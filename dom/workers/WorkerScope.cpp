@@ -13,6 +13,8 @@
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/FileReaderSyncBinding.h"
+#include "mozilla/dom/ImageData.h"
+#include "mozilla/dom/ImageDataBinding.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
@@ -36,7 +38,6 @@
 #include "File.h"
 #include "FileReaderSync.h"
 #include "Location.h"
-#include "ImageData.h"
 #include "Navigator.h"
 #include "Principal.h"
 #include "ScriptLoader.h"
@@ -1012,13 +1013,13 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   // Init other classes we care about.
   if (!events::InitClasses(aCx, global, false) ||
       !file::InitClasses(aCx, global) ||
-      !exceptions::InitClasses(aCx, global) ||
-      !imagedata::InitClass(aCx, global)) {
+      !exceptions::InitClasses(aCx, global)) {
     return NULL;
   }
 
   // Init other paris-bindings.
   if (!FileReaderSyncBinding_workers::GetConstructorObject(aCx, global) ||
+      !ImageDataBinding::GetConstructorObject(aCx, global) ||
       !TextDecoderBinding_workers::GetConstructorObject(aCx, global) ||
       !TextEncoderBinding_workers::GetConstructorObject(aCx, global) ||
       !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, global) ||

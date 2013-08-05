@@ -596,10 +596,8 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
     ResolveAnonymousBoxStyle(nsCSSAnonBoxes::tableColGroup, mStyleContext);
   // Create a col group frame
   nsIFrame* newFrame = NS_NewTableColGroupFrame(shell, colGroupStyle);
-  if (newFrame) {
-    ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
-    newFrame->Init(colGroupContent, this, nullptr);
-  }
+  ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
+  newFrame->Init(colGroupContent, this, nullptr);
   return (nsTableColGroupFrame *)newFrame;
 }
 

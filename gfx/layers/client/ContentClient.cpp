@@ -26,9 +26,10 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 {
   LayersBackend backend = aForwarder->GetCompositorBackendType();
   if (backend != LAYERS_OPENGL &&
+      backend != LAYERS_D3D9 &&
       backend != LAYERS_D3D11 &&
       backend != LAYERS_BASIC) {
-        return nullptr;
+    return nullptr;
   }
 
   bool useDoubleBuffering = false;
@@ -138,6 +139,25 @@ ContentClientRemoteBuffer::EndPaint()
   }
 }
 
+bool
+ContentClientRemoteBuffer::CreateAndAllocateDeprecatedTextureClient(RefPtr<DeprecatedTextureClient>& aClient)
+{
+  aClient = CreateDeprecatedTextureClient(TEXTURE_CONTENT);
+  MOZ_ASSERT(aClient, "Failed to create texture client");
+
+  if (!aClient->EnsureAllocated(mSize, mContentType)) {
+    aClient = CreateDeprecatedTextureClient(TEXTURE_FALLBACK);
+    MOZ_ASSERT(aClient, "Failed to create texture client");
+    if (!aClient->EnsureAllocated(mSize, mContentType)) {
+      NS_WARNING("Could not allocate texture client");
+      return false;
+    }
+  }
+
+  MOZ_ASSERT(IsSurfaceDescriptorValid(*aClient->GetDescriptor()));
+  return true;
+}
+
 void
 ContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType aType,
                                                const nsIntRect& aRect,
@@ -155,22 +175,20 @@ ContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType aType,
     }
     DestroyBuffers();
   }
-  mTextureInfo.mTextureFlags = aFlags | TEXTURE_DEALLOCATE_HOST;
-  mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_CONTENT);
-  MOZ_ASSERT(mDeprecatedTextureClient, "Failed to create texture client");
-  if (aFlags & BUFFER_COMPONENT_ALPHA) {
-    mDeprecatedTextureClientOnWhite = CreateDeprecatedTextureClient(TEXTURE_CONTENT);
-    MOZ_ASSERT(mDeprecatedTextureClientOnWhite, "Failed to create texture client");
-    mTextureInfo.mTextureFlags |= ComponentAlpha;
-  }
 
   mContentType = aType;
   mSize = gfx::IntSize(aRect.width, aRect.height);
-  mDeprecatedTextureClient->EnsureAllocated(mSize, mContentType);
-  MOZ_ASSERT(IsSurfaceDescriptorValid(*mDeprecatedTextureClient->GetDescriptor()));
-  if (mDeprecatedTextureClientOnWhite) {
-    mDeprecatedTextureClientOnWhite->EnsureAllocated(mSize, mContentType);
-    MOZ_ASSERT(IsSurfaceDescriptorValid(*mDeprecatedTextureClientOnWhite->GetDescriptor()));
+  mTextureInfo.mTextureFlags = aFlags | TEXTURE_DEALLOCATE_HOST;
+
+  if (!CreateAndAllocateDeprecatedTextureClient(mDeprecatedTextureClient)) {
+    return;
+  }
+  
+  if (aFlags & BUFFER_COMPONENT_ALPHA) {
+    if (!CreateAndAllocateDeprecatedTextureClient(mDeprecatedTextureClientOnWhite)) {
+      return;
+    }
+    mTextureInfo.mTextureFlags |= ComponentAlpha;
   }
 
   CreateFrontBufferAndNotify(aRect);
@@ -283,18 +301,18 @@ ContentClientDoubleBuffered::~ContentClientDoubleBuffered()
 void
 ContentClientDoubleBuffered::CreateFrontBufferAndNotify(const nsIntRect& aBufferRect)
 {
-  mFrontClient = CreateDeprecatedTextureClient(TEXTURE_CONTENT);
-  MOZ_ASSERT(mFrontClient, "Failed to create texture client");
-  mFrontClient->EnsureAllocated(mSize, mContentType);
+  if (!CreateAndAllocateDeprecatedTextureClient(mFrontClient)) {
+    return;
+  }
+
+  if (mTextureInfo.mTextureFlags & ComponentAlpha) {
+    if (!CreateAndAllocateDeprecatedTextureClient(mFrontClientOnWhite)) {
+      return;
+    }
+  }
 
   mFrontBufferRect = aBufferRect;
   mFrontBufferRotation = nsIntPoint();
-
-  if (mTextureInfo.mTextureFlags & ComponentAlpha) {
-    mFrontClientOnWhite = CreateDeprecatedTextureClient(TEXTURE_CONTENT);
-    MOZ_ASSERT(mFrontClientOnWhite, "Failed to create texture client");
-    mFrontClientOnWhite->EnsureAllocated(mSize, mContentType);
-  }
   
   mForwarder->CreatedDoubleBuffer(this,
                                   *mFrontClient->GetDescriptor(),

@@ -28,8 +28,16 @@ XPCOMUtils.defineLazyServiceGetter(this, "socketTransportService",
                                    "@mozilla.org/network/socket-transport-service;1",
                                    "nsISocketTransportService");
 
-XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleClient",
-                                  "resource://gre/modules/devtools/WebConsoleClient.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+                                  "resource://gre/modules/devtools/Loader.jsm");
+
+Object.defineProperty(this, "WebConsoleClient", {
+  get: function() {
+    return devtools.require("devtools/toolkit/webconsole/client").WebConsoleClient;
+  },
+  configurable: true,
+  enumerable: true
+});
 
 Components.utils.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 this.makeInfallible = DevToolsUtils.makeInfallible;

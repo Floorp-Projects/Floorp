@@ -2257,6 +2257,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-box-align: stretch;
 }
 
+.tabbrowser-tab[remote] {
+  text-decoration: underline;
+}
+
 %define TABSONTOP_TAB #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab
 %define TABSONBOTTOM_TAB #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab
 %define TABSONTOP_TAB_STACK #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab > .tab-stack
@@ -3626,9 +3630,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #full-screen-warning-message {
-  background-color: hsl(0,0%,15%);
+  background-image: url("chrome://browser/skin/fullscreen-darknoise.png");
   color: white;
-  border-radius: 8px;
+  border-radius: 4px;
   margin-top: 30px;
   padding: 30px 50px;
   box-shadow: 0 0 2px white;

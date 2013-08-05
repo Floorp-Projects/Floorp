@@ -903,76 +903,7 @@ enum ccType {
     ShutdownCC   /* Shutdown CC, used for finding leaks. */
 };
 
-class nsCycleCollector;
-
-class nsCycleCollectorRunner : public nsRunnable
-{
-    nsCycleCollector *mCollector;
-    CCThreadingModel mModel;
-    nsICycleCollectorListener *mListener;
-    nsCOMPtr<nsIThread> mThread;
-    Mutex mLock;
-    CondVar mRequest;
-    CondVar mReply;
-    bool mRunning;
-    bool mShutdown;
-    bool mCollected;
-    ccType mCCType;
-
-public:
-    nsCycleCollectorRunner(nsCycleCollector *collector,
-                           CCThreadingModel aModel)
-        : mCollector(collector),
-          mModel(aModel),
-          mListener(nullptr),
-          mLock("cycle collector lock"),
-          mRequest(mLock, "cycle collector request condvar"),
-          mReply(mLock, "cycle collector reply condvar"),
-          mRunning(false),
-          mShutdown(false),
-          mCollected(false),
-          mCCType(ScheduledCC)
-    {
-        MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-    }
-
-    NS_IMETHOD Run();
-
-    nsresult Init()
-    {
-        if (mModel == CCSingleThread)
-            return NS_OK;
-
-        return NS_NewThread(getter_AddRefs(mThread), this);
-    }
-
-    void Collect(ccType aCCType,
-                 nsCycleCollectorResults *aResults,
-                 nsICycleCollectorListener *aListener);
-
-    void Shutdown()
-    {
-        MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-        if (!mThread)
-            return;
-
-        MutexAutoLock autoLock(mLock);
-
-        mShutdown = true;
-
-        if (!mRunning)
-            return;
-
-        mRunning = false;
-        mRequest.Notify();
-        mReply.Wait();
-
-        nsCOMPtr<nsIThread> thread;
-        thread.swap(mThread);
-        thread->Shutdown();
-    }
-};
+class nsCycleCollectorRunner;
 
 ////////////////////////////////////////////////////////////////////////
 // Top level structure for the cycle collector.
@@ -995,14 +926,12 @@ class nsCycleCollector
 
     // Strong reference
     nsCycleCollectorRunner *mRunner;
-    PRThread* mThread;
+    nsIThread* mThread;
 
 public:
     nsCycleCollectorParams mParams;
 
 private:
-    nsRefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
-
     nsTArray<PtrInfo*> *mWhiteNodes;
     uint32_t mWhiteNodeCount;
 
@@ -1080,17 +1009,7 @@ public:
     bool BeginCollection(ccType aCCType, nsICycleCollectorListener *aListener);
     bool FinishCollection(nsICycleCollectorListener *aListener);
 
-    AsyncFreeSnowWhite* AsyncSnowWhiteFreer()
-    {
-        return mAsyncSnowWhiteFreer;
-    }
-
     bool FreeSnowWhite(bool aUntilNoSWInPurpleBuffer);
-
-    // If there is a cycle collector available in the current thread,
-    // this calls FreeSnowWhite(false). Returns true if some
-    // snow-white objects were found.
-    static bool TryToFreeSnowWhite();
 
     uint32_t SuspectedCount();
     void Shutdown();
@@ -1109,6 +1028,75 @@ public:
                              size_t *aGraphEdgesSize,
                              size_t *aWhiteNodeSize,
                              size_t *aPurpleBufferSize) const;
+};
+
+class nsCycleCollectorRunner : public nsRunnable
+{
+    nsCycleCollector *mCollector;
+    CCThreadingModel mModel;
+    nsICycleCollectorListener *mListener;
+    nsCOMPtr<nsIThread> mThread;
+    Mutex mLock;
+    CondVar mRequest;
+    CondVar mReply;
+    bool mRunning;
+    bool mShutdown;
+    bool mCollected;
+    ccType mCCType;
+
+public:
+    nsCycleCollectorRunner(nsCycleCollector *collector,
+                           CCThreadingModel aModel)
+        : mCollector(collector),
+          mModel(aModel),
+          mListener(nullptr),
+          mLock("cycle collector lock"),
+          mRequest(mLock, "cycle collector request condvar"),
+          mReply(mLock, "cycle collector reply condvar"),
+          mRunning(false),
+          mShutdown(false),
+          mCollected(false),
+          mCCType(ScheduledCC)
+    {
+        collector->CheckThreadSafety();
+    }
+
+    NS_IMETHOD Run();
+
+    nsresult Init()
+    {
+        if (mModel == CCSingleThread)
+            return NS_OK;
+
+        return NS_NewThread(getter_AddRefs(mThread), this);
+    }
+
+    void Collect(ccType aCCType,
+                 nsCycleCollectorResults *aResults,
+                 nsICycleCollectorListener *aListener);
+
+    void Shutdown()
+    {
+        mCollector->CheckThreadSafety();
+
+        if (!mThread)
+            return;
+
+        MutexAutoLock autoLock(mLock);
+
+        mShutdown = true;
+
+        if (!mRunning)
+            return;
+
+        mRunning = false;
+        mRequest.Notify();
+        mReply.Wait();
+
+        nsCOMPtr<nsIThread> thread;
+        thread.swap(mThread);
+        thread->Shutdown();
+    }
 };
 
 NS_IMETHODIMP
@@ -1160,7 +1148,7 @@ nsCycleCollectorRunner::Collect(ccType aCCType,
                                 nsCycleCollectorResults *aResults,
                                 nsICycleCollectorListener *aListener)
 {
-    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+    mCollector->CheckThreadSafety();
 
     // On a WantAllTraces CC, force a synchronous global GC to prevent
     // hijinks from ForgetSkippable and compartmental GCs.
@@ -1447,7 +1435,9 @@ public:
         gcLogFile->OpenANSIFileDesc("w", &gcLogANSIFile);
         NS_ENSURE_STATE(gcLogANSIFile);
         MozillaRegisterDebugFILE(gcLogANSIFile);
-        xpc::DumpJSHeap(gcLogANSIFile);
+        CollectorData *data = sCollectorData.get();
+        if (data && data->mRuntime)
+            data->mRuntime->DumpJSHeap(gcLogANSIFile);
         MozillaUnRegisterDebugFILE(gcLogANSIFile);
         fclose(gcLogANSIFile);
 
@@ -2181,44 +2171,6 @@ MayHaveChild(void *o, nsCycleCollectionParticipant* cp)
     return cf.MayHaveChild();
 }
 
-class AsyncFreeSnowWhite : public nsRunnable
-{
-public:
-  NS_IMETHOD Run()
-  {
-      TimeStamp start = TimeStamp::Now();
-      bool hadSnowWhiteObjects = nsCycleCollector::TryToFreeSnowWhite();
-      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING,
-                            uint32_t((TimeStamp::Now() - start).ToMilliseconds()));
-      if (hadSnowWhiteObjects && !mContinuation) {
-          mContinuation = true;
-          if (NS_FAILED(NS_DispatchToCurrentThread(this))) {
-              mActive = false;
-          }
-      } else {
-          mActive = false;
-      }
-      return NS_OK;
-  }
-
-  static void Dispatch(nsCycleCollector* aCollector, bool aContinuation = false)
-  {
-      AsyncFreeSnowWhite* swf = aCollector->AsyncSnowWhiteFreer();
-      if (swf->mContinuation) {
-          swf->mContinuation = aContinuation;
-      }
-      if (!swf->mActive && NS_SUCCEEDED(NS_DispatchToCurrentThread(swf))) {
-          swf->mActive = true;
-      }
-  }
-
-  AsyncFreeSnowWhite() : mContinuation(false), mActive(false) {}
-
-public:
-  bool mContinuation;
-  bool mActive;
-};
-
 struct SnowWhiteObject
 {
   void* mPointer;
@@ -2300,7 +2252,7 @@ public:
         }
         if (HasSnowWhiteObjects()) {
             // Effectively a continuation.
-            AsyncFreeSnowWhite::Dispatch(mCollector, true);
+            nsCycleCollector_dispatchDeferredDeletion(true);
         }
     }
 
@@ -2313,7 +2265,7 @@ public:
                 SnowWhiteKiller::Visit(aBuffer, aEntry);
             } else if (!mDispatchedDeferredDeletion) {
                 mDispatchedDeferredDeletion = true;
-                nsCycleCollector_dispatchDeferredDeletion();
+                nsCycleCollector_dispatchDeferredDeletion(false);
             }
             return;
         }
@@ -2360,15 +2312,6 @@ nsCycleCollector::FreeSnowWhite(bool aUntilNoSWInPurpleBuffer)
         }
     } while (aUntilNoSWInPurpleBuffer);
     return hadSnowWhiteObjects;
-}
-
-/* static */ bool
-nsCycleCollector::TryToFreeSnowWhite()
-{
-  CollectorData* data = sCollectorData.get();
-  return data->mCollector ?
-      data->mCollector->FreeSnowWhite(false) :
-      false;
 }
 
 void
@@ -2647,7 +2590,7 @@ nsCycleCollector::CollectWhite(nsICycleCollectorListener *aListener)
     }
     timeLog.Checkpoint("CollectWhite::Unroot");
 
-    nsCycleCollector_dispatchDeferredDeletion();
+    nsCycleCollector_dispatchDeferredDeletion(false);
 
     return count > 0;
 }
@@ -2737,8 +2680,7 @@ nsCycleCollector::nsCycleCollector(CCThreadingModel aModel) :
     mResults(nullptr),
     mJSRuntime(nullptr),
     mRunner(nullptr),
-    mThread(PR_GetCurrentThread()),
-    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()),
+    mThread(NS_GetCurrentThread()),
     mWhiteNodes(nullptr),
     mWhiteNodeCount(0),
     mVisitedRefCounted(0),
@@ -2843,7 +2785,10 @@ void
 nsCycleCollector::CheckThreadSafety()
 {
 #ifdef DEBUG
-    MOZ_ASSERT(mThread == PR_GetCurrentThread());
+    nsIThread* currentThread = NS_GetCurrentThread();
+    // XXXkhuey we can be called so late in shutdown that NS_GetCurrentThread
+    // returns null (after the thread manager has shut down)
+    MOZ_ASSERT(mThread == currentThread || !currentThread);
 #endif
 }
 
@@ -2856,8 +2801,7 @@ nsCycleCollector::CheckThreadSafety()
 void
 nsCycleCollector::FixGrayBits(bool aForceGC)
 {
-    MOZ_ASSERT(NS_IsMainThread(),
-               "nsCycleCollector::FixGrayBits() must be called on the main thread.");
+    CheckThreadSafety();
 
     if (!mJSRuntime)
         return;
@@ -3377,12 +3321,28 @@ nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes,
 }
 
 void
-nsCycleCollector_dispatchDeferredDeletion()
+nsCycleCollector_dispatchDeferredDeletion(bool aContinuation)
 {
-    CollectorData* data = sCollectorData.get();
-    if (data && data->mCollector) {
-        AsyncFreeSnowWhite::Dispatch(data->mCollector);
+    CollectorData *data = sCollectorData.get();
+
+    if (!data || !data->mRuntime) {
+        return;
     }
+
+    data->mRuntime->DispatchDeferredDeletion(aContinuation);
+}
+
+bool
+nsCycleCollector_doDeferredDeletion()
+{
+    CollectorData *data = sCollectorData.get();
+
+    // We should have started the cycle collector by now.
+    MOZ_ASSERT(data);
+    MOZ_ASSERT(data->mCollector);
+    MOZ_ASSERT(data->mRuntime);
+
+    return data->mCollector->FreeSnowWhite(false);
 }
 
 void

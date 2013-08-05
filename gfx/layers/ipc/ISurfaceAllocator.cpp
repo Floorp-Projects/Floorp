@@ -90,7 +90,10 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
     gfxImageFormat format =
       gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
     int32_t stride = gfxASurface::FormatStrideForWidth(format, aSize.width);
-    uint8_t *data = new uint8_t[stride * aSize.height];
+    uint8_t *data = new (std::nothrow) uint8_t[stride * aSize.height];
+    if (!data) {
+      return false;
+    }
 #ifdef XP_MACOSX
     // Workaround a bug in Quartz where drawing an a8 surface to another a8
     // surface with OPERATOR_SOURCE still requires the destination to be clear.
@@ -133,6 +136,7 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
     case SurfaceDescriptor::TRGBImage:
       DeallocShmem(aSurface->get_RGBImage().data());
       break;
+    case SurfaceDescriptor::TSurfaceDescriptorD3D9:
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
       break;
     case SurfaceDescriptor::TMemoryImage:

@@ -346,7 +346,10 @@ class Parser : private AutoGCRooter, public StrictModeGetter
      * is not known whether the parse succeeds or fails, this bit is set and
      * the parse will return false.
      */
-    bool abortedSyntaxParse;
+    bool abortedSyntaxParse:1;
+
+    /* Unexpected end of input, i.e. TOK_EOF not at top-level. */
+    bool isUnexpectedEOF_:1;
 
     typedef typename ParseHandler::Node Node;
     typedef typename ParseHandler::DefinitionNode DefinitionNode;
@@ -422,6 +425,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     void clearAbortedSyntaxParse() {
         abortedSyntaxParse = false;
     }
+
+    bool isUnexpectedEOF() const { return isUnexpectedEOF_; }
 
   private:
     Parser *thisForCtor() { return this; }

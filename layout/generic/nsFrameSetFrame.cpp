@@ -972,27 +972,21 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
                                                             borderWidth,
                                                             false,
                                                             false);
-        if (MOZ_LIKELY(borderFrame != nullptr)) {
-          borderFrame->Init(mContent, this, nullptr);
-          mChildCount++;
-          mFrames.AppendFrame(nullptr, borderFrame);
-          mHorBorders[cellIndex.y-1] = borderFrame;
-          // set the neighbors for determining drag boundaries
-          borderFrame->mPrevNeighbor = lastRow;
-          borderFrame->mNextNeighbor = cellIndex.y;
-        }
+        borderFrame->Init(mContent, this, nullptr);
+        mChildCount++;
+        mFrames.AppendFrame(nullptr, borderFrame);
+        mHorBorders[cellIndex.y-1] = borderFrame;
+        // set the neighbors for determining drag boundaries
+        borderFrame->mPrevNeighbor = lastRow;
+        borderFrame->mNextNeighbor = cellIndex.y;
       } else {
         borderFrame = (nsHTMLFramesetBorderFrame*)mFrames.FrameAt(borderChildX);
-        if (MOZ_LIKELY(borderFrame != nullptr)) {
-          borderFrame->mWidth = borderWidth;
-          borderChildX++;
-        }
+        borderFrame->mWidth = borderWidth;
+        borderChildX++;
       }
-      if (MOZ_LIKELY(borderFrame != nullptr)) {
-        nsSize borderSize(aDesiredSize.width, borderWidth);
-        ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
-        borderFrame = nullptr;
-      }
+      nsSize borderSize(aDesiredSize.width, borderWidth);
+      ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
+      borderFrame = nullptr;
       offset.y += borderWidth;
     } else {
       if (cellIndex.x > 0) {  // moved to next col in same row
@@ -1008,27 +1002,21 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
                                                                 borderWidth,
                                                                 true,
                                                                 false);
-            if (MOZ_LIKELY(borderFrame != nullptr)) {
-              borderFrame->Init(mContent, this, nullptr);
-              mChildCount++;
-              mFrames.AppendFrame(nullptr, borderFrame);
-              mVerBorders[cellIndex.x-1] = borderFrame;
-              // set the neighbors for determining drag boundaries
-              borderFrame->mPrevNeighbor = lastCol;
-              borderFrame->mNextNeighbor = cellIndex.x;
-            }
+            borderFrame->Init(mContent, this, nullptr);
+            mChildCount++;
+            mFrames.AppendFrame(nullptr, borderFrame);
+            mVerBorders[cellIndex.x-1] = borderFrame;
+            // set the neighbors for determining drag boundaries
+            borderFrame->mPrevNeighbor = lastCol;
+            borderFrame->mNextNeighbor = cellIndex.x;
           } else {
             borderFrame = (nsHTMLFramesetBorderFrame*)mFrames.FrameAt(borderChildX);
-            if (MOZ_LIKELY(borderFrame != nullptr)) {
-              borderFrame->mWidth = borderWidth;
-              borderChildX++;
-            }
+            borderFrame->mWidth = borderWidth;
+            borderChildX++;
           }
-          if (MOZ_LIKELY(borderFrame != nullptr)) {
-            nsSize borderSize(borderWidth, aDesiredSize.height);
-            ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
-            borderFrame = nullptr;
-          }
+          nsSize borderSize(borderWidth, aDesiredSize.height);
+          ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
+          borderFrame = nullptr;
         }
         offset.x += borderWidth;
       }

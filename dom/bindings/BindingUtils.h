@@ -2074,6 +2074,10 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
 JSBool
 InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JS::Value> vp,
                      JSBool* bp);
+JSBool
+InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
+                     JS::Handle<JSObject*> instance,
+                     JSBool* bp);
 
 // Helper for lenient getters/setters to report to console.  If this
 // returns false, we couldn't even get a global.

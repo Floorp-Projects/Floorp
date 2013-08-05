@@ -63,6 +63,7 @@ MOCHITEST_FILES := \
   forOf_iframe.html \
   test_sequence_wrapping.html \
   file_bug775543.html \
+  file_bug707564.html \
   test_bug788369.html \
   test_bug742191.html \
   test_namedNoIndexed.html \
@@ -75,10 +76,12 @@ MOCHITEST_FILES := \
   test_lenientThis.html \
   test_ByteString.html \
   test_exception_messages.html \
+  test_bug707564.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
   test_bug775543.html \
+  test_bug707564-chrome.html \
   $(NULL)
 
 ifdef GNU_CC

@@ -227,6 +227,7 @@ webidl_files = \
   PositionError.webidl \
   ProcessingInstruction.webidl \
   Promise.webidl \
+  PushManager.webidl \
   Range.webidl \
   Rect.webidl \
   RGBColor.webidl \

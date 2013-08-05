@@ -4207,7 +4207,6 @@ BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
-MOZ_ANDROID_WALLPAPER=
 MOZ_ANDROID_BEAM=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
@@ -5164,13 +5163,6 @@ MOZ_ARG_DISABLE_BOOL(websms-backend,
 
 if test -n "$MOZ_WEBSMS_BACKEND"; then
     AC_DEFINE(MOZ_WEBSMS_BACKEND)
-fi
-
-dnl ========================================================
-dnl = Enable SET_WALLPAPER permission on Android
-dnl ========================================================
-if test -n "$MOZ_ANDROID_WALLPAPER"; then
-    AC_DEFINE(MOZ_ANDROID_WALLPAPER)
 fi
 
 dnl ========================================================
@@ -8612,7 +8604,6 @@ AC_SUBST(MOZ_METRO)
 
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
-AC_SUBST(MOZ_ANDROID_WALLPAPER)
 AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
@@ -9134,7 +9125,7 @@ if test -n "$MOZ_WEBRTC"; then
    AC_MSG_RESULT("generating WebRTC Makefiles...")
 
    if test "${MOZ_WIDGET_TOOLKIT}" = "gonk"; then
-      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D build_with_gonk=1 -D include_internal_audio_device=0"
+      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D build_with_gonk=1"
    fi
 
 dnl Any --include files must also appear in -D FORCED_INCLUDE_FILE= entries
@@ -9424,11 +9415,14 @@ fi
 dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 ac_configure_args="$ac_configure_args --enable-threadsafe"
-if test "$MOZ_BUILD_APP" != "browser"; then
-    # The Internationalization API is currently disabled in all non-standalone,
-    # non-desktop SpiderMonkey builds.  Bug 864843 is on file for enabling it
-    # in Android builds, and bug 866301 is on file for enabling it in B2G
-    # builds.
+# Switch to "$MOZ_BUILD_APP" != "browser" when enabling for desktop builds.
+if test "A" = "A"; then
+    # The Internationalization API isn't on by default except in standalone JS
+    # engine builds.  Bugs to enable it in the browser:
+    #
+    #   Desktop:  bug 853301
+    #   Android:  bug 864843
+    #   B2G:      bug 866301
     ac_configure_args="$ac_configure_args --disable-intl-api"
 fi
 if test "$BUILD_CTYPES"; then
