@@ -1740,11 +1740,11 @@ ReportZoneStats(const JS::ZoneStats &zStats,
 
         nsDependentCString hugeString(info.buffer);
 
-        // Escape / to \/ before we put hugeString into the memory reporter
+        // Escape / to \ before we put hugeString into the memory reporter
         // path, because we don't want any forward slashes in the string to
         // count as path separators.
         nsCString escapedString(hugeString);
-        escapedString.ReplaceSubstring("/", "\\/");
+        escapedString.ReplaceSubstring("/", "\\");
 
         ZCREPORT_BYTES2(
             pathPrefix +
