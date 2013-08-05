@@ -153,10 +153,12 @@ var FindHelperUI = {
   },
 
   goToPrevious: function findHelperGoToPrevious() {
+    this._textbox.blur();
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Previous", { });
   },
 
   goToNext: function findHelperGoToNext() {
+    this._textbox.blur();
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Next", { });
   },
 
