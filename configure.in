@@ -9424,11 +9424,14 @@ fi
 dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 ac_configure_args="$ac_configure_args --enable-threadsafe"
-if test "$MOZ_BUILD_APP" != "browser"; then
-    # The Internationalization API is currently disabled in all non-standalone,
-    # non-desktop SpiderMonkey builds.  Bug 864843 is on file for enabling it
-    # in Android builds, and bug 866301 is on file for enabling it in B2G
-    # builds.
+# Switch to "$MOZ_BUILD_APP" != "browser" when enabling for desktop builds.
+if test "A" = "A"; then
+    # The Internationalization API isn't on by default except in standalone JS
+    # engine builds.  Bugs to enable it in the browser:
+    #
+    #   Desktop:  bug 853301
+    #   Android:  bug 864843
+    #   B2G:      bug 866301
     ac_configure_args="$ac_configure_args --disable-intl-api"
 fi
 if test "$BUILD_CTYPES"; then
