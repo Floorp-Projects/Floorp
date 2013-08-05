@@ -15,11 +15,8 @@ function test() {
 
 function testPropertyProvider() {
   browser.removeEventListener("load", testPropertyProvider, true);
-
-  let tmp = {};
-  Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm", tmp);
-  let JSPropertyProvider = tmp.JSPropertyProvider;
-  tmp = null;
+  let tools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+  let JSPropertyProvider = tools.require("devtools/toolkit/webconsole/utils").JSPropertyProvider;
 
   let completion = JSPropertyProvider(content, "thisIsNotDefined");
   is (completion.matches.length, 0, "no match for 'thisIsNotDefined");

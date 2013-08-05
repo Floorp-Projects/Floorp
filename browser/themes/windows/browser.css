@@ -2783,9 +2783,9 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 #full-screen-warning-message {
-  background-color: hsl(0,0%,15%);
+  background-image: url("chrome://browser/skin/fullscreen-darknoise.png");
   color: white;
-  border-radius: 8px;
+  border-radius: 4px;
   margin-top: 30px;
   padding: 30px 50px;
   box-shadow: 0 0 2px white;

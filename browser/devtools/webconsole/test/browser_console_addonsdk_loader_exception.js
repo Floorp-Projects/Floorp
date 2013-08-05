@@ -24,7 +24,7 @@ function test()
   {
     ok(hud, "web console opened");
     webconsole = hud;
-    HUDConsoleUI.toggleBrowserConsole().then(browserConsoleOpened);
+    HUDService.toggleBrowserConsole().then(browserConsoleOpened);
   }
 
   function browserConsoleOpened(hud)

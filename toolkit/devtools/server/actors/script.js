@@ -886,8 +886,12 @@ ThreadActor.prototype = {
 
       let { url, line, column } = form.where;
       let promise = this.sources.getOriginalLocation(url, line, column)
-        .then(function (aOrigLocation) {
+        .then((aOrigLocation) => {
           form.where = aOrigLocation;
+          let source = this.sources.source(form.where.url);
+          if (source) {
+            form.source = source.form();
+          }
         });
       promises.push(promise);
     }
@@ -2669,7 +2673,6 @@ FrameActor.prototype = {
         line: this.frame.script.getOffsetLine(this.frame.offset),
         column: getOffsetColumn(this.frame.offset, this.frame.script)
       };
-      form.isBlackBoxed = this.threadActor.sources.isBlackBoxed(this.frame.script.url)
     }
 
     if (!this.frame.older) {
