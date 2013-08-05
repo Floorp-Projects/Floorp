@@ -72,11 +72,7 @@ public:
 
   virtual void BindTexture(GLenum aTextureUnit) = 0;
 
-  /**
-   * Unbind this texture
-   * XXX - "Release" is confusing, should be called UnbindTexture instead.
-   */
-  virtual void ReleaseTexture() = 0;
+  virtual void UnbindTexture() = 0;
 
   virtual gfx::IntSize GetSize() const = 0;
 
@@ -136,7 +132,7 @@ public:
 
   virtual bool IsValid() const MOZ_OVERRIDE { return !!mTexImage; }
 
-  virtual void ReleaseTexture() MOZ_OVERRIDE
+  virtual void UnbindTexture() MOZ_OVERRIDE
   {
     mTexImage->ReleaseTexture();
   }
@@ -220,7 +216,7 @@ public:
 
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return mWrapMode; }
 
-  virtual void ReleaseTexture() MOZ_OVERRIDE {}
+  virtual void UnbindTexture() MOZ_OVERRIDE {}
 
   // SharedTextureSource doesn't own any gl texture
   virtual void DeallocateDeviceData() {}
@@ -361,7 +357,7 @@ public:
     mTexture->BindTexture(aTextureUnit);
   }
 
-  void ReleaseTexture() MOZ_OVERRIDE
+  void UnbindTexture() MOZ_OVERRIDE
   {
     mTexture->ReleaseTexture();
   }
@@ -488,7 +484,7 @@ public:
     {
       mTexImage->BindTexture(aUnit);
     }
-    void ReleaseTexture() MOZ_OVERRIDE
+    void UnbindTexture() MOZ_OVERRIDE
     {
       mTexImage->ReleaseTexture();
     }
@@ -612,7 +608,7 @@ public:
     // Lock already bound us!
     MOZ_ASSERT(activetex == LOCAL_GL_TEXTURE0);
   }
-  void ReleaseTexture() MOZ_OVERRIDE {}
+  void UnbindTexture() MOZ_OVERRIDE {}
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType()
   {
@@ -699,7 +695,7 @@ public:
     mGL->fBindTexture(mTextureTarget, mTextureHandle);
   }
 
-  void ReleaseTexture() MOZ_OVERRIDE {}
+  void UnbindTexture() MOZ_OVERRIDE {}
 
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType() {
@@ -766,7 +762,7 @@ public:
     mGL->fActiveTexture(aTextureUnit);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
   }
-  virtual void ReleaseTexture() MOZ_OVERRIDE {}
+  virtual void UnbindTexture() MOZ_OVERRIDE {}
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE
   {
     return mSize;
@@ -853,7 +849,7 @@ public:
 #endif
 
   void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE;
-  void ReleaseTexture() MOZ_OVERRIDE {}
+  void UnbindTexture() MOZ_OVERRIDE {}
 
   virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE
   {

@@ -964,7 +964,7 @@ struct MOZ_STACK_CLASS AutoBindTexture
   ~AutoBindTexture()
   {
     if (mTexture) {
-      mTexture->ReleaseTexture();
+      mTexture->UnbindTexture();
     }
   }
 
