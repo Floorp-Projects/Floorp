@@ -68,7 +68,7 @@ interface IPeerConnectionObserver : nsISupports
   void foundIceCandidate(in string candidate);
 };
 
-[scriptable, uuid(80b98a4f-c629-4e81-b738-a4608f6a4cd3)]
+[scriptable, uuid(930dce8b-7c5e-4393-b8c0-cb3a928f68bd)]
 interface IPeerConnection : nsISupports
 {
   const unsigned long kHintAudio = 0x00000001;
