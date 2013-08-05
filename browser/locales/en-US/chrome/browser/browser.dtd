@@ -729,7 +729,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY toggleAddonBarCmd.key         "/">
 <!ENTITY backForwardItem.title         "Back/Forward">
 <!ENTITY viewBookmarksSidebar.label    "Show in Sidebar">
-<!ENTITY appMenuBookmarks.label        "Bookmarks">
 <!ENTITY bookmarksItem.title           "Bookmarks">
 <!-- end of strings to be removed post-Australis -->
 
