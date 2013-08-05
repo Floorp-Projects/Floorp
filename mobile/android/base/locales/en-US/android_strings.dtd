@@ -72,6 +72,11 @@
 <!ENTITY pref_category_vendor "&vendorShortName;">
 <!ENTITY pref_category_datareporting "Data choices">
 <!ENTITY pref_category_installed_search_engines "Installed search engines">
+<!ENTITY pref_category_add_search_providers "Add more search providers">
+<!-- Localization note (pref_search_tip) : "TIP" as in "hint", "clue" etc. Displayed as an
+     advisory message on the customise search providers settings page explaining how to add new
+     search providers.-->
+<!ENTITY pref_search_tip "TIP: Add any website to your list of search providers by long-pressing on its search field.">
 <!ENTITY pref_category_devtools "Developer tools">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
 <!ENTITY pref_developer_remotedebugging_docs "Learn more">
@@ -144,6 +149,10 @@ size. -->
 <!ENTITY pref_about_firefox "About &brandShortName;">
 <!ENTITY pref_vendor_faqs "FAQs">
 <!ENTITY pref_vendor_feedback "Give feedback">
+<!ENTITY pref_search_set_default "Set as default">
+<!ENTITY pref_search_default "Default">
+<!ENTITY pref_search_remove "Remove">
+<!ENTITY pref_search_last_toast "You can\'t remove or disable your last search engine.">
 
 <!ENTITY datareporting_notification_title "&brandShortName; stats &amp; data">
 <!ENTITY datareporting_notification_action_long "Choose what information to share">
