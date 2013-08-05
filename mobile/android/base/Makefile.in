@@ -474,6 +474,7 @@ RES_LAYOUT = \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
   res/layout/preference_rightalign_icon.xml \
+  res/layout/preference_search_tip.xml \
   res/layout/search_engine_row.xml \
   res/layout/site_setting_item.xml \
   res/layout/site_setting_title.xml \
@@ -672,6 +673,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/tab_thumbnail_shadow.png \
   res/drawable-mdpi/tabs_count.png \
   res/drawable-mdpi/tabs_count_foreground.png \
+  res/drawable-mdpi/tip_addsearch.png \
   res/drawable-mdpi/toast.9.png \
   res/drawable-mdpi/toast_button_focused.9.png \
   res/drawable-mdpi/toast_button_pressed.9.png \
@@ -784,6 +786,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tab_thumbnail_shadow.png \
   res/drawable-hdpi/tabs_count.png \
   res/drawable-hdpi/tabs_count_foreground.png \
+  res/drawable-hdpi/tip_addsearch.png \
   res/drawable-hdpi/address_bar_url_default.9.png \
   res/drawable-hdpi/address_bar_url_default_pb.9.png \
   res/drawable-hdpi/address_bar_url_pressed.9.png \
@@ -880,6 +883,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/tab_thumbnail_shadow.png \
   res/drawable-xhdpi/tabs_count.png \
   res/drawable-xhdpi/tabs_count_foreground.png \
+  res/drawable-xhdpi/tip_addsearch.png \
   res/drawable-xhdpi/find_close.png \
   res/drawable-xhdpi/find_next.png \
   res/drawable-xhdpi/find_prev.png \
