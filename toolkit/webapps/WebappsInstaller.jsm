@@ -423,8 +423,8 @@ WinNativeApp.prototype = {
 
       subKey.writeStringValue("DisplayName", this.appName);
 
-      subKey.writeStringValue("UninstallString", this.uninstallerFile.path);
-      subKey.writeStringValue("InstallLocation", this.installDir.path);
+      subKey.writeStringValue("UninstallString", '"' + this.uninstallerFile.path + '"');
+      subKey.writeStringValue("InstallLocation", '"' + this.installDir.path + '"');
       subKey.writeStringValue("AppFilename", this.appNameAsFilename);
 
       if(this.iconFile) {
