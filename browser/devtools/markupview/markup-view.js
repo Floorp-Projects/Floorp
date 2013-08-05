@@ -21,9 +21,7 @@ Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyGetter(this, "AutocompletePopup", function() {
-  return Cu.import("resource:///modules/devtools/AutocompletePopup.jsm", {}).AutocompletePopup;
-});
+loader.lazyGetter(this, "AutocompletePopup", () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
 
 /**
  * Vocabulary for the purposes of this file:
@@ -161,6 +159,14 @@ MarkupView.prototype = {
     }
 
     switch(aEvent.keyCode) {
+      case Ci.nsIDOMKeyEvent.DOM_VK_H:
+        let node = this._selectedContainer.node;
+        if (node.hidden) {
+          this.walker.unhideNode(node).then(() => this.nodeChanged(node));
+        } else {
+          this.walker.hideNode(node).then(() => this.nodeChanged(node));
+        }
+        break;
       case Ci.nsIDOMKeyEvent.DOM_VK_DELETE:
       case Ci.nsIDOMKeyEvent.DOM_VK_BACK_SPACE:
         this.deleteNode(this._selectedContainer.node);
@@ -523,7 +529,7 @@ MarkupView.prototype = {
    */
   nodeChanged: function MT_nodeChanged(aNode)
   {
-    if (aNode === this._inspector.selection) {
+    if (aNode === this._inspector.selection.nodeFront) {
       this._inspector.change("markupview");
     }
   },

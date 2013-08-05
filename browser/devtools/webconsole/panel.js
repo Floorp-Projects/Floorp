@@ -4,29 +4,22 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "WebConsolePanel" ];
+const {Cc, Ci, Cu} = require("chrome");
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "promise",
-    "resource://gre/modules/commonjs/sdk/core/promise.js", "Promise");
-
-XPCOMUtils.defineLazyModuleGetter(this, "HUDService",
-    "resource:///modules/HUDService.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-    "resource:///modules/devtools/shared/event-emitter.js");
+loader.lazyGetter(this, "promise", () => require("sdk/core/promise"));
+loader.lazyGetter(this, "HUDService", () => require("devtools/webconsole/hudservice"));
+loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
 
 /**
  * A DevToolPanel that controls the Web Console.
  */
-function WebConsolePanel(iframeWindow, toolbox) {
+function WebConsolePanel(iframeWindow, toolbox)
+{
   this._frameWindow = iframeWindow;
   this._toolbox = toolbox;
   EventEmitter.decorate(this);
 }
+exports.WebConsolePanel = WebConsolePanel;
 
 WebConsolePanel.prototype = {
   hud: null,

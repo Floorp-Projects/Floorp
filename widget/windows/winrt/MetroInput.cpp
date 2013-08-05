@@ -10,6 +10,7 @@
 #include "nsTArray.h" // Touch lists
 #include "nsIDOMSimpleGestureEvent.h" // Constants for gesture events
 #include "InputData.h"
+#include "UIABridgePrivate.h"
 
 // System headers (alphabetical)
 #include <windows.ui.core.h> // ABI::Window::UI::Core namespace

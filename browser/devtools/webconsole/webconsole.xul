@@ -22,7 +22,12 @@
         width="900" height="350"
         persist="screenX screenY width height sizemode">
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="text/javascript" src="webconsole.js"/>
+  <script type="text/javascript"><![CDATA[
+function goUpdateConsoleCommands() {
+  goUpdateCommand("consoleCmd_openURL");
+  goUpdateCommand("consoleCmd_copyURL");
+}
+  // ]]></script>
 
   <commandset id="editMenuCommands"/>
 
@@ -57,8 +62,7 @@
   <keyset id="editMenuKeys"/>
 
   <popupset id="mainPopupSet">
-    <menupopup id="output-contextmenu"
-               onpopupshowing="ConsoleContextMenu.build(event);">
+    <menupopup id="output-contextmenu">
       <menuitem id="saveBodiesContextMenu" type="checkbox" label="&saveBodies.label;"
                 accesskey="&saveBodies.accesskey;"/>
       <menuitem id="menu_openURL" label="&openURL.label;"
@@ -78,11 +82,8 @@
         <toolbarbutton label="&btnPageNet.label;" type="menu-button"
                        category="net" class="devtools-toolbarbutton webconsole-filter-button"
                        tooltiptext="&btnPageNet.tooltip;"
-#ifdef XP_MACOSX
-                       accesskey="&btnPageNet.accesskeyMacOSX;"
-#else
+                       accesskeyMacOSX="&btnPageNet.accesskeyMacOSX;"
                        accesskey="&btnPageNet.accesskey;"
-#endif
                        tabindex="3">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
