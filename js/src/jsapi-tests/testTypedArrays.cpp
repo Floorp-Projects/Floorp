@@ -80,7 +80,7 @@ TestPlainTypedArray(JSContext *cx)
     CHECK(data = GetData(array));
     *data = 13;
     RootedValue v(cx);
-    CHECK(JS_GetElement(cx, array, 0, v.address()));
+    CHECK(JS_GetElement(cx, array, 0, &v));
     CHECK_SAME(v, INT_TO_JSVAL(13));
 
     return true;
@@ -131,39 +131,39 @@ TestArrayFromBuffer(JSContext *cx)
 
     // Make sure all 3 views reflect the same buffer at the expected locations
     JS::RootedValue v(cx, INT_TO_JSVAL(39));
-    JS_SetElement(cx, array, 0, v.address());
+    JS_SetElement(cx, array, 0, &v);
     JS::RootedValue v2(cx);
-    CHECK(JS_GetElement(cx, array, 0, v2.address()));
+    CHECK(JS_GetElement(cx, array, 0, &v2));
     CHECK_SAME(v, v2);
-    CHECK(JS_GetElement(cx, shortArray, 0, v2.address()));
+    CHECK(JS_GetElement(cx, shortArray, 0, &v2));
     CHECK_SAME(v, v2);
     CHECK_EQUAL(long(JSVAL_TO_INT(v)), long(reinterpret_cast<Element*>(data)[0]));
 
     v = INT_TO_JSVAL(40);
-    JS_SetElement(cx, array, elts / 2, v.address());
-    CHECK(JS_GetElement(cx, array, elts / 2, v2.address()));
+    JS_SetElement(cx, array, elts / 2, &v);
+    CHECK(JS_GetElement(cx, array, elts / 2, &v2));
     CHECK_SAME(v, v2);
-    CHECK(JS_GetElement(cx, ofsArray, 0, v2.address()));
+    CHECK(JS_GetElement(cx, ofsArray, 0, &v2));
     CHECK_SAME(v, v2);
     CHECK_EQUAL(long(JSVAL_TO_INT(v)), long(reinterpret_cast<Element*>(data)[elts / 2]));
 
     v = INT_TO_JSVAL(41);
-    JS_SetElement(cx, array, elts - 1, v.address());
-    CHECK(JS_GetElement(cx, array, elts - 1, v2.address()));
+    JS_SetElement(cx, array, elts - 1, &v);
+    CHECK(JS_GetElement(cx, array, elts - 1, &v2));
     CHECK_SAME(v, v2);
-    CHECK(JS_GetElement(cx, ofsArray, elts / 2 - 1, v2.address()));
+    CHECK(JS_GetElement(cx, ofsArray, elts / 2 - 1, &v2));
     CHECK_SAME(v, v2);
     CHECK_EQUAL(long(JSVAL_TO_INT(v)), long(reinterpret_cast<Element*>(data)[elts - 1]));
 
     JS::RootedObject copy(cx, CreateFromArray(cx, array));
-    CHECK(JS_GetElement(cx, array, 0, v.address()));
-    CHECK(JS_GetElement(cx, copy, 0, v2.address()));
+    CHECK(JS_GetElement(cx, array, 0, &v));
+    CHECK(JS_GetElement(cx, copy, 0, &v2));
     CHECK_SAME(v, v2);
 
     /* The copy should not see changes in the original */
     v2 = INT_TO_JSVAL(42);
-    JS_SetElement(cx, array, 0, v2.address());
-    CHECK(JS_GetElement(cx, copy, 0, v2.address()));
+    JS_SetElement(cx, array, 0, &v2);
+    CHECK(JS_GetElement(cx, copy, 0, &v2));
     CHECK_SAME(v2, v); /* v is still the original value from 'array' */
 
     return true;

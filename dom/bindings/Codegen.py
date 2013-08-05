@@ -2771,7 +2771,7 @@ if (!arr.SetCapacity(length)) {
 }
 for (uint32_t i = 0; i < length; ++i) {
   JS::Rooted<JS::Value> temp(cx);
-  if (!JS_GetElement(cx, seq, i, temp.address())) {
+  if (!JS_GetElement(cx, seq, i, &temp)) {
 %s
   }
   %s& slot = *arr.AppendElement();
@@ -7771,7 +7771,7 @@ class CGDOMJSProxyHandler_getElementIfPresent(ClassMethod):
 JS::Rooted<JSObject*> expando(cx, GetExpandoObject(proxy));
 if (expando) {
   JSBool isPresent;
-  if (!JS_GetElementIfPresent(cx, expando, index, expando, vp.address(), &isPresent)) {
+  if (!JS_GetElementIfPresent(cx, expando, index, expando, vp, &isPresent)) {
     return false;
   }
   if (isPresent) {
@@ -7791,7 +7791,7 @@ if (!js::GetObjectProto(cx, proxy, &proto)) {
 }
 if (proto) {
   JSBool isPresent;
-  if (!JS_GetElementIfPresent(cx, proto, index, proxy, vp.address(), &isPresent)) {
+  if (!JS_GetElementIfPresent(cx, proto, index, proxy, vp, &isPresent)) {
     return false;
   }
   *present = isPresent;

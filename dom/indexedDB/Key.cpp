@@ -152,7 +152,7 @@ Key::EncodeJSValInternal(JSContext* aCx, const jsval aVal,
 
       for (uint32_t index = 0; index < length; index++) {
         JS::Rooted<JS::Value> val(aCx);
-        if (!JS_GetElement(aCx, obj, index, val.address())) {
+        if (!JS_GetElement(aCx, obj, index, &val)) {
           return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
@@ -205,15 +205,15 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
     }
 
     uint32_t index = 0;
+    JS::Rooted<JS::Value> val(aCx);
     while (aPos < aEnd && *aPos - aTypeOffset != eTerminator) {
-      JS::Rooted<JS::Value> val(aCx);
       nsresult rv = DecodeJSValInternal(aPos, aEnd, aCx, aTypeOffset,
                                         &val, aRecursionDepth + 1);
       NS_ENSURE_SUCCESS(rv, rv);
 
       aTypeOffset = 0;
 
-      if (!JS_SetElement(aCx, array, index++, val.address())) {
+      if (!JS_SetElement(aCx, array, index++, &val)) {
         NS_WARNING("Failed to set array element!");
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }

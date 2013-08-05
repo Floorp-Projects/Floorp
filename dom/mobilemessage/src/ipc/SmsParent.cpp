@@ -120,7 +120,7 @@ GetParamsFromSendMmsMessageRequest(JSContext* aCx,
       MmsAttachmentDataToJSObject(aCx, aRequest.attachments().ElementAt(i)));
     NS_ENSURE_TRUE(obj, false);
     JS::Rooted<JS::Value> val(aCx, JS::ObjectValue(*obj));
-    if (!JS_SetElement(aCx, attachmentArray, i, val.address())) {
+    if (!JS_SetElement(aCx, attachmentArray, i, &val)) {
       return false;
     }
   }

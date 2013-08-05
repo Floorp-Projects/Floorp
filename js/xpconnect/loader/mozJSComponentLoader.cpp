@@ -1309,7 +1309,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
         RootedValue value(mContext);
         RootedId symbolId(mContext);
         for (uint32_t i = 0; i < symbolCount; ++i) {
-            if (!JS_GetElement(mContext, symbolsObj, i, value.address()) ||
+            if (!JS_GetElement(mContext, symbolsObj, i, &value) ||
                 !value.isString() ||
                 !JS_ValueToId(mContext, value, symbolId.address())) {
                 return ReportOnCaller(cxhelper, ERROR_ARRAY_ELEMENT,
