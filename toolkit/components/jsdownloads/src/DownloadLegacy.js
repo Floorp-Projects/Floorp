@@ -164,16 +164,16 @@ DownloadLegacyTransfer.prototype = {
   init: function DLT_init(aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime,
                           aTempFile, aCancelable, aIsPrivate)
   {
-
-    let launchWhenSuccedded = false, contentType = null, launcherPath = null;
+    let launchWhenSucceeded = false, contentType = null, launcherPath = null;
 
     if (aMIMEInfo instanceof Ci.nsIMIMEInfo) {
-      launchWhenSuccedded = aMIMEInfo.preferredAction != Ci.nsIMIMEInfo.saveToDisk;
+      launchWhenSucceeded =
+                aMIMEInfo.preferredAction != Ci.nsIMIMEInfo.saveToDisk;
       contentType = aMIMEInfo.type;
-      let appHandler = aMIMEInfo.preferredApplicationHandler;
 
+      let appHandler = aMIMEInfo.preferredApplicationHandler;
       if (appHandler instanceof Ci.nsILocalHandlerApp) {
-        launcherPath = localHandler.executable.path;
+        launcherPath = appHandler.executable.path;
       }
     }
 
@@ -185,7 +185,7 @@ DownloadLegacyTransfer.prototype = {
       target: { path: aTarget.QueryInterface(Ci.nsIFileURL).file.path,
                 partFilePath: aTempFile && aTempFile.path },
       saver: "legacy",
-      launchWhenSuccedded: launchWhenSuccedded,
+      launchWhenSucceeded: launchWhenSucceeded,
       contentType: contentType,
       launcherPath: launcherPath
     }).then(function DLT_I_onDownload(aDownload) {

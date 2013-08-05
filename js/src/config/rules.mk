@@ -442,7 +442,7 @@ define SUBMAKE # $(call SUBMAKE,target,directory,static)
 endef # The extra line is important here! don't delete it
 
 define TIER_DIR_SUBMAKE
-@echo "BUILDSTATUS TIERDIR_START $(2)"
+@echo "BUILDSTATUS TIERDIR_START  $(2)"
 $(call SUBMAKE,$(1),$(2),$(3))
 @echo "BUILDSTATUS TIERDIR_FINISH $(2)"
 

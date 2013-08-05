@@ -321,23 +321,22 @@
   <!-- Search suggestions opt-in -->
   <string name="suggestions_prompt">&suggestions_prompt2;</string>
 
-  <!-- Wallpaper Notifications -->
-  <string name="wallpaper_success">&wallpaper_success;</string>
-  <string name="wallpaper_progress">&wallpaper_progress;</string>
-  <string name="wallpaper_fail">&wallpaper_fail;</string>
+  <!-- Set Image Notifications -->
+  <string name="set_image_fail">&set_image_fail;</string>
+  <string name="set_image_chooser_title">&set_image_chooser_title;</string>
 
   <!-- Contacts API -->
   <string name="contacts_account_chooser_dialog_title">Share contacts from...</string>
 
 
   <!-- Guest mode -->
-  <string name="enter_guest_mode">&enter_guest_mode;</string>
-  <string name="exit_guest_mode">&exit_guest_mode;</string>
-  <string name="guest_mode_dialog_continue">&guest_mode_dialog_continue;</string>
-  <string name="guest_mode_dialog_cancel">&guest_mode_dialog_cancel;</string>
-  <string name="guest_mode_enter_title">&guest_mode_enter_title;</string>
-  <string name="guest_mode_enter_text">&guest_mode_enter_text;</string>
+  <string name="new_guest_session">&new_guest_session;</string>
+  <string name="exit_guest_session">&exit_guest_session;</string>
+  <string name="guest_session_dialog_continue">&guest_session_dialog_continue;</string>
+  <string name="guest_session_dialog_cancel">&guest_session_dialog_cancel;</string>
+  <string name="new_guest_session_title">&new_guest_session_title;</string>
+  <string name="new_guest_session_text">&new_guest_session_text;</string>
 
-  <string name="guest_mode_leave_title">&guest_mode_leave_title;</string>
-  <string name="guest_mode_leave_text">&guest_mode_leave_text;</string>
+  <string name="exit_guest_session_title">&exit_guest_session_title;</string>
+  <string name="exit_guest_session_text">&exit_guest_session_text;</string>
 </resources>

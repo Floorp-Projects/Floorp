@@ -44,6 +44,7 @@ public:
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE
   {
     return TextureFactoryIdentifier(LAYERS_OPENGL,
+                                    XRE_GetProcessType(),
                                     GetMaxTextureSize(),
                                     mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
                                     SupportsPartialTextureUpdate());

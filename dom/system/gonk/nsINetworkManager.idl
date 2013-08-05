@@ -108,10 +108,23 @@ interface nsINetworkStatsCallback : nsISupports
                              in jsval date);
 };
 
+[scriptable, function, uuid(9ede8720-f8bc-11e2-b778-0800200c9a66)]
+interface nsIWifiOperationModeCallback : nsISupports
+{
+  /**
+   * Callback function used to report result to WifiManager.
+   *
+   * @param error
+   *        An error message if the operation wasn't successful,
+   *        or `null` if it was.
+   */
+  void wifiOperationModeResult(in jsval error);
+};
+
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(f39a0fb6-2752-47d2-943e-a0cdd3e43494)]
+[scriptable, uuid(5b22c620-f8b9-11e2-b778-0800200c9a66)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -208,4 +221,19 @@ interface nsINetworkManager : nsISupports
    */
   void getNetworkInterfaceStats(in DOMString networkName, in nsINetworkStatsCallback callback);
 
+  /**
+   * Reload Wifi firmware to specific operation mode.
+   *
+   * @param interfaceName
+   *        Wifi Network interface name.
+   *
+   * @param mode
+   *        AP  - Access pointer mode.
+   *        P2P - Peer to peer connection mode.
+   *        STA - Station mode.
+   *
+   * @param callback
+   *        Callback to notify Wifi firmware reload result.
+   */
+  void setWifiOperationMode(in DOMString interfaceName, in DOMString mode, in nsIWifiOperationModeCallback callback);
 };

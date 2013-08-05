@@ -47,11 +47,13 @@ gTests.push({
     is(Elements.findbar.isShowing, false, "Find bar is still hidden");
 
     EventUtils.synthesizeKey("f", { accelKey: true });
-    yield waitForEvent(Elements.navbar, "transitionend");
+    yield Promise.all(waitForEvent(Elements.navbar, "transitionend"),
+                      waitForEvent(Elements.findbar, "transitionend"));
     is(ContextUI.navbarVisible, false, "Navbar is hidden");
     is(Elements.findbar.isShowing, true, "Findbar is visible");
 
-    yield showNavBar();
+    yield Promise.all(showNavBar(),
+                      waitForEvent(Elements.findbar, "transitionend"));
     is(ContextUI.navbarVisible, true, "Navbar is visible again");
     is(Elements.findbar.isShowing, false, "Find bar is hidden again");
 

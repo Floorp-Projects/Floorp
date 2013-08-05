@@ -932,7 +932,8 @@ class IDLInterface(IDLObjectWithScope):
             elif (identifier == "Pref" or
                   identifier == "JSImplementation" or
                   identifier == "HeaderFile" or
-                  identifier == "NavigatorProperty"):
+                  identifier == "NavigatorProperty" or
+                  identifier == "Func"):
                 # Known extended attributes that take a string value
                 if not attr.hasValue():
                     raise WebIDLError("[%s] must have a value" % identifier,

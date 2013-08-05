@@ -6,45 +6,29 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const {Cc, Ci, Cu} = require("chrome");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
-                                   "@mozilla.org/widget/clipboardhelper;1",
-                                   "nsIClipboardHelper");
-
-XPCOMUtils.defineLazyModuleGetter(this, "GripClient",
-                                  "resource://gre/modules/devtools/dbg-client.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "NetworkPanel",
-                                  "resource:///modules/NetworkPanel.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "AutocompletePopup",
-                                  "resource:///modules/devtools/AutocompletePopup.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "promise",
-                                  "resource://gre/modules/commonjs/sdk/core/promise.js", "Promise");
-
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
-                                  "resource:///modules/devtools/VariablesView.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
-                                  "resource:///modules/devtools/VariablesViewController.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource:///modules/devtools/shared/event-emitter.js");
-
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource://gre/modules/devtools/Loader.jsm");
+loader.lazyServiceGetter(this, "clipboardHelper",
+                         "@mozilla.org/widget/clipboardhelper;1",
+                         "nsIClipboardHelper");
+loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
+loader.lazyGetter(this, "promise", () => require("sdk/core/promise"));
+loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
+loader.lazyGetter(this, "AutocompletePopup",
+                  () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
+loader.lazyGetter(this, "ToolSidebar",
+                  () => require("devtools/framework/sidebar").ToolSidebar);
+loader.lazyGetter(this, "NetworkPanel",
+                  () => require("devtools/webconsole/network-panel").NetworkPanel);
+loader.lazyGetter(this, "ConsoleOutput",
+                  () => require("devtools/webconsole/console-output").ConsoleOutput);
+loader.lazyGetter(this, "Messages",
+                  () => require("devtools/webconsole/console-output").Messages);
+loader.lazyImporter(this, "GripClient", "resource://gre/modules/devtools/dbg-client.jsm");
+loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
+loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -191,6 +175,7 @@ const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
  * The WebConsoleFrame is responsible for the actual Web Console UI
  * implementation.
  *
+ * @constructor
  * @param object aWebConsoleOwner
  *        The WebConsole owner object.
  */
@@ -198,12 +183,15 @@ function WebConsoleFrame(aWebConsoleOwner)
 {
   this.owner = aWebConsoleOwner;
   this.hudId = this.owner.hudId;
+  this.window = this.owner.iframeWindow;
 
   this._repeatNodes = {};
   this._outputQueue = [];
   this._pruneCategoriesQueue = {};
   this._networkRequests = {};
   this.filterPrefs = {};
+
+  this.output = new ConsoleOutput(this);
 
   this._toggleFilter = this._toggleFilter.bind(this);
   this._flushMessageQueue = this._flushMessageQueue.bind(this);
@@ -213,11 +201,12 @@ function WebConsoleFrame(aWebConsoleOwner)
 
   EventEmitter.decorate(this);
 }
+exports.WebConsoleFrame = WebConsoleFrame;
 
 WebConsoleFrame.prototype = {
   /**
    * The WebConsole instance that owns this frame.
-   * @see HUDService.jsm::WebConsole
+   * @see hudservice.js::WebConsole
    * @type object
    */
   owner: null,
@@ -340,6 +329,12 @@ WebConsoleFrame.prototype = {
    * @type nsIDOMElement
    */
   outputNode: null,
+
+  /**
+   * The ConsoleOutput instance that manages all output.
+   * @type object
+   */
+  output: null,
 
   /**
    * The input element that allows the user to filter messages by string.
@@ -471,9 +466,6 @@ WebConsoleFrame.prototype = {
    */
   _initUI: function WCF__initUI()
   {
-    // Remember that this script is loaded in the webconsole.xul context:
-    // |window| is the iframe global.
-    this.window = window;
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
 
@@ -482,6 +474,8 @@ WebConsoleFrame.prototype = {
     // Register the controller to handle "select all" properly.
     this._commandController = new CommandController(this);
     this.window.controllers.insertControllerAt(0, this._commandController);
+
+    this._contextMenuHandler = new ConsoleContextMenu(this);
 
     let doc = this.document;
 
@@ -625,6 +619,12 @@ WebConsoleFrame.prototype = {
       // are just log messages. The Web Console does not show such messages.
       let jslog = this.document.querySelector("menuitem[prefKey=jslog]");
       jslog.hidden = true;
+    }
+
+    if (Services.appinfo.OS == "Darwin") {
+      let net = this.document.querySelector("toolbarbutton[category=net]");
+      let accesskey = net.getAttribute("accesskeyMacOSX");
+      net.setAttribute("accesskey", accesskey);
     }
   },
 
@@ -842,8 +842,6 @@ WebConsoleFrame.prototype = {
         node.classList.add("hud-filtered-by-type");
       }
     }
-
-    this.regroupOutput();
   },
 
   /**
@@ -870,8 +868,6 @@ WebConsoleFrame.prototype = {
         node.classList.add("hud-filtered-by-string");
       }
     }
-
-    this.regroupOutput();
   },
 
   /**
@@ -1763,6 +1759,35 @@ WebConsoleFrame.prototype = {
   },
 
   /**
+   * Handler for the tabNavigated notification.
+   *
+   * @param string aEvent
+   *        Event name.
+   * @param object aPacket
+   *        Notification packet received from the server.
+   */
+  handleTabNavigated: function WCF_handleTabNavigated(aEvent, aPacket)
+  {
+    if (aEvent == "will-navigate") {
+      if (this.persistLog) {
+        let marker = new Messages.NavigationMarker(aPacket.url, Date.now());
+        this.output.addMessage(marker);
+      }
+      else {
+        this.jsterm.clearOutput();
+      }
+    }
+
+    if (aPacket.url) {
+      this.onLocationChange(aPacket.url, aPacket.title);
+    }
+
+    if (aEvent == "navigate" && !aPacket.nativeConsoleAPI) {
+      this.logWarningAboutReplacedAPI();
+    }
+  },
+
+  /**
    * Output a message node. This filters a node appropriately, then sends it to
    * the output, regrouping and pruning output as necessary.
    *
@@ -1873,11 +1898,6 @@ WebConsoleFrame.prototype = {
         removedNodes += this.pruneOutputIfNecessary(aCategory);
       }, this);
       this._pruneCategoriesQueue = {};
-    }
-
-    // Regroup messages at the end of the queue.
-    if (!this._outputQueue.length) {
-      this.regroupOutput();
     }
 
     let isInputOutput = lastVisibleNode &&
@@ -2145,29 +2165,6 @@ WebConsoleFrame.prototype = {
 
     if (aNode.parentNode) {
       aNode.parentNode.removeChild(aNode);
-    }
-  },
-
-  /**
-   * Splits the given console messages into groups based on their timestamps.
-   */
-  regroupOutput: function WCF_regroupOutput()
-  {
-    // Go through the nodes and adjust the placement of "webconsole-new-group"
-    // classes.
-    let nodes = this.outputNode.querySelectorAll(".hud-msg-node" +
-      ":not(.hud-filtered-by-string):not(.hud-filtered-by-type)");
-    let lastTimestamp;
-    for (let i = 0, n = nodes.length; i < n; i++) {
-      let thisTimestamp = nodes[i].timestamp;
-      if (lastTimestamp != null &&
-          thisTimestamp >= lastTimestamp + NEW_GROUP_DELAY) {
-        nodes[i].classList.add("webconsole-new-group");
-      }
-      else {
-        nodes[i].classList.remove("webconsole-new-group");
-      }
-      lastTimestamp = thisTimestamp;
     }
   },
 
@@ -2634,7 +2631,6 @@ WebConsoleFrame.prototype = {
 
     // Gather up the selected items and concatenate their clipboard text.
     let strings = [];
-    let newGroup = false;
 
     let children = this.outputNode.children;
 
@@ -2644,21 +2640,10 @@ WebConsoleFrame.prototype = {
         continue;
       }
 
-      // Add dashes between groups so that group boundaries show up in the
-      // copied output.
-      if (i > 0 && item.classList.contains("webconsole-new-group")) {
-        newGroup = true;
-      }
-
       // Ensure the selected item hasn't been filtered by type or string.
       if (!item.classList.contains("hud-filtered-by-type") &&
           !item.classList.contains("hud-filtered-by-string")) {
         let timestampString = l10n.timestampString(item.timestamp);
-        if (newGroup) {
-          strings.push("--");
-          newGroup = false;
-        }
-
         if (aOptions.linkOnly) {
           strings.push(item.url);
         }
@@ -2752,6 +2737,13 @@ WebConsoleFrame.prototype = {
     if (this.jsterm) {
       this.jsterm.destroy();
       this.jsterm = null;
+    }
+    this.output.destroy();
+    this.output = null;
+
+    if (this._contextMenuHandler) {
+      this._contextMenuHandler.destroy();
+      this._contextMenuHandler = null;
     }
 
     this._commandController = null;
@@ -3288,7 +3280,6 @@ JSTerm.prototype = {
   _createSidebar: function JST__createSidebar()
   {
     let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
-    let ToolSidebar = devtools.require("devtools/framework/sidebar").ToolSidebar;
     this.sidebar = new ToolSidebar(tabbox, this, "webconsole");
     this.sidebar.show();
   },
@@ -4990,17 +4981,7 @@ WebConsoleConnectionProxy.prototype = {
       return;
     }
 
-    if (aEvent == "will-navigate" && !this.owner.persistLog) {
-      this.owner.jsterm.clearOutput();
-    }
-
-    if (aPacket.url) {
-      this.owner.onLocationChange(aPacket.url, aPacket.title);
-    }
-
-    if (aEvent == "navigate" && !aPacket.nativeConsoleAPI) {
-      this.owner.logWarningAboutReplacedAPI();
-    }
+    this.owner.handleTabNavigated(aEvent, aPacket);
   },
 
   /**
@@ -5063,40 +5044,35 @@ function gSequenceId()
 gSequenceId.n = 0;
 
 
-function goUpdateConsoleCommands() {
-  goUpdateCommand("consoleCmd_openURL");
-  goUpdateCommand("consoleCmd_copyURL");
-}
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // Context Menu
 ///////////////////////////////////////////////////////////////////////////////
 
-const CONTEXTMENU_ID = "output-contextmenu";
-
 /*
- * ConsoleContextMenu: This handle to show/hide a context menu item.
+ * ConsoleContextMenu this used to handle the visibility of context menu items.
+ *
+ * @constructor
+ * @param object aOwner
+ *        The WebConsoleFrame instance that owns this object.
  */
-let ConsoleContextMenu = {
+function ConsoleContextMenu(aOwner)
+{
+  this.owner = aOwner;
+  this.popup = this.owner.document.getElementById("output-contextmenu");
+  this.build = this.build.bind(this);
+  this.popup.addEventListener("popupshowing", this.build);
+}
+
+ConsoleContextMenu.prototype = {
   /*
    * Handle to show/hide context menu item.
-   *
-   * @param nsIDOMEvent aEvent
    */
   build: function CCM_build(aEvent)
   {
-    let popup = aEvent.target;
-    if (popup.id !== CONTEXTMENU_ID) {
-      return;
-    }
-
-    let view = document.querySelector(".hud-output-node");
+    let view = this.owner.outputNode;
     let metadata = this.getSelectionMetadata(view);
 
-    for (let i = 0, l = popup.childNodes.length; i < l; ++i) {
-      let element = popup.childNodes[i];
+    for (let element of this.popup.children) {
       element.hidden = this.shouldHideMenuItem(element, metadata);
     }
   },
@@ -5173,4 +5149,15 @@ let ConsoleContextMenu = {
 
     return shouldHide;
   },
+
+  /**
+   * Destroy the ConsoleContextMenu object instance.
+   */
+  destroy: function CCM_destroy()
+  {
+    this.popup.removeEventListener("popupshowing", this.build);
+    this.popup = null;
+    this.owner = null;
+  },
 };
+

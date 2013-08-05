@@ -498,3 +498,4 @@ needs-focus pref(accessibility.browsewithcaret,true) load 868906.html
 test-pref(layout.css.flexbox.enabled,true) load 866547-1.html
 asserts(1-4) test-pref(layout.css.flexbox.enabled,true) load 876074-1.html # bug 876749
 load 885009-1.html
+load 893523.html

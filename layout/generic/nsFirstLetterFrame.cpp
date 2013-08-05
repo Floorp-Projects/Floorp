@@ -70,8 +70,7 @@ nsFirstLetterFrame::Init(nsIContent*      aContent,
     if (parentStyleContext) {
       newSC = PresContext()->StyleSet()->
         ResolveStyleForNonElement(parentStyleContext);
-      if (newSC)
-        SetStyleContextWithoutNotification(newSC);
+      SetStyleContextWithoutNotification(newSC);
     }
   }
 
@@ -328,9 +327,7 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
   if (parentSC) {
     nsRefPtr<nsStyleContext> newSC;
     newSC = presShell->StyleSet()->ResolveStyleForNonElement(parentSC);
-    if (newSC) {
-      continuation->SetStyleContext(newSC);
-    }
+    continuation->SetStyleContext(newSC);
   }
 
   //XXX Bidi may not be involved but we have to use the list name
@@ -381,9 +378,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
       NS_ASSERTION(kidContent->IsNodeOfType(nsINode::eTEXT),
                    "should contain only text nodes");
       sc = aPresContext->StyleSet()->ResolveStyleForNonElement(mStyleContext);
-      if (sc) {
-        kid->SetStyleContext(sc);
-      }
+      kid->SetStyleContext(sc);
     }
   }
 }

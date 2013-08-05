@@ -161,6 +161,7 @@ void
 CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier)
 {
   mTextureFactoryIdentifier = aIdentifier;
+  mMultiProcess = aIdentifier.mParentProcessId != XRE_GetProcessType();
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder()
@@ -407,9 +408,16 @@ ShadowLayerForwarder::UpdatedTexture(CompositableClient* aCompositable,
 {
   MaybeRegion region = aRegion ? MaybeRegion(*aRegion)
                                : MaybeRegion(null_t());
-  mTxn->AddEdit(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
-                                aTexture->GetID(),
-                                region));
+  if (aTexture->GetFlags() & TEXTURE_IMMEDIATE_UPLOAD) {
+    mTxn->AddPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
+                                   aTexture->GetID(),
+                                   region));
+  } else {
+    mTxn->AddNoSwapPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
+                                         aTexture->GetID(),
+                                         region));
+
+  }
 }
 
 void

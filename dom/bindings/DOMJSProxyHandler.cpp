@@ -266,11 +266,13 @@ DOMProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid
   return ok;
 }
 
+/* static */
 bool
 DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx,
                                         JS::Handle<JSObject*> proxy,
                                         nsTArray<nsString>& names,
                                         bool shadowPrototypeProperties,
+                                        DOMProxyHandler* handler,
                                         JS::AutoIdVector& props)
 {
   for (uint32_t i = 0; i < names.Length(); ++i) {
@@ -285,7 +287,7 @@ DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx,
     }
 
     if (shadowPrototypeProperties ||
-        !HasPropertyOnPrototype(cx, proxy, this, id)) {
+        !HasPropertyOnPrototype(cx, proxy, handler, id)) {
       if (!props.append(id)) {
         return false;
       }

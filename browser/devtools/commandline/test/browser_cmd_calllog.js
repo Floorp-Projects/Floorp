@@ -3,8 +3,6 @@
 
 // Tests that the calllog commands works as they should
 
-let HUDService = (Cu.import("resource:///modules/HUDService.jsm", {})).HUDService;
-
 const TEST_URI = "data:text/html;charset=utf-8,gcli-calllog";
 
 let tests = {};
@@ -55,7 +53,7 @@ tests.testCallLogExec = function(options) {
 
     subject.QueryInterface(Ci.nsISupportsString);
     let hud = HUDService.getHudReferenceById(subject.data);
-    ok(hud.hudId in HUDService.hudReferences, "console open");
+    ok(hud, "console open");
 
     helpers.audit(options, [
       {

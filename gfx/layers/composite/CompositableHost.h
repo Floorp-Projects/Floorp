@@ -187,13 +187,18 @@ public:
   virtual void Attach(Layer* aLayer, Compositor* aCompositor)
   {
     MOZ_ASSERT(aCompositor, "Compositor is required");
+    MOZ_ASSERT(!IsAttached());
     SetCompositor(aCompositor);
     SetLayer(aLayer);
+    mAttached = true;
   }
-  void Detach() {
+  void Detach()
+  {
     SetLayer(nullptr);
     SetCompositor(nullptr);
+    mAttached = false;
   }
+  bool IsAttached() { return mAttached; }
 
   virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
@@ -219,6 +224,7 @@ protected:
   Compositor* mCompositor;
   Layer* mLayer;
   RefPtr<TextureHost> mFirstTexture;
+  bool mAttached;
 };
 
 class CompositableParentManager;

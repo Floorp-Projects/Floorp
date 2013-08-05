@@ -393,6 +393,8 @@ protected:
       }
     }
 #elif defined(_M_X64)
+    byteptr_t directJmpAddr;
+
     while (nBytes < 13) {
 
       // if found JMP 32bit offset, next bytes must be NOP 
@@ -478,9 +480,22 @@ protected:
           }
         } else if (origBytes[nBytes] == 0xc7) {
           // MOV r/m64, imm32
-          if (origBytes[nBytes + 1] & 0xf8 == 0x40) {
+          if ((origBytes[nBytes + 1] & 0xf8) == 0x40) {
             nBytes += 6;
           } else {
+            return;
+          }
+        } else if (origBytes[nBytes] == 0xff) {
+          pJmp32 = nBytes - 1;
+          // JMP /4
+          if ((origBytes[nBytes+1] & 0xc0) == 0x0 &&
+              (origBytes[nBytes+1] & 0x07) == 0x5) {
+            // [rip+disp32]
+            // convert JMP 32bit offset to JMP 64bit direct
+            directJmpAddr = (byteptr_t)*((uint64_t*)(origBytes + nBytes + 6 + (*((uint32_t*)(origBytes + nBytes + 2)))));
+            nBytes += 6;
+          } else {
+            // not support yet!
             return;
           }
         } else {
@@ -501,6 +516,8 @@ protected:
         nBytes++;
       } else if (origBytes[nBytes] == 0xe9) {
         pJmp32 = nBytes;
+        // convert JMP 32bit offset to JMP 64bit direct
+        directJmpAddr = origBytes + pJmp32 + 5 + (*((uint32_t*)(origBytes + pJmp32 + 1)));
         // jmp 32bit offset
         nBytes += 5;
       } else if (origBytes[nBytes] == 0xff) {
@@ -547,8 +564,6 @@ protected:
 #elif defined(_M_X64)
     // If JMP32 opcode found, we don't insert to trampoline jump 
     if (pJmp32 >= 0) {
-      // convert JMP 32bit offset to JMP 64bit direct
-      byteptr_t directJmpAddr = origBytes + pJmp32 + 5 + (*((LONG*)(origBytes+pJmp32+1)));
       // mov r11, address
       tramp[pJmp32]   = 0x49;
       tramp[pJmp32+1] = 0xbb;
