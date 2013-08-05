@@ -6025,34 +6025,6 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
   return nullptr;
 }
 
-bool
-nsContentUtils::GetContentSecurityPolicy(JSContext* aCx,
-                                         nsIContentSecurityPolicy** aCSP)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  // Get the security manager
-  nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
-
-  if (!ssm) {
-    NS_ERROR("Failed to get security manager service");
-    return false;
-  }
-
-  nsCOMPtr<nsIPrincipal> subjectPrincipal = ssm->GetCxSubjectPrincipal(aCx);
-  NS_ASSERTION(subjectPrincipal, "Failed to get subjectPrincipal");
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
-  if (NS_FAILED(rv)) {
-    NS_ERROR("CSP: Failed to get CSP from principal.");
-    return false;
-  }
-
-  csp.forget(aCSP);
-  return true;
-}
-
 // static
 bool
 nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
