@@ -4207,7 +4207,6 @@ BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
-MOZ_ANDROID_WALLPAPER=
 MOZ_ANDROID_BEAM=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
@@ -5164,13 +5163,6 @@ MOZ_ARG_DISABLE_BOOL(websms-backend,
 
 if test -n "$MOZ_WEBSMS_BACKEND"; then
     AC_DEFINE(MOZ_WEBSMS_BACKEND)
-fi
-
-dnl ========================================================
-dnl = Enable SET_WALLPAPER permission on Android
-dnl ========================================================
-if test -n "$MOZ_ANDROID_WALLPAPER"; then
-    AC_DEFINE(MOZ_ANDROID_WALLPAPER)
 fi
 
 dnl ========================================================
@@ -8612,7 +8604,6 @@ AC_SUBST(MOZ_METRO)
 
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
-AC_SUBST(MOZ_ANDROID_WALLPAPER)
 AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)

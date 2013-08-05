@@ -6,28 +6,17 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const {Cc, Ci, Cu} = require("chrome");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+loader.lazyGetter(this, "NetworkHelper", () => require("devtools/toolkit/webconsole/network-helper"));
+loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
+loader.lazyServiceGetter(this, "mimeService", "@mozilla.org/mime;1", "nsIMIMEService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "mimeService", "@mozilla.org/mime;1",
-                                   "nsIMIMEService");
-
-XPCOMUtils.defineLazyModuleGetter(this, "NetworkHelper",
-                                  "resource://gre/modules/devtools/NetworkHelper.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
+let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
-this.EXPORTED_SYMBOLS = ["NetworkPanel"];
 
 /**
  * Creates a new NetworkPanel.
@@ -41,7 +30,6 @@ this.EXPORTED_SYMBOLS = ["NetworkPanel"];
  *        The parent WebConsoleFrame object that owns this network panel
  *        instance.
  */
-this.NetworkPanel =
 function NetworkPanel(aParent, aHttpActivity, aWebConsoleFrame)
 {
   let doc = aParent.ownerDocument;
@@ -108,6 +96,7 @@ function NetworkPanel(aParent, aHttpActivity, aWebConsoleFrame)
 
   aParent.appendChild(this.panel);
 }
+exports.NetworkPanel = NetworkPanel;
 
 NetworkPanel.prototype =
 {
