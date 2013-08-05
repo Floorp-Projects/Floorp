@@ -109,6 +109,23 @@ class SearchEngineRow extends AnimatedHeightLayout {
         mUserEnteredView.setOnClickListener(mClickListener);
 
         mUserEnteredTextView = (TextView) findViewById(R.id.suggestion_text);
+
+        // Handle clicks on this row that don't happen on individual suggestion views.
+        setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Don't do anything if we are showing suggestions.
+                if (mSearchEngine.suggestions.size() > 0) {
+                    return;
+                }
+
+                // Otherwise, perform a search for the user entered term.
+                String searchTerm = getSuggestionTextFromView(mUserEnteredView);
+                if (mSearchListener != null) {
+                    mSearchListener.onSearch(mSearchEngine.name, searchTerm);
+                }
+            }
+        });
     }
 
     private String getSuggestionTextFromView(View v) {
