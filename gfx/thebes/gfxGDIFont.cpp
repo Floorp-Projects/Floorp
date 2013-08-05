@@ -14,10 +14,15 @@
 #include "gfxGraphiteShaper.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxContext.h"
+#include "mozilla/Preferences.h"
+#include "nsUnicodeProperties.h"
 
 #include "cairo-win32.h"
 
 #define ROUND(x) floor((x) + 0.5)
+
+using namespace mozilla;
+using namespace mozilla::unicode;
 
 static inline cairo_antialias_t
 GetCairoAntialiasOption(gfxFont::AntialiasOption anAntialiasOption)
@@ -139,7 +144,12 @@ gfxGDIFont::ShapeText(gfxContext      *aContext,
     }
 
     if (!ok && mHarfBuzzShaper) {
-        if (gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aScript)) {
+        if (gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aScript) ||
+            (gfxWindowsPlatform::WindowsOSVersion() <
+                 gfxWindowsPlatform::kWindowsVista &&
+             ScriptShapingType(aScript) == SHAPING_INDIC &&
+             !Preferences::GetBool("gfx.font_rendering.winxp-indic-uniscribe",
+                                   false))) {
             ok = mHarfBuzzShaper->ShapeText(aContext, aText, aOffset, aLength,
                                             aScript, aShapedText);
         }
