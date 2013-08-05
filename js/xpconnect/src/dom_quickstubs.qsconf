@@ -19,7 +19,6 @@ members = [
     #
     # Note that many implementations of interfaces in this directory
     # use GetCurrentNativeCallContext, notably:
-    #   - nsIDOMCrypto.{generateCRMFRequest,signText}
     #   - nsIDOMLocation.reload
     #   - nsIDOMNSHistory.go
     #   - nsIDOMJSPluginArray.refresh

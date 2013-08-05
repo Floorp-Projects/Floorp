@@ -16,6 +16,7 @@ MOCHITEST_CHROME_FILES	= \
 	inspector-traversal-data.html \
 	test_inspector-changeattrs.html \
 	test_inspector-changevalue.html \
+	test_inspector-hide.html \
 	test_inspector-insert.html \
 	test_inspector-mutations-attr.html \
 	test_inspector-mutations-childlist.html \

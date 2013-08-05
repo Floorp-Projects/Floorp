@@ -137,10 +137,6 @@ InspectorPanel.prototype = {
       // All the components are initialized. Let's select a node.
       this._selection.setNodeFront(defaultSelection);
 
-      if (this.highlighter) {
-        this.highlighter.unlock();
-      }
-
       this.markup.expandNode(this.selection.nodeFront);
 
       this.emit("ready");

@@ -75,11 +75,11 @@
           android:icon="@drawable/ic_menu_settings"
           android:title="@string/settings" />
 
-    <item android:id="@+id/enter_guest_mode"
+    <item android:id="@+id/new_guest_session"
           android:visible="false"
-          android:title="@string/enter_guest_mode"/>
+          android:title="@string/new_guest_session"/>
 
-    <item android:id="@+id/exit_guest_mode"
+    <item android:id="@+id/exit_guest_session"
           android:visible="false"
-          android:title="@string/exit_guest_mode"/>
+          android:title="@string/exit_guest_session"/>
 </menu>

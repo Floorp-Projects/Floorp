@@ -32,7 +32,7 @@ function test()
     openConsole(null, function(aHud) {
       hud = aHud;
 
-      HUDService.lastFinishedRequestCallback = requestCallbackWrapper;
+      HUDService.lastFinishedRequest.callback = requestCallbackWrapper;
 
       executeSoon(testPageLoad);
     });
@@ -204,7 +204,7 @@ function testNetworkPanel()
     // All tests are done. Shutdown.
     networkPanel.panel.hidePopup();
     lastRequest = null;
-    HUDService.lastFinishedRequestCallback = null;
+    HUDService.lastFinishedRequest.callback = null;
     executeSoon(finishTest);
   }, true);
 }
