@@ -1641,7 +1641,7 @@ var NativeWindow = {
         type: "PageActions:Add",
         id: id,
         title: aOptions.title,
-        icon: resolveGeckoUri(aOptions.icon)
+        icon: resolveGeckoURI(aOptions.icon)
       });
       this._items[id] = {
         clickCallback: aOptions.clickCallback,
