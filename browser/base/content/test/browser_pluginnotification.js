@@ -94,6 +94,22 @@ function prepareTest(nextTest, url) {
   gTestBrowser.contentWindow.location = url;
 }
 
+// Due to layout being async, "PluginBindAttached" may trigger later.
+// This wraps a function to force a layout flush, thus triggering it,
+// and schedules the function execution so they're definitely executed
+// afterwards.
+function runAfterPluginBindingAttached(func) {
+  let doc = gTestBrowser.contentDocument;
+  return function() {
+    let elems = doc.getElementsByTagName('embed');
+    if (elems.length < 1) {
+      elems = doc.getElementsByTagName('object');
+    }
+    elems[0].clientTop;
+    executeSoon(func);
+  };
+}
+
 // Tests a page with an unknown plugin in it.
 function test1() {
   ok(PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 1, Should have displayed the missing plugin notification");
@@ -109,7 +125,7 @@ function test1() {
   var plugin = getTestPlugin();
   ok(plugin, "Should have a test plugin");
   plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
-  prepareTest(test2, gTestRoot + "plugin_test.html");
+  prepareTest(runAfterPluginBindingAttached(test2), gTestRoot + "plugin_test.html");
 }
 
 // Tests a page with a working plugin in it.
@@ -120,7 +136,7 @@ function test2() {
   var plugin = getTestPlugin();
   ok(plugin, "Should have a test plugin");
   plugin.enabledState = Ci.nsIPluginTag.STATE_DISABLED;
-  prepareTest(test3, gTestRoot + "plugin_test.html");
+  prepareTest(runAfterPluginBindingAttached(test3), gTestRoot + "plugin_test.html");
 }
 
 // Tests a page with a disabled plugin in it.
@@ -152,7 +168,7 @@ function prepareTest5() {
   setAndUpdateBlocklist(gHttpTestRoot + "blockPluginHard.xml",
     function() {
       info("prepareTest5 callback");
-      prepareTest(test5, gTestRoot + "plugin_test.html");
+      prepareTest(runAfterPluginBindingAttached(test5), gTestRoot + "plugin_test.html");
   });
 }
 
@@ -174,7 +190,7 @@ function test5() {
   var objLoadingContent = pluginNode.QueryInterface(Ci.nsIObjectLoadingContent);
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_BLOCKLISTED, "Test 5, plugin fallback type should be PLUGIN_BLOCKLISTED");
 
-  prepareTest(test6, gTestRoot + "plugin_both.html");
+  prepareTest(runAfterPluginBindingAttached(test6), gTestRoot + "plugin_both.html");
 }
 
 // Tests a page with a blocked and unknown plugin in it.
@@ -184,7 +200,7 @@ function test6() {
   ok(gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 6, Should know about application/x-unknown");
   ok(!gTestBrowser.missingPlugins.has("application/x-test"), "Test 6, application/x-test should not be a missing plugin");
 
-  prepareTest(test7, gTestRoot + "plugin_both2.html");
+  prepareTest(runAfterPluginBindingAttached(test7), gTestRoot + "plugin_both2.html");
 }
 
 // Tests a page with a blocked and unknown plugin in it (alternate order to above).
@@ -199,7 +215,7 @@ function test7() {
   getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
 
   setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", function() {
-    prepareTest(test8, gTestRoot + "plugin_test.html");
+    prepareTest(runAfterPluginBindingAttached(test8), gTestRoot + "plugin_test.html");
   });
 }
 
@@ -214,7 +230,7 @@ function test8() {
   var objLoadingContent = pluginNode.QueryInterface(Ci.nsIObjectLoadingContent);
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 8, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
 
-  prepareTest(test11a, gTestRoot + "plugin_test3.html");
+  prepareTest(runAfterPluginBindingAttached(test11a), gTestRoot + "plugin_test3.html");
 }
 
 // Tests 9 & 10 removed
@@ -224,7 +240,7 @@ function test11a() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 11a, Should have a click-to-play notification");
 
-  prepareTest(test11b, "about:blank");
+  prepareTest(runAfterPluginBindingAttached(test11b), "about:blank");
 }
 
 // Tests that the going back will reshow the notification for click-to-play plugins (part 2/4)
@@ -248,7 +264,7 @@ function test11d() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 11d, Should have a click-to-play notification");
 
-  prepareTest(test12a, gHttpTestRoot + "plugin_clickToPlayAllow.html");
+  prepareTest(runAfterPluginBindingAttached(test12a), gHttpTestRoot + "plugin_clickToPlayAllow.html");
 }
 
 // Tests that the "Allow Always" permission works for click-to-play plugins
@@ -270,7 +286,7 @@ function test12a() {
 function test12b() {
   var popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Test 12d, Should have a click-to-play notification");
-  prepareTest(test12c, gHttpTestRoot + "plugin_two_types.html");
+  prepareTest(runAfterPluginBindingAttached(test12c), gHttpTestRoot + "plugin_two_types.html");
 }
 
 // Test that the "Always" permission, when set for just the Test plugin,
@@ -302,7 +318,7 @@ function test14() {
   var plugin = getTestPlugin();
   plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   getTestPlugin("Second Test Plug-in").enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
-  prepareTest(test15, gTestRoot + "plugin_alternate_content.html");
+  prepareTest(runAfterPluginBindingAttached(test15), gTestRoot + "plugin_alternate_content.html");
 }
 
 // Tests that the overlay is shown instead of alternate content when
@@ -313,7 +329,7 @@ function test15() {
   var mainBox = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
   ok(mainBox, "Test 15, Plugin with id=" + plugin.id + " overlay should exist");
 
-  prepareTest(test17, gTestRoot + "plugin_bug749455.html");
+  prepareTest(runAfterPluginBindingAttached(test17), gTestRoot + "plugin_bug749455.html");
 }
 
 // Test 16 removed
@@ -328,7 +344,7 @@ function test17() {
 
   setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableUpdatable.xml",
   function() {
-    prepareTest(test18a, gHttpTestRoot + "plugin_test.html");
+    prepareTest(runAfterPluginBindingAttached(test18a), gHttpTestRoot + "plugin_test.html");
   });
 }
 
@@ -371,7 +387,7 @@ function test18b() {
 
   setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableNoUpdate.xml",
   function() {
-    prepareTest(test18c, gHttpTestRoot + "plugin_test.html");
+    prepareTest(runAfterPluginBindingAttached(test18c), gHttpTestRoot + "plugin_test.html");
   });
 }
 
@@ -414,7 +430,7 @@ function test18e() {
   ok(objLoadingContent.activated, "Test 18e, Plugin should be activated");
 
   clearAllPluginPermissions();
-  prepareTest(test18f, gHttpTestRoot + "plugin_test.html");
+  prepareTest(runAfterPluginBindingAttached(test18f), gHttpTestRoot + "plugin_test.html");
 }
 
 // clicking the in-content overlay of a vulnerable plugin should bring
@@ -446,7 +462,7 @@ function test18g() {
   setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml",
   function() {
     resetBlocklist();
-    prepareTest(test19a, gTestRoot + "plugin_test.html");
+    prepareTest(runAfterPluginBindingAttached(test19a), gTestRoot + "plugin_test.html");
   });
 }
 
@@ -465,7 +481,7 @@ function test19a() {
 }
 
 function test19b() {
-  prepareTest(test19c, gTestRoot + "plugin_test.html");
+  prepareTest(runAfterPluginBindingAttached(test19c), gTestRoot + "plugin_test.html");
 }
 
 // Tests that clicking the text of the overlay activates the plugin
@@ -484,7 +500,7 @@ function test19c() {
 }
 
 function test19d() {
-  prepareTest(test19e, gTestRoot + "plugin_test.html");
+  prepareTest(runAfterPluginBindingAttached(test19e), gTestRoot + "plugin_test.html");
 }
 
 // Tests that clicking the box of the overlay activates the doorhanger
@@ -503,7 +519,7 @@ function test19e() {
 }
 
 function test19f() {
-  prepareTest(test20a, gTestRoot + "plugin_hidden_to_visible.html");
+  prepareTest(runAfterPluginBindingAttached(test20a), gTestRoot + "plugin_hidden_to_visible.html");
 }
 
 // Tests that a plugin in a div that goes from style="display: none" to
@@ -568,7 +584,7 @@ function test20d() {
 
   clearAllPluginPermissions();
 
-  prepareTest(test21a, gTestRoot + "plugin_two_types.html");
+  prepareTest(runAfterPluginBindingAttached(test21a), gTestRoot + "plugin_two_types.html");
 }
 
 // Test having multiple different types of plugin on one page
@@ -696,7 +712,7 @@ function test21e() {
 
   clearAllPluginPermissions();
 
-  prepareTest(test22, gTestRoot + "plugin_test.html");
+  prepareTest(runAfterPluginBindingAttached(test22), gTestRoot + "plugin_test.html");
 }
 
 // Tests that a click-to-play plugin retains its activated state upon reloading
@@ -728,7 +744,7 @@ function test22() {
   }
   ok(pluginsDiffer, "Test 22, plugin should have reloaded");
 
-  prepareTest(test23, gTestRoot + "plugin_test.html");
+  prepareTest(runAfterPluginBindingAttached(test23), gTestRoot + "plugin_test.html");
 }
 
 // Tests that a click-to-play plugin resets its activated state when changing types
@@ -758,7 +774,7 @@ function test23() {
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 23, Plugin should be click-to-play");
   ok(!pluginNode.activated, "Test 23, plugin node should not be activated");
 
-  prepareTest(test24a, gHttpTestRoot + "plugin_test.html");
+  prepareTest(runAfterPluginBindingAttached(test24a), gHttpTestRoot + "plugin_test.html");
 }
 
 // Test that "always allow"-ing a plugin will not allow it when it becomes
@@ -786,7 +802,7 @@ function test24b() {
   ok(objLoadingContent.activated, "Test 24b, plugin should be activated");
   setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableUpdatable.xml",
   function() {
-    prepareTest(test24c, gHttpTestRoot + "plugin_test.html");
+    prepareTest(runAfterPluginBindingAttached(test24c), gHttpTestRoot + "plugin_test.html");
   });
 }
 
