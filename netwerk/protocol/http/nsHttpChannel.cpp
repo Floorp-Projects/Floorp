@@ -378,18 +378,17 @@ nsHttpChannel::Connect()
 
     if (!usingSSL) {
         // enforce Strict-Transport-Security
-        nsISiteSecurityService* sss = gHttpHandler->GetSSService();
-        NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
+        nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
+        NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
 
         bool isStsHost = false;
         uint32_t flags = mPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
-        rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, mURI, flags,
-                              &isStsHost);
+        rv = stss->IsStsURI(mURI, flags, &isStsHost);
 
-        // if SSS fails, there's no reason to cancel the load, but it's
+        // if STS fails, there's no reason to cancel the load, but it's
         // worrisome.
         NS_ASSERTION(NS_SUCCEEDED(rv),
-                     "Something is wrong with SSS: IsSecureURI failed.");
+                     "Something is wrong with STS: IsStsURI failed.");
 
         if (NS_SUCCEEDED(rv) && isStsHost) {
             LOG(("nsHttpChannel::Connect() STS permissions found\n"));
@@ -1144,8 +1143,8 @@ nsHttpChannel::ProcessSTSHeader()
     if (PR_SUCCESS == PR_StringToNetAddr(asciiHost.get(), &hostAddr))
         return NS_OK;
 
-    nsISiteSecurityService* sss = gHttpHandler->GetSSService();
-    NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
+    nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
+    NS_ENSURE_TRUE(stss, NS_ERROR_OUT_OF_MEMORY);
 
     // mSecurityInfo may not always be present, and if it's not then it is okay
     // to just disregard any STS headers since we know nothing about the
@@ -1156,7 +1155,7 @@ nsHttpChannel::ProcessSTSHeader()
     // If there are certificate errors, we still load the data, we just ignore
     // any STS headers that are present.
     bool tlsIsBroken = false;
-    rv = sss->ShouldIgnoreHeader(mSecurityInfo, &tlsIsBroken);
+    rv = stss->ShouldIgnoreStsHeader(mSecurityInfo, &tlsIsBroken);
     NS_ENSURE_SUCCESS(rv, NS_OK);
 
     // If this was already an STS host, the connection should have been aborted
@@ -1167,8 +1166,7 @@ nsHttpChannel::ProcessSTSHeader()
     bool wasAlreadySTSHost;
     uint32_t flags =
       NS_UsePrivateBrowsing(this) ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
-    rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, mURI, flags,
-                          &wasAlreadySTSHost);
+    rv = stss->IsStsURI(mURI, flags, &wasAlreadySTSHost);
     // Failure here means STS is broken.  Don't prevent the load, but this
     // shouldn't fail.
     NS_ENSURE_SUCCESS(rv, NS_OK);
@@ -1196,8 +1194,7 @@ nsHttpChannel::ProcessSTSHeader()
     // All other failures are fatal.
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = sss->ProcessHeader(nsISiteSecurityService::HEADER_HSTS, mURI,
-                            stsHeader.get(), flags, NULL, NULL);
+    rv = stss->ProcessStsHeader(mURI, stsHeader.get(), flags, NULL, NULL);
     if (NS_FAILED(rv)) {
         AddSecurityMessage(NS_LITERAL_STRING("InvalidSTSHeaders"),
                 NS_LITERAL_STRING("Invalid HSTS Headers"));
