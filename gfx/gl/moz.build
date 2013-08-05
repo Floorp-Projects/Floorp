@@ -101,6 +101,7 @@ if gl_provider == 'EGL':
 
 CPP_SOURCES += [
     'GLContext.cpp',
+    'GLContextExtensionGroupQueries.cpp',
     'GLContextTypes.cpp',
     'GLContextUtils.cpp',
     'GLLibraryLoader.cpp',

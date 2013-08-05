@@ -2257,6 +2257,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-box-align: stretch;
 }
 
+.tabbrowser-tab[remote] {
+  text-decoration: underline;
+}
+
 %define TABSONTOP_TAB #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab
 %define TABSONBOTTOM_TAB #tabbrowser-tabs[tabsontop="false"] > .tabbrowser-tab
 %define TABSONTOP_TAB_STACK #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab > .tab-stack

@@ -201,21 +201,63 @@ DetachedWrappedNativeProtoMarker(PLDHashTable *table, PLDHashEntryHdr *hdr,
     return PL_DHASH_NEXT;
 }
 
-// GCCallback calls are chained
-static JSBool
-ContextCallback(JSContext *cx, unsigned operation)
+bool
+XPCJSRuntime::CustomContextCallback(JSContext *cx, unsigned operation)
 {
-    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
-    if (self) {
-        if (operation == JSCONTEXT_NEW) {
-            if (!self->OnJSContextNew(cx))
-                return false;
-        } else if (operation == JSCONTEXT_DESTROY) {
-            delete XPCContext::GetXPCContext(cx);
+    if (operation == JSCONTEXT_NEW) {
+        if (!OnJSContextNew(cx)) {
+            return false;
+        }
+    } else if (operation == JSCONTEXT_DESTROY) {
+        delete XPCContext::GetXPCContext(cx);
+    }
+
+    nsTArray<xpcContextCallback> callbacks(extraContextCallbacks);
+    for (uint32_t i = 0; i < callbacks.Length(); ++i) {
+        if (!callbacks[i](cx, operation)) {
+            return false;
         }
     }
+
     return true;
 }
+
+class AsyncFreeSnowWhite : public nsRunnable
+{
+public:
+  NS_IMETHOD Run()
+  {
+      TimeStamp start = TimeStamp::Now();
+      bool hadSnowWhiteObjects = nsCycleCollector_doDeferredDeletion();
+      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING,
+                            uint32_t((TimeStamp::Now() - start).ToMilliseconds()));
+      if (hadSnowWhiteObjects && !mContinuation) {
+          mContinuation = true;
+          if (NS_FAILED(NS_DispatchToCurrentThread(this))) {
+              mActive = false;
+          }
+      } else {
+          mActive = false;
+      }
+      return NS_OK;
+  }
+
+  void Dispatch(bool aContinuation = false)
+  {
+      if (mContinuation) {
+          mContinuation = aContinuation;
+      }
+      if (!mActive && NS_SUCCEEDED(NS_DispatchToCurrentThread(this))) {
+          mActive = true;
+      }
+  }
+
+  AsyncFreeSnowWhite() : mContinuation(false), mActive(false) {}
+
+public:
+  bool mContinuation;
+  bool mActive;
+};
 
 namespace xpc {
 
@@ -562,6 +604,12 @@ XPCJSRuntime::PrepareForCollection()
 }
 
 void
+XPCJSRuntime::DispatchDeferredDeletion(bool aContinuation)
+{
+    mAsyncSnowWhiteFreer->Dispatch(aContinuation);
+}
+
+void
 xpc_UnmarkSkippableJSHolders()
 {
     if (nsXPConnect::XPConnect()->GetRuntime()) {
@@ -605,24 +653,6 @@ XPCJSRuntime::GCSliceCallback(JSRuntime *rt,
 void
 XPCJSRuntime::CustomGCCallback(JSGCStatus status)
 {
-    switch (status) {
-        case JSGC_BEGIN:
-        {
-            // We seem to sometime lose the unrooted global flag. Restore it
-            // here. FIXME: bug 584495.
-            JSContext *iter = nullptr;
-            while (JSContext *acx = JS_ContextIterator(Runtime(), &iter)) {
-                if (!js::HasUnrootedGlobal(acx))
-                    JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
-            }
-            break;
-        }
-        case JSGC_END:
-        {
-            break;
-        }
-    }
-
     nsTArray<xpcGCCallback> callbacks(extraGCCallbacks);
     for (uint32_t i = 0; i < callbacks.Length(); ++i)
         callbacks[i](status);
@@ -2711,6 +2741,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mObjectHolderRoots(nullptr),
    mWatchdogManager(new WatchdogManager(this)),
    mJunkScope(nullptr),
+   mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite()),
    mExceptionManagerNotAvailable(false)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
@@ -2748,7 +2779,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 #else
     JS_SetNativeStackQuota(runtime, 128 * sizeof(size_t) * 1024);
 #endif
-    JS_SetContextCallback(runtime, ContextCallback);
     JS_SetDestroyCompartmentCallback(runtime, CompartmentDestroyedCallback);
     JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
@@ -2868,9 +2898,6 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     XPCContext* xpc = new XPCContext(this, cx);
     if (!xpc)
         return false;
-
-    // we want to mark the global object ourselves since we use a different color
-    JS_ToggleOptions(cx, JSOPTION_UNROOTED_GLOBAL);
 
     return true;
 }
@@ -3059,6 +3086,23 @@ XPCJSRuntime::RemoveGCCallback(xpcGCCallback cb)
 {
     NS_ASSERTION(cb, "null callback");
     bool found = extraGCCallbacks.RemoveElement(cb);
+    if (!found) {
+        NS_ERROR("Removing a callback which was never added.");
+    }
+}
+
+void
+XPCJSRuntime::AddContextCallback(xpcContextCallback cb)
+{
+    NS_ASSERTION(cb, "null callback");
+    extraContextCallbacks.AppendElement(cb);
+}
+
+void
+XPCJSRuntime::RemoveContextCallback(xpcContextCallback cb)
+{
+    NS_ASSERTION(cb, "null callback");
+    bool found = extraContextCallbacks.RemoveElement(cb);
     if (!found) {
         NS_ERROR("Removing a callback which was never added.");
     }

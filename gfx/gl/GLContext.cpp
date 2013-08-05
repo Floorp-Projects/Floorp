@@ -15,6 +15,7 @@
 #include "GLContextProvider.h"
 #include "GLTextureImage.h"
 #include "nsIMemoryReporter.h"
+#include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
 #include "prlink.h"
@@ -469,8 +470,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         }
 
         // Check for aux symbols based on extensions
-        if (IsExtensionSupported(GLContext::ANGLE_framebuffer_blit) ||
-            IsExtensionSupported(GLContext::EXT_framebuffer_blit))
+        if (IsExtensionSupported(XXX_framebuffer_blit))
         {
             SymLoadStruct auxSymbols[] = {
                 {
@@ -487,15 +487,13 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
                 NS_ERROR("GL supports framebuffer_blit without supplying glBlitFramebuffer");
 
-                MarkExtensionUnsupported(ANGLE_framebuffer_blit);
-                MarkExtensionUnsupported(EXT_framebuffer_blit);
+                MarkExtensionGroupUnsupported(XXX_framebuffer_blit);
                 mSymbols.fBlitFramebuffer = nullptr;
             }
         }
 
-        if (SupportsFramebufferMultisample())
+        if (IsExtensionSupported(XXX_framebuffer_multisample))
         {
-            MOZ_ASSERT(SupportsSplitFramebuffer());
             SymLoadStruct auxSymbols[] = {
                 {
                     (PRFuncPtr*) &mSymbols.fRenderbufferStorageMultisample,
@@ -511,8 +509,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (!LoadSymbols(&auxSymbols[0], trygl, prefix)) {
                 NS_ERROR("GL supports framebuffer_multisample without supplying glRenderbufferStorageMultisample");
 
-                MarkExtensionUnsupported(ANGLE_framebuffer_multisample);
-                MarkExtensionUnsupported(EXT_framebuffer_multisample);
+                MarkExtensionGroupUnsupported(XXX_framebuffer_multisample);
                 mSymbols.fRenderbufferStorageMultisample = nullptr;
             }
         }
@@ -572,9 +569,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (!LoadSymbols(&vaoSymbols[0], trygl, prefix)) {
                 NS_ERROR("GL supports Vertex Array Object without supplying its functions.");
 
-                MarkExtensionUnsupported(ARB_vertex_array_object);
-                MarkExtensionUnsupported(OES_vertex_array_object);
-                MarkExtensionUnsupported(APPLE_vertex_array_object);
+                MarkExtensionGroupUnsupported(XXX_vertex_array_object);
                 mSymbols.fIsVertexArray = nullptr;
                 mSymbols.fGenVertexArrays = nullptr;
                 mSymbols.fBindVertexArray = nullptr;
@@ -597,7 +592,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (!LoadSymbols(&vaoSymbols[0], trygl, prefix)) {
                 NS_ERROR("GL supports Vertex Array Object without supplying its functions.");
 
-                MarkExtensionUnsupported(APPLE_vertex_array_object);
+                MarkExtensionGroupUnsupported(XXX_vertex_array_object);
                 mSymbols.fIsVertexArray = nullptr;
                 mSymbols.fGenVertexArrays = nullptr;
                 mSymbols.fBindVertexArray = nullptr;
@@ -631,10 +626,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (!LoadSymbols(drawInstancedSymbols, trygl, prefix)) {
                 NS_ERROR("GL supports instanced draws without supplying its functions.");
 
-                MarkExtensionUnsupported(ARB_draw_instanced);
-                MarkExtensionUnsupported(EXT_draw_instanced);
-                MarkExtensionUnsupported(NV_draw_instanced);
-                MarkExtensionUnsupported(ANGLE_instanced_array);
+                MarkExtensionGroupUnsupported(XXX_draw_instanced);
                 mSymbols.fDrawArraysInstanced = nullptr;
                 mSymbols.fDrawElementsInstanced = nullptr;
             }
@@ -705,7 +697,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         mMaxTextureImageSize = mMaxTextureSize;
 
         mMaxSamples = 0;
-        if (SupportsFramebufferMultisample()) {
+        if (IsExtensionSupported(XXX_framebuffer_multisample)) {
             fGetIntegerv(LOCAL_GL_MAX_SAMPLES, (GLint*)&mMaxSamples);
         }
 
@@ -730,6 +722,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         mSymbols.Zero();
         NS_WARNING("InitWithPrefix failed!");
     }
+
+    mVersionString = nsPrintfCString("%u.%u.%u", mVersion / 100, (mVersion / 10) % 10, mVersion % 10);
 
     return mInitialized;
 }

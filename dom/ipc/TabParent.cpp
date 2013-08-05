@@ -41,6 +41,9 @@
 #include "nsIURI.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIWebBrowserChrome.h"
+#include "nsIXULBrowserWindow.h"
+#include "nsIXULWindow.h"
 #include "nsViewManager.h"
 #include "nsIWidget.h"
 #include "nsIWindowWatcher.h"
@@ -744,6 +747,42 @@ TabParent::RecvSetBackgroundColor(const nscolor& aColor)
 {
   if (RenderFrameParent* frame = GetRenderFrame()) {
     frame->SetBackgroundColor(aColor);
+  }
+  return true;
+}
+
+bool
+TabParent::RecvSetStatus(const uint32_t& aType, const nsString& aStatus)
+{
+  nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
+  if (frame) {
+    nsCOMPtr<nsISupports> container = frame->OwnerDoc()->GetContainer();
+    if (!container)
+      return true;
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+    if (!docShell)
+      return true;
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+    if (!treeOwner)
+      return true;
+
+    nsCOMPtr<nsIXULWindow> window = do_GetInterface(treeOwner);
+    if (window) {
+      nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
+      window->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
+      if (xulBrowserWindow) {
+        switch (aType)
+        {
+        case nsIWebBrowserChrome::STATUS_SCRIPT:
+          xulBrowserWindow->SetJSStatus(aStatus);
+          break;
+        case nsIWebBrowserChrome::STATUS_LINK:
+          xulBrowserWindow->SetOverLink(aStatus, nullptr);
+          break;
+        }
+      }
+    }
   }
   return true;
 }
