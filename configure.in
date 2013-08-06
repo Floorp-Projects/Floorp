@@ -8406,9 +8406,6 @@ case "$OS_TARGET" in
     NECKO_WIFI=1
     ;;
   Linux)
-    if test -z "$MOZ_ENABLE_DBUS"; then
-      AC_MSG_ERROR([Necko WiFi scanning needs DBus on your platform, remove --disable-dbus or use --disable-necko-wifi])
-    fi
     NECKO_WIFI=1
     NECKO_WIFI_DBUS=1
     ;;
@@ -8420,6 +8417,9 @@ MOZ_ARG_DISABLE_BOOL(necko-wifi,
     NECKO_WIFI=1)
 
 if test "$NECKO_WIFI"; then
+  if test -z "$MOZ_ENABLE_DBUS" -a -n "$NECKO_WIFI_DBUS"; then
+    AC_MSG_ERROR([Necko WiFi scanning needs DBus on your platform, remove --disable-dbus or use --disable-necko-wifi])
+  fi
   AC_DEFINE(NECKO_WIFI)
   _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_WIFI"
 fi
