@@ -78,6 +78,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:VoicemailNotification",
   "RIL:VoicemailInfoChanged",
   "RIL:CallError",
+  "RIL:SuppSvcNotification",
   "RIL:CardLockResult",
   "RIL:CardLockRetryCount",
   "RIL:USSDReceived",
@@ -1475,6 +1476,11 @@ RILContentHelper.prototype = {
                            [data.callIndex, data.errorMsg]);
         break;
       }
+      case "RIL:SuppSvcNotification":
+        this._deliverEvent("_telephonyListeners",
+                           "supplementaryServiceNotification",
+                           [msg.json.callIndex, msg.json.notification]);
+        break;
       case "RIL:VoicemailNotification":
         this.handleVoicemailNotification(msg.json.data);
         break;

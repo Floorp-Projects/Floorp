@@ -21,7 +21,6 @@
  "content/base/test/test_mixed_content_blocker.html": "TIMED_OUT, SSL_REQUIRED",
  "content/base/test/test_mixed_content_blocker_bug803225.html": "TIMED_OUT, SSL_REQUIRED",
  "content/base/test/test_mixed_content_blocker_frameNavigation.html": "TIMED_OUT, SSL_REQUIRED",
- "content/base/test/test_mutationobservers.html": "",
  "content/base/test/test_plugin_freezing.html": "CLICK_TO_PLAY",
  "content/base/test/test_object.html": "",
  "content/base/test/test_range_bounds.html": "",

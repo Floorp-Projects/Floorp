@@ -64,6 +64,13 @@ TelephonyListener::EnumerateCallState(uint32_t aCallIndex,
 }
 
 NS_IMETHODIMP
+TelephonyListener::SupplementaryServiceNotification(int32_t aCallIndex,
+                                                    uint16_t aNotification)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 TelephonyListener::NotifyError(int32_t aCallIndex,
                                const nsAString& aError)
 {

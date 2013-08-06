@@ -67,8 +67,9 @@ public:
   }
   void Send(const nsAString& aData, mozilla::ErrorResult& aRv);
   void Send(nsIDOMBlob* aData, mozilla::ErrorResult& aRv);
-  void Send(mozilla::dom::ArrayBuffer& aData, mozilla::ErrorResult& aRv);
-  void Send(mozilla::dom::ArrayBufferView& aData, mozilla::ErrorResult& aRv);
+  void Send(const mozilla::dom::ArrayBuffer& aData, mozilla::ErrorResult& aRv);
+  void Send(const mozilla::dom::ArrayBufferView& aData,
+            mozilla::ErrorResult& aRv);
 
   // Uses XPIDL GetProtocol.
   bool Ordered() const;

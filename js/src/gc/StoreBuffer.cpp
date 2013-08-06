@@ -317,7 +317,7 @@ JS_PUBLIC_API(void)
 JS::HeapCellPostBarrier(js::gc::Cell **cellp)
 {
     JS_ASSERT(*cellp);
-    JSRuntime *runtime = (*cellp)->runtime();
+    JSRuntime *runtime = (*cellp)->runtimeFromMainThread();
     runtime->gcStoreBuffer.putRelocatableCell(cellp);
 }
 
@@ -326,7 +326,7 @@ JS::HeapCellRelocate(js::gc::Cell **cellp)
 {
     /* Called with old contents of *pp before overwriting. */
     JS_ASSERT(*cellp);
-    JSRuntime *runtime = (*cellp)->runtime();
+    JSRuntime *runtime = (*cellp)->runtimeFromMainThread();
     runtime->gcStoreBuffer.removeRelocatableCell(cellp);
 }
 
@@ -334,7 +334,7 @@ JS_PUBLIC_API(void)
 JS::HeapValuePostBarrier(JS::Value *valuep)
 {
     JS_ASSERT(JSVAL_IS_TRACEABLE(*valuep));
-    JSRuntime *runtime = static_cast<js::gc::Cell *>(valuep->toGCThing())->runtime();
+    JSRuntime *runtime = static_cast<js::gc::Cell *>(valuep->toGCThing())->runtimeFromMainThread();
     runtime->gcStoreBuffer.putRelocatableValue(valuep);
 }
 
@@ -343,7 +343,7 @@ JS::HeapValueRelocate(JS::Value *valuep)
 {
     /* Called with old contents of *valuep before overwriting. */
     JS_ASSERT(JSVAL_IS_TRACEABLE(*valuep));
-    JSRuntime *runtime = static_cast<js::gc::Cell *>(valuep->toGCThing())->runtime();
+    JSRuntime *runtime = static_cast<js::gc::Cell *>(valuep->toGCThing())->runtimeFromMainThread();
     runtime->gcStoreBuffer.removeRelocatableValue(valuep);
 }
 

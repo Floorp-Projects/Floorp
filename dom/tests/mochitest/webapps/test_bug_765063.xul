@@ -22,26 +22,23 @@ SimpleTest.waitForExplicitFinish();
 
 makeAllAppsLaunchable();
 
-var url = "http://test/chrome/dom/tests/mochitest/webapps/apps/basic.webapp";
+var mmListener = {
+  receiveMessage: function(aMessage) {
+    ppmm.removeMessageListener("Webapps:Install", mmListener);
 
-// Observe app installation and confirm that the install origin didn't change.
-var observer = {
-  observe: function observe(subject, topic, data) {
-    Services.obs.removeObserver(observer, "webapps-sync-install");
-    is(JSON.parse(data).installOrigin, "http://test",
-       "the install origin didn't change");
+    var msg = aMessage.json;
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                      .getService(Components.interfaces.nsIIOService);
+    var uri = ioService.newURI(msg.from, null, null);
+    is(uri.prePath, "http://test", "the install origin didn't change");
 
-    navigator.mozApps.mgmt.getAll().onsuccess = function onGetAll() {
-      var app = [a for (a of this.result) if (a.manifestURL == url)][0];
-      navigator.mozApps.mgmt.uninstall(app).onsuccess = function onUninstall() {
-        SimpleTest.finish();
-      }
-    }
+    SimpleTest.finish();
   }
 };
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Services.obs.addObserver(observer, "webapps-sync-install", false);
+var ppmm = Components.classes["@mozilla.org/parentprocessmessagemanager;1"]
+                             .getService(Components.interfaces.nsIMessageBroadcaster);
+ppmm.addMessageListener("Webapps:Install", mmListener);
 
 // We call this here, even though the app is installed by the helper page,
 // because the helper page redirect would cause its install listener to unload
@@ -53,6 +50,6 @@ confirmNextInstall();
   <!-- Load a page that initiates an app installation and then immediately
      - redirects to a page at a different origin.  We can't do this directly
      - inside this test page, because that would cause the test to hang. -->
-  <iframe src="http://test/chrome/dom/tests/mochitest/webapps/bug_765063.xul"/>
+  <iframe src="http://test/chrome/dom/tests/mochitest/webapps/install_and_redirect_helper.xul"/>
 
 </window>

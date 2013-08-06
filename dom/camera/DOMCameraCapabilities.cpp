@@ -46,7 +46,7 @@ ParseZoomRatioItemAndAdd(JSContext* aCx, JS::Handle<JSObject*> aArray,
 
   JS::Rooted<JS::Value> v(aCx, JS_NumberValue(d));
 
-  if (!JS_SetElement(aCx, aArray, aIndex, v.address())) {
+  if (!JS_SetElement(aCx, aArray, aIndex, &v)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -69,7 +69,7 @@ ParseStringItemAndAdd(JSContext* aCx, JS::Handle<JSObject*> aArray,
   }
 
   JS::Rooted<JS::Value> v(aCx, STRING_TO_JSVAL(s));
-  if (!JS_SetElement(aCx, aArray, aIndex, v.address())) {
+  if (!JS_SetElement(aCx, aArray, aIndex, &v)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -103,7 +103,7 @@ ParseDimensionItemAndAdd(JSContext* aCx, JS::Handle<JSObject*> aArray,
   }
 
   JS::Rooted<JS::Value> v(aCx, OBJECT_TO_JSVAL(o));
-  if (!JS_SetElement(aCx, aArray, aIndex, v.address())) {
+  if (!JS_SetElement(aCx, aArray, aIndex, &v)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -380,7 +380,7 @@ DOMCameraCapabilities::GetVideoSizes(JSContext* cx, JS::Value* aVideoSizes)
     }
 
     v = OBJECT_TO_JSVAL(o);
-    if (!JS_SetElement(cx, array, i, v.address())) {
+    if (!JS_SetElement(cx, array, i, &v)) {
       return NS_ERROR_FAILURE;
     }
   }

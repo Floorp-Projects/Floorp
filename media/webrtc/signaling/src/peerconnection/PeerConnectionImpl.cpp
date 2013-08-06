@@ -950,7 +950,7 @@ PeerConnectionImpl::ConvertConstraints(
     }
     for (uint32_t i = 0; i < length; i++) {
       JS::Rooted<JS::Value> element(aCx);
-      if (!JS_GetElement(aCx, array, i, element.address()) ||
+      if (!JS_GetElement(aCx, array, i, &element) ||
           !element.isObject()) {
         return NS_ERROR_FAILURE;
       }

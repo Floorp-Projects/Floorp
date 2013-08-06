@@ -607,6 +607,7 @@ protected:
   /* Functions for filter parsing */
   bool ParseFilter();
   bool ParseSingleFilter(nsCSSValue* aValue);
+  bool ParseDropShadow(nsCSSValue* aValue);
 
   /* Find and return the namespace ID associated with aPrefix.
      If aPrefix has not been declared in an @namespace rule, returns
@@ -10052,6 +10053,32 @@ bool CSSParserImpl::ParseTransformOrigin(bool aPerspective)
 }
 
 /**
+ * Reads a drop-shadow value. At the moment the Filter Effects specification
+ * just expects one shadow item. Should this ever change to a list of shadow
+ * items, use ParseShadowList instead.
+ */
+bool
+CSSParserImpl::ParseDropShadow(nsCSSValue* aValue)
+{
+  // Use nsCSSValueList to reuse the shadow resolving code in
+  // nsRuleNode and nsComputedDOMStyle.
+  nsCSSValue shadow;
+  nsCSSValueList* cur = shadow.SetListValue();
+  if (!ParseShadowItem(cur->mValue, false))
+    return false;
+
+  if (!ExpectSymbol(')', true))
+    return false;
+
+  nsCSSValue::Array* dropShadow = aValue->InitFunction(eCSSKeyword_drop_shadow, 1);
+
+  // Copy things over.
+  dropShadow->Item(1) = shadow;
+
+  return true;
+}
+
+/**
  * Reads a single url or filter function from the tokenizer stream, reporting an
  * error if something goes wrong.
  */
@@ -10078,11 +10105,24 @@ CSSParserImpl::ParseSingleFilter(nsCSSValue* aValue)
     return false;
   }
 
+  nsCSSKeyword functionName = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+  // Parse drop-shadow independently of the other filter functions
+  // because of its more complex characteristics.
+  if (functionName == eCSSKeyword_drop_shadow) {
+    if (ParseDropShadow(aValue)) {
+      return true;
+    } else {
+      // Unrecognized filter function.
+      REPORT_UNEXPECTED_TOKEN(PEExpectedNoneOrURLOrFilterFunction);
+      SkipUntil(')');
+      return false;
+    }
+  }
+
   // Set up the parsing rules based on the filter function.
   int32_t variantMask = VARIANT_PN;
   bool rejectNegativeArgument = true;
   bool clampArgumentToOne = false;
-  nsCSSKeyword functionName = nsCSSKeywords::LookupKeyword(mToken.mIdent);
   switch (functionName) {
     case eCSSKeyword_blur:
       variantMask = VARIANT_LCALC | VARIANT_NONNEGATIVE_DIMENSION;
