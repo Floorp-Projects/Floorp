@@ -418,17 +418,7 @@ IDBKeyRange::GetUpperOpen(bool* aUpperOpen)
 
 // Explicitly instantiate for all our key range types... Grumble.
 template already_AddRefed<IDBKeyRange>
-IDBKeyRange::FromSerializedKeyRange<FIXME_Bug_521898_objectstore::KeyRange>
-(const FIXME_Bug_521898_objectstore::KeyRange& aKeyRange);
-
-template already_AddRefed<IDBKeyRange>
-IDBKeyRange::FromSerializedKeyRange<FIXME_Bug_521898_index::KeyRange>
-(const FIXME_Bug_521898_index::KeyRange& aKeyRange);
+IDBKeyRange::FromSerializedKeyRange<KeyRange> (const KeyRange& aKeyRange);
 
 template void
-IDBKeyRange::ToSerializedKeyRange<FIXME_Bug_521898_objectstore::KeyRange>
-(FIXME_Bug_521898_objectstore::KeyRange& aKeyRange);
-
-template void
-IDBKeyRange::ToSerializedKeyRange<FIXME_Bug_521898_index::KeyRange>
-(FIXME_Bug_521898_index::KeyRange& aKeyRange);
+IDBKeyRange::ToSerializedKeyRange<KeyRange> (KeyRange& aKeyRange);
