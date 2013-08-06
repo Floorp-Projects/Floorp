@@ -19,7 +19,6 @@
   locale/browser/sync.dtd                 (%chrome/sync.dtd)
   locale/browser/sync.properties          (%chrome/sync.properties)
   locale/browser/passwordmgr.properties   (%chrome/passwordmgr.properties)
-  locale/browser/prompt.dtd               (%chrome/prompt.dtd)
   locale/browser/phishing.dtd             (%chrome/phishing.dtd)
   locale/browser/crashprompt.dtd          (%chrome/crashprompt.dtd)
   locale/browser/crashprompt.properties   (%chrome/crashprompt.properties)
