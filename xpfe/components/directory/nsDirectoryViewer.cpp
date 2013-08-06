@@ -1167,8 +1167,6 @@ nsHTTPIndex::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval)
 NS_IMETHODIMP
 nsHTTPIndex::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
 {
-	nsresult	rv = NS_ERROR_UNEXPECTED;
-
 	*_retval = nullptr;
 
 	nsCOMPtr<nsISimpleEnumerator> child, anonArcs;
@@ -1179,7 +1177,7 @@ nsHTTPIndex::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval
 
 	if (mInner)
 	{
-		rv = mInner->ArcLabelsOut(aSource, getter_AddRefs(anonArcs));
+		mInner->ArcLabelsOut(aSource, getter_AddRefs(anonArcs));
 	}
 
 	return NS_NewUnionEnumerator(_retval, child, anonArcs);
