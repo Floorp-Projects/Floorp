@@ -7719,36 +7719,6 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   COMPUTE_END_INHERITED(SVG, svg)
 }
 
-static nsStyleFilter::Type
-StyleFilterTypeForFunctionName(nsCSSKeyword aFunctionName)
-{
-  switch (aFunctionName) {
-    case eCSSKeyword_blur:
-      return nsStyleFilter::Type::eBlur;
-    case eCSSKeyword_brightness:
-      return nsStyleFilter::Type::eBrightness;
-    case eCSSKeyword_contrast:
-      return nsStyleFilter::Type::eContrast;
-    case eCSSKeyword_drop_shadow:
-      return nsStyleFilter::Type::eDropShadow;
-    case eCSSKeyword_grayscale:
-      return nsStyleFilter::Type::eGrayscale;
-    case eCSSKeyword_hue_rotate:
-      return nsStyleFilter::Type::eHueRotate;
-    case eCSSKeyword_invert:
-      return nsStyleFilter::Type::eInvert;
-    case eCSSKeyword_opacity:
-      return nsStyleFilter::Type::eOpacity;
-    case eCSSKeyword_saturate:
-      return nsStyleFilter::Type::eSaturate;
-    case eCSSKeyword_sepia:
-      return nsStyleFilter::Type::eSepia;
-    default:
-      NS_NOTREACHED("Unknown filter type.");
-      return nsStyleFilter::Type::eNull;
-  }
-}
-
 void
 nsRuleNode::SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
                                      const nsCSSValue& aValue,
@@ -7768,8 +7738,13 @@ nsRuleNode::SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
   nsCSSKeyword functionName =
     (nsCSSKeyword)filterFunction->Item(0).GetIntValue();
 
-  nsStyleFilter::Type type = StyleFilterTypeForFunctionName(functionName);
-  if (type == nsStyleFilter::Type::eDropShadow) {
+  int32_t type;
+  DebugOnly<bool> foundKeyword =
+    nsCSSProps::FindKeyword(functionName,
+                            nsCSSProps::kFilterFunctionKTable,
+                            type);
+  NS_ABORT_IF_FALSE(foundKeyword, "unknown filter type");
+  if (type == NS_STYLE_FILTER_DROP_SHADOW) {
     nsRefPtr<nsCSSShadowArray> shadowArray = GetShadowData(
       filterFunction->Item(1).GetListValue(),
       aStyleContext,
@@ -7780,9 +7755,9 @@ nsRuleNode::SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
   }
 
   int32_t mask = SETCOORD_PERCENT | SETCOORD_FACTOR;
-  if (type == nsStyleFilter::Type::eBlur) {
+  if (type == NS_STYLE_FILTER_BLUR) {
     mask = SETCOORD_LENGTH | SETCOORD_STORE_CALC;
-  } else if (type == nsStyleFilter::Type::eHueRotate) {
+  } else if (type == NS_STYLE_FILTER_HUE_ROTATE) {
     mask = SETCOORD_ANGLE;
   }
 
@@ -7792,12 +7767,12 @@ nsRuleNode::SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
 
   nsCSSValue& arg = filterFunction->Item(1);
   nsStyleCoord filterParameter;
-  DebugOnly<bool> success = SetCoord(arg, filterParameter,
-                                     nsStyleCoord(), mask,
-                                     aStyleContext, aPresContext,
-                                     aCanStoreInRuleTree);
+  DebugOnly<bool> didSetCoord = SetCoord(arg, filterParameter,
+                                         nsStyleCoord(), mask,
+                                         aStyleContext, aPresContext,
+                                         aCanStoreInRuleTree);
   aStyleFilter->SetFilterParameter(filterParameter, type);
-  NS_ABORT_IF_FALSE(success, "unexpected unit");
+  NS_ABORT_IF_FALSE(didSetCoord, "unexpected unit");
 }
 
 const void*
@@ -7895,7 +7870,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
         nsStyleFilter styleFilter;
         SetStyleFilterToCSSValue(&styleFilter, cur->mValue, aContext,
                                  mPresContext, canStoreInRuleTree);
-        NS_ABORT_IF_FALSE(styleFilter.GetType() != nsStyleFilter::Type::eNull,
+        NS_ABORT_IF_FALSE(styleFilter.GetType() != NS_STYLE_FILTER_NONE,
                           "filter should be set");
         svgReset->mFilters.AppendElement(styleFilter);
         cur = cur->mNext;
