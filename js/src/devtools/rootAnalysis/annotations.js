@@ -71,6 +71,7 @@ var ignoreCallees = {
     "js::ion::LInstruction.getDef" : true, // virtual but no implementation can GC
     "js::ion::IonCache.kind" : true, // macro generated virtuals just return a constant
     "icu_50::UObject.__deleting_dtor" : true, // destructors in ICU code can't cause GC
+    "mozilla::CycleCollectedJSRuntime.DescribeCustomObjects" : true, // During tracing, cannot GC.
 };
 
 function fieldCallCannotGC(csu, fullfield)
