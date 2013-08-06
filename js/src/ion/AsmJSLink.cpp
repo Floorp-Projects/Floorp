@@ -398,10 +398,9 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     if (cx->isExceptionPending())
         return false;
 
-    const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
-
-    uint32_t length = info.bufEnd - info.bufStart;
-    Rooted<JSStableString*> src(cx, info.scriptSource->substring(cx, info.bufStart, info.bufEnd));
+    const AsmJSModuleSourceDesc &desc= module.sourceDesc();
+    uint32_t length = desc.bufEnd() - desc.bufStart();
+    Rooted<JSStableString*> src(cx, desc.scriptSource()->substring(cx, desc.bufStart(), desc.bufEnd()));
     if (!src)
         return false;
 
@@ -422,7 +421,7 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
 
     CompileOptions options(cx);
     options.setPrincipals(cx->compartment()->principals)
-           .setOriginPrincipals(info.scriptSource->originPrincipals())
+           .setOriginPrincipals(desc.scriptSource()->originPrincipals())
            .setCompileAndGo(false)
            .setNoScriptRval(false);
 
@@ -501,8 +500,7 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
 
     unsigned long base = (unsigned long) module.functionCode();
 
-    const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
-    const char *filename = const_cast<char *>(info.scriptSource->filename());
+    const char *filename = module.sourceDesc().scriptSource()->filename();
 
     for (unsigned i = 0; i < module.numPerfFunctions(); i++) {
         const AsmJSModule::ProfiledFunction &func = module.perfProfiledFunction(i);
@@ -536,8 +534,7 @@ SendBlocksToPerf(JSContext *cx, AsmJSModule &module)
     AsmJSPerfSpewer spewer;
     unsigned long funcBaseAddress = (unsigned long) module.functionCode();
 
-    const AsmJSModule::PostLinkFailureInfo &info = module.postLinkFailureInfo();
-    const char *filename = const_cast<char *>(info.scriptSource->filename());
+    const char *filename = module.sourceDesc().scriptSource()->filename();
 
     for (unsigned i = 0; i < module.numPerfBlocksFunctions(); i++) {
         const AsmJSModule::ProfiledBlocksFunction &func = module.perfProfiledBlocksFunction(i);
