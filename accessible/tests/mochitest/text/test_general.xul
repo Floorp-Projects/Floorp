@@ -26,6 +26,9 @@
     var gQueue = null;
     function doTests()
     {
+      //////////////////////////////////////////////////////////////////////////
+      // XUL label
+
       var ids = ["label1", "label2"];
 
       testCharacterCount(ids, 5);
@@ -36,6 +39,12 @@
       testCharAfterOffset(ids, 0, "e", 1, 2);
       testCharBeforeOffset(ids, 1, "H", 0, 1);
       testCharAtOffset(ids, 1, "e", 1, 2);
+
+      //////////////////////////////////////////////////////////////////////////
+      // XUL textbox
+
+      testTextAtOffset([ "tbox1" ], BOUNDARY_LINE_START,
+                       [ [ 0, 4, "test", 0, 4 ] ]);
 
       SimpleTest.finish();
     }
@@ -52,6 +61,11 @@
         title="xul:label@value accessible should implement nsIAccessibleText">
       Bug 396166
     </a>
+    <a target="_blank"
+        href="https://bugzilla.mozilla.org/show_bug.cgi?id=899433"
+        title="Accessibility returns empty line for last line in certain cases">
+      Bug 899433
+    </a>
     <p id="display"></p>
     <div id="content" style="display: none">
     </div>
@@ -60,5 +74,7 @@
   </body>
   <label id="label1" value="Hello"/>
   <label id="label2">Hello</label>
+
+  <textbox id="tbox1" value="test" multiline="true"/>
   </vbox>
 </window>
