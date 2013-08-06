@@ -1493,6 +1493,15 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
         return true;
       }
 
+      if (name.EqualsLiteral("mozSettings")) {
+        bool hasPermission = CheckPermission("settings-read") ||
+                             CheckPermission("settings-write");
+        if (!hasPermission) {
+          aValue.setNull();
+          return true;
+        }
+      }
+
       domObject = construct(aCx, naviObj);
       if (!domObject) {
         return Throw<true>(aCx, NS_ERROR_FAILURE);
