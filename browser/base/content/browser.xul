@@ -444,7 +444,8 @@
 #ifdef CAN_DRAW_IN_TITLEBAR
 #ifndef XP_MACOSX
       <hbox class="titlebar-placeholder" type="caption-buttons" ordinal="1000"
-            id="titlebar-placeholder-on-menubar-for-caption-buttons" persist="width"/>
+            id="titlebar-placeholder-on-menubar-for-caption-buttons" persist="width"
+            skipintoolbarset="true"/>
 #endif
 #endif
     </toolbar>
@@ -516,11 +517,12 @@
 #ifndef XP_MACOSX
             ordinal="1000"
 #endif
-      />
+            skipintoolbarset="true"/>
 
 #ifdef XP_MACOSX
       <hbox class="titlebar-placeholder" type="fullscreen-button"
-            id="titlebar-placeholder-on-TabsToolbar-for-fullscreen-button" persist="width"/>
+            id="titlebar-placeholder-on-TabsToolbar-for-fullscreen-button" persist="width"
+            skipintoolbarset="true"/>
 #endif
 #endif
     </toolbar>
