@@ -175,7 +175,7 @@ MobileMessageManager::Send(const JS::Value& aNumber_, const nsAString& aMessage,
 
   JS::Rooted<JS::Value> number(cx);
   for (uint32_t i=0; i<size; ++i) {
-    if (!JS_GetElement(cx, numbers, i, number.address())) {
+    if (!JS_GetElement(cx, numbers, i, &number)) {
       return NS_ERROR_INVALID_ARG;
     }
 
@@ -278,7 +278,7 @@ MobileMessageManager::Delete(const JS::Value& aParam, nsIDOMDOMRequest** aReques
 
     JS::Rooted<JS::Value> idJsValue(cx);
     for (uint32_t i = 0; i < size; i++) {
-      if (!JS_GetElement(cx, ids, i, idJsValue.address())) {
+      if (!JS_GetElement(cx, ids, i, &idJsValue)) {
         return NS_ERROR_INVALID_ARG;
       }
 

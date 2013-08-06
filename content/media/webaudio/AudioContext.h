@@ -124,7 +124,7 @@ public:
                ErrorResult& aRv);
 
   already_AddRefed<AudioBuffer>
-  CreateBuffer(JSContext* aJSContext, ArrayBuffer& aBuffer,
+  CreateBuffer(JSContext* aJSContext, const ArrayBuffer& aBuffer,
                bool aMixToMono, ErrorResult& aRv);
 
   already_AddRefed<MediaStreamAudioDestinationNode>

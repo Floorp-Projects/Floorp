@@ -27,19 +27,49 @@ Compositor::AssertOnCompositorThread()
 }
 
 void
-Compositor::DrawDiagnostics(const gfx::Color& aColor,
+Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
                             const gfx::Rect& rect,
                             const gfx::Rect& aClipRect,
                             const gfx::Matrix4x4& aTransform,
                             const gfx::Point& aOffset)
 {
-  if (!mDrawColoredBorders) {
+  if (!(mDiagnosticTypes & DIAGNOSTIC_TILE_BORDERS) && (aFlags & DIAGNOSTIC_TILE)) {
     return;
   }
+
+  if (!(mDiagnosticTypes & DIAGNOSTIC_LAYER_BORDERS)) {
+    return;
+  }
+
+  int lWidth = 2;
+  float opacity = 0.7;
+
+  gfx::Color color;
+  if (aFlags & DIAGNOSTIC_CONTENT) {
+    color = gfx::Color(0.0, 1.0, 0.0, 1.0); // green
+    if (aFlags & DIAGNOSTIC_COMPONENT_ALPHA) {
+      color = gfx::Color(0.0, 1.0, 1.0, 1.0); // greenish blue
+    }
+  } else if (aFlags & DIAGNOSTIC_IMAGE) {
+    color = gfx::Color(0.5, 0.0, 0.0, 1.0); // red
+  } else if (aFlags & DIAGNOSTIC_COLOR) {
+    color = gfx::Color(0.0, 0.0, 1.0, 1.0); // blue
+  } else if (aFlags & DIAGNOSTIC_CONTAINER) {
+    color = gfx::Color(0.8, 0.0, 0.8, 1.0); // purple
+  }
+
+  // make tile borders a bit more transparent to keep layer borders readable.
+  if (aFlags & DIAGNOSTIC_TILE || aFlags & DIAGNOSTIC_BIGIMAGE) {
+    lWidth = 1;
+    opacity = 0.5;
+    color.r *= 0.7;
+    color.g *= 0.7;
+    color.b *= 0.7;
+  }
+
   EffectChain effects;
-  effects.mPrimaryEffect = new EffectSolidColor(aColor);
-  int lWidth = 1;
-  float opacity = 0.8;
+
+  effects.mPrimaryEffect = new EffectSolidColor(color);
   // left
   this->DrawQuad(gfx::Rect(rect.x, rect.y,
                            lWidth, rect.height),

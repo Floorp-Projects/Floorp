@@ -4404,6 +4404,14 @@ size_t
 js::PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, JSLinearString *str,
                          uint32_t quote)
 {
+    return PutEscapedStringImpl(buffer, bufferSize, fp, str->chars(),
+                                str->length(), quote);
+}
+
+size_t
+js::PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const jschar *chars,
+                         size_t length, uint32_t quote)
+{
     enum {
         STOP, FIRST_QUOTE, LAST_QUOTE, CHARS, ESCAPE_START, ESCAPE_MORE
     } state;
@@ -4417,8 +4425,7 @@ js::PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, JSLinearStri
     else
         bufferSize--;
 
-    const jschar *chars = str->chars();
-    const jschar *charsEnd = chars + str->length();
+    const jschar *charsEnd = chars + length;
     size_t n = 0;
     state = FIRST_QUOTE;
     unsigned shift = 0;
