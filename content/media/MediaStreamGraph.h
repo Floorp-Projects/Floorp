@@ -263,24 +263,7 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStream)
 
-  MediaStream(DOMMediaStream* aWrapper)
-    : mBufferStartTime(0)
-    , mExplicitBlockerCount(0)
-    , mBlocked(false)
-    , mGraphUpdateIndices(0)
-    , mFinished(false)
-    , mNotifiedFinished(false)
-    , mNotifiedBlocked(false)
-    , mHasCurrentData(false)
-    , mNotifiedHasCurrentData(false)
-    , mWrapper(aWrapper)
-    , mMainThreadCurrentTime(0)
-    , mMainThreadFinished(false)
-    , mMainThreadDestroyed(false)
-    , mGraph(nullptr)
-  {
-    MOZ_COUNT_CTOR(MediaStream);
-  }
+  MediaStream(DOMMediaStream* aWrapper);
   virtual ~MediaStream()
   {
     MOZ_COUNT_DTOR(MediaStream);
