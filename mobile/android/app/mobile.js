@@ -438,6 +438,10 @@ pref("browser.ui.touch.weight.visited", 120); // percentage
 // The percentage of the screen that needs to be scrolled before margins are exposed.
 pref("browser.ui.show-margins-threshold", 20);
 
+// Maximum distance from the point where the user pressed where we still
+// look for text to select
+pref("browser.ui.selection.distance", 250);
+
 // plugins
 pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", false);
