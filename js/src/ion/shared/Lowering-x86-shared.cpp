@@ -163,6 +163,23 @@ LIRGeneratorX86Shared::lowerDivI(MDiv *div)
         }
     }
 
+    // Optimize x/x. This is quaint, but it also protects the LDivI code below.
+    // Since LDivI requires lhs to be in %eax, and since the register allocator
+    // can't put a virtual register in two physical registers at the same time,
+    // this puts rhs in %eax too, and since rhs isn't marked usedAtStart, it
+    // would conflict with the %eax output register. (rhs could be marked
+    // usedAtStart but for the fact that LDivI clobbers %edx early and rhs could
+    // happen to be in %edx).
+    if (div->lhs() == div->rhs()) {
+        if (!div->canBeDivideByZero())
+            return define(new LInteger(1), div);
+
+        LDivSelfI *lir = new LDivSelfI(useRegisterAtStart(div->lhs()));
+        if (div->fallible() && !assignSnapshot(lir))
+            return false;
+        return define(lir, div);
+    }
+
     LDivI *lir = new LDivI(useFixed(div->lhs(), eax), useRegister(div->rhs()), tempFixed(edx));
     if (div->fallible() && !assignSnapshot(lir))
         return false;
