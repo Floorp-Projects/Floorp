@@ -101,8 +101,9 @@
                      android:layout_width="@dimen/browser_toolbar_favicon_size"
                      android:layout_height="fill_parent"
                      android:scaleType="fitCenter"
-                     android:paddingLeft="12dip"
-                     android:layout_marginRight="4dip"
+                     android:layout_marginLeft="8dip"
+                     android:paddingLeft="4dip"
+                     android:paddingRight="4dip"
                      android:layout_gravity="center_vertical"
                      android:src="@drawable/favicon"/>
 

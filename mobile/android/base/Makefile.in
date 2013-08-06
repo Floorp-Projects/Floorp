@@ -597,6 +597,7 @@ RES_ANIM = \
   res/anim/awesomebar_hold_still.xml \
   res/anim/grow_fade_in.xml \
   res/anim/grow_fade_in_center.xml \
+  res/anim/progress_spinner.xml \
   res/anim/shrink_fade_out.xml \
   $(NULL)
 
@@ -647,18 +648,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/ic_menu_reload.png \
   res/drawable-mdpi/ic_status_logo.png \
   res/drawable-mdpi/icon_pageaction.png \
-  res/drawable-mdpi/progress_spinner_1.png \
-  res/drawable-mdpi/progress_spinner_2.png \
-  res/drawable-mdpi/progress_spinner_3.png \
-  res/drawable-mdpi/progress_spinner_4.png \
-  res/drawable-mdpi/progress_spinner_5.png \
-  res/drawable-mdpi/progress_spinner_6.png \
-  res/drawable-mdpi/progress_spinner_7.png \
-  res/drawable-mdpi/progress_spinner_8.png \
-  res/drawable-mdpi/progress_spinner_9.png \
-  res/drawable-mdpi/progress_spinner_10.png \
-  res/drawable-mdpi/progress_spinner_11.png \
-  res/drawable-mdpi/progress_spinner_12.png \
+  res/drawable-mdpi/progress_spinner.png \
   res/drawable-mdpi/tab_indicator_divider.9.png \
   res/drawable-mdpi/tab_indicator_selected.9.png \
   res/drawable-mdpi/tab_indicator_selected_focused.9.png \
@@ -1118,7 +1108,6 @@ RES_DRAWABLE += \
   res/drawable/ic_menu_quit.xml                       \
   res/drawable/menu_item_state.xml                    \
   res/drawable/menu_level.xml                         \
-  res/drawable/progress_spinner.xml                   \
   res/drawable/remote_tabs_child_divider.xml          \
   res/drawable/shaped_button.xml                      \
   res/drawable/site_security_level.xml                \
