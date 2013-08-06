@@ -10,10 +10,17 @@
  * liability, trademark and document use rules apply.
  */
 
+enum OverSampleType {
+  "none",
+  "2x",
+  "4x"
+};
+
 [PrefControlled]
 interface WaveShaperNode : AudioNode {
 
       attribute Float32Array? curve;
+      attribute OverSampleType oversample;
 
 };
 
