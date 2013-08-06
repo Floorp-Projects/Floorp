@@ -13,6 +13,7 @@
     _(UnboxDouble)                  \
     _(DivI)                         \
     _(DivPowTwoI)                   \
+    _(DivSelfI)                     \
     _(ModI)                         \
     _(ModPowTwoI)                   \
     _(PowHalfD)                     \
