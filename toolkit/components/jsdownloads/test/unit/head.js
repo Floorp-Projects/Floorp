@@ -305,13 +305,18 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
  * it using the legacy nsITransfer interface.  The source of the download will
  * be "interruptible_resumable.txt" and partially downloaded data will be kept.
  *
+ * @param aSourceUrl
+ *        String containing the URI for the download source, or null to use
+ *        httpUrl("interruptible_resumable.txt").
+ *
  * @return {Promise}
  * @resolves The Download object created as a consequence of controlling the
  *           download through the legacy nsITransfer interface.
  * @rejects Never.  The current test fails in case of exceptions.
  */
-function promiseStartExternalHelperAppServiceDownload() {
-  let sourceURI = NetUtil.newURI(httpUrl("interruptible_resumable.txt"));
+function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
+  let sourceURI = NetUtil.newURI(aSourceUrl ||
+                                 httpUrl("interruptible_resumable.txt"));
 
   let deferred = Promise.defer();
 

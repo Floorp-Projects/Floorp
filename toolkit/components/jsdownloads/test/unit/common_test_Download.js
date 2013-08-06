@@ -205,6 +205,23 @@ add_task(function test_basic()
 });
 
 /**
+ * Executes a download with the tryToKeepPartialData property set, and ensures
+ * that the file is saved correctly.  When testing DownloadLegacySaver, the
+ * download is executed using the nsIExternalHelperAppService component.
+ */
+add_task(function test_basic_tryToKeepPartialData()
+{
+  let download = yield promiseStartDownload_tryToKeepPartialData();
+  continueResponses();
+  yield promiseDownloadStopped(download);
+
+  // The target file should now have been created, and the ".part" file deleted.
+  yield promiseVerifyContents(download.target.path,
+                              TEST_DATA_SHORT + TEST_DATA_SHORT);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+});
+
+/**
  * Checks the referrer for downloads.
  */
 add_task(function test_referrer()
@@ -358,6 +375,36 @@ add_task(function test_empty_progress()
   do_check_eq(download.contentType, "text/plain");
 
   do_check_eq((yield OS.File.stat(download.target.path)).size, 0);
+});
+
+/**
+ * Downloads a file with a "Content-Length" of 0 with the tryToKeepPartialData
+ * property set, and ensures that the file is saved correctly.
+ */
+add_task(function test_empty_progress_tryToKeepPartialData()
+{
+  // Start a new download and configure it to keep partially downloaded data.
+  let download;
+  if (!gUseLegacySaver) {
+    let targetFilePath = getTempFile(TEST_TARGET_FILE_NAME).path;
+    download = yield Downloads.createDownload({
+      source: httpUrl("empty.txt"),
+      target: { path: targetFilePath,
+                partFilePath: targetFilePath + ".part" },
+    });
+    download.tryToKeepPartialData = true;
+    download.start();
+  } else {
+    // Start a download using nsIExternalHelperAppService, that is configured
+    // to keep partially downloaded data by default.
+    download = yield promiseStartExternalHelperAppServiceDownload(
+                                                         httpUrl("empty.txt"));
+  }
+  yield promiseDownloadStopped(download);
+
+  // The target file should now have been created, and the ".part" file deleted.
+  do_check_eq((yield OS.File.stat(download.target.path)).size, 0);
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
 });
 
 /**
