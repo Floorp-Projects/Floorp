@@ -110,7 +110,7 @@ def build_one_stage_aux(stage_dir, is_stage_one):
                       "--enable-targets=" + ",".join(targets),
                       "--disable-assertions",
                       "--prefix=%s" % inst_dir,
-                      "--with-gcc-toolchain=/tools/gcc-4.7.2-0moz1"]
+                      "--with-gcc-toolchain=/tools/gcc-4.7.3-0moz1"]
     build_package(llvm_source_dir, build_dir, configure_opts,
                   [])
 
