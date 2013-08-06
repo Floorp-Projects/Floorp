@@ -475,12 +475,12 @@ nsHttpHandler::GetStreamConverterService(nsIStreamConverterService **result)
     return NS_OK;
 }
 
-nsIStrictTransportSecurityService*
-nsHttpHandler::GetSTSService()
+nsISiteSecurityService*
+nsHttpHandler::GetSSService()
 {
-    if (!mSTSService)
-      mSTSService = do_GetService(NS_STSSERVICE_CONTRACTID);
-    return mSTSService;
+    if (!mSSService)
+      mSSService = do_GetService(NS_SSSERVICE_CONTRACTID);
+    return mSSService;
 }
 
 nsICookieService *
@@ -1830,9 +1830,9 @@ NS_IMETHODIMP
 nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
                                   nsIInterfaceRequestor *aCallbacks)
 {
-    nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
+    nsISiteSecurityService* sss = gHttpHandler->GetSSService();
     bool isStsHost = false;
-    if (!stss)
+    if (!sss)
         return NS_OK;
 
     nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(aCallbacks);
@@ -1840,7 +1840,8 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
     if (loadContext && loadContext->UsePrivateBrowsing())
         flags |= nsISocketProvider::NO_PERMANENT_STORAGE;
     nsCOMPtr<nsIURI> clone;
-    if (NS_SUCCEEDED(stss->IsStsURI(aURI, flags, &isStsHost)) && isStsHost) {
+    if (NS_SUCCEEDED(sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS,
+                                      aURI, flags, &isStsHost)) && isStsHost) {
         if (NS_SUCCEEDED(aURI->Clone(getter_AddRefs(clone)))) {
             clone->SetScheme(NS_LITERAL_CSTRING("https"));
             aURI = clone.get();

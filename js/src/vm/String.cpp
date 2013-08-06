@@ -185,7 +185,12 @@ JSRope::getCharsNonDestructiveInternal(ThreadSafeContext *cx, ScopedJSFreePtr<js
      */
 
     size_t n = length();
-    jschar *s = cx->pod_malloc<jschar>(n + 1);
+    jschar *s;
+    if (cx)
+        s = cx->pod_malloc<jschar>(n + 1);
+    else
+        s = js_pod_malloc<jschar>(n + 1);
+
     if (!s)
         return false;
     jschar *pos = s;

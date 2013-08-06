@@ -179,7 +179,7 @@ SmsFilter::SetNumbers(JSContext* aCx, const JS::Value& aNumbers)
 
   for (uint32_t i=0; i<size; ++i) {
     JS::Rooted<JS::Value> jsNumber(aCx);
-    if (!JS_GetElement(aCx, obj, i, jsNumber.address())) {
+    if (!JS_GetElement(aCx, obj, i, &jsNumber)) {
       return NS_ERROR_INVALID_ARG;
     }
 

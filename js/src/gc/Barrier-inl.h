@@ -79,7 +79,7 @@ inline void
 EncapsulatedValue::writeBarrierPre(const Value &value)
 {
 #ifdef JSGC_INCREMENTAL
-    if (value.isMarkable() && runtime(value)->needsBarrier())
+    if (value.isMarkable() && runtimeFromAnyThread(value)->needsBarrier())
         writeBarrierPre(ZoneOfValue(value), value);
 #endif
 }
@@ -89,7 +89,7 @@ EncapsulatedValue::writeBarrierPre(Zone *zone, const Value &value)
 {
 #ifdef JSGC_INCREMENTAL
     if (zone->needsBarrier()) {
-        JS_ASSERT_IF(value.isMarkable(), runtime(value)->needsBarrier());
+        JS_ASSERT_IF(value.isMarkable(), runtimeFromMainThread(value)->needsBarrier());
         Value tmp(value);
         js::gc::MarkValueUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == value);
@@ -180,14 +180,14 @@ HeapValue::set(Zone *zone, const Value &v)
 #ifdef DEBUG
     if (value.isMarkable()) {
         JS_ASSERT(ZoneOfValue(value) == zone ||
-                  ZoneOfValue(value) == zone->rt->atomsCompartment->zone());
+                  ZoneOfValue(value) == zone->runtimeFromMainThread()->atomsCompartment->zone());
     }
 #endif
 
     pre(zone);
     JS_ASSERT(!IsPoisonedValue(v));
     value = v;
-    post(zone->rt);
+    post(zone->runtimeFromAnyThread());
 }
 
 inline void
@@ -195,7 +195,7 @@ HeapValue::writeBarrierPost(const Value &value, Value *addr)
 {
 #ifdef JSGC_GENERATIONAL
     if (value.isMarkable())
-        runtime(value)->gcStoreBuffer.putValue(addr);
+        runtimeFromMainThread(value)->gcStoreBuffer.putValue(addr);
 #endif
 }
 
@@ -248,7 +248,7 @@ inline
 RelocatableValue::~RelocatableValue()
 {
     if (value.isMarkable())
-        relocate(runtime(value));
+        relocate(runtimeFromMainThread(value));
 }
 
 inline RelocatableValue &
@@ -260,7 +260,7 @@ RelocatableValue::operator=(const Value &v)
         value = v;
         post();
     } else if (value.isMarkable()) {
-        JSRuntime *rt = runtime(value);
+        JSRuntime *rt = runtimeFromMainThread(value);
         value = v;
         relocate(rt);
     } else {
@@ -278,7 +278,7 @@ RelocatableValue::operator=(const RelocatableValue &v)
         value = v.value;
         post();
     } else if (value.isMarkable()) {
-        JSRuntime *rt = runtime(value);
+        JSRuntime *rt = runtimeFromMainThread(value);
         value = v.value;
         relocate(rt);
     } else {
@@ -292,7 +292,7 @@ RelocatableValue::post()
 {
 #ifdef JSGC_GENERATIONAL
     JS_ASSERT(value.isMarkable());
-    runtime(value)->gcStoreBuffer.putRelocatableValue(&value);
+    runtimeFromMainThread(value)->gcStoreBuffer.putRelocatableValue(&value);
 #endif
 }
 
@@ -362,14 +362,14 @@ HeapSlot::set(Zone *zone, JSObject *obj, Kind kind, uint32_t slot, const Value &
     pre(zone);
     JS_ASSERT(!IsPoisonedValue(v));
     value = v;
-    post(zone->rt, obj, kind, slot, v);
+    post(zone->runtimeFromAnyThread(), obj, kind, slot, v);
 }
 
 inline void
 HeapSlot::writeBarrierPost(JSObject *obj, Kind kind, uint32_t slot, Value target)
 {
 #ifdef JSGC_GENERATIONAL
-    writeBarrierPost(obj->runtime(), obj, kind, slot, target);
+    writeBarrierPost(obj->runtimeFromAnyThread(), obj, kind, slot, target);
 #endif
 }
 

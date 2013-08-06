@@ -10,7 +10,10 @@
 var child;
 function childDone() {
   child.close();
-  SimpleTest.executeSoon(SimpleTest.finish);
+  // This test has a history of focus issues, but waiting for focus to return
+  // from the child window instead of attempting to reclaim it after finish
+  // seems to prevent some kind of race on win8 (Bug 874843)
+  SimpleTest.waitForFocus(SimpleTest.finish, window);
 }
 
 SimpleTest.waitForExplicitFinish();

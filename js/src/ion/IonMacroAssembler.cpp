@@ -478,7 +478,7 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
 
 #ifdef JS_GC_ZEAL
     // Don't execute the inline path if gcZeal is active.
-    movePtr(ImmWord(zone->rt), result);
+    movePtr(ImmWord(GetIonContext()->runtime), result);
     loadPtr(Address(result, offsetof(JSRuntime, gcZeal_)), result);
     branch32(Assembler::NotEqual, result, Imm32(0), fail);
 #endif
@@ -489,7 +489,7 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
         jump(fail);
 
 #ifdef JSGC_GENERATIONAL
-    Nursery &nursery = zone->rt->gcNursery;
+    Nursery &nursery = GetIonContext()->runtime->gcNursery;
     if (nursery.isEnabled() && allocKind <= gc::FINALIZE_OBJECT_LAST) {
         // Inline Nursery::allocate. No explicit check for nursery.isEnabled()
         // is needed, as the comparison with the nursery's end will always fail
@@ -706,7 +706,7 @@ MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
 {
     JSCompartment *compartment = GetIonContext()->compartment;
 
-    void *interrupt = (void*)&compartment->rt->interrupt;
+    void *interrupt = (void*)&GetIonContext()->runtime->interrupt;
     movePtr(ImmWord(interrupt), tempReg);
     load32(Address(tempReg, 0), tempReg);
     branchTest32(Assembler::NonZero, tempReg, tempReg, fail);
