@@ -23,10 +23,6 @@ pref("metro.debug.selection.displayRanges", false);
 pref("metro.debug.selection.dumpRanges", false);
 pref("metro.debug.selection.dumpEvents", false);
 
-// Enable tab-modal prompts
-pref("prompts.tab_modal.enabled", true);
-
-
 // Enable off main thread compositing
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-pan-zoom.enabled", false);
