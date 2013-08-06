@@ -72,10 +72,6 @@
           {
             role: ROLE_TEXT_LEAF,
             children: []
-          },
-          {
-            role: ROLE_WHITESPACE,
-            children: []
           }
         ]
       };
