@@ -4012,11 +4012,6 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
     }
   }
 
-  // text-blink: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForTextBlink(), text->mTextBlink,
-              canStoreInRuleTree, SETDSC_ENUMERATED, parentText->mTextBlink,
-              NS_STYLE_TEXT_BLINK_NONE, 0, 0, 0, 0);
-
   // text-decoration-line: enum (bit field), inherit, initial
   const nsCSSValue* decorationLineValue =
     aRuleData->ValueForTextDecorationLine();
