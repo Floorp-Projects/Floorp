@@ -474,10 +474,8 @@ pref("security.alternate_certificate_error_page", "certerror");
 
 pref("security.warn_viewing_mixed", false); // Warning is disabled.  See Bug 616712.
 
-#ifdef NIGHTLY_BUILD
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
-#endif
 
 // Override some named colors to avoid inverse OS themes
 pref("ui.-moz-dialog", "#efebe7");
