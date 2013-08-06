@@ -7,10 +7,12 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
 import android.content.Context;
@@ -23,7 +25,8 @@ import android.view.LayoutInflater;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class TwoLinePageRow extends LinearLayout {
+public class TwoLinePageRow extends LinearLayout
+                            implements Tabs.OnTabsChangedListener {
     private static final int NO_ICON = 0;
 
     private final TextView mTitle;
@@ -33,6 +36,9 @@ public class TwoLinePageRow extends LinearLayout {
     private int mUrlIconId;
     private int mBookmarkIconId;
     private boolean mShowIcons;
+
+    // The URL for the page corresponding to this view.
+    private String mPageUrl;
 
     public TwoLinePageRow(Context context) {
         this(context, null);
@@ -51,6 +57,34 @@ public class TwoLinePageRow extends LinearLayout {
         mTitle = (TextView) findViewById(R.id.title);
         mUrl = (TextView) findViewById(R.id.url);
         mFavicon = (FaviconView) findViewById(R.id.favicon);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        Tabs.registerOnTabsChangedListener(this);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        // Delay removing the listener to avoid modifying mTabsChangedListeners
+        // while notifyListeners is iterating through the array.
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Tabs.unregisterOnTabsChangedListener(TwoLinePageRow.this);
+            }
+        });
+    }
+
+    @Override
+    public void onTabChanged(final Tab tab, final Tabs.TabEvents msg, final Object data) {
+        switch(msg) {
+            case ADDED:
+            case CLOSED:
+            case LOCATION_CHANGE:
+                updateDisplayedUrl();
+                break;
+        }
     }
 
     private void setTitle(String title) {
@@ -87,6 +121,28 @@ public class TwoLinePageRow extends LinearLayout {
         mUrl.setCompoundDrawablesWithIntrinsicBounds(mUrlIconId, 0, mBookmarkIconId, 0);
     }
 
+    /**
+     * Stores the page URL, so that we can use it to replace "Switch to tab" if the open
+     * tab changes or is closed.
+     */
+    private void updateDisplayedUrl(String url) {
+        mPageUrl = url;
+        updateDisplayedUrl();
+    }
+
+    /**
+     * Replaces the page URL with "Switch to tab" if there is already a tab open with that URL.
+     */
+    private void updateDisplayedUrl() {
+        if (!mShowIcons || !Tabs.getInstance().hasUrl(mPageUrl)) {
+            setUrl(mPageUrl);
+            setUrlIcon(NO_ICON);
+        } else {
+            setUrl(R.string.switch_to_tab);
+            setUrlIcon(R.drawable.ic_url_bar_tab);
+        }
+    }
+
     public void setShowIcons(boolean showIcons) {
         mShowIcons = showIcons;
     }
@@ -106,14 +162,7 @@ public class TwoLinePageRow extends LinearLayout {
         // bar view - this is the equivalent of getDisplayTitle() in Tab.java
         setTitle(TextUtils.isEmpty(title) ? url : title);
 
-        // Update the url with "Switch to tab" if needed.
-        if (!mShowIcons || !Tabs.getInstance().hasUrl(url)) {
-            setUrl(url);
-            setUrlIcon(NO_ICON);
-        } else {
-            setUrl(R.string.switch_to_tab);
-            setUrlIcon(R.drawable.ic_url_bar_tab);
-        }
+        updateDisplayedUrl(url);
 
         int faviconIndex = cursor.getColumnIndex(URLColumns.FAVICON);
         if (faviconIndex != -1) {
