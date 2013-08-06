@@ -477,6 +477,10 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
 {
   public:
     inline MutableHandle(Rooted<T> *root);
+    MutableHandle(int) MOZ_DELETE;
+#ifdef MOZ_HAVE_CXX11_NULLPTR
+    MutableHandle(decltype(nullptr)) MOZ_DELETE;
+#endif
 
     void set(T v) {
         JS_ASSERT(!js::GCMethods<T>::poisoned(v));
