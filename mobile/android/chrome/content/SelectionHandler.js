@@ -126,6 +126,14 @@ var SelectionHandler = {
         this._positionHandles();
         break;
       }
+
+      case "TextSelection:Get":
+        sendMessageToJava({
+          type: "TextSelection:Data",
+          requestId: aData,
+          text: this._getSelectedText()
+        });
+        break;
     }
   },
 
@@ -276,7 +284,7 @@ var SelectionHandler = {
       return this._contentWindow.getSelection();
   },
 
-  getSelectedText: function sh_getSelectedText() {
+  _getSelectedText: function sh_getSelectedText() {
     if (!this._contentWindow)
       return "";
 
@@ -415,7 +423,7 @@ var SelectionHandler = {
   },
 
   copySelection: function sh_copySelection() {
-    let selectedText = this.getSelectedText();
+    let selectedText = this._getSelectedText();
     if (selectedText.length) {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
       clipboard.copyString(selectedText, this._contentWindow.document);
@@ -425,7 +433,7 @@ var SelectionHandler = {
   },
 
   shareSelection: function sh_shareSelection() {
-    let selectedText = this.getSelectedText();
+    let selectedText = this._getSelectedText();
     if (selectedText.length) {
       sendMessageToJava({
         type: "Share:Text",
@@ -436,7 +444,7 @@ var SelectionHandler = {
   },
 
   searchSelection: function sh_searchSelection() {
-    let selectedText = this.getSelectedText();
+    let selectedText = this._getSelectedText();
     if (selectedText.length) {
       let req = Services.search.defaultEngine.getSubmission(selectedText);
       BrowserApp.selectOrOpenTab(req.uri.spec);
