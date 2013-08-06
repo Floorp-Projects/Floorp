@@ -600,7 +600,7 @@ var BrowserApp = {
       function(aTarget) {
         let src = aTarget.src;
         sendMessageToJava({
-          type: "Wallpaper:Set",
+          type: "Image:SetAs",
           url: src
         });
       });
