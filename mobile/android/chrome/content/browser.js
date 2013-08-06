@@ -4248,9 +4248,17 @@ var BrowserEventHandler = {
 
             // the target should already have been fluffed by the platform touch event code, but
             // will be fluffed out again by the platform mouse event code as well
-            this._sendMouseEvent("mousemove", element, x, y);
-            this._sendMouseEvent("mousedown", element, x, y);
-            this._sendMouseEvent("mouseup",   element, x, y);
+            let win = element.ownerDocument.defaultView;
+            let cwu = win.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+            // For now, all events are sent as if they came from a touch
+            let source = Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH;
+            try {
+              cwu.sendMouseEventToWindow("mousemove", x, y, 0, 1, 0, true, 1.0, source);
+              cwu.sendMouseEventToWindow("mousedown", x, y, 0, 1, 0, true, 1.0, source);
+              cwu.sendMouseEventToWindow("mouseup", x, y, 0, 1, 0, true, 1.0, source);
+            } catch(e) {
+              Cu.reportError(e);
+            }
 
             // See if its a input element
             if ((element instanceof HTMLInputElement && element.mozIsTextField(false)) ||
@@ -4502,16 +4510,6 @@ var BrowserEventHandler = {
     this.lastTime = Date.now();
 
     this.motionBuffer.push({ dx: dx, dy: dy, time: this.lastTime });
-  },
-
-  _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY) {
-    let window = aElement.ownerDocument.defaultView;
-    try {
-      let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      cwu.sendMouseEventToWindow(aName, aX, aY, 0, 1, 0, true);
-    } catch(e) {
-      Cu.reportError(e);
-    }
   },
 
   _hasScrollableOverflow: function(elem) {
