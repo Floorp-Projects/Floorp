@@ -259,7 +259,7 @@ nsScreen::MozLockOrientation(const JS::Value& aOrientation, JSContext* aCx,
 
       for (uint32_t i = 0; i < length; ++i) {
         JS::Rooted<JS::Value> temp(aCx);
-        if (!JS_GetElement(aCx, seq, i, temp.address())) {
+        if (!JS_GetElement(aCx, seq, i, &temp)) {
           return NS_ERROR_FAILURE;
         }
 

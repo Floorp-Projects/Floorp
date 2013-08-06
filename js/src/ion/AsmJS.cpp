@@ -1763,7 +1763,7 @@ class FunctionCompiler
         JS_ASSERT(locals_.count() == argTypes.length() + varInitializers_.length());
 
         alloc_  = lifo_.new_<TempAllocator>(&lifo_);
-        ionContext_.construct(m_.cx()->compartment(), alloc_);
+        ionContext_.construct(m_.cx()->runtime(), m_.cx()->compartment(), alloc_);
 
         graph_  = lifo_.new_<MIRGraph>(alloc_);
         info_   = lifo_.new_<CompileInfo>(locals_.count(), SequentialExecution);
@@ -4843,7 +4843,7 @@ GenerateCodeForFinishedJob(ModuleCompiler &m, ParallelGroupState &group, AsmJSPa
 
     {
         // Perform code generation on the main thread.
-        IonContext ionContext(m.cx()->compartment(), &task->mir->temp());
+        IonContext ionContext(m.cx()->runtime(), m.cx()->compartment(), &task->mir->temp());
         if (!GenerateCode(m, func, *task->mir, *task->lir))
             return false;
     }
@@ -5152,7 +5152,7 @@ static const RegisterSet NonVolatileRegs =
 static void
 LoadAsmJSActivationIntoRegister(MacroAssembler &masm, Register reg)
 {
-    masm.movePtr(ImmWord(GetIonContext()->compartment->rt), reg);
+    masm.movePtr(ImmWord(GetIonContext()->runtime), reg);
     size_t offset = offsetof(JSRuntime, mainThread) +
                     PerThreadData::offsetOfAsmJSActivationStackReadOnly();
     masm.loadPtr(Address(reg, offset), reg);
@@ -6204,7 +6204,7 @@ FinishModule(ModuleCompiler &m,
              ScopedJSFreePtr<char> *compilationTimeReport)
 {
     TempAllocator alloc(&m.cx()->tempLifoAlloc());
-    IonContext ionContext(m.cx()->compartment(), &alloc);
+    IonContext ionContext(m.cx()->runtime(), m.cx()->compartment(), &alloc);
 
     if (!GenerateStubs(m))
         return false;

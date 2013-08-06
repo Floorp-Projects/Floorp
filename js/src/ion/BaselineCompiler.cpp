@@ -436,7 +436,7 @@ BaselineCompiler::emitInterruptCheck()
     frame.syncStack(0);
 
     Label done;
-    void *interrupt = (void *)&cx->compartment()->rt->interrupt;
+    void *interrupt = (void *)&cx->runtime()->interrupt;
     masm.branch32(Assembler::Equal, AbsoluteAddress(interrupt), Imm32(0), &done);
 
     prepareVMCall();

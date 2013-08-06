@@ -176,12 +176,12 @@ public:
   }
 
   void
-  Send(ArrayBuffer& aBody, ErrorResult& aRv) {
+  Send(const ArrayBuffer& aBody, ErrorResult& aRv) {
     return Send(aBody.Obj(), aRv);
   }
 
   void
-  Send(ArrayBufferView& aBody, ErrorResult& aRv) {
+  Send(const ArrayBufferView& aBody, ErrorResult& aRv) {
     return Send(aBody.Obj(), aRv);
   }
 

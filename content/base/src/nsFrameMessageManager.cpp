@@ -401,7 +401,7 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
                         retval[i].Length(), &ret)) {
         return NS_ERROR_UNEXPECTED;
       }
-      NS_ENSURE_TRUE(JS_SetElement(aCx, dataArray, i, ret.address()),
+      NS_ENSURE_TRUE(JS_SetElement(aCx, dataArray, i, &ret),
                      NS_ERROR_OUT_OF_MEMORY);
     }
 

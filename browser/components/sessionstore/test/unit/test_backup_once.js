@@ -25,7 +25,7 @@ add_task(function test_first_write_backup() {
   let initial_content = decoder.decode(yield OS.File.read(pathStore));
 
   do_check_true(!(yield OS.File.exists(pathBackup)));
-  yield _SessionFile.write(content, {backupOnFirstWrite: true});
+  yield _SessionFile.write(content);
   do_check_true(yield OS.File.exists(pathBackup));
 
   let backup_content = decoder.decode(yield OS.File.read(pathBackup));
@@ -38,7 +38,7 @@ add_task(function test_second_write_no_backup() {
   let initial_content = decoder.decode(yield OS.File.read(pathStore));
   let initial_backup_content = decoder.decode(yield OS.File.read(pathBackup));
 
-  yield _SessionFile.write(content, {backupOnFirstWrite: true});
+  yield _SessionFile.write(content);
 
   let written_content = decoder.decode(yield OS.File.read(pathStore));
   do_check_eq(content, written_content);

@@ -3778,7 +3778,7 @@ ICGetElem_String::Compiler::generateStubCode(MacroAssembler &masm)
                   &failure);
 
     // Load static string.
-    masm.movePtr(ImmWord(&cx->compartment()->rt->staticStrings.unitStaticTable), str);
+    masm.movePtr(ImmWord(&cx->runtime()->staticStrings.unitStaticTable), str);
     masm.loadPtr(BaseIndex(str, scratchReg, ScalePointer), str);
 
     // Return.

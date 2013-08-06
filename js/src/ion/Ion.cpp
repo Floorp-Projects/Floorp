@@ -123,8 +123,8 @@ IonContext::IonContext(JSContext *cx, TempAllocator *temp)
     SetIonContext(this);
 }
 
-IonContext::IonContext(JSCompartment *comp, TempAllocator *temp)
-  : runtime(comp->rt),
+IonContext::IonContext(JSRuntime *rt, JSCompartment *comp, TempAllocator *temp)
+  : runtime(rt),
     cx(NULL),
     compartment(comp),
     temp(temp),
@@ -550,7 +550,7 @@ void
 IonCode::writeBarrierPre(IonCode *code)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!code || !code->runtime()->needsBarrier())
+    if (!code || !code->runtimeFromMainThread()->needsBarrier())
         return;
 
     Zone *zone = code->zone();
@@ -898,8 +898,9 @@ IonScript::purgeCaches(Zone *zone)
     if (invalidated())
         return;
 
-    IonContext ictx(zone->rt);
-    AutoFlushCache afc("purgeCaches", zone->rt->ionRuntime());
+    JSRuntime *rt = zone->runtimeFromMainThread();
+    IonContext ictx(rt);
+    AutoFlushCache afc("purgeCaches", rt->ionRuntime());
     for (size_t i = 0; i < numCaches(); i++)
         getCache(i).reset();
 }
@@ -937,11 +938,12 @@ IonScript::detachDependentAsmJSModules(FreeOp *fop) {
 void
 ion::ToggleBarriers(JS::Zone *zone, bool needs)
 {
-    IonContext ictx(zone->rt);
-    if (!zone->rt->hasIonRuntime())
+    JSRuntime *rt = zone->runtimeFromMainThread();
+    IonContext ictx(rt);
+    if (!rt->hasIonRuntime())
         return;
 
-    AutoFlushCache afc("ToggleBarriers", zone->rt->ionRuntime());
+    AutoFlushCache afc("ToggleBarriers", rt->ionRuntime());
     for (gc::CellIterUnderGC i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->hasIonScript())
@@ -2115,8 +2117,8 @@ ion::InvalidateAll(FreeOp *fop, Zone *zone)
 
     for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter) {
         if (iter.activation()->compartment()->zone() == zone) {
-            IonContext ictx(zone->rt);
-            AutoFlushCache afc("InvalidateAll", zone->rt->ionRuntime());
+            IonContext ictx(fop->runtime());
+            AutoFlushCache afc("InvalidateAll", fop->runtime()->ionRuntime());
             IonSpew(IonSpew_Invalidate, "Invalidating all frames for GC");
             InvalidateActivation(fop, iter.jitTop(), true);
         }
