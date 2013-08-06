@@ -16,7 +16,6 @@
 #include "Axis.h"
 #include "TaskThrottler.h"
 #include "mozilla/layers/APZCTreeManager.h"
-#include "gfx3DMatrix.h"
 
 #include "base/message_loop.h"
 
@@ -642,28 +641,17 @@ private:
    * hit-testing to see which APZC instance should handle touch events.
    */
 public:
-  void SetLayerHitTestData(const LayerRect& aRect, const gfx3DMatrix& aTransform) {
-    mVisibleRect = aRect;
-    mCSSTransform = aTransform;
-  }
+  void SetVisibleRegion(gfxRect rect) { mVisibleRegion = rect; }
 
-  gfx3DMatrix GetCSSTransform() const {
-    return mCSSTransform;
-  }
-
-  bool VisibleRegionContains(const LayerPoint& aPoint) const {
-    return mVisibleRect.Contains(aPoint);
+  bool VisibleRegionContains(const gfxPoint& aPoint) const {
+    return mVisibleRegion.Contains(aPoint.x, aPoint.y);
   }
 
 private:
-  /* This is the viewport of the layer that this APZC corresponds to, in
-   * layer pixels. It position here does not account for any transformations
-   * applied to any layers, whether they are CSS transforms or async
-   * transforms. */
-  LayerRect mVisibleRect;
-  /* This is the cumulative layer transform from the parent APZC down to this
-   * one. */
-  gfx3DMatrix mCSSTransform;
+  /* This is the viewport of the layer that this APZC corresponds to, but
+   * post-transform. In other words, it is in the coordinate space of its
+   * parent layer. */
+  gfxRect mVisibleRegion;
 };
 
 }
