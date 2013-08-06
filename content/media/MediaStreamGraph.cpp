@@ -1547,6 +1547,30 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
   }
 }
 
+MediaStream::MediaStream(DOMMediaStream* aWrapper)
+  : mBufferStartTime(0)
+  , mExplicitBlockerCount(0)
+  , mBlocked(false)
+  , mGraphUpdateIndices(0)
+  , mFinished(false)
+  , mNotifiedFinished(false)
+  , mNotifiedBlocked(false)
+  , mHasCurrentData(false)
+  , mNotifiedHasCurrentData(false)
+  , mWrapper(aWrapper)
+  , mMainThreadCurrentTime(0)
+  , mMainThreadFinished(false)
+  , mMainThreadDestroyed(false)
+  , mGraph(nullptr)
+{
+  MOZ_COUNT_CTOR(MediaStream);
+  // aWrapper should not already be connected to a MediaStream! It needs
+  // to be hooked up to this stream, and since this stream is only just
+  // being created now, aWrapper must not be connected to anything.
+  NS_ASSERTION(!aWrapper || !aWrapper->GetStream(),
+               "Wrapper already has another media stream hooked up to it!");
+}
+
 void
 MediaStream::Init()
 {
