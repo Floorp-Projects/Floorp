@@ -41,6 +41,9 @@ pref("browser.offline-apps.notify", false);
 pref("browser.cache.offline.enable", true);
 pref("offline-apps.allow_by_default", true);
 
+// TCPSocket
+pref("dom.mozTCPSocket.enabled", true);
+
 // Enable smooth scrolling
 pref("general.smoothScroll", true);
 
