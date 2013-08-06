@@ -704,8 +704,6 @@ void
 MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
                                             Label *fail)
 {
-    JSCompartment *compartment = GetIonContext()->compartment;
-
     void *interrupt = (void*)&GetIonContext()->runtime->interrupt;
     movePtr(ImmWord(interrupt), tempReg);
     load32(Address(tempReg, 0), tempReg);

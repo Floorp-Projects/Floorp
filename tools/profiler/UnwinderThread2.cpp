@@ -1572,6 +1572,8 @@ public:
   // copied CodeModule as far as the CodeModule interface is concerned.
   const CodeModule* Copy() const { MOZ_CRASH(); return NULL; }
 
+  friend void read_procmaps(std::vector<MyCodeModule*>& mods_);
+
  private:
   // record info for a file backed executable mapping
   u_int64_t x_start_;
@@ -1580,10 +1582,20 @@ public:
 };
 
 
+// Simple predicates on MyCodeModule, used by read_procmaps
+static bool mcm_has_zero_length(MyCodeModule* cm) {
+  return cm->size() == 0;
+}
+
+static bool mcm_is_lessthan_by_start(MyCodeModule* cm1, MyCodeModule* cm2) {
+  return cm1->base_address() < cm2->base_address();
+}
+
+
 /* Find out, in a platform-dependent way, where the code modules got
    mapped in the process' virtual address space, and add them to
    |mods_|. */
-static void read_procmaps(std::vector<MyCodeModule*>& mods_)
+void read_procmaps(std::vector<MyCodeModule*>& mods_)
 {
   MOZ_ASSERT(mods_.size() == 0);
 #if defined(SPS_OS_linux) || defined(SPS_OS_android) || defined(SPS_OS_darwin)
@@ -1601,6 +1613,44 @@ static void read_procmaps(std::vector<MyCodeModule*>& mods_)
 # error "Unknown platform"
 #endif
   if (0) LOGF("got %d mappings\n", (int)mods_.size());
+
+  // Now tidy up |_mods| to ensure that it is possible to do
+  // binary search for addresses in it, without risk of infinite loops:
+  // * segments must be ordered by x_start_ values
+  // * segments must not have zero size (x_len_)
+  // * segments must be non-overlapping
+  std::sort(mods_.begin(), mods_.end(), mcm_is_lessthan_by_start);
+  if (mods_.size() >= 2) {
+    // trim range ends, to guarantee no overlaps
+    for (std::vector<MyCodeModule*>::size_type i = 1; i < mods_.size(); i++) {
+      uint64_t prev_start = mods_[i-1]->x_start_;
+      uint64_t prev_len   = mods_[i-1]->x_len_;
+      uint64_t here_start = mods_[i]->x_start_;
+      MOZ_ASSERT(prev_start <= here_start);
+      if (prev_start + prev_len > here_start) {
+        // overlap; trim the end of the previous one
+        mods_[i-1]->x_len_ = here_start - prev_start;
+      }
+    }
+  }
+
+  // remove any zero-sized ranges
+  std::remove_if(mods_.begin(), mods_.end(), mcm_has_zero_length);
+  // Final sanity check: ascending, non-overlapping
+  if (mods_.size() >= 2) {
+    for (std::vector<MyCodeModule*>::size_type i = 1; i < mods_.size(); i++) {
+      uint64_t prev_start = mods_[i-1]->x_start_;
+      uint64_t prev_len   = mods_[i-1]->x_len_;
+      uint64_t here_start = mods_[i]->x_start_;
+      uint64_t here_len   = mods_[i]->x_len_;
+      MOZ_ASSERT(prev_len > 0 && here_len > 0);
+      MOZ_ASSERT(prev_start + prev_len <= here_start);
+      (void)prev_start;
+      (void)prev_len;
+      (void)here_start;
+      (void)here_len;
+    }
+  }
 }
 
 
@@ -1608,7 +1658,14 @@ class MyCodeModules : public google_breakpad::CodeModules
 {
  public:
   MyCodeModules() {
+    max_addr_ = 0;
+    min_addr_ = ~0;
     read_procmaps(mods_);
+    if (mods_.size() > 0) {
+      MyCodeModule *first = mods_[0], *last = mods_[mods_.size()-1];
+      min_addr_ = first->base_address();
+      max_addr_ = last->base_address() + last->size() - 1;
+    }
   }
 
   ~MyCodeModules() {
@@ -1620,7 +1677,21 @@ class MyCodeModules : public google_breakpad::CodeModules
   }
 
  private:
-  std::vector<MyCodeModule*> mods_;
+  // A vector of loaded modules, in ascending order of base_address(),
+  // non-zero size()d, and non-overlapping, suitable for binary
+  // search.  These guarantees are ensured by read_procmaps() as
+  // called from the constructor, hence they will need to be
+  // re-ensured if there is ever a use case in which modules are added
+  // to |mods_| after the initial construction.  Likewise, |min_addr_|
+  // and |max_addr_| would need to be updates.  At the moment that
+  // never happens, so the code is safe as it stands.
+  mutable std::vector<MyCodeModule*> mods_;
+
+  // Additional optimisation: cache the minimum and maximum code address
+  // for any of the entries in |mods_|, so that GetModuleForAddress can
+  // reject obviously out-of-range values without having to do any binary
+  // search.
+  uint64_t min_addr_, max_addr_;
 
   unsigned int module_count() const { MOZ_CRASH(); return 1; }
 
@@ -1628,17 +1699,34 @@ class MyCodeModules : public google_breakpad::CodeModules
                 GetModuleForAddress(u_int64_t address) const
   {
     if (0) printf("GMFA %llx\n", (unsigned long long int)address);
-    std::vector<MyCodeModule*>::const_iterator it;
-    for (it = mods_.begin(); it < mods_.end(); it++) {
-       MyCodeModule* cm = *it;
-       if (0) printf("considering %p  %llx +%llx\n",
-                     (void*)cm, (unsigned long long int)cm->base_address(),
-                                (unsigned long long int)cm->size());
-       if (cm->base_address() <= address
-           && address < cm->base_address() + cm->size())
-          return cm;
+    std::vector<MyCodeModule*>::size_type nMods = mods_.size();
+
+    // Reject obviously-nonsensical requests.  Note that the
+    // comparisons against {min_,max_}addr_ are only valid in the case
+    // where nMods > 0, hence the ordering of tests.
+    if (nMods == 0 || address < min_addr_ || address > max_addr_) {
+      return NULL;
     }
-    return NULL;
+
+    // Binary search in |mods_|.  lo and hi need to be signed, else
+    // the loop termination tests don't work properly.
+    long int lo = 0;
+    long int hi = nMods-1;
+    while (true) {
+      // current unsearched space is from lo to hi, inclusive.
+      if (lo > hi) {
+        // not found
+        return NULL;
+      }
+      long int mid = (lo + hi) / 2;
+      MyCodeModule* mid_mod = mods_[mid];
+      uint64_t mid_minAddr = mid_mod->base_address();
+      uint64_t mid_maxAddr = mid_minAddr + mid_mod->size() - 1;
+      if (address < mid_minAddr) { hi = mid-1; continue; }
+      if (address > mid_maxAddr) { lo = mid+1; continue; }
+      MOZ_ASSERT(mid_minAddr <= address && address <= mid_maxAddr);
+      return mid_mod;
+    }
   }
 
   const google_breakpad::CodeModule* GetMainModule() const {
