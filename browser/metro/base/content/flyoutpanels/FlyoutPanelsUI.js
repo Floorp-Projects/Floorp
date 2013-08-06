@@ -52,7 +52,7 @@ let FlyoutPanelsUI = {
     }
 
     this._currentFlyout = this[aToShow];
-    if (this._currentFlyout.show) {
+    if (this._currentFlyout._show) {
       this._currentFlyout._show();
     } else {
       this._currentFlyout._topmostElement.show();
