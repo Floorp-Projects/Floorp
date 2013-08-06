@@ -1304,7 +1304,7 @@ JS::AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
     : cx(cx)
 {
     JS_ASSERT(cx->runtime()->requestDepth || cx->runtime()->isHeapBusy());
-    cx->runtime()->assertValidThread();
+    JS_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
     cx->runtime()->checkRequestDepth++;
 }
 
@@ -1313,7 +1313,7 @@ JS::AutoCheckRequestDepth::AutoCheckRequestDepth(ContextFriendFields *cxArg)
 {
     if (cx) {
         JS_ASSERT(cx->runtime()->requestDepth || cx->runtime()->isHeapBusy());
-        cx->runtime()->assertValidThread();
+        JS_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
         cx->runtime()->checkRequestDepth++;
     }
 }

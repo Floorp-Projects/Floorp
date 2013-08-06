@@ -219,7 +219,7 @@ nsDOMMultipartFile::InitBlob(JSContext* aCx,
     JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &length));
     for (uint32_t i = 0; i < length; ++i) {
       JS::Rooted<JS::Value> element(aCx);
-      if (!JS_GetElement(aCx, obj, i, element.address()))
+      if (!JS_GetElement(aCx, obj, i, &element))
         return NS_ERROR_TYPE_ERR;
 
       if (element.isObject()) {

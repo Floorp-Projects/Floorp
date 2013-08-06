@@ -1269,7 +1269,8 @@ BaseShape::getUnowned(ExclusiveContext *cx, const StackBaseShape &base)
 void
 JSCompartment::sweepBaseShapeTable()
 {
-    gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_BASE_SHAPE);
+    gcstats::AutoPhase ap(runtimeFromMainThread()->gcStats,
+                          gcstats::PHASE_SWEEP_TABLES_BASE_SHAPE);
 
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
@@ -1466,7 +1467,8 @@ JSCompartment::markAllInitialShapeTableEntries(JSTracer *trc)
 void
 JSCompartment::sweepInitialShapeTable()
 {
-    gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_INITIAL_SHAPE);
+    gcstats::AutoPhase ap(runtimeFromMainThread()->gcStats,
+                          gcstats::PHASE_SWEEP_TABLES_INITIAL_SHAPE);
 
     if (initialShapes.initialized()) {
         for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {

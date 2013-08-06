@@ -284,7 +284,7 @@ PostBarrierTypedArrayObject(JSObject *obj)
 {
 #ifdef JSGC_GENERATIONAL
     JS_ASSERT(obj);
-    JSRuntime *rt = obj->runtime();
+    JSRuntime *rt = obj->runtimeFromMainThread();
     if (!rt->isHeapBusy() && !IsInsideNursery(rt, obj))
         rt->gcStoreBuffer.putWholeCell(obj);
 #endif
@@ -325,7 +325,7 @@ InitViewList(ArrayBufferObject *obj, ArrayBufferViewObject *viewsHead)
 static EncapsulatedPtr<ArrayBufferViewObject> &
 GetViewListRef(ArrayBufferObject *obj)
 {
-    JS_ASSERT(obj->runtime()->isHeapBusy());
+    JS_ASSERT(obj->runtimeFromMainThread()->isHeapBusy());
     return reinterpret_cast<OldObjectRepresentationHack*>(obj->getElementsHeader())->views;
 }
 

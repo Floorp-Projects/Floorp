@@ -303,7 +303,7 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JS::Handle<JSObject*> obj) const
     JSBool hasProp;
     if (::JS_AlreadyHasOwnUCProperty(cx, obj, s, name.Length(), &hasProp) &&
         hasProp) {
-      JS::Rooted<JS::Value> dummy(cx);
+      bool dummy;
       ::JS_DeleteUCProperty2(cx, obj, s, name.Length(), &dummy);
     }
   }

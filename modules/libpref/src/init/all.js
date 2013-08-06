@@ -4073,6 +4073,8 @@ pref("layers.acceleration.force-enabled", false);
 pref("layers.acceleration.draw-fps", false);
 
 pref("layers.draw-borders", false);
+pref("layers.draw-tile-borders", false);
+pref("layers.draw-bigimage-borders", false);
 pref("layers.frame-counter", false);
 
 #ifdef XP_MACOSX

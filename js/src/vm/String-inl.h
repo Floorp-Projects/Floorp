@@ -105,7 +105,7 @@ inline void
 JSString::writeBarrierPre(JSString *str)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!str || !str->runtime()->needsBarrier())
+    if (!str || !str->runtimeFromAnyThread()->needsBarrier())
         return;
 
     JS::Zone *zone = str->zone();
