@@ -174,6 +174,10 @@
 
           aTab._findBar = findBar;
 
+          let event = document.createEvent("Events");
+          event.initEvent("TabFindInitialized", true, false);
+          aTab.dispatchEvent(event);
+
           return findBar;
         ]]></body>
       </method>

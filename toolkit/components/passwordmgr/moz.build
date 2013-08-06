@@ -32,5 +32,6 @@ EXTRA_PP_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'InsecurePasswordUtils.jsm',
     'LoginManagerContent.jsm',
 ]
