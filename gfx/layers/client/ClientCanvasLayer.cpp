@@ -83,7 +83,7 @@ ClientCanvasLayer::RenderLayer()
   if (!mCanvasClient) {
     TextureFlags flags = TEXTURE_IMMEDIATE_UPLOAD;
     if (mNeedsYFlip) {
-      flags |= NeedsYFlip;
+      flags |= TEXTURE_NEEDS_Y_FLIP;
     }
 
     bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
