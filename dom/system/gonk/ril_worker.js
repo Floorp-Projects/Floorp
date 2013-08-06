@@ -3848,6 +3848,51 @@ let RIL = {
     }
   },
 
+  _processSuppSvcNotification: function _processSuppSvcNotification(info) {
+    debug("handle supp svc notification: " + JSON.stringify(info));
+
+    let notification = null;
+    let callIndex = -1;
+
+    if (info.notificationType === 0) {
+      // MO intermediate result code. Refer to code1 defined in 3GPP 27.007
+      // 7.17.
+    } else if (info.notificationType === 1) {
+      // MT unsolicited result code. Refer to code2 defined in 3GPP 27.007 7.17.
+      switch (info.code) {
+        case SUPP_SVC_NOTIFICATION_CODE2_PUT_ON_HOLD:
+        case SUPP_SVC_NOTIFICATION_CODE2_RETRIEVED:
+          notification = GECKO_SUPP_SVC_NOTIFICATION_FROM_CODE2[info.code];
+          break;
+        default:
+          // Notification type not supported.
+          return;
+      }
+
+      // Get the target call object for this notification.
+      let currentCallIndexes = Object.keys(this.currentCalls);
+      if (currentCallIndexes.length === 1) {
+        // Only one call exists. This should be the target.
+        callIndex = currentCallIndexes[0];
+      } else {
+        // Find the call in |currentCalls| by the given number.
+        if (info.number) {
+          for each (let currentCall in this.currentCalls) {
+            if (currentCall.number == info.number) {
+              callIndex = currentCall.callIndex;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    let message = {rilMessageType: "suppSvcNotification",
+                   notification: notification,
+                   callIndex: callIndex};
+    this.sendChromeMessage(message);
+  },
+
   _processNetworks: function _processNetworks() {
     let strings = Buf.readStringList();
     let networks = [];
@@ -6011,7 +6056,16 @@ RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CH
   }
   this[REQUEST_DATA_CALL_LIST](length, {rilRequestError: ERROR_SUCCESS});
 };
-RIL[UNSOLICITED_SUPP_SVC_NOTIFICATION] = null;
+RIL[UNSOLICITED_SUPP_SVC_NOTIFICATION] = function UNSOLICITED_SUPP_SVC_NOTIFICATION(length) {
+  let info = {};
+  info.notificationType = Buf.readUint32();
+  info.code = Buf.readUint32();
+  info.index = Buf.readUint32();
+  info.type = Buf.readUint32();
+  info.number = Buf.readString();
+
+  this._processSuppSvcNotification(info);
+};
 
 RIL[UNSOLICITED_STK_SESSION_END] = function UNSOLICITED_STK_SESSION_END() {
   this.sendChromeMessage({rilMessageType: "stksessionend"});

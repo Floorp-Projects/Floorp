@@ -9,7 +9,7 @@
 interface nsIDOMEventListener;
 interface nsIDOMTelephonyCall;
 
-[scriptable, builtinclass, uuid(dd9f3957-b0fe-4d3d-b738-79782f76f05d)]
+[scriptable, builtinclass, uuid(5ad8bf8b-958c-447b-9e1a-e6cf598b680f)]
 interface nsIDOMTelephony : nsIDOMEventTarget
 {
   nsIDOMTelephonyCall dial(in DOMString number);
@@ -30,4 +30,6 @@ interface nsIDOMTelephony : nsIDOMEventTarget
 
   [implicit_jscontext] attribute jsval onincoming;
   [implicit_jscontext] attribute jsval oncallschanged;
+  [implicit_jscontext] attribute jsval onremoteheld;
+  [implicit_jscontext] attribute jsval onremoteresumed;
 };
