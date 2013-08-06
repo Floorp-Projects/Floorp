@@ -22,6 +22,10 @@ WebGLContext::Clear(WebGLbitfield mask)
     if (mask != m)
         return ErrorInvalidValue("clear: invalid mask bits");
 
+    if (mask == 0) {
+        GenerateWarning("Calling gl.clear(0) has no effect.");
+    }
+
     if (mBoundFramebuffer) {
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
             return ErrorInvalidFramebufferOperation("clear: incomplete framebuffer");
