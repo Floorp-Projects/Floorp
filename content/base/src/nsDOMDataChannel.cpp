@@ -290,7 +290,7 @@ nsDOMDataChannel::Send(nsIDOMBlob* aData, ErrorResult& aRv)
 }
 
 void
-nsDOMDataChannel::Send(ArrayBuffer& aData, ErrorResult& aRv)
+nsDOMDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 
@@ -303,7 +303,7 @@ nsDOMDataChannel::Send(ArrayBuffer& aData, ErrorResult& aRv)
 }
 
 void
-nsDOMDataChannel::Send(ArrayBufferView& aData, ErrorResult& aRv)
+nsDOMDataChannel::Send(const ArrayBufferView& aData, ErrorResult& aRv)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 

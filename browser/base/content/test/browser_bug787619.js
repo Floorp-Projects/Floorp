@@ -21,6 +21,10 @@ function test() {
 }
 
 function pageLoad() {
+  // Due to layout being async, "PluginBindAttached" may trigger later.
+  // This forces a layout flush, thus triggering it, and schedules the
+  // test so it is definitely executed afterwards.
+  gTestBrowser.contentDocument.getElementById('plugin').clientTop;
   executeSoon(part1);
 }
 

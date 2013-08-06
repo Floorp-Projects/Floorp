@@ -23,8 +23,10 @@ function test() {
 }
 
 function pageLoad(aEvent) {
-  // The plugin events are async dispatched and can come after the load event
-  // This just allows the events to fire before we then go on to test the states
+  // Due to layout being async, "PluginBindAttached" may trigger later.
+  // This forces a layout flush, thus triggering it, and schedules the
+  // test so it is definitely executed afterwards.
+  gTestBrowser.contentDocument.getElementById('test').clientTop;
   executeSoon(actualTest);
 }
 

@@ -125,17 +125,20 @@ HasMouseListener(nsIContent* aContent)
 }
 
 static bool
-IsElementClickable(nsIFrame* aFrame)
+IsElementClickable(nsIFrame* aFrame, nsIAtom* stopAt = nullptr)
 {
   // Input events propagate up the content tree so we'll follow the content
   // ancestors to look for elements accepting the click.
   for (nsIContent* content = aFrame->GetContent(); content;
        content = content->GetFlattenedTreeParent()) {
+    nsIAtom* tag = content->Tag();
+    if (content->IsHTML() && stopAt && tag == stopAt) {
+      break;
+    }
     if (HasMouseListener(content)) {
       return true;
     }
     if (content->IsHTML()) {
-      nsIAtom* tag = content->Tag();
       if (tag == nsGkAtoms::button ||
           tag == nsGkAtoms::input ||
           tag == nsGkAtoms::select ||
@@ -305,7 +308,7 @@ FindFrameTargetedByInputEvent(const nsGUIEvent *aEvent,
     nsLayoutUtils::GetFrameForPoint(aRootFrame, aPointRelativeToRootFrame, flags);
 
   const EventRadiusPrefs* prefs = GetPrefsFor(aEvent->eventStructType);
-  if (!prefs || !prefs->mEnabled || (target && IsElementClickable(target))) {
+  if (!prefs || !prefs->mEnabled || (target && IsElementClickable(target, nsGkAtoms::body))) {
     return target;
   }
 

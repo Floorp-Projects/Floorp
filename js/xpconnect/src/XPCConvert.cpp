@@ -1372,7 +1372,7 @@ XPCConvert::NativeArray2JS(jsval* d, const void** s,
     PR_BEGIN_MACRO                                                                      \
         for (i = 0; i < count; i++) {                                                   \
             if (!NativeData2JS(current.address(), ((_t*)*s)+i, type, iid, pErr) ||      \
-                !JS_SetElement(cx, array, i, current.address()))                        \
+                !JS_SetElement(cx, array, i, &current))                                 \
                 goto failure;                                                           \
         }                                                                               \
     PR_END_MACRO
@@ -1638,7 +1638,7 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
             goto failure;                                                      \
         }                                                                      \
         for (initedCount = 0; initedCount < count; initedCount++) {            \
-            if (!JS_GetElement(cx, jsarray, initedCount, current.address()) || \
+            if (!JS_GetElement(cx, jsarray, initedCount, &current) ||          \
                 !JSData2Native(((_t*)array)+initedCount, current, type,        \
                                true, iid, pErr))                               \
                 goto failure;                                                  \

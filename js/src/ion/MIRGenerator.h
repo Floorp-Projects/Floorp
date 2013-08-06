@@ -60,7 +60,7 @@ class MIRGenerator
         return compartment->ionCompartment();
     }
     IonRuntime *ionRuntime() const {
-        return compartment->rt->ionRuntime();
+        return GetIonContext()->runtime->ionRuntime();
     }
     CompileInfo &info() {
         return *info_;
@@ -81,7 +81,7 @@ class MIRGenerator
     }
 
     bool instrumentedProfiling() {
-        return compartment->rt->spsProfiler.enabled();
+        return GetIonContext()->runtime->spsProfiler.enabled();
     }
 
     // Whether the main thread is trying to cancel this build.

@@ -111,12 +111,12 @@ inline void
 JSScript::writeBarrierPre(JSScript *script)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!script || !script->runtime()->needsBarrier())
+    if (!script || !script->runtimeFromAnyThread()->needsBarrier())
         return;
 
     JS::Zone *zone = script->zone();
     if (zone->needsBarrier()) {
-        JS_ASSERT(!zone->rt->isHeapMajorCollecting());
+        JS_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
         JSScript *tmp = script;
         MarkScriptUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == script);
@@ -128,12 +128,12 @@ JSScript::writeBarrierPre(JSScript *script)
 js::LazyScript::writeBarrierPre(js::LazyScript *lazy)
 {
 #ifdef JSGC_INCREMENTAL
-    if (!lazy)
+    if (!lazy || !lazy->runtimeFromAnyThread()->needsBarrier())
         return;
 
     JS::Zone *zone = lazy->zone();
     if (zone->needsBarrier()) {
-        JS_ASSERT(!zone->rt->isHeapMajorCollecting());
+        JS_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
         js::LazyScript *tmp = lazy;
         MarkLazyScriptUnbarriered(zone->barrierTracer(), &tmp, "write barrier");
         JS_ASSERT(tmp == lazy);
