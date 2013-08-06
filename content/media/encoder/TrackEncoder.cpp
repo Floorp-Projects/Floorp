@@ -27,6 +27,10 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             uint32_t aTrackEvents,
                                             const MediaSegment& aQueuedMedia)
 {
+  if (mCanceled) {
+    return;
+  }
+
   AudioSegment* audio = const_cast<AudioSegment*>
                         (static_cast<const AudioSegment*>(&aQueuedMedia));
 
@@ -40,9 +44,11 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
       // thus the audio encoder is initialized at this time.
       if (!chunk.IsNull()) {
         nsresult rv = Init(chunk.mChannelData.Length(), aTrackRate);
-        if (NS_SUCCEEDED(rv)) {
-          break;
+        if (NS_FAILED(rv)) {
+          LOG("[AudioTrackEncoder]: Fail to initialize the encoder!");
+          NotifyCancel();
         }
+        break;
       } else {
         mSilentDuration += chunk.mDuration;
       }
