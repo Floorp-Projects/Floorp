@@ -41,12 +41,49 @@ class WaveShaperNodeEngine : public AudioNodeEngine
 public:
   explicit WaveShaperNodeEngine(AudioNode* aNode)
     : AudioNodeEngine(aNode)
+    , mType(OverSampleType::None)
   {
   }
+
+  enum Parameteres {
+    TYPE
+  };
 
   virtual void SetRawArrayData(nsTArray<float>& aCurve) MOZ_OVERRIDE
   {
     mCurve.SwapElements(aCurve);
+  }
+
+  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aValue) MOZ_OVERRIDE
+  {
+    switch (aIndex) {
+    case TYPE:
+      mType = static_cast<OverSampleType>(aValue);
+      break;
+    default:
+      NS_ERROR("Bad WaveShaperNode Int32Parameter");
+    }
+  }
+
+  template <uint32_t blocks>
+  void ProcessCurve(const float* aInputBuffer, float* aOutputBuffer)
+  {
+    for (uint32_t j = 0; j < WEBAUDIO_BLOCK_SIZE*blocks; ++j) {
+      // Index into the curve array based on the amplitude of the
+      // incoming signal by clamping the amplitude to [-1, 1] and
+      // performing a linear interpolation of the neighbor values.
+      float index = std::max(0.0f, std::min(float(mCurve.Length() - 1),
+                                            mCurve.Length() * (aInputBuffer[j] + 1) / 2));
+      uint32_t indexLower = uint32_t(index);
+      uint32_t indexHigher = uint32_t(index + 1.0f);
+      if (indexHigher == mCurve.Length()) {
+        aOutputBuffer[j] = mCurve[indexLower];
+      } else {
+        float interpolationFactor = index - indexLower;
+        aOutputBuffer[j] = (1.0f - interpolationFactor) * mCurve[indexLower] +
+                                   interpolationFactor  * mCurve[indexHigher];
+      }
+    }
   }
 
   virtual void ProduceAudioBlock(AudioNodeStream* aStream,
@@ -66,27 +103,26 @@ public:
     for (uint32_t i = 0; i < channelCount; ++i) {
       const float* inputBuffer = static_cast<const float*>(aInput.mChannelData[i]);
       float* outputBuffer = const_cast<float*> (static_cast<const float*>(aOutput->mChannelData[i]));
-      for (uint32_t j = 0; j < WEBAUDIO_BLOCK_SIZE; ++j) {
-        // Index into the curve array based on the amplitude of the
-        // incoming signal by clamping the amplitude to [-1, 1] and
-        // performing a linear interpolation of the neighbor values.
-        float index = std::max(0.0f, std::min(float(mCurve.Length() - 1),
-                                              mCurve.Length() * (inputBuffer[j] + 1) / 2));
-        uint32_t indexLower = uint32_t(index);
-        uint32_t indexHigher = uint32_t(index + 1.0f);
-        if (indexHigher == mCurve.Length()) {
-          outputBuffer[j] = mCurve[indexLower];
-        } else {
-          float interpolationFactor = index - indexLower;
-          outputBuffer[j] = (1.0f - interpolationFactor) * mCurve[indexLower] +
-                                    interpolationFactor  * mCurve[indexHigher];
-        }
+
+      switch (mType) {
+      case OverSampleType::None:
+        ProcessCurve<1>(inputBuffer, outputBuffer);
+        break;
+      case OverSampleType::_2x:
+        /* TODO: to be implemented */
+        break;
+      case OverSampleType::_4x:
+        /* TODO: to be implemented */
+        break;
+      default:
+        NS_NOTREACHED("We should never reach here");
       }
     }
   }
 
 private:
   nsTArray<float> mCurve;
+  OverSampleType mType;
 };
 
 WaveShaperNode::WaveShaperNode(AudioContext* aContext)
@@ -95,6 +131,7 @@ WaveShaperNode::WaveShaperNode(AudioContext* aContext)
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
   , mCurve(nullptr)
+  , mType(OverSampleType::None)
 {
   NS_HOLD_JS_OBJECTS(this, WaveShaperNode);
 
@@ -136,6 +173,13 @@ WaveShaperNode::SetCurve(const Float32Array* aCurve)
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
   MOZ_ASSERT(ns, "Why don't we have a stream here?");
   ns->SetRawArrayData(curve);
+}
+
+void
+WaveShaperNode::SetOversample(OverSampleType aType)
+{
+  mType = aType;
+  SendInt32ParameterToStream(WaveShaperNodeEngine::TYPE, static_cast<int32_t>(aType));
 }
 
 }
