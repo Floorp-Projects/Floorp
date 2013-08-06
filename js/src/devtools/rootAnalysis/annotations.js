@@ -24,6 +24,9 @@ function indirectCallCannotGC(caller, name)
     if (name == "params" && caller == "PR_ExplodeTime")
         return true;
 
+    if (name == "op" && /GetWeakmapKeyDelegate/.test(caller))
+        return true;
+
     var CheckCallArgs = "AsmJS.cpp:uint8 CheckCallArgs(FunctionCompiler*, js::frontend::ParseNode*, (uint8)(FunctionCompiler*,js::frontend::ParseNode*,Type)*, FunctionCompiler::Call*)";
     if (name == "checkArg" && caller == CheckCallArgs)
         return true;
