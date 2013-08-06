@@ -107,7 +107,8 @@ let gBuildAreas = new Map();
 let gBuildWindows = new Map();
 
 let gNewElementCount = 0;
-let gWrapperCache = new WeakMap();
+let gGroupWrapperCache = new Map();
+let gSingleWrapperCache = new WeakMap();
 let gListeners = new Set();
 
 let gModuleName = "[CustomizableUI]";
@@ -197,6 +198,10 @@ let CustomizableUIInternal = {
   },
 
   wrapWidget: function(aWidgetId) {
+    if (gGroupWrapperCache.has(aWidgetId)) {
+      return gGroupWrapperCache.get(aWidgetId);
+    }
+
     let provider = this.getWidgetProvider(aWidgetId);
     if (!provider) {
       return null;
@@ -206,12 +211,15 @@ let CustomizableUIInternal = {
       let widget = gPalette.get(aWidgetId);
       if (!widget.wrapper) {
         widget.wrapper = new WidgetGroupWrapper(widget);
+        gGroupWrapperCache.set(aWidgetId, widget.wrapper);
       }
       return widget.wrapper;
     }
 
     // PROVIDER_SPECIAL gets treated the same as PROVIDER_XUL.
-    return new XULWidgetGroupWrapper(aWidgetId);
+    let wrapper = new XULWidgetGroupWrapper(aWidgetId);
+    gGroupWrapperCache.set(aWidgetId, wrapper);
+    return wrapper;
   },
 
   registerArea: function(aName, aProperties) {
@@ -572,6 +580,11 @@ let CustomizableUIInternal = {
       if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
         areaNode.setAttribute("currentset", areaNode.currentSet);
       }
+
+      let windowCache = gSingleWrapperCache.get(window);
+      if (windowCache) {
+        windowCache.delete(aWidgetId);
+      }
     }
   },
 
@@ -650,6 +663,7 @@ let CustomizableUIInternal = {
     aWindow.removeEventListener("command", this, true);
     gPanelsForWindow.delete(aWindow);
     gBuildWindows.delete(aWindow);
+    gSingleWrapperCache.delete(aWindow);
     let document = aWindow.document;
 
     for (let [areaId, areaNodes] of gBuildAreas) {
@@ -1581,6 +1595,10 @@ let CustomizableUIInternal = {
     if (buildAreaNodes) {
       for (let buildNode of buildAreaNodes) {
         let widgetNode = buildNode.ownerDocument.getElementById(aWidgetId);
+        let windowCache = gSingleWrapperCache.get(buildNode.ownerDocument.defaultView);
+        if (windowCache) {
+          windowCache.delete(aWidgetId);
+        }
         if (widgetNode) {
           widgetNode.parentNode.removeChild(widgetNode);
         }
@@ -1599,6 +1617,7 @@ let CustomizableUIInternal = {
     }
 
     gPalette.delete(aWidgetId);
+    gGroupWrapperCache.delete(aWidgetId);
 
     this.notifyListeners("onWidgetDestroyed", aWidgetId);
   },
@@ -2021,17 +2040,25 @@ function WidgetGroupWrapper(aWidget) {
   });
 
   this.forWindow = function WidgetGroupWrapper_forWindow(aWindow) {
+    let wrapperMap;
+    if (!gSingleWrapperCache.has(aWindow)) {
+      wrapperMap = new Map();
+      gSingleWrapperCache.set(aWindow, wrapperMap);
+    } else {
+      wrapperMap = gSingleWrapperCache.get(aWindow);
+    }
+    if (wrapperMap.has(aWidget.id)) {
+      return wrapperMap.get(aWidget.id);
+    }
+
     let instance = aWidget.instances.get(aWindow.document);
     if (!instance) {
       instance = CustomizableUIInternal.buildWidget(aWindow.document,
                                                     aWidget);
     }
 
-    let wrapper = gWrapperCache.get(instance);
-    if (!wrapper) {
-      wrapper = new WidgetSingleWrapper(aWidget, instance);
-      gWrapperCache.set(instance, wrapper);
-    }
+    let wrapper = new WidgetSingleWrapper(aWidget, instance);
+    wrapperMap.set(aWidget.id, wrapper);
     return wrapper;
   };
 
@@ -2099,6 +2126,17 @@ function XULWidgetGroupWrapper(aWidgetId) {
   this.provider = CustomizableUI.PROVIDER_XUL;
 
   this.forWindow = function XULWidgetGroupWrapper_forWindow(aWindow) {
+    let wrapperMap;
+    if (!gSingleWrapperCache.has(aWindow)) {
+      wrapperMap = new Map();
+      gSingleWrapperCache.set(aWindow, wrapperMap);
+    } else {
+      wrapperMap = gSingleWrapperCache.get(aWindow);
+    }
+    if (wrapperMap.has(aWidgetId)) {
+      return wrapperMap.get(aWidgetId);
+    }
+
     let instance = aWindow.document.getElementById(aWidgetId);
     if (!instance) {
       // Toolbar palettes aren't part of the document, so elements in there
@@ -2106,11 +2144,8 @@ function XULWidgetGroupWrapper(aWidgetId) {
       instance = aWindow.gNavToolbox.palette.querySelector(idToSelector(aWidgetId));
     }
 
-    let wrapper = gWrapperCache.get(instance);
-    if (!wrapper) {
-      wrapper = new XULWidgetSingleWrapper(aWidgetId, instance);
-      gWrapperCache.set(instance, wrapper);
-    }
+    let wrapper = new XULWidgetSingleWrapper(aWidgetId, instance);
+    wrapperMap.set(aWidgetId, wrapper);
     return wrapper;
   };
 
