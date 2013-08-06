@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<!DOCTYPE prompt SYSTEM "chrome://browser/locale/prompt.dtd">
+
+<dialog id="prompt-prompt-dialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="document.getElementById('prompt-prompt-textbox').focus()"
+        onclose="this.PromptHelper.onClosePrompt(this)"
+        script="chrome://browser/content/prompt/prompt.js">
+
+  <keyset>
+    <key keycode="VK_RETURN" command="cmd_ok"/>
+    <key keycode="VK_ESCAPE" command="cmd_cancel"/>
+  </keyset>
+
+  <commandset>
+    <command id="cmd_ok" oncommand="document.getElementById('prompt-prompt-dialog').PromptHelper.closePrompt(true)"/>
+    <command id="cmd_cancel" oncommand="document.getElementById('prompt-prompt-dialog').PromptHelper.closePrompt(false)"/>
+  </commandset>
+
+  <vbox class="prompt-inner">
+    <vbox class="prompt-header" flex="1">
+      <description id="prompt-prompt-title" class="prompt-title" crop="center" flex="1"/>
+  
+      <scrollbox orient="vertical" class="prompt-message" flex="1">
+        <description id="prompt-prompt-message"/>
+      </scrollbox>
+  
+      <textbox id="prompt-prompt-textbox" class="prompt-edit"/>
+  
+      <button id="prompt-prompt-checkbox" collapsed="true" pack="start" flex="1"/>
+    </vbox>
+  
+    <hbox class="prompt-buttons">
+      <button label="&ok.label;" command="cmd_ok"/>
+      <button label="&cancel.label;" command="cmd_cancel"/>
+    </hbox>
+  </vbox>
+</dialog>
