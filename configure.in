@@ -5268,7 +5268,7 @@ fi
 
 # target_arch is from {ia32|x64|arm|ppc}
 case "$CPU_ARCH" in
-x86_64 | ia64)
+x86_64)
     WEBRTC_TARGET_ARCH=x64
     ;;
 
@@ -5282,6 +5282,9 @@ x86)
 
 ppc*)
     WEBRTC_TARGET_ARCH=ppc
+    ;;
+ia64)
+    WEBRTC_TARGET_ARCH=ia64
     ;;
 *)
 # unsupported arch for webrtc
