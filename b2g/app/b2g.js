@@ -255,7 +255,6 @@ pref("layers.async-pan-zoom.enabled", true);
 
 // Web Notifications
 pref("notification.feature.enabled", true);
-pref("dom.webnotifications.enabled", false);
 
 // IndexedDB
 pref("indexedDB.feature.enabled", true);
@@ -660,13 +659,13 @@ pref("accessibility.accessfu.utterance", 1);
 pref("accessibility.accessfu.skip_empty_images", true);
 
 // Enable hit-target fluffing
-pref("ui.touch.radius.enabled", false);
+pref("ui.touch.radius.enabled", true);
 pref("ui.touch.radius.leftmm", 3);
 pref("ui.touch.radius.topmm", 5);
 pref("ui.touch.radius.rightmm", 3);
 pref("ui.touch.radius.bottommm", 2);
 
-pref("ui.mouse.radius.enabled", false);
+pref("ui.mouse.radius.enabled", true);
 pref("ui.mouse.radius.leftmm", 3);
 pref("ui.mouse.radius.topmm", 5);
 pref("ui.mouse.radius.rightmm", 3);
