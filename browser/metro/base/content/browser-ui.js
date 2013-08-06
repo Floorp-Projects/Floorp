@@ -231,6 +231,7 @@ var BrowserUI = {
   },
 
   showContent: function showContent(aURI) {
+    DialogUI.closeAllDialogs();
     StartUI.update(aURI);
     ContextUI.dismissTabs();
     ContextUI.dismissContextAppbar();
@@ -731,6 +732,13 @@ var BrowserUI = {
     // Check open popups
     if (DialogUI._popup) {
       DialogUI._hidePopup();
+      return;
+    }
+
+    // Check open dialogs
+    let dialog = DialogUI.activeDialog;
+    if (dialog) {
+      dialog.close();
       return;
     }
 
@@ -1308,6 +1316,7 @@ var PanelUI = {
 };
 
 var DialogUI = {
+  _dialogs: [],
   _popup: null,
 
   init: function() {
@@ -1372,6 +1381,39 @@ var DialogUI = {
     dialog.arguments = aArguments;
     dialog.parent = aParent;
     return dialog;
+  },
+
+  /*******************************************
+   * Dialogs
+   */
+
+  get activeDialog() {
+    // Return the topmost dialog
+    if (this._dialogs.length)
+      return this._dialogs[this._dialogs.length - 1];
+    return null;
+  },
+
+  closeAllDialogs: function closeAllDialogs() {
+    while (this.activeDialog)
+      this.activeDialog.close();
+  },
+
+  pushDialog: function pushDialog(aDialog) {
+    // If we have a dialog push it on the stack and set the attr for CSS
+    if (aDialog) {
+      this._dialogs.push(aDialog);
+      Elements.contentShowing.setAttribute("disabled", "true");
+    }
+  },
+
+  popDialog: function popDialog() {
+    if (this._dialogs.length)
+      this._dialogs.pop();
+
+    // If no more dialogs are being displayed, remove the attr for CSS
+    if (!this._dialogs.length)
+      Elements.contentShowing.removeAttribute("disabled");
   },
 
   /*******************************************
