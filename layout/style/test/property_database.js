@@ -4413,7 +4413,7 @@ if (SpecialPowers.getBoolPref("svg.paint-order.enabled")) {
 }
 
 if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
-  	gCSSProperties["filter"] = {
+	gCSSProperties["filter"] = {
 		domProp: "filter",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
@@ -4460,7 +4460,7 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
 
 			"drop-shadow(2px 2px)",
 			"drop-shadow(2px 2px 1px)",
-			"drop-shadow(2px 2px green))",
+			"drop-shadow(2px 2px green)",
 			"drop-shadow(2px 2px 1px green)",
 			"drop-shadow(green 2px 2px)",
 			"drop-shadow(green 2px 2px 1px)",
