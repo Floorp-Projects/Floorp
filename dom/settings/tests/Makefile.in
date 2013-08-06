@@ -16,6 +16,7 @@ MOCHITEST_FILES = \
   test_settings_events.html \
   test_settings_onsettingchange.html \
   test_settings_blobs.html \
+  test_settings_navigator_object.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
