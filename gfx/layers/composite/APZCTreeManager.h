@@ -253,7 +253,6 @@ private:
    */
   AsyncPanZoomController* UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                                       Layer* aLayer, uint64_t aLayersId,
-                                                      gfx3DMatrix aTransform,
                                                       AsyncPanZoomController* aParent,
                                                       AsyncPanZoomController* aNextSibling,
                                                       bool aIsFirstPaint,
