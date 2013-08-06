@@ -491,16 +491,23 @@ GfxInfo::Init()
     gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName, dllVersion);
     gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName2, dllVersion2);
 
-    uint64_t dllNumericVersion = 0, dllNumericVersion2 = 0, driverNumericVersion = 0;
+    uint64_t dllNumericVersion = 0, dllNumericVersion2 = 0,
+             driverNumericVersion = 0, knownSafeMismatchVersion = 0;
     ParseDriverVersion(dllVersion, &dllNumericVersion);
     ParseDriverVersion(dllVersion2, &dllNumericVersion2);
     ParseDriverVersion(mDriverVersion, &driverNumericVersion);
+    ParseDriverVersion(NS_LITERAL_STRING("9.17.10.0"), &knownSafeMismatchVersion);
 
-    // if GetDLLVersion fails, it gives "0.0.0.0"
-    // so if GetDLLVersion failed, we get dllNumericVersion = 0
-    // so this test implicitly handles the case where GetDLLVersion failed
-    if (dllNumericVersion != driverNumericVersion && dllNumericVersion2 != driverNumericVersion)
+    // If there's a driver version mismatch, consider this harmful only when
+    // the driver version is less than knownSafeMismatchVersion.  See the
+    // above comment about crashes with old mismatches. If the GetDllVersion
+    // call fails, then they return 0, so that will be considered a mismatch.
+    if (dllNumericVersion != driverNumericVersion &&
+        dllNumericVersion2 != driverNumericVersion &&
+        (driverNumericVersion < knownSafeMismatchVersion ||
+         std::max(dllNumericVersion, dllNumericVersion2) < knownSafeMismatchVersion)) {
       mHasDriverVersionMismatch = true;
+    }
   }
 
   const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
