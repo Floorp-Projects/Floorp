@@ -14,7 +14,7 @@ from multiprocessing import cpu_count
 from optparse import OptionParser
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import mkdtemp, gettempdir
-from threading import Timer, Thread, Event
+from threading import Timer, Thread, Event, RLock
 import random
 import signal
 import socket
@@ -28,6 +28,12 @@ except ImportError:
 
 from automation import Automation, getGlobalLog, resetGlobalLog
 from automationutils import *
+
+# Printing buffered output in case of a failure or verbose mode will result
+# in buffered output interleaved with other threads' output.
+# To prevent his, each call to the logger as well as any blocks of output that
+# are intended to be continuous are protected by the same lock.
+LOG_MUTEX = RLock()
 
 HARNESS_TIMEOUT = 5 * 60
 
@@ -355,10 +361,11 @@ class XPCShellTestThread(Thread):
 
         # we couldn't clean up the directory, and it's not the plugins dir,
         # which means that something wrong has probably happened
-        message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up directory: %s" % (name, sys.exc_info()[1])
-        self.log.error(message)
-        self.print_stdout(stdout)
-        self.print_stdout(traceback.format_exc())
+        with LOG_MUTEX:
+            message = "TEST-UNEXPECTED-FAIL | %s | Failed to clean up directory: %s" % (name, sys.exc_info()[1])
+            self.log.error(message)
+            self.print_stdout(stdout)
+            self.print_stdout(traceback.format_exc())
 
         self.failCount += 1
         xunit_result["passed"] = False
@@ -476,8 +483,11 @@ class XPCShellTestThread(Thread):
                 failureType = "TEST-UNEXPECTED-%s" % ("FAIL" if expected else "PASS")
                 message = "%s | %s | test failed (with xpcshell return code: %d), see following log:" % (
                               failureType, name, self.getReturnCode(proc))
-                self.log.error(message)
-                self.print_stdout(stdout)
+
+                with LOG_MUTEX:
+                    self.log.error(message)
+                    self.print_stdout(stdout)
+
                 self.failCount += 1
                 self.xunit_result["passed"] = False
 
@@ -490,9 +500,11 @@ class XPCShellTestThread(Thread):
                 now = time.time()
                 timeTaken = (now - startTime) * 1000
                 self.xunit_result["time"] = now - startTime
-                self.log.info("TEST-%s | %s | test passed (time: %.3fms)" % ("PASS" if expected else "KNOWN-FAIL", name, timeTaken))
-                if self.verbose:
-                    self.print_stdout(stdout)
+
+                with LOG_MUTEX:
+                    self.log.info("TEST-%s | %s | test passed (time: %.3fms)" % ("PASS" if expected else "KNOWN-FAIL", name, timeTaken))
+                    if self.verbose:
+                        self.print_stdout(stdout)
 
                 self.xunit_result["passed"] = True
 
@@ -519,9 +531,11 @@ class XPCShellTestThread(Thread):
             # We can sometimes get here before the process has terminated, which would
             # cause removeDir() to fail - so check for the process & kill it it needed.
             if proc and self.poll(proc) is None:
-                message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
-                self.log.error(message)
-                self.print_stdout(stdout)
+                with LOG_MUTEX:
+                    message = "TEST-UNEXPECTED-FAIL | %s | Process still running after test!" % name
+                    self.log.error(message)
+                    self.print_stdout(stdout)
+
                 self.failCount = 1
                 self.xunit_result["passed"] = False
                 self.xunit_result["failure"] = {
@@ -569,6 +583,20 @@ class XPCShellTests(object):
         """ Init logging and node status """
         if log:
             resetGlobalLog(log)
+
+        # Each method of the underlying logger must acquire the log
+        # mutex before writing to stdout.
+        log_funs = ['debug', 'info', 'warning', 'error', 'critical', 'log']
+        for fun_name in log_funs:
+            unwrapped = getattr(self.log, fun_name, None)
+            if unwrapped:
+                def wrap(fn):
+                    def wrapped(*args, **kwargs):
+                        with LOG_MUTEX:
+                            fn(*args, **kwargs)
+                    return wrapped
+                setattr(self.log, fun_name, wrap(unwrapped))
+
         self.nodeProc = None
 
     def buildTestList(self):
