@@ -444,6 +444,16 @@ documenttab[selected] .documenttab-selection {
 
 /* Navigation bar ========================================================== */
 
+/* Most appbars are hidden by default, but we want to keep #navbar visible so
+ * we can show the progress bar at all times.  Instead, we hide only the
+ * toolbar portion of the navbar. */
+#navbar {
+  visibility: visible;
+}
+#navbar:not([hiding]):not([visible]) > #toolbar-overlay {
+  visibility: hidden;
+}
+
 .circularprogressindicator-progressRing {
   margin: 0 @toolbar_horizontal_spacing@;
   pointer-events:none;
