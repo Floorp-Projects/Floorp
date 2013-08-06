@@ -2039,11 +2039,13 @@ this.DOMApplicationRegistry = {
       aData.app[aProp] = appObject[aProp];
      });
 
-    this.queuedDownload[app.manifestURL] = {
-      manifest: manifest,
-      app: appObject,
-      profileDir: aProfileDir,
-      offlineCacheObserver: aOfflineCacheObserver
+    if (manifest.appcache_path) {
+      this.queuedDownload[app.manifestURL] = {
+        manifest: manifest,
+        app: appObject,
+        profileDir: aProfileDir,
+        offlineCacheObserver: aOfflineCacheObserver
+      }
     }
 
     // We notify about the successful installation via mgmt.oninstall and the
