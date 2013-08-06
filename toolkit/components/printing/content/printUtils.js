@@ -216,6 +216,13 @@ var PrintUtils = {
       return;
     }
 
+    // Set the original window as an active window so any mozPrintCallbacks can
+    // run without delayed setTimeouts.
+    var docShell = originalWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIWebNavigation)
+                                 .QueryInterface(Ci.nsIDocShell);
+    docShell.isActive = true;
+
     // show the toolbar after we go into print preview mode so
     // that we can initialize the toolbar with total num pages
     var XUL_NS =

@@ -59,15 +59,17 @@
 /* Black box message */
 
 #black-boxed-message {
-  padding: 100px 50px;
-  background-color: rgb(61, 69, 76);
+  /* Prevent the container deck from aquiring the height from this message. */
+  min-height: 1px;
+  background-color: rgb(61,69,76);
+  padding: 25vh 0;
   color: white;
 }
 
 #black-boxed-message-label,
 #black-boxed-message-button {
   text-align: center;
-  font-size: 150%;
+  font-size: 120%;
 }
 
 #black-boxed-message-button {

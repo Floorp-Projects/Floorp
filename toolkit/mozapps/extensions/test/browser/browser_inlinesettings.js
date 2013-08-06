@@ -139,7 +139,7 @@ function end_test() {
   MockFilePicker.cleanup();
 
   close_manager(gManagerWindow, function() {
-    observer.checkHidden("inlinesettings2@tests.mozilla.org");
+    observer.checkHidden("inlinesettings3@tests.mozilla.org");
     Services.obs.removeObserver(observer,
                                 AddonManager.OPTIONS_NOTIFICATION_HIDDEN);
 
@@ -571,6 +571,104 @@ add_test(function() {
     button.focus(); // make sure it's in view
     EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
     observer.checkNotDisplayed();
+
+    gCategoryUtilities.openType("extension", run_next_test);
+  });
+});
+
+// Tests bindings with existing prefs.
+add_test(function() {
+  observer.checkHidden("inlinesettings2@tests.mozilla.org");
+
+  // Ensure these prefs are set. They should be set above, but somebody might
+  // change the tests above.
+  var profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  Services.prefs.setBoolPref("extensions.inlinesettings1.bool", false);
+  Services.prefs.setIntPref("extensions.inlinesettings1.boolint", 1);
+  Services.prefs.setIntPref("extensions.inlinesettings1.integer", 12);
+  Services.prefs.setCharPref("extensions.inlinesettings1.string", "bar/");
+  Services.prefs.setCharPref("extensions.inlinesettings1.color", "#FF9900");
+  Services.prefs.setCharPref("extensions.inlinesettings1.file", profD.path);
+  Services.prefs.setCharPref("extensions.inlinesettings1.directory", profD.path);
+
+  var addon = get_addon_element(gManagerWindow, "inlinesettings1@tests.mozilla.org");
+  addon.parentNode.ensureElementIsVisible(addon);
+
+  var button = gManagerWindow.document.getAnonymousElementByAttribute(addon, "anonid", "preferences-btn");
+  EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+
+  wait_for_view_load(gManagerWindow, function() {
+    observer.checkDisplayed("inlinesettings1@tests.mozilla.org");
+
+    var grid = gManagerWindow.document.getElementById("detail-grid");
+    var settings = grid.querySelectorAll("rows > setting");
+
+    var input = gManagerWindow.document.getAnonymousElementByAttribute(settings[0], "anonid", "input");
+    is(input.checked, false, "Checkbox should have initial value");
+
+    var input = gManagerWindow.document.getAnonymousElementByAttribute(settings[1], "anonid", "input");
+    is(input.checked, true, "Checkbox should have initial value");
+
+    var input = gManagerWindow.document.getAnonymousElementByAttribute(settings[2], "anonid", "input");
+    is(input.value, "12", "Number box should have initial value");
+
+    var input = gManagerWindow.document.getAnonymousElementByAttribute(settings[3], "anonid", "input");
+    is(input.value, "bar/", "Text box should have initial value");
+
+    input = gManagerWindow.document.getAnonymousElementByAttribute(settings[5], "anonid", "input");
+    is(input.color, "#FF9900", "Color picker should have initial value");
+
+    input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
+    is(input.value, profD.path, "Label should have initial value");
+    is(input.tooltipText, profD.path, "Label tooltip should have initial value");
+
+    input = gManagerWindow.document.getAnonymousElementByAttribute(settings[7], "anonid", "input");
+    is(input.value, profD.path, "Label value should have initial value");
+    is(input.tooltipText, profD.path, "Label tooltip should have initial value");
+
+    gCategoryUtilities.openType("extension", run_next_test);
+  });
+});
+
+// Tests bindings with existing prefs.
+add_test(function() {
+  observer.checkHidden("inlinesettings1@tests.mozilla.org");
+
+  // Ensure these prefs are set. They should be set above, but somebody might
+  // change the tests above.
+  Services.prefs.setBoolPref("extensions.inlinesettings3.radioBool", false);
+  Services.prefs.setIntPref("extensions.inlinesettings3.radioInt", 6);
+  Services.prefs.setCharPref("extensions.inlinesettings3.radioString", "kilo");
+  Services.prefs.setIntPref("extensions.inlinesettings3.menulist", 9);
+
+  var addon = get_addon_element(gManagerWindow, "inlinesettings3@tests.mozilla.org");
+  addon.parentNode.ensureElementIsVisible(addon);
+
+  var button = gManagerWindow.document.getAnonymousElementByAttribute(addon, "anonid", "preferences-btn");
+  EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
+
+  wait_for_view_load(gManagerWindow, function() {
+    observer.checkDisplayed("inlinesettings3@tests.mozilla.org");
+
+    var grid = gManagerWindow.document.getElementById("detail-grid");
+    var settings = grid.querySelectorAll("rows > setting");
+
+    var radios = settings[0].getElementsByTagName("radio");
+    isnot(radios[0].selected, true, "Correct radio button should be selected");
+    is(radios[1].selected, true, "Correct radio button should be selected");
+
+    var radios = settings[1].getElementsByTagName("radio");
+    isnot(radios[0].selected, true, "Correct radio button should be selected");
+    isnot(radios[1].selected, true, "Correct radio button should be selected");
+    is(radios[2].selected, true, "Correct radio button should be selected");
+
+    var radios = settings[2].getElementsByTagName("radio");
+    isnot(radios[0].selected, true, "Correct radio button should be selected");
+    isnot(radios[1].selected, true, "Correct radio button should be selected");
+    is(radios[2].selected, true, "Correct radio button should be selected");
+
+    var input = settings[3].firstElementChild;
+    is(input.value, "9", "Menulist should have initial value");
 
     gCategoryUtilities.openType("extension", run_next_test);
   });

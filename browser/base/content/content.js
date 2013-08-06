@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this,
   "LoginManagerContent", "resource://gre/modules/LoginManagerContent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this,
+  "InsecurePasswordUtils", "resource://gre/modules/InsecurePasswordUtils.jsm");
 
 // Bug 671101 - directly using webNavigation in this context
 // causes docshells to leak
@@ -37,6 +39,9 @@ addMessageListener("Browser:HideSessionRestoreButton", function (message) {
 if (!Services.prefs.getBoolPref("browser.tabs.remote")) {
   addEventListener("DOMContentLoaded", function(event) {
     LoginManagerContent.onContentLoaded(event);
+  });
+  addEventListener("DOMFormHasPassword", function(event) {
+    InsecurePasswordUtils.checkForInsecurePasswords(event.target);
   });
   addEventListener("DOMAutoComplete", function(event) {
     LoginManagerContent.onUsernameInput(event);

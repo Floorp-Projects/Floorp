@@ -79,6 +79,11 @@
   margin: 0;
 }
 
+.webconsole-learn-more-link {
+  color: #0000EE;
+  margin: 0 0 0 4px;
+}
+
 .hud-msg-node[selected="true"] > .webconsole-timestamp,
 .hud-msg-node[selected="true"] > .webconsole-location {
   color: inherit;
