@@ -269,78 +269,12 @@
 
       <field name="_webNavigation">null</field>
 
-      <field name="_remoteWebNavigation"><![CDATA[
-        ({
-          LOAD_FLAGS_MASK: 65535,
-          LOAD_FLAGS_NONE: 0,
-          LOAD_FLAGS_IS_REFRESH: 16,
-          LOAD_FLAGS_IS_LINK: 32,
-          LOAD_FLAGS_BYPASS_HISTORY: 64,
-          LOAD_FLAGS_REPLACE_HISTORY: 128,
-          LOAD_FLAGS_BYPASS_CACHE: 256,
-          LOAD_FLAGS_BYPASS_PROXY: 512,
-          LOAD_FLAGS_CHARSET_CHANGE: 1024,
-          LOAD_FLAGS_STOP_CONTENT: 2048,
-          LOAD_FLAGS_FROM_EXTERNAL: 4096,
-          LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP: 8192,
-          LOAD_FLAGS_FIRST_LOAD: 16384,
-          LOAD_FLAGS_ALLOW_POPUPS: 32768,
-          LOAD_FLAGS_BYPASS_CLASSIFIER: 65536,
-          LOAD_FLAGS_FORCE_ALLOW_COOKIES: 131072,
-
-          STOP_NETWORK: 1,
-          STOP_CONTENT: 2,
-          STOP_ALL: 3,
-
-          canGoBack: false,
-          canGoForward: false,
-          goBack: function() { this._sendMessage("WebNavigation:GoBack", {}); },
-          goForward: function() { this._sendMessage("WebNavigation:GoForward", {}); },
-          gotoIndex: function(aIndex) { this._sendMessage("WebNavigation:GotoIndex", {index: aIndex}); },
-          loadURI: function(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
-            this._browser.userTypedValue = aURI;
-            this._browser._contentTitle = "";
-            this._sendMessage("WebNavigation:LoadURI", {uri: aURI, flags: aLoadFlags});
-          },
-          reload: function(aReloadFlags) { this._sendMessage("WebNavigation:Reload", {flags: aReloadFlags}); },
-          stop: function(aStopFlags) { this._sendMessage("WebNavigation:Stop", {flags: aStopFlags}); },
-          get document() { Components.utils.reportError("contentDocument is not available"); return null; },
-          get currentURI() {
-            if (!this._currentURI)
-               this._currentURI = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService).newURI("about:blank", null, null);
-
-            return this._currentURI;
-          },
-          set currentURI(aURI) { this.loadURI(aURI.spec, null, null, null); },
-          referringURI: null,
-          get sessionHistory() { return null; },
-          set sessionHistory(aValue) { },
-
-          _currentURI: null,
-          _browser: this,
-          _sendMessage: function(aMessage, aData) {
-            try {
-              this._browser.messageManager.sendAsyncMessage(aMessage, aData);
-            }
-            catch (e) {
-              Components.utils.reportError(e);
-            }
-         },
-
-         QueryInterface: function(aIID) {
-           if (aIID.equals(Components.interfaces.nsIWebNavigation) || aIID.equals(Components.interfaces.nsISupports))
-             return this;
-           throw Components.results.NS_NOINTERFACE;
-         }
-        })
-      ]]></field>
-
       <property name="webNavigation"
                 readonly="true">
         <getter>
         <![CDATA[
           if (!this._webNavigation)
-            this._webNavigation = this.isRemoteBrowser ? this._remoteWebNavigation : this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+            this._webNavigation = this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
           return this._webNavigation;
         ]]>
         </getter>
