@@ -260,6 +260,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_visibleTabs_contextMenu.js \
                  browser_visibleTabs_tabPreview.js \
                  browser_visibleTabs.js \
+                 browser_windowopen_reflows.js \
                  browser_wyciwyg_urlbarCopying.js \
                  browser_zbug569342.js \
                  bug564387_video1.ogv \
