@@ -33,14 +33,6 @@ chrome.jar:
 * content/flyoutpanels/AboutFlyoutPanel.js     (content/flyoutpanels/AboutFlyoutPanel.js)
   content/flyoutpanels/PrefsFlyoutPanel.js     (content/flyoutpanels/PrefsFlyoutPanel.js)
 
-  content/prompt/alert.xul                     (content/prompt/alert.xul)
-  content/prompt/confirm.xul                   (content/prompt/confirm.xul)
-  content/prompt/prompt.xul                    (content/prompt/prompt.xul)
-  content/prompt/promptPassword.xul            (content/prompt/promptPassword.xul)
-  content/prompt/select.xul                    (content/prompt/select.xul)
-  content/prompt/prompt.js                     (content/prompt/prompt.js)
-  content/prompt/crash.xul                     (content/prompt/crash.xul)
-
   content/helperui/AlertsHelper.js             (content/helperui/AlertsHelper.js)
   content/helperui/IndexedDB.js                (content/helperui/IndexedDB.js)
   content/helperui/MenuUI.js                   (content/helperui/MenuUI.js)
