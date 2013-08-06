@@ -109,7 +109,7 @@
       substitute: function(source) {
         let map = this._map;
         return source.replace(this.regexp, function(url) {
-          return map.get(url);
+          return map.get(url) || url;
         }, "g");
       }
     };
