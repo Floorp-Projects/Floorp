@@ -4379,7 +4379,8 @@ nsIPrincipal*
 nsContentUtils::GetSystemPrincipal()
 {
   nsCOMPtr<nsIPrincipal> sysPrin;
-  nsresult rv = sSecurityManager->GetSystemPrincipal(getter_AddRefs(sysPrin));
+  DebugOnly<nsresult> rv =
+    sSecurityManager->GetSystemPrincipal(getter_AddRefs(sysPrin));
   MOZ_ASSERT(NS_SUCCEEDED(rv) && sysPrin);
   return sysPrin;
 }
