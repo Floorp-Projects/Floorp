@@ -573,7 +573,8 @@ class Pattern(object):
     def __init__(self, s):
         r = []
         i = 0
-        while i < len(s):
+        slen = len(s)
+        while i < slen:
             c = s[i]
             if c == '\\':
                 nc = s[i + 1]
