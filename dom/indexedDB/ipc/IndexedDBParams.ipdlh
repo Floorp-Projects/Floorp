@@ -1,0 +1,57 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using mozilla::dom::indexedDB::Key;
+using mozilla::dom::indexedDB::IDBCursor::Direction;
+
+using mozilla::void_t;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+namespace ipc {
+
+struct KeyRange
+{
+  Key lower;
+  Key upper;
+  bool lowerOpen;
+  bool upperOpen;
+  bool isOnly;
+};
+
+union OptionalKeyRange
+{
+  KeyRange;
+  void_t;
+};
+
+struct GetParams
+{
+  KeyRange keyRange;
+};
+
+struct GetAllParams
+{
+  OptionalKeyRange optionalKeyRange;
+  uint32_t limit;
+};
+
+struct CountParams
+{
+  OptionalKeyRange optionalKeyRange;
+};
+
+struct OpenCursorParams
+{
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+} // namespace ipc
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla
