@@ -1022,6 +1022,7 @@ var BrowserUI = {
       case "cmd_openLocation":
         ContextUI.displayNavbar();
         this._edit.beginEditing(true);
+        this._edit.select();
         break;
       case "cmd_addBookmark":
         ContextUI.displayNavbar();
