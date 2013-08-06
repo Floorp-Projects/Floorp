@@ -67,7 +67,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor, Laye
                                 aRoot,
                                 // aCompositor is null in gtest scenarios
                                 aCompositor ? aCompositor->RootLayerTreeId() : 0,
-                                gfx3DMatrix(), nullptr, nullptr,
+                                nullptr, nullptr,
                                 aIsFirstPaint, aFirstPaintLayersId,
                                 &apzcsToDestroy);
   }
@@ -81,15 +81,11 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor, Laye
 AsyncPanZoomController*
 APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                              Layer* aLayer, uint64_t aLayersId,
-                                             gfx3DMatrix aTransform,
                                              AsyncPanZoomController* aParent,
                                              AsyncPanZoomController* aNextSibling,
                                              bool aIsFirstPaint, uint64_t aFirstPaintLayersId,
                                              nsTArray< nsRefPtr<AsyncPanZoomController> >* aApzcsToDestroy)
 {
-  // Accumulate the CSS transform between layers that have an APZC
-  aTransform = aTransform * aLayer->GetTransform();
-
   ContainerLayer* container = aLayer->AsContainerLayer();
   AsyncPanZoomController* controller = nullptr;
   if (container) {
@@ -120,13 +116,13 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
         controller->NotifyLayersUpdated(container->GetFrameMetrics(),
                                         aIsFirstPaint && (aLayersId == aFirstPaintLayersId));
 
+        gfx3DMatrix transform = container->GetEffectiveTransform();
         LayerRect visible = container->GetFrameMetrics().mViewport * container->GetFrameMetrics().LayersPixelsPerCSSPixel();
-        controller->SetLayerHitTestData(visible, aTransform);
-        // Reset the accumulated transform once we hit a layer with an APZC
-        aTransform = gfx3DMatrix();
-        APZC_LOG("Setting rect(%f %f %f %f) as visible region for APZC %p\n", visible.x, visible.y,
-                                                                              visible.width, visible.height,
-                                                                              controller);
+        gfxRect transformed = transform.TransformBounds(gfxRect(visible.x, visible.y, visible.width, visible.height));
+        controller->SetVisibleRegion(transformed);
+        APZC_LOG("Setting rect(%f %f %f %f) as visible region for %p\n", transformed.x, transformed.y,
+                                                                         transformed.width, transformed.height,
+                                                                         controller);
 
         // Bind the APZC instance into the tree of APZCs
         if (aNextSibling) {
@@ -148,7 +144,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
   uint64_t childLayersId = (aLayer->AsRefLayer() ? aLayer->AsRefLayer()->GetReferentId() : aLayersId);
   AsyncPanZoomController* next = nullptr;
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
-    next = UpdatePanZoomControllerTree(aCompositor, child, childLayersId, aTransform, aParent, next,
+    next = UpdatePanZoomControllerTree(aCompositor, child, childLayersId, aParent, next,
                                        aIsFirstPaint, aFirstPaintLayersId, aApzcsToDestroy);
   }
 
@@ -370,19 +366,17 @@ APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableL
 AsyncPanZoomController*
 APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, gfxPoint aHitTestPoint)
 {
-  gfx3DMatrix transform = gfx3DMatrix(aApzc->GetCurrentAsyncTransform()) * aApzc->GetCSSTransform();
-  gfx3DMatrix untransform = transform.Inverse();
-  gfxPoint untransformed = untransform.ProjectPoint(aHitTestPoint);
-
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
+  ViewTransform apzcTransform = aApzc->GetCurrentAsyncTransform();
+  gfxPoint untransformed = gfx3DMatrix(apzcTransform).Inverse().ProjectPoint(aHitTestPoint);
   for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
     AsyncPanZoomController* match = GetAPZCAtPoint(child, untransformed);
     if (match) {
       return match;
     }
   }
-  if (aApzc->VisibleRegionContains(LayerPoint(untransformed.x, untransformed.y))) {
+  if (aApzc->VisibleRegionContains(untransformed)) {
     return aApzc;
   }
   return nullptr;
