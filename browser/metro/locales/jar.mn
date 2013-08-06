@@ -20,6 +20,7 @@
   locale/browser/sync.properties          (%chrome/sync.properties)
   locale/browser/passwordmgr.properties   (%chrome/passwordmgr.properties)
   locale/browser/phishing.dtd             (%chrome/phishing.dtd)
+  locale/browser/crashprompt.dtd          (%chrome/crashprompt.dtd)
   locale/browser/aboutAddons.dtd          (%chrome/aboutAddons.dtd)
 
 @AB_CD@.jar:
