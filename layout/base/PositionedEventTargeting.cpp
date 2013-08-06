@@ -167,6 +167,9 @@ IsElementClickable(nsIFrame* aFrame, nsIAtom* stopAt = nullptr)
                              nsGkAtoms::button, eIgnoreCase)) {
       return true;
     }
+    if (content->IsEditable()) {
+      return true;
+    }
     nsCOMPtr<nsIURI> linkURI;
     if (content->IsLink(getter_AddRefs(linkURI))) {
       return true;
