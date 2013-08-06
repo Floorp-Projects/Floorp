@@ -138,6 +138,10 @@ var NodeActor = protocol.ActorClass({
 
   // Returns the JSON representation of this object over the wire.
   form: function(detail) {
+    if (detail === "actorid") {
+      return this.actorID;
+    }
+
     let parentNode = this.walker.parentNode(this);
 
     // Estimate the number of children.
@@ -152,7 +156,7 @@ var NodeActor = protocol.ActorClass({
       actor: this.actorID,
       parent: parentNode ? parentNode.actorID : undefined,
       nodeType: this.rawNode.nodeType,
-      namespaceURI: this.namespaceURI,
+      namespaceURI: this.rawNode.namespaceURI,
       nodeName: this.rawNode.nodeName,
       numChildren: numChildren,
 
@@ -308,6 +312,10 @@ let NodeFront = protocol.FrontClass(NodeActor, {
 
   // Update the object given a form representation off the wire.
   form: function(form, detail, ctx) {
+    if (detail === "actorid") {
+      this.actorID = form;
+      return;
+    }
     // Shallow copy of the form.  We could just store a reference, but
     // eventually we'll want to update some of the data.
     this._form = object.merge(form);

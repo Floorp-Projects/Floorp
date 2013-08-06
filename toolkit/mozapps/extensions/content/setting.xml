@@ -463,11 +463,15 @@
               return;
           }
 
-          for (let i = 0; i < this.control.itemCount; i++) {
-            if (this.control.getItemAtIndex(i).value == val) {
-              this.control.selectedIndex = i;
-              break;
+          if ("itemCount" in this.control) {
+            for (let i = 0; i < this.control.itemCount; i++) {
+              if (this.control.getItemAtIndex(i).value == val) {
+                this.control.selectedIndex = i;
+                break;
+              }
             }
+          } else {
+            this.control.setAttribute("value", val);
           }
         ]]>
         </body>
