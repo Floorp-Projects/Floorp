@@ -259,11 +259,8 @@ class JSAPITest
 
     bool definePrint();
 
-    virtual JSRuntime * createRuntime() {
-        JSRuntime *rt = JS_NewRuntime(8L * 1024 * 1024, JS_USE_HELPER_THREADS);
-        if (!rt)
-            return NULL;
-
+    static void setNativeStackQuota(JSRuntime *rt)
+    {
         const size_t MAX_STACK_SIZE =
 /* Assume we can't use more than 5e5 bytes of C stack by default. */
 #if (defined(DEBUG) && defined(__SUNPRO_CC))  || defined(JS_CPU_SPARC)
@@ -278,6 +275,13 @@ class JSAPITest
         ;
 
         JS_SetNativeStackQuota(rt, MAX_STACK_SIZE);
+    }
+
+    virtual JSRuntime * createRuntime() {
+        JSRuntime *rt = JS_NewRuntime(8L * 1024 * 1024, JS_USE_HELPER_THREADS);
+        if (!rt)
+            return NULL;
+        setNativeStackQuota(rt);
         return rt;
     }
 
