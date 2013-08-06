@@ -410,7 +410,7 @@ InParallelSection()
 #endif
 }
 
-bool InSequentialOrExclusiveParallelSection();
+bool InExclusiveParallelSection();
 
 bool ParallelTestsShouldPass(JSContext *cx);
 

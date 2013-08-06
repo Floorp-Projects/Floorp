@@ -62,8 +62,8 @@ public:
 
   void SetAppendWindowEnd(double aAppendWindowEnd, ErrorResult& aRv);
 
-  void AppendBuffer(ArrayBuffer& aData, ErrorResult& aRv);
-  void AppendBuffer(ArrayBufferView& aData, ErrorResult& aRv);
+  void AppendBuffer(const ArrayBuffer& aData, ErrorResult& aRv);
+  void AppendBuffer(const ArrayBufferView& aData, ErrorResult& aRv);
 
   void Abort(ErrorResult& aRv);
 

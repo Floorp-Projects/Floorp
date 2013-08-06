@@ -55,7 +55,8 @@ Crypto::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 JSObject *
-Crypto::GetRandomValues(JSContext* aCx, ArrayBufferView& aArray, ErrorResult& aRv)
+Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
+			ErrorResult& aRv)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Called on the wrong thread");
 

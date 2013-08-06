@@ -1415,9 +1415,15 @@
 
             t.setAttribute("crop", "end");
             t.setAttribute("onerror", "this.removeAttribute('image');");
+            t.className = "tabbrowser-tab";
+
+#ifdef MAKE_E10S_WORK
+            let remote = this._shouldBrowserBeRemote(aURI);
+#else
+            let remote = gMultiProcessBrowser;
+#endif
             if (remote)
               t.setAttribute("remote", "true");
-            t.className = "tabbrowser-tab";
 
             this.tabContainer._unlockTabSizing();
 
@@ -1452,11 +1458,6 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
-#ifdef MAKE_E10S_WORK
-            let remote = this._shouldBrowserBeRemote(aURI);
-#else
-            let remote = gMultiProcessBrowser;
-#endif
             if (remote)
               b.setAttribute("remote", "true");
 

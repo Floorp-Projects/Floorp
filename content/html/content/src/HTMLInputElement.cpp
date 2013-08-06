@@ -6025,10 +6025,14 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
         continue;
       }
 
-      // Get mime type name
-      nsCString mimeTypeName;
-      mimeInfo->GetType(mimeTypeName);
-      CopyUTF8toUTF16(mimeTypeName, filterName);
+      // Get a name for the filter: first try the description, then the mime type
+      // name if there is no description
+      mimeInfo->GetDescription(filterName);
+      if (filterName.IsEmpty()) {
+        nsCString mimeTypeName;
+        mimeInfo->GetType(mimeTypeName);
+        CopyUTF8toUTF16(mimeTypeName, filterName);
+      }
 
       // Get extension list
       nsCOMPtr<nsIUTF8StringEnumerator> extensions;

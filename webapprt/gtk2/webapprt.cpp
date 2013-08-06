@@ -71,6 +71,8 @@ void ErrorDialog(const char* message)
   gtk_init(pargc, pargv);
 
   GtkWidget* dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s", message);
+  gtk_window_set_title(GTK_WINDOW(dialog), "Error launching webapp");
+  gtk_window_set_skip_taskbar_hint(GTK_WINDOW(dialog), false);
   gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
 }
