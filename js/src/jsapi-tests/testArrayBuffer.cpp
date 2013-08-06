@@ -23,7 +23,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
     CHECK(buf_len1 = JS_NewArrayBuffer(cx, sizes[0]));
     CHECK(tarray_len1 = JS_NewInt32ArrayWithBuffer(cx, testBuf[0], 0, -1));
 
-    jsval dummy = INT_TO_JSVAL(MAGIC_VALUE_1);
+    JS::RootedValue dummy(cx, INT_TO_JSVAL(MAGIC_VALUE_1));
     JS_SetElement(cx, testArray[0], 0, &dummy);
 
     // Many-element ArrayBuffer (uses dynamic storage)
@@ -48,7 +48,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         uint8_t *data = JS_GetArrayBufferData(obj);
         CHECK(data != NULL);
         *reinterpret_cast<uint32_t*>(data) = MAGIC_VALUE_2;
-        CHECK(JS_GetElement(cx, view, 0, v.address()));
+        CHECK(JS_GetElement(cx, view, 0, &v));
         CHECK_SAME(v, INT_TO_JSVAL(MAGIC_VALUE_2));
 
         // Steal the contents
@@ -69,7 +69,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK_SAME(v, INT_TO_JSVAL(0));
         CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), 0);
         v = JSVAL_VOID;
-        JS_GetElement(cx, obj, 0, v.address());
+        JS_GetElement(cx, obj, 0, &v);
         CHECK_SAME(v, JSVAL_VOID);
 
         // Transfer to a new ArrayBuffer
@@ -84,7 +84,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         data = JS_GetArrayBufferData(dst);
         CHECK(data != NULL);
         CHECK_EQUAL(*reinterpret_cast<uint32_t*>(data), MAGIC_VALUE_2);
-        CHECK(JS_GetElement(cx, dstview, 0, v.address()));
+        CHECK(JS_GetElement(cx, dstview, 0, &v));
         CHECK_SAME(v, INT_TO_JSVAL(MAGIC_VALUE_2));
     }
 

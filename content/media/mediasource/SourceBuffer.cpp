@@ -89,13 +89,13 @@ SourceBuffer::SetAppendWindowEnd(double aAppendWindowEnd, ErrorResult& aRv)
 }
 
 void
-SourceBuffer::AppendBuffer(ArrayBuffer& aData, ErrorResult& aRv)
+SourceBuffer::AppendBuffer(const ArrayBuffer& aData, ErrorResult& aRv)
 {
   AppendData(aData.Data(), aData.Length(), aRv);
 }
 
 void
-SourceBuffer::AppendBuffer(ArrayBufferView& aData, ErrorResult& aRv)
+SourceBuffer::AppendBuffer(const ArrayBufferView& aData, ErrorResult& aRv)
 {
   AppendData(aData.Data(), aData.Length(), aRv);
 }

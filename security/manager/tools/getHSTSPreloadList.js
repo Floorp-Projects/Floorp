@@ -47,7 +47,7 @@ const HEADER = "/* This Source Code Form is subject to the terms of the Mozilla 
 "\n" +
 "/*****************************************************************************/\n" +
 "/* This is an automatically generated file. If you're not                    */\n" +
-"/* nsStrictTransportSecurityService.cpp, you shouldn't be #including it.     */\n" +
+"/* nsSiteSecurityService.cpp, you shouldn't be #including it.     */\n" +
 "/*****************************************************************************/\n" +
 "\n" +
 "#include <stdint.h>\n";
@@ -110,8 +110,8 @@ function getHosts(rawdata) {
   return hosts;
 }
 
-var gSTSService = Cc["@mozilla.org/stsservice;1"]
-                  .getService(Ci.nsIStrictTransportSecurityService);
+var gSSService = Cc["@mozilla.org/ssservice;1"]
+                   .getService(Ci.nsISiteSecurityService);
 
 function processStsHeader(host, header, status) {
   var maxAge = { value: 0 };
@@ -120,7 +120,7 @@ function processStsHeader(host, header, status) {
   if (header != null) {
     try {
       var uri = Services.io.newURI("https://" + host.name, null, null);
-      gSTSService.processStsHeader(uri, header, 0, maxAge, includeSubdomains);
+      gSSService.processStsHeader(uri, header, 0, maxAge, includeSubdomains);
     }
     catch (e) {
       dump("ERROR: could not process header '" + header + "' from " +

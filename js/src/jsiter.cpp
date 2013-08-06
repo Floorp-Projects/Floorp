@@ -829,10 +829,8 @@ PropertyIteratorObject::trace(JSTracer *trc, JSObject *obj)
 void
 PropertyIteratorObject::finalize(FreeOp *fop, JSObject *obj)
 {
-    if (NativeIterator *ni = obj->as<PropertyIteratorObject>().getNativeIterator()) {
-        obj->as<PropertyIteratorObject>().setNativeIterator(NULL);
+    if (NativeIterator *ni = obj->as<PropertyIteratorObject>().getNativeIterator())
         fop->free_(ni);
-    }
 }
 
 Class PropertyIteratorObject::class_ = {

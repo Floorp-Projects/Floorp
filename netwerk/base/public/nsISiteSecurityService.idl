@@ -1,0 +1,100 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsIObserver;
+interface nsIHttpChannel;
+
+[scriptable, uuid(b20a9242-5732-45bc-9fa0-a178154f2721)]
+interface nsISiteSecurityService : nsISupports
+{
+    const uint32_t HEADER_HSTS = 0;
+    const uint32_t HEADER_HKPK = 1;
+    const uint32_t HEADER_OMS = 2;
+
+    /**
+     * Parses a given HTTP header and records the results internally.
+     * Currently the only header type supported is HSTS (aka STS).
+     * The format of the HSTS header is defined by the HSTS specification:
+     * https://tools.ietf.org/html/rfc6797
+     * and allows a host to specify that future HTTP requests should be
+     * upgraded to HTTPS.
+     *
+     * @param aType the type of security header in question.
+     * @param aSourceURI the URI of the resource with the HTTP header.
+     * @param aHeader the HTTP response header specifying security data.
+     * @param aFlags  options for this request as defined in nsISocketProvider:
+     *                  NO_PERMANENT_STORAGE
+     * @param aMaxAge the parsed max-age directive of the header.
+     * @param aIncludeSubdomains the parsed includeSubdomains directive.
+     * @return NS_OK            if it succeeds
+     *         NS_ERROR_FAILURE if it can't be parsed
+     *         NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA
+     *                          if there are unrecognized tokens in the header.
+     */
+    void processHeader(in uint32_t aType,
+                       in nsIURI aSourceURI,
+                       in string aHeader,
+                       in uint32_t aFlags,
+                       [optional] out unsigned long long aMaxAge,
+                       [optional] out boolean aIncludeSubdomains);
+
+    /**
+     * Given a header type, removes state relating to that header of a host,
+     * including the includeSubdomains state that would affect subdomains.
+     * This essentially removes the state for the domain tree rooted at this
+     * host.
+     * @param aType   the type of security state in question
+     * @param aURI    the URI of the target host
+     * @param aFlags  options for this request as defined in nsISocketProvider:
+     *                  NO_PERMANENT_STORAGE
+     */
+    void removeState(in uint32_t aType,
+                     in nsIURI aURI,
+                     in uint32_t aFlags);
+
+    /**
+     * See isSecureURI
+     *
+     * @param aType the type of security state in question.
+     * @param aHost the hostname (punycode) to query for state.
+     * @param aFlags  options for this request as defined in nsISocketProvider:
+     *                  NO_PERMANENT_STORAGE
+     */
+    boolean isSecureHost(in uint32_t aType,
+                         in string aHost,
+                         in uint32_t aFlags);
+
+    /**
+     * Checks if the given security info is for a host with a broken
+     * transport layer (certificate errors like invalid CN).
+     */
+    boolean shouldIgnoreHeaders(in nsISupports aSecurityInfo);
+
+    /**
+     * Checks whether or not the URI's hostname has a given security state set.
+     * For example, for HSTS:
+     * The URI is an HSTS URI if either the host has the HSTS state set, or one
+     * of its super-domains has the HSTS "includeSubdomains" flag set.
+     * NOTE: this function makes decisions based only on the
+     * host contained in the URI, and disregards other portions of the URI
+     * such as path and port.
+     *
+     * @param aType the type of security state in question.
+     * @param aURI the URI to query for STS state.
+     * @param aFlags  options for this request as defined in nsISocketProvider:
+     *                  NO_PERMANENT_STORAGE
+     */
+    boolean isSecureURI(in uint32_t aType, in nsIURI aURI, in uint32_t aFlags);
+
+};
+
+%{C++
+#define NS_SSSERVICE_CONTRACTID "@mozilla.org/ssservice;1"
+
+#define STS_PERMISSION "sts/use"
+#define STS_SUBDOMAIN_PERMISSION "sts/subd"
+%}

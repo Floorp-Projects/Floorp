@@ -211,18 +211,12 @@ bool
 DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
                          JS::Handle<jsid> id, bool* bp)
 {
-  JSBool b = true;
-
   JS::Rooted<JSObject*> expando(cx);
   if (!xpc::WrapperFactory::IsXrayWrapper(proxy) && (expando = GetExpandoObject(proxy))) {
-    JS::Rooted<Value> v(cx);
-    if (!JS_DeletePropertyById2(cx, expando, id, &v) ||
-        !JS_ValueToBoolean(cx, v, &b)) {
-      return false;
-    }
+    return JS_DeletePropertyById2(cx, expando, id, bp);
   }
 
-  *bp = !!b;
+  *bp = true;
   return true;
 }
 

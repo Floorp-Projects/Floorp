@@ -28,8 +28,10 @@ struct JSRuntime;
 
 namespace js {
 
-// Defined in vm/ForkJoin.cpp
-extern bool InSequentialOrExclusiveParallelSection();
+// Whether the current thread is permitted access to any part of the specified
+// runtime or zone.
+extern bool CurrentThreadCanAccessRuntime(JSRuntime *rt);
+extern bool CurrentThreadCanAccessZone(JS::Zone *zone);
 
 class FreeOp;
 
@@ -97,9 +99,13 @@ struct Cell
     MOZ_ALWAYS_INLINE bool markIfUnmarked(uint32_t color = BLACK) const;
     MOZ_ALWAYS_INLINE void unmark(uint32_t color) const;
 
-    inline JSRuntime *runtime() const;
+    inline JSRuntime *runtimeFromMainThread() const;
     inline JS::Zone *tenuredZone() const;
     inline bool tenuredIsInsideZone(JS::Zone *zone) const;
+
+    // Note: Unrestricted access to the runtime of a GC thing from an arbitrary
+    // thread can easily lead to races. Use this method very carefully.
+    inline JSRuntime *runtimeFromAnyThread() const;
 
 #ifdef DEBUG
     inline bool isAligned() const;
@@ -950,9 +956,16 @@ Cell::arenaHeader() const
 }
 
 inline JSRuntime *
-Cell::runtime() const
+Cell::runtimeFromMainThread() const
 {
-    JS_ASSERT(InSequentialOrExclusiveParallelSection());
+    JSRuntime *rt = chunk()->info.runtime;
+    JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
+    return rt;
+}
+
+inline JSRuntime *
+Cell::runtimeFromAnyThread() const
+{
     return chunk()->info.runtime;
 }
 
@@ -990,9 +1003,10 @@ Cell::unmark(uint32_t color) const
 JS::Zone *
 Cell::tenuredZone() const
 {
-    JS_ASSERT(InSequentialOrExclusiveParallelSection());
+    JS::Zone *zone = arenaHeader()->zone;
+    JS_ASSERT(CurrentThreadCanAccessZone(zone));
     JS_ASSERT(isTenured());
-    return arenaHeader()->zone;
+    return zone;
 }
 
 bool

@@ -8,23 +8,23 @@
 #include "nsEntropyCollector.h"
 #include "nsSecureBrowserUIImpl.h"
 #include "nsSecurityWarningDialogs.h"
-#include "nsStrictTransportSecurityService.h"
+#include "nsSiteSecurityService.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntropyCollector)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSecurityWarningDialogs, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStrictTransportSecurityService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSiteSecurityService, Init)
 
 NS_DEFINE_NAMED_CID(NS_ENTROPYCOLLECTOR_CID);
 NS_DEFINE_NAMED_CID(NS_SECURITYWARNINGDIALOGS_CID);
 NS_DEFINE_NAMED_CID(NS_SECURE_BROWSER_UI_CID);
-NS_DEFINE_NAMED_CID(NS_STRICT_TRANSPORT_SECURITY_CID);
+NS_DEFINE_NAMED_CID(NS_SITE_SECURITY_SERVICE_CID);
 
 static const mozilla::Module::CIDEntry kBOOTCIDs[] = {
   { &kNS_ENTROPYCOLLECTOR_CID, false, nullptr, nsEntropyCollectorConstructor },
   { &kNS_SECURITYWARNINGDIALOGS_CID, false, nullptr, nsSecurityWarningDialogsConstructor },
   { &kNS_SECURE_BROWSER_UI_CID, false, nullptr, nsSecureBrowserUIImplConstructor },
-  { &kNS_STRICT_TRANSPORT_SECURITY_CID, false, nullptr, nsStrictTransportSecurityServiceConstructor },
+  { &kNS_SITE_SECURITY_SERVICE_CID, false, nullptr, nsSiteSecurityServiceConstructor },
   { nullptr }
 };
 
@@ -32,7 +32,7 @@ static const mozilla::Module::ContractIDEntry kBOOTContracts[] = {
   { NS_ENTROPYCOLLECTOR_CONTRACTID, &kNS_ENTROPYCOLLECTOR_CID },
   { NS_SECURITYWARNINGDIALOGS_CONTRACTID, &kNS_SECURITYWARNINGDIALOGS_CID },
   { NS_SECURE_BROWSER_UI_CONTRACTID, &kNS_SECURE_BROWSER_UI_CID },
-  { NS_STSSERVICE_CONTRACTID, &kNS_STRICT_TRANSPORT_SECURITY_CID },
+  { NS_SSSERVICE_CONTRACTID, &kNS_SITE_SECURITY_SERVICE_CID },
   { nullptr }
 };
 
