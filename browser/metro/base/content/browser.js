@@ -16,9 +16,16 @@ const kSetInactiveStateTimeout = 100;
 
 const kDefaultMetadata = { autoSize: false, allowZoom: true, autoScale: true };
 
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
 // Override sizeToContent in the main window. It breaks things (bug 565887)
 window.sizeToContent = function() {
   Cu.reportError("window.sizeToContent is not allowed in this window");
+}
+
+function getTabModalPromptBox(aWindow) {
+  let browser = Browser.getBrowserForWindow(aWindow);
+  return Browser.getTabModalPromptBox(browser);
 }
 
 /*
@@ -410,19 +417,68 @@ var Browser = {
     return this._tabs;
   },
 
-  getTabForBrowser: function getTabForBrowser(aBrowser) {
-    let tabs = this._tabs;
-    for (let i = 0; i < tabs.length; i++) {
-      if (tabs[i].browser == aBrowser)
-        return tabs[i];
-    }
-    return null;
+  getTabModalPromptBox: function(aBrowser) {
+    let browser = (aBrowser || getBrowser());
+    let stack = browser.parentNode;
+    let self = this;
+
+    let promptBox = {
+      appendPrompt : function(args, onCloseCallback) {
+          let newPrompt = document.createElementNS(XUL_NS, "tabmodalprompt");
+          stack.appendChild(newPrompt);
+          browser.setAttribute("tabmodalPromptShowing", true);
+          newPrompt.clientTop; // style flush to assure binding is attached
+
+          let tab = self.getTabForBrowser(browser);
+          tab = tab.chromeTab;
+
+          newPrompt.init(args, tab, onCloseCallback);
+          return newPrompt;
+      },
+
+      removePrompt : function(aPrompt) {
+          stack.removeChild(aPrompt);
+
+          let prompts = this.listPrompts();
+          if (prompts.length) {
+          let prompt = prompts[prompts.length - 1];
+              prompt.Dialog.setDefaultFocus();
+          } else {
+              browser.removeAttribute("tabmodalPromptShowing");
+              browser.focus();
+          }
+      },
+
+      listPrompts : function(aPrompt) {
+          let els = stack.getElementsByTagNameNS(XUL_NS, "tabmodalprompt");
+          // NodeList --> real JS array
+          let prompts = Array.slice(els);
+          return prompts;
+      },
+    };
+
+    return promptBox;
   },
 
   getBrowserForWindowId: function getBrowserForWindowId(aWindowId) {
     for (let i = 0; i < this.browsers.length; i++) {
       if (this.browsers[i].contentWindowId == aWindowId)
         return this.browsers[i];
+    }
+    return null;
+  },
+
+  getBrowserForWindow: function(aWindow) {
+    let windowID = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+    return this.getBrowserForWindowId(windowID);
+  },
+
+  getTabForBrowser: function getTabForBrowser(aBrowser) {
+    let tabs = this._tabs;
+    for (let i = 0; i < tabs.length; i++) {
+      if (tabs[i].browser == aBrowser)
+        return tabs[i];
     }
     return null;
   },
@@ -612,7 +668,7 @@ var Browser = {
 
   getNotificationBox: function getNotificationBox(aBrowser) {
     let browser = aBrowser || this.selectedBrowser;
-    return browser.parentNode;
+    return browser.parentNode.parentNode;
   },
 
   /**
@@ -1632,7 +1688,11 @@ Tab.prototype = {
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
 
     // Append the browser to the document, which should start the page load
-    notification.appendChild(browser);
+    let stack = document.createElementNS(XUL_NS, "stack");
+    stack.className = "browserStack";
+    stack.appendChild(browser);
+    stack.setAttribute("flex", "1");
+    notification.appendChild(stack);
     Elements.browsers.insertBefore(notification, aInsertBefore);
 
     // stop about:blank from loading
