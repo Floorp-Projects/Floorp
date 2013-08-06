@@ -176,7 +176,7 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
 
   // Create a TrackUnionStream to support Pause/Resume by using ChangeExplicitBlockerCount
   MediaStreamGraph* gm = mStream->GetStream()->Graph();
-  mTrackUnionStream = gm->CreateTrackUnionStream(mStream);
+  mTrackUnionStream = gm->CreateTrackUnionStream(nullptr);
   MOZ_ASSERT(mTrackUnionStream, "CreateTrackUnionStream failed");
 
   if (!CheckPrincipal()) {
