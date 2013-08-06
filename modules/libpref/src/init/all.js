@@ -453,7 +453,8 @@ pref("devtools.debugger.remote-enabled", false);
 pref("devtools.debugger.remote-port", 6000);
 // Force debugger server binding on the loopback interface
 pref("devtools.debugger.force-local", true);
-
+// Display a prompt when a new connection starts to accept/reject it
+pref("devtools.debugger.prompt-connection", true);
 // Temporary setting to enable webapps actors
 pref("devtools.debugger.enable-content-actors", false);
 
