@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["CustomizableUI"];
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
   "resource:///modules/CustomizableWidgets.jsm");
@@ -1620,104 +1619,6 @@ let CustomizableUIInternal = {
     gGroupWrapperCache.delete(aWidgetId);
 
     this.notifyListeners("onWidgetDestroyed", aWidgetId);
-  },
-
-  registerManifest: function(aBaseLocation, aData) {
-    let tokens = aData.split(/\s+/);
-    let directive = tokens.shift();
-    if (directive != "widget") {
-      return;
-    }
-
-    for (let [id, widget] of gPalette) {
-      if (widget.source == aBaseLocation.spec) {
-        return; // Already registered.
-      }
-    }
-
-    let uri = NetUtil.newURI(tokens.shift(), null, aBaseLocation);
-
-    dump("\tNew widget! " + uri.spec + "\n");
-
-    let data = "";
-    try {
-      if (uri.schemeIs("jar")) {
-        data = this.readManifestFromJar(uri);
-      } else {
-        data = this.readManifestFromFile(uri);
-      }
-    }
-    catch (e) {
-      ERROR(e);
-      return;
-    }
-    data = JSON.parse(data);
-    data.source = aBaseLocation.spec;
-
-    this.createWidget(data);
-  },
-
-  // readManifestFromJar and readManifestFromFile from ChromeManifestParser.jsm.
-  readManifestFromJar: function(aURI) {
-    let data = "";
-    let entries = [];
-    let readers = [];
-
-    try {
-      // Deconstrict URI, which can be nested jar: URIs. 
-      let uri = aURI.clone();
-      while (uri instanceof Ci.nsIJARURI) {
-        entries.push(uri.JAREntry);
-        uri = uri.JARFile;
-      }
-
-      // Open the base jar.
-      let reader = Cc["@mozilla.org/libjar/zip-reader;1"]
-                     .createInstance(Ci.nsIZipReader);
-      reader.open(uri.QueryInterface(Ci.nsIFileURL).file);
-      readers.push(reader);
-
-      // Open the nested jars.
-      for (let i = entries.length - 1; i > 0; i--) {
-        let innerReader = Cc["@mozilla.org/libjar/zip-reader;1"].
-                          createInstance(Ci.nsIZipReader);
-        innerReader.openInner(reader, entries[i]);
-        readers.push(innerReader);
-        reader = innerReader;
-      }
-
-      // First entry is the actual file we want to read.
-      let zis = reader.getInputStream(entries[0]);
-      data = NetUtil.readInputStreamToString(zis, zis.available());
-    }
-    finally {
-      // Close readers in reverse order.
-      for (let i = readers.length - 1; i >= 0; i--) {
-        readers[i].close();
-        //XXXunf Don't think this is needed, but need to double check.
-        //flushJarCache(readers[i].file);
-      }
-    }
-
-    return data;
-  },
-
-  readManifestFromFile: function(aURI) {
-    let file = aURI.QueryInterface(Ci.nsIFileURL).file;
-    if (!file.exists() || !file.isFile()) {
-      return "";
-    }
-
-    let data = "";
-    let fis = Cc["@mozilla.org/network/file-input-stream;1"]
-                .createInstance(Ci.nsIFileInputStream);
-    try {
-      fis.init(file, -1, -1, false);
-      data = NetUtil.readInputStreamToString(fis, fis.available());
-    } finally {
-      fis.close();
-    }
-    return data;
   },
 
   getCustomizeTargetForArea: function(aArea, aWindow) {
