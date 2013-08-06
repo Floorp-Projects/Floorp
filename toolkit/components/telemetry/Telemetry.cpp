@@ -1015,8 +1015,8 @@ TelemetryImpl::ReflectSQL(const SlowSQLEntryType *entry,
   if (!arrayObj) {
     return false;
   }
-  return (JS_SetElement(cx, arrayObj, 0, hitCount.address())
-          && JS_SetElement(cx, arrayObj, 1, totalTime.address())
+  return (JS_SetElement(cx, arrayObj, 0, &hitCount)
+          && JS_SetElement(cx, arrayObj, 1, &totalTime)
           && JS_DefineProperty(cx, obj,
                                sql.BeginReading(),
                                OBJECT_TO_JSVAL(arrayObj),
@@ -1517,7 +1517,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::Value *ret)
   const size_t length = stacks.GetStackCount();
   for (size_t i = 0; i < length; ++i) {
     JS::Rooted<JS::Value> duration(cx, INT_TO_JSVAL(mHangReports.GetDuration(i)));
-    if (!JS_SetElement(cx, durationArray, i, duration.address())) {
+    if (!JS_SetElement(cx, durationArray, i, &duration)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -1554,7 +1554,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       return nullptr;
     }
     JS::Rooted<JS::Value> val(cx, OBJECT_TO_JSVAL(moduleInfoArray));
-    if (!JS_SetElement(cx, moduleArray, moduleIndex, val.address())) {
+    if (!JS_SetElement(cx, moduleArray, moduleIndex, &val)) {
       return nullptr;
     }
 
@@ -1566,7 +1566,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       return nullptr;
     }
     val = STRING_TO_JSVAL(str);
-    if (!JS_SetElement(cx, moduleInfoArray, index++, val.address())) {
+    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
       return nullptr;
     }
 
@@ -1576,7 +1576,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       return nullptr;
     }
     val = STRING_TO_JSVAL(id);
-    if (!JS_SetElement(cx, moduleInfoArray, index++, val.address())) {
+    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
       return nullptr;
     }
   }
@@ -1601,7 +1601,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
     }
 
     JS::Rooted<JS::Value> pcArrayVal(cx, OBJECT_TO_JSVAL(pcArray));
-    if (!JS_SetElement(cx, reportArray, i, pcArrayVal.address())) {
+    if (!JS_SetElement(cx, reportArray, i, &pcArrayVal)) {
       return nullptr;
     }
 
@@ -1616,15 +1616,15 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       int modIndex = (std::numeric_limits<uint16_t>::max() == frame.mModIndex) ?
         -1 : frame.mModIndex;
       JS::Rooted<JS::Value> modIndexVal(cx, INT_TO_JSVAL(modIndex));
-      if (!JS_SetElement(cx, framePair, 0, modIndexVal.address())) {
+      if (!JS_SetElement(cx, framePair, 0, &modIndexVal)) {
         return nullptr;
       }
       JS::Rooted<JS::Value> mOffsetVal(cx, INT_TO_JSVAL(frame.mOffset));
-      if (!JS_SetElement(cx, framePair, 1, mOffsetVal.address())) {
+      if (!JS_SetElement(cx, framePair, 1, &mOffsetVal)) {
         return nullptr;
       }
       JS::Rooted<JS::Value> framePairVal(cx, OBJECT_TO_JSVAL(framePair));
-      if (!JS_SetElement(cx, pcArray, pcIndex, framePairVal.address())) {
+      if (!JS_SetElement(cx, pcArray, pcIndex, &framePairVal)) {
         return nullptr;
       }
     }

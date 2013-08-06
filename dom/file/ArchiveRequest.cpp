@@ -196,7 +196,7 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
 
     JS::Rooted<JS::Value> item(aCx, STRING_TO_JSVAL(str));
 
-    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, item.address())) {
+    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, &item)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -249,7 +249,7 @@ ArchiveRequest::GetFilesResult(JSContext* aCx,
     nsresult rv = nsContentUtils::WrapNative(aCx, global, file,
                                              &NS_GET_IID(nsIDOMFile),
                                              value.address());
-    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, value.address())) {
+    if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, &value)) {
       return NS_ERROR_FAILURE;
     }
   }

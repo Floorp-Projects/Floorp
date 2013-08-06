@@ -266,7 +266,7 @@ class RelocatablePtr : public EncapsulatedPtr<T>
 
     ~RelocatablePtr() {
         if (this->value)
-            relocate(this->value->runtime());
+            relocate(this->value->runtimeFromMainThread());
     }
 
     RelocatablePtr<T> &operator=(T *v) {
@@ -276,7 +276,7 @@ class RelocatablePtr : public EncapsulatedPtr<T>
             this->value = v;
             post();
         } else if (this->value) {
-            JSRuntime *rt = this->value->runtime();
+            JSRuntime *rt = this->value->runtimeFromMainThread();
             this->value = v;
             relocate(rt);
         }
@@ -290,7 +290,7 @@ class RelocatablePtr : public EncapsulatedPtr<T>
             this->value = v.value;
             post();
         } else if (this->value) {
-            JSRuntime *rt = this->value->runtime();
+            JSRuntime *rt = this->value->runtimeFromMainThread();
             this->value = v;
             relocate(rt);
         }
@@ -419,9 +419,13 @@ class EncapsulatedValue : public ValueOperations<EncapsulatedValue>
     inline void pre();
     inline void pre(Zone *zone);
 
-    static inline JSRuntime *runtime(const Value &v) {
+    static inline JSRuntime *runtimeFromMainThread(const Value &v) {
         JS_ASSERT(v.isMarkable());
-        return static_cast<js::gc::Cell *>(v.toGCThing())->runtime();
+        return static_cast<js::gc::Cell *>(v.toGCThing())->runtimeFromMainThread();
+    }
+    static inline JSRuntime *runtimeFromAnyThread(const Value &v) {
+        JS_ASSERT(v.isMarkable());
+        return static_cast<js::gc::Cell *>(v.toGCThing())->runtimeFromAnyThread();
     }
 
   private:

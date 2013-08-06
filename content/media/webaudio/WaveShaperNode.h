@@ -31,7 +31,7 @@ public:
   {
     return mCurve;
   }
-  void SetCurve(const Float32Array* aData);
+  void SetCurve(const Nullable<Float32Array>& aData);
 
 private:
   void ClearCurve();

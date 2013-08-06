@@ -10,8 +10,8 @@ function test() {
   let windowsToClose = [];
   let testURI = "about:blank";
   let uri;
-  let gSTSService = Cc["@mozilla.org/stsservice;1"].
-                    getService(Ci.nsIStrictTransportSecurityService);
+  let gSSService = Cc["@mozilla.org/ssservice;1"].
+                   getService(Ci.nsISiteSecurityService);
 
   function privacyFlags(aIsPrivateMode) {
     return aIsPrivateMode ? Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0;
@@ -22,8 +22,9 @@ function test() {
       aWindow.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
 
       uri = aWindow.Services.io.newURI("https://localhost/img.png", null, null);
-      gSTSService.processStsHeader(uri, "max-age=1000", privacyFlags(aIsPrivateMode));
-      ok(gSTSService.isStsHost("localhost", privacyFlags(aIsPrivateMode)), "checking sts host");
+      gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTA, uri,
+                               "max-age=1000", privacyFlags(aIsPrivateMode));
+      ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS, "localhost", privacyFlags(aIsPrivateMode)), "checking sts host");
 
       aCallback();
     }, true);
@@ -47,7 +48,8 @@ function test() {
       aWin.close();
     });
     uri = Services.io.newURI("http://localhost", null, null);
-    gSTSService.removeStsState(uri, privacyFlags(true));
+    gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
+                           privacyFlags(true));
   });
 
   // test first when on private mode

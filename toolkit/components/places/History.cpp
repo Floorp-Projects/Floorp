@@ -426,7 +426,7 @@ GetJSObjectFromArray(JSContext* aCtx,
                   "Must provide an object that is an array!");
 
   JS::Rooted<JS::Value> value(aCtx);
-  JSBool rc = JS_GetElement(aCtx, aArray, aIndex, value.address());
+  JSBool rc = JS_GetElement(aCtx, aArray, aIndex, &value);
   NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
   NS_ENSURE_ARG(!JSVAL_IS_PRIMITIVE(value));
   *_rooter = JSVAL_TO_OBJECT(value);
@@ -2706,7 +2706,7 @@ History::GetPlacesInfo(const JS::Value& aPlaceIdentifiers,
   nsTArray<VisitData> placesInfo;
   placesInfo.SetCapacity(placesIndentifiersLength);
   for (uint32_t i = 0; i < placesIndentifiersLength; i++) {
-    JS::Value placeIdentifier;
+    JS::Rooted<JS::Value> placeIdentifier(aCtx);
     JSBool rc = JS_GetElement(aCtx, placesIndentifiers, i, &placeIdentifier);
     NS_ENSURE_TRUE(rc, NS_ERROR_UNEXPECTED);
 

@@ -173,7 +173,7 @@ MmsMessage::Create(int32_t               aId,
   nsTArray<DeliveryStatus> deliveryStatus;
   JS::Rooted<JS::Value> statusJsVal(aCx);
   for (uint32_t i = 0; i < length; ++i) {
-    if (!JS_GetElement(aCx, deliveryStatusObj, i, statusJsVal.address()) ||
+    if (!JS_GetElement(aCx, deliveryStatusObj, i, &statusJsVal) ||
         !statusJsVal.isString()) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -215,7 +215,7 @@ MmsMessage::Create(int32_t               aId,
   nsTArray<nsString> receivers;
   JS::Rooted<JS::Value> receiverJsVal(aCx);
   for (uint32_t i = 0; i < length; ++i) {
-    if (!JS_GetElement(aCx, receiversObj, i, receiverJsVal.address()) ||
+    if (!JS_GetElement(aCx, receiversObj, i, &receiverJsVal) ||
         !receiverJsVal.isString()) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -244,7 +244,7 @@ MmsMessage::Create(int32_t               aId,
 
   JS::Rooted<JS::Value> attachmentJsVal(aCx);
   for (uint32_t i = 0; i < length; ++i) {
-    if (!JS_GetElement(aCx, attachmentsObj, i, attachmentJsVal.address())) {
+    if (!JS_GetElement(aCx, attachmentsObj, i, &attachmentJsVal)) {
       return NS_ERROR_INVALID_ARG;
     }
 
@@ -526,7 +526,7 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::Value* aAttachments)
     }
 
     tmpJsVal = OBJECT_TO_JSVAL(attachmentObj);
-    if (!JS_SetElement(aCx, attachments, i, tmpJsVal.address())) {
+    if (!JS_SetElement(aCx, attachments, i, &tmpJsVal)) {
       return NS_ERROR_FAILURE;
     }
   }

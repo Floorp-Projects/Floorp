@@ -1230,14 +1230,14 @@ function test41()
         const Ci = Components.interfaces;
         var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
         var thehost = ios.newURI("http://example.com", null, null);
-        var stss = Cc["@mozilla.org/stsservice;1"].getService(Ci.nsIStrictTransportSecurityService);
+        var sss = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
         var loadContext = window.QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIWebNavigation)
                                 .QueryInterface(Ci.nsILoadContext);
         var flags = 0;
         if (loadContext.usePrivateBrowsing)
           flags |= Ci.nsISocketProvider.NO_PERMANENT_STORAGE;
-        stss.removeStsState(thehost, flags);
+        sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, thehost, flags);
         doTest(42);
        }
      }
