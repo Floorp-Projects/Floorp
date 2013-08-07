@@ -3623,6 +3623,15 @@ nsComputedDOMStyle::DoGetMinWidth()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetMixBlendMode()
+{
+    nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+    val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mMixBlendMode,
+                  nsCSSProps::kBlendModeKTable));
+    return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetLeft()
 {
   return GetOffsetWidthFor(NS_SIDE_LEFT);
@@ -5033,6 +5042,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(max_width,              MaxWidth),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(min_height,             MinHeight),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(min_width,              MinWidth),
+    COMPUTED_STYLE_MAP_ENTRY(mix_blend_mode,                MixBlendMode),
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),
     // COMPUTED_STYLE_MAP_ENTRY(orphans,                    Orphans),
     //// COMPUTED_STYLE_MAP_ENTRY(outline,                  Outline),
