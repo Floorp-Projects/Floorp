@@ -44,8 +44,8 @@ class FaviconsLoader {
             final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
 
             // We only want to load favicons from DB if they are not in the
-            // memory cache yet.
-            if (favicons.getFaviconFromMemCache(url) != null) {
+            // memory cache yet. The url is null for bookmark folders.
+            if (url == null || favicons.getFaviconFromMemCache(url) != null) {
                 continue;
             }
 
