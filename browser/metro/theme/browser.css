@@ -1246,36 +1246,3 @@ setting[type="radio"] > vbox {
 #clear-notification-done {
   font-weight: bold;
 }
-
-/* Alert Popup ============================================================= */
-
-#alerts-container {
-  color: white;
-  background-color: #5e6166;
-  border: @border_width_small@ solid #767973;
-  border-radius: @border_radius_normal@;
-  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
-  padding: @padding_normal@; /* core spacing on top/bottom */
-  margin-bottom: @margin_large@;
-  transition-property: opacity;
-  transition-duration: 0.5s;
-  opacity: 0;
-}
-
-#alerts-container.showing {
-  opacity: 1;
-}
-
-#alerts-title {
-  font-size: @font_small@ !important;
-}
-
-#alerts-text {
-  font-size: @font_xsmall@ !important;
-  white-space: pre;
-}
-
-#alerts-container {
-  -moz-margin-end: @margin_large@;
-}
-
