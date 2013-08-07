@@ -1498,6 +1498,25 @@ let RIL = {
   },
 
   /**
+   * Returns when to hide or show the caller id in the call.
+   *
+   * @param mmi
+   *        The MMI code.
+   * @return One of the CLIR_* constants.
+   */
+  _getCLIRMode: function _getCLIRMode(mmi) {
+    if (!mmi ||
+        (mmi.serviceCode != MMI_SC_CLIR) ||
+        (mmi.procedure != MMI_PROCEDURE_ACTIVATION &&
+         mmi.procedure != MMI_PROCEDURE_DEACTIVATION)) {
+      return CLIR_DEFAULT;
+    }
+
+    return mmi.procedure == MMI_PROCEDURE_ACTIVATION ? CLIR_INVOCATION :
+                                                       CLIR_SUPPRESSION;
+  },
+
+  /**
    * Enables or disables the presentation of the calling line identity (CLI) to
    * the called party when originating a call.
    *
@@ -1755,7 +1774,7 @@ let RIL = {
    * @param number
    *        String containing the number to dial.
    * @param clirMode
-   *        Integer doing something XXX TODO
+   *        Integer for showing/hidding the caller Id to the called party.
    * @param uusInfo
    *        Integer doing something XXX TODO
    */
@@ -1770,6 +1789,14 @@ let RIL = {
     if (this._isEmergencyNumber(options.number)) {
       this.dialEmergencyNumber(options, onerror);
     } else {
+      // TODO: Both dial() and sendMMI() functions should be unified at some
+      // point in the future. In the mean time we handle temporary CLIR MMI
+      // commands through the dial() function. Please see bug 889737.
+      let mmi = this._parseMMI(options.number);
+      if (mmi && this._isTemporaryModeCLIR(mmi)) {
+        options.number = mmi.dialNumber;
+        options.clirMode = this._getCLIRMode(mmi);
+      }
       this.dialNonEmergencyNumber(options, onerror);
     }
   },
@@ -2539,6 +2566,9 @@ let RIL = {
         return;
 
       // CLIR (non-temporary ones)
+      // TODO: Both dial() and sendMMI() functions should be unified at some
+      // point in the future. In the mean time we handle temporary CLIR MMI
+      // commands through the dial() function. Please see bug 889737.
       case MMI_SC_CLIR:
         options.mmiServiceCode = MMI_KS_SC_CLIR;
         options.procedure = mmi.procedure;
@@ -3153,6 +3183,20 @@ let RIL = {
      }
 
      return numbers.indexOf(number) != -1;
+   },
+
+   /**
+    * Checks whether to temporarily suppress caller id for the call.
+    *
+    * @param mmi
+    *        MMI full object.
+    */
+   _isTemporaryModeCLIR: function _isTemporaryModeCLIR(mmi) {
+     return (mmi &&
+             mmi.serviceCode == MMI_SC_CLIR &&
+             mmi.dialNumber &&
+             (mmi.procedure == MMI_PROCEDURE_ACTIVATION ||
+              mmi.procedure == MMI_PROCEDURE_DEACTIVATION));
    },
 
   /**
