@@ -68,7 +68,7 @@ ParallelResult BitLshPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs,
 ParallelResult BitRshPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *out);
 
 ParallelResult UrshValuesPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs,
-                             MutableHandleValue out);
+                             Value *out);
 
 // Make a new rest parameter in parallel.
 ParallelResult InitRestParameterPar(ForkJoinSlice *slice, uint32_t length, Value *rest,

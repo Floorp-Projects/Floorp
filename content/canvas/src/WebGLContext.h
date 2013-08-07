@@ -71,6 +71,7 @@ class WebGLBuffer;
 class WebGLVertexAttribData;
 class WebGLShader;
 class WebGLProgram;
+class WebGLQuery;
 class WebGLUniformLocation;
 class WebGLFramebuffer;
 class WebGLRenderbuffer;
@@ -389,10 +390,8 @@ public:
     void DepthRange(WebGLclampf zNear, WebGLclampf zFar);
     void DetachShader(WebGLProgram *program, WebGLShader *shader);
     void Disable(WebGLenum cap);
-    void DisableVertexAttribArray(WebGLuint index);
     void DrawBuffers(const dom::Sequence<GLenum>& buffers);
     void Enable(WebGLenum cap);
-    void EnableVertexAttribArray(WebGLuint index);
     void Flush() {
         if (!IsContextStable())
             return;
@@ -462,9 +461,6 @@ public:
                          WebGLUniformLocation *location, ErrorResult& rv);
     already_AddRefed<WebGLUniformLocation>
       GetUniformLocation(WebGLProgram *prog, const nsAString& name);
-    JS::Value GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
-                              ErrorResult& rv);
-    WebGLsizeiptr GetVertexAttribOffset(WebGLuint index, WebGLenum pname);
     void Hint(WebGLenum target, WebGLenum mode);
     bool IsBuffer(WebGLBuffer *buffer);
     bool IsEnabled(WebGLenum cap);
@@ -745,6 +741,39 @@ public:
                                     WebGLUniformLocation *location,
                                     WebGLint value);
 
+    void Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height);
+
+// -----------------------------------------------------------------------------
+// Asynchronous Queries (WebGLContextAsyncQueries.cpp)
+public:
+    already_AddRefed<WebGLQuery> CreateQuery();
+    void DeleteQuery(WebGLQuery *query);
+    void BeginQuery(WebGLenum target, WebGLQuery *query);
+    void EndQuery(WebGLenum target);
+    bool IsQuery(WebGLQuery *query);
+    already_AddRefed<WebGLQuery> GetQuery(WebGLenum target, WebGLenum pname);
+    JS::Value GetQueryObject(JSContext* cx, WebGLQuery *query, WebGLenum pname);
+
+private:
+    bool ValidateTargetParameter(WebGLenum target, const char* infos);
+    WebGLRefPtr<WebGLQuery>& GetActiveQueryByTarget(WebGLenum target);
+
+// -----------------------------------------------------------------------------
+// Vertices Feature (WebGLContextVertices.cpp)
+public:
+    void DrawArrays(GLenum mode, WebGLint first, WebGLsizei count);
+    void DrawArraysInstanced(GLenum mode, WebGLint first, WebGLsizei count, WebGLsizei primcount);
+    void DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, WebGLintptr byteOffset);
+    void DrawElementsInstanced(WebGLenum mode, WebGLsizei count, WebGLenum type,
+                               WebGLintptr byteOffset, WebGLsizei primcount);
+
+    void EnableVertexAttribArray(WebGLuint index);
+    void DisableVertexAttribArray(WebGLuint index);
+
+    JS::Value GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
+                              ErrorResult& rv);
+    WebGLsizeiptr GetVertexAttribOffset(WebGLuint index, WebGLenum pname);
+
     void VertexAttrib1f(WebGLuint index, WebGLfloat x0);
     void VertexAttrib2f(WebGLuint index, WebGLfloat x0, WebGLfloat x1);
     void VertexAttrib3f(WebGLuint index, WebGLfloat x0, WebGLfloat x1,
@@ -758,8 +787,6 @@ public:
     void VertexAttrib1fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
         VertexAttrib1fv_base(idx, arr.Length(), arr.Elements());
     }
-    void VertexAttrib1fv_base(WebGLuint idx, uint32_t arrayLength,
-                              const WebGLfloat* ptr);
 
     void VertexAttrib2fv(WebGLuint idx, const dom::Float32Array &arr) {
         VertexAttrib2fv_base(idx, arr.Length(), arr.Data());
@@ -767,8 +794,6 @@ public:
     void VertexAttrib2fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
         VertexAttrib2fv_base(idx, arr.Length(), arr.Elements());
     }
-    void VertexAttrib2fv_base(WebGLuint idx, uint32_t arrayLength,
-                              const WebGLfloat* ptr);
 
     void VertexAttrib3fv(WebGLuint idx, const dom::Float32Array &arr) {
         VertexAttrib3fv_base(idx, arr.Length(), arr.Data());
@@ -776,8 +801,6 @@ public:
     void VertexAttrib3fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
         VertexAttrib3fv_base(idx, arr.Length(), arr.Elements());
     }
-    void VertexAttrib3fv_base(WebGLuint idx, uint32_t arrayLength,
-                              const WebGLfloat* ptr);
 
     void VertexAttrib4fv(WebGLuint idx, const dom::Float32Array &arr) {
         VertexAttrib4fv_base(idx, arr.Length(), arr.Data());
@@ -785,28 +808,24 @@ public:
     void VertexAttrib4fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
         VertexAttrib4fv_base(idx, arr.Length(), arr.Elements());
     }
-    void VertexAttrib4fv_base(WebGLuint idx, uint32_t arrayLength,
-                              const WebGLfloat* ptr);
-    
+
     void VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type,
                              WebGLboolean normalized, WebGLsizei stride,
                              WebGLintptr byteOffset);
-    void Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height);
-
-// -----------------------------------------------------------------------------
-// Vertices Feature (WebGLContextVertices.cpp)
-public:
-    void DrawArrays(GLenum mode, WebGLint first, WebGLsizei count);
-    void DrawArraysInstanced(GLenum mode, WebGLint first, WebGLsizei count, WebGLsizei primcount);
-    void DrawElements(WebGLenum mode, WebGLsizei count, WebGLenum type, WebGLintptr byteOffset);
-    void DrawElementsInstanced(WebGLenum mode, WebGLsizei count, WebGLenum type,
-                               WebGLintptr byteOffset, WebGLsizei primcount);
+    void VertexAttribDivisor(WebGLuint index, WebGLuint divisor);
 
 private:
     bool DrawArrays_check(WebGLint first, WebGLsizei count, WebGLsizei primcount, const char* info);
     bool DrawElements_check(WebGLsizei count, WebGLenum type, WebGLintptr byteOffset,
                             WebGLsizei primcount, const char* info);
     void Draw_cleanup();
+
+    void VertexAttrib1fv_base(WebGLuint idx, uint32_t arrayLength, const WebGLfloat* ptr);
+    void VertexAttrib2fv_base(WebGLuint idx, uint32_t arrayLength, const WebGLfloat* ptr);
+    void VertexAttrib3fv_base(WebGLuint idx, uint32_t arrayLength, const WebGLfloat* ptr);
+    void VertexAttrib4fv_base(WebGLuint idx, uint32_t arrayLength, const WebGLfloat* ptr);
+
+    bool ValidateBufferFetching(const char *info);
 
 // -----------------------------------------------------------------------------
 // PROTECTED
@@ -876,15 +895,17 @@ protected:
     int32_t mGLMaxColorAttachments;
     int32_t mGLMaxDrawBuffers;
 
-    // Cache the max number of elements that can be read from bound VBOs
-    // (result of ValidateBuffers).
-    bool mMinInUseAttribArrayLengthCached;
-    uint32_t mMinInUseAttribArrayLength;
+    // Cache the max number of vertices and isntances that can be read from
+    // bound VBOs (result of ValidateBuffers).
+    bool mBufferFetchingIsVerified;
+    uint32_t mMaxFetchedVertices;
+    uint32_t mMaxFetchedInstances;
 
-    inline void InvalidateCachedMinInUseAttribArrayLength()
+    inline void InvalidateBufferFetching()
     {
-        mMinInUseAttribArrayLengthCached = false;
-        mMinInUseAttribArrayLength = 0;
+        mBufferFetchingIsVerified = false;
+        mMaxFetchedVertices = 0;
+        mMaxFetchedInstances = 0;
     }
 
     // Represents current status, or state, of the context. That is, is it lost
@@ -937,8 +958,9 @@ protected:
 
     nsTArray<WebGLenum> mCompressedTextureFormats;
 
+    // -------------------------------------------------------------------------
+    // Validation functions (implemented in WebGLContextValidate.cpp)
     bool InitAndValidateGL();
-    bool ValidateBuffers(uint32_t *maxAllowedCount, const char *info);
     bool ValidateCapabilityEnum(WebGLenum cap, const char *info);
     bool ValidateBlendEquationEnum(WebGLenum cap, const char *info);
     bool ValidateBlendFuncDstEnum(WebGLenum mode, const char *info);
@@ -1088,10 +1110,12 @@ protected:
     WebGLRefPtr<WebGLFramebuffer> mBoundFramebuffer;
     WebGLRefPtr<WebGLRenderbuffer> mBoundRenderbuffer;
     WebGLRefPtr<WebGLVertexArray> mBoundVertexArray;
+    WebGLRefPtr<WebGLQuery> mActiveOcclusionQuery;
 
     LinkedList<WebGLTexture> mTextures;
     LinkedList<WebGLBuffer> mBuffers;
     LinkedList<WebGLProgram> mPrograms;
+    LinkedList<WebGLQuery> mQueries;
     LinkedList<WebGLShader> mShaders;
     LinkedList<WebGLRenderbuffer> mRenderbuffers;
     LinkedList<WebGLFramebuffer> mFramebuffers;
@@ -1180,6 +1204,7 @@ public:
     friend class WebGLFramebuffer;
     friend class WebGLRenderbuffer;
     friend class WebGLProgram;
+    friend class WebGLQuery;
     friend class WebGLBuffer;
     friend class WebGLShader;
     friend class WebGLUniformLocation;

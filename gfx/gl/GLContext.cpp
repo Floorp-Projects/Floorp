@@ -97,7 +97,10 @@ static const char *sExtensionNames[] = {
     "GL_ARB_draw_instanced",
     "GL_EXT_draw_instanced",
     "GL_NV_draw_instanced",
-    "GL_ANGLE_instanced_array",
+    "GL_ARB_instanced_arrays",
+    "GL_NV_instanced_arrays",
+    "GL_ANGLE_instanced_arrays",
+    "GL_EXT_occlusion_query_boolean",
     nullptr
 };
 
@@ -321,6 +324,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryiv", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectiv", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQuery", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQuery", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fDrawBuffer, { "DrawBuffer", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffers", nullptr } },
                 { nullptr, { nullptr } },
@@ -631,6 +635,56 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 mSymbols.fDrawElementsInstanced = nullptr;
             }
         }
+
+        if (IsExtensionSupported(XXX_instanced_arrays)) {
+            SymLoadStruct instancedArraySymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fVertexAttribDivisor,
+                  { "VertexAttribDivisor",
+                    "VertexAttribDivisorARB",
+                    "VertexAttribDivisorNV",
+                    "VertexAttribDivisorANGLE",
+                    nullptr
+                  }
+                },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(instancedArraySymbols, trygl, prefix)) {
+                NS_ERROR("GL supports array instanced without supplying it function.");
+
+                mInitialized &= MarkExtensionGroupUnsupported(XXX_instanced_arrays);
+                mSymbols.fVertexAttribDivisor = nullptr;
+            }
+        }
+
+        if (IsGLES2() &&
+            IsExtensionSupported(EXT_occlusion_query_boolean)) {
+            SymLoadStruct queryObjectsSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQuery", "BeginQueryEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGenQueries, { "GenQueries", "GenQueriesEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fDeleteQueries, { "DeleteQueries", "DeleteQueriesEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQuery", "EndQueryEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryiv", "GetQueryivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, { "GetQueryObjectuiv", "GetQueryObjectuivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQuery", "IsQueryEXT", nullptr } },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(queryObjectsSymbols, trygl, prefix)) {
+                NS_ERROR("GL ES supports query objects without supplying its functions.");
+
+                MarkExtensionUnsupported(EXT_occlusion_query_boolean);
+                mSymbols.fBeginQuery = nullptr;
+                mSymbols.fGenQueries = nullptr;
+                mSymbols.fDeleteQueries = nullptr;
+                mSymbols.fEndQuery = nullptr;
+                mSymbols.fGetQueryiv = nullptr;
+                mSymbols.fGetQueryObjectiv = nullptr;
+                mSymbols.fGetQueryObjectuiv = nullptr;
+                mSymbols.fIsQuery = nullptr;
+            }
+        }
+
 
         // Load developer symbols, don't fail if we can't find them.
         SymLoadStruct auxSymbols[] = {

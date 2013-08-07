@@ -658,7 +658,10 @@ class CGHeaders(CGWrapper):
                     bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
             for m in desc.interface.members:
                 addHeaderForFunc(PropertyDefiner.getStringAttr(m, "Func"))
-            addHeaderForFunc(desc.interface.getExtendedAttribute("Func"))
+            # getExtendedAttribute() returns a list, extract the entry.
+            funcList = desc.interface.getExtendedAttribute("Func")
+            if funcList is not None:
+                addHeaderForFunc(funcList[0])
 
         for d in dictionaries:
             if d.parent:
@@ -1017,7 +1020,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, ctor, name=CONSTRUCT_HOOK_NAME):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'), Argument('JS::Value*', 'vp')]
-        CGAbstractStaticMethod.__init__(self, descriptor, name, 'JSBool', args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
         self._ctor = ctor
 
     def define(self):
@@ -5194,7 +5197,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     def __init__(self, descriptor, name, args, unwrapFailureCode=None,
                  getThisObj="args.computeThis(cx).toObjectOrNull()",
                  callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);",
-                 returnType="JSBool"):
+                 returnType="bool"):
         CGAbstractStaticMethod.__init__(self, descriptor, name, returnType, args)
 
         if unwrapFailureCode is None:
@@ -5238,7 +5241,7 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
     def __init__(self, descriptor, name):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
-        CGAbstractStaticMethod.__init__(self, descriptor, name, "JSBool", args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
     def definition_body(self):
         unwrap = CGGeneric("""JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -5362,7 +5365,7 @@ class CGNewResolveHook(CGAbstractBindingMethod):
         # Our "self" is actually the "obj" argument in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, NEWRESOLVE_HOOK_NAME,
-            args, getThisObj="", callArgs="")
+            args, getThisObj="", callArgs="", returnType="JSBool")
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
@@ -5390,7 +5393,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
         # Our "self" is actually the "obj" argument in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, ENUMERATE_HOOK_NAME,
-            args, getThisObj="", callArgs="")
+            args, getThisObj="", callArgs="", returnType="JSBool")
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
@@ -6934,7 +6937,7 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
         CGAbstractBindingMethod.__init__(self, descriptor,
                                          "ResolveOwnPropertyViaNewresolve",
                                          args, getThisObj="",
-                                         callArgs="", returnType="bool")
+                                         callArgs="")
     def generate_code(self):
         return CGIndenter(CGGeneric(
                 "JS::Rooted<JS::Value> value(cx);\n"
@@ -6971,7 +6974,7 @@ class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
         CGAbstractBindingMethod.__init__(self, descriptor,
                                          "EnumerateOwnPropertiesViaGetOwnPropertyNames",
                                          args, getThisObj="",
-                                         callArgs="", returnType="bool")
+                                         callArgs="")
     def generate_code(self):
         return CGIndenter(CGGeneric(
                 "nsAutoTArray<nsString, 8> names;\n"
@@ -9688,7 +9691,7 @@ class CGJSImplClass(CGBindingImplClass):
 
         self.methodDecls.append(
             ClassMethod("_Create",
-                        "JSBool",
+                        "bool",
                         [Argument("JSContext*", "cx"),
                          Argument("unsigned", "argc"),
                          Argument("JS::Value*", "vp")],

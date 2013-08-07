@@ -1776,6 +1776,9 @@ pref("layout.css.masking.enabled", false);
 pref("layout.css.masking.enabled", true);
 #endif
 
+// Is support for mix-blend-mode enabled? 
+pref("layout.css.mix-blend-mode.enabled", false);
+
 // Is support for the the @supports rule enabled?
 pref("layout.css.supports-rule.enabled", true);
 
@@ -4076,6 +4079,8 @@ pref("layers.draw-borders", false);
 pref("layers.draw-tile-borders", false);
 pref("layers.draw-bigimage-borders", false);
 pref("layers.frame-counter", false);
+// Max number of layers per container. See Overwrite in mobile prefs.
+pref("layers.max-active", -1);
 
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);

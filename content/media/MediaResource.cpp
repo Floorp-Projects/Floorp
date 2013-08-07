@@ -205,6 +205,16 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     hc->GetResponseHeader(NS_LITERAL_CSTRING("Accept-Ranges"),
                           ranges);
     bool acceptsRanges = ranges.EqualsLiteral("bytes");
+    // True if this channel will not return an unbounded amount of data
+    bool dataIsBounded = false;
+
+    int64_t contentLength = -1;
+    hc->GetContentLength(&contentLength);
+    if (contentLength >= 0 && responseStatus == HTTP_OK_CODE) {
+      // "OK" status means Content-Length is for the whole resource.
+      // Since that's bounded, we know we have a finite-length resource.
+      dataIsBounded = true;
+    }
 
     if (mOffset == 0) {
       // Look for duration headers from known Ogg content systems.
@@ -225,20 +235,21 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
         rv = hc->GetResponseHeader(NS_LITERAL_CSTRING("X-Content-Duration"), durationText);
       }
 
-      // If there is no Content-Duration header, or if the value for this header
-      // is not valid, set the media as being infinite.
+      // If there is a Content-Duration header with a valid value, record
+      // the duration.
       if (NS_SUCCEEDED(rv)) {
         double duration = durationText.ToDouble(&ec);
         if (ec == NS_OK && duration >= 0) {
           mDecoder->SetDuration(duration);
-        } else {
-          mDecoder->SetInfinite(true);
+          // We know the resource must be bounded.
+          dataIsBounded = true;
         }
-      } else {
-        mDecoder->SetInfinite(true);
       }
     }
 
+    // Assume Range requests have a bounded upper limit unless the
+    // Content-Range header tells us otherwise.
+    bool boundedSeekLimit = true;
     // Check response code for byte-range requests (seeking, chunk requests).
     if (!mByteRange.IsNull() && (responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
       // Parse Content-Range header.
@@ -267,10 +278,10 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       // Notify media cache about the length and start offset of data received.
       // Note: If aRangeTotal == -1, then the total bytes is unknown at this stage.
       //       For now, tell the decoder that the stream is infinite.
-      if (rangeTotal != -1) {
-        mCacheStream.NotifyDataLength(rangeTotal);
+      if (rangeTotal == -1) {
+        boundedSeekLimit = false;
       } else {
-        mDecoder->SetInfinite(true);
+        mCacheStream.NotifyDataLength(rangeTotal);
       }
       mCacheStream.NotifyDataStarted(rangeStart);
 
@@ -290,13 +301,8 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     } else if (mOffset == 0 &&
                (responseStatus == HTTP_OK_CODE ||
                 responseStatus == HTTP_PARTIAL_RESPONSE_CODE)) {
-      // We weren't seeking and got a valid response status,
-      // set the length of the content.
-      int64_t cl = -1;
-      hc->GetContentLength(&cl);
-
-      if (cl >= 0) {
-        mCacheStream.NotifyDataLength(cl);
+      if (contentLength >= 0) {
+        mCacheStream.NotifyDataLength(contentLength);
       }
     }
     // XXX we probably should examine the Content-Range header in case
@@ -307,10 +313,13 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     // support seeking.
     seekable =
       responseStatus == HTTP_PARTIAL_RESPONSE_CODE || acceptsRanges;
-
-    if (seekable) {
-      mDecoder->SetInfinite(false);
+    if (seekable && boundedSeekLimit) {
+      // If range requests are supported, and we did not see an unbounded
+      // upper range limit, we assume the resource is bounded.
+      dataIsBounded = true;
     }
+
+    mDecoder->SetInfinite(!dataIsBounded);
   }
   mDecoder->SetTransportSeekable(seekable);
   mCacheStream.SetTransportSeekable(seekable);

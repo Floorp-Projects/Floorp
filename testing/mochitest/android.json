@@ -17,6 +17,7 @@
  "content/base/test/test_CSP.html": "TIMED_OUT",
  "content/base/test/test_CSP_frameancestors.html": "",
  "content/base/test/test_CSP_inlinescript.html": "",
+ "content/base/test/test_CSP_evalscript_getCRMFRequest.html": "bug 824652",
  "content/base/test/test_csp_redirects.html": "TIMED_OUT",
  "content/base/test/test_fileapi_slice.html": "bug 775227",
  "content/base/test/test_mozfiledataurl.html": "TIMED_OUT",
