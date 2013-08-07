@@ -26,7 +26,14 @@ import org.mozilla.gecko.background.healthreport.EnvironmentBuilder.ProfileInfor
 public class ProfileInformationCache implements ProfileInformationProvider {
   private static final String LOG_TAG = "GeckoProfileInfo";
   private static final String CACHE_FILE = "profile_info_cache.json";
-  public static final int FORMAT_VERSION = 1;
+
+  /*
+   * FORMAT_VERSION history:
+   *   -: No version number; implicit v1.
+   *   1: Add versioning (Bug 878670).
+   *   2: Bump to regenerate add-on set after landing Bug 900694 (Bug 901622).
+   */
+  public static final int FORMAT_VERSION = 2;
 
   protected boolean initialized = false;
   protected boolean needsWrite = false;
@@ -66,7 +73,10 @@ public class ProfileInformationCache implements ProfileInformationProvider {
   }
 
   /**
-   * Attempt to restore this object from a JSON blob.
+   * Attempt to restore this object from a JSON blob. If there is a version mismatch, there has
+   * likely been an upgrade to the cache format. The cache can be reconstructed without data loss
+   * so rather than migrating, we invalidate the cache by refusing to store the given JSONObject
+   * and returning false.
    *
    * @return false if there's a version mismatch or an error, true on success.
    */
