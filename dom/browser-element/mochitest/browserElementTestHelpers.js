@@ -206,7 +206,7 @@ function expectMozbrowserEvent(iframe, eventName) {
 
 // Set some prefs:
 //
-//  * browser.pageThumbs.enabled: false
+//  * browser.pagethumbnails.capturing_disabled: false
 //
 //    Disable tab view; it seriously messes us up.
 //
@@ -244,7 +244,7 @@ function expectMozbrowserEvent(iframe, eventName) {
 
   browserElementTestHelpers.lockTestReady();
   SpecialPowers.setBoolPref("network.disable.ipc.security", true);
-  SpecialPowers.pushPrefEnv({set: [["browser.pageThumbs.enabled", false],
+  SpecialPowers.pushPrefEnv({set: [["browser.pagethumbnails.capturing_disabled", false],
                                    ["dom.ipc.browser_frames.oop_by_default", oop],
                                    ["dom.ipc.tabs.disabled", false],
                                    ["security.mixed_content.block_active_content", false]]},
