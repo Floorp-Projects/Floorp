@@ -1829,7 +1829,8 @@ RadioInterface.prototype = {
    */
   handleSuppSvcNotification: function handleSuppSvcNotification(message) {
     message.notification = convertRILSuppSvcNotification(message.notification);
-    this._sendTelephonyMessage("RIL:SuppSvcNotification", message);
+    gMessageManager.sendTelephonyMessage("RIL:SuppSvcNotification",
+                                         this.clientId, message);
   },
 
   /**
