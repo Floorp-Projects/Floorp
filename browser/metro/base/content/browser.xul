@@ -291,15 +291,13 @@
                            command="cmd_stop"/>
           </hbox>
 
-          <circularprogressindicator id="download-progress"
-                                     oncommand="Appbar.onDownloadButton()"/>
           <stack id="toolbar-contextual">
             <observes element="bcast_windowState" attribute="*"/>
             <observes element="bcast_urlbarState" attribute="*"/>
 
             <hbox id="toolbar-context-page" pack="end">
-              <toolbarbutton id="download-button" class="appbar-secondary"
-                             oncommand="Appbar.onDownloadButton()"/>
+              <circularprogressindicator id="download-progress"
+                                     oncommand="Appbar.onDownloadButton()"/>
               <toolbarbutton id="star-button" class="appbar-primary"
                              type="checkbox"
                              oncommand="Appbar.onStarButton()"/>
@@ -721,11 +719,11 @@
         <setting pref="app.crashreporter.autosubmit" type="bool" title="&optionsHeader.reporting.crashes.label;" oncommand="BrowserUI.crashReportingPrefChanged(this.value);"/>
       </settings>
       <settings id="prefs-telemetry" label="&optionsHeader.telemetry.title;">
-        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;" oncommand="FlyoutPanelsUI.PrefsFlyoutPanel.onTelemetryPreferenceChanged(this.value);"/>
+        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;"/>
       </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
         <description>&doNotTrack.desc;</description>
-        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" onpreferencechanged="FlyoutPanelsUI.PrefsFlyoutPanel.onDNTPreferenceChanged();" type="radio" >
+        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" type="radio" >
           <radiogroup id="prefs-dnt-options">
             <radio id="prefs-dnt-notrack" label="&doNotTrack.options.trackingNotOkay;" value="1"/>
             <radio id="prefs-dnt-nopref" label="&doNotTrack.options.noPreference;" value="-1"/>

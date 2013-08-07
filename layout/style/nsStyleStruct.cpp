@@ -1005,22 +1005,22 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 // nsStyleFilter
 //
 nsStyleFilter::nsStyleFilter()
-  : mType(eNull)
+  : mType(NS_STYLE_FILTER_NONE)
   , mDropShadow(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleFilter);
 }
 
 nsStyleFilter::nsStyleFilter(const nsStyleFilter& aSource)
-  : mType(eNull)
+  : mType(NS_STYLE_FILTER_NONE)
   , mDropShadow(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleFilter);
-  if (aSource.mType == eURL) {
+  if (aSource.mType == NS_STYLE_FILTER_URL) {
     SetURL(aSource.mURL);
-  } else if (aSource.mType == eDropShadow) {
+  } else if (aSource.mType == NS_STYLE_FILTER_DROP_SHADOW) {
     SetDropShadow(aSource.mDropShadow);
-  } else if (aSource.mType != eNull) {
+  } else if (aSource.mType != NS_STYLE_FILTER_NONE) {
     SetFilterParameter(aSource.mFilterParameter, aSource.mType);
   }
 }
@@ -1037,11 +1037,11 @@ nsStyleFilter::operator=(const nsStyleFilter& aOther)
   if (this == &aOther)
     return *this;
 
-  if (aOther.mType == eURL) {
+  if (aOther.mType == NS_STYLE_FILTER_URL) {
     SetURL(aOther.mURL);
-  } else if (aOther.mType == eDropShadow) {
+  } else if (aOther.mType == NS_STYLE_FILTER_DROP_SHADOW) {
     SetDropShadow(aOther.mDropShadow);
-  } else if (aOther.mType != eNull) {
+  } else if (aOther.mType != NS_STYLE_FILTER_NONE) {
     SetFilterParameter(aOther.mFilterParameter, aOther.mType);
   }
   return *this;
@@ -1055,11 +1055,11 @@ nsStyleFilter::operator==(const nsStyleFilter& aOther) const
       return false;
   }
 
-  if (mType == eURL) {
+  if (mType == NS_STYLE_FILTER_URL) {
     return EqualURIs(mURL, aOther.mURL);
-  } else if (mType == eDropShadow) {
+  } else if (mType == NS_STYLE_FILTER_DROP_SHADOW) {
     return *mDropShadow == *aOther.mDropShadow;
-  } else if (mType != eNull) {
+  } else if (mType != NS_STYLE_FILTER_NONE) {
     return mFilterParameter == aOther.mFilterParameter;
   }
 
@@ -1069,10 +1069,10 @@ nsStyleFilter::operator==(const nsStyleFilter& aOther) const
 void
 nsStyleFilter::ReleaseRef()
 {
-  if (mType == eDropShadow) {
+  if (mType == NS_STYLE_FILTER_DROP_SHADOW) {
     NS_ASSERTION(mDropShadow, "expected pointer");
     mDropShadow->Release();
-  } else if (mType == eURL) {
+  } else if (mType == NS_STYLE_FILTER_URL) {
     NS_ASSERTION(mURL, "expected pointer");
     mURL->Release();
   }
@@ -1080,7 +1080,7 @@ nsStyleFilter::ReleaseRef()
 
 void
 nsStyleFilter::SetFilterParameter(const nsStyleCoord& aFilterParameter,
-                                  Type aType)
+                                  int32_t aType)
 {
   ReleaseRef();
   mFilterParameter = aFilterParameter;
@@ -1094,7 +1094,7 @@ nsStyleFilter::SetURL(nsIURI* aURL)
   ReleaseRef();
   mURL = aURL;
   mURL->AddRef();
-  mType = eURL;
+  mType = NS_STYLE_FILTER_URL;
 }
 
 void
@@ -1104,7 +1104,7 @@ nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow)
   ReleaseRef();
   mDropShadow = aDropShadow;
   mDropShadow->AddRef();
-  mType = eDropShadow;
+  mType = NS_STYLE_FILTER_DROP_SHADOW;
 }
 
 // --------------------

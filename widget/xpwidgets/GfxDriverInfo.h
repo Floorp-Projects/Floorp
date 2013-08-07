@@ -213,7 +213,7 @@ inline void PadDriverDecimal(char *aString)
 }
 
 inline bool
-ParseDriverVersion(nsAString& aVersion, uint64_t *aNumericVersion)
+ParseDriverVersion(const nsAString& aVersion, uint64_t *aNumericVersion)
 {
 #if defined(XP_WIN)
   int a, b, c, d;

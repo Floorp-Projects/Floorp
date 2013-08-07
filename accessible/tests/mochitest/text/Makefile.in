@@ -16,10 +16,10 @@ MOCHITEST_A11Y_FILES = \
 		test_atcaretoffset.html \
 		test_charboundary.html \
 		test_doc.html \
+		test_general.xul \
 		test_gettext.html \
 		test_hypertext.html \
 		test_lineboundary.html \
-		test_label.xul \
 		test_passwords.html \
 		test_selection.html \
 		test_wordboundary.html \
