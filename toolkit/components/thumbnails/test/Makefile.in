@@ -20,6 +20,7 @@ MOCHITEST_BROWSER_FILES := \
 	browser_thumbnails_storage_migrate3.js \
 	browser_thumbnails_bug726727.js \
 	browser_thumbnails_bug727765.js \
+	browser_thumbnails_bug818225.js \
 	browser_thumbnails_update.js \
 	head.js \
 	background_red.html \
