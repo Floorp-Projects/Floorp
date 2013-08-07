@@ -1386,7 +1386,7 @@ InitIds(JSContext* cx, const Prefable<Spec>* prefableSpecs, jsid* ids)
   return true;
 }
 
-JSBool
+bool
 QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp);
 
 template <class T, bool isISupports=IsBaseOf<nsISupports, T>::value>
@@ -1408,7 +1408,7 @@ WantsQueryInterface<T, true>
   }
 };
 
-JSBool
+bool
 ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
@@ -1953,7 +1953,7 @@ enum {
   CONSTRUCTOR_XRAY_EXPANDO_SLOT
 };
 
-JSBool
+bool
 Constructor(JSContext* cx, unsigned argc, JS::Value* vp);
 
 inline bool

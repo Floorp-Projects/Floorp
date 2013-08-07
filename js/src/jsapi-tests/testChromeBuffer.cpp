@@ -23,13 +23,13 @@ JSClass global_class = {
 JSObject *trusted_glob = NULL;
 JSObject *trusted_fun = NULL;
 
-JSBool
+bool
 CallTrusted(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!JS_SaveFrameChain(cx))
-        return JS_FALSE;
+        return false;
 
-    JSBool ok = JS_FALSE;
+    bool ok = false;
     {
         JSAutoCompartment ac(cx, trusted_glob);
         ok = JS_CallFunctionValue(cx, NULL, JS::ObjectValue(*trusted_fun),

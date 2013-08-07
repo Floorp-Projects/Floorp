@@ -759,7 +759,7 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
     assert isAttr or isMethod
     isGetter = isAttr and not isSetter
 
-    signature = ("static JSBool\n" +
+    signature = ("static bool\n" +
                  "%s(JSContext *cx, unsigned argc,%s jsval *vp)\n")
 
     customMethodCall = customMethodCalls.get(stubName, None)

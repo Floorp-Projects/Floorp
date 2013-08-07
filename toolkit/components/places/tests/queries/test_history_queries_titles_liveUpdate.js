@@ -35,6 +35,7 @@ function searchNodeHavingUrl(aRoot, aUrl) {
       return aRoot.getChild(i);
     }
   }
+  return null;
 }
 
 function newQueryWithOptions()
@@ -58,13 +59,12 @@ add_task(function pages_query()
 
   compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
   for (let i = 0; i < root.childCount; i++) {
-    let node = root.getChild(i);
-    do_check_eq(node.title, gTestData[i].title);
-    let uri = NetUtil.newURI(node.uri);
+    do_check_eq(root.getChild(i).title, gTestData[i].title);
+    let uri = NetUtil.newURI(root.getChild(i).uri);
     yield promiseAddVisits({uri: uri, title: "changedTitle"});
-    do_check_eq(node.title, "changedTitle");
+    do_check_eq(root.getChild(i).title, "changedTitle");
     yield promiseAddVisits({uri: uri, title: gTestData[i].title});
-    do_check_eq(node.title, gTestData[i].title);
+    do_check_eq(root.getChild(i).title, gTestData[i].title);
   }
 
   root.containerOpen = false;
@@ -109,13 +109,12 @@ add_task(function pages_searchterm_query()
 
   compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
   for (let i = 0; i < root.childCount; i++) {
-    let node = root.getChild(i);
-    let uri = NetUtil.newURI(node.uri);
-    do_check_eq(node.title, gTestData[i].title);
+    let uri = NetUtil.newURI(root.getChild(i).uri);
+    do_check_eq(root.getChild(i).title, gTestData[i].title);
     yield promiseAddVisits({uri: uri, title: "changedTitle"});
-    do_check_eq(node.title, "changedTitle");
+    do_check_eq(root.getChild(i).title, "changedTitle");
     yield promiseAddVisits({uri: uri, title: gTestData[i].title});
-    do_check_eq(node.title, gTestData[i].title);
+    do_check_eq(root.getChild(i).title, gTestData[i].title);
   }
 
   root.containerOpen = false;

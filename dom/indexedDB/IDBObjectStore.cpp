@@ -3259,7 +3259,7 @@ GetHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
                              "GetHelper::PackArgumentsForParentProcess "
                              "[IDBObjectStore.cpp]");
 
-  FIXME_Bug_521898_objectstore::GetParams params;
+  GetParams params;
 
   mKeyRange->ToSerializedKeyRange(params.keyRange());
 
@@ -3714,10 +3714,10 @@ OpenCursorHelper::PackArgumentsForParentProcess(
                              "OpenCursorHelper::PackArgumentsForParentProcess "
                              "[IDBObjectStore.cpp]");
 
-  FIXME_Bug_521898_objectstore::OpenCursorParams params;
+  OpenCursorParams params;
 
   if (mKeyRange) {
-    FIXME_Bug_521898_objectstore::KeyRange keyRange;
+    KeyRange keyRange;
     mKeyRange->ToSerializedKeyRange(keyRange);
     params.optionalKeyRange() = keyRange;
   }
@@ -4176,10 +4176,10 @@ GetAllHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
                              "GetAllHelper::PackArgumentsForParentProcess "
                              "[IDBObjectStore.cpp]");
 
-  FIXME_Bug_521898_objectstore::GetAllParams params;
+  GetAllParams params;
 
   if (mKeyRange) {
-    FIXME_Bug_521898_objectstore::KeyRange keyRange;
+    KeyRange keyRange;
     mKeyRange->ToSerializedKeyRange(keyRange);
     params.optionalKeyRange() = keyRange;
   }
@@ -4389,10 +4389,10 @@ CountHelper::PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams)
                              "CountHelper::PackArgumentsForParentProcess "
                              "[IDBObjectStore.cpp]");
 
-  FIXME_Bug_521898_objectstore::CountParams params;
+  CountParams params;
 
   if (mKeyRange) {
-    FIXME_Bug_521898_objectstore::KeyRange keyRange;
+    KeyRange keyRange;
     mKeyRange->ToSerializedKeyRange(keyRange);
     params.optionalKeyRange() = keyRange;
   }

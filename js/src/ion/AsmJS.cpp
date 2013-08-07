@@ -6325,7 +6325,7 @@ js::CompileAsmJS(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *
     return Warn(cx, JSMSG_USE_ASM_TYPE_OK, compilationTimeReport);
 }
 
-JSBool
+bool
 js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

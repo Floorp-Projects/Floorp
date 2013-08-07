@@ -7,60 +7,15 @@ include protocol PIndexedDBCursor;
 include protocol PIndexedDBObjectStore;
 include protocol PIndexedDBRequest;
 
-include "mozilla/dom/indexedDB/SerializationHelpers.h";
+include IndexedDBParams;
 
-using mozilla::dom::indexedDB::Key;
-using mozilla::dom::indexedDB::IDBCursor::Direction;
 using mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo;
-
-using mozilla::void_t;
 
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
 namespace ipc {
-
-namespace FIXME_Bug_521898_index {
-
-struct KeyRange
-{
-  Key lower;
-  Key upper;
-  bool lowerOpen;
-  bool upperOpen;
-  bool isOnly;
-};
-
-union OptionalKeyRange
-{
-  KeyRange;
-  void_t;
-};
-
-struct GetParams
-{
-  KeyRange keyRange;
-};
-
-struct GetAllParams
-{
-  OptionalKeyRange optionalKeyRange;
-  uint32_t limit;
-};
-
-struct CountParams
-{
-  OptionalKeyRange optionalKeyRange;
-};
-
-struct OpenCursorParams
-{
-  OptionalKeyRange optionalKeyRange;
-  Direction direction;
-};
-
-} // namespace FIXME_Bug_521898_index
 
 struct GetKeyParams
 {

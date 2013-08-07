@@ -16,7 +16,15 @@ template<> struct Non8BitParameters<4> {
 };
 
 template<> struct Non8BitParameters<8> {
-  static inline size_t mask() { return 0xff00ff00ff00ff00; }
+  static inline size_t mask() {
+    static const uint64_t maskAsUint64 = 0xff00ff00ff00ff00ULL;
+    // We have to explicitly cast this 64-bit value to a size_t, or else
+    // compilers for 32-bit platforms will warn about it being too large to fit
+    // in the size_t return type. (Fortunately, this code isn't actually
+    // invoked on 32-bit platforms -- they'll use the <4> specialization above.
+    // So it is, in fact, OK that this value is too large for a 32-bit size_t.)
+    return (size_t)maskAsUint64;
+  }
   static inline uint32_t alignMask() { return 0x7; }
   static inline uint32_t numUnicharsPerWord() { return 4; }
 };

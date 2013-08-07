@@ -403,7 +403,7 @@ xpc_qsGetterOnlyPropertyStub(JSContext *cx, HandleObject obj, HandleId id, JSBoo
                                         JSMSG_GETTER_ONLY);
 }
 
-JSBool
+bool
 xpc_qsGetterOnlyNativeStub(JSContext *cx, unsigned argc, jsval *vp)
 {
     return JS_ReportErrorFlagsAndNumber(cx,
