@@ -421,20 +421,20 @@ TEST(APZCTreeManager, GetAPZCAtPoint) {
   gfx3DMatrix transform;
   transform.ScalePost(0.1, 0.1, 1);
   root->SetBaseTransform(transform);
-  root->ComputeEffectiveTransforms(gfx3DMatrix());
   manager->UpdatePanZoomControllerTree(nullptr, root, 0, false);
   hit = manager->GetTargetAPZC(ScreenPoint(50, 50)); // This point is now outside the root layer
   EXPECT_EQ(nullAPZC, hit.get());
 
+  // This hit test will hit both layers[3] and layers[4]; layers[4] is later in the tree so
+  // it is a better match
   hit = manager->GetTargetAPZC(ScreenPoint(2, 2));
-  EXPECT_EQ(layers[3]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
+  EXPECT_EQ(layers[4]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
   // expect hit point at LayerPoint(20, 20)
 
   // Scale layer[4] outside the range
   layers[4]->SetBaseTransform(transform);
   // layer 4 effective visible screenrect: (0.05, 0.05, 0.2, 0.2)
   // Does not contain (2, 2)
-  root->ComputeEffectiveTransforms(gfx3DMatrix());
   manager->UpdatePanZoomControllerTree(nullptr, root, 0, false);
   hit = manager->GetTargetAPZC(ScreenPoint(2, 2));
   EXPECT_EQ(layers[3]->AsContainerLayer()->GetAsyncPanZoomController(), hit.get());
@@ -455,7 +455,6 @@ TEST(APZCTreeManager, GetAPZCAtPoint) {
   translateTransform3.ScalePost(1,15,1);
   layers[7]->SetBaseTransform(translateTransform3);
 
-  root->ComputeEffectiveTransforms(gfx3DMatrix());
   manager->UpdatePanZoomControllerTree(nullptr, root, 0, false);
   // layer 7 effective visible screenrect (0,16,4,60) but clipped by parent layers
   hit = manager->GetTargetAPZC(ScreenPoint(1, 45));
