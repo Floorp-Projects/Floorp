@@ -34,7 +34,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -229,12 +228,7 @@ public class BrowserSearch extends HomeFragment
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // Account for the search engines
                 position -= getSuggestEngineCount();
-
-                final Cursor c = mAdapter.getCursor();
-                if (c == null || !c.moveToPosition(position)) {
-                    return;
-                }
-
+                final Cursor c = mAdapter.getCursor(position);
                 final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
                 mUrlOpenListener.onUrlOpen(url);
             }
@@ -630,15 +624,18 @@ public class BrowserSearch extends HomeFragment
         }
     }
 
-    private class SearchAdapter extends SimpleCursorAdapter {
+    private class SearchAdapter extends MultiTypeCursorAdapter {
         private static final int ROW_SEARCH = 0;
         private static final int ROW_STANDARD = 1;
         private static final int ROW_SUGGEST = 2;
 
-        private static final int ROW_TYPE_COUNT = 3;
-
         public SearchAdapter(Context context) {
-            super(context, -1, null, new String[] {}, new int[] {});
+            super(context, null, new int[] { ROW_STANDARD,
+                                             ROW_SEARCH,
+                                             ROW_SUGGEST },
+                                 new int[] { R.layout.home_item_row,
+                                             R.layout.home_search_item_row,
+                                             R.layout.home_search_item_row });
         }
 
         @Override
@@ -656,13 +653,6 @@ public class BrowserSearch extends HomeFragment
             }
 
             return ROW_SEARCH;
-        }
-
-        @Override
-        public int getViewTypeCount() {
-            // view can be either a standard awesomebar row, a search engine
-            // row, or a suggestion row
-            return ROW_TYPE_COUNT;
         }
 
         @Override
@@ -699,20 +689,14 @@ public class BrowserSearch extends HomeFragment
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public void bindView(View view, Context context, int position) {
             final int type = getItemViewType(position);
 
             if (type == ROW_SEARCH || type == ROW_SUGGEST) {
-                final SearchEngineRow row;
-                if (convertView == null) {
-                    row = (SearchEngineRow) mInflater.inflate(R.layout.home_search_item_row, mList, false);
-                    row.setOnUrlOpenListener(mUrlOpenListener);
-                    row.setOnSearchListener(mSearchListener);
-                    row.setOnEditSuggestionListener(mEditSuggestionListener);
-                } else {
-                    row = (SearchEngineRow) convertView;
-                }
-
+                final SearchEngineRow row = (SearchEngineRow) view;
+                row.setOnUrlOpenListener(mUrlOpenListener);
+                row.setOnSearchListener(mSearchListener);
+                row.setOnEditSuggestionListener(mEditSuggestionListener);
                 row.setSearchTerm(mSearchTerm);
 
                 final SearchEngine engine = mSearchEngines.get(getEngineIndex(position));
@@ -722,27 +706,13 @@ public class BrowserSearch extends HomeFragment
                     // Only animate suggestions the first time they are shown
                     mAnimateSuggestions = false;
                 }
-
-                return row;
             } else {
-                final TwoLinePageRow row;
-                if (convertView == null) {
-                    row = (TwoLinePageRow) mInflater.inflate(R.layout.home_item_row, mList, false);
-                } else {
-                    row = (TwoLinePageRow) convertView;
-                }
-
                 // Account for the search engines
                 position -= getSuggestEngineCount();
 
-                final Cursor c = getCursor();
-                if (!c.moveToPosition(position)) {
-                    throw new IllegalStateException("Couldn't move cursor to position " + position);
-                }
-
+                final Cursor c = getCursor(position);
+                final TwoLinePageRow row = (TwoLinePageRow) view;
                 row.updateFromCursor(c);
-
-                return row;
             }
         }
 

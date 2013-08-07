@@ -11,22 +11,20 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.support.v4.widget.CursorAdapter;
 import android.util.Pair;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 
 import java.util.LinkedList;
 
 /**
  * Adapter to back the BookmarksListView with a list of bookmarks.
  */
-class BookmarksListAdapter extends CursorAdapter {
+class BookmarksListAdapter extends MultiTypeCursorAdapter {
     private static final int VIEW_TYPE_ITEM = 0;
     private static final int VIEW_TYPE_FOLDER = 1;
 
-    private static final int VIEW_TYPE_COUNT = 2;
+    private static final int[] VIEW_TYPES = new int[] { VIEW_TYPE_ITEM, VIEW_TYPE_FOLDER };
+    private static final int[] LAYOUT_TYPES = new int[] { R.layout.home_item_row, R.layout.bookmark_folder_row };
 
     // A listener that knows how to refresh the list for a given folder id.
     // This is usually implemented by the enclosing fragment/activity.
@@ -44,7 +42,7 @@ class BookmarksListAdapter extends CursorAdapter {
 
     public BookmarksListAdapter(Context context, Cursor cursor) {
         // Initializing with a null cursor.
-        super(context, cursor);
+        super(context, cursor, VIEW_TYPES, LAYOUT_TYPES);
 
         mParentStack = new LinkedList<Pair<Integer, String>>();
 
@@ -104,33 +102,13 @@ class BookmarksListAdapter extends CursorAdapter {
             position--;
         }
 
-        Cursor c = getCursor();
-
-        if (!c.moveToPosition(position)) {
-            throw new IllegalStateException("Couldn't move cursor to position " + position);
-        }
-
-        return getItemViewType(c);
-    }
-
-    /**
-     * Returns the type of the item at the given position in the cursor.
-     *
-     * @param cursor A cursor moved to the required position.
-     * @return The type of the item.
-     */
-    public int getItemViewType(Cursor cursor) {
-        if (cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER) {
+        final Cursor c = getCursor(position);
+        if (c.getInt(c.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER) {
             return VIEW_TYPE_FOLDER;
         }
 
         // Default to returning normal item type.
         return VIEW_TYPE_ITEM;
-    }
-
-    @Override
-    public int getViewTypeCount() {
-        return VIEW_TYPE_COUNT;
     }
 
     /**
@@ -179,48 +157,34 @@ class BookmarksListAdapter extends CursorAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        // The position also reflects the opened child folder row.
+    public void bindView(View view, Context context, int position) {
+        final int viewType = getItemViewType(position);
+
+        final Cursor cursor;
         if (isShowingChildFolder()) {
             if (position == 0) {
-                BookmarkFolderView folder = (BookmarkFolderView) LayoutInflater.from(parent.getContext()).inflate(R.layout.bookmark_folder_row, null);
-                folder.setText(mParentStack.peek().second);
-                folder.open();
-                return folder;
+                cursor = null;
+            } else {
+                // Accounting for the folder view.
+                position--;
+                cursor = getCursor(position);
             }
-
-            // Accounting for the folder view.
-            position--;
+        } else {
+            cursor = getCursor(position);
         }
 
-        return super.getView(position, convertView, parent);
-    }
-
-    @Override
-    public void bindView(View view, Context context, Cursor cursor) {
-        final int viewType = getItemViewType(cursor);
-
         if (viewType == VIEW_TYPE_ITEM) {
-            TwoLinePageRow row = (TwoLinePageRow) view;
+            final TwoLinePageRow row = (TwoLinePageRow) view;
             row.updateFromCursor(cursor);
         } else {
-            BookmarkFolderView row = (BookmarkFolderView) view;
-            row.setText(getFolderTitle(context, cursor));
-            row.close();
+            final BookmarkFolderView row = (BookmarkFolderView) view;
+            if (cursor == null) {
+                row.setText(mParentStack.peek().second);
+                row.open();
+            } else {
+                row.setText(getFolderTitle(context, cursor));
+                row.close();
+            }
         }
-    }
-
-    @Override
-    public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        final int viewType = getItemViewType(cursor);
-
-        final int resId;
-        if (viewType == VIEW_TYPE_ITEM) {
-            resId = R.layout.home_item_row;
-        } else {
-            resId = R.layout.bookmark_folder_row;
-        }
-
-        return LayoutInflater.from(parent.getContext()).inflate(resId, null);
     }
 }
