@@ -637,7 +637,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/ic_url_bar_search.png \
   res/drawable-mdpi/ic_url_bar_star.png \
   res/drawable-mdpi/ic_url_bar_tab.png \
-  res/drawable-mdpi/icon_most_recent_empty.png \
   res/drawable-mdpi/icon_last_tabs.png \
   res/drawable-mdpi/icon_most_recent.png \
   res/drawable-mdpi/icon_most_visited.png \
@@ -754,7 +753,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_url_bar_search.png \
   res/drawable-hdpi/ic_url_bar_star.png \
   res/drawable-hdpi/ic_url_bar_tab.png \
-  res/drawable-hdpi/icon_most_recent_empty.png \
   res/drawable-hdpi/icon_last_tabs.png \
   res/drawable-hdpi/icon_most_recent.png \
   res/drawable-hdpi/icon_most_visited.png \
@@ -847,7 +845,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/ic_url_bar_search.png \
   res/drawable-xhdpi/ic_url_bar_star.png \
   res/drawable-xhdpi/ic_url_bar_tab.png \
-  res/drawable-xhdpi/icon_most_recent_empty.png \
   res/drawable-xhdpi/icon_last_tabs.png \
   res/drawable-xhdpi/icon_most_recent.png \
   res/drawable-xhdpi/icon_most_visited.png \

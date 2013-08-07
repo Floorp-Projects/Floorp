@@ -24,7 +24,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.LayoutInflater;
 import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -45,8 +44,6 @@ public class MostRecentPage extends HomeFragment {
 
     // The view shown by the fragment.
     private ListView mList;
-
-    private View emptyView;
 
     // Callbacks used for the search and favicon cursor loaders
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
@@ -105,14 +102,6 @@ public class MostRecentPage extends HomeFragment {
                 mUrlOpenListener.onUrlOpen(url);
             }
         });
-
-        // Set empty page view.
-        if (emptyView == null) {
-            emptyView = view.findViewById(R.id.home_empty_view);
-            ((ImageView) emptyView.findViewById(R.id.home_empty_image)).setImageResource(R.drawable.icon_most_recent_empty);
-            ((TextView) emptyView.findViewById(R.id.home_empty_text)).setText(R.string.home_most_recent_empty);
-            mList.setEmptyView(emptyView);
-        }
 
         registerForContextMenu(mList);
     }
