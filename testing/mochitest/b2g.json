@@ -134,6 +134,7 @@
     "content/base/test/test_object.html":"",
     "content/base/test/test_xbl_userdata.xhtml":"",
     "content/base/test/test_CSP_evalscript.html":"",
+    "content/base/test/test_CSP_evalscript_getCRMFRequest.html":"",
     "content/base/test/test_CSP_frameancestors.html":"",
     "content/svg/content/test/test_text_selection.html":"",
     "content/base/test/test_CSP.html":"",
