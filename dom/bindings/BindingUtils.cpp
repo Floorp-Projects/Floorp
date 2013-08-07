@@ -371,7 +371,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                       JS::Handle<JSObject*> proto,
                       const NativeProperties* properties,
                       const NativeProperties* chromeOnlyProperties,
-                      const char* name)
+                      const char* name, bool defineOnGlobal)
 {
   JS::Rooted<JSObject*> constructor(cx);
   if (constructorClass) {
@@ -455,7 +455,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
     return NULL;
   }
 
-  if (!DefineConstructor(cx, global, name, constructor)) {
+  if (defineOnGlobal && !DefineConstructor(cx, global, name, constructor)) {
     return nullptr;
   }
 
@@ -471,8 +471,9 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
                              JS::ObjectValue(*proto), JS_PropertyStub,
                              JS_StrictPropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY) ||
-          !DefineConstructor(cx, global, namedConstructors->mName,
-                             namedConstructor)) {
+          (defineOnGlobal &&
+           !DefineConstructor(cx, global, namedConstructors->mName,
+                              namedConstructor))) {
         return nullptr;
       }
       js::SetReservedSlot(constructor, namedConstructorSlot++,
@@ -562,7 +563,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Heap<JSObject*>* constructorCache, const DOMClass* domClass,
                        const NativeProperties* properties,
                        const NativeProperties* chromeOnlyProperties,
-                       const char* name)
+                       const char* name, bool defineOnGlobal)
 {
   MOZ_ASSERT(protoClass || constructorClass || constructor,
              "Need at least one class or a constructor!");
@@ -612,7 +613,8 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
     interface = CreateInterfaceObject(cx, global, constructorProto,
                                       constructorClass, constructor,
                                       ctorNargs, namedConstructors, proto,
-                                      properties, chromeOnlyProperties, name);
+                                      properties, chromeOnlyProperties, name,
+                                      defineOnGlobal);
     if (!interface) {
       if (protoCache) {
         // If we fail we need to make sure to clear the value of protoCache we
