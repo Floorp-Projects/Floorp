@@ -16,8 +16,8 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, builtinclass, uuid(cde2ef8a-4953-425d-9bd5-977035156f01)]
-interface nsIDOMHTMLTableCaptionElement : nsIDOMHTMLElement
+[scriptable, builtinclass, uuid(78f0635b-44d2-4d5c-87de-29d54df6aed6)]
+interface nsIDOMHTMLTableCaptionElement : nsISupports
 {
            attribute DOMString        align;
 };
