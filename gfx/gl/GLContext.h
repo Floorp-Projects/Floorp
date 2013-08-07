@@ -380,7 +380,9 @@ public:
         ARB_draw_instanced,
         EXT_draw_instanced,
         NV_draw_instanced,
-        ANGLE_instanced_array,
+        ARB_instanced_arrays,
+        NV_instanced_arrays,
+        ANGLE_instanced_arrays,
         EXT_occlusion_query_boolean,
         Extensions_Max,
         Extensions_End
@@ -480,6 +482,7 @@ public:
         XXX_framebuffer_blit,
         XXX_framebuffer_multisample,
         XXX_framebuffer_object,
+        XXX_instanced_arrays,
         XXX_robustness,
         XXX_texture_float,
         XXX_texture_non_power_of_two,
@@ -2136,6 +2139,18 @@ public:
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fRenderbufferStorageMultisample);
         mSymbols.fRenderbufferStorageMultisample(target, samples, internalFormat, width, height);
+        AFTER_GL_CALL;
+    }
+
+
+// -----------------------------------------------------------------------------
+// Package XXX_instanced_arrays
+public:
+    void fVertexAttribDivisor(GLuint index, GLuint divisor)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fVertexAttribDivisor);
+        mSymbols.fVertexAttribDivisor(index, divisor);
         AFTER_GL_CALL;
     }
 
