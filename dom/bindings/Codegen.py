@@ -658,7 +658,10 @@ class CGHeaders(CGWrapper):
                     bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
             for m in desc.interface.members:
                 addHeaderForFunc(PropertyDefiner.getStringAttr(m, "Func"))
-            addHeaderForFunc(desc.interface.getExtendedAttribute("Func"))
+            # getExtendedAttribute() returns a list, extract the entry.
+            funcList = desc.interface.getExtendedAttribute("Func")
+            if funcList is not None:
+                addHeaderForFunc(funcList[0])
 
         for d in dictionaries:
             if d.parent:
