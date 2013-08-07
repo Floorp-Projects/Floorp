@@ -2550,32 +2550,23 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 
   nsIPrincipal* principal = NodePrincipal();
 
-  bool unknownAppId;
-  uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-  nsAutoString appManifestCSP;
-  if (NS_SUCCEEDED(principal->GetUnknownAppId(&unknownAppId)) &&
-      !unknownAppId &&
-      NS_SUCCEEDED(principal->GetAppStatus(&appStatus))) {
-    applyAppDefaultCSP = ( appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED ||
-                           appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
+  uint16_t appStatus = principal->GetAppStatus();
+  applyAppDefaultCSP = appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED ||
+                       appStatus == nsIPrincipal::APP_STATUS_CERTIFIED;
 
-    if (appStatus != nsIPrincipal::APP_STATUS_NOT_INSTALLED) {
-      nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-      if (appsService) {
-        uint32_t appId = 0;
-        if (NS_SUCCEEDED(principal->GetAppId(&appId))) {
-          appsService->GetCSPByLocalId(appId, appManifestCSP);
-          if (!appManifestCSP.IsEmpty()) {
-            applyAppManifestCSP = true;
-          }
+  nsAutoString appManifestCSP;
+  if (appStatus != nsIPrincipal::APP_STATUS_NOT_INSTALLED) {
+    nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+    if (appsService) {
+      uint32_t appId = 0;
+      if (NS_SUCCEEDED(principal->GetAppId(&appId))) {
+        appsService->GetCSPByLocalId(appId, appManifestCSP);
+        if (!appManifestCSP.IsEmpty()) {
+          applyAppManifestCSP = true;
         }
       }
     }
   }
-#ifdef PR_LOGGING
-  else
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("Failed to get app status from principal"));
-#endif
 
   // If there's no CSP to apply, go ahead and return early
   if (!applyAppDefaultCSP &&
