@@ -7226,7 +7226,7 @@ IonBuilder::jsop_arguments_setelem(MDefinition *object, MDefinition *index, MDef
 static JSObject *
 CreateRestArgumentsTemplateObject(JSContext *cx, unsigned length)
 {
-    JSObject *templateObject = NewDenseUnallocatedArray(cx, 0, NULL, TenuredObject);
+    JSObject *templateObject = NewDenseUnallocatedArray(cx, length, NULL, TenuredObject);
     if (templateObject)
         types::FixRestArgumentsType(cx, templateObject);
     return templateObject;
