@@ -1788,6 +1788,31 @@ extern JS_FRIEND_API(bool)
 CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
 
+class ScriptSource;
+
+// An AsmJSModuleSourceDesc object holds a reference to the ScriptSource
+// containing an asm.js module as well as the [begin, end) range of the
+// module's chars within the ScriptSource.
+class AsmJSModuleSourceDesc
+{
+    ScriptSource *scriptSource_;
+    uint32_t bufStart_;
+    uint32_t bufEnd_;
+
+  public:
+    AsmJSModuleSourceDesc() : scriptSource_(NULL), bufStart_(UINT32_MAX), bufEnd_(UINT32_MAX) {}
+    void init(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd);
+    ~AsmJSModuleSourceDesc();
+
+    ScriptSource *scriptSource() const { JS_ASSERT(scriptSource_ != NULL); return scriptSource_; }
+    uint32_t bufStart() const { JS_ASSERT(bufStart_ != UINT32_MAX); return bufStart_; }
+    uint32_t bufEnd() const { JS_ASSERT(bufStart_ != UINT32_MAX); return bufEnd_; }
+
+  private:
+    AsmJSModuleSourceDesc(const AsmJSModuleSourceDesc &) MOZ_DELETE;
+    void operator=(const AsmJSModuleSourceDesc &) MOZ_DELETE;
+};
+
 } /* namespace js */
 
 extern JS_FRIEND_API(JSBool)

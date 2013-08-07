@@ -194,6 +194,7 @@
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/UndoManager.h"
 #include "nsFrame.h"
@@ -7590,7 +7591,7 @@ nsDocument::Sanitize()
   for (uint32_t i = 0; i < length; ++i) {
     NS_ASSERTION(nodes->Item(i), "null item in node list!");
 
-    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(nodes->Item(i));
+    nsRefPtr<HTMLInputElement> input = HTMLInputElement::FromContentOrNull(nodes->Item(i));
     if (!input)
       continue;
 
@@ -7606,8 +7607,7 @@ nsDocument::Sanitize()
     }
 
     if (resetValue) {
-      nsCOMPtr<nsIFormControl> fc = do_QueryInterface(input);
-      fc->Reset();
+      input->Reset();
     }
   }
 
@@ -7622,7 +7622,8 @@ nsDocument::Sanitize()
     if (!form)
       continue;
 
-    form->GetAttribute(NS_LITERAL_STRING("autocomplete"), value);
+    nodes->Item(i)->AsElement()->GetAttr(kNameSpaceID_None,
+                                         nsGkAtoms::autocomplete, value);
     if (value.LowerCaseEqualsLiteral("off"))
       form->Reset();
   }

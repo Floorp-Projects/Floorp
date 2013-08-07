@@ -35,15 +35,6 @@ public:
   // DOM memory reporter participant
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 
   // nsIDOMHTMLAreaElement
@@ -78,8 +69,6 @@ public:
   virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
-
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   // WebIDL
 
