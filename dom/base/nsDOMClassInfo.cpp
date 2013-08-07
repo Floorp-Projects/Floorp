@@ -3782,12 +3782,12 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
 // Native code for window._content getter, this simply maps
 // window._content to window.content for backwards compatibility only.
-static JSBool
+static bool
 ContentWindowGetter(JSContext *cx, unsigned argc, jsval *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj)
-    return JS_FALSE;
+    return false;
 
   JS::Rooted<JS::Value> value(cx);
   bool result = ::JS_GetProperty(cx, obj, "content", &value);
@@ -4817,7 +4817,7 @@ nsHTMLDocumentSH::ReleaseDocument(JSFreeOp *fop, JSObject *obj)
   }
 }
 
-JSBool
+bool
 nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
 {
   // Handle document.all("foo") style access to document.all.
@@ -4828,13 +4828,13 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
     // accepts nothing other than one arg.
     xpc::Throw(cx, NS_ERROR_INVALID_ARG);
 
-    return JS_FALSE;
+    return false;
   }
 
   // Convert all types to string.
   JS::Rooted<JSString*> str(cx, ::JS_ValueToString(cx, JS_ARGV(cx, vp)[0]));
   if (!str) {
-    return JS_FALSE;
+    return false;
   }
 
   // If we are called via document.all(id) instead of document.all.item(i) or
@@ -4847,14 +4847,14 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
   } else {
     self = JS_THIS_OBJECT(cx, vp);
     if (!self)
-      return JS_FALSE;
+      return false;
   }
 
   size_t length;
   JS::Anchor<JSString *> anchor(str);
   const jschar *chars = ::JS_GetStringCharsAndLength(cx, str, &length);
   if (!chars) {
-    return JS_FALSE;
+    return false;
   }
 
   JS::Rooted<JS::Value> value(cx);

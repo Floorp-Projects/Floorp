@@ -2729,7 +2729,7 @@ WorkerPrivate::Create(JSContext* aCx, JS::Handle<JSObject*> aObj, WorkerPrivate*
       return nullptr;
     }
 
-    if (!GetContentSecurityPolicy(aCx, getter_AddRefs(csp))) {
+    if (!nsContentUtils::GetContentSecurityPolicy(aCx, getter_AddRefs(csp))) {
       return nullptr;
     }
 
@@ -4373,34 +4373,6 @@ WorkerPrivate::GetCrossThreadDispatcher()
     mCrossThreadDispatcher = new WorkerCrossThreadDispatcher(this);
   }
   return mCrossThreadDispatcher;
-}
-
-bool
-WorkerPrivate::GetContentSecurityPolicy(JSContext* aCx,
-                                        nsIContentSecurityPolicy** aCSP)
-{
-  AssertIsOnMainThread();
-
-  // Get the security manager
-  nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
-
-  if (!ssm) {
-    NS_ERROR("Failed to get security manager service");
-    return false;
-  }
-
-  nsCOMPtr<nsIPrincipal> subjectPrincipal = ssm->GetCxSubjectPrincipal(aCx);
-  NS_ASSERTION(subjectPrincipal, "Failed to get subjectPrincipal");
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
-  if (NS_FAILED(rv)) {
-    NS_ERROR("CSP: Failed to get CSP from principal.");
-    return false;
-  }
-
-  csp.forget(aCSP);
-  return true;
 }
 
 void

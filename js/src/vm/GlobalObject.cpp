@@ -43,7 +43,7 @@ js_InitFunctionClass(JSContext *cx, HandleObject obj)
     return obj->as<GlobalObject>().getOrCreateFunctionPrototype(cx);
 }
 
-static JSBool
+static bool
 ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
@@ -77,7 +77,7 @@ ProtoGetterImpl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+static bool
 ProtoGetter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -164,7 +164,7 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+static bool
 ProtoSetter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

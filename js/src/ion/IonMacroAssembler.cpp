@@ -797,16 +797,18 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 {
     enterExitFrame();
 
-    Label exception;
     Label baseline;
 
     // The return value from Bailout is tagged as:
     // - 0x0: done (enter baseline)
     // - 0x1: error (handle exception)
     // - 0x2: overrecursed
+    JS_STATIC_ASSERT(BAILOUT_RETURN_OK == 0);
+    JS_STATIC_ASSERT(BAILOUT_RETURN_FATAL_ERROR == 1);
+    JS_STATIC_ASSERT(BAILOUT_RETURN_OVERRECURSED == 2);
 
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OK), &baseline);
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &exception);
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), exceptionLabel());
 
     // Fall-through: overrecursed.
     {
@@ -814,12 +816,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         setupUnalignedABICall(1, scratch);
         passABIArg(ReturnReg);
         callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReportOverRecursed));
-        jump(&exception);
-    }
-
-    bind(&exception);
-    {
-        handleException();
+        jump(exceptionLabel());
     }
 
     bind(&baseline);
@@ -887,7 +884,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             setupUnalignedABICall(1, temp);
             passABIArg(bailoutInfo);
             callWithABI(JS_FUNC_TO_DATA_PTR(void *, FinishBailoutToBaseline));
-            branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+            branchTest32(Zero, ReturnReg, ReturnReg, exceptionLabel());
 
             // Restore values where they need to be and resume execution.
             GeneralRegisterSet enterMonRegs(GeneralRegisterSet::All());
@@ -929,7 +926,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             setupUnalignedABICall(1, temp);
             passABIArg(bailoutInfo);
             callWithABI(JS_FUNC_TO_DATA_PTR(void *, FinishBailoutToBaseline));
-            branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+            branchTest32(Zero, ReturnReg, ReturnReg, exceptionLabel());
 
             // Restore values where they need to be and resume execution.
             GeneralRegisterSet enterRegs(GeneralRegisterSet::All());
@@ -1402,6 +1399,21 @@ MacroAssembler::popRooted(VMFunction::RootType rootType, Register cellReg,
         Pop(valueReg);
         break;
     }
+}
+
+void
+MacroAssembler::finish()
+{
+    if (sequentialFailureLabel_.used()) {
+        bind(&sequentialFailureLabel_);
+        handleFailure(SequentialExecution);
+    }
+    if (parallelFailureLabel_.used()) {
+        bind(&parallelFailureLabel_);
+        handleFailure(ParallelExecution);
+    }
+
+    MacroAssemblerSpecific::finish();
 }
 
 void

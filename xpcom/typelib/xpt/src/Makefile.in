@@ -10,34 +10,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIB_IS_C_ONLY	= 1
+LIBXUL_LIBRARY = 1
 DIST_INSTALL	= 1
+USE_STATIC_LIBS = 1
 
 CSRCS		= xpt_arena.c xpt_struct.c xpt_xdr.c
 
-# we don't want the shared lib, but we want to force the creation of a static lib.
-FORCE_STATIC_LIB = 1
-USE_STATIC_LIBS = 1
-
-
-# Don't use profile-guided optimization
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-
 include $(topsrcdir)/config/rules.mk
-
-DEFINES		+= -DIMPL_LIBXUL
-
-# Build libxpt early so that it'll be available to xpidl, which also
-# must be built early.
-export::
-	@$(MAKE) -C ../../../base ErrorListCDefines.h
-	@$(MAKE) libs
-
-# XXX, bug 417045, make -jN combines badly with -save-temps in   
-# CFLAGS/CXXFLAGS (for stabs symbols with XCode3)
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-.NOTPARALLEL:
-endif
 
 ifdef _MSC_VER
 OS_COMPILE_CFLAGS += -Zl

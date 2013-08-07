@@ -909,6 +909,9 @@ protected:
   nsMediaNetworkState mNetworkState;
   nsMediaReadyState mReadyState;
 
+  // Last value passed from codec or stream source to UpdateReadyStateForData.
+  NextFrameStatus mLastNextFrameStatus;
+
   enum LoadAlgorithmState {
     // No load algorithm instance is waiting for a source to be added to the
     // media in order to continue loading.
@@ -1120,6 +1123,9 @@ protected:
 
   // True if the media has an audio track
   bool mHasAudio;
+
+  // True if the media has a video track
+  bool mHasVideo;
 
   // True if the media's channel's download has been suspended.
   bool mDownloadSuspendedByCache;
