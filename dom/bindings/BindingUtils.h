@@ -1623,6 +1623,13 @@ public:
     void Destroy() {
       storage.addr()->~T();
     }
+
+private:
+    // Disallow the assignment operator, because we have no idea what the right
+    // way to assign T is, and bitwise copying is likely to be wrong.  Sadly,
+    // we can't disallow copy-construction here, because we need to have no
+    // constructor, since we're used in a union...
+    void operator=(const UnionMember<T>& aOther) MOZ_DELETE;
 };
 
 template<typename T>
