@@ -8,6 +8,6 @@
               android:layout_height="fill_parent"
               android:orientation="vertical">
 
-    <include layout="@layout/home_list_with_title"/>
+    <include layout="@layout/home_history_list"/>
 
 </LinearLayout>

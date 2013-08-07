@@ -97,7 +97,9 @@ public class LastTabsPage extends HomeFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         mTitle = (TextView) view.findViewById(R.id.title);
-        mTitle.setText(R.string.home_last_tabs_title);
+        if (mTitle != null) {
+            mTitle.setText(R.string.home_last_tabs_title);
+        }
 
         mList = (ListView) view.findViewById(R.id.list);
 
@@ -149,13 +151,17 @@ public class LastTabsPage extends HomeFragment {
 
     private void updateUiFromCursor(Cursor c) {
         if (c != null && c.getCount() > 0) {
-            mTitle.setVisibility(View.VISIBLE);
+            if (mTitle != null) {
+                mTitle.setVisibility(View.VISIBLE);
+            }
             mRestoreButton.setVisibility(View.VISIBLE);
             return;
         }
 
         // Cursor is empty, so hide the title and set the empty view if it hasn't been set already.
-        mTitle.setVisibility(View.GONE);
+        if (mTitle != null) {
+            mTitle.setVisibility(View.VISIBLE);
+        }
         mRestoreButton.setVisibility(View.GONE);
 
         if (mEmptyView == null) {

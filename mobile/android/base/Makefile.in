@@ -473,7 +473,7 @@ RES_LAYOUT = \
   res/layout/home_history_page.xml \
   res/layout/home_history_tabs_indicator.xml \
   res/layout/home_last_tabs_page.xml \
-  res/layout/home_list_with_title.xml \
+  res/layout/home_history_list.xml \
   res/layout/home_most_recent_page.xml \
   res/layout/home_most_visited_page.xml \
   res/layout/home_search_item_row.xml \
@@ -523,6 +523,9 @@ RES_LAYOUT_LARGE_V11 = \
   $(NULL)
 
 RES_LAYOUT_LARGE_LAND_V11 = \
+  res/layout-large-land-v11/home_history_page.xml \
+  res/layout-large-land-v11/home_history_tabs_indicator.xml \
+  res/layout-large-land-v11/home_history_list.xml \
   res/layout-large-land-v11/tabs_panel.xml \
   res/layout-large-land-v11/tabs_panel_header.xml \
   res/layout-large-land-v11/tabs_panel_footer.xml \
@@ -530,6 +533,9 @@ RES_LAYOUT_LARGE_LAND_V11 = \
 
 RES_LAYOUT_XLARGE_V11 = \
   res/layout-xlarge-v11/font_size_preference.xml \
+  res/layout-xlarge-v11/home_history_page.xml \
+  res/layout-xlarge-v11/home_history_tabs_indicator.xml \
+  res/layout-xlarge-v11/home_history_list.xml \
   res/layout-xlarge-v11/remote_tabs_child.xml \
   res/layout-xlarge-v11/remote_tabs_group.xml \
   $(NULL)
@@ -569,6 +575,7 @@ RES_VALUES_LARGE_V11 = \
   $(NULL)
 
 RES_VALUES_LARGE_LAND_V11 = \
+  res/values-large-land-v11/dimens.xml \
   res/values-large-land-v11/styles.xml \
   $(NULL)
 
@@ -579,6 +586,7 @@ RES_VALUES_XLARGE_V11 = \
   $(NULL)
 
 RES_VALUES_XLARGE_LAND_V11 = \
+  res/values-xlarge-land-v11/dimens.xml \
   res/values-xlarge-land-v11/styles.xml \
   $(NULL)
 
@@ -993,6 +1001,10 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_status_logo.png \
   $(NULL)
 
+RES_DRAWABLE_LARGE_LAND_V11 = \
+  res/drawable-large-land-v11/home_history_tabs_indicator.xml \
+  $(NULL)
+
 RES_DRAWABLE_LARGE_MDPI_V11 = \
   res/drawable-large-mdpi-v11/arrow_popup_bg.9.png \
   res/drawable-large-mdpi-v11/ic_menu_reload.png \
@@ -1012,6 +1024,10 @@ RES_DRAWABLE_LARGE_XHDPI_V11 = \
   res/drawable-large-xhdpi-v11/ic_menu_reload.png \
   res/drawable-large-xhdpi-v11/ic_menu_forward.png \
   res/drawable-large-xhdpi-v11/menu.png \
+  $(NULL)
+
+RES_DRAWABLE_XLARGE_V11 = \
+  res/drawable-xlarge-v11/home_history_tabs_indicator.xml \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_MDPI_V11 = \
@@ -1104,6 +1120,7 @@ RESOURCES = \
   $(RES_DRAWABLE) \
   $(RES_DRAWABLE_HDPI) \
   $(RES_DRAWABLE_HDPI_V11) \
+  $(RES_DRAWABLE_LARGE_LAND_V11) \
   $(RES_DRAWABLE_LARGE_HDPI_V11) \
   $(RES_DRAWABLE_LARGE_MDPI_V11) \
   $(RES_DRAWABLE_LARGE_XHDPI_V11) \
@@ -1112,6 +1129,7 @@ RESOURCES = \
   $(RES_DRAWABLE_MDPI_V11) \
   $(RES_DRAWABLE_XHDPI) \
   $(RES_DRAWABLE_XHDPI_V11) \
+  $(RES_DRAWABLE_XLARGE_V11) \
   $(RES_DRAWABLE_XLARGE_HDPI_V11) \
   $(RES_DRAWABLE_XLARGE_MDPI_V11) \
   $(RES_DRAWABLE_XLARGE_XHDPI_V11) \
@@ -1158,9 +1176,11 @@ RES_DIRS= \
   res/drawable-mdpi-v11         \
   res/drawable-hdpi-v11         \
   res/drawable-xhdpi-v11        \
+  res/drawable-large-land-v11   \
   res/drawable-large-mdpi-v11   \
   res/drawable-large-hdpi-v11   \
   res/drawable-large-xhdpi-v11  \
+  res/drawable-xlarge-v11       \
   res/drawable-xlarge-mdpi-v11  \
   res/drawable-xlarge-hdpi-v11  \
   res/drawable-xlarge-xhdpi-v11 \
