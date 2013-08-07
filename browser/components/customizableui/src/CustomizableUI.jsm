@@ -91,7 +91,7 @@ let gSeenWidgets = new Set();
 let gSavedState = null;
 let gRestoring = false;
 let gDirty = false;
-let gInBatch = false;
+let gInBatchStack = 0;
 let gResetting = false;
 
 /**
@@ -271,6 +271,7 @@ let CustomizableUIInternal = {
   },
 
   registerToolbar: function(aToolbar) {
+    this.beginBatchUpdate();
     let document = aToolbar.ownerDocument;
     let area = aToolbar.id;
     let areaProperties = gAreas.get(area);
@@ -298,6 +299,7 @@ let CustomizableUIInternal = {
     this.registerBuildArea(area, aToolbar);
     this.buildArea(area, placements, aToolbar);
     aToolbar.setAttribute("currentset", placements.join(","));
+    this.endBatchUpdate();
   },
 
   buildArea: function(aArea, aPlacements, aAreaNode) {
@@ -1294,7 +1296,7 @@ let CustomizableUIInternal = {
   },
 
   saveState: function() {
-    if (gInBatch || !gDirty) {
+    if (gInBatchStack || !gDirty) {
       return;
     }
     let state = { placements: gPlacements,
@@ -1323,15 +1325,19 @@ let CustomizableUIInternal = {
   },
 
   beginBatchUpdate: function() {
-    gInBatch = true;
+    gInBatchStack++;
   },
 
-  endBatchUpdate: function(aForceSave) {
-    gInBatch = false;
-    if (aForceSave === true) {
+  endBatchUpdate: function(aForceDirty) {
+    gInBatchStack--;
+    if (aForceDirty === true) {
       gDirty = true;
     }
-    this.saveState();
+    if (gInBatchStack == 0) {
+      this.saveState();
+    } else if (gInBatchStack < 0) {
+      throw new Error("The batch editing stack should never reach a negative number.");
+    }
   },
 
   addListener: function(aListener) {
@@ -1832,8 +1838,8 @@ this.CustomizableUI = {
   beginBatchUpdate: function() {
     CustomizableUIInternal.beginBatchUpdate();
   },
-  endBatchUpdate: function(aForceSave) {
-    CustomizableUIInternal.endBatchUpdate(aForceSave);
+  endBatchUpdate: function(aForceDirty) {
+    CustomizableUIInternal.endBatchUpdate(aForceDirty);
   },
   createWidget: function(aProperties) {
     return CustomizableUIInternal.wrapWidget(
