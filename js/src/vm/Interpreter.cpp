@@ -173,10 +173,10 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 
 #if JS_HAS_NO_SUCH_METHOD
 
-const uint32_t JSSLOT_FOUND_FUNCTION  = 0;
-const uint32_t JSSLOT_SAVED_ID        = 1;
+static const uint32_t JSSLOT_FOUND_FUNCTION = 0;
+static const uint32_t JSSLOT_SAVED_ID = 1;
 
-Class js_NoSuchMethodClass = {
+static Class js_NoSuchMethodClass = {
     "NoSuchMethod",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
