@@ -1549,9 +1549,9 @@ class MOZ_STACK_CLASS ModuleCompiler
                     return;
             }
         }
-#endif
         out->reset(JS_smprintf("total compilation time %dms%s",
                                msTotal, slowFuns ? slowFuns.get() : ""));
+#endif
     }
 
     bool staticallyLink(ScopedJSDeletePtr<AsmJSModule> *module, ScopedJSFreePtr<char> *report) {
@@ -6293,7 +6293,7 @@ static bool
 Warn(JSContext *cx, int code, const char *str)
 {
     return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage,
-                                        NULL, code, str);
+                                        NULL, code, str ? str : "");
 }
 
 extern bool
