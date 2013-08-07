@@ -219,8 +219,8 @@ var PageStyleActor = protocol.ActorClass({
     let matched = [];
     let propInfo = this.cssLogic.getPropertyInfo(property);
     for (let selectorInfo of propInfo.matchedSelectors) {
-      let cssRule = selectorInfo.selector._cssRule;
-      let domRule = cssRule.sourceElement || cssRule._domRule;
+      let cssRule = selectorInfo.selector.cssRule;
+      let domRule = cssRule.sourceElement || cssRule.domRule;
 
       let rule = this._styleRef(domRule);
       rules.add(rule);

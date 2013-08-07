@@ -901,7 +901,7 @@ SelectorView.prototype = {
   {
     let inspector = this.tree.styleInspector.inspector;
     let contentDoc = inspector.selection.document;
-    let cssSheet = this.selectorInfo.selector._cssRule._cssSheet;
+    let cssSheet = this.selectorInfo.selector.cssRule._cssSheet;
     let line = this.selectorInfo.ruleLine || 0;
     let contentSheet = false;
     let styleSheet;
