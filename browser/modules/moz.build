@@ -26,7 +26,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
 
 EXTRA_PP_JS_MODULES += [
-    'AboutHomeUtils.jsm',
+    'AboutHome.jsm',
     'RecentWindow.jsm',
 ]
 

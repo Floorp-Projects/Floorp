@@ -2116,15 +2116,21 @@ NS_IMETHODIMP_(void)
 nsCocoaWindow::SetInputContext(const InputContext& aContext,
                                const InputContextAction& aAction)
 {
-  // XXX Ideally, we should check if this instance has focus or not.
-  //     However, this is called only when this widget has focus, so,
-  //     it's not problem at least for now.
-  if (aContext.IsPasswordEditor()) {
-    TextInputHandler::EnableSecureEventInput();
-  } else {
-    TextInputHandler::EnsureSecureEventInputDisabled();
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (mWindow &&
+      [mWindow firstResponder] == mWindow &&
+      [mWindow isKeyWindow] &&
+      [[NSApplication sharedApplication] isActive]) {
+    if (aContext.IsPasswordEditor()) {
+      TextInputHandler::EnableSecureEventInput();
+    } else {
+      TextInputHandler::EnsureSecureEventInputDisabled();
+    }
   }
   mInputContext = aContext;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @implementation WindowDelegate

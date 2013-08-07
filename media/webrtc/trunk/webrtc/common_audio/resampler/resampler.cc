@@ -53,23 +53,14 @@ Resampler::~Resampler()
 
 int Resampler::ResetIfNeeded(int in_freq, int out_freq, ResamplerType type)
 {
-  if (!state_ || type != type_)
+  if (!state_ || type != type_ ||
+      in_freq != in_freq_ || out_freq != out_freq_)
   {
     // Note that fixed-rate resamplers where input == output rate will
     // have state_ == NULL, and will call Reset() here - but reset won't
     // do anything beyond overwrite the member vars unless it needs a
     // real resampler.
     return Reset(in_freq, out_freq, type);
-
-  } else if (in_freq != in_freq_ || out_freq != out_freq_) {
-    if (speex_resampler_set_rate(state_, in_freq, out_freq) ==
-        RESAMPLER_ERR_SUCCESS)
-    {
-      in_freq_ = in_freq;
-      out_freq_ = out_freq;
-      return 0;
-    }
-    return -1;
   } else {
     return 0;
   }
@@ -83,6 +74,7 @@ int Resampler::Reset(int in_freq, int out_freq, ResamplerType type)
   if (state_)
   {
     speex_resampler_destroy(state_);
+    state_ = NULL;
   }
   type_ = type;
   channels_ = channels;
