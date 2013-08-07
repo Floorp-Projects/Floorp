@@ -348,6 +348,8 @@ ion::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
     return true;
 }
 
+namespace {
+
 // The type analysis algorithm inserts conversions and box/unbox instructions
 // to make the IR graph well-typed for future passes.
 //
@@ -393,6 +395,8 @@ class TypeAnalyzer
 
     bool analyze();
 };
+
+} /* anonymous namespace */
 
 // Try to specialize this phi based on its non-cyclic inputs.
 static MIRType
