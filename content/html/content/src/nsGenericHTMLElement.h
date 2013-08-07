@@ -541,6 +541,8 @@ public:
     return rv.ErrorCode();
   }
 
+  using nsGenericHTMLElementBase::GetOwnerDocument;
+
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
 public:
