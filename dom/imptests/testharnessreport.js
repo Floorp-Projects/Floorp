@@ -293,6 +293,10 @@ var W3CTest = {
       "output": false,
       "explicit_timeout": true
     });
+    // Workaround until testharness is updated (see bug 885107).
+    window.onerror = function(message, fileName, lineNumber) {
+      W3CTest.logFailure("Uncaught exception", fileName + " (" + lineNumber + "): " + message);
+    };
   } catch (e) {
     W3CTest.logFailure("Harness setup", "Unexpected exception: " + e);
   }
