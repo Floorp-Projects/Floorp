@@ -2645,6 +2645,7 @@
             } catch (e) {
               let url = this.mCurrentBrowser.currentURI.spec;
               this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(url));
+              throw e;
             }
 #endif
           ]]>
@@ -2669,6 +2670,7 @@
             } catch (e) {
               let url = this.mCurrentBrowser.currentURI.spec;
               this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(url));
+              throw e;
             }
 #endif
           ]]>
