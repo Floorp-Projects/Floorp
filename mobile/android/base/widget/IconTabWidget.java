@@ -12,11 +12,13 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.TabWidget;
 
 public class IconTabWidget extends TabWidget {
     private OnTabChangedListener mListener;
     private final int mButtonLayoutId;
+    private final boolean mIsIcon;
 
     public static interface OnTabChangedListener {
         public void onTabChanged(int tabIndex);
@@ -27,6 +29,7 @@ public class IconTabWidget extends TabWidget {
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.IconTabWidget);
         mButtonLayoutId = a.getResourceId(R.styleable.IconTabWidget_android_layout, 0);
+        mIsIcon = (a.getInt(R.styleable.IconTabWidget_display, 0x00) == 0x00);
         a.recycle();
 
         if (mButtonLayoutId == 0) {
@@ -34,14 +37,18 @@ public class IconTabWidget extends TabWidget {
         }
     }
 
-    public ImageButton addTab(int resId) {
-        ImageButton button = (ImageButton) LayoutInflater.from(getContext()).inflate(mButtonLayoutId, null);
-        button.setImageResource(resId);
+    public void addTab(int imageResId, int stringResId) {
+        View button = LayoutInflater.from(getContext()).inflate(mButtonLayoutId, this, false);
+        if (mIsIcon) {
+            ((ImageButton) button).setImageResource(imageResId);
+            button.setContentDescription(getContext().getString(stringResId));
+        } else {
+            ((TextView) button).setText(getContext().getString(stringResId));
+        }
 
         addView(button);
         button.setOnClickListener(new TabClickListener(getTabCount() - 1));
         button.setOnFocusChangeListener(this);
-        return button;
     }
 
     public void setTabSelectionListener(OnTabChangedListener listener) {

@@ -9,6 +9,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.widget.IconTabWidget;
 import android.support.v4.app.Fragment;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -24,6 +25,7 @@ public class HistoryPage extends HomeFragment
     private static final String LOGTAG = "GeckoHistoryPage";
     private IconTabWidget mTabWidget;
     private int mSelectedTab;
+    private boolean initializeVisitedPage;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -36,20 +38,16 @@ public class HistoryPage extends HomeFragment
 
         mTabWidget = (IconTabWidget) view.findViewById(R.id.tab_icon_widget);
 
-        ImageButton button;
-        final Resources resources = view.getContext().getResources();
+        mTabWidget.addTab(R.drawable.icon_most_visited, R.string.home_most_visited_title);
+        mTabWidget.addTab(R.drawable.icon_most_recent, R.string.home_most_recent_title);
+        mTabWidget.addTab(R.drawable.icon_last_tabs, R.string.home_last_tabs_title);
 
-        button = mTabWidget.addTab(R.drawable.icon_most_visited);
-        button.setContentDescription(resources.getString(R.string.home_most_visited_title));
-
-        button = mTabWidget.addTab(R.drawable.icon_most_recent);
-        button.setContentDescription(resources.getString(R.string.home_most_recent_title));
-
-        button = mTabWidget.addTab(R.drawable.icon_last_tabs);
-        button.setContentDescription(resources.getString(R.string.home_last_tabs_title));
-
-        //Show most visited page as the initial page
-        showMostVisitedPage();
+        // Show most visited page as the initial page.
+        // Since we detach/attach on config change, this prevents from replacing current fragment.
+        if (!initializeVisitedPage) {
+            showMostVisitedPage();
+            initializeVisitedPage = true;
+        }
 
         mTabWidget.setTabSelectionListener(this);
         mTabWidget.setCurrentTab(mSelectedTab);
@@ -74,6 +72,19 @@ public class HistoryPage extends HomeFragment
 
         mTabWidget.setCurrentTab(index);
         mSelectedTab = index;
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        // Rotation should detach and re-attach to use a different layout.
+        if (isVisible()) {
+            getFragmentManager().beginTransaction()
+                                .detach(this)
+                                .attach(this)
+                                .commitAllowingStateLoss();
+        }
     }
 
     private void showSubPage(Fragment subPage) {
