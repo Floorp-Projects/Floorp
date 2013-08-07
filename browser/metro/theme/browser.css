@@ -127,6 +127,7 @@ documenttab[closing] > .documenttab-container {
   margin: @metro_spacing_normal@ @metro_spacing_snormal@;
   background: white none center top no-repeat;
   background-size: cover;
+  min-width: @thumbnail_width@;
   width: @thumbnail_width@;
   height: @thumbnail_height@;
 }
