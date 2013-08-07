@@ -1199,7 +1199,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_vstr(src, addr.base, addr.index, scale);
     }
     void moveDouble(FloatRegister src, FloatRegister dest) {
-        ma_vstr(src, Operand(dest));
+        ma_vmov(src, dest);
     }
 
     void storeFloat(FloatRegister src, Address addr) {

@@ -9,8 +9,6 @@
 #include "nsTArray.h"
 #include "gfxPlatform.h"
 
-#define MAC_OS_X_VERSION_10_4_HEX 0x00001040
-#define MAC_OS_X_VERSION_10_5_HEX 0x00001050
 #define MAC_OS_X_VERSION_10_6_HEX 0x00001060
 #define MAC_OS_X_VERSION_10_7_HEX 0x00001070
 

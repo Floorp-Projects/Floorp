@@ -67,7 +67,7 @@ ToStringGuts(XPCCallContext& ccx)
 
 /***************************************************************************/
 
-static JSBool
+static bool
 XPC_WN_Shared_ToString(JSContext *cx, unsigned argc, jsval *vp)
 {
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
@@ -82,7 +82,7 @@ XPC_WN_Shared_ToString(JSContext *cx, unsigned argc, jsval *vp)
     return ToStringGuts(ccx);
 }
 
-static JSBool
+static bool
 XPC_WN_Shared_ToSource(JSContext *cx, unsigned argc, jsval *vp)
 {
     static const char empty[] = "({})";
@@ -133,7 +133,7 @@ GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)
 // This is the getter native function we use to handle 'wrappedJSObject' for
 // double wrapped JSObjects.
 
-static JSBool
+static bool
 XPC_WN_DoubleWrappedGetter(JSContext *cx, unsigned argc, jsval *vp)
 {
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
@@ -860,7 +860,7 @@ XPC_WN_Helper_CheckAccess(JSContext *cx, HandleObject obj, HandleId id,
     POST_HELPER_STUB
 }
 
-static JSBool
+static bool
 XPC_WN_Helper_Call(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -879,7 +879,7 @@ XPC_WN_Helper_Call(JSContext *cx, unsigned argc, jsval *vp)
     POST_HELPER_STUB
 }
 
-static JSBool
+static bool
 XPC_WN_Helper_Construct(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -1290,7 +1290,7 @@ FixUpThisIfBroken(JSObject *obj, JSObject *funobj)
     return obj;
 }
 
-JSBool
+bool
 XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
 {
     NS_ASSERTION(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
@@ -1315,7 +1315,7 @@ XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
     return XPCWrappedNative::CallMethod(ccx);
 }
 
-JSBool
+bool
 XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
 {
     NS_ASSERTION(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
