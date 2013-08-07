@@ -121,9 +121,9 @@ GetLine(char *bufp,
     fputs(prompt, stdout);
     fflush(stdout);
     if (!fgets(line, sizeof line, file))
-        return JS_FALSE;
+        return false;
     strcpy(bufp, line);
-    return JS_TRUE;
+    return true;
 }
 
 static bool
@@ -453,7 +453,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
 
     /* It's an interactive filehandle; drop into read-eval-print loop. */
     lineno = 1;
-    hitEOF = JS_FALSE;
+    hitEOF = false;
     do {
         bufp = buffer;
         *bufp = '\0';
@@ -470,7 +470,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
         startline = lineno;
         do {
             if (!GetLine(bufp, file, startline == lineno ? "js> " : "")) {
-                hitEOF = JS_TRUE;
+                hitEOF = true;
                 break;
             }
             bufp += strlen(bufp);
@@ -498,7 +498,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
                 if (!!bytes)
                     fprintf(stdout, "%s\n", bytes.ptr());
                 else
-                    ok = JS_FALSE;
+                    ok = false;
             }
         }
     } while (!hitEOF && !env->IsQuitting());
@@ -554,7 +554,7 @@ XPCShellEnvironment::CreateEnvironment()
 }
 
 XPCShellEnvironment::XPCShellEnvironment()
-:   mQuitting(JS_FALSE)
+:   mQuitting(false)
 {
 }
 
@@ -674,7 +674,7 @@ XPCShellEnvironment::Init()
     if (runtimeScriptFile) {
         fprintf(stdout, "[loading '%s'...]\n", kDefaultRuntimeScriptFilename);
         ProcessFile(cx, globalObj, kDefaultRuntimeScriptFilename,
-                    runtimeScriptFile, JS_FALSE);
+                    runtimeScriptFile, false);
         fclose(runtimeScriptFile);
     }
 

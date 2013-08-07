@@ -225,7 +225,7 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 {
     InvokeArgs args(cx);
     if (!args.init(2))
-        return JS_FALSE;
+        return false;
 
     JS_ASSERT(vp[0].isObject());
     JS_ASSERT(vp[1].isObject());
@@ -237,7 +237,7 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
     args[0].set(obj->getReservedSlot(JSSLOT_SAVED_ID));
     JSObject *argsobj = NewDenseCopiedArray(cx, argc, vp + 2);
     if (!argsobj)
-        return JS_FALSE;
+        return false;
     args[1].setObject(*argsobj);
     JSBool ok = Invoke(cx, args);
     vp[0] = args.rval();
@@ -2034,7 +2034,7 @@ END_CASE(JSOP_NE)
         bool equal;                                                           \
         if (!StrictlyEqual(cx, lref, rref, &equal))                           \
             goto error;                                                       \
-        COND = equal OP JS_TRUE;                                              \
+        COND = equal OP true;                                                 \
         regs.sp--;                                                            \
     JS_END_MACRO
 

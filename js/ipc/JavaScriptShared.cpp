@@ -358,14 +358,14 @@ JSBool
 UnknownPropertyStub(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     JS_ReportError(cx, "getter could not be wrapped via CPOWs");
-    return JS_FALSE;
+    return false;
 }
 
 JSBool
 UnknownStrictPropertyStub(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
 {
     JS_ReportError(cx, "setter could not be wrapped via CPOWs");
-    return JS_FALSE;
+    return false;
 }
 
 bool
