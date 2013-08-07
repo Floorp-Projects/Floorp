@@ -42,7 +42,10 @@ public class TopBookmarksView extends GridView {
     // Number of columns to show.
     private final int mNumColumns;
 
-    // Vertical spacing inbetween the rows.
+    // Horizontal spacing in between the rows.
+    private final int mHorizontalSpacing;
+
+    // Vertical spacing in between the rows.
     private final int mVerticalSpacing;
 
     // On URL open listener.
@@ -69,6 +72,7 @@ public class TopBookmarksView extends GridView {
         setNumColumns(mNumColumns);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TopBookmarksView, defStyle, 0);
+        mHorizontalSpacing = a.getDimensionPixelOffset(R.styleable.TopBookmarksView_android_horizontalSpacing, 0x00);
         mVerticalSpacing = a.getDimensionPixelOffset(R.styleable.TopBookmarksView_android_verticalSpacing, 0x00);
         a.recycle();
     }
@@ -128,7 +132,8 @@ public class TopBookmarksView extends GridView {
     public int getColumnWidth() {
         // This method will be called from onMeasure() too.
         // It's better to use getMeasuredWidth(), as it is safe in this case.
-        return (getMeasuredWidth() - getPaddingLeft() - getPaddingRight()) / mNumColumns;
+        final int totalHorizontalSpacing = mNumColumns > 0 ? (mNumColumns - 1) * mHorizontalSpacing : 0;
+        return (getMeasuredWidth() - getPaddingLeft() - getPaddingRight() - totalHorizontalSpacing) / mNumColumns;
     }
 
     /**

@@ -40,4 +40,19 @@
          <item name="android:nextFocusUp">@+id/info</item>
     </style>
 
+    <style name="Widget.BookmarksListView" parent="Widget.HomeListView">
+        <item name="android:paddingLeft">32dp</item>
+        <item name="android:paddingRight">32dp</item>
+        <item name="android:scrollbarStyle">outsideOverlay</item>
+    </style>
+
+    <style name="Widget.TopBookmarksView" parent="Widget.GridView">
+        <item name="android:paddingLeft">5dp</item>
+        <item name="android:paddingRight">5dp</item>
+        <item name="android:paddingTop">30dp</item>
+        <item name="android:paddingBottom">30dp</item>
+        <item name="android:horizontalSpacing">10dp</item>
+        <item name="android:verticalSpacing">10dp</item>
+    </style>
+
 </resources>

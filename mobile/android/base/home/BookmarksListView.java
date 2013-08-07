@@ -39,7 +39,7 @@ public class BookmarksListView extends HomeListView
     }
 
     public BookmarksListView(Context context, AttributeSet attrs) {
-        this(context, attrs, R.attr.homeListViewStyle);
+        this(context, attrs, R.attr.bookmarksListViewStyle);
     }
 
     public BookmarksListView(Context context, AttributeSet attrs, int defStyle) {

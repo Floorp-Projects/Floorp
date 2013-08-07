@@ -119,6 +119,7 @@
 
     <style name="Widget.TopBookmarksView" parent="Widget.GridView">
         <item name="android:padding">7dp</item>
+        <item name="android:horizontalSpacing">0dp</item>
         <item name="android:verticalSpacing">7dp</item>
     </style>
 
@@ -128,6 +129,10 @@
       <item name="android:padding">5dip</item>
       <item name="android:orientation">vertical</item>
     </style>
+
+    <style name="Widget.BookmarkItemView" parent="Widget.TwoLinePageRow"/>
+
+    <style name="Widget.BookmarksListView" parent="Widget.HomeListView"/>
 
     <style name="Widget.BookmarkThumbnailView">
       <item name="android:padding">0dip</item>

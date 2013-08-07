@@ -24,7 +24,7 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
     private static final int VIEW_TYPE_FOLDER = 1;
 
     private static final int[] VIEW_TYPES = new int[] { VIEW_TYPE_ITEM, VIEW_TYPE_FOLDER };
-    private static final int[] LAYOUT_TYPES = new int[] { R.layout.home_item_row, R.layout.bookmark_folder_row };
+    private static final int[] LAYOUT_TYPES = new int[] { R.layout.bookmark_item_row, R.layout.bookmark_folder_row };
 
     // A listener that knows how to refresh the list for a given folder id.
     // This is usually implemented by the enclosing fragment/activity.
