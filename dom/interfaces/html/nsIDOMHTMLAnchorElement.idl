@@ -16,8 +16,8 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(76ec122a-db6d-4b3f-8a24-15faf117f695)]
-interface nsIDOMHTMLAnchorElement : nsIDOMHTMLElement
+[scriptable, uuid(339c01c8-2d41-4626-b231-eec63f0241b6)]
+interface nsIDOMHTMLAnchorElement : nsISupports
 {
            attribute DOMString        href;
            attribute DOMString        target;

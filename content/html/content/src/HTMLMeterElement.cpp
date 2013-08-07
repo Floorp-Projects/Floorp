@@ -25,16 +25,7 @@ HTMLMeterElement::~HTMLMeterElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLMeterElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLMeterElement, Element)
-
-
-NS_INTERFACE_MAP_BEGIN(HTMLMeterElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-NS_ELEMENT_INTERFACE_MAP_END
-
 NS_IMPL_ELEMENT_CLONE(HTMLMeterElement)
-
 
 nsEventStates
 HTMLMeterElement::IntrinsicState() const
