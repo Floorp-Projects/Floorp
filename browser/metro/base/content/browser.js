@@ -1039,13 +1039,6 @@ var Browser = {
         break;
     }
   },
-
-  onAboutPolicyClick: function() {
-    FlyoutPanelsUI.hide();
-    let linkStr = Services.urlFormatter.formatURLPref("app.privacyURL");
-    BrowserUI.newTab(linkStr, Browser.selectedTab);
-  }
-
 };
 
 Browser.MainDragger = function MainDragger() {

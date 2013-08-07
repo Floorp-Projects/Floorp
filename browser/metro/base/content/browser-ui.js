@@ -411,12 +411,21 @@ var BrowserUI = {
     });
   },
 
+  onAboutPolicyClick: function() {
+    FlyoutPanelsUI.hide();
+    let linkStr = Services.urlFormatter.formatURLPref("app.privacyURL");
+    BrowserUI.newTab(linkStr, Browser.selectedTab, true);
+  },
+
   /*********************************
    * Tab management
    */
 
-  newTab: function newTab(aURI, aOwner) {
+  newTab: function newTab(aURI, aOwner, aPeekTabs) {
     aURI = aURI || kStartOverlayURI;
+    if (aPeekTabs) {
+      ContextUI.peekTabs(kNewTabAnimationDelayMsec);
+    }
     let tab = Browser.addTab(aURI, true, aOwner);
     return tab;
   },
@@ -1064,9 +1073,8 @@ var BrowserUI = {
         this._closeOrQuit();
         break;
       case "cmd_newTab":
-        this.newTab();
+        this.newTab(null, null, true);
         this._edit.beginEditing(false);
-        ContextUI.peekTabs(kNewTabAnimationDelayMsec);
         break;
       case "cmd_closeTab":
         this.closeTab();
@@ -1442,7 +1450,7 @@ var SettingsCharm = {
         label: Strings.browser.GetStringFromName("helpOnlineCharm"),
         onselected: function() {
           let url = Services.urlFormatter.formatURLPref("app.support.baseURL");
-          BrowserUI.newTab(url, Browser.selectedTab);
+          BrowserUI.newTab(url, Browser.selectedTab, true);
         }
     });
   },
