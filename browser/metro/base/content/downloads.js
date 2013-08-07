@@ -169,6 +169,7 @@ var Downloads = {
   },
 
   showNotification: function dh_showNotification(title, msg, buttons, priority) {
+    this._notificationBox.notificationsHidden = false;
     return this._notificationBox.appendNotification(msg,
                                               title,
                                               URI_GENERIC_ICON_DOWNLOAD,
