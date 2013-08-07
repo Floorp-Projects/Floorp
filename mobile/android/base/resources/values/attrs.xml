@@ -17,6 +17,9 @@
         <!-- Style for MenuItemDefault -->
         <attr name="menuItemDefaultStyle" format="reference"/>
 
+        <!-- Default style for the BookmarksListView -->
+        <attr name="bookmarksListViewStyle" format="reference" />
+
         <!-- Default style for the BookmarkThumbnailView -->
         <attr name="bookmarkThumbnailViewStyle" format="reference" />
 
@@ -198,6 +201,7 @@
     </declare-styleable>
 
     <declare-styleable name="TopBookmarksView">
+        <attr name="android:horizontalSpacing"/>
         <attr name="android:verticalSpacing"/>
     </declare-styleable>
 

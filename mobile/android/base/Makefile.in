@@ -456,6 +456,7 @@ RES_LAYOUT = \
   res/layout/autocomplete_list_item.xml \
   res/layout/bookmark_edit.xml \
   res/layout/bookmark_folder_row.xml \
+  res/layout/bookmark_item_row.xml \
   res/layout/browser_search.xml \
   res/layout/browser_toolbar.xml \
   res/layout/datetime_picker.xml \
@@ -572,6 +573,10 @@ RES_VALUES_XLARGE_V11 = \
   res/values-xlarge-v11/dimens.xml \
   res/values-xlarge-v11/integers.xml \
   res/values-xlarge-v11/styles.xml \
+  $(NULL)
+
+RES_VALUES_XLARGE_LAND_V11 = \
+  res/values-xlarge-land-v11/styles.xml \
   $(NULL)
 
 RES_VALUES_V14 = \
@@ -1126,6 +1131,7 @@ RESOURCES = \
   $(RES_VALUES_V11) \
   $(RES_VALUES_V14) \
   $(RES_VALUES_V16) \
+  $(RES_VALUES_XLARGE_LAND_V11) \
   $(RES_VALUES_XLARGE_V11) \
   $(RES_XML) \
   $(RES_XML_V11) \
@@ -1139,6 +1145,7 @@ RES_DIRS= \
   res/values                    \
   res/values-v11                \
   res/values-large-v11          \
+  res/values-xlarge-land-v11    \
   res/values-xlarge-v11         \
   res/values-v14                \
   res/values-v16                \
