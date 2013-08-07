@@ -234,17 +234,18 @@ documenttab[selected] .documenttab-selection {
 #start-autocomplete[viewstate="snapped"] .richgrid-item-content {
   -moz-box-orient: horizontal;
 }
+
 #start-container,
 #start-autocomplete {
   padding-left: 0;
   padding-right: 0;
 }
+
 #start-container[viewstate="snapped"] #start-scrollbox > .meta-section {
-  margin: 0;
+  margin: 0 @metro_spacing_xnormal@;
   min-width: @grid_double_column_width@;
-  -moz-box-flex: 1;
-  -moz-box-align: center;
 }
+
 #start-container[viewstate="snapped"] richgrid {
   visibility: collapse;
 }
