@@ -1664,8 +1664,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal'),
-                Argument('JS::Heap<JSObject*>*', 'aProtoAndIfaceArray'),
-                Argument('bool', 'aDefineOnGlobal')]
+                Argument('JS::Heap<JSObject*>*', 'protoAndIfaceArray')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
     def definition_body(self):
@@ -1792,13 +1791,13 @@ if (!unforgeableHolder) {
 
         if needInterfacePrototypeObject:
             protoClass = "&PrototypeClass.mBase"
-            protoCache = "&aProtoAndIfaceArray[prototypes::id::%s]" % self.descriptor.name
+            protoCache = "&protoAndIfaceArray[prototypes::id::%s]" % self.descriptor.name
         else:
             protoClass = "nullptr"
             protoCache = "nullptr"
         if needInterfaceObject:
             interfaceClass = "&InterfaceObjectClass.mBase"
-            interfaceCache = "&aProtoAndIfaceArray[constructors::id::%s]" % self.descriptor.name
+            interfaceCache = "&protoAndIfaceArray[constructors::id::%s]" % self.descriptor.name
         else:
             # We don't have slots to store the named constructors.
             assert len(self.descriptor.interface.namedConstructors) == 0
@@ -1829,7 +1828,7 @@ if (!unforgeableHolder) {
                 "                            %s,\n"
                 "                            %s,\n"
                 "                            %s,\n"
-                "                            %s, aDefineOnGlobal);" % (
+                "                            %s);" % (
             protoClass, protoCache,
             interfaceClass, constructHookHolder, constructArgs,
             namedConstructors,
@@ -1841,7 +1840,7 @@ if (!unforgeableHolder) {
         if UseHolderForUnforgeable(self.descriptor):
             assert needInterfacePrototypeObject
             setUnforgeableHolder = CGGeneric(
-                "JSObject* proto = aProtoAndIfaceArray[prototypes::id::%s];\n"
+                "JSObject* proto = protoAndIfaceArray[prototypes::id::%s];\n"
                 "if (proto) {\n"
                 "  js::SetReservedSlot(proto, DOM_INTERFACE_PROTO_SLOTS_BASE,\n"
                 "                      JS::ObjectValue(*unforgeableHolder));\n"
@@ -1859,9 +1858,9 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     A method for getting a per-interface object (a prototype object or interface
     constructor object).
     """
-    def __init__(self, descriptor, name, idPrefix="", extraArgs=[]):
+    def __init__(self, descriptor, name, idPrefix=""):
         args = [Argument('JSContext*', 'aCx'),
-                Argument('JS::Handle<JSObject*>', 'aGlobal')] + extraArgs
+                Argument('JS::Handle<JSObject*>', 'aGlobal')]
         CGAbstractMethod.__init__(self, descriptor, name,
                                   'JS::Handle<JSObject*>', args, inline=True)
         self.id = idPrefix + "id::" + self.descriptor.name
@@ -1875,7 +1874,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
   /* Check to see whether the interface objects are already installed */
   JS::Heap<JSObject*>* protoAndIfaceArray = GetProtoAndIfaceArray(aGlobal);
   if (!protoAndIfaceArray[%s]) {
-    CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray, aDefineOnGlobal);
+    CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray);
   }
 
   /* 
@@ -1898,18 +1897,15 @@ class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
     def definition_body(self):
         return """
   /* Get the interface prototype object for this class.  This will create the
-     object as needed. */
-  bool aDefineOnGlobal = true;""" + CGGetPerInterfaceObject.definition_body(self)
+     object as needed. */""" + CGGetPerInterfaceObject.definition_body(self)
 
 class CGGetConstructorObjectMethod(CGGetPerInterfaceObject):
     """
     A method for getting the interface constructor object.
     """
     def __init__(self, descriptor):
-        CGGetPerInterfaceObject.__init__(
-            self, descriptor, "GetConstructorObject",
-            "constructors::",
-            extraArgs=[Argument("bool", "aDefineOnGlobal", "true")])
+        CGGetPerInterfaceObject.__init__(self, descriptor, "GetConstructorObject",
+                                         "constructors::")
     def definition_body(self):
         return """
   /* Get the interface object for this class.  This will create the object as
@@ -1924,7 +1920,7 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('bool', 'aDefineOnGlobal')]
+                Argument('bool*', 'aEnabled')]
         CGAbstractMethod.__init__(self, descriptor, 'DefineDOMInterface', 'JSObject*', args)
 
     def declare(self):
@@ -1939,7 +1935,7 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
 
     def definition_body(self):
         if len(self.descriptor.interface.namedConstructors) > 0:
-            getConstructor = """  JSObject* interfaceObject = GetConstructorObject(aCx, aGlobal, aDefineOnGlobal);
+            getConstructor = """  JSObject* interfaceObject = GetConstructorObject(aCx, aGlobal);
   if (!interfaceObject) {
     return nullptr;
   }
@@ -1951,8 +1947,10 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
   }
   return interfaceObject;"""
         else:
-            getConstructor = "  return GetConstructorObject(aCx, aGlobal, aDefineOnGlobal);"
-        return getConstructor
+            getConstructor = "  return GetConstructorObject(aCx, aGlobal);"
+        return ("""  *aEnabled = true;
+
+""" + getConstructor)
 
 class CGConstructorEnabledViaPrefEnabled(CGAbstractMethod):
     """
