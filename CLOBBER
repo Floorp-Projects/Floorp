@@ -17,4 +17,4 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Removal of XPIDL for bug 893117 requires a clobber to make sure interfaces aren't generated.
+Bug 888905: Tablet bookmarks layout, makefile and xml changes requires clobbering.
