@@ -73,7 +73,7 @@ private:
 };
 
 inline XPCShellEnvironment*
-Environment(JSObject* global)
+Environment(Handle<JSObject*> global)
 {
     AutoSafeJSContext cx;
     JSAutoCompartment ac(cx, global);
@@ -174,10 +174,11 @@ Load(JSContext *cx,
             JS_ReportError(cx, "cannot open file '%s' for reading", filename.ptr());
             return false;
         }
+        Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
         JS::CompileOptions options(cx);
         options.setUTF8(true)
                .setFileAndLine(filename.ptr(), 1)
-               .setPrincipals(Environment(JS::CurrentGlobalOrNull(cx))->GetPrincipal());
+               .setPrincipals(Environment(global)->GetPrincipal());
         JS::RootedObject rootedObj(cx, obj);
         JSScript *script = JS::Compile(cx, rootedObj, options, file);
         fclose(file);
@@ -217,7 +218,8 @@ Quit(JSContext *cx,
      unsigned argc,
      JS::Value *vp)
 {
-    XPCShellEnvironment* env = Environment(JS::CurrentGlobalOrNull(cx));
+    Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+    XPCShellEnvironment* env = Environment(global);
     env->SetIsQuitting();
 
     return false;
