@@ -1524,19 +1524,19 @@ js_TrimString(JSContext *cx, Value *vp, JSBool trimLeft, JSBool trimRight)
 static bool
 str_trim(JSContext *cx, unsigned argc, Value *vp)
 {
-    return js_TrimString(cx, vp, JS_TRUE, JS_TRUE);
+    return js_TrimString(cx, vp, true, true);
 }
 
 static bool
 str_trimLeft(JSContext *cx, unsigned argc, Value *vp)
 {
-    return js_TrimString(cx, vp, JS_TRUE, JS_FALSE);
+    return js_TrimString(cx, vp, true, false);
 }
 
 static bool
 str_trimRight(JSContext *cx, unsigned argc, Value *vp)
 {
-    return js_TrimString(cx, vp, JS_FALSE, JS_TRUE);
+    return js_TrimString(cx, vp, false, true);
 }
 
 /*
@@ -3548,21 +3548,21 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
     if (args.length() == 1) {
         uint16_t code;
         if (!ToUint16(cx, args[0], &code))
-            return JS_FALSE;
+            return false;
         if (StaticStrings::hasUnit(code)) {
             args.rval().setString(cx->runtime()->staticStrings.getUnit(code));
-            return JS_TRUE;
+            return true;
         }
         args[0].setInt32(code);
     }
     jschar *chars = cx->pod_malloc<jschar>(args.length() + 1);
     if (!chars)
-        return JS_FALSE;
+        return false;
     for (unsigned i = 0; i < args.length(); i++) {
         uint16_t code;
         if (!ToUint16(cx, args[i], &code)) {
             js_free(chars);
-            return JS_FALSE;
+            return false;
         }
         chars[i] = (jschar)code;
     }
@@ -3570,11 +3570,11 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
     JSString *str = js_NewString<CanGC>(cx, chars, args.length());
     if (!str) {
         js_free(chars);
-        return JS_FALSE;
+        return false;
     }
 
     args.rval().setString(str);
-    return JS_TRUE;
+    return true;
 }
 
 static const JSFunctionSpec string_static_methods[] = {
@@ -4017,12 +4017,12 @@ js::DeflateStringToBuffer(JSContext *maybecx, const jschar *src, size_t srclen,
             JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL,
                                  JSMSG_BUFFER_TOO_SMALL);
         }
-        return JS_FALSE;
+        return false;
     }
     for (size_t i = 0; i < srclen; i++)
         dst[i] = (char) src[i];
     *dstlenp = srclen;
-    return JS_TRUE;
+    return true;
 }
 
 bool
@@ -4039,13 +4039,13 @@ js::InflateStringToBuffer(JSContext *maybecx, const char *src, size_t srclen,
                 JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL,
                                      JSMSG_BUFFER_TOO_SMALL);
             }
-            return JS_FALSE;
+            return false;
         }
         for (size_t i = 0; i < srclen; i++)
             dst[i] = (unsigned char) src[i];
     }
     *dstlenp = srclen;
-    return JS_TRUE;
+    return true;
 }
 
 #define ____ false
@@ -4315,21 +4315,21 @@ Decode(JSContext *cx, Handle<JSLinearString*> str, const bool *reservedSet, Muta
                     c = (jschar)((v & 0x3FF) + 0xDC00);
                     jschar H = (jschar)((v >> 10) + 0xD800);
                     if (!sb.append(H))
-                        return JS_FALSE;
+                        return false;
                 } else {
                     c = (jschar)v;
                 }
             }
             if (c < 128 && reservedSet && reservedSet[c]) {
                 if (!sb.append(chars + start, k - start + 1))
-                    return JS_FALSE;
+                    return false;
             } else {
                 if (!sb.append(c))
-                    return JS_FALSE;
+                    return false;
             }
         } else {
             if (!sb.append(c))
-                return JS_FALSE;
+                return false;
         }
     }
 
