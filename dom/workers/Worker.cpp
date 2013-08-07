@@ -103,7 +103,7 @@ public:
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName);
 
 protected:
-  static JSBool
+  static bool
   ConstructInternal(JSContext* aCx, unsigned aArgc, jsval* aVp,
                     bool aIsChromeWorker, JSClass* aClass)
   {
@@ -230,7 +230,7 @@ private:
     return true;
   }
 
-  static JSBool
+  static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     return ConstructInternal(aCx, aArgc, aVp, false, Class());
@@ -256,7 +256,7 @@ private:
     }
   }
 
-  static JSBool
+  static bool
   Terminate(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
@@ -273,7 +273,7 @@ private:
     return worker->Terminate(aCx);
   }
 
-  static JSBool
+  static bool
   PostMessage(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
@@ -435,7 +435,7 @@ private:
     return Worker::GetInstancePrivate(aCx, aObj, aFunctionName);
   }
 
-  static JSBool
+  static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     return ConstructInternal(aCx, aArgc, aVp, true, Class());

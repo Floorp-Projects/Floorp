@@ -200,6 +200,9 @@ class ICFallbackStub;
 class ICEntry
 {
   private:
+    // A pointer to the baseline IC stub for this instruction.
+    ICStub *firstStub_;
+
     // Offset from the start of the JIT code where the IC
     // load and call instructions are.
     uint32_t returnOffset_;
@@ -210,12 +213,9 @@ class ICEntry
     // Whether this IC is for a bytecode op.
     uint32_t isForOp_ : 1;
 
-    // A pointer to the baseline IC stub for this instruction.
-    ICStub *firstStub_;
-
   public:
     ICEntry(uint32_t pcOffset, bool isForOp)
-      : returnOffset_(), pcOffset_(pcOffset), isForOp_(isForOp), firstStub_(NULL)
+      : firstStub_(NULL), returnOffset_(), pcOffset_(pcOffset), isForOp_(isForOp)
     {}
 
     CodeOffsetLabel returnOffset() const {
@@ -561,15 +561,6 @@ class ICStub
     void trace(JSTracer *trc);
 
   protected:
-    // The kind of the stub.
-    //  High bit is 'isFallback' flag.
-    //  Second high bit is 'isMonitored' flag.
-    Trait trait_ : 3;
-    Kind kind_ : 13;
-
-    // A 16-bit field usable by subtypes of ICStub for subtype-specific small-info
-    uint16_t extra_;
-
     // The raw jitcode to call for this stub.
     uint8_t *stubCode_;
 
@@ -577,22 +568,31 @@ class ICStub
     // either be a fallback or inert IC stub.
     ICStub *next_;
 
+    // A 16-bit field usable by subtypes of ICStub for subtype-specific small-info
+    uint16_t extra_;
+
+    // The kind of the stub.
+    //  High bit is 'isFallback' flag.
+    //  Second high bit is 'isMonitored' flag.
+    Trait trait_ : 3;
+    Kind kind_ : 13;
+
     inline ICStub(Kind kind, IonCode *stubCode)
-      : trait_(Regular),
-        kind_(kind),
+      : stubCode_(stubCode->raw()),
+        next_(NULL),
         extra_(0),
-        stubCode_(stubCode->raw()),
-        next_(NULL)
+        trait_(Regular),
+        kind_(kind)
     {
         JS_ASSERT(stubCode != NULL);
     }
 
     inline ICStub(Kind kind, Trait trait, IonCode *stubCode)
-      : trait_(trait),
-        kind_(kind),
+      : stubCode_(stubCode->raw()),
+        next_(NULL),
         extra_(0),
-        stubCode_(stubCode->raw()),
-        next_(NULL)
+        trait_(trait),
+        kind_(kind)
     {
         JS_ASSERT(stubCode != NULL);
     }

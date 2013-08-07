@@ -16,20 +16,36 @@ PARSER_SRCS = \
   xpidl.py \
   $(NULL)
 
+SDK_BINARY = \
+  $(PARSER_SRCS) \
+  xpidllex.py \
+  xpidlyacc.py \
+  $(NULL)
+
+SDK_BINARY_TARGET = xpidl-parser
+
 ifndef MOZ_SYSTEM_PLY
-PLY_PROGS = \
+PLY_FILES = \
+  $(topsrcdir)/other-licenses/ply/ply/__init__.py \
   $(topsrcdir)/other-licenses/ply/ply/lex.py \
   $(topsrcdir)/other-licenses/ply/ply/yacc.py \
   $(NULL)
+
+PLY_DEST = $(SDK_BIN_DIR)/ply
+INSTALL_TARGETS += PLY
+PLY_TARGET = xpidl-parser
 endif
 
 include $(topsrcdir)/config/rules.mk
 
 # Generate the PLY lexer and parser.
-export:: $(PARSER_SRCS) $(PLY_PROGS)
+xpidllex.py: $(PARSER_SRCS) $(PLY_FILES)
 	$(PYTHON_PATH) \
 	  $(PLY_INCLUDE) \
 	  $(srcdir)/header.py --cachedir=. --regen
+
+# generating xpidllex.py generates xpidlyacc.py too
+xpidlyacc.py: xpidllex.py
 
 check::
 	$(PYTHON_PATH) \

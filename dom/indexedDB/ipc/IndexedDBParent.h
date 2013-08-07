@@ -697,10 +697,10 @@ class IndexedDBObjectStoreRequestParent : public IndexedDBRequestParentBase
   typedef ipc::PutParams PutParams;
   typedef ipc::ClearParams ClearParams;
   typedef ipc::DeleteParams DeleteParams;
-  typedef ipc::FIXME_Bug_521898_objectstore::GetParams GetParams;
-  typedef ipc::FIXME_Bug_521898_objectstore::GetAllParams GetAllParams;
-  typedef ipc::FIXME_Bug_521898_objectstore::CountParams CountParams;
-  typedef ipc::FIXME_Bug_521898_objectstore::OpenCursorParams OpenCursorParams;
+  typedef ipc::GetParams GetParams;
+  typedef ipc::GetAllParams GetAllParams;
+  typedef ipc::CountParams CountParams;
+  typedef ipc::OpenCursorParams OpenCursorParams;
 
 public:
   IndexedDBObjectStoreRequestParent(IDBObjectStore* aObjectStore,
@@ -758,10 +758,10 @@ class IndexedDBIndexRequestParent : public IndexedDBRequestParentBase
   typedef ipc::GetKeyParams GetKeyParams;
   typedef ipc::GetAllKeysParams GetAllKeysParams;
   typedef ipc::OpenKeyCursorParams OpenKeyCursorParams;
-  typedef ipc::FIXME_Bug_521898_index::GetParams GetParams;
-  typedef ipc::FIXME_Bug_521898_index::GetAllParams GetAllParams;
-  typedef ipc::FIXME_Bug_521898_index::CountParams CountParams;
-  typedef ipc::FIXME_Bug_521898_index::OpenCursorParams OpenCursorParams;
+  typedef ipc::GetParams GetParams;
+  typedef ipc::GetAllParams GetAllParams;
+  typedef ipc::CountParams CountParams;
+  typedef ipc::OpenCursorParams OpenCursorParams;
 
 public:
   IndexedDBIndexRequestParent(IDBIndex* aIndex, RequestType aRequestType);

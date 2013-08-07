@@ -171,13 +171,16 @@ void read_profiler_env_vars()
 
   MOZ_ASSERT(sUnwindMode     == UnwINVALID);
   MOZ_ASSERT(sUnwindInterval == 0);
+  MOZ_ASSERT(sProfileEntries == 0);
 
   /* Set defaults */
   sUnwindMode     = nativeAvail ? UnwCOMBINED : UnwPSEUDO;
   sUnwindInterval = 0;  /* We'll have to look elsewhere */
+  sProfileEntries = 0;
 
   const char* strM = PR_GetEnv("MOZ_PROFILER_MODE");
   const char* strI = PR_GetEnv("MOZ_PROFILER_INTERVAL");
+  const char* strE = PR_GetEnv("MOZ_PROFILER_ENTRIES");
   const char* strF = PR_GetEnv("MOZ_PROFILER_STACK_SCAN");
 
   if (strM) {
@@ -195,6 +198,15 @@ void read_profiler_env_vars()
     long int n = strtol(strI, (char**)NULL, 10);
     if (errno == 0 && n >= 1 && n <= 1000) {
       sUnwindInterval = n;
+    }
+    else goto usage;
+  }
+
+  if (strE) {
+    errno = 0;
+    long int n = strtol(strE, (char**)NULL, 10);
+    if (errno == 0 && n > 0) {
+      sProfileEntries = n;
     }
     else goto usage;
   }
@@ -223,6 +235,9 @@ void read_profiler_env_vars()
   LOG( "SPS:   MOZ_PROFILER_INTERVAL=<number>   (milliseconds, 1 to 1000)");
   LOG( "SPS:   If unset, platform default is used.");
   LOG( "SPS: ");
+  LOG( "SPS:   MOZ_PROFILER_ENTRIES=<number>    (count, minimum of 1)");
+  LOG( "SPS:   If unset, platform default is used.");
+  LOG( "SPS: ");
   LOG( "SPS:   MOZ_PROFILER_VERBOSE");
   LOG( "SPS:   If set to any value, increases verbosity (recommended).");
   LOG( "SPS: ");
@@ -238,6 +253,7 @@ void read_profiler_env_vars()
   /* Re-set defaults */
   sUnwindMode       = nativeAvail ? UnwCOMBINED : UnwPSEUDO;
   sUnwindInterval   = 0;  /* We'll have to look elsewhere */
+  sProfileEntries   = 0;
   sUnwindStackScan  = 0;
 
  out:
@@ -245,6 +261,8 @@ void read_profiler_env_vars()
   LOGF("SPS: Unwind mode       = %s", name_UnwMode(sUnwindMode));
   LOGF("SPS: Sampling interval = %d ms (zero means \"platform default\")",
        (int)sUnwindInterval);
+  LOGF("SPS: Entry store size  = %d (zero means \"platform default\")",
+       (int)sProfileEntries);
   LOGF("SPS: UnwindStackScan   = %d (max dubious frames per unwind).",
        (int)sUnwindStackScan);
   LOG( "SPS: Use env var MOZ_PROFILER_MODE=help for further information.");
@@ -430,6 +448,10 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
      in preference to anything else. */
   if (sUnwindInterval > 0)
     aInterval = sUnwindInterval;
+
+  /* If the entry count was set using env vars, use that, too: */
+  if (sProfileEntries > 0)
+    aProfileEntries = sProfileEntries;
 
   // Reset the current state if the profiler is running
   profiler_stop();
