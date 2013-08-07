@@ -72,14 +72,25 @@ FilterContainsLocation(HandleScript function)
 void
 ion::EnableIonDebugLogging()
 {
+    EnableChannel(IonSpew_Logs);
     ionspewer.init();
 }
 
 void
-ion::IonSpewNewFunction(MIRGraph *graph, HandleScript function)
+ion::IonSpewNewFunction(MIRGraph *graph, HandleScript func)
 {
-    if (!js_IonOptions.parallelCompilation)
-        ionspewer.beginFunction(graph, function);
+    if (!js_IonOptions.parallelCompilation) {
+        ionspewer.beginFunction(graph, func);
+    } else {
+        if (func) {
+            IonSpew(IonSpew_Logs,
+                    "Can't log script %s:%d. (Compiled on background thread.)",
+                    func->filename(), func->lineno);
+        } else {
+            IonSpew(IonSpew_Logs,
+                    "Can't log asm.js compilation. (Compiled on background thread.)");
+        }
+    }
 }
 
 void

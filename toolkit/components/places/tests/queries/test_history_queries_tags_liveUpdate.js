@@ -68,13 +68,12 @@ add_task(function pages_query()
   testQueryContents(query, options, function (root) {
     compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
     for (let i = 0; i < root.childCount; i++) {
-      let node = root.getChild(i);
-      let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.tags, null);
+      let uri = NetUtil.newURI(root.getChild(i).uri);
+      do_check_eq(root.getChild(i).tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, "test-tag");
+      do_check_eq(root.getChild(i).tags, "test-tag");
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, null);
+      do_check_eq(root.getChild(i).tags, null);
     }
   });
 });
@@ -86,13 +85,12 @@ add_task(function visits_query()
   testQueryContents(query, options, function (root) {
     compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
     for (let i = 0; i < root.childCount; i++) {
-      let node = root.getChild(i);
-      let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.tags, null);
+      let uri = NetUtil.newURI(root.getChild(i).uri);
+      do_check_eq(root.getChild(i).tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, "test-tag");
+      do_check_eq(root.getChild(i).tags, "test-tag");
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, null);
+      do_check_eq(root.getChild(i).tags, null);
     }
   });
 });
@@ -104,13 +102,12 @@ add_task(function bookmarks_query()
   testQueryContents(query, options, function (root) {
     compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
     for (let i = 0; i < root.childCount; i++) {
-      let node = root.getChild(i);
-      let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.tags, null);
+      let uri = NetUtil.newURI(root.getChild(i).uri);
+      do_check_eq(root.getChild(i).tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, "test-tag");
+      do_check_eq(root.getChild(i).tags, "test-tag");
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, null);
+      do_check_eq(root.getChild(i).tags, null);
     }
   });
 });
@@ -122,13 +119,12 @@ add_task(function pages_searchterm_query()
   testQueryContents(query, options, function (root) {
     compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
     for (let i = 0; i < root.childCount; i++) {
-      let node = root.getChild(i);
-      let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.tags, null);
+      let uri = NetUtil.newURI(root.getChild(i).uri);
+      do_check_eq(root.getChild(i).tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, "test-tag");
+      do_check_eq(root.getChild(i).tags, "test-tag");
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, null);
+      do_check_eq(root.getChild(i).tags, null);
     }
   });
 });
@@ -141,13 +137,12 @@ add_task(function visits_searchterm_query()
   testQueryContents(query, options, function (root) {
     compareArrayToResult([gTestData[0], gTestData[1], gTestData[2]], root);
     for (let i = 0; i < root.childCount; i++) {
-      let node = root.getChild(i);
-      let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.tags, null);
+      let uri = NetUtil.newURI(root.getChild(i).uri);
+      do_check_eq(root.getChild(i).tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, "test-tag");
+      do_check_eq(root.getChild(i).tags, "test-tag");
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, null);
+      do_check_eq(root.getChild(i).tags, null);
     }
   });
 });

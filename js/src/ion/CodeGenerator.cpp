@@ -1492,13 +1492,12 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.passABIArg(argUintNReg);
     masm.passABIArg(argVpReg);
 
-    Label success, failure;
     switch (executionMode) {
       case SequentialExecution:
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
 
         // Test for failure.
-        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &failure);
+        masm.branchIfFalseBool(ReturnReg, masm.failureLabel(executionMode));
         break;
 
       case ParallelExecution:
@@ -1506,7 +1505,8 @@ CodeGenerator::visitCallNative(LCallNative *call)
 
         // ParallelResult has more nuanced failure, but for now we fail on
         // anything that's != TP_SUCCESS.
-        masm.branch32(Assembler::NotEqual, ReturnReg, Imm32(TP_SUCCESS), &failure);
+        masm.branch32(Assembler::NotEqual, ReturnReg, Imm32(TP_SUCCESS),
+                      masm.failureLabel(executionMode));
         break;
 
       default:
@@ -1515,14 +1515,6 @@ CodeGenerator::visitCallNative(LCallNative *call)
 
     // Load the outparam vp[0] into output register(s).
     masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), JSReturnOperand);
-    masm.jump(&success);
-
-    // Handle failure case.
-    {
-        masm.bind(&failure);
-        masm.handleFailure(executionMode);
-    }
-    masm.bind(&success);
 
     // The next instruction is removing the footer of the exit frame, so there
     // is no need for leaveFakeExitFrame.
@@ -1625,20 +1617,11 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
                        JSReturnOperand);
     } else {
         // Test for failure.
-        Label success, exception;
-        masm.branchIfFalseBool(ReturnReg, &exception);
+        masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
         // Load the outparam vp[0] into output register(s).
         masm.loadValue(Address(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult()),
                        JSReturnOperand);
-        masm.jump(&success);
-
-        // Handle exception case.
-        {
-            masm.bind(&exception);
-            masm.handleException();
-        }
-        masm.bind(&success);
     }
 
     // The next instruction is removing the footer of the exit frame, so there
@@ -3686,21 +3669,27 @@ CodeGenerator::visitModD(LModD *ins)
 
 typedef bool (*BinaryFn)(JSContext *, HandleScript, jsbytecode *,
                          MutableHandleValue, MutableHandleValue, Value *);
+typedef ParallelResult (*BinaryParFn)(ForkJoinSlice *, HandleValue, HandleValue,
+                                      Value *);
 
 static const VMFunction AddInfo = FunctionInfo<BinaryFn>(js::AddValues);
 static const VMFunction SubInfo = FunctionInfo<BinaryFn>(js::SubValues);
 static const VMFunction MulInfo = FunctionInfo<BinaryFn>(js::MulValues);
 static const VMFunction DivInfo = FunctionInfo<BinaryFn>(js::DivValues);
 static const VMFunction ModInfo = FunctionInfo<BinaryFn>(js::ModValues);
-static const VMFunction UrshInfo = FunctionInfo<BinaryFn>(js::UrshValues);
+static const VMFunctionsModal UrshInfo = VMFunctionsModal(
+    FunctionInfo<BinaryFn>(js::UrshValues),
+    FunctionInfo<BinaryParFn>(UrshValuesPar));
 
 bool
 CodeGenerator::visitBinaryV(LBinaryV *lir)
 {
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
-    pushArg(ImmWord(lir->mirRaw()->toInstruction()->resumePoint()->pc()));
-    pushArg(ImmGCPtr(current->mir()->info().script()));
+    if (gen->info().executionMode() == SequentialExecution) {
+        pushArg(ImmWord(lir->mirRaw()->toInstruction()->resumePoint()->pc()));
+        pushArg(ImmGCPtr(current->mir()->info().script()));
+    }
 
     switch (lir->jsop()) {
       case JSOP_ADD:
@@ -6871,18 +6860,10 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
         masm.loadValue(Address(StackPointer, IonDOMExitFrameLayout::offsetOfResult()),
                        JSReturnOperand);
     } else {
-        Label success, exception;
-        masm.branchIfFalseBool(ReturnReg, &exception);
+        masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
         masm.loadValue(Address(StackPointer, IonDOMExitFrameLayout::offsetOfResult()),
                        JSReturnOperand);
-        masm.jump(&success);
-
-        {
-            masm.bind(&exception);
-            masm.handleException();
-        }
-        masm.bind(&success);
     }
     masm.adjustStack(IonDOMExitFrameLayout::Size());
 
@@ -6936,16 +6917,8 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
     masm.passABIArg(ValueReg);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ins->mir()->fun()));
 
-    Label success, exception;
-    masm.branchIfFalseBool(ReturnReg, &exception);
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
-    masm.jump(&success);
-
-    {
-        masm.bind(&exception);
-        masm.handleException();
-    }
-    masm.bind(&success);
     masm.adjustStack(IonDOMExitFrameLayout::Size());
 
     JS_ASSERT(masm.framePushed() == initialStack);

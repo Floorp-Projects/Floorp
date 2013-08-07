@@ -380,7 +380,10 @@ public:
         ARB_draw_instanced,
         EXT_draw_instanced,
         NV_draw_instanced,
-        ANGLE_instanced_array,
+        ARB_instanced_arrays,
+        NV_instanced_arrays,
+        ANGLE_instanced_arrays,
+        EXT_occlusion_query_boolean,
         Extensions_Max,
         Extensions_End
     };
@@ -479,6 +482,7 @@ public:
         XXX_framebuffer_blit,
         XXX_framebuffer_multisample,
         XXX_framebuffer_object,
+        XXX_instanced_arrays,
         XXX_robustness,
         XXX_texture_float,
         XXX_texture_non_power_of_two,
@@ -732,6 +736,7 @@ public:
 
     void fBeginQuery(GLenum target, GLuint id) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBeginQuery);
         mSymbols.fBeginQuery(target, id);
         AFTER_GL_CALL;
     }
@@ -991,6 +996,7 @@ public:
 
     void fEndQuery(GLenum target) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fEndQuery);
         mSymbols.fEndQuery(target);
         AFTER_GL_CALL;
     }
@@ -1040,18 +1046,21 @@ public:
 
     void fGetQueryiv(GLenum target, GLenum pname, GLint* params) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetQueryiv);
         mSymbols.fGetQueryiv(target, pname, params);
         AFTER_GL_CALL;
     }
 
     void fGetQueryObjectiv(GLuint id, GLenum pname, GLint* params) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetQueryObjectiv);
         mSymbols.fGetQueryObjectiv(id, pname, params);
         AFTER_GL_CALL;
     }
 
     void fGetQueryObjectuiv(GLuint id, GLenum pname, GLuint* params) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetQueryObjectuiv);
         mSymbols.fGetQueryObjectuiv(id, pname, params);
         AFTER_GL_CALL;
     }
@@ -1260,6 +1269,14 @@ public:
     realGLboolean fIsProgram(GLuint program) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsProgram(program);
+        AFTER_GL_CALL;
+        return retval;
+    }
+
+    realGLboolean fIsQuery(GLuint query) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fIsQuery);
+        realGLboolean retval = mSymbols.fIsQuery(query);
         AFTER_GL_CALL;
         return retval;
     }
@@ -1826,6 +1843,7 @@ private:
 
     void GLAPIENTRY raw_fGenQueries(GLsizei n, GLuint* names) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGenQueries);
         mSymbols.fGenQueries(n, names);
         AFTER_GL_CALL;
     }
@@ -1919,6 +1937,7 @@ private:
 
     void GLAPIENTRY raw_fDeleteQueries(GLsizei n, GLuint* names) {
         BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDeleteQueries);
         mSymbols.fDeleteQueries(n, names);
         AFTER_GL_CALL;
     }
@@ -2120,6 +2139,18 @@ public:
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fRenderbufferStorageMultisample);
         mSymbols.fRenderbufferStorageMultisample(target, samples, internalFormat, width, height);
+        AFTER_GL_CALL;
+    }
+
+
+// -----------------------------------------------------------------------------
+// Package XXX_instanced_arrays
+public:
+    void fVertexAttribDivisor(GLuint index, GLuint divisor)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fVertexAttribDivisor);
+        mSymbols.fVertexAttribDivisor(index, divisor);
         AFTER_GL_CALL;
     }
 

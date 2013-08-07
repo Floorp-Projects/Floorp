@@ -31,9 +31,20 @@
         ]]></getter>
       </property>
 
-      <property name="webNavigation"
-                onget="return this._remoteWebNavigation;"
-                readonly="true"/>
+      <field name="_remoteWebNavigation">null</field>
+
+      <property name="webNavigation" readonly="true">
+        <getter>
+          <![CDATA[
+            if (!this._remoteWebNavigation) {
+              let jsm = "resource://gre/modules/RemoteWebNavigation.jsm";
+              let RemoteWebNavigation = Components.utils.import(jsm, {}).RemoteWebNavigation;
+              this._remoteWebNavigation = new RemoteWebNavigation(this);
+            }
+            return this._remoteWebNavigation;
+          ]]>
+        </getter>
+      </property>
 
       <field name="_remoteWebProgress">null</field>
 
