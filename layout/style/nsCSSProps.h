@@ -437,6 +437,7 @@ public:
   static const int32_t kBackgroundRepeatKTable[];
   static const int32_t kBackgroundRepeatPartKTable[];
   static const int32_t kBackgroundSizeKTable[];
+  static const int32_t kBlendModeKTable[];
   static const int32_t kBorderCollapseKTable[];
   static const int32_t kBorderColorKTable[];
   static const int32_t kBorderImageRepeatKTable[];
