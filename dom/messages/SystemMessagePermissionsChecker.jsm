@@ -97,7 +97,7 @@ this.SystemMessagePermissionsTable = {
     "mobileconnection": []
   },
   "wappush-received": {
-    "sms": []
+    "wappush": []
   },
 };
 

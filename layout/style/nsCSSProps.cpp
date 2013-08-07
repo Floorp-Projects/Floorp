@@ -1648,6 +1648,20 @@ const int32_t nsCSSProps::kFillRuleKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
+const int32_t nsCSSProps::kFilterFunctionKTable[] = {
+  eCSSKeyword_blur, NS_STYLE_FILTER_BLUR,
+  eCSSKeyword_brightness, NS_STYLE_FILTER_BRIGHTNESS,
+  eCSSKeyword_contrast, NS_STYLE_FILTER_CONTRAST,
+  eCSSKeyword_grayscale, NS_STYLE_FILTER_GRAYSCALE,
+  eCSSKeyword_invert, NS_STYLE_FILTER_INVERT,
+  eCSSKeyword_opacity, NS_STYLE_FILTER_OPACITY,
+  eCSSKeyword_saturate, NS_STYLE_FILTER_SATURATE,
+  eCSSKeyword_sepia, NS_STYLE_FILTER_SEPIA,
+  eCSSKeyword_hue_rotate, NS_STYLE_FILTER_HUE_ROTATE,
+  eCSSKeyword_drop_shadow, NS_STYLE_FILTER_DROP_SHADOW,
+  eCSSKeyword_UNKNOWN, -1
+};
+
 const int32_t nsCSSProps::kImageRenderingKTable[] = {
   eCSSKeyword_auto, NS_STYLE_IMAGE_RENDERING_AUTO,
   eCSSKeyword_optimizespeed, NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED,

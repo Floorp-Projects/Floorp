@@ -441,6 +441,20 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_FLOAT_LEFT                     1
 #define NS_STYLE_FLOAT_RIGHT                    2
 
+// See nsStyleFilter
+#define NS_STYLE_FILTER_NONE                    0
+#define NS_STYLE_FILTER_URL                     1
+#define NS_STYLE_FILTER_BLUR                    2
+#define NS_STYLE_FILTER_BRIGHTNESS              3
+#define NS_STYLE_FILTER_CONTRAST                4
+#define NS_STYLE_FILTER_GRAYSCALE               5
+#define NS_STYLE_FILTER_INVERT                  6
+#define NS_STYLE_FILTER_OPACITY                 7
+#define NS_STYLE_FILTER_SATURATE                8
+#define NS_STYLE_FILTER_SEPIA                   9
+#define NS_STYLE_FILTER_HUE_ROTATE              10
+#define NS_STYLE_FILTER_DROP_SHADOW             11
+
 // See nsStyleFont
 // We should eventually stop using the NS_STYLE_* variants here.
 #define NS_STYLE_FONT_STYLE_NORMAL              NS_FONT_STYLE_NORMAL

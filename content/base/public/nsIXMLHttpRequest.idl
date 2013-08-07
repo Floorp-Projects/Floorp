@@ -79,7 +79,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(977f1406-416a-40ac-ab89-ccd7ca0622ea)]
+[scriptable, uuid(2e91e088-e9fa-4ba4-9887-2a0b7cf27a3e)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
