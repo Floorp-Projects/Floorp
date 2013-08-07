@@ -6105,6 +6105,10 @@ ${methods}
 private:
   friend class ${structName}Argument;
 
+  // Disallow copy-construction and assignment
+  ${structName}(const ${structName}&) MOZ_DELETE;
+  void operator=(const ${structName}&) MOZ_DELETE;
+
 ${destructors}
 
   enum Type {
@@ -6228,6 +6232,10 @@ ${methods}
                JS::MutableHandle<JS::Value> rval) const;
 
 private:
+  // Disallow copy-construction and assignment
+  ${structName}ReturnValue(const ${structName}ReturnValue&) MOZ_DELETE;
+  void operator=(const ${structName}ReturnValue&) MOZ_DELETE;
+
   enum Type {
     eUninitialized,
     ${enumValues}
