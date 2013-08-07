@@ -64,6 +64,11 @@ interface WebGL2RenderingContext : WebGLRenderingContext {
     const GLenum QUERY_RESULT                = 0x8866;
     const GLenum QUERY_RESULT_AVAILABLE      = 0x8867;
 
+    /* instanced array */
+    const GLenum VERTEX_ATTRIB_ARRAY_DIVISOR = 0x88FE;
+
+    void vertexAttribDivisor(GLuint index, GLuint divisor);
+
 
     void beginQuery(GLenum target, WebGLQuery? queryObject);
     void bindVertexArray(WebGLVertexArray? arrayObject);

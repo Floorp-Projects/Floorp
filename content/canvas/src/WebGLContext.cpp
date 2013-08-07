@@ -197,8 +197,9 @@ WebGLContext::WebGLContext()
 
     mLastUseIndex = 0;
 
-    mMinInUseAttribArrayLengthCached = false;
-    mMinInUseAttribArrayLength = 0;
+    mBufferFetchingIsVerified = false;
+    mMaxFetchedVertices = 0;
+    mMaxFetchedInstances = 0;
 
     mIsScreenCleared = false;
 

@@ -390,10 +390,8 @@ public:
     void DepthRange(WebGLclampf zNear, WebGLclampf zFar);
     void DetachShader(WebGLProgram *program, WebGLShader *shader);
     void Disable(WebGLenum cap);
-    void DisableVertexAttribArray(WebGLuint index);
     void DrawBuffers(const dom::Sequence<GLenum>& buffers);
     void Enable(WebGLenum cap);
-    void EnableVertexAttribArray(WebGLuint index);
     void Flush() {
         if (!IsContextStable())
             return;
@@ -463,9 +461,6 @@ public:
                          WebGLUniformLocation *location, ErrorResult& rv);
     already_AddRefed<WebGLUniformLocation>
       GetUniformLocation(WebGLProgram *prog, const nsAString& name);
-    JS::Value GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
-                              ErrorResult& rv);
-    WebGLsizeiptr GetVertexAttribOffset(WebGLuint index, WebGLenum pname);
     void Hint(WebGLenum target, WebGLenum mode);
     bool IsBuffer(WebGLBuffer *buffer);
     bool IsEnabled(WebGLenum cap);
@@ -746,52 +741,6 @@ public:
                                     WebGLUniformLocation *location,
                                     WebGLint value);
 
-    void VertexAttrib1f(WebGLuint index, WebGLfloat x0);
-    void VertexAttrib2f(WebGLuint index, WebGLfloat x0, WebGLfloat x1);
-    void VertexAttrib3f(WebGLuint index, WebGLfloat x0, WebGLfloat x1,
-                        WebGLfloat x2);
-    void VertexAttrib4f(WebGLuint index, WebGLfloat x0, WebGLfloat x1,
-                        WebGLfloat x2, WebGLfloat x3);
-
-    void VertexAttrib1fv(WebGLuint idx, const dom::Float32Array &arr) {
-        VertexAttrib1fv_base(idx, arr.Length(), arr.Data());
-    }
-    void VertexAttrib1fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
-        VertexAttrib1fv_base(idx, arr.Length(), arr.Elements());
-    }
-    void VertexAttrib1fv_base(WebGLuint idx, uint32_t arrayLength,
-                              const WebGLfloat* ptr);
-
-    void VertexAttrib2fv(WebGLuint idx, const dom::Float32Array &arr) {
-        VertexAttrib2fv_base(idx, arr.Length(), arr.Data());
-    }
-    void VertexAttrib2fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
-        VertexAttrib2fv_base(idx, arr.Length(), arr.Elements());
-    }
-    void VertexAttrib2fv_base(WebGLuint idx, uint32_t arrayLength,
-                              const WebGLfloat* ptr);
-
-    void VertexAttrib3fv(WebGLuint idx, const dom::Float32Array &arr) {
-        VertexAttrib3fv_base(idx, arr.Length(), arr.Data());
-    }
-    void VertexAttrib3fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
-        VertexAttrib3fv_base(idx, arr.Length(), arr.Elements());
-    }
-    void VertexAttrib3fv_base(WebGLuint idx, uint32_t arrayLength,
-                              const WebGLfloat* ptr);
-
-    void VertexAttrib4fv(WebGLuint idx, const dom::Float32Array &arr) {
-        VertexAttrib4fv_base(idx, arr.Length(), arr.Data());
-    }
-    void VertexAttrib4fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
-        VertexAttrib4fv_base(idx, arr.Length(), arr.Elements());
-    }
-    void VertexAttrib4fv_base(WebGLuint idx, uint32_t arrayLength,
-                              const WebGLfloat* ptr);
-    
-    void VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type,
-                             WebGLboolean normalized, WebGLsizei stride,
-                             WebGLintptr byteOffset);
     void Viewport(WebGLint x, WebGLint y, WebGLsizei width, WebGLsizei height);
 
 // -----------------------------------------------------------------------------
@@ -818,11 +767,65 @@ public:
     void DrawElementsInstanced(WebGLenum mode, WebGLsizei count, WebGLenum type,
                                WebGLintptr byteOffset, WebGLsizei primcount);
 
+    void EnableVertexAttribArray(WebGLuint index);
+    void DisableVertexAttribArray(WebGLuint index);
+
+    JS::Value GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
+                              ErrorResult& rv);
+    WebGLsizeiptr GetVertexAttribOffset(WebGLuint index, WebGLenum pname);
+
+    void VertexAttrib1f(WebGLuint index, WebGLfloat x0);
+    void VertexAttrib2f(WebGLuint index, WebGLfloat x0, WebGLfloat x1);
+    void VertexAttrib3f(WebGLuint index, WebGLfloat x0, WebGLfloat x1,
+                        WebGLfloat x2);
+    void VertexAttrib4f(WebGLuint index, WebGLfloat x0, WebGLfloat x1,
+                        WebGLfloat x2, WebGLfloat x3);
+
+    void VertexAttrib1fv(WebGLuint idx, const dom::Float32Array &arr) {
+        VertexAttrib1fv_base(idx, arr.Length(), arr.Data());
+    }
+    void VertexAttrib1fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
+        VertexAttrib1fv_base(idx, arr.Length(), arr.Elements());
+    }
+
+    void VertexAttrib2fv(WebGLuint idx, const dom::Float32Array &arr) {
+        VertexAttrib2fv_base(idx, arr.Length(), arr.Data());
+    }
+    void VertexAttrib2fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
+        VertexAttrib2fv_base(idx, arr.Length(), arr.Elements());
+    }
+
+    void VertexAttrib3fv(WebGLuint idx, const dom::Float32Array &arr) {
+        VertexAttrib3fv_base(idx, arr.Length(), arr.Data());
+    }
+    void VertexAttrib3fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
+        VertexAttrib3fv_base(idx, arr.Length(), arr.Elements());
+    }
+
+    void VertexAttrib4fv(WebGLuint idx, const dom::Float32Array &arr) {
+        VertexAttrib4fv_base(idx, arr.Length(), arr.Data());
+    }
+    void VertexAttrib4fv(WebGLuint idx, const dom::Sequence<WebGLfloat>& arr) {
+        VertexAttrib4fv_base(idx, arr.Length(), arr.Elements());
+    }
+
+    void VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type,
+                             WebGLboolean normalized, WebGLsizei stride,
+                             WebGLintptr byteOffset);
+    void VertexAttribDivisor(WebGLuint index, WebGLuint divisor);
+
 private:
     bool DrawArrays_check(WebGLint first, WebGLsizei count, WebGLsizei primcount, const char* info);
     bool DrawElements_check(WebGLsizei count, WebGLenum type, WebGLintptr byteOffset,
                             WebGLsizei primcount, const char* info);
     void Draw_cleanup();
+
+    void VertexAttrib1fv_base(WebGLuint idx, uint32_t arrayLength, const WebGLfloat* ptr);
+    void VertexAttrib2fv_base(WebGLuint idx, uint32_t arrayLength, const WebGLfloat* ptr);
+    void VertexAttrib3fv_base(WebGLuint idx, uint32_t arrayLength, const WebGLfloat* ptr);
+    void VertexAttrib4fv_base(WebGLuint idx, uint32_t arrayLength, const WebGLfloat* ptr);
+
+    bool ValidateBufferFetching(const char *info);
 
 // -----------------------------------------------------------------------------
 // PROTECTED
@@ -892,15 +895,17 @@ protected:
     int32_t mGLMaxColorAttachments;
     int32_t mGLMaxDrawBuffers;
 
-    // Cache the max number of elements that can be read from bound VBOs
-    // (result of ValidateBuffers).
-    bool mMinInUseAttribArrayLengthCached;
-    uint32_t mMinInUseAttribArrayLength;
+    // Cache the max number of vertices and isntances that can be read from
+    // bound VBOs (result of ValidateBuffers).
+    bool mBufferFetchingIsVerified;
+    uint32_t mMaxFetchedVertices;
+    uint32_t mMaxFetchedInstances;
 
-    inline void InvalidateCachedMinInUseAttribArrayLength()
+    inline void InvalidateBufferFetching()
     {
-        mMinInUseAttribArrayLengthCached = false;
-        mMinInUseAttribArrayLength = 0;
+        mBufferFetchingIsVerified = false;
+        mMaxFetchedVertices = 0;
+        mMaxFetchedInstances = 0;
     }
 
     // Represents current status, or state, of the context. That is, is it lost
@@ -953,8 +958,9 @@ protected:
 
     nsTArray<WebGLenum> mCompressedTextureFormats;
 
+    // -------------------------------------------------------------------------
+    // Validation functions (implemented in WebGLContextValidate.cpp)
     bool InitAndValidateGL();
-    bool ValidateBuffers(uint32_t *maxAllowedCount, const char *info);
     bool ValidateCapabilityEnum(WebGLenum cap, const char *info);
     bool ValidateBlendEquationEnum(WebGLenum cap, const char *info);
     bool ValidateBlendFuncDstEnum(WebGLenum mode, const char *info);
