@@ -232,6 +232,7 @@ FENNEC_JAVA_FILES = \
   home/LastTabsPage.java \
   home/MostRecentPage.java \
   home/MostVisitedPage.java \
+  home/MultiTypeCursorAdapter.java \
   home/PinBookmarkDialog.java \
   home/ReadingListPage.java \
   home/SearchEngine.java \
