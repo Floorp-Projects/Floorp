@@ -21,6 +21,7 @@
     "content/media/test/test_can_play_type.html":"timed out",
     "content/media/test/test_can_play_type_mpeg.html":"7 failures out of 27",
     "content/media/test/test_can_play_type_no_dash.html":"",
+    "content/media/test/test_mediarecorder_record_stopms.html":"",
     "content/media/test/test_can_play_type_ogg.html":"",
     "content/media/test/test_chaining.html": "timed out",
     "content/media/test/test_delay_load.html": "6 failures",
