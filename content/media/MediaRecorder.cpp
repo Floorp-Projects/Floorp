@@ -166,6 +166,11 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
     return;
   }
 
+  if (mStream->GetStream()->IsFinished() || mStream->GetStream()->IsDestroyed()) {
+    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
   if (aTimeSlice.WasPassed()) {
     if (aTimeSlice.Value() < 0) {
       aResult.Throw(NS_ERROR_INVALID_ARG);
