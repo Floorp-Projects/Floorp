@@ -135,6 +135,7 @@ const gint kEvents = GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
                      GDK_VISIBILITY_NOTIFY_MASK |
                      GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                      GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                     GDK_SCROLL_MASK |
 #ifdef MOZ_PLATFORM_MAEMO
                      GDK_POINTER_MOTION_HINT_MASK |
 #endif

@@ -44,6 +44,14 @@ function test() {
 
   // Make sure the second tab is correct, then set it up
   gBrowser.selectedTab = tabs[1];
+  gBrowser.selectedTab.addEventListener("TabFindInitialized", continueTests1);
+  // Initialize the findbar
+  gFindBar;
+}
+function continueTests1() {
+  gBrowser.selectedTab.removeEventListener("TabFindInitialized",
+                                           continueTests1);
+  ok(true, "'TabFindInitialized' event properly dispatched!");
   ok(gFindBar.hidden, "Second tab doesn't show find bar!");
   gFindBar.open();
   is(gFindBar._findField.value, texts[0],
@@ -59,11 +67,11 @@ function test() {
 
   // While we're here, let's test bug 253793
   gBrowser.reload();
-  gBrowser.addEventListener("DOMContentLoaded", continueTests, true);
+  gBrowser.addEventListener("DOMContentLoaded", continueTests2, true);
 }
 
-function continueTests() {
-  gBrowser.removeEventListener("DOMContentLoaded", continueTests, true);
+function continueTests2() {
+  gBrowser.removeEventListener("DOMContentLoaded", continueTests2, true);
   ok(!gFindBar.getElement("highlight").checked, "Highlight button reset!");
   gFindBar.close();
   ok(gFindBar.hidden, "First tab doesn't show find bar!");

@@ -4497,62 +4497,27 @@ nsComputedDOMStyle::SetCssTextToCoord(nsAString& aCssText,
   delete value;
 }
 
-static void
-GetFilterFunctionName(nsAString& aString, nsStyleFilter::Type aType)
-{
-  switch (aType) {
-    case nsStyleFilter::Type::eBlur:
-      aString.AssignLiteral("blur(");
-      break;
-    case nsStyleFilter::Type::eBrightness:
-      aString.AssignLiteral("brightness(");
-      break;
-    case nsStyleFilter::Type::eContrast:
-      aString.AssignLiteral("contrast(");
-      break;
-    case nsStyleFilter::Type::eDropShadow:
-      aString.AssignLiteral("drop-shadow(");
-      break;
-    case nsStyleFilter::Type::eGrayscale:
-      aString.AssignLiteral("grayscale(");
-      break;
-    case nsStyleFilter::Type::eHueRotate:
-      aString.AssignLiteral("hue-rotate(");
-      break;
-    case nsStyleFilter::Type::eInvert:
-      aString.AssignLiteral("invert(");
-      break;
-    case nsStyleFilter::Type::eOpacity:
-      aString.AssignLiteral("opacity(");
-      break;
-    case nsStyleFilter::Type::eSaturate:
-      aString.AssignLiteral("saturate(");
-      break;
-    case nsStyleFilter::Type::eSepia:
-      aString.AssignLiteral("sepia(");
-      break;
-    default:
-      NS_NOTREACHED("unrecognized filter type");
-  }
-}
-
 CSSValue*
 nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
   const nsStyleFilter& aStyleFilter)
 {
   nsROCSSPrimitiveValue* value = new nsROCSSPrimitiveValue;
   // Handle url().
-  if (nsStyleFilter::Type::eURL == aStyleFilter.GetType()) {
+  if (aStyleFilter.GetType() == NS_STYLE_FILTER_URL) {
     value->SetURI(aStyleFilter.GetURL());
     return value;
   }
 
   // Filter function name and opening parenthesis.
   nsAutoString filterFunctionString;
-  GetFilterFunctionName(filterFunctionString, aStyleFilter.GetType());
+  AppendASCIItoUTF16(
+    nsCSSProps::ValueToKeyword(aStyleFilter.GetType(),
+                               nsCSSProps::kFilterFunctionKTable),
+                               filterFunctionString);
+  filterFunctionString.AppendLiteral("(");
 
   nsAutoString argumentString;
-  if (nsStyleFilter::Type::eDropShadow == aStyleFilter.GetType()) {
+  if (aStyleFilter.GetType() == NS_STYLE_FILTER_DROP_SHADOW) {
     // Handle drop-shadow()
     nsRefPtr<CSSValue> shadowValue =
       GetCSSShadowArray(aStyleFilter.GetDropShadow(),
