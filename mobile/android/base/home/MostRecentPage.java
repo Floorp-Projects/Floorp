@@ -18,11 +18,10 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.SparseArray;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.LayoutInflater;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -93,12 +92,7 @@ public class MostRecentPage extends HomeFragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 position -= mAdapter.getMostRecentSectionsCountBefore(position);
-
-                final Cursor c = mAdapter.getCursor();
-                if (c == null || !c.moveToPosition(position)) {
-                    return;
-                }
-
+                final Cursor c = mAdapter.getCursor(position);
                 final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
                 mUrlOpenListener.onUrlOpen(url);
             }
@@ -154,11 +148,12 @@ public class MostRecentPage extends HomeFragment {
         }
     }
 
-    private static class MostRecentAdapter extends SimpleCursorAdapter {
+    private static class MostRecentAdapter extends MultiTypeCursorAdapter {
         private static final int ROW_HEADER = 0;
         private static final int ROW_STANDARD = 1;
 
-        private static final int ROW_TYPE_COUNT = 2;
+        private static final int[] VIEW_TYPES = new int[] { ROW_STANDARD, ROW_HEADER };
+        private static final int[] LAYOUT_TYPES = new int[] { R.layout.home_item_row, R.layout.home_header_row };
 
         // For the time sections in history
         private static final long MS_PER_DAY = 86400000;
@@ -178,7 +173,8 @@ public class MostRecentPage extends HomeFragment {
         private final SparseArray<MostRecentSection> mMostRecentSections;
 
         public MostRecentAdapter(Context context) {
-            super(context, -1, null, new String[] {}, new int[] {});
+            super(context, null, VIEW_TYPES, LAYOUT_TYPES);
+
             mContext = context;
 
             // Initialize map of history sections
@@ -207,12 +203,6 @@ public class MostRecentPage extends HomeFragment {
         }
 
         @Override
-        public int getViewTypeCount() {
-            // view can be either a standard page row, or a header row
-            return ROW_TYPE_COUNT;
-        }
-
-        @Override
         public boolean isEnabled(int position) {
             return (getItemViewType(position) == ROW_STANDARD);
         }
@@ -231,40 +221,19 @@ public class MostRecentPage extends HomeFragment {
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public void bindView(View view, Context context, int position) {
             final int type = getItemViewType(position);
 
             if (type == ROW_HEADER) {
-                final TextView row;
-                if (convertView == null) {
-                    row = (TextView) LayoutInflater.from(mContext).inflate(R.layout.home_header_row, parent, false);
-                } else {
-                    row = (TextView) convertView;
-                }
-
                 final MostRecentSection section = mMostRecentSections.get(position);
+                final TextView row = (TextView) view;
                 row.setText(getMostRecentSectionTitle(section));
-
-                return row;
             } else {
-                final TwoLinePageRow row;
-                if (convertView == null) {
-                    row = (TwoLinePageRow) LayoutInflater.from(mContext).inflate(R.layout.home_item_row, parent, false);
-                } else {
-                    row = (TwoLinePageRow) convertView;
-                }
-
-                // Account for the search engines
+                // Account for the most recent section headers
                 position -= getMostRecentSectionsCountBefore(position);
-
-                final Cursor c = getCursor();
-                if (!c.moveToPosition(position)) {
-                    throw new IllegalStateException("Couldn't move cursor to position " + position);
-                }
-
+                final Cursor c = getCursor(position);
+                final TwoLinePageRow row = (TwoLinePageRow) view;
                 row.updateFromCursor(c);
-
-                return row;
             }
         }
 
