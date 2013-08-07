@@ -1181,10 +1181,10 @@ extern js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass;
 extern js::Class XPC_WN_Tearoff_JSClass;
 extern js::Class XPC_WN_NoHelper_Proto_JSClass;
 
-extern JSBool
+extern bool
 XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp);
 
-extern JSBool
+extern bool
 XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp);
 
 extern JSBool

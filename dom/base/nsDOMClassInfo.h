@@ -452,7 +452,7 @@ public:
   static JSBool DocumentAllNewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                                       unsigned flags, JS::MutableHandle<JSObject*> objp);
   static void ReleaseDocument(JSFreeOp *fop, JSObject *obj);
-  static JSBool CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp);
+  static bool CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp);
 };
 
 

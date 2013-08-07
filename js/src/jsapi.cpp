@@ -4234,7 +4234,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobjArg, jsid *idp)
     return true;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_ArrayIterator(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -4506,7 +4506,7 @@ JS_BindCallable(JSContext *cx, JSObject *targetArg, JSObject *newThis)
     return js_fun_bind(cx, target, thisArg, NULL, 0);
 }
 
-JSBool
+static bool
 js_generic_native_method_dispatcher(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

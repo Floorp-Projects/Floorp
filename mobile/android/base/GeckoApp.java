@@ -2447,18 +2447,18 @@ abstract public class GeckoApp
         }
     }
 
-
     private void collectAndReportLocInfo(Location location) {
         final JSONObject locInfo = new JSONObject();
         WifiManager wm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
         wm.startScan();
         try {
             JSONArray cellInfo = new JSONArray();
-            int radioType = getCellInfo(cellInfo);
-            if (radioType == TelephonyManager.PHONE_TYPE_GSM)
-                locInfo.put("radio", "gsm");
-            else
-                return; // we don't care about other radio types for now
+
+            String radioType = getRadioTypeName(getCellInfo(cellInfo));
+            if (radioType != null) {
+                locInfo.put("radio", radioType);
+            }
+
             locInfo.put("lon", location.getLongitude());
             locInfo.put("lat", location.getLatitude());
             locInfo.put("accuracy", (int)location.getAccuracy());
@@ -2494,9 +2494,11 @@ abstract public class GeckoApp
             locInfo.put("wifi", wifiInfo);
         } catch (JSONException jsonex) {
             Log.w(LOGTAG, "json exception", jsonex);
+            return;
         } catch (NoSuchAlgorithmException nsae) {
-            Log.w(LOGTAG, "can't creat a SHA1", nsae);
+            Log.w(LOGTAG, "can't create a SHA1", nsae);
         }
+
         ThreadUtils.postToBackgroundThread(new Runnable() {
             public void run() {
                 try {
@@ -2525,6 +2527,25 @@ abstract public class GeckoApp
                 }
             }
         });
+    }
+
+    private static String getRadioTypeName(int phoneType) {
+        switch (phoneType) {
+            case TelephonyManager.PHONE_TYPE_CDMA:
+                return "cdma";
+
+            case TelephonyManager.PHONE_TYPE_GSM:
+                return "gsm";
+
+            case TelephonyManager.PHONE_TYPE_NONE:
+            case TelephonyManager.PHONE_TYPE_SIP:
+                // These devices have no radio.
+                return null;
+
+            default:
+                Log.e(LOGTAG, "", new IllegalArgumentException("Unexpected PHONE_TYPE: " + phoneType));
+                return null;
+        }
     }
 
     @Override

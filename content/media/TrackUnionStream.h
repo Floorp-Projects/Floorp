@@ -120,6 +120,17 @@ protected:
 
   // Only non-ended tracks are allowed to persist in this map.
   struct TrackMapEntry {
+    // mEndOfConsumedInputTicks is the end of the input ticks that we've consumed.
+    // 0 if we haven't consumed any yet.
+    TrackTicks mEndOfConsumedInputTicks;
+    // mEndOfLastInputIntervalInInputStream is the timestamp for the end of the
+    // previous interval which was unblocked for both the input and output
+    // stream, in the input stream's timeline, or -1 if there wasn't one.
+    StreamTime mEndOfLastInputIntervalInInputStream;
+    // mEndOfLastInputIntervalInOutputStream is the timestamp for the end of the
+    // previous interval which was unblocked for both the input and output
+    // stream, in the output stream's timeline, or -1 if there wasn't one.
+    StreamTime mEndOfLastInputIntervalInOutputStream;
     MediaInputPort* mInputPort;
     // We keep track IDs instead of track pointers because
     // tracks can be removed without us being notified (e.g.
@@ -161,6 +172,9 @@ protected:
                        (long long)outputStart));
 
     TrackMapEntry* map = mTrackMap.AppendElement();
+    map->mEndOfConsumedInputTicks = 0;
+    map->mEndOfLastInputIntervalInInputStream = -1;
+    map->mEndOfLastInputIntervalInOutputStream = -1;
     map->mInputPort = aPort;
     map->mInputTrackID = aTrack->GetID();
     map->mOutputTrackID = track->GetID();
@@ -208,14 +222,12 @@ protected:
       // Ticks >= startTicks and < endTicks are in the interval
       StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
       TrackTicks startTicks = outputTrack->GetEnd();
-#ifdef DEBUG
       StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
-#endif
       NS_ASSERTION(startTicks == TimeToTicksRoundUp(rate, outputStart),
                    "Samples missing");
       TrackTicks endTicks = TimeToTicksRoundUp(rate, outputEnd);
       TrackTicks ticks = endTicks - startTicks;
-      // StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
+      StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
       StreamTime inputEnd = source->GraphTimeToStreamTime(interval.mEnd);
       TrackTicks inputTrackEndPoint = TRACK_TICKS_MAX;
 
@@ -239,12 +251,66 @@ protected:
         // that 'ticks' samples are gathered, even though a tick boundary may
         // occur between outputStart and outputEnd but not between inputStart
         // and inputEnd.
-        // We'll take the latest samples we can.
-        TrackTicks inputEndTicks = TimeToTicksRoundUp(rate, inputEnd);
-        TrackTicks inputStartTicks = inputEndTicks - ticks;
-        segment->AppendSlice(*aInputTrack->GetSegment(),
-                             std::min(inputTrackEndPoint, inputStartTicks),
-                             std::min(inputTrackEndPoint, inputEndTicks));
+        // These are the properties we need to ensure:
+        // 1) Exactly 'ticks' ticks of output are produced, i.e.
+        // inputEndTicks - inputStartTicks = ticks.
+        // 2) inputEndTicks <= aInputTrack->GetSegment()->GetDuration().
+        // 3) In any sequence of intervals where neither stream is blocked,
+        // the content of the input track we use is a contiguous sequence of
+        // ticks with no gaps or overlaps.
+        if (map->mEndOfLastInputIntervalInInputStream != inputStart ||
+            map->mEndOfLastInputIntervalInOutputStream != outputStart) {
+          // Start of a new series of intervals where neither stream is blocked.
+          map->mEndOfConsumedInputTicks = TimeToTicksRoundDown(rate, inputStart) - 1;
+        }
+        TrackTicks inputStartTicks = map->mEndOfConsumedInputTicks;
+        TrackTicks inputEndTicks = inputStartTicks + ticks;
+        map->mEndOfConsumedInputTicks = inputEndTicks;
+        map->mEndOfLastInputIntervalInInputStream = inputEnd;
+        map->mEndOfLastInputIntervalInOutputStream = outputEnd;
+        // Now we prove that the above properties hold:
+        // Property #1: trivial by construction.
+        // Property #3: trivial by construction. Between every two
+        // intervals where both streams are not blocked, the above if condition
+        // is false and mEndOfConsumedInputTicks advances exactly to match
+        // the ticks that were consumed.
+        // Property #2:
+        // Let originalOutputStart be the value of outputStart and originalInputStart
+        // be the value of inputStart when the body of the "if" block was last
+        // executed.
+        // Let allTicks be the sum of the values of 'ticks' computed since then.
+        // The interval [originalInputStart/rate, inputEnd/rate) is the
+        // same length as the interval [originalOutputStart/rate, outputEnd/rate),
+        // so the latter interval can have at most one more integer in it. Thus
+        // TimeToTicksRoundUp(rate, outputEnd) - TimeToTicksRoundUp(rate, originalOutputStart)
+        //   <= TimeToTicksRoundDown(rate, inputEnd) - TimeToTicksRoundDown(rate, originalInputStart) + 1
+        // Then
+        // inputEndTicks = TimeToTicksRoundDown(rate, originalInputStart) - 1 + allTicks
+        //   = TimeToTicksRoundDown(rate, originalInputStart) - 1 + TimeToTicksRoundUp(rate, outputEnd) - TimeToTicksRoundUp(rate, originalOutputStart)
+        //   <= TimeToTicksRoundDown(rate, originalInputStart) - 1 + TimeToTicksRoundDown(rate, inputEnd) - TimeToTicksRoundDown(rate, originalInputStart) + 1
+        //   = TimeToTicksRoundDown(rate, inputEnd)
+        //   <= inputEnd/rate
+        // (now using the fact that inputEnd <= track->GetEndTimeRoundDown() for a non-ended track)
+        //   <= TicksToTimeRoundDown(rate, aInputTrack->GetSegment()->GetDuration())/rate
+        //   <= rate*aInputTrack->GetSegment()->GetDuration()/rate
+        //   = aInputTrack->GetSegment()->GetDuration()
+        // as required.
+
+        if (inputStartTicks < 0) {
+          // Data before the start of the track is just null.
+          // We have to add a small amount of delay to ensure that there is
+          // always a sample available if we see an interval that contains a
+          // tick boundary on the output stream's timeline but does not contain
+          // a tick boundary on the input stream's timeline. 1 tick delay is
+          // necessary and sufficient.
+          segment->AppendNullData(-inputStartTicks);
+          inputStartTicks = 0;
+        }
+        if (inputEndTicks > inputStartTicks) {
+          segment->AppendSlice(*aInputTrack->GetSegment(),
+                               std::min(inputTrackEndPoint, inputStartTicks),
+                               std::min(inputTrackEndPoint, inputEndTicks));
+        }
         LOG(PR_LOG_DEBUG+1, ("TrackUnionStream %p appending %lld ticks of input data to track %d",
             this, (long long)(std::min(inputTrackEndPoint, inputEndTicks) - std::min(inputTrackEndPoint, inputStartTicks)),
             outputTrack->GetID()));

@@ -69,6 +69,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     // actually emitted or not. If NULL, then no instrumentation is emitted.
     IonInstrumentation *sps_;
 
+    // Labels for handling exceptions and failures.
+    NonAssertingLabel sequentialFailureLabel_;
+    NonAssertingLabel parallelFailureLabel_;
+
   public:
     // If instrumentation should be emitted, then the sps parameter should be
     // provided, but otherwise it can be safely omitted to prevent all
@@ -731,12 +735,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         reenterSPSFrame();
     }
 
-    void handleException() {
-        handleFailure(SequentialExecution);
-    }
-
-    void handleFailure(ExecutionMode executionMode);
-
     // see above comment for what is returned
     uint32_t callIon(const Register &callee) {
         leaveSPSFrame();
@@ -944,6 +942,25 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadBaselineFramePtr(framePtr, scratch);
         push(scratch);
     }
+
+  private:
+    void handleFailure(ExecutionMode executionMode);
+
+  public:
+    Label *exceptionLabel() {
+        // Exceptions are currently handled the same way as sequential failures.
+        return &sequentialFailureLabel_;
+    }
+
+    Label *failureLabel(ExecutionMode executionMode) {
+        switch (executionMode) {
+          case SequentialExecution: return &sequentialFailureLabel_;
+          case ParallelExecution: return &parallelFailureLabel_;
+          default: MOZ_ASSUME_UNREACHABLE("Unexpected execution mode");
+        }
+    }
+
+    void finish();
 
     void printf(const char *output);
     void printf(const char *output, Register value);

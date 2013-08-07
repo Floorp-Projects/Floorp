@@ -251,7 +251,7 @@ FieldGetterImpl(JSContext *cx, JS::CallArgs args)
   return true;
 }
 
-static JSBool
+static bool
 FieldGetter(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -288,7 +288,7 @@ FieldSetterImpl(JSContext *cx, JS::CallArgs args)
   return true;
 }
 
-static JSBool
+static bool
 FieldSetter(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);

@@ -89,87 +89,6 @@ WebGLProgram::UpdateInfo()
     return true;
 }
 
-/*
- * Verify that state is consistent for drawing, and compute max number of elements (maxAllowedCount)
- * that will be legal to be read from bound VBOs.
- */
-
-bool
-WebGLContext::ValidateBuffers(uint32_t *maxAllowedCount, const char *info)
-{
-#ifdef DEBUG
-    GLint currentProgram = 0;
-    MakeContextCurrent();
-    gl->fGetIntegerv(LOCAL_GL_CURRENT_PROGRAM, &currentProgram);
-    NS_ASSERTION(GLuint(currentProgram) == mCurrentProgram->GLName(),
-                 "WebGL: current program doesn't agree with GL state");
-    if (GLuint(currentProgram) != mCurrentProgram->GLName())
-        return false;
-#endif
-
-    if (mMinInUseAttribArrayLengthCached) {
-        *maxAllowedCount = mMinInUseAttribArrayLength;
-        return true;
-    }
-
-    uint32_t maxAllowed = UINT32_MAX;
-    uint32_t attribs = mBoundVertexArray->mAttribBuffers.Length();
-    for (uint32_t i = 0; i < attribs; ++i) {
-        const WebGLVertexAttribData& vd = mBoundVertexArray->mAttribBuffers[i];
-
-        // If the attrib array isn't enabled, there's nothing to check;
-        // it's a static value.
-        if (!vd.enabled)
-            continue;
-
-        if (vd.buf == nullptr) {
-            ErrorInvalidOperation("%s: no VBO bound to enabled vertex attrib index %d!", info, i);
-            return false;
-        }
-
-        // If the attrib is not in use, then we don't have to validate
-        // it, just need to make sure that the binding is non-null.
-        if (!mCurrentProgram->IsAttribInUse(i))
-            continue;
-
-        // the base offset
-        CheckedUint32 checked_byteLength
-            = CheckedUint32(vd.buf->ByteLength()) - vd.byteOffset;
-        CheckedUint32 checked_sizeOfLastElement
-            = CheckedUint32(vd.componentSize()) * vd.size;
-
-        if (!checked_byteLength.isValid() ||
-            !checked_sizeOfLastElement.isValid())
-        {
-            ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
-            return false;
-        }
-
-        if (checked_byteLength.value() < checked_sizeOfLastElement.value()) {
-            maxAllowed = 0;
-            break;
-        } else {
-            CheckedUint32 checked_maxAllowedCount
-                = ((checked_byteLength - checked_sizeOfLastElement) / vd.actualStride()) + 1;
-
-            if (!checked_maxAllowedCount.isValid()) {
-                ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
-                return false;
-            }
-
-            if (maxAllowed > checked_maxAllowedCount.value())
-                maxAllowed = checked_maxAllowedCount.value();
-        }
-    }
-
-    *maxAllowedCount = maxAllowed;
-
-    mMinInUseAttribArrayLengthCached = true;
-    mMinInUseAttribArrayLength = *maxAllowedCount;
-
-    return true;
-}
-
 bool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
 {
     switch (cap) {
@@ -1078,9 +997,12 @@ WebGLContext::InitAndValidateGL()
          !IsExtensionSupported(WEBGL_draw_buffers) ||
          !gl->IsExtensionSupported(gl::GLContext::EXT_gpu_shader4) ||
          !gl->IsExtensionSupported(gl::GLContext::EXT_blend_minmax) ||
-         !gl->IsExtensionSupported(gl::GLContext::XXX_draw_instanced)
+         !gl->IsExtensionSupported(gl::GLContext::XXX_draw_instanced) ||
+         !gl->IsExtensionSupported(gl::GLContext::XXX_instanced_arrays) ||
+         (gl->IsGLES2() && !gl->IsExtensionSupported(gl::GLContext::EXT_occlusion_query_boolean))
         ))
     {
+        // Todo: Bug 898404: Only allow WebGL2 on GL>=3.0 on desktop GL.
         return false;
     }
 

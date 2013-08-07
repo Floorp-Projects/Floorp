@@ -30,14 +30,14 @@ static JSClass ptestClass = {
     JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
-static JSBool
+static bool
 test_fn(JSContext *cx, unsigned argc, jsval *vp)
 {
     max_stack = psize;
-    return JS_TRUE;
+    return true;
 }
 
-static JSBool
+static bool
 test_fn2(JSContext *cx, unsigned argc, jsval *vp)
 {
     jsval r;
@@ -45,28 +45,28 @@ test_fn2(JSContext *cx, unsigned argc, jsval *vp)
     return JS_CallFunctionName(cx, global, "d", 0, NULL, &r);
 }
 
-static JSBool
+static bool
 enable(JSContext *cx, unsigned argc, jsval *vp)
 {
     js::EnableRuntimeProfilingStack(cx->runtime(), true);
-    return JS_TRUE;
+    return true;
 }
 
-static JSBool
+static bool
 disable(JSContext *cx, unsigned argc, jsval *vp)
 {
     js::EnableRuntimeProfilingStack(cx->runtime(), false);
-    return JS_TRUE;
+    return true;
 }
 
-static JSBool
+static bool
 Prof(JSContext* cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_NewObjectForConstructor(cx, &ptestClass, vp);
     if (!obj)
-        return JS_FALSE;
+        return false;
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
-    return JS_TRUE;
+    return true;
 }
 
 static const JSFunctionSpec ptestFunctions[] = {

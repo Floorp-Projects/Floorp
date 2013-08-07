@@ -39,7 +39,7 @@ static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
             GLContext::ARB_draw_instanced,
             GLContext::EXT_draw_instanced,
             GLContext::NV_draw_instanced,
-            GLContext::ANGLE_instanced_array,
+            GLContext::ANGLE_instanced_arrays,
             GLContext::Extensions_End
         }
     },
@@ -70,6 +70,17 @@ static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
         {
             GLContext::ARB_framebuffer_object,
             GLContext::EXT_framebuffer_object,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "XXX_instanced_arrays",
+        330, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::ARB_instanced_arrays,
+            GLContext::NV_instanced_arrays,
+            GLContext::ANGLE_instanced_arrays,
             GLContext::Extensions_End
         }
     },
