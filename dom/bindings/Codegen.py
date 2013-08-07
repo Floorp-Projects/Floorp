@@ -597,9 +597,6 @@ class CGHeaders(CGWrapper):
             dictionary, if passed, to decide what to do with interface types.
             """
             assert not descriptor or not dictionary
-            if t.nullable() and dictionary:
-                # Need to make sure that Nullable as a dictionary member works
-                declareIncludes.add("mozilla/dom/Nullable.h")
             unrolled = t.unroll()
             if unrolled.isUnion():
                 # UnionConversions.h includes UnionTypes.h
@@ -607,11 +604,7 @@ class CGHeaders(CGWrapper):
             elif unrolled.isInterface():
                 if unrolled.isSpiderMonkeyInterface():
                     bindingHeaders.add("jsfriendapi.h")
-                    if dictionary:
-                        headerSet = declareIncludes
-                    else:
-                        headerSet = bindingHeaders
-                    headerSet.add("mozilla/dom/TypedArray.h")
+                    bindingHeaders.add("mozilla/dom/TypedArray.h")
                 else:
                     providers = getRelevantProviders(descriptor, dictionary,
                                                      config)
