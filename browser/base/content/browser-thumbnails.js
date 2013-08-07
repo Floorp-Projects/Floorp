@@ -35,11 +35,6 @@ let gBrowserThumbnails = {
     if (gMultiProcessBrowser)
       return;
 
-    try {
-      if (Services.prefs.getBoolPref("browser.pagethumbnails.capturing_disabled"))
-        return;
-    } catch (e) {}
-
     PageThumbs.addExpirationFilter(this);
     gBrowser.addTabsProgressListener(this);
     Services.prefs.addObserver(this.PREF_DISK_CACHE_SSL, this, false);
