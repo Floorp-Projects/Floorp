@@ -80,7 +80,7 @@ abstract class MultiTypeCursorAdapter extends CursorAdapter {
      * @param position Position of the view.
      * @param parent Parent view group that will hold this view.
      */
-    public View newView(Context context, int position, ViewGroup parent) {
+    private View newView(Context context, int position, ViewGroup parent) {
         final int type = getItemViewType(position);
         final int count = mViewTypes.length;
 
