@@ -1536,15 +1536,25 @@ DownloadLegacySaver.prototype = {
           aSetProgressBytesFn(0, this.request.contentLength);
         }
 
-        // The download implementation may not have created the target file if
-        // no data was received from the source.  In this case, ensure that an
-        // empty file is created as expected.
-        try {
-          // This atomic operation is more efficient than an existence check.
-          let file = yield OS.File.open(this.download.target.path,
-                                        { create: true });
-          yield file.close();
-        } catch (ex if ex instanceof OS.File.Error && ex.becauseExists) { }
+        // If the component executing the download provides the path of a
+        // ".part" file, it means that it expects the listener to move the file
+        // to its final target path when the download succeeds.  In this case,
+        // an empty ".part" file is created even if no data was received from
+        // the source.
+        if (this.download.target.partFilePath) {
+          yield OS.File.move(this.download.target.partFilePath,
+                             this.download.target.path);
+        } else {
+          // The download implementation may not have created the target file if
+          // no data was received from the source.  In this case, ensure that an
+          // empty file is created as expected.
+          try {
+            // This atomic operation is more efficient than an existence check.
+            let file = yield OS.File.open(this.download.target.path,
+                                          { create: true });
+            yield file.close();
+          } catch (ex if ex instanceof OS.File.Error && ex.becauseExists) { }
+        }
       } finally {
         // We don't need the reference to the request anymore.
         this.request = null;
