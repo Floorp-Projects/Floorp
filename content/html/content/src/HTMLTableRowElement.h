@@ -16,8 +16,7 @@ namespace dom {
 
 class HTMLTableSectionElement;
 
-class HTMLTableRowElement MOZ_FINAL : public nsGenericHTMLElement,
-                                      public nsIDOMHTMLElement
+class HTMLTableRowElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
   HTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -29,15 +28,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   int32_t RowIndex() const;
   int32_t SectionRowIndex() const;
@@ -95,8 +85,6 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
-
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(HTMLTableRowElement,
                                                      nsGenericHTMLElement)

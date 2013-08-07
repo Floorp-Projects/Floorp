@@ -24,17 +24,8 @@ HTMLMetaElement::~HTMLMetaElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(HTMLMetaElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLMetaElement, Element)
-
-
-// QueryInterface implementation for HTMLMetaElement
-NS_INTERFACE_TABLE_HEAD(HTMLMetaElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLMetaElement, nsIDOMHTMLMetaElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLMetaElement, nsGenericHTMLElement,
+                             nsIDOMHTMLMetaElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLMetaElement)
 

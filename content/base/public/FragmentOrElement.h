@@ -172,12 +172,6 @@ public:
 
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
-  /**
-   * Called during QueryInterface to give the binding manager a chance to
-   * get an interface for this element.
-   */
-  nsresult PostQueryInterface(REFNSIID aIID, void** aInstancePtr);
-
   // nsINode interface methods
   virtual uint32_t GetChildCount() const MOZ_OVERRIDE;
   virtual nsIContent *GetChildAt(uint32_t aIndex) const MOZ_OVERRIDE;
@@ -401,17 +395,5 @@ protected:
                                                                               \
     rv = FragmentOrElement::QueryInterface(aIID, aInstancePtr);               \
     NS_INTERFACE_TABLE_TO_MAP_SEGUE
-
-#define NS_ELEMENT_INTERFACE_MAP_END                                          \
-    {                                                                         \
-      return PostQueryInterface(aIID, aInstancePtr);                          \
-    }                                                                         \
-                                                                              \
-    NS_ADDREF(foundInterface);                                                \
-                                                                              \
-    *aInstancePtr = foundInterface;                                           \
-                                                                              \
-    return NS_OK;                                                             \
-  }
 
 #endif /* FragmentOrElement_h___ */

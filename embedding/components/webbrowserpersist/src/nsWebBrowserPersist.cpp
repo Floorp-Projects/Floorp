@@ -86,8 +86,12 @@
 #include "nsWebBrowserPersist.h"
 
 #include "nsIContent.h"
+#include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/HTMLSharedElement.h"
+#include "mozilla/dom/HTMLSharedObjectElement.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // Buffer file writes in 32kb chunks
 #define BUFFERED_OUTPUT_SIZE (1024 * 32)
@@ -2962,11 +2966,12 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
         if (nodeAsBase)
         {
             nsCOMPtr<nsIDOMDocument> ownerDocument;
-            nodeAsBase->GetOwnerDocument(getter_AddRefs(ownerDocument));
+            HTMLSharedElement* base = static_cast<HTMLSharedElement*>(nodeAsBase.get());
+            base->GetOwnerDocument(getter_AddRefs(ownerDocument));
             if (ownerDocument)
             {
                 nsAutoString href;
-                nodeAsBase->GetHref(href); // Doesn't matter if this fails
+                base->GetHref(href); // Doesn't matter if this fails
                 nsCOMPtr<nsIDOMComment> comment;
                 nsAutoString commentText; commentText.AssignLiteral(" base ");
                 if (!href.IsEmpty())
@@ -3173,7 +3178,8 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
             }
             // Unset the codebase too, since we'll correctly relativize the
             // code and archive paths.
-            newApplet->RemoveAttribute(NS_LITERAL_STRING("codebase"));
+            static_cast<HTMLSharedObjectElement*>(newApplet.get())->
+              RemoveAttribute(NS_LITERAL_STRING("codebase"));
             FixupNodeAttribute(*aNodeOut, "code");
             FixupNodeAttribute(*aNodeOut, "archive");
             // restore the base URI we really want to have
@@ -3240,7 +3246,9 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
             nsAutoString valueStr;
             NS_NAMED_LITERAL_STRING(valueAttr, "value");
             // Update element node attributes with user-entered form state
-            nsCOMPtr<nsIDOMHTMLInputElement> outElt = do_QueryInterface(*aNodeOut);
+            nsCOMPtr<nsIContent> content = do_QueryInterface(*aNodeOut);
+            nsRefPtr<HTMLInputElement> outElt =
+              HTMLInputElement::FromContentOrNull(content);
             nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(*aNodeOut);
             switch (formControl->GetType()) {
                 case NS_FORM_INPUT_EMAIL:

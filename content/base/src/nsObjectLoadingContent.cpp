@@ -1479,10 +1479,10 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
             }
             if (domapplet || domobject) {
               if (domapplet) {
-                parent = domapplet;
+                parent = do_QueryInterface(domapplet);
               }
               else {
-                parent = domobject;
+                parent = do_QueryInterface(domobject);
               }
               nsCOMPtr<nsIDOMNode> mydomNode = do_QueryInterface(mydomElement);
               if (parent == mydomNode) {
