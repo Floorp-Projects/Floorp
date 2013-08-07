@@ -382,7 +382,7 @@ function formatTrace(aTrace) {
   aTrace.forEach(function(frame) {
     reply += fmt(frame.filename, 20, 20, { truncate: "start" }) + " " +
              fmt(frame.lineNumber, 5, 5) + " " +
-             fmt(frame.functionName, 0, 75, { truncate: "center" }) + "\n";
+             fmt(frame.functionName, 75, 0, { truncate: "center" }) + "\n";
   });
   return reply;
 }
