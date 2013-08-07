@@ -198,6 +198,7 @@ function modify_if_8() {
   window.modified_if_8 = true;
 
   if_8.sandbox = 'allow-scripts';
+  testAttempted();
   sendMouseEvent({type:'click'}, 'a_button');
 }
 
@@ -224,8 +225,8 @@ function modify_if_9() {
 
   if_9.sandbox = 'allow-same-origin';
 
-  sendMouseEvent({type:'click'}, 'a_button2');
   testAttempted();
+  sendMouseEvent({type:'click'}, 'a_button2');
 }
 
 var firstPrincipal = "";
