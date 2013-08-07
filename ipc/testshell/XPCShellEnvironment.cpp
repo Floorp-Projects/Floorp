@@ -562,7 +562,7 @@ XPCShellEnvironment::~XPCShellEnvironment()
 {
 
     AutoSafeJSContext cx;
-    JSObject* global = GetGlobalObject();
+    Rooted<JSObject*> global(cx, GetGlobalObject());
     if (global) {
         {
             JSAutoCompartment ac(cx, global);
