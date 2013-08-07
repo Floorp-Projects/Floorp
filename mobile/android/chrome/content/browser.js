@@ -7631,12 +7631,26 @@ let Reader = {
 var ExternalApps = {
   _contextMenuId: -1,
 
+  // extend _getLink to pickup html5 media links.
+  _getMediaLink: function(aElement) {
+    let uri = NativeWindow.contextmenus._getLink(aElement);
+    if (uri == null) {
+      if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE && (aElement instanceof Ci.nsIDOMHTMLMediaElement && mediaSrc)) {
+        try {
+          let mediaSrc = aElement.currentSrc || aElement.src;
+          uri = ContentAreaUtils.makeURI(mediaSrc, null, null);
+        } catch (e) {}
+      }
+    }
+    return uri;
+  },
+
   init: function helper_init() {
     this._contextMenuId = NativeWindow.contextmenus.add(function(aElement) {
       let uri = null;
       var node = aElement;
       while (node && !uri) {
-        uri = NativeWindow.contextmenus._getLink(node);
+        uri = ExternalApps._getMediaLink(node);
         node = node.parentNode;
       }
       let apps = [];
@@ -7654,7 +7668,7 @@ var ExternalApps = {
 
   filter: {
     matches: function(aElement) {
-      let uri = NativeWindow.contextmenus._getLink(aElement);
+      let uri = ExternalApps._getMediaLink(aElement);
       let apps = [];
       if (uri) {
         apps = HelperApps.getAppsForUri(uri);
@@ -7664,7 +7678,7 @@ var ExternalApps = {
   },
 
   openExternal: function(aElement) {
-    let uri = NativeWindow.contextmenus._getLink(aElement);
+    let uri = ExternalApps._getMediaLink(aElement);
     HelperApps.openUriInApp(uri);
   }
 };
