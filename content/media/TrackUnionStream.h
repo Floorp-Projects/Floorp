@@ -298,6 +298,11 @@ protected:
 
         if (inputStartTicks < 0) {
           // Data before the start of the track is just null.
+          // We have to add a small amount of delay to ensure that there is
+          // always a sample available if we see an interval that contains a
+          // tick boundary on the output stream's timeline but does not contain
+          // a tick boundary on the input stream's timeline. 1 tick delay is
+          // necessary and sufficient.
           segment->AppendNullData(-inputStartTicks);
           inputStartTicks = 0;
         }
