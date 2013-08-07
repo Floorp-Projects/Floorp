@@ -755,6 +755,7 @@ void CanvasRenderingContext2D::Demote()
   RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
   RefPtr<DrawTarget> oldTarget = mTarget;
   mTarget = nullptr;
+  mResetLayer = true;
   mForceSoftware = true;
 
   // Recreate target, now demoted to software only
