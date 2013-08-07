@@ -33,15 +33,13 @@ NS_IMPL_RELEASE_INHERITED(HTMLSharedElement, Element)
 
 // QueryInterface implementation for HTMLSharedElement
 NS_INTERFACE_MAP_BEGIN(HTMLSharedElement)
-  NS_HTML_CONTENT_INTERFACES_AMBIGUOUS(nsGenericHTMLElement,
-                                       nsIDOMHTMLBaseElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLBaseElement, base)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLDirectoryElement, dir)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLQuoteElement, q)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLQuoteElement, blockquote)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLHeadElement, head)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLHtmlElement, html)
-NS_ELEMENT_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLSharedElement)

@@ -27,14 +27,6 @@ HTMLProgressElement::~HTMLProgressElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLProgressElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLProgressElement, Element)
-
-
-NS_INTERFACE_MAP_BEGIN(HTMLProgressElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-NS_ELEMENT_INTERFACE_MAP_END
-
 NS_IMPL_ELEMENT_CLONE(HTMLProgressElement)
 
 

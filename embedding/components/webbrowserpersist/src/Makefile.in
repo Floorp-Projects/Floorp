@@ -15,3 +15,8 @@ FAIL_ON_WARNINGS = 1
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES	= \
+	-I$(topsrcdir)/content/html/content/src \
+	-I$(topsrcdir)/content/base/src \
+	$(NULL)
+
