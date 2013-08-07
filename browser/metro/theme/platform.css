@@ -581,6 +581,16 @@ arrowbox {
   cursor: default;
 }
 
+#start-container[viewstate="snapped"] {
+  padding-top: 0;
+}
+
+#start-container[viewstate="snapped"] .meta-section-title,
+#start-container[viewstate="snapped"] richgrid {
+  margin-top: @metro_spacing_xnormal@;
+  padding: 0;
+}
+
 #start-container[viewstate="snapped"] .meta-section-title.narrow-title,
 #start-container:not([viewstate="snapped"]) .meta-section-title.wide-title {
   display: block;
