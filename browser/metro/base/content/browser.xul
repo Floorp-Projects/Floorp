@@ -465,7 +465,7 @@
 #endif
 #endif
       <label id="about-policy-label"
-            onclick="if (event.button == 0) { Browser.onAboutPolicyClick(); }"
+            onclick="if (event.button == 0) { BrowserUI.onAboutPolicyClick(); }"
             class="text-link" value="&aboutHeader.policy.label;"/>
     </flyoutpanel>
 
