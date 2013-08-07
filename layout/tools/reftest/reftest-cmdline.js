@@ -105,8 +105,8 @@ RefTestCmdLineHandler.prototype =
     // Checking whether two files are the same is slow on Windows.
     // Setting this pref makes tests run much faster there.
     branch.setBoolPref("security.fileuri.strict_origin_policy", false);
-    // Disable the background thumbnailing service
-    branch.setBoolPref("browser.pageThumbs.enabled", false);
+    // Disable the thumbnailing service
+    branch.setBoolPref("browser.pagethumbnails.capturing_disabled", false);
 
     var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                            .getService(nsIWindowWatcher);
