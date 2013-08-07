@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:gecko="http://schemas.android.com/apk/res-auto"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent">
+
+    <org.mozilla.gecko.widget.IconTabWidget android:id="@+id/tab_icon_widget"
+                                            style="@style/Widget.Home.HistoryTabWidget"
+                                            android:layout_width="@dimen/history_tab_widget_width"
+                                            android:layout_height="@dimen/history_tab_widget_height"
+                                            android:orientation="vertical"
+                                            android:layout="@layout/home_history_tabs_indicator"
+                                            gecko:display="text"/>
+
+    <FrameLayout android:id="@+id/visited_page_container"
+                 android:layout_width="0dp"
+                 android:layout_height="fill_parent"
+                 android:layout_weight="1" />
+
+</LinearLayout>

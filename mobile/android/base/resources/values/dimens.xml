@@ -75,6 +75,13 @@
     <dimen name="forward_default_offset">-13dip</dimen>
     <dimen name="url_bar_offset_left">32dp</dimen>
     <dimen name="toast_button_padding">8dp</dimen>
+    <dimen name="history_tab_indicator_height">50dp</dimen>
+
+    <!-- We need to maintain height for the tab widget on History Page
+         since android does not add footer/header divider height to its
+         calculation for wrap_content in LinearLayout.
+         50dp * 3 Views + 30dp padding + 4dp dividers-->
+    <dimen name="history_tab_widget_height">184dp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>

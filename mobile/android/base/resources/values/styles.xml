@@ -186,7 +186,7 @@
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.PageAction</item>
     </style>
 
-    <style name="Widget.Home.PageTitle">
+    <style name="Widget.Home.HistoryTabIndicator">
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">32dp</item>
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.PageTitle</item>

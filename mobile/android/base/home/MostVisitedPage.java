@@ -84,7 +84,10 @@ public class MostVisitedPage extends HomeFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         final TextView title = (TextView) view.findViewById(R.id.title);
-        title.setText(R.string.home_most_visited_title);
+        if (title != null) {
+            title.setText(R.string.home_most_visited_title);
+            title.setVisibility(View.VISIBLE);
+        }
 
         mList = (HomeListView) view.findViewById(R.id.list);
 

@@ -198,6 +198,12 @@
 
     <declare-styleable name="IconTabWidget">
         <attr name="android:layout"/>
+
+        <!-- Sets the tab's content type. Defaults to icon. -->
+        <attr name="display">
+            <enum name="icon" value="0x00" />
+            <enum name="text" value="0x01" />
+        </attr>
     </declare-styleable>
 
     <declare-styleable name="TopBookmarksView">

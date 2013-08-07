@@ -11,11 +11,12 @@
               android:layout_height="fill_parent"/>
 
     <TextView android:id="@+id/title"
-              style="@style/Widget.Home.PageTitle"
+              style="@style/Widget.Home.HistoryTabIndicator"
               android:visibility="gone"/>
 
     <org.mozilla.gecko.home.HomeListView
             android:id="@+id/list"
+            style="@style/Widget.Home.HistoryListView"
             android:layout_width="fill_parent"
             android:layout_height="0dp"
             android:layout_weight="1"/>
