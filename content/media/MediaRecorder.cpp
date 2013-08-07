@@ -261,12 +261,8 @@ MediaRecorder::RequestData(ErrorResult& aResult)
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-
-  nsresult rv = CreateAndDispatchBlobEvent();
-  if (NS_FAILED(rv)) {
-    aResult.Throw(rv);
-    return;
-  }
+  NS_DispatchToMainThread(NS_NewRunnableMethod(this, &MediaRecorder::CreateAndDispatchBlobEvent),
+                                               NS_DISPATCH_NORMAL);
 }
 
 JSObject*
