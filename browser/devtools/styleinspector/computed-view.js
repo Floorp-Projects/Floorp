@@ -379,7 +379,7 @@ CssHtmlTree.prototype = {
     this._matchedProperties = null;
     this.cssLogic.sourceFilter = this.includeBrowserStyles ?
                                  CssLogic.FILTER.UA :
-                                 CssLogic.FILTER.ALL;
+                                 CssLogic.FILTER.USER;
   },
 
   /**
