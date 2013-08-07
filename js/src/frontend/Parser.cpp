@@ -1051,6 +1051,8 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
     JS_ASSERT(pc->sc->isFunctionBox());
     JS_ASSERT(!pc->funHasReturnExpr && !pc->funHasReturnVoid);
 
+    uint32_t startYieldOffset = pc->lastYieldOffset;
+
     Node pn;
     if (type == StatementListBody) {
         pn = statements();
@@ -1067,13 +1069,24 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
         pn = handler.newReturnStatement(kid, handler.getPosition(kid));
         if (!pn)
             return null();
+    }
 
-        if (pc->sc->asFunctionBox()->isLegacyGenerator()) {
+    if (pc->lastYieldOffset != startYieldOffset) {
+        JS_ASSERT(pc->isLegacyGenerator());
+        if (kind == Arrow) {
+            reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                             JSMSG_YIELD_IN_ARROW, js_yield_str);
+            return null();
+        }
+        if (type == ExpressionBody) {
             reportBadReturn(pn, ParseError,
                             JSMSG_BAD_GENERATOR_RETURN,
                             JSMSG_BAD_ANON_GENERATOR_RETURN);
             return null();
         }
+        pc->sc->asFunctionBox()->setIsLegacyGenerator();
+    } else {
+        JS_ASSERT(!pc->isLegacyGenerator());
     }
 
     /* Check for falling off the end of a function that returns a value. */
@@ -2253,10 +2266,6 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     }
 
     // Parse the function body.
-    Maybe<GenexpGuard<ParseHandler> > yieldGuard;
-    if (kind == Arrow)
-        yieldGuard.construct(this);
-
     FunctionBodyType bodyType = StatementListBody;
     if (tokenStream.getToken(TokenStream::Operand) != TOK_LC) {
         tokenStream.ungetToken();
@@ -2266,9 +2275,6 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
 
     Node body = functionBody(kind, bodyType);
     if (!body)
-        return false;
-
-    if (!yieldGuard.empty() && !yieldGuard.ref().checkValidBody(body, JSMSG_YIELD_IN_ARROW))
         return false;
 
     if (fun->name() && !checkStrictBinding(fun->name(), pn))
@@ -4410,18 +4416,31 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
     // Legacy generators are identified by the presence of "yield" in their
     // bodies.  We only see "yield" as TOK_YIELD in JS 1.7+.
     if (isYield) {
+        JS_ASSERT(tokenStream.versionNumber() >= JSVERSION_1_7);
         if (!abortIfSyntaxParser())
             return null();
 
-        // If we're within parens, we won't know if this is a generator
-        // expression until we see a |for| token, so we have to delay flagging
-        // the current function.
-        if (pc->parenDepth == 0) {
-            pc->sc->asFunctionBox()->setIsLegacyGenerator();
+        if (pc->isLegacyGenerator()) {
+            // We are in a legacy generator: a function that has already seen a
+            // yield.
+            JS_ASSERT(pc->sc->isFunctionBox());
+            JS_ASSERT(pc->lastYieldOffset != ParseContext<ParseHandler>::NoYieldOffset);
         } else {
-            pc->yieldCount++;
-            pc->yieldOffset = begin;
+            // We are in a code that has not seen a yield, and in JS 1.8 so
+            // "yield" parsed as TOK_YIELD.  Try to transition to being a legacy
+            // generator.
+            JS_ASSERT(tokenStream.currentToken().type == TOK_YIELD);
+            JS_ASSERT(pc->lastYieldOffset == ParseContext<ParseHandler>::NoYieldOffset);
+
+            if (!pc->sc->isFunctionBox()) {
+                report(ParseError, false, null(), JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
+                return null();
+            }
+
+            pc->generatorParseMode = ParseContext<ParseHandler>::LegacyGenerator;
         }
+
+        pc->lastYieldOffset = begin;
     }
 
     // Parse an optional operand.
@@ -4466,7 +4485,7 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
     if (!pn)
         return null();
 
-    if (pc->funHasReturnExpr && pc->sc->asFunctionBox()->isLegacyGenerator()) {
+    if (pc->funHasReturnExpr && pc->isLegacyGenerator()) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
         reportBadReturn(pn, ParseError, JSMSG_BAD_GENERATOR_RETURN,
                         JSMSG_BAD_ANON_GENERATOR_RETURN);
@@ -5416,117 +5435,6 @@ class CompExprTransplanter
 };
 
 /*
- * A helper for lazily checking for the presence of illegal |yield| or
- * |arguments| tokens inside of legacy generator expressions. This must be done
- * lazily since we don't know whether we're in a legacy generator expression
- * until we see the "for" token after we've already parsed the body expression.
- * (For ES6 generator comprehensions, we won't need this lazy check because the
- * |for| is at the beginning.)
- *
- * Use in any context which may turn out to be inside a legacy generator
- * expression. This includes parenthesized expressions and argument lists, and
- * it includes the tail of legacy generator expressions.
- *
- * The guard will keep track of any |yield| or |arguments| tokens that occur while
- * parsing the body. As soon as the parser reaches the end of the body expression,
- * call endBody() to reset the context's state, and then immediately call:
- *
- * - checkValidBody() if this *did* turn out to be a legacy generator expression
- * - maybeNoteLegacyGenerator() if this *did not* turn out to be a legacy
- *   generator expression
- */
-template <typename ParseHandler>
-class GenexpGuard
-{
-    Parser<ParseHandler> *parser;
-    uint32_t startYieldCount;
-
-    typedef typename ParseHandler::Node Node;
-
-  public:
-    explicit GenexpGuard(Parser<ParseHandler> *parser)
-      : parser(parser)
-    {
-        ParseContext<ParseHandler> *pc = parser->pc;
-        if (pc->parenDepth == 0) {
-            pc->yieldCount = 0;
-            pc->yieldOffset = 0;
-        }
-        startYieldCount = pc->yieldCount;
-        pc->parenDepth++;
-    }
-
-    void endBody();
-    bool checkValidBody(Node pn, unsigned err = JSMSG_BAD_GENEXP_BODY);
-    bool maybeNoteLegacyGenerator(Node pn);
-};
-
-template <typename ParseHandler>
-void
-GenexpGuard<ParseHandler>::endBody()
-{
-    parser->pc->parenDepth--;
-}
-
-/*
- * Check whether a |yield| or |arguments| token has been encountered in the
- * body expression, and if so, report an error.
- *
- * Call this after endBody() when determining that the body *was* in a
- * generator expression.
- */
-template <typename ParseHandler>
-bool
-GenexpGuard<ParseHandler>::checkValidBody(Node pn, unsigned err)
-{
-    ParseContext<ParseHandler> *pc = parser->pc;
-    if (pc->yieldCount > startYieldCount) {
-        uint32_t offset = pc->yieldOffset
-                          ? pc->yieldOffset
-                          : (pn ? parser->handler.getPosition(pn)
-                                : parser->pos()).begin;
-
-        parser->reportWithOffset(ParseError, false, offset, err, js_yield_str);
-        return false;
-    }
-
-    return true;
-}
-
-/*
- * Check whether a |yield| token has been encountered in the body expression,
- * and if so, note that the current function is a generator function.
- *
- * Call this after endBody() when determining that the body *was not* in a
- * generator expression.
- */
-template <typename ParseHandler>
-bool
-GenexpGuard<ParseHandler>::maybeNoteLegacyGenerator(Node pn)
-{
-    ParseContext<ParseHandler> *pc = parser->pc;
-    // yieldCount is only incremented when we see yield in JS 1.7+ code.
-    if (pc->yieldCount > 0) {
-        if (!pc->sc->isFunctionBox()) {
-            // FIXME: This error should be detected eagerly, when the yield is
-            // seen.
-            parser->report(ParseError, false, ParseHandler::null(),
-                           JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
-            return false;
-        }
-        pc->sc->asFunctionBox()->setIsLegacyGenerator();
-        if (pc->funHasReturnExpr) {
-            // At the time we saw the yield, we might not have set
-            // isLegacyGenerator yet.
-            parser->reportBadReturn(pn, ParseError,
-                                    JSMSG_BAD_GENERATOR_RETURN, JSMSG_BAD_ANON_GENERATOR_RETURN);
-            return false;
-        }
-    }
-    return true;
-}
-
-/*
  * Any definitions nested within the comprehension expression of a generator
  * expression must move "down" one static level, which of course increases the
  * upvar-frame-skip count.
@@ -5817,7 +5725,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
             pn2->pn_iflags |= JSITER_FOREACH;
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
-        GenexpGuard<FullParseHandler> guard(this);
+        uint32_t startYieldOffset = pc->lastYieldOffset;
 
         RootedPropertyName name(context);
         tt = tokenStream.getToken();
@@ -5874,14 +5782,10 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
             return null();
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
 
-        guard.endBody();
-
-        if (isGenexp) {
-            if (!guard.checkValidBody(pn2))
-                return null();
-        } else {
-            if (!guard.maybeNoteLegacyGenerator(pn2))
-                return null();
+        if (isGenexp && pc->lastYieldOffset != startYieldOffset) {
+            reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                             JSMSG_BAD_GENEXP_BODY, js_yield_str);
+            return null();
         }
 
         switch (tt) {
@@ -6111,12 +6015,12 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::assignExprWithoutYield(unsigned msg)
 {
-    GenexpGuard<ParseHandler> yieldGuard(this);
+    uint32_t startYieldOffset = pc->lastYieldOffset;
     Node res = assignExpr();
-    yieldGuard.endBody();
-    if (res) {
-        if (!yieldGuard.checkValidBody(res, msg))
-            return null();
+    if (res && pc->lastYieldOffset != startYieldOffset) {
+        reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                         msg, js_yield_str);
+        return null();
     }
     return res;
 }
@@ -6128,15 +6032,13 @@ Parser<ParseHandler>::argumentList(Node listNode)
     if (tokenStream.matchToken(TOK_RP, TokenStream::Operand))
         return true;
 
-    GenexpGuard<ParseHandler> guard(this);
+    uint32_t startYieldOffset = pc->lastYieldOffset;
     bool arg0 = true;
 
     do {
         Node argNode = assignExpr();
         if (!argNode)
             return false;
-        if (arg0)
-            guard.endBody();
 
         if (handler.isOperationWithoutParens(argNode, PNK_YIELD) &&
             tokenStream.peekToken() == TOK_COMMA) {
@@ -6145,8 +6047,11 @@ Parser<ParseHandler>::argumentList(Node listNode)
         }
 #if JS_HAS_GENERATOR_EXPRS
         if (tokenStream.matchToken(TOK_FOR)) {
-            if (!guard.checkValidBody(argNode))
+            if (pc->lastYieldOffset != startYieldOffset) {
+                reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                                 JSMSG_BAD_GENEXP_BODY, js_yield_str);
                 return false;
+            }
             argNode = generatorExpr(argNode);
             if (!argNode)
                 return false;
@@ -6154,11 +6059,8 @@ Parser<ParseHandler>::argumentList(Node listNode)
                 report(ParseError, false, argNode, JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
                 return false;
             }
-        } else
+        }
 #endif
-        if (arg0 && !guard.maybeNoteLegacyGenerator(argNode))
-            return false;
-
         arg0 = false;
 
         handler.addList(listNode, argNode);
@@ -6784,7 +6686,7 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
     if (genexp)
         *genexp = false;
 
-    GenexpGuard<ParseHandler> guard(this);
+    uint32_t startYieldOffset = pc->lastYieldOffset;
 
     /*
      * Always accept the 'in' operator in a parenthesized expression,
@@ -6798,12 +6700,14 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
 
     if (!pn)
         return null();
-    guard.endBody();
 
 #if JS_HAS_GENERATOR_EXPRS
     if (tokenStream.matchToken(TOK_FOR)) {
-        if (!guard.checkValidBody(pn))
+        if (pc->lastYieldOffset != startYieldOffset) {
+            reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                             JSMSG_BAD_GENEXP_BODY, js_yield_str);
             return null();
+        }
         if (handler.isOperationWithoutParens(pn, PNK_COMMA)) {
             report(ParseError, false, null(),
                    JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
@@ -6822,11 +6726,8 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
             handler.setEndPosition(pn, pos().end);
             *genexp = true;
         }
-    } else
+    }
 #endif /* JS_HAS_GENERATOR_EXPRS */
-
-    if (!guard.maybeNoteLegacyGenerator(pn))
-        return null();
 
     return pn;
 }

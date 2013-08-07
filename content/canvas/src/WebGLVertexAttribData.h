@@ -13,13 +13,20 @@ class WebGLBuffer;
 struct WebGLVertexAttribData {
     // note that these initial values are what GL initializes vertex attribs to
     WebGLVertexAttribData()
-        : buf(0), stride(0), size(4), byteOffset(0),
-          type(LOCAL_GL_FLOAT), enabled(false), normalized(false)
+        : buf(0)
+        , stride(0)
+        , size(4)
+        , divisor(0) // OpenGL ES 3.0 specs paragraphe 6.2 p240
+        , byteOffset(0)
+        , type(LOCAL_GL_FLOAT)
+        , enabled(false)
+        , normalized(false)
     { }
 
     WebGLRefPtr<WebGLBuffer> buf;
     WebGLuint stride;
     WebGLuint size;
+    WebGLuint divisor;
     GLuint byteOffset;
     GLenum type;
     bool enabled;

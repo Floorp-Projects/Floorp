@@ -13,13 +13,13 @@ BEGIN_TEST(testContexts_IsRunning)
         return true;
     }
 
-    static JSBool chk(JSContext *cx, unsigned argc, jsval *vp)
+    static bool chk(JSContext *cx, unsigned argc, jsval *vp)
     {
         JSRuntime *rt = JS_GetRuntime(cx);
         JSContext *acx = JS_NewContext(rt, 8192);
         if (!acx) {
             JS_ReportOutOfMemory(cx);
-            return JS_FALSE;
+            return false;
         }
 
         // acx should not be running

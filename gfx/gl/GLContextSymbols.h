@@ -173,6 +173,8 @@ struct GLContextSymbols
     PFNGLISENABLEDPROC fIsEnabled;
     typedef realGLboolean (GLAPIENTRY * PFNGLISPROGRAMPROC) (GLuint program);
     PFNGLISPROGRAMPROC fIsProgram;
+    typedef realGLboolean (GLAPIENTRY * PFNGLISQUERYPROC) (GLuint id);
+    PFNGLISQUERYPROC fIsQuery;
     typedef realGLboolean (GLAPIENTRY * PFNGLISSHADERPROC) (GLuint shader);
     PFNGLISSHADERPROC fIsShader;
     typedef realGLboolean (GLAPIENTRY * PFNGLISTEXTUREPROC) (GLuint texture);
@@ -413,6 +415,10 @@ struct GLContextSymbols
     PFNGLDRAWARRAYSINSTANCED fDrawArraysInstanced;
     typedef void (GLAPIENTRY * PFNGLDRAWELEMENTSINSTANCED) (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices, GLsizei primcount);
     PFNGLDRAWELEMENTSINSTANCED fDrawElementsInstanced;
+
+    // ARB_instanced_array
+    typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBDIVISOR) (GLuint index, GLuint divisor);
+    PFNGLVERTEXATTRIBDIVISOR fVertexAttribDivisor;
 };
 
 }

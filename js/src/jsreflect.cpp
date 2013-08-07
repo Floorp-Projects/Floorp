@@ -2949,7 +2949,7 @@ ASTSerializer::moduleOrFunctionBody(ParseNode *pn, TokenPos *pos, MutableHandleV
     return builder.blockStatement(elts, pos, dst);
 }
 
-static JSBool
+static bool
 reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

@@ -251,7 +251,7 @@ BEGIN_TEST(testDebugger_singleStepThrow)
         return true;
     }
 
-    static JSBool
+    static bool
     setStepMode(JSContext *cx, unsigned argc, jsval *vp)
     {
         JSScript *script;
