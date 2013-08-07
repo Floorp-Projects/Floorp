@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for middle-click to paste selection with paste events</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<input id="copy-area" value="CLIPBOARD">
+<input id="paste-selection-area" value="" onpaste="pastedSelection(event)">
+<input id="paste-global-area" value="" onpaste="pastedGlobal(event)">
+
+<script>
+
+var supportsSelectionClipboard = SpecialPowers.supportsSelectionClipboard();
+
+function checkSelectionClipboardText(count)
+{
+  if ((!supportsSelectionClipboard ||
+       SpecialPowers.getClipboardData("text/unicode", SpecialPowers.Ci.nsIClipboard.kSelectionClipboard) == "COPY TEXT") &&
+      SpecialPowers.getClipboardData("text/unicode", SpecialPowers.Ci.nsIClipboard.kGlobalClipboard) == "CLIPBOARD") {
+    pasteArea();
+    return;
+  }
+
+  if (count > 10) {
+    ok(false, "could not set clipboards");
+    pasteArea();
+    SimpleTest.finish();
+    return;
+  }
+
+  setTimeout(checkSelectionClipboardText, 5, count + 1);
+}
+
+function selectArea()
+{
+  var copyArea = document.getElementById("copy-area");
+  copyArea.focus();
+  copyArea.select();
+  synthesizeKey("x", { accelKey: true });
+
+  if (supportsSelectionClipboard) {
+    var clipboardHelper = SpecialPowers.Cc["@mozilla.org/widget/clipboardhelper;1"]
+                                       .getService(SpecialPowers.Ci.nsIClipboardHelper);
+    clipboardHelper.copyStringToClipboard("COPY TEXT",
+                                          SpecialPowers.Ci.nsIClipboard.kSelectionClipboard,
+                                          document);
+  }
+
+  setTimeout(checkSelectionClipboardText, 50, 0);
+}
+
+var selectionPasted = false;
+var globalPasted = false;
+
+function pasteArea()
+{
+  var pasteArea = document.getElementById("paste-selection-area");
+  pasteArea.focus();
+  synthesizeMouse(pasteArea, 8, 8, { button: 1 });
+
+  var usesMouseButtonPaste = SpecialPowers.getBoolPref("middlemouse.paste");
+  if (usesMouseButtonPaste) {
+    // The data transfer should contain the selection data when the selection clipboard is supported,
+    // not the global clipboard data.
+    var expectedText = supportsSelectionClipboard ? "COPY TEXT" : "CLIPBOARD";
+    is(document.getElementById("paste-selection-area").value, expectedText, "data pasted properly from selection");
+    ok(selectionPasted, "selection event fired");
+  }
+  else {
+    is(pasteArea.value, "", "data not pasted when middle click not supported");
+  }
+
+  var pasteArea = document.getElementById("paste-global-area");
+  pasteArea.focus();
+  synthesizeKey("v", { accelKey: true });
+
+  ok(globalPasted, "global event fired");
+  is(document.getElementById("paste-global-area").value, "CLIPBOARD", "data pasted properly from global clipboard");
+  SimpleTest.finish();
+}
+
+function pastedSelection(event)
+{
+  ok(SpecialPowers.getBoolPref("middlemouse.paste"), "paste on middle click is valid");
+
+  // Mac and Windows shouldn't get here as the middle mouse preference is false by default
+  ok(navigator.platform.indexOf("Mac") == -1 && navigator.platform.indexOf("Win") == -1, "middle click enabled on right platforms");
+
+  var expectedText = supportsSelectionClipboard ? "COPY TEXT" : "CLIPBOARD";
+  is(event.clipboardData.getData("text/plain"), expectedText, "data pasted properly from selection");
+
+  selectionPasted = true;
+}
+
+function pastedGlobal(event)
+{
+  // The data transfer should contain the global data.
+  is(event.clipboardData.getData("text/plain"), "CLIPBOARD", "data correct in global clipboard data transfer");
+  globalPasted = true;
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(selectArea);
+</script>
+
+</pre>
+</body>
+</html>
+
