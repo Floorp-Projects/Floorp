@@ -73,6 +73,7 @@ int Resampler::Reset(int in_freq, int out_freq, ResamplerType type)
   if (state_)
   {
     speex_resampler_destroy(state_);
+    state_ = NULL;
   }
   type_ = type;
   channels_ = channels;
