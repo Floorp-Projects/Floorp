@@ -967,28 +967,28 @@ let RIL = {
    */
   iccUnlockCardLock: function iccUnlockCardLock(options) {
     switch (options.lockType) {
-      case "pin":
+      case GECKO_CARDLOCK_PIN:
         this.enterICCPIN(options);
         break;
-      case "pin2":
+      case GECKO_CARDLOCK_PIN2:
         this.enterICCPIN2(options);
         break;
-      case "puk":
+      case GECKO_CARDLOCK_PUK:
         this.enterICCPUK(options);
         break;
-      case "puk2":
+      case GECKO_CARDLOCK_PUK2:
         this.enterICCPUK2(options);
         break;
-      case "nck":
-      case "cck": // Fall through.
-      case "spck": {
+      case GECKO_CARDLOCK_NCK:
+      case GECKO_CARDLOCK_CCK: // Fall through.
+      case GECKO_CARDLOCK_SPCK: {
         let type = GECKO_PERSO_LOCK_TO_CARD_PERSO_LOCK[options.lockType];
         this.enterDepersonalization(type, options.pin, options);
         break;
       }
-      case "nckPuk":
-      case "cckPuk": // Fall through.
-      case "spckPuk": {
+      case GECKO_CARDLOCK_NCK_PUK:
+      case GECKO_CARDLOCK_CCK_PUK: // Fall through.
+      case GECKO_CARDLOCK_SPCK_PUK: {
         let type = GECKO_PERSO_LOCK_TO_CARD_PERSO_LOCK[options.lockType];
         this.enterDepersonalization(type, options.puk, options);
         break;
@@ -1057,10 +1057,10 @@ let RIL = {
   iccSetCardLock: function iccSetCardLock(options) {
     if (options.newPin !== undefined) { // Change PIN lock.
       switch (options.lockType) {
-        case "pin":
+        case GECKO_CARDLOCK_PIN:
           this.changeICCPIN(options);
           break;
-        case "pin2":
+        case GECKO_CARDLOCK_PIN2:
           this.changeICCPIN2(options);
           break;
         default:
@@ -1070,11 +1070,11 @@ let RIL = {
       }
     } else { // Enable/Disable lock.
       switch (options.lockType) {
-        case "pin":
+        case GECKO_CARDLOCK_PIN:
           options.facility = ICC_CB_FACILITY_SIM;
           options.password = options.pin;
           break;
-        case "fdn":
+        case GECKO_CARDLOCK_FDN:
           options.facility = ICC_CB_FACILITY_FDN;
           options.password = options.pin2;
           break;
@@ -1180,10 +1180,10 @@ let RIL = {
    */
   iccGetCardLockState: function iccGetCardLockState(options) {
     switch (options.lockType) {
-      case "pin":
+      case GECKO_CARDLOCK_PIN:
         options.facility = ICC_CB_FACILITY_SIM;
         break;
-      case "fdn":
+      case GECKO_CARDLOCK_FDN:
         options.facility = ICC_CB_FACILITY_FDN;
         break;
       default:
