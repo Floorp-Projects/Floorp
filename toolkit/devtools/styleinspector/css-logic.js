@@ -63,9 +63,8 @@ exports.CssLogic = CssLogic;
  * Special values for filter, in addition to an href these values can be used
  */
 CssLogic.FILTER = {
-  ALL: "user", // show properties from all user style sheets
-  USER: "user",
-  UA: "ua",    // ALL, plus user-agent (i.e. browser) style sheets
+  USER: "user", // show properties for all user style sheets.
+  UA: "ua",    // USER, plus user-agent (i.e. browser) style sheets
 };
 
 /**
@@ -113,7 +112,7 @@ CssLogic.prototype = {
   _computedStyle: null,
 
   // Source filter. Only display properties coming from the given source
-  _sourceFilter: CssLogic.FILTER.ALL,
+  _sourceFilter: CssLogic.FILTER.USER,
 
   // Used for tracking unique CssSheet/CssRule/CssSelector objects, in a run of
   // processMatchedSelectors().
@@ -591,7 +590,7 @@ CssLogic.prototype = {
           sheet._passId = this._passId;
         }
 
-        if (filter === CssLogic.FILTER.ALL && !sheet.contentSheet) {
+        if (filter === CssLogic.FILTER.USER && !sheet.contentSheet) {
           continue;
         }
 
@@ -989,10 +988,10 @@ CssSheet.prototype = {
     this._sheetAllowed = true;
 
     let filter = this._cssLogic.sourceFilter;
-    if (filter === CssLogic.FILTER.ALL && !this.contentSheet) {
+    if (filter === CssLogic.FILTER.USER && !this.contentSheet) {
       this._sheetAllowed = false;
     }
-    if (filter !== CssLogic.FILTER.ALL && filter !== CssLogic.FILTER.UA) {
+    if (filter !== CssLogic.FILTER.USER && filter !== CssLogic.FILTER.UA) {
       this._sheetAllowed = (filter === this.href);
     }
 
