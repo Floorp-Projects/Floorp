@@ -5,6 +5,10 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <style name="TextAppearance.EmptyMessage" parent="TextAppearance.Large">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
     <style name="TextAppearance.Widget.TwoLinePageRow.Title" parent="TextAppearance.Medium">
         <item name="android:fontFamily">sans-serif-light</item>
     </style>
