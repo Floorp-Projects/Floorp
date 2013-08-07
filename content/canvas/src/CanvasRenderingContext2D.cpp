@@ -799,13 +799,6 @@ CanvasRenderingContext2D::AddDemotableContext(CanvasRenderingContext2D* context)
   DemotableContexts().push_back(context);
 }
 
-#define MIN_SKIA_GL_DIMENSION 16
-
-bool
-CheckSizeForSkiaGL(IntSize size) {
-  return size.width > MIN_SKIA_GL_DIMENSION && size.height > MIN_SKIA_GL_DIMENSION;
-}
-
 #endif
 
 void
@@ -851,7 +844,10 @@ CanvasRenderingContext2D::EnsureTarget()
         nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
         nsString vendor;
 
-        if (!mForceSoftware && CheckSizeForSkiaGL(size))
+        if (!mForceSoftware &&
+            gfxInfo &&
+            NS_SUCCEEDED(gfxInfo->GetAdapterVendorID(vendor)) &&
+            StringBeginsWith(vendor, NS_LITERAL_STRING("NVIDIA")))
         {
           glContext = GLContextProvider::CreateOffscreen(gfxIntSize(size.width, size.height),
                                                          caps, GLContext::ContextFlagsNone);
