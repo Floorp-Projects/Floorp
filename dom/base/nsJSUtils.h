@@ -64,6 +64,13 @@ public:
                                   const nsAString& aBody,
                                   JSObject** aFunctionObject);
 
+  static nsresult EvaluateString(JSContext* aCx,
+                                 const nsAString& aScript,
+                                 JS::Handle<JSObject*> aScopeObject,
+                                 JS::CompileOptions &aOptions,
+                                 bool aCoerceToString,
+                                 JS::Value* aRetValue);
+
 };
 
 

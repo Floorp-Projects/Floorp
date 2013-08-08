@@ -1241,70 +1241,21 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             bool aCoerceToString,
                             JS::Value* aRetValue)
 {
-  PROFILER_LABEL("JS", "EvaluateString");
-  MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
-  MOZ_ASSERT_IF(aCoerceToString, aRetValue);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-  // Unfortunately, the JS engine actually compiles scripts with a return value
-  // in a different, less efficient way.  Furthermore, it can't JIT them in many
-  // cases.  So we need to be explicitly told whether the caller cares about the
-  // return value.  Callers use null to indicate they don't care.
-  if (aRetValue) {
-    *aRetValue = JSVAL_VOID;
-  }
-
+  nsresult rv;
   if (!mScriptsEnabled) {
     return NS_OK;
   }
 
-  nsCxPusher pusher;
-  pusher.Push(mContext);
-
-  xpc_UnmarkGrayObject(aScopeObject);
-  nsAutoMicroTask mt;
-
-  JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetObjectCompartment(aScopeObject));
-  aOptions.setPrincipals(p);
-
-  bool ok = false;
-  nsresult rv = sSecurityManager->CanExecuteScripts(mContext, nsJSPrincipals::get(p), &ok);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(ok, NS_OK);
-
-  // Scope the JSAutoCompartment so that it gets destroyed before we pop the
-  // cx and potentially call JS_RestoreFrameChain.
   {
-    JSAutoCompartment ac(mContext, aScopeObject);
-
-    JS::RootedObject rootedScope(mContext, aScopeObject);
-    ok = JS::Evaluate(mContext, rootedScope, aOptions,
-                      PromiseFlatString(aScript).get(),
-                      aScript.Length(), aRetValue);
-    if (ok && aCoerceToString && !aRetValue->isUndefined()) {
-      JSString* str = JS_ValueToString(mContext, *aRetValue);
-      ok = !!str;
-      *aRetValue = ok ? JS::StringValue(str) : JS::UndefinedValue();
-    }
-  }
-
-  if (!ok) {
-    if (aRetValue) {
-      *aRetValue = JS::UndefinedValue();
-    }
-    // Tell XPConnect about any pending exceptions. This is needed
-    // to avoid dropping JS exceptions in case we got here through
-    // nested calls through XPConnect.
-    ReportPendingException();
+    AutoCxPusher pusher(mContext);
+    rv = nsJSUtils::EvaluateString(mContext, aScript, aScopeObject,
+                                   aOptions, aCoerceToString, aRetValue);
   }
 
   // ScriptEvaluated needs to come after we pop the stack
-  pusher.Pop();
   ScriptEvaluated(true);
-
-  // Wrap the return value into whatever compartment mContext was in.
-  if (aRetValue && !JS_WrapValue(mContext, aRetValue))
-    return NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
+  return rv;
 }
 
 nsresult
