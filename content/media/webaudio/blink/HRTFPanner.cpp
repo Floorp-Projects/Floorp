@@ -41,7 +41,7 @@ const double MaxDelayTimeSeconds = 0.002;
 const int UninitializedAzimuth = -1;
 const unsigned RenderingQuantum = 128;
 
-HRTFPanner::HRTFPanner(float sampleRate, HRTFDatabaseLoader* databaseLoader)
+HRTFPanner::HRTFPanner(float sampleRate, mozilla::TemporaryRef<HRTFDatabaseLoader> databaseLoader)
     : m_databaseLoader(databaseLoader)
     , m_sampleRate(sampleRate)
     , m_crossfadeSelection(CrossfadeSelection1)
@@ -60,7 +60,9 @@ HRTFPanner::HRTFPanner(float sampleRate, HRTFDatabaseLoader* databaseLoader)
     , m_delayLineR(ceilf(MaxDelayTimeSeconds * sampleRate),
                    WebAudioUtils::ComputeSmoothingRate(0.02, sampleRate))
 {
-    MOZ_ASSERT(databaseLoader);
+    MOZ_ASSERT(m_databaseLoader);
+    MOZ_COUNT_CTOR(HRTFPanner);
+
     m_tempL1.SetLength(RenderingQuantum);
     m_tempR1.SetLength(RenderingQuantum);
     m_tempL2.SetLength(RenderingQuantum);
@@ -69,6 +71,7 @@ HRTFPanner::HRTFPanner(float sampleRate, HRTFDatabaseLoader* databaseLoader)
 
 HRTFPanner::~HRTFPanner()
 {
+    MOZ_COUNT_DTOR(HRTFPanner);
 }
 
 void HRTFPanner::reset()
@@ -111,7 +114,7 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* 
     unsigned numInputChannels =
         inputBus->IsNull() ? 0 : inputBus->mChannelData.Length();
 
-    bool isInputGood = inputBus &&  numInputChannels >= 1 && numInputChannels <= 2;
+    bool isInputGood = inputBus && numInputChannels <= 2;
     MOZ_ASSERT(isInputGood);
     MOZ_ASSERT(framesToProcess <= inputBus->mDuration);
 
@@ -125,8 +128,7 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* 
     }
 
     HRTFDatabase* database = m_databaseLoader->database();
-    MOZ_ASSERT(database);
-    if (!database) {
+    if (!database) { // not yet loaded
         outputBus->SetNull(outputBus->mDuration);
         return;
     }
@@ -145,7 +147,8 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* 
     // If we have a stereo input, implement stereo panning with left source processed by left HRTF, and right source by right HRTF.
 
     // Get source and destination pointers.
-    const float* sourceL = static_cast<const float*>(inputBus->mChannelData[0]);
+    const float* sourceL = numInputChannels > 0 ?
+        static_cast<const float*>(inputBus->mChannelData[0]) : nullptr;
     const float* sourceR = numInputChannels > 1 ?
         static_cast<const float*>(inputBus->mChannelData[1]) : sourceL;
     float* destinationL =
@@ -225,8 +228,8 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* 
 
         // Calculate the source and destination pointers for the current segment.
         unsigned offset = segment * framesPerSegment;
-        const float* segmentSourceL = sourceL + offset;
-        const float* segmentSourceR = sourceR + offset;
+        const float* segmentSourceL = sourceL ? sourceL + offset : nullptr;
+        const float* segmentSourceR = sourceR ? sourceR + offset : nullptr;
         float* segmentDestinationL = destinationL + offset;
         float* segmentDestinationR = destinationR + offset;
 
