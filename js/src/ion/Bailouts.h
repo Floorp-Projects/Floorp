@@ -125,6 +125,7 @@ class IonBailoutIterator : public IonFrameIterator
   public:
     IonBailoutIterator(const JitActivationIterator &activations, BailoutStack *sp);
     IonBailoutIterator(const JitActivationIterator &activations, InvalidationBailoutStack *sp);
+    IonBailoutIterator(const JitActivationIterator &activations, const IonFrameIterator &frame);
 
     SnapshotOffset snapshotOffset() const {
         JS_ASSERT(topIonScript_);
@@ -156,6 +157,19 @@ uint32_t Bailout(BailoutStack *sp, BaselineBailoutInfo **info);
 // Called from the invalidation thunk. Returns a BAILOUT_* error code.
 uint32_t InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
                              BaselineBailoutInfo **info);
+
+struct ExceptionBailoutInfo
+{
+    size_t frameNo;
+    jsbytecode *resumePC;
+    size_t numExprSlots;
+};
+
+// Called from the exception handler to enter a catch or finally block.
+// Returns a BAILOUT_* error code.
+uint32_t ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
+                                 const ExceptionBailoutInfo &excInfo,
+                                 BaselineBailoutInfo **bailoutInfo);
 
 uint32_t FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo);
 

@@ -1263,17 +1263,10 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
         uint32_t length = obj->getDenseInitializedLength();
         int32_t i = JSID_TO_INT(id);
         if ((uint32_t)i >= length) {
-            // In an Ion activation, GetPcScript won't work.  For non-baseline activations,
-            // that's ok, because optimized ion doesn't generate analysis info.  However,
-            // baseline must generate this information, so it passes the script and pc in
-            // as arguments.
-            if (script || cx->currentlyRunningInInterpreter()) {
-                JS_ASSERT(!!script == !!pc);
-                if (!script)
-                    types::TypeScript::GetPcScript(cx, script.address(), &pc);
-
-                if (script->hasAnalysis())
-                    script->analysis()->getCode(pc).arrayWriteHole = true;
+            // Annotate script if provided with information (e.g. baseline)
+            if (script && script->hasAnalysis()) {
+                JS_ASSERT(pc);
+                script->analysis()->getCode(pc).arrayWriteHole = true;
             }
         }
     }

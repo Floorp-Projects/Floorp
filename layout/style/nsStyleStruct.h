@@ -1281,6 +1281,7 @@ struct nsStyleTextReset {
   nsStyleCoord  mVerticalAlign;         // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
   nsStyleTextOverflow mTextOverflow;    // [reset] enum, string
 
+  uint8_t mTextBlink;                   // [reset] see nsStyleConsts.h
   uint8_t mTextDecorationLine;          // [reset] see nsStyleConsts.h
   uint8_t mUnicodeBidi;                 // [reset] see nsStyleConsts.h
 protected:

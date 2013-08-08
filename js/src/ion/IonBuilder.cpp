@@ -1162,6 +1162,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_IFEQ:
         return jsop_ifeq(JSOP_IFEQ);
 
+      case JSOP_TRY:
+        return jsop_try();
+
       case JSOP_CONDSWITCH:
         return jsop_condswitch();
 
@@ -1632,6 +1635,9 @@ IonBuilder::processCfgEntry(CFGState &state)
 
       case CFGState::LABEL:
         return processLabelEnd(state);
+
+      case CFGState::TRY:
+        return processTryEnd(state);
 
       default:
         MOZ_ASSUME_UNREACHABLE("unknown cfgstate");
@@ -2172,6 +2178,30 @@ IonBuilder::processLabelEnd(CFGState &state)
 
     pc = state.stopAt;
     setCurrentAndSpecializePhis(successor);
+    return ControlStatus_Joined;
+}
+
+IonBuilder::ControlStatus
+IonBuilder::processTryEnd(CFGState &state)
+{
+    JS_ASSERT(state.state == CFGState::TRY);
+
+    if (!state.try_.successor) {
+        JS_ASSERT(!current);
+        return ControlStatus_Ended;
+    }
+
+    if (current) {
+        current->end(MGoto::New(state.try_.successor));
+
+        if (!state.try_.successor->addPredecessor(current))
+            return ControlStatus_Error;
+    }
+
+    // Start parsing the code after this try-catch statement.
+    setCurrentAndSpecializePhis(state.try_.successor);
+    graph().moveBlockToEnd(current);
+    pc = current->pc();
     return ControlStatus_Joined;
 }
 
@@ -2861,6 +2891,16 @@ IonBuilder::CFGState::Label(jsbytecode *exitpc)
     return state;
 }
 
+IonBuilder::CFGState
+IonBuilder::CFGState::Try(jsbytecode *exitpc, MBasicBlock *successor)
+{
+    CFGState state;
+    state.state = TRY;
+    state.stopAt = exitpc;
+    state.try_.successor = successor;
+    return state;
+}
+
 IonBuilder::ControlStatus
 IonBuilder::processCondSwitchCase(CFGState &state)
 {
@@ -3180,6 +3220,82 @@ IonBuilder::jsop_ifeq(JSOp op)
     return true;
 }
 
+bool
+IonBuilder::jsop_try()
+{
+    JS_ASSERT(JSOp(*pc) == JSOP_TRY);
+
+    if (!js_IonOptions.compileTryCatch)
+        return abort("Try-catch support disabled");
+
+    // Try-finally is not yet supported.
+    JS_ASSERT(script()->analysis()->hasTryFinally());
+
+    graph().setHasTryBlock();
+
+    jssrcnote *sn = info().getNote(cx, pc);
+    JS_ASSERT(SN_TYPE(sn) == SRC_TRY);
+
+    // Get the pc of the last instruction in the try block. It's a JSOP_GOTO to
+    // jump over the catch block.
+    jsbytecode *endpc = pc + js_GetSrcNoteOffset(sn, 0);
+    JS_ASSERT(JSOp(*endpc) == JSOP_GOTO);
+    JS_ASSERT(GetJumpOffset(endpc) > 0);
+
+    jsbytecode *afterTry = endpc + GetJumpOffset(endpc);
+
+    // If controlflow in the try body is terminated (by a return or throw
+    // statement), the code after the try-statement may still be reachable
+    // via the catch block (which we don't compile) and OSR can enter it.
+    // For example:
+    //
+    //     try {
+    //         throw 3;
+    //     } catch(e) { }
+    //
+    //     for (var i=0; i<1000; i++) {}
+    //
+    // To handle this, we create two blocks: one for the try block and one
+    // for the code following the try-catch statement. Both blocks are
+    // connected to the graph with an MTest instruction that always jumps to
+    // the try block. This ensures the successor block always has a predecessor
+    // and later passes will optimize this MTest to a no-op.
+    //
+    // If the code after the try block is unreachable (control flow in both the
+    // try and catch blocks is terminated), only create the try block, to avoid
+    // parsing unreachable code.
+
+    MBasicBlock *tryBlock = newBlock(current, GetNextPc(pc));
+    if (!tryBlock)
+        return false;
+
+    MBasicBlock *successor;
+    if (script()->analysis()->maybeCode(afterTry)) {
+        successor = newBlock(current, afterTry);
+        if (!successor)
+            return false;
+
+        // Add MTest(true, tryBlock, successorBlock).
+        MConstant *true_ = MConstant::New(BooleanValue(true));
+        current->add(true_);
+        current->end(MTest::New(true_, tryBlock, successor));
+    } else {
+        successor = NULL;
+        current->end(MGoto::New(tryBlock));
+    }
+
+    if (!cfgStack_.append(CFGState::Try(endpc, successor)))
+        return false;
+
+    // The baseline compiler should not attempt to enter the catch block
+    // via OSR.
+    JS_ASSERT(info().osrPc() < endpc || info().osrPc() >= afterTry);
+
+    // Start parsing the try block.
+    setCurrentAndSpecializePhis(tryBlock);
+    return true;
+}
+
 IonBuilder::ControlStatus
 IonBuilder::processReturn(JSOp op)
 {
@@ -3219,6 +3335,35 @@ IonBuilder::ControlStatus
 IonBuilder::processThrow()
 {
     MDefinition *def = current->pop();
+
+    if (graph().hasTryBlock()) {
+        // MThrow is not marked as effectful. This means when it throws and we
+        // are inside a try block, we could use an earlier resume point and this
+        // resume point may not be up-to-date, for example:
+        //
+        // (function() {
+        //     try {
+        //         var x = 1;
+        //         foo(); // resume point
+        //         x = 2;
+        //         throw foo;
+        //     } catch(e) {
+        //         print(x);
+        //     }
+        // ])();
+        //
+        // If we use the resume point after the call, this will print 1 instead
+        // of 2. To fix this, we create a resume point right before the MThrow.
+        //
+        // Note that this is not a problem for instructions other than MThrow
+        // because they are either marked as effectful (have their own resume
+        // point) or cannot throw a catchable exception.
+        MNop *ins = MNop::New();
+        current->add(ins);
+
+        if (!resumeAfter(ins))
+            return ControlStatus_Error;
+    }
 
     MThrow *ins = MThrow::New(def);
     current->end(ins);
@@ -6372,9 +6517,7 @@ IonBuilder::jsop_getelem()
     bool cacheable = obj->mightBeType(MIRType_Object) && !obj->mightBeType(MIRType_String) &&
         (index->mightBeType(MIRType_Int32) || index->mightBeType(MIRType_String));
 
-    bool nonNativeGetElement =
-        script()->analysis()->getCode(pc).nonNativeGetElement ||
-        inspector->hasSeenNonNativeGetElement(pc);
+    bool nonNativeGetElement = inspector->hasSeenNonNativeGetElement(pc);
 
     // Turn off cacheing if the element is int32 and we've seen non-native objects as the target
     // of this getelem.
