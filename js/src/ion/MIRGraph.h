@@ -545,6 +545,7 @@ class MIRGraph
     Vector<JSScript *, 4, IonAllocPolicy> scripts_;
 
     size_t numBlocks_;
+    bool hasTryBlock_;
 
   public:
     MIRGraph(TempAllocator *alloc)
@@ -554,7 +555,8 @@ class MIRGraph
         idGen_(0),
         osrBlock_(NULL),
         osrStart_(NULL),
-        numBlocks_(0)
+        numBlocks_(0),
+        hasTryBlock_(false)
     { }
 
     template <typename T>
@@ -675,6 +677,13 @@ class MIRGraph
     }
     JSScript **scripts() {
         return scripts_.begin();
+    }
+
+    bool hasTryBlock() const {
+        return hasTryBlock_;
+    }
+    void setHasTryBlock() {
+        hasTryBlock_ = true;
     }
 
     // The per-thread context. So as not to modify the calling convention for

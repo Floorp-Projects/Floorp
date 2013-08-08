@@ -376,9 +376,10 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
 {
     FloatRegister first = ToFloatRegister(ins->first());
     FloatRegister second = ToFloatRegister(ins->second());
+#ifdef DEBUG
     FloatRegister output = ToFloatRegister(ins->output());
-
     JS_ASSERT(first == output);
+#endif
 
     Label done, nan, minMaxInst;
 
