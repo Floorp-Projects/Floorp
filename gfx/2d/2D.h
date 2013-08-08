@@ -292,7 +292,7 @@ public:
    * aFilter Resampling filter used for resampling the image.
    */
   SurfacePattern(SourceSurface *aSourceSurface, ExtendMode aExtendMode,
-                 const Matrix &aMatrix = Matrix(), Filter aFilter = FILTER_GOOD)
+                 const Matrix &aMatrix = Matrix(), Filter aFilter = FILTER_LINEAR)
     : mSurface(aSourceSurface)
     , mExtendMode(aExtendMode)
     , mFilter(aFilter)
