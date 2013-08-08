@@ -1046,7 +1046,8 @@ CanvasRenderingContext2D::GetInputStream(const char *aMimeType,
 
   nsresult rv;
   const char encoderPrefix[] = "@mozilla.org/image/encoder;2?type=";
-  nsAutoArrayPtr<char> conid(new (std::nothrow) char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
+  static const fallible_t fallible = fallible_t();
+  nsAutoArrayPtr<char> conid(new (fallible) char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
 
   if (!conid) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1060,7 +1061,7 @@ CanvasRenderingContext2D::GetInputStream(const char *aMimeType,
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoArrayPtr<uint8_t> imageBuffer(new (std::nothrow) uint8_t[mWidth * mHeight * 4]);
+  nsAutoArrayPtr<uint8_t> imageBuffer(new (fallible) uint8_t[mWidth * mHeight * 4]);
   if (!imageBuffer) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
