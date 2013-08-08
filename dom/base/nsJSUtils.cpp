@@ -206,6 +206,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   MOZ_ASSERT_IF(aCompileOptions.versionSet,
                 aCompileOptions.version != JSVERSION_UNKNOWN);
   MOZ_ASSERT_IF(aEvaluateOptions.coerceToString, aRetValue);
+  MOZ_ASSERT_IF(!aEvaluateOptions.reportUncaught, aRetValue);
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
 
   // Unfortunately, the JS engine actually compiles scripts with a return value
@@ -245,17 +246,21 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   }
 
   if (!ok) {
-    if (aRetValue) {
-      *aRetValue = JS::UndefinedValue();
+    if (aEvaluateOptions.reportUncaught) {
+      ReportPendingException(aCx);
+      if (aRetValue) {
+        *aRetValue = JS::UndefinedValue();
+      }
+    } else {
+      rv = JS_IsExceptionPending(aCx) ? NS_ERROR_FAILURE
+                                      : NS_ERROR_OUT_OF_MEMORY;
+      JS_GetPendingException(aCx, aRetValue);
+      JS_ClearPendingException(aCx);
     }
-    // Tell XPConnect about any pending exceptions. This is needed
-    // to avoid dropping JS exceptions in case we got here through
-    // nested calls through XPConnect.
-    ReportPendingException(aCx);
   }
 
   // Wrap the return value into whatever compartment aCx was in.
   if (aRetValue && !JS_WrapValue(aCx, aRetValue))
     return NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
+  return rv;
 }

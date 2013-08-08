@@ -66,12 +66,19 @@ public:
 
   struct EvaluateOptions {
     bool coerceToString;
+    bool reportUncaught;
 
     explicit EvaluateOptions() : coerceToString(false)
+                               , reportUncaught(true)
     {}
 
     EvaluateOptions& setCoerceToString(bool aCoerce) {
       coerceToString = aCoerce;
+      return *this;
+    }
+
+    EvaluateOptions& setReportUncaught(bool aReport) {
+      reportUncaught = aReport;
       return *this;
     }
   };
