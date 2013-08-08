@@ -2826,6 +2826,7 @@ nsStyleTextReset::nsStyleTextReset(void)
 { 
   MOZ_COUNT_CTOR(nsStyleTextReset);
   mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
+  mTextBlink = NS_STYLE_TEXT_BLINK_NONE;
   mTextDecorationLine = NS_STYLE_TEXT_DECORATION_LINE_NONE;
   mTextDecorationColor = NS_RGB(0,0,0);
   mTextDecorationStyle =

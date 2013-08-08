@@ -2645,6 +2645,18 @@ nsComputedDOMStyle::DoGetTextAlignLast()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetMozTextBlink()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleTextReset()->mTextBlink,
+                                   nsCSSProps::kTextBlinkKTable));
+
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetTextDecoration()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
@@ -2674,14 +2686,25 @@ nsComputedDOMStyle::DoGetTextDecoration()
   // don't want these to appear in the computed style.
   line &= ~(NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS |
             NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL);
+  uint8_t blink = textReset->mTextBlink;
 
-  if (line == NS_STYLE_TEXT_DECORATION_LINE_NONE) {
+  if (blink == NS_STYLE_TEXT_BLINK_NONE &&
+      line == NS_STYLE_TEXT_DECORATION_LINE_NONE) {
     val->SetIdent(eCSSKeyword_none);
   } else {
     nsAutoString str;
-    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration_line,
-      line, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
-      NS_STYLE_TEXT_DECORATION_LINE_BLINK, str);
+    if (line != NS_STYLE_TEXT_DECORATION_LINE_NONE) {
+      nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration_line,
+        line, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+        NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, str);
+    }
+    if (blink != NS_STYLE_TEXT_BLINK_NONE) {
+      if (!str.IsEmpty()) {
+        str.Append(PRUnichar(' '));
+      }
+      nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_blink, blink,
+        NS_STYLE_TEXT_BLINK_BLINK, NS_STYLE_TEXT_BLINK_BLINK, str);
+    }
     val->SetString(str);
   }
 
@@ -2722,7 +2745,7 @@ nsComputedDOMStyle::DoGetTextDecorationLine()
                   NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL);
     nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration_line,
       intValue, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
-      NS_STYLE_TEXT_DECORATION_LINE_BLINK, decorationLineString);
+      NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, decorationLineString);
     val->SetString(decorationLineString);
   }
 
@@ -5117,6 +5140,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY(stack_sizing,                  StackSizing),
     COMPUTED_STYLE_MAP_ENTRY(_moz_tab_size,                 TabSize),
     COMPUTED_STYLE_MAP_ENTRY(text_align_last,               TextAlignLast),
+    COMPUTED_STYLE_MAP_ENTRY(text_blink,                    MozTextBlink),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration_color,         TextDecorationColor),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration_line,          TextDecorationLine),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration_style,         TextDecorationStyle),
