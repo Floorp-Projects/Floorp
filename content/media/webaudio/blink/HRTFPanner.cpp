@@ -22,20 +22,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
+#include "HRTFPanner.h"
 
-#if ENABLE(WEB_AUDIO)
-
-#include "core/platform/audio/HRTFPanner.h"
-
-#include <algorithm>
-#include "core/platform/audio/AudioBus.h"
-#include "core/platform/audio/FFTConvolver.h"
-#include "core/platform/audio/HRTFDatabase.h"
-#include <wtf/MathExtras.h>
-#include <wtf/RefPtr.h>
+#include "FFTConvolver.h"
+#include "HRTFDatabase.h"
+#include "WebAudioUtils.h"
 
 using namespace std;
+using namespace mozilla;
+using mozilla::dom::WebAudioUtils;
 
 namespace WebCore {
 
@@ -47,8 +42,7 @@ const int UninitializedAzimuth = -1;
 const unsigned RenderingQuantum = 128;
 
 HRTFPanner::HRTFPanner(float sampleRate, HRTFDatabaseLoader* databaseLoader)
-    : Panner(PanningModelHRTF)
-    , m_databaseLoader(databaseLoader)
+    : m_databaseLoader(databaseLoader)
     , m_sampleRate(sampleRate)
     , m_crossfadeSelection(CrossfadeSelection1)
     , m_azimuthIndex1(UninitializedAzimuth)
@@ -58,17 +52,19 @@ HRTFPanner::HRTFPanner(float sampleRate, HRTFDatabaseLoader* databaseLoader)
     , m_crossfadeX(0)
     , m_crossfadeIncr(0)
     , m_convolverL1(HRTFElevation::fftSizeForSampleRate(sampleRate))
-    , m_convolverR1(convolverL1.fftSize())
-    , m_convolverL2(convolverL1.fftSize())
-    , m_convolverR2(convolverL1.fftSize())
-    , m_delayLineL(MaxDelayTimeSeconds, sampleRate)
-    , m_delayLineR(MaxDelayTimeSeconds, sampleRate)
-    , m_tempL1(RenderingQuantum)
-    , m_tempR1(RenderingQuantum)
-    , m_tempL2(RenderingQuantum)
-    , m_tempR2(RenderingQuantum)
+    , m_convolverR1(m_convolverL1.fftSize())
+    , m_convolverL2(m_convolverL1.fftSize())
+    , m_convolverR2(m_convolverL1.fftSize())
+    , m_delayLineL(ceilf(MaxDelayTimeSeconds * sampleRate),
+                   WebAudioUtils::ComputeSmoothingRate(0.02, sampleRate))
+    , m_delayLineR(ceilf(MaxDelayTimeSeconds * sampleRate),
+                   WebAudioUtils::ComputeSmoothingRate(0.02, sampleRate))
 {
-    ASSERT(databaseLoader);
+    MOZ_ASSERT(databaseLoader);
+    m_tempL1.SetLength(RenderingQuantum);
+    m_tempR1.SetLength(RenderingQuantum);
+    m_tempL2.SetLength(RenderingQuantum);
+    m_tempR2.SetLength(RenderingQuantum);
 }
 
 HRTFPanner::~HRTFPanner()
@@ -81,8 +77,8 @@ void HRTFPanner::reset()
     m_convolverR1.reset();
     m_convolverL2.reset();
     m_convolverR2.reset();
-    m_delayLineL.reset();
-    m_delayLineR.reset();
+    m_delayLineL.Reset();
+    m_delayLineR.Reset();
 }
 
 int HRTFPanner::calculateDesiredAzimuthIndexAndBlend(double azimuth, double& azimuthBlend)
@@ -93,7 +89,7 @@ int HRTFPanner::calculateDesiredAzimuthIndexAndBlend(double azimuth, double& azi
         azimuth += 360.0;
 
     HRTFDatabase* database = m_databaseLoader->database();
-    ASSERT(database);
+    MOZ_ASSERT(database);
 
     int numberOfAzimuths = database->numberOfAzimuths();
     const double angleBetweenAzimuths = 360.0 / numberOfAzimuths;
@@ -110,26 +106,28 @@ int HRTFPanner::calculateDesiredAzimuthIndexAndBlend(double azimuth, double& azi
     return desiredAzimuthIndex;
 }
 
-void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioBus* inputBus, AudioBus* outputBus, size_t framesToProcess)
+void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* inputBus, AudioChunk* outputBus, TrackTicks framesToProcess)
 {
-    unsigned numInputChannels = inputBus ? inputBus->numberOfChannels() : 0;
+    unsigned numInputChannels =
+        inputBus->IsNull() ? 0 : inputBus->mChannelData.Length();
 
     bool isInputGood = inputBus &&  numInputChannels >= 1 && numInputChannels <= 2;
-    ASSERT(isInputGood);
+    MOZ_ASSERT(isInputGood);
+    MOZ_ASSERT(framesToProcess <= inputBus->mDuration);
 
-    bool isOutputGood = outputBus && outputBus->numberOfChannels() == 2 && framesToProcess <= outputBus->length();
-    ASSERT(isOutputGood);
+    bool isOutputGood = outputBus && outputBus->mChannelData.Length() == 2 && framesToProcess <= outputBus->mDuration;
+    MOZ_ASSERT(isOutputGood);
 
     if (!isInputGood || !isOutputGood) {
         if (outputBus)
-            outputBus->zero();
+            outputBus->SetNull(outputBus->mDuration);
         return;
     }
 
     HRTFDatabase* database = m_databaseLoader->database();
-    ASSERT(database);
+    MOZ_ASSERT(database);
     if (!database) {
-        outputBus->zero();
+        outputBus->SetNull(outputBus->mDuration);
         return;
     }
 
@@ -137,22 +135,23 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioBus* in
     double azimuth = -desiredAzimuth;
 
     bool isAzimuthGood = azimuth >= -180.0 && azimuth <= 180.0;
-    ASSERT(isAzimuthGood);
+    MOZ_ASSERT(isAzimuthGood);
     if (!isAzimuthGood) {
-        outputBus->zero();
+        outputBus->SetNull(outputBus->mDuration);
         return;
     }
 
     // Normally, we'll just be dealing with mono sources.
     // If we have a stereo input, implement stereo panning with left source processed by left HRTF, and right source by right HRTF.
-    const AudioChannel* inputChannelL = inputBus->channelByType(AudioBus::ChannelLeft);
-    const AudioChannel* inputChannelR = numInputChannels > 1 ? inputBus->channelByType(AudioBus::ChannelRight) : 0;
 
     // Get source and destination pointers.
-    const float* sourceL = inputChannelL->data();
-    const float* sourceR = numInputChannels > 1 ? inputChannelR->data() : sourceL;
-    float* destinationL = outputBus->channelByType(AudioBus::ChannelLeft)->mutableData();
-    float* destinationR = outputBus->channelByType(AudioBus::ChannelRight)->mutableData();
+    const float* sourceL = static_cast<const float*>(inputBus->mChannelData[0]);
+    const float* sourceR = numInputChannels > 1 ?
+        static_cast<const float*>(inputBus->mChannelData[1]) : sourceL;
+    float* destinationL =
+        static_cast<float*>(const_cast<void*>(outputBus->mChannelData[0]));
+    float* destinationR =
+        static_cast<float*>(const_cast<void*>(outputBus->mChannelData[1]));
 
     double azimuthBlend;
     int desiredAzimuthIndex = calculateDesiredAzimuthIndexAndBlend(azimuth, azimuthBlend);
@@ -191,8 +190,8 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioBus* in
     }
 
     // This algorithm currently requires that we process in power-of-two size chunks at least RenderingQuantum.
-    ASSERT(1UL << static_cast<int>(log2(framesToProcess)) == framesToProcess);
-    ASSERT(framesToProcess >= RenderingQuantum);
+    MOZ_ASSERT(framesToProcess && 0 == (framesToProcess & (framesToProcess - 1)));
+    MOZ_ASSERT(framesToProcess >= RenderingQuantum);
 
     const unsigned framesPerSegment = RenderingQuantum;
     const unsigned numberOfSegments = framesToProcess / framesPerSegment;
@@ -211,14 +210,14 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioBus* in
         database->getKernelsFromAzimuthElevation(azimuthBlend, m_azimuthIndex2, m_elevation2, kernelL2, kernelR2, frameDelayL2, frameDelayR2);
 
         bool areKernelsGood = kernelL1 && kernelR1 && kernelL2 && kernelR2;
-        ASSERT(areKernelsGood);
+        MOZ_ASSERT(areKernelsGood);
         if (!areKernelsGood) {
-            outputBus->zero();
+            outputBus->SetNull(outputBus->mDuration);
             return;
         }
 
-        ASSERT(frameDelayL1 / sampleRate() < MaxDelayTimeSeconds && frameDelayR1 / sampleRate() < MaxDelayTimeSeconds);
-        ASSERT(frameDelayL2 / sampleRate() < MaxDelayTimeSeconds && frameDelayR2 / sampleRate() < MaxDelayTimeSeconds);
+        MOZ_ASSERT(frameDelayL1 / sampleRate() < MaxDelayTimeSeconds && frameDelayR1 / sampleRate() < MaxDelayTimeSeconds);
+        MOZ_ASSERT(frameDelayL2 / sampleRate() < MaxDelayTimeSeconds && frameDelayR2 / sampleRate() < MaxDelayTimeSeconds);
 
         // Crossfade inter-aural delays based on transitions.
         double frameDelayL = (1 - m_crossfadeX) * frameDelayL1 + m_crossfadeX * frameDelayL2;
@@ -232,18 +231,16 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioBus* in
         float* segmentDestinationR = destinationR + offset;
 
         // First run through delay lines for inter-aural time difference.
-        m_delayLineL.setDelayFrames(frameDelayL);
-        m_delayLineR.setDelayFrames(frameDelayR);
-        m_delayLineL.process(segmentSourceL, segmentDestinationL, framesPerSegment);
-        m_delayLineR.process(segmentSourceR, segmentDestinationR, framesPerSegment);
+        m_delayLineL.Process(frameDelayL, &segmentSourceL, &segmentDestinationL, 1, framesPerSegment);
+        m_delayLineR.Process(frameDelayR, &segmentSourceR, &segmentDestinationR, 1, framesPerSegment);
 
         bool needsCrossfading = m_crossfadeIncr;
         
         // Have the convolvers render directly to the final destination if we're not cross-fading.
-        float* convolutionDestinationL1 = needsCrossfading ? m_tempL1.data() : segmentDestinationL;
-        float* convolutionDestinationR1 = needsCrossfading ? m_tempR1.data() : segmentDestinationR;
-        float* convolutionDestinationL2 = needsCrossfading ? m_tempL2.data() : segmentDestinationL;
-        float* convolutionDestinationR2 = needsCrossfading ? m_tempR2.data() : segmentDestinationR;
+        float* convolutionDestinationL1 = needsCrossfading ? m_tempL1.Elements() : segmentDestinationL;
+        float* convolutionDestinationR1 = needsCrossfading ? m_tempR1.Elements() : segmentDestinationR;
+        float* convolutionDestinationL2 = needsCrossfading ? m_tempL2.Elements() : segmentDestinationL;
+        float* convolutionDestinationR2 = needsCrossfading ? m_tempR2.Elements() : segmentDestinationR;
 
         // Now do the convolutions.
         // Note that we avoid doing convolutions on both sets of convolvers if we're not currently cross-fading.
@@ -301,5 +298,3 @@ double HRTFPanner::latencyTime() const
 }
 
 } // namespace WebCore
-
-#endif // ENABLE(WEB_AUDIO)
