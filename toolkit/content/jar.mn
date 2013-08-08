@@ -14,6 +14,9 @@ toolkit.jar:
    content/global/aboutAbout.xhtml            (aboutAbout.xhtml)
    content/global/aboutRights.xhtml           (aboutRights.xhtml)
    content/global/aboutRights-unbranded.xhtml (aboutRights-unbranded.xhtml)
+   content/global/aboutNetworking.js
+   content/global/aboutNetworking.xhtml
+   content/global/aboutNetworking.css
 *  content/global/aboutSupport.js
 *  content/global/aboutSupport.xhtml
 *  content/global/aboutTelemetry.js
