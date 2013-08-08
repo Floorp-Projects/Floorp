@@ -1244,6 +1244,11 @@ protected:
 
   bool mCleanedUp;
 
+#ifdef MOZ_B2G
+  bool mNetworkUploadObserverEnabled;
+  bool mNetworkDownloadObserverEnabled;
+#endif // MOZ_B2G
+
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
   nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*> mCachedXBLPrototypeHandlers;
