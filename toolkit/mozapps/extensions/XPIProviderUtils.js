@@ -43,6 +43,8 @@ const FILE_XPI_ADDONS_LIST            = "extensions.ini";
 // The value for this is in Makefile.in
 #expand const DB_SCHEMA                       = __MOZ_EXTENSIONS_DB_SCHEMA__;
 
+// The last version of DB_SCHEMA implemented in SQLITE
+const LAST_SQLITE_DB_SCHEMA           = 14;
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
 const PREF_EM_ENABLED_ADDONS          = "extensions.enabledAddons";
@@ -469,26 +471,21 @@ this.XPIDatabase = {
    *              {location: {id1:{addon1}, id2:{addon2}}, location2:{...}, ...}
    *              if there is useful information
    */
-  loadSqliteData: function XPIDB_loadSqliteData() {
+  getMigrateDataFromSQLITE: function XPIDB_getMigrateDataFromSQLITE() {
     let connection = null;
     let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-    if (!dbfile.exists()) {
-      return false;
-    }
     // Attempt to open the database
     try {
       connection = Services.storage.openUnsharedDatabase(dbfile);
     }
     catch (e) {
-      // exists but SQLITE can't open it
       WARN("Failed to open sqlite database " + dbfile.path + " for upgrade", e);
-      this.migrateData = null;
-      return true;
+      return null;
     }
     LOG("Migrating data from sqlite");
-    this.migrateData = this.getMigrateDataFromDatabase(connection);
+    let migrateData = this.getMigrateDataFromDatabase(connection);
     connection.close();
-    return true;
+    return migrateData;
   },
 
   /**
@@ -578,13 +575,18 @@ this.XPIDatabase = {
     }
     catch (e) {
       if (e.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
-        // XXX re-implement logic to decide whether to upgrade database
-        // by checking the DB_SCHEMA_VERSION preference.
-        // Fall back to attempting database upgrades
-        WARN("Extensions database not found; attempting to upgrade");
-        // See if there is SQLITE to migrate from
-        if (!this.loadSqliteData()) {
-          // Nope, try RDF
+        try {
+          let schemaVersion = Services.prefs.getIntPref(PREF_DB_SCHEMA);
+          if (schemaVersion <= LAST_SQLITE_DB_SCHEMA) {
+            // we should have an older SQLITE database
+            this.migrateData = this.getMigrateDataFromSQLITE();
+          }
+          // else we've upgraded before but the JSON file is gone, fall through
+          // and rebuild from scratch
+        }
+        catch(e) {
+          // No schema version pref means either a really old upgrade (RDF) or
+          // a new profile
           this.migrateData = this.getMigrateDataFromRDF();
         }
 
@@ -595,6 +597,7 @@ this.XPIDatabase = {
             " exists but is not readable; rebuilding in memory", e);
         // XXX open question - if we can overwrite at save time, should we, or should we
         // leave the locked database in case we can recover from it next time we start up?
+        // The old code made one attempt to remove the locked file before it rebuilt in memory
         this.lockedDatabase = true;
         // XXX TELEMETRY report when this happens?
         this.rebuildDatabase(aRebuildOnError);
