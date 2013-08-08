@@ -1446,16 +1446,6 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
   }
 }
 
-void MediaDecoderStateMachine::UpdateDuration(int64_t aDuration)
-{
-  if (aDuration != GetDuration()) {
-    SetDuration(aDuration);
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-  }
-}
-
 void MediaDecoderStateMachine::SetMediaEndTime(int64_t aEndTime)
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread");
