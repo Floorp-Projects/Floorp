@@ -949,40 +949,6 @@ exports.testOnLoadEventWithImage = function(test) {
   });
 };
 
-exports.testOnPageShowEvent = function (test) {
-  test.waitUntilDone();
-
-  let firstUrl = 'data:text/html;charset=utf-8,First';
-  let secondUrl = 'data:text/html;charset=utf-8,Second';
-
-  openBrowserWindow(function(window, browser) {
-    let counter = 0;
-    tabs.on('pageshow', function onPageShow(tab, persisted) {
-      counter++;
-      if (counter === 1) {
-        test.assert(!persisted, 'page should not be cached on initial load');
-        tab.url = secondUrl;
-      }
-      else if (counter === 2) {
-        test.assert(!persisted, 'second test page should not be cached either');
-        tab.attach({
-          contentScript: 'setTimeout(function () { window.history.back(); }, 0)'
-        });
-      }
-      else {
-        test.assert(persisted, 'when we get back to the fist page, it has to' +
-                               'come from cache');
-        tabs.removeListener('pageshow', onPageShow);
-        closeBrowserWindow(window, function() test.done());
-      }
-    });
-
-    tabs.open({
-      url: firstUrl
-    });
-  });
-};
-
 exports.testFaviconGetterDeprecation = function (test) {
   const { LoaderWithHookedConsole } = require("sdk/test/loader");
   let { loader, messages } = LoaderWithHookedConsole(module);

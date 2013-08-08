@@ -4,6 +4,12 @@
 
 "use strict";
 
+module.metadata = {
+  engines: {
+    "Firefox": "*"
+  }
+};
+
 const { Loader } = require("sdk/test/loader");
 const { open, getMostRecentBrowserWindow, getOuterId } = require("sdk/window/utils");
 const { setTimeout } = require("sdk/timers");
