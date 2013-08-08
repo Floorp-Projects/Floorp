@@ -6,94 +6,92 @@
 
 const apiUtils = require("sdk/deprecated/api-utils");
 
-exports.testPublicConstructor = function (assert) {
+exports.testPublicConstructor = function (test) {
   function PrivateCtor() {}
   PrivateCtor.prototype = {};
 
   let PublicCtor = apiUtils.publicConstructor(PrivateCtor);
-  assert.ok(
+  test.assert(
     PrivateCtor.prototype.isPrototypeOf(PublicCtor.prototype),
     "PrivateCtor.prototype should be prototype of PublicCtor.prototype"
   );
 
   function testObj(useNew) {
     let obj = useNew ? new PublicCtor() : PublicCtor();
-    assert.ok(obj instanceof PublicCtor,
+    test.assert(obj instanceof PublicCtor,
                 "Object should be instance of PublicCtor");
-    assert.ok(obj instanceof PrivateCtor,
+    test.assert(obj instanceof PrivateCtor,
                 "Object should be instance of PrivateCtor");
-    assert.ok(PublicCtor.prototype.isPrototypeOf(obj),
+    test.assert(PublicCtor.prototype.isPrototypeOf(obj),
                 "PublicCtor's prototype should be prototype of object");
-    assert.equal(obj.constructor, PublicCtor,
+    test.assertEqual(obj.constructor, PublicCtor,
                      "Object constructor should be PublicCtor");
   }
   testObj(true);
   testObj(false);
 };
 
-exports.testValidateOptionsEmpty = function (assert) {
+exports.testValidateOptionsEmpty = function (test) {
   let val = apiUtils.validateOptions(null, {});
-
-  assert.deepEqual(val, {});
+  assertObjsEqual(test, val, {});
 
   val = apiUtils.validateOptions(null, { foo: {} });
-  assert.deepEqual(val, {});
+  assertObjsEqual(test, val, {});
 
   val = apiUtils.validateOptions({}, {});
-  assert.deepEqual(val, {});
+  assertObjsEqual(test, val, {});
 
   val = apiUtils.validateOptions({}, { foo: {} });
-  assert.deepEqual(val, {});
+  assertObjsEqual(test, val, {});
 };
 
-exports.testValidateOptionsNonempty = function (assert) {
+exports.testValidateOptionsNonempty = function (test) {
   let val = apiUtils.validateOptions({ foo: 123 }, {});
-  assert.deepEqual(val, {});
+  assertObjsEqual(test, val, {});
 
   val = apiUtils.validateOptions({ foo: 123, bar: 456 },
                                  { foo: {}, bar: {}, baz: {} });
-
-  assert.deepEqual(val, { foo: 123, bar: 456 });
+  assertObjsEqual(test, val, { foo: 123, bar: 456 });
 };
 
-exports.testValidateOptionsMap = function (assert) {
+exports.testValidateOptionsMap = function (test) {
   let val = apiUtils.validateOptions({ foo: 3, bar: 2 }, {
     foo: { map: function (v) v * v },
     bar: { map: function (v) undefined }
   });
-  assert.deepEqual(val, { foo: 9, bar: undefined });
+  assertObjsEqual(test, val, { foo: 9, bar: undefined });
 };
 
-exports.testValidateOptionsMapException = function (assert) {
+exports.testValidateOptionsMapException = function (test) {
   let val = apiUtils.validateOptions({ foo: 3 }, {
     foo: { map: function () { throw new Error(); }}
   });
-  assert.deepEqual(val, { foo: 3 });
+  assertObjsEqual(test, val, { foo: 3 });
 };
 
-exports.testValidateOptionsOk = function (assert) {
+exports.testValidateOptionsOk = function (test) {
   let val = apiUtils.validateOptions({ foo: 3, bar: 2, baz: 1 }, {
     foo: { ok: function (v) v },
     bar: { ok: function (v) v }
   });
-  assert.deepEqual(val, { foo: 3, bar: 2 });
+  assertObjsEqual(test, val, { foo: 3, bar: 2 });
 
-  assert.throws(
+  test.assertRaises(
     function () apiUtils.validateOptions({ foo: 2, bar: 2 }, {
       bar: { ok: function (v) v > 2 }
     }),
-    /^The option "bar" is invalid/,
+    'The option "bar" is invalid.',
     "ok should raise exception on invalid option"
   );
 
-  assert.throws(
+  test.assertRaises(
     function () apiUtils.validateOptions(null, { foo: { ok: function (v) v }}),
-    /^The option "foo" is invalid/,
+    'The option "foo" is invalid.',
     "ok should raise exception on invalid option"
   );
 };
 
-exports.testValidateOptionsIs = function (assert) {
+exports.testValidateOptionsIs = function (test) {
   let opts = {
     array: [],
     boolean: true,
@@ -116,137 +114,18 @@ exports.testValidateOptionsIs = function (assert) {
     undef2: { is: ["undefined"] }
   };
   let val = apiUtils.validateOptions(opts, requirements);
-  assert.deepEqual(val, opts);
+  assertObjsEqual(test, val, opts);
 
-  assert.throws(
+  test.assertRaises(
     function () apiUtils.validateOptions(null, {
       foo: { is: ["object", "number"] }
     }),
-    /^The option "foo" must be one of the following types: object, number/,
+    'The option "foo" must be one of the following types: object, number',
     "Invalid type should raise exception"
   );
 };
 
-exports.testValidateOptionsIsWithExportedValue = function (assert) {
-  let { string, number, boolean, object } = apiUtils;
-
-  let opts = {
-    boolean: true,
-    number: 1337,
-    object: {},
-    string: "foo"
-  };
-  let requirements = {
-    string: { is: string },
-    number: { is: number },
-    boolean: { is: boolean },
-    object: { is: object }
-  };
-  let val = apiUtils.validateOptions(opts, requirements);
-  assert.deepEqual(val, opts);
-
-  // Test the types are optional by default
-  val = apiUtils.validateOptions({foo: 'bar'}, requirements);
-  assert.deepEqual(val, {});
-};
-
-exports.testValidateOptionsIsWithEither = function (assert) {
-  let { string, number, boolean, either } = apiUtils;
-  let text = { is: either(string, number) };
-
-  let requirements = {
-    text: text,
-    boolOrText: { is: either(text, boolean) }
-  };
-
-  let val = apiUtils.validateOptions({text: 12}, requirements);
-  assert.deepEqual(val, {text: 12});
-
-  val = apiUtils.validateOptions({text: "12"}, requirements);
-  assert.deepEqual(val, {text: "12"});
-
-  val = apiUtils.validateOptions({boolOrText: true}, requirements);
-  assert.deepEqual(val, {boolOrText: true});
-
-  val = apiUtils.validateOptions({boolOrText: "true"}, requirements);
-  assert.deepEqual(val, {boolOrText: "true"});
-
-  val = apiUtils.validateOptions({boolOrText: 1}, requirements);
-  assert.deepEqual(val, {boolOrText: 1});
-
-  assert.throws(
-    () => apiUtils.validateOptions({text: true}, requirements),
-    /^The option "text" must be one of the following types/,
-    "Invalid type should raise exception"
-  );
-
-  assert.throws(
-    () => apiUtils.validateOptions({boolOrText: []}, requirements),
-    /^The option "boolOrText" must be one of the following types/,
-    "Invalid type should raise exception"
-  );
-};
-
-exports.testValidateOptionsWithRequiredAndOptional = function (assert) {
-  let { string, number, required, optional } = apiUtils;
-
-  let opts = {
-    number: 1337,
-    string: "foo"
-  };
-
-  let requirements = {
-    string: required(string),
-    number: number
-  };
-
-  let val = apiUtils.validateOptions(opts, requirements);
-  assert.deepEqual(val, opts);
-
-  val = apiUtils.validateOptions({string: "foo"}, requirements);
-  assert.deepEqual(val, {string: "foo"});
-
-  assert.throws(
-    () => apiUtils.validateOptions({number: 10}, requirements),
-    /^The option "string" must be one of the following types/,
-    "Invalid type should raise exception"
-  );
-
-  // Makes string optional
-  requirements.string = optional(requirements.string);
-
-  val = apiUtils.validateOptions({number: 10}, requirements),
-  assert.deepEqual(val, {number: 10});
-
-};
-
-
-
-exports.testValidateOptionsWithExportedValue = function (assert) {
-  let { string, number, boolean, object } = apiUtils;
-
-  let opts = {
-    boolean: true,
-    number: 1337,
-    object: {},
-    string: "foo"
-  };
-  let requirements = {
-    string: string,
-    number: number,
-    boolean: boolean,
-    object: object
-  };
-  let val = apiUtils.validateOptions(opts, requirements);
-  assert.deepEqual(val, opts);
-
-  // Test the types are optional by default
-  val = apiUtils.validateOptions({foo: 'bar'}, requirements);
-  assert.deepEqual(val, {});
-};
-
-
-exports.testValidateOptionsMapIsOk = function (assert) {
+exports.testValidateOptionsMapIsOk = function (test) {
   let [map, is, ok] = [false, false, false];
   let val = apiUtils.validateOptions({ foo: 1337 }, {
     foo: {
@@ -255,48 +134,48 @@ exports.testValidateOptionsMapIsOk = function (assert) {
       ok: function (v) v.length > 0
     }
   });
-  assert.deepEqual(val, { foo: "1337" });
+  assertObjsEqual(test, val, { foo: "1337" });
 
   let requirements = {
     foo: {
       is: ["object"],
-      ok: function () assert.fail("is should have caused us to throw by now")
+      ok: function () test.fail("is should have caused us to throw by now")
     }
   };
-  assert.throws(
+  test.assertRaises(
     function () apiUtils.validateOptions(null, requirements),
-    /^The option "foo" must be one of the following types: object/,
+    'The option "foo" must be one of the following types: object',
     "is should be used before ok is called"
   );
 };
 
-exports.testValidateOptionsErrorMsg = function (assert) {
-  assert.throws(
+exports.testValidateOptionsErrorMsg = function (test) {
+  test.assertRaises(
     function () apiUtils.validateOptions(null, {
       foo: { ok: function (v) v, msg: "foo!" }
     }),
-    /^foo!/,
+    "foo!",
     "ok should raise exception with customized message"
   );
 };
 
-exports.testValidateMapWithMissingKey = function (assert) {
+exports.testValidateMapWithMissingKey = function (test) {
   let val = apiUtils.validateOptions({ }, {
     foo: {
       map: function (v) v || "bar"
     }
   });
-  assert.deepEqual(val, { foo: "bar" });
+  assertObjsEqual(test, val, { foo: "bar" });
 
   val = apiUtils.validateOptions({ }, {
     foo: {
       map: function (v) { throw "bar" }
     }
   });
-  assert.deepEqual(val, { });
+  assertObjsEqual(test, val, { });
 };
 
-exports.testValidateMapWithMissingKeyAndThrown = function (assert) {
+exports.testValidateMapWithMissingKeyAndThrown = function (test) {
   let val = apiUtils.validateOptions({}, {
     bar: {
       map: function(v) { throw "bar" }
@@ -305,10 +184,10 @@ exports.testValidateMapWithMissingKeyAndThrown = function (assert) {
       map: function(v) "foo"
     }
   });
-  assert.deepEqual(val, { baz: "foo" });
+  assertObjsEqual(test, val, { baz: "foo" });
 };
 
-exports.testAddIterator = function testAddIterator (assert) {
+exports.testAddIterator = function testAddIterator(test) {
   let obj = {};
   let keys = ["foo", "bar", "baz"];
   let vals = [1, 2, 3];
@@ -324,20 +203,34 @@ exports.testAddIterator = function testAddIterator (assert) {
   let keysItr = [];
   for (let key in obj)
     keysItr.push(key);
-
-  assert.equal(keysItr.length, keys.length,
+  test.assertEqual(keysItr.length, keys.length,
                    "the keys iterator returns the correct number of items");
   for (let i = 0; i < keys.length; i++)
-    assert.equal(keysItr[i], keys[i], "the key is correct");
+    test.assertEqual(keysItr[i], keys[i], "the key is correct");
 
   let valsItr = [];
   for each (let val in obj)
     valsItr.push(val);
-  assert.equal(valsItr.length, vals.length,
+  test.assertEqual(valsItr.length, vals.length,
                    "the vals iterator returns the correct number of items");
   for (let i = 0; i < vals.length; i++)
-    assert.equal(valsItr[i], vals[i], "the val is correct");
+    test.assertEqual(valsItr[i], vals[i], "the val is correct");
 
 };
 
-require('test').run(exports);
+function assertObjsEqual(test, obj1, obj2) {
+  var items = 0;
+  for (let key in obj1) {
+    items++;
+    test.assert(key in obj2, "obj1 key should be present in obj2");
+    test.assertEqual(obj2[key], obj1[key], "obj1 value should match obj2 value");
+  }
+  for (let key in obj2) {
+    items++;
+    test.assert(key in obj1, "obj2 key should be present in obj1");
+    test.assertEqual(obj1[key], obj2[key], "obj2 value should match obj1 value");
+  }
+  if (!items)
+    test.assertEqual(JSON.stringify(obj1), JSON.stringify(obj2),
+                     "obj1 should have same JSON representation as obj2");
+}

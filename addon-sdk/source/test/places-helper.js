@@ -106,13 +106,6 @@ function addVisits (urls) {
 }
 exports.addVisits = addVisits;
 
-function removeVisits (urls) {
-  [].concat(urls).map(url => {
-    hsrv.removePage(newURI(url));
-  });
-}
-exports.removeVisits = removeVisits;
-
 // Creates a mozIVisitInfo object
 function createVisit (url) {
   let place = {}

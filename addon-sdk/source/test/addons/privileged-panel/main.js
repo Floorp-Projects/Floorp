@@ -4,14 +4,10 @@
 
 "use strict";
 
-const app = require("sdk/system/xul-app");
+const { Panel } = require("sdk/panel")
+const { data } = require("sdk/self")
 
-exports["test addon globa"] = app.is("Firefox") ? testAddonGlobal : unsupported;
-
-function testAddonGlobal (assert, done) {
-  const { Panel } = require("sdk/panel")
-  const { data } = require("sdk/self")
-
+exports["test addon global"] = function(assert, done) {
   let panel = Panel({
     contentURL: //"data:text/html,now?",
                 data.url("./index.html"),
@@ -21,14 +17,10 @@ function testAddonGlobal (assert, done) {
       done();
     },
     onError: function(error) {
-      assert.fail(Error("failed to recieve message"));
+      asser.fail(Error("failed to recieve message"));
       done();
     }
   });
 };
-
-function unsupported (assert) {
-  assert.pass("privileged-panel unsupported on platform");
-}
 
 require("sdk/test/runner").runTestsFromModule(module);
