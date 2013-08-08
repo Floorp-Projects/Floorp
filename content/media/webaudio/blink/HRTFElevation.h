@@ -39,6 +39,9 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
+struct SpeexResamplerState_;
+typedef struct SpeexResamplerState_ SpeexResamplerState;
+
 namespace WebCore {
 
 // HRTFElevation contains all of the HRTFKernels (one left ear and one right ear per azimuth angle) for a particular elevation.
@@ -63,15 +66,6 @@ public:
     // The interpolated delays based on azimuthBlend: 0 -> 1 are returned in frameDelayL and frameDelayR.
     void getKernelsFromAzimuth(double azimuthBlend, unsigned azimuthIndex, HRTFKernel* &kernelL, HRTFKernel* &kernelR, double& frameDelayL, double& frameDelayR);
     
-    // Spacing, in degrees, between every azimuth loaded from resource.
-    static const unsigned AzimuthSpacing;
-    
-    // Number of azimuths loaded from resource.
-    static const unsigned NumberOfRawAzimuths;
-
-    // Interpolates by this factor to get the total number of azimuths from every azimuth loaded from resource.
-    static const unsigned InterpolationFactor;
-    
     // Total number of azimuths after interpolation.
     static const unsigned NumberOfTotalAzimuths;
 
@@ -89,10 +83,11 @@ private:
     HRTFKernelList* kernelListL() { return m_kernelListL.get(); }
 
     // Given a specific azimuth and elevation angle, returns the left HRTFKernel.
-    // Valid values for azimuth are 0 -> 345 in 15 degree increments.
+    // Values for azimuth must be multiples of 15 in 0 -> 345,
+    // but not all azimuths are available for elevations > +45.
     // Valid values for elevation are -45 -> +90 in 15 degree increments.
     // Returns true on success.
-    static bool calculateKernelForAzimuthElevation(int azimuth, int elevation, float sampleRate, const String& subjectName,
+    static bool calculateKernelForAzimuthElevation(int azimuth, int elevation, SpeexResamplerState* resampler, float sampleRate,
                                                    RefPtr<HRTFKernel>& kernelL);
 
     OwnPtr<HRTFKernelList> m_kernelListL;
