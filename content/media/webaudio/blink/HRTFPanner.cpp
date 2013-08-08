@@ -57,10 +57,10 @@ HRTFPanner::HRTFPanner(float sampleRate, HRTFDatabaseLoader* databaseLoader)
     , m_elevation2(0)
     , m_crossfadeX(0)
     , m_crossfadeIncr(0)
-    , m_convolverL1(fftSizeForSampleRate(sampleRate))
-    , m_convolverR1(fftSizeForSampleRate(sampleRate))
-    , m_convolverL2(fftSizeForSampleRate(sampleRate))
-    , m_convolverR2(fftSizeForSampleRate(sampleRate))
+    , m_convolverL1(HRTFElevation::fftSizeForSampleRate(sampleRate))
+    , m_convolverR1(convolverL1.fftSize())
+    , m_convolverL2(convolverL1.fftSize())
+    , m_convolverR2(convolverL1.fftSize())
     , m_delayLineL(MaxDelayTimeSeconds, sampleRate)
     , m_delayLineR(MaxDelayTimeSeconds, sampleRate)
     , m_tempL1(RenderingQuantum)
@@ -73,15 +73,6 @@ HRTFPanner::HRTFPanner(float sampleRate, HRTFDatabaseLoader* databaseLoader)
 
 HRTFPanner::~HRTFPanner()
 {
-}
-
-size_t HRTFPanner::fftSizeForSampleRate(float sampleRate)
-{
-    // The HRTF impulse responses (loaded as audio resources) are 512 sample-frames @44.1KHz.
-    // Currently, we truncate the impulse responses to half this size, but an FFT-size of twice impulse response size is needed (for convolution).
-    // So for sample rates around 44.1KHz an FFT size of 512 is good. We double the FFT-size only for sample rates at least double this.
-    ASSERT(sampleRate >= 44100 && sampleRate <= 96000.0);
-    return (sampleRate < 88200.0) ? 512 : 1024;
 }
 
 void HRTFPanner::reset()
