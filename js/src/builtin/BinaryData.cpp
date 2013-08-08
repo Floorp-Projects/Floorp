@@ -23,6 +23,8 @@
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 
+using mozilla::DebugOnly;
+
 using namespace js;
 
 /*
@@ -1552,7 +1554,7 @@ StructType::layout(JSContext *cx, HandleObject structType, HandleObject fields)
 
         // If the field type is a BinaryType and we can't get its bytes, we have a problem.
         RootedValue fieldTypeBytes(cx);
-        bool r = JSObject::getProperty(cx, fieldType, fieldType, cx->names().bytes, &fieldTypeBytes);
+        DebugOnly<bool> r = JSObject::getProperty(cx, fieldType, fieldType, cx->names().bytes, &fieldTypeBytes);
         JS_ASSERT(r);
 
         JS_ASSERT(fieldTypeBytes.isInt32());

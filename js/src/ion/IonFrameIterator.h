@@ -480,6 +480,15 @@ class InlineFrameIteratorMaybeGC
 
     void resetOn(const IonFrameIterator *iter);
 
+    const IonFrameIterator &frame() const {
+        return *frame_;
+    }
+
+    // Inline frame number, 0 for the outermost (non-inlined) frame.
+    size_t frameNo() const {
+        return start_.frameCount() - framesRead_;
+    }
+
   private:
     InlineFrameIteratorMaybeGC() MOZ_DELETE;
     InlineFrameIteratorMaybeGC(const InlineFrameIteratorMaybeGC &iter) MOZ_DELETE;

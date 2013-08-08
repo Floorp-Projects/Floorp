@@ -56,6 +56,12 @@ ion::SplitCriticalEdges(MIRGraph &graph)
 bool
 ion::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
 {
+    // If we are compiling try blocks, locals and arguments may be observable
+    // from catch or finally blocks (which Ion does not compile). For now just
+    // disable the pass in this case.
+    if (graph.hasTryBlock())
+        return true;
+
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
         if (mir->shouldCancel("Eliminate Dead Resume Point Operands (main loop)"))
             return false;
