@@ -26,106 +26,74 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-
-#if ENABLE(WEB_AUDIO)
-
-#include "core/platform/audio/HRTFKernel.h"
-
-#include "core/platform/FloatConversion.h"
-#include "core/platform/PlatformMemoryInstrumentation.h"
-#include "core/platform/audio/AudioChannel.h"
-#include "core/platform/audio/FFTFrame.h"
-#include <wtf/MathExtras.h>
-
-using namespace std;
-
+#include "HRTFKernel.h"
 namespace WebCore {
 
-// Takes the input AudioChannel as an input impulse response and calculates the average group delay.
+// Takes the input audio channel |impulseP| as an input impulse response and calculates the average group delay.
 // This represents the initial delay before the most energetic part of the impulse response.
-// The sample-frame delay is removed from the impulseP impulse response, and this value  is returned.
-// the length of the passed in AudioChannel must be a power of 2.
-static float extractAverageGroupDelay(AudioChannel* channel, size_t analysisFFTSize)
+// The sample-frame delay is removed from the |impulseP| impulse response, and this value  is returned.
+// The |length| of the passed in |impulseP| must be must be a power of 2.
+static float extractAverageGroupDelay(float* impulseP, size_t length)
 {
-    ASSERT(channel);
-        
-    float* impulseP = channel->mutableData();
-    
-    bool isSizeGood = channel->length() >= analysisFFTSize;
-    ASSERT(isSizeGood);
-    if (!isSizeGood)
-        return 0;
-    
     // Check for power-of-2.
-    ASSERT(1UL << static_cast<unsigned>(log2(analysisFFTSize)) == analysisFFTSize);
+    MOZ_ASSERT(length && (length & (length - 1)) == 0);
 
-    FFTFrame estimationFrame(analysisFFTSize);
-    estimationFrame.doFFT(impulseP);
+    FFTBlock estimationFrame(length);
+    estimationFrame.PerformFFT(impulseP);
 
-    float frameDelay = narrowPrecisionToFloat(estimationFrame.extractAverageGroupDelay());
-    estimationFrame.doInverseFFT(impulseP);
+    float frameDelay = static_cast<float>(estimationFrame.ExtractAverageGroupDelay());
+    estimationFrame.PerformInverseFFT(impulseP);
 
     return frameDelay;
 }
 
-HRTFKernel::HRTFKernel(AudioChannel* channel, size_t fftSize, float sampleRate)
+HRTFKernel::HRTFKernel(float* impulseResponse, size_t length, float sampleRate)
     : m_frameDelay(0)
     , m_sampleRate(sampleRate)
 {
-    ASSERT(channel);
-
     // Determine the leading delay (average group delay) for the response.
-    m_frameDelay = extractAverageGroupDelay(channel, fftSize / 2);
+    m_frameDelay = extractAverageGroupDelay(impulseResponse, length);
 
-    float* impulseResponse = channel->mutableData();
-    size_t responseLength = channel->length();
-
-    // We need to truncate to fit into 1/2 the FFT size (with zero padding) in order to do proper convolution.
-    size_t truncatedResponseLength = min(responseLength, fftSize / 2); // truncate if necessary to max impulse response length allowed by FFT
+    // The FFT size (with zero padding) needs to be twice the response length
+    // in order to do proper convolution.
+    unsigned fftSize = 2 * length;
 
     // Quick fade-out (apply window) at truncation point
+    // because the impulse response has been truncated.
     unsigned numberOfFadeOutFrames = static_cast<unsigned>(sampleRate / 4410); // 10 sample-frames @44.1KHz sample-rate
-    ASSERT(numberOfFadeOutFrames < truncatedResponseLength);
-    if (numberOfFadeOutFrames < truncatedResponseLength) {
-        for (unsigned i = truncatedResponseLength - numberOfFadeOutFrames; i < truncatedResponseLength; ++i) {
-            float x = 1.0f - static_cast<float>(i - (truncatedResponseLength - numberOfFadeOutFrames)) / numberOfFadeOutFrames;
+    MOZ_ASSERT(numberOfFadeOutFrames < length);
+    if (numberOfFadeOutFrames < length) {
+        for (unsigned i = length - numberOfFadeOutFrames; i < length; ++i) {
+            float x = 1.0f - static_cast<float>(i - (length - numberOfFadeOutFrames)) / numberOfFadeOutFrames;
             impulseResponse[i] *= x;
         }
     }
 
-    m_fftFrame = adoptPtr(new FFTFrame(fftSize));
-    m_fftFrame->doPaddedFFT(impulseResponse, truncatedResponseLength);
+    m_fftFrame = new FFTBlock(fftSize);
+    m_fftFrame->PerformPaddedFFT(impulseResponse, length);
 }
 
 // Interpolates two kernels with x: 0 -> 1 and returns the result.
-PassRefPtr<HRTFKernel> HRTFKernel::createInterpolatedKernel(HRTFKernel* kernel1, HRTFKernel* kernel2, float x)
+nsReturnRef<HRTFKernel> HRTFKernel::createInterpolatedKernel(HRTFKernel* kernel1, HRTFKernel* kernel2, float x)
 {
-    ASSERT(kernel1 && kernel2);
+    MOZ_ASSERT(kernel1 && kernel2);
     if (!kernel1 || !kernel2)
-        return 0;
+        return nsReturnRef<HRTFKernel>();
  
-    ASSERT(x >= 0.0 && x < 1.0);
-    x = min(1.0f, max(0.0f, x));
+    MOZ_ASSERT(x >= 0.0 && x < 1.0);
+    x = mozilla::clamped(x, 0.0f, 1.0f);
     
     float sampleRate1 = kernel1->sampleRate();
     float sampleRate2 = kernel2->sampleRate();
-    ASSERT(sampleRate1 == sampleRate2);
+    MOZ_ASSERT(sampleRate1 == sampleRate2);
     if (sampleRate1 != sampleRate2)
-        return 0;
+        return nsReturnRef<HRTFKernel>();
     
     float frameDelay = (1 - x) * kernel1->frameDelay() + x * kernel2->frameDelay();
     
-    OwnPtr<FFTFrame> interpolatedFrame = FFTFrame::createInterpolatedFrame(*kernel1->fftFrame(), *kernel2->fftFrame(), x);
-    return HRTFKernel::create(interpolatedFrame.release(), frameDelay, sampleRate1);
-}
-
-void HRTFKernel::reportMemoryUsage(MemoryObjectInfo* memoryObjectInfo) const
-{
-    MemoryClassInfo info(memoryObjectInfo, this, PlatformMemoryTypes::AudioSharedData);
-    info.addMember(m_fftFrame, "fftFrame");
+    nsAutoPtr<FFTBlock> interpolatedFrame(
+        FFTBlock::CreateInterpolatedBlock(*kernel1->fftFrame(), *kernel2->fftFrame(), x));
+    return HRTFKernel::create(interpolatedFrame, frameDelay, sampleRate1);
 }
 
 } // namespace WebCore
-
-#endif // ENABLE(WEB_AUDIO)
