@@ -16,6 +16,7 @@ CPP_SOURCES += [
     'HRTFDatabaseLoader.cpp',
     'HRTFElevation.cpp',
     'HRTFKernel.cpp',
+    'HRTFPanner.cpp',
     'Reverb.cpp',
     'ReverbAccumulationBuffer.cpp',
     'ReverbConvolver.cpp',
