@@ -13,18 +13,42 @@ const basePath = pathFor('ProfD');
 const { atob } = Cu.import("resource://gre/modules/Services.jsm", {});
 const historyService = Cc["@mozilla.org/browser/nav-history-service;1"]
                        .getService(Ci.nsINavHistoryService);
-const { events } = require('sdk/places/events');
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+const ObserverShimMethods = ['onBeginUpdateBatch', 'onEndUpdateBatch',
+  'onVisit', 'onTitleChanged', 'onDeleteURI', 'onClearHistory',
+  'onPageChanged', 'onDeleteVisits'];
 
-function onFaviconChange (url, callback) {
-  function handler ({data, type}) {
-    if (type !== 'history-page-changed' ||
-        data.url !== url ||
-        data.property !== Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON)
-      return;
-    events.off('data', handler);
-    callback(data.value);
-  }
-  events.on('data', handler);
+/*
+ * Shims NavHistoryObserver
+ */
+
+let noop = function () {}
+let NavHistoryObserver = function () {};
+ObserverShimMethods.forEach(function (method) {
+  NavHistoryObserver.prototype[method] = noop;
+});
+NavHistoryObserver.prototype.QueryInterface = XPCOMUtils.generateQI([
+  Ci.nsINavHistoryObserver
+]);
+
+/*
+ * Uses history observer to watch for an onPageChanged event,
+ * which detects when a favicon is updated in the registry.
+ */
+function onFaviconChange (uri, callback) {
+  let observer = Object.create(NavHistoryObserver.prototype, {
+    onPageChanged: {
+      value: function onPageChanged(aURI, aWhat, aValue, aGUID) {
+        if (aWhat !== Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON)
+          return;
+        if (aURI.spec !== uri)
+          return;
+        historyService.removeObserver(this);
+        callback(aValue);
+      }
+    }
+  });
+  historyService.addObserver(observer, false);
 }
 exports.onFaviconChange = onFaviconChange;
 

@@ -77,9 +77,6 @@ const Tabs = Class({
     if (options.onReady)
       tab.on('ready', options.onReady);
 
-    if (options.onPageShow)
-      tab.on('pageshow', options.onPageShow);
-
     if (options.onActivate)
       tab.on('activate', options.onActivate);
 
@@ -134,12 +131,9 @@ function onTabOpen(event) {
   tab.on('ready', function() emit(gTabs, 'ready', tab));
   tab.once('close', onTabClose);
 
-  tab.on('pageshow', function(_tab, persisted)
-    emit(gTabs, 'pageshow', tab, persisted));
-  
   emit(tab, 'open', tab);
   emit(gTabs, 'open', tab);
-}
+};
 
 // TabSelect
 function onTabSelect(event) {
@@ -159,10 +153,10 @@ function onTabSelect(event) {
     emit(t, 'deactivate', t);
     emit(gTabs, 'deactivate', t);
   }
-}
+};
 
 // TabClose
 function onTabClose(tab) {
   removeTab(tab);
   emit(gTabs, EVENTS.close.name, tab);
-}
+};

@@ -140,7 +140,6 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Tim Taubert
 * Shane Tomlinson
 * Dave Townsend
-* [Fraser Tweedale](https://github.com/frasertweedale)
 * [Matthias Tylkowski](https://github.com/tylkomat)
 
 ### V ###

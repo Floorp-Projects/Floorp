@@ -26,14 +26,7 @@ exports.EVENTS = EVENTS;
 Object.keys(EVENTS).forEach(function(name) {
   EVENTS[name] = {
     name: name,
-    listener: createListenerName(name),
+    listener: ON_PREFIX + name.charAt(0).toUpperCase() + name.substr(1),
     dom: EVENTS[name]
   }
 });
-
-function createListenerName (name) {
-  if (name === 'pageshow')
-    return 'onPageShow';
-  else
-    return ON_PREFIX + name.charAt(0).toUpperCase() + name.substr(1);
-}
