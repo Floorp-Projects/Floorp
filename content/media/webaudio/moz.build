@@ -64,6 +64,7 @@ CPP_SOURCES += [
     'DelayNode.cpp',
     'DynamicsCompressorNode.cpp',
     'EnableWebAudioCheck.cpp',
+    'FFTBlock.cpp',
     'GainNode.cpp',
     'MediaBufferDecoder.cpp',
     'MediaStreamAudioDestinationNode.cpp',
