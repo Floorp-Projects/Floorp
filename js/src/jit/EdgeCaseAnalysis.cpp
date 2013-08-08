@@ -6,8 +6,6 @@
 
 #include "jit/EdgeCaseAnalysis.h"
 
-#include <stdio.h>
-
 #include "jit/Ion.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonSpewer.h"

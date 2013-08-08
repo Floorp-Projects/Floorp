@@ -15,14 +15,14 @@
  * allocations in the same native method.
  */
 
-#include "jsstrinlines.h"
+#include "jsstr.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
-#include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 
 #include "jsapi.h"
@@ -35,7 +35,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsversion.h"
@@ -47,7 +46,6 @@
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/ScopeObject.h"
-#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
@@ -1091,6 +1089,56 @@ js::StringHasPattern(const jschar *text, uint32_t textlen,
     return StringMatch(text, textlen, pat, patlen) != -1;
 }
 
+// When an algorithm does not need a string represented as a single linear
+// array of characters, this range utility may be used to traverse the string a
+// sequence of linear arrays of characters. This avoids flattening ropes.
+class StringSegmentRange
+{
+    // If malloc() shows up in any profiles from this vector, we can add a new
+    // StackAllocPolicy which stashes a reusable freed-at-gc buffer in the cx.
+    AutoStringVector stack;
+    Rooted<JSLinearString*> cur;
+
+    bool settle(JSString *str) {
+        while (str->isRope()) {
+            JSRope &rope = str->asRope();
+            if (!stack.append(rope.rightChild()))
+                return false;
+            str = rope.leftChild();
+        }
+        cur = &str->asLinear();
+        return true;
+    }
+
+  public:
+    StringSegmentRange(JSContext *cx)
+      : stack(cx), cur(cx)
+    {}
+
+    JS_WARN_UNUSED_RESULT bool init(JSString *str) {
+        JS_ASSERT(stack.empty());
+        return settle(str);
+    }
+
+    bool empty() const {
+        return cur == NULL;
+    }
+
+    JSLinearString *front() const {
+        JS_ASSERT(!cur->isRope());
+        return cur;
+    }
+
+    JS_WARN_UNUSED_RESULT bool popFront() {
+        JS_ASSERT(!empty());
+        if (stack.empty()) {
+            cur = NULL;
+            return true;
+        }
+        return settle(stack.popCopy());
+    }
+};
+
 /*
  * RopeMatch takes the text to search and the pattern to search for in the text.
  * RopeMatch returns false on OOM and otherwise returns the match index through
@@ -1933,6 +1981,29 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setInt32(match.start);
     return true;
 }
+
+// Utility for building a rope (lazy concatenation) of strings.
+class RopeBuilder {
+    JSContext *cx;
+    RootedString res;
+
+    RopeBuilder(const RopeBuilder &other) MOZ_DELETE;
+    void operator=(const RopeBuilder &other) MOZ_DELETE;
+
+  public:
+    RopeBuilder(JSContext *cx)
+      : cx(cx), res(cx, cx->runtime()->emptyString)
+    {}
+
+    inline bool append(HandleString str) {
+        res = ConcatStrings<CanGC>(cx, res, str);
+        return !!res;
+    }
+
+    inline JSString *result() {
+        return res;
+    }
+};
 
 struct ReplaceData
 {

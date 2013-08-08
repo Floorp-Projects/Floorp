@@ -13,9 +13,7 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsopcode.h"
-#include "jsproxy.h"
 
-#include "gc/Heap.h"
 #include "jit/BaselineJIT.h"
 #include "jit/BaselineRegisters.h"
 

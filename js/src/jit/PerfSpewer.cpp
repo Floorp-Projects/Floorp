@@ -6,8 +6,6 @@
 
 #include "jit/PerfSpewer.h"
 
-#include <stdarg.h>
-
 #if defined(__linux__)
 # include <unistd.h>
 #endif

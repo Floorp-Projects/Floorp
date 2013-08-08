@@ -22,8 +22,10 @@
 #include "jit/Safepoints.h"
 #include "jit/SnapshotReader.h"
 #include "jit/VMFunctions.h"
+#include "vm/Interpreter.h"
 
 #include "jsfuninlines.h"
+#include "jsscriptinlines.h"
 
 #include "jit/IonFrameIterator-inl.h"
 #include "vm/Probes-inl.h"
