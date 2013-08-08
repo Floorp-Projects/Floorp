@@ -545,22 +545,41 @@ ContentClientSingleBuffered::SyncFrontBufferToBackBuffer()
     return;
   }
 
-  gfxASurface* backBuffer = GetBuffer();
-  if (!backBuffer && mDeprecatedTextureClient) {
-    backBuffer = mDeprecatedTextureClient->LockSurface();
+  if (SupportsAzureContent()) {
+    DrawTarget* backBuffer = GetDTBuffer();
+    if (!backBuffer && mDeprecatedTextureClient) {
+      backBuffer = mDeprecatedTextureClient->LockDrawTarget();
+    }
+
+    RefPtr<DrawTarget> oldBuffer;
+    oldBuffer = SetDTBuffer(backBuffer,
+                            mBufferRect,
+                            mBufferRotation);
+
+    backBuffer = GetDTBufferOnWhite();
+    if (!backBuffer && mDeprecatedTextureClientOnWhite) {
+      backBuffer = mDeprecatedTextureClientOnWhite->LockDrawTarget();
+    }
+
+    oldBuffer = SetDTBufferOnWhite(backBuffer);
+  } else {
+    gfxASurface* backBuffer = GetBuffer();
+    if (!backBuffer && mDeprecatedTextureClient) {
+      backBuffer = mDeprecatedTextureClient->LockSurface();
+    }
+
+    nsRefPtr<gfxASurface> oldBuffer;
+    oldBuffer = SetBuffer(backBuffer,
+                          mBufferRect,
+                          mBufferRotation);
+
+    backBuffer = GetBufferOnWhite();
+    if (!backBuffer && mDeprecatedTextureClientOnWhite) {
+      backBuffer = mDeprecatedTextureClientOnWhite->LockSurface();
+    }
+
+    oldBuffer = SetBufferOnWhite(backBuffer);
   }
-
-  nsRefPtr<gfxASurface> oldBuffer;
-  oldBuffer = SetBuffer(backBuffer,
-                        mBufferRect,
-                        mBufferRotation);
-
-  backBuffer = GetBufferOnWhite();
-  if (!backBuffer && mDeprecatedTextureClientOnWhite) {
-    backBuffer = mDeprecatedTextureClientOnWhite->LockSurface();
-  }
-
-  oldBuffer = SetBufferOnWhite(backBuffer);
 
   mIsNewBuffer = false;
   mFrontAndBackBufferDiffer = false;
