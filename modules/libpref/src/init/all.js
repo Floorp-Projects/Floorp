@@ -4098,6 +4098,8 @@ pref("layers.prefer-memory-over-shmem", true);
 
 pref("layers.bufferrotation.enabled", true);
 
+pref("layers.componentalpha.enabled", true);
+
 #ifdef MOZ_X11
 #ifdef MOZ_WIDGET_GTK2
 pref("gfx.xrender.enabled",true);

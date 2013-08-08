@@ -354,6 +354,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
     break;
   case EFFECT_COMPONENT_ALPHA:
     {
+      MOZ_ASSERT(gfxPlatform::ComponentAlphaEnabled());
       EffectComponentAlpha* effectComponentAlpha =
         static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
       TextureSourceD3D9* sourceOnWhite = effectComponentAlpha->mOnWhite->AsSourceD3D9();

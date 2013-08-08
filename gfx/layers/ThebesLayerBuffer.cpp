@@ -488,7 +488,8 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
           !aLayer->Manager()->IsCompositingCheap() ||
           !aLayer->AsShadowableLayer() ||
           !aLayer->AsShadowableLayer()->HasShadow() ||
-          SupportsAzureContent()) {
+          SupportsAzureContent() ||
+          !gfxPlatform::ComponentAlphaEnabled()) {
         mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
       } else {
         contentType = gfxASurface::CONTENT_COLOR;
