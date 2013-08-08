@@ -80,11 +80,13 @@ HRTFDatabaseLoader::~HRTFDatabaseLoader()
     waitForLoaderThreadCompletion();
     m_hrtfDatabase.reset();
 
-    // Remove ourself from the map.
-    s_loaderMap->RemoveEntry(m_databaseSampleRate);
-    if (s_loaderMap->Count() == 0) {
-        delete s_loaderMap;
-        s_loaderMap = nullptr;
+    if (s_loaderMap) {
+        // Remove ourself from the map.
+        s_loaderMap->RemoveEntry(m_databaseSampleRate);
+        if (s_loaderMap->Count() == 0) {
+            delete s_loaderMap;
+            s_loaderMap = nullptr;
+        }
     }
 }
 
@@ -142,25 +144,31 @@ static void databaseLoaderEntry(void* threadData)
 void HRTFDatabaseLoader::load()
 {
     MOZ_ASSERT(!NS_IsMainThread());
-    if (!m_hrtfDatabase.get()) {
-        // Load the default HRTF database.
-        m_hrtfDatabase = HRTFDatabase::create(m_databaseSampleRate);
-    }
+    MOZ_ASSERT(!m_hrtfDatabase.get(), "Called twice");
+    // Load the default HRTF database.
+    m_hrtfDatabase = HRTFDatabase::create(m_databaseSampleRate);
+    // Notifies the main thread of completion.  See loadAsynchronously().
+    Release();
 }
 
 void HRTFDatabaseLoader::loadAsynchronously()
 {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(m_refCnt, "Must not be called before a reference is added");
+
+    // Add a reference so that the destructor won't run and wait for the
+    // loader thread, until load() has completed.
+    AddRef();
 
     MutexAutoLock locker(m_threadLock);
     
-    if (!m_hrtfDatabase.get() && !m_databaseLoaderThread) {
-        // Start the asynchronous database loading process.
-        m_databaseLoaderThread =
-            PR_CreateThread(PR_USER_THREAD, databaseLoaderEntry, this,
-                            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-                            PR_JOINABLE_THREAD, 0);
-    }
+    MOZ_ASSERT(!m_hrtfDatabase.get() && !m_databaseLoaderThread,
+               "Called twice");
+    // Start the asynchronous database loading process.
+    m_databaseLoaderThread =
+        PR_CreateThread(PR_USER_THREAD, databaseLoaderEntry, this,
+                        PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
+                        PR_JOINABLE_THREAD, 0);
 }
 
 bool HRTFDatabaseLoader::isLoaded() const
@@ -180,4 +188,24 @@ void HRTFDatabaseLoader::waitForLoaderThreadCompletion()
     m_databaseLoaderThread = nullptr;
 }
 
+PLDHashOperator
+HRTFDatabaseLoader::shutdownEnumFunc(LoaderByRateEntry *entry, void* unused)
+{
+    // Ensure the loader thread's reference is removed for leak analysis.
+    entry->mLoader->waitForLoaderThreadCompletion();
+    return PLDHashOperator::PL_DHASH_NEXT;
+}
+
+void HRTFDatabaseLoader::shutdown()
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    if (s_loaderMap) {
+        // Set s_loaderMap to NULL so that the hashtable is not modified on
+        // reference release during enumeration.
+        nsTHashtable<LoaderByRateEntry>* loaderMap = s_loaderMap;
+        s_loaderMap = nullptr;
+        loaderMap->EnumerateEntries(shutdownEnumFunc, nullptr);
+        delete loaderMap;
+    }
+}
 } // namespace WebCore
