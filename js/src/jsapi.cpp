@@ -2791,11 +2791,7 @@ JS_HasInstance(JSContext *cx, JSObject *objArg, jsval valueArg, bool *bp)
     AssertHeapIsIdle(cx);
     assertSameCompartment(cx, obj, value);
 
-    bool b;
-    if (!HasInstance(cx, obj, value, &b))
-        return false;
-    *bp = b;
-    return true;
+    return HasInstance(cx, obj, value, bp);
 }
 
 JS_PUBLIC_API(void *)
