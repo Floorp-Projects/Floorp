@@ -98,18 +98,6 @@ HRTFKernel::HRTFKernel(AudioChannel* channel, size_t fftSize, float sampleRate)
     m_fftFrame->doPaddedFFT(impulseResponse, truncatedResponseLength);
 }
 
-PassOwnPtr<AudioChannel> HRTFKernel::createImpulseResponse()
-{
-    OwnPtr<AudioChannel> channel = adoptPtr(new AudioChannel(fftSize()));
-    FFTFrame fftFrame(*m_fftFrame);
-
-    // Add leading delay back in.
-    fftFrame.addConstantGroupDelay(m_frameDelay);
-    fftFrame.doInverseFFT(channel->mutableData());
-
-    return channel.release();
-}
-
 // Interpolates two kernels with x: 0 -> 1 and returns the result.
 PassRefPtr<HRTFKernel> HRTFKernel::createInterpolatedKernel(HRTFKernel* kernel1, HRTFKernel* kernel2, float x)
 {
