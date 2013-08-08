@@ -669,13 +669,8 @@ js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp)
 {
     Class *clasp = obj->getClass();
     RootedValue local(cx, v);
-    if (clasp->hasInstance) {
-        bool b;
-        if (!clasp->hasInstance(cx, obj, &local, &b))
-            return false;
-        *bp = b;
-        return true;
-    }
+    if (clasp->hasInstance)
+        return clasp->hasInstance(cx, obj, &local, bp);
 
     RootedValue val(cx, ObjectValue(*obj));
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
@@ -3669,10 +3664,8 @@ js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, bool *
     if (!obj)
         return false;
 
-    bool b;
-    if (!JSObject::deleteProperty(cx, obj, name, &b))
+    if (!JSObject::deleteProperty(cx, obj, name, bp))
         return false;
-    *bp = b;
 
     if (strict && !*bp) {
         obj->reportNotConfigurable(cx, NameToId(name));
@@ -3692,10 +3685,9 @@ js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, bool *bp)
     if (!obj)
         return false;
 
-    bool b;
-    if (!JSObject::deleteByValue(cx, obj, index, &b))
+    if (!JSObject::deleteByValue(cx, obj, index, bp))
         return false;
-    *bp = b;
+
     if (strict && !*bp) {
         // XXX This observably calls ToString(propval).  We should convert to
         //     PropertyKey and use that to delete, and to report an error if
