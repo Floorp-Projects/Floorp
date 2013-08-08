@@ -12,6 +12,7 @@ self.onmessage = function(msg) {
   test_getcwd();
   test_open_close();
   test_create_file();
+  test_passing_undefined();
   test_access();
   test_read_write();
   finish();
@@ -34,6 +35,23 @@ function test_open_close() {
   file = OS.Unix.File.open("/i do not exist", OS.Constants.libc.O_RDONLY, 0);
   is(file, -1, "test_open_close: opening of non-existing file failed");
   is(ctypes.errno, OS.Constants.libc.ENOENT, "test_open_close: error is ENOENT");
+}
+
+function test_passing_undefined()
+{
+  info("Testing that an exception gets thrown when an FFI function is passed undefined");
+  let exceptionRaised = false;
+
+  try {
+    let file = OS.Unix.File.open(undefined, OS.Constants.libc.O_RDWR
+                                 | OS.Constants.libc.O_CREAT
+                                 | OS.Constants.libc.O_TRUNC,
+                                 OS.Constants.libc.S_IRWXU);
+  } catch(e if e instanceof TypeError) {
+    exceptionRaised = true;
+  }
+
+  ok(exceptionRaised, "test_passing_undefined: exception gets thrown")
 }
 
 function test_create_file()
