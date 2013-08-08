@@ -56,6 +56,6 @@ function test_4() {
     do_check_neq(aInstall.icons, null);
     do_check_eq(aInstall.icons[32], icon32_url);
     do_check_eq(aInstall.icons[64], icon64_url);
-    do_test_finished();
+    do_execute_soon(do_test_finished);
   }, "application/x-xpinstall", null, null, { "32": icon32_url, "64": icon64_url }, null, null);
 }

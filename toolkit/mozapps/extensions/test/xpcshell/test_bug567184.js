@@ -47,7 +47,7 @@ function check_test_1() {
       do_check_false(b1.userDisabled);
       do_check_false(b1.isActive);
 
-      do_test_finished();
+      do_execute_soon(do_test_finished);
     });
   });
 }

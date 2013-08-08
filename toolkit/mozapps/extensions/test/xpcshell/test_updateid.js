@@ -93,7 +93,7 @@ function run_test_1() {
 }
 
 function check_test_1(install) {
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
     // Existing add-on should have a pending upgrade
     do_check_neq(a1.pendingUpgrade, null);
     do_check_eq(a1.pendingUpgrade.id, "addon2@tests.mozilla.org");
@@ -118,7 +118,7 @@ function check_test_1(install) {
 
       do_execute_soon(run_test_2);
     });
-  });
+  }));
 }
 
 // Test that when the new add-on already exists we just upgrade that
@@ -164,7 +164,8 @@ function run_test_2() {
 
 function check_test_2(install) {
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                               "addon2@tests.mozilla.org"], function([a1, a2]) {
+                               "addon2@tests.mozilla.org"],
+                               callback_soon(function([a1, a2]) {
     do_check_eq(a1.pendingUpgrade, null);
     // Existing add-on should have a pending upgrade
     do_check_neq(a2.pendingUpgrade, null);
@@ -184,7 +185,7 @@ function check_test_2(install) {
 
       do_execute_soon(run_test_3);
     });
-  });
+  }));
 }
 
 // Test that we rollback correctly when removing the old add-on fails
@@ -225,7 +226,7 @@ function run_test_3() {
 }
 
 function check_test_3(install) {
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
     // Existing add-on should have a pending upgrade
     do_check_neq(a1.pendingUpgrade, null);
     do_check_eq(a1.pendingUpgrade.id, "addon2@tests.mozilla.org");
@@ -248,7 +249,8 @@ function check_test_3(install) {
     fstream.close();
 
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
-                                 "addon2@tests.mozilla.org"], function([a1, a2]) {
+                                 "addon2@tests.mozilla.org"],
+                                 callback_soon(function([a1, a2]) {
       // Should not have installed the new add-on but it should still be
       // pending install
       do_check_neq(a1, null);
@@ -266,8 +268,8 @@ function check_test_3(install) {
 
         do_execute_soon(run_test_4);
       });
-    });
-  });
+    }));
+  }));
 }
 
 // Tests that upgrading to a bootstrapped add-on works but requires a restart
@@ -306,7 +308,8 @@ function run_test_4() {
 
 function check_test_4() {
   AddonManager.getAddonsByIDs(["addon2@tests.mozilla.org",
-                               "addon3@tests.mozilla.org"], function([a2, a3]) {
+                               "addon3@tests.mozilla.org"],
+                               callback_soon(function([a2, a3]) {
     // Should still be pending install even though the new add-on is restartless
     do_check_neq(a2, null);
     do_check_eq(a3, null);
@@ -330,7 +333,7 @@ function check_test_4() {
 
       do_execute_soon(run_test_5);
     });
-  });
+  }));
 }
 
 // Tests that upgrading to another bootstrapped add-on works without a restart
@@ -349,7 +352,8 @@ function run_test_5() {
 
 function check_test_5() {
   AddonManager.getAddonsByIDs(["addon3@tests.mozilla.org",
-                               "addon4@tests.mozilla.org"], function([a3, a4]) {
+                               "addon4@tests.mozilla.org"],
+                               callback_soon(function([a3, a4]) {
     // Should have updated
     do_check_eq(a3, null);
     do_check_neq(a4, null);
@@ -370,7 +374,7 @@ function check_test_5() {
 
       run_test_6();
     });
-  });
+  }));
 }
 
 // Tests that upgrading to a non-bootstrapped add-on works but requires a restart
@@ -389,7 +393,8 @@ function run_test_6() {
 
 function check_test_6() {
   AddonManager.getAddonsByIDs(["addon4@tests.mozilla.org",
-                               "addon2@tests.mozilla.org"], function([a4, a2]) {
+                               "addon2@tests.mozilla.org"],
+                               callback_soon(function([a4, a2]) {
     // Should still be pending install even though the old add-on is restartless
     do_check_neq(a4, null);
     do_check_eq(a2, null);
@@ -413,5 +418,5 @@ function check_test_6() {
 
       end_test();
     });
-  });
+  }));
 }

@@ -34,7 +34,7 @@ function run_test_1() {
     }, [
       "onInstallStarted",
       "onInstallEnded",
-    ], run_test_2);
+    ], callback_soon(run_test_2));
     install.install();
   });
 }
@@ -50,19 +50,19 @@ function run_test_2() {
     do_check_eq(addon.description, "fr-FR Description");
 
     addon.userDisabled = true;
-    restartManager();
-
-    run_test_3();
+    do_execute_soon(run_test_3);
   });
 }
 
 // Test that the localized properties are still there when disabled.
 function run_test_3() {
+  restartManager();
+
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
     do_check_eq(addon.name, "fr-FR Name");
 
-    run_test_4();
+    do_execute_soon(run_test_4);
   });
 }
 
@@ -82,7 +82,7 @@ function run_test_4() {
     do_check_eq(contributors[1], "Fr Contributor 2");
     do_check_eq(contributors[2], "Fr Contributor 3");
 
-    run_test_5();
+    do_execute_soon(run_test_5);
   });
 }
 
@@ -97,7 +97,7 @@ function run_test_5() {
     do_check_eq(addon.name, "de-DE Name");
     do_check_eq(addon.description, null);
 
-    run_test_6();
+    do_execute_soon(run_test_6);
   });
 }
 
@@ -106,26 +106,27 @@ function run_test_6() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "nl-NL");
   restartManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(addon) {
     do_check_neq(addon, null);
 
     do_check_eq(addon.name, "Fallback Name");
     do_check_eq(addon.description, "Fallback Description");
 
     addon.userDisabled = false;
-    restartManager();
-    run_test_7();
-  });
+    do_execute_soon(run_test_7);
+  }));
 }
 
 // Test that the prefs will override the fallbacks
 function run_test_7() {
+  restartManager();
+
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
 
     do_check_eq(addon.name, "Name from prefs");
 
-    run_test_8();
+    do_execute_soon(run_test_8);
   });
 }
 
@@ -143,6 +144,6 @@ function run_test_8() {
     do_check_eq(contributors[0], "Contributor 1");
     do_check_eq(contributors[1], "Contributor 2");
 
-    do_test_finished();
+    do_execute_soon(do_test_finished);
   });
 }

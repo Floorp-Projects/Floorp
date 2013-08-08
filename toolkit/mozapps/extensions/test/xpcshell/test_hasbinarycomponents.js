@@ -76,7 +76,7 @@ function run_test() {
       do_check_true(a5.isActive);
       do_check_true(isExtensionInAddonsList(profileDir, a5.id));
 
-      do_test_finished();
+      do_execute_soon(do_test_finished);
     });
   });
 }

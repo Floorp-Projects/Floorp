@@ -41,7 +41,7 @@ function end_test() {
 }
 
 function run_test_1() {
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
@@ -50,13 +50,13 @@ function run_test_1() {
     gExtensionsJSON.remove(true);
 
     do_execute_soon(check_test_1);
-  });
+  }));
 }
 
 function check_test_1() {
   startupManager(false);
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
@@ -67,5 +67,5 @@ function check_test_1() {
     do_check_true(gExtensionsJSON.fileSize > 0);
 
     end_test();
-  });
+  }));
 }

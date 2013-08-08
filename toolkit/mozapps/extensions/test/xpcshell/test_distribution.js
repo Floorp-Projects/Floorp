@@ -149,7 +149,7 @@ function run_test_4() {
 
 // Tests that after uninstalling a restart doesn't re-install the extension
 function run_test_5() {
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
     a1.uninstall();
 
     restartManager();
@@ -159,7 +159,7 @@ function run_test_5() {
 
       do_execute_soon(run_test_6);
     });
-  });
+  }));
 }
 
 // Tests that upgrading the application still doesn't re-install the uninstalled
@@ -257,6 +257,6 @@ function run_test_9() {
 
     a2.uninstall();
 
-    do_test_finished();
+    do_execute_soon(do_test_finished);
   });
 }
