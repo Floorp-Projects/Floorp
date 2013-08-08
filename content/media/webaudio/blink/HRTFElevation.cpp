@@ -32,6 +32,9 @@
 
 #include "core/platform/audio/HRTFElevation.h"
 
+#include "speex/speex_resampler.h"
+#include "mozilla/PodOperations.h"
+#include "AudioSampleFormat.h"
 #include <math.h>
 #include <algorithm>
 #include "core/platform/PlatformMemoryInstrumentation.h"
@@ -40,66 +43,94 @@
 #include <wtf/MemoryInstrumentationVector.h>
 #include <wtf/OwnPtr.h>
 
+#include "IRC_Composite_C_R0195-incl.cpp"
+
 using namespace std;
+using namespace mozilla;
  
 namespace WebCore {
 
-const unsigned HRTFElevation::AzimuthSpacing = 15;
-const unsigned HRTFElevation::NumberOfRawAzimuths = 360 / AzimuthSpacing;
-const unsigned HRTFElevation::InterpolationFactor = 8;
-const unsigned HRTFElevation::NumberOfTotalAzimuths = NumberOfRawAzimuths * InterpolationFactor;
+const int elevationSpacing = irc_composite_c_r0195_elevation_interval;
+const int firstElevation = irc_composite_c_r0195_first_elevation;
+const int numberOfElevations = MOZ_ARRAY_LENGTH(irc_composite_c_r0195);
+
+const unsigned HRTFElevation::NumberOfTotalAzimuths = 360 / 15 * 8;
+
+const int rawSampleRate = irc_composite_c_r0195_sample_rate;
 
 // Number of frames in an individual impulse response.
 const size_t ResponseFrameSize = 256;
 
-bool HRTFElevation::calculateKernelForAzimuthElevation(int azimuth, int elevation, float sampleRate, const String& subjectName,
+size_t HRTFElevation::fftSizeForSampleRate(float sampleRate)
+{
+    // The HRTF impulse responses (loaded as audio resources) are 512 sample-frames @44.1KHz.
+    // Currently, we truncate the impulse responses to half this size, but an FFT-size of twice impulse response size is needed (for convolution).
+    // So for sample rates around 44.1KHz an FFT size of 512 is good. We double the FFT-size only for sample rates at least double this.
+    ASSERT(sampleRate >= 44100 && sampleRate <= 96000.0);
+    return (sampleRate < 88200.0) ? 512 : 1024;
+}
+
+bool HRTFElevation::calculateKernelForAzimuthElevation(int azimuth, int elevation, SpeexResamplerState* resampler, float sampleRate,
                                                        RefPtr<HRTFKernel>& kernelL)
 {
-    // Valid values for azimuth are 0 -> 345 in 15 degree increments.
-    // Valid values for elevation are -45 -> +90 in 15 degree increments.
+    int elevationIndex = (elevation - firstElevation) / elevationSpacing;
+    MOZ_ASSERT(elevationIndex >= 0 && elevationIndex <= numberOfElevations);
 
-    bool isAzimuthGood = azimuth >= 0 && azimuth <= 345 && (azimuth / 15) * 15 == azimuth;
-    ASSERT(isAzimuthGood);
-    if (!isAzimuthGood)
-        return false;
+    int numberOfAzimuths = irc_composite_c_r0195[elevationIndex].count;
+    int azimuthSpacing = 360 / numberOfAzimuths;
+    MOZ_ASSERT(numberOfAzimuths * azimuthSpacing == 360);
 
-    bool isElevationGood = elevation >= -45 && elevation <= 90 && (elevation / 15) * 15 == elevation;
-    ASSERT(isElevationGood);
-    if (!isElevationGood)
-        return false;
-    
-    // Construct the resource name from the subject name, azimuth, and elevation, for example:
-    // "IRC_Composite_C_R0195_T015_P000"
-    // Note: the passed in subjectName is not a string passed in via JavaScript or the web.
-    // It's passed in as an internal ASCII identifier and is an implementation detail.
-    int positiveElevation = elevation < 0 ? elevation + 360 : elevation;
+    int azimuthIndex = azimuth / azimuthSpacing;
+    MOZ_ASSERT(azimuthIndex * azimuthSpacing == azimuth);
 
-    String resourceName = String::format("IRC_%s_C_R0195_T%03d_P%03d", subjectName.utf8().data(), azimuth, positiveElevation);
+    const int16_t (&impulse_response_data)[ResponseFrameSize] =
+        irc_composite_c_r0195[elevationIndex].azimuths[azimuthIndex];
+    float floatResponse[ResponseFrameSize];
+    ConvertAudioSamples(impulse_response_data, floatResponse,
+                        ResponseFrameSize);
 
-    RefPtr<AudioBus> impulseResponse(AudioBus::loadPlatformResource(resourceName.utf8().data(), sampleRate));
+    // Note that depending on the fftSize returned by the panner, we may be truncating the impulse response.
+    const size_t responseLength = fftSizeForSampleRate(sampleRate) / 2;
 
-    ASSERT(impulseResponse.get());
-    if (!impulseResponse.get())
-        return false;
-    
-    size_t responseLength = impulseResponse->length();
-    size_t expectedLength = static_cast<size_t>(256 * (sampleRate / 44100.0));
+    float* response;
+    nsAutoTArray<float, 2 * ResponseFrameSize> resampled;
+    if (sampleRate == rawSampleRate) {
+        response = floatResponse;
+        MOZ_ASSERT(responseLength == ResponseFrameSize);
+    } else {
+        resampled.SetLength(responseLength);
+        response = resampled.Elements();
+        speex_resampler_skip_zeros(resampler);
 
-    // Check number of channels and length.  For now these are fixed and known.
-    bool isBusGood = responseLength == expectedLength && impulseResponse->numberOfChannels() == 2;
-    ASSERT(isBusGood);
-    if (!isBusGood)
-        return false;
-    
-    AudioChannel* leftEarImpulseResponse = impulseResponse->channelByType(AudioBus::ChannelLeft);
+        // Feed the input buffer into the resampler.
+        spx_uint32_t in_len = ResponseFrameSize;
+        spx_uint32_t out_len = resampled.Length();
+        speex_resampler_process_float(resampler, 0, floatResponse, &in_len,
+                                      response, &out_len);
 
-    // Note that depending on the fftSize returned by the panner, we may be truncating the impulse response we just loaded in.
-    const size_t fftSize = HRTFPanner::fftSizeForSampleRate(sampleRate);
-    MOZ_ASSERT(responseLength >= fftSize / 2);
-    if (responseLength < fftSize / 2)
-        return false;
+        if (out_len < resampled.Length()) {
+            // The input should have all been processed.
+            MOZ_ASSERT(in_len == ResponseFrameSize);
+            // Feed in zeros get the data remaining in the resampler.
+            spx_uint32_t out_index = out_len;
+            in_len = speex_resampler_get_input_latency(resampler);
+            nsAutoTArray<float, 256> zeros;
+            zeros.SetLength(in_len);
+            PodZero(zeros.Elements(), in_len);
+            out_len = resampled.Length() - out_index;
+            speex_resampler_process_float(resampler, 0,
+                                          zeros.Elements(), &in_len,
+                                          response + out_index, &out_len);
+            out_index += out_len;
+            // There may be some uninitialized samples remaining for low
+            // sample rates.
+            PodZero(response + out_index, resampled.Length() - out_index);
+        }
 
-    kernelL = HRTFKernel::create(leftEarImpulseResponse, fftSize / 2, sampleRate);
+        speex_resampler_reset_mem(resampler);
+    }
+
+    kernelL = HRTFKernel::create(response, responseLength, sampleRate);
     
     return true;
 }
@@ -138,12 +169,28 @@ static int maxElevations[] = {
 
 PassOwnPtr<HRTFElevation> HRTFElevation::createForSubject(const String& subjectName, int elevation, float sampleRate)
 {
-    bool isElevationGood = elevation >= -45 && elevation <= 90 && (elevation / 15) * 15 == elevation;
-    ASSERT(isElevationGood);
-    if (!isElevationGood)
+    if (elevation < firstElevation ||
+        elevation > firstElevation + numberOfElevations * elevationSpacing ||
+        (elevation / elevationSpacing) * elevationSpacing != elevation)
         return nullptr;
         
+    // Spacing, in degrees, between every azimuth loaded from resource.
+    // Some elevations do not have data for all these intervals.
+    // See maxElevations.
+    static const unsigned AzimuthSpacing = 15;
+    static const unsigned NumberOfRawAzimuths = 360 / AzimuthSpacing;
+    static_assert(AzimuthSpacing * NumberOfRawAzimuths == 360,
+                  "Not a multiple");
+    static const unsigned InterpolationFactor =
+        NumberOfTotalAzimuths / NumberOfRawAzimuths;
+    static_assert(NumberOfTotalAzimuths ==
+                  NumberOfRawAzimuths * InterpolationFactor, "Not a multiple");
+
     OwnPtr<HRTFKernelList> kernelListL = adoptPtr(new HRTFKernelList(NumberOfTotalAzimuths));
+
+    SpeexResamplerState* resampler = sampleRate == rawSampleRate ? nullptr :
+        speex_resampler_init(1, rawSampleRate, sampleRate,
+                             SPEEX_RESAMPLER_QUALITY_DEFAULT, nullptr);
 
     // Load convolution kernels from HRTF files.
     int interpolatedIndex = 0;
@@ -152,12 +199,15 @@ PassOwnPtr<HRTFElevation> HRTFElevation::createForSubject(const String& subjectN
         int maxElevation = maxElevations[rawIndex];
         int actualElevation = min(elevation, maxElevation);
 
-        bool success = calculateKernelForAzimuthElevation(rawIndex * AzimuthSpacing, actualElevation, sampleRate, subjectName, kernelListL->at(interpolatedIndex));
+        bool success = calculateKernelForAzimuthElevation(rawIndex * AzimuthSpacing, actualElevation, resampler, sampleRate, kernelListL->at(interpolatedIndex));
         if (!success)
             return nullptr;
             
         interpolatedIndex += InterpolationFactor;
     }
+
+    if (resampler)
+        speex_resampler_destroy(resampler);
 
     // Now go back and interpolate intermediate azimuth values.
     for (unsigned i = 0; i < NumberOfTotalAzimuths; i += InterpolationFactor) {
