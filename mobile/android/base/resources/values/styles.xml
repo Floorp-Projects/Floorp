@@ -160,6 +160,8 @@
 
     <style name="Widget.ReadingListView" parent="Widget.BookmarksListView"/>
 
+    <style name="Widget.HomeBanner"/>
+
     <style name="Widget.Home" />
 
     <style name="Widget.Home.HeaderItem">
@@ -316,6 +318,10 @@
 
     <style name="TextAppearance.Widget.Home.PageAction" parent="TextAppearance.Small">
         <item name="android:textColor">#00ACFF</item>
+    </style>
+
+    <style name="TextAppearance.Widget.HomeBanner" parent="TextAppearance.Small">
+        <item name="android:textColor">?android:attr/textColorHint</item>
     </style>
 
     <!-- BrowserToolbar -->
