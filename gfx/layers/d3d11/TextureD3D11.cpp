@@ -330,6 +330,8 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
     dxgiFormat = DXGI_FORMAT_A8_UNORM;
     bpp = 1;
     break;
+  default:
+    NS_ERROR("Bad image format");
   }
 
   mSize = IntSize(size.width, size.height);
