@@ -12,7 +12,7 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(ac813696-3b0a-4259-bce1-1d078021ebbe)]
+[scriptable, uuid(c5a654c8-2443-47ce-9322-d150af3ca526)]
 interface nsIWinMetroUtils : nsISupports
 {
   /* Fullscreen landscape orientation */
@@ -65,6 +65,11 @@ interface nsIWinMetroUtils : nsISupports
    * switches to Desktop mode if in metro mode.
    */
    void launchInDesktop(in AString aPath, in AString aArguments); 
+
+  /**
+   * Displays a native Windows 8 toast.
+   */
+   void showNativeToast(in AString aTitle, in AString aMessage, in AString anImage);
 
   /**
    * Secondary tiles are a Windows 8 specific feature for pinning new tiles
