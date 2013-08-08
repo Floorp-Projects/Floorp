@@ -12,6 +12,8 @@ CPP_SOURCES += [
     'DynamicsCompressor.cpp',
     'DynamicsCompressorKernel.cpp',
     'FFTConvolver.cpp',
+    'HRTFDatabase.cpp',
+    'HRTFDatabaseLoader.cpp',
     'HRTFElevation.cpp',
     'HRTFKernel.cpp',
     'Reverb.cpp',
