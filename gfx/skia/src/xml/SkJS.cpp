@@ -79,7 +79,7 @@ global_enumerate(JSContext *cx, JSObject *obj)
 #ifdef LAZY_STANDARD_CLASSES
     return JS_EnumerateStandardClasses(cx, obj);
 #else
-    return JS_TRUE;
+    return true;
 #endif
 }
 
@@ -91,10 +91,10 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **o
         JSBool resolved;
 
         if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
-            return JS_FALSE;
+            return false;
         if (resolved) {
             *objp = obj;
-            return JS_TRUE;
+            return true;
         }
     }
 #endif
@@ -111,21 +111,21 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **o
         JSFunction *fun;
 
         if (!JSVAL_IS_STRING(id))
-            return JS_TRUE;
+            return true;
         path = getenv("PATH");
         if (!path)
-            return JS_TRUE;
+            return true;
         path = JS_strdup(cx, path);
         if (!path)
-            return JS_FALSE;
+            return false;
         name = JS_GetStringBytes(JSVAL_TO_STRING(id));
-        ok = JS_TRUE;
+        ok = true;
         for (comp = strtok(path, ":"); comp; comp = strtok(NULL, ":")) {
             if (*comp != '\0') {
                 full = JS_smprintf("%s/%s", comp, name);
                 if (!full) {
                     JS_ReportOutOfMemory(cx);
-                    ok = JS_FALSE;
+                    ok = false;
                     break;
                 }
             } else {
@@ -146,7 +146,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **o
         return ok;
     }
 #else
-    return JS_TRUE;
+    return true;
 #endif
 }
 

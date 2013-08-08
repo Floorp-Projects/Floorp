@@ -304,7 +304,7 @@ TiledTexture::Validate(gfxReusableSurfaceWrapper* aReusableSurface, Compositor* 
                                                   TEXTURE_HOST_TILED,
                                                   flags);
     mDeprecatedTextureHost->SetCompositor(aCompositor);
-    flags |= NewTile;
+    flags |= TEXTURE_NEW_TILE;
   }
 
   mDeprecatedTextureHost->Update(aReusableSurface, flags, gfx::IntSize(aSize, aSize));

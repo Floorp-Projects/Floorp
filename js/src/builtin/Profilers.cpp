@@ -77,13 +77,13 @@ StartOSXProfiling(const char *profileName = NULL)
 JS_PUBLIC_API(JSBool)
 JS_StartProfiling(const char *profileName)
 {
-    JSBool ok = JS_TRUE;
+    JSBool ok = true;
 #ifdef __APPLE__
     ok = StartOSXProfiling(profileName);
 #endif
 #ifdef __linux__
     if (!js_StartPerf())
-        ok = JS_FALSE;
+        ok = false;
 #endif
     return ok;
 }
@@ -91,7 +91,7 @@ JS_StartProfiling(const char *profileName)
 JS_PUBLIC_API(JSBool)
 JS_StopProfiling(const char *profileName)
 {
-    JSBool ok = JS_TRUE;
+    JSBool ok = true;
 #ifdef __APPLE__
 #ifdef MOZ_SHARK
     Shark::Stop();
@@ -102,7 +102,7 @@ JS_StopProfiling(const char *profileName)
 #endif
 #ifdef __linux__
     if (!js_StopPerf())
-        ok = JS_FALSE;
+        ok = false;
 #endif
     return ok;
 }
@@ -114,7 +114,7 @@ JS_StopProfiling(const char *profileName)
 static JSBool
 ControlProfilers(bool toState)
 {
-    JSBool ok = JS_TRUE;
+    JSBool ok = true;
 
     if (! Probes::ProfilingActive && toState) {
 #ifdef __APPLE__
@@ -136,7 +136,7 @@ ControlProfilers(bool toState)
 #ifdef MOZ_CALLGRIND
         if (! js_StartCallgrind()) {
             UnsafeError("Failed to start Callgrind");
-            ok = JS_FALSE;
+            ok = false;
         }
 #endif
     } else if (Probes::ProfilingActive && ! toState) {
@@ -151,7 +151,7 @@ ControlProfilers(bool toState)
 #ifdef MOZ_CALLGRIND
         if (! js_StopCallgrind()) {
             UnsafeError("failed to stop Callgrind");
-            ok = JS_FALSE;
+            ok = false;
         }
 #endif
     }
@@ -184,7 +184,7 @@ JS_ResumeProfilers(const char *profileName)
 JS_PUBLIC_API(JSBool)
 JS_DumpProfile(const char *outfile, const char *profileName)
 {
-    JSBool ok = JS_TRUE;
+    JSBool ok = true;
 #ifdef MOZ_CALLGRIND
     js_DumpCallgrind(outfile);
 #endif

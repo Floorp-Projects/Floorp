@@ -518,9 +518,18 @@ class Automation(object):
         # Only 2 GB RAM or less available? Use custom ASan options to reduce
         # the amount of resources required to do the tests. Standard options 
         # will otherwise lead to OOM conditions on the current test slaves.
+        # 
+        # If we have more than 2 GB or RAM but still less than 4 GB, we need
+        # another set of options to prevent OOM in some memory-intensive
+        # tests.
         if totalMemory <= 1024 * 1024 * 2:
           self.log.info("INFO | automation.py | ASan running in low-memory configuration")
           env["ASAN_OPTIONS"] = "quarantine_size=50331648:redzone=64"
+        elif totalMemory <= 1024 * 1024 * 4:
+          self.log.info("INFO | automation.py | ASan running in mid-memory configuration")
+          env["ASAN_OPTIONS"] = "quarantine_size=100663296:redzone=64"
+        else:
+          self.log.info("INFO | automation.py | ASan running in default memory configuration")
       except OSError,err:
         self.log.info("Failed determine available memory, disabling ASan low-memory configuration: %s", err.strerror)
       except:

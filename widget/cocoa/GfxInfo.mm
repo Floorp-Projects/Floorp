@@ -108,37 +108,6 @@ GfxInfo::Init()
   // Calling CGLQueryRendererInfo causes us to switch to the discrete GPU
   // even when we don't want to. We'll avoid doing so for now and just
   // use the device ids.
-#if 0
-  CGLRendererInfoObj renderer = 0;
-  GLint rendererCount = 0;
-
-  memset(mRendererIDs, 0, sizeof(mRendererIDs));
-
-  if (CGLQueryRendererInfo(0xffffffff, &renderer, &rendererCount) != kCGLNoError)
-    return rv;
-
-  rendererCount = (GLint) std::min(rendererCount, (GLint) ArrayLength(mRendererIDs));
-  for (GLint i = 0; i < rendererCount; i++) {
-    GLint prop = 0;
-
-    if (!mRendererIDsString.IsEmpty())
-      mRendererIDsString.AppendLiteral(",");
-    if (CGLDescribeRenderer(renderer, i, kCGLRPRendererID, &prop) == kCGLNoError) {
-#ifdef kCGLRendererIDMatchingMask
-      prop = prop & kCGLRendererIDMatchingMask;
-#else
-      prop = prop & 0x00FE7F00; // this is the mask token above, but it doesn't seem to exist everywhere?
-#endif
-      mRendererIDs[i] = prop;
-      mRendererIDsString.AppendPrintf("0x%04x", prop);
-    } else {
-      mRendererIDs[i] = 0;
-      mRendererIDsString.AppendPrintf("???");
-    }
-  }
-
-  CGLDestroyRendererInfo(renderer);
-#endif
 
   GetDeviceInfo();
 
@@ -179,7 +148,7 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
 NS_IMETHODIMP
 GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
 {
-  aAdapterDescription = mRendererIDsString;
+  aAdapterDescription.AssignLiteral("");
   return NS_OK;
 }
 
@@ -354,44 +323,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
 
   // Don't evaluate special cases when we're evaluating the downloaded blocklist.
   if (!aDriverInfo.Length()) {
-    // The code around the following has been moved into the global blocklist.
-#if 0
-      // CGL reports a list of renderers, some renderers are slow (e.g. software)
-      // and AFAIK we can't decide which one will be used among them, so let's implement this by returning NO_INFO
-      // if any not-known-to-be-bad renderer is found.
-      // The assumption that we make here is that the system will spontaneously use the best/fastest renderer in the list.
-      // Note that the presence of software renderer fallbacks means that slow software rendering may be automatically
-      // used, which seems to be the case in bug 611292 where the user had a Intel GMA 945 card (non programmable hardware).
-      // Therefore we need to explicitly blacklist non-OpenGL2 hardware, which could result in a software renderer
-      // being used.
-
-      for (uint32_t i = 0; i < ArrayLength(mRendererIDs); ++i) {
-        switch (mRendererIDs[i]) {
-          case kCGLRendererATIRage128ID: // non-programmable
-          case kCGLRendererATIRadeonID: // non-programmable
-          case kCGLRendererATIRageProID: // non-programmable
-          case kCGLRendererATIRadeon8500ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
-          case kCGLRendererATIRadeon9700ID: // no OpenGL 2 support, http://en.wikipedia.org/wiki/Radeon_R200
-          case kCGLRendererATIRadeonX1000ID: // can't render to non-power-of-two texture backed framebuffers
-          case kCGLRendererIntel900ID: // non-programmable
-          case kCGLRendererGeForce2MXID: // non-programmable
-          case kCGLRendererGeForce3ID: // no OpenGL 2 support,
-                                       // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
-          case kCGLRendererGeForceFXID: // incomplete OpenGL 2 support with software fallbacks,
-                                        // http://en.wikipedia.org/wiki/Comparison_of_Nvidia_graphics_processing_units
-          case kCGLRendererVTBladeXP2ID: // Trident DX8 chip, assuming it's not GL2 capable
-          case kCGLRendererMesa3DFXID: // non-programmable
-          case kCGLRendererGenericFloatID: // software renderer
-          case kCGLRendererGenericID: // software renderer
-          case kCGLRendererAppleSWID: // software renderer
-            break;
-          default:
-            if (mRendererIDs[i])
-              foundGoodDevice = true;
-        }
-      }
-#endif
-
     if (aFeature == nsIGfxInfo::FEATURE_WEBGL_MSAA) {
       // Blacklist all ATI cards on OSX, except for
       // 0x6760 and 0x9488
