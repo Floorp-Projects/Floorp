@@ -519,8 +519,8 @@ public:
     return functor.mResult;
   }
 
-  // Only used by WebMReader and MediaOmxReader for now, so stub here rather
-  // than in every reader than inherits from MediaDecoderReader.
+  // Only used by WebMReader for now, so stub here rather than in every
+  // reader than inherits from MediaDecoderReader.
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) {}
 
   virtual MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
