@@ -388,10 +388,10 @@ js_DisassembleAtPC(JSContext *cx, JSScript *scriptArg, JSBool lines,
         }
         len = js_Disassemble1(cx, script, next, next - script->code, lines, sp);
         if (!len)
-            return JS_FALSE;
+            return false;
         next += len;
     }
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -406,7 +406,7 @@ js_DumpPC(JSContext *cx)
     js::gc::AutoSuppressGC suppressGC(cx);
     Sprinter sprinter(cx);
     if (!sprinter.init())
-        return JS_FALSE;
+        return false;
     ScriptFrameIter iter(cx);
     RootedScript script(cx, iter.script());
     JSBool ok = js_DisassembleAtPC(cx, script, true, iter.pc(), false, &sprinter);
@@ -420,7 +420,7 @@ js_DumpScript(JSContext *cx, JSScript *scriptArg)
     js::gc::AutoSuppressGC suppressGC(cx);
     Sprinter sprinter(cx);
     if (!sprinter.init())
-        return JS_FALSE;
+        return false;
     RootedScript script(cx, scriptArg);
     JSBool ok = js_Disassemble(cx, script, true, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
@@ -436,7 +436,7 @@ js_DumpScriptDepth(JSContext *cx, JSScript *scriptArg, jsbytecode *pc)
     js::gc::AutoSuppressGC suppressGC(cx);
     Sprinter sprinter(cx);
     if (!sprinter.init())
-        return JS_FALSE;
+        return false;
     RootedScript script(cx, scriptArg);
     JSBool ok = js_DisassembleAtPC(cx, script, true, pc, true, &sprinter);
     fprintf(stdout, "%s", sprinter.string());
