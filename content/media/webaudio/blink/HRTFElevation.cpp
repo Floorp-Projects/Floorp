@@ -63,11 +63,35 @@ const size_t ResponseFrameSize = 256;
 
 size_t HRTFElevation::fftSizeForSampleRate(float sampleRate)
 {
-    // The HRTF impulse responses (loaded as audio resources) are 512 sample-frames @44.1KHz.
-    // Currently, we truncate the impulse responses to half this size, but an FFT-size of twice impulse response size is needed (for convolution).
-    // So for sample rates around 44.1KHz an FFT size of 512 is good. We double the FFT-size only for sample rates at least double this.
-    ASSERT(sampleRate >= 44100 && sampleRate <= 96000.0);
-    return (sampleRate < 88200.0) ? 512 : 1024;
+    // The IRCAM HRTF impulse responses were 512 sample-frames @44.1KHz,
+    // but these have been truncated to 256 samples.
+    // An FFT-size of twice impulse response size is used (for convolution).
+    // So for sample rates of 44.1KHz an FFT size of 512 is good.
+    // We double the FFT-size only for sample rates at least double this.
+    // If the FFT size is too large then the impulse response will be padded
+    // with zeros without the fade-out provided by HRTFKernel.
+    MOZ_ASSERT(sampleRate > 1.0 && sampleRate < 1048576.0);
+
+    // This is the size if we were to use all raw response samples.
+    unsigned resampledLength =
+        floorf(ResponseFrameSize * sampleRate / rawSampleRate);
+    // Keep things semi-sane, with max FFT size of 1024 and minimum of 4.
+    // "size |= 3" ensures a minimum of 4 (with the size++ below) and sets the
+    // 2 least significant bits for rounding up to the next power of 2 below.
+    unsigned size = min(resampledLength, 1023U);
+    size |= 3;
+    // Round up to the next power of 2, making the FFT size no more than twice
+    // the impulse response length.  This doubles size for values that are
+    // already powers of 2.  This works by filling in 7 bits to right of the
+    // most significant bit.  The most significant bit is no greater than
+    // 1 << 9, and the least significant 2 bits were already set above.
+    size |= (size >> 1);
+    size |= (size >> 2);
+    size |= (size >> 4);
+    size++;
+    MOZ_ASSERT((size & (size - 1)) == 0);
+
+    return size;
 }
 
 bool HRTFElevation::calculateKernelForAzimuthElevation(int azimuth, int elevation, SpeexResamplerState* resampler, float sampleRate,
@@ -122,7 +146,7 @@ bool HRTFElevation::calculateKernelForAzimuthElevation(int azimuth, int elevatio
                                           zeros.Elements(), &in_len,
                                           response + out_index, &out_len);
             out_index += out_len;
-            // There may be some uninitialized samples remaining for low
+            // There may be some uninitialized samples remaining for very low
             // sample rates.
             PodZero(response + out_index, resampled.Length() - out_index);
         }
