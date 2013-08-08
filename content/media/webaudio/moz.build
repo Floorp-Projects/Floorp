@@ -64,6 +64,7 @@ CPP_SOURCES += [
     'ChannelSplitterNode.cpp',
     'ConvolverNode.cpp',
     'DelayNode.cpp',
+    'DelayProcessor.cpp',
     'DynamicsCompressorNode.cpp',
     'EnableWebAudioCheck.cpp',
     'FFTBlock.cpp',
