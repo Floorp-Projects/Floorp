@@ -364,7 +364,7 @@ const JSSubString js_EmptySubString = {0, js_empty_ucstr};
 
 static const unsigned STRING_ELEMENT_ATTRS = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
 
-static JSBool
+static bool
 str_enumerate(JSContext *cx, HandleObject obj)
 {
     RootedString str(cx, obj->as<StringObject>().unbox());
@@ -764,7 +764,7 @@ js_toUpperCase(JSContext *cx, JSString *str)
     return str;
 }
 
-static JSBool
+static bool
 ToUpperCaseHelper(JSContext *cx, CallReceiver call)
 {
     RootedString str(cx, ThisToStringForStringProto(cx, call));
@@ -1488,8 +1488,8 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
-js_TrimString(JSContext *cx, Value *vp, JSBool trimLeft, JSBool trimRight)
+static bool
+js_TrimString(JSContext *cx, Value *vp, bool trimLeft, bool trimRight)
 {
     CallReceiver call = CallReceiverFromVp(vp);
     RootedString str(cx, ThisToStringForStringProto(cx, call));
@@ -3361,7 +3361,7 @@ tagify(JSContext *cx, const char *begin, HandleLinearString param, const char *e
     return true;
 }
 
-static JSBool
+static bool
 tagify_value(JSContext *cx, CallArgs args, const char *begin, const char *end)
 {
     RootedLinearString param(cx, ArgToRootedString(cx, args, 0));

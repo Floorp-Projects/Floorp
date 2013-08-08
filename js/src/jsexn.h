@@ -27,7 +27,7 @@ js_InitExceptionClasses(JSContext *cx, js::HandleObject obj);
  * error reports so flagged.  Returns true if an associated exception is
  * found and set, false otherwise.
  */
-extern JSBool
+extern bool
 js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
                     JSErrorCallback callback, void *userRef);
 
@@ -47,7 +47,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
  * other contexts may want to use an error reporter that ignores errors with
  * this flag.
  */
-extern JSBool
+extern bool
 js_ReportUncaughtException(JSContext *cx);
 
 extern JSErrorReport *

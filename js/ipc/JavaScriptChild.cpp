@@ -313,7 +313,7 @@ JavaScriptChild::AnswerHas(const ObjectId &objId, const nsString &id, ReturnStat
     if (!convertGeckoStringToId(cx, id, &internedId))
         return fail(cx, rs);
 
-    JSBool found;
+    bool found;
     if (!JS_HasPropertyById(cx, obj, internedId, &found))
         return fail(cx, rs);
     *bp = !!found;
@@ -435,7 +435,7 @@ JavaScriptChild::AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs, boo
     if (!obj)
         return false;
 
-    JSBool extensible;
+    bool extensible;
     if (!JS_IsExtensible(cx, obj, &extensible))
         return fail(cx, rs);
 
@@ -517,7 +517,7 @@ JavaScriptChild::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv
         RootedObject obj(cx, &outobjects[i].toObject());
 
         RootedValue v(cx);
-        JSBool found;
+        bool found;
         if (JS_HasProperty(cx, obj, "value", &found)) {
             if (!JS_GetProperty(cx, obj, "value", &v))
                 return fail(cx, rs);
@@ -642,7 +642,7 @@ JavaScriptChild::AnswerDOMInstanceOf(const ObjectId &objId, const int &prototype
 
     JSAutoCompartment comp(cx, obj);
 
-    JSBool tmp;
+    bool tmp;
     if (!mozilla::dom::InterfaceHasInstance(cx, prototypeID, depth, obj, &tmp))
         return fail(cx, rs);
     *instanceof = tmp;

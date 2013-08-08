@@ -36,7 +36,7 @@ BEGIN_TEST(testContexts_bug563735)
     JSContext *cx2 = JS_NewContext(rt, 8192);
     CHECK(cx2);
 
-    JSBool ok;
+    bool ok;
     {
         JSAutoRequest req(cx2);
         JSAutoCompartment ac(cx2, global);

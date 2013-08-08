@@ -220,7 +220,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
     return true;
 }
 
-static JSBool
+static bool
 NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 {
     InvokeArgs args(cx);
@@ -239,7 +239,7 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
     if (!argsobj)
         return false;
     args[1].setObject(*argsobj);
-    JSBool ok = Invoke(cx, args);
+    bool ok = Invoke(cx, args);
     vp[0] = args.rval();
     return ok;
 }
@@ -502,7 +502,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
         }
     }
 
-    JSBool ok = RunScript(cx, state);
+    bool ok = RunScript(cx, state);
 
     JS_ASSERT_IF(ok && construct, !args.rval().isPrimitive());
     return ok;
@@ -670,7 +670,7 @@ js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp)
     Class *clasp = obj->getClass();
     RootedValue local(cx, v);
     if (clasp->hasInstance) {
-        JSBool b;
+        bool b;
         if (!clasp->hasInstance(cx, obj, &local, &b))
             return false;
         *bp = b;
@@ -2260,7 +2260,7 @@ BEGIN_CASE(JSOP_DELPROP)
     RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -1, obj);
 
-    JSBool succeeded;
+    bool succeeded;
     if (!JSObject::deleteProperty(cx, obj, name, &succeeded))
         goto error;
     if (!succeeded && script->strict) {
@@ -2281,7 +2281,7 @@ BEGIN_CASE(JSOP_DELELEM)
     RootedValue &propval = rootValue0;
     propval = regs.sp[-1];
 
-    JSBool succeeded;
+    bool succeeded;
     if (!JSObject::deleteByValue(cx, obj, propval, &succeeded))
         goto error;
     if (!succeeded && script->strict) {
@@ -3669,7 +3669,7 @@ js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, bool *
     if (!obj)
         return false;
 
-    JSBool b;
+    bool b;
     if (!JSObject::deleteProperty(cx, obj, name, &b))
         return false;
     *bp = b;
@@ -3692,7 +3692,7 @@ js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, bool *bp)
     if (!obj)
         return false;
 
-    JSBool b;
+    bool b;
     if (!JSObject::deleteByValue(cx, obj, index, &b))
         return false;
     *bp = b;
@@ -3814,7 +3814,7 @@ js::DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject sco
         return true;
     }
 
-    JSBool succeeded;
+    bool succeeded;
     if (!JSObject::deleteProperty(cx, scope, name, &succeeded))
         return false;
     res.setBoolean(succeeded);

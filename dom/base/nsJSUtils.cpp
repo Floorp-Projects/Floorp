@@ -30,7 +30,7 @@
 
 #include "mozilla/dom/BindingUtils.h"
 
-JSBool
+bool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
                               uint32_t* aLineno)
 {

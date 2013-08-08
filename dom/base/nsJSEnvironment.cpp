@@ -694,7 +694,7 @@ GetPromptFromContext(nsJSContext* ctx)
   return prompt.forget();
 }
 
-JSBool
+bool
 nsJSContext::DOMOperationCallback(JSContext *cx)
 {
   nsresult rv;
@@ -763,7 +763,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   // Check if we should offer the option to debug
   JS::RootedScript script(cx);
   unsigned lineno;
-  JSBool hasFrame = ::JS_DescribeScriptedCaller(cx, script.address(), &lineno);
+  bool hasFrame = ::JS_DescribeScriptedCaller(cx, script.address(), &lineno);
 
   bool debugPossible = hasFrame && js::CanCallContextDebugHandler(cx);
 #ifdef MOZ_JSDEBUGGER
@@ -3315,7 +3315,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
   return nullptr;
 }
 
-JSBool
+bool
 NS_DOMWriteStructuredClone(JSContext* cx,
                            JSStructuredCloneWriter* writer,
                            JS::Handle<JSObject*> obj,

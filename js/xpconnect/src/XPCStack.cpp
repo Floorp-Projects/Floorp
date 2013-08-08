@@ -26,7 +26,7 @@ public:
     XPCJSStackFrame();
     virtual ~XPCJSStackFrame();
 
-    JSBool IsJSFrame() const
+    bool IsJSFrame() const
         {return mLanguage == nsIProgrammingLanguage::JAVASCRIPT;}
 
 private:
@@ -149,7 +149,7 @@ XPCJSStackFrame::CreateStackFrameLocation(uint32_t aLanguage,
                                           nsIStackFrame* aCaller,
                                           XPCJSStackFrame** stack)
 {
-    JSBool failed = false;
+    bool failed = false;
     XPCJSStackFrame* self = new XPCJSStackFrame();
     if (self)
         NS_ADDREF(self);

@@ -50,7 +50,7 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
     JS::RootedObject obj(cx, objArg);
     JS::RootedId id(cx, idArg);
 
-    JSBool resolved;
+    bool resolved;
 
     *_retval = !!JS_ResolveStandardClass(cx, obj, id, &resolved);
     if (!*_retval) {

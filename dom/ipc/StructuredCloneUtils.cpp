@@ -98,7 +98,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
   return NS_DOMReadStructuredClone(aCx, aReader, aTag, aData, nullptr);
 }
 
-JSBool
+bool
 Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
       JS::Handle<JSObject*> aObj, void* aClosure)
 {

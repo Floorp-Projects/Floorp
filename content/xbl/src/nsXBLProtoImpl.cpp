@@ -300,7 +300,7 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JS::Handle<JSObject*> obj) const
     nsDependentString name(f->GetName());
 
     const jschar* s = reinterpret_cast<const jschar*>(name.get());
-    JSBool hasProp;
+    bool hasProp;
     if (::JS_AlreadyHasOwnUCProperty(cx, obj, s, name.Length(), &hasProp) &&
         hasProp) {
       bool dummy;

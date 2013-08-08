@@ -104,10 +104,10 @@ XPCJSContextStack::HasJSContext(JSContext *cx)
     return false;
 }
 
-static JSBool
+static bool
 SafeGlobalResolve(JSContext *cx, HandleObject obj, HandleId id)
 {
-    JSBool resolved;
+    bool resolved;
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
 }
 
