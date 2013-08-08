@@ -27,8 +27,8 @@ class nsIPrincipal;
 class nsJSUtils
 {
 public:
-  static JSBool GetCallingLocation(JSContext* aContext, const char* *aFilename,
-                                   uint32_t* aLineno);
+  static bool GetCallingLocation(JSContext* aContext, const char* *aFilename,
+                                 uint32_t* aLineno);
 
   static nsIScriptGlobalObject *GetStaticScriptGlobal(JSObject* aObj);
 
@@ -99,7 +99,7 @@ public:
   {
   }
 
-  JSBool init(JSContext* aContext, JSString* str)
+  bool init(JSContext* aContext, JSString* str)
   {
       size_t length;
       const jschar* chars = JS_GetStringCharsZAndLength(aContext, str, &length);
@@ -112,7 +112,7 @@ public:
       return true;
   }
 
-  JSBool init(JSContext* aContext, const JS::Value &v)
+  bool init(JSContext* aContext, const JS::Value &v)
   {
       return init(aContext, JSVAL_TO_STRING(v));
   }

@@ -123,7 +123,7 @@ _hash_root(const void *key)
     return ((JSHashNumber)(ptrdiff_t) key) >> 2; /* help lame MSVC1.5 on Win16 */
 }
 
-JSBool
+bool
 jsd_InitObjectManager(JSDContext* jsdc)
 {
     JS_INIT_CLIST(&jsdc->objectsList);

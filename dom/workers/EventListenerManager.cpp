@@ -314,7 +314,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
   }
 
   JS::Rooted<JSString*> eventType(aCx);
-  JSBool eventIsTrusted;
+  bool eventIsTrusted;
 
   if (!JS_GetProperty(aCx, aEvent, "type", &val) ||
       !(eventType = JS_ValueToString(aCx, val)) ||
@@ -398,7 +398,7 @@ EventListenerManager::DispatchEvent(JSContext* aCx, const EventTarget& aTarget,
 
     JS::Rooted<JSObject*> thisObj(aCx, aTarget.GetJSObject());
 
-    JSBool hasHandleEvent;
+    bool hasHandleEvent;
     if (!JS_HasProperty(aCx, listenerObj, sHandleEventChars, &hasHandleEvent)) {
       if (!JS_ReportPendingException(aCx)) {
         aRv.Throw(NS_ERROR_FAILURE);

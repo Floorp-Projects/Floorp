@@ -54,7 +54,7 @@ static nsresult ThrowAndFail(nsresult errNum, JSContext* cx, bool* retval)
     return NS_OK;
 }
 
-static JSBool
+static bool
 JSValIsInterfaceOfType(JSContext *cx, HandleValue v, REFNSIID iid)
 {
 
@@ -1905,7 +1905,7 @@ struct MOZ_STACK_CLASS ExceptionArgParser
 
     bool getOption(HandleObject obj, const char *name, MutableHandleValue rv) {
         // Look for the property.
-        JSBool found;
+        bool found;
         if (!JS_HasProperty(cx, obj, name, &found))
             return false;
 
@@ -2935,16 +2935,16 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 sandbox_enumerate(JSContext *cx, HandleObject obj)
 {
     return JS_EnumerateStandardClasses(cx, obj);
 }
 
-static JSBool
+static bool
 sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id)
 {
-    JSBool resolved;
+    bool resolved;
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
 }
 
@@ -2959,7 +2959,7 @@ sandbox_finalize(JSFreeOp *fop, JSObject *obj)
     DestroyProtoAndIfaceCache(obj);
 }
 
-static JSBool
+static bool
 sandbox_convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
 {
     if (type == JSTYPE_OBJECT) {
@@ -3125,10 +3125,10 @@ bool BindPropertyOp(JSContext *cx, Op &op, PropertyDescriptor *desc, HandleId id
     return true;
 }
 
-extern JSBool
+extern bool
 XPC_WN_Helper_GetProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
-extern JSBool
-XPC_WN_Helper_SetProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp);
+extern bool
+XPC_WN_Helper_SetProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp);
 
 bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
@@ -3523,7 +3523,7 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
 // helper that tries to get a property form the options object
 nsresult
 GetPropFromOptions(JSContext *cx, HandleObject from, const char *name, MutableHandleValue prop,
-                   JSBool *found)
+                   bool *found)
 {
     if (!JS_HasProperty(cx, from, name, found))
         return NS_ERROR_INVALID_ARG;
@@ -3542,7 +3542,7 @@ GetBoolPropFromOptions(JSContext *cx, HandleObject from, const char *name, bool 
 
 
     RootedValue value(cx);
-    JSBool found;
+    bool found;
     if (NS_FAILED(GetPropFromOptions(cx, from, name, &value, &found)))
         return NS_ERROR_INVALID_ARG;
 
@@ -3563,7 +3563,7 @@ GetObjPropFromOptions(JSContext *cx, HandleObject from, const char *name, JSObje
     MOZ_ASSERT(prop);
 
     RootedValue value(cx);
-    JSBool found;
+    bool found;
     if (NS_FAILED(GetPropFromOptions(cx, from, name, &value, &found)))
         return NS_ERROR_INVALID_ARG;
 
@@ -3584,7 +3584,7 @@ nsresult
 GetStringPropFromOptions(JSContext *cx, HandleObject from, const char *name, nsCString &prop)
 {
     RootedValue value(cx);
-    JSBool found;
+    bool found;
     nsresult rv = GetPropFromOptions(cx, from, name, &value, &found);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3737,7 +3737,7 @@ public:
     NS_DECL_ISUPPORTS
 
 private:
-    static JSBool ContextHolderOperationCallback(JSContext *cx);
+    static bool ContextHolderOperationCallback(JSContext *cx);
 
     JSContext* mJSContext;
     JSContext* mOrigCx;
@@ -3775,7 +3775,7 @@ ContextHolder::~ContextHolder()
         JS_DestroyContextNoGC(mJSContext);
 }
 
-JSBool
+bool
 ContextHolder::ContextHolderOperationCallback(JSContext *cx)
 {
     ContextHolder* thisObject =
@@ -3784,7 +3784,7 @@ ContextHolder::ContextHolderOperationCallback(JSContext *cx)
 
     JSContext *origCx = thisObject->mOrigCx;
     JSOperationCallback callback = JS_GetOperationCallback(origCx);
-    JSBool ok = true;
+    bool ok = true;
     if (callback)
         ok = callback(origCx);
     return ok;
@@ -4240,7 +4240,7 @@ FunctionWrapper(JSContext *cx, unsigned argc, Value *vp)
     return JS_CallFunctionValue(cx, obj, v, args.length(), args.array(), vp);
 }
 
-JSBool
+bool
 WrapCallable(JSContext *cx, HandleObject obj, HandleId id, HandleObject propobj,
              MutableHandleValue vp)
 {
@@ -4856,7 +4856,7 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN;
 }
 
-static JSBool
+static bool
 ContentComponentsGetterOp(JSContext *cx, HandleObject obj, HandleId id,
                           MutableHandleValue vp)
 {
@@ -4886,7 +4886,7 @@ ContentComponentsGetterOp(JSContext *cx, HandleObject obj, HandleId id,
 }
 
 // static
-JSBool
+bool
 nsXPCComponents::AttachComponentsObject(JSContext* aCx,
                                         XPCWrappedNativeScope* aScope)
 {

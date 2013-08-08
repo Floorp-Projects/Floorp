@@ -31,7 +31,7 @@ static const struct ResultMap
 #define RESULT_COUNT ((sizeof(map) / sizeof(map[0]))-1)
 
 // static
-JSBool
+bool
 nsXPCException::NameAndFormatForNSResult(nsresult rv,
                                          const char** name,
                                          const char** format)
@@ -365,7 +365,7 @@ nsXPCException::ToString(char **_retval)
     return final ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-JSBool nsXPCException::sEverMadeOneFromFactory = false;
+bool nsXPCException::sEverMadeOneFromFactory = false;
 
 // static
 nsresult

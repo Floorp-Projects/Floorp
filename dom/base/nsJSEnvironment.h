@@ -206,7 +206,7 @@ private:
 
   static int JSOptionChangedCallback(const char *pref, void *data);
 
-  static JSBool DOMOperationCallback(JSContext *cx);
+  static bool DOMOperationCallback(JSContext *cx);
 };
 
 class nsIJSRuntimeService;
@@ -263,9 +263,9 @@ JSObject* NS_DOMReadStructuredClone(JSContext* cx,
                                     JSStructuredCloneReader* reader, uint32_t tag,
                                     uint32_t data, void* closure);
 
-JSBool NS_DOMWriteStructuredClone(JSContext* cx,
-                                  JSStructuredCloneWriter* writer,
-                                  JS::Handle<JSObject*> obj, void *closure);
+bool NS_DOMWriteStructuredClone(JSContext* cx,
+                                JSStructuredCloneWriter* writer,
+                                JS::Handle<JSObject*> obj, void *closure);
 
 void NS_DOMStructuredCloneError(JSContext* cx, uint32_t errorid);
 
