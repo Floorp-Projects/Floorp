@@ -38,7 +38,11 @@ addMessageListener("Browser:HideSessionRestoreButton", function (message) {
   }
 });
 
-if (!Services.prefs.getBoolPref("browser.tabs.remote")) {
+if (Services.prefs.getBoolPref("browser.tabs.remote")) {
+  addEventListener("contextmenu", function (event) {
+    sendAsyncMessage("contextmenu", {}, { event: event });
+  }, false);
+} else {
   addEventListener("DOMContentLoaded", function(event) {
     LoginManagerContent.onContentLoaded(event);
   });
