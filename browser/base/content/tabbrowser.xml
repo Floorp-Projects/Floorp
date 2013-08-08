@@ -2910,6 +2910,16 @@
               let titleChanged = this.setTabTitle(tab);
               if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
                 tab.setAttribute("titlechanged", "true");
+              break;
+            case "contextmenu":
+              gContextMenuContentData = { event: aMessage.objects.event,
+                                          browser: browser };
+              let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
+              popup.openPopup(browser, "overlap",
+                              gContextMenuContentData.event.clientX,
+                              gContextMenuContentData.event.clientY,
+                              true, false, null);
+              break;
           }
         ]]></body>
       </method>
@@ -2953,8 +2963,10 @@
               "-moz-default-background-color" :
               Services.prefs.getCharPref("browser.display.background_color");
 
-          if (Services.prefs.getBoolPref("browser.tabs.remote"))
+          if (Services.prefs.getBoolPref("browser.tabs.remote")) {
             messageManager.addMessageListener("DOMTitleChanged", this);
+            messageManager.addMessageListener("contextmenu", this);
+          }
         ]]>
       </constructor>
 
@@ -2989,8 +3001,10 @@
           document.removeEventListener("keypress", this, false);
           window.removeEventListener("sizemodechange", this, false);
 
-          if (Services.prefs.getBoolPref("browser.tabs.remote"))
+          if (Services.prefs.getBoolPref("browser.tabs.remote")) {
             messageManager.removeMessageListener("DOMTitleChanged", this);
+            messageManager.removeMessageListener("contextmenu", this);
+          }
         ]]>
       </destructor>
 

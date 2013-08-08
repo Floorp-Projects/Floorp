@@ -10,7 +10,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMEventListener;
 interface nsIDOMMozIccInfo;
 
-[scriptable, builtinclass, uuid(d362bf60-c910-11e2-8b8b-0800200c9a66)]
+[scriptable, builtinclass, uuid(904b92cb-dad3-416f-88cf-0291012cf448)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -295,7 +295,9 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    * Indicates the state of the device's ICC card.
    *
    * Possible values: null, 'unknown', 'absent', 'pinRequired', 'pukRequired',
-   * 'networkLocked', 'corporateLocked', 'serviceProviderLocked', 'ready'.
+   * 'personalizationInProgress', 'networkLocked', 'corporateLocked',
+   * 'serviceProviderLocked', 'networkPukRequired', 'corporatePukRequired',
+   * 'serviceProviderPukRequired', 'ready'.
    */
   readonly attribute DOMString cardState;
 
@@ -359,6 +361,23 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    *
    *   unlockCardLock({lockType: "spck",
    *                   pin: "..."});
+   *
+   * (6) Network PUK depersonalization. Unlocking the network control key (NCK).
+   *
+   *   unlockCardLock({lockType: "nckPuk",
+   *                   puk: "..."});
+   *
+   * (7) Corporate PUK depersonalization. Unlocking the corporate control key
+   *     (CCK).
+   *
+   *   unlockCardLock({lockType: "cckPuk",
+   *                   puk: "..."});
+   *
+   * (8) Service Provider PUK depersonalization. Unlocking the service provider
+   *     control key (SPCK).
+   *
+   *   unlockCardLock({lockType: "spckPuk",
+   *                   puk: "..."});
    *
    * @return a nsIDOMDOMRequest.
    *         The request's result will be an object containing
