@@ -42,16 +42,6 @@
 // JS
 #include "jsdbgapi.h"
 
-// we eventually want to make this runtime switchable
-#if defined(MOZ_PROFILING) && (defined(XP_UNIX) && !defined(XP_MACOSX))
- #ifndef ANDROID
-  #define USE_BACKTRACE
- #endif
-#endif
-#ifdef USE_BACKTRACE
- #include <execinfo.h>
-#endif
-
 #if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_WIN))
  #define USE_NS_STACKWALK
 #endif
@@ -347,22 +337,6 @@ void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
   }
 }
 
-#ifdef USE_BACKTRACE
-void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
-{
-  void *array[100];
-  int count = backtrace (array, 100);
-
-  aProfile.addTag(ProfileEntry('s', "(root)"));
-
-  for (int i = 0; i < count; i++) {
-    if( (intptr_t)array[i] == -1 ) break;
-    aProfile.addTag(ProfileEntry('l', (void*)array[i]));
-  }
-}
-#endif
-
-
 #ifdef USE_NS_STACKWALK
 typedef struct {
   void** array;
@@ -522,7 +496,7 @@ void TableTicker::InplaceTick(TickSample* sample)
     }
   }
 
-#if defined(USE_BACKTRACE) || defined(USE_NS_STACKWALK)
+#if defined(USE_NS_STACKWALK)
   if (mUseStackWalk) {
     doNativeBacktrace(currThreadProfile, sample);
   } else {
