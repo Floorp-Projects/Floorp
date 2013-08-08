@@ -165,6 +165,9 @@ double FFTBlock::ExtractAverageGroupDelay()
 
     const double kSamplePhaseDelay = (2.0 * M_PI) / double(FFTSize());
 
+    // Remove DC offset
+    dft[0].r = 0.0f;
+
     // Calculate weighted average group delay
     for (int i = 1; i < halfSize; i++) {
         Complex c(dft[i].r, dft[i].i);
@@ -189,14 +192,12 @@ double FFTBlock::ExtractAverageGroupDelay()
     double aveSampleDelay = -ave / kSamplePhaseDelay;
 
     // Leave 20 sample headroom (for leading edge of impulse)
-    if (aveSampleDelay > 20.0)
-        aveSampleDelay -= 20.0;
+    aveSampleDelay -= 20.0;
+    if (aveSampleDelay <= 0.0)
+        return 0.0;
 
     // Remove average group delay (minus 20 samples for headroom)
     AddConstantGroupDelay(-aveSampleDelay);
-
-    // Remove DC offset
-    dft[0].r = 0.0f;
 
     return aveSampleDelay;
 }
