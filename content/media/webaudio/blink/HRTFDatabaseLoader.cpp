@@ -26,39 +26,38 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
+#include "HRTFDatabaseLoader.h"
 
-#if ENABLE(WEB_AUDIO)
+#include "HRTFDatabase.h"
 
-#include "core/platform/audio/HRTFDatabaseLoader.h"
-
-#include "core/platform/PlatformMemoryInstrumentation.h"
-#include "core/platform/audio/HRTFDatabase.h"
-#include "wtf/MainThread.h"
-#include "wtf/MemoryInstrumentationHashMap.h"
+using namespace mozilla;
 
 namespace WebCore {
 
 // Singleton
-HRTFDatabaseLoader::LoaderMap* HRTFDatabaseLoader::s_loaderMap = 0;
+nsTHashtable<HRTFDatabaseLoader::LoaderByRateEntry>*
+    HRTFDatabaseLoader::s_loaderMap = nullptr;
 
-PassRefPtr<HRTFDatabaseLoader> HRTFDatabaseLoader::createAndLoadAsynchronouslyIfNecessary(float sampleRate)
+TemporaryRef<HRTFDatabaseLoader> HRTFDatabaseLoader::createAndLoadAsynchronouslyIfNecessary(float sampleRate)
 {
-    ASSERT(isMainThread());
+    MOZ_ASSERT(NS_IsMainThread());
 
     RefPtr<HRTFDatabaseLoader> loader;
     
-    if (!s_loaderMap)
-        s_loaderMap = adoptPtr(new LoaderMap()).leakPtr();
+    if (!s_loaderMap) {
+        s_loaderMap = new nsTHashtable<LoaderByRateEntry>();
+        s_loaderMap->Init();
+    }
 
-    loader = s_loaderMap->get(sampleRate);
-    if (loader) {
-        ASSERT(sampleRate == loader->databaseSampleRate());
+    LoaderByRateEntry* entry = s_loaderMap->PutEntry(sampleRate);
+    loader = entry->mLoader;
+    if (loader) { // existing entry
+        MOZ_ASSERT(sampleRate == loader->databaseSampleRate());
         return loader;
     }
 
-    loader = adoptRef(new HRTFDatabaseLoader(sampleRate));
-    s_loaderMap->add(sampleRate, loader.get());
+    loader = new HRTFDatabaseLoader(sampleRate);
+    entry->mLoader = loader;
 
     loader->loadAsynchronously();
 
@@ -66,35 +65,41 @@ PassRefPtr<HRTFDatabaseLoader> HRTFDatabaseLoader::createAndLoadAsynchronouslyIf
 }
 
 HRTFDatabaseLoader::HRTFDatabaseLoader(float sampleRate)
-    : m_databaseLoaderThread(0)
+    : m_threadLock("HRTFDatabaseLoader")
+    , m_databaseLoaderThread(nullptr)
     , m_databaseSampleRate(sampleRate)
 {
-    ASSERT(isMainThread());
+    MOZ_ASSERT(NS_IsMainThread());
 }
 
 HRTFDatabaseLoader::~HRTFDatabaseLoader()
 {
-    ASSERT(isMainThread());
+    MOZ_ASSERT(NS_IsMainThread());
 
     waitForLoaderThreadCompletion();
-    m_hrtfDatabase.clear();
+    m_hrtfDatabase.reset();
 
     // Remove ourself from the map.
-    if (s_loaderMap)
-        s_loaderMap->remove(m_databaseSampleRate);
+    s_loaderMap->RemoveEntry(m_databaseSampleRate);
+    if (s_loaderMap->Count() == 0) {
+        delete s_loaderMap;
+        s_loaderMap = nullptr;
+    }
 }
 
 // Asynchronously load the database in this thread.
 static void databaseLoaderEntry(void* threadData)
 {
+    PR_SetCurrentThreadName("HRTFDatabaseLdr");
+
     HRTFDatabaseLoader* loader = reinterpret_cast<HRTFDatabaseLoader*>(threadData);
-    ASSERT(loader);
+    MOZ_ASSERT(loader);
     loader->load();
 }
 
 void HRTFDatabaseLoader::load()
 {
-    ASSERT(!isMainThread());
+    MOZ_ASSERT(!NS_IsMainThread());
     if (!m_hrtfDatabase.get()) {
         // Load the default HRTF database.
         m_hrtfDatabase = HRTFDatabase::create(m_databaseSampleRate);
@@ -103,13 +108,16 @@ void HRTFDatabaseLoader::load()
 
 void HRTFDatabaseLoader::loadAsynchronously()
 {
-    ASSERT(isMainThread());
+    MOZ_ASSERT(NS_IsMainThread());
 
-    MutexLocker locker(m_threadLock);
+    MutexAutoLock locker(m_threadLock);
     
     if (!m_hrtfDatabase.get() && !m_databaseLoaderThread) {
         // Start the asynchronous database loading process.
-        m_databaseLoaderThread = createThread(databaseLoaderEntry, this, "HRTF database loader");
+        m_databaseLoaderThread =
+            PR_CreateThread(PR_USER_THREAD, databaseLoaderEntry, this,
+                            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
+                            PR_JOINABLE_THREAD, 0);
     }
 }
 
@@ -120,21 +128,14 @@ bool HRTFDatabaseLoader::isLoaded() const
 
 void HRTFDatabaseLoader::waitForLoaderThreadCompletion()
 {
-    MutexLocker locker(m_threadLock);
+    MutexAutoLock locker(m_threadLock);
     
     // waitForThreadCompletion() should not be called twice for the same thread.
-    if (m_databaseLoaderThread)
-        waitForThreadCompletion(m_databaseLoaderThread);
-    m_databaseLoaderThread = 0;
-}
-
-void HRTFDatabaseLoader::reportMemoryUsage(MemoryObjectInfo* memoryObjectInfo) const
-{
-    MemoryClassInfo info(memoryObjectInfo, this, PlatformMemoryTypes::AudioSharedData);
-    info.addMember(m_hrtfDatabase, "hrtfDatabase");
-    info.addMember(s_loaderMap, "loaderMap", WTF::RetainingPointer);
+    if (m_databaseLoaderThread) {
+        DebugOnly<PRStatus> status = PR_JoinThread(m_databaseLoaderThread);
+        MOZ_ASSERT(status == PR_SUCCESS, "PR_JoinThread failed");
+    }
+    m_databaseLoaderThread = nullptr;
 }
 
 } // namespace WebCore
-
-#endif // ENABLE(WEB_AUDIO)

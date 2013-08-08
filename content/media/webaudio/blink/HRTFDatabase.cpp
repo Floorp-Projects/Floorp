@@ -26,15 +26,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
+#include "HRTFDatabase.h"
 
-#if ENABLE(WEB_AUDIO)
-
-#include "core/platform/audio/HRTFDatabase.h"
-
-#include "core/platform/PlatformMemoryInstrumentation.h"
-#include "core/platform/audio/HRTFElevation.h"
-#include <wtf/MemoryInstrumentationVector.h>
+#include "HRTFElevation.h"
 
 using namespace std;
 
@@ -47,24 +41,24 @@ const unsigned HRTFDatabase::NumberOfRawElevations = 10; // -45 -> +90 (each 15 
 const unsigned HRTFDatabase::InterpolationFactor = 1;
 const unsigned HRTFDatabase::NumberOfTotalElevations = NumberOfRawElevations * InterpolationFactor;
 
-PassOwnPtr<HRTFDatabase> HRTFDatabase::create(float sampleRate)
+nsReturnRef<HRTFDatabase> HRTFDatabase::create(float sampleRate)
 {
-    OwnPtr<HRTFDatabase> hrtfDatabase = adoptPtr(new HRTFDatabase(sampleRate));
-    return hrtfDatabase.release();
+    return nsReturnRef<HRTFDatabase>(new HRTFDatabase(sampleRate));
 }
 
 HRTFDatabase::HRTFDatabase(float sampleRate)
-    : m_elevations(NumberOfTotalElevations)
-    , m_sampleRate(sampleRate)
+    : m_sampleRate(sampleRate)
 {
+    m_elevations.SetLength(NumberOfTotalElevations);
+
     unsigned elevationIndex = 0;
     for (int elevation = MinElevation; elevation <= MaxElevation; elevation += RawElevationAngleSpacing) {
-        OwnPtr<HRTFElevation> hrtfElevation = HRTFElevation::createForSubject("Composite", elevation, sampleRate);
-        ASSERT(hrtfElevation.get());
+        nsAutoRef<HRTFElevation> hrtfElevation(HRTFElevation::createBuiltin(elevation, sampleRate));
+        MOZ_ASSERT(hrtfElevation.get());
         if (!hrtfElevation.get())
             return;
         
-        m_elevations[elevationIndex] = hrtfElevation.release();
+        m_elevations[elevationIndex] = hrtfElevation.out();
         elevationIndex += InterpolationFactor;
     }
 
@@ -79,7 +73,7 @@ HRTFDatabase::HRTFDatabase(float sampleRate)
             for (unsigned jj = 1; jj < InterpolationFactor; ++jj) {
                 float x = static_cast<float>(jj) / static_cast<float>(InterpolationFactor);
                 m_elevations[i + jj] = HRTFElevation::createByInterpolatingSlices(m_elevations[i].get(), m_elevations[j].get(), x, sampleRate);
-                ASSERT(m_elevations[i + jj].get());
+                MOZ_ASSERT(m_elevations[i + jj].get());
             }
         }
     }
@@ -89,19 +83,19 @@ void HRTFDatabase::getKernelsFromAzimuthElevation(double azimuthBlend, unsigned 
                                                   double& frameDelayL, double& frameDelayR)
 {
     unsigned elevationIndex = indexFromElevationAngle(elevationAngle);
-    ASSERT_WITH_SECURITY_IMPLICATION(elevationIndex < m_elevations.size() && m_elevations.size() > 0);
+    MOZ_ASSERT(elevationIndex < m_elevations.Length() && m_elevations.Length() > 0);
     
-    if (!m_elevations.size()) {
+    if (!m_elevations.Length()) {
         kernelL = 0;
         kernelR = 0;
         return;
     }
     
-    if (elevationIndex > m_elevations.size() - 1)
-        elevationIndex = m_elevations.size() - 1;    
+    if (elevationIndex > m_elevations.Length() - 1)
+        elevationIndex = m_elevations.Length() - 1;
     
     HRTFElevation* hrtfElevation = m_elevations[elevationIndex].get();
-    ASSERT(hrtfElevation);
+    MOZ_ASSERT(hrtfElevation);
     if (!hrtfElevation) {
         kernelL = 0;
         kernelR = 0;
@@ -114,19 +108,12 @@ void HRTFDatabase::getKernelsFromAzimuthElevation(double azimuthBlend, unsigned 
 unsigned HRTFDatabase::indexFromElevationAngle(double elevationAngle)
 {
     // Clamp to allowed range.
-    elevationAngle = max(static_cast<double>(MinElevation), elevationAngle);
-    elevationAngle = min(static_cast<double>(MaxElevation), elevationAngle);
+    elevationAngle = mozilla::clamped(elevationAngle,
+                                      static_cast<double>(MinElevation),
+                                      static_cast<double>(MaxElevation));
 
     unsigned elevationIndex = static_cast<int>(InterpolationFactor * (elevationAngle - MinElevation) / RawElevationAngleSpacing);    
     return elevationIndex;
 }
 
-void HRTFDatabase::reportMemoryUsage(MemoryObjectInfo* memoryObjectInfo) const
-{
-    MemoryClassInfo info(memoryObjectInfo, this, PlatformMemoryTypes::AudioSharedData);
-    info.addMember(m_elevations, "elevations");
-}
-
 } // namespace WebCore
-
-#endif // ENABLE(WEB_AUDIO)
