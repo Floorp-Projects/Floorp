@@ -371,13 +371,6 @@ public:
      */
     virtual bool RequiresLinearZoom() { return false; }
 
-    bool UsesSubpixelAATextRendering() {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-	return false;
-#endif
-	return true;
-    }
-
     /**
      * Whether to check all font cmaps during system font fallback
      */
@@ -481,6 +474,9 @@ public:
      */
     static bool BufferRotationEnabled();
     static void DisableBufferRotation();
+
+    static bool ComponentAlphaEnabled();
+
     /**
      * Are we going to try color management?
      */
