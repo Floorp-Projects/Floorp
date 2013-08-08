@@ -40,7 +40,7 @@ this.DOMRequestIpcHelperMessageListener = function(aHelper, aWindow, aMessages) 
 
   this._messages = aMessages;
   this._messages.forEach(function(msgName) {
-    cpmm.addMessageListener(msgName, this);
+    cpmm.addWeakMessageListener(msgName, this);
   }, this);
 
   Services.obs.addObserver(this, "inner-window-destroyed", /* weakRef */ true);
@@ -91,7 +91,7 @@ DOMRequestIpcHelperMessageListener.prototype = {
     Services.obs.removeObserver(this, "inner-window-destroyed");
 
     this._messages.forEach(function(msgName) {
-      cpmm.removeMessageListener(msgName, this);
+      cpmm.removeWeakMessageListener(msgName, this);
     }, this);
     this._messages = null;
 
