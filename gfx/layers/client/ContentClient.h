@@ -226,10 +226,7 @@ public:
                                                        uint32_t aFlags,
                                                        RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE;
 
-  virtual bool SupportsAzureContent() const MOZ_OVERRIDE
-  {
-    return gfxPlatform::GetPlatform()->SupportsAzureContent();
-  }
+  virtual bool SupportsAzureContent() const MOZ_OVERRIDE;
 
   void DestroyBuffers();
 

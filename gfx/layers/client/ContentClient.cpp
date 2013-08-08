@@ -194,6 +194,20 @@ ContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType aType,
 
   CreateFrontBufferAndNotify(aRect);
 }
+ 
+bool
+ContentClientRemoteBuffer::SupportsAzureContent() const
+{
+  if (!mDeprecatedTextureClient) {
+    // Hopefully we don't call this method before we have a texture client. But if
+    // we do, then we have no idea if we can support Azure for whatever surface the
+    // texture client might come up with.
+    return false;
+  }
+
+  return gfxPlatform::GetPlatform()->SupportsAzureContentForType(
+    mDeprecatedTextureClient->BackendType());
+}
 
 TemporaryRef<DrawTarget>
 ContentClientRemoteBuffer::CreateDTBuffer(ContentType aType,
@@ -457,7 +471,7 @@ ContentClientDoubleBuffered::SyncFrontBufferToBackBuffer()
  
   AutoDeprecatedTextureClient autoTextureFront;
   AutoDeprecatedTextureClient autoTextureFrontOnWhite;
-  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+  if (SupportsAzureContent()) {
     RotatedBuffer frontBuffer(autoTextureFront.GetDrawTarget(mFrontClient),
                               autoTextureFrontOnWhite.GetDrawTarget(mFrontClientOnWhite),
                               mFrontBufferRect,
@@ -488,7 +502,7 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
     gfxUtils::ClipToRegion(destCtx, aUpdateRegion);
   }
 
-  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+  if (SupportsAzureContent()) {
     MOZ_ASSERT(!destCtx->IsCairo());
 
     if (destCtx->GetDrawTarget()->GetFormat() == FORMAT_B8G8R8A8) {
@@ -510,7 +524,7 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
       gfxUtils::ClipToRegion(destCtx, aUpdateRegion);
     }
 
-    if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+    if (SupportsAzureContent()) {
       MOZ_ASSERT(!destCtx->IsCairo());
 
       if (destCtx->GetDrawTarget()->GetFormat() == FORMAT_B8G8R8A8) {
@@ -806,8 +820,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
                    "BeginUpdate should always modify the draw region in the same way!");
       FillSurface(onBlack, result.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(0.0, 0.0, 0.0, 1.0));
       FillSurface(onWhite, result.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(1.0, 1.0, 1.0, 1.0));
-      if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-        RefPtr<DrawTarget> onBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onBlack, onBlack->GetSize());
+      if (RefPtr<DrawTarget> onBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onBlack, onBlack->GetSize())) {
         RefPtr<DrawTarget> onWhiteDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onWhite, onWhite->GetSize());
         RefPtr<DrawTarget> dt = Factory::CreateDualDrawTarget(onBlackDT, onWhiteDT);
         result.mContext = new gfxContext(dt);
@@ -833,8 +846,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
     }
   } else {
     nsRefPtr<gfxASurface> surf = GetUpdateSurface(BUFFER_BLACK, result.mRegionToDraw);
-    if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-      RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize());
+    if (RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize())) {
       result.mContext = new gfxContext(dt);
     } else {
       result.mContext = new gfxContext(surf);

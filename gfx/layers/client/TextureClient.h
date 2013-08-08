@@ -345,7 +345,15 @@ public:
    */
   virtual gfxImageSurface* LockImageSurface() { return nullptr; }
   virtual gfxASurface* LockSurface() { return nullptr; }
+  // If you implement LockDrawTarget, you MUST implement BackendType()
   virtual gfx::DrawTarget* LockDrawTarget() { return nullptr; }
+
+  // The type of draw target returned by LockDrawTarget.
+  virtual gfx::BackendType BackendType()
+  {
+    return gfx::BACKEND_NONE;
+  }
+
 
   virtual SurfaceDescriptor* LockSurfaceDescriptor() { return GetDescriptor(); }
   virtual void ReleaseResources() {}
@@ -432,6 +440,10 @@ public:
   virtual gfxImageSurface* LockImageSurface() MOZ_OVERRIDE;
   virtual gfxASurface* LockSurface() MOZ_OVERRIDE { return GetSurface(); }
   virtual gfx::DrawTarget* LockDrawTarget();
+  virtual gfx::BackendType BackendType() MOZ_OVERRIDE
+  {
+    return gfx::BACKEND_CAIRO;
+  }
   virtual void Unlock() MOZ_OVERRIDE;
   virtual bool EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
 
