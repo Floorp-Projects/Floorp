@@ -509,6 +509,9 @@ function findClosestLocale(aLocales) {
  * previous instance may be a previous install or in the case of an application
  * version change the same add-on.
  *
+ * NOTE: this may modify aNewAddon in place; callers should save the database if
+ * necessary
+ *
  * @param  aOldAddon
  *         The previous instance of the add-on
  * @param  aNewAddon
@@ -1332,19 +1335,24 @@ function recursiveRemove(aFile) {
  * @return Epoch time, as described above. 0 for an empty directory.
  */
 function recursiveLastModifiedTime(aFile) {
-  if (aFile.isFile())
-    return aFile.lastModifiedTime;
+  try {
+    if (aFile.isFile())
+      return aFile.lastModifiedTime;
 
-  if (aFile.isDirectory()) {
-    let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
-    let entry, time;
-    let maxTime = aFile.lastModifiedTime;
-    while ((entry = entries.nextFile)) {
-      time = recursiveLastModifiedTime(entry);
-      maxTime = Math.max(time, maxTime);
+    if (aFile.isDirectory()) {
+      let entries = aFile.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
+      let entry, time;
+      let maxTime = aFile.lastModifiedTime;
+      while ((entry = entries.nextFile)) {
+        time = recursiveLastModifiedTime(entry);
+        maxTime = Math.max(time, maxTime);
+      }
+      entries.close();
+      return maxTime;
     }
-    entries.close();
-    return maxTime;
+  }
+  catch (e) {
+    WARN("Problem getting last modified time for " + aFile.path, e);
   }
 
   // If the file is something else, just ignore it.
@@ -1877,10 +1885,12 @@ var XPIProvider = {
 
     if (gLazyObjectsLoaded) {
       XPIDatabase.shutdown(function shutdownCallback() {
+        LOG("Notifying XPI shutdown observers");
         Services.obs.notifyObservers(null, "xpi-provider-shutdown", null);
       });
     }
     else {
+      LOG("Notifying XPI shutdown observers");
       Services.obs.notifyObservers(null, "xpi-provider-shutdown", null);
     }
   },
@@ -1938,7 +1948,7 @@ var XPIProvider = {
   },
 
   /**
-   * Persists changes to XPIProvider.bootstrappedAddons to it's store (a pref).
+   * Persists changes to XPIProvider.bootstrappedAddons to its store (a pref).
    */
   persistBootstrappedAddons: function XPI_persistBootstrappedAddons() {
     Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
@@ -2498,7 +2508,7 @@ var XPIProvider = {
           applyBlocklistChanges(aOldAddon, newAddon);
 
           // Carry over any pendingUninstall state to add-ons modified directly
-          // in the profile. This is impoprtant when the attempt to remove the
+          // in the profile. This is important when the attempt to remove the
           // add-on in processPendingFileChanges failed and caused an mtime
           // change to the add-ons files.
           newAddon.pendingUninstall = aOldAddon.pendingUninstall;
@@ -2658,38 +2668,27 @@ var XPIProvider = {
 
       // App version changed, we may need to update the appDisabled property.
       if (aUpdateCompatibility) {
-        // Create a basic add-on object for the new state to save reproducing
-        // the applyBlocklistChanges code
-        let newAddon = new AddonInternal();
-        newAddon.id = aOldAddon.id;
-        newAddon.syncGUID = aOldAddon.syncGUID;
-        newAddon.version = aOldAddon.version;
-        newAddon.type = aOldAddon.type;
-        newAddon.appDisabled = !isUsableAddon(aOldAddon);
-
-        // Sync the userDisabled flag to the selectedSkin
-        if (aOldAddon.type == "theme")
-          newAddon.userDisabled = aOldAddon.internalName != XPIProvider.selectedSkin;
-
-        applyBlocklistChanges(aOldAddon, newAddon, aOldAppVersion,
-                              aOldPlatformVersion);
-
         let wasDisabled = isAddonDisabled(aOldAddon);
-        let isDisabled = isAddonDisabled(newAddon);
+        let wasAppDisabled = aOldAddon.appDisabled;
+        let wasUserDisabled = aOldAddon.userDisabled;
+        let wasSoftDisabled = aOldAddon.softDisabled;
+
+        // This updates the addon's JSON cached data in place
+        applyBlocklistChanges(aOldAddon, aOldAddon, aOldAppVersion,
+                              aOldPlatformVersion);
+        aOldAddon.appDisabled = !isUsableAddon(aOldAddon);
+
+        let isDisabled = isAddonDisabled(aOldAddon);
 
         // If either property has changed update the database.
-        if (newAddon.appDisabled != aOldAddon.appDisabled ||
-            newAddon.userDisabled != aOldAddon.userDisabled ||
-            newAddon.softDisabled != aOldAddon.softDisabled) {
+        if (wasAppDisabled != aOldAddon.appDisabled ||
+            wasUserDisabled != aOldAddon.userDisabled ||
+            wasSoftDisabled != aOldAddon.softDisabled) {
           LOG("Add-on " + aOldAddon.id + " changed appDisabled state to " +
-              newAddon.appDisabled + ", userDisabled state to " +
-              newAddon.userDisabled + " and softDisabled state to " +
-              newAddon.softDisabled);
-          XPIDatabase.setAddonProperties(aOldAddon, {
-            appDisabled: newAddon.appDisabled,
-            userDisabled: newAddon.userDisabled,
-            softDisabled: newAddon.softDisabled
-          });
+              aOldAddon.appDisabled + ", userDisabled state to " +
+              aOldAddon.userDisabled + " and softDisabled state to " +
+              aOldAddon.softDisabled);
+          XPIDatabase.saveChanges();
         }
 
         // If this is a visible add-on and it has changed disabled state then we
@@ -2895,20 +2894,7 @@ var XPIProvider = {
         newAddon.active = (newAddon.visible && !isAddonDisabled(newAddon))
       }
 
-      let newDBAddon = null;
-      try {
-        // Update the database.
-        // XXX I don't think this can throw any more
-        newDBAddon = XPIDatabase.addAddonMetadata(newAddon, aAddonState.descriptor);
-      }
-      catch (e) {
-        // Failing to write the add-on into the database is non-fatal, the
-        // add-on will just be unavailable until we try again in a subsequent
-        // startup
-        ERROR("Failed to add add-on " + aId + " in " + aInstallLocation.name +
-              " to database", e);
-        return false;
-      }
+      let newDBAddon = XPIDatabase.addAddonMetadata(newAddon, aAddonState.descriptor);
 
       if (newDBAddon.visible) {
         // Remember add-ons that were first detected during startup.
@@ -3226,25 +3212,22 @@ var XPIProvider = {
       }
     }
 
-    // Catch any errors during the main startup and rollback the database changes
-    let transationBegun = false;
+    // Catch and log any errors during the main startup
     try {
       let extensionListChanged = false;
       // If the database needs to be updated then open it and then update it
       // from the filesystem
       if (updateDatabase || hasPendingChanges) {
-        XPIDatabase.beginTransaction();
-        transationBegun = true;
-        XPIDatabase.openConnection(false, true);
-
         try {
+          XPIDatabase.openConnection(false, true);
+
           extensionListChanged = this.processFileChanges(state, manifests,
                                                          aAppChanged,
                                                          aOldAppVersion,
                                                          aOldPlatformVersion);
         }
         catch (e) {
-          ERROR("Error processing file changes", e);
+          ERROR("Failed to process extension changes at startup", e);
         }
       }
       AddonManagerPrivate.recordSimpleMeasure("installedUnpacked", this.unpackedAddons);
@@ -3253,10 +3236,6 @@ var XPIProvider = {
         // When upgrading the app and using a custom skin make sure it is still
         // compatible otherwise switch back the default
         if (this.currentSkin != this.defaultSkin) {
-          if (!transationBegun) {
-            XPIDatabase.beginTransaction();
-            transationBegun = true;
-          }
           let oldSkin = XPIDatabase.getVisibleAddonForInternalName(this.currentSkin);
           if (!oldSkin || isAddonDisabled(oldSkin))
             this.enableDefaultTheme();
@@ -3264,21 +3243,21 @@ var XPIProvider = {
 
         // When upgrading remove the old extensions cache to force older
         // versions to rescan the entire list of extensions
-        let oldCache = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_CACHE], true);
-        if (oldCache.exists())
-          oldCache.remove(true);
+        try {
+          let oldCache = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_CACHE], true);
+          if (oldCache.exists())
+            oldCache.remove(true);
+        }
+        catch (e) {
+          WARN("Unable to remove old extension cache " + oldCache.path, e);
+        }
       }
 
       // If the application crashed before completing any pending operations then
       // we should perform them now.
       if (extensionListChanged || hasPendingChanges) {
         LOG("Updating database with changes to installed add-ons");
-        if (!transationBegun) {
-          XPIDatabase.beginTransaction();
-          transationBegun = true;
-        }
         XPIDatabase.updateActiveAddons();
-        XPIDatabase.commitTransaction();
         XPIDatabase.writeAddonsList();
         Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
         Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
@@ -3287,14 +3266,9 @@ var XPIProvider = {
       }
 
       LOG("No changes found");
-      if (transationBegun)
-        XPIDatabase.commitTransaction();
     }
     catch (e) {
-      ERROR("Error during startup file checks, rolling back any database " +
-            "changes", e);
-      if (transationBegun)
-        XPIDatabase.rollbackTransaction();
+      ERROR("Error during startup file checks", e);
     }
 
     // Check that the add-ons list still exists
@@ -3683,7 +3657,7 @@ var XPIProvider = {
                                                        null);
       this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
                                                             null);
-      this.updateAllAddonDisabledStates();
+      this.updateAddonAppDisabledStates();
       break;
     }
   },
@@ -4002,8 +3976,7 @@ var XPIProvider = {
         this.bootstrapScopes[aId][aMethod](params, aReason);
       }
       catch (e) {
-        WARN("Exception running bootstrap method " + aMethod + " on " +
-             aId, e);
+        WARN("Exception running bootstrap method " + aMethod + " on " + aId, e);
       }
     }
     finally {
@@ -4015,19 +3988,9 @@ var XPIProvider = {
   },
 
   /**
-   * Updates the appDisabled property for all add-ons.
-   */
-  updateAllAddonDisabledStates: function XPI_updateAllAddonDisabledStates() {
-    let addons = XPIDatabase.getAddons();
-    addons.forEach(function(aAddon) {
-      this.updateAddonDisabledState(aAddon);
-    }, this);
-  },
-
-  /**
    * Updates the disabled state for an add-on. Its appDisabled property will be
-   * calculated and if the add-on is changed appropriate notifications will be
-   * sent out to the registered AddonListeners.
+   * calculated and if the add-on is changed the database will be saved and
+   * appropriate notifications will be sent out to the registered AddonListeners.
    *
    * @param  aAddon
    *         The DBAddonInternal to update
@@ -5334,7 +5297,7 @@ AddonInstall.prototype = {
         // Update the metadata in the database
         this.addon._sourceBundle = file;
         this.addon._installLocation = this.installLocation;
-        this.addon.updateDate = recursiveLastModifiedTime(file);
+        this.addon.updateDate = recursiveLastModifiedTime(file); // XXX sync recursive scan
         this.addon.visible = true;
         if (isUpgrade) {
           this.addon =  XPIDatabase.updateAddonMetadata(this.existingAddon, this.addon,
