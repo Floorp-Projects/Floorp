@@ -1258,57 +1258,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   return rv;
 }
 
-nsresult
-nsJSContext::ExecuteScript(JSScript* aScriptObject_,
-                           JSObject* aScopeObject_)
-{
-  JSAutoRequest ar(mContext);
-  JS::Rooted<JSObject*> aScopeObject(mContext, aScopeObject_);
-  JS::Rooted<JSScript*> aScriptObject(mContext, aScriptObject_);
-  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  if (!mScriptsEnabled) {
-    return NS_OK;
-  }
-
-  nsAutoMicroTask mt;
-
-  if (!aScopeObject) {
-    aScopeObject = GetNativeGlobal();
-  }
-
-  xpc_UnmarkGrayScript(aScriptObject);
-  xpc_UnmarkGrayObject(aScopeObject);
-
-  // Push our JSContext on our thread's context stack, in case native code
-  // called from JS calls back into JS via XPConnect.
-  nsCxPusher pusher;
-  pusher.Push(mContext);
-
-  // Scope the JSAutoCompartment so that it gets destroyed before we pop the
-  // cx and potentially call JS_RestoreFrameChain.
-  {
-    JSAutoCompartment ac(mContext, aScopeObject);
-
-    // The result of evaluation, used only if there were no errors. This need
-    // not be a GC root currently, provided we run the GC only from the
-    // operation callback or from ScriptEvaluated.
-    JS::Rooted<JS::Value> val(mContext);
-    if (!JS_ExecuteScript(mContext, aScopeObject, aScriptObject, val.address())) {
-      ReportPendingException();
-    }
-  }
-
-  // Pop here, after JS_ValueToString and any other possible evaluation.
-  pusher.Pop();
-
-  // ScriptEvaluated needs to come after we pop the stack
-  ScriptEvaluated(true);
-
-  return NS_OK;
-}
-
-
 #ifdef DEBUG
 bool
 AtomIsEventHandlerName(nsIAtom *aName)

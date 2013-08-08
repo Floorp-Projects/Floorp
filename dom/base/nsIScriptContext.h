@@ -65,23 +65,6 @@ public:
                                   JS::Value* aRetValue) = 0;
 
   /**
-   * Execute a precompiled script object.
-   *
-   * @param aScriptObject an object representing the script to be executed
-   * @param aScopeObject an object telling the scope in which to execute,
-   *                     or nullptr to use a default scope
-   * @param aRetValue the result of executing the script, may be null in
-   *                  which case no result string is computed
-   * @param aIsUndefined true if the result of executing the script is the
-   *                     undefined value, may be null for "don't care"
-   *
-   * @return NS_OK if the script was valid and got executed
-   *
-   */
-  virtual nsresult ExecuteScript(JSScript* aScriptObject,
-                                 JSObject* aScopeObject) = 0;
-
-  /**
    * Bind an already-compiled event handler function to the given
    * target.  Scripting languages with static scoping must re-bind the
    * scope chain for aHandler to begin (after the activation scope for
