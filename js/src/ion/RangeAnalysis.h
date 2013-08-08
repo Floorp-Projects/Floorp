@@ -329,10 +329,10 @@ class Range : public TempObject {
     }
 
     inline void set(int64_t l, int64_t h, bool d = false, uint16_t e = MaxInt32Exponent) {
+        max_exponent_ = e;
         setLowerInit(l);
         setUpperInit(h);
         decimal_ = d;
-        max_exponent_ = e;
         rectifyExponent();
         JS_ASSERT_IF(lower_infinite_, lower_ == JSVAL_INT_MIN);
         JS_ASSERT_IF(upper_infinite_, upper_ == JSVAL_INT_MAX);
