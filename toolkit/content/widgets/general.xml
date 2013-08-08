@@ -113,15 +113,7 @@
       </children>
     </content>
 
-    <implementation implements="nsIAccessibleProvider">
-      <property name="accessibleType" readonly="true">
-        <getter>
-          <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULButton;
-          ]]>
-        </getter>
-      </property>
-
+    <implementation>
       <property name="label"
                 onget="return this.getAttribute('label');"
                 onset="this.setAttribute('label',val); return val;"/>
@@ -184,6 +176,16 @@
     <content>
       <xul:image class="statusbarpanel-icon" xbl:inherits="src,src=image"/>
     </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULButton;
+          ]]>
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="statusbarpanel-iconic-text" display="xul:button"
@@ -192,6 +194,16 @@
       <xul:image class="statusbarpanel-icon" xbl:inherits="src,src=image"/>
       <xul:label class="statusbarpanel-text" xbl:inherits="value=label,crop"/>
     </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          <![CDATA[
+            return Components.interfaces.nsIAccessibleProvider.XULButton;
+          ]]>
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="image">
