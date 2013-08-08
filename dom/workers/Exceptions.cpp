@@ -12,6 +12,7 @@
 #include "mozilla/Util.h"
 #include "nsDOMException.h"
 #include "nsTraceRefcnt.h"
+#include "mozilla/dom/BindingUtils.h"
 
 #include "WorkerInlines.h"
 
@@ -31,14 +32,15 @@ class DOMException : public PrivatizableBase
   static JSClass sClass;
   static const JSPropertySpec sProperties[];
   static const JSFunctionSpec sFunctions[];
-  static const JSPropertySpec sStaticProperties[];
+  static const dom::ConstantSpec sStaticConstants[];
 
   enum SLOT {
     SLOT_code = 0,
     SLOT_name,
     SLOT_message,
 
-    SLOT_COUNT
+    SLOT_COUNT,
+    SLOT_FIRST = SLOT_code
   };
 
 public:
@@ -46,9 +48,18 @@ public:
   InitClass(JSContext* aCx, JSObject* aObj)
   {
     JS::Rooted<JSObject*> proto(aCx, JS_InitClass(aCx, aObj, nullptr, &sClass, Construct, 0,
-                                                  sProperties, sFunctions, sStaticProperties,
-                                                  nullptr));
-    if (proto && !JS_DefineProperties(aCx, proto, sStaticProperties)) {
+                                                  sProperties, sFunctions, nullptr, nullptr));
+    if (!proto) {
+      return NULL;
+    }
+
+    JS::Rooted<JSObject*> ctor(aCx, JS_GetConstructor(aCx, proto));
+    if (!ctor) {
+      return NULL;
+    }
+
+    if (!dom::DefineConstants(aCx, ctor, sStaticConstants) ||
+        !dom::DefineConstants(aCx, proto, sStaticConstants)) {
       return NULL;
     }
 
@@ -125,35 +136,38 @@ private:
     return true;
   }
 
-  static JSBool
-  GetProperty(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
-              JS::MutableHandle<JS::Value> aVp)
+  static bool
+  IsDOMException(const JS::Value& v)
   {
-    JS_ASSERT(JSID_IS_INT(aIdval));
-
-    int32_t slot = JSID_TO_INT(aIdval);
-
-    JSClass* classPtr = JS_GetClass(aObj);
-
-    if (classPtr != &sClass || !GetJSPrivateSafeish<DOMException>(aObj)) {
-      JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
-                           JSMSG_INCOMPATIBLE_PROTO, sClass.name,
-                           sProperties[slot].name, classPtr->name);
+    if (!v.isObject())
       return false;
-    }
-
-    aVp.set(JS_GetReservedSlot(aObj, slot));
-    return true;
+    JSObject* obj = &v.toObject();
+    return JS_GetClass(obj) == &sClass &&
+           GetJSPrivateSafeish<DOMException>(obj) != nullptr;
   }
 
-  static JSBool
-  GetConstant(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> idval,
-              JS::MutableHandle<JS::Value> aVp)
+  template<SLOT Slot>
+  static bool
+  GetPropertyImpl(JSContext* aCx, JS::CallArgs aArgs)
   {
-    JS_ASSERT(JSID_IS_INT(idval));
-    aVp.set(INT_TO_JSVAL(JSID_TO_INT(idval)));
+    aArgs.rval().set(JS_GetReservedSlot(&aArgs.thisv().toObject(), Slot));
     return true;
   }
+
+  // This struct (versus just templating the method directly) is needed only for
+  // gcc 4.4 (and maybe 4.5 -- 4.6 is okay) being too braindead to allow
+  // GetProperty<Slot> and friends in the JSPropertySpec[] below.
+  template<SLOT Slot>
+  struct Property
+  {
+    static JSBool
+    Get(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
+    {
+      static_assert(SLOT_FIRST <= Slot && Slot < SLOT_COUNT, "bad slot");
+      JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
+      return JS::CallNonGenericMethod<IsDOMException, GetPropertyImpl<Slot> >(aCx, args);
+    }
+  };
 };
 
 JSClass DOMException::sClass = {
@@ -164,13 +178,11 @@ JSClass DOMException::sClass = {
 };
 
 const JSPropertySpec DOMException::sProperties[] = {
-  { "code", SLOT_code, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
-    JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
-  { "name", SLOT_name, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
-    JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
-  { "message", SLOT_message, PROPERTY_FLAGS, JSOP_WRAPPER(GetProperty),
-    JSOP_WRAPPER(js_GetterOnlyPropertyStub) },
-  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+  JS_PSGS("code", Property<SLOT_code>::Get, GetterOnlyJSNative, JSPROP_ENUMERATE),
+  JS_PSGS("name", Property<SLOT_name>::Get, GetterOnlyJSNative, JSPROP_ENUMERATE),
+  JS_PSGS("message", Property<SLOT_message>::Get, GetterOnlyJSNative,
+          JSPROP_ENUMERATE),
+  JS_PS_END
 };
 
 const JSFunctionSpec DOMException::sFunctions[] = {
@@ -178,10 +190,10 @@ const JSFunctionSpec DOMException::sFunctions[] = {
   JS_FS_END
 };
 
-const JSPropertySpec DOMException::sStaticProperties[] = {
+const dom::ConstantSpec DOMException::sStaticConstants[] = {
 
 #define EXCEPTION_ENTRY(_name) \
-  { #_name, _name, CONSTANT_FLAGS, JSOP_WRAPPER(GetConstant), JSOP_NULLWRAPPER },
+  { #_name, JS::Int32Value(_name) },
 
   EXCEPTION_ENTRY(INDEX_SIZE_ERR)
   EXCEPTION_ENTRY(DOMSTRING_SIZE_ERR)
@@ -211,7 +223,7 @@ const JSPropertySpec DOMException::sStaticProperties[] = {
 
 #undef EXCEPTION_ENTRY
 
-  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }
+  { nullptr, JS::UndefinedValue() }
 };
 
 // static
