@@ -260,7 +260,7 @@ typedef struct JSPropertyDesc {
 #define JSPD_ALIAS      0x08    /* property has an alias id */
 #define JSPD_EXCEPTION  0x40    /* exception occurred fetching the property, */
                                 /* value is exception */
-#define JSPD_ERROR      0x80    /* native getter returned JS_FALSE without */
+#define JSPD_ERROR      0x80    /* native getter returned false without */
                                 /* throwing an exception */
 
 typedef struct JSPropertyDescArray {
@@ -358,8 +358,8 @@ class JS_PUBLIC_API(JSBrokenFrameIterator)
  * or function call: just before execution begins and just after it finishes.
  * In both cases the 'current' frame is that of the executing code.
  *
- * The 'before' param is JS_TRUE for the hook invocation before the execution
- * and JS_FALSE for the invocation after the code has run.
+ * The 'before' param is true for the hook invocation before the execution
+ * and false for the invocation after the code has run.
  *
  * The 'ok' param is significant only on the post execution invocation to
  * signify whether or not the code completed 'normally'.

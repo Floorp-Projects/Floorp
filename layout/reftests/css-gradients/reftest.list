@@ -3,7 +3,7 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,3,89700) f
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,2,89997) fuzzy-if(azureQuartz&&OSX==10.6,1,11469) == linear-keywords-1a.html linear-keywords-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureSkiaGL,2,89997) fuzzy-if(azureQuartz,1,11985) == linear-keywords-1b.html linear-keywords-1-ref.html
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,88500) fuzzy-if(azureQuartz&&OSX==10.6,1,10230) == linear-percent.html linear-percent-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,92400) fuzzy-if(azureSkiaGL,2,143400) fuzzy-if(azureQuartz,1,18215) == linear-mix.html linear-mix-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,4,92400) fuzzy-if(azureSkiaGL,2,143400) fuzzy-if(azureQuartz,1,18215) fuzzy-if(Android&&AndroidVersion>=15,4,93000) == linear-mix.html linear-mix-ref.html
 == linear-diagonal-1a.html linear-diagonal-1-ref.html
 == linear-diagonal-1b.html linear-diagonal-1-ref.html
 == linear-diagonal-1c.html linear-diagonal-1-ref.html

@@ -168,17 +168,20 @@ HTMLOptionsCollection::SetOption(uint32_t aIndex,
   
   nsCOMPtr<nsIDOMNode> ret;
   if (index == mElements.Length()) {
-    rv = mSelect->AppendChild(aOption, getter_AddRefs(ret));
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aOption);
+    rv = mSelect->AppendChild(node, getter_AddRefs(ret));
   } else {
     // Find the option they're talking about and replace it
     // hold a strong reference to follow COM rules.
-    nsCOMPtr<nsIDOMHTMLOptionElement> refChild = ItemAsOption(index);
+    nsRefPtr<HTMLOptionElement> refChild = ItemAsOption(index);
     NS_ENSURE_TRUE(refChild, NS_ERROR_UNEXPECTED);
 
-    nsCOMPtr<nsIDOMNode> parent;
-    refChild->GetParentNode(getter_AddRefs(parent));
+    nsCOMPtr<nsINode> parent = refChild->GetParent();
     if (parent) {
-      rv = parent->ReplaceChild(aOption, refChild, getter_AddRefs(ret));
+      nsCOMPtr<nsINode> node = do_QueryInterface(aOption);
+      ErrorResult res;
+      parent->ReplaceChild(*node, *refChild, res);
+      rv = res.ErrorCode();
     }
   }
 
@@ -346,7 +349,8 @@ HTMLOptionsCollection::Add(nsIDOMHTMLOptionElement* aOption,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  return mSelect->Add(aOption, aBefore);
+  nsCOMPtr<nsIDOMHTMLElement> elem = do_QueryInterface(aOption);
+  return mSelect->Add(elem, aBefore);
 }
 
 void
