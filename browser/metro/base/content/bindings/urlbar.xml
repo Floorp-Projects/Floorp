@@ -281,20 +281,22 @@
         <parameter name="aShouldDismiss"/>
         <body>
           <![CDATA[
-            if (this.isEditing)
+            if (this.isEditing) {
               return;
+            }
 
             Elements.urlbarState.setAttribute("mode", "edit");
             this._lastKnownGoodURL = this.value;
 
-            if (!this.focused)
+            if (!this.focused) {
               this.focus();
+            }
 
             this._clearFormatting();
-            this.select();
 
-            if (aShouldDismiss)
+            if (aShouldDismiss) {
               ContextUI.dismissTabs();
+            }
           ]]>
         </body>
       </method>
@@ -313,8 +315,9 @@
             if (this.focused)
               this.blur();
 
-            if (aShouldRevert)
+            if (aShouldRevert) {
               this.value = this._lastKnownGoodURL;
+            }
           ]]>
         </body>
       </method>
@@ -445,6 +448,7 @@
       <handler event="click" phase="capturing">
         <![CDATA[
           this.beginEditing(true);
+          this.select();
         ]]>
       </handler>
 
