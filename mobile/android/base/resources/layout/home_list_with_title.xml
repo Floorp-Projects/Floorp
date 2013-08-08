@@ -29,8 +29,7 @@
     </LinearLayout>
 
     <TextView android:id="@+id/title"
-              style="@style/Widget.Home.PageTitle"
-              android:visibility="gone"/>
+              style="@style/Widget.Home.PageTitle"/>
 
     <org.mozilla.gecko.home.HomeListView
             android:id="@+id/list"
