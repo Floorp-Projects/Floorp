@@ -29,24 +29,23 @@
 #ifndef HRTFDatabaseLoader_h
 #define HRTFDatabaseLoader_h
 
-#include "core/platform/audio/HRTFDatabase.h"
-#include "wtf/HashMap.h"
-#include "wtf/PassRefPtr.h"
-#include "wtf/RefCounted.h"
-#include "wtf/RefPtr.h"
-#include "wtf/Threading.h"
+#include "HRTFDatabase.h"
+#include "nsTHashtable.h"
+#include "mozilla/RefPtr.h"
+#include "nsIThread.h"
+#include "mozilla/Mutex.h"
 
 namespace WebCore {
 
 // HRTFDatabaseLoader will asynchronously load the default HRTFDatabase in a new thread.
 
-class HRTFDatabaseLoader : public RefCounted<HRTFDatabaseLoader> {
+class HRTFDatabaseLoader : public mozilla::RefCounted<HRTFDatabaseLoader> {
 public:
     // Lazily creates a HRTFDatabaseLoader (if not already created) for the given sample-rate
     // and starts loading asynchronously (when created the first time).
     // Returns the HRTFDatabaseLoader.
     // Must be called from the main thread.
-    static PassRefPtr<HRTFDatabaseLoader> createAndLoadAsynchronouslyIfNecessary(float sampleRate);
+    static mozilla::TemporaryRef<HRTFDatabaseLoader> createAndLoadAsynchronouslyIfNecessary(float sampleRate);
 
     // Both constructor and destructor must be called from the main thread.
     ~HRTFDatabaseLoader();
@@ -54,7 +53,8 @@ public:
     // Returns true once the default database has been completely loaded.
     bool isLoaded() const;
 
-    // waitForLoaderThreadCompletion() may be called more than once and is thread-safe.
+    // waitForLoaderThreadCompletion() may be called more than once,
+    // on any thread except m_databaseLoaderThread.
     void waitForLoaderThreadCompletion();
     
     HRTFDatabase* database() { return m_hrtfDatabase.get(); }
@@ -63,8 +63,6 @@ public:
     
     // Called in asynchronous loading thread.
     void load();
-
-    void reportMemoryUsage(MemoryObjectInfo*) const;
 
 private:
     // Both constructor and destructor must be called from the main thread.
@@ -75,16 +73,23 @@ private:
     void loadAsynchronously();
 
     // Map from sample-rate to loader.
-    typedef HashMap<double, HRTFDatabaseLoader*> LoaderMap;
-
+    class LoaderByRateEntry : public nsFloatHashKey {
+    public:
+        LoaderByRateEntry(KeyTypePointer aKey)
+            : nsFloatHashKey(aKey)
+            , mLoader() // so PutEntry() will zero-initialize
+        {
+        }
+        HRTFDatabaseLoader* mLoader;
+    };
     // Keeps track of loaders on a per-sample-rate basis.
-    static LoaderMap* s_loaderMap; // singleton
+    static nsTHashtable<LoaderByRateEntry> *s_loaderMap; // singleton
 
-    OwnPtr<HRTFDatabase> m_hrtfDatabase;
+    nsAutoRef<HRTFDatabase> m_hrtfDatabase;
 
     // Holding a m_threadLock is required when accessing m_databaseLoaderThread.
-    Mutex m_threadLock;
-    ThreadIdentifier m_databaseLoaderThread;
+    mozilla::Mutex m_threadLock;
+    PRThread* m_databaseLoaderThread;
 
     float m_databaseSampleRate;
 };
