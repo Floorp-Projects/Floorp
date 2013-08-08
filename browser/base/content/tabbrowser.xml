@@ -187,8 +187,7 @@
           if (!window.gShowPageResizers)
             return;
 
-          var show = document.getElementById("addon-bar").collapsed &&
-                     window.windowState == window.STATE_NORMAL;
+          var show = window.windowState == window.STATE_NORMAL;
           for (let i = 0; i < this.browsers.length; i++) {
             this.browsers[i].showWindowResizer = show;
           }
@@ -979,7 +978,7 @@
             this.mCurrentTab = this.tabContainer.selectedItem;
             this.showTab(this.mCurrentTab);
 
-            var backForwardContainer = document.getElementById("unified-back-forward-button");
+            var backForwardContainer = document.getElementById("urlbar-container");
             if (backForwardContainer) {
               backForwardContainer.setAttribute("switchingtabs", "true");
               window.addEventListener("MozAfterPaint", function removeSwitchingtabsAttr() {
@@ -1466,8 +1465,7 @@
             if (remote)
               b.setAttribute("remote", "true");
 
-            if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
-                window.windowState == window.STATE_NORMAL) {
+            if (window.gShowPageResizers && window.windowState == window.STATE_NORMAL) {
               b.setAttribute("showresizer", "true");
             }
 
@@ -3361,10 +3359,6 @@
           document.getElementById("menu_close").setAttribute("label",
             this.tabbrowser.mStringBundle.getString(visible ? "tabs.closeTab" : "tabs.close"));
 
-          goSetCommandEnabled("cmd_ToggleTabsOnTop", visible);
-
-          TabsOnTop.syncUI();
-
           TabsInTitlebar.allowedBy("tabs-visible", visible);
         ]]></body>
       </method>
@@ -3716,9 +3710,7 @@
               if (aEvent.target != window)
                 break;
 
-              let sizemode = document.documentElement.getAttribute("sizemode");
-              TabsInTitlebar.allowedBy("sizemode",
-                                       sizemode == "maximized" || sizemode == "fullscreen");
+              TabsInTitlebar.updateAppearance();
 
               var width = this.mTabstrip.boxObject.width;
               if (width != this.mTabstripWidth) {
@@ -4019,8 +4011,7 @@
         // When the tabbar has an unified appearance with the titlebar
         // and menubar, a double-click in it should have the same behavior
         // as double-clicking the titlebar
-        if (TabsInTitlebar.enabled ||
-            (TabsOnTop.enabled && this.parentNode._dragBindingAlive))
+        if (TabsInTitlebar.enabled || this.parentNode._dragBindingAlive)
           return;
 #endif
 
@@ -4451,7 +4442,7 @@
         var clickedOnce = false;
         function enableDblClick(event) {
           var target = event.originalTarget;
-          if (target.className == 'tab-close-button')
+          if (target.classList.contains("tab-close-button"))
             target._ignoredClick = true;
           if (!clickedOnce) {
             clickedOnce = true;
@@ -4507,7 +4498,7 @@
                      role="presentation"/>
           <xul:toolbarbutton anonid="close-button"
                              xbl:inherits="fadein,pinned,selected"
-                             class="tab-close-button"/>
+                             class="tab-close-button close-icon"/>
         </xul:hbox>
       </xul:stack>
     </content>
