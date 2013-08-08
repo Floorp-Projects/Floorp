@@ -86,8 +86,7 @@
     }
 
     function sendMessageToJava(aMessage) {
-      Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge).
-                                          handleGeckoMessage(JSON.stringify(aMessage));
+      Services.androidBridge.handleGeckoMessage(JSON.stringify(aMessage));
     }
 
     function init() {
