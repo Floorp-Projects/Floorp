@@ -85,8 +85,9 @@ ContentClientBasic::CreateBuffer(ContentType aType,
 
 TemporaryRef<DrawTarget>
 ContentClientBasic::CreateDTBuffer(ContentType aType,
-                                 const nsIntRect& aRect,
-                                 uint32_t aFlags)
+                                   const nsIntRect& aRect,
+                                   uint32_t aFlags,
+                                   RefPtr<DrawTarget>* aWhiteDT)
 {
   NS_RUNTIMEABORT("ContentClientBasic does not support Moz2D drawing yet!");
   // TODO[Bas] - Implement me!?
@@ -197,12 +198,15 @@ ContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType aType,
 TemporaryRef<DrawTarget>
 ContentClientRemoteBuffer::CreateDTBuffer(ContentType aType,
                                           const nsIntRect& aRect,
-                                          uint32_t aFlags)
+                                          uint32_t aFlags,
+                                          RefPtr<gfx::DrawTarget>* aWhiteDT)
 {
-  MOZ_ASSERT(!(aFlags & BUFFER_COMPONENT_ALPHA), "We don't support component alpha here!");
   BuildDeprecatedTextureClients(aType, aRect, aFlags);
 
   RefPtr<DrawTarget> ret = mDeprecatedTextureClient->LockDrawTarget();
+  if (aFlags & BUFFER_COMPONENT_ALPHA) {
+    *aWhiteDT = mDeprecatedTextureClientOnWhite->LockDrawTarget();
+  }
   return ret.forget();
 }
 
