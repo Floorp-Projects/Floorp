@@ -112,7 +112,6 @@
 #include "nsHTMLDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIRequest.h"
-#include "nsILink.h"
 #include "nsHostObjectProtocolHandler.h"
 
 #include "nsCharsetAlias.h"
@@ -149,6 +148,7 @@
 #include "nsObjectLoadingContent.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsIDOMElementReplaceEvent.h"
+#include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #ifdef MOZ_WEBRTC
 #include "IPeerConnection.h"
@@ -8067,15 +8067,12 @@ nsDocument::OnPageShow(bool aPersisted,
   if (aPersisted && root) {
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
-                                                      kNameSpaceID_Unknown,
+                                                      kNameSpaceID_XHTML,
                                                       NS_LITERAL_STRING("link"));
 
     uint32_t linkCount = links->Length(true);
     for (uint32_t i = 0; i < linkCount; ++i) {
-      nsCOMPtr<nsILink> link = do_QueryInterface(links->Item(i, false));
-      if (link) {
-        link->LinkAdded();
-      }
+      static_cast<HTMLLinkElement*>(links->Item(i, false))->LinkAdded();
     }
   }
 
@@ -8131,15 +8128,12 @@ nsDocument::OnPageHide(bool aPersisted,
   Element* root = GetRootElement();
   if (aPersisted && root) {
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
-                                                      kNameSpaceID_Unknown,
+                                                      kNameSpaceID_XHTML,
                                                       NS_LITERAL_STRING("link"));
 
     uint32_t linkCount = links->Length(true);
     for (uint32_t i = 0; i < linkCount; ++i) {
-      nsCOMPtr<nsILink> link = do_QueryInterface(links->Item(i, false));
-      if (link) {
-        link->LinkRemoved();
-      }
+      static_cast<HTMLLinkElement*>(links->Item(i, false))->LinkRemoved();
     }
   }
 

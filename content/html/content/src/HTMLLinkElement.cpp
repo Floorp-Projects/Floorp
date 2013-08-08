@@ -15,7 +15,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMStyleSheet.h"
-#include "nsILink.h"
 #include "nsIStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIURL.h"
@@ -58,10 +57,9 @@ NS_IMPL_RELEASE_INHERITED(HTMLLinkElement, Element)
 
 // QueryInterface implementation for HTMLLinkElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLLinkElement)
-  NS_INTERFACE_TABLE_INHERITED5(HTMLLinkElement,
+  NS_INTERFACE_TABLE_INHERITED4(HTMLLinkElement,
                                 nsIDOMHTMLLinkElement,
                                 nsIDOMLinkStyle,
-                                nsILink,
                                 nsIStyleSheetLinkingElement,
                                 Link)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
@@ -147,18 +145,16 @@ HTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return rv;
 }
 
-NS_IMETHODIMP
+void
 HTMLLinkElement::LinkAdded()
 {
   CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkAdded"));
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 HTMLLinkElement::LinkRemoved()
 {
   CreateAndDispatchEvent(OwnerDoc(), NS_LITERAL_STRING("DOMLinkRemoved"));
-  return NS_OK;
 }
 
 void

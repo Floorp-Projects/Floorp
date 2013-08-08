@@ -10,7 +10,6 @@
 #include "mozilla/dom/Link.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLLinkElement.h"
-#include "nsILink.h"
 #include "nsStyleLinkElement.h"
 
 namespace mozilla {
@@ -18,7 +17,6 @@ namespace dom {
 
 class HTMLLinkElement MOZ_FINAL : public nsGenericHTMLElement,
                                   public nsIDOMHTMLLinkElement,
-                                  public nsILink,
                                   public nsStyleLinkElement,
                                   public Link
 {
@@ -39,9 +37,8 @@ public:
   // DOM memory reporter participant
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
-  // nsILink
-  NS_IMETHOD    LinkAdded() MOZ_OVERRIDE;
-  NS_IMETHOD    LinkRemoved() MOZ_OVERRIDE;
+  void LinkAdded();
+  void LinkRemoved();
 
   // nsIDOMEventTarget
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;

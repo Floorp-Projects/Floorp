@@ -29,9 +29,8 @@ using namespace mozilla::dom;
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-NS_IMPL_ISUPPORTS_INHERITED4(nsMathMLElement, nsMathMLElementBase,
-                             nsIDOMElement, nsIDOMNode,
-                             nsILink, Link)
+NS_IMPL_ISUPPORTS_INHERITED3(nsMathMLElement, nsMathMLElementBase,
+                             nsIDOMElement, nsIDOMNode, Link)
 
 static nsresult
 WarnDeprecated(const PRUnichar* aDeprecatedAttribute, 

@@ -12,7 +12,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMHTMLAreaElement.h"
-#include "nsILink.h"
 #include "nsIURL.h"
 
 class nsIDocument;
@@ -22,7 +21,6 @@ namespace dom {
 
 class HTMLAreaElement MOZ_FINAL : public nsGenericHTMLElement,
                                   public nsIDOMHTMLAreaElement,
-                                  public nsILink,
                                   public Link
 {
 public:
@@ -39,10 +37,6 @@ public:
 
   // nsIDOMHTMLAreaElement
   NS_DECL_NSIDOMHTMLAREAELEMENT
-
-  // nsILink
-  NS_IMETHOD LinkAdded() MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD LinkRemoved() MOZ_OVERRIDE { return NS_OK; }
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;

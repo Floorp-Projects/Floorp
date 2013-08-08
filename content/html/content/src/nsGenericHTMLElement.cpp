@@ -28,7 +28,6 @@
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLDocument.h"
-#include "nsILink.h"
 #include "nsPIDOMWindow.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
@@ -85,6 +84,7 @@
 #include "nsDOMMutationObserver.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FromParser.h"
+#include "mozilla/dom/Link.h"
 #include "mozilla/dom/UndoManager.h"
 #include "mozilla/BloomFilter.h"
 
@@ -694,8 +694,8 @@ nsGenericHTMLElement::FindAncestorForm(HTMLFormElement* aCurrentForm)
 bool
 nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(nsEventChainVisitor& aVisitor)
 {
-  NS_PRECONDITION(nsCOMPtr<nsILink>(do_QueryObject(this)),
-                  "should be called only when |this| implements |nsILink|");
+  NS_PRECONDITION(nsCOMPtr<Link>(do_QueryObject(this)),
+                  "should be called only when |this| implements |Link|");
 
   if (!aVisitor.mPresContext) {
     // We need a pres context to do link stuff. Some events (e.g. mutation
@@ -749,7 +749,7 @@ nsGenericHTMLElement::IsHTMLLink(nsIURI** aURI) const
 already_AddRefed<nsIURI>
 nsGenericHTMLElement::GetHrefURIForAnchors() const
 {
-  // This is used by the three nsILink implementations and
+  // This is used by the three Link implementations and
   // nsHTMLStyleElement.
 
   // Get href= attribute (relative URI).
