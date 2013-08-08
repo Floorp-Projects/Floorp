@@ -10,6 +10,5 @@ PARALLEL_DIRS += [
     'gcli',
     'sourcemap',
     'webconsole',
-    'apps',
-    'styleinspector'
+    'apps'
 ]

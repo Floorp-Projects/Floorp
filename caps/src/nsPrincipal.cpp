@@ -442,8 +442,6 @@ nsPrincipal::GetExtendedOrigin(nsACString& aExtendedOrigin)
 NS_IMETHODIMP
 nsPrincipal::GetAppStatus(uint16_t* aAppStatus)
 {
-  MOZ_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
   *aAppStatus = GetAppStatus();
   return NS_OK;
 }
@@ -569,8 +567,8 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
 uint16_t
 nsPrincipal::GetAppStatus()
 {
-  MOZ_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
+  NS_WARN_IF_FALSE(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID,
+                   "Asking for app status on a principal with an unknown app id");
   // Installed apps have a valid app id (not NO_APP_ID or UNKNOWN_APP_ID)
   // and they are not inside a mozbrowser.
   if (mAppId == nsIScriptSecurityManager::NO_APP_ID ||

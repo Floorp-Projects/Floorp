@@ -12665,10 +12665,11 @@ let ICCContactHelper = {
         return;
       }
 
-      // Check if contact has additional properties (email, anr, ...etc) need
-      // to be updated as well.
+      // Check if contact has additional properties (email, anr, ...etc) that
+      // need to be updated as well.
       if ((field === USIM_PBR_EMAIL && !contact.email) ||
-          (field === USIM_PBR_ANR0 && !contact.anr[0])) {
+          (field === USIM_PBR_ANR0 && (!Array.isArray(contact.anr) ||
+                                       !contact.anr[0]))) {
         updateField();
         return;
       }

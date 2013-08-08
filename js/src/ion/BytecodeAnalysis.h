@@ -25,6 +25,9 @@ struct BytecodeInfo
     bool jumpFallthrough : 1;
     bool fallthrough : 1;
 
+    // If true, this is a JSOP_LOOPENTRY op inside a catch or finally block.
+    bool loopEntryInCatchOrFinally : 1;
+
     void init(unsigned depth) {
         JS_ASSERT(depth <= MAX_STACK_DEPTH);
         JS_ASSERT_IF(initialized, stackDepth == depth);
@@ -41,7 +44,7 @@ class BytecodeAnalysis
   public:
     explicit BytecodeAnalysis(JSScript *script);
 
-    bool init();
+    bool init(JSContext *cx);
 
     BytecodeInfo &info(jsbytecode *pc) {
         JS_ASSERT(infos_[pc - script_->code].initialized);

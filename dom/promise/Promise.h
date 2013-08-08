@@ -41,6 +41,7 @@ public:
   ~Promise();
 
   static bool PrefEnabled();
+  static bool EnabledForScope(JSContext* aCx, JSObject* /* unused */);
 
   // WebIDL
 

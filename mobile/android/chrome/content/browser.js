@@ -4320,10 +4320,14 @@ var BrowserEventHandler = {
 
   onDoubleTap: function(aData) {
     let data = JSON.parse(aData);
+    let element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
 
-    // We only want to do this if reflow-on-zoom is enabled.
+    // We only want to do this if reflow-on-zoom is enabled, we don't already
+    // have a reflow-on-zoom event pending, and the element upon which the user
+    // double-tapped isn't of a type we want to avoid reflow-on-zoom.
     if (BrowserEventHandler.mReflozPref &&
-       !BrowserApp.selectedTab._mReflozPoint) {
+       !BrowserApp.selectedTab._mReflozPoint &&
+       !this._shouldSuppressReflowOnZoom(element)) {
      let data = JSON.parse(aData);
      let zoomPointX = data.x;
      let zoomPointY = data.y;
@@ -4333,8 +4337,6 @@ var BrowserEventHandler = {
        BrowserApp.selectedTab.probablyNeedRefloz = true;
     }
 
-    let zoom = BrowserApp.selectedTab._zoom;
-    let element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
     if (!element) {
       this._zoomOut();
       return;
@@ -4348,6 +4350,28 @@ var BrowserEventHandler = {
     } else {
       this._zoomToElement(element, data.y);
     }
+  },
+
+  /**
+   * Determine if reflow-on-zoom functionality should be suppressed, given a
+   * particular element. Double-tapping on the following elements suppresses
+   * reflow-on-zoom:
+   *
+   * <video>, <object>, <embed>, <applet>, <canvas>, <img>, <media>, <pre>
+   */
+  _shouldSuppressReflowOnZoom: function(aElement) {
+    if (aElement instanceof Ci.nsIDOMHTMLVideoElement ||
+        aElement instanceof Ci.nsIDOMHTMLObjectElement ||
+        aElement instanceof Ci.nsIDOMHTMLEmbedElement ||
+        aElement instanceof Ci.nsIDOMHTMLAppletElement ||
+        aElement instanceof Ci.nsIDOMHTMLCanvasElement ||
+        aElement instanceof Ci.nsIDOMHTMLImageElement ||
+        aElement instanceof Ci.nsIDOMHTMLMediaElement ||
+        aElement instanceof Ci.nsIDOMHTMLPreElement) {
+      return true;
+    }
+
+    return false;
   },
 
   /* Zoom to an element, optionally keeping a particular part of it
