@@ -63,8 +63,5 @@ MOZ_PAY=1
 # Enable UI for healthreporter
 MOZ_SERVICES_HEALTHREPORT=1
 
-# Wifi-AP/cell tower data reporting is always enabled.
-MOZ_DATA_REPORTING=1
-
 # Enable the production cert for verifying signed packaged apps.
 MOZ_B2G_CERTDATA=1

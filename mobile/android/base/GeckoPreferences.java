@@ -72,7 +72,6 @@ public class GeckoPreferences
     private static String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
     private static String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
     private static String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
-    private static String PREFS_GEO_REPORTING = "app.geo.reportdata";
     private static String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
 
     // These values are chosen to be distinct from other Activity constants.
@@ -442,10 +441,6 @@ public class GeckoPreferences
             // repeated background upload attempts.
             broadcastHealthReportUploadPref(GeckoAppShell.getContext(), ((Boolean) newValue).booleanValue());
             return true;
-        } else if (PREFS_GEO_REPORTING.equals(prefName)) {
-            // Translate boolean value to int for geo reporting pref.
-            PrefsHelper.setPref(prefName, (Boolean) newValue ? 1 : 0);
-            return true;
         }
 
         if (!TextUtils.isEmpty(prefName)) {
@@ -698,27 +693,6 @@ public class GeckoPreferences
                             fontSizePref.setSummary(fontSizeName); // Ex: "Small".
                         }
                     });
-                }
-            }
-
-            @Override
-            public void prefValue(String prefName, final int value) {
-                final Preference pref = getField(prefName);
-                final CheckBoxPrefSetter prefSetter;
-                if (PREFS_GEO_REPORTING.equals(prefName)) {
-                    if (Build.VERSION.SDK_INT < 14) {
-                        prefSetter = new CheckBoxPrefSetter();
-                    } else {
-                        prefSetter = new TwoStatePrefSetter();
-                    }
-                    ThreadUtils.postToUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            prefSetter.setBooleanPref(pref, value == 1);
-                        }
-                    });
-                } else {
-                    Log.w(LOGTAG, "Unhandled int value for pref [" + pref + "]");
                 }
             }
 
