@@ -1292,7 +1292,7 @@ let RIL = {
    */
   setICCFacilityLock: function setICCFacilityLock(options) {
     Buf.newParcel(REQUEST_SET_FACILITY_LOCK, options);
-    Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 3 : 4);
+    Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 4 : 5);
     Buf.writeString(options.facility);
     Buf.writeString(options.enabled ? "1" : "0");
     Buf.writeString(options.password);
