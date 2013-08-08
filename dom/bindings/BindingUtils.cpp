@@ -217,7 +217,7 @@ DefineConstants(JSContext* cx, JS::Handle<JSObject*> obj,
                 const ConstantSpec* cs)
 {
   for (; cs->name; ++cs) {
-    JSBool ok =
+    bool ok =
       JS_DefineProperty(cx, obj, cs->name, cs->value, NULL, NULL,
                         JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
     if (!ok) {
@@ -351,7 +351,7 @@ static bool
 DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global, const char* name,
                   JS::Handle<JSObject*> constructor)
 {
-  JSBool alreadyDefined;
+  bool alreadyDefined;
   if (!JS_AlreadyHasOwnProperty(cx, global, name, &alreadyDefined)) {
     return false;
   }
@@ -672,7 +672,7 @@ TryPreserveWrapper(JSObject* obj)
 
 // Can only be called with the immediate prototype of the instance object. Can
 // only be called on the prototype of an object known to be a DOM instance.
-JSBool
+bool
 InstanceClassHasProtoAtDepth(JS::Handle<JSObject*> protoObject, uint32_t protoID,
                              uint32_t depth)
 {
@@ -1316,7 +1316,7 @@ GetPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
     return true;
   }
 
-  JSBool hasProp;
+  bool hasProp;
   if (!JS_HasPropertyById(cx, proto, id, &hasProp)) {
     return false;
   }
@@ -1730,10 +1730,10 @@ WorkerGlobalObject::WorkerGlobalObject(JSContext* aCx, JSObject* aObject)
   mGlobalJSObject = GetGlobalObject<false>(aCx, aObject, ac);
 }
 
-JSBool
+bool
 InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
                      JS::Handle<JSObject*> instance,
-                     JSBool* bp)
+                     bool* bp)
 {
   const DOMIfaceAndProtoJSClass* clasp =
     DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj));
@@ -1789,9 +1789,9 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
   return true;
 }
 
-JSBool
+bool
 InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JS::Value> vp,
-                     JSBool* bp)
+                     bool* bp)
 {
   if (!vp.isObject()) {
     *bp = false;
@@ -1802,10 +1802,10 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle
   return InterfaceHasInstance(cx, obj, instanceObject, bp);
 }
 
-JSBool
+bool
 InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
                      JS::Handle<JSObject*> instance,
-                     JSBool* bp)
+                     bool* bp)
 {
   const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
 

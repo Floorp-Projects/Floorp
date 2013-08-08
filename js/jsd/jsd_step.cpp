@@ -33,7 +33,7 @@ _indentSpaces(int i)
 
 static void
 _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSAbstractFramePtr frame,
-                  bool isConstructing, JSBool before)
+                  bool isConstructing, bool before)
 {
     JSDScript* jsdscript = NULL;
     JSScript * script;
@@ -76,13 +76,13 @@ _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSAbstractFramePtr frame,
 }
 #endif
 
-JSBool
+bool
 _callHook(JSDContext *jsdc, JSContext *cx, JSAbstractFramePtr frame, bool isConstructing,
-          JSBool before, unsigned type, JSD_CallHookProc hook, void *hookData)
+          bool before, unsigned type, JSD_CallHookProc hook, void *hookData)
 {
     JSDScript*        jsdscript;
     JSScript*         jsscript;
-    JSBool            hookresult = true;
+    bool              hookresult = true;
     
     if (!jsdc || !jsdc->inited)
         return false;
@@ -234,7 +234,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSAbstractFramePtr frame, bool isCons
 
 void *
 jsd_FunctionCallHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing,
-                     JSBool before, JSBool *ok, void *closure)
+                     bool before, bool *ok, void *closure)
 {
     JSDContext*       jsdc;
     JSD_CallHookProc  hook;
@@ -260,7 +260,7 @@ jsd_FunctionCallHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructin
 
 void *
 jsd_TopLevelCallHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing,
-                     JSBool before, JSBool *ok, void *closure)
+                     bool before, bool *ok, void *closure)
 {
     JSDContext*       jsdc;
     JSD_CallHookProc  hook;

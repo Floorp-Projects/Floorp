@@ -98,10 +98,10 @@ nsXULPDGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
 }
 
 
-JSBool
+bool
 nsXULPDGlobalObject_resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id)
 {
-    JSBool did_resolve = false;
+    bool did_resolve = false;
 
     return JS_ResolveStandardClass(cx, obj, id, &did_resolve);
 }

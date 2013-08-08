@@ -2182,7 +2182,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * aProto)
   }
 
   // Don't overwrite a property set by content.
-  JSBool found;
+  bool found;
   if (!::JS_AlreadyHasOwnUCProperty(cx, global, reinterpret_cast<const jschar*>(mData->mNameUTF16),
                                     NS_strlen(mData->mNameUTF16), &found)) {
     return NS_ERROR_FAILURE;
@@ -2346,7 +2346,7 @@ static JSClass sGlobalScopePolluterClass = {
 
 
 // static
-JSBool
+bool
 nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JS::Handle<JSObject*> obj,
                                            JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp)
 {
@@ -2369,7 +2369,7 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JS::Handle<JSObject*> 
 }
 
 // Gets a subframe.
-static JSBool
+static bool
 ChildWindowGetter(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                   JS::MutableHandle<JS::Value> vp)
 {
@@ -2406,7 +2406,7 @@ GetDocument(JSObject *obj)
 }
 
 // static
-JSBool
+bool
 nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JS::Handle<JSObject*> obj,
                                           JS::Handle<jsid> id, unsigned flags,
                                           JS::MutableHandle<JSObject*> objp)
@@ -2452,7 +2452,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JS::Handle<JSObject*> o
   if (!::JS_GetPrototype(cx, obj, &proto)) {
     return false;
   }
-  JSBool hasProp;
+  bool hasProp;
 
   if (!proto || !::JS_HasPropertyById(cx, proto, id, &hasProp) ||
       hasProp) {
@@ -2503,7 +2503,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JS::Handle<JSObject*> o
 }
 
 // static
-JSBool
+bool
 nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx,
                                           JS::Handle<JSObject*> aObj)
 {
@@ -2861,7 +2861,7 @@ public:
   {
     JS::Rooted<JS::Value> thisAsVal(cx, aThisAsVal);
     // The 'attrs' argument used to be JSPROP_PERMANENT. See bug 628612.
-    JSBool ok = JS_WrapValue(cx, thisAsVal.address()) &&
+    bool ok = JS_WrapValue(cx, thisAsVal.address()) &&
       ::JS_DefineUCProperty(cx, target,
                             reinterpret_cast<const jschar *>(mClassName),
                             NS_strlen(mClassName), thisAsVal, JS_PropertyStub,
@@ -3763,9 +3763,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       return NS_ERROR_UNEXPECTED;
     }
 
-    JSBool ok = ::JS_DefinePropertyById(cx, obj, id, prop_val,
-                                        JS_PropertyStub, JS_StrictPropertyStub,
-                                        JSPROP_ENUMERATE);
+    bool ok = ::JS_DefinePropertyById(cx, obj, id, prop_val,
+                                      JS_PropertyStub, JS_StrictPropertyStub,
+                                      JSPROP_ENUMERATE);
 
     *did_resolve = true;
 
@@ -3850,8 +3850,8 @@ LocationSetterGuts(JSContext *cx, JSObject *obj, jsval *vp)
 }
 
 template<class Interface>
-static JSBool
-LocationSetter(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JSBool strict,
+static bool
+LocationSetter(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, bool strict,
                JS::MutableHandle<JS::Value> vp)
 {
   nsresult rv = LocationSetterGuts<Interface>(cx, obj, vp.address());
@@ -3863,9 +3863,9 @@ LocationSetter(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS
   return true;
 }
 
-static JSBool
+static bool
 LocationSetterUnwrapper(JSContext *cx, JS::Handle<JSObject*> obj_, JS::Handle<jsid> id,
-                        JSBool strict, JS::MutableHandle<JS::Value> vp)
+                        bool strict, JS::MutableHandle<JS::Value> vp)
 {
   JS::RootedObject obj(cx, obj_);
 
@@ -3990,8 +3990,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // Don't resolve standard classes on XrayWrappers, only resolve them if we're
   // resolving on the real global object.
   if (!xpc::WrapperFactory::IsXrayWrapper(obj)) {
-    JSBool did_resolve = false;
-    JSBool ok = true;
+    bool did_resolve = false;
+    bool ok = true;
     JS::Rooted<JS::Value> exn(cx, JSVAL_VOID);
 
     {
@@ -4068,7 +4068,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                     v.address(), getter_AddRefs(holder));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JSBool ok = JS_WrapValue(cx, v.address()) &&
+    bool ok = JS_WrapValue(cx, v.address()) &&
                 JS_DefinePropertyById(cx, obj, id, v, JS_PropertyStub,
                                       LocationSetterUnwrapper,
                                       JSPROP_PERMANENT | JSPROP_ENUMERATE);
@@ -4517,7 +4517,7 @@ nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   sCurrentlyEnumerating = true;
 
   JS::Rooted<JS::Value> len_val(cx);
-  JSBool ok = ::JS_GetProperty(cx, obj, "length", &len_val);
+  bool ok = ::JS_GetProperty(cx, obj, "length", &len_val);
 
   if (ok && JSVAL_IS_INT(len_val)) {
     int32_t length = JSVAL_TO_INT(len_val);
@@ -4613,7 +4613,7 @@ JSClass sHTMLDocumentAllClass = {
 
 
 // static
-JSBool
+bool
 nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx,
                                          JS::Handle<JSObject*> obj,
                                          nsDocument *domdoc,
@@ -4679,7 +4679,7 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx,
   return *nodeList != nullptr;
 }
 
-JSBool
+bool
 nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> obj_,
                                          JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp)
 {
@@ -4776,7 +4776,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> ob
   return true;
 }
 
-JSBool
+bool
 nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JS::Handle<JSObject*> obj,
                                         JS::Handle<jsid> id, unsigned flags,
                                         JS::MutableHandle<JSObject*> objp)
@@ -4806,7 +4806,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JS::Handle<JSObject*> obj
     }
   }
 
-  JSBool ok = true;
+  bool ok = true;
 
   if (v.get() != JSVAL_VOID) {
     ok = ::JS_DefinePropertyById(cx, obj, id, v, nullptr, nullptr, 0);
@@ -5052,7 +5052,7 @@ nsStorage2SH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   if (!::JS_GetPrototype(cx, realObj, &proto)) {
     return NS_ERROR_FAILURE;
   }
-  JSBool hasProp;
+  bool hasProp;
 
   if (proto &&
       (::JS_HasPropertyById(cx, proto, id, &hasProp) &&
@@ -5298,7 +5298,7 @@ nsDOMConstructorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx
   // looked-for constant. Note that we don't have to worry about infinitely
   // recurring back here because the Xray wrapper's holder object doesn't call
   // NewResolve hooks.
-  JSBool found;
+  bool found;
   if (!JS_HasPropertyById(cx, nativePropsObj, id, &found)) {
     *_retval = false;
     return NS_OK;

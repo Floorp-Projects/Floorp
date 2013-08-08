@@ -35,13 +35,13 @@ TestShellParent::CommandDone(TestShellCommandParent* command,
                              const nsString& aResponse)
 {
   // XXX what should happen if the callback fails?
-  /*JSBool ok = */command->RunCallback(aResponse);
+  /*bool ok = */command->RunCallback(aResponse);
   command->ReleaseCallback();
 
   return true;
 }
 
-JSBool
+bool
 TestShellCommandParent::SetCallback(JSContext* aCx,
                                     JS::Value aCallback)
 {
@@ -55,7 +55,7 @@ TestShellCommandParent::SetCallback(JSContext* aCx,
   return true;
 }
 
-JSBool
+bool
 TestShellCommandParent::RunCallback(const nsString& aResponse)
 {
   NS_ENSURE_TRUE(*mCallback.ToJSValPtr() != JSVAL_NULL && mCx, false);
@@ -71,7 +71,7 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
   JS::Rooted<JS::Value> strVal(mCx, JS::StringValue(str));
 
   JS::Rooted<JS::Value> rval(mCx);
-  JSBool ok = JS_CallFunctionValue(mCx, global, mCallback, 1, strVal.address(),
+  bool ok = JS_CallFunctionValue(mCx, global, mCallback, 1, strVal.address(),
                                    rval.address());
   NS_ENSURE_TRUE(ok, false);
 

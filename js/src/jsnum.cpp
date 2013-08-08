@@ -1668,14 +1668,14 @@ js::ToUint16Slow(JSContext *cx, const HandleValue v, uint16_t *out)
     return true;
 }
 
-JSBool
+bool
 js_strtod(ThreadSafeContext *cx, const jschar *s, const jschar *send,
           const jschar **ep, double *dp)
 {
     size_t i;
     char cbuf[32];
     char *cstr, *istr, *estr;
-    JSBool negative;
+    bool negative;
     double d;
 
     const jschar *s1 = SkipSpace(s, send);

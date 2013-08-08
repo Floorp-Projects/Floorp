@@ -130,7 +130,7 @@ js::InformalValueTypeName(const Value &v)
 }
 
 template <AllowGC allowGC>
-JSBool
+bool
 js::HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
                    typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
                    typename MaybeRooted<jsid, allowGC>::HandleType id,
@@ -174,12 +174,12 @@ js::HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
     return true;
 }
 
-template JSBool
+template bool
 js::HasOwnProperty<CanGC>(JSContext *cx, LookupGenericOp lookup,
                           HandleObject obj, HandleId id,
                           MutableHandleObject objp, MutableHandleShape propp);
 
-template JSBool
+template bool
 js::HasOwnProperty<NoGC>(JSContext *cx, LookupGenericOp lookup,
                          JSObject *obj, jsid id,
                          FakeMutableHandle<JSObject*> objp, FakeMutableHandle<Shape*> propp);
@@ -525,7 +525,7 @@ js::Throw(JSContext *cx, JSObject *obj, unsigned errorNumber)
     return false;
 }
 
-static JSBool
+static bool
 Reject(JSContext *cx, unsigned errorNumber, bool throwError, jsid id, bool *rval)
 {
     if (throwError)
@@ -535,7 +535,7 @@ Reject(JSContext *cx, unsigned errorNumber, bool throwError, jsid id, bool *rval
     return true;
 }
 
-static JSBool
+static bool
 Reject(JSContext *cx, JSObject *obj, unsigned errorNumber, bool throwError, bool *rval)
 {
     if (throwError)
@@ -599,7 +599,7 @@ js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValu
     return true;
 }
 
-static JSBool
+static bool
 DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropDesc &desc,
                        bool throwError, bool *rval)
 {
@@ -912,7 +912,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
      * redefining it or we had invoked its setter to change its value).
      */
     if (callDelProperty) {
-        JSBool succeeded;
+        bool succeeded;
         if (!CallJSDeletePropertyOp(cx, obj2->getClass()->delProperty, obj2, id, &succeeded))
             return false;
     }
@@ -921,7 +921,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
 }
 
 /* ES6 20130308 draft 8.4.2.1 [[DefineOwnProperty]] */
-static JSBool
+static bool
 DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, const PropDesc &desc,
                       bool throwError, bool *rval)
 {
@@ -1006,9 +1006,9 @@ js::DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc 
     return DefinePropertyOnObject(cx, obj, id, desc, throwError, rval);
 }
 
-JSBool
+bool
 js::DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue descriptor,
-                      JSBool *bp)
+                      bool *bp)
 {
     AutoPropDescArrayRooter descs(cx);
     PropDesc *desc = descs.append();
@@ -1022,9 +1022,9 @@ js::DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue 
     return true;
 }
 
-JSBool
+bool
 js::DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id,
-                      const PropertyDescriptor &descriptor, JSBool *bp)
+                      const PropertyDescriptor &descriptor, bool *bp)
 {
     AutoPropDescArrayRooter descs(cx);
     PropDesc *desc = descs.append();
@@ -1107,7 +1107,7 @@ js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
     return true;
 }
 
-extern JSBool
+extern bool
 js_PopulateObject(JSContext *cx, HandleObject newborn, HandleObject props)
 {
     return DefineProperties(cx, newborn, props);
@@ -1730,9 +1730,9 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
     return flags;
 }
 
-/* static */ JSBool
+/* static */ bool
 JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj,
-                               HandleId id, MutableHandleValue vp, JSBool strict)
+                               HandleId id, MutableHandleValue vp, bool strict)
 {
     if (JS_UNLIKELY(obj->watched())) {
         WatchpointMap *wpmap = cx->compartment()->watchpointMap;
@@ -1742,9 +1742,9 @@ JSObject::nonNativeSetProperty(JSContext *cx, HandleObject obj,
     return obj->getOps()->setGeneric(cx, obj, id, vp, strict);
 }
 
-/* static */ JSBool
+/* static */ bool
 JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj,
-                              uint32_t index, MutableHandleValue vp, JSBool strict)
+                              uint32_t index, MutableHandleValue vp, bool strict)
 {
     if (JS_UNLIKELY(obj->watched())) {
         RootedId id(cx);
@@ -1759,7 +1759,7 @@ JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj,
 }
 
 /* static */ bool
-JSObject::deleteByValue(JSContext *cx, HandleObject obj, const Value &property, JSBool *succeeded)
+JSObject::deleteByValue(JSContext *cx, HandleObject obj, const Value &property, bool *succeeded)
 {
     uint32_t index;
     if (IsDefinitelyIndex(property, &index))
@@ -2384,7 +2384,7 @@ js::DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey ke
 
 bad:
     if (named) {
-        JSBool succeeded;
+        bool succeeded;
         JSObject::deleteByValue(cx, obj, StringValue(atom), &succeeded);
     }
     if (cached)
@@ -3340,14 +3340,14 @@ js_AddNativeProperty(JSContext *cx, HandleObject obj, HandleId id,
     return shape;
 }
 
-JSBool
+bool
 baseops::DefineGeneric(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
                        PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
     return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs, 0, 0);
 }
 
-/* static */ JSBool
+/* static */ bool
 JSObject::defineGeneric(ExclusiveContext *cx, HandleObject obj,
                         HandleId id, HandleValue value,
                         JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
@@ -3362,7 +3362,7 @@ JSObject::defineGeneric(ExclusiveContext *cx, HandleObject obj,
     return baseops::DefineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
-/* static */ JSBool
+/* static */ bool
 JSObject::defineProperty(ExclusiveContext *cx, HandleObject obj,
                          PropertyName *name, HandleValue value,
                          JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
@@ -3371,7 +3371,7 @@ JSObject::defineProperty(ExclusiveContext *cx, HandleObject obj,
     return defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
-/* static */ JSBool
+/* static */ bool
 JSObject::defineSpecial(ExclusiveContext *cx, HandleObject obj,
                         SpecialId sid, HandleValue value,
                         JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
@@ -3380,7 +3380,7 @@ JSObject::defineSpecial(ExclusiveContext *cx, HandleObject obj,
     return defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
-JSBool
+bool
 baseops::DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, HandleValue value,
                        PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
@@ -3398,7 +3398,7 @@ baseops::DefineElement(ExclusiveContext *cx, HandleObject obj, uint32_t index, H
     return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs, 0, 0);
 }
 
-/* static */ JSBool
+/* static */ bool
 JSObject::defineElement(ExclusiveContext *cx, HandleObject obj,
                         uint32_t index, HandleValue value,
                         JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
@@ -3691,7 +3691,7 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
  *   - Otherwise no property was resolved. Set *propp = NULL and *recursedp = false
  *     and return true.
  */
-static JS_ALWAYS_INLINE JSBool
+static JS_ALWAYS_INLINE bool
 CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
               MutableHandleObject objp, MutableHandleShape propp, bool *recursedp)
 {
@@ -3847,7 +3847,7 @@ LookupPropertyWithFlagsInline(ExclusiveContext *cx,
 }
 
 template <AllowGC allowGC>
-JSBool
+bool
 baseops::LookupProperty(ExclusiveContext *cx,
                         typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
                         typename MaybeRooted<jsid, allowGC>::HandleType id,
@@ -3863,16 +3863,16 @@ baseops::LookupProperty(ExclusiveContext *cx,
     return LookupPropertyWithFlagsInline<allowGC>(cx, obj, id, resolveFlags, objp, propp);
 }
 
-template JSBool
+template bool
 baseops::LookupProperty<CanGC>(ExclusiveContext *cx, HandleObject obj, HandleId id,
                                MutableHandleObject objp, MutableHandleShape propp);
 
-template JSBool
+template bool
 baseops::LookupProperty<NoGC>(ExclusiveContext *cx, JSObject *obj, jsid id,
                               FakeMutableHandle<JSObject*> objp,
                               FakeMutableHandle<Shape*> propp);
 
-/* static */ JSBool
+/* static */ bool
 JSObject::lookupGeneric(JSContext *cx, HandleObject obj, js::HandleId id,
                         MutableHandleObject objp, MutableHandleShape propp)
 {
@@ -3887,7 +3887,7 @@ JSObject::lookupGeneric(JSContext *cx, HandleObject obj, js::HandleId id,
     return baseops::LookupProperty<js::CanGC>(cx, obj, id, objp, propp);
 }
 
-JSBool
+bool
 baseops::LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                        MutableHandleObject objp, MutableHandleShape propp)
 {
@@ -3973,7 +3973,7 @@ js::LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleOb
 }
 
 template <AllowGC allowGC>
-static JS_ALWAYS_INLINE JSBool
+static JS_ALWAYS_INLINE bool
 NativeGetInline(JSContext *cx,
                 typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
                 typename MaybeRooted<JSObject*, allowGC>::HandleType receiver,
@@ -4038,7 +4038,7 @@ NativeGetInline(JSContext *cx,
     return true;
 }
 
-JSBool
+bool
 js_NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, Handle<Shape*> shape,
              unsigned getHow, MutableHandle<Value> vp)
 {
@@ -4046,7 +4046,7 @@ js_NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, Handl
 }
 
 
-JSBool
+bool
 js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
              HandleShape shape, bool strict, MutableHandleValue vp)
 {
@@ -4094,7 +4094,7 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
 }
 
 template <AllowGC allowGC>
-static JS_ALWAYS_INLINE JSBool
+static JS_ALWAYS_INLINE bool
 GetPropertyHelperInline(JSContext *cx,
                         typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
                         typename MaybeRooted<JSObject*, allowGC>::HandleType receiver,
@@ -4209,14 +4209,14 @@ js::GetPropertyHelper(JSContext *cx, HandleObject obj, HandleId id, uint32_t get
     return GetPropertyHelperInline<CanGC>(cx, obj, obj, id, getHow, vp);
 }
 
-JSBool
+bool
 baseops::GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id, MutableHandleValue vp)
 {
     /* This call site is hot -- use the always-inlined variant of GetPropertyHelper(). */
     return GetPropertyHelperInline<CanGC>(cx, obj, receiver, id, 0, vp);
 }
 
-JSBool
+bool
 baseops::GetPropertyNoGC(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp)
 {
     AutoAssertNoException nogc(cx);
@@ -4396,7 +4396,7 @@ js::GetObjectElementOperationPure(ThreadSafeContext *cx, JSObject *obj, const Va
     return GetPropertyPure(cx, obj, NameToId(name->asPropertyName()), vp);
 }
 
-JSBool
+bool
 baseops::GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
                     MutableHandleValue vp)
 {
@@ -4408,7 +4408,7 @@ baseops::GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint
     return GetPropertyHelperInline<CanGC>(cx, obj, receiver, id, 0, vp);
 }
 
-JSBool
+bool
 baseops::GetPropertyDefault(JSContext *cx, HandleObject obj, HandleId id, HandleValue def,
                             MutableHandleValue vp)
 {
@@ -4528,9 +4528,9 @@ JSObject::callMethod(JSContext *cx, HandleId id, unsigned argc, Value *argv, Mut
     return Invoke(cx, ObjectValue(*obj), fval, argc, argv, vp);
 }
 
-JSBool
+bool
 baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
-                           unsigned defineHow, MutableHandleValue vp, JSBool strict)
+                           unsigned defineHow, MutableHandleValue vp, bool strict)
 {
     JS_ASSERT((defineHow & ~DNP_UNQUALIFIED) == 0);
 
@@ -4706,9 +4706,9 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
     return js_NativeSet(cx, obj, receiver, shape, strict, vp);
 }
 
-JSBool
+bool
 baseops::SetElementHelper(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
-                          unsigned defineHow, MutableHandleValue vp, JSBool strict)
+                          unsigned defineHow, MutableHandleValue vp, bool strict)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
@@ -4716,7 +4716,7 @@ baseops::SetElementHelper(JSContext *cx, HandleObject obj, HandleObject receiver
     return baseops::SetPropertyHelper(cx, obj, receiver, id, defineHow, vp, strict);
 }
 
-JSBool
+bool
 baseops::GetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
     RootedObject nobj(cx);
@@ -4734,7 +4734,7 @@ baseops::GetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *a
     return true;
 }
 
-JSBool
+bool
 baseops::GetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp)
 {
     RootedObject nobj(cx);
@@ -4752,7 +4752,7 @@ baseops::GetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, u
     return true;
 }
 
-JSBool
+bool
 baseops::SetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp)
 {
     RootedObject nobj(cx);
@@ -4771,7 +4771,7 @@ baseops::SetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *a
            : JSObject::setGenericAttributes(cx, nobj, id, attrsp);
 }
 
-JSBool
+bool
 baseops::SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp)
 {
     RootedObject nobj(cx);
@@ -4791,8 +4791,8 @@ baseops::SetElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, u
            : JSObject::setElementAttributes(cx, nobj, index, attrsp);
 }
 
-JSBool
-baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded)
+bool
+baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
     RootedObject proto(cx);
     RootedShape shape(cx);
@@ -4835,16 +4835,16 @@ baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, JSBool *suc
     return obj->removeProperty(cx, id) && js_SuppressDeletedProperty(cx, obj, id);
 }
 
-JSBool
+bool
 baseops::DeleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                        JSBool *succeeded)
+                        bool *succeeded)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return baseops::DeleteGeneric(cx, obj, id, succeeded);
 }
 
-JSBool
-baseops::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, JSBool *succeeded)
+bool
+baseops::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeeded)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
@@ -4852,8 +4852,8 @@ baseops::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, JSBool *
     return baseops::DeleteGeneric(cx, obj, id, succeeded);
 }
 
-JSBool
-baseops::DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSBool *succeeded)
+bool
+baseops::DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, bool *succeeded)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return baseops::DeleteGeneric(cx, obj, id, succeeded);
@@ -4897,7 +4897,7 @@ MaybeCallMethod(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
     return Invoke(cx, ObjectValue(*obj), vp, 0, NULL, vp);
 }
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(bool)
 js::DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
     JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
@@ -4975,7 +4975,7 @@ js::DefaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValu
     return false;
 }
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(bool)
 JS_EnumerateState(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                   MutableHandleValue statep, JS::MutableHandleId idp)
 {
@@ -4996,11 +4996,11 @@ JS_EnumerateState(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
     return true;
 }
 
-JSBool
+bool
 js::CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
                 MutableHandleValue vp, unsigned *attrsp)
 {
-    JSBool writing;
+    bool writing;
     RootedObject obj(cx, obj_), pobj(cx);
 
     while (JS_UNLIKELY(obj->is<WithObject>()))
@@ -5161,7 +5161,7 @@ PrimitiveToObject(JSContext *cx, const Value &v)
     return BooleanObject::create(cx, v.toBoolean());
 }
 
-JSBool
+bool
 js_PrimitiveToObject(JSContext *cx, Value *vp)
 {
     JSObject *obj = PrimitiveToObject(cx, *vp);
@@ -5172,7 +5172,7 @@ js_PrimitiveToObject(JSContext *cx, Value *vp)
     return true;
 }
 
-JSBool
+bool
 js_ValueToObjectOrNull(JSContext *cx, const Value &v, MutableHandleObject objp)
 {
     JSObject *obj;
@@ -5266,7 +5266,7 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     }
 }
 
-JSBool
+bool
 js_ReportGetterOnlyAssignment(JSContext *cx, bool strict)
 {
     return JS_ReportErrorFlagsAndNumber(cx,
@@ -5277,8 +5277,8 @@ js_ReportGetterOnlyAssignment(JSContext *cx, bool strict)
                                         JSMSG_GETTER_ONLY);
 }
 
-JS_FRIEND_API(JSBool)
-js_GetterOnlyPropertyStub(JSContext *cx, HandleObject obj, HandleId id, JSBool strict,
+JS_FRIEND_API(bool)
+js_GetterOnlyPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool strict,
                           MutableHandleValue vp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_GETTER_ONLY);

@@ -142,7 +142,7 @@ jsd_Unlock(JSDStaticLock* lock)
 }    
 
 #ifdef DEBUG
-JSBool
+bool
 jsd_IsLocked(JSDStaticLock* lock)
 {
     void* me;
@@ -194,7 +194,7 @@ jsd_Unlock(void* lock)
 }    
 
 #ifdef DEBUG
-JSBool
+bool
 jsd_IsLocked(void* lock)
 {
     return true;

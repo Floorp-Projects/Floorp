@@ -49,7 +49,7 @@ using mozilla::DebugOnly;
 using mozilla::IsNaN;
 using mozilla::PointerRangeSize;
 
-JSBool
+bool
 js::GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp)
 {
     if (obj->is<ArrayObject>()) {
@@ -150,7 +150,7 @@ DoubleIndexToId(JSContext *cx, double index, MutableHandleId id)
  * properly rooted and can be used as GC-protected storage for temporaries.
  */
 static inline bool
-DoGetElement(JSContext *cx, HandleObject obj, double index, JSBool *hole, MutableHandleValue vp)
+DoGetElement(JSContext *cx, HandleObject obj, double index, bool *hole, MutableHandleValue vp)
 {
     RootedId id(cx);
 
@@ -174,7 +174,7 @@ DoGetElement(JSContext *cx, HandleObject obj, double index, JSBool *hole, Mutabl
 }
 
 static inline bool
-DoGetElement(JSContext *cx, HandleObject obj, uint32_t index, JSBool *hole, MutableHandleValue vp)
+DoGetElement(JSContext *cx, HandleObject obj, uint32_t index, bool *hole, MutableHandleValue vp)
 {
     bool present;
     if (!JSObject::getElementIfPresent(cx, obj, obj, index, vp, &present))
@@ -202,8 +202,8 @@ AssertGreaterThanZero(uint32_t index)
 }
 
 template<typename IndexType>
-static JSBool
-GetElement(JSContext *cx, HandleObject obj, IndexType index, JSBool *hole, MutableHandleValue vp)
+static bool
+GetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, MutableHandleValue vp)
 {
     AssertGreaterThanZero(index);
     if (obj->isNative() && index < obj->getDenseInitializedLength()) {
@@ -263,7 +263,7 @@ js::GetElements(JSContext *cx, HandleObject aobj, uint32_t length, Value *vp)
 /*
  * Set the value of the property at the given index to v assuming v is rooted.
  */
-static JSBool
+static bool
 SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
 {
     JS_ASSERT(index >= 0);
@@ -316,7 +316,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, HandleValue v)
  * implement different semantics.)
  */
 static bool
-DeleteArrayElement(JSContext *cx, HandleObject obj, double index, JSBool *succeeded)
+DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeeded)
 {
     JS_ASSERT(index >= 0);
     JS_ASSERT(floor(index) == index);
@@ -346,7 +346,7 @@ DeleteArrayElement(JSContext *cx, HandleObject obj, double index, JSBool *succee
 static bool
 DeletePropertyOrThrow(JSContext *cx, HandleObject obj, double index)
 {
-    JSBool succeeded;
+    bool succeeded;
     if (!DeleteArrayElement(cx, obj, index, &succeeded))
         return false;
     if (succeeded)
@@ -359,7 +359,7 @@ DeletePropertyOrThrow(JSContext *cx, HandleObject obj, double index)
     return obj->reportNotConfigurable(cx, id, JSREPORT_ERROR);
 }
 
-JSBool
+bool
 js::SetLengthProperty(JSContext *cx, HandleObject obj, double length)
 {
     RootedValue v(cx, NumberValue(length));
@@ -373,7 +373,7 @@ js::SetLengthProperty(JSContext *cx, HandleObject obj, double length)
  * array that caused this getter to be invoked. In the setter case to overcome
  * the JSPROP_SHARED attribute, we must define a shadowing length property.
  */
-static JSBool
+static bool
 array_length_getter(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValue vp)
 {
     RootedObject obj(cx, obj_);
@@ -388,8 +388,8 @@ array_length_getter(JSContext *cx, HandleObject obj_, HandleId id, MutableHandle
     return true;
 }
 
-static JSBool
-array_length_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
+static bool
+array_length_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
     if (!obj->is<ArrayObject>()) {
         return JSObject::defineProperty(cx, obj, cx->names().length, vp,
@@ -536,7 +536,7 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, unsigne
                 oldLen--;
 
                 /* Steps 15b-d. */
-                JSBool deleteSucceeded;
+                bool deleteSucceeded;
                 if (!JSObject::deleteElement(cx, arr, oldLen, &deleteSucceeded))
                     return false;
                 if (!deleteSucceeded) {
@@ -596,7 +596,7 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, unsigne
                 index = indexes[i];
 
                 /* Steps 15b-d. */
-                JSBool deleteSucceeded;
+                bool deleteSucceeded;
                 if (!JSObject::deleteElement(cx, arr, index, &deleteSucceeded))
                     return false;
                 if (!deleteSucceeded) {
@@ -699,7 +699,7 @@ js::WouldDefinePastNonwritableLength(ExclusiveContext *cx,
                                         JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
 }
 
-static JSBool
+static bool
 array_addProperty(JSContext *cx, HandleObject obj, HandleId id,
                   MutableHandleValue vp)
 {
@@ -718,7 +718,7 @@ array_addProperty(JSContext *cx, HandleObject obj, HandleId id,
     return true;
 }
 
-JSBool
+bool
 js::ObjectMayHaveExtraIndexedProperties(JSObject *obj)
 {
     /*
@@ -831,7 +831,7 @@ array_toSource_impl(JSContext *cx, CallArgs args)
         return false;
 
     for (uint32_t index = 0; index < length; index++) {
-        JSBool hole;
+        bool hole;
         if (!JS_CHECK_OPERATION_LIMIT(cx) ||
             !GetElement(cx, obj, index, &hole, &elt)) {
             return false;
@@ -956,7 +956,7 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
             if (!JS_CHECK_OPERATION_LIMIT(cx))
                 return false;
 
-            JSBool hole;
+            bool hole;
             if (!GetElement(cx, obj, i, &hole, &v))
                 return false;
             if (!hole && !v.isNullOrUndefined()) {
@@ -970,7 +970,7 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
             if (!JS_CHECK_OPERATION_LIMIT(cx))
                 return false;
 
-            JSBool hole;
+            bool hole;
             if (!GetElement(cx, obj, index, &hole, &elt))
                 return false;
 
@@ -1242,7 +1242,7 @@ array_reverse(JSContext *cx, unsigned argc, Value *vp)
 
     RootedValue lowval(cx), hival(cx);
     for (uint32_t i = 0, half = len / 2; i < half; i++) {
-        JSBool hole, hole2;
+        bool hole, hole2;
         if (!JS_CHECK_OPERATION_LIMIT(cx) ||
             !GetElement(cx, obj, i, &hole, &lowval) ||
             !GetElement(cx, obj, len - i - 1, &hole2, &hival))
@@ -1780,7 +1780,7 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
                 return false;
 
             /* Clear vec[newlen] before including it in the rooted set. */
-            JSBool hole;
+            bool hole;
             if (!GetElement(cx, obj, i, &hole, &v))
                 return false;
             if (hole)
@@ -1873,7 +1873,7 @@ js::array_sort(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JS_ALWAYS_INLINE JSBool
+JS_ALWAYS_INLINE bool
 NewbornArrayPushImpl(JSContext *cx, HandleObject obj, const Value &v)
 {
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
@@ -1893,7 +1893,7 @@ NewbornArrayPushImpl(JSContext *cx, HandleObject obj, const Value &v)
     return true;
 }
 
-JSBool
+bool
 js_NewbornArrayPush(JSContext *cx, HandleObject obj, const Value &vp)
 {
     return NewbornArrayPushImpl(cx, obj, vp);
@@ -1972,7 +1972,7 @@ js::array_pop(JSContext *cx, unsigned argc, Value *vp)
         index--;
 
         /* Step 5b, 5e. */
-        JSBool hole;
+        bool hole;
         if (!GetElement(cx, obj, index, &hole, args.rval()))
             return false;
 
@@ -2055,7 +2055,7 @@ js::array_shift(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Steps 5, 10. */
-    JSBool hole;
+    bool hole;
     if (!GetElement(cx, obj, uint32_t(0), &hole, args.rval()))
         return false;
 
@@ -2126,7 +2126,7 @@ array_unshift(JSContext *cx, unsigned argc, Value *vp)
                 RootedValue value(cx);
                 do {
                     --last, --upperIndex;
-                    JSBool hole;
+                    bool hole;
                     if (!JS_CHECK_OPERATION_LIMIT(cx))
                         return false;
                     if (!GetElement(cx, obj, last, &hole, &value))
@@ -2275,7 +2275,7 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
 
         RootedValue fromValue(cx);
         for (uint32_t k = 0; k < actualDeleteCount; k++) {
-            JSBool hole;
+            bool hole;
             if (!JS_CHECK_OPERATION_LIMIT(cx) ||
                 !GetElement(cx, obj, actualStart + k, &hole, &fromValue) ||
                 (!hole && !JSObject::defineElement(cx, arr, k, fromValue)))
@@ -2325,7 +2325,7 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
                 if (!JS_CHECK_OPERATION_LIMIT(cx))
                     return false;
 
-                JSBool hole;
+                bool hole;
                 if (!GetElement(cx, obj, from, &hole, &fromValue))
                     return false;
                 if (hole) {
@@ -2396,7 +2396,7 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
                 double from = k + actualDeleteCount - 1;
                 double to = k + itemCount - 1;
 
-                JSBool hole;
+                bool hole;
                 if (!GetElement(cx, obj, from, &hole, &fromValue))
                     return false;
 
@@ -2509,7 +2509,7 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
                     return false;
                 RootedValue tmp(cx);
                 for (uint32_t slot = 0; slot < alength; slot++) {
-                    JSBool hole;
+                    bool hole;
                     if (!JS_CHECK_OPERATION_LIMIT(cx) || !GetElement(cx, obj, slot, &hole, &tmp))
                         return false;
 
@@ -2537,7 +2537,7 @@ static bool
 array_slice(JSContext *cx, unsigned argc, Value *vp)
 {
     uint32_t length, begin, end, slot;
-    JSBool hole;
+    bool hole;
 
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2665,7 +2665,7 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
             return false;
 
         /* Step a, b, and c.i. */
-        JSBool kNotPresent;
+        bool kNotPresent;
         if (!GetElement(cx, obj, k, &kNotPresent, &kValue))
             return false;
 
@@ -2718,7 +2718,7 @@ IsArrayConstructor(const Value &v)
            v.toObject().as<JSFunction>().native() == js_Array;
 }
 
-static JSBool
+static bool
 ArrayFromCallArgs(JSContext *cx, RootedTypeObject &type, CallArgs &args)
 {
     if (!InitArrayTypes(cx, type, args.array(), args.length()))

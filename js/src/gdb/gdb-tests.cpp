@@ -28,7 +28,7 @@ checkPtr(T *ptr)
 }
 
 void
-checkBool(JSBool success)
+checkBool(bool success)
 {
   if (! success)
     abort();

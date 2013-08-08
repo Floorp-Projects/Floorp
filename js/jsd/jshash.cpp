@@ -166,7 +166,7 @@ JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
     return hep;
 }
 
-static JSBool
+static bool
 Resize(JSHashTable *ht, uint32_t newshift)
 {
     size_t nb, nentries, i;
@@ -289,7 +289,7 @@ JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
     }
 }
 
-JSBool
+bool
 JS_HashTableRemove(JSHashTable *ht, const void *key)
 {
     JSHashNumber keyHash;
