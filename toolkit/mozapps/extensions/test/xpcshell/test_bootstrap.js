@@ -204,8 +204,6 @@ function run_test_1() {
 }
 
 function check_test_1(installSyncGUID) {
-  do_check_true(gExtensionsJSON.exists());
-
   let file = gProfD.clone();
   file.leafName = "extensions.ini";
   do_check_false(file.exists());
@@ -352,6 +350,9 @@ function run_test_4() {
 // Tests that a restart shuts down and restarts the add-on
 function run_test_5() {
   shutdownManager();
+  // By the time we've shut down, the database must have been written
+  do_check_true(gExtensionsJSON.exists());
+
   do_check_eq(getInstalledVersion(), 1);
   do_check_eq(getActiveVersion(), 0);
   do_check_eq(getShutdownReason(), APP_SHUTDOWN);
