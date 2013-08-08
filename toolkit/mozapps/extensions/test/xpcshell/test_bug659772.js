@@ -108,14 +108,8 @@ function run_test_1() {
       shutdownManager();
 
       // Make it look like the next time the app is started it has a new DB schema
-      let dbfile = gProfD.clone();
-      dbfile.append("extensions.sqlite");
-      let db = AM_Cc["@mozilla.org/storage/service;1"].
-               getService(AM_Ci.mozIStorageService).
-               openDatabase(dbfile);
-      db.schemaVersion = 1;
+      changeXPIDBVersion(1);
       Services.prefs.setIntPref("extensions.databaseSchema", 1);
-      db.close();
 
       let jsonfile = gProfD.clone();
       jsonfile.append("extensions");
@@ -255,14 +249,8 @@ function run_test_2() {
       shutdownManager();
 
       // Make it look like the next time the app is started it has a new DB schema
-      let dbfile = gProfD.clone();
-      dbfile.append("extensions.sqlite");
-      let db = AM_Cc["@mozilla.org/storage/service;1"].
-               getService(AM_Ci.mozIStorageService).
-               openDatabase(dbfile);
-      db.schemaVersion = 1;
+      changeXPIDBVersion(1);
       Services.prefs.setIntPref("extensions.databaseSchema", 1);
-      db.close();
 
       let jsonfile = gProfD.clone();
       jsonfile.append("extensions");

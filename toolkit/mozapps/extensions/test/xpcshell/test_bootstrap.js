@@ -11,8 +11,6 @@ const ADDON_UNINSTALL                 = 6;
 const ADDON_UPGRADE                   = 7;
 const ADDON_DOWNGRADE                 = 8;
 
-const EXTENSIONS_DB                   = "extensions.sqlite";
-
 // This verifies that bootstrappable add-ons can be used without restarts.
 Components.utils.import("resource://gre/modules/Services.jsm");
 
