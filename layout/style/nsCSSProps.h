@@ -529,6 +529,7 @@ public:
   static const int32_t kTableLayoutKTable[];
   static const int32_t kTextAlignKTable[];
   static const int32_t kTextAlignLastKTable[];
+  static const int32_t kTextBlinkKTable[];
   static const int32_t kTextDecorationLineKTable[];
   static const int32_t kTextDecorationStyleKTable[];
   static const int32_t kTextOverflowKTable[];
