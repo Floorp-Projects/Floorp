@@ -26,22 +26,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-
-#if ENABLE(WEB_AUDIO)
-
-#include "core/platform/audio/HRTFElevation.h"
+#include "HRTFElevation.h"
 
 #include "speex/speex_resampler.h"
 #include "mozilla/PodOperations.h"
 #include "AudioSampleFormat.h"
-#include <math.h>
-#include <algorithm>
-#include "core/platform/PlatformMemoryInstrumentation.h"
-#include "core/platform/audio/AudioBus.h"
-#include "core/platform/audio/HRTFPanner.h"
-#include <wtf/MemoryInstrumentationVector.h>
-#include <wtf/OwnPtr.h>
 
 #include "IRC_Composite_C_R0195-incl.cpp"
 
@@ -94,8 +83,7 @@ size_t HRTFElevation::fftSizeForSampleRate(float sampleRate)
     return size;
 }
 
-bool HRTFElevation::calculateKernelForAzimuthElevation(int azimuth, int elevation, SpeexResamplerState* resampler, float sampleRate,
-                                                       RefPtr<HRTFKernel>& kernelL)
+nsReturnRef<HRTFKernel> HRTFElevation::calculateKernelForAzimuthElevation(int azimuth, int elevation, SpeexResamplerState* resampler, float sampleRate)
 {
     int elevationIndex = (elevation - firstElevation) / elevationSpacing;
     MOZ_ASSERT(elevationIndex >= 0 && elevationIndex <= numberOfElevations);
@@ -154,9 +142,7 @@ bool HRTFElevation::calculateKernelForAzimuthElevation(int azimuth, int elevatio
         speex_resampler_reset_mem(resampler);
     }
 
-    kernelL = HRTFKernel::create(response, responseLength, sampleRate);
-    
-    return true;
+    return HRTFKernel::create(response, responseLength, sampleRate);
 }
 
 // The range of elevations for the IRCAM impulse responses varies depending on azimuth, but the minimum elevation appears to always be -45.
@@ -191,12 +177,12 @@ static int maxElevations[] = {
     45 //  345 
 };
 
-PassOwnPtr<HRTFElevation> HRTFElevation::createForSubject(const String& subjectName, int elevation, float sampleRate)
+nsReturnRef<HRTFElevation> HRTFElevation::createBuiltin(int elevation, float sampleRate)
 {
     if (elevation < firstElevation ||
         elevation > firstElevation + numberOfElevations * elevationSpacing ||
         (elevation / elevationSpacing) * elevationSpacing != elevation)
-        return nullptr;
+        return nsReturnRef<HRTFElevation>();
         
     // Spacing, in degrees, between every azimuth loaded from resource.
     // Some elevations do not have data for all these intervals.
@@ -210,7 +196,8 @@ PassOwnPtr<HRTFElevation> HRTFElevation::createForSubject(const String& subjectN
     static_assert(NumberOfTotalAzimuths ==
                   NumberOfRawAzimuths * InterpolationFactor, "Not a multiple");
 
-    OwnPtr<HRTFKernelList> kernelListL = adoptPtr(new HRTFKernelList(NumberOfTotalAzimuths));
+    HRTFKernelList kernelListL;
+    kernelListL.SetLength(NumberOfTotalAzimuths);
 
     SpeexResamplerState* resampler = sampleRate == rawSampleRate ? nullptr :
         speex_resampler_init(1, rawSampleRate, sampleRate,
@@ -223,9 +210,7 @@ PassOwnPtr<HRTFElevation> HRTFElevation::createForSubject(const String& subjectN
         int maxElevation = maxElevations[rawIndex];
         int actualElevation = min(elevation, maxElevation);
 
-        bool success = calculateKernelForAzimuthElevation(rawIndex * AzimuthSpacing, actualElevation, resampler, sampleRate, kernelListL->at(interpolatedIndex));
-        if (!success)
-            return nullptr;
+        kernelListL[interpolatedIndex] = calculateKernelForAzimuthElevation(rawIndex * AzimuthSpacing, actualElevation, resampler, sampleRate);
             
         interpolatedIndex += InterpolationFactor;
     }
@@ -241,50 +226,49 @@ PassOwnPtr<HRTFElevation> HRTFElevation::createForSubject(const String& subjectN
         for (unsigned jj = 1; jj < InterpolationFactor; ++jj) {
             float x = float(jj) / float(InterpolationFactor); // interpolate from 0 -> 1
 
-            (*kernelListL)[i + jj] = HRTFKernel::createInterpolatedKernel(kernelListL->at(i).get(), kernelListL->at(j).get(), x);
+            kernelListL[i + jj] = HRTFKernel::createInterpolatedKernel(kernelListL[i], kernelListL[j], x);
         }
     }
     
-    OwnPtr<HRTFElevation> hrtfElevation = adoptPtr(new HRTFElevation(kernelListL.release(), elevation, sampleRate));
-    return hrtfElevation.release();
+    return nsReturnRef<HRTFElevation>(new HRTFElevation(&kernelListL, elevation, sampleRate));
 }
 
-PassOwnPtr<HRTFElevation> HRTFElevation::createByInterpolatingSlices(HRTFElevation* hrtfElevation1, HRTFElevation* hrtfElevation2, float x, float sampleRate)
+nsReturnRef<HRTFElevation> HRTFElevation::createByInterpolatingSlices(HRTFElevation* hrtfElevation1, HRTFElevation* hrtfElevation2, float x, float sampleRate)
 {
-    ASSERT(hrtfElevation1 && hrtfElevation2);
+    MOZ_ASSERT(hrtfElevation1 && hrtfElevation2);
     if (!hrtfElevation1 || !hrtfElevation2)
-        return nullptr;
+        return nsReturnRef<HRTFElevation>();
         
-    ASSERT(x >= 0.0 && x < 1.0);
+    MOZ_ASSERT(x >= 0.0 && x < 1.0);
     
-    OwnPtr<HRTFKernelList> kernelListL = adoptPtr(new HRTFKernelList(NumberOfTotalAzimuths));
+    HRTFKernelList kernelListL;
+    kernelListL.SetLength(NumberOfTotalAzimuths);
 
-    HRTFKernelList* kernelListL1 = hrtfElevation1->kernelListL();
-    HRTFKernelList* kernelListL2 = hrtfElevation2->kernelListL();
+    const HRTFKernelList& kernelListL1 = hrtfElevation1->kernelListL();
+    const HRTFKernelList& kernelListL2 = hrtfElevation2->kernelListL();
     
     // Interpolate kernels of corresponding azimuths of the two elevations.
     for (unsigned i = 0; i < NumberOfTotalAzimuths; ++i) {
-        (*kernelListL)[i] = HRTFKernel::createInterpolatedKernel(kernelListL1->at(i).get(), kernelListL2->at(i).get(), x);
+        kernelListL[i] = HRTFKernel::createInterpolatedKernel(kernelListL1[i], kernelListL2[i], x);
     }
 
     // Interpolate elevation angle.
     double angle = (1.0 - x) * hrtfElevation1->elevationAngle() + x * hrtfElevation2->elevationAngle();
     
-    OwnPtr<HRTFElevation> hrtfElevation = adoptPtr(new HRTFElevation(kernelListL.release(), static_cast<int>(angle), sampleRate));
-    return hrtfElevation.release();  
+    return nsReturnRef<HRTFElevation>(new HRTFElevation(&kernelListL, static_cast<int>(angle), sampleRate));
 }
 
 void HRTFElevation::getKernelsFromAzimuth(double azimuthBlend, unsigned azimuthIndex, HRTFKernel* &kernelL, HRTFKernel* &kernelR, double& frameDelayL, double& frameDelayR)
 {
     bool checkAzimuthBlend = azimuthBlend >= 0.0 && azimuthBlend < 1.0;
-    ASSERT(checkAzimuthBlend);
+    MOZ_ASSERT(checkAzimuthBlend);
     if (!checkAzimuthBlend)
         azimuthBlend = 0.0;
     
-    unsigned numKernels = m_kernelListL->size();
+    unsigned numKernels = m_kernelListL.Length();
 
     bool isIndexGood = azimuthIndex < numKernels;
-    ASSERT(isIndexGood);
+    MOZ_ASSERT(isIndexGood);
     if (!isIndexGood) {
         kernelL = 0;
         kernelR = 0;
@@ -293,29 +277,21 @@ void HRTFElevation::getKernelsFromAzimuth(double azimuthBlend, unsigned azimuthI
     
     // Return the left and right kernels,
     // using symmetry to produce the right kernel.
-    kernelL = m_kernelListL->at(azimuthIndex).get();
+    kernelL = m_kernelListL[azimuthIndex];
     int azimuthIndexR = (numKernels - azimuthIndex) % numKernels;
-    kernelR = m_kernelListL->at(azimuthIndexR).get();
+    kernelR = m_kernelListL[azimuthIndexR];
 
     frameDelayL = kernelL->frameDelay();
     frameDelayR = kernelR->frameDelay();
 
     int azimuthIndex2L = (azimuthIndex + 1) % numKernels;
-    double frameDelay2L = m_kernelListL->at(azimuthIndex2L)->frameDelay();
+    double frameDelay2L = m_kernelListL[azimuthIndex2L]->frameDelay();
     int azimuthIndex2R = (numKernels - azimuthIndex2L) % numKernels;
-    double frameDelay2R = m_kernelListL->at(azimuthIndex2R)->frameDelay();
+    double frameDelay2R = m_kernelListL[azimuthIndex2R]->frameDelay();
 
     // Linearly interpolate delays.
     frameDelayL = (1.0 - azimuthBlend) * frameDelayL + azimuthBlend * frameDelay2L;
     frameDelayR = (1.0 - azimuthBlend) * frameDelayR + azimuthBlend * frameDelay2R;
 }
 
-void HRTFElevation::reportMemoryUsage(MemoryObjectInfo* memoryObjectInfo) const
-{
-    MemoryClassInfo info(memoryObjectInfo, this, PlatformMemoryTypes::AudioSharedData);
-    info.addMember(m_kernelListL, "kernelListL");
-}
-
 } // namespace WebCore
-
-#endif // ENABLE(WEB_AUDIO)

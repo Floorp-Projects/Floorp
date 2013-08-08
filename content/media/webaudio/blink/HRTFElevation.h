@@ -29,15 +29,8 @@
 #ifndef HRTFElevation_h
 #define HRTFElevation_h
 
-#include "core/platform/audio/HRTFKernel.h"
-#include <wtf/Noncopyable.h>
-#include <wtf/OwnPtr.h>
-#include <wtf/PassOwnPtr.h>
-#include <wtf/PassRefPtr.h>
-#include <wtf/RefCounted.h>
-#include <wtf/RefPtr.h>
-#include <wtf/text/CString.h>
-#include <wtf/text/WTFString.h>
+#include "HRTFKernel.h"
+#include "nsAutoRef.h"
 
 struct SpeexResamplerState_;
 typedef struct SpeexResamplerState_ SpeexResamplerState;
@@ -47,16 +40,15 @@ namespace WebCore {
 // HRTFElevation contains all of the HRTFKernels (one left ear and one right ear per azimuth angle) for a particular elevation.
 
 class HRTFElevation {
-    WTF_MAKE_NONCOPYABLE(HRTFElevation);
 public:
     // Loads and returns an HRTFElevation with the given HRTF database subject name and elevation from browser (or WebKit.framework) resources.
     // Normally, there will only be a single HRTF database set, but this API supports the possibility of multiple ones with different names.
     // Interpolated azimuths will be generated based on InterpolationFactor.
     // Valid values for elevation are -45 -> +90 in 15 degree increments.
-    static PassOwnPtr<HRTFElevation> createForSubject(const String& subjectName, int elevation, float sampleRate);
+    static nsReturnRef<HRTFElevation> createBuiltin(int elevation, float sampleRate);
 
     // Given two HRTFElevations, and an interpolation factor x: 0 -> 1, returns an interpolated HRTFElevation.
-    static PassOwnPtr<HRTFElevation> createByInterpolatingSlices(HRTFElevation* hrtfElevation1, HRTFElevation* hrtfElevation2, float x, float sampleRate);
+    static nsReturnRef<HRTFElevation> createByInterpolatingSlices(HRTFElevation* hrtfElevation1, HRTFElevation* hrtfElevation2, float x, float sampleRate);
 
     double elevationAngle() const { return m_elevationAngle; }
     unsigned numberOfAzimuths() const { return NumberOfTotalAzimuths; }
@@ -69,32 +61,40 @@ public:
     // Total number of azimuths after interpolation.
     static const unsigned NumberOfTotalAzimuths;
 
-    void reportMemoryUsage(MemoryObjectInfo*) const;
+    static size_t fftSizeForSampleRate(float sampleRate);
 
 private:
-    HRTFElevation(PassOwnPtr<HRTFKernelList> kernelListL, int elevation, float sampleRate)
-        : m_kernelListL(kernelListL)
-        , m_elevationAngle(elevation)
+    HRTFElevation(const HRTFElevation& other) MOZ_DELETE;
+    void operator=(const HRTFElevation& other) MOZ_DELETE;
+
+    HRTFElevation(HRTFKernelList *kernelListL, int elevation, float sampleRate)
+        : m_elevationAngle(elevation)
         , m_sampleRate(sampleRate)
     {
+        m_kernelListL.SwapElements(*kernelListL);
     }
 
     // Returns the list of left ear HRTFKernels for all the azimuths going from 0 to 360 degrees.
-    HRTFKernelList* kernelListL() { return m_kernelListL.get(); }
+    const HRTFKernelList& kernelListL() { return m_kernelListL; }
 
     // Given a specific azimuth and elevation angle, returns the left HRTFKernel.
     // Values for azimuth must be multiples of 15 in 0 -> 345,
     // but not all azimuths are available for elevations > +45.
     // Valid values for elevation are -45 -> +90 in 15 degree increments.
-    // Returns true on success.
-    static bool calculateKernelForAzimuthElevation(int azimuth, int elevation, SpeexResamplerState* resampler, float sampleRate,
-                                                   RefPtr<HRTFKernel>& kernelL);
+    static nsReturnRef<HRTFKernel> calculateKernelForAzimuthElevation(int azimuth, int elevation, SpeexResamplerState* resampler, float sampleRate);
 
-    OwnPtr<HRTFKernelList> m_kernelListL;
+    HRTFKernelList m_kernelListL;
     double m_elevationAngle;
     float m_sampleRate;
 };
 
 } // namespace WebCore
+
+template <>
+class nsAutoRefTraits<WebCore::HRTFElevation> :
+    public nsPointerRefTraits<WebCore::HRTFElevation> {
+public:
+    static void Release(WebCore::HRTFElevation* ptr) { delete(ptr); }
+};
 
 #endif // HRTFElevation_h
