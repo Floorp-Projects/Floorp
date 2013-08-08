@@ -457,7 +457,7 @@ inline bool IsDOMProxy(JSObject *obj)
 
 typedef JSObject*
 (*DefineInterface)(JSContext *cx, JS::Handle<JSObject*> global,
-                   JS::Handle<jsid> id, bool *enabled);
+                   JS::Handle<jsid> id, bool defineOnGlobal);
 
 typedef JSObject*
 (*ConstructNavigatorProperty)(JSContext *cx, JS::Handle<JSObject*> naviObj);
