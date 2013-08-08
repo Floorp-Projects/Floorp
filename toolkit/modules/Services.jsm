@@ -37,6 +37,9 @@ XPCOMUtils.defineLazyGetter(Services, "dirsvc", function () {
 });
 
 let initTable = [
+#ifdef MOZ_WIDGET_ANDROID
+  ["androidBridge", "@mozilla.org/android/bridge;1", "nsIAndroidBridge"],
+#endif
   ["appShell", "@mozilla.org/appshell/appShellService;1", "nsIAppShellService"],
   ["cache", "@mozilla.org/network/cache-service;1", "nsICacheService"],
   ["console", "@mozilla.org/consoleservice;1", "nsIConsoleService"],
