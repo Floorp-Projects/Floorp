@@ -64,11 +64,23 @@ public:
                                   const nsAString& aBody,
                                   JSObject** aFunctionObject);
 
+  struct EvaluateOptions {
+    bool coerceToString;
+
+    explicit EvaluateOptions() : coerceToString(false)
+    {}
+
+    EvaluateOptions& setCoerceToString(bool aCoerce) {
+      coerceToString = aCoerce;
+      return *this;
+    }
+  };
+
   static nsresult EvaluateString(JSContext* aCx,
                                  const nsAString& aScript,
                                  JS::Handle<JSObject*> aScopeObject,
-                                 JS::CompileOptions &aOptions,
-                                 bool aCoerceToString,
+                                 JS::CompileOptions &aCompileOptions,
+                                 EvaluateOptions& aEvaluateOptions,
                                  JS::Value* aRetValue);
 
 };

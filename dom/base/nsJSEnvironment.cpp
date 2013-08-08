@@ -1237,7 +1237,7 @@ nsJSContext::GetCCRefcnt()
 nsresult
 nsJSContext::EvaluateString(const nsAString& aScript,
                             JS::Handle<JSObject*> aScopeObject,
-                            JS::CompileOptions& aOptions,
+                            JS::CompileOptions& aCompileOptions,
                             bool aCoerceToString,
                             JS::Value* aRetValue)
 {
@@ -1249,8 +1249,10 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 
   {
     AutoCxPusher pusher(mContext);
+    nsJSUtils::EvaluateOptions evalOptions;
+    evalOptions.setCoerceToString(aCoerceToString);
     rv = nsJSUtils::EvaluateString(mContext, aScript, aScopeObject,
-                                   aOptions, aCoerceToString, aRetValue);
+                                   aCompileOptions, evalOptions, aRetValue);
   }
 
   // ScriptEvaluated needs to come after we pop the stack
