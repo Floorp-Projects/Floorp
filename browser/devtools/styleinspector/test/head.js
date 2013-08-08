@@ -59,6 +59,17 @@ function openRuleView(callback)
   });
 }
 
+function openComputedView(callback)
+{
+  openInspector(inspector => {
+    inspector.sidebar.once("computedview-ready", () => {
+      inspector.sidebar.select("computedview");
+      let ruleView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
+      callback(inspector, ruleView);
+    })
+  });
+}
+
 function addStyle(aDocument, aString)
 {
   let node = aDocument.createElement('style');

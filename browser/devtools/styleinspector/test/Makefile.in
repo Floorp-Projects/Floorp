@@ -12,7 +12,6 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \
-  browser_styleinspector.js \
   browser_bug683672.js \
   browser_styleinspector_bug_672746_default_styles.js \
   browser_styleinspector_bug_672744_search_filter.js \
