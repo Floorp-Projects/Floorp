@@ -61,7 +61,7 @@
 #include "frontend/Parser.h" // for JS_BufferIsCompileableUnit
 #include "gc/Marking.h"
 #include "gc/Memory.h"
-#include "ion/AsmJSLink.h"
+#include "jit/AsmJSLink.h"
 #include "js/CharacterEncoding.h"
 #if ENABLE_INTL_API
 #include "unicode/uclean.h"
