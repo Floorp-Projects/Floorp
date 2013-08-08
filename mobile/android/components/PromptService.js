@@ -807,7 +807,7 @@ let PromptUtils = {
   },
 
   sendMessageToJava: function(aMsg) {
-    let data = Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge).handleGeckoMessage(JSON.stringify(aMsg));
+    let data = Services.androidBridge.handleGeckoMessage(JSON.stringify(aMsg));
     return JSON.parse(data);
   },
 
