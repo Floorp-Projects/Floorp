@@ -802,7 +802,7 @@ gfxPlatform::SupportsAzureContentForDrawTarget(DrawTarget* aTarget)
     return false;
   }
 
-  return (1 << aTarget->GetType()) & mContentBackendBitmask;
+  return SupportsAzureContentForType(aTarget->GetType());
 }
 
 bool
