@@ -9555,7 +9555,7 @@ CSSParserImpl::ParseTextDecoration()
     return false;
   }
 
-  nsCSSValue line, style, color;
+  nsCSSValue blink, line, style, color;
   switch (value.GetUnit()) {
     case eCSSUnit_Enumerated: {
       // We shouldn't accept decoration line style and color via
@@ -9567,6 +9567,7 @@ CSSParserImpl::ParseTextDecoration()
 
       int32_t intValue = value.GetIntValue();
       if (intValue == eDecorationNone) {
+        blink.SetIntValue(NS_STYLE_TEXT_BLINK_NONE, eCSSUnit_Enumerated);
         line.SetIntValue(NS_STYLE_TEXT_DECORATION_LINE_NONE,
                          eCSSUnit_Enumerated);
         break;
@@ -9588,14 +9589,18 @@ CSSParserImpl::ParseTextDecoration()
         intValue |= newValue;
       }
 
-      line.SetIntValue(intValue, eCSSUnit_Enumerated);
+      blink.SetIntValue((intValue & eDecorationBlink) != 0 ?
+                          NS_STYLE_TEXT_BLINK_BLINK : NS_STYLE_TEXT_BLINK_NONE,
+                        eCSSUnit_Enumerated);
+      line.SetIntValue((intValue & ~eDecorationBlink), eCSSUnit_Enumerated);
       break;
     }
     default:
-      line = color = style = value;
+      blink = line = color = style = value;
       break;
   }
 
+  AppendValue(eCSSProperty_text_blink, blink);
   AppendValue(eCSSProperty_text_decoration_line, line);
   AppendValue(eCSSProperty_text_decoration_color, color);
   AppendValue(eCSSProperty_text_decoration_style, style);
@@ -9613,7 +9618,7 @@ CSSParserImpl::ParseTextDecorationLine(nsCSSValue& aValue)
         // look for more keywords
         nsCSSValue  keyword;
         int32_t index;
-        for (index = 0; index < 3; index++) {
+        for (index = 0; index < 2; index++) {
           if (ParseEnum(keyword, nsCSSProps::kTextDecorationLineKTable)) {
             int32_t newValue = keyword.GetIntValue();
             if (newValue == NS_STYLE_TEXT_DECORATION_LINE_NONE ||
