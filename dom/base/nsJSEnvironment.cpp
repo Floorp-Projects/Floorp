@@ -1259,63 +1259,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 }
 
 nsresult
-nsJSContext::CompileScript(const PRUnichar* aText,
-                           int32_t aTextLength,
-                           nsIPrincipal *aPrincipal,
-                           const char *aURL,
-                           uint32_t aLineNo,
-                           uint32_t aVersion,
-                           JS::MutableHandle<JSScript*> aScriptObject,
-                           bool aSaveSource /* = false */)
-{
-  PROFILER_LABEL_PRINTF("JS", "Compile Script", "%s", aURL ? aURL : "");
-  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  AutoPushJSContext cx(mContext);
-  JSAutoRequest ar(cx);
-  JS::Rooted<JSObject*> scopeObject(mContext, GetNativeGlobal());
-  JSAutoCompartment ac(cx, scopeObject);
-  xpc_UnmarkGrayObject(scopeObject);
-
-  bool ok = false;
-
-  nsresult rv = sSecurityManager->CanExecuteScripts(cx, aPrincipal, &ok);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aScriptObject.set(nullptr); // ensure old object not used on failure...
-
-  // Don't compile if SecurityManager said "not ok" or aVersion is unknown.
-  // Since the caller is responsible for parsing the version strings, we just
-  // check it isn't JSVERSION_UNKNOWN.
-  if (!ok || JSVersion(aVersion) == JSVERSION_UNKNOWN)
-    return NS_OK;
-
-  JS::CompileOptions options(cx);
-  JS::CompileOptions::SourcePolicy sp = aSaveSource ?
-    JS::CompileOptions::SAVE_SOURCE :
-    JS::CompileOptions::LAZY_SOURCE;
-  options.setPrincipals(nsJSPrincipals::get(aPrincipal))
-         .setFileAndLine(aURL, aLineNo)
-         .setVersion(JSVersion(aVersion))
-         .setSourcePolicy(sp);
-  JS::RootedObject rootedScope(cx, scopeObject);
-  JSScript* script = JS::Compile(cx,
-                                 rootedScope,
-                                 options,
-                                 static_cast<const jschar*>(aText),
-                                 aTextLength);
-  if (!script) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aScriptObject.set(script);
-  return NS_OK;
-}
-
-nsresult
 nsJSContext::ExecuteScript(JSScript* aScriptObject_,
                            JSObject* aScopeObject_)
 {
