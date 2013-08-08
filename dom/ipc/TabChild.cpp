@@ -339,34 +339,19 @@ TabChild::HandleEvent(nsIDOMEvent* aEvent)
     uint32_t presShellId;
     nsIScrollableFrame* scrollFrame = nullptr;
 
-    nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIContent> content;
+    if (nsCOMPtr<nsIDocument> doc = do_QueryInterface(target))
+      content = doc->GetDocumentElement();
+    else
+      content = do_QueryInterface(target);
 
-    if ((doc = do_QueryInterface(target))) {
-      nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
-      if (!presShell)
-        return NS_OK;
+    nsCOMPtr<nsIDOMWindowUtils> utils = ::GetDOMWindowUtils(content);
+    utils->GetPresShellId(&presShellId);
 
-      presShellId = presShell->GetPresShellId();
-      if (presShell->GetPresContext()->IsRootContentDocument()) {
-        // Case 1: Root content document.
-        viewId = FrameMetrics::ROOT_SCROLL_ID;
-        scrollFrame = presShell->GetRootScrollFrameAsScrollable();
-      } else {
-        // Case 2: Other document.
-        if (!nsLayoutUtils::FindIDFor(doc->GetDocumentElement(), &viewId))
-          return NS_ERROR_UNEXPECTED;
-        scrollFrame = nsLayoutUtils::FindScrollableFrameFor(viewId);
-      }
-    } else if ((content = do_QueryInterface(target))) {
-      // Case 3: Content.
-      nsCOMPtr<nsIDOMWindowUtils> utils = ::GetDOMWindowUtils(content);
-      utils->GetPresShellId(&presShellId);
-      if (!nsLayoutUtils::FindIDFor(content, &viewId))
-        return NS_ERROR_UNEXPECTED;
-      scrollFrame = nsLayoutUtils::FindScrollableFrameFor(viewId);
-    }
+    if (!nsLayoutUtils::FindIDFor(content, &viewId))
+      return NS_ERROR_UNEXPECTED;
 
+    scrollFrame = nsLayoutUtils::FindScrollableFrameFor(viewId);
     if (scrollFrame) {
       CSSIntPoint scrollOffset = scrollFrame->GetScrollPositionCSSPixels();
 
