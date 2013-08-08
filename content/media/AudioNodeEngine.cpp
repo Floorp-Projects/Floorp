@@ -4,11 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/arm.h"
 #include "AudioNodeEngine.h"
-#ifdef MOZILLA_MAY_SUPPORT_NEON
-#include "AudioNodeEngineNEON.h"
-#endif
 
 namespace mozilla {
 
@@ -62,12 +58,6 @@ void AudioBufferAddWithScale(const float* aInput,
                              float* aOutput,
                              uint32_t aSize)
 {
-#ifdef MOZILLA_MAY_SUPPORT_NEON
-  if (mozilla::supports_neon()) {
-    AudioBufferAddWithScale_NEON(aInput, aScale, aOutput, aSize);
-    return;
-  }
-#endif
   if (aScale == 1.0f) {
     for (uint32_t i = 0; i < aSize; ++i) {
       aOutput[i] += aInput[i];
@@ -95,12 +85,6 @@ AudioBlockCopyChannelWithScale(const float* aInput,
   if (aScale == 1.0f) {
     memcpy(aOutput, aInput, WEBAUDIO_BLOCK_SIZE*sizeof(float));
   } else {
-#ifdef MOZILLA_MAY_SUPPORT_NEON
-    if (mozilla::supports_neon()) {
-      AudioBlockCopyChannelWithScale_NEON(aInput, aScale, aOutput);
-      return;
-    }
-#endif
     for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
       aOutput[i] = aInput[i]*aScale;
     }
@@ -130,12 +114,6 @@ AudioBlockCopyChannelWithScale(const float aInput[WEBAUDIO_BLOCK_SIZE],
                                const float aScale[WEBAUDIO_BLOCK_SIZE],
                                float aOutput[WEBAUDIO_BLOCK_SIZE])
 {
-#ifdef MOZILLA_MAY_SUPPORT_NEON
-  if (mozilla::supports_neon()) {
-    AudioBlockCopyChannelWithScale_NEON(aInput, aScale, aOutput);
-    return;
-  }
-#endif
   for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
     aOutput[i] = aInput[i]*aScale[i];
   }
@@ -158,12 +136,6 @@ AudioBufferInPlaceScale(float* aBlock,
   if (aScale == 1.0f) {
     return;
   }
-#ifdef MOZILLA_MAY_SUPPORT_NEON
-  if (mozilla::supports_neon()) {
-    AudioBufferInPlaceScale_NEON(aBlock, aChannelCount, aScale, aSize);
-    return;
-  }
-#endif
   for (uint32_t i = 0; i < aSize * aChannelCount; ++i) {
     *aBlock++ *= aScale;
   }
@@ -186,15 +158,6 @@ AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                             float aOutputL[WEBAUDIO_BLOCK_SIZE],
                             float aOutputR[WEBAUDIO_BLOCK_SIZE])
 {
-#ifdef MOZILLA_MAY_SUPPORT_NEON
-  if (mozilla::supports_neon()) {
-    AudioBlockPanStereoToStereo_NEON(aInputL, aInputR,
-                                     aGainL, aGainR, aIsOnTheLeft,
-                                     aOutputL, aOutputR);
-    return;
-  }
-#endif
-
   uint32_t i;
 
   if (aIsOnTheLeft) {
