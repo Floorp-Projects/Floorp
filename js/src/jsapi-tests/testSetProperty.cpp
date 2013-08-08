@@ -11,7 +11,7 @@ static JSBool
 nativeGet(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
     vp.set(INT_TO_JSVAL(17));
-    return JS_TRUE;
+    return true;
 }
 
 BEGIN_TEST(testSetProperty_NativeGetterStubSetter)

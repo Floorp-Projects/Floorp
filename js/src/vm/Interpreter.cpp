@@ -173,10 +173,10 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 
 #if JS_HAS_NO_SUCH_METHOD
 
-const uint32_t JSSLOT_FOUND_FUNCTION  = 0;
-const uint32_t JSSLOT_SAVED_ID        = 1;
+static const uint32_t JSSLOT_FOUND_FUNCTION = 0;
+static const uint32_t JSSLOT_SAVED_ID = 1;
 
-Class js_NoSuchMethodClass = {
+static Class js_NoSuchMethodClass = {
     "NoSuchMethod",
     JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
@@ -225,7 +225,7 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 {
     InvokeArgs args(cx);
     if (!args.init(2))
-        return JS_FALSE;
+        return false;
 
     JS_ASSERT(vp[0].isObject());
     JS_ASSERT(vp[1].isObject());
@@ -237,7 +237,7 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
     args[0].set(obj->getReservedSlot(JSSLOT_SAVED_ID));
     JSObject *argsobj = NewDenseCopiedArray(cx, argc, vp + 2);
     if (!argsobj)
-        return JS_FALSE;
+        return false;
     args[1].setObject(*argsobj);
     JSBool ok = Invoke(cx, args);
     vp[0] = args.rval();
@@ -2034,7 +2034,7 @@ END_CASE(JSOP_NE)
         bool equal;                                                           \
         if (!StrictlyEqual(cx, lref, rref, &equal))                           \
             goto error;                                                       \
-        COND = equal OP JS_TRUE;                                              \
+        COND = equal OP true;                                                 \
         regs.sp--;                                                            \
     JS_END_MACRO
 

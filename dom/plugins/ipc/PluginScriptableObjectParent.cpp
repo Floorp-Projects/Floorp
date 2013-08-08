@@ -1223,31 +1223,31 @@ PluginScriptableObjectParent::GetPropertyHelper(NPIdentifier aName,
   ParentNPObject* object = static_cast<ParentNPObject*>(mObject);
   if (object->invalidated) {
     NS_WARNING("Calling method on an invalidated object!");
-    return JS_FALSE;
+    return false;
   }
 
   StackIdentifier identifier(GetInstance(), aName);
   if (!identifier) {
-    return JS_FALSE;
+    return false;
   }
 
   bool hasProperty, hasMethod, success;
   Variant result;
   if (!CallGetChildProperty(identifier, &hasProperty, &hasMethod, &result,
                             &success)) {
-    return JS_FALSE;
+    return false;
   }
 
   if (!success) {
-    return JS_FALSE;
+    return false;
   }
 
   if (!ConvertToVariant(result, *aResult, GetInstance())) {
     NS_WARNING("Failed to convert result!");
-    return JS_FALSE;
+    return false;
   }
 
   *aHasProperty = hasProperty;
   *aHasMethod = hasMethod;
-  return JS_TRUE;
+  return true;
 }

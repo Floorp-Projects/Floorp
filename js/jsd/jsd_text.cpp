@@ -31,9 +31,9 @@ _clearText(JSDContext* jsdc, JSDSourceText* jsdsrc)
     jsdsrc->textLength  = 0;
     jsdsrc->textSpace   = 0;
     jsdsrc->status      = JSD_SOURCE_CLEARED;
-    jsdsrc->dirty       = JS_TRUE;
+    jsdsrc->dirty       = true;
     jsdsrc->alterCount  = jsdc->sourceAlterCount++ ;
-    jsdsrc->doingEval   = JS_FALSE;
+    jsdsrc->doingEval   = false;
 }    
 
 static JSBool
@@ -66,7 +66,7 @@ _appendText(JSDContext* jsdc, JSDSourceText* jsdsrc,
                 /* out of memory */
                 _clearText( jsdc, jsdsrc );
                 jsdsrc->status = JSD_SOURCE_FAILED;
-                return JS_FALSE;
+                return false;
             }
         }
 
@@ -76,7 +76,7 @@ _appendText(JSDContext* jsdc, JSDSourceText* jsdsrc,
 
     memcpy(jsdsrc->text + jsdsrc->textLength, text, length);
     jsdsrc->textLength += length;
-    return JS_TRUE;
+    return true;
 }
 
 static JSDSourceText*
@@ -88,7 +88,7 @@ _newSource(JSDContext* jsdc, char* url)
     
     jsdsrc->url        = url;
     jsdsrc->status     = JSD_SOURCE_INITED;
-    jsdsrc->dirty      = JS_TRUE;
+    jsdsrc->dirty      = true;
     jsdsrc->alterCount = jsdc->sourceAlterCount++ ;
             
     return jsdsrc;
@@ -145,9 +145,9 @@ _isSourceInSourceList(JSDContext* jsdc, JSDSourceText* jsdsrcToFind)
          jsdsrc = (JSDSourceText*)jsdsrc->links.next ) 
     {
         if( jsdsrc == jsdsrcToFind )
-            return JS_TRUE;
+            return true;
     }
-    return JS_FALSE;
+    return false;
 }
 
 /*  compare strings in a case insensitive manner with a length limit
@@ -261,7 +261,7 @@ jsd_GetSourceText(JSDContext* jsdc, JSDSourceText* jsdsrc,
 {
     *ppBuf = jsdsrc->text;
     *pLen  = jsdsrc->textLength;
-    return JS_TRUE;
+    return true;
 }
 
 void
@@ -394,7 +394,7 @@ jsd_AppendSourceText(JSDContext* jsdc,
 
     if( text && length && ! _appendText( jsdc, jsdsrc, text, length ) )
     {
-        jsdsrc->dirty  = JS_TRUE;
+        jsdsrc->dirty  = true;
         jsdsrc->alterCount  = jsdc->sourceAlterCount++ ;
         jsdsrc->status = JSD_SOURCE_FAILED;
         _moveSourceToRemovedList(jsdc, jsdsrc);
@@ -402,7 +402,7 @@ jsd_AppendSourceText(JSDContext* jsdc,
         return NULL;    
     }
 
-    jsdsrc->dirty  = JS_TRUE;
+    jsdsrc->dirty  = true;
     jsdsrc->alterCount  = jsdc->sourceAlterCount++ ;
     jsdsrc->status = status;
     DEBUG_ITERATE_SOURCES(jsdc);
@@ -472,7 +472,7 @@ jsd_AddFullSourceText(JSDContext* jsdc,
 
     JSD_UNLOCK_SOURCE_TEXT(jsdc);
 
-    return jsdsrc ? JS_TRUE : JS_FALSE;
+    return jsdsrc ? true : false;
 }
 
 /***************************************************************************/
@@ -493,7 +493,7 @@ jsd_StartingEvalUsingFilename(JSDContext* jsdc, const char* url)
         JS_ASSERT(! jsdsrc->doingEval);
 #endif
 #endif
-        jsdsrc->doingEval = JS_TRUE;
+        jsdsrc->doingEval = true;
     }
 }    
 
@@ -517,7 +517,7 @@ jsd_FinishedEvalUsingFilename(JSDContext* jsdc, const char* url)
         JS_ASSERT(jsdsrc->doingEval);
 #endif
 #endif
-        jsdsrc->doingEval = JS_FALSE;
+        jsdsrc->doingEval = false;
     }
 
     JSD_UNLOCK_SOURCE_TEXT(jsdc);
