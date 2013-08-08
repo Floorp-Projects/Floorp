@@ -9,7 +9,9 @@
 #include "BluetoothService.h"
 
 #include "BluetoothCommon.h"
+#include "BluetoothHfpManager.h"
 #include "BluetoothManager.h"
+#include "BluetoothOppManager.h"
 #include "BluetoothParent.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothServiceChildProcess.h"
@@ -473,6 +475,14 @@ BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
     rv = NS_NewNamedThread("BluetoothCmd",
                            getter_AddRefs(mBluetoothCommandThread));
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!aStart) {
+    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+    hfp->Disconnect();
+
+    BluetoothOppManager* opp = BluetoothOppManager::Get();
+    opp->Disconnect();
   }
 
   nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(aStart, aIsStartup);
