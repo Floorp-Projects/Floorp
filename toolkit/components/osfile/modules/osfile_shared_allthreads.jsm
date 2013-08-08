@@ -885,7 +885,12 @@ let declareFFI = function declareFFI(lib, symbol, abi,
   }
   try {
     let fun = lib.declare.apply(lib, signature);
-    let result = function ffi(/*arguments*/) {
+    let result = function ffi(...args) {
+      for (let i = 0; i < args.length; i++) {
+        if (typeof args[i] == "undefined") {
+          throw new TypeError("Argument " + i + " of " + symbol + " is undefined");
+        }
+      }
       let result = fun.apply(fun, arguments);
       return returnType.importFromC(result, symbol);
     };
