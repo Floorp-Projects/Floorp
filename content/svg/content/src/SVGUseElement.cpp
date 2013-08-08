@@ -99,9 +99,6 @@ SVGUseElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   *aResult = nullptr;
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
   SVGUseElement *it = new SVGUseElement(ni.forget());
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   nsCOMPtr<nsINode> kungFuDeathGrip(it);
   nsresult rv1 = it->Init();
