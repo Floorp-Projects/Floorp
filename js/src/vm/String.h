@@ -16,6 +16,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Heap.h"
+#include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
 

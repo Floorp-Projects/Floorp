@@ -11,6 +11,7 @@
 #include "jscompartment.h"
 #include "jsiter.h"
 
+#include "vm/ArgumentsObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
@@ -18,6 +19,7 @@
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
 #include "vm/Stack-inl.h"

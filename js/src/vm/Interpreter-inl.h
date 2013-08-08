@@ -10,21 +10,19 @@
 #include "vm/Interpreter.h"
 
 #include "jsapi.h"
-#include "jsbool.h"
 #include "jscompartment.h"
 #include "jsinfer.h"
-#include "jslibmath.h"
 #include "jsnum.h"
 #include "jsstr.h"
 
 #include "jit/Ion.h"
 #include "jit/IonCompartment.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
 
 #include "jsatominlines.h"
-#include "jsfuninlines.h"
+#include "jsobjinlines.h"
 #include "jsinferinlines.h"
-#include "jsopcodeinlines.h"
 
 #include "vm/GlobalObject-inl.h"
 #include "vm/Stack-inl.h"

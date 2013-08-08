@@ -10,6 +10,7 @@
 
 #include "mozilla/PodOperations.h"
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,8 +20,6 @@
 #include "jscntxt.h"
 #include "jsexn.h"
 #include "jsnum.h"
-#include "jsopcode.h"
-#include "jsscript.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "js/CharacterEncoding.h"

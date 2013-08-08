@@ -7,22 +7,14 @@
 #ifndef gc_Zone_h
 #define gc_Zone_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
 #include "jscntxt.h"
-#include "jsfun.h"
 #include "jsgc.h"
 #include "jsinfer.h"
-#include "jsobj.h"
 
 #include "gc/FindSCCs.h"
-#include "gc/StoreBuffer.h"
-#include "vm/GlobalObject.h"
-#include "vm/RegExpObject.h"
-#include "vm/Shape.h"
 
 namespace js {
 
