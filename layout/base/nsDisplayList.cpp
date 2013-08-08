@@ -3213,7 +3213,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   // Get the already set unique ID for scrolling this content remotely.
   // Or, if not set, generate a new ID.
   nsIContent* content = mScrolledFrame->GetContent();
-  ViewID scrollId = nsLayoutUtils::FindIDFor(content);
+  ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
 
   nsRect viewport = mScrollFrame->GetRect() -
                     mScrollFrame->GetPosition() +
