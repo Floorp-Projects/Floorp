@@ -14,7 +14,8 @@ except (OSError, IOError):
 deps = ['manifestdestiny', 'mozhttpd >= 0.5',
         'mozprocess >= 0.9', 'mozrunner >= 5.15',
         'mozdevice >= 0.22', 'moznetwork >= 0.21',
-        'mozcrash >= 0.5', 'mozprofile >= 0.7']
+        'mozcrash >= 0.5', 'mozprofile >= 0.7',
+        'moztest >= 0.1']
 
 setup(name='marionette_client',
       version=version,
