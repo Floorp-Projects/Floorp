@@ -5,8 +5,6 @@
 // This verifies that deleting the database from the profile doesn't break
 // anything
 
-const EXTENSIONS_DB = "extensions.sqlite";
-
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
