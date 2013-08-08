@@ -40,8 +40,8 @@ HTMLAnchorElement::~HTMLAnchorElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(HTMLAnchorElement, nsGenericHTMLElement,
-                             nsIDOMHTMLAnchorElement, nsILink, Link)
+NS_IMPL_ISUPPORTS_INHERITED2(HTMLAnchorElement, nsGenericHTMLElement,
+                             nsIDOMHTMLAnchorElement, Link)
 
 NS_IMPL_ELEMENT_CLONE(HTMLAnchorElement)
 
