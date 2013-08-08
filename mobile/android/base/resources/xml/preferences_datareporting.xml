@@ -18,10 +18,6 @@
                         android:summary="@string/datareporting_crashreporter_summary"
                         android:defaultValue="false" />
 
-    <CheckBoxPreference android:key="app.geo.reportdata"
-                        android:title="@string/datareporting_wifi_title"
-                        android:summary="@string/datareporting_wifi_summary" />
-
     <CheckBoxPreference android:key="android.not_a_preference.healthreport.uploadEnabled"
                         android:title="@string/datareporting_fhr_title"
                         android:summary="@string/datareporting_fhr_summary2"
