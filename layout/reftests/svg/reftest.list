@@ -76,7 +76,7 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,
 fuzzy-if(Android,4,87) skip-if(B2G) == dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
-random-if(gtk2Widget) == dynamic-feImage-01.svg pass.svg # intermittent failures (bug 886080)
+skip-if(gtk2Widget) == dynamic-feImage-01.svg pass.svg # intermittent failures (bug 886080)
 == dynamic-fill-01.svg dynamic-fill-01-ref.svg
 skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
 skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01-ref.svg
@@ -166,7 +166,7 @@ skip-if(B2G) == foreignObject-start-hidden-01.svg pass.svg # followup from Bug 5
 skip-if(B2G) == foreignObject-start-hidden-02.svg pass.svg
 skip-if(B2G) == foreignObject-style-change-01.svg pass.svg
 == foreignObject-dynamic-abspos-01.html foreignObject-dynamic-abspos-01-ref.html
-fuzzy-if(Android,18,500) == foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
+fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == getElementById-a-element-01.svg pass.svg
 fuzzy-if(Android,9,980) == gradient-live-01a.svg gradient-live-01-ref.svg
