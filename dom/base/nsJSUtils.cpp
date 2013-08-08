@@ -198,13 +198,14 @@ nsresult
 nsJSUtils::EvaluateString(JSContext* aCx,
                           const nsAString& aScript,
                           JS::Handle<JSObject*> aScopeObject,
-                          JS::CompileOptions& aOptions,
-                          bool aCoerceToString,
+                          JS::CompileOptions& aCompileOptions,
+                          EvaluateOptions& aEvaluateOptions,
                           JS::Value* aRetValue)
 {
   PROFILER_LABEL("JS", "EvaluateString");
-  MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
-  MOZ_ASSERT_IF(aCoerceToString, aRetValue);
+  MOZ_ASSERT_IF(aCompileOptions.versionSet,
+                aCompileOptions.version != JSVERSION_UNKNOWN);
+  MOZ_ASSERT_IF(aEvaluateOptions.coerceToString, aRetValue);
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
 
   // Unfortunately, the JS engine actually compiles scripts with a return value
@@ -219,7 +220,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   nsAutoMicroTask mt;
 
   JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetObjectCompartment(aScopeObject));
-  aOptions.setPrincipals(p);
+  aCompileOptions.setPrincipals(p);
 
   bool ok = false;
   nsresult rv = nsContentUtils::GetSecurityManager()->
@@ -233,10 +234,10 @@ nsJSUtils::EvaluateString(JSContext* aCx,
     JSAutoCompartment ac(aCx, aScopeObject);
 
     JS::RootedObject rootedScope(aCx, aScopeObject);
-    ok = JS::Evaluate(aCx, rootedScope, aOptions,
+    ok = JS::Evaluate(aCx, rootedScope, aCompileOptions,
                       PromiseFlatString(aScript).get(),
                       aScript.Length(), aRetValue);
-    if (ok && aCoerceToString && !aRetValue->isUndefined()) {
+    if (ok && aEvaluateOptions.coerceToString && !aRetValue->isUndefined()) {
       JSString* str = JS_ValueToString(aCx, *aRetValue);
       ok = !!str;
       *aRetValue = ok ? JS::StringValue(str) : JS::UndefinedValue();
