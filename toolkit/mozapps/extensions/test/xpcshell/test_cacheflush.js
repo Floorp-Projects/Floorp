@@ -117,6 +117,6 @@ function run_test_4() {
     do_check_true(gCacheFlushed);
     gCacheFlushed = false;
 
-    do_test_finished();
+    do_execute_soon(do_test_finished);
   });
 }

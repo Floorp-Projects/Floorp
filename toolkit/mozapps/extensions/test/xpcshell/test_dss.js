@@ -115,7 +115,7 @@ function run_test() {
 }
 
 function end_test() {
-  do_test_finished();
+  do_execute_soon(do_test_finished);
 }
 
 // Checks enabling one theme disables the others
@@ -592,7 +592,7 @@ function run_test_9() {
 
 // Uninstalling a custom theme in use should require a restart
 function run_test_10() {
-  AddonManager.getAddonByID("theme2@tests.mozilla.org", function(oldt2) {
+  AddonManager.getAddonByID("theme2@tests.mozilla.org", callback_soon(function(oldt2) {
     prepare_test({
       "theme2@tests.mozilla.org": [
         ["onEnabling", false],
@@ -611,7 +611,8 @@ function run_test_10() {
     restartManager();
 
     AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
-                                 "theme2@tests.mozilla.org"], function([d, t2]) {
+                                 "theme2@tests.mozilla.org"],
+                                 callback_soon(function([d, t2]) {
       do_check_true(t2.isActive);
       do_check_false(t2.userDisabled);
       do_check_false(t2.appDisabled);
@@ -638,8 +639,8 @@ function run_test_10() {
       restartManager();
 
       do_execute_soon(run_test_11);
-    });
-  });
+    }));
+  }));
 }
 
 // Installing a custom theme not in use should not require a restart
@@ -665,7 +666,7 @@ function run_test_11() {
     }, [
       "onInstallStarted",
       "onInstallEnded",
-    ], check_test_11);
+    ], callback_soon(check_test_11));
     install.install();
   });
 }
@@ -722,7 +723,7 @@ function check_test_12() {
 
 // Updating a custom theme in use should require a restart
 function run_test_13() {
-  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", callback_soon(function(t1) {
     prepare_test({
       "theme1@tests.mozilla.org": [
         ["onEnabling", false],
@@ -758,10 +759,10 @@ function run_test_13() {
       }, [
         "onInstallStarted",
         "onInstallEnded",
-      ], check_test_13);
+      ], callback_soon(check_test_13));
       install.install();
     });
-  });
+  }));
 }
 
 function check_test_13() {
@@ -772,7 +773,6 @@ function check_test_13() {
     do_check_true(t1.isActive);
     do_check_false(gLWThemeChanged);
     t1.uninstall();
-    restartManager();
 
     do_execute_soon(run_test_14);
   });
@@ -781,6 +781,7 @@ function check_test_13() {
 // Switching from a lightweight theme to the default theme should not require
 // a restart
 function run_test_14() {
+  restartManager();
   LightweightThemeManager.currentTheme = {
     id: "1",
     version: "1",

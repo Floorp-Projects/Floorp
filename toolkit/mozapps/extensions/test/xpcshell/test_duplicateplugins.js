@@ -164,7 +164,7 @@ function run_test_2() {
 function run_test_3() {
   restartManager();
 
-  AddonManager.getAddonByID(gPluginIDs[0], function(p) {
+  AddonManager.getAddonByID(gPluginIDs[0], callback_soon(function(p) {
     do_check_neq(p, null);
     do_check_eq(p.name, "Duplicate Plugin 1");
     do_check_eq(p.description, "A duplicate plugin");
@@ -178,7 +178,7 @@ function run_test_3() {
       do_check_eq(p.name, "Duplicate Plugin 1");
       do_check_eq(p.description, "A duplicate plugin");
 
-      do_test_finished();
+      do_execute_soon(do_test_finished);
     });
-  });
+  }));
 }

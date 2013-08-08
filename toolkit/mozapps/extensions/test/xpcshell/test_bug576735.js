@@ -38,7 +38,7 @@ function run_test() {
 
   startupManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
     a1.uninstall();
 
     shutdownManager();
@@ -60,7 +60,7 @@ function run_test() {
       // Addon2 should have been detected
       do_check_neq(a2, null);
 
-      do_test_finished();
+      do_execute_soon(do_test_finished);
     });
-  });
+  }));
 }
