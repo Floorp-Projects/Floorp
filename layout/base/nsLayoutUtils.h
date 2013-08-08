@@ -67,10 +67,16 @@ public:
   typedef mozilla::layers::FrameMetrics::ViewID ViewID;
 
   /**
+   * Finds previously assigned ViewID for the given content element, if any.
+   * Returns whether a ViewID was previously assigned.
+   */
+  static bool FindIDFor(nsIContent* aContent, ViewID* aOutViewId);
+
+  /**
    * Finds previously assigned or generates a unique ViewID for the given
    * content element.
    */
-  static ViewID FindIDFor(nsIContent* aContent);
+  static ViewID FindOrCreateIDFor(nsIContent* aContent);
 
   /**
    * Find content for given ID.
