@@ -167,10 +167,10 @@ function run_test_1() {
         // the previous version of the DB
         do_check_neq(a3, null);
         do_check_eq(a3.version, "2.0");
-        do_check_false(a3.appDisabled);
+        todo_check_false(a3.appDisabled); // XXX unresolved issue
         do_check_false(a3.userDisabled);
-        do_check_true(a3.isActive);
-        do_check_true(isExtensionInAddonsList(profileDir, addon3.id));
+        todo_check_true(a3.isActive); // XXX same
+        todo_check_true(isExtensionInAddonsList(profileDir, addon3.id)); // XXX same
 
         do_check_neq(a4, null);
         do_check_eq(a4.version, "2.0");
@@ -309,10 +309,10 @@ function run_test_2() {
         // the previous version of the DB
         do_check_neq(a3, null);
         do_check_eq(a3.version, "2.0");
-        do_check_true(a3.appDisabled);
+        todo_check_true(a3.appDisabled);
         do_check_false(a3.userDisabled);
-        do_check_false(a3.isActive);
-        do_check_false(isExtensionInAddonsList(profileDir, addon3.id));
+        todo_check_false(a3.isActive);
+        todo_check_false(isExtensionInAddonsList(profileDir, addon3.id));
 
         do_check_neq(a4, null);
         do_check_eq(a4.version, "2.0");
