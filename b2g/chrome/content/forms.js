@@ -194,6 +194,9 @@ let FormAssistant = {
     addMessageListener("Forms:Select:Blur", this);
     addMessageListener("Forms:SetSelectionRange", this);
     addMessageListener("Forms:ReplaceSurroundingText", this);
+    addMessageListener("Forms:GetText", this);
+    addMessageListener("Forms:Input:SendKey", this);
+    addMessageListener("Forms:GetContext", this);
   },
 
   ignoredInputTypes: new Set([
@@ -203,8 +206,11 @@ let FormAssistant = {
   isKeyboardOpened: false,
   selectionStart: -1,
   selectionEnd: -1,
+  textBeforeCursor: "",
+  textAfterCursor: "",
   scrollIntoViewTimeout: null,
   _focusedElement: null,
+  _focusCounter: 0, // up one for every time we focus a new element
   _documentEncoder: null,
   _editor: null,
   _editing: false,
@@ -218,6 +224,7 @@ let FormAssistant = {
   },
 
   set focusedElement(val) {
+    this._focusCounter++;
     this._focusedElement = val;
   },
 
@@ -390,12 +397,34 @@ let FormAssistant = {
 
   receiveMessage: function fa_receiveMessage(msg) {
     let target = this.focusedElement;
+    let json = msg.json;
+
+    // To not break mozKeyboard contextId is optional
+    if ('contextId' in json &&
+        json.contextId !== this._focusCounter &&
+        json.requestId) {
+      // Ignore messages that are meant for a previously focused element
+      sendAsyncMessage("Forms:SequenceError", {
+        requestId: json.requestId,
+        error: "Expected contextId " + this._focusCounter +
+               " but was " + json.contextId
+      });
+      return;
+    }
+
     if (!target) {
+      switch (msg.name) {
+      case "Forms:GetText":
+        sendAsyncMessage("Forms:GetText:Result:Error", {
+          requestId: json.requestId,
+          error: "No focused element"
+        });
+        break;
+      }
       return;
     }
 
     this._editing = true;
-    let json = msg.json;
     switch (msg.name) {
       case "Forms:Input:Value": {
         target.value = json.value;
@@ -405,6 +434,19 @@ let FormAssistant = {
         target.dispatchEvent(event);
         break;
       }
+
+      case "Forms:Input:SendKey":
+        ["keydown", "keypress", "keyup"].forEach(function(type) {
+          domWindowUtils.sendKeyEvent(type, json.keyCode, json.charCode,
+            json.modifiers);
+        });
+
+        if (json.requestId) {
+          sendAsyncMessage("Forms:SendKey:Result:OK", {
+            requestId: json.requestId
+          });
+        }
+        break;
 
       case "Forms:Select:Choice":
         let options = target.options;
@@ -442,6 +484,13 @@ let FormAssistant = {
         let end =  json.selectionEnd;
         setSelectionRange(target, start, end);
         this.updateSelection();
+
+        if (json.requestId) {
+          sendAsyncMessage("Forms:SetSelectionRange:Result:OK", {
+            requestId: json.requestId,
+            selectioninfo: this.getSelectionInfo()
+          });
+        }
         break;
       }
 
@@ -449,8 +498,44 @@ let FormAssistant = {
         let text = json.text;
         let beforeLength = json.beforeLength;
         let afterLength = json.afterLength;
-        replaceSurroundingText(target, text, this.selectionStart, beforeLength,
+        let selectionRange = getSelectionRange(target);
+
+        replaceSurroundingText(target, text, selectionRange[0], beforeLength,
                                afterLength);
+
+        if (json.requestId) {
+          sendAsyncMessage("Forms:ReplaceSurroundingText:Result:OK", {
+            requestId: json.requestId,
+            selectioninfo: this.getSelectionInfo()
+          });
+        }
+        break;
+      }
+
+      case "Forms:GetText": {
+        let isPlainTextField = target instanceof HTMLInputElement ||
+                               target instanceof HTMLTextAreaElement;
+        let value = isPlainTextField ?
+          target.value :
+          getContentEditableText(target);
+
+        if (json.offset && json.length) {
+          value = value.substr(json.offset, json.length);
+        }
+        else if (json.offset) {
+          value = value.substr(json.offset);
+        }
+
+        sendAsyncMessage("Forms:GetText:Result:OK", {
+          requestId: json.requestId,
+          text: value
+        });
+        break;
+      }
+
+      case "Forms:GetContext": {
+        let obj = getJSON(target, this._focusCounter);
+        sendAsyncMessage("Forms:GetContext:Result:OK", obj);
         break;
       }
     }
@@ -529,20 +614,47 @@ let FormAssistant = {
       return false;
     }
 
-    sendAsyncMessage("Forms:Input", getJSON(element));
+    sendAsyncMessage("Forms:Input", getJSON(element, this._focusCounter));
     return true;
+  },
+
+  getSelectionInfo: function fa_getSelectionInfo() {
+    let element = this.focusedElement;
+    let range =  getSelectionRange(element);
+
+    let isPlainTextField = element instanceof HTMLInputElement ||
+                           element instanceof HTMLTextAreaElement;
+
+    let text = isPlainTextField ?
+      element.value :
+      getContentEditableText(element);
+
+    let textAround = getTextAroundCursor(text, range);
+
+    let changed = this.selectionStart !== range[0] ||
+      this.selectionEnd !== range[1] ||
+      this.textBeforeCursor !== textAround.before ||
+      this.textAfterCursor !== textAround.after;
+
+    this.selectionStart = range[0];
+    this.selectionEnd = range[1];
+    this.textBeforeCursor = textAround.before;
+    this.textAfterCursor = textAround.after;
+
+    return {
+      selectionStart: range[0],
+      selectionEnd: range[1],
+      textBeforeCursor: textAround.before,
+      textAfterCursor: textAround.after,
+      changed: changed
+    };
   },
 
   // Notify when the selection range changes
   updateSelection: function fa_updateSelection() {
-    let range =  getSelectionRange(this.focusedElement);
-    if (range[0] != this.selectionStart || range[1] != this.selectionEnd) {
-      this.selectionStart = range[0];
-      this.selectionEnd = range[1];
-      sendAsyncMessage("Forms:SelectionChange", {
-        selectionStart: range[0],
-        selectionEnd: range[1]
-      });
+    let selectionInfo = this.getSelectionInfo();
+    if (selectionInfo.changed) {
+      sendAsyncMessage("Forms:SelectionChange", this.getSelectionInfo());
     }
   }
 };
@@ -568,7 +680,7 @@ function isContentEditable(element) {
   return element.ownerDocument && element.ownerDocument.designMode == "on";
 }
 
-function getJSON(element) {
+function getJSON(element, focusCounter) {
   let type = element.type || "";
   let value = element.value || "";
   let max = element.max || "";
@@ -609,8 +721,11 @@ function getJSON(element) {
   }
 
   let range = getSelectionRange(element);
+  let textAround = getTextAroundCursor(value, range);
 
   return {
+    "contextId": focusCounter,
+
     "type": type.toLowerCase(),
     "choices": getListForElement(element),
     "value": value,
@@ -618,7 +733,25 @@ function getJSON(element) {
     "selectionStart": range[0],
     "selectionEnd": range[1],
     "max": max,
-    "min": min
+    "min": min,
+    "lang": element.lang || "",
+    "textBeforeCursor": textAround.before,
+    "textAfterCursor": textAround.after
+  };
+}
+
+function getTextAroundCursor(value, range) {
+  let textBeforeCursor = range[0] < 100 ?
+    value.substr(0, range[0]) :
+    value.substr(range[0] - 100, 100);
+
+  let textAfterCursor = range[1] + 100 > value.length ?
+    value.substr(range[0], value.length) :
+    value.substr(range[0], range[1] - range[0] + 100);
+
+  return {
+    before: textBeforeCursor,
+    after: textAfterCursor
   };
 }
 
