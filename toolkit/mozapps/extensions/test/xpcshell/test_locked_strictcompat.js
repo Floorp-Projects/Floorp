@@ -256,10 +256,8 @@ function run_test_1() {
 
     // After shutting down the database won't be open so we can lock it
     shutdownManager();
-    var dbfile = gProfD.clone();
-    dbfile.append(EXTENSIONS_DB);
-    var savedPermissions = dbfile.permissions;
-    dbfile.permissions = 0;
+    var savedPermissions = gExtensionsJSON.permissions;
+    gExtensionsJSON.permissions = 0;
 
     startupManager(false);
 
@@ -425,11 +423,11 @@ function run_test_1() {
         do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
         do_check_true(isThemeInAddonsList(profileDir, t2.id));
 
-        dbfile.permissions = savedPermissions;
-
         // After allowing access to the original DB things should go back to as
         // they were previously
-        restartManager();
+        shutdownManager();
+        gExtensionsJSON.permissions = savedPermissions;
+        startupManager(false);
 
         // Shouldn't have seen any startup changes
         check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);

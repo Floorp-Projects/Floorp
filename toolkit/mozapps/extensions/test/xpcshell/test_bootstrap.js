@@ -146,10 +146,9 @@ function run_test() {
 
   startupManager();
 
-  let file = gProfD.clone();
-  file.append(EXTENSIONS_DB);
-  do_check_false(file.exists());
+  do_check_false(gExtensionsJSON.exists());
 
+  let file = gProfD.clone();
   file.leafName = "extensions.ini";
   do_check_false(file.exists());
 
@@ -205,10 +204,9 @@ function run_test_1() {
 }
 
 function check_test_1(installSyncGUID) {
-  let file = gProfD.clone();
-  file.append(EXTENSIONS_DB);
-  do_check_true(file.exists());
+  do_check_true(gExtensionsJSON.exists());
 
+  let file = gProfD.clone();
   file.leafName = "extensions.ini";
   do_check_false(file.exists());
 
