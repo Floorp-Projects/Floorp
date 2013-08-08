@@ -83,11 +83,11 @@ public:
 
 #ifdef MOZ_DUMP_PAINTING
   virtual already_AddRefed<gfxImageSurface> GetAsSurface();
-#endif
 
   virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
+#endif
 
   virtual DeprecatedTextureHost* GetDeprecatedTextureHost() MOZ_OVERRIDE;
 
@@ -147,9 +147,11 @@ public:
                                  const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
   virtual void DestroyTextures() MOZ_OVERRIDE;
 
+#ifdef MOZ_DUMP_PAINTING
   virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
+#endif
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);

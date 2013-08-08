@@ -10,14 +10,8 @@
 #include "ISurfaceAllocator.h" // For IsSurfaceDescriptorValid
 #include "GLContext.h" // For SharedTextureHandle
 
-#ifdef MOZ_WIDGET_GONK
-#include <ui/GraphicBuffer.h>
-#endif
-
 namespace mozilla {
 namespace layers {
-
-
 
 /**
  * A TextureClient implementation to share TextureMemory that is already

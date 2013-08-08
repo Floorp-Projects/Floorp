@@ -392,7 +392,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
 already_AddRefed<gfxImageSurface>
 BufferTextureHost::GetAsSurface()
 {
-  nsRefPtr<gfxImageSurface> result; 
+  nsRefPtr<gfxImageSurface> result;
   if (mFormat == gfx::FORMAT_UNKNOWN) {
     NS_WARNING("BufferTextureHost: unsupported format!");
     return nullptr;
