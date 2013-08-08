@@ -3,7 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Services.prefs.setBoolPref("devtools.debugger.log", true);
+SimpleTest.registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("devtools.debugger.log");
+});
+
 let tempScope = {};
+
 Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
 let ConsoleUtils = tempScope.ConsoleUtils;
 let gDevTools = tempScope.gDevTools;
@@ -15,6 +21,8 @@ let TargetFactory = devtools.TargetFactory;
 let {CssHtmlTree} = devtools.require("devtools/styleinspector/computed-view");
 let {CssRuleView, _ElementStyle} = devtools.require("devtools/styleinspector/rule-view");
 let {CssLogic, CssSelector} = devtools.require("devtools/styleinspector/css-logic");
+
+let promise = devtools.require("sdk/core/promise");
 
 let {
   editableField,
@@ -37,6 +45,17 @@ function openInspector(callback)
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
     callback(toolbox.getCurrentPanel());
+  });
+}
+
+function openRuleView(callback)
+{
+  openInspector(inspector => {
+    inspector.sidebar.once("ruleview-ready", () => {
+      inspector.sidebar.select("ruleview");
+      let ruleView = inspector.sidebar.getWindowForTab("ruleview").ruleview.view;
+      callback(inspector, ruleView);
+    })
   });
 }
 
@@ -119,6 +138,21 @@ function contextMenuClick(element) {
 
   element.dispatchEvent(evt);
 }
+
+function expectRuleChange(rule) {
+  return rule._applyingModifications;
+}
+
+function promiseDone(promise) {
+  promise.then(null, err => {
+    ok(false, "Promise failed: " + err);
+    if (err.stack) {
+      dump(err.stack);
+    }
+    SimpleTest.finish();
+  });
+}
+
 
 registerCleanupFunction(tearDown);
 

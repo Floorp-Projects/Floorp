@@ -18,3 +18,13 @@ function openInspector(callback)
   });
 }
 
+function openRuleView(callback)
+{
+  openInspector(inspector => {
+    inspector.sidebar.once("ruleview-ready", () => {
+      inspector.sidebar.select("ruleview");
+      let ruleView = inspector.sidebar.getWindowForTab("ruleview").ruleview.view;
+      callback(inspector, ruleView);
+    })
+  });
+}
