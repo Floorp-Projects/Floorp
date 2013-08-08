@@ -352,6 +352,9 @@ gTests.push({
   }
 });
 
+/*
+XXX code used to diagnose bug 880739
+
 var observeLogger = {
   observe: function (aSubject, aTopic, aData) {
     info("observeLogger: " + aTopic);
@@ -383,15 +386,18 @@ var observeLogger = {
     Services.obs.removeObserver(observeLogger, "dl-cancel");
   }
 }
+*/
 
 // Image context menu tests
 gTests.push({
   desc: "image context menu",
   setUp: function() {
-    observeLogger.init();
+    // XXX code used to diagnose bug 880739
+    //observeLogger.init();
   },
   tearDown: function() {
-    observeLogger.shutdown();
+    // XXX code used to diagnose bug 880739
+    //observeLogger.shutdown();
   },
   run: function test() {
     info(chromeRoot + "browser_context_menu_tests_01.html");
