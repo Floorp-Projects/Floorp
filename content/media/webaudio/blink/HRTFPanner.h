@@ -41,8 +41,7 @@ public:
     virtual void pan(double azimuth, double elevation, const AudioBus* inputBus, AudioBus* outputBus, size_t framesToProcess);
     virtual void reset();
 
-    size_t fftSize() const { return fftSizeForSampleRate(m_sampleRate); }
-    static size_t fftSizeForSampleRate(float sampleRate);
+    size_t fftSize() const { return m_convolverL1.fftSize(); }
 
     float sampleRate() const { return m_sampleRate; }
 
