@@ -26,18 +26,18 @@ const SurfaceDescriptorType SURFACEDESCRIPTOR_UNKNOWN = 0;
  */
 typedef uint32_t TextureFlags;
 // Use nearest-neighbour texture filtering (as opposed to linear filtering).
-const TextureFlags UseNearestFilter           = 1 << 0;
+const TextureFlags TEXTURE_USE_NEAREST_FILTER = 1 << 0;
 // The texture should be flipped around the y-axis when composited.
-const TextureFlags NeedsYFlip                 = 1 << 1;
+const TextureFlags TEXTURE_NEEDS_Y_FLIP       = 1 << 1;
 // Force the texture to be represented using a single tile (note that this means
 // tiled textures, not tiled layers).
 const TextureFlags TEXTURE_DISALLOW_BIGIMAGE  = 1 << 2;
 // Allow using 'repeat' mode for wrapping.
-const TextureFlags AllowRepeat                = 1 << 3;
+const TextureFlags TEXTURE_ALLOW_REPEAT       = 1 << 3;
 // The texture represents a tile which is newly created.
-const TextureFlags NewTile                    = 1 << 4;
+const TextureFlags TEXTURE_NEW_TILE           = 1 << 4;
 // The texture is part of a component-alpha pair
-const TextureFlags ComponentAlpha             = 1 << 5;
+const TextureFlags TEXTURE_COMPONENT_ALPHA    = 1 << 5;
 // The buffer will be treated as if the RB bytes are swapped.
 // This is useful for rendering using Cairo/Thebes, because there is no
 // BGRX Android pixel format, and so we have to do byte swapping.

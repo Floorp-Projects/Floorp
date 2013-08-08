@@ -5010,9 +5010,9 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
         compileOnly = true;
 
     if (op->getBoolOption('w'))
-        reportWarnings = JS_TRUE;
+        reportWarnings = true;
     else if (op->getBoolOption('W'))
-        reportWarnings = JS_FALSE;
+        reportWarnings = false;
 
     if (op->getBoolOption('s'))
         JS_ToggleOptions(cx, JSOPTION_EXTRA_WARNINGS);

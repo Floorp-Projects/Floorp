@@ -101,6 +101,7 @@ HelperAppLauncherDialog.prototype = {
       .replace("#2", downloadSize)
       .replace("#3", aLauncher.source.host);
 
+    notificationBox.notificationsHidden = false;
     let newBar = notificationBox.appendNotification(msg,
                                                     "save-download",
                                                     URI_GENERIC_ICON_DOWNLOAD,

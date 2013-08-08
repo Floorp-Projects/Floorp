@@ -858,15 +858,6 @@
         <richlistbox id="menupopup-commands" onclick="if (event.target != this) AutofillMenuUI.selectByIndex(this.selectedIndex);" flex="1"/>
       </vbox>
     </box>
-
-    <!-- alerts for content -->
-    <hbox id="alerts-container" hidden="true" align="start" bottom="0" onclick="AlertsHelper.click(event);">
-      <image id="alerts-image"/>
-      <vbox flex="1">
-        <label id="alerts-title" value=""/>
-        <description id="alerts-text" flex="1"/>
-      </vbox>
-    </hbox>
   </stack>
 
 </window>

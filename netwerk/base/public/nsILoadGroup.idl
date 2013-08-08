@@ -81,7 +81,12 @@ interface nsILoadGroup : nsIRequest
 };
 
 %{C++
-#include "mozilla/net/PSpdyPush3.h"
+// Forward-declare mozilla::net::SpdyPushCache3
+namespace mozilla {
+namespace net {
+class SpdyPushCache3;
+}
+}
 %}
 
 [ptr] native SpdyPushCache3Ptr(mozilla::net::SpdyPushCache3);

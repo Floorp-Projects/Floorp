@@ -310,23 +310,40 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
         // Only expose the bare minimum extensions we want to support to ensure a functional Ganesh
         // as GLContext only exposes certain extensions
         static bool extensionsStringBuilt = false;
-        static char extensionsString[256];
+        static char extensionsString[1024];
 
         if (!extensionsStringBuilt) {
-            if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_texture_format_BGRA8888)) {
-                strcpy(extensionsString, "GL_EXT_texture_format_BGRA8888 ");
+            extensionsString[0] = '\0';
+
+            if (sGLContext.get()->IsGLES2()) {
+                // OES is only applicable to GLES2
+                if (sGLContext.get()->IsExtensionSupported(GLContext::OES_packed_depth_stencil)) {
+                    strcat(extensionsString, "GL_OES_packed_depth_stencil ");
+                }
+
+                if (sGLContext.get()->IsExtensionSupported(GLContext::OES_rgb8_rgba8)) {
+                    strcat(extensionsString, "GL_OES_rgb8_rgba8 ");
+                }
+
+                if (sGLContext.get()->IsExtensionSupported(GLContext::OES_texture_npot)) {
+                    strcat(extensionsString, "GL_OES_texture_npot ");
+                }
+
+                if (sGLContext.get()->IsExtensionSupported(GLContext::OES_vertex_array_object)) {
+                    strcat(extensionsString, "GL_OES_vertex_array_object ");
+                }
+
+                if (sGLContext.get()->IsExtensionSupported(GLContext::OES_standard_derivatives)) {
+                    strcat(extensionsString, "GL_OES_standard_derivatives ");
+                }
             }
 
-            if (sGLContext.get()->IsExtensionSupported(GLContext::OES_packed_depth_stencil)) {
-                strcat(extensionsString, "GL_OES_packed_depth_stencil ");
+            if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_texture_format_BGRA8888)) {
+                strcat(extensionsString, "GL_EXT_texture_format_BGRA8888 ");
             }
 
             if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_packed_depth_stencil)) {
                 strcat(extensionsString, "GL_EXT_packed_depth_stencil ");
-            }
-
-            if (sGLContext.get()->IsExtensionSupported(GLContext::OES_rgb8_rgba8)) {
-                strcat(extensionsString, "GL_OES_rgb8_rgba8 ");
             }
 
             if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_bgra)) {
@@ -338,6 +355,9 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
             }
 
             extensionsStringBuilt = true;
+#ifdef DEBUG
+            printf_stderr("Exported SkiaGL extensions: %s\n", extensionsString);
+#endif
         }
 
         return reinterpret_cast<const GLubyte*>(extensionsString);
@@ -677,6 +697,19 @@ GrGLvoid glBlitFramebuffer_mozilla(GrGLint srcX0, GrGLint srcY0,
                                         mask, filter);
 }
 
+GrGLvoid glBindVertexArray_mozilla(GrGLuint array) {
+    return sGLContext.get()->fBindVertexArray(array);
+}
+
+GrGLvoid glDeleteVertexArrays_mozilla(GrGLsizei n, const GrGLuint *arrays) {
+    return sGLContext.get()->fDeleteVertexArrays(n, arrays);
+}
+
+GrGLvoid glGenVertexArrays_mozilla(GrGLsizei n, GrGLuint *arrays) {
+    return sGLContext.get()->fGenVertexArrays(n, arrays);
+}
+
+
 } // extern "C"
 
 GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
@@ -792,6 +825,11 @@ GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
 
     // GLContext supports glCompressedTexImage2D
     i->fCompressedTexImage2D = glCompressedTexImage2D_mozilla;
+
+    // GL_OES_vertex_array_object
+    i->fBindVertexArray = glBindVertexArray_mozilla;
+    i->fDeleteVertexArrays = glDeleteVertexArrays_mozilla;
+    i->fGenVertexArrays = glGenVertexArrays_mozilla;
 
     // Desktop GL 
     i->fGetTexLevelParameteriv = glGetTexLevelParameteriv_mozilla;

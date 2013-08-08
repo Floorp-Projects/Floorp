@@ -382,6 +382,8 @@ ParseVarStatement(AsmJSParser &parser, ParseNode **var)
 
 /*****************************************************************************/
 
+namespace {
+
 // Respresents the type of a general asm.js expression.
 class Type
 {
@@ -478,6 +480,8 @@ class Type
     }
 };
 
+} /* anonymous namespace */
+
 // Represents the subset of Type that can be used as the return type of a
 // function.
 class RetType
@@ -527,6 +531,8 @@ class RetType
     bool operator!=(RetType rhs) const { return which_ != rhs.which_; }
 };
 
+namespace {
+
 // Represents the subset of Type that can be used as a variable or
 // argument's type. Note: AsmJSCoercion and VarType are kept separate to
 // make very clear the signed/int distinction: a coercion may explicitly sign
@@ -540,6 +546,7 @@ class RetType
 //     else
 //         i = bar() | 0;
 //     return i | 0;          (2)
+//   }
 //
 // the AsmJSCoercion of (1) is Signed (since | performs ToInt32) but, when
 // translated to an VarType, the result is a plain Int since, as shown, it
@@ -592,6 +599,8 @@ class VarType
     bool operator==(VarType rhs) const { return which_ == rhs.which_; }
     bool operator!=(VarType rhs) const { return which_ != rhs.which_; }
 };
+
+} /* anonymous namespace */
 
 // Implements <: (subtype) operator when the rhs is an VarType
 static inline bool
@@ -692,6 +701,8 @@ bool operator!=(const Signature &lhs, const Signature &rhs)
 /*****************************************************************************/
 // Numeric literal utilities
 
+namespace {
+
 // Represents the type and value of an asm.js numeric literal.
 //
 // A literal is a double iff the literal contains an exponent or decimal point
@@ -743,6 +754,8 @@ class NumLit
         return v_;
     }
 };
+
+} /* anonymous namespace */
 
 // Note: '-' is never rolled into the number; numbers are always positive and
 // negations must be applied manually.
@@ -892,6 +905,8 @@ TypedArrayStoreType(ArrayBufferView::ViewType viewType)
 typedef Vector<PropertyName*,1> LabelVector;
 typedef Vector<MBasicBlock*,8> BlockVector;
 
+namespace {
+
 // ModuleCompiler encapsulates the compilation of an entire asm.js module. Over
 // the course of an ModuleCompiler object's lifetime, many FunctionCompiler
 // objects will be created and destroyed in sequence, one for each function in
@@ -936,6 +951,7 @@ typedef Vector<MBasicBlock*,8> BlockVector;
 //      bar(1)|0;    // Exit #3: (int) -> int
 //      bar(2)|0;    // Exit #3: (int) -> int
 //    }
+//  }
 //
 // The ModuleCompiler maintains a hash table (ExitMap) which allows a call site
 // to add a new exit or reuse an existing one. The key is an ExitDescriptor
@@ -1533,9 +1549,9 @@ class MOZ_STACK_CLASS ModuleCompiler
                     return;
             }
         }
-#endif
         out->reset(JS_smprintf("total compilation time %dms%s",
                                msTotal, slowFuns ? slowFuns.get() : ""));
+#endif
     }
 
     bool staticallyLink(ScopedJSDeletePtr<AsmJSModule> *module, ScopedJSFreePtr<char> *report) {
@@ -1543,7 +1559,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         // the link-time validation fails in LinkAsmJS and we need to re-parse
         // the entire module from scratch.
         uint32_t bodyEnd = parser_.tokenStream.currentToken().pos.end;
-        module_->initPostLinkFailureInfo(parser_.ss, bodyStart_, bodyEnd);
+        module_->initSourceDesc(parser_.ss, bodyStart_, bodyEnd);
 
         // Finish the code section.
         masm_.finish();
@@ -1624,7 +1640,11 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 };
 
+} /* anonymous namespace */
+
 /*****************************************************************************/
+
+namespace {
 
 // Encapsulates the compilation of a single function in an asm.js module. The
 // function compiler handles the creation and final backend compilation of the
@@ -2536,6 +2556,8 @@ class FunctionCompiler
         return true;
     }
 };
+
+} /* anonymous namespace */
 
 /*****************************************************************************/
 // asm.js type-checking and code-generation algorithm
@@ -6271,7 +6293,7 @@ static bool
 Warn(JSContext *cx, int code, const char *str)
 {
     return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage,
-                                        NULL, code, str);
+                                        NULL, code, str ? str : "");
 }
 
 extern bool

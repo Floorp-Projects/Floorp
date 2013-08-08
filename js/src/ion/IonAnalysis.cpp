@@ -348,6 +348,8 @@ ion::EliminatePhis(MIRGenerator *mir, MIRGraph &graph,
     return true;
 }
 
+namespace {
+
 // The type analysis algorithm inserts conversions and box/unbox instructions
 // to make the IR graph well-typed for future passes.
 //
@@ -393,6 +395,8 @@ class TypeAnalyzer
 
     bool analyze();
 };
+
+} /* anonymous namespace */
 
 // Try to specialize this phi based on its non-cyclic inputs.
 static MIRType
@@ -537,7 +541,7 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
 
     // If we specialized a type that's not Value, either every input is of
     // that type or the input's typeset was unobserved (i.e. the opcode hasn't
-    // been executed yet.) Be optimistic and insert unboxes.
+    // been executed yet.)
     if (phiType != MIRType_Value) {
         for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
             MDefinition *in = phi->getOperand(i);
@@ -547,6 +551,17 @@ TypeAnalyzer::adjustPhiInputs(MPhi *phi)
             if (in->isBox() && in->toBox()->input()->type() == phiType) {
                 phi->replaceOperand(i, in->toBox()->input());
             } else {
+                // If we know this branch will fail to convert to phiType,
+                // insert a box that'll immediately fail in the fallible unbox
+                // below.
+                if (in->type() != MIRType_Value) {
+                    MBox *box = MBox::New(in);
+                    in->block()->insertBefore(in->block()->lastIns(), box);
+                    in = box;
+                }
+
+                // Be optimistic and insert unboxes when the operand is a
+                // value.
                 MUnbox *unbox = MUnbox::New(in, phiType, MUnbox::Fallible);
                 in->block()->insertBefore(in->block()->lastIns(), unbox);
                 phi->replaceOperand(i, unbox);

@@ -185,6 +185,18 @@ this.PageThumbs = {
            "?url=" + encodeURIComponent(aUrl);
   },
 
+   /**
+    * Gets the path of the thumbnail file for a given web page's
+    * url. This file may or may not exist depending on whether the
+    * thumbnail has been captured or not.
+    *
+    * @param aUrl The web page's url.
+    * @return The path of the thumbnail file.
+    */
+   getThumbnailPath: function PageThumbs_getThumbnailPath(aUrl) {
+     return PageThumbsStorage.getFilePathForURL(aUrl);
+   },
+
   /**
    * Checks if an existing thumbnail for the specified URL is either missing
    * or stale, and if so, queues a background request to capture it.  That

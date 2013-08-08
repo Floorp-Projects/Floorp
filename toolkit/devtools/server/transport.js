@@ -125,14 +125,11 @@ DebuggerTransport.prototype = {
 
   onStopRequest:
   makeInfallible(function DT_onStopRequest(aRequest, aContext, aStatus) {
-    let self = this;
-    Services.tm.currentThread.dispatch(makeInfallible(function() {
-      self.close();
-      if (self.hooks) {
-        self.hooks.onClosed(aStatus);
-        self.hooks = null;
-      }
-    }, "DebuggerTransport instance's this.close"), 0);
+    this.close();
+    if (this.hooks) {
+      this.hooks.onClosed(aStatus);
+      this.hooks = null;
+    }
   }, "DebuggerTransport.prototype.onStopRequest"),
 
   onDataAvailable:

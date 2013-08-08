@@ -16,8 +16,8 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(e619cdc1-b869-4ebf-a77c-754c68017240)]
-interface nsIDOMHTMLBRElement : nsIDOMHTMLElement
+[scriptable, uuid(ba8fb51a-e552-4272-b3df-5e63a60b86ee)]
+interface nsIDOMHTMLBRElement : nsISupports
 {
            attribute DOMString        clear;
 };

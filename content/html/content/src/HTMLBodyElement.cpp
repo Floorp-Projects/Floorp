@@ -199,15 +199,8 @@ HTMLBodyElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   return HTMLBodyElementBinding::Wrap(aCx, aScope, this);
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLBodyElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLBodyElement, Element)
-
-// QueryInterface implementation for HTMLBodyElement
-NS_INTERFACE_TABLE_HEAD(HTMLBodyElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLBodyElement, nsIDOMHTMLBodyElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLBodyElement, nsGenericHTMLElement,
+                             nsIDOMHTMLBodyElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLBodyElement)
 

@@ -77,7 +77,8 @@ nsXULContextMenuBuilder::AddItemFor(nsIDOMHTMLMenuItemElement* aElement,
   }
 
   nsCOMPtr<nsIContent> menuitem;
-  nsresult rv = CreateElement(nsGkAtoms::menuitem, aElement,
+  nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(aElement);
+  nsresult rv = CreateElement(nsGkAtoms::menuitem, element,
                               getter_AddRefs(menuitem));
   NS_ENSURE_SUCCESS(rv, rv);
 
