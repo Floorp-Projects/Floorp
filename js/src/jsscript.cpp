@@ -2009,6 +2009,12 @@ JSScript::isShortRunning()
            !analysis()->hasFunctionCalls();
 }
 
+js::GlobalObject&
+JSScript::uninlinedGlobal() const
+{
+    return global();
+}
+
 bool
 JSScript::enclosingScriptsCompiledSuccessfully() const
 {
