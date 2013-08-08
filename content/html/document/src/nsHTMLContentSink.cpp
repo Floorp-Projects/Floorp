@@ -933,9 +933,6 @@ SinkContext::GrowStack()
   }
 
   Node* stack = new Node[newSize];
-  if (!stack) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   if (mStackPos != 0) {
     memcpy(stack, mStack, sizeof(Node) * mStackPos);
@@ -967,9 +964,6 @@ SinkContext::AddText(const nsAString& aText)
   // Create buffer when we first need it
   if (mTextSize == 0) {
     mText = new PRUnichar[4096];
-    if (!mText) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     mTextSize = 4096;
   }
 
@@ -1205,10 +1199,6 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
 
   nsRefPtr<HTMLContentSink> it = new HTMLContentSink();
 
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   nsresult rv = it->Init(aDoc, aURI, aContainer, aChannel);
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1402,7 +1392,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mRoot->AppendChildTo(mHead, false);
 
   mCurrentContext = new SinkContext(this);
-  NS_ENSURE_TRUE(mCurrentContext, NS_ERROR_OUT_OF_MEMORY);
   mCurrentContext->Begin(eHTMLTag_html, mRoot, 0, -1);
   mContextStack.AppendElement(mCurrentContext);
 
@@ -1879,7 +1868,6 @@ HTMLContentSink::OpenHeadContext()
 
   if (!mHeadContext) {
     mHeadContext = new SinkContext(this);
-    NS_ENSURE_TRUE(mHeadContext, NS_ERROR_OUT_OF_MEMORY);
 
     nsresult rv = mHeadContext->Begin(eHTMLTag_head, mHead, 0, -1);
     NS_ENSURE_SUCCESS(rv, rv);
