@@ -198,14 +198,13 @@ class Marionette(object):
     TIMEOUT_SCRIPT = 'script'
     TIMEOUT_PAGE = 'page load'
 
-    def __init__(self, host='localhost', port=2828, app=None, bin=None,
+    def __init__(self, host='localhost', port=2828, app=None, app_args=None, bin=None,
                  profile=None, emulator=None, sdcard=None, emulatorBinary=None,
                  emulatorImg=None, emulator_res=None, gecko_path=None,
                  connectToRunningEmulator=False, homedir=None, baseurl=None,
                  noWindow=False, logcat_dir=None, busybox=None, symbols_path=None, timeout=None):
         self.host = host
         self.port = self.local_port = port
-        self.app = app
         self.bin = bin
         self.instance = None
         self.profile = profile
@@ -236,7 +235,7 @@ class Marionette(object):
             else:
                 instance_class = geckoinstance.GeckoInstance
             self.instance = instance_class(host=self.host, port=self.port,
-                                           bin=self.bin, profile=self.profile)
+                                           bin=self.bin, profile=self.profile, app_args=app_args)
             self.instance.start()
             assert(self.wait_for_port())
 

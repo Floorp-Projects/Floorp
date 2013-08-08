@@ -25,19 +25,8 @@ HTMLAreaElement::~HTMLAreaElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLAreaElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLAreaElement, Element)
-
-// QueryInterface implementation for HTMLAreaElement
-NS_INTERFACE_TABLE_HEAD(HTMLAreaElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED3(HTMLAreaElement,
-                                nsIDOMHTMLAreaElement,
-                                nsILink,
-                                Link)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS_INHERITED2(HTMLAreaElement, nsGenericHTMLElement,
+                             nsIDOMHTMLAreaElement, Link)
 
 NS_IMPL_ELEMENT_CLONE(HTMLAreaElement)
 

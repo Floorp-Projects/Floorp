@@ -175,7 +175,7 @@ jsd_CallCallHook (JSDContext* jsdc,
     JSBool hookanswer;
     JSDThreadState*  jsdthreadstate;
     
-    hookanswer = JS_FALSE;
+    hookanswer = false;
     if(hook && NULL != (jsdthreadstate = jsd_NewThreadState(jsdc, cx)))
     {
         hookanswer = hook(jsdc, jsdthreadstate, type, hookData);
@@ -196,7 +196,7 @@ jsd_SetInterruptHook(JSDContext*           jsdc,
     JS_SetInterrupt(jsdc->jsrt, jsd_InterruptHandler, (void*) jsdc);
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -207,7 +207,7 @@ jsd_ClearInterruptHook(JSDContext* jsdc)
     jsdc->interruptHook      = NULL;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -220,7 +220,7 @@ jsd_SetDebugBreakHook(JSDContext*           jsdc,
     jsdc->debugBreakHook      = hook;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -230,7 +230,7 @@ jsd_ClearDebugBreakHook(JSDContext* jsdc)
     jsdc->debugBreakHook      = NULL;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -243,7 +243,7 @@ jsd_SetDebuggerHook(JSDContext*           jsdc,
     jsdc->debuggerHook      = hook;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -253,7 +253,7 @@ jsd_ClearDebuggerHook(JSDContext* jsdc)
     jsdc->debuggerHook      = NULL;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -266,7 +266,7 @@ jsd_SetThrowHook(JSDContext*           jsdc,
     jsdc->throwHook      = hook;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -276,7 +276,7 @@ jsd_ClearThrowHook(JSDContext* jsdc)
     jsdc->throwHook      = NULL;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -289,7 +289,7 @@ jsd_SetFunctionHook(JSDContext*      jsdc,
     jsdc->functionHook      = hook;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -299,7 +299,7 @@ jsd_ClearFunctionHook(JSDContext* jsdc)
     jsdc->functionHook      = NULL;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -312,7 +312,7 @@ jsd_SetTopLevelHook(JSDContext*      jsdc,
     jsdc->toplevelHook      = hook;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -322,6 +322,6 @@ jsd_ClearTopLevelHook(JSDContext* jsdc)
     jsdc->toplevelHook      = NULL;
     JSD_UNLOCK();
 
-    return JS_TRUE;
+    return true;
 }
 

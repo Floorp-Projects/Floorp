@@ -30,16 +30,9 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Audio)
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF_INHERITED(HTMLAudioElement, HTMLMediaElement)
-NS_IMPL_RELEASE_INHERITED(HTMLAudioElement, HTMLMediaElement)
-
-NS_INTERFACE_TABLE_HEAD(HTMLAudioElement)
-  NS_HTML_CONTENT_INTERFACES(HTMLMediaElement)
-  NS_INTERFACE_TABLE_INHERITED4(HTMLAudioElement, nsIDOMHTMLMediaElement,
-                                nsIDOMHTMLAudioElement, nsITimerCallback,
-                                nsIAudioChannelAgentCallback)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED4(HTMLAudioElement, HTMLMediaElement,
+                             nsIDOMHTMLMediaElement, nsIDOMHTMLAudioElement,
+                             nsITimerCallback, nsIAudioChannelAgentCallback)
 
 NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
 

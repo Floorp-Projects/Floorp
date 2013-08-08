@@ -27,15 +27,6 @@ HTMLFontElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   return HTMLFontElementBinding::Wrap(aCx, aScope, this);
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLFontElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLFontElement, Element)
-
-// QueryInterface implementation for HTMLFontElement
-NS_INTERFACE_MAP_BEGIN(HTMLFontElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-NS_ELEMENT_INTERFACE_MAP_END
-
-
 NS_IMPL_ELEMENT_CLONE(HTMLFontElement)
 
 bool

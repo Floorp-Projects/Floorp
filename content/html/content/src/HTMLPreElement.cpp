@@ -21,15 +21,8 @@ HTMLPreElement::~HTMLPreElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLPreElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLPreElement, Element)
-
-// QueryInterface implementation for HTMLPreElement
-NS_INTERFACE_TABLE_HEAD(HTMLPreElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLPreElement, nsIDOMHTMLPreElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLPreElement, nsGenericHTMLElement,
+                             nsIDOMHTMLPreElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLPreElement)
 

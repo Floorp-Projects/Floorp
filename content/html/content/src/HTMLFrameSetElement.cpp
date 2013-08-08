@@ -23,17 +23,8 @@ HTMLFrameSetElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   return HTMLFrameSetElementBinding::Wrap(aCx, aScope, this);
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLFrameSetElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLFrameSetElement, Element)
-
-// QueryInterface implementation for HTMLFrameSetElement
-NS_INTERFACE_TABLE_HEAD(HTMLFrameSetElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLFrameSetElement,
-                                nsIDOMHTMLFrameSetElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLFrameSetElement, nsGenericHTMLElement,
+                             nsIDOMHTMLFrameSetElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLFrameSetElement)
 

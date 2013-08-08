@@ -104,12 +104,12 @@ public:
       size_t length;
       const jschar* chars = JS_GetStringCharsZAndLength(aContext, str, &length);
       if (!chars)
-          return JS_FALSE;
+          return false;
 
       NS_ASSERTION(IsEmpty(), "init() on initialized string");
       nsDependentString* base = this;
       new(base) nsDependentString(chars, length);
-      return JS_TRUE;
+      return true;
   }
 
   JSBool init(JSContext* aContext, const JS::Value &v)

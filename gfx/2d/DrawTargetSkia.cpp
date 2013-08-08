@@ -285,7 +285,7 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
   const SkBitmap& bitmap = static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
  
   AutoPaintSetup paint(mCanvas.get(), aOptions);
-  if (aSurfOptions.mFilter != FILTER_LINEAR) {
+  if (aSurfOptions.mFilter == FILTER_POINT) {
     paint.mPaint.setFilterBitmap(false);
   }
 

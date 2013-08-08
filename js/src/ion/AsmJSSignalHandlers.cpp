@@ -154,6 +154,8 @@ InnermostAsmJSActivation()
 # ifdef JS_THREADSAFE
 #  include "jslock.h"
 
+namespace {
+
 class InstallSignalHandlersMutex
 {
     PRLock *mutex_;
@@ -177,6 +179,8 @@ class InstallSignalHandlersMutex
     };
 } signalMutex;
 
+} /* anonymous namespace */
+
 bool InstallSignalHandlersMutex::Lock::sHandlersInstalled = false;
 
 InstallSignalHandlersMutex::Lock::Lock()
@@ -189,6 +193,8 @@ InstallSignalHandlersMutex::Lock::~Lock()
     PR_Unlock(signalMutex.mutex_);
 }
 # else  // JS_THREADSAFE
+namespace {
+
 struct InstallSignalHandlersMutex
 {
     class Lock {
@@ -199,6 +205,8 @@ struct InstallSignalHandlersMutex
         void setHandlersInstalled() { sHandlersInstalled = true; }
     };
 };
+
+} /* anonymous namespace */
 
 bool InstallSignalHandlersMutex::Lock::sHandlersInstalled = false;
 # endif  // JS_THREADSAFE

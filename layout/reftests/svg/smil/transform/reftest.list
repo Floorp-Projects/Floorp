@@ -11,7 +11,7 @@ fuzzy(32,200) random-if(Android&&AndroidVersion>=15) == rotate-angle-4.svg rotat
 fuzzy(32,125) random-if(Android&&AndroidVersion>=15) == rotate-angle-5.svg rotate-angle-ref.svg # bug 839865
 fuzzy(16,6237) random-if(Android&&AndroidVersion>=15) == scale-1.svg scale-1-ref.svg            # bug 839865
 == set-transform-1.svg lime.svg
-fuzzy(132,13656) == skew-1.svg skew-1-ref.svg            # bug 839865
+fuzzy(132,15500) == skew-1.svg skew-1-ref.svg            # bug 839865
 random-if(Android&&!browserIsRemote) == translate-clipPath-1.svg lime.svg # bug 760266
 fails-if(OSX==10.6) == translate-gradient-1.svg lime.svg
 fuzzy-if(Android,8,200) == translate-pattern-1.svg lime.svg
