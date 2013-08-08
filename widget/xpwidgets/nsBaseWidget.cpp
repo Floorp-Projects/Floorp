@@ -970,6 +970,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     lf->SetShadowManager(shadowManager);
     lf->IdentifyTextureHost(textureFactoryIdentifier);
     ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
+    WindowUsesOMTC();
 
     mLayerManager = lm;
     return;
