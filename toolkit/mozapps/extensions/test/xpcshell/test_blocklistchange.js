@@ -531,10 +531,10 @@ function manual_update(aVersion, aCallback) {
 // Checks that an add-ons properties match expected values
 function check_addon(aAddon, aExpectedVersion, aExpectedUserDisabled,
                      aExpectedSoftDisabled, aExpectedState) {
+  do_check_neq(aAddon, null);
   dump("Testing " + aAddon.id + " version " + aAddon.version + "\n");
   dump(aAddon.userDisabled + " " + aAddon.softDisabled + "\n");
 
-  do_check_neq(aAddon, null);
   do_check_eq(aAddon.version, aExpectedVersion);
   do_check_eq(aAddon.blocklistState, aExpectedState);
   do_check_eq(aAddon.userDisabled, aExpectedUserDisabled);
@@ -706,11 +706,7 @@ add_test(function run_app_update_schema_test() {
   function update_schema_2() {
     shutdownManager();
 
-    var dbfile = gProfD.clone();
-    dbfile.append("extensions.sqlite");
-    var db = Services.storage.openDatabase(dbfile);
-    db.schemaVersion = 100;
-    db.close();
+    changeXPIDBVersion(100);
     gAppInfo.version = "2";
     startupManager(true);
 
@@ -738,11 +734,7 @@ add_test(function run_app_update_schema_test() {
     restartManager();
 
     shutdownManager();
-    var dbfile = gProfD.clone();
-    dbfile.append("extensions.sqlite");
-    var db = Services.storage.openDatabase(dbfile);
-    db.schemaVersion = 100;
-    db.close();
+    changeXPIDBVersion(100);
     gAppInfo.version = "2.5";
     startupManager(true);
 
@@ -764,11 +756,7 @@ add_test(function run_app_update_schema_test() {
   function update_schema_4() {
     shutdownManager();
 
-    var dbfile = gProfD.clone();
-    dbfile.append("extensions.sqlite");
-    var db = Services.storage.openDatabase(dbfile);
-    db.schemaVersion = 100;
-    db.close();
+    changeXPIDBVersion(100);
     startupManager(false);
 
     AddonManager.getAddonsByIDs(ADDON_IDS, function([s1, s2, s3, s4, s5, h, r]) {
@@ -789,11 +777,7 @@ add_test(function run_app_update_schema_test() {
   function update_schema_5() {
     shutdownManager();
 
-    var dbfile = gProfD.clone();
-    dbfile.append("extensions.sqlite");
-    var db = Services.storage.openDatabase(dbfile);
-    db.schemaVersion = 100;
-    db.close();
+    changeXPIDBVersion(100);
     gAppInfo.version = "1";
     startupManager(true);
 

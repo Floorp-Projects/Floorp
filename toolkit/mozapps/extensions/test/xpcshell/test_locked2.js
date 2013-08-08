@@ -145,13 +145,9 @@ function run_test() {
         // After shutting down the database won't be open so we can lock it
         shutdownManager();
         var dbfile = gProfD.clone();
-        dbfile.append("extensions.sqlite");
-        let connection = Services.storage.openUnsharedDatabase(dbfile);
-        connection.executeSimpleSQL("PRAGMA synchronous = FULL");
-        connection.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
-        // Force the DB to become locked
-        connection.beginTransactionAs(connection.TRANSACTION_EXCLUSIVE);
-        connection.commitTransaction();
+        dbfile.append(EXTENSIONS_DB);
+        var savedPermissions = dbfile.permissions;
+        dbfile.permissions = 0;
 
         startupManager(false);
 
@@ -203,7 +199,7 @@ function run_test() {
           do_check_eq(a6.pendingOperations, AddonManager.PENDING_NONE);
           do_check_true(isExtensionInAddonsList(profileDir, a6.id));
 
-          connection.close();
+          dbfile.permissions = savedPermissions;
 
           // After allowing access to the original DB things should still be
           // applied correctly
