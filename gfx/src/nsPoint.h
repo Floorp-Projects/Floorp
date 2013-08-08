@@ -13,6 +13,8 @@
 
 struct nsIntPoint;
 
+// nsPoint represents a point in app units.
+
 struct nsPoint : public mozilla::gfx::BasePoint<nscoord, nsPoint> {
   typedef mozilla::gfx::BasePoint<nscoord, nsPoint> Super;
 
@@ -27,6 +29,10 @@ struct nsPoint : public mozilla::gfx::BasePoint<nscoord, nsPoint> {
   // Converts this point from aFromAPP, an appunits per pixel ratio, to aToAPP.
   inline nsPoint ConvertAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
 };
+
+// nsIntPoint represents a point in one of the types of pixels.
+// Uses of nsIntPoint should eventually be converted to CSSIntPoint,
+// LayoutDeviceIntPoint, etc. (see layout/base/Units.h).
 
 struct nsIntPoint : public mozilla::gfx::BasePoint<int32_t, nsIntPoint> {
   typedef mozilla::gfx::BasePoint<int32_t, nsIntPoint> Super;
