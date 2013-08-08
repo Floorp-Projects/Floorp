@@ -21,7 +21,7 @@
 # 
 # We check the following things in all files.
 #
-# - #includes should have full paths, e.g. "ion/Ion.h", not "Ion.h". 
+# - #includes should have full paths, e.g. "jit/Ion.h", not "Ion.h".
 #
 # - #includes should use the appropriate form for system headers (<...>) and
 #   local headers ("...").

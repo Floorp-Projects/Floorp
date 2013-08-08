@@ -13,8 +13,8 @@
 #include "frontend/BytecodeCompiler.h"
 
 #ifdef JS_WORKER_THREADS
-# include "ion/ExecutionModeInlines.h"
-# include "ion/IonBuilder.h"
+# include "jit/ExecutionModeInlines.h"
+# include "jit/IonBuilder.h"
 #endif
 
 #include "jscntxtinlines.h"

@@ -12,7 +12,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Nursery.h"
-#include "ion/IonCode.h"
+#include "jit/IonCode.h"
 
 extern "C" {
 struct JSContext;
