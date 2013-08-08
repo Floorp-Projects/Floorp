@@ -11,14 +11,12 @@
 #include "mozilla/dom/Link.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsILink.h"
 
 namespace mozilla {
 namespace dom {
 
 class HTMLAnchorElement MOZ_FINAL : public nsGenericHTMLElement,
                                     public nsIDOMHTMLAnchorElement,
-                                    public nsILink,
                                     public Link
 {
 public:
@@ -43,10 +41,6 @@ public:
 
   // DOM memory reporter participant
   NS_DECL_SIZEOF_EXCLUDING_THIS
-
-  // nsILink
-  NS_IMETHOD LinkAdded() MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD LinkRemoved() MOZ_OVERRIDE { return NS_OK; }
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,

@@ -25,8 +25,8 @@ HTMLAreaElement::~HTMLAreaElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(HTMLAreaElement, nsGenericHTMLElement,
-                             nsIDOMHTMLAreaElement, nsILink, Link)
+NS_IMPL_ISUPPORTS_INHERITED2(HTMLAreaElement, nsGenericHTMLElement,
+                             nsIDOMHTMLAreaElement, Link)
 
 NS_IMPL_ELEMENT_CLONE(HTMLAreaElement)
 
