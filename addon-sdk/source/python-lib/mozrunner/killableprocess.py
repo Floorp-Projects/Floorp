@@ -257,8 +257,7 @@ class Popen(subprocess.Popen):
                 self.kill(group)
 
         else:
-            if sys.platform in ('linux2', 'sunos5', 'solaris') \
-                    or sys.platform.startswith('freebsd'):
+            if (sys.platform == 'linux2') or (sys.platform in ('sunos5', 'solaris')):
                 def group_wait(timeout):
                     try:
                         os.waitpid(self.pid, 0)
