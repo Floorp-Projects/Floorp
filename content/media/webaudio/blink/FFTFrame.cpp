@@ -193,7 +193,7 @@ double FFTFrame::extractAverageGroupDelay()
     const double kSamplePhaseDelay = (2.0 * piDouble) / double(fftSize());
 
     // Calculate weighted average group delay
-    for (int i = 0; i < halfSize; i++) {
+    for (int i = 1; i < halfSize; i++) {
         Complex c(realP[i], imagP[i]);
         double mag = abs(c);
         double phase = arg(c);
