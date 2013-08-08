@@ -94,8 +94,7 @@ add_test(function test_error_on_duplicate_syncguid_insert() {
             do_throw("Should not get here.");
           }
           catch (e) {
-            do_check_eq(e.result,
-                        Components.results.NS_ERROR_STORAGE_CONSTRAINT);
+            do_check_true(e.message.startsWith("Addon sync GUID conflict"));
             restartManager();
 
             AddonManager.getAddonByID(installIDs[1], function(addon) {
