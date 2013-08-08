@@ -15,7 +15,6 @@ loader.lazyGetter(this, "RuleView", () => require("devtools/styleinspector/rule-
 loader.lazyGetter(this, "ComputedView", () => require("devtools/styleinspector/computed-view"));
 loader.lazyGetter(this, "_strings", () => Services.strings
   .createBundle("chrome://browser/locale/devtools/styleinspector.properties"));
-loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
 
 // This module doesn't currently export any symbols directly, it only
 // registers inspector tools.
@@ -171,21 +170,20 @@ function ComputedViewTool(aInspector, aWindow, aIFrame)
   this.window = aWindow;
   this.document = aWindow.document;
   this.outerIFrame = aIFrame;
-  this.cssLogic = new CssLogic();
-  this.view = new ComputedView.CssHtmlTree(this);
+  this.view = new ComputedView.CssHtmlTree(this, aInspector.pageStyle);
 
   this._onSelect = this.onSelect.bind(this);
   this.inspector.selection.on("detached", this._onSelect);
-  this.inspector.selection.on("new-node", this._onSelect);
+  this.inspector.selection.on("new-node-front", this._onSelect);
   if (this.inspector.highlighter) {
     this.inspector.highlighter.on("locked", this._onSelect);
   }
   this.refresh = this.refresh.bind(this);
   this.inspector.on("layout-change", this.refresh);
-  this.inspector.sidebar.on("computedview-selected", this.refresh);
   this.inspector.selection.on("pseudoclass", this.refresh);
+  this.panelSelected = this.panelSelected.bind(this);
+  this.inspector.sidebar.on("computedview-selected", this.panelSelected);
 
-  this.cssLogic.highlight(null);
   this.view.highlight(null);
 
   this.onSelect();
@@ -196,24 +194,35 @@ exports.ComputedViewTool = ComputedViewTool;
 ComputedViewTool.prototype = {
   onSelect: function CVT_onSelect(aEvent)
   {
+    if (!this.isActive()) {
+      // We'll try again when we're selected.
+      return;
+    }
+
+    this.view.setPageStyle(this.inspector.pageStyle);
+
     if (!this.inspector.selection.isConnected() ||
         !this.inspector.selection.isElementNode()) {
       this.view.highlight(null);
       return;
     }
 
-    if (!aEvent || aEvent == "new-node") {
+    if (!aEvent || aEvent == "new-node-front") {
       if (this.inspector.selection.reason == "highlighter") {
         // FIXME: We should hide view's content
       } else {
-        this.cssLogic.highlight(this.inspector.selection.node);
-        this.view.highlight(this.inspector.selection.node);
+        let done = this.inspector.updating("computed-view");
+        this.view.highlight(this.inspector.selection.nodeFront).then(() => {
+          done();
+        });
       }
     }
 
-    if (aEvent == "locked") {
-      this.cssLogic.highlight(this.inspector.selection.node);
-      this.view.highlight(this.inspector.selection.node);
+    if (aEvent == "locked" && this.inspector.selection.nodeFront != this.view.viewedElement) {
+      let done = this.inspector.updating("computed-view");
+      this.view.highlight(this.inspector.selection.nodeFront).then(() => {
+        done();
+      });
     }
   },
 
@@ -223,8 +232,15 @@ ComputedViewTool.prototype = {
 
   refresh: function CVT_refresh() {
     if (this.isActive()) {
-      this.cssLogic.highlight(this.inspector.selection.node);
       this.view.refreshPanel();
+    }
+  },
+
+  panelSelected: function() {
+    if (this.inspector.selection.nodeFront === this.view.viewedElement) {
+      this.view.refreshPanel();
+    } else {
+      this.onSelect();
     }
   },
 
@@ -233,7 +249,7 @@ ComputedViewTool.prototype = {
     this.inspector.off("layout-change", this.refresh);
     this.inspector.sidebar.off("computedview-selected", this.refresh);
     this.inspector.selection.off("pseudoclass", this.refresh);
-    this.inspector.selection.off("new-node", this._onSelect);
+    this.inspector.selection.off("new-node-front", this._onSelect);
     if (this.inspector.highlighter) {
       this.inspector.highlighter.off("locked", this._onSelect);
     }
