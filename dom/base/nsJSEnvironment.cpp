@@ -1097,7 +1097,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
   : mActive(false)
   , mGCOnDestruction(aGCOnDestruction)
-  , mExecuteDepth(0)
   , mGlobalObjectRef(aGlobalObject)
 {
   mNext = sContextList;
@@ -1277,8 +1276,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   {
     JSAutoCompartment ac(mContext, aScopeObject);
 
-    ++mExecuteDepth;
-
     JS::RootedObject rootedScope(mContext, aScopeObject);
     ok = JS::Evaluate(mContext, rootedScope, aOptions,
                       PromiseFlatString(aScript).get(),
@@ -1288,7 +1285,6 @@ nsJSContext::EvaluateString(const nsAString& aScript,
       ok = !!str;
       *aRetValue = ok ? JS::StringValue(str) : JS::UndefinedValue();
     }
-    --mExecuteDepth;
   }
 
   if (!ok) {
@@ -1399,7 +1395,6 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject_,
   // cx and potentially call JS_RestoreFrameChain.
   {
     JSAutoCompartment ac(mContext, aScopeObject);
-    ++mExecuteDepth;
 
     // The result of evaluation, used only if there were no errors. This need
     // not be a GC root currently, provided we run the GC only from the
@@ -1408,7 +1403,6 @@ nsJSContext::ExecuteScript(JSScript* aScriptObject_,
     if (!JS_ExecuteScript(mContext, aScopeObject, aScriptObject, val.address())) {
       ReportPendingException();
     }
-    --mExecuteDepth;
   }
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
@@ -2384,12 +2378,6 @@ void
 nsJSContext::SetProcessingScriptTag(bool aFlag)
 {
   mProcessingScriptTag = aFlag;
-}
-
-bool
-nsJSContext::GetExecutingScript()
-{
-  return JS_IsRunning(mContext) || mExecuteDepth > 0;
 }
 
 NS_IMETHODIMP

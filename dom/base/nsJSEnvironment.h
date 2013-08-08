@@ -83,8 +83,6 @@ public:
   virtual bool GetProcessingScriptTag() MOZ_OVERRIDE;
   virtual void SetProcessingScriptTag(bool aResult) MOZ_OVERRIDE;
 
-  virtual bool GetExecutingScript() MOZ_OVERRIDE;
-
   virtual nsresult InitClasses(JS::Handle<JSObject*> aGlobalObj) MOZ_OVERRIDE;
 
   virtual void WillInitializeContext() MOZ_OVERRIDE;
@@ -190,7 +188,6 @@ private:
   bool mGCOnDestruction;
   bool mProcessingScriptTag;
 
-  uint32_t mExecuteDepth;
   uint32_t mDefaultJSOptions;
   PRTime mOperationCallbackTime;
 
