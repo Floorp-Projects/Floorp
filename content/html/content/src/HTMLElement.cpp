@@ -10,32 +10,18 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLElement MOZ_FINAL : public nsGenericHTMLElement,
-                              public nsIDOMHTMLElement
+class HTMLElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
   HTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~HTMLElement();
 
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
+  using nsGenericHTMLElement::GetInnerHTML;
   virtual void GetInnerHTML(nsAString& aInnerHTML,
                             mozilla::ErrorResult& aError) MOZ_OVERRIDE;
 
   virtual nsresult Clone(nsINodeInfo* aNodeInfo,
                          nsINode** aResult) const MOZ_OVERRIDE;
-
-  virtual nsIDOMNode* AsDOMNode() { return this; }
 
 protected:
   virtual JSObject* WrapNode(JSContext *aCx,
@@ -50,13 +36,6 @@ HTMLElement::HTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
 HTMLElement::~HTMLElement()
 {
 }
-
-NS_IMPL_ADDREF_INHERITED(HTMLElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLElement, Element)
-
-NS_INTERFACE_MAP_BEGIN(HTMLElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLElement)
 

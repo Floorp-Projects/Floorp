@@ -852,18 +852,42 @@ CycleCollectedJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTrace
   mJSHolders.Put(aHolder, aTracer);
 }
 
+struct ClearJSHolder : TraceCallbacks
+{
+  virtual void Trace(JS::Heap<JS::Value>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = JSVAL_VOID;
+  }
+
+  virtual void Trace(JS::Heap<jsid>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = JSID_VOID;
+  }
+
+  virtual void Trace(JS::Heap<JSObject*>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JS::Heap<JSString*>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JS::Heap<JSScript*>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = nullptr;
+  }
+};
+
 void
 CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
 {
-#ifdef DEBUG
-  // Assert that the holder doesn't try to keep any GC things alive.
-  // In case of unlinking cycle collector calls AssertNoObjectsToTrace
-  // manually because we don't want to check the holder before we are
-  // finished unlinking it
-  if (aHolder != mObjectToUnlink) {
-    AssertNoObjectsToTrace(aHolder);
+  nsScriptObjectTracer* tracer = mJSHolders.Get(aHolder);
+  if (!tracer) {
+    return;
   }
-#endif
+  tracer->Trace(aHolder, ClearJSHolder(), nullptr);
   mJSHolders.Remove(aHolder);
 }
 

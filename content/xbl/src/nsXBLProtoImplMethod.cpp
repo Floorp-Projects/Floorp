@@ -342,7 +342,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   rv = nsContentUtils::GetSecurityManager()->CheckFunctionAccess(cx, method,
                                                                  thisObject);
 
-  JSBool ok = JS_TRUE;
+  JSBool ok = true;
   if (NS_SUCCEEDED(rv)) {
     JS::Rooted<JS::Value> retval(cx);
     ok = ::JS_CallFunctionValue(cx, thisObject, OBJECT_TO_JSVAL(method),

@@ -16,7 +16,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(fdfda110-e96b-4e98-8716-167a6555c80a)]
+[scriptable, uuid(75a7f3ca-0761-4b63-863b-6fd6a87ed51c)]
 interface nsIDOMHTMLAudioElement : nsIDOMHTMLMediaElement
 {
 };

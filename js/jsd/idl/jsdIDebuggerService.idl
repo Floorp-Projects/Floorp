@@ -1203,7 +1203,7 @@ interface jsdIProperty : jsdIEphemeral
     const unsigned long FLAG_VARIABLE  = 0x20;
     /** exception occurred looking up property, value is exception */
     const unsigned long FLAG_EXCEPTION = 0x40;
-    /** native getter returned JS_FALSE without throwing an exception */
+    /** native getter returned false without throwing an exception */
     const unsigned long FLAG_ERROR     = 0x80;
     /** found via explicit lookup (property defined elsewhere.) */
     const unsigned long FLAG_HINTED    = 0x800;

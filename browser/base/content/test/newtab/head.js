@@ -465,9 +465,11 @@ function synthesizeNativeMouseEvent(aElement, aMsg, aOffsetX = 0, aOffsetY = 0) 
   let x = aOffsetX + win.mozInnerScreenX + rect.left + rect.width / 2;
   let y = aOffsetY + win.mozInnerScreenY + rect.top + rect.height / 2;
 
-  win.QueryInterface(Ci.nsIInterfaceRequestor)
-     .getInterface(Ci.nsIDOMWindowUtils)
-     .sendNativeMouseEvent(x, y, aMsg, 0, null);
+  let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIDOMWindowUtils);
+
+  let scale = utils.screenPixelsPerCSSPixel;
+  utils.sendNativeMouseEvent(x * scale, y * scale, aMsg, 0, null);
 }
 
 /**

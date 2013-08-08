@@ -2642,8 +2642,10 @@ public:
 
     /**
      * Return a valid, allocated TextureImage of |aSize| with
-     * |aContentType|.  The TextureImage's texture is configured to
-     * use |aWrapMode| (usually GL_CLAMP_TO_EDGE or GL_REPEAT) and by
+     * |aContentType|.  If |aContentType| is COLOR, |aImageFormat| can be used
+     * to hint at the preferred RGB format, however it is not necessarily
+     * respected.  The TextureImage's texture is configured to use
+     * |aWrapMode| (usually GL_CLAMP_TO_EDGE or GL_REPEAT) and by
      * default, GL_LINEAR filtering.  Specify
      * |aFlags=UseNearestFilter| for GL_NEAREST filtering. Specify
      * |aFlags=NeedsYFlip| if the image is flipped. Return
@@ -2658,7 +2660,8 @@ public:
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
-                       TextureImage::Flags aFlags = TextureImage::NoFlags);
+                       TextureImage::Flags aFlags = TextureImage::NoFlags,
+                       TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown);
 
     /**
      * In EGL we want to use Tiled Texture Images, which we return
@@ -2670,7 +2673,8 @@ public:
     virtual already_AddRefed<TextureImage>
     TileGenFunc(const nsIntSize& aSize,
                 TextureImage::ContentType aContentType,
-                TextureImage::Flags aFlags = TextureImage::NoFlags)
+                TextureImage::Flags aFlags = TextureImage::NoFlags,
+                TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown)
     {
         return nullptr;
     }

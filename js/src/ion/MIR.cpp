@@ -696,6 +696,8 @@ ion::MergeTypes(MIRType *ptype, types::StackTypeSet **ptypeSet,
             if (!*ptypeSet)
                 *ptypeSet = MakeMIRTypeSet(*ptype);
             *ptype = MIRType_Value;
+        } else if (*ptypeSet && (*ptypeSet)->empty()) {
+            *ptype = newType;
         }
     }
     if (*ptypeSet) {

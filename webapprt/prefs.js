@@ -47,6 +47,9 @@ pref("dom.mozTCPSocket.enabled", true);
 // Enable smooth scrolling
 pref("general.smoothScroll", true);
 
+// Enable window resize and move
+pref("dom.always_allow_move_resize_window", true);
+
 pref("plugin.allowed_types", "application/x-shockwave-flash,application/futuresplash");
 
 // The default for this pref reflects whether the build is capable of IPC.

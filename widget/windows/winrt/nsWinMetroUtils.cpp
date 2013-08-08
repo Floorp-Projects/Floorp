@@ -9,6 +9,7 @@
 #include "FrameworkView.h"
 #include "MetroApp.h"
 #include "nsIWindowsRegKey.h"
+#include "ToastNotificationHandler.h"
 
 #include <shldisp.h>
 #include <shellapi.h>
@@ -339,6 +340,24 @@ nsWinMetroUtils::LaunchInDesktop(const nsAString &aPath, const nsAString &aArgum
   if (!ShellExecuteEx(&sinfo)) {
     return NS_ERROR_FAILURE;
   }
+}
+
+NS_IMETHODIMP
+nsWinMetroUtils::ShowNativeToast(const nsAString &aTitle,
+  const nsAString &aMessage, const nsAString &anImage)
+{
+  // Firefox is in the foreground, no need for a notification.
+  if (::GetActiveWindow() == ::GetForegroundWindow()) {
+    return NS_OK;
+  }
+
+  ToastNotificationHandler* notification_handler =
+      new ToastNotificationHandler;
+
+  HSTRING title = HStringReference(aTitle.BeginReading()).Get();
+  HSTRING msg = HStringReference(aMessage.BeginReading()).Get();
+  HSTRING imagePath = HStringReference(anImage.BeginReading()).Get();
+  notification_handler->DisplayNotification(title, msg, imagePath);
 
   return NS_OK;
 }

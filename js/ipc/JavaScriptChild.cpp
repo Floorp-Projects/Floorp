@@ -251,13 +251,18 @@ JavaScriptChild::AnswerDefineProperty(const ObjectId &objId, const nsString &id,
     if (!convertGeckoStringToId(cx, id, &internedId))
         return fail(cx, rs);
 
-    JSPropertyDescriptor desc;
-    if (!toDescriptor(cx, descriptor, &desc))
+    Rooted<JSPropertyDescriptor> desc(cx);
+    if (!toDescriptor(cx, descriptor, desc.address()))
         return false;
 
-    RootedValue v(cx, desc.value);
-    if (!js::CheckDefineProperty(cx, obj, internedId, v, desc.getter, desc.setter, desc.attrs) ||
-        !JS_DefinePropertyById(cx, obj, internedId, v, desc.getter, desc.setter, desc.attrs))
+    if (!js::CheckDefineProperty(cx, obj, internedId, desc.value(), desc.getter(),
+                                 desc.setter(), desc.attributes()))
+    {
+        return fail(cx, rs);
+    }
+
+    if (!JS_DefinePropertyById(cx, obj, internedId, desc.value(), desc.getter(),
+                               desc.setter(), desc.attributes()))
     {
         return fail(cx, rs);
     }

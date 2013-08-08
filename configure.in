@@ -9054,7 +9054,9 @@ xpcom/xpcom-private.h
 
 AC_SUBST(STLPORT_LIBS)
 
+export WRITE_MOZINFO=1
 AC_OUTPUT([mozilla-config.h])
+unset WRITE_MOZINFO
 
 # Hack around an Apple bug that affects the egrep that comes with OS X 10.7.
 # "env ARCHPREFERENCE=i386,x86_64 arch egrep" first tries to use the 32-bit
@@ -9199,24 +9201,6 @@ dnl so that regeneration via dependencies works correctly
    if test "$?" != 0; then
       AC_MSG_ERROR([failed to generate nICEr Makefiles])
    fi
-fi
-
-# Generate a JSON config file for unittest harnesses etc to read
-# build configuration details from in a standardized way.
-OS_TARGET=${OS_TARGET} \
-TARGET_CPU=${TARGET_CPU} \
-MOZ_DEBUG=${MOZ_DEBUG} \
-MOZ_WIDGET_TOOLKIT=${MOZ_WIDGET_TOOLKIT} \
-UNIVERSAL_BINARY=${UNIVERSAL_BINARY} \
-MOZ_CRASHREPORTER=${MOZ_CRASHREPORTER} \
-MOZ_APP_NAME=${MOZ_APP_NAME} \
-TOPSRCDIR=${_topsrcdir} \
-MOZ_ASAN=${MOZ_ASAN} \
-  $PYTHON ${_topsrcdir}/config/writemozinfo.py ./mozinfo.json.tmp
-if cmp -s ./mozinfo.json.tmp ./mozinfo.json; then
-  rm ./mozinfo.json.tmp
-else
-  mv -f ./mozinfo.json.tmp ./mozinfo.json
 fi
 
 # Run jemalloc configure script

@@ -36,7 +36,6 @@
 #include "nsContainerFrame.h"
 #include "prprf.h"
 #include "nsCSSRendering.h"
-#include "nsILink.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsINameSpaceManager.h"
@@ -71,6 +70,8 @@
 #include "ImageContainer.h"
 
 #include "mozilla/Preferences.h"
+
+#include "mozilla/dom/Link.h"
 
 using namespace mozilla;
 
@@ -1562,7 +1563,7 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
   // Walk up the content tree, looking for an nsIDOMAnchorElement
   for (nsIContent* content = mContent->GetParent();
        content; content = content->GetParent()) {
-    nsCOMPtr<nsILink> link(do_QueryInterface(content));
+    nsCOMPtr<dom::Link> link(do_QueryInterface(content));
     if (link) {
       nsCOMPtr<nsIURI> href = content->GetHrefURI();
       if (href) {
