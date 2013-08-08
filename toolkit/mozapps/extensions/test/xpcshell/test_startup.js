@@ -828,7 +828,7 @@ function run_test_12() {
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
                                "addon5@tests.mozilla.org"],
-                               function([a1, a2, a3, a4, a5]) {
+                               callback_soon(function([a1, a2, a3, a4, a5]) {
     do_check_neq(a1, null);
     do_check_false(a1.userDisabled);
     do_check_true(a1.isActive);
@@ -917,8 +917,8 @@ function run_test_12() {
         do_check_true(a3.userDisabled);
         do_check_false(a3.isActive);
 
-        end_test();
+        do_execute_soon(end_test);
       });
     });
-  });
+  }));
 }

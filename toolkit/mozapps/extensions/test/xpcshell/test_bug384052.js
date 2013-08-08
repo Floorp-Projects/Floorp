@@ -96,7 +96,7 @@ function run_test()
       onUpdateFinished: function(addon, error) {
         do_check_eq(error, AddonManager.UPDATE_STATUS_DOWNLOAD_ERROR);
         do_check_true(gSeenExpectedURL);
-        shutdownTest();
+        do_execute_soon(shutdownTest);
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
   });
