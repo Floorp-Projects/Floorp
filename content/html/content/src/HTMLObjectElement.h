@@ -29,15 +29,6 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 
   // nsIDOMHTMLObjectElement
@@ -91,8 +82,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLObjectElement,
                                            nsGenericHTMLFormElement)
-
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   // Web IDL binding methods
   // XPCOM GetData is ok; note that it's a URI attribute with a weird base URI

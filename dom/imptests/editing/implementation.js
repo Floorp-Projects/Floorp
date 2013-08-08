@@ -1971,8 +1971,7 @@ function isSimpleModifiableElement(node) {
 	if (["A", "FONT", "S", "SPAN", "STRIKE", "U"].indexOf(node.tagName) != -1
 	&& node.hasAttribute("style")
 	&& (node.style.length == 1
-	|| (node.style.length == 4
-		&& "MozTextBlink" in node.style
+	|| (node.style.length == 3
 		&& "MozTextDecorationColor" in node.style
 		&& "MozTextDecorationLine" in node.style
 		&& "MozTextDecorationStyle" in node.style)
