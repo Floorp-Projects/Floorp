@@ -141,11 +141,13 @@ public:
   // TextureSourceOGL
   TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE
   {
+    // XXX - Bug 900770
     MOZ_ASSERT(false, "CompositingRenderTargetOGL should not be used as a TextureSource");
     return nullptr;
   }
   gfx::IntSize GetSize() const MOZ_OVERRIDE
   {
+    // XXX - Bug 900770
     MOZ_ASSERT(false, "CompositingRenderTargetOGL should not be used as a TextureSource");
     return gfx::IntSize(0, 0);
   }
