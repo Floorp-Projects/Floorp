@@ -60,6 +60,9 @@ function check_test_1() {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
+    // due to delayed write, the file may not exist until
+    // after shutdown
+    shutdownManager();
     do_check_true(gExtensionsJSON.exists());
     do_check_true(gExtensionsJSON.fileSize > 0);
 
