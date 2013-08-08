@@ -484,10 +484,14 @@ CompositorD3D9::EndFrame()
 {
   device()->EndScene();
 
-  if (!!mTarget) {
-    PaintToTarget();
-  } else {
-    mSwapChain->Present();
+  nsIntSize oldSize = mSize;
+  EnsureSize();
+  if (oldSize == mSize) {
+    if (mTarget) {
+      PaintToTarget();
+    } else {
+      mSwapChain->Present();
+    }
   }
 
   mCurrentRT = nullptr;

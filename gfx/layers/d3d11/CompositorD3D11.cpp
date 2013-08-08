@@ -662,11 +662,17 @@ void
 CompositorD3D11::EndFrame()
 {
   mContext->Flush();
-  mSwapChain->Present(0, 0);
 
-  if (mTarget) {
-    PaintToTarget();
+  nsIntSize oldSize = mSize;
+  EnsureSize();
+  if (oldSize == mSize) {
+    mSwapChain->Present(0, 0);
+
+    if (mTarget) {
+      PaintToTarget();
+    }
   }
+
   mCurrentRT = nullptr;
 }
 
