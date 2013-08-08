@@ -18,7 +18,7 @@
 
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "ion/IonCompartment.h"
+#include "jit/IonCompartment.h"
 #endif
 #include "js/RootingAPI.h"
 #include "vm/StopIterationObject.h"
