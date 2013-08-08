@@ -55,10 +55,6 @@ public:
     // Given two HRTFElevations, and an interpolation factor x: 0 -> 1, returns an interpolated HRTFElevation.
     static PassOwnPtr<HRTFElevation> createByInterpolatingSlices(HRTFElevation* hrtfElevation1, HRTFElevation* hrtfElevation2, float x, float sampleRate);
 
-    // Returns the list of left or right ear HRTFKernels for all the azimuths going from 0 to 360 degrees.
-    HRTFKernelList* kernelListL() { return m_kernelListL.get(); }
-    HRTFKernelList* kernelListR() { return m_kernelListR.get(); }
-
     double elevationAngle() const { return m_elevationAngle; }
     unsigned numberOfAzimuths() const { return NumberOfTotalAzimuths; }
     float sampleRate() const { return m_sampleRate; }
@@ -79,26 +75,27 @@ public:
     // Total number of azimuths after interpolation.
     static const unsigned NumberOfTotalAzimuths;
 
-    // Given a specific azimuth and elevation angle, returns the left and right HRTFKernel.
-    // Valid values for azimuth are 0 -> 345 in 15 degree increments.
-    // Valid values for elevation are -45 -> +90 in 15 degree increments.
-    // Returns true on success.
-    static bool calculateKernelsForAzimuthElevation(int azimuth, int elevation, float sampleRate, const String& subjectName,
-                                                    RefPtr<HRTFKernel>& kernelL, RefPtr<HRTFKernel>& kernelR);
-
     void reportMemoryUsage(MemoryObjectInfo*) const;
 
 private:
-    HRTFElevation(PassOwnPtr<HRTFKernelList> kernelListL, PassOwnPtr<HRTFKernelList> kernelListR, int elevation, float sampleRate)
+    HRTFElevation(PassOwnPtr<HRTFKernelList> kernelListL, int elevation, float sampleRate)
         : m_kernelListL(kernelListL)
-        , m_kernelListR(kernelListR)
         , m_elevationAngle(elevation)
         , m_sampleRate(sampleRate)
     {
     }
 
+    // Returns the list of left ear HRTFKernels for all the azimuths going from 0 to 360 degrees.
+    HRTFKernelList* kernelListL() { return m_kernelListL.get(); }
+
+    // Given a specific azimuth and elevation angle, returns the left HRTFKernel.
+    // Valid values for azimuth are 0 -> 345 in 15 degree increments.
+    // Valid values for elevation are -45 -> +90 in 15 degree increments.
+    // Returns true on success.
+    static bool calculateKernelForAzimuthElevation(int azimuth, int elevation, float sampleRate, const String& subjectName,
+                                                   RefPtr<HRTFKernel>& kernelL);
+
     OwnPtr<HRTFKernelList> m_kernelListL;
-    OwnPtr<HRTFKernelList> m_kernelListR;
     double m_elevationAngle;
     float m_sampleRate;
 };
