@@ -27,6 +27,7 @@ function run_test()
         }
       }
       do_check_true(false); // We should have found our tab in the list.
+      return undefined;
     });
   });
 

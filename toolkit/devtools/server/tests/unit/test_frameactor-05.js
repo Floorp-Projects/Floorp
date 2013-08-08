@@ -85,6 +85,5 @@ function test_pause_frame()
     };
     depth1();
     debugger;
-    ")"
   } + ")()");
 }

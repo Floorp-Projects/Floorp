@@ -67,7 +67,8 @@ function test_source_content()
 
 function testContents(aSources, aCallback) {
   if (aSources.length === 0) {
-    return aCallback();
+    aCallback();
+    return;
   }
 
   let source = aSources[0];

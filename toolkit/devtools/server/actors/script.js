@@ -343,7 +343,9 @@ ThreadActor.prototype = {
   addDebuggee: function TA_addDebuggee(aGlobal) {
     let globalDebugObject;
     try {
-      globalDebugObject = this.dbg.addDebuggee(aGlobal);
+      if (this.dbg) {
+        globalDebugObject = this.dbg.addDebuggee(aGlobal);
+      }
     } catch (e) {
       // Ignore attempts to add the debugger's compartment as a debuggee.
       dumpn("Ignoring request to add the debugger's compartment as a debuggee");
@@ -2333,7 +2335,8 @@ ObjectActor.prototype = {
           toString = desc.value;
           break;
         }
-      } while ((obj = obj.proto));
+        obj = obj.proto;
+      } while ((obj));
     } catch (e) {
       dumpn(e);
     }
