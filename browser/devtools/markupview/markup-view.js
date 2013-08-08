@@ -21,6 +21,10 @@ Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+loader.lazyGetter(this, "DOMParser", function() {
+ return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
+});
 loader.lazyGetter(this, "AutocompletePopup", () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
 
 /**
@@ -1111,7 +1115,7 @@ function ElementEditor(aContainer, aNode)
   this.markup = this.container.markup;
   this.node = aNode;
 
-  this.attrs = [];
+  this.attrs = { };
 
   // The templates will fill the following properties
   this.elt = null;
@@ -1168,7 +1172,7 @@ function ElementEditor(aContainer, aNode)
           undoMods.apply();
         });
       } catch(x) {
-        console.log(x);
+        console.error(x);
       }
     }
   });
@@ -1217,7 +1221,7 @@ ElementEditor.prototype = {
 
   _createAttribute: function EE_createAttribute(aAttr, aBefore)
   {
-    if (this.attrs.indexOf(aAttr.name) !== -1) {
+    if (this.attrs.hasOwnProperty(aAttr.name)) {
       var attr = this.attrs[aAttr.name];
       var name = attr.querySelector(".attrname");
       var val = attr.querySelector(".attrvalue");
@@ -1307,8 +1311,7 @@ ElementEditor.prototype = {
    */
   _applyAttributes: function EE__applyAttributes(aValue, aAttrNode, aDoMods, aUndoMods)
   {
-    let attrs = escapeAttributeValues(aValue);
-
+    let attrs = parseAttributeValues(aValue, this.doc);
     for (let attr of attrs) {
       // Create an attribute editor next to the current attribute if needed.
       this._createAttribute(attr, aAttrNode ? aAttrNode.nextSibling : null);
@@ -1403,97 +1406,41 @@ function nodeDocument(node) {
 }
 
 /**
- * Properly escape attribute values.
+ * Parse attribute names and values from a string.
  *
  * @param  {String} attr
- *         The attributes for which the values are to be escaped.
+ *         The input string for which names/values are to be parsed.
+ * @param  {HTMLDocument} doc
+ *         A document that can be used to test valid attributes.
  * @return {Array}
- *         An array of attribute names and their escaped values.
+ *         An array of attribute names and their values.
  */
-function escapeAttributeValues(attr) {
-  let name = null;
-  let value = null;
-  let result = "";
+function parseAttributeValues(attr, doc) {
+
+  attr = attr.trim();
+
+  // Handle bad user inputs by appending a " or ' if it fails to parse without them.
+  let el = DOMParser.parseFromString("<div " + attr + "></div>", "text/html").body.childNodes[0] ||
+           DOMParser.parseFromString("<div " + attr + "\"></div>", "text/html").body.childNodes[0] ||
+           DOMParser.parseFromString("<div " + attr + "'></div>", "text/html").body.childNodes[0];
+  let div = doc.createElement("div");
+
   let attributes = [];
-
-  while(attr.length > 0) {
-    let match;
-    let dirty = false;
-
-    // Trim quotes and spaces from attr start
-    match = attr.match(/^["\s]+/);
-    if (match && match.length == 1) {
-      attr = attr.substr(match[0].length);
+  for (let attribute of el.attributes) {
+    // Try to set on an element in the document, throws exception on bad input.
+    // Prevents InvalidCharacterError - "String contains an invalid character".
+    try {
+      div.setAttribute(attribute.name, attribute.value);
+      attributes.push({
+        name: attribute.name,
+        value: attribute.value
+      });
     }
-
-    // Name
-    if (!dirty) {
-      match = attr.match(/^([\w-]+)="/);
-      if (match && match.length == 2) {
-        if (name) {
-          // We had a name without a value e.g. disabled. Let's set the value to "";
-          value = "";
-        } else {
-          name = match[1];
-          attr = attr.substr(match[0].length);
-        }
-        dirty = true;
-      }
-    }
-
-    // Value (in the case of multiple attributes)
-    if (!dirty) {
-      match = attr.match(/^(.+?)"\s+[\w-]+="/);
-      if (match && match.length > 1) {
-        value = typeof match[1] == "undefined" ? match[2] : match[1];
-        attr = attr.substr(value.length);
-        value = simpleEscape(value);
-        dirty = true;
-      }
-    }
-
-    // Final value
-    if (!dirty && attr.indexOf("=\"") == -1) {
-      // No more attributes, get the remaining value minus it's ending quote.
-      if (attr.charAt(attr.length - 1) == '"') {
-        attr = attr.substr(0, attr.length - 1);
-      }
-
-      if (!name) {
-        name = attr;
-        value = "";
-      } else {
-        value = simpleEscape(attr);
-      }
-      attr = "";
-      dirty = true;
-    }
-
-    if (name !== null && value !== null) {
-      attributes.push({name: name, value: value});
-      name = value = null;
-    }
-
-    if (!dirty) {
-      // This should never happen but we exit here if it does.
-      return attributes;
-    }
+    catch(e) { }
   }
-  return attributes;
-}
 
-/**
- * Escape basic html entities <, >, " and '.
- * @param  {String} value
- *         Value to escape.
- * @return {String}
- *         Escaped value.
- */
-function simpleEscape(value) {
-  return value.replace(/</g, "&lt;")
-              .replace(/>/g, "&gt;")
-              .replace(/"/g, "&quot;")
-              .replace(/'/g, "&apos;");
+  // Attributes return from DOMParser in reverse order from how they are entered.
+  return attributes.reverse();
 }
 
 /**
