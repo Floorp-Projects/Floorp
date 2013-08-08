@@ -20,7 +20,6 @@
 #include "jscompartmentinlines.h"
 #include "jsinferinlines.h"
 
-#include "vm/ObjectImpl-inl.h"
 #include "vm/Shape-inl.h"
 
 /* static */ inline bool

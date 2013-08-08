@@ -9,10 +9,6 @@
 
 #include <stdio.h>
 
-#include "jsscript.h"
-
-#include "js/RootingAPI.h"
-
 class JSScript;
 
 namespace js {

@@ -8,8 +8,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include <limits.h>
-
 #include "jit/BitSet.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonSpewer.h"

@@ -7,11 +7,13 @@
 #ifndef json_h
 #define json_h
 
-#include "js/CharacterEncoding.h"
+#include "jsapi.h"
+
 #include "js/RootingAPI.h"
-#include "js/Value.h"
-#include "js/Vector.h"
-#include "vm/StringBuffer.h"
+
+namespace js {
+class StringBuffer;
+}
 
 extern JSObject *
 js_InitJSONClass(JSContext *cx, js::HandleObject obj);
