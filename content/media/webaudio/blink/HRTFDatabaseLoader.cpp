@@ -65,7 +65,8 @@ TemporaryRef<HRTFDatabaseLoader> HRTFDatabaseLoader::createAndLoadAsynchronously
 }
 
 HRTFDatabaseLoader::HRTFDatabaseLoader(float sampleRate)
-    : m_threadLock("HRTFDatabaseLoader")
+    : m_refCnt(0)
+    , m_threadLock("HRTFDatabaseLoader")
     , m_databaseLoaderThread(nullptr)
     , m_databaseSampleRate(sampleRate)
 {
@@ -84,6 +85,47 @@ HRTFDatabaseLoader::~HRTFDatabaseLoader()
     if (s_loaderMap->Count() == 0) {
         delete s_loaderMap;
         s_loaderMap = nullptr;
+    }
+}
+
+class HRTFDatabaseLoader::ProxyReleaseEvent MOZ_FINAL : public nsRunnable {
+public:
+    explicit ProxyReleaseEvent(HRTFDatabaseLoader* loader) : mLoader(loader) {}
+    NS_IMETHOD Run() MOZ_OVERRIDE
+    {
+        mLoader->MainThreadRelease();
+        return NS_OK;
+    }
+private:
+    HRTFDatabaseLoader* mLoader;
+};
+
+void HRTFDatabaseLoader::ProxyRelease()
+{
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    if (MOZ_LIKELY(mainThread)) {
+        nsRefPtr<ProxyReleaseEvent> event = new ProxyReleaseEvent(this);
+        DebugOnly<nsresult> rv =
+            mainThread->Dispatch(event, NS_DISPATCH_NORMAL);
+        MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to dispatch release event");
+    } else {
+        // Should be in XPCOM shutdown.
+        MOZ_ASSERT(NS_IsMainThread(),
+                   "Main thread is not available for dispatch.");
+        MainThreadRelease();
+    }
+}
+
+void HRTFDatabaseLoader::MainThreadRelease()
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    int count = --m_refCnt;
+    MOZ_ASSERT(count >= 0, "extra release");
+    NS_LOG_RELEASE(this, count, "HRTFDatabaseLoader");
+    if (count == 0) {
+        // It is safe to delete here as the first reference can only be added
+        // on this (main) thread.
+        delete this;
     }
 }
 

@@ -39,7 +39,7 @@ namespace WebCore {
 
 // HRTFDatabaseLoader will asynchronously load the default HRTFDatabase in a new thread.
 
-class HRTFDatabaseLoader : public mozilla::RefCounted<HRTFDatabaseLoader> {
+class HRTFDatabaseLoader {
 public:
     // Lazily creates a HRTFDatabaseLoader (if not already created) for the given sample-rate
     // and starts loading asynchronously (when created the first time).
@@ -47,9 +47,34 @@ public:
     // Must be called from the main thread.
     static mozilla::TemporaryRef<HRTFDatabaseLoader> createAndLoadAsynchronouslyIfNecessary(float sampleRate);
 
-    // Both constructor and destructor must be called from the main thread.
-    ~HRTFDatabaseLoader();
-    
+    // AddRef and Release may be called from any thread.
+    void AddRef()
+    {
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING)
+        int count =
+#endif
+          ++m_refCnt;
+        MOZ_ASSERT(count > 0, "invalid ref count");
+        NS_LOG_ADDREF(this, count, "HRTFDatabaseLoader", sizeof(*this));
+    }
+
+    void Release()
+    {
+        // The last reference can't be removed on a non-main thread because
+        // the object can be accessed on the main thread from the hash
+        // table via createAndLoadAsynchronouslyIfNecessary().
+        int count = m_refCnt;
+        MOZ_ASSERT(count > 0, "extra release");
+        // Optimization attempt to possibly skip proxying the release to the
+        // main thread.
+        if (count != 1 && m_refCnt.compareExchange(count, count - 1)) {
+            NS_LOG_RELEASE(this, count - 1, "HRTFDatabaseLoader");
+            return;
+        }
+
+        ProxyRelease();
+    }
+
     // Returns true once the default database has been completely loaded.
     bool isLoaded() const;
 
@@ -67,7 +92,12 @@ public:
 private:
     // Both constructor and destructor must be called from the main thread.
     explicit HRTFDatabaseLoader(float sampleRate);
+    ~HRTFDatabaseLoader();
     
+    void ProxyRelease(); // any thread
+    void MainThreadRelease(); // main thread only
+    class ProxyReleaseEvent;
+
     // If it hasn't already been loaded, creates a new thread and initiates asynchronous loading of the default database.
     // This must be called from the main thread.
     void loadAsynchronously();
@@ -84,6 +114,8 @@ private:
     };
     // Keeps track of loaders on a per-sample-rate basis.
     static nsTHashtable<LoaderByRateEntry> *s_loaderMap; // singleton
+
+    mozilla::Atomic<int> m_refCnt;
 
     nsAutoRef<HRTFDatabase> m_hrtfDatabase;
 
