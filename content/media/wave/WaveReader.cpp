@@ -337,7 +337,7 @@ WaveReader::LoadRIFFChunk()
     return false;
   }
 
-  static_assert(sizeof(uint32_t) * 2 <= RIFF_INITIAL_SIZE,
+  static_assert(sizeof(uint32_t) * 3 <= RIFF_INITIAL_SIZE,
                 "Reads would overflow riffHeader buffer.");
   if (ReadUint32BE(&p) != RIFF_CHUNK_MAGIC) {
     NS_WARNING("resource data not in RIFF format");
@@ -345,7 +345,7 @@ WaveReader::LoadRIFFChunk()
   }
 
   // Skip over RIFF size field.
-  p += 4;
+  p += sizeof(uint32_t);
 
   if (ReadUint32BE(&p) != WAVE_CHUNK_MAGIC) {
     NS_WARNING("Expected WAVE chunk");
@@ -546,7 +546,7 @@ WaveReader::LoadListChunk(uint32_t aChunkSize,
                     "LoadListChunk called with unaligned resource");
 
   static const unsigned int MAX_CHUNK_SIZE = 1 << 16;
-  static_assert(MAX_CHUNK_SIZE < UINT_MAX / sizeof(char),
+  static_assert(uint64_t(MAX_CHUNK_SIZE) < UINT_MAX / sizeof(char),
                 "MAX_CHUNK_SIZE too large for enumerator.");
 
   if (aChunkSize > MAX_CHUNK_SIZE) {
