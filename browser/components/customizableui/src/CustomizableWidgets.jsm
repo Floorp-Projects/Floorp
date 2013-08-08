@@ -276,6 +276,7 @@ const CustomizableWidgets = [{
     defaultArea: CustomizableUI.AREA_PANEL,
     allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     onBuild: function(aDocument) {
+      const kPanelId = "PanelUI-popup";
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
       let noautoclose = inPanel ? "true" : null;
       let flex = inPanel ? "1" : null;
@@ -341,11 +342,13 @@ const CustomizableWidgets = [{
       // Register ourselves with the service so we know when the zoom prefs change.
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomChange", false);
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomReset", false);
-      Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:locationChange", false);
 
-      updateZoomResetButton();
-      if (!inPanel)
+      if (inPanel) {
+        let panel = aDocument.getElementById(kPanelId);
+        panel.addEventListener("popupshowing", updateZoomResetButton);
+      } else {
         zoomResetButton.setAttribute("hidden", "true");
+      }
 
       function updateWidgetStyle(aInPanel) {
         let attrs = {
@@ -373,6 +376,11 @@ const CustomizableWidgets = [{
             return;
 
           updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
+          if (aArea == CustomizableUI.AREA_PANEL) {
+            zoomResetButton.removeAttribute("hidden");
+            let panel = aDocument.getElementById(kPanelId);
+            panel.addEventListener("popupshowing", updateZoomResetButton);
+          }
         }.bind(this),
 
         onWidgetRemoved: function(aWidgetId, aPrevArea) {
@@ -382,6 +390,11 @@ const CustomizableWidgets = [{
 
           if (aWidgetId != this.id)
             return;
+
+          if (aPrevArea == CustomizableUI.AREA_PANEL) {
+            let panel = aDocument.getElementById(kPanelId);
+            panel.removeEventListener("popupshowing", updateZoomResetButton);
+          }
 
           // When a widget is demoted to the palette ('removed'), it's visual
           // style should change.
@@ -412,7 +425,8 @@ const CustomizableWidgets = [{
           CustomizableUI.removeListener(listener);
           Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomChange");
           Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomReset");
-          Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:locationChange");
+          let panel = aDoc.getElementById(kPanelId);
+          panel.removeEventListener("popupshowing", updateZoomResetButton);
         }.bind(this)
       };
       CustomizableUI.addListener(listener);
