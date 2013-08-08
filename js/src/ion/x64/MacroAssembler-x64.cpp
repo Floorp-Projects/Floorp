@@ -8,6 +8,7 @@
 
 #include "mozilla/Casting.h"
 
+#include "ion/Bailouts.h"
 #include "ion/BaselineFrame.h"
 #include "ion/IonFrames.h"
 #include "ion/MoveEmitter.h"
@@ -253,12 +254,14 @@ MacroAssemblerX64::handleFailureWithHandlerTail()
     Label catch_;
     Label finally;
     Label return_;
+    Label bailout;
 
     loadPtr(Address(rsp, offsetof(ResumeFromException, kind)), rax);
     branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_ENTRY_FRAME), &entryFrame);
     branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_CATCH), &catch_);
     branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_FINALLY), &finally);
     branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_FORCED_RETURN), &return_);
+    branch32(Assembler::Equal, rax, Imm32(ResumeFromException::RESUME_BAILOUT), &bailout);
 
     breakpoint(); // Invalid kind.
 
@@ -300,6 +303,13 @@ MacroAssemblerX64::handleFailureWithHandlerTail()
     movq(rbp, rsp);
     pop(rbp);
     ret();
+
+    // If we are bailing out to baseline to handle an exception, jump to
+    // the bailout tail stub.
+    bind(&bailout);
+    movq(Operand(esp, offsetof(ResumeFromException, bailoutInfo)), r9);
+    movl(Imm32(BAILOUT_RETURN_OK), rax);
+    jmp(Operand(rsp, offsetof(ResumeFromException, target)));
 }
 
 Assembler::Condition
