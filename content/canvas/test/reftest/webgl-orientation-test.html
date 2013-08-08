@@ -26,15 +26,6 @@ function renderGL(gl) {
   gl.finish();
 }
 
-function renderBackup(canvas) {
-  var context = canvas.getContext("2d");
-  context.fillStyle = "rgba(0, 0, 0, 1.0)";
-  context.fillRect(0, 0, 256, 256);
-
-  context.fillStyle = "rgba(255, 255, 255, 1.0)";
-  context.fillRect(0, 0, 128, 128);
-}
-
 function runTest() {
   var canvas = document.getElementById("canvas");
   var gl = initGL(canvas);
@@ -42,7 +33,7 @@ function runTest() {
   if (gl)
     renderGL(gl);
   else
-    renderBackup(canvas);
+    document.write("Failed to get WebGL context.");
 
   rAF(testComplete);
 }
