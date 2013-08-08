@@ -43,7 +43,8 @@ nsWindowRoot::~nsWindowRoot()
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_3(nsWindowRoot,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(nsWindowRoot,
+                                        mWindow,
                                         mListenerManager,
                                         mPopupNode,
                                         mParent)
