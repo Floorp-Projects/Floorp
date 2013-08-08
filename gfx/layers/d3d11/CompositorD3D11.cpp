@@ -569,7 +569,9 @@ CompositorD3D11::BeginFrame(const Rect* aClipRectIn,
 {
   UpdateRenderTarget();
 
-  if (mSize.width == 0 || mSize.height == 0) {
+  // Failed to create a render target.
+  if (!mDefaultRT ||
+      mSize.width == 0 || mSize.height == 0) {
     *aRenderBoundsOut = Rect();
     return;
   }
