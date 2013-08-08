@@ -1242,12 +1242,12 @@ protected:
   nsCOMPtr<nsIURI> mLastOpenedURI;
 #endif
 
-  bool mCleanedUp;
-
 #ifdef MOZ_B2G
   bool mNetworkUploadObserverEnabled;
   bool mNetworkDownloadObserverEnabled;
 #endif // MOZ_B2G
+
+  bool mCleanedUp;
 
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
