@@ -42,94 +42,47 @@ MOZ_MTLOG_MODULE("mediapipeline")
 MtransportTestUtils *test_utils;
 
 namespace {
-
-class TransportInfo {
- public:
-  TransportInfo() :
-    flow_(NULL),
-    prsock_(NULL),
-    dtls_(NULL) {}
-
-  void Init(bool client) {
-    nsresult res;
-
-    flow_ = new TransportFlow();
-    prsock_ = new TransportLayerPrsock();
-    dtls_ = new TransportLayerDtls();
-
-    res = prsock_->Init();
-    if (res != NS_OK) {
-      FreeLayers();
-    }
-    ASSERT_EQ((nsresult)NS_OK, res);
-
-    std::vector<uint16_t> ciphers;
-    ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
-    dtls_->SetSrtpCiphers(ciphers);
-    dtls_->SetIdentity(DtlsIdentity::Generate());
-    dtls_->SetRole(client ? TransportLayerDtls::CLIENT :
-      TransportLayerDtls::SERVER);
-    dtls_->SetVerificationAllowAll();
-  }
-
-  void PushLayers() {
-    nsresult res;
-
-    nsAutoPtr<std::queue<TransportLayer *> > layers(
-      new std::queue<TransportLayer *>);
-    layers->push(prsock_);
-    layers->push(dtls_);
-    res = flow_->PushLayers(layers);
-    if (res != NS_OK) {
-      FreeLayers();
-    }
-    ASSERT_EQ((nsresult)NS_OK, res);
-  }
-
-  // Free the memory allocated at the beginning of Init
-  // if failure occurs before layers setup.
-  void FreeLayers() {
-    delete prsock_;
-    delete dtls_;
-  }
-
-  void Stop() {
-    flow_ = NULL;
-  }
-
-  mozilla::RefPtr<TransportFlow> flow_;
-  TransportLayerPrsock *prsock_;
-  TransportLayerDtls *dtls_;
-};
-
 class TestAgent {
  public:
   TestAgent() :
+      audio_flow_(new TransportFlow()),
+      audio_prsock_(new TransportLayerPrsock()),
+      audio_dtls_(new TransportLayerDtls()),
       audio_config_(109, "opus", 48000, 960, 2, 64000),
       audio_conduit_(mozilla::AudioSessionConduit::Create(NULL)),
       audio_(),
-      audio_pipeline_() {
+      audio_pipeline_(),
+      video_flow_(new TransportFlow()),
+      video_prsock_(new TransportLayerPrsock()),
+      video_config_(120, "VP8"),
+      video_conduit_(mozilla::VideoSessionConduit::Create()),
+      video_(),
+      video_pipeline_() {
   }
 
-  void ConnectSocket(PRFileDesc *fd, bool client, bool isRtcp) {
+  void ConnectSocket(PRFileDesc *fd, bool client) {
     nsresult res;
-    TransportInfo *transport = isRtcp ?
-      &audio_rtcp_transport_ : &audio_rtp_transport_;
-
-    transport->Init(client);
+    res = audio_prsock_->Init();
+    ASSERT_EQ((nsresult)NS_OK, res);
 
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnable(transport->prsock_, &TransportLayerPrsock::Import, fd, &res));
-    if (!NS_SUCCEEDED(res)) {
-      transport->FreeLayers();
-    }
+      WrapRunnable(audio_prsock_, &TransportLayerPrsock::Import, fd, &res));
+
     ASSERT_TRUE(NS_SUCCEEDED(res));
 
-    transport->PushLayers();
+    ASSERT_EQ((nsresult)NS_OK, audio_flow_->PushLayer(audio_prsock_));
+
+    std::vector<uint16_t> ciphers;
+    ciphers.push_back(SRTP_AES128_CM_HMAC_SHA1_80);
+    audio_dtls_->SetSrtpCiphers(ciphers);
+    audio_dtls_->SetIdentity(DtlsIdentity::Generate());
+    audio_dtls_->SetRole(client ? TransportLayerDtls::CLIENT :
+                         TransportLayerDtls::SERVER);
+    audio_flow_->PushLayer(audio_dtls_);
   }
 
-  virtual void CreatePipelines_s(bool aIsRtcpMux) = 0;
+  virtual void CreatePipelines_s() = 0;
 
   void Start() {
     nsresult ret;
@@ -145,10 +98,12 @@ class TestAgent {
 
   void StopInt() {
     audio_->GetStream()->Stop();
-    audio_rtp_transport_.Stop();
-    audio_rtcp_transport_.Stop();
+    audio_flow_ = NULL;
+    video_flow_ = NULL;
     if (audio_pipeline_)
       audio_pipeline_->ShutdownTransport_s();
+    if (video_pipeline_)
+      video_pipeline_->ShutdownTransport_s();
   }
 
   void Stop() {
@@ -156,28 +111,39 @@ class TestAgent {
 
     if (audio_pipeline_)
       audio_pipeline_->ShutdownMedia_m();
+    if (video_pipeline_)
+      video_pipeline_->ShutdownMedia_m();
 
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
       WrapRunnable(this, &TestAgent::StopInt));
 
     audio_pipeline_ = NULL;
+    video_pipeline_ = NULL;
 
     PR_Sleep(1000); // Deal with race condition
   }
 
+
  protected:
+  mozilla::RefPtr<TransportFlow> audio_flow_;
+  TransportLayerPrsock *audio_prsock_;
+  TransportLayerDtls *audio_dtls_;
   mozilla::AudioCodecConfig audio_config_;
   mozilla::RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
   nsRefPtr<DOMMediaStream> audio_;
   mozilla::RefPtr<mozilla::MediaPipeline> audio_pipeline_;
-  TransportInfo audio_rtp_transport_;
-  TransportInfo audio_rtcp_transport_;
+  mozilla::RefPtr<TransportFlow> video_flow_;
+  TransportLayerPrsock *video_prsock_;
+  mozilla::VideoCodecConfig video_config_;
+  mozilla::RefPtr<mozilla::MediaSessionConduit> video_conduit_;
+  nsRefPtr<DOMMediaStream> video_;
+  mozilla::RefPtr<mozilla::MediaPipeline> video_pipeline_;
 };
 
 class TestAgentSend : public TestAgent {
  public:
-  virtual void CreatePipelines_s(bool aIsRtcpMux) {
+  virtual void CreatePipelines_s() {
     audio_ = new Fake_DOMMediaStream(new Fake_AudioStreamSource());
 
     mozilla::MediaConduitErrorCode err =
@@ -187,29 +153,16 @@ class TestAgentSend : public TestAgent {
 
     std::string test_pc("PC");
 
-    if (aIsRtcpMux) {
-      ASSERT_FALSE(audio_rtcp_transport_.flow_);
-    }
-
     audio_pipeline_ = new mozilla::MediaPipelineTransmit(
         test_pc,
         NULL,
         test_utils->sts_target(),
-        audio_->GetStream(),
-        1,
-        audio_conduit_,
-        audio_rtp_transport_.flow_,
-        audio_rtcp_transport_.flow_);
+        audio_->GetStream(), 1, audio_conduit_, audio_flow_, NULL);
 
     audio_pipeline_->Init();
-  }
 
-  int GetAudioRtpCount() {
-    return audio_pipeline_->rtp_packets_sent();
-  }
-
-  int GetAudioRtcpCount() {
-    return audio_pipeline_->rtcp_packets_received();
+//    video_ = new Fake_DOMMediaStream(new Fake_VideoStreamSource());
+//    video_pipeline_ = new mozilla::MediaPipelineTransmit(video_, video_conduit_, &video_flow_, &video_flow_);
   }
 
  private:
@@ -218,7 +171,7 @@ class TestAgentSend : public TestAgent {
 
 class TestAgentReceive : public TestAgent {
  public:
-  virtual void CreatePipelines_s(bool aIsRtcpMux) {
+  virtual void CreatePipelines_s() {
     mozilla::SourceMediaStream *audio = new Fake_SourceMediaStream();
     audio->SetPullEnabled(true);
 
@@ -237,28 +190,15 @@ class TestAgentReceive : public TestAgent {
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
 
     std::string test_pc("PC");
-
-    if (aIsRtcpMux) {
-      ASSERT_FALSE(audio_rtcp_transport_.flow_);
-    }
-
     audio_pipeline_ = new mozilla::MediaPipelineReceiveAudio(
         test_pc,
         NULL,
         test_utils->sts_target(),
         audio_->GetStream(), 1,
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
-        audio_rtp_transport_.flow_, audio_rtcp_transport_.flow_);
+        audio_flow_, NULL);
 
     audio_pipeline_->Init();
-  }
-
-  int GetAudioRtpCount() {
-    return audio_pipeline_->rtp_packets_received();
-  }
-
-  int GetAudioRtcpCount() {
-    return audio_pipeline_->rtcp_packets_sent();
   }
 
  private:
@@ -268,85 +208,44 @@ class TestAgentReceive : public TestAgent {
 class MediaPipelineTest : public ::testing::Test {
  public:
   MediaPipelineTest() : p1_() {
-    rtp_fds_[0] = rtp_fds_[1] = NULL;
-    rtcp_fds_[0] = rtcp_fds_[1] = NULL;
+    fds_[0] = fds_[1] = NULL;
   }
 
-  // Setup transport.
-  void InitTransports(bool aIsRtcpMux) {
-    // Create RTP related transport.
-    PRStatus status =  PR_NewTCPSocketPair(rtp_fds_);
+  void SetUp() {
+    PRStatus status = PR_NewTCPSocketPair(fds_);
     ASSERT_EQ(status, PR_SUCCESS);
 
-    // RTP, DTLS server
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnable(&p1_, &TestAgent::ConnectSocket, rtp_fds_[0], false, false));
+      WrapRunnable(&p1_, &TestAgent::ConnectSocket, fds_[0], false));
 
-    // RTP, DTLS client
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
-      WrapRunnable(&p2_, &TestAgent::ConnectSocket, rtp_fds_[1], true, false));
+      WrapRunnable(&p2_, &TestAgent::ConnectSocket, fds_[1], false));
 
-    // Create RTCP flows separately if we are not muxing them.
-    if(!aIsRtcpMux) {
-      status = PR_NewTCPSocketPair(rtcp_fds_);
-      ASSERT_EQ(status, PR_SUCCESS);
+    mozilla::SyncRunnable::DispatchToThread(
+      test_utils->sts_target(),
+      WrapRunnable(&p1_, &TestAgent::CreatePipelines_s));
 
-      // RTCP, DTLS server
-      mozilla::SyncRunnable::DispatchToThread(
-        test_utils->sts_target(),
-        WrapRunnable(&p1_, &TestAgent::ConnectSocket, rtcp_fds_[0], false, true));
-
-      // RTCP, DTLS client
-      mozilla::SyncRunnable::DispatchToThread(
-        test_utils->sts_target(),
-        WrapRunnable(&p2_, &TestAgent::ConnectSocket, rtcp_fds_[1], true, true));
-    }
+    mozilla::SyncRunnable::DispatchToThread(
+      test_utils->sts_target(),
+      WrapRunnable(&p2_, &TestAgent::CreatePipelines_s));
   }
 
-  // Verify RTP and RTCP
-  void TestAudioSend(bool aIsRtcpMux) {
-    // Setup transport flows
-    InitTransports(aIsRtcpMux);
-
-    mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnable(&p1_, &TestAgent::CreatePipelines_s, aIsRtcpMux));
-
-    mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnable(&p2_, &TestAgent::CreatePipelines_s, aIsRtcpMux));
-
-    p2_.Start();
-    p1_.Start();
-
-    // wait for some RTP/RTCP tx and rx to happen
-    PR_Sleep(5000);
-
-    ASSERT_GE(p1_.GetAudioRtpCount(), 40);
-    ASSERT_GE(p2_.GetAudioRtpCount(), 40);
-    ASSERT_GE(p1_.GetAudioRtcpCount(), 1);
-    ASSERT_GE(p2_.GetAudioRtcpCount(), 1);
-
-    p1_.Stop();
-    p2_.Stop();
-  }
-
-protected:
-  PRFileDesc *rtp_fds_[2];
-  PRFileDesc *rtcp_fds_[2];
+ protected:
+  PRFileDesc *fds_[2];
   TestAgentSend p1_;
   TestAgentReceive p2_;
 };
 
-TEST_F(MediaPipelineTest, TestAudioSendNoMux) {
-  TestAudioSend(false);
+TEST_F(MediaPipelineTest, AudioSend) {
+  p2_.Start();
+  p1_.Start();
+  PR_Sleep(1000);
+  p1_.Stop();
+  p2_.Stop();
 }
 
-TEST_F(MediaPipelineTest, TestAudioSendMux) {
-  TestAudioSend(true);
-}
 
 }  // end namespace
 

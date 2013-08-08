@@ -84,28 +84,25 @@ nsresult MediaPipeline::Init_s() {
     MOZ_MTLOG(ML_ERROR, "RTP transport is already in error state");
     TransportFailed_s(rtp_transport_);
     return NS_ERROR_FAILURE;
-  }
+  } else {
+    if (!muxed_) {
+      rtcp_transport_->SignalStateChange.connect(this,
+                                                 &MediaPipeline::StateChange);
 
-  // If rtcp_transport_ is the same as rtp_transport_ then we are muxing.
-  // Otherwise, set it up separately.
-  if (rtcp_transport_ != rtp_transport_) {
-    rtcp_transport_->SignalStateChange.connect(this,
-                                               &MediaPipeline::StateChange);
-
-    if (rtcp_transport_->state() == TransportLayer::TS_OPEN) {
-      res = TransportReady_s(rtcp_transport_);
-      if (NS_FAILED(res)) {
-        MOZ_MTLOG(ML_ERROR, "Error calling TransportReady(); res="
-                  << static_cast<uint32_t>(res) << " in " << __FUNCTION__);
-        return res;
+      if (rtcp_transport_->state() == TransportLayer::TS_OPEN) {
+        res = TransportReady_s(rtcp_transport_);
+        if (NS_FAILED(res)) {
+          MOZ_MTLOG(ML_ERROR, "Error calling TransportReady(); res="
+                    << static_cast<uint32_t>(res) << " in " << __FUNCTION__);
+          return res;
+        }
+      } else if (rtcp_transport_->state() == TransportLayer::TS_ERROR) {
+        MOZ_MTLOG(ML_ERROR, "RTCP transport is already in error state");
+        TransportFailed_s(rtcp_transport_);
+        return NS_ERROR_FAILURE;
       }
-    } else if (rtcp_transport_->state() == TransportLayer::TS_ERROR) {
-      MOZ_MTLOG(ML_ERROR, "RTCP transport is already in error state");
-      TransportFailed_s(rtcp_transport_);
-      return NS_ERROR_FAILURE;
     }
   }
-
   return NS_OK;
 }
 
@@ -124,12 +121,6 @@ void MediaPipeline::ShutdownTransport_s() {
 }
 
 void MediaPipeline::StateChange(TransportFlow *flow, TransportLayer::State state) {
-  // If rtcp_transport_ is the same as rtp_transport_ then we are muxing.
-  // So the only flow should be the RTP flow.
-  if (rtcp_transport_ == rtp_transport_) {
-    MOZ_ASSERT(flow == rtp_transport_);
-  }
-
   if (state == TransportLayer::TS_OPEN) {
     MOZ_MTLOG(ML_DEBUG, "Flow is ready");
     TransportReady_s(flow);
@@ -225,8 +216,7 @@ nsresult MediaPipeline::TransportReady_s(TransportFlow *flow) {
     }
 
     // Start listening
-    // If rtcp_transport_ is the same as rtp_transport_ then we are muxing
-    if (rtcp_transport_ == rtp_transport_) {
+    if (muxed_) {
       MOZ_ASSERT(!rtcp_send_srtp_ && !rtcp_recv_srtp_);
       rtcp_send_srtp_ = rtp_send_srtp_;
       rtcp_recv_srtp_ = rtp_recv_srtp_;
@@ -237,7 +227,6 @@ nsresult MediaPipeline::TransportReady_s(TransportFlow *flow) {
       dtls->downward()->SignalPacketReceived.connect(this,
                                                      &MediaPipeline::
                                                      PacketReceived);
-      rtcp_state_ = MP_OPEN;
     } else {
       MOZ_MTLOG(ML_DEBUG, "Listening for RTP packets received on " <<
                 static_cast<void *>(dtls->downward()));
@@ -279,13 +268,6 @@ nsresult MediaPipeline::TransportFailed_s(TransportFlow *flow) {
   State *state = rtcp ? &rtcp_state_ : &rtp_state_;
 
   *state = MP_CLOSED;
-
-  // If rtcp_transport_ is the same as rtp_transport_ then we are muxing
-  if(rtcp_transport_ == rtp_transport_) {
-    MOZ_ASSERT(state != &rtcp_state_);
-    rtcp_state_ = MP_CLOSED;
-  }
-
 
   MOZ_MTLOG(ML_DEBUG, "Transport closed for flow " << (rtcp ? "rtcp" : "rtp"));
 
@@ -371,7 +353,7 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
                                       const unsigned char *data,
                                       size_t len) {
   if (!transport_->pipeline()) {
-    MOZ_MTLOG(ML_ERROR, "Discarding incoming packet; transport disconnected");
+    MOZ_MTLOG(ML_DEBUG, "Discarding incoming packet; transport disconnected");
     return;
   }
 
@@ -381,7 +363,7 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
   }
 
   if (rtp_state_ != MP_OPEN) {
-    MOZ_MTLOG(ML_ERROR, "Discarding incoming packet; pipeline not open");
+    MOZ_MTLOG(ML_DEBUG, "Discarding incoming packet; pipeline not open");
     return;
   }
 
