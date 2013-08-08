@@ -50,9 +50,6 @@ public:
                                   bool aCoerceToString,
                                   JS::Value* aRetValue) MOZ_OVERRIDE;
 
-  virtual nsresult ExecuteScript(JSScript* aScriptObject,
-                                 JSObject* aScopeObject) MOZ_OVERRIDE;
-
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
                                             JS::Handle<JSObject*> aScope,
                                             JS::Handle<JSObject*> aHandler,
