@@ -376,6 +376,7 @@ nsTreeBodyFrame::EnsureView()
         // Scroll to the given row.
         // XXX is this optimal if we haven't laid out yet?
         ScrollToRow(rowIndex);
+        ENSURE_TRUE(weakFrame.IsAlive());
 
         // Clear out the property info for the top row, but we always keep the
         // view current.
@@ -4134,9 +4135,12 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, int32_t aPosition
   Invalidate();
 
   // Update the column scroll view
+  nsWeakFrame weakFrame(this);
   aParts.mColumnsScrollFrame->ScrollTo(nsPoint(mHorzPosition, 0),
                                        nsIScrollableFrame::INSTANT);
-
+  if (!weakFrame.IsAlive()) {
+    return NS_ERROR_FAILURE;
+  }
   // And fire off an event about it all
   PostScrollEvent();
   return NS_OK;
@@ -4153,7 +4157,8 @@ nsTreeBodyFrame::ScrollbarButtonPressed(nsScrollbarFrame* aScrollbar, int32_t aO
     else if (aNewIndex < aOldIndex)
       ScrollToRowInternal(parts, mTopRowIndex-1);
   } else {
-    ScrollHorzInternal(parts, aNewIndex);
+    nsresult rv = ScrollHorzInternal(parts, aNewIndex);
+    if (NS_FAILED(rv)) return rv;
   }
 
   UpdateScrollbars(parts);
@@ -4177,7 +4182,8 @@ nsTreeBodyFrame::PositionChanged(nsScrollbarFrame* aScrollbar, int32_t aOldIndex
     ScrollInternal(parts, newrow);
   // Horizontal Scrollbar
   } else if (parts.mHScrollbar == aScrollbar) {
-    ScrollHorzInternal(parts, aNewIndex);
+    nsresult rv = ScrollHorzInternal(parts, aNewIndex);
+    if (NS_FAILED(rv)) return rv;
   }
 
   UpdateScrollbars(parts);
