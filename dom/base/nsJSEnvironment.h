@@ -50,14 +50,6 @@ public:
                                   bool aCoerceToString,
                                   JS::Value* aRetValue) MOZ_OVERRIDE;
 
-  virtual nsresult CompileScript(const PRUnichar* aText,
-                                 int32_t aTextLength,
-                                 nsIPrincipal *principal,
-                                 const char *aURL,
-                                 uint32_t aLineNo,
-                                 uint32_t aVersion,
-                                 JS::MutableHandle<JSScript*> aScriptObject,
-                                 bool aSaveSource = false) MOZ_OVERRIDE;
   virtual nsresult ExecuteScript(JSScript* aScriptObject,
                                  JSObject* aScopeObject) MOZ_OVERRIDE;
 

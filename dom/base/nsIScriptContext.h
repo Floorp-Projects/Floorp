@@ -28,8 +28,8 @@ class nsIDOMWindow;
 class nsIURI;
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x76d14525, 0x68ff, 0x4f43, \
-  { 0xb1, 0x92, 0x9e, 0x67, 0x28, 0xaa, 0xaf, 0x19 } }
+{ 0x9173717f, 0x0722, 0x44bc, \
+  { 0x99, 0x6c, 0x69, 0xa9, 0xf9, 0x6d, 0x73, 0xac } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -63,31 +63,6 @@ public:
                                   JS::CompileOptions& aOptions,
                                   bool aCoerceToString,
                                   JS::Value* aRetValue) = 0;
-
-  /**
-   * Compile a script.
-   *
-   * @param aText a PRUnichar buffer containing script source
-   * @param aTextLength number of characters in aText
-   * @param aPrincipal the principal that produced the script
-   * @param aURL the URL or filename for error messages
-   * @param aLineNo the starting line number of the script for error messages
-   * @param aVersion the script language version to use when executing
-   * @param aScriptObject an executable object that's the result of compiling
-   *                      the script.
-   * @param aSaveSource force the source code to be saved by the JS engine in memory
-   *
-   * @return NS_OK if the script source was valid and got compiled.
-   *
-   **/
-  virtual nsresult CompileScript(const PRUnichar* aText,
-                                 int32_t aTextLength,
-                                 nsIPrincipal* aPrincipal,
-                                 const char* aURL,
-                                 uint32_t aLineNo,
-                                 uint32_t aVersion,
-                                 JS::MutableHandle<JSScript*> aScriptObject,
-                                 bool aSaveSource = false) = 0;
 
   /**
    * Execute a precompiled script object.
