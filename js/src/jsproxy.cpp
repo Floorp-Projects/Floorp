@@ -3133,7 +3133,7 @@ Class js::ObjectProxyObject::class_ = {
     }
 };
 
-JS_FRIEND_DATA(Class* const) js::ObjectProxyClassPtr = &ObjectProxyObject::class_;
+Class* const js::ObjectProxyClassPtr = &ObjectProxyObject::class_;
 
 Class js::OuterWindowProxyObject::class_ = {
     "Proxy",
@@ -3192,7 +3192,7 @@ Class js::OuterWindowProxyObject::class_ = {
     }
 };
 
-JS_FRIEND_DATA(Class* const) js::OuterWindowProxyClassPtr = &OuterWindowProxyObject::class_;
+Class* const js::OuterWindowProxyClassPtr = &OuterWindowProxyObject::class_;
 
 static bool
 proxy_Call(JSContext *cx, unsigned argc, Value *vp)
@@ -3263,7 +3263,7 @@ Class js::FunctionProxyObject::class_ = {
     }
 };
 
-JS_FRIEND_DATA(Class* const) js::FunctionProxyClassPtr = &FunctionProxyObject::class_;
+Class* const js::FunctionProxyClassPtr = &FunctionProxyObject::class_;
 
 /* static */ ProxyObject *
 ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, TaggedProto proto_,
