@@ -311,7 +311,7 @@ nsXBLDocGlobalObject::GetGlobalJSObject()
 {
   // The prototype document has its own special secret script object
   // that can be used to compile scripts and event handlers.
-
+  EnsureScriptEnvironment();
   if (!mScriptContext)
     return nullptr;
 
