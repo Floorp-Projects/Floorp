@@ -17,8 +17,8 @@ function HistoryView(aSet, aLimit, aFilterUnpinned) {
   this._pinHelper = new ItemPinHelper("metro.history.unpinned");
   this._historyService.addObserver(this, false);
   Services.obs.addObserver(this, "metro_viewstate_changed", false);
-  window.addEventListener('MozAppbarDismissing', this, false);
-  window.addEventListener('HistoryNeedsRefresh', this, false);
+  StartUI.chromeWin.addEventListener('MozAppbarDismissing', this, false);
+  StartUI.chromeWin.addEventListener('HistoryNeedsRefresh', this, false);
 }
 
 HistoryView.prototype = Util.extend(Object.create(View.prototype), {
@@ -27,7 +27,7 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
 
   handleItemClick: function tabview_handleItemClick(aItem) {
     let url = aItem.getAttribute("value");
-    BrowserUI.goToURI(url);
+    StartUI.goToURI(url);
   },
 
   populateGrid: function populateGrid(aRefresh) {
@@ -298,6 +298,8 @@ let HistoryStartView = {
   },
 
   uninit: function uninit() {
-    this._view.destruct();
+    if (this._view) {
+      this._view.destruct();
+    }
   }
 };
