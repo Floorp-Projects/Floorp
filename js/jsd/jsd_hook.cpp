@@ -165,14 +165,14 @@ jsd_CallExecutionHook(JSDContext* jsdc,
     return JSTRAP_CONTINUE;
 }
 
-JSBool
+bool
 jsd_CallCallHook (JSDContext* jsdc,
                   JSContext *cx,
                   unsigned type,
                   JSD_CallHookProc hook,
                   void* hookData)
 {
-    JSBool hookanswer;
+    bool hookanswer;
     JSDThreadState*  jsdthreadstate;
     
     hookanswer = false;
@@ -185,7 +185,7 @@ jsd_CallCallHook (JSDContext* jsdc,
     return hookanswer;
 }
 
-JSBool
+bool
 jsd_SetInterruptHook(JSDContext*           jsdc,
                      JSD_ExecutionHookProc hook,
                      void*                 callerdata)
@@ -199,7 +199,7 @@ jsd_SetInterruptHook(JSDContext*           jsdc,
     return true;
 }
 
-JSBool
+bool
 jsd_ClearInterruptHook(JSDContext* jsdc)
 {
     JSD_LOCK();
@@ -210,7 +210,7 @@ jsd_ClearInterruptHook(JSDContext* jsdc)
     return true;
 }
 
-JSBool
+bool
 jsd_SetDebugBreakHook(JSDContext*           jsdc,
                       JSD_ExecutionHookProc hook,
                       void*                 callerdata)
@@ -223,7 +223,7 @@ jsd_SetDebugBreakHook(JSDContext*           jsdc,
     return true;
 }
 
-JSBool
+bool
 jsd_ClearDebugBreakHook(JSDContext* jsdc)
 {
     JSD_LOCK();
@@ -233,7 +233,7 @@ jsd_ClearDebugBreakHook(JSDContext* jsdc)
     return true;
 }
 
-JSBool
+bool
 jsd_SetDebuggerHook(JSDContext*           jsdc,
                       JSD_ExecutionHookProc hook,
                       void*                 callerdata)
@@ -246,7 +246,7 @@ jsd_SetDebuggerHook(JSDContext*           jsdc,
     return true;
 }
 
-JSBool
+bool
 jsd_ClearDebuggerHook(JSDContext* jsdc)
 {
     JSD_LOCK();
@@ -256,7 +256,7 @@ jsd_ClearDebuggerHook(JSDContext* jsdc)
     return true;
 }
 
-JSBool
+bool
 jsd_SetThrowHook(JSDContext*           jsdc,
                  JSD_ExecutionHookProc hook,
                  void*                 callerdata)
@@ -269,7 +269,7 @@ jsd_SetThrowHook(JSDContext*           jsdc,
     return true;
 }
 
-JSBool
+bool
 jsd_ClearThrowHook(JSDContext* jsdc)
 {
     JSD_LOCK();
@@ -279,7 +279,7 @@ jsd_ClearThrowHook(JSDContext* jsdc)
     return true;
 }
 
-JSBool
+bool
 jsd_SetFunctionHook(JSDContext*      jsdc,
                     JSD_CallHookProc hook,
                     void*            callerdata)
@@ -292,7 +292,7 @@ jsd_SetFunctionHook(JSDContext*      jsdc,
     return true;
 }
 
-JSBool
+bool
 jsd_ClearFunctionHook(JSDContext* jsdc)
 {
     JSD_LOCK();
@@ -302,7 +302,7 @@ jsd_ClearFunctionHook(JSDContext* jsdc)
     return true;
 }
 
-JSBool
+bool
 jsd_SetTopLevelHook(JSDContext*      jsdc,
                     JSD_CallHookProc hook,
                     void*            callerdata)
@@ -315,7 +315,7 @@ jsd_SetTopLevelHook(JSDContext*      jsdc,
     return true;
 }
 
-JSBool
+bool
 jsd_ClearTopLevelHook(JSDContext* jsdc)
 {
     JSD_LOCK();

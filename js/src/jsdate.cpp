@@ -512,7 +512,7 @@ MakeTime(double hour, double min, double sec, double ms)
  * end of ECMA 'support' functions
  */
 
-static JSBool
+static bool
 date_convert(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
     JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
@@ -565,11 +565,11 @@ static const int ttb[] = {
 };
 
 /* helper for date_parse */
-static JSBool
+static bool
 date_regionMatches(const char* s1, int s1off, const jschar* s2, int s2off,
                    int count, int ignoreCase)
 {
-    JSBool result = false;
+    bool result = false;
     /* return true if matches, otherwise, false */
 
     while (count > 0 && s1[s1off] && s2[s2off]) {
@@ -604,7 +604,7 @@ date_msecFromDate(double year, double mon, double mday, double hour,
 /* compute the time in msec (unclipped) from the given args */
 #define MAXARGS        7
 
-static JSBool
+static bool
 date_msecFromArgs(JSContext *cx, CallArgs args, double *rval)
 {
     unsigned loop;
@@ -666,7 +666,7 @@ date_UTC(JSContext *cx, unsigned argc, Value *vp)
  * Succeed if any digits are converted. Advance *i only
  * as digits are consumed.
  */
-static JSBool
+static bool
 digits(size_t *result, const jschar *s, size_t *i, size_t limit)
 {
     size_t init = *i;
@@ -688,7 +688,7 @@ digits(size_t *result, const jschar *s, size_t *i, size_t limit)
  * Succeed if any digits are converted. Advance *i only
  * as digits are consumed.
  */
-static JSBool
+static bool
 fractional(double *result, const jschar *s, size_t *i, size_t limit)
 {
     double factor = 0.1;
@@ -710,7 +710,7 @@ fractional(double *result, const jschar *s, size_t *i, size_t limit)
  * Succeed if exactly n digits are converted. Advance *i only
  * on success.
  */
-static JSBool
+static bool
 ndigits(size_t n, size_t *result, const jschar *s, size_t* i, size_t limit)
 {
     size_t init = *i;
@@ -786,7 +786,7 @@ DaysInMonth(int year, int month)
  *   TZD  = time zone designator (Z or +hh:mm or -hh:mm or missing for local)
  */
 
-static JSBool
+static bool
 date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 {
     double msec;
@@ -925,7 +925,7 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 #undef NEED_NDIGITS
 }
 
-static JSBool
+static bool
 date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 {
     double msec;
@@ -943,9 +943,9 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
     int n = -1;
     int tzoffset = -1;
     int prevc = 0;
-    JSBool seenplusminus = false;
+    bool seenplusminus = false;
     int temp;
-    JSBool seenmonthname = false;
+    bool seenmonthname = false;
 
     if (date_parseISOString(str, result, dtInfo))
         return true;
@@ -2542,12 +2542,12 @@ typedef enum formatspec {
 } formatspec;
 
 /* helper function */
-static JSBool
+static bool
 date_format(JSContext *cx, double date, formatspec format, MutableHandleValue rval)
 {
     char buf[100];
     char tzbuf[100];
-    JSBool usetz;
+    bool usetz;
     size_t i, tzlen;
     PRMJTime split;
 
@@ -3092,7 +3092,7 @@ js_NewDateObject(JSContext *cx, int year, int mon, int mday,
     return js_NewDateObjectMsec(cx, UTC(msec_time, &cx->runtime()->dateTimeInfo));
 }
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(bool)
 js_DateIsValid(JSObject *obj)
 {
     return obj->is<DateObject>() && !IsNaN(obj->as<DateObject>().UTCTime().toNumber());

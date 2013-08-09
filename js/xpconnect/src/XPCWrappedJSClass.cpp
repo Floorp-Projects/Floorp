@@ -94,7 +94,7 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
 
 // It turns out that some errors may be not worth reporting. So, this
 // function is factored out to manage that.
-JSBool xpc_IsReportableErrorCode(nsresult code)
+bool xpc_IsReportableErrorCode(nsresult code)
 {
     if (NS_SUCCEEDED(code))
         return false;
@@ -209,7 +209,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
     JSObject* id;
     RootedValue retval(cx);
     RootedObject retObj(cx);
-    JSBool success = false;
+    bool success = false;
     jsid funid;
     RootedValue fun(cx);
 
@@ -321,7 +321,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
 
 /***************************************************************************/
 
-static JSBool
+static bool
 GetNamedPropertyAsVariantRaw(XPCCallContext& ccx,
                              JSObject* aJSObj,
                              jsid aName,
@@ -348,7 +348,7 @@ nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx,
 {
     JSContext* cx = ccx.GetJSContext();
     RootedObject aJSObj(cx, aJSObjArg);
-    JSBool ok;
+    bool ok;
     RootedId id(cx);
     nsresult rv = NS_ERROR_FAILURE;
 
@@ -486,7 +486,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WrappedJSIdentity,
 /***************************************************************************/
 
 // static
-JSBool
+bool
 nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
 {
     void* result;
@@ -823,7 +823,7 @@ xpcWrappedJSErrorReporter(JSContext *cx, const char *message,
         ccx.GetXPCContext()->SetException(e);
 }
 
-JSBool
+bool
 nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
                                            const XPTMethodDescriptor* method,
                                            const nsXPTParamInfo& param,
@@ -854,7 +854,7 @@ nsXPCWrappedJSClass::GetArraySizeFromParam(JSContext* cx,
     return true;
 }
 
-JSBool
+bool
 nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
                                                const XPTMethodDescriptor* method,
                                                const nsXPTParamInfo& param,
@@ -962,7 +962,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     nsresult pending_result = xpcc->GetPendingResult();
 
     RootedValue js_exception(cx);
-    JSBool is_js_exception = JS_GetPendingException(cx, js_exception.address());
+    bool is_js_exception = JS_GetPendingException(cx, js_exception.address());
 
     /* JS might throw an expection whether the reporter was called or not */
     if (is_js_exception) {
@@ -1134,12 +1134,12 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     uint8_t i;
     nsresult retval = NS_ERROR_FAILURE;
     nsresult pending_result = NS_OK;
-    JSBool success;
-    JSBool readyToDoTheCall = false;
+    bool success;
+    bool readyToDoTheCall = false;
     nsID  param_iid;
     const nsXPTMethodInfo* info = static_cast<const nsXPTMethodInfo*>(info_);
     const char* name = info->name;
-    JSBool foundDependentParam;
+    bool foundDependentParam;
 
     // Make sure not to set the callee on ccx until after we've gone through
     // the whole nsIXPCFunctionThisTranslator bit.  That code uses ccx to
@@ -1249,7 +1249,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                             if (newThis) {
                                 RootedValue v(cx);
                                 xpcObjectHelper helper(newThis);
-                                JSBool ok =
+                                bool ok =
                                   XPCConvert::NativeInterface2JSObject(
                                       v.address(), nullptr, helper, nullptr,
                                       nullptr, false, nullptr);

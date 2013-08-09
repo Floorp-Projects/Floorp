@@ -3668,8 +3668,7 @@ nsLayoutUtils::GetFirstLinePosition(const nsIFrame* aFrame,
       nsIFrame* kid = aFrame->GetFirstPrincipalChild();
       // kid might be a legend frame here, but that's ok.
       if (GetFirstLinePosition(kid, &kidPosition)) {
-        *aResult = kidPosition + (kid->GetPosition().y -
-                                  kid->GetRelativeOffset().y);
+        *aResult = kidPosition + kid->GetNormalPosition().y;
         return true;
       }
       return false;
@@ -3686,8 +3685,7 @@ nsLayoutUtils::GetFirstLinePosition(const nsIFrame* aFrame,
       nsIFrame *kid = line->mFirstChild;
       LinePosition kidPosition;
       if (GetFirstLinePosition(kid, &kidPosition)) {
-        *aResult = kidPosition + (kid->GetPosition().y -
-                                  kid->GetRelativeOffset().y);
+        *aResult = kidPosition + kid->GetNormalPosition().y;
         return true;
       }
     } else {
@@ -3721,13 +3719,12 @@ nsLayoutUtils::GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult)
       nscoord kidBaseline;
       if (GetLastLineBaseline(kid, &kidBaseline)) {
         // Ignore relative positioning for baseline calculations
-        *aResult = kidBaseline + kid->GetPosition().y -
-          kid->GetRelativeOffset().y;
+        *aResult = kidBaseline + kid->GetNormalPosition().y;
         return true;
       } else if (kid->GetType() == nsGkAtoms::scrollFrame) {
         // Use the bottom of the scroll frame.
         // XXX CSS2.1 really doesn't say what to do here.
-        *aResult = kid->GetRect().YMost() - kid->GetRelativeOffset().y;
+        *aResult = kid->GetNormalPosition().y + kid->GetRect().height;
         return true;
       }
     } else {
@@ -3754,7 +3751,7 @@ CalculateBlockContentBottom(nsBlockFrame* aFrame)
        line != line_end; ++line) {
     if (line->IsBlock()) {
       nsIFrame* child = line->mFirstChild;
-      nscoord offset = child->GetRect().y - child->GetRelativeOffset().y;
+      nscoord offset = child->GetNormalPosition().y;
       contentBottom = std::max(contentBottom,
                         nsLayoutUtils::CalculateContentBottom(child) + offset);
     }
@@ -3790,7 +3787,7 @@ nsLayoutUtils::CalculateContentBottom(nsIFrame* aFrame)
         nsFrameList::Enumerator childFrames(lists.CurrentList()); 
         for (; !childFrames.AtEnd(); childFrames.Next()) {
           nsIFrame* child = childFrames.get();
-          nscoord offset = child->GetRect().y - child->GetRelativeOffset().y;
+          nscoord offset = child->GetNormalPosition().y;
           contentBottom = std::max(contentBottom,
                                  CalculateContentBottom(child) + offset);
         }

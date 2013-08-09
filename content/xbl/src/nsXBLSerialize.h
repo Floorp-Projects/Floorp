@@ -8,7 +8,6 @@
 
 #include "jsapi.h"
 
-#include "nsIScriptContext.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsINameSpaceManager.h"
@@ -77,13 +76,11 @@ typedef uint8_t XBLBindingSerializeDetails;
 PR_STATIC_ASSERT(XBLBinding_Serialize_CustomNamespace >= kNameSpaceID_LastBuiltin);
 
 nsresult
-XBL_SerializeFunction(nsIScriptContext* aContext,
-                      nsIObjectOutputStream* aStream,
+XBL_SerializeFunction(nsIObjectOutputStream* aStream,
                       JS::Handle<JSObject*> aFunctionObject);
 
 nsresult
-XBL_DeserializeFunction(nsIScriptContext* aContext,
-                        nsIObjectInputStream* aStream,
+XBL_DeserializeFunction(nsIObjectInputStream* aStream,
                         JS::MutableHandle<JSObject*> aFunctionObject);
 
 #endif // nsXBLSerialize_h__

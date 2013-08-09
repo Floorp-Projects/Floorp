@@ -653,24 +653,24 @@ typedef js::HashMap<void *,
                     js::DefaultHasher<void *>,
                     js::SystemAllocPolicy> RootedValueMap;
 
-extern JSBool
+extern bool
 AddValueRoot(JSContext *cx, js::Value *vp, const char *name);
 
-extern JSBool
+extern bool
 AddValueRootRT(JSRuntime *rt, js::Value *vp, const char *name);
 
-extern JSBool
+extern bool
 AddStringRoot(JSContext *cx, JSString **rp, const char *name);
 
-extern JSBool
+extern bool
 AddObjectRoot(JSContext *cx, JSObject **rp, const char *name);
 
-extern JSBool
+extern bool
 AddScriptRoot(JSContext *cx, JSScript **rp, const char *name);
 
 } /* namespace js */
 
-extern JSBool
+extern bool
 js_InitGC(JSRuntime *rt, uint32_t maxbytes);
 
 extern void

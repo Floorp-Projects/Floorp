@@ -74,13 +74,13 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
 {
   nsXBLDocumentInfo* docInfo =
     static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(obj));
-  nsContentUtils::DeferredFinalize(static_cast<nsIScriptGlobalObjectOwner*>(docInfo));
+  nsContentUtils::DeferredFinalize(docInfo);
   
   nsXBLJSClass* c = static_cast<nsXBLJSClass*>(::JS_GetClass(obj));
   c->Drop();
 }
 
-static JSBool
+static bool
 XBLEnumerate(JSContext *cx, JS::Handle<JSObject*> obj)
 {
   nsXBLPrototypeBinding* protoBinding =
@@ -178,8 +178,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLBinding)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
                                      "mPrototypeBinding->XBLDocumentInfo()");
-  cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObjectOwner*>(
-                      tmp->mPrototypeBinding->XBLDocumentInfo()));
+  cb.NoteXPCOMChild(tmp->mPrototypeBinding->XBLDocumentInfo());
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNextBinding)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDefaultInsertionPoint)

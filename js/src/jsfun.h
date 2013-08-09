@@ -411,7 +411,7 @@ DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,
                gc::AllocKind allocKind = JSFunction::FinalizeKind,
                NewObjectKind newKind = GenericObject);
 
-extern JSBool
+extern bool
 fun_resolve(JSContext *cx, js::HandleObject obj, js::HandleId id,
             unsigned flags, js::MutableHandleObject objp);
 

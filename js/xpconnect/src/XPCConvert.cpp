@@ -45,7 +45,7 @@ using namespace JS;
 /***********************************************************/
 
 // static
-JSBool
+bool
 XPCConvert::IsMethodReflectable(const XPTMethodDescriptor& info)
 {
     if (XPT_MD_IS_NOTXPCOM(info.flags) || XPT_MD_IS_HIDDEN(info.flags))
@@ -78,7 +78,7 @@ UnwrapNativeCPOW(nsISupports* wrapper)
 /***************************************************************************/
 
 // static
-JSBool
+bool
 XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
 {
     JSClass* jsclass = js::GetObjectJSClass(obj);
@@ -96,7 +96,7 @@ XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
 /***************************************************************************/
 
 // static
-JSBool
+bool
 XPCConvert::NativeData2JS(jsval* d, const void* s,
                           const nsXPTType& type, const nsID* iid, nsresult* pErr)
 {
@@ -377,15 +377,15 @@ bool ConvertToPrimitive(JSContext *cx, HandleValue v, T *retval)
 }
 
 // static
-JSBool
+bool
 XPCConvert::JSData2Native(void* d, HandleValue s,
                           const nsXPTType& type,
-                          JSBool useAllocator, const nsID* iid,
+                          bool useAllocator, const nsID* iid,
                           nsresult* pErr)
 {
     NS_PRECONDITION(d, "bad param");
 
-    JSBool isDOMString = true;
+    bool isDOMString = true;
 
     AutoJSContext cx;
     if (pErr)
@@ -489,7 +489,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
         const PRUnichar* chars = nullptr;
         JSString* str = nullptr;
-        JSBool isNewString = false;
+        bool isNewString = false;
         uint32_t length = 0;
 
         if (JSVAL_IS_VOID(s)) {
@@ -772,7 +772,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     return true;
 }
 
-inline JSBool
+inline bool
 CreateHolderIfNeeded(HandleObject obj, jsval* d,
                      nsIXPConnectJSObjectHolder** dest)
 {
@@ -791,7 +791,7 @@ CreateHolderIfNeeded(HandleObject obj, jsval* d,
 
 /***************************************************************************/
 // static
-JSBool
+bool
 XPCConvert::NativeInterface2JSObject(jsval* d,
                                      nsIXPConnectJSObjectHolder** dest,
                                      xpcObjectHelper& aHelper,
@@ -960,7 +960,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
 /***************************************************************************/
 
 // static
-JSBool
+bool
 XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
                                      const nsID* iid,
                                      nsISupports* aOuter,
@@ -1169,7 +1169,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
 
 
             unsigned ignored;
-            JSBool found;
+            bool found;
 
             // heuristic to see if it might be usable as an xpcexception
             if (!JS_GetPropertyAttributes(cx, obj, "message", &ignored, &found))
@@ -1223,7 +1223,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
         // lets see if it looks like an nsresult
         nsresult rv;
         double number;
-        JSBool isResult = false;
+        bool isResult = false;
 
         if (JSVAL_IS_INT(s)) {
             rv = (nsresult) JSVAL_TO_INT(s);
@@ -1268,7 +1268,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
     }
 
     // otherwise we'll just try to convert it to a string
-    // Note: e.g., JSBools get converted to JSStrings by this code.
+    // Note: e.g., bools get converted to JSStrings by this code.
 
     JSString* str = JS_ValueToString(cx, s);
     if (str) {
@@ -1344,7 +1344,7 @@ XPCConvert::JSErrorToXPCException(const char* message,
 #endif
 
 // static
-JSBool
+bool
 XPCConvert::NativeArray2JS(jsval* d, const void** s,
                            const nsXPTType& type, const nsID* iid,
                            uint32_t count, nsresult* pErr)
@@ -1423,7 +1423,7 @@ failure:
 // of the array. If the check succeeds, check that the size
 // of the output does not exceed UINT32_MAX bytes. Allocate
 // the memory and copy the elements by memcpy.
-static JSBool
+static bool
 CheckTargetAndPopulate(const nsXPTType& type,
                        uint8_t requiredType,
                        size_t typeSize,
@@ -1469,7 +1469,7 @@ CheckTargetAndPopulate(const nsXPTType& type,
 // are not supported.
 
 // static
-JSBool
+bool
 XPCConvert::JSTypedArray2Native(void** d,
                                 JSObject* jsArray,
                                 uint32_t count,
@@ -1574,7 +1574,7 @@ XPCConvert::JSTypedArray2Native(void** d,
 }
 
 // static
-JSBool
+bool
 XPCConvert::JSArray2Native(void** d, HandleValue s,
                            uint32_t count, const nsXPTType& type,
                            const nsID* iid, nsresult* pErr)
@@ -1714,7 +1714,7 @@ failure:
 }
 
 // static
-JSBool
+bool
 XPCConvert::NativeStringWithSize2JS(jsval* d, const void* s,
                                     const nsXPTType& type,
                                     uint32_t count,
@@ -1758,7 +1758,7 @@ XPCConvert::NativeStringWithSize2JS(jsval* d, const void* s,
 }
 
 // static
-JSBool
+bool
 XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                                     uint32_t count, const nsXPTType& type,
                                     nsresult* pErr)

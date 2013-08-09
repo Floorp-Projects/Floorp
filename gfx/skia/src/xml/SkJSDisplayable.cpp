@@ -60,19 +60,19 @@ public:
     SkJSDisplayable() : fDisplayable(NULL) {}
     ~SkJSDisplayable() { delete fDisplayable; }
     static void Destructor(JSContext *cx, JSObject *obj);
-    static JSBool GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
-    static JSBool SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+    static bool GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+    static bool SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
     static SkCanvas* gCanvas;
     static SkPaint* gPaint;
-    static JSBool Draw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+    static bool Draw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
     SkDisplayable* fDisplayable;
 };
 
 SkCanvas* SkJSDisplayable::gCanvas;
 SkPaint* SkJSDisplayable::gPaint;
 
-JSBool SkJSDisplayable::Draw(JSContext *cx, JSObject *obj, uintN argc,
-                                    jsval *argv, jsval *rval)
+bool SkJSDisplayable::Draw(JSContext *cx, JSObject *obj, uintN argc,
+                           jsval *argv, jsval *rval)
 {
     SkJSDisplayable *p = (SkJSDisplayable*) JS_GetPrivate(cx, obj);
     SkASSERT(p->fDisplayable->isDrawable());
@@ -93,7 +93,7 @@ static JSPropertySpec* gDisplayableProperties[kNumberOfTypes];
 static JSClass gDisplayableClasses[kNumberOfTypes];
 
 #define JS_INIT(_prefix, _class) \
-static JSBool _class##Constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) { \
+static bool _class##Constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval) { \
     SkJSDisplayable* jsDisplayable = new SkJSDisplayable(); \
     jsDisplayable->fDisplayable = new _prefix##_class(); \
     JS_SetPrivate(cx, obj, (void*) jsDisplayable); \
@@ -215,8 +215,8 @@ void SkJSDisplayable::Destructor(JSContext *cx, JSObject *obj) {
     delete (SkJSDisplayable*) JS_GetPrivate(cx, obj);
 }
 
-JSBool SkJSDisplayable::GetProperty(JSContext *cx, JSObject *obj, jsval id,
-                                 jsval *vp)
+bool SkJSDisplayable::GetProperty(JSContext *cx, JSObject *obj, jsval id,
+                                  jsval *vp)
 {
     if (JSVAL_IS_INT(id) == 0)
         return true;
@@ -293,7 +293,7 @@ JSBool SkJSDisplayable::GetProperty(JSContext *cx, JSObject *obj, jsval id,
     return true;
 }
 
-JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp) {
+bool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp) {
     if (JSVAL_IS_INT(id) == 0)
         return true;
     SkJSDisplayable *p = (SkJSDisplayable *) JS_GetPrivate(cx, obj);

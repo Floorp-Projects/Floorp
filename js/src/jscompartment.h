@@ -295,7 +295,7 @@ struct JSCompartment
     bool wrapId(JSContext *cx, jsid *idp);
     bool wrap(JSContext *cx, js::PropertyOp *op);
     bool wrap(JSContext *cx, js::StrictPropertyOp *op);
-    bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
+    bool wrap(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
     bool putWrapper(const js::CrossCompartmentKey& wrapped, const js::Value& wrapper);

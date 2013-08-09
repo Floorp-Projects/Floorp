@@ -9,25 +9,6 @@ const Cu = Components.utils;
 
 const CACHE_MAX_GROUP_ENTRIES = 100;
 
-
-// We have a whitelist for getting/setting. This is because
-// there are potential privacy issues with a compromised
-// content process checking the user's content preferences
-// and using that to discover all the websites visited, etc.
-// Also there are both potential race conditions (if two processes
-// set more than one value in succession, and the values
-// only make sense together), as well as security issues, if
-// a compromised content process can send arbitrary setPref
-// messages. The whitelist contains only those settings that
-// are not at risk for either.
-// We currently whitelist saving/reading the last directory of file
-// uploads, and the last current spellchecker dictionary which are so far
-// the only need we have identified.
-const REMOTE_WHITELIST = [
-  "browser.upload.lastDir",
-  "spellcheck.lang",
-];
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
@@ -41,75 +22,11 @@ function electrolify(service) {
   service.wrappedJSObject = service;
 
   var appInfo = Cc["@mozilla.org/xre/app-info;1"];
-  if (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType ==
-      Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-    // Parent process
-
-    service.messageManager = Cc["@mozilla.org/parentprocessmessagemanager;1"].
-                             getService(Ci.nsIMessageBroadcaster);
-
-    // Setup listener for child messages. We don't need to call
-    // addMessageListener as the wakeup service will do that for us.
-    service.receiveMessage = function(aMessage) {
-      var json = aMessage.json;
-
-      if (REMOTE_WHITELIST.indexOf(json.name) == -1)
-        return { succeeded: false };
-
-      switch (aMessage.name) {
-        case "ContentPref:getPref":
-          return { succeeded: true,
-                   value: service.getPref(json.group, json.name, json.value) };
-
-        case "ContentPref:setPref":
-          service.setPref(json.group, json.name, json.value);
-          return { succeeded: true };
-      }
-    };
-  } else {
+  if (appInfo && appInfo.getService(Ci.nsIXULRuntime).processType !=
+      Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
+  {
     // Child process
-
     service._dbInit = function(){}; // No local DB
-
-    service.messageManager = Cc["@mozilla.org/childprocessmessagemanager;1"].
-                             getService(Ci.nsISyncMessageSender);
-
-    // Child method remoting
-    [
-      ['getPref', ['group', 'name'], ['_parseGroupParam']],
-      ['setPref', ['group', 'name', 'value'], ['_parseGroupParam']],
-    ].forEach(function(data) {
-      var method = data[0];
-      var params = data[1];
-      var parsers = data[2];
-      service[method] = function __remoted__() {
-        var json = {};
-        for (var i = 0; i < params.length; i++) {
-          if (params[i]) {
-            json[params[i]] = arguments[i];
-            if (parsers[i])
-              json[params[i]] = this[parsers[i]](json[params[i]]);
-          }
-        }
-        var ret = service.messageManager.sendSyncMessage('ContentPref:' + method, json)[0];
-        if (!ret.succeeded)
-          throw "ContentPrefs remoting failed to pass whitelist";
-        return ret.value;
-      };
-    });
-
-    // Listen to preference change notifications from the parent and notify
-    // observers in the child process according to the change
-    service.messageManager.addMessageListener("ContentPref:notifyPrefSet",
-      function(aMessage) {
-        var json = aMessage.json;
-        service._notifyPrefSet(json.group, json.name, json.value);
-      });
-    service.messageManager.addMessageListener("ContentPref:notifyPrefRemoved",
-      function(aMessage) {
-        var json = aMessage.json;
-        service._notifyPrefRemoved(json.group, json.name);
-      });
   }
 }
 
@@ -314,6 +231,8 @@ ContentPrefService.prototype = {
   // nsIContentPrefService
 
   getPref: function ContentPrefService_getPref(aGroup, aName, aContext, aCallback) {
+    warnDeprecated();
+
     if (!aName)
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -339,6 +258,8 @@ ContentPrefService.prototype = {
   },
 
   setPref: function ContentPrefService_setPref(aGroup, aName, aValue, aContext) {
+    warnDeprecated();
+
     // If the pref is already set to the value, there's nothing more to do.
     var currentValue = this.getPref(aGroup, aName, aContext);
     if (typeof currentValue != "undefined") {
@@ -350,7 +271,7 @@ ContentPrefService.prototype = {
 
     if (aContext && aContext.usePrivateBrowsing) {
       this._privModeStorage.setWithCast(group, aName, aValue);
-      this._broadcastPrefSet(group, aName, aValue);
+      this._notifyPrefSet(group, aName, aValue);
       return;
     }
 
@@ -372,16 +293,20 @@ ContentPrefService.prototype = {
       this._insertPref(groupID, settingID, aValue);
 
     this._cache.setWithCast(group, aName, aValue);
-    this._broadcastPrefSet(group, aName, aValue);
+    this._notifyPrefSet(group, aName, aValue);
   },
 
   hasPref: function ContentPrefService_hasPref(aGroup, aName, aContext) {
+    warnDeprecated();
+
     // XXX If consumers end up calling this method regularly, then we should
     // optimize this to query the database directly.
     return (typeof this.getPref(aGroup, aName, aContext) != "undefined");
   },
 
   hasCachedPref: function ContentPrefService_hasCachedPref(aGroup, aName, aContext) {
+    warnDeprecated();
+
     if (!aName)
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -392,6 +317,8 @@ ContentPrefService.prototype = {
   },
 
   removePref: function ContentPrefService_removePref(aGroup, aName, aContext) {
+    warnDeprecated();
+
     // If there's no old value, then there's nothing to remove.
     if (!this.hasPref(aGroup, aName, aContext))
       return;
@@ -400,7 +327,7 @@ ContentPrefService.prototype = {
 
     if (aContext && aContext.usePrivateBrowsing) {
       this._privModeStorage.remove(group, aName);
-      this._broadcastPrefRemoved(group, aName);
+      this._notifyPrefRemoved(group, aName);
       return;
     }
 
@@ -423,10 +350,12 @@ ContentPrefService.prototype = {
       this._deleteGroupIfUnused(groupID);
 
     this._cache.remove(group, aName);
-    this._broadcastPrefRemoved(group, aName);
+    this._notifyPrefRemoved(group, aName);
   },
 
   removeGroupedPrefs: function ContentPrefService_removeGroupedPrefs(aContext) {
+    warnDeprecated();
+
     // will not delete global preferences
     if (aContext && aContext.usePrivateBrowsing) {
         // keep only global prefs
@@ -450,6 +379,8 @@ ContentPrefService.prototype = {
   },
 
   removePrefsByName: function ContentPrefService_removePrefsByName(aName, aContext) {
+    warnDeprecated();
+
     if (!aName)
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -458,7 +389,7 @@ ContentPrefService.prototype = {
       for (let [group, name, ] in this._privModeStorage) {
         if (name === aName) {
           this._privModeStorage.remove(group, aName);
-          this._broadcastPrefRemoved(group, aName);
+          this._notifyPrefRemoved(group, aName);
         }
       }
     }
@@ -500,12 +431,14 @@ ContentPrefService.prototype = {
       if (groupNames[i]) // ie. not null, which will be last (and i == groupIDs.length)
         this._deleteGroupIfUnused(groupIDs[i]);
       if (!aContext || !aContext.usePrivateBrowsing) {
-        this._broadcastPrefRemoved(groupNames[i], aName);
+        this._notifyPrefRemoved(groupNames[i], aName);
       }
     }
   },
 
   getPrefs: function ContentPrefService_getPrefs(aGroup, aContext) {
+    warnDeprecated();
+
     var group = this._parseGroupParam(aGroup);
     if (aContext && aContext.usePrivateBrowsing) {
         let prefs = Cc["@mozilla.org/hash-property-bag;1"].
@@ -523,6 +456,8 @@ ContentPrefService.prototype = {
   },
 
   getPrefsByName: function ContentPrefService_getPrefsByName(aName, aContext) {
+    warnDeprecated();
+
     if (!aName)
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -547,6 +482,11 @@ ContentPrefService.prototype = {
   _genericObservers: [],
 
   addObserver: function ContentPrefService_addObserver(aName, aObserver) {
+    warnDeprecated();
+    this._addObserver.apply(this, arguments);
+  },
+
+  _addObserver: function ContentPrefService__addObserver(aName, aObserver) {
     var observers;
     if (aName) {
       if (!this._observers[aName])
@@ -561,6 +501,11 @@ ContentPrefService.prototype = {
   },
 
   removeObserver: function ContentPrefService_removeObserver(aName, aObserver) {
+    warnDeprecated();
+    this._removeObserver.apply(this, arguments);
+  },
+
+  _removeObserver: function ContentPrefService__removeObserver(aName, aObserver) {
     var observers;
     if (aName) {
       if (!this._observers[aName])
@@ -619,47 +564,20 @@ ContentPrefService.prototype = {
     }
   },
 
-  /**
-   * Notify all observers in the current process about the removal of a
-   * preference and send a message to all other processes so that they can in
-   * turn notify their observers about the change. This is meant to be called
-   * only in the parent process. Only whitelisted preferences are broadcast to
-   * the child processes.
-   */
-  _broadcastPrefRemoved: function ContentPrefService__broadcastPrefRemoved(aGroup, aName) {
-    this._notifyPrefRemoved(aGroup, aName);
-
-    if (REMOTE_WHITELIST.indexOf(aName) != -1) {
-      this.messageManager.broadcastAsyncMessage('ContentPref:notifyPrefRemoved',
-        { "group": aGroup, "name": aName } );
-    }
-  },
-
-  /**
-   * Notify all observers in the current process about a preference change and
-   * send a message to all other processes so that they can in turn notify
-   * their observers about the change. This is meant to be called only in the
-   * parent process. Only whitelisted preferences are broadcast to the child
-   * processes.
-   */
-  _broadcastPrefSet: function ContentPrefService__broadcastPrefSet(aGroup, aName, aValue) {
-    this._notifyPrefSet(aGroup, aName, aValue);
-
-    if (REMOTE_WHITELIST.indexOf(aName) != -1) {
-      this.messageManager.broadcastAsyncMessage('ContentPref:notifyPrefSet',
-        { "group": aGroup, "name": aName, "value": aValue } );
-    }
-  },
-
-  _grouper: null,
   get grouper() {
-    if (!this._grouper)
-      this._grouper = Cc["@mozilla.org/content-pref/hostname-grouper;1"].
-                      getService(Ci.nsIContentURIGrouper);
+    warnDeprecated();
     return this._grouper;
+  },
+  __grouper: null,
+  get _grouper() {
+    if (!this.__grouper)
+      this.__grouper = Cc["@mozilla.org/content-pref/hostname-grouper;1"].
+                       getService(Ci.nsIContentURIGrouper);
+    return this.__grouper;
   },
 
   get DBConnection() {
+    warnDeprecated();
     return this._dbConnection;
   },
 
@@ -1319,6 +1237,13 @@ ContentPrefService.prototype = {
                                Cr.NS_ERROR_ILLEGAL_VALUE);
   },
 };
+
+function warnDeprecated() {
+  Cu.import("resource://gre/modules/Deprecated.jsm");
+  Deprecated.warning("nsIContentPrefService is deprecated. Please use nsIContentPrefService2 instead.",
+                     "https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIContentPrefService2",
+                     Components.stack.caller);
+}
 
 
 function HostnameGrouper() {}

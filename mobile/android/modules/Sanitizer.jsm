@@ -14,13 +14,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
 
 function dump(a) {
-  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
+  Services.console.logStringMessage(a);
 }
 
 function sendMessageToJava(aMessage) {
-  return Cc["@mozilla.org/android/bridge;1"]
-           .getService(Ci.nsIAndroidBridge)
-           .handleGeckoMessage(JSON.stringify(aMessage));
+  return Services.androidBridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
 
 this.EXPORTED_SYMBOLS = ["Sanitizer"];

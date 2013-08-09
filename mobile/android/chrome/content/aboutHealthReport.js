@@ -25,9 +25,7 @@ const EVENT_HEALTH_REQUEST = "HealthReport:Request";
 const EVENT_HEALTH_RESPONSE = "HealthReport:Response";
 
 function sendMessageToJava(message) {
-  return Cc["@mozilla.org/android/bridge;1"]
-    .getService(Ci.nsIAndroidBridge)
-    .handleGeckoMessage(JSON.stringify(message));
+  return Services.androidBridge.handleGeckoMessage(JSON.stringify(message));
 }
 
 // about:healthreport prefs are stored in Firefox's default Android

@@ -279,6 +279,8 @@ public:
 
 protected:
 
+  virtual void WindowUsesOMTC() MOZ_OVERRIDE;
+
   // A magic number to identify the FAKETRACKPOINTSCROLLABLE window created
   // when the trackpoint hack is enabled.
   enum { eFakeTrackPointScrollableID = 0x46545053 };

@@ -445,7 +445,7 @@ CompareCountArrays(JSContext *cx, JSObject *aBefore, JSObject *aAfter)
       return NS_ERROR_UNEXPECTED;
     }
 
-    JSBool same = true;
+    bool same = true;
     if (!JS_LooselyEqual(cx, before_num, after_num, &same)) {
       return NS_ERROR_UNEXPECTED;
     } else {

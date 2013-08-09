@@ -8,6 +8,7 @@ TEST_DIRS += ['test']
 
 EXTRA_JS_MODULES += [
     'BrowserNewTabPreloader.jsm',
+    'ContentClick.jsm',
     'NetworkPrioritizer.jsm',
     'SharedFrame.jsm',
     'SignInToWebsite.jsm',
@@ -26,7 +27,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
 
 EXTRA_PP_JS_MODULES += [
-    'AboutHome.jsm',
+    'AboutHomeUtils.jsm',
     'RecentWindow.jsm',
 ]
 

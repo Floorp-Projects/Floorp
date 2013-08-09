@@ -659,7 +659,7 @@ XPCJSRuntime::CustomGCCallback(JSGCStatus status)
 }
 
 /* static */ void
-XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool isCompartmentGC)
+XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartmentGC)
 {
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if (!self)
@@ -1206,7 +1206,7 @@ xpc::SimulateActivityCallback(bool aActive)
 
 //static
 void
-XPCJSRuntime::ActivityCallback(void *arg, JSBool active)
+XPCJSRuntime::ActivityCallback(void *arg, bool active)
 {
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
     self->mWatchdogManager->RecordRuntimeActivity(active);
@@ -2616,7 +2616,7 @@ JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
 } // namespace xpc
 
 #ifdef MOZ_CRASHREPORTER
-static JSBool
+static bool
 DiagnosticMemoryCallback(void *ptr, size_t size)
 {
     return CrashReporter::RegisterAppMemory(ptr, size) == NS_OK;
@@ -2947,7 +2947,7 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
 // InternStaticDictionaryJSVals is automatically generated.
 bool InternStaticDictionaryJSVals(JSContext* aCx);
 
-JSBool
+bool
 XPCJSRuntime::OnJSContextNew(JSContext *cx)
 {
     // If we were the first cx ever created (like the SafeJSContext), the caller

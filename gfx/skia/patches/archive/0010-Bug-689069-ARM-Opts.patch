@@ -16,7 +16,7 @@ index f2e7a83..b2717d7 100644
 @@ -74,7 +74,7 @@ extern "C" {
  #endif
  
- static JSBool
+ static bool
 -global_enumerate(JSContext *cx, JSObject *obj)
 +global_enumerate(JSContext *cx, JSHandleObject *obj)
  {
@@ -25,7 +25,7 @@ index f2e7a83..b2717d7 100644
 @@ -84,7 +84,7 @@ global_enumerate(JSContext *cx, JSObject *obj)
  }
  
- static JSBool
+ static bool
 -global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **objp)
 +global_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags, JSObject **objp)
  {

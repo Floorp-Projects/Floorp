@@ -1091,9 +1091,7 @@ nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame)
 
   // Create a SelectionController
   mSelCon = new nsTextInputSelectionImpl(frameSel, shell, rootNode);
-  NS_ENSURE_TRUE(mSelCon, NS_ERROR_OUT_OF_MEMORY);
   mTextListener = new nsTextInputListener(mTextCtrlElement);
-  NS_ENSURE_TRUE(mTextListener, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(mTextListener);
 
   mTextListener->SetFrame(mBoundFrame);

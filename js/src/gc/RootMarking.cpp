@@ -23,8 +23,8 @@
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
-# include "ion/IonFrameIterator.h"
-# include "ion/IonMacroAssembler.h"
+# include "jit/IonFrameIterator.h"
+# include "jit/IonMacroAssembler.h"
 #endif
 #include "js/HashTable.h"
 #include "vm/Debugger.h"

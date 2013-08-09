@@ -59,7 +59,7 @@
 #include "builtin/TestingFunctions.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/Parser.h"
-#include "ion/Ion.h"
+#include "jit/Ion.h"
 #include "perf/jsperf.h"
 #include "shell/jsheaptools.h"
 #include "shell/jsoptparse.h"
@@ -126,7 +126,7 @@ static bool enableAsmJS = true;
 
 static bool printTiming = false;
 
-static JSBool
+static bool
 SetTimeoutValue(JSContext *cx, double t);
 
 static bool
@@ -344,7 +344,7 @@ GetContextData(JSContext *cx)
     return data;
 }
 
-static JSBool
+static bool
 ShellOperationCallback(JSContext *cx)
 {
     if (!gTimedOut)
@@ -780,7 +780,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 LoadScript(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -937,7 +937,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_GetProperty(cx, opts, "newContext", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
-            JSBool b;
+            bool b;
             if (!JS_ValueToBoolean(cx, v, &b))
                 return false;
             newContext = b;
@@ -946,7 +946,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_GetProperty(cx, opts, "compileAndGo", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
-            JSBool b;
+            bool b;
             if (!JS_ValueToBoolean(cx, v, &b))
                 return false;
             compileAndGo = b;
@@ -955,7 +955,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_GetProperty(cx, opts, "noScriptRval", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
-            JSBool b;
+            bool b;
             if (!JS_ValueToBoolean(cx, v, &b))
                 return false;
             noScriptRval = b;
@@ -1015,7 +1015,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_GetProperty(cx, opts, "catchTermination", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
-            JSBool b;
+            bool b;
             if (!JS_ValueToBoolean(cx, v, &b))
                 return false;
             catchTermination = b;
@@ -1024,7 +1024,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!JS_GetProperty(cx, opts, "saveFrameChain", &v))
             return false;
         if (!JSVAL_IS_VOID(v)) {
-            JSBool b;
+            bool b;
             if (!JS_ValueToBoolean(cx, v, &b))
                 return false;
             saveFrameChain = b;
@@ -1328,7 +1328,7 @@ Now(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 PrintInternal(JSContext *cx, const CallArgs &args, FILE *file)
 {
     for (unsigned i = 0; i < args.length(); i++) {
@@ -1407,7 +1407,7 @@ AssertEq(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    JSBool same;
+    bool same;
     if (!JS_SameValue(cx, args[0], args[1], &same))
         return false;
     if (!same) {
@@ -1484,7 +1484,7 @@ SetDebug(JSContext *cx, unsigned argc, jsval *vp)
     return ok;
 }
 
-static JSBool
+static bool
 GetScriptAndPCArgs(JSContext *cx, unsigned argc, jsval *argv, MutableHandleScript scriptp,
                    int32_t *ip)
 {
@@ -1847,7 +1847,7 @@ JS_STATIC_ASSERT(JSTRY_ITER == 2);
 
 static const char* const TryNoteNames[] = { "catch", "finally", "iter", "loop" };
 
-static JSBool
+static bool
 TryNotes(JSContext *cx, HandleScript script, Sprinter *sp)
 {
     JSTryNote *tn, *tnlimit;
@@ -2459,11 +2459,11 @@ typedef struct ComplexObject {
     JSObject *outer;
 } ComplexObject;
 
-static JSBool
+static bool
 sandbox_enumerate(JSContext *cx, HandleObject obj)
 {
     RootedValue v(cx);
-    JSBool b;
+    bool b;
 
     if (!JS_GetProperty(cx, obj, "lazy", &v))
         return false;
@@ -2472,12 +2472,12 @@ sandbox_enumerate(JSContext *cx, HandleObject obj)
     return !b || JS_EnumerateStandardClasses(cx, obj);
 }
 
-static JSBool
+static bool
 sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                 MutableHandleObject objp)
 {
     RootedValue v(cx);
-    JSBool b, resolved;
+    bool b, resolved;
 
     if (!JS_GetProperty(cx, obj, "lazy", &v))
         return false;
@@ -2674,12 +2674,12 @@ ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
  * Since obj is native, this isn't totally transparent; properties of a
  * non-native referent may be simplified to data properties.
  */
-static JSBool
+static bool
 CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id,
              unsigned lookupFlags, MutableHandleObject objp)
 {
     RootedShape shape(cx);
-    AutoPropertyDescriptorRooter desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     unsigned propFlags = 0;
     RootedObject obj2(cx);
 
@@ -2691,24 +2691,24 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
             return true;
 
         if (shape->hasSlot()) {
-            desc.value = referent->nativeGetSlot(shape->slot());
+            desc.value().set(referent->nativeGetSlot(shape->slot()));
         } else {
-            desc.value.setUndefined();
+            desc.value().setUndefined();
         }
 
-        desc.attrs = shape->attributes();
-        desc.getter = shape->getter();
-        if (!desc.getter && !(desc.attrs & JSPROP_GETTER))
-            desc.getter = JS_PropertyStub;
-        desc.setter = shape->setter();
-        if (!desc.setter && !(desc.attrs & JSPROP_SETTER))
-            desc.setter = JS_StrictPropertyStub;
-        desc.shortid = shape->shortid();
+        desc.setAttributes(shape->attributes());
+        desc.setGetter(shape->getter());
+        if (!desc.getter() && !desc.hasGetterObject())
+            desc.setGetter(JS_PropertyStub);
+        desc.setSetter(shape->setter());
+        if (!desc.setter() && !desc.hasSetterObject())
+            desc.setSetter(JS_StrictPropertyStub);
+        desc.setShortId(shape->shortid());
         propFlags = shape->getFlags();
     } else if (referent->is<ProxyObject>()) {
         if (!Proxy::getOwnPropertyDescriptor(cx, referent, id, &desc, 0))
             return false;
-        if (!desc.obj)
+        if (!desc.object())
             return true;
     } else {
         if (!JSObject::lookupGeneric(cx, referent, id, objp, &shape))
@@ -2717,24 +2717,23 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
             return true;
         RootedValue value(cx);
         if (!JSObject::getGeneric(cx, referent, referent, id, &value) ||
-            !JSObject::getGenericAttributes(cx, referent, id, &desc.attrs))
+            !JSObject::getGenericAttributes(cx, referent, id, &desc.attributesRef()))
         {
             return false;
         }
-        desc.value = value;
-        desc.attrs &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-        desc.getter = JS_PropertyStub;
-        desc.setter = JS_StrictPropertyStub;
-        desc.shortid = 0;
+        desc.value().set(value);
+        desc.attributesRef() &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+        desc.setGetter(JS_PropertyStub);
+        desc.setSetter(JS_StrictPropertyStub);
+        desc.setShortId(0);
     }
 
-    RootedValue value(cx, desc.value);
     objp.set(obj);
-    return DefineNativeProperty(cx, obj, id, value, desc.getter, desc.setter,
-                                desc.attrs, propFlags, desc.shortid);
+    return DefineNativeProperty(cx, obj, id, desc.value(), desc.getter(), desc.setter(),
+                                desc.attributes(), propFlags, desc.shortid());
 }
 
-static JSBool
+static bool
 resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                  MutableHandleObject objp)
 {
@@ -2743,7 +2742,7 @@ resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return CopyProperty(cx, obj, vobj, id, flags, objp);
 }
 
-static JSBool
+static bool
 resolver_enumerate(JSContext *cx, HandleObject obj)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
@@ -3044,7 +3043,7 @@ CancelExecution(JSRuntime *rt)
     }
 }
 
-static JSBool
+static bool
 SetTimeoutValue(JSContext *cx, double t)
 {
     /* NB: The next condition also filter out NaNs. */
@@ -3309,7 +3308,7 @@ struct FreeOnReturn
     }
 };
 
-static JSBool
+static bool
 ReadFile(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3336,7 +3335,7 @@ ReadFile(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
         JSString *opt = JS_ValueToString(cx, args[1]);
         if (!opt)
             return false;
-        JSBool match;
+        bool match;
         if (!JS_StringEqualsAscii(cx, opt, "binary", &match))
             return false;
         if (match) {
@@ -4086,11 +4085,11 @@ enum its_tinyid {
     ITS_CUSTOM, ITS_CUSTOMRDONLY, ITS_CUSTOMNATIVE
 };
 
-static JSBool
+static bool
 its_getter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
 
-static JSBool
-its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp);
+static bool
+its_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp);
 
 static bool
 its_get_customNative(JSContext *cx, unsigned argc, jsval *vp);
@@ -4116,10 +4115,10 @@ static const JSPropertySpec its_props[] = {
     {NULL,0,0,JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}
 };
 
-static JSBool its_noisy;    /* whether to be noisy when finalizing it */
-static JSBool its_enum_fail;/* whether to fail when enumerating it */
+static bool its_noisy;    /* whether to be noisy when finalizing it */
+static bool its_enum_fail;/* whether to fail when enumerating it */
 
-static JSBool
+static bool
 its_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     if (!its_noisy)
@@ -4132,8 +4131,8 @@ its_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
     return true;
 }
 
-static JSBool
-its_delProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded)
+static bool
+its_delProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
     if (!its_noisy) {
         *succeeded = true;
@@ -4150,7 +4149,7 @@ its_delProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded)
     return true;
 }
 
-static JSBool
+static bool
 its_getProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     if (!its_noisy)
@@ -4163,8 +4162,8 @@ its_getProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
     return true;
 }
 
-static JSBool
-its_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
+static bool
+its_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
     ToStringHelper idString(cx, id);
     if (its_noisy) {
@@ -4188,7 +4187,7 @@ its_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Mut
  * Its enumerator, implemented using the "new" enumerate API,
  * see class flags.
  */
-static JSBool
+static bool
 its_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
               jsval *statep, jsid *idp)
 {
@@ -4232,7 +4231,7 @@ its_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
     return true;
 }
 
-static JSBool
+static bool
 its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp)
 {
@@ -4245,7 +4244,7 @@ its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-static JSBool
+static bool
 its_convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
 {
     if (its_noisy)
@@ -4267,7 +4266,7 @@ static JSClass its_class = {
     its_convert,      its_finalize,
 };
 
-static JSBool
+static bool
 its_getter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     if (JS_GetClass(obj) != &its_class) {
@@ -4279,8 +4278,8 @@ its_getter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
     return true;
 }
 
-static JSBool
-its_setter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
+static bool
+its_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
     if (JS_GetClass(obj) != &its_class)
         return true;
@@ -4352,7 +4351,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 }
 
 #if defined(SHELL_HACK) && defined(DEBUG) && defined(XP_UNIX)
-static JSBool
+static bool
 Exec(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSFunction *fun;
@@ -4416,7 +4415,7 @@ Exec(JSContext *cx, unsigned argc, jsval *vp)
 }
 #endif
 
-static JSBool
+static bool
 global_enumerate(JSContext *cx, HandleObject obj)
 {
 #ifdef LAZY_STANDARD_CLASSES
@@ -4426,12 +4425,12 @@ global_enumerate(JSContext *cx, HandleObject obj)
 #endif
 }
 
-static JSBool
+static bool
 global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                MutableHandleObject objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
-    JSBool resolved;
+    bool resolved;
 
     if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
         return false;
@@ -4501,8 +4500,8 @@ JSClass global_class = {
     JS_ConvertStub,   NULL
 };
 
-static JSBool
-env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
+static bool
+env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
 #if !defined XP_OS2 && !defined SOLARIS
@@ -4545,7 +4544,7 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Mut
     return true;
 }
 
-static JSBool
+static bool
 env_enumerate(JSContext *cx, HandleObject obj)
 {
     static bool reflected;
@@ -4573,7 +4572,7 @@ env_enumerate(JSContext *cx, HandleObject obj)
     return true;
 }
 
-static JSBool
+static bool
 env_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp)
 {
@@ -4820,7 +4819,7 @@ dom_constructor(JSContext* cx, unsigned argc, JS::Value *vp)
     return true;
 }
 
-static JSBool
+static bool
 InstanceClassHasProtoAtDepth(HandleObject protoObject, uint32_t protoID, uint32_t depth)
 {
     /* There's only a single (fake) DOM object in the shell, so just return true. */
@@ -5264,7 +5263,7 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
 /* Set the initial counter to 1 so the principal will never be destroyed. */
 JSPrincipals shellTrustedPrincipals = { 1 };
 
-JSBool
+bool
 CheckObjectAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mode,
                   MutableHandleValue vp)
 {
