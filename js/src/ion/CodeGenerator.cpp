@@ -5687,12 +5687,12 @@ bool
 CodeGenerator::visitSetElementCacheV(LSetElementCacheV *ins)
 {
     Register obj = ToRegister(ins->object());
-    Register temp0 = ToRegister(ins->temp0());
-    Register temp1 = ToRegister(ins->temp1());
+    Register unboxIndex = ToTempUnboxRegister(ins->tempToUnboxIndex());
+    Register temp = ToRegister(ins->temp());
     ValueOperand index = ToValue(ins, LSetElementCacheV::Index);
     ConstantOrRegister value = TypedOrValueRegister(ToValue(ins, LSetElementCacheV::Value));
 
-    SetElementIC cache(obj, temp0, temp1, index, value, ins->mir()->strict());
+    SetElementIC cache(obj, unboxIndex, temp, index, value, ins->mir()->strict());
 
     return addCache(ins, allocateCache(cache));
 }
@@ -5701,8 +5701,8 @@ bool
 CodeGenerator::visitSetElementCacheT(LSetElementCacheT *ins)
 {
     Register obj = ToRegister(ins->object());
-    Register temp0 = ToRegister(ins->temp0());
-    Register temp1 = ToRegister(ins->temp1());
+    Register unboxIndex = ToTempUnboxRegister(ins->tempToUnboxIndex());
+    Register temp = ToRegister(ins->temp());
     ValueOperand index = ToValue(ins, LSetElementCacheT::Index);
     ConstantOrRegister value;
     const LAllocation *tmp = ins->value();
@@ -5711,7 +5711,7 @@ CodeGenerator::visitSetElementCacheT(LSetElementCacheT *ins)
     else
         value = TypedOrValueRegister(ins->mir()->value()->type(), ToAnyRegister(tmp));
 
-    SetElementIC cache(obj, temp0, temp1, index, value, ins->mir()->strict());
+    SetElementIC cache(obj, unboxIndex, temp, index, value, ins->mir()->strict());
 
     return addCache(ins, allocateCache(cache));
 }
