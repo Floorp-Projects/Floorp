@@ -1871,7 +1871,7 @@ Assembler::as_b(Label *l, Condition c, bool isPatchable)
         BOffImm inv;
         ret = as_b(inv, c, isPatchable);
     }
-    int32_t check = l->use(ret.getOffset());
+    DebugOnly<int32_t> check = l->use(ret.getOffset());
     JS_ASSERT(check == old);
     return ret;
 }
@@ -1930,7 +1930,7 @@ Assembler::as_bl(Label *l, Condition c)
         BOffImm inv;
         ret = as_bl(inv, c);
     }
-    int32_t check = l->use(ret.getOffset());
+    DebugOnly<int32_t> check = l->use(ret.getOffset());
     JS_ASSERT(check == old);
     return ret;
 }
@@ -2302,7 +2302,6 @@ Assembler::retarget(Label *label, Label *target)
         } else if (target->used()) {
             // The target is not bound but used. Prepend label's branch list
             // onto target's.
-            bool more;
             BufferOffset labelBranchOffset(label);
             BufferOffset next;
 
@@ -2538,8 +2537,8 @@ Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue, Im
     InstructionIterator iter(ptr);
     Register dest;
     Assembler::RelocStyle rs;
-    const uint32_t *val = getPtr32Target(&iter, &dest, &rs);
-    JS_ASSERT((uint32_t)val == expectedValue.value);
+    DebugOnly<const uint32_t *> val = getPtr32Target(&iter, &dest, &rs);
+    JS_ASSERT((uint32_t)(const uint32_t *)val == expectedValue.value);
     reinterpret_cast<MacroAssemblerARM*>(dummy)->ma_movPatchable(Imm32(newValue.value), dest, Always, rs, ptr);
     // L_LDR won't cause any instructions to be updated.
     if (rs != L_LDR) {
