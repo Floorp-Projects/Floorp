@@ -304,12 +304,12 @@ nsXBLProtoImplProperty::Read(nsIScriptContext* aContext,
   MOZ_ASSERT(!mIsCompiled);
   MOZ_ASSERT(!mGetter.GetUncompiled() && !mSetter.GetUncompiled());
 
-  JSContext *cx = aContext->GetNativeContext();
+  AutoPushJSContext cx(aContext->GetNativeContext());
 
   JS::Rooted<JSObject*> getterObject(cx);
   if (aType == XBLBinding_Serialize_GetterProperty ||
       aType == XBLBinding_Serialize_GetterSetterProperty) {
-    nsresult rv = XBL_DeserializeFunction(aContext, aStream, &getterObject);
+    nsresult rv = XBL_DeserializeFunction(aStream, &getterObject);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mJSAttributes |= JSPROP_GETTER | JSPROP_SHARED;
@@ -319,7 +319,7 @@ nsXBLProtoImplProperty::Read(nsIScriptContext* aContext,
   JS::Rooted<JSObject*> setterObject(cx);
   if (aType == XBLBinding_Serialize_SetterProperty ||
       aType == XBLBinding_Serialize_GetterSetterProperty) {
-    nsresult rv = XBL_DeserializeFunction(aContext, aStream, &setterObject);
+    nsresult rv = XBL_DeserializeFunction(aStream, &setterObject);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mJSAttributes |= JSPROP_SETTER | JSPROP_SHARED;
@@ -338,6 +338,7 @@ nsXBLProtoImplProperty::Write(nsIScriptContext* aContext,
                               nsIObjectOutputStream* aStream)
 {
   XBLBindingSerializeDetails type;
+  AutoPushJSContext cx(aContext->GetNativeContext());
 
   if (mJSAttributes & JSPROP_GETTER) {
     type = mJSAttributes & JSPROP_SETTER ?
@@ -365,14 +366,14 @@ nsXBLProtoImplProperty::Write(nsIScriptContext* aContext,
   if (mJSAttributes & JSPROP_GETTER) {
     JS::Handle<JSObject*> function =
       JS::Handle<JSObject*>::fromMarkedLocation(mGetter.AsHeapObject().address());
-    rv = XBL_SerializeFunction(aContext, aStream, function);
+    rv = XBL_SerializeFunction(aStream, function);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (mJSAttributes & JSPROP_SETTER) {
      JS::Handle<JSObject*> function =
       JS::Handle<JSObject*>::fromMarkedLocation(mSetter.AsHeapObject().address());
-    rv = XBL_SerializeFunction(aContext, aStream, function);
+    rv = XBL_SerializeFunction(aStream, function);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
