@@ -272,7 +272,7 @@
       <property name="isEditing" readonly="true">
         <getter>
           <![CDATA[
-            return Elements.urlbarState.getAttribute("mode") == "edit";
+            return Elements.urlbarState.hasAttribute("editing");
           ]]>
         </getter>
       </property>
@@ -284,7 +284,7 @@
             if (this.isEditing)
               return;
 
-            Elements.urlbarState.setAttribute("mode", "edit");
+            Elements.urlbarState.setAttribute("editing", true);
             this._lastKnownGoodURL = this.value;
 
             if (!this.focused)
@@ -306,7 +306,7 @@
             if (!this.isEditing)
               return;
 
-            Elements.urlbarState.setAttribute("mode", "view");
+            Elements.urlbarState.removeAttribute("editing");
             this.closePopup();
             this.formatValue();
 

@@ -15,16 +15,15 @@
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="documenttab">
-    <content observes="bcast_urlbarState">
+    <content>
       <xul:stack class="documenttab-container">
         <html:canvas anonid="thumbnail-canvas" class="documenttab-thumbnail" />
-        <xul:image anonid="favicon" class="documenttab-favicon"
-                   observes="bcast_urlbarState" width="26" height="26"/>
+        <xul:image anonid="favicon" class="documenttab-favicon" width="26" height="26"/>
 
         <xul:label anonid="title" class="documenttab-title" bottom="0" start="0" end="0" crop="end"/>
         <xul:box anonid="selection" class="documenttab-crop"/>
         <xul:box anonid="selection" class="documenttab-selection"/>
-        <xul:button anonid="close" class="documenttab-close" observes="bcast_urlbarState" end="0" top="0"
+        <xul:button anonid="close" class="documenttab-close" end="0" top="0"
                     onclick="event.stopPropagation(); document.getBindingParent(this)._onClose()"
                     label="&closetab.label;"/>
       </xul:stack>
