@@ -16,7 +16,7 @@ namespace js {
 // Create a new JSFunction to replace originalFun as the representation of the
 // function defining the succesfully-validated module 'moduleObj'.
 extern JSFunction *
-NewAsmJSModuleFunction(JSContext *cx, JSFunction *originalFun, HandleObject moduleObj);
+NewAsmJSModuleFunction(ExclusiveContext *cx, JSFunction *originalFun, HandleObject moduleObj);
 
 // Return whether this is the js::Native returned by NewAsmJSModuleFunction.
 extern bool

@@ -194,7 +194,6 @@ IonRuntime::IonRuntime()
     functionWrappers_(NULL),
     osrTempData_(NULL),
     flusher_(NULL),
-    signalHandlersInstalled_(false),
     ionCodeProtected_(false)
 {
 }
@@ -294,8 +293,6 @@ IonRuntime::initialize(JSContext *cx)
             return false;
     }
 
-    signalHandlersInstalled_ = EnsureAsmJSSignalHandlersInstalled(cx->runtime());
-
     return true;
 }
 
@@ -344,7 +341,7 @@ IonRuntime::ensureIonCodeProtected(JSRuntime *rt)
 {
     JS_ASSERT(rt->currentThreadOwnsOperationCallbackLock());
 
-    if (!signalHandlersInstalled_ || ionCodeProtected_ || !ionAlloc_)
+    if (!rt->signalHandlersInstalled() || ionCodeProtected_ || !ionAlloc_)
         return;
 
     // Protect all Ion code in the runtime to trigger an access violation the
@@ -356,7 +353,7 @@ IonRuntime::ensureIonCodeProtected(JSRuntime *rt)
 bool
 IonRuntime::handleAccessViolation(JSRuntime *rt, void *faultingAddress)
 {
-    if (!signalHandlersInstalled_ || !ionAlloc_ || !ionAlloc_->codeContains((char *) faultingAddress))
+    if (!rt->signalHandlersInstalled() || !ionAlloc_ || !ionAlloc_->codeContains((char *) faultingAddress))
         return false;
 
 #ifdef JS_THREADSAFE
@@ -1532,7 +1529,7 @@ AttachFinishedCompilations(JSContext *cx)
     if (!ion || !cx->runtime()->workerThreadState)
         return;
 
-    AutoLockWorkerThreadState lock(cx->runtime());
+    AutoLockWorkerThreadState lock(*cx->runtime()->workerThreadState);
 
     OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
 
