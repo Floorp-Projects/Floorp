@@ -756,7 +756,6 @@ var gBrowserInit = {
 
     // initialize observers and listeners
     // and give C++ access to gBrowser
-    gBrowser.init();
     XULBrowserWindow.init();
     window.QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(nsIWebNavigation)

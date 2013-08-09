@@ -106,7 +106,7 @@ RefTestCmdLineHandler.prototype =
     // Setting this pref makes tests run much faster there.
     branch.setBoolPref("security.fileuri.strict_origin_policy", false);
     // Disable the thumbnailing service
-    branch.setBoolPref("browser.pagethumbnails.capturing_disabled", false);
+    branch.setBoolPref("browser.pagethumbnails.capturing_disabled", true);
 
     var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                            .getService(nsIWindowWatcher);

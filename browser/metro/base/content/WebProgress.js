@@ -134,7 +134,6 @@ const WebProgress = {
       browser.messageManager.removeMessageListener(aMessage.name, arguments.callee);
       aTab._firstPaint = true;
       aTab.scrolledAreaChanged(true);
-      aTab.updateThumbnailSource();
     });
   },
 

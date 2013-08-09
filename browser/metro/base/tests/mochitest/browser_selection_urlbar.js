@@ -78,7 +78,7 @@ gTests.push({
     sendContextMenuClickToElement(window, edit);
     yield waitForEvent(document, "popupshown");
 
-    ok(ContextMenuUI._menuPopup._visible, "is visible");
+    ok(ContextMenuUI._menuPopup.visible, "is visible");
     let paste = document.getElementById("context-paste");
     ok(!paste.hidden, "paste item is visible");
 

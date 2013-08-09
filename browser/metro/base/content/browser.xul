@@ -228,10 +228,7 @@
               <richgrid id="start-remotetabs-grid" set-name="remoteTabs" seltype="multiple" flex="1"/>
             </vbox>
 
-            <!-- Spacer to take extra space in snapped mode. -->
-            <spacer flex="999"/>
           </scrollbox>
-
         </hbox>
       </vbox> <!-- end tray -->
 
