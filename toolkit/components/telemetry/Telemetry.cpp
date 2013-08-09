@@ -1508,9 +1508,9 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::Value *ret)
   if (!durationArray) {
     return NS_ERROR_FAILURE;
   }
-  JSBool ok = JS_DefineProperty(cx, fullReportObj, "durations",
-                                OBJECT_TO_JSVAL(durationArray),
-                                NULL, NULL, JSPROP_ENUMERATE);
+  bool ok = JS_DefineProperty(cx, fullReportObj, "durations",
+                              OBJECT_TO_JSVAL(durationArray),
+                              NULL, NULL, JSPROP_ENUMERATE);
   if (!ok) {
     return NS_ERROR_FAILURE;
   }
@@ -1537,9 +1537,9 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
   if (!moduleArray) {
     return nullptr;
   }
-  JSBool ok = JS_DefineProperty(cx, ret, "memoryMap",
-                                OBJECT_TO_JSVAL(moduleArray),
-                                NULL, NULL, JSPROP_ENUMERATE);
+  bool ok = JS_DefineProperty(cx, ret, "memoryMap",
+                              OBJECT_TO_JSVAL(moduleArray),
+                              NULL, NULL, JSPROP_ENUMERATE);
   if (!ok) {
     return nullptr;
   }

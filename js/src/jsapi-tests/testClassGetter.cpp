@@ -12,7 +12,7 @@
 int called_test_fn;
 int called_test_prop_get;
 
-static JSBool test_prop_get( JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp )
+static bool test_prop_get( JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp )
 {
     called_test_prop_get++;
     return true;

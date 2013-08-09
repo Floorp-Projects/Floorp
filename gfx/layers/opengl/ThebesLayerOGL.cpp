@@ -14,6 +14,7 @@
 #include "ThebesLayerOGL.h"
 #include "gfxUtils.h"
 #include "gfxTeeSurface.h"
+#include "gfxPlatform.h"
 
 #include "base/message_loop.h"
 
@@ -460,15 +461,13 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
     }
 
     if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-      mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
-#else
-      if (!mLayer->GetParent() || !mLayer->GetParent()->SupportsComponentAlphaChildren()) {
+      if (!gfxPlatform::ComponentAlphaEnabled() ||
+          !mLayer->GetParent() ||
+          !mLayer->GetParent()->SupportsComponentAlphaChildren()) {
         mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
       } else {
         contentType = gfxASurface::CONTENT_COLOR;
       }
- #endif
     }
  
     if ((aFlags & PAINT_WILL_RESAMPLE) &&

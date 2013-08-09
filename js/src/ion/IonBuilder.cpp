@@ -5300,7 +5300,7 @@ IonBuilder::jsop_eval(uint32_t argc)
         {
             JSString *str = string->getOperand(1)->toConstant()->value().toString();
 
-            JSBool match;
+            bool match;
             if (!JS_StringEqualsAscii(cx, str, "()", &match))
                 return false;
             if (match) {

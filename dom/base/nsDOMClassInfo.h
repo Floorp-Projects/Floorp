@@ -333,13 +333,13 @@ public:
   NS_IMETHOD OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, JSObject * *_retval) MOZ_OVERRIDE;
 
-  static JSBool GlobalScopePolluterNewResolve(JSContext *cx, JS::Handle<JSObject*> obj,
-                                              JS::Handle<jsid> id, unsigned flags,
-                                              JS::MutableHandle<JSObject*> objp);
-  static JSBool GlobalScopePolluterGetProperty(JSContext *cx, JS::Handle<JSObject*> obj,
-                                               JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
-  static JSBool InvalidateGlobalScopePolluter(JSContext *cx,
-                                              JS::Handle<JSObject*> obj);
+  static bool GlobalScopePolluterNewResolve(JSContext *cx, JS::Handle<JSObject*> obj,
+                                            JS::Handle<jsid> id, unsigned flags,
+                                            JS::MutableHandle<JSObject*> objp);
+  static bool GlobalScopePolluterGetProperty(JSContext *cx, JS::Handle<JSObject*> obj,
+                                             JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
+  static bool InvalidateGlobalScopePolluter(JSContext *cx,
+                                            JS::Handle<JSObject*> obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx,
                                              JS::Handle<JSObject*> obj);
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -443,14 +443,14 @@ extern JSClass sHTMLDocumentAllClass;
 class nsHTMLDocumentSH
 {
 protected:
-  static JSBool GetDocumentAllNodeList(JSContext *cx, JS::Handle<JSObject*> obj,
-                                       nsDocument *doc,
-                                       nsContentList **nodeList);
+  static bool GetDocumentAllNodeList(JSContext *cx, JS::Handle<JSObject*> obj,
+                                     nsDocument *doc,
+                                     nsContentList **nodeList);
 public:
-  static JSBool DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                                       JS::MutableHandle<JS::Value> vp);
-  static JSBool DocumentAllNewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                                      unsigned flags, JS::MutableHandle<JSObject*> objp);
+  static bool DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                                     JS::MutableHandle<JS::Value> vp);
+  static bool DocumentAllNewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                                    unsigned flags, JS::MutableHandle<JSObject*> objp);
   static void ReleaseDocument(JSFreeOp *fop, JSObject *obj);
   static bool CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp);
 };

@@ -1180,6 +1180,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
     }
     break;
   case EFFECT_COMPONENT_ALPHA: {
+      MOZ_ASSERT(gfxPlatform::ComponentAlphaEnabled());
       EffectComponentAlpha* effectComponentAlpha =
         static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
       TextureSourceOGL* sourceOnWhite = effectComponentAlpha->mOnWhite->AsSourceOGL();

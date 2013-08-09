@@ -305,7 +305,7 @@ struct PrimitiveConversionTraits<bool, B> : public DisallowedConversion<bool> {}
 
 template<>
 struct PrimitiveConversionTraits<bool, eDefault> {
-  typedef JSBool jstype;
+  typedef bool jstype;
   typedef bool intermediateType;
   static inline bool converter(JSContext* /* unused */, JS::Handle<JS::Value> v,
                                jstype* retval) {

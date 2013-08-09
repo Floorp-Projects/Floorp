@@ -199,7 +199,7 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
      * object, we collect the object's compartment (and any other compartments
      * scheduled for GC). Otherwise, we collect all compartments.
      */
-    JSBool compartment = false;
+    bool compartment = false;
     if (argc == 1) {
         Value arg = vp[2];
         if (arg.isString()) {

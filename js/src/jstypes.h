@@ -180,16 +180,6 @@
 # error "Implement me"
 #endif
 
-
-/************************************************************************
-** TYPES:       JSBool
-** DESCRIPTION:
-**  This type is deprecated;  avoid it.  See bug 898914.
-************************************************************************/
-typedef int JSBool;
-#define JS_TRUE_DEPRECATED  (int)1
-#define JS_FALSE_DEPRECATED (int)0
-
 /***********************************************************************
 ** MACROS:      JS_LIKELY
 **              JS_UNLIKELY

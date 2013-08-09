@@ -190,7 +190,7 @@ Error(JSContext *cx, const char (&input)[N])
     CHECK(!JS_GetContextPrivate(cx));
     JS_SetContextPrivate(cx, &p);
     JSErrorReporter old = JS_SetErrorReporter(cx, reportJSONEror);
-    JSBool ok = JS_ParseJSON(cx, str.chars(), str.length(), &dummy);
+    bool ok = JS_ParseJSON(cx, str.chars(), str.length(), &dummy);
     JS_SetErrorReporter(cx, old);
     JS_SetContextPrivate(cx, NULL);
 

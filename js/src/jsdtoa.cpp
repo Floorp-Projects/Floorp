@@ -112,7 +112,7 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
 
     /* If Infinity, -Infinity, or NaN, return the string regardless of mode. */
     if (decPt != 9999) {
-        JSBool exponentialNotation = false;
+        bool exponentialNotation = false;
         int minNDigits = 0;  /* Min number of significant digits required */
         char *p;
         char *q;

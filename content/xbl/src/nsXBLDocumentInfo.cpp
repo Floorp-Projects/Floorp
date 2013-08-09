@@ -68,8 +68,8 @@ public:
   // nsIScriptObjectPrincipal methods
   virtual nsIPrincipal* GetPrincipal();
 
-  static JSBool doCheckAccess(JSContext *cx, JS::Handle<JSObject*> obj,
-                              JS::Handle<jsid> id, uint32_t accessType);
+  static bool doCheckAccess(JSContext *cx, JS::Handle<JSObject*> obj,
+                            JS::Handle<jsid> id, uint32_t accessType);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXBLDocGlobalObject,
                                            nsIScriptGlobalObject)
@@ -90,7 +90,7 @@ protected:
   static JSClass gSharedGlobalClass;
 };
 
-JSBool
+bool
 nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JS::Handle<JSObject*> obj,
                                     JS::Handle<jsid> id, uint32_t accessType)
 {
@@ -118,7 +118,7 @@ nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JS::Handle<JSObject*> obj,
   return NS_SUCCEEDED(rv);
 }
 
-static JSBool
+static bool
 nsXBLDocGlobalObject_getProperty(JSContext *cx, JS::Handle<JSObject*> obj,
                                  JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp)
 {
@@ -126,15 +126,15 @@ nsXBLDocGlobalObject_getProperty(JSContext *cx, JS::Handle<JSObject*> obj,
     doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 }
 
-static JSBool
+static bool
 nsXBLDocGlobalObject_setProperty(JSContext *cx, JS::Handle<JSObject*> obj,
-                                 JS::Handle<jsid> id, JSBool strict, JS::MutableHandle<JS::Value> vp)
+                                 JS::Handle<jsid> id, bool strict, JS::MutableHandle<JS::Value> vp)
 {
   return nsXBLDocGlobalObject::
     doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 }
 
-static JSBool
+static bool
 nsXBLDocGlobalObject_checkAccess(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                                  JSAccessMode mode, JS::MutableHandle<JS::Value> vp)
 {
@@ -163,10 +163,10 @@ nsXBLDocGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
   NS_RELEASE(nativeThis);
 }
 
-static JSBool
+static bool
 nsXBLDocGlobalObject_resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id)
 {
-  JSBool did_resolve = false;
+  bool did_resolve = false;
   return JS_ResolveStandardClass(cx, obj, id, &did_resolve);
 }
 

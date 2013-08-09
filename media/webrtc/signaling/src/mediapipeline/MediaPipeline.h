@@ -92,9 +92,16 @@ class MediaPipeline : public sigslot::has_slots<> {
         rtcp_packets_sent_(0),
         rtp_packets_received_(0),
         rtcp_packets_received_(0),
-        muxed_((rtcp_transport_ == NULL) || (rtp_transport_ == rtcp_transport_)),
         pc_(pc),
         description_() {
+      // To indicate rtcp-mux rtcp_transport should be NULL.
+      // Therefore it's an error to send in the same flow for
+      // both rtp and rtcp.
+      MOZ_ASSERT(rtp_transport_ != rtcp_transport_);
+
+      if (!rtcp_transport_) {
+        rtcp_transport_ = rtp_transport;
+      }
   }
 
   virtual ~MediaPipeline();
@@ -116,9 +123,9 @@ class MediaPipeline : public sigslot::has_slots<> {
   virtual Direction direction() const { return direction_; }
 
   int rtp_packets_sent() const { return rtp_packets_sent_; }
-  int rtcp_packets_sent() const { return rtp_packets_sent_; }
+  int rtcp_packets_sent() const { return rtcp_packets_sent_; }
   int rtp_packets_received() const { return rtp_packets_received_; }
-  int rtcp_packets_received() const { return rtp_packets_received_; }
+  int rtcp_packets_received() const { return rtcp_packets_received_; }
 
   MediaSessionConduit *Conduit() { return conduit_; }
 
@@ -209,7 +216,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   int rtcp_packets_received_;
 
   // Written on Init. Read on STS thread.
-  bool muxed_;
   std::string pc_;
   std::string description_;
 
@@ -290,6 +296,7 @@ private:
 // and transmitting to the network.
 class MediaPipelineTransmit : public MediaPipeline {
  public:
+  // Set rtcp_transport to NULL to use rtcp-mux
   MediaPipelineTransmit(const std::string& pc,
                         nsCOMPtr<nsIEventTarget> main_thread,
                         nsCOMPtr<nsIEventTarget> sts_thread,
@@ -384,6 +391,7 @@ class MediaPipelineTransmit : public MediaPipeline {
 // rendering video.
 class MediaPipelineReceive : public MediaPipeline {
  public:
+  // Set rtcp_transport to NULL to use rtcp-mux
   MediaPipelineReceive(const std::string& pc,
                        nsCOMPtr<nsIEventTarget> main_thread,
                        nsCOMPtr<nsIEventTarget> sts_thread,

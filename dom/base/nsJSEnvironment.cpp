@@ -694,7 +694,7 @@ GetPromptFromContext(nsJSContext* ctx)
   return prompt.forget();
 }
 
-JSBool
+bool
 nsJSContext::DOMOperationCallback(JSContext *cx)
 {
   nsresult rv;
@@ -763,7 +763,7 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
   // Check if we should offer the option to debug
   JS::RootedScript script(cx);
   unsigned lineno;
-  JSBool hasFrame = ::JS_DescribeScriptedCaller(cx, script.address(), &lineno);
+  bool hasFrame = ::JS_DescribeScriptedCaller(cx, script.address(), &lineno);
 
   bool debugPossible = hasFrame && js::CanCallContextDebugHandler(cx);
 #ifdef MOZ_JSDEBUGGER
@@ -1097,7 +1097,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
   : mActive(false)
   , mGCOnDestruction(aGCOnDestruction)
-  , mExecuteDepth(0)
   , mGlobalObjectRef(aGlobalObject)
 {
   mNext = sContextList;
@@ -1238,188 +1237,28 @@ nsJSContext::GetCCRefcnt()
 nsresult
 nsJSContext::EvaluateString(const nsAString& aScript,
                             JS::Handle<JSObject*> aScopeObject,
-                            JS::CompileOptions& aOptions,
+                            JS::CompileOptions& aCompileOptions,
                             bool aCoerceToString,
                             JS::Value* aRetValue)
 {
-  PROFILER_LABEL("JS", "EvaluateString");
-  MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
-  MOZ_ASSERT_IF(aCoerceToString, aRetValue);
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-  // Unfortunately, the JS engine actually compiles scripts with a return value
-  // in a different, less efficient way.  Furthermore, it can't JIT them in many
-  // cases.  So we need to be explicitly told whether the caller cares about the
-  // return value.  Callers use null to indicate they don't care.
-  if (aRetValue) {
-    *aRetValue = JSVAL_VOID;
-  }
-
+  nsresult rv;
   if (!mScriptsEnabled) {
     return NS_OK;
   }
 
-  nsCxPusher pusher;
-  pusher.Push(mContext);
-
-  xpc_UnmarkGrayObject(aScopeObject);
-  nsAutoMicroTask mt;
-
-  JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetObjectCompartment(aScopeObject));
-  aOptions.setPrincipals(p);
-
-  bool ok = false;
-  nsresult rv = sSecurityManager->CanExecuteScripts(mContext, nsJSPrincipals::get(p), &ok);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(ok, NS_OK);
-
-  // Scope the JSAutoCompartment so that it gets destroyed before we pop the
-  // cx and potentially call JS_RestoreFrameChain.
   {
-    JSAutoCompartment ac(mContext, aScopeObject);
-
-    ++mExecuteDepth;
-
-    JS::RootedObject rootedScope(mContext, aScopeObject);
-    ok = JS::Evaluate(mContext, rootedScope, aOptions,
-                      PromiseFlatString(aScript).get(),
-                      aScript.Length(), aRetValue);
-    if (ok && aCoerceToString && !aRetValue->isUndefined()) {
-      JSString* str = JS_ValueToString(mContext, *aRetValue);
-      ok = !!str;
-      *aRetValue = ok ? JS::StringValue(str) : JS::UndefinedValue();
-    }
-    --mExecuteDepth;
-  }
-
-  if (!ok) {
-    if (aRetValue) {
-      *aRetValue = JS::UndefinedValue();
-    }
-    // Tell XPConnect about any pending exceptions. This is needed
-    // to avoid dropping JS exceptions in case we got here through
-    // nested calls through XPConnect.
-    ReportPendingException();
+    AutoCxPusher pusher(mContext);
+    nsJSUtils::EvaluateOptions evalOptions;
+    evalOptions.setCoerceToString(aCoerceToString);
+    rv = nsJSUtils::EvaluateString(mContext, aScript, aScopeObject,
+                                   aCompileOptions, evalOptions, aRetValue);
   }
 
   // ScriptEvaluated needs to come after we pop the stack
-  pusher.Pop();
   ScriptEvaluated(true);
-
-  // Wrap the return value into whatever compartment mContext was in.
-  if (aRetValue && !JS_WrapValue(mContext, aRetValue))
-    return NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
+  return rv;
 }
-
-nsresult
-nsJSContext::CompileScript(const PRUnichar* aText,
-                           int32_t aTextLength,
-                           nsIPrincipal *aPrincipal,
-                           const char *aURL,
-                           uint32_t aLineNo,
-                           uint32_t aVersion,
-                           JS::MutableHandle<JSScript*> aScriptObject,
-                           bool aSaveSource /* = false */)
-{
-  PROFILER_LABEL_PRINTF("JS", "Compile Script", "%s", aURL ? aURL : "");
-  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  AutoPushJSContext cx(mContext);
-  JSAutoRequest ar(cx);
-  JS::Rooted<JSObject*> scopeObject(mContext, GetNativeGlobal());
-  JSAutoCompartment ac(cx, scopeObject);
-  xpc_UnmarkGrayObject(scopeObject);
-
-  bool ok = false;
-
-  nsresult rv = sSecurityManager->CanExecuteScripts(cx, aPrincipal, &ok);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aScriptObject.set(nullptr); // ensure old object not used on failure...
-
-  // Don't compile if SecurityManager said "not ok" or aVersion is unknown.
-  // Since the caller is responsible for parsing the version strings, we just
-  // check it isn't JSVERSION_UNKNOWN.
-  if (!ok || JSVersion(aVersion) == JSVERSION_UNKNOWN)
-    return NS_OK;
-
-  JS::CompileOptions options(cx);
-  JS::CompileOptions::SourcePolicy sp = aSaveSource ?
-    JS::CompileOptions::SAVE_SOURCE :
-    JS::CompileOptions::LAZY_SOURCE;
-  options.setPrincipals(nsJSPrincipals::get(aPrincipal))
-         .setFileAndLine(aURL, aLineNo)
-         .setVersion(JSVersion(aVersion))
-         .setSourcePolicy(sp);
-  JS::RootedObject rootedScope(cx, scopeObject);
-  JSScript* script = JS::Compile(cx,
-                                 rootedScope,
-                                 options,
-                                 static_cast<const jschar*>(aText),
-                                 aTextLength);
-  if (!script) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aScriptObject.set(script);
-  return NS_OK;
-}
-
-nsresult
-nsJSContext::ExecuteScript(JSScript* aScriptObject_,
-                           JSObject* aScopeObject_)
-{
-  JSAutoRequest ar(mContext);
-  JS::Rooted<JSObject*> aScopeObject(mContext, aScopeObject_);
-  JS::Rooted<JSScript*> aScriptObject(mContext, aScriptObject_);
-  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-
-  if (!mScriptsEnabled) {
-    return NS_OK;
-  }
-
-  nsAutoMicroTask mt;
-
-  if (!aScopeObject) {
-    aScopeObject = GetNativeGlobal();
-  }
-
-  xpc_UnmarkGrayScript(aScriptObject);
-  xpc_UnmarkGrayObject(aScopeObject);
-
-  // Push our JSContext on our thread's context stack, in case native code
-  // called from JS calls back into JS via XPConnect.
-  nsCxPusher pusher;
-  pusher.Push(mContext);
-
-  // Scope the JSAutoCompartment so that it gets destroyed before we pop the
-  // cx and potentially call JS_RestoreFrameChain.
-  {
-    JSAutoCompartment ac(mContext, aScopeObject);
-    ++mExecuteDepth;
-
-    // The result of evaluation, used only if there were no errors. This need
-    // not be a GC root currently, provided we run the GC only from the
-    // operation callback or from ScriptEvaluated.
-    JS::Rooted<JS::Value> val(mContext);
-    if (!JS_ExecuteScript(mContext, aScopeObject, aScriptObject, val.address())) {
-      ReportPendingException();
-    }
-    --mExecuteDepth;
-  }
-
-  // Pop here, after JS_ValueToString and any other possible evaluation.
-  pusher.Pop();
-
-  // ScriptEvaluated needs to come after we pop the stack
-  ScriptEvaluated(true);
-
-  return NS_OK;
-}
-
 
 #ifdef DEBUG
 bool
@@ -2386,12 +2225,6 @@ nsJSContext::SetProcessingScriptTag(bool aFlag)
   mProcessingScriptTag = aFlag;
 }
 
-bool
-nsJSContext::GetExecutingScript()
-{
-  return JS_IsRunning(mContext) || mExecuteDepth > 0;
-}
-
 NS_IMETHODIMP
 nsJSContext::ScriptExecuted()
 {
@@ -3315,7 +3148,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
   return nullptr;
 }
 
-JSBool
+bool
 NS_DOMWriteStructuredClone(JSContext* cx,
                            JSStructuredCloneWriter* writer,
                            JS::Handle<JSObject*> obj,
