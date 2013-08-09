@@ -214,11 +214,12 @@ struct AssemblerBuffer
             JS_ASSERT(cur != NULL);
         } else {
             for (; cur != NULL; cur = cur->getNext()) {
-                if (local_off < cur_off + cur->size()) {
+                int cur_size = cur->size();
+                if (local_off < cur_off + cur_size) {
                     local_off -= cur_off;
                     break;
                 }
-                cur_off += cur->size();
+                cur_off += cur_size;
                 count++;
             }
             JS_ASSERT(cur != NULL);
@@ -228,7 +229,7 @@ struct AssemblerBuffer
             finger_offset = cur_off;
         }
         // the offset within this node should not be larger than the node itself.
-        JS_ASSERT(local_off < cur->size());
+        JS_ASSERT(local_off < (int)cur->size());
         return (Inst*)&cur->instructions[local_off];
     }
     BufferOffset nextOffset() const {
