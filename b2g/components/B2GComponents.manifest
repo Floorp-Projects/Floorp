@@ -22,7 +22,6 @@ category JavaScript-navigator-property mozKeyboard @mozilla.org/b2g-keyboard;1
 
 component {4607330d-e7d2-40a4-9eb8-43967eae0142} MozKeyboard.js
 contract @mozilla.org/b2g-inputmethod;1 {4607330d-e7d2-40a4-9eb8-43967eae0142}
-category JavaScript-navigator-property mozInputMethod @mozilla.org/b2g-inputmethod;1
 
 # DirectoryProvider.js
 component {9181eb7c-6f87-11e1-90b1-4f59d80dd2e5} DirectoryProvider.js
