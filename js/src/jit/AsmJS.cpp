@@ -299,7 +299,7 @@ FunctionLastReturnStatementOrNull(ParseNode *fn)
 }
 
 static inline bool
-IsNormalObjectField(JSContext *cx, ParseNode *pn)
+IsNormalObjectField(ExclusiveContext *cx, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_COLON));
     return pn->getOp() == JSOP_INITPROP &&
@@ -308,7 +308,7 @@ IsNormalObjectField(JSContext *cx, ParseNode *pn)
 }
 
 static inline PropertyName *
-ObjectNormalFieldName(JSContext *cx, ParseNode *pn)
+ObjectNormalFieldName(ExclusiveContext *cx, ParseNode *pn)
 {
     JS_ASSERT(IsNormalObjectField(cx, pn));
     return BinaryLeft(pn)->name();
@@ -657,9 +657,9 @@ class Signature
     RetType retType_;
 
   public:
-    Signature(JSContext *cx)
+    Signature(ExclusiveContext *cx)
       : argTypes_(cx) {}
-    Signature(JSContext *cx, RetType retType)
+    Signature(ExclusiveContext *cx, RetType retType)
       : argTypes_(cx), retType_(retType) {}
     Signature(MoveRef<VarTypeVector> argTypes, RetType retType)
       : argTypes_(argTypes), retType_(retType) {}
@@ -1072,8 +1072,9 @@ class MOZ_STACK_CLASS ModuleCompiler
         FuncPtrVector elems_;
 
       public:
-        FuncPtrTable(JSContext *cx, MoveRef<Signature> sig, uint32_t mask, uint32_t globalDataOffset)
-          : sig_(sig), mask_(mask), globalDataOffset_(globalDataOffset), elems_(cx) {}
+        FuncPtrTable(ExclusiveContext *cx, MoveRef<Signature> sig, uint32_t mask, uint32_t gdo)
+          : sig_(sig), mask_(mask), globalDataOffset_(gdo), elems_(cx)
+        {}
 
         FuncPtrTable(MoveRef<FuncPtrTable> rhs)
           : sig_(Move(rhs->sig_)), mask_(rhs->mask_), globalDataOffset_(rhs->globalDataOffset_),
@@ -1121,7 +1122,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
     };
 
-    typedef HashMap<ExitDescriptor, unsigned, ExitDescriptor, ContextAllocPolicy> ExitMap;
+    typedef HashMap<ExitDescriptor, unsigned, ExitDescriptor> ExitMap;
 
   private:
     struct SlowFunction
@@ -1138,7 +1139,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     typedef Vector<AsmJSGlobalAccess> GlobalAccessVector;
     typedef Vector<SlowFunction> SlowFunctionVector;
 
-    JSContext *                    cx_;
+    ExclusiveContext *             cx_;
     AsmJSParser &                  parser_;
 
     MacroAssembler                 masm_;
@@ -1174,7 +1175,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 
   public:
-    ModuleCompiler(JSContext *cx, AsmJSParser &parser)
+    ModuleCompiler(ExclusiveContext *cx, AsmJSParser &parser)
       : cx_(cx),
         parser_(parser),
         masm_(MacroAssembler::AsmJSToken()),
@@ -1275,8 +1276,8 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 
     bool failName(ParseNode *pn, const char *fmt, PropertyName *name) {
-        JSAutoByteString bytes(cx_, name);
-        if (bytes.ptr())
+        JSAutoByteString bytes;
+        if (AtomToPrintableString(cx_, name, &bytes))
             failf(pn, fmt, bytes.ptr());
         return false;
     }
@@ -1295,7 +1296,7 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     /*************************************************** Read-only interface */
 
-    JSContext *cx() const { return cx_; }
+    ExclusiveContext *cx() const { return cx_; }
     AsmJSParser &parser() const { return parser_; }
     MacroAssembler &masm() { return masm_; }
     Label &stackOverflowLabel() { return stackOverflowLabel_; }
@@ -1693,7 +1694,7 @@ class FunctionCompiler
     ModuleCompiler &    m() const      { return m_; }
     LifoAlloc &         lifo() const   { return lifo_; }
     ParseNode *         fn() const     { return fn_; }
-    JSContext *         cx() const     { return m_.cx(); }
+    ExclusiveContext *  cx() const     { return m_.cx(); }
     const AsmJSModule & module() const { return m_.module(); }
 
     bool init()
@@ -1726,7 +1727,8 @@ class FunctionCompiler
 
     ~FunctionCompiler()
     {
-        if (!m().hasError() && !cx()->isExceptionPending()) {
+#ifdef DEBUG
+        if (!m().hasError() && cx()->isJSContext() && !cx()->asJSContext()->isExceptionPending()) {
             JS_ASSERT(loopStack_.empty());
             JS_ASSERT(unlabeledBreaks_.empty());
             JS_ASSERT(unlabeledContinues_.empty());
@@ -1734,6 +1736,7 @@ class FunctionCompiler
             JS_ASSERT(labeledContinues_.empty());
             JS_ASSERT(curBlock_ == NULL);
         }
+#endif
     }
 
     /***************************************************** Local scope setup */
@@ -4800,6 +4803,22 @@ CheckFunctionsSequential(ModuleCompiler &m)
 }
 
 #ifdef JS_WORKER_THREADS
+
+static bool
+ParallelCompilationEnabled(ExclusiveContext *cx)
+{
+    // If 'cx' isn't a JSContext, then we are already off the main thread so
+    // off-thread compilation must be enabled. However, since there are a fixed
+    // number of worker threads and one is already being consumed by this
+    // parsing task, ensure that there another free thread to avoid deadlock.
+    // (Note: there is at most one thread used for parsing so we don't have to
+    // worry about general dining philosophers.)
+    if (!cx->isJSContext())
+        return cx->workerThreadState()->numThreads > 1;
+
+    return OffThreadCompilationEnabled(cx->asJSContext());
+}
+
 // State of compilation as tracked and updated by the main thread.
 struct ParallelGroupState
 {
@@ -4817,7 +4836,7 @@ struct ParallelGroupState
 static AsmJSParallelTask *
 GetFinishedCompilation(ModuleCompiler &m, ParallelGroupState &group)
 {
-    AutoLockWorkerThreadState lock(m.cx()->runtime());
+    AutoLockWorkerThreadState lock(*m.cx()->workerThreadState());
 
     while (!group.state.asmJSWorkerFailed()) {
         if (!group.state.asmJSFinishedList.empty()) {
@@ -4929,7 +4948,7 @@ CancelOutstandingJobs(ModuleCompiler &m, ParallelGroupState &group)
     if (!group.outstandingJobs)
         return;
 
-    AutoLockWorkerThreadState lock(m.cx()->runtime());
+    AutoLockWorkerThreadState lock(*m.cx()->workerThreadState());
 
     // From the compiling tasks, eliminate those waiting for worker assignation.
     group.outstandingJobs -= group.state.asmJSWorklist.length();
@@ -4963,7 +4982,7 @@ static bool
 CheckFunctionsParallel(ModuleCompiler &m)
 {
     // Saturate all worker threads plus the main thread.
-    WorkerThreadState &state = *m.cx()->runtime()->workerThreadState;
+    WorkerThreadState &state = *m.cx()->workerThreadState();
     size_t numParallelJobs = state.numThreads + 1;
 
     // Allocate scoped AsmJSParallelTask objects. Each contains a unique
@@ -6203,7 +6222,8 @@ FinishModule(ModuleCompiler &m,
              ScopedJSDeletePtr<AsmJSModule> *module,
              ScopedJSFreePtr<char> *compilationTimeReport)
 {
-    TempAllocator alloc(&m.cx()->tempLifoAlloc());
+    LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+    TempAllocator alloc(&lifo);
     IonContext ionContext(m.cx(), &alloc);
 
     if (!GenerateStubs(m))
@@ -6213,7 +6233,7 @@ FinishModule(ModuleCompiler &m,
 }
 
 static bool
-CheckModule(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList,
+CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
             ScopedJSDeletePtr<AsmJSModule> *module,
             ScopedJSFreePtr<char> *compilationTimeReport)
 {
@@ -6240,7 +6260,7 @@ CheckModule(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList,
         return false;
 
 #ifdef JS_WORKER_THREADS
-    if (OffThreadCompilationEnabled(cx)) {
+    if (ParallelCompilationEnabled(cx)) {
         if (!CheckFunctionsParallel(m))
             return false;
     } else {
@@ -6268,46 +6288,61 @@ CheckModule(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList,
 }
 
 static bool
-Warn(JSContext *cx, int code, const char *str)
+Warn(AsmJSParser &parser, int errorNumber, const char *str)
 {
-    return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage,
-                                        NULL, code, str ? str : "");
+    parser.reportNoOffset(ParseWarning, /* strict = */ false, errorNumber, str ? str : "");
+    return false;
+}
+
+static bool
+EstablishPreconditions(ExclusiveContext *cx, AsmJSParser &parser)
+{
+    if (!cx->jitSupportsFloatingPoint())
+        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
+
+    if (!cx->signalHandlersInstalled())
+        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
+
+    if (cx->gcSystemPageSize() != AsmJSPageSize)
+        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by non 4KiB system page size");
+
+    if (!parser.options().asmJSOption)
+        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by javascript.options.asmjs in about:config");
+
+    if (!parser.options().compileAndGo)
+        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Temporarily disabled for event-handler and other cloneable scripts");
+
+    if (cx->compartment()->debugMode())
+        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
+
+# ifdef JS_WORKER_THREADS
+    if (ParallelCompilationEnabled(cx)) {
+        if (!EnsureWorkerThreadsInitialized(cx))
+            return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Failed compilation thread initialization");
+    }
+# endif
+
+    return true;
+}
+
+static bool
+NoExceptionPending(ExclusiveContext *cx)
+{
+    return !cx->isJSContext() || !cx->asJSContext()->isExceptionPending();
 }
 
 bool
-js::CompileAsmJS(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *validated)
+js::CompileAsmJS(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *validated)
 {
     *validated = false;
 
-    if (!JSC::MacroAssembler::supportsFloatingPoint())
-        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of floating point support");
-
-    if (cx->runtime()->gcSystemPageSize != AsmJSPageSize)
-        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by non 4KiB system page size");
-
-    if (!cx->hasOption(JSOPTION_ASMJS))
-        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by javascript.options.asmjs in about:config");
-
-    if (!parser.options().compileAndGo)
-        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Temporarily disabled for event-handler and other cloneable scripts");
-
-    if (cx->compartment()->debugMode())
-        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
-
-    if (!EnsureAsmJSSignalHandlersInstalled(cx->runtime()))
-        return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Platform missing signal handler support");
-
-# ifdef JS_WORKER_THREADS
-    if (OffThreadCompilationEnabled(cx)) {
-        if (!EnsureWorkerThreadsInitialized(cx->runtime()))
-            return Warn(cx, JSMSG_USE_ASM_TYPE_FAIL, "Failed compilation thread initialization");
-    }
-# endif
+    if (!EstablishPreconditions(cx, parser))
+        return NoExceptionPending(cx);
 
     ScopedJSFreePtr<char> compilationTimeReport;
     ScopedJSDeletePtr<AsmJSModule> module;
     if (!CheckModule(cx, parser, stmtList, &module, &compilationTimeReport))
-        return !cx->isExceptionPending();
+        return NoExceptionPending(cx);
 
     RootedObject moduleObj(cx, AsmJSModuleObject::create(cx, &module));
     if (!moduleObj)
@@ -6322,7 +6357,8 @@ js::CompileAsmJS(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *
     funbox->object = moduleFun;
 
     *validated = true;
-    return Warn(cx, JSMSG_USE_ASM_TYPE_OK, compilationTimeReport);
+    Warn(parser, JSMSG_USE_ASM_TYPE_OK, compilationTimeReport.get());
+    return NoExceptionPending(cx);
 }
 
 bool
@@ -6330,7 +6366,9 @@ js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    // See EstablishPreconditions.
     bool available = JSC::MacroAssembler::supportsFloatingPoint() &&
+                     cx->gcSystemPageSize() == AsmJSPageSize &&
                      !cx->compartment()->debugMode() &&
                      cx->hasOption(JSOPTION_ASMJS);
 
