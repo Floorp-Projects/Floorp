@@ -10,13 +10,9 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE_NAME = xpcom_glue_gtest
 EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY = 1
-IS_COMPONENT = 1
 
-LOCAL_INCLUDES = \
-  -I$(srcdir)/../.. \
-  $(NULL)
+LOCAL_INCLUDES = -I$(srcdir)/../..
 
 include $(topsrcdir)/config/rules.mk

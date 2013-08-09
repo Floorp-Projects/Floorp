@@ -12,7 +12,5 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = mediasniffer
 LIBXUL_LIBRARY  = 1
 EXPORT_LIBRARY = 1
-MODULE_NAME = nsMediaSnifferModule
-IS_COMPONENT = 1
 
 include $(topsrcdir)/config/rules.mk

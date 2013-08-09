@@ -23,10 +23,8 @@ ifneq (,$(filter armeabi,$(ANDROID_CPU_ARCH)))
 DEFINES += -DARCH_ARMV6
 endif
 
-MODULE_NAME     = nsProfilerModule
 EXPORT_LIBRARY  = 1
 LIBXUL_LIBRARY  = 1
-IS_COMPONENT    = 1
 ifndef _MSC_VER
 FAIL_ON_WARNINGS = 1
 endif # !_MSC_VER
