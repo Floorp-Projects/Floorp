@@ -273,15 +273,20 @@ var ContextUI = {
         this.dismissTabs();
         break;
       case "mousedown":
+        if (BrowserUI.isStartTabVisible)
+          break;
         if (aEvent.button == 0 && this.isVisible)
           this.dismiss();
         break;
-
       case "ToolPanelShown":
       case "ToolPanelHidden":
-      case "touchstart":
       case "AlertActive":
         this.dismiss();
+        break;
+      case "touchstart":
+        if (!BrowserUI.isStartTabVisible) {
+          this.dismiss();
+        }
         break;
     }
   },
