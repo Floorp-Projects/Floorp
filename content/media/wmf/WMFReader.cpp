@@ -16,6 +16,8 @@
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/ShadowLayers.h"
+#include "gfxWindowsPlatform.h"
 
 #ifndef MOZ_SAMPLE_TYPE_FLOAT32
 #error We expect 32bit float audio samples on desktop for the Windows Media Foundation media backend.
@@ -53,7 +55,7 @@ WMFReader::WMFReader(AbstractMediaDecoder* aDecoder)
     mAudioFrameOffset(0),
     mHasAudio(false),
     mHasVideo(false),
-    mUseHwAccel(false),
+    mVideoDecodingMode(Software),
     mMustRecaptureAudioPosition(true),
     mIsMP3Enabled(WMFDecoder::IsMP3Supported()),
     mCOMInitialized(false)
@@ -99,11 +101,11 @@ WMFReader::OnDecodeThreadFinish()
   }
 }
 
-bool
+void
 WMFReader::InitializeDXVA()
 {
   if (!Preferences::GetBool("media.windows-media-foundation.use-dxva", false)) {
-    return false;
+    return;
   }
 
   // Extract the layer manager backend type so that we can determine
@@ -112,23 +114,31 @@ WMFReader::InitializeDXVA()
   // CPU memory grinds painting to a halt, and makes playback performance
   // *worse*.
   MediaDecoderOwner* owner = mDecoder->GetOwner();
-  NS_ENSURE_TRUE(owner, false);
+  NS_ENSURE_TRUE_VOID(owner);
 
   HTMLMediaElement* element = owner->GetMediaElement();
-  NS_ENSURE_TRUE(element, false);
+  NS_ENSURE_TRUE_VOID(element);
 
   nsRefPtr<LayerManager> layerManager =
     nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
-  NS_ENSURE_TRUE(layerManager, false);
+  NS_ENSURE_TRUE_VOID(layerManager);
 
-  if (layerManager->GetBackendType() != LayersBackend::LAYERS_D3D9 &&
-      layerManager->GetBackendType() != LayersBackend::LAYERS_D3D10) {
-    return false;
+  if (gfxWindowsPlatform::WindowsOSVersion() == gfxWindowsPlatform::kWindows8 &&
+      layerManager->GetBackendType() == LayersBackend::LAYERS_CLIENT &&
+      layerManager->AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D11) {
+    // We're on Windows 8 and we're using off main thread compositing,
+    // with a D3D11 layers backend, so we can use a D3D11 texture client.
+    // Without this, we end up doing readback when the decoded video frame
+    // gets sent over to the compositor.
+    mDXVA2Manager = DXVA2Manager::CreateD3D11DXVA();
+    NS_ENSURE_TRUE_VOID(mDXVA2Manager);
+    mVideoDecodingMode = VideoDecodingMode::DXVA_D3D11;
+  } else if (layerManager->GetBackendType() == LayersBackend::LAYERS_D3D9 ||
+             layerManager->GetBackendType() == LayersBackend::LAYERS_D3D10) {
+    mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA();
+    NS_ENSURE_TRUE_VOID(mDXVA2Manager);
+    mVideoDecodingMode = VideoDecodingMode::DXVA_D3D9;
   }
-
-  mDXVA2Manager = DXVA2Manager::Create();
-
-  return mDXVA2Manager != nullptr;
 }
 
 static bool
@@ -162,9 +172,7 @@ WMFReader::Init(MediaDecoderReader* aCloneDonor)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsVideoContentType(mDecoder->GetResource()->GetContentType())) {
-    mUseHwAccel = InitializeDXVA();
-  } else {
-    mUseHwAccel = false;
+    InitializeDXVA();
   }
 
   return NS_OK;
@@ -378,15 +386,15 @@ WMFReader::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
   HRESULT hr;
 
   // Verify that the video subtype is what we expect it to be.
-  // When using hardware acceleration/DXVA2 the video format should
-  // be NV12, which is DXVA2's preferred format. For software decoding
-  // we use YV12, as that's easier for us to stick into our rendering
+  // When using hardware acceleration/DXVA2 with D3D9 the video format should
+  // be NV12, which is DXVA2's preferred format. For DXVA via D3D11 we use
+  // RGBA (DXVA does the YUV->RGB conversion using the GPU). For software
+  // decoding we use YV12, as that's easier for us to stick into our rendering
   // pipeline than NV12. NV12 has interleaved UV samples, whereas YV12
   // is a planar format.
   GUID videoFormat;
   hr = aMediaType->GetGUID(MF_MT_SUBTYPE, &videoFormat);
-  NS_ENSURE_TRUE(videoFormat == MFVideoFormat_NV12 || !mUseHwAccel, E_FAIL);
-  NS_ENSURE_TRUE(videoFormat == MFVideoFormat_YV12 || mUseHwAccel, E_FAIL);
+  NS_ENSURE_TRUE(videoFormat == GetVideoFormat(), E_FAIL);
 
   nsIntRect pictureRegion;
   hr = GetPictureRegion(aMediaType, pictureRegion);
@@ -396,12 +404,13 @@ WMFReader::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
   hr = MFGetAttributeSize(aMediaType, MF_MT_FRAME_SIZE, &width, &height);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  uint32_t aspectNum = 0, aspectDenom = 0;
-  hr = MFGetAttributeRatio(aMediaType,
-                           MF_MT_PIXEL_ASPECT_RATIO,
-                           &aspectNum,
-                           &aspectDenom);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  // Note: some formats' media types don't have an aspect ratio, so just
+  // assume those are 1:1.
+  uint32_t aspectNum = 1, aspectDenom = 1;
+  MFGetAttributeRatio(aMediaType,
+                      MF_MT_PIXEL_ASPECT_RATIO,
+                      &aspectNum,
+                      &aspectDenom);
 
   // Calculate and validate the picture region and frame dimensions after
   // scaling by the pixel aspect ratio.
@@ -430,6 +439,17 @@ WMFReader::ConfigureVideoFrameGeometry(IMFMediaType* aMediaType)
   return S_OK;
 }
 
+const GUID&
+WMFReader::GetVideoFormat() const
+{
+  switch (mVideoDecodingMode) {
+    case Software: return MFVideoFormat_YV12;
+    case DXVA_D3D9: return MFVideoFormat_NV12;
+    case DXVA_D3D11: return MFVideoFormat_ARGB32;
+  }
+  return GUID_NULL;
+}
+
 HRESULT
 WMFReader::ConfigureVideoDecoder()
 {
@@ -447,7 +467,7 @@ WMFReader::ConfigureVideoDecoder()
   };
   HRESULT hr = ConfigureSourceReaderStream(mSourceReader,
                                            MF_SOURCE_READER_FIRST_VIDEO_STREAM,
-                                           mUseHwAccel ? MFVideoFormat_NV12 : MFVideoFormat_YV12,
+                                           GetVideoFormat(),
                                            MP4VideoTypes,
                                            NS_ARRAY_LENGTH(MP4VideoTypes));
   if (FAILED(hr)) {
@@ -544,6 +564,24 @@ WMFReader::ConfigureAudioDecoder()
   return S_OK;
 }
 
+static const char*
+DXVAModeStr(WMFReader::VideoDecodingMode aMode)
+{
+  switch (aMode) {
+    case WMFReader::Software: return "Software";
+    case WMFReader::DXVA_D3D9: return "DXVA_D3D9";
+    case WMFReader::DXVA_D3D11: return "DXVA_D3D11";
+    default: return "Invalid Mode";
+  }
+}
+
+// MF_SOURCE_READER_ENABLE_ADVANCED_VIDEO_PROCESSING is only defined if we're
+// building with the Win8 SDK.
+#ifndef MF_SOURCE_READER_ENABLE_ADVANCED_VIDEO_PROCESSING
+static const GUID MF_SOURCE_READER_ENABLE_ADVANCED_VIDEO_PROCESSING =
+ { 0xf81da2c, 0xb537, 0x4672, 0xa8, 0xb2, 0xa6, 0x81, 0xb1, 0x73, 0x7, 0xa3 };
+#endif
+
 nsresult
 WMFReader::ReadMetadata(VideoInfo* aInfo,
                         MetadataTags** aTags)
@@ -560,12 +598,20 @@ WMFReader::ReadMetadata(VideoInfo* aInfo,
   hr = attr->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, mSourceReaderCallback);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
-  if (mUseHwAccel) {
+  if (mVideoDecodingMode == VideoDecodingMode::DXVA_D3D11) {
+    hr = attr->SetUINT32(MF_SOURCE_READER_ENABLE_ADVANCED_VIDEO_PROCESSING, TRUE);
+    if (FAILED(hr)) {
+      LOG("Failed to set MF_SOURCE_READER_ENABLE_ADVANCED_VIDEO_PROCESSING in attributes");
+      mVideoDecodingMode = VideoDecodingMode::Software;
+    }
+  }
+
+  if (mVideoDecodingMode != VideoDecodingMode::Software) {
     hr = attr->SetUnknown(MF_SOURCE_READER_D3D_MANAGER,
                           mDXVA2Manager->GetDXVADeviceManager());
     if (FAILED(hr)) {
       LOG("Failed to set DXVA2 D3D Device manager on source reader attributes");
-      mUseHwAccel = false;
+      mVideoDecodingMode = VideoDecodingMode::Software;
     }
   }
 
@@ -578,7 +624,7 @@ WMFReader::ReadMetadata(VideoInfo* aInfo,
   hr = ConfigureAudioDecoder();
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
-  if (mUseHwAccel && mInfo.mHasVideo) {
+  if (mVideoDecodingMode != VideoDecodingMode::Software && mInfo.mHasVideo) {
     RefPtr<IMFTransform> videoDecoder;
     hr = mSourceReader->GetServiceForStream(MF_SOURCE_READER_FIRST_VIDEO_STREAM,
                                             GUID_NULL,
@@ -592,11 +638,11 @@ WMFReader::ReadMetadata(VideoInfo* aInfo,
     }
     if (FAILED(hr)) {
       LOG("Failed to set DXVA2 D3D Device manager on decoder");
-      mUseHwAccel = false;
+      mVideoDecodingMode = VideoDecodingMode::Software;
     }
   }
   if (mInfo.mHasVideo) {
-    LOG("Using DXVA: %s", (mUseHwAccel ? "Yes" : "No"));
+    LOG("Video Decoding mode: %s", DXVAModeStr(mVideoDecodingMode));
   }
 
   // Abort if both video and audio failed to initialize.
@@ -862,7 +908,7 @@ WMFReader::CreateD3DVideoFrame(IMFSample* aSample,
   NS_ENSURE_TRUE(aSample, E_POINTER);
   NS_ENSURE_TRUE(aOutVideoData, E_POINTER);
   NS_ENSURE_TRUE(mDXVA2Manager, E_ABORT);
-  NS_ENSURE_TRUE(mUseHwAccel, E_ABORT);
+  NS_ENSURE_TRUE(mVideoDecodingMode != Software, E_ABORT);
 
   *aOutVideoData = nullptr;
   HRESULT hr;
@@ -966,7 +1012,7 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
   int64_t duration = GetSampleDuration(sample);
 
   VideoData* v = nullptr;
-  if (mUseHwAccel) {
+  if (mVideoDecodingMode != Software) {
     hr = CreateD3DVideoFrame(sample, timestamp, duration, offset, &v);
   } else {
     hr = CreateBasicVideoFrame(sample, timestamp, duration, offset, &v);
