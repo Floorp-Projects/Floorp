@@ -233,6 +233,10 @@ var FullZoom = {
    *        (optional) browser object displaying the document
    */
   onLocationChange: function FullZoom_onLocationChange(aURI, aIsTabSwitch, aBrowser) {
+    // Bug 691614 - zooming support for electrolysis
+    if (gMultiProcessBrowser)
+      return;
+
     // Ignore all pending async zoom accesses in the browser.  Pending accesses
     // that started before the location change will be prevented from applying
     // to the new location.
