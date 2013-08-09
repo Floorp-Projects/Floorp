@@ -100,6 +100,8 @@ EXPORTS.mozilla.layers += [
     'CompositorTypes.h',
     'D3D9SurfaceImage.h',
     'Effects.h',
+    'GrallocTextureClient.h',
+    'GrallocTextureHost.h',
     'ImageDataSerializer.h',
     'LayersTypes.h',
     'RenderTrace.h',
@@ -172,8 +174,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'ipc/ShadowLayerUtilsGralloc.h',
     ]
     CPP_SOURCES += [
-        'ShadowLayerUtilsGralloc.cpp',
         'GrallocImages.cpp',
+        'GrallocTextureClient.cpp',
+        'GrallocTextureHost.cpp',
+        'ShadowLayerUtilsGralloc.cpp',
     ]
 
 CPP_SOURCES += [
