@@ -111,6 +111,14 @@ ISurfaceAllocator() {}
 
   virtual void DestroySharedSurface(SurfaceDescriptor* aSurface);
 
+  // method that does the actual allocation work
+  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfxIntSize& aSize,
+                                                  uint32_t aFormat,
+                                                  uint32_t aUsage,
+                                                  MaybeMagicGrallocBufferHandle* aHandle)
+  {
+    return nullptr;
+  }
 protected:
   // this method is needed for a temporary fix, will be removed after
   // DeprecatedTextureClient/Host rework.
@@ -121,14 +129,6 @@ protected:
                                               uint32_t aCaps,
                                               SurfaceDescriptor* aBuffer);
 
-  // method that does the actual allocation work
-  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfxIntSize& aSize,
-                                                  uint32_t aFormat,
-                                                  uint32_t aUsage,
-                                                  MaybeMagicGrallocBufferHandle* aHandle)
-  {
-    return nullptr;
-  }
 
   ~ISurfaceAllocator() {}
 };
