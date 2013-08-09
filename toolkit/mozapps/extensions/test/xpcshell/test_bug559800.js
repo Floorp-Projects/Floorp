@@ -47,7 +47,9 @@ function run_test_1() {
 
     shutdownManager();
 
-    gExtensionsJSON.remove(true);
+    let db = gProfD.clone();
+    db.append(EXTENSIONS_DB);
+    db.remove(true);
 
     do_execute_soon(check_test_1);
   });
@@ -60,8 +62,10 @@ function check_test_1() {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
-    do_check_true(gExtensionsJSON.exists());
-    do_check_true(gExtensionsJSON.fileSize > 0);
+    let db = gProfD.clone();
+    db.append(EXTENSIONS_DB);
+    do_check_true(db.exists());
+    do_check_true(db.fileSize > 0);
 
     end_test();
   });
