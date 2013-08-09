@@ -33,6 +33,7 @@
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "JavaScriptChild.h"
 #include "JavaScriptParent.h"
+#include "nsDOMLists.h"
 #include <algorithm>
 
 #ifdef ANDROID
@@ -313,6 +314,28 @@ NS_IMETHODIMP
 nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
 {
   mPendingScripts.RemoveElement(aURL);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameMessageManager::GetDelayedFrameScripts(nsIDOMDOMStringList** aList)
+{
+  // Frame message managers may return an incomplete list because scripts
+  // that were loaded after it was connected are not added to the list.
+  if (!IsGlobal() && !IsWindowLevel()) {
+    NS_WARNING("Cannot retrieve list of pending frame scripts for frame"
+               "message managers as it may be incomplete");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  nsRefPtr<nsDOMStringList> scripts = new nsDOMStringList();
+
+  for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
+    scripts->Add(mPendingScripts[i]);
+  }
+
+  scripts.forget(aList);
+
   return NS_OK;
 }
 

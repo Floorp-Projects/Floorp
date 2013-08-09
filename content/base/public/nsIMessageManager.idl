@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMDOMStringList;
 interface nsIDOMWindow;
 interface nsIDocShell;
 interface nsIContent;
@@ -320,7 +321,7 @@ interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
   [notxpcom] nsIContent getOwnerContent();
 };
 
-[scriptable, builtinclass, uuid(a54acd34-4141-46f5-b71b-e2ca32879b08)]
+[scriptable, builtinclass, uuid(ecebfb8c-ff51-11e2-9d65-7af553959281)]
 interface nsIFrameScriptLoader : nsISupports
 {
   /**
@@ -336,6 +337,12 @@ interface nsIFrameScriptLoader : nsISupports
    * Removes aURL from the list of scripts which support delayed load.
    */
   void removeDelayedFrameScript(in AString aURL);
+
+  /**
+   * Returns a list of all delayed scripts that will be loaded once
+   * a (remote) frame becomes available.
+   */
+  nsIDOMDOMStringList getDelayedFrameScripts();
 };
 
 [scriptable, builtinclass, uuid(b37821ff-df79-44d4-821c-6d6ec4dfe1e9)]
