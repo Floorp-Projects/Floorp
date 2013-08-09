@@ -11,7 +11,7 @@ let Cr = Components.results;
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 
 // Page for which the start UI is shown
-const kStartURI = "chrome://browser/content/Start.xul";
+const kStartURI = "about:start";
 
 const kBrowserViewZoomLevelPrecision = 10000;
 
