@@ -117,7 +117,7 @@ DOMRequestIpcHelper.prototype = {
       new DOMRequestIpcHelperMessageListener(this, aWindow, aMessages);
 
     this._window = aWindow;
-    this._requests = [];
+    this._requests = {};
     this._id = this._getRandomId();
 
     if (this._window) {
@@ -166,7 +166,7 @@ DOMRequestIpcHelper.prototype = {
     this._destroyed = true;
 
     this._DOMRequestIpcHelperMessageListener.destroy();
-    this._requests = [];
+    this._requests = {};
     this._window = null;
 
     if(this.uninit) {
