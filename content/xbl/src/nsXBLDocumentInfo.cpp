@@ -458,9 +458,8 @@ nsXBLDocumentInfo::MarkInCCGeneration(uint32_t aGeneration)
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXBLDocumentInfo)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObjectOwner)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXBLDocumentInfo)
@@ -709,18 +708,6 @@ nsXBLDocumentInfo::EnsureGlobalObject()
   if (!mGlobalObject) {
     mGlobalObject = new nsXBLDocGlobalObject(this);
   }
-}
-
-//----------------------------------------------------------------------
-//
-// nsIScriptGlobalObjectOwner methods
-//
-
-nsIScriptGlobalObject*
-nsXBLDocumentInfo::GetScriptGlobalObject()
-{
-  EnsureGlobalObject();
-  return mGlobalObject;
 }
 
 #ifdef DEBUG
