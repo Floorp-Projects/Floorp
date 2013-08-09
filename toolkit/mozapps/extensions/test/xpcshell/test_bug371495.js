@@ -28,7 +28,7 @@ function run_test()
         do_check_eq(addon.optionsURL, null);
         do_check_eq(addon.aboutURL, null);
 
-        do_execute_soon(do_test_finished);
+        do_test_finished();
       });
     });
   });

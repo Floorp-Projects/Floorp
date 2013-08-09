@@ -173,6 +173,6 @@ function run_test_4() {
 
     Services.prefs.clearUserPref("plugins.click_to_play");
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }

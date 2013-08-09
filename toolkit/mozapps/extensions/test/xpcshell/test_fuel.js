@@ -160,5 +160,5 @@ function onPrefChange(evt) {
 function onPrefChange2(evt) {
   do_check_eq(evt.data, testdata.dummy);
 
-  do_execute_soon(do_test_finished);
+  do_test_finished();
 }

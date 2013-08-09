@@ -93,7 +93,7 @@ function end_test() {
     globalDir.append(do_get_expected_addon_name("addon4@tests.mozilla.org"));
     globalDir.remove(true);
   }
-  do_execute_soon(do_test_finished);
+  do_test_finished();
 }
 
 // Test that the test extensions are all installed

@@ -21,7 +21,7 @@ function run_test()
       do_check_eq(addon.name, "Deutsches W\u00f6rterbuch");
       do_check_eq(addon.name.length, 20);
 
-      do_execute_soon(do_test_finished);
+      do_test_finished();
     });
   });
 }

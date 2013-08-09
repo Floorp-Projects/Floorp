@@ -50,7 +50,7 @@ function run_test_1() {
     "onDownloadEnded",
     "onInstallStarted",
     "onInstallEnded",
-  ], callback_soon(check_test_1));
+  ], check_test_1);
 
   // Fake a timer event
   gInternalManager.notify(null);
@@ -105,7 +105,7 @@ function run_test_3() {
     "onDownloadEnded",
     "onInstallStarted",
     "onInstallEnded",
-  ], callback_soon(check_test_3));
+  ], check_test_3);
 
   // Fake a timer event
   gInternalManager.notify(null);
@@ -189,7 +189,7 @@ function run_test_6() {
     "onDownloadEnded",
     "onInstallStarted",
     "onInstallEnded",
-  ], callback_soon(check_test_6));
+  ], check_test_6);
 
   // Fake a timer event
   gInternalManager.notify(null);
@@ -261,7 +261,7 @@ function check_test_7(aInstall) {
     "onDownloadEnded",
     "onInstallStarted",
     "onInstallEnded",
-  ], callback_soon(finish_test_7));
+  ], finish_test_7);
 
   // Fake a timer event
   gInternalManager.notify(null);
@@ -326,13 +326,13 @@ function check_test_8() {
 }
 
 function finish_test_8() {
-  AddonManager.getAllInstalls(callback_soon(function(aInstalls) {
+  AddonManager.getAllInstalls(function(aInstalls) {
     do_check_eq(aInstalls.length, 1);
     do_check_eq(aInstalls[0].version, "2.0");
 
     restartManager();
 
-    AddonManager.getAddonByID("hotfix@tests.mozilla.org", callback_soon(function(aAddon) {
+    AddonManager.getAddonByID("hotfix@tests.mozilla.org", function(aAddon) {
       do_check_neq(aAddon, null);
       do_check_eq(aAddon.version, "2.0");
 
@@ -340,6 +340,6 @@ function finish_test_8() {
       restartManager();
 
       end_test();
-    }));
-  }));
+    });
+  });
 }
