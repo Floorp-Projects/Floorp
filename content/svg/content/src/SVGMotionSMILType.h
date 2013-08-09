@@ -73,8 +73,10 @@ public:
 private:
   // Private constructor & destructor: prevent instances beyond my singleton,
   // and prevent others from deleting my singleton.
-  SVGMotionSMILType()  {}
+  MOZ_CONSTEXPR SVGMotionSMILType() {}
+#ifdef DEBUG
   ~SVGMotionSMILType() {}
+#endif
 };
 
 } // namespace mozilla
