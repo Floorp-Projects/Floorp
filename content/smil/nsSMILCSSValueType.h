@@ -100,8 +100,10 @@ public:
 private:
   // Private constructor & destructor: prevent instances beyond my singleton,
   // and prevent others from deleting my singleton.
-  nsSMILCSSValueType()  {}
+  MOZ_CONSTEXPR nsSMILCSSValueType() {}
+#ifdef DEBUG
   ~nsSMILCSSValueType() {}
+#endif
 };
 
 #endif // NS_SMILCSSVALUETYPE_H_
