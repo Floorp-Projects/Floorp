@@ -224,7 +224,7 @@ function run_test() {
     do_check_true(a4.isActive);
     do_check_true(a4.strictCompatibility);
     do_check_false(a4.foreignInstall);
-    // addon5 was enabled in the database but needed a compatibility update
+    // addon5 was enabled in the database but needed a compatibiltiy update
     do_check_neq(a5, null);
     do_check_false(a5.userDisabled);
     do_check_false(a5.appDisabled);
