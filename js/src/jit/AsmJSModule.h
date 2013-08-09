@@ -353,7 +353,6 @@ class AsmJSModule
     size_t                                funcPtrTableAndExitBytes_;
     bool                                  hasArrayView_;
 
-    ScopedReleasePtr<JSC::ExecutablePool> codePool_;
     uint8_t *                             code_;
     uint8_t *                             operationCallbackExit_;
     size_t                                functionBytes_;
@@ -648,13 +647,8 @@ class AsmJSModule
     }
     void patchHeapAccesses(ArrayBufferObject *heap, JSContext *cx);
 
-    void takeOwnership(JSC::ExecutablePool *pool, uint8_t *code, size_t codeBytes, size_t totalBytes) {
-        JS_ASSERT(uintptr_t(code) % AsmJSPageSize == 0);
-        codePool_ = pool;
-        code_ = code;
-        codeBytes_ = codeBytes;
-        totalBytes_ = totalBytes;
-    }
+    uint8_t *allocateCodeAndGlobalSegment(ExclusiveContext *cx, size_t bytesNeeded);
+
     uint8_t *functionCode() const {
         JS_ASSERT(code_);
         JS_ASSERT(uintptr_t(code_) % AsmJSPageSize == 0);
