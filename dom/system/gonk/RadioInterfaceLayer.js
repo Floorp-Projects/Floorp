@@ -2994,7 +2994,7 @@ RadioInterface.prototype = {
     return options;
   },
 
-  getSegmentInfoForText: function getSegmentInfoForText(text) {
+  getSegmentInfoForText: function getSegmentInfoForText(text, request) {
     let strict7BitEncoding;
     try {
       strict7BitEncoding = Services.prefs.getBoolPref("dom.sms.strict7BitEncoding");
@@ -3015,10 +3015,11 @@ RadioInterface.prototype = {
       charsInLastSegment = 0;
     }
 
-    let result = gMobileMessageService.createSmsSegmentInfo(options.segmentMaxSeq,
-                                                            options.segmentChars,
-                                                            options.segmentChars - charsInLastSegment);
-    return result;
+    let result = gMobileMessageService
+                 .createSmsSegmentInfo(options.segmentMaxSeq,
+                                       options.segmentChars,
+                                       options.segmentChars - charsInLastSegment);
+    request.notifySegmentInfoForTextGot(result);
   },
 
   sendSMS: function sendSMS(number, message, silent, request) {

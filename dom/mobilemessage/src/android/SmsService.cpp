@@ -23,19 +23,16 @@ SmsService::HasSupport(bool* aHasSupport)
 }
 
 NS_IMETHODIMP
-SmsService::GetSegmentInfoForText(const nsAString & aText,
-                                  nsIDOMMozSmsSegmentInfo** aResult)
+SmsService::GetSegmentInfoForText(const nsAString& aText,
+                                  nsIMobileMessageCallback* aRequest)
 {
   if (!AndroidBridge::Bridge()) {
     return NS_ERROR_FAILURE;
   }
 
-  SmsSegmentInfoData data;
-  nsresult rv = AndroidBridge::Bridge()->GetSegmentInfoForText(aText, &data);
+  nsresult rv = AndroidBridge::Bridge()->GetSegmentInfoForText(aText, aRequest);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMMozSmsSegmentInfo> info = new SmsSegmentInfo(data);
-  info.forget(aResult);
   return NS_OK;
 }
 

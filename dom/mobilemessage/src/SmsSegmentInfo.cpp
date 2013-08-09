@@ -55,5 +55,11 @@ SmsSegmentInfo::GetCharsAvailableInLastSegment(int32_t* aCharsAvailableInLastSeg
   return NS_OK;
 }
 
+const SmsSegmentInfoData&
+SmsSegmentInfo::GetData() const
+{
+  return mData;
+}
+
 } // namespace dom
 } // namespace mozilla
