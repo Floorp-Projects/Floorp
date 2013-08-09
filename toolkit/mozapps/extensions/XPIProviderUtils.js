@@ -7,24 +7,19 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
-const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/AddonRepository.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DeferredSave",
-                                  "resource://gre/modules/DeferredSave.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/Promise.jsm");
 
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
   Object.defineProperty(this, aName, {
     get: function logFuncGetter () {
-      Cu.import("resource://gre/modules/AddonLogging.jsm");
+      Components.utils.import("resource://gre/modules/AddonLogging.jsm");
 
       LogManager.getLogger("addons.xpi-utils", this);
       return this[aName];
@@ -92,8 +87,6 @@ const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
                           "strictCompatibility", "locales", "targetApplications",
                           "targetPlatforms"];
 
-// Time to wait before async save of XPI JSON database, in milliseconds
-const ASYNC_SAVE_DELAY_MS = 20;
 
 const PREFIX_ITEM_URI                 = "urn:mozilla:item:";
 const RDFURI_ITEM_ROOT                = "urn:mozilla:item:root"
@@ -349,17 +342,18 @@ function DBAddonInternal(aLoaded) {
 
 DBAddonInternal.prototype = {
   applyCompatibilityUpdate: function DBA_applyCompatibilityUpdate(aUpdate, aSyncCompatibility) {
+    XPIDatabase.beginTransaction();
     this.targetApplications.forEach(function(aTargetApp) {
       aUpdate.targetApplications.forEach(function(aUpdateTarget) {
         if (aTargetApp.id == aUpdateTarget.id && (aSyncCompatibility ||
             Services.vc.compare(aTargetApp.maxVersion, aUpdateTarget.maxVersion) < 0)) {
           aTargetApp.minVersion = aUpdateTarget.minVersion;
           aTargetApp.maxVersion = aUpdateTarget.maxVersion;
-          XPIDatabase.saveChanges();
         }
       });
     });
     XPIProvider.updateAddonDisabledState(this);
+    XPIDatabase.commitTransaction();
   },
 
   get inDatabase() {
@@ -376,6 +370,8 @@ DBAddonInternal.prototype.__proto__ = AddonInternal.prototype;
 this.XPIDatabase = {
   // true if the database connection has been opened
   initialized: false,
+  // The nested transaction count
+  transactionCount: 0,
   // The database file
   jsonFile: FileUtils.getFile(KEY_PROFILEDIR, [FILE_JSON_DB], true),
   // Migration data loaded from an old version of the database.
@@ -396,58 +392,19 @@ this.XPIDatabase = {
   },
 
   /**
-   * Mark the current stored data dirty, and schedule a flush to disk
-   */
-  saveChanges: function() {
-    if (!this.initialized) {
-      throw new Error("Attempt to use XPI database when it is not initialized");
-    }
-
-    // handle the "in memory only" case
-    if (this.lockedDatabase) {
-      return;
-    }
-
-    let promise = this._deferredSave.saveChanges();
-    if (!this._schemaVersionSet) {
-      this._schemaVersionSet = true;
-      promise.then(
-        count => {
-          // Update the XPIDB schema version preference the first time we successfully
-          // save the database.
-          LOG("XPI Database saved, setting schema version preference to " + DB_SCHEMA);
-          Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
-        },
-        error => {
-          // Need to try setting the schema version again later
-          this._schemaVersionSet = false;
-          WARN("Failed to save XPI database", error);
-        });
-    }
-  },
-
-  flush: function() {
-    // handle the "in memory only" case
-    if (this.lockedDatabase) {
-      let done = Promise.defer();
-      done.resolve(0);
-      return done.promise;
-    }
-
-    return this._deferredSave.flush();
-  },
-
-  get _deferredSave() {
-    delete this._deferredSave;
-    return this._deferredSave =
-      new DeferredSave(this.jsonFile.path, () => JSON.stringify(this),
-                       ASYNC_SAVE_DELAY_MS);
-  },
-
-  /**
    * Converts the current internal state of the XPI addon database to JSON
+   * and writes it to the user's profile. Synchronous for now, eventually must
+   * be async, reliable, etc.
+   * XXX should we remove the JSON file if it would be empty? Not sure if that
+   * would ever happen, given the default theme
    */
-  toJSON: function() {
+  writeJSON: function XPIDB_writeJSON() {
+    // XXX should have a guard here for if the addonDB hasn't been auto-loaded yet
+
+    // Don't mess with an existing database on disk, if it was locked at start up
+    if (this.lockedDatabase)
+      return;
+
     let addons = [];
     for (let [key, addon] of this.addonDB) {
       addons.push(addon);
@@ -456,7 +413,74 @@ this.XPIDatabase = {
       schemaVersion: DB_SCHEMA,
       addons: addons
     };
-    return toSave;
+
+    let stream = FileUtils.openSafeFileOutputStream(this.jsonFile);
+    let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
+      createInstance(Ci.nsIConverterOutputStream);
+    try {
+      converter.init(stream, "UTF-8", 0, 0x0000);
+      // XXX pretty print the JSON while debugging
+      let out = JSON.stringify(toSave, null, 2);
+      // dump("Writing JSON:\n" + out + "\n");
+      converter.writeString(out);
+      converter.flush();
+      // nsConverterOutputStream doesn't finish() safe output streams on close()
+      FileUtils.closeSafeFileOutputStream(stream);
+      converter.close();
+      this.dbfileExists = true;
+      // XXX probably only want to do this if the version is different
+      Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
+      Services.prefs.savePrefFile(null);   // XXX is this bad sync I/O?
+    }
+    catch(e) {
+      ERROR("Failed to save database to JSON", e);
+      stream.close();
+    }
+  },
+
+  /**
+   * Begins a new transaction in the database. Transactions may be nested. Data
+   * written by an inner transaction may be rolled back on its own. Rolling back
+   * an outer transaction will rollback all the changes made by inner
+   * transactions even if they were committed. No data is written to the disk
+   * until the outermost transaction is committed. Transactions can be started
+   * even when the database is not yet open in which case they will be started
+   * when the database is first opened.
+   */
+  beginTransaction: function XPIDB_beginTransaction() {
+    this.transactionCount++;
+  },
+
+  /**
+   * Commits the most recent transaction. The data may still be rolled back if
+   * an outer transaction is rolled back.
+   */
+  commitTransaction: function XPIDB_commitTransaction() {
+    if (this.transactionCount == 0) {
+      ERROR("Attempt to commit one transaction too many.");
+      return;
+    }
+
+    this.transactionCount--;
+
+    if (this.transactionCount == 0) {
+      // All our nested transactions are done, write the JSON file
+      this.writeJSON();
+    }
+  },
+
+  /**
+   * Rolls back the most recent transaction. The database will return to its
+   * state when the transaction was started.
+   */
+  rollbackTransaction: function XPIDB_rollbackTransaction() {
+    if (this.transactionCount == 0) {
+      ERROR("Attempt to rollback one transaction too many.");
+      return;
+    }
+
+    this.transactionCount--;
+    // XXX IRVING we don't handle rollback in the JSON store
   },
 
   /**
@@ -542,10 +566,9 @@ this.XPIDatabase = {
           this.rebuildDatabase(aRebuildOnError);
         }
         if (inputAddons.schemaVersion != DB_SCHEMA) {
-          // Handle mismatched JSON schema version. For now, we assume
-          // compatibility for JSON data, though we throw away any fields we
-          // don't know about
-          // XXX preserve unknown fields during save/restore
+          // Handle mismatched JSON schema version. For now, we assume backward/forward
+          // compatibility as long as we preserve unknown fields during save & restore
+          // XXX preserve schema version and unknown fields during save/restore
           LOG("JSON schema mismatch: expected " + DB_SCHEMA +
               ", actual " + inputAddons.schemaVersion);
         }
@@ -558,7 +581,6 @@ this.XPIDatabase = {
         });
         this.addonDB = addonDB;
         LOG("Successfully read XPI database");
-        this.initialized = true;
       }
       catch(e) {
         // If we catch and log a SyntaxError from the JSON
@@ -605,6 +627,7 @@ this.XPIDatabase = {
         fstream.close();
     }
 
+    this.initialized = true;
     return;
 
     // XXX what about aForceOpen? Appears to handle the case of "don't open DB file if there aren't any extensions"?
@@ -624,25 +647,26 @@ this.XPIDatabase = {
    *         (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    */
   rebuildDatabase: function XIPDB_rebuildDatabase(aRebuildOnError) {
-    this.addonDB = new Map();
-    this.initialized = true;
-
     // If there is no migration data then load the list of add-on directories
     // that were active during the last run
+    this.addonDB = new Map();
     if (!this.migrateData)
       this.activeBundles = this.getActiveBundles();
 
     if (aRebuildOnError) {
       WARN("Rebuilding add-ons database from installed extensions.");
+      this.beginTransaction();
       try {
         let state = XPIProvider.getInstallLocationStates();
         XPIProvider.processFileChanges(state, {}, false);
+        // Make sure to update the active add-ons and add-ons list on shutdown
+        Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
+        this.commitTransaction();
       }
       catch (e) {
-        ERROR("Failed to rebuild XPI database from installed extensions", e);
+        ERROR("Error processing file changes", e);
+        this.rollbackTransaction();
       }
-      // Make to update the active add-ons and add-ons list on shutdown
-      Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
     }
   },
 
@@ -861,55 +885,38 @@ this.XPIDatabase = {
   shutdown: function XPIDB_shutdown(aCallback) {
     LOG("shutdown");
     if (this.initialized) {
+      if (this.transactionCount > 0) {
+        ERROR(this.transactionCount + " outstanding transactions, rolling back.");
+        while (this.transactionCount > 0)
+          this.rollbackTransaction();
+      }
+
       // If we are running with an in-memory database then force a new
       // extensions.ini to be written to disk on the next startup
       if (this.lockedDatabase)
         Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
 
       this.initialized = false;
-      let result = null;
 
-      // Make sure any pending writes of the DB are complete, and we
-      // finish cleaning up, and then call back
-      this.flush()
-        .then(null, error => {
-          ERROR("Flush of XPI database failed", error);
-          Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
-          result = error;
-          return 0;
-        })
-        .then(count => {
-          // Clear out the cached addons data loaded from JSON and recreate
-          // the getter to allow database re-loads during testing.
-          delete this.addonDB;
-          Object.defineProperty(this, "addonDB", {
-            get: function addonsGetter() {
-              this.openConnection(true);
-              return this.addonDB;
-            },
-            configurable: true
-          });
-          // same for the deferred save
-          delete this._deferredSave;
-          Object.defineProperty(this, "_deferredSave", {
-            set: function deferredSaveGetter() {
-              delete this._deferredSave;
-              return this._deferredSave =
-                new DeferredSave(this.jsonFile.path, this.formJSON.bind(this),
-                                 ASYNC_SAVE_DELAY_MS);
-            },
-            configurable: true
-          });
-          // re-enable the schema version setter
-          delete this._schemaVersionSet;
-
-          if (aCallback)
-            aCallback(result);
-        });
+      // Clear out the cached addons data loaded from JSON and recreate
+      // the getter to allow database re-loads during testing.
+      delete this.addonDB;
+      Object.defineProperty(this, "addonDB", {
+        get: function addonsGetter() {
+          this.openConnection(true);
+          return this.addonDB;
+        },
+        configurable: true
+      });
+      // XXX IRVING removed an async callback when the database was closed
+      // XXX do we want to keep the ability to async flush extensions.json
+      // XXX and then call back?
+      if (aCallback)
+        aCallback();
     }
     else {
       if (aCallback)
-        aCallback(null);
+        aCallback();
     }
   },
 
@@ -1120,6 +1127,8 @@ this.XPIDatabase = {
     if (!this.addonDB)
       this.openConnection(false, true);
 
+    this.beginTransaction();
+
     let newAddon = new DBAddonInternal(aAddon);
     newAddon.descriptor = aDescriptor;
     this.addonDB.set(newAddon._key, newAddon);
@@ -1127,12 +1136,12 @@ this.XPIDatabase = {
       this.makeAddonVisible(newAddon);
     }
 
-    this.saveChanges();
+    this.commitTransaction();
     return newAddon;
   },
 
   /**
-   * Synchronously updates an add-on's metadata in the database. Currently just
+   * Synchronously updates an add-ons metadata in the database. Currently just
    * removes and recreates.
    *
    * @param  aOldAddon
@@ -1145,16 +1154,26 @@ this.XPIDatabase = {
    */
   updateAddonMetadata: function XPIDB_updateAddonMetadata(aOldAddon, aNewAddon,
                                                           aDescriptor) {
-    this.removeAddonMetadata(aOldAddon);
-    aNewAddon.syncGUID = aOldAddon.syncGUID;
-    aNewAddon.installDate = aOldAddon.installDate;
-    aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
-    aNewAddon.foreignInstall = aOldAddon.foreignInstall;
-    aNewAddon.active = (aNewAddon.visible && !aNewAddon.userDisabled &&
-                        !aNewAddon.appDisabled && !aNewAddon.pendingUninstall);
+    this.beginTransaction();
 
-    // addAddonMetadata does a saveChanges()
-    return this.addAddonMetadata(aNewAddon, aDescriptor);
+    // Any errors in here should rollback the transaction
+    try {
+      this.removeAddonMetadata(aOldAddon);
+      aNewAddon.syncGUID = aOldAddon.syncGUID;
+      aNewAddon.installDate = aOldAddon.installDate;
+      aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
+      aNewAddon.foreignInstall = aOldAddon.foreignInstall;
+      aNewAddon.active = (aNewAddon.visible && !aNewAddon.userDisabled &&
+                          !aNewAddon.appDisabled && !aNewAddon.pendingUninstall)
+
+      let newDBAddon = this.addAddonMetadata(aNewAddon, aDescriptor);
+      this.commitTransaction();
+      return newDBAddon;
+    }
+    catch (e) {
+      this.rollbackTransaction();
+      throw e;
+    }
   },
 
   /**
@@ -1164,8 +1183,9 @@ this.XPIDatabase = {
    *         The DBAddonInternal being removed
    */
   removeAddonMetadata: function XPIDB_removeAddonMetadata(aAddon) {
+    this.beginTransaction();
     this.addonDB.delete(aAddon._key);
-    this.saveChanges();
+    this.commitTransaction();
   },
 
   /**
@@ -1178,6 +1198,7 @@ this.XPIDatabase = {
    *         A callback to pass the DBAddonInternal to
    */
   makeAddonVisible: function XPIDB_makeAddonVisible(aAddon) {
+    this.beginTransaction();
     LOG("Make addon " + aAddon._key + " visible");
     for (let [key, otherAddon] of this.addonDB) {
       if ((otherAddon.id == aAddon.id) && (otherAddon._key != aAddon._key)) {
@@ -1186,7 +1207,7 @@ this.XPIDatabase = {
       }
     }
     aAddon.visible = true;
-    this.saveChanges();
+    this.commitTransaction();
   },
 
   /**
@@ -1198,10 +1219,11 @@ this.XPIDatabase = {
    *         A dictionary of properties to set
    */
   setAddonProperties: function XPIDB_setAddonProperties(aAddon, aProperties) {
+    this.beginTransaction();
     for (let key in aProperties) {
       aAddon[key] = aProperties[key];
     }
-    this.saveChanges();
+    this.commitTransaction();
   },
 
   /**
@@ -1223,8 +1245,9 @@ this.XPIDatabase = {
       throw new Error("Addon sync GUID conflict for addon " + aAddon._key +
           ": " + otherAddon._key + " already has GUID " + aGUID);
     }
+    this.beginTransaction();
     aAddon.syncGUID = aGUID;
-    this.saveChanges();
+    this.commitTransaction();
   },
 
   /**
@@ -1237,8 +1260,9 @@ this.XPIDatabase = {
    *         File path of the installed addon
    */
   setAddonDescriptor: function XPIDB_setAddonDescriptor(aAddon, aDescriptor) {
+    this.beginTransaction();
     aAddon.descriptor = aDescriptor;
-    this.saveChanges();
+    this.commitTransaction();
   },
 
   /**
@@ -1250,8 +1274,9 @@ this.XPIDatabase = {
   updateAddonActive: function XPIDB_updateAddonActive(aAddon, aActive) {
     LOG("Updating active state for add-on " + aAddon.id + " to " + aActive);
 
+    this.beginTransaction();
     aAddon.active = aActive;
-    this.saveChanges();
+    this.commitTransaction();
   },
 
   /**
@@ -1261,14 +1286,19 @@ this.XPIDatabase = {
     // XXX IRVING this may get called during XPI-utils shutdown
     // XXX need to make sure PREF_PENDING_OPERATIONS handling is clean
     LOG("Updating add-on states");
+    let changed = false;
     for (let [key, addon] of this.addonDB) {
       let newActive = (addon.visible && !addon.userDisabled &&
                       !addon.softDisabled && !addon.appDisabled &&
                       !addon.pendingUninstall);
       if (newActive != addon.active) {
         addon.active = newActive;
-        this.saveChanges();
+        changed = true;
       }
+    }
+    if (changed) {
+      this.beginTransaction();
+      this.commitTransaction();
     }
   },
 
