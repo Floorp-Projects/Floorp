@@ -78,6 +78,8 @@ public:
 
   void UnmarkScriptContext();
 
+  static JSClass gSharedGlobalClass;
+
 protected:
   virtual ~nsXBLDocGlobalObject();
 
@@ -87,7 +89,6 @@ protected:
   JSObject *mJSObject;
 
   nsXBLDocumentInfo* mGlobalObjectOwner; // weak reference
-  static JSClass gSharedGlobalClass;
 };
 
 bool
@@ -713,3 +714,13 @@ nsXBLDocumentInfo::GetScriptGlobalObject()
 
   return mGlobalObject;
 }
+
+#ifdef DEBUG
+void
+AssertInCompilationScope()
+{
+  AutoJSContext cx;
+  MOZ_ASSERT(JS_GetClass(JS::CurrentGlobalOrNull(cx)) ==
+             &nsXBLDocGlobalObject::gSharedGlobalClass);
+}
+#endif

@@ -70,4 +70,10 @@ private:
   nsRefPtr<nsXBLDocGlobalObject> mGlobalObject;
 };
 
+#ifdef DEBUG
+void AssertInCompilationScope();
+#else
+inline void AssertInCompilationScope() {}
+#endif
+
 #endif
