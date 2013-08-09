@@ -27,7 +27,6 @@
 #include "gfxWindowsPlatform.h"
 #include <d3d10_1.h>
 #include "d3d10/ImageLayerD3D10.h"
-#include "D3D11ShareHandleImage.h"
 #include "D3D9SurfaceImage.h"
 #endif
 
@@ -71,10 +70,6 @@ ImageFactory::CreateImage(const ImageFormat *aFormats,
     return img.forget();
   }
 #ifdef XP_WIN
-  if (FormatInList(aFormats, aNumFormats, D3D11_SHARE_HANDLE_TEXTURE)) {
-    img = new D3D11ShareHandleImage();
-    return img.forget();
-  }
   if (FormatInList(aFormats, aNumFormats, D3D9_RGB32_TEXTURE)) {
     img = new D3D9SurfaceImage();
     return img.forget();

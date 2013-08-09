@@ -359,7 +359,7 @@ UnloadDLLs()
 #define ENSURE_FUNCTION_PTR(FunctionName, DLL) \
   static FunctionName##Ptr_t FunctionName##Ptr = nullptr; \
   if (!FunctionName##Ptr) { \
-    FunctionName##Ptr = (FunctionName##Ptr_t)GetProcAddress(GetModuleHandleW( L#DLL ), #FunctionName ); \
+    FunctionName##Ptr = (FunctionName##Ptr_t)GetProcAddress(GetModuleHandle( #DLL ), #FunctionName ); \
     if (!FunctionName##Ptr) { \
       NS_WARNING("Failed to get GetProcAddress of " #FunctionName " from " #DLL ); \
       return E_FAIL; \
@@ -531,15 +531,6 @@ DXVA2CreateDirect3DDeviceManager9(UINT *pResetToken,
   DECL_FUNCTION_PTR(DXVA2CreateDirect3DDeviceManager9, UINT*, IDirect3DDeviceManager9 **);
   ENSURE_FUNCTION_PTR(DXVA2CreateDirect3DDeviceManager9, dxva2.dll)
   return (DXVA2CreateDirect3DDeviceManager9Ptr)(pResetToken, ppDXVAManager);
-}
-
-HRESULT
-MFCreateDXGIDeviceManager(UINT *pResetToken,
-                          IMFDXGIDeviceManager **ppDXVAManager)
-{
-  DECL_FUNCTION_PTR(MFCreateDXGIDeviceManager, UINT*, IMFDXGIDeviceManager**);
-  ENSURE_FUNCTION_PTR(MFCreateDXGIDeviceManager, mfplat.dll)
-  return (MFCreateDXGIDeviceManagerPtr)(pResetToken, ppDXVAManager);
 }
 
 } // end namespace wmf
