@@ -36,15 +36,15 @@ exports.testPlainTextConsole = function(test) {
   test.pass("PlainTextConsole instantiates");
 
   con.log('testing', 1, [2, 3, 4]);
-  test.assertEqual(lastPrint(), "console.log: " + name + ": testing, 1, Array [2,3,4]\n",
+  test.assertEqual(lastPrint(), "console.log: " + name + ": testing 1 Array [2,3,4]\n",
                    "PlainTextConsole.log() must work.");
 
   con.info('testing', 1, [2, 3, 4]);
-  test.assertEqual(lastPrint(), "console.info: " + name + ": testing, 1, Array [2,3,4]\n",
+  test.assertEqual(lastPrint(), "console.info: " + name + ": testing 1 Array [2,3,4]\n",
                    "PlainTextConsole.info() must work.");
 
   con.warn('testing', 1, [2, 3, 4]);
-  test.assertEqual(lastPrint(), "console.warn: " + name + ": testing, 1, Array [2,3,4]\n",
+  test.assertEqual(lastPrint(), "console.warn: " + name + ": testing 1 Array [2,3,4]\n",
                    "PlainTextConsole.warn() must work.");
 
   con.error('testing', 1, [2, 3, 4]);
@@ -64,20 +64,20 @@ exports.testPlainTextConsole = function(test) {
   prints = [];
 
   con.log('testing', undefined);
-  test.assertEqual(lastPrint(), "console.log: " + name + ": testing, undefined\n",
+  test.assertEqual(lastPrint(), "console.log: " + name + ": testing undefined\n",
                    "PlainTextConsole.log() must stringify undefined.");
 
   con.log('testing', null);
-  test.assertEqual(lastPrint(), "console.log: " + name + ": testing, null\n",
+  test.assertEqual(lastPrint(), "console.log: " + name + ": testing null\n",
                    "PlainTextConsole.log() must stringify null.");
 
   // TODO: Fix console.jsm to detect custom toString.
   con.log("testing", { toString: function() "obj.toString()" });
-  test.assertEqual(lastPrint(), "console.log: " + name + ": testing, {}\n",
+  test.assertEqual(lastPrint(), "console.log: " + name + ": testing {}\n",
                    "PlainTextConsole.log() doesn't printify custom toString.");
 
   con.log("testing", { toString: function() { throw "fail!"; } });
-  test.assertEqual(lastPrint(), "console.log: " + name + ": testing, {}\n",
+  test.assertEqual(lastPrint(), "console.log: " + name + ": testing {}\n",
                    "PlainTextConsole.log() must stringify custom bad toString.");
 
   

@@ -59,7 +59,8 @@ class MachCommands(MachCommandBase):
         return self.run_process([self.python_executable] + args,
             pass_thru=True, # Allow user to run Python interactively.
             ensure_exit_code=False, # Don't throw on non-zero exit code.
-            append_env={'PYTHONDONTWRITEBYTECODE': '1'})
+            # Note: subprocess requires native strings in os.environ on Windows
+            append_env={b'PYTHONDONTWRITEBYTECODE': str('1')})
 
     @Command('python-test', category='testing',
         description='Run Python unit tests.')
@@ -109,7 +110,8 @@ class MachCommands(MachCommandBase):
                 [self.python_executable, file],
                 ensure_exit_code=False, # Don't throw on non-zero exit code.
                 log_name='python-test',
-                append_env={'PYTHONDONTWRITEBYTECODE': '1'},
+                # subprocess requires native strings in os.environ on Windows
+                append_env={b'PYTHONDONTWRITEBYTECODE': str('1')},
                 line_handler=_line_handler)
             return_code += inner_return_code
 
