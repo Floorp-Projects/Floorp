@@ -96,19 +96,11 @@ SmsIPCService::HasSupport(bool* aHasSupport)
 }
 
 NS_IMETHODIMP
-SmsIPCService::GetSegmentInfoForText(const nsAString & aText,
-                                     nsIDOMMozSmsSegmentInfo** aResult)
+SmsIPCService::GetSegmentInfoForText(const nsAString& aText,
+                                     nsIMobileMessageCallback* aRequest)
 {
-  PSmsChild* smsChild = GetSmsChild();
-  NS_ENSURE_TRUE(smsChild, NS_ERROR_FAILURE);
-
-  SmsSegmentInfoData data;
-  bool ok = smsChild->SendGetSegmentInfoForText(nsString(aText), &data);
-  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMMozSmsSegmentInfo> info = new SmsSegmentInfo(data);
-  info.forget(aResult);
-  return NS_OK;
+  return SendRequest(GetSegmentInfoForTextRequest(nsString(aText)),
+                                                  aRequest);
 }
 
 NS_IMETHODIMP
