@@ -485,8 +485,6 @@ let SessionStoreInternal = {
         this._prefBranch.getBoolPref("sessionstore.resume_session_once"))
       this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
 
-    this._initEncoding();
-
     this._performUpgradeBackup();
 
     this._sessionInitialized = true;
@@ -519,13 +517,6 @@ let SessionStoreInternal = {
         debug(ex.stack);
       }
     }.bind(this));
-  },
-
-  _initEncoding : function ssi_initEncoding() {
-    // The (UTF-8) encoder used to write to files.
-    XPCOMUtils.defineLazyGetter(this, "_writeFileEncoder", function () {
-      return new TextEncoder();
-    });
   },
 
   _initPrefs : function() {
