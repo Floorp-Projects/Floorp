@@ -2815,6 +2815,10 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
                                 NS_LITERAL_STRING("horizontal"), false);
     mHScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
                                 NS_LITERAL_STRING("always"), false);
+    if (mIsRoot) {
+      mHScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::root_,
+                                  NS_LITERAL_STRING("true"), false);
+    }
     if (!aElements.AppendElement(mHScrollbarContent))
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2826,6 +2830,10 @@ nsGfxScrollFrameInner::CreateAnonymousContent(
                                 NS_LITERAL_STRING("vertical"), false);
     mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
                                 NS_LITERAL_STRING("always"), false);
+    if (mIsRoot) {
+      mVScrollbarContent->SetAttr(kNameSpaceID_None, nsGkAtoms::root_,
+                                  NS_LITERAL_STRING("true"), false);
+    }
     if (!aElements.AppendElement(mVScrollbarContent))
       return NS_ERROR_OUT_OF_MEMORY;
   }
