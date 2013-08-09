@@ -150,12 +150,10 @@ NS_IMPL_RELEASE_INHERITED(HTMLSelectElement, Element)
 
 // QueryInterface implementation for HTMLSelectElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSelectElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElementWithState)
   NS_INTERFACE_TABLE_INHERITED2(HTMLSelectElement,
                                 nsIDOMHTMLSelectElement,
                                 nsIConstraintValidation)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElementWithState)
 
 
 // nsIDOMHTMLSelectElement
@@ -609,13 +607,13 @@ HTMLSelectElement::Add(nsGenericHTMLElement& aElement,
                        ErrorResult& aError)
 {
   if (!aBefore) {
-    nsGenericHTMLElement::AppendChild(aElement, aError);
+    Element::AppendChild(aElement, aError);
     return;
   }
 
   // Just in case we're not the parent, get the parent of the reference
   // element
-  nsINode* parent = aBefore->GetParentNode();
+  nsINode* parent = aBefore->Element::GetParentNode();
   if (!parent || !nsContentUtils::ContentIsDescendantOf(parent, this)) {
     // NOT_FOUND_ERR: Raised if before is not a descendant of the SELECT
     // element.

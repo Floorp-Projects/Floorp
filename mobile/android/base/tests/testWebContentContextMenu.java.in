@@ -23,7 +23,7 @@ public class testWebContentContextMenu extends PixelTest {
         String urls [] = { "/robocop/robocop_big_link.html", "/robocop/robocop_big_mailto.html", "/robocop/robocop_picture_link.html"};
         String linkMenuItems [] = { "Open Link in New Tab", "Open Link in Private Tab", "Copy Link", "Share Link", "Bookmark Link"};
         String mailtoMenuItems [] = { "Open With an App", "Copy Email Address", "Share Email Address"};
-        String photoMenuItems [] = { "Copy Image Location", "Share Image", "Set as Wallpaper", "Save Image"};
+        String photoMenuItems [] = { "Copy Image Location", "Share Image", "Set Image As", "Save Image"};
 
         verfyLinkContextMenu(linkMenuItems, urls);
         verfyMailtoContextMenu(mailtoMenuItems, urls);
@@ -192,7 +192,7 @@ public class testWebContentContextMenu extends PixelTest {
                     mSolo.waitForText("Picture Link");
                 }
                 else {
-                    if (opt.equals("Set as Wallpaper")) {
+                    if (opt.equals("Set Image As")) {
                         openContextMenu(2, urls);
                         mAsserter.ok(mSolo.waitForText(opt), "Waiting for  " + opt + "  option", "The " + opt + "  option is present");
                     }

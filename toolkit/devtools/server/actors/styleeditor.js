@@ -104,7 +104,7 @@ StyleEditorActor.prototype = {
    * @return {object} JSON message to with BaseURI
    */
   onGetBaseURI: function() {
-    return { baseURI: this.document.baseURIObject };
+    return { baseURI: this.document.baseURIObject.spec };
   },
 
   /**

@@ -909,10 +909,6 @@ private:
                 nsCOMPtr<nsIContentSecurityPolicy>& aCSP, bool aEvalAllowed,
                 bool aReportCSPViolations, bool aXHRParamsAllowed);
 
-  static bool
-  GetContentSecurityPolicy(JSContext *aCx,
-                           nsIContentSecurityPolicy** aCsp);
-
   bool
   Dispatch(WorkerRunnable* aEvent, EventQueue* aQueue);
 

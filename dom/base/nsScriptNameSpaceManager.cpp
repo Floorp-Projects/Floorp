@@ -787,27 +787,34 @@ nsScriptNameSpaceManager::RegisterNavigatorDOMConstructor(
   }
 }
 
-struct GlobalNameClosure
+struct NameClosure
 {
-  nsScriptNameSpaceManager::GlobalNameEnumerator enumerator;
+  nsScriptNameSpaceManager::NameEnumerator enumerator;
   void* closure;
 };
 
 static PLDHashOperator
-EnumerateGlobalName(PLDHashTable*, PLDHashEntryHdr *hdr, uint32_t,
-                    void* aClosure)
+EnumerateName(PLDHashTable*, PLDHashEntryHdr *hdr, uint32_t, void* aClosure)
 {
   GlobalNameMapEntry *entry = static_cast<GlobalNameMapEntry *>(hdr);
-  GlobalNameClosure* closure = static_cast<GlobalNameClosure*>(aClosure);
+  NameClosure* closure = static_cast<NameClosure*>(aClosure);
   return closure->enumerator(entry->mKey, closure->closure);
 }
 
 void
-nsScriptNameSpaceManager::EnumerateGlobalNames(GlobalNameEnumerator aEnumerator,
+nsScriptNameSpaceManager::EnumerateGlobalNames(NameEnumerator aEnumerator,
                                                void* aClosure)
 {
-  GlobalNameClosure closure = { aEnumerator, aClosure };
-  PL_DHashTableEnumerate(&mGlobalNames, EnumerateGlobalName, &closure);
+  NameClosure closure = { aEnumerator, aClosure };
+  PL_DHashTableEnumerate(&mGlobalNames, EnumerateName, &closure);
+}
+
+void
+nsScriptNameSpaceManager::EnumerateNavigatorNames(NameEnumerator aEnumerator,
+                                                  void* aClosure)
+{
+  NameClosure closure = { aEnumerator, aClosure };
+  PL_DHashTableEnumerate(&mNavigatorNames, EnumerateName, &closure);
 }
 
 static size_t

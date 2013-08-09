@@ -129,10 +129,10 @@ jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
     {
         JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(jsdval->val));
         AutoSaveExceptionState as(cx);
-        JSBool ok = JS_FALSE;
+        JSBool ok = false;
         fun = JSD_GetValueFunction(jsdc, jsdval);
         if(fun)
-            ok = JS_GetFunctionScript(cx, fun) ? JS_FALSE : JS_TRUE;
+            ok = JS_GetFunctionScript(cx, fun) ? false : true;
         JS_ASSERT(fun);
         return ok;
     }
@@ -146,7 +146,7 @@ jsd_GetValueBoolean(JSDContext* jsdc, JSDValue* jsdval)
 {
     jsval val = jsdval->val;
     if(!JSVAL_IS_BOOLEAN(val))
-        return JS_FALSE;
+        return false;
     return JSVAL_TO_BOOLEAN(val);
 }
 
@@ -254,7 +254,7 @@ jsd_NewValue(JSDContext* jsdc, jsval value)
         ok = JS_AddNamedValueRoot(cx, &jsdval->val, "JSDValue");
         if(ok && JSVAL_IS_STRING(val)) {
             if(!JS_WrapValue(cx, val.address())) {
-                ok = JS_FALSE;
+                ok = false;
             }
         }
 
@@ -363,7 +363,7 @@ static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(jsdval->val));
 
     if(JSVAL_IS_PRIMITIVE(jsdval->val))
-        return JS_FALSE;
+        return false;
 
     obj = JSVAL_TO_OBJECT(jsdval->val);
 
@@ -371,7 +371,7 @@ static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
 
     if(!JS_GetPropertyDescArray(cx, obj, &pda))
     {
-        return JS_FALSE;
+        return false;
     }
 
     for(i = 0; i < pda.length; i++)

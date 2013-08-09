@@ -932,7 +932,8 @@ class IDLInterface(IDLObjectWithScope):
             elif (identifier == "Pref" or
                   identifier == "JSImplementation" or
                   identifier == "HeaderFile" or
-                  identifier == "NavigatorProperty"):
+                  identifier == "NavigatorProperty" or
+                  identifier == "Func"):
                 # Known extended attributes that take a string value
                 if not attr.hasValue():
                     raise WebIDLError("[%s] must have a value" % identifier,
@@ -3689,21 +3690,33 @@ class Parser(Tokenizer):
 
     def p_EnumValueList(self, p):
         """
-            EnumValueList : STRING EnumValues
+            EnumValueList : STRING EnumValueListComma
         """
         p[0] = [p[1]]
         p[0].extend(p[2])
 
-    def p_EnumValues(self, p):
+    def p_EnumValueListComma(self, p):
         """
-            EnumValues : COMMA STRING EnumValues
+            EnumValueListComma : COMMA EnumValueListString
         """
-        p[0] = [p[2]]
-        p[0].extend(p[3])
+        p[0] = p[2]
 
-    def p_EnumValuesEmpty(self, p):
+    def p_EnumValueListCommaEmpty(self, p):
         """
-            EnumValues :
+            EnumValueListComma :
+        """
+        p[0] = []
+
+    def p_EnumValueListString(self, p):
+        """
+            EnumValueListString : STRING EnumValueListComma
+        """
+        p[0] = [p[1]]
+        p[0].extend(p[2])
+
+    def p_EnumValueListStringEmpty(self, p):
+        """
+            EnumValueListString :
         """
         p[0] = []
 

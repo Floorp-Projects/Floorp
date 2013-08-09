@@ -25,6 +25,8 @@
 using namespace js;
 using namespace js::ion;
 
+namespace {
+
 // Emulate a TypeSet logic from a Type object to avoid duplicating the guard
 // logic.
 class TypeWrapper {
@@ -57,6 +59,8 @@ class TypeWrapper {
         return NULL;
     }
 };
+
+} /* anonymous namespace */
 
 template <typename Source, typename TypeSet> void
 MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types,
@@ -478,7 +482,7 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
 
 #ifdef JS_GC_ZEAL
     // Don't execute the inline path if gcZeal is active.
-    movePtr(ImmWord(zone->rt), result);
+    movePtr(ImmWord(GetIonContext()->runtime), result);
     loadPtr(Address(result, offsetof(JSRuntime, gcZeal_)), result);
     branch32(Assembler::NotEqual, result, Imm32(0), fail);
 #endif
@@ -489,7 +493,7 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
         jump(fail);
 
 #ifdef JSGC_GENERATIONAL
-    Nursery &nursery = zone->rt->gcNursery;
+    Nursery &nursery = GetIonContext()->runtime->gcNursery;
     if (nursery.isEnabled() && allocKind <= gc::FINALIZE_OBJECT_LAST) {
         // Inline Nursery::allocate. No explicit check for nursery.isEnabled()
         // is needed, as the comparison with the nursery's end will always fail
@@ -704,9 +708,7 @@ void
 MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
                                             Label *fail)
 {
-    JSCompartment *compartment = GetIonContext()->compartment;
-
-    void *interrupt = (void*)&compartment->rt->interrupt;
+    void *interrupt = (void*)&GetIonContext()->runtime->interrupt;
     movePtr(ImmWord(interrupt), tempReg);
     load32(Address(tempReg, 0), tempReg);
     branchTest32(Assembler::NonZero, tempReg, tempReg, fail);
@@ -799,16 +801,18 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
 {
     enterExitFrame();
 
-    Label exception;
     Label baseline;
 
     // The return value from Bailout is tagged as:
     // - 0x0: done (enter baseline)
     // - 0x1: error (handle exception)
     // - 0x2: overrecursed
+    JS_STATIC_ASSERT(BAILOUT_RETURN_OK == 0);
+    JS_STATIC_ASSERT(BAILOUT_RETURN_FATAL_ERROR == 1);
+    JS_STATIC_ASSERT(BAILOUT_RETURN_OVERRECURSED == 2);
 
     branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_OK), &baseline);
-    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), &exception);
+    branch32(Equal, ReturnReg, Imm32(BAILOUT_RETURN_FATAL_ERROR), exceptionLabel());
 
     // Fall-through: overrecursed.
     {
@@ -816,12 +820,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         setupUnalignedABICall(1, scratch);
         passABIArg(ReturnReg);
         callWithABI(JS_FUNC_TO_DATA_PTR(void *, ReportOverRecursed));
-        jump(&exception);
-    }
-
-    bind(&exception);
-    {
-        handleException();
+        jump(exceptionLabel());
     }
 
     bind(&baseline);
@@ -889,7 +888,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             setupUnalignedABICall(1, temp);
             passABIArg(bailoutInfo);
             callWithABI(JS_FUNC_TO_DATA_PTR(void *, FinishBailoutToBaseline));
-            branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+            branchTest32(Zero, ReturnReg, ReturnReg, exceptionLabel());
 
             // Restore values where they need to be and resume execution.
             GeneralRegisterSet enterMonRegs(GeneralRegisterSet::All());
@@ -931,7 +930,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             setupUnalignedABICall(1, temp);
             passABIArg(bailoutInfo);
             callWithABI(JS_FUNC_TO_DATA_PTR(void *, FinishBailoutToBaseline));
-            branchTest32(Zero, ReturnReg, ReturnReg, &exception);
+            branchTest32(Zero, ReturnReg, ReturnReg, exceptionLabel());
 
             // Restore values where they need to be and resume execution.
             GeneralRegisterSet enterRegs(GeneralRegisterSet::All());
@@ -1404,6 +1403,21 @@ MacroAssembler::popRooted(VMFunction::RootType rootType, Register cellReg,
         Pop(valueReg);
         break;
     }
+}
+
+void
+MacroAssembler::finish()
+{
+    if (sequentialFailureLabel_.used()) {
+        bind(&sequentialFailureLabel_);
+        handleFailure(SequentialExecution);
+    }
+    if (parallelFailureLabel_.used()) {
+        bind(&parallelFailureLabel_);
+        handleFailure(ParallelExecution);
+    }
+
+    MacroAssemblerSpecific::finish();
 }
 
 void

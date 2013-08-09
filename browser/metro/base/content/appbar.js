@@ -39,7 +39,7 @@ var Appbar = {
         if (this.activeTileset && ('isBound' in this.activeTileset)) {
           this.activeTileset.clearSelection();
         }
-        this.clearContextualActions();
+        this._clearContextualActions();
         this.activeTileset = null;
         break;
 
@@ -70,8 +70,8 @@ var Appbar = {
   },
 
   onDownloadButton: function() {
-    // TODO: Bug 883962: Toggle the downloads infobar when the
-    // download button is clicked
+    let notificationBox = Browser.getNotificationBox();
+    notificationBox.notificationsHidden = !notificationBox.notificationsHidden;
     ContextUI.dismiss();
   },
 
@@ -174,8 +174,6 @@ var Appbar = {
 
     if (aVerbs.length) {
       Elements.contextappbar.show();
-    } else {
-      Elements.contextappbar.hide();
     }
 
     // Look up all of the buttons for the verbs that should be visible.
@@ -227,7 +225,7 @@ var Appbar = {
     });
   },
 
-  clearContextualActions: function() {
+  _clearContextualActions: function() {
     this.showContextualActions([]);
   },
 

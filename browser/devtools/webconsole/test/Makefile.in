@@ -17,7 +17,6 @@ MOCHITEST_BROWSER_FILES = \
 	browser_webconsole_basic_net_logging.js \
 	browser_webconsole_bug_579412_input_focus.js \
 	browser_webconsole_bug_580001_closing_after_completion.js \
-	browser_webconsole_bug_580400_groups.js \
 	browser_webconsole_bug_588730_text_node_insertion.js \
 	browser_webconsole_bug_601667_filter_buttons.js \
 	browser_webconsole_bug_597136_external_script_errors.js \
@@ -145,6 +144,9 @@ MOCHITEST_BROWSER_FILES = \
 	browser_console_variables_view_while_debugging_and_inspecting.js \
 	browser_webconsole_bug_686937_autocomplete_JSTerm_helpers.js \
 	browser_webconsole_cached_autocomplete.js \
+	browser_console_navigation_marker.js \
+	browser_webconsole_bug_762593_insecure_passwords_web_console_warning.js \
+	browser_webconsole_bug_762593_insecure_passwords_about_blank_web_console_warning.js \
 	head.js \
 	$(NULL)
 
@@ -244,6 +246,10 @@ MOCHITEST_BROWSER_FILES += \
 	test-bug-837351-security-errors.html \
 	test-bug-869003-top-window.html \
 	test-bug-869003-iframe.html \
+	test-iframe-762593-insecure-form-action.html \
+	test-iframe-762593-insecure-frame.html \
+	test-bug-762593-insecure-passwords-web-console-warning.html \
+	test-bug-762593-insecure-passwords-about-blank-web-console-warning.html \
 	test-consoleiframes.html \
 	test-iframe1.html \
 	test-iframe2.html \

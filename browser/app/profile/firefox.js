@@ -335,6 +335,9 @@ pref("browser.download.manager.quitBehavior", 0);
 pref("browser.download.manager.scanWhenDone", true);
 pref("browser.download.manager.resumeOnWakeDelay", 10000);
 
+// Enables the asynchronous Downloads API in the Downloads Panel.
+pref("browser.download.useJSTransfer", false);
+
 // This allows disabling the Downloads Panel in favor of the old interface.
 pref("browser.download.useToolkitUI", false);
 
@@ -620,6 +623,9 @@ pref("network.protocol-handler.expose.mailto", false);
 pref("network.protocol-handler.expose.news", false);
 pref("network.protocol-handler.expose.snews", false);
 pref("network.protocol-handler.expose.nntp", false);
+
+// Warning for about:networking page
+pref("network.warnOnAboutNetworking", true);
 
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);

@@ -549,7 +549,7 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
 
   JSBool match;
   if (!JS_StringEqualsAscii(cx, key.toString(), AUDIO_VOLUME_BT_SCO_ID, &match) ||
-      (match != JS_TRUE)) {
+      !match) {
     return;
   }
 
@@ -1368,6 +1368,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           // Incoming call, no break
           sStopSendingRingFlag = true;
           ConnectSco();
+        case nsITelephonyProvider::CALL_STATE_DIALING:
         case nsITelephonyProvider::CALL_STATE_ALERTING:
           // Outgoing call
           UpdateCIND(CINDType::CALL, CallState::IN_PROGRESS, aSend);

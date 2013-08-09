@@ -23,11 +23,24 @@ Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetworkHelper",
-  "resource://gre/modules/devtools/NetworkHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+  "resource://gre/modules/devtools/Loader.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
+Object.defineProperty(this, "WebConsoleUtils", {
+  get: function() {
+    return devtools.require("devtools/toolkit/webconsole/utils").Utils;
+  },
+  configurable: true,
+  enumerable: true
+});
+
+Object.defineProperty(this, "NetworkHelper", {
+  get: function() {
+    return devtools.require("devtools/toolkit/webconsole/network-helper");
+  },
+  configurable: true,
+  enumerable: true
+});
 
 this.EXPORTED_SYMBOLS = ["VariablesView"];
 

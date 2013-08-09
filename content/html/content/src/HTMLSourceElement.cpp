@@ -21,19 +21,8 @@ HTMLSourceElement::~HTMLSourceElement()
 {
 }
 
-
-NS_IMPL_ADDREF_INHERITED(HTMLSourceElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLSourceElement, Element)
-
-
-
-// QueryInterface implementation for HTMLSourceElement
-NS_INTERFACE_TABLE_HEAD(HTMLSourceElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLSourceElement, nsIDOMHTMLSourceElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLSourceElement, nsGenericHTMLElement,
+                             nsIDOMHTMLSourceElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLSourceElement)
 

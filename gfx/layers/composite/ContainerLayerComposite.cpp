@@ -159,7 +159,7 @@ ContainerRender(ContainerT* aContainer,
     LayerRect layerViewport = frame.mViewport * frame.LayersPixelsPerCSSPixel();
     gfx::Rect rect(layerViewport.x, layerViewport.y, layerViewport.width, layerViewport.height);
     gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
-    aManager->GetCompositor()->DrawDiagnostics(gfx::Color(1.0, 0.0, 0.0, 1.0),
+    aManager->GetCompositor()->DrawDiagnostics(DIAGNOSTIC_CONTAINER,
                                                rect, clipRect,
                                                transform, gfx::Point(aOffset.x, aOffset.y));
   }

@@ -30,7 +30,6 @@ var onevalblocked = (function(window) {
 // Defer until document is loaded so that we can write the pretty result boxes
 // out.
 addEventListener('load', function() {
-
   // setTimeout(String) test -- mutate something in the window._testResults
   // obj, then check it.
   {

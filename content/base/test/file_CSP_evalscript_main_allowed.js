@@ -28,7 +28,6 @@ var onevalblocked = (function(window) {
 // Defer until document is loaded so that we can write the pretty result boxes
 // out.
 addEventListener('load', function() {
-
   // setTimeout(String) test  -- should pass
   try {
     setTimeout('onevalexecuted(true, "setTimeout(String)", "setTimeout with a string was enabled.");', 10);

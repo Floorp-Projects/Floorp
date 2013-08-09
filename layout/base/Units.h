@@ -106,20 +106,20 @@ struct CSSPixel {
   // Conversions to app units
 
   static nsPoint ToAppUnits(const CSSPoint& aPoint) {
-    return nsPoint(NSFloatPixelsToAppUnits(aPoint.x, float(nsDeviceContext::AppUnitsPerCSSPixel())),
-                   NSFloatPixelsToAppUnits(aPoint.y, float(nsDeviceContext::AppUnitsPerCSSPixel())));
+    return nsPoint(NSToCoordRoundWithClamp(aPoint.x * float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                   NSToCoordRoundWithClamp(aPoint.y * float(nsDeviceContext::AppUnitsPerCSSPixel())));
   }
 
   static nsPoint ToAppUnits(const CSSIntPoint& aPoint) {
-    return nsPoint(NSIntPixelsToAppUnits(aPoint.x, nsDeviceContext::AppUnitsPerCSSPixel()),
-                   NSIntPixelsToAppUnits(aPoint.y, nsDeviceContext::AppUnitsPerCSSPixel()));
+    return nsPoint(NSToCoordRoundWithClamp(float(aPoint.x) * float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                   NSToCoordRoundWithClamp(float(aPoint.y) * float(nsDeviceContext::AppUnitsPerCSSPixel())));
   }
 
   static nsRect ToAppUnits(const CSSRect& aRect) {
-    return nsRect(NSFloatPixelsToAppUnits(aRect.x, float(nsDeviceContext::AppUnitsPerCSSPixel())),
-                  NSFloatPixelsToAppUnits(aRect.y, float(nsDeviceContext::AppUnitsPerCSSPixel())),
-                  NSFloatPixelsToAppUnits(aRect.width, float(nsDeviceContext::AppUnitsPerCSSPixel())),
-                  NSFloatPixelsToAppUnits(aRect.height, float(nsDeviceContext::AppUnitsPerCSSPixel())));
+    return nsRect(NSToCoordRoundWithClamp(aRect.x * float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                  NSToCoordRoundWithClamp(aRect.y * float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                  NSToCoordRoundWithClamp(aRect.width * float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                  NSToCoordRoundWithClamp(aRect.height * float(nsDeviceContext::AppUnitsPerCSSPixel())));
   }
 };
 

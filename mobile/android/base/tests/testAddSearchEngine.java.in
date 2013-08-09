@@ -5,13 +5,17 @@ import @ANDROID_PACKAGE_NAME@.*;
 import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.util.Log;
 import java.util.ArrayList;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
- * Test adding a search engine from an input field context menu
- * 1. Get the number of existing search engines
- * 2. Load a page with a text field, open the context menu and add a search engine from the page
- * 3. Get the number of search engines after adding the new one
+ * Test adding a search engine from an input field context menu.
+ * 1. Get the number of existing search engines (As shown in the AwesomeScreen).
+ * 2. Load a page with a text field, open the context menu and add a search engine from the page.
+ * 3. Get the number of search engines after adding the new one and verify it has increased by 1.
  */
 public class testAddSearchEngine extends PixelTest {
     private final int MAX_WAIT_TEST_MS = 5000;
@@ -21,40 +25,45 @@ public class testAddSearchEngine extends PixelTest {
     }
 
     public void testAddSearchEngine() {
-        int height,width;
-        final int initialNumSearchEngines;
-        String blank = getAbsoluteUrl("/robocop/robocop_blank_01.html");
-        String url = getAbsoluteUrl("/robocop/robocop_search.html");
+        String blankPageURL = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        String searchEngineURL = getAbsoluteUrl("/robocop/robocop_search.html");
 
         blockForGeckoReady();
-        loadUrl(blank);
+        loadUrl(blankPageURL);
         waitForText("Browser Blank Page 01");
 
-        // Get the searchengine data
+        // Get the searchengine data by clicking the awesomebar - this causes Gecko to send Java the list
+        // of search engines.
         Actions.EventExpecter searchEngineDataEventExpector = mActions.expectGeckoEvent("SearchEngines:Data");
         focusUrlBar();
         String eventData = searchEngineDataEventExpector.blockForEventData();
         searchEngineDataEventExpector.unregisterListener();
 
-        // Parse the data to get the number of searchengines
-        ArrayList<String> parsedData = parseEventData(eventData, "[\"{}],");
-        ArrayList<String> searchEngines = getSearchEnginesNames(parsedData);
-        initialNumSearchEngines = searchEngines.size();
+        ArrayList<String> searchEngines;
+        try {
+            // Parse the data to get the number of searchengines.
+            searchEngines = getSearchEnginesNames(eventData);
+        } catch (JSONException e) {
+            mAsserter.ok(false, "Fatal exception in testAddSearchEngine while decoding JSON search engine string from Gecko prior to addition of new engine.", e.toString());
+            return;
+        }
+        final int initialNumSearchEngines = searchEngines.size();
         mAsserter.dumpLog("Search Engines list = " + searchEngines.toString());
 
-        // Verify that the number of displayed searchengines is the same as the one received through the SearchEngines:Data event
+        // Verify that the number of displayed search engines is the same as the one received through the SearchEngines:Data event.
         verifyDisplayedSearchEnginesCount("Browser Blank Page 01", initialNumSearchEngines);
-        
-        loadUrl(url);
+
+        // Load the page for the search engine to add.
+        loadUrl(searchEngineURL);
         waitForText("Robocop Search Engine");
 
-        // Open the context menu for the input field
-        height = mDriver.getGeckoTop() + 10;
-        width = mDriver.getGeckoLeft() + 20;
+        // Used to long-tap on the search input box for the search engine to add.
+        int height = mDriver.getGeckoTop() + 10;
+        int width = mDriver.getGeckoLeft() + 20;
         mAsserter.dumpLog("Long Clicking at width = " + String.valueOf(width) + " and height = " + String.valueOf(height));
         mSolo.clickLongOnScreen(width,height);
         if (!waitForText("Add Search Engine")) {
-            // TODO: clickLongOnScreen does not always work - known Robotium issue - . Clicking a second time seems to work
+            // TODO: clickLongOnScreen does not always work - known Robotium issue - . Clicking a second time seems to work.
             mAsserter.dumpLog("Something went wrong and the context menu was not opened. Trying again");
             mSolo.clickLongOnScreen(width,height);
         }
@@ -67,33 +76,59 @@ public class testAddSearchEngine extends PixelTest {
         mAsserter.ok(!mSolo.searchText("Add Search Engine"), "Adding the Search Engine", "The add Search Engine pop-up has been closed");
 
         // Load Robocop Blank 1 again to give the time for the searchengine to be added
-        loadAndPaint(blank);
+        // TODO: This is a potential source of intermittent oranges - it's a race condition!
+        loadAndPaint(blankPageURL);
         waitForText("Browser Blank Page 01");
 
-        // Check that the number of search results has increased
+        // Load search engines again and check that the quantity of engines has increased by 1.
         searchEngineDataEventExpector = mActions.expectGeckoEvent("SearchEngines:Data");
         focusUrlBar();
         eventData = searchEngineDataEventExpector.blockForEventData();
-        parsedData = parseEventData(eventData, "[\"{}],");
-        searchEngines = getSearchEnginesNames(parsedData);
+
+        try {
+            // Parse the data to get the number of searchengines
+            searchEngines = getSearchEnginesNames(eventData);
+        } catch (JSONException e) {
+            mAsserter.ok(false, "Fatal exception in testAddSearchEngine while decoding JSON search engine string from Gecko after adding of new engine.", e.toString());
+            return;
+        }
+
         mAsserter.dumpLog("Search Engines list = " + searchEngines.toString());
         mAsserter.is(searchEngines.size(), initialNumSearchEngines + 1, "Checking the number of Search Engines has increased");
         
-        // Verify that the number of displayed searchengines is the same as the one received through the SearchEngines:Data event
+        // Verify that the number of displayed searchengines is the same as the one received through the SearchEngines:Data event.
         verifyDisplayedSearchEnginesCount("Browser Blank Page 01", initialNumSearchEngines + 1);
         searchEngineDataEventExpector.unregisterListener();
     }
 
-    public ArrayList<String> getSearchEnginesNames(ArrayList<String> parsedSearchEngineData) {
+    /**
+     * Helper method to decode a list of search engine names from the provided search engine information
+     * JSON string sent from Gecko.
+     * @param searchEngineData The JSON string representing the search engine array to process
+     * @return An ArrayList<String> containing the names of all the search engines represented in
+     *         the provided JSON message.
+     * @throws JSONException In the event that the JSON provided cannot be decoded.
+     */
+    public ArrayList<String> getSearchEnginesNames(String searchEngineData) throws JSONException {
+        JSONObject data = new JSONObject(searchEngineData);
+        JSONArray engines = data.getJSONArray("searchEngines");
+
         ArrayList<String> searchEngineNames = new ArrayList<String>();
-        for (int i=0; i<parsedSearchEngineData.size(); i++) {
-            if (parsedSearchEngineData.get(i).equals("name")) {
-                searchEngineNames.add(parsedSearchEngineData.get(i+1));
-            }
+        for (int i = 0; i < engines.length(); i++) {
+            JSONObject engineJSON = engines.getJSONObject(i);
+            searchEngineNames.add(engineJSON.getString("name"));
         }
         return searchEngineNames;
     }
 
+    /**
+     * Method to verify that the displayed number of search engines matches the expected number.
+     * Uses a BooleanTest which counts how many SearchEngineRow instances are being displayed
+     * in the Awesomescreen.
+     * @param waitText Text from the loaded page to expect. Used to detect when the Awesomescreen
+     *                 close animation has completed.
+     * @param expectedCountParam The expected number of search engines.
+     */
     public void verifyDisplayedSearchEnginesCount(String waitText, int expectedCountParam) {
         final int expectedCount = expectedCountParam;
         mActions.sendKeys("Firefox for Android");
@@ -106,16 +141,16 @@ public class testAddSearchEngine extends PixelTest {
                 for (ListView view : views) {
                     ListAdapter adapter = view.getAdapter();
                     if (adapter != null) {
-                        // Get only the SearchEngineRow views since getCurrentViews can also add to the ArrayList also the Top Sites entries
+                        // Only count SearchEngineRow views - other views are not relavent to this test.
                         try {
-                                ClassLoader classLoader = getActivity().getClassLoader();
-                                Class searchEngineRow = classLoader.loadClass("org.mozilla.gecko.SearchEngineRow");
-                                for (int i = 0; i < adapter.getCount(); i++ ) {
-                                    View item = view.getChildAt(i);
-                                    if (searchEngineRow.isInstance(item)) {
-                                        searchEngineCount++;
-                                    }
+                            ClassLoader classLoader = getActivity().getClassLoader();
+                            Class searchEngineRow = classLoader.loadClass("org.mozilla.gecko.SearchEngineRow");
+                            for (int i = 0; i < adapter.getCount(); i++ ) {
+                                View item = view.getChildAt(i);
+                                if (searchEngineRow.isInstance(item)) {
+                                    searchEngineCount++;
                                 }
+                            }
                         } catch (Exception e) {
                              mAsserter.dumpLog("Exception in verifyDisplayedSearchEnginesCount", e);
                         }

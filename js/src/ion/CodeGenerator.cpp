@@ -624,7 +624,7 @@ CodeGenerator::visitIntToString(LIntToString *lir)
     masm.branch32(Assembler::AboveOrEqual, input, Imm32(StaticStrings::INT_STATIC_LIMIT),
                   ool->entry());
 
-    masm.movePtr(ImmWord(&gen->compartment->rt->staticStrings.intStaticTable), output);
+    masm.movePtr(ImmWord(&GetIonContext()->runtime->staticStrings.intStaticTable), output);
     masm.loadPtr(BaseIndex(output, input, ScalePointer), output);
 
     masm.bind(ool->rejoin());
@@ -653,7 +653,7 @@ CodeGenerator::visitDoubleToString(LDoubleToString *lir)
     masm.branch32(Assembler::AboveOrEqual, temp, Imm32(StaticStrings::INT_STATIC_LIMIT),
                   ool->entry());
 
-    masm.movePtr(ImmWord(&gen->compartment->rt->staticStrings.intStaticTable), output);
+    masm.movePtr(ImmWord(&GetIonContext()->runtime->staticStrings.intStaticTable), output);
     masm.loadPtr(BaseIndex(output, temp, ScalePointer), output);
 
     masm.bind(ool->rejoin());
@@ -739,9 +739,22 @@ CodeGenerator::emitLambdaInit(const Register &output, const Register &scopeChain
 
     JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
     masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
-    masm.storePtr(ImmGCPtr(fun->nonLazyScript()),
-                  Address(output, JSFunction::offsetOfNativeOrScript()));
+
+    // Initialize the JSFunction union with the script / native / lazyScript
+    // corresponding to the flag.
+    ImmGCPtr scriptOrLazyScript(NULL);
+    if (fun->isInterpretedLazy())
+        scriptOrLazyScript = ImmGCPtr(fun->lazyScriptOrNull());
+    else
+        scriptOrLazyScript = ImmGCPtr(fun->nonLazyScript());
+
+    masm.storePtr(scriptOrLazyScript, Address(output, JSFunction::offsetOfNativeOrScript()));
+
+    // Lambda scripted functions are given the scope chain as the environment in
+    // which the caller was at the time of the creation of the lambda.
     masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
+
+    // Copy the name of the function used for diagnostics.
     masm.storePtr(ImmGCPtr(fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
 }
 
@@ -1341,7 +1354,7 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier 
     }
 
     Register runtimereg = regs.takeAny();
-    masm.mov(ImmWord(gen->compartment->rt), runtimereg);
+    masm.mov(ImmWord(GetIonContext()->runtime), runtimereg);
 
     masm.setupUnalignedABICall(2, regs.takeAny());
     masm.passABIArg(runtimereg);
@@ -1363,7 +1376,7 @@ CodeGenerator::visitPostWriteBarrierO(LPostWriteBarrierO *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    Nursery &nursery = gen->compartment->rt->gcNursery;
+    Nursery &nursery = GetIonContext()->runtime->gcNursery;
 
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
@@ -1395,7 +1408,7 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
     ValueOperand value = ToValue(lir, LPostWriteBarrierV::Input);
     masm.branchTestObject(Assembler::NotEqual, value, ool->rejoin());
 
-    Nursery &nursery = gen->compartment->rt->gcNursery;
+    Nursery &nursery = GetIonContext()->runtime->gcNursery;
 
     if (lir->object()->isConstant()) {
         JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
@@ -1479,13 +1492,12 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.passABIArg(argUintNReg);
     masm.passABIArg(argVpReg);
 
-    Label success, failure;
     switch (executionMode) {
       case SequentialExecution:
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
 
         // Test for failure.
-        masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &failure);
+        masm.branchIfFalseBool(ReturnReg, masm.failureLabel(executionMode));
         break;
 
       case ParallelExecution:
@@ -1493,7 +1505,8 @@ CodeGenerator::visitCallNative(LCallNative *call)
 
         // ParallelResult has more nuanced failure, but for now we fail on
         // anything that's != TP_SUCCESS.
-        masm.branch32(Assembler::NotEqual, ReturnReg, Imm32(TP_SUCCESS), &failure);
+        masm.branch32(Assembler::NotEqual, ReturnReg, Imm32(TP_SUCCESS),
+                      masm.failureLabel(executionMode));
         break;
 
       default:
@@ -1502,14 +1515,6 @@ CodeGenerator::visitCallNative(LCallNative *call)
 
     // Load the outparam vp[0] into output register(s).
     masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), JSReturnOperand);
-    masm.jump(&success);
-
-    // Handle failure case.
-    {
-        masm.bind(&failure);
-        masm.handleFailure(executionMode);
-    }
-    masm.bind(&success);
 
     // The next instruction is removing the footer of the exit frame, so there
     // is no need for leaveFakeExitFrame.
@@ -1612,20 +1617,11 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
                        JSReturnOperand);
     } else {
         // Test for failure.
-        Label success, exception;
-        masm.branchIfFalseBool(ReturnReg, &exception);
+        masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
         // Load the outparam vp[0] into output register(s).
         masm.loadValue(Address(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult()),
                        JSReturnOperand);
-        masm.jump(&success);
-
-        // Handle exception case.
-        {
-            masm.bind(&exception);
-            masm.handleException();
-        }
-        masm.bind(&success);
     }
 
     // The next instruction is removing the footer of the exit frame, so there
@@ -2274,7 +2270,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
     // Ion may legally place frames very close to the limit. Calling additional
     // C functions may then violate the limit without any checking.
 
-    JSRuntime *rt = gen->compartment->rt;
+    JSRuntime *rt = GetIonContext()->runtime;
 
     // Since Ion frames exist on the C stack, the stack limit may be
     // dynamically set by JS_SetThreadStackLimit() and JS_SetNativeStackQuota().
@@ -2772,7 +2768,7 @@ CodeGenerator::visitNewSlots(LNewSlots *lir)
     Register temp3 = ToRegister(lir->temp3());
     Register output = ToRegister(lir->output());
 
-    masm.mov(ImmWord(gen->compartment->rt), temp1);
+    masm.mov(ImmWord(GetIonContext()->runtime), temp1);
     masm.mov(Imm32(lir->mir()->nslots()), temp2);
 
     masm.setupUnalignedABICall(2, temp3);
@@ -3673,21 +3669,27 @@ CodeGenerator::visitModD(LModD *ins)
 
 typedef bool (*BinaryFn)(JSContext *, HandleScript, jsbytecode *,
                          MutableHandleValue, MutableHandleValue, Value *);
+typedef ParallelResult (*BinaryParFn)(ForkJoinSlice *, HandleValue, HandleValue,
+                                      Value *);
 
 static const VMFunction AddInfo = FunctionInfo<BinaryFn>(js::AddValues);
 static const VMFunction SubInfo = FunctionInfo<BinaryFn>(js::SubValues);
 static const VMFunction MulInfo = FunctionInfo<BinaryFn>(js::MulValues);
 static const VMFunction DivInfo = FunctionInfo<BinaryFn>(js::DivValues);
 static const VMFunction ModInfo = FunctionInfo<BinaryFn>(js::ModValues);
-static const VMFunction UrshInfo = FunctionInfo<BinaryFn>(js::UrshValues);
+static const VMFunctionsModal UrshInfo = VMFunctionsModal(
+    FunctionInfo<BinaryFn>(js::UrshValues),
+    FunctionInfo<BinaryParFn>(UrshValuesPar));
 
 bool
 CodeGenerator::visitBinaryV(LBinaryV *lir)
 {
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
-    pushArg(ImmWord(lir->mirRaw()->toInstruction()->resumePoint()->pc()));
-    pushArg(ImmGCPtr(current->mir()->info().script()));
+    if (gen->info().executionMode() == SequentialExecution) {
+        pushArg(ImmWord(lir->mirRaw()->toInstruction()->resumePoint()->pc()));
+        pushArg(ImmGCPtr(current->mir()->info().script()));
+    }
 
     switch (lir->jsop()) {
       case JSOP_ADD:
@@ -4336,7 +4338,7 @@ CodeGenerator::visitFromCharCode(LFromCharCode *lir)
     masm.branch32(Assembler::AboveOrEqual, code, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
                   ool->entry());
 
-    masm.movePtr(ImmWord(&gen->compartment->rt->staticStrings.unitStaticTable), output);
+    masm.movePtr(ImmWord(&GetIonContext()->runtime->staticStrings.unitStaticTable), output);
     masm.loadPtr(BaseIndex(output, code, ScalePointer), output);
 
     masm.bind(ool->rejoin());
@@ -5043,7 +5045,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     JS_ASSERT(flags == JSITER_ENUMERATE);
 
     // Fetch the most recent iterator and ensure it's not NULL.
-    masm.loadPtr(AbsoluteAddress(&gen->compartment->rt->nativeIterCache.last), output);
+    masm.loadPtr(AbsoluteAddress(&GetIonContext()->runtime->nativeIterCache.last), output);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
     // Load NativeIterator.
@@ -6246,7 +6248,7 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    JSRuntime *rt = gen->compartment->rt;
+    JSRuntime *rt = GetIonContext()->runtime;
 
     // Jump to the OOL path if the value is an object. Objects are complicated
     // since they may have a typeof hook.
@@ -6858,18 +6860,10 @@ CodeGenerator::visitGetDOMProperty(LGetDOMProperty *ins)
         masm.loadValue(Address(StackPointer, IonDOMExitFrameLayout::offsetOfResult()),
                        JSReturnOperand);
     } else {
-        Label success, exception;
-        masm.branchIfFalseBool(ReturnReg, &exception);
+        masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
         masm.loadValue(Address(StackPointer, IonDOMExitFrameLayout::offsetOfResult()),
                        JSReturnOperand);
-        masm.jump(&success);
-
-        {
-            masm.bind(&exception);
-            masm.handleException();
-        }
-        masm.bind(&success);
     }
     masm.adjustStack(IonDOMExitFrameLayout::Size());
 
@@ -6923,16 +6917,8 @@ CodeGenerator::visitSetDOMProperty(LSetDOMProperty *ins)
     masm.passABIArg(ValueReg);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ins->mir()->fun()));
 
-    Label success, exception;
-    masm.branchIfFalseBool(ReturnReg, &exception);
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
-    masm.jump(&success);
-
-    {
-        masm.bind(&exception);
-        masm.handleException();
-    }
-    masm.bind(&success);
     masm.adjustStack(IonDOMExitFrameLayout::Size());
 
     JS_ASSERT(masm.framePushed() == initialStack);
@@ -7201,7 +7187,7 @@ CodeGenerator::visitAsmJSVoidReturn(LAsmJSVoidReturn *lir)
 bool
 CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
 {
-    uintptr_t *limitAddr = &gen->compartment->rt->mainThread.nativeStackLimit;
+    uintptr_t *limitAddr = &GetIonContext()->runtime->mainThread.nativeStackLimit;
     masm.branchPtr(Assembler::AboveOrEqual,
                    AbsoluteAddress(limitAddr),
                    StackPointer,

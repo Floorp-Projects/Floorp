@@ -65,7 +65,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
-#include "nsLayoutStatics.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;
@@ -478,10 +477,10 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
                                                  bool aExpectUnrootedGlobals)
   : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal),
     mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal),
-    mJSRuntime(nullptr)
+    mJSRuntime(nullptr),
+    mExpectUnrootedGlobals(aExpectUnrootedGlobals)
 #ifdef DEBUG
   , mObjectToUnlink(nullptr)
-  , mExpectUnrootedGlobals(aExpectUnrootedGlobals)
 #endif
 {
   mJSRuntime = JS_NewRuntime(aMaxbytes, aUseHelperThreads);
@@ -494,6 +493,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
   }
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
   JS_SetGCCallback(mJSRuntime, GCCallback, this);
+  JS_SetContextCallback(mJSRuntime, ContextCallback, this);
 
   mJSHolders.Init(512);
 
@@ -795,6 +795,18 @@ CycleCollectedJSRuntime::GCCallback(JSRuntime* aRuntime,
   self->OnGC(aStatus);
 }
 
+/* static */ JSBool
+CycleCollectedJSRuntime::ContextCallback(JSContext* aContext,
+                                         unsigned aOperation,
+                                         void* aData)
+{
+  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+
+  MOZ_ASSERT(JS_GetRuntime(aContext) == self->Runtime());
+
+  return self->OnContext(aContext, aOperation);
+}
+
 struct JsGcTracer : public TraceCallbacks
 {
   virtual void Trace(JS::Heap<JS::Value> *p, const char *name, void *closure) const MOZ_OVERRIDE {
@@ -837,30 +849,46 @@ CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer)
 void
 CycleCollectedJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
-  bool wasEmpty = mJSHolders.Count() == 0;
   mJSHolders.Put(aHolder, aTracer);
-  if (wasEmpty && mJSHolders.Count() == 1) {
-    nsLayoutStatics::AddRef();
-  }
 }
+
+struct ClearJSHolder : TraceCallbacks
+{
+  virtual void Trace(JS::Heap<JS::Value>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = JSVAL_VOID;
+  }
+
+  virtual void Trace(JS::Heap<jsid>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = JSID_VOID;
+  }
+
+  virtual void Trace(JS::Heap<JSObject*>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JS::Heap<JSString*>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JS::Heap<JSScript*>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = nullptr;
+  }
+};
 
 void
 CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
 {
-#ifdef DEBUG
-  // Assert that the holder doesn't try to keep any GC things alive.
-  // In case of unlinking cycle collector calls AssertNoObjectsToTrace
-  // manually because we don't want to check the holder before we are
-  // finished unlinking it
-  if (aHolder != mObjectToUnlink) {
-    AssertNoObjectsToTrace(aHolder);
+  nsScriptObjectTracer* tracer = mJSHolders.Get(aHolder);
+  if (!tracer) {
+    return;
   }
-#endif
-  bool hadOne = mJSHolders.Count() == 1;
+  tracer->Trace(aHolder, ClearJSHolder(), nullptr);
   mJSHolders.Remove(aHolder);
-  if (hadOne && mJSHolders.Count() == 0) {
-    nsLayoutStatics::Release();
-  }
 }
 
 #ifdef DEBUG
@@ -966,6 +994,10 @@ CycleCollectedJSRuntime::BeginCycleCollection(nsCycleCollectionNoteRootCallback 
 bool
 CycleCollectedJSRuntime::UsefulToMergeZones() const
 {
+  if (!NS_IsMainThread()) {
+    return false;
+  }
+
   JSContext* iter = nullptr;
   JSContext* cx;
   JSAutoRequest ar(nsContentUtils::GetSafeJSContext());
@@ -1031,6 +1063,13 @@ CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
 {
   mDeferredSupports.AppendElement(aSupports);
 }
+
+void
+CycleCollectedJSRuntime::DumpJSHeap(FILE* file)
+{
+  js::DumpHeapComplete(Runtime(), file);
+}
+
 
 bool
 ReleaseSliceNow(uint32_t aSlice, void* aData)
@@ -1179,6 +1218,18 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
   switch (aStatus) {
     case JSGC_BEGIN:
     {
+      // XXXkhuey do we still need this?
+      // We seem to sometime lose the unrooted global flag. Restore it
+      // here. FIXME: bug 584495.
+      if (mExpectUnrootedGlobals){
+        JSContext* iter = nullptr;
+        while (JSContext* acx = JS_ContextIterator(Runtime(), &iter)) {
+          if (!js::HasUnrootedGlobal(acx)) {
+            JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
+          }
+        }
+      }
+
       break;
     }
     case JSGC_END:
@@ -1204,4 +1255,16 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
   }
 
   CustomGCCallback(aStatus);
+}
+
+bool
+CycleCollectedJSRuntime::OnContext(JSContext* aCx, unsigned aOperation)
+{
+  if (mExpectUnrootedGlobals && aOperation == JSCONTEXT_NEW) {
+    // XXXkhuey bholley is going to make this go away, but for now XPConnect
+    // needs it.
+    JS_ToggleOptions(aCx, JSOPTION_UNROOTED_GLOBAL);
+  }
+
+  return CustomContextCallback(aCx, aOperation);
 }

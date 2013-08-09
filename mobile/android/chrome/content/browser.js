@@ -63,7 +63,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
 [
   ["HelperApps", "chrome://browser/content/HelperApps.js"],
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
-  ["SelectionHandler", "chrome://browser/content/SelectionHandler.js"],
   ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
   ["AboutReader", "chrome://browser/content/aboutReader.js"],
   ["WebAppRT", "chrome://browser/content/WebAppRT.js"],
@@ -100,6 +99,7 @@ var LazyNotificationGetter = {
   ["PermissionsHelper", ["Permissions:Get", "Permissions:Clear"], "chrome://browser/content/PermissionsHelper.js"],
   ["FeedHandler", ["Feeds:Subscribe"], "chrome://browser/content/FeedHandler.js"],
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
+  ["SelectionHandler", ["TextSelection:Get"], "chrome://browser/content/SelectionHandler.js"],
 ].forEach(function (aScript) {
   let [name, notifications, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -295,7 +295,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "FormHistory:Init", false);
     Services.obs.addObserver(this, "gather-telemetry", false);
     Services.obs.addObserver(this, "keyword-search", false);
-    Services.obs.addObserver(this, "SelectedText:Get", false);
 
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
 
@@ -595,17 +594,15 @@ var BrowserApp = {
                                       aTarget.ownerDocument);
       });
 
-#ifdef MOZ_ANDROID_WALLPAPER
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.setWallpaper"),
+    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.setImageAs"),
       NativeWindow.contextmenus.imageSaveableContext,
       function(aTarget) {
         let src = aTarget.src;
         sendMessageToJava({
-          type: "Wallpaper:Set",
+          type: "Image:SetAs",
           url: src
         });
       });
-#endif
 
     NativeWindow.contextmenus.add(
       function(aTarget) {
@@ -1442,14 +1439,6 @@ var BrowserApp = {
         });
         break;
 
-      case "SelectedText:Get":
-        sendMessageToJava({
-          type: "SelectedText:Data",
-          requestId: aData,
-          text: SelectionHandler.getSelectedText()
-        });
-        break;
-
       case "Browser:Quit":
         this.quit();
         break;
@@ -1642,7 +1631,7 @@ var NativeWindow = {
         type: "PageActions:Add",
         id: id,
         title: aOptions.title,
-        icon: resolveGeckoUri(aOptions.icon)
+        icon: resolveGeckoURI(aOptions.icon)
       });
       this._items[id] = {
         clickCallback: aOptions.clickCallback,
@@ -4332,10 +4321,14 @@ var BrowserEventHandler = {
 
   onDoubleTap: function(aData) {
     let data = JSON.parse(aData);
+    let element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
 
-    // We only want to do this if reflow-on-zoom is enabled.
+    // We only want to do this if reflow-on-zoom is enabled, we don't already
+    // have a reflow-on-zoom event pending, and the element upon which the user
+    // double-tapped isn't of a type we want to avoid reflow-on-zoom.
     if (BrowserEventHandler.mReflozPref &&
-       !BrowserApp.selectedTab._mReflozPoint) {
+       !BrowserApp.selectedTab._mReflozPoint &&
+       !this._shouldSuppressReflowOnZoom(element)) {
      let data = JSON.parse(aData);
      let zoomPointX = data.x;
      let zoomPointY = data.y;
@@ -4345,8 +4338,6 @@ var BrowserEventHandler = {
        BrowserApp.selectedTab.probablyNeedRefloz = true;
     }
 
-    let zoom = BrowserApp.selectedTab._zoom;
-    let element = ElementTouchHelper.anyElementFromPoint(data.x, data.y);
     if (!element) {
       this._zoomOut();
       return;
@@ -4360,6 +4351,28 @@ var BrowserEventHandler = {
     } else {
       this._zoomToElement(element, data.y);
     }
+  },
+
+  /**
+   * Determine if reflow-on-zoom functionality should be suppressed, given a
+   * particular element. Double-tapping on the following elements suppresses
+   * reflow-on-zoom:
+   *
+   * <video>, <object>, <embed>, <applet>, <canvas>, <img>, <media>, <pre>
+   */
+  _shouldSuppressReflowOnZoom: function(aElement) {
+    if (aElement instanceof Ci.nsIDOMHTMLVideoElement ||
+        aElement instanceof Ci.nsIDOMHTMLObjectElement ||
+        aElement instanceof Ci.nsIDOMHTMLEmbedElement ||
+        aElement instanceof Ci.nsIDOMHTMLAppletElement ||
+        aElement instanceof Ci.nsIDOMHTMLCanvasElement ||
+        aElement instanceof Ci.nsIDOMHTMLImageElement ||
+        aElement instanceof Ci.nsIDOMHTMLMediaElement ||
+        aElement instanceof Ci.nsIDOMHTMLPreElement) {
+      return true;
+    }
+
+    return false;
   },
 
   /* Zoom to an element, optionally keeping a particular part of it
@@ -4891,7 +4904,7 @@ var ErrorPageEventHandler = {
           let isMalware = errorDoc.documentURI.contains("e=malwareBlocked");
           let bucketName = isMalware ? "WARNING_MALWARE_PAGE_" : "WARNING_PHISHING_PAGE_";
           let nsISecTel = Ci.nsISecurityUITelemetry;
-          let isIframe = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
+          let isIframe = (errorDoc.defaultView.parent === errorDoc.defaultView);
           bucketName += isIframe ? "TOP_" : "FRAME_";
 
           let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
@@ -6424,6 +6437,9 @@ var SearchEngines = {
 
   init: function init() {
     Services.obs.addObserver(this, "SearchEngines:Get", false);
+    Services.obs.addObserver(this, "SearchEngines:GetVisible", false);
+    Services.obs.addObserver(this, "SearchEngines:SetDefault", false);
+    Services.obs.addObserver(this, "SearchEngines:Remove", false);
     let contextName = Strings.browser.GetStringFromName("contextmenu.addSearchEngine");
     let filter = {
       matches: function (aElement) {
@@ -6435,21 +6451,36 @@ var SearchEngines = {
 
   uninit: function uninit() {
     Services.obs.removeObserver(this, "SearchEngines:Get");
+    Services.obs.removeObserver(this, "SearchEngines:GetVisible");
+    Services.obs.removeObserver(this, "SearchEngines:SetDefault");
+    Services.obs.removeObserver(this, "SearchEngines:Remove");
     if (this._contextMenuId != null)
       NativeWindow.contextmenus.remove(this._contextMenuId);
   },
 
-  _handleSearchEnginesGet: function _handleSearchEnginesGet(rv) {
+  // Fetch list of search engines. all ? All engines : Visible engines only.
+  _handleSearchEnginesGet: function _handleSearchEnginesGet(rv, all) {
     if (!Components.isSuccessCode(rv)) {
       Cu.reportError("Could not initialize search service, bailing out.");
       return;
     }
-    let engineData = Services.search.getVisibleEngines({});
+    let engineData;
+    if (all) {
+      engineData = Services.search.getEngines({});
+    } else {
+      engineData = Services.search.getVisibleEngines({});
+    }
+
+    // These engines are the bundled ones - they may not be uninstalled.
+    let immutableEngines = Services.search.getDefaultEngines();
+
     let searchEngines = engineData.map(function (engine) {
       return {
         name: engine.name,
         identifier: engine.identifier,
-        iconURI: (engine.iconURI ? engine.iconURI.spec : null)
+        iconURI: (engine.iconURI ? engine.iconURI.spec : null),
+        hidden: engine.hidden,
+        immutable: immutableEngines.indexOf(engine) != -1
       };
     });
 
@@ -6461,6 +6492,8 @@ var SearchEngines = {
       suggestTemplate = engine.getSubmission("__searchTerms__", "application/x-suggestions+json").uri.spec;
     }
 
+
+    // By convention, the currently configured default engine is at position zero in searchEngines.
     sendMessageToJava({
       type: "SearchEngines:Data",
       searchEngines: searchEngines,
@@ -6473,9 +6506,45 @@ var SearchEngines = {
     });
   },
 
+  _handleSearchEnginesGetAll: function _handleSearchEnginesGetAll(rv) {
+    this._handleSearchEnginesGet(rv, true);
+  },
+  _handleSearchEnginesGetVisible: function _handleSearchEnginesGetVisible(rv) {
+    this._handleSearchEnginesGet(rv, false)
+  },
+
+  // Helper method to extract the engine name from a JSON. Simplifies the observe function.
+  _extractEngineFromJSON: function _extractEngineFromJSON(aData) {
+    let data = JSON.parse(aData);
+    return Services.search.getEngineByName(data.engine);
+  },
+
   observe: function observe(aSubject, aTopic, aData) {
-    if (aTopic == "SearchEngines:Get") {
-      Services.search.init(this._handleSearchEnginesGet.bind(this));
+    let engine;
+    switch(aTopic) {
+      case "SearchEngines:GetVisible":
+        Services.search.init(this._handleSearchEnginesGetVisible.bind(this));
+        break;
+      case "SearchEngines:Get":
+        // Return a list of all engines, including "Hidden" ones.
+        Services.search.init(this._handleSearchEnginesGetAll.bind(this));
+        break;
+      case "SearchEngines:SetDefault":
+        engine = this._extractEngineFromJSON(aData);
+        // Move the new default search engine to the top of the search engine list.
+        Services.search.moveEngine(engine, 0);
+        Services.search.defaultEngine = engine;
+        break;
+      case "SearchEngines:Remove":
+        // Make sure the engine isn't hidden before removing it, to make sure it's
+        // visible if the user later re-adds it (works around bug 341833)
+        engine = this._extractEngineFromJSON(aData);
+        engine.hidden = false;
+        Services.search.removeEngine(engine);
+        break;
+      default:
+        dump("Unexpected message type observed: " + aTopic);
+        break;
     }
   },
 
@@ -7563,12 +7632,26 @@ let Reader = {
 var ExternalApps = {
   _contextMenuId: -1,
 
+  // extend _getLink to pickup html5 media links.
+  _getMediaLink: function(aElement) {
+    let uri = NativeWindow.contextmenus._getLink(aElement);
+    if (uri == null) {
+      if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE && (aElement instanceof Ci.nsIDOMHTMLMediaElement && mediaSrc)) {
+        try {
+          let mediaSrc = aElement.currentSrc || aElement.src;
+          uri = ContentAreaUtils.makeURI(mediaSrc, null, null);
+        } catch (e) {}
+      }
+    }
+    return uri;
+  },
+
   init: function helper_init() {
     this._contextMenuId = NativeWindow.contextmenus.add(function(aElement) {
       let uri = null;
       var node = aElement;
       while (node && !uri) {
-        uri = NativeWindow.contextmenus._getLink(node);
+        uri = ExternalApps._getMediaLink(node);
         node = node.parentNode;
       }
       let apps = [];
@@ -7586,7 +7669,7 @@ var ExternalApps = {
 
   filter: {
     matches: function(aElement) {
-      let uri = NativeWindow.contextmenus._getLink(aElement);
+      let uri = ExternalApps._getMediaLink(aElement);
       let apps = [];
       if (uri) {
         apps = HelperApps.getAppsForUri(uri);
@@ -7596,7 +7679,7 @@ var ExternalApps = {
   },
 
   openExternal: function(aElement) {
-    let uri = NativeWindow.contextmenus._getLink(aElement);
+    let uri = ExternalApps._getMediaLink(aElement);
     HelperApps.openUriInApp(uri);
   }
 };

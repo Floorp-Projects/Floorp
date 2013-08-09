@@ -24,7 +24,7 @@ interface IPeerConnectionManager : nsISupports
  *
  * See media/webrtc/signaling/include/PeerConnectionImpl.h
  */
-[scriptable, uuid(85ba28da-53d0-401d-afed-9cad69f727ff)]
+[scriptable, uuid(cf9152f0-c9a8-4093-9435-1daa056e0177)]
 interface IPeerConnectionObserver : nsISupports
 {
   /* Constants */
@@ -68,7 +68,7 @@ interface IPeerConnectionObserver : nsISupports
   void foundIceCandidate(in string candidate);
 };
 
-[scriptable, uuid(80b98a4f-c629-4e81-b738-a4608f6a4cd3)]
+[scriptable, uuid(930dce8b-7c5e-4393-b8c0-cb3a928f68bd)]
 interface IPeerConnection : nsISupports
 {
   const unsigned long kHintAudio = 0x00000001;

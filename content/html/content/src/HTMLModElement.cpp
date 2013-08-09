@@ -21,16 +21,6 @@ HTMLModElement::~HTMLModElement()
 {
 }
 
-
-NS_IMPL_ADDREF_INHERITED(HTMLModElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLModElement, Element)
-
-// QueryInterface implementation for HTMLModElement
-NS_INTERFACE_MAP_BEGIN(HTMLModElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-NS_ELEMENT_INTERFACE_MAP_END
-
-
 NS_IMPL_ELEMENT_CLONE(HTMLModElement)
 
 JSObject*

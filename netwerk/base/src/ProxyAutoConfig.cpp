@@ -382,7 +382,7 @@ bool PACResolveToString(const nsCString &aHostName,
 
 // dnsResolve(host) javascript implementation
 static
-JSBool PACDnsResolve(JSContext *cx, unsigned int argc, JS::Value *vp)
+bool PACDnsResolve(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
   if (NS_IsMainThread()) {
     NS_WARNING("DNS Resolution From PAC on Main Thread. How did that happen?");
@@ -405,13 +405,13 @@ JSBool PACDnsResolve(JSContext *cx, unsigned int argc, JS::Value *vp)
   else {
     JS_SET_RVAL(cx, vp, JSVAL_NULL);
   }
-  
+
   return true;
 }
 
 // myIpAddress() javascript implementation
 static
-JSBool PACMyIpAddress(JSContext *cx, unsigned int argc, JS::Value *vp)
+bool PACMyIpAddress(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
   if (NS_IsMainThread()) {
     NS_WARNING("DNS Resolution From PAC on Main Thread. How did that happen?");
@@ -420,7 +420,7 @@ JSBool PACMyIpAddress(JSContext *cx, unsigned int argc, JS::Value *vp)
 
   if (!sRunning) {
     NS_WARNING("PAC myIPAddress without a running ProxyAutoConfig object");
-    return JS_FALSE;
+    return false;
   }
 
   return sRunning->MyIPAddress(vp);
@@ -428,7 +428,7 @@ JSBool PACMyIpAddress(JSContext *cx, unsigned int argc, JS::Value *vp)
 
 // proxyAlert(msg) javascript implementation
 static
-JSBool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
+bool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
   JS::Rooted<JSString*> arg1(cx);
   if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", arg1.address()))

@@ -11,11 +11,12 @@ relativesrcdir	= @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_CHROME_FILES = \
-    bug_765063.xul \
+    install_and_redirect_helper.xul \
     cross_origin.html \
     head.js \
     test_bug_765063.xul \
     test_bug_795164.xul \
+    test_bug_771294.xul \
     test_cross_origin.xul \
     test_install_app.xul \
     test_list_api.xul \

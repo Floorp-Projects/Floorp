@@ -742,7 +742,7 @@ js_ThrowStopIteration(JSContext *cx)
 
 /*** Iterator objects ****************************************************************************/
 
-JSBool
+bool
 js::IteratorConstructor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -786,7 +786,7 @@ iterator_next_impl(JSContext *cx, CallArgs args)
     return js_IteratorNext(cx, thisObj, args.rval());
 }
 
-static JSBool
+static bool
 iterator_iterator(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -794,7 +794,7 @@ iterator_iterator(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSBool
+bool
 iterator_next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -829,10 +829,8 @@ PropertyIteratorObject::trace(JSTracer *trc, JSObject *obj)
 void
 PropertyIteratorObject::finalize(FreeOp *fop, JSObject *obj)
 {
-    if (NativeIterator *ni = obj->as<PropertyIteratorObject>().getNativeIterator()) {
-        obj->as<PropertyIteratorObject>().setNativeIterator(NULL);
+    if (NativeIterator *ni = obj->as<PropertyIteratorObject>().getNativeIterator())
         fop->free_(ni);
-    }
 }
 
 Class PropertyIteratorObject::class_ = {
@@ -883,7 +881,7 @@ IsElementIterator(const Value &v)
     return v.isObject() && v.toObject().is<ElementIteratorObject>();
 }
 
-JSBool
+bool
 ElementIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1670,7 +1668,7 @@ generator_send_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 generator_send(JSContext *cx, unsigned argc, Value *vp)
 {
     // FIXME: send() is only a method on legacy generator objects.
@@ -1698,7 +1696,7 @@ generator_next_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 generator_next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1726,7 +1724,7 @@ generator_throw_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 generator_throw(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1761,7 +1759,7 @@ generator_close_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 generator_close(JSContext *cx, unsigned argc, Value *vp)
 {
     // FIXME: close() is only a method on legacy generator objects.

@@ -755,6 +755,7 @@ void CanvasRenderingContext2D::Demote()
   RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
   RefPtr<DrawTarget> oldTarget = mTarget;
   mTarget = nullptr;
+  mResetLayer = true;
   mForceSoftware = true;
 
   // Recreate target, now demoted to software only
@@ -1232,7 +1233,7 @@ ObjectToMatrix(JSContext* cx, JS::Handle<JSObject*> obj, Matrix& matrix,
   for (uint32_t i = 0; i < 6; ++i) {
     JS::Rooted<JS::Value> elt(cx);
     double d;
-    if (!JS_GetElement(cx, obj, i, elt.address())) {
+    if (!JS_GetElement(cx, obj, i, &elt)) {
       error.Throw(NS_ERROR_FAILURE);
       return false;
     }
@@ -3039,6 +3040,24 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
   RedrawUser(gfxRect(dx, dy, dw, dh));
 }
 
+#ifdef USE_SKIA_GPU
+static bool
+IsStandardCompositeOp(CompositionOp op)
+{
+    return (op == OP_SOURCE ||
+            op == OP_ATOP ||
+            op == OP_IN ||
+            op == OP_OUT ||
+            op == OP_OVER ||
+            op == OP_DEST_IN ||
+            op == OP_DEST_OUT ||
+            op == OP_DEST_OVER ||
+            op == OP_DEST_ATOP ||
+            op == OP_ADD ||
+            op == OP_XOR);
+}
+#endif
+
 void
 CanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op,
                                                       ErrorResult& error)
@@ -3077,6 +3096,12 @@ CanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op,
   else CANVAS_OP_TO_GFX_OP("luminosity", LUMINOSITY)
   // XXX ERRMSG we need to report an error to developers here! (bug 329026)
   else return;
+
+#ifdef USE_SKIA_GPU
+  if (!IsStandardCompositeOp(comp_op)) {
+    Demote();
+  }
+#endif
 
 #undef CANVAS_OP_TO_GFX_OP
   CurrentState().op = comp_op;
@@ -3121,6 +3146,12 @@ CanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op,
   else {
     error.Throw(NS_ERROR_FAILURE);
   }
+
+#ifdef USE_SKIA_GPU
+  if (!IsStandardCompositeOp(comp_op)) {
+    Demote();
+  }
+#endif
 
 #undef CANVAS_OP_TO_GFX_OP
 }

@@ -440,12 +440,12 @@ CompareCountArrays(JSContext *cx, JSObject *aBefore, JSObject *aAfter)
 
   JS::RootedValue before_num(cx), after_num(cx);
   for (uint32_t i = 0; i < before_size; ++i) {
-    if (!(JS_GetElement(cx, before, i, before_num.address())
-          && JS_GetElement(cx, after, i, after_num.address()))) {
+    if (!(JS_GetElement(cx, before, i, &before_num)
+          && JS_GetElement(cx, after, i, &after_num))) {
       return NS_ERROR_UNEXPECTED;
     }
 
-    JSBool same = JS_TRUE;
+    JSBool same = true;
     if (!JS_LooselyEqual(cx, before_num, after_num, &same)) {
       return NS_ERROR_UNEXPECTED;
     } else {

@@ -20,16 +20,8 @@ HTMLParagraphElement::~HTMLParagraphElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLParagraphElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLParagraphElement, Element)
-
-// QueryInterface implementation for nsHTMLParagraphElement
-NS_INTERFACE_TABLE_HEAD(HTMLParagraphElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLParagraphElement,
-                                nsIDOMHTMLParagraphElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLParagraphElement, nsGenericHTMLElement,
+                             nsIDOMHTMLParagraphElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLParagraphElement)
 

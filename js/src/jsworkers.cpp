@@ -99,8 +99,8 @@ static void
 FinishOffThreadIonCompile(ion::IonBuilder *builder)
 {
     JSCompartment *compartment = builder->script()->compartment();
-    JS_ASSERT(compartment->rt->workerThreadState);
-    JS_ASSERT(compartment->rt->workerThreadState->isLocked());
+    JS_ASSERT(compartment->runtimeFromAnyThread()->workerThreadState);
+    JS_ASSERT(compartment->runtimeFromAnyThread()->workerThreadState->isLocked());
 
     compartment->ionCompartment()->finishedOffThreadCompilations().append(builder);
 }
@@ -116,16 +116,18 @@ CompiledScriptMatches(JSCompartment *compartment, JSScript *script, JSScript *ta
 void
 js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 {
-    if (!compartment->rt->workerThreadState)
+    JSRuntime *rt = compartment->runtimeFromMainThread();
+
+    if (!rt->workerThreadState)
         return;
 
-    WorkerThreadState &state = *compartment->rt->workerThreadState;
+    WorkerThreadState &state = *rt->workerThreadState;
 
     ion::IonCompartment *ion = compartment->ionCompartment();
     if (!ion)
         return;
 
-    AutoLockWorkerThreadState lock(compartment->rt);
+    AutoLockWorkerThreadState lock(rt);
 
     /* Cancel any pending entries for which processing hasn't started. */
     for (size_t i = 0; i < state.ionWorklist.length(); i++) {
@@ -475,7 +477,7 @@ WorkerThread::handleAsmJSWorkload(WorkerThreadState &state)
 
     state.unlock();
     do {
-        ion::IonContext icx(asmData->mir->compartment, &asmData->mir->temp());
+        ion::IonContext icx(runtime, asmData->mir->compartment, &asmData->mir->temp());
 
         int64_t before = PRMJ_Now();
 
@@ -523,7 +525,7 @@ WorkerThread::handleIonWorkload(WorkerThreadState &state)
 
     state.unlock();
     {
-        ion::IonContext ictx(ionBuilder->script()->compartment(), &ionBuilder->temp());
+        ion::IonContext ictx(runtime, ionBuilder->script()->compartment(), &ionBuilder->temp());
         ionBuilder->setBackgroundCodegen(ion::CompileBackEnd(ionBuilder));
     }
     state.lock();
@@ -612,7 +614,7 @@ AutoPauseWorkersForGC::AutoPauseWorkersForGC(JSRuntime *rt MOZ_GUARD_OBJECT_NOTI
     if (!runtime->workerThreadState)
         return;
 
-    runtime->assertValidThread();
+    JS_ASSERT(CurrentThreadCanAccessRuntime(runtime));
 
     WorkerThreadState &state = *runtime->workerThreadState;
     if (!state.numThreads)

@@ -133,7 +133,7 @@ _newJSDContext(JSRuntime*         jsrt,
         goto label_newJSDContext_failure;
 
     jsdc->data = NULL;
-    jsdc->inited = JS_TRUE;
+    jsdc->inited = true;
 
     JSD_LOCK();
     JS_INSERT_LINK(&jsdc->links, &_jsd_context_list);
@@ -167,7 +167,7 @@ _destroyJSDContext(JSDContext* jsdc)
     jsd_DestroyObjectManager(jsdc);
     jsd_DestroyAtomTable(jsdc);
 
-    jsdc->inited = JS_FALSE;
+    jsdc->inited = false;
 
     /*
     * We should free jsdc here, but we let it leak in case there are any 
@@ -218,7 +218,7 @@ jsd_DebuggerOn(void)
 void
 jsd_DebuggerOff(JSDContext* jsdc)
 {
-    jsd_DebuggerPause(jsdc, JS_TRUE);
+    jsd_DebuggerPause(jsdc, true);
     /* clear hooks here */
     JS_SetNewScriptHookProc(jsdc->jsrt, NULL, NULL);
     JS_SetDestroyScriptHookProc(jsdc->jsrt, NULL, NULL);
@@ -339,10 +339,10 @@ jsd_DebugErrorHook(JSContext *cx, const char *message,
     if( ! jsdc )
     {
         JS_ASSERT(0);
-        return JS_TRUE;
+        return true;
     }
     if( JSD_IS_DANGEROUS_THREAD(jsdc) )
-        return JS_TRUE;
+        return true;
 
     /* local in case hook gets cleared on another thread */
     JSD_LOCK();
@@ -351,14 +351,14 @@ jsd_DebugErrorHook(JSContext *cx, const char *message,
     JSD_UNLOCK();
 
     if(!errorReporter)
-        return JS_TRUE;
+        return true;
 
     switch(errorReporter(jsdc, cx, message, report, errorReporterData))
     {
         case JSD_ERROR_REPORTER_PASS_ALONG:
-            return JS_TRUE;
+            return true;
         case JSD_ERROR_REPORTER_RETURN:
-            return JS_FALSE;
+            return false;
         case JSD_ERROR_REPORTER_DEBUG:
         {
             jsval rval;
@@ -374,17 +374,17 @@ jsd_DebugErrorHook(JSContext *cx, const char *message,
             jsd_CallExecutionHook(jsdc, cx, JSD_HOOK_DEBUG_REQUESTED,
                                   hook, hookData, &rval);
             /* XXX Should make this dependent on ExecutionHook retval */
-            return JS_TRUE;
+            return true;
         }
         case JSD_ERROR_REPORTER_CLEAR_RETURN:
             if(report && JSREPORT_IS_EXCEPTION(report->flags))
                 JS_ClearPendingException(cx);
-            return JS_FALSE;
+            return false;
         default:
             JS_ASSERT(0);
             break;
     }
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -396,7 +396,7 @@ jsd_SetErrorReporter(JSDContext*       jsdc,
     jsdc->errorReporter = reporter;
     jsdc->errorReporterData = callerdata;
     JSD_UNLOCK();
-    return JS_TRUE;
+    return true;
 }
 
 JSBool
@@ -410,5 +410,5 @@ jsd_GetErrorReporter(JSDContext*        jsdc,
     if( callerdata )
         *callerdata = jsdc->errorReporterData;
     JSD_UNLOCK();
-    return JS_TRUE;
+    return true;
 }

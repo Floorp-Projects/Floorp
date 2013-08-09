@@ -53,11 +53,14 @@ FrameworkView::Render(const nsIntRegion& aInvalidRegion)
     }
   }
 
-  if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
-      IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
-      IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)) {
-    NS_WARNING("Unsupported render mode, can't draw. Needs to be D2D.");
-    return false;
+  // If OMTC is not in use, then we only support D2D rendering
+  if (!mWidget->ShouldUseOffMainThreadCompositing()) {
+    if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
+        IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
+        IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)) {
+      NS_WARNING("Unsupported render mode, can't draw. Needs to be D2D.");
+      return false;
+    }
   }
 
   if (mWidget->GetTransparencyMode() != eTransparencyOpaque) {

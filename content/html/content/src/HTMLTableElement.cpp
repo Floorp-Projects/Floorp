@@ -332,10 +332,8 @@ NS_IMPL_RELEASE_INHERITED(HTMLTableElement, Element)
 
 // QueryInterface implementation for HTMLTableElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLTableElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
   NS_INTERFACE_TABLE_INHERITED1(HTMLTableElement, nsIDOMHTMLTableElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 
 
 NS_IMPL_ELEMENT_CLONE(HTMLTableElement)
@@ -473,7 +471,7 @@ HTMLTableElement::CreateTBody()
                                                nsIDOMNode::ELEMENT_NODE);
   MOZ_ASSERT(nodeInfo);
 
-  nsCOMPtr<nsGenericHTMLElement> newBody =
+  nsRefPtr<nsGenericHTMLElement> newBody =
     NS_NewHTMLTableSectionElement(nodeInfo.forget());
   MOZ_ASSERT(newBody);
 

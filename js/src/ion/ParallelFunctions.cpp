@@ -457,7 +457,7 @@ ion::BitRshPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs, int32_t *
 
 ParallelResult
 ion::UrshValuesPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs,
-                   MutableHandleValue out)
+                   Value *out)
 {
     uint32_t left;
     int32_t right;
@@ -466,7 +466,7 @@ ion::UrshValuesPar(ForkJoinSlice *slice, HandleValue lhs, HandleValue rhs,
     if (!NonObjectToUint32(slice, lhs, &left) || !NonObjectToInt32(slice, rhs, &right))
         return TP_FATAL;
     left >>= right & 31;
-    out.setNumber(uint32_t(left));
+    out->setNumber(uint32_t(left));
     return TP_SUCCESS;
 }
 

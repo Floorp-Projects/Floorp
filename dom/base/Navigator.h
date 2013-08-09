@@ -243,6 +243,8 @@ public:
 #endif // MOZ_MEDIA_NAVIGATOR
   bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
                     JS::Handle<jsid> aId, JS::MutableHandle<JS::Value> aValue);
+  void GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
+                           ErrorResult& aRv);
 
   // WebIDL helper methods
   static bool HasBatterySupport(JSContext* /* unused*/, JSObject* /*unused */);
@@ -280,6 +282,9 @@ public:
   static bool HasUserMediaSupport(JSContext* /* unused */,
                                   JSObject* /* unused */);
 #endif // MOZ_MEDIA_NAVIGATOR
+
+  static bool HasPushNotificationsSupport(JSContext* /* unused */,
+                                          JSObject* aGlobal);
 
   nsPIDOMWindow* GetParentObject() const
   {

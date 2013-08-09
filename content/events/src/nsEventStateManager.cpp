@@ -1585,6 +1585,7 @@ CrossProcessSafeEvent(const nsEvent& aEvent)
     case NS_MOUSE_BUTTON_DOWN:
     case NS_MOUSE_BUTTON_UP:
     case NS_MOUSE_MOVE:
+    case NS_CONTEXTMENU:
       return true;
     default:
       return false;
@@ -2027,7 +2028,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       }
 
       nsRefPtr<nsDOMDataTransfer> dataTransfer =
-        new nsDOMDataTransfer(NS_DRAGDROP_START, false);
+        new nsDOMDataTransfer(NS_DRAGDROP_START, false, -1);
       if (!dataTransfer)
         return;
 

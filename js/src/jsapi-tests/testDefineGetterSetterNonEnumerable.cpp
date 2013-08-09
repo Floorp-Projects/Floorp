@@ -7,10 +7,10 @@
 
 #include "jsapi-tests/tests.h"
 
-static JSBool
+static bool
 native(JSContext *cx, unsigned argc, jsval *vp)
 {
-    return JS_TRUE;
+    return true;
 }
 
 static const char PROPERTY_NAME[] = "foo";
@@ -45,7 +45,7 @@ BEGIN_TEST(testDefineGetterSetterNonEnumerable)
                             JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, (JSObject*) funSetObj),
                             JSPROP_GETTER | JSPROP_SETTER | JSPROP_PERMANENT));
 
-    JSBool found = JS_FALSE;
+    JSBool found = false;
     unsigned attrs = 0;
     CHECK(JS_GetPropertyAttributes(cx, vObject, PROPERTY_NAME, &attrs, &found));
     CHECK(found);

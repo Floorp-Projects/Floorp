@@ -32,8 +32,9 @@ struct AutoMarkInDeadZone
       : zone(zone),
         scheduled(zone->scheduledForDestruction)
     {
-        if (zone->rt->gcManipulatingDeadZones && zone->scheduledForDestruction) {
-            zone->rt->gcObjectsMarkedInDeadZones++;
+        JSRuntime *rt = zone->runtimeFromMainThread();
+        if (rt->gcManipulatingDeadZones && zone->scheduledForDestruction) {
+            rt->gcObjectsMarkedInDeadZones++;
             zone->scheduledForDestruction = false;
         }
     }
@@ -90,7 +91,7 @@ GetGCThingTraceKind(const void *thing)
     JS_ASSERT(thing);
     const Cell *cell = static_cast<const Cell *>(thing);
 #ifdef JSGC_GENERATIONAL
-    if (IsInsideNursery(cell->runtime(), cell))
+    if (IsInsideNursery(cell->runtimeFromMainThread(), cell))
         return JSTRACE_OBJECT;
 #endif
     return MapAllocToTraceKind(cell->tenuredGetAllocKind());
@@ -237,12 +238,12 @@ class CellIterUnderGC : public CellIterImpl
 {
   public:
     CellIterUnderGC(JS::Zone *zone, AllocKind kind) {
-        JS_ASSERT(zone->rt->isHeapBusy());
+        JS_ASSERT(zone->runtimeFromAnyThread()->isHeapBusy());
         init(zone, kind);
     }
 
     CellIterUnderGC(ArenaHeader *aheader) {
-        JS_ASSERT(aheader->zone->rt->isHeapBusy());
+        JS_ASSERT(aheader->zone->runtimeFromAnyThread()->isHeapBusy());
         init(aheader);
     }
 };
@@ -268,16 +269,16 @@ class CellIter : public CellIterImpl
         if (IsBackgroundFinalized(kind) &&
             zone->allocator.arenas.needBackgroundFinalizeWait(kind))
         {
-            gc::FinishBackgroundFinalize(zone->rt);
+            gc::FinishBackgroundFinalize(zone->runtimeFromMainThread());
         }
         if (lists->isSynchronizedFreeList(kind)) {
             lists = NULL;
         } else {
-            JS_ASSERT(!zone->rt->isHeapBusy());
+            JS_ASSERT(!zone->runtimeFromMainThread()->isHeapBusy());
             lists->copyFreeListToArena(kind);
         }
 #ifdef DEBUG
-        counter = &zone->rt->noGCOrAllocationCheck;
+        counter = &zone->runtimeFromAnyThread()->noGCOrAllocationCheck;
         ++*counter;
 #endif
         init(zone, kind);

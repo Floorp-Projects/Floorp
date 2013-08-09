@@ -134,7 +134,7 @@ JSBool
 xpc_qsGetterOnlyPropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                              JSBool strict, JS::MutableHandleValue vp);
 
-JSBool
+bool
 xpc_qsGetterOnlyNativeStub(JSContext *cx, unsigned argc, jsval *vp);
 
 /* Functions for converting values between COM and JS. */
@@ -590,7 +590,7 @@ ApplyPropertyOp<JSStrictPropertyOp>(JSContext *cx, JSStrictPropertyOp op, JS::Ha
 }
 
 template<typename Op>
-JSBool
+bool
 PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
 {
     // Layout:

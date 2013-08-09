@@ -17,4 +17,5 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 888905: Tablet bookmarks layout, makefile and xml changes requires clobbering.
+
+Add an WebIDL interface for bug 892978 requires a clobber for Windows.

@@ -1258,6 +1258,10 @@ private:
 class PrepareAdapterRunnable : public nsRunnable
 {
 public:
+  PrepareAdapterRunnable(const nsAString& aAdapterPath)
+    : mAdapterPath(aAdapterPath)
+  { }
+
   NS_IMETHOD Run()
   {
     static const dbus_uint32_t sServices[] = {
@@ -1266,14 +1270,23 @@ public:
       BluetoothServiceClass::OBJECT_PUSH
     };
 
-    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(NS_IsMainThread());
 
-    nsRefPtr<DBusReplyHandler> handler = new AddReservedServiceRecordsReplyHandler();
-    MOZ_ASSERT(handler.get());
+    nsRefPtr<RawDBusConnection> threadConnection = gThreadConnection;
+
+    if (!threadConnection.get()) {
+      BT_WARNING("%s: DBus connection has been closed.", __FUNCTION__);
+      return false;
+    }
+
+    sAdapterPath = mAdapterPath;
+
+    nsRefPtr<DBusReplyHandler> handler =
+      new AddReservedServiceRecordsReplyHandler();
 
     const dbus_uint32_t* services = sServices;
 
-    bool success = dbus_func_args_async(gThreadConnection->GetConnection(), -1,
+    bool success = dbus_func_args_async(threadConnection->GetConnection(), -1,
                                         DBusReplyHandler::Callback, handler.get(),
                                         NS_ConvertUTF16toUTF8(sAdapterPath).get(),
                                         DBUS_ADAPTER_IFACE, "AddReservedServiceRecords",
@@ -1286,30 +1299,9 @@ public:
 
     return NS_OK;
   }
-};
-
-class PrepareAdapterTask : public nsRunnable
-{
-public:
-  PrepareAdapterTask(const nsAString& aPath)
-    : mPath(aPath)
-  {
-  }
-
-  nsresult Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    BluetoothService* bs = BluetoothService::Get();
-    NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
-    sAdapterPath = mPath;
-    nsRefPtr<nsRunnable> func(new PrepareAdapterRunnable());
-    bs->DispatchToCommandThread(func);
-    return NS_OK;
-  }
 
 private:
-  nsString mPath;
+  nsString mAdapterPath;
 };
 
 class SendPlayStatusTask : public nsRunnable
@@ -1517,7 +1509,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
       errorStr.AssignLiteral("Cannot parse manager path!");
     } else {
       v = NS_ConvertUTF8toUTF16(str);
-      NS_DispatchToMainThread(new PrepareAdapterTask(v.get_nsString()));
+      NS_DispatchToMainThread(new PrepareAdapterRunnable(v.get_nsString()));
     }
   } else if (dbus_message_is_signal(aMsg, DBUS_MANAGER_IFACE,
                                     "PropertyChanged")) {
@@ -1671,10 +1663,10 @@ BluetoothDBusService::StartInternal()
   nsAutoString replyError;
   if (!GetDefaultAdapterPath(v, replyError)) {
     // Adapter path is not ready yet
-    // Let's do PrepareAdapterTask when we receive signal 'AdapterAdded'
+    // Let's do PrepareAdapterRunnable when we receive signal 'AdapterAdded'
   } else {
-    // Adapter path has been ready. let's do PrepareAdapterTask now
-    nsRefPtr<PrepareAdapterTask> b = new PrepareAdapterTask(v.get_nsString());
+    // Adapter path has been ready. let's do PrepareAdapterRunnable now
+    nsRefPtr<PrepareAdapterRunnable> b = new PrepareAdapterRunnable(v.get_nsString());
     if (NS_FAILED(NS_DispatchToMainThread(b))) {
       NS_WARNING("Failed to dispatch to main thread!");
     }

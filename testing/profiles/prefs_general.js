@@ -147,4 +147,4 @@ user_pref("geo.provider.testing", true);
 
 // Background thumbnails in particular cause grief, and disabling thumbnails
 // in general can't hurt - we re-enable them when tests need them.
-user_pref("browser.pageThumbs.enabled", false);
+user_pref("browser.pagethumbnails.capturing_disabled", true);

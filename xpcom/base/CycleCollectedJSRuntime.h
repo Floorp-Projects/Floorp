@@ -84,7 +84,7 @@ class CycleCollectedJSRuntime
 protected:
   CycleCollectedJSRuntime(uint32_t aMaxbytes,
                           JSUseHelperThreads aUseHelperThreads,
-                          bool aExpectRootedGlobals);
+                          bool aExpectUnrootedGlobals);
   virtual ~CycleCollectedJSRuntime();
 
   JSRuntime* Runtime() const
@@ -96,10 +96,14 @@ protected:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
 
-  virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) = 0;
-  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) = 0;
+  virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) {}
+  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) {}
 
   virtual void CustomGCCallback(JSGCStatus aStatus) {}
+  virtual bool CustomContextCallback(JSContext* aCx, unsigned aOperation)
+  {
+    return true; // Don't block context creation.
+  }
 
 private:
 
@@ -109,7 +113,10 @@ private:
 
   virtual bool
   DescribeCustomObjects(JSObject* aObject, js::Class* aClasp,
-                        char (&aName)[72]) const = 0;
+                        char (&aName)[72]) const
+  {
+    return false; // We did nothing.
+  }
 
   void
   NoteGCThingJSChildren(void* aThing, JSGCTraceKind aTraceKind,
@@ -121,8 +128,10 @@ private:
 
   virtual bool
   NoteCustomGCThingXPCOMChildren(js::Class* aClasp, JSObject* aObj,
-                                 nsCycleCollectionTraversalCallback& aCb) const = 0;
-
+                                 nsCycleCollectionTraversalCallback& aCb) const
+  {
+    return false; // We did nothing.
+  }
 
   enum TraverseSelect {
       TRAVERSE_CPP,
@@ -150,6 +159,8 @@ private:
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
   static void GCCallback(JSRuntime* aRuntime, JSGCStatus aStatus, void* aData);
+  static JSBool ContextCallback(JSContext* aCx, unsigned aOperation,
+                                void* aData);
 
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
   void TraceNativeGrayRoots(JSTracer* aTracer);
@@ -162,6 +173,7 @@ private:
   void FinalizeDeferredThings(DeferredFinalizeType aType);
 
   void OnGC(JSGCStatus aStatus);
+  bool OnContext(JSContext* aCx, unsigned aOperation);
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
@@ -196,6 +208,10 @@ public:
                         void* aThing);
   void DeferredFinalize(nsISupports* aSupports);
 
+  void DumpJSHeap(FILE* aFile);
+  
+  virtual void DispatchDeferredDeletion(bool aContinuation) = 0;
+
 private:
   JSGCThingParticipant mGCThingCycleCollectorGlobal;
 
@@ -212,9 +228,10 @@ private:
 
   nsRefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
 
+  bool mExpectUnrootedGlobals;
+
 #ifdef DEBUG
   void* mObjectToUnlink;
-  bool mExpectUnrootedGlobals;
 #endif
 };
 

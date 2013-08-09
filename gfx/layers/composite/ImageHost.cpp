@@ -67,6 +67,10 @@ ImageHost::Composite(EffectChain& aEffectChain,
                                                        source,
                                                        aFilter);
   aEffectChain.mPrimaryEffect = effect;
+  IntSize textureSize = source->GetSize();
+  gfx::Rect gfxPictureRect
+    = mHasPictureRect ? gfx::Rect(0, 0, mPictureRect.width, mPictureRect.height)
+                      : gfx::Rect(0, 0, textureSize.width, textureSize.height);
 
   gfx::Rect pictureRect(0, 0,
                         mPictureRect.width,
@@ -91,10 +95,14 @@ ImageHost::Composite(EffectChain& aEffectChain,
       }
       GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                                 aOpacity, aTransform, aOffset);
-      GetCompositor()->DrawDiagnostics(gfx::Color(0.5,0.0,0.0,1.0),
+      GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE|DIAGNOSTIC_BIGIMAGE,
                                        rect, aClipRect, aTransform, aOffset);
     } while (it->NextTile());
     it->EndTileIteration();
+    // layer border
+    GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
+                                     gfxPictureRect, aClipRect,
+                                     aTransform, aOffset);    
   } else {
     IntSize textureSize = source->GetSize();
     gfx::Rect rect;
@@ -109,15 +117,16 @@ ImageHost::Composite(EffectChain& aEffectChain,
       rect = gfx::Rect(0, 0, textureSize.width, textureSize.height);
     }
 
-    if (mFrontBuffer->GetFlags() & NeedsYFlip) {
+    if (mFrontBuffer->GetFlags() & TEXTURE_NEEDS_Y_FLIP) {
       effect->mTextureCoords.y = effect->mTextureCoords.YMost();
       effect->mTextureCoords.height = -effect->mTextureCoords.height;
     }
 
     GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                               aOpacity, aTransform, aOffset);
-    GetCompositor()->DrawDiagnostics(gfx::Color(1.0,0.1,0.1,1.0),
-                                     rect, aClipRect, aTransform, aOffset);
+    GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
+                                     rect, aClipRect,
+                                     aTransform, aOffset);
   }
   mFrontBuffer->Unlock();
 }
@@ -270,7 +279,7 @@ DeprecatedImageHostSingle::Composite(EffectChain& aEffectChain,
       gfx::Rect rect(tileRect.x, tileRect.y, tileRect.width, tileRect.height);
       GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                                 aOpacity, aTransform, aOffset);
-      GetCompositor()->DrawDiagnostics(gfx::Color(0.5,0.0,0.0,1.0),
+      GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE|DIAGNOSTIC_BIGIMAGE,
                                        rect, aClipRect, aTransform, aOffset);
     } while (it->NextTile());
     it->EndTileIteration();
@@ -289,14 +298,14 @@ DeprecatedImageHostSingle::Composite(EffectChain& aEffectChain,
       rect = gfx::Rect(0, 0, textureSize.width, textureSize.height);
     }
 
-    if (mDeprecatedTextureHost->GetFlags() & NeedsYFlip) {
+    if (mDeprecatedTextureHost->GetFlags() & TEXTURE_NEEDS_Y_FLIP) {
       effect->mTextureCoords.y = effect->mTextureCoords.YMost();
       effect->mTextureCoords.height = -effect->mTextureCoords.height;
     }
 
     GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                               aOpacity, aTransform, aOffset);
-    GetCompositor()->DrawDiagnostics(gfx::Color(1.0,0.1,0.1,1.0),
+    GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
                                      rect, aClipRect, aTransform, aOffset);
   }
 

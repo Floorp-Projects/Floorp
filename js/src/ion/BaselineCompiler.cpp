@@ -27,7 +27,7 @@ BaselineCompiler::BaselineCompiler(JSContext *cx, HandleScript script)
 bool
 BaselineCompiler::init()
 {
-    if (!analysis_.init())
+    if (!analysis_.init(cx))
         return false;
 
     if (!labels_.init(script->length))
@@ -436,7 +436,7 @@ BaselineCompiler::emitInterruptCheck()
     frame.syncStack(0);
 
     Label done;
-    void *interrupt = (void *)&cx->compartment()->rt->interrupt;
+    void *interrupt = (void *)&cx->runtime()->interrupt;
     masm.branch32(Assembler::Equal, AbsoluteAddress(interrupt), Imm32(0), &done);
 
     prepareVMCall();
@@ -464,6 +464,13 @@ BaselineCompiler::emitUseCountIncrement()
     masm.load32(useCountAddr, countReg);
     masm.add32(Imm32(1), countReg);
     masm.store32(countReg, useCountAddr);
+
+    // If this is a loop inside a catch or finally block, increment the use
+    // count but don't attempt OSR (Ion only compiles the try block).
+    if (analysis_.info(pc).loopEntryInCatchOrFinally) {
+        JS_ASSERT(JSOp(*pc) == JSOP_LOOPENTRY);
+        return true;
+    }
 
     Label skipCall;
 

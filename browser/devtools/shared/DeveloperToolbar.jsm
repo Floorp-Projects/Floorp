@@ -25,9 +25,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "gcli",
 XPCOMUtils.defineLazyModuleGetter(this, "CmdCommands",
                                   "resource:///modules/devtools/BuiltinCommands.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ConsoleServiceListener",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
@@ -54,6 +51,14 @@ XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function () {
 let Telemetry = devtools.require("devtools/shared/telemetry");
 
 const converters = require("gcli/converters");
+
+Object.defineProperty(this, "ConsoleServiceListener", {
+  get: function() {
+    return devtools.require("devtools/toolkit/webconsole/utils").ConsoleServiceListener;
+  },
+  configurable: true,
+  enumerable: true
+});
 
 /**
  * A collection of utilities to help working with commands
@@ -400,6 +405,10 @@ DeveloperToolbar.prototype._onload = function DT_onload(aFocus)
   tabbrowser.addEventListener("beforeunload", this, true);
 
   this._initErrorsCount(tabbrowser.selectedTab);
+  this._devtoolsUnloaded = this._devtoolsUnloaded.bind(this);
+  this._devtoolsLoaded = this._devtoolsLoaded.bind(this);
+  Services.obs.addObserver(this._devtoolsUnloaded, "devtools-unloaded", false);
+  Services.obs.addObserver(this._devtoolsLoaded, "devtools-loaded", false);
 
   this._element.hidden = false;
 
@@ -425,6 +434,26 @@ DeveloperToolbar.prototype._onload = function DT_onload(aFocus)
     this.display.maybeShowIntro();
     DeveloperToolbar.introShownThisSession = true;
   }
+};
+
+/**
+ * The devtools-unloaded event handler.
+ * @private
+ */
+DeveloperToolbar.prototype._devtoolsUnloaded = function DT__devtoolsUnloaded()
+{
+  let tabbrowser = this._chromeWindow.getBrowser();
+  Array.prototype.forEach.call(tabbrowser.tabs, this._stopErrorsCount, this);
+};
+
+/**
+ * The devtools-loaded event handler.
+ * @private
+ */
+DeveloperToolbar.prototype._devtoolsLoaded = function DT__devtoolsLoaded()
+{
+  let tabbrowser = this._chromeWindow.getBrowser();
+  this._initErrorsCount(tabbrowser.selectedTab);
 };
 
 /**
@@ -523,6 +552,8 @@ DeveloperToolbar.prototype.destroy = function DT_destroy()
   tabbrowser.removeEventListener("load", this, true);
   tabbrowser.removeEventListener("beforeunload", this, true);
 
+  Services.obs.removeObserver(this._devtoolsUnloaded, "devtools-unloaded");
+  Services.obs.removeObserver(this._devtoolsLoaded, "devtools-loaded");
   Array.prototype.forEach.call(tabbrowser.tabs, this._stopErrorsCount, this);
 
   this.display.focusManager.removeMonitoredElement(this.outputPanel._frame);

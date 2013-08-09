@@ -9,7 +9,7 @@
 #include "mozilla/Move.h"
 
 #ifdef MOZ_VTUNE
-# include "jitprofiling.h"
+# include "vtune/VTuneWrapper.h"
 #endif
 
 #include "jsmath.h"
@@ -359,9 +359,9 @@ static TokenKind
 PeekToken(AsmJSParser &parser)
 {
     TokenStream &ts = parser.tokenStream;
-    while (ts.peekToken(TSF_OPERAND) == TOK_SEMI)
-        ts.getToken(TSF_OPERAND);
-    return ts.peekToken(TSF_OPERAND);
+    while (ts.peekToken(TokenStream::Operand) == TOK_SEMI)
+        ts.consumeKnownToken(TOK_SEMI);
+    return ts.peekToken(TokenStream::Operand);
 }
 
 static bool
@@ -381,6 +381,8 @@ ParseVarStatement(AsmJSParser &parser, ParseNode **var)
 }
 
 /*****************************************************************************/
+
+namespace {
 
 // Respresents the type of a general asm.js expression.
 class Type
@@ -478,6 +480,8 @@ class Type
     }
 };
 
+} /* anonymous namespace */
+
 // Represents the subset of Type that can be used as the return type of a
 // function.
 class RetType
@@ -527,6 +531,8 @@ class RetType
     bool operator!=(RetType rhs) const { return which_ != rhs.which_; }
 };
 
+namespace {
+
 // Represents the subset of Type that can be used as a variable or
 // argument's type. Note: AsmJSCoercion and VarType are kept separate to
 // make very clear the signed/int distinction: a coercion may explicitly sign
@@ -540,6 +546,7 @@ class RetType
 //     else
 //         i = bar() | 0;
 //     return i | 0;          (2)
+//   }
 //
 // the AsmJSCoercion of (1) is Signed (since | performs ToInt32) but, when
 // translated to an VarType, the result is a plain Int since, as shown, it
@@ -592,6 +599,8 @@ class VarType
     bool operator==(VarType rhs) const { return which_ == rhs.which_; }
     bool operator!=(VarType rhs) const { return which_ != rhs.which_; }
 };
+
+} /* anonymous namespace */
 
 // Implements <: (subtype) operator when the rhs is an VarType
 static inline bool
@@ -692,6 +701,8 @@ bool operator!=(const Signature &lhs, const Signature &rhs)
 /*****************************************************************************/
 // Numeric literal utilities
 
+namespace {
+
 // Represents the type and value of an asm.js numeric literal.
 //
 // A literal is a double iff the literal contains an exponent or decimal point
@@ -743,6 +754,8 @@ class NumLit
         return v_;
     }
 };
+
+} /* anonymous namespace */
 
 // Note: '-' is never rolled into the number; numbers are always positive and
 // negations must be applied manually.
@@ -892,6 +905,8 @@ TypedArrayStoreType(ArrayBufferView::ViewType viewType)
 typedef Vector<PropertyName*,1> LabelVector;
 typedef Vector<MBasicBlock*,8> BlockVector;
 
+namespace {
+
 // ModuleCompiler encapsulates the compilation of an entire asm.js module. Over
 // the course of an ModuleCompiler object's lifetime, many FunctionCompiler
 // objects will be created and destroyed in sequence, one for each function in
@@ -936,6 +951,7 @@ typedef Vector<MBasicBlock*,8> BlockVector;
 //      bar(1)|0;    // Exit #3: (int) -> int
 //      bar(2)|0;    // Exit #3: (int) -> int
 //    }
+//  }
 //
 // The ModuleCompiler maintains a hash table (ExitMap) which allows a call site
 // to add a new exit or reuse an existing one. The key is an ExitDescriptor
@@ -1533,9 +1549,9 @@ class MOZ_STACK_CLASS ModuleCompiler
                     return;
             }
         }
-#endif
         out->reset(JS_smprintf("total compilation time %dms%s",
                                msTotal, slowFuns ? slowFuns.get() : ""));
+#endif
     }
 
     bool staticallyLink(ScopedJSDeletePtr<AsmJSModule> *module, ScopedJSFreePtr<char> *report) {
@@ -1543,7 +1559,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         // the link-time validation fails in LinkAsmJS and we need to re-parse
         // the entire module from scratch.
         uint32_t bodyEnd = parser_.tokenStream.currentToken().pos.end;
-        module_->initPostLinkFailureInfo(parser_.ss, bodyStart_, bodyEnd);
+        module_->initSourceDesc(parser_.ss, bodyStart_, bodyEnd);
 
         // Finish the code section.
         masm_.finish();
@@ -1624,7 +1640,11 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 };
 
+} /* anonymous namespace */
+
 /*****************************************************************************/
+
+namespace {
 
 // Encapsulates the compilation of a single function in an asm.js module. The
 // function compiler handles the creation and final backend compilation of the
@@ -1763,7 +1783,7 @@ class FunctionCompiler
         JS_ASSERT(locals_.count() == argTypes.length() + varInitializers_.length());
 
         alloc_  = lifo_.new_<TempAllocator>(&lifo_);
-        ionContext_.construct(m_.cx()->compartment(), alloc_);
+        ionContext_.construct(m_.cx()->runtime(), m_.cx()->compartment(), alloc_);
 
         graph_  = lifo_.new_<MIRGraph>(alloc_);
         info_   = lifo_.new_<CompileInfo>(locals_.count(), SequentialExecution);
@@ -2536,6 +2556,8 @@ class FunctionCompiler
         return true;
     }
 };
+
+} /* anonymous namespace */
 
 /*****************************************************************************/
 // asm.js type-checking and code-generation algorithm
@@ -4585,7 +4607,7 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     DebugOnly<TokenKind> tk = tokenStream.getToken();
     JS_ASSERT(tk == TOK_FUNCTION);
 
-    if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) != TOK_NAME)
+    if (tokenStream.getToken(TokenStream::KeywordIsName) != TOK_NAME)
         return false;  // This will throw a SyntaxError, no need to m.fail.
 
     RootedPropertyName name(m.cx(), tokenStream.currentToken().name());
@@ -4710,10 +4732,8 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
     }
 
 #ifdef MOZ_VTUNE
-    if (iJIT_IsProfilingActive() == iJIT_SAMPLING_ON) {
-        if (!m.trackProfiledFunction(func, m.masm().size()))
-            return false;
-    }
+    if (IsVTuneProfilingActive() && !m.trackProfiledFunction(func, m.masm().size()))
+        return false;
 #endif
 
 #ifdef JS_ION_PERF
@@ -4845,7 +4865,7 @@ GenerateCodeForFinishedJob(ModuleCompiler &m, ParallelGroupState &group, AsmJSPa
 
     {
         // Perform code generation on the main thread.
-        IonContext ionContext(m.cx()->compartment(), &task->mir->temp());
+        IonContext ionContext(m.cx()->runtime(), m.cx()->compartment(), &task->mir->temp());
         if (!GenerateCode(m, func, *task->mir, *task->lir))
             return false;
     }
@@ -5118,7 +5138,7 @@ CheckModuleReturn(ModuleCompiler &m)
         return m.fail(NULL, "invalid asm.js statement");
     }
 
-    ParseNode *returnStmt = m.parser().statement(TSF_OPERAND);
+    ParseNode *returnStmt = m.parser().statement();
     if (!returnStmt)
         return false;
 
@@ -5154,7 +5174,7 @@ static const RegisterSet NonVolatileRegs =
 static void
 LoadAsmJSActivationIntoRegister(MacroAssembler &masm, Register reg)
 {
-    masm.movePtr(ImmWord(GetIonContext()->compartment->rt), reg);
+    masm.movePtr(ImmWord(GetIonContext()->runtime), reg);
     size_t offset = offsetof(JSRuntime, mainThread) +
                     PerThreadData::offsetOfAsmJSActivationStackReadOnly();
     masm.loadPtr(Address(reg, offset), reg);
@@ -6206,7 +6226,7 @@ FinishModule(ModuleCompiler &m,
              ScopedJSFreePtr<char> *compilationTimeReport)
 {
     TempAllocator alloc(&m.cx()->tempLifoAlloc());
-    IonContext ionContext(m.cx()->compartment(), &alloc);
+    IonContext ionContext(m.cx()->runtime(), m.cx()->compartment(), &alloc);
 
     if (!GenerateStubs(m))
         return false;
@@ -6273,7 +6293,7 @@ static bool
 Warn(JSContext *cx, int code, const char *str)
 {
     return JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage,
-                                        NULL, code, str);
+                                        NULL, code, str ? str : "");
 }
 
 extern bool
@@ -6327,7 +6347,7 @@ js::CompileAsmJS(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *
     return Warn(cx, JSMSG_USE_ASM_TYPE_OK, compilationTimeReport);
 }
 
-JSBool
+bool
 js::IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

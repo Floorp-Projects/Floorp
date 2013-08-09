@@ -10,13 +10,13 @@ let {PageThumbs, PageThumbsStorage, SessionStore, FileUtils, OS} = tmp;
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
-let oldEnabledPref = Services.prefs.getBoolPref("browser.pageThumbs.enabled");
-Services.prefs.setBoolPref("browser.pageThumbs.enabled", true);
+let oldEnabledPref = Services.prefs.getBoolPref("browser.pagethumbnails.capturing_disabled");
+Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", false);
 
 registerCleanupFunction(function () {
   while (gBrowser.tabs.length > 1)
     gBrowser.removeTab(gBrowser.tabs[1]);
-  Services.prefs.setBoolPref("browser.pageThumbs.enabled", oldEnabledPref)
+  Services.prefs.setBoolPref("browser.pagethumbnails.capturing_disabled", oldEnabledPref)
 });
 
 /**

@@ -175,13 +175,10 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
                                           Float(tileRegionRect.width) / texRect.width,
                                           Float(tileRegionRect.height) / texRect.height);
             GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform, aOffset);
-            if (iterOnWhite) {
-                GetCompositor()->DrawDiagnostics(gfx::Color(0.0,0.0,1.0,1.0),
-                                                 rect, aClipRect, aTransform, aOffset);
-	    } else {
-                GetCompositor()->DrawDiagnostics(gfx::Color(0.0,1.0,0.0,1.0),
-                                                 rect, aClipRect, aTransform, aOffset);
-	    }
+            DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT;
+            diagnostics |= usingTiles ? DIAGNOSTIC_BIGIMAGE : 0;
+            diagnostics |= iterOnWhite ? DIAGNOSTIC_COMPONENT_ALPHA : 0;
+            GetCompositor()->DrawDiagnostics(diagnostics, rect, aClipRect, aTransform, aOffset);
         }
       }
     }
@@ -513,7 +510,7 @@ ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* 
     newHost->SetCompositor(compositor);
   }
   RefPtr<DeprecatedTextureHost> newHostOnWhite;
-  if (mTextureInfo.mTextureFlags & ComponentAlpha) {
+  if (mTextureInfo.mTextureFlags & TEXTURE_COMPONENT_ALPHA) {
     newHostOnWhite =
       DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptor::TShmem,
                                      mTextureInfo.mDeprecatedTextureHostFlags,

@@ -32,7 +32,6 @@ public:
     mTempFileEnabled(false) { }
   ~EncodedBufferCache()
   {
-    NS_ASSERTION(mDataSize == 0, "still has data in EncodedBuffers!");
   }
   // Append buffers in cache, check if the queue is too large then switch to write buffer to file system
   // aBuf will append to mEncodedBuffers or temporary File, aBuf also be cleared
