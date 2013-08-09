@@ -60,7 +60,6 @@ const object = require("sdk/util/object");
 const events = require("sdk/event/core");
 const { Unknown } = require("sdk/platform/xpcom");
 const { Class } = require("sdk/core/heritage");
-const {PageStyleActor} = require("devtools/server/actors/styles");
 
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
 
@@ -2081,8 +2080,7 @@ var InspectorActor = protocol.ActorClass({
     var domReady = () => {
       let tabActor = this.tabActor;
       window.removeEventListener("DOMContentLoaded", domReady, true);
-      this.walker = WalkerActor(this.conn, window.document, tabActor._tabbrowser, options);
-      deferred.resolve(this.walker);
+      deferred.resolve(WalkerActor(this.conn, window.document, tabActor._tabbrowser, options));
     };
 
     if (window.document.readyState === "loading") {
@@ -2097,20 +2095,6 @@ var InspectorActor = protocol.ActorClass({
     response: {
       walker: RetVal("domwalker")
     }
-  }),
-
-  getPageStyle: method(function() {
-    if (this._pageStylePromise) {
-      return this._pageStylePromise;
-    }
-
-    this._pageStylePromise = this.getWalker().then(walker => {
-      return PageStyleActor(this);
-    });
-    return this._pageStylePromise;
-  }, {
-    request: {},
-    response: { pageStyle: RetVal("pagestyle") }
   })
 });
 
@@ -2127,31 +2111,7 @@ var InspectorFront = exports.InspectorFront = protocol.FrontClass(InspectorActor
     // library, so we're going to self-own on the client side for now.
     client.addActorPool(this);
     this.manage(this);
-  },
-
-  getWalker: protocol.custom(function() {
-    return this._getWalker().then(walker => {
-      this.walker = walker;
-      return walker;
-    });
-  }, {
-    impl: "_getWalker"
-  }),
-
-  getPageStyle: protocol.custom(function() {
-    return this._getPageStyle().then(pageStyle => {
-      // We need a walker to understand node references from the
-      // node style.
-      if (this.walker) {
-        return pageStyle;
-      }
-      return this.getWalker().then(() => {
-        return pageStyle;
-      });
-    });
-  }, {
-    impl: "_getPageStyle"
-  })
+  }
 });
 
 function documentWalker(node, whatToShow=Ci.nsIDOMNodeFilter.SHOW_ALL) {
