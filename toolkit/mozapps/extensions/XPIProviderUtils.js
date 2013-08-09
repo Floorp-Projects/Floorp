@@ -18,21 +18,17 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 
 
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
-  Object.defineProperty(this, aName, {
-    get: function logFuncGetter () {
-      Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+  this.__defineGetter__(aName, function logFuncGetter () {
+    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
 
-      LogManager.getLogger("addons.xpi-utils", this);
-      return this[aName];
-    },
-    configurable: true
-  });
+    LogManager.getLogger("addons.xpi-utils", this);
+    return this[aName];
+  })
 }, this);
 
 
 const KEY_PROFILEDIR                  = "ProfD";
 const FILE_DATABASE                   = "extensions.sqlite";
-const FILE_JSON_DB                    = "extensions.json";
 const FILE_OLD_DATABASE               = "extensions.rdf";
 const FILE_XPI_ADDONS_LIST            = "extensions.ini";
 
@@ -76,30 +72,16 @@ const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
 const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
 const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
 
-// Properties to save in JSON file
-const PROP_JSON_FIELDS = ["id", "syncGUID", "location", "version", "type",
-                          "internalName", "updateURL", "updateKey", "optionsURL",
-                          "optionsType", "aboutURL", "iconURL", "icon64URL",
-                          "defaultLocale", "visible", "active", "userDisabled",
-                          "appDisabled", "pendingUninstall", "descriptor", "installDate",
-                          "updateDate", "applyBackgroundUpdates", "bootstrap",
-                          "skinnable", "size", "sourceURI", "releaseNotesURI",
-                          "softDisabled", "foreignInstall", "hasBinaryComponents",
-                          "strictCompatibility", "locales", "targetApplications",
-                          "targetPlatforms"];
 
 
 const PREFIX_ITEM_URI                 = "urn:mozilla:item:";
 const RDFURI_ITEM_ROOT                = "urn:mozilla:item:root"
 const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 
-Object.defineProperty(this, "gRDF", {
-  get: function gRDFGetter() {
-    delete this.gRDF;
-    return this.gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
-                       getService(Ci.nsIRDFService);
-  },
-  configurable: true
+this.__defineGetter__("gRDF", function gRDFGetter() {
+  delete this.gRDF;
+  return this.gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
+                     getService(Ci.nsIRDFService);
 });
 
 function EM_R(aProperty) {
@@ -192,67 +174,6 @@ AsyncAddonListCallback.prototype = {
   }
 };
 
-/**
- * Asynchronously fill in the _repositoryAddon field for one addon
- */
-function getRepositoryAddon(aAddon, aCallback) {
-  if (!aAddon) {
-    aCallback(aAddon);
-    return;
-  }
-  function completeAddon(aRepositoryAddon) {
-    aAddon._repositoryAddon = aRepositoryAddon;
-    aAddon.compatibilityOverrides = aRepositoryAddon ?
-                                      aRepositoryAddon.compatibilityOverrides :
-                                      null;
-    aCallback(aAddon);
-  }
-  AddonRepository.getCachedAddonByID(aAddon.id, completeAddon);
-}
-
-/**
- * A helper method to asynchronously call a function on an array
- * of objects, calling a callback when function(x) has been gathered
- * for every element of the array.
- * WARNING: not currently error-safe; if the async function does not call
- * our internal callback for any of the array elements, asyncMap will not
- * call the callback parameter.
- *
- * @param  aObjects
- *         The array of objects to process asynchronously
- * @param  aMethod
- *         Function with signature function(object, function aCallback(f_of_object))
- * @param  aCallback
- *         Function with signature f([aMethod(object)]), called when all values
- *         are available
- */
-function asyncMap(aObjects, aMethod, aCallback) {
-  var resultsPending = aObjects.length;
-  var results = []
-  if (resultsPending == 0) {
-    aCallback(results);
-    return;
-  }
-
-  function asyncMap_gotValue(aIndex, aValue) {
-    results[aIndex] = aValue;
-    if (--resultsPending == 0) {
-      aCallback(results);
-    }
-  }
-
-  aObjects.map(function asyncMap_each(aObject, aIndex, aArray) {
-    try {
-      aMethod(aObject, function asyncMap_callback(aResult) {
-        asyncMap_gotValue(aIndex, aResult);
-      });
-    }
-    catch (e) {
-      WARN("Async map function failed", e);
-      asyncMap_gotValue(aIndex, undefined);
-    }
-  });
-}
 
 /**
  * A generator to synchronously return result rows from an mozIStorageStatement.
@@ -372,78 +293,6 @@ function copyRowProperties(aRow, aProperties, aTarget) {
   return aTarget;
 }
 
-/**
- * Create a DBAddonInternal from the fields saved in the JSON database
- * or loaded into an AddonInternal from an XPI manifest.
- * @return a DBAddonInternal populated with the loaded data
- */
-
-/**
- * The DBAddonInternal is a special AddonInternal that has been retrieved from
- * the database. The constructor will initialize the DBAddonInternal with a set
- * of fields, which could come from either the JSON store or as an
- * XPIProvider.AddonInternal created from an addon's manifest
- * @constructor
- * @param aLoaded
- *        Addon data fields loaded from JSON or the addon manifest.
- */
-function DBAddonInternal(aLoaded) {
-  copyProperties(aLoaded, PROP_JSON_FIELDS, this);
-  if (aLoaded._installLocation) {
-    this._installLocation = aLoaded._installLocation;
-    this.location = aLoaded._installLocation._name;
-  }
-  else if (aLoaded.location) {
-    this._installLocation = XPIProvider.installLocationsByName[this.location];
-  }
-  this._key = this.location + ":" + this.id;
-  try {
-    this._sourceBundle = this._installLocation.getLocationForID(this.id);
-  }
-  catch (e) {
-    // An exception will be thrown if the add-on appears in the database but
-    // not on disk. In general this should only happen during startup as
-    // this change is being detected.
-  }
-
-  Object.defineProperty(this, "pendingUpgrade", {
-    get: function DBA_pendingUpgradeGetter() {
-      delete this.pendingUpgrade;
-      for (let install of XPIProvider.installs) {
-        if (install.state == AddonManager.STATE_INSTALLED &&
-            !(install.addon.inDatabase) &&
-            install.addon.id == this.id &&
-            install.installLocation == this._installLocation) {
-          return this.pendingUpgrade = install.addon;
-        }
-      };
-    },
-    configurable: true
-  });
-}
-
-DBAddonInternal.prototype = {
-  applyCompatibilityUpdate: function DBA_applyCompatibilityUpdate(aUpdate, aSyncCompatibility) {
-    XPIDatabase.beginTransaction();
-    this.targetApplications.forEach(function(aTargetApp) {
-      aUpdate.targetApplications.forEach(function(aUpdateTarget) {
-        if (aTargetApp.id == aUpdateTarget.id && (aSyncCompatibility ||
-            Services.vc.compare(aTargetApp.maxVersion, aUpdateTarget.maxVersion) < 0)) {
-          aTargetApp.minVersion = aUpdateTarget.minVersion;
-          aTargetApp.maxVersion = aUpdateTarget.maxVersion;
-        }
-      });
-    });
-    XPIProvider.updateAddonDisabledState(this);
-    XPIDatabase.commitTransaction();
-  },
-  get inDatabase() {
-    return true;
-  }
-}
-
-DBAddonInternal.prototype.__proto__ = AddonInternal.prototype;
-
 this.XPIDatabase = {
   // true if the database connection has been opened
   initialized: false,
@@ -456,7 +305,6 @@ this.XPIDatabase = {
   transactionCount: 0,
   // The database file
   dbfile: FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true),
-  jsonFile: FileUtils.getFile(KEY_PROFILEDIR, [FILE_JSON_DB], true),
   // Migration data loaded from an old version of the database.
   migrateData: null,
   // Active add-on directories loaded from extensions.ini and prefs at startup.
@@ -478,6 +326,30 @@ this.XPIDatabase = {
                          "addon_internal_id=:internal_id",
     _readLocaleStrings: "SELECT locale_id, type, value FROM locale_strings " +
                         "WHERE locale_id=:id",
+
+    addAddonMetadata_addon: "INSERT INTO addon VALUES (NULL, :id, :syncGUID, " +
+                            ":location, :version, :type, :internalName, " +
+                            ":updateURL, :updateKey, :optionsURL, " +
+                            ":optionsType, :aboutURL, " +
+                            ":iconURL, :icon64URL, :locale, :visible, :active, " +
+                            ":userDisabled, :appDisabled, :pendingUninstall, " +
+                            ":descriptor, :installDate, :updateDate, " +
+                            ":applyBackgroundUpdates, :bootstrap, :skinnable, " +
+                            ":size, :sourceURI, :releaseNotesURI, :softDisabled, " +
+                            ":isForeignInstall, :hasBinaryComponents, " +
+                            ":strictCompatibility)",
+    addAddonMetadata_addon_locale: "INSERT INTO addon_locale VALUES " +
+                                   "(:internal_id, :name, :locale)",
+    addAddonMetadata_locale: "INSERT INTO locale (name, description, creator, " +
+                             "homepageURL) VALUES (:name, :description, " +
+                             ":creator, :homepageURL)",
+    addAddonMetadata_strings: "INSERT INTO locale_strings VALUES (:locale, " +
+                              ":type, :value)",
+    addAddonMetadata_targetApplication: "INSERT INTO targetApplication VALUES " +
+                                        "(:internal_id, :id, :minVersion, " +
+                                        ":maxVersion)",
+    addAddonMetadata_targetPlatform: "INSERT INTO targetPlatform VALUES " +
+                                     "(:internal_id, :os, :abi)",
 
     clearVisibleAddons: "UPDATE addon SET visible=0 WHERE id=:id",
     updateAddonActive: "UPDATE addon SET active=:active WHERE " +
@@ -542,100 +414,6 @@ this.XPIDatabase = {
   },
 
   /**
-   * Converts the current internal state of the XPI addon database to JSON
-   * and writes it to the user's profile. Synchronous for now, eventually must
-   * be async, reliable, etc.
-   */
-  writeJSON: function XPIDB_writeJSON() {
-    // XXX should have a guard here for if the addonDB hasn't been auto-loaded yet
-    let addons = [];
-    for (let aKey in this.addonDB) {
-      addons.push(copyProperties(this.addonDB[aKey], PROP_JSON_FIELDS));
-    }
-    let toSave = {
-      schemaVersion: DB_SCHEMA,
-      addons: addons
-    };
-
-    let stream = FileUtils.openSafeFileOutputStream(this.jsonFile);
-    let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
-      createInstance(Ci.nsIConverterOutputStream);
-    try {
-      converter.init(stream, "UTF-8", 0, 0x0000);
-      // XXX pretty print the JSON while debugging
-      converter.writeString(JSON.stringify(toSave, null, 2));
-      converter.flush();
-      // nsConverterOutputStream doesn't finish() safe output streams on close()
-      FileUtils.closeSafeFileOutputStream(stream);
-      converter.close();
-    }
-    catch(e) {
-      ERROR("Failed to save database to JSON", e);
-      stream.close();
-    }
-  },
-
-  /**
-   * Open and parse the JSON XPI extensions database.
-   * @return true: the DB was successfully loaded
-   *         false: The DB either needs upgrade or did not exist at all.
-   *         XXX upgrade and errors handled in a following patch
-   */
-  openJSONDatabase: function XPIDB_openJSONDatabase() {
-    dump("XPIDB_openJSONDatabase\n");
-    try {
-      let data = "";
-      let fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].
-              createInstance(Components.interfaces.nsIFileInputStream);
-      let cstream = Components.classes["@mozilla.org/intl/converter-input-stream;1"].
-              createInstance(Components.interfaces.nsIConverterInputStream);
-      fstream.init(this.jsonFile, -1, 0, 0);
-      cstream.init(fstream, "UTF-8", 0, 0);
-      let (str = {}) {
-        let read = 0;
-        do {
-          read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
-          data += str.value;
-        } while (read != 0);
-      }
-      cstream.close();
-      let inputAddons = JSON.parse(data);
-      // Now do some sanity checks on our JSON db
-      if (!("schemaVersion" in inputAddons) || !("addons" in inputAddons)) {
-        // XXX Content of JSON file is bad, need to rebuild from scratch
-        ERROR("bad JSON file contents");
-        delete this.addonDB;
-        this.addonDB = {};
-        return false;
-      }
-      if (inputAddons.schemaVersion != DB_SCHEMA) {
-        // XXX UPGRADE FROM PREVIOUS VERSION OF JSON DB
-        ERROR("JSON schema upgrade needed");
-        return false;
-      }
-      // If we got here, we probably have good data
-      // Make AddonInternal instances from the loaded data and save them
-      delete this.addonDB;
-      let addonDB = {}
-      inputAddons.addons.forEach(function(loadedAddon) {
-        let newAddon = new DBAddonInternal(loadedAddon);
-        addonDB[newAddon._key] = newAddon;
-      });
-      this.addonDB = addonDB;
-      // dump("Finished reading DB: " + this.addonDB.toSource() + "\n");
-      return true;
-    }
-    catch(e) {
-      // XXX handle missing JSON database
-      ERROR("Failed to load XPI JSON data from profile", e);
-      // XXX for now, start from scratch
-      delete this.addonDB;
-      this.addonDB = {};
-      return false;
-    }
-  },
-
-  /**
    * Begins a new transaction in the database. Transactions may be nested. Data
    * written by an inner transaction may be rolled back on its own. Rolling back
    * an outer transaction will rollback all the changes made by inner
@@ -645,6 +423,8 @@ this.XPIDatabase = {
    * when the database is first opened.
    */
   beginTransaction: function XPIDB_beginTransaction() {
+    if (this.initialized)
+      this.getStatement("createSavepoint").execute();
     this.transactionCount++;
   },
 
@@ -658,12 +438,9 @@ this.XPIDatabase = {
       return;
     }
 
+    if (this.initialized)
+      this.getStatement("releaseSavepoint").execute();
     this.transactionCount--;
-
-    if (this.transactionCount == 0) {
-      // All our nested transactions are done, write the JSON file
-      this.writeJSON();
-    }
   },
 
   /**
@@ -676,8 +453,11 @@ this.XPIDatabase = {
       return;
     }
 
+    if (this.initialized) {
+      this.getStatement("rollbackSavepoint").execute();
+      this.getStatement("releaseSavepoint").execute();
+    }
     this.transactionCount--;
-    // XXX IRVING we don't handle rollback in the JSON store
   },
 
   /**
@@ -714,7 +494,7 @@ this.XPIDatabase = {
         }
         catch (e) {
           ERROR("Failed to open database (2nd attempt)", e);
-
+  
           // If we have got here there seems to be no way to open the real
           // database, instead open a temporary memory database so things will
           // work for this session.
@@ -738,20 +518,18 @@ this.XPIDatabase = {
    * @param  aRebuildOnError
    *         A boolean indicating whether add-on information should be loaded
    *         from the install locations if the database needs to be rebuilt.
+   * @return the migration data from the database if it was an old schema or
+   *         null otherwise.
    */
   openConnection: function XPIDB_openConnection(aRebuildOnError, aForceOpen) {
-    this.openJSONDatabase();
-    this.initialized = true;
-    return;
-    // XXX IRVING deal with the migration logic below and in openDatabaseFile...
-
     delete this.connection;
 
     if (!aForceOpen && !this.dbfileExists) {
       this.connection = null;
-      return;
+      return {};
     }
 
+    this.initialized = true;
     this.migrateData = null;
 
     this.connection = this.openDatabaseFile(this.dbfile);
@@ -840,12 +618,11 @@ this.XPIDatabase = {
   },
 
   /**
-   * Lazy getter for the addons database
+   * A lazy getter for the database connection.
    */
-  get addonDB() {
-    delete this.addonDB;
-    this.openJSONDatabase();
-    return this.addonDB;
+  get connection() {
+    this.openConnection(true);
+    return this.connection;
   },
 
   /**
@@ -1006,8 +783,6 @@ this.XPIDatabase = {
         migrateData[row.location][row.id] = addonData;
 
         props.forEach(function(aProp) {
-          if (aProp == "isForeignInstall")
-            addonData.foreignInstall = (row[aProp] == 1);
           if (DB_BOOL_METADATA.indexOf(aProp) != -1)
             addonData[aProp] = row[aProp] == 1;
           else
@@ -1055,6 +830,11 @@ this.XPIDatabase = {
   shutdown: function XPIDB_shutdown(aCallback) {
     LOG("shutdown");
     if (this.initialized) {
+      for each (let stmt in this.statementCache)
+        stmt.finalize();
+      this.statementCache = {};
+      this.addonCache = [];
+
       if (this.transactionCount > 0) {
         ERROR(this.transactionCount + " outstanding transactions, rolling back.");
         while (this.transactionCount > 0)
@@ -1063,28 +843,24 @@ this.XPIDatabase = {
 
       // If we are running with an in-memory database then force a new
       // extensions.ini to be written to disk on the next startup
-      // XXX IRVING special case for if we fail to save extensions.json?
-      // XXX maybe doesn't need to be at shutdown?
-      // if (!this.connection.databaseFile)
-      //   Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
+      if (!this.connection.databaseFile)
+        Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
 
       this.initialized = false;
+      let connection = this.connection;
+      delete this.connection;
 
-      // Clear out the cached addons data loaded from JSON and recreate
-      // the getter to allow database re-loads during testing.
-      delete this.addonDB;
-      Object.defineProperty(this, "addonDB", {
-        get: function addonsGetter() {
-          this.openJSONDatabase();
-          return this.addonDB;
-        },
-        configurable: true
+      // Re-create the connection smart getter to allow the database to be
+      // re-loaded during testing.
+      this.__defineGetter__("connection", function connectionGetter() {
+        this.openConnection(true);
+        return this.connection;
       });
-      // XXX IRVING removed an async callback when the database was closed
-      // XXX do we want to keep the ability to async flush extensions.json
-      // XXX and then call back?
-      if (aCallback)
+
+      connection.asyncClose(function shutdown_asyncClose() {
+        LOG("Database closed");
         aCallback();
+      });
     }
     else {
       if (aCallback)
@@ -1093,7 +869,433 @@ this.XPIDatabase = {
   },
 
   /**
-   * Return a list of all install locations known about by the database. This
+   * Gets a cached statement or creates a new statement if it doesn't already
+   * exist.
+   *
+   * @param  key
+   *         A unique key to reference the statement
+   * @param  aSql
+   *         An optional SQL string to use for the query, otherwise a
+   *         predefined sql string for the key will be used.
+   * @return a mozIStorageStatement for the passed SQL
+   */
+  getStatement: function XPIDB_getStatement(aKey, aSql) {
+    if (aKey in this.statementCache)
+      return this.statementCache[aKey];
+    if (!aSql)
+      aSql = this.statements[aKey];
+
+    try {
+      return this.statementCache[aKey] = this.connection.createStatement(aSql);
+    }
+    catch (e) {
+      ERROR("Error creating statement " + aKey + " (" + aSql + ")");
+      throw e;
+    }
+  },
+
+  /**
+   * Creates the schema in the database.
+   */
+  createSchema: function XPIDB_createSchema() {
+    LOG("Creating database schema");
+    this.beginTransaction();
+
+    // Any errors in here should rollback the transaction
+    try {
+      this.connection.createTable("addon",
+                                  "internal_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                  "id TEXT, syncGUID TEXT, " +
+                                  "location TEXT, version TEXT, " +
+                                  "type TEXT, internalName TEXT, updateURL TEXT, " +
+                                  "updateKey TEXT, optionsURL TEXT, " +
+                                  "optionsType TEXT, aboutURL TEXT, iconURL TEXT, " +
+                                  "icon64URL TEXT, defaultLocale INTEGER, " +
+                                  "visible INTEGER, active INTEGER, " +
+                                  "userDisabled INTEGER, appDisabled INTEGER, " +
+                                  "pendingUninstall INTEGER, descriptor TEXT, " +
+                                  "installDate INTEGER, updateDate INTEGER, " +
+                                  "applyBackgroundUpdates INTEGER, " +
+                                  "bootstrap INTEGER, skinnable INTEGER, " +
+                                  "size INTEGER, sourceURI TEXT, " +
+                                  "releaseNotesURI TEXT, softDisabled INTEGER, " +
+                                  "isForeignInstall INTEGER, " +
+                                  "hasBinaryComponents INTEGER, " +
+                                  "strictCompatibility INTEGER, " +
+                                  "UNIQUE (id, location), " +
+                                  "UNIQUE (syncGUID)");
+      this.connection.createTable("targetApplication",
+                                  "addon_internal_id INTEGER, " +
+                                  "id TEXT, minVersion TEXT, maxVersion TEXT, " +
+                                  "UNIQUE (addon_internal_id, id)");
+      this.connection.createTable("targetPlatform",
+                                  "addon_internal_id INTEGER, " +
+                                  "os, abi TEXT, " +
+                                  "UNIQUE (addon_internal_id, os, abi)");
+      this.connection.createTable("addon_locale",
+                                  "addon_internal_id INTEGER, "+
+                                  "locale TEXT, locale_id INTEGER, " +
+                                  "UNIQUE (addon_internal_id, locale)");
+      this.connection.createTable("locale",
+                                  "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                  "name TEXT, description TEXT, creator TEXT, " +
+                                  "homepageURL TEXT");
+      this.connection.createTable("locale_strings",
+                                  "locale_id INTEGER, type TEXT, value TEXT");
+      this.connection.executeSimpleSQL("CREATE INDEX locale_strings_idx ON " +
+        "locale_strings (locale_id)");
+      this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon AFTER DELETE " +
+        "ON addon BEGIN " +
+        "DELETE FROM targetApplication WHERE addon_internal_id=old.internal_id; " +
+        "DELETE FROM targetPlatform WHERE addon_internal_id=old.internal_id; " +
+        "DELETE FROM addon_locale WHERE addon_internal_id=old.internal_id; " +
+        "DELETE FROM locale WHERE id=old.defaultLocale; " +
+        "END");
+      this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon_locale AFTER " +
+        "DELETE ON addon_locale WHEN NOT EXISTS " +
+        "(SELECT * FROM addon_locale WHERE locale_id=old.locale_id) BEGIN " +
+        "DELETE FROM locale WHERE id=old.locale_id; " +
+        "END");
+      this.connection.executeSimpleSQL("CREATE TRIGGER delete_locale AFTER " +
+        "DELETE ON locale BEGIN " +
+        "DELETE FROM locale_strings WHERE locale_id=old.id; " +
+        "END");
+      this.connection.schemaVersion = DB_SCHEMA;
+      this.commitTransaction();
+    }
+    catch (e) {
+      ERROR("Failed to create database schema", e);
+      logSQLError(this.connection.lastError, this.connection.lastErrorString);
+      this.rollbackTransaction();
+      this.connection.close();
+      this.connection = null;
+      throw e;
+    }
+  },
+
+  /**
+   * Synchronously reads the multi-value locale strings for a locale
+   *
+   * @param  aLocale
+   *         The locale object to read into
+   */
+  _readLocaleStrings: function XPIDB__readLocaleStrings(aLocale) {
+    let stmt = this.getStatement("_readLocaleStrings");
+
+    stmt.params.id = aLocale.id;
+    for (let row in resultRows(stmt)) {
+      if (!(row.type in aLocale))
+        aLocale[row.type] = [];
+      aLocale[row.type].push(row.value);
+    }
+  },
+
+  /**
+   * Synchronously reads the locales for an add-on
+   *
+   * @param  aAddon
+   *         The DBAddonInternal to read the locales for
+   * @return the array of locales
+   */
+  _getLocales: function XPIDB__getLocales(aAddon) {
+    let stmt = this.getStatement("_getLocales");
+
+    let locales = [];
+    stmt.params.internal_id = aAddon._internal_id;
+    for (let row in resultRows(stmt)) {
+      let locale = {
+        id: row.id,
+        locales: [row.locale]
+      };
+      copyProperties(row, PROP_LOCALE_SINGLE, locale);
+      locales.push(locale);
+    }
+    locales.forEach(function(aLocale) {
+      this._readLocaleStrings(aLocale);
+    }, this);
+    return locales;
+  },
+
+  /**
+   * Synchronously reads the default locale for an add-on
+   *
+   * @param  aAddon
+   *         The DBAddonInternal to read the default locale for
+   * @return the default locale for the add-on
+   * @throws if the database does not contain the default locale information
+   */
+  _getDefaultLocale: function XPIDB__getDefaultLocale(aAddon) {
+    let stmt = this.getStatement("_getDefaultLocale");
+
+    stmt.params.id = aAddon._defaultLocale;
+    if (!stepStatement(stmt))
+      throw new Error("Missing default locale for " + aAddon.id);
+    let locale = copyProperties(stmt.row, PROP_LOCALE_SINGLE);
+    locale.id = aAddon._defaultLocale;
+    stmt.reset();
+    this._readLocaleStrings(locale);
+    return locale;
+  },
+
+  /**
+   * Synchronously reads the target application entries for an add-on
+   *
+   * @param  aAddon
+   *         The DBAddonInternal to read the target applications for
+   * @return an array of target applications
+   */
+  _getTargetApplications: function XPIDB__getTargetApplications(aAddon) {
+    let stmt = this.getStatement("_getTargetApplications");
+
+    stmt.params.internal_id = aAddon._internal_id;
+    return [copyProperties(row, PROP_TARGETAPP) for each (row in resultRows(stmt))];
+  },
+
+  /**
+   * Synchronously reads the target platform entries for an add-on
+   *
+   * @param  aAddon
+   *         The DBAddonInternal to read the target platforms for
+   * @return an array of target platforms
+   */
+  _getTargetPlatforms: function XPIDB__getTargetPlatforms(aAddon) {
+    let stmt = this.getStatement("_getTargetPlatforms");
+
+    stmt.params.internal_id = aAddon._internal_id;
+    return [copyProperties(row, ["os", "abi"]) for each (row in resultRows(stmt))];
+  },
+
+  /**
+   * Synchronously makes a DBAddonInternal from a storage row or returns one
+   * from the cache.
+   *
+   * @param  aRow
+   *         The storage row to make the DBAddonInternal from
+   * @return a DBAddonInternal
+   */
+  makeAddonFromRow: function XPIDB_makeAddonFromRow(aRow) {
+    if (this.addonCache[aRow.internal_id]) {
+      let addon = this.addonCache[aRow.internal_id].get();
+      if (addon)
+        return addon;
+    }
+
+    let addon = new XPIProvider.DBAddonInternal();
+    addon._internal_id = aRow.internal_id;
+    addon._installLocation = XPIProvider.installLocationsByName[aRow.location];
+    addon._descriptor = aRow.descriptor;
+    addon._defaultLocale = aRow.defaultLocale;
+    copyProperties(aRow, PROP_METADATA, addon);
+    copyProperties(aRow, DB_METADATA, addon);
+    DB_BOOL_METADATA.forEach(function(aProp) {
+      addon[aProp] = aRow[aProp] != 0;
+    });
+    try {
+      addon._sourceBundle = addon._installLocation.getLocationForID(addon.id);
+    }
+    catch (e) {
+      // An exception will be thrown if the add-on appears in the database but
+      // not on disk. In general this should only happen during startup as
+      // this change is being detected.
+    }
+
+    this.addonCache[aRow.internal_id] = Components.utils.getWeakReference(addon);
+    return addon;
+  },
+
+  /**
+   * Asynchronously fetches additional metadata for a DBAddonInternal.
+   *
+   * @param  aAddon
+   *         The DBAddonInternal
+   * @param  aCallback
+   *         The callback to call when the metadata is completely retrieved
+   */
+  fetchAddonMetadata: function XPIDB_fetchAddonMetadata(aAddon) {
+    function readLocaleStrings(aLocale, aCallback) {
+      let stmt = XPIDatabase.getStatement("_readLocaleStrings");
+
+      stmt.params.id = aLocale.id;
+      stmt.executeAsync({
+        handleResult: function readLocaleStrings_handleResult(aResults) {
+          let row = null;
+          while ((row = aResults.getNextRow())) {
+            let type = row.getResultByName("type");
+            if (!(type in aLocale))
+              aLocale[type] = [];
+            aLocale[type].push(row.getResultByName("value"));
+          }
+        },
+
+        handleError: asyncErrorLogger,
+
+        handleCompletion: function readLocaleStrings_handleCompletion(aReason) {
+          aCallback();
+        }
+      });
+    }
+
+    function readDefaultLocale() {
+      delete aAddon.defaultLocale;
+      let stmt = XPIDatabase.getStatement("_getDefaultLocale");
+
+      stmt.params.id = aAddon._defaultLocale;
+      stmt.executeAsync({
+        handleResult: function readDefaultLocale_handleResult(aResults) {
+          aAddon.defaultLocale = copyRowProperties(aResults.getNextRow(),
+                                                   PROP_LOCALE_SINGLE);
+          aAddon.defaultLocale.id = aAddon._defaultLocale;
+        },
+
+        handleError: asyncErrorLogger,
+
+        handleCompletion: function readDefaultLocale_handleCompletion(aReason) {
+          if (aAddon.defaultLocale) {
+            readLocaleStrings(aAddon.defaultLocale, readLocales);
+          }
+          else {
+            ERROR("Missing default locale for " + aAddon.id);
+            readLocales();
+          }
+        }
+      });
+    }
+
+    function readLocales() {
+      delete aAddon.locales;
+      aAddon.locales = [];
+      let stmt = XPIDatabase.getStatement("_getLocales");
+
+      stmt.params.internal_id = aAddon._internal_id;
+      stmt.executeAsync({
+        handleResult: function readLocales_handleResult(aResults) {
+          let row = null;
+          while ((row = aResults.getNextRow())) {
+            let locale = {
+              id: row.getResultByName("id"),
+              locales: [row.getResultByName("locale")]
+            };
+            copyRowProperties(row, PROP_LOCALE_SINGLE, locale);
+            aAddon.locales.push(locale);
+          }
+        },
+
+        handleError: asyncErrorLogger,
+
+        handleCompletion: function readLocales_handleCompletion(aReason) {
+          let pos = 0;
+          function readNextLocale() {
+            if (pos < aAddon.locales.length)
+              readLocaleStrings(aAddon.locales[pos++], readNextLocale);
+            else
+              readTargetApplications();
+          }
+
+          readNextLocale();
+        }
+      });
+    }
+
+    function readTargetApplications() {
+      delete aAddon.targetApplications;
+      aAddon.targetApplications = [];
+      let stmt = XPIDatabase.getStatement("_getTargetApplications");
+
+      stmt.params.internal_id = aAddon._internal_id;
+      stmt.executeAsync({
+        handleResult: function readTargetApplications_handleResult(aResults) {
+          let row = null;
+          while ((row = aResults.getNextRow()))
+            aAddon.targetApplications.push(copyRowProperties(row, PROP_TARGETAPP));
+        },
+
+        handleError: asyncErrorLogger,
+
+        handleCompletion: function readTargetApplications_handleCompletion(aReason) {
+          readTargetPlatforms();
+        }
+      });
+    }
+
+    function readTargetPlatforms() {
+      delete aAddon.targetPlatforms;
+      aAddon.targetPlatforms = [];
+      let stmt = XPIDatabase.getStatement("_getTargetPlatforms");
+
+      stmt.params.internal_id = aAddon._internal_id;
+      stmt.executeAsync({
+        handleResult: function readTargetPlatforms_handleResult(aResults) {
+          let row = null;
+          while ((row = aResults.getNextRow()))
+            aAddon.targetPlatforms.push(copyRowProperties(row, ["os", "abi"]));
+        },
+
+        handleError: asyncErrorLogger,
+
+        handleCompletion: function readTargetPlatforms_handleCompletion(aReason) {
+          let callbacks = aAddon._pendingCallbacks;
+          delete aAddon._pendingCallbacks;
+          callbacks.forEach(function(aCallback) {
+            aCallback(aAddon);
+          });
+        }
+      });
+    }
+
+    readDefaultLocale();
+  },
+
+  /**
+   * Synchronously makes a DBAddonInternal from a mozIStorageRow or returns one
+   * from the cache.
+   *
+   * @param  aRow
+   *         The mozIStorageRow to make the DBAddonInternal from
+   * @return a DBAddonInternal
+   */
+  makeAddonFromRowAsync: function XPIDB_makeAddonFromRowAsync(aRow, aCallback) {
+    let internal_id = aRow.getResultByName("internal_id");
+    if (this.addonCache[internal_id]) {
+      let addon = this.addonCache[internal_id].get();
+      if (addon) {
+        // If metadata is still pending for this instance add our callback to
+        // the list to be called when complete, otherwise pass the addon to
+        // our callback
+        if ("_pendingCallbacks" in addon)
+          addon._pendingCallbacks.push(aCallback);
+        else
+          aCallback(addon);
+        return;
+      }
+    }
+
+    let addon = new XPIProvider.DBAddonInternal();
+    addon._internal_id = internal_id;
+    let location = aRow.getResultByName("location");
+    addon._installLocation = XPIProvider.installLocationsByName[location];
+    addon._descriptor = aRow.getResultByName("descriptor");
+    copyRowProperties(aRow, PROP_METADATA, addon);
+    addon._defaultLocale = aRow.getResultByName("defaultLocale");
+    copyRowProperties(aRow, DB_METADATA, addon);
+    DB_BOOL_METADATA.forEach(function(aProp) {
+      addon[aProp] = aRow.getResultByName(aProp) != 0;
+    });
+    try {
+      addon._sourceBundle = addon._installLocation.getLocationForID(addon.id);
+    }
+    catch (e) {
+      // An exception will be thrown if the add-on appears in the database but
+      // not on disk. In general this should only happen during startup as
+      // this change is being detected.
+    }
+
+    this.addonCache[internal_id] = Components.utils.getWeakReference(addon);
+    addon._pendingCallbacks = [aCallback];
+    this.fetchAddonMetadata(addon);
+  },
+
+  /**
+   * Synchronously reads all install locations known about by the database. This
    * is often a a subset of the total install locations when not all have
    * installed add-ons, occasionally a superset when an install location no
    * longer exists.
@@ -1101,74 +1303,34 @@ this.XPIDatabase = {
    * @return  an array of names of install locations
    */
   getInstallLocations: function XPIDB_getInstallLocations() {
-    if (!this.addonDB)
+    if (!this.connection)
       return [];
 
-    let locations = {};
-    for each (let addon in this.addonDB) {
-      locations[addon.location] = 1;
-    }
-    return Object.keys(locations);
-  },
+    let stmt = this.getStatement("getInstallLocations");
 
-  /**
-   * List all addons that match the filter function
-   * @param  aFilter
-   *         Function that takes an addon instance and returns
-   *         true if that addon should be included in the selected array
-   * @return an array of DBAddonInternals
-   */
-  _listAddons: function XPIDB_listAddons(aFilter) {
-    if (!this.addonDB)
-      return [];
-
-    let addonList = [];
-    for (let key in this.addonDB) {
-      let addon = this.addonDB[key];
-      if (aFilter(addon)) {
-        addonList.push(addon);
-      }
-    }
-
-    return addonList;
-  },
-
-  /**
-   * Find the first addon that matches the filter function
-   * @param  aFilter
-   *         Function that takes an addon instance and returns
-   *         true if that addon should be selected
-   * @return The first DBAddonInternal for which the filter returns true
-   */
-  _findAddon: function XPIDB_findAddon(aFilter) {
-    if (!this.addonDB)
-      return null;
-
-    for (let key in this.addonDB) {
-      let addon = this.addonDB[key];
-      if (aFilter(addon)) {
-        return addon;
-      }
-    }
-
-    return null;
+    return [row.location for each (row in resultRows(stmt))];
   },
 
   /**
    * Synchronously reads all the add-ons in a particular install location.
    *
-   * @param  aLocation
+   * @param  location
    *         The name of the install location
    * @return an array of DBAddonInternals
    */
   getAddonsInLocation: function XPIDB_getAddonsInLocation(aLocation) {
-    return this._listAddons(function inLocation(aAddon) {return (aAddon.location == aLocation);});
+    if (!this.connection)
+      return [];
+
+    let stmt = this.getStatement("getAddonsInLocation");
+
+    stmt.params.location = aLocation;
+    return [this.makeAddonFromRow(row) for each (row in resultRows(stmt))];
   },
 
   /**
    * Asynchronously gets an add-on with a particular ID in a particular
    * install location.
-   * XXX IRVING sync for now
    *
    * @param  aId
    *         The ID of the add-on to retrieve
@@ -1178,12 +1340,30 @@ this.XPIDatabase = {
    *         A callback to pass the DBAddonInternal to
    */
   getAddonInLocation: function XPIDB_getAddonInLocation(aId, aLocation, aCallback) {
-    getRepositoryAddon(this.addonDB[aLocation + ":" + aId], aCallback);
+    if (!this.connection) {
+      aCallback(null);
+      return;
+    }
+
+    let stmt = this.getStatement("getAddonInLocation");
+
+    stmt.params.id = aId;
+    stmt.params.location = aLocation;
+    stmt.executeAsync(new AsyncAddonListCallback(function getAddonInLocation_executeAsync(aAddons) {
+      if (aAddons.length == 0) {
+        aCallback(null);
+        return;
+      }
+      // This should never happen but indicates invalid data in the database if
+      // it does
+      if (aAddons.length > 1)
+        ERROR("Multiple addons with ID " + aId + " found in location " + aLocation);
+      aCallback(aAddons[0]);
+    }));
   },
 
   /**
    * Asynchronously gets the add-on with an ID that is visible.
-   * XXX IRVING sync
    *
    * @param  aId
    *         The ID of the add-on to retrieve
@@ -1191,13 +1371,29 @@ this.XPIDatabase = {
    *         A callback to pass the DBAddonInternal to
    */
   getVisibleAddonForID: function XPIDB_getVisibleAddonForID(aId, aCallback) {
-    let addon = this._findAddon(function visibleID(aAddon) {return ((aAddon.id == aId) && aAddon.visible)});
-    getRepositoryAddon(addon, aCallback);
+    if (!this.connection) {
+      aCallback(null);
+      return;
+    }
+
+    let stmt = this.getStatement("getVisibleAddonForID");
+
+    stmt.params.id = aId;
+    stmt.executeAsync(new AsyncAddonListCallback(function getVisibleAddonForID_executeAsync(aAddons) {
+      if (aAddons.length == 0) {
+        aCallback(null);
+        return;
+      }
+      // This should never happen but indicates invalid data in the database if
+      // it does
+      if (aAddons.length > 1)
+        ERROR("Multiple visible addons with ID " + aId + " found");
+      aCallback(aAddons[0]);
+    }));
   },
 
   /**
    * Asynchronously gets the visible add-ons, optionally restricting by type.
-   * XXX IRVING sync
    *
    * @param  aTypes
    *         An array of types to include or null to include all types
@@ -1205,10 +1401,32 @@ this.XPIDatabase = {
    *         A callback to pass the array of DBAddonInternals to
    */
   getVisibleAddons: function XPIDB_getVisibleAddons(aTypes, aCallback) {
-    let addons = this._listAddons(function visibleType(aAddon) {
-      return (aAddon.visible && (!aTypes || (aTypes.length == 0) || (aTypes.indexOf(aAddon.type) > -1)))
-    });
-    asyncMap(addons, getRepositoryAddon, aCallback);
+    if (!this.connection) {
+      aCallback([]);
+      return;
+    }
+
+    let stmt = null;
+    if (!aTypes || aTypes.length == 0) {
+      stmt = this.getStatement("getVisibleAddons");
+    }
+    else {
+      let sql = "SELECT " + FIELDS_ADDON + " FROM addon WHERE visible=1 AND " +
+                "type IN (";
+      for (let i = 1; i <= aTypes.length; i++) {
+        sql += "?" + i;
+        if (i < aTypes.length)
+          sql += ",";
+      }
+      sql += ")";
+
+      // Note that binding to index 0 sets the value for the ?1 parameter
+      stmt = this.getStatement("getVisibleAddons_" + aTypes.length, sql);
+      for (let i = 0; i < aTypes.length; i++)
+        stmt.bindByIndex(i, aTypes[i]);
+    }
+
+    stmt.executeAsync(new AsyncAddonListCallback(aCallback));
   },
 
   /**
@@ -1219,7 +1437,13 @@ this.XPIDatabase = {
    * @return an array of DBAddonInternals
    */
   getAddonsByType: function XPIDB_getAddonsByType(aType) {
-    return this._listAddons(function byType(aAddon) { return aAddon.type == aType; });
+    if (!this.connection)
+      return [];
+
+    let stmt = this.getStatement("getAddonsByType");
+
+    stmt.params.type = aType;
+    return [this.makeAddonFromRow(row) for each (row in resultRows(stmt))];
   },
 
   /**
@@ -1230,14 +1454,23 @@ this.XPIDatabase = {
    * @return a DBAddonInternal
    */
   getVisibleAddonForInternalName: function XPIDB_getVisibleAddonForInternalName(aInternalName) {
-    return this._findAddon(function visibleInternalName(aAddon) {
-      return (aAddon.visible && (aAddon.internalName == aInternalName));
-    });
+    if (!this.connection)
+      return null;
+
+    let stmt = this.getStatement("getVisibleAddonForInternalName");
+
+    let addon = null;
+    stmt.params.internalName = aInternalName;
+
+    if (stepStatement(stmt))
+      addon = this.makeAddonFromRow(stmt.row);
+
+    stmt.reset();
+    return addon;
   },
 
   /**
    * Asynchronously gets all add-ons with pending operations.
-   * XXX IRVING sync
    *
    * @param  aTypes
    *         The types of add-ons to retrieve or null to get all types
@@ -1246,22 +1479,38 @@ this.XPIDatabase = {
    */
   getVisibleAddonsWithPendingOperations:
     function XPIDB_getVisibleAddonsWithPendingOperations(aTypes, aCallback) {
+    if (!this.connection) {
+      aCallback([]);
+      return;
+    }
 
-    let addons = this._listAddons(function visibleType(aAddon) {
-      return (aAddon.visible &&
-        (aAddon.pendingUninstall ||
-         // Logic here is tricky. If we're active but either
-         // disabled flag is set, we're pending disable; if we're not
-         // active and neither disabled flag is set, we're pending enable
-         (aAddon.active == (aAddon.userDisabled || aAddon.appDisabled))) &&
-        (!aTypes || (aTypes.length == 0) || (aTypes.indexOf(aAddon.type) > -1)))
-    });
-    asyncMap(addons, getRepositoryAddon, aCallback);
+    let stmt = null;
+    if (!aTypes || aTypes.length == 0) {
+      stmt = this.getStatement("getVisibleAddonsWithPendingOperations");
+    }
+    else {
+      let sql = "SELECT * FROM addon WHERE visible=1 AND " +
+                "(pendingUninstall=1 OR MAX(userDisabled,appDisabled)=active) " +
+                "AND type IN (";
+      for (let i = 1; i <= aTypes.length; i++) {
+        sql += "?" + i;
+        if (i < aTypes.length)
+          sql += ",";
+      }
+      sql += ")";
+
+      // Note that binding to index 0 sets the value for the ?1 parameter
+      stmt = this.getStatement("getVisibleAddonsWithPendingOperations_" +
+                               aTypes.length, sql);
+      for (let i = 0; i < aTypes.length; i++)
+        stmt.bindByIndex(i, aTypes[i]);
+    }
+
+    stmt.executeAsync(new AsyncAddonListCallback(aCallback));
   },
 
   /**
    * Asynchronously get an add-on by its Sync GUID.
-   * XXX IRVING sync
    *
    * @param  aGUID
    *         Sync GUID of add-on to fetch
@@ -1271,8 +1520,16 @@ this.XPIDatabase = {
    *
    */
   getAddonBySyncGUID: function XPIDB_getAddonBySyncGUID(aGUID, aCallback) {
-    let addon = this._findAddon(function bySyncGUID(aAddon) { return aAddon.syncGUID == aGUID; });
-    getRepositoryAddon(addon, aCallback);
+    let stmt = this.getStatement("getAddonBySyncGUID");
+    stmt.params.syncGUID = aGUID;
+
+    stmt.executeAsync(new AsyncAddonListCallback(function getAddonBySyncGUID_executeAsync(aAddons) {
+      if (aAddons.length == 0) {
+        aCallback(null);
+        return;
+      }
+      aCallback(aAddons[0]);
+    }));
   },
 
   /**
@@ -1281,7 +1538,12 @@ this.XPIDatabase = {
    * @return  an array of DBAddonInternals
    */
   getAddons: function XPIDB_getAddons() {
-    return this._listAddons(function(aAddon) {return true;});
+    if (!this.connection)
+      return [];
+
+    let stmt = this.getStatement("getAddons");
+
+    return [this.makeAddonFromRow(row) for each (row in resultRows(stmt))];
   },
 
   /**
@@ -1291,27 +1553,92 @@ this.XPIDatabase = {
    *         AddonInternal to add
    * @param  aDescriptor
    *         The file descriptor of the add-on
-   * @return The DBAddonInternal that was added to the database
    */
   addAddonMetadata: function XPIDB_addAddonMetadata(aAddon, aDescriptor) {
     // If there is no DB yet then forcibly create one
-    // XXX IRVING I don't think this will work as expected because the addonDB
-    // getter will kick in. Might not matter because of the way the new DB
-    // creates itself.
-    if (!this.addonDB)
+    if (!this.connection)
       this.openConnection(false, true);
 
     this.beginTransaction();
 
-    let newAddon = new DBAddonInternal(aAddon);
-    newAddon.descriptor = aDescriptor;
-    this.addonDB[newAddon._key] = newAddon;
-    if (newAddon.visible) {
-      this.makeAddonVisible(newAddon);
+    var self = this;
+    function insertLocale(aLocale) {
+      let localestmt = self.getStatement("addAddonMetadata_locale");
+      let stringstmt = self.getStatement("addAddonMetadata_strings");
+
+      copyProperties(aLocale, PROP_LOCALE_SINGLE, localestmt.params);
+      executeStatement(localestmt);
+      let row = XPIDatabase.connection.lastInsertRowID;
+
+      PROP_LOCALE_MULTI.forEach(function(aProp) {
+        aLocale[aProp].forEach(function(aStr) {
+          stringstmt.params.locale = row;
+          stringstmt.params.type = aProp;
+          stringstmt.params.value = aStr;
+          executeStatement(stringstmt);
+        });
+      });
+      return row;
     }
 
-    this.commitTransaction();
-    return newAddon;
+    // Any errors in here should rollback the transaction
+    try {
+
+      if (aAddon.visible) {
+        let stmt = this.getStatement("clearVisibleAddons");
+        stmt.params.id = aAddon.id;
+        executeStatement(stmt);
+      }
+
+      let stmt = this.getStatement("addAddonMetadata_addon");
+
+      stmt.params.locale = insertLocale(aAddon.defaultLocale);
+      stmt.params.location = aAddon._installLocation.name;
+      stmt.params.descriptor = aDescriptor;
+      copyProperties(aAddon, PROP_METADATA, stmt.params);
+      copyProperties(aAddon, DB_METADATA, stmt.params);
+      DB_BOOL_METADATA.forEach(function(aProp) {
+        stmt.params[aProp] = aAddon[aProp] ? 1 : 0;
+      });
+      executeStatement(stmt);
+      let internal_id = this.connection.lastInsertRowID;
+
+      stmt = this.getStatement("addAddonMetadata_addon_locale");
+      aAddon.locales.forEach(function(aLocale) {
+        let id = insertLocale(aLocale);
+        aLocale.locales.forEach(function(aName) {
+          stmt.params.internal_id = internal_id;
+          stmt.params.name = aName;
+          stmt.params.locale = id;
+          executeStatement(stmt);
+        });
+      });
+
+      stmt = this.getStatement("addAddonMetadata_targetApplication");
+
+      aAddon.targetApplications.forEach(function(aApp) {
+        stmt.params.internal_id = internal_id;
+        stmt.params.id = aApp.id;
+        stmt.params.minVersion = aApp.minVersion;
+        stmt.params.maxVersion = aApp.maxVersion;
+        executeStatement(stmt);
+      });
+
+      stmt = this.getStatement("addAddonMetadata_targetPlatform");
+
+      aAddon.targetPlatforms.forEach(function(aPlatform) {
+        stmt.params.internal_id = internal_id;
+        stmt.params.os = aPlatform.os;
+        stmt.params.abi = aPlatform.abi;
+        executeStatement(stmt);
+      });
+
+      this.commitTransaction();
+    }
+    catch (e) {
+      this.rollbackTransaction();
+      throw e;
+    }
   },
 
   /**
@@ -1324,7 +1651,6 @@ this.XPIDatabase = {
    *         The new AddonInternal to add
    * @param  aDescriptor
    *         The file descriptor of the add-on
-   * @return The DBAddonInternal that was added to the database
    */
   updateAddonMetadata: function XPIDB_updateAddonMetadata(aOldAddon, aNewAddon,
                                                           aDescriptor) {
@@ -1340,9 +1666,38 @@ this.XPIDatabase = {
       aNewAddon.active = (aNewAddon.visible && !aNewAddon.userDisabled &&
                           !aNewAddon.appDisabled && !aNewAddon.pendingUninstall)
 
-      let newDBAddon = this.addAddonMetadata(aNewAddon, aDescriptor);
+      this.addAddonMetadata(aNewAddon, aDescriptor);
       this.commitTransaction();
-      return newDBAddon;
+    }
+    catch (e) {
+      this.rollbackTransaction();
+      throw e;
+    }
+  },
+
+  /**
+   * Synchronously updates the target application entries for an add-on.
+   *
+   * @param  aAddon
+   *         The DBAddonInternal being updated
+   * @param  aTargets
+   *         The array of target applications to update
+   */
+  updateTargetApplications: function XPIDB_updateTargetApplications(aAddon,
+                                                                    aTargets) {
+    this.beginTransaction();
+
+    // Any errors in here should rollback the transaction
+    try {
+      let stmt = this.getStatement("updateTargetApplications");
+      aTargets.forEach(function(aTarget) {
+        stmt.params.internal_id = aAddon._internal_id;
+        stmt.params.id = aTarget.id;
+        stmt.params.minVersion = aTarget.minVersion;
+        stmt.params.maxVersion = aTarget.maxVersion;
+        executeStatement(stmt);
+      });
+      this.commitTransaction();
     }
     catch (e) {
       this.rollbackTransaction();
@@ -1357,9 +1712,9 @@ this.XPIDatabase = {
    *         The DBAddonInternal being removed
    */
   removeAddonMetadata: function XPIDB_removeAddonMetadata(aAddon) {
-    this.beginTransaction();
-    delete this.addonDB[aAddon._key];
-    this.commitTransaction();
+    let stmt = this.getStatement("removeAddonMetadata");
+    stmt.params.internal_id = aAddon._internal_id;
+    executeStatement(stmt);
   },
 
   /**
@@ -1372,17 +1727,15 @@ this.XPIDatabase = {
    *         A callback to pass the DBAddonInternal to
    */
   makeAddonVisible: function XPIDB_makeAddonVisible(aAddon) {
-    this.beginTransaction();
-    LOG("Make addon " + aAddon._key + " visible");
-    for (let key in this.addonDB) {
-      let otherAddon = this.addonDB[key];
-      if ((otherAddon.id == aAddon.id) && (otherAddon._key != aAddon._key)) {
-        LOG("Hide addon " + otherAddon._key);
-        otherAddon.visible = false;
-      }
-    }
+    let stmt = this.getStatement("clearVisibleAddons");
+    stmt.params.id = aAddon.id;
+    executeStatement(stmt);
+
+    stmt = this.getStatement("makeAddonVisible");
+    stmt.params.internal_id = aAddon._internal_id;
+    executeStatement(stmt);
+
     aAddon.visible = true;
-    this.commitTransaction();
   },
 
   /**
@@ -1394,11 +1747,33 @@ this.XPIDatabase = {
    *         A dictionary of properties to set
    */
   setAddonProperties: function XPIDB_setAddonProperties(aAddon, aProperties) {
-    this.beginTransaction();
-    for (let key in aProperties) {
-      aAddon[key] = aProperties[key];
+    function convertBoolean(value) {
+      return value ? 1 : 0;
     }
-    this.commitTransaction();
+
+    let stmt = this.getStatement("setAddonProperties");
+    stmt.params.internal_id = aAddon._internal_id;
+
+    ["userDisabled", "appDisabled", "softDisabled",
+     "pendingUninstall"].forEach(function(aProp) {
+      if (aProp in aProperties) {
+        stmt.params[aProp] = convertBoolean(aProperties[aProp]);
+        aAddon[aProp] = aProperties[aProp];
+      }
+      else {
+        stmt.params[aProp] = convertBoolean(aAddon[aProp]);
+      }
+    });
+
+    if ("applyBackgroundUpdates" in aProperties) {
+      stmt.params.applyBackgroundUpdates = aProperties.applyBackgroundUpdates;
+      aAddon.applyBackgroundUpdates = aProperties.applyBackgroundUpdates;
+    }
+    else {
+      stmt.params.applyBackgroundUpdates = aAddon.applyBackgroundUpdates;
+    }
+
+    executeStatement(stmt);
   },
 
   /**
@@ -1408,36 +1783,29 @@ this.XPIDatabase = {
    *         The DBAddonInternal being updated
    * @param  aGUID
    *         GUID string to set the value to
-   * @throws if another addon already has the specified GUID
    */
   setAddonSyncGUID: function XPIDB_setAddonSyncGUID(aAddon, aGUID) {
-    // Need to make sure no other addon has this GUID
-    function excludeSyncGUID(otherAddon) {
-      return (otherAddon._key != aAddon._key) && (otherAddon.syncGUID == aGUID);
-    }
-    let otherAddon = this._findAddon(excludeSyncGUID);
-    if (otherAddon) {
-      throw new Error("Addon sync GUID conflict for addon " + aAddon._key +
-          ": " + otherAddon._key + " already has GUID " + aGUID);
-    }
-    this.beginTransaction();
-    aAddon.syncGUID = aGUID;
-    this.commitTransaction();
+    let stmt = this.getStatement("setAddonSyncGUID");
+    stmt.params.internal_id = aAddon._internal_id;
+    stmt.params.syncGUID = aGUID;
+
+    executeStatement(stmt);
   },
 
   /**
    * Synchronously sets the file descriptor for an add-on.
-   * XXX IRVING could replace this with setAddonProperties
    *
    * @param  aAddon
    *         The DBAddonInternal being updated
-   * @param  aDescriptor
-   *         File path of the installed addon
+   * @param  aProperties
+   *         A dictionary of properties to set
    */
   setAddonDescriptor: function XPIDB_setAddonDescriptor(aAddon, aDescriptor) {
-    this.beginTransaction();
-    aAddon.descriptor = aDescriptor;
-    this.commitTransaction();
+    let stmt = this.getStatement("setAddonDescriptor");
+    stmt.params.internal_id = aAddon._internal_id;
+    stmt.params.descriptor = aDescriptor;
+
+    executeStatement(stmt);
   },
 
   /**
@@ -1446,29 +1814,28 @@ this.XPIDatabase = {
    * @param  aAddon
    *         The DBAddonInternal to update
    */
-  updateAddonActive: function XPIDB_updateAddonActive(aAddon, aActive) {
-    LOG("Updating active state for add-on " + aAddon.id + " to " + aActive);
+  updateAddonActive: function XPIDB_updateAddonActive(aAddon) {
+    LOG("Updating add-on state");
 
-    this.beginTransaction();
-    aAddon.active = aActive;
-    this.commitTransaction();
+    let stmt = this.getStatement("updateAddonActive");
+    stmt.params.internal_id = aAddon._internal_id;
+    stmt.params.active = aAddon.active ? 1 : 0;
+    executeStatement(stmt);
   },
 
   /**
    * Synchronously calculates and updates all the active flags in the database.
    */
   updateActiveAddons: function XPIDB_updateActiveAddons() {
-    // XXX IRVING this may get called during XPI-utils shutdown
-    // XXX need to make sure PREF_PENDING_OPERATIONS handling is clean
     LOG("Updating add-on states");
-    this.beginTransaction();
-    for (let key in this.addonDB) {
-      let addon = this.addonDB[key];
-      addon.active = (addon.visible && !addon.userDisabled &&
-                      !addon.softDisabled && !addon.appDisabled &&
-                      !addon.pendingUninstall);
-    }
-    this.commitTransaction();
+    let stmt = this.getStatement("setActiveAddons");
+    executeStatement(stmt);
+
+    // Note that this does not update the active property on cached
+    // DBAddonInternal instances so we throw away the cache. This should only
+    // happen during shutdown when everything is going away anyway or during
+    // startup when the only references are internal.
+    this.addonCache = [];
   },
 
   /**
@@ -1479,16 +1846,26 @@ this.XPIDatabase = {
 
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
+    if (!this.connection) {
+      try {
+        addonsList.remove(false);
+        LOG("Deleted add-ons list");
+      }
+      catch (e) {
+      }
+
+      Services.prefs.clearUserPref(PREF_EM_ENABLED_ADDONS);
+      return;
+    }
+
     let enabledAddons = [];
     let text = "[ExtensionDirs]\r\n";
     let count = 0;
     let fullCount = 0;
 
-    let activeAddons = this._listAddons(function active(aAddon) {
-      return aAddon.active && !aAddon.bootstrap && (aAddon.type != "theme");
-    });
+    let stmt = this.getStatement("getActiveAddons");
 
-    for (let row of activeAddons) {
+    for (let row in resultRows(stmt)) {
       text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
       enabledAddons.push(encodeURIComponent(row.id) + ":" +
                          encodeURIComponent(row.version));
@@ -1504,22 +1881,17 @@ this.XPIDatabase = {
       dssEnabled = Services.prefs.getBoolPref(PREF_EM_DSS_ENABLED);
     } catch (e) {}
 
-    let themes = [];
     if (dssEnabled) {
-      themes = this._listAddons(function isTheme(aAddon){ return aAddon.type == "theme"; });
+      stmt = this.getStatement("getThemes");
     }
     else {
-      let activeTheme = this._findAddon(function isSelected(aAddon) {
-        return ((aAddon.type == "theme") && (aAddon.internalName == XPIProvider.selectedSkin));
-      });
-      if (activeTheme) {
-        themes.push(activeTheme);
-      }
+      stmt = this.getStatement("getActiveTheme");
+      stmt.params.internalName = XPIProvider.selectedSkin;
     }
 
-    if (themes.length > 0) {
+    if (stmt) {
       count = 0;
-      for (let row of themes) {
+      for (let row in resultRows(stmt)) {
         text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
         enabledAddons.push(encodeURIComponent(row.id) + ":" +
                            encodeURIComponent(row.version));
