@@ -231,6 +231,8 @@ ContentPrefService.prototype = {
   // nsIContentPrefService
 
   getPref: function ContentPrefService_getPref(aGroup, aName, aContext, aCallback) {
+    warnDeprecated();
+
     if (!aName)
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -256,6 +258,8 @@ ContentPrefService.prototype = {
   },
 
   setPref: function ContentPrefService_setPref(aGroup, aName, aValue, aContext) {
+    warnDeprecated();
+
     // If the pref is already set to the value, there's nothing more to do.
     var currentValue = this.getPref(aGroup, aName, aContext);
     if (typeof currentValue != "undefined") {
@@ -293,12 +297,16 @@ ContentPrefService.prototype = {
   },
 
   hasPref: function ContentPrefService_hasPref(aGroup, aName, aContext) {
+    warnDeprecated();
+
     // XXX If consumers end up calling this method regularly, then we should
     // optimize this to query the database directly.
     return (typeof this.getPref(aGroup, aName, aContext) != "undefined");
   },
 
   hasCachedPref: function ContentPrefService_hasCachedPref(aGroup, aName, aContext) {
+    warnDeprecated();
+
     if (!aName)
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -309,6 +317,8 @@ ContentPrefService.prototype = {
   },
 
   removePref: function ContentPrefService_removePref(aGroup, aName, aContext) {
+    warnDeprecated();
+
     // If there's no old value, then there's nothing to remove.
     if (!this.hasPref(aGroup, aName, aContext))
       return;
@@ -344,6 +354,8 @@ ContentPrefService.prototype = {
   },
 
   removeGroupedPrefs: function ContentPrefService_removeGroupedPrefs(aContext) {
+    warnDeprecated();
+
     // will not delete global preferences
     if (aContext && aContext.usePrivateBrowsing) {
         // keep only global prefs
@@ -367,6 +379,8 @@ ContentPrefService.prototype = {
   },
 
   removePrefsByName: function ContentPrefService_removePrefsByName(aName, aContext) {
+    warnDeprecated();
+
     if (!aName)
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -423,6 +437,8 @@ ContentPrefService.prototype = {
   },
 
   getPrefs: function ContentPrefService_getPrefs(aGroup, aContext) {
+    warnDeprecated();
+
     var group = this._parseGroupParam(aGroup);
     if (aContext && aContext.usePrivateBrowsing) {
         let prefs = Cc["@mozilla.org/hash-property-bag;1"].
@@ -440,6 +456,8 @@ ContentPrefService.prototype = {
   },
 
   getPrefsByName: function ContentPrefService_getPrefsByName(aName, aContext) {
+    warnDeprecated();
+
     if (!aName)
       throw Components.Exception("aName cannot be null or an empty string",
                                  Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -464,6 +482,11 @@ ContentPrefService.prototype = {
   _genericObservers: [],
 
   addObserver: function ContentPrefService_addObserver(aName, aObserver) {
+    warnDeprecated();
+    this._addObserver.apply(this, arguments);
+  },
+
+  _addObserver: function ContentPrefService__addObserver(aName, aObserver) {
     var observers;
     if (aName) {
       if (!this._observers[aName])
@@ -478,6 +501,11 @@ ContentPrefService.prototype = {
   },
 
   removeObserver: function ContentPrefService_removeObserver(aName, aObserver) {
+    warnDeprecated();
+    this._removeObserver.apply(this, arguments);
+  },
+
+  _removeObserver: function ContentPrefService__removeObserver(aName, aObserver) {
     var observers;
     if (aName) {
       if (!this._observers[aName])
@@ -536,15 +564,20 @@ ContentPrefService.prototype = {
     }
   },
 
-  _grouper: null,
   get grouper() {
-    if (!this._grouper)
-      this._grouper = Cc["@mozilla.org/content-pref/hostname-grouper;1"].
-                      getService(Ci.nsIContentURIGrouper);
+    warnDeprecated();
     return this._grouper;
+  },
+  __grouper: null,
+  get _grouper() {
+    if (!this.__grouper)
+      this.__grouper = Cc["@mozilla.org/content-pref/hostname-grouper;1"].
+                       getService(Ci.nsIContentURIGrouper);
+    return this.__grouper;
   },
 
   get DBConnection() {
+    warnDeprecated();
     return this._dbConnection;
   },
 
@@ -1204,6 +1237,13 @@ ContentPrefService.prototype = {
                                Cr.NS_ERROR_ILLEGAL_VALUE);
   },
 };
+
+function warnDeprecated() {
+  Cu.import("resource://gre/modules/Deprecated.jsm");
+  Deprecated.warning("nsIContentPrefService is deprecated. Please use nsIContentPrefService2 instead.",
+                     "https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIContentPrefService2",
+                     Components.stack.caller);
+}
 
 
 function HostnameGrouper() {}

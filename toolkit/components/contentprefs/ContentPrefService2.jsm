@@ -696,7 +696,7 @@ ContentPrefService2.prototype = {
     catch (err) {
       return groupStr;
     }
-    return this._cps.grouper.group(groupURI);
+    return this._cps._grouper.group(groupURI);
   },
 
   _schedule: function CPS2__schedule(fn) {
@@ -705,11 +705,11 @@ ContentPrefService2.prototype = {
   },
 
   addObserverForName: function CPS2_addObserverForName(name, observer) {
-    this._cps.addObserver(name, observer);
+    this._cps._addObserver(name, observer);
   },
 
   removeObserverForName: function CPS2_removeObserverForName(name, observer) {
-    this._cps.removeObserver(name, observer);
+    this._cps._removeObserver(name, observer);
   },
 
   extractDomain: function CPS2_extractDomain(str) {
