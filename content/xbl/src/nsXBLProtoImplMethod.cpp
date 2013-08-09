@@ -239,8 +239,9 @@ nsXBLProtoImplMethod::Read(nsIScriptContext* aContext,
 {
   MOZ_ASSERT(!IsCompiled() && !GetUncompiledMethod());
 
-  JS::Rooted<JSObject*> methodObject(aContext->GetNativeContext());
-  nsresult rv = XBL_DeserializeFunction(aContext, aStream, &methodObject);
+  AutoPushJSContext cx(aContext->GetNativeContext());
+  JS::Rooted<JSObject*> methodObject(cx);
+  nsresult rv = XBL_DeserializeFunction(aStream, &methodObject);
   if (NS_FAILED(rv)) {
     SetUncompiledMethod(nullptr);
     return rv;
@@ -257,6 +258,7 @@ nsXBLProtoImplMethod::Write(nsIScriptContext* aContext,
 {
   MOZ_ASSERT(IsCompiled());
   if (GetCompiledMethod()) {
+    AutoPushJSContext cx(aContext->GetNativeContext());
     nsresult rv = aStream->Write8(XBLBinding_Serialize_Method);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -268,7 +270,7 @@ nsXBLProtoImplMethod::Write(nsIScriptContext* aContext,
     // been set to a compiled method.
     JS::Handle<JSObject*> method =
       JS::Handle<JSObject*>::fromMarkedLocation(mMethod.AsHeapObject().address());
-    return XBL_SerializeFunction(aContext, aStream, method);
+    return XBL_SerializeFunction(aStream, method);
   }
 
   return NS_OK;
@@ -368,6 +370,7 @@ nsXBLProtoImplAnonymousMethod::Write(nsIScriptContext* aContext,
 {
   MOZ_ASSERT(IsCompiled());
   if (GetCompiledMethod()) {
+    AutoPushJSContext cx(aContext->GetNativeContext());
     nsresult rv = aStream->Write8(aType);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -376,7 +379,7 @@ nsXBLProtoImplAnonymousMethod::Write(nsIScriptContext* aContext,
     // been set to a compiled method.
     JS::Handle<JSObject*> method =
       JS::Handle<JSObject*>::fromMarkedLocation(mMethod.AsHeapObject().address());
-    rv = XBL_SerializeFunction(aContext, aStream, method);
+    rv = XBL_SerializeFunction(aStream, method);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
