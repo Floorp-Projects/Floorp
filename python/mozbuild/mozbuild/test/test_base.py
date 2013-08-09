@@ -47,6 +47,21 @@ class TestMozbuildObject(unittest.TestCase):
 
         del os.environ[b'MOZCONFIG']
 
+    def test_objdir_trailing_slash(self):
+        """Trailing slashes in topobjdir should be removed."""
+        base = self.get_base()
+
+        with NamedTemporaryFile() as mozconfig:
+            mozconfig.write('mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/foo/')
+            mozconfig.flush()
+            os.environ[b'MOZCONFIG'] = mozconfig.name
+
+            self.assertEqual(base.topobjdir, os.path.join(base.topsrcdir,
+                'foo'))
+            self.assertTrue(base.topobjdir.endswith('foo'))
+
+        del os.environ[b'MOZCONFIG']
+
     def test_config_guess(self):
         # It's difficult to test for exact values from the output of
         # config.guess because they vary depending on platform.
