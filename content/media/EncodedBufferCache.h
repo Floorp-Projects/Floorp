@@ -8,7 +8,7 @@
 #define EncodedBufferCache_h_
 
 #include "nsTArray.h"
-#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/Mutex.h"
 #include "prio.h"
 #include "nsDOMFile.h"
 
@@ -26,7 +26,7 @@ class EncodedBufferCache
 public:
   EncodedBufferCache(uint32_t aMaxMemoryStorage)
   : mFD(nullptr),
-    mReentrantMonitor("EncodedBufferCache.Data.Monitor"),
+    mMutex("EncodedBufferCache.Data.Mutex"),
     mDataSize(0),
     mMaxMemoryStorage(aMaxMemoryStorage),
     mTempFileEnabled(false) { }
@@ -45,7 +45,7 @@ private:
   // File handle for the temporary file
   PRFileDesc* mFD;
   // Used to protect the mEncodedBuffer for avoiding AppendBuffer/Consume on different thread at the same time.
-  ReentrantMonitor mReentrantMonitor;
+  Mutex mMutex;;
   // the current buffer size can be read
   uint64_t mDataSize;
   // The maximal buffer allowed in memory
