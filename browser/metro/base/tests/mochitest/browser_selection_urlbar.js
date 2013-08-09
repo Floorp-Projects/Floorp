@@ -23,7 +23,7 @@ gTests.push({
     yield addTab(chromeRoot + "res/textblock01.html");
 
     yield waitForCondition(function () {
-      return !StartUI.isStartPageVisible;
+      return !BrowserUI.isStartTabVisible;
       });
 
     yield hideContextUI();

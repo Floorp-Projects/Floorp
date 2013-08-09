@@ -15,10 +15,10 @@ gTests.push({
     yield addTab("about:start");
 
     yield waitForCondition(function () {
-      return StartUI.isStartPageVisible;
+      return BrowserUI.isStartTabVisible;
       });
 
-    is(StartUI.isVisible, true, "Start UI is displayed on about:start");
+    is(BrowserUI.isStartTabVisible, true, "Start UI is displayed on about:start");
     is(ContextUI.navbarVisible, true, "Navbar is displayed on about:start");
     is(ContextUI.tabbarVisible, false, "Tabbar is not displayed initially");
     is(ContextUI.contextAppbarVisible, false, "Appbar is not displayed initially");
@@ -41,7 +41,7 @@ gTests.push({
     is(ContextUI.tabbarVisible, true, "Tabbar is visible after third swipe");
     is(ContextUI.contextAppbarVisible, false, "Appbar is hidden after third swipe");
 
-    is(StartUI.isVisible, true, "Start UI is still visible");
+    is(BrowserUI.isStartTabVisible, true, "Start UI is still visible");
   }
 });
 
@@ -50,7 +50,7 @@ gTests.push({
   run: function testAbout() {
     yield addTab("about:");
     ContextUI.dismiss();
-    is(StartUI.isVisible, false, "Start UI is not visible on about:");
+    is(BrowserUI.isStartTabVisible, false, "Start UI is not visible on about:");
     is(ContextUI.navbarVisible, false, "Navbar is not initially visible on about:");
     is(ContextUI.tabbarVisible, false, "Tabbar is not initially visible on about:");
 
@@ -62,7 +62,7 @@ gTests.push({
     is(ContextUI.navbarVisible, false, "Navbar is not visible after second swipe");
     is(ContextUI.tabbarVisible, false, "Tabbar is not visible after second swipe");
 
-    is(StartUI.isVisible, false, "Start UI is still not visible");
+    is(BrowserUI.isStartTabVisible, false, "Start UI is still not visible");
   }
 });
 
