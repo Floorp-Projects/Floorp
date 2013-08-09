@@ -1212,7 +1212,7 @@ PluginScriptableObjectParent::AnswerNPN_Evaluate(const nsCString& aScript,
   return true;
 }
 
-JSBool
+bool
 PluginScriptableObjectParent::GetPropertyHelper(NPIdentifier aName,
                                                 bool* aHasProperty,
                                                 bool* aHasMethod,

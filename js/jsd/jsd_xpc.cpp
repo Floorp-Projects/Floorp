@@ -537,7 +537,7 @@ jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
     return JSD_ERROR_REPORTER_PASS_ALONG;
 }
 
-static JSBool
+static bool
 jsds_CallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
                    unsigned type, void* callerdata)
 {
@@ -652,7 +652,7 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
 }
 
 static void
-jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
+jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, bool creating,
                      void* callerdata)
 {
 #ifdef CAUTIOUS_SCRIPTHOOK

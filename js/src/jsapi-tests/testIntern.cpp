@@ -29,7 +29,7 @@ struct StringWrapperStruct
 } sw;
 
 void
-FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool isCompartmentGC)
+FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartmentGC)
 {
     if (status == JSFINALIZE_GROUP_START)
         sw.strOk = js::gc::IsStringMarked(&sw.str);

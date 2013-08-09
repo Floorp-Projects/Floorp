@@ -48,6 +48,7 @@ struct DeviceAttachmentsD3D11
   RefPtr<ID3D11PixelShader> mRGBAShader[3];
   RefPtr<ID3D11PixelShader> mRGBShader[2];
   RefPtr<ID3D11PixelShader> mYCbCrShader[2];
+  RefPtr<ID3D11PixelShader> mComponentAlphaShader[2];
   RefPtr<ID3D11Buffer> mPSConstantBuffer;
   RefPtr<ID3D11Buffer> mVSConstantBuffer;
   RefPtr<ID3D11RasterizerState> mRasterizerState;
@@ -55,6 +56,7 @@ struct DeviceAttachmentsD3D11
   RefPtr<ID3D11SamplerState> mPointSamplerState;
   RefPtr<ID3D11BlendState> mPremulBlendState;
   RefPtr<ID3D11BlendState> mNonPremulBlendState;
+  RefPtr<ID3D11BlendState> mComponentBlendState;
 };
 
 CompositorD3D11::CompositorD3D11(nsIWidget* aWidget)
@@ -215,6 +217,22 @@ CompositorD3D11::Initialize()
     };
     blendDesc.RenderTarget[0] = rtBlendNonPremul;
     hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mNonPremulBlendState));
+    if (FAILED(hr)) {
+      return false;
+    }
+
+    D3D11_RENDER_TARGET_BLEND_DESC rtBlendComponent = {
+      TRUE,
+      D3D11_BLEND_ONE,
+      D3D11_BLEND_INV_SRC1_COLOR,
+      D3D11_BLEND_OP_ADD,
+      D3D11_BLEND_ONE,
+      D3D11_BLEND_INV_SRC_ALPHA,
+      D3D11_BLEND_OP_ADD,
+      D3D11_COLOR_WRITE_ENABLE_ALL
+    };
+    blendDesc.RenderTarget[0] = rtBlendComponent;
+    hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mComponentBlendState));
     if (FAILED(hr)) {
       return false;
     }
@@ -434,6 +452,12 @@ CompositorD3D11::SetPSForEffect(Effect* aEffect, MaskType aMaskType)
   case EFFECT_YCBCR:
     mContext->PSSetShader(mAttachments->mYCbCrShader[aMaskType], nullptr, 0);
     return;
+  case EFFECT_COMPONENT_ALPHA:
+    mContext->PSSetShader(mAttachments->mComponentAlphaShader[aMaskType], nullptr, 0);
+    return;
+  default:
+    NS_WARNING("No shader to load");
+    return;
   }
 }
 
@@ -453,7 +477,7 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
 
   mPSConstants.layerOpacity[0] = aOpacity;
 
-  bool isPremultiplied = true;
+  bool restoreBlendMode = false;
 
   MaskType maskType = MaskNone;
 
@@ -521,7 +545,10 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
       ID3D11ShaderResourceView* srView = view;
       mContext->PSSetShaderResources(0, 1, &srView);
 
-      isPremultiplied = texturedEffect->mPremultiplied;
+      if (!texturedEffect->mPremultiplied) {
+        mContext->OMSetBlendState(mAttachments->mNonPremulBlendState, sBlendFactor, 0xFFFFFFFF);
+        restoreBlendMode = true;
+      }
 
       SetSamplerForFilter(texturedEffect->mFilter);
     }
@@ -546,16 +573,35 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
       mContext->PSSetShaderResources(0, 3, srViews);
     }
     break;
+  case EFFECT_COMPONENT_ALPHA:
+    {
+      MOZ_ASSERT(gfxPlatform::ComponentAlphaEnabled());
+      EffectComponentAlpha* effectComponentAlpha =
+        static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
+      TextureSourceD3D11* sourceOnWhite = effectComponentAlpha->mOnWhite->AsSourceD3D11();
+      TextureSourceD3D11* sourceOnBlack = effectComponentAlpha->mOnBlack->AsSourceD3D11();
+      SetSamplerForFilter(effectComponentAlpha->mFilter);
+
+      mVSConstants.textureCoords = effectComponentAlpha->mTextureCoords;
+      RefPtr<ID3D11ShaderResourceView> views[2];
+      mDevice->CreateShaderResourceView(sourceOnBlack->GetD3D11Texture(), nullptr, byRef(views[0]));
+      mDevice->CreateShaderResourceView(sourceOnWhite->GetD3D11Texture(), nullptr, byRef(views[1]));
+
+      ID3D11ShaderResourceView* srViews[2] = { views[0], views[1] };
+      mContext->PSSetShaderResources(0, 2, srViews);
+
+      mContext->OMSetBlendState(mAttachments->mComponentBlendState, sBlendFactor, 0xFFFFFFFF);
+      restoreBlendMode = true;
+    }
+    break;
   default:
+    NS_WARNING("Unknown shader type");
     return;
   }
   UpdateConstantBuffers();
 
-  if (!isPremultiplied) {
-    mContext->OMSetBlendState(mAttachments->mNonPremulBlendState, sBlendFactor, 0xFFFFFFFF);
-  }
   mContext->Draw(4, 0);
-  if (!isPremultiplied) {
+  if (restoreBlendMode) {
     mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
   }
 }
@@ -569,7 +615,9 @@ CompositorD3D11::BeginFrame(const Rect* aClipRectIn,
 {
   UpdateRenderTarget();
 
-  if (mSize.width == 0 || mSize.height == 0) {
+  // Failed to create a render target.
+  if (!mDefaultRT ||
+      mSize.width == 0 || mSize.height == 0) {
     *aRenderBoundsOut = Rect();
     return;
   }
@@ -614,11 +662,17 @@ void
 CompositorD3D11::EndFrame()
 {
   mContext->Flush();
-  mSwapChain->Present(0, 0);
 
-  if (mTarget) {
-    PaintToTarget();
+  nsIntSize oldSize = mSize;
+  EnsureSize();
+  if (oldSize == mSize) {
+    mSwapChain->Present(0, 0);
+
+    if (mTarget) {
+      PaintToTarget();
+    }
   }
+
   mCurrentRT = nullptr;
 }
 
@@ -754,6 +808,7 @@ CompositorD3D11::CreateShaders()
   LOAD_PIXEL_SHADER(RGBShader);
   LOAD_PIXEL_SHADER(RGBAShader);
   LOAD_PIXEL_SHADER(YCbCrShader);
+  LOAD_PIXEL_SHADER(ComponentAlphaShader);
 
 #undef LOAD_PIXEL_SHADER
 

@@ -125,7 +125,7 @@ ValueHasISupportsPrivate(const JS::Value &v)
 // contents of the callee's reserved slots.  If the property was defined,
 // *installed will be true, and idp will be set to the property name that was
 // defined.
-static JSBool
+static bool
 InstallXBLField(JSContext* cx,
                 JS::Handle<JSObject*> callee, JS::Handle<JSObject*> thisObj,
                 JS::MutableHandle<jsid> idp, bool* installed)
@@ -323,7 +323,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   // Properties/Methods have historically taken precendence over fields. We
   // install members first, so just bounce here if the property is already
   // defined.
-  JSBool found = false;
+  bool found = false;
   if (!JS_AlreadyHasOwnPropertyById(aCx, aTargetClassObject, id, &found))
     return NS_ERROR_FAILURE;
   if (found)

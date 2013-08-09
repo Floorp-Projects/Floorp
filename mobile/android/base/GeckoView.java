@@ -31,9 +31,9 @@ public class GeckoView extends LayerView
 
     public GeckoView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GeckoView);
         String url = a.getString(R.styleable.GeckoView_url);
+        boolean doInit = a.getBoolean(R.styleable.GeckoView_doinit, true);
         a.recycle();
 
         if (url != null) {
@@ -46,24 +46,20 @@ public class GeckoView extends LayerView
             Tabs tabs = Tabs.getInstance();
             tabs.attachToContext(context);
         }
-        GeckoProfile profile = GeckoProfile.get(context);
-        BrowserDB.initialize(profile.getName());
         GeckoAppShell.registerEventListener("Gecko:Ready", this);
 
         ThreadUtils.setUiThread(Thread.currentThread(), new Handler());
         initializeView(GeckoAppShell.getEventDispatcher());
+
+        if (!doInit)
+            return;
+
+        GeckoProfile profile = GeckoProfile.get(context);
+        BrowserDB.initialize(profile.getName());
+
         if (GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.Launched)) {
             GeckoAppShell.setLayerView(this);
             GeckoThread.createAndStart();
-        }
-    }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-
-        if (hasFocus) {
-            setBackgroundDrawable(null);
         }
     }
 

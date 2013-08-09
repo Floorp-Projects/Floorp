@@ -233,7 +233,7 @@ public:
   virtual already_AddRefed<gfxASurface>
   CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags, gfxASurface** aWhiteSurface) = 0;
   virtual TemporaryRef<gfx::DrawTarget>
-  CreateDTBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags)
+  CreateDTBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags, RefPtr<gfx::DrawTarget>* aWhiteDT)
   { NS_RUNTIMEABORT("CreateDTBuffer not implemented on this platform!"); return nullptr; }
   virtual bool SupportsAzureContent() const 
   { return false; }
@@ -245,6 +245,8 @@ public:
    */
   gfxASurface* GetBuffer() { return mBuffer; }
   gfxASurface* GetBufferOnWhite() { return mBufferOnWhite; }
+  gfx::DrawTarget* GetDTBuffer() { return mDTBuffer; }
+  gfx::DrawTarget* GetDTBufferOnWhite() { return mDTBufferOnWhite; }
 
   /**
    * Complete the drawing operation. The region to draw must have been
@@ -255,6 +257,8 @@ public:
               gfxASurface* aMask, const gfxMatrix* aMaskTransform);
 
 protected:
+  // If this buffer is currently using Azure.
+  bool IsAzureBuffer();
 
   already_AddRefed<gfxASurface>
   SetBuffer(gfxASurface* aBuffer,
@@ -271,8 +275,30 @@ protected:
   already_AddRefed<gfxASurface>
   SetBufferOnWhite(gfxASurface* aBuffer)
   {
+    MOZ_ASSERT(!SupportsAzureContent());
     nsRefPtr<gfxASurface> tmp = mBufferOnWhite.forget();
     mBufferOnWhite = aBuffer;
+    return tmp.forget();
+  }
+
+  TemporaryRef<gfx::DrawTarget>
+  SetDTBuffer(gfx::DrawTarget* aBuffer,
+            const nsIntRect& aBufferRect, const nsIntPoint& aBufferRotation)
+  {
+    MOZ_ASSERT(SupportsAzureContent());
+    RefPtr<gfx::DrawTarget> tmp = mDTBuffer.forget();
+    mDTBuffer = aBuffer;
+    mBufferRect = aBufferRect;
+    mBufferRotation = aBufferRotation;
+    return tmp.forget();
+  }
+
+  TemporaryRef<gfx::DrawTarget>
+  SetDTBufferOnWhite(gfx::DrawTarget* aBuffer)
+  {
+    MOZ_ASSERT(SupportsAzureContent());
+    RefPtr<gfx::DrawTarget> tmp = mDTBufferOnWhite.forget();
+    mDTBufferOnWhite = aBuffer;
     return tmp.forget();
   }
 

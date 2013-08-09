@@ -198,7 +198,7 @@ BEGIN_TEST(testProfileStrings_isCalledWhenError)
     {
         JS::RootedValue rval(cx);
         /* Make sure the stack resets and we have an entry for each stack */
-        JSBool ok = JS_CallFunctionName(cx, global, "check2", 0, NULL, rval.address());
+        bool ok = JS_CallFunctionName(cx, global, "check2", 0, NULL, rval.address());
         CHECK(!ok);
         CHECK(psize == 0);
         CHECK(cx->runtime()->spsProfiler.stringsCount() == 1);

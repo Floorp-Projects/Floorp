@@ -2206,7 +2206,7 @@ nsCryptoRunnable::Run()
   JSAutoRequest ar(cx);
   JSAutoCompartment ac(cx, m_args->m_scope);
 
-  JSBool ok =
+  bool ok =
     JS_EvaluateScriptForPrincipals(cx, m_args->m_scope,
                                    nsJSPrincipals::get(m_args->m_principals),
                                    m_args->m_jsCallback, 

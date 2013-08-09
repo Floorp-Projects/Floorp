@@ -29,8 +29,8 @@ public:
   NS_DECL_NSIIDBKEYRANGE
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBKeyRange)
 
-  static JSBool DefineConstructors(JSContext* aCx,
-                                   JSObject* aObject);
+  static bool DefineConstructors(JSContext* aCx,
+                                 JSObject* aObject);
 
   static nsresult FromJSVal(JSContext* aCx,
                             const jsval& aVal,

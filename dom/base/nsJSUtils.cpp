@@ -22,6 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsPIDOMWindow.h"
+#include "GeckoProfiler.h"
 
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 
@@ -30,7 +31,7 @@
 
 #include "mozilla/dom/BindingUtils.h"
 
-JSBool
+bool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
                               uint32_t* aLineno)
 {
@@ -191,4 +192,75 @@ nsJSUtils::CompileFunction(JSContext* aCx,
 
   *aFunctionObject = JS_GetFunctionObject(fun);
   return NS_OK;
+}
+
+nsresult
+nsJSUtils::EvaluateString(JSContext* aCx,
+                          const nsAString& aScript,
+                          JS::Handle<JSObject*> aScopeObject,
+                          JS::CompileOptions& aCompileOptions,
+                          EvaluateOptions& aEvaluateOptions,
+                          JS::Value* aRetValue)
+{
+  PROFILER_LABEL("JS", "EvaluateString");
+  MOZ_ASSERT_IF(aCompileOptions.versionSet,
+                aCompileOptions.version != JSVERSION_UNKNOWN);
+  MOZ_ASSERT_IF(aEvaluateOptions.coerceToString, aRetValue);
+  MOZ_ASSERT_IF(!aEvaluateOptions.reportUncaught, aRetValue);
+  MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
+
+  // Unfortunately, the JS engine actually compiles scripts with a return value
+  // in a different, less efficient way.  Furthermore, it can't JIT them in many
+  // cases.  So we need to be explicitly told whether the caller cares about the
+  // return value.  Callers use null to indicate they don't care.
+  if (aRetValue) {
+    *aRetValue = JSVAL_VOID;
+  }
+
+  xpc_UnmarkGrayObject(aScopeObject);
+  nsAutoMicroTask mt;
+
+  JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetObjectCompartment(aScopeObject));
+  aCompileOptions.setPrincipals(p);
+
+  bool ok = false;
+  nsresult rv = nsContentUtils::GetSecurityManager()->
+                  CanExecuteScripts(aCx, nsJSPrincipals::get(p), &ok);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(ok, NS_OK);
+
+  // Scope the JSAutoCompartment so that we can later wrap the return value
+  // into the caller's cx.
+  {
+    JSAutoCompartment ac(aCx, aScopeObject);
+
+    JS::RootedObject rootedScope(aCx, aScopeObject);
+    ok = JS::Evaluate(aCx, rootedScope, aCompileOptions,
+                      PromiseFlatString(aScript).get(),
+                      aScript.Length(), aRetValue);
+    if (ok && aEvaluateOptions.coerceToString && !aRetValue->isUndefined()) {
+      JSString* str = JS_ValueToString(aCx, *aRetValue);
+      ok = !!str;
+      *aRetValue = ok ? JS::StringValue(str) : JS::UndefinedValue();
+    }
+  }
+
+  if (!ok) {
+    if (aEvaluateOptions.reportUncaught) {
+      ReportPendingException(aCx);
+      if (aRetValue) {
+        *aRetValue = JS::UndefinedValue();
+      }
+    } else {
+      rv = JS_IsExceptionPending(aCx) ? NS_ERROR_FAILURE
+                                      : NS_ERROR_OUT_OF_MEMORY;
+      JS_GetPendingException(aCx, aRetValue);
+      JS_ClearPendingException(aCx);
+    }
+  }
+
+  // Wrap the return value into whatever compartment aCx was in.
+  if (aRetValue && !JS_WrapValue(aCx, aRetValue))
+    return NS_ERROR_OUT_OF_MEMORY;
+  return rv;
 }
