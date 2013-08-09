@@ -26,8 +26,8 @@ function BookmarksView(aSet, aLimit, aRoot, aFilterUnpinned) {
   this._pinHelper = new ItemPinHelper("metro.bookmarks.unpinned");
   this._bookmarkService.addObserver(this._changes, false);
   Services.obs.addObserver(this, "metro_viewstate_changed", false);
-  window.addEventListener('MozAppbarDismissing', this, false);
-  window.addEventListener('BookmarksNeedsRefresh', this, false);
+  StartUI.chromeWin.addEventListener('MozAppbarDismissing', this, false);
+  StartUI.chromeWin.addEventListener('BookmarksNeedsRefresh', this, false);
 
   this.root = aRoot;
 }
@@ -60,7 +60,7 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
 
   handleItemClick: function bv_handleItemClick(aItem) {
     let url = aItem.getAttribute("value");
-    BrowserUI.goToURI(url);
+    StartUI.goToURI(url);
   },
 
   _getItemForBookmarkId: function bv__getItemForBookmark(aBookmarkId) {
@@ -309,7 +309,9 @@ let BookmarksStartView = {
   },
 
   uninit: function uninit() {
-    this._view.destruct();
+    if (this._view) {
+      this._view.destruct();
+    }
   },
 
   show: function show() {
