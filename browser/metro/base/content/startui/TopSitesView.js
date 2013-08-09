@@ -39,6 +39,16 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
   // isUpdating used only for testing currently
   isUpdating: false,
 
+  destruct: function destruct() {
+    Services.obs.removeObserver(this, "Metro:RefreshTopsiteThumbnail");
+    Services.obs.removeObserver(this, "metro_viewstate_changed");
+    PageThumbs.removeExpirationFilter(this);
+    NewTabUtils.allPages.unregister(this);
+    if (StartUI.chromeWin) {
+      StartUI.chromeWin.removeEventListener('MozAppbarDismissing', this, false);
+    }
+  },
+
   handleItemClick: function tabview_handleItemClick(aItem) {
     let url = aItem.getAttribute("value");
     StartUI.goToURI(url);
@@ -212,13 +222,6 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
 
   isFirstRun: function isFirstRun() {
     return prefs.getBoolPref("browser.firstrun.show.localepicker");
-  },
-
-  destruct: function destruct() {
-    Services.obs.removeObserver(this, "Metro:RefreshTopsiteThumbnail");
-    Services.obs.removeObserver(this, "metro_viewstate_changed");
-    PageThumbs.removeExpirationFilter(this);
-    window.removeEventListener('MozAppbarDismissing', this, false);
   },
 
   // nsIObservers

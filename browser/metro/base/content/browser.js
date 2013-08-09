@@ -25,6 +25,9 @@ const kTabThumbnailDelayCapture = 500;
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+// See grid.xml, we use this to cache style info across loads of the startui.
+var _richgridTileSizes = {};
+
 // Override sizeToContent in the main window. It breaks things (bug 565887)
 window.sizeToContent = function() {
   Cu.reportError("window.sizeToContent is not allowed in this window");
