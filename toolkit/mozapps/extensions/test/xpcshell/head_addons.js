@@ -1395,16 +1395,16 @@ function do_exception_wrap(func) {
 }
 
 const EXTENSIONS_DB = "extensions.json";
-let gExtensionsJSON = gProfD.clone();
-gExtensionsJSON.append(EXTENSIONS_DB);
 
 /**
  * Change the schema version of the JSON extensions database
  */
 function changeXPIDBVersion(aNewVersion) {
-  let jData = loadJSON(gExtensionsJSON);
+  let dbfile = gProfD.clone();
+  dbfile.append(EXTENSIONS_DB);
+  let jData = loadJSON(dbfile);
   jData.schemaVersion = aNewVersion;
-  saveJSON(jData, gExtensionsJSON);
+  saveJSON(jData, dbfile);
 }
 
 /**
@@ -1426,7 +1426,7 @@ function loadJSON(aFile) {
     } while (read != 0);
   }
   cstream.close();
-  do_print("Loaded JSON file " + aFile.path);
+  do_print("Loaded JSON file " + aFile.spec);
   return(JSON.parse(data));
 }
 

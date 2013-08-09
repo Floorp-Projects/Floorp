@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 
+
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
   Object.defineProperty(this, aName, {
     get: function logFuncGetter () {
@@ -92,8 +93,14 @@ const PREFIX_ITEM_URI                 = "urn:mozilla:item:";
 const RDFURI_ITEM_ROOT                = "urn:mozilla:item:root"
 const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 
-XPCOMUtils.defineLazyServiceGetter(this, "gRDF", "@mozilla.org/rdf/rdf-service;1",
-                                   Ci.nsIRDFService);
+Object.defineProperty(this, "gRDF", {
+  get: function gRDFGetter() {
+    delete this.gRDF;
+    return this.gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
+                       getService(Ci.nsIRDFService);
+  },
+  configurable: true
+});
 
 function EM_R(aProperty) {
   return gRDF.GetResource(PREFIX_NS_EM + aProperty);
@@ -130,6 +137,60 @@ function getRDFValue(aLiteral) {
 function getRDFProperty(aDs, aResource, aProperty) {
   return getRDFValue(aDs.GetTarget(aResource, EM_R(aProperty), true));
 }
+
+
+/**
+ * A mozIStorageStatementCallback that will asynchronously build DBAddonInternal
+ * instances from the results it receives. Once the statement has completed
+ * executing and all of the metadata for all of the add-ons has been retrieved
+ * they will be passed as an array to aCallback.
+ *
+ * @param  aCallback
+ *         A callback function to pass the array of DBAddonInternals to
+ */
+function AsyncAddonListCallback(aCallback) {
+  this.callback = aCallback;
+  this.addons = [];
+}
+
+AsyncAddonListCallback.prototype = {
+  callback: null,
+  complete: false,
+  count: 0,
+  addons: null,
+
+  handleResult: function AsyncAddonListCallback_handleResult(aResults) {
+    let row = null;
+    while ((row = aResults.getNextRow())) {
+      this.count++;
+      let self = this;
+      XPIDatabase.makeAddonFromRowAsync(row, function handleResult_makeAddonFromRowAsync(aAddon) {
+        function completeAddon(aRepositoryAddon) {
+          aAddon._repositoryAddon = aRepositoryAddon;
+          aAddon.compatibilityOverrides = aRepositoryAddon ?
+                                            aRepositoryAddon.compatibilityOverrides :
+                                            null;
+          self.addons.push(aAddon);
+          if (self.complete && self.addons.length == self.count)
+           self.callback(self.addons);
+        }
+
+        if ("getCachedAddonByID" in AddonRepository)
+          AddonRepository.getCachedAddonByID(aAddon.id, completeAddon);
+        else
+          completeAddon(null);
+      });
+    }
+  },
+
+  handleError: asyncErrorLogger,
+
+  handleCompletion: function AsyncAddonListCallback_handleCompletion(aReason) {
+    this.complete = true;
+    if (this.addons.length == this.count)
+      this.callback(this.addons);
+  }
+};
 
 /**
  * Asynchronously fill in the _repositoryAddon field for one addon
@@ -233,6 +294,24 @@ function asyncErrorLogger(aError) {
 }
 
 /**
+ * A helper function to execute a statement synchronously and log any error
+ * that occurs.
+ *
+ * @param  aStatement
+ *         A mozIStorageStatement to execute
+ */
+function executeStatement(aStatement) {
+  try {
+    aStatement.execute();
+  }
+  catch (e) {
+    logSQLError(XPIDatabase.connection.lastError,
+                XPIDatabase.connection.lastErrorString);
+    throw e;
+  }
+}
+
+/**
  * A helper function to step a statement synchronously and log any error that
  * occurs.
  *
@@ -294,6 +373,12 @@ function copyRowProperties(aRow, aProperties, aTarget) {
 }
 
 /**
+ * Create a DBAddonInternal from the fields saved in the JSON database
+ * or loaded into an AddonInternal from an XPI manifest.
+ * @return a DBAddonInternal populated with the loaded data
+ */
+
+/**
  * The DBAddonInternal is a special AddonInternal that has been retrieved from
  * the database. The constructor will initialize the DBAddonInternal with a set
  * of fields, which could come from either the JSON store or as an
@@ -304,7 +389,6 @@ function copyRowProperties(aRow, aProperties, aTarget) {
  */
 function DBAddonInternal(aLoaded) {
   copyProperties(aLoaded, PROP_JSON_FIELDS, this);
-
   if (aLoaded._installLocation) {
     this._installLocation = aLoaded._installLocation;
     this.location = aLoaded._installLocation._name;
@@ -312,9 +396,7 @@ function DBAddonInternal(aLoaded) {
   else if (aLoaded.location) {
     this._installLocation = XPIProvider.installLocationsByName[this.location];
   }
-
   this._key = this.location + ":" + this.id;
-
   try {
     this._sourceBundle = this._installLocation.getLocationForID(this.id);
   }
@@ -324,20 +406,20 @@ function DBAddonInternal(aLoaded) {
     // this change is being detected.
   }
 
-  // XXX Can we redesign pendingUpgrade?
-  XPCOMUtils.defineLazyGetter(this, "pendingUpgrade",
-    function DBA_pendingUpgradeGetter() {
+  Object.defineProperty(this, "pendingUpgrade", {
+    get: function DBA_pendingUpgradeGetter() {
+      delete this.pendingUpgrade;
       for (let install of XPIProvider.installs) {
         if (install.state == AddonManager.STATE_INSTALLED &&
             !(install.addon.inDatabase) &&
             install.addon.id == this.id &&
             install.installLocation == this._installLocation) {
-          delete this.pendingUpgrade;
           return this.pendingUpgrade = install.addon;
         }
       };
-      return null;
-    });
+    },
+    configurable: true
+  });
 }
 
 DBAddonInternal.prototype = {
@@ -355,13 +437,8 @@ DBAddonInternal.prototype = {
     XPIProvider.updateAddonDisabledState(this);
     XPIDatabase.commitTransaction();
   },
-
   get inDatabase() {
     return true;
-  },
-
-  toJSON: function() {
-    return copyProperties(this, PROP_JSON_FIELDS);
   }
 }
 
@@ -370,21 +447,94 @@ DBAddonInternal.prototype.__proto__ = AddonInternal.prototype;
 this.XPIDatabase = {
   // true if the database connection has been opened
   initialized: false,
+  // A cache of statements that are used and need to be finalized on shutdown
+  statementCache: {},
+  // A cache of weak referenced DBAddonInternals so we can reuse objects where
+  // possible
+  addonCache: [],
   // The nested transaction count
   transactionCount: 0,
   // The database file
+  dbfile: FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true),
   jsonFile: FileUtils.getFile(KEY_PROFILEDIR, [FILE_JSON_DB], true),
   // Migration data loaded from an old version of the database.
   migrateData: null,
   // Active add-on directories loaded from extensions.ini and prefs at startup.
   activeBundles: null,
-  // Special handling for when the database is locked at first load
-  lockedDatabase: false,
 
-  // XXX may be able to refactor this away
+  // The statements used by the database
+  statements: {
+    _getDefaultLocale: "SELECT id, name, description, creator, homepageURL " +
+                       "FROM locale WHERE id=:id",
+    _getLocales: "SELECT addon_locale.locale, locale.id, locale.name, " +
+                 "locale.description, locale.creator, locale.homepageURL " +
+                 "FROM addon_locale JOIN locale ON " +
+                 "addon_locale.locale_id=locale.id WHERE " +
+                 "addon_internal_id=:internal_id",
+    _getTargetApplications: "SELECT addon_internal_id, id, minVersion, " +
+                            "maxVersion FROM targetApplication WHERE " +
+                            "addon_internal_id=:internal_id",
+    _getTargetPlatforms: "SELECT os, abi FROM targetPlatform WHERE " +
+                         "addon_internal_id=:internal_id",
+    _readLocaleStrings: "SELECT locale_id, type, value FROM locale_strings " +
+                        "WHERE locale_id=:id",
+
+    clearVisibleAddons: "UPDATE addon SET visible=0 WHERE id=:id",
+    updateAddonActive: "UPDATE addon SET active=:active WHERE " +
+                       "internal_id=:internal_id",
+
+    getActiveAddons: "SELECT " + FIELDS_ADDON + " FROM addon WHERE active=1 AND " +
+                     "type<>'theme' AND bootstrap=0",
+    getActiveTheme: "SELECT " + FIELDS_ADDON + " FROM addon WHERE " +
+                    "internalName=:internalName AND type='theme'",
+    getThemes: "SELECT " + FIELDS_ADDON + " FROM addon WHERE type='theme'",
+
+    getAddonInLocation: "SELECT " + FIELDS_ADDON + " FROM addon WHERE id=:id " +
+                        "AND location=:location",
+    getAddons: "SELECT " + FIELDS_ADDON + " FROM addon",
+    getAddonsByType: "SELECT " + FIELDS_ADDON + " FROM addon WHERE type=:type",
+    getAddonsInLocation: "SELECT " + FIELDS_ADDON + " FROM addon WHERE " +
+                         "location=:location",
+    getInstallLocations: "SELECT DISTINCT location FROM addon",
+    getVisibleAddonForID: "SELECT " + FIELDS_ADDON + " FROM addon WHERE " +
+                          "visible=1 AND id=:id",
+    getVisibleAddonForInternalName: "SELECT " + FIELDS_ADDON + " FROM addon " +
+                                    "WHERE visible=1 AND internalName=:internalName",
+    getVisibleAddons: "SELECT " + FIELDS_ADDON + " FROM addon WHERE visible=1",
+    getVisibleAddonsWithPendingOperations: "SELECT " + FIELDS_ADDON + " FROM " +
+                                           "addon WHERE visible=1 " +
+                                           "AND (pendingUninstall=1 OR " +
+                                           "MAX(userDisabled,appDisabled)=active)",
+    getAddonBySyncGUID: "SELECT " + FIELDS_ADDON + " FROM addon " +
+                        "WHERE syncGUID=:syncGUID",
+    makeAddonVisible: "UPDATE addon SET visible=1 WHERE internal_id=:internal_id",
+    removeAddonMetadata: "DELETE FROM addon WHERE internal_id=:internal_id",
+    // Equates to active = visible && !userDisabled && !softDisabled &&
+    //                     !appDisabled && !pendingUninstall
+    setActiveAddons: "UPDATE addon SET active=MIN(visible, 1 - userDisabled, " +
+                     "1 - softDisabled, 1 - appDisabled, 1 - pendingUninstall)",
+    setAddonProperties: "UPDATE addon SET userDisabled=:userDisabled, " +
+                        "appDisabled=:appDisabled, " +
+                        "softDisabled=:softDisabled, " +
+                        "pendingUninstall=:pendingUninstall, " +
+                        "applyBackgroundUpdates=:applyBackgroundUpdates WHERE " +
+                        "internal_id=:internal_id",
+    setAddonDescriptor: "UPDATE addon SET descriptor=:descriptor WHERE " +
+                        "internal_id=:internal_id",
+    setAddonSyncGUID: "UPDATE addon SET syncGUID=:syncGUID WHERE " +
+                      "internal_id=:internal_id",
+    updateTargetApplications: "UPDATE targetApplication SET " +
+                              "minVersion=:minVersion, maxVersion=:maxVersion " +
+                              "WHERE addon_internal_id=:internal_id AND id=:id",
+
+    createSavepoint: "SAVEPOINT 'default'",
+    releaseSavepoint: "RELEASE SAVEPOINT 'default'",
+    rollbackSavepoint: "ROLLBACK TO SAVEPOINT 'default'"
+  },
+
   get dbfileExists() {
     delete this.dbfileExists;
-    return this.dbfileExists = this.jsonFile.exists();
+    return this.dbfileExists = this.dbfile.exists();
   },
   set dbfileExists(aValue) {
     delete this.dbfileExists;
@@ -395,19 +545,12 @@ this.XPIDatabase = {
    * Converts the current internal state of the XPI addon database to JSON
    * and writes it to the user's profile. Synchronous for now, eventually must
    * be async, reliable, etc.
-   * XXX should we remove the JSON file if it would be empty? Not sure if that
-   * would ever happen, given the default theme
    */
   writeJSON: function XPIDB_writeJSON() {
     // XXX should have a guard here for if the addonDB hasn't been auto-loaded yet
-
-    // Don't mess with an existing database on disk, if it was locked at start up
-    if (this.lockedDatabase)
-      return;
-
     let addons = [];
-    for (let [key, addon] of this.addonDB) {
-      addons.push(addon);
+    for (let aKey in this.addonDB) {
+      addons.push(copyProperties(this.addonDB[aKey], PROP_JSON_FIELDS));
     }
     let toSave = {
       schemaVersion: DB_SCHEMA,
@@ -420,21 +563,75 @@ this.XPIDatabase = {
     try {
       converter.init(stream, "UTF-8", 0, 0x0000);
       // XXX pretty print the JSON while debugging
-      let out = JSON.stringify(toSave, null, 2);
-      // dump("Writing JSON:\n" + out + "\n");
-      converter.writeString(out);
+      converter.writeString(JSON.stringify(toSave, null, 2));
       converter.flush();
       // nsConverterOutputStream doesn't finish() safe output streams on close()
       FileUtils.closeSafeFileOutputStream(stream);
       converter.close();
-      this.dbfileExists = true;
-      // XXX probably only want to do this if the version is different
-      Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
-      Services.prefs.savePrefFile(null);   // XXX is this bad sync I/O?
     }
     catch(e) {
       ERROR("Failed to save database to JSON", e);
       stream.close();
+    }
+  },
+
+  /**
+   * Open and parse the JSON XPI extensions database.
+   * @return true: the DB was successfully loaded
+   *         false: The DB either needs upgrade or did not exist at all.
+   *         XXX upgrade and errors handled in a following patch
+   */
+  openJSONDatabase: function XPIDB_openJSONDatabase() {
+    dump("XPIDB_openJSONDatabase\n");
+    try {
+      let data = "";
+      let fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].
+              createInstance(Components.interfaces.nsIFileInputStream);
+      let cstream = Components.classes["@mozilla.org/intl/converter-input-stream;1"].
+              createInstance(Components.interfaces.nsIConverterInputStream);
+      fstream.init(this.jsonFile, -1, 0, 0);
+      cstream.init(fstream, "UTF-8", 0, 0);
+      let (str = {}) {
+        let read = 0;
+        do {
+          read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
+          data += str.value;
+        } while (read != 0);
+      }
+      cstream.close();
+      let inputAddons = JSON.parse(data);
+      // Now do some sanity checks on our JSON db
+      if (!("schemaVersion" in inputAddons) || !("addons" in inputAddons)) {
+        // XXX Content of JSON file is bad, need to rebuild from scratch
+        ERROR("bad JSON file contents");
+        delete this.addonDB;
+        this.addonDB = {};
+        return false;
+      }
+      if (inputAddons.schemaVersion != DB_SCHEMA) {
+        // XXX UPGRADE FROM PREVIOUS VERSION OF JSON DB
+        ERROR("JSON schema upgrade needed");
+        return false;
+      }
+      // If we got here, we probably have good data
+      // Make AddonInternal instances from the loaded data and save them
+      delete this.addonDB;
+      let addonDB = {}
+      inputAddons.addons.forEach(function(loadedAddon) {
+        let newAddon = new DBAddonInternal(loadedAddon);
+        addonDB[newAddon._key] = newAddon;
+      });
+      this.addonDB = addonDB;
+      // dump("Finished reading DB: " + this.addonDB.toSource() + "\n");
+      return true;
+    }
+    catch(e) {
+      // XXX handle missing JSON database
+      ERROR("Failed to load XPI JSON data from profile", e);
+      // XXX for now, start from scratch
+      delete this.addonDB;
+      this.addonDB = {};
+      return false;
     }
   },
 
@@ -484,197 +681,170 @@ this.XPIDatabase = {
   },
 
   /**
-   * Pull upgrade information from an existing SQLITE database
+   * Attempts to open the database file. If it fails it will try to delete the
+   * existing file and create an empty database. If that fails then it will
+   * open an in-memory database that can be used during this session.
    *
-   * @return false if there is no SQLITE database
-   *         true and sets this.migrateData to null if the SQLITE DB exists
-   *              but does not contain useful information
-   *         true and sets this.migrateData to
-   *              {location: {id1:{addon1}, id2:{addon2}}, location2:{...}, ...}
-   *              if there is useful information
+   * @param  aDBFile
+   *         The nsIFile to open
+   * @return the mozIStorageConnection for the database
    */
-  loadSqliteData: function XPIDB_loadSqliteData() {
+  openDatabaseFile: function XPIDB_openDatabaseFile(aDBFile) {
+    LOG("Opening database");
     let connection = null;
-    let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-    if (!dbfile.exists()) {
-      return false;
-    }
+
     // Attempt to open the database
     try {
-      connection = Services.storage.openUnsharedDatabase(dbfile);
+      connection = Services.storage.openUnsharedDatabase(aDBFile);
+      this.dbfileExists = true;
     }
     catch (e) {
-      // exists but SQLITE can't open it
-      WARN("Failed to open sqlite database " + dbfile.path + " for upgrade", e);
-      this.migrateData = null;
-      return true;
+      ERROR("Failed to open database (1st attempt)", e);
+      // If the database was locked for some reason then assume it still
+      // has some good data and we should try to load it the next time around.
+      if (e.result != Cr.NS_ERROR_STORAGE_BUSY) {
+        try {
+          aDBFile.remove(true);
+        }
+        catch (e) {
+          ERROR("Failed to remove database that could not be opened", e);
+        }
+        try {
+          connection = Services.storage.openUnsharedDatabase(aDBFile);
+        }
+        catch (e) {
+          ERROR("Failed to open database (2nd attempt)", e);
+
+          // If we have got here there seems to be no way to open the real
+          // database, instead open a temporary memory database so things will
+          // work for this session.
+          return Services.storage.openSpecialDatabase("memory");
+        }
+      }
+      else {
+        return Services.storage.openSpecialDatabase("memory");
+      }
     }
-    LOG("Migrating data from sqlite");
-    this.migrateData = this.getMigrateDataFromDatabase(connection);
-    connection.close();
-    return true;
+
+    connection.executeSimpleSQL("PRAGMA synchronous = FULL");
+    connection.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
+
+    return connection;
   },
 
   /**
-   * Opens and reads the database file, upgrading from old
-   * databases or making a new DB if needed.
+   * Opens a new connection to the database file.
    *
-   * The possibilities, in order of priority, are:
-   * 1) Perfectly good, up to date database
-   * 2) Out of date JSON database needs to be upgraded => upgrade
-   * 3) JSON database exists but is mangled somehow => build new JSON
-   * 4) no JSON DB, but a useable SQLITE db we can upgrade from => upgrade
-   * 5) useless SQLITE DB => build new JSON
-   * 6) useable RDF DB => upgrade
-   * 7) useless RDF DB => build new JSON
-   * 8) Nothing at all => build new JSON
    * @param  aRebuildOnError
    *         A boolean indicating whether add-on information should be loaded
    *         from the install locations if the database needs to be rebuilt.
-   *         (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    */
   openConnection: function XPIDB_openConnection(aRebuildOnError, aForceOpen) {
-    // XXX TELEMETRY report opens with aRebuildOnError true (which implies delayed open)
-    // vs. aRebuildOnError false (DB loaded during startup)
-    delete this.addonDB;
-    this.migrateData = null;
-    let fstream = null;
-    let data = "";
-    try {
-      LOG("Opening XPI database " + this.jsonFile.path);
-      fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].
-              createInstance(Components.interfaces.nsIFileInputStream);
-      fstream.init(this.jsonFile, -1, 0, 0);
-      let cstream = null;
-      try {
-        cstream = Components.classes["@mozilla.org/intl/converter-input-stream;1"].
-                createInstance(Components.interfaces.nsIConverterInputStream);
-        cstream.init(fstream, "UTF-8", 0, 0);
-        let (str = {}) {
-          let read = 0;
-          do {
-            read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
-            data += str.value;
-          } while (read != 0);
-        }
-        // dump("Loaded JSON:\n" + data + "\n");
-        let inputAddons = JSON.parse(data);
-        // Now do some sanity checks on our JSON db
-        if (!("schemaVersion" in inputAddons) || !("addons" in inputAddons)) {
-          // Content of JSON file is bad, need to rebuild from scratch
-          ERROR("bad JSON file contents");
-          this.rebuildDatabase(aRebuildOnError);
-        }
-        if (inputAddons.schemaVersion != DB_SCHEMA) {
-          // Handle mismatched JSON schema version. For now, we assume backward/forward
-          // compatibility as long as we preserve unknown fields during save & restore
-          // XXX preserve schema version and unknown fields during save/restore
-          LOG("JSON schema mismatch: expected " + DB_SCHEMA +
-              ", actual " + inputAddons.schemaVersion);
-        }
-        // If we got here, we probably have good data
-        // Make AddonInternal instances from the loaded data and save them
-        let addonDB = new Map();
-        inputAddons.addons.forEach(function(loadedAddon) {
-          let newAddon = new DBAddonInternal(loadedAddon);
-          addonDB.set(newAddon._key, newAddon);
-        });
-        this.addonDB = addonDB;
-        LOG("Successfully read XPI database");
-      }
-      catch(e) {
-        // If we catch and log a SyntaxError from the JSON
-        // parser, the xpcshell test harness fails the test for us: bug 870828
-        if (e.name == "SyntaxError") {
-          ERROR("Syntax error parsing saved XPI JSON data");
-        }
-        else {
-          ERROR("Failed to load XPI JSON data from profile", e);
-        }
-        this.rebuildDatabase(aRebuildOnError);
-      }
-      finally {
-        if (cstream)
-          cstream.close();
-      }
-    }
-    catch (e) {
-      if (e.result == Cr.NS_ERROR_FILE_NOT_FOUND) {
-        // XXX re-implement logic to decide whether to upgrade database
-        // by checking the DB_SCHEMA_VERSION preference.
-        // Fall back to attempting database upgrades
-        WARN("Extensions database not found; attempting to upgrade");
-        // See if there is SQLITE to migrate from
-        if (!this.loadSqliteData()) {
-          // Nope, try RDF
-          this.migrateData = this.getMigrateDataFromRDF();
-        }
-
-        this.rebuildDatabase(aRebuildOnError);
-      }
-      else {
-        WARN("Extensions database " + this.jsonFile.path +
-            " exists but is not readable; rebuilding in memory", e);
-        // XXX open question - if we can overwrite at save time, should we, or should we
-        // leave the locked database in case we can recover from it next time we start up?
-        this.lockedDatabase = true;
-        // XXX TELEMETRY report when this happens?
-        this.rebuildDatabase(aRebuildOnError);
-      }
-    }
-    finally {
-      if (fstream)
-        fstream.close();
-    }
-
+    this.openJSONDatabase();
     this.initialized = true;
     return;
+    // XXX IRVING deal with the migration logic below and in openDatabaseFile...
 
-    // XXX what about aForceOpen? Appears to handle the case of "don't open DB file if there aren't any extensions"?
+    delete this.connection;
+
     if (!aForceOpen && !this.dbfileExists) {
       this.connection = null;
       return;
     }
-  },
 
-  /**
-   * Rebuild the database from addon install directories. If this.migrateData
-   * is available, uses migrated information for settings on the addons found
-   * during rebuild
-   * @param aRebuildOnError
-   *         A boolean indicating whether add-on information should be loaded
-   *         from the install locations if the database needs to be rebuilt.
-   *         (if false, caller is XPIProvider.checkForChanges() which will rebuild)
-   */
-  rebuildDatabase: function XIPDB_rebuildDatabase(aRebuildOnError) {
-    // If there is no migration data then load the list of add-on directories
-    // that were active during the last run
-    this.addonDB = new Map();
-    if (!this.migrateData)
-      this.activeBundles = this.getActiveBundles();
+    this.migrateData = null;
 
-    if (aRebuildOnError) {
-      WARN("Rebuilding add-ons database from installed extensions.");
-      this.beginTransaction();
+    this.connection = this.openDatabaseFile(this.dbfile);
+
+    // If the database was corrupt or missing then the new blank database will
+    // have a schema version of 0.
+    let schemaVersion = this.connection.schemaVersion;
+    if (schemaVersion != DB_SCHEMA) {
+      // A non-zero schema version means that a schema has been successfully
+      // created in the database in the past so we might be able to get useful
+      // information from it
+      if (schemaVersion != 0) {
+        LOG("Migrating data from schema " + schemaVersion);
+        this.migrateData = this.getMigrateDataFromDatabase();
+
+        // Delete the existing database
+        this.connection.close();
+        try {
+          if (this.dbfileExists)
+            this.dbfile.remove(true);
+
+          // Reopen an empty database
+          this.connection = this.openDatabaseFile(this.dbfile);
+        }
+        catch (e) {
+          ERROR("Failed to remove old database", e);
+          // If the file couldn't be deleted then fall back to an in-memory
+          // database
+          this.connection = Services.storage.openSpecialDatabase("memory");
+        }
+      }
+      else {
+        let dbSchema = 0;
+        try {
+          dbSchema = Services.prefs.getIntPref(PREF_DB_SCHEMA);
+        } catch (e) {}
+
+        if (dbSchema == 0) {
+          // Only migrate data from the RDF if we haven't done it before
+          this.migrateData = this.getMigrateDataFromRDF();
+        }
+      }
+
+      // At this point the database should be completely empty
       try {
-        let state = XPIProvider.getInstallLocationStates();
-        XPIProvider.processFileChanges(state, {}, false);
-        // Make sure to update the active add-ons and add-ons list on shutdown
-        Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
-        this.commitTransaction();
+        this.createSchema();
       }
       catch (e) {
-        ERROR("Error processing file changes", e);
-        this.rollbackTransaction();
+        // If creating the schema fails, then the database is unusable,
+        // fall back to an in-memory database.
+        this.connection = Services.storage.openSpecialDatabase("memory");
+      }
+
+      // If there is no migration data then load the list of add-on directories
+      // that were active during the last run
+      if (!this.migrateData)
+        this.activeBundles = this.getActiveBundles();
+
+      if (aRebuildOnError) {
+        WARN("Rebuilding add-ons database from installed extensions.");
+        this.beginTransaction();
+        try {
+          let state = XPIProvider.getInstallLocationStates();
+          XPIProvider.processFileChanges(state, {}, false);
+          // Make sure to update the active add-ons and add-ons list on shutdown
+          Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
+          this.commitTransaction();
+        }
+        catch (e) {
+          ERROR("Error processing file changes", e);
+          this.rollbackTransaction();
+        }
       }
     }
+
+    // If the database connection has a file open then it has the right schema
+    // by now so make sure the preferences reflect that.
+    if (this.connection.databaseFile) {
+      Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
+      Services.prefs.savePrefFile(null);
+    }
+
+    // Begin any pending transactions
+    for (let i = 0; i < this.transactionCount; i++)
+      this.connection.executeSimpleSQL("SAVEPOINT 'default'");
   },
 
   /**
    * Lazy getter for the addons database
    */
   get addonDB() {
-    this.openConnection(true);
+    delete this.addonDB;
+    this.openJSONDatabase();
     return this.addonDB;
   },
 
@@ -794,13 +964,13 @@ this.XPIDatabase = {
    * @return an object holding information about what add-ons were previously
    *         userDisabled and any updated compatibility information
    */
-  getMigrateDataFromDatabase: function XPIDB_getMigrateDataFromDatabase(aConnection) {
+  getMigrateDataFromDatabase: function XPIDB_getMigrateDataFromDatabase() {
     let migrateData = {};
 
     // Attempt to migrate data from a different (even future!) version of the
     // database
     try {
-      var stmt = aConnection.createStatement("PRAGMA table_info(addon)");
+      var stmt = this.connection.createStatement("PRAGMA table_info(addon)");
 
       const REQUIRED = ["internal_id", "id", "location", "userDisabled",
                         "installDate", "version"];
@@ -826,7 +996,7 @@ this.XPIDatabase = {
       }
       stmt.finalize();
 
-      stmt = aConnection.createStatement("SELECT " + props.join(",") + " FROM addon");
+      stmt = this.connection.createStatement("SELECT " + props.join(",") + " FROM addon");
       for (let row in resultRows(stmt)) {
         if (!(row.location in migrateData))
           migrateData[row.location] = {};
@@ -845,7 +1015,7 @@ this.XPIDatabase = {
         })
       }
 
-      var taStmt = aConnection.createStatement("SELECT id, minVersion, " +
+      var taStmt = this.connection.createStatement("SELECT id, minVersion, " +
                                                    "maxVersion FROM " +
                                                    "targetApplication WHERE " +
                                                    "addon_internal_id=:internal_id");
@@ -893,8 +1063,10 @@ this.XPIDatabase = {
 
       // If we are running with an in-memory database then force a new
       // extensions.ini to be written to disk on the next startup
-      if (this.lockedDatabase)
-        Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
+      // XXX IRVING special case for if we fail to save extensions.json?
+      // XXX maybe doesn't need to be at shutdown?
+      // if (!this.connection.databaseFile)
+      //   Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
 
       this.initialized = false;
 
@@ -903,7 +1075,7 @@ this.XPIDatabase = {
       delete this.addonDB;
       Object.defineProperty(this, "addonDB", {
         get: function addonsGetter() {
-          this.openConnection(true);
+          this.openJSONDatabase();
           return this.addonDB;
         },
         configurable: true
@@ -926,17 +1098,17 @@ this.XPIDatabase = {
    * installed add-ons, occasionally a superset when an install location no
    * longer exists.
    *
-   * @return  a Set of names of install locations
+   * @return  an array of names of install locations
    */
   getInstallLocations: function XPIDB_getInstallLocations() {
-    let locations = new Set();
     if (!this.addonDB)
-      return locations;
+      return [];
 
-    for (let [, addon] of this.addonDB) {
-      locations.add(addon.location);
+    let locations = {};
+    for each (let addon in this.addonDB) {
+      locations[addon.location] = 1;
     }
-    return locations;
+    return Object.keys(locations);
   },
 
   /**
@@ -951,7 +1123,8 @@ this.XPIDatabase = {
       return [];
 
     let addonList = [];
-    for (let [key, addon] of this.addonDB) {
+    for (let key in this.addonDB) {
+      let addon = this.addonDB[key];
       if (aFilter(addon)) {
         addonList.push(addon);
       }
@@ -971,7 +1144,8 @@ this.XPIDatabase = {
     if (!this.addonDB)
       return null;
 
-    for (let [key, addon] of this.addonDB) {
+    for (let key in this.addonDB) {
+      let addon = this.addonDB[key];
       if (aFilter(addon)) {
         return addon;
       }
@@ -1004,7 +1178,7 @@ this.XPIDatabase = {
    *         A callback to pass the DBAddonInternal to
    */
   getAddonInLocation: function XPIDB_getAddonInLocation(aId, aLocation, aCallback) {
-    getRepositoryAddon(this.addonDB.get(aLocation + ":" + aId), aCallback);
+    getRepositoryAddon(this.addonDB[aLocation + ":" + aId], aCallback);
   },
 
   /**
@@ -1131,7 +1305,7 @@ this.XPIDatabase = {
 
     let newAddon = new DBAddonInternal(aAddon);
     newAddon.descriptor = aDescriptor;
-    this.addonDB.set(newAddon._key, newAddon);
+    this.addonDB[newAddon._key] = newAddon;
     if (newAddon.visible) {
       this.makeAddonVisible(newAddon);
     }
@@ -1184,7 +1358,7 @@ this.XPIDatabase = {
    */
   removeAddonMetadata: function XPIDB_removeAddonMetadata(aAddon) {
     this.beginTransaction();
-    this.addonDB.delete(aAddon._key);
+    delete this.addonDB[aAddon._key];
     this.commitTransaction();
   },
 
@@ -1200,7 +1374,8 @@ this.XPIDatabase = {
   makeAddonVisible: function XPIDB_makeAddonVisible(aAddon) {
     this.beginTransaction();
     LOG("Make addon " + aAddon._key + " visible");
-    for (let [key, otherAddon] of this.addonDB) {
+    for (let key in this.addonDB) {
+      let otherAddon = this.addonDB[key];
       if ((otherAddon.id == aAddon.id) && (otherAddon._key != aAddon._key)) {
         LOG("Hide addon " + otherAddon._key);
         otherAddon.visible = false;
@@ -1286,20 +1461,14 @@ this.XPIDatabase = {
     // XXX IRVING this may get called during XPI-utils shutdown
     // XXX need to make sure PREF_PENDING_OPERATIONS handling is clean
     LOG("Updating add-on states");
-    let changed = false;
-    for (let [key, addon] of this.addonDB) {
-      let newActive = (addon.visible && !addon.userDisabled &&
+    this.beginTransaction();
+    for (let key in this.addonDB) {
+      let addon = this.addonDB[key];
+      addon.active = (addon.visible && !addon.userDisabled &&
                       !addon.softDisabled && !addon.appDisabled &&
                       !addon.pendingUninstall);
-      if (newActive != addon.active) {
-        addon.active = newActive;
-        changed = true;
-      }
     }
-    if (changed) {
-      this.beginTransaction();
-      this.commitTransaction();
-    }
+    this.commitTransaction();
   },
 
   /**
