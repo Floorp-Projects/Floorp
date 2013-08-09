@@ -77,32 +77,21 @@ var APZCObserver = {
       let resolution = frameMetrics.resolution;
       let compositedRect = frameMetrics.compositedRect;
 
-      if (StartUI.isStartPageVisible) {
-        let windowUtils = Browser.windowUtils;
-        Browser.selectedBrowser.contentWindow.scrollTo(scrollTo.x, scrollTo.y);
-        windowUtils.setResolution(resolution, resolution);
-        windowUtils.setDisplayPortForElement(displayPort.x * resolution,
-                                             displayPort.y * resolution,
-                                             displayPort.width * resolution,
-                                             displayPort.height * resolution,
-                                             Elements.startUI);
-      } else {
-        let windowUtils = Browser.selectedBrowser.contentWindow.
-                                  QueryInterface(Ci.nsIInterfaceRequestor).
-                                  getInterface(Ci.nsIDOMWindowUtils);
-        windowUtils.setScrollPositionClampingScrollPortSize(compositedRect.width,
-                                                            compositedRect.height);
-        Browser.selectedBrowser.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-          scrollX: scrollTo.x,
-          scrollY: scrollTo.y,
-          x: displayPort.x + scrollTo.x,
-          y: displayPort.y + scrollTo.y,
-          w: displayPort.width,
-          h: displayPort.height,
-          scale: resolution,
-          id: scrollId
-        });
-      }
+      let windowUtils = Browser.selectedBrowser.contentWindow.
+                                QueryInterface(Ci.nsIInterfaceRequestor).
+                                getInterface(Ci.nsIDOMWindowUtils);
+      windowUtils.setScrollPositionClampingScrollPortSize(compositedRect.width,
+                                                          compositedRect.height);
+      Browser.selectedBrowser.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
+        scrollX: scrollTo.x,
+        scrollY: scrollTo.y,
+        x: displayPort.x + scrollTo.x,
+        y: displayPort.y + scrollTo.y,
+        w: displayPort.width,
+        h: displayPort.height,
+        scale: resolution,
+        id: scrollId
+      });
 
       Util.dumpLn("APZC scrollId: " + scrollId);
       Util.dumpLn("APZC scrollTo.x: " + scrollTo.x + ", scrollTo.y: " + scrollTo.y);
