@@ -2911,10 +2911,6 @@ let SessionStoreInternal = {
       delete this._statesToRestore[aWindow.__SS_restoreID];
       delete aWindow.__SS_restoreID;
       delete this._windows[aWindow.__SSi]._restoring;
-
-      // It's important to set the window state to dirty so that
-      // we collect their data for the first time when saving state.
-      this._dirtyWindows[aWindow.__SSi] = true;
     }
 
     if (aTabs.length == 0) {
