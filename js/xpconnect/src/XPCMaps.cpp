@@ -582,7 +582,7 @@ XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
         PL_DHashTableDestroy(mTable);
 }
 
-JSBool
+bool
 XPCNativeScriptableSharedMap::GetNewOrUsed(uint32_t flags,
                                            char* name,
                                            uint32_t interfacesBitmap,

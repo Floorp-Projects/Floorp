@@ -394,7 +394,7 @@ JavaScriptParent::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
             JSObject *obj = &v.toObject();
             if (xpc::IsOutObject(cx, obj)) {
                 // Make sure it is not an in-out object.
-                JSBool found;
+                bool found;
                 if (!JS_HasProperty(cx, obj, "value", &found))
                     return false;
                 if (found) {

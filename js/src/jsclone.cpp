@@ -561,7 +561,7 @@ JSStructuredCloneWriter::checkStack()
 #endif
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v)
 {
     JS_ASSERT(v.isObject());
@@ -852,7 +852,7 @@ TagToV1ArrayType(uint32_t tag)
     return tag - SCTAG_TYPED_ARRAY_V1_MIN;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_ReadTypedArray(JSStructuredCloneReader *r, jsval *vp)
 {
     uint32_t tag, nelems;

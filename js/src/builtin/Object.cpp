@@ -388,7 +388,7 @@ DefineAccessor(JSContext *cx, unsigned argc, Value *vp)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
-    JSBool dummy;
+    bool dummy;
     RootedValue descObjValue(cx, ObjectValue(*descObj));
     if (!DefineOwnProperty(cx, thisObj, id, descObjValue, &dummy))
         return false;
@@ -524,7 +524,7 @@ obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 
 #if JS_HAS_OBJ_WATCHPOINT
 
-static JSBool
+static bool
 obj_watch_handler(JSContext *cx, JSObject *obj_, jsid id_, jsval old,
                   jsval *nvp, void *closure)
 {
@@ -839,7 +839,7 @@ obj_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     if (!ValueToId<CanGC>(cx, args.get(1), &id))
         return false;
 
-    JSBool junk;
+    bool junk;
     if (!DefineOwnProperty(cx, obj, id, args.get(2), &junk))
         return false;
 

@@ -132,7 +132,7 @@ doResolve(JS::HandleObject obj, JS::HandleId id, unsigned flags, JS::MutableHand
     return false;
 }
 
-static JSBool
+static bool
 my_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned flags,
            JS::MutableHandleObject objp)
 {

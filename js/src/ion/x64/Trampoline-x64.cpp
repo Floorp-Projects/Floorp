@@ -27,7 +27,7 @@ static const RegisterSet AllRegs =
 
 /* This method generates a trampoline on x64 for a c++ function with
  * the following signature:
- *   JSBool blah(void *code, int argc, Value *argv, JSObject *scopeChain,
+ *   bool blah(void *code, int argc, Value *argv, JSObject *scopeChain,
  *               Value *vp)
  *   ...using standard x64 fastcall calling convention
  */

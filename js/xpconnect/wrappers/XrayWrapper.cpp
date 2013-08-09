@@ -535,7 +535,7 @@ XPCWrappedNativeXrayTraits::isResolving(JSContext *cx, JSObject *holder,
 // Some DOM objects have shared properties that don't have an explicit
 // getter/setter and rely on the class getter/setter. We install a
 // class getter/setter on the holder object to trigger them.
-JSBool
+bool
 holder_get(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue vp)
 {
     // JSClass::getProperty is wacky enough that it's hard to be sure someone
@@ -559,8 +559,8 @@ holder_get(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue 
     return true;
 }
 
-JSBool
-holder_set(JSContext *cx, HandleObject wrapper, HandleId id, JSBool strict, MutableHandleValue vp)
+bool
+holder_set(JSContext *cx, HandleObject wrapper, HandleId id, bool strict, MutableHandleValue vp)
 {
     // JSClass::setProperty is wacky enough that it's hard to be sure someone
     // can't inherit this getter by prototyping a random object to an
@@ -780,7 +780,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
                                  desc->getter, desc->setter, desc->attrs);
 }
 
-static JSBool
+static bool
 wrappedJSObject_getter(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue vp)
 {
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
@@ -858,7 +858,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
     // in the wrapper's compartment here, not the wrappee.
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
 
-    JSBool hasProp;
+    bool hasProp;
     if (!JS_HasPropertyById(cx, holder, id, &hasProp)) {
         return false;
     }
@@ -947,7 +947,7 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, 
     // Go through the properties we got and enumerate all native ones.
     for (size_t n = 0; n < wnProps.length(); ++n) {
         RootedId id(cx, wnProps[n]);
-        JSBool hasProp;
+        bool hasProp;
         if (!JS_HasPropertyById(cx, wrapper, id, &hasProp))
             return false;
         if (hasProp)
@@ -1210,7 +1210,7 @@ HasNativeProperty(JSContext *cx, HandleObject wrapper, HandleId id, bool *hasPro
     }
 
     // Try the holder.
-    JSBool found = false;
+    bool found = false;
     if (!JS_AlreadyHasOwnPropertyById(cx, holder, id, &found))
         return false;
     if (found) {

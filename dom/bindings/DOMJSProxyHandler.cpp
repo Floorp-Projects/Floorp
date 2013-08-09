@@ -40,7 +40,7 @@ DOMProxyShadows(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id)
 {
   JS::Value v = js::GetProxyExtra(proxy, JSPROXYSLOT_EXPANDO);
   if (v.isObject()) {
-    JSBool hasOwn;
+    bool hasOwn;
     if (!JS_AlreadyHasOwnPropertyById(cx, &v.toObject(), id, &hasOwn))
       return js::ShadowCheckFailed;
 
@@ -203,7 +203,7 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
     return false;
   }
 
-  JSBool dummy;
+  bool dummy;
   return js_DefineOwnProperty(cx, expando, id, *desc, &dummy);
 }
 
@@ -252,7 +252,7 @@ DOMProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid
   if (!proto) {
     return true;
   }
-  JSBool protoHasProp;
+  bool protoHasProp;
   bool ok = JS_HasPropertyById(cx, proto, id, &protoHasProp);
   if (ok) {
     *bp = protoHasProp;

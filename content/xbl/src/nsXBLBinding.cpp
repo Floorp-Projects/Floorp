@@ -80,7 +80,7 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
   c->Drop();
 }
 
-static JSBool
+static bool
 XBLEnumerate(JSContext *cx, JS::Handle<JSObject*> obj)
 {
   nsXBLPrototypeBinding* protoBinding =

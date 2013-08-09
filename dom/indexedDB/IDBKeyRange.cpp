@@ -135,7 +135,7 @@ MakeLowerBoundKeyRange(JSContext* aCx,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   JS::Rooted<JS::Value> val(aCx);
-  JSBool open = false;
+  bool open = false;
   if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/b", val.address(),
                            &open)) {
     return false;
@@ -158,7 +158,7 @@ MakeUpperBoundKeyRange(JSContext* aCx,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   JS::Rooted<JS::Value> val(aCx);
-  JSBool open = false;
+  bool open = false;
   if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/b", val.address(),
                            &open)) {
     return false;
@@ -181,7 +181,7 @@ MakeBoundKeyRange(JSContext* aCx,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   JS::Rooted<JS::Value> lowerVal(aCx), upperVal(aCx);
-  JSBool lowerOpen = false, upperOpen = false;
+  bool lowerOpen = false, upperOpen = false;
   if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "vv/bb",
                            lowerVal.address(), upperVal.address(),
                            &lowerOpen, &upperOpen)) {
@@ -219,7 +219,7 @@ const JSFunctionSpec gKeyRangeConstructors[] = {
 } // anonymous namespace
 
 // static
-JSBool
+bool
 IDBKeyRange::DefineConstructors(JSContext* aCx,
                                 JSObject* aObject)
 {

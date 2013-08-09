@@ -196,7 +196,7 @@ ContentPrefService2.prototype = {
       this._pbStore.set(group, name, value);
       this._schedule(function () {
         cbHandleCompletion(callback, Ci.nsIContentPrefCallback2.COMPLETE_OK);
-        this._cps._broadcastPrefSet(group, name, value);
+        this._cps._notifyPrefSet(group, name, value);
       });
       return;
     }
@@ -266,7 +266,7 @@ ContentPrefService2.prototype = {
           this._cache.setWithCast(group, name, value);
         cbHandleCompletion(callback, reason);
         if (ok)
-          this._cps._broadcastPrefSet(group, name, value);
+          this._cps._notifyPrefSet(group, name, value);
       },
       onError: function onError(nsresult) {
         cbHandleError(callback, nsresult);
@@ -356,7 +356,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, , ] in prefs) {
-            this._cps._broadcastPrefRemoved(sgroup, name);
+            this._cps._notifyPrefRemoved(sgroup, name);
           }
         }
       },
@@ -448,7 +448,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, sname, ] in prefs) {
-            this._cps._broadcastPrefRemoved(sgroup, sname);
+            this._cps._notifyPrefRemoved(sgroup, sname);
           }
         }
       },
@@ -505,7 +505,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, sname, ] in prefs) {
-            this._cps._broadcastPrefRemoved(sgroup, sname);
+            this._cps._notifyPrefRemoved(sgroup, sname);
           }
         }
       },
@@ -585,7 +585,7 @@ ContentPrefService2.prototype = {
         cbHandleCompletion(callback, reason);
         if (ok) {
           for (let [sgroup, , ] in prefs) {
-            this._cps._broadcastPrefRemoved(sgroup, name);
+            this._cps._notifyPrefRemoved(sgroup, name);
           }
         }
       },
@@ -696,7 +696,7 @@ ContentPrefService2.prototype = {
     catch (err) {
       return groupStr;
     }
-    return this._cps.grouper.group(groupURI);
+    return this._cps._grouper.group(groupURI);
   },
 
   _schedule: function CPS2__schedule(fn) {
@@ -705,11 +705,11 @@ ContentPrefService2.prototype = {
   },
 
   addObserverForName: function CPS2_addObserverForName(name, observer) {
-    this._cps.addObserver(name, observer);
+    this._cps._addObserver(name, observer);
   },
 
   removeObserverForName: function CPS2_removeObserverForName(name, observer) {
-    this._cps.removeObserver(name, observer);
+    this._cps._removeObserver(name, observer);
   },
 
   extractDomain: function CPS2_extractDomain(str) {

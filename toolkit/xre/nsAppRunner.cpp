@@ -1769,10 +1769,7 @@ ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
          nsIPromptService::BUTTON_POS_1) +
         nsIPromptService::BUTTON_POS_1_DEFAULT;
 
-      // The actual value is irrelevant but we shouldn't be handing out
-      // malformed JSBools to XPConnect.
       bool checkState = false;
-
       rv = ps->ConfirmEx(nullptr, killTitle, killMessage, flags,
                          killTitle, nullptr, nullptr, nullptr, 
                          &checkState, &button);

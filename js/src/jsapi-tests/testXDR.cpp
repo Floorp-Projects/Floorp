@@ -138,7 +138,7 @@ JSScript *createScriptViaXDR(JSPrincipals *prin, JSPrincipals *orig, int testCas
     }
 
     JS::RootedValue v(cx);
-    JSBool ok = JS_ExecuteScript(cx, global, script, v.address());
+    bool ok = JS_ExecuteScript(cx, global, script, v.address());
     if (!ok || !v.isObject())
         return NULL;
     JS::RootedObject funobj(cx, &v.toObject());
@@ -214,7 +214,7 @@ BEGIN_TEST(testXDR_source)
         CHECK(script);
         JSString *out = JS_DecompileScript(cx, script, "testing", 0);
         CHECK(out);
-        JSBool equal;
+        bool equal;
         CHECK(JS_StringEqualsAscii(cx, out, *s, &equal));
         CHECK(equal);
     }
