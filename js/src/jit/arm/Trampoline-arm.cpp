@@ -103,16 +103,10 @@ struct EnterJITStack
 IonCode *
 IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 {
-
-    const Register reg_code  = r0;
-    const Register reg_argc  = r1;
-    const Register reg_argv  = r2;
-    const Register reg_frame = r3;
-
     const Address slot_token(sp, offsetof(EnterJITStack, token));
     const Address slot_vp(sp, offsetof(EnterJITStack, vp));
 
-    JS_ASSERT(OsrFrameReg == reg_frame);
+    JS_ASSERT(OsrFrameReg == r3);
 
     MacroAssembler masm(cx);
     AutoFlushCache afc("GenerateEnterJIT", cx->runtime()->ionRuntime());
