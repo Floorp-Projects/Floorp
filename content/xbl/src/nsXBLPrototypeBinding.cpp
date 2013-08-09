@@ -35,7 +35,6 @@
 #include "nsTextFragment.h"
 #include "nsTextNode.h"
 
-#include "nsIScriptContext.h"
 #include "nsIScriptError.h"
 
 #include "nsIStyleRuleProcessor.h"
@@ -946,13 +945,13 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
     mInterfaceTable.Put(iid, mBinding);
   }
 
+  AutoSafeJSContext cx;
   nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(do_QueryObject(aDocInfo));
   nsIScriptGlobalObject* globalObject = globalOwner->GetScriptGlobalObject();
   NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
-
-  nsIScriptContext *context = globalObject->GetContext();
-  NS_ENSURE_TRUE(context && context->GetNativeContext(), NS_ERROR_FAILURE);
-  AutoCxPusher pusher(context->GetNativeContext());
+  JS::Rooted<JSObject*> compilationGlobal(cx, globalObject->GetGlobalJSObject());
+  NS_ENSURE_TRUE(compilationGlobal, NS_ERROR_UNEXPECTED);
+  JSAutoCompartment ac(cx, compilationGlobal);
 
   bool isFirstBinding = aFlags & XBLBinding_Serialize_IsFirstBinding;
   rv = Init(id, aDocInfo, nullptr, isFirstBinding);
@@ -1055,13 +1054,13 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
   // mKeyHandlersRegistered and mKeyHandlers are not serialized as they are
   // computed on demand.
 
+  AutoSafeJSContext cx;
   nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(do_QueryObject(mXBLDocInfoWeak));
   nsIScriptGlobalObject* globalObject = globalOwner->GetScriptGlobalObject();
   NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
-
-  nsIScriptContext *context = globalObject->GetContext();
-  NS_ENSURE_TRUE(context && context->GetNativeContext(), NS_ERROR_FAILURE);
-  AutoCxPusher pusher(context->GetNativeContext());
+  JS::Rooted<JSObject*> compilationGlobal(cx, globalObject->GetGlobalJSObject());
+  NS_ENSURE_TRUE(compilationGlobal, NS_ERROR_UNEXPECTED);
+  JSAutoCompartment ac(cx, compilationGlobal);
 
   uint8_t flags = mInheritStyle ? XBLBinding_Serialize_InheritStyle : 0;
 
