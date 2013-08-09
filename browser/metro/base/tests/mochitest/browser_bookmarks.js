@@ -5,7 +5,7 @@
 
 "use strict";
 
-let gStartView = BookmarksStartView._view;
+let gStartView = null;
 
 function test() {
   runTests();
@@ -13,16 +13,17 @@ function test() {
 
 function setup() {
   PanelUI.hide();
+
+  if (!BrowserUI.isStartTabVisible) {
+    let tab = yield addTab("about:start");
+    gStartView = tab.browser.contentWindow.BookmarksStartView._view;
+
+    yield waitForCondition(() => BrowserUI.isStartTabVisible);
+
+    yield hideContextUI();
+  }
+
   BookmarksTestHelper.setup();
-
-  yield hideContextUI();
-
-  if (StartUI.isStartPageVisible)
-    return;
-
-  yield addTab("about:start");
-
-  yield waitForCondition(() => StartUI.isStartPageVisible);
 }
 
 function tearDown() {

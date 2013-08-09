@@ -780,8 +780,9 @@ function runTests() {
       let badTabs = [];
       Browser.tabs.forEach(function(item, index, array) {
         let location = item.browser.currentURI.spec;
-        if (index == 0 && location == "about:blank")
+        if (index == 0 && location == "about:blank" || location == "about:start") {
           return;
+        }
         ok(false, "Left over tab after test: '" + location + "'");
         badTabs.push(item);
       });
