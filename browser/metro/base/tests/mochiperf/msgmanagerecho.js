@@ -6,6 +6,8 @@
  * TestEchoReceiver - receives json data, reserializes it and send it back.
  */ 
 
+"use strict";
+
 var TestEchoReceiver = {
   init: function init() {
     addMessageListener("Test:EchoRequest", this);
