@@ -2698,11 +2698,11 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     masm.branchTestInt32(Assembler::NotEqual, indexVal, &failures);
 
     // Unbox the index.
-    Register index = masm.extractInt32(indexVal, temp0());
+    Register index = masm.extractInt32(indexVal, tempToUnboxIndex());
 
     {
         // Load obj->elements.
-        Register elements = temp1();
+        Register elements = temp();
         masm.loadPtr(Address(object(), JSObject::offsetOfElements()), elements);
 
         // Compute the location of the element.
