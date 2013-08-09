@@ -43,8 +43,6 @@ class GLContext;
 class TextureImage
 {
     NS_INLINE_DECL_REFCOUNTING(TextureImage)
-protected:
-    typedef gfxASurface::gfxImageFormat ImageFormat;
 public:
     enum TextureState
     {
@@ -61,6 +59,7 @@ public:
     };
 
     typedef gfxASurface::gfxContentType ContentType;
+    typedef gfxASurface::gfxImageFormat ImageFormat;
 
     static already_AddRefed<TextureImage> Create(
                        GLContext* gl,
@@ -232,6 +231,7 @@ public:
 
     const nsIntSize& GetSize() const { return mSize; }
     ContentType GetContentType() const { return mContentType; }
+    ImageFormat GetImageFormat() const { return mImageFormat; }
     virtual bool InUpdate() const = 0;
     GLenum GetWrapMode() const { return mWrapMode; }
 
@@ -254,10 +254,12 @@ protected:
      */
     TextureImage(const nsIntSize& aSize,
                  GLenum aWrapMode, ContentType aContentType,
-                 Flags aFlags = NoFlags)
+                 Flags aFlags = NoFlags,
+                 ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown)
         : mSize(aSize)
         , mWrapMode(aWrapMode)
         , mContentType(aContentType)
+        , mImageFormat(aImageFormat)
         , mFilter(gfxPattern::FILTER_GOOD)
         , mFlags(aFlags)
     {}
@@ -269,6 +271,7 @@ protected:
     nsIntSize mSize;
     GLenum mWrapMode;
     ContentType mContentType;
+    ImageFormat mImageFormat;
     gfx::SurfaceFormat mTextureFormat;
     gfxPattern::GraphicsFilter mFilter;
     Flags mFlags;
@@ -294,8 +297,9 @@ public:
                       GLenum aWrapMode,
                       ContentType aContentType,
                       GLContext* aContext,
-                      TextureImage::Flags aFlags = TextureImage::NoFlags)
-        : TextureImage(aSize, aWrapMode, aContentType, aFlags)
+                      TextureImage::Flags aFlags = TextureImage::NoFlags,
+                      TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown)
+        : TextureImage(aSize, aWrapMode, aContentType, aFlags, aImageFormat)
         , mTexture(aTexture)
         , mTextureState(Created)
         , mGLContext(aContext)
@@ -349,8 +353,11 @@ class TiledTextureImage
     : public TextureImage
 {
 public:
-    TiledTextureImage(GLContext* aGL, nsIntSize aSize,
-        TextureImage::ContentType, TextureImage::Flags aFlags = TextureImage::NoFlags);
+    TiledTextureImage(GLContext* aGL,
+                      nsIntSize aSize,
+                      TextureImage::ContentType,
+                      TextureImage::Flags aFlags = TextureImage::NoFlags,
+                      TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown);
     ~TiledTextureImage();
     void DumpDiv();
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
@@ -388,6 +395,7 @@ protected:
     // The region of update requested
     nsIntRegion mUpdateRegion;
     TextureState mTextureState;
+    TextureImage::ImageFormat mImageFormat;
 };
 
 /**
@@ -400,7 +408,8 @@ CreateBasicTextureImage(GLContext* aGL,
                         const nsIntSize& aSize,
                         TextureImage::ContentType aContentType,
                         GLenum aWrapMode,
-                        TextureImage::Flags aFlags);
+                        TextureImage::Flags aFlags,
+                        TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown);
 
 } // namespace gl
 } // namespace mozilla

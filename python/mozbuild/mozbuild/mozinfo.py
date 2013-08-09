@@ -1,29 +1,21 @@
-#!/usr/bin/env python
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#
-# This script is run during configure, taking variables set in configure
-# and producing a JSON file that describes some portions of the build
-# configuration, such as the target OS and CPU.
-#
-# The output file is intended to be used as input to the mozinfo package.
-from __future__ import print_function
+# This module produces a JSON file that provides basic build info and
+# configuration metadata.
+
 import os
 import re
-import sys
 import json
 
-import buildconfig
 
-def build_dict(env=None):
+def build_dict(config, env=os.environ):
     """
     Build a dict containing data about the build configuration from
     the environment.
     """
-    substs = env or buildconfig.substs
-    env = env or os.environ
+    substs = config.substs
 
     # Check that all required variables are present first.
     required = ["TARGET_CPU", "OS_TARGET", "MOZ_WIDGET_TOOLKIT"]
@@ -33,12 +25,11 @@ def build_dict(env=None):
                         ', '.join(missing))
 
     d = {}
-    d['topsrcdir'] = substs.get('TOPSRCDIR', buildconfig.topsrcdir)
+    d['topsrcdir'] = config.topsrcdir
 
     if 'MOZCONFIG' in env:
         mozconfig = env["MOZCONFIG"]
-        if 'TOPSRCDIR' in env:
-            mozconfig = os.path.join(env["TOPSRCDIR"], mozconfig)
+        mozconfig = os.path.join(config.topsrcdir, mozconfig)
         d['mozconfig'] = os.path.normpath(mozconfig)
 
     # os
@@ -89,24 +80,17 @@ def build_dict(env=None):
 
     return d
 
-def write_json(file, env=None):
-    """
-    Write JSON data about the configuration specified in |env|
-    to |file|, which may be a filename or file-like object.
+
+def write_mozinfo(file, config, env=os.environ):
+    """Write JSON data about the configuration specified in config and an
+    environment variable dict to |file|, which may be a filename or file-like
+    object.
     See build_dict for information about what  environment variables are used,
     and what keys are produced.
     """
-    build_conf = build_dict(env=env)
+    build_conf = build_dict(config, env)
     if isinstance(file, basestring):
         with open(file, "w") as f:
             json.dump(build_conf, f)
     else:
         json.dump(build_conf, file)
-
-
-if __name__ == '__main__':
-    try:
-        write_json(sys.argv[1] if len(sys.argv) > 1 else sys.stdout)
-    except Exception as e:
-        print(str(e), file=sys.stderr)
-        sys.exit(1)

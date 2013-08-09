@@ -358,14 +358,14 @@ JSBool
 UnknownPropertyStub(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     JS_ReportError(cx, "getter could not be wrapped via CPOWs");
-    return JS_FALSE;
+    return false;
 }
 
 JSBool
 UnknownStrictPropertyStub(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
 {
     JS_ReportError(cx, "setter could not be wrapped via CPOWs");
-    return JS_FALSE;
+    return false;
 }
 
 bool
@@ -375,16 +375,18 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in, JSP
     out->shortid = in.shortid();
     if (!toValue(cx, in.value(), &out->value))
         return false;
-    if (!unwrap(cx, in.objId(), &out->obj))
+    Rooted<JSObject*> obj(cx);
+    if (!unwrap(cx, in.objId(), &obj))
         return false;
+    out->obj = obj;
 
     if (!in.getter()) {
         out->getter = NULL;
     } else if (in.attrs() & JSPROP_GETTER) {
-        JSObject *getter;
+        Rooted<JSObject*> getter(cx);
         if (!unwrap(cx, in.getter(), &getter))
             return false;
-        out->getter = JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter);
+        out->getter = JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter.get());
     } else {
         if (in.getter() == DefaultPropertyOp)
             out->getter = JS_PropertyStub;
@@ -395,10 +397,10 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in, JSP
     if (!in.setter()) {
         out->setter = NULL;
     } else if (in.attrs() & JSPROP_SETTER) {
-        JSObject *setter;
+        Rooted<JSObject*> setter(cx);
         if (!unwrap(cx, in.setter(), &setter))
             return false;
-        out->setter = JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter);
+        out->setter = JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter.get());
     } else {
         if (in.setter() == DefaultPropertyOp)
             out->setter = JS_StrictPropertyStub;

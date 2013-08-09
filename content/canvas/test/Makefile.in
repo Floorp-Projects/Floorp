@@ -89,9 +89,6 @@ MOCHITEST_FILES = \
 	test_windingRuleUndefined.html \
 	$(NULL)
 
-ifneq ($(MOZ_WIDGET_TOOLKIT), android)
-ifneq ($(MOZ_WIDGET_TOOLKIT), gonk)
-
 # SkiaGL on Android/Gonk does not implement these composite ops yet
 
 MOCHITEST_FILES += \
@@ -122,9 +119,6 @@ MOCHITEST_FILES += \
 	test_2d.composite.solid.screen.html \
 	test_2d.composite.solid.soft-light.html \
 	$(NULL)
-
-endif
-endif
 
 ifneq (1_Linux,$(MOZ_SUITE)_$(OS_ARCH))
 # This test fails in Suite on Linux for some reason, disable it there

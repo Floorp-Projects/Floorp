@@ -148,6 +148,9 @@ class CommandAction(argparse.Action):
         cats = [(k, v[2]) for k, v in r.categories.items()]
         sorted_cats = sorted(cats, key=itemgetter(1), reverse=True)
         for category, priority in sorted_cats:
+            if not r.commands_by_category[category]:
+                continue
+
             title, description, _priority = r.categories[category]
 
             group = parser.add_argument_group(title, description)

@@ -38,7 +38,7 @@ class MOZ_STACK_CLASS InfoObject
     const nsString &flat = PromiseFlatString(value);
     JSString *string = JS_NewUCStringCopyN(mCx, static_cast<const jschar*>(flat.get()), flat.Length());
     if (!string)
-      mOk = JS_FALSE;
+      mOk = false;
 
     if (!mOk)
       return;
@@ -54,11 +54,11 @@ class MOZ_STACK_CLASS InfoObject
 
   private:
   // We need to ensure that this object lives on the stack so that GC sees it properly
-  InfoObject(JSContext *aCx) : mCx(aCx), mObj(aCx), mOk(JS_TRUE)
+  InfoObject(JSContext *aCx) : mCx(aCx), mObj(aCx), mOk(true)
   {
     mObj = JS_NewObject(mCx, NULL, NULL, NULL);
     if (!mObj)
-      mOk = JS_FALSE;
+      mOk = false;
   }
   InfoObject(InfoObject&);
 

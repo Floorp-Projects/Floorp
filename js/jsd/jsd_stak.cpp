@@ -361,7 +361,7 @@ jsd_IsStackFrameDebugger(JSDContext* jsdc,
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe)
 {
-    JSBool rv = JS_TRUE;
+    JSBool rv = true;
     JSD_LOCK_THREADSTATES(jsdc);
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
@@ -378,7 +378,7 @@ jsd_IsStackFrameConstructing(JSDContext* jsdc,
                              JSDThreadState* jsdthreadstate,
                              JSDStackFrameInfo* jsdframe)
 {
-    JSBool rv = JS_TRUE;
+    JSBool rv = true;
     JSD_LOCK_THREADSTATES(jsdc);
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
@@ -409,7 +409,7 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
     JSD_UNLOCK_THREADSTATES(jsdc);
 
     if( ! valid )
-        return JS_FALSE;
+        return false;
 
     AutoPushJSContext cx(jsdthreadstate->context);
     JS_ASSERT(cx);
@@ -446,7 +446,7 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
     JSD_UNLOCK_THREADSTATES(jsdc);
 
     if (!valid)
-        return JS_FALSE;
+        return false;
 
     AutoPushJSContext cx(jsdthreadstate->context);
     JS_ASSERT(cx);
@@ -505,9 +505,9 @@ jsd_IsValidThreadState(JSDContext*        jsdc,
          cur = (JSDThreadState*)cur->links.next ) 
     {
         if( cur == jsdthreadstate )
-            return JS_TRUE;
+            return true;
     }
-    return JS_FALSE;
+    return false;
 }    
 
 JSBool
@@ -518,14 +518,14 @@ jsd_IsValidFrameInThreadState(JSDContext*        jsdc,
     JS_ASSERT(JSD_THREADSTATES_LOCKED(jsdc));
 
     if( ! jsd_IsValidThreadState(jsdc, jsdthreadstate) )
-        return JS_FALSE;
+        return false;
     if( jsdframe->jsdthreadstate != jsdthreadstate )
-        return JS_FALSE;
+        return false;
 
     JSD_ASSERT_VALID_THREAD_STATE(jsdthreadstate);
     JSD_ASSERT_VALID_STACK_FRAME(jsdframe);
     
-    return JS_TRUE;
+    return true;
 }
 
 static JSContext*
@@ -561,12 +561,12 @@ jsd_SetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     JSContext* cx;
 
     if(!(cx = _getContextForThreadState(jsdc, jsdthreadstate)))
-        return JS_FALSE;
+        return false;
 
     if(jsdval)
         JS_SetPendingException(cx, JSD_GetValueWrappedJSVal(jsdc, jsdval));
     else
         JS_ClearPendingException(cx);
-    return JS_TRUE;
+    return true;
 }
 

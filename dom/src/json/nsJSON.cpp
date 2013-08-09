@@ -165,9 +165,9 @@ WriteCallback(const jschar *buf, uint32_t len, void *data)
   nsJSONWriter *writer = static_cast<nsJSONWriter*>(data);
   nsresult rv =  writer->Write((const PRUnichar*)buf, (uint32_t)len);
   if (NS_FAILED(rv))
-    return JS_FALSE;
+    return false;
 
-  return JS_TRUE;
+  return true;
 }
 
 NS_IMETHODIMP

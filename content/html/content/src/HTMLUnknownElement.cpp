@@ -12,9 +12,6 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF_INHERITED(HTMLUnknownElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLUnknownElement, Element)
-
 JSObject*
 HTMLUnknownElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
@@ -33,11 +30,6 @@ HTMLUnknownElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   }
   return obj;
 }
-
-// QueryInterface implementation for HTMLUnknownElement
-NS_INTERFACE_MAP_BEGIN(HTMLUnknownElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLUnknownElement)
 

@@ -304,7 +304,7 @@ public:
   virtual bool IsTransformable() { return false; }
 
   // WebIDL
-  mozilla::dom::SVGSVGElement* GetOwnerSVGElement(mozilla::ErrorResult& rv);
+  mozilla::dom::SVGSVGElement* GetOwnerSVGElement();
   nsSVGElement* GetViewportElement();
   already_AddRefed<mozilla::dom::SVGAnimatedString> ClassName();
   already_AddRefed<mozilla::dom::CSSValue> GetPresentationAttribute(const nsAString& aName, mozilla::ErrorResult& rv);

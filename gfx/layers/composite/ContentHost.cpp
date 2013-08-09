@@ -510,7 +510,7 @@ ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* 
     newHost->SetCompositor(compositor);
   }
   RefPtr<DeprecatedTextureHost> newHostOnWhite;
-  if (mTextureInfo.mTextureFlags & ComponentAlpha) {
+  if (mTextureInfo.mTextureFlags & TEXTURE_COMPONENT_ALPHA) {
     newHostOnWhite =
       DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptor::TShmem,
                                      mTextureInfo.mDeprecatedTextureHostFlags,

@@ -289,8 +289,10 @@ class AutoUnlockWorkerThreadState
 /* Pause any threads that are running jobs off thread during GC activity. */
 class AutoPauseWorkersForGC
 {
+#ifdef JS_WORKER_THREADS
     JSRuntime *runtime;
     bool needsUnpause;
+#endif
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
