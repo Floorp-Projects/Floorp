@@ -255,9 +255,6 @@ FENNEC_JAVA_FILES = \
   menu/MenuPopup.java \
   preferences/SearchPreferenceCategory.java \
   preferences/SearchEnginePreference.java \
-  widget/AboutHome.java \
-  widget/AboutHomeView.java \
-  widget/AboutHomeSection.java \
   widget/ActivityChooserModel.java \
   widget/ButtonToast.java \
   widget/ArrowPopup.java \
