@@ -563,9 +563,16 @@ var Browser = {
         item.owner = null;
     });
 
+    // tray tab
     let event = document.createEvent("Events");
     event.initEvent("TabClose", true, false);
     aTab.chromeTab.dispatchEvent(event);
+
+    // tab window
+    event = document.createEvent("Events");
+    event.initEvent("TabClose", true, false);
+    aTab.browser.contentWindow.dispatchEvent(event);
+
     aTab.browser.messageManager.sendAsyncMessage("Browser:TabClose");
 
     let container = aTab.chromeTab.parentNode;
