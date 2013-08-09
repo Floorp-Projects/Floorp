@@ -1140,7 +1140,7 @@ Navigator::GetMozCellBroadcast(ErrorResult& aRv)
   return mCellBroadcast;
 }
 
-nsIDOMTelephony*
+telephony::Telephony*
 Navigator::GetMozTelephony(ErrorResult& aRv)
 {
   if (!mTelephony) {

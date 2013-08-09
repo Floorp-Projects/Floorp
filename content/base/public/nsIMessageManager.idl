@@ -180,7 +180,7 @@ interface nsIMessageListener : nsISupports
   void receiveMessage();
 };
 
-[scriptable, builtinclass, uuid(9c37a142-3de3-4902-a1a4-133f37d5980a)]
+[scriptable, builtinclass, uuid(aae827bd-acf1-45fe-a556-ea545d4c0804)]
 interface nsIMessageListenerManager : nsISupports
 {
   /**
@@ -197,11 +197,30 @@ interface nsIMessageListenerManager : nsISupports
                           in nsIMessageListener listener);
 
   /**
-   * No longer invoke |listener| when |messageName| is received, after
-   * the first time removeMessageListener() is called.
+   * Undo an |addMessageListener| call -- that is, calling this causes us to no
+   * longer invoke |listener| when |messageName| is received.
+   *
+   * removeMessageListener does not remove a message listener added via
+   * addWeakMessageListener; use removeWeakMessageListener for that.
    */
   void removeMessageListener(in AString messageName,
                              in nsIMessageListener listener);
+
+  /**
+   * This is just like addMessageListener, except the message manager holds a
+   * weak ref to |listener|.
+   *
+   * If you have two weak message listeners for the same message, they may be
+   * called in any order.
+   */
+  void addWeakMessageListener(in AString messageName,
+                              in nsIMessageListener listener);
+
+  /**
+   * This undoes an |addWeakMessageListener| call.
+   */
+  void removeWeakMessageListener(in AString messageName,
+                                 in nsIMessageListener listener);
 
   [notxpcom] boolean markForCC();
 };

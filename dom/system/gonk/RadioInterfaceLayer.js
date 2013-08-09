@@ -943,6 +943,10 @@ RadioInterface.prototype = {
         // This one will handle its own notifications.
         this.handleCallDisconnected(message.call);
         break;
+      case "cdmaCallWaiting":
+        gMessageManager.sendTelephonyMessage("RIL:CdmaCallWaiting",
+                                             this.clientId, message.number);
+        break;
       case "enumerateCalls":
         // This one will handle its own notifications.
         this.handleEnumerateCalls(message);
@@ -1829,7 +1833,8 @@ RadioInterface.prototype = {
    */
   handleSuppSvcNotification: function handleSuppSvcNotification(message) {
     message.notification = convertRILSuppSvcNotification(message.notification);
-    this._sendTelephonyMessage("RIL:SuppSvcNotification", message);
+    gMessageManager.sendTelephonyMessage("RIL:SuppSvcNotification",
+                                         this.clientId, message);
   },
 
   /**
