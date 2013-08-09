@@ -162,7 +162,7 @@ public class ReadingListPage extends HomeFragment {
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return LayoutInflater.from(parent.getContext()).inflate(R.layout.home_item_row, parent, false);
+            return LayoutInflater.from(parent.getContext()).inflate(R.layout.bookmark_item_row, parent, false);
         }
     }
 
