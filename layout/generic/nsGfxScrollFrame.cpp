@@ -3861,21 +3861,34 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
   }
 }
 
+#if DEBUG
+static bool ShellIsAlive(nsWeakPtr& aWeakPtr)
+{
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aWeakPtr));
+  return !!shell;
+}
+#endif
+
 void
 nsGfxScrollFrameInner::SetScrollbarEnabled(nsIContent* aContent, nscoord aMaxPos)
 {
+  DebugOnly<nsWeakPtr> weakShell(
+    do_GetWeakReference(mOuter->PresContext()->PresShell()));
   if (aMaxPos) {
     aContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::disabled, true);
   } else {
     aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
                       NS_LITERAL_STRING("true"), true);
   }
+  MOZ_ASSERT(ShellIsAlive(weakShell), "pres shell was destroyed by scrolling");
 }
 
 void
 nsGfxScrollFrameInner::SetCoordAttribute(nsIContent* aContent, nsIAtom* aAtom,
                                          nscoord aSize)
 {
+  DebugOnly<nsWeakPtr> weakShell(
+    do_GetWeakReference(mOuter->PresContext()->PresShell()));
   // convert to pixels
   aSize = nsPresContext::AppUnitsToIntCSSPixels(aSize);
 
@@ -3888,6 +3901,7 @@ nsGfxScrollFrameInner::SetCoordAttribute(nsIContent* aContent, nsIAtom* aAtom,
     return;
 
   aContent->SetAttr(kNameSpaceID_None, aAtom, newValue, true);
+  MOZ_ASSERT(ShellIsAlive(weakShell), "pres shell was destroyed by scrolling");
 
   if (mScrollbarActivity) {
     nsRefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
