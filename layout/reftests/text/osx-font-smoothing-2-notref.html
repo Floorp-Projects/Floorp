@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<!-- testcase for https://bugzilla.mozilla.org/show_bug.cgi?id=900975 -->
+<html>
+<head>
+<style type="text/css">
+p {
+  margin: 20px;
+  font-family: Arial, sans-serif;
+  background-color: black;
+  color: white;
+}
+.smoothing-gray {
+  -moz-osx-font-smoothing: grayscale;
+}
+.smoothing-auto {
+  -moz-osx-font-smoothing: auto;
+}
+</style>
+</head>
+<body lang="en">
+<p class="smoothing-auto"><span>foo</span> <span>bar</span></p>
+</body>
+</html>

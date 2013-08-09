@@ -296,34 +296,35 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static Class jsclass;
 
     static Debugger *fromThisValue(JSContext *cx, const CallArgs &ca, const char *fnname);
-    static JSBool getEnabled(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool setEnabled(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool getHookImpl(JSContext *cx, unsigned argc, Value *vp, Hook which);
-    static JSBool setHookImpl(JSContext *cx, unsigned argc, Value *vp, Hook which);
-    static JSBool getOnDebuggerStatement(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool setOnDebuggerStatement(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool getOnExceptionUnwind(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool setOnExceptionUnwind(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool getOnNewScript(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool setOnNewScript(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool getOnEnterFrame(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool setOnEnterFrame(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool getOnNewGlobalObject(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool setOnNewGlobalObject(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool getUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool setUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool addDebuggee(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool removeDebuggee(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool removeAllDebuggees(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool hasDebuggee(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool getDebuggees(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool getNewestFrame(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool clearAllBreakpoints(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool findScripts(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool findAllGlobals(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool wrap(JSContext *cx, unsigned argc, Value *vp);
-    static JSBool construct(JSContext *cx, unsigned argc, Value *vp);
+    static bool getEnabled(JSContext *cx, unsigned argc, Value *vp);
+    static bool setEnabled(JSContext *cx, unsigned argc, Value *vp);
+    static bool getHookImpl(JSContext *cx, unsigned argc, Value *vp, Hook which);
+    static bool setHookImpl(JSContext *cx, unsigned argc, Value *vp, Hook which);
+    static bool getOnDebuggerStatement(JSContext *cx, unsigned argc, Value *vp);
+    static bool setOnDebuggerStatement(JSContext *cx, unsigned argc, Value *vp);
+    static bool getOnExceptionUnwind(JSContext *cx, unsigned argc, Value *vp);
+    static bool setOnExceptionUnwind(JSContext *cx, unsigned argc, Value *vp);
+    static bool getOnNewScript(JSContext *cx, unsigned argc, Value *vp);
+    static bool setOnNewScript(JSContext *cx, unsigned argc, Value *vp);
+    static bool getOnEnterFrame(JSContext *cx, unsigned argc, Value *vp);
+    static bool setOnEnterFrame(JSContext *cx, unsigned argc, Value *vp);
+    static bool getOnNewGlobalObject(JSContext *cx, unsigned argc, Value *vp);
+    static bool setOnNewGlobalObject(JSContext *cx, unsigned argc, Value *vp);
+    static bool getUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp);
+    static bool setUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp);
+    static bool addDebuggee(JSContext *cx, unsigned argc, Value *vp);
+    static bool addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp);
+    static bool removeDebuggee(JSContext *cx, unsigned argc, Value *vp);
+    static bool removeAllDebuggees(JSContext *cx, unsigned argc, Value *vp);
+    static bool hasDebuggee(JSContext *cx, unsigned argc, Value *vp);
+    static bool getDebuggees(JSContext *cx, unsigned argc, Value *vp);
+    static bool getNewestFrame(JSContext *cx, unsigned argc, Value *vp);
+    static bool clearAllBreakpoints(JSContext *cx, unsigned argc, Value *vp);
+    static bool findScripts(JSContext *cx, unsigned argc, Value *vp);
+    static bool findAllGlobals(JSContext *cx, unsigned argc, Value *vp);
+// njn: ?
+//    static JSBool wrap(JSContext *cx, unsigned argc, Value *vp);
+    static bool construct(JSContext *cx, unsigned argc, Value *vp);
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
 
@@ -676,7 +677,7 @@ void
 Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileAndGoGlobal)
 {
     JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal);
-    JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal == &script->global());
+    JS_ASSERT_IF(script->compileAndGo, compileAndGoGlobal == &script->uninlinedGlobal());
     // We early return in slowPathOnNewScript for self-hosted scripts, so we can
     // ignore those in our assertion here.
     JS_ASSERT_IF(!script->compartment()->options().invisibleToDebugger &&

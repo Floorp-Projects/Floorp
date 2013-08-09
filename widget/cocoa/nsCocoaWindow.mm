@@ -512,16 +512,19 @@ NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect,
 
 NS_IMETHODIMP nsCocoaWindow::Destroy()
 {
-  // The reference from a possible sibling widget will never get cleared because
-  // we don't implement GetParent so RemoveChild never removes us from the
-  // sibling widget list. So if we don't hide ourselves here we may stay on
-  // screen. This is gross. (Bug 891424)
+  // If we don't hide here we run into problems with panels, this is not ideal.
+  // (Bug 891424)
   Show(false);
 
   if (mPopupContentView)
     mPopupContentView->Destroy();
 
   nsBaseWidget::Destroy();
+  // nsBaseWidget::Destroy() calls GetParent()->RemoveChild(this). But we
+  // don't implement GetParent(), so we need to do the equivalent here.
+  if (mParent) {
+    mParent->RemoveChild(this);
+  }
   nsBaseWidget::OnDestroy();
 
   if (mFullScreen) {
@@ -2113,15 +2116,21 @@ NS_IMETHODIMP_(void)
 nsCocoaWindow::SetInputContext(const InputContext& aContext,
                                const InputContextAction& aAction)
 {
-  // XXX Ideally, we should check if this instance has focus or not.
-  //     However, this is called only when this widget has focus, so,
-  //     it's not problem at least for now.
-  if (aContext.IsPasswordEditor()) {
-    TextInputHandler::EnableSecureEventInput();
-  } else {
-    TextInputHandler::EnsureSecureEventInputDisabled();
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (mWindow &&
+      [mWindow firstResponder] == mWindow &&
+      [mWindow isKeyWindow] &&
+      [[NSApplication sharedApplication] isActive]) {
+    if (aContext.IsPasswordEditor()) {
+      TextInputHandler::EnableSecureEventInput();
+    } else {
+      TextInputHandler::EnsureSecureEventInputDisabled();
+    }
   }
   mInputContext = aContext;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 @implementation WindowDelegate

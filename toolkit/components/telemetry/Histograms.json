@@ -1573,6 +1573,11 @@
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSASYNCDOOMEVENT_RUN"
   },
+  "DNT_USAGE": {
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "I want to be tracked, I do NOT want to be tracked, DNT unset"
+  },
   "DNS_LOOKUP_METHOD2": {
     "kind": "enumerated",
     "n_values": 16,

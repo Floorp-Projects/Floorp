@@ -59,7 +59,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         });
 
         mInflated = true;
-        GeckoAppShell.getEventDispatcher().registerEventListener("SelectedText:Data", this);
+        GeckoAppShell.getEventDispatcher().registerEventListener("TextSelection:Data", this);
     }
 
     public void show() {
@@ -70,7 +70,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
         mFindText.requestFocus();
 
         // handleMessage() receives response message and determines initial state of softInput
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SelectedText:Get", REQUEST_ID));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("TextSelection:Get", REQUEST_ID));
     }
 
     public void hide() {
@@ -85,7 +85,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
      }
 
     public void onDestroy() {
-        GeckoAppShell.getEventDispatcher().unregisterEventListener("SelectedText:Data", this);
+        GeckoAppShell.getEventDispatcher().unregisterEventListener("TextSelection:Data", this);
     }
 
     // TextWatcher implementation
@@ -128,7 +128,7 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
 
     @Override
     public void handleMessage(String event, JSONObject message) {
-        if (!event.equals("SelectedText:Data") || !REQUEST_ID.equals(message.optString("requestId"))) {
+        if (!event.equals("TextSelection:Data") || !REQUEST_ID.equals(message.optString("requestId"))) {
             return;
         }
 

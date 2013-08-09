@@ -2800,7 +2800,7 @@ NS_IMPL_ISUPPORTS3(SandboxPrivate,
                    nsIGlobalObject,
                    nsISupportsWeakReference)
 
-static JSBool
+static bool
 SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSString *str;
@@ -2838,7 +2838,7 @@ SandboxDump(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 SandboxDebug(JSContext *cx, unsigned argc, jsval *vp)
 {
 #ifdef DEBUG
@@ -2848,7 +2848,7 @@ SandboxDebug(JSContext *cx, unsigned argc, jsval *vp)
 #endif
 }
 
-static JSBool
+static bool
 SandboxImport(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2905,7 +2905,7 @@ SandboxImport(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
+static bool
 CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
 {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
@@ -3482,7 +3482,7 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
 
     for (uint32_t i = 0; i < length; ++i) {
         RootedValue allowed(cx);
-        if (!JS_GetElement(cx, arrayObj, i, allowed.address()))
+        if (!JS_GetElement(cx, arrayObj, i, &allowed))
             return NS_ERROR_INVALID_ARG;
 
         nsresult rv;
@@ -4225,7 +4225,7 @@ nsXPCComponents_Utils::CreateDateIn(const Value &vobj, int64_t msec, JSContext *
     return NS_OK;
 }
 
-JSBool
+bool
 FunctionWrapper(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -4235,7 +4235,7 @@ FunctionWrapper(JSContext *cx, unsigned argc, Value *vp)
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj) {
-        return JS_FALSE;
+        return false;
     }
     return JS_CallFunctionValue(cx, obj, v, args.length(), args.array(), vp);
 }

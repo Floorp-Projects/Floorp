@@ -267,7 +267,7 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
     return true;
 }
 
-static JSBool
+static bool
 ReadLine(JSContext *cx, unsigned argc, jsval *vp)
 {
     // While 4096 might be quite arbitrary, this is something to be fixed in
@@ -309,7 +309,7 @@ ReadLine(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 Print(JSContext *cx, unsigned argc, jsval *vp)
 {
     unsigned i, n;
@@ -333,7 +333,7 @@ Print(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 Dump(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -358,7 +358,7 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 Load(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::Rooted<JSObject*> obj(cx, JS_THIS_OBJECT(cx, vp));
@@ -398,7 +398,7 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 Version(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSVersion origVersion = JS_GetVersion(cx);
@@ -409,7 +409,7 @@ Version(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 BuildDate(JSContext *cx, unsigned argc, jsval *vp)
 {
     fprintf(gOutFile, "built on %s at %s\n", __DATE__, __TIME__);
@@ -417,7 +417,7 @@ BuildDate(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 Quit(JSContext *cx, unsigned argc, jsval *vp)
 {
     gExitCode = 0;
@@ -431,7 +431,7 @@ Quit(JSContext *cx, unsigned argc, jsval *vp)
 // Provide script a way to disable the xpcshell error reporter, preventing
 // reported errors from being logged to the console and also from affecting the
 // exit code returned by the xpcshell binary.
-static JSBool
+static bool
 IgnoreReportedErrors(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -443,7 +443,7 @@ IgnoreReportedErrors(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 DumpXPC(JSContext *cx, unsigned argc, jsval *vp)
 {
     int32_t depth = 2;
@@ -460,7 +460,7 @@ DumpXPC(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 GC(JSContext *cx, unsigned argc, jsval *vp)
 {
     JSRuntime *rt = JS_GetRuntime(cx);
@@ -473,7 +473,7 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 #ifdef JS_GC_ZEAL
-static JSBool
+static bool
 GCZeal(JSContext *cx, unsigned argc, jsval *vp)
 {
     uint32_t zeal;
@@ -488,7 +488,7 @@ GCZeal(JSContext *cx, unsigned argc, jsval *vp)
 
 #ifdef DEBUG
 
-static JSBool
+static bool
 DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
 {
     void* startThing = NULL;
@@ -574,7 +574,7 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
 
 #endif /* DEBUG */
 
-static JSBool
+static bool
 SendCommand(JSContext* cx,
             unsigned argc,
             jsval* vp)
@@ -648,7 +648,7 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
     return 0;
 }
 
-static JSBool
+static bool
 Options(JSContext *cx, unsigned argc, jsval *vp)
 {
     uint32_t optset, flag;
@@ -698,7 +698,7 @@ Options(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 Parent(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc != 1) {
@@ -716,7 +716,7 @@ Parent(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 Atob(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!argc)
@@ -725,7 +725,7 @@ Atob(JSContext *cx, unsigned argc, jsval *vp)
     return xpc::Base64Decode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
-static JSBool
+static bool
 Btoa(JSContext *cx, unsigned argc, jsval *vp)
 {
   if (!argc)
@@ -734,7 +734,7 @@ Btoa(JSContext *cx, unsigned argc, jsval *vp)
   return xpc::Base64Encode(cx, JS_ARGV(cx, vp)[0], &JS_RVAL(cx, vp));
 }
 
-static JSBool
+static bool
 Blob(JSContext *cx, unsigned argc, jsval *vp)
 {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -773,7 +773,7 @@ Blob(JSContext *cx, unsigned argc, jsval *vp)
   return true;
 }
 
-static JSBool
+static bool
 File(JSContext *cx, unsigned argc, jsval *vp)
 {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
@@ -834,7 +834,7 @@ XPCShellOperationCallback(JSContext *cx)
     return rv.toBoolean();
 }
 
-static JSBool
+static bool
 SetOperationCallback(JSContext *cx, unsigned argc, jsval *vp)
 {
     // Sanity-check args.
@@ -861,7 +861,7 @@ SetOperationCallback(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 SimulateActivityCallback(JSContext *cx, unsigned argc, jsval *vp)
 {
     // Sanity-check args.
@@ -1450,9 +1450,6 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 
 #endif
 
-// ContextCallback calls are chained
-static JSContextCallback gOldJSContextCallback;
-
 void
 XPCShellErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 {
@@ -1466,12 +1463,9 @@ XPCShellErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
     xpc::SystemErrorReporterExternal(cx, message, rep);
 }
 
-static JSBool
+static bool
 ContextCallback(JSContext *cx, unsigned contextOp)
 {
-    if (gOldJSContextCallback && !gOldJSContextCallback(cx, contextOp))
-        return false;
-
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, XPCShellErrorReporter);
         JS_SetOperationCallback(cx, XPCShellOperationCallback);
@@ -1646,7 +1640,7 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
-        gOldJSContextCallback = JS_SetContextCallback(rt, ContextCallback);
+        rtsvc->RegisterContextCallback(ContextCallback);
 
         cx = JS_NewContext(rt, 8192);
         if (!cx) {
@@ -1950,24 +1944,26 @@ XPCShellDirProvider::GetFiles(const char *prop, nsISimpleEnumerator* *result)
         }
         return NS_ERROR_FAILURE;
     } else if (!strcmp(prop, NS_APP_PLUGINS_DIR_LIST)) {
-        nsCOMPtr<nsIFile> file;
         nsCOMArray<nsIFile> dirs;
-        bool exists;
-        // We have to add this path, buildbot copies the test plugin directory
-        // to (app)/bin when unpacking test zips.
-        if (mGREDir) {
-            mGREDir->Clone(getter_AddRefs(file));
-            if (NS_SUCCEEDED(mGREDir->Clone(getter_AddRefs(file)))) {
-                file->AppendNative(NS_LITERAL_CSTRING("plugins"));
-                if (NS_SUCCEEDED(file->Exists(&exists)) && exists) {
-                    dirs.AppendObject(file);
-                }
-            }
-        }
         // Add the test plugin location passed in by the caller or through
         // runxpcshelltests.
         if (mPluginDir) {
             dirs.AppendObject(mPluginDir);
+        // If there was no path specified, default to the one set up by automation
+        } else {
+            nsCOMPtr<nsIFile> file;
+            bool exists;
+            // We have to add this path, buildbot copies the test plugin directory
+            // to (app)/bin when unpacking test zips.
+            if (mGREDir) {
+                mGREDir->Clone(getter_AddRefs(file));
+                if (NS_SUCCEEDED(mGREDir->Clone(getter_AddRefs(file)))) {
+                    file->AppendNative(NS_LITERAL_CSTRING("plugins"));
+                    if (NS_SUCCEEDED(file->Exists(&exists)) && exists) {
+                        dirs.AppendObject(file);
+                    }
+                }
+            }
         }
         return NS_NewArrayEnumerator(result, dirs);
     }

@@ -3411,7 +3411,7 @@ IMEInputHandler::IsFocused()
   NSWindow* window = [mView window];
   NS_ENSURE_TRUE(window, false);
   return [window firstResponder] == mView &&
-         ([window isMainWindow] || [window isSheet]) &&
+         [window isKeyWindow] &&
          [[NSApplication sharedApplication] isActive];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);

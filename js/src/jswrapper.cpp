@@ -166,7 +166,7 @@ bool CrossCompartmentWrapper::finalizeInBackground(Value priv)
      * Make the 'background-finalized-ness' of the wrapper the same as the
      * wrapped object, to allow transplanting between them.
      */
-    if (IsInsideNursery(priv.toObject().runtime(), &priv.toObject()))
+    if (IsInsideNursery(priv.toObject().runtimeFromMainThread(), &priv.toObject()))
         return false;
     return IsBackgroundFinalized(priv.toObject().tenuredGetAllocKind());
 }
@@ -892,7 +892,7 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
         }
     }
 
-    return JS_TRUE;
+    return true;
 }
 
 // Given a cross-compartment wrapper |wobj|, update it to point to

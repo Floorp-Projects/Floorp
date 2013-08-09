@@ -524,7 +524,7 @@ ReferenceFinder::addReferrer(jsval referrerArg, Path *path)
     /* Append our referrer to this array. */
     uint32_t length;
     return JS_GetArrayLength(context, array, &length) &&
-           JS_SetElement(context, array, length, referrer.address());
+           JS_SetElement(context, array, length, &referrer);
 }
 
 JSObject *
@@ -540,7 +540,7 @@ ReferenceFinder::findReferences(HandleObject target)
 }
 
 /* See help(findReferences). */
-JSBool
+bool
 FindReferences(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (argc < 1) {

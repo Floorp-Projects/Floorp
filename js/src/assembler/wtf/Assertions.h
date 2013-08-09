@@ -44,7 +44,7 @@
     (void)variable; \
     ASSERT(assertion); \
 } while (0)
-#define ASSERT_NOT_REACHED() MOZ_ASSUME_UNREACHABLE()
+#define ASSERT_NOT_REACHED() MOZ_ASSUME_UNREACHABLE("wtf/Assertions.h")
 #define CRASH() MOZ_CRASH()
 #define COMPILE_ASSERT(exp, name) static_assert(exp, #name)
 

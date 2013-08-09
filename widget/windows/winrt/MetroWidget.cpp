@@ -29,6 +29,7 @@
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
+#include "UIABridgePrivate.h"
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
@@ -54,7 +55,21 @@ extern PRLogModuleInfo* gWindowsLog;
 
 static uint32_t gInstanceCount = 0;
 const PRUnichar* kMetroSubclassThisProp = L"MetroSubclassThisProp";
-static const UINT sDefaultBrowserMsgID = RegisterWindowMessageW(L"DefaultBrowserClosing");
+HWND MetroWidget::sICoreHwnd = NULL;
+
+namespace mozilla {
+namespace widget {
+UINT sDefaultBrowserMsgId = RegisterWindowMessageW(L"DefaultBrowserClosing");
+} }
+
+// WM_GETOBJECT id pulled from uia headers
+#define UiaRootObjectId -25
+
+namespace mozilla {
+namespace widget {
+namespace winrt {
+extern ComPtr<IUIABridge> gProviderRoot;
+} } }
 
 namespace {
 
@@ -551,7 +566,7 @@ MetroWidget::SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
 static void
 CloseGesture()
 {
-  Log("shuting down due to close gesture.\n");
+  LogFunction();
   nsCOMPtr<nsIAppStartup> appStartup =
     do_GetService(NS_APPSTARTUP_CONTRACTID);
   if (appStartup) {
@@ -575,7 +590,7 @@ MetroWidget::StaticWindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM 
 LRESULT
 MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam)
 {
-  if(sDefaultBrowserMsgID == aMsg) {
+  if(sDefaultBrowserMsgId == aMsg) {
     CloseGesture();
   }
 
@@ -675,6 +690,30 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
       break;
     }
 
+    case WM_GETOBJECT:
+    {
+      DWORD dwObjId = (LPARAM)(DWORD) aLParam;
+      // Passing this to CallWindowProc can result in a failure due to a timing issue
+      // in winrt core window server code, so we call it directly here. Also, it's not
+      // clear Windows::UI::Core::WindowServer::OnAutomationProviderRequestedEvent is
+      // compatible with metro enabled desktop browsers, it makes an initial call to
+      // UiaReturnRawElementProvider passing the return result from FrameworkView
+      // OnAutomationProviderRequested as the hwnd (me scratches head) which results in
+      // GetLastError always being set to invalid handle (6) after CallWindowProc returns.
+      if (dwObjId == UiaRootObjectId) {
+        NS_ASSERTION(gProviderRoot.Get(), "gProviderRoot is null??");
+        ComPtr<IRawElementProviderSimple> simple;
+        gProviderRoot.As(&simple);
+        LRESULT res = UiaReturnRawElementProvider(aWnd, aWParam, aLParam, simple.Get());
+        if (res) {
+          return res;
+        }
+        NS_ASSERTION(res, "UiaReturnRawElementProvider failed!");
+        Log("UiaReturnRawElementProvider failed! GetLastError=%X", GetLastError());
+      }
+      break;
+    }
+
     default:
     {
       if (aWParam == WM_USER_TSF_TEXTCHANGE) {
@@ -717,6 +756,7 @@ MetroWidget::FindMetroWindow()
 
   // subclass it
   SetSubclass();
+  sICoreHwnd = mWnd;
   return;
 }
 

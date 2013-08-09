@@ -15,8 +15,8 @@
 
 %{C++
 #include "nsColor.h"
-#include "nsRect.h"
-#include "gfxContext.h"
+class gfxContext;
+class nsRect;
 %}
 
 [ref] native nsConstRect(const nsRect);

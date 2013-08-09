@@ -13,6 +13,7 @@
 #include "WebGLMemoryMultiReporterWrapper.h"
 #include "WebGLFramebuffer.h"
 #include "WebGLVertexArray.h"
+#include "WebGLQuery.h"
 
 #include "AccessCheck.h"
 #include "nsIConsoleService.h"
@@ -196,8 +197,9 @@ WebGLContext::WebGLContext()
 
     mLastUseIndex = 0;
 
-    mMinInUseAttribArrayLengthCached = false;
-    mMinInUseAttribArrayLength = 0;
+    mBufferFetchingIsVerified = false;
+    mMaxFetchedVertices = 0;
+    mMaxFetchedInstances = 0;
 
     mIsScreenCleared = false;
 
@@ -237,6 +239,7 @@ WebGLContext::DestroyResourcesAndContext()
     mBoundArrayBuffer = nullptr;
     mCurrentProgram = nullptr;
     mBoundFramebuffer = nullptr;
+    mActiveOcclusionQuery = nullptr;
     mBoundRenderbuffer = nullptr;
     mBoundVertexArray = nullptr;
     mDefaultVertexArray = nullptr;
@@ -255,6 +258,8 @@ WebGLContext::DestroyResourcesAndContext()
         mShaders.getLast()->DeleteOnce();
     while (!mPrograms.isEmpty())
         mPrograms.getLast()->DeleteOnce();
+    while (!mQueries.isEmpty())
+        mQueries.getLast()->DeleteOnce();
 
     if (mBlackTexturesAreInitialized) {
         gl->fDeleteTextures(1, &mBlackTexture2D);
@@ -1599,7 +1604,7 @@ WebGLContext::GetSupportedExtensions(JSContext *cx, Nullable< nsTArray<nsString>
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLContext)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_9(WebGLContext,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_10(WebGLContext,
   mCanvasElement,
   mExtensions,
   mBound2DTextures,
@@ -1608,7 +1613,8 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_9(WebGLContext,
   mCurrentProgram,
   mBoundFramebuffer,
   mBoundRenderbuffer,
-  mBoundVertexArray)
+  mBoundVertexArray,
+  mActiveOcclusionQuery)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLContext)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

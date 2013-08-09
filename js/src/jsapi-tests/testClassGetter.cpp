@@ -15,10 +15,10 @@ int called_test_prop_get;
 static JSBool test_prop_get( JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp )
 {
     called_test_prop_get++;
-    return JS_TRUE;
+    return true;
 }
 
-static JSBool
+static bool
 PTest(JSContext* cx, unsigned argc, jsval *vp);
 
 static JSClass ptestClass = {
@@ -34,19 +34,19 @@ static JSClass ptestClass = {
     JS_ConvertStub
 };
 
-static JSBool
+static bool
 PTest(JSContext* cx, unsigned argc, jsval *vp)
 {
     JSObject *obj = JS_NewObjectForConstructor(cx, &ptestClass, vp);
     if (!obj)
-        return JS_FALSE;
+        return false;
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
-    return JS_TRUE;
+    return true;
 }
-static JSBool test_fn(JSContext *cx, unsigned argc, jsval *vp)
+static bool test_fn(JSContext *cx, unsigned argc, jsval *vp)
 {
     called_test_fn++;
-    return JS_TRUE;
+    return true;
 }
 
 static const JSFunctionSpec ptestFunctions[] = {

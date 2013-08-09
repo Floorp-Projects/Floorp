@@ -24,6 +24,8 @@ namespace ion {
     /* Information about compiled scripts */\
     _(Scripts)                              \
     /* Information during MIR building */   \
+    _(Logs)                                 \
+    /* Info about failing to log script */  \
     _(MIR)                                  \
     /* Information during alias analysis */ \
     _(Alias)                                \

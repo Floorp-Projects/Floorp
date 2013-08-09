@@ -51,6 +51,7 @@ function moveMouseOver(aElement)
 
 function runIframeTests()
 {
+  getActiveInspector().highlighter.unlock();
   getActiveInspector().selection.once("new-node", performTestComparisons1);
   moveMouseOver(div1)
 }

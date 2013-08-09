@@ -22,17 +22,8 @@ HTMLHeadingElement::~HTMLHeadingElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLHeadingElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLHeadingElement, Element)
-
-// QueryInterface implementation for HTMLHeadingElement
-NS_INTERFACE_TABLE_HEAD(HTMLHeadingElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLHeadingElement,
-                                nsIDOMHTMLHeadingElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLHeadingElement, nsGenericHTMLElement,
+                             nsIDOMHTMLHeadingElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLHeadingElement)
 

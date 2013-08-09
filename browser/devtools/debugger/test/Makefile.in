@@ -17,6 +17,8 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_blackboxing-03.js \
 	browser_dbg_blackboxing-04.js \
 	browser_dbg_blackboxing-05.js \
+	browser_dbg_blackboxing-06.js \
+	browser_dbg_blackboxing-07.js \
 	browser_dbg_clean-exit.js \
 	browser_dbg_cmd.js \
 	browser_dbg_cmd_blackbox.js \

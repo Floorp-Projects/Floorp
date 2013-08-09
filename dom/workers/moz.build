@@ -39,7 +39,6 @@ CPP_SOURCES += [
     'Exceptions.cpp',
     'File.cpp',
     'FileReaderSync.cpp',
-    'ImageData.cpp',
     'Location.cpp',
     'Navigator.cpp',
     'Principal.cpp',

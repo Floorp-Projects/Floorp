@@ -242,6 +242,7 @@ MOCHITEST_FILES_A = \
 		test_bug704063.html \
 		test_bug894874.html \
 		test_bug895974.html \
+		test_bug895239.html \
 		$(NULL)
 
 MOCHITEST_FILES_B = \
@@ -363,6 +364,18 @@ MOCHITEST_FILES_B = \
 	 	file_CSP_evalscript_main_spec_compliant.html^headers^ \
 		file_CSP_evalscript_main_spec_compliant_allowed.html \
 		file_CSP_evalscript_main_spec_compliant_allowed.html^headers^ \
+		test_CSP_evalscript_getCRMFRequest.html \
+		file_CSP_evalscript_main_getCRMFRequest.html \
+		file_CSP_evalscript_main_getCRMFRequest.html^headers^ \
+		file_CSP_evalscript_main_getCRMFRequest.js \
+		file_CSP_evalscript_main_allowed_getCRMFRequest.js \
+		file_CSP_evalscript_main_spec_compliant_getCRMFRequest.html \
+	 	file_CSP_evalscript_main_spec_compliant_getCRMFRequest.html^headers^ \
+		file_CSP_evalscript_main_spec_compliant_allowed_getCRMFRequest.html \
+		file_CSP_evalscript_main_spec_compliant_allowed_getCRMFRequest.html^headers^ \
+		file_CSP_evalscript_no_CSP_at_all.html \
+		file_CSP_evalscript_no_CSP_at_all.html^headers^ \
+		file_CSP_evalscript_no_CSP_at_all.js \
 		test_CSP_inlinestyle.html \
 		file_CSP_inlinestyle_main.html \
 		file_CSP_inlinestyle_main.html^headers^ \

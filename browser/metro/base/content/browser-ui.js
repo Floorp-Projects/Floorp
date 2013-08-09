@@ -231,7 +231,6 @@ var BrowserUI = {
   },
 
   showContent: function showContent(aURI) {
-    DialogUI.closeAllDialogs();
     StartUI.update(aURI);
     ContextUI.dismissTabs();
     ContextUI.dismissContextAppbar();
@@ -259,23 +258,49 @@ var BrowserUI = {
       return;
     }
     let lastCrashID = this.lastCrashID;
+
     if (!lastCrashID || !lastCrashID.length) {
       return;
     }
+
     let shouldReport = Services.prefs.getBoolPref("app.crashreporter.autosubmit");
     let didPrompt = Services.prefs.getBoolPref("app.crashreporter.prompted");
 
     if (!shouldReport && !didPrompt) {
-      // We have a crash to submit, we haven't prompted for approval yet,
-      // and the auto-submit pref is false, prompt. The dialog will call
-      // startupCrashCheck again if the user approves.
+      let crashBundle = Services.strings.createBundle("chrome://browser/locale/crashprompt.properties");
+      let title = crashBundle.GetStringFromName("crashprompt.dialog.title");
+      let acceptbutton = crashBundle.GetStringFromName("crashprompt.dialog.acceptbutton");
+      let refusebutton = crashBundle.GetStringFromName("crashprompt.dialog.refusebutton");
+      let bodyText = crashBundle.GetStringFromName("crashprompt.dialog.statement1");
+
+      let buttonPressed =
+            Services.prompt.confirmEx(
+                null,
+                title,
+                bodyText,
+                Ci.nsIPrompt.BUTTON_POS_0 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING
+              + Ci.nsIPrompt.BUTTON_POS_1 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING
+              + Ci.nsIPrompt.BUTTON_POS_1_DEFAULT,
+                acceptbutton,
+                refusebutton,
+                null,
+                null,
+                { value: false });
+
       Services.prefs.setBoolPref("app.crashreporter.prompted", true);
-      DialogUI.importModal(document, "chrome://browser/content/prompt/crash.xul");
-      return;
+
+      if (buttonPressed == 0) {
+        Services.prefs.setBoolPref('app.crashreporter.autosubmit', true);
+        BrowserUI.crashReportingPrefChanged(true);
+        shouldReport = true;
+      } else {
+        Services.prefs.setBoolPref('app.crashreporter.autosubmit', false);
+        BrowserUI.crashReportingPrefChanged(false);
+      }
     }
 
     // We've already prompted, return if the user doesn't want to report.
-    if (!shouldReport && didPrompt) {
+    if (!shouldReport) {
       return;
     }
 
@@ -386,12 +411,21 @@ var BrowserUI = {
     });
   },
 
+  onAboutPolicyClick: function() {
+    FlyoutPanelsUI.hide();
+    let linkStr = Services.urlFormatter.formatURLPref("app.privacyURL");
+    BrowserUI.newTab(linkStr, Browser.selectedTab, true);
+  },
+
   /*********************************
    * Tab management
    */
 
-  newTab: function newTab(aURI, aOwner) {
+  newTab: function newTab(aURI, aOwner, aPeekTabs) {
     aURI = aURI || kStartOverlayURI;
+    if (aPeekTabs) {
+      ContextUI.peekTabs(kNewTabAnimationDelayMsec);
+    }
     let tab = Browser.addTab(aURI, true, aOwner);
     return tab;
   },
@@ -735,18 +769,6 @@ var BrowserUI = {
       return;
     }
 
-    // Check open dialogs
-    let dialog = DialogUI.activeDialog;
-    if (dialog) {
-      dialog.close();
-      return;
-    }
-
-    // Check open modal elements
-    if (DialogUI.modals.length > 0) {
-      return;
-    }
-
     // Check open panel
     if (PanelUI.isVisible) {
       PanelUI.hide();
@@ -1022,6 +1044,7 @@ var BrowserUI = {
       case "cmd_openLocation":
         ContextUI.displayNavbar();
         this._edit.beginEditing(true);
+        this._edit.select();
         break;
       case "cmd_addBookmark":
         ContextUI.displayNavbar();
@@ -1050,9 +1073,8 @@ var BrowserUI = {
         this._closeOrQuit();
         break;
       case "cmd_newTab":
-        this.newTab();
+        this.newTab(null, null, true);
         this._edit.beginEditing(false);
-        ContextUI.peekTabs(kNewTabAnimationDelayMsec);
         break;
       case "cmd_closeTab":
         this.closeTab();
@@ -1116,7 +1138,6 @@ var StartUI = {
       if (section.init)
         section.init();
     });
-
   },
 
   uninit: function() {
@@ -1316,104 +1337,10 @@ var PanelUI = {
 };
 
 var DialogUI = {
-  _dialogs: [],
   _popup: null,
 
   init: function() {
     window.addEventListener("mousedown", this, true);
-  },
-
-  /*******************************************
-   * Modal popups
-   */
-
-  get modals() {
-    return document.getElementsByClassName("modal-block");
-  },
-
-  importModal: function importModal(aParent, aSrc, aArguments) {
-  // load the dialog with a synchronous XHR
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
-    xhr.open("GET", aSrc, false);
-    xhr.overrideMimeType("text/xml");
-    xhr.send(null);
-    if (!xhr.responseXML)
-      return null;
-
-    let currentNode;
-    let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML, NodeFilter.SHOW_TEXT, null, false);
-    while (!!(currentNode = nodeIterator.nextNode())) {
-      let trimmed = currentNode.nodeValue.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
-      if (!trimmed.length)
-        currentNode.parentNode.removeChild(currentNode);
-    }
-
-    let doc = xhr.responseXML.documentElement;
-
-    let dialog  = null;
-
-    // we need to insert before context-container if we want allow pasting (using
-    //  the context menu) into dialogs
-    let contentMenuContainer = document.getElementById("context-container");
-    let parentNode = contentMenuContainer.parentNode;
-
-    // emit DOMWillOpenModalDialog event
-    let event = document.createEvent("Events");
-    event.initEvent("DOMWillOpenModalDialog", true, false);
-    let dispatcher = aParent || getBrowser();
-    dispatcher.dispatchEvent(event);
-
-    // create a full-screen semi-opaque box as a background or reuse
-    // the existing one.
-    let back = document.getElementById("dialog-modal-block");
-    if (!back) {
-      back = document.createElement("box");
-    } else {
-      while (back.hasChildNodes()) {
-        back.removeChild(back.firstChild);
-      }
-    }
-    back.setAttribute("class", "modal-block");
-    back.setAttribute("id", "dialog-modal-block");
-    dialog = back.appendChild(document.importNode(doc, true));
-    parentNode.insertBefore(back, contentMenuContainer);
-
-    dialog.arguments = aArguments;
-    dialog.parent = aParent;
-    return dialog;
-  },
-
-  /*******************************************
-   * Dialogs
-   */
-
-  get activeDialog() {
-    // Return the topmost dialog
-    if (this._dialogs.length)
-      return this._dialogs[this._dialogs.length - 1];
-    return null;
-  },
-
-  closeAllDialogs: function closeAllDialogs() {
-    while (this.activeDialog)
-      this.activeDialog.close();
-  },
-
-  pushDialog: function pushDialog(aDialog) {
-    // If we have a dialog push it on the stack and set the attr for CSS
-    if (aDialog) {
-      this._dialogs.push(aDialog);
-      Elements.contentShowing.setAttribute("disabled", "true");
-    }
-  },
-
-  popDialog: function popDialog() {
-    if (this._dialogs.length)
-      this._dialogs.pop();
-
-    // If no more dialogs are being displayed, remove the attr for CSS
-    if (!this._dialogs.length)
-      Elements.contentShowing.removeAttribute("disabled");
   },
 
   /*******************************************
@@ -1523,7 +1450,7 @@ var SettingsCharm = {
         label: Strings.browser.GetStringFromName("helpOnlineCharm"),
         onselected: function() {
           let url = Services.urlFormatter.formatURLPref("app.support.baseURL");
-          BrowserUI.newTab(url, Browser.selectedTab);
+          BrowserUI.newTab(url, Browser.selectedTab, true);
         }
     });
   },

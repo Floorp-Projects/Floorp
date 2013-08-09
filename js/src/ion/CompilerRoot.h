@@ -29,7 +29,7 @@ class CompilerRoot : public CompilerRootNode
       : CompilerRootNode(NULL)
     {
         if (ptr) {
-            JS_ASSERT(!UninlinedIsInsideNursery(GetIonContext()->compartment->rt, ptr));
+            JS_ASSERT(!UninlinedIsInsideNursery(GetIonContext()->runtime, ptr));
             setRoot(ptr);
         }
     }

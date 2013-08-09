@@ -40,6 +40,7 @@ struct YCbCrBufferInfo
   uint32_t mYHeight;
   uint32_t mCbCrWidth;
   uint32_t mCbCrHeight;
+  StereoMode mStereoMode;
 };
 
 static YCbCrBufferInfo* GetYCbCrBufferInfo(uint8_t* aData)
@@ -103,6 +104,12 @@ gfxIntSize YCbCrImageDataDeserializerBase::GetCbCrSize()
   return gfxIntSize(info->mCbCrWidth, info->mCbCrHeight);
 }
 
+StereoMode YCbCrImageDataDeserializerBase::GetStereoMode()
+{
+  YCbCrBufferInfo* info = GetYCbCrBufferInfo(mData);
+  return info->mStereoMode;
+}
+
 // Offset in bytes
 static size_t ComputeOffset(uint32_t aHeight, uint32_t aStride)
 {
@@ -144,7 +151,8 @@ YCbCrImageDataSerializer::ComputeMinBufferSize(uint32_t aSize)
 
 void
 YCbCrImageDataSerializer::InitializeBufferInfo(const gfx::IntSize& aYSize,
-                                               const gfx::IntSize& aCbCrSize)
+                                               const gfx::IntSize& aCbCrSize,
+                                               StereoMode aStereoMode)
 {
   YCbCrBufferInfo* info = GetYCbCrBufferInfo(mData);
   info->mYOffset = MOZ_ALIGN_WORD(sizeof(YCbCrBufferInfo));
@@ -157,14 +165,17 @@ YCbCrImageDataSerializer::InitializeBufferInfo(const gfx::IntSize& aYSize,
   info->mYHeight = aYSize.height;
   info->mCbCrWidth = aCbCrSize.width;
   info->mCbCrHeight = aCbCrSize.height;
+  info->mStereoMode = aStereoMode;
 }
 
 void
 YCbCrImageDataSerializer::InitializeBufferInfo(const gfxIntSize& aYSize,
-                                               const gfxIntSize& aCbCrSize)
+                                               const gfxIntSize& aCbCrSize,
+                                               StereoMode aStereoMode)
 {
   InitializeBufferInfo(gfx::IntSize(aYSize.width, aYSize.height),
-                       gfx::IntSize(aCbCrSize.width, aCbCrSize.height));
+                       gfx::IntSize(aCbCrSize.width, aCbCrSize.height),
+                       aStereoMode);
 }
 
 static void CopyLineWithSkip(const uint8_t* src, uint8_t* dst, uint32_t len, uint32_t skip) {

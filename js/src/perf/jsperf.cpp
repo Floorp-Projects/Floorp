@@ -23,9 +23,9 @@ static PerfMeasurement* GetPMFromThis(JSContext* cx, jsval* vp);
     {                                                                   \
         PerfMeasurement* p = GetPM(cx, obj, #name);                     \
         if (!p)                                                         \
-            return JS_FALSE;                                            \
+            return false;                                               \
         vp.set(JS_NumberValue(double(p->name)));                        \
-        return JS_TRUE;                                                 \
+        return true;                                                    \
     }
 
 GETTER(cpu_cycles)
@@ -45,48 +45,48 @@ GETTER(eventsMeasured)
 
 // Calls
 
-static JSBool
+static bool
 pm_start(JSContext* cx, unsigned /*unused*/, jsval* vp)
 {
     PerfMeasurement* p = GetPMFromThis(cx, vp);
     if (!p)
-        return JS_FALSE;
+        return false;
 
     p->start();
-    return JS_TRUE;
+    return true;
 }
 
-static JSBool
+static bool
 pm_stop(JSContext* cx, unsigned /*unused*/, jsval* vp)
 {
     PerfMeasurement* p = GetPMFromThis(cx, vp);
     if (!p)
-        return JS_FALSE;
+        return false;
 
     p->stop();
-    return JS_TRUE;
+    return true;
 }
 
-static JSBool
+static bool
 pm_reset(JSContext* cx, unsigned /*unused*/, jsval* vp)
 {
     PerfMeasurement* p = GetPMFromThis(cx, vp);
     if (!p)
-        return JS_FALSE;
+        return false;
 
     p->reset();
-    return JS_TRUE;
+    return true;
 }
 
-static JSBool
+static bool
 pm_canMeasureSomething(JSContext* cx, unsigned /*unused*/, jsval* vp)
 {
     PerfMeasurement* p = GetPMFromThis(cx, vp);
     if (!p)
-        return JS_FALSE;
+        return false;
 
     JS_SET_RVAL(cx, vp, BOOLEAN_TO_JSVAL(p->canMeasureSomething()));
-    return JS_TRUE;
+    return true;
 }
 
 const uint8_t PM_FATTRS = JSPROP_READONLY | JSPROP_PERMANENT;
@@ -150,7 +150,7 @@ static const struct pm_const {
 
 #undef CONSTANT
 
-static JSBool pm_construct(JSContext* cx, unsigned argc, jsval* vp);
+static bool pm_construct(JSContext* cx, unsigned argc, jsval* vp);
 static void pm_finalize(JSFreeOp* fop, JSObject* obj);
 
 static JSClass pm_class = {
@@ -161,29 +161,29 @@ static JSClass pm_class = {
 
 // Constructor and destructor
 
-static JSBool
+static bool
 pm_construct(JSContext* cx, unsigned argc, jsval* vp)
 {
     uint32_t mask;
     if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "u", &mask))
-        return JS_FALSE;
+        return false;
 
     JS::RootedObject obj(cx, JS_NewObjectForConstructor(cx, &pm_class, vp));
     if (!obj)
-        return JS_FALSE;
+        return false;
 
     if (!JS_FreezeObject(cx, obj))
-        return JS_FALSE;
+        return false;
 
     PerfMeasurement* p = cx->new_<PerfMeasurement>(PerfMeasurement::EventMask(mask));
     if (!p) {
         JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
+        return false;
     }
 
     JS_SetPrivate(obj, p);
     *vp = OBJECT_TO_JSVAL(obj);
-    return JS_TRUE;
+    return true;
 }
 
 static void

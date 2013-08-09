@@ -476,14 +476,6 @@ class VirtualRegisterMap
     }
 };
 
-static inline AnyRegister
-GetFixedRegister(LDefinition *def, LUse *use)
-{
-    return def->type() == LDefinition::DOUBLE
-           ? AnyRegister(FloatRegister::FromCode(use->registerCode()))
-           : AnyRegister(Register::FromCode(use->registerCode()));
-}
-
 static inline bool
 IsNunbox(VirtualRegister *vreg)
 {

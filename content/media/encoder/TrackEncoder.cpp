@@ -27,6 +27,10 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             uint32_t aTrackEvents,
                                             const MediaSegment& aQueuedMedia)
 {
+  if (mCanceled) {
+    return;
+  }
+
   AudioSegment* audio = const_cast<AudioSegment*>
                         (static_cast<const AudioSegment*>(&aQueuedMedia));
 
@@ -40,9 +44,11 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
       // thus the audio encoder is initialized at this time.
       if (!chunk.IsNull()) {
         nsresult rv = Init(chunk.mChannelData.Length(), aTrackRate);
-        if (NS_SUCCEEDED(rv)) {
-          break;
+        if (NS_FAILED(rv)) {
+          LOG("[AudioTrackEncoder]: Fail to initialize the encoder!");
+          NotifyCancel();
         }
+        break;
       } else {
         mSilentDuration += chunk.mDuration;
       }
@@ -67,16 +73,24 @@ AudioTrackEncoder::NotifyRemoved(MediaStreamGraph* aGraph)
 {
   // In case that MediaEncoder does not receive a TRACK_EVENT_ENDED event.
   LOG("[AudioTrackEncoder]: NotifyRemoved.");
+  NotifyEndOfStream();
+}
 
+void
+AudioTrackEncoder::NotifyEndOfStream()
+{
   // If source audio chunks are completely silent till the end of encoding,
   // initialize the encoder with default channel counts and sampling rate, and
   // append this many null data to the segment of track encoder.
-  if (!mInitialized && mSilentDuration > 0) {
+  if (!mCanceled && !mInitialized && mSilentDuration > 0) {
     Init(DEFAULT_CHANNELS, DEFAULT_SAMPLING_RATE);
     mRawSegment->AppendNullData(mSilentDuration);
     mSilentDuration = 0;
   }
-  NotifyEndOfStream();
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  mEndOfStream = true;
+  mReentrantMonitor.NotifyAll();
 }
 
 nsresult

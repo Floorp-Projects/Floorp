@@ -111,11 +111,12 @@ function getCtorName(aObj) {
  *
  * @param {any} aThing
  *        The object to be stringified
+ * @param {boolean} aAllowNewLines
  * @return {string}
  *        A single line representation of aThing, which will generally be at
  *        most 80 chars long
  */
-function stringify(aThing) {
+function stringify(aThing, aAllowNewLines) {
   if (aThing === undefined) {
     return "undefined";
   }
@@ -145,7 +146,10 @@ function stringify(aThing) {
     return aThing.toString().replace(/\s+/g, " ");
   }
 
-  let str = aThing.toString().replace(/\n/g, "|");
+  let str = aThing.toString();
+  if (!aAllowNewLines) {
+    str = str.replace(/\n/g, "|");
+  }
   return str;
 }
 
@@ -382,7 +386,7 @@ function formatTrace(aTrace) {
   aTrace.forEach(function(frame) {
     reply += fmt(frame.filename, 20, 20, { truncate: "start" }) + " " +
              fmt(frame.lineNumber, 5, 5) + " " +
-             fmt(frame.functionName, 0, 75, { truncate: "center" }) + "\n";
+             fmt(frame.functionName, 75, 0, { truncate: "center" }) + "\n";
   });
   return reply;
 }
@@ -465,9 +469,9 @@ function createDumper(aLevel) {
     let frame = getStack(Components.stack.caller, 1)[0];
     sendConsoleAPIMessage(aLevel, frame, args);
     let data = args.map(function(arg) {
-      return stringify(arg);
+      return stringify(arg, true);
     });
-    dumpMessage(this, aLevel, data.join(", "));
+    dumpMessage(this, aLevel, data.join(" "));
   };
 }
 

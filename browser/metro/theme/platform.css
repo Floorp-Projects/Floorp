@@ -498,107 +498,26 @@ notification {
   -moz-box-flex: 9999;
 }
 
-/* Dialogs ----------------------------------------------------------------- */
+/* Prompts ----------------------------------------------------------------- */
 
-.modal-block,
-.perm-modal-block {
-  background-color: rgba(0,0,0,.6);
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  -moz-box-orient: horizontal;
+.mainContainer {
+/* TODO: These values should probably come from somewhere. Maybe the same as the width of our overlay buttons? */
+  padding-left: 60px;
+  padding-right: 60px;
 }
 
-.dialog-dark,
-.panel-arrowcontent {
-  background: url("chrome://browser/skin/images/popup-bg-hdpi.png") left bottom repeat-x;
-  background-color: white;
-  border-radius: @border_radius_normal@;
-  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@,
-              black 0 -@border_radius_tiny@ @border_radius_tiny@;
-  padding: @padding_normal@ 0; /* core spacing on top/bottom */
-}
-
-dialog {
-  -moz-box-orient: horizontal;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-}
-
-dialog > .prompt-inner {
-  width: 600px;
-}
-
-.prompt-header > .prompt-message {
-  white-space: pre-wrap;
-}
-
-.prompt-header > .button-checkbox {
-  margin-left: @margin_large@;
-}
-
-.prompt-title {
-  padding-top: @metro_spacing_normal@;
-  text-align: start;
+.info\.title {
   font-size: @metro_font_large@;
 }
 
-/* Authentication dialogs do not have a title */
-.prompt-title:empty {
-  display: none;
-}
-
-.prompt-message {
-  padding-top: @metro_spacing_normal@;
-  text-align: start;
+.info\.body {
   font-size: @metro_font_normal@;
 }
 
-.prompt-buttons {
-  -moz-box-pack: end;
-  text-align: end;
-  padding: @metro_spacing_normal@ 0;
-}
-
-.prompt-edit {
-  margin: @margin_xnormal@;
-  font-size: @font_normal@;
-  text-align: start;
-}
-
-/* additional styles for crash prompt dialog */
-
-/* specific height and wider for the long privacy statement */
-.prompt-inner-statement {
-  margin-top: @metro_spacing_xnormal@;
-  margin-bottom: @metro_spacing_xnormal@;
-  height: 450px;
-  width: 800px;
-}
-
-.crash-message {
-  text-align: justify;
-  margin-top: 5px;
-  margin-bottom: @metro_spacing_small@;
-  font-size: @metro_font_normal@;
-}
-
-.crash-link {
-  margin-top: @metro_spacing_small@;
-}
-
-/* temp - bug 887176 */
-.crash-privacy-back-button {
-  width: 26px;
-  margin-top: 22px; /* align with title text */
-  -moz-margin-end: 15px;
-  background-image: url(chrome://browser/skin/images/appbar-stop.png);
-  background-origin: border-box;
-  background-position: right 0 top 0;
-  background-repeat: no-repeat;
-}
-
-.crash-privacy-statement-scroller {
-  overflow: auto;
+.buttonContainer {
+  background-color: transparent;
+  padding: none;
+  border: none;
 }
 
 /* Arrowbox ---------------------------------------------------------------- */
@@ -645,9 +564,6 @@ arrowbox {
 
 .meta {
   background-color: @panel_light_color@;
-  background-image: url("chrome://browser/skin/images/firefox-watermark.png");
-  background-repeat: no-repeat;
-  background-position: center center;
   padding: @metro_spacing_normal@ @metro_spacing_xxnormal@;
   overflow: auto;
   max-width: 100%;
@@ -663,6 +579,16 @@ arrowbox {
   font-weight: 100;
   display: none;
   cursor: default;
+}
+
+#start-container[viewstate="snapped"] {
+  padding-top: 0;
+}
+
+#start-container[viewstate="snapped"] .meta-section-title,
+#start-container[viewstate="snapped"] richgrid {
+  margin-top: @metro_spacing_xnormal@;
+  padding: 0;
 }
 
 #start-container[viewstate="snapped"] .meta-section-title.narrow-title,

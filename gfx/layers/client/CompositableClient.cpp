@@ -10,6 +10,7 @@
 #include "mozilla/layers/CompositableForwarder.h"
 #include "gfxPlatform.h"
 #ifdef XP_WIN
+#include "mozilla/layers/TextureD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "gfxWindowsPlatform.h"
 #endif
@@ -112,6 +113,7 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
     break;
   case TEXTURE_YCBCR:
     if (parentBackend == LAYERS_OPENGL ||
+        parentBackend == LAYERS_D3D9 ||
         parentBackend == LAYERS_D3D11 ||
         parentBackend == LAYERS_BASIC) {
       result = new DeprecatedTextureClientShmemYCbCr(GetForwarder(), GetTextureInfo());
@@ -123,10 +125,22 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
       result = new DeprecatedTextureClientD3D11(GetForwarder(), GetTextureInfo());
       break;
     }
+    if (parentBackend == LAYERS_D3D9 &&
+        !GetForwarder()->ForwardsToDifferentProcess()) {
+      result = new DeprecatedTextureClientD3D9(GetForwarder(), GetTextureInfo());
+      break;
+    }
 #endif
      // fall through to TEXTURE_SHMEM
   case TEXTURE_SHMEM:
     result = new DeprecatedTextureClientShmem(GetForwarder(), GetTextureInfo());
+    break;
+  case TEXTURE_FALLBACK:
+#ifdef XP_WIN
+    if (parentBackend == LAYERS_D3D9) {
+      result = new DeprecatedTextureClientShmem(GetForwarder(), GetTextureInfo());
+    }
+#endif
     break;
   default:
     MOZ_ASSERT(false, "Unhandled texture client type");
@@ -147,16 +161,22 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
 }
 
 TemporaryRef<BufferTextureClient>
-CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
+CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
+                                              uint32_t aTextureFlags)
 {
   if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
-    RefPtr<BufferTextureClient> result = new MemoryTextureClient(this, aFormat);
+    RefPtr<BufferTextureClient> result = new MemoryTextureClient(this, aFormat, aTextureFlags);
     return result.forget();
   }
-  RefPtr<BufferTextureClient> result = new ShmemTextureClient(this, aFormat);
+  RefPtr<BufferTextureClient> result = new ShmemTextureClient(this, aFormat, aTextureFlags);
   return result.forget();
 }
 
+TemporaryRef<BufferTextureClient>
+CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
+{
+  return CreateBufferTextureClient(aFormat, TEXTURE_FLAGS_DEFAULT);
+}
 
 void
 CompositableClient::AddTextureClient(TextureClient* aClient)

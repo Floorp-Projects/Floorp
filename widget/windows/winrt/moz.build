@@ -15,6 +15,7 @@ CPP_SOURCES += [
     'MetroInput.cpp',
     'MetroUtils.cpp',
     'MetroWidget.cpp',
+    'ToastNotificationHandler.cpp',
     'UIAAccessibilityBridge.cpp',
     'UIABridge.cpp',
     'nsMetroFilePicker.cpp',

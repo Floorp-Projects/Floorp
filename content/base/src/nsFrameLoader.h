@@ -303,6 +303,13 @@ public:
    */
   nsView* GetDetachedSubdocView(nsIDocument** aContainerDoc) const;
 
+  /**
+   * Applies a new set of sandbox flags. These are merged with the sandbox
+   * flags from our owning content's owning document with a logical OR, this
+   * ensures that we can only add restrictions and never remove them.
+   */
+  void ApplySandboxFlags(uint32_t sandboxFlags);
+
 private:
 
   void SetOwnerContent(mozilla::dom::Element* aContent);

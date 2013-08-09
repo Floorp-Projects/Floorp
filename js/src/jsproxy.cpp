@@ -423,14 +423,7 @@ DirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool
 {
     assertEnteredPolicy(cx, proxy, id);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    RootedValue v(cx);
-    if (!JS_DeletePropertyById2(cx, target, id, &v))
-        return false;
-    JSBool b;
-    if (!JS_ValueToBoolean(cx, v, &b))
-        return false;
-    *bp = !!b;
-    return true;
+    return JS_DeletePropertyById2(cx, target, id, bp);
 }
 
 bool
@@ -3140,7 +3133,7 @@ Class js::ObjectProxyObject::class_ = {
     }
 };
 
-JS_FRIEND_DATA(Class* const) js::ObjectProxyClassPtr = &ObjectProxyObject::class_;
+Class* const js::ObjectProxyClassPtr = &ObjectProxyObject::class_;
 
 Class js::OuterWindowProxyObject::class_ = {
     "Proxy",
@@ -3199,9 +3192,9 @@ Class js::OuterWindowProxyObject::class_ = {
     }
 };
 
-JS_FRIEND_DATA(Class* const) js::OuterWindowProxyClassPtr = &OuterWindowProxyObject::class_;
+Class* const js::OuterWindowProxyClassPtr = &OuterWindowProxyObject::class_;
 
-static JSBool
+static bool
 proxy_Call(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3210,7 +3203,7 @@ proxy_Call(JSContext *cx, unsigned argc, Value *vp)
     return Proxy::call(cx, proxy, args);
 }
 
-static JSBool
+static bool
 proxy_Construct(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3270,7 +3263,7 @@ Class js::FunctionProxyObject::class_ = {
     }
 };
 
-JS_FRIEND_DATA(Class* const) js::FunctionProxyClassPtr = &FunctionProxyObject::class_;
+Class* const js::FunctionProxyClassPtr = &FunctionProxyObject::class_;
 
 /* static */ ProxyObject *
 ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, TaggedProto proto_,
@@ -3380,7 +3373,7 @@ ProxyObject::renew(JSContext *cx, BaseProxyHandler *handler, Value priv)
     setSlot(EXTRA_SLOT + 1, UndefinedValue());
 }
 
-static JSBool
+static bool
 proxy(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3409,7 +3402,7 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSBool
+static bool
 proxy_create(JSContext *cx, unsigned argc, Value *vp)
 {
     if (argc < 1) {
@@ -3440,7 +3433,7 @@ proxy_create(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
+static bool
 proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
 {
     if (argc < 2) {

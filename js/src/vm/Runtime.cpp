@@ -85,14 +85,14 @@ PerThreadData::addToThreadList()
 {
     // PerThreadData which are created/destroyed off the main thread do not
     // show up in the runtime's thread list.
-    runtime_->assertValidThread();
+    JS_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
     runtime_->threadList.insertBack(this);
 }
 
 void
 PerThreadData::removeFromThreadList()
 {
-    runtime_->assertValidThread();
+    JS_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
     removeFrom(runtime_->threadList);
 }
 
@@ -393,8 +393,6 @@ JSRuntime::~JSRuntime()
 # endif
     sourceCompressorThread.finish();
 
-    clearOwnerThread();
-
     JS_ASSERT(!operationCallbackOwner);
     if (operationCallbackLock)
         PR_DestroyLock(operationCallbackLock);
@@ -454,6 +452,10 @@ JSRuntime::~JSRuntime()
 
     DebugOnly<size_t> oldCount = liveRuntimesCount--;
     JS_ASSERT(oldCount > 0);
+
+#ifdef JS_THREADSAFE
+    clearOwnerThread();
+#endif
 }
 
 #ifdef JS_THREADSAFE
@@ -476,7 +478,7 @@ JSRuntime::setOwnerThread()
 void
 JSRuntime::clearOwnerThread()
 {
-    assertValidThread();
+    JS_ASSERT(CurrentThreadCanAccessRuntime(this));
     JS_ASSERT(requestDepth == 0);
     ownerThread_ = (void *)0xc1ea12;  /* "clear" */
     js::TlsPerThreadData.set(NULL);
@@ -490,25 +492,7 @@ JSRuntime::clearOwnerThread()
     asmJSMachExceptionHandler.clearCurrentThread();
 #endif
 }
-
-JS_FRIEND_API(void)
-JSRuntime::abortIfWrongThread() const
-{
-    if (ownerThread_ != PR_GetCurrentThread())
-        MOZ_CRASH();
-    if (!js::TlsPerThreadData.get()->associatedWith(this))
-        MOZ_CRASH();
-}
-
-#ifdef DEBUG
-JS_FRIEND_API(void)
-JSRuntime::assertValidThread() const
-{
-    JS_ASSERT(ownerThread_ == PR_GetCurrentThread());
-    JS_ASSERT(js::TlsPerThreadData.get()->associatedWith(this));
-}
-#endif  /* DEBUG */
-#endif  /* JS_THREADSAFE */
+#endif /* JS_THREADSAFE */
 
 void
 NewObjectCache::clearNurseryObjects(JSRuntime *rt)
@@ -748,3 +732,36 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
     return NULL;
 }
 
+#ifdef JS_THREADSAFE
+
+bool
+js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
+{
+    PerThreadData *pt = js::TlsPerThreadData.get();
+    JS_ASSERT(pt && pt->associatedWith(rt));
+    return rt->ownerThread_ == PR_GetCurrentThread() || InExclusiveParallelSection();
+}
+
+bool
+js::CurrentThreadCanAccessZone(Zone *zone)
+{
+    PerThreadData *pt = js::TlsPerThreadData.get();
+    JS_ASSERT(pt && pt->associatedWith(zone->runtime_));
+    return !InParallelSection() || InExclusiveParallelSection();
+}
+
+#else
+
+bool
+js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
+{
+    return true;
+}
+
+bool
+js::CurrentThreadCanAccessZone(Zone *zone)
+{
+    return true;
+}
+
+#endif

@@ -376,9 +376,10 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
 {
     FloatRegister first = ToFloatRegister(ins->first());
     FloatRegister second = ToFloatRegister(ins->second());
+#ifdef DEBUG
     FloatRegister output = ToFloatRegister(ins->output());
-
     JS_ASSERT(first == output);
+#endif
 
     Label done, nan, minMaxInst;
 
@@ -754,6 +755,27 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI *ins)
 
         // Do the shift.
         masm.sarl(Imm32(shift), lhs);
+    }
+
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitDivSelfI(LDivSelfI *ins)
+{
+    Register op = ToRegister(ins->op());
+    Register output = ToRegister(ins->output());
+    MDiv *mir = ins->mir();
+
+    JS_ASSERT(mir->canBeDivideByZero());
+
+    masm.testl(op, op);
+    if (mir->isTruncated()) {
+        masm.emitSet(Assembler::NonZero, output);
+    } else {
+       if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+           return false;
+        masm.mov(Imm32(1), output);
     }
 
     return true;

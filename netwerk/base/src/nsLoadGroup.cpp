@@ -24,6 +24,8 @@
 #include "nsTArray.h"
 #include "nsIHttpChannelInternal.h"
 #include "mozilla/Telemetry.h"
+#include "nsAutoPtr.h"
+#include "mozilla/net/PSpdyPush3.h"
 
 using namespace mozilla;
 

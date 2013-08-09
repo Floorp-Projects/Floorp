@@ -93,6 +93,10 @@ public class ActivityHandlerHelper implements GeckoEventListener {
         return mActivityResultHandlerMap.put(aHandler);
     }
 
+    public void startIntentForActivity (Activity activity, Intent intent, ActivityResultHandler activityResultHandler) {
+        activity.startActivityForResult(intent, mActivityResultHandlerMap.put(activityResultHandler));
+    }
+
     private int addIntentActivitiesToList(Context context, Intent intent, ArrayList<Prompt.PromptListItem> items, ArrayList<Intent> aIntents) {
         PackageManager pm = context.getPackageManager();
         List<ResolveInfo> lri = pm.queryIntentActivityOptions(GeckoAppShell.getGeckoInterface().getActivity().getComponentName(), null, intent, 0);

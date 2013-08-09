@@ -128,7 +128,7 @@ function test()
     info("testBrowserConsole()");
     closeConsole(privateTab, () => {
       info("web console closed");
-      privateWindow.HUDConsoleUI.toggleBrowserConsole().then(onBrowserConsoleOpen);
+      privateWindow.HUDService.toggleBrowserConsole().then(onBrowserConsoleOpen);
     });
   }
 
@@ -167,10 +167,10 @@ function test()
       checkNoPrivateMessages();
 
       info("close the browser console");
-      privateWindow.HUDConsoleUI.toggleBrowserConsole().then(() => {
+      privateWindow.HUDService.toggleBrowserConsole().then(() => {
         info("reopen the browser console");
         executeSoon(() =>
-          HUDConsoleUI.toggleBrowserConsole().then(onBrowserConsoleReopen));
+          HUDService.toggleBrowserConsole().then(onBrowserConsoleReopen));
       });
     });
     privateWindow.BrowserTryToCloseWindow();

@@ -14,6 +14,7 @@
 #include "mozilla/layers/BasicCompositor.h"
 #ifdef XP_WIN
 #include "mozilla/layers/CompositorD3D11.h"
+#include "mozilla/layers/CompositorD3D9.h"
 #endif
 #include "LayerTransactionParent.h"
 #include "nsIWidget.h"
@@ -423,16 +424,13 @@ CompositorParent::ScheduleTask(CancelableTask* task, int time)
 void
 CompositorParent::NotifyShadowTreeTransaction(uint64_t aId, bool aIsFirstPaint)
 {
-  if (mApzcTreeManager) {
+  if (mApzcTreeManager &&
+      mLayerManager &&
+      mLayerManager->GetRoot()) {
     AutoResolveRefLayers resolve(mCompositionManager);
     mApzcTreeManager->UpdatePanZoomControllerTree(this, mLayerManager->GetRoot(), aIsFirstPaint, aId);
-  }
 
-  if (mLayerManager) {
-    LayerManagerComposite* managerComposite = mLayerManager->AsLayerManagerComposite();
-    if (managerComposite) {
-      managerComposite->NotifyShadowTreeTransaction();
-    }
+    mLayerManager->AsLayerManagerComposite()->NotifyShadowTreeTransaction();
   }
   ScheduleComposition();
 }
@@ -603,7 +601,8 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
 PLayerTransactionParent*
 CompositorParent::AllocPLayerTransactionParent(const LayersBackend& aBackendHint,
                                                const uint64_t& aId,
-                                               TextureFactoryIdentifier* aTextureFactoryIdentifier)
+                                               TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                               bool *aSuccess)
 {
   MOZ_ASSERT(aId == 0);
 
@@ -625,23 +624,29 @@ CompositorParent::AllocPLayerTransactionParent(const LayersBackend& aBackendHint
   } else if (aBackendHint == mozilla::layers::LAYERS_D3D11) {
     mLayerManager =
       new LayerManagerComposite(new CompositorD3D11(mWidget));
+  } else if (aBackendHint == mozilla::layers::LAYERS_D3D9) {
+    mLayerManager =
+      new LayerManagerComposite(new CompositorD3D9(mWidget));
 #endif
   } else {
-    NS_ERROR("Unsupported backend selected for Async Compositor");
-    return nullptr;
+    NS_WARNING("Unsupported backend selected for Async Compositor");
+    *aSuccess = false;
+    return new LayerTransactionParent(nullptr, this, 0);
   }
 
   mWidget = nullptr;
   mLayerManager->SetCompositorID(mCompositorID);
 
   if (!mLayerManager->Initialize()) {
-    NS_ERROR("Failed to init Compositor");
-    return nullptr;
+    NS_WARNING("Failed to init Compositor");
+    *aSuccess = false;
+    return new LayerTransactionParent(nullptr, this, 0);
   }
 
   mCompositionManager = new AsyncCompositionManager(mLayerManager);
 
   *aTextureFactoryIdentifier = mLayerManager->GetTextureFactoryIdentifier();
+  *aSuccess = true;
   return new LayerTransactionParent(mLayerManager, this, 0);
 }
 
@@ -831,7 +836,8 @@ public:
   virtual PLayerTransactionParent*
     AllocPLayerTransactionParent(const LayersBackend& aBackendType,
                                  const uint64_t& aId,
-                                 TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
+                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                 bool *aSuccess) MOZ_OVERRIDE;
 
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
 
@@ -912,17 +918,22 @@ CrossProcessCompositorParent::ActorDestroy(ActorDestroyReason aWhy)
 PLayerTransactionParent*
 CrossProcessCompositorParent::AllocPLayerTransactionParent(const LayersBackend& aBackendType,
                                                            const uint64_t& aId,
-                                                           TextureFactoryIdentifier* aTextureFactoryIdentifier)
+                                                           TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                                           bool *aSuccess)
 {
   MOZ_ASSERT(aId != 0);
 
   if (sIndirectLayerTrees[aId].mParent) {
     LayerManagerComposite* lm = sIndirectLayerTrees[aId].mParent->GetLayerManager();
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
+    *aSuccess = true;
     return new LayerTransactionParent(lm, this, aId);
   }
 
   NS_WARNING("Created child without a matching parent?");
+  // XXX: should be false, but that causes us to fail some tests on Mac w/ OMTC.
+  // Bug 900745. change *aSuccess to false to see test failures.
+  *aSuccess = true;
   return new LayerTransactionParent(nullptr, this, aId);
 }
 

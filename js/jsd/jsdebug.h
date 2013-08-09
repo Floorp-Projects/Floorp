@@ -418,7 +418,7 @@ JSD_GetScriptLineExtent(JSDContext* jsdc, JSDScript *jsdscript);
 
 /*
 * Declaration of callback for notification of script creation and destruction.
-* 'creating' is JS_TRUE if creating new script, JS_FALSE if destroying existing
+* 'creating' is true if creating new script, false if destroying existing
 * script (callback called just before actual destruction).
 * 'callerdata' is what was passed to JSD_SetScriptHook to set the hook.
 */
@@ -683,7 +683,7 @@ JSD_AppendUCSourceText(JSDContext*     jsdc,
  *       jsdsrc = jsd_AppendSourceText(jsdc, jsdsrc,
  *                                     NULL, 0, JSD_SOURCE_COMPLETED);
  *   JSD_UNLOCK_SOURCE_TEXT(jsdc);
- *   return jsdsrc ? JS_TRUE : JS_FALSE;
+ *   return jsdsrc ? true : false;
  */
 extern JSD_PUBLIC_API(JSBool)
 JSD_AddFullSourceText(JSDContext* jsdc,
@@ -727,7 +727,7 @@ typedef unsigned
 
 /*
 * Implement a callback of this form in order to hook function call/returns.
-* Return JS_TRUE from a TOPLEVEL_START or FUNCTION_CALL type call hook if you
+* Return true from a TOPLEVEL_START or FUNCTION_CALL type call hook if you
 * want to hear about the TOPLEVEL_END or FUNCTION_RETURN too.  Return value is
 * ignored to TOPLEVEL_END and FUNCTION_RETURN type hooks.
 */
@@ -965,7 +965,7 @@ JSD_IsStackFrameConstructing(JSDContext* jsdc,
 
 /*
 * Evaluate the given unicode source code in the context of the given stack frame.
-* returns JS_TRUE and puts result in rval on success, JS_FALSE on failure.
+* returns true and puts result in rval on success, false on failure.
 * NOTE: The ErrorReporter hook might be called if this fails.
 */
 extern JSD_PUBLIC_API(JSBool)
@@ -1099,7 +1099,7 @@ extern JSD_PUBLIC_API(void)
 JSD_Unlock(JSDStaticLock* lock);
 
 /*
-* For debugging only if not (JS_THREADSAFE AND DEBUG) then returns JS_TRUE
+* For debugging only if not (JS_THREADSAFE AND DEBUG) then returns true
 *    So JSD_IsLocked(lock) may not equal !JSD_IsUnlocked(lock)
 */
 extern JSD_PUBLIC_API(JSBool)
@@ -1364,7 +1364,7 @@ JSD_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval);
 #define JSDPD_ALIAS      JSPD_ALIAS        /* property has an alias id */
 #define JSDPD_EXCEPTION  JSPD_EXCEPTION    /* exception occurred looking up */
                                            /* proprety, value is exception  */
-#define JSDPD_ERROR      JSPD_ERROR        /* native getter returned JS_FALSE */
+#define JSDPD_ERROR      JSPD_ERROR        /* native getter returned false */
                                            /* without throwing an exception */
 /* this is not one of the JSPD_ flags in jsdbgapi.h  - careful not to overlap*/
 #define JSDPD_HINTED     0x800             /* found via explicit lookup */

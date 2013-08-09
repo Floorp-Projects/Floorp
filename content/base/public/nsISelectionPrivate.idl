@@ -14,11 +14,13 @@ interface nsIContent;
 interface nsINode;
 
 %{C++
+class nsIFrame;
 struct nsTextRangeStyle;
 struct nsPoint;
 struct ScrollAxis;
+#include "nsDirection.h"
 #include "nsTArray.h"
-#include "nsIFrame.h"
+#include "nsIPresShell.h" // TODO: Remove this include
 %}
 
 [ptr] native nsIFrame(nsIFrame);

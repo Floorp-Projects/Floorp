@@ -93,9 +93,7 @@ NS_NewListControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
   nsListControlFrame* it =
     new (aPresShell) nsListControlFrame(aPresShell, aPresShell->GetDocument(), aContext);
 
-  if (it) {
-    it->AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
-  }
+  it->AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
 
   return it;
 }

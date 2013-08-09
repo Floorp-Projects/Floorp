@@ -50,8 +50,9 @@ function install(next) {
 
     is(app.origin, "http://test", "origin");
     is(app.installOrigin, "chrome://mochitests", "install origin");
-    ok(app.installTime >= beforehand, "install time is after install() call");
-    ok(app.installTime <= Date.now(), "install time is before install success");
+    ok(app.installTime >= beforehand, "install time (" + app.installTime + ") is after install() call (" + beforehand + ")");
+    let installSuccess = Date.now();
+    ok(app.installTime <= installSuccess, "install time (" + app.installTime + ") is before install success (" + installSuccess + ")");
     is(app.manifestURL, url, "manifest URL");
     is(app.manifest.name, "Basic App", "manifest.name");
     is(app.manifest.installs_allowed_from, "*",

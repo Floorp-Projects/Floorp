@@ -50,13 +50,65 @@ let ColorUtils = {
     return textColor;
   },
 
+  toCSSRgbColor: function toCSSRgbColor(r, g, b, a) {
+    var values = [Math.round(r), Math.round(g), Math.round(b)];
+    if(undefined !== a && a < 1) {
+      values.push(a);
+      return 'rgba('+values.join(',')+')';
+    }
+    return 'rgb('+values.join(',')+')';
+  },
+
   /**
-   * converts a decimal(base10) number into rgb string
+   * converts a decimal(base10) number into CSS rgb color value string
    */
   convertDecimalToRgbColor: function convertDecimalToRgbColor(aColor) {
-    let r = (aColor & 0xff0000) >> 16;
-    let g = (aColor & 0x00ff00) >> 8;
-    let b = (aColor & 0x0000ff);
-    return "rgb("+r+","+g+","+b+")";
+    let [r,g,b,a] = this.unpackDecimalColorWord(aColor);
+    return this.toCSSRgbColor(r,g,b,a);
+  },
+
+  /**
+   * unpack a decimal(base10) word for r,g,b,a values
+   */
+  unpackDecimalColorWord: function unpackDecimalColorWord(aColor) {
+    let a = (aColor & 0xff000000) >> 24;
+    let r = (aColor & 0x00ff0000) >> 16;
+    let g = (aColor & 0x0000ff00) >> 8;
+    let b = (aColor & 0x000000ff);
+    // NB: falsy alpha treated as undefined, fully opaque
+    return a ? [r,g,b,a/255] : [r,g,b];
+  },
+
+  /**
+   * create a decimal(base10) word for r,g,b values
+   */
+  createDecimalColorWord: function createDecimalColorWord(r, g, b, a) {
+    let rgb = 0;
+    rgb |= b;
+    rgb |= (g << 8);
+    rgb |= (r << 16);
+    // pack alpha value if one is given
+    if(undefined !== a && a < 1)
+      rgb |= (Math.round(a*255) << 24);
+    return rgb;
+  },
+
+  /**
+   * Add 2 rgb(a) colors to get a flat color
+   */
+  addRgbColors: function addRgbColors(color1, color2) {
+    let [r1, g1, b1] = this.unpackDecimalColorWord(color1);
+    let [r2, g2, b2, alpha] = this.unpackDecimalColorWord(color2);
+
+    let color = {};
+    // early return if 2nd color is opaque
+    if (!alpha || alpha >= 1)
+      return color2;
+
+    return this.createDecimalColorWord(
+      Math.min(255, alpha * r2 + (1 - alpha) * r1),
+      Math.min(255, alpha * g2 + (1 - alpha) * g1),
+      Math.min(255, alpha * b2 + (1 - alpha) * b1)
+    );
   }
 };

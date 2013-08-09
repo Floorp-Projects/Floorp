@@ -28,11 +28,13 @@ this.EXPORTED_SYMBOLS = ["devtools"];
  */
 
 let loaderGlobals = {
+  btoa: btoa,
   console: console,
   _Iterator: Iterator,
   loader: {
     lazyGetter: XPCOMUtils.defineLazyGetter.bind(XPCOMUtils),
-    lazyImporter: XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils)
+    lazyImporter: XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils),
+    lazyServiceGetter: XPCOMUtils.defineLazyServiceGetter.bind(XPCOMUtils)
   }
 }
 
@@ -48,6 +50,7 @@ var BuiltinProvider = {
         "main": "resource:///modules/devtools/main.js",
         "devtools": "resource:///modules/devtools",
         "devtools/server": "resource://gre/modules/devtools/server",
+        "devtools/toolkit/webconsole": "resource://gre/modules/devtools/toolkit/webconsole",
 
         // Allow access to xpcshell test items from the loader.
         "xpcshell-test": "resource://test"
@@ -81,6 +84,7 @@ var SrcdirProvider = {
     let devtoolsURI = this.fileURI(devtoolsDir);
     let toolkitURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools"));
     let serverURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "server"));
+    let webconsoleURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "webconsole"));
     let mainURI = this.fileURI(OS.Path.join(srcdir, "browser", "devtools", "main.js"));
     this.loader = new loader.Loader({
       modules: {
@@ -89,6 +93,7 @@ var SrcdirProvider = {
       paths: {
         "": "resource://gre/modules/commonjs/",
         "devtools/server": serverURI,
+        "devtools/toolkit/webconsole": webconsoleURI,
         "devtools": devtoolsURI,
         "main": mainURI
       },

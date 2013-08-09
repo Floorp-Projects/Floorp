@@ -32,7 +32,7 @@ interface nsIAnnotationObserver : nsISupports
                                  in AUTF8String aName);
 };
 
-[scriptable, uuid(c7f425cc-a063-49ef-9f4c-b08eb2f1730a)]
+[scriptable, uuid(D4CDAAB1-8EEC-47A8-B420-AD7CB333056A)]
 interface nsIAnnotationService : nsISupports
 {
     /**
@@ -80,7 +80,6 @@ interface nsIAnnotationService : nsISupports
     const unsigned short TYPE_INT32  = 1;
     const unsigned short TYPE_DOUBLE = 2;
     const unsigned short TYPE_STRING = 3;
-    const unsigned short TYPE_BINARY = 4;
     const unsigned short TYPE_INT64  = 5;
 
     /**
@@ -112,9 +111,7 @@ interface nsIAnnotationService : nsISupports
      * service, but are special cased in the protocol handler so they look like
      * annotations. Do not set favicons using this service, it will not work.
      *
-     * Binary annotations should be set using
-     * setItemAnnotationBinary/setPageAnnotationBinary. For other types, only
-     * C++ consumers may use the type-specific methods.
+     * Only C++ consumers may use the type-specific methods.
      *
      * @throws NS_ERROR_ILLEGAL_VALUE if the page or the bookmark doesn't exist.
      */
@@ -193,30 +190,11 @@ interface nsIAnnotationService : nsISupports
                                             in double aValue,
                                             in long aFlags,
                                             in unsigned short aExpiration);
-    /**
-     * Sets an annotation just like setAnnotationString, but takes binary data
-     * as input. You MUST supply a valid MIME type.
-     *
-     * @throws NS_ERROR_ILLEGAL_VALUE if the page or the bookmark doesn't exist.
-     */
-    void setPageAnnotationBinary(in nsIURI aURI, in AUTF8String aName,
-                                 [const,array,size_is(aDataLen)] in octet aData,
-                                 in unsigned long aDataLen,
-                                 in AUTF8String aMimeType,
-                                 in long aFlags,
-                                 in unsigned short aExpiration);
-    void setItemAnnotationBinary(in long long aItemId, in AUTF8String aName,
-                                 [const,array,size_is(aDataLen)] in octet aData,
-                                 in unsigned long aDataLen,
-                                 in AUTF8String aMimeType,
-                                 in long aFlags,
-                                 in unsigned short aExpiration);
 
     /**
      * Retrieves the value of a given annotation. Throws an error if the
-     * annotation does not exist. Throws for binary annotations, for which
-     * getPageAnnotationBinary/getItemAnnotationBinary should be used. C++
-     * consumers may use the type-specific methods.
+     * annotation does not exist. C++ consumers may use the type-specific
+     * methods.
      *
      * The type-specific methods throw if the given annotation is set in
      * a different type.
@@ -259,42 +237,24 @@ interface nsIAnnotationService : nsISupports
                                               in AUTF8String aName);
 
     /**
-     * @see getPageAnnotation. This also returns the
-     * MIME type.
-     */
-    void getPageAnnotationBinary(in nsIURI aURI,
-                                 in AUTF8String aName,
-                                 [array,size_is(aDataLen)] out octet aData,
-                                 out unsigned long aDataLen,
-                                 out AUTF8String aMimeType);
-    void getItemAnnotationBinary(in long long aItemId,
-                                 in AUTF8String aName,
-                                 [array,size_is(aDataLen)] out octet aData,
-                                 out unsigned long aDataLen,
-                                 out AUTF8String aMimeType);
-
-    /**
-     * Retrieves info about an existing annotation. aMimeType will be empty
-     * if the value was not binary data.
+     * Retrieves info about an existing annotation.
      *
      * aType will be one of TYPE_* constansts above
      *
      * example JS:
-     *   var flags = {}, exp = {}, mimeType = {};
-     *   annotator.getAnnotationInfo(myURI, "foo", flags, exp, mimeType);
+     *   var flags = {}, exp = {}, type = {};
+     *   annotator.getAnnotationInfo(myURI, "foo", flags, exp, type);
      *   // now you can use 'exp.value' and 'flags.value'
      */
     void getPageAnnotationInfo(in nsIURI aURI,
                                in AUTF8String aName,
                                out int32_t aFlags,
                                out unsigned short aExpiration,
-                               out AUTF8String aMimeType,
                                out unsigned short aType);
     void getItemAnnotationInfo(in long long aItemId,
                                in AUTF8String aName,
                                out long aFlags,
                                out unsigned short aExpiration,
-                               out AUTF8String aMimeType,
                                out unsigned short aType);
 
     /**
@@ -331,7 +291,6 @@ interface nsIAnnotationService : nsISupports
      * @param name
      *        The annotation to search for.
      * @return list of mozIAnnotation objects.
-     * @note binary annotations are not supported and thus skipped.
      */
     void getAnnotationsWithName(
         in AUTF8String name,
@@ -405,16 +364,6 @@ interface nsIAnnotationService : nsISupports
      * Removes an annotaton observer previously registered by addObserver.
      */
     void removeObserver(in nsIAnnotationObserver aObserver);
-
-    /**
-     * Returns a URI that can be used to access the given binary annotation.
-     * This function does NOT check that the annotation exists. Also, note that
-     * you can only load URIs for annotations that have have a valid MIME type
-     * set by setAnnotationBinary. No non-URI valid chars in name, especially
-     * colon, which will mess up parsing.
-     */
-    nsIURI getAnnotationURI(in nsIURI aURI,
-                            in AUTF8String aName);
 };
 
 /**

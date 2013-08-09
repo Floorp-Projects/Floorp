@@ -2278,6 +2278,16 @@ CSS_PROP_POSITION(
     offsetof(nsStylePosition, mMinWidth),
     eStyleAnimType_Coord)
 CSS_PROP_DISPLAY(
+    mix-blend-mode,
+    mix_blend_mode,
+    MixBlendMode,
+    CSS_PROPERTY_PARSE_VALUE,
+    "layout.css.mix-blend-mode.enabled",
+    VARIANT_HK,
+    kBlendModeKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_DISPLAY(
     opacity,
     opacity,
     Opacity,

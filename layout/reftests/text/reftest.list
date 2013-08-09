@@ -180,8 +180,8 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03a.html gra
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) != graphite-03b.html graphite-03-notref.html
 pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-01.html graphite-01-ref.html
 pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-02.html graphite-02-ref.html
-# test 03a (lang setting in Padauk font) now works in opentype/harfbuzz as well, but not on Windows (using Uniscribe/DirectWrite)
-fails-if(winWidget) pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-03a.html graphite-03-notref.html
+# test 03a (lang setting in Padauk font) now works in opentype/harfbuzz as well, but not on Windows 7/8 (using Uniscribe/DirectWrite)
+fails-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu)) pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) != graphite-03a.html graphite-03-notref.html
 pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == graphite-03b.html graphite-03-notref.html
 
 # tests for graphite rendering with valid and invalid lang tags
@@ -278,4 +278,6 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-g
 == auto-hyphenation-uk-1.html auto-hyphenation-uk-1-ref.html
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
-skip-if(!cocoaWidget||OSX==10.6||OSX==10.7) != osx-font-smoothing.html osx-font-smoothing-ref.html
+fails-if(!cocoaWidget||OSX==10.6||OSX==10.7) != osx-font-smoothing.html osx-font-smoothing-ref.html
+fails-if(!cocoaWidget||OSX==10.6||OSX==10.7) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
+== osx-font-smoothing-2.html osx-font-smoothing-2-ref.html

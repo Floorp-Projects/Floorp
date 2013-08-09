@@ -108,7 +108,9 @@ protected:
   void SetLastBool(nsTArray<bool>& aStack, bool aValue);
   void PushBool(nsTArray<bool>& aStack, bool aValue);
   bool PopBool(nsTArray<bool>& aStack);
-  
+
+  bool ShouldReplaceContainerWithPlaceholder(nsIAtom* aTag);
+
 protected:
   nsString         mCurrentLine;
   uint32_t         mHeadLevel;
@@ -208,6 +210,15 @@ protected:
   // Conveniance constant. It would be nice to have it as a const static
   // variable, but that causes issues with OpenBSD and module unloading.
   const nsString          kSpace;
+
+  // If nsIDocumentEncoder::OutputNonTextContentAsPlaceholder is set, the child
+  // nodes of specific nodes - <iframe>, <canvas>, etc. should be ignored.
+  // mIgnoredChildNodeLevel is used to tell if current node is an ignorable
+  // child node. The initial value of mIgnoredChildNodeLevel is 0. When
+  // serializer enters those specific nodes, mIgnoredChildNodeLevel increases
+  // and is greater than 0. Otherwise when serializer leaves those nodes,
+  // mIgnoredChildNodeLevel decreases.
+  uint32_t mIgnoredChildNodeLevel;
 };
 
 nsresult

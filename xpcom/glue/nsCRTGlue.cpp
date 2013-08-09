@@ -14,6 +14,7 @@
 
 #ifdef XP_WIN
 #include <io.h>
+#include <windows.h>
 #endif
 
 #ifdef ANDROID
@@ -270,6 +271,16 @@ void NS_MakeRandomString(char *aBuf, int32_t aBufLen)
 void
 printf_stderr(const char *fmt, ...)
 {
+  if (IsDebuggerPresent()) {
+    char buf[2048];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    buf[sizeof(buf) - 1] = '\0';
+    va_end(args);
+    OutputDebugStringA(buf);
+  }
+
   FILE *fp = _fdopen(_dup(2), "a");
   if (!fp)
       return;

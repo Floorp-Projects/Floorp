@@ -84,6 +84,14 @@ gTests.push({
     is(edit.selectionStart, 0, "Location field is selected");
     is(edit.selectionEnd, edit.value.length, "Location field is selected");
 
+    edit.selectionEnd = 0;
+    is(edit.selectionStart, 0, "Location field is unselected");
+    is(edit.selectionEnd, 0, "Location field is unselected");
+
+    EventUtils.synthesizeKey('l', { accelKey: true });
+    is(edit.selectionStart, 0, "Location field is selected again");
+    is(edit.selectionEnd, edit.value.length, "Location field is selected again");
+
     Browser.closeTab(tab, { forceClose: true });
   }
 });

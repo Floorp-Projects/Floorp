@@ -370,8 +370,8 @@ Range::unionWith(const Range *other)
    max_exponent_ = max_exponent;
 }
 
-const int64_t RANGE_INF_MAX = int64_t(JSVAL_INT_MAX) + 1;
-const int64_t RANGE_INF_MIN = int64_t(JSVAL_INT_MIN) - 1;
+static const int64_t RANGE_INF_MAX = int64_t(JSVAL_INT_MAX) + 1;
+static const int64_t RANGE_INF_MIN = int64_t(JSVAL_INT_MIN) - 1;
 
 Range::Range(const MDefinition *def)
   : symbolicLower_(NULL),

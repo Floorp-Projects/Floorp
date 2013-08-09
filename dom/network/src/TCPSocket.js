@@ -350,7 +350,12 @@ TCPSocket.prototype = {
   /* end nsITCPSocketInternal methods */
 
   initWindowless: function ts_initWindowless() {
-    return Services.prefs.getBoolPref("dom.mozTCPSocket.enabled");
+    try {
+      return Services.prefs.getBoolPref("dom.mozTCPSocket.enabled");
+    } catch (e) {
+      // no pref means return false
+      return false;
+    }
   },
 
   init: function ts_init(aWindow) {

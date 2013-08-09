@@ -25,9 +25,9 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  void GetFloatFrequencyData(Float32Array& aArray);
-  void GetByteFrequencyData(Uint8Array& aArray);
-  void GetByteTimeDomainData(Uint8Array& aArray);
+  void GetFloatFrequencyData(const Float32Array& aArray);
+  void GetByteFrequencyData(const Uint8Array& aArray);
+  void GetByteTimeDomainData(const Uint8Array& aArray);
   uint32_t FftSize() const
   {
     return mAnalysisBlock.FFTSize();

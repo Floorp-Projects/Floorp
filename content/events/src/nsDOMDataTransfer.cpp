@@ -63,7 +63,7 @@ const char nsDOMDataTransfer::sEffects[8][9] = {
   "none", "copy", "move", "copyMove", "link", "copyLink", "linkMove", "all"
 };
 
-nsDOMDataTransfer::nsDOMDataTransfer(uint32_t aEventType, bool aIsExternal)
+nsDOMDataTransfer::nsDOMDataTransfer(uint32_t aEventType, bool aIsExternal, int32_t aClipboardType)
   : mEventType(aEventType),
     mDropEffect(nsIDragService::DRAGDROP_ACTION_NONE),
     mEffectAllowed(nsIDragService::DRAGDROP_ACTION_UNINITIALIZED),
@@ -72,6 +72,7 @@ nsDOMDataTransfer::nsDOMDataTransfer(uint32_t aEventType, bool aIsExternal)
     mIsExternal(aIsExternal),
     mUserCancelled(false),
     mIsCrossDomainSubFrameDrop(false),
+    mClipboardType(aClipboardType),
     mDragImageX(0),
     mDragImageY(0)
 {
@@ -98,6 +99,7 @@ nsDOMDataTransfer::nsDOMDataTransfer(uint32_t aEventType,
                                      bool aIsExternal,
                                      bool aUserCancelled,
                                      bool aIsCrossDomainSubFrameDrop,
+                                     int32_t aClipboardType,
                                      nsTArray<nsTArray<TransferItem> >& aItems,
                                      nsIDOMElement* aDragImage,
                                      uint32_t aDragImageX,
@@ -110,6 +112,7 @@ nsDOMDataTransfer::nsDOMDataTransfer(uint32_t aEventType,
     mIsExternal(aIsExternal),
     mUserCancelled(aUserCancelled),
     mIsCrossDomainSubFrameDrop(aIsCrossDomainSubFrameDrop),
+    mClipboardType(aClipboardType),
     mItems(aItems),
     mDragImage(aDragImage),
     mDragImageX(aDragImageX),
@@ -653,7 +656,7 @@ nsDOMDataTransfer::Clone(uint32_t aEventType, bool aUserCancelled,
   nsDOMDataTransfer* newDataTransfer =
     new nsDOMDataTransfer(aEventType, mEffectAllowed, mCursorState,
                           mIsExternal, aUserCancelled, aIsCrossDomainSubFrameDrop,
-                          mItems, mDragImage, mDragImageX, mDragImageY);
+                          mClipboardType, mItems, mDragImage, mDragImageX, mDragImageY);
   NS_ENSURE_TRUE(newDataTransfer, NS_ERROR_OUT_OF_MEMORY);
 
   *aNewDataTransfer = newDataTransfer;
@@ -979,7 +982,7 @@ nsDOMDataTransfer::CacheExternalClipboardFormats()
   // data will only be retrieved when needed.
 
   nsCOMPtr<nsIClipboard> clipboard = do_GetService("@mozilla.org/widget/clipboard;1");
-  if (!clipboard) {
+  if (!clipboard || mClipboardType < 0) {
     return;
   }
 
@@ -994,8 +997,7 @@ nsDOMDataTransfer::CacheExternalClipboardFormats()
   for (uint32_t f = 0; f < mozilla::ArrayLength(formats); ++f) {
     // check each format one at a time
     bool supported;
-    clipboard->HasDataMatchingFlavors(&(formats[f]), 1,
-                                      nsIClipboard::kGlobalClipboard, &supported);
+    clipboard->HasDataMatchingFlavors(&(formats[f]), 1, mClipboardType, &supported);
     // if the format is supported, add an item to the array with null as
     // the data. When retrieved, GetRealData will read the data.
     if (supported) {
@@ -1036,11 +1038,11 @@ nsDOMDataTransfer::FillInExternalData(TransferItem& aItem, uint32_t aIndex)
     MOZ_ASSERT(aIndex == 0, "index in clipboard must be 0");
 
     nsCOMPtr<nsIClipboard> clipboard = do_GetService("@mozilla.org/widget/clipboard;1");
-    if (!clipboard) {
+    if (!clipboard || mClipboardType < 0) {
       return;
     }
 
-    clipboard->GetData(trans, nsIClipboard::kGlobalClipboard);
+    clipboard->GetData(trans, mClipboardType);
   } else {
     nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
     if (!dragSession) {

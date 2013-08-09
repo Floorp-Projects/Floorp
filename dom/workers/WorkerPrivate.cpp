@@ -36,6 +36,9 @@
 #include "js/MemoryMetrics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/ImageData.h"
+#include "mozilla/dom/ImageDataBinding.h"
 #include "nsAlgorithm.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
@@ -57,7 +60,6 @@
 #include "Events.h"
 #include "Exceptions.h"
 #include "File.h"
-#include "ImageData.h"
 #include "Principal.h"
 #include "RuntimeService.h"
 #include "ScriptLoader.h"
@@ -204,9 +206,14 @@ struct WorkerStructuredCloneCallbacks
       MOZ_ASSERT(dataArray.isObject());
 
       // Construct the ImageData.
-      JS::Rooted<JSObject*> dataObj(aCx, &dataArray.toObject());
-      JSObject* obj = imagedata::Create(aCx, width, height, dataObj);
-      return obj;
+      nsRefPtr<ImageData> imageData = new ImageData(width, height,
+                                                    dataArray.toObject());
+      // Wrap it in a JS::Value.
+      JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+      if (!global) {
+        return nullptr;
+      }
+      return imageData->WrapObject(aCx, global);
     }
 
     Error(aCx, 0);
@@ -250,16 +257,20 @@ struct WorkerStructuredCloneCallbacks
     }
 
     // See if this is an ImageData object.
-    if (imagedata::IsImageData(aObj)) {
-      // Pull the properties off the object.
-      uint32_t width = imagedata::GetWidth(aObj);
-      uint32_t height = imagedata::GetHeight(aObj);
-      JSObject* data = imagedata::GetData(aObj);
+    {
+      ImageData* imageData = nullptr;
+      if (NS_SUCCEEDED(UnwrapObject<ImageData>(aCx, aObj, imageData))) {
+        // Prepare the ImageData internals.
+        uint32_t width = imageData->Width();
+        uint32_t height = imageData->Height();
+        JS::Rooted<JSObject*> dataArray(aCx, imageData->GetDataObject());
 
-      // Write the structured clone.
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEDATA, 0) &&
-             JS_WriteUint32Pair(aWriter, width, height) &&
-             JS_WriteTypedArray(aWriter, OBJECT_TO_JSVAL(data));
+        // Write the internals to the stream.
+        JSAutoCompartment ac(aCx, dataArray);
+        return JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEDATA, 0) &&
+               JS_WriteUint32Pair(aWriter, width, height) &&
+               JS_WriteTypedArray(aWriter, JS::ObjectValue(*dataArray));
+      }
     }
 
     Error(aCx, 0);
@@ -2718,7 +2729,7 @@ WorkerPrivate::Create(JSContext* aCx, JS::Handle<JSObject*> aObj, WorkerPrivate*
       return nullptr;
     }
 
-    if (!GetContentSecurityPolicy(aCx, getter_AddRefs(csp))) {
+    if (!nsContentUtils::GetContentSecurityPolicy(aCx, getter_AddRefs(csp))) {
       return nullptr;
     }
 
@@ -4362,34 +4373,6 @@ WorkerPrivate::GetCrossThreadDispatcher()
     mCrossThreadDispatcher = new WorkerCrossThreadDispatcher(this);
   }
   return mCrossThreadDispatcher;
-}
-
-bool
-WorkerPrivate::GetContentSecurityPolicy(JSContext* aCx,
-                                        nsIContentSecurityPolicy** aCSP)
-{
-  AssertIsOnMainThread();
-
-  // Get the security manager
-  nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
-
-  if (!ssm) {
-    NS_ERROR("Failed to get security manager service");
-    return false;
-  }
-
-  nsCOMPtr<nsIPrincipal> subjectPrincipal = ssm->GetCxSubjectPrincipal(aCx);
-  NS_ASSERTION(subjectPrincipal, "Failed to get subjectPrincipal");
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
-  if (NS_FAILED(rv)) {
-    NS_ERROR("CSP: Failed to get CSP from principal.");
-    return false;
-  }
-
-  csp.forget(aCSP);
-  return true;
 }
 
 void

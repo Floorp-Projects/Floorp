@@ -145,6 +145,9 @@ ClientImageLayer::RenderLayer()
       return;
     }
   }
+  if (mImageClient) {
+    mImageClient->OnTransaction();
+  }
   ClientManager()->Hold(this);
 }
 

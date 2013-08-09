@@ -125,17 +125,20 @@ HasMouseListener(nsIContent* aContent)
 }
 
 static bool
-IsElementClickable(nsIFrame* aFrame)
+IsElementClickable(nsIFrame* aFrame, nsIAtom* stopAt = nullptr)
 {
   // Input events propagate up the content tree so we'll follow the content
   // ancestors to look for elements accepting the click.
   for (nsIContent* content = aFrame->GetContent(); content;
        content = content->GetFlattenedTreeParent()) {
+    nsIAtom* tag = content->Tag();
+    if (content->IsHTML() && stopAt && tag == stopAt) {
+      break;
+    }
     if (HasMouseListener(content)) {
       return true;
     }
     if (content->IsHTML()) {
-      nsIAtom* tag = content->Tag();
       if (tag == nsGkAtoms::button ||
           tag == nsGkAtoms::input ||
           tag == nsGkAtoms::select ||
@@ -162,6 +165,9 @@ IsElementClickable(nsIFrame* aFrame)
     }
     if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::role,
                              nsGkAtoms::button, eIgnoreCase)) {
+      return true;
+    }
+    if (content->IsEditable()) {
       return true;
     }
     nsCOMPtr<nsIURI> linkURI;
@@ -207,6 +213,7 @@ ComputeDistanceFromRect(const nsPoint& aPoint, const nsRect& aRect)
 static float
 ComputeDistanceFromRegion(const nsPoint& aPoint, const nsRegion& aRegion)
 {
+  MOZ_ASSERT(!aRegion.IsEmpty(), "can't compute distance between point and empty region");
   nsRegionRectIterator iter(aRegion);
   const nsRect* r;
   float minDist = -1;
@@ -254,6 +261,11 @@ GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
         nsRect(nsPoint(0, 0), f->GetSize()), aRoot, &preservesAxisAlignedRectangles);
     nsRegion region;
     region.And(exposedRegion, borderBox);
+
+    if (region.IsEmpty()) {
+      continue;
+    }
+
     if (preservesAxisAlignedRectangles) {
       // Subtract from the exposed region if we have a transform that won't make
       // the bounds include a bunch of area that we don't actually cover.
@@ -299,7 +311,7 @@ FindFrameTargetedByInputEvent(const nsGUIEvent *aEvent,
     nsLayoutUtils::GetFrameForPoint(aRootFrame, aPointRelativeToRootFrame, flags);
 
   const EventRadiusPrefs* prefs = GetPrefsFor(aEvent->eventStructType);
-  if (!prefs || !prefs->mEnabled || (target && IsElementClickable(target))) {
+  if (!prefs || !prefs->mEnabled || (target && IsElementClickable(target, nsGkAtoms::body))) {
     return target;
   }
 

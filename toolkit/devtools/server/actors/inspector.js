@@ -63,6 +63,10 @@ const { Class } = require("sdk/core/heritage");
 
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
 
+const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
+
+const HELPER_SHEET = "." + HIDDEN_CLASS + " { visibility: hidden !important }";
+
 Cu.import("resource://gre/modules/Services.jsm");
 
 exports.register = function(handle) {
@@ -134,6 +138,10 @@ var NodeActor = protocol.ActorClass({
 
   // Returns the JSON representation of this object over the wire.
   form: function(detail) {
+    if (detail === "actorid") {
+      return this.actorID;
+    }
+
     let parentNode = this.walker.parentNode(this);
 
     // Estimate the number of children.
@@ -148,7 +156,7 @@ var NodeActor = protocol.ActorClass({
       actor: this.actorID,
       parent: parentNode ? parentNode.actorID : undefined,
       nodeType: this.rawNode.nodeType,
-      namespaceURI: this.namespaceURI,
+      namespaceURI: this.rawNode.namespaceURI,
       nodeName: this.rawNode.nodeName,
       numChildren: numChildren,
 
@@ -304,6 +312,10 @@ let NodeFront = protocol.FrontClass(NodeActor, {
 
   // Update the object given a form representation off the wire.
   form: function(form, detail, ctx) {
+    if (detail === "actorid") {
+      this.actorID = form;
+      return;
+    }
     // Shallow copy of the form.  We could just store a reference, but
     // eventually we'll want to update some of the data.
     this._form = object.merge(form);
@@ -400,6 +412,11 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   hasAttribute: function(name) {
     this._cacheAttributes();
     return (name in this._attrMap);
+  },
+
+  get hidden() {
+    let cls = this.getAttribute("class");
+    return cls && cls.indexOf(HIDDEN_CLASS) > -1;
   },
 
   get attributes() this._form.attrs,
@@ -1290,6 +1307,33 @@ var WalkerActor = protocol.ActorClass({
     this._queuePseudoClassMutation(node);
     return true;
   },
+
+  _installHelperSheet: function(node) {
+    if (!this.installedHelpers) {
+      this.installedHelpers = new WeakMap;
+    }
+    let win = node.rawNode.ownerDocument.defaultView;
+    if (!this.installedHelpers.has(win)) {
+      let { Style } = require("sdk/stylesheet/style");
+      let { attach } = require("sdk/content/mod");
+      let style = Style({source: HELPER_SHEET, type: "agent" });
+      attach(style, win);
+      this.installedHelpers.set(win, style);
+    }
+  },
+
+  hideNode: method(function(node) {
+    this._installHelperSheet(node);
+    node.rawNode.classList.add(HIDDEN_CLASS);
+  }, {
+    request: { node: Arg(0, "domnode") }
+  }),
+
+  unhideNode: method(function(node) {
+    node.rawNode.classList.remove(HIDDEN_CLASS);
+  }, {
+    request: { node: Arg(0, "domnode") }
+  }),
 
   /**
    * Remove a pseudo-class lock from a node.

@@ -370,7 +370,7 @@ def write_cpp(iface, fd):
                  iface.base)
         fd.write("  NS_ENSURE_SUCCESS(rv, rv);\n")
 
-    fd.write("  JSBool found = JS_FALSE;\n")
+    fd.write("  JSBool found = false;\n")
     needccx = False
     for a in attributes:
         if a.realtype.nativeType('in').count("nsIVariant"):

@@ -77,7 +77,7 @@ public:
     return aType == TEXTURE_CONTENT;
   }
 
-  virtual void EnsureAllocated(gfx::IntSize aSize,
+  virtual bool EnsureAllocated(gfx::IntSize aSize,
                                gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
 
   virtual gfxASurface* LockSurface() MOZ_OVERRIDE;

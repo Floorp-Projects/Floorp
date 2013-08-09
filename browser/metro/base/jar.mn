@@ -10,6 +10,7 @@ chrome.jar:
   content/aboutRights.xhtml                    (content/pages/aboutRights.xhtml)
   content/blockedSite.xhtml                    (content/pages/blockedSite.xhtml)
   content/netError.xhtml                       (content/pages/netError.xhtml)
+  content/aboutAddons.xhtml                    (content/pages/aboutAddons.xhtml)
 
   content/bindings/bindings.xml                (content/bindings/bindings.xml)
   content/bindings/tabs.xml                    (content/bindings/tabs.xml)
@@ -31,14 +32,6 @@ chrome.jar:
 * content/flyoutpanels/FlyoutPanelsUI.js       (content/flyoutpanels/FlyoutPanelsUI.js)
 * content/flyoutpanels/AboutFlyoutPanel.js     (content/flyoutpanels/AboutFlyoutPanel.js)
   content/flyoutpanels/PrefsFlyoutPanel.js     (content/flyoutpanels/PrefsFlyoutPanel.js)
-
-  content/prompt/alert.xul                     (content/prompt/alert.xul)
-  content/prompt/confirm.xul                   (content/prompt/confirm.xul)
-  content/prompt/prompt.xul                    (content/prompt/prompt.xul)
-  content/prompt/promptPassword.xul            (content/prompt/promptPassword.xul)
-  content/prompt/select.xul                    (content/prompt/select.xul)
-  content/prompt/prompt.js                     (content/prompt/prompt.js)
-  content/prompt/crash.xul                     (content/prompt/crash.xul)
 
   content/helperui/AlertsHelper.js             (content/helperui/AlertsHelper.js)
   content/helperui/IndexedDB.js                (content/helperui/IndexedDB.js)
@@ -101,3 +94,4 @@ chrome.jar:
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
+% override chrome://mozapps/content/extensions/extensions.xul chrome://browser/content/aboutAddons.xhtml

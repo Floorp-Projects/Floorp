@@ -6,23 +6,11 @@
 #include "domstubs.idl"
 
 interface nsIDOMCRMFObject;
+interface nsIDOMWindow;
 
-[scriptable, uuid(e1df1d4d-41ef-4225-934a-107c5d612686)]
+[uuid(c25ecf08-3f46-4420-bee4-8505792fd63a)]
 interface nsIDOMCrypto : nsISupports
 {
-  readonly attribute DOMString        version;
+  [notxpcom] void init(in nsIDOMWindow window);
   attribute boolean         enableSmartCardEvents;
-
-  nsIDOMCRMFObject          generateCRMFRequest(/* ... */);
-  DOMString                 importUserCertificates(in DOMString nickname,
-                                                   in DOMString cmmfResponse,
-                                                   in boolean doForcedBackup);
-  DOMString                 popChallengeResponse(in DOMString challenge);
-  DOMString                 random(in long numBytes);
-  DOMString                 signText(in DOMString stringToSign,
-                                     in DOMString caOption /* ... */);
-  void                      logout();
-  void                      disableRightClick();
-
-  [implicit_jscontext] jsval getRandomValues(in jsval aData);
 };

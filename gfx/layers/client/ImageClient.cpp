@@ -121,7 +121,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       mFrontBuffer = CreateBufferTextureClient(gfx::FORMAT_YUV);
       gfx::IntSize ySize(data->mYSize.width, data->mYSize.height);
       gfx::IntSize cbCrSize(data->mCbCrSize.width, data->mCbCrSize.height);
-      if (!mFrontBuffer->AsTextureClientYCbCr()->AllocateForYCbCr(ySize, cbCrSize)) {
+      if (!mFrontBuffer->AsTextureClientYCbCr()->AllocateForYCbCr(ySize, cbCrSize, data->mStereoMode)) {
         mFrontBuffer = nullptr;
         return false;
       }
@@ -146,7 +146,10 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     nsRefPtr<gfxASurface> surface = image->GetAsSurface();
     MOZ_ASSERT(surface);
 
-    if (mFrontBuffer && mFrontBuffer->IsImmutable()) {
+    gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
+
+    if (mFrontBuffer &&
+        (mFrontBuffer->IsImmutable() || mFrontBuffer->GetSize() != size)) {
       RemoveTextureClient(mFrontBuffer);
       mFrontBuffer = nullptr;
     }
@@ -155,7 +158,6 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       gfxASurface::gfxImageFormat format
         = gfxPlatform::GetPlatform()->OptimalFormatForContent(surface->GetContentType());
       mFrontBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format));
-      gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
       MOZ_ASSERT(mFrontBuffer->AsTextureClientSurface());
       mFrontBuffer->AsTextureClientSurface()->AllocateForSurface(size);
 
@@ -195,8 +197,14 @@ ImageClientBuffered::UpdateImage(ImageContainer* aContainer,
 void
 ImageClientSingle::AddTextureClient(TextureClient* aTexture)
 {
-  aTexture->AddFlags(mTextureFlags);
+  MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
   CompositableClient::AddTextureClient(aTexture);
+}
+
+TemporaryRef<BufferTextureClient>
+ImageClientSingle::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
+{
+  return CompositableClient::CreateBufferTextureClient(aFormat, mTextureFlags);
 }
 
 void

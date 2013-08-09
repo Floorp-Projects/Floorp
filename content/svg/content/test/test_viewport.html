@@ -32,6 +32,15 @@ function runTest()
   var sym = doc.getElementById("sym");
   var symbolRect = doc.getElementById("symbolRect");
 
+  <!-- ownerSVGElement -->
+  is(root.ownerSVGElement, null, "root.ownerSVGElement");
+  is(inner.ownerSVGElement, root, "inner.ownerSVGElement");
+  is(g1.ownerSVGElement, inner, "g1.ownerSVGElement");
+  is(outer.ownerSVGElement, null, "outer.ownerSVGElement");
+  is(g2.ownerSVGElement, outer, "g2.ownerSVGElement");
+  is(g3.ownerSVGElement, null, "g3.ownerSVGElement");
+  is(symbolRect.ownerSVGElement, root, "symbolRect.ownerSVGElement");
+
   <!-- viewportElement -->
   is(root.viewportElement, null, "root.viewportElement");
   is(inner.viewportElement, root, "inner.viewportElement");

@@ -8,14 +8,17 @@
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/AnalyserNode.h"
 #include "mozilla/dom/AudioContextBinding.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
 #include "MediaStreamGraph.h"
-#include "mozilla/dom/AnalyserNode.h"
 #include "AudioDestinationNode.h"
 #include "AudioBufferSourceNode.h"
 #include "AudioBuffer.h"
 #include "GainNode.h"
+#include "MediaElementAudioSourceNode.h"
+#include "MediaStreamAudioSourceNode.h"
 #include "DelayNode.h"
 #include "PannerNode.h"
 #include "AudioListener.h"
@@ -160,7 +163,7 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
 }
 
 already_AddRefed<AudioBuffer>
-AudioContext::CreateBuffer(JSContext* aJSContext, ArrayBuffer& aBuffer,
+AudioContext::CreateBuffer(JSContext* aJSContext, const ArrayBuffer& aBuffer,
                           bool aMixToMono, ErrorResult& aRv)
 {
   // Do not accept this method unless the legacy pref has been set.
@@ -251,6 +254,36 @@ AudioContext::CreateAnalyser()
 {
   nsRefPtr<AnalyserNode> analyserNode = new AnalyserNode(this);
   return analyserNode.forget();
+}
+
+already_AddRefed<MediaElementAudioSourceNode>
+AudioContext::CreateMediaElementSource(HTMLMediaElement& aMediaElement,
+                                       ErrorResult& aRv)
+{
+  if (mIsOffline) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+  nsRefPtr<DOMMediaStream> stream = aMediaElement.MozCaptureStream(aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  nsRefPtr<MediaElementAudioSourceNode> mediaElementAudioSourceNode =
+    new MediaElementAudioSourceNode(this, stream);
+  return mediaElementAudioSourceNode.forget();
+}
+
+already_AddRefed<MediaStreamAudioSourceNode>
+AudioContext::CreateMediaStreamSource(DOMMediaStream& aMediaStream,
+                                      ErrorResult& aRv)
+{
+  if (mIsOffline) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+  nsRefPtr<MediaStreamAudioSourceNode> mediaStreamAudioSourceNode =
+    new MediaStreamAudioSourceNode(this, &aMediaStream);
+  return mediaStreamAudioSourceNode.forget();
 }
 
 already_AddRefed<GainNode>

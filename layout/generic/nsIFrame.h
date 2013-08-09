@@ -33,6 +33,7 @@
 #include "mozilla/css/ImageLoader.h"
 #include "FramePropertyTable.h"
 #include "mozilla/TypedEnum.h"
+#include "nsDirection.h"
 #include <algorithm>
 
 #ifdef ACCESSIBILITY
@@ -353,11 +354,6 @@ enum nsSelectionAmount {
   eSelectWordNoSpace = 8 // select a "word" without selecting the following
                          // space, no matter what the default platform
                          // behavior is
-};
-
-enum nsDirection {
-  eDirNext    = 0,
-  eDirPrevious= 1
 };
 
 enum nsSpread {
@@ -751,12 +747,9 @@ public:
     if (aContext != mStyleContext) {
       nsStyleContext* oldStyleContext = mStyleContext;
       mStyleContext = aContext;
-      if (aContext) {
-        aContext->AddRef();
-        DidSetStyleContext(oldStyleContext);
-      }
-      if (oldStyleContext)
-        oldStyleContext->Release();
+      aContext->AddRef();
+      DidSetStyleContext(oldStyleContext);
+      oldStyleContext->Release();
     }
   }
 
@@ -769,12 +762,9 @@ public:
   void SetStyleContextWithoutNotification(nsStyleContext* aContext)
   {
     if (aContext != mStyleContext) {
-      if (mStyleContext)
-        mStyleContext->Release();
+      mStyleContext->Release();
       mStyleContext = aContext;
-      if (aContext) {
-        aContext->AddRef();
-      }
+      aContext->AddRef();
     }
   }
 
