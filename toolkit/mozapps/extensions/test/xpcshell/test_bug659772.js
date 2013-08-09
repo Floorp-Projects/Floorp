@@ -290,7 +290,7 @@ function run_test_2() {
                                    "addon2@tests.mozilla.org",
                                    "addon3@tests.mozilla.org",
                                    "addon4@tests.mozilla.org"],
-                                  callback_soon(function([a1, a2, a3, a4]) {
+                                  function([a1, a2, a3, a4]) {
         do_check_neq(a1, null);
         do_check_eq(a1.version, "2.0");
         do_check_true(a1.appDisabled);
@@ -334,7 +334,7 @@ function run_test_2() {
         shutdownManager();
 
         do_test_finished();
-      }));
+      });
     };
   });
 }

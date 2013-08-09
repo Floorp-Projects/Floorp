@@ -35,6 +35,6 @@ function run_test() {
     do_check_eq(getInstalledVersion(), "1.0");
     do_check_eq(getActiveVersion(), "1.0");
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }

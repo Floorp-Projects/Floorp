@@ -335,12 +335,12 @@ const ADDON_IDS = ["softblock1@tests.mozilla.org",
 // Don't need the full interface, attempts to call other methods will just
 // throw which is just fine
 var WindowWatcher = {
-  openWindow: function(parent, url, name, features, openArgs) {
+  openWindow: function(parent, url, name, features, arguments) {
     // Should be called to list the newly blocklisted items
     do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
 
     // Simulate auto-disabling any softblocks
-    var list = openArgs.wrappedJSObject.list;
+    var list = arguments.wrappedJSObject.list;
     list.forEach(function(aItem) {
       if (!aItem.blocked)
         aItem.disable = true;
@@ -1329,7 +1329,7 @@ add_test(function run_manual_update_2_test() {
 
   startupManager(false);
 
-  AddonManager.getAddonsByIDs(ADDON_IDS, callback_soon(function([s1, s2, s3, s4, s5, h, r]) {
+  AddonManager.getAddonsByIDs(ADDON_IDS, function([s1, s2, s3, s4, s5, h, r]) {
 
     check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
     check_addon(s2, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1347,8 +1347,7 @@ add_test(function run_manual_update_2_test() {
     manual_update("2", function manual_update_2_2() {
       restartManager();
 
-      AddonManager.getAddonsByIDs(ADDON_IDS,
-       callback_soon(function([s1, s2, s3, s4, s5, h, r]) {
+      AddonManager.getAddonsByIDs(ADDON_IDS, function([s1, s2, s3, s4, s5, h, r]) {
 
         check_addon(s1, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
         check_addon(s2, "2.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1376,9 +1375,9 @@ add_test(function run_manual_update_2_test() {
             run_next_test();
           });
         });
-      }));
+      });
     });
-  }));
+  });
 });
 
 // Uses the API to install blocked add-ons from the local filesystem

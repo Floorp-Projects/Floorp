@@ -24,7 +24,9 @@ function run_test() {
     }, [
       "onInstallStarted",
       "onInstallEnded",
-    ], callback_soon(check_test));
+    ], function() {
+      do_execute_soon(check_test)
+    });
     install.install();
   });
 }
@@ -86,6 +88,6 @@ function check_test() {
       do_check_false(target.active);
     }
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   }));
 }
