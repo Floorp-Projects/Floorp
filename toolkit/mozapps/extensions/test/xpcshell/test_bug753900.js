@@ -81,6 +81,6 @@ function run_test() {
     do_check_neq(a4, null);
     do_check_in_crash_annotation(addon4.id, addon4.version);
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }

@@ -254,6 +254,6 @@ function run_test() {
     do_check_false(a8.strictCompatibility);
     do_check_true(a8.foreignInstall);
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }
