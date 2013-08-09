@@ -1075,7 +1075,6 @@ var BrowserUI = {
       case "cmd_newTab":
         this.newTab(null, null, true);
         this._edit.beginEditing(false);
-        this._edit.select();
         break;
       case "cmd_closeTab":
         this.closeTab();
