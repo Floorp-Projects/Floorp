@@ -57,6 +57,7 @@
 
     <style name="Widget.ReadingListView" parent="Widget.BookmarksListView">
         <item name="android:paddingTop">30dp</item>
+        <item name="topDivider">true</item>
     </style>
 
 </resources>
