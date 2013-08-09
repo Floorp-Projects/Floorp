@@ -632,7 +632,7 @@ nsresult MediaDecoder::Seek(double aTime)
         if (distanceLeft == distanceRight) {
           distanceLeft = Abs(leftBound - mCurrentTime);
           distanceRight = Abs(rightBound - mCurrentTime);
-        } 
+        }
         aTime = (distanceLeft < distanceRight) ? leftBound : rightBound;
       } else {
         // Seek target is after the end last range in seekable data.
@@ -1270,6 +1270,12 @@ void MediaDecoder::SetMediaDuration(int64_t aDuration)
 {
   NS_ENSURE_TRUE_VOID(GetStateMachine());
   GetStateMachine()->SetDuration(aDuration);
+}
+
+void MediaDecoder::UpdateMediaDuration(int64_t aDuration)
+{
+  NS_ENSURE_TRUE_VOID(GetStateMachine());
+  GetStateMachine()->UpdateDuration(aDuration);
 }
 
 void MediaDecoder::SetMediaSeekable(bool aMediaSeekable) {

@@ -39,8 +39,8 @@ function setDevPixelEqualToPx()
 function checkContextUIMenuItemCount(aCount)
 {
   let visibleCount = 0;
-  for (let idx = 0; idx < ContextMenuUI._commands.childNodes.length; idx++) {
-    if (!ContextMenuUI._commands.childNodes[idx].hidden)
+  for (let idx = 0; idx < ContextMenuUI.commands.childNodes.length; idx++) {
+    if (!ContextMenuUI.commands.childNodes[idx].hidden)
       visibleCount++;
   }
   is(visibleCount, aCount, "command list count");
@@ -49,8 +49,8 @@ function checkContextUIMenuItemCount(aCount)
 function checkContextUIMenuItemVisibility(aVisibleList)
 {
   let errors = 0;
-  for (let idx = 0; idx < ContextMenuUI._commands.childNodes.length; idx++) {
-    let item = ContextMenuUI._commands.childNodes[idx];
+  for (let idx = 0; idx < ContextMenuUI.commands.childNodes.length; idx++) {
+    let item = ContextMenuUI.commands.childNodes[idx];
     if (aVisibleList.indexOf(item.id) != -1 && item.hidden) {
       // item should be visible
       errors++;
@@ -551,6 +551,20 @@ function logicalCoordsForElement (aElement, aX, aY) {
   return coords;
 }
 
+function sendContextMenuMouseClickToElement(aWindow, aElement, aX, aY) {
+  let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindowUtils);
+  let coords = logicalCoordsForElement(aElement, aX, aY);
+
+  utils.sendMouseEventToWindow("mousedown", coords.x, coords.y, 2, 1, 0);
+  utils.sendMouseEventToWindow("mouseup", coords.x, coords.y, 2, 1, 0);
+  utils.sendMouseEventToWindow("contextmenu", coords.x, coords.y, 2, 1, 0);
+}
+
+function sendMouseClick(aWindow, aX, aY) {
+  EventUtils.synthesizeMouseAtPoint(aX, aY, {}, aWindow);
+}
+
 /*
  * sendContextMenuClick - simulates a press-hold touch input event. Event
  * is delivered to the main window of the application through the top-level
@@ -766,8 +780,9 @@ function runTests() {
       let badTabs = [];
       Browser.tabs.forEach(function(item, index, array) {
         let location = item.browser.currentURI.spec;
-        if (index == 0 && location == "about:blank")
+        if (index == 0 && location == "about:blank" || location == "about:start") {
           return;
+        }
         ok(false, "Left over tab after test: '" + location + "'");
         badTabs.push(item);
       });

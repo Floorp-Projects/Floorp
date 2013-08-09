@@ -92,6 +92,12 @@ TelephonyListener::NotifyError(int32_t aCallIndex,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TelephonyListener::NotifyCdmaCallWaiting(const nsAString& aNumber)
+{
+  return NS_OK;
+}
+
 } // anonymous namespace
 
 BluetoothTelephonyListener::BluetoothTelephonyListener()

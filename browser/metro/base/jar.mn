@@ -78,7 +78,6 @@ chrome.jar:
   content/bookmarks.js                         (content/bookmarks.js)
   content/exceptions.js                        (content/exceptions.js)
   content/downloads.js                         (content/downloads.js)
-  content/history.js                           (content/history.js)
   content/Site.js                              (content/Site.js)
   content/TopSites.js                          (content/TopSites.js)
   content/console.js                           (content/console.js)
@@ -86,11 +85,20 @@ chrome.jar:
   content/dbg-metro-actors.js                  (content/dbg-metro-actors.js)
 #ifdef MOZ_SERVICES_SYNC
   content/flyoutpanels/SyncFlyoutPanel.js      (content/flyoutpanels/SyncFlyoutPanel.js)
-  content/RemoteTabs.js                        (content/RemoteTabs.js)
 #endif
   content/NavButtonSlider.js                   (content/NavButtonSlider.js)
   content/ContextUI.js                         (content/ContextUI.js)
   content/apzc.js                              (content/apzc.js)
+
+* content/Start.xul                            (content/startui/Start.xul)
+* content/startui-scripts.js                   (content/startui/startui-scripts.js)
+  content/StartUI.js                           (content/startui/StartUI.js)
+  content/BookmarksView.js                     (content/startui/BookmarksView.js)
+  content/HistoryView.js                       (content/startui/HistoryView.js)
+  content/TopSitesView.js                      (content/startui/TopSitesView.js)
+#ifdef MOZ_SERVICES_SYNC
+  content/RemoteTabsView.js                    (content/startui/RemoteTabsView.js)
+#endif
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xul
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml

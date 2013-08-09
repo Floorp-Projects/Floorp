@@ -127,6 +127,7 @@ documenttab[closing] > .documenttab-container {
   margin: @metro_spacing_normal@ @metro_spacing_snormal@;
   background: white none center top no-repeat;
   background-size: cover;
+  min-width: @thumbnail_width@;
   width: @thumbnail_width@;
   height: @thumbnail_height@;
 }
@@ -187,11 +188,6 @@ documenttab[selected] .documenttab-selection {
 /* Start UI ----------------------------------------------------------------- */
 
 #start-container {
-  display: none;
-}
-
-#start-container[startpage],
-#start-container[filtering] {
   display: -moz-box;
 }
 
@@ -199,12 +195,6 @@ documenttab[selected] .documenttab-selection {
   overflow-x: scroll;
 }
 
-/* if autocomplete is set, hide both start pages,
- *  else hide the autocomplete screen */
-#start-container[filtering] > .start-page,
-#start-container:not([filtering]) > #start-autocomplete {
-  visibility: collapse;
-}
 /* startUI sections, grids */
 #start-scrollbox > .meta-section {
   /* allot space for at least a single column */
@@ -212,13 +202,16 @@ documenttab[selected] .documenttab-selection {
   /* leave margin for horizontal scollbar */
   margin-bottom: 30px;
 }
+
 #start-scrollbox[input="precise"] > .meta-section {
   margin-bottom: 5px;
 }
+
 #start-topsites {
   /* allot space for 3 tile columns for the topsites grid */
   min-width: calc(3 * @grid_double_column_width@);
 }
+
 #start-scrollbox {
   -moz-box-orient: horizontal;
   /* Move scrollbar above toolbar,
@@ -234,17 +227,18 @@ documenttab[selected] .documenttab-selection {
 #start-autocomplete[viewstate="snapped"] .richgrid-item-content {
   -moz-box-orient: horizontal;
 }
+
 #start-container,
 #start-autocomplete {
   padding-left: 0;
   padding-right: 0;
 }
+
 #start-container[viewstate="snapped"] #start-scrollbox > .meta-section {
-  margin: 0;
+  margin: 0 @metro_spacing_xnormal@;
   min-width: @grid_double_column_width@;
-  -moz-box-flex: 1;
-  -moz-box-align: center;
 }
+
 #start-container[viewstate="snapped"] richgrid {
   visibility: collapse;
 }
@@ -556,7 +550,7 @@ documenttab[selected] .documenttab-selection {
   overflow: hidden;
 }
 
-#urlbar[mode="edit"] {
+#urlbar[editing] {
   border-color: @metro_orange@;
 }
 
@@ -681,9 +675,19 @@ documenttab[selected] .documenttab-selection {
   }
 }
 
-#urlbar:-moz-any([mode="loading"], [mode="view"]) > #go-button,
-#urlbar:-moz-any([mode="edit"], [mode="loading"]) > #reload-button,
-#urlbar:-moz-any([mode="edit"], [mode="view"]) > #stop-button,
+/* navbar edit button: one button out of three - when editing: go, when !editing,
+   loading: stop, when !editing, !loading: reload */ 
+
+#go-button, #reload-button, #stop-button  {
+  visibility: collapse;
+}
+
+#urlbar[editing] > #go-button,
+#urlbar:not([editing])[loading] > #stop-button,
+#urlbar:not([editing]):not([loading]) > #reload-button {
+  visibility: visible;
+}
+
 #toolbar[viewstate="snapped"] > #urlbar ~ toolbarbutton {
   visibility: collapse;
 }

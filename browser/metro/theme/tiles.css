@@ -282,4 +282,13 @@ richgriditem[bending] > .tile-content {
     background: #fff;
     opacity: 1.0;
   }
+
+  .tile-content {
+    left: 0;
+    right: 0;
+  }
+
+  richgriditem {
+    width: auto;
+  }
 }

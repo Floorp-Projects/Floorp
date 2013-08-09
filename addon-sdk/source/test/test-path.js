@@ -429,8 +429,3 @@ if (isWindows) {
 };
 
 require('test').run(exports);
-
-// Test disabled on OSX because of bug 891698
-if (require("sdk/system/runtime").OS == "Darwin")
-  module.exports = {};
-

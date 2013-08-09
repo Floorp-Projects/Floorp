@@ -406,7 +406,8 @@ class Runner(object):
     def find_binary(self):
         """Finds the binary for self.names if one was not provided."""
         binary = None
-        if sys.platform in ('linux2', 'sunos5', 'solaris'):
+        if sys.platform in ('linux2', 'sunos5', 'solaris') \
+                or sys.platform.startswith('freebsd'):
             for name in reversed(self.names):
                 binary = findInPath(name)
         elif os.name == 'nt' or sys.platform == 'cygwin':
@@ -578,7 +579,8 @@ class FirefoxRunner(Runner):
     def names(self):
         if sys.platform == 'darwin':
             return ['firefox', 'nightly', 'shiretoko']
-        if (sys.platform == 'linux2') or (sys.platform in ('sunos5', 'solaris')):
+        if sys.platform in ('linux2', 'sunos5', 'solaris') \
+                or sys.platform.startswith('freebsd'):
             return ['firefox', 'mozilla-firefox', 'iceweasel']
         if os.name == 'nt' or sys.platform == 'cygwin':
             return ['firefox']

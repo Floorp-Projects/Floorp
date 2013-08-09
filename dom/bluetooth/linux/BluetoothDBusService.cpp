@@ -34,14 +34,16 @@
 #include "nsDebug.h"
 #include "nsDataHashtable.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ipc/UnixSocket.h"
 #include "mozilla/ipc/DBusThread.h"
 #include "mozilla/ipc/DBusUtils.h"
 #include "mozilla/ipc/RawDBusConnection.h"
-#include "mozilla/Util.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/NullPtr.h"
-#include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "mozilla/StaticMutex.h"
+#include "mozilla/Util.h"
 #if defined(MOZ_WIDGET_GONK)
 #include "cutils/properties.h"
 #endif
@@ -74,6 +76,13 @@ USING_BLUETOOTH_NAMESPACE
 #define ERR_A2DP_IS_DISCONNECTED      "A2dpIsDisconnected"
 #define ERR_AVRCP_IS_DISCONNECTED     "AvrcpIsDisconnected"
 #define ERR_UNKNOWN_PROFILE           "UnknownProfileError"
+
+/**
+ * To not lock Bluetooth switch button on Settings UI because of any accident,
+ * we will force disabling Bluetooth 5 seconds after the user requesting to
+ * turn off Bluetooth.
+ */
+#define TIMEOUT_FORCE_TO_DISABLE_BT 5
 
 typedef struct {
   const char* name;
@@ -159,8 +168,10 @@ static const char* sBluetoothDBusSignals[] =
 static nsRefPtr<RawDBusConnection> gThreadConnection;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sPairingReqTable;
 static nsDataHashtable<nsStringHashKey, DBusMessage* > sAuthorizeReqTable;
-static Atomic<int32_t> sIsPairing;
 static nsString sAdapterPath;
+static Atomic<int32_t> sIsPairing(0);
+static int sConnectedDeviceCount = 0;
+static Monitor sStopBluetoothMonitor("BluetoothService.sStopBluetoothMonitor");
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 typedef bool (*FilterFunc)(const BluetoothValue&);
@@ -1499,6 +1510,19 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
       signal.path() = NS_LITERAL_STRING(KEY_ADAPTER);
       signal.value() = parameters;
       NS_DispatchToMainThread(new DistributeBluetoothSignalTask(signal));
+    } else if (property.name().EqualsLiteral("Connected")) {
+      MonitorAutoLock lock(sStopBluetoothMonitor);
+
+      if (property.value().get_bool()) {
+        ++sConnectedDeviceCount;
+      } else {
+        MOZ_ASSERT(sConnectedDeviceCount > 0);
+
+        --sConnectedDeviceCount;
+        if (sConnectedDeviceCount == 0) {
+          lock.Notify();
+        }
+      }
     }
   } else if (dbus_message_is_signal(aMsg, DBUS_MANAGER_IFACE, "AdapterAdded")) {
     const char* str;
@@ -1689,11 +1713,11 @@ BluetoothDBusService::StopInternal()
   // This could block. It should never be run on the main thread.
   MOZ_ASSERT(!NS_IsMainThread());
 
-  // If Bluetooth is turned off while connections exist, in order not to only
-  // disconnect with profile connections with low level ACL connections alive,
-  // we disconnect ACLs directly instead of closing each socket.
-  if (!sAdapterPath.IsEmpty()) {
-    DisconnectAllAcls(sAdapterPath);
+  {
+    MonitorAutoLock lock(sStopBluetoothMonitor);
+    if (sConnectedDeviceCount > 0) {
+      lock.Wait(PR_SecondsToInterval(TIMEOUT_FORCE_TO_DISABLE_BT));
+    }
   }
 
   if (!mConnection) {
@@ -1737,6 +1761,7 @@ BluetoothDBusService::StopInternal()
   sAuthorizeReqTable.Clear();
 
   sIsPairing = 0;
+  sConnectedDeviceCount = 0;
 
   StopDBus();
   return NS_OK;

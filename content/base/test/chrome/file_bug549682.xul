@@ -11,14 +11,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   <label value="Mozilla Bug 549682"/>
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+  var Cr = Components.results;
+  var Cu = Components.utils;
+
   var didRunAsync = false;
   var didRunLocal = false;
-  var global = Components.classes["@mozilla.org/globalmessagemanager;1"]
-                         .getService(Components.interfaces.nsIMessageBroadcaster);
-  var ppm = Components.classes["@mozilla.org/parentprocessmessagemanager;1"]
-                      .getService(Components.interfaces.nsIMessageBroadcaster);
-  var cpm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
-                      .getService(Components.interfaces.nsISyncMessageSender);
+
+  var global = Cc["@mozilla.org/globalmessagemanager;1"]
+                 .getService(Components.interfaces.nsIMessageBroadcaster);
+  var ppm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+              .getService(Components.interfaces.nsIMessageBroadcaster);
+  var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+              .getService(Components.interfaces.nsISyncMessageSender);
+
+  Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+  function ok(cond, msg) {
+    opener.wrappedJSObject.ok(cond, msg);
+  }
+
+  function is(actual, expected, msg) {
+    opener.wrappedJSObject.is(actual, expected, msg);
+  }
 
   var asyncPPML = false;
   function ppmASL(m) {
@@ -42,9 +58,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   ppm.broadcastAsyncMessage("childprocessmessage", "");
   
   function checkPMMMessages() {
-    opener.wrappedJSObject.ok(asyncPPML, "should have handled async message");
-    opener.wrappedJSObject.ok(syncPPML, "should have handled sync message");
-    opener.wrappedJSObject.ok(asyncCPML, "should have handled async message");
+    ok(asyncPPML, "should have handled async message");
+    ok(syncPPML, "should have handled sync message");
+    ok(asyncCPML, "should have handled async message");
     ppm.removeMessageListener("processmessageAsync", ppmASL);
     ppm.removeMessageListener("processmessageSync", ppmSL);
     cpm.removeMessageListener("childprocessmessage", cpmASL);
@@ -58,38 +74,77 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
       global.removeMessageListener("sync", globalListener);
       global.removeMessageListener("global-sync", globalListener);
       // Note, the result depends on what other windows are open.
-      opener.wrappedJSObject.ok(globalListenerCallCount >= 4,
-                                "Global listener should have been called at least 4 times!");
-      opener.wrappedJSObject.ok(didRunLocal, "Local message received.");
-
-      opener.setTimeout("done()", 0);
-      var i = document.getElementById("ifr");
-      i.parentNode.removeChild(i); // This is a crash test!
-      window.close();
+      ok(globalListenerCallCount >= 4,
+         "Global listener should have been called at least 4 times!");
+      ok(didRunLocal, "Local message received.");
     }
   }
 
   function asyncL(m) {
     didRunAsync = true;
-    opener.wrappedJSObject.is(m.name, "async", "Wrong message!");
-    opener.wrappedJSObject.is(m.json.data, 1234, "Wrong data!");
+    is(m.name, "async", "Wrong message!");
+    is(m.json.data, 1234, "Wrong data!");
   }
 
   function syncL(m) {
-    opener.wrappedJSObject.is(m.name, "sync", "Wrong message!");
-    opener.wrappedJSObject.is(m.json.data, 1234, "Wrong data!");
-    opener.wrappedJSObject.ok(didRunAsync, "Should have run async!");
+    is(m.name, "sync", "Wrong message!");
+    is(m.json.data, 1234, "Wrong data!");
+    ok(didRunAsync, "Should have run async!");
   }
 
   function localL(m) {
-    opener.wrappedJSObject.is(m.name, "lasync", "Wrong message!");
-    opener.wrappedJSObject.is(m.json.data, 2345, "Wrong data!");
+    is(m.name, "lasync", "Wrong message!");
+    is(m.json.data, 2345, "Wrong data!");
     didRunLocal = true;
+  }
+
+  var weakMessageReceived = false;
+  var weakListener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIMessageListener,
+                                           Ci.nsISupportsWeakReference]),
+
+    receiveMessage: function(msg) {
+      if (weakMessageReceived) {
+        ok(false, 'Weak listener fired twice.');
+        return;
+      }
+
+      ok(true, 'Weak listener fired once.');
+      weakMessageReceived = true;
+      document.getElementById('ifr').messageManager
+              .removeWeakMessageListener('weak', weakListener);
+    }
+  };
+
+  var weakListener2 = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIMessageListener,
+                                           Ci.nsISupportsWeakReference]),
+
+    receiveMessage: function(msg) {
+      ok(false, 'Should not have received a message.');
+    }
+  };
+
+  function weakDoneListener() {
+    ok(weakMessageReceived, 'Got "weak" message.');
+    finish();
+  }
+
+  function finish() {
+    opener.setTimeout("done()", 0);
+    var i = document.getElementById("ifr");
+    i.parentNode.removeChild(i); // This is a crash test!
+    window.close();
   }
 
   function loadScript() {
     // Async should be processed first!
-    messageManager.loadFrameScript("data:,sendAsyncMessage('async', { data: 1234 }); sendSyncMessage('sync', { data: 1234 });", false);
+    messageManager.loadFrameScript("data:,\
+      sendAsyncMessage('async', { data: 1234 });\
+      sendSyncMessage('sync', { data: 1234 });\
+      sendAsyncMessage('weak', {});\
+      sendAsyncMessage('weak', {});\
+      sendAsyncMessage('weakdone', {});", false);
   }
 
   function run() {
@@ -97,9 +152,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
 
     var wn = document.getElementById('ifr').contentWindow
       .getInterface(Components.interfaces.nsIWebNavigation);
-    opener.wrappedJSObject.ok(wn, "Should have webnavigation");
+    ok(wn, "Should have webnavigation");
     var cfmm = wn.getInterface(Components.interfaces.nsIContentFrameMessageManager);
-    opener.wrappedJSObject.ok(cfmm, "Should have content messageManager");
+    ok(cfmm, "Should have content messageManager");
 
     var didGetSyncMessage = false;
     function syncContinueTestFn() {
@@ -108,7 +163,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     localmm.addMessageListener("syncContinueTest", syncContinueTestFn);
     cfmm.sendSyncMessage("syncContinueTest", {});
     localmm.removeMessageListener("syncContinueTest", syncContinueTestFn);
-    opener.wrappedJSObject.ok(didGetSyncMessage, "Should have got sync message!");
+    ok(didGetSyncMessage, "Should have got sync message!");
     
     localmm.addMessageListener("lasync", localL);
     localmm.loadFrameScript("data:,sendAsyncMessage('lasync', { data: 2345 })", false);
@@ -123,7 +178,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     var c = 0;
     messageManager.addMessageListener("toberemoved", function() {
       ++c;
-      opener.wrappedJSObject.is(c, 1, "Should be called only once!");
+      is(c, 1, "Should be called only once!");
     });
     // This loads the script in the existing <browser>
     messageManager.loadFrameScript(toBeRemovedScript, true);
@@ -134,11 +189,36 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     var b = document.createElement("browser");
     b.setAttribute("type", "content");
     document.documentElement.appendChild(b);
-    opener.wrappedJSObject.is(globalListenerCallCount, oldValue + 1,
+    is(globalListenerCallCount, oldValue + 1,
                               "Wrong message count");
 
-    setTimeout(checkPMMMessages, 0);
-    setTimeout(loadScript, 0);
+    localmm.addWeakMessageListener('weak', weakListener);
+    localmm.addMessageListener('weakdone', weakDoneListener);
+
+    // Add weakListener2 as a weak message listener, then force weakListener2
+    // to be gc'ed.  weakListener2 shouldn't be run.
+    var weakRef = Cu.getWeakReference(weakListener2);
+    localmm.addWeakMessageListener('weak', weakListener2);
+    weakListener2 = null;
+
+    // Force a gc/cc in a loop until weakRef's referent has gone away.
+    function waitForWeakRefToDie() {
+      if (weakRef.get()) {
+        var mgr = Cc["@mozilla.org/memory-reporter-manager;1"]
+                    .getService(Ci.nsIMemoryReporterManager);
+        mgr.minimizeMemoryUsage(waitForWeakRefToDie);
+
+        // Print a message so that if the test hangs in a minimizeMemoryUsage
+        // loop, we'll be able to see it in the log.
+        ok(true, "waitForWeakRefToDie spinning...");
+        return;
+      }
+
+      setTimeout(checkPMMMessages, 0);
+      setTimeout(loadScript, 0);
+    }
+
+    waitForWeakRefToDie();
   }
 
   ]]></script>

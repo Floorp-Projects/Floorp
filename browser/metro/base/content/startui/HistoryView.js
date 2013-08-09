@@ -17,17 +17,27 @@ function HistoryView(aSet, aLimit, aFilterUnpinned) {
   this._pinHelper = new ItemPinHelper("metro.history.unpinned");
   this._historyService.addObserver(this, false);
   Services.obs.addObserver(this, "metro_viewstate_changed", false);
-  window.addEventListener('MozAppbarDismissing', this, false);
-  window.addEventListener('HistoryNeedsRefresh', this, false);
+  StartUI.chromeWin.addEventListener('MozAppbarDismissing', this, false);
+  StartUI.chromeWin.addEventListener('HistoryNeedsRefresh', this, false);
+  window.addEventListener("TabClose", this, true);
 }
 
 HistoryView.prototype = Util.extend(Object.create(View.prototype), {
   _set: null,
   _toRemove: null,
 
+  destruct: function destruct() {
+    this._historyService.removeObserver(this);
+    Services.obs.removeObserver(this, "metro_viewstate_changed");
+    if (StartUI.chromeWin) {
+      StartUI.chromeWin.removeEventListener('MozAppbarDismissing', this, false);
+      StartUI.chromeWin.removeEventListener('HistoryNeedsRefresh', this, false);
+    }
+  },
+
   handleItemClick: function tabview_handleItemClick(aItem) {
     let url = aItem.getAttribute("value");
-    BrowserUI.goToURI(url);
+    StartUI.goToURI(url);
   },
 
   populateGrid: function populateGrid(aRefresh) {
@@ -88,13 +98,6 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
     this._set.arrangeItems();
     if (this._inBatch > 0)
       this._inBatch--;
-  },
-
-  destruct: function destruct() {
-    this._historyService.removeObserver(this);
-    Services.obs.removeObserver(this, "metro_viewstate_changed");
-    window.removeEventListener('MozAppbarDismissing', this, false);
-    window.removeEventListener('HistoryNeedsRefresh', this, false);
   },
 
   addItemToSet: function addItemToSet(aURI, aTitle, aIcon, aPos) {
@@ -208,6 +211,12 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
       case "HistoryNeedsRefresh":
         this.populateGrid(true);
         break;
+
+      case "TabClose":
+        // Flush any pending actions - appbar will call us back
+        // before this returns with 'MozAppbarDismissing' above.
+        StartUI.chromeWin.ContextUI.dismiss();
+      break;
     }
   },
 
@@ -298,6 +307,8 @@ let HistoryStartView = {
   },
 
   uninit: function uninit() {
-    this._view.destruct();
+    if (this._view) {
+      this._view.destruct();
+    }
   }
 };

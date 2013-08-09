@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_telephony_telephonycommon_h__
 #define mozilla_dom_telephony_telephonycommon_h__
 
+#include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
@@ -22,15 +24,13 @@
 #define USING_TELEPHONY_NAMESPACE \
   using namespace mozilla::dom::telephony;
 
-class nsIDOMTelephony;
-class nsIDOMTelephonyCall;
-
 BEGIN_TELEPHONY_NAMESPACE
 
 enum {
   kOutgoingPlaceholderCallIndex = UINT32_MAX
 };
 
+class CallsList;
 class Telephony;
 class TelephonyCall;
 

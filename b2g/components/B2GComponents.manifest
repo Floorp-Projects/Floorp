@@ -40,7 +40,8 @@ category app-startup ProcessGlobal service,@mozilla.org/b2g-process-global;1
 
 # ContentHandler.js
 component {d18d0216-d50c-11e1-ba54-efb18d0ef0ac} ContentHandler.js
-contract @mozilla.org/uriloader/content-handler;1?type=application/pdf {d18d0216-d50c-11e1-ba54-efb18d0ef0ac}
+contract @mozilla.org/b2g/activities-content-handler;1 {d18d0216-d50c-11e1-ba54-efb18d0ef0ac}
+category app-startup ContentHandler service,@mozilla.org/b2g/activities-content-handler;1
 
 # PaymentGlue.js
 component {8b83eabc-7929-47f4-8b48-4dea8d887e4b} PaymentGlue.js

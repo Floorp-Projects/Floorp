@@ -3,7 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-const { URL, toFilename, fromFilename, isValidURI, getTLD, DataURL } = require('sdk/url');
+const {
+  URL,
+  toFilename,
+  fromFilename,
+  isValidURI,
+  getTLD,
+  DataURL,
+  isLocalURL } = require('sdk/url');
+
 const { pathFor } = require('sdk/system');
 const file = require('sdk/io/file');
 const tabs = require('sdk/tabs');
@@ -63,11 +71,11 @@ exports.testParseHttpSearchAndHash = function (assert) {
   var info = URL('https://www.moz.com/some/page.html');
   assert.equal(info.hash, '');
   assert.equal(info.search, '');
-  
+
   var hashOnly = URL('https://www.sub.moz.com/page.html#justhash');
   assert.equal(hashOnly.search, '');
   assert.equal(hashOnly.hash, '#justhash');
-  
+
   var queryOnly = URL('https://www.sub.moz.com/page.html?my=query');
   assert.equal(queryOnly.search, '?my=query');
   assert.equal(queryOnly.hash, '');
@@ -75,11 +83,11 @@ exports.testParseHttpSearchAndHash = function (assert) {
   var qMark = URL('http://www.moz.org?');
   assert.equal(qMark.search, '');
   assert.equal(qMark.hash, '');
-  
+
   var hash = URL('http://www.moz.org#');
   assert.equal(hash.search, '');
   assert.equal(hash.hash, '');
-  
+
   var empty = URL('http://www.moz.org?#');
   assert.equal(hash.search, '');
   assert.equal(hash.hash, '');
@@ -346,6 +354,39 @@ exports.testWindowLocationMatch = function (assert, done) {
     }
   })
 };
+
+exports.testURLInRegExpTest = function(assert) {
+  let url = 'https://mozilla.org';
+  assert.equal((new RegExp(url).test(URL(url))), true, 'URL instances work in a RegExp test');
+}
+
+exports.testLocalURL = function(assert) {
+  [
+    'data:text/html;charset=utf-8,foo and bar',
+    'data:text/plain,foo and bar',
+    'resource://gre/modules/commonjs/',
+    'chrome://browser/content/browser.xul'
+  ].forEach(aUri => {
+    assert.ok(isLocalURL(aUri), aUri + ' is a Local URL');
+  })
+
+}
+
+exports.testLocalURLwithRemoteURL = function(assert) {
+  validURIs().filter(url => !url.startsWith('data:')).forEach(aUri => {
+    assert.ok(!isLocalURL(aUri), aUri + ' is an invalid Local URL');
+  });
+}
+
+exports.testLocalURLwithInvalidURL = function(assert) {
+  invalidURIs().concat([
+    'data:foo and bar',
+    'resource:// must fail',
+    'chrome:// here too'
+  ]).forEach(aUri => {
+    assert.ok(!isLocalURL(aUri), aUri + ' is an invalid Local URL');
+  });
+}
 
 function validURIs() {
   return [

@@ -32,6 +32,7 @@ EXTRA_PP_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'TelemetryFile.jsm',
     'TelemetryStopwatch.jsm',
     'ThirdPartyCookieProbe.jsm',
 ]
