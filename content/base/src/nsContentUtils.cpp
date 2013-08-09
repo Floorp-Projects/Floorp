@@ -4960,7 +4960,7 @@ nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
     // means, for instance calling the drag service directly, or a drag
     // from another application. In either case, a new dataTransfer should
     // be created that reflects the data.
-    initialDataTransfer = new nsDOMDataTransfer(aDragEvent->message, true);
+    initialDataTransfer = new nsDOMDataTransfer(aDragEvent->message, true, -1);
 
     NS_ENSURE_TRUE(initialDataTransfer, NS_ERROR_OUT_OF_MEMORY);
 

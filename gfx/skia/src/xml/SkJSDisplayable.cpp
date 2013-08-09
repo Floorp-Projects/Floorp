@@ -79,7 +79,7 @@ JSBool SkJSDisplayable::Draw(JSContext *cx, JSObject *obj, uintN argc,
     SkDrawable* drawable = (SkDrawable*) p->fDisplayable;
     SkAnimateMaker maker(NULL, gCanvas, gPaint);
     drawable->draw(maker);
-    return JS_TRUE;
+    return true;
 }
 
 
@@ -97,7 +97,7 @@ static JSBool _class##Constructor(JSContext *cx, JSObject *obj, uintN argc, jsva
     SkJSDisplayable* jsDisplayable = new SkJSDisplayable(); \
     jsDisplayable->fDisplayable = new _prefix##_class(); \
     JS_SetPrivate(cx, obj, (void*) jsDisplayable); \
-    return JS_TRUE; \
+    return true; \
 } \
     \
 static JSObject* _class##Init(JSContext *cx, JSObject *obj, JSObject *proto) { \
@@ -219,7 +219,7 @@ JSBool SkJSDisplayable::GetProperty(JSContext *cx, JSObject *obj, jsval id,
                                  jsval *vp)
 {
     if (JSVAL_IS_INT(id) == 0)
-        return JS_TRUE;
+        return true;
     SkJSDisplayable *p = (SkJSDisplayable *) JS_GetPrivate(cx, obj);
     SkDisplayable* displayable = p->fDisplayable;
     SkDisplayTypes displayableType = displayable->getType();
@@ -290,12 +290,12 @@ JSBool SkJSDisplayable::GetProperty(JSContext *cx, JSObject *obj, jsval id,
         default:
             SkASSERT(0); // !!! unimplemented
     }
-    return JS_TRUE;
+    return true;
 }
 
 JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp) {
     if (JSVAL_IS_INT(id) == 0)
-        return JS_TRUE;
+        return true;
     SkJSDisplayable *p = (SkJSDisplayable *) JS_GetPrivate(cx, obj);
     SkDisplayable* displayable = p->fDisplayable;
     SkDisplayTypes displayableType = displayable->getType();
@@ -368,7 +368,7 @@ JSBool SkJSDisplayable::SetProperty(JSContext *cx, JSObject *obj, jsval id, jsva
                 SkASSERT(0); // !!! unimplemented
         }
     }
-    return JS_TRUE;
+    return true;
 }
 
 void SkJS::InitializeDisplayables(const SkBitmap& bitmap, JSContext *cx, JSObject *obj, JSObject *proto) {

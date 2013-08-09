@@ -364,6 +364,12 @@ struct NamedConstructor
  *                  on objects in chrome compartments. This must be null if the
  *                  interface doesn't have any ChromeOnly properties or if the
  *                  object is being created in non-chrome compartment.
+ * defineOnGlobal controls whether properties should be defined on the given
+ *                global for the interface object (if any) and named
+ *                constructors (if any) for this interface.  This can be
+ *                false in situations where we want the properties to only
+ *                appear on privileged Xrays but not on the unprivileged
+ *                underlying global.
  *
  * At least one of protoClass, constructorClass or constructor should be
  * non-null. If constructorClass or constructor are non-null, the resulting
@@ -380,7 +386,7 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Heap<JSObject*>* constructorCache, const DOMClass* domClass,
                        const NativeProperties* regularProperties,
                        const NativeProperties* chromeOnlyProperties,
-                       const char* name);
+                       const char* name, bool defineOnGlobal);
 
 /*
  * Define the unforgeable attributes on an object.

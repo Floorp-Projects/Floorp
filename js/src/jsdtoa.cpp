@@ -112,7 +112,7 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
 
     /* If Infinity, -Infinity, or NaN, return the string regardless of mode. */
     if (decPt != 9999) {
-        JSBool exponentialNotation = JS_FALSE;
+        JSBool exponentialNotation = false;
         int minNDigits = 0;  /* Min number of significant digits required */
         char *p;
         char *q;
@@ -120,7 +120,7 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
         switch (mode) {
             case DTOSTR_STANDARD:
                 if (decPt < -5 || decPt > 21)
-                    exponentialNotation = JS_TRUE;
+                    exponentialNotation = true;
                 else
                     minNDigits = decPt;
                 break;
@@ -137,14 +137,14 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
                 minNDigits = precision;
                 /* Fall through */
             case DTOSTR_STANDARD_EXPONENTIAL:
-                exponentialNotation = JS_TRUE;
+                exponentialNotation = true;
                 break;
 
             case DTOSTR_PRECISION:
                 JS_ASSERT(precision > 0);
                 minNDigits = precision;
                 if (decPt < -5 || decPt > precision)
-                    exponentialNotation = JS_TRUE;
+                    exponentialNotation = true;
                 break;
         }
 
@@ -422,7 +422,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
          *   (d - prevDouble(d))/2 = mlo/2^s2;
          *   (nextDouble(d) - d)/2 = mhi/2^s2. */
 
-        done = JS_FALSE;
+        done = false;
         do {
             int32_t j, j1;
             Bigint *delta;
@@ -459,7 +459,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
             if (j1 == 0 && !(word1(d) & 1)) {
                 if (j > 0)
                     digit++;
-                done = JS_TRUE;
+                done = true;
             } else
 #endif
             if (j < 0 || (j == 0
@@ -478,10 +478,10 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
                                  * such as 3.5 in base 3.  */
                         digit++;
                 }
-                done = JS_TRUE;
+                done = true;
             } else if (j1 > 0) {
                 digit++;
-                done = JS_TRUE;
+                done = true;
             }
             JS_ASSERT(digit < (uint32_t)base);
             *p++ = BASEDIGIT(digit);

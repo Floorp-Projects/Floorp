@@ -25,6 +25,8 @@
 using namespace js;
 using namespace js::ion;
 
+namespace {
+
 // Emulate a TypeSet logic from a Type object to avoid duplicating the guard
 // logic.
 class TypeWrapper {
@@ -57,6 +59,8 @@ class TypeWrapper {
         return NULL;
     }
 };
+
+} /* anonymous namespace */
 
 template <typename Source, typename TypeSet> void
 MacroAssembler::guardTypeSet(const Source &address, const TypeSet *types,

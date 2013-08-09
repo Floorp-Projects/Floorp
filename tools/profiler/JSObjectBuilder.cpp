@@ -7,7 +7,7 @@
 #include "nsStringGlue.h"
 #include "JSObjectBuilder.h"
 
-JSObjectBuilder::JSObjectBuilder(JSContext *aCx) : mCx(aCx), mOk(JS_TRUE)
+JSObjectBuilder::JSObjectBuilder(JSContext *aCx) : mCx(aCx), mOk(true)
 {}
 
 void
@@ -52,7 +52,7 @@ JSObjectBuilder::DefineProperty(JSCustomObject *aObject, const char *name, nsASt
   const nsString &flat = PromiseFlatString(value);
   JSString *string = JS_NewUCStringCopyN(mCx, static_cast<const jschar*>(flat.get()), flat.Length());
   if (!string)
-    mOk = JS_FALSE;
+    mOk = false;
 
   if (!mOk)
     return;
@@ -68,7 +68,7 @@ JSObjectBuilder::DefineProperty(JSCustomObject *aObject, const char *name, const
 
   JSString *string = JS_InternStringN(mCx, value, valueLength);
   if (!string) {
-    mOk = JS_FALSE;
+    mOk = false;
     return;
   }
 
@@ -104,7 +104,7 @@ JSObjectBuilder::ArrayPush(JSCustomArray *aArray, const char *value)
 
   JS::RootedString string(mCx, JS_NewStringCopyN(mCx, value, strlen(value)));
   if (!string) {
-    mOk = JS_FALSE;
+    mOk = false;
     return;
   }
 
@@ -138,7 +138,7 @@ JSCustomArray*
 JSObjectBuilder::CreateArray() {
   JSCustomArray *array = (JSCustomArray*)JS_NewArrayObject(mCx, 0, nullptr);
   if (!array)
-    mOk = JS_FALSE;
+    mOk = false;
 
   return array;
 }
@@ -147,7 +147,7 @@ JSCustomObject*
 JSObjectBuilder::CreateObject() {
   JSCustomObject *obj = (JSCustomObject*)JS_NewObject(mCx, nullptr, nullptr, nullptr);
   if (!obj)
-    mOk = JS_FALSE;
+    mOk = false;
 
   return obj;
 }

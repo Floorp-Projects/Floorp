@@ -819,7 +819,7 @@ typedef JSBool
  *    call to this function when enum_op was JSENUMERATE_INIT or
  *    JSENUMERATE_INIT_ALL.
  *
- * The return value is used to indicate success, with a value of JS_FALSE
+ * The return value is used to indicate success, with a value of false
  * indicating failure.
  */
 typedef JSBool
@@ -917,7 +917,7 @@ typedef JSBool
 
 /*
  * Check whether v is an instance of obj.  Return false on error or exception,
- * true on success with JS_TRUE in *bp if v is an instance of obj, JS_FALSE in
+ * true on success with true in *bp if v is an instance of obj, false in
  * *bp otherwise.
  */
 typedef JSBool
@@ -3340,7 +3340,7 @@ JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JS
  * Determine the attributes (JSPROP_* flags) of a property on a given object.
  *
  * If the object does not have a property by that name, *foundp will be
- * JS_FALSE and the value of *attrsp is undefined.
+ * false and the value of *attrsp is undefined.
  */
 extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
@@ -3369,7 +3369,7 @@ JS_GetPropertyAttrsGetterAndSetterById(JSContext *cx, JSObject *obj,
  * Set the attributes of a property on a given object.
  *
  * If the object does not have a property by that name, *foundp will be
- * JS_FALSE and nothing will be altered.
+ * false and nothing will be altered.
  */
 extern JS_PUBLIC_API(JSBool)
 JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
@@ -3595,7 +3595,7 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
  * Determine the attributes (JSPROP_* flags) of a property on a given object.
  *
  * If the object does not have a property by that name, *foundp will be
- * JS_FALSE and the value of *attrsp is undefined.
+ * false and the value of *attrsp is undefined.
  */
 extern JS_PUBLIC_API(JSBool)
 JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
@@ -3618,7 +3618,7 @@ JS_GetUCPropertyAttrsGetterAndSetter(JSContext *cx, JSObject *obj,
  * Set the attributes of a property on a given object.
  *
  * If the object does not have a property by that name, *foundp will be
- * JS_FALSE and nothing will be altered.
+ * false and nothing will be altered.
  */
 extern JS_PUBLIC_API(JSBool)
 JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
@@ -3968,9 +3968,9 @@ extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
 
 /*
- * Given a buffer, return JS_FALSE if the buffer might become a valid
+ * Given a buffer, return false if the buffer might become a valid
  * javascript statement with the addition of more lines.  Otherwise return
- * JS_TRUE.  The intent is to support interactive compilation - accumulate
+ * true.  The intent is to support interactive compilation - accumulate
  * lines in a buffer until JS_BufferIsCompilableUnit is true, then pass it to
  * the compiler.
  */
@@ -4414,7 +4414,7 @@ JS_FileEscapedString(FILE *fp, JSString *str, char quote);
  *   // in a fallible context
  *   JSFlatString *fstr = JS_FlattenString(cx, str);
  *   if (!fstr)
- *     return JS_FALSE;
+ *     return false;
  *   JS_ASSERT(fstr == JS_ASSERT_STRING_IS_FLAT(str));
  *
  *   // in an infallible context, for the same 'str'
@@ -4513,7 +4513,7 @@ JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
  *
  * On errors, the functions report the error. In that case, *dstlenp contains
  * the number of characters or bytes transferred so far.  If cx is NULL, no
- * error is reported on failure, and the functions simply return JS_FALSE.
+ * error is reported on failure, and the functions simply return false.
  *
  * NB: This function does not store an additional zero byte or jschar after the
  * transcoded string.

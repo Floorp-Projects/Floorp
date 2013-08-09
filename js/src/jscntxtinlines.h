@@ -433,6 +433,10 @@ class AutoLockForExclusiveAccess
     AutoLockForExclusiveAccess(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
+    ~AutoLockForExclusiveAccess() {
+        // An empty destructor is needed to avoid warnings from clang about
+        // unused local variables of this type.
+    }
 #endif // JS_THREADSAFE
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER

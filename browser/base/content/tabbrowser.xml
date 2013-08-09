@@ -2643,6 +2643,7 @@
             } catch (e) {
               let url = this.mCurrentBrowser.currentURI.spec;
               this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(url));
+              throw e;
             }
 #endif
           ]]>
@@ -2667,6 +2668,7 @@
             } catch (e) {
               let url = this.mCurrentBrowser.currentURI.spec;
               this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(url));
+              throw e;
             }
 #endif
           ]]>
@@ -2924,12 +2926,6 @@
         <![CDATA[
           let browserStack = document.getAnonymousElementByAttribute(this, "anonid", "browserStack");
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
-          if (Services.prefs.getBoolPref("browser.tabs.remote")) {
-            browserStack.removeChild(this.mCurrentBrowser);
-            this.mCurrentBrowser.setAttribute("remote", true);
-            browserStack.appendChild(this.mCurrentBrowser);
-            this.tabContainer.firstChild.setAttribute("remote", "true");
-          }
 
           this.mCurrentTab = this.tabContainer.firstChild;
           document.addEventListener("keypress", this, false);

@@ -16,8 +16,8 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(9be22a4b-4edc-4c37-9403-c9350671b86f)]
-interface nsIDOMHTMLParagraphElement : nsIDOMHTMLElement
+[scriptable, uuid(b494e517-2388-4a63-80e7-2f73be3c38a3)]
+interface nsIDOMHTMLParagraphElement : nsISupports
 {
            attribute DOMString        align;
 };

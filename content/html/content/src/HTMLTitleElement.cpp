@@ -27,25 +27,8 @@ HTMLTitleElement::~HTMLTitleElement()
 {
 }
 
-
-NS_IMPL_ADDREF_INHERITED(HTMLTitleElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLTitleElement, Element)
-
-} // namespace dom
-} // namespace mozilla
-
-namespace mozilla {
-namespace dom {
-
-// QueryInterface implementation for HTMLTitleElement
-NS_INTERFACE_TABLE_HEAD(HTMLTitleElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED2(HTMLTitleElement,
-                                nsIDOMHTMLTitleElement,
-                                nsIMutationObserver)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS_INHERITED2(HTMLTitleElement, nsGenericHTMLElement,
+                             nsIDOMHTMLTitleElement, nsIMutationObserver)
 
 NS_IMPL_ELEMENT_CLONE(HTMLTitleElement)
 
