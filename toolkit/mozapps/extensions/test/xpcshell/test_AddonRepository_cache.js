@@ -512,7 +512,7 @@ function check_cache(aExpectedToFind, aExpectedImmediately, aCallback) {
  *         A callback to call once the checks are complete
  */
 function check_initialized_cache(aExpectedToFind, aCallback) {
-  check_cache(aExpectedToFind, true, function restart_initialized_cache() {
+  check_cache(aExpectedToFind, true, function() {
     restartManager();
 
     // If cache is disabled, then expect results immediately
@@ -534,13 +534,13 @@ function waitForFlushedData(aCallback) {
 
 function run_test() {
   // Setup for test
-  do_test_pending("test_AddonRepository_cache");
+  do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   startupManager();
 
   // Install XPI add-ons
-  installAllFiles(ADDON_FILES, function first_installs() {
+  installAllFiles(ADDON_FILES, function() {
     restartManager();
 
     gServer = new HttpServer();
@@ -552,7 +552,7 @@ function run_test() {
 }
 
 function end_test() {
-  gServer.stop(function() {do_test_finished("test_AddonRepository_cache");});
+  gServer.stop(do_test_finished);
 }
 
 // Tests AddonRepository.cacheEnabled
@@ -578,7 +578,7 @@ function run_test_3() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_FAILED);
 
-  AddonRepository.repopulateCache(ADDON_IDS, function test_3_repopulated() {
+  AddonRepository.repopulateCache(ADDON_IDS, function() {
     check_initialized_cache([false, false, false], run_test_4);
   });
 }
@@ -695,7 +695,7 @@ function run_test_12() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
 
-  AddonManager.getAddonsByIDs(ADDON_IDS, function test_12_check(aAddons) {
+  AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
     check_results(aAddons, WITHOUT_CACHE);
     do_execute_soon(run_test_13);
   });
