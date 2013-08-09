@@ -58,6 +58,15 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
     this._root = aRoot;
   },
 
+  destruct: function bv_destruct() {
+    this._bookmarkService.removeObserver(this._changes);
+    Services.obs.removeObserver(this, "metro_viewstate_changed");
+    if (StartUI.chromeWin) {
+      StartUI.chromeWin.removeEventListener('MozAppbarDismissing', this, false);
+      StartUI.chromeWin.removeEventListener('BookmarksNeedsRefresh', this, false);
+    }
+  },
+
   handleItemClick: function bv_handleItemClick(aItem) {
     let url = aItem.getAttribute("value");
     StartUI.goToURI(url);
@@ -199,13 +208,6 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
     let item = this._getItemForBookmarkId(aBookmarkId);
     let index = this._set.getIndexOfItem(item);
     this._set.removeItemAt(index, this._inBatch);
-  },
-
-  destruct: function bv_destruct() {
-    this._bookmarkService.removeObserver(this._changes);
-    Services.obs.removeObserver(this, "metro_viewstate_changed");
-    window.removeEventListener('MozAppbarDismissing', this, false);
-    window.removeEventListener('BookmarksNeedsRefresh', this, false);
   },
 
   doActionOnSelectedTiles: function bv_doActionOnSelectedTiles(aActionName, aEvent) {

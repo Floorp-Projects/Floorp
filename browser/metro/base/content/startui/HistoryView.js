@@ -25,6 +25,15 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
   _set: null,
   _toRemove: null,
 
+  destruct: function destruct() {
+    this._historyService.removeObserver(this);
+    Services.obs.removeObserver(this, "metro_viewstate_changed");
+    if (StartUI.chromeWin) {
+      StartUI.chromeWin.removeEventListener('MozAppbarDismissing', this, false);
+      StartUI.chromeWin.removeEventListener('HistoryNeedsRefresh', this, false);
+    }
+  },
+
   handleItemClick: function tabview_handleItemClick(aItem) {
     let url = aItem.getAttribute("value");
     StartUI.goToURI(url);
@@ -88,13 +97,6 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
     this._set.arrangeItems();
     if (this._inBatch > 0)
       this._inBatch--;
-  },
-
-  destruct: function destruct() {
-    this._historyService.removeObserver(this);
-    Services.obs.removeObserver(this, "metro_viewstate_changed");
-    window.removeEventListener('MozAppbarDismissing', this, false);
-    window.removeEventListener('HistoryNeedsRefresh', this, false);
   },
 
   addItemToSet: function addItemToSet(aURI, aTitle, aIcon, aPos) {
