@@ -272,6 +272,7 @@ size. -->
 <!ENTITY home_history_title "History">
 <!ENTITY home_last_tabs_title "Tabs from last time">
 <!ENTITY home_last_tabs_open "Open all tabs from last time">
+<!ENTITY home_last_tabs_empty "Your recent tabs show up here.">
 <!ENTITY home_most_recent_title "Most recent">
 <!ENTITY home_most_recent_empty "Websites you visited most recently show up here.">
 <!ENTITY home_most_visited_title "Most visited">

@@ -17,7 +17,8 @@
         <Button android:id="@+id/open_all_tabs_button"
                 style="@style/Widget.Home.ActionButton"
                 android:text="@string/home_last_tabs_open"
-                android:gravity="center"/>
+                android:gravity="center"
+                android:visibility="gone"/>
 
     </LinearLayout>
 
