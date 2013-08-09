@@ -135,7 +135,6 @@ nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
   JS::Rooted<JSObject*> scopeObject(aCx, xpc::GetXBLScope(aCx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
-  // now we want to reevaluate our property using aContext and the script object for this window...
   if (mGetter.GetJSFunction() || mSetter.GetJSFunction()) {
     // First, enter the compartment of the scope object and clone the functions.
     JSAutoCompartment ac(aCx, scopeObject);
@@ -170,9 +169,10 @@ nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
 }
 
 nsresult
-nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
+nsXBLProtoImplProperty::CompileMember(const nsCString& aClassStr,
                                       JS::Handle<JSObject*> aClassObject)
 {
+  AssertInCompilationScope();
   NS_PRECONDITION(!mIsCompiled,
                   "Trying to compile an already-compiled property");
   NS_PRECONDITION(aClassObject,
@@ -199,7 +199,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
   if (getterText && getterText->GetText()) {
     nsDependentString getter(getterText->GetText());
     if (!getter.IsEmpty()) {
-      AutoPushJSContext cx(aContext->GetNativeContext());
+      AutoJSContext cx;
       JSAutoCompartment ac(cx, aClassObject);
       JS::CompileOptions options(cx);
       options.setFileAndLine(functionUri.get(), getterText->GetLineNumber())
@@ -246,7 +246,7 @@ nsXBLProtoImplProperty::CompileMember(nsIScriptContext* aContext, const nsCStrin
   if (setterText && setterText->GetText()) {
     nsDependentString setter(setterText->GetText());
     if (!setter.IsEmpty()) {
-      AutoPushJSContext cx(aContext->GetNativeContext());
+      AutoJSContext cx;
       JSAutoCompartment ac(cx, aClassObject);
       JS::CompileOptions options(cx);
       options.setFileAndLine(functionUri.get(), setterText->GetLineNumber())
@@ -297,15 +297,14 @@ nsXBLProtoImplProperty::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
 }
 
 nsresult
-nsXBLProtoImplProperty::Read(nsIScriptContext* aContext,
-                             nsIObjectInputStream* aStream,
+nsXBLProtoImplProperty::Read(nsIObjectInputStream* aStream,
                              XBLBindingSerializeDetails aType)
 {
+  AssertInCompilationScope();
   MOZ_ASSERT(!mIsCompiled);
   MOZ_ASSERT(!mGetter.GetUncompiled() && !mSetter.GetUncompiled());
 
-  AutoPushJSContext cx(aContext->GetNativeContext());
-
+  AutoJSContext cx;
   JS::Rooted<JSObject*> getterObject(cx);
   if (aType == XBLBinding_Serialize_GetterProperty ||
       aType == XBLBinding_Serialize_GetterSetterProperty) {
@@ -334,11 +333,10 @@ nsXBLProtoImplProperty::Read(nsIScriptContext* aContext,
 }
 
 nsresult
-nsXBLProtoImplProperty::Write(nsIScriptContext* aContext,
-                              nsIObjectOutputStream* aStream)
+nsXBLProtoImplProperty::Write(nsIObjectOutputStream* aStream)
 {
+  AssertInCompilationScope();
   XBLBindingSerializeDetails type;
-  AutoPushJSContext cx(aContext->GetNativeContext());
 
   if (mJSAttributes & JSPROP_GETTER) {
     type = mJSAttributes & JSPROP_SETTER ?

@@ -38,7 +38,7 @@ public:
   }
   
   nsresult InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding, nsXBLBinding* aBinding);
-  nsresult InitTargetObjects(nsXBLPrototypeBinding* aBinding, nsIScriptContext* aContext, 
+  nsresult InitTargetObjects(nsXBLPrototypeBinding* aBinding,
                              nsIContent* aBoundElement, 
                              nsIXPConnectJSObjectHolder** aScriptObjectHolder,
                              JS::MutableHandle<JSObject*> aTargetClassObject,
@@ -77,12 +77,10 @@ public:
     return mClassObject != nullptr;
   }
 
-  nsresult Read(nsIScriptContext* aContext,
-                nsIObjectInputStream* aStream,
+  nsresult Read(nsIObjectInputStream* aStream,
                 nsXBLPrototypeBinding* aBinding,
                 nsIScriptGlobalObject* aGlobal);
-  nsresult Write(nsIScriptContext* aContext,
-                 nsIObjectOutputStream* aStream,
+  nsresult Write(nsIObjectOutputStream* aStream,
                  nsXBLPrototypeBinding* aBinding);
 
 protected:

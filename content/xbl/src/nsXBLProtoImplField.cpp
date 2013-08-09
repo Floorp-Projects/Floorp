@@ -407,9 +407,6 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   NS_ASSERTION(!::JS_IsExceptionPending(cx),
                "Shouldn't get here when an exception is pending!");
 
-  // compile the literal string
-  nsCOMPtr<nsIScriptContext> context = aContext;
-
   // First, enter the xbl scope, wrap the node, and use that as the scope for
   // the evaluation.
   JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScope(cx, aBoundNode));
@@ -424,11 +421,11 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriSpec.get(), mLineNumber)
          .setVersion(JSVERSION_LATEST);
-  rv = context->EvaluateString(nsDependentString(mFieldText,
-                                                 mFieldTextLength),
-                               wrappedNode, options,
-                               /* aCoerceToString = */ false,
-                               result.address());
+  rv = aContext->EvaluateString(nsDependentString(mFieldText,
+                                                  mFieldTextLength),
+                                wrappedNode, options,
+                                /* aCoerceToString = */ false,
+                                result.address());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -451,8 +448,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
 }
 
 nsresult
-nsXBLProtoImplField::Read(nsIScriptContext* aContext,
-                          nsIObjectInputStream* aStream)
+nsXBLProtoImplField::Read(nsIObjectInputStream* aStream)
 {
   nsAutoString name;
   nsresult rv = aStream->ReadString(name);
@@ -473,8 +469,7 @@ nsXBLProtoImplField::Read(nsIScriptContext* aContext,
 }
 
 nsresult
-nsXBLProtoImplField::Write(nsIScriptContext* aContext,
-                           nsIObjectOutputStream* aStream)
+nsXBLProtoImplField::Write(nsIObjectOutputStream* aStream)
 {
   XBLBindingSerializeDetails type = XBLBinding_Serialize_Field;
 
