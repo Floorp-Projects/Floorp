@@ -13,6 +13,8 @@
 using namespace js;
 using namespace js::ion;
 
+using mozilla::DebugOnly;
+
 bool
 SetElemICInspector::sawOOBDenseWrite() const
 {
