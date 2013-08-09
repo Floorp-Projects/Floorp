@@ -1257,8 +1257,6 @@ if test "$GNU_CC"; then
     WARNINGS_AS_ERRORS='-Werror'
     # Don't treat -Wuninitialized as error b/c it has lots of false positives.
     WARNINGS_AS_ERRORS="$WARNINGS_AS_ERRORS -Wno-error=uninitialized"
-    # Don't treat -Wmaybe-uninitialized as error b/c it has lots of false positives.
-    WARNINGS_AS_ERRORS="$WARNINGS_AS_ERRORS -Wno-error=maybe-uninitialized"
     # Don't treat -Wdeprecated-declarations as error b/c we don't want our
     # builds held hostage when a platform-specific API is suddenly deprecated.
     WARNINGS_AS_ERRORS="$WARNINGS_AS_ERRORS -Wno-error=deprecated-declarations"
