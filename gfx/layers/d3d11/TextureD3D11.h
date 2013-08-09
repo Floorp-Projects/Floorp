@@ -74,8 +74,7 @@ public:
 
   virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE
   {
-    return aType == TEXTURE_CONTENT ||
-           aType == TEXTURE_D3D11_HANDLE;
+    return aType == TEXTURE_CONTENT;
   }
 
   virtual bool EnsureAllocated(gfx::IntSize aSize,

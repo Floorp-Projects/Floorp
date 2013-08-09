@@ -13,10 +13,6 @@
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 #include "gfxPlatform.h"
 
-#ifdef XP_WIN
-#include "D3D11ShareHandleImage.h"
-#endif
-
 #ifdef MOZ_WIDGET_GONK
 #include "GrallocImages.h"
 #endif
@@ -338,22 +334,6 @@ DeprecatedImageClientSingle::UpdateImage(ImageContainer* aContainer,
     AutoLockDeprecatedTextureClient lock(mDeprecatedTextureClient);
 
     SurfaceDescriptor desc = static_cast<GrallocImage*>(image)->GetSurfaceDescriptor();
-    if (!IsSurfaceDescriptorValid(desc)) {
-      return false;
-    }
-    mDeprecatedTextureClient->SetDescriptor(desc);
-#endif
-#ifdef XP_WIN
-  } else if (image->GetFormat() == D3D11_SHARE_HANDLE_TEXTURE &&
-             EnsureDeprecatedTextureClient(TEXTURE_D3D11_HANDLE)) {
-    nsIntRect rect(0, 0,
-                   image->GetSize().width,
-                   image->GetSize().height);
-    UpdatePictureRect(rect);
-
-    AutoLockDeprecatedTextureClient lock(mDeprecatedTextureClient);
-
-    SurfaceDescriptor desc = static_cast<D3D11ShareHandleImage*>(image)->GetSurfaceDescriptor();
     if (!IsSurfaceDescriptorValid(desc)) {
       return false;
     }

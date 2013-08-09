@@ -8,7 +8,6 @@ MODULE = 'thebes'
 
 EXPORTS += [
     'CopyableCanvasLayer.h',
-    'D3D11ShareHandleImage.h',
     'D3D9SurfaceImage.h',
     'FrameMetrics.h',
     'GrallocImages.h',
@@ -46,7 +45,6 @@ EXPORTS += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     CPP_SOURCES += [
-        'D3D11ShareHandleImage.cpp',
         'D3D9SurfaceImage.cpp',
     ]
     if CONFIG['MOZ_ENABLE_D3D9_LAYER']:
