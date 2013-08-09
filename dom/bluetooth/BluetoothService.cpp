@@ -593,7 +593,7 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
   }
 
   // First, check if the string equals to BLUETOOTH_DEBUGGING_SETTING
-  JSBool match;
+  bool match;
   if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_DEBUGGING_SETTING, &match)) {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     return NS_ERROR_OUT_OF_MEMORY;

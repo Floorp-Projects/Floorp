@@ -1534,13 +1534,6 @@ nsChildView::ComputeShouldAccelerate(bool aDefault)
 bool
 nsChildView::ShouldUseOffMainThreadCompositing()
 {
-  // When acceleration is off, default to false, but allow force-enabling
-  // using the layers.offmainthreadcomposition.prefer-basic pref.
-  if (!ComputeShouldAccelerate(mUseLayersAcceleration) &&
-      !Preferences::GetBool("layers.offmainthreadcomposition.prefer-basic", false)) {
-    return false;
-  }
-
   // Don't use OMTC (which requires OpenGL) for transparent windows or for
   // popup windows.
   if (!mView || ![[mView window] isOpaque] ||

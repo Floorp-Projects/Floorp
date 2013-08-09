@@ -28,11 +28,14 @@ interface TextTrackCue : EventTarget {
   attribute double startTime;
   attribute double endTime;
   attribute boolean pauseOnExit;
+  [SetterThrows]
   attribute DOMString vertical;
   attribute boolean snapToLines;
   // XXXhumph: https://www.w3.org/Bugs/Public/show_bug.cgi?id=20651
   // attribute (long or AutoKeyword) line;
+  [SetterThrows]
   attribute long position;
+  [SetterThrows]
   attribute long size;
   attribute TextTrackCueAlign align;
   attribute DOMString text;

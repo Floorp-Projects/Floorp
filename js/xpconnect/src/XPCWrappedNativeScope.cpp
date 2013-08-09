@@ -177,7 +177,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
 }
 
 // static
-JSBool
+bool
 XPCWrappedNativeScope::IsDyingScope(XPCWrappedNativeScope *scope)
 {
     for (XPCWrappedNativeScope *cur = gDyingScopes; cur; cur = cur->mNext) {

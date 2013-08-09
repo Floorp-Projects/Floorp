@@ -21,7 +21,7 @@
 #include "jsproxy.h"
 
 #include "builtin/ParallelArray.h"
-#include "ion/IonFrames.h"
+#include "jit/IonFrames.h"
 #include "js/RootingAPI.h"
 #include "vm/ArrayObject.h"
 #include "vm/BooleanObject.h"

@@ -504,8 +504,8 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
     RootedObject parent(cx, Scope->GetGlobalJSObject());
 
     RootedValue newParentVal(cx, NullValue());
-    JSBool needsSOW = false;
-    JSBool needsCOW = false;
+    bool needsSOW = false;
+    bool needsCOW = false;
 
     mozilla::Maybe<JSAutoCompartment> ac;
 
@@ -991,7 +991,7 @@ XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
     return sciProto;
 }
 
-JSBool
+bool
 XPCWrappedNative::Init(HandleObject parent,
                        const XPCNativeScriptableCreateInfo* sci)
 {
@@ -1052,7 +1052,7 @@ XPCWrappedNative::Init(HandleObject parent,
     return FinishInit();
 }
 
-JSBool
+bool
 XPCWrappedNative::FinishInit()
 {
     AutoJSContext cx;
@@ -1615,7 +1615,7 @@ XPCWrappedNative::RescueOrphans()
     return ::RescueOrphans(flatJSObject);
 }
 
-JSBool
+bool
 XPCWrappedNative::ExtendSet(XPCNativeInterface* aInterface)
 {
     AutoJSContext cx;
@@ -1659,7 +1659,7 @@ XPCWrappedNative::LocateTearOff(XPCNativeInterface* aInterface)
 
 XPCWrappedNativeTearOff*
 XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
-                              JSBool needJSObject /* = false */,
+                              bool needJSObject /* = false */,
                               nsresult* pError /* = nullptr */)
 {
     AutoJSContext cx;
@@ -1683,7 +1683,7 @@ XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
             if (to->GetInterface() == aInterface) {
                 if (needJSObject && !to->GetJSObjectPreserveColor()) {
                     AutoMarkingWrappedNativeTearOffPtr tearoff(cx, to);
-                    JSBool ok = InitTearOffJSObject(to);
+                    bool ok = InitTearOffJSObject(to);
                     // During shutdown, we don't sweep tearoffs.  So make sure
                     // to unmark manually in case the auto-marker marked us.
                     // We shouldn't ever be getting here _during_ our
@@ -1736,7 +1736,7 @@ return_result:
 nsresult
 XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
                               XPCNativeInterface* aInterface,
-                              JSBool needJSObject)
+                              bool needJSObject)
 {
     AutoJSContext cx;
 
@@ -1906,7 +1906,7 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
     return NS_OK;
 }
 
-JSBool
+bool
 XPCWrappedNative::InitTearOffJSObject(XPCWrappedNativeTearOff* to)
 {
     AutoJSContext cx;
@@ -1971,7 +1971,7 @@ XPCWrappedNative::GetSameCompartmentSecurityWrapper(JSContext *cx)
 
 /***************************************************************************/
 
-static JSBool Throw(nsresult errNum, XPCCallContext& ccx)
+static bool Throw(nsresult errNum, XPCCallContext& ccx)
 {
     XPCThrower::Throw(errNum, ccx);
     return false;
@@ -1995,21 +1995,21 @@ class CallMethodHelper
     jsval* const mArgv;
     const uint32_t mArgc;
 
-    JS_ALWAYS_INLINE JSBool
+    JS_ALWAYS_INLINE bool
     GetArraySizeFromParam(uint8_t paramIndex, uint32_t* result) const;
 
-    JS_ALWAYS_INLINE JSBool
+    JS_ALWAYS_INLINE bool
     GetInterfaceTypeFromParam(uint8_t paramIndex,
                               const nsXPTType& datum_type,
                               nsID* result) const;
 
-    JS_ALWAYS_INLINE JSBool
+    JS_ALWAYS_INLINE bool
     GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp) const;
 
-    JS_ALWAYS_INLINE JSBool
+    JS_ALWAYS_INLINE bool
     GatherAndConvertResults();
 
-    JS_ALWAYS_INLINE JSBool
+    JS_ALWAYS_INLINE bool
     QueryInterfaceFastPath() const;
 
     nsXPTCVariant*
@@ -2027,16 +2027,16 @@ class CallMethodHelper
         return const_cast<CallMethodHelper*>(this)->GetDispatchParam(paramIndex);
     }
 
-    JS_ALWAYS_INLINE JSBool InitializeDispatchParams();
+    JS_ALWAYS_INLINE bool InitializeDispatchParams();
 
-    JS_ALWAYS_INLINE JSBool ConvertIndependentParams(JSBool* foundDependentParam);
-    JS_ALWAYS_INLINE JSBool ConvertIndependentParam(uint8_t i);
-    JS_ALWAYS_INLINE JSBool ConvertDependentParams();
-    JS_ALWAYS_INLINE JSBool ConvertDependentParam(uint8_t i);
+    JS_ALWAYS_INLINE bool ConvertIndependentParams(bool* foundDependentParam);
+    JS_ALWAYS_INLINE bool ConvertIndependentParam(uint8_t i);
+    JS_ALWAYS_INLINE bool ConvertDependentParams();
+    JS_ALWAYS_INLINE bool ConvertDependentParam(uint8_t i);
 
     JS_ALWAYS_INLINE void CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type);
 
-    JS_ALWAYS_INLINE JSBool HandleDipperParam(nsXPTCVariant* dp,
+    JS_ALWAYS_INLINE bool HandleDipperParam(nsXPTCVariant* dp,
                                               const nsXPTParamInfo& paramInfo);
 
     JS_ALWAYS_INLINE nsresult Invoke();
@@ -2062,12 +2062,12 @@ public:
 
     ~CallMethodHelper();
 
-    JS_ALWAYS_INLINE JSBool Call();
+    JS_ALWAYS_INLINE bool Call();
 
 };
 
 // static
-JSBool
+bool
 XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                              CallMode mode /*= CALL_METHOD */)
 {
@@ -2114,7 +2114,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     return CallMethodHelper(ccx).Call();
 }
 
-JSBool
+bool
 CallMethodHelper::Call()
 {
     mCallContext.SetRetVal(JSVAL_VOID);
@@ -2138,7 +2138,7 @@ CallMethodHelper::Call()
     // When we later convert the dependent params (if any) we will know that
     // the params upon which they depend will have already been converted -
     // regardless of ordering.
-    JSBool foundDependentParam = false;
+    bool foundDependentParam = false;
     if (!ConvertIndependentParams(&foundDependentParam))
         return false;
 
@@ -2210,7 +2210,7 @@ CallMethodHelper::~CallMethodHelper()
 
 }
 
-JSBool
+bool
 CallMethodHelper::GetArraySizeFromParam(uint8_t paramIndex,
                                         uint32_t* result) const
 {
@@ -2228,7 +2228,7 @@ CallMethodHelper::GetArraySizeFromParam(uint8_t paramIndex,
     return true;
 }
 
-JSBool
+bool
 CallMethodHelper::GetInterfaceTypeFromParam(uint8_t paramIndex,
                                             const nsXPTType& datum_type,
                                             nsID* result) const
@@ -2259,7 +2259,7 @@ CallMethodHelper::GetInterfaceTypeFromParam(uint8_t paramIndex,
     return true;
 }
 
-JSBool
+bool
 CallMethodHelper::GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp) const
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
@@ -2287,7 +2287,7 @@ CallMethodHelper::GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp)
     return true;
 }
 
-JSBool
+bool
 CallMethodHelper::GatherAndConvertResults()
 {
     // now we iterate through the native params to gather and convert results
@@ -2372,7 +2372,7 @@ CallMethodHelper::GatherAndConvertResults()
     return true;
 }
 
-JSBool
+bool
 CallMethodHelper::QueryInterfaceFastPath() const
 {
     NS_ASSERTION(mVTableIndex == 0,
@@ -2407,7 +2407,7 @@ CallMethodHelper::QueryInterfaceFastPath() const
 
     RootedValue v(mCallContext, NullValue());
     nsresult err;
-    JSBool success =
+    bool success =
         XPCConvert::NativeData2JS(v.address(), &qiresult,
                                   nsXPTType::T_INTERFACE_IS,
                                   iid, &err);
@@ -2422,7 +2422,7 @@ CallMethodHelper::QueryInterfaceFastPath() const
     return true;
 }
 
-JSBool
+bool
 CallMethodHelper::InitializeDispatchParams()
 {
     const uint8_t wantsOptArgc = mMethodInfo->WantsOptArgc() ? 1 : 0;
@@ -2486,8 +2486,8 @@ CallMethodHelper::InitializeDispatchParams()
     return true;
 }
 
-JSBool
-CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
+bool
+CallMethodHelper::ConvertIndependentParams(bool* foundDependentParam)
 {
     const uint8_t paramCount = mMethodInfo->GetParamCount();
     for (uint8_t i = 0; i < paramCount; i++) {
@@ -2503,7 +2503,7 @@ CallMethodHelper::ConvertIndependentParams(JSBool* foundDependentParam)
     return true;
 }
 
-JSBool
+bool
 CallMethodHelper::ConvertIndependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
@@ -2581,7 +2581,7 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     return true;
 }
 
-JSBool
+bool
 CallMethodHelper::ConvertDependentParams()
 {
     const uint8_t paramCount = mMethodInfo->GetParamCount();
@@ -2597,7 +2597,7 @@ CallMethodHelper::ConvertDependentParams()
     return true;
 }
 
-JSBool
+bool
 CallMethodHelper::ConvertDependentParam(uint8_t i)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(i);
@@ -2764,7 +2764,7 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
 // after the call.
 //
 // This method creates these empty containers.
-JSBool
+bool
 CallMethodHelper::HandleDipperParam(nsXPTCVariant* dp,
                                     const nsXPTParamInfo& paramInfo)
 {
@@ -3148,7 +3148,7 @@ static void ReportSingleMember(jsval ifaceName,
     }
 }
 
-static void ShowHeader(JSBool* printedHeader,
+static void ShowHeader(bool* printedHeader,
                        const char* header,
                        XPCNativeSet* set,
                        XPCWrappedNative* wrapper,
@@ -3179,8 +3179,8 @@ static void ShowDuplicateInterface(jsval ifaceName)
     fputs(" appears twice in the nsIClassInfo interface set!\n", stdout);
 }
 
-static JSBool InterfacesAreRelated(XPCNativeInterface* iface1,
-                                   XPCNativeInterface* iface2)
+static bool InterfacesAreRelated(XPCNativeInterface* iface1,
+                                 XPCNativeInterface* iface2)
 {
     nsIInterfaceInfo* info1 = iface1->GetInterfaceInfo();
     nsIInterfaceInfo* info2 = iface2->GetInterfaceInfo();
@@ -3194,10 +3194,10 @@ static JSBool InterfacesAreRelated(XPCNativeInterface* iface1,
         (NS_SUCCEEDED(info2->HasAncestor(iface1->GetIID(), &match)) && match);
 }
 
-static JSBool MembersAreTheSame(XPCNativeInterface* iface1,
-                                uint16_t memberIndex1,
-                                XPCNativeInterface* iface2,
-                                uint16_t memberIndex2)
+static bool MembersAreTheSame(XPCNativeInterface* iface1,
+                              uint16_t memberIndex1,
+                              XPCNativeInterface* iface2,
+                              uint16_t memberIndex2)
 {
     nsIInterfaceInfo* info1 = iface1->GetInterfaceInfo();
     nsIInterfaceInfo* info2 = iface2->GetInterfaceInfo();
@@ -3313,7 +3313,7 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
     const char header[] =
         "!!!Object wrapped by XPConnect has members whose names shadow each other!!!";
 
-    JSBool printedHeader = false;
+    bool printedHeader = false;
 
     jsval QIName = rt->GetStringJSVal(XPCJSRuntime::IDX_QUERY_INTERFACE);
 

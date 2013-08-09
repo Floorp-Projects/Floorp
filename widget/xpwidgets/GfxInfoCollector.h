@@ -64,7 +64,7 @@ class MOZ_STACK_CLASS InfoObject
 
   JSContext *mCx;
   JS::Rooted<JSObject*> mObj;
-  JSBool mOk;
+  bool mOk;
 };
 
 /*

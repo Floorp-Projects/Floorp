@@ -575,17 +575,17 @@ public:
   virtual bool getPropertyDescriptor(JSContext* cx,
                                      JS::Handle<JSObject*> proxy,
                                      JS::Handle<jsid> id,
-                                     JSPropertyDescriptor* desc,
+                                     JS::MutableHandle<JSPropertyDescriptor> desc,
                                      unsigned flags) MOZ_OVERRIDE;
   virtual bool getOwnPropertyDescriptor(JSContext* cx,
                                         JS::Handle<JSObject*> proxy,
                                         JS::Handle<jsid> id,
-                                        JSPropertyDescriptor* desc,
+                                        JS::MutableHandle<JSPropertyDescriptor> desc,
                                         unsigned flags) MOZ_OVERRIDE;
   virtual bool defineProperty(JSContext* cx,
                               JS::Handle<JSObject*> proxy,
                               JS::Handle<jsid> id,
-                              JSPropertyDescriptor* desc) MOZ_OVERRIDE;
+                              JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
   virtual bool getOwnPropertyNames(JSContext *cx,
                                    JS::Handle<JSObject*> proxy,
                                    JS::AutoIdVector &props) MOZ_OVERRIDE;
@@ -688,18 +688,18 @@ bool
 nsOuterWindowProxy::getPropertyDescriptor(JSContext* cx,
                                           JS::Handle<JSObject*> proxy,
                                           JS::Handle<jsid> id,
-                                          JSPropertyDescriptor* desc,
+                                          JS::MutableHandle<JSPropertyDescriptor> desc,
                                           unsigned flags)
 {
   // The only thing we can do differently from js::Wrapper is shadow stuff with
   // our indexed properties, so we can just try getOwnPropertyDescriptor and if
   // that gives us nothing call on through to js::Wrapper.
-  desc->obj = nullptr;
+  desc.object().set(nullptr);
   if (!getOwnPropertyDescriptor(cx, proxy, id, desc, flags)) {
     return false;
   }
 
-  if (desc->obj) {
+  if (desc.object()) {
     return true;
   }
 
@@ -710,11 +710,11 @@ bool
 nsOuterWindowProxy::getOwnPropertyDescriptor(JSContext* cx,
                                              JS::Handle<JSObject*> proxy,
                                              JS::Handle<jsid> id,
-                                             JSPropertyDescriptor* desc,
+                                             JS::MutableHandle<JSPropertyDescriptor> desc,
                                              unsigned flags)
 {
   bool found;
-  if (!GetSubframeWindow(cx, proxy, id, &desc->value, found)) {
+  if (!GetSubframeWindow(cx, proxy, id, desc.value().address(), found)) {
     return false;
   }
   if (found) {
@@ -730,7 +730,7 @@ bool
 nsOuterWindowProxy::defineProperty(JSContext* cx,
                                    JS::Handle<JSObject*> proxy,
                                    JS::Handle<jsid> id,
-                                   JSPropertyDescriptor* desc)
+                                   JS::MutableHandle<JSPropertyDescriptor> desc)
 {
   int32_t index = GetArrayIndexFromId(cx, id);
   if (IsArrayIndex(index)) {
@@ -6736,7 +6736,7 @@ PostMessageReadStructuredClone(JSContext* cx,
   return nullptr;
 }
 
-static JSBool
+static bool
 PostMessageWriteStructuredClone(JSContext* cx,
                                 JSStructuredCloneWriter* writer,
                                 JS::Handle<JSObject*> obj,

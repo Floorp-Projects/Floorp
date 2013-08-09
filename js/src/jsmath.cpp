@@ -803,7 +803,7 @@ js::math_tan(JSContext *cx, unsigned argc, Value *vp)
 typedef double (*UnaryMathFunctionType)(MathCache *cache, double);
 
 template <UnaryMathFunctionType F>
-JSBool math_function(JSContext *cx, unsigned argc, Value *vp)
+bool math_function(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {

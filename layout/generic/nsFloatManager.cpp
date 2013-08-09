@@ -264,22 +264,18 @@ nsRect
 nsFloatManager::CalculateRegionFor(nsIFrame*       aFloat,
                                    const nsMargin& aMargin)
 {
-  nsRect region = aFloat->GetRect();
+  // We consider relatively positioned frames at their original position.
+  nsRect region(aFloat->GetNormalPosition(), aFloat->GetSize());
 
   // Float region includes its margin
   region.Inflate(aMargin);
-
-  // If the element is relatively positioned, then adjust x and y
-  // accordingly so that we consider relatively positioned frames
-  // at their original position.
-  const nsStyleDisplay* display = aFloat->StyleDisplay();
-  region -= aFloat->GetRelativeOffset(display);
 
   // Don't store rectangles with negative margin-box width or height in
   // the float manager; it can't deal with them.
   if (region.width < 0) {
     // Preserve the right margin-edge for left floats and the left
     // margin-edge for right floats
+    const nsStyleDisplay* display = aFloat->StyleDisplay();
     if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
       region.x = region.XMost();
     }

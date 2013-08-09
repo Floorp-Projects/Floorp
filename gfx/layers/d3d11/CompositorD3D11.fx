@@ -17,28 +17,6 @@ float fLayerOpacity : register(ps, c1);
 
 sampler sSampler : register(ps, s0);
 
-BlendState NoBlendDual
-{
-  AlphaToCoverageEnable = FALSE;
-  BlendEnable[0] = FALSE;
-  BlendEnable[1] = FALSE;
-  RenderTargetWriteMask[0] = 0x0F; // All
-  RenderTargetWriteMask[1] = 0x0F; // All
-};
-
-BlendState ComponentAlphaBlend
-{
-  AlphaToCoverageEnable = FALSE;
-  BlendEnable[0] = TRUE;
-  SrcBlend = One;
-  DestBlend = Inv_Src1_Color;
-  BlendOp = Add;
-  SrcBlendAlpha = One;
-  DestBlendAlpha = Inv_Src_Alpha;
-  BlendOpAlpha = Add;
-  RenderTargetWriteMask[0] = 0x0F; // All
-};
-
 Texture2D tRGB;
 Texture2D tY;
 Texture2D tCb;
@@ -71,11 +49,6 @@ struct VS_MASK_3D_OUTPUT {
 struct PS_OUTPUT {
   float4 vSrc;
   float4 vAlpha;
-};
-
-struct PS_DUAL_OUTPUT {
-  float4 vOutput1 : SV_Target0;
-  float4 vOutput2 : SV_Target1;
 };
 
 float2 TexCoords(const float2 aPosition)
@@ -292,12 +265,4 @@ PS_OUTPUT ComponentAlphaShader(const VS_OUTPUT aVertex) : SV_Target
 float4 SolidColorShader(const VS_OUTPUT aVertex) : SV_Target
 {
   return fLayerColor;
-}
-
-PS_DUAL_OUTPUT AlphaExtractionPrepareShader(const VS_OUTPUT aVertex)
-{
-  PS_DUAL_OUTPUT result;
-  result.vOutput1 = float4(0, 0, 0, 1);
-  result.vOutput2 = float4(1, 1, 1, 1);
-  return result;
 }

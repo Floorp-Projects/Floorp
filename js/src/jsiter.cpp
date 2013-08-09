@@ -730,7 +730,7 @@ js::GetIteratorObject(JSContext *cx, HandleObject obj, uint32_t flags)
     return &value.toObject();
 }
 
-JSBool
+bool
 js_ThrowStopIteration(JSContext *cx)
 {
     JS_ASSERT(!JS_IsExceptionPending(cx));
@@ -808,7 +808,7 @@ static const JSFunctionSpec iterator_methods[] = {
 };
 
 static JSObject *
-iterator_iteratorObject(JSContext *cx, HandleObject obj, JSBool keysonly)
+iterator_iteratorObject(JSContext *cx, HandleObject obj, bool keysonly)
 {
     return obj;
 }
@@ -957,7 +957,7 @@ const JSFunctionSpec ElementIteratorObject::methods[] = {
     JS_FS_END
 };
 
-static JSBool
+static bool
 CloseGenerator(JSContext *cx, HandleObject genobj);
 
 bool
@@ -1287,8 +1287,8 @@ js_IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     return true;
 }
 
-static JSBool
-stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, JSBool *bp)
+static bool
+stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, bool *bp)
 {
     *bp = IsStopIteration(v);
     return true;
@@ -1539,7 +1539,7 @@ typedef enum JSGeneratorOp {
  * Start newborn or restart yielding generator and perform the requested
  * operation inside its frame.
  */
-static JSBool
+static bool
 SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
                 JSGenerator *gen, HandleValue arg)
 {
@@ -1578,7 +1578,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
         break;
     }
 
-    JSBool ok;
+    bool ok;
     {
         GeneratorState state(cx, gen, futureState);
         ok = RunScript(cx, state);
@@ -1615,7 +1615,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
     return false;
 }
 
-static JSBool
+static bool
 CloseGenerator(JSContext *cx, HandleObject obj)
 {
     JSGenerator *gen = obj->as<GeneratorObject>().getGenerator();

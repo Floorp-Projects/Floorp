@@ -14,6 +14,7 @@
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
+class nsIScriptContext;
 class nsIURI;
 
 class nsXBLProtoImplField
@@ -39,8 +40,8 @@ public:
   nsresult InstallAccessors(JSContext* aCx,
                             JS::Handle<JSObject*> aTargetClassObject);
 
-  nsresult Read(nsIScriptContext* aContext, nsIObjectInputStream* aStream);
-  nsresult Write(nsIScriptContext* aContext, nsIObjectOutputStream* aStream);
+  nsresult Read(nsIObjectInputStream* aStream);
+  nsresult Write(nsIObjectOutputStream* aStream);
 
   const PRUnichar* GetName() const { return mName; }
 

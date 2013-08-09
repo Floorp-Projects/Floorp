@@ -49,7 +49,7 @@ IsValidKeyPathString(JSContext* aCx, const nsAString& aKeyPath)
     NS_ASSERTION(JSVAL_IS_STRING(stringVal), "This should never happen");
     JSString* str = JSVAL_TO_STRING(stringVal);
 
-    JSBool isIdentifier = false;
+    bool isIdentifier = false;
     if (!JS_IsIdentifier(aCx, str, &isIdentifier) || !isIdentifier) {
       return false;
     }
@@ -105,21 +105,21 @@ GetJSValFromKeyPathString(JSContext* aCx,
     const jschar* keyPathChars = token.BeginReading();
     const size_t keyPathLen = token.Length();
 
-    JSBool hasProp;
+    bool hasProp;
     if (!targetObject) {
       // We're still walking the chain of existing objects
       if (!obj) {
         return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
       }
 
-      JSBool ok = JS_HasUCProperty(aCx, obj, keyPathChars, keyPathLen,
-                                   &hasProp);
+      bool ok = JS_HasUCProperty(aCx, obj, keyPathChars, keyPathLen,
+                                 &hasProp);
       NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
       if (hasProp) {
         // Get if the property exists...
         JS::Rooted<JS::Value> intermediate(aCx);
-        JSBool ok = JS_GetUCProperty(aCx, obj, keyPathChars, keyPathLen, &intermediate);
+        bool ok = JS_GetUCProperty(aCx, obj, keyPathChars, keyPathLen, &intermediate);
         NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
         // Treat explicitly undefined as an error.

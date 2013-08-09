@@ -49,9 +49,9 @@ HTMLTableSectionElement*
 HTMLTableRowElement::GetSection() const
 {
   nsIContent* parent = GetParent();
-  if (parent->IsHTML() && (parent->Tag() == nsGkAtoms::thead ||
-                           parent->Tag() == nsGkAtoms::tbody ||
-                           parent->Tag() == nsGkAtoms::tfoot)) {
+  if (parent && parent->IsHTML() && (parent->Tag() == nsGkAtoms::thead ||
+                                     parent->Tag() == nsGkAtoms::tbody ||
+                                     parent->Tag() == nsGkAtoms::tfoot)) {
     return static_cast<HTMLTableSectionElement*>(parent);
   }
   return nullptr;

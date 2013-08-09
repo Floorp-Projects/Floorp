@@ -723,7 +723,7 @@ nsGeolocationService::HandleMozsettingChanged(const PRUnichar* aData)
       return;
     }
 
-    JSBool match;
+    bool match;
     if (!JS_StringEqualsAscii(cx, key.toString(), GEO_SETINGS_ENABLED, &match) || !match) {
       return;
     }
