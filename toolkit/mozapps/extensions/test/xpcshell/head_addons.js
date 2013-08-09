@@ -1394,60 +1394,6 @@ function do_exception_wrap(func) {
   };
 }
 
-const EXTENSIONS_DB = "extensions.json";
-
-/**
- * Change the schema version of the JSON extensions database
- */
-function changeXPIDBVersion(aNewVersion) {
-  let dbfile = gProfD.clone();
-  dbfile.append(EXTENSIONS_DB);
-  let jData = loadJSON(dbfile);
-  jData.schemaVersion = aNewVersion;
-  saveJSON(jData, dbfile);
-}
-
-/**
- * Raw load of a JSON file
- */
-function loadJSON(aFile) {
-  let data = "";
-  let fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].
-          createInstance(Components.interfaces.nsIFileInputStream);
-  let cstream = Components.classes["@mozilla.org/intl/converter-input-stream;1"].
-          createInstance(Components.interfaces.nsIConverterInputStream);
-  fstream.init(aFile, -1, 0, 0);
-  cstream.init(fstream, "UTF-8", 0, 0);
-  let (str = {}) {
-    let read = 0;
-    do {
-      read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
-      data += str.value;
-    } while (read != 0);
-  }
-  cstream.close();
-  do_print("Loaded JSON file " + aFile.spec);
-  return(JSON.parse(data));
-}
-
-/**
- * Raw save of a JSON blob to file
- */
-function saveJSON(aData, aFile) {
-  do_print("Starting to save JSON file " + aFile.path);
-  let stream = FileUtils.openSafeFileOutputStream(aFile);
-  let converter = AM_Cc["@mozilla.org/intl/converter-output-stream;1"].
-    createInstance(AM_Ci.nsIConverterOutputStream);
-  converter.init(stream, "UTF-8", 0, 0x0000);
-  // XXX pretty print the JSON while debugging
-  converter.writeString(JSON.stringify(aData, null, 2));
-  converter.flush();
-  // nsConverterOutputStream doesn't finish() safe output streams on close()
-  FileUtils.closeSafeFileOutputStream(stream);
-  converter.close();
-  do_print("Done saving JSON file " + aFile.path);
-}
-
 /**
  * Create a callback function that calls do_execute_soon on an actual callback and arguments
  */

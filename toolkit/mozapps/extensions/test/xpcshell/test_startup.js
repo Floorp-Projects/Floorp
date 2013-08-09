@@ -133,7 +133,7 @@ function run_test() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
 
   let file = gProfD.clone();
-  file.append("extensions.json");
+  file.append("extensions.sqlite");
   do_check_false(file.exists());
 
   file.leafName = "extensions.ini";
@@ -191,7 +191,7 @@ function run_test_1() {
   do_check_true(gCachePurged);
 
   let file = gProfD.clone();
-  file.append("extensions.json");
+  file.append("extensions.sqlite");
   do_check_true(file.exists());
 
   file.leafName = "extensions.ini";

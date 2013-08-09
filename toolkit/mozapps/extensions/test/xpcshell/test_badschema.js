@@ -254,11 +254,14 @@ function run_test_1() {
 
 
 function run_test_1_modified_db() {
-    // After restarting the database won't be open so we can alter
-    // the schema
-    shutdownManager();
-    changeXPIDBVersion(100);
-    startupManager();
+    // After restarting the database won't be open and so can be replaced with
+    // a bad file
+    restartManager();
+    var dbfile = gProfD.clone();
+    dbfile.append("extensions.sqlite");
+    var db = Services.storage.openDatabase(dbfile);
+    db.schemaVersion = 100;
+    db.close();
 
     // Accessing the add-ons should open and recover the database. Since
     // migration occurs everything should be recovered correctly

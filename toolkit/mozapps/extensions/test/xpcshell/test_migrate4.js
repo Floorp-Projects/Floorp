@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Checks that we migrate data from a previous version of the JSON database
+// Checks that we migrate data from a previous version of the sqlite database
 
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
@@ -172,8 +172,14 @@ function perform_migration() {
   // Turn on disabling for all scopes
   Services.prefs.setIntPref("extensions.autoDisableScopes", 15);
 
-  changeXPIDBVersion(1);
+  let dbfile = gProfD.clone();
+  dbfile.append("extensions.sqlite");
+  let db = AM_Cc["@mozilla.org/storage/service;1"].
+           getService(AM_Ci.mozIStorageService).
+           openDatabase(dbfile);
+  db.schemaVersion = 1;
   Services.prefs.setIntPref("extensions.databaseSchema", 1);
+  db.close();
 
   gAppInfo.version = "2"
   startupManager(true);
@@ -241,7 +247,7 @@ function test_results() {
     do_check_false(a4.hasBinaryComponents);
     do_check_true(a4.strictCompatibility);
 
-    // addon5 was enabled in the database but needed a compatibility update
+    // addon5 was enabled in the database but needed a compatibiltiy update
     do_check_neq(a5, null);
     do_check_false(a5.userDisabled);
     do_check_false(a5.appDisabled);

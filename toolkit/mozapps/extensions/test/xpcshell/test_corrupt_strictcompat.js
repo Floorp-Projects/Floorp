@@ -253,7 +253,7 @@ function run_test_1() {
     // because there is a file there still.
     shutdownManager();
     var dbfile = gProfD.clone();
-    dbfile.append("extensions.json");
+    dbfile.append("extensions.sqlite");
     dbfile.remove(true);
     dbfile.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
     startupManager(false);
