@@ -19,6 +19,7 @@ function HistoryView(aSet, aLimit, aFilterUnpinned) {
   Services.obs.addObserver(this, "metro_viewstate_changed", false);
   StartUI.chromeWin.addEventListener('MozAppbarDismissing', this, false);
   StartUI.chromeWin.addEventListener('HistoryNeedsRefresh', this, false);
+  window.addEventListener("TabClose", this, true);
 }
 
 HistoryView.prototype = Util.extend(Object.create(View.prototype), {
@@ -210,6 +211,12 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
       case "HistoryNeedsRefresh":
         this.populateGrid(true);
         break;
+
+      case "TabClose":
+        // Flush any pending actions - appbar will call us back
+        // before this returns with 'MozAppbarDismissing' above.
+        StartUI.chromeWin.ContextUI.dismiss();
+      break;
     }
   },
 
