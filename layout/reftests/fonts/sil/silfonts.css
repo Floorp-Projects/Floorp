@@ -30,5 +30,5 @@
 
 @font-face {
   font-family: Scheherazade;
-  src: url(ScheherazadeRegAAT.ttf) format("truetype-aat"), url(ScheherazadeRegOT.ttf) format("opentype");
+  src: url(ScheherazadeRegOT.ttf) format("opentype");
 }  
