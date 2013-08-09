@@ -20,6 +20,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ContentClick",
+                                  "resource:///modules/ContentClick.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
@@ -466,6 +469,9 @@ BrowserGlue.prototype = {
     PdfJs.init();
     webrtcUI.init();
     AboutHome.init();
+
+    if (Services.prefs.getBoolPref("browser.tabs.remote"))
+      ContentClick.init();
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
   },
