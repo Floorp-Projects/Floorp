@@ -22,9 +22,7 @@ import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
 
 import com.jayway.android.robotium.solo.Solo;
 
@@ -458,41 +456,6 @@ public class FennecNativeActions implements Actions {
 
     public void drag(int startingX, int endingX, int startingY, int endingY) {
         mSolo.drag(startingX, endingX, startingY, endingY, 10);
-    }
-
-     /**
-     * This is the implementation of clickLongOnScreen from Robotium 4.0 since this sometimes fails for Robotium 3.6
-     * TODO : Remove this when Robotium is updated
-     */
-
-    public void clickLongOnScreen(float x, float y) {
-    	boolean successfull = false;
-        int retry = 0;
-        long downTime = SystemClock.uptimeMillis();
-        long eventTime = SystemClock.uptimeMillis();
-        MotionEvent event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_DOWN, x, y, 0);
-
-        while(!successfull && retry < 10) {
-            try{
-                mInstr.sendPointerSync(event);
-                successfull = true;
-            }catch(SecurityException e){
-                FennecNativeDriver.log(LogLevel.ERROR, e);
-                retry++;
-            }
-        }
-
-        mAsserter.ok(successfull, "Trying to click on long on screen at (" + x + "," + y + ")", "Was able to click long on screen");
-
-        eventTime = SystemClock.uptimeMillis();
-        event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_MOVE, x + 1.0f, y + 1.0f, 0);
-        mInstr.sendPointerSync(event);
-        mSolo.sleep(((int)(ViewConfiguration.getLongPressTimeout() * 2.5f)));
-
-        eventTime = SystemClock.uptimeMillis();
-        event = MotionEvent.obtain(downTime, eventTime, MotionEvent.ACTION_UP, x, y, 0);
-        mInstr.sendPointerSync(event);
-        mSolo.sleep(500);
     }
 
     public Cursor querySql(String dbPath, String sql) {
