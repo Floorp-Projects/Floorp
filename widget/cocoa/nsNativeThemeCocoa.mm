@@ -2841,7 +2841,15 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
       *aIsOverridable = false;
 
       if (nsLookAndFeel::UseOverlayScrollbars()) {
-        aResult->SizeTo(16, 16);
+        nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
+        if (scrollbarFrame &&
+            scrollbarFrame->StyleDisplay()->mAppearance ==
+              NS_THEME_SCROLLBAR_SMALL) {
+          aResult->SizeTo(14, 14);
+        }
+        else {
+          aResult->SizeTo(16, 16);
+        }
         break;
       }
 
