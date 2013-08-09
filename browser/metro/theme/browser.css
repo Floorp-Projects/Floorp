@@ -127,6 +127,7 @@ documenttab[closing] > .documenttab-container {
   margin: @metro_spacing_normal@ @metro_spacing_snormal@;
   background: white none center top no-repeat;
   background-size: cover;
+  min-width: @thumbnail_width@;
   width: @thumbnail_width@;
   height: @thumbnail_height@;
 }
@@ -234,17 +235,18 @@ documenttab[selected] .documenttab-selection {
 #start-autocomplete[viewstate="snapped"] .richgrid-item-content {
   -moz-box-orient: horizontal;
 }
+
 #start-container,
 #start-autocomplete {
   padding-left: 0;
   padding-right: 0;
 }
+
 #start-container[viewstate="snapped"] #start-scrollbox > .meta-section {
-  margin: 0;
+  margin: 0 @metro_spacing_xnormal@;
   min-width: @grid_double_column_width@;
-  -moz-box-flex: 1;
-  -moz-box-align: center;
 }
+
 #start-container[viewstate="snapped"] richgrid {
   visibility: collapse;
 }

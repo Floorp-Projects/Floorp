@@ -1920,7 +1920,6 @@ let GroupItems = {
   minGroupHeight: 110,
   minGroupWidth: 125,
   _lastActiveList: null,
-  _lastGroupToUpdateTabBar: null,
 
   // ----------
   // Function: toString
@@ -2286,10 +2285,6 @@ let GroupItems = {
     });
 
     this._lastActiveList.remove(groupItem);
-
-    if (this._lastGroupToUpdateTabBar == groupItem)
-      this._lastGroupToUpdateTabBar = null;
-
     UI.updateTabButton();
   },
 
@@ -2423,13 +2418,8 @@ let GroupItems = {
 
     Utils.assert(this._activeGroupItem, "There must be something to show in the tab bar!");
 
-    // Update list of visible tabs only once after switching to another group.
-    if (this._activeGroupItem == this._lastGroupToUpdateTabBar)
-      return;
-
     let tabItems = this._activeGroupItem._children;
     gBrowser.showOnlyTheseTabs(tabItems.map(function(item) item.tab));
-    this._lastGroupToUpdateTabBar = this._activeGroupItem;
   },
 
   // ----------
@@ -2547,7 +2537,7 @@ let GroupItems = {
     if (tab._tabViewTabItem.parent && tab._tabViewTabItem.parent.id == groupItemId)
       return;
 
-    let shouldHideTab = false;
+    let shouldUpdateTabBar = false;
     let shouldShowTabView = false;
     let groupItem;
 
@@ -2555,12 +2545,12 @@ let GroupItems = {
     if (tab.selected) {
       if (gBrowser.visibleTabs.length > 1) {
         gBrowser._blurTab(tab);
-        shouldHideTab = true;
+        shouldUpdateTabBar = true;
       } else {
         shouldShowTabView = true;
       }
     } else {
-      shouldHideTab = true;
+      shouldUpdateTabBar = true
     }
 
     // remove tab item from a groupItem
@@ -2583,8 +2573,8 @@ let GroupItems = {
       new GroupItem([ tab._tabViewTabItem ], { bounds: box, immediately: true });
     }
 
-    if (shouldHideTab)
-      gBrowser.hideTab(tab);
+    if (shouldUpdateTabBar)
+      this._updateTabBar();
     else if (shouldShowTabView)
       UI.showTabView();
   },
