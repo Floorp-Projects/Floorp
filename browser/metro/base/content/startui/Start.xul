@@ -32,6 +32,12 @@
 
   <script type="application/javascript" src="chrome://browser/content/startui-scripts.js"/>
 
+  <!-- mimic broadcasts in browser.xul. note browser.xul broadcasters do not propagate down here! -->
+  <broadcasterset id="broadcasterset">
+    <broadcaster id="bcast_preciseInput" input="precise"/>
+    <broadcaster id="bcast_windowState" viewstate=""/>
+  </broadcasterset>
+
   <hbox id="start-container" flex="1" observes="bcast_windowState" class="meta content-height content-width">
     <scrollbox id="start-scrollbox" observes="bcast_preciseInput" flex="1">
       <vbox id="start-topsites" class="meta-section" expanded="true">
