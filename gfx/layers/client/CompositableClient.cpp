@@ -119,6 +119,9 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
       result = new DeprecatedTextureClientShmemYCbCr(GetForwarder(), GetTextureInfo());
     }
     break;
+  case TEXTURE_D3D11_HANDLE:
+    // Fall through to TEXTURE_CONTENT case, we'll create a
+    // DeprecatedTextureClientD3D11
   case TEXTURE_CONTENT:
 #ifdef XP_WIN
     if (parentBackend == LAYERS_D3D11 && gfxWindowsPlatform::GetPlatform()->GetD2DDevice()) {
