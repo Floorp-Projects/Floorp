@@ -56,7 +56,7 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
     delete mScriptableInfo;
 }
 
-JSBool
+bool
 XPCWrappedNativeProto::Init(const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
                             bool callPostCreatePrototype)
 {
@@ -190,7 +190,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
     if (NS_FAILED(classInfo->GetFlags(&ciFlags)))
         ciFlags = 0;
 
-    JSBool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
+    bool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
     map = scope->GetWrappedNativeProtoMap(mainThreadOnly);
     lock = mainThreadOnly ? nullptr : scope->GetRuntime()->GetMapLock();
     {   // scoped lock

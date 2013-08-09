@@ -181,6 +181,14 @@ public:
     virtual already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
                                                         gfxASurface::gfxImageFormat format);
 
+    /**
+     * Beware that these methods may return DrawTargets which are not fully supported
+     * on the current platform and might fail silently in subtle ways. This is a massive
+     * potential footgun. You should only use these methods for canvas drawing really.
+     * Use extreme caution if you use them for content where you are not 100% sure we
+     * support the DrawTarget we get back.
+     * See SupportsAzureContentForDrawTarget.
+     */
     virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateDrawTargetForSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
 
@@ -235,6 +243,12 @@ public:
     /**
      * Returns true if we will render content using Azure using a gfxPlatform
      * provided DrawTarget.
+     * Prefer using SupportsAzureContentForDrawTarget or 
+     * SupportsAzureContentForType.
+     * This function is potentially misleading and dangerous because we might
+     * support a certain Azure backend on the current platform, but when you
+     * ask for a DrawTarget you get one for a different backend which is not
+     * supported for content drawing.
      */
     bool SupportsAzureContent() {
       return GetContentBackend() != mozilla::gfx::BACKEND_NONE;
@@ -248,6 +262,10 @@ public:
      * will return false.
      */
     bool SupportsAzureContentForDrawTarget(mozilla::gfx::DrawTarget* aTarget);
+
+    bool SupportsAzureContentForType(mozilla::gfx::BackendType aType) {
+      return (1 << aType) & mContentBackendBitmask;
+    }
 
     virtual bool UseAcceleratedSkiaCanvas();
 
@@ -371,13 +389,6 @@ public:
      */
     virtual bool RequiresLinearZoom() { return false; }
 
-    bool UsesSubpixelAATextRendering() {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-	return false;
-#endif
-	return true;
-    }
-
     /**
      * Whether to check all font cmaps during system font fallback
      */
@@ -481,6 +492,9 @@ public:
      */
     static bool BufferRotationEnabled();
     static void DisableBufferRotation();
+
+    static bool ComponentAlphaEnabled();
+
     /**
      * Are we going to try color management?
      */

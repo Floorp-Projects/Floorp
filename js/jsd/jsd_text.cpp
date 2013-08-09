@@ -36,7 +36,7 @@ _clearText(JSDContext* jsdc, JSDSourceText* jsdsrc)
     jsdsrc->doingEval   = false;
 }    
 
-static JSBool
+static bool
 _appendText(JSDContext* jsdc, JSDSourceText* jsdsrc, 
             const char* text, size_t length)
 {
@@ -135,7 +135,7 @@ _removeSourceFromRemovedList( JSDContext* jsdc, JSDSourceText* jsdsrc )
     _destroySource( jsdc, jsdsrc );
 }
 
-static JSBool
+static bool
 _isSourceInSourceList(JSDContext* jsdc, JSDSourceText* jsdsrcToFind)
 {
     JSDSourceText *jsdsrc;
@@ -255,7 +255,7 @@ jsd_GetSourceURL(JSDContext* jsdc, JSDSourceText* jsdsrc)
     return jsdsrc->url;
 }
 
-JSBool
+bool
 jsd_GetSourceText(JSDContext* jsdc, JSDSourceText* jsdsrc,
                   const char** ppBuf, int* pLen )
 {
@@ -280,14 +280,14 @@ jsd_GetSourceStatus(JSDContext* jsdc, JSDSourceText* jsdsrc)
     return jsdsrc->status;
 }
 
-JSBool
+bool
 jsd_IsSourceDirty(JSDContext* jsdc, JSDSourceText* jsdsrc)
 {
     return jsdsrc->dirty;
 }
 
 void
-jsd_SetSourceDirty(JSDContext* jsdc, JSDSourceText* jsdsrc, JSBool dirty)
+jsd_SetSourceDirty(JSDContext* jsdc, JSDSourceText* jsdsrc, bool dirty)
 {
     jsdsrc->dirty = dirty;
 }
@@ -318,9 +318,9 @@ void DEBUG_ITERATE_SOURCES( JSDContext* jsdc )
         const char*     url;
         const char*     text;
         int             len;
-        JSBool          dirty;
+        bool            dirty;
         JSDStreamStatus status;
-        JSBool          gotSrc;
+        bool            gotSrc;
 
         url     = JSD_GetSourceURL(jsdc, jsdsrc);
         dirty   = JSD_IsSourceDirty(jsdc, jsdsrc);
@@ -452,7 +452,7 @@ jsd_AppendUCSourceText(JSDContext* jsdc,
 }
 
 /* convienence function for adding complete source of url in one call */
-JSBool
+bool
 jsd_AddFullSourceText(JSDContext* jsdc, 
                       const char* text,       /* *not* zero terminated */
                       size_t      length,

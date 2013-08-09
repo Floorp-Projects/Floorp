@@ -16,6 +16,7 @@
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsEventDispatcher.h"
 #include "nsIWebBrowserChrome2.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebBrowserChromeFocus.h"
@@ -117,6 +118,13 @@ public:
                                                     aUseCapture,
                                                     aWantsUntrusted,
                                                     optional_argc);
+  }
+
+  nsresult
+  PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+  {
+    aVisitor.mForceContentDispatch = true;
+    return NS_OK;
   }
 
   virtual JSContext* GetJSContextForEventHandlers() MOZ_OVERRIDE;

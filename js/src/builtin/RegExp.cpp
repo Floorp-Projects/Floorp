@@ -394,7 +394,7 @@ static const JSFunctionSpec regexp_methods[] = {
  */
 
 #define DEFINE_STATIC_GETTER(name, code)                                        \
-    static JSBool                                                               \
+    static bool                                                                 \
     name(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)   \
     {                                                                           \
         RegExpStatics *res = cx->regExpStatics();                               \
@@ -420,8 +420,8 @@ DEFINE_STATIC_GETTER(static_paren8_getter,       return res->createParen(cx, 8, 
 DEFINE_STATIC_GETTER(static_paren9_getter,       return res->createParen(cx, 9, vp))
 
 #define DEFINE_STATIC_SETTER(name, code)                                        \
-    static JSBool                                                               \
-    name(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)\
+    static bool                                                                 \
+    name(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)\
     {                                                                           \
         RegExpStatics *res = cx->regExpStatics();                               \
         code;                                                                   \

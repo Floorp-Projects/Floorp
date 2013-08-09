@@ -112,7 +112,7 @@ private:
     NS_IF_RELEASE(blob);
   }
 
-  static JSBool
+  static bool
   GetSize(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
           JS::MutableHandle<JS::Value> aVp)
   {
@@ -132,7 +132,7 @@ private:
     return true;
   }
 
-  static JSBool
+  static bool
   GetType(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
           JS::MutableHandle<JS::Value> aVp)
   {
@@ -303,7 +303,7 @@ private:
     NS_IF_RELEASE(file);
   }
 
-  static JSBool
+  static bool
   GetMozFullPath(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
                  JS::MutableHandle<JS::Value> aVp)
   {
@@ -330,7 +330,7 @@ private:
     return true;
   }
 
-  static JSBool
+  static bool
   GetName(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
           JS::MutableHandle<JS::Value> aVp)
   {
@@ -353,7 +353,7 @@ private:
     return true;
   }
 
-  static JSBool
+  static bool
   GetLastModifiedDate(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
                       JS::MutableHandle<JS::Value> aVp)
   {

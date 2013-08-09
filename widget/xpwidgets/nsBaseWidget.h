@@ -363,6 +363,11 @@ protected:
 
   virtual mozilla::layers::LayersBackend GetPreferredCompositorBackend();
 
+  /**
+   * Notify the widget that this window is being used with OMTC.
+   */
+  virtual void WindowUsesOMTC() {}
+
 protected:
   /**
    * Starts the OMTC compositor destruction sequence.

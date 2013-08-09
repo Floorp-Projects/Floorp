@@ -20,7 +20,7 @@
 // for mozilla::dom::workers::kJSPrincipalsDebugToken
 #include "mozilla/dom/workers/Workers.h"
 
-/* static */ JSBool
+/* static */ bool
 nsJSPrincipals::Subsume(JSPrincipals *jsprin, JSPrincipals *other)
 {
     bool result;

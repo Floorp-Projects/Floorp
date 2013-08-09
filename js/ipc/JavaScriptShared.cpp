@@ -313,39 +313,40 @@ static const uint32_t GetterOnlyPropertyStub = 2;
 static const uint32_t UnknownPropertyOp = 3;
 
 bool
-JavaScriptShared::fromDescriptor(JSContext *cx, const JSPropertyDescriptor &desc, PPropertyDescriptor *out)
+JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> desc,
+                                 PPropertyDescriptor *out)
 {
-    out->attrs() = desc.attrs;
-    out->shortid() = desc.shortid;
-    if (!toVariant(cx, desc.value, &out->value()))
+    out->attrs() = desc.attributes();
+    out->shortid() = desc.shortid();
+    if (!toVariant(cx, desc.value(), &out->value()))
         return false;
 
-    if (!makeId(cx, desc.obj, &out->objId()))
+    if (!makeId(cx, desc.object(), &out->objId()))
         return false;
 
-    if (!desc.getter) {
+    if (!desc.getter()) {
         out->getter() = 0;
-    } else if (desc.attrs & JSPROP_GETTER) {
-        JSObject *getter = JS_FUNC_TO_DATA_PTR(JSObject *, desc.getter);
+    } else if (desc.hasGetterObject()) {
+        JSObject *getter = desc.getterObject();
         if (!makeId(cx, getter, &out->getter()))
             return false;
     } else {
-        if (desc.getter == JS_PropertyStub)
+        if (desc.getter() == JS_PropertyStub)
             out->getter() = DefaultPropertyOp;
         else
             out->getter() = UnknownPropertyOp;
     }
 
-    if (!desc.setter) {
+    if (!desc.setter()) {
         out->setter() = 0;
-    } else if (desc.attrs & JSPROP_SETTER) {
-        JSObject *setter = JS_FUNC_TO_DATA_PTR(JSObject  *, desc.setter);
+    } else if (desc.hasSetterObject()) {
+        JSObject *setter = desc.setterObject();
         if (!makeId(cx, setter, &out->setter()))
             return false;
     } else {
-        if (desc.setter == JS_StrictPropertyStub)
+        if (desc.setter() == JS_StrictPropertyStub)
             out->setter() = DefaultPropertyOp;
-        else if (desc.setter == js_GetterOnlyPropertyStub)
+        else if (desc.setter() == js_GetterOnlyPropertyStub)
             out->setter() = GetterOnlyPropertyStub;
         else
             out->setter() = UnknownPropertyOp;
@@ -354,60 +355,61 @@ JavaScriptShared::fromDescriptor(JSContext *cx, const JSPropertyDescriptor &desc
     return true;
 }
 
-JSBool
+bool
 UnknownPropertyStub(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     JS_ReportError(cx, "getter could not be wrapped via CPOWs");
     return false;
 }
 
-JSBool
-UnknownStrictPropertyStub(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
+bool
+UnknownStrictPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
     JS_ReportError(cx, "setter could not be wrapped via CPOWs");
     return false;
 }
 
 bool
-JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in, JSPropertyDescriptor *out)
+JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
+                               MutableHandle<JSPropertyDescriptor> out)
 {
-    out->attrs = in.attrs();
-    out->shortid = in.shortid();
-    if (!toValue(cx, in.value(), &out->value))
+    out.setAttributes(in.attrs());
+    out.setShortId(in.shortid());
+    if (!toValue(cx, in.value(), out.value()))
         return false;
     Rooted<JSObject*> obj(cx);
     if (!unwrap(cx, in.objId(), &obj))
         return false;
-    out->obj = obj;
+    out.object().set(obj);
 
     if (!in.getter()) {
-        out->getter = NULL;
+        out.setGetter(nullptr);
     } else if (in.attrs() & JSPROP_GETTER) {
         Rooted<JSObject*> getter(cx);
         if (!unwrap(cx, in.getter(), &getter))
             return false;
-        out->getter = JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter.get());
+        out.setGetter(JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter.get()));
     } else {
         if (in.getter() == DefaultPropertyOp)
-            out->getter = JS_PropertyStub;
+            out.setGetter(JS_PropertyStub);
         else
-            out->getter = UnknownPropertyStub;
+            out.setGetter(UnknownPropertyStub);
     }
 
     if (!in.setter()) {
-        out->setter = NULL;
+        out.setSetter(nullptr);
     } else if (in.attrs() & JSPROP_SETTER) {
         Rooted<JSObject*> setter(cx);
         if (!unwrap(cx, in.setter(), &setter))
             return false;
-        out->setter = JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter.get());
+        out.setSetter(JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter.get()));
     } else {
         if (in.setter() == DefaultPropertyOp)
-            out->setter = JS_StrictPropertyStub;
+            out.setSetter(JS_StrictPropertyStub);
         else if (in.setter() == GetterOnlyPropertyStub)
-            out->setter = js_GetterOnlyPropertyStub;
+            out.setSetter(js_GetterOnlyPropertyStub);
         else
-            out->setter = UnknownStrictPropertyStub;
+            out.setSetter(UnknownStrictPropertyStub);
     }
 
     return true;

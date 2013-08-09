@@ -16,7 +16,7 @@
 extern JSObject *
 js_InitJSONClass(JSContext *cx, js::HandleObject obj);
 
-extern JSBool
+extern bool
 js_Stringify(JSContext *cx, js::MutableHandleValue vp, JSObject *replacer,
              js::Value space, js::StringBuffer &sb);
 

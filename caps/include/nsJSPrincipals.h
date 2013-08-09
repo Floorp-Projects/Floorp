@@ -13,7 +13,7 @@ class nsCString;
 
 struct nsJSPrincipals : nsIPrincipal, JSPrincipals
 {
-  static JSBool Subsume(JSPrincipals *jsprin, JSPrincipals *other);
+  static bool Subsume(JSPrincipals *jsprin, JSPrincipals *other);
   static void Destroy(JSPrincipals *jsprin);
 
   /*
