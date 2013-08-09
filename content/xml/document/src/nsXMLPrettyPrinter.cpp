@@ -251,7 +251,6 @@ nsXMLPrettyPrinter::NodeWillBeDestroyed(const nsINode* aNode)
 nsresult NS_NewXMLPrettyPrinter(nsXMLPrettyPrinter** aPrinter)
 {
     *aPrinter = new nsXMLPrettyPrinter;
-    NS_ENSURE_TRUE(*aPrinter, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(*aPrinter);
     return NS_OK;
 }

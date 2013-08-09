@@ -354,6 +354,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
     break;
   case EFFECT_COMPONENT_ALPHA:
     {
+      MOZ_ASSERT(gfxPlatform::ComponentAlphaEnabled());
       EffectComponentAlpha* effectComponentAlpha =
         static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
       TextureSourceD3D9* sourceOnWhite = effectComponentAlpha->mOnWhite->AsSourceD3D9();
@@ -376,7 +377,6 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
       device()->SetTexture(1, sourceOnWhite->GetD3D9Texture());
       device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
       device()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCCOLOR);
-      device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
       device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 
       maskTexture = mDeviceManager->SetShaderMode(DeviceManagerD3D9::COMPONENTLAYERPASS2, maskType);
@@ -387,7 +387,6 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
       // Restore defaults
       device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
       device()->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-      device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
       device()->SetTexture(1, NULL);
     }
     return;
@@ -400,14 +399,12 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect, const gfx::Rect &aClipRect,
 
   if (!isPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-    device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, TRUE);
   }
 
   HRESULT hr = device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 
   if (!isPremultiplied) {
     device()->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-    device()->SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE, FALSE);
   }
 }
 
@@ -487,10 +484,14 @@ CompositorD3D9::EndFrame()
 {
   device()->EndScene();
 
-  if (!!mTarget) {
-    PaintToTarget();
-  } else {
-    mSwapChain->Present();
+  nsIntSize oldSize = mSize;
+  EnsureSize();
+  if (oldSize == mSize) {
+    if (mTarget) {
+      PaintToTarget();
+    } else {
+      mSwapChain->Present();
+    }
   }
 
   mCurrentRT = nullptr;

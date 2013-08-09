@@ -12,7 +12,6 @@
 #include "MediaStreamGraph.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/AudioContextBinding.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"

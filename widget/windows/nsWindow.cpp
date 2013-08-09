@@ -4886,7 +4886,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (lParam != -1 && !result && mCustomNonClient) {
         nsMouseEvent event(true, NS_MOUSE_MOZHITTEST, this, nsMouseEvent::eReal,
                            nsMouseEvent::eNormal);
-        event.refPoint = LayoutDeviceIntPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        event.refPoint = LayoutDeviceIntPoint(GET_X_LPARAM(pos), GET_Y_LPARAM(pos));
         event.inputSource = MOUSE_INPUT_SOURCE();
         event.mFlags.mOnlyChromeDispatch = true;
         if (DispatchWindowEvent(&event)) {
@@ -6563,6 +6563,19 @@ nsWindow::GetPreferredCompositorBackend()
     return mozilla::layers::LAYERS_D3D9;
   }
   return mozilla::layers::LAYERS_D3D11;
+}
+
+void
+nsWindow::WindowUsesOMTC()
+{
+  ULONG_PTR style = ::GetClassLongPtr(mWnd, GCL_STYLE);
+  if (!style) {
+    NS_WARNING("Could not get window class style");
+    return;
+  }
+  style |= CS_HREDRAW | CS_VREDRAW;
+  DebugOnly<ULONG_PTR> result = ::SetClassLongPtr(mWnd, GCL_STYLE, style);
+  NS_WARN_IF_FALSE(result, "Could not reset window class style");
 }
 
 bool

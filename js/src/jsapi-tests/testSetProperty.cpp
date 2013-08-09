@@ -7,7 +7,7 @@
 
 #include "jsapi-tests/tests.h"
 
-static JSBool
+static bool
 nativeGet(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
     vp.set(INT_TO_JSVAL(17));

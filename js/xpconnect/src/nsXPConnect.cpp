@@ -67,11 +67,11 @@ NS_IMPL_ISUPPORTS5(nsXPConnect,
                    nsIJSEngineTelemetryStats)
 
 nsXPConnect* nsXPConnect::gSelf = nullptr;
-JSBool       nsXPConnect::gOnceAliveNowDead = false;
+bool         nsXPConnect::gOnceAliveNowDead = false;
 uint32_t     nsXPConnect::gReportAllJSExceptions = 0;
 
-JSBool       xpc::gDebugMode = false;
-JSBool       xpc::gDesiredDebugMode = false;
+bool         xpc::gDebugMode = false;
+bool         xpc::gDesiredDebugMode = false;
 
 // Global cache of the default script security manager (QI'd to
 // nsIScriptSecurityManager)
@@ -218,7 +218,7 @@ nsXPConnect::GetRuntimeInstance()
 }
 
 // static
-JSBool
+bool
 nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 {
     bool found = false;
@@ -310,7 +310,7 @@ nsXPConnect::GarbageCollect(uint32_t reason)
     return NS_OK;
 }
 
-JSBool
+bool
 xpc_GCThingIsGrayCCThing(void *thing)
 {
     return AddToCCKind(js::GCThingTraceKind(thing)) &&

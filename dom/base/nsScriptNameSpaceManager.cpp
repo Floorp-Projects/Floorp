@@ -479,6 +479,7 @@ nsresult
 nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
                                             int32_t aDOMClassInfoID,
                                             bool aPrivileged,
+                                            bool aXBLAllowed,
                                             bool aDisabled,
                                             const PRUnichar **aResult)
 {
@@ -508,6 +509,7 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
   s->mType = nsGlobalNameStruct::eTypeClassConstructor;
   s->mDOMClassInfoID = aDOMClassInfoID;
   s->mChromeOnly = aPrivileged;
+  s->mAllowXBL = aXBLAllowed;
   s->mDisabled = aDisabled;
 
   return NS_OK;

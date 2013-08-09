@@ -188,11 +188,11 @@ JavaScriptChild::AnswerGetPropertyDescriptor(const ObjectId &objId, const nsStri
     if (!convertGeckoStringToId(cx, id, &internedId))
         return fail(cx, rs);
 
-    JSPropertyDescriptor desc;
-    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, flags, &desc))
+    Rooted<JSPropertyDescriptor> desc(cx);
+    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, flags, desc.address()))
         return fail(cx, rs);
 
-    if (!desc.obj)
+    if (!desc.object())
         return ok(rs);
 
     if (!fromDescriptor(cx, desc, out))
@@ -221,11 +221,11 @@ JavaScriptChild::AnswerGetOwnPropertyDescriptor(const ObjectId &objId, const nsS
     if (!convertGeckoStringToId(cx, id, &internedId))
         return fail(cx, rs);
 
-    JSPropertyDescriptor desc;
-    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, flags, &desc))
+    Rooted<JSPropertyDescriptor> desc(cx);
+    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, flags, desc.address()))
         return fail(cx, rs);
 
-    if (desc.obj != obj)
+    if (desc.object() != obj)
         return ok(rs);
 
     if (!fromDescriptor(cx, desc, out))
@@ -252,7 +252,7 @@ JavaScriptChild::AnswerDefineProperty(const ObjectId &objId, const nsString &id,
         return fail(cx, rs);
 
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!toDescriptor(cx, descriptor, desc.address()))
+    if (!toDescriptor(cx, descriptor, &desc))
         return false;
 
     if (!js::CheckDefineProperty(cx, obj, internedId, desc.value(), desc.getter(),
@@ -313,7 +313,7 @@ JavaScriptChild::AnswerHas(const ObjectId &objId, const nsString &id, ReturnStat
     if (!convertGeckoStringToId(cx, id, &internedId))
         return fail(cx, rs);
 
-    JSBool found;
+    bool found;
     if (!JS_HasPropertyById(cx, obj, internedId, &found))
         return fail(cx, rs);
     *bp = !!found;
@@ -435,7 +435,7 @@ JavaScriptChild::AnswerIsExtensible(const ObjectId &objId, ReturnStatus *rs, boo
     if (!obj)
         return false;
 
-    JSBool extensible;
+    bool extensible;
     if (!JS_IsExtensible(cx, obj, &extensible))
         return fail(cx, rs);
 
@@ -517,7 +517,7 @@ JavaScriptChild::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv
         RootedObject obj(cx, &outobjects[i].toObject());
 
         RootedValue v(cx);
-        JSBool found;
+        bool found;
         if (JS_HasProperty(cx, obj, "value", &found)) {
             if (!JS_GetProperty(cx, obj, "value", &v))
                 return fail(cx, rs);
@@ -642,7 +642,7 @@ JavaScriptChild::AnswerDOMInstanceOf(const ObjectId &objId, const int &prototype
 
     JSAutoCompartment comp(cx, obj);
 
-    JSBool tmp;
+    bool tmp;
     if (!mozilla::dom::InterfaceHasInstance(cx, prototypeID, depth, obj, &tmp))
         return fail(cx, rs);
     *instanceof = tmp;

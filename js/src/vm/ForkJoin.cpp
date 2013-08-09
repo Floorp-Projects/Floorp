@@ -11,15 +11,15 @@
 #ifdef JS_THREADSAFE
 # include "prthread.h"
 # include "prprf.h"
-# include "ion/BaselineJIT.h"
+# include "jit/BaselineJIT.h"
 # include "vm/Monitor.h"
 #endif
 
 #if defined(DEBUG) && defined(JS_THREADSAFE) && defined(JS_ION)
-# include "ion/Ion.h"
-# include "ion/IonCompartment.h"
-# include "ion/MIR.h"
-# include "ion/MIRGraph.h"
+# include "jit/Ion.h"
+# include "jit/IonCompartment.h"
+# include "jit/MIR.h"
+# include "jit/MIRGraph.h"
 #endif // DEBUG && THREADSAFE && ION
 
 #include "vm/Interpreter-inl.h"

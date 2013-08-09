@@ -12,7 +12,7 @@
 static const int expectedCount = 100;
 static int callCount = 0;
 
-static JSBool
+static bool
 addProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
   callCount++;

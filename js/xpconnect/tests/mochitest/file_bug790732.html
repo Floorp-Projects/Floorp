@@ -40,9 +40,6 @@ function testShim() {
   is(Ci.nsIDOMNodeFilter, NodeFilter);
   is(Ci.nsIDOMXPathNamespace, XPathNamespace);
   is(Ci.nsIDOMXPathResult, XPathResult);
-  is(Ci.nsIDOMXULButtonElement, XULButtonElement);
-  is(Ci.nsIDOMXULCheckboxElement, XULCheckboxElement);
-  is(Ci.nsIDOMXULPopupElement, XULPopupElement);
 
   // Test for Bug 895231
   for (var k of Object.keys(Components.interfaces)) {

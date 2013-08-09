@@ -9,7 +9,7 @@
 
 #include "jsapi-tests/tests.h"
 
-static JSBool
+static bool
 my_convert(JSContext* context, JS::HandleObject obj, JSType type, JS::MutableHandleValue rval)
 {
     if (type == JSTYPE_VOID || type == JSTYPE_STRING || type == JSTYPE_NUMBER || type == JSTYPE_BOOLEAN) {

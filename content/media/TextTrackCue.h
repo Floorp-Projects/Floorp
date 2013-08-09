@@ -86,7 +86,6 @@ public:
 
   void SetStartTime(double aStartTime)
   {
-    //XXXhumph: validate? bug 868519.
     if (mStartTime == aStartTime)
       return;
 
@@ -101,7 +100,6 @@ public:
 
   void SetEndTime(double aEndTime)
   {
-    //XXXhumph: validate? bug 868519.
     if (mEndTime == aEndTime)
       return;
 
@@ -128,10 +126,15 @@ public:
     aVertical = mVertical;
   }
 
-  void SetVertical(const nsAString& aVertical)
+  void SetVertical(const nsAString& aVertical, ErrorResult& aRv)
   {
     if (mVertical == aVertical)
       return;
+
+    if (!aVertical.EqualsLiteral("rl") && !aVertical.EqualsLiteral("lr") && !aVertical.IsEmpty()){
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return;
+    }
 
     mReset = true;
     mVertical = aVertical;
@@ -160,7 +163,7 @@ public:
 
   void SetLine(double aLine)
   {
-    //XXX: validate? bug 868519.
+    //XXX: TODO Line position can be a keyword auto. bug882299
     mReset = true;
     mLine = aLine;
   }
@@ -170,11 +173,16 @@ public:
     return mPosition;
   }
 
-  void SetPosition(int32_t aPosition)
+  void SetPosition(int32_t aPosition, ErrorResult& aRv)
   {
     // XXXhumph: validate? bug 868519.
     if (mPosition == aPosition)
       return;
+
+    if (aPosition > 100 || aPosition < 0){
+      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      return;
+    }
 
     mReset = true;
     mPosition = aPosition;
@@ -186,14 +194,15 @@ public:
     return mSize;
   }
 
-  void SetSize(int32_t aSize)
+  void SetSize(int32_t aSize, ErrorResult& aRv)
   {
     if (mSize == aSize) {
       return;
     }
 
     if (aSize < 0 || aSize > 100) {
-      //XXX:throw IndexSizeError; bug 868519.
+      aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+      return;
     }
 
     mReset = true;
@@ -223,7 +232,6 @@ public:
 
   void SetText(const nsAString& aText)
   {
-    // XXXhumph: validate? bug 868519.
     if (mText == aText)
       return;
 
