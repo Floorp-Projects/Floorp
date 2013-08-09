@@ -16,7 +16,7 @@ function TopSitesView(aGrid, aMaxSites) {
   this._topSitesMax = aMaxSites;
 
   // clean up state when the appbar closes
-  window.addEventListener('MozAppbarDismissing', this, false);
+  StartUI.chromeWin.addEventListener('MozAppbarDismissing', this, false);
   let history = Cc["@mozilla.org/browser/nav-history-service;1"].
                 getService(Ci.nsINavHistoryService);
   history.addObserver(this, false);
@@ -290,7 +290,9 @@ let TopSitesStartView = {
   },
 
   uninit: function uninit() {
-    this._view.destruct();
+    if (this._view) {
+      this._view.destruct();
+    }
   },
 
   show: function show() {
