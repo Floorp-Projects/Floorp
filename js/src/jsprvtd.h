@@ -66,54 +66,6 @@ struct IdValuePair
 
 } /* namespace js */
 
-/* "Friend" types used by jscntxt.h and jsdbgapi.h. */
-typedef enum JSTrapStatus {
-    JSTRAP_ERROR,
-    JSTRAP_CONTINUE,
-    JSTRAP_RETURN,
-    JSTRAP_THROW,
-    JSTRAP_LIMIT
-} JSTrapStatus;
-
-typedef JSTrapStatus
-(* JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-                  jsval closure);
-
-typedef JSTrapStatus
-(* JSInterruptHook)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-                    void *closure);
-
-typedef JSTrapStatus
-(* JSDebuggerHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-                      void *closure);
-
-typedef JSTrapStatus
-(* JSThrowHook)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-                void *closure);
-
-typedef bool
-(* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsid id, jsval old,
-                        jsval *newp, void *closure);
-
-/* called just after script creation */
-typedef void
-(* JSNewScriptHook)(JSContext  *cx,
-                    const char *filename,  /* URL of script */
-                    unsigned   lineno,     /* first line */
-                    JSScript   *script,
-                    JSFunction *fun,
-                    void       *callerdata);
-
-/* called just before script destruction */
-typedef void
-(* JSDestroyScriptHook)(JSFreeOp *fop,
-                        JSScript *script,
-                        void     *callerdata);
-
-typedef void
-(* JSSourceHandler)(const char *filename, unsigned lineno, const jschar *str,
-                    size_t length, void **listenerTSData, void *closure);
-
 /* js::ObjectOps function pointer typedefs. */
 
 /*
