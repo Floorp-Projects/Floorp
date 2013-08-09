@@ -203,7 +203,6 @@ struct AssemblerBuffer
             cur_off = bufferSize;
         }
         int count = 0;
-        char sigil;
         if (local_off < cur_off) {
             for (; cur != NULL; cur = cur->getPrev(), cur_off -= cur->size()) {
                 if (local_off >= cur_off) {
