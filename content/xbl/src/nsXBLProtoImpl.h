@@ -78,8 +78,7 @@ public:
   }
 
   nsresult Read(nsIObjectInputStream* aStream,
-                nsXBLPrototypeBinding* aBinding,
-                nsIScriptGlobalObject* aGlobal);
+                nsXBLPrototypeBinding* aBinding);
   nsresult Write(nsIObjectOutputStream* aStream,
                  nsXBLPrototypeBinding* aBinding);
 

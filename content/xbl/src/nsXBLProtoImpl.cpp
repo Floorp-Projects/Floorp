@@ -11,7 +11,6 @@
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptContext.h"
 #include "nsIXPConnect.h"
 #include "nsIServiceManager.h"
@@ -183,13 +182,8 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   // We want to pre-compile our implementation's members against a "prototype context". Then when we actually 
   // bind the prototype to a real xbl instance, we'll clone the pre-compiled JS into the real instance's 
   // context.
-  nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(
-      do_QueryObject(aBinding->XBLDocumentInfo()));
-
   AutoSafeJSContext cx;
-  nsIScriptGlobalObject* globalObject = globalOwner->GetScriptGlobalObject();
-  NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
-  JS::Rooted<JSObject*> compilationGlobal(cx, globalObject->GetGlobalJSObject());
+  JS::Rooted<JSObject*> compilationGlobal(cx, aBinding->XBLDocumentInfo()->GetCompilationGlobal());
   NS_ENSURE_TRUE(compilationGlobal, NS_ERROR_UNEXPECTED);
   JSAutoCompartment ac(cx, compilationGlobal);
 
@@ -318,13 +312,12 @@ nsXBLProtoImpl::DestroyMembers()
 
 nsresult
 nsXBLProtoImpl::Read(nsIObjectInputStream* aStream,
-                     nsXBLPrototypeBinding* aBinding,
-                     nsIScriptGlobalObject* aGlobal)
+                     nsXBLPrototypeBinding* aBinding)
 {
   AssertInCompilationScope();
   AutoJSContext cx;
   // Set up a class object first so that deserialization is possible
-  JS::Rooted<JSObject*> global(cx, aGlobal->GetGlobalJSObject());
+  JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
 
   JS::Rooted<JSObject*> classObject(cx);
   bool classObjectIsNew = false;
