@@ -10,6 +10,7 @@
 #include "yuv_convert.h"
 #include "../d3d9/Nv3DVUtils.h"
 #include "D3D9SurfaceImage.h"
+#include "D3D11ShareHandleImage.h"
 
 #include "gfxWindowsPlatform.h"
 
@@ -158,6 +159,26 @@ ImageLayerD3D10::GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex 
       aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, dat.forget());
     }
     aHasAlpha = false;
+  } else if (aImage->GetFormat() == D3D11_SHARE_HANDLE_TEXTURE) {
+    if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D10)) {
+      // Use resource sharing to open the D3D11 texture as a D3D10 texture.
+      HRESULT hr;
+      D3D11ShareHandleImage* d3dImage = reinterpret_cast<D3D11ShareHandleImage*>(aImage);
+      nsRefPtr<ID3D10Texture2D> texture;
+      hr = device()->OpenSharedResource(d3dImage->GetShareHandle(),
+                                        IID_ID3D10Texture2D,
+                                        (void**)getter_AddRefs(texture));
+      NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+      nsAutoPtr<TextureD3D10BackendData> dat(new TextureD3D10BackendData());
+      dat->mTexture = texture;
+
+      hr = device()->CreateShaderResourceView(dat->mTexture, NULL, getter_AddRefs(dat->mSRView));
+      NS_ENSURE_TRUE(SUCCEEDED(hr) && dat->mSRView, nullptr);
+
+      aImage->SetBackendData(mozilla::layers::LAYERS_D3D10, dat.forget());
+    }
+    aHasAlpha = false;
   } else {
     NS_WARNING("Incorrect image type.");
     return nullptr;
@@ -212,7 +233,8 @@ ImageLayerD3D10::RenderLayer()
   if (image->GetFormat() == ImageFormat::CAIRO_SURFACE ||
       image->GetFormat() == ImageFormat::REMOTE_IMAGE_BITMAP ||
       image->GetFormat() == ImageFormat::REMOTE_IMAGE_DXGI_TEXTURE ||
-      image->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE) {
+      image->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE ||
+      image->GetFormat() == ImageFormat::D3D11_SHARE_HANDLE_TEXTURE) {
     NS_ASSERTION(image->GetFormat() != ImageFormat::CAIRO_SURFACE ||
                  !static_cast<CairoImage*>(image)->mSurface ||
                  static_cast<CairoImage*>(image)->mSurface->GetContentType() != gfxASurface::CONTENT_ALPHA,

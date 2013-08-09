@@ -52,6 +52,13 @@ public:
   void OnDecodeThreadStart() MOZ_OVERRIDE;
   void OnDecodeThreadFinish() MOZ_OVERRIDE;
 
+  // Mode that the video decoder is decoding with.
+  enum VideoDecodingMode {
+    Software,
+    DXVA_D3D9,
+    DXVA_D3D11
+  };
+
 private:
 
   HRESULT ConfigureAudioDecoder();
@@ -71,8 +78,8 @@ private:
                               int64_t aOffsetBytes,
                               VideoData** aOutVideoData);
 
-  // Attempt to initialize DXVA. Returns true on success.
-  bool InitializeDXVA();  
+  // Attempt to initialize DXVA.
+  void InitializeDXVA();  
 
   // Notifies the MediaDecoder of the number of bytes we have consumed
   // since last time we called this. We call this once per call to
@@ -96,6 +103,14 @@ private:
   uint32_t mVideoHeight;
   uint32_t mVideoStride;
 
+  // Denotes whether we're using DXVA2 with D3D9 or D3D11, or sofware
+  // decoding.
+  VideoDecodingMode mVideoDecodingMode;
+
+  // Returns the GUID of the video format the video decoder should output
+  // as appropriate for whether we're using DXVA or software decoding.
+  const GUID& GetVideoFormat() const;
+
   // The offset, in audio frames, at which playback started since the
   // last discontinuity.
   int64_t mAudioFrameOffset;
@@ -109,7 +124,6 @@ private:
 
   bool mHasAudio;
   bool mHasVideo;
-  bool mUseHwAccel;
 
   // We can't call WMFDecoder::IsMP3Supported() on non-main threads, since it
   // checks a pref, so we cache its value in mIsMP3Enabled and use that on

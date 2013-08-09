@@ -148,6 +148,7 @@ enum DeprecatedTextureClientType
                               // the SurfaceDescriptor passed to the texture
                               // remains with whoever passed it.
   TEXTURE_STREAM_GL,          // WebGL streaming buffer
+  TEXTURE_D3D11_HANDLE,       // D3D11Texture share handle
   TEXTURE_FALLBACK            // A fallback path appropriate for the platform
 };
 
