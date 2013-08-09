@@ -19,7 +19,6 @@ var StartUI = {
   },
 
   init: function init() {
-    this.startUI.addEventListener("contextmenu", this, false);
     this.startUI.addEventListener("click", this, false);
     this.startUI.addEventListener("MozMousePixelScroll", this, false);
 
@@ -103,11 +102,6 @@ var StartUI = {
         break;
       case "MozImprecisePointer":
         document.getElementById("bcast_preciseInput").setAttribute("input", "imprecise");
-        break;
-      case "contextmenu":
-        let event = document.createEvent("Events");
-        event.initEvent("MozEdgeUICompleted", true, false);
-        window.dispatchEvent(event);
         break;
       case "click":
         this.onClick(aEvent);
