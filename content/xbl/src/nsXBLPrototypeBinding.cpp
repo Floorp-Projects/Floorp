@@ -951,7 +951,8 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
   NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
 
   nsIScriptContext *context = globalObject->GetContext();
-  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(context && context->GetNativeContext(), NS_ERROR_FAILURE);
+  AutoCxPusher pusher(context->GetNativeContext());
 
   bool isFirstBinding = aFlags & XBLBinding_Serialize_IsFirstBinding;
   rv = Init(id, aDocInfo, nullptr, isFirstBinding);
@@ -976,7 +977,7 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
     // retrieve the mapped bindings from within here. However, if an error
     // occurs, the mapping should be removed again so that we don't keep an
     // invalid binding around.
-    rv = mImplementation->Read(context, aStream, this, globalObject);
+    rv = mImplementation->Read(aStream, this, globalObject);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -995,7 +996,7 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
                  "invalid handler type");
 
     nsXBLPrototypeHandler* handler = new nsXBLPrototypeHandler(this);
-    rv = handler->Read(context, aStream);
+    rv = handler->Read(aStream);
     if (NS_FAILED(rv)) {
       delete handler;
       return rv;
@@ -1059,7 +1060,8 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
   NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
 
   nsIScriptContext *context = globalObject->GetContext();
-  NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(context && context->GetNativeContext(), NS_ERROR_FAILURE);
+  AutoCxPusher pusher(context->GetNativeContext());
 
   uint8_t flags = mInheritStyle ? XBLBinding_Serialize_InheritStyle : 0;
 
@@ -1118,7 +1120,7 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
 
   // Write out the implementation details.
   if (mImplementation) {
-    rv = mImplementation->Write(context, aStream, this);
+    rv = mImplementation->Write(aStream, this);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
@@ -1131,7 +1133,7 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
   // Write out the handlers.
   nsXBLPrototypeHandler* handler = mPrototypeHandler;
   while (handler) {
-    rv = handler->Write(context, aStream);
+    rv = handler->Write(aStream);
     NS_ENSURE_SUCCESS(rv, rv);
 
     handler = handler->GetNextHandler();

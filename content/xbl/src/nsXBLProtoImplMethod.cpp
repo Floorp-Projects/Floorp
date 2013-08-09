@@ -107,7 +107,6 @@ nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
   JS::Rooted<JSObject*> scopeObject(aCx, xpc::GetXBLScope(aCx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
-  // now we want to reevaluate our property using aContext and the script object for this window...
   JS::Rooted<JSObject*> jsMethodObject(aCx, GetCompiledMethod());
   if (jsMethodObject) {
     nsDependentString name(mName);
@@ -137,9 +136,10 @@ nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
 }
 
 nsresult 
-nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
+nsXBLProtoImplMethod::CompileMember(const nsCString& aClassStr,
                                     JS::Handle<JSObject*> aClassObject)
 {
+  AssertInCompilationScope();
   NS_PRECONDITION(!IsCompiled(),
                   "Trying to compile an already-compiled method");
   NS_PRECONDITION(aClassObject,
@@ -199,7 +199,7 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
     functionUri.Truncate(hash);
   }
 
-  AutoPushJSContext cx(aContext->GetNativeContext());
+  AutoJSContext cx;
   JSAutoCompartment ac(cx, aClassObject);
   JS::CompileOptions options(cx);
   options.setFileAndLine(functionUri.get(),
@@ -234,12 +234,12 @@ nsXBLProtoImplMethod::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
 }
 
 nsresult
-nsXBLProtoImplMethod::Read(nsIScriptContext* aContext,
-                           nsIObjectInputStream* aStream)
+nsXBLProtoImplMethod::Read(nsIObjectInputStream* aStream)
 {
+  AssertInCompilationScope();
   MOZ_ASSERT(!IsCompiled() && !GetUncompiledMethod());
 
-  AutoPushJSContext cx(aContext->GetNativeContext());
+  AutoJSContext cx;
   JS::Rooted<JSObject*> methodObject(cx);
   nsresult rv = XBL_DeserializeFunction(aStream, &methodObject);
   if (NS_FAILED(rv)) {
@@ -253,12 +253,11 @@ nsXBLProtoImplMethod::Read(nsIScriptContext* aContext,
 }
 
 nsresult
-nsXBLProtoImplMethod::Write(nsIScriptContext* aContext,
-                            nsIObjectOutputStream* aStream)
+nsXBLProtoImplMethod::Write(nsIObjectOutputStream* aStream)
 {
+  AssertInCompilationScope();
   MOZ_ASSERT(IsCompiled());
   if (GetCompiledMethod()) {
-    AutoPushJSContext cx(aContext->GetNativeContext());
     nsresult rv = aStream->Write8(XBLBinding_Serialize_Method);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -364,13 +363,12 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 }
 
 nsresult
-nsXBLProtoImplAnonymousMethod::Write(nsIScriptContext* aContext,
-                                     nsIObjectOutputStream* aStream,
+nsXBLProtoImplAnonymousMethod::Write(nsIObjectOutputStream* aStream,
                                      XBLBindingSerializeDetails aType)
 {
+  AssertInCompilationScope();
   MOZ_ASSERT(IsCompiled());
   if (GetCompiledMethod()) {
-    AutoPushJSContext cx(aContext->GetNativeContext());
     nsresult rv = aStream->Write8(aType);
     NS_ENSURE_SUCCESS(rv, rv);
 
