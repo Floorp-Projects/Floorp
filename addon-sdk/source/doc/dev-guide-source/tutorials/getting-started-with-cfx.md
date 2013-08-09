@@ -168,3 +168,24 @@ add-on.
 
 Now you have the basic `cfx` commands, you can try out the
 [SDK's features](dev-guide/tutorials/index.html).
+
+## Overriding the Built-in Modules ##
+
+The SDK modules you use to implement your add-on are built into Firefox.
+When you run or package an add-on using `cfx run` or `cfx xpi`, the add-on
+will use the versions of the modules in the version of Firefox that hosts
+it.
+
+As an add-on developer, this is usually what you want. But if you're
+developing the SDK modules themselves, of course it won't work at all.
+In this case it's assumed that you will have checked out the SDK from
+its [GitHub repo](https://github.com/mozilla/addon-sdk) and will have
+run [`source/activate`](dev-guide/tutorials/installation.html) from
+the root of your checkout.
+
+Then when you invoke `cfx run` or `cfx xpi`, you pass the `"-o"` option:
+
+<pre>cfx run -o</pre>
+
+This instructs cfx to use the local copies of the SDK modules, not the
+ones in Firefox.
