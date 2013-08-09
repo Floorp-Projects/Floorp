@@ -273,6 +273,7 @@ class IonContext
 {
   public:
     IonContext(JSContext *cx, TempAllocator *temp);
+    IonContext(ExclusiveContext *cx, TempAllocator *temp);
     IonContext(JSRuntime *rt, JSCompartment *comp, TempAllocator *temp);
     IonContext(JSRuntime *rt);
     ~IonContext();

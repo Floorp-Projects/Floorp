@@ -124,6 +124,17 @@ IonContext::IonContext(JSContext *cx, TempAllocator *temp)
     SetIonContext(this);
 }
 
+IonContext::IonContext(ExclusiveContext *cx, TempAllocator *temp)
+  : runtime(cx->runtime_),
+    cx(NULL),
+    compartment(NULL),
+    temp(temp),
+    prev_(CurrentIonContext()),
+    assemblerCount_(0)
+{
+    SetIonContext(this);
+}
+
 IonContext::IonContext(JSRuntime *rt, JSCompartment *comp, TempAllocator *temp)
   : runtime(rt),
     cx(NULL),
