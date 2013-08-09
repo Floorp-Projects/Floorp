@@ -550,7 +550,7 @@ documenttab[selected] .documenttab-selection {
   overflow: hidden;
 }
 
-#urlbar[mode="edit"] {
+#urlbar[editing] {
   border-color: @metro_orange@;
 }
 
@@ -675,9 +675,19 @@ documenttab[selected] .documenttab-selection {
   }
 }
 
-#urlbar:-moz-any([mode="loading"], [mode="view"]) > #go-button,
-#urlbar:-moz-any([mode="edit"], [mode="loading"]) > #reload-button,
-#urlbar:-moz-any([mode="edit"], [mode="view"]) > #stop-button,
+/* navbar edit button: one button out of three - when editing: go, when !editing,
+   loading: stop, when !editing, !loading: reload */ 
+
+#go-button, #reload-button, #stop-button  {
+  visibility: collapse;
+}
+
+#urlbar[editing] > #go-button,
+#urlbar:not([editing])[loading] > #stop-button,
+#urlbar:not([editing]):not([loading]) > #reload-button {
+  visibility: visible;
+}
+
 #toolbar[viewstate="snapped"] > #urlbar ~ toolbarbutton {
   visibility: collapse;
 }

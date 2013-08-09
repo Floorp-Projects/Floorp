@@ -30,6 +30,7 @@ let Elements = {};
 [
   ["contentShowing",     "bcast_contentShowing"],
   ["urlbarState",        "bcast_urlbarState"],
+  ["loadingState",       "bcast_loadingState"],
   ["windowState",        "bcast_windowState"],
   ["mainKeyset",         "mainKeyset"],
   ["stack",              "stack"],
@@ -703,13 +704,11 @@ var BrowserUI = {
   },
 
   _updateToolbar: function _updateToolbar() {
-    let mode = Elements.urlbarState.getAttribute("mode");
-    let isLoading = Browser.selectedTab.isLoading();
-
-    if (isLoading && mode != "loading")
-      Elements.urlbarState.setAttribute("mode", "loading");
-    else if (!isLoading && mode != "edit")
-      Elements.urlbarState.setAttribute("mode", "view");
+    if (Browser.selectedTab.isLoading()) {
+      Elements.loadingState.setAttribute("loading", true);
+    } else {
+      Elements.loadingState.removeAttribute("loading");
+    }
   },
 
   _closeOrQuit: function _closeOrQuit() {
