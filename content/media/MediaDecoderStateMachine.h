@@ -157,6 +157,10 @@ public:
   // aEndTime is in microseconds.
   void SetMediaEndTime(int64_t aEndTime);
 
+  // Called from decode thread to update the duration. Can result in
+  // a durationchangeevent. aDuration is in microseconds.
+  void UpdateDuration(int64_t aDuration);
+
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
   bool OnDecodeThread() const {
