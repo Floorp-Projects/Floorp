@@ -20,6 +20,11 @@ Tests of DOM Worker Threads
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+  // Intermittently triggers one assertion on Mac (bug 848098).
+  if (navigator.platform.indexOf("Mac") == 0) {
+    SimpleTest.expectAssertions(0, 1);
+  }
+
   const testCount = 2;
   var errorCount = 0;
 
