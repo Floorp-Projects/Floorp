@@ -55,4 +55,8 @@
         <item name="android:verticalSpacing">10dp</item>
     </style>
 
+    <style name="Widget.ReadingListView" parent="Widget.BookmarksListView">
+        <item name="android:paddingTop">30dp</item>
+    </style>
+
 </resources>

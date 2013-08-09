@@ -476,6 +476,7 @@ RES_LAYOUT = \
   res/layout/home_history_list.xml \
   res/layout/home_most_recent_page.xml \
   res/layout/home_most_visited_page.xml \
+  res/layout/home_reading_list_page.xml \
   res/layout/home_search_item_row.xml \
   res/layout/home_suggestion_prompt.xml \
   res/layout/web_app.xml \
