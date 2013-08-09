@@ -11,9 +11,6 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm")
  * Constants
  */
 
-// Page for which the start UI is shown
-const kStartOverlayURI = "about:start";
-
 // Devtools Messages
 const debugServerStateChanged = "devtools.debugger.remote-enabled";
 const debugServerPortChanged = "devtools.debugger.remote-port";
@@ -40,7 +37,6 @@ let Elements = {};
   ["tabs",               "tabs-container"],
   ["controls",           "browser-controls"],
   ["panelUI",            "panel-container"],
-  ["startUI",            "start-container"],
   ["tray",               "tray"],
   ["toolbar",            "toolbar"],
   ["browsers",           "browsers"],
@@ -109,7 +105,6 @@ var BrowserUI = {
 
     // Init core UI modules
     ContextUI.init();
-    StartUI.init();
     PanelUI.init();
     FlyoutPanelsUI.init();
     PageThumbs.init();
@@ -184,7 +179,6 @@ var BrowserUI = {
     messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
     PanelUI.uninit();
-    StartUI.uninit();
     Downloads.uninit();
     SettingsCharm.uninit();
     messageManager.removeMessageListener("Content:StateChange", this);
@@ -231,7 +225,7 @@ var BrowserUI = {
   },
 
   showContent: function showContent(aURI) {
-    StartUI.update(aURI);
+    this.updateStartURIAttributes(aURI);
     ContextUI.dismissTabs();
     ContextUI.dismissContextAppbar();
     FlyoutPanelsUI.hide();
@@ -329,7 +323,7 @@ var BrowserUI = {
     let flags = aFlags || 0;
     if (!(flags & this.NO_STARTUI_VISIBILITY)) {
       let uri = this.getDisplayURI(Browser.selectedBrowser);
-      StartUI.update(uri);
+      this.updateStartURIAttributes(uri);
     }
     this._updateButtons();
     this._updateToolbar();
@@ -340,6 +334,25 @@ var BrowserUI = {
     let uri = this.getDisplayURI(Browser.selectedBrowser);
     let cleanURI = Util.isURLEmpty(uri) ? "" : uri;
     this._edit.value = cleanURI;
+  },
+
+  get isStartTabVisible() {
+    return this.isStartURI();
+  },
+
+  isStartURI: function isStartURI(aURI) {
+    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
+    return aURI == kStartURI;
+  },
+
+  updateStartURIAttributes: function (aURI) {
+    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
+    if (this.isStartURI(aURI)) {
+      ContextUI.displayNavbar();
+      Elements.windowState.setAttribute("startpage", "true");
+    } else if (aURI != "about:blank") { // about:blank is loaded briefly for new tabs; ignore it
+      Elements.windowState.removeAttribute("startpage");
+    }
   },
 
   getDisplayURI: function(browser) {
@@ -422,7 +435,7 @@ var BrowserUI = {
    */
 
   newTab: function newTab(aURI, aOwner, aPeekTabs) {
-    aURI = aURI || kStartOverlayURI;
+    aURI = aURI || kStartURI;
     if (aPeekTabs) {
       ContextUI.peekTabs(kNewTabAnimationDelayMsec);
     }
@@ -781,12 +794,6 @@ var BrowserUI = {
       return;
     }
 
-    if (StartUI.hide()) {
-      // When escaping from the start screen, hide the toolbar too.
-      ContextUI.dismiss();
-      return;
-    }
-
     if (Browser.selectedTab.isLoading()) {
       Browser.selectedBrowser.stop();
       return;
@@ -863,7 +870,6 @@ var BrowserUI = {
         let referrerURI = null;
         if (json.referrer)
           referrerURI = Services.io.newURI(json.referrer, null, null);
-        //Browser.addTab(json.uri, json.bringFront, Browser.selectedTab, { referrerURI: referrerURI });
         this.goToURI(json.uri);
         break;
       case "Content:StateChange":

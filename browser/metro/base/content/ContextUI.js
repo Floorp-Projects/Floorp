@@ -181,7 +181,7 @@ var ContextUI = {
 
   // Dismiss the navbar if visible.
   dismissNavbar: function dismissNavbar() {
-    if (!StartUI.isVisible) {
+    if (!BrowserUI.isStartTabVisible) {
       Elements.navbar.dismiss();
     }
   },
@@ -230,17 +230,11 @@ var ContextUI = {
   _onEdgeUIStarted: function(aEvent) {
     this._hasEdgeSwipeStarted = true;
     this._clearDelayedTimeout();
-
-    if (StartUI.hide()) {
-      this.dismiss();
-      return;
-    }
     this.toggleNavUI();
   },
 
   _onEdgeUICanceled: function(aEvent) {
     this._hasEdgeSwipeStarted = false;
-    StartUI.hide();
     this.dismiss();
   },
 
@@ -251,10 +245,6 @@ var ContextUI = {
     }
 
     this._clearDelayedTimeout();
-    if (StartUI.hide()) {
-      this.dismiss();
-      return;
-    }
     this.toggleNavUI();
   },
 

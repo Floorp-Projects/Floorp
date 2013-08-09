@@ -73,7 +73,7 @@ function needHomepageOverride() {
 }
 
 function getHomePage() {
-  let url = "about:start";
+  let url = "chrome://browser/content/Start.xul";
   try {
     url = Services.prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
   } catch (e) { }
