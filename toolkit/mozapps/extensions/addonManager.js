@@ -183,13 +183,13 @@ amManager.prototype = {
           };
         }
         var window = null;
-        try {
-          // Normal approach for single-process mode
-          window = aMessage.target.contentWindow;
-        } catch (e) {
+        if (aMessage.target.getAttribute("remote") == "true") {
           // Fallback for multiprocess (e10s) mode. Should reimplement this
           // properly with Window IDs when possible, see bug 596109.
           window = aMessage.target.ownerDocument.defaultView;
+        } else {
+          // Normal approach for single-process mode
+          window = aMessage.target.contentWindow;
         }
         return this.installAddonsFromWebpage(payload.mimetype,
           window, referer, payload.uris, payload.hashes, payload.names,
