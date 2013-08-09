@@ -12,7 +12,7 @@ var AutofillMenuUI = {
 
   get _panel() { return document.getElementById("autofill-container"); },
   get _popup() { return document.getElementById("autofill-popup"); },
-  get _commands() { return this._popup.childNodes[0]; },
+  get commands() { return this._popup.childNodes[0]; },
 
   get _menuPopup() {
     if (!this.__menuPopup) {
@@ -32,8 +32,8 @@ var AutofillMenuUI = {
   },
 
   _emptyCommands: function _emptyCommands() {
-    while (this._commands.firstChild)
-      this._commands.removeChild(this._commands.firstChild);
+    while (this.commands.firstChild)
+      this.commands.removeChild(this.commands.firstChild);
   },
 
   _positionOptions: function _positionOptions() {
@@ -57,7 +57,7 @@ var AutofillMenuUI = {
       label.setAttribute("value", aSuggestionsList[idx].label);
       item.setAttribute("data", aSuggestionsList[idx].value);
       item.appendChild(label);
-      this._commands.appendChild(item);
+      this.commands.appendChild(item);
     }
 
     this._menuPopup.show(this._positionOptions());
@@ -65,7 +65,7 @@ var AutofillMenuUI = {
 
   selectByIndex: function mn_selectByIndex(aIndex) {
     this._menuPopup.hide();
-    FormHelperUI.doAutoComplete(this._commands.childNodes[aIndex].getAttribute("data"));
+    FormHelperUI.doAutoComplete(this.commands.childNodes[aIndex].getAttribute("data"));
   },
 
   hide: function hide () {
@@ -85,7 +85,7 @@ var ContextMenuUI = {
 
   get _panel() { return document.getElementById("context-container"); },
   get _popup() { return document.getElementById("context-popup"); },
-  get _commands() { return this._popup.childNodes[0]; },
+  get commands() { return this._popup.childNodes[0]; },
 
   get _menuPopup() {
     if (!this.__menuPopup) {
@@ -153,12 +153,12 @@ var ContextMenuUI = {
          contentTypes.indexOf("selected-text") != -1))
       multipleMediaTypes = true;
 
-    for (let command of Array.slice(this._commands.childNodes)) {
+    for (let command of Array.slice(this.commands.childNodes)) {
       command.hidden = true;
     }
 
     let optionsAvailable = false;
-    for (let command of Array.slice(this._commands.childNodes)) {
+    for (let command of Array.slice(this.commands.childNodes)) {
       let types = command.getAttribute("type").split(",");
       let lowPriority = (command.hasAttribute("priority") &&
         command.getAttribute("priority") == "low");
@@ -221,7 +221,7 @@ var MenuControlUI = {
 
   get _panel() { return document.getElementById("menucontrol-container"); },
   get _popup() { return document.getElementById("menucontrol-popup"); },
-  get _commands() { return this._popup.childNodes[0]; },
+  get commands() { return this._popup.childNodes[0]; },
 
   get _menuPopup() {
     if (!this.__menuPopup) {
@@ -240,8 +240,8 @@ var MenuControlUI = {
   },
 
   _emptyCommands: function _emptyCommands() {
-    while (this._commands.firstChild)
-      this._commands.removeChild(this._commands.firstChild);
+    while (this.commands.firstChild)
+      this.commands.removeChild(this.commands.firstChild);
   },
 
   _positionOptions: function _positionOptions() {
@@ -314,7 +314,7 @@ var MenuControlUI = {
       label.setAttribute("value", child.label);
       item.appendChild(label);
 
-      this._commands.appendChild(item);
+      this.commands.appendChild(item);
     }
 
     this._menuPopup.show(this._positionOptions());
@@ -338,84 +338,25 @@ function MenuPopup(aPanel, aPopup) {
   this._panel = aPanel;
   this._popup = aPopup;
   this._wantTypeBehind = false;
-  this._willReshowPopup = false;
 
   window.addEventListener('MozAppbarShowing', this, false);
 }
 MenuPopup.prototype = {
-  get _visible() { return !this._panel.hidden; },
-  get _commands() { return this._popup.childNodes[0]; },
+  get visible() { return !this._panel.hidden; },
+  get commands() { return this._popup.childNodes[0]; },
 
   show: function (aPositionOptions) {
-    if (this._visible) {
-      this._willReshowPopup = true;
-      let self = this;
-      this._panel.addEventListener("transitionend", function () {
-        self._show(aPositionOptions);
-        self._panel.removeEventListener("transitionend", arguments.callee);
-      });
+    if (this.visible) {
+      this._animateHide().then(() => this._animateShow(aPositionOptions));
     } else {
-      this._show(aPositionOptions);
+      this._animateShow(aPositionOptions);
     }
   },
 
-  _show: function (aPositionOptions) {
-    window.addEventListener("keypress", this, true);
-    window.addEventListener("mousedown", this, true);
-    Elements.stack.addEventListener("PopupChanged", this, false);
-    Elements.browsers.addEventListener("PanBegin", this, false);
-
-    this._panel.hidden = false;
-    this._position(aPositionOptions || {});
-
-    let self = this;
-    this._panel.addEventListener("transitionend", function () {
-      self._panel.removeEventListener("transitionend", arguments.callee);
-      self._panel.removeAttribute("showingfrom");
-
-      let eventName = self._willReshowPopup ? "popupmoved" : "popupshown";
-      let event = document.createEvent("Events");
-      event.initEvent(eventName, true, false);
-      self._panel.dispatchEvent(event);
-
-      self._willReshowPopup = false;
-    });
-
-    let popupFrom = !aPositionOptions.bottomAligned ? "above" : "below";
-    this._panel.setAttribute("showingfrom", popupFrom);
-
-    // Ensure the panel actually gets shifted before getting animated
-    setTimeout(function () {
-      self._panel.setAttribute("showing", "true");
-    }, 0);
-  },
-
   hide: function () {
-    if (!this._visible)
-      return;
-
-    window.removeEventListener("keypress", this, true);
-    window.removeEventListener("mousedown", this, true);
-    Elements.stack.removeEventListener("PopupChanged", this, false);
-    Elements.browsers.removeEventListener("PanBegin", this, false);
-
-    let self = this;
-    this._panel.addEventListener("transitionend", function () {
-      self._panel.removeEventListener("transitionend", arguments.callee);
-      self._panel.removeAttribute("hiding");
-      self._panel.hidden = true;
-      self._popup.style.maxWidth = "none";
-      self._popup.style.maxHeight = "none";
-
-      if (!self._willReshowPopup) {
-        let event = document.createEvent("Events");
-        event.initEvent("popuphidden", true, false);
-        self._panel.dispatchEvent(event);
-      }
-    });
-
-    this._panel.setAttribute("hiding", "true");
-    setTimeout(()=>this._panel.removeAttribute("showing"), 0);
+    if (this.visible) {
+      this._animateHide();
+    }
   },
 
   _position: function _position(aPositionOptions) {
@@ -440,7 +381,7 @@ MenuPopup.prototype = {
     // Add padding on the side of the menu per the user's hand preference
     let leftHand = MetroUtils.handPreference == MetroUtils.handPreferenceLeft;
     if (aSource && aSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
-      this._commands.setAttribute("left-hand", leftHand);
+      this.commands.setAttribute("left-hand", leftHand);
     }
 
     if (aPositionOptions.rightAligned)
@@ -486,6 +427,66 @@ MenuPopup.prototype = {
     }
   },
 
+  _animateShow: function (aPositionOptions) {
+    let deferred = Promise.defer();
+
+    window.addEventListener("keypress", this, true);
+    window.addEventListener("click", this, true);
+    Elements.stack.addEventListener("PopupChanged", this, false);
+    Elements.browsers.addEventListener("PanBegin", this, false);
+
+    this._panel.hidden = false;
+    let popupFrom = !aPositionOptions.bottomAligned ? "above" : "below";
+    this._panel.setAttribute("showingfrom", popupFrom);
+
+    // This triggers a reflow, which sets transitionability.
+    // All animation/transition setup must happen before here.
+    this._position(aPositionOptions || {});
+
+    let self = this;
+    this._panel.addEventListener("transitionend", function popupshown () {
+      self._panel.removeEventListener("transitionend", popupshown);
+      self._panel.removeAttribute("showingfrom");
+
+      self._dispatch("popupshown");
+      deferred.resolve();
+    });
+
+    this._panel.setAttribute("showing", "true");
+    return deferred.promise;
+  },
+
+  _animateHide: function () {
+    let deferred = Promise.defer();
+
+    window.removeEventListener("keypress", this, true);
+    window.removeEventListener("click", this, true);
+    Elements.stack.removeEventListener("PopupChanged", this, false);
+    Elements.browsers.removeEventListener("PanBegin", this, false);
+
+    let self = this;
+    this._panel.addEventListener("transitionend", function popuphidden() {
+      self._panel.removeEventListener("transitionend", popuphidden);
+      self._panel.removeAttribute("hiding");
+      self._panel.hidden = true;
+      self._popup.style.maxWidth = "none";
+      self._popup.style.maxHeight = "none";
+
+      self._dispatch("popuphidden");
+      deferred.resolve();
+    });
+
+    this._panel.setAttribute("hiding", "true");
+    this._panel.removeAttribute("showing");
+    return deferred.promise;
+  },
+
+  _dispatch: function _dispatch(aName) {
+    let event = document.createEvent("Events");
+    event.initEvent(aName, true, false);
+    this._panel.dispatchEvent(event);
+  },
+
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       case "keypress":
@@ -497,7 +498,7 @@ MenuPopup.prototype = {
             this.hide();
         }
         break;
-      case "mousedown":
+      case "click":
         if (!this._popup.contains(aEvent.target)) {
           aEvent.stopPropagation();
           this.hide();

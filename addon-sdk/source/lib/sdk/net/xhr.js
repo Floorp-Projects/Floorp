@@ -4,7 +4,7 @@
 "use strict";
 
 module.metadata = {
-  "stability": "unstable"
+  "stability": "stable"
 };
 
 const { deprecateFunction } = require("../util/deprecate");

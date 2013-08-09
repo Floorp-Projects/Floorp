@@ -239,7 +239,6 @@ var TouchModule = {
     // Don't allow kinetic panning if APZC is enabled and the pan element is the deck
     let deck = document.getElementById("browsers");
     if (Services.prefs.getBoolPref(kAsyncPanZoomEnabled) &&
-        !StartUI.isStartPageVisible &&
         this._targetScrollbox == deck) {
       return;
     }
@@ -364,11 +363,10 @@ var TouchModule = {
       if (Date.now() - this._dragStartTime > kStopKineticPanOnDragTimeout)
         this._kinetic._velocity.set(0, 0);
 
-      // Start kinetic pan if we i) aren't using async pan zoom or ii) if we
-      // are on the start page, iii) If the scroll element is not browsers
+      // Start kinetic pan if we aren't using async pan zoom or the scroll
+      // element is not browsers.
       let deck = document.getElementById("browsers");
       if (!Services.prefs.getBoolPref(kAsyncPanZoomEnabled) ||
-          StartUI.isStartPageVisible ||
           this._targetScrollbox != deck) {
         this._kinetic.start();
       }
@@ -449,8 +447,10 @@ var ScrollUtils = {
   getScrollboxFromElement: function getScrollboxFromElement(elem) {
     let scrollbox = null;
     let qinterface = null;
-    // if element is content, get the browser scroll interface
-    if (elem.ownerDocument == Browser.selectedBrowser.contentDocument) {
+
+    // if element is content (but not the startui page), get the browser scroll interface
+    if (!BrowserUI.isStartTabVisible &&
+        elem.ownerDocument == Browser.selectedBrowser.contentDocument) {
       elem = Browser.selectedBrowser;
     }
     for (; elem; elem = elem.parentNode) {

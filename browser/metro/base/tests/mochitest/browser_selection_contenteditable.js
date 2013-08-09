@@ -20,7 +20,7 @@ gTests.push({
     info(chromeRoot + "browser_selection_contenteditable.html");
     yield addTab(chromeRoot + "browser_selection_contenteditable.html");
     yield waitForCondition(function () {
-        return !StartUI.isStartPageVisible;
+        return !BrowserUI.isStartTabVisible;
       }, kCommonWaitMs, kCommonPollMs);
 
     yield hideContextUI();

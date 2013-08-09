@@ -138,8 +138,7 @@ public class UpdateService extends IntentService {
         int interval;
         if (isRetry) {
             interval = INTERVAL_RETRY;
-        } else if (AppConstants.MOZ_UPDATE_CHANNEL.equals("nightly") ||
-                   AppConstants.MOZ_UPDATE_CHANNEL.equals("aurora")) {
+        } else if (!AppConstants.RELEASE_BUILD) {
             interval = INTERVAL_SHORT;
         } else {
             interval = INTERVAL_LONG;

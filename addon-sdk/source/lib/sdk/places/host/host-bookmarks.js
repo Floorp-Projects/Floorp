@@ -104,17 +104,22 @@ function saveBookmarkItem (data) {
   let group = bmsrv.getFolderIdForItem(id);
   let index = bmsrv.getItemIndex(id);
   let type = bmsrv.getItemType(id);
+  let title = typeMap(type) !== 'separator' ?
+    bmsrv.getItemTitle(id) :
+    undefined;
+  let url = typeMap(type) === 'bookmark' ?
+    bmsrv.getBookmarkURI(id).spec :
+    undefined;
 
-  if (data.url) {
+  if (url != data.url)
     bmsrv.changeBookmarkURI(id, newURI(data.url));
-  }
   else if (typeMap(type) === 'bookmark')
-    data.url = bmsrv.getBookmarkURI(id).spec;
+    data.url = url;
 
-  if (data.title)
+  if (title != data.title)
     bmsrv.setItemTitle(id, data.title);
   else if (typeMap(type) !== 'separator')
-    data.title = bmsrv.getItemTitle(id);
+    data.title = title;
 
   if (data.group && data.group !== group)
     bmsrv.moveItem(id, data.group, data.index || -1);
@@ -123,7 +128,7 @@ function saveBookmarkItem (data) {
     // so we don't have to manage the indicies of the siblings
     bmsrv.moveItem(id, group, data.index);
   } else if (data.index == null)
-    data.index = bmsrv.getItemIndex(id);
+    data.index = index;
 
   data.updated = bmsrv.getItemLastModified(data.id);
 

@@ -45,7 +45,7 @@ RemoteTabsView.prototype = Util.extend(Object.create(View.prototype), {
 
   handleItemClick: function tabview_handleItemClick(aItem) {
     let url = aItem.getAttribute("value");
-    BrowserUI.goToURI(url);
+    StartUI.goToURI(url);
   },
 
   observe: function(subject, topic, data) {
@@ -122,7 +122,9 @@ let RemoteTabsStartView = {
   },
 
   uninit: function uninit() {
-    this._view.destruct();
+    if (this._view) {
+      this._view.destruct();
+    }
   },
 
   show: function show() {

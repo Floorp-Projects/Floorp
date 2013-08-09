@@ -147,6 +147,7 @@ this.Downloads = {
         function task_D_getPublicDownloadList() {
           let list = new DownloadList(true);
           try {
+            yield DownloadIntegration.addListObservers(list, false);
             yield DownloadIntegration.loadPersistent(list);
           } catch (ex) {
             Cu.reportError(ex);
@@ -176,12 +177,27 @@ this.Downloads = {
    */
   getPrivateDownloadList: function D_getPrivateDownloadList()
   {
-    if (!this._privateDownloadList) {
-      this._privateDownloadList = new DownloadList(false);
+    if (!this._promisePrivateDownloadList) {
+      this._promisePrivateDownloadList = Task.spawn(
+        function task_D_getPublicDownloadList() {
+          let list = new DownloadList(false);
+          try {
+            yield DownloadIntegration.addListObservers(list, true);
+          } catch (ex) {
+            Cu.reportError(ex);
+          }
+          throw new Task.Result(list);
+        });
     }
-    return Promise.resolve(this._privateDownloadList);
+    return this._promisePrivateDownloadList;
   },
-  _privateDownloadList: null,
+
+  /**
+   * This promise is resolved with a reference to a DownloadList object that
+   * represents private downloads. This property is null before the list of
+   * downloads is requested for the first time.
+   */
+  _promisePrivateDownloadList: null,
 
   /**
    * Returns the system downloads directory asynchronously.

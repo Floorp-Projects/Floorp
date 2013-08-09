@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+findbar {
+  transition-property: transform, opacity, visibility;
+  transition-duration: 120ms, 120ms, 0s;
+  transition-timing-function: ease-in-out, ease-in-out, linear;
+
+  /* The following positioning properties only take an effect during findbar
+   * transitions. The findbar binding sets position:absolute during that time
+   * on the findbar.
+   */
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+findbar[position="top"] {
+  top: 0;
+  bottom: auto;
+}
+
+findbar > hbox {
+  width: 100%;
+}
+
+findbar[hidden] {
+  /* Override display:none to make the transition work. */
+  display: -moz-box;
+  visibility: collapse;
+  opacity: 0;
+  transition-delay: 0s, 0s, 120ms;
+  transform: translateY(2em);
+}
+
+findbar[position="top"][hidden] {
+  transform: translateY(-2em);
+}
