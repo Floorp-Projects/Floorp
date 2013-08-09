@@ -72,7 +72,7 @@ struct BufferSlice {
     unsigned int size() {
         return nodeSize;
     }
-    BufferSlice() : next(NULL), prev(NULL), nodeSize(0) {}
+    BufferSlice() : prev(NULL), next(NULL), nodeSize(0) {}
     void putBlob(uint32_t instSize, uint8_t* inst) {
         if (inst != NULL)
             memcpy(&instructions[size()], inst, instSize);
