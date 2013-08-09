@@ -180,6 +180,11 @@
         <attr name="android:listSelector"/>
     </declare-styleable>
 
+    <declare-styleable name="HomeListView">
+        <!-- Draws a divider on top of the list, if true. Defaults to false. -->
+        <attr name="topDivider" format="boolean"/>
+    </declare-styleable>
+
     <declare-styleable name="HomePagerTabStrip">
         <attr name="tabIndicatorColor" format="color"/>
     </declare-styleable>

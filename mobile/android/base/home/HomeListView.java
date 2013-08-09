@@ -12,11 +12,14 @@ import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AbsListView.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
@@ -34,6 +37,9 @@ public class HomeListView extends ListView
     // On URL open listener
     private OnUrlOpenListener mUrlOpenListener;
 
+    // Top divider
+    private boolean mShowTopDivider;
+
     public HomeListView(Context context) {
         this(context, null);
     }
@@ -45,7 +51,24 @@ public class HomeListView extends ListView
     public HomeListView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.HomeListView, defStyle, 0);
+        mShowTopDivider = a.getBoolean(R.styleable.HomeListView_topDivider, false);
+        a.recycle();
+
         setOnItemLongClickListener(this);
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        final Drawable divider = getDivider();
+        if (mShowTopDivider && divider != null) {
+            final int dividerHeight = getDividerHeight();
+            final View view = new View(getContext());
+            view.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, dividerHeight));
+            addHeaderView(view);
+        }
     }
 
     @Override
