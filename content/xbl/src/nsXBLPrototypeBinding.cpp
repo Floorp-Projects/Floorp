@@ -946,10 +946,7 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
   }
 
   AutoSafeJSContext cx;
-  nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(do_QueryObject(aDocInfo));
-  nsIScriptGlobalObject* globalObject = globalOwner->GetScriptGlobalObject();
-  NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
-  JS::Rooted<JSObject*> compilationGlobal(cx, globalObject->GetGlobalJSObject());
+  JS::Rooted<JSObject*> compilationGlobal(cx, aDocInfo->GetCompilationGlobal());
   NS_ENSURE_TRUE(compilationGlobal, NS_ERROR_UNEXPECTED);
   JSAutoCompartment ac(cx, compilationGlobal);
 
@@ -976,7 +973,7 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
     // retrieve the mapped bindings from within here. However, if an error
     // occurs, the mapping should be removed again so that we don't keep an
     // invalid binding around.
-    rv = mImplementation->Read(aStream, this, globalObject);
+    rv = mImplementation->Read(aStream, this);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1055,10 +1052,7 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
   // computed on demand.
 
   AutoSafeJSContext cx;
-  nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(do_QueryObject(mXBLDocInfoWeak));
-  nsIScriptGlobalObject* globalObject = globalOwner->GetScriptGlobalObject();
-  NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
-  JS::Rooted<JSObject*> compilationGlobal(cx, globalObject->GetGlobalJSObject());
+  JS::Rooted<JSObject*> compilationGlobal(cx, mXBLDocInfoWeak->GetCompilationGlobal());
   NS_ENSURE_TRUE(compilationGlobal, NS_ERROR_UNEXPECTED);
   JSAutoCompartment ac(cx, compilationGlobal);
 

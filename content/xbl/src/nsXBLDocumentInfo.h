@@ -48,6 +48,8 @@ public:
 
   bool IsChrome() { return mIsChrome; }
 
+  JSObject* GetCompilationGlobal();
+
   // nsIScriptGlobalObjectOwner methods
   virtual nsIScriptGlobalObject* GetScriptGlobalObject() MOZ_OVERRIDE;
 
@@ -59,6 +61,7 @@ public:
                                                          nsIScriptGlobalObjectOwner)
 
 private:
+  void EnsureGlobalObject();
   nsCOMPtr<nsIDocument> mDocument;
   bool mScriptAccess;
   bool mIsChrome;
