@@ -63,7 +63,7 @@ _compareAtoms(const void *v1, const void *v2)
 }        
 
 
-JSBool
+bool
 jsd_CreateAtomTable(JSDContext* jsdc)
 {
     jsdc->atoms = JS_NewHashTable(256, JS_HashString,

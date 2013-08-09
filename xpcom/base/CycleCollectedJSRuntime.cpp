@@ -795,7 +795,7 @@ CycleCollectedJSRuntime::GCCallback(JSRuntime* aRuntime,
   self->OnGC(aStatus);
 }
 
-/* static */ JSBool
+/* static */ bool
 CycleCollectedJSRuntime::ContextCallback(JSContext* aContext,
                                          unsigned aOperation,
                                          void* aData)

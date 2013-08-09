@@ -400,7 +400,11 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, b
   if (mIsOpenChanged) {
     nsIScrollableFrame *scrollframe = do_QueryFrame(GetChildBox());
     if (scrollframe) {
+      nsWeakFrame weakFrame(this);
       scrollframe->ScrollTo(nsPoint(0,0), nsIScrollableFrame::INSTANT);
+      if (!weakFrame.IsAlive()) {
+        return;
+      }
     }
   }
 

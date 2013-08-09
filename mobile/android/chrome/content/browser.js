@@ -149,15 +149,11 @@ const kDoNotTrackPrefState = Object.freeze({
 });
 
 function dump(a) {
-  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
-}
-
-function getBridge() {
-  return Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
+  Services.console.logStringMessage(a);
 }
 
 function sendMessageToJava(aMessage) {
-  return getBridge().handleGeckoMessage(JSON.stringify(aMessage));
+  return Services.androidBridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
 
 function doChangeMaxLineBoxWidth(aWidth) {
@@ -269,7 +265,7 @@ var BrowserApp = {
     BrowserEventHandler.init();
     ViewportHandler.init();
 
-    getBridge().browserApp = this;
+    Services.androidBridge.browserApp = this;
 
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
@@ -672,7 +668,7 @@ var BrowserApp = {
   // off to the compositor.
   isBrowserContentDocumentDisplayed: function() {
     try {
-      if (!getBridge().isContentDocumentDisplayed())
+      if (!Services.androidBridge.isContentDocumentDisplayed())
         return false;
     } catch (e) {
       return false;
@@ -686,7 +682,7 @@ var BrowserApp = {
 
   contentDocumentChanged: function() {
     window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint = true;
-    getBridge().contentDocumentChanged();
+    Services.androidBridge.contentDocumentChanged();
   },
 
   get tabs() {
@@ -3253,7 +3249,7 @@ Tab.prototype = {
 
   sendViewportUpdate: function(aPageSizeUpdate) {
     let viewport = this.getViewport();
-    let displayPort = getBridge().getDisplayPort(aPageSizeUpdate, BrowserApp.isBrowserContentDocumentDisplayed(), this.id, viewport);
+    let displayPort = Services.androidBridge.getDisplayPort(aPageSizeUpdate, BrowserApp.isBrowserContentDocumentDisplayed(), this.id, viewport);
     if (displayPort != null)
       this.setDisplayPort(displayPort);
   },

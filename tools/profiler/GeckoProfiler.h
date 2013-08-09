@@ -94,7 +94,7 @@ static inline void profiler_shutdown() {};
 //   "aInterval" the sampling interval. The profiler will do its
 //       best to sample at this interval. The profiler visualization
 //       should represent the actual sampling accuracy.
-static inline void profiler_start(int aProfileEntries, int aInterval,
+static inline void profiler_start(int aProfileEntries, double aInterval,
                               const char** aFeatures, uint32_t aFeatureCount,
                               const char** aThreadNameFilters, uint32_t aFilterCount) {}
 

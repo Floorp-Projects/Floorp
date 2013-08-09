@@ -164,7 +164,7 @@ struct JSSettings
 };
 
 // All of these are implemented in RuntimeService.cpp
-JSBool
+bool
 ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
                      unsigned aFlags, JS::MutableHandle<JSObject*> aObjp);
 

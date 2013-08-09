@@ -388,7 +388,7 @@ DefineAccessor(JSContext *cx, unsigned argc, Value *vp)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
-    JSBool dummy;
+    bool dummy;
     RootedValue descObjValue(cx, ObjectValue(*descObj));
     if (!DefineOwnProperty(cx, thisObj, id, descObjValue, &dummy))
         return false;
@@ -424,11 +424,11 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
         // The vanilla getter lookup code below requires that the object is
         // native. Handle proxies separately.
         args.rval().setUndefined();
-        AutoPropertyDescriptorRooter desc(cx);
+        Rooted<PropertyDescriptor> desc(cx);
         if (!Proxy::getPropertyDescriptor(cx, obj, id, &desc, 0))
             return false;
-        if (desc.obj && (desc.attrs & JSPROP_GETTER) && desc.getter)
-            args.rval().set(CastAsObjectJsval(desc.getter));
+        if (desc.object() && desc.hasGetterObject() && desc.getterObject())
+            args.rval().setObject(*desc.getterObject());
         return true;
     }
     RootedObject pobj(cx);
@@ -460,11 +460,11 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
         // The vanilla setter lookup code below requires that the object is
         // native. Handle proxies separately.
         args.rval().setUndefined();
-        AutoPropertyDescriptorRooter desc(cx);
+        Rooted<PropertyDescriptor> desc(cx);
         if (!Proxy::getPropertyDescriptor(cx, obj, id, &desc, 0))
             return false;
-        if (desc.obj && (desc.attrs & JSPROP_SETTER) && desc.setter)
-            args.rval().set(CastAsObjectJsval(desc.setter));
+        if (desc.object() && desc.hasSetterObject() && desc.setterObject())
+            args.rval().setObject(*desc.setterObject());
         return true;
     }
     RootedObject pobj(cx);
@@ -524,7 +524,7 @@ obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 
 #if JS_HAS_OBJ_WATCHPOINT
 
-static JSBool
+static bool
 obj_watch_handler(JSContext *cx, JSObject *obj_, jsid id_, jsval old,
                   jsval *nvp, void *closure)
 {
@@ -839,7 +839,7 @@ obj_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     if (!ValueToId<CanGC>(cx, args.get(1), &id))
         return false;
 
-    JSBool junk;
+    bool junk;
     if (!DefineOwnProperty(cx, obj, id, args.get(2), &junk))
         return false;
 

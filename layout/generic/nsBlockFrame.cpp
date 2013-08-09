@@ -5985,7 +5985,7 @@ nsBlockFrame::RecoverFloatsFor(nsIFrame*       aFrame,
     // If the element is relatively positioned, then adjust x and y
     // accordingly so that we consider relatively positioned frames
     // at their original position.
-    nsPoint pos = block->GetPosition() - block->GetRelativeOffset();
+    nsPoint pos = block->GetNormalPosition();
     aFloatManager.Translate(pos.x, pos.y);
     block->RecoverFloats(aFloatManager);
     aFloatManager.Translate(-pos.x, -pos.y);

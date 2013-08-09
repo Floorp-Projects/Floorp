@@ -9,7 +9,7 @@
 #include "jsinfer.h"
 
 #ifdef JS_ION
-#include "ion/IonFrames.h"
+#include "jit/IonFrames.h"
 #endif
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"
@@ -280,8 +280,8 @@ ArgumentsObject::createForIon(JSContext *cx, ion::IonJSFrameLayout *frame, Handl
 }
 #endif
 
-static JSBool
-args_delProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded)
+static bool
+args_delProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
     ArgumentsObject &argsobj = obj->as<ArgumentsObject>();
     if (JSID_IS_INT(id)) {
@@ -297,7 +297,7 @@ args_delProperty(JSContext *cx, HandleObject obj, HandleId id, JSBool *succeeded
     return true;
 }
 
-static JSBool
+static bool
 ArgGetter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     if (!obj->is<NormalArgumentsObject>())
@@ -323,8 +323,8 @@ ArgGetter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
     return true;
 }
 
-static JSBool
-ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
+static bool
+ArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
     if (!obj->is<NormalArgumentsObject>())
         return true;
@@ -358,12 +358,12 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHa
      * of setting it in case the user has changed the prototype to an object
      * that has a setter for this id.
      */
-    JSBool succeeded;
+    bool succeeded;
     return baseops::DeleteGeneric(cx, obj, id, &succeeded) &&
            baseops::DefineGeneric(cx, obj, id, vp, NULL, NULL, attrs);
 }
 
-static JSBool
+static bool
 args_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
              MutableHandleObject objp)
 {
@@ -397,7 +397,7 @@ args_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-static JSBool
+static bool
 args_enumerate(JSContext *cx, HandleObject obj)
 {
     Rooted<NormalArgumentsObject*> argsobj(cx, &obj->as<NormalArgumentsObject>());
@@ -423,7 +423,7 @@ args_enumerate(JSContext *cx, HandleObject obj)
     return true;
 }
 
-static JSBool
+static bool
 StrictArgGetter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     if (!obj->is<StrictArgumentsObject>())
@@ -447,8 +447,8 @@ StrictArgGetter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
     return true;
 }
 
-static JSBool
-StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, MutableHandleValue vp)
+static bool
+StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
     if (!obj->is<StrictArgumentsObject>())
         return true;
@@ -477,12 +477,12 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Mut
      * args_delProperty to clear the corresponding reserved slot so the GC can
      * collect its value.
      */
-    JSBool succeeded;
+    bool succeeded;
     return baseops::DeleteGeneric(cx, argsobj, id, &succeeded) &&
            baseops::DefineGeneric(cx, argsobj, id, vp, NULL, NULL, attrs);
 }
 
-static JSBool
+static bool
 strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                    MutableHandleObject objp)
 {
@@ -520,7 +520,7 @@ strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-static JSBool
+static bool
 strictargs_enumerate(JSContext *cx, HandleObject obj)
 {
     Rooted<StrictArgumentsObject*> argsobj(cx, &obj->as<StrictArgumentsObject>());

@@ -984,7 +984,7 @@ TryPreserveWrapper(JSObject* obj);
 
 // Can only be called with the immediate prototype of the instance object. Can
 // only be called on the prototype of an object known to be a DOM instance.
-JSBool
+bool
 InstanceClassHasProtoAtDepth(JS::Handle<JSObject*> protoObject, uint32_t protoID,
                              uint32_t depth);
 
@@ -1901,7 +1901,7 @@ bool
 XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj,
                        JS::Handle<jsid> id,
-                       JSPropertyDescriptor* desc, unsigned flags);
+                       JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
 
 /**
  * This resolves operations, attributes and constants of the interfaces for obj.
@@ -1924,9 +1924,9 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
  * defined will be set to true if a property was set as a result of this call.
  */
 bool
-XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper, 
+XrayDefineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                    JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                   JSPropertyDescriptor* desc, bool* defined);
+                   JS::MutableHandle<JSPropertyDescriptor> desc, bool* defined);
 
 /**
  * This enumerates indexed or named properties of obj and operations, attributes
@@ -2093,17 +2093,17 @@ ReparentWrapper(JSContext* aCx, JS::HandleObject aObj);
  *
  * instance should not be a security wrapper.
  */
-JSBool
+bool
 InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
                      JS::Handle<JSObject*> instance,
-                     JSBool* bp);
-JSBool
+                     bool* bp);
+bool
 InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JS::Value> vp,
-                     JSBool* bp);
-JSBool
+                     bool* bp);
+bool
 InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
                      JS::Handle<JSObject*> instance,
-                     JSBool* bp);
+                     bool* bp);
 
 // Helper for lenient getters/setters to report to console.  If this
 // returns false, we couldn't even get a global.

@@ -59,8 +59,9 @@ struct nsGlobalNameStruct
   // mChromeOnly is only used for structs that define non-WebIDL things
   // (possibly in addition to WebIDL ones).  In particular, it's not even
   // initialized for eTypeNewDOMBinding structs.
-  bool mChromeOnly;
-  bool mDisabled;
+  bool mChromeOnly : 1;
+  bool mAllowXBL : 1;
+  bool mDisabled : 1;
 
   union {
     int32_t mDOMClassInfoID; // eTypeClassConstructor
@@ -119,6 +120,7 @@ public:
   nsresult RegisterClassName(const char *aClassName,
                              int32_t aDOMClassInfoID,
                              bool aPrivileged,
+                             bool aXBLAllowed,
                              bool aDisabled,
                              const PRUnichar **aResult);
 

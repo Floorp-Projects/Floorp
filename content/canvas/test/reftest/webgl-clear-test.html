@@ -18,10 +18,10 @@ function renderGL(gl) {
   gl.finish();
 }
 
-function renderBackup(canvas) {
+function renderFailure(canvas) {
+  // This will also trigger RAF for us.
   var context = canvas.getContext("2d");
-  context.fillStyle = "rgba(0, 255, 0, 1.0)";
-  context.fillRect(0, 0, 256, 256);
+  context.fillText('WebGL failed.', 64, 64);
 }
 
 function runTest() {
@@ -31,7 +31,7 @@ function runTest() {
   if (gl)
     renderGL(gl);
   else
-    renderBackup(canvas);
+    renderFailure(canvas);
 
   rAF(testComplete);
 }
@@ -39,6 +39,7 @@ function runTest() {
 function testComplete() {
   document.documentElement.removeAttribute("class");
 }
+
 </script>
 </head>
 

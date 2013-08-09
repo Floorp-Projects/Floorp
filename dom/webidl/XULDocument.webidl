@@ -11,6 +11,7 @@ interface XULCommandDispatcher;
 interface MozBoxObject;
 interface MozObserver;
 
+[Func="IsChromeOrXBL"]
 interface XULDocument : Document {
            attribute Node? popupNode;
 

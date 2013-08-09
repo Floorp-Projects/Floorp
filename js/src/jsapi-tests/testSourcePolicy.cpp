@@ -30,14 +30,14 @@ static void
 newScriptHook(JSContext *cx, const char *fn, unsigned lineno,
               JSScript *script, JSFunction *fun, void *data)
 {
-    if (!JS_StringEqualsAscii(cx, script->sourceData(cx), simpleSource, (JSBool *)data))
-        *((JSBool *)data) = false;
+    if (!JS_StringEqualsAscii(cx, script->sourceData(cx), simpleSource, (bool *)data))
+        *((bool *)data) = false;
 }
 
 BEGIN_TEST(testScriptSourceReentrant)
 {
     JS::CompileOptions opts(cx);
-    JSBool match = false;
+    bool match = false;
     JS_SetNewScriptHook(rt, newScriptHook, &match);
     CHECK(JS::Evaluate(cx, global, opts, simpleSource, strlen(simpleSource), NULL));
     CHECK(match);

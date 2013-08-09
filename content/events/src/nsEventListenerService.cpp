@@ -300,7 +300,6 @@ nsresult
 NS_NewEventListenerService(nsIEventListenerService** aResult)
 {
   *aResult = new nsEventListenerService();
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aResult);
   return NS_OK;
 }

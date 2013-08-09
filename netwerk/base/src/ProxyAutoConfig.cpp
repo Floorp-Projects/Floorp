@@ -315,8 +315,8 @@ PACErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 // timeout of 0 means the normal necko timeout strategy, otherwise the dns request
 // will be canceled after aTimeout milliseconds
 static
-JSBool PACResolve(const nsCString &aHostName, NetAddr *aNetAddr,
-                  unsigned int aTimeout)
+bool PACResolve(const nsCString &aHostName, NetAddr *aNetAddr,
+                unsigned int aTimeout)
 {
   if (!sRunning) {
     NS_WARNING("PACResolve without a running ProxyAutoConfig object");
@@ -658,7 +658,7 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
 
     JS::Value argv[2] = { uriValue, hostValue };
     JS::Rooted<JS::Value> rval(cx);
-    JSBool ok = JS_CallFunctionName(cx, mJSRuntime->Global(),
+    bool ok = JS_CallFunctionName(cx, mJSRuntime->Global(),
                                     "FindProxyForURL", 2, argv, rval.address());
 
     if (ok && rval.isString()) {

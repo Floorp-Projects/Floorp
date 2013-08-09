@@ -12,7 +12,7 @@
 #include "frontend/FoldConstants.h"
 #include "frontend/NameFunctions.h"
 #include "frontend/Parser.h"
-#include "ion/AsmJSLink.h"
+#include "jit/AsmJSLink.h"
 #include "vm/GlobalObject.h"
 
 #include "jsobjinlines.h"
