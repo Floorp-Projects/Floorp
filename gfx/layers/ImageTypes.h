@@ -64,12 +64,7 @@ enum ImageFormat {
    * The D3D9_RGB32_TEXTURE format creates a D3D9SurfaceImage, and wraps a
    * IDirect3DTexture9 in RGB32 layout.
    */
-  D3D9_RGB32_TEXTURE,
-
-  /**
-   * A share handle to a ID3D11Texture2D.
-   */
-  D3D11_SHARE_HANDLE_TEXTURE
+  D3D9_RGB32_TEXTURE
 
 };
 

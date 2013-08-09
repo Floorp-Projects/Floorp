@@ -5,12 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DXVA2Manager.h"
-#include <d3d11.h>
 #include "nsThreadUtils.h"
 #include "ImageContainer.h"
-#include "gfxWindowsPlatform.h"
 #include "D3D9SurfaceImage.h"
-#include "D3D11ShareHandleImage.h"
 #include "mozilla/Preferences.h"
 
 namespace mozilla {
@@ -18,7 +15,6 @@ namespace mozilla {
 using layers::Image;
 using layers::ImageContainer;
 using layers::D3D9SurfaceImage;
-using layers::D3D11ShareHandleImage;
 
 class D3D9DXVA2Manager : public DXVA2Manager
 {
@@ -178,7 +174,7 @@ static uint32_t sDXVAVideosCount = 0;
 
 /* static */
 DXVA2Manager*
-DXVA2Manager::CreateD3D9DXVA()
+DXVA2Manager::Create()
 {
   MOZ_ASSERT(NS_IsMainThread());
   HRESULT hr;
@@ -199,129 +195,6 @@ DXVA2Manager::CreateD3D9DXVA()
 
   // No hardware accelerated video decoding. :(
   return nullptr;
-}
-
-class D3D11DXVA2Manager : public DXVA2Manager
-{
-public:
-  D3D11DXVA2Manager();
-  virtual ~D3D11DXVA2Manager();
-
-  HRESULT Init();
-
-  IUnknown* GetDXVADeviceManager() MOZ_OVERRIDE;
-
-  // Copies a region (aRegion) of the video frame stored in aVideoSample
-  // into an image which is returned by aOutImage.
-  HRESULT CopyToImage(IMFSample* aVideoSample,
-                      const nsIntRect& aRegion,
-                      ImageContainer* aContainer,
-                      Image** aOutImage) MOZ_OVERRIDE;
-
-private:
-  RefPtr<ID3D11Device> mDevice;
-  RefPtr<ID3D11DeviceContext> mContext;
-  RefPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
-  UINT mDeviceManagerToken;
-};
-
-D3D11DXVA2Manager::D3D11DXVA2Manager()
-  : mDeviceManagerToken(0)
-{
-}
-
-D3D11DXVA2Manager::~D3D11DXVA2Manager()
-{
-}
-
-IUnknown*
-D3D11DXVA2Manager::GetDXVADeviceManager()
-{
-  MutexAutoLock lock(mLock);
-  return mDXGIDeviceManager;
-}
-
-HRESULT
-D3D11DXVA2Manager::Init()
-{
-  HRESULT hr;
-
-  mDevice = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
-  NS_ENSURE_TRUE(mDevice, E_FAIL);
-
-  mDevice->GetImmediateContext(byRef(mContext));
-  NS_ENSURE_TRUE(mContext, E_FAIL);
-
-  hr = wmf::MFCreateDXGIDeviceManager(&mDeviceManagerToken, byRef(mDXGIDeviceManager));
-  NS_ENSURE_TRUE(SUCCEEDED(hr),hr);
-
-  hr = mDXGIDeviceManager->ResetDevice(mDevice, mDeviceManagerToken);
-  NS_ENSURE_TRUE(SUCCEEDED(hr),hr);
-
-  return S_OK;
-}
-
-HRESULT
-D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
-                               const nsIntRect& aRegion,
-                               ImageContainer* aContainer,
-                               Image** aOutImage)
-{
-  NS_ENSURE_TRUE(aVideoSample, E_POINTER);
-  NS_ENSURE_TRUE(aContainer, E_POINTER);
-  NS_ENSURE_TRUE(aOutImage, E_POINTER);
-
-  // Our video frame is stored in a non-sharable ID3D11Texture2D. We need
-  // to create a copy of that frame as a sharable resource, save its share
-  // handle, and put that handle into the rendering pipeline.
-
-  // First, get the frame as an ID3D11Texture2D.
-  RefPtr<IMFMediaBuffer> mediaBuffer;
-
-  HRESULT hr = aVideoSample->GetBufferByIndex(0, byRef(mediaBuffer));
-  NS_ENSURE_TRUE(SUCCEEDED(hr),hr);
-
-  RefPtr<IMFDXGIBuffer> dxgiBuffer;
-  hr = mediaBuffer->QueryInterface(static_cast<IMFDXGIBuffer**>(byRef(dxgiBuffer)));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  RefPtr<ID3D11Texture2D> frameTexture;
-  hr = dxgiBuffer->GetResource(IID_ID3D11Texture2D,
-    reinterpret_cast<void**>(static_cast<ID3D11Texture2D**>(byRef(frameTexture))));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  ImageFormat format = D3D11_SHARE_HANDLE_TEXTURE;
-  nsRefPtr<Image> image(aContainer->CreateImage(&format, 1));
-  NS_ENSURE_TRUE(image, E_FAIL);
-  NS_ASSERTION(image->GetFormat() == D3D11_SHARE_HANDLE_TEXTURE,
-               "Wrong format?");
-
-  D3D11ShareHandleImage* videoImage = static_cast<D3D11ShareHandleImage*>(image.get());
-  hr = videoImage->SetData(D3D11ShareHandleImage::Data(frameTexture, mDevice, mContext, aRegion));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  image.forget(aOutImage);
-
-  return S_OK;
-}
-
-/* static */
-DXVA2Manager*
-DXVA2Manager::CreateD3D11DXVA()
-{
-  // DXVA processing takes up a lot of GPU resources, so limit the number of
-  // videos we use DXVA with at any one time.
-  const uint32_t dxvaLimit =
-    Preferences::GetInt("media.windows-media-foundation.max-dxva-videos", 8);
-  if (sDXVAVideosCount == dxvaLimit) {
-    return nullptr;
-  }
-
-  nsAutoPtr<D3D11DXVA2Manager> manager(new D3D11DXVA2Manager());
-  HRESULT hr = manager->Init();
-  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
-
-  return manager.forget();
 }
 
 DXVA2Manager::DXVA2Manager()

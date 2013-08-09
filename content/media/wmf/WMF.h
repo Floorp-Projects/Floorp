@@ -104,10 +104,6 @@ HRESULT MFGetService(IUnknown *punkObject,
 
 HRESULT DXVA2CreateDirect3DDeviceManager9(UINT *pResetToken,
                                           IDirect3DDeviceManager9 **ppDXVAManager);
-
-HRESULT MFCreateDXGIDeviceManager(UINT *pResetToken,
-                                  IMFDXGIDeviceManager **ppDXVAManager);
-
 } // end namespace wmf
 } // end namespace mozilla
 
