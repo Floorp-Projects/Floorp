@@ -8,7 +8,6 @@
 
 #include "jsapi.h"
 
-#include "nsIScriptContext.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsINameSpaceManager.h"
