@@ -1137,7 +1137,7 @@ nsPlaintextEditor::CanCutOrCopy()
 }
 
 bool
-nsPlaintextEditor::FireClipboardEvent(int32_t aType)
+nsPlaintextEditor::FireClipboardEvent(int32_t aType, int32_t aSelectionType)
 {
   if (aType == NS_PASTE)
     ForceCompositionEnd();
@@ -1149,7 +1149,7 @@ nsPlaintextEditor::FireClipboardEvent(int32_t aType)
   if (NS_FAILED(GetSelection(getter_AddRefs(selection))))
     return false;
 
-  if (!nsCopySupport::FireClipboardEvent(aType, presShell, selection))
+  if (!nsCopySupport::FireClipboardEvent(aType, aSelectionType, presShell, selection))
     return false;
 
   // If the event handler caused the editor to be destroyed, return false.
@@ -1159,7 +1159,7 @@ nsPlaintextEditor::FireClipboardEvent(int32_t aType)
 
 NS_IMETHODIMP nsPlaintextEditor::Cut()
 {
-  if (FireClipboardEvent(NS_CUT))
+  if (FireClipboardEvent(NS_CUT, nsIClipboard::kGlobalClipboard))
     return DeleteSelection(eNone, eStrip);
   return NS_OK;
 }
@@ -1173,7 +1173,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanCut(bool *aCanCut)
 
 NS_IMETHODIMP nsPlaintextEditor::Copy()
 {
-  FireClipboardEvent(NS_COPY);
+  FireClipboardEvent(NS_COPY, nsIClipboard::kGlobalClipboard);
   return NS_OK;
 }
 

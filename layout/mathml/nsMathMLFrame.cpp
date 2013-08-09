@@ -133,8 +133,7 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,
     ResolvePseudoElementStyle(aContent->AsElement(), pseudoType,
                               aParentStyleContext);
 
-  if (newStyleContext)
-    aMathMLChar->SetStyleContext(newStyleContext);
+  aMathMLChar->SetStyleContext(newStyleContext);
 }
 
 /* static */ void

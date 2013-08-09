@@ -402,13 +402,13 @@ load 772306.html
 load 788360.html
 load 793848.html
 load 795646.html
-load 802902.html
-skip-if(1) load 813372-1.html # bug 873083
+skip-if(1) load 802902.html # bug 901752
+load 813372-1.html
 asserts-if(gtk2Widget,0-1) load 822865.html # bug 540078
 load 833604-1.html
 load 835056.html
 load 836990-1.html
-skip-if(1) load 852293.html # bug 874073
+load 852293.html
 load 860579-1.html
 pref(layers.force-active,true) load 859526-1.html
 pref(layers.force-active,true) load 859630-1.html

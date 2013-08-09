@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const URI_GENERIC_ICON_DOWNLOAD = "chrome://browser/skin/images/alert-downloads-30.png";
+const TOAST_URI_GENERIC_ICON_DOWNLOAD = "ms-appx:///metro/chrome/chrome/skin/images/alert-downloads-30.png"
 
 var Downloads = {
   /**
@@ -154,29 +155,21 @@ var Downloads = {
       BrowserUI.newTab(uri, Browser.selectedTab);
   },
 
-  showAlert: function dh_showAlert(aName, aMessage, aTitle, aIcon) {
+  showAlert: function dh_showAlert(aName, aMessage, aTitle, aIcon, aObserver) {
     var notifier = Cc["@mozilla.org/alerts-service;1"]
                      .getService(Ci.nsIAlertsService);
-
-    // Callback for tapping on the alert popup
-    let observer = {
-      observe: function (aSubject, aTopic, aData) {
-        if (aTopic == "alertclickcallback") {
-          // TODO: Bug 783232 turns this alert into a native toast. 
-        }
-      }
-    };
 
     if (!aTitle)
       aTitle = Strings.browser.GetStringFromName("alertDownloads");
 
     if (!aIcon)
-      aIcon = URI_GENERIC_ICON_DOWNLOAD;
+      aIcon = TOAST_URI_GENERIC_ICON_DOWNLOAD;
 
-    notifier.showAlertNotification(aIcon, aTitle, aMessage, true, "", observer, aName);
+    notifier.showAlertNotification(aIcon, aTitle, aMessage, true, "", aObserver, aName);
   },
 
   showNotification: function dh_showNotification(title, msg, buttons, priority) {
+    this._notificationBox.notificationsHidden = false;
     return this._notificationBox.appendNotification(msg,
                                               title,
                                               URI_GENERIC_ICON_DOWNLOAD,
@@ -255,6 +248,53 @@ var Downloads = {
     }
     this.showNotification("download-complete", message, buttons,
       this._notificationBox.PRIORITY_WARNING_MEDIUM);
+  },
+
+  _showDownloadCompleteToast: function (aDownload) {
+    let name = "DownloadComplete";
+    let msg = "";
+    let title = "";
+    let observer = null;
+    if (this._downloadCount > 1) {
+      title = PluralForm.get(this._downloadCount,
+                             Strings.browser.GetStringFromName("alertMultipleDownloadsComplete"))
+                             .replace("#1", this._downloadCount)
+      msg = PluralForm.get(2, Strings.browser.GetStringFromName("downloadShowInFiles"));
+
+      observer = {
+        observe: function (aSubject, aTopic, aData) {
+          switch (aTopic) {
+            case "alertclickcallback":
+              let fileURI = aDownload.target;
+              let file = Downloads._getLocalFile(fileURI);
+              file.reveal();
+
+              let downloadCompleteNotification =
+                Downloads._notificationBox.getNotificationWithValue("download-complete");
+              Downloads._notificationBox.removeNotification(downloadCompleteNotification);
+              break;
+          }
+        }
+      }
+    } else {
+      title = Strings.browser.formatStringFromName("alertDownloadsDone",
+        [aDownload.displayName], 1);
+      msg = Strings.browser.GetStringFromName("downloadRunNow");
+      observer = {
+        observe: function (aSubject, aTopic, aData) {
+          switch (aTopic) {
+            case "alertclickcallback":
+              Downloads.openDownload(aDownload);
+
+              let downloadCompleteNotification =
+                Downloads._notificationBox.getNotificationWithValue("download-complete");
+              Downloads._notificationBox.removeNotification(downloadCompleteNotification);
+              break;
+          }
+        }
+      }
+    }
+    this.showAlert(name, msg, title, null, observer);
   },
 
   _updateCircularProgressMeter: function dv_updateCircularProgressMeter() {
@@ -391,6 +431,7 @@ var Downloads = {
         this._runDownloadBooleanMap.delete(download.targetFile.path);
         if (this._downloadsInProgress == 0) {
           if (this._downloadCount > 1 || !runAfterDownload) {
+            this._showDownloadCompleteToast(download);
             this._showDownloadCompleteNotification(download);
           }
           this._progressNotificationInfo.clear();

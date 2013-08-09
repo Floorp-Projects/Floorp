@@ -18,11 +18,11 @@ BEGIN_TEST(testJSEvaluateScript)
     CHECK(JS_EvaluateScript(cx, obj, src, sizeof(src) - 1, __FILE__, __LINE__,
                             retval.address()));
 
-    JSBool hasProp = JS_TRUE;
+    JSBool hasProp = true;
     CHECK(JS_AlreadyHasOwnProperty(cx, obj, "x", &hasProp));
     CHECK(!hasProp);
 
-    hasProp = JS_FALSE;
+    hasProp = false;
     CHECK(JS_HasProperty(cx, global, "x", &hasProp));
     CHECK(hasProp);
 
@@ -34,11 +34,11 @@ BEGIN_TEST(testJSEvaluateScript)
     CHECK(JS_EvaluateScript(cx, obj, src2, sizeof(src2) - 1, __FILE__, __LINE__,
                             retval.address()));
 
-    hasProp = JS_FALSE;
+    hasProp = false;
     CHECK(JS_AlreadyHasOwnProperty(cx, obj, "y", &hasProp));
     CHECK(hasProp);
 
-    hasProp = JS_TRUE;
+    hasProp = true;
     CHECK(JS_AlreadyHasOwnProperty(cx, global, "y", &hasProp));
     CHECK(!hasProp);
 

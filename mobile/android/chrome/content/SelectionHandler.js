@@ -126,6 +126,14 @@ var SelectionHandler = {
         this._positionHandles();
         break;
       }
+
+      case "TextSelection:Get":
+        sendMessageToJava({
+          type: "TextSelection:Data",
+          requestId: aData,
+          text: this._getSelectedText()
+        });
+        break;
     }
   },
 
@@ -155,6 +163,17 @@ var SelectionHandler = {
              aElement.style.MozUserSelect != 'none';
   },
 
+  _getScrollPos: function sh_getScrollPos() {
+    // Get the current display position
+    let scrollX = {}, scrollY = {};
+    this._contentWindow.top.QueryInterface(Ci.nsIInterfaceRequestor).
+                            getInterface(Ci.nsIDOMWindowUtils).getScrollXY(false, scrollX, scrollY);
+    return {
+      X: scrollX.value,
+      Y: scrollY.value
+    };
+  },
+
   /*
    * Called from browser.js when the user long taps on text or chooses
    * the "Select Word" context menu item. Initializes SelectionHandler,
@@ -167,6 +186,7 @@ var SelectionHandler = {
     this._closeSelection();
 
     this._initTargetInfo(aElement);
+    this._activeType = this.TYPE_SELECTION;
 
     // Clear any existing selection from the document
     this._contentWindow.getSelection().removeAllRanges();
@@ -187,8 +207,35 @@ var SelectionHandler = {
     this._cache = { start: {}, end: {}};
     this._updateCacheForSelection();
 
-    this._activeType = this.TYPE_SELECTION;
-    this._positionHandles();
+    let scroll = this._getScrollPos();
+    // Figure out the distance between the selection and the click
+    let positions = this._getHandlePositions(scroll);
+    let clickX = scroll.X + aX;
+    let clickY = scroll.Y + aY;
+    let distance = 0;
+
+    // Check if the click was in the bounding box of the selection handles
+    if (positions[0].left < clickX && clickX < positions[1].left
+        && positions[0].top < clickY && clickY < positions[1].top) {
+      distance = 0;
+    } else {
+      // If it was outside, check the distance to the center of the selection
+      let selectposX = (positions[0].left + positions[1].left) / 2;
+      let selectposY = (positions[0].top + positions[1].top) / 2;
+
+      let dx = Math.abs(selectposX - clickX);
+      let dy = Math.abs(selectposY - clickY);
+      distance = dx + dy;
+    }
+
+    let maxSelectionDistance = Services.prefs.getIntPref("browser.ui.selection.distance");
+    // Do not select text far away from where the user clicked
+    if (distance > maxSelectionDistance) {
+      this._closeSelection();
+      return;
+    }
+
+    this._positionHandles(positions);
 
     sendMessageToJava({
       type: "TextSelection:ShowHandles",
@@ -237,7 +284,7 @@ var SelectionHandler = {
       return this._contentWindow.getSelection();
   },
 
-  getSelectedText: function sh_getSelectedText() {
+  _getSelectedText: function sh_getSelectedText() {
     if (!this._contentWindow)
       return "";
 
@@ -376,7 +423,7 @@ var SelectionHandler = {
   },
 
   copySelection: function sh_copySelection() {
-    let selectedText = this.getSelectedText();
+    let selectedText = this._getSelectedText();
     if (selectedText.length) {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
       clipboard.copyString(selectedText, this._contentWindow.document);
@@ -386,7 +433,7 @@ var SelectionHandler = {
   },
 
   shareSelection: function sh_shareSelection() {
-    let selectedText = this.getSelectedText();
+    let selectedText = this._getSelectedText();
     if (selectedText.length) {
       sendMessageToJava({
         type: "Share:Text",
@@ -397,7 +444,7 @@ var SelectionHandler = {
   },
 
   searchSelection: function sh_searchSelection() {
-    let selectedText = this.getSelectedText();
+    let selectedText = this._getSelectedText();
     if (selectedText.length) {
       let req = Services.search.defaultEngine.getSubmission(selectedText);
       BrowserApp.selectOrOpenTab(req.uri.spec);
@@ -491,11 +538,7 @@ var SelectionHandler = {
     return selectionReversed;
   },
 
-  _positionHandles: function sh_positionHandles() {
-    let scrollX = {}, scrollY = {};
-    this._contentWindow.top.QueryInterface(Ci.nsIInterfaceRequestor).
-                            getInterface(Ci.nsIDOMWindowUtils).getScrollXY(false, scrollX, scrollY);
-
+  _getHandlePositions: function sh_getHandlePositions(scroll) {
     // the checkHidden function tests to see if the given point is hidden inside an
     // iframe/subdocument. this is so that if we select some text inside an iframe and
     // scroll the iframe so the selection is out of view, we hide the handles rather
@@ -507,7 +550,7 @@ var SelectionHandler = {
       let bounds = this._contentWindow.frameElement.getBoundingClientRect();
       checkHidden = function(x, y) {
         return x < 0 || y < 0 || x > bounds.width || y > bounds.height;
-      }
+      };
     }
 
     let positions = null;
@@ -519,10 +562,10 @@ var SelectionHandler = {
       // divide by the pixel ratio
       let x = cursor.left / window.devicePixelRatio;
       let y = (cursor.top + cursor.height) / window.devicePixelRatio;
-      positions = [{ handle: this.HANDLE_TYPE_MIDDLE,
-                     left: x + scrollX.value,
-                     top: y + scrollY.value,
-                     hidden: checkHidden(x, y) }];
+      return [{ handle: this.HANDLE_TYPE_MIDDLE,
+                left: x + scroll.X,
+                top: y + scroll.Y,
+                hidden: checkHidden(x, y) }];
     } else {
       let sx = this._cache.start.x;
       let sy = this._cache.start.y;
@@ -533,16 +576,23 @@ var SelectionHandler = {
       // this because the top-level page may have scrolled since selection started.
       let offset = this._getViewOffset();
 
-      positions = [{ handle: this.HANDLE_TYPE_START,
-                     left: sx + offset.x + scrollX.value,
-                     top: sy + offset.y + scrollY.value,
-                     hidden: checkHidden(sx, sy) },
-                   { handle: this.HANDLE_TYPE_END,
-                     left: ex + offset.x + scrollX.value,
-                     top: ey + offset.y + scrollY.value,
-                     hidden: checkHidden(ex, ey) }];
+      return  [{ handle: this.HANDLE_TYPE_START,
+                 left: sx + offset.x + scroll.X,
+                 top: sy + offset.y + scroll.Y,
+                 hidden: checkHidden(sx, sy) },
+               { handle: this.HANDLE_TYPE_END,
+                 left: ex + offset.x + scroll.X,
+                 top: ey + offset.y + scroll.Y,
+                 hidden: checkHidden(ex, ey) }];
     }
+  },
 
+  // positions is an array of objects with data about handle positions,
+  // which we get from _getHandlePositions.
+  _positionHandles: function sh_positionHandles(positions) {
+    if (!positions) {
+      positions = this._getHandlePositions(this._getScrollPos());
+    }
     sendMessageToJava({
       type: "TextSelection:PositionHandles",
       positions: positions,

@@ -616,79 +616,80 @@ IsEmpty(const Histogram *h)
   return ss.counts(0) == 0 && ss.sum() == 0;
 }
 
-JSBool
+bool
 JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   if (!argc) {
     JS_ReportError(cx, "Expected one argument");
-    return JS_FALSE;
+    return false;
   }
 
   JS::Value v = JS_ARGV(cx, vp)[0];
 
   if (!(JSVAL_IS_NUMBER(v) || JSVAL_IS_BOOLEAN(v))) {
     JS_ReportError(cx, "Not a number");
-    return JS_FALSE;
+    return false;
   }
 
   int32_t value;
   if (!JS_ValueToECMAInt32(cx, v, &value)) {
-    return JS_FALSE;
+    return false;
   }
 
   if (TelemetryImpl::CanRecord()) {
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj) {
-      return JS_FALSE;
+      return false;
     }
 
     Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
     h->Add(value);
   }
-  return JS_TRUE;
+  return true;
+
 }
 
-JSBool
+bool
 JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {
-    return JS_FALSE;
+    return false;
   }
 
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
   JS::Rooted<JSObject*> snapshot(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
   if (!snapshot)
-    return JS_FALSE;
+    return false;
 
   switch (ReflectHistogramSnapshot(cx, snapshot, h)) {
   case REFLECT_FAILURE:
-    return JS_FALSE;
+    return false;
   case REFLECT_CORRUPT:
     JS_ReportError(cx, "Histogram is corrupt");
-    return JS_FALSE;
+    return false;
   case REFLECT_OK:
     JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(snapshot));
-    return JS_TRUE;
+    return true;
   default:
     MOZ_CRASH("unhandled reflection status");
   }
 }
 
-JSBool
+bool
 JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {
-    return JS_FALSE;
+    return false;
   }
 
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
   h->Clear();
-  return JS_TRUE;
+  return true;
 }
 
-nsresult 
+nsresult
 WrapAndReturnHistogram(Histogram *h, JSContext *cx, JS::Value *ret)
 {
   static JSClass JSHistogram_class = {
@@ -1015,8 +1016,8 @@ TelemetryImpl::ReflectSQL(const SlowSQLEntryType *entry,
   if (!arrayObj) {
     return false;
   }
-  return (JS_SetElement(cx, arrayObj, 0, hitCount.address())
-          && JS_SetElement(cx, arrayObj, 1, totalTime.address())
+  return (JS_SetElement(cx, arrayObj, 0, &hitCount)
+          && JS_SetElement(cx, arrayObj, 1, &totalTime)
           && JS_DefineProperty(cx, obj,
                                sql.BeginReading(),
                                OBJECT_TO_JSVAL(arrayObj),
@@ -1517,7 +1518,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::Value *ret)
   const size_t length = stacks.GetStackCount();
   for (size_t i = 0; i < length; ++i) {
     JS::Rooted<JS::Value> duration(cx, INT_TO_JSVAL(mHangReports.GetDuration(i)));
-    if (!JS_SetElement(cx, durationArray, i, duration.address())) {
+    if (!JS_SetElement(cx, durationArray, i, &duration)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -1554,7 +1555,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       return nullptr;
     }
     JS::Rooted<JS::Value> val(cx, OBJECT_TO_JSVAL(moduleInfoArray));
-    if (!JS_SetElement(cx, moduleArray, moduleIndex, val.address())) {
+    if (!JS_SetElement(cx, moduleArray, moduleIndex, &val)) {
       return nullptr;
     }
 
@@ -1566,7 +1567,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       return nullptr;
     }
     val = STRING_TO_JSVAL(str);
-    if (!JS_SetElement(cx, moduleInfoArray, index++, val.address())) {
+    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
       return nullptr;
     }
 
@@ -1576,7 +1577,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       return nullptr;
     }
     val = STRING_TO_JSVAL(id);
-    if (!JS_SetElement(cx, moduleInfoArray, index++, val.address())) {
+    if (!JS_SetElement(cx, moduleInfoArray, index++, &val)) {
       return nullptr;
     }
   }
@@ -1601,7 +1602,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
     }
 
     JS::Rooted<JS::Value> pcArrayVal(cx, OBJECT_TO_JSVAL(pcArray));
-    if (!JS_SetElement(cx, reportArray, i, pcArrayVal.address())) {
+    if (!JS_SetElement(cx, reportArray, i, &pcArrayVal)) {
       return nullptr;
     }
 
@@ -1616,15 +1617,15 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
       int modIndex = (std::numeric_limits<uint16_t>::max() == frame.mModIndex) ?
         -1 : frame.mModIndex;
       JS::Rooted<JS::Value> modIndexVal(cx, INT_TO_JSVAL(modIndex));
-      if (!JS_SetElement(cx, framePair, 0, modIndexVal.address())) {
+      if (!JS_SetElement(cx, framePair, 0, &modIndexVal)) {
         return nullptr;
       }
       JS::Rooted<JS::Value> mOffsetVal(cx, INT_TO_JSVAL(frame.mOffset));
-      if (!JS_SetElement(cx, framePair, 1, mOffsetVal.address())) {
+      if (!JS_SetElement(cx, framePair, 1, &mOffsetVal)) {
         return nullptr;
       }
       JS::Rooted<JS::Value> framePairVal(cx, OBJECT_TO_JSVAL(framePair));
-      if (!JS_SetElement(cx, pcArray, pcIndex, framePairVal.address())) {
+      if (!JS_SetElement(cx, pcArray, pcIndex, &framePairVal)) {
         return nullptr;
       }
     }

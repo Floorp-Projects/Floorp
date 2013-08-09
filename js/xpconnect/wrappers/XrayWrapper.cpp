@@ -1227,7 +1227,7 @@ HasNativeProperty(JSContext *cx, HandleObject wrapper, HandleId id, bool *hasPro
 
 } // namespace XrayUtils
 
-static JSBool
+static bool
 XrayToString(JSContext *cx, unsigned argc, jsval *vp)
 {
     RootedObject  wrapper(cx, JS_THIS_OBJECT(cx, vp));
@@ -1625,17 +1625,11 @@ XrayWrapper<Base, Traits>::delete_(JSContext *cx, HandleObject wrapper,
     // Check the expando object.
     RootedObject target(cx, Traits::getTargetObject(wrapper));
     RootedObject expando(cx, Traits::singleton.getExpandoObject(cx, target, wrapper));
-    JSBool b = true;
     if (expando) {
         JSAutoCompartment ac(cx, expando);
-        RootedValue v(cx);
-        if (!JS_DeletePropertyById2(cx, expando, id, &v) ||
-            !JS_ValueToBoolean(cx, v, &b))
-        {
-            return false;
-        }
+        return JS_DeletePropertyById2(cx, expando, id, bp);
     }
-    *bp = !!b;
+    *bp = true;
     return true;
 }
 

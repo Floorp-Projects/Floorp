@@ -854,7 +854,6 @@ NS_IMPL_RELEASE_INHERITED(HTMLInputElement, Element)
 
 // QueryInterface implementation for HTMLInputElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLInputElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElementWithState)
   NS_INTERFACE_TABLE_INHERITED8(HTMLInputElement,
                                 nsIDOMHTMLInputElement,
                                 nsITextControlElement,
@@ -864,8 +863,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLInputElement)
                                 imgIOnloadBlocker,
                                 nsIDOMNSEditableElement,
                                 nsIConstraintValidation)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElementWithState)
 
 // nsIConstraintValidation
 NS_IMPL_NSICONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(HTMLInputElement)
@@ -3119,7 +3117,8 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                 nsCOMPtr<nsIContent> radioContent =
                   do_QueryInterface(selectedRadioButton);
                 if (radioContent) {
-                  rv = selectedRadioButton->Focus();
+                  nsCOMPtr<nsIDOMHTMLElement> elem = do_QueryInterface(selectedRadioButton);
+                  rv = elem->Focus();
                   if (NS_SUCCEEDED(rv)) {
                     nsEventStatus status = nsEventStatus_eIgnore;
                     nsMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
@@ -6025,10 +6024,14 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
         continue;
       }
 
-      // Get mime type name
-      nsCString mimeTypeName;
-      mimeInfo->GetType(mimeTypeName);
-      CopyUTF8toUTF16(mimeTypeName, filterName);
+      // Get a name for the filter: first try the description, then the mime type
+      // name if there is no description
+      mimeInfo->GetDescription(filterName);
+      if (filterName.IsEmpty()) {
+        nsCString mimeTypeName;
+        mimeInfo->GetType(mimeTypeName);
+        CopyUTF8toUTF16(mimeTypeName, filterName);
+      }
 
       // Get extension list
       nsCOMPtr<nsIUTF8StringEnumerator> extensions;

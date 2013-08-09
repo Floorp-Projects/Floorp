@@ -394,8 +394,7 @@ nsFrame::~nsFrame()
   MOZ_COUNT_DTOR(nsFrame);
 
   NS_IF_RELEASE(mContent);
-  if (mStyleContext)
-    mStyleContext->Release();
+  mStyleContext->Release();
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFrame)

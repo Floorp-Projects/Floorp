@@ -137,7 +137,7 @@ ArrayBufferObject::byteLengthGetterImpl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 ArrayBufferObject::byteLengthGetter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -175,7 +175,7 @@ ArrayBufferObject::fun_slice_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 ArrayBufferObject::fun_slice(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -185,7 +185,7 @@ ArrayBufferObject::fun_slice(JSContext *cx, unsigned argc, Value *vp)
 /*
  * new ArrayBuffer(byteLength)
  */
-JSBool
+bool
 ArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
 {
     int32_t nbytes = 0;
@@ -284,7 +284,7 @@ PostBarrierTypedArrayObject(JSObject *obj)
 {
 #ifdef JSGC_GENERATIONAL
     JS_ASSERT(obj);
-    JSRuntime *rt = obj->runtime();
+    JSRuntime *rt = obj->runtimeFromMainThread();
     if (!rt->isHeapBusy() && !IsInsideNursery(rt, obj))
         rt->gcStoreBuffer.putWholeCell(obj);
 #endif
@@ -325,7 +325,7 @@ InitViewList(ArrayBufferObject *obj, ArrayBufferViewObject *viewsHead)
 static EncapsulatedPtr<ArrayBufferViewObject> &
 GetViewListRef(ArrayBufferObject *obj)
 {
-    JS_ASSERT(obj->runtime()->isHeapBusy());
+    JS_ASSERT(obj->runtimeFromMainThread()->isHeapBusy());
     return reinterpret_cast<OldObjectRepresentationHack*>(obj->getElementsHeader())->views;
 }
 
@@ -588,7 +588,7 @@ ArrayBufferObject::createDataViewForThisImpl(JSContext *cx, CallArgs args)
     return DataViewObject::construct(cx, buffer, frobbedArgs, proto);
 }
 
-JSBool
+bool
 ArrayBufferObject::createDataViewForThis(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1826,7 +1826,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
      * new [Type]Array(JSArray)
      * new [Type]Array(ArrayBuffer, [optional] byteOffset, [optional] length)
      */
-    static JSBool
+    static bool
     class_constructor(JSContext *cx, unsigned argc, Value *vp)
     {
         /* N.B. this is a constructor for protoClass, not fastClass! */
@@ -1910,7 +1910,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     // returns a Value. Given such a function, Getter<> is a native that
     // retrieves a given Value, probably from a slot on the object.
     template<Value ValueGetter(TypedArrayObject *tarr)>
-    static JSBool
+    static bool
     Getter(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
@@ -1987,7 +1987,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return true;
     }
 
-    static JSBool
+    static bool
     fun_subarray(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
@@ -2051,7 +2051,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return true;
     }
 
-    static JSBool
+    static bool
     fun_move(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
@@ -2117,7 +2117,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return true;
     }
 
-    static JSBool
+    static bool
     fun_set(JSContext *cx, unsigned argc, Value *vp)
     {
         CallArgs args = CallArgsFromVp(argc, vp);
@@ -2634,7 +2634,7 @@ ArrayBufferObject::createTypedArrayFromBufferImpl(JSContext *cx, CallArgs args)
 }
 
 template<typename T>
-JSBool
+bool
 ArrayBufferObject::createTypedArrayFromBuffer(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2849,7 +2849,7 @@ DataViewObject::construct(JSContext *cx, JSObject *bufobj, const CallArgs &args,
     return true;
 }
 
-JSBool
+bool
 DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3062,7 +3062,7 @@ DataViewObject::getInt8Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_getInt8(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3083,7 +3083,7 @@ DataViewObject::getUint8Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_getUint8(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3104,7 +3104,7 @@ DataViewObject::getInt16Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_getInt16(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3125,7 +3125,7 @@ DataViewObject::getUint16Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_getUint16(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3146,7 +3146,7 @@ DataViewObject::getInt32Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_getInt32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3167,7 +3167,7 @@ DataViewObject::getUint32Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_getUint32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3189,7 +3189,7 @@ DataViewObject::getFloat32Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_getFloat32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3211,7 +3211,7 @@ DataViewObject::getFloat64Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_getFloat64(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3231,7 +3231,7 @@ DataViewObject::setInt8Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_setInt8(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3251,7 +3251,7 @@ DataViewObject::setUint8Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_setUint8(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3271,7 +3271,7 @@ DataViewObject::setInt16Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_setInt16(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3291,7 +3291,7 @@ DataViewObject::setUint16Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_setUint16(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3311,7 +3311,7 @@ DataViewObject::setInt32Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_setInt32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3331,7 +3331,7 @@ DataViewObject::setUint32Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_setUint32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3351,7 +3351,7 @@ DataViewObject::setFloat32Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_setFloat32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3371,7 +3371,7 @@ DataViewObject::setFloat64Impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+bool
 DataViewObject::fun_setFloat64(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -3871,7 +3871,7 @@ DataViewObject::getterImpl(JSContext *cx, CallArgs args)
 }
 
 template<Value ValueGetter(DataViewObject *view)>
-JSBool
+bool
 DataViewObject::getter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

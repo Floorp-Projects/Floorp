@@ -955,7 +955,7 @@ Navigator::GetDeviceStorages(const nsAString& aType,
     return;
   }
 
-  nsDOMDeviceStorage::CreateDeviceStoragesFor(mWindow, aType, aStores, false);
+  nsDOMDeviceStorage::CreateDeviceStoragesFor(mWindow, aType, aStores);
 
   mDeviceStorageStores.AppendElements(aStores);
 }
@@ -1456,7 +1456,7 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
     return true;
   }
 
-  nsScriptNameSpaceManager *nameSpaceManager =
+  nsScriptNameSpaceManager* nameSpaceManager =
     nsJSRuntime::GetNameSpaceManager();
   if (!nameSpaceManager) {
     return Throw<true>(aCx, NS_ERROR_NOT_INITIALIZED);
@@ -1491,6 +1491,15 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
       if (name_struct->mConstructorEnabled &&
           !(*name_struct->mConstructorEnabled)(aCx, naviObj)) {
         return true;
+      }
+
+      if (name.EqualsLiteral("mozSettings")) {
+        bool hasPermission = CheckPermission("settings-read") ||
+                             CheckPermission("settings-write");
+        if (!hasPermission) {
+          aValue.setNull();
+          return true;
+        }
       }
 
       domObject = construct(aCx, naviObj);
@@ -1548,6 +1557,29 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
 
   aValue.set(prop_val);
   return true;
+}
+
+static PLDHashOperator
+SaveNavigatorName(const nsAString& aName, void* aClosure)
+{
+  nsTArray<nsString>* arr = static_cast<nsTArray<nsString>*>(aClosure);
+  arr->AppendElement(aName);
+  return PL_DHASH_NEXT;
+}
+
+void
+Navigator::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
+                               ErrorResult& aRv)
+{
+  nsScriptNameSpaceManager *nameSpaceManager =
+    nsJSRuntime::GetNameSpaceManager();
+  if (!nameSpaceManager) {
+    NS_ERROR("Can't get namespace manager.");
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  nameSpaceManager->EnumerateNavigatorNames(SaveNavigatorName, &aNames);
 }
 
 JSObject*
@@ -1703,6 +1735,14 @@ bool Navigator::HasUserMediaSupport(JSContext* /* unused */,
          Preferences::GetBool("media.peerconnection.enabled", false);
 }
 #endif // MOZ_MEDIA_NAVIGATOR
+
+/* static */
+bool Navigator::HasPushNotificationsSupport(JSContext* /* unused */,
+                                            JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && Preferences::GetBool("services.push.enabled", false) && CheckPermission(win, "push");
+}
 
 /* static */
 already_AddRefed<nsPIDOMWindow>

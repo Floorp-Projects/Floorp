@@ -127,6 +127,7 @@ documenttab[closing] > .documenttab-container {
   margin: @metro_spacing_normal@ @metro_spacing_snormal@;
   background: white none center top no-repeat;
   background-size: cover;
+  min-width: @thumbnail_width@;
   width: @thumbnail_width@;
   height: @thumbnail_height@;
 }
@@ -234,17 +235,18 @@ documenttab[selected] .documenttab-selection {
 #start-autocomplete[viewstate="snapped"] .richgrid-item-content {
   -moz-box-orient: horizontal;
 }
+
 #start-container,
 #start-autocomplete {
   padding-left: 0;
   padding-right: 0;
 }
+
 #start-container[viewstate="snapped"] #start-scrollbox > .meta-section {
-  margin: 0;
+  margin: 0 @metro_spacing_xnormal@;
   min-width: @grid_double_column_width@;
-  -moz-box-flex: 1;
-  -moz-box-align: center;
 }
+
 #start-container[viewstate="snapped"] richgrid {
   visibility: collapse;
 }
@@ -443,6 +445,16 @@ documenttab[selected] .documenttab-selection {
 }
 
 /* Navigation bar ========================================================== */
+
+/* Most appbars are hidden by default, but we want to keep #navbar visible so
+ * we can show the progress bar at all times.  Instead, we hide only the
+ * toolbar portion of the navbar. */
+#navbar {
+  visibility: visible;
+}
+#navbar:not([hiding]):not([visible]) > #toolbar-overlay {
+  visibility: hidden;
+}
 
 .circularprogressindicator-progressRing {
   margin: 0 @toolbar_horizontal_spacing@;
@@ -1236,36 +1248,3 @@ setting[type="radio"] > vbox {
 #clear-notification-done {
   font-weight: bold;
 }
-
-/* Alert Popup ============================================================= */
-
-#alerts-container {
-  color: white;
-  background-color: #5e6166;
-  border: @border_width_small@ solid #767973;
-  border-radius: @border_radius_normal@;
-  box-shadow: black 0 @border_radius_tiny@ @border_radius_tiny@;
-  padding: @padding_normal@; /* core spacing on top/bottom */
-  margin-bottom: @margin_large@;
-  transition-property: opacity;
-  transition-duration: 0.5s;
-  opacity: 0;
-}
-
-#alerts-container.showing {
-  opacity: 1;
-}
-
-#alerts-title {
-  font-size: @font_small@ !important;
-}
-
-#alerts-text {
-  font-size: @font_xsmall@ !important;
-  white-space: pre;
-}
-
-#alerts-container {
-  -moz-margin-end: @margin_large@;
-}
-

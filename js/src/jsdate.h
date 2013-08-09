@@ -65,7 +65,7 @@ extern JS_FRIEND_API(int)
 js_DateGetSeconds(JSObject *obj);
 
 /* Date constructor native. Exposed only so the JIT can know its address. */
-JSBool
+bool
 js_Date(JSContext *cx, unsigned argc, js::Value *vp);
 
 #endif /* jsdate_h */

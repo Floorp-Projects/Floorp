@@ -22,6 +22,7 @@
 #include "AudioChannelCommon.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
+#include "AudioNodeExternalInputStream.h"
 #include <algorithm>
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
@@ -520,7 +521,7 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   mozilla::LinkedList<MediaStream> stack;
   for (uint32_t i = 0; i < mOldStreams.Length(); ++i) {
     nsRefPtr<MediaStream>& s = mOldStreams[i];
-    if (!s->mAudioOutputs.IsEmpty() || !s->mVideoOutputs.IsEmpty()) {
+    if (s->IsIntrinsicallyConsumed()) {
       MarkConsumed(s);
     }
     if (!s->mHasBeenOrdered) {
@@ -1231,6 +1232,9 @@ MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate)
   stream->mMainThreadCurrentTime = aUpdate->mNextMainThreadCurrentTime;
   stream->mMainThreadFinished = aUpdate->mNextMainThreadFinished;
 
+  if (stream->mWrapper) {
+    stream->mWrapper->NotifyStreamStateChanged();
+  }
   for (int32_t i = stream->mMainThreadListeners.Length() - 1; i >= 0; --i) {
     stream->mMainThreadListeners[i]->NotifyMainThreadStateChanged();
   }
@@ -1541,6 +1545,30 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
   if (mRealtime || mNonRealtimeProcessing) {
     EnsureRunInStableState();
   }
+}
+
+MediaStream::MediaStream(DOMMediaStream* aWrapper)
+  : mBufferStartTime(0)
+  , mExplicitBlockerCount(0)
+  , mBlocked(false)
+  , mGraphUpdateIndices(0)
+  , mFinished(false)
+  , mNotifiedFinished(false)
+  , mNotifiedBlocked(false)
+  , mHasCurrentData(false)
+  , mNotifiedHasCurrentData(false)
+  , mWrapper(aWrapper)
+  , mMainThreadCurrentTime(0)
+  , mMainThreadFinished(false)
+  , mMainThreadDestroyed(false)
+  , mGraph(nullptr)
+{
+  MOZ_COUNT_CTOR(MediaStream);
+  // aWrapper should not already be connected to a MediaStream! It needs
+  // to be hooked up to this stream, and since this stream is only just
+  // being created now, aWrapper must not be connected to anything.
+  NS_ASSERTION(!aWrapper || !aWrapper->GetStream(),
+               "Wrapper already has another media stream hooked up to it!");
 }
 
 void
@@ -2309,6 +2337,21 @@ ProcessedMediaStream*
 MediaStreamGraph::CreateTrackUnionStream(DOMMediaStream* aWrapper)
 {
   TrackUnionStream* stream = new TrackUnionStream(aWrapper);
+  NS_ADDREF(stream);
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  stream->SetGraphImpl(graph);
+  graph->AppendMessage(new CreateMessage(stream));
+  return stream;
+}
+
+AudioNodeExternalInputStream*
+MediaStreamGraph::CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!aSampleRate) {
+    aSampleRate = aEngine->NodeMainThread()->Context()->SampleRate();
+  }
+  AudioNodeExternalInputStream* stream = new AudioNodeExternalInputStream(aEngine, aSampleRate);
   NS_ADDREF(stream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   stream->SetGraphImpl(graph);

@@ -62,14 +62,13 @@ typedef MutableHandle<PropertyName*> MutableHandlePropertyName;
  * Insist that the next token be of type tt, or report errno and return null.
  * NB: this macro uses cx and ts from its lexical environment.
  */
-#define MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, __flags)                                     \
+#define MUST_MATCH_TOKEN(tt, errno)                                                         \
     JS_BEGIN_MACRO                                                                          \
-        if (tokenStream.getToken((__flags)) != tt) {                                        \
+        if (tokenStream.getToken() != tt) {                                                 \
             report(ParseError, false, null(), errno);                                       \
             return null();                                                                  \
         }                                                                                   \
     JS_END_MACRO
-#define MUST_MATCH_TOKEN(tt, errno) MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, 0)
 
 template <typename ParseHandler>
 bool
@@ -399,6 +398,7 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     keepAtoms(cx->perThreadData),
     foldConstants(foldConstants),
     abortedSyntaxParse(false),
+    isUnexpectedEOF_(false),
     handler(cx, *alloc, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
 {
     cx->perThreadData->activeCompilations++;
@@ -1051,6 +1051,8 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
     JS_ASSERT(pc->sc->isFunctionBox());
     JS_ASSERT(!pc->funHasReturnExpr && !pc->funHasReturnVoid);
 
+    uint32_t startYieldOffset = pc->lastYieldOffset;
+
     Node pn;
     if (type == StatementListBody) {
         pn = statements();
@@ -1067,13 +1069,24 @@ Parser<ParseHandler>::functionBody(FunctionSyntaxKind kind, FunctionBodyType typ
         pn = handler.newReturnStatement(kid, handler.getPosition(kid));
         if (!pn)
             return null();
+    }
 
-        if (pc->sc->asFunctionBox()->isLegacyGenerator()) {
+    if (pc->lastYieldOffset != startYieldOffset) {
+        JS_ASSERT(pc->isLegacyGenerator());
+        if (kind == Arrow) {
+            reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                             JSMSG_YIELD_IN_ARROW, js_yield_str);
+            return null();
+        }
+        if (type == ExpressionBody) {
             reportBadReturn(pn, ParseError,
                             JSMSG_BAD_GENERATOR_RETURN,
                             JSMSG_BAD_ANON_GENERATOR_RETURN);
             return null();
         }
+        pc->sc->asFunctionBox()->setIsLegacyGenerator();
+    } else {
+        JS_ASSERT(!pc->isLegacyGenerator());
     }
 
     /* Check for falling off the end of a function that returns a value. */
@@ -1246,12 +1259,12 @@ Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
 static bool
 MatchOrInsertSemicolon(TokenStream &ts)
 {
-    TokenKind tt = ts.peekTokenSameLine(TSF_OPERAND);
+    TokenKind tt = ts.peekTokenSameLine(TokenStream::Operand);
     if (tt == TOK_ERROR)
         return false;
     if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
         /* Advance the scanner for proper error location reporting. */
-        ts.getToken(TSF_OPERAND);
+        ts.getToken(TokenStream::Operand);
         ts.reportError(JSMSG_SEMI_BEFORE_STMNT);
         return false;
     }
@@ -2253,12 +2266,8 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     }
 
     // Parse the function body.
-    Maybe<GenexpGuard<ParseHandler> > yieldGuard;
-    if (kind == Arrow)
-        yieldGuard.construct(this);
-
     FunctionBodyType bodyType = StatementListBody;
-    if (tokenStream.getToken(TSF_OPERAND) != TOK_LC) {
+    if (tokenStream.getToken(TokenStream::Operand) != TOK_LC) {
         tokenStream.ungetToken();
         bodyType = ExpressionBody;
         fun->setIsExprClosure();
@@ -2266,9 +2275,6 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
 
     Node body = functionBody(kind, bodyType);
     if (!body)
-        return false;
-
-    if (!yieldGuard.empty() && !yieldGuard.ref().checkValidBody(body, JSMSG_YIELD_IN_ARROW))
         return false;
 
     if (fun->name() && !checkStrictBinding(fun->name(), pn))
@@ -2351,7 +2357,7 @@ Parser<ParseHandler>::functionStmt()
     tokenStream.tell(&start);
 
     RootedPropertyName name(context);
-    if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME) {
+    if (tokenStream.getToken(TokenStream::KeywordIsName) == TOK_NAME) {
         name = tokenStream.currentToken().name();
     } else {
         /* Unnamed function expressions are forbidden in statement context. */
@@ -2375,7 +2381,7 @@ Parser<ParseHandler>::functionExpr()
     JS_ASSERT(tokenStream.currentToken().type == TOK_FUNCTION);
     TokenStream::Position start(keepAtoms);
     tokenStream.tell(&start);
-    if (tokenStream.getToken(TSF_KEYWORD_IS_NAME) == TOK_NAME)
+    if (tokenStream.getToken(TokenStream::KeywordIsName) == TOK_NAME)
         name = tokenStream.currentToken().name();
     else
         tokenStream.ungetToken();
@@ -2541,11 +2547,11 @@ Parser<ParseHandler>::statements()
 
     bool canHaveDirectives = pc->atBodyLevel();
     for (;;) {
-        TokenKind tt = tokenStream.peekToken(TSF_OPERAND);
+        TokenKind tt = tokenStream.peekToken(TokenStream::Operand);
         if (tt <= TOK_EOF || tt == TOK_RC) {
             if (tt == TOK_ERROR) {
                 if (tokenStream.isEOF())
-                    tokenStream.setUnexpectedEOF();
+                    isUnexpectedEOF_ = true;
                 return null();
             }
             break;
@@ -2553,7 +2559,7 @@ Parser<ParseHandler>::statements()
         Node next = statement(canHaveDirectives);
         if (!next) {
             if (tokenStream.isEOF())
-                tokenStream.setUnexpectedEOF();
+                isUnexpectedEOF_ = true;
             return null();
         }
 
@@ -2598,7 +2604,7 @@ Parser<ParseHandler>::condition()
 static bool
 MatchLabel(TokenStream &ts, MutableHandlePropertyName label)
 {
-    TokenKind tt = ts.peekTokenSameLine(TSF_OPERAND);
+    TokenKind tt = ts.peekTokenSameLine(TokenStream::Operand);
     if (tt == TOK_ERROR)
         return false;
     if (tt == TOK_NAME) {
@@ -3256,7 +3262,7 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
     handler.setBeginPosition(pnlet, begin);
 
     bool needExprStmt = false;
-    if (letContext == LetStatement && !tokenStream.matchToken(TOK_LC, TSF_OPERAND)) {
+    if (letContext == LetStatement && !tokenStream.matchToken(TOK_LC, TokenStream::Operand)) {
         /*
          * Strict mode eliminates a grammar ambiguity with unparenthesized
          * LetExpressions in an ExpressionStatement. If followed immediately
@@ -3630,7 +3636,7 @@ Parser<ParseHandler>::ifStatement()
     if (!cond)
         return null();
 
-    if (tokenStream.peekToken(TSF_OPERAND) == TOK_SEMI &&
+    if (tokenStream.peekToken(TokenStream::Operand) == TOK_SEMI &&
         !report(ParseExtraWarning, false, null(), JSMSG_EMPTY_CONSEQUENT))
     {
         return null();
@@ -3643,7 +3649,7 @@ Parser<ParseHandler>::ifStatement()
         return null();
 
     Node elseBranch;
-    if (tokenStream.matchToken(TOK_ELSE, TSF_OPERAND)) {
+    if (tokenStream.matchToken(TOK_ELSE, TokenStream::Operand)) {
         stmtInfo.type = STMT_ELSE;
         elseBranch = statement();
         if (!elseBranch)
@@ -3803,7 +3809,7 @@ Parser<FullParseHandler>::forStatement()
     ParseNode *pn1;
 
     {
-        TokenKind tt = tokenStream.peekToken(TSF_OPERAND);
+        TokenKind tt = tokenStream.peekToken(TokenStream::Operand);
         if (tt == TOK_SEMI) {
             pn1 = NULL;
         } else {
@@ -4035,7 +4041,7 @@ Parser<FullParseHandler>::forStatement()
 
         /* Parse the loop condition or null into pn2. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
-        if (tokenStream.peekToken(TSF_OPERAND) == TOK_SEMI) {
+        if (tokenStream.peekToken(TokenStream::Operand) == TOK_SEMI) {
             pn2 = NULL;
         } else {
             pn2 = expr();
@@ -4045,7 +4051,7 @@ Parser<FullParseHandler>::forStatement()
 
         /* Parse the update expression or null into pn3. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_COND);
-        if (tokenStream.peekToken(TSF_OPERAND) == TOK_RP) {
+        if (tokenStream.peekToken(TokenStream::Operand) == TOK_RP) {
             pn3 = NULL;
         } else {
             pn3 = expr();
@@ -4127,7 +4133,7 @@ Parser<SyntaxParseHandler>::forStatement()
     Node lhsNode;
 
     {
-        TokenKind tt = tokenStream.peekToken(TSF_OPERAND);
+        TokenKind tt = tokenStream.peekToken(TokenStream::Operand);
         if (tt == TOK_SEMI) {
             lhsNode = null();
         } else {
@@ -4187,14 +4193,14 @@ Parser<SyntaxParseHandler>::forStatement()
     } else {
         /* Parse the loop condition or null. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_INIT);
-        if (tokenStream.peekToken(TSF_OPERAND) != TOK_SEMI) {
+        if (tokenStream.peekToken(TokenStream::Operand) != TOK_SEMI) {
             if (!expr())
                 return null();
         }
 
         /* Parse the update expression or null. */
         MUST_MATCH_TOKEN(TOK_SEMI, JSMSG_SEMI_AFTER_FOR_COND);
-        if (tokenStream.peekToken(TSF_OPERAND) != TOK_RP) {
+        if (tokenStream.peekToken(TokenStream::Operand) != TOK_RP) {
             if (!expr())
                 return null();
         }
@@ -4275,7 +4281,7 @@ Parser<ParseHandler>::switchStatement()
         if (!body)
             return null();
 
-        while ((tt = tokenStream.peekToken(TSF_OPERAND)) != TOK_RC &&
+        while ((tt = tokenStream.peekToken(TokenStream::Operand)) != TOK_RC &&
                tt != TOK_CASE && tt != TOK_DEFAULT) {
             if (tt == TOK_ERROR)
                 return null();
@@ -4410,18 +4416,31 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
     // Legacy generators are identified by the presence of "yield" in their
     // bodies.  We only see "yield" as TOK_YIELD in JS 1.7+.
     if (isYield) {
+        JS_ASSERT(tokenStream.versionNumber() >= JSVERSION_1_7);
         if (!abortIfSyntaxParser())
             return null();
 
-        // If we're within parens, we won't know if this is a generator
-        // expression until we see a |for| token, so we have to delay flagging
-        // the current function.
-        if (pc->parenDepth == 0) {
-            pc->sc->asFunctionBox()->setIsLegacyGenerator();
+        if (pc->isLegacyGenerator()) {
+            // We are in a legacy generator: a function that has already seen a
+            // yield.
+            JS_ASSERT(pc->sc->isFunctionBox());
+            JS_ASSERT(pc->lastYieldOffset != ParseContext<ParseHandler>::NoYieldOffset);
         } else {
-            pc->yieldCount++;
-            pc->yieldOffset = begin;
+            // We are in a code that has not seen a yield, and in JS 1.8 so
+            // "yield" parsed as TOK_YIELD.  Try to transition to being a legacy
+            // generator.
+            JS_ASSERT(tokenStream.currentToken().type == TOK_YIELD);
+            JS_ASSERT(pc->lastYieldOffset == ParseContext<ParseHandler>::NoYieldOffset);
+
+            if (!pc->sc->isFunctionBox()) {
+                report(ParseError, false, null(), JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
+                return null();
+            }
+
+            pc->generatorParseMode = ParseContext<ParseHandler>::LegacyGenerator;
         }
+
+        pc->lastYieldOffset = begin;
     }
 
     // Parse an optional operand.
@@ -4433,7 +4452,7 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
     // this extension in order to conform to the ES6 syntax, which treats
     // "yield \n expr;" as a single ExpressionStatement.
     Node exprNode;
-    TokenKind next = tokenStream.peekTokenSameLine(TSF_OPERAND);
+    TokenKind next = tokenStream.peekTokenSameLine(TokenStream::Operand);
     if (next == TOK_ERROR)
         return null();
     if (next == TOK_EOF || next == TOK_EOL || next == TOK_SEMI || next == TOK_RC ||
@@ -4466,7 +4485,7 @@ Parser<ParseHandler>::returnStatementOrYieldExpression()
     if (!pn)
         return null();
 
-    if (pc->funHasReturnExpr && pc->sc->asFunctionBox()->isLegacyGenerator()) {
+    if (pc->funHasReturnExpr && pc->isLegacyGenerator()) {
         /* As in Python (see PEP-255), disallow return v; in generators. */
         reportBadReturn(pn, ParseError, JSMSG_BAD_GENERATOR_RETURN,
                         JSMSG_BAD_ANON_GENERATOR_RETURN);
@@ -4584,7 +4603,7 @@ Parser<ParseHandler>::throwStatement()
     uint32_t begin = pos().begin;
 
     /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
-    TokenKind tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
+    TokenKind tt = tokenStream.peekTokenSameLine(TokenStream::Operand);
     if (tt == TOK_ERROR)
         return null();
     if (tt == TOK_EOF || tt == TOK_EOL || tt == TOK_SEMI || tt == TOK_RC) {
@@ -4740,7 +4759,7 @@ Parser<ParseHandler>::tryStatement()
             handler.setEndPosition(catchList, pos().end);
             handler.setEndPosition(pnblock, pos().end);
 
-            tt = tokenStream.getToken(TSF_OPERAND);
+            tt = tokenStream.getToken(TokenStream::Operand);
         } while (tt == TOK_CATCH);
     }
 
@@ -4788,7 +4807,7 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 {
     JS_CHECK_RECURSION(context, return null());
 
-    switch (TokenKind tt = tokenStream.getToken(TSF_OPERAND)) {
+    switch (TokenKind tt = tokenStream.getToken(TokenStream::Operand)) {
       case TOK_LC:
         return blockStatement();
 
@@ -5167,7 +5186,7 @@ Parser<ParseHandler>::assignExpr()
     // assignExpr(), condExpr1(), orExpr1(), unaryExpr(), memberExpr(), and
     // primaryExpr().
 
-    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
+    TokenKind tt = tokenStream.getToken(TokenStream::Operand);
 
     if (tt == TOK_NAME && tokenStream.nextTokenEndsExpr())
         return identifierName();
@@ -5299,7 +5318,7 @@ Parser<ParseHandler>::unaryExpr()
 
     JS_CHECK_RECURSION(context, return null());
 
-    TokenKind tt = tokenStream.getToken(TSF_OPERAND);
+    TokenKind tt = tokenStream.getToken(TokenStream::Operand);
     uint32_t begin = pos().begin;
     switch (tt) {
       case TOK_TYPEOF:
@@ -5310,15 +5329,15 @@ Parser<ParseHandler>::unaryExpr()
         return unaryOpExpr(PNK_NOT, JSOP_NOT, begin);
       case TOK_BITNOT:
         return unaryOpExpr(PNK_BITNOT, JSOP_BITNOT, begin);
-      case TOK_PLUS:
+      case TOK_ADD:
         return unaryOpExpr(PNK_POS, JSOP_POS, begin);
-      case TOK_MINUS:
+      case TOK_SUB:
         return unaryOpExpr(PNK_NEG, JSOP_NEG, begin);
 
       case TOK_INC:
       case TOK_DEC:
       {
-        TokenKind tt2 = tokenStream.getToken(TSF_OPERAND);
+        TokenKind tt2 = tokenStream.getToken(TokenStream::Operand);
         pn2 = memberExpr(tt2, true);
         if (!pn2)
             return null();
@@ -5355,7 +5374,7 @@ Parser<ParseHandler>::unaryExpr()
             return null();
 
         /* Don't look across a newline boundary for a postfix incop. */
-        tt = tokenStream.peekTokenSameLine(TSF_OPERAND);
+        tt = tokenStream.peekTokenSameLine(TokenStream::Operand);
         if (tt == TOK_INC || tt == TOK_DEC) {
             tokenStream.consumeKnownToken(tt);
             if (!checkAndMarkAsIncOperand(pn, tt, false))
@@ -5414,117 +5433,6 @@ class CompExprTransplanter
 
     bool transplant(ParseNode *pn);
 };
-
-/*
- * A helper for lazily checking for the presence of illegal |yield| or
- * |arguments| tokens inside of legacy generator expressions. This must be done
- * lazily since we don't know whether we're in a legacy generator expression
- * until we see the "for" token after we've already parsed the body expression.
- * (For ES6 generator comprehensions, we won't need this lazy check because the
- * |for| is at the beginning.)
- *
- * Use in any context which may turn out to be inside a legacy generator
- * expression. This includes parenthesized expressions and argument lists, and
- * it includes the tail of legacy generator expressions.
- *
- * The guard will keep track of any |yield| or |arguments| tokens that occur while
- * parsing the body. As soon as the parser reaches the end of the body expression,
- * call endBody() to reset the context's state, and then immediately call:
- *
- * - checkValidBody() if this *did* turn out to be a legacy generator expression
- * - maybeNoteLegacyGenerator() if this *did not* turn out to be a legacy
- *   generator expression
- */
-template <typename ParseHandler>
-class GenexpGuard
-{
-    Parser<ParseHandler> *parser;
-    uint32_t startYieldCount;
-
-    typedef typename ParseHandler::Node Node;
-
-  public:
-    explicit GenexpGuard(Parser<ParseHandler> *parser)
-      : parser(parser)
-    {
-        ParseContext<ParseHandler> *pc = parser->pc;
-        if (pc->parenDepth == 0) {
-            pc->yieldCount = 0;
-            pc->yieldOffset = 0;
-        }
-        startYieldCount = pc->yieldCount;
-        pc->parenDepth++;
-    }
-
-    void endBody();
-    bool checkValidBody(Node pn, unsigned err = JSMSG_BAD_GENEXP_BODY);
-    bool maybeNoteLegacyGenerator(Node pn);
-};
-
-template <typename ParseHandler>
-void
-GenexpGuard<ParseHandler>::endBody()
-{
-    parser->pc->parenDepth--;
-}
-
-/*
- * Check whether a |yield| or |arguments| token has been encountered in the
- * body expression, and if so, report an error.
- *
- * Call this after endBody() when determining that the body *was* in a
- * generator expression.
- */
-template <typename ParseHandler>
-bool
-GenexpGuard<ParseHandler>::checkValidBody(Node pn, unsigned err)
-{
-    ParseContext<ParseHandler> *pc = parser->pc;
-    if (pc->yieldCount > startYieldCount) {
-        uint32_t offset = pc->yieldOffset
-                          ? pc->yieldOffset
-                          : (pn ? parser->handler.getPosition(pn)
-                                : parser->pos()).begin;
-
-        parser->reportWithOffset(ParseError, false, offset, err, js_yield_str);
-        return false;
-    }
-
-    return true;
-}
-
-/*
- * Check whether a |yield| token has been encountered in the body expression,
- * and if so, note that the current function is a generator function.
- *
- * Call this after endBody() when determining that the body *was not* in a
- * generator expression.
- */
-template <typename ParseHandler>
-bool
-GenexpGuard<ParseHandler>::maybeNoteLegacyGenerator(Node pn)
-{
-    ParseContext<ParseHandler> *pc = parser->pc;
-    // yieldCount is only incremented when we see yield in JS 1.7+ code.
-    if (pc->yieldCount > 0) {
-        if (!pc->sc->isFunctionBox()) {
-            // FIXME: This error should be detected eagerly, when the yield is
-            // seen.
-            parser->report(ParseError, false, ParseHandler::null(),
-                           JSMSG_BAD_RETURN_OR_YIELD, js_yield_str);
-            return false;
-        }
-        pc->sc->asFunctionBox()->setIsLegacyGenerator();
-        if (pc->funHasReturnExpr) {
-            // At the time we saw the yield, we might not have set
-            // isLegacyGenerator yet.
-            parser->reportBadReturn(pn, ParseError,
-                                    JSMSG_BAD_GENERATOR_RETURN, JSMSG_BAD_ANON_GENERATOR_RETURN);
-            return false;
-        }
-    }
-    return true;
-}
 
 /*
  * Any definitions nested within the comprehension expression of a generator
@@ -5817,7 +5725,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
             pn2->pn_iflags |= JSITER_FOREACH;
         MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
 
-        GenexpGuard<FullParseHandler> guard(this);
+        uint32_t startYieldOffset = pc->lastYieldOffset;
 
         RootedPropertyName name(context);
         tt = tokenStream.getToken();
@@ -5874,14 +5782,10 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
             return null();
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
 
-        guard.endBody();
-
-        if (isGenexp) {
-            if (!guard.checkValidBody(pn2))
-                return null();
-        } else {
-            if (!guard.maybeNoteLegacyGenerator(pn2))
-                return null();
+        if (isGenexp && pc->lastYieldOffset != startYieldOffset) {
+            reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                             JSMSG_BAD_GENEXP_BODY, js_yield_str);
+            return null();
         }
 
         switch (tt) {
@@ -6111,12 +6015,12 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::assignExprWithoutYield(unsigned msg)
 {
-    GenexpGuard<ParseHandler> yieldGuard(this);
+    uint32_t startYieldOffset = pc->lastYieldOffset;
     Node res = assignExpr();
-    yieldGuard.endBody();
-    if (res) {
-        if (!yieldGuard.checkValidBody(res, msg))
-            return null();
+    if (res && pc->lastYieldOffset != startYieldOffset) {
+        reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                         msg, js_yield_str);
+        return null();
     }
     return res;
 }
@@ -6125,18 +6029,16 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::argumentList(Node listNode)
 {
-    if (tokenStream.matchToken(TOK_RP, TSF_OPERAND))
+    if (tokenStream.matchToken(TOK_RP, TokenStream::Operand))
         return true;
 
-    GenexpGuard<ParseHandler> guard(this);
+    uint32_t startYieldOffset = pc->lastYieldOffset;
     bool arg0 = true;
 
     do {
         Node argNode = assignExpr();
         if (!argNode)
             return false;
-        if (arg0)
-            guard.endBody();
 
         if (handler.isOperationWithoutParens(argNode, PNK_YIELD) &&
             tokenStream.peekToken() == TOK_COMMA) {
@@ -6145,8 +6047,11 @@ Parser<ParseHandler>::argumentList(Node listNode)
         }
 #if JS_HAS_GENERATOR_EXPRS
         if (tokenStream.matchToken(TOK_FOR)) {
-            if (!guard.checkValidBody(argNode))
+            if (pc->lastYieldOffset != startYieldOffset) {
+                reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                                 JSMSG_BAD_GENEXP_BODY, js_yield_str);
                 return false;
+            }
             argNode = generatorExpr(argNode);
             if (!argNode)
                 return false;
@@ -6154,11 +6059,8 @@ Parser<ParseHandler>::argumentList(Node listNode)
                 report(ParseError, false, argNode, JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
                 return false;
             }
-        } else
+        }
 #endif
-        if (arg0 && !guard.maybeNoteLegacyGenerator(argNode))
-            return false;
-
         arg0 = false;
 
         handler.addList(listNode, argNode);
@@ -6187,7 +6089,7 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
         if (!lhs)
             return null();
 
-        tt = tokenStream.getToken(TSF_OPERAND);
+        tt = tokenStream.getToken(TokenStream::Operand);
         Node ctorExpr = memberExpr(tt, false);
         if (!ctorExpr)
             return null();
@@ -6205,7 +6107,7 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
     while ((tt = tokenStream.getToken()) > TOK_EOF) {
         Node nextMember;
         if (tt == TOK_DOT) {
-            tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
+            tt = tokenStream.getToken(TokenStream::KeywordIsName);
             if (tt == TOK_ERROR)
                 return null();
             if (tt == TOK_NAME) {
@@ -6356,7 +6258,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
             return null();
         handler.setBlockId(pn, pc->blockidGen);
 
-        if (tokenStream.matchToken(TOK_RB, TSF_OPERAND)) {
+        if (tokenStream.matchToken(TOK_RB, TokenStream::Operand)) {
             /*
              * Mark empty arrays as non-constant, since we cannot easily
              * determine their type.
@@ -6371,7 +6273,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                     return null();
                 }
 
-                tt = tokenStream.peekToken(TSF_OPERAND);
+                tt = tokenStream.peekToken(TokenStream::Operand);
                 if (tt == TOK_RB)
                     break;
 
@@ -6489,7 +6391,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
         RootedAtom atom(context);
         Value tmp;
         for (;;) {
-            TokenKind ltok = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
+            TokenKind ltok = tokenStream.getToken(TokenStream::KeywordIsName);
             switch (ltok) {
               case TOK_NUMBER:
                 tmp = DoubleValue(tokenStream.currentToken().number());
@@ -6512,7 +6414,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
                         break;
                     }
 
-                    tt = tokenStream.getToken(TSF_KEYWORD_IS_NAME);
+                    tt = tokenStream.getToken(TokenStream::KeywordIsName);
                     if (tt == TOK_NAME) {
                         atom = tokenStream.currentToken().name();
                         pn3 = newName(atom->asPropertyName());
@@ -6784,7 +6686,7 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
     if (genexp)
         *genexp = false;
 
-    GenexpGuard<ParseHandler> guard(this);
+    uint32_t startYieldOffset = pc->lastYieldOffset;
 
     /*
      * Always accept the 'in' operator in a parenthesized expression,
@@ -6798,12 +6700,14 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
 
     if (!pn)
         return null();
-    guard.endBody();
 
 #if JS_HAS_GENERATOR_EXPRS
     if (tokenStream.matchToken(TOK_FOR)) {
-        if (!guard.checkValidBody(pn))
+        if (pc->lastYieldOffset != startYieldOffset) {
+            reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                             JSMSG_BAD_GENEXP_BODY, js_yield_str);
             return null();
+        }
         if (handler.isOperationWithoutParens(pn, PNK_COMMA)) {
             report(ParseError, false, null(),
                    JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
@@ -6822,11 +6726,8 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
             handler.setEndPosition(pn, pos().end);
             *genexp = true;
         }
-    } else
+    }
 #endif /* JS_HAS_GENERATOR_EXPRS */
-
-    if (!guard.maybeNoteLegacyGenerator(pn))
-        return null();
 
     return pn;
 }

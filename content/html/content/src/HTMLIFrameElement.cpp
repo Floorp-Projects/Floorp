@@ -29,16 +29,8 @@ HTMLIFrameElement::~HTMLIFrameElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLIFrameElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLIFrameElement, Element)
-
-// QueryInterface implementation for HTMLIFrameElement
-NS_INTERFACE_TABLE_HEAD(HTMLIFrameElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFrameElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLIFrameElement,
-                                nsIDOMHTMLIFrameElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLIFrameElement, nsGenericHTMLFrameElement,
+                             nsIDOMHTMLIFrameElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLIFrameElement)
 
@@ -222,23 +214,18 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 bool aNotify)
 {
   if (aName == nsGkAtoms::sandbox && aNameSpaceID == kNameSpaceID_None) {
-    // Parse the new value of the sandbox attribute, and if we have a docshell
-    // set its sandbox flags appropriately.
+    // If we have an nsFrameLoader, parse the new value of the sandbox
+    // attribute and apply the new sandbox flags.
     if (mFrameLoader) {
-      nsCOMPtr<nsIDocShell> docshell = mFrameLoader->GetExistingDocShell();
-
-      if (docshell) {
-        uint32_t newFlags = 0;
-        // If a nullptr aValue is passed in, we want to clear the sandbox flags
-        // which we will do by setting them to 0.
-        if (aValue) {
-          nsAutoString strValue;
-          aValue->ToString(strValue);
-          newFlags = nsContentUtils::ParseSandboxAttributeToFlags(
-            strValue);
-        }   
-        docshell->SetSandboxFlags(newFlags);
-      }
+      // If a nullptr aValue is passed in, we want to clear the sandbox flags
+      // which we will do by setting them to 0.
+      uint32_t newFlags = 0;
+      if (aValue) {
+        nsAutoString strValue;
+        aValue->ToString(strValue);
+        newFlags = nsContentUtils::ParseSandboxAttributeToFlags(strValue);
+      }   
+      mFrameLoader->ApplySandboxFlags(newFlags);
     }
   }
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,

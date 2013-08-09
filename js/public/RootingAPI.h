@@ -856,6 +856,10 @@ class SkipRoot
     void init(js::ContextFriendFields *cx, const T *ptr, size_t count) {}
 
   public:
+    ~SkipRoot() {
+        // An empty destructor is needed to avoid warnings from clang about
+        // unused local variables of this type.
+    }
 
 #endif /* DEBUG && JSGC_ROOT_ANALYSIS */
 

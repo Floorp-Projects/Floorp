@@ -453,7 +453,8 @@ pref("devtools.debugger.remote-enabled", false);
 pref("devtools.debugger.remote-port", 6000);
 // Force debugger server binding on the loopback interface
 pref("devtools.debugger.force-local", true);
-
+// Display a prompt when a new connection starts to accept/reject it
+pref("devtools.debugger.prompt-connection", true);
 // Temporary setting to enable webapps actors
 pref("devtools.debugger.enable-content-actors", false);
 
@@ -1775,6 +1776,9 @@ pref("layout.css.masking.enabled", false);
 #else
 pref("layout.css.masking.enabled", true);
 #endif
+
+// Is support for mix-blend-mode enabled? 
+pref("layout.css.mix-blend-mode.enabled", false);
 
 // Is support for the the @supports rule enabled?
 pref("layout.css.supports-rule.enabled", true);
@@ -4073,7 +4077,11 @@ pref("layers.acceleration.force-enabled", false);
 pref("layers.acceleration.draw-fps", false);
 
 pref("layers.draw-borders", false);
+pref("layers.draw-tile-borders", false);
+pref("layers.draw-bigimage-borders", false);
 pref("layers.frame-counter", false);
+// Max number of layers per container. See Overwrite in mobile prefs.
+pref("layers.max-active", -1);
 
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
@@ -4087,6 +4095,8 @@ pref("layers.offmainthreadcomposition.testing.enabled", false);
 pref("layers.offmainthreadcomposition.async-animations", false);
 // Whether to prefer normal memory over shared memory. Ignored with cross-process compositing
 pref("layers.prefer-memory-over-shmem", true);
+
+pref("layers.bufferrotation.enabled", true);
 
 #ifdef MOZ_X11
 #ifdef MOZ_WIDGET_GTK2

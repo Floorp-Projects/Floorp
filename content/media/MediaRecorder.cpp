@@ -23,9 +23,8 @@ namespace mozilla {
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(MediaRecorder, nsDOMEventTargetHelper,
-                                     mStream,
-                                     mReadThread)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(MediaRecorder, nsDOMEventTargetHelper,
+                                     mStream)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaRecorder)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
@@ -176,7 +175,7 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
 
   // Create a TrackUnionStream to support Pause/Resume by using ChangeExplicitBlockerCount
   MediaStreamGraph* gm = mStream->GetStream()->Graph();
-  mTrackUnionStream = gm->CreateTrackUnionStream(mStream);
+  mTrackUnionStream = gm->CreateTrackUnionStream(nullptr);
   MOZ_ASSERT(mTrackUnionStream, "CreateTrackUnionStream failed");
 
   if (!CheckPrincipal()) {

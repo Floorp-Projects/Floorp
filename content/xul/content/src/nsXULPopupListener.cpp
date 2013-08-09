@@ -136,6 +136,16 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
     }
   }
 
+  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+  if (!targetContent) {
+    return NS_OK;
+  }
+  if (targetContent->Tag() == nsGkAtoms::browser &&
+      targetContent->IsXUL() &&
+      nsEventStateManager::IsRemoteTarget(targetContent)) {
+    return NS_OK;
+  }
+
   bool preventDefault;
   mouseEvent->GetDefaultPrevented(&preventDefault);
   if (preventDefault && targetNode && mIsContext) {
@@ -180,7 +190,6 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
   // If a menu item child was clicked on that leads to a popup needing
   // to show, we know (guaranteed) that we're dealing with a menu or
   // submenu of an already-showing popup.  We don't need to do anything at all.
-  nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
   if (!mIsContext) {
     nsIAtom *tag = targetContent ? targetContent->Tag() : nullptr;
     if (tag == nsGkAtoms::menu || tag == nsGkAtoms::menuitem)

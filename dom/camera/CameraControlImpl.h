@@ -71,6 +71,8 @@ public:
   nsresult Get(nsICameraClosedCallback** aOnClosed);
   nsresult Set(nsICameraRecorderStateChange* aOnRecorderStateChange);
   nsresult Get(nsICameraRecorderStateChange** aOnRecorderStateChange);
+  nsresult Set(nsICameraPreviewStateChange* aOnPreviewStateChange);
+  nsresult Get(nsICameraPreviewStateChange** aOnPreviewStateChange);
 
   nsresult SetFocusAreas(JSContext* aCx, const JS::Value& aValue)
   {
@@ -102,6 +104,12 @@ public:
   void OnClosed();
   void OnRecorderStateChange(const nsString& aStateMsg, int32_t aStatus, int32_t aTrackNumber);
 
+  enum PreviewState {
+    PREVIEW_STOPPED,
+    PREVIEW_STARTED
+  };
+  void OnPreviewStateChange(PreviewState aNewState);
+
   uint64_t GetWindowId()
   {
     return mWindowId;
@@ -132,6 +140,7 @@ protected:
   nsString            mFileFormat;
   uint32_t            mMaxMeteringAreas;
   uint32_t            mMaxFocusAreas;
+  PreviewState        mPreviewState;
 
   /**
    * 'mDOMPreview' is a raw pointer to the object that will receive incoming
@@ -150,6 +159,7 @@ protected:
   nsMainThreadPtrHandle<nsICameraShutterCallback>     mOnShutterCb;
   nsMainThreadPtrHandle<nsICameraClosedCallback>      mOnClosedCb;
   nsMainThreadPtrHandle<nsICameraRecorderStateChange> mOnRecorderStateChangeCb;
+  nsMainThreadPtrHandle<nsICameraPreviewStateChange>  mOnPreviewStateChangeCb;
 
 private:
   CameraControlImpl(const CameraControlImpl&) MOZ_DELETE;
@@ -693,6 +703,32 @@ protected:
   const nsString mStateMsg;
   int32_t mStatus;
   int32_t mTrackNumber;
+  uint64_t mWindowId;
+};
+
+// Report that the preview stream state has changed.
+class CameraPreviewStateChange : public nsRunnable
+{
+public:
+  CameraPreviewStateChange(nsMainThreadPtrHandle<nsICameraPreviewStateChange> onStateChange, const nsString& aStateMsg, uint64_t aWindowId)
+    : mOnStateChangeCb(onStateChange)
+    , mStateMsg(aStateMsg)
+    , mWindowId(aWindowId)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (mOnStateChangeCb.get() && nsDOMCameraManager::IsWindowStillActive(mWindowId)) {
+      mOnStateChangeCb->HandleStateChange(mStateMsg);
+    }
+    return NS_OK;
+  }
+
+protected:
+  nsMainThreadPtrHandle<nsICameraPreviewStateChange> mOnStateChangeCb;
+  const nsString mStateMsg;
   uint64_t mWindowId;
 };
 

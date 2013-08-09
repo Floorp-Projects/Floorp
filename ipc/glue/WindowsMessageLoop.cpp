@@ -68,12 +68,20 @@ using namespace mozilla::ipc::windows;
  * these in-calls are blocked.
  */
 
-// pulled from widget's nsAppShell
-extern const PRUnichar* kAppShellEventId;
 #if defined(ACCESSIBILITY)
 // pulled from accessibility's win utils
 extern const PRUnichar* kPropNameTabContent;
 #endif
+
+// widget related message id constants we need to defer
+namespace mozilla {
+namespace widget {
+extern UINT sAppShellGeckoMsgId;
+#ifdef MOZ_METRO
+extern UINT sDefaultBrowserMsgId;
+#endif
+}
+}
 
 namespace {
 
@@ -94,7 +102,6 @@ HHOOK gDeferredGetMsgHook = NULL;
 HHOOK gDeferredCallWndProcHook = NULL;
 
 DWORD gUIThreadId = 0;
-static UINT sAppShellGeckoMsgId;
 
 LRESULT CALLBACK
 DeferredMessageHook(int nCode,
@@ -274,9 +281,14 @@ ProcessOrDeferMessage(HWND hwnd,
       return 0;
 
     default: {
-      if (uMsg && uMsg == sAppShellGeckoMsgId) {
+      if (uMsg && uMsg == mozilla::widget::sAppShellGeckoMsgId) {
         // Widget's registered native event callback
         deferred = new DeferredSendMessage(hwnd, uMsg, wParam, lParam);
+#ifdef MOZ_METRO
+      } else if (uMsg && uMsg == mozilla::widget::sDefaultBrowserMsgId) {
+        // Metro widget's system shutdown message
+        deferred = new DeferredSendMessage(hwnd, uMsg, wParam, lParam);
+#endif
       } else {
         // Unknown messages only
 #ifdef DEBUG
@@ -368,6 +380,13 @@ WindowIsDeferredWindow(HWND hWnd)
       className.EqualsLiteral("nsAppShell:EventWindowClass")) {
     return true;
   }
+
+#ifdef MOZ_METRO
+  // immersive UI ICoreWindow
+  if (className.EqualsLiteral("Windows.UI.Core.CoreWindow")) {
+    return true;
+  }
+#endif
 
   // Plugin windows that can trigger ipc calls in child:
   // 'ShockwaveFlashFullScreen' - flash fullscreen window
@@ -525,7 +544,6 @@ Init()
   NS_ASSERTION(gUIThreadId, "ThreadId should not be 0!");
   NS_ASSERTION(gUIThreadId == GetCurrentThreadId(),
                "Running on different threads!");
-  sAppShellGeckoMsgId = RegisterWindowMessageW(kAppShellEventId);
 }
 
 // This timeout stuff assumes a sane value of mTimeoutMs (less than the overflow

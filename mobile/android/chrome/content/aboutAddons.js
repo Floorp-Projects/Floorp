@@ -41,7 +41,6 @@ var ContextMenus = {
       document.getElementById("contextmenu-enable").setAttribute("hidden", "true");
       document.getElementById("contextmenu-disable").setAttribute("hidden", "true");
       document.getElementById("contextmenu-uninstall").setAttribute("hidden", "true");
-      document.getElementById("contextmenu-default").setAttribute("hidden", "true");
       return;
     }
 
@@ -60,13 +59,6 @@ var ContextMenus = {
       document.getElementById("contextmenu-enable").removeAttribute("hidden");
       document.getElementById("contextmenu-disable").setAttribute("hidden", "true");
     }
-
-    // Only show the "Set as Default" menuitem for enabled non-default search engines.
-    if (addon.type == "search" && enabled && addon.id != Services.search.defaultEngine.name) {
-      document.getElementById("contextmenu-default").removeAttribute("hidden");
-    } else {
-      document.getElementById("contextmenu-default").setAttribute("hidden", "true");
-    }
   },
 
   enable: function(event) {
@@ -82,17 +74,11 @@ var ContextMenus = {
   uninstall: function (event) {
     Addons.uninstall(this.target.addon);
     this.target = null;
-  },
-
-  setDefaultSearch: function(event) {
-    Addons.setDefaultSearch(this.target.addon);
-    this.target = null;
   }
 }
 
 function init() {
   window.addEventListener("popstate", onPopState, false);
-  Services.obs.addObserver(Addons, "browser-search-engine-modified", false);
 
   AddonManager.addInstallListener(Addons);
   AddonManager.addAddonListener(Addons);
@@ -102,7 +88,6 @@ function init() {
 }
 
 function uninit() {
-  Services.obs.removeObserver(Addons, "browser-search-engine-modified");
   AddonManager.removeInstallListener(Addons);
   AddonManager.removeAddonListener(Addons);
 }
@@ -265,37 +250,6 @@ var Addons = {
         list.appendChild(item);
       }
 
-      // Load the search engines
-      let defaults = Services.search.getDefaultEngines({ }).map(function (e) e.name);
-      function isDefault(aEngine)
-        defaults.indexOf(aEngine.name) != -1
-
-      let defaultDescription = gStringBundle.GetStringFromName("addonsSearchEngine.description");
-
-      let engines = Services.search.getEngines({ });
-      for (let e = 0; e < engines.length; e++) {
-        let engine = engines[e];
-        let addon = {};
-        addon.id = engine.name;
-        addon.type = "search";
-        addon.name = engine.name;
-        addon.version = "";
-        addon.description = engine.description || defaultDescription;
-        addon.iconURL = engine.iconURI ? engine.iconURI.spec : "";
-        addon.optionsURL = "";
-        addon.appDisabled = false;
-        addon.scope = isDefault(engine) ? AddonManager.SCOPE_APPLICATION : AddonManager.SCOPE_PROFILE;
-        addon.engine = engine;
-
-        let item = self._createItem(addon);
-        item.setAttribute("isDisabled", engine.hidden);
-        item.setAttribute("updateable", "false");
-        item.setAttribute("opType", "");
-        item.setAttribute("optionsURL", "");
-        item.addon = addon;
-        list.appendChild(item);
-      }
-
       // Add a "Browse all Firefox Add-ons" item to the bottom of the list.
       let browseItem = self._createBrowseItem();
       list.appendChild(browseItem);
@@ -360,18 +314,6 @@ var Addons = {
     else
       uninstallBtn.removeAttribute("disabled");
 
-    let defaultButton = document.getElementById("default-btn");
-    if (addon.type == "search") {
-      if (addon.id == Services.search.defaultEngine.name)
-        defaultButton.setAttribute("disabled", "true");
-      else
-        defaultButton.removeAttribute("disabled");
-
-      defaultButton.removeAttribute("hidden");
-    } else {
-      defaultButton.setAttribute("hidden", "true");
-    }
-
     let box = document.querySelector("#addons-details > .addon-item .options-box");
     box.innerHTML = "";
 
@@ -424,10 +366,7 @@ var Addons = {
     let listItem = this._getElementForAddon(addon.id);
 
     let opType;
-    if (addon.type == "search") {
-      addon.engine.hidden = !aValue;
-      opType = aValue ? "needs-enable" : "needs-disable";
-    } else if (addon.type == "theme") {
+    if (addon.type == "theme") {
       if (aValue) {
         // We can have only one theme enabled, so disable the current one if any
         let list = document.getElementById("addons-list");
@@ -492,30 +431,21 @@ var Addons = {
 
     let listItem = this._getElementForAddon(addon.id);
 
-    if (addon.type == "search") {
-      // Make sure the engine isn't hidden before removing it, to make sure it's
-      // visible if the user later re-adds it (works around bug 341833)
-      addon.engine.hidden = false;
-      Services.search.removeEngine(addon.engine);
-      // the search-engine-modified observer will take care of updating the list
-      history.back();
+    addon.uninstall();
+    if (addon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
+      this.showRestart();
+
+      // A disabled addon doesn't need a restart so it has no pending ops and
+      // can't be cancelled
+      let opType = this._getOpTypeForOperations(addon.pendingOperations);
+      if (!addon.isActive && opType == "")
+        opType = "needs-uninstall";
+
+      detailItem.setAttribute("opType", opType);
+      listItem.setAttribute("opType", opType);
     } else {
-      addon.uninstall();
-      if (addon.pendingOperations & AddonManager.PENDING_UNINSTALL) {
-        this.showRestart();
-
-        // A disabled addon doesn't need a restart so it has no pending ops and
-        // can't be cancelled
-        let opType = this._getOpTypeForOperations(addon.pendingOperations);
-        if (!addon.isActive && opType == "")
-          opType = "needs-uninstall";
-
-        detailItem.setAttribute("opType", opType);
-        listItem.setAttribute("opType", opType);
-      } else {
-        list.removeChild(listItem);
-        history.back();
-      }
+      list.removeChild(listItem);
+      history.back();
     }
   },
 
@@ -533,20 +463,6 @@ var Addons = {
 
     let listItem = this._getElementForAddon(addon.id);
     listItem.setAttribute("opType", opType);
-  },
-
-  setDefaultSearch: function setDefaultSearch(aAddon) {
-    let addon = aAddon || document.querySelector("#addons-details > .addon-item").addon;
-    if (addon.type != "search")
-      return;
-
-    let engine = Services.search.getEngineByName(addon.id);
-
-    // Move the new default search engine to the top of the search engine list.
-    Services.search.moveEngine(engine, 0);
-    Services.search.defaultEngine = engine;
-
-    document.getElementById("default-btn").setAttribute("disabled", "true");
   },
 
   showRestart: function showRestart() {
@@ -588,18 +504,6 @@ var Addons = {
 
     if (needsRestart)
       element.setAttribute("opType", "needs-restart");
-  },
-
-  observe: function observe(aSubject, aTopic, aData) {
-    if (aTopic == "browser-search-engine-modified") {
-      switch (aData) {
-        case "engine-added":
-        case "engine-removed":
-        case "engine-changed":
-          this.getAddons();
-          break;
-      }
-    }
   },
 
   onInstallFailed: function(aInstall) {

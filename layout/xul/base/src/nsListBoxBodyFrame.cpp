@@ -1474,10 +1474,6 @@ nsIFrame*
 NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
   nsCOMPtr<nsBoxLayout> layout = NS_NewListBoxLayout();
-  if (!layout) {
-    return nullptr;
-  }
-
   return new (aPresShell) nsListBoxBodyFrame(aPresShell, aContext, layout);
 }
 

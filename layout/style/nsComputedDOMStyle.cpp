@@ -3623,6 +3623,15 @@ nsComputedDOMStyle::DoGetMinWidth()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetMixBlendMode()
+{
+    nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+    val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mMixBlendMode,
+                  nsCSSProps::kBlendModeKTable));
+    return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetLeft()
 {
   return GetOffsetWidthFor(NS_SIDE_LEFT);
@@ -4497,61 +4506,38 @@ nsComputedDOMStyle::SetCssTextToCoord(nsAString& aCssText,
   delete value;
 }
 
-static void
-GetFilterFunctionName(nsAString& aString, nsStyleFilter::Type mType)
-{
-  switch (mType) {
-    case nsStyleFilter::Type::eBlur:
-      aString.AssignLiteral("blur(");
-      break;
-    case nsStyleFilter::Type::eBrightness:
-      aString.AssignLiteral("brightness(");
-      break;
-    case nsStyleFilter::Type::eContrast:
-      aString.AssignLiteral("contrast(");
-      break;
-    case nsStyleFilter::Type::eGrayscale:
-      aString.AssignLiteral("grayscale(");
-      break;
-    case nsStyleFilter::Type::eHueRotate:
-      aString.AssignLiteral("hue-rotate(");
-      break;
-    case nsStyleFilter::Type::eInvert:
-      aString.AssignLiteral("invert(");
-      break;
-    case nsStyleFilter::Type::eOpacity:
-      aString.AssignLiteral("opacity(");
-      break;
-    case nsStyleFilter::Type::eSaturate:
-      aString.AssignLiteral("saturate(");
-      break;
-    case nsStyleFilter::Type::eSepia:
-      aString.AssignLiteral("sepia(");
-      break;
-    default:
-      NS_NOTREACHED("unrecognized filter type");
-  }
-}
-
-nsROCSSPrimitiveValue*
+CSSValue*
 nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
   const nsStyleFilter& aStyleFilter)
 {
   nsROCSSPrimitiveValue* value = new nsROCSSPrimitiveValue;
-
   // Handle url().
-  if (nsStyleFilter::Type::eURL == aStyleFilter.mType) {
-    value->SetURI(aStyleFilter.mURL);
+  if (aStyleFilter.GetType() == NS_STYLE_FILTER_URL) {
+    value->SetURI(aStyleFilter.GetURL());
     return value;
   }
 
   // Filter function name and opening parenthesis.
   nsAutoString filterFunctionString;
-  GetFilterFunctionName(filterFunctionString, aStyleFilter.mType);
+  AppendASCIItoUTF16(
+    nsCSSProps::ValueToKeyword(aStyleFilter.GetType(),
+                               nsCSSProps::kFilterFunctionKTable),
+                               filterFunctionString);
+  filterFunctionString.AppendLiteral("(");
 
-  // Filter function argument.
   nsAutoString argumentString;
-  SetCssTextToCoord(argumentString, aStyleFilter.mFilterParameter);
+  if (aStyleFilter.GetType() == NS_STYLE_FILTER_DROP_SHADOW) {
+    // Handle drop-shadow()
+    nsRefPtr<CSSValue> shadowValue =
+      GetCSSShadowArray(aStyleFilter.GetDropShadow(),
+                        StyleColor()->mColor,
+                        false);
+    ErrorResult dummy;
+    shadowValue->GetCssText(argumentString, dummy);
+  } else {
+    // Filter function argument.
+    SetCssTextToCoord(argumentString, aStyleFilter.GetFilterParameter());
+  }
   filterFunctionString.Append(argumentString);
 
   // Filter function closing parenthesis.
@@ -4574,8 +4560,7 @@ nsComputedDOMStyle::DoGetFilter()
 
   nsDOMCSSValueList* valueList = GetROCSSValueList(false);
   for(uint32_t i = 0; i < filters.Length(); i++) {
-    nsROCSSPrimitiveValue* value =
-      CreatePrimitiveValueForStyleFilter(filters[i]);
+    CSSValue* value = CreatePrimitiveValueForStyleFilter(filters[i]);
     valueList->AppendCSSValue(value);
   }
   return valueList;
@@ -5057,6 +5042,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(max_width,              MaxWidth),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(min_height,             MinHeight),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(min_width,              MinWidth),
+    COMPUTED_STYLE_MAP_ENTRY(mix_blend_mode,                MixBlendMode),
     COMPUTED_STYLE_MAP_ENTRY(opacity,                       Opacity),
     // COMPUTED_STYLE_MAP_ENTRY(orphans,                    Orphans),
     //// COMPUTED_STYLE_MAP_ENTRY(outline,                  Outline),

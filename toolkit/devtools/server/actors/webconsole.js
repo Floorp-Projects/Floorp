@@ -12,32 +12,28 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "ConsoleServiceListener",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIListener",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "ConsoleProgressListener",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "JSTermHelpers",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "JSPropertyProvider",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "NetworkMonitor",
-                                  "resource://gre/modules/devtools/WebConsoleUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIStorage",
                                   "resource://gre/modules/ConsoleAPIStorage.jsm");
+
+for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
+                  "ConsoleAPIListener", "ConsoleProgressListener",
+                  "JSTermHelpers", "JSPropertyProvider", "NetworkMonitor"]) {
+  Object.defineProperty(this, name, {
+    get: function(prop) {
+      if (prop == "WebConsoleUtils") {
+        prop = "Utils";
+      }
+      return devtools.require("devtools/toolkit/webconsole/utils")[prop];
+    }.bind(null, name),
+    configurable: true,
+    enumerable: true
+  });
+}
 
 
 /**
@@ -1004,7 +1000,7 @@ WebConsoleActor.prototype =
    * is about to be recorded.
    *
    * @see NetworkEventActor
-   * @see NetworkMonitor from WebConsoleUtils.jsm
+   * @see NetworkMonitor from webconsole/utils.js
    *
    * @param object aEvent
    *        The initial network request event information.

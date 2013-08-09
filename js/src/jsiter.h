@@ -156,7 +156,7 @@ class ElementIteratorObject : public JSObject
         NumSlots
     };
 
-    static JSBool next(JSContext *cx, unsigned argc, Value *vp);
+    static bool next(JSContext *cx, unsigned argc, Value *vp);
     static bool next_impl(JSContext *cx, JS::CallArgs args);
 };
 
@@ -203,7 +203,7 @@ UnwindIteratorForException(JSContext *cx, js::HandleObject obj);
 void
 UnwindIteratorForUncatchableException(JSContext *cx, JSObject *obj);
 
-JSBool
+bool
 IteratorConstructor(JSContext *cx, unsigned argc, Value *vp);
 
 }

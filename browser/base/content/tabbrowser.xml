@@ -9,6 +9,11 @@
 %tabBrowserDTD;
 ]>
 
+# MAKE_E10S_WORK surrounds code needed to have the front-end try to be smart
+# about using non-remote browsers for loading certain URIs when remote tabs
+# (browser.tabs.remote) are enabled.
+#define MAKE_E10S_WORK 1
+
 <bindings id="tabBrowserBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -168,6 +173,10 @@
           findBar._findField.value = this._lastFindValue;
 
           aTab._findBar = findBar;
+
+          let event = document.createEvent("Events");
+          event.initEvent("TabFindInitialized", true, false);
+          aTab.dispatchEvent(event);
 
           return findBar;
         ]]></body>
@@ -1300,6 +1309,73 @@
         ]]></body>
       </method>
 
+#ifdef MAKE_E10S_WORK
+      <method name="_updateBrowserRemoteness">
+        <parameter name="aBrowser"/>
+        <parameter name="aRemote"/>
+        <body>
+          <![CDATA[
+            let isRemote = aBrowser.getAttribute("remote") == "true";
+            if (isRemote == aRemote)
+              return;
+
+            // Unhook our progress listener.
+            let tab = this._getTabForBrowser(aBrowser);
+            let index = tab._tPos;
+            let filter = this.mTabFilters[index];
+            aBrowser.webProgress.removeProgressListener(filter);
+
+            // Change the "remote" attribute.
+            let parent = aBrowser.parentNode;
+            parent.removeChild(aBrowser);
+            aBrowser.setAttribute("remote", aRemote ? "true" : "false");
+            parent.appendChild(aBrowser);
+
+            // Restore the progress listener.
+            aBrowser.webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
+
+            if (aRemote)
+              tab.setAttribute("remote", "true");
+            else
+              tab.removeAttribute("remote");
+          ]]>
+        </body>
+      </method>
+
+      <!--
+        Returns true if we want to load the content for this URL in a
+        remote process. Eventually this should just check whether aURL
+        is unprivileged. Right now, though, we would like to load
+        some unprivileged URLs (like about:neterror) in the main
+        process since they interact with chrome code through
+        BrowserOnClick.
+      -->
+      <method name="_shouldBrowserBeRemote">
+        <parameter name="aURL"/>
+        <body>
+          <![CDATA[
+            if (!gMultiProcessBrowser)
+              return false;
+
+            // loadURI in browser.xml treats null as about:blank
+            if (!aURL)
+              aURL = "about:blank";
+
+            if (aURL.startsWith("about:") &&
+                aURL.toLowerCase() != "about:home" &&
+                aURL.toLowerCase() != "about:blank") {
+              return false;
+            }
+
+            if (aURL.startsWith("chrome:"))
+              return false;
+
+            return true;
+          ]]>
+        </body>
+      </method>
+#endif
+
       <method name="addTab">
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
@@ -1346,6 +1422,14 @@
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
 
+#ifdef MAKE_E10S_WORK
+            let remote = this._shouldBrowserBeRemote(aURI);
+#else
+            let remote = gMultiProcessBrowser;
+#endif
+            if (remote)
+              t.setAttribute("remote", "true");
+
             this.tabContainer._unlockTabSizing();
 
             // When overflowing, new tabs are scrolled into view smoothly, which
@@ -1379,10 +1463,8 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
 
-            if (Services.prefs.getPrefType("browser.tabs.remote") == Services.prefs.PREF_BOOL &&
-                Services.prefs.getBoolPref("browser.tabs.remote")) {
+            if (remote)
               b.setAttribute("remote", "true");
-            }
 
             if (window.gShowPageResizers && document.getElementById("addon-bar").collapsed &&
                 window.windowState == window.STATE_NORMAL) {
@@ -2554,7 +2636,18 @@
         <parameter name="aCharset"/>
         <body>
           <![CDATA[
+#ifdef MAKE_E10S_WORK
+            this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(aURI));
+            try {
+#endif
             return this.mCurrentBrowser.loadURI(aURI, aReferrerURI, aCharset);
+#ifdef MAKE_E10S_WORK
+            } catch (e) {
+              let url = this.mCurrentBrowser.currentURI.spec;
+              this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(url));
+              throw e;
+            }
+#endif
           ]]>
         </body>
       </method>
@@ -2568,7 +2661,18 @@
         <parameter name="aPostData"/>
         <body>
           <![CDATA[
+#ifdef MAKE_E10S_WORK
+            this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(aURI));
+            try {
+#endif
             return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData);
+#ifdef MAKE_E10S_WORK
+            } catch (e) {
+              let url = this.mCurrentBrowser.currentURI.spec;
+              this._updateBrowserRemoteness(this.mCurrentBrowser, this._shouldBrowserBeRemote(url));
+              throw e;
+            }
+#endif
           ]]>
         </body>
       </method>
@@ -2806,6 +2910,16 @@
               let titleChanged = this.setTabTitle(tab);
               if (titleChanged && !tab.selected && !tab.hasAttribute("busy"))
                 tab.setAttribute("titlechanged", "true");
+              break;
+            case "contextmenu":
+              gContextMenuContentData = { event: aMessage.objects.event,
+                                          browser: browser };
+              let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
+              popup.openPopup(browser, "overlap",
+                              gContextMenuContentData.event.clientX,
+                              gContextMenuContentData.event.clientY,
+                              true, false, null);
+              break;
           }
         ]]></body>
       </method>
@@ -2814,11 +2928,6 @@
         <![CDATA[
           let browserStack = document.getAnonymousElementByAttribute(this, "anonid", "browserStack");
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
-          if (Services.prefs.getBoolPref("browser.tabs.remote")) {
-            browserStack.removeChild(this.mCurrentBrowser);
-            this.mCurrentBrowser.setAttribute("remote", true);
-            browserStack.appendChild(this.mCurrentBrowser);
-          }
 
           this.mCurrentTab = this.tabContainer.firstChild;
           document.addEventListener("keypress", this, false);
@@ -2847,29 +2956,52 @@
           filter.addProgressListener(tabListener, nsIWebProgress.NOTIFY_ALL);
           this.mTabListeners[0] = tabListener;
           this.mTabFilters[0] = filter;
-          this.init();
+
+          try {
+            // We assume this can only fail because mCurrentBrowser's docShell
+            // hasn't been created, yet. This may be caused by code accessing
+            // gBrowser before the window has finished loading.
+            this._addProgressListenerForInitialTab();
+          } catch (e) {
+            // The binding was constructed too early, wait until the initial
+            // tab's document is ready, then add the progress listener.
+            this._waitForInitialContentDocument();
+          }
 
           this.style.backgroundColor =
             Services.prefs.getBoolPref("browser.display.use_system_colors") ?
               "-moz-default-background-color" :
               Services.prefs.getCharPref("browser.display.background_color");
 
-          if (Services.prefs.getBoolPref("browser.tabs.remote"))
+          if (Services.prefs.getBoolPref("browser.tabs.remote")) {
             messageManager.addMessageListener("DOMTitleChanged", this);
+            messageManager.addMessageListener("contextmenu", this);
+          }
         ]]>
       </constructor>
 
-      <method name="init">
+      <method name="_addProgressListenerForInitialTab">
         <body><![CDATA[
-          if (!this._initialProgressListenerAdded) {
-            this._initialProgressListenerAdded = true;
-            try {
-              this.webProgress.addProgressListener(this.mTabFilters[0], Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-            } catch (e) {
-              // The binding was constructed too early, need to try this again later. See bug 463384.
-              this._initialProgressListenerAdded = false;
+          this.webProgress.addProgressListener(this.mTabFilters[0], Ci.nsIWebProgress.NOTIFY_ALL);
+        ]]></body>
+      </method>
+
+      <method name="_waitForInitialContentDocument">
+        <body><![CDATA[
+          let obs = (subject, topic) => {
+            if (this.browsers[0].contentWindow == subject) {
+              Services.obs.removeObserver(obs, topic);
+              this._addProgressListenerForInitialTab();
             }
-          }
+          };
+
+          // We use content-document-global-created as an approximation for
+          // "docShell is initialized". We can do this because in the
+          // mTabProgressListener we care most about the STATE_STOP notification
+          // that will reset mBlank. That means it's important to at least add
+          // the progress listener before the initial about:blank load stops
+          // if we can't do it before the load starts.
+          Services.obs.addObserver(obs, "content-document-global-created", false);
         ]]></body>
       </method>
 
@@ -2890,8 +3022,10 @@
           document.removeEventListener("keypress", this, false);
           window.removeEventListener("sizemodechange", this, false);
 
-          if (Services.prefs.getBoolPref("browser.tabs.remote"))
+          if (Services.prefs.getBoolPref("browser.tabs.remote")) {
             messageManager.removeMessageListener("DOMTitleChanged", this);
+            messageManager.removeMessageListener("contextmenu", this);
+          }
         ]]>
       </destructor>
 

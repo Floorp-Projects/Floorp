@@ -21,7 +21,14 @@ function test() {
   gTestBrowser.addEventListener("load", pageLoad, true);
   setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableUpdatable.xml",
   function() {
-    prepareTest(testPart1, gHttpTestRoot + "plugin_test.html");
+    prepareTest(function() {
+        // Due to layout being async, "PluginBindAttached" may trigger later.
+        // This forces a layout flush, thus triggering it, and schedules the
+        // test so it is definitely executed afterwards.
+        gTestBrowser.contentDocument.getElementById('test').clientTop;
+        testPart1();
+      },
+      gHttpTestRoot + "plugin_test.html");
   });
 }
 

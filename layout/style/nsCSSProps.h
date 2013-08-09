@@ -437,6 +437,7 @@ public:
   static const int32_t kBackgroundRepeatKTable[];
   static const int32_t kBackgroundRepeatPartKTable[];
   static const int32_t kBackgroundSizeKTable[];
+  static const int32_t kBlendModeKTable[];
   static const int32_t kBorderCollapseKTable[];
   static const int32_t kBorderColorKTable[];
   static const int32_t kBorderImageRepeatKTable[];
@@ -449,6 +450,7 @@ public:
   static const int32_t kBoxPackKTable[];
   static const int32_t kDominantBaselineKTable[];
   static const int32_t kFillRuleKTable[];
+  static const int32_t kFilterFunctionKTable[];
   static const int32_t kImageRenderingKTable[];
   static const int32_t kShapeRenderingKTable[];
   static const int32_t kStrokeLinecapKTable[];
@@ -468,7 +470,8 @@ public:
   static const int32_t kContentKTable[];
   static const int32_t kCursorKTable[];
   static const int32_t kDirectionKTable[];
-  // Not const because we modify its entries when CSS prefs change.
+  // Not const because we modify its entries when the pref
+  // "layout.css.flexbox.enabled" changes:
   static int32_t kDisplayKTable[];
   static const int32_t kElevationKTable[];
   static const int32_t kEmptyCellsKTable[];

@@ -16,8 +16,8 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(26260ff8-6a9e-4bf5-9f61-93200f37e53a)]
-interface nsIDOMHTMLHRElement : nsIDOMHTMLElement
+[scriptable, uuid(30771953-b9f4-44de-b0fe-e490949af98b)]
+interface nsIDOMHTMLHRElement : nsISupports
 {
            attribute DOMString        align;
            attribute boolean          noShade;

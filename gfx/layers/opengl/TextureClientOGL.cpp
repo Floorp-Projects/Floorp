@@ -78,11 +78,12 @@ DeprecatedTextureClientSharedOGL::ReleaseResources()
   // care of this for us though.
 }
 
-void
+bool
 DeprecatedTextureClientSharedOGL::EnsureAllocated(gfx::IntSize aSize,
                                         gfxASurface::gfxContentType aContentType)
 {
   mSize = aSize;
+  return true;
 }
 
 

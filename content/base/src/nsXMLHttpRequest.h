@@ -272,11 +272,11 @@ private:
     RequestBody() : mType(Uninitialized)
     {
     }
-    RequestBody(mozilla::dom::ArrayBuffer* aArrayBuffer) : mType(ArrayBuffer)
+    RequestBody(const mozilla::dom::ArrayBuffer* aArrayBuffer) : mType(ArrayBuffer)
     {
       mValue.mArrayBuffer = aArrayBuffer;
     }
-    RequestBody(mozilla::dom::ArrayBufferView* aArrayBufferView) : mType(ArrayBufferView)
+    RequestBody(const mozilla::dom::ArrayBufferView* aArrayBufferView) : mType(ArrayBufferView)
     {
       mValue.mArrayBufferView = aArrayBufferView;
     }
@@ -312,8 +312,8 @@ private:
       InputStream
     };
     union Value {
-      mozilla::dom::ArrayBuffer* mArrayBuffer;
-      mozilla::dom::ArrayBufferView* mArrayBufferView;
+      const mozilla::dom::ArrayBuffer* mArrayBuffer;
+      const mozilla::dom::ArrayBufferView* mArrayBufferView;
       nsIDOMBlob* mBlob;
       nsIDocument* mDocument;
       const nsAString* mString;
@@ -359,11 +359,12 @@ public:
   {
     aRv = Send(Nullable<RequestBody>());
   }
-  void Send(mozilla::dom::ArrayBuffer& aArrayBuffer, ErrorResult& aRv)
+  void Send(const mozilla::dom::ArrayBuffer& aArrayBuffer, ErrorResult& aRv)
   {
     aRv = Send(RequestBody(&aArrayBuffer));
   }
-  void Send(mozilla::dom::ArrayBufferView& aArrayBufferView, ErrorResult& aRv)
+  void Send(const mozilla::dom::ArrayBufferView& aArrayBufferView,
+            ErrorResult& aRv)
   {
     aRv = Send(RequestBody(&aArrayBufferView));
   }

@@ -2949,7 +2949,7 @@ ASTSerializer::moduleOrFunctionBody(ParseNode *pn, TokenPos *pos, MutableHandleV
     return builder.blockStatement(elts, pos, dst);
 }
 
-static JSBool
+static bool
 reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2957,12 +2957,12 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                              "Reflect.parse", "0", "s");
-        return JS_FALSE;
+        return false;
     }
 
     RootedString src(cx, ToString<CanGC>(cx, args[0]));
     if (!src)
-        return JS_FALSE;
+        return false;
 
     ScopedJSFreePtr<char> filename;
     uint32_t lineno = 1;
@@ -2976,7 +2976,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         if (!arg.isObject()) {
             js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
                                      JSDVG_SEARCH_STACK, arg, NullPtr(), "not an object", NULL);
-            return JS_FALSE;
+            return false;
         }
 
         RootedObject config(cx, &arg.toObject());
@@ -2987,7 +2987,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         RootedId locId(cx, NameToId(cx->names().loc));
         RootedValue trueVal(cx, BooleanValue(true));
         if (!baseops::GetPropertyDefault(cx, config, locId, trueVal, &prop))
-            return JS_FALSE;
+            return false;
 
         loc = ToBoolean(prop);
 
@@ -2996,22 +2996,22 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
             RootedId sourceId(cx, NameToId(cx->names().source));
             RootedValue nullVal(cx, NullValue());
             if (!baseops::GetPropertyDefault(cx, config, sourceId, nullVal, &prop))
-                return JS_FALSE;
+                return false;
 
             if (!prop.isNullOrUndefined()) {
                 RootedString str(cx, ToString<CanGC>(cx, prop));
                 if (!str)
-                    return JS_FALSE;
+                    return false;
 
                 size_t length = str->length();
                 const jschar *chars = str->getChars(cx);
                 if (!chars)
-                    return JS_FALSE;
+                    return false;
 
                 TwoByteChars tbchars(chars, length);
                 filename = LossyTwoByteCharsToNewLatin1CharsZ(cx, tbchars).c_str();
                 if (!filename)
-                    return JS_FALSE;
+                    return false;
             }
 
             /* config.line */
@@ -3019,7 +3019,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
             RootedValue oneValue(cx, Int32Value(1));
             if (!baseops::GetPropertyDefault(cx, config, lineId, oneValue, &prop) ||
                 !ToUint32(cx, prop, &lineno)) {
-                return JS_FALSE;
+                return false;
             }
         }
 
@@ -3027,13 +3027,13 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         RootedId builderId(cx, NameToId(cx->names().builder));
         RootedValue nullVal(cx, NullValue());
         if (!baseops::GetPropertyDefault(cx, config, builderId, nullVal, &prop))
-            return JS_FALSE;
+            return false;
 
         if (!prop.isNullOrUndefined()) {
             if (!prop.isObject()) {
                 js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
                                          JSDVG_SEARCH_STACK, prop, NullPtr(), "not an object", NULL);
-                return JS_FALSE;
+                return false;
             }
             builder = &prop.toObject();
         }
@@ -3042,11 +3042,11 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     /* Extract the builder methods first to report errors before parsing. */
     ASTSerializer serialize(cx, loc, filename, lineno);
     if (!serialize.init(builder))
-        return JS_FALSE;
+        return false;
 
     JSStableString *stable = src->ensureStable(cx);
     if (!stable)
-        return JS_FALSE;
+        return false;
 
     const StableCharPtr chars = stable->chars();
     size_t length = stable->length();
@@ -3060,16 +3060,16 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 
     ParseNode *pn = parser.parse(NULL);
     if (!pn)
-        return JS_FALSE;
+        return false;
 
     RootedValue val(cx);
     if (!serialize.program(pn, &val)) {
         args.rval().setNull();
-        return JS_FALSE;
+        return false;
     }
 
     args.rval().set(val);
-    return JS_TRUE;
+    return true;
 }
 
 static const JSFunctionSpec static_methods[] = {

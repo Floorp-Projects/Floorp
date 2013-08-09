@@ -254,6 +254,10 @@ FENNEC_JAVA_FILES = \
   menu/MenuPanel.java \
   menu/MenuPopup.java \
   preferences/SearchPreferenceCategory.java \
+  preferences/SearchEnginePreference.java \
+  widget/AboutHome.java \
+  widget/AboutHomeView.java \
+  widget/AboutHomeSection.java \
   widget/ActivityChooserModel.java \
   widget/ButtonToast.java \
   widget/ArrowPopup.java \
@@ -487,6 +491,7 @@ RES_LAYOUT = \
   res/layout/notification_progress_text.xml \
   res/layout/pin_bookmark_dialog.xml \
   res/layout/preference_rightalign_icon.xml \
+  res/layout/preference_search_tip.xml \
   res/layout/search_engine_row.xml \
   res/layout/site_setting_item.xml \
   res/layout/site_setting_title.xml \
@@ -608,6 +613,7 @@ RES_ANIM = \
   res/anim/popup_hide.xml \
   res/anim/grow_fade_in.xml \
   res/anim/grow_fade_in_center.xml \
+  res/anim/progress_spinner.xml \
   res/anim/shrink_fade_out.xml \
   $(NULL)
 
@@ -648,18 +654,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/icon_most_recent.png \
   res/drawable-mdpi/icon_most_visited.png \
   res/drawable-mdpi/icon_pageaction.png \
-  res/drawable-mdpi/progress_spinner_1.png \
-  res/drawable-mdpi/progress_spinner_2.png \
-  res/drawable-mdpi/progress_spinner_3.png \
-  res/drawable-mdpi/progress_spinner_4.png \
-  res/drawable-mdpi/progress_spinner_5.png \
-  res/drawable-mdpi/progress_spinner_6.png \
-  res/drawable-mdpi/progress_spinner_7.png \
-  res/drawable-mdpi/progress_spinner_8.png \
-  res/drawable-mdpi/progress_spinner_9.png \
-  res/drawable-mdpi/progress_spinner_10.png \
-  res/drawable-mdpi/progress_spinner_11.png \
-  res/drawable-mdpi/progress_spinner_12.png \
+  res/drawable-mdpi/progress_spinner.png \
   res/drawable-mdpi/tab_indicator_divider.9.png \
   res/drawable-mdpi/tab_indicator_selected.9.png \
   res/drawable-mdpi/tab_indicator_selected_focused.9.png \
@@ -678,6 +673,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/url_bar_entry_default_pb.9.png \
   res/drawable-mdpi/url_bar_entry_pressed.9.png \
   res/drawable-mdpi/url_bar_entry_pressed_pb.9.png \
+  res/drawable-mdpi/tip_addsearch.png \
   res/drawable-mdpi/toast.9.png \
   res/drawable-mdpi/toast_button_focused.9.png \
   res/drawable-mdpi/toast_button_pressed.9.png \
@@ -783,6 +779,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/url_bar_entry_default_pb.9.png \
   res/drawable-hdpi/url_bar_entry_pressed.9.png \
   res/drawable-hdpi/url_bar_entry_pressed_pb.9.png \
+  res/drawable-hdpi/tip_addsearch.png \
   res/drawable-hdpi/find_close.png \
   res/drawable-hdpi/find_next.png \
   res/drawable-hdpi/find_prev.png \
@@ -868,6 +865,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/tab_thumbnail_shadow.png \
   res/drawable-xhdpi/tabs_count.png \
   res/drawable-xhdpi/tabs_count_foreground.png \
+  res/drawable-xhdpi/tip_addsearch.png \
   res/drawable-xhdpi/find_close.png \
   res/drawable-xhdpi/find_next.png \
   res/drawable-xhdpi/find_prev.png \
@@ -1085,7 +1083,6 @@ RES_DRAWABLE += \
   res/drawable/ic_menu_quit.xml                       \
   res/drawable/menu_item_state.xml                    \
   res/drawable/menu_level.xml                         \
-  res/drawable/progress_spinner.xml                   \
   res/drawable/remote_tabs_child_divider.xml          \
   res/drawable/shaped_button.xml                      \
   res/drawable/site_security_level.xml                \

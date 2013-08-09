@@ -112,7 +112,6 @@
 #include "nsHTMLDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIRequest.h"
-#include "nsILink.h"
 #include "nsHostObjectProtocolHandler.h"
 
 #include "nsCharsetAlias.h"
@@ -149,6 +148,7 @@
 #include "nsObjectLoadingContent.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsIDOMElementReplaceEvent.h"
+#include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #ifdef MOZ_WEBRTC
 #include "IPeerConnection.h"
@@ -194,6 +194,7 @@
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/UndoManager.h"
 #include "nsFrame.h"
@@ -1952,15 +1953,6 @@ nsDocument::Init()
   mRadioGroups.Init();
   mCustomPrototypes.Init();
 
-  // If after creation the owner js global is not set for a document
-  // we use the default compartment for this document, instead of creating
-  // wrapper in some random compartment when the document is exposed to js
-  // via some events.
-  nsCOMPtr<nsIGlobalObject> global = xpc::GetJunkScopeGlobal();
-  NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-  mScopeObject = do_GetWeakReference(global);
-  MOZ_ASSERT(mScopeObject);
-
   // Force initialization.
   nsINode::nsSlots* slots = Slots();
 
@@ -1990,6 +1982,15 @@ nsDocument::Init()
                     "Bad NodeType in aNodeInfo");
 
   NS_ASSERTION(OwnerDoc() == this, "Our nodeinfo is busted!");
+
+  // If after creation the owner js global is not set for a document
+  // we use the default compartment for this document, instead of creating
+  // wrapper in some random compartment when the document is exposed to js
+  // via some events.
+  nsCOMPtr<nsIGlobalObject> global = xpc::GetJunkScopeGlobal();
+  NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+  mScopeObject = do_GetWeakReference(global);
+  MOZ_ASSERT(mScopeObject);
 
   mScriptLoader = new nsScriptLoader(this);
 
@@ -2544,37 +2545,26 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   }
 
   // Figure out if we need to apply an app default CSP or a CSP from an app manifest
-  bool applyAppDefaultCSP = false;
-  bool applyAppManifestCSP = false;
-
   nsIPrincipal* principal = NodePrincipal();
 
-  bool unknownAppId;
-  uint16_t appStatus = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-  nsAutoString appManifestCSP;
-  if (NS_SUCCEEDED(principal->GetUnknownAppId(&unknownAppId)) &&
-      !unknownAppId &&
-      NS_SUCCEEDED(principal->GetAppStatus(&appStatus))) {
-    applyAppDefaultCSP = ( appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED ||
-                           appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
+  uint16_t appStatus = principal->GetAppStatus();
+  bool applyAppDefaultCSP = appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED ||
+                            appStatus == nsIPrincipal::APP_STATUS_CERTIFIED;
+  bool applyAppManifestCSP = false;
 
-    if (appStatus != nsIPrincipal::APP_STATUS_NOT_INSTALLED) {
-      nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
-      if (appsService) {
-        uint32_t appId = 0;
-        if (NS_SUCCEEDED(principal->GetAppId(&appId))) {
-          appsService->GetCSPByLocalId(appId, appManifestCSP);
-          if (!appManifestCSP.IsEmpty()) {
-            applyAppManifestCSP = true;
-          }
+  nsAutoString appManifestCSP;
+  if (appStatus != nsIPrincipal::APP_STATUS_NOT_INSTALLED) {
+    nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
+    if (appsService) {
+      uint32_t appId = 0;
+      if (NS_SUCCEEDED(principal->GetAppId(&appId))) {
+        appsService->GetCSPByLocalId(appId, appManifestCSP);
+        if (!appManifestCSP.IsEmpty()) {
+          applyAppManifestCSP = true;
         }
       }
     }
   }
-#ifdef PR_LOGGING
-  else
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("Failed to get app status from principal"));
-#endif
 
   // If there's no CSP to apply, go ahead and return early
   if (!applyAppDefaultCSP &&
@@ -5155,7 +5145,7 @@ nsIDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
   return attribute.forget();
 }
 
-static JSBool
+static bool
 CustomElementConstructor(JSContext *aCx, unsigned aArgc, JS::Value* aVp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
@@ -6704,6 +6694,14 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
         int32_t idx = parent->IndexOf(adoptedNode);
         MOZ_ASSERT(idx >= 0);
         parent->RemoveChildAt(idx, true);
+      } else {
+        MOZ_ASSERT(!adoptedNode->IsInDoc());
+
+        // If we're adopting a node that's not in a document, it might still
+        // have a binding applied. Remove the binding from the element now
+        // that it's getting adopted into a new document.
+        // TODO Fully tear down the binding.
+        adoptedNode->AsContent()->SetXBLBinding(nullptr);
       }
 
       break;
@@ -7582,7 +7580,7 @@ nsDocument::Sanitize()
   for (uint32_t i = 0; i < length; ++i) {
     NS_ASSERTION(nodes->Item(i), "null item in node list!");
 
-    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(nodes->Item(i));
+    nsRefPtr<HTMLInputElement> input = HTMLInputElement::FromContentOrNull(nodes->Item(i));
     if (!input)
       continue;
 
@@ -7598,8 +7596,7 @@ nsDocument::Sanitize()
     }
 
     if (resetValue) {
-      nsCOMPtr<nsIFormControl> fc = do_QueryInterface(input);
-      fc->Reset();
+      input->Reset();
     }
   }
 
@@ -7614,7 +7611,8 @@ nsDocument::Sanitize()
     if (!form)
       continue;
 
-    form->GetAttribute(NS_LITERAL_STRING("autocomplete"), value);
+    nodes->Item(i)->AsElement()->GetAttr(kNameSpaceID_None,
+                                         nsGkAtoms::autocomplete, value);
     if (value.LowerCaseEqualsLiteral("off"))
       form->Reset();
   }
@@ -8058,15 +8056,12 @@ nsDocument::OnPageShow(bool aPersisted,
   if (aPersisted && root) {
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
-                                                      kNameSpaceID_Unknown,
+                                                      kNameSpaceID_XHTML,
                                                       NS_LITERAL_STRING("link"));
 
     uint32_t linkCount = links->Length(true);
     for (uint32_t i = 0; i < linkCount; ++i) {
-      nsCOMPtr<nsILink> link = do_QueryInterface(links->Item(i, false));
-      if (link) {
-        link->LinkAdded();
-      }
+      static_cast<HTMLLinkElement*>(links->Item(i, false))->LinkAdded();
     }
   }
 
@@ -8122,15 +8117,12 @@ nsDocument::OnPageHide(bool aPersisted,
   Element* root = GetRootElement();
   if (aPersisted && root) {
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
-                                                      kNameSpaceID_Unknown,
+                                                      kNameSpaceID_XHTML,
                                                       NS_LITERAL_STRING("link"));
 
     uint32_t linkCount = links->Length(true);
     for (uint32_t i = 0; i < linkCount; ++i) {
-      nsCOMPtr<nsILink> link = do_QueryInterface(links->Item(i, false));
-      if (link) {
-        link->LinkRemoved();
-      }
+      static_cast<HTMLLinkElement*>(links->Item(i, false))->LinkRemoved();
     }
   }
 

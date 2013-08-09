@@ -696,6 +696,8 @@ ion::MergeTypes(MIRType *ptype, types::StackTypeSet **ptypeSet,
             if (!*ptypeSet)
                 *ptypeSet = MakeMIRTypeSet(*ptype);
             *ptype = MIRType_Value;
+        } else if (*ptypeSet && (*ptypeSet)->empty()) {
+            *ptype = newType;
         }
     }
     if (*ptypeSet) {
@@ -1922,6 +1924,10 @@ MToDouble::foldsTo(bool useValueNumbers)
             return MConstant::New(DoubleValue(out));
         }
     }
+
+    // Fold unnecessary numeric conversions.
+    if (input()->isToInt32())
+        replaceOperand(0, input()->getOperand(0));
 
     return this;
 }

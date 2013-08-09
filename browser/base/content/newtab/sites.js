@@ -144,10 +144,6 @@ Site.prototype = {
   refreshThumbnail: function Site_refreshThumbnail() {
     let thumbnailURL = PageThumbs.getThumbnailURL(this.url);
     let thumbnail = this._querySelector(".newtab-thumbnail");
-    // if this is being called due to the thumbnail being updated we will
-    // be setting it to the same value it had before.  To be confident the
-    // change wont be optimized away we remove the property first.
-    thumbnail.style.removeProperty("backgroundImage");
     thumbnail.style.backgroundImage = "url(" + thumbnailURL + ")";
   },
 

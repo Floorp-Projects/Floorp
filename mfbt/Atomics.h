@@ -43,12 +43,17 @@
 #  endif
 /*
  * Android uses a different C++ standard library that does not provide
- * support for <atomic>
+ * support for <atomic>.
+ *
+ * GCC 4.5.x and 4.6.x's unspecialized std::atomic template doesn't include
+ * inline definitions for the functions declared therein.  This oversight
+ * leads to linking errors when using atomic enums.  We therefore require
+ * GCC 4.7 or higher.
  */
 #elif defined(__GNUC__) && !defined(__ANDROID__)
 #  include "mozilla/Compiler.h"
 #  if (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L) && \
-      MOZ_GCC_VERSION_AT_LEAST(4, 5, 2)
+      MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
 #    define MOZ_HAVE_CXX11_ATOMICS
 #  endif
 #elif defined(_MSC_VER) && _MSC_VER >= 1700

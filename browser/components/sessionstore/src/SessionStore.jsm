@@ -112,8 +112,6 @@ let gDocShellCapabilities = (function () {
   };
 })();
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
   "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
@@ -313,9 +311,6 @@ let SessionStoreInternal = {
   // states for all recently closed windows
   _closedWindows: [],
 
-  // not-"dirty" windows usually don't need to have their data updated
-  _dirtyWindows: {},
-
   // collection of session states yet to be restored
   _statesToRestore: {},
 
@@ -348,16 +343,6 @@ let SessionStoreInternal = {
   // True if session store is disabled by multi-process browsing.
   // See bug 516755.
   _disabledForMultiProcess: false,
-
-  // The original "sessionstore.resume_session_once" preference value before it
-  // was modified by saveState.  saveState will set the
-  // "sessionstore.resume_session_once" to true when the
-  // the "sessionstore.resume_from_crash" preference is false (crash recovery
-  // is disabled) so that pinned tabs will be restored in the case of a
-  // crash.  This variable is used to restore the original value so the
-  // previous session is not always restored when
-  // "sessionstore.resume_from_crash" is true.
-  _resume_session_once_on_shutdown: null,
 
   /**
    * A promise fulfilled once initialization is complete.
@@ -500,8 +485,6 @@ let SessionStoreInternal = {
         this._prefBranch.getBoolPref("sessionstore.resume_session_once"))
       this._prefBranch.setBoolPref("sessionstore.resume_session_once", false);
 
-    this._initEncoding();
-
     this._performUpgradeBackup();
 
     this._sessionInitialized = true;
@@ -536,13 +519,6 @@ let SessionStoreInternal = {
     }.bind(this));
   },
 
-  _initEncoding : function ssi_initEncoding() {
-    // The (UTF-8) encoder used to write to files.
-    XPCOMUtils.defineLazyGetter(this, "_writeFileEncoder", function () {
-      return new TextEncoder();
-    });
-  },
-
   _initPrefs : function() {
     this._prefBranch = Services.prefs.getBranch("browser.");
 
@@ -557,13 +533,6 @@ let SessionStoreInternal = {
       // used often, so caching/observing instead of fetching on-demand
       this._prefBranch.addObserver("sessionstore.interval", this, true);
       return this._prefBranch.getIntPref("sessionstore.interval");
-    });
-
-    // when crash recovery is disabled, session data is not written to disk
-    XPCOMUtils.defineLazyGetter(this, "_resume_from_crash", function () {
-      // get crash recovery state from prefs and allow for proper reaction to state changes
-      this._prefBranch.addObserver("sessionstore.resume_from_crash", this, true);
-      return this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
     });
 
     XPCOMUtils.defineLazyGetter(this, "_max_tabs_undo", function () {
@@ -1019,7 +988,7 @@ let SessionStoreInternal = {
     var activeWindow = this._getMostRecentBrowserWindow();
     if (activeWindow)
       this.activeWindowSSiCache = activeWindow.__SSi || "";
-    this._dirtyWindows = [];
+    DirtyWindows.clear();
   },
 
   /**
@@ -1056,15 +1025,6 @@ let SessionStoreInternal = {
       // perform any other sanitization processing on a restart as the
       // browser is about to exit anyway.
       Services.obs.removeObserver(this, "browser:purge-session-history");
-    }
-    else if (this._resume_session_once_on_shutdown != null) {
-      // if the sessionstore.resume_session_once preference was changed by
-      // saveState because crash recovery is disabled then restore the
-      // preference back to the value it was prior to that.  This will prevent
-      // SessionStore from always restoring the session when crash recovery is
-      // disabled.
-      this._prefBranch.setBoolPref("sessionstore.resume_session_once",
-                                   this._resume_session_once_on_shutdown);
     }
 
     if (aData != "restart") {
@@ -1211,20 +1171,6 @@ let SessionStoreInternal = {
           this._saveTimer = null;
         }
         this.saveStateDelayed(null, -1);
-        break;
-      case "sessionstore.resume_from_crash":
-        this._resume_from_crash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
-        // restore original resume_session_once preference if set in saveState
-        if (this._resume_session_once_on_shutdown != null) {
-          this._prefBranch.setBoolPref("sessionstore.resume_session_once",
-                                       this._resume_session_once_on_shutdown);
-          this._resume_session_once_on_shutdown = null;
-        }
-        // either create the file with crash recovery information or remove it
-        // (when _loadState is not STATE_RUNNING, that file is used for session resuming instead)
-        if (!this._resume_from_crash)
-          _SessionFile.wipe();
-        this.saveState(true);
         break;
     }
   },
@@ -2574,11 +2520,9 @@ let SessionStoreInternal = {
    * gather session data as object
    * @param aUpdateAll
    *        Bool update all windows
-   * @param aPinnedOnly
-   *        Bool collect pinned tabs only
    * @returns object
    */
-  _getCurrentState: function ssi_getCurrentState(aUpdateAll, aPinnedOnly) {
+  _getCurrentState: function ssi_getCurrentState(aUpdateAll) {
     this._handleClosedWindows();
 
     var activeWindow = this._getMostRecentBrowserWindow();
@@ -2588,14 +2532,14 @@ let SessionStoreInternal = {
       this._forEachBrowserWindow(function(aWindow) {
         if (!this._isWindowLoaded(aWindow)) // window data is still in _statesToRestore
           return;
-        if (aUpdateAll || this._dirtyWindows[aWindow.__SSi] || aWindow == activeWindow) {
+        if (aUpdateAll || DirtyWindows.has(aWindow) || aWindow == activeWindow) {
           this._collectWindowData(aWindow);
         }
         else { // always update the window features (whose change alone never triggers a save operation)
           this._updateWindowFeatures(aWindow);
         }
       });
-      this._dirtyWindows = [];
+      DirtyWindows.clear();
     }
 
     // collect the data for all windows
@@ -2640,24 +2584,6 @@ let SessionStoreInternal = {
       } while (total[0].isPopup && lastClosedWindowsCopy.length > 0)
     }
 #endif
-
-    if (aPinnedOnly) {
-      // perform a deep copy so that existing session variables are not changed.
-      total = JSON.parse(this._toJSONString(total));
-      total = total.filter(function (win) {
-        win.tabs = win.tabs.filter(function (tab) tab.pinned);
-        // remove closed tabs
-        win._closedTabs = [];
-        // correct selected tab index if it was stripped out
-        if (win.selected > win.tabs.length)
-          win.selected = 1;
-        return win.tabs.length > 0;
-      });
-      if (total.length == 0)
-        return null;
-
-      lastClosedWindowsCopy = [];
-    }
 
     if (activeWindow) {
       this.activeWindowSSiCache = activeWindow.__SSi || "";
@@ -2744,7 +2670,7 @@ let SessionStoreInternal = {
       this._windows[aWindow.__SSi].__lastSessionWindowID =
         aWindow.__SS_lastSessionWindowID;
 
-    this._dirtyWindows[aWindow.__SSi] = false;
+    DirtyWindows.remove(aWindow);
   },
 
   /* ........ Restoring Functionality .............. */
@@ -3069,6 +2995,10 @@ let SessionStoreInternal = {
       delete this._statesToRestore[aWindow.__SS_restoreID];
       delete aWindow.__SS_restoreID;
       delete this._windows[aWindow.__SSi]._restoring;
+
+      // It's important to set the window state to dirty so that
+      // we collect their data for the first time when saving state.
+      DirtyWindows.add(aWindow);
     }
 
     if (aTabs.length == 0) {
@@ -3759,7 +3689,7 @@ let SessionStoreInternal = {
    */
   saveStateDelayed: function ssi_saveStateDelayed(aWindow = null, aDelay = 2000) {
     if (aWindow) {
-      this._dirtyWindows[aWindow.__SSi] = true;
+      DirtyWindows.add(aWindow);
     }
 
     if (!this._saveTimer) {
@@ -3786,12 +3716,10 @@ let SessionStoreInternal = {
   saveState: function ssi_saveState(aUpdateAll) {
     // If crash recovery is disabled, we only want to resume with pinned tabs
     // if we crash.
-    let pinnedOnly = this._loadState == STATE_RUNNING && !this._resume_from_crash;
-
     TelemetryStopwatch.start("FX_SESSION_RESTORE_COLLECT_DATA_MS");
     TelemetryStopwatch.start("FX_SESSION_RESTORE_COLLECT_DATA_LONGEST_OP_MS");
 
-    var oState = this._getCurrentState(aUpdateAll, pinnedOnly);
+    var oState = this._getCurrentState(aUpdateAll);
     if (!oState) {
       TelemetryStopwatch.cancel("FX_SESSION_RESTORE_COLLECT_DATA_MS");
       TelemetryStopwatch.cancel("FX_SESSION_RESTORE_COLLECT_DATA_LONGEST_OP_MS");
@@ -3841,19 +3769,6 @@ let SessionStoreInternal = {
     }
 #endif
 
-    if (pinnedOnly) {
-      // Save original resume_session_once preference for when quiting browser,
-      // otherwise session will be restored next time browser starts and we
-      // only want it to be restored in the case of a crash.
-      if (this._resume_session_once_on_shutdown == null) {
-        this._resume_session_once_on_shutdown =
-          this._prefBranch.getBoolPref("sessionstore.resume_session_once");
-        this._prefBranch.setBoolPref("sessionstore.resume_session_once", true);
-        // flush the preference file so preference will be saved in case of a crash
-        Services.prefs.savePrefFile(null);
-      }
-    }
-
     // Persist the last session if we deferred restoring it
     if (this._lastSessionState)
       oState.lastSessionState = this._lastSessionState;
@@ -3884,8 +3799,7 @@ let SessionStoreInternal = {
     }
 
     // Write (atomically) to a session file, using a tmp file.
-    let promise =
-      _SessionFile.write(data, {backupOnFirstWrite: this._resume_from_crash});
+    let promise = _SessionFile.write(data);
 
     // Once the session file is successfully updated, save the time stamp of the
     // last save and notify the observers.
@@ -4760,6 +4674,28 @@ let DyingWindowCache = {
 
   remove: function (window) {
     this._data.delete(window);
+  }
+};
+
+// A weak set of dirty windows. We use it to determine which windows we need to
+// recollect data for when _getCurrentState() is called.
+let DirtyWindows = {
+  _data: new WeakMap(),
+
+  has: function (window) {
+    return this._data.has(window);
+  },
+
+  add: function (window) {
+    return this._data.set(window, true);
+  },
+
+  remove: function (window) {
+    this._data.delete(window);
+  },
+
+  clear: function (window) {
+    this._data.clear();
   }
 };
 

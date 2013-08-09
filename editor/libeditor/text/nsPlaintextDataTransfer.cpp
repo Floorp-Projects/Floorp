@@ -322,7 +322,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
 NS_IMETHODIMP nsPlaintextEditor::Paste(int32_t aSelectionType)
 {
-  if (!FireClipboardEvent(NS_PASTE))
+  if (!FireClipboardEvent(NS_PASTE, aSelectionType))
     return NS_OK;
 
   // Get Clipboard Service
@@ -353,7 +353,9 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(int32_t aSelectionType)
 
 NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferable)
 {
-  if (!FireClipboardEvent(NS_PASTE))
+  // Use an invalid value for the clipboard type as data comes from aTransferable
+  // and we don't currently implement a way to put that in the data transfer yet.
+  if (!FireClipboardEvent(NS_PASTE, -1))
     return NS_OK;
 
   if (!IsModifiable())

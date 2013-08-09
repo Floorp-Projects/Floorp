@@ -169,17 +169,8 @@ HTMLMenuItemElement::~HTMLMenuItemElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(HTMLMenuItemElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLMenuItemElement, Element)
-
-
-// QueryInterface implementation for HTMLMenuItemElement
-NS_INTERFACE_TABLE_HEAD(HTMLMenuItemElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLMenuItemElement,
-                                nsIDOMHTMLMenuItemElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLMenuItemElement, nsGenericHTMLElement,
+                             nsIDOMHTMLMenuItemElement)
 
 //NS_IMPL_ELEMENT_CLONE(HTMLMenuItemElement)
 nsresult

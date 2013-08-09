@@ -690,6 +690,26 @@ const int32_t nsCSSProps::kBackgroundSizeKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kBlendModeKTable[] = {
+    eCSSKeyword_normal,      NS_STYLE_BLEND_NORMAL,
+    eCSSKeyword_multiply,    NS_STYLE_BLEND_MULTIPLY,
+    eCSSKeyword_screen,      NS_STYLE_BLEND_SCREEN,
+    eCSSKeyword_overlay,     NS_STYLE_BLEND_OVERLAY,
+    eCSSKeyword_darken,      NS_STYLE_BLEND_DARKEN,
+    eCSSKeyword_lighten,     NS_STYLE_BLEND_LIGHTEN,
+    eCSSKeyword_color_dodge, NS_STYLE_BLEND_COLOR_DODGE,
+    eCSSKeyword_color_burn,  NS_STYLE_BLEND_COLOR_BURN,
+    eCSSKeyword_hard_light,  NS_STYLE_BLEND_HARD_LIGHT,
+    eCSSKeyword_soft_light,  NS_STYLE_BLEND_SOFT_LIGHT,
+    eCSSKeyword_difference,  NS_STYLE_BLEND_DIFFERENCE,
+    eCSSKeyword_exclusion,   NS_STYLE_BLEND_EXCLUSION,
+    eCSSKeyword_hue,         NS_STYLE_BLEND_HUE,
+    eCSSKeyword_saturation,  NS_STYLE_BLEND_SATURATION,
+    eCSSKeyword_color,       NS_STYLE_BLEND_COLOR,
+    eCSSKeyword_luminosity,  NS_STYLE_BLEND_LUMINOSITY,
+    eCSSKeyword_UNKNOWN,-1
+};
+
 const int32_t nsCSSProps::kBorderCollapseKTable[] = {
   eCSSKeyword_collapse,  NS_STYLE_BORDER_COLLAPSE,
   eCSSKeyword_separate,  NS_STYLE_BORDER_SEPARATE,
@@ -1644,6 +1664,20 @@ const int32_t nsCSSProps::kDominantBaselineKTable[] = {
 const int32_t nsCSSProps::kFillRuleKTable[] = {
   eCSSKeyword_nonzero, NS_STYLE_FILL_RULE_NONZERO,
   eCSSKeyword_evenodd, NS_STYLE_FILL_RULE_EVENODD,
+  eCSSKeyword_UNKNOWN, -1
+};
+
+const int32_t nsCSSProps::kFilterFunctionKTable[] = {
+  eCSSKeyword_blur, NS_STYLE_FILTER_BLUR,
+  eCSSKeyword_brightness, NS_STYLE_FILTER_BRIGHTNESS,
+  eCSSKeyword_contrast, NS_STYLE_FILTER_CONTRAST,
+  eCSSKeyword_grayscale, NS_STYLE_FILTER_GRAYSCALE,
+  eCSSKeyword_invert, NS_STYLE_FILTER_INVERT,
+  eCSSKeyword_opacity, NS_STYLE_FILTER_OPACITY,
+  eCSSKeyword_saturate, NS_STYLE_FILTER_SATURATE,
+  eCSSKeyword_sepia, NS_STYLE_FILTER_SEPIA,
+  eCSSKeyword_hue_rotate, NS_STYLE_FILTER_HUE_ROTATE,
+  eCSSKeyword_drop_shadow, NS_STYLE_FILTER_DROP_SHADOW,
   eCSSKeyword_UNKNOWN, -1
 };
 

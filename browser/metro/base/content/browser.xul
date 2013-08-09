@@ -228,10 +228,7 @@
               <richgrid id="start-remotetabs-grid" set-name="remoteTabs" seltype="multiple" flex="1"/>
             </vbox>
 
-            <!-- Spacer to take extra space in snapped mode. -->
-            <spacer flex="999"/>
           </scrollbox>
-
         </hbox>
       </vbox> <!-- end tray -->
 
@@ -291,15 +288,13 @@
                            command="cmd_stop"/>
           </hbox>
 
-          <circularprogressindicator id="download-progress"
-                                     oncommand="Appbar.onDownloadButton()"/>
           <stack id="toolbar-contextual">
             <observes element="bcast_windowState" attribute="*"/>
             <observes element="bcast_urlbarState" attribute="*"/>
 
             <hbox id="toolbar-context-page" pack="end">
-              <toolbarbutton id="download-button" class="appbar-secondary"
-                             oncommand="Appbar.onDownloadButton()"/>
+              <circularprogressindicator id="download-progress"
+                                     oncommand="Appbar.onDownloadButton()"/>
               <toolbarbutton id="star-button" class="appbar-primary"
                              type="checkbox"
                              oncommand="Appbar.onStarButton()"/>
@@ -467,7 +462,7 @@
 #endif
 #endif
       <label id="about-policy-label"
-            onclick="if (event.button == 0) { Browser.onAboutPolicyClick(); }"
+            onclick="if (event.button == 0) { BrowserUI.onAboutPolicyClick(); }"
             class="text-link" value="&aboutHeader.policy.label;"/>
     </flyoutpanel>
 
@@ -721,11 +716,11 @@
         <setting pref="app.crashreporter.autosubmit" type="bool" title="&optionsHeader.reporting.crashes.label;" oncommand="BrowserUI.crashReportingPrefChanged(this.value);"/>
       </settings>
       <settings id="prefs-telemetry" label="&optionsHeader.telemetry.title;">
-        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;" oncommand="FlyoutPanelsUI.PrefsFlyoutPanel.onTelemetryPreferenceChanged(this.value);"/>
+        <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;"/>
       </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
         <description>&doNotTrack.desc;</description>
-        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" onpreferencechanged="FlyoutPanelsUI.PrefsFlyoutPanel.onDNTPreferenceChanged();" type="radio" >
+        <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" type="radio" >
           <radiogroup id="prefs-dnt-options">
             <radio id="prefs-dnt-notrack" label="&doNotTrack.options.trackingNotOkay;" value="1"/>
             <radio id="prefs-dnt-nopref" label="&doNotTrack.options.noPreference;" value="-1"/>
@@ -860,15 +855,6 @@
         <richlistbox id="menupopup-commands" onclick="if (event.target != this) AutofillMenuUI.selectByIndex(this.selectedIndex);" flex="1"/>
       </vbox>
     </box>
-
-    <!-- alerts for content -->
-    <hbox id="alerts-container" hidden="true" align="start" bottom="0" onclick="AlertsHelper.click(event);">
-      <image id="alerts-image"/>
-      <vbox flex="1">
-        <label id="alerts-title" value=""/>
-        <description id="alerts-text" flex="1"/>
-      </vbox>
-    </hbox>
   </stack>
 
 </window>

@@ -57,11 +57,11 @@ class ArrayBufferObject : public JSObject
     static Class protoClass;
     static const JSFunctionSpec jsfuncs[];
 
-    static JSBool byteLengthGetter(JSContext *cx, unsigned argc, Value *vp);
+    static bool byteLengthGetter(JSContext *cx, unsigned argc, Value *vp);
 
-    static JSBool fun_slice(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_slice(JSContext *cx, unsigned argc, Value *vp);
 
-    static JSBool class_constructor(JSContext *cx, unsigned argc, Value *vp);
+    static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
     static JSObject *create(JSContext *cx, uint32_t nbytes, uint8_t *contents = NULL);
 
@@ -69,13 +69,13 @@ class ArrayBufferObject : public JSObject
                                  uint32_t begin, uint32_t end);
 
     static bool createDataViewForThisImpl(JSContext *cx, CallArgs args);
-    static JSBool createDataViewForThis(JSContext *cx, unsigned argc, Value *vp);
+    static bool createDataViewForThis(JSContext *cx, unsigned argc, Value *vp);
 
     template<typename T>
     static bool createTypedArrayFromBufferImpl(JSContext *cx, CallArgs args);
 
     template<typename T>
-    static JSBool createTypedArrayFromBuffer(JSContext *cx, unsigned argc, Value *vp);
+    static bool createTypedArrayFromBuffer(JSContext *cx, unsigned argc, Value *vp);
 
     static void obj_trace(JSTracer *trc, JSObject *obj);
 
@@ -461,7 +461,7 @@ class DataViewObject : public ArrayBufferViewObject
     getterImpl(JSContext *cx, CallArgs args);
 
     template<Value ValueGetter(DataViewObject *view)>
-    static JSBool
+    static bool
     getter(JSContext *cx, unsigned argc, Value *vp);
 
     template<Value ValueGetter(DataViewObject *view)>
@@ -507,7 +507,7 @@ class DataViewObject : public ArrayBufferViewObject
         return getPrivate();
     }
 
-    static JSBool class_constructor(JSContext *cx, unsigned argc, Value *vp);
+    static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
     static JSBool constructWithProto(JSContext *cx, unsigned argc, Value *vp);
     static JSBool construct(JSContext *cx, JSObject *bufobj, const CallArgs &args,
                             HandleObject proto);
@@ -517,52 +517,52 @@ class DataViewObject : public ArrayBufferViewObject
            Handle<ArrayBufferObject*> arrayBuffer, JSObject *proto);
 
     static bool getInt8Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_getInt8(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_getInt8(JSContext *cx, unsigned argc, Value *vp);
 
     static bool getUint8Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_getUint8(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_getUint8(JSContext *cx, unsigned argc, Value *vp);
 
     static bool getInt16Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_getInt16(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_getInt16(JSContext *cx, unsigned argc, Value *vp);
 
     static bool getUint16Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_getUint16(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_getUint16(JSContext *cx, unsigned argc, Value *vp);
 
     static bool getInt32Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_getInt32(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_getInt32(JSContext *cx, unsigned argc, Value *vp);
 
     static bool getUint32Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_getUint32(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_getUint32(JSContext *cx, unsigned argc, Value *vp);
 
     static bool getFloat32Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_getFloat32(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_getFloat32(JSContext *cx, unsigned argc, Value *vp);
 
     static bool getFloat64Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_getFloat64(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_getFloat64(JSContext *cx, unsigned argc, Value *vp);
 
     static bool setInt8Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_setInt8(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_setInt8(JSContext *cx, unsigned argc, Value *vp);
 
     static bool setUint8Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_setUint8(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_setUint8(JSContext *cx, unsigned argc, Value *vp);
 
     static bool setInt16Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_setInt16(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_setInt16(JSContext *cx, unsigned argc, Value *vp);
 
     static bool setUint16Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_setUint16(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_setUint16(JSContext *cx, unsigned argc, Value *vp);
 
     static bool setInt32Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_setInt32(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_setInt32(JSContext *cx, unsigned argc, Value *vp);
 
     static bool setUint32Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_setUint32(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_setUint32(JSContext *cx, unsigned argc, Value *vp);
 
     static bool setFloat32Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_setFloat32(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_setFloat32(JSContext *cx, unsigned argc, Value *vp);
 
     static bool setFloat64Impl(JSContext *cx, CallArgs args);
-    static JSBool fun_setFloat64(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_setFloat64(JSContext *cx, unsigned argc, Value *vp);
 
     static JSObject *initClass(JSContext *cx);
     static bool getDataPointer(JSContext *cx, Handle<DataViewObject*> obj,

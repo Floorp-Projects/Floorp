@@ -21,6 +21,8 @@
 #include "mozilla/RefPtr.h"
 #include "GfxInfoCollector.h"
 
+#include "mozilla/layers/CompositorTypes.h"
+
 #ifdef XP_OS2
 #undef OS2EMX_PLAIN_CHAR
 #endif
@@ -471,8 +473,14 @@ public:
     static bool GetPrefLayersAccelerationDisabled();
     static bool GetPrefLayersPreferOpenGL();
     static bool GetPrefLayersPreferD3D9();
+    static bool CanUseDirect3D9();
     static int  GetPrefLayoutFrameRate();
 
+    /**
+     * Is it possible to use buffer rotation
+     */
+    static bool BufferRotationEnabled();
+    static void DisableBufferRotation();
     /**
      * Are we going to try color management?
      */
@@ -554,7 +562,11 @@ public:
 
     uint32_t GetOrientationSyncMillis() const;
 
-    static bool DrawLayerBorders();
+    /**
+     * Return the layer debugging options to use browser-wide.
+     */
+    mozilla::layers::DiagnosticTypes GetLayerDiagnosticTypes();
+
     static bool DrawFrameCounter();
     /**
      * Returns true if we should use raw memory to send data to the compositor
@@ -669,6 +681,9 @@ private:
     uint32_t mOrientationSyncMillis;
     bool mLayersPreferMemoryOverShmem;
     bool mLayersUseDeprecated;
+    bool mDrawLayerBorders;
+    bool mDrawTileBorders;
+    bool mDrawBigImageBorders;
 };
 
 #endif /* GFX_PLATFORM_H */

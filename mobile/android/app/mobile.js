@@ -438,6 +438,10 @@ pref("browser.ui.touch.weight.visited", 120); // percentage
 // The percentage of the screen that needs to be scrolled before margins are exposed.
 pref("browser.ui.show-margins-threshold", 20);
 
+// Maximum distance from the point where the user pressed where we still
+// look for text to select
+pref("browser.ui.selection.distance", 250);
+
 // plugins
 pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", false);
@@ -474,10 +478,8 @@ pref("security.alternate_certificate_error_page", "certerror");
 
 pref("security.warn_viewing_mixed", false); // Warning is disabled.  See Bug 616712.
 
-#ifdef NIGHTLY_BUILD
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
-#endif
 
 // Override some named colors to avoid inverse OS themes
 pref("ui.-moz-dialog", "#efebe7");
@@ -546,6 +548,12 @@ pref("layers.async-video.enabled", true);
 pref("layers.progressive-paint", true);
 pref("layers.low-precision-buffer", true);
 pref("layers.low-precision-resolution", 250);
+// We want to limit layers for two reasons:
+// 1) We can't scroll smoothly if we have to many draw calls
+// 2) Pages that have too many layers consume too much memory and crash.
+// By limiting the number of layers on mobile we're making the main thread
+// work harder keep scrolling smooth and memory low.
+pref("layers.max-active", 20);
 
 pref("notification.feature.enabled", true);
 pref("dom.webnotifications.enabled", true);
@@ -751,10 +759,12 @@ pref("dom.payment.provider.0.type", "mozilla/payments/pay/v1");
 pref("dom.payment.provider.0.requestMethod", "GET");
 #endif
 
+#ifdef NIGHTLY_BUILD
 // Contacts API
 pref("dom.mozContacts.enabled", true);
 pref("dom.navigator-property.disable.mozContacts", false);
 pref("dom.global-constructor.disable.mozContact", false);
+#endif
 
 // Shortnumber matching needed for e.g. Brazil:
 // 01187654321 can be found with 87654321

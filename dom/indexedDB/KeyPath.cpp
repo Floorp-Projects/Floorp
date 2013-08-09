@@ -49,7 +49,7 @@ IsValidKeyPathString(JSContext* aCx, const nsAString& aKeyPath)
     NS_ASSERTION(JSVAL_IS_STRING(stringVal), "This should never happen");
     JSString* str = JSVAL_TO_STRING(stringVal);
 
-    JSBool isIdentifier = JS_FALSE;
+    JSBool isIdentifier = false;
     if (!JS_IsIdentifier(aCx, str, &isIdentifier) || !isIdentifier) {
       return false;
     }
@@ -204,16 +204,14 @@ GetJSValFromKeyPathString(JSContext* aCx,
   if (targetObject) {
     // If this fails, we lose, and the web page sees a magical property
     // appear on the object :-(
-    JS::Rooted<JS::Value> succeeded(aCx);
+    bool succeeded;
     if (!JS_DeleteUCProperty2(aCx, targetObject,
                               targetObjectPropName.get(),
                               targetObjectPropName.Length(),
                               &succeeded)) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
-    NS_ASSERTION(JSVAL_IS_BOOLEAN(succeeded), "Wtf?");
-    NS_ENSURE_TRUE(JSVAL_TO_BOOLEAN(succeeded),
-                   NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    NS_ENSURE_TRUE(succeeded, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -284,7 +282,7 @@ KeyPath::Parse(JSContext* aCx, const JS::Value& aValue, KeyPath* aKeyPath)
       JS::Rooted<JS::Value> val(aCx);
       JSString* jsstr;
       nsDependentJSString str;
-      if (!JS_GetElement(aCx, obj, index, val.address()) ||
+      if (!JS_GetElement(aCx, obj, index, &val) ||
           !(jsstr = JS_ValueToString(aCx, val)) ||
           !str.init(aCx, jsstr)) {
         return NS_ERROR_FAILURE;
@@ -399,7 +397,7 @@ KeyPath::ExtractKeyAsJSVal(JSContext* aCx, const JS::Value& aValue,
       return rv;
     }
 
-    if (!JS_SetElement(aCx, arrayObj, i, value.address())) {
+    if (!JS_SetElement(aCx, arrayObj, i, &value)) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   }
@@ -508,7 +506,7 @@ KeyPath::ToJSVal(JSContext* aCx, JS::MutableHandle<JS::Value> aValue) const
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
 
-      if (!JS_SetElement(aCx, array, i, val.address())) {
+      if (!JS_SetElement(aCx, array, i, &val)) {
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
     }

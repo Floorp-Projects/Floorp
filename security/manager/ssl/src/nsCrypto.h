@@ -6,6 +6,8 @@
 #ifndef _nsCrypto_h_
 #define _nsCrypto_h_
 
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/ErrorResult.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 #include "Crypto.h"
 #include "nsCOMPtr.h"
@@ -22,7 +24,6 @@
 
 class nsIPSMComponent;
 class nsIDOMScriptObjectFactory;
-
 
 class nsCRMFObject : public nsIDOMCRMFObject
 {
@@ -41,7 +42,6 @@ private:
   nsString mBase64Request;
 };
 
-
 class nsCrypto: public mozilla::dom::Crypto
 {
 public:
@@ -53,6 +53,46 @@ public:
   // If legacy DOM crypto is enabled this is the class that actually
   // implements the legacy methods.
   NS_DECL_NSIDOMCRYPTO
+
+  virtual bool EnableSmartCardEvents() MOZ_OVERRIDE;
+  virtual void SetEnableSmartCardEvents(bool aEnable,
+                                        mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+
+  virtual void GetVersion(nsString& aVersion) MOZ_OVERRIDE;
+
+  virtual already_AddRefed<nsIDOMCRMFObject>
+  GenerateCRMFRequest(JSContext* aContext,
+                      const nsCString& aReqDN,
+                      const nsCString& aRegToken,
+                      const nsCString& aAuthenticator,
+                      const nsCString& aEaCert,
+                      const nsCString& aJsCallback,
+                      const mozilla::dom::Sequence<JS::Value>& aArgs,
+                      mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+
+  virtual void ImportUserCertificates(const nsAString& aNickname,
+                                      const nsAString& aCmmfResponse,
+                                      bool aDoForcedBackup,
+                                      nsAString& aReturn,
+                                      mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+
+  virtual void PopChallengeResponse(const nsAString& aChallenge,
+                                    nsAString& aReturn,
+                                    mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+
+  virtual void Random(int32_t aNumBytes,
+                      nsAString& aReturn,
+                      mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+
+  virtual void SignText(JSContext* aContext,
+                        const nsAString& aStringToSign,
+                        const nsAString& aCaOption,
+                        const mozilla::dom::Sequence<nsCString>& aArgs,
+                        nsAString& aReturn) MOZ_OVERRIDE;
+
+  virtual void Logout(mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+
+  virtual void DisableRightClick(mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
 
 private:
   static already_AddRefed<nsIPrincipal> GetScriptPrincipal(JSContext *cx);

@@ -203,6 +203,10 @@ function promiseNewDownload(aSourceUrl) {
  *          targetFile: nsIFile for the target, or null to use a temporary file.
  *          outPersist: Receives a reference to the created nsIWebBrowserPersist
  *                      instance.
+ *          launchWhenSucceeded: Boolean indicating whether the target should
+ *                               be launched when it has completed successfully.
+ *          launcherPath: String containing the path of the custom executable to
+ *                        use to launch the target of the download.
  *        }
  *
  * @return {Promise}
@@ -229,9 +233,25 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 
   if (fileExtension) {
     try {
-      mimeInfo = gMIMEService.getFromTypeAndExtension(null,
-                                                      fileExtension);
+      mimeInfo = gMIMEService.getFromTypeAndExtension(null, fileExtension);
+      mimeInfo.preferredAction = Ci.nsIMIMEInfo.saveToDisk;
     } catch (ex) { }
+  }
+
+  if (aOptions && aOptions.launcherPath) {
+    do_check_true(mimeInfo != null);
+
+    let localHandlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
+                            .createInstance(Ci.nsILocalHandlerApp);
+    localHandlerApp.executable = new FileUtils.File(aOptions.launcherPath);
+
+    mimeInfo.preferredApplicationHandler = localHandlerApp;
+  }
+
+  if (aOptions && aOptions.launchWhenSucceeded) {
+    do_check_true(mimeInfo != null);
+
+    mimeInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
   }
 
   // Apply decoding if required by the "Content-Encoding" header.
@@ -268,8 +288,8 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 
     // Initialize the components so they reference each other.  This will cause
     // the Download object to be created and added to the public downloads.
-    transfer.init(sourceURI, NetUtil.newURI(targetFile), null, mimeInfo, null, null,
-                  persist, isPrivate);
+    transfer.init(sourceURI, NetUtil.newURI(targetFile), null, mimeInfo, null,
+                  null, persist, isPrivate);
     persist.progressListener = transfer;
 
     // Start the actual download process.
@@ -285,13 +305,18 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
  * it using the legacy nsITransfer interface.  The source of the download will
  * be "interruptible_resumable.txt" and partially downloaded data will be kept.
  *
+ * @param aSourceUrl
+ *        String containing the URI for the download source, or null to use
+ *        httpUrl("interruptible_resumable.txt").
+ *
  * @return {Promise}
  * @resolves The Download object created as a consequence of controlling the
  *           download through the legacy nsITransfer interface.
  * @rejects Never.  The current test fails in case of exceptions.
  */
-function promiseStartExternalHelperAppServiceDownload() {
-  let sourceURI = NetUtil.newURI(httpUrl("interruptible_resumable.txt"));
+function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
+  let sourceURI = NetUtil.newURI(aSourceUrl ||
+                                 httpUrl("interruptible_resumable.txt"));
 
   let deferred = Promise.defer();
 

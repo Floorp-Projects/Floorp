@@ -979,19 +979,19 @@ class ContextAllocPolicy
 };
 
 /* Exposed intrinsics so that Ion may inline them. */
-JSBool intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp);
-JSBool intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp);
-JSBool intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp);
-JSBool intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp);
 
-JSBool intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp);
-JSBool intrinsic_UnsafeSetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
-JSBool intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
-JSBool intrinsic_NewObjectWithClassPrototype(JSContext *cx, unsigned argc, Value *vp);
-JSBool intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_UnsafeSetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_NewObjectWithClassPrototype(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp);
 
-JSBool intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp);
-JSBool intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp);
 
 } /* namespace js */
 

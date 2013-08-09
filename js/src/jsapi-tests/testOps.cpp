@@ -14,9 +14,9 @@ my_convert(JSContext* context, JS::HandleObject obj, JSType type, JS::MutableHan
 {
     if (type == JSTYPE_VOID || type == JSTYPE_STRING || type == JSTYPE_NUMBER || type == JSTYPE_BOOLEAN) {
         rval.set(JS_NumberValue(123));
-        return JS_TRUE;
+        return true;
     }
-    return JS_FALSE;
+    return false;
 }
 
 static JSClass myClass = {
@@ -26,7 +26,7 @@ static JSClass myClass = {
     JS_EnumerateStub, JS_ResolveStub, my_convert
 };
 
-static JSBool
+static bool
 createMyObject(JSContext* context, unsigned argc, jsval *vp)
 {
     JS_BeginRequest(context);
@@ -38,7 +38,7 @@ createMyObject(JSContext* context, unsigned argc, jsval *vp)
 
     JS_EndRequest(context);
 
-    return JS_TRUE;
+    return true;
 }
 
 static const JSFunctionSpec s_functions[] =

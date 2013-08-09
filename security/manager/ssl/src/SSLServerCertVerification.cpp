@@ -98,7 +98,7 @@
 #include "CertVerifier.h"
 #include "nsIBadCertListener2.h"
 #include "nsICertOverrideService.h"
-#include "nsIStrictTransportSecurityService.h"
+#include "nsISiteSecurityService.h"
 #include "nsNSSComponent.h"
 #include "nsNSSCleaner.h"
 #include "nsRecentBadCerts.h"
@@ -315,14 +315,13 @@ CertErrorRunnable::CheckCertOverrides()
   // connections must be dropped when there are any certificate errors
   // (STS Spec section 7.3).
   bool strictTransportSecurityEnabled = false;
-  nsCOMPtr<nsIStrictTransportSecurityService> stss
-    = do_GetService(NS_STSSERVICE_CONTRACTID, &nsrv);
+  nsCOMPtr<nsISiteSecurityService> sss
+    = do_GetService(NS_SSSERVICE_CONTRACTID, &nsrv);
   if (NS_SUCCEEDED(nsrv)) {
-    nsCOMPtr<nsISSLSocketControl> sslSocketControl = do_QueryInterface(
-      NS_ISUPPORTS_CAST(nsITransportSecurityInfo*, mInfoObject));
-    nsrv = stss->IsStsHost(mInfoObject->GetHostName(),
-                           mProviderFlags,
-                           &strictTransportSecurityEnabled);
+    nsrv = sss->IsSecureHost(nsISiteSecurityService::HEADER_HSTS,
+                             mInfoObject->GetHostName(),
+                             mProviderFlags,
+                             &strictTransportSecurityEnabled);
   }
   if (NS_FAILED(nsrv)) {
     return new SSLServerCertVerificationResult(mInfoObject,

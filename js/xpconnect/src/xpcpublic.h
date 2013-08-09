@@ -321,8 +321,6 @@ nsIPrincipal *GetObjectPrincipal(JSObject *obj);
 
 bool IsXBLScope(JSCompartment *compartment);
 
-void DumpJSHeap(FILE* file);
-
 void SetLocationForGlobal(JSObject *global, const nsACString& location);
 void SetLocationForGlobal(JSObject *global, nsIURI *locationURI);
 
@@ -459,7 +457,7 @@ inline bool IsDOMProxy(JSObject *obj)
 
 typedef JSObject*
 (*DefineInterface)(JSContext *cx, JS::Handle<JSObject*> global,
-                   JS::Handle<jsid> id, bool *enabled);
+                   JS::Handle<jsid> id, bool defineOnGlobal);
 
 typedef JSObject*
 (*ConstructNavigatorProperty)(JSContext *cx, JS::Handle<JSObject*> naviObj);

@@ -12,6 +12,6 @@
                            android:title="@string/pref_developer_remotedebugging" />
 
        <org.mozilla.gecko.AlignRightLinkPreference android:title="@string/pref_developer_remotedebugging_docs"
-                                                   url="https://developer.mozilla.org/docs/Tools/Debugger#Remote_debugging?" />
+                                                   url="https://developer.mozilla.org/docs/Tools/Remote_Debugging" />
 
 </PreferenceScreen>

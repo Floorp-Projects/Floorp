@@ -19,8 +19,25 @@ BytecodeAnalysis::BytecodeAnalysis(JSScript *script)
 {
 }
 
+// Bytecode range containing only catch or finally code.
+struct CatchFinallyRange
+{
+    uint32_t start; // Inclusive.
+    uint32_t end;   // Exclusive.
+
+    CatchFinallyRange(uint32_t start, uint32_t end)
+      : start(start), end(end)
+    {
+        JS_ASSERT(end > start);
+    }
+
+    bool contains(uint32_t offset) const {
+        return start <= offset && offset < end;
+    }
+};
+
 bool
-BytecodeAnalysis::init()
+BytecodeAnalysis::init(JSContext *cx)
 {
     if (!infos_.growByUninitialized(script_->length))
         return false;
@@ -30,6 +47,8 @@ BytecodeAnalysis::init()
     // Clear all BytecodeInfo.
     mozilla::PodZero(infos_.begin(), infos_.length());
     infos_[0].init(/*stackDepth=*/0);
+
+    Vector<CatchFinallyRange, 0, IonAllocPolicy> catchFinallyRanges;
 
     for (jsbytecode *pc = script_->code; pc < end; pc += GetBytecodeLength(pc)) {
         JSOp op = JSOp(*pc);
@@ -59,7 +78,8 @@ BytecodeAnalysis::init()
         // If stack depth exceeds max allowed by analysis, fail fast.
         JS_ASSERT(stackDepth <= BytecodeInfo::MAX_STACK_DEPTH);
 
-        if (op == JSOP_TABLESWITCH) {
+        switch (op) {
+          case JSOP_TABLESWITCH: {
             unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
             jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
             int32_t low = GET_JUMP_OFFSET(pc2);
@@ -78,7 +98,10 @@ BytecodeAnalysis::init()
                 }
                 pc2 += JUMP_OFFSET_LEN;
             }
-        } else if (op == JSOP_TRY) {
+            break;
+          }
+
+          case JSOP_TRY: {
             JSTryNote *tn = script_->trynotes()->vector;
             JSTryNote *tnlimit = tn + script_->trynotes()->length;
             for (; tn < tnlimit; tn++) {
@@ -92,6 +115,37 @@ BytecodeAnalysis::init()
                     }
                 }
             }
+
+            // Get the pc of the last instruction in the try block. It's a JSOP_GOTO to
+            // jump over the catch/finally blocks.
+            jssrcnote *sn = js_GetSrcNote(cx, script_, pc);
+            JS_ASSERT(SN_TYPE(sn) == SRC_TRY);
+
+            jsbytecode *endOfTry = pc + js_GetSrcNoteOffset(sn, 0);
+            JS_ASSERT(JSOp(*endOfTry) == JSOP_GOTO);
+
+            jsbytecode *afterTry = endOfTry + GET_JUMP_OFFSET(endOfTry);
+            JS_ASSERT(afterTry > endOfTry);
+
+            // Pop CatchFinallyRanges that are no longer needed.
+            while (!catchFinallyRanges.empty() && catchFinallyRanges.back().end <= offset)
+                catchFinallyRanges.popBack();
+
+            CatchFinallyRange range(endOfTry - script_->code, afterTry - script_->code);
+            if (!catchFinallyRanges.append(range))
+                return false;
+            break;
+          }
+
+          case JSOP_LOOPENTRY:
+            for (size_t i = 0; i < catchFinallyRanges.length(); i++) {
+                if (catchFinallyRanges[i].contains(offset))
+                    infos_[offset].loopEntryInCatchOrFinally = true;
+            }
+            break;
+
+          default:
+            break;
         }
 
         bool jump = IsJumpOpcode(op);

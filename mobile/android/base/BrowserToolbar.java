@@ -56,6 +56,7 @@ import android.view.Window;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Interpolator;
 import android.view.animation.TranslateAnimation;
@@ -119,7 +120,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
     public ImageButton mSiteSecurity;
     public ImageButton mGo;
     public PageActionLayout mPageActionLayout;
-    private AnimationDrawable mProgressSpinner;
+    private Animation mProgressSpinner;
     private TabCounter mTabsCounter;
     private ImageView mShadow;
     private GeckoImageButton mMenu;
@@ -137,6 +138,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     private boolean mShowSiteSecurity;
     private boolean mShowReader;
+    private boolean mSpinnerVisible;
 
     private boolean mDelayRestartInput;
     // The previous autocomplete result returned to us
@@ -266,7 +268,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
         mActivity.getSiteIdentityPopup().setAnchor(mSiteSecurity);
 
-        mProgressSpinner = (AnimationDrawable) res.getDrawable(R.drawable.progress_spinner);
+        mProgressSpinner = AnimationUtils.loadAnimation(mActivity, R.anim.progress_spinner);
 
         mStop = (ImageButton) findViewById(R.id.stop);
         mShadow = (ImageView) findViewById(R.id.shadow);
@@ -923,16 +925,26 @@ public class BrowserToolbar extends GeckoRelativeLayout
         // are needed by S1/S2 tests (http://mrcote.info/phonedash/#).
         // See discussion in Bug 804457. Bug 805124 tracks paring these down.
         if (visible) {
-            mFavicon.setImageDrawable(mProgressSpinner);
-            mProgressSpinner.start();
-            setPageActionVisibility(true);
+            mFavicon.setImageResource(R.drawable.progress_spinner);
+            //To stop the glitch caused by mutiple start() calls.
+            if (!mSpinnerVisible) {
+                setPageActionVisibility(true);
+                mFavicon.setAnimation(mProgressSpinner);
+                mProgressSpinner.start();
+                mSpinnerVisible = true;
+            }
             Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber start");
         } else {
-            mProgressSpinner.stop();
-            setPageActionVisibility(false);
             Tab selectedTab = Tabs.getInstance().getSelectedTab();
             if (selectedTab != null)
                 setFavicon(selectedTab.getFavicon());
+
+            if (mSpinnerVisible) {
+                setPageActionVisibility(false);
+                mFavicon.setAnimation(null);
+                mProgressSpinner.cancel();
+                mSpinnerVisible = false;
+            }
             Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber stop");
         }
     }

@@ -84,7 +84,7 @@ private:
     return GetPrivate(aObj);
   }
 
-  static JSBool
+  static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     nsRefPtr<nsDOMMultipartFile> file = new nsDOMMultipartFile();
@@ -157,7 +157,7 @@ private:
     return true;
   }
 
-  static JSBool
+  static bool
   Slice(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
@@ -286,7 +286,7 @@ private:
     return NULL;
   }
 
-  static JSBool
+  static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_WRONG_CONSTRUCTOR,

@@ -42,7 +42,7 @@ struct JSContext;
 class JSObject;
 
 /* Typedef for native functions called by the JS VM. */
-typedef JSBool
+typedef bool
 (* JSNative)(JSContext *cx, unsigned argc, JS::Value *vp);
 
 /* Typedef for native functions that may be called in parallel. */
@@ -53,7 +53,7 @@ typedef js::ParallelResult
  * Typedef for native functions that may be called either in parallel or
  * sequential execution.
  */
-typedef JSBool
+typedef bool
 (* JSThreadSafeNative)(js::ThreadSafeContext *cx, unsigned argc, JS::Value *vp);
 
 /*
@@ -61,7 +61,7 @@ typedef JSBool
  * a JSNative or a JSParallelNative.
  */
 template <JSThreadSafeNative threadSafeNative>
-inline JSBool
+inline bool
 JSNativeThreadSafeWrapper(JSContext *cx, unsigned argc, JS::Value *vp);
 
 template <JSThreadSafeNative threadSafeNative>

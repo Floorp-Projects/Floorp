@@ -107,7 +107,7 @@ public class DoCommand {
     String ffxProvider = "org.mozilla.ffxcp";
     String fenProvider = "org.mozilla.fencp";
 
-    private final String prgVersion = "SUTAgentAndroid Version 1.18";
+    private final String prgVersion = "SUTAgentAndroid Version 1.19";
 
     public enum Command
         {
@@ -1396,7 +1396,7 @@ private void CancelNotification()
             }
         Log.e("SUTAgentAndroid", "ERROR: Cannot access world writeable test root");
 
-        return(null);
+        return sErrorPrefix + " unable to determine test root";
         }
 
     public String GetAppRoot(String AppName)

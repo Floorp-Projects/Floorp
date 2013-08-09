@@ -17,7 +17,7 @@ random skip-if(Android||B2G) HTTP(..) == object-aspect-ratio-1b.xhtml aspect-rat
 skip-if(Android||B2G) HTTP(..) == offset-1.xhtml offset-1-ref.html
 random skip-if(Android||B2G) HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
 random skip-if(Android||B2G) HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
-skip-if(Android||B2G) skip-if(gtk2Widget) fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),1,56000) fuzzy-if(cocoaWidget,1,56000) fuzzy-if(d2d&&layersGPUAccelerated,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
+skip-if(Android||B2G) skip-if(gtk2Widget) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # bug 778995 for fuzzy
 skip-if(Android||B2G) == poster-1.html poster-ref-blue250x200.html
 skip-if(Android||B2G) == poster-2.html poster-ref-black140x100.html
 skip-if(Android||B2G) == poster-3.html poster-ref-black140x100.html

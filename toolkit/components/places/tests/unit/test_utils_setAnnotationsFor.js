@@ -22,19 +22,20 @@ function run_test() {
 
   // create annotations array
   var testAnnos = [{ name: "testAnno/test0",
-                     type: Ci.nsIAnnotationService.TYPE_STRING,
                      flags: 0,
                      value: "test0",
                      expires: Ci.nsIAnnotationService.EXPIRE_NEVER },
                    { name: "testAnno/test1",
-                     type: Ci.nsIAnnotationService.TYPE_STRING,
                      flags: 0,
                      value: "test1",
                      expires: Ci.nsIAnnotationService.EXPIRE_NEVER },
                    { name: "testAnno/test2",
-                     type: Ci.nsIAnnotationService.TYPE_STRING,
                      flags: 0,
                      value: "test2",
+                     expires: Ci.nsIAnnotationService.EXPIRE_NEVER },
+                   { name: "testAnno/test3",
+                     flags: 0,
+                     value: 0,
                      expires: Ci.nsIAnnotationService.EXPIRE_NEVER }];
 
   // Add item annotations
@@ -53,8 +54,12 @@ function run_test() {
     do_check_eq(as.getPageAnnotation(testURI, anno.name), anno.value);
   });
 
-  // To unset annotations we set their values to null
-  testAnnos.forEach(function(anno) { anno.value = null; });
+  // To unset annotations we unset their values or set them to
+  //null/undefined
+  testAnnos[0].value = null;
+  testAnnos[1].value = undefined;
+  delete testAnnos[2].value;
+  delete testAnnos[3].value;
 
   // Unset all item annotations
   PlacesUtils.setAnnotationsForItem(itemId, testAnnos);

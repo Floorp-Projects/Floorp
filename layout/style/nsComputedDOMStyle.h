@@ -180,6 +180,7 @@ private:
   mozilla::dom::CSSValue* DoGetMaxWidth();
   mozilla::dom::CSSValue* DoGetMinHeight();
   mozilla::dom::CSSValue* DoGetMinWidth();
+  mozilla::dom::CSSValue* DoGetMixBlendMode();
   mozilla::dom::CSSValue* DoGetLeft();
   mozilla::dom::CSSValue* DoGetTop();
   mozilla::dom::CSSValue* DoGetRight();
@@ -494,7 +495,7 @@ private:
 
   /* Helper functions for computing the filter property style. */
   void SetCssTextToCoord(nsAString& aCssText, const nsStyleCoord& aCoord);
-  nsROCSSPrimitiveValue* CreatePrimitiveValueForStyleFilter(
+  mozilla::dom::CSSValue* CreatePrimitiveValueForStyleFilter(
     const nsStyleFilter& aStyleFilter);
 
   struct ComputedStyleMapEntry

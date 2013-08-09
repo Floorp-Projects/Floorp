@@ -160,6 +160,47 @@ add_task(function test_notifications_change()
 });
 
 /**
+ * Checks that the reference to "this" is correct in the view callbacks.
+ */
+add_task(function test_notifications_this()
+{
+  let list = yield promiseNewDownloadList();
+
+  // Check that we receive change notifications.
+  let receivedOnDownloadAdded = false;
+  let receivedOnDownloadChanged = false;
+  let receivedOnDownloadRemoved = false;
+  let view = {
+    onDownloadAdded: function () {
+      do_check_eq(this, view);
+      receivedOnDownloadAdded = true;
+    },
+    onDownloadChanged: function () {
+      // Only do this check once.
+      if (!receivedOnDownloadChanged) {
+        do_check_eq(this, view);
+        receivedOnDownloadChanged = true;
+      }
+    },
+    onDownloadRemoved: function () {
+      do_check_eq(this, view);
+      receivedOnDownloadRemoved = true;
+    },
+  };
+  list.addView(view);
+
+  let download = yield promiseNewDownload();
+  list.add(download);
+  yield download.start();
+  list.remove(download);
+
+  // Verify that we executed the checks.
+  do_check_true(receivedOnDownloadAdded);
+  do_check_true(receivedOnDownloadChanged);
+  do_check_true(receivedOnDownloadRemoved);
+});
+
+/**
  * Checks that download is removed on history expiration.
  */
 add_task(function test_history_expiration()

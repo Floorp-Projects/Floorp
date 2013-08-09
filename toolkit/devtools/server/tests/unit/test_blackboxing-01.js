@@ -83,7 +83,7 @@ function test_black_box_default() {
                     "Should step into `doStuff`.");
       },
       function onDebuggerStatementFrames(aFrames) {
-        do_check_true(!aFrames.some(f => f.isBlackBoxed));
+        do_check_true(!aFrames.some(f => f.source.isBlackBoxed));
       },
       test_black_boxing.bind(null, sourceClient)
     );
@@ -108,9 +108,9 @@ function test_black_boxing(aSourceClient) {
       function onDebuggerStatementFrames(aFrames) {
         for (let f of aFrames) {
           if (f.where.url == BLACK_BOXED_URL) {
-            do_check_true(f.isBlackBoxed, "Should be black boxed");
+            do_check_true(f.source.isBlackBoxed, "Should be black boxed");
           } else {
-            do_check_true(!f.isBlackBoxed, "Should not be black boxed")
+            do_check_true(!f.source.isBlackBoxed, "Should not be black boxed")
           }
         }
       },
@@ -133,7 +133,7 @@ function test_unblack_boxing(aSourceClient) {
                     "Should step into `doStuff`.");
       },
       function onDebuggerStatementFrames(aFrames) {
-        do_check_true(!aFrames.some(f => f.isBlackBoxed));
+        do_check_true(!aFrames.some(f => f.source.isBlackBoxed));
       },
       finishClient.bind(null, gClient)
     );

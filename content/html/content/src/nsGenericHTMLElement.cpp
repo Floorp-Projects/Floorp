@@ -28,7 +28,6 @@
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLDocument.h"
-#include "nsILink.h"
 #include "nsPIDOMWindow.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
@@ -85,6 +84,7 @@
 #include "nsDOMMutationObserver.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FromParser.h"
+#include "mozilla/dom/Link.h"
 #include "mozilla/dom/UndoManager.h"
 #include "mozilla/BloomFilter.h"
 
@@ -254,26 +254,16 @@ NS_INTERFACE_TABLE_HEAD(nsGenericHTMLElementTearoff)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsGenericHTMLElementTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
-nsresult
-nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
-                                        REFNSIID aIID, void **aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
+NS_IMPL_ADDREF_INHERITED(nsGenericHTMLElement, nsGenericHTMLElementBase)
+NS_IMPL_RELEASE_INHERITED(nsGenericHTMLElement, nsGenericHTMLElementBase)
 
-  nsresult rv = NS_ERROR_FAILURE;
-
-  NS_INTERFACE_TABLE_BEGIN
-    NS_INTERFACE_TABLE_ENTRY(nsIDOMHTMLElement, nsIDOMNode)
-    NS_INTERFACE_TABLE_ENTRY(nsIDOMHTMLElement, nsIDOMElement)
-    NS_INTERFACE_TABLE_ENTRY(nsIDOMHTMLElement, nsIDOMHTMLElement)
-  NS_INTERFACE_TABLE_END_WITH_PTR(aElement)
-
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMElementCSSInlineStyle,
                                  new nsGenericHTMLElementTearoff(this))
-  NS_INTERFACE_MAP_END
-
-// No closing bracket, because NS_INTERFACE_MAP_END does that for us.
+NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElementBase)
 
 nsresult
 nsGenericHTMLElement::CopyInnerTo(Element* aDst)
@@ -325,7 +315,7 @@ nsGenericHTMLElement::Dataset()
   return ret.forget();
 }
 
-nsresult
+NS_IMETHODIMP
 nsGenericHTMLElement::GetDataset(nsISupports** aDataset)
 {
   *aDataset = Dataset().get();
@@ -352,7 +342,7 @@ static const nsAttrValue::EnumTable kDirTable[] = {
 };
 
 void
-nsGenericHTMLElement::GetAccessKeyLabel(nsAString& aLabel)
+nsGenericHTMLElement::GetAccessKeyLabel(nsString& aLabel)
 {
   nsPresContext *presContext = GetPresContext();
 
@@ -528,7 +518,7 @@ nsGenericHTMLElement::Spellcheck()
   }
 
   // Anything else that's not a form control is not spellchecked by default
-  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(this);
+  nsCOMPtr<nsIFormControl> formControl = do_QueryObject(this);
   if (!formControl) {
     return false;                       // Not spellchecked by default
   }
@@ -704,8 +694,8 @@ nsGenericHTMLElement::FindAncestorForm(HTMLFormElement* aCurrentForm)
 bool
 nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(nsEventChainVisitor& aVisitor)
 {
-  NS_PRECONDITION(nsCOMPtr<nsILink>(do_QueryInterface(this)),
-                  "should be called only when |this| implements |nsILink|");
+  NS_PRECONDITION(nsCOMPtr<Link>(do_QueryObject(this)),
+                  "should be called only when |this| implements |Link|");
 
   if (!aVisitor.mPresContext) {
     // We need a pres context to do link stuff. Some events (e.g. mutation
@@ -759,7 +749,7 @@ nsGenericHTMLElement::IsHTMLLink(nsIURI** aURI) const
 already_AddRefed<nsIURI>
 nsGenericHTMLElement::GetHrefURIForAnchors() const
 {
-  // This is used by the three nsILink implementations and
+  // This is used by the three Link implementations and
   // nsHTMLStyleElement.
 
   // Get href= attribute (relative URI).
@@ -1925,10 +1915,11 @@ nsGenericHTMLElement::GetContextMenu() const
   return nullptr;
 }
 
-void
-nsGenericHTMLElement::GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu) const
+NS_IMETHODIMP
+nsGenericHTMLElement::GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu)
 {
   NS_IF_ADDREF(*aContextMenu = GetContextMenu());
+  return NS_OK;
 }
 
 bool
@@ -2039,9 +2030,9 @@ nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
   NS_ASSERTION(!mForm, "mForm should be null at this point!");
 }
 
-NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGenericHTMLFormElement,
-                                   nsGenericHTMLElement,
-                                   nsIFormControl)
+NS_IMPL_ISUPPORTS_INHERITED1(nsGenericHTMLFormElement,
+                             nsGenericHTMLElement,
+                             nsIFormControl)
 
 nsINode*
 nsGenericHTMLFormElement::GetParentObject() const
@@ -2716,8 +2707,7 @@ nsGenericHTMLElement::Focus(ErrorResult& aError)
 {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
-    aError = fm->SetFocus(elem, 0);
+    aError = fm->SetFocus(this, 0);
   }
 }
 
@@ -2748,7 +2738,7 @@ nsGenericHTMLElement::Click()
                      NS_MOUSE_CLICK, nullptr, nsMouseEvent::eReal);
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
 
-  nsEventDispatcher::Dispatch(this, context, &event);
+  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context, &event);
 
   ClearHandlingClick();
 }
@@ -2842,8 +2832,7 @@ nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
   // It's hard to say what HTML4 wants us to do in all cases.
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
-    fm->SetFocus(elem, nsIFocusManager::FLAG_BYKEY);
+    fm->SetFocus(this, nsIFocusManager::FLAG_BYKEY);
   }
 
   if (aKeyCausesActivation) {
@@ -2855,7 +2844,7 @@ nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);
 
-    nsEventDispatcher::Dispatch(this, presContext, &event);
+    nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext, &event);
   }
 }
 
@@ -3188,7 +3177,7 @@ nsGenericHTMLElement::GetItemValue(nsIVariant** aValue)
   }
 
   if (ItemScope()) {
-    out->SetAsISupports(static_cast<nsISupports*>(this));
+    out->SetAsISupports(static_cast<nsIContent*>(this));
   } else {
     nsAutoString string;
     GetItemValueText(string);
@@ -3312,10 +3301,11 @@ nsGenericHTMLElement::Properties()
   return properties;
 }
 
-void
+NS_IMETHODIMP
 nsGenericHTMLElement::GetProperties(nsISupports** aProperties)
 {
   NS_ADDREF(*aProperties = static_cast<nsIHTMLCollection*>(Properties()));
+  return NS_OK;
 }
 
 nsSize

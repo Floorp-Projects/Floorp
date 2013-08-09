@@ -150,6 +150,7 @@ dnl cross-compiling case.
 AC_LANG_CPLUSPLUS
 if test "$GNU_CXX"; then
     CXXFLAGS="$CXXFLAGS -std=gnu++0x"
+    _ADDED_CXXFLAGS="-std=gnu++0x"
 
     AC_CACHE_CHECK(for gcc c++0x headers bug without rtti,
         ac_cv_cxx0x_headers_bug,
@@ -159,6 +160,7 @@ if test "$GNU_CXX"; then
 
     if test "$CLANG_CXX" -a "$ac_cv_cxx0x_headers_bug" = "yes"; then
         CXXFLAGS="$CXXFLAGS -I$_topsrcdir/build/unix/headers"
+        _ADDED_CXXFLAGS="$_ADDED_CXXFLAGS -I$_topsrcdir/build/unix/headers"
         AC_CACHE_CHECK(whether workaround for gcc c++0x headers conflict with clang works,
             ac_cv_cxx0x_clang_workaround,
             [AC_TRY_COMPILE([#include <memory>], [],
@@ -218,7 +220,7 @@ EOF
         CXX="$_SAVE_CXX"
     fi
 elif test "$GNU_CXX"; then
-    HOST_CXXFLAGS="$HOST_CXXFLAGS -std=gnu++0x"
+    HOST_CXXFLAGS="$HOST_CXXFLAGS $_ADDED_CXXFLAGS"
 fi
 AC_LANG_C
 ])

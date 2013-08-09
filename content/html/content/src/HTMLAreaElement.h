@@ -12,7 +12,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMHTMLAreaElement.h"
-#include "nsILink.h"
 #include "nsIURL.h"
 
 class nsIDocument;
@@ -22,7 +21,6 @@ namespace dom {
 
 class HTMLAreaElement MOZ_FINAL : public nsGenericHTMLElement,
                                   public nsIDOMHTMLAreaElement,
-                                  public nsILink,
                                   public Link
 {
 public:
@@ -35,23 +33,10 @@ public:
   // DOM memory reporter participant
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 
   // nsIDOMHTMLAreaElement
   NS_DECL_NSIDOMHTMLAREAELEMENT
-
-  // nsILink
-  NS_IMETHOD LinkAdded() MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD LinkRemoved() MOZ_OVERRIDE { return NS_OK; }
 
   virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
@@ -78,8 +63,6 @@ public:
   virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
-
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
   // WebIDL
 

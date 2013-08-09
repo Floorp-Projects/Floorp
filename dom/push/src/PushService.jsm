@@ -1304,14 +1304,17 @@ this.PushService = {
   _wsOnStop: function(context, statusCode) {
     debug("wsOnStop()");
 
-    this._shutdownWS();
-
     if (statusCode != Cr.NS_OK &&
         !(statusCode == Cr.NS_BASE_STREAM_CLOSED && this._willBeWokenUpByUDP)) {
       debug("Socket error " + statusCode);
       this._reconnectAfterBackoff();
     }
 
+    // Bug 896919. We always shutdown the WebSocket, even if we need to
+    // reconnect. This works because _reconnectAfterBackoff() is "async"
+    // (there is a minimum delay of the pref retryBaseInterval, which by default
+    // is 5000ms), so that function will open the WebSocket again.
+    this._shutdownWS();
   },
 
   _wsOnMessageAvailable: function(context, message) {

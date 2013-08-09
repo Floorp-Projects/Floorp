@@ -77,14 +77,15 @@ public:
 
   const DOMClass& mClass;
 
-protected:
   // Append the property names in "names" to "props". If
   // shadowPrototypeProperties is false then skip properties that are also
-  // present on our proto chain.
-  bool AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
-                              nsTArray<nsString>& names,
-                              bool shadowPrototypeProperties,
-                              JS::AutoIdVector& props);
+  // present on our proto chain.  If shadowPrototypeProperties is true,
+  // then the "proxy" and "handler" arguments are ignored.
+  static bool AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
+                                     nsTArray<nsString>& names,
+                                     bool shadowPrototypeProperties,
+                                     DOMProxyHandler* handler,
+                                     JS::AutoIdVector& props);
 };
 
 extern jsid s_length_id;

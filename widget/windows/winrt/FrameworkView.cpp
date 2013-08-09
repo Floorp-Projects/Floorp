@@ -368,6 +368,7 @@ FrameworkView::OnSoftkeyboardHidden(IInputPane* aSender,
   sKeyboardIsVisible = false;
   memset(&sKeyboardRect, 0, sizeof(Rect));
   MetroUtils::FireObserver("metro_softkeyboard_hidden");
+  aArgs->put_EnsuredFocusedElementInView(true);
   return S_OK;
 }
 
@@ -381,6 +382,7 @@ FrameworkView::OnSoftkeyboardShown(IInputPane* aSender,
   sKeyboardIsVisible = true;
   aSender->get_OccludedRect(&sKeyboardRect);
   MetroUtils::FireObserver("metro_softkeyboard_shown");
+  aArgs->put_EnsuredFocusedElementInView(true);
   return S_OK;
 }
 
@@ -500,9 +502,14 @@ HRESULT
 FrameworkView::OnAutomationProviderRequested(ICoreWindow* aSender,
                                              IAutomationProviderRequestedEventArgs* aArgs)
 {
+  LogFunction();
   if (!EnsureAutomationProviderCreated())
     return E_FAIL;
-  aArgs->put_AutomationProvider(mAutomationProvider.Get());
+  Log("OnAutomationProviderRequested %X", mAutomationProvider.Get());
+  HRESULT hr = aArgs->put_AutomationProvider(mAutomationProvider.Get());
+  if (FAILED(hr)) {
+    Log("put failed? %X", hr);
+  }
   return S_OK;
 }
 

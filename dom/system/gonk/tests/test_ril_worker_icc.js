@@ -2413,67 +2413,95 @@ add_test(function test_read_icc_contacts() {
   let record = worker.ICCRecordHelper;
   let contactHelper = worker.ICCContactHelper;
 
-  // Override some functions to test.
-  contactHelper.getContactFieldRecordId = function (pbr, contact, field, onsuccess, onerror) {
-    onsuccess(1);
-  };
+  function do_test(aSimType, aContactType, aExpectedContact, aEnhancedPhoneBook) {
+    worker.RIL.appType = aSimType;
+    worker.RIL._isCdma = (aSimType === CARD_APPTYPE_RUIM);
+    worker.RIL.iccInfoPrivate.cst = (aEnhancedPhoneBook) ?
+                                    [0x0, 0x0C, 0x0, 0x0, 0x0]:
+                                    [0x0, 0x00, 0x0, 0x0, 0x0];
 
-  record.readPBR = function readPBR(onsuccess, onerror) {
-    onsuccess([{adn:{}, email: {}, anr0: {}}]);
-  };
-
-  record.readADNLike = function readADNLike(fileId, onsuccess, onerror) {
-    onsuccess([{alphaId: "name", number: "111111"}])
-  };
-
-  record.readEmail = function readEmail(fileId, fileType, recordNumber, onsuccess, onerror) {
-    onsuccess("hello@mail.com");
-  };
-
-  record.readANR = function readANR(fileId, fileType, recordNumber, onsuccess, onerror) {
-    onsuccess("123456");
-  };
-
-  let successCb = function successCb(contacts) {
-    let contact = contacts[0];
-    do_check_eq(contact.alphaId, "name");
-    do_check_eq(contact.number, "111111");
-    do_check_eq(contact.email, "hello@mail.com");
-    do_check_eq(contact.anr[0], "123456");
-    run_next_test();
-  };
-
-  let errorCb = function errorCb(errorMsg) {
-    do_print(errorMsg);
-    do_check_true(false);
-    run_next_test();
-  };
-
-  contactHelper.readICCContacts(CARD_APPTYPE_USIM, "adn", successCb, errorCb);
-});
-
-/**
- * Verify ICCContactHelper.updateICCContact with appType is CARD_APPTYPE_SIM.
- */
-add_test(function test_update_icc_contact() {
-  let worker = newUint8Worker();
-  let record = worker.ICCRecordHelper;
-  let contactHelper = worker.ICCContactHelper;
-  let contactType;
-
-  function do_test(aContact, aContactType, aFileId, aPin2) {
-    record.updateADNLike = function (fileId, contact, pin2, onsuccess, onerror) {
-      do_check_eq(fileId, aFileId);
-      do_check_eq(contact.alphaId, aContact.alphaId);
-      do_check_eq(contact.number, aContact.number);
-      do_check_eq(pin2, aPin2);
+    // Override some functions to test.
+    contactHelper.getContactFieldRecordId = function (pbr, contact, field, onsuccess, onerror) {
+      onsuccess(1);
     };
-    contactHelper.updateICCContact(CARD_APPTYPE_SIM, aContactType, aContact, aPin2);
+
+    record.readPBR = function readPBR(onsuccess, onerror) {
+      onsuccess([{adn:{}, email: {}, anr0: {}}]);
+    };
+
+    record.readADNLike = function readADNLike(fileId, onsuccess, onerror) {
+      onsuccess([{recordId: 1, alphaId: "name", number: "111111"}])
+    };
+
+    record.readEmail = function readEmail(fileId, fileType, recordNumber, onsuccess, onerror) {
+      onsuccess("hello@mail.com");
+    };
+
+    record.readANR = function readANR(fileId, fileType, recordNumber, onsuccess, onerror) {
+      onsuccess("123456");
+    };
+
+    let onsuccess = function onsuccess(contacts) {
+      let contact = contacts[0];
+      for (key in contact) {
+        do_print("check " + key);
+        if (Array.isArray(contact[key])) {
+          do_check_eq(contact[key][0], aExpectedContact[key]);
+        } else {
+          do_check_eq(contact[key], aExpectedContact[key]);
+        }
+      }
+    };
+
+    let onerror = function onerror(errorMsg) {
+      do_print("readICCContacts failed: " + errorMsg);
+      do_check_true(false);
+    };
+
+    contactHelper.readICCContacts(aSimType, aContactType, onsuccess, onerror);
+  }
+
+  let expectedContact1 = {
+    recordId: 1,
+    alphaId:  "name",
+    number:   "111111"
   };
 
-  let contact = {recordId: 1, alphaId: "test", number: "123456"};
-  do_test(contact, "adn", ICC_EF_ADN);
-  do_test(contact, "fdn", ICC_EF_FDN, "1111");
+  let expectedContact2 = {
+    recordId: 1,
+    alphaId:  "name",
+    number:   "111111",
+    email:    "hello@mail.com",
+    anr:      "123456"
+  };
+
+  // SIM
+  do_print("Test read SIM adn contacts");
+  do_test(CARD_APPTYPE_SIM, "adn", expectedContact1);
+
+  do_print("Test read SIM fdn contacts");
+  do_test(CARD_APPTYPE_SIM, "fdn", expectedContact1);
+
+  // USIM
+  do_print("Test read USIM adn contacts");
+  do_test(CARD_APPTYPE_USIM, "adn", expectedContact2);
+
+  do_print("Test read USIM fdn contacts");
+  do_test(CARD_APPTYPE_USIM, "fdn", expectedContact1);
+
+  // RUIM
+  do_print("Test read RUIM adn contacts");
+  do_test(CARD_APPTYPE_RUIM, "adn", expectedContact1);
+
+  do_print("Test read RUIM fdn contacts");
+  do_test(CARD_APPTYPE_RUIM, "fdn", expectedContact1);
+
+  // RUIM with enhanced phone book
+  do_print("Test read RUIM adn contacts with enhanced phone book");
+  do_test(CARD_APPTYPE_RUIM, "adn", expectedContact2, true);
+
+  do_print("Test read RUIM fdn contacts with enhanced phone book");
+  do_test(CARD_APPTYPE_RUIM, "fdn", expectedContact1, true);
 
   run_next_test();
 });
@@ -2482,34 +2510,58 @@ add_test(function test_update_icc_contact() {
  * Verify ICCContactHelper.updateICCContact with appType is CARD_APPTYPE_USIM.
  */
 add_test(function test_update_icc_contact() {
+  const ADN_RECORD_ID   = 100;
+  const ADN_SFI         = 1;
+  const IAP_FILE_ID     = 0x4f17;
+  const EMAIL_FILE_ID   = 0x4f50;
+  const EMAIL_RECORD_ID = 20;
+  const ANR0_FILE_ID    = 0x4f11;
+  const ANR0_RECORD_ID  = 30;
+
   let worker = newUint8Worker();
   let recordHelper = worker.ICCRecordHelper;
   let contactHelper = worker.ICCContactHelper;
-  const NUM_TESTS = 2;
-  const ADN_RECORD_ID = 100;
-  const ADN_FILE_ID = 0x4f3a;
-  const ADN_SFI = 1;
-  const IAP_FILE_ID = 0x4f17;
-  const EMAIL_FILE_ID = 0x4f50;
-  const EMAIL_RECORD_ID = 20;
-  const ANR0_FILE_ID = 0x4f11;
-  const ANR0_RECORD_ID = 30;
-  let count = 0;
-  let oldContact = {recordId: ADN_RECORD_ID,
-                    alphaId: "test",
-                    number: "123456",
-                    email: "test@mail.com",
-                    anr: ["+654321"]};
 
-  function do_test(pbrs, onsuccess, onerror) {
+  function do_test(aSimType, aContactType, aContact, aPin2, aFileType, aEnhancedPhoneBook) {
+    worker.RIL.appType = aSimType;
+    worker.RIL._isCdma = (aSimType === CARD_APPTYPE_RUIM);
+    worker.RIL.iccInfoPrivate.cst = (aEnhancedPhoneBook) ?
+                                    [0x0, 0x0C, 0x0, 0x0, 0x0]:
+                                    [0x0, 0x00, 0x0, 0x0, 0x0];
+
     recordHelper.readPBR = function (onsuccess, onerror) {
-      onsuccess(pbrs) ;
+      if (aFileType === ICC_USIM_TYPE1_TAG) {
+        onsuccess([{
+          adn:   {fileId: ICC_EF_ADN},
+          email: {fileId: EMAIL_FILE_ID,
+                  fileType: ICC_USIM_TYPE1_TAG},
+          anr0:  {fileId: ANR0_FILE_ID,
+                  fileType: ICC_USIM_TYPE1_TAG}
+        }]);
+      } else if (aFileType === ICC_USIM_TYPE2_TAG) {
+        onsuccess([{
+          adn:   {fileId: ICC_EF_ADN,
+                  sfi: ADN_SFI},
+          iap:   {fileId: IAP_FILE_ID},
+          email: {fileId: EMAIL_FILE_ID,
+                  fileType: ICC_USIM_TYPE2_TAG,
+                  indexInIAP: 0},
+          anr0:  {fileId: ANR0_FILE_ID,
+                  fileType: ICC_USIM_TYPE2_TAG,
+                  indexInIAP: 1}
+        }]);
+      }
     };
 
     recordHelper.updateADNLike = function (fileId, contact, pin2, onsuccess, onerror) {
-      do_check_eq(fileId, ADN_FILE_ID);
-      do_check_eq(contact.alphaId, oldContact.alphaId);
-      do_check_eq(contact.number, oldContact.number);
+      if (aContactType === "fdn") {
+        do_check_eq(fileId, ICC_EF_FDN);
+      } else if (aContactType === "adn") {
+        do_check_eq(fileId, ICC_EF_ADN);
+      }
+      do_check_eq(pin2, aPin2);
+      do_check_eq(contact.alphaId, aContact.alphaId);
+      do_check_eq(contact.number, aContact.number);
       onsuccess();
     };
 
@@ -2526,7 +2578,7 @@ add_test(function test_update_icc_contact() {
       } else if (pbr.email.fileType === ICC_USIM_TYPE2_TAG) {
         do_check_eq(recordNumber, EMAIL_RECORD_ID);
       }
-      do_check_eq(email, oldContact.email);
+      do_check_eq(email, aContact.email);
       onsuccess();
     };
 
@@ -2537,43 +2589,61 @@ add_test(function test_update_icc_contact() {
       } else if (pbr.anr0.fileType === ICC_USIM_TYPE2_TAG) {
         do_check_eq(recordNumber, ANR0_RECORD_ID);
       }
-      do_check_eq(number, oldContact.anr[0]);
+      do_check_eq(number, aContact.anr[0]);
       onsuccess();
     };
 
-    contactHelper.updateICCContact(CARD_APPTYPE_USIM, "adn", oldContact, null, onsuccess, onerror);
+    let onsuccess = function onsuccess() {
+      do_print("updateICCContact success");
+    };
+
+    let onerror = function onerror(errorMsg) {
+      do_print("updateICCContact failed: " + errorMsg);
+      do_check_true(false);
+    };
+
+    contactHelper.updateICCContact(aSimType, aContactType, aContact, aPin2, onsuccess, onerror);
   }
 
-  let successCb = function () {
-    count++;
-    if (count == NUM_TESTS) {
-      run_next_test();
-    }
-  }.bind(this);
+  let contact = {
+    recordId: ADN_RECORD_ID,
+    alphaId:  "test",
+    number:   "123456",
+    email:    "test@mail.com",
+    anr:      ["+654321"]
+  };
 
-  let errorCb = function (errorMsg) {
-    do_print("updateICCContact failed " + errorMsg);
-    do_check_true(false);
-    run_next_test();
-  }.bind(this);
+  // SIM
+  do_print("Test update SIM adn contacts");
+  do_test(CARD_APPTYPE_SIM, "adn", contact);
 
-  do_test([{adn:{fileId: ADN_FILE_ID},
-            email: {fileId: EMAIL_FILE_ID, fileType: ICC_USIM_TYPE1_TAG},
-            anr0: {fileId: ANR0_FILE_ID, fileType: ICC_USIM_TYPE1_TAG}}],
-          successCb,
-          errorCb);
+  do_print("Test update SIM fdn contacts");
+  do_test(CARD_APPTYPE_SIM, "fdn", contact, "1234");
 
-  do_test([{adn:{fileId: ADN_FILE_ID, sfi: ADN_SFI},
-            iap: {fileId: IAP_FILE_ID},
-            email: {fileId: EMAIL_FILE_ID,
-                    fileType: ICC_USIM_TYPE2_TAG,
-                    indexInIAP: 0},
-            anr0: {fileId: ANR0_FILE_ID,
-                   fileType: ICC_USIM_TYPE2_TAG,
-                   indexInIAP: 1}}],
-          successCb,
-          errorCb);
+  // USIM
+  do_print("Test update USIM adn contacts");
+  do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE1_TAG);
+  do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE2_TAG);
 
+  do_print("Test update USIM fdn contacts");
+  do_test(CARD_APPTYPE_USIM, "fdn", contact, "1234");
+
+  // RUIM
+  do_print("Test update RUIM adn contacts");
+  do_test(CARD_APPTYPE_RUIM, "adn", contact);
+
+  do_print("Test update RUIM fdn contacts");
+  do_test(CARD_APPTYPE_RUIM, "fdn", contact, "1234");
+
+  // RUIM with enhanced phone book
+  do_print("Test update RUIM adn contacts with enhanced phone book");
+  do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE1_TAG, true);
+  do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, true);
+
+  do_print("Test update RUIM fdn contacts with enhanced phone book");
+  do_test(CARD_APPTYPE_RUIM, "fdn", contact, "1234", null, true);
+
+  run_next_test();
 });
 
 /**
@@ -2606,58 +2676,51 @@ add_test(function test_find_free_icc_contact() {
   contactHelper.findFreeICCContact(CARD_APPTYPE_USIM, "adn", successCb, errorCb);
 });
 
-/**
- * Verify cardState 'corporateLocked'.
- */
-add_test(function test_card_state_corporateLocked() {
+add_test(function test_personalization_state() {
   let worker = newUint8Worker();
   let ril = worker.RIL;
-  let iccStatus = {
-    gsmUmtsSubscriptionAppIndex: 0,
-    apps: [
-      {
-        app_state: CARD_APPSTATE_SUBSCRIPTION_PERSO,
-        perso_substate: CARD_PERSOSUBSTATE_SIM_CORPORATE
-      }],
-  };
 
-  ril._processICCStatus(iccStatus);
-  do_check_eq(ril.cardState, GECKO_CARDSTATE_CORPORATE_LOCKED);
+  function testPersonalization(cardPersoState, geckoCardState) {
+    let iccStatus = {
+      gsmUmtsSubscriptionAppIndex: 0,
+      apps: [
+        {
+          app_state: CARD_APPSTATE_SUBSCRIPTION_PERSO,
+          perso_substate: cardPersoState
+        }],
+    };
+
+    ril._processICCStatus(iccStatus);
+    do_check_eq(ril.cardState, geckoCardState);
+  }
+
+  testPersonalization(CARD_PERSOSUBSTATE_SIM_NETWORK,
+                      GECKO_CARDSTATE_NETWORK_LOCKED);
+  testPersonalization(CARD_PERSOSUBSTATE_SIM_CORPORATE,
+                      GECKO_CARDSTATE_CORPORATE_LOCKED);
+  testPersonalization(CARD_PERSOSUBSTATE_SIM_SERVICE_PROVIDER,
+                      GECKO_CARDSTATE_SERVICE_PROVIDER_LOCKED);
+  testPersonalization(CARD_PERSOSUBSTATE_SIM_NETWORK_PUK,
+                      GECKO_CARDSTATE_NETWORK_PUK_REQUIRED);
+  testPersonalization(CARD_PERSOSUBSTATE_SIM_CORPORATE_PUK,
+                      GECKO_CARDSTATE_CORPORATE_PUK_REQUIRED);
+  testPersonalization(CARD_PERSOSUBSTATE_SIM_SERVICE_PROVIDER_PUK,
+                      GECKO_CARDSTATE_SERVICE_PROVIDER_PUK_REQUIRED);
 
   run_next_test();
 });
 
 /**
- * Verify cardState 'serviceProviderLocked'.
- */
-add_test(function test_card_state_serviceProviderLocked() {
-  let worker = newUint8Worker();
-  let ril = worker.RIL;
-  let iccStatus = {
-    gsmUmtsSubscriptionAppIndex: 0,
-    apps: [
-      {
-        app_state: CARD_APPSTATE_SUBSCRIPTION_PERSO,
-        perso_substate: CARD_PERSOSUBSTATE_SIM_SERVICE_PROVIDER
-      }],
-  };
-
-  ril._processICCStatus(iccStatus);
-  do_check_eq(ril.cardState, GECKO_CARDSTATE_SERVICE_PROVIDER_LOCKED);
-
-  run_next_test();
-});
-
-/**
- * Verify iccUnlockCardLock with lockType is "cck" and "spck".
+ * Verify iccUnlockCardLock.
  */
 add_test(function test_unlock_card_lock_corporateLocked() {
   let worker = newUint8Worker();
   let ril = worker.RIL;
   let buf = worker.Buf;
   const pin = "12345678";
+  const puk = "12345678";
 
-  function do_test(aLock, aPin) {
+  function do_test(aLock, aPassword) {
     buf.sendParcel = function fakeSendParcel () {
       // Request Type.
       do_check_eq(this.readUint32(), REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE);
@@ -2665,23 +2728,29 @@ add_test(function test_unlock_card_lock_corporateLocked() {
       // Token : we don't care
       this.readUint32();
 
-      let lockType = aLock === "cck" ?
-                     CARD_PERSOSUBSTATE_SIM_CORPORATE :
-                     CARD_PERSOSUBSTATE_SIM_SERVICE_PROVIDER;
-
+      let lockType = GECKO_PERSO_LOCK_TO_CARD_PERSO_LOCK[aLock];
       // Lock Type
       do_check_eq(this.readUint32(), lockType);
 
-      // Pin.
-      do_check_eq(this.readString(), aPin);
+      // Pin/Puk.
+      do_check_eq(this.readString(), aPassword);
     };
 
-    ril.iccUnlockCardLock({lockType: aLock,
-                           pin: aPin});
+    if (aLock.endsWith("Puk")) {
+      ril.iccUnlockCardLock({lockType: aLock,
+                             puk: aPassword});
+    } else {
+      ril.iccUnlockCardLock({lockType: aLock,
+                             pin: aPassword});
+    }
   }
 
+  do_test("nck", pin);
   do_test("cck", pin);
   do_test("spck", pin);
+  do_test("nckPuk", puk);
+  do_test("cckPuk", puk);
+  do_test("spckPuk", puk);
 
   run_next_test();
 });

@@ -218,12 +218,12 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
 
     // Any compartment with the trusted principals -- and there can be
     // multiple -- is a system compartment.
-    JSPrincipals *trusted = compartment->rt->trustedPrincipals();
+    JSPrincipals *trusted = compartment->runtimeFromMainThread()->trustedPrincipals();
     bool isSystem = principals && principals == trusted;
 
     // Clear out the old principals, if any.
     if (compartment->principals) {
-        JS_DropPrincipals(compartment->rt, compartment->principals);
+        JS_DropPrincipals(compartment->runtimeFromMainThread(), compartment->principals);
         compartment->principals = NULL;
         // We'd like to assert that our new principals is always same-origin
         // with the old one, but JSPrincipals doesn't give us a way to do that.
@@ -337,7 +337,7 @@ js::IsSystemZone(Zone *zone)
 JS_FRIEND_API(bool)
 js::IsAtomsCompartment(JSCompartment *comp)
 {
-    return comp == comp->rt->atomsCompartment;
+    return comp == comp->runtimeFromAnyThread()->atomsCompartment;
 }
 
 JS_FRIEND_API(bool)
@@ -920,7 +920,7 @@ JS::IncrementalObjectBarrier(JSObject *obj)
     if (!obj)
         return;
 
-    JS_ASSERT(!obj->zone()->rt->isHeapMajorCollecting());
+    JS_ASSERT(!obj->zone()->runtimeFromMainThread()->isHeapMajorCollecting());
 
     AutoMarkInDeadZone amn(obj->zone());
 
@@ -938,7 +938,7 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
                  ? static_cast<JSObject *>(cell)->zone()
                  : cell->tenuredZone();
 
-    JS_ASSERT(!zone->rt->isHeapMajorCollecting());
+    JS_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
 
     AutoMarkInDeadZone amn(zone);
 
@@ -1136,6 +1136,22 @@ js::IsInRequest(JSContext *cx)
 #endif
 }
 #endif
+
+void
+AsmJSModuleSourceDesc::init(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd)
+{
+    JS_ASSERT(scriptSource_ == NULL);
+    scriptSource_ = scriptSource;
+    bufStart_ = bufStart;
+    bufEnd_ = bufEnd;
+    scriptSource_->incref();
+}
+
+AsmJSModuleSourceDesc::~AsmJSModuleSourceDesc()
+{
+    if (scriptSource_)
+        scriptSource_->decref();
+}
 
 #ifdef JSGC_GENERATIONAL
 JS_FRIEND_API(void)
