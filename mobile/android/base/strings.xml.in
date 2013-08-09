@@ -254,6 +254,7 @@
   <string name="home_history_title">&home_history_title;</string>
   <string name="home_last_tabs_title">&home_last_tabs_title;</string>
   <string name="home_last_tabs_open">&home_last_tabs_open;</string>
+  <string name="home_last_tabs_empty">&home_last_tabs_empty;</string>
   <string name="home_most_recent_title">&home_most_recent_title;</string>
   <string name="home_most_recent_empty">&home_most_recent_empty;</string>
   <string name="home_most_visited_title">&home_most_visited_title;</string>
