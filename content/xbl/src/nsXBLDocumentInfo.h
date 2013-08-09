@@ -8,7 +8,6 @@
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsWeakReference.h"
 #include "nsIDocument.h"
 #include "nsCycleCollectionParticipant.h"
@@ -17,8 +16,7 @@ class nsXBLPrototypeBinding;
 class nsObjectHashtable;
 class nsXBLDocGlobalObject;
 
-class nsXBLDocumentInfo : public nsIScriptGlobalObjectOwner,
-                          public nsSupportsWeakReference
+class nsXBLDocumentInfo : public nsSupportsWeakReference
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -50,15 +48,11 @@ public:
 
   JSObject* GetCompilationGlobal();
 
-  // nsIScriptGlobalObjectOwner methods
-  virtual nsIScriptGlobalObject* GetScriptGlobalObject() MOZ_OVERRIDE;
-
   void MarkInCCGeneration(uint32_t aGeneration);
 
   static nsresult ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo);
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsXBLDocumentInfo,
-                                                         nsIScriptGlobalObjectOwner)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXBLDocumentInfo)
 
 private:
   void EnsureGlobalObject();
