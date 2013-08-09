@@ -30,7 +30,7 @@
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
     <dimen name="browser_toolbar_lock_width">20dp</dimen>
-    <dimen name="browser_toolbar_favicon_size">29.33dip</dimen>
+    <dimen name="browser_toolbar_favicon_size">25.33dip</dimen>
     <dimen name="favicon_bg">32dp</dimen>
     <dimen name="favicon_bg_radius">1dp</dimen>
 

@@ -21,6 +21,7 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
+#include "nsWeakPtr.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
@@ -111,7 +112,9 @@ class JSObject;
 
 struct nsMessageListenerInfo
 {
-  nsCOMPtr<nsIMessageListener> mListener;
+  // Exactly one of mStrongListener and mWeakListener must be non-null.
+  nsCOMPtr<nsIMessageListener> mStrongListener;
+  nsWeakPtr mWeakListener;
   nsCOMPtr<nsIAtom> mMessage;
 };
 

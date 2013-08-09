@@ -457,3 +457,100 @@ exports.testTabReload = function(test) {
     }
   });
 };
+
+exports.testOnPageShowEvent = function (test) {
+  test.waitUntilDone();
+
+  let events = [];
+  let firstUrl = 'data:text/html;charset=utf-8,First';
+  let secondUrl = 'data:text/html;charset=utf-8,Second';
+
+  let counter = 0;
+  function onPageShow (tab, persisted) {
+    events.push('pageshow');
+    counter++;
+    if (counter === 1) {
+      test.assertEqual(persisted, false, 'page should not be cached on initial load');
+      tab.url = secondUrl;
+    }
+    else if (counter === 2) {
+      test.assertEqual(persisted, false, 'second test page should not be cached either');
+      tab.attach({
+        contentScript: 'setTimeout(function () { window.history.back(); }, 0)'
+      });
+    }
+    else {
+      test.assertEqual(persisted, true, 'when we get back to the fist page, it has to' +
+                             'come from cache');
+      tabs.removeListener('pageshow', onPageShow);
+      tabs.removeListener('open', onOpen);
+      tabs.removeListener('ready', onReady);
+      tab.close(() => {
+        ['open', 'ready', 'pageshow', 'ready',
+            'pageshow', 'pageshow'].map((type, i) => {
+          test.assertEqual(type, events[i], 'correct ordering of events');
+        });
+        test.done()
+      });
+    }
+  }
+
+  function onOpen () events.push('open');
+  function onReady () events.push('ready');
+
+  tabs.on('pageshow', onPageShow);
+  tabs.on('open', onOpen);
+  tabs.on('ready', onReady);
+  tabs.open({
+    url: firstUrl
+  });
+};
+
+exports.testOnPageShowEventDeclarative = function (test) {
+  test.waitUntilDone();
+
+  let events = [];
+  let firstUrl = 'data:text/html;charset=utf-8,First';
+  let secondUrl = 'data:text/html;charset=utf-8,Second';
+
+  let counter = 0;
+  function onPageShow (tab, persisted) {
+    events.push('pageshow');
+    counter++;
+    if (counter === 1) {
+      test.assertEqual(persisted, false, 'page should not be cached on initial load');
+      tab.url = secondUrl;
+    }
+    else if (counter === 2) {
+      test.assertEqual(persisted, false, 'second test page should not be cached either');
+      tab.attach({
+        contentScript: 'setTimeout(function () { window.history.back(); }, 0)'
+      });
+    }
+    else {
+      test.assertEqual(persisted, true, 'when we get back to the fist page, it has to' +
+                             'come from cache');
+      tabs.removeListener('pageshow', onPageShow);
+      tabs.removeListener('open', onOpen);
+      tabs.removeListener('ready', onReady);
+      tab.close(() => {
+        ['open', 'ready', 'pageshow', 'ready',
+            'pageshow', 'pageshow'].map((type, i) => {
+          test.assertEqual(type, events[i], 'correct ordering of events');
+        });
+        test.done()
+      });
+    }
+  }
+
+  function onOpen () events.push('open');
+  function onReady () events.push('ready');
+
+  tabs.open({
+    url: firstUrl,
+    onPageShow: onPageShow,
+    onOpen: onOpen,
+    onReady: onReady
+  });
+};
+

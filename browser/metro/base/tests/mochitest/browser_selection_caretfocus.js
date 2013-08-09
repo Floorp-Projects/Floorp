@@ -31,7 +31,7 @@ gTests.push({
     yield addTab(chromeRoot + "browser_selection_caretfocus.html");
 
     yield waitForCondition(function () {
-      return !StartUI.isStartPageVisible;
+      return !BrowserUI.isStartTabVisible;
     });
 
     yield hideContextUI();

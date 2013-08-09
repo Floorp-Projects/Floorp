@@ -791,6 +791,7 @@ var AlertsHelper = {
 
     if (!manifestUrl || !manifestUrl.length) {
       send(null, null);
+      return;
     }
 
     // If we have a manifest URL, get the icon and title from the manifest

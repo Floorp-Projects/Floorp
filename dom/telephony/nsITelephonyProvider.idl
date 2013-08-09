@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(a1e9fdd9-7901-4a0f-8b6b-6ee0fa8f9d81)]
+[scriptable, uuid(3fb573c3-6fc4-41d3-80c1-f0e60662691e)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -82,6 +82,14 @@ interface nsITelephonyListener : nsISupports
    */
   void notifyError(in long callIndex,
                    in AString error);
+
+  /**
+   * Called when a waiting call comes in CDMA networks.
+   *
+   * @param number
+   *        Number of the other party.
+   */
+  void notifyCdmaCallWaiting(in AString number);
 };
 
 /**

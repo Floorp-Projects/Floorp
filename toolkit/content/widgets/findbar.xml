@@ -173,6 +173,7 @@
   <binding id="findbar"
            extends="chrome://global/content/bindings/toolbar.xml#toolbar">
     <resources>
+      <stylesheet src="chrome://global/content/bindings/findbar.css"/>
       <stylesheet src="chrome://global/skin/findBar.css"/>
     </resources>
 
@@ -240,6 +241,8 @@
 
       <field name="_flashFindBar">0</field>
       <field name="_initialFlashFindBarCount">6</field>
+
+      <field name="_contentScrollOffset">0</field>
 
       <property name="_foundLink"
                 onget="return this._foundLinkRef.get();"
@@ -1134,7 +1137,29 @@
 
           this._updateFindUI();
           if (this.hidden) {
+            // Use position:absolute during the transition.
+            this.style.position = "absolute";
+            this.parentNode.style.position = "relative";
+
+            // Apparently a flush is necessary after setting position:relative
+            // on our parentNode, otherwise setting hidden to false won't
+            // animate the transform change.
+            this.getBoundingClientRect();
+
             this.hidden = false;
+
+            // Set a height on the findbar that's at least as much as the
+            // current height, but guaranteed to be an integer number of
+            // screen pixels.
+            // This way, reapplying position:static on the findbar after the
+            // fade in animation won't cause the browser contents to wiggle.
+            let [chromeOffset, contentScrollOffset] = this._findOffsets();
+            this.style.height = chromeOffset + "px";
+            this._contentScrollOffset = contentScrollOffset;
+
+            // Wait for the findbar appearance animation to end before
+            // changing the browser size.
+            this.addEventListener("transitionend", this);
 
             this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
 
@@ -1178,6 +1203,16 @@
           }
 
           this.hidden = true;
+
+          this.addEventListener("transitionend", this);
+
+          // Revert browser scroll shift + findbar static positioning.
+          if (this.getAttribute("position") == "top" &&
+              this.style.position != "absolute") {
+            this._browser.contentWindow.scrollBy(0, -this._contentScrollOffset);
+          }
+          this.style.position = "absolute";
+
           var fastFind = this.browser.fastFind;
           fastFind.setSelectionModeAndRepaint
             (this.nsISelectionController.SELECTION_ON);
@@ -1479,7 +1514,55 @@
             case "keypress":
               this._onBrowserKeypress(aEvent);
               break;
+            case "transitionend":
+              if (aEvent.target == this &&
+                  aEvent.propertyName == "transform") {
+                this.removeEventListener("transitionend", this);
+
+                // Change the browser size in such a way that the region that's
+                // overlapped by the findbar can be scrolled to, but try to
+                // avoid a visual shift of the browser contents.
+                this.style.removeProperty("position");
+                if (this.getAttribute("position") == "top" &&
+                    !this.hidden) {
+                  this._browser.contentWindow.scrollBy(0, this._contentScrollOffset);
+                }
+
+                // We'd like to remove position:relative from this.parentNode,
+                // but that unfortunately causes unnecessary repainting.
+              }
+              break;
           }
+        ]]></body>
+      </method>
+
+      <method name="_screenPixelsPerCSSPixel">
+        <parameter name="aWindow"/>
+        <body><![CDATA[
+          return aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                        .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                        .screenPixelsPerCSSPixel;
+        ]]></body>
+      </method>
+
+      <!--
+        - Find two numbers, one in chrome CSS pixels and one in integer
+        - content CSS pixels, that are about the same as (but not less than)
+        - the height of the findbar. These two numbers hopefully map to the
+        - same number of integer screen pixels.
+        - We want to avoid shifting of the page even when chrome and content
+        - have different zoom factors, and scrollBy() only accepts integers.
+        -->
+      <method name="_findOffsets">
+        <body><![CDATA[
+          let chromeFactor = this._screenPixelsPerCSSPixel(window);
+          let contentFactor = this._screenPixelsPerCSSPixel(this._browser.contentWindow);
+
+          let findbarHeightScreen = this.getBoundingClientRect().height * chromeFactor;
+          let contentScrollOffset = Math.ceil(findbarHeightScreen / contentFactor);
+          let estimatedScrollOffsetInScreenPixels = Math.round(contentScrollOffset * contentFactor);
+          let chromeOffset = estimatedScrollOffsetInScreenPixels / chromeFactor;
+          return [chromeOffset, contentScrollOffset];
         ]]></body>
       </method>
 

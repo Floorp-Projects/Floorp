@@ -34,13 +34,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CrossSlide",
-                                  "resource:///modules/CrossSlide.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "View",
-                                  "resource:///modules/View.jsm");
 
 /*
  * Services
@@ -123,13 +118,8 @@ let ScriptContexts = {};
   ["Bookmarks", "chrome://browser/content/bookmarks.js"],
   ["Downloads", "chrome://browser/content/downloads.js"],
   ["ConsolePanelView", "chrome://browser/content/console.js"],
-  ["BookmarksStartView", "chrome://browser/content/bookmarks.js"],
-  ["HistoryView", "chrome://browser/content/history.js"],
-  ["HistoryStartView", "chrome://browser/content/history.js"],
   ["Site", "chrome://browser/content/Site.js"],
   ["TopSites", "chrome://browser/content/TopSites.js"],
-  ["TopSitesView", "chrome://browser/content/TopSites.js"],
-  ["TopSitesStartView", "chrome://browser/content/TopSites.js"],
   ["Sanitizer", "chrome://browser/content/sanitize.js"],
   ["SanitizeUI", "chrome://browser/content/sanitizeUI.js"],
   ["SSLExceptions", "chrome://browser/content/exceptions.js"],
@@ -137,10 +127,6 @@ let ScriptContexts = {};
   ["NavButtonSlider", "chrome://browser/content/NavButtonSlider.js"],
   ["ContextUI", "chrome://browser/content/ContextUI.js"],
   ["FlyoutPanelsUI", "chrome://browser/content/flyoutpanels/FlyoutPanelsUI.js"],
-#ifdef MOZ_SERVICES_SYNC
-  ["RemoteTabsView", "chrome://browser/content/RemoteTabs.js"],
-  ["RemoteTabsStartView", "chrome://browser/content/RemoteTabs.js"],
-#endif
 ].forEach(function (aScript) {
   let [name, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {

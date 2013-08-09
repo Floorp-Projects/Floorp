@@ -1955,7 +1955,13 @@ let RIL = {
   holdCall: function holdCall(options) {
     let call = this.currentCalls[options.callIndex];
     if (call && call.state == CALL_STATE_ACTIVE) {
-      Buf.simpleRequest(REQUEST_SWITCH_HOLDING_AND_ACTIVE);
+      if (this._isCdma) {
+        Buf.newParcel(REQUEST_CDMA_FLASH);
+        Buf.writeString("");
+        Buf.sendParcel();
+      } else {
+        Buf.simpleRequest(REQUEST_SWITCH_HOLDING_AND_ACTIVE);
+      }
     }
   },
 
@@ -6179,7 +6185,19 @@ RIL[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = function UNSOLICITED_RESPONSE_NEW_
 RIL[UNSOLICITED_CDMA_RUIM_SMS_STORAGE_FULL] = null;
 RIL[UNSOLICITED_RESTRICTED_STATE_CHANGED] = null;
 RIL[UNSOLICITED_ENTER_EMERGENCY_CALLBACK_MODE] = null;
-RIL[UNSOLICITED_CDMA_CALL_WAITING] = null;
+RIL[UNSOLICITED_CDMA_CALL_WAITING] = function UNSOLICITED_CDMA_CALL_WAITING(length) {
+  let call = {};
+  call.number              = Buf.readString();
+  call.numberPresentation  = Buf.readUint32();
+  call.name                = Buf.readString();
+  call.namePresentation    = Buf.readUint32();
+  call.isPresent           = Buf.readUint32();
+  call.signalType          = Buf.readUint32();
+  call.alertPitch          = Buf.readUint32();
+  call.signal              = Buf.readUint32();
+  this.sendChromeMessage({rilMessageType: "cdmaCallWaiting",
+                          number: call.number});
+};
 RIL[UNSOLICITED_CDMA_OTA_PROVISION_STATUS] = null;
 RIL[UNSOLICITED_CDMA_INFO_REC] = null;
 RIL[UNSOLICITED_OEM_HOOK_RAW] = null;

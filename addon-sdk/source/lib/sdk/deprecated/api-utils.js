@@ -5,12 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-
 module.metadata = {
   "stability": "deprecated"
 };
 
 const memory = require("./memory");
+
+const { merge } = require("../util/object");
+const { union } = require("../util/array");
+const { isNil } = require("../lang/type");
+
 // The possible return values of getTypeOf.
 const VALID_TYPES = [
   "array",
@@ -22,6 +26,8 @@ const VALID_TYPES = [
   "string",
   "undefined",
 ];
+
+const { isArray } = Array;
 
 /**
  * Returns a function C that creates instances of privateCtor.  C may be called
@@ -86,6 +92,7 @@ exports.validateOptions = function validateOptions(options, requirements) {
   let validatedOptions = {};
 
   for (let key in requirements) {
+    let isOptional = false;
     let mapThrew = false;
     let req = requirements[key];
     let [optsVal, keyInOpts] = (key in options) ?
@@ -103,17 +110,27 @@ exports.validateOptions = function validateOptions(options, requirements) {
       }
     }
     if (req.is) {
-      // Sanity check the caller's type names.
-      req.is.forEach(function (typ) {
-        if (VALID_TYPES.indexOf(typ) < 0) {
-          let msg = 'Internal error: invalid requirement type "' + typ + '".';
-          throw new Error(msg);
-        }
-      });
-      if (req.is.indexOf(getTypeOf(optsVal)) < 0)
-        throw new RequirementError(key, req);
+      let types = req.is;
+
+      if (!isArray(types) && isArray(types.is))
+        types = types.is;
+
+      if (isArray(types)) {
+        isOptional = ['undefined', 'null'].every(v => ~types.indexOf(v));
+
+        // Sanity check the caller's type names.
+        types.forEach(function (typ) {
+          if (VALID_TYPES.indexOf(typ) < 0) {
+            let msg = 'Internal error: invalid requirement type "' + typ + '".';
+            throw new Error(msg);
+          }
+        });
+        if (types.indexOf(getTypeOf(optsVal)) < 0)
+          throw new RequirementError(key, req);
+      }
     }
-    if (req.ok && !req.ok(optsVal))
+
+    if (req.ok && ((!isOptional || !isNil(optsVal)) && !req.ok(optsVal)))
       throw new RequirementError(key, req);
 
     if (keyInOpts || (req.map && !mapThrew && optsVal !== undefined))
@@ -142,7 +159,7 @@ let getTypeOf = exports.getTypeOf = function getTypeOf(val) {
   if (typ === "object") {
     if (!val)
       return "null";
-    if (Array.isArray(val))
+    if (isArray(val))
       return "array";
   }
   return typ;
@@ -164,3 +181,38 @@ function RequirementError(key, requirement) {
   this.message = msg;
 }
 RequirementError.prototype = Object.create(Error.prototype);
+
+let string = { is: ['string', 'undefined', 'null'] };
+exports.string = string;
+
+let number = { is: ['number', 'undefined', 'null'] };
+exports.number = number;
+
+let boolean = { is: ['boolean', 'undefined', 'null'] };
+exports.boolean = boolean;
+
+let object = { is: ['object', 'undefined', 'null'] };
+exports.object = object;
+
+let isTruthyType = type => !(type === 'undefined' || type === 'null');
+let findTypes = v => { while (!isArray(v) && v.is) v = v.is; return v };
+
+function required(req) {
+  let types = (findTypes(req) || VALID_TYPES).filter(isTruthyType);
+
+  return merge({}, req, {is: types});
+}
+exports.required = required;
+
+function optional(req) {
+  req = merge({is: []}, req);
+  req.is = findTypes(req).filter(isTruthyType).concat('undefined', 'null');
+
+  return req;
+}
+exports.optional = optional;
+
+function either(...types) {
+  return union.apply(null, types.map(findTypes));
+}
+exports.either = either;

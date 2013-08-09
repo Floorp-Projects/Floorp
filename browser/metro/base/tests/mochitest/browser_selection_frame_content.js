@@ -38,7 +38,7 @@ gTests.push({
     yield addTab(chromeRoot + "browser_selection_frame_content.html");
 
     yield waitForCondition(function () {
-      return !StartUI.isStartPageVisible;
+      return !BrowserUI.isStartTabVisible;
       }, 10000, 100);
 
     yield hideContextUI();
@@ -138,7 +138,7 @@ gTests.push({
 
     yield promise;
     ok(promise && !(promise instanceof Error), "promise error");
-    ok(ContextMenuUI._menuPopup._visible, "is visible");
+    ok(ContextMenuUI._menuPopup.visible, "is visible");
 
     let menuItem = document.getElementById("context-copy");
     ok(menuItem, "menu item exists");

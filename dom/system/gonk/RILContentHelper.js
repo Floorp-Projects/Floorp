@@ -105,7 +105,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:ReadIccContacts",
   "RIL:UpdateIccContact",
   "RIL:SetRoamingPreference",
-  "RIL:GetRoamingPreference"
+  "RIL:GetRoamingPreference",
+  "RIL:CdmaCallWaiting"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -1599,6 +1600,11 @@ RILContentHelper.prototype = {
       case "RIL:GetRoamingPreference":
         this.handleSimpleRequest(msg.json.requestId, msg.json.errorMsg,
                                  msg.json.mode);
+        break;
+      case "RIL:CdmaCallWaiting":
+        this._deliverEvent("_telephonyListeners",
+                           "notifyCdmaCallWaiting",
+                           [msg.json.data]);
         break;
     }
   },

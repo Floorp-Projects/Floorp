@@ -15,16 +15,15 @@
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="documenttab">
-    <content observes="bcast_urlbarState">
+    <content>
       <xul:stack class="documenttab-container">
-        <xul:box anonid="thumbnail" class="documenttab-thumbnail" />
-        <xul:image anonid="favicon" class="documenttab-favicon"
-                   observes="bcast_urlbarState" width="26" height="26"/>
+        <html:canvas anonid="thumbnail-canvas" class="documenttab-thumbnail" />
+        <xul:image anonid="favicon" class="documenttab-favicon" width="26" height="26"/>
 
         <xul:label anonid="title" class="documenttab-title" bottom="0" start="0" end="0" crop="end"/>
         <xul:box anonid="selection" class="documenttab-crop"/>
         <xul:box anonid="selection" class="documenttab-selection"/>
-        <xul:button anonid="close" class="documenttab-close" observes="bcast_urlbarState" end="0" top="0"
+        <xul:button anonid="close" class="documenttab-close" end="0" top="0"
                     onclick="event.stopPropagation(); document.getBindingParent(this)._onClose()"
                     label="&closetab.label;"/>
       </xul:stack>
@@ -36,11 +35,18 @@
     </handlers>
 
     <implementation>
-      <field name="_thumbnail" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "thumbnail");</field>
+      <field name="thumbnailCanvas" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "thumbnail-canvas");</field>
       <field name="_close" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "close");</field>
       <field name="_title" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "title");</field>
       <field name="_favicon" readonly="true">document.getAnonymousElementByAttribute(this, "anonid", "favicon");</field>
       <field name="_container" readonly="true">this.parentNode;</field>
+
+      <constructor>
+        <![CDATA[
+          this.thumbnailCanvas.mozOpaque = true;
+          this.thumbnailCanvas.mozImageSmoothingEnabled = true;
+        ]]>
+      </constructor>
 
       <method name="_onClick">
         <body>
@@ -90,14 +96,6 @@
         </body>
       </method>
 
-      <method name="updateThumbnailSource">
-        <parameter name="browser"/>
-        <body>
-          <![CDATA[
-            this._thumbnail.style.backgroundImage = "-moz-element(#" + browser.id + ")";
-          ]]>
-        </body>
-      </method>
     </implementation>
   </binding>
 
