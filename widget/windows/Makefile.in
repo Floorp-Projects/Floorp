@@ -13,9 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= widget_windows
 MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY	= 1
-IS_COMPONENT	= 1
 RESFILE		= widget.res
-MODULE_NAME	= nsWidgetWinModule
 LIBXUL_LIBRARY = 1
 
 DEFINES		+= -DMOZ_UNICODE 

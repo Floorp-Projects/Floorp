@@ -57,8 +57,11 @@ SHARED_LIBRARY_LIBS += $(DEPTH)/accessible/src/xul/$(LIB_PREFIX)accessibility_xu
 endif
 endif
 
+# XXX bug 903227 COMPONENT_LIBS is useless since bug 886526, but removing it
+# reorders the static libraries which makes msvc use more memory to link
+# xul.dll.
 SHARED_LIBRARY_LIBS += \
-  $(foreach component,$(COMPONENT_LIBS),$(DEPTH)/staticlib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
+  $(foreach component,$(COMPONENT_LIBS),$(DEPTH)/staticlib/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
   $(foreach lib,$(STATIC_LIBS),$(DEPTH)/staticlib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
   $(NULL)
 
