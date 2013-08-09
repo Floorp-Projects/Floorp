@@ -100,6 +100,23 @@ These are attributes that all settings *may* have:
 	this may be an integer, string, or boolean value.</td>
   </tr>
 
+  <tr>
+    <td><code>hidden</code></td>
+    <td><p>A boolean value which, if present and set to <code>true</code>,
+    means that the setting won't appear in the Add-ons Manager interface,
+    so users of your add-on won't be able to see or alter it.</p>
+    <pre>
+{
+    "name": "myHiddenInteger",
+    "type": "integer",
+    "title": "How Many?",
+    "hidden": true
+}</pre>
+    <p>Your add-on's code will still be able to access and modify it,
+    just like any other preference you define.</p>
+    </td>
+  </tr>
+
 </table>
 
 ### Setting-Specific Attributes ###

@@ -10,12 +10,12 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 #ifndef MOZ_WIDGET_GONK
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 #endif
 Cu.import("resource://gre/modules/ctypes.jsm");
 Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm");
+Cu.import("resource://gre/modules/TelemetryFile.jsm");
 
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 1;
@@ -37,15 +37,6 @@ const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
 const TELEMETRY_INTERVAL = 60000;
 // Delay before intializing telemetry (ms)
 const TELEMETRY_DELAY = 60000;
-// Delete ping files that have been lying around for longer than this.
-const MAX_PING_FILE_AGE = 7 * 24 * 60 * 60 * 1000; // 1 week
-// Constants from prio.h for nsIFileOutputStream.init
-const PR_WRONLY = 0x2;
-const PR_CREATE_FILE = 0x8;
-const PR_TRUNCATE = 0x20;
-const PR_EXCL = 0x80;
-const RW_OWNER = 0600;
-const RWX_OWNER = 0700;
 
 // MEM_HISTOGRAMS lists the memory reporters we turn into histograms.
 //
@@ -172,15 +163,7 @@ TelemetryPing.prototype = {
   _prevSession: null,
   _hasWindowRestoredObserver: false,
   _hasXulWindowVisibleObserver: false,
-  _pendingPings: [],
-  _doLoadSaveNotifications: false,
   _startupIO : {},
-  // The number of outstanding saved pings that we have issued loading
-  // requests for.
-  _pingsLoaded: 0,
-  // The number of those requests that have actually completed.
-  _pingLoadsCompleted: 0,
-  _savedProfileDirectory: null,
   // The previous build ID, if this is the first run with a new build.
   // Undefined if this is not the first run, or the previous build ID is unknown.
   _previousBuildID: undefined,
@@ -258,7 +241,7 @@ TelemetryPing.prototype = {
     } catch(e) {
     }
     if (!forSavedSession || hasPingBeenSent) {
-      ret.savedPings = this._pingsLoaded;
+      ret.savedPings = TelemetryFile.pingsLoaded;
     }
 
     return ret;
@@ -593,16 +576,11 @@ TelemetryPing.prototype = {
     return this.assemblePing(this.getSessionPayload(reason), reason);
   },
 
-  getPayloads: function getPayloads(reason) {
+  popPayloads: function popPayloads(reason) {
     function payloadIter() {
       yield this.getSessionPayloadAndSlug(reason);
-
-      while (this._pendingPings.length > 0) {
-        let data = this._pendingPings.pop();
-        // Send persisted pings to the test URL too.
-        if (reason == "test-ping") {
-          data.reason = reason;
-        }
+      let iterator = TelemetryFile.popPendingPings(reason);
+      for (let data of iterator) {
         yield data;
       }
     }
@@ -618,7 +596,7 @@ TelemetryPing.prototype = {
     // populate histograms one last time
     this.gatherMemory();
     this.sendPingsFromIterator(server, reason,
-                               Iterator(this.getPayloads(reason)));
+                               Iterator(this.popPayloads(reason)));
   },
 
   /**
@@ -651,7 +629,7 @@ TelemetryPing.prototype = {
       this.sendPingsFromIterator(server, reason, i);
     }
     function onError() {
-      this.savePing(data, true);
+      TelemetryFile.savePing(data, true);
       // Notify that testing is complete, even if we didn't send everything.
       finishPings(reason);
     }
@@ -667,11 +645,7 @@ TelemetryPing.prototype = {
     hping.add(new Date() - startTime);
 
     if (success) {
-      let file = this.saveFileForPing(ping);
-      try {
-        file.remove(true);
-      } catch(e) {
-      }
+      TelemetryFile.cleanupPingFile(ping);
     }
   },
 
@@ -820,7 +794,11 @@ TelemetryPing.prototype = {
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     function timerCallback() {
       this._initialized = true;
-      this.loadSavedPings(false);
+      TelemetryFile.loadSavedPings(false, (success =>
+        {
+          let success_histogram = Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS");
+          success_histogram.add(success);
+        }));
       this.attachObservers();
       this.gatherMemory();
 
@@ -832,128 +810,12 @@ TelemetryPing.prototype = {
                                  Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
-  addToPendingPings: function addToPendingPings(file, stream) {
-    let success = false;
-
-    try {
-      let string = NetUtil.readInputStreamToString(stream, stream.available(), { charset: "UTF-8" });
-      stream.close();
-      let ping = JSON.parse(string);
-      // The ping's payload used to be stringified JSON.  Deal with that.
-      if (typeof(ping.payload) == "string") {
-        ping.payload = JSON.parse(ping.payload);
-      }
-      this._pingLoadsCompleted++;
-      this._pendingPings.push(ping);
-      if (this._doLoadSaveNotifications &&
-          this._pingLoadsCompleted == this._pingsLoaded) {
-        Services.obs.notifyObservers(null, "telemetry-test-load-complete", null);
-      }
-      success = true;
-    } catch (e) {
-      // An error reading the file, or an error parsing the contents.
-      stream.close();           // close is idempotent.
-      file.remove(true);
-    }
-    let success_histogram = Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS");
-    success_histogram.add(success);
-  },
-
-  loadHistograms: function loadHistograms(file, sync) {
-    let now = new Date();
-    if (now - file.lastModifiedTime > MAX_PING_FILE_AGE) {
-      // We haven't had much luck in sending this file; delete it.
-      file.remove(true);
-      return;
-    }
-
-    this._pingsLoaded++;
-    if (sync) {
-      let stream = Cc["@mozilla.org/network/file-input-stream;1"]
-                   .createInstance(Ci.nsIFileInputStream);
-      stream.init(file, -1, -1, 0);
-      this.addToPendingPings(file, stream);
-    } else {
-      let channel = NetUtil.newChannel(file);
-      channel.contentType = "application/json"
-
-      NetUtil.asyncFetch(channel, (function(stream, result) {
-        if (!Components.isSuccessCode(result)) {
-          return;
-        }
-        this.addToPendingPings(file, stream);
-      }).bind(this));
-    }
-  },
-
   testLoadHistograms: function testLoadHistograms(file, sync) {
-    this._pingsLoaded = 0;
-    this._pingLoadsCompleted = 0;
-    this.loadHistograms(file, sync);
-  },
-
-  loadSavedPings: function loadSavedPings(sync) {
-    let directory = this.ensurePingDirectory();
-    let entries = directory.directoryEntries
-                           .QueryInterface(Ci.nsIDirectoryEnumerator);
-    this._pingsLoaded = 0;
-    this._pingLoadsCompleted = 0;
-    try {
-      while (entries.hasMoreElements()) {
-        this.loadHistograms(entries.nextFile, sync);
-      }
-    }
-    finally {
-      entries.close();
-    }
-  },
-
-  finishTelemetrySave: function finishTelemetrySave(ok, stream) {
-    stream.close();
-    if (this._doLoadSaveNotifications && ok) {
-      Services.obs.notifyObservers(null, "telemetry-test-save-complete", null);
-    }
-  },
-
-  savePingToFile: function savePingToFile(ping, file, sync, overwrite) {
-    let pingString = JSON.stringify(ping);
-
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
-    let ostream = Cc["@mozilla.org/network/file-output-stream;1"]
-                  .createInstance(Ci.nsIFileOutputStream);
-    let initFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
-    if (!overwrite) {
-      initFlags |= PR_EXCL;
-    }
-    try {
-      ostream.init(file, initFlags, RW_OWNER, 0);
-    } catch (e) {
-      // Probably due to PR_EXCL.
-      return;
-    }
-
-    if (sync) {
-      let utf8String = converter.ConvertFromUnicode(pingString);
-      utf8String += converter.Finish();
-      let success = false;
-      try {
-        let amount = ostream.write(utf8String, utf8String.length);
-        success = amount == utf8String.length;
-      } catch (e) {
-      }
-      this.finishTelemetrySave(success, ostream);
-    } else {
-      let istream = converter.convertToInputStream(pingString)
-      let self = this;
-      NetUtil.asyncCopy(istream, ostream,
-                        function(result) {
-                          self.finishTelemetrySave(Components.isSuccessCode(result),
-                                                   ostream);
-                        });
-    }
+    TelemetryFile.testLoadHistograms(file, sync, (success =>
+        {
+          let success_histogram = Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS");
+          success_histogram.add(success);
+        }));
   },
 
   getFlashVersion: function getFlashVersion() {
@@ -968,39 +830,15 @@ TelemetryPing.prototype = {
     return null;
   },
 
-  ensurePingDirectory: function ensurePingDirectory() {
-    let directory = this._savedProfileDirectory.clone();
-    directory.append("saved-telemetry-pings");
-    try {
-      directory.create(Ci.nsIFile.DIRECTORY_TYPE, RWX_OWNER);
-    } catch (e) {
-      // Already exists, just ignore this.
-    }
-    return directory;
-  },
-
-  saveFileForPing: function saveFileForPing(ping) {
-    let file = this.ensurePingDirectory();
-    file.append(ping.slug);
-    return file;
-  },
-
-  savePing: function savePing(ping, overwrite) {
-    this.savePingToFile(ping, this.saveFileForPing(ping), true, overwrite);
-  },
-
   savePendingPings: function savePendingPings() {
     let sessionPing = this.getSessionPayloadAndSlug("saved-session");
-    this.savePing(sessionPing, true);
-    this._pendingPings.forEach(function sppcb(e, i, a) {
-                                 this.savePing(e, false);
-                               }, this);
-    this._pendingPings = [];
+    TelemetryFile.savePendingPings(sessionPing);
   },
 
   saveHistograms: function saveHistograms(file, sync) {
-    this.savePingToFile(this.getSessionPayloadAndSlug("saved-session"),
-                        file, sync, true);
+    TelemetryFile.savePingToFile(
+      this.getSessionPayloadAndSlug("saved-session"),
+      file, sync, true);
   },
 
   /** 
@@ -1045,7 +883,7 @@ TelemetryPing.prototype = {
   },
 
   enableLoadSaveNotifications: function enableLoadSaveNotifications() {
-    this._doLoadSaveNotifications = true;
+    TelemetryFile.shouldNotifyUponSave = true;
   },
 
   setAddOns: function setAddOns(aAddOns) {
@@ -1069,7 +907,8 @@ TelemetryPing.prototype = {
   },
 
   cacheProfileDirectory: function cacheProfileDirectory() {
-    this._savedProfileDirectory = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    // This method doesn't do anything anymore
+    return;
   },
 
   /**
@@ -1079,7 +918,6 @@ TelemetryPing.prototype = {
     switch (aTopic) {
     case "profile-after-change":
       this.setup();
-      this.cacheProfileDirectory();
       break;
     case "cycle-collector-begin":
       let now = new Date();
@@ -1146,7 +984,7 @@ TelemetryPing.prototype = {
     case "application-background":
       if (Telemetry.canSend) {
         let ping = this.getSessionPayloadAndSlug("saved-session");
-        this.savePing(ping, true);
+        TelemetryFile.savePing(ping, true);
       }
       break;
 #endif

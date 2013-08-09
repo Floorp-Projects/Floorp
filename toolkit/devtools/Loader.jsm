@@ -51,6 +51,7 @@ var BuiltinProvider = {
         "devtools": "resource:///modules/devtools",
         "devtools/server": "resource://gre/modules/devtools/server",
         "devtools/toolkit/webconsole": "resource://gre/modules/devtools/toolkit/webconsole",
+        "devtools/styleinspector/css-logic": "resource://gre/modules/devtools/styleinspector/css-logic",
 
         // Allow access to xpcshell test items from the loader.
         "xpcshell-test": "resource://test"
@@ -85,6 +86,8 @@ var SrcdirProvider = {
     let toolkitURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools"));
     let serverURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "server"));
     let webconsoleURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "webconsole"));
+    let cssLogicURI = this.fileURI(OS.Path.join(toolkitURI, "styleinspector", "css-logic"));
+
     let mainURI = this.fileURI(OS.Path.join(srcdir, "browser", "devtools", "main.js"));
     this.loader = new loader.Loader({
       modules: {
@@ -95,6 +98,7 @@ var SrcdirProvider = {
         "devtools/server": serverURI,
         "devtools/toolkit/webconsole": webconsoleURI,
         "devtools": devtoolsURI,
+        "devtools/styleinspector/css-logic": cssLogicURI,
         "main": mainURI
       },
       globals: loaderGlobals

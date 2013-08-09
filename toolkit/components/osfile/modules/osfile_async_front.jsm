@@ -23,6 +23,7 @@ this.EXPORTED_SYMBOLS = ["OS"];
 
 let SharedAll = {};
 Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+Components.utils.import("resource://gre/modules/Deprecated.jsm", this);
 
 // Boilerplate, to simplify the transition to require()
 let OS = SharedAll.OS;
@@ -725,7 +726,14 @@ File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
  * @constructor
  */
 File.Info = function Info(value) {
-  return value;
+  // Note that we can't just do this[k] = value[k] because our
+  // prototype defines getters for all of these fields.
+  for (let k in value) {
+    if (k != "creationDate") {
+      Object.defineProperty(this, k, {value: value[k]});
+    }
+  }
+  Object.defineProperty(this, "_deprecatedCreationDate", {value: value["creationDate"]});
 };
 if (OS.Constants.Win) {
   File.Info.prototype = Object.create(OS.Shared.Win.AbstractInfo.prototype);
@@ -734,6 +742,14 @@ if (OS.Constants.Win) {
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
+
+// Deprecated
+Object.defineProperty(File.Info.prototype, "creationDate", {
+  get: function creationDate() {
+    Deprecated.warning("Field 'creationDate' is deprecated.", "https://developer.mozilla.org/en-US/docs/JavaScript_OS.File/OS.File.Info#Cross-platform_Attributes");
+    return this._deprecatedCreationDate;
+  }
+});
 
 File.Info.fromMsg = function fromMsg(value) {
   return new File.Info(value);
