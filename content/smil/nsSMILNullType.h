@@ -44,8 +44,10 @@ protected:
 private:
   // Private constructor & destructor: prevent instances beyond my singleton,
   // and prevent others from deleting my singleton.
-  nsSMILNullType()  {}
+  MOZ_CONSTEXPR nsSMILNullType() {}
+#ifdef DEBUG
   ~nsSMILNullType() {}
+#endif
 };
 
 #endif // NS_SMILNULLTYPE_H_
