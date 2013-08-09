@@ -313,7 +313,7 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
     //  - a pointer to the module from which it was returned
     //  - its index in the ordered list of exported functions
     RootedObject moduleObj(cx, &callee->getExtendedSlot(ASM_MODULE_SLOT).toObject());
-    AsmJSModule &module = AsmJSModuleObjectToModule(moduleObj);
+    AsmJSModule &module = moduleObj->as<AsmJSModuleObject>().module();
 
     // An exported function points to the code as well as the exported
     // function's signature, which implies the dynamic coercions performed on
@@ -576,7 +576,7 @@ SendModuleToAttachedProfiler(JSContext *cx, AsmJSModule &module)
 static JSObject *
 CreateExportObject(JSContext *cx, HandleObject moduleObj)
 {
-    AsmJSModule &module = AsmJSModuleObjectToModule(moduleObj);
+    AsmJSModule &module = moduleObj->as<AsmJSModuleObject>().module();
 
     if (module.numExportedFunctions() == 1) {
         const AsmJSModule::ExportedFunction &func = module.exportedFunction(0);
@@ -616,7 +616,7 @@ LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
     // function and stores its module in an extended slot.
     RootedFunction fun(cx, &args.callee().as<JSFunction>());
     RootedObject moduleObj(cx,  &fun->getExtendedSlot(MODULE_FUN_SLOT).toObject());
-    AsmJSModule &module = AsmJSModuleObjectToModule(moduleObj);
+    AsmJSModule &module = moduleObj->as<AsmJSModuleObject>().module();
 
     // Link the module by performing the link-time validation checks in the
     // asm.js spec and then patching the generated module to associate it with

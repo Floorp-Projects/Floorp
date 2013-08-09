@@ -15,70 +15,11 @@
 # include "jswin.h"
 #endif
 
+#include "js/MemoryMetrics.h"
+
 #include "jsobjinlines.h"
 
 using namespace js;
-
-static void AsmJSModuleObject_finalize(FreeOp *fop, JSObject *obj);
-static void AsmJSModuleObject_trace(JSTracer *trc, JSObject *obj);
-
-static const unsigned ASM_CODE_RESERVED_SLOT = 0;
-static const unsigned ASM_CODE_NUM_RESERVED_SLOTS = 1;
-
-static Class AsmJSModuleClass = {
-    "AsmJSModuleObject",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(ASM_CODE_NUM_RESERVED_SLOTS),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    NULL,                    /* convert     */
-    AsmJSModuleObject_finalize,
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
-    NULL,                    /* hasInstance */
-    NULL,                    /* construct   */
-    AsmJSModuleObject_trace
-};
-
-bool
-js::IsAsmJSModuleObject(JSObject *obj)
-{
-    return obj->getClass() == &AsmJSModuleClass;
-}
-
-AsmJSModule &
-js::AsmJSModuleObjectToModule(JSObject *obj)
-{
-    JS_ASSERT(IsAsmJSModuleObject(obj));
-    return *(AsmJSModule *)obj->getReservedSlot(ASM_CODE_RESERVED_SLOT).toPrivate();
-}
-
-static void
-AsmJSModuleObject_finalize(FreeOp *fop, JSObject *obj)
-{
-    fop->delete_(&AsmJSModuleObjectToModule(obj));
-}
-
-static void
-AsmJSModuleObject_trace(JSTracer *trc, JSObject *obj)
-{
-    AsmJSModuleObjectToModule(obj).trace(trc);
-}
-
-JSObject *
-js::NewAsmJSModuleObject(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module)
-{
-    JSObject *obj = NewObjectWithGivenProto(cx, &AsmJSModuleClass, NULL, NULL);
-    if (!obj)
-        return NULL;
-
-    obj->setReservedSlot(ASM_CODE_RESERVED_SLOT, PrivateValue(module->forget()));
-    return obj;
-}
 
 void
 AsmJSModule::patchHeapAccesses(ArrayBufferObject *heap, JSContext *cx)
@@ -178,4 +119,73 @@ AsmJSModule::~AsmJSModule()
 
     for (size_t i = 0; i < numFunctionCounts(); i++)
         js_delete(functionCounts(i));
+}
+
+void
+AsmJSModule::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
+                        size_t *asmJSModuleData)
+{
+    *asmJSModuleCode = totalBytes_;
+    *asmJSModuleData = mallocSizeOf(this) +
+                       globals_.sizeOfExcludingThis(mallocSizeOf) +
+                       exits_.sizeOfExcludingThis(mallocSizeOf) +
+                       exports_.sizeOfExcludingThis(mallocSizeOf) +
+                       heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
+#if defined(MOZ_VTUNE)
+                       profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+#endif
+#if defined(JS_ION_PERF)
+                       perfProfiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+                       perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+#endif
+                       functionCounts_.sizeOfExcludingThis(mallocSizeOf);
+}
+
+static void
+AsmJSModuleObject_finalize(FreeOp *fop, JSObject *obj)
+{
+    fop->delete_(&obj->as<AsmJSModuleObject>().module());
+}
+
+static void
+AsmJSModuleObject_trace(JSTracer *trc, JSObject *obj)
+{
+    obj->as<AsmJSModuleObject>().module().trace(trc);
+}
+
+Class AsmJSModuleObject::class_ = {
+    "AsmJSModuleObject",
+    JSCLASS_IS_ANONYMOUS | JSCLASS_IMPLEMENTS_BARRIERS |
+    JSCLASS_HAS_RESERVED_SLOTS(AsmJSModuleObject::RESERVED_SLOTS),
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    NULL,                    /* convert     */
+    AsmJSModuleObject_finalize,
+    NULL,                    /* checkAccess */
+    NULL,                    /* call        */
+    NULL,                    /* hasInstance */
+    NULL,                    /* construct   */
+    AsmJSModuleObject_trace
+};
+
+AsmJSModuleObject *
+AsmJSModuleObject::create(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module)
+{
+    JSObject *obj = NewObjectWithGivenProto(cx, &AsmJSModuleObject::class_, NULL, NULL);
+    if (!obj)
+        return NULL;
+
+    obj->setReservedSlot(MODULE_SLOT, PrivateValue(module->forget()));
+    return &obj->as<AsmJSModuleObject>();
+}
+
+AsmJSModule &
+AsmJSModuleObject::module() const
+{
+    JS_ASSERT(is<AsmJSModuleObject>());
+    return *(AsmJSModule *)getReservedSlot(MODULE_SLOT).toPrivate();
 }
