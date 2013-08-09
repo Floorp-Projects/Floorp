@@ -1263,7 +1263,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     JS_SourceHook       sourceHook;
 
-    /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
+    /* Per runtime debug hooks -- see jsdbgapi.h. */
     JSDebugHooks        debugHooks;
 
     /* If true, new compartments are initially in debug mode. */

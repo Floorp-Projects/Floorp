@@ -9,6 +9,7 @@
 
 #include "jsalloc.h"
 #include "jsapi.h"
+#include "jsdbgapi.h"
 #include "jsfriendapi.h"
 #include "jsprvtd.h"
 
