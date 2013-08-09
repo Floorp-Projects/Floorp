@@ -31,67 +31,21 @@ SDK-based add-ons.
 
 ## SDK Modules ##
 
-All the modules supplied with the SDK can be found in the "lib"
-directory under the SDK root. The following diagram shows a reduced view
-of the SDK tree, with the "lib" directory highlighted.
+The modules supplied by the SDK are divided into two sorts:
 
-<ul class="tree">
-  <li>addon-sdk
-    <ul>
-      <li>app-extension</li>
-      <li>bin</li>
-      <li>data</li>
-      <li>doc</li>
-      <li>examples</li>
-      <li class="highlight-tree-node">lib
-        <ul>
-          <li>sdk
-            <ul>
-              <li>core
-                <ul>
-                  <li>heritage.js</li>
-                  <li>namespace.js</li>
-                </ul>
-              </li>
-              <li>panel.js</li>
-              <li>page-mod.js</li>
-            </ul>
-          </li>
-          <li>toolkit
-              <ul>
-                <li>loader.js</li>
-              </ul>
-          </li>
-        </ul>
-      </li>
-      <li>python-lib</li>
-      <li>test</li>
-    </ul>
-  </li>
-</ul>
-
-All modules that are specifically intended for users of the
-SDK are stored under "lib" in the "sdk" directory.
-
-[High-level modules](dev-guide/high-level-apis.html) like
+* [High-level modules](dev-guide/high-level-apis.html) like
 [`panel`](modules/sdk/panel.html) and
- [`page-mod`](modules/sdk/page-mod.html) are directly underneath
-the "sdk" directory.
-
-[Low-level modules](dev-guide/low-level-apis.html) like
+ [`page-mod`](modules/sdk/page-mod.html) provide relatively simple,
+stable APIs for the most common add-on development tasks.
+* [Low-level modules](dev-guide/low-level-apis.html) like
 [`heritage`](modules/sdk/core/heritage.html) and
-[`namespace`](modules/sdk/core/heritage.html) are grouped in subdirectories
-of "sdk" such as "core".
+[`namespace`](modules/sdk/core/heritage.html) provide more
+powerful functionality, and are typically less stable and more
+complex.
 
-Very generic, platform-agnostic modules that are shared with other
-projects, such as [`loader`](modules/toolkit/loader.html), are stored
-in "toolkit".
-
-<div style="clear:both"></div>
-
-To use SDK modules, you can pass `require` a complete path from
-(but not including) the "lib" directory to the module you want to use.
-For high-level modules this is just `sdk/<module_name>`, and for low-level
+To use SDK modules, you can pass `require()` a complete path, starting with
+"sdk", to the module you want to use. For high-level modules this is just
+`sdk/<module_name>`, and for low-level
 modules it is `sdk/<path_to_module>/<module_name>`:
 
     // load the high-level "tabs" module
@@ -100,13 +54,19 @@ modules it is `sdk/<path_to_module>/<module_name>`:
     // load the low-level "uuid" module
     var uuid = require('sdk/util/uuid');
 
-For high-level modules only, you can also pass just the name of the module:
+The path to specify for a low-level module is given along with the module
+name itself in the title of the module's documentation page (for example,
+[system/environment](modules/sdk/system/environment.html)).
 
-    var tabs = require("tabs");
-
-However, this is ambiguous, as it could also refer to a local module in your
-add-on named `tabs`. For this reason it is better to use the full path from
-"lib".
+Although the [SDK repository in GitHub](https://github.com/mozilla/addon-sdk)
+includes copies of these modules, they are built into Firefox and by
+default, when you run or build an add-on using
+[`cfx run`](dev-guide/cfx-tool.html#cfx-run)
+or [`cfx xpi`](dev-guide/cfx-tool.html#cfx-xpi), it is the versions of
+the modules in Firefox that are used. If you need to use a different version
+of the modules, you can do this by checking out the version of the SDK
+that you need and passing the `-o` or
+`--overload-modules` option to `cfx run` or `cfx xpi`.
 
 ## Local Modules ##
 

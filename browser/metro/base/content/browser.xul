@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="Windows-1252" ?>
 
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -51,9 +51,10 @@
   <script type="application/javascript" src="chrome://browser/content/apzc.js"/>
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing" disabled="false"/>
-    <broadcaster id="bcast_urlbarState" mode="view"/>
+    <broadcaster id="bcast_urlbarState" mode="editing"/>
     <broadcaster id="bcast_preciseInput" input="precise"/>
     <broadcaster id="bcast_windowState" viewstate=""/>
+    <broadcaster id="bcast_loadingState" loading="false"/>
   </broadcasterset>
 
   <observerset id="observerset">
@@ -63,7 +64,7 @@
   <commandset id="mainCommandSet">
     <!-- basic navigation -->
     <command id="cmd_back" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_forward" disabled="true" oncommand="CommandUpdater.doCommand(this.id);" observes="bcast_urlbarState"/>
+    <command id="cmd_forward" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_handleBackspace" oncommand="BrowserUI.handleBackspace();" />
     <command id="cmd_handleShiftBackspace" oncommand="BrowserUI.handleShiftBackspace();" />
     <command id="cmd_reload" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -190,46 +191,6 @@
             <toolbarbutton id="newtab-button" command="cmd_newTab" label="&newtab.label;"/>
           </vbox>
         </hbox>
-
-        <!-- Start UI -->
-        <hbox id="start-container" flex="1" observes="bcast_windowState" class="meta content-height content-width">
-          <!-- portrait/landscape/filled view -->
-
-          <scrollbox id="start-scrollbox" observes="bcast_preciseInput" flex="1">
-            <vbox id="start-topsites" class="meta-section" expanded="true">
-              <label class="meta-section-title wide-title" value="&topSitesHeader.label;"/>
-              <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-topsites')">
-                &narrowTopSitesHeader.label;
-              </html:div>
-              <richgrid id="start-topsites-grid" set-name="topSites" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
-            </vbox>
-
-            <vbox id="start-bookmarks" class="meta-section">
-              <label class="meta-section-title wide-title" value="&bookmarksHeader.label;"/>
-              <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-bookmarks')">
-                &narrowBookmarksHeader.label;
-              </html:div>
-              <richgrid id="start-bookmarks-grid" set-name="bookmarks" seltype="multiple" flex="1"/>
-            </vbox>
-
-            <vbox id="start-history" class="meta-section">
-              <label class="meta-section-title wide-title" value="&recentHistoryHeader.label;"/>
-              <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-history')">
-                &narrowRecentHistoryHeader.label;
-              </html:div>
-              <richgrid id="start-history-grid" set-name="recentHistory" seltype="multiple" flex="1"/>
-            </vbox>
-
-            <vbox id="start-remotetabs" class="meta-section">
-              <label class="meta-section-title wide-title" value="&remoteTabsHeader.label;"/>
-              <html:div id="snappedRemoteTabsLabel" class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-remotetabs')">
-                &narrowRemoteTabsHeader.label;
-              </html:div>
-              <richgrid id="start-remotetabs-grid" set-name="remoteTabs" seltype="multiple" flex="1"/>
-            </vbox>
-
-          </scrollbox>
-        </hbox>
       </vbox> <!-- end tray -->
 
       <!-- Content viewport -->
@@ -267,7 +228,9 @@
           <toolbarbutton id="forward-button" class="appbar-primary"
                          command="cmd_forward"/>
 
-          <hbox id="urlbar" flex="1" observes="bcast_urlbarState">
+          <hbox id="urlbar" flex="1">
+            <observes element="bcast_urlbarState" attribute="*"/>
+            <observes element="bcast_loadingState" attribute="*"/>
             <box id="identity-box" align="center" role="button">
               <image id="identity-icon"/>
             </box>
@@ -291,7 +254,6 @@
           <stack id="toolbar-contextual">
             <observes element="bcast_windowState" attribute="*"/>
             <observes element="bcast_urlbarState" attribute="*"/>
-
             <hbox id="toolbar-context-page" pack="end">
               <circularprogressindicator id="download-progress"
                                      oncommand="Appbar.onDownloadButton()"/>
