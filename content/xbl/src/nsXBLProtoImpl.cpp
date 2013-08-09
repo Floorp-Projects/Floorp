@@ -186,18 +186,16 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(
       do_QueryObject(aBinding->XBLDocumentInfo()));
 
+  AutoSafeJSContext cx;
   nsIScriptGlobalObject* globalObject = globalOwner->GetScriptGlobalObject();
   NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
+  JS::Rooted<JSObject*> compilationGlobal(cx, globalObject->GetGlobalJSObject());
+  NS_ENSURE_TRUE(compilationGlobal, NS_ERROR_UNEXPECTED);
+  JSAutoCompartment ac(cx, compilationGlobal);
 
-  nsIScriptContext *context = globalObject->GetContext();
-  NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
-
-  AutoPushJSContext cx(context->GetNativeContext());
-
-  JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
   JS::Rooted<JSObject*> classObject(cx);
   bool classObjectIsNew = false;
-  nsresult rv = aBinding->InitClass(mClassName, cx, global, global,
+  nsresult rv = aBinding->InitClass(mClassName, cx, compilationGlobal, compilationGlobal,
                                     &classObject, &classObjectIsNew);
   if (NS_FAILED(rv))
     return rv;
