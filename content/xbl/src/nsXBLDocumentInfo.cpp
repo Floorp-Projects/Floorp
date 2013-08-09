@@ -696,6 +696,21 @@ nsXBLDocumentInfo::FlushSkinStylesheets()
     mBindingTable->Enumerate(FlushScopedSkinSheets);
 }
 
+JSObject*
+nsXBLDocumentInfo::GetCompilationGlobal()
+{
+  EnsureGlobalObject();
+  return mGlobalObject->GetGlobalJSObject();
+}
+
+void
+nsXBLDocumentInfo::EnsureGlobalObject()
+{
+  if (!mGlobalObject) {
+    mGlobalObject = new nsXBLDocGlobalObject(this);
+  }
+}
+
 //----------------------------------------------------------------------
 //
 // nsIScriptGlobalObjectOwner methods
@@ -704,14 +719,7 @@ nsXBLDocumentInfo::FlushSkinStylesheets()
 nsIScriptGlobalObject*
 nsXBLDocumentInfo::GetScriptGlobalObject()
 {
-  if (!mGlobalObject) {
-    nsXBLDocGlobalObject *global = new nsXBLDocGlobalObject(this);
-    if (!global)
-      return nullptr;
-
-    mGlobalObject = global;
-  }
-
+  EnsureGlobalObject();
   return mGlobalObject;
 }
 
