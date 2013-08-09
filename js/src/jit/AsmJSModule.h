@@ -698,21 +698,36 @@ class AsmJSModule
     void detachIonCompilation(size_t exitIndex) const {
         exitIndexToGlobalDatum(exitIndex).exit = exit(exitIndex).interpCode();
     }
+
+    // Part of about:memory reporting:
+    void sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
+                    size_t *asmJSModuleData);
 };
 
-// On success, return an AsmJSModuleClass JSObject that has taken ownership
-// (and release()ed) the given module.
-extern JSObject *
-NewAsmJSModuleObject(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module);
+// An AsmJSModuleObject is an internal implementation object (i.e., not exposed
+// directly to user script) which manages the lifetime of an AsmJSModule. A
+// JSObject is necessary since we want LinkAsmJS/CallAsmJS JSFunctions to be
+// able to point to their module via their extended slots.
+class AsmJSModuleObject : public JSObject
+{
+    static const unsigned MODULE_SLOT = 0;
 
-// Return whether the given object was created by NewAsmJSModuleObject.
-extern bool
-IsAsmJSModuleObject(JSObject *obj);
+  public:
+    static const unsigned RESERVED_SLOTS = 1;
 
-// The AsmJSModule C++ object is held by a JSObject that takes care of calling
-// 'trace' and the destructor on finalization.
-extern AsmJSModule &
-AsmJSModuleObjectToModule(JSObject *obj);
+    // On success, return an AsmJSModuleClass JSObject that has taken ownership
+    // (and release()ed) the given module.
+    static AsmJSModuleObject *create(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module);
+
+    AsmJSModule &module() const;
+
+    void sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
+                    size_t *asmJSModuleData) {
+        module().sizeOfMisc(mallocSizeOf, asmJSModuleCode, asmJSModuleData);
+    }
+
+    static Class class_;
+};
 
 }  // namespace js
 

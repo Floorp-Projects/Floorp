@@ -6309,7 +6309,7 @@ js::CompileAsmJS(JSContext *cx, AsmJSParser &parser, ParseNode *stmtList, bool *
     if (!CheckModule(cx, parser, stmtList, &module, &compilationTimeReport))
         return !cx->isExceptionPending();
 
-    RootedObject moduleObj(cx, NewAsmJSModuleObject(cx, &module));
+    RootedObject moduleObj(cx, AsmJSModuleObject::create(cx, &module));
     if (!moduleObj)
         return false;
 
