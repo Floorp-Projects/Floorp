@@ -717,7 +717,7 @@ class AsmJSModuleObject : public JSObject
 
     // On success, return an AsmJSModuleClass JSObject that has taken ownership
     // (and release()ed) the given module.
-    static AsmJSModuleObject *create(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module);
+    static AsmJSModuleObject *create(ExclusiveContext *cx, ScopedJSDeletePtr<AsmJSModule> *module);
 
     AsmJSModule &module() const;
 

@@ -1305,6 +1305,15 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
 #endif
 
+    // Whether asm.js signal handlers have been installed and can be used for
+    // performing interrupt checks in loops.
+  private:
+    bool signalHandlersInstalled_;
+  public:
+    bool signalHandlersInstalled() const {
+        return signalHandlersInstalled_;
+    }
+
 #ifdef JS_THREADSAFE
 # ifdef JS_ION
     js::WorkerThreadState *workerThreadState;

@@ -173,7 +173,7 @@ Class AsmJSModuleObject::class_ = {
 };
 
 AsmJSModuleObject *
-AsmJSModuleObject::create(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *module)
+AsmJSModuleObject::create(ExclusiveContext *cx, ScopedJSDeletePtr<AsmJSModule> *module)
 {
     JSObject *obj = NewObjectWithGivenProto(cx, &AsmJSModuleObject::class_, NULL, NULL);
     if (!obj)

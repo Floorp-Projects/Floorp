@@ -645,7 +645,7 @@ LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 JSFunction *
-js::NewAsmJSModuleFunction(JSContext *cx, JSFunction *origFun, HandleObject moduleObj)
+js::NewAsmJSModuleFunction(ExclusiveContext *cx, JSFunction *origFun, HandleObject moduleObj)
 {
     RootedPropertyName name(cx, origFun->name());
     JSFunction *moduleFun = NewFunction(cx, NullPtr(), LinkAsmJS, origFun->nargs,

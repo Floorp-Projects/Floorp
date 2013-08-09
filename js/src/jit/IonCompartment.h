@@ -203,10 +203,6 @@ class IonRuntime
     // Keep track of memoryregions that are going to be flushed.
     AutoFlushCache *flusher_;
 
-    // Whether asm.js signal handlers have been installed and can be used for
-    // performing interrupt checks in loops.
-    bool signalHandlersInstalled_;
-
     // Whether all Ion code in the runtime is protected, and will fault if it
     // is accessed.
     bool ionCodeProtected_;
@@ -257,9 +253,6 @@ class IonRuntime
         return ionAlloc_;
     }
 
-    bool signalHandlersInstalled() {
-        return signalHandlersInstalled_;
-    }
     bool ionCodeProtected() {
         return ionCodeProtected_;
     }
