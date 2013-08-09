@@ -2427,7 +2427,7 @@ LIRGenerator::visitSetElementCache(MSetElementCache *ins)
 
     LInstruction *lir;
     if (ins->value()->type() == MIRType_Value) {
-        lir = new LSetElementCacheV(useRegister(ins->object()), temp(), temp());
+        lir = new LSetElementCacheV(useRegister(ins->object()), tempToUnbox(), temp());
 
         if (!useBox(lir, LSetElementCacheV::Index, ins->index()))
             return false;
@@ -2437,7 +2437,7 @@ LIRGenerator::visitSetElementCache(MSetElementCache *ins)
         lir = new LSetElementCacheT(
             useRegister(ins->object()),
             useRegisterOrConstant(ins->value()),
-            temp(), temp());
+            tempToUnbox(), temp());
 
         if (!useBox(lir, LSetElementCacheT::Index, ins->index()))
             return false;
