@@ -102,7 +102,7 @@ var Appbar = {
   onMenuButton: function(aEvent) {
       let typesArray = [];
 
-      if (!StartUI.isVisible)
+      if (!BrowserUI.isStartTabVisible)
         typesArray.push("find-in-page");
       if (ConsolePanelView.enabled)
         typesArray.push("open-error-console");

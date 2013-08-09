@@ -449,8 +449,10 @@ var ScrollUtils = {
   getScrollboxFromElement: function getScrollboxFromElement(elem) {
     let scrollbox = null;
     let qinterface = null;
-    // if element is content, get the browser scroll interface
-    if (elem.ownerDocument == Browser.selectedBrowser.contentDocument) {
+
+    // if element is content (but not the startui page), get the browser scroll interface
+    if (!BrowserUI.isStartTabVisible &&
+        elem.ownerDocument == Browser.selectedBrowser.contentDocument) {
       elem = Browser.selectedBrowser;
     }
     for (; elem; elem = elem.parentNode) {

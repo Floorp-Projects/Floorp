@@ -10,6 +10,9 @@ let Cr = Components.results;
 
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 
+// Page for which the start UI is shown
+const kStartURI = "chrome://browser/content/Start.xul";
+
 const kBrowserViewZoomLevelPrecision = 10000;
 
 // allow panning after this timeout on pages with registered touch listeners
@@ -175,13 +178,10 @@ var Browser = {
 
       let self = this;
       function loadStartupURI() {
-        let uri = activationURI || commandURL || Browser.getHomePage();
-        if (StartUI.isStartURI(uri)) {
-          self.addTab(uri, true);
-          StartUI.show(); // This makes about:start load a lot faster
-        } else if (activationURI) {
-          self.addTab(uri, true, null, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP });
+        if (activationURI) {
+          self.addTab(activationURI, true, null, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP });
         } else {
+          let uri = commandURL || Browser.getHomePage();
           self.addTab(uri, true);
         }
       }
@@ -191,9 +191,9 @@ var Browser = {
       if (ss.shouldRestore() || Services.prefs.getBoolPref("browser.startup.sessionRestore")) {
         let bringFront = false;
         // First open any commandline URLs, except the homepage
-        if (activationURI && !StartUI.isStartURI(activationURI)) {
+        if (activationURI && activationURI != kStartURI) {
           this.addTab(activationURI, true, null, { flags: Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP });
-        } else if (commandURL && !StartUI.isStartURI(commandURL)) {
+        } else if (commandURL && commandURL != kStartURI) {
           this.addTab(commandURL, true);
         } else {
           bringFront = true;
@@ -290,7 +290,7 @@ var Browser = {
   getHomePage: function getHomePage(aOptions) {
     aOptions = aOptions || { useDefault: false };
 
-    let url = "about:start";
+    let url = kStartURI;
     try {
       let prefs = aOptions.useDefault ? Services.prefs.getDefaultBranch(null) : Services.prefs;
       url = prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
