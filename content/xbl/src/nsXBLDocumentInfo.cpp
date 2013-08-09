@@ -159,8 +159,9 @@ nsXBLDocGlobalObject_finalize(JSFreeOp *fop, JSObject *obj)
   if (sgo)
     sgo->OnFinalize(obj);
 
-  // The addref was part of JSObject construction
-  NS_RELEASE(nativeThis);
+  // The addref was part of JSObject construction. Note that this effectively
+  // just calls release later on.
+  nsContentUtils::DeferredFinalize(nativeThis);
 }
 
 static bool
