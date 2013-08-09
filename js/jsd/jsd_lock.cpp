@@ -149,9 +149,9 @@ jsd_IsLocked(JSDStaticLock* lock)
     ASSERT_VALID_LOCK(lock);
     _CURRENT_THREAD(me);
     if (lock->owner != me)
-        return JS_FALSE;
+        return false;
     JS_ASSERT(lock->count > 0);
-    return JS_TRUE;
+    return true;
 }    
 #endif /* DEBUG */
 
@@ -197,7 +197,7 @@ jsd_Unlock(void* lock)
 JSBool
 jsd_IsLocked(void* lock)
 {
-    return JS_TRUE;
+    return true;
 }    
 #endif /* DEBUG */
 

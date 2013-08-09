@@ -10,8 +10,8 @@
  * <menuitem> element.
  */
 
-[scriptable, uuid(53180e95-90af-4c6e-9d16-34fa799f84d5)]
-interface nsIDOMHTMLMenuItemElement : nsIDOMHTMLElement
+[scriptable, uuid(979d6e44-5930-4232-b405-873939655c19)]
+interface nsIDOMHTMLMenuItemElement : nsISupports
 {
            attribute DOMString        type;
            attribute DOMString        label;

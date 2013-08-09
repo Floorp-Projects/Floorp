@@ -42,7 +42,7 @@ struct Zone;
  * prevents many bugs from being caught at compile time. E.g.:
  *
  *  jsid id = ...
- *  if (id == JS_TRUE)  // error
+ *  if (id)             // error
  *    ...
  *
  *  size_t n = id;      // error

@@ -11,6 +11,7 @@
 
 #include "mozilla/MathAlgorithms.h"
 
+#include "jsfriendapi.h"
 #include "jsscript.h"
 
 #include "gc/Marking.h"
@@ -317,32 +318,6 @@ class AsmJSModule
     };
 #endif
 
-    // If linking fails, we recompile the function as if it's ordinary JS.
-    // This struct holds the data required to do this.
-    struct PostLinkFailureInfo
-    {
-        ScriptSource *      scriptSource;
-        uint32_t            bufStart;      // offset of the function body's start
-        uint32_t            bufEnd;        // offset of the function body's end
-
-        PostLinkFailureInfo()
-          : scriptSource(), bufStart(), bufEnd()
-        {}
-
-        void init(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd) {
-            JS_ASSERT(!this->scriptSource);
-            this->scriptSource     = scriptSource;
-            this->bufStart         = bufStart;
-            this->bufEnd           = bufEnd;
-            scriptSource->incref();
-        }
-
-        ~PostLinkFailureInfo() {
-            if (scriptSource)
-                scriptSource->decref();
-        }
-    };
-
   private:
     typedef Vector<ExportedFunction, 0, SystemAllocPolicy> ExportedFunctionVector;
     typedef Vector<Global, 0, SystemAllocPolicy> GlobalVector;
@@ -384,7 +359,7 @@ class AsmJSModule
     HeapPtrPropertyName                   importArgumentName_;
     HeapPtrPropertyName                   bufferArgumentName_;
 
-    PostLinkFailureInfo                   postLinkFailureInfo_;
+    AsmJSModuleSourceDesc                 sourceDesc_;
     FunctionCountsVector                  functionCounts_;
 
   public:
@@ -400,7 +375,7 @@ class AsmJSModule
         totalBytes_(0),
         linked_(false),
         maybeHeap_(),
-        postLinkFailureInfo_()
+        sourceDesc_()
     {}
 
     ~AsmJSModule();
@@ -706,13 +681,11 @@ class AsmJSModule
     PropertyName *importArgumentName() const { return importArgumentName_; }
     PropertyName *bufferArgumentName() const { return bufferArgumentName_; }
 
-    void initPostLinkFailureInfo(ScriptSource *scriptSource,
-                                 uint32_t bufStart,
-                                 uint32_t bufEnd) {
-        postLinkFailureInfo_.init(scriptSource, bufStart, bufEnd);
+    void initSourceDesc(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd) {
+        sourceDesc_.init(scriptSource, bufStart, bufEnd);
     }
-    const PostLinkFailureInfo &postLinkFailureInfo() const {
-        return postLinkFailureInfo_;
+    const AsmJSModuleSourceDesc &sourceDesc() const {
+        return sourceDesc_;
     }
 
     void detachIonCompilation(size_t exitIndex) const {

@@ -44,7 +44,7 @@ public:
     }
 
     void SetIsQuitting() {
-        mQuitting = JS_TRUE;
+        mQuitting = true;
     }
     JSBool IsQuitting() {
         return mQuitting;

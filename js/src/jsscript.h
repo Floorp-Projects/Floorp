@@ -809,6 +809,7 @@ class JSScript : public js::gc::Cell
     inline void clearPropertyReadTypes();
 
     inline js::GlobalObject &global() const;
+    js::GlobalObject &uninlinedGlobal() const;
 
     /* See StaticScopeIter comment. */
     JSObject *enclosingStaticScope() const {

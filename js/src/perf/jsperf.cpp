@@ -23,9 +23,9 @@ static PerfMeasurement* GetPMFromThis(JSContext* cx, jsval* vp);
     {                                                                   \
         PerfMeasurement* p = GetPM(cx, obj, #name);                     \
         if (!p)                                                         \
-            return JS_FALSE;                                            \
+            return false;                                               \
         vp.set(JS_NumberValue(double(p->name)));                        \
-        return JS_TRUE;                                                 \
+        return true;                                                    \
     }
 
 GETTER(cpu_cycles)

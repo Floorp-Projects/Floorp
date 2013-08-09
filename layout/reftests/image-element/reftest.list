@@ -1,6 +1,6 @@
 == bug-364968.html bug-364968-ref.html
 == bug-463204.html bug-463204-ref.html
-fails-if(Android) == canvas-outside-document.html canvas-inside-document.html
+fails-if(Android&&AndroidVersion<15) == canvas-outside-document.html canvas-inside-document.html
 == mozsetimageelement-01.html mozsetimageelement-01-ref.html
 skip-if(B2G) == mozsetimageelement-02.html about:blank # bug 773482
 skip-if(B2G) == image-outside-document-invalidate.html about:blank # bug 773482
