@@ -50,7 +50,7 @@ public:
   // getting the value of an a-rate AudioParam for each tick inside an
   // AudioNodeEngine implementation.
   template<class TimeType>
-  float GetValueAtTime(TimeType aTime, size_t aCounter = 0) const
+  float GetValueAtTime(TimeType aTime, size_t aCounter = 0)
   {
     MOZ_ASSERT(aCounter < WEBAUDIO_BLOCK_SIZE);
     MOZ_ASSERT(!aCounter || !HasSimpleValue());
