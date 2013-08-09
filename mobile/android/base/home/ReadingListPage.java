@@ -15,6 +15,7 @@ import org.mozilla.gecko.ReaderModeUtils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -68,9 +69,7 @@ public class ReadingListPage extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // All list views are styled to look the same with a global activity theme.
-        // If the style of the list changes, inflate it from an XML.
-        mList = new HomeListView(container.getContext());
+        mList = (HomeListView) inflater.inflate(R.layout.home_reading_list_page, container, false);
         return mList;
     }
 
@@ -101,6 +100,19 @@ public class ReadingListPage extends HomeFragment {
     public void onDestroyView() {
         super.onDestroyView();
         mList = null;
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        // Detach and reattach the fragment as the layout changes.
+        if (isVisible()) {
+            getFragmentManager().beginTransaction()
+                                .detach(this)
+                                .attach(this)
+                                .commitAllowingStateLoss();
+        }
     }
 
     @Override

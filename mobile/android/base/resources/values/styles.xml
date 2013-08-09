@@ -158,6 +158,8 @@
         <item name="android:divider">#E7ECF0</item>
     </style>
 
+    <style name="Widget.ReadingListView" parent="Widget.BookmarksListView"/>
+
     <style name="Widget.Home" />
 
     <style name="Widget.Home.HeaderItem">
