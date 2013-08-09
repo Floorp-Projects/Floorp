@@ -144,8 +144,10 @@ function run_test() {
 
         // After shutting down the database won't be open so we can lock it
         shutdownManager();
-        var savedPermissions = gExtensionsJSON.permissions;
-        gExtensionsJSON.permissions = 0;
+        var dbfile = gProfD.clone();
+        dbfile.append(EXTENSIONS_DB);
+        var savedPermissions = dbfile.permissions;
+        dbfile.permissions = 0;
 
         startupManager(false);
 
@@ -197,11 +199,11 @@ function run_test() {
           do_check_eq(a6.pendingOperations, AddonManager.PENDING_NONE);
           do_check_true(isExtensionInAddonsList(profileDir, a6.id));
 
+          dbfile.permissions = savedPermissions;
+
           // After allowing access to the original DB things should still be
           // applied correctly
-          shutdownManager();
-          gExtensionsJSON.permissions = savedPermissions;
-          startupManager();
+          restartManager();
 
           // These things happened when we had no access to the database so
           // they are seen as external changes when we get the database back :(
