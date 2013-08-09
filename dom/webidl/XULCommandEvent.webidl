@@ -6,7 +6,8 @@
 
 interface WindowProxy;
 
- interface XULCommandEvent : UIEvent
+[Func="IsChromeOrXBL"]
+interface XULCommandEvent : UIEvent
 {
   readonly attribute boolean ctrlKey;
   readonly attribute boolean shiftKey;
