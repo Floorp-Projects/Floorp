@@ -2949,7 +2949,17 @@
           filter.addProgressListener(tabListener, nsIWebProgress.NOTIFY_ALL);
           this.mTabListeners[0] = tabListener;
           this.mTabFilters[0] = filter;
-          this.init();
+
+          try {
+            // We assume this can only fail because mCurrentBrowser's docShell
+            // hasn't been created, yet. This may be caused by code accessing
+            // gBrowser before the window has finished loading.
+            this._addProgressListenerForInitialTab();
+          } catch (e) {
+            // The binding was constructed too early, wait until the initial
+            // tab's document is ready, then add the progress listener.
+            this._waitForInitialContentDocument();
+          }
 
           this.style.backgroundColor =
             Services.prefs.getBoolPref("browser.display.use_system_colors") ?
@@ -2961,17 +2971,28 @@
         ]]>
       </constructor>
 
-      <method name="init">
+      <method name="_addProgressListenerForInitialTab">
         <body><![CDATA[
-          if (!this._initialProgressListenerAdded) {
-            this._initialProgressListenerAdded = true;
-            try {
-              this.webProgress.addProgressListener(this.mTabFilters[0], Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-            } catch (e) {
-              // The binding was constructed too early, need to try this again later. See bug 463384.
-              this._initialProgressListenerAdded = false;
+          this.webProgress.addProgressListener(this.mTabFilters[0], Ci.nsIWebProgress.NOTIFY_ALL);
+        ]]></body>
+      </method>
+
+      <method name="_waitForInitialContentDocument">
+        <body><![CDATA[
+          let obs = (subject, topic) => {
+            if (this.browsers[0].contentWindow == subject) {
+              Services.obs.removeObserver(obs, topic);
+              this._addProgressListenerForInitialTab();
             }
-          }
+          };
+
+          // We use content-document-global-created as an approximation for
+          // "docShell is initialized". We can do this because in the
+          // mTabProgressListener we care most about the STATE_STOP notification
+          // that will reset mBlank. That means it's important to at least add
+          // the progress listener before the initial about:blank load stops
+          // if we can't do it before the load starts.
+          Services.obs.addObserver(obs, "content-document-global-created", false);
         ]]></body>
       </method>
 
