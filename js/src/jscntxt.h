@@ -34,6 +34,8 @@ js_ReportOverRecursed(js::ThreadSafeContext *cx);
 
 namespace js {
 
+namespace ion { class IonContext; }
+
 struct CallsiteCloneKey {
     /* The original function that we are cloning. */
     JSFunction *original;
@@ -281,6 +283,7 @@ class ExclusiveContext : public ThreadSafeContext
     friend class AutoLockForExclusiveAccess;
     friend struct StackBaseShape;
     friend void JSScript::initCompartment(ExclusiveContext *cx);
+    friend class ion::IonContext;
 
     // The worker on which this context is running, if this is not a JSContext.
     WorkerThread *workerThread;
