@@ -97,6 +97,8 @@ public:
 
   virtual void SetMediaDuration(int64_t aDuration) MOZ_FINAL MOZ_OVERRIDE;
 
+  virtual void UpdateMediaDuration(int64_t aDuration) MOZ_FINAL MOZ_OVERRIDE;
+
   virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
 
   virtual void SetTransportSeekable(bool aTransportSeekable) MOZ_FINAL MOZ_OVERRIDE;
@@ -210,6 +212,12 @@ BufferDecoder::GetMediaDuration()
 
 void
 BufferDecoder::SetMediaDuration(int64_t aDuration)
+{
+  // ignore
+}
+
+void
+BufferDecoder::UpdateMediaDuration(int64_t aDuration)
 {
   // ignore
 }
