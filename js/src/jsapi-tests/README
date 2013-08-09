@@ -49,7 +49,7 @@ The BEGIN_TEST and END_TEST macros bracket each test. By convention, the test
 name is <testFilename>_<detail>. (The above test is in testIntString.cpp.)
 
 The curly braces are required. This block is the body of a C++ member function
-that returns JSBool. The test harness calls this member function
+that returns bool. The test harness calls this member function
 automatically. If the function returns true, the test passes. False, it fails.
 
 JSAPI tests often need extra global C/C++ code: a JSClass, a getter or setter

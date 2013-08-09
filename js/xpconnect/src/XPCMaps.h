@@ -564,8 +564,8 @@ public:
 
     static XPCNativeScriptableSharedMap* newMap(int size);
 
-    JSBool GetNewOrUsed(uint32_t flags, char* name, uint32_t interfacesBitmap,
-                        XPCNativeScriptableInfo* si);
+    bool GetNewOrUsed(uint32_t flags, char* name, uint32_t interfacesBitmap,
+                      XPCNativeScriptableInfo* si);
 
     inline uint32_t Count() {return mTable->entryCount;}
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)

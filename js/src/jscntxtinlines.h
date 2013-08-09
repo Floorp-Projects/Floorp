@@ -17,7 +17,7 @@
 
 #include "builtin/Object.h" // For js::obj_construct
 #include "frontend/ParseMaps.h"
-#include "ion/IonFrames.h" // For GetPcScript
+#include "jit/IonFrames.h" // For GetPcScript
 #include "vm/Interpreter.h"
 #include "vm/Probes.h"
 #include "vm/RegExpObject.h"
@@ -293,7 +293,7 @@ CallJSPropertyOp(JSContext *cx, PropertyOp op, HandleObject receiver, HandleId i
     JS_CHECK_RECURSION(cx, return false);
 
     assertSameCompartment(cx, receiver, id, vp);
-    JSBool ok = op(cx, receiver, id, vp);
+    bool ok = op(cx, receiver, id, vp);
     if (ok)
         assertSameCompartment(cx, vp);
     return ok;
@@ -301,7 +301,7 @@ CallJSPropertyOp(JSContext *cx, PropertyOp op, HandleObject receiver, HandleId i
 
 JS_ALWAYS_INLINE bool
 CallJSPropertyOpSetter(JSContext *cx, StrictPropertyOp op, HandleObject obj, HandleId id,
-                       JSBool strict, MutableHandleValue vp)
+                       bool strict, MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -311,7 +311,7 @@ CallJSPropertyOpSetter(JSContext *cx, StrictPropertyOp op, HandleObject obj, Han
 
 static inline bool
 CallJSDeletePropertyOp(JSContext *cx, JSDeletePropertyOp op, HandleObject receiver, HandleId id,
-                       JSBool *succeeded)
+                       bool *succeeded)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -321,7 +321,7 @@ CallJSDeletePropertyOp(JSContext *cx, JSDeletePropertyOp op, HandleObject receiv
 
 inline bool
 CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, unsigned attrs,
-           unsigned shortid, JSBool strict, MutableHandleValue vp)
+           unsigned shortid, bool strict, MutableHandleValue vp)
 {
     if (attrs & JSPROP_SETTER) {
         RootedValue opv(cx, CastAsObjectJsval(op));

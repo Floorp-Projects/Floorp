@@ -266,9 +266,6 @@ nsresult
 HTMLFormElement::Init()
 {
   mControls = new nsFormControlList(this);
-  if (!mControls) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   nsresult rv = mControls->Init();
   

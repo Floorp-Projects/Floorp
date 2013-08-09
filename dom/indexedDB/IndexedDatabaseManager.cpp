@@ -526,7 +526,7 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
 
   JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(aObj));
 
-  JSBool hasIndexedDB;
+  bool hasIndexedDB;
   if (!JS_HasProperty(aCx, obj, "indexedDB", &hasIndexedDB)) {
     return NS_ERROR_FAILURE;
   }

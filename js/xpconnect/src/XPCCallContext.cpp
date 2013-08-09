@@ -154,7 +154,7 @@ XPCCallContext::SetName(jsid name)
 
 void
 XPCCallContext::SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
-                            JSBool isSetter)
+                            bool isSetter)
 {
     CHECK_STATE(HAVE_CONTEXT);
 

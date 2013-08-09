@@ -169,7 +169,7 @@ extern const char * const TypeStrings[];
  * memory. The caller must zero rt->atomState before calling this function and
  * only call it after js_InitGC successfully returns.
  */
-extern JSBool
+extern bool
 InitAtoms(JSRuntime *rt);
 
 /*

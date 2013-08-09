@@ -49,7 +49,7 @@ static JSClass DocumentAllClass = {
     JS_ConvertStub
 };
 
-JSBool
+bool
 document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned flags,
                  JS::MutableHandleObject objp)
 {
@@ -67,7 +67,7 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned 
             if (!docAll)
                 return false;
             JS::Rooted<JS::Value> allValue(cx, ObjectValue(*docAll));
-            JSBool ok = JS_DefinePropertyById(cx, obj, id, allValue, NULL, NULL, 0);
+            bool ok = JS_DefinePropertyById(cx, obj, id, allValue, NULL, NULL, 0);
             objp.set(ok ? obj.get() : NULL);
             return ok;
         }

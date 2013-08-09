@@ -203,7 +203,7 @@ CrossCompartmentWrapper::preventExtensions(JSContext *cx, HandleObject wrapper)
 
 bool
 CrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
-                                               PropertyDescriptor *desc, unsigned flags)
+                                               MutableHandle<PropertyDescriptor> desc, unsigned flags)
 {
     RootedId idCopy(cx, id);
     PIERCE(cx, wrapper,
@@ -214,7 +214,7 @@ CrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapp
 
 bool
 CrossCompartmentWrapper::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper,
-                                                  HandleId id, PropertyDescriptor *desc,
+                                                  HandleId id, MutableHandle<PropertyDescriptor> desc,
                                                   unsigned flags)
 {
     RootedId idCopy(cx, id);
@@ -226,10 +226,10 @@ CrossCompartmentWrapper::getOwnPropertyDescriptor(JSContext *cx, HandleObject wr
 
 bool
 CrossCompartmentWrapper::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                                        PropertyDescriptor *desc)
+                                        MutableHandle<PropertyDescriptor> desc)
 {
     RootedId idCopy(cx, id);
-    AutoPropertyDescriptorRooter desc2(cx, desc);
+    Rooted<PropertyDescriptor> desc2(cx, desc);
     PIERCE(cx, wrapper,
            cx->compartment()->wrapId(cx, idCopy.address()) && cx->compartment()->wrap(cx, &desc2),
            Wrapper::defineProperty(cx, wrapper, idCopy, &desc2),
@@ -657,9 +657,9 @@ SecurityWrapper<Base>::regexp_toShared(JSContext *cx, HandleObject obj, RegExpGu
 template <class Base>
 bool
 SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper,
-                                      HandleId id, PropertyDescriptor *desc)
+                                      HandleId id, MutableHandle<PropertyDescriptor> desc)
 {
-    if (desc->getter || desc->setter) {
+    if (desc.getter() || desc.setter()) {
         JSString *str = IdToString(cx, id);
         const jschar *prop = str ? str->getCharsZ(cx) : NULL;
         JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
@@ -696,7 +696,7 @@ DeadObjectProxy::preventExtensions(JSContext *cx, HandleObject proxy)
 
 bool
 DeadObjectProxy::getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
-                                       PropertyDescriptor *desc, unsigned flags)
+                                       MutableHandle<PropertyDescriptor> desc, unsigned flags)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
     return false;
@@ -704,7 +704,7 @@ DeadObjectProxy::getPropertyDescriptor(JSContext *cx, HandleObject wrapper, Hand
 
 bool
 DeadObjectProxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
-                                          PropertyDescriptor *desc, unsigned flags)
+                                          MutableHandle<PropertyDescriptor> desc, unsigned flags)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
     return false;
@@ -712,7 +712,7 @@ DeadObjectProxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper, H
 
 bool
 DeadObjectProxy::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                                PropertyDescriptor *desc)
+                                MutableHandle<PropertyDescriptor> desc)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
     return false;
@@ -853,7 +853,7 @@ js::NukeCrossCompartmentWrapper(JSContext *cx, JSObject *wrapper)
  * and only do that on tab close (outer window destruction).  Thus the
  * option of how to handle the global object.
  */
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(bool)
 js::NukeCrossCompartmentWrappers(JSContext* cx,
                                  const CompartmentFilter& sourceFilter,
                                  const CompartmentFilter& targetFilter,

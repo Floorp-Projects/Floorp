@@ -16,7 +16,6 @@
 
 class nsIContent;
 class nsIObjectOutputStream;
-class nsIScriptContext;
 
 struct nsXBLTextWithLineNumber
 {
@@ -75,14 +74,12 @@ public:
 
   virtual nsresult InstallMember(JSContext* aCx,
                                  JS::Handle<JSObject*> aTargetClassObject) = 0;
-  virtual nsresult CompileMember(nsIScriptContext* aContext,
-                                 const nsCString& aClassStr,
+  virtual nsresult CompileMember(const nsCString& aClassStr,
                                  JS::Handle<JSObject*> aClassObject) = 0;
 
   virtual void Trace(const TraceCallbacks& aCallbacks, void *aClosure) = 0;
 
-  virtual nsresult Write(nsIScriptContext* aContext,
-                         nsIObjectOutputStream* aStream)
+  virtual nsresult Write(nsIObjectOutputStream* aStream)
   {
     return NS_OK;
   }

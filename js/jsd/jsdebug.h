@@ -385,7 +385,7 @@ JSD_GetScriptPrivate(JSDScript* jsdscript);
 /*
 * Determine if this script is still loaded in the interpreter
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsActiveScript(JSDContext* jsdc, JSDScript *jsdscript);
 
 /*
@@ -425,7 +425,7 @@ JSD_GetScriptLineExtent(JSDContext* jsdc, JSDScript *jsdscript);
 typedef void
 (* JSD_ScriptHookProc)(JSDContext* jsdc,
                        JSDScript*  jsdscript,
-                       JSBool      creating,
+                       bool        creating,
                        void*       callerdata);
 
 /*
@@ -433,13 +433,13 @@ typedef void
 * unloaded).
 * 'callerdata' can be whatever you want it to be.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_SetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc hook, void* callerdata);
 
 /*
 * Get the current script hook.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_GetScriptHook(JSDContext* jsdc, JSD_ScriptHookProc* hook, void** callerdata);
 
 /*
@@ -468,7 +468,7 @@ JSD_GetClosestLine(JSDContext* jsdc, JSDScript* jsdscript, uintptr_t pc);
  * may be passed for either lines or pcs to avoid filling anything in for that
  * argument.
  */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_GetLinePCs(JSDContext* jsdc, JSDScript* jsdscript,
                unsigned startLine, unsigned maxLines,
                unsigned* count, unsigned** lines, uintptr_t** pcs);
@@ -575,7 +575,7 @@ JSD_GetSourceURL(JSDContext* jsdc, JSDSourceText* jsdsrc);
 * hold a zero terminating char).
 * XXX this is 8-bit character data. Unicode source is not yet supported.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_GetSourceText(JSDContext* jsdc, JSDSourceText* jsdsrc,
                   const char** ppBuf, int* pLen);
 
@@ -600,14 +600,14 @@ JSD_GetSourceStatus(JSDContext* jsdc, JSDSourceText* jsdsrc);
 * discouraged in favor of the JSD_GetSourceAlterCount system. This dirty
 * scheme ASSUMES that there is only one consumer of the data.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsSourceDirty(JSDContext* jsdc, JSDSourceText* jsdsrc);
 
 /*
 * Clear the dirty flag
 */
 extern JSD_PUBLIC_API(void)
-JSD_SetSourceDirty(JSDContext* jsdc, JSDSourceText* jsdsrc, JSBool dirty);
+JSD_SetSourceDirty(JSDContext* jsdc, JSDSourceText* jsdsrc, bool dirty);
 
 /*
 * Each time a source text item is altered this value is incremented. Any
@@ -685,7 +685,7 @@ JSD_AppendUCSourceText(JSDContext*     jsdc,
  *   JSD_UNLOCK_SOURCE_TEXT(jsdc);
  *   return jsdsrc ? true : false;
  */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_AddFullSourceText(JSDContext* jsdc,
                       const char* text,       /* *not* zero terminated */
                       size_t      length,
@@ -731,7 +731,7 @@ typedef unsigned
 * want to hear about the TOPLEVEL_END or FUNCTION_RETURN too.  Return value is
 * ignored to TOPLEVEL_END and FUNCTION_RETURN type hooks.
 */
-typedef JSBool
+typedef bool
 (* JSD_CallHookProc)(JSDContext*     jsdc,
                      JSDThreadState* jsdthreadstate,
                      unsigned           type,
@@ -741,7 +741,7 @@ typedef JSBool
 * Set Hook to be called whenever the given pc is about to be executed --
 * i.e. for 'trap' or 'breakpoint'
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_SetExecutionHook(JSDContext*           jsdc,
                      JSDScript*            jsdscript,
                      uintptr_t             pc,
@@ -751,7 +751,7 @@ JSD_SetExecutionHook(JSDContext*           jsdc,
 /*
 * Clear the hook for this pc
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_ClearExecutionHook(JSDContext*          jsdc,
                        JSDScript*           jsdscript,
                        uintptr_t            pc);
@@ -759,14 +759,14 @@ JSD_ClearExecutionHook(JSDContext*          jsdc,
 /*
 * Clear all the pc specific hooks for this script
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_ClearAllExecutionHooksForScript(JSDContext* jsdc, JSDScript* jsdscript);
 
 /*
 * Clear all the pc specific hooks for the entire JSRuntime associated with
 * this JSDContext
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_ClearAllExecutionHooks(JSDContext* jsdc);
 
 /*
@@ -776,7 +776,7 @@ JSD_ClearAllExecutionHooks(JSDContext* jsdc);
 * future time. The hook will continue to be called as each instruction
 * executes until cleared.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_SetInterruptHook(JSDContext*           jsdc,
                      JSD_ExecutionHookProc hook,
                      void*                 callerdata);
@@ -784,20 +784,20 @@ JSD_SetInterruptHook(JSDContext*           jsdc,
 /*
 * Call the interrupt hook at least once per source line
 */
-extern JSD_PUBLIC_API(JSBool)
-JSD_EnableSingleStepInterrupts(JSDContext* jsdc, JSDScript *jsdscript, JSBool enable);
+extern JSD_PUBLIC_API(bool)
+JSD_EnableSingleStepInterrupts(JSDContext* jsdc, JSDScript *jsdscript, bool enable);
 
 /*
 * Clear the current interrupt hook.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_ClearInterruptHook(JSDContext* jsdc);
 
 /*
 * Set the hook that should be called whenever a JSD_ErrorReporter hook
 * returns JSD_ERROR_REPORTER_DEBUG.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_SetDebugBreakHook(JSDContext*           jsdc,
                       JSD_ExecutionHookProc hook,
                       void*                 callerdata);
@@ -805,14 +805,14 @@ JSD_SetDebugBreakHook(JSDContext*           jsdc,
 /*
 * Clear the debug break hook
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_ClearDebugBreakHook(JSDContext* jsdc);
 
 /*
 * Set the hook that should be called when the 'debugger' keyword is
 * encountered by the JavaScript interpreter during execution.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_SetDebuggerHook(JSDContext*           jsdc,
                     JSD_ExecutionHookProc hook,
                     void*                 callerdata);
@@ -820,47 +820,47 @@ JSD_SetDebuggerHook(JSDContext*           jsdc,
 /*
 * Clear the 'debugger' keyword hook
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_ClearDebuggerHook(JSDContext* jsdc);
 
 /*
 * Set the hook that should be called when a JS exception is thrown.
 * NOTE: the 'do default' return value is: JSD_HOOK_RETURN_CONTINUE_THROW
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_SetThrowHook(JSDContext*           jsdc,
                  JSD_ExecutionHookProc hook,
                  void*                 callerdata);
 /*
 * Clear the throw hook
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_ClearThrowHook(JSDContext* jsdc);
 
 /*
 * Set the hook that should be called when a toplevel script begins or completes.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_SetTopLevelHook(JSDContext*      jsdc,
                     JSD_CallHookProc hook,
                     void*            callerdata);
 /*
 * Clear the toplevel call hook
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_ClearTopLevelHook(JSDContext* jsdc);
 
 /*
 * Set the hook that should be called when a function call or return happens.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_SetFunctionHook(JSDContext*      jsdc,
                     JSD_CallHookProc hook,
                     void*            callerdata);
 /*
 * Clear the function call hook
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_ClearFunctionHook(JSDContext* jsdc);
 
 /***************************************************************************/
@@ -950,7 +950,7 @@ JSD_GetIdForStackFrame(JSDContext* jsdc,
 * True if stack frame represents a frame created as a result of a debugger
 * evaluation.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsStackFrameDebugger(JSDContext* jsdc,
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe);
@@ -958,7 +958,7 @@ JSD_IsStackFrameDebugger(JSDContext* jsdc,
 /*
 * True if stack frame is constructing a new object.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsStackFrameConstructing(JSDContext* jsdc,
                              JSDThreadState* jsdthreadstate,
                              JSDStackFrameInfo* jsdframe);
@@ -968,7 +968,7 @@ JSD_IsStackFrameConstructing(JSDContext* jsdc,
 * returns true and puts result in rval on success, false on failure.
 * NOTE: The ErrorReporter hook might be called if this fails.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  JSDThreadState* jsdthreadstate,
                                  JSDStackFrameInfo* jsdframe,
@@ -979,7 +979,7 @@ JSD_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
 /*
 * Same as above, but does not eat exceptions.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_AttemptUCScriptInStackFrame(JSDContext* jsdc,
                                 JSDThreadState* jsdthreadstate,
                                 JSDStackFrameInfo* jsdframe,
@@ -988,7 +988,7 @@ JSD_AttemptUCScriptInStackFrame(JSDContext* jsdc,
                                 JS::MutableHandleValue rval);
 
 /* single byte character version of JSD_EvaluateUCScriptInStackFrame */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                JSDThreadState* jsdthreadstate,
                                JSDStackFrameInfo* jsdframe,
@@ -998,7 +998,7 @@ JSD_EvaluateScriptInStackFrame(JSDContext* jsdc,
 /*
 * Same as above, but does not eat exceptions.
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_AttemptScriptInStackFrame(JSDContext* jsdc,
                               JSDThreadState* jsdthreadstate,
                               JSDStackFrameInfo* jsdframe,
@@ -1027,7 +1027,7 @@ JSD_GetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate);
 * Set the JSDValue currently being thrown as an exception.
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_SetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate, 
                  JSDValue* jsdval);
 
@@ -1056,13 +1056,13 @@ typedef unsigned
                       void*           callerdata);
 
 /* Set ErrorReporter hook */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_SetErrorReporter(JSDContext*       jsdc,
                      JSD_ErrorReporter reporter,
                      void*             callerdata);
 
 /* Get Current ErrorReporter hook */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_GetErrorReporter(JSDContext*        jsdc,
                      JSD_ErrorReporter* reporter,
                      void**             callerdata);
@@ -1075,7 +1075,7 @@ struct JSDStaticLock;
 /*
 * Is Locking and GetThread supported in this build?
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsLockingAndThreadIdSupported();
 
 /*
@@ -1102,13 +1102,13 @@ JSD_Unlock(JSDStaticLock* lock);
 * For debugging only if not (JS_THREADSAFE AND DEBUG) then returns true
 *    So JSD_IsLocked(lock) may not equal !JSD_IsUnlocked(lock)
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsLocked(JSDStaticLock* lock);
 
 /*
 * See above...
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsUnlocked(JSDStaticLock* lock);
 
 /*
@@ -1166,86 +1166,86 @@ JSD_RefreshValue(JSDContext* jsdc, JSDValue* jsdval);
 * Does the JSDValue wrap a JSObject?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValueObject(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
 * Does the JSDValue wrap a number (int or double)?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValueNumber(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
 * Does the JSDValue wrap an int?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValueInt(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
 * Does the JSDValue wrap a double?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValueDouble(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
 * Does the JSDValue wrap a JSString?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValueString(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
-* Does the JSDValue wrap a JSBool?
+* Does the JSDValue wrap a bool?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValueBoolean(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
 * Does the JSDValue wrap a JSVAL_NULL?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValueNull(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
 * Does the JSDValue wrap a JSVAL_VOID?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValueVoid(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
 * Does the JSDValue wrap a primative (not a JSObject)?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValuePrimitive(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
 * Does the JSDValue wrap a function?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValueFunction(JSDContext* jsdc, JSDValue* jsdval);
 
 /*
 * Does the JSDValue wrap a native function?
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_IsValueNative(JSDContext* jsdc, JSDValue* jsdval);
 
 /**************************************************/
 
 /*
-* Return JSBool value (does NOT do conversion).
+* Return bool value (does NOT do conversion).
 * *** new for version 1.1 ****
 */
-extern JSD_PUBLIC_API(JSBool)
+extern JSD_PUBLIC_API(bool)
 JSD_GetValueBoolean(JSDContext* jsdc, JSDValue* jsdval);
 
 /*

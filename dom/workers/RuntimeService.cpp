@@ -587,7 +587,7 @@ ErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aReport)
   return worker->ReportError(aCx, aMessage, aReport);
 }
 
-JSBool
+bool
 OperationCallback(JSContext* aCx)
 {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
@@ -690,7 +690,7 @@ public:
   }
 };
 
-JSBool
+bool
 ContentSecurityPolicyAllows(JSContext* aCx)
 {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
@@ -940,7 +940,7 @@ public:
 BEGIN_WORKERS_NAMESPACE
 
 // Entry point for the DOM.
-JSBool
+bool
 ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
                      unsigned aFlags, JS::MutableHandle<JSObject*> aObjp)
 {

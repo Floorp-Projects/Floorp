@@ -90,7 +90,7 @@ PointerHolderClass = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, PointerFinalize
 };
 
-JSBool
+bool
 xpc_qsDefineQuickStubs(JSContext *cx, JSObject *protoArg, unsigned flags,
                        uint32_t ifacec, const nsIID **interfaces,
                        uint32_t tableSize, const xpc_qsHashEntry *table,
@@ -153,7 +153,7 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *protoArg, unsigned flags,
     return true;
 }
 
-JSBool
+bool
 xpc_qsThrow(JSContext *cx, nsresult rv)
 {
     XPCThrower::Throw(rv, cx);
@@ -257,7 +257,7 @@ ThrowCallFailed(JSContext *cx, nsresult rv,
     return false;
 }
 
-JSBool
+bool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
                               jsid memberIdArg)
 {
@@ -267,7 +267,7 @@ xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
     return ThrowCallFailed(cx, rv, ifaceName, memberId, NULL);
 }
 
-JSBool
+bool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *objArg,
                               const char* memberName)
 {
@@ -280,7 +280,7 @@ xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *objArg,
                                          INTERNED_STRING_TO_JSID(cx, str));
 }
 
-JSBool
+bool
 xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
                               uint16_t memberIndex)
 {
@@ -288,7 +288,7 @@ xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
                                          xpc_qsStringTable + memberIndex);
 }
 
-JSBool
+bool
 xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp)
 {
     const char *ifaceName;
@@ -297,7 +297,7 @@ xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp)
     return ThrowCallFailed(cx, rv, ifaceName, memberId, NULL);
 }
 
-JSBool
+bool
 xpc_qsThrowMethodFailedWithCcx(XPCCallContext &ccx, nsresult rv)
 {
     ThrowBadResult(rv, ccx);
@@ -392,8 +392,8 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv, JSObject *obj,
     xpc_qsThrowBadSetterValue(cx, rv, obj, xpc_qsStringTable + name_index);
 }
 
-JSBool
-xpc_qsGetterOnlyPropertyStub(JSContext *cx, HandleObject obj, HandleId id, JSBool strict,
+bool
+xpc_qsGetterOnlyPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool strict,
                              MutableHandleValue vp)
 {
     return JS_ReportErrorFlagsAndNumber(cx,
@@ -653,7 +653,7 @@ castNativeFromWrapper(JSContext *cx,
     return native;
 }
 
-JSBool
+bool
 xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,
                             const nsIID &iid,
                             void **ppThis,
@@ -741,7 +741,7 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     return rv;
 }
 
-JSBool
+bool
 xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes)
 {
     JSString *str;
@@ -758,7 +758,7 @@ xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes)
     return !!bytes->encodeLatin1(cx, str);
 }
 
-JSBool
+bool
 xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, const PRUnichar **pstr)
 {
     JSString *str;
@@ -802,7 +802,7 @@ NonVoidStringToJsval(JSContext *cx, nsAString &str, JS::Value *rval)
 
 } // namespace xpc
 
-JSBool
+bool
 xpc_qsStringToJsstring(JSContext *cx, nsString &str, JSString **rval)
 {
     // From the T_DOMSTRING case in XPCConvert::NativeData2JS.
@@ -824,7 +824,7 @@ xpc_qsStringToJsstring(JSContext *cx, nsString &str, JSString **rval)
     return true;
 }
 
-JSBool
+bool
 xpc_qsXPCOMObjectToJsval(JSContext *cx, qsObjectHelper &aHelper,
                          const nsIID *iid, XPCNativeInterface **iface,
                          jsval *rval)
@@ -856,7 +856,7 @@ xpc_qsXPCOMObjectToJsval(JSContext *cx, qsObjectHelper &aHelper,
     return true;
 }
 
-JSBool
+bool
 xpc_qsVariantToJsval(JSContext *aCx,
                      nsIVariant *p,
                      jsval *rval)
@@ -865,7 +865,7 @@ xpc_qsVariantToJsval(JSContext *aCx,
     // Error handling is in XPCWrappedNative::CallMethod.
     if (p) {
         nsresult rv;
-        JSBool ok = XPCVariant::VariantDataToJS(p, &rv, rval);
+        bool ok = XPCVariant::VariantDataToJS(p, &rv, rval);
         if (!ok)
             xpc_qsThrow(aCx, rv);
         return ok;

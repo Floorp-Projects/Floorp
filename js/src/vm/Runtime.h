@@ -30,7 +30,7 @@
 #include "gc/Nursery.h"
 #include "gc/Statistics.h"
 #include "gc/StoreBuffer.h"
-#include "ion/AsmJSSignalHandlers.h"
+#include "jit/AsmJSSignalHandlers.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
 #include "vm/DateTime.h"

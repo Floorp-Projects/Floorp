@@ -89,7 +89,7 @@ extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
  * return value for a function call.  The principal way to create a
  * CallReceiver is using JS::CallReceiverFromVp:
  *
- *   static JSBool
+ *   static bool
  *   FunctionReturningThis(JSContext *cx, unsigned argc, JS::Value *vp)
  *   {
  *       JS::CallReceiver rec = JS::CallReceiverFromVp(vp);
@@ -282,7 +282,7 @@ CallReceiverFromVp(Value *vp)
  * the function call's arguments.  The principal way to create a CallArgs is
  * like so, using JS::CallArgsFromVp:
  *
- *   static JSBool
+ *   static bool
  *   FunctionReturningArgcTimesArg0(JSContext *cx, unsigned argc, JS::Value *vp)
  *   {
  *       JS::CallArgs args = JS::CallArgsFromVp(argc, vp);

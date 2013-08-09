@@ -951,8 +951,9 @@ nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent,
 }
 
 nsresult
-nsXBLPrototypeHandler::Read(nsIScriptContext* aContext, nsIObjectInputStream* aStream)
+nsXBLPrototypeHandler::Read(nsIObjectInputStream* aStream)
 {
+  AssertInCompilationScope();
   nsresult rv = aStream->Read8(&mPhase);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = aStream->Read8(&mType);
@@ -985,8 +986,9 @@ nsXBLPrototypeHandler::Read(nsIScriptContext* aContext, nsIObjectInputStream* aS
 }
 
 nsresult
-nsXBLPrototypeHandler::Write(nsIScriptContext* aContext, nsIObjectOutputStream* aStream)
+nsXBLPrototypeHandler::Write(nsIObjectOutputStream* aStream)
 {
+  AssertInCompilationScope();
   // Make sure we don't write out NS_HANDLER_TYPE_XUL types, as they are used
   // for <keyset> elements.
   if ((mType & NS_HANDLER_TYPE_XUL) || !mEventName)

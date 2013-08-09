@@ -48,6 +48,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsIStyleSheet.h"
@@ -77,6 +78,7 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
+#include "nsJSPrincipals.h"
 #include "nsDOMAttributeMap.h"
 #include "nsGkAtoms.h"
 #include "nsXULContentUtils.h"
@@ -2581,29 +2583,33 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
     // Ok, compile it to create a prototype script object!
 
-    JSAutoRequest ar(context->GetNativeContext());
-    JS::Rooted<JSScript*> newScriptObject(context->GetNativeContext());
+    JSContext* cx = context->GetNativeContext();
+    AutoCxPusher pusher(cx);
 
+    bool ok = false;
+    nsresult rv = nsContentUtils::GetSecurityManager()->
+                    CanExecuteScripts(cx, aDocument->NodePrincipal(), &ok);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(ok, NS_OK);
+    NS_ENSURE_TRUE(JSVersion(mLangVersion) != JSVERSION_UNKNOWN, NS_OK);
+
+    JS::CompileOptions options(cx);
+    options.setPrincipals(nsJSPrincipals::get(aDocument->NodePrincipal()))
+           .setFileAndLine(urlspec.get(), aLineNo)
+           .setVersion(JSVersion(mLangVersion));
     // If the script was inline, tell the JS parser to save source for
     // Function.prototype.toSource(). If it's out of line, we retrieve the
     // source from the files on demand.
-    bool saveSource = !mOutOfLine;
-
-    nsresult rv = context->CompileScript(aText, aTextLength,
-                                         // Use the enclosing document's principal
-                                         // XXX is this right? or should we use the
-                                         // protodoc's?
-                                         // If we start using the protodoc's, make sure
-                                         // the DowngradePrincipalIfNeeded stuff in
-                                         // XULDocument::OnStreamComplete still works!
-                                         aDocument->NodePrincipal(),
-                                         urlspec.get(), aLineNo, mLangVersion,
-                                         &newScriptObject, saveSource);
-    if (NS_FAILED(rv))
-        return rv;
-
-    Set(newScriptObject);
-    return rv;
+    options.setSourcePolicy(mOutOfLine ? JS::CompileOptions::LAZY_SOURCE
+                                       : JS::CompileOptions::SAVE_SOURCE);
+    JS::RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
+    xpc_UnmarkGrayObject(scope);
+    JSScript* script = JS::Compile(cx, scope, options,
+                                   static_cast<const jschar*>(aText), aTextLength);
+    if (!script)
+        return NS_ERROR_OUT_OF_MEMORY;
+    Set(script);
+    return NS_OK;
 }
 
 void

@@ -10,7 +10,7 @@
 #define JSVAL_IS_FALSE(x) ((JSVAL_IS_BOOLEAN(x)) && !(JSVAL_TO_BOOLEAN(x)))
 #define JSVAL_IS_TRUE(x)  ((JSVAL_IS_BOOLEAN(x)) && (JSVAL_TO_BOOLEAN(x)))
 
-static JSBool
+static bool
 stringToId(JSContext *cx, const char *s, jsid *idp)
 {
     JSString *str = JS_NewStringCopyZ(cx, s);

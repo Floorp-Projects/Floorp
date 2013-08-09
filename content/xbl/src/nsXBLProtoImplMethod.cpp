@@ -107,7 +107,6 @@ nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
   JS::Rooted<JSObject*> scopeObject(aCx, xpc::GetXBLScope(aCx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
-  // now we want to reevaluate our property using aContext and the script object for this window...
   JS::Rooted<JSObject*> jsMethodObject(aCx, GetCompiledMethod());
   if (jsMethodObject) {
     nsDependentString name(mName);
@@ -137,9 +136,10 @@ nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
 }
 
 nsresult 
-nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
+nsXBLProtoImplMethod::CompileMember(const nsCString& aClassStr,
                                     JS::Handle<JSObject*> aClassObject)
 {
+  AssertInCompilationScope();
   NS_PRECONDITION(!IsCompiled(),
                   "Trying to compile an already-compiled method");
   NS_PRECONDITION(aClassObject,
@@ -199,7 +199,7 @@ nsXBLProtoImplMethod::CompileMember(nsIScriptContext* aContext, const nsCString&
     functionUri.Truncate(hash);
   }
 
-  AutoPushJSContext cx(aContext->GetNativeContext());
+  AutoJSContext cx;
   JSAutoCompartment ac(cx, aClassObject);
   JS::CompileOptions options(cx);
   options.setFileAndLine(functionUri.get(),
@@ -234,13 +234,14 @@ nsXBLProtoImplMethod::Trace(const TraceCallbacks& aCallbacks, void *aClosure)
 }
 
 nsresult
-nsXBLProtoImplMethod::Read(nsIScriptContext* aContext,
-                           nsIObjectInputStream* aStream)
+nsXBLProtoImplMethod::Read(nsIObjectInputStream* aStream)
 {
+  AssertInCompilationScope();
   MOZ_ASSERT(!IsCompiled() && !GetUncompiledMethod());
 
-  JS::Rooted<JSObject*> methodObject(aContext->GetNativeContext());
-  nsresult rv = XBL_DeserializeFunction(aContext, aStream, &methodObject);
+  AutoJSContext cx;
+  JS::Rooted<JSObject*> methodObject(cx);
+  nsresult rv = XBL_DeserializeFunction(aStream, &methodObject);
   if (NS_FAILED(rv)) {
     SetUncompiledMethod(nullptr);
     return rv;
@@ -252,9 +253,9 @@ nsXBLProtoImplMethod::Read(nsIScriptContext* aContext,
 }
 
 nsresult
-nsXBLProtoImplMethod::Write(nsIScriptContext* aContext,
-                            nsIObjectOutputStream* aStream)
+nsXBLProtoImplMethod::Write(nsIObjectOutputStream* aStream)
 {
+  AssertInCompilationScope();
   MOZ_ASSERT(IsCompiled());
   if (GetCompiledMethod()) {
     nsresult rv = aStream->Write8(XBLBinding_Serialize_Method);
@@ -268,7 +269,7 @@ nsXBLProtoImplMethod::Write(nsIScriptContext* aContext,
     // been set to a compiled method.
     JS::Handle<JSObject*> method =
       JS::Handle<JSObject*>::fromMarkedLocation(mMethod.AsHeapObject().address());
-    return XBL_SerializeFunction(aContext, aStream, method);
+    return XBL_SerializeFunction(aStream, method);
   }
 
   return NS_OK;
@@ -342,7 +343,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   rv = nsContentUtils::GetSecurityManager()->CheckFunctionAccess(cx, method,
                                                                  thisObject);
 
-  JSBool ok = true;
+  bool ok = true;
   if (NS_SUCCEEDED(rv)) {
     JS::Rooted<JS::Value> retval(cx);
     ok = ::JS_CallFunctionValue(cx, thisObject, OBJECT_TO_JSVAL(method),
@@ -362,10 +363,10 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 }
 
 nsresult
-nsXBLProtoImplAnonymousMethod::Write(nsIScriptContext* aContext,
-                                     nsIObjectOutputStream* aStream,
+nsXBLProtoImplAnonymousMethod::Write(nsIObjectOutputStream* aStream,
                                      XBLBindingSerializeDetails aType)
 {
+  AssertInCompilationScope();
   MOZ_ASSERT(IsCompiled());
   if (GetCompiledMethod()) {
     nsresult rv = aStream->Write8(aType);
@@ -376,7 +377,7 @@ nsXBLProtoImplAnonymousMethod::Write(nsIScriptContext* aContext,
     // been set to a compiled method.
     JS::Handle<JSObject*> method =
       JS::Handle<JSObject*>::fromMarkedLocation(mMethod.AsHeapObject().address());
-    rv = XBL_SerializeFunction(aContext, aStream, method);
+    rv = XBL_SerializeFunction(aStream, method);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

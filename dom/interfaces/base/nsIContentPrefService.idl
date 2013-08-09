@@ -39,6 +39,9 @@ interface nsIContentPrefCallback : nsISupports
   void onResult(in nsIVariant aResult);
 };
 
+/**
+ * @deprecated Please use nsIContentPrefService2 instead.
+ */
 [scriptable, uuid(e3f772f3-023f-4b32-b074-36cf0fd5d414)]
 interface nsIContentPrefService : nsISupports
 {

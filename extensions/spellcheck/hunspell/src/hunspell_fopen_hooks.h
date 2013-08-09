@@ -19,6 +19,7 @@
 #include <string.h>
 
 #if defined(XP_WIN)
+#include "nsNativeCharsetUtils.h"
 #include "nsString.h"
 
 #include <fcntl.h>
@@ -41,9 +42,16 @@ hunspell_fopen_readahead(const char* filename, const char* mode)
   }
   int fd = -1;
 #if defined(XP_WIN)
+  // filename is obtained via the nsIFile::nativePath attribute, so 
+  // it is using the Windows ANSI code page, NOT UTF-8!
+  nsAutoString utf16Filename;
+  nsresult rv = NS_CopyNativeToUnicode(nsDependentCString(filename),
+                                       utf16Filename);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
   HANDLE handle = INVALID_HANDLE_VALUE;
-  mozilla::ReadAheadFile(NS_ConvertUTF8toUTF16(filename).get(), 0, SIZE_MAX,
-                         &handle);
+  mozilla::ReadAheadFile(utf16Filename.get(), 0, SIZE_MAX, &handle);
   if (handle == INVALID_HANDLE_VALUE) {
     return nullptr;
   }
