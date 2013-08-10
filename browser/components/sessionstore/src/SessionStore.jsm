@@ -1066,9 +1066,6 @@ let SessionStoreInternal = {
       win.setTimeout(function() { _this.saveState(true); }, 0);
     else if (this._loadState == STATE_RUNNING)
       this.saveState(true);
-    // Delete the private browsing backed up state, if any
-    if ("_stateBackup" in this)
-      delete this._stateBackup;
 
     this._clearRestoringWindows();
   },
