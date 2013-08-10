@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/dom/HTMLStyleElement.h"
 #include "mozilla/dom/HTMLStyleElementBinding.h"
-#include "nsIDOMLinkStyle.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIDOMStyleSheet.h"
@@ -49,9 +48,8 @@ NS_IMPL_RELEASE_INHERITED(HTMLStyleElement, Element)
 
 // QueryInterface implementation for HTMLStyleElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLStyleElement)
-  NS_INTERFACE_TABLE_INHERITED4(HTMLStyleElement,
+  NS_INTERFACE_TABLE_INHERITED3(HTMLStyleElement,
                                 nsIDOMHTMLStyleElement,
-                                nsIDOMLinkStyle,
                                 nsIStyleSheetLinkingElement,
                                 nsIMutationObserver)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)

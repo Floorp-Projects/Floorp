@@ -142,7 +142,6 @@
 // includes needed for the prototype chain interfaces
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMElementCSSInlineStyle.h"
-#include "nsIDOMLinkStyle.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
