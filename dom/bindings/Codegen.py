@@ -6191,12 +6191,6 @@ class CGUnionReturnValueStruct(CGThing):
         CGThing.__init__(self)
         self.type = type.unroll()
         self.descriptorProvider = descriptorProvider
-        self.templateVars = map(
-            lambda t: getUnionTypeTemplateVars(self.type, t,
-                                               self.descriptorProvider,
-                                               isReturnValue=True),
-            self.type.flatMemberTypes)
-
         self.struct = self.getStruct()
 
     def declare(self):
@@ -6205,35 +6199,6 @@ class CGUnionReturnValueStruct(CGThing):
     def define(self):
         return self.struct.define()
 
-    def toJSValMethod(self):
-        conversionsToJS = []
-        if self.type.hasNullableType:
-            conversionsToJS.append("    case eNull:\n"
-                                   "    {\n"
-                                   "      rval.setNull();\n"
-                                   "      return true;\n"
-                                   "    }")
-        conversionsToJS.extend(
-            map(self.getConversionToJS,
-                zip(self.templateVars, self.type.flatMemberTypes)))
-
-        body = """
-switch (mType) {
-%s
-  case eUninitialized:
-  {
-    break;
-  }
-}
-return false;
-""" % ("\n\n".join(conversionsToJS))
-
-        return ClassMethod("ToJSVal", "bool", [
-            Argument("JSContext*", "cx"),
-            Argument("JS::Handle<JSObject*>", "scopeObj"),
-            Argument("JS::MutableHandle<JS::Value>", "rval")
-        ], body=body, const=True)
-
     def getStruct(self):
 
         members = [ClassMember("mType", "Type", body="eUninitialized"),
@@ -6241,19 +6206,21 @@ return false;
         ctor = ClassConstructor([], bodyInHeader=True, visibility="public",
                                 explicit=True)
 
-        templateVars = self.templateVars
-        methods = [self.toJSValMethod()]
+        methods = []
         enumValues = ["eUninitialized"]
+        toJSValCases = [CGCase("eUninitialized", CGGeneric("return false;"))]
+        destructorCases = [CGCase("eUninitialized", None)]
         unionValues = []
-        callDestructors = ""
         if self.type.hasNullableType:
             enumValues.append("eNull")
             methods.append(ClassMethod("IsNull", "bool", [], const=True, inline=True,
                                        body="return mType == eNull;"))
             methods.append(ClassMethod("SetNull", "void", [], inline=True,
                                        body="mType = eNull;"))
-            callDestructors += ("\n  case eNull:\n"
-                                "    break;")
+            destructorCases.append(CGCase("eNull", None))
+            toJSValCases.append(CGCase("eNull", CGGeneric("rval.setNull();\n"
+                                                          "return true;")))
+
         for t in self.type.flatMemberTypes:
             vars = getUnionTypeTemplateVars(self.type,
                        t, self.descriptorProvider, isReturnValue=True)
@@ -6267,17 +6234,21 @@ return false;
                                                "m${name}").substitute(vars))
             enumValues.append("e" + vars["name"])
 
-            callDestructors += string.Template("case e${name}:\n"
-                                               "  mValue.m${name}.Destroy();\n"
-                                               "  mType = eUninitialized;\n"
-                                               "  break;").substitute(vars)
+            toJSValCases.append(CGCase("e" + vars["name"],
+                                       self.getConversionToJS(vars, t)))
+            destructorCases.append(CGCase("e" + vars["name"],
+                                          CGGeneric("mValue.m%s.Destroy();\n"
+                                                    "mType = eUninitialized;"
+                                                     % vars["name"])))
 
-        dtor = """
-switch (mType) {%s
-  case eUninitialized:
-    break;
-}
-""" % callDestructors
+        dtor = CGSwitch("mType", destructorCases).define()
+
+        methods.append(ClassMethod("ToJSVal", "bool", [
+                                   Argument("JSContext*", "cx"),
+                                   Argument("JS::Handle<JSObject*>", "scopeObj"),
+                                   Argument("JS::MutableHandle<JS::Value>", "rval")
+        ], body=CGSwitch("mType", toJSValCases,
+                         default=CGGeneric("return false;")).define(), const=True))
 
         return CGClass(self.type.__str__() + "ReturnValue",
                        members=members,
@@ -6288,8 +6259,7 @@ switch (mType) {%s
                        enums=[ClassEnum("Type", enumValues, visibility="private")],
                        unions=[ClassUnion("Value", unionValues, visibility="private")])
 
-    def getConversionToJS(self, arg):
-        (templateVars, type) = arg
+    def getConversionToJS(self, templateVars, type):
         assert not type.nullable() # flatMemberTypes never has nullable types
         val = "mValue.m%(name)s.Value()" % templateVars
         wrapCode = wrapForType(
@@ -6300,12 +6270,7 @@ switch (mType) {%s
                 "obj": "scopeObj",
                 "result": val,
                 })
-        return CGIndenter(CGList([CGGeneric("case e%(name)s:" % templateVars),
-                                  CGWrapper(CGIndenter(CGGeneric(wrapCode)),
-                                            pre="{\n",
-                                            post="\n}")],
-                                 "\n"),
-                          2).define()
+        return CGGeneric(wrapCode)
 
 class CGUnionConversionStruct(CGThing):
     def __init__(self, type, descriptorProvider):
