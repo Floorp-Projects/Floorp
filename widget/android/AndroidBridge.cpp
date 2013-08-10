@@ -47,7 +47,7 @@ using namespace mozilla;
 
 NS_IMPL_ISUPPORTS0(nsFilePickerCallback)
 
-StaticRefPtr<AndroidBridge> AndroidBridge::sBridge;
+nsRefPtr<AndroidBridge> AndroidBridge::sBridge = nullptr;
 static unsigned sJavaEnvThreadIndex = 0;
 static void JavaThreadDetachFunc(void *arg);
 
@@ -1431,7 +1431,7 @@ namespace mozilla {
         nsCOMPtr<nsIThread> mMainThread;
 
     };
-    StaticRefPtr<TracerRunnable> sTracerRunnable;
+    nsCOMPtr<TracerRunnable> sTracerRunnable;
 
     bool InitWidgetTracing() {
         if (!sTracerRunnable)

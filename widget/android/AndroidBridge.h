@@ -421,7 +421,7 @@ public:
                             const int32_t      aPort,
                             nsACString & aResult);
 protected:
-    static StaticRefPtr<AndroidBridge> sBridge;
+    static nsRefPtr<AndroidBridge> sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback> > mSmsRequests;
 
     // the global JavaVM
