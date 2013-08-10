@@ -137,6 +137,7 @@ public:
    */
   enum ScrollMode { INSTANT, SMOOTH, NORMAL };
   /**
+   * @note This method might destroy the frame, pres shell and other objects.
    * Clamps aScrollPosition to GetScrollRange and sets the scroll position
    * to that value.
    * @param aRange If non-null, specifies area which contains aScrollPosition
@@ -147,6 +148,7 @@ public:
   virtual void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
                         const nsRect* aRange = nullptr) = 0;
   /**
+   * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in integer CSS pixels.
    * Keeps the exact current horizontal or vertical position if the current
    * position, rounded to CSS pixels, matches aScrollPosition. If
@@ -158,6 +160,7 @@ public:
    */
   virtual void ScrollToCSSPixels(nsIntPoint aScrollPosition) = 0;
   /**
+   * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in float CSS pixels.
    * This does not guarantee that GetScrollPositionCSSPixels equals
    * aScrollPosition afterward. It tries to scroll as close to
@@ -177,6 +180,7 @@ public:
    */
   enum ScrollUnit { DEVICE_PIXELS, LINES, PAGES, WHOLE };
   /**
+   * @note This method might destroy the frame, pres shell and other objects.
    * Modifies the current scroll position by aDelta units given by aUnit,
    * clamping it to GetScrollRange. If WHOLE is specified as the unit,
    * content is scrolled all the way in the direction(s) given by aDelta.
@@ -188,6 +192,7 @@ public:
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
                         nsIntPoint* aOverflow = nullptr, nsIAtom *aOrigin = nullptr) = 0;
   /**
+   * @note This method might destroy the frame, pres shell and other objects.
    * This tells the scroll frame to try scrolling to the scroll
    * position that was restored from the history. This must be called
    * at least once after state has been restored. It is called by the
