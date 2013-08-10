@@ -1047,7 +1047,7 @@ let SessionStoreInternal = {
         delete aTab.linkedBrowser.__SS_formDataSaved;
         if (aTab.linkedBrowser.__SS_restoreState)
           this._resetTabRestoringState(aTab);
-      });
+      }, this);
       openWindows[aWindow.__SSi] = true;
     });
     // also clear all data about closed tabs and windows
