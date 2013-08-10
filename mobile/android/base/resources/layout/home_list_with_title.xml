@@ -5,28 +5,10 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <LinearLayout android:id="@+id/home_empty_view"
-                  android:layout_width="fill_parent"
-                  android:layout_height="fill_parent"
-                  android:orientation="vertical"
-                  android:gravity="center"
-                  android:paddingLeft="50dp"
-                  android:paddingRight="50dp"
-                  android:visibility="gone">
-
-        <ImageView android:id="@+id/home_empty_image"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:paddingBottom="15dp"
-                   android:scaleType="fitXY"/>
-
-        <TextView android:id="@+id/home_empty_text"
-                  android:layout_width="fill_parent"
-                  android:layout_height="wrap_content"
-                  android:gravity="center"
-                  android:textAppearance="@style/TextAppearance.EmptyMessage"/>
-
-    </LinearLayout>
+    <ViewStub android:id="@+id/home_empty_view_stub"
+              android:layout="@layout/home_empty_page"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"/>
 
     <TextView android:id="@+id/title"
               style="@style/Widget.Home.PageTitle"
