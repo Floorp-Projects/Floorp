@@ -595,8 +595,14 @@ function isAddonDisabled(aAddon) {
   return aAddon.appDisabled || aAddon.softDisabled || aAddon.userDisabled;
 }
 
-XPCOMUtils.defineLazyServiceGetter(this, "gRDF", "@mozilla.org/rdf/rdf-service;1",
-                                   Ci.nsIRDFService);
+Object.defineProperty(this, "gRDF", {
+  get: function gRDFGetter() {
+    delete this.gRDF;
+    return this.gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
+                       getService(Ci.nsIRDFService);
+  },
+  configurable: true
+});
 
 function EM_R(aProperty) {
   return gRDF.GetResource(PREFIX_NS_EM + aProperty);
@@ -1759,7 +1765,7 @@ var XPIProvider = {
                                                      null);
     this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
                                                           null);
-    this.enabledAddons = "";
+    this.enabledAddons = [];
 
     Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this, false);
     Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this, false);
@@ -2898,7 +2904,6 @@ var XPIProvider = {
       let newDBAddon = null;
       try {
         // Update the database.
-        // XXX I don't think this can throw any more
         newDBAddon = XPIDatabase.addAddonMetadata(newAddon, aAddonState.descriptor);
       }
       catch (e) {
@@ -3000,8 +3005,9 @@ var XPIProvider = {
       let addonStates = aSt.addons;
 
       // Check if the database knows about any add-ons in this install location.
-      if (knownLocations.has(installLocation.name)) {
-        knownLocations.delete(installLocation.name);
+      let pos = knownLocations.indexOf(installLocation.name);
+      if (pos >= 0) {
+        knownLocations.splice(pos, 1);
         let addons = XPIDatabase.getAddonsInLocation(installLocation.name);
         // Iterate through the add-ons installed the last time the application
         // ran
@@ -3078,12 +3084,12 @@ var XPIProvider = {
     // have any add-ons installed in them, or the locations no longer exist.
     // The metadata for the add-ons that were in them must be removed from the
     // database.
-    for (let location of knownLocations) {
-      let addons = XPIDatabase.getAddonsInLocation(location);
+    knownLocations.forEach(function(aLocation) {
+      let addons = XPIDatabase.getAddonsInLocation(aLocation);
       addons.forEach(function(aOldAddon) {
         changed = removeMetadata(aOldAddon) || changed;
       }, this);
-    }
+    }, this);
 
     // Tell Telemetry what we found
     AddonManagerPrivate.recordSimpleMeasure("modifiedUnpacked", modifiedUnpacked);
@@ -5373,8 +5379,6 @@ AddonInstall.prototype = {
                                             reason, extraParams);
           }
           else {
-            // XXX this makes it dangerous to do many things in onInstallEnded
-            // listeners because important cleanup hasn't been done yet
             XPIProvider.unloadBootstrapScope(this.addon.id);
           }
         }
@@ -5752,8 +5756,8 @@ UpdateChecker.prototype = {
 
 /**
  * The AddonInternal is an internal only representation of add-ons. It may
- * have come from the database (see DBAddonInternal in XPIProviderUtils.jsm)
- * or an install manifest.
+ * have come from the database (see DBAddonInternal below) or an install
+ * manifest.
  */
 function AddonInternal() {
 }
