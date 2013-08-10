@@ -770,7 +770,9 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
             unionStructs[name] = CGUnionStruct(t, providers[0])
             # Unions cannot contain JSObject*.
             if not any(member.isObject() or member.isSpiderMonkeyInterface() for member in t.flatMemberTypes):
-                unionReturnValues[name] = CGUnionReturnValueStruct(t, providers[0])
+                unionReturnValues[name] = CGUnionStruct(t,
+                                                        providers[0],
+                                                        isReturnValue=True)
 
             for f in t.flatMemberTypes:
                 f = f.unroll()
@@ -6028,169 +6030,11 @@ def mapTemplate(template, templateVarArray):
                templateVarArray)
 
 class CGUnionStruct(CGThing):
-    def __init__(self, type, descriptorProvider):
+    def __init__(self, type, descriptorProvider, isReturnValue=False):
         CGThing.__init__(self)
         self.type = type.unroll()
         self.descriptorProvider = descriptorProvider
-        self.templateVars = map(
-            lambda t: getUnionTypeTemplateVars(self.type, t, self.descriptorProvider),
-            self.type.flatMemberTypes)
-
-
-    def declare(self):
-        templateVars = self.templateVars
-
-        callDestructors = []
-        enumValues = []
-        methods = []
-        if self.type.hasNullableType:
-            callDestructors.append("      case eNull:\n"
-                                   "        break;")
-            enumValues.append("eNull")
-            methods.append("""  bool IsNull() const
-  {
-    return mType == eNull;
-  }""")
-
-        destructorTemplate = """  void Destroy${name}()
-  {
-    MOZ_ASSERT(Is${name}(), "Wrong type!");
-    mValue.m${name}.Destroy();
-    mType = eUninitialized;
-  }"""
-        destructors = mapTemplate(destructorTemplate, templateVars)
-        callDestructors.extend(mapTemplate("      case e${name}:\n"
-                                           "         Destroy${name}();\n"
-                                           "         break;", templateVars))
-        enumValues.extend(mapTemplate("e${name}", templateVars))
-        methodTemplate = """  bool Is${name}() const
-  {
-    return mType == e${name};
-  }
-  ${externalType} GetAs${name}() const
-  {
-    MOZ_ASSERT(Is${name}(), "Wrong type!");
-    return const_cast<${structType}&>(mValue.m${name}.Value());
-  }"""
-        methods.extend(mapTemplate(methodTemplate, templateVars))
-        # Now have to be careful: we do not want the SetAsObject() method!
-        setterTemplate = """  ${structType}& SetAs${name}()
-  {
-    mType = e${name};
-    return mValue.m${name}.SetValue();
-  }"""
-        methods.extend(mapTemplate(setterTemplate,
-                                   filter(lambda v: v["name"] != "Object",
-                                          templateVars)))
-        values = mapTemplate("UnionMember<${structType} > m${name};", templateVars)
-        return string.Template("""
-class ${structName} {
-public:
-  ${structName}() : mType(eUninitialized)
-  {
-  }
-  ~${structName}()
-  {
-    switch (mType) {
-${callDestructors}
-      case eUninitialized:
-        break;
-    }
-  }
-
-${methods}
-
-  bool ToJSVal(JSContext* cx, JS::Handle<JSObject*> scopeObj,
-               JS::MutableHandle<JS::Value> rval) const;
-
-private:
-  friend class ${structName}Argument;
-
-  // Disallow copy-construction and assignment
-  ${structName}(const ${structName}&) MOZ_DELETE;
-  void operator=(const ${structName}&) MOZ_DELETE;
-
-${destructors}
-
-  enum Type {
-    eUninitialized,
-    ${enumValues}
-  };
-  union Value {
-    ${values}
-  };
-
-  Type mType;
-  Value mValue;
-};
-
-""").substitute(
-    {
-       "structName": self.type.__str__(),
-       "callDestructors": "\n".join(callDestructors),
-       "destructors": "\n".join(destructors),
-       "methods": "\n\n".join(methods),
-       "enumValues": ",\n    ".join(enumValues),
-       "values": "\n    ".join(values)
-       })
-
-    def define(self):
-        templateVars = self.templateVars
-        conversionsToJS = []
-        if self.type.hasNullableType:
-            conversionsToJS.append("    case eNull:\n"
-                                   "    {\n"
-                                   "      rval.setNull();\n"
-                                   "      return true;\n"
-                                   "    }")
-        conversionsToJS.extend(
-            map(self.getConversionToJS,
-                zip(templateVars, self.type.flatMemberTypes)))
-
-        return string.Template("""bool
-${structName}::ToJSVal(JSContext* cx, JS::Handle<JSObject*> scopeObj,
-                       JS::MutableHandle<JS::Value> rval) const
-{
-  switch (mType) {
-${doConversionsToJS}
-
-    case eUninitialized:
-    {
-      break;
-    }
-  }
-  return false;
-}
-""").substitute({
-                "structName": str(self.type),
-                "doConversionsToJS": "\n\n".join(conversionsToJS)
-                })
-
-    def getConversionToJS(self, arg):
-        (templateVars, type) = arg
-        assert not type.nullable() # flatMemberTypes never has nullable types
-        val = "mValue.m%(name)s.Value()" % templateVars
-        wrapCode = wrapForType(
-            type, self.descriptorProvider,
-            {
-                "jsvalRef": "rval",
-                "jsvalHandle": "rval",
-                "obj": "scopeObj",
-                "result": val,
-                "typedArraysAreStructs": True
-                })
-        return CGIndenter(CGList([CGGeneric("case e%(name)s:" % templateVars),
-                                  CGWrapper(CGIndenter(CGGeneric(wrapCode)),
-                                            pre="{\n",
-                                            post="\n}")],
-                                 "\n"),
-                          4).define()
-
-class CGUnionReturnValueStruct(CGThing):
-    def __init__(self, type, descriptorProvider):
-        CGThing.__init__(self)
-        self.type = type.unroll()
-        self.descriptorProvider = descriptorProvider
+        self.isReturnValue = isReturnValue
         self.struct = self.getStruct()
 
     def declare(self):
@@ -6223,13 +6067,44 @@ class CGUnionReturnValueStruct(CGThing):
 
         for t in self.type.flatMemberTypes:
             vars = getUnionTypeTemplateVars(self.type,
-                       t, self.descriptorProvider, isReturnValue=True)
-            body=string.Template("mType = e${name};\n"
-                                 "return mValue.m${name}.SetValue();").substitute(vars)
-            methods.append(ClassMethod("SetAs" + vars["name"],
-                                       vars["structType"] + "&",
+                                            t, self.descriptorProvider,
+                                            isReturnValue=self.isReturnValue)
+            if vars["name"] != "Object":
+                body=string.Template("mType = e${name};\n"
+                                     "return mValue.m${name}.SetValue();").substitute(vars)
+                # bodyInHeader must be false for return values because they own
+                # their union members and we don't want include headers in
+                # UnionTypes.h just to call Addref/Release
+                methods.append(ClassMethod("SetAs" + vars["name"],
+                                           vars["structType"] + "&",
+                                           [],
+                                           bodyInHeader=not self.isReturnValue,
+                                           body=body))
+            body = string.Template('MOZ_ASSERT(Is${name}(), "Wrong type!");\n'
+                                   'mValue.m${name}.Destroy();\n'
+                                   'mType = eUninitialized;').substitute(vars)
+            methods.append(ClassMethod("Destroy" + vars["name"],
+                                       "void",
                                        [],
+                                       visibility="private",
+                                       bodyInHeader=not self.isReturnValue,
                                        body=body))
+            body = string.Template("return mType == e${name};").substitute(vars)
+            methods.append(ClassMethod("Is" + vars["name"],
+                                       "bool",
+                                       [],
+                                       const=True,
+                                       bodyInHeader=True,
+                                       body=body))
+            if not self.isReturnValue:
+                body = string.Template('MOZ_ASSERT(Is${name}(), "Wrong type!");\n'
+                                       'return const_cast<${structType}&>(mValue.m${name}.Value());').substitute(vars)
+                methods.append(ClassMethod("GetAs" + vars["name"],
+                                           vars["externalType"],
+                                           [],
+                                           const=True,
+                                           bodyInHeader=True,
+                                           body=body))
             unionValues.append(string.Template("UnionMember<${structType} > "
                                                "m${name}").substitute(vars))
             enumValues.append("e" + vars["name"])
@@ -6237,8 +6112,7 @@ class CGUnionReturnValueStruct(CGThing):
             toJSValCases.append(CGCase("e" + vars["name"],
                                        self.getConversionToJS(vars, t)))
             destructorCases.append(CGCase("e" + vars["name"],
-                                          CGGeneric("mValue.m%s.Destroy();\n"
-                                                    "mType = eUninitialized;"
+                                          CGGeneric("Destroy%s();"
                                                      % vars["name"])))
 
         dtor = CGSwitch("mType", destructorCases).define()
@@ -6250,12 +6124,16 @@ class CGUnionReturnValueStruct(CGThing):
         ], body=CGSwitch("mType", toJSValCases,
                          default=CGGeneric("return false;")).define(), const=True))
 
-        return CGClass(self.type.__str__() + "ReturnValue",
+        friend="  friend class %sArgument;\n" % str(self.type) if not self.isReturnValue else ""
+        return CGClass(str(self.type) + ("ReturnValue" if self.isReturnValue else ""),
                        members=members,
                        constructors=[ctor],
                        methods=methods,
                        disallowCopyConstruction=True,
-                       destructor=ClassDestructor(visibility="public", body=dtor),
+                       extradeclarations=friend,
+                       destructor=ClassDestructor(visibility="public",
+                                                  body=dtor,
+                                                  bodyInHeader=not self.isReturnValue),
                        enums=[ClassEnum("Type", enumValues, visibility="private")],
                        unions=[ClassUnion("Value", unionValues, visibility="private")])
 
@@ -6269,6 +6147,7 @@ class CGUnionReturnValueStruct(CGThing):
                 "jsvalHandle": "rval",
                 "obj": "scopeObj",
                 "result": val,
+                "typedArraysAreStructs": True
                 })
         return CGGeneric(wrapCode)
 
