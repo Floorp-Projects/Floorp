@@ -47,8 +47,7 @@ protected:
                                                        const uint16_t& aBacklog,
                                                        const nsString& aBinaryType);
   virtual bool DeallocPTCPServerSocketChild(PTCPServerSocketChild*);
-  virtual PRemoteOpenFileChild* AllocPRemoteOpenFileChild(const URIParams&,
-                                                          PBrowserChild*);
+  virtual PRemoteOpenFileChild* AllocPRemoteOpenFileChild(const URIParams&);
   virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*);
 };
 

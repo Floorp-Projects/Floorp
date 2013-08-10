@@ -189,7 +189,7 @@ NeckoChild::DeallocPTCPServerSocketChild(PTCPServerSocketChild* child)
 }
 
 PRemoteOpenFileChild*
-NeckoChild::AllocPRemoteOpenFileChild(const URIParams&, PBrowserChild*)
+NeckoChild::AllocPRemoteOpenFileChild(const URIParams&)
 {
   // We don't allocate here: instead we always use IPDL constructor that takes
   // an existing RemoteOpenFileChild
