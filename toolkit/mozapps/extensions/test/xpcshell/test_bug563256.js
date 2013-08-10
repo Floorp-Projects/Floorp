@@ -65,7 +65,7 @@ function run_test() {
 }
 
 function end_test() {
-  do_test_finished();
+  do_execute_soon(do_test_finished);
 }
 
 // Checks switching to a different theme and back again leaves everything the
@@ -196,7 +196,7 @@ function run_test_2() {
 function check_test_2() {
   restartManager();
   AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
-                               "alternate@tests.mozilla.org"], function([d, a]) {
+                               "alternate@tests.mozilla.org"], callback_soon(function([d, a]) {
     do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "alternate/1.0");
 
     do_check_true(d.userDisabled);
@@ -255,5 +255,5 @@ function check_test_2() {
 
       end_test();
     });
-  });
+  }));
 }
