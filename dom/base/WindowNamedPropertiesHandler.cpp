@@ -70,9 +70,9 @@ WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
   if (!htmlDoc) {
     return true;
   }
-  nsHTMLDocument *document = static_cast<nsHTMLDocument*>(htmlDoc.get());
+  nsHTMLDocument* document = static_cast<nsHTMLDocument*>(htmlDoc.get());
 
-  Element *element = document->GetElementById(str);
+  Element* element = document->GetElementById(str);
   if (element) {
     JS::Rooted<JS::Value> v(aCx);
     if (!WrapObject(aCx, aProxy, element, &v)) {
@@ -113,7 +113,7 @@ WindowNamedPropertiesHandler::defineProperty(JSContext* aCx,
 }
 
 bool
-WindowNamedPropertiesHandler::getOwnPropertyNames(JSContext *aCx,
+WindowNamedPropertiesHandler::getOwnPropertyNames(JSContext* aCx,
                                                   JS::Handle<JSObject*> aProxy,
                                                   JS::AutoIdVector& aProps)
 {
@@ -134,7 +134,7 @@ WindowNamedPropertiesHandler::getOwnPropertyNames(JSContext *aCx,
   if (!htmlDoc) {
     return true;
   }
-  nsHTMLDocument *document = static_cast<nsHTMLDocument*>(htmlDoc.get());
+  nsHTMLDocument* document = static_cast<nsHTMLDocument*>(htmlDoc.get());
   document->GetSupportedNames(names);
 
   JS::AutoIdVector docProps(aCx);
@@ -156,7 +156,7 @@ WindowNamedPropertiesHandler::delete_(JSContext* aCx,
 
 // static
 void
-WindowNamedPropertiesHandler::Install(JSContext *aCx,
+WindowNamedPropertiesHandler::Install(JSContext* aCx,
                                       JS::Handle<JSObject*> aProto)
 {
   JS::Rooted<JSObject*> protoProto(aCx);
