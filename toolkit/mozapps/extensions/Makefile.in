@@ -15,7 +15,7 @@ endif
 
 # This is used in multiple places, so is defined here to avoid it getting
 # out of sync.
-DEFINES += -DMOZ_EXTENSIONS_DB_SCHEMA=15
+DEFINES += -DMOZ_EXTENSIONS_DB_SCHEMA=14
 
 # Additional debugging info is exposed in debug builds, or by setting the
 # MOZ_EM_DEBUG environment variable when building.

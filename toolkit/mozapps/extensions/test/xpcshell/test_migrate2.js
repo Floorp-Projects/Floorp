@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Checks that we migrate data from SQLITE databases
+// Checks that we migrate data from future versions of the database
 // Note that since the database doesn't contain the foreignInstall field we
 // should just assume that no add-ons  in the user profile were foreignInstalls
 
@@ -177,7 +177,7 @@ function run_test() {
   stmt.finalize();
 
   db.schemaVersion = 10000;
-  Services.prefs.setIntPref("extensions.databaseSchema", 14);
+  Services.prefs.setIntPref("extensions.databaseSchema", 100);
   db.close();
 
   startupManager();
