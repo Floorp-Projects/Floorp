@@ -6918,80 +6918,187 @@ IonBuilder::jsop_getelem_string()
 bool
 IonBuilder::jsop_setelem()
 {
+    bool emitted = false;
+
     MDefinition *value = current->pop();
     MDefinition *index = current->pop();
     MDefinition *object = current->pop();
 
-    int arrayType = TypedArrayObject::TYPE_MAX;
-    if (ElementAccessIsTypedArray(object, index, &arrayType))
-        return jsop_setelem_typed(arrayType, SetElem_Normal,
-                                  object, index, value);
+    if (!setElemTryTypedStatic(&emitted, object, index, value) || emitted)
+        return emitted;
 
-    if (ElementAccessIsDenseNative(object, index)) {
-        do {
-            if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value))
-                break;
-            if (!object->resultTypeSet())
-                break;
+    if (!setElemTryTyped(&emitted, object, index, value) || emitted)
+        return emitted;
 
-            types::StackTypeSet::DoubleConversion conversion =
-                object->resultTypeSet()->convertDoubleElements(cx);
+    if (!setElemTryDense(&emitted, object, index, value) || emitted)
+        return emitted;
 
-            // If AmbiguousDoubleConversion, only handle int32 values for now.
-            if (conversion == types::StackTypeSet::AmbiguousDoubleConversion &&
-                value->type() != MIRType_Int32)
-            {
-                break;
-            }
-
-            // Don't generate a fast path if there have been bounds check failures
-            // and this access might be on a sparse property.
-            if (ElementAccessHasExtraIndexedProperty(cx, object) && failedBoundsCheck_)
-                break;
-
-            return jsop_setelem_dense(conversion, SetElem_Normal, object, index, value);
-        } while(false);
-    }
-
-    if (object->type() == MIRType_Magic)
-        return jsop_arguments_setelem(object, index, value);
+    if (!setElemTryArguments(&emitted, object, index, value) || emitted)
+        return emitted;
 
     if (script()->argumentsHasVarBinding() && object->mightBeType(MIRType_Magic))
         return abort("Type is not definitely lazy arguments.");
 
-    // Check if only objects are manipulated valid index, and generate a SetElementCache.
-    do {
-        if (!object->mightBeType(MIRType_Object))
-            break;
+    if (!setElemTryCache(&emitted, object, index, value) || emitted)
+        return emitted;
 
-        if (!index->mightBeType(MIRType_Int32) &&
-            !index->mightBeType(MIRType_String))
-        {
-            break;
-        }
-
-        // TODO: Bug 876650: remove this check:
-        // Temporary disable the cache if non dense native,
-        // untill the cache supports more ics
-        SetElemICInspector icInspect(inspector->setElemICInspector(pc));
-        if (!icInspect.sawDenseWrite())
-            break;
-
-        if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value))
-            break;
-
-        MInstruction *ins = MSetElementCache::New(object, index, value, script()->strict);
-        current->add(ins);
-        current->push(value);
-
-        return resumeAfter(ins);
-    } while (false);
-
+    // Emit call.
     MInstruction *ins = MCallSetElement::New(object, index, value);
     current->add(ins);
     current->push(value);
 
     return resumeAfter(ins);
+}
+
+bool
+IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
+                                  MDefinition *index, MDefinition *value)
+{
+    JS_ASSERT(*emitted == false);
+
+    int arrayType = TypedArrayObject::TYPE_MAX;
+    if (!ElementAccessIsTypedArray(object, index, &arrayType))
+        return true;
+
+    if (!LIRGenerator::allowStaticTypedArrayAccesses())
+        return true;
+
+    if (ElementAccessHasExtraIndexedProperty(cx, object))
+        return true;
+
+    if (!object->resultTypeSet())
+        return true;
+    JSObject *tarrObj = object->resultTypeSet()->getSingleton();
+    if (!tarrObj)
+        return true;
+
+    TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
+    ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(tarr);
+
+    MDefinition *ptr = convertShiftToMaskForStaticTypedArray(index, viewType);
+    if (!ptr)
+        return true;
+
+    // Emit StoreTypedArrayElementStatic.
+    object->setFoldedUnchecked();
+
+    // Clamp value to [0, 255] for Uint8ClampedArray.
+    MDefinition *toWrite = value;
+    if (viewType == ArrayBufferView::TYPE_UINT8_CLAMPED) {
+        toWrite = MClampToUint8::New(value);
+        current->add(toWrite->toInstruction());
+    }
+
+    MInstruction *store = MStoreTypedArrayElementStatic::New(tarr, ptr, toWrite);
+    current->add(store);
+    current->push(value);
+
+    if (!resumeAfter(store))
+        return false;
+
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::setElemTryTyped(bool *emitted, MDefinition *object,
+                            MDefinition *index, MDefinition *value)
+{
+    JS_ASSERT(*emitted == false);
+
+    int arrayType = TypedArrayObject::TYPE_MAX;
+    if (!ElementAccessIsTypedArray(object, index, &arrayType))
+        return true;
+
+    // Emit typed setelem variant.
+    if (!jsop_setelem_typed(arrayType, SetElem_Normal, object, index, value))
+        return false;
+
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::setElemTryDense(bool *emitted, MDefinition *object,
+                            MDefinition *index, MDefinition *value)
+{
+    JS_ASSERT(*emitted == false);
+
+    if (!ElementAccessIsDenseNative(object, index))
+        return true;
+    if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value))
+        return true;
+    if (!object->resultTypeSet())
+        return true;
+
+    types::StackTypeSet::DoubleConversion conversion =
+        object->resultTypeSet()->convertDoubleElements(cx);
+
+    // If AmbiguousDoubleConversion, only handle int32 values for now.
+    if (conversion == types::StackTypeSet::AmbiguousDoubleConversion &&
+        value->type() != MIRType_Int32)
+    {
+        return true;
+    }
+
+    // Don't generate a fast path if there have been bounds check failures
+    // and this access might be on a sparse property.
+    if (ElementAccessHasExtraIndexedProperty(cx, object) && failedBoundsCheck_)
+        return true;
+
+    // Emit dense setelem variant.
+    if (!jsop_setelem_dense(conversion, SetElem_Normal, object, index, value))
+        return false;
+
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::setElemTryArguments(bool *emitted, MDefinition *object,
+                                MDefinition *index, MDefinition *value)
+{
+    JS_ASSERT(*emitted == false);
+
+    if (object->type() != MIRType_Magic)
+        return true;
+
+    // Arguments are not supported yet.
+    return abort("NYI arguments[]=");
+}
+
+bool
+IonBuilder::setElemTryCache(bool *emitted, MDefinition *object,
+                            MDefinition *index, MDefinition *value)
+{
+    JS_ASSERT(*emitted == false);
+
+    if (!object->mightBeType(MIRType_Object))
+        return true;
+
+    if (!index->mightBeType(MIRType_Int32) && !index->mightBeType(MIRType_String))
+        return true;
+
+    // TODO: Bug 876650: remove this check:
+    // Temporary disable the cache if non dense native,
+    // untill the cache supports more ics
+    SetElemICInspector icInspect(inspector->setElemICInspector(pc));
+    if (!icInspect.sawDenseWrite())
+        return true;
+
+    if (PropertyWriteNeedsTypeBarrier(cx, current, &object, NULL, &value))
+        return true;
+
+    // Emit SetElementCache.
+    MInstruction *ins = MSetElementCache::New(object, index, value, script()->strict);
+    current->add(ins);
+    current->push(value);
+
+    if (!resumeAfter(ins))
+        return false;
+
+    *emitted = true;
+    return true;
 }
 
 bool
@@ -7105,57 +7212,12 @@ IonBuilder::jsop_setelem_dense(types::StackTypeSet::DoubleConversion conversion,
     return true;
 }
 
-bool
-IonBuilder::jsop_setelem_typed_static(MDefinition *obj, MDefinition *id, MDefinition *value,
-                                      bool *psucceeded)
-{
-    if (!LIRGenerator::allowStaticTypedArrayAccesses())
-        return true;
-
-    if (ElementAccessHasExtraIndexedProperty(cx, obj))
-        return true;
-
-    if (!obj->resultTypeSet())
-        return true;
-    JSObject *tarrObj = obj->resultTypeSet()->getSingleton();
-    if (!tarrObj)
-        return true;
-    TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
-
-    ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(tarr);
-
-    MDefinition *ptr = convertShiftToMaskForStaticTypedArray(id, viewType);
-    if (!ptr)
-        return true;
-
-    obj->setFoldedUnchecked();
-
-    // Clamp value to [0, 255] for Uint8ClampedArray.
-    MDefinition *toWrite = value;
-    if (viewType == ArrayBufferView::TYPE_UINT8_CLAMPED) {
-        toWrite = MClampToUint8::New(value);
-        current->add(toWrite->toInstruction());
-    }
-
-    MInstruction *store = MStoreTypedArrayElementStatic::New(tarr, ptr, toWrite);
-    current->add(store);
-    current->push(value);
-
-    *psucceeded = true;
-    return resumeAfter(store);
-}
 
 bool
 IonBuilder::jsop_setelem_typed(int arrayType,
                                SetElemSafety safety,
                                MDefinition *obj, MDefinition *id, MDefinition *value)
 {
-    bool staticAccess = false;
-    if (!jsop_setelem_typed_static(obj, id, value, &staticAccess))
-        return false;
-    if (staticAccess)
-        return true;
-
     bool expectOOB;
     if (safety == SetElem_Normal) {
         SetElemICInspector icInspect(inspector->setElemICInspector(pc));
@@ -7355,12 +7417,6 @@ IonBuilder::jsop_arguments_getelem()
 
     // inlined not constant not supported, yet.
     return abort("NYI inlined not constant get argument element");
-}
-
-bool
-IonBuilder::jsop_arguments_setelem(MDefinition *object, MDefinition *index, MDefinition *value)
-{
-    return abort("NYI arguments[]=");
 }
 
 static JSObject *
