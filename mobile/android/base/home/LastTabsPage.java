@@ -24,6 +24,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewStub;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -159,7 +160,8 @@ public class LastTabsPage extends HomeFragment {
 
         if (mEmptyView == null) {
             // Set empty page view. We delay this so that the empty view won't flash.
-            mEmptyView = getActivity().findViewById(R.id.home_empty_view);
+            ViewStub emptyViewStub = (ViewStub) getActivity().findViewById(R.id.home_empty_view_stub);
+            mEmptyView = emptyViewStub.inflate();
 
             final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
             emptyIcon.setImageResource(R.drawable.icon_last_tabs_empty);

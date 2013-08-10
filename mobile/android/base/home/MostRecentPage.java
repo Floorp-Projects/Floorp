@@ -21,6 +21,7 @@ import android.support.v4.content.Loader;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewStub;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageView;
@@ -158,7 +159,8 @@ public class MostRecentPage extends HomeFragment {
         mTitle.setVisibility(View.GONE);
         if (mEmptyView == null) {
             // Set empty page view. We delay this so that the empty view won't flash.
-            mEmptyView = getActivity().findViewById(R.id.home_empty_view);
+            ViewStub emptyViewStub = (ViewStub) getActivity().findViewById(R.id.home_empty_view_stub);
+            mEmptyView = emptyViewStub.inflate();
 
             final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
             emptyIcon.setImageResource(R.drawable.icon_most_recent_empty);

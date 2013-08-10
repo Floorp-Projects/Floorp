@@ -467,6 +467,7 @@ RES_LAYOUT = \
   res/layout/font_size_preference.xml \
   res/layout/gecko_app.xml \
   res/layout/home_bookmarks_page.xml \
+  res/layout/home_empty_page.xml \
   res/layout/home_item_row.xml \
   res/layout/home_header_row.xml \
   res/layout/home_history_page.xml \
