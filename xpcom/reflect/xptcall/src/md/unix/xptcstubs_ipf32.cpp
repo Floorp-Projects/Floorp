@@ -126,7 +126,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
   return result;
 }
 
-extern "C" int SharedStub(uint64_t,uint64_t,uint64_t,uint64_t,
+extern "C" nsresult SharedStub(uint64_t,uint64_t,uint64_t,uint64_t,
  uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t *);
 
 /* Variable a0-a7 were put there so we can have access to the 8 input
