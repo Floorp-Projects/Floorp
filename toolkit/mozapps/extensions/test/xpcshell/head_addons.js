@@ -344,6 +344,10 @@ function do_check_icons(aActual, aExpected) {
   }
 }
 
+// Record the error (if any) from trying to save the XPI
+// database at shutdown time
+let gXPISaveError = null;
+
 /**
  * Starts up the add-on manager as if it was started by the application.
  *
@@ -396,26 +400,24 @@ function shutdownManager() {
   if (!gInternalManager)
     return;
 
-  let obs = AM_Cc["@mozilla.org/observer-service;1"].
-            getService(AM_Ci.nsIObserverService);
-
   let xpiShutdown = false;
-  obs.addObserver({
+  Services.obs.addObserver({
     observe: function(aSubject, aTopic, aData) {
       xpiShutdown = true;
-      obs.removeObserver(this, "xpi-provider-shutdown");
+      gXPISaveError = aData;
+      Services.obs.removeObserver(this, "xpi-provider-shutdown");
     }
   }, "xpi-provider-shutdown", false);
 
   let repositoryShutdown = false;
-  obs.addObserver({
+  Services.obs.addObserver({
     observe: function(aSubject, aTopic, aData) {
       repositoryShutdown = true;
-      obs.removeObserver(this, "addon-repository-shutdown");
+      Services.obs.removeObserver(this, "addon-repository-shutdown");
     }
   }, "addon-repository-shutdown", false);
 
-  obs.notifyObservers(null, "quit-application-granted", null);
+  Services.obs.notifyObservers(null, "quit-application-granted", null);
   let scope = Components.utils.import("resource://gre/modules/AddonManager.jsm");
   scope.AddonManagerInternal.shutdown();
   gInternalManager = null;
@@ -428,14 +430,11 @@ function shutdownManager() {
   // Clear any crash report annotations
   gAppInfo.annotations = {};
 
-  let thr = AM_Cc["@mozilla.org/thread-manager;1"].
-            getService(AM_Ci.nsIThreadManager).
-            mainThread;
+  let thr = Services.tm.mainThread;
 
   // Wait until we observe the shutdown notifications
   while (!repositoryShutdown || !xpiShutdown) {
-    if (thr.hasPendingEvents())
-      thr.processNextEvent(false);
+    thr.processNextEvent(true);
   }
 
   // Force the XPIProvider provider to reload to better
