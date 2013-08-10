@@ -25,7 +25,7 @@ function run_test() {
   do_test_pending();
   startupManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(olda1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(olda1) {
     do_check_eq(olda1, null);
 
     writeInstallRDFForExtension(addon1, profileDir);
@@ -40,13 +40,13 @@ function run_test() {
       do_check_eq(a1.pendingOperations, 0);
       do_check_in_crash_annotation(addon1.id, addon1.version);
 
-      run_test_1();
+      do_execute_soon(run_test_1);
     });
-  });
+  }));
 }
 
 function end_test() {
-  do_test_finished();
+  do_execute_soon(do_test_finished);
 }
 
 // Uninstalling an add-on should work.

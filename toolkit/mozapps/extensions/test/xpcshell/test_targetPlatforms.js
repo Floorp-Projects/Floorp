@@ -141,6 +141,6 @@ function run_test() {
     do_check_false(isExtensionInAddonsList(profileDir, a5.id));
     do_check_not_in_crash_annotation(addon5.id, addon5.version);
 
-    do_test_finished();
+    do_execute_soon(do_test_finished);
   });
 }
