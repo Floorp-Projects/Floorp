@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CookieServiceParent.h"
-#include "mozilla/dom/PBrowserParent.h"
+#include "mozilla/dom/PContentParent.h"
 #include "mozilla/net/NeckoParent.h"
 
 #include "mozilla/ipc/URIUtils.h"
@@ -13,25 +13,25 @@
 #include "nsPrintfCString.h"
 
 using namespace mozilla::ipc;
-using mozilla::dom::PBrowserParent;
+using mozilla::dom::PContentParent;
 using mozilla::net::NeckoParent;
 
 namespace mozilla {
 namespace net {
 
 MOZ_WARN_UNUSED_RESULT
-static bool
-GetAppInfoFromParams(const IPC::SerializedLoadContext &aLoadContext,
-                     PBrowserParent* aBrowser,
-                     uint32_t& aAppId,
-                     bool& aIsInBrowserElement,
-                     bool& aIsPrivate)
+bool
+CookieServiceParent::GetAppInfoFromParams(const IPC::SerializedLoadContext &aLoadContext,
+                                          uint32_t& aAppId,
+                                          bool& aIsInBrowserElement,
+                                          bool& aIsPrivate)
 {
   aAppId = NECKO_NO_APP_ID;
   aIsInBrowserElement = false;
   aIsPrivate = false;
 
-  const char* error = NeckoParent::GetValidatedAppInfo(aLoadContext, aBrowser,
+  const char* error = NeckoParent::GetValidatedAppInfo(aLoadContext,
+                                                       Manager()->Manager(),
                                                        &aAppId,
                                                        &aIsInBrowserElement);
   if (error) {
@@ -69,7 +69,6 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
                                          const bool& aFromHttp,
                                          const IPC::SerializedLoadContext&
                                                aLoadContext,
-                                         PBrowserParent* aBrowser,
                                          nsCString* aResult)
 {
   if (!mCookieService)
@@ -83,7 +82,7 @@ CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
 
   uint32_t appId;
   bool isInBrowserElement, isPrivate;
-  bool valid = GetAppInfoFromParams(aLoadContext, aBrowser, appId,
+  bool valid = GetAppInfoFromParams(aLoadContext, appId,
                                     isInBrowserElement, isPrivate);
   if (!valid) {
     return false;
@@ -101,8 +100,7 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
                                          const nsCString& aServerTime,
                                          const bool& aFromHttp,
                                          const IPC::SerializedLoadContext&
-                                               aLoadContext,
-                                         PBrowserParent* aBrowser)
+                                               aLoadContext)
 {
   if (!mCookieService)
     return true;
@@ -115,7 +113,7 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
 
   uint32_t appId;
   bool isInBrowserElement, isPrivate;
-  bool valid = GetAppInfoFromParams(aLoadContext, aBrowser, appId,
+  bool valid = GetAppInfoFromParams(aLoadContext, appId,
                                     isInBrowserElement, isPrivate);
   if (!valid) {
     return false;

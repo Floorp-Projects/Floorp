@@ -36,6 +36,13 @@ public:
                       uint32_t* aAppId,
                       bool* aInBrowserElement);
 
+  MOZ_WARN_UNUSED_RESULT
+  static const char *
+  GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
+                      PContentParent* aBrowser,
+                      uint32_t* aAppId,
+                      bool* aInBrowserElement);
+
   /*
    * Creates LoadContext for parent-side of an e10s channel.
    *
