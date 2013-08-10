@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="DOMRequestHelper Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="start();">
+  <title>DOMRequestHelper Test</title>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+    Components.utils.import("resource://gre/modules/DOMRequestHelper.jsm");
+    function DummyHelperSubclass() {
+      this.initDOMRequestHelper(window, []);
+    }
+
+    DummyHelperSubclass.prototype = {
+      __proto__: DOMRequestIpcHelper.prototype
+    };
+
+    var dummy = new DummyHelperSubclass();
+
+    function createPromise() {
+      ok(Promise, "Promise object should exist");
+
+      var promise = dummy.createPromise(function(r) {
+        ok(r, "received PromiseResolver");
+        r.resolve(true);
+      });
+      ok(promise instanceof Promise, "returned a Promise");
+      promise.then(runTest);
+    }
+
+    function getResolver() {
+      var id;
+      var resolver;
+      var promise = dummy.createPromise(function(r) {
+        id = dummy.getPromiseResolverId(r);
+        resolver = r;
+        ok(typeof id === "string", "id should be string");
+        r.resolve(true);
+      }).then(function(unused) {
+        var r = dummy.getPromiseResolver(id);
+        ok(resolver === r, "get should succeed");
+        runTest();
+      });
+    }
+
+    function removeResolver() {
+      var id;
+      var promise = dummy.createPromise(function(r) {
+        id = dummy.getPromiseResolverId(r);
+        ok(typeof id === "string", "id should be string");
+
+        var resolver = dummy.getPromiseResolver(id);
+        ok(resolver === r, "resolver get should succeed");
+
+        r.resolve(true);
+      }).then(function(unused) {
+        dummy.removePromiseResolver(id);
+        var resolver = dummy.getPromiseResolver(id);
+        ok(resolver === undefined, "removeResolver: get should fail");
+        runTest();
+      });
+    }
+
+    function takeResolver() {
+      var id;
+      var resolver;
+      var promise = dummy.createPromise(function(r) {
+        id = dummy.getPromiseResolverId(r);
+        resolver = r;
+        ok(typeof id === "string", "id should be string");
+
+        var gotR = dummy.getPromiseResolver(id);
+        ok(gotR === r, "resolver get should succeed");
+
+        r.resolve(true);
+      }).then(function(unused) {
+        var r = dummy.takePromiseResolver(id);
+        ok(resolver === r, "take should succeed");
+
+        r = dummy.getPromiseResolver(id);
+        ok(r === undefined, "takeResolver: get should fail");
+        runTest();
+      });
+    }
+
+    var tests = [ createPromise,
+                  getResolver,
+                  removeResolver,
+                  takeResolver,
+                ];
+
+    function runTest() {
+      if (!tests.length) {
+        SimpleTest.finish();
+        return;
+      }
+
+      var test = tests.shift();
+      test();
+    }
+
+    function start() {
+      SimpleTest.waitForExplicitFinish();
+      runTest();
+    }
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display: none"></div>
+    <pre id="test"></pre>
+  </body>
+</window>
