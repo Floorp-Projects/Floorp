@@ -34,9 +34,6 @@ nsPrintPreviewListener::nsPrintPreviewListener(EventTarget* aTarget)
   NS_ADDREF_THIS();
 } // ctor
 
-nsPrintPreviewListener::~nsPrintPreviewListener()
-{
-}
 
 //-------------------------------------------------------
 //

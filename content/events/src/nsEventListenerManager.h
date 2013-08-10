@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 #include "mozilla/dom/EventListenerBinding.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
@@ -36,8 +37,6 @@ class nsEventListenerManager;
 
 namespace mozilla {
 namespace dom {
-
-class EventTarget;
 
 typedef CallbackObjectHolder<EventListener, nsIDOMEventListener>
   EventListenerHolder;
