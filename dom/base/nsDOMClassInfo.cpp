@@ -54,7 +54,6 @@
 
 // General helper includes
 #include "nsGlobalWindow.h"
-#include "nsHistory.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -87,7 +86,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMJSWindow.h"
 #include "nsIDOMWindowCollection.h"
-#include "nsIDOMHistory.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMConstructor.h"
@@ -409,9 +407,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                              nsIXPCScriptable::WANT_ADDPROPERTY) &
                             ~nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE))
 
-  NS_DEFINE_CLASSINFO_DATA(History, nsHistorySH,
-                           ARRAY_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE)
   NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE |
@@ -1218,10 +1213,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(Location, nsIDOMLocation)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLocation)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(History, nsIDOMHistory)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHistory)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(DOMPrototype, nsIDOMDOMConstructor)
@@ -4665,61 +4656,6 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   NS_ENSURE_TRUE(xpc::NonVoidStringToJsval(cx, val, vp),
                  NS_ERROR_OUT_OF_MEMORY);
   return NS_SUCCESS_I_DID_SOMETHING;
-}
-
-
-// History helper
-
-NS_IMETHODIMP
-nsHistorySH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                       JSObject *globalObj, JSObject **parentObj)
-{
-  nsHistory *history = (nsHistory *)((nsIDOMHistory*)nativeObj);
-  nsCOMPtr<nsPIDOMWindow> innerWindow;
-  history->GetWindow(getter_AddRefs(innerWindow));
-  if (!innerWindow) {
-    NS_WARNING("refusing to create history object in the wrong scope");
-    return NS_ERROR_FAILURE;
-  }
-  return SetParentToWindow(static_cast<nsGlobalWindow *>(innerWindow.get()),
-                           parentObj);
-}
-
-NS_IMETHODIMP
-nsHistorySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *aObj, jsid aId, jsval *vp, bool *_retval)
-{
-  JS::Rooted<JSObject*> obj(cx, aObj);
-  JS::Rooted<jsid> id(cx, aId);
-  bool is_number = false;
-  GetArrayIndexFromId(cx, id, &is_number);
-
-  if (!is_number) {
-    return NS_OK;
-  }
-
-  return nsStringArraySH::GetProperty(wrapper, cx, obj, id, vp, _retval);
-}
-
-nsresult
-nsHistorySH::GetStringAt(nsISupports *aNative, int32_t aIndex,
-                         nsAString& aResult)
-{
-  if (aIndex < 0) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  nsCOMPtr<nsIDOMHistory> history(do_QueryInterface(aNative));
-
-  nsresult rv = history->Item(aIndex, aResult);
-#ifdef DEBUG
-  if (DOMStringIsNull(aResult)) {
-    int32_t length = 0;
-    history->GetLength(&length);
-    NS_ASSERTION(aIndex >= length, "Item should only return null for out-of-bounds access");
-  }
-#endif
-  return rv;
 }
 
 
