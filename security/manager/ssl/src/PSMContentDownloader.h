@@ -20,7 +20,6 @@
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
-#include "nsIDOMEventTarget.h"
 #endif
 #include "nsINSSErrorsService.h"
 #include "nsNetUtil.h"
