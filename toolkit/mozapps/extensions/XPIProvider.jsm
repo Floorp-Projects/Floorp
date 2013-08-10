@@ -3218,8 +3218,9 @@ var XPIProvider = {
       // If the database needs to be updated then open it and then update it
       // from the filesystem
       if (updateDatabase || hasPendingChanges) {
-        XPIDatabase.syncLoadDB(false);
         try {
+          XPIDatabase.openConnection(false, true);
+
           extensionListChanged = this.processFileChanges(state, manifests,
                                                          aAppChanged,
                                                          aOldAppVersion,

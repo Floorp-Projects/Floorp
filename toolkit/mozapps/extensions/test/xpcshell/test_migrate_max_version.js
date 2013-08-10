@@ -45,26 +45,25 @@ function run_test() {
 
   let internal_ids = {};
 
-  let a = ["addon1@tests.mozilla.org", "app-profile", "1.0", "0", "1", "0"];
-  stmt.params.id = a[0];
-  stmt.params.location = a[1];
-  stmt.params.version = a[2];
-  stmt.params.active = a[3];
-  stmt.params.userDisabled = a[4];
-  stmt.params.installDate = a[5];
-  stmt.execute();
-  internal_ids[a[0]] = db.lastInsertRowID;
+  [["addon1@tests.mozilla.org", "app-profile", "1.0", "0", "1", "0"]
+   ].forEach(function(a) {
+    stmt.params.id = a[0];
+    stmt.params.location = a[1];
+    stmt.params.version = a[2];
+    stmt.params.active = a[3];
+    stmt.params.userDisabled = a[4];
+    stmt.params.installDate = a[5];
+    stmt.execute();
+    internal_ids[a[0]] = db.lastInsertRowID;
+  });
   stmt.finalize();
 
-  db.schemaVersion = 14;
+  db.schemaVersion = 15;
   Services.prefs.setIntPref("extensions.databaseSchema", 14);
   db.close();
 
   startupManager();
-  run_next_test();
-}
 
-add_test(function before_rebuild() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org",
                             function check_before_rebuild (a1) {
     // First check that it migrated OK once
@@ -78,7 +77,7 @@ add_test(function before_rebuild() {
 
     run_next_test();
   });
-});
+}
 
 // now shut down, remove the JSON database, 
 // start up again, and make sure the data didn't migrate this time
