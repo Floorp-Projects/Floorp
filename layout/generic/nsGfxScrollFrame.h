@@ -125,7 +125,7 @@ public:
                                 nscoord aMaxXY, nscoord aCurPosXY,
                                 nscoord aPageIncrement,
                                 nscoord aIncrement);
-  static void SetScrollbarEnabled(nsIContent* aContent, nscoord aMaxPos);
+  void SetScrollbarEnabled(nsIContent* aContent, nscoord aMaxPos);
   void SetCoordAttribute(nsIContent* aContent, nsIAtom* aAtom, nscoord aSize);
   nscoord GetCoordAttribute(nsIFrame* aFrame, nsIAtom* aAtom, nscoord aDefaultValue,
                             nscoord* aRangeStart, nscoord* aRangeLength);
