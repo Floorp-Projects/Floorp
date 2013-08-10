@@ -367,35 +367,6 @@ class IonBuilder : public MIRGenerator
     bool getPropTryCache(bool *emitted, HandlePropertyName name, HandleId id,
                          bool barrier, types::StackTypeSet *types);
 
-    // jsop_setprop() helpers.
-    bool setPropTryCommonSetter(bool *emitted, MDefinition *obj,
-                                HandlePropertyName name, HandleId id,
-                                MDefinition *value);
-    bool setPropTryCommonDOMSetter(bool *emitted, MDefinition *obj,
-                                   MDefinition *value, HandleFunction setter,
-                                   bool isDOM);
-    bool setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
-                                HandlePropertyName name, MDefinition *value,
-                                bool barrier);
-    bool setPropTryInlineAccess(bool *emitted, MDefinition *obj,
-                                HandlePropertyName name, HandleId id,
-                                MDefinition *value, bool barrier);
-    bool setPropTryCache(bool *emitted, MDefinition *obj,
-                         HandlePropertyName name, MDefinition *value,
-                         bool barrier);
-
-    // jsop_setelem() helpers.
-    bool setElemTryTyped(bool *emitted, MDefinition *object,
-                         MDefinition *index, MDefinition *value);
-    bool setElemTryTypedStatic(bool *emitted, MDefinition *object,
-                               MDefinition *index, MDefinition *value);
-    bool setElemTryDense(bool *emitted, MDefinition *object,
-                         MDefinition *index, MDefinition *value);
-    bool setElemTryArguments(bool *emitted, MDefinition *object,
-                             MDefinition *index, MDefinition *value);
-    bool setElemTryCache(bool *emitted, MDefinition *object,
-                         MDefinition *index, MDefinition *value);
-
     // Typed array helpers.
     MInstruction *getTypedArrayLength(MDefinition *obj);
     MInstruction *getTypedArrayElements(MDefinition *obj);
@@ -440,11 +411,14 @@ class IonBuilder : public MIRGenerator
     bool jsop_setelem_typed(int arrayType,
                             SetElemSafety safety,
                             MDefinition *object, MDefinition *index, MDefinition *value);
+    bool jsop_setelem_typed_static(MDefinition *object, MDefinition *index, MDefinition *value,
+                                   bool *psucceeded);
     bool jsop_length();
     bool jsop_length_fastPath();
     bool jsop_arguments();
     bool jsop_arguments_length();
     bool jsop_arguments_getelem();
+    bool jsop_arguments_setelem(MDefinition *object, MDefinition *index, MDefinition *value);
     bool jsop_runonce();
     bool jsop_rest();
     bool jsop_not();
