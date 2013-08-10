@@ -42,10 +42,8 @@ protected:
 private:
   // Private constructor & destructor: prevent instances beyond my singleton,
   // and prevent others from deleting my singleton.
-  MOZ_CONSTEXPR SMILBoolType() {}
-#ifdef DEBUG
+  SMILBoolType()  {}
   ~SMILBoolType() {}
-#endif
 };
 
 } // namespace mozilla
