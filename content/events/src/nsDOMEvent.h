@@ -10,26 +10,21 @@
 #include "nsIDOMEvent.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
+#include "nsIDOMEventTarget.h"
 #include "nsPIDOMWindow.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/EventBinding.h"
 #include "nsIScriptGlobalObject.h"
 #include "Units.h"
 
 class nsIContent;
-class nsIDOMEventTarget;
 class nsPresContext;
 struct JSContext;
 class JSObject;
-
-namespace mozilla {
-namespace dom {
-class EventTarget;
-}
-}
 
 // Dummy class so we can cast through it to get from nsISupports to
 // nsDOMEvent subclasses with only two non-ambiguous static casts.

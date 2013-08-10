@@ -8,7 +8,6 @@
 #include "nscore.h"
 #include "nsGUIEvent.h"
 #include "nsIXULWindow.h"
-#include "nsRegion.h"
 
 class nsView;
 class nsIPresShell;

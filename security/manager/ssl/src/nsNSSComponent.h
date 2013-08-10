@@ -17,6 +17,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
+#include "nsIDOMEventTarget.h"
 #endif
 #include "nsINSSErrorsService.h"
 #include "nsNSSCallbacks.h"
@@ -25,7 +26,6 @@
 #include "nsClientAuthRemember.h"
 #include "prerror.h"
 
-class nsIDOMWindow;
 class nsIPrompt;
 class SmartCardThreadList;
 
