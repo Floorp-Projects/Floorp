@@ -41,10 +41,8 @@ protected:
 private:
   // Private constructor & destructor: prevent instances beyond my singleton,
   // and prevent others from deleting my singleton.
-  MOZ_CONSTEXPR nsSMILFloatType() {}
-#ifdef DEBUG
+  nsSMILFloatType()  {}
   ~nsSMILFloatType() {}
-#endif
 };
 
 #endif // NS_SMILFLOATTYPE_H_

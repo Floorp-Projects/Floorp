@@ -6,7 +6,6 @@
 #ifndef NS_ISMILTYPE_H_
 #define NS_ISMILTYPE_H_
 
-#include "mozilla/Attributes.h"
 #include "nscore.h"
 
 class nsSMILValue;
@@ -213,17 +212,8 @@ protected:
    * Protected destructor, to ensure that no one accidentally deletes an
    * instance of this class.
    * (The only instances in existence should be singletons - one per subclass.)
-   *
-   * This destructor and the destructors of subclasses are only defined in
-   * debug builds.  For non-debug builds, we let the compiler define the
-   * default (public) constructor.  The compiler understands that the default
-   * destructor doesn't necessarily need to be invoked (e.g. if there are no
-   * members to destroy) and so will avoid creating static destructors (and
-   * registering them with static *constructors*) in non-debug builds.
    */
-#ifdef DEBUG
   ~nsISMILType() {}
-#endif
 };
 
 #endif // NS_ISMILTYPE_H_
