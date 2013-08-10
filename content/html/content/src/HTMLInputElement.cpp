@@ -3111,21 +3111,18 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               if (container) {
                 nsAutoString name;
                 GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-                nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
+                nsRefPtr<HTMLInputElement> selectedRadioButton;
                 container->GetNextRadioButton(name, isMovingBack, this,
                                               getter_AddRefs(selectedRadioButton));
-                nsCOMPtr<nsIContent> radioContent =
-                  do_QueryInterface(selectedRadioButton);
-                if (radioContent) {
-                  nsCOMPtr<nsIDOMHTMLElement> elem = do_QueryInterface(selectedRadioButton);
-                  rv = elem->Focus();
+                if (selectedRadioButton) {
+                  rv = selectedRadioButton->Focus();
                   if (NS_SUCCEEDED(rv)) {
                     nsEventStatus status = nsEventStatus_eIgnore;
                     nsMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
                                        NS_MOUSE_CLICK, nullptr,
                                        nsMouseEvent::eReal);
                     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
-                    rv = nsEventDispatcher::Dispatch(radioContent,
+                    rv = nsEventDispatcher::Dispatch(ToSupports(selectedRadioButton),
                                                      aVisitor.mPresContext,
                                                      &event, nullptr, &status);
                     if (NS_SUCCEEDED(rv)) {
@@ -4975,8 +4972,7 @@ HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* 
   nsAutoString name;
   GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
 
-  nsCOMPtr<nsIDOMHTMLInputElement> currentRadio = container->GetCurrentRadioButton(name);
-  if (currentRadio) {
+  if (container->GetCurrentRadioButton(name)) {
     *aTabIndex = -1;
   }
   *aIsFocusable = defaultFocusable;
