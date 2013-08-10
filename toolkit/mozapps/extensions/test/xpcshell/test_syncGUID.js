@@ -86,7 +86,7 @@ add_test(function test_error_on_duplicate_syncguid_insert() {
        do_execute_soon(function duplicate_syncguid_install_ended() {
         restartManager();
 
-        AddonManager.getAddonsByIDs(installIDs, function(addons) {
+        AddonManager.getAddonsByIDs(installIDs, callback_soon(function(addons) {
           let initialGUID = addons[1].syncGUID;
 
           try {
@@ -102,7 +102,7 @@ add_test(function test_error_on_duplicate_syncguid_insert() {
               run_next_test();
             });
           }
-        });
+        }));
        });
       }
     }

@@ -18,7 +18,7 @@ function run_test() {
   AddonManager.getAddonsByTypes(null, function(list) {
     gCount = list.length;
 
-    run_test_1();
+    do_execute_soon(run_test_1);
   });
 }
 
@@ -51,9 +51,8 @@ function run_test_2() {
 function run_test_3() {
   restartManager();
 
-  AddonManager.getAddonsByTypes(null, function(addons) {
+  AddonManager.getAddonsByTypes(null, callback_soon(function(addons) {
     do_check_eq(gCount, addons.length);
-    shutdownManager();
     do_test_finished();
-  });
+  }));
 }
