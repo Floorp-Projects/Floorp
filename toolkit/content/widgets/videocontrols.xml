@@ -477,9 +477,9 @@
                     // go ahead and reveal the controls now, so they're an obvious user cue.
                     //
                     // (Note: the |controls| attribute is already handled via layout/style/html.css)
-                    var shouldShow = !this.dynamicControls ||
-                      (this.video.paused &&
-                       !(this.video.autoplay && this.video.mozAutoplayEnabled));
+                    var shouldShow = this.video.paused &&
+                       (!(this.video.autoplay && this.video.mozAutoplayEnabled) ||
+                        !this.dynamicControls);
                     // Hide the overlay if the video time is non-zero or if an error occurred to workaround bug 718107.
                     this.startFade(this.clickToPlay, shouldShow && !this.isAudioOnly &&
                                    this.video.currentTime == 0 && !this.hasError(), true);
