@@ -367,6 +367,24 @@ class IonBuilder : public MIRGenerator
     bool getPropTryCache(bool *emitted, HandlePropertyName name, HandleId id,
                          bool barrier, types::StackTypeSet *types);
 
+    // jsop_setprop() helpers.
+    bool setPropTryCommonSetter(bool *emitted, MDefinition *obj,
+                                HandlePropertyName name, HandleId id,
+                                MDefinition *value);
+    bool setPropTryCommonDOMSetter(bool *emitted, MDefinition *obj,
+                                   MDefinition *value, HandleFunction setter,
+                                   bool isDOM);
+    bool setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
+                                HandlePropertyName name, MDefinition *value,
+                                bool barrier, types::StackTypeSet *objTypes);
+    bool setPropTryInlineAccess(bool *emitted, MDefinition *obj,
+                                HandlePropertyName name, HandleId id,
+                                MDefinition *value, bool barrier,
+                                types::StackTypeSet *objTypes);
+    bool setPropTryCache(bool *emitted, MDefinition *obj,
+                         HandlePropertyName name, MDefinition *value,
+                         bool barrier, types::StackTypeSet *objTypes);
+
     // jsop_setelem() helpers.
     bool setElemTryTyped(bool *emitted, MDefinition *object,
                          MDefinition *index, MDefinition *value);
