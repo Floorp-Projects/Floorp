@@ -8,16 +8,14 @@
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/AnalyserNode.h"
 #include "mozilla/dom/AudioContextBinding.h"
-#include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/OfflineAudioContextBinding.h"
 #include "MediaStreamGraph.h"
+#include "mozilla/dom/AnalyserNode.h"
 #include "AudioDestinationNode.h"
 #include "AudioBufferSourceNode.h"
 #include "AudioBuffer.h"
 #include "GainNode.h"
-#include "MediaElementAudioSourceNode.h"
 #include "MediaStreamAudioSourceNode.h"
 #include "DelayNode.h"
 #include "PannerNode.h"
@@ -256,23 +254,6 @@ AudioContext::CreateAnalyser()
   return analyserNode.forget();
 }
 
-already_AddRefed<MediaElementAudioSourceNode>
-AudioContext::CreateMediaElementSource(HTMLMediaElement& aMediaElement,
-                                       ErrorResult& aRv)
-{
-  if (mIsOffline) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
-  nsRefPtr<DOMMediaStream> stream = aMediaElement.MozCaptureStream(aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  nsRefPtr<MediaElementAudioSourceNode> mediaElementAudioSourceNode =
-    new MediaElementAudioSourceNode(this, stream);
-  return mediaElementAudioSourceNode.forget();
-}
-
 already_AddRefed<MediaStreamAudioSourceNode>
 AudioContext::CreateMediaStreamSource(DOMMediaStream& aMediaStream,
                                       ErrorResult& aRv)
@@ -281,8 +262,7 @@ AudioContext::CreateMediaStreamSource(DOMMediaStream& aMediaStream,
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
-  nsRefPtr<MediaStreamAudioSourceNode> mediaStreamAudioSourceNode =
-    new MediaStreamAudioSourceNode(this, &aMediaStream);
+  nsRefPtr<MediaStreamAudioSourceNode> mediaStreamAudioSourceNode = new MediaStreamAudioSourceNode(this, &aMediaStream);
   return mediaStreamAudioSourceNode.forget();
 }
 
