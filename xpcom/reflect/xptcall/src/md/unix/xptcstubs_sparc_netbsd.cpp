@@ -93,7 +93,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
     return result;
 }
 
-extern "C" int SharedStub(int, int*);
+extern "C" nsresult SharedStub(int, int*);
 
 #define STUB_ENTRY(n) \
 nsresult nsXPTCStubBase::Stub##n() \
