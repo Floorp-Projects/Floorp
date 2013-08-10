@@ -332,7 +332,7 @@ function run_test() {
 
     AddonManager.getAddonsByIDs(["bug542391_2@tests.mozilla.org",
                                  "bug542391_4@tests.mozilla.org"],
-                                 callback_soon(function disable_and_restart([a2, a4]) {
+                                 function disable_and_restart([a2, a4]) {
       do_check_true(a2 != null && a4 != null);
       a2.userDisabled = true;
       a4.userDisabled = true;
@@ -349,7 +349,7 @@ function run_test() {
                                    "bug542391_4@tests.mozilla.org",
                                    "bug542391_5@tests.mozilla.org",
                                    "bug542391_6@tests.mozilla.org"],
-                                   callback_soon(function(addons) {
+                                   function(addons) {
         check_state_v1(addons);
 
         WindowWatcher.expected = true;
@@ -372,8 +372,8 @@ function run_test() {
 
           do_execute_soon(run_test_1);
         });
-      }));
-    }));
+      });
+    });
   });
 }
 

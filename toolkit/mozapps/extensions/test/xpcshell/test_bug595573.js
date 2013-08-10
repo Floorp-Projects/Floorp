@@ -35,6 +35,6 @@ function run_test_2() {
     do_check_neq(a1, null);
     do_check_true(isExtensionInAddonsList(profileDir, a1.id));
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }

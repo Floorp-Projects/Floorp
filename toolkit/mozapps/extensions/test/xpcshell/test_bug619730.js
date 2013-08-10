@@ -14,13 +14,7 @@ gTestserver.start(-1);
 gPort = gTestserver.identity.primaryPort;
 mapFile("/data/test_bug619730.xml", gTestserver);
 
-function load_blocklist(file, aCallback) {
-  Services.obs.addObserver(function() {
-    Services.obs.removeObserver(arguments.callee, "blocklist-updated");
-
-    do_execute_soon(aCallback);
-  }, "blocklist-updated", false);
-  
+function load_blocklist(file) {
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
                              gPort + "/data/" + file);
   var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
@@ -55,10 +49,9 @@ function run_test() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     do_check_true(gSawGFX);
     do_check_true(gSawTest);
+
+    gTestserver.stop(do_test_finished);
   }, "blocklist-data-fooItems", false);
 
-  // Need to wait for the blocklist to load; Bad Things happen if the test harness
-  // shuts down AddonManager before the blocklist service is done telling it about
-  // changes
-  load_blocklist("test_bug619730.xml", () => gTestserver.stop(do_test_finished));
+  load_blocklist("test_bug619730.xml");
 }

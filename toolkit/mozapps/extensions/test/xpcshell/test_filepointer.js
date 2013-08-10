@@ -150,7 +150,7 @@ function run_test_2() {
       "onDownloadEnded",
       "onInstallStarted",
       "onInstallEnded"
-    ], callback_soon(check_test_2));
+    ], check_test_2);
 
     install.install();
   }, "application/x-xpinstall");
@@ -190,7 +190,7 @@ function run_test_3() {
 
   restartManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
@@ -203,7 +203,7 @@ function run_test_3() {
     do_check_true(source.exists());
 
     do_execute_soon(run_test_4);
-  }));
+  });
 }
 
 // Tests that misnaming a pointer doesn't clobber the sources
@@ -238,7 +238,7 @@ function run_test_5() {
 
   restartManager();
 
-  AddonManager.getAddonByID(addon1.id, callback_soon(function(a1) {
+  AddonManager.getAddonByID(addon1.id, function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
@@ -261,7 +261,7 @@ function run_test_5() {
 
       do_execute_soon(run_test_6);
     });
-  }));
+  });
 }
 
 // Removing the pointer file should uninstall the add-on
@@ -273,7 +273,7 @@ function run_test_6() {
 
   restartManager();
 
-  AddonManager.getAddonByID(addon1.id, callback_soon(function(a1) {
+  AddonManager.getAddonByID(addon1.id, function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
@@ -288,7 +288,7 @@ function run_test_6() {
 
       do_execute_soon(run_test_7);
     });
-  }));
+  });
 }
 
 // Removing the pointer file and replacing it with a directory should work
@@ -297,7 +297,7 @@ function run_test_7() {
 
   restartManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
@@ -315,20 +315,20 @@ function run_test_7() {
 
       a1.uninstall();
 
+      restartManager();
+
       do_execute_soon(run_test_8);
     });
-  }));
+  });
 }
 
 // Changes to the source files should be detected
 function run_test_8() {
-  restartManager();
-
   writePointer(addon1.id);
 
   restartManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
@@ -342,21 +342,21 @@ function run_test_8() {
 
       a1.uninstall();
 
+      restartManager();
+
       do_execute_soon(run_test_9);
     });
-  }));
+  });
 }
 
 // Removing the add-on the pointer file points at should uninstall the add-on
 function run_test_9() {
-  restartManager();
-
   var dest = writeInstallRDFForExtension(addon1, sourceDir);
   writePointer(addon1.id);
 
   restartManager();
 
-  AddonManager.getAddonByID(addon1.id, callback_soon(function(a1) {
+  AddonManager.getAddonByID(addon1.id, function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
@@ -373,7 +373,7 @@ function run_test_9() {
 
       do_execute_soon(run_test_10);
     });
-  }));
+  });
 }
 
 // Tests that installing a new add-on by pointer with a relative path works

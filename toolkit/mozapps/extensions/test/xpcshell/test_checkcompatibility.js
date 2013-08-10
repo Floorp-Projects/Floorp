@@ -191,6 +191,6 @@ function run_test_4() {
                                function([a1, a2, a3, a4, a5]) {
     check_state(false, a1, a2, a3, a4, a5);
 
-    do_execute_soon(do_test_finished);
+    do_test_finished("checkcompatibility.js");
   });
 }

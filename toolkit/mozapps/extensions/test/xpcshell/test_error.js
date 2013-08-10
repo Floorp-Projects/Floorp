@@ -85,6 +85,6 @@ function run_test_5() {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
     do_check_eq(install.error, AddonManager.ERROR_CORRUPT_FILE);
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }
