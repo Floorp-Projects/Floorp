@@ -6197,68 +6197,15 @@ class CGUnionReturnValueStruct(CGThing):
                                                isReturnValue=True),
             self.type.flatMemberTypes)
 
+        self.struct = self.getStruct()
+
     def declare(self):
-        templateVars = self.templateVars
-
-        enumValues = []
-        methods = []
-        if self.type.hasNullableType:
-            enumValues.append("eNull")
-            methods.append("""  bool IsNull() const
-  {
-    return mType == eNull;
-  }
-
-  bool SetNull()
-  {
-    mType = eNull;
-    return true;
-  }""")
-
-        enumValues.extend(mapTemplate("e${name}", templateVars))
-        methodTemplate = "  ${structType}& SetAs${name}();"
-        methods.extend(mapTemplate(methodTemplate, templateVars))
-        values = mapTemplate("UnionMember<${structType} > m${name};", templateVars)
-        return string.Template("""
-class ${structName}ReturnValue {
-public:
-  ${structName}ReturnValue() : mType(eUninitialized)
-  {
-  }
-  ~${structName}ReturnValue();
-
-${methods}
-
-  bool ToJSVal(JSContext* cx, JS::Handle<JSObject*> scopeObj,
-               JS::MutableHandle<JS::Value> rval) const;
-
-private:
-  // Disallow copy-construction and assignment
-  ${structName}ReturnValue(const ${structName}ReturnValue&) MOZ_DELETE;
-  void operator=(const ${structName}ReturnValue&) MOZ_DELETE;
-
-  enum Type {
-    eUninitialized,
-    ${enumValues}
-  };
-  union Value {
-    ${values}
-  };
-
-  Type mType;
-  Value mValue;
-};
-
-""").substitute(
-    {
-       "structName": self.type.__str__(),
-       "methods": "\n\n".join(methods),
-       "enumValues": ",\n    ".join(enumValues),
-       "values": "\n    ".join(values)
-       })
+        return self.struct.declare()
 
     def define(self):
-        templateVars = self.templateVars
+        return self.struct.define()
+
+    def toJSValMethod(self):
         conversionsToJS = []
         if self.type.hasNullableType:
             conversionsToJS.append("    case eNull:\n"
@@ -6268,63 +6215,78 @@ private:
                                    "    }")
         conversionsToJS.extend(
             map(self.getConversionToJS,
-                zip(templateVars, self.type.flatMemberTypes)))
+                zip(self.templateVars, self.type.flatMemberTypes)))
 
-        toJSVal = string.Template("""
-
-bool
-${structName}ReturnValue::ToJSVal(JSContext* cx, JS::Handle<JSObject*> scopeObj, JS::MutableHandle<JS::Value> rval) const
-{
-  switch (mType) {
-${doConversionsToJS}
-
-    case eUninitialized:
-    {
-      break;
-    }
+        body = """
+switch (mType) {
+%s
+  case eUninitialized:
+  {
+    break;
   }
-  return false;
 }
-""").substitute({
-                "structName": str(self.type),
-                "doConversionsToJS": "\n\n".join(conversionsToJS)
-                })
+return false;
+""" % ("\n\n".join(conversionsToJS))
+
+        return ClassMethod("ToJSVal", "bool", [
+            Argument("JSContext*", "cx"),
+            Argument("JS::Handle<JSObject*>", "scopeObj"),
+            Argument("JS::MutableHandle<JS::Value>", "rval")
+        ], body=body, const=True)
+
+    def getStruct(self):
+
+        members = [ClassMember("mType", "Type", body="eUninitialized"),
+                   ClassMember("mValue", "Value")]
+        ctor = ClassConstructor([], bodyInHeader=True, visibility="public",
+                                explicit=True)
+
         templateVars = self.templateVars
-
-        methods = []
-        methodTemplate = """${structType}&
-%sReturnValue::SetAs${name}()
-{
-  mType = e${name};
-  return mValue.m${name}.SetValue();
-}""" % str(self.type)
-        methods.extend(mapTemplate(methodTemplate, templateVars))
-
-        callDestructors = []
+        methods = [self.toJSValMethod()]
+        enumValues = ["eUninitialized"]
+        unionValues = []
+        callDestructors = ""
         if self.type.hasNullableType:
-            callDestructors.append("      case eNull:\n"
-                                   "        break;")
-        callDestructors.extend(mapTemplate("    case e${name}:\n"
-                                           "       mValue.m${name}.Destroy();\n"
-                                           "       mType = eUninitialized;\n"
-                                           "       break;", templateVars))
-        destructor = string.Template("""
-${structName}ReturnValue::~${structName}ReturnValue()
-{
-  switch (mType) {
-${callDestructors}
-    case eUninitialized:
-      break;
-  }
+            enumValues.append("eNull")
+            methods.append(ClassMethod("IsNull", "bool", [], const=True, inline=True,
+                                       body="return mType == eNull;"))
+            methods.append(ClassMethod("SetNull", "void", [], inline=True,
+                                       body="mType = eNull;"))
+            callDestructors += ("\n  case eNull:\n"
+                                "    break;")
+        for t in self.type.flatMemberTypes:
+            vars = getUnionTypeTemplateVars(self.type,
+                       t, self.descriptorProvider, isReturnValue=True)
+            body=string.Template("mType = e${name};\n"
+                                 "return mValue.m${name}.SetValue();").substitute(vars)
+            methods.append(ClassMethod("SetAs" + vars["name"],
+                                       vars["structType"] + "&",
+                                       [],
+                                       body=body))
+            unionValues.append(string.Template("UnionMember<${structType} > "
+                                               "m${name}").substitute(vars))
+            enumValues.append("e" + vars["name"])
+
+            callDestructors += string.Template("case e${name}:\n"
+                                               "  mValue.m${name}.Destroy();\n"
+                                               "  mType = eUninitialized;\n"
+                                               "  break;").substitute(vars)
+
+        dtor = """
+switch (mType) {%s
+  case eUninitialized:
+    break;
 }
+""" % callDestructors
 
-""").substitute(
-    {
-       "structName": self.type.__str__(),
-       "callDestructors": "\n".join(callDestructors),
-       })
-
-        return destructor + "\n\n".join(methods) + toJSVal
+        return CGClass(self.type.__str__() + "ReturnValue",
+                       members=members,
+                       constructors=[ctor],
+                       methods=methods,
+                       disallowCopyConstruction=True,
+                       destructor=ClassDestructor(visibility="public", body=dtor),
+                       enums=[ClassEnum("Type", enumValues, visibility="private")],
+                       unions=[ClassUnion("Value", unionValues, visibility="private")])
 
     def getConversionToJS(self, arg):
         (templateVars, type) = arg
@@ -6343,7 +6305,7 @@ ${callDestructors}
                                             pre="{\n",
                                             post="\n}")],
                                  "\n"),
-                          4).define()
+                          2).define()
 
 class CGUnionConversionStruct(CGThing):
     def __init__(self, type, descriptorProvider):
@@ -6750,7 +6712,7 @@ class ClassEnum(ClassItem):
     def declare(self, cgClass):
         entries = []
         for i in range(0, len(self.entries)):
-            if i >= len(self.values):
+            if not self.values or i >= len(self.values):
                 entry = '%s' % self.entries[i]
             else:
                 entry = '%s = %s' % (self.entries[i], self.values[i])
@@ -6762,10 +6724,22 @@ class ClassEnum(ClassItem):
         # Only goes in the header
         return ''
 
+class ClassUnion(ClassItem):
+    def __init__(self, name, entries, visibility="public"):
+        self.entries = [entry + ";" for entry in entries]
+        ClassItem.__init__(self, name, visibility)
+
+    def declare(self, cgClass):
+        return 'union %s\n{\n  %s\n};\n' % (self.name, '\n  '.join(self.entries))
+
+    def define(self, cgClass):
+        # Only goes in the header
+        return ''
+
 class CGClass(CGThing):
     def __init__(self, name, bases=[], members=[], constructors=[],
                  destructor=None, methods=[],
-                 typedefs = [], enums=[], templateArgs=[],
+                 typedefs = [], enums=[], unions=[], templateArgs=[],
                  templateSpecialization=[], isStruct=False,
                  disallowCopyConstruction=False, indent='',
                  decorators='',
@@ -6782,6 +6756,7 @@ class CGClass(CGThing):
         self.methods = methods
         self.typedefs = typedefs
         self.enums = enums
+        self.unions = unions
         self.templateArgs = templateArgs
         self.templateSpecialization = templateSpecialization
         self.isStruct = isStruct
@@ -6877,12 +6852,14 @@ class CGClass(CGThing):
                     self.visibility = "private"
                 def declare(self, cgClass):
                     name = cgClass.getNameString()
-                    return "%s(const %s&) MOZ_DELETE;\n" % (name, name)
+                    return ("%s(const %s&) MOZ_DELETE;\n"
+                            "void operator=(const %s) MOZ_DELETE;\n" % (name, name, name))
             disallowedCopyConstructors = [DisallowedCopyConstructor()]
         else:
             disallowedCopyConstructors = []
 
-        order = [(self.enums, ''), (self.typedefs, ''), (self.members, ''),
+        order = [(self.enums, ''), (self.unions, ''),
+                 (self.typedefs, ''), (self.members, ''),
                  (self.constructors + disallowedCopyConstructors, '\n'),
                  (self.destructors, '\n'), (self.methods, '\n')]
 
