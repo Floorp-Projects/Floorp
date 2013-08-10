@@ -335,6 +335,11 @@ ImageDocument::ShrinkToFit()
   // origin now that we're showing a shrunk-to-window version.
   ScrollImageTo(0, 0, false);
 
+  if (!mImageContent) {
+    // ScrollImageTo flush destroyed our content.
+    return;
+  }
+
   SetModeClass(eShrinkToFit);
   
   mImageIsResized = true;
@@ -366,7 +371,7 @@ ImageDocument::ScrollImageTo(int32_t aX, int32_t aY, bool restoreImage)
     FlushPendingNotifications(Flush_Layout);
   }
 
-  nsIPresShell *shell = GetShell();
+  nsCOMPtr<nsIPresShell> shell = GetShell();
   if (!shell)
     return;
 
