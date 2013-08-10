@@ -19,18 +19,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664737
 <script type="application/javascript">
 
 /** Test for Bug 664737 **/
-function shouldfail(name) {
+function isUndefined(name) {
     try {
         var rv = history[name];
-        fail(false, "able to access history." + name);
+        is(rv, undefined, "No value found for history." + name);
     } catch (e) {
-        ok(e.message.indexOf("Permission denied") >= 0, "cannot access history." + name);
+        ok(false, "Accessing history." + name + " threw: " + e);
     }
 }
 
-shouldfail("current");
-shouldfail("previous");
-shouldfail("next");
+isUndefined("current");
+isUndefined("previous");
+isUndefined("next");
 
 
 </script>
