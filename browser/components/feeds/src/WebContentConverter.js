@@ -308,8 +308,7 @@ WebContentConverterRegistrar.prototype = {
   function WCCR_checkAndGetURI(aURIString, aContentWindow)
   {
     try {
-      let baseURI = this._makeURI(aContentWindow.document.baseURI);
-      var uri = this._makeURI(aURIString, null, baseURI);
+      var uri = this._makeURI(aURIString);
     } catch (ex) {
       // not supposed to throw according to spec
       return; 
