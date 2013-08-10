@@ -37,7 +37,6 @@ interface DOMException;
 
 // Style Sheets
 interface nsIDOMStyleSheetList;
-interface nsIDOMLinkStyle;
 interface nsIDOMStyleSheet;
 interface nsIDOMMediaList;
 
