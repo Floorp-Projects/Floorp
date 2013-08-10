@@ -3376,7 +3376,7 @@ nsGlobalWindow::GetScreen(nsIDOMScreen** aScreen)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetHistory(nsIDOMHistory** aHistory)
+nsGlobalWindow::GetHistory(nsISupports** aHistory)
 {
   FORWARD_TO_INNER(GetHistory, (aHistory), NS_ERROR_NOT_INITIALIZED);
 
