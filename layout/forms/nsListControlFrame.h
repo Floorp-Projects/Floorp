@@ -126,19 +126,19 @@ public:
   virtual void AboutToDropDown() MOZ_OVERRIDE;
 
   /**
-   * @note This method might destroy |this|.
+   * @note This method might destroy the frame, pres shell and other objects.
    */
   virtual void AboutToRollup() MOZ_OVERRIDE;
 
   /**
    * Dispatch a DOM onchange event synchroniously.
-   * @note This method might destroy |this|.
+   * @note This method might destroy the frame, pres shell and other objects.
    */
   virtual void FireOnChange() MOZ_OVERRIDE;
 
   /**
    * Makes aIndex the selected option of a combobox list.
-   * @note This method might destroy |this|.
+   * @note This method might destroy the frame, pres shell and other objects.
    */
   virtual void ComboboxFinish(int32_t aIndex) MOZ_OVERRIDE;
   virtual void OnContentReset() MOZ_OVERRIDE;
@@ -155,12 +155,15 @@ public:
   NS_IMETHOD OnOptionSelected(int32_t aIndex, bool aSelected) MOZ_OVERRIDE;
   NS_IMETHOD OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) MOZ_OVERRIDE;
 
-  // mouse event listeners (both )
-  nsresult MouseDown(nsIDOMEvent* aMouseEvent); // might destroy |this|
-  nsresult MouseUp(nsIDOMEvent* aMouseEvent);   // might destroy |this|
+  /**
+   * Mouse event listeners.
+   * @note These methods might destroy the frame, pres shell and other objects.
+   */
+  nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  nsresult MouseUp(nsIDOMEvent* aMouseEvent);
   nsresult MouseMove(nsIDOMEvent* aMouseEvent);
   nsresult DragMove(nsIDOMEvent* aMouseEvent);
-  nsresult KeyPress(nsIDOMEvent* aKeyEvent);    // might destroy |this|
+  nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 
   /**
    * Returns the options collection for aContent, if any.
@@ -257,6 +260,7 @@ public:
 protected:
   /**
    * Updates the selected text in a combobox and then calls FireOnChange().
+   * @note This method might destroy the frame, pres shell and other objects.
    * Returns false if calling it destroyed |this|.
    */
   bool       UpdateSelection();
@@ -271,12 +275,18 @@ protected:
 
   /**
    * Toggles (show/hide) the combobox dropdown menu.
-   * @note This method might destroy |this|.
+   * @note This method might destroy the frame, pres shell and other objects.
    */
   void       DropDownToggleKey(nsIDOMEvent* aKeyEvent);
 
   nsresult   IsOptionDisabled(int32_t anIndex, bool &aIsDisabled);
+  /**
+   * @note This method might destroy the frame, pres shell and other objects.
+   */
   nsresult   ScrollToFrame(nsIContent * aOptElement);
+  /**
+   * @note This method might destroy the frame, pres shell and other objects.
+   */
   nsresult   ScrollToIndex(int32_t anIndex);
 
   /**
@@ -368,11 +378,20 @@ protected:
                                        bool aValue,
                                        bool aClearAll);
   bool     ToggleOptionSelectedFromFrame(int32_t aIndex);
+  /**
+   * @note This method might destroy the frame, pres shell and other objects.
+   */
   bool     SingleSelection(int32_t aClickedIndex, bool aDoToggle);
   bool     ExtendedSelection(int32_t aStartIndex, int32_t aEndIndex,
                              bool aClearAll);
+  /**
+   * @note This method might destroy the frame, pres shell and other objects.
+   */
   bool     PerformSelection(int32_t aClickedIndex, bool aIsShift,
                             bool aIsControl);
+  /**
+   * @note This method might destroy the frame, pres shell and other objects.
+   */
   bool     HandleListSelection(nsIDOMEvent * aDOMEvent, int32_t selectedIndex);
   void     InitSelectionRange(int32_t aClickedIndex);
 
