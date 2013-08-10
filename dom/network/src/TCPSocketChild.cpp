@@ -91,8 +91,7 @@ TCPSocketChild::Open(nsITCPSocketInternal* aSocket, const nsAString& aHost,
   }
   AddIPDLReference();
   gNeckoChild->SendPTCPSocketConstructor(this);
-  SendOpen(nsString(aHost), aPort, aUseSSL, nsString(aBinaryType),
-           GetTabChildFrom(aWindow));
+  SendOpen(nsString(aHost), aPort, aUseSSL, nsString(aBinaryType));
   return NS_OK;
 }
 

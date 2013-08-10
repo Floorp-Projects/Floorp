@@ -47,8 +47,7 @@ public:
   TCPSocketParent() : mIntermediaryObj(nullptr) {}
 
   virtual bool RecvOpen(const nsString& aHost, const uint16_t& aPort,
-                        const bool& useSSL, const nsString& aBinaryType,
-                        PBrowserParent* aBrowser);
+                        const bool& useSSL, const nsString& aBinaryType);
 
   virtual bool RecvSuspend() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;
