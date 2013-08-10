@@ -32,7 +32,7 @@ function run_test() {
 
   startupManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_eq(a1, null);
     do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
@@ -57,7 +57,7 @@ function run_test() {
 
       run_test_1();
     });
-  }));
+  });
 }
 
 // Disabling an add-on should work
@@ -83,7 +83,7 @@ function run_test_1() {
 
     ensure_test_completed();
 
-    AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(function(list) {
+    AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
       do_check_eq(list.length, 1);
       do_check_eq(list[0].id, "addon1@tests.mozilla.org");
 
@@ -104,7 +104,7 @@ function run_test_1() {
 
         run_test_2();
       });
-    }));
+    });
   });
 }
 
@@ -127,7 +127,7 @@ function run_test_2() {
 
     ensure_test_completed();
 
-    AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(function(list) {
+    AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
       do_check_eq(list.length, 1);
       do_check_eq(list[0].id, "addon1@tests.mozilla.org");
 
@@ -149,7 +149,7 @@ function run_test_2() {
 
         run_test_3();
       });
-    }));
+    });
   });
 }
 
@@ -161,7 +161,7 @@ function run_test_3() {
     ]
   });
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     a1.userDisabled = true;
     ensure_test_completed();
     prepare_test({
@@ -188,7 +188,7 @@ function run_test_3() {
       do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
       do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
 
-      do_execute_soon(do_test_finished);
+      do_test_finished();
     });
-  }));
+  });
 }

@@ -234,6 +234,6 @@ function run_test() {
 
     do_check_false(stagedXPIs.exists());
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }

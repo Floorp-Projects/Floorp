@@ -126,7 +126,7 @@ function run_test() {
 }
 
 function end_test() {
-  do_execute_soon(do_test_finished);
+  do_test_finished();
 }
 
 // Checks enabling one theme disables the others
@@ -613,7 +613,7 @@ function run_test_9() {
 
 // Uninstalling a custom theme in use should require a restart
 function run_test_10() {
-  AddonManager.getAddonByID("theme2@tests.mozilla.org", callback_soon(function(oldt2) {
+  AddonManager.getAddonByID("theme2@tests.mozilla.org", function(oldt2) {
     prepare_test({
       "theme2@tests.mozilla.org": [
         "onEnabling",
@@ -654,7 +654,7 @@ function run_test_10() {
 
       do_execute_soon(run_test_11);
     });
-  }));
+  });
 }
 
 // Installing a custom theme not in use should not require a restart
@@ -742,7 +742,7 @@ function check_test_12() {
 
 // Updating a custom theme in use should require a restart
 function run_test_13() {
-  AddonManager.getAddonByID("theme1@tests.mozilla.org", callback_soon(function(t1) {
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     prepare_test({
       "theme1@tests.mozilla.org": [
         "onEnabling",
@@ -777,16 +777,16 @@ function run_test_13() {
       }, [
         "onInstallStarted",
         "onInstallEnded",
-      ], callback_soon(check_test_13));
+      ], check_test_13);
       install.install();
     });
-  }));
+  });
 }
 
 function check_test_13() {
   restartManager();
 
-  AddonManager.getAddonByID("theme1@tests.mozilla.org", callback_soon(function(t1) {
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     do_check_neq(t1, null);
     do_check_true(t1.isActive);
     do_check_false(gLWThemeChanged);
@@ -794,7 +794,7 @@ function check_test_13() {
     restartManager();
 
     do_execute_soon(run_test_14);
-  }));
+  });
 }
 
 // Switching from a lightweight theme to the default theme should not require
@@ -846,15 +846,14 @@ function run_test_15() {
   restartManager();
 
   installAllFiles([do_get_addon("test_theme")], function() {
-    AddonManager.getAddonByID("theme1@tests.mozilla.org", callback_soon(function(t1) {
+    AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
       t1.userDisabled = false;
 
       restartManager();
 
       do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "theme1/1.0");
       AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
-                                   "theme1@tests.mozilla.org"],
-                                   callback_soon(function([d, t1]) {
+                                   "theme1@tests.mozilla.org"], function([d, t1]) {
         do_check_true(d.userDisabled);
         do_check_false(d.appDisabled);
         do_check_false(d.isActive);
@@ -878,8 +877,8 @@ function run_test_15() {
 
           do_execute_soon(run_test_16);
         });
-      }));
-    }));
+      });
+    });
   });
 }
 
@@ -933,14 +932,13 @@ function run_test_17() {
 function run_test_18() {
   restartManager(2);
 
-  AddonManager.getAddonByID("theme1@tests.mozilla.org", callback_soon(function(t1) {
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     t1.userDisabled = false;
 
     restartManager();
 
     AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
-                                 "theme1@tests.mozilla.org"],
-                                 callback_soon(function([d, t1]) {
+                                 "theme1@tests.mozilla.org"], function([d, t1]) {
       do_check_true(d.userDisabled);
       do_check_false(d.appDisabled);
       do_check_false(d.isActive);
@@ -982,8 +980,8 @@ function run_test_18() {
 
         do_execute_soon(run_test_19);
       });
-    }));
-  }));
+    });
+  });
 }
 
 // Disabling the active persona should switch back to the default theme
@@ -1046,7 +1044,7 @@ function run_test_20() {
 // Tests that cached copies of a lightweight theme have the right permissions
 // and pendingOperations during the onEnabling event
 function run_test_21() {
-  AddonManager.getAddonByID("theme1@tests.mozilla.org", callback_soon(function(t1) {
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     // Switch to a custom theme so we can test pendingOperations properly.
 
     prepare_test({
@@ -1088,5 +1086,5 @@ function run_test_21() {
 
       end_test();
     });
-  }));
+  });
 }

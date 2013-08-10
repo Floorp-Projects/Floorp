@@ -96,12 +96,12 @@ function run_test_1() {
 
         restartManager();
 
-        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+        AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
           check_addon_upgrading(a1);
 
           restartManager();
 
-          AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+          AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
             check_addon_upgrading(a1);
 
             fstream.close();
@@ -114,8 +114,8 @@ function run_test_1() {
               a1.uninstall();
               do_execute_soon(run_test_2);
             });
-          }));
-        }));
+          });
+        });
       });
     });
   });
@@ -128,7 +128,7 @@ function run_test_2() {
   installAllFiles([do_get_addon("test_bug587088_1")], function() {
     restartManager();
 
-    AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
       check_addon(a1, "1.0");
 
       // Lock either install.rdf for unpacked add-ons or the xpi for packed add-ons.
@@ -146,12 +146,12 @@ function run_test_2() {
 
       restartManager();
 
-      AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+      AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
         check_addon_uninstalling(a1, true);
 
         restartManager();
 
-        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
+        AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
           check_addon_uninstalling(a1, true);
 
           fstream.close();
@@ -165,10 +165,10 @@ function run_test_2() {
             do_check_false(dir.exists());
             do_check_false(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
 
-            do_execute_soon(do_test_finished);
+            do_test_finished();
           });
-        }));
-      }));
-    }));
+        });
+      });
+    });
   });
 }

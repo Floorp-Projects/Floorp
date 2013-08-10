@@ -134,6 +134,6 @@ function run_test() {
     do_check_false(d.appDisabled);
     do_check_false(d.isActive);
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }

@@ -16,7 +16,7 @@ function run_test() {
 
     AddonManager.getAddonsByIDs(["bug526598_1@tests.mozilla.org",
                                  "bug526598_2@tests.mozilla.org"],
-                                 callback_soon(function([a1, a2]) {
+                                 function([a1, a2]) {
 
       do_check_neq(a1, null);
       do_check_true(a1.hasResource("install.rdf"));
@@ -47,8 +47,8 @@ function run_test() {
         do_check_eq(newa1, null);
         do_check_eq(newa2, null);
 
-        do_execute_soon(do_test_finished);
+        do_test_finished();
       });
-    }));
+    });
   });
 }

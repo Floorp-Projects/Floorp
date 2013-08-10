@@ -54,6 +54,6 @@ function run_test_2() {
     do_check_neq(addon, null);
     do_check_false(addon.isActive);
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }

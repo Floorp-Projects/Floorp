@@ -103,6 +103,6 @@ function run_test_1() {
       do_check_eq(JSON.stringify(manifest[i]), JSON.stringify(expected[i]));
     }
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }

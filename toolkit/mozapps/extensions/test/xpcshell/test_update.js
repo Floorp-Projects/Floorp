@@ -210,7 +210,7 @@ function run_test_2(install) {
 function check_test_2() {
   ensure_test_completed();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(olda1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(olda1) {
     do_check_neq(olda1, null);
     do_check_eq(olda1.version, "1.0");
     do_check_true(isExtensionInAddonsList(profileDir, olda1.id));
@@ -234,7 +234,7 @@ function check_test_2() {
       a1.uninstall();
       do_execute_soon(run_test_3);
     });
-  }));
+  });
 }
 
 
@@ -401,7 +401,7 @@ function continue_test_6(install) {
   }, [
     "onInstallStarted",
     "onInstallEnded",
-  ], callback_soon(check_test_6));
+  ], check_test_6);
 }
 
 function check_test_6(install) {
@@ -413,14 +413,14 @@ function check_test_6(install) {
     do_check_eq(a1.version, "2.0");
     do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
     a1.uninstall();
-    do_execute_soon(run_test_7);
+    restartManager();
+
+    run_test_7();
   });
 }
 
 // Test that background update checks work for lightweight themes
 function run_test_7() {
-  restartManager();
-
   LightweightThemeManager.currentTheme = {
     id: "1",
     version: "1",
@@ -578,7 +578,7 @@ function check_test_7_cache() {
     do_check_eq(p1.installDate.getTime(), gInstallDate);
     do_check_true(p1.installDate.getTime() < p1.updateDate.getTime());
 
-    do_execute_soon(run_test_8);
+    run_test_8();
   });
 }
 
@@ -662,7 +662,7 @@ function run_test_8() {
 
   restartManager();
 
-  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(function(a2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
     a2.userDisabled = true;
     restartManager();
 
@@ -756,7 +756,7 @@ function run_test_8() {
       let compatListener = {
         onUpdateFinished: function(addon, error) {
           if (--count == 0)
-            do_execute_soon(run_next_test);
+            run_next_test();
         }
       };
 
@@ -778,7 +778,7 @@ function run_test_8() {
       a5.findUpdates(compatListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
       a6.findUpdates(updateListener, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
     });
-  }));
+  });
 }
 
 // Tests that if an install.rdf claims compatibility then the add-on will be
@@ -828,7 +828,7 @@ function run_test_11() {
       onUpdateFinished: function(addon) {
         do_check_true(addon.isCompatible);
 
-        do_execute_soon(run_test_12);
+        run_test_12();
       }
     }, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
   });
@@ -1296,7 +1296,7 @@ function continue_test_20(install) {
   }, [
     "onInstallStarted",
     "onInstallEnded",
-  ], callback_soon(check_test_20));
+  ], check_test_20);
 }
 
 function check_test_20(install) {
@@ -1308,10 +1308,8 @@ function check_test_20(install) {
     do_check_eq(a12.version, "2.0");
     do_check_eq(a12.type, "extension");
     a12.uninstall();
+    restartManager();
 
-    do_execute_soon(() => {
-      restartManager();
-      end_test();
-    });
+    end_test();
   });
 }
