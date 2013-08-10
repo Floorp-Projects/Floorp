@@ -157,7 +157,7 @@
           <![CDATA[
             // Grab the actual input field's value, not our value, which could include moz-action:
             let inputVal = this.inputField.value;
-            let selectedVal = inputVal.substring(this.selectionStart, this.electionEnd);
+            let selectedVal = inputVal.substring(this.selectionStart, this.selectionEnd);
 
             // If the selection doesn't start at the beginning or doesn't span the full domain or
             // the URL bar is modified, nothing else to do here.
