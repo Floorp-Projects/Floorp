@@ -191,8 +191,10 @@ function run_test_1() {
   do_check_true(gCachePurged);
 
   let file = gProfD.clone();
-  file.append = "extensions.ini";
-  do_print("Checking for " + file.path);
+  file.append("extensions.json");
+  do_check_true(file.exists());
+
+  file.leafName = "extensions.ini";
   do_check_true(file.exists());
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
