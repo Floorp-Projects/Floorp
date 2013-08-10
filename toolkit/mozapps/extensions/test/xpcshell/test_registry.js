@@ -146,6 +146,6 @@ function run_test_4() {
     do_check_eq(a1, null);
     do_check_neq(a2, null);
 
-    do_test_finished();
+    do_execute_soon(do_test_finished);
   });
 }

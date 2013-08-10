@@ -106,7 +106,7 @@ function run_test_2() {
 
     do_check_eq(a1, gAddon);
 
-    do_test_finished();
+    do_execute_soon(do_test_finished);
   });
 
 }
