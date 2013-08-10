@@ -141,7 +141,7 @@ function run_test() {
     do_check_true(a6.appDisabled);
     do_check_false(a6.isActive);
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
 
   });
 }

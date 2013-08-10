@@ -349,6 +349,7 @@ function DBAddonInternal(aLoaded) {
     // this change is being detected.
   }
 
+  // XXX Can we redesign pendingUpgrade?
   XPCOMUtils.defineLazyGetter(this, "pendingUpgrade",
     function DBA_pendingUpgradeGetter() {
       for (let install of XPIProvider.installs) {
@@ -425,17 +426,17 @@ this.XPIDatabase = {
   migrateData: null,
   // Active add-on directories loaded from extensions.ini and prefs at startup.
   activeBundles: null,
+  // Special handling for when the database is locked at first load
+  lockedDatabase: false,
 
-  // Saved error object if we fail to read an existing database
-  _loadError: null,
-
-  // Error reported by our most recent attempt to read or write the database, if any
-  get lastError() {
-    if (this._loadError)
-      return this._loadError;
-    if (this._deferredSave)
-      return this._deferredSave.lastError;
-    return null;
+  // XXX may be able to refactor this away
+  get dbfileExists() {
+    delete this.dbfileExists;
+    return this.dbfileExists = this.jsonFile.exists();
+  },
+  set dbfileExists(aValue) {
+    delete this.dbfileExists;
+    return this.dbfileExists = aValue;
   },
 
   /**
@@ -444,6 +445,11 @@ this.XPIDatabase = {
   saveChanges: function() {
     if (!this.initialized) {
       throw new Error("Attempt to use XPI database when it is not initialized");
+    }
+
+    // handle the "in memory only" case
+    if (this.lockedDatabase) {
+      return;
     }
 
     if (!this._deferredSave) {
@@ -461,16 +467,11 @@ this.XPIDatabase = {
           // save the database.
           LOG("XPI Database saved, setting schema version preference to " + DB_SCHEMA);
           Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
-          // Reading the DB worked once, so we don't need the load error
-          this._loadError = null;
         },
         error => {
           // Need to try setting the schema version again later
           this._schemaVersionSet = false;
           WARN("Failed to save XPI database", error);
-          // this._deferredSave.lastError has the most recent error so we don't
-          // need this any more
-          this._loadError = null;
         });
     }
   },
@@ -478,15 +479,16 @@ this.XPIDatabase = {
   flush: function() {
     // handle the "in memory only" and "saveChanges never called" cases
     if (!this._deferredSave) {
-      return Promise.resolve(0);
+      let done = Promise.defer();
+      done.resolve(0);
+      return done.promise;
     }
 
     return this._deferredSave.flush();
   },
 
   /**
-   * Converts the current internal state of the XPI addon database to
-   * a JSON.stringify()-ready structure
+   * Converts the current internal state of the XPI addon database to JSON
    */
   toJSON: function() {
     if (!this.addonDB) {
@@ -494,9 +496,13 @@ this.XPIDatabase = {
       throw new Error("Attempt to save database without loading it first");
     }
 
+    let addons = [];
+    for (let [, addon] of this.addonDB) {
+      addons.push(addon);
+    }
     let toSave = {
       schemaVersion: DB_SCHEMA,
-      addons: [...this.addonDB.values()]
+      addons: addons
     };
     return toSave;
   },
@@ -619,16 +625,17 @@ this.XPIDatabase = {
         // Handle mismatched JSON schema version. For now, we assume
         // compatibility for JSON data, though we throw away any fields we
         // don't know about
+        // XXX preserve unknown fields during save/restore
         LOG("JSON schema mismatch: expected " + DB_SCHEMA +
             ", actual " + inputAddons.schemaVersion);
       }
       // If we got here, we probably have good data
       // Make AddonInternal instances from the loaded data and save them
       let addonDB = new Map();
-      for (let loadedAddon of inputAddons.addons) {
+      inputAddons.addons.forEach(function(loadedAddon) {
         let newAddon = new DBAddonInternal(loadedAddon);
         addonDB.set(newAddon._key, newAddon);
-      };
+      });
       this.addonDB = addonDB;
       LOG("Successfully read XPI database");
       this.initialized = true;
@@ -670,14 +677,15 @@ this.XPIDatabase = {
 
   /**
    * Reconstruct when the DB file exists but is unreadable
-   * (for example because read permission is denied)
+   * (for example because read permission is denied
    */
   rebuildUnreadableDB: function(aError, aRebuildOnError) {
     WARN("Extensions database " + this.jsonFile.path +
         " exists but is not readable; rebuilding in memory", aError);
-    // Remember the error message until we try and write at least once, so
-    // we know at shutdown time that there was a problem
-    this._loadError = aError;
+    // XXX open question - if we can overwrite at save time, should we, or should we
+    // leave the locked database in case we can recover from it next time we start up?
+    // The old code made one attempt to remove the locked file before it rebuilt in memory
+    this.lockedDatabase = true;
     // XXX TELEMETRY report when this happens?
     this.rebuildDatabase(aRebuildOnError);
   },
@@ -965,26 +973,24 @@ this.XPIDatabase = {
   shutdown: function XPIDB_shutdown(aCallback) {
     LOG("shutdown");
     if (this.initialized) {
-      // If our last database I/O had an error, try one last time to save.
-      if (this.lastError)
-        this.saveChanges();
+      // If we are running with an in-memory database then force a new
+      // extensions.ini to be written to disk on the next startup
+      if (this.lockedDatabase)
+        Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
 
       this.initialized = false;
+      let result = null;
 
       // Make sure any pending writes of the DB are complete, and we
       // finish cleaning up, and then call back
       this.flush()
         .then(null, error => {
           ERROR("Flush of XPI database failed", error);
+          Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
+          result = error;
           return 0;
         })
         .then(count => {
-          // If our last attempt to read or write the DB failed, force a new
-          // extensions.ini to be written to disk on the next startup
-          let lastSaveFailed = this.lastError;
-          if (lastSaveFailed)
-            Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
-
           // Clear out the cached addons data loaded from JSON
           delete this.addonDB;
           delete this._dbPromise;
@@ -994,7 +1000,7 @@ this.XPIDatabase = {
           delete this._schemaVersionSet;
 
           if (aCallback)
-            aCallback(lastSaveFailed);
+            aCallback(result);
         });
     }
     else {
@@ -1336,6 +1342,20 @@ this.XPIDatabase = {
   },
 
   /**
+   * Synchronously sets the file descriptor for an add-on.
+   * XXX IRVING could replace this with setAddonProperties
+   *
+   * @param  aAddon
+   *         The DBAddonInternal being updated
+   * @param  aDescriptor
+   *         File path of the installed addon
+   */
+  setAddonDescriptor: function XPIDB_setAddonDescriptor(aAddon, aDescriptor) {
+    aAddon.descriptor = aDescriptor;
+    this.saveChanges();
+  },
+
+  /**
    * Synchronously updates an add-on's active flag in the database.
    *
    * @param  aAddon
@@ -1352,6 +1372,8 @@ this.XPIDatabase = {
    * Synchronously calculates and updates all the active flags in the database.
    */
   updateActiveAddons: function XPIDB_updateActiveAddons() {
+    // XXX IRVING this may get called during XPI-utils shutdown
+    // XXX need to make sure PREF_PENDING_OPERATIONS handling is clean
     LOG("Updating add-on states");
     for (let [, addon] of this.addonDB) {
       let newActive = (addon.visible && !addon.userDisabled &&

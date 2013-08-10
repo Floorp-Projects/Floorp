@@ -28,7 +28,7 @@ function run_test() {
 
   startupManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a) {
     do_check_neq(a, null);
     do_check_eq(a.version, "1.0");
     do_check_false(a.userDisabled);
@@ -57,7 +57,7 @@ function run_test() {
       do_check_true(a.isActive);
       do_check_true(isExtensionInAddonsList(profileDir, a.id));
 
-      do_execute_soon(do_test_finished);
+      do_test_finished();
     });
-  }));
+  });
 }

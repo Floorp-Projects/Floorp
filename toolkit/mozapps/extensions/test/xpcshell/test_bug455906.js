@@ -285,7 +285,7 @@ function check_initial_state(callback) {
 function check_test_pt1() {
   dump("Checking pt 1\n");
 
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], callback_soon(function(addons) {
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
     for (var i = 0; i < ADDONS.length; i++) {
       if (!addons[i])
         do_throw("Addon " + (i + 1) + " did not get installed correctly");
@@ -316,7 +316,7 @@ function check_test_pt1() {
       gTestCheck = check_test_pt2;
       load_blocklist("bug455906_warn.xml");
     });
-  }));
+  });
 }
 
 function check_notification_pt2(args) {
@@ -357,7 +357,7 @@ function check_test_pt2() {
   restartManager();
   dump("Checking results pt 2\n");
 
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], callback_soon(function(addons) {
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
     // Should have disabled this add-on as requested
     do_check_eq(check_addon_state(addons[2]), "true,true,false");
     do_check_eq(check_plugin_state(PLUGINS[2]), "true,false");
@@ -386,7 +386,7 @@ function check_test_pt2() {
     gNotificationCheck = null;
     gTestCheck = run_test_pt3;
     load_blocklist("bug455906_start.xml");
-  }));
+  });
 }
 
 function run_test_pt3() {
@@ -485,7 +485,7 @@ function check_test_pt3() {
 }
 
 function run_test_pt4() {
-  AddonManager.getAddonByID(ADDONS[4].id, callback_soon(function(addon) {
+  AddonManager.getAddonByID(ADDONS[4].id, function(addon) {
     addon.userDisabled = false;
     PLUGINS[4].enabledState = Ci.nsIPluginTag.STATE_ENABLED;
     restartManager();
@@ -494,7 +494,7 @@ function run_test_pt4() {
       gTestCheck = check_test_pt4;
       load_blocklist("bug455906_empty.xml");
     });
-  }));
+  });
 }
 
 function check_notification_pt4(args) {

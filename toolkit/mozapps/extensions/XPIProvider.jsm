@@ -1884,9 +1884,9 @@ var XPIProvider = {
     delete this._uriMappings;
 
     if (gLazyObjectsLoaded) {
-      XPIDatabase.shutdown(function shutdownCallback(saveError) {
+      XPIDatabase.shutdown(function shutdownCallback() {
         LOG("Notifying XPI shutdown observers");
-        Services.obs.notifyObservers(null, "xpi-provider-shutdown", saveError);
+        Services.obs.notifyObservers(null, "xpi-provider-shutdown", null);
       });
     }
     else {
@@ -2594,8 +2594,9 @@ var XPIProvider = {
 
       aOldAddon.descriptor = aAddonState.descriptor;
       aOldAddon.visible = !(aOldAddon.id in visibleAddons);
-      XPIDatabase.saveChanges();
 
+      // Update the database
+      XPIDatabase.setAddonDescriptor(aOldAddon, aAddonState.descriptor);
       if (aOldAddon.visible) {
         visibleAddons[aOldAddon.id] = aOldAddon;
 
@@ -3187,6 +3188,8 @@ var XPIProvider = {
     // If the database doesn't exist and there are add-ons installed then we
     // must update the database however if there are no add-ons then there is
     // no need to update the database.
+    // Avoid using XPIDatabase.dbFileExists, as that code is lazy-loaded,
+    // and we want to avoid loading it until absolutely necessary.
     let dbFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
     if (!dbFile.exists())
       updateDatabase = state.length > 0;

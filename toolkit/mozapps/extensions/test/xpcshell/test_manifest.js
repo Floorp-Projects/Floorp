@@ -557,6 +557,6 @@ function run_test() {
     do_check_eq(a26.optionsType, AddonManager.OPTIONS_TYPE_INLINE_INFO);
     do_check_neq(a26.optionsURL, null);
 
-    do_execute_soon(do_test_finished);
+    do_test_finished();
   });
 }

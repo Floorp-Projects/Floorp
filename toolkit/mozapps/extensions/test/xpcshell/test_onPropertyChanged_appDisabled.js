@@ -59,7 +59,7 @@ function run_test_2() {
       "addon1@tests.mozilla.org": [
         ["onPropertyChanged", ["appDisabled"]]
       ]
-    }, [], callback_soon(do_test_finished));
+    }, [], do_test_finished);
 
     AddonManager.strictCompatibility = false;
   });
