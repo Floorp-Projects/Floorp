@@ -69,7 +69,7 @@ if CONFIG['MOZ_WEBRTC']:
     ])
 
 if CONFIG['MOZ_OMX_PLUGIN']:
-    external_dirs += [
+    add_tier_dir('platform', [
         'media/omx-plugin/lib/ics/libutils',
         'media/omx-plugin/lib/ics/libstagefright',
         'media/omx-plugin/lib/gb/libutils',
@@ -85,7 +85,7 @@ if CONFIG['MOZ_OMX_PLUGIN']:
         'media/omx-plugin/hc',
         'media/omx-plugin/sony',
         'media/omx-plugin/jb-htc',
-    ]
+    ])
 
 if CONFIG['ENABLE_TESTS']:
     add_tier_dir('platform', 'testing/specialpowers')
