@@ -1,101 +1,211 @@
-accounts.google.com: max-age too low: 2592000
+accounts.google.com: TypeError: gSSService.processStsHeader is not a function
+aladdinschools.appspot.com: TypeError: gSSService.processStsHeader is not a function
 alpha.irccloud.com: could not connect to host
+api.intercom.io: TypeError: gSSService.processStsHeader is not a function
 api.mega.co.nz: could not connect to host
 api.recurly.com: did not receive HSTS header
 api.simple.com: did not receive HSTS header
 apis.google.com: did not receive HSTS header
+app.recurly.com: TypeError: gSSService.processStsHeader is not a function
 appengine.google.com: did not receive HSTS header
+arivo.com.br: TypeError: gSSService.processStsHeader is not a function
+bank.simple.com: TypeError: gSSService.processStsHeader is not a function
+bassh.net: TypeError: gSSService.processStsHeader is not a function
+bccx.com: TypeError: gSSService.processStsHeader is not a function
 betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
+blog.cyveillance.com: TypeError: gSSService.processStsHeader is not a function
+blog.linode.com: TypeError: gSSService.processStsHeader is not a function
+blog.torproject.org: TypeError: gSSService.processStsHeader is not a function
 blueseed.co: did not receive HSTS header
 braintreegateway.com: could not connect to host
 braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
+bugzilla.mozilla.org: TypeError: gSSService.processStsHeader is not a function
+business.medbank.com.mt: TypeError: gSSService.processStsHeader is not a function
+carezone.com: TypeError: gSSService.processStsHeader is not a function
 carlolly.co.uk: did not receive HSTS header
-cert.se: max-age too low: 2628001
+cert.se: TypeError: gSSService.processStsHeader is not a function
+check.torproject.org: TypeError: gSSService.processStsHeader is not a function
 checkout.google.com: did not receive HSTS header
 chrome-devtools-frontend.appspot.com: did not receive HSTS header
 chrome.google.com: did not receive HSTS header
+chromiumcodereview.appspot.com: TypeError: gSSService.processStsHeader is not a function
+cloudsecurityalliance.org: TypeError: gSSService.processStsHeader is not a function
 code.google.com: did not receive HSTS header
+codereview.appspot.com: TypeError: gSSService.processStsHeader is not a function
 codereview.chromium.org: did not receive HSTS header
+conformal.com: TypeError: gSSService.processStsHeader is not a function
+controlcenter.gigahost.dk: TypeError: gSSService.processStsHeader is not a function
+crate.io: TypeError: gSSService.processStsHeader is not a function
+crm.onlime.ch: TypeError: gSSService.processStsHeader is not a function
+crypto.cat: TypeError: gSSService.processStsHeader is not a function
 crypto.is: did not receive HSTS header
 csawctf.poly.edu: did not receive HSTS header
+cyphertite.com: TypeError: gSSService.processStsHeader is not a function
+developer.mydigipass.com: TypeError: gSSService.processStsHeader is not a function
+dist.torproject.org: TypeError: gSSService.processStsHeader is not a function
 dl.google.com: did not receive HSTS header
+dm.lookout.com: TypeError: gSSService.processStsHeader is not a function
+dm.mylookout.com: TypeError: gSSService.processStsHeader is not a function
 docs.google.com: did not receive HSTS header
+download.jitsi.org: TypeError: gSSService.processStsHeader is not a function
 drive.google.com: did not receive HSTS header
 dropcam.com: did not receive HSTS header
-emailprivacytester.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
+ebanking.indovinabank.com.vn: TypeError: gSSService.processStsHeader is not a function
+emailprivacytester.com: TypeError: gSSService.processStsHeader is not a function
 encrypted.google.com: did not receive HSTS header
-epoxate.com: max-age too low: 259200
+entropia.de: TypeError: gSSService.processStsHeader is not a function
+epoxate.com: TypeError: gSSService.processStsHeader is not a function
+espra.com: TypeError: gSSService.processStsHeader is not a function
+factor.cc: TypeError: gSSService.processStsHeader is not a function
 fatzebra.com.au: did not receive HSTS header
 fj.simple.com: did not receive HSTS header
+forum.linode.com: TypeError: gSSService.processStsHeader is not a function
+forum.quantifiedself.com: TypeError: gSSService.processStsHeader is not a function
 gmail.com: did not receive HSTS header
-gocardless.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
+gocardless.com: TypeError: gSSService.processStsHeader is not a function
 googlemail.com: did not receive HSTS header
 googleplex.com: could not connect to host
+grc.com: TypeError: gSSService.processStsHeader is not a function
 greplin.com: did not receive HSTS header
-grepular.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
+grepular.com: TypeError: gSSService.processStsHeader is not a function
 groups.google.com: did not receive HSTS header
+haste.ch: could not connect to host
 health.google.com: did not receive HSTS header
 history.google.com: did not receive HSTS header
 hostedtalkgadget.google.com: did not receive HSTS header
-iop.intuit.com: max-age too low: 86400
+howrandom.org: TypeError: gSSService.processStsHeader is not a function
+id.mayfirst.org: TypeError: gSSService.processStsHeader is not a function
+inertianetworks.com: TypeError: gSSService.processStsHeader is not a function
+intercom.io: TypeError: gSSService.processStsHeader is not a function
+iop.intuit.com: TypeError: gSSService.processStsHeader is not a function
 irccloud.com: did not receive HSTS header
+itriskltd.com: TypeError: gSSService.processStsHeader is not a function
 jitsi.org: did not receive HSTS header
 jottit.com: did not receive HSTS header
-kiwiirc.com: max-age too low: 5256000
-ledgerscope.net: max-age too low: 86400
+keyerror.com: TypeError: gSSService.processStsHeader is not a function
+kiwiirc.com: TypeError: gSSService.processStsHeader is not a function
+lastpass.com: TypeError: gSSService.processStsHeader is not a function
+launchkey.com: TypeError: gSSService.processStsHeader is not a function
+ledgerscope.net: TypeError: gSSService.processStsHeader is not a function
+library.linode.com: TypeError: gSSService.processStsHeader is not a function
+linode.com: TypeError: gSSService.processStsHeader is not a function
+linx.net: TypeError: gSSService.processStsHeader is not a function
 lists.mayfirst.org: did not receive HSTS header
+lockify.com: TypeError: gSSService.processStsHeader is not a function
 logentries.com: did not receive HSTS header
+login.persona.org: TypeError: gSSService.processStsHeader is not a function
+login.sapo.pt: TypeError: gSSService.processStsHeader is not a function
+logotype.se: TypeError: gSSService.processStsHeader is not a function
+lookout.com: TypeError: gSSService.processStsHeader is not a function
+luneta.nearbuysystems.com: TypeError: gSSService.processStsHeader is not a function
 mail.google.com: did not receive HSTS header
+makeyourlaws.org: TypeError: gSSService.processStsHeader is not a function
+manager.linode.com: TypeError: gSSService.processStsHeader is not a function
 market.android.com: did not receive HSTS header
+mattmccutchen.net: TypeError: gSSService.processStsHeader is not a function
+mega.co.nz: TypeError: gSSService.processStsHeader is not a function
+members.mayfirst.org: TypeError: gSSService.processStsHeader is not a function
+members.nearlyfreespeech.net: TypeError: gSSService.processStsHeader is not a function
+mudcrab.us: TypeError: gSSService.processStsHeader is not a function
 my.alfresco.com: did not receive HSTS header
+my.onlime.ch: TypeError: gSSService.processStsHeader is not a function
 mydigipass.com: did not receive HSTS header
+mylookout.com: TypeError: gSSService.processStsHeader is not a function
+neg9.org: TypeError: gSSService.processStsHeader is not a function
 neonisi.com: could not connect to host
 openshift.redhat.com: did not receive HSTS header
 ottospora.nl: could not connect to host
-packagist.org: max-age too low: 2592000
+p.linode.com: TypeError: gSSService.processStsHeader is not a function
+packagist.org: TypeError: gSSService.processStsHeader is not a function
 passwd.io: could not connect to host
-paypal.com: max-age too low: 14400
+paste.linode.com: TypeError: gSSService.processStsHeader is not a function
+pastebin.linode.com: TypeError: gSSService.processStsHeader is not a function
+pay.gigahost.dk: TypeError: gSSService.processStsHeader is not a function
+paymill.com: TypeError: gSSService.processStsHeader is not a function
+paymill.de: TypeError: gSSService.processStsHeader is not a function
+paypal.com: TypeError: gSSService.processStsHeader is not a function
 piratenlogin.de: could not connect to host
+pixi.me: TypeError: gSSService.processStsHeader is not a function
 plus.google.com: did not receive HSTS header
 plus.sandbox.google.com: did not receive HSTS header
 profiles.google.com: did not receive HSTS header
-romab.com: max-age too low: 2628000
+rapidresearch.me: TypeError: gSSService.processStsHeader is not a function
+riseup.net: TypeError: gSSService.processStsHeader is not a function
+romab.com: TypeError: gSSService.processStsHeader is not a function
+roundcube.mayfirst.org: TypeError: gSSService.processStsHeader is not a function
 sah3.net: could not connect to host
+sandbox.mydigipass.com: TypeError: gSSService.processStsHeader is not a function
 script.google.com: did not receive HSTS header
 security.google.com: did not receive HSTS header
+securityheaders.com: TypeError: gSSService.processStsHeader is not a function
 serverdensity.io: did not receive HSTS header
+shodan.io: TypeError: gSSService.processStsHeader is not a function
 shops.neonisi.com: could not connect to host
+silentcircle.com: TypeError: gSSService.processStsHeader is not a function
 silentcircle.org: could not connect to host
-simon.butcher.name: max-age too low: 2629743
+simon.butcher.name: TypeError: gSSService.processStsHeader is not a function
+simple.com: TypeError: gSSService.processStsHeader is not a function
 sites.google.com: did not receive HSTS header
 sol.io: could not connect to host
 spreadsheets.google.com: did not receive HSTS header
 square.com: did not receive HSTS header
+squareup.com: TypeError: gSSService.processStsHeader is not a function
 ssl.google-analytics.com: did not receive HSTS header
 ssl.panoramio.com: did not receive HSTS header
+stocktrade.de: TypeError: gSSService.processStsHeader is not a function
+stripe.com: TypeError: gSSService.processStsHeader is not a function
 sunshinepress.org: could not connect to host
+support.mayfirst.org: TypeError: gSSService.processStsHeader is not a function
 surfeasy.com: did not receive HSTS header
+surkatty.org: TypeError: gSSService.processStsHeader is not a function
 talk.google.com: did not receive HSTS header
 talkgadget.google.com: did not receive HSTS header
+therapynotes.com: TypeError: gSSService.processStsHeader is not a function
 torproject.org: did not receive HSTS header
+twitter.com: TypeError: gSSService.processStsHeader is not a function
+ubertt.org: TypeError: gSSService.processStsHeader is not a function
 uprotect.it: could not connect to host
+webmail.gigahost.dk: TypeError: gSSService.processStsHeader is not a function
+webmail.mayfirst.org: TypeError: gSSService.processStsHeader is not a function
+webmail.onlime.ch: TypeError: gSSService.processStsHeader is not a function
+whonix.org: TypeError: gSSService.processStsHeader is not a function
+wiz.biz: TypeError: gSSService.processStsHeader is not a function
+writeapp.me: TypeError: gSSService.processStsHeader is not a function
+www.apollo-auto.com: TypeError: gSSService.processStsHeader is not a function
+www.braintreepayments.com: TypeError: gSSService.processStsHeader is not a function
+www.cueup.com: TypeError: gSSService.processStsHeader is not a function
+www.cyveillance.com: TypeError: gSSService.processStsHeader is not a function
 www.developer.mydigipass.com: could not connect to host
-www.dropcam.com: max-age too low: 2592000
+www.dropcam.com: TypeError: gSSService.processStsHeader is not a function
 www.elanex.biz: did not receive HSTS header
+www.entropia.de: TypeError: gSSService.processStsHeader is not a function
 www.gmail.com: did not receive HSTS header
 www.googlemail.com: did not receive HSTS header
-www.gov.uk: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
+www.gov.uk: TypeError: gSSService.processStsHeader is not a function
+www.grc.com: TypeError: gSSService.processStsHeader is not a function
 www.greplin.com: did not receive HSTS header
+www.intercom.io: TypeError: gSSService.processStsHeader is not a function
+www.irccloud.com: TypeError: gSSService.processStsHeader is not a function
 www.jitsi.org: did not receive HSTS header
 www.lastpass.com: did not receive HSTS header
-www.ledgerscope.net: max-age too low: 86400
+www.ledgerscope.net: TypeError: gSSService.processStsHeader is not a function
+www.linode.com: TypeError: gSSService.processStsHeader is not a function
 www.logentries.com: did not receive HSTS header
+www.lookout.com: TypeError: gSSService.processStsHeader is not a function
+www.makeyourlaws.org: TypeError: gSSService.processStsHeader is not a function
 www.moneybookers.com: did not receive HSTS header
+www.mydigipass.com: TypeError: gSSService.processStsHeader is not a function
+www.mylookout.com: TypeError: gSSService.processStsHeader is not a function
 www.neonisi.com: could not connect to host
-www.paycheckrecords.com: max-age too low: 86400
-www.paypal.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
+www.noisebridge.net: TypeError: gSSService.processStsHeader is not a function
+www.paycheckrecords.com: TypeError: gSSService.processStsHeader is not a function
+www.paypal.com: TypeError: gSSService.processStsHeader is not a function
 www.sandbox.mydigipass.com: could not connect to host
+www.simple.com: TypeError: gSSService.processStsHeader is not a function
 www.surfeasy.com: did not receive HSTS header
+www.therapynotes.com: TypeError: gSSService.processStsHeader is not a function
+www.torproject.org: TypeError: gSSService.processStsHeader is not a function
+www.twitter.com: TypeError: gSSService.processStsHeader is not a function
 zoo24.de: did not receive HSTS header
