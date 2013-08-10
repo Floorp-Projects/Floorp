@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef mozilla_dom_WindowNamedPropertiesHandler_h
-#define mozilla_dom_WindowNamedPropertiesHandler_h__
+#define mozilla_dom_WindowNamedPropertiesHandler_h
 
 #include "jsproxy.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
