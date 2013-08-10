@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 this.EXPORTED_SYMBOLS = ["SessionStore"];
 
 const Cu = Components.utils;
@@ -868,12 +870,12 @@ let SessionStoreInternal = {
    *        Window reference
    */
   onOpen: function ssi_onOpen(aWindow) {
-    var _this = this;
-    aWindow.addEventListener("load", function(aEvent) {
-      aEvent.currentTarget.removeEventListener("load", arguments.callee, false);
-      _this.onLoad(aEvent.currentTarget);
-    }, false);
-    return;
+    let onload = () => {
+      aWindow.removeEventListener("load", onload);
+      this.onLoad(aWindow);
+    };
+
+    aWindow.addEventListener("load", onload);
   },
 
   /**
