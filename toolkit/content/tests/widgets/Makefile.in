@@ -41,7 +41,6 @@ MOCHITEST_FILES =	\
 		$(topsrcdir)/content/media/test/audio.wav \
 		$(topsrcdir)/content/media/test/seek_with_sound.ogg \
 		videomask.css \
-		test_bug898940.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \
