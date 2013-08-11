@@ -343,7 +343,7 @@ class StrictModeGetter {
 // Calls to getToken() increase |cursor| by one and return the new current
 // token. If a TokenStream was just created, the current token is initialized
 // with random data (i.e. not initialized). It is therefore important that
-// either of the first four member functions listed below is called first.
+// one of the first four member functions listed below is called first.
 // The circular buffer lets us go back up to two tokens from the last
 // scanned token. Internally, the relative number of backward steps that were
 // taken (via ungetToken()) after the last token was scanned is stored in
@@ -355,8 +355,8 @@ class StrictModeGetter {
 // Function Name     | Precondition; changes to |lookahead|
 // ------------------+---------------------------------------------------------
 // getToken          | none; if |lookahead > 0| then |lookahead--|
-// peekToken         | none; none
-// peekTokenSameLine | none; none
+// peekToken         | none; if |lookahead == 0| then |lookahead == 1|
+// peekTokenSameLine | none; if |lookahead == 0| then |lookahead == 1|
 // matchToken        | none; if |lookahead > 0| and the match succeeds then
 //                   |       |lookahead--|
 // consumeKnownToken | none; if |lookahead > 0| then |lookahead--|
@@ -373,6 +373,7 @@ class StrictModeGetter {
 //
 // The methods seek() and tell() allow to rescan from a previous visited
 // location of the buffer.
+//
 class MOZ_STACK_CLASS TokenStream
 {
     // Unicode separators that are treated as line terminators, in addition to \n, \r.
