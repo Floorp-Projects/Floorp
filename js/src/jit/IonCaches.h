@@ -143,8 +143,8 @@ class IonCache
     bool is##ickind() const {                                           \
         return kind() == Cache_##ickind;                                \
     }                                                                   \
-    inline ickind##IC &to##ickind();
-
+    inline ickind##IC &to##ickind();                                    \
+    inline const ickind##IC &to##ickind() const;
     IONCACHE_KIND_LIST(CACHEKIND_CASTS)
 #   undef CACHEKIND_CASTS
 
@@ -248,7 +248,7 @@ class IonCache
     }
 #endif
 
-    bool pure() {
+    bool pure() const {
         return pure_;
     }
     bool idempotent() const {
@@ -1049,6 +1049,11 @@ class GetElementParIC : public ParallelIonCache
     {                                                                   \
         JS_ASSERT(is##ickind());                                        \
         return *static_cast<ickind##IC *>(this);                        \
+    }                                                                   \
+    const ickind##IC &IonCache::to##ickind() const                      \
+    {                                                                   \
+        JS_ASSERT(is##ickind());                                        \
+        return *static_cast<const ickind##IC *>(this);                  \
     }
 IONCACHE_KIND_LIST(CACHE_CASTS)
 #undef OPCODE_CASTS
