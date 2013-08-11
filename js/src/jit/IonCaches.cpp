@@ -1761,28 +1761,6 @@ GetPropertyParIC::reset()
     hasTypedArrayLengthStub_ = false;
 }
 
-/* static */ bool
-GetPropertyParIC::canAttachReadSlot(LockedJSContext &cx, IonCache &cache,
-                                    TypedOrValueRegister output, JSObject *obj,
-                                    PropertyName *name, MutableHandleObject holder,
-                                    MutableHandleShape shape)
-{
-    // Bail if we have hooks or are not native.
-    if (!obj->hasIdempotentProtoChain())
-        return false;
-
-    if (!js::LookupPropertyPure(obj, NameToId(name), holder.address(), shape.address()))
-        return false;
-
-    // In parallel execution we can't cache getters due to possible
-    // side-effects, so only check if we can cache slot reads.
-    RootedScript script(cx);
-    jsbytecode *pc;
-    cache.getScriptedLocation(&script, &pc);
-    return (IsCacheableGetPropReadSlot(obj, holder, shape) ||
-            IsCacheableNoProperty(obj, holder, shape, pc, output));
-}
-
 bool
 GetPropertyParIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj,
                                  JSObject *holder, Shape *shape)
@@ -2991,9 +2969,13 @@ GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject ob
             {
                 RootedShape shape(cx);
                 RootedObject holder(cx);
-                PropertyName *name = JSID_TO_ATOM(id)->asPropertyName();
-                if (GetPropertyParIC::canAttachReadSlot(cx, cache, cache.output(), obj,
-                                                        name, &holder, &shape))
+                RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
+
+                GetPropertyIC::NativeGetPropCacheability canCache =
+                    CanAttachNativeGetProp(cx, cache, obj, name, &holder, &shape);
+                JS_ASSERT(canCache != GetPropertyIC::CanAttachError);
+
+                if (canCache == GetPropertyIC::CanAttachReadSlot)
                 {
                     if (!cache.attachReadSlot(cx, ion, obj, idval, name, holder, shape))
                         return TP_FATAL;
