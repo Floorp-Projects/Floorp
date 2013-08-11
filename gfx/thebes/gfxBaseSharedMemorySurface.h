@@ -9,10 +9,10 @@
 
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ipc/SharedMemory.h"
-
+#include "cairo.h"
+ 
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
-#include "cairo.h"
 #include "pratom.h"
 
 struct SharedImageInfo {

@@ -56,6 +56,7 @@
 #endif
 
 #include "Layers.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
