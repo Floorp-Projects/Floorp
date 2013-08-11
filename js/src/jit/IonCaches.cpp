@@ -1361,10 +1361,6 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, Handle
         return false;
     if (canCache == CanAttachNone)
         return true;
-    // Dont cache no properties, because the proxy can still contain the property
-    // by magic
-    if (!holder)
-        return true;
 
     *emitted = true;
 
@@ -1393,32 +1389,45 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, Handle
     // Make sure object is a DOMProxy proxy
     GenerateDOMProxyChecks(cx, masm, obj, name, object(), &failures);
 
-    Register scratchReg = output().valueReg().scratchReg();
-    GeneratePrototypeGuards(cx, ion, masm, obj, holder, object(), scratchReg, &failures);
+    if (holder) {
+        // Found the property on the prototype chain. Treat it like a native
+        // getprop.
+        Register scratchReg = output().valueReg().scratchReg();
+        GeneratePrototypeGuards(cx, ion, masm, obj, holder, object(), scratchReg, &failures);
 
-    // Rename scratch for clarity.
-    Register holderReg = scratchReg;
+        // Rename scratch for clarity.
+        Register holderReg = scratchReg;
 
-    // Guard on the holder of the property
-    masm.moveNurseryPtr(ImmMaybeNurseryPtr(holder), holderReg);
-    masm.branchPtr(Assembler::NotEqual,
-                   Address(holderReg, JSObject::offsetOfShape()),
-                   ImmGCPtr(holder->lastProperty()),
-                   &failures);
+        // Guard on the holder of the property
+        masm.moveNurseryPtr(ImmMaybeNurseryPtr(holder), holderReg);
+        masm.branchPtr(Assembler::NotEqual,
+                    Address(holderReg, JSObject::offsetOfShape()),
+                    ImmGCPtr(holder->lastProperty()),
+                    &failures);
 
-    if (canCache == CanAttachReadSlot) {
-        EmitLoadSlot(masm, holder, shape, holderReg, output(), scratchReg);
+        if (canCache == CanAttachReadSlot) {
+            EmitLoadSlot(masm, holder, shape, holderReg, output(), scratchReg);
+        } else {
+            // EmitGetterCall() expects |obj| to be the object the property is
+            // on to do some checks. Since we actually looked at checkObj, and
+            // no extra guards will be generated, we can just pass that instead.
+            JS_ASSERT_IF(canCache != CanAttachCallGetter, canCache == CanAttachArrayLength);
+            if (!EmitGetterCall(cx, masm, attacher, checkObj, holder, shape, liveRegs_,
+                                object(), scratchReg, output(), returnAddr))
+            {
+                return false;
+            }
+        }
     } else {
-        // EmitGetterCall() expects |obj| to be the object the property is on to do some
-        // checks. Since we actually looked at checkObj, and no extra guards will be generated,
-        // we can just pass that instead.
-        JS_ASSERT_IF(canCache != CanAttachCallGetter, canCache == CanAttachArrayLength);
-        if (!EmitGetterCall(cx, masm, attacher, checkObj, holder, shape, liveRegs_,
-                            object(), scratchReg, output(), returnAddr))
+        // Property was not found on the prototype chain. Deoptimize down to
+        // proxy get call
+        if (!EmitCallProxyGet(cx, masm, name, liveRegs_, object(), output(),
+                              returnAddr))
         {
             return false;
         }
     }
+
     attacher.jumpRejoin(masm);
     masm.bind(&failures);
     attacher.jumpNextStub(masm);
