@@ -1078,38 +1078,37 @@ GenerateTypedArrayLength(JSContext *cx, MacroAssembler &masm, IonCache::StubAtta
     attacher.jumpNextStub(masm);
 }
 
-GetPropertyIC::NativeGetPropCacheability
-GetPropertyIC::canAttachNative(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                               MutableHandleObject holder, MutableHandleShape shape)
+template <class GetPropCache>
+static GetPropertyIC::NativeGetPropCacheability
+CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &cache,
+                       HandleObject obj, HandlePropertyName name,
+                       MutableHandleObject holder, MutableHandleShape shape)
 {
     if (!obj || !obj->isNative())
-        return CanAttachNone;
+        return GetPropertyIC::CanAttachNone;
 
-    // If the cache is idempotent, watch out for resolve hooks or non-native
-    // objects on the proto chain. We check this before calling lookupProperty,
-    // to make sure no effectful lookup hooks or resolve hooks are called.
-    if (idempotent() && !obj->hasIdempotentProtoChain())
-        return CanAttachNone;
+    // If the cache is idempotent or parallel, watch out for resolve hooks or
+    // non-native objects on the proto chain. We check this before calling
+    // lookupProperty, to make sure no effectful lookup hooks or resolve hooks
+    // are called.
+    if (cache.lookupNeedsIdempotentChain() && !obj->hasIdempotentProtoChain())
+        return GetPropertyIC::CanAttachNone;
 
-    if (!JSObject::lookupProperty(cx, obj, name, holder, shape))
-        return CanAttachError;
+    if (!GetPropCache::doPropertyLookup(cx, obj, name, holder, shape))
+        return GetPropertyIC::CanAttachError;
 
+    RootedScript script(cx);
+    jsbytecode *pc;
+    cache.getScriptedLocation(&script, &pc);
     if (IsCacheableGetPropReadSlot(obj, holder, shape) ||
-        IsCacheableNoProperty(obj, holder, shape, pc, output()))
+        IsCacheableNoProperty(obj, holder, shape, pc, cache.output()))
     {
         // TI infers the possible types of native object properties. There's one
         // edge case though: for singleton objects it does not add the initial
-        // "undefined" type, see the propertySet comment in jsinfer.h. We can't
-        // monitor the return type inside an idempotent cache though, so we don't
-        // handle this case.
-        if (idempotent() &&
-            holder &&
-            holder->hasSingletonType() &&
-            holder->getSlot(shape->slot()).isUndefined())
-        {
-            return CanAttachNone;
-        }
-        return CanAttachReadSlot;
+        // "undefined" type, see the propertySet comment in jsinfer.h.
+        if (!cache.canMonitorSingletonUndefinedSlot(holder, shape))
+            return GetPropertyIC::CanAttachNone;
+        return GetPropertyIC::CanAttachReadSlot;
     }
 
     if (obj->is<ArrayObject>() && cx->names().length == name) {
@@ -1117,19 +1116,30 @@ GetPropertyIC::canAttachNative(JSContext *cx, HandleObject obj, HandlePropertyNa
         // checking the class of the object and the name of the property is enough
         // and that we don't need to worry about monitoring, since we know the
         // return type statically.
-        return CanAttachArrayLength;
+        return GetPropertyIC::CanAttachArrayLength;
     }
 
-    if (allowGetters() && (IsCacheableGetPropCallNative(obj, holder, shape) ||
-               IsCacheableGetPropCallPropertyOp(obj, holder, shape)))
+    if (cache.allowGetters() &&
+        (IsCacheableGetPropCallNative(obj, holder, shape) ||
+         IsCacheableGetPropCallPropertyOp(obj, holder, shape)))
     {
-        // Don't enable getter call if cache is idempotent, since
+        // Don't enable getter call if cache is parallel or idempotent, since
         // they can be effectful. This is handled by allowGetters()
-        return CanAttachCallGetter;
+        return GetPropertyIC::CanAttachCallGetter;
     }
 
-    // Return true only if one strategy is viable.
-    return CanAttachNone;
+    return GetPropertyIC::CanAttachNone;
+}
+
+bool
+GetPropertyIC::canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const
+{
+    // We can't monitor the return type inside an idempotent cache,
+    // so we don't handle this case.
+    return !(idempotent() &&
+             holder &&
+             holder->hasSingletonType() &&
+             holder->getSlot(shape->slot()).isUndefined());
 }
 
 bool
@@ -1142,7 +1152,8 @@ GetPropertyIC::tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
     RootedShape shape(cx);
     RootedObject holder(cx);
 
-    NativeGetPropCacheability type = canAttachNative(cx, obj, name, &holder, &shape);
+    NativeGetPropCacheability type =
+        CanAttachNativeGetProp(cx, *this, obj, name, &holder, &shape);
     if (type == CanAttachError)
         return false;
     if (type == CanAttachNone)
@@ -1355,8 +1366,8 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, Handle
     RootedObject holder(cx);
     RootedShape shape(cx);
 
-    NativeGetPropCacheability canCache = canAttachNative(cx, checkObj, name,
-                                                         &holder, &shape);
+    NativeGetPropCacheability canCache =
+        CanAttachNativeGetProp(cx, *this, checkObj, name, &holder, &shape);
 
     if (canCache == CanAttachError)
         return false;
