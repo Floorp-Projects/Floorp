@@ -509,6 +509,7 @@ class GetPropertyIC : public RepatchIonCache
     bool hasTypedArrayLengthStub_ : 1;
     bool hasStrictArgumentsLengthStub_ : 1;
     bool hasNormalArgumentsLengthStub_ : 1;
+    bool hasGenericProxyStub_ : 1;
 
   public:
     GetPropertyIC(RegisterSet liveRegs,
@@ -523,7 +524,8 @@ class GetPropertyIC : public RepatchIonCache
         hasArrayLengthStub_(false),
         hasTypedArrayLengthStub_(false),
         hasStrictArgumentsLengthStub_(false),
-        hasNormalArgumentsLengthStub_(false)
+        hasNormalArgumentsLengthStub_(false),
+        hasGenericProxyStub_(false)
     {
     }
 
@@ -552,6 +554,9 @@ class GetPropertyIC : public RepatchIonCache
     bool hasArgumentsLengthStub(bool strict) const {
         return strict ? hasStrictArgumentsLengthStub_ : hasNormalArgumentsLengthStub_;
     }
+    bool hasGenericProxyStub() const {
+        return hasGenericProxyStub_;
+    }
 
     enum NativeGetPropCacheability {
         CanAttachError,
@@ -572,6 +577,8 @@ class GetPropertyIC : public RepatchIonCache
                        HandlePropertyName name, void *returnAddr, bool *emitted);
     bool tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
                         HandlePropertyName name, void *returnAddr, bool *emitted);
+    bool tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject obj,
+                               HandlePropertyName name, void *returnAddr, bool *emitted);
     bool tryAttachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
                                    void *returnAddr, bool *emitted);
     bool tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObject obj,
