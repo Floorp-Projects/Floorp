@@ -251,7 +251,7 @@ class IonCache
     bool pure() {
         return pure_;
     }
-    bool idempotent() {
+    bool idempotent() const {
         return idempotent_;
     }
     void setIdempotent() {
@@ -541,7 +541,7 @@ class GetPropertyIC : public RepatchIonCache
         return output_;
     }
     bool allowGetters() const {
-        return allowGetters_;
+        return allowGetters_ && !idempotent();
     }
     bool hasArrayLengthStub() const {
         return hasArrayLengthStub_;
@@ -553,15 +553,41 @@ class GetPropertyIC : public RepatchIonCache
         return strict ? hasStrictArgumentsLengthStub_ : hasNormalArgumentsLengthStub_;
     }
 
-    bool attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                        HandleShape shape);
-    bool attachDOMProxyShadowed(JSContext *cx, IonScript *ion, JSObject *obj, void *returnAddr);
-    bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                          HandleShape shape,
-                          const SafepointIndex *safepointIndex, void *returnAddr);
-    bool attachArrayLength(JSContext *cx, IonScript *ion, JSObject *obj);
-    bool attachTypedArrayLength(JSContext *cx, IonScript *ion, JSObject *obj);
-    bool attachArgumentsLength(JSContext *cx, IonScript *ion, JSObject *obj);
+    enum NativeGetPropCacheability {
+        CanAttachError,
+        CanAttachNone,
+        CanAttachReadSlot,
+        CanAttachArrayLength,
+        CanAttachCallGetter
+    };
+
+    /* Native Property Type helper */
+    NativeGetPropCacheability canAttachNative(JSContext *cx, HandleObject obj,
+                                              HandlePropertyName name,
+                                              MutableHandleObject holder,
+                                              MutableHandleShape shape);
+
+    // Attach the proper stub, if possible
+    bool tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,
+                       HandlePropertyName name, const SafepointIndex *safepointIndex,
+                       void *returnAddr, bool *emitted);
+    bool tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
+                        HandlePropertyName name, const SafepointIndex *safepointIndex,
+                        void *returnAddr, bool *emitted);
+    bool tryAttachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
+                                   void *returnAddr, bool *emitted);
+    bool tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObject obj,
+                                     HandlePropertyName name, bool resetNeeded,
+                                     const SafepointIndex *safepointIndex,
+                                     void *returnAddr, bool *emitted);
+    bool tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
+                         HandlePropertyName name, const SafepointIndex *safepointIndex,
+                         void *returnAddr, bool *emitted);
+    bool tryAttachTypedArrayLength(JSContext *cx, IonScript *ion, HandleObject obj,
+                                   HandlePropertyName name, bool *emitted);
+
+    bool tryAttachArgumentsLength(JSContext *cx, IonScript *ion, HandleObject obj,
+                                  HandlePropertyName name, bool *emitted);
 
     static bool update(JSContext *cx, size_t cacheIndex, HandleObject obj, MutableHandleValue vp);
 };
