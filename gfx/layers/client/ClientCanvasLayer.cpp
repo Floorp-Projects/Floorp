@@ -4,10 +4,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ClientCanvasLayer.h"
-#include "gfxPlatform.h"
-#include "SurfaceStream.h"
-#include "SharedSurfaceGL.h"
-#include "SharedSurfaceEGL.h"
+#include "GLContext.h"                  // for GLContext
+#include "GLScreenBuffer.h"             // for GLScreenBuffer
+#include "GeckoProfilerImpl.h"          // for PROFILER_LABEL
+#include "SharedSurfaceEGL.h"           // for SurfaceFactory_EGLImage
+#include "SharedSurfaceGL.h"            // for SurfaceFactory_GLTexture, etc
+#include "SurfaceStream.h"              // for SurfaceStream, etc
+#include "SurfaceTypes.h"               // for SurfaceStreamType
+#include "ClientLayerManager.h"         // for ClientLayerManager, etc
+#include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsISupportsImpl.h"            // for Layer::AddRef, etc
+#include "nsRect.h"                     // for nsIntRect
+#include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #ifdef MOZ_WIDGET_GONK
 #include "SharedSurfaceGralloc.h"
 #endif

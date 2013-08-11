@@ -3,33 +3,53 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/TabChild.h"
-#include "mozilla/Hal.h"
-#include "mozilla/layers/PLayerChild.h"
-#include "mozilla/layers/PLayerTransactionChild.h"
-#include "mozilla/layers/PLayerTransactionParent.h"
-
-#include "gfxSharedImageSurface.h"
-#include "gfxImageSurface.h"
-#include "gfxUtils.h"
-#include "gfxPlatform.h"
-#include "nsXULAppAPI.h"
-#include "RenderTrace.h"
-#include "GeckoProfiler.h"
-
+#include <stdint.h>                     // for uint32_t
+#include <stdlib.h>                     // for rand, RAND_MAX
+#include <sys/types.h>                  // for int32_t
+#include "BasicContainerLayer.h"        // for BasicContainerLayer
+#include "BasicLayersImpl.h"            // for ToData, BasicReadbackLayer, etc
+#include "GeckoProfilerImpl.h"          // for PROFILER_LABEL
+#include "ImageContainer.h"             // for ImageFactory
+#include "Layers.h"                     // for Layer, ContainerLayer, etc
+#include "ReadbackLayer.h"              // for ReadbackLayer
+#include "ReadbackProcessor.h"          // for ReadbackProcessor
+#include "RenderTrace.h"                // for RenderTraceLayers, etc
+#include "basic/BasicImplData.h"        // for BasicImplData
+#include "basic/BasicLayers.h"          // for BasicLayerManager, etc
+#include "cairo-rename.h"               // for pixman_image_create_bits, etc
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxCachedTempSurface.h"       // for gfxCachedTempSurface
+#include "gfxColor.h"                   // for gfxRGBA
+#include "gfxContext.h"                 // for gfxContext, etc
+#include "gfxImageSurface.h"            // for gfxImageSurface
+#include "gfxMatrix.h"                  // for gfxMatrix
+#include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxPoint.h"                   // for gfxIntSize, gfxPoint
+#include "gfxRect.h"                    // for gfxRect
+#include "gfxUtils.h"                   // for gfxUtils
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/WidgetUtils.h"        // for ScreenRotation
+#include "mozilla/gfx/2D.h"             // for DrawTarget
+#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/gfx/BaseRect.h"       // for BaseRect
+#include "mozilla/gfx/Matrix.h"         // for Matrix
+#include "mozilla/gfx/Rect.h"           // for IntRect, Rect
+#include "mozilla/layers/LayersTypes.h"  // for BufferMode::BUFFER_NONE, etc
+#include "mozilla/mozalloc.h"           // for operator new
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsDebug.h"                    // for NS_ASSERTION, etc
+#include "nsISupportsImpl.h"            // for gfxContext::Release, etc
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsRect.h"                     // for nsIntRect
+#include "nsRegion.h"                   // for nsIntRegion, etc
+#include "nsTArray.h"                   // for nsAutoTArray
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #define PIXMAN_DONT_DEFINE_STDINT
-#include "pixman.h"
+#include "pixman.h"                     // for pixman_f_transform, etc
 
-#include "BasicLayersImpl.h"
-#include "BasicThebesLayer.h"
-#include "BasicContainerLayer.h"
-#include "CompositorChild.h"
-#include "mozilla/Preferences.h"
-#include "nsIWidget.h"
-
-#ifdef MOZ_WIDGET_ANDROID
-#include "AndroidBridge.h"
-#endif
+class nsIWidget;
 
 using namespace mozilla::dom;
 using namespace mozilla::gfx;

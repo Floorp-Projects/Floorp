@@ -6,22 +6,53 @@
 #ifndef MOZILLA_GFX_TEXTUREOGL_H
 #define MOZILLA_GFX_TEXTUREOGL_H
 
-#include "ImageLayerOGL.h"
-#include "GLContextTypes.h"
-#include "gfx2DGlue.h"
-#include "mozilla/layers/Effects.h"
-#include "gfxReusableSurfaceWrapper.h"
-#include "TiledLayerBuffer.h" // for TILEDLAYERBUFFER_TILE_SIZE
-
+#include <stddef.h>                     // for size_t
+#include <stdint.h>                     // for uint64_t
+#include "GLContext.h"                  // for GLContext, etc
+#include "GLContextTypes.h"             // for GLenum, GLuint
+#include "GLDefs.h"                     // for LOCAL_GL_CLAMP_TO_EDGE, etc
+#include "GLTextureImage.h"             // for TextureImage
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxASurface.h"                // for gfxASurface, etc
+#include "IPCMessageUtils.h"            // for gfxContentType
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/gfx/Point.h"          // for IntSize, IntPoint
+#include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
+#include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
+#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
+#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_HAVE_LOG
+#include "mozilla/layers/TextureHost.h"  // for DeprecatedTextureHost, etc
+#include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsDebug.h"                    // for NS_WARNING
+#include "nsISupportsImpl.h"            // for TextureImage::Release, etc
+#include "nsRect.h"                     // for nsIntRect
+#include "nsSize.h"                     // for nsIntSize
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "LayerManagerOGLProgram.h"     // for ShaderProgramType, etc
 #ifdef MOZ_WIDGET_GONK
 #include <ui/GraphicBuffer.h>
 #endif
 
+class gfxImageSurface;
+class gfxReusableSurfaceWrapper;
+class nsIntRegion;
+struct nsIntPoint;
+
 namespace mozilla {
+namespace gfx {
+class DataSourceSurface;
+class SurfaceStream;
+}
+
 namespace layers {
 
-class TextureImageDeprecatedTextureHostOGL;
+class Compositor;
 class CompositorOGL;
+class TextureImageDeprecatedTextureHostOGL;
 
 /*
  * TextureHost implementations for the OpenGL backend.

@@ -4,10 +4,28 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LayerTreeInvalidation.h"
-#include "Layers.h"
-#include "ImageLayers.h"
-#include "gfxUtils.h"
-#include "nsDataHashtable.h"
+#include <stdint.h>                     // for uint32_t
+#include "ImageContainer.h"             // for ImageContainer
+#include "ImageLayers.h"                // for ImageLayer, etc
+#include "Layers.h"                     // for Layer, ContainerLayer, etc
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxColor.h"                   // for gfxRGBA
+#include "gfxPattern.h"                 // for gfxPattern, etc
+#include "gfxPoint.h"                   // for gfxIntSize
+#include "gfxPoint3D.h"                 // for gfxPoint3D
+#include "gfxRect.h"                    // for gfxRect
+#include "gfxUtils.h"                   // for gfxUtils
+#include "mozilla/gfx/BaseSize.h"       // for BaseSize
+#include "mozilla/mozalloc.h"           // for operator new, etc
+#include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoPtr, etc
+#include "nsDataHashtable.h"            // for nsDataHashtable
+#include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsHashKeys.h"                 // for nsPtrHashKey
+#include "nsISupportsImpl.h"            // for Layer::AddRef, etc
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsRect.h"                     // for nsIntRect
+#include "nsTArray.h"                   // for nsAutoTArray, nsTArray_Impl
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
 namespace layers {

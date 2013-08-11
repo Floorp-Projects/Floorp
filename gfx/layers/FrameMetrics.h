@@ -6,11 +6,11 @@
 #ifndef GFX_FRAMEMETRICS_H
 #define GFX_FRAMEMETRICS_H
 
-#include "gfxPoint.h"
-#include "gfxTypes.h"
-#include "nsRect.h"
-#include "mozilla/gfx/Rect.h"
-#include "Units.h"
+#include <stdint.h>                     // for uint32_t, uint64_t
+#include "Units.h"                      // for CSSRect, CSSPixel, etc
+#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/gfx/Rect.h"           // for RoundedIn
+#include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 
 namespace mozilla {
 namespace layers {

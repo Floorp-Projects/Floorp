@@ -8,58 +8,54 @@
 #ifndef mozilla_layers_ShadowLayers_h
 #define mozilla_layers_ShadowLayers_h 1
 
-#include "gfxASurface.h"
-#include "GLDefs.h"
-
-#include "ImageLayers.h"
-#include "mozilla/layers/Compositor.h"
-#include "mozilla/ipc/SharedMemory.h"
-#include "mozilla/WidgetUtils.h"
-#include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/dom/ScreenOrientation.h"
+#include <stddef.h>                     // for size_t
+#include <stdint.h>                     // for uint64_t
+#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxPoint.h"                   // for gfxIntSize
+#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/WidgetUtils.h"        // for ScreenRotation
+#include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
+#include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 #include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/CompositorTypes.h"  // for OpenMode, etc
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsRegion.h"                   // for nsIntRegion
+#include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
 
-class gfxSharedImageSurface;
+struct nsIntPoint;
+struct nsIntRect;
 
 namespace mozilla {
-
-namespace gl {
-class GLContext;
-class TextureImage;
-}
-
 namespace layers {
 
-class CompositableClient;
-class Edit;
+class BasicTiledLayerBuffer;
+class CanvasClient;
+class CanvasLayerComposite;
+class CanvasSurface;
+class ColorLayerComposite;
+class CompositableChild;
+class ContainerLayerComposite;
+class ContentClient;
+class ContentClientRemote;
 class EditReply;
+class ImageClient;
+class ImageLayerComposite;
+class Layer;
 class OptionalThebesBuffer;
 class PLayerChild;
 class PLayerTransactionChild;
 class PLayerTransactionParent;
-class ShadowableLayer;
-class ThebesLayerComposite;
-class ContainerLayerComposite;
-class ImageLayerComposite;
-class ColorLayerComposite;
-class CanvasLayerComposite;
 class RefLayerComposite;
+class ShadowableLayer;
+class Shmem;
+class ShmemTextureClient;
 class SurfaceDescriptor;
+class TextureClient;
+class ThebesLayerComposite;
 class ThebesBuffer;
+class ThebesBufferData;
 class TiledLayerComposer;
 class Transaction;
-class SurfaceDescriptor;
-class CanvasSurface;
-class DeprecatedTextureClientShmem;
-class ShmemTextureClient;
-class ContentClientRemote;
-class CompositableChild;
-class ImageClient;
-class CanvasClient;
-class ContentClient;
-class TextureClient;
-
 
 /**
  * We want to share layer trees across thread contexts and address

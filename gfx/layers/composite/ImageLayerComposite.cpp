@@ -3,19 +3,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gfxSharedImageSurface.h"
-
-#include "ipc/AutoOpenSurface.h"
 #include "ImageLayerComposite.h"
-#include "ImageHost.h"
-#include "gfxImageSurface.h"
-#include "gfx2DGlue.h"
-#include "gfxUtils.h"
-
-#include "mozilla/layers/Compositor.h"
-#include "mozilla/layers/CompositorTypes.h" // for TextureInfo
-#include "mozilla/layers/Effects.h"
-#include "CompositableHost.h"
+#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
+#include "CompositableHost.h"           // for CompositableHost
+#include "Layers.h"                     // for WriteSnapshotToDumpFile, etc
+#include "gfx2DGlue.h"                  // for ToFilter, ToMatrix4x4
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxImageSurface.h"            // for gfxImageSurface
+#include "gfxPoint.h"                   // for gfxIntSize
+#include "gfxRect.h"                    // for gfxRect
+#include "gfxUtils.h"                   // for gfxUtils, etc
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/gfx/Point.h"          // for IntSize, Point
+#include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/Effects.h"     // for EffectChain
+#include "mozilla/layers/TextureHost.h"  // for DeprecatedTextureHost, etc
+#include "mozilla/mozalloc.h"           // for operator delete
+#include "nsAString.h"
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsRect.h"                     // for nsIntRect
+#include "nsString.h"                   // for nsAutoCString
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 using namespace mozilla::gfx;
 

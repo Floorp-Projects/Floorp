@@ -4,13 +4,29 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/ContentClient.h"
-#include "mozilla/gfx/2D.h"
-#include "BasicThebesLayer.h"
-#include "nsIWidget.h"
-#include "gfxUtils.h"
-#include "gfxPlatform.h"
+#include "BasicLayers.h"                // for BasicLayerManager
+#include "Layers.h"                     // for ThebesLayer, Layer, etc
+#include "gfxColor.h"                   // for gfxRGBA
+#include "gfxContext.h"                 // for gfxContext, etc
+#include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxPoint.h"                   // for gfxIntSize, gfxPoint
+#include "gfxTeeSurface.h"              // for gfxTeeSurface
+#include "gfxUtils.h"                   // for gfxUtils
+#include "ipc/ShadowLayers.h"           // for ShadowLayerForwarder
+#include "mozilla/Util.h"               // for ArrayLength
+#include "mozilla/gfx/2D.h"             // for DrawTarget, Factory
+#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/gfx/BaseSize.h"       // for BaseSize
+#include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/gfx/Types.h"
 #include "mozilla/layers/LayerManagerComposite.h"
-#include "gfxTeeSurface.h"
+#include "mozilla/layers/LayerTransaction.h"  // for ThebesBufferData
+#include "mozilla/layers/LayersTypes.h"
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
+#include "nsISupportsImpl.h"            // for gfxContext::Release, etc
+#include "nsIWidget.h"                  // for nsIWidget
+#include "prenv.h"                      // for PR_GetEnv
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
 #endif
