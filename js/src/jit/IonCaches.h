@@ -505,7 +505,6 @@ class GetPropertyIC : public RepatchIonCache
     PropertyName *name_;
     TypedOrValueRegister output_;
     bool allowGetters_ : 1;
-    bool hasArrayLengthStub_ : 1;
     bool hasTypedArrayLengthStub_ : 1;
     bool hasStrictArgumentsLengthStub_ : 1;
     bool hasNormalArgumentsLengthStub_ : 1;
@@ -521,7 +520,6 @@ class GetPropertyIC : public RepatchIonCache
         name_(name),
         output_(output),
         allowGetters_(allowGetters),
-        hasArrayLengthStub_(false),
         hasTypedArrayLengthStub_(false),
         hasStrictArgumentsLengthStub_(false),
         hasNormalArgumentsLengthStub_(false),
@@ -544,9 +542,6 @@ class GetPropertyIC : public RepatchIonCache
     }
     bool allowGetters() const {
         return allowGetters_ && !idempotent();
-    }
-    bool hasArrayLengthStub() const {
-        return hasArrayLengthStub_;
     }
     bool hasTypedArrayLengthStub() const {
         return hasTypedArrayLengthStub_;
