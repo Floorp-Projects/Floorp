@@ -1220,6 +1220,83 @@ GetPropertyIC::tryAttachTypedArrayLength(JSContext *cx, IonScript *ion, HandleOb
     return linkAndAttachStub(cx, masm, attacher, ion, "typed array length");
 }
 
+static bool
+EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, PropertyName *name,
+                 RegisterSet liveRegs, Register object, TypedOrValueRegister output,
+                 void *returnAddr)
+{
+    JS_ASSERT(output.hasValue());
+    // saveLive()
+    masm.PushRegsInMask(liveRegs);
+
+    DebugOnly<uint32_t> initialStack = masm.framePushed();
+
+    // Remaining registers should be free, but we need to use |object| still
+    // so leave it alone.
+    RegisterSet regSet(RegisterSet::All());
+    regSet.take(AnyRegister(object));
+
+    // Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+    //            MutableHandleValue vp)
+    Register argJSContextReg = regSet.takeGeneral();
+    Register argProxyReg     = regSet.takeGeneral();
+    Register argIdReg        = regSet.takeGeneral();
+    Register argVpReg        = regSet.takeGeneral();
+
+    Register scratch         = regSet.takeGeneral();
+
+    // Push args on stack first so we can take pointers to make handles.
+    masm.Push(UndefinedValue());
+    masm.movePtr(StackPointer, argVpReg);
+
+    RootedId propId(cx, AtomToId(name));
+    masm.Push(propId, scratch);
+    masm.movePtr(StackPointer, argIdReg);
+
+    // Pushing object and receiver.  Both are the same, so Handle to one is equivalent to
+    // handle to other.
+    masm.Push(object);
+    masm.Push(object);
+    masm.movePtr(StackPointer, argProxyReg);
+
+    masm.loadJSContext(argJSContextReg);
+
+    if (!masm.buildOOLFakeExitFrame(returnAddr))
+        return false;
+    masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY_GET);
+
+    // Make the call.
+    masm.setupUnalignedABICall(5, scratch);
+    masm.passABIArg(argJSContextReg);
+    masm.passABIArg(argProxyReg);
+    masm.passABIArg(argProxyReg);
+    masm.passABIArg(argIdReg);
+    masm.passABIArg(argVpReg);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Proxy::get));
+
+    // Test for failure.
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+    // Load the outparam vp[0] into output register(s).
+    masm.loadValue(
+        Address(StackPointer, IonOOLProxyGetExitFrameLayout::offsetOfResult()),
+        JSReturnOperand);
+
+    masm.storeCallResultValue(output);
+
+    // The next instruction is removing the footer of the exit frame, so there
+    // is no need for leaveFakeExitFrame.
+
+    // Move the StackPointer back to its original location, unwinding the exit frame.
+    masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
+    JS_ASSERT(masm.framePushed() == initialStack);
+
+    // restoreLive()
+    masm.PopRegsInMask(liveRegs);
+
+    return true;
+}
+
 bool
 GetPropertyIC::tryAttachDOMProxyShadowed(JSContext *cx, IonScript *ion,
                                          HandleObject obj, void *returnAddr,
@@ -1250,73 +1327,8 @@ GetPropertyIC::tryAttachDOMProxyShadowed(JSContext *cx, IonScript *ion,
     GenerateDOMProxyChecks(cx, masm, obj, name(), object(), &failures,
                            /*skipExpandoCheck=*/true);
 
-    // saveLive()
-    masm.PushRegsInMask(liveRegs_);
-
-    DebugOnly<uint32_t> initialStack = masm.framePushed();
-
-    // Remaining registers should be free, but we need to use |object| still
-    // so leave it alone.
-    RegisterSet regSet(RegisterSet::All());
-    regSet.take(AnyRegister(object()));
-
-    // Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
-    //            MutableHandleValue vp)
-    Register argJSContextReg = regSet.takeGeneral();
-    Register argProxyReg     = regSet.takeGeneral();
-    Register argIdReg        = regSet.takeGeneral();
-    Register argVpReg        = regSet.takeGeneral();
-
-    Register scratch         = regSet.takeGeneral();
-
-    // Push args on stack first so we can take pointers to make handles.
-    masm.Push(UndefinedValue());
-    masm.movePtr(StackPointer, argVpReg);
-
-    RootedId propId(cx, AtomToId(name()));
-    masm.Push(propId, scratch);
-    masm.movePtr(StackPointer, argIdReg);
-
-    // Pushing object and receiver.  Both are same, so Handle to one is equivalent to
-    // handle to other.
-    masm.Push(object());
-    masm.Push(object());
-    masm.movePtr(StackPointer, argProxyReg);
-
-    masm.loadJSContext(argJSContextReg);
-
-    if (!masm.buildOOLFakeExitFrame(returnAddr))
+    if (!EmitCallProxyGet(cx, masm, name(), liveRegs_, object(), output(), returnAddr))
         return false;
-    masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY_GET);
-
-    // Make the call.
-    masm.setupUnalignedABICall(5, scratch);
-    masm.passABIArg(argJSContextReg);
-    masm.passABIArg(argProxyReg);
-    masm.passABIArg(argProxyReg);
-    masm.passABIArg(argIdReg);
-    masm.passABIArg(argVpReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Proxy::get));
-
-    // Test for failure.
-    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
-
-    // Load the outparam vp[0] into output register(s).
-    masm.loadValue(
-        Address(StackPointer, IonOOLProxyGetExitFrameLayout::offsetOfResult()),
-        JSReturnOperand);
-
-    masm.storeCallResultValue(output());
-
-    // The next instruction is removing the footer of the exit frame, so there
-    // is no need for leaveFakeExitFrame.
-
-    // Move the StackPointer back to its original location, unwinding the exit frame.
-    masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
-    JS_ASSERT(masm.framePushed() == initialStack);
-
-    // restoreLive()
-    masm.PopRegsInMask(liveRegs_);
 
     // Success.
     attacher.jumpRejoin(masm);
