@@ -4,13 +4,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TiledContentHost.h"
-#include "mozilla/layers/Effects.h"
-#include "nsPrintfCString.h"
-#include "ThebesLayerComposite.h"
+#include "ThebesLayerComposite.h"       // for ThebesLayerComposite
+#include "mozilla/gfx/BaseSize.h"       // for BaseSize
+#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
+#include "nsAString.h"
+#include "nsDebug.h"                    // for NS_WARNING
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsPrintfCString.h"            // for nsPrintfCString
+#include "nsRect.h"                     // for nsIntRect
+#include "nsSize.h"                     // for nsIntSize
+
+class gfxReusableSurfaceWrapper;
 
 namespace mozilla {
 using namespace gfx;
 namespace layers {
+
+class Layer;
 
 void
 TiledLayerBufferComposite::Upload(const BasicTiledLayerBuffer* aMainMemoryTiledBuffer,

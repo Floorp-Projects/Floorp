@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
-#include "base/message_loop.h"
 #include "TaskThrottler.h"
 
 namespace mozilla {

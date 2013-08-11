@@ -6,17 +6,47 @@
 #ifndef GFX_TILEDCONTENTHOST_H
 #define GFX_TILEDCONTENTHOST_H
 
-#include "ContentHost.h"
-#include "ClientTiledThebesLayer.h" // for BasicTiledLayerBuffer
-#include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/layers/TextureHost.h"
+#include <stdint.h>                     // for uint16_t
+#include <stdio.h>                      // for FILE
+#include <algorithm>                    // for swap
+#include "ContentHost.h"                // for ContentHost
+#include "TiledLayerBuffer.h"           // for TiledLayerBuffer, etc
+#include "CompositableHost.h"
+#include "gfxPoint.h"                   // for gfxSize
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/gfx/Point.h"          // for Point
+#include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/gfx/Types.h"          // for Filter
+#include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
+#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
+#include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
+#include "mozilla/layers/TextureHost.h"  // for DeprecatedTextureHost
+#include "mozilla/layers/TiledContentClient.h"
+#include "mozilla/mozalloc.h"           // for operator delete
+#include "nsRegion.h"                   // for nsIntRegion
+#include "nscore.h"                     // for nsACString
+
+class gfxReusableSurfaceWrapper;
+struct nsIntPoint;
+struct nsIntRect;
+struct nsIntSize;
 
 namespace mozilla {
+namespace gfx {
+class Matrix4x4;
+}
+
 namespace layers {
 
-class ThebesBuffer;
-class OptionalThebesBuffer;
-struct TexturedEffect;
+class Compositor;
+class ISurfaceAllocator;
+class Layer;
+class ThebesBufferData;
+class TiledThebesLayerComposite;
+struct EffectChain;
+ 
 
 class TiledTexture {
 public:
@@ -106,8 +136,6 @@ private:
   const BasicTiledLayerBuffer* mMainMemoryTiledBuffer;
   gfxSize mFrameResolution;
 };
-
-class TiledThebesLayerComposite;
 
 /**
  * ContentHost for tiled Thebes layers. Since tiled layers are special snow

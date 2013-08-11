@@ -6,13 +6,35 @@
 #ifndef MOZILLA_GFX_IMAGEHOST_H
 #define MOZILLA_GFX_IMAGEHOST_H
 
-#include "CompositableHost.h"
-#include "mozilla/layers/LayerManagerComposite.h"
+#include <stdio.h>                      // for FILE, NULL
+#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
+#include "CompositableHost.h"           // for CompositableHost
+#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/gfx/Point.h"          // for Point
+#include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/gfx/Types.h"          // for Filter
+#include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
+#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
+#include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
+#include "mozilla/layers/TextureHost.h"  // for DeprecatedTextureHost, etc
+#include "mozilla/mozalloc.h"           // for operator delete
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsRect.h"                     // for nsIntRect
+#include "nscore.h"                     // for nsACString
+ 
+class gfxImageSurface;
+class nsIntRegion;
 
 namespace mozilla {
+namespace gfx {
+class Matrix4x4;
+}
 namespace layers {
 
-class TextureHost;
+class Compositor;
+class ISurfaceAllocator;
+struct EffectChain;
 
 /**
  * ImageHost. Works with ImageClientSingle and ImageClientBuffered
