@@ -298,13 +298,7 @@ public:
                       ContentType aContentType,
                       GLContext* aContext,
                       TextureImage::Flags aFlags = TextureImage::NoFlags,
-                      TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown)
-        : TextureImage(aSize, aWrapMode, aContentType, aFlags, aImageFormat)
-        , mTexture(aTexture)
-        , mTextureState(Created)
-        , mGLContext(aContext)
-        , mUpdateOffset(0, 0)
-    {}
+                      TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown);
 
     virtual void BindTexture(GLenum aTextureUnit);
 
