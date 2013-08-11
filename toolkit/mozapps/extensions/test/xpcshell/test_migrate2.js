@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Checks that we migrate data from future versions of the database
+// Checks that we migrate data from SQLITE databases
 // Note that since the database doesn't contain the foreignInstall field we
 // should just assume that no add-ons  in the user profile were foreignInstalls
 
@@ -177,7 +177,7 @@ function run_test() {
   stmt.finalize();
 
   db.schemaVersion = 10000;
-  Services.prefs.setIntPref("extensions.databaseSchema", 100);
+  Services.prefs.setIntPref("extensions.databaseSchema", 14);
   db.close();
 
   startupManager();
@@ -224,7 +224,7 @@ function run_test() {
     do_check_true(a4.isActive);
     do_check_true(a4.strictCompatibility);
     do_check_false(a4.foreignInstall);
-    // addon5 was enabled in the database but needed a compatibiltiy update
+    // addon5 was enabled in the database but needed a compatibility update
     do_check_neq(a5, null);
     do_check_false(a5.userDisabled);
     do_check_false(a5.appDisabled);
@@ -254,6 +254,6 @@ function run_test() {
     do_check_false(a8.strictCompatibility);
     do_check_true(a8.foreignInstall);
 
-    do_test_finished();
+    do_execute_soon(do_test_finished);
   });
 }

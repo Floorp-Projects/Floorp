@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Checks that we fail to migrate but still start up ok when there is a database
+// Checks that we fail to migrate but still start up ok when there is a SQLITE database
 // with no useful data in it.
 
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
@@ -134,6 +134,6 @@ function run_test() {
     do_check_false(d.appDisabled);
     do_check_false(d.isActive);
 
-    do_test_finished();
+    do_execute_soon(do_test_finished);
   });
 }

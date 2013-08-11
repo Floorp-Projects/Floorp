@@ -5,8 +5,6 @@
 // This verifies that deleting the database from the profile doesn't break
 // anything
 
-const EXTENSIONS_DB = "extensions.sqlite";
-
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
@@ -43,32 +41,31 @@ function end_test() {
 }
 
 function run_test_1() {
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
     shutdownManager();
 
-    let db = gProfD.clone();
-    db.append(EXTENSIONS_DB);
-    db.remove(true);
+    gExtensionsJSON.remove(true);
 
     do_execute_soon(check_test_1);
-  });
+  }));
 }
 
 function check_test_1() {
   startupManager(false);
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
-    let db = gProfD.clone();
-    db.append(EXTENSIONS_DB);
-    do_check_true(db.exists());
-    do_check_true(db.fileSize > 0);
+    // due to delayed write, the file may not exist until
+    // after shutdown
+    shutdownManager();
+    do_check_true(gExtensionsJSON.exists());
+    do_check_true(gExtensionsJSON.fileSize > 0);
 
     end_test();
-  });
+  }));
 }
