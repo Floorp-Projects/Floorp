@@ -2340,15 +2340,14 @@ GetElementIC::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
 
     RootedObject holder(cx);
     RootedShape shape(cx);
-    if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
+
+    GetPropertyIC::NativeGetPropCacheability canCache =
+        CanAttachNativeGetProp(cx, *this, obj, name, &holder, &shape);
+
+    if (canCache == GetPropertyIC::CanAttachError)
         return false;
 
-    RootedScript script(cx);
-    jsbytecode *pc;
-    getScriptedLocation(&script, &pc);
-
-    if (!IsCacheableGetPropReadSlot(obj, holder, shape) &&
-        !IsCacheableNoProperty(obj, holder, shape, pc, output())) {
+    if (canCache != GetPropertyIC::CanAttachReadSlot) {
         IonSpew(IonSpew_InlineCaches, "GETELEM uncacheable property");
         return true;
     }
