@@ -8,6 +8,28 @@
 </head>
 <body>
 Login Manager test: form with JS submit action
+<script>
+SimpleTest.waitForExplicitFinish();
+var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
+                         .getService(SpecialPowers.Ci.nsILoginManager);
+var jslogin = SpecialPowers.Cc["@mozilla.org/login-manager/loginInfo;1"]
+                           .createInstance(SpecialPowers.Ci.nsILoginInfo);
+jslogin.init("http://mochi.test:8888", "javascript:", null,
+              "jsuser", "jspass123", "uname", "pword");
+pwmgr.addLogin(jslogin);
+
+/** Test for Login Manager: JS action URL **/
+
+function startTest() {
+    checkForm(1, "jsuser", "jspass123");
+
+    pwmgr.removeLogin(jslogin);
+    SimpleTest.finish();
+}
+
+window.onload = startTest;
+</script>
+
 <p id="display"></p>
 
 <div id="content" style="display: none">
@@ -23,51 +45,7 @@ Login Manager test: form with JS submit action
 
 </div>
 
-<pre id="test">
-<script class="testbody" type="text/javascript">
-
-/** Test for Login Manager: JS action URL **/
-
-function startTest() {
-
-    checkForm(1, "jsuser", "jspass123");
-
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    pwmgr.removeLogin(jslogin);
-    SimpleTest.finish();
-}
-
-
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-// Get the pwmgr service
-var Cc_pwmgr = Components.classes["@mozilla.org/login-manager;1"];
-ok(Cc_pwmgr != null, "Access Cc[@mozilla.org/login-manager;1]");
-
-var Ci_pwmgr = Components.interfaces.nsILoginManager;
-ok(Ci_pwmgr != null, "Access Ci.nsILoginManager");
-
-var pwmgr = Cc_pwmgr.getService(Ci_pwmgr);
-ok(pwmgr != null, "pwmgr getService()");
-
-var jslogin = Components.classes["@mozilla.org/login-manager/loginInfo;1"].
-              createInstance(Components.interfaces.nsILoginInfo);
-ok(jslogin != null, "create a login");
-
-jslogin.init("http://mochi.test:8888", "javascript:", null,
-              "jsuser", "jspass123", "uname", "pword");
-
-try {
-    pwmgr.addLogin(jslogin);
-} catch (e) {
-    ok(false, "addLogin threw: " + e);
-}
-
-window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
-</script>
-</pre>
+<pre id="test"></pre>
 </body>
 </html>
 

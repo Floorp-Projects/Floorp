@@ -73,9 +73,13 @@ function DeferredSave(aPath, aDataProvider, aDelay) {
   // Some counters for telemetry
   // The total number of times the file was written
   this.totalSaves = 0;
+
   // The number of times the data became dirty while
   // another save was in progress
   this.overlappedSaves = 0;
+
+  // Error returned by the most recent write (if any)
+  this._lastError = null;
 
   if (aDelay && (aDelay > 0))
     this._delay = aDelay;
@@ -88,7 +92,7 @@ DeferredSave.prototype = {
     return this._pending || this.writeInProgress;
   },
 
-  get error() {
+  get lastError() {
     return this._lastError;
   },
 

@@ -8,6 +8,17 @@
 </head>
 <body>
 Login Manager test: simple form with autocomplete off and notifying observers & normal form
+<script>
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const Cu = Components.utils;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+commonInit();
+SimpleTest.waitForExplicitFinish();
+</script>
+
 <p id="display"></p>
 
 <div id="content" style="display: block">
@@ -20,7 +31,7 @@ Login Manager test: simple form with autocomplete off and notifying observers & 
     <button type="submit">Submit</button>
     <button type="reset"> Reset </button>
   </form>
-  
+
   <form id="form2" action="formtest.js">
     <p>This is form 2.</p>
     <input  type="text"       name="uname">
@@ -36,15 +47,6 @@ Login Manager test: simple form with autocomplete off and notifying observers & 
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: simple form with autocomplete off and notifying observers & normal form **/
-
-commonInit();
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
 var TestObserver = {
   receivedNotification1 : false,
   receivedNotification2 : false,
@@ -99,8 +101,6 @@ function startTest(){
 }
 
 window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>
