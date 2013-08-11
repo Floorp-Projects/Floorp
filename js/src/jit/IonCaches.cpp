@@ -1111,18 +1111,20 @@ GetPropertyIC::canAttachNative(JSContext *cx, HandleObject obj, HandlePropertyNa
         }
         return CanAttachReadSlot;
     }
-    else if (allowGetters() && (IsCacheableGetPropCallNative(obj, holder, shape) ||
-             IsCacheableGetPropCallPropertyOp(obj, holder, shape)))
+
+    if (obj->is<ArrayObject>() && cx->names().length == name) {
+        // The array length property is non-configurable, which means both that
+        // checking the class of the object and the name of the property is enough
+        // and that we don't need to worry about monitoring, since we know the
+        // return type statically.
+        return CanAttachArrayLength;
+    }
+
+    if (allowGetters() && (IsCacheableGetPropCallNative(obj, holder, shape) ||
+               IsCacheableGetPropCallPropertyOp(obj, holder, shape)))
     {
         // Don't enable getter call if cache is idempotent, since
         // they can be effectful. This is handled by allowGetters()
-
-        // Optimize Array.length if possible
-        if (obj->is<ArrayObject>() && cx->names().length == name)
-        {
-            return CanAttachArrayLength;
-        }
-
         return CanAttachCallGetter;
     }
 
