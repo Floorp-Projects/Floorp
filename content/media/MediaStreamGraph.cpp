@@ -22,7 +22,6 @@
 #include "AudioChannelCommon.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
-#include "AudioNodeExternalInputStream.h"
 #include <algorithm>
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
@@ -521,7 +520,7 @@ MediaStreamGraphImpl::UpdateStreamOrder()
   mozilla::LinkedList<MediaStream> stack;
   for (uint32_t i = 0; i < mOldStreams.Length(); ++i) {
     nsRefPtr<MediaStream>& s = mOldStreams[i];
-    if (s->IsIntrinsicallyConsumed()) {
+    if (!s->mAudioOutputs.IsEmpty() || !s->mVideoOutputs.IsEmpty()) {
       MarkConsumed(s);
     }
     if (!s->mHasBeenOrdered) {
@@ -1232,9 +1231,6 @@ MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate)
   stream->mMainThreadCurrentTime = aUpdate->mNextMainThreadCurrentTime;
   stream->mMainThreadFinished = aUpdate->mNextMainThreadFinished;
 
-  if (stream->mWrapper) {
-    stream->mWrapper->NotifyStreamStateChanged();
-  }
   for (int32_t i = stream->mMainThreadListeners.Length() - 1; i >= 0; --i) {
     stream->mMainThreadListeners[i]->NotifyMainThreadStateChanged();
   }
@@ -2313,21 +2309,6 @@ ProcessedMediaStream*
 MediaStreamGraph::CreateTrackUnionStream(DOMMediaStream* aWrapper)
 {
   TrackUnionStream* stream = new TrackUnionStream(aWrapper);
-  NS_ADDREF(stream);
-  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
-  stream->SetGraphImpl(graph);
-  graph->AppendMessage(new CreateMessage(stream));
-  return stream;
-}
-
-AudioNodeExternalInputStream*
-MediaStreamGraph::CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aSampleRate) {
-    aSampleRate = aEngine->NodeMainThread()->Context()->SampleRate();
-  }
-  AudioNodeExternalInputStream* stream = new AudioNodeExternalInputStream(aEngine, aSampleRate);
   NS_ADDREF(stream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   stream->SetGraphImpl(graph);
