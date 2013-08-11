@@ -13,6 +13,9 @@ class nsCookieService;
 class nsIIOService;
 
 namespace mozilla {
+namespace dom {
+  class PBrowserParent;
+}
 namespace net {
 
 class CookieServiceParent : public PCookieServiceParent
@@ -22,18 +25,13 @@ public:
   virtual ~CookieServiceParent();
 
 protected:
-  MOZ_WARN_UNUSED_RESULT bool
-  GetAppInfoFromParams(const IPC::SerializedLoadContext &aLoadContext,
-                       uint32_t& aAppId,
-                       bool& aIsInBrowserElement,
-                       bool& aIsPrivate);
-
-   virtual bool RecvGetCookieString(const URIParams& aHost,
+  virtual bool RecvGetCookieString(const URIParams& aHost,
                                    const bool& aIsForeign,
                                    const bool& aFromHttp,
                                    const IPC::SerializedLoadContext&
                                          loadContext,
-                                   nsCString* aResult) MOZ_OVERRIDE;
+                                   mozilla::dom::PBrowserParent* aBrowser,
+                                   nsCString* aResult);
 
   virtual bool RecvSetCookieString(const URIParams& aHost,
                                    const bool& aIsForeign,
@@ -41,7 +39,8 @@ protected:
                                    const nsCString& aServerTime,
                                    const bool& aFromHttp,
                                    const IPC::SerializedLoadContext&
-                                         loadContext) MOZ_OVERRIDE;
+                                         loadContext,
+                                   mozilla::dom::PBrowserParent* aBrowser);
 
   nsRefPtr<nsCookieService> mCookieService;
 };

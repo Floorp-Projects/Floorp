@@ -36,24 +36,17 @@ public:
                       uint32_t* aAppId,
                       bool* aInBrowserElement);
 
-  MOZ_WARN_UNUSED_RESULT
-  static const char *
-  GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
-                      PContentParent* aBrowser,
-                      uint32_t* aAppId,
-                      bool* aInBrowserElement);
-
   /*
    * Creates LoadContext for parent-side of an e10s channel.
    *
-   * PContentParent corresponds to the process that is requesting the load.
+   * Values from PBrowserParent are more secure, and override those set in
+   * SerializedLoadContext.
    *
    * Returns null if successful, or an error string if failed.
    */
   MOZ_WARN_UNUSED_RESULT
   static const char*
   CreateChannelLoadContext(PBrowserParent* aBrowser,
-                           PContentParent* aContent,
                            const SerializedLoadContext& aSerialized,
                            nsCOMPtr<nsILoadContext> &aResult);
 
@@ -86,12 +79,14 @@ protected:
   virtual PWebSocketParent* AllocPWebSocketParent(PBrowserParent* browser,
                                                   const SerializedLoadContext& aSerialized);
   virtual bool DeallocPWebSocketParent(PWebSocketParent*);
-  virtual PTCPSocketParent* AllocPTCPSocketParent();
+virtual PTCPSocketParent* AllocPTCPSocketParent();
 
-  virtual PRemoteOpenFileParent* AllocPRemoteOpenFileParent(const URIParams& aFileURI)
+  virtual PRemoteOpenFileParent* AllocPRemoteOpenFileParent(const URIParams& aFileURI,
+                                                            PBrowserParent* aBrowser)
                                                             MOZ_OVERRIDE;
   virtual bool RecvPRemoteOpenFileConstructor(PRemoteOpenFileParent* aActor,
-                                              const URIParams& aFileURI)
+                                              const URIParams& aFileURI,
+                                              PBrowserParent* aBrowser)
                                               MOZ_OVERRIDE;
   virtual bool DeallocPRemoteOpenFileParent(PRemoteOpenFileParent* aActor)
                                             MOZ_OVERRIDE;

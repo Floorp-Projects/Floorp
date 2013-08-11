@@ -4,11 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CookieServiceChild.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsITabChild.h"
 #include "nsNetUtil.h"
 
 using namespace mozilla::ipc;
@@ -116,10 +118,22 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
   URIParams uriParams;
   SerializeURI(aHostURI, uriParams);
 
+  nsCOMPtr<nsITabChild> iTabChild;
+  mozilla::dom::TabChild* tabChild = nullptr;
+  if (aChannel) {
+    NS_QueryNotificationCallbacks(aChannel, iTabChild);
+    if (iTabChild) {
+      tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
+    }
+    if (MissingRequiredTabChild(tabChild, "cookie")) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+  }
+
   // Synchronously call the parent.
   nsAutoCString result;
   SendGetCookieString(uriParams, !!isForeign, aFromHttp,
-                      IPC::SerializedLoadContext(aChannel), &result);
+                      IPC::SerializedLoadContext(aChannel), tabChild, &result);
   if (!result.IsEmpty())
     *aCookieString = ToNewCString(result);
 
@@ -149,9 +163,21 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   URIParams uriParams;
   SerializeURI(aHostURI, uriParams);
 
+  nsCOMPtr<nsITabChild> iTabChild;
+  mozilla::dom::TabChild* tabChild = nullptr;
+  if (aChannel) {
+    NS_QueryNotificationCallbacks(aChannel, iTabChild);
+    if (iTabChild) {
+      tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
+    }
+    if (MissingRequiredTabChild(tabChild, "cookie")) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+  }
+
   // Synchronously call the parent.
   SendSetCookieString(uriParams, !!isForeign, cookieString, serverTime,
-                      aFromHttp, IPC::SerializedLoadContext(aChannel));
+                      aFromHttp, IPC::SerializedLoadContext(aChannel), tabChild);
   return NS_OK;
 }
 
