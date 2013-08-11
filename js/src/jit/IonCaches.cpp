@@ -1133,8 +1133,7 @@ GetPropertyIC::canAttachNative(JSContext *cx, HandleObject obj, HandlePropertyNa
 
 bool
 GetPropertyIC::tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
-                               HandlePropertyName name, const SafepointIndex *safepointIndex,
-                               void *returnAddr, bool *emitted)
+                               HandlePropertyName name, void *returnAddr, bool *emitted)
 {
     JS_ASSERT(canAttachStub());
     JS_ASSERT(!*emitted);
@@ -1332,7 +1331,6 @@ GetPropertyIC::tryAttachDOMProxyShadowed(JSContext *cx, IonScript *ion,
 bool
 GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObject obj,
                                            HandlePropertyName name, bool resetNeeded,
-                                           const SafepointIndex *safepointIndex,
                                            void *returnAddr, bool *emitted)
 {
     JS_ASSERT(canAttachStub());
@@ -1418,8 +1416,8 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, Handle
 
 bool
 GetPropertyIC::tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
-                              HandlePropertyName name, const SafepointIndex *safepointIndex,
-                              void *returnAddr, bool *emitted)
+                              HandlePropertyName name, void *returnAddr,
+                              bool *emitted)
 {
     JS_ASSERT(canAttachStub());
     JS_ASSERT(!*emitted);
@@ -1439,7 +1437,7 @@ GetPropertyIC::tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
             return tryAttachDOMProxyShadowed(cx, ion, obj, returnAddr, emitted);
 
         return tryAttachDOMProxyUnshadowed(cx, ion, obj, name, shadows == DoesntShadowUnique,
-                                           safepointIndex, returnAddr, emitted);
+                                           returnAddr, emitted);
     }
 
     return true;
@@ -1519,8 +1517,7 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext *cx, IonScript *ion, HandleObj
 
 bool
 GetPropertyIC::tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,
-                             HandlePropertyName name, const SafepointIndex *safepointIndex,
-                             void *returnAddr, bool *emitted)
+                             HandlePropertyName name, void *returnAddr, bool *emitted)
 {
     JS_ASSERT(!*emitted);
 
@@ -1530,23 +1527,14 @@ GetPropertyIC::tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,
     if (!*emitted && !tryAttachArgumentsLength(cx, ion, obj, name, emitted))
         return false;
 
-    if (!*emitted && !tryAttachProxy(cx, ion, obj, name,
-                                     safepointIndex, returnAddr,
-                                     emitted))
-    {
+    if (!*emitted && !tryAttachProxy(cx, ion, obj, name, returnAddr, emitted))
         return false;
-    }
 
-    if (!*emitted && !tryAttachNative(cx, ion, obj, name, safepointIndex,
-                                      returnAddr, emitted))
-    {
+    if (!*emitted && !tryAttachNative(cx, ion, obj, name, returnAddr, emitted))
         return false;
-    }
 
-    if (!*emitted && !tryAttachTypedArrayLength(cx, ion, obj,
-                                                name, emitted)) {
-            return false;
-    }
+    if (!*emitted && !tryAttachTypedArrayLength(cx, ion, obj, name, emitted))
+        return false;
 
     return true;
 }
@@ -1555,9 +1543,8 @@ GetPropertyIC::tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,
 GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
                       HandleObject obj, MutableHandleValue vp)
 {
-    const SafepointIndex *safepointIndex;
     void *returnAddr;
-    RootedScript topScript(cx, GetTopIonJSScript(cx, &safepointIndex, &returnAddr));
+    RootedScript topScript(cx, GetTopIonJSScript(cx, &returnAddr));
     IonScript *ion = topScript->ionScript();
 
     GetPropertyIC &cache = ion->getCache(cacheIndex).toGetProperty();
@@ -1576,7 +1563,7 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
     // limit. Once we can make calls from within generated stubs, a new call
     // stub will be generated instead and the previous stubs unlinked.
     bool emitted = false;
-    if (!cache.tryAttachStub(cx, ion, obj, name, safepointIndex, returnAddr, &emitted))
+    if (!cache.tryAttachStub(cx, ion, obj, name, returnAddr, &emitted))
         return false;
 
     if (cache.idempotent() && !emitted) {
@@ -2192,8 +2179,7 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     AutoFlushCache afc ("SetPropertyCache");
 
     void *returnAddr;
-    const SafepointIndex *safepointIndex;
-    RootedScript script(cx, GetTopIonJSScript(cx, &safepointIndex, &returnAddr));
+    RootedScript script(cx, GetTopIonJSScript(cx, &returnAddr));
     IonScript *ion = script->ionScript();
     SetPropertyIC &cache = ion->getCache(cacheIndex).toSetProperty();
     RootedPropertyName name(cx, cache.name());
@@ -3179,7 +3165,7 @@ IsCacheableNameReadSlot(JSContext *cx, HandleObject scopeChain, HandleObject obj
 
 bool
 NameIC::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                         HandleShape shape, const SafepointIndex *safepointIndex, void *returnAddr)
+                         HandleShape shape, void *returnAddr)
 {
     MacroAssembler masm(cx);
 
@@ -3217,9 +3203,8 @@ NameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
 {
     AutoFlushCache afc ("GetNameCache");
 
-    const SafepointIndex *safepointIndex;
     void *returnAddr;
-    IonScript *ion = GetTopIonJSScript(cx, &safepointIndex, &returnAddr)->ionScript();
+    IonScript *ion = GetTopIonJSScript(cx, &returnAddr)->ionScript();
 
     NameIC &cache = ion->getCache(cacheIndex).toName();
     RootedPropertyName name(cx, cache.name());
@@ -3239,7 +3224,7 @@ NameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
             if (!cache.attachReadSlot(cx, ion, scopeChain, obj, shape))
                 return false;
         } else if (IsCacheableNameCallGetter(scopeChain, obj, holder, shape)) {
-            if (!cache.attachCallGetter(cx, ion, obj, holder, shape, safepointIndex, returnAddr))
+            if (!cache.attachCallGetter(cx, ion, obj, holder, shape, returnAddr))
                 return false;
         }
     }
