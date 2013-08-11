@@ -1449,6 +1449,7 @@ GetPropertyIC::tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
     if (!output().hasValue())
         return true;
 
+    // Skim off DOM proxies.
     if (IsCacheableDOMProxy(obj)) {
         RootedId id(cx, NameToId(name));
         DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
@@ -1461,7 +1462,63 @@ GetPropertyIC::tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
                                            returnAddr, emitted);
     }
 
-    return true;
+    return tryAttachGenericProxy(cx, ion, obj, name, returnAddr, emitted);
+}
+
+bool
+GetPropertyIC::tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject obj,
+                                     HandlePropertyName name, void *returnAddr,
+                                     bool *emitted)
+{
+    JS_ASSERT(canAttachStub());
+    JS_ASSERT(!*emitted);
+    JS_ASSERT(obj->is<ProxyObject>());
+
+    if (hasGenericProxyStub())
+        return true;
+
+    *emitted = true;
+
+    Label failures;
+    Label classPass;
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+
+    Register scratchReg = output().valueReg().scratchReg();
+
+    masm.setFramePushed(ion->frameSize());
+
+    // The branching around here is a little kludgy. It seems mostly unavoidable.
+
+    // Ensure that the incoming object has one of the magic class pointers.
+    masm.branchTestObjClass(Assembler::Equal, object(), scratchReg,
+                            ObjectProxyClassPtr, &classPass);
+    masm.branchTestObjClass(Assembler::Equal, object(), scratchReg,
+                            FunctionProxyClassPtr, &classPass);
+    masm.branchTestObjClass(Assembler::NotEqual, object(), scratchReg,
+                            OuterWindowProxyClassPtr, &failures);
+
+    masm.bind(&classPass);
+    // Ensure that the incoming object is not a DOM proxy, so that we can get to
+    // the specialized stubs
+    Address handlerAddr(object(), ProxyObject::offsetOfHandler());
+    masm.loadPrivate(handlerAddr, scratchReg);
+    Address familyAddr(scratchReg, BaseProxyHandler::offsetOfFamily());
+    masm.branchPtr(Assembler::Equal, familyAddr, ImmWord(GetDOMProxyHandlerFamily()),
+                   &failures);
+
+    if (!EmitCallProxyGet(cx, masm, name, liveRegs_, object(), output(), returnAddr))
+        return false;
+
+    attacher.jumpRejoin(masm);
+
+    masm.bind(&failures);
+    attacher.jumpNextStub(masm);
+
+    JS_ASSERT(!hasGenericProxyStub_);
+    hasGenericProxyStub_ = true;
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "Generic Proxy get");
 }
 
 bool
@@ -1646,6 +1703,7 @@ GetPropertyIC::reset()
     hasTypedArrayLengthStub_ = false;
     hasStrictArgumentsLengthStub_ = false;
     hasNormalArgumentsLengthStub_ = false;
+    hasGenericProxyStub_ = false;
 }
 
 bool
