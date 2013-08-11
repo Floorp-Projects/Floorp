@@ -976,6 +976,16 @@ class GetPropertyParIC : public ParallelIonCache
         return hasTypedArrayLengthStub_;
     }
 
+    // CanAttachNativeGetProp Helpers
+    typedef LockedJSContext & Context;
+    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
+                                 MutableHandleObject holder, MutableHandleShape shape) {
+        return LookupPropertyPure(obj, NameToId(name), holder.address(), shape.address());
+    }
+    bool lookupNeedsIdempotentChain() const { return true; }
+    bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
+    bool allowGetters() const { return false; }
+
     static bool canAttachReadSlot(LockedJSContext &cx, IonCache &cache,
                                   TypedOrValueRegister output, JSObject *obj,
                                   PropertyName *name, MutableHandleObject holder,
