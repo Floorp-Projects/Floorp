@@ -4,10 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LayerSorter.h"
-#include "DirectedGraph.h"
+#include <math.h>                       // for fabs
+#include <stdint.h>                     // for uint32_t
+#include <stdio.h>                      // for fprintf, stderr, FILE
+#include <stdlib.h>                     // for getenv
+#include "DirectedGraph.h"              // for DirectedGraph
+#include "Layers.h"                     // for Layer
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxLineSegment.h"             // for gfxLineSegment
+#include "gfxPoint.h"                   // for gfxPoint
+#include "gfxPoint3D.h"                 // for gfxPoint3D
+#include "gfxQuad.h"                    // for gfxQuad
+#include "gfxRect.h"                    // for gfxRect
+#include "gfxTypes.h"                   // for gfxFloat
+#include "mozilla/gfx/BasePoint3D.h"    // for BasePoint3D
+#include "nsRegion.h"                   // for nsIntRegion
+#include "nsTArray.h"                   // for nsTArray, etc
 #include "limits.h"
-#include "gfxLineSegment.h"
-#include "Layers.h"
 #include "mozilla/Assertions.h"
 
 namespace mozilla {

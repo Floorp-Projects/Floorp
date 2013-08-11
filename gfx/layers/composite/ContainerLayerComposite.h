@@ -6,18 +6,19 @@
 #ifndef GFX_ContainerLayerComposite_H
 #define GFX_ContainerLayerComposite_H
 
-#include "mozilla/layers/PLayerTransaction.h"
-#include "mozilla/layers/ShadowLayers.h"
-
-#include "Layers.h"
+#include "Layers.h"                     // for Layer (ptr only), etc
+#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/layers/LayerManagerComposite.h"
-#include "mozilla/layers/Effects.h"
+#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_HAVE_LOG
 
-#include "gfxUtils.h"
-#include "gfx2DGlue.h"
+class gfx3DMatrix;
+struct nsIntPoint;
+struct nsIntRect;
 
 namespace mozilla {
 namespace layers {
+
+class CompositableHost;
 
 class ContainerLayerComposite : public ContainerLayer,
                                 public LayerComposite

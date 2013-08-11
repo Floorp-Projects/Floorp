@@ -4,9 +4,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/TiledContentClient.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/MathAlgorithms.h"
-#include "ClientTiledThebesLayer.h"
+#include <math.h>                       // for ceil, ceilf, floor
+#include "ClientTiledThebesLayer.h"     // for ClientTiledThebesLayer
+#include "GeckoProfilerImpl.h"          // for PROFILER_LABEL
+#include "ClientLayerManager.h"         // for ClientLayerManager
+#include "gfxContext.h"                 // for gfxContext, etc
+#include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxRect.h"                    // for gfxRect
+#include "mozilla/MathAlgorithms.h"     // for Abs
+#include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
+#include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
+#include "nsSize.h"                     // for nsIntSize
 #include "gfxReusableSharedImageSurfaceWrapper.h"
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY

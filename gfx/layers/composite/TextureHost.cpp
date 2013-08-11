@@ -4,16 +4,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/layers/LayersSurfaces.h"
-#include "LayersLogging.h"
-#include "nsPrintfCString.h"
-#include "mozilla/ipc/Shmem.h"
-#include "ipc/AutoOpenSurface.h"
+#include "LayersLogging.h"              // for AppendToString
+#include "gfx2DGlue.h"                  // for ToIntSize
+#include "gfxImageSurface.h"            // for gfxImageSurface
+#include "mozilla/gfx/2D.h"             // for DataSourceSurface, Factory
+#include "mozilla/ipc/Shmem.h"          // for Shmem
+#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
-#include "gfx2DGlue.h"
-#include "mozilla/gfx/2D.h"
+#include "nsAString.h"
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsPrintfCString.h"            // for nsPrintfCString
 
+struct nsIntPoint;
 
 namespace mozilla {
 namespace layers {

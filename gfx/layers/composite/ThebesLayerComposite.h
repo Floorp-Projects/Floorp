@@ -6,12 +6,19 @@
 #ifndef GFX_ThebesLayerComposite_H
 #define GFX_ThebesLayerComposite_H
 
-#include "mozilla/layers/PLayerTransaction.h"
-#include "mozilla/layers/ShadowLayers.h"
+#include "Layers.h"                     // for Layer (ptr only), etc
+#include "gfxPoint.h"                   // for gfxSize
+#include "gfxRect.h"                    // for gfxRect
+#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
+#include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
+#include "nsDebug.h"                    // for NS_RUNTIMEABORT
+#include "nsRegion.h"                   // for nsIntRegion
+#include "nscore.h"                     // for nsACString
 
-#include "Layers.h"
-#include "mozilla/layers/LayerManagerComposite.h"
-#include "base/task.h"
+struct nsIntPoint;
+struct nsIntRect;
 
 
 namespace mozilla {
@@ -23,7 +30,9 @@ namespace layers {
  * non-tiled Thebes layers and single or double buffering.
  */
 
+class CompositableHost;
 class ContentHost;
+class TiledLayerComposer;
 
 class ThebesLayerComposite : public ThebesLayer,
                              public LayerComposite

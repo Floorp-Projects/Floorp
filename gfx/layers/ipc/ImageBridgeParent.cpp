@@ -3,14 +3,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/thread.h"
-
-#include "mozilla/layers/CompositorParent.h"
-#include "mozilla/layers/ImageBridgeParent.h"
-#include "CompositableHost.h"
-#include "nsTArray.h"
-#include "nsXULAppAPI.h"
+#include "ImageBridgeParent.h"
+#include <stdint.h>                     // for uint64_t, uint32_t
+#include "CompositableHost.h"           // for CompositableParent, Create
+#include "base/message_loop.h"          // for MessageLoop
+#include "base/process.h"               // for ProcessHandle
+#include "base/process_util.h"          // for OpenProcessHandle
+#include "base/task.h"                  // for CancelableTask, DeleteTask, etc
+#include "base/tracked.h"               // for FROM_HERE
+#include "gfxPoint.h"                   // for gfxIntSize
+#include "mozilla/ipc/AsyncChannel.h"   // for AsyncChannel, etc
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/Transport.h"      // for Transport
+#include "mozilla/layers/CompositableTransactionParent.h"
+#include "mozilla/layers/CompositorParent.h"  // for CompositorParent
 #include "mozilla/layers/LayerManagerComposite.h"
+#include "mozilla/layers/LayerTransaction.h"  // for EditReply
+#include "mozilla/layers/LayersSurfaces.h"  // for PGrallocBufferParent
+#include "mozilla/layers/PCompositableParent.h"
+#include "mozilla/layers/PImageBridgeParent.h"
+#include "mozilla/mozalloc.h"           // for operator new, etc
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsDebug.h"                    // for NS_RUNTIMEABORT, etc
+#include "nsISupportsImpl.h"            // for ImageBridgeParent::Release, etc
+#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl
+#include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
+#include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
 
 using namespace base;
 using namespace mozilla::ipc;
@@ -18,6 +36,7 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace layers {
 
+class PGrallocBufferParent;
 
 ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop, Transport* aTransport)
   : mMessageLoop(aLoop)

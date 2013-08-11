@@ -6,26 +6,45 @@
 #ifndef GFX_LAYERS_H
 #define GFX_LAYERS_H
 
-#include "mozilla/DebugOnly.h"
-
+#include <stdint.h>                     // for uint32_t, uint64_t, uint8_t
+#include <stdio.h>                      // for FILE
+#include <sys/types.h>                  // for int32_t, int64_t
+#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
+#include "FrameMetrics.h"               // for FrameMetrics
+#include "Units.h"                      // for LayerMargin, LayerPoint
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxColor.h"                   // for gfxRGBA
+#include "gfxMatrix.h"                  // for gfxMatrix
+#include "gfxPattern.h"                 // for gfxPattern, etc
+#include "gfxPoint.h"                   // for gfxPoint, gfxIntSize
+#include "gfxRect.h"                    // for gfxRect
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2, etc
+#include "mozilla/DebugOnly.h"          // for DebugOnly
+#include "mozilla/RefPtr.h"             // for TemporaryRef
+#include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
+#include "mozilla/gfx/BaseMargin.h"     // for BaseMargin
+#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/gfx/Types.h"          // for SurfaceFormat
+#include "mozilla/gfx/UserData.h"       // for UserData, etc
 #include "mozilla/layers/LayersTypes.h"
-#include "gfxTypes.h"
-#include "gfxASurface.h"
-#include "nsRegion.h"
-#include "nsPoint.h"
-#include "nsRect.h"
-#include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
-#include "gfx3DMatrix.h"
-#include "gfxColor.h"
-#include "gfxPattern.h"
-#include "nsTArray.h"
-#include "nsThreadUtils.h"
-#include "nsStyleAnimation.h"
-#include "FrameMetrics.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/TimeStamp.h"
-//#include "mozilla/CanonicalRegion.h"
+#include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "nsAutoPtr.h"                  // for nsAutoPtr, nsRefPtr, etc
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsCSSProperty.h"              // for nsCSSProperty
+#include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsISupportsImpl.h"            // for Layer::Release, etc
+#include "nsRect.h"                     // for nsIntRect
+#include "nsRegion.h"                   // for nsIntRegion
+#include "nsSize.h"                     // for nsIntSize
+#include "nsString.h"                   // for nsCString
+#include "nsStyleAnimation.h"           // for nsStyleAnimation::Value, etc
+#include "nsTArray.h"                   // for nsTArray
+#include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
+#include "nscore.h"                     // for nsACString, nsAString
+#include "prlog.h"                      // for PRLogModuleInfo
+
 
 class gfxContext;
 class nsPaintEvent;
@@ -39,6 +58,10 @@ class WebGLContext;
 
 namespace gl {
 class GLContext;
+}
+
+namespace gfx {
+class DrawTarget;
 }
 
 namespace css {
@@ -68,7 +91,6 @@ class LayerManagerComposite;
 class SpecificLayerAttributes;
 class SurfaceDescriptor;
 class Compositor;
-class LayerComposite;
 struct TextureFactoryIdentifier;
 struct EffectMask;
 
@@ -592,7 +614,6 @@ private:
   TimeStamp mTabSwitchStart;
 };
 
-class ThebesLayer;
 typedef InfallibleTArray<Animation> AnimationArray;
 
 struct AnimData {

@@ -5,21 +5,41 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/AsyncCompositionManager.h"
-#include "base/basictypes.h"
-
+#include <stdint.h>                     // for uint32_t
+#include "AnimationCommon.h"            // for ComputedTimingFunction
+#include "CompositorParent.h"           // for CompositorParent, etc
+#include "FrameMetrics.h"               // for FrameMetrics
+#include "LayerManagerComposite.h"      // for LayerManagerComposite, etc
+#include "Layers.h"                     // for Layer, ContainerLayer, etc
+#include "gfxMatrix.h"                  // for gfxMatrix
+#include "gfxPoint.h"                   // for gfxPoint, gfxSize
+#include "gfxPoint3D.h"                 // for gfxPoint3D
+#include "mozilla/WidgetUtils.h"        // for ComputeTransformForRotation
+#include "mozilla/gfx/BaseRect.h"       // for BaseRect
+#include "mozilla/gfx/Point.h"          // for RoundedToInt, PointTyped
+#include "mozilla/gfx/Rect.h"           // for RoundedToInt, RectTyped
+#include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
+#include "mozilla/layers/AsyncPanZoomController.h"
+#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "nsAnimationManager.h"         // for ElementAnimations
+#include "nsCSSPropList.h"
+#include "nsCoord.h"                    // for NSAppUnitsToFloatPixels, etc
+#include "nsDebug.h"                    // for NS_ASSERTION, etc
+#include "nsDeviceContext.h"            // for nsDeviceContext
+#include "nsDisplayList.h"              // for nsDisplayTransform, etc
+#include "nsMathUtils.h"                // for NS_round
+#include "nsPoint.h"                    // for nsPoint
+#include "nsRect.h"                     // for nsIntRect
+#include "nsRegion.h"                   // for nsIntRegion
+#include "nsStyleAnimation.h"           // for nsStyleAnimation::Value, etc
+#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
+#include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
 #if defined(MOZ_WIDGET_ANDROID)
 # include <android/log.h>
 # include "AndroidBridge.h"
 #endif
 
-#include "CompositorParent.h"
-#include "LayerManagerComposite.h" 
-
-#include "nsStyleAnimation.h"
-#include "nsDisplayList.h"
-#include "AnimationCommon.h"
-#include "nsAnimationManager.h"
-#include "mozilla/layers/AsyncPanZoomController.h"
+struct nsCSSValueList;
 
 using namespace mozilla::dom;
 

@@ -3,27 +3,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ipc/AutoOpenSurface.h"
-#include "mozilla/layers/PLayerTransaction.h"
-#include "TiledLayerBuffer.h"
-
-// This must occur *after* layers/PLayerTransaction.h to avoid
-// typedefs conflicts.
-#include "mozilla/Util.h"
-
-#include "mozilla/layers/ShadowLayers.h"
-
-#include "ThebesLayerBuffer.h"
 #include "ThebesLayerComposite.h"
-#include "mozilla/layers/ContentHost.h"
-#include "gfxUtils.h"
-#include "gfx2DGlue.h"
-
-#include "mozilla/layers/CompositorTypes.h" // for TextureInfo
-#include "mozilla/layers/Effects.h"
+#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
+#include "CompositableHost.h"           // for TiledLayerProperties, etc
+#include "FrameMetrics.h"               // for FrameMetrics
+#include "Units.h"                      // for CSSRect, LayerPixel, etc
+#include "gfx2DGlue.h"                  // for ToMatrix4x4
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxImageSurface.h"            // for gfxImageSurface
+#include "gfxUtils.h"                   // for gfxUtils, etc
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/gfx/Point.h"          // for Point
+#include "mozilla/gfx/Rect.h"           // for RoundedToInt, Rect
+#include "mozilla/gfx/Types.h"          // for Filter::FILTER_LINEAR
+#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/ContentHost.h"  // for ContentHost
+#include "mozilla/layers/Effects.h"     // for EffectChain
+#include "mozilla/mozalloc.h"           // for operator delete
+#include "nsAString.h"
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsMathUtils.h"                // for NS_lround
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsRect.h"                     // for nsIntRect
+#include "nsSize.h"                     // for nsIntSize
+#include "nsString.h"                   // for nsAutoCString
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
 namespace layers {
+
+class TiledLayerComposer;
 
 ThebesLayerComposite::ThebesLayerComposite(LayerManagerComposite *aManager)
   : ThebesLayer(aManager, nullptr)

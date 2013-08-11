@@ -4,23 +4,54 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
-#include "CompositorParent.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Constants.h"
-#include "mozilla/Util.h"
-#include "mozilla/XPCOM.h"
-#include "mozilla/Monitor.h"
-#include "mozilla/StaticPtr.h"
-#include "AsyncPanZoomController.h"
-#include "GestureEventListener.h"
-#include "nsIThreadManager.h"
-#include "nsThreadUtils.h"
-#include "Layers.h"
-#include "AnimationCommon.h"
-#include <algorithm>
-#include "mozilla/layers/LayerManagerComposite.h"
+#include <math.h>                       // for fabsf, fabs, atan2
+#include <stdint.h>                     // for uint32_t, uint64_t
+#include <sys/types.h>                  // for int32_t
+#include <algorithm>                    // for max, min
+#include "AnimationCommon.h"            // for ComputedTimingFunction
+#include "AsyncPanZoomController.h"     // for AsyncPanZoomController, etc
+#include "CompositorParent.h"           // for CompositorParent
+#include "FrameMetrics.h"               // for FrameMetrics, etc
+#include "GeckoProfilerFunc.h"          // for TimeDuration, TimeStamp
+#include "GestureEventListener.h"       // for GestureEventListener
+#include "InputData.h"                  // for MultiTouchInput, etc
+#include "Units.h"                      // for CSSRect, CSSPoint, etc
+#include "base/message_loop.h"          // for MessageLoop
+#include "base/task.h"                  // for NewRunnableMethod, etc
+#include "base/tracked.h"               // for FROM_HERE
+#include "gfxTypes.h"                   // for gfxFloat
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/ClearOnShutdown.h"    // for ClearOnShutdown
+#include "mozilla/Preferences.h"        // for Preferences
+#include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitorAutoEnter, etc
+#include "mozilla/StaticPtr.h"          // for StaticAutoPtr
+#include "mozilla/TimeStamp.h"          // for TimeDuration, TimeStamp
+#include "mozilla/dom/Touch.h"          // for Touch
+#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/gfx/BaseRect.h"       // for BaseRect
+#include "mozilla/gfx/Point.h"          // for Point, RoundedToInt, etc
+#include "mozilla/gfx/Rect.h"           // for RoundedIn
+#include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
+#include "mozilla/layers/APZCTreeManager.h"  // for ScrollableLayerGuid
+#include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
+#include "mozilla/layers/Axis.h"        // for AxisX, AxisY, Axis, etc
+#include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/layers/TaskThrottler.h"  // for TaskThrottler
+#include "mozilla/mozalloc.h"           // for operator new, etc
+#include "nsAlgorithm.h"                // for clamped
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsDebug.h"                    // for NS_WARNING
+#include "nsEvent.h"
+#include "nsGUIEvent.h"                 // for nsInputEvent, nsTouchEvent, etc
+#include "nsISupportsImpl.h"
+#include "nsMathUtils.h"                // for NS_hypot
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsStyleConsts.h"
+#include "nsStyleStruct.h"              // for nsTimingFunction
+#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
+#include "nsThreadUtils.h"              // for NS_IsMainThread
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 using namespace mozilla::css;
 

@@ -5,8 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/layers/LayerTransaction.h"
+#ifndef MOZILLA_LAYERS_COMPOSITABLETRANSACTIONPARENT_H
+#define MOZILLA_LAYERS_COMPOSITABLETRANSACTIONPARENT_H
+
+#include <vector>                       // for vector
+#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
+#include "mozilla/layers/LayerTransaction.h"  // for EditReply, etc
 
 namespace mozilla {
 namespace layers {
@@ -28,8 +33,7 @@ protected:
   bool IsOnCompositorSide() const MOZ_OVERRIDE { return true; }
 };
 
-
-
-
 } // namespace
 } // namespace
+
+#endif
