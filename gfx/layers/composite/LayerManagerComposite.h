@@ -6,39 +6,63 @@
 #ifndef GFX_LayerManagerComposite_H
 #define GFX_LayerManagerComposite_H
 
-#include "mozilla/layers/Compositor.h"
-#include "mozilla/layers/ShadowLayers.h"
-#include "Composer2D.h"
-#include "mozilla/TimeStamp.h"
+#include <stdint.h>                     // for int32_t, uint32_t
+#include "GLDefs.h"                     // for GLenum
 #include "Layers.h"
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxMatrix.h"                  // for gfxMatrix
+#include "gfxPoint.h"                   // for gfxIntSize
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
+#include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/gfx/Types.h"          // for SurfaceFormat
+#include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/LayersTypes.h"  // for LayersBackend, etc
+#include "nsAString.h"
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsISupportsImpl.h"            // for Layer::AddRef, etc
+#include "nsRect.h"                     // for nsIntRect
+#include "nsRegion.h"                   // for nsIntRegion
+#include "nscore.h"                     // for nsAString, etc
+
+class gfxASurface;
+class gfxContext;
+struct nsIntPoint;
+struct nsIntSize;
 
 #ifdef XP_WIN
 #include <windows.h>
 #endif
 
-#include "gfxContext.h"
-#include "gfx3DMatrix.h"
-#include "GLDefs.h"
-
 namespace mozilla {
+namespace gfx {
+class DrawTarget;
+}
+
 namespace gl {
 class GLContext;
 class TextureImage;
 }
-}
 
-namespace mozilla {
 namespace layers {
 
-class LayerComposite;
-class ThebesLayerComposite;
-class ContainerLayerComposite;
-class ImageLayerComposite;
 class CanvasLayerComposite;
 class ColorLayerComposite;
-class RefLayerComposite;
+class Composer2D;
 class CompositableHost;
+class Compositor;
+class ContainerLayerComposite;
 class EffectChain;
+class ImageLayer;
+class ImageLayerComposite;
+class LayerComposite;
+class RefLayerComposite;
+class SurfaceDescriptor;
+class ThebesLayerComposite;
 class TiledLayerComposer;
 
 class LayerManagerComposite : public LayerManager

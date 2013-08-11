@@ -6,6 +6,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "LayersLogging.h"
+#include <stdint.h>                     // for uint8_t
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxColor.h"                   // for gfxRGBA
+#include "gfxMatrix.h"                  // for gfxMatrix
+#include "mozilla/gfx/Matrix.h"         // for Matrix4x4, Matrix
+#include "nsDebug.h"                    // for NS_ERROR
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsRect.h"                     // for nsIntRect
+#include "nsSize.h"                     // for nsIntSize
 
 using namespace mozilla::gfx;
 

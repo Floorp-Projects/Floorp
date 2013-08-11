@@ -4,26 +4,50 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <map>
-
-#include "mozilla/DebugOnly.h"
-
-#include "AutoOpenSurface.h"
 #include "CompositorParent.h"
-#include "mozilla/layers/CompositorOGL.h"
-#include "mozilla/layers/BasicCompositor.h"
+#include <stdio.h>                      // for fprintf, stdout
+#include <stdint.h>                     // for uint64_t
+#include <map>                          // for _Rb_tree_iterator, etc
+#include <utility>                      // for pair
+#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
+#include "AutoOpenSurface.h"            // for AutoOpenSurface
+#include "LayerTransactionParent.h"     // for LayerTransactionParent
+#include "RenderTrace.h"                // for RenderTraceLayers
+#include "base/message_loop.h"          // for MessageLoop
+#include "base/process.h"               // for ProcessHandle
+#include "base/process_util.h"          // for OpenProcessHandle
+#include "base/task.h"                  // for CancelableTask, etc
+#include "base/thread.h"                // for Thread
+#include "base/tracked.h"               // for FROM_HERE
+#include "gfxContext.h"                 // for gfxContext
+#include "gfxPlatform.h"                // for gfxPlatform
+#include "ipc/ShadowLayersManager.h"    // for ShadowLayersManager
+#include "mozilla/AutoRestore.h"        // for AutoRestore
+#include "mozilla/DebugOnly.h"          // for DebugOnly
+#include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/ipc/Transport.h"      // for Transport
+#include "mozilla/layers/APZCTreeManager.h"  // for APZCTreeManager
+#include "mozilla/layers/AsyncCompositionManager.h"
+#include "mozilla/layers/BasicCompositor.h"  // for BasicCompositor
+#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
+#include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/LayerManagerComposite.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/PLayerTransactionParent.h"
+#include "mozilla/mozalloc.h"           // for operator new, etc
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsDebug.h"                    // for NS_ABORT_IF_FALSE, etc
+#include "nsIWidget.h"                  // for nsIWidget
+#include "nsRect.h"                     // for nsIntRect
+#include "nsTArray.h"                   // for nsTArray
+#include "nsThreadUtils.h"              // for NS_IsMainThread
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
 #ifdef XP_WIN
 #include "mozilla/layers/CompositorD3D11.h"
 #include "mozilla/layers/CompositorD3D9.h"
 #endif
-#include "LayerTransactionParent.h"
-#include "nsIWidget.h"
-#include "nsGkAtoms.h"
-#include "RenderTrace.h"
-#include "gfxPlatform.h"
-#include "mozilla/AutoRestore.h"
-#include "mozilla/layers/AsyncCompositionManager.h"
-#include "mozilla/layers/LayerManagerComposite.h"
 
 using namespace base;
 using namespace mozilla;

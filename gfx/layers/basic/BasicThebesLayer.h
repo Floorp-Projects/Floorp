@@ -6,12 +6,25 @@
 #ifndef GFX_BASICTHEBESLAYER_H
 #define GFX_BASICTHEBESLAYER_H
 
-#include "mozilla/layers/PLayerTransactionParent.h"
-#include "BasicLayersImpl.h"
-#include "mozilla/layers/ContentClient.h"
+#include "Layers.h"                     // for ThebesLayer, LayerManager, etc
+#include "ThebesLayerBuffer.h"          // for ThebesLayerBuffer, etc
+#include "BasicImplData.h"              // for BasicImplData
+#include "BasicLayers.h"                // for BasicLayerManager
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxPoint.h"                   // for gfxPoint
+#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/layers/ContentClient.h"  // for ContentClientBasic
+#include "mozilla/mozalloc.h"           // for operator delete
+#include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsRegion.h"                   // for nsIntRegion
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+class gfxContext;
 
 namespace mozilla {
 namespace layers {
+
+class ReadbackProcessor;
 
 class BasicThebesLayer : public ThebesLayer, public BasicImplData {
 public:
