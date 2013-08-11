@@ -11,8 +11,6 @@
 #include "nsCxPusher.h"
 #include "mozilla/unused.h"
 #include "mozilla/AppProcessChecker.h"
-#include "mozilla/net/NeckoCommon.h"
-#include "mozilla/net/PNeckoParent.h"
 
 namespace IPC {
 
@@ -82,12 +80,11 @@ NS_IMETHODIMP_(nsrefcnt) TCPSocketParent::Release(void)
 
 bool
 TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bool& aUseSSL,
-                          const nsString& aBinaryType)
+                          const nsString& aBinaryType, PBrowserParent* aBrowser)
 {
   // We don't have browser actors in xpcshell, and hence can't run automated
   // tests without this loophole.
-  if (net::UsingNeckoIPCSecurity() &&
-      !AssertAppProcessPermission(Manager()->Manager(), "tcp-socket")) {
+  if (aBrowser && !AssertAppProcessPermission(aBrowser, "tcp-socket")) {
     FireInteralError(this, __LINE__);
     return true;
   }
