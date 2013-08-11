@@ -36,6 +36,7 @@
 
 #include "nsGtkIMModule.h"
 
+#undef LOG
 #ifdef MOZ_LOGGING
 
 // make sure that logging is enabled before including prlog.h
