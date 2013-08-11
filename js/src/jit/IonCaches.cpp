@@ -1118,8 +1118,7 @@ GetPropertyIC::canAttachNative(JSContext *cx, HandleObject obj, HandlePropertyNa
         // they can be effectful. This is handled by allowGetters()
 
         // Optimize Array.length if possible
-        if (obj->is<ArrayObject>() && !hasArrayLengthStub() &&
-            cx->names().length == name)
+        if (obj->is<ArrayObject>() && cx->names().length == name)
         {
             return CanAttachArrayLength;
         }
@@ -1172,9 +1171,6 @@ GetPropertyIC::tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
       case CanAttachArrayLength:
         if (!GenerateArrayLength(cx, masm, attacher, obj, object(), output()))
             return false;
-
-        JS_ASSERT(!hasArrayLengthStub_);
-        hasArrayLengthStub_ = true;
 
         attachKind = "array length";
         break;
@@ -1699,7 +1695,6 @@ void
 GetPropertyIC::reset()
 {
     RepatchIonCache::reset();
-    hasArrayLengthStub_ = false;
     hasTypedArrayLengthStub_ = false;
     hasStrictArgumentsLengthStub_ = false;
     hasNormalArgumentsLengthStub_ = false;
