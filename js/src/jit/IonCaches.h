@@ -569,20 +569,16 @@ class GetPropertyIC : public RepatchIonCache
 
     // Attach the proper stub, if possible
     bool tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,
-                       HandlePropertyName name, const SafepointIndex *safepointIndex,
-                       void *returnAddr, bool *emitted);
+                       HandlePropertyName name, void *returnAddr, bool *emitted);
     bool tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
-                        HandlePropertyName name, const SafepointIndex *safepointIndex,
-                        void *returnAddr, bool *emitted);
+                        HandlePropertyName name, void *returnAddr, bool *emitted);
     bool tryAttachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
                                    void *returnAddr, bool *emitted);
     bool tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObject obj,
                                      HandlePropertyName name, bool resetNeeded,
-                                     const SafepointIndex *safepointIndex,
                                      void *returnAddr, bool *emitted);
     bool tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
-                         HandlePropertyName name, const SafepointIndex *safepointIndex,
-                         void *returnAddr, bool *emitted);
+                         HandlePropertyName name, void *returnAddr, bool *emitted);
     bool tryAttachTypedArrayLength(JSContext *cx, IonScript *ion, HandleObject obj,
                                    HandlePropertyName name, bool *emitted);
 
@@ -869,8 +865,7 @@ class NameIC : public RepatchIonCache
     bool attachReadSlot(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject obj,
                         HandleShape shape);
     bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                          HandleShape shape, const SafepointIndex *safepointIndex,
-                          void *returnAddr);
+                          HandleShape shape, void *returnAddr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, MutableHandleValue vp);
