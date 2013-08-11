@@ -4,13 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
-#include "base/thread.h"
-
 #include "GestureEventListener.h"
-#include "AsyncPanZoomController.h"
-
-#include "mozilla/Preferences.h"
+#include <math.h>                       // for fabsf
+#include <stddef.h>                     // for size_t
+#include "AsyncPanZoomController.h"     // for AsyncPanZoomController
+#include "base/task.h"                  // for CancelableTask, etc
+#include "mozilla/Preferences.h"        // for Preferences
+#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/mozalloc.h"           // for operator new
+#include "nsDebug.h"                    // for NS_WARN_IF_FALSE
+#include "nsMathUtils.h"                // for NS_hypot
 
 namespace mozilla {
 namespace layers {

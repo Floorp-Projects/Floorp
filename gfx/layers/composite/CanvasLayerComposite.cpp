@@ -3,16 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ipc/AutoOpenSurface.h"
-#include "mozilla/layers/PLayerTransaction.h"
-#include "mozilla/layers/ShadowLayers.h"
-#include "mozilla/layers/CompositorTypes.h" // for TextureInfo
-#include "mozilla/layers/Effects.h"
-
 #include "CanvasLayerComposite.h"
-#include "ImageHost.h"
-#include "gfxUtils.h"
-#include "gfx2DGlue.h"
+#include "composite/CompositableHost.h"  // for CompositableHost
+#include "gfx2DGlue.h"                  // for ToFilter, ToMatrix4x4
+#include "gfxImageSurface.h"            // for gfxImageSurface
+#include "gfxPattern.h"                 // for gfxPattern, etc
+#include "gfxUtils.h"                   // for gfxUtils, etc
+#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/gfx/Point.h"          // for Point
+#include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/Effects.h"     // for EffectChain
+#include "mozilla/mozalloc.h"           // for operator delete
+#include "nsAString.h"
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsString.h"                   // for nsAutoCString
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 using namespace mozilla;
 using namespace mozilla::layers;

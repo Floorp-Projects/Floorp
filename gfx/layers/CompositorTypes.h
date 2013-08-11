@@ -6,9 +6,10 @@
 #ifndef MOZILLA_LAYERS_COMPOSITORTYPES_H
 #define MOZILLA_LAYERS_COMPOSITORTYPES_H
 
-#include "LayersTypes.h"
-#include "nsXULAppAPI.h"
-
+#include <stdint.h>                     // for uint32_t
+#include <sys/types.h>                  // for int32_t
+#include "LayersTypes.h"                // for LayersBackend, etc
+#include "nsXULAppAPI.h"                // for GeckoProcessType, etc
 
 namespace mozilla {
 namespace layers {

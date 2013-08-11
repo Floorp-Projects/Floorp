@@ -4,7 +4,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ClientThebesLayer.h"
-#include "ClientTiledThebesLayer.h"
+#include <stdint.h>                     // for uint32_t
+#include "GeckoProfilerImpl.h"          // for PROFILER_LABEL
+#include "client/ClientLayerManager.h"  // for ClientLayerManager, etc
+#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxContext.h"                 // for gfxContext
+#include "gfxRect.h"                    // for gfxRect
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/gfx/2D.h"             // for DrawTarget
+#include "mozilla/gfx/Matrix.h"         // for Matrix
+#include "mozilla/gfx/Rect.h"           // for Rect, IntRect
+#include "mozilla/gfx/Types.h"          // for Float, etc
+#include "mozilla/layers/LayersTypes.h"
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsISupportsImpl.h"            // for Layer::AddRef, etc
+#include "nsRect.h"                     // for nsIntRect
 
 using namespace mozilla::gfx;
 

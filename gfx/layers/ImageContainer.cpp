@@ -4,19 +4,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#include "mozilla/layers/ImageBridgeChild.h"
-
 #include "ImageContainer.h"
+#include <string.h>                     // for memcpy, memset
+#include "SharedTextureImage.h"         // for SharedTextureImage
+#include "gfxImageSurface.h"            // for gfxImageSurface
+#include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxUtils.h"                   // for gfxUtils
+#include "mozilla/RefPtr.h"             // for TemporaryRef
+#include "mozilla/ipc/CrossProcessMutex.h"  // for CrossProcessMutex, etc
+#include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
+#include "mozilla/layers/ImageClient.h"  // for ImageClient
+#include "nsISupportsUtils.h"           // for NS_IF_ADDREF
+#ifdef MOZ_WIDGET_GONK
 #include "GrallocImages.h"
-#include "mozilla/ipc/Shmem.h"
-#include "mozilla/ipc/CrossProcessMutex.h"
-#include "SharedTextureImage.h"
-#include "gfxImageSurface.h"
-#include "gfxSharedImageSurface.h"
-#include "yuv_convert.h"
-#include "gfxUtils.h"
-#include "gfxPlatform.h"
-#include "mozilla/layers/ImageClient.h"
+#endif
 
 #ifdef XP_MACOSX
 #include "mozilla/gfx/QuartzSupport.h"
@@ -38,6 +40,9 @@ using mozilla::gfx::SourceSurface;
 
 namespace mozilla {
 namespace layers {
+
+class DataSourceSurface;
+class SourceSurface;
 
 int32_t Image::sSerialCounter = 0;
 

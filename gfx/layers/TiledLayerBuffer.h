@@ -16,9 +16,13 @@
 //#define GFX_TILEDLAYER_DEBUG_OVERLAY
 //#define GFX_TILEDLAYER_PREF_WARNINGS
 
-#include "nsRect.h"
-#include "nsRegion.h"
-#include "nsTArray.h"
+#include <stdint.h>                     // for uint16_t, uint32_t
+#include <sys/types.h>                  // for int32_t
+#include "nsDebug.h"                    // for NS_ABORT_IF_FALSE
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsRect.h"                     // for nsIntRect
+#include "nsRegion.h"                   // for nsIntRegion
+#include "nsTArray.h"                   // for nsTArray
 
 namespace mozilla {
 namespace layers {
