@@ -3,49 +3,64 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/PLayerTransaction.h"
-
-// This must occur *after* layers/PLayerTransaction.h to avoid
-// typedefs conflicts.
-#include "mozilla/Util.h"
-
-#include "mozilla/layers/LayerManagerComposite.h"
-#include "ThebesLayerComposite.h"
-#include "ContainerLayerComposite.h"
-#include "ImageLayerComposite.h"
-#include "ColorLayerComposite.h"
-#include "CanvasLayerComposite.h"
-#include "CompositableHost.h"
-#include "mozilla/gfx/Matrix.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/layers/ImageHost.h"
-#include "mozilla/layers/ContentHost.h"
-#include "mozilla/layers/Compositor.h"
-
-#include "gfxContext.h"
-#include "gfxUtils.h"
-#include "gfx2DGlue.h"
+#include "LayerManagerComposite.h"
+#include <stddef.h>                     // for size_t
+#include <stdint.h>                     // for uint16_t, uint32_t
+#include "CanvasLayerComposite.h"       // for CanvasLayerComposite
+#include "ColorLayerComposite.h"        // for ColorLayerComposite
+#include "Composer2D.h"                 // for Composer2D
+#include "CompositableHost.h"           // for CompositableHost
+#include "ContainerLayerComposite.h"    // for ContainerLayerComposite, etc
+#include "FrameMetrics.h"               // for FrameMetrics
+#include "GeckoProfilerImpl.h"          // for profiler_set_frame_number, etc
+#include "ImageLayerComposite.h"        // for ImageLayerComposite
+#include "Layers.h"                     // for Layer, ContainerLayer, etc
+#include "ThebesLayerComposite.h"       // for ThebesLayerComposite
+#include "TiledLayerBuffer.h"           // for TiledLayerComposer
+#include "Units.h"                      // for ScreenIntRect
+#include "gfx2DGlue.h"                  // for ToMatrix4x4
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxMatrix.h"                  // for gfxMatrix
+#include "gfxPlatform.h"                // for gfxPlatform
 #ifdef XP_MACOSX
 #include "gfxPlatformMac.h"
-#else
-#include "gfxPlatform.h"
 #endif
-
-#include "nsIWidget.h"
-#include "nsIServiceManager.h"
-#include "nsIConsoleService.h"
-
-#include "gfxCrashReporterUtils.h"
-
-#include "GeckoProfiler.h"
-
+#include "gfxPoint.h"                   // for gfxIntSize
+#include "gfxRect.h"                    // for gfxRect
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
+#include "mozilla/gfx/2D.h"             // for DrawTarget
+#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
+#include "mozilla/gfx/Point.h"          // for IntSize, Point
+#include "mozilla/gfx/Rect.h"           // for Rect
+#include "mozilla/gfx/Types.h"          // for Color, SurfaceFormat
+#include "mozilla/layers/Compositor.h"  // for Compositor
+#include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
+#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_HAVE_LOG, etc
+#include "ipc/ShadowLayerUtils.h"
+#include "mozilla/mozalloc.h"           // for operator new, etc
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsDebug.h"                    // for NS_WARNING, NS_RUNTIMEABORT, etc
+#include "nsISupportsImpl.h"            // for Layer::AddRef, etc
+#include "nsIWidget.h"                  // for nsIWidget
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsRect.h"                     // for nsIntRect
+#include "nsRegion.h"                   // for nsIntRegion, etc
 #ifdef MOZ_WIDGET_ANDROID
 #include <android/log.h>
 #endif
 
+class gfxASurface;
+class gfxContext;
+struct nsIntSize;
+
+
 namespace mozilla {
 namespace layers {
+
+class ImageLayer;
 
 using namespace mozilla::gfx;
 using namespace mozilla::gl;

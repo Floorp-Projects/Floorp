@@ -5,8 +5,19 @@
 
 #include "APZCTreeManager.h"
 #include "AsyncCompositionManager.h"    // for ViewTransform
-#include "LayerManagerComposite.h"      // for AsyncCompositionManager.h
-#include "Compositor.h"
+#include "Compositor.h"                 // for Compositor
+#include "CompositorParent.h"           // for CompositorParent, etc
+#include "InputData.h"                  // for InputData, etc
+#include "Layers.h"                     // for ContainerLayer, Layer, etc
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "mozilla/dom/Touch.h"          // for Touch
+#include "mozilla/gfx/Point.h"          // for Point
+#include "mozilla/layers/AsyncPanZoomController.h"
+#include "mozilla/mozalloc.h"           // for operator new
+#include "nsGUIEvent.h"                 // for nsMouseEvent, nsTouchEvent, etc
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
+#include "nsThreadUtils.h"              // for NS_IsMainThread
 
 #define APZC_LOG(...)
 // #define APZC_LOG(args...) printf_stderr(args)
@@ -19,6 +30,10 @@ APZCTreeManager::APZCTreeManager()
 {
   MOZ_ASSERT(NS_IsMainThread());
   AsyncPanZoomController::InitializeGlobalState();
+}
+
+APZCTreeManager::~APZCTreeManager()
+{
 }
 
 void

@@ -5,9 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CompositorChild.h"
-#include "CompositorParent.h"
-#include "LayerManagerOGL.h"
+#include <stddef.h>                     // for size_t
+#include "Layers.h"                     // for LayerManager
+#include "base/message_loop.h"          // for MessageLoop
+#include "base/process_util.h"          // for OpenProcessHandle
+#include "base/task.h"                  // for NewRunnableMethod, etc
+#include "base/tracked.h"               // for FROM_HERE
 #include "mozilla/layers/LayerTransactionChild.h"
+#include "mozilla/layers/PLayerTransactionChild.h"
+#include "mozilla/mozalloc.h"           // for operator new, etc
+#include "nsDebug.h"                    // for NS_RUNTIMEABORT
+#include "nsIObserver.h"                // for nsIObserver
+#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop, etc
 
 using mozilla::layers::LayerTransactionChild;
 
