@@ -267,7 +267,7 @@ class IonCache
         this->pc = pc;
     }
 
-    void getScriptedLocation(MutableHandleScript pscript, jsbytecode **ppc) {
+    void getScriptedLocation(MutableHandleScript pscript, jsbytecode **ppc) const {
         pscript.set(script);
         *ppc = pc;
     }
@@ -561,11 +561,16 @@ class GetPropertyIC : public RepatchIonCache
         CanAttachCallGetter
     };
 
-    /* Native Property Type helper */
-    NativeGetPropCacheability canAttachNative(JSContext *cx, HandleObject obj,
-                                              HandlePropertyName name,
-                                              MutableHandleObject holder,
-                                              MutableHandleShape shape);
+    // Helpers for CanAttachNativeGetProp
+    typedef JSContext * Context;
+    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
+                                 MutableHandleObject holder, MutableHandleShape shape) {
+        return JSObject::lookupProperty(cx, obj, name, holder, shape);
+    }
+    bool lookupNeedsIdempotentChain() const {
+        return idempotent();
+    }
+    bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const;
 
     // Attach the proper stub, if possible
     bool tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,
