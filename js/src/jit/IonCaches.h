@@ -705,6 +705,18 @@ class GetElementIC : public RepatchIonCache
         hasDenseStub_ = true;
     }
 
+    // Helpers for CanAttachNativeGetProp
+    typedef JSContext * Context;
+    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
+                                 MutableHandleObject holder, MutableHandleShape shape) {
+        return JSObject::lookupProperty(cx, obj, name, holder, shape);
+    }
+    bool allowGetters() const { return false; }
+    bool lookupNeedsIdempotentChain() const { return false; }
+    bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const {
+        return monitoredResult();
+    }
+
     static bool canAttachGetProp(JSObject *obj, const Value &idval, jsid id);
     static bool canAttachDenseElement(JSObject *obj, const Value &idval);
     static bool canAttachTypedArrayElement(JSObject *obj, const Value &idval,
