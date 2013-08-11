@@ -73,6 +73,9 @@ class JS_FRIEND_API(BaseProxyHandler)
     inline void *family() {
         return mFamily;
     }
+    static size_t offsetOfFamily() {
+        return offsetof(BaseProxyHandler, mFamily);
+    }
 
     virtual bool isOuterWindow() {
         return false;
