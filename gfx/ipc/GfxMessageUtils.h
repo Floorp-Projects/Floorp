@@ -9,7 +9,7 @@
 
 #include "base/process_util.h"
 #include "chrome/common/ipc_message_utils.h"
-//#include "ipc/IPCMessageUtils.h"
+#include "ipc/IPCMessageUtils.h"
 
 #include "mozilla/Util.h"
 #include "mozilla/gfx/2D.h"
