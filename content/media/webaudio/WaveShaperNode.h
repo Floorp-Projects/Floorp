@@ -9,7 +9,6 @@
 
 #include "AudioNode.h"
 #include "AudioParam.h"
-#include "mozilla/dom/WaveShaperNodeBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -34,18 +33,11 @@ public:
   }
   void SetCurve(const Float32Array* aData);
 
-  OverSampleType Oversample() const
-  {
-    return mType;
-  }
-  void SetOversample(OverSampleType aType);
-
 private:
   void ClearCurve();
 
 private:
   JS::Heap<JSObject*> mCurve;
-  OverSampleType mType;
 };
 
 }

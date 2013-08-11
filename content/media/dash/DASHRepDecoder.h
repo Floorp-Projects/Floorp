@@ -73,8 +73,9 @@ public:
   void SetMPDRepresentation(Representation const * aRep);
 
   // Called from DASHDecoder on main thread; Starts media stream download.
-  virtual nsresult Load(nsIStreamListener** aListener = nullptr,
-                        MediaDecoder* aCloneDonor = nullptr) MOZ_OVERRIDE;
+  nsresult Load(MediaResource* aResource = nullptr,
+                nsIStreamListener** aListener = nullptr,
+                MediaDecoder* aCloneDonor = nullptr);
 
   // Loads the next byte range (or first one on first call). Called on the main
   // thread only.

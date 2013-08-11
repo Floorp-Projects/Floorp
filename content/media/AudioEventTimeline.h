@@ -160,9 +160,7 @@ class AudioEventTimeline
 {
 public:
   explicit AudioEventTimeline(float aDefaultValue)
-    : mValue(aDefaultValue),
-      mComputedValue(aDefaultValue),
-      mLastComputedValue(aDefaultValue)
+    : mValue(aDefaultValue)
   {
   }
 
@@ -188,7 +186,7 @@ public:
   {
     // Silently don't change anything if there are any events
     if (mEvents.IsEmpty()) {
-      mLastComputedValue = mComputedValue = mValue = aValue;
+      mValue = aValue;
     }
   }
 
@@ -239,29 +237,9 @@ public:
     mEvents.Clear();
   }
 
-  static bool TimesEqual(int64_t aLhs, int64_t aRhs)
-  {
-    return aLhs == aRhs;
-  }
-
-  // Since we are going to accumulate error by adding 0.01 multiple time in a
-  // loop, we want to fuzz the equality check in GetValueAtTime.
-  static bool TimesEqual(double aLhs, double aRhs)
-  {
-    const float kEpsilon = 0.0000000001f;
-    return fabs(aLhs - aRhs) < kEpsilon;
-  }
-
-  template<class TimeType>
-  float GetValueAtTime(TimeType aTime)
-  {
-    mComputedValue = GetValueAtTimeHelper(aTime);
-    return mComputedValue;
-  }
-
   // This method computes the AudioParam value at a given time based on the event timeline
   template<class TimeType>
-  float GetValueAtTimeHelper(TimeType aTime)
+  float GetValueAtTime(TimeType aTime) const
   {
     const AudioTimelineEvent* previous = nullptr;
     const AudioTimelineEvent* next = nullptr;
@@ -274,8 +252,7 @@ public:
       case AudioTimelineEvent::LinearRamp:
       case AudioTimelineEvent::ExponentialRamp:
       case AudioTimelineEvent::SetValueCurve:
-        if (TimesEqual(aTime, mEvents[i].template Time<TimeType>())) {
-          mLastComputedValue = mComputedValue;
+        if (aTime == mEvents[i].template Time<TimeType>()) {
           // Find the last event with the same time
           do {
             ++i;
@@ -284,14 +261,13 @@ public:
 
           // SetTarget nodes can be handled no matter what their next node is (if they have one)
           if (mEvents[i - 1].mType == AudioTimelineEvent::SetTarget) {
-            // Follow the curve, without regard to the next event, starting at
-            // the last value of the last event.
+            // Follow the curve, without regard to the next node
             return ExponentialApproach(mEvents[i - 1].template Time<TimeType>(),
-                                       mLastComputedValue, mEvents[i - 1].mValue,
+                                       mValue, mEvents[i - 1].mValue,
                                        mEvents[i - 1].mTimeConstant, aTime);
           }
 
-          // SetValueCurve events can be handled no matter what their event node is (if they have one)
+          // SetValueCurve events can be handled no mattar what their next node is (if they have one)
           if (mEvents[i - 1].mType == AudioTimelineEvent::SetValueCurve) {
             return ExtractValueFromCurve(mEvents[i - 1].template Time<TimeType>(),
                                          mEvents[i - 1].mCurve,
@@ -330,8 +306,8 @@ public:
 
     // SetTarget nodes can be handled no matter what their next node is (if they have one)
     if (previous->mType == AudioTimelineEvent::SetTarget) {
-      return ExponentialApproach(previous->template Time<TimeType>(),
-                                 mLastComputedValue, previous->mValue,
+      // Follow the curve, without regard to the next node
+      return ExponentialApproach(previous->template Time<TimeType>(), mValue, previous->mValue,
                                  previous->mTimeConstant, aTime);
     }
 
@@ -564,10 +540,6 @@ private:
   // being a bottleneck.
   nsTArray<AudioTimelineEvent> mEvents;
   float mValue;
-  // This is the value of this AudioParam we computed at the last call.
-  float mComputedValue;
-  // This is the value of this AudioParam at the last tick of the previous event.
-  float mLastComputedValue;
 };
 
 }
