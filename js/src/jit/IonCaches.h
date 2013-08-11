@@ -998,11 +998,6 @@ class GetPropertyParIC : public ParallelIonCache
     bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
     bool allowGetters() const { return false; }
 
-    static bool canAttachReadSlot(LockedJSContext &cx, IonCache &cache,
-                                  TypedOrValueRegister output, JSObject *obj,
-                                  PropertyName *name, MutableHandleObject holder,
-                                  MutableHandleShape shape);
-
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, JSObject *holder,
                         Shape *shape);
     bool attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
@@ -1051,6 +1046,16 @@ class GetElementParIC : public ParallelIonCache
     bool monitoredResult() const {
         return monitoredResult_;
     }
+
+    // CanAttachNativeGetProp Helpers
+    typedef LockedJSContext & Context;
+    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
+                                 MutableHandleObject holder, MutableHandleShape shape) {
+        return LookupPropertyPure(obj, NameToId(name), holder.address(), shape.address());
+    }
+    bool lookupNeedsIdempotentChain() const { return true; }
+    bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
+    bool allowGetters() const { return false; }
 
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval,
                         PropertyName *name, JSObject *holder, Shape *shape);
