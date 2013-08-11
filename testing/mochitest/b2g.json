@@ -32,6 +32,7 @@
     "content/media/test/test_load_candidates.html": "timed out",
     "content/media/test/test_load_same_resource.html": "",
     "content/media/test/test_media_selection.html": "timed out",
+    "content/media/test/test_mediarecorder_avoid_recursion.html": "guM isn't ready on b2g, bug 903765",
     "content/media/test/test_metadata.html": "",
     "content/media/test/test_mozHasAudio.html": "",
     "content/media/test/test_play_events.html": "Last event should be canplaythrough for gizmo.mp4 - got playing, expected canplaythrough",
