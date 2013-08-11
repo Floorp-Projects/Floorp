@@ -73,7 +73,8 @@ DASHRepDecoder::SetReader(WebMReader* aReader)
 }
 
 nsresult
-DASHRepDecoder::Load(nsIStreamListener** aListener,
+DASHRepDecoder::Load(MediaResource* aResource,
+                     nsIStreamListener** aListener,
                      MediaDecoder* aCloneDonor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");

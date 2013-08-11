@@ -368,7 +368,6 @@ MediaDecoder::MediaDecoder() :
   mDuration(-1),
   mTransportSeekable(true),
   mMediaSeekable(true),
-  mSameOriginMedia(false),
   mReentrantMonitor("media.decoder"),
   mIsDormant(false),
   mPlayState(PLAY_STATE_PAUSED),
@@ -446,7 +445,8 @@ MediaDecoder::~MediaDecoder()
   MOZ_COUNT_DTOR(MediaDecoder);
 }
 
-nsresult MediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
+nsresult MediaDecoder::OpenResource(MediaResource* aResource,
+                                    nsIStreamListener** aStreamListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (aStreamListener) {
@@ -459,21 +459,24 @@ nsresult MediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
     // should be grabbed before the cache lock
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
-    nsresult rv = mResource->Open(aStreamListener);
+    nsresult rv = aResource->Open(aStreamListener);
     if (NS_FAILED(rv)) {
       LOG(PR_LOG_DEBUG, ("%p Failed to open stream!", this));
       return rv;
     }
+
+    mResource = aResource;
   }
   return NS_OK;
 }
 
-nsresult MediaDecoder::Load(nsIStreamListener** aStreamListener,
-                            MediaDecoder* aCloneDonor)
+nsresult MediaDecoder::Load(MediaResource* aResource,
+                                nsIStreamListener** aStreamListener,
+                                MediaDecoder* aCloneDonor)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsresult rv = OpenResource(aStreamListener);
+  nsresult rv = OpenResource(aResource, aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDecoderStateMachine = CreateStateMachine();
@@ -837,18 +840,6 @@ void MediaDecoder::DecodeError()
     mOwner->DecodeError();
 
   Shutdown();
-}
-
-void MediaDecoder::UpdateSameOriginStatus(bool aSameOrigin)
-{
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mSameOriginMedia = aSameOrigin;
-}
-
-bool MediaDecoder::IsSameOriginMedia()
-{
-  GetReentrantMonitor().AssertCurrentThreadIn();
-  return mSameOriginMedia;
 }
 
 bool MediaDecoder::IsSeeking() const

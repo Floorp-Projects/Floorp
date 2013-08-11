@@ -57,8 +57,9 @@ public:
 
   // Loads the MPD from the network and subsequently loads the media streams.
   // Called from the main thread only.
-  virtual nsresult Load(nsIStreamListener** aListener,
-                        MediaDecoder* aCloneDonor) MOZ_OVERRIDE;
+  nsresult Load(MediaResource* aResource,
+                nsIStreamListener** aListener,
+                MediaDecoder* aCloneDonor);
 
   // Notifies download of MPD file has ended.
   // Called on the main thread only.

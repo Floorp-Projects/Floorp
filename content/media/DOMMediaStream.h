@@ -68,12 +68,10 @@ public:
 
   // WebIDL
   double CurrentTime();
-
   void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks);
   void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
 
-  MediaStream* GetStream() const { return mStream; }
-
+  MediaStream* GetStream() { return mStream; }
   bool IsFinished();
   /**
    * Returns a principal indicating who may access this stream. The stream contents
@@ -95,10 +93,6 @@ public:
    * will only be called during a forced shutdown due to application exit.
    */
   void NotifyMediaStreamGraphShutdown();
-  /**
-   * Called when the main-thread state of the MediaStream changed.
-   */
-  void NotifyStreamStateChanged();
 
   // Indicate what track types we eventually expect to add to this stream
   enum {
@@ -151,17 +145,6 @@ public:
   // Takes ownership of aCallback.
   void OnTracksAvailable(OnTracksAvailableCallback* aCallback);
 
-  /**
-   * Add an nsISupports object that this stream will keep alive as long as
-   * the stream is not finished.
-   */
-  void AddConsumerToKeepAlive(nsISupports* aConsumer)
-  {
-    if (!IsFinished() && !mNotifiedOfMediaStreamGraphShutdown) {
-      mConsumersToKeepAlive.AppendElement(aConsumer);
-    }
-  }
-
 protected:
   void Destroy();
   void InitSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
@@ -189,9 +172,6 @@ protected:
   nsRefPtr<StreamListener> mListener;
 
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
-
-  // Keep these alive until the stream finishes
-  nsTArray<nsCOMPtr<nsISupports> > mConsumersToKeepAlive;
 
   // Indicate what track types we eventually expect to add to this stream
   uint8_t mHintContents;

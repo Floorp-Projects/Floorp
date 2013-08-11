@@ -40,28 +40,14 @@ SpeechStreamListener::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 
   AudioSegment::ChunkIterator iterator(*audio);
   while (!iterator.IsEnded()) {
-    // Skip over-large chunks so we don't crash!
-    if (iterator->GetDuration() > INT_MAX) {
-      continue;
-    }
-    int duration = int(iterator->GetDuration());
+    AudioSampleFormat format = iterator->mBufferFormat;
 
-    if (iterator->IsNull()) {
-      nsTArray<int16_t> nullData;
-      PodZero(nullData.AppendElements(duration), duration);
-      ConvertAndDispatchAudioChunk(duration, iterator->mVolume, nullData.Elements());
-    } else {
-      AudioSampleFormat format = iterator->mBufferFormat;
+    MOZ_ASSERT(format == AUDIO_FORMAT_S16 || format == AUDIO_FORMAT_FLOAT32);
 
-      MOZ_ASSERT(format == AUDIO_FORMAT_S16 || format == AUDIO_FORMAT_FLOAT32);
-
-      if (format == AUDIO_FORMAT_S16) {
-        ConvertAndDispatchAudioChunk(duration, iterator->mVolume,
-                                     static_cast<const int16_t*>(iterator->mChannelData[0]));
-      } else if (format == AUDIO_FORMAT_FLOAT32) {
-        ConvertAndDispatchAudioChunk(duration, iterator->mVolume,
-                                     static_cast<const float*>(iterator->mChannelData[0]));
-      }
+    if (format == AUDIO_FORMAT_S16) {
+      ConvertAndDispatchAudioChunk<int16_t>(*iterator);
+    } else if (format == AUDIO_FORMAT_FLOAT32) {
+      ConvertAndDispatchAudioChunk<float>(*iterator);
     }
 
     iterator.Next();
@@ -69,17 +55,20 @@ SpeechStreamListener::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 }
 
 template<typename SampleFormatType> void
-SpeechStreamListener::ConvertAndDispatchAudioChunk(int aDuration, float aVolume,
-                                                   SampleFormatType* aData)
+SpeechStreamListener::ConvertAndDispatchAudioChunk(AudioChunk& aChunk)
 {
-  nsRefPtr<SharedBuffer> samples(SharedBuffer::Create(aDuration *
+  nsRefPtr<SharedBuffer> samples(SharedBuffer::Create(aChunk.mDuration *
                                                       1 * // channel
                                                       sizeof(int16_t)));
 
-  int16_t* to = static_cast<int16_t*>(samples->Data());
-  ConvertAudioSamplesWithScale(aData, to, aDuration, aVolume);
+  const SampleFormatType* from =
+    static_cast<const SampleFormatType*>(aChunk.mChannelData[0]);
 
-  mRecognition->FeedAudioData(samples.forget(), aDuration, this);
+  int16_t* to = static_cast<int16_t*>(samples->Data());
+  ConvertAudioSamplesWithScale(from, to, aChunk.mDuration, aChunk.mVolume);
+
+  mRecognition->FeedAudioData(samples.forget(), aChunk.mDuration, this);
+  return;
 }
 
 void
