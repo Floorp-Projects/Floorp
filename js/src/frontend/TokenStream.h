@@ -395,7 +395,6 @@ class MOZ_STACK_CLASS TokenStream
     ~TokenStream();
 
     // Accessors.
-    bool onCurrentLine(const TokenPos &pos) const { return srcCoords.isOnThisLine(pos.end, lineno); }
     const Token &currentToken() const { return tokens[cursor]; }
     bool isCurrentTokenType(TokenKind type) const {
         return currentToken().type == type;
@@ -447,13 +446,12 @@ class MOZ_STACK_CLASS TokenStream
     struct Flags
     {
         bool isEOF:1;           // Hit end of file.
-        bool sawEOL:1;          // An EOL was hit in whitespace or a multi-line comment.
         bool isDirtyLine:1;     // Non-whitespace since start of line.
         bool sawOctalEscape:1;  // Saw an octal character escape.
         bool hadError:1;        // Returned TOK_ERROR from getToken.
 
         Flags()
-          : isEOF(), sawEOL(), isDirtyLine(), sawOctalEscape(), hadError()
+          : isEOF(), isDirtyLine(), sawOctalEscape(), hadError()
         {}
     };
 
@@ -499,23 +497,35 @@ class MOZ_STACK_CLASS TokenStream
         return tt;
     }
 
-    TokenKind peekTokenSameLine(Modifier modifier = None) {
-        if (!onCurrentLine(currentToken().pos))
-            return TOK_EOL;
+    // This is like peekToken(), with one exception:  if there is an EOL
+    // between the end of the current token and the start of the next token, it
+    // returns TOK_EOL.  In that case, no token with TOK_EOL is actually
+    // created, just a TOK_EOL TokenKind is returned, and currentToken()
+    // shouldn't be consulted.  (This is the only place TOK_EOL is produced.)
+    JS_ALWAYS_INLINE TokenKind peekTokenSameLine(Modifier modifier = None) {
+       const Token &curr = currentToken();
 
-        if (lookahead != 0)
+        // If lookahead != 0, we have scanned ahead at least one token, and
+        // |lineno| is the line that the furthest-scanned token ends on.  If
+        // it's the same as the line that the current token ends on, that's a
+        // stronger condition than what we are looking for, and we don't need
+        // to return TOK_EOL.
+        if (lookahead != 0 && srcCoords.isOnThisLine(curr.pos.end, lineno))
             return tokens[(cursor + 1) & ntokensMask].type;
 
-        // This is the only place TOK_EOL is produced.  No token with TOK_EOL
-        // is created, just a TOK_EOL TokenKind is returned.
-        flags.sawEOL = false;
-        TokenKind tt = getToken(modifier);
-        if (flags.sawEOL) {
-            tt = TOK_EOL;
-            flags.sawEOL = false;
-        }
+        // The above check misses two cases where we don't have to return
+        // TOK_EOL.
+        // - The next token starts on the same line, but is a multi-line token.
+        // - The next token starts on the same line, but lookahead==2 and there
+        //   is a newline between the next token and the one after that.
+        // The following test is somewhat expensive but gets these cases (and
+        // all others) right.
+        (void)getToken(modifier);
+        const Token &next = currentToken();
         ungetToken();
-        return tt;
+        return srcCoords.lineNum(curr.pos.end) == srcCoords.lineNum(next.pos.begin)
+               ? next.type
+               : TOK_EOL;
     }
 
     // Get the next token from the stream if its kind is |tt|.
