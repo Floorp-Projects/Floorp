@@ -1859,19 +1859,23 @@ GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
             {
                 RootedShape shape(cx);
                 RootedObject holder(cx);
-                if (canAttachReadSlot(cx, cache, cache.output(), obj, cache.name(),
-                                      &holder, &shape))
-                {
+                RootedPropertyName name(cx, cache.name());
+
+                GetPropertyIC::NativeGetPropCacheability canCache =
+                    CanAttachNativeGetProp(cx, cache, obj, name, &holder, &shape);
+                JS_ASSERT(canCache != GetPropertyIC::CanAttachError);
+
+                if (canCache == GetPropertyIC::CanAttachReadSlot) {
                     if (!cache.attachReadSlot(cx, ion, obj, holder, shape))
                         return TP_FATAL;
                     attachedStub = true;
                 }
-            }
 
-            if (!attachedStub && obj->is<ArrayObject>() && slice->names().length == cache.name()) {
-                if (!cache.attachArrayLength(cx, ion, obj))
-                    return TP_FATAL;
-                attachedStub = true;
+                if (!attachedStub && canCache == GetPropertyIC::CanAttachArrayLength) {
+                    if (!cache.attachArrayLength(cx, ion, obj))
+                        return TP_FATAL;
+                    attachedStub = true;
+                }
             }
 
             if (!attachedStub && !cache.hasTypedArrayLengthStub() &&
