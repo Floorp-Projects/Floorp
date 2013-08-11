@@ -293,15 +293,11 @@ MakeFrameDescriptor(uint32_t frameSize, FrameType type)
 
 // Returns the JSScript associated with the topmost Ion frame.
 inline JSScript *
-GetTopIonJSScript(PerThreadData *pt, const SafepointIndex **safepointIndexOut, void **returnAddrOut)
+GetTopIonJSScript(PerThreadData *pt, void **returnAddrOut)
 {
     IonFrameIterator iter(pt->ionTop);
     JS_ASSERT(iter.type() == IonFrame_Exit);
     ++iter;
-
-    // If needed, grab the safepoint index.
-    if (safepointIndexOut)
-        *safepointIndexOut = iter.safepoint();
 
     JS_ASSERT(iter.returnAddressToFp() != NULL);
     if (returnAddrOut)
@@ -317,10 +313,9 @@ GetTopIonJSScript(PerThreadData *pt, const SafepointIndex **safepointIndexOut, v
 }
 
 inline JSScript *
-GetTopIonJSScript(ThreadSafeContext *cx, const SafepointIndex **safepointIndexOut = NULL,
-                  void **returnAddrOut = NULL)
+GetTopIonJSScript(ThreadSafeContext *cx, void **returnAddrOut = NULL)
 {
-    return GetTopIonJSScript(cx->perThreadData, safepointIndexOut, returnAddrOut);
+    return GetTopIonJSScript(cx->perThreadData, returnAddrOut);
 }
 
 } // namespace ion
