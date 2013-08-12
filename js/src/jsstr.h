@@ -20,11 +20,11 @@
 #include "vm/Unicode.h"
 
 class JSFlatString;
+class JSLinearString;
 class JSStableString;
 
 namespace js {
 
-/* Implemented in jsstrinlines.h */
 class StringBuffer;
 
 /*

@@ -34,4 +34,3 @@ install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/svg.css $(DESTDIR)$(mozappdir)/res
 
 
-DEFINES += -D_IMPL_NS_LAYOUT

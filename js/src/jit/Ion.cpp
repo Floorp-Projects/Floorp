@@ -1388,8 +1388,10 @@ IonCompile(JSContext *cx, JSScript *script,
         return AbortReason_Alloc;
 
     // Try-finally is not yet supported.
-    if (script->analysis()->hasTryFinally())
+    if (script->analysis()->hasTryFinally()) {
+        IonSpew(IonSpew_Abort, "Has try-finally.");
         return AbortReason_Disable;
+    }
 
     LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     if (!alloc)

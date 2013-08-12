@@ -48,7 +48,7 @@ Filter(JSContext *cx, HandleObject wrapper, AutoIdVector &props)
 
 template <typename Policy>
 static bool
-FilterSetter(JSContext *cx, JSObject *wrapper, jsid id, JS::MutableHandle<js::PropertyDescriptor> desc)
+FilterSetter(JSContext *cx, JSObject *wrapper, jsid id, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     bool setAllowed = Policy::check(cx, wrapper, id, Wrapper::SET);
     if (!setAllowed) {
@@ -63,7 +63,7 @@ template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
                                                       HandleId id,
-                                                      JS::MutableHandle<js::PropertyDescriptor> desc,
+                                                      JS::MutableHandle<JSPropertyDescriptor> desc,
                                                       unsigned flags)
 {
     assertEnteredPolicy(cx, wrapper, id);
@@ -76,7 +76,7 @@ template <typename Base, typename Policy>
 bool
 FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper,
                                                          HandleId id,
-                                                         JS::MutableHandle<js::PropertyDescriptor> desc,
+                                                         JS::MutableHandle<JSPropertyDescriptor> desc,
                                                          unsigned flags)
 {
     assertEnteredPolicy(cx, wrapper, id);

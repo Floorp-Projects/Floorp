@@ -762,22 +762,6 @@ js::GetContextStructuredCloneCallbacks(JSContext *cx)
     return cx->runtime()->structuredCloneCallbacks;
 }
 
-JS_FRIEND_API(bool)
-js::CanCallContextDebugHandler(JSContext *cx)
-{
-    return !!cx->runtime()->debugHooks.debuggerHandler;
-}
-
-JS_FRIEND_API(JSTrapStatus)
-js::CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval)
-{
-    if (!cx->runtime()->debugHooks.debuggerHandler)
-        return JSTRAP_RETURN;
-
-    return cx->runtime()->debugHooks.debuggerHandler(cx, script, bc, rval,
-                                                   cx->runtime()->debugHooks.debuggerHandlerData);
-}
-
 #ifdef JS_THREADSAFE
 JS_FRIEND_API(bool)
 js::ContextHasOutstandingRequests(const JSContext *cx)

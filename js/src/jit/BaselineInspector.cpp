@@ -6,10 +6,14 @@
 
 #include "jit/BaselineInspector.h"
 
+#include "mozilla/DebugOnly.h"
+
 #include "jit/BaselineIC.h"
 
 using namespace js;
 using namespace js::ion;
+
+using mozilla::DebugOnly;
 
 bool
 SetElemICInspector::sawOOBDenseWrite() const
@@ -228,7 +232,7 @@ TryToSpecializeBinaryArithOp(ICStub **stubs,
                              uint32_t nstubs,
                              MIRType *result)
 {
-    bool sawInt32 = false;
+    DebugOnly<bool> sawInt32 = false;
     bool sawDouble = false;
     bool sawOther = false;
 

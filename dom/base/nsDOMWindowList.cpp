@@ -86,14 +86,9 @@ nsDOMWindowList::GetLength(uint32_t* aLength)
 already_AddRefed<nsIDOMWindow>
 nsDOMWindowList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
-  EnsureFresh();
-
   aFound = false;
-  NS_ENSURE_TRUE(mDocShellNode, nullptr);
 
-  nsCOMPtr<nsIDocShellTreeItem> item;
-  mDocShellNode->GetChildAt(aIndex, getter_AddRefs(item));
-
+  nsCOMPtr<nsIDocShellTreeItem> item = GetDocShellTreeItemAt(aIndex);
   if (!item) {
     return nullptr;
   }

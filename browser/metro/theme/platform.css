@@ -577,7 +577,6 @@ arrowbox {
 .meta-section-title {
   font-size: @metro_font_large@;
   font-weight: 100;
-  display: none;
   cursor: default;
 }
 
@@ -591,9 +590,9 @@ arrowbox {
   padding: 0;
 }
 
-#start-container[viewstate="snapped"] .meta-section-title.narrow-title,
-#start-container:not([viewstate="snapped"]) .meta-section-title.wide-title {
-  display: block;
+#start-container:not([viewstate="snapped"]) .meta-section-title.narrow-title,
+#start-container[viewstate="snapped"] .meta-section-title.wide-title {
+  display: none;
 }
 
 .meta-section:not([expanded]) > .meta-section-title.narrow-title:-moz-locale-dir(ltr):after {

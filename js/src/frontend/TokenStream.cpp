@@ -360,7 +360,6 @@ JS_ALWAYS_INLINE void
 TokenStream::updateFlagsForEOL()
 {
     flags.isDirtyLine = false;
-    flags.sawEOL = true;
 }
 
 // This gets the next char, normalizing all EOL sequences to '\n' as it goes.

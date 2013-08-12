@@ -7,10 +7,15 @@
 
 #include "nsISupports.h"
 
-class nsIDOMHTMLInputElement;
 class nsString;
 class nsIRadioVisitor;
 class nsIFormControl;
+
+namespace mozilla {
+namespace dom {
+class HTMLInputElement;
+}
+}
 
 #define NS_IRADIOGROUPCONTAINER_IID   \
 { 0x22924a01, 0x4360, 0x401b, \
@@ -41,15 +46,15 @@ public:
    * @param aName the group name
    * @param aRadio the currently selected radio button
    */
-  virtual void SetCurrentRadioButton(const nsAString& aName, 
-                                     nsIDOMHTMLInputElement* aRadio) = 0;
+  virtual void SetCurrentRadioButton(const nsAString& aName,
+                                     mozilla::dom::HTMLInputElement* aRadio) = 0;
 
   /**
    * Get the current radio button in a group
    * @param aName the group name
    * @return the currently selected radio button
    */
-  virtual nsIDOMHTMLInputElement* GetCurrentRadioButton(const nsAString& aName) = 0;
+  virtual mozilla::dom::HTMLInputElement* GetCurrentRadioButton(const nsAString& aName) = 0;
 
   /**
    * Get the next/prev radio button in a group
@@ -60,8 +65,8 @@ public:
    */
   NS_IMETHOD GetNextRadioButton(const nsAString& aName,
                                 const bool aPrevious,
-                                nsIDOMHTMLInputElement*  aFocusedRadio,
-                                nsIDOMHTMLInputElement** aRadio) = 0;
+                                mozilla::dom::HTMLInputElement*  aFocusedRadio,
+                                mozilla::dom::HTMLInputElement** aRadio) = 0;
 
   /**
    * Add radio button to radio group

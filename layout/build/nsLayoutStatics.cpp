@@ -118,6 +118,8 @@ using namespace mozilla::system;
 #include "nsDocument.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 
+extern void NS_ShutdownEventTargetChainItemRecyclePool();
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
@@ -373,6 +375,8 @@ nsLayoutStatics::Shutdown()
   nsHtml5Module::ReleaseStatics();
 
   nsRegion::ShutdownStatic();
+
+  NS_ShutdownEventTargetChainItemRecyclePool();
 
   HTMLInputElement::DestroyUploadLastDir();
 
