@@ -4329,10 +4329,10 @@ Call(JSContext *cx, jsval thisv, JSObject *funObj, unsigned argc, jsval *argv,
  * is disconnected before attempting such re-entry.
  */
 extern JS_PUBLIC_API(JSOperationCallback)
-JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback);
+JS_SetOperationCallback(JSRuntime *rt, JSOperationCallback callback);
 
 extern JS_PUBLIC_API(JSOperationCallback)
-JS_GetOperationCallback(JSContext *cx);
+JS_GetOperationCallback(JSRuntime *rt);
 
 extern JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSRuntime *rt);

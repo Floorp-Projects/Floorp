@@ -399,7 +399,7 @@ function openTabPrompt(domWin, tabPrompt, args) {
 
     let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
-    let callerWin = winUtils.enterModalStateWithWindow();
+    winUtils.enterModalState();
 
     // We provide a callback so the prompt can close itself. We don't want to
     // wait for this event loop to return... Otherwise the presence of other
@@ -413,7 +413,7 @@ function openTabPrompt(domWin, tabPrompt, args) {
         if (newPrompt)
             tabPrompt.removePrompt(newPrompt);
 
-        winUtils.leaveModalStateWithWindow(callerWin);
+        winUtils.leaveModalState();
 
         PromptUtils.fireDialogEvent(domWin, "DOMModalDialogClosed");
     }
