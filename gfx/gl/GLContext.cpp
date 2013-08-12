@@ -923,9 +923,11 @@ already_AddRefed<TextureImage>
 GLContext::CreateTextureImage(const nsIntSize& aSize,
                               TextureImage::ContentType aContentType,
                               GLenum aWrapMode,
-                              TextureImage::Flags aFlags)
+                              TextureImage::Flags aFlags,
+                              TextureImage::ImageFormat aImageFormat)
 {
-    return CreateBasicTextureImage(this, aSize, aContentType, aWrapMode, aFlags);
+    return CreateBasicTextureImage(this, aSize, aContentType, aWrapMode,
+                                   aFlags, aImageFormat);
 }
 
 void GLContext::ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter)

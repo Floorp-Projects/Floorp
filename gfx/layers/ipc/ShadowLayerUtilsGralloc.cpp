@@ -505,6 +505,23 @@ ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
 }
 
 /*static*/ bool
+ShadowLayerForwarder::PlatformGetDescriptorSurfaceImageFormat(
+  const SurfaceDescriptor& aDescriptor,
+  OpenMode aMode,
+  gfxImageFormat* aImageFormat,
+  gfxASurface** aSurface)
+{
+  if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aDescriptor.type()) {
+    return false;
+  }
+
+  sp<GraphicBuffer> buffer =
+    GrallocBufferActor::GetFrom(aDescriptor.get_SurfaceDescriptorGralloc());
+  *aImageFormat = ImageFormatForPixelFormat(buffer->getPixelFormat());
+  return true;
+}
+
+/*static*/ bool
 ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor* aSurface)
 {
   if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aSurface->type()) {

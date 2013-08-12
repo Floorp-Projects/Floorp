@@ -422,16 +422,22 @@ TextureImageDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage
     NS_WARNING("trying to update TextureImageDeprecatedTextureHostOGL without a compositor?");
     return;
   }
+
   AutoOpenSurface surf(OPEN_READ_ONLY, aImage);
   nsIntSize size = surf.Size();
+  TextureImage::ImageFormat format = surf.ImageFormat();
 
   if (!mTexture ||
       (mTexture->GetSize() != size && !aOffset) ||
-      mTexture->GetContentType() != surf.ContentType()) {
+      mTexture->GetContentType() != surf.ContentType() ||
+      (mTexture->GetImageFormat() != format &&
+       mTexture->GetImageFormat() != gfxASurface::ImageFormatUnknown)) {
+
     mTexture = mGL->CreateTextureImage(size,
                                        surf.ContentType(),
                                        WrapMode(mGL, mFlags & AllowRepeat),
-                                       FlagsToGLFlags(mFlags));
+                                       FlagsToGLFlags(mFlags),
+                                       format);
   }
 
   // XXX this is always just ridiculously slow
