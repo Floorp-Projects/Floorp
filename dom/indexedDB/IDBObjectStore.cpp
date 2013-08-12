@@ -1132,8 +1132,7 @@ IDBObjectStore::GetStructuredCloneReadInfoFromStatement(
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  nsAutoArrayPtr<char> uncompressed(new (fallible_t()) char[uncompressedLength]);
-  NS_ENSURE_TRUE(uncompressed, NS_ERROR_OUT_OF_MEMORY);
+  nsAutoArrayPtr<char> uncompressed(new char[uncompressedLength]);
 
   if (!snappy::RawUncompress(compressed, compressedLength,
                              uncompressed.get())) {
@@ -2969,8 +2968,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
   // This will hold our compressed data until the end of the method. The
   // BindBlobByName function will copy it.
-  nsAutoArrayPtr<char> compressed(new (fallible_t()) char[compressedLength]);
-  NS_ENSURE_TRUE(compressed, NS_ERROR_OUT_OF_MEMORY);
+  nsAutoArrayPtr<char> compressed(new char[compressedLength]);
 
   snappy::RawCompress(uncompressed, uncompressedLength, compressed.get(),
                       &compressedLength);
