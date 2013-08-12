@@ -1078,9 +1078,9 @@ nsBindingManager::ClearInsertionPointsRecursively(nsIContent* aContent)
     static_cast<XBLChildrenElement*>(aContent)->ClearInsertedChildrenAndInsertionParents();
   }
 
-  uint32_t childCount = aContent->GetChildCount();
-  for (uint32_t c = 0; c < childCount; c++) {
-    ClearInsertionPointsRecursively(aContent->GetChildAt(c));
+  for (nsIContent* child = aContent->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    ClearInsertionPointsRecursively(child);
   }
 }
 
