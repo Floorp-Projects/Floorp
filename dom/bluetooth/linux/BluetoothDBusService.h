@@ -162,6 +162,11 @@ public:
   SendSinkMessage(const nsAString& aDeviceAddresses,
                   const nsAString& aMessage) MOZ_OVERRIDE;
 
+  virtual nsresult
+  SendInputMessage(const nsAString& aDeviceAddresses,
+                   const nsAString& aMessage,
+                   BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
 private:
   /**
    * For DBus Control method of "UpdateNotification", event id should be
