@@ -35,6 +35,10 @@ function testSimpleCall() {
       let localVar3 = localScope.addItem("localVar3");
       let localVar4 = localScope.addItem("localVar4");
       let localVar5 = localScope.addItem("localVar5");
+      let localVar6 = localScope.addItem("localVar6");
+      let localVar7 = localScope.addItem("localVar7");
+      let localVar8 = localScope.addItem("localVar8");
+      let localVar9 = localScope.addItem("localVar9");
 
       localVar0.setGrip(42);
       localVar1.setGrip(true);
@@ -43,6 +47,10 @@ function testSimpleCall() {
       localVar3.setGrip({ "type": "undefined" });
       localVar4.setGrip({ "type": "null" });
       localVar5.setGrip({ "type": "object", "class": "Object" });
+      localVar6.setGrip({ "type": "Infinity" });
+      localVar7.setGrip({ "type": "-Infinity" });
+      localVar8.setGrip({ "type": "NaN" });
+      localVar9.setGrip({ "type": "-0" });
 
       localVar5.addItems({
         "someProp0": { "value": 42, "enumerable": true },
@@ -54,15 +62,16 @@ function testSimpleCall() {
           "value": { "type": "object", "class": "Object" },
           "enumerable": true
         },
-        "someUndefined": {
-          "value": { "type": "undefined" },
-          "enumerable": true
-        },
-        "someAccessor": {
+        "someProp6": { "value": { "type": "Infinity" }, "enumerable": true },
+        "someProp7": { "value": { "type": "-Infinity" }, "enumerable": true },
+        "someProp8": { "value": { "type": "NaN" }, "enumerable": true },
+        "someProp9": { "value": { "type": "undefined" }, "enumerable": true },
+        "someProp10": { "value": { "type": "-0" }, "enumerable": true },
+        "someProp11": {
           "get": { "type": "object", "class": "Function" },
           "set": { "type": "undefined" },
           "enumerable": true
-        }
+        },
       });
 
       localVar5.get("someProp5").addItems({
@@ -75,15 +84,16 @@ function testSimpleCall() {
           "value": { "type": "object", "class": "Object" },
           "enumerable": true
         },
-        "someUndefined": {
-          "value": { "type": "undefined" },
-          "enumerable": true
-        },
-        "someAccessor": {
+        "someProp6": { "value": { "type": "Infinity" }, "enumerable": true },
+        "someProp7": { "value": { "type": "-Infinity" }, "enumerable": true },
+        "someProp8": { "value": { "type": "NaN" }, "enumerable": true },
+        "someProp9": { "value": { "type": "undefined" }, "enumerable": true },
+        "someProp10": { "value": { "type": "-0" }, "enumerable": true },
+        "someProp11": {
           "get": { "type": "object", "class": "Function" },
           "set": { "type": "undefined" },
           "enumerable": true
-        }
+        },
       });
 
       windowVar.setGrip({ "type": "object", "class": "Window" });
@@ -110,6 +120,10 @@ function testSimpleCall() {
       ok(localVar3, "The localVar3 hasn't been created correctly.");
       ok(localVar4, "The localVar4 hasn't been created correctly.");
       ok(localVar5, "The localVar5 hasn't been created correctly.");
+      ok(localVar6, "The localVar6 hasn't been created correctly.");
+      ok(localVar7, "The localVar7 hasn't been created correctly.");
+      ok(localVar8, "The localVar8 hasn't been created correctly.");
+      ok(localVar9, "The localVar8 hasn't been created correctly.");
 
       for each (let elt in globalScope.target.querySelector(".nonenum").childNodes) {
         info("globalScope :: " + { id: elt.id, className: elt.className }.toSource());
@@ -120,12 +134,12 @@ function testSimpleCall() {
       for each (let elt in localScope.target.querySelector(".nonenum").childNodes) {
         info("localScope :: " + { id: elt.id, className: elt.className }.toSource());
       }
-      is(localScope.target.querySelector(".nonenum").childNodes.length, 6,
+      is(localScope.target.querySelector(".nonenum").childNodes.length, 10,
         "The localScope doesn't contain all the created variable elements.");
 
-      is(localVar5.target.querySelector(".variables-view-element-details").childNodes.length, 8,
+      is(localVar5.target.querySelector(".variables-view-element-details").childNodes.length, 12,
         "The localVar5 doesn't contain all the created properties.");
-      is(localVar5.get("someProp5").target.querySelector(".variables-view-element-details").childNodes.length, 8,
+      is(localVar5.get("someProp5").target.querySelector(".variables-view-element-details").childNodes.length, 12,
         "The localVar5.someProp5 doesn't contain all the created properties.");
 
       is(windowVar.target.querySelector(".value").getAttribute("value"), "Window",
@@ -145,40 +159,64 @@ function testSimpleCall() {
         "The grip information for the localVar4 wasn't set correctly.");
       is(localVar5.target.querySelector(".value").getAttribute("value"), "Object",
         "The grip information for the localVar5 wasn't set correctly.");
+      is(localVar6.target.querySelector(".value").getAttribute("value"), "Infinity",
+        "The grip information for the localVar6 wasn't set correctly.");
+      is(localVar7.target.querySelector(".value").getAttribute("value"), "-Infinity",
+        "The grip information for the localVar7 wasn't set correctly.");
+      is(localVar8.target.querySelector(".value").getAttribute("value"), "NaN",
+        "The grip information for the localVar8 wasn't set correctly.");
+      is(localVar9.target.querySelector(".value").getAttribute("value"), "-0",
+        "The grip information for the localVar9 wasn't set correctly.");
 
       is(localVar5.get("someProp0").target.querySelector(".value").getAttribute("value"), "42",
-        "The grip information for the localVar0 wasn't set correctly.");
+        "The grip information for the someProp0 wasn't set correctly.");
       is(localVar5.get("someProp1").target.querySelector(".value").getAttribute("value"), "true",
-        "The grip information for the localVar1 wasn't set correctly.");
+        "The grip information for the someProp1 wasn't set correctly.");
       is(localVar5.get("someProp2").target.querySelector(".value").getAttribute("value"), "\"nasu\"",
-        "The grip information for the localVar2 wasn't set correctly.");
+        "The grip information for the someProp2 wasn't set correctly.");
       is(localVar5.get("someProp3").target.querySelector(".value").getAttribute("value"), "undefined",
-        "The grip information for the localVar3 wasn't set correctly.");
+        "The grip information for the someProp3 wasn't set correctly.");
       is(localVar5.get("someProp4").target.querySelector(".value").getAttribute("value"), "null",
-        "The grip information for the localVar4 wasn't set correctly.");
+        "The grip information for the someProp4 wasn't set correctly.");
       is(localVar5.get("someProp5").target.querySelector(".value").getAttribute("value"), "Object",
-        "The grip information for the localVar5 wasn't set correctly.");
-      is(localVar5.get("someUndefined").target.querySelector(".value").getAttribute("value"), "undefined",
-        "The grip information for the someUndefined wasn't set correctly.");
-      is(localVar5.get("someAccessor").target.querySelector(".value").getAttribute("value"), "",
-        "The grip information for the someAccessor wasn't set correctly.");
+        "The grip information for the someProp5 wasn't set correctly.");
+      is(localVar5.get("someProp6").target.querySelector(".value").getAttribute("value"), "Infinity",
+        "The grip information for the someProp6 wasn't set correctly.");
+      is(localVar5.get("someProp7").target.querySelector(".value").getAttribute("value"), "-Infinity",
+        "The grip information for the someProp7 wasn't set correctly.");
+      is(localVar5.get("someProp8").target.querySelector(".value").getAttribute("value"), "NaN",
+        "The grip information for the someProp8 wasn't set correctly.");
+      is(localVar5.get("someProp9").target.querySelector(".value").getAttribute("value"), "undefined",
+        "The grip information for the someProp9 wasn't set correctly.");
+      is(localVar5.get("someProp10").target.querySelector(".value").getAttribute("value"), "-0",
+        "The grip information for the someProp10 wasn't set correctly.");
+      is(localVar5.get("someProp11").target.querySelector(".value").getAttribute("value"), "",
+        "The grip information for the someProp11 wasn't set correctly.");
 
       is(localVar5.get("someProp5").get("someProp0").target.querySelector(".value").getAttribute("value"), "42",
-        "The grip information for the sub-localVar0 wasn't set correctly.");
+        "The grip information for the sub-someProp0 wasn't set correctly.");
       is(localVar5.get("someProp5").get("someProp1").target.querySelector(".value").getAttribute("value"), "true",
-        "The grip information for the sub-localVar1 wasn't set correctly.");
+        "The grip information for the sub-someProp1 wasn't set correctly.");
       is(localVar5.get("someProp5").get("someProp2").target.querySelector(".value").getAttribute("value"), "\"nasu\"",
-        "The grip information for the sub-localVar2 wasn't set correctly.");
+        "The grip information for the sub-someProp2 wasn't set correctly.");
       is(localVar5.get("someProp5").get("someProp3").target.querySelector(".value").getAttribute("value"), "undefined",
-        "The grip information for the sub-localVar3 wasn't set correctly.");
+        "The grip information for the sub-someProp3 wasn't set correctly.");
       is(localVar5.get("someProp5").get("someProp4").target.querySelector(".value").getAttribute("value"), "null",
-        "The grip information for the sub-localVar4 wasn't set correctly.");
+        "The grip information for the sub-someProp4 wasn't set correctly.");
       is(localVar5.get("someProp5").get("someProp5").target.querySelector(".value").getAttribute("value"), "Object",
-        "The grip information for the sub-localVar5 wasn't set correctly.");
-      is(localVar5.get("someProp5").get("someUndefined").target.querySelector(".value").getAttribute("value"), "undefined",
-        "The grip information for the sub-someUndefined wasn't set correctly.");
-      is(localVar5.get("someProp5").get("someAccessor").target.querySelector(".value").getAttribute("value"), "",
-        "The grip information for the sub-someAccessor wasn't set correctly.");
+        "The grip information for the sub-someProp5 wasn't set correctly.");
+      is(localVar5.get("someProp5").get("someProp6").target.querySelector(".value").getAttribute("value"), "Infinity",
+        "The grip information for the sub-someProp6 wasn't set correctly.");
+      is(localVar5.get("someProp5").get("someProp7").target.querySelector(".value").getAttribute("value"), "-Infinity",
+        "The grip information for the sub-someProp7 wasn't set correctly.");
+      is(localVar5.get("someProp5").get("someProp8").target.querySelector(".value").getAttribute("value"), "NaN",
+        "The grip information for the sub-someProp8 wasn't set correctly.");
+      is(localVar5.get("someProp5").get("someProp9").target.querySelector(".value").getAttribute("value"), "undefined",
+        "The grip information for the sub-someProp9 wasn't set correctly.");
+      is(localVar5.get("someProp5").get("someProp10").target.querySelector(".value").getAttribute("value"), "-0",
+        "The grip information for the sub-someProp10 wasn't set correctly.");
+      is(localVar5.get("someProp5").get("someProp11").target.querySelector(".value").getAttribute("value"), "",
+        "The grip information for the sub-someProp11 wasn't set correctly.");
 
       gDebugger.DebuggerController.activeThread.resume(function() {
         closeDebuggerAndFinish();

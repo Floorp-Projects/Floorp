@@ -827,6 +827,7 @@ public:
     static void ActivityCallback(void *arg, bool active);
     static void CTypesActivityCallback(JSContext *cx,
                                        js::CTypesActivityType type);
+    static bool OperationCallback(JSContext *cx);
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
@@ -836,6 +837,7 @@ public:
     void DeleteJunkScope();
 
     PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
+    void OnAfterProcessNextEvent() { mSlowScriptCheckpoint = mozilla::TimeStamp(); }
 
 private:
     XPCJSRuntime(); // no implementation
@@ -875,6 +877,8 @@ private:
     JS::GCSliceCallback mPrevGCSliceCallback;
     JSObject* mJunkScope;
     nsRefPtr<AsyncFreeSnowWhite> mAsyncSnowWhiteFreer;
+
+    mozilla::TimeStamp mSlowScriptCheckpoint;
 
     nsCOMPtr<nsIException>   mPendingException;
     nsCOMPtr<nsIExceptionManager> mExceptionManager;
