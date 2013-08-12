@@ -33,6 +33,9 @@ pref(webgl.force-layers-readback,true)                      random-if(Android&&A
 pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&alpha&preserve  wrapper.html?green.png
 pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&alpha&preserve  wrapper.html?green.png
 
+# Check that resize works:
+== webgl-resize-test.html  wrapper.html?green.png
+
 # Check orientation:
                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&_____&________  wrapper.html?white-top-left.png
                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&_____&________  wrapper.html?white-top-left.png
