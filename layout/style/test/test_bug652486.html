@@ -35,106 +35,100 @@ var tests = [
   // When only text-decoration was specified, text-decoration should look like
   // a longhand property.
   { decoration: "none",
-    blink: null, line: null, color: null, style: null,
+    line: null, color: null, style: null,
     expectedValue: "none", expectedCSSValue: "none" },
   { decoration: "underline",
-    blink: null, line: null, color: null, style: null,
+    line: null, color: null, style: null,
     expectedValue: "underline", expectedCSSValue: "underline" },
   { decoration: "overline",
-    blink: null, line: null, color: null, style: null,
+    line: null, color: null, style: null,
     expectedValue: "overline", expectedCSSValue: "overline" },
   { decoration: "line-through",
-    blink: null, line: null, color: null, style: null,
+    line: null, color: null, style: null,
     expectedValue: "line-through", expectedCSSValue: "line-through" },
   { decoration: "blink",
-    blink: null, line: null, color: null, style: null,
+    line: null, color: null, style: null,
     expectedValue: "blink", expectedCSSValue: "blink" },
   { decoration: "underline overline",
-    blink: null, line: null, color: null, style: null,
+    line: null, color: null, style: null,
     expectedValue: "underline overline",
     expectedCSSValue: "underline overline" },
   { decoration: "underline line-through",
-    blink: null, line: null, color: null, style: null,
+    line: null, color: null, style: null,
     expectedValue: "underline line-through",
     expectedCSSValue: "underline line-through" },
   { decoration: "blink underline",
-    blink: null, line: null, color: null, style: null,
+    line: null, color: null, style: null,
     expectedValue: "underline blink",
     expectedCSSValue: "underline blink" },
   { decoration: "underline blink",
-    blink: null, line: null, color: null, style: null,
+    line: null, color: null, style: null,
     expectedValue: "underline blink",
     expectedCSSValue: "underline blink" },
 
   // When only text-decoration-line or text-blink was specified,
   // text-decoration should look like a longhand property.
   { decoration: null,
-    blink: "blink", line: null, color: null, style: null,
+    line: "blink", color: null, style: null,
     expectedValue: "blink", expectedCSSValue: "blink" },
   { decoration: null,
-    blink: null, line: "underline", color: null, style: null,
+    line: "underline", color: null, style: null,
     expectedValue: "underline", expectedCSSValue: "underline" },
   { decoration: null,
-    blink: null, line: "overline", color: null, style: null,
+    line: "overline", color: null, style: null,
     expectedValue: "overline", expectedCSSValue: "overline" },
   { decoration: null,
-    blink: null, line: "line-through", color: null, style: null,
+    line: "line-through", color: null, style: null,
     expectedValue: "line-through", expectedCSSValue: "line-through" },
   { decoration: null,
-    blink: "blink", line: "underline", color: null, style: null,
+    line: "blink underline", color: null, style: null,
     expectedValue: "underline blink", expectedCSSValue: "underline blink" },
-  { decoration: null,
-    blink: "none", line: "underline", color: null, style: null,
-    expectedValue: "underline", expectedCSSValue: "underline" },
-  { decoration: null,
-    blink: "blink", line: "none", color: null, style: null,
-    expectedValue: "blink", expectedCSSValue: "blink" },
 
   // When text-decoration-color isn't its initial value,
   // text-decoration should be a shorthand property.
   { decoration: "blink",
-    blink: null, line: null, color: "rgb(0, 0, 0)", style: null,
+    line: null, color: "rgb(0, 0, 0)", style: null,
     expectedValue: "", expectedCSSValue: null },
   { decoration: "underline",
-    blink: null, line: null, color: "black", style: null,
+    line: null, color: "black", style: null,
     expectedValue: "", expectedCSSValue: null },
   { decoration: "overline",
-    blink: null, line: null, color: "#ff0000", style: null,
+    line: null, color: "#ff0000", style: null,
     expectedValue: "", expectedCSSValue: null },
   { decoration: "line-through",
-    blink: null, line: null, color: "initial", style: null,
+    line: null, color: "initial", style: null,
     expectedValue: "line-through", expectedCSSValue: "line-through" },
   { decoration: "blink underline",
-    blink: null, line: null, color: "currentColor", style: null,
+    line: null, color: "currentColor", style: null,
     expectedValue: "underline blink", expectedCSSValue: "underline blink" },
   { decoration: "underline line-through",
-    blink: null, line: null, color: "-moz-use-text-color", style: null,
+    line: null, color: "-moz-use-text-color", style: null,
     expectedValue: "underline line-through",
     expectedCSSValue: "underline line-through" },
 
   // When text-decoration-style isn't its initial value,
   // text-decoration should be a shorthand property.
   { decoration: "blink",
-    blink: null, line: null, color: null, style: "-moz-none",
+    line: null, color: null, style: "-moz-none",
     expectedValue: "", expectedCSSValue: null },
   { decoration: "underline",
-    blink: null, line: null, color: null, style: "dotted",
+    line: null, color: null, style: "dotted",
     expectedValue: "", expectedCSSValue: null },
   { decoration: "overline",
-    blink: null, line: null, color: null, style: "dashed",
+    line: null, color: null, style: "dashed",
     expectedValue: "", expectedCSSValue: null },
   { decoration: "line-through",
-    blink: null, line: null, color: null, style: "double",
+    line: null, color: null, style: "double",
     expectedValue: "", expectedCSSValue: null },
   { decoration: "blink underline",
-    blink: null, line: null, color: null, style: "wavy",
+    line: null, color: null, style: "wavy",
     expectedValue: "", expectedCSSValue: null },
   { decoration: "underline blink overline line-through",
-    blink: null, line: null, color: null, style: "solid",
+    line: null, color: null, style: "solid",
     expectedValue: "underline overline line-through blink",
     expectedCSSValue: "underline overline line-through blink" },
   { decoration: "line-through overline underline",
-    blink: null, line: null, color: null, style: "initial",
+    line: null, color: null, style: "initial",
     expectedValue: "underline overline line-through",
     expectedCSSValue: "underline overline line-through" }
 ];
@@ -144,9 +138,6 @@ function makeDeclaration(aTest)
   var str = "";
   if (aTest.decoration) {
     str += "text-decoration: " + aTest.decoration + "; ";
-  }
-  if (aTest.blink) {
-    str += "-moz-text-blink: " + aTest.blink + "; ";
   }
   if (aTest.color) {
     str += "-moz-text-decoration-color: " + aTest.color + "; ";
@@ -169,9 +160,6 @@ for (var i = 0; i < tests.length; ++i) {
   var test = tests[i];
   if (test.decoration) {
     $('t').style.textDecoration = test.decoration;
-  }
-  if (test.blink) {
-    $('t').style.MozTextBlink = test.blink;
   }
   if (test.color) {
     $('t').style.MozTextDecorationColor = test.color;

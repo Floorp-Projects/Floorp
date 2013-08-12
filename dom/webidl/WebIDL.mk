@@ -94,6 +94,7 @@ webidl_files = \
   Function.webidl \
   GainNode.webidl \
   Geolocation.webidl \
+  History.webidl \
   HTMLAnchorElement.webidl \
   HTMLAppletElement.webidl \
   HTMLAreaElement.webidl \

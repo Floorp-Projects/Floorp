@@ -1,0 +1,45 @@
+
+external_dirs = []
+if not CONFIG['MOZ_NATIVE_SQLITE']:
+    external_dirs += ['db/sqlite3/src']
+
+if not CONFIG['MOZ_NATIVE_JPEG']:
+    external_dirs += ['media/libjpeg']
+
+if CONFIG['MOZ_UPDATER']:
+    if not CONFIG['MOZ_NATIVE_BZ2']:
+        external_dirs += ['modules/libbz2']
+
+if CONFIG['MOZ_VORBIS']:
+    external_dirs += ['media/libvorbis']
+
+if CONFIG['MOZ_TREMOR']:
+    external_dirs += ['media/libtremor']
+
+if CONFIG['MOZ_OPUS']:
+    external_dirs += ['media/libopus']
+
+if CONFIG['MOZ_WEBM']:
+    external_dirs += ['media/libnestegg']
+
+if CONFIG['MOZ_VP8'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
+    external_dirs += ['media/libvpx']
+
+if CONFIG['MOZ_OGG']:
+    external_dirs += ['media/libogg', 'media/libtheora']
+
+if CONFIG['MOZ_SPEEX_RESAMPLER']:
+    external_dirs += ['media/libspeex_resampler']
+
+if CONFIG['MOZ_SOUNDTOUCH']:
+    external_dirs += ['media/libsoundtouch']
+
+if CONFIG['MOZ_CUBEB']:
+    external_dirs += ['media/libcubeb']
+
+if not CONFIG['MOZ_NATIVE_PNG']:
+    external_dirs += ['media/libpng']
+
+external_dirs += ['media/kiss_fft']
+
+PARALLEL_DIRS += ['../../' + i for i in external_dirs]

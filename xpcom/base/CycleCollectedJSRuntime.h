@@ -8,8 +8,8 @@
 #define mozilla_CycleCollectedJSRuntime_h__
 
 #include "mozilla/MemoryReporting.h"
-#include "jsprvtd.h"
 #include "jsapi.h"
+#include "jsfriendapi.h"
 
 #include "nsCycleCollector.h"
 #include "nsCycleCollectionParticipant.h"

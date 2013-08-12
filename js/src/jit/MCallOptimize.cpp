@@ -1309,6 +1309,8 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
         return InliningStatus_NotInlined;
     if (returnTypes->unknownObject() || returnTypes->getObjectCount() != 1)
         return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_Int32)
+        return InliningStatus_NotInlined;
     types::TypeObject *typeObject = returnTypes->getTypeObject(0);
 
     RootedObject templateObject(cx, NewDenseAllocatedArray(cx, 0, NULL, TenuredObject));

@@ -22,5 +22,3 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 INCLUDES += \
   -I$(srcdir)/../../../base/src \
   $(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT

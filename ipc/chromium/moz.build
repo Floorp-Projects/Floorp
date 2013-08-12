@@ -23,7 +23,7 @@ else:
     elif CONFIG['OS_ARCH'] == 'DragonFly':
         os_dragonfly = 1
         os_bsd = 1
-    elif CONFIG['OS_ARCH'] == 'FreeBSD':
+    elif CONFIG['OS_ARCH'] in ['FreeBSD', 'GNU_kFreeBSD']:
         os_freebsd = 1
         os_bsd = 1
     elif CONFIG['OS_ARCH'] == 'NetBSD':
@@ -205,9 +205,12 @@ if os_linux:
 if os_bsd:
     CPP_SOURCES += [
         'atomicops_internals_x86_gcc.cc',
-        'process_util_bsd.cc',
         'time_posix.cc',
     ]
+    if CONFIG['OS_ARCH'] == 'GNU_kFreeBSD':
+        CPP_SOURCES += ['process_util_linux.cc']
+    else:
+        CPP_SOURCES += ['process_util_bsd.cc']
     if CONFIG['MOZ_WIDGET_GTK']:
         CPP_SOURCES += [
             'message_pump_glib.cc',

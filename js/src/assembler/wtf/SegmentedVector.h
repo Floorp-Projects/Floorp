@@ -29,7 +29,6 @@
 #ifndef assembler_wtf_SegmentedVector_h
 #define assembler_wtf_SegmentedVector_h
 
-#include "jsprvtd.h"
 #include "js/Vector.h"
 
 namespace WTF {
