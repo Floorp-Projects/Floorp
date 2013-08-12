@@ -154,7 +154,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void clearTheListOfActiveFormattingElementsUpToTheLastMarker();
     inline bool isCurrent(nsIAtom* name)
     {
-      return name == stack[currentPtr]->name;
+      return stack[currentPtr]->ns == kNameSpaceID_XHTML && name == stack[currentPtr]->name;
     }
 
     void removeFromStack(int32_t pos);
