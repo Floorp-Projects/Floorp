@@ -1350,12 +1350,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         flushCharacters();
         // Note: Can't attach error messages to EOF in C++ yet
         eofloop: for (;;) {
-            if (isInForeign()) {
-                // [NOCPP[
-                err("End of file in a foreign namespace context.");
-                // ]NOCPP]
-                break eofloop;
-            }
             switch (mode) {
                 case INITIAL:
                     /*
@@ -2101,9 +2095,10 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         }
                                         break;
                                     } else if (node.isSpecial()
-                                            && node.name != "p"
-                                            && node.name != "address"
-                                            && node.name != "div") {
+                                            && (node.ns != "http://www.w3.org/1999/xhtml"
+                                                || (node.name != "p"
+                                                    && node.name != "address"
+                                                    && node.name != "div"))) {
                                         break;
                                     }
                                     eltPos--;
@@ -3728,7 +3723,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             eltPos = currentPtr;
                             for (;;) {
                                 StackNode<T> node = stack[eltPos];
-                                if (node.name == name) {
+                                if (node.ns == "http://www.w3.org/1999/xhtml" && node.name == name) {
                                     generateImpliedEndTags();
                                     if (errorHandler != null
                                             && !isCurrent(name)) {
@@ -4052,7 +4047,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private int findLast(@Local String name) {
         for (int i = currentPtr; i > 0; i--) {
-            if (stack[i].name == name) {
+            if (stack[i].ns == "http://www.w3.org/1999/xhtml" && stack[i].name == name) {
                 return i;
             }
         }
@@ -4061,10 +4056,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private int findLastInTableScope(@Local String name) {
         for (int i = currentPtr; i > 0; i--) {
-            if (stack[i].name == name) {
-                return i;
-            } else if (stack[i].name == "table" || stack[i].name == "template") {
-                return TreeBuilder.NOT_FOUND_ON_STACK;
+            if (stack[i].ns == "http://www.w3.org/1999/xhtml") {
+                if (stack[i].name == name) {
+                    return i;
+                } else if (stack[i].name == "table" || stack[i].name == "template") {
+                    return TreeBuilder.NOT_FOUND_ON_STACK;
+                }
             }
         }
         return TreeBuilder.NOT_FOUND_ON_STACK;
@@ -4072,9 +4069,15 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private int findLastInButtonScope(@Local String name) {
         for (int i = currentPtr; i > 0; i--) {
-            if (stack[i].name == name) {
-                return i;
-            } else if (stack[i].isScoping() || stack[i].name == "button") {
+            if (stack[i].ns == "http://www.w3.org/1999/xhtml") {
+                if (stack[i].name == name) {
+                    return i;
+                } else if (stack[i].name == "button") {
+                    return TreeBuilder.NOT_FOUND_ON_STACK;
+                }
+            }
+
+            if (stack[i].isScoping()) {
                 return TreeBuilder.NOT_FOUND_ON_STACK;
             }
         }
@@ -4083,7 +4086,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private int findLastInScope(@Local String name) {
         for (int i = currentPtr; i > 0; i--) {
-            if (stack[i].name == name) {
+            if (stack[i].ns == "http://www.w3.org/1999/xhtml" && stack[i].name == name) {
                 return i;
             } else if (stack[i].isScoping()) {
                 return TreeBuilder.NOT_FOUND_ON_STACK;
@@ -4094,9 +4097,15 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private int findLastInListScope(@Local String name) {
         for (int i = currentPtr; i > 0; i--) {
-            if (stack[i].name == name) {
-                return i;
-            } else if (stack[i].isScoping() || stack[i].name == "ul" || stack[i].name == "ol") {
+            if (stack[i].ns == "http://www.w3.org/1999/xhtml") {
+                if (stack[i].name == name) {
+                    return i;
+                } else if (stack[i].name == "ul" || stack[i].name == "ol") {
+                    return TreeBuilder.NOT_FOUND_ON_STACK;
+                }
+            }
+
+            if (stack[i].isScoping()) {
                 return TreeBuilder.NOT_FOUND_ON_STACK;
             }
         }
@@ -4125,7 +4134,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 case OPTION:
                 case OPTGROUP:
                 case RT_OR_RP:
-                    if (node.name == name) {
+                    if (node.ns == "http://www.w3.org/1999/xhtml" && node.name == name) {
                         return;
                     }
                     pop();
@@ -4271,10 +4280,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private int findLastInTableScopeTdTh() {
         for (int i = currentPtr; i > 0; i--) {
             @Local String name = stack[i].name;
-            if ("td" == name || "th" == name) {
-                return i;
-            } else if (name == "table" || name == "template") {
-                return TreeBuilder.NOT_FOUND_ON_STACK;
+            if (stack[i].ns == "http://www.w3.org/1999/xhtml") {
+                if ("td" == name || "th" == name) {
+                    return i;
+                } else if (name == "table" || name == "template") {
+                    return TreeBuilder.NOT_FOUND_ON_STACK;
+                }
             }
         }
         return TreeBuilder.NOT_FOUND_ON_STACK;
@@ -4283,7 +4294,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void clearStackBackTo(int eltPos) throws SAXException {
         int eltGroup = stack[eltPos].getGroup();
         while (currentPtr > eltPos) { // > not >= intentional
-            if (stack[currentPtr].getGroup() == TEMPLATE
+            if (stack[currentPtr].ns == "http://www.w3.org/1999/xhtml"
+                    && stack[currentPtr].getGroup() == TEMPLATE
                     && (eltGroup == TABLE || eltGroup == TBODY_OR_THEAD_OR_TFOOT|| eltGroup == TR || eltGroup == HTML)) {
                 return;
             }
@@ -4454,7 +4466,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     @Inline private boolean isCurrent(@Local String name) {
-        return name == stack[currentPtr].name;
+        return stack[currentPtr].ns == "http://www.w3.org/1999/xhtml" &&
+                name == stack[currentPtr].name;
     }
 
     private void removeFromStack(int pos) throws SAXException {
@@ -4737,7 +4750,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     private int findLastOrRoot(@Local String name) {
         for (int i = currentPtr; i > 0; i--) {
-            if (stack[i].name == name) {
+            if (stack[i].ns == "http://www.w3.org/1999/xhtml" && stack[i].name == name) {
                 return i;
             }
         }
