@@ -692,6 +692,13 @@ public:
     mAllowScriptsToClose = true;
   }
 
+  enum SlowScriptResponse {
+    ContinueSlowScript = 0,
+    AlwaysContinueSlowScript,
+    KillSlowScript
+  };
+  SlowScriptResponse ShowSlowScriptDialog();
+
 #ifdef MOZ_GAMEPAD
   void AddGamepad(uint32_t aIndex, mozilla::dom::Gamepad* aGamepad);
   void RemoveGamepad(uint32_t aIndex);
