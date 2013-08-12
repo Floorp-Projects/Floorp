@@ -713,6 +713,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
     for (uint32_t table = 0; table < tables.Length(); table++) {
       if (tables[table].Equals(resultsPtr->ElementAt(i).table)) {
         activeTable = true;
+        break;
       }
     }
     if (activeTable) {
