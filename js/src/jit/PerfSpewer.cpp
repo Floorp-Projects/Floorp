@@ -6,8 +6,6 @@
 
 #include "jit/PerfSpewer.h"
 
-#include <stdarg.h>
-
 #if defined(__linux__)
 # include <unistd.h>
 #endif
@@ -149,7 +147,7 @@ PerfSpewer::writeProfile(JSScript *script,
         if (size > 0) {
             fprintf(fp_,
                     "%lx %lx %s:%d: Func%02d\n",
-                    reinterpret_cast<uintptr_t>(code->raw()),
+                    reinterpret_cast<unsigned long>(code->raw()),
                     size,
                     script->filename(),
                     script->lineno,
@@ -170,7 +168,8 @@ PerfSpewer::writeProfile(JSScript *script,
             if (cur < blockStart) {
                 fprintf(fp_,
                         "%lx %lx %s:%d: Func%02d-Block?\n",
-                        cur, blockStart - cur,
+                        static_cast<unsigned long>(cur),
+                        static_cast<unsigned long>(blockStart - cur),
                         script->filename(), script->lineno,
                         thisFunctionIndex);
             }
@@ -181,7 +180,7 @@ PerfSpewer::writeProfile(JSScript *script,
             if (size > 0) {
                 fprintf(fp_,
                         "%lx %lx %s:%d:%d: Func%02d-Block%d\n",
-                        blockStart, size,
+                        static_cast<unsigned long>(blockStart), size,
                         r.filename, r.lineNumber, r.columnNumber,
                         thisFunctionIndex, r.id);
             }
@@ -193,7 +192,8 @@ PerfSpewer::writeProfile(JSScript *script,
         if (cur < funcEnd) {
             fprintf(fp_,
                     "%lx %lx %s:%d: Func%02d-OOL\n",
-                    cur, funcEnd - cur,
+                    static_cast<unsigned long>(cur),
+                    static_cast<unsigned long>(funcEnd - cur),
                     script->filename(), script->lineno,
                     thisFunctionIndex);
         }

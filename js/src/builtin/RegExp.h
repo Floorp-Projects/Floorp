@@ -7,7 +7,6 @@
 #ifndef builtin_RegExp_h
 #define builtin_RegExp_h
 
-#include "vm/MatchPairs.h"
 #include "vm/RegExpObject.h"
 
 JSObject *

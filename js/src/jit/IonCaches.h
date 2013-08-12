@@ -13,13 +13,13 @@
 #include "jit/IonCode.h"
 #include "jit/Registers.h"
 #include "jit/shared/Assembler-shared.h"
-#include "vm/ForkJoin.h"
 
 class JSFunction;
 class JSScript;
 
 namespace js {
 
+class LockedJSContext;
 class TypedArrayObject;
 
 namespace ion {

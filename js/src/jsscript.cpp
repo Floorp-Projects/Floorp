@@ -26,9 +26,11 @@
 #include "jsutil.h"
 
 #include "frontend/BytecodeEmitter.h"
+#include "frontend/SharedContext.h"
 #include "gc/Marking.h"
 #include "jit/BaselineJIT.h"
 #include "jit/IonCode.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
@@ -164,7 +166,7 @@ Bindings::clone(JSContext *cx, InternalBindingsHandle self,
     Bindings &src = srcScript->bindings;
     ptrdiff_t off = (uint8_t *)src.bindingArray() - srcScript->data;
     JS_ASSERT(off >= 0);
-    JS_ASSERT(off <= srcScript->dataSize);
+    JS_ASSERT(size_t(off) <= srcScript->dataSize);
     Binding *dstPackedBindings = (Binding *)(dstScriptData + off);
 
     /*

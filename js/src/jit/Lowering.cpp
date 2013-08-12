@@ -9,8 +9,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jsanalyze.h"
-#include "jsbool.h"
-#include "jsnum.h"
 
 #include "jit/IonSpewer.h"
 #include "jit/LIR.h"
