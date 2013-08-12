@@ -5,7 +5,7 @@
 
 #include "mozilla/dom/ClipboardEvent.h"
 #include "mozilla/ContentEvents.h"
-#include "nsDOMDataTransfer.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "nsIClipboard.h"
 
 namespace mozilla {
@@ -56,14 +56,14 @@ ClipboardEvent::Constructor(const GlobalObject& aGlobal,
   nsRefPtr<ClipboardEvent> e = new ClipboardEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 
-  nsRefPtr<nsDOMDataTransfer> clipboardData;
+  nsRefPtr<DataTransfer> clipboardData;
   if (e->mEventIsInternal) {
     InternalClipboardEvent* event = e->mEvent->AsClipboardEvent();
     if (event) {
       // Always create a clipboardData for the copy event. If this is changed to
       // support other types of events, make sure that read/write privileges are
-      // checked properly within nsDOMDataTransfer.
-      clipboardData = new nsDOMDataTransfer(NS_COPY, false, -1);
+      // checked properly within DataTransfer.
+      clipboardData = new DataTransfer(NS_COPY, false, -1);
       clipboardData->SetData(aParam.mDataType, aParam.mData);
     }
   }
@@ -88,10 +88,10 @@ ClipboardEvent::GetClipboardData()
 
   if (!event->clipboardData) {
     if (mEventIsInternal) {
-      event->clipboardData = new nsDOMDataTransfer(NS_COPY, false, -1);
+      event->clipboardData = new DataTransfer(NS_COPY, false, -1);
     } else {
       event->clipboardData =
-        new nsDOMDataTransfer(event->message, event->message == NS_PASTE, nsIClipboard::kGlobalClipboard);
+        new DataTransfer(event->message, event->message == NS_PASTE, nsIClipboard::kGlobalClipboard);
     }
   }
 

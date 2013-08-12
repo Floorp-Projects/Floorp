@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDOMDataTransfer_h__
-#define nsDOMDataTransfer_h__
+#ifndef mozilla_dom_DataTransfer_h
+#define mozilla_dom_DataTransfer_h
 
 #include "nsString.h"
 #include "nsTArray.h"
@@ -18,9 +18,13 @@
 #include "nsDOMFile.h"
 #include "mozilla/Attributes.h"
 
+class nsEventStateManager;
 class nsITransferable;
 class nsISupportsArray;
 class nsILoadContext;
+
+namespace mozilla {
+namespace dom {
 
 /**
  * TransferItem is used to hold data for a particular format. Each piece of
@@ -35,36 +39,36 @@ struct TransferItem {
   nsCOMPtr<nsIVariant> mData;
 };
 
-class nsDOMDataTransfer MOZ_FINAL : public nsIDOMDataTransfer
+class DataTransfer MOZ_FINAL : public nsIDOMDataTransfer
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMDATATRANSFER
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMDataTransfer, nsIDOMDataTransfer)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(DataTransfer, nsIDOMDataTransfer)
 
-  friend class nsEventStateManager;
+  friend class ::nsEventStateManager;
 
 protected:
 
   // hide the default constructor
-  nsDOMDataTransfer();
+  DataTransfer();
 
   // this constructor is used only by the Clone method to copy the fields as
   // needed to a new data transfer.
-  nsDOMDataTransfer(uint32_t aEventType,
-                    const uint32_t aEffectAllowed,
-                    bool aCursorState,
-                    bool aIsExternal,
-                    bool aUserCancelled,
-                    bool aIsCrossDomainSubFrameDrop,
-                    int32_t aClipboardType,
-                    nsTArray<nsTArray<TransferItem> >& aItems,
-                    nsIDOMElement* aDragImage,
-                    uint32_t aDragImageX,
-                    uint32_t aDragImageY);
+  DataTransfer(uint32_t aEventType,
+               const uint32_t aEffectAllowed,
+               bool aCursorState,
+               bool aIsExternal,
+               bool aUserCancelled,
+               bool aIsCrossDomainSubFrameDrop,
+               int32_t aClipboardType,
+               nsTArray<nsTArray<TransferItem> >& aItems,
+               nsIDOMElement* aDragImage,
+               uint32_t aDragImageX,
+               uint32_t aDragImageY);
 
-  ~nsDOMDataTransfer()
+  ~DataTransfer()
   {
     if (mFiles) {
       mFiles->Disconnect();
@@ -75,7 +79,7 @@ protected:
 
 public:
 
-  // Constructor for nsDOMDataTransfer.
+  // Constructor for DataTransfer.
   //
   // aEventType is an event constant (such as NS_DRAGDROP_START)
   //
@@ -86,7 +90,7 @@ public:
   // service directly. For clipboard operations, aClipboardType indicates
   // which clipboard to use, from nsIClipboard, or -1 for non-clipboard operations,
   // or if access to the system clipboard should not be allowed.
-  nsDOMDataTransfer(uint32_t aEventType, bool aIsExternal, int32_t aClipboardType);
+  DataTransfer(uint32_t aEventType, bool aIsExternal, int32_t aClipboardType);
 
   void GetDragTarget(nsIDOMElement** aDragTarget)
   {
@@ -201,5 +205,8 @@ protected:
   uint32_t mDragImageY;
 };
 
-#endif // nsDOMDataTransfer_h__
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_DataTransfer_h */
 

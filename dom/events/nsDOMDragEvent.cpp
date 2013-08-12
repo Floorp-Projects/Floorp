@@ -5,7 +5,6 @@
 
 #include "nsDOMDragEvent.h"
 #include "nsContentUtils.h"
-#include "nsIDOMDataTransfer.h"
 #include "prtime.h"
 #include "mozilla/MouseEvents.h"
 
