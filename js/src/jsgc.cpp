@@ -1012,6 +1012,7 @@ js_FinishGC(JSRuntime *rt)
     }
 
     rt->zones.clear();
+    rt->atomsCompartment = NULL;
 
     rt->gcSystemAvailableChunkListHead = NULL;
     rt->gcUserAvailableChunkListHead = NULL;
@@ -1960,7 +1961,7 @@ js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
         return;
     }
 
-    if (rt->isAtomsZone(zone)) {
+    if (zone == rt->atomsCompartment->zone()) {
         /* We can't do a zone GC of the atoms compartment. */
         TriggerGC(rt, reason);
         return;
@@ -2524,7 +2525,7 @@ SweepCompartments(FreeOp *fop, Zone *zone, bool keepAtleastOne, bool lastGC)
     bool foundOne = false;
     while (read < end) {
         JSCompartment *comp = *read++;
-        JS_ASSERT(!rt->isAtomsCompartment(comp));
+        JS_ASSERT(comp != rt->atomsCompartment);
 
         /*
          * Don't delete the last compartment if all the ones before it were
@@ -2557,7 +2558,7 @@ SweepZones(FreeOp *fop, bool lastGC)
     Zone **end = rt->zones.end();
     Zone **write = read;
     JS_ASSERT(rt->zones.length() >= 1);
-    JS_ASSERT(rt->isAtomsZone(rt->zones[0]));
+    JS_ASSERT(rt->zones[0] == rt->atomsCompartment->zone());
 
     while (read < end) {
         Zone *zone = *read++;
@@ -2596,7 +2597,7 @@ PurgeRuntime(JSRuntime *rt)
     for (ThreadDataIter iter(rt); !iter.done(); iter.next())
         activeCompilations |= iter->activeCompilations;
     if (!activeCompilations)
-        rt->parseMapPool().purgeAll();
+        rt->parseMapPool.purgeAll();
 }
 
 static bool
@@ -2657,7 +2658,7 @@ CheckCompartment(CompartmentCheckTracer *trc, JSCompartment *thingCompartment,
                  Cell *thing, JSGCTraceKind kind)
 {
     JS_ASSERT(thingCompartment == trc->compartment ||
-              trc->runtime->isAtomsCompartment(thingCompartment) ||
+              thingCompartment == trc->runtime->atomsCompartment ||
               (trc->srcKind == JSTRACE_OBJECT &&
                InCrossCompartmentMap((JSObject *)trc->src, thing, kind)));
 }
@@ -2688,7 +2689,7 @@ CheckCompartmentCallback(JSTracer *trcArg, void **thingp, JSGCTraceKind kind)
         CheckCompartment(trc, comp, thing, kind);
     } else {
         JS_ASSERT(thing->tenuredZone() == trc->zone ||
-                  trc->runtime->isAtomsZone(thing->tenuredZone()));
+                  thing->tenuredZone() == trc->runtime->atomsCompartment->zone());
     }
 }
 
@@ -2737,7 +2738,7 @@ BeginMarkPhase(JSRuntime *rt)
 
         /* Set up which zones will be collected. */
         if (zone->isGCScheduled()) {
-            if (!rt->isAtomsZone(zone)) {
+            if (zone != rt->atomsCompartment->zone()) {
                 any = true;
                 zone->setGCState(Zone::Mark);
             }
@@ -2767,7 +2768,7 @@ BeginMarkPhase(JSRuntime *rt)
      * atoms. Otherwise, the non-collected zones could contain pointers
      * to atoms that we would miss.
      */
-    Zone *atomsZone = rt->atomsCompartment()->zone();
+    Zone *atomsZone = rt->atomsCompartment->zone();
 
     bool keepAtoms = false;
     for (ThreadDataIter iter(rt); !iter.done(); iter.next())
@@ -3301,8 +3302,8 @@ Zone::findOutgoingEdges(ComponentFinder<JS::Zone> &finder)
      * compartment, and these aren't in the cross compartment map.
      */
     JSRuntime *rt = runtimeFromMainThread();
-    if (rt->atomsCompartment()->zone()->isGCMarking())
-        finder.addEdgeTo(rt->atomsCompartment()->zone());
+    if (rt->atomsCompartment->zone()->isGCMarking())
+        finder.addEdgeTo(rt->atomsCompartment->zone());
 
     for (CompartmentsInZoneIter comp(this); !comp.done(); comp.next())
         comp->findOutgoingEdges(finder);
@@ -3648,7 +3649,7 @@ BeginSweepingZoneGroup(JSRuntime *rt)
         /* Purge the ArenaLists before sweeping. */
         zone->allocator.arenas.purge();
 
-        if (rt->isAtomsZone(zone))
+        if (zone == rt->atomsCompartment->zone())
             sweepingAtoms = true;
     }
 

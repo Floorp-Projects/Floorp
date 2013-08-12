@@ -45,16 +45,16 @@ class CompartmentChecker
         MOZ_CRASH();
     }
 
-    /* Note: should only be used when neither c1 nor c2 may be the atoms compartment. */
+    /* Note: should only be used when neither c1 nor c2 may be the default compartment. */
     static void check(JSCompartment *c1, JSCompartment *c2) {
-        JS_ASSERT(!c1->runtimeFromMainThread()->isAtomsCompartment(c1));
-        JS_ASSERT(!c2->runtimeFromMainThread()->isAtomsCompartment(c2));
+        JS_ASSERT(c1 != c1->runtimeFromMainThread()->atomsCompartment);
+        JS_ASSERT(c2 != c2->runtimeFromMainThread()->atomsCompartment);
         if (c1 != c2)
             fail(c1, c2);
     }
 
     void check(JSCompartment *c) {
-        if (c && !compartment->runtimeFromMainThread()->isAtomsCompartment(c)) {
+        if (c && c != compartment->runtimeFromMainThread()->atomsCompartment) {
             if (!compartment)
                 compartment = c;
             else if (c != compartment)
@@ -338,6 +338,36 @@ GetNativeStackLimit(ExclusiveContext *cx)
     return cx->perThreadData->nativeStackLimit;
 }
 
+inline RegExpCompartment &
+ExclusiveContext::regExps()
+{
+    return compartment_->regExps;
+}
+
+inline PropertyTree&
+ExclusiveContext::propertyTree()
+{
+    return compartment_->propertyTree;
+}
+
+inline BaseShapeSet &
+ExclusiveContext::baseShapes()
+{
+    return compartment_->baseShapes;
+}
+
+inline InitialShapeSet &
+ExclusiveContext::initialShapes()
+{
+    return compartment_->initialShapes;
+}
+
+inline DtoaCache &
+ExclusiveContext::dtoaCache()
+{
+    return compartment_->dtoaCache;
+}
+
 inline void
 ExclusiveContext::maybePause() const
 {
@@ -475,7 +505,7 @@ inline void
 js::ExclusiveContext::setCompartment(JSCompartment *comp)
 {
     // ExclusiveContexts can only be in the atoms zone or in exclusive zones.
-    JS_ASSERT_IF(!isJSContext() && !runtime_->isAtomsCompartment(comp),
+    JS_ASSERT_IF(!isJSContext() && comp != runtime_->atomsCompartment,
                  comp->zone()->usedByExclusiveThread);
 
     // Normal JSContexts cannot enter exclusive zones.
@@ -483,12 +513,12 @@ js::ExclusiveContext::setCompartment(JSCompartment *comp)
                  !comp->zone()->usedByExclusiveThread);
 
     // Only one thread can be in the atoms compartment at a time.
-    JS_ASSERT_IF(runtime_->isAtomsCompartment(comp),
+    JS_ASSERT_IF(comp == runtime_->atomsCompartment,
                  runtime_->currentThreadHasExclusiveAccess());
 
     // Make sure that the atoms compartment has its own zone.
-    JS_ASSERT_IF(comp && !runtime_->isAtomsCompartment(comp),
-                 !runtime_->isAtomsZone(comp->zone()));
+    JS_ASSERT_IF(comp && comp != runtime_->atomsCompartment,
+                 comp->zone() != runtime_->atomsCompartment->zone());
 
     // Both the current and the new compartment should be properly marked as
     // entered at this point.

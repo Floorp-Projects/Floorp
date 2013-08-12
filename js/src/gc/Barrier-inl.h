@@ -182,7 +182,7 @@ HeapValue::set(Zone *zone, const Value &v)
 #ifdef DEBUG
     if (value.isMarkable()) {
         JS_ASSERT(ZoneOfValue(value) == zone ||
-                  zone->runtimeFromAnyThread()->isAtomsZone(ZoneOfValue(value)));
+                  ZoneOfValue(value) == zone->runtimeFromMainThread()->atomsCompartment->zone());
     }
 #endif
 

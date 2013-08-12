@@ -292,7 +292,6 @@ class AutoPauseWorkersForGC
 #ifdef JS_WORKER_THREADS
     JSRuntime *runtime;
     bool needsUnpause;
-    mozilla::DebugOnly<bool> oldExclusiveThreadsPaused;
 #endif
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
