@@ -572,7 +572,7 @@ struct RIS
     {
         JS_ASSERT(ShiftAmount == imm);
     }
-    explicit RIS(Reg r) : ShiftAmount(r.ShiftAmount) {}
+    explicit RIS(Reg r) : ShiftAmount(ShiftAmount) { }
 };
 
 struct RRS

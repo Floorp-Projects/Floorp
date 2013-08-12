@@ -164,7 +164,7 @@ Bindings::clone(JSContext *cx, InternalBindingsHandle self,
     Bindings &src = srcScript->bindings;
     ptrdiff_t off = (uint8_t *)src.bindingArray() - srcScript->data;
     JS_ASSERT(off >= 0);
-    JS_ASSERT(size_t(off) <= srcScript->dataSize);
+    JS_ASSERT(off <= srcScript->dataSize);
     Binding *dstPackedBindings = (Binding *)(dstScriptData + off);
 
     /*

@@ -52,7 +52,7 @@ struct Pool
 
     Pool(int maxOffset_, int immSize_, int instSize_, int bias_, int alignment_, LifoAlloc &LifoAlloc_,
          bool isBackref_ = false, bool canDedup_ = false, Pool *other_ = NULL)
-        : maxOffset(maxOffset_), immSize(immSize_), instSize(instSize_),
+        : maxOffset(maxOffset_), immSize(immSize_), instSize(instSize),
           bias(bias_), alignment(alignment_),
           isBackref(isBackref_), canDedup(canDedup_), other(other_),
           poolData(static_cast<uint8_t *>(LifoAlloc_.alloc(8*immSize))), numEntries(0),
