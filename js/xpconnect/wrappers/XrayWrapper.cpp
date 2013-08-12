@@ -207,7 +207,7 @@ public:
 
     static bool resolveDOMCollectionProperty(JSContext *cx, HandleObject wrapper,
                                              HandleObject holder, HandleId id,
-                                             JSPropertyDescriptor *desc, unsigned flags);
+                                             MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
 
     static XPCWrappedNative* getWN(JSObject *wrapper) {
         return XPCWrappedNative::Get(getTargetObject(wrapper));
@@ -615,7 +615,8 @@ private:
 bool
 XPCWrappedNativeXrayTraits::resolveDOMCollectionProperty(JSContext *cx, HandleObject wrapper,
                                                          HandleObject holder, HandleId id,
-                                                         JSPropertyDescriptor *desc, unsigned flags)
+                                                         MutableHandle<JSPropertyDescriptor> desc,
+                                                         unsigned flags)
 {
     // If we are not currently resolving this id and resolveNative is called
     // we don't do anything. (see defineProperty in case of shadowing is forbidden).
@@ -709,7 +710,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
     // check for those.
     if (!JSID_IS_STRING(id)) {
         /* Not found */
-        return resolveDOMCollectionProperty(cx, wrapper, holder, id, desc.address(), flags);
+        return resolveDOMCollectionProperty(cx, wrapper, holder, id, desc, flags);
     }
 
     XPCNativeInterface *iface;
@@ -723,7 +724,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
     } else if (!(iface = ccx.GetInterface()) ||
                !(member = ccx.GetMember())) {
         /* Not found */
-        return resolveDOMCollectionProperty(cx, wrapper, holder, id, desc.address(), flags);
+        return resolveDOMCollectionProperty(cx, wrapper, holder, id, desc, flags);
     }
 
     desc.object().set(holder);
@@ -809,11 +810,11 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
     // in the target compartment.
     if (expando) {
         JSAutoCompartment ac(cx, expando);
-        if (!JS_GetPropertyDescriptorById(cx, expando, id, 0, desc.address()))
+        if (!JS_GetPropertyDescriptorById(cx, expando, id, 0, desc))
             return false;
     }
     if (desc.object()) {
-        if (!JS_WrapPropertyDescriptor(cx, desc.address()))
+        if (!JS_WrapPropertyDescriptor(cx, desc))
             return false;
         // Pretend the property lives on the wrapper.
         desc.object().set(wrapper);
@@ -853,7 +854,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
                 }
                 desc.value().setObject(*obj);
                 mozilla::dom::FillPropertyDescriptor(desc, wrapper, true);
-                return JS_WrapPropertyDescriptor(cx, desc.address());
+                return JS_WrapPropertyDescriptor(cx, desc);
             }
         }
     }
@@ -901,7 +902,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
     // return non-|own| properties from Object.getOwnPropertyDescriptor if
     // lookups are performed in a certain order, but we can probably live with
     // that until XPCWN Xrays go away with the new DOM bindings.
-    return JS_GetPropertyDescriptorById(cx, holder, id, 0, desc.address());
+    return JS_GetPropertyDescriptorById(cx, holder, id, 0, desc);
 }
 
 bool
@@ -1031,7 +1032,7 @@ DOMXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
                                      MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
     RootedObject obj(cx, getTargetObject(wrapper));
-    if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc.address()))
+    if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc))
         return false;
 
     NS_ASSERTION(!desc.object() || desc.object() == wrapper,
@@ -1393,7 +1394,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         return false;
 
     // Check the holder.
-    if (!desc.object() && !JS_GetPropertyDescriptorById(cx, holder, id, 0, desc.address()))
+    if (!desc.object() && !JS_GetPropertyDescriptorById(cx, holder, id, 0, desc))
         return false;
     if (desc.object()) {
         desc.object().set(wrapper);
@@ -1424,7 +1425,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
             mozilla::dom::FillPropertyDescriptor(desc, wrapper,
                                                  ObjectValue(*childObj),
                                                  /* readOnly = */ true);
-            return JS_WrapPropertyDescriptor(cx, desc.address());
+            return JS_WrapPropertyDescriptor(cx, desc);
         }
     }
 
@@ -1463,7 +1464,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         EnsureCompartmentPrivate(wrapper)->scope->IsXBLScope() &&
         (content = do_QueryInterfaceNative(cx, wrapper)))
     {
-        if (!nsContentUtils::LookupBindingMember(cx, content, id, desc.address()))
+        if (!nsContentUtils::LookupBindingMember(cx, content, id, desc))
             return false;
         DEBUG_CheckXBLLookup(cx, desc.address());
     }
@@ -1474,7 +1475,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
 
     if (!JS_DefinePropertyById(cx, holder, id, desc.value(), desc.getter(),
                                desc.setter(), desc.attributes()) ||
-        !JS_GetPropertyDescriptorById(cx, holder, id, flags, desc.address()))
+        !JS_GetPropertyDescriptorById(cx, holder, id, flags, desc))
     {
         return false;
     }
@@ -1600,7 +1601,7 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
 
     // Wrap the property descriptor for the target compartment.
     Rooted<JSPropertyDescriptor> wrappedDesc(cx, desc);
-    if (!JS_WrapPropertyDescriptor(cx, wrappedDesc.address()))
+    if (!JS_WrapPropertyDescriptor(cx, &wrappedDesc))
         return false;
 
     // Fix up Xray waivers.

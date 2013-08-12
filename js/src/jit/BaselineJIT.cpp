@@ -12,8 +12,12 @@
 #include "jit/BaselineIC.h"
 #include "jit/CompileInfo.h"
 #include "jit/IonSpewer.h"
+#include "vm/Interpreter.h"
 
+#include "jsgcinlines.h"
+#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
+#include "jsscriptinlines.h"
 
 #include "jit/IonFrames-inl.h"
 #include "vm/Stack-inl.h"

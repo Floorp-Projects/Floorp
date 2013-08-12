@@ -1226,16 +1226,15 @@ var WifiManager = (function() {
                                      null);
 
         prepareForStartup(function() {
-          gNetworkManager.setWifiOperationMode(ifname,
-                                               WIFI_FIRMWARE_STATION,
-                                               function (status) {
+          loadDriver(function (status) {
             if (status) {
               callback(status);
               manager.state = "UNINITIALIZED";
               return;
             }
-
-            loadDriver(function (status) {
+            gNetworkManager.setWifiOperationMode(ifname,
+                                                 WIFI_FIRMWARE_STATION,
+                                                 function (status) {
               if (status < 0) {
                 callback(status);
                 manager.state = "UNINITIALIZED";
@@ -1264,7 +1263,7 @@ var WifiManager = (function() {
               // to return from loadDriver, so wait 2 seconds before starting
               // the supplicant to give it a chance to start.
               createWaitForDriverReadyTimer(doStartSupplicant);
-           });
+            });
           });
         });
       });

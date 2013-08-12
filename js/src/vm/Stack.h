@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "jsautooplen.h"
+#include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsscript.h"
 

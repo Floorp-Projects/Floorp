@@ -7,7 +7,8 @@
 #ifndef builtin_Eval_h
 #define builtin_Eval_h
 
-#include "vm/Stack.h"
+#include "jsapi.h"
+#include "jsbytecode.h"
 
 namespace js {
 

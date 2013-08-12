@@ -8,7 +8,9 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include "jsnum.h"
+#include <ctype.h>
+
+#include "jslibmath.h"
 #include "jsstr.h"
 
 #include "jit/BaselineInspector.h"

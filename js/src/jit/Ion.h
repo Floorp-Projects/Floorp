@@ -13,11 +13,9 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsinfer.h"
 
 #include "jit/CompileInfo.h"
 #include "jit/IonCode.h"
-#include "vm/Interpreter.h"
 
 namespace js {
 namespace ion {

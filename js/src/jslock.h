@@ -9,7 +9,6 @@
 
 #ifdef JS_THREADSAFE
 
-# include "jsapi.h"
 # include "pratom.h"
 # include "prcvar.h"
 # include "prinit.h"
@@ -20,11 +19,6 @@
 # define JS_ATOMIC_DECREMENT(p)      PR_ATOMIC_DECREMENT((int32_t *)(p))
 # define JS_ATOMIC_ADD(p,v)          PR_ATOMIC_ADD((int32_t *)(p), (int32_t)(v))
 # define JS_ATOMIC_SET(p,v)          PR_ATOMIC_SET((int32_t *)(p), (int32_t)(v))
-
-namespace js {
-    // Defined in jsgc.cpp.
-    unsigned GetCPUCount();
-}
 
 #else  /* JS_THREADSAFE */
 

@@ -8,7 +8,6 @@
 
 #include "jit/C1Spewer.h"
 
-#include <stdarg.h>
 #include <time.h>
 
 #include "jit/Ion.h"

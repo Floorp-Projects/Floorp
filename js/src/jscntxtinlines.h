@@ -9,20 +9,13 @@
 
 #include "jscntxt.h"
 
-#include "jscompartment.h"
-#include "jsfriendapi.h"
-#include "jsgc.h"
 #include "jsiter.h"
-#include "jsworkers.h"
 
-#include "builtin/Object.h" // For js::obj_construct
-#include "frontend/ParseMaps.h"
-#include "jit/IonFrames.h" // For GetPcScript
+#include "builtin/Object.h"
+#include "jit/IonFrames.h"
+#include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
-#include "vm/Probes.h"
-#include "vm/RegExpObject.h"
-
-#include "jsgcinlines.h"
+#include "vm/ProxyObject.h"
 
 #include "vm/ObjectImpl-inl.h"
 

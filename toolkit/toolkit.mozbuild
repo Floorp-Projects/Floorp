@@ -177,9 +177,6 @@ if not CONFIG['MOZ_ENABLE_LIBCONIC'] and not CONFIG['MOZ_ENABLE_QTNETWORK'] and 
 
 add_tier_dir('platform', 'addon-sdk')
 
-if CONFIG['MOZ_MAPINFO']:
-    add_tier_dir('platform', 'tools/codesighs')
-
 if CONFIG['ENABLE_MARIONETTE'] or CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('gonk', 'android'):
     add_tier_dir('platform', 'testing/marionette')
 

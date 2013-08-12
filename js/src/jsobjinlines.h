@@ -20,7 +20,6 @@
 #include "jscompartmentinlines.h"
 #include "jsinferinlines.h"
 
-#include "vm/ObjectImpl-inl.h"
 #include "vm/Shape-inl.h"
 
 /* static */ inline bool
@@ -930,34 +929,6 @@ class AutoPropDescArrayRooter : private AutoGCRooter
   private:
     PropDescArray descriptors;
     SkipRoot skip;
-};
-
-class AutoPropertyDescriptorRooter : private AutoGCRooter, public PropertyDescriptor
-{
-    SkipRoot skip;
-
-  public:
-    AutoPropertyDescriptorRooter(JSContext *cx)
-      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, MOZ_THIS_IN_INITIALIZER_LIST())
-    {
-        obj = NULL;
-        attrs = 0;
-        getter = (PropertyOp) NULL;
-        setter = (StrictPropertyOp) NULL;
-        value.setUndefined();
-    }
-
-    AutoPropertyDescriptorRooter(JSContext *cx, PropertyDescriptor *desc)
-      : AutoGCRooter(cx, DESCRIPTOR), skip(cx, MOZ_THIS_IN_INITIALIZER_LIST())
-    {
-        obj = desc->obj;
-        attrs = desc->attrs;
-        getter = desc->getter;
-        setter = desc->setter;
-        value = desc->value;
-    }
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
 };
 
 /*

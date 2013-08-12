@@ -12,8 +12,6 @@
 
 #include "mozilla/Array.h"
 
-#include "jscntxt.h"
-
 #include "jit/Bailouts.h"
 #include "jit/InlineList.h"
 #include "jit/IonAllocPolicy.h"

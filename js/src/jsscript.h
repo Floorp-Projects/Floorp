@@ -12,13 +12,14 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
-#include "jsdbgapi.h"
-#include "jsinfer.h"
+#include "jsatom.h"
+#ifdef JS_THREADSAFE
+#include "jslock.h"
+#endif
 #include "jsobj.h"
 #include "jsopcode.h"
 
 #include "gc/Barrier.h"
-#include "js/RootingAPI.h"
 #include "vm/Shape.h"
 
 namespace js {
