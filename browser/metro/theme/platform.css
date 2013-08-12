@@ -635,6 +635,10 @@ appbar toolbar toolbarbutton {
   background-color: transparent;
 }
 
+appbar[viewstate="snapped"] toolbar toolbarbutton {
+  margin: 0 @toolbar_snapped_horizontal_spacing@;
+}
+
 appbar toolbar toolbarbutton[disabled] {
   visibility: collapse;
 }
