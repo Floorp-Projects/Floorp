@@ -2560,7 +2560,7 @@ function Tab(aURL, aParams) {
   this.viewportExcludesHorizontalMargins = true;
   this.viewportExcludesVerticalMargins = true;
   this.viewportMeasureCallback = null;
-  this.lastPageSizeUsedForViewportChange = { width: 0, height: 0 };
+  this.lastPageSizeAfterViewportRemeasure = { width: 0, height: 0 };
   this.contentDocumentIsDisplayed = true;
   this.pluginDoorhangerTimeout = null;
   this.shouldShowPluginDoorhanger = true;
@@ -3301,8 +3301,8 @@ Tab.prototype = {
           let pageWidth = viewport.pageRight - viewport.pageLeft;
           let pageHeight = viewport.pageBottom - viewport.pageTop;
 
-          if (Math.abs(pageWidth - this.lastPageSizeUsedForViewportChange.width) >= 0.5 ||
-              Math.abs(pageHeight - this.lastPageSizeUsedForViewportChange.height) >= 0.5) {
+          if (Math.abs(pageWidth - this.lastPageSizeAfterViewportRemeasure.width) >= 0.5 ||
+              Math.abs(pageHeight - this.lastPageSizeAfterViewportRemeasure.height) >= 0.5) {
             this.updateViewportSize(gScreenWidth);
           }
         }.bind(this), kViewportRemeasureThrottle);
@@ -3881,13 +3881,6 @@ Tab.prototype = {
         this.viewportExcludesVerticalMargins = false;
       }
 
-      // Store the page size that was used to calculate the viewport so that we
-      // can verify it's changed when we consider remeasuring in updateViewportForPageSize
-      this.lastPageSizeUsedForViewportChange = {
-        width: pageWidth,
-        height: pageHeight
-      };
-
       minScale = screenW / pageWidth;
     }
     minScale = this.clampZoom(minScale);
@@ -3916,6 +3909,14 @@ Tab.prototype = {
     this.setResolution(zoom, false);
     this.setScrollClampingSize(zoom);
     this.sendViewportUpdate();
+
+    // Store the page size that was used to calculate the viewport so that we
+    // can verify it's changed when we consider remeasuring in updateViewportForPageSize
+    let viewport = this.getViewport();
+    this.lastPageSizeAfterViewportRemeasure = {
+      width: viewport.pageRight - viewport.pageLeft,
+      height: viewport.pageBottom - viewport.pageTop
+    };
   },
 
   sendViewportMetadata: function sendViewportMetadata() {
