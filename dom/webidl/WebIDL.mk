@@ -491,6 +491,7 @@ webidl_files += \
   DataErrorEvent.webidl \
   IccCardLockErrorEvent.webidl \
   MozCellBroadcastEvent.webidl \
+  MozEmergencyCbModeEvent.webidl \
   MozVoicemailEvent.webidl \
   MozWifiConnectionInfoEvent.webidl \
   MozWifiStatusChangeEvent.webidl \
