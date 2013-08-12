@@ -383,7 +383,7 @@
         <deck id="updateDeck" orient="vertical">
           <hbox id="updateButtonBox" align="center">
             <button id="updateButton" align="start"
-                    oncommand="FlyoutPanelsUI.AboutFlyout.appUpdater.buttonOnCommand();"/>
+                    oncommand="FlyoutPanelsUI.AboutFlyoutPanel.appUpdater.buttonOnCommand();"/>
             <spacer flex="1"/>
           </hbox>
           <hbox id="checkingForUpdates" align="center">
