@@ -10,9 +10,7 @@
 #include "mozilla/Endian.h"
 
 #include "jsapi.h"
-#include "jsnum.h"
-
-#include "vm/NumericConversions.h"
+#include "jsatom.h"
 
 namespace js {
 

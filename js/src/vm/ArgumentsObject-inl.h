@@ -9,9 +9,9 @@
 
 #include "vm/ArgumentsObject.h"
 
-#include "mozilla/MemoryReporting.h"
-
 #include "vm/ScopeObject.h"
+
+#include "jsscriptinlines.h"
 
 #include "vm/ScopeObject-inl.h"
 

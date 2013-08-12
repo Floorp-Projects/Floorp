@@ -9,15 +9,8 @@
 
 #include "jsbool.h"
 
-#include "mozilla/Assertions.h"
-#include "mozilla/Likely.h"
-
-#include "jswrapper.h"
-
-#include "js/RootingAPI.h"
+#include "vm/BooleanObject.h"
 #include "vm/WrapperObject.h"
-
-#include "vm/BooleanObject-inl.h"
 
 namespace js {
 

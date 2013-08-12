@@ -9,6 +9,8 @@
 
 #include "gc/Barrier.h"
 
+#include "jscompartment.h"
+
 #include "gc/Marking.h"
 #include "gc/StoreBuffer.h"
 

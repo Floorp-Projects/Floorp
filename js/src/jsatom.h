@@ -9,16 +9,11 @@
 
 #include "mozilla/HashFunctions.h"
 
-#include <stddef.h>
-
-#include "jsalloc.h"
-#include "jsapi.h"
-#include "jspubtd.h"
-
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
-#include "js/HashTable.h"
 #include "vm/CommonPropertyNames.h"
+
+class JSAtom;
 
 struct JSIdArray {
     int length;

@@ -216,7 +216,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
 bool
 nsXBLProtoImpl::LookupMember(JSContext* aCx, nsString& aName,
                              JS::HandleId aNameAsId,
-                             JSPropertyDescriptor* aDesc,
+                             JS::MutableHandle<JSPropertyDescriptor> aDesc,
                              JSObject* aClassObject)
 {
   for (nsXBLProtoImplMember* m = mMembers; m; m = m->GetNext()) {

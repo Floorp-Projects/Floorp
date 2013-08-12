@@ -22,7 +22,6 @@
 #include "jit/IonInstrumentation.h"
 #include "jit/ParallelFunctions.h"
 #include "jit/VMFunctions.h"
-#include "vm/ForkJoin.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
