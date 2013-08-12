@@ -676,24 +676,6 @@ DumpString(const nsAString &str)
 }
 #endif
 
-void
-nsJSContext::EnterModalState()
-{
-  ++mModalStateDepth;
-}
-
-void
-nsJSContext::LeaveModalState()
-{
-  if (!mModalStateDepth) {
-    NS_ERROR("Uh, mismatched LeaveModalState() call!");
-
-    return;
-  }
-
-  --mModalStateDepth;
-}
-
 #define JS_OPTIONS_DOT_STR "javascript.options."
 
 static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
@@ -868,7 +850,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
   }
   mIsInitialized = false;
   mScriptsEnabled = true;
-  mModalStateDepth = 0;
   mProcessingScriptTag = false;
 }
 
