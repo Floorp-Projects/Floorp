@@ -19,6 +19,8 @@
 #include "devtools/sharkctl.h"
 #endif
 
+#include "vm/Probes.h"
+
 #include "jscntxtinlines.h"
 
 using namespace js;

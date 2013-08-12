@@ -6,14 +6,13 @@
 
 #ifndef jsfun_h
 #define jsfun_h
+
 /*
  * JS function definitions.
  */
 
 #include "jsobj.h"
 #include "jsscript.h"
-
-#include "gc/Barrier.h"
 
 namespace js {
 class FunctionExtended;

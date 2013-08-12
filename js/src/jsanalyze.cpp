@@ -14,7 +14,6 @@
 #include "jscompartment.h"
 
 #include "jsinferinlines.h"
-#include "jsopcodeinlines.h"
 
 using namespace js;
 using namespace js::analyze;

@@ -37,7 +37,9 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsiter.h"
+#ifdef JS_THREADSAFE
 #include "jslock.h"
+#endif
 #include "jsnum.h"
 #include "jsobj.h"
 #include "json.h"
@@ -67,6 +69,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
+#include "jsfuninlines.h"
 #include "jsinferinlines.h"
 #include "jsscriptinlines.h"
 

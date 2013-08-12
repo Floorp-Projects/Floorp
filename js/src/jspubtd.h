@@ -15,6 +15,7 @@
 
 #include "jsprototypes.h"
 #include "jstypes.h"
+#include "jsversion.h"  // #include here so it's seen everywhere
 
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING) || defined(DEBUG)
 # define JSGC_TRACK_EXACT_ROOTS

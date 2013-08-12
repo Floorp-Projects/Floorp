@@ -8,6 +8,7 @@
 #define js_GCAPI_h
 
 #include "js/HeapAPI.h"
+#include "js/RootingAPI.h"
 
 namespace JS {
 

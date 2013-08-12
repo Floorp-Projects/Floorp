@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jit/IonCode.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 

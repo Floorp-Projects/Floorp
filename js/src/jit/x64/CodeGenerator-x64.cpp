@@ -6,11 +6,8 @@
 
 #include "jit/x64/CodeGenerator-x64.h"
 
-#include "jsnum.h"
-
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
-#include "vm/Shape.h"
 
 #include "jsscriptinlines.h"
 

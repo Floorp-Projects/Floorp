@@ -17,11 +17,14 @@
 #include "gc/Marking.h"
 #include "jit/BaselineJIT.h"
 #include "js/Vector.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/WrapperObject.h"
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
+#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
+#include "jsscriptinlines.h"
 
 #include "vm/Stack-inl.h"
 

@@ -7,7 +7,10 @@
 #ifndef TraceLogging_h
 #define TraceLogging_h
 
-#include "jsscript.h"
+#include <stdio.h>
+#include <stdint.h>
+
+class JSScript;
 
 namespace js {
 

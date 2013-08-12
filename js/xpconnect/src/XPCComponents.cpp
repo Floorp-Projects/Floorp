@@ -2693,7 +2693,7 @@ nsXPCComponents_Utils::LookupMethod(const JS::Value& object,
         // Alright, now do the lookup.
         *retval = UndefinedValue();
         Rooted<JSPropertyDescriptor> desc(cx);
-        if (!JS_GetPropertyDescriptorById(cx, xray, methodId, 0, desc.address()))
+        if (!JS_GetPropertyDescriptorById(cx, xray, methodId, 0, &desc))
             return NS_ERROR_FAILURE;
 
         // First look for a method value. If that's not there, try a getter,
@@ -3141,7 +3141,7 @@ xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
 
     MOZ_ASSERT(js::GetObjectCompartment(obj) == js::GetObjectCompartment(proxy));
     if (!JS_GetPropertyDescriptorById(cx, obj, id,
-                                      flags, desc.address()))
+                                      flags, desc))
         return false;
 
     if (!desc.object())

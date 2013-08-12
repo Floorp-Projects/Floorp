@@ -26,7 +26,8 @@
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
+#include "jsinferinlines.h"
+#include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
 

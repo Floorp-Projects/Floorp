@@ -8,8 +8,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include <limits.h>
-
 #include "jit/BitSet.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonSpewer.h"
@@ -265,13 +263,25 @@ LinearScanAllocator::resolveControlFlow()
         BitSet *live = liveIn[mSuccessor->id()];
 
         for (BitSet::Iterator liveRegId(*live); liveRegId; liveRegId++) {
-            LiveInterval *to = vregs[*liveRegId].intervalFor(inputOf(successor->firstId()));
+            LinearScanVirtualRegister *vreg = &vregs[*liveRegId];
+            LiveInterval *to = vreg->intervalFor(inputOf(successor->firstId()));
             JS_ASSERT(to);
 
             for (size_t j = 0; j < mSuccessor->numPredecessors(); j++) {
                 LBlock *predecessor = mSuccessor->getPredecessor(j)->lir();
                 LiveInterval *from = vregs[*liveRegId].intervalFor(outputOf(predecessor->lastId()));
                 JS_ASSERT(from);
+
+                if (*from->getAllocation() == *to->getAllocation())
+                    continue;
+
+                // If this value is spilled at its definition, other stores
+                // are redundant.
+                if (vreg->mustSpillAtDefinition() && to->getAllocation()->isStackSlot()) {
+                    JS_ASSERT(vreg->canonicalSpill());
+                    JS_ASSERT(*vreg->canonicalSpill() == *to->getAllocation());
+                    continue;
+                }
 
                 if (mSuccessor->numPredecessors() > 1) {
                     JS_ASSERT(predecessor->mir()->numSuccessors() == 1);
