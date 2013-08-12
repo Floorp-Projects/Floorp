@@ -1284,12 +1284,6 @@ XPCJSRuntime::OperationCallback(JSContext *cx)
     return true;
 }
 
-bool
-xpc::OperationCallback(JSContext *cx)
-{
-    return XPCJSRuntime::OperationCallback(cx);
-}
-
 size_t
 XPCJSRuntime::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 {
@@ -2939,6 +2933,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetAccumulateTelemetryCallback(runtime, AccumulateTelemetryCallback);
     js::SetActivityCallback(runtime, ActivityCallback, this);
     js::SetCTypesActivityCallback(runtime, CTypesActivityCallback);
+    JS_SetOperationCallback(runtime, OperationCallback);
 
     // The JS engine needs to keep the source code around in order to implement
     // Function.prototype.toSource(). It'd be nice to not have to do this for

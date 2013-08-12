@@ -9519,14 +9519,15 @@ nsGlobalWindow::ShowSlowScriptDialog()
     buttonFlags += nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2;
 
   // Null out the operation callback while we're re-entering JS here.
-  JSOperationCallback old = JS_SetOperationCallback(cx, nullptr);
+  JSRuntime* rt = JS_GetRuntime(cx);
+  JSOperationCallback old = JS_SetOperationCallback(rt, nullptr);
 
   // Open the dialog.
   rv = prompt->ConfirmEx(title, msg, buttonFlags, waitButton, stopButton,
                          debugButton, neverShowDlg, &neverShowDlgChk,
                          &buttonPressed);
 
-  JS_SetOperationCallback(cx, old);
+  JS_SetOperationCallback(rt, old);
 
   if (NS_SUCCEEDED(rv) && (buttonPressed == 0)) {
     return neverShowDlgChk ? AlwaysContinueSlowScript : ContinueSlowScript;
