@@ -317,29 +317,36 @@ let WebConsoleUtils = {
    */
   createValueGrip: function WCU_createValueGrip(aValue, aObjectWrapper)
   {
-    let type = typeof(aValue);
-    switch (type) {
+    switch (typeof aValue) {
       case "boolean":
-      case "number":
         return aValue;
       case "string":
-          return aObjectWrapper(aValue);
-      case "object":
-      case "function":
-        if (aValue) {
-          return aObjectWrapper(aValue);
+        return aObjectWrapper(aValue);
+      case "number":
+        if (aValue === Infinity) {
+          return { type: "Infinity" };
         }
-      default:
+        else if (aValue === -Infinity) {
+          return { type: "-Infinity" };
+        }
+        else if (Number.isNaN(aValue)) {
+          return { type: "NaN" };
+        }
+        else if (!aValue && 1 / aValue === -Infinity) {
+          return { type: "-0" };
+        }
+        return aValue;
+      case "undefined":
+        return { type: "undefined" };
+      case "object":
         if (aValue === null) {
           return { type: "null" };
         }
-
-        if (aValue === undefined) {
-          return { type: "undefined" };
-        }
-
-        Cu.reportError("Failed to provide a grip for value of " + type + ": " +
-                       aValue);
+      case "function":
+        return aObjectWrapper(aValue);
+      default:
+        Cu.reportError("Failed to provide a grip for value of " + typeof aValue
+                       + ": " + aValue);
         return null;
     }
   },

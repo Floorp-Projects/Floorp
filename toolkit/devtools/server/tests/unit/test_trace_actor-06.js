@@ -64,6 +64,22 @@ function test_enter_exit_frame()
                   'return value should have property "arr"');
       do_check_eq(typeof obj.ownProperties.arr.value, "object",
                   'return value property "arr" should be a grip');
+      do_check_eq(typeof obj.ownProperties.inf, "object",
+                  'return value should have property "inf"');
+      do_check_eq(typeof obj.ownProperties.inf.value, "object",
+                  'return value property "inf" should be a grip');
+      do_check_eq(typeof obj.ownProperties.ninf, "object",
+                  'return value should have property "ninf"');
+      do_check_eq(typeof obj.ownProperties.ninf.value, "object",
+                  'return value property "ninf" should be a grip');
+      do_check_eq(typeof obj.ownProperties.nan, "object",
+                  'return value should have property "nan"');
+      do_check_eq(typeof obj.ownProperties.nan.value, "object",
+                  'return value property "nan" should be a grip');
+      do_check_eq(typeof obj.ownProperties.nzero, "object",
+                  'return value should have property "nzero"');
+      do_check_eq(typeof obj.ownProperties.nzero.value, "object",
+                  'return value property "nzero" should be a grip');
 
       do_check_eq(obj.prototype.type, "object");
       do_check_eq(obj.ownProperties.num.value, 25);
@@ -75,6 +91,10 @@ function test_enter_exit_frame()
       do_check_eq(obj.ownProperties.obj.value.class, "Object");
       do_check_eq(obj.ownProperties.arr.value.type, "object");
       do_check_eq(obj.ownProperties.arr.value.class, "Array");
+      do_check_eq(obj.ownProperties.inf.value.type, "Infinity");
+      do_check_eq(obj.ownProperties.ninf.value.type, "-Infinity");
+      do_check_eq(obj.ownProperties.nan.value.type, "NaN");
+      do_check_eq(obj.ownProperties.nzero.value.type, "-0");
     }
   });
 
@@ -107,7 +127,11 @@ function eval_code()
         undef: undefined,
         nil: null,
         obj: obj,
-        arr: [1,2,3,4,5]
+        arr: [1,2,3,4,5],
+        inf: Infinity,
+        ninf: -Infinity,
+        nan: NaN,
+        nzero: -0
       };
     }
     foo();
