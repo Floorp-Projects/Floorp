@@ -98,10 +98,8 @@ public:
   static bool ValueToString(const nsSMILValue& aValue, nsAString& aString);
 
 private:
-  // Private constructor & destructor: prevent instances beyond my singleton,
-  // and prevent others from deleting my singleton.
-  nsSMILCSSValueType()  {}
-  ~nsSMILCSSValueType() {}
+  // Private constructor: prevent instances beyond my singleton.
+  MOZ_CONSTEXPR nsSMILCSSValueType() {}
 };
 
 #endif // NS_SMILCSSVALUETYPE_H_
