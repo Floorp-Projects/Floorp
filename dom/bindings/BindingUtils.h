@@ -1924,7 +1924,7 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 bool
 XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           JS::Handle<JSObject*> obj,
-                          JS::Handle<jsid> id, JSPropertyDescriptor* desc);
+                          JS::Handle<jsid> id, JS::MutableHandle<JSPropertyDescriptor> desc);
 
 /**
  * Define a property on obj through an Xray wrapper.
