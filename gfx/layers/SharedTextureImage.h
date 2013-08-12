@@ -6,15 +6,9 @@
 #ifndef GFX_SHAREDTEXTUREIMAGE_H
 #define GFX_SHAREDTEXTUREIMAGE_H
 
-#include "GLContext.h"                  // for GLContext, etc
-#include "GLContextProvider.h"          // for GLContextProvider
-#include "ImageContainer.h"             // for Image
-#include "ImageTypes.h"                 // for ImageFormat::SHARED_TEXTURE
-#include "gfxPoint.h"                   // for gfxIntSize
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsSize.h"                     // for nsIntSize
-
-class gfxASurface;
+#include "ImageContainer.h"
+#include "GLContext.h"
+#include "GLContextProvider.h"
 
 // Split into a separate header from ImageLayers.h due to GLContext.h dependence
 // Implementation remains in ImageLayers.cpp

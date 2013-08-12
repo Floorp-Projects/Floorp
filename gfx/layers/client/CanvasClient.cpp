@@ -4,33 +4,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/CanvasClient.h"
-#include "ClientCanvasLayer.h"          // for ClientCanvasLayer
-#include "GLContext.h"                  // for GLContext
-#include "GLScreenBuffer.h"             // for GLScreenBuffer
-#include "Layers.h"                     // for Layer, etc
-#include "SurfaceStream.h"              // for SurfaceStream
-#include "SurfaceTypes.h"               // for SurfaceStreamHandle
-#include "gfx2DGlue.h"                  // for ImageFormatToSurfaceFormat
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxPlatform.h"                // for gfxPlatform
-#include "mozilla/gfx/BaseSize.h"       // for BaseSize
-#include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/layers/LayersTypes.h"
-#include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsDebug.h"                    // for printf_stderr, NS_ASSERTION
-#include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
+#include "mozilla/layers/TextureClient.h"
+#include "ClientCanvasLayer.h"
+#include "mozilla/layers/ShadowLayers.h"
+#include "SharedTextureImage.h"
+#include "nsXULAppAPI.h"
+#include "GLContext.h"
+#include "SurfaceStream.h"
+#include "SharedSurface.h"
 #ifdef MOZ_WIDGET_GONK
 #include "SharedSurfaceGralloc.h"
 #endif
 
 using namespace mozilla::gl;
-
-namespace mozilla {
-namespace gfx {
-class SharedSurface;
-}
-}
 
 namespace mozilla {
 namespace layers {

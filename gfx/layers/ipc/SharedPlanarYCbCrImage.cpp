@@ -4,21 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedPlanarYCbCrImage.h"
-#include <stddef.h>                     // for size_t
-#include <stdio.h>                      // for printf
-#include "ISurfaceAllocator.h"          // for ISurfaceAllocator, etc
-#include "gfxPoint.h"                   // for gfxIntSize
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/gfx/Types.h"          // for SurfaceFormat::FORMAT_YUV
-#include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
-#include "mozilla/layers/ImageClient.h"  // for ImageClient
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
-#include "mozilla/layers/TextureClient.h"  // for BufferTextureClient, etc
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
-#include "mozilla/mozalloc.h"           // for operator delete
-#include "nsISupportsImpl.h"            // for Image::AddRef
-
-class gfxASurface;
+#include "ISurfaceAllocator.h"
+#include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/ImageClient.h"
 
 namespace mozilla {
 namespace layers {

@@ -6,10 +6,10 @@
 #ifndef GFX_COLORLAYEROGL_H
 #define GFX_COLORLAYEROGL_H
 
-#include "LayerManagerOGL.h"            // for LayerOGL, LayerManagerOGL
-#include "Layers.h"                     // for ColorLayer, etc
+#include "mozilla/layers/PLayerTransaction.h"
+#include "mozilla/layers/ShadowLayers.h"
 
-struct nsIntPoint;
+#include "LayerManagerOGL.h"
 
 namespace mozilla {
 namespace layers {

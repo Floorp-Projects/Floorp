@@ -3,26 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <stdint.h>                     // for uint8_t, uint32_t
-#include "BasicLayers.h"                // for BasicLayerManager
-#include "ImageContainer.h"             // for PlanarYCbCrImage, etc
-#include "ImageTypes.h"                 // for ImageFormat, etc
-#include "cairo.h"                      // for cairo_user_data_key_t
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
-#include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
-#include "gfxPoint.h"                   // for gfxIntSize
-#include "gfxUtils.h"                   // for gfxUtils
-#include "mozilla/mozalloc.h"           // for operator delete[], etc
-#include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoArrayPtr
-#include "nsAutoRef.h"                  // for nsCountedRef
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsDebug.h"                    // for NS_ERROR, NS_ASSERTION
-#include "nsISupportsImpl.h"            // for Image::Release, etc
-#include "nsThreadUtils.h"              // for NS_IsMainThread
+#include "mozilla/ReentrantMonitor.h"
+
+#include "ImageLayers.h"
+#include "BasicLayers.h"
+#include "gfxImageSurface.h"
+
 #ifdef XP_MACOSX
 #include "gfxQuartzImageSurface.h"
 #endif
+
+#include "cairo.h"
+
+#include "gfxUtils.h"
+
+#include "gfxPlatform.h"
+
+using mozilla::ReentrantMonitor;
 
 namespace mozilla {
 namespace layers {

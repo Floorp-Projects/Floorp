@@ -2,22 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "LayerManagerOGLProgram.h"
-#include <stdint.h>                     // for uint32_t
-#include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPoint.h"                   // for gfxIntSize, gfxPoint, etc
-#include "gfxRect.h"                    // for gfxRect
-#include "mozilla/DebugOnly.h"          // for DebugOnly
-#include "nsAString.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsString.h"                   // for nsAutoCString
-#include "prenv.h"                      // for PR_GetEnv
-#include "LayerManagerOGL.h"
-#include "LayerManagerOGLShaders.h"
-#include "Layers.h"
-#include "GLContext.h"
+#include "mozilla/DebugOnly.h"
 
-struct gfxRGBA;
+#include "LayerManagerOGLProgram.h"
+
+#include "LayerManagerOGLShaders.h"
+#include "LayerManagerOGL.h"
+
+#include "GLContext.h"
 
 namespace mozilla {
 namespace layers {

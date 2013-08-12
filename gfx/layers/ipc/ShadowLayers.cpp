@@ -5,49 +5,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ShadowLayers.h"
-#include <set>                          // for _Rb_tree_const_iterator, etc
-#include <vector>                       // for vector
-#include "AutoOpenSurface.h"            // for AutoOpenSurface, etc
-#include "GeckoProfilerImpl.h"          // for PROFILER_LABEL
-#include "ISurfaceAllocator.h"          // for IsSurfaceDescriptorValid
-#include "Layers.h"                     // for Layer
-#include "RenderTrace.h"                // for RenderTraceScope
-#include "ShadowLayerChild.h"           // for ShadowLayerChild
-#include "gfxImageSurface.h"            // for gfxImageSurface
-#include "gfxPlatform.h"                // for gfxImageFormat, gfxPlatform
-#include "gfxSharedImageSurface.h"      // for gfxSharedImageSurface
-#include "ipc/IPCMessageUtils.h"        // for gfxContentType, null_t
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/layers/CompositableClient.h"  // for CompositableClient, etc
-#include "mozilla/layers/LayerTransaction.h"  // for Edit, etc
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
-#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
-#include "mozilla/layers/PLayerTransactionChild.h"
-#include "ShadowLayerUtils.h"
-#include "mozilla/layers/TextureClient.h"  // for TextureClient
-#include "mozilla/mozalloc.h"           // for operator new, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
-#include "nsDebug.h"                    // for NS_ABORT_IF_FALSE, etc
-#include "nsRect.h"                     // for nsIntRect
-#include "nsSize.h"                     // for nsIntSize
-#include "nsTArray.h"                   // for nsAutoTArray, nsTArray, etc
-#include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
+#include <set>
+#include <vector>
 
-struct nsIntPoint;
+#include "gfxSharedImageSurface.h"
+#include "gfxPlatform.h"
+
+#include "AutoOpenSurface.h"
+#include "mozilla/ipc/SharedMemorySysV.h"
+#include "mozilla/layers/PLayerChild.h"
+#include "mozilla/layers/PLayerTransactionChild.h"
+#include "mozilla/layers/PLayerTransactionParent.h"
+#include "mozilla/layers/LayerTransaction.h"
+#include "mozilla/layers/LayersSurfaces.h"
+#include "ShadowLayers.h"
+#include "ShadowLayerChild.h"
+#include "gfxipc/ShadowLayerUtils.h"
+#include "RenderTrace.h"
+#include "GeckoProfiler.h"
+#include "nsXULAppAPI.h"
+#include "mozilla/layers/ImageClient.h"
+#include "mozilla/layers/CanvasClient.h"
+#include "mozilla/layers/ContentClient.h"
+#include "ISurfaceAllocator.h"
+
+#include "nsTraceRefcntImpl.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::gl;
 using namespace mozilla::dom;
 
 namespace mozilla {
-namespace ipc {
-class Shmem;
-}
-
 namespace layers {
-
-class BasicTiledLayerBuffer;
 
 typedef nsTArray<SurfaceDescriptor> BufferArray;
 typedef std::vector<Edit> EditVector;

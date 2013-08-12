@@ -6,10 +6,8 @@
 #ifndef GFX_CONTAINERLAYEROGL_H
 #define GFX_CONTAINERLAYEROGL_H
 
-#include "LayerManagerOGL.h"            // for LayerOGL
-#include "Layers.h"                     // for Layer (ptr only), etc
-class gfx3DMatrix;
-struct nsIntPoint;
+#include "Layers.h"
+#include "LayerManagerOGL.h"
 
 namespace mozilla {
 namespace layers {

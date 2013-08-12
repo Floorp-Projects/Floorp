@@ -6,28 +6,13 @@
 #ifndef mozilla_layers_APZCTreeManager_h
 #define mozilla_layers_APZCTreeManager_h
 
-#include <stdint.h>                     // for uint64_t, uint32_t
-#include "FrameMetrics.h"               // for FrameMetrics, etc
-#include "Units.h"                      // for CSSPoint, CSSRect, etc
-#include "gfxPoint.h"                   // for gfxPoint
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
-#include "mozilla/Monitor.h"            // for Monitor
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsEvent.h"                    // for nsEventStatus
-#include "nsISupportsImpl.h"
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
-
-class gfx3DMatrix;
-class nsInputEvent;
-template <class E> class nsTArray;
+#include "mozilla/layers/AsyncPanZoomController.h"
+#include "Layers.h"
+#include "CompositorParent.h"
 
 namespace mozilla {
-class InputData;
-
 namespace layers {
 
-class Layer;
 class AsyncPanZoomController;
 class CompositorParent;
 
@@ -116,7 +101,7 @@ class APZCTreeManager {
 
 public:
   APZCTreeManager();
-  virtual ~APZCTreeManager();
+  virtual ~APZCTreeManager() {}
 
   /**
    * Rebuild the APZC tree based on the layer update that just came up. Preserve

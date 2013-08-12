@@ -7,9 +7,7 @@
 #ifndef mozilla_layers_GeckoContentController_h
 #define mozilla_layers_GeckoContentController_h
 
-#include "FrameMetrics.h"               // for FrameMetrics, etc
-#include "Units.h"                      // for CSSIntPoint, CSSRect, etc
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
+#include "FrameMetrics.h"
 #include "nsISupportsImpl.h"
 
 class Task;
@@ -17,8 +15,7 @@ class Task;
 namespace mozilla {
 namespace layers {
 
-class GeckoContentController
-{
+class GeckoContentController {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GeckoContentController)
 

@@ -4,12 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/CompositableClient.h"
-#include <stdint.h>                     // for uint64_t, uint32_t
-#include "gfxPlatform.h"                // for gfxPlatform
-#include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/layers/TextureClient.h"  // for DeprecatedTextureClient, etc
+#include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureClientOGL.h"
-#include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "mozilla/layers/LayerTransactionChild.h"
+#include "mozilla/layers/CompositableForwarder.h"
+#include "gfxPlatform.h"
 #ifdef XP_WIN
 #include "mozilla/layers/TextureD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"

@@ -109,7 +109,6 @@ extern "C" {
 #include "Layers.h"
 #include "LayerManagerOGL.h"
 #include "GLContextProvider.h"
-#include "mozilla/gfx/2D.h"
 
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
@@ -123,7 +122,6 @@ extern "C" {
 #include "nsWindow.h"
 
 using namespace mozilla;
-using namespace mozilla::gfx;
 using namespace mozilla::widget;
 using namespace mozilla::layers;
 using mozilla::gl::GLContext;
@@ -5964,7 +5962,7 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
 #endif
 
 #if defined(MOZ_WIDGET_GTK2)
-TemporaryRef<DrawTarget>
+TemporaryRef<gfx::DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
   gfxASurface *surf = GetThebesSurface();
@@ -5972,7 +5970,7 @@ nsWindow::StartRemoteDrawing()
     return nullptr;
   }
 
-  IntSize size(surf->GetSize().width, surf->GetSize().height);
+  gfx::IntSize size(surf->GetSize().width, surf->GetSize().height);
   if (size.width <= 0 || size.height <= 0) {
     return nullptr;
   }

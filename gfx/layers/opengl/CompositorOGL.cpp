@@ -3,41 +3,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/layers/TextureHostOGL.h"
 #include "CompositorOGL.h"
-#include <stddef.h>                     // for size_t
-#include <stdint.h>                     // for uint32_t, uint8_t
-#include <stdlib.h>                     // for free, malloc
-#include "FPSCounter.h"                 // for FPSState, FPSCounter
-#include "GLContextProvider.h"          // for GLContextProvider
-#include "Layers.h"                     // for WriteSnapshotToDumpFile
-#include "gfx2DGlue.h"                  // for ThebesFilter
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxCrashReporterUtils.h"      // for ScopedGfxFeatureReporter
-#include "gfxImageSurface.h"            // for gfxImageSurface
-#include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPattern.h"                 // for gfxPattern, etc
-#include "gfxPlatform.h"                // for gfxPlatform
-#include "gfxRect.h"                    // for gfxRect
-#include "gfxUtils.h"                   // for NextPowerOfTwo, gfxUtils, etc
-#include "mozilla/Preferences.h"        // for Preferences
-#include "mozilla/Util.h"               // for ArrayLength
-#include "mozilla/gfx/BasePoint.h"      // for BasePoint
-#include "mozilla/gfx/Matrix.h"         // for Matrix4x4, Matrix
+#include "mozilla/layers/ImageHost.h"
+#include "mozilla/layers/ContentHost.h"
 #include "mozilla/layers/CompositingRenderTargetOGL.h"
-#include "mozilla/layers/Effects.h"     // for EffectChain, TexturedEffect, etc
-#include "mozilla/layers/TextureHost.h"  // for TextureSource, etc
-#include "mozilla/layers/TextureHostOGL.h"  // for TextureSourceOGL, etc
-#include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsAString.h"
-#include "nsIConsoleService.h"          // for nsIConsoleService, etc
-#include "nsIWidget.h"                  // for nsIWidget
-#include "nsLiteralString.h"            // for NS_LITERAL_STRING
-#include "nsMathUtils.h"                // for NS_roundf
-#include "nsRect.h"                     // for nsIntRect
-#include "nsServiceManagerUtils.h"      // for do_GetService
-#include "nsString.h"                   // for nsString, nsAutoCString, etc
-#include "prtypes.h"                    // for PR_INT32_MAX
+#include "mozilla/Preferences.h"
+#include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/layers/PLayer.h"
+#include "mozilla/layers/Effects.h"
+#include "nsIWidget.h"
+#include "FPSCounter.h"
+
+#include "gfxUtils.h"
+
+#include "GLContextProvider.h"
+
+#include "nsIServiceManager.h"
+#include "nsIConsoleService.h"
+
+#include "gfxCrashReporterUtils.h"
+
+#include "nsMathUtils.h"
+
+#include "GeckoProfiler.h"
+#include <algorithm>
 
 #if MOZ_ANDROID_OMTC
 #include "TexturePoolOGL.h"
