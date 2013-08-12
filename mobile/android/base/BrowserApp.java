@@ -16,6 +16,7 @@ import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.health.BrowserHealthReporter;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.FloatUtils;
@@ -84,7 +85,7 @@ abstract public class BrowserApp extends GeckoApp
                                             BrowserSearch.OnSearchListener,
                                             BrowserSearch.OnEditSuggestionListener,
                                             HomePager.OnNewTabsListener,
-                                            HomePager.OnUrlOpenListener {
+                                            OnUrlOpenListener {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final String PREF_CHROME_DYNAMICTOOLBAR = "browser.chrome.dynamictoolbar";
@@ -1262,6 +1263,35 @@ abstract public class BrowserApp extends GeckoApp
         outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mHomePagerContainer.getPaddingTop());
     }
 
+    /**
+     * Attempts to switch to an open tab with the given URL.
+     *
+     * @return true if we successfully switched to a tab, false otherwise.
+     */
+    private boolean maybeSwitchToTab(String url, EnumSet<OnUrlOpenListener.Flags> flags) {
+        if (!flags.contains(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB)) {
+            return false;
+        }
+
+        final Tabs tabs = Tabs.getInstance();
+        final int tabId = tabs.getTabIdForUrl(url);
+        if (tabId < 0) {
+            return false;
+        }
+
+        // If this tab is already selected, just hide the home pager.
+        if (tabs.isSelectedTab(tabs.getTab(tabId))) {
+            hideHomePager();
+        } else {
+            tabs.selectTab(tabId);
+        }
+
+        hideBrowserSearch();
+        mBrowserToolbar.cancelEdit();
+
+        return true;
+    }
+
     private void openUrl(String url) {
         openUrl(url, null, false);
     }
@@ -2065,10 +2095,12 @@ abstract public class BrowserApp extends GeckoApp
 
     // HomePager.OnUrlOpenListener
     @Override
-    public void onUrlOpen(String url) {
-        openUrl(url);
+    public void onUrlOpen(String url, EnumSet<OnUrlOpenListener.Flags> flags) {
+        if (!maybeSwitchToTab(url, flags)) {
+            openUrl(url);
+        }
     }
- 
+
     // BrowserSearch.OnSearchListener
     @Override
     public void onSearch(String engineId, String text) {

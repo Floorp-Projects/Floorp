@@ -24,6 +24,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.EnumSet;
+
 class SearchEngineRow extends AnimatedHeightLayout {
     // Duration for fade-in animation
     private static final int ANIMATION_DURATION = 250;
@@ -77,7 +79,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
                 // search for the term.
                 if (v != mUserEnteredView && !StringUtils.isSearchQuery(suggestion, false)) {
                     if (mUrlOpenListener != null) {
-                        mUrlOpenListener.onUrlOpen(suggestion);
+                        mUrlOpenListener.onUrlOpen(suggestion, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
                     }
                 } else if (mSearchListener != null) {
                     mSearchListener.onSearch(mSearchEngine.name, suggestion);
