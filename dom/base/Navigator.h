@@ -39,10 +39,6 @@ class nsIDOMMozVoicemail;
 class nsIDOMMozIccManager;
 #endif // MOZ_B2G_RIL
 
-#ifdef MOZ_B2G_BT
-class nsIDOMBluetoothManager;
-#endif // MOZ_B2G_BT
-
 #include "nsIDOMNavigatorSystemMessages.h"
 
 #include "DOMCameraManager.h"
@@ -90,6 +86,12 @@ namespace telephony {
 class Telephony;
 } // namespace Telephony;
 #endif
+
+#ifdef MOZ_B2G_BT
+namespace bluetooth {
+class BluetoothManager;
+} // namespace bluetooth
+#endif // MOZ_B2G_BT
 
 namespace power {
 class PowerManager;
@@ -229,7 +231,7 @@ public:
   void GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads, ErrorResult& aRv);
 #endif // MOZ_GAMEPAD
 #ifdef MOZ_B2G_BT
-  nsIDOMBluetoothManager* GetMozBluetooth(ErrorResult& aRv);
+  bluetooth::BluetoothManager* GetMozBluetooth(ErrorResult& aRv);
 #endif // MOZ_B2G_BT
 #ifdef MOZ_TIME_MANAGER
   time::TimeManager* GetMozTime(ErrorResult& aRv);
@@ -324,7 +326,7 @@ private:
   nsRefPtr<icc::IccManager> mIccManager;
 #endif
 #ifdef MOZ_B2G_BT
-  nsCOMPtr<nsIDOMBluetoothManager> mBluetooth;
+  nsCOMPtr<bluetooth::BluetoothManager> mBluetooth;
 #endif
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
   nsRefPtr<system::AudioChannelManager> mAudioChannelManager;
