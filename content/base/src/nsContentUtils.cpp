@@ -1756,7 +1756,7 @@ nsContentUtils::IsImageSrcSetDisabled()
 // static
 bool
 nsContentUtils::LookupBindingMember(JSContext* aCx, nsIContent *aContent,
-                                    JS::HandleId aId, JSPropertyDescriptor* aDesc)
+                                    JS::HandleId aId, JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
   nsXBLBinding* binding = aContent->GetXBLBinding();
   if (!binding)

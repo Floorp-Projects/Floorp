@@ -17,7 +17,6 @@
 #include <stdio.h>
 
 #include "jscntxt.h"
-#include "jsopcode.h"
 #include "jspubtd.h"
 #include "jsversion.h"
 

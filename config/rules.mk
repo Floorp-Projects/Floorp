@@ -324,21 +324,9 @@ ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
 endif
 
-ifdef MOZ_MAPINFO
-ifdef SHARED_LIBRARY_NAME
-MAPFILE=$(SHARED_LIBRARY_NAME).map
-else
-MAPFILE=$(basename $(@F)).map
-endif # SHARED_LIBRARY_NAME
-endif # MOZ_MAPINFO
-
 ifdef DEFFILE
 OS_LDFLAGS += -DEF:$(call normalizepath,$(DEFFILE))
 EXTRA_DEPS += $(DEFFILE)
-endif
-
-ifdef MAPFILE
-OS_LDFLAGS += -MAP:$(MAPFILE)
 endif
 
 else #!GNU_CC
@@ -399,7 +387,7 @@ ALL_TRASH = \
 	$(OBJS:.$(OBJ_SUFFIX)=.i) $(OBJS:.$(OBJ_SUFFIX)=.i_o) \
 	$(HOST_PROGOBJS) $(HOST_OBJS) $(IMPORT_LIBRARY) $(DEF_FILE)\
 	$(EXE_DEF_FILE) so_locations _gen _stubs $(wildcard *.res) $(wildcard *.RES) \
-	$(wildcard *.pdb) $(CODFILE) $(MAPFILE) $(IMPORT_LIBRARY) \
+	$(wildcard *.pdb) $(CODFILE) $(IMPORT_LIBRARY) \
 	$(SHARED_LIBRARY:$(DLL_SUFFIX)=.exp) $(wildcard *.ilk) \
 	$(PROGRAM:$(BIN_SUFFIX)=.exp) $(SIMPLE_PROGRAMS:$(BIN_SUFFIX)=.exp) \
 	$(PROGRAM:$(BIN_SUFFIX)=.lib) $(SIMPLE_PROGRAMS:$(BIN_SUFFIX)=.lib) \

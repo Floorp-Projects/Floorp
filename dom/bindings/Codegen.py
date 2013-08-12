@@ -7125,7 +7125,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                    "}\n") % (self.descriptor.nativeType)
 
         if UseHolderForUnforgeable(self.descriptor):
-            getUnforgeable = """if (!JS_GetPropertyDescriptorById(cx, ${holder}, id, flags, desc.address())) {
+            getUnforgeable = """if (!JS_GetPropertyDescriptorById(cx, ${holder}, id, flags, desc)) {
   return false;
 }
 MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
@@ -7133,7 +7133,7 @@ MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
                                                      getUnforgeable, "isXray")
             getUnforgeable += """if (desc.object()) {
   desc.object().set(proxy);
-  return !isXray || JS_WrapPropertyDescriptor(cx, desc.address());
+  return !isXray || JS_WrapPropertyDescriptor(cx, desc);
 }
 
 """
@@ -7202,7 +7202,7 @@ MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
 
         return setOrIndexedGet + """JS::Rooted<JSObject*> expando(cx);
 if (!isXray && (expando = GetExpandoObject(proxy))) {
-  if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc.address())) {
+  if (!JS_GetPropertyDescriptorById(cx, expando, id, flags, desc)) {
     return false;
   }
   if (desc.object()) {

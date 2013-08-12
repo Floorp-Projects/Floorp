@@ -1040,7 +1040,7 @@ CodeGeneratorARM::visitOutOfLineTableSwitch(OutOfLineTableSwitch *ool)
 {
     MTableSwitch *mir = ool->mir();
 
-    int numCases = mir->numCases();
+    size_t numCases = mir->numCases();
     for (size_t i = 0; i < numCases; i++) {
         LBlock *caseblock = mir->getCase(numCases - 1 - i)->lir();
         Label *caseheader = caseblock->label();
