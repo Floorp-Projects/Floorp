@@ -18,6 +18,7 @@ if CONFIG['MOZ_B2G_BT']:
     MODULE = 'dom'
     XPIDL_MODULE = 'dom_bluetooth'
     XPIDL_SOURCES += [
+        'nsIDOMBluetoothAdapter.idl',
         'nsIDOMBluetoothDevice.idl',
         'nsIDOMBluetoothDeviceEvent.idl',
         'nsIDOMBluetoothStatusChangedEvent.idl',
@@ -41,6 +42,8 @@ if CONFIG['MOZ_B2G_BT']:
         'ObexBase.cpp',
         'BluetoothUuid.cpp',
         'BluetoothSocket.cpp',
+        'MediaMetaData.cpp',
+        'MediaPlayStatus.cpp'
     ]
 
     if CONFIG['MOZ_B2G_RIL']:
