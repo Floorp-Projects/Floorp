@@ -146,6 +146,7 @@ CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph *graph, MacroAssembler 
 
 CodeGenerator::~CodeGenerator()
 {
+    JS_ASSERT_IF(!gen->compilingAsmJS(), masm.numAsmJSAbsoluteLinks() == 0);
     js_delete(unassociatedScriptCounts_);
 }
 
@@ -3832,7 +3833,10 @@ CodeGenerator::visitModD(LModD *ins)
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
 
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NumberMod), MacroAssembler::DOUBLE);
+    if (gen->compilingAsmJS())
+        masm.callWithABI(AsmJSImm_ModD, MacroAssembler::DOUBLE);
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NumberMod), MacroAssembler::DOUBLE);
     return true;
 }
 
@@ -7393,7 +7397,7 @@ CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
         masm.call(ToRegister(ins->getOperand(mir->dynamicCalleeOperandIndex())));
         break;
       case MAsmJSCall::Callee::Builtin:
-        masm.call(ImmPtr(callee.builtin()));
+        masm.call(callee.builtin());
         break;
     }
 
@@ -7445,9 +7449,8 @@ CodeGenerator::visitAsmJSVoidReturn(LAsmJSVoidReturn *lir)
 bool
 CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
 {
-    uintptr_t *limitAddr = &GetIonContext()->runtime->mainThread.nativeStackLimit[StackForUntrustedScript];
     masm.branchPtr(Assembler::AboveOrEqual,
-                   AbsoluteAddress(limitAddr),
+                   AsmJSAbsoluteAddress(AsmJSImm_StackLimit),
                    StackPointer,
                    lir->mir()->onError());
     return true;

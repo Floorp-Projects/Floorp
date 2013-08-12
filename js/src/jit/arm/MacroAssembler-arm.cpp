@@ -1895,6 +1895,19 @@ MacroAssemblerARMCompat::movePtr(const ImmPtr &imm, const Register &dest)
     movePtr(ImmWord(uintptr_t(imm.value)), dest);
 }
 void
+MacroAssemblerARMCompat::movePtr(const AsmJSImmPtr &imm, const Register &dest)
+{
+    RelocStyle rs;
+    if (hasMOVWT())
+        rs = L_MOVWT;
+    else
+        rs = L_LDR;
+
+    AsmJSAbsoluteLink link(nextOffset().getOffset(), imm.kind());
+    enoughMemory_ &= asmJSAbsoluteLinks_.append(link);
+    ma_movPatchable(Imm32(-1), dest, Always, rs);
+}
+void
 MacroAssemblerARMCompat::load8ZeroExtend(const Address &address, const Register &dest)
 {
     ma_dataTransferN(IsLoad, 8, false, address.base, Imm32(address.offset), dest);
@@ -2036,6 +2049,12 @@ void
 MacroAssemblerARMCompat::loadPtr(const AbsoluteAddress &address, const Register &dest)
 {
     movePtr(ImmWord(uintptr_t(address.addr)), ScratchRegister);
+    loadPtr(Address(ScratchRegister, 0x0), dest);
+}
+void
+MacroAssemblerARMCompat::loadPtr(const AsmJSAbsoluteAddress &address, const Register &dest)
+{
+    movePtr(AsmJSImmPtr(address.kind()), ScratchRegister);
     loadPtr(Address(ScratchRegister, 0x0), dest);
 }
 
@@ -3562,6 +3581,15 @@ MacroAssemblerARMCompat::callWithABI(void *fun, Result result)
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
     ma_call(ImmPtr(fun));
+    callWithABIPost(stackAdjust, result);
+}
+
+void
+MacroAssemblerARMCompat::callWithABI(AsmJSImmPtr imm, Result result)
+{
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(imm);
     callWithABIPost(stackAdjust, result);
 }
 
