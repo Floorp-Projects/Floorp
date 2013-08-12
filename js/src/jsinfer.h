@@ -11,15 +11,12 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "jsalloc.h"
 #include "jsfriendapi.h"
 
 #include "ds/LifoAlloc.h"
 #include "ds/IdValuePair.h"
 #include "gc/Barrier.h"
-#include "gc/Heap.h"
-#include "js/HashTable.h"
-#include "js/Vector.h"
+#include "js/Utility.h"
 
 class JSScript;
 

@@ -7,11 +7,7 @@
 #ifndef gc_Marking_h
 #define gc_Marking_h
 
-#include "jsgc.h"
-#include "jslock.h"
-
 #include "gc/Barrier.h"
-#include "gc/Nursery.h"
 #include "jit/IonCode.h"
 
 extern "C" {
@@ -30,9 +26,13 @@ class ArgumentsObject;
 class ArrayBufferObject;
 class ArrayBufferViewObject;
 class BaseShape;
+class DebugScopeObject;
+struct GCMarker;
 class GlobalObject;
-class UnownedBaseShape;
+class LazyScript;
+class ScopeObject;
 class Shape;
+class UnownedBaseShape;
 
 template<class, typename> class HeapPtr;
 

@@ -9,10 +9,6 @@
 
 #ifdef JS_ION
 
-#include "jscntxt.h"
-#include "jscompartment.h"
-#include "jsinfer.h"
-
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/BytecodeAnalysis.h"
@@ -26,7 +22,6 @@
 #else
 # include "jit/arm/BaselineCompiler-arm.h"
 #endif
-#include "vm/Interpreter.h"
 
 namespace js {
 namespace ion {

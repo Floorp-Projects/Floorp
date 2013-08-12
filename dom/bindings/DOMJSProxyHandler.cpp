@@ -182,7 +182,7 @@ BaseDOMProxyHandler::getPropertyDescriptor(JSContext* cx,
     return true;
   }
 
-  return JS_GetPropertyDescriptorById(cx, proto, id, 0, desc.address());
+  return JS_GetPropertyDescriptorById(cx, proto, id, 0, desc);
 }
 
 bool

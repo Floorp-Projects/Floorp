@@ -12,6 +12,8 @@
 #include "vm/Debugger.h"
 #include "vm/ScopeObject.h"
 
+#include "jsobjinlines.h"
+
 #include "jit/IonFrames-inl.h"
 #include "vm/Stack-inl.h"
 

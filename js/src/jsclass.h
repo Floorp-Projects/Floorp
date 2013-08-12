@@ -6,6 +6,7 @@
 
 #ifndef jsclass_h
 #define jsclass_h
+
 /*
  * A JSClass acts as a vtable for JS objects that allows JSAPI clients to
  * control various aspects of the behavior of an object like property lookup.

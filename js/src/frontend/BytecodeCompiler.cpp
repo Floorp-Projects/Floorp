@@ -6,6 +6,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 
+#include "jscntxt.h"
 #include "jsscript.h"
 
 #include "frontend/BytecodeEmitter.h"
@@ -19,6 +20,7 @@
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
+#include "frontend/Parser-inl.h"
 
 using namespace js;
 using namespace js::frontend;

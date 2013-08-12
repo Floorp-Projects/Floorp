@@ -16,8 +16,6 @@
 #include <string.h>
 #include <time.h>
 
-#include "jslock.h"
-#include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
 

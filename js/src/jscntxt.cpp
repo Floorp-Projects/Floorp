@@ -14,7 +14,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
-#include <locale.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include <string.h>
 #ifdef ANDROID
@@ -30,7 +30,6 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsiter.h"
-#include "jsmath.h"
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsprf.h"
@@ -45,11 +44,11 @@
 #include "jit/Ion.h"
 #endif
 #include "js/CharacterEncoding.h"
-#include "js/MemoryMetrics.h"
 #include "vm/Shape.h"
 #include "yarr/BumpPointerAllocator.h"
 
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 #include "vm/Stack-inl.h"
 

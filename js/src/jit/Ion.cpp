@@ -48,13 +48,12 @@
 # include "jit/arm/Lowering-arm.h"
 #endif
 #include "vm/ForkJoin.h"
-#include "vm/ThreadPool.h"
 
 #include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
 #include "jsinferinlines.h"
 
-#include "vm/Stack-inl.h"
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::ion;
