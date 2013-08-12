@@ -11,7 +11,6 @@
 #ifndef jsutil_h
 #define jsutil_h
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/GuardObjects.h"
 

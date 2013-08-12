@@ -16,9 +16,9 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
+#include "jsprf.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsworkers.h"

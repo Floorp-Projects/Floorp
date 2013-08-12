@@ -9,18 +9,10 @@
 #ifndef jscntxt_h
 #define jscntxt_h
 
-#include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 
-#include <string.h>
-
-#include "jsapi.h"
-#include "jsfriendapi.h"
-
-#include "js/HashTable.h"
 #include "js/Vector.h"
 #include "vm/Runtime.h"
-#include "vm/Stack.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)

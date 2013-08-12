@@ -8,12 +8,9 @@
 #define builtin_ParallelArray_h
 
 #include "jsapi.h"
-#include "jscntxt.h"
 #include "jsobj.h"
 
 #include "jit/Ion.h"
-#include "vm/ForkJoin.h"
-#include "vm/ThreadPool.h"
 
 namespace js {
 

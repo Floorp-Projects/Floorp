@@ -11,12 +11,8 @@
  * JS bytecode definitions.
  */
 
-#include <stddef.h>
-
 #include "jsapi.h"
 #include "jsbytecode.h"
-#include "jspubtd.h"
-#include "jsutil.h"
 
 #include "frontend/SourceNotes.h"
 
