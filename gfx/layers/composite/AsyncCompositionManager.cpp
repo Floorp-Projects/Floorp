@@ -453,7 +453,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     // Apply the render offset
     mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
-    gfx3DMatrix transform(aLayer->GetTransform() * gfx3DMatrix(treeTransform));
+    gfx3DMatrix transform(gfx3DMatrix(treeTransform) * aLayer->GetTransform());
     // The transform already takes the resolution scale into account.  Since we
     // will apply the resolution scale again when computing the effective
     // transform, we must apply the inverse resolution scale here.
@@ -551,20 +551,20 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer, const LayoutDev
   // primary scrollable layer. We compare this to the user zoom and scroll
   // offset in the view transform we obtained from Java in order to compute the
   // transformation we need to apply.
-  LayoutDeviceToScreenScale zoomAdjust = userZoom / metrics.mDevPixelsPerCSSPixel;
+  LayerToScreenScale zoomAdjust = userZoom / geckoZoom;
 
-  LayoutDevicePoint geckoScroll(0, 0);
+  LayerIntPoint geckoScroll(0, 0);
   if (metrics.IsScrollable()) {
-    geckoScroll = metrics.mScrollOffset * metrics.mDevPixelsPerCSSPixel;
+    geckoScroll = scrollOffsetLayerPixels;
   }
 
-  LayoutDevicePoint translation = (userScroll / zoomAdjust) - geckoScroll;
+  LayerPoint translation = (userScroll / zoomAdjust) - geckoScroll;
   treeTransform = gfx3DMatrix(ViewTransform(-translation, userZoom / metrics.mDevPixelsPerCSSPixel));
 
   // The transform already takes the resolution scale into account.  Since we
   // will apply the resolution scale again when computing the effective
   // transform, we must apply the inverse resolution scale here.
-  gfx3DMatrix computedTransform = currentTransform * treeTransform;
+  gfx3DMatrix computedTransform = treeTransform * currentTransform;
   computedTransform.Scale(1.0f/container->GetPreXScale(),
                           1.0f/container->GetPreYScale(),
                           1);
