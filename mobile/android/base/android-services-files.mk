@@ -128,6 +128,7 @@ SYNC_JAVA_FILES := \
   sync/net/BrowserIDAuthHeaderProvider.java \
   sync/net/ConnectionMonitorThread.java \
   sync/net/HandleProgressException.java \
+  sync/net/HawkAuthHeaderProvider.java \
   sync/net/HMACAuthHeaderProvider.java \
   sync/net/HttpResponseObserver.java \
   sync/net/Resource.java \

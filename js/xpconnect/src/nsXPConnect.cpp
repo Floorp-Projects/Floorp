@@ -1182,6 +1182,9 @@ nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
         return NS_OK;
     mEventDepth--;
 
+    // Now that we're back to the event loop, reset the slow script checkpoint.
+    mRuntime->OnAfterProcessNextEvent();
+
     // Call cycle collector occasionally.
     MOZ_ASSERT(NS_IsMainThread());
     nsJSContext::MaybePokeCC();
