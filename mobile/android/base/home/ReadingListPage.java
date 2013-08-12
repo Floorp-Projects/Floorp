@@ -26,6 +26,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import java.util.EnumSet;
+
 /**
  * Fragment that displays reading list contents in a ListView.
  */
@@ -86,7 +88,9 @@ public class ReadingListPage extends HomeFragment {
 
                 String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
                 url = ReaderModeUtils.getAboutReaderForUrl(url, true);
-                mUrlOpenListener.onUrlOpen(url);
+
+                // This item is a TwoLinePageRow, so we allow switch-to-tab.
+                mUrlOpenListener.onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
             }
         });
 

@@ -24,6 +24,8 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
+import java.util.EnumSet;
+
 /**
  * A grid view of top bookmarks and pinned tabs.
  * Each cell in the grid is a TopBookmarkItemView.
@@ -94,7 +96,7 @@ public class TopBookmarksView extends GridView {
                 // If not, navigate to the page given by the url.
                 if (!TextUtils.isEmpty(url)) {
                     if (mUrlOpenListener != null) {
-                        mUrlOpenListener.onUrlOpen(url);
+                        mUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
                     }
                 } else {
                     if (mPinBookmarkListener != null) {

@@ -40,7 +40,11 @@ public class HomePager extends ViewPager {
     private EnumMap<Page, Fragment> mPages = new EnumMap<Page, Fragment>(Page.class);
 
     public interface OnUrlOpenListener {
-        public void onUrlOpen(String url);
+        public enum Flags {
+            ALLOW_SWITCH_TO_TAB
+        }
+
+        public void onUrlOpen(String url, EnumSet<Flags> flags);
     }
 
     public interface OnNewTabsListener {

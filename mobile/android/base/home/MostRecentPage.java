@@ -29,6 +29,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.Date;
+import java.util.EnumSet;
 
 /**
  * Fragment that displays recent history in a ListView.
@@ -101,7 +102,9 @@ public class MostRecentPage extends HomeFragment {
                 position -= mAdapter.getMostRecentSectionsCountBefore(position);
                 final Cursor c = mAdapter.getCursor(position);
                 final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
-                mUrlOpenListener.onUrlOpen(url);
+
+                // This item is a TwoLinePageRow, so we allow switch-to-tab.
+                mUrlOpenListener.onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
             }
         });
 

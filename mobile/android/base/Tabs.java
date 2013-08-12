@@ -585,19 +585,19 @@ public class Tabs implements GeckoEventListener {
     }
 
     /**
-     * Returns true if any of the tabs has the requested url.
-     * 
-     * @return true if the url is open currently, false otherwise.
+     * Looks for an open tab with the given URL.
+     *
+     * @return id of an open tab with the given URL; -1 if the tab doesn't exist.
      */
-    public boolean hasUrl(String url) {
+    public int getTabIdForUrl(String url) {
         for (Tab tab : mOrder) {
             if (TextUtils.equals(tab.getURL(), url) ||
                 TextUtils.equals(ReaderModeUtils.getUrlFromAboutReader(tab.getURL()), url)) {
-                return true;
+                return tab.getId();
             }
         }
 
-        return false;
+        return -1;
     }
 
     /**

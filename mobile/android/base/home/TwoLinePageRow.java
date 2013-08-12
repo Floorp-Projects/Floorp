@@ -134,7 +134,8 @@ public class TwoLinePageRow extends LinearLayout
      * Replaces the page URL with "Switch to tab" if there is already a tab open with that URL.
      */
     private void updateDisplayedUrl() {
-        if (!mShowIcons || !Tabs.getInstance().hasUrl(mPageUrl)) {
+        int tabId = Tabs.getInstance().getTabIdForUrl(mPageUrl);
+        if (!mShowIcons || tabId < 0) {
             setUrl(mPageUrl);
             setUrlIcon(NO_ICON);
         } else {
