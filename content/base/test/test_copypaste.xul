@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=888839
+-->
+<window title="Mozilla Bug 888839"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <script type="application/javascript"><![CDATA[
+
+let { classes: Cc, interfaces: Ci } = Components;
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+function runTest() {
+  let desc = document.querySelector("description");
+  window.getSelection().selectAllChildren(desc);
+
+  let webnav = window.
+               QueryInterface(Ci.nsIInterfaceRequestor).
+               getInterface(Ci.nsIWebNavigation);
+
+  webnav.
+    QueryInterface(Ci.nsIDocShell).
+    contentViewer.
+    QueryInterface(Ci.nsIContentViewerEdit).
+    copySelection();
+
+  let mime = "text/unicode";
+  let whichClipboard = Ci.nsIClipboard.kGlobalClipboard;
+  let clipboard = Cc["@mozilla.org/widget/clipboard;1"].
+                  getService(Ci.nsIClipboard);
+  ok(clipboard.hasDataMatchingFlavors([mime], 1, whichClipboard),
+     "Clipboard should have text/unicode");
+
+  let transferable = Cc["@mozilla.org/widget/transferable;1"].
+                     createInstance(Ci.nsITransferable);
+  transferable.init(webnav.QueryInterface(Ci.nsILoadContext));
+  transferable.addDataFlavor(mime);
+  clipboard.getData(transferable, whichClipboard);
+  var data = {};
+  transferable.getTransferData(mime, data, {});
+  is(data.value.QueryInterface(Ci.nsISupportsString).data,
+     "\n    hello\n    world\n  ",
+     "Paste is not HTML, so it should not be pretty printed");
+
+  SimpleTest.finish();
+}
+
+  ]]></script>
+
+  <description style="-moz-user-focus: normal; -moz-user-select: text;"><![CDATA[
+    hello
+    world
+  ]]></description>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=888839"
+     target="_blank">Mozilla Bug 888839</a>
+  </body>
+</window>
