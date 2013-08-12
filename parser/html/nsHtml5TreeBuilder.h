@@ -252,6 +252,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     nsIContent** getDeepTreeSurrogateParent();
     jArray<nsHtml5StackNode*,int32_t> getListOfActiveFormattingElements();
     jArray<nsHtml5StackNode*,int32_t> getStack();
+    jArray<int32_t,int32_t> getTemplateModeStack();
     int32_t getMode();
     int32_t getOriginalMode();
     bool isFramesetOk();
@@ -259,6 +260,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     bool isQuirks();
     int32_t getListOfActiveFormattingElementsLength();
     int32_t getStackLength();
+    int32_t getTemplateModeStackLength();
     static void initializeStatics();
     static void releaseStatics();
 
