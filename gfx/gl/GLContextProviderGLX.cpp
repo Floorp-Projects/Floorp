@@ -940,7 +940,8 @@ TRY_AGAIN_NO_SHARING:
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
-                       TextureImage::Flags aFlags = TextureImage::NoFlags);
+                       TextureImage::Flags aFlags = TextureImage::NoFlags,
+                       TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown);
 
 private:
     friend class GLContextProviderGLX;
@@ -988,7 +989,8 @@ class TextureImageGLX : public TextureImage
     GLContextGLX::CreateTextureImage(const nsIntSize&,
                                      ContentType,
                                      GLenum,
-                                     TextureImage::Flags);
+                                     TextureImage::Flags,
+                                     TextureImage::ImageFormat);
 
 public:
     virtual ~TextureImageGLX()
@@ -1087,13 +1089,15 @@ already_AddRefed<TextureImage>
 GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
                                  TextureImage::ContentType aContentType,
                                  GLenum aWrapMode,
-                                 TextureImage::Flags aFlags)
+                                 TextureImage::Flags aFlags,
+                                 TextureImage::ImageFormat aImageFormat)
 {
     if (!TextureImageSupportsGetBackingSurface()) {
         return GLContext::CreateTextureImage(aSize, 
                                              aContentType, 
                                              aWrapMode, 
-                                             aFlags);
+                                             aFlags,
+                                             aImageFormat);
     }
 
     Display *display = DefaultXDisplay();
@@ -1127,7 +1131,8 @@ GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
         return GLContext::CreateTextureImage(aSize,
                                              aContentType,
                                              aWrapMode,
-                                             aFlags);
+                                             aFlags,
+                                             aImageFormat);
     }
     NS_ASSERTION(pixmap, "Failed to create pixmap!");
 

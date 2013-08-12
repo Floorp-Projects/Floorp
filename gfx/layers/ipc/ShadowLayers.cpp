@@ -635,6 +635,30 @@ ShadowLayerForwarder::GetDescriptorSurfaceSize(
   return size;
 }
 
+/*static*/ gfxImageFormat
+ShadowLayerForwarder::GetDescriptorSurfaceImageFormat(
+  const SurfaceDescriptor& aDescriptor, OpenMode aMode,
+  gfxASurface** aSurface)
+{
+  gfxImageFormat format;
+  if (PlatformGetDescriptorSurfaceImageFormat(aDescriptor, aMode, &format, aSurface)) {
+    return format;
+  }
+
+  nsRefPtr<gfxASurface> surface = OpenDescriptor(aMode, aDescriptor);
+  NS_ENSURE_TRUE(surface, gfxASurface::ImageFormatUnknown);
+
+  nsRefPtr<gfxImageSurface> img = surface->GetAsImageSurface();
+  NS_ENSURE_TRUE(img, gfxASurface::ImageFormatUnknown);
+
+  format = img->Format();
+  NS_ASSERTION(format != gfxASurface::ImageFormatUnknown,
+               "ImageSurface RGB format should be known");
+
+  *aSurface = surface.forget().get();
+  return format;
+}
+
 /*static*/ void
 ShadowLayerForwarder::CloseDescriptor(const SurfaceDescriptor& aDescriptor)
 {
@@ -684,6 +708,16 @@ ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
   return false;
 }
 
+/*static*/ bool
+ShadowLayerForwarder::PlatformGetDescriptorSurfaceImageFormat(
+  const SurfaceDescriptor&,
+  OpenMode,
+  gfxImageFormat*,
+  gfxASurface**)
+{
+  return false;
+}
+
 bool
 ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor*)
 {
@@ -726,6 +760,24 @@ AutoOpenSurface::ContentType()
     return mSurface->GetContentType();
   }
   return ShadowLayerForwarder::GetDescriptorSurfaceContentType(
+    mDescriptor, mMode, getter_AddRefs(mSurface));
+}
+
+gfxImageFormat
+AutoOpenSurface::ImageFormat()
+{
+  if (mSurface) {
+    nsRefPtr<gfxImageSurface> img = mSurface->GetAsImageSurface();
+    if (img) {
+      gfxImageFormat format = img->Format();
+      NS_ASSERTION(format != gfxASurface::ImageFormatUnknown,
+                   "ImageSurface RGB format should be known");
+
+      return format;
+    }
+  }
+
+  return ShadowLayerForwarder::GetDescriptorSurfaceImageFormat(
     mDescriptor, mMode, getter_AddRefs(mSurface));
 }
 
