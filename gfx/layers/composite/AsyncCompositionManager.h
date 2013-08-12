@@ -27,7 +27,7 @@ class AutoResolveRefLayers;
 
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
-  ViewTransform(LayerPoint aTranslation = LayerPoint(),
+  ViewTransform(LayoutDevicePoint aTranslation = LayoutDevicePoint(),
                 LayoutDeviceToScreenScale aScale = LayoutDeviceToScreenScale())
     : mTranslation(aTranslation)
     , mScale(aScale)
@@ -48,7 +48,7 @@ struct ViewTransform {
     return !(*this == rhs);
   }
 
-  LayerPoint mTranslation;
+  LayoutDevicePoint mTranslation;
   LayoutDeviceToScreenScale mScale;
 };
 

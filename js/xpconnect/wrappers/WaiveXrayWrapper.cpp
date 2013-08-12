@@ -18,7 +18,7 @@ using namespace JS;
 namespace xpc {
 
 static bool
-WaiveAccessors(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc)
+WaiveAccessors(JSContext *cx, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     if (desc.hasGetterObject() && desc.getterObject()) {
         RootedValue v(cx, JS::ObjectValue(*desc.getterObject()));
@@ -46,7 +46,7 @@ WaiveXrayWrapper::~WaiveXrayWrapper()
 
 bool
 WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
-                                        HandleId id, JS::MutableHandle<js::PropertyDescriptor> desc,
+                                        HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc,
                                         unsigned flags)
 {
     return CrossCompartmentWrapper::getPropertyDescriptor(cx, wrapper, id, desc, flags) &&
@@ -55,7 +55,7 @@ WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
 
 bool
 WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper,
-                                           HandleId id, JS::MutableHandle<js::PropertyDescriptor> desc,
+                                           HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc,
                                            unsigned flags)
 {
     return CrossCompartmentWrapper::getOwnPropertyDescriptor(cx, wrapper, id, desc, flags) &&

@@ -1668,7 +1668,7 @@ HTMLSelectElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 
   nsAutoString mozType;
   nsCOMPtr<nsIFormProcessor> keyGenProcessor;
-  if (GetAttr(kNameSpaceID_None, nsGkAtoms::_moz_type, mozType) &&
+  if (GetAttr(kNameSpaceID_None, nsGkAtoms::moztype, mozType) &&
       mozType.EqualsLiteral("-mozilla-keygen")) {
     keyGenProcessor = do_GetService(kFormProcessorCID);
   }

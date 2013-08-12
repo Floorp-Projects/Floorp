@@ -7,7 +7,10 @@
 #ifndef vm_MatchPairs_h
 #define vm_MatchPairs_h
 
+#include "jsalloc.h"
+
 #include "ds/LifoAlloc.h"
+#include "js/Vector.h"
 
 /*
  * RegExp match results are succinctly represented by pairs of integer

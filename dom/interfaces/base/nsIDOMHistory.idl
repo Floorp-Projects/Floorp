@@ -9,29 +9,8 @@
 struct JSContext;
 %}
 
-interface nsIVariant;
-
-[scriptable, uuid(d5a3006b-dd6b-4ba3-81be-6559f8889e60)]
+[scriptable, uuid(55226663-fe68-48ba-addf-08e32eaab569)]
 interface nsIDOMHistory : nsISupports
 {
-  readonly attribute long             length;
-  readonly attribute DOMString        current;
-  readonly attribute DOMString        previous;
-  readonly attribute DOMString        next;
-
-  void                       back();
-  void                       forward();
-
-  void                       go([optional] in long aDelta);
-  DOMString                  item(in unsigned long index);
-  [implicit_jscontext]
-  void                       pushState(in nsIVariant aData,
-                                       in DOMString aTitle,
-                                       [optional] in DOMString aURL);
-  [implicit_jscontext]
-  void                       replaceState(in nsIVariant aData,
-                                          in DOMString aTitle,
-                                          [optional] in DOMString aURL);
-
-  readonly attribute nsIVariant state;
+  // Empty interface that exists only for extension backwards compat
 };

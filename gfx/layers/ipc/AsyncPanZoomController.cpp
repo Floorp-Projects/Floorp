@@ -1160,8 +1160,8 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
     lastPaintScrollOffset = mLastContentPaintMetrics.mScrollOffset;
   }
   CSSToScreenScale localScale = mFrameMetrics.CalculateResolution();
-  LayerPoint translation = (mFrameMetrics.mScrollOffset - lastPaintScrollOffset)
-                         * mLastContentPaintMetrics.LayersPixelsPerCSSPixel();
+  LayoutDevicePoint translation = (mFrameMetrics.mScrollOffset - lastPaintScrollOffset)
+                                * mLastContentPaintMetrics.mDevPixelsPerCSSPixel;
   return ViewTransform(-translation, localScale / mLastContentPaintMetrics.mDevPixelsPerCSSPixel);
 }
 

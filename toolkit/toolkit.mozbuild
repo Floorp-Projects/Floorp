@@ -10,14 +10,16 @@ if not CONFIG['MOZ_NATIVE_NSPR']:
     add_tier_dir('nspr', 'config/nspr')
 
 add_tier_dir('precompile', 'config/makefiles/precompile')
-
-if not CONFIG['MOZ_NATIVE_SQLITE']:
-    add_tier_dir('nss', 'db/sqlite3/src')
+add_tier_dir('external', 'config/external')
 
 if not CONFIG['MOZ_NATIVE_NSS']:
     add_tier_dir('nss', 'security/build')
 
 include('/config/js/js.mozbuild')
+
+# the signing related bits of libmar depend on nss
+if CONFIG['MOZ_UPDATER']:
+    add_tier_dir('platform', 'modules/libmar')
 
 if CONFIG['NS_TRACE_MALLOC']:
     add_tier_dir('platform', 'tools/trace-malloc/lib')
@@ -39,15 +41,7 @@ add_tier_dir('platform', [
 if CONFIG['MOZ_AUTH_EXTENSION']:
     add_tier_dir('platform', 'extensions/auth')
 
-# External/3rd party libraries.
-
-if not CONFIG['MOZ_NATIVE_JPEG']:
-    add_tier_dir('platform', 'media/libjpeg')
-
 if CONFIG['MOZ_UPDATER']:
-    if not CONFIG['MOZ_NATIVE_BZ2']:
-        add_tier_dir('platform', 'modules/libbz2')
-
     add_tier_dir('platform', 'other-licenses/bsdiff')
 
 # Gecko/Core components.
@@ -66,24 +60,6 @@ add_tier_dir('platform', 'rdf')
 if CONFIG['MOZ_JSDEBUGGER']:
     add_tier_dir('platform', 'js/jsd')
 
-if CONFIG['MOZ_VORBIS']:
-    add_tier_dir('platform', 'media/libvorbis')
-
-if CONFIG['MOZ_TREMOR']:
-    add_tier_dir('platform', 'media/libtremor')
-
-if CONFIG['MOZ_OPUS']:
-    add_tier_dir('platform', 'media/libopus')
-
-if CONFIG['MOZ_WEBM']:
-    add_tier_dir('platform', 'media/libnestegg')
-
-if CONFIG['MOZ_VP8'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
-    add_tier_dir('platform', 'media/libvpx')
-
-if CONFIG['MOZ_OGG']:
-    add_tier_dir('platform', ['media/libogg', 'media/libtheora'])
-
 if CONFIG['MOZ_WEBRTC']:
     add_tier_dir('platform', [
         'media/webrtc',
@@ -91,15 +67,6 @@ if CONFIG['MOZ_WEBRTC']:
         'media/mtransport/build',
         'media/mtransport/standalone',
     ])
-
-if CONFIG['MOZ_SPEEX_RESAMPLER']:
-    add_tier_dir('platform', 'media/libspeex_resampler')
-
-if CONFIG['MOZ_SOUNDTOUCH']:
-    add_tier_dir('platform', 'media/libsoundtouch')
-
-if CONFIG['MOZ_CUBEB']:
-    add_tier_dir('platform', 'media/libcubeb')
 
 if CONFIG['MOZ_OMX_PLUGIN']:
     add_tier_dir('platform', [
@@ -119,11 +86,6 @@ if CONFIG['MOZ_OMX_PLUGIN']:
         'media/omx-plugin/sony',
         'media/omx-plugin/jb-htc',
     ])
-
-if not CONFIG['MOZ_NATIVE_PNG']:
-    add_tier_dir('platform', 'media/libpng')
-
-add_tier_dir('platform', 'media/kiss_fft')
 
 if CONFIG['ENABLE_TESTS']:
     add_tier_dir('platform', 'testing/specialpowers')
@@ -179,9 +141,6 @@ if CONFIG['MOZ_SPELLCHECK']:
     add_tier_dir('platform', 'extensions/spellcheck')
 
 add_tier_dir('platform', 'security/manager')
-
-if CONFIG['MOZ_UPDATER']:
-    add_tier_dir('platform', 'modules/libmar')
 
 add_tier_dir('platform', 'toolkit')
 

@@ -116,6 +116,8 @@
 
 namespace js {
 
+class PropertyName;
+
 template<class T, typename Unioned = uintptr_t>
 class EncapsulatedPtr
 {

@@ -92,13 +92,6 @@ nsStyleLinkElement::InitStyleLinkElement(bool aDontLoadStyle)
 }
 
 NS_IMETHODIMP
-nsStyleLinkElement::GetSheet(nsIDOMStyleSheet** aSheet)
-{
-  NS_IF_ADDREF(*aSheet = mStyleSheet);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsStyleLinkElement::SetEnableUpdates(bool aEnableUpdates)
 {
   mUpdatesEnabled = aEnableUpdates;
