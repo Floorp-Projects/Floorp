@@ -6225,7 +6225,7 @@ Parser<ParseHandler>::newRegExp()
     RegExpFlag flags = tokenStream.currentToken().regExpFlags();
 
     Rooted<RegExpObject*> reobj(context);
-    if (RegExpStatics *res = context->regExpStatics())
+    if (RegExpStatics *res = context->global()->getRegExpStatics())
         reobj = RegExpObject::create(context, res, chars.get(), length, flags, &tokenStream);
     else
         reobj = RegExpObject::createNoStatics(context, chars.get(), length, flags, &tokenStream);

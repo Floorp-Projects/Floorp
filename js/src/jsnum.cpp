@@ -550,8 +550,11 @@ js::Int32ToString(ThreadSafeContext *cx, int32_t si)
         JS_ASSERT_IF(si == INT32_MIN, ui == uint32_t(INT32_MAX) + 1);
     }
 
-    if (cx->isExclusiveContext()) {
-        if (JSFlatString *str = cx->asExclusiveContext()->dtoaCache().lookup(10, si))
+    JSCompartment *comp = cx->isExclusiveContext()
+                          ? cx->asExclusiveContext()->compartment()
+                          : NULL;
+    if (comp) {
+        if (JSFlatString *str = comp->dtoaCache.lookup(10, si))
             return str;
     }
 
@@ -570,8 +573,8 @@ js::Int32ToString(ThreadSafeContext *cx, int32_t si)
     jschar *dst = str->init(end - start);
     PodCopy(dst, start.get(), end - start + 1);
 
-    if (cx->isExclusiveContext())
-        cx->asExclusiveContext()->dtoaCache().cache(10, si, str);
+    if (comp)
+        comp->dtoaCache.cache(10, si, str);
     return str;
 }
 
@@ -1275,6 +1278,10 @@ js_NumberToStringWithBase(ThreadSafeContext *cx, double d, int base)
     if (base < 2 || base > 36)
         return NULL;
 
+    JSCompartment *comp = cx->isExclusiveContext()
+                          ? cx->asExclusiveContext()->compartment()
+                          : NULL;
+
     int32_t i;
     if (mozilla::DoubleIsInt32(d, &i)) {
         if (base == 10 && StaticStrings::hasInt(i))
@@ -1287,16 +1294,16 @@ js_NumberToStringWithBase(ThreadSafeContext *cx, double d, int base)
             return cx->staticStrings().getUnit(c);
         }
 
-        if (cx->isExclusiveContext()) {
-            if (JSFlatString *str = cx->asExclusiveContext()->dtoaCache().lookup(base, d))
+        if (comp) {
+            if (JSFlatString *str = comp->dtoaCache.lookup(base, d))
                 return str;
         }
 
         numStr = IntToCString(&cbuf, i, base);
         JS_ASSERT(!cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
     } else {
-        if (cx->isExclusiveContext()) {
-            if (JSFlatString *str = cx->asExclusiveContext()->dtoaCache().lookup(base, d))
+        if (comp) {
+            if (JSFlatString *str = comp->dtoaCache.lookup(base, d))
                 return str;
         }
 
@@ -1313,8 +1320,8 @@ js_NumberToStringWithBase(ThreadSafeContext *cx, double d, int base)
 
     JSFlatString *s = js_NewStringCopyZ<allowGC>(cx, numStr);
 
-    if (cx->isExclusiveContext())
-        cx->asExclusiveContext()->dtoaCache().cache(base, d, s);
+    if (comp)
+        comp->dtoaCache.cache(base, d, s);
 
     return s;
 }
