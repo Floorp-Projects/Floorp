@@ -57,12 +57,6 @@
                         android:negativeButtonText="@string/button_cancel"
                         android:persistent="false" />
 
-        <CheckBoxPreference
-                        android:key="browser.zoom.reflowOnZoom"
-                        android:title="@string/pref_reflow_on_zoom"
-                        android:defaultValue="false"
-                        android:persistent="false" />
-
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_category_privacy">
 
