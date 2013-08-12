@@ -18,16 +18,14 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Util.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "mozilla/dom/BluetoothManagerBinding.h"
 
 using namespace mozilla;
 
 USING_BLUETOOTH_NAMESPACE
 
-DOMCI_DATA(BluetoothManager, BluetoothManager)
-
-NS_INTERFACE_MAP_BEGIN(BluetoothManager)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMBluetoothManager)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(BluetoothManager)
+// QueryInterface implementation for BluetoothManager
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothManager)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(BluetoothManager, nsDOMEventTargetHelper)
@@ -93,9 +91,11 @@ private:
 };
 
 BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
-  : BluetoothPropertyContainer(BluetoothObjectType::TYPE_MANAGER)
+  : nsDOMEventTargetHelper(aWindow)
+  , BluetoothPropertyContainer(BluetoothObjectType::TYPE_MANAGER)
 {
   MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(IsDOMBinding());
 
   BindToOwner(aWindow);
   mPath.AssignLiteral("/");
@@ -124,37 +124,44 @@ BluetoothManager::SetPropertyByValue(const BluetoothNamedValue& aValue)
 #endif
 }
 
-NS_IMETHODIMP
-BluetoothManager::GetEnabled(bool* aEnabled)
+bool
+BluetoothManager::GetEnabled(ErrorResult& aRv)
 {
   BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
-
-  *aEnabled = bs->IsEnabled();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-BluetoothManager::GetDefaultAdapter(nsIDOMDOMRequest** aAdapter)
-{
-  nsCOMPtr<nsIDOMRequestService> rs =
-    do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(rs, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMDOMRequest> request;
-  nsresult rv = rs->CreateRequest(GetOwner(), getter_AddRefs(request));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRefPtr<BluetoothReplyRunnable> results = new GetAdapterTask(this, request);
-
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
-  if (NS_FAILED(bs->GetDefaultAdapterPathInternal(results))) {
-    return NS_ERROR_FAILURE;
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return false;
   }
 
-  request.forget(aAdapter);
-  return NS_OK;
+  return bs->IsEnabled();
+}
+
+already_AddRefed<dom::DOMRequest>
+BluetoothManager::GetDefaultAdapter(ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothReplyRunnable> results =
+    new GetAdapterTask(this, request);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsresult rv = bs->GetDefaultAdapterPathInternal(results);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  return request.forget();
 }
 
 // static
@@ -208,19 +215,20 @@ BluetoothManager::Notify(const BluetoothSignal& aData)
   }
 }
 
-NS_IMETHODIMP
-BluetoothManager::IsConnected(uint16_t aProfileId, bool* aConnected)
+bool
+BluetoothManager::IsConnected(uint16_t aProfileId, ErrorResult& aRv)
 {
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
-    NS_WARNING("BluetoothService not available!");
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return false;
   }
 
-  *aConnected = bs->IsConnected(aProfileId);
-  return NS_OK;
+  return bs->IsConnected(aProfileId);
 }
-NS_IMPL_EVENT_HANDLER(BluetoothManager, enabled)
-NS_IMPL_EVENT_HANDLER(BluetoothManager, disabled)
-NS_IMPL_EVENT_HANDLER(BluetoothManager, adapteradded)
 
+JSObject*
+BluetoothManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return BluetoothManagerBinding::Wrap(aCx, aScope, this);
+}
