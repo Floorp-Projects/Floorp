@@ -110,7 +110,8 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SetCallingLineIdRestriction",
   "RIL:GetCallingLineIdRestriction",
   "RIL:SetRoamingPreference",
-  "RIL:GetRoamingPreference"
+  "RIL:GetRoamingPreference",
+  "RIL:ExitEmergencyCbMode"
 ];
 
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
@@ -912,6 +913,10 @@ RadioInterface.prototype = {
         gMessageManager.saveRequestTarget(msg);
         this.getCallingLineIdRestriction(msg.json.data);
         break;
+      case "RIL:ExitEmergencyCbMode":
+        gMessageManager.saveRequestTarget(msg);
+        this.exitEmergencyCbMode(msg.json.data);
+        break;
       case "RIL:GetVoicemailInfo":
         // This message is sync.
         return this.voicemailInfo;
@@ -971,6 +976,9 @@ RadioInterface.prototype = {
         break;
       case "suppSvcNotification":
         this.handleSuppSvcNotification(message);
+        break;
+      case "emergencyCbModeChange":
+        this.handleEmergencyCbModeChange(message);
         break;
       case "iccOpenChannel":
         this.handleIccOpenChannel(message);
@@ -1131,6 +1139,9 @@ RadioInterface.prototype = {
         break;
       case "queryRoamingPreference":
         this.handleQueryRoamingPreference(message);
+        break;
+      case "exitEmergencyCbMode":
+        this.handleExitEmergencyCbMode(message);
         break;
       default:
         throw new Error("Don't know about this message type: " +
@@ -1848,6 +1859,15 @@ RadioInterface.prototype = {
   },
 
   /**
+   * Handle emergency callback mode change.
+   */
+  handleEmergencyCbModeChange: function handleEmergencyCbModeChange(message) {
+    if (DEBUG) this.debug("handleEmergencyCbModeChange: " + JSON.stringify(message));
+    gMessageManager.sendMobileConnectionMessage("RIL:EmergencyCbModeChanged",
+                                                this.clientId, message);
+  },
+
+  /**
    * Handle call error.
    */
   handleCallError: function handleCallError(message) {
@@ -2432,6 +2452,11 @@ RadioInterface.prototype = {
     gMessageManager.sendRequestResults("RIL:GetRoamingPreference", message);
   },
 
+  handleExitEmergencyCbMode: function handleExitEmergencyCbMode(message) {
+    if (DEBUG) this.debug("handleExitEmergencyCbMode: " + JSON.stringify(message));
+    gMessageManager.sendRequestResults("RIL:ExitEmergencyCbMode", message);
+  },
+
   // nsIObserver
 
   observe: function observe(subject, topic, data) {
@@ -2830,6 +2855,14 @@ RadioInterface.prototype = {
   setRoamingPreference: function setRoamingPreference(message) {
     if (DEBUG) this.debug("setRoamingPreference: " + JSON.stringify(message));
     message.rilMessageType = "setRoamingPreference";
+    this.worker.postMessage(message);
+  },
+
+  exitEmergencyCbMode: function exitEmergencyCbMode(message) {
+    if (DEBUG) {
+      this.debug("exitEmergencyCbMode: " + JSON.stringify(message));
+    }
+    message.rilMessageType = "exitEmergencyCbMode";
     this.worker.postMessage(message);
   },
 
