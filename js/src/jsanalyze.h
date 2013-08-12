@@ -9,13 +9,7 @@
 #ifndef jsanalyze_h
 #define jsanalyze_h
 
-#include "mozilla/PodOperations.h"
-
 #include "jscompartment.h"
-#include "jsinfer.h"
-#include "jsscript.h"
-
-#include "vm/Runtime.h"
 
 class JSScript;
 

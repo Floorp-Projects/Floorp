@@ -8,8 +8,6 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include <string.h>
-
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -26,6 +24,7 @@
 
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::gc;

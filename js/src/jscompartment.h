@@ -8,16 +8,9 @@
 #define jscompartment_h
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
-
-#include "jscntxt.h"
-#include "jsgc.h"
-#include "jsobj.h"
 
 #include "gc/Zone.h"
 #include "vm/GlobalObject.h"
-#include "vm/RegExpObject.h"
-#include "vm/Shape.h"
 
 namespace js {
 

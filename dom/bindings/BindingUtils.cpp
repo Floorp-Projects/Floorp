@@ -829,7 +829,7 @@ static bool
 XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
                      JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                      const Prefable<const JSPropertySpec>* attributes, jsid* attributeIds,
-                     const JSPropertySpec* attributeSpecs, JSPropertyDescriptor* desc)
+                     const JSPropertySpec* attributeSpecs, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
   for (; attributes->specs; ++attributes) {
     if (attributes->isEnabled(cx, obj)) {
@@ -842,7 +842,7 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
           // Because of centralization, we need to make sure we fault in the
           // JitInfos as well. At present, until the JSAPI changes, the easiest
           // way to do this is wrap them up as functions ourselves.
-          desc->attrs = attrSpec.flags & ~JSPROP_NATIVE_ACCESSORS;
+          desc.setAttributes(attrSpec.flags & ~JSPROP_NATIVE_ACCESSORS);
           // They all have getters, so we can just make it.
           JS::Rooted<JSObject*> global(cx, JS_GetGlobalForObject(cx, wrapper));
           JS::Rooted<JSFunction*> fun(cx,
@@ -852,8 +852,8 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
             return false;
           SET_JITINFO(fun, attrSpec.getter.info);
           JSObject *funobj = JS_GetFunctionObject(fun);
-          desc->getter = js::CastAsJSPropertyOp(funobj);
-          desc->attrs |= JSPROP_GETTER;
+          desc.setGetterObject(funobj);
+          desc.attributesRef() |= JSPROP_GETTER;
           if (attrSpec.setter.op) {
             // We have a setter! Make it.
             fun = JS_NewFunctionById(cx, (JSNative)attrSpec.setter.op, 1, 0,
@@ -862,12 +862,12 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
               return false;
             SET_JITINFO(fun, attrSpec.setter.info);
             funobj = JS_GetFunctionObject(fun);
-            desc->setter = js::CastAsJSStrictPropertyOp(funobj);
-            desc->attrs |= JSPROP_SETTER;
+            desc.setSetterObject(funobj);
+            desc.attributesRef() |= JSPROP_SETTER;
           } else {
-            desc->setter = nullptr;
+            desc.setSetter(nullptr);
           }
-          desc->obj = wrapper;
+          desc.object().set(wrapper);
           return true;
         }
       }
@@ -879,7 +879,7 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
 static bool
 XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                     JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                    JSPropertyDescriptor* desc, DOMObjectType type,
+                    JS::MutableHandle<JSPropertyDescriptor> desc, DOMObjectType type,
                     const NativeProperties* nativeProperties)
 {
   const Prefable<const JSFunctionSpec>* methods;
@@ -912,11 +912,11 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
             }
             SET_JITINFO(fun, methodSpec.call.info);
             JSObject *funobj = JS_GetFunctionObject(fun);
-            desc->value.setObject(*funobj);
-            desc->attrs = methodSpec.flags;
-            desc->obj = wrapper;
-            desc->setter = nullptr;
-            desc->getter = nullptr;
+            desc.value().setObject(*funobj);
+            desc.setAttributes(methodSpec.flags);
+            desc.object().set(wrapper);
+            desc.setSetter(nullptr);
+            desc.setGetter(nullptr);
            return true;
           }
         }
@@ -932,7 +932,7 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                 nativeProperties->staticAttributeSpecs, desc)) {
         return false;
       }
-      if (desc->obj) {
+      if (desc.object()) {
         return true;
       }
     }
@@ -944,7 +944,7 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                 nativeProperties->attributeSpecs, desc)) {
         return false;
       }
-      if (desc->obj) {
+      if (desc.object()) {
         return true;
       }
     }
@@ -956,7 +956,7 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                 desc)) {
         return false;
       }
-      if (desc->obj) {
+      if (desc.object()) {
         return true;
       }
     }
@@ -971,9 +971,9 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
         size_t i = constant->specs - nativeProperties->constantSpecs;
         for ( ; nativeProperties->constantIds[i] != JSID_VOID; ++i) {
           if (id == nativeProperties->constantIds[i]) {
-            desc->attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-            desc->obj = wrapper;
-            desc->value = nativeProperties->constantSpecs[i].value;
+            desc.setAttributes(JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
+            desc.object().set(wrapper);
+            desc.value().set(nativeProperties->constantSpecs[i].value);
             return true;
           }
         }
@@ -988,7 +988,7 @@ static bool
 ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
                               JS::Handle<JSObject*> obj,
                               size_t protoAndIfaceArrayIndex, unsigned attrs,
-                              JSPropertyDescriptor* desc)
+                              JS::MutableHandle<JSPropertyDescriptor> desc)
 {
   JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
   {
@@ -998,12 +998,12 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
     if (!protoOrIface) {
       return false;
     }
-    desc->obj = wrapper;
-    desc->shortid = 0;
-    desc->attrs = attrs;
-    desc->getter = JS_PropertyStub;
-    desc->setter = JS_StrictPropertyStub;
-    desc->value = JS::ObjectValue(*protoOrIface);
+    desc.object().set(wrapper);
+    desc.setShortId(0);
+    desc.setAttributes(attrs);
+    desc.setGetter(JS_PropertyStub);
+    desc.setSetter(JS_StrictPropertyStub);
+    desc.value().set(JS::ObjectValue(*protoOrIface));
   }
   return JS_WrapPropertyDescriptor(cx, desc);
 }
@@ -1013,7 +1013,7 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           const NativePropertyHooks* nativePropertyHooks,
                           DOMObjectType type, JS::Handle<JSObject*> obj,
                           JS::Handle<jsid> id,
-                          JSPropertyDescriptor* desc)
+                          JS::MutableHandle<JSPropertyDescriptor> desc)
 {
   if (type == eInterface && IdEquals(id, "prototype")) {
     return nativePropertyHooks->mPrototypeID == prototypes::id::_ID_Count ||
@@ -1039,7 +1039,7 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     return false;
   }
 
-  if (!desc->obj &&
+  if (!desc.object() &&
       nativeProperties.chromeOnly &&
       xpc::AccessCheck::isChrome(js::GetObjectCompartment(wrapper)) &&
       !XrayResolveProperty(cx, wrapper, obj, id, desc, type,
@@ -1053,7 +1053,7 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 bool
 XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           JS::Handle<JSObject*> obj,
-                          JS::Handle<jsid> id, JSPropertyDescriptor* desc)
+                          JS::Handle<jsid> id, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
   DOMObjectType type;
   const NativePropertyHooks* nativePropertyHooks =
@@ -1072,7 +1072,7 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
         return false;
       }
 
-      if (desc->obj) {
+      if (desc.object()) {
         return true;
       }
     } while ((nativePropertyHooks = nativePropertyHooks->mProtoHooks));
@@ -1459,8 +1459,7 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
   toStringDesc.value().set(JS::UndefinedValue());
   JS::Rooted<jsid> id(cx,
     nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING));
-  if (!XrayResolveNativeProperty(cx, wrapper, obj, id,
-                                 toStringDesc.address())) {
+  if (!XrayResolveNativeProperty(cx, wrapper, obj, id, &toStringDesc)) {
     return false;
   }
 
