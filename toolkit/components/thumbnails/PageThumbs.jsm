@@ -444,7 +444,7 @@ this.PageThumbs = {
       let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
                             .getService(Ci.nsIScreenManager);
       let left = {}, top = {}, width = {}, height = {};
-      screenManager.primaryScreen.GetRect(left, top, width, height);
+      screenManager.primaryScreen.GetRectDisplayPix(left, top, width, height);
       this._thumbnailWidth = Math.round(width.value / 3);
       this._thumbnailHeight = Math.round(height.value / 3);
     }
