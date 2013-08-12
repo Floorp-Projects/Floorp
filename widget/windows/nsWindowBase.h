@@ -37,6 +37,8 @@ public:
 
   /*
    * Init a standard gecko event for this widget.
+   * @param aEvent the event to initialize.
+   * @param aPoint message position in physical coordinates.
    */
   virtual void InitEvent(nsGUIEvent& aEvent, nsIntPoint* aPoint = nullptr) = 0;
 

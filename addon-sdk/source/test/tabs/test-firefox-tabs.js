@@ -141,6 +141,9 @@ exports.testTabPropertiesInNewWindow = function(test) {
 exports.testTabPropertiesInSameWindow = function(test) {
   test.waitUntilDone();
 
+  // Get current count of tabs so we know the index of the
+  // new tab, bug 893846
+  let tabCount = tabs.length;
   let count = 0;
   function onReadyOrLoad (tab) {
     if (count++) {
@@ -156,7 +159,7 @@ exports.testTabPropertiesInSameWindow = function(test) {
       test.assertEqual(tab.url, url, "URL of the new tab matches");
       test.assert(tab.favicon, "favicon of the new tab is not empty");
       test.assertEqual(tab.style, null, "style of the new tab matches");
-      test.assertEqual(tab.index, 1, "index of the new tab matches");
+      test.assertEqual(tab.index, tabCount, "index of the new tab matches");
       test.assertNotEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
       test.assertNotEqual(tab.id, null, "a tab object always has an id property.");
 
@@ -167,7 +170,7 @@ exports.testTabPropertiesInSameWindow = function(test) {
       test.assertEqual(tab.url, url, "URL of the new tab matches");
       test.assert(tab.favicon, "favicon of the new tab is not empty");
       test.assertEqual(tab.style, null, "style of the new tab matches");
-      test.assertEqual(tab.index, 1, "index of the new tab matches");
+      test.assertEqual(tab.index, tabCount, "index of the new tab matches");
       test.assertNotEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
       test.assertNotEqual(tab.id, null, "a tab object always has an id property.");
 
