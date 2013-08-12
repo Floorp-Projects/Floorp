@@ -34,6 +34,12 @@ LOCAL_INCLUDES = \
 		-I$(topsrcdir)/js/ipc \
 		$(NULL)
 
+ifdef MOZ_B2G_BT
+LOCAL_INCLUDES += \
+    -I$(topsrcdir)/dom/bluetooth \
+    $(NULL)
+endif
+
 SHARED_LIBRARY_LIBS = \
   ../loader/$(LIB_PREFIX)jsloader_s.$(LIB_SUFFIX) \
   ../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
