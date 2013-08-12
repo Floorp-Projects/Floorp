@@ -1466,10 +1466,8 @@ XPCShellErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 static bool
 ContextCallback(JSContext *cx, unsigned contextOp)
 {
-    if (contextOp == JSCONTEXT_NEW) {
+    if (contextOp == JSCONTEXT_NEW)
         JS_SetErrorReporter(cx, XPCShellErrorReporter);
-        JS_SetOperationCallback(cx, XPCShellOperationCallback);
-    }
     return true;
 }
 
@@ -1641,6 +1639,11 @@ main(int argc, char **argv, char **envp)
         }
 
         rtsvc->RegisterContextCallback(ContextCallback);
+
+        // Override the default XPConnect operation callback. We could store the
+        // old one and restore it before shutting down, but there's not really a
+        // reason to bother.
+        JS_SetOperationCallback(rt, XPCShellOperationCallback);
 
         cx = JS_NewContext(rt, 8192);
         if (!cx) {

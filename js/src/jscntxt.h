@@ -445,9 +445,6 @@ struct JSContext : public js::ExclusiveContext,
     /* Per-context optional error reporter. */
     JSErrorReporter     errorReporter;
 
-    /* Branch callback. */
-    JSOperationCallback operationCallback;
-
     /* Client opaque pointers. */
     void                *data;
     void                *data2;
