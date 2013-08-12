@@ -67,6 +67,10 @@ AllowXBLScope(JSCompartment *c);
 bool
 IsSandboxPrototypeProxy(JSObject *obj);
 
+// XXXbholley - Temporary - goes away in future patches.
+bool
+OperationCallback(JSContext* cx);
+
 } /* namespace xpc */
 
 #define XPCONNECT_GLOBAL_FLAGS                                                \
