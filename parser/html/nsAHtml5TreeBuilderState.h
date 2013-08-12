@@ -16,10 +16,14 @@ class nsAHtml5TreeBuilderState {
     virtual jArray<nsHtml5StackNode*,int32_t> getStack() = 0;
     
     virtual jArray<nsHtml5StackNode*,int32_t> getListOfActiveFormattingElements() = 0;
-    
+
+    virtual jArray<int32_t,int32_t> getTemplateModeStack() = 0;
+
     virtual int32_t getStackLength() = 0;
 
     virtual int32_t getListOfActiveFormattingElementsLength() = 0;
+
+    virtual int32_t getTemplateModeStackLength() = 0;
 
     virtual nsIContent** getFormPointer() = 0;
     
