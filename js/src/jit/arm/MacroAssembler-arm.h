@@ -544,6 +544,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         addPendingJump(bo, imm, Relocation::HARDCODED);
         ma_call(imm);
     }
+    void call(AsmJSImmPtr imm) {
+        movePtr(imm, CallReg);
+        call(CallReg);
+    }
     void call(IonCode *c) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::IONCODE);
@@ -935,6 +939,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branchPtr(Condition cond, Register lhs, ImmPtr imm, Label *label) {
         branchPtr(cond, lhs, ImmWord(uintptr_t(imm.value)), label);
     }
+    void branchPtr(Condition cond, Register lhs, AsmJSImmPtr imm, Label *label) {
+        movePtr(imm, ScratchRegister);
+        branchPtr(cond, lhs, ScratchRegister, label);
+    }
     void decBranchPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
         subPtr(imm, lhs);
         branch32(cond, lhs, Imm32(0), label);
@@ -967,8 +975,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         branchPtr(cond, addr, ImmWord(uintptr_t(ptr.value)), label);
     }
     void branchPtr(Condition cond, const AbsoluteAddress &addr, const Register &ptr, Label *label) {
-        loadPtr(addr, secondScratchReg_); // ma_cmp will use the scratch register.
-        ma_cmp(secondScratchReg_, ptr);
+        loadPtr(addr, ScratchRegister);
+        ma_cmp(ScratchRegister, ptr);
+        ma_b(label, cond);
+    }
+    void branchPtr(Condition cond, const AsmJSAbsoluteAddress &addr, const Register &ptr, Label *label) {
+        loadPtr(addr, ScratchRegister);
+        ma_cmp(ScratchRegister, ptr);
         ma_b(label, cond);
     }
     void branch32(Condition cond, const AbsoluteAddress &lhs, Imm32 rhs, Label *label) {
@@ -1208,6 +1221,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void movePtr(const Register &src, const Register &dest);
     void movePtr(const ImmWord &imm, const Register &dest);
     void movePtr(const ImmPtr &imm, const Register &dest);
+    void movePtr(const AsmJSImmPtr &imm, const Register &dest);
     void movePtr(const ImmGCPtr &imm, const Register &dest);
 
     void load8SignExtend(const Address &address, const Register &dest);
@@ -1229,6 +1243,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadPtr(const Address &address, const Register &dest);
     void loadPtr(const BaseIndex &src, const Register &dest);
     void loadPtr(const AbsoluteAddress &address, const Register &dest);
+    void loadPtr(const AsmJSAbsoluteAddress &address, const Register &dest);
 
     void loadPrivate(const Address &address, const Register &dest);
 
@@ -1383,6 +1398,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
   public:
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABI(void *fun, Result result = GENERAL);
+    void callWithABI(AsmJSImmPtr imm, Result result = GENERAL);
     void callWithABI(const Address &fun, Result result = GENERAL);
 
     CodeOffsetLabel labelForPatch() {

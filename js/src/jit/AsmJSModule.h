@@ -54,11 +54,20 @@ struct AsmJSStaticLinkData
 
     typedef Vector<RelativeLink> RelativeLinkVector;
 
+    struct AbsoluteLink
+    {
+        jit::CodeOffsetLabel patchAt;
+        jit::AsmJSImmKind target;
+    };
+
+    typedef Vector<AbsoluteLink> AbsoluteLinkVector;
+
     size_t operationCallbackExitOffset;
     RelativeLinkVector relativeLinks;
+    AbsoluteLinkVector absoluteLinks;
 
     AsmJSStaticLinkData(ExclusiveContext *cx)
-      : relativeLinks(cx)
+      : relativeLinks(cx), absoluteLinks(cx)
     {}
 };
 
@@ -673,7 +682,7 @@ class AsmJSModule
     }
 
     bool allocateAndCopyCode(ExclusiveContext *cx, jit::MacroAssembler &masm);
-    void staticallyLink(const AsmJSStaticLinkData &linkData);
+    void staticallyLink(const AsmJSStaticLinkData &linkData, ExclusiveContext *cx);
 
     uint8_t *codeBase() const {
         JS_ASSERT(code_);

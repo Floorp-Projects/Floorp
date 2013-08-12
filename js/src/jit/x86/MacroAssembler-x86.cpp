@@ -256,6 +256,15 @@ MacroAssemblerX86::callWithABI(void *fun, Result result)
 }
 
 void
+MacroAssemblerX86::callWithABI(AsmJSImmPtr fun, Result result)
+{
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(fun);
+    callWithABIPost(stackAdjust, result);
+}
+
+void
 MacroAssemblerX86::callWithABI(const Address &fun, Result result)
 {
     uint32_t stackAdjust;

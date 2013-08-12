@@ -131,6 +131,7 @@ class AssemblerX86Shared
 
     Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
     Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
+    AsmJSAbsoluteLinkVector asmJSAbsoluteLinks_;
     CompactBufferWriter jumpRelocations_;
     CompactBufferWriter dataRelocations_;
     CompactBufferWriter preBarriers_;
@@ -290,6 +291,13 @@ class AssemblerX86Shared
     }
     CodeLabel codeLabel(size_t i) {
         return codeLabels_[i];
+    }
+
+    size_t numAsmJSAbsoluteLinks() const {
+        return asmJSAbsoluteLinks_.length();
+    }
+    const AsmJSAbsoluteLink &asmJSAbsoluteLink(size_t i) const {
+        return asmJSAbsoluteLinks_[i];
     }
 
     // Size of the instruction stream, in bytes.
@@ -1582,12 +1590,15 @@ class AssemblerX86Shared
         *((int32_t *) dataLabel.raw() - 1) = toWrite.value;
     }
 
-    static void patchDataWithValueCheck(CodeLocationLabel data, ImmPtr newData,
-                                        ImmPtr expectedData) {
+    static void patchDataWithValueCheck(CodeLocationLabel data, PatchedImmPtr newData,
+                                        PatchedImmPtr expectedData) {
         // The pointer given is a pointer to *after* the data.
         uintptr_t *ptr = ((uintptr_t *) data.raw()) - 1;
         JS_ASSERT(*ptr == (uintptr_t)expectedData.value);
         *ptr = (uintptr_t)newData.value;
+    }
+    static void patchDataWithValueCheck(CodeLocationLabel data, ImmPtr newData, ImmPtr expectedData) {
+        patchDataWithValueCheck(data, PatchedImmPtr(newData.value), PatchedImmPtr(expectedData.value));
     }
     static uint32_t nopSize() {
         return 1;
