@@ -124,7 +124,7 @@ function check_test_1(installSyncGUID) {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(olda1) {
     do_check_eq(olda1, null);
 
-    AddonManager.getAddonsWithOperationsByTypes(null, function(pendingAddons) {
+    AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(function(pendingAddons) {
       do_check_eq(pendingAddons.length, 1);
       do_check_eq(pendingAddons[0].id, "addon1@tests.mozilla.org");
       let uri = NetUtil.newURI(pendingAddons[0].iconURL);
@@ -162,7 +162,7 @@ function check_test_1(installSyncGUID) {
       AddonManager.getAllInstalls(function(activeInstalls) {
         do_check_eq(activeInstalls, 0);
 
-        AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
           do_check_neq(a1, null);
           do_check_neq(a1.syncGUID, null);
           do_check_true(a1.syncGUID.length >= 9);
@@ -198,10 +198,10 @@ function check_test_1(installSyncGUID) {
           restartManager();
           do_check_not_in_crash_annotation(a1.id, a1.version);
 
-          run_test_2();
-        });
+          do_execute_soon(run_test_2);
+        }));
       });
-    });
+    }));
   });
 }
 
@@ -275,7 +275,7 @@ function check_test_3(aInstall) {
   setExtensionModifiedTime(ext, updateDate);
 
   ensure_test_completed();
-  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(olda2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(function(olda2) {
     do_check_eq(olda2, null);
     restartManager();
 
@@ -307,7 +307,7 @@ function check_test_3(aInstall) {
         run_test_4();
       });
     });
-  });
+  }));
 }
 
 // Tests that installing a new version of an existing add-on works
@@ -376,7 +376,7 @@ function check_test_5(install) {
     do_check_neq(olda2, null);
     do_check_true(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
 
-    AddonManager.getInstallsByTypes(null, function(installs) {
+    AddonManager.getInstallsByTypes(null, callback_soon(function(installs) {
       do_check_eq(installs.length, 1);
       do_check_eq(installs[0].addon, olda2.pendingUpgrade);
       restartManager();
@@ -402,17 +402,17 @@ function check_test_5(install) {
           do_check_true(a2.installDate <= a2.updateDate);
 
           a2.uninstall();
-          restartManager();
-
-          run_test_6();
+          do_execute_soon(run_test_6);
         });
       });
-    });
+    }));
   });
 }
 
 // Tests that an install that requires a compatibility update works
 function run_test_6() {
+  restartManager();
+
   prepare_test({ }, [
     "onNewInstall"
   ]);
@@ -464,7 +464,7 @@ function run_test_7() {
 
 function check_test_7() {
   ensure_test_completed();
-  AddonManager.getAddonByID("addon3@tests.mozilla.org", function(olda3) {
+  AddonManager.getAddonByID("addon3@tests.mozilla.org", callback_soon(function(olda3) {
     do_check_eq(olda3, null);
     restartManager();
 
@@ -482,15 +482,15 @@ function check_test_7() {
         do_check_true(isExtensionInAddonsList(profileDir, a3.id));
         do_check_true(do_get_addon("test_install3").exists());
         a3.uninstall();
-        restartManager();
-
-        run_test_8();
+        do_execute_soon(run_test_8);
       });
     });
-  });
+  }));
 }
 
 function run_test_8() {
+  restartManager();
+
   AddonManager.addInstallListener(InstallListener);
   AddonManager.addAddonListener(AddonListener);
 
@@ -508,7 +508,7 @@ function run_test_8() {
     }, [
       "onInstallStarted",
       "onInstallEnded",
-    ], check_test_8);
+    ], callback_soon(check_test_8));
     install.install();
   });
 }
@@ -527,14 +527,14 @@ function check_test_8() {
     do_check_true(isExtensionInAddonsList(profileDir, a3.id));
     do_check_true(do_get_addon("test_install3").exists());
     a3.uninstall();
-    restartManager();
-
-    run_test_9();
+    do_execute_soon(run_test_9);
   });
 }
 
 // Test that after cancelling a download it is removed from the active installs
 function run_test_9() {
+  restartManager();
+
   prepare_test({ }, [
     "onNewInstall"
   ]);
@@ -625,7 +625,7 @@ function check_test_10(install) {
 
   ensure_test_completed();
 
-  AddonManager.getAllInstalls(function(activeInstalls) {
+  AddonManager.getAllInstalls(callback_soon(function(activeInstalls) {
     do_check_eq(activeInstalls.length, 0);
 
     restartManager();
@@ -634,9 +634,9 @@ function check_test_10(install) {
     AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
       do_check_eq(a3, null);
 
-      run_test_11();
+      do_execute_soon(run_test_11);
     });
-  });
+  }));
 }
 
 // Tests that a multi-package install shows up as multiple installs with the
@@ -738,7 +738,7 @@ function run_test_11() {
           "onInstallStarted",
           "onInstallEnded"
         ]
-      }, check_test_11);
+      }, callback_soon(check_test_11));
 
       installs[0].install();
       installs[1].install();
@@ -771,14 +771,14 @@ function check_test_11() {
     a6.uninstall();
     a7.uninstall();
 
-    restartManager();
-
-    run_test_12();
+    do_execute_soon(run_test_12);
   });
 }
 
 // Same as test 11 but for a remote XPI
 function run_test_12() {
+  restartManager();
+
   prepare_test({ }, [
     "onNewInstall",
   ]);
@@ -829,7 +829,7 @@ function run_test_12() {
         "onInstallStarted",
         "onInstallEnded"
       ]
-    }, check_test_12);
+    }, callback_soon(check_test_12));
     install.install();
   }, "application/x-xpinstall", null, "Multi Test 4");
 }
@@ -896,9 +896,7 @@ function check_test_12() {
     a6.uninstall();
     a7.uninstall();
 
-    restartManager();
-
-    run_test_13();
+    do_execute_soon(run_test_13);
   });
 }
 
@@ -906,6 +904,8 @@ function check_test_12() {
 // Tests that cancelling an upgrade leaves the original add-on's pendingOperations
 // correct
 function run_test_13() {
+  restartManager();
+
   installAllFiles([do_get_addon("test_install2_1")], function() {
     restartManager();
 
@@ -953,7 +953,7 @@ function check_test_13(install) {
   do_check_eq(install.existingAddon.id, "addon2@tests.mozilla.org");
   do_check_eq(install.addon.install, install);
 
-  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(olda2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(function(olda2) {
     do_check_neq(olda2, null);
     do_check_true(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
     do_check_eq(olda2.pendingUpgrade, install.addon);
@@ -984,15 +984,15 @@ function check_test_13(install) {
 
       a2.uninstall();
 
-      restartManager();
-
-      run_test_14();
+      do_execute_soon(run_test_14);
     });
-  });
+  }));
 }
 
 // Check that cancelling the install from onDownloadStarted actually cancels it
 function run_test_14() {
+  restartManager();
+
   prepare_test({ }, [
     "onNewInstall"
   ]);
@@ -1347,7 +1347,7 @@ function run_test_21() {
 }
 
 function check_test_21(aInstall) {
-  AddonManager.getAllInstalls(function(aInstalls) {
+  AddonManager.getAllInstalls(callback_soon(function(aInstalls) {
     do_check_eq(aInstalls.length, 1);
     do_check_eq(aInstalls[0], aInstall);
 
@@ -1370,7 +1370,7 @@ function check_test_21(aInstall) {
 
       run_test_22();
     });
-  });
+  }));
 }
 
 // Tests that an install can be restarted after being cancelled

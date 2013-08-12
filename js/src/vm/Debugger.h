@@ -21,6 +21,8 @@
 
 namespace js {
 
+class Breakpoint;
+
 /*
  * A weakmap that supports the keys being in different compartments to the
  * values, although all values must be in the same compartment.
@@ -145,6 +147,14 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
             zoneCounts.remove(zone);
     }
 };
+
+/*
+ * Env is the type of what ES5 calls "lexical environments" (runtime
+ * activations of lexical scopes). This is currently just JSObject, and is
+ * implemented by Call, Block, With, and DeclEnv objects, among others--but
+ * environments and objects are really two different concepts.
+ */
+typedef JSObject Env;
 
 class Debugger : private mozilla::LinkedListElement<Debugger>
 {

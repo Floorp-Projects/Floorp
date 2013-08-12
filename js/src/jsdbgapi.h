@@ -6,11 +6,17 @@
 
 #ifndef jsdbgapi_h
 #define jsdbgapi_h
+
 /*
  * JS debugger API.
  */
 
-#include "jsprvtd.h"
+#include "jsapi.h"
+#include "jsbytecode.h"
+
+class JSAtom;
+
+namespace js { class StackFrame; }
 
 namespace JS {
 
@@ -46,6 +52,55 @@ JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, js::StackFrame *start = NUL
 
 JS_FRIEND_API(void)
 js_DumpBacktrace(JSContext *cx);
+
+typedef enum JSTrapStatus {
+    JSTRAP_ERROR,
+    JSTRAP_CONTINUE,
+    JSTRAP_RETURN,
+    JSTRAP_THROW,
+    JSTRAP_LIMIT
+} JSTrapStatus;
+
+typedef JSTrapStatus
+(* JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                  jsval closure);
+
+typedef JSTrapStatus
+(* JSInterruptHook)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                    void *closure);
+
+typedef JSTrapStatus
+(* JSDebuggerHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                      void *closure);
+
+typedef JSTrapStatus
+(* JSThrowHook)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                void *closure);
+
+typedef bool
+(* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsid id, jsval old,
+                        jsval *newp, void *closure);
+
+/* called just after script creation */
+typedef void
+(* JSNewScriptHook)(JSContext  *cx,
+                    const char *filename,  /* URL of script */
+                    unsigned   lineno,     /* first line */
+                    JSScript   *script,
+                    JSFunction *fun,
+                    void       *callerdata);
+
+/* called just before script destruction */
+typedef void
+(* JSDestroyScriptHook)(JSFreeOp *fop,
+                        JSScript *script,
+                        void     *callerdata);
+
+typedef void
+(* JSSourceHandler)(const char *filename, unsigned lineno, const jschar *str,
+                    size_t length, void **listenerTSData, void *closure);
+
+
 
 extern JS_PUBLIC_API(JSCompartment *)
 JS_EnterCompartmentOfScript(JSContext *cx, JSScript *target);
@@ -228,9 +283,8 @@ JS_GetScriptIsSelfHosted(JSScript *script);
 /************************************************************************/
 
 /*
- * Hook setters for script creation and destruction, see jsprvtd.h for the
- * typedefs.  These macros provide binary compatibility and newer, shorter
- * synonyms.
+ * Hook setters for script creation and destruction.  These macros provide
+ * binary compatibility and newer, shorter synonyms.
  */
 #define JS_SetNewScriptHook     JS_SetNewScriptHookProc
 #define JS_SetDestroyScriptHook JS_SetDestroyScriptHookProc
@@ -449,6 +503,11 @@ JS_DumpPCCounts(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(void)
 JS_DumpCompartmentPCCounts(JSContext *cx);
+
+namespace js {
+extern JS_FRIEND_API(bool)
+CanCallContextDebugHandler(JSContext *cx);
+}
 
 /* Call the context debug handler on the topmost scripted frame. */
 extern JS_FRIEND_API(bool)

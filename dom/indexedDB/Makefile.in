@@ -24,7 +24,6 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/xpcom/build \
   $(NULL)
 
-DEFINES += -D_IMPL_NS_LAYOUT
 
 # Make sure to quickstub as much as possible here! See
 # js/xpconnect/src/dom_quickstubs.qsconf.

@@ -61,4 +61,3 @@ DOM_SRCDIRS += content/media/webspeech
 endif
 
 LOCAL_INCLUDES += $(DOM_SRCDIRS:%=-I$(topsrcdir)/%)
-DEFINES += -D_IMPL_NS_LAYOUT

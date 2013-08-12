@@ -12,8 +12,10 @@ Test limiting number of forms filled.
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 
-
 <script>
+commonInit();
+SimpleTest.waitForExplicitFinish();
+
 var FORMS_TO_CREATE = 41;
 
 function createForm(id) {
@@ -34,7 +36,6 @@ theDiv.innerHTML = formsHtml;
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-commonInit();
 /** Test for Login Manager: form fill, multiple forms. **/
 
 function startTest() {
@@ -52,10 +53,7 @@ function startTest() {
 }
 
 window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>
 </html>
-

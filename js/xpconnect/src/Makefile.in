@@ -178,5 +178,3 @@ GARBAGE += \
 		$(MDDEPDIR)/event_impl_gen.pp \
 		$(wildcard $(topsrcdir)/other-licenses/ply/ply/*.pyc) \
 		$(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT

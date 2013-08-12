@@ -1660,13 +1660,8 @@ GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
                          HandleObject obj, MutableHandleValue vp)
 {
     AutoFlushCache afc("GetPropertyParCache");
-    PerThreadData *pt = slice->perThreadData;
 
-    const SafepointIndex *safepointIndex;
-    void *returnAddr;
-    RootedScript topScript(pt, GetTopIonJSScript(pt, &safepointIndex, &returnAddr));
-    IonScript *ion = topScript->parallelIonScript();
-
+    IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
     GetPropertyParIC &cache = ion->getCache(cacheIndex).toGetPropertyPar();
 
     // Grab the property early, as the pure path is fast anyways and doesn't
@@ -2316,14 +2311,13 @@ GenerateTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAtt
     // The array type is the object within the table of typed array classes.
     int arrayType = tarr->type();
 
-    Register tmpReg = output.scratchReg().gpr();
-    JS_ASSERT(tmpReg != InvalidReg);
-
-    // Check that the typed array is of the same type as the current object
-    // because load size differ in function of the typed array data width.
-    masm.branchTestObjClass(Assembler::NotEqual, object, tmpReg, tarr->getClass(), &failures);
+    // Guard on the shape.
+    Shape *shape = tarr->lastProperty();
+    masm.branchTestObjShape(Assembler::NotEqual, object, shape, &failures);
 
     // Decide to what type index the stub should be optimized
+    Register tmpReg = output.scratchReg().gpr();
+    JS_ASSERT(tmpReg != InvalidReg);
     Register indexReg = tmpReg;
     JS_ASSERT(!index.constant());
     if (idval.isString()) {
@@ -2798,13 +2792,8 @@ GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject ob
                         HandleValue idval, MutableHandleValue vp)
 {
     AutoFlushCache afc("GetElementParCache");
-    PerThreadData *pt = slice->perThreadData;
 
-    const SafepointIndex *safepointIndex;
-    void *returnAddr;
-    RootedScript topScript(pt, GetTopIonJSScript(pt, &safepointIndex, &returnAddr));
-    IonScript *ion = topScript->parallelIonScript();
-
+    IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
     GetElementParIC &cache = ion->getCache(cacheIndex).toGetElementPar();
 
     // Try to get the element early, as the pure path doesn't need a lock. If

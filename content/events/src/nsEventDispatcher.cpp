@@ -54,27 +54,61 @@ class nsEventTargetChainItem
 private:
   nsEventTargetChainItem(EventTarget* aTarget,
                          nsEventTargetChainItem* aChild = nullptr);
-public:
-  nsEventTargetChainItem()
-  : mChild(nullptr), mParent(nullptr), mFlags(0), mItemFlags(0)
-  {
-  }
 
-  static nsEventTargetChainItem* Create(nsTArray<nsEventTargetChainItem>& aPool,
-                                        EventTarget* aTarget,
+  // This is the ETCI recycle pool, which is used to avoid some malloc/free
+  // churn.  It's implemented as a linked list.
+  static nsEventTargetChainItem* sEtciRecyclePool;
+  static uint32_t sNumRecycledEtcis;
+  static const uint32_t kMaxNumRecycledEtcis = 128;
+
+public:
+  static nsEventTargetChainItem* Create(EventTarget* aTarget,
                                         nsEventTargetChainItem* aChild = nullptr)
   {
-    
-    return new (aPool.AppendElement()) nsEventTargetChainItem(aTarget, aChild);
+    // Allocate from the ETCI recycle pool if possible.
+    void* place = nullptr;
+    if (sNumRecycledEtcis > 0) {
+      MOZ_ASSERT(sEtciRecyclePool);
+      place = sEtciRecyclePool;
+      sEtciRecyclePool = sEtciRecyclePool->mNext;
+      --sNumRecycledEtcis;
+    } else {
+      place = malloc(sizeof(nsEventTargetChainItem));
+    }
+    return place
+      ? ::new (place) nsEventTargetChainItem(aTarget, aChild)
+      : nullptr;
   }
 
   static void Destroy(nsEventTargetChainItem* aItem)
   {
-    // nsEventTargetChainItem objects are deleted when the pool goes out of
-    // the scope.
-    if (aItem->mChild) {
-      aItem->mChild->mParent = nullptr;
-      aItem->mChild = nullptr;
+    // ::Destroy deletes ancestor chain.
+    nsEventTargetChainItem* item = aItem;
+    if (item->mChild) {
+      item->mChild->mParent = nullptr;
+      item->mChild = nullptr;
+    }
+    // Put destroyed ETCIs into the recycle pool if it's not already full.
+    while (item) {
+      nsEventTargetChainItem* parent = item->mParent;
+      item->~nsEventTargetChainItem();
+      if (sNumRecycledEtcis < kMaxNumRecycledEtcis) {
+        item->mNext = sEtciRecyclePool;
+        sEtciRecyclePool = item;
+        ++sNumRecycledEtcis;
+      } else {
+        free(item);
+      }
+      item = parent;
+    }
+  }
+
+  static void ShutdownRecyclePool()
+  {
+    while (sEtciRecyclePool) {
+      nsEventTargetChainItem* tmp = sEtciRecyclePool;
+      sEtciRecyclePool = sEtciRecyclePool->mNext;
+      free(tmp);
     }
   }
 
@@ -199,9 +233,21 @@ public:
   nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor,
                            nsCxPusher* aPusher);
 
+  static uint32_t MaxEtciCount() { return sMaxEtciCount; }
+
+  static void ResetMaxEtciCount()
+  {
+    MOZ_ASSERT(!sCurrentEtciCount, "Wrong time to call ResetMaxEtciCount()!");
+    sMaxEtciCount = 0;
+  }
+
   nsCOMPtr<EventTarget>             mTarget;
   nsEventTargetChainItem*           mChild;
-  nsEventTargetChainItem*           mParent;
+  union {
+    nsEventTargetChainItem*         mParent;
+     // This is used only when recycling ETCIs.
+    nsEventTargetChainItem*         mNext;
+  };
   uint16_t                          mFlags;
   uint16_t                          mItemFlags;
   nsCOMPtr<nsISupports>             mItemData;
@@ -209,7 +255,13 @@ public:
   nsCOMPtr<EventTarget>             mNewTarget;
   // Cache mTarget's event listener manager.
   nsRefPtr<nsEventListenerManager>  mManager;
+
+  static uint32_t                   sMaxEtciCount;
+  static uint32_t                   sCurrentEtciCount;
 };
+
+nsEventTargetChainItem* nsEventTargetChainItem::sEtciRecyclePool = nullptr;
+uint32_t nsEventTargetChainItem::sNumRecycledEtcis = 0;
 
 nsEventTargetChainItem::nsEventTargetChainItem(EventTarget* aTarget,
                                                nsEventTargetChainItem* aChild)
@@ -353,9 +405,13 @@ nsEventTargetChainItem::HandleEventTargetChain(
   return NS_OK;
 }
 
+void NS_ShutdownEventTargetChainItemRecyclePool()
+{
+  nsEventTargetChainItem::ShutdownRecyclePool();
+}
+
 nsEventTargetChainItem*
-EventTargetChainItemForChromeTarget(nsTArray<nsEventTargetChainItem>& aPool,
-                                    nsINode* aNode,
+EventTargetChainItemForChromeTarget(nsINode* aNode,
                                     nsEventTargetChainItem* aChild = nullptr)
 {
   if (!aNode->IsInDoc()) {
@@ -366,9 +422,9 @@ EventTargetChainItemForChromeTarget(nsTArray<nsEventTargetChainItem>& aPool,
   NS_ENSURE_TRUE(piTarget, nullptr);
 
   nsEventTargetChainItem* etci =
-    nsEventTargetChainItem::Create(aPool,
-                                   piTarget->GetTargetForEventTargetChain(),
+    nsEventTargetChainItem::Create(piTarget->GetTargetForEventTargetChain(),
                                    aChild);
+  NS_ENSURE_TRUE(etci, nullptr);
   if (!etci->IsValid()) {
     nsEventTargetChainItem::Destroy(etci);
     return nullptr;
@@ -466,12 +522,10 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   // event dispatching is finished.
   nsRefPtr<nsPresContext> kungFuDeathGrip(aPresContext);
 
-  // Try to limit malloc/free churn by using an array as a pool.
-  nsTArray<nsEventTargetChainItem> pool(128);
-
   // Create the event target chain item for the event target.
   nsEventTargetChainItem* targetEtci =
-    nsEventTargetChainItem::Create(pool, target->GetTargetForEventTargetChain());
+    nsEventTargetChainItem::Create(target->GetTargetForEventTargetChain());
+  NS_ENSURE_TRUE(targetEtci, NS_ERROR_OUT_OF_MEMORY);
   if (!targetEtci->IsValid()) {
     nsEventTargetChainItem::Destroy(targetEtci);
     return NS_ERROR_FAILURE;
@@ -517,7 +571,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   if (!preVisitor.mCanHandle && preVisitor.mAutomaticChromeDispatch && content) {
     // Event target couldn't handle the event. Try to propagate to chrome.
     nsEventTargetChainItem::Destroy(targetEtci);
-    targetEtci = EventTargetChainItemForChromeTarget(pool, content);
+    targetEtci = EventTargetChainItemForChromeTarget(content);
     NS_ENSURE_STATE(targetEtci);
     targetEtci->PreHandleEvent(preVisitor);
   }
@@ -530,7 +584,11 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     while (preVisitor.mParentTarget) {
       EventTarget* parentTarget = preVisitor.mParentTarget;
       nsEventTargetChainItem* parentEtci =
-        nsEventTargetChainItem::Create(pool, preVisitor.mParentTarget, topEtci);
+        nsEventTargetChainItem::Create(preVisitor.mParentTarget, topEtci);
+      if (!parentEtci) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        break;
+      }
       if (!parentEtci->IsValid()) {
         rv = NS_ERROR_FAILURE;
         break;
@@ -555,8 +613,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
           // propagate to chrome.
           nsCOMPtr<nsINode> disabledTarget = do_QueryInterface(parentTarget);
           if (disabledTarget) {
-            parentEtci = EventTargetChainItemForChromeTarget(pool,
-                                                             disabledTarget,
+            parentEtci = EventTargetChainItemForChromeTarget(disabledTarget,
                                                              topEtci);
             if (parentEtci) {
               parentEtci->PreHandleEvent(preVisitor);

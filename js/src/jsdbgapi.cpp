@@ -18,7 +18,6 @@
 #include "jsgc.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsprvtd.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jstypes.h"
@@ -931,6 +930,22 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
 }
 
 JS_FRIEND_API(bool)
+js::CanCallContextDebugHandler(JSContext *cx)
+{
+    return !!cx->runtime()->debugHooks.debuggerHandler;
+}
+
+static JSTrapStatus
+CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval)
+{
+    if (!cx->runtime()->debugHooks.debuggerHandler)
+        return JSTRAP_RETURN;
+
+    return cx->runtime()->debugHooks.debuggerHandler(cx, script, bc, rval,
+                                                     cx->runtime()->debugHooks.debuggerHandlerData);
+}
+
+JS_FRIEND_API(bool)
 js_CallContextDebugHandler(JSContext *cx)
 {
     NonBuiltinScriptFrameIter iter(cx);
@@ -938,7 +953,7 @@ js_CallContextDebugHandler(JSContext *cx)
 
     RootedValue rval(cx);
     RootedScript script(cx, iter.script());
-    switch (js::CallContextDebugHandler(cx, script, iter.pc(), rval.address())) {
+    switch (CallContextDebugHandler(cx, script, iter.pc(), rval.address())) {
       case JSTRAP_ERROR:
         JS_ClearPendingException(cx);
         return false;

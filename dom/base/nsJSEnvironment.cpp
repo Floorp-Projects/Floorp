@@ -43,7 +43,7 @@
 
 #include "xpcpublic.h"
 
-#include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
+#include "jsdbgapi.h"
 #include "jswrapper.h"
 #include "nsIArray.h"
 #include "nsIObjectInputStream.h"
@@ -57,7 +57,6 @@
 #include "mozilla/dom/ImageDataBinding.h"
 
 #include "nsJSPrincipals.h"
-#include "jsdbgapi.h"
 
 #ifdef XP_MACOSX
 // AssertMacros.h defines 'check' and conflicts with AccessCheck.h
