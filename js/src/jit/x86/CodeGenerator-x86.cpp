@@ -859,7 +859,10 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
 
         masm.setupUnalignedABICall(1, output);
         masm.passABIArg(input);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
+        if (gen->compilingAsmJS())
+            masm.callWithABI(AsmJSImm_ToInt32);
+        else
+            masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
         masm.storeCallResult(output);
 
         restoreVolatile(output);
