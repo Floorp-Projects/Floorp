@@ -4309,6 +4309,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 }
             }
             if ("template" == name) {
+                assert templateModePtr >= 0;
                 mode = templateModeStack[templateModePtr];
                 return;
             } else if ("select" == name) {
@@ -5686,7 +5687,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 stackCopy[i].retain();
             }
         }
-        return new StateSnapshot<T>(stackCopy, listCopy, formPointer, headPointer, deepTreeSurrogateParent, mode, originalMode, framesetOk, needToDropLF, quirks);
+        int[] templateModeStackCopy = new int[templateModePtr + 1];
+        System.arraycopy(templateModeStack, 0, templateModeStackCopy, 0,
+                templateModeStackCopy.length);
+        return new StateSnapshot<T>(stackCopy, listCopy, templateModeStackCopy, formPointer,
+                headPointer, deepTreeSurrogateParent, mode, originalMode, framesetOk,
+                needToDropLF, quirks);
     }
 
     public boolean snapshotMatches(TreeBuilderState<T> snapshot) {
@@ -5694,9 +5700,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         int stackLen = snapshot.getStackLength();
         StackNode<T>[] listCopy = snapshot.getListOfActiveFormattingElements();
         int listLen = snapshot.getListOfActiveFormattingElementsLength();
+        int[] templateModeStackCopy = snapshot.getTemplateModeStack();
+        int templateModeStackLen = snapshot.getTemplateModeStackLength();
 
         if (stackLen != currentPtr + 1
                 || listLen != listPtr + 1
+                || templateModeStackLen != templateModePtr + 1
                 || formPointer != snapshot.getFormPointer()
                 || headPointer != snapshot.getHeadPointer()
                 || deepTreeSurrogateParent != snapshot.getDeepTreeSurrogateParent()
@@ -5725,6 +5734,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 return false;
             }
         }
+        for (int i = templateModeStackLen - 1; i >=0; i--) {
+            if (templateModeStackCopy[i] != templateModeStack[i]) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -5735,6 +5749,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         int stackLen = snapshot.getStackLength();
         StackNode<T>[] listCopy = snapshot.getListOfActiveFormattingElements();
         int listLen = snapshot.getListOfActiveFormattingElementsLength();
+        int[] templateModeStackCopy = snapshot.getTemplateModeStack();
+        int templateModeStackLen = snapshot.getTemplateModeStackLength();
 
         for (int i = 0; i <= listPtr; i++) {
             if (listOfActiveFormattingElements[i] != null) {
@@ -5753,6 +5769,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             stack = new StackNode[stackLen];
         }
         currentPtr = stackLen - 1;
+
+        if (templateModeStack.length < templateModeStackLen) {
+            templateModeStack = new int[templateModeStackLen];
+        }
+        templateModePtr = templateModeStackLen - 1;
 
         for (int i = 0; i < listLen; i++) {
             StackNode<T> node = listCopy[i];
@@ -5788,6 +5809,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 stack[i].retain();
             }
         }
+        System.arraycopy(templateModeStackCopy, 0, templateModeStack, 0, templateModeStackLen);
         formPointer = snapshot.getFormPointer();
         headPointer = snapshot.getHeadPointer();
         deepTreeSurrogateParent = snapshot.getDeepTreeSurrogateParent();
@@ -5847,6 +5869,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     /**
+     * @see nu.validator.htmlparser.impl.TreeBuilderState#getTemplateModeStack()
+     */
+    public int[] getTemplateModeStack() {
+        return templateModeStack;
+    }
+
+    /**
      * Returns the mode.
      *
      * @return the mode
@@ -5903,6 +5932,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      */
     public int getStackLength() {
         return currentPtr + 1;
+    }
+
+    /**
+     * @see nu.validator.htmlparser.impl.TreeBuilderState#getTemplateModeStackLength()
+     */
+    public int getTemplateModeStackLength() {
+        return templateModePtr + 1;
     }
 
     /**
