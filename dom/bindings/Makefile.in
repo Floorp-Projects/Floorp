@@ -205,7 +205,7 @@ ParserResults.pkl: $(globalgen_dependencies)
 	  --cachedir=$(CACHE_DIR) \
 	  $(all_webidl_files)
 
-# Make sure .deps actually exists, since we'll try to write to it from 
+# Make sure .deps actually exists, since we'll try to write to it from
 # BindingGen.py but we're typically running in the export phase, which is
 # before anyone has bothered creating .deps.
 # Then, pass our long lists through files to try to avoid blowing out the
