@@ -6,8 +6,6 @@
 
 #include "jit/x64/MacroAssembler-x64.h"
 
-#include "mozilla/Casting.h"
-
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/IonFrames.h"

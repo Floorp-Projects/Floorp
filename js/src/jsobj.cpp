@@ -40,8 +40,8 @@
 #include "gc/Marking.h"
 #include "jit/BaselineJIT.h"
 #include "js/MemoryMetrics.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/Interpreter.h"
-#include "vm/RegExpStatics.h"
 #include "vm/RegExpStaticsObject.h"
 #include "vm/Shape.h"
 

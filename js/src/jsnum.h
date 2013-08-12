@@ -9,7 +9,7 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include "jscntxt.h"
+#include "jsapi.h"
 
 #include "vm/NumericConversions.h"
 
@@ -17,6 +17,8 @@ extern double js_PositiveInfinity;
 extern double js_NegativeInfinity;
 
 namespace js {
+
+class StringBuffer;
 
 extern bool
 InitRuntimeNumberState(JSRuntime *rt);

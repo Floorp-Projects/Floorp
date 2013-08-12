@@ -9,13 +9,7 @@
 
 #include "jsgc.h"
 
-#include "jscntxt.h"
-#include "jscompartment.h"
-#include "jslock.h"
-
-#include "js/RootingAPI.h"
-#include "vm/ForkJoin.h"
-#include "vm/Shape.h"
+#include "gc/Zone.h"
 
 namespace js {
 

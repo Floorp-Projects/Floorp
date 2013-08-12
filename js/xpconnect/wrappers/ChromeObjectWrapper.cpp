@@ -90,7 +90,7 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
 
     // If not, try doing the lookup on the prototype.
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
-    return JS_GetPropertyDescriptorById(cx, wrapperProto, id, 0, desc.address());
+    return JS_GetPropertyDescriptorById(cx, wrapperProto, id, 0, desc);
 }
 
 bool
@@ -115,7 +115,7 @@ ChromeObjectWrapper::has(JSContext *cx, HandleObject wrapper,
     // Try the prototype if that failed.
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, wrapperProto, id, 0, desc.address()))
+    if (!JS_GetPropertyDescriptorById(cx, wrapperProto, id, 0, &desc))
         return false;
     *bp = !!desc.object();
     return true;

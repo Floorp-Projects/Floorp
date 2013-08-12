@@ -10,7 +10,6 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsgc.h"
 #include "jsprf.h"
 

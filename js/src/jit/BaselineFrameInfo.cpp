@@ -6,8 +6,6 @@
 
 #include "jit/BaselineFrameInfo.h"
 
-#include "jsanalyze.h"
-
 #include "jit/IonSpewer.h"
 #include "jit/shared/BaselineCompiler-shared.h"
 
