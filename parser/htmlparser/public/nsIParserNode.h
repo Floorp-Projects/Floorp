@@ -23,20 +23,9 @@
 #ifndef NS_IPARSERNODE__
 #define NS_IPARSERNODE__
 
-#include "nsISupports.h"
 #include "nsStringGlue.h"
-#include "nsDebug.h"
-
-//#define HEAP_ALLOCATED_NODES 
-//#define DEBUG_TRACK_NODES
 
 class nsIAtom;
-class CToken;
-
-// 6e59f160-2717-11d2-9246-00805f8a7ab6
-#define NS_IPARSER_NODE_IID      \
-  {0x6e59f160, 0x2717,  0x11d1,  \
-  {0x92, 0x46, 0x00,    0x80, 0x5f, 0x8a, 0x7a, 0xb6}}
 
 /**
  *  Parser nodes are the unit of exchange between the 
@@ -46,25 +35,8 @@ class CToken;
  *  
  *  @update  gess 3/25/98
  */
-class nsIParserNode { // XXX Should be nsAParserNode
-            
+class nsIParserNode {
   public:
-
-
-    /**
-     * Retrieve the name of the node
-     * @update	gess5/11/98
-     * @return  string containing node name
-     */
-    virtual const nsAString& GetTagName() const = 0;  //to get name of tag
-
-    /**
-     * Retrieve the text from the given node
-     * @update	gess5/11/98
-     * @return  string containing node text
-     */
-    virtual const nsAString& GetText() const = 0;  //get plain text if available
-
     /**
      * Retrieve the type of the parser node.
      * @update	gess5/11/98
@@ -84,7 +56,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @update	gess5/11/98
      * @return  count of attributes (may be 0)
      */
-    virtual int32_t GetAttributeCount(bool askToken=false) const =0;
+    virtual int32_t GetAttributeCount() const =0;
 
     /**
      * Retrieve the key (of key/value pair) at given index
@@ -101,46 +73,6 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @return  string containing value.
      */
     virtual const nsAString& GetValueAt(uint32_t anIndex) const = 0;
-
-    /**
-     * NOTE: When the node is an entity, this will translate the entity
-     *       to it's unicode value, and store it in aString.
-     * @update	gess5/11/98
-     * @param   aString will contain the resulting unicode string value
-     * @return  int (unicode char or unicode index from table)
-     */
-    virtual int32_t TranslateToUnicodeStr(nsString& aString) const = 0;
-
-
-    virtual void AddAttribute(CToken* aToken)=0;
-
-    /**
-     * This getter retrieves the line number from the input source where
-     * the token occurred. Lines are interpreted as occurring between \n characters.
-     * @update	gess7/24/98
-     * @return  int containing the line number the token was found on
-     */
-    virtual int32_t GetSourceLineNumber(void) const =0;
-
-    /**
-     * This pair of methods allows us to set a generic bit (for arbitrary use)
-     * on each node stored in the context.
-     * @update	gess 11May2000
-     */
-    virtual bool    GetGenericState(void) const =0;
-    virtual void    SetGenericState(bool aState) =0;
-
-    /** Retrieve a string containing the tag and its attributes in "source" form
-     * @update	rickg 06June2000
-     * @return  void
-     */
-    virtual void GetSource(nsString& aString) const = 0;
-
-    /** Release all the objects you're holding
-     * @update	harishd 08/02/00
-     * @return  void
-     */
-    virtual nsresult ReleaseAll()=0;
 };
 
 #endif
