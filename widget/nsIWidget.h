@@ -8,12 +8,9 @@
 
 #include "nsISupports.h"
 #include "nsColor.h"
-#include "nsCoord.h"
 #include "nsRect.h"
-#include "nsPoint.h"
 #include "nsStringGlue.h"
 
-#include "prthread.h"
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
 #include "nsITheme.h"
