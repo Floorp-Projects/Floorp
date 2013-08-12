@@ -4,16 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/Compositor.h"
-#include "base/message_loop.h"          // for MessageLoop
-#include "mozilla/layers/CompositorParent.h"  // for CompositorParent
-#include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
-#include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "mozilla/layers/Effects.h"
+#include "mozilla/layers/CompositorParent.h"
 
 namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-}
-
 namespace layers {
 
 /* static */ LayersBackend Compositor::sBackend = LAYERS_NONE;

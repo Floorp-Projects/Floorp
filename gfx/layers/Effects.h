@@ -6,17 +6,11 @@
 #ifndef MOZILLA_LAYERS_EFFECTS_H
 #define MOZILLA_LAYERS_EFFECTS_H
 
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef, etc
-#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
-#include "mozilla/gfx/Point.h"          // for IntSize
-#include "mozilla/gfx/Rect.h"           // for Rect
-#include "mozilla/gfx/Types.h"          // for Filter, etc
-#include "mozilla/layers/CompositorTypes.h"  // for EffectTypes, etc
-#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_HAVE_LOG
-#include "mozilla/layers/TextureHost.h"  // for CompositingRenderTarget, etc
-#include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nscore.h"                     // for nsACString
+#include "mozilla/gfx/Matrix.h"
+#include "mozilla/layers/Compositor.h"
+#include "mozilla/layers/TextureHost.h"
+#include "LayersLogging.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 namespace layers {

@@ -6,33 +6,29 @@
 #ifndef GFX_BASICLAYERS_H
 #define GFX_BASICLAYERS_H
 
-#include <stdint.h>                     // for INT32_MAX, int32_t
-#include "Layers.h"                     // for Layer (ptr only), etc
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxCachedTempSurface.h"       // for gfxCachedTempSurface
-#include "gfxContext.h"                 // for gfxContext
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/WidgetUtils.h"        // for ScreenRotation
-#include "mozilla/layers/LayersTypes.h"  // for BufferMode, LayersBackend, etc
-#include "nsAString.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nscore.h"                     // for nsAString, etc
+#include "Layers.h"
 
-class gfxPattern;
+#include "gfxContext.h"
+#include "gfxCachedTempSurface.h"
+#include "mozilla/layers/ShadowLayers.h"
+#include "mozilla/WidgetUtils.h"
+#include "nsAutoRef.h"
+#include "nsThreadUtils.h"
+
 class nsIWidget;
 
 namespace mozilla {
 namespace layers {
 
 class BasicShadowableLayer;
-class ImageFactory;
-class ImageLayer;
-class PaintLayerContext;
-class ReadbackLayer;
+class ThebesLayerComposite;
+class ContainerLayerComposite;
+class ImageLayerComposite;
+class CanvasLayerComposite;
+class ColorLayerComposite;
 class ReadbackProcessor;
+class ImageFactory;
+class PaintLayerContext;
 
 /**
  * This is a cairo/Thebes-only, main-thread-only implementation of layers.

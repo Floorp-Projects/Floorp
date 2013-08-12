@@ -6,55 +6,20 @@
 #ifndef MOZILLA_GFX_COMPOSITOROGL_H
 #define MOZILLA_GFX_COMPOSITOROGL_H
 
-#include "./../mozilla-config.h"        // for MOZ_DUMP_PAINTING
-#include "GLContext.h"                  // for GLContext
-#include "GLContextTypes.h"             // for GLuint, GLenum, GLint
-#include "GLDefs.h"                     // for GLintptr, GLvoid, etc
-#include "GeckoProfilerFunc.h"          // for TimeStamp
-#include "LayerManagerOGLProgram.h"     // for ShaderProgramOGL, etc
-#include "Units.h"                      // for ScreenPoint
-#include "gfxContext.h"                 // for gfxContext
-#include "gfxPoint.h"                   // for gfxIntSize
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE, MOZ_FINAL
-#include "mozilla/RefPtr.h"             // for TemporaryRef, RefPtr
-#include "mozilla/TimeStamp.h"          // for TimeStamp
-#include "mozilla/gfx/BaseSize.h"       // for BaseSize
-#include "mozilla/gfx/Point.h"          // for IntSize, Point
-#include "mozilla/gfx/Rect.h"           // for Rect, IntRect
-#include "mozilla/gfx/Types.h"          // for Float, SurfaceFormat, etc
-#include "mozilla/layers/Compositor.h"  // for SurfaceInitMode, Compositor, etc
-#include "mozilla/layers/CompositorTypes.h"  // for MaskType::NumMaskTypes, etc
-#include "mozilla/layers/LayersTypes.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoPtr
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING
-#include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
-#include "nsSize.h"                     // for nsIntSize
-#include "nsTArray.h"                   // for nsAutoTArray, nsTArray, etc
-#include "nsThreadUtils.h"              // for nsRunnable
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
-#include "nsXULAppAPI.h"                // for XRE_GetProcessType
-#include "nscore.h"                     // for NS_IMETHOD
-class gfx3DMatrix;
-class nsIWidget;
-struct gfxMatrix;
+#include "mozilla/layers/Compositor.h"
+#include "GLContext.h"
+#include "LayerManagerOGLProgram.h"
+#include "mozilla/layers/Effects.h"
+#include "nsTArray.h"
+
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-}
-
 namespace layers {
 
-class CompositingRenderTarget;
-class CompositingRenderTargetOGL;
-class DataTextureSource;
-class GLManagerCompositor;
-class TextureSource;
-struct Effect;
-struct EffectChain;
 struct FPSState;
+class CompositingRenderTargetOGL;
+class GLManagerCompositor;
 
 class CompositorOGL : public Compositor
 {

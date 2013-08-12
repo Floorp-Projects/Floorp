@@ -6,53 +6,31 @@
 #ifndef GFX_LAYERMANAGEROGL_H
 #define GFX_LAYERMANAGEROGL_H
 
-#include <sys/types.h>                  // for int32_t
-#include "GLDefs.h"                     // for GLuint, GLenum, GLintptr, etc
-#include "LayerManagerOGLProgram.h"     // for ShaderProgramOGL, etc
 #include "Layers.h"
-#include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPoint.h"                   // for gfxIntSize
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE, MOZ_FINAL
-#include "mozilla/RefPtr.h"             // for TemporaryRef
-#include "mozilla/gfx/BaseSize.h"       // for BaseSize
-#include "mozilla/gfx/Point.h"          // for IntSize
-#include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
-#include "mozilla/layers/CompositorTypes.h"  // for MaskType::MaskNone, etc
-#include "mozilla/layers/LayersTypes.h"  // for LayersBackend, etc
-#include "nsAString.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoPtr
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING
-#include "nsISupportsImpl.h"            // for Layer::AddRef, etc
-#include "nsRect.h"                     // for nsIntRect
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nsSize.h"                     // for nsIntSize
-#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
-#include "nsThreadUtils.h"              // for nsRunnable
-#include "nscore.h"                     // for NS_IMETHOD, nsAString, etc
+#include "LayerManagerOGLProgram.h"
+
+#include "mozilla/TimeStamp.h"
+#include "nsPoint.h"
+
 #ifdef XP_WIN
 #include <windows.h>
 #endif
 
 #define BUFFER_OFFSET(i) ((char *)nullptr + (i))
 
-class gfx3DMatrix;
-class gfxASurface;
-class gfxContext;
-class nsIWidget;
-struct nsIntPoint;
+#include "gfxContext.h"
+#include "gfx3DMatrix.h"
+#include "nsIWidget.h"
+#include "GLContextTypes.h"
+#include "GLDefs.h"
 
 namespace mozilla {
 namespace gl {
 class GLContext;
 }
-namespace gfx {
-class DrawTarget;
-}
 namespace layers {
 
 class Composer2D;
-class ImageLayer;
 class LayerOGL;
 class ThebesLayerComposite;
 class ContainerLayerComposite;

@@ -3,24 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BasicLayersImpl.h"            // for FillWithMask, etc
+#include "mozilla/layers/PLayerTransactionParent.h"
 #include "CopyableCanvasLayer.h"
-#include "GLContext.h"                  // for GLContext
-#include "GLScreenBuffer.h"             // for GLScreenBuffer
-#include "SharedSurface.h"              // for SharedSurface
-#include "SharedSurfaceGL.h"            // for SharedSurface_GL, etc
-#include "SurfaceTypes.h"               // for APITypeT, APITypeT::OpenGL, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
-#include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPattern.h"                 // for gfxPattern, etc
-#include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
-#include "gfxRect.h"                    // for gfxRect
-#include "gfxUtils.h"                   // for gfxUtils
-#include "mozilla/gfx/BaseSize.h"       // for BaseSize
-#include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
-#include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
-#include "nsRect.h"                     // for nsIntRect
-#include "nsSize.h"                     // for nsIntSize
+#include "BasicLayersImpl.h"
+#include "gfxImageSurface.h"
+#include "GLContext.h"
+#include "gfxUtils.h"
+#include "gfxPlatform.h"
+#include "mozilla/Preferences.h"
+#include "SurfaceStream.h"
+#include "SharedSurfaceGL.h"
+#include "SharedSurfaceEGL.h"
+#include "GeckoProfiler.h"
+
+#include "nsXULAppAPI.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::gl;

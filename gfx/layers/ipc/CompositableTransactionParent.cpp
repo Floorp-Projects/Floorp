@@ -6,29 +6,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CompositableTransactionParent.h"
-#include "CompositableHost.h"           // for CompositableParent, etc
-#include "CompositorParent.h"           // for CompositorParent
-#include "Layers.h"                     // for Layer
-#include "RenderTrace.h"                // for RenderTraceInvalidateEnd, etc
-#include "TiledLayerBuffer.h"           // for TiledLayerComposer
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr
-#include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/ContentHost.h"  // for ContentHostBase
+#include "ShadowLayers.h"
+#include "RenderTrace.h"
+#include "ShadowLayersManager.h"
+#include "CompositableHost.h"
+#include "mozilla/layers/ContentHost.h"
+#include "ShadowLayerParent.h"
+#include "TiledLayerBuffer.h"
 #include "mozilla/layers/LayerManagerComposite.h"
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
-#include "mozilla/layers/TextureHost.h"  // for TextureHost
 #include "mozilla/layers/ThebesLayerComposite.h"
-#include "mozilla/mozalloc.h"           // for operator delete
-#include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
-#include "nsRegion.h"                   // for nsIntRegion
+#include "mozilla/layers/TextureHost.h"
+#include "CompositorParent.h"
 
 namespace mozilla {
 namespace layers {
-
-class BasicTiledLayerBuffer;
-class Compositor;
 
 template<typename T>
 CompositableHost* AsCompositable(const T& op)

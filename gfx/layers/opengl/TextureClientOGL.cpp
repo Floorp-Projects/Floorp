@@ -4,17 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/TextureClientOGL.h"
-#include "GLContext.h"                  // for GLContext, etc
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/layers/ISurfaceAllocator.h"
-#include "nsSize.h"                     // for nsIntSize
+#include "mozilla/layers/CompositableClient.h"
+#include "mozilla/layers/CompositableForwarder.h"
+#include "GLContext.h"
+#include "gfxipc/ShadowLayerUtils.h"
 
 using namespace mozilla::gl;
 
 namespace mozilla {
 namespace layers {
-
-class CompositableForwarder;
 
 SharedTextureClientOGL::SharedTextureClientOGL()
 : mHandle(0), mIsCrossProcess(false), mInverted(false)

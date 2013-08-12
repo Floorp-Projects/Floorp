@@ -6,17 +6,12 @@
 #ifndef MOZILLA_GFX_COMPOSITOR_H
 #define MOZILLA_GFX_COMPOSITOR_H
 
-#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
-#include "Units.h"                      // for ScreenPoint
-#include "gfxPoint.h"                   // for gfxIntSize
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for TemporaryRef, RefCounted
-#include "mozilla/gfx/Point.h"          // for IntSize, Point
-#include "mozilla/gfx/Rect.h"           // for Rect, IntRect
-#include "mozilla/gfx/Types.h"          // for Float
-#include "mozilla/layers/CompositorTypes.h"  // for DiagnosticTypes, etc
-#include "mozilla/layers/LayersTypes.h"  // for LayersBackend
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/Matrix.h"
+#include "gfxMatrix.h"
+#include "Layers.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/layers/CompositorTypes.h"
 
 /**
  * Different elements of a web pages are rendered into separate "layers" before
@@ -105,12 +100,10 @@
 
 class gfxContext;
 class nsIWidget;
-struct gfxMatrix;
-struct nsIntSize;
 
 namespace mozilla {
 namespace gfx {
-class Matrix4x4;
+class DrawTarget;
 }
 
 namespace layers {

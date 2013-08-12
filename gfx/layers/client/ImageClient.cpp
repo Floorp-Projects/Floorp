@@ -3,35 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ImageClient.h"
-#include <stdint.h>                     // for uint32_t
-#include "ImageContainer.h"             // for Image, PlanarYCbCrImage, etc
-#include "ImageTypes.h"                 // for ImageFormat::PLANAR_YCBCR, etc
-#include "SharedTextureImage.h"         // for SharedTextureImage::Data, etc
-#include "gfx2DGlue.h"                  // for ImageFormatToSurfaceFormat
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxPlatform.h"                // for gfxPlatform
-#include "gfxPoint.h"                   // for gfxIntSize
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
-#include "mozilla/gfx/BaseSize.h"       // for BaseSize
-#include "mozilla/gfx/Point.h"          // for IntSize
-#include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
-#include "mozilla/layers/CompositableClient.h"  // for CompositableClient
-#include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/layers/CompositorTypes.h"  // for CompositableType, etc
-#include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
-#include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
-#include "mozilla/layers/SharedPlanarYCbCrImage.h"
+#include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/ImageClient.h"
+#include "BasicLayers.h"
+#include "mozilla/layers/ShadowLayers.h"
+#include "SharedTextureImage.h"
+#include "ImageContainer.h" // For PlanarYCbCrImage
 #include "mozilla/layers/SharedRGBImage.h"
-#include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
-#include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
-#include "nsISupportsImpl.h"            // for Image::Release, etc
-#include "nsRect.h"                     // for nsIntRect
+#include "mozilla/layers/SharedPlanarYCbCrImage.h"
+#include "gfxPlatform.h"
+
 #ifdef MOZ_WIDGET_GONK
 #include "GrallocImages.h"
 #endif

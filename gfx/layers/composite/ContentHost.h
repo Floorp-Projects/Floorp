@@ -6,45 +6,14 @@
 #ifndef GFX_CONTENTHOST_H
 #define GFX_CONTENTHOST_H
 
-#include <stdint.h>                     // for uint32_t
-#include <stdio.h>                      // for FILE
-#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
-#include "CompositableHost.h"           // for CompositableHost, etc
-#include "ThebesLayerBuffer.h"          // for ThebesLayerBuffer, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/RefPtr.h"             // for RefPtr
-#include "mozilla/gfx/BasePoint.h"      // for BasePoint
-#include "mozilla/gfx/Point.h"          // for Point
-#include "mozilla/gfx/Rect.h"           // for Rect
-#include "mozilla/gfx/Types.h"          // for Filter
-#include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
-#include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_HAVE_LOG, etc
-#include "mozilla/layers/TextureHost.h"  // for DeprecatedTextureHost
-#include "mozilla/mozalloc.h"           // for operator delete
-#include "nsAutoPtr.h"                  // for nsAutoPtr
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsDebug.h"                    // for NS_RUNTIMEABORT
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nsTArray.h"                   // for nsTArray
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
-#include "nscore.h"                     // for nsACString
-
-class gfxImageSurface;
+#include "ThebesLayerBuffer.h"
+#include "CompositableHost.h"
 
 namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-}
 namespace layers {
-class Compositor;
-class ThebesBufferData;
-class TiledLayerComposer;
-struct EffectChain;
 
+class ThebesBuffer;
+class OptionalThebesBuffer;
 struct TexturedEffect;
 
 /**

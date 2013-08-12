@@ -7,22 +7,15 @@
 #ifndef mozilla_layers_CompositorChild_h
 #define mozilla_layers_CompositorChild_h
 
-#include "base/basictypes.h"            // for DISALLOW_EVIL_CONSTRUCTORS
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/PCompositorChild.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsCOMPtr.h"                   // for nsCOMPtr
-#include "nsISupportsImpl.h"            // for NS_INLINE_DECL_REFCOUNTING
-
-class nsIObserver;
+#include "nsXULAppAPI.h"
 
 namespace mozilla {
 namespace layers {
 
 class LayerManager;
 class CompositorParent;
+struct TextureFactoryIdentifier;
 
 class CompositorChild : public PCompositorChild
 {

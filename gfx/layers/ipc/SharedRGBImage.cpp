@@ -2,22 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ShadowLayers.h"
 #include "SharedRGBImage.h"
-#include "ImageTypes.h"                 // for ImageFormat::SHARED_RGB, etc
-#include "Shmem.h"                      // for Shmem
-#include "gfx2DGlue.h"                  // for ImageFormatToSurfaceFormat, etc
-#include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
-#include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator, etc
-#include "mozilla/layers/ImageClient.h"  // for ImageClient
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
-#include "mozilla/layers/TextureClient.h"  // for BufferTextureClient, etc
-#include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
-#include "nsISupportsImpl.h"            // for Image::AddRef, etc
-#include "nsRect.h"                     // for nsIntRect
-#include "nsSize.h"                     // for nsIntSize
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "mozilla/layers/LayersSurfaces.h"
+#include "Shmem.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/ImageClient.h"
+#include "gfx2DGlue.h"
 
 // Just big enough for a 1080p RGBA32 frame
 #define MAX_FRAME_SIZE (16 * 1024 * 1024)

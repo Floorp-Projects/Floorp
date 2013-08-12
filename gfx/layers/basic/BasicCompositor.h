@@ -8,7 +8,6 @@
 
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/gfx/2D.h"
 
 namespace mozilla {
 namespace layers {

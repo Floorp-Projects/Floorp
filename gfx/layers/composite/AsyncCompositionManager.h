@@ -6,24 +6,23 @@
 #ifndef GFX_ASYNCCOMPOSITIONMANAGER_H
 #define GFX_ASYNCCOMPOSITIONMANAGER_H
 
-#include "GeckoProfilerFunc.h"          // for TimeStamp
-#include "Units.h"                      // for LayerPoint, etc
-#include "mozilla/layers/LayerManagerComposite.h"  // for LayerManagerComposite
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "mozilla/Attributes.h"         // for MOZ_DELETE, MOZ_FINAL, etc
-#include "mozilla/RefPtr.h"             // for RefCounted
-#include "mozilla/TimeStamp.h"          // for TimeStamp
-#include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
-#include "mozilla/gfx/BasePoint.h"      // for BasePoint
-#include "mozilla/layers/LayerTransaction.h"  // for TargetConfig
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsISupportsImpl.h"            // for LayerManager::AddRef, etc
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "gfxPoint.h"
+#include "gfx3DMatrix.h"
+#include "nsAutoPtr.h"
+#include "nsRect.h"
+#include "mozilla/dom/ScreenOrientation.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/layers/LayerTransaction.h" // for TargetConfig
 
 namespace mozilla {
 namespace layers {
 
+class AsyncPanZoomController;
 class Layer;
+class LayerManagerComposite;
 class AutoResolveRefLayers;
 
 // Represents (affine) transforms that are calculated from a content view.

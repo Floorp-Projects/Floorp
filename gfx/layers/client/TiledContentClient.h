@@ -6,29 +6,9 @@
 #ifndef MOZILLA_GFX_TILEDCONTENTCLIENT_H
 #define MOZILLA_GFX_TILEDCONTENTCLIENT_H
 
-#include <stddef.h>                     // for size_t
-#include <stdint.h>                     // for uint16_t
-#include <algorithm>                    // for swap
-#include "Layers.h"                     // for LayerManager, etc
-#include "TiledLayerBuffer.h"           // for TiledLayerBuffer
-#include "Units.h"                      // for CSSPoint
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
-#include "gfxPoint.h"                   // for gfxSize
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/RefPtr.h"             // for RefPtr
-#include "mozilla/layers/CompositableClient.h"  // for CompositableClient
-#include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
-#include "mozilla/layers/TextureClient.h"
-#include "mozilla/mozalloc.h"           // for operator delete
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_DTOR
-#include "gfxReusableSurfaceWrapper.h"
+#include "mozilla/layers/ContentClient.h"
+#include "TiledLayerBuffer.h"
+#include "gfxPlatform.h"
 
 namespace mozilla {
 namespace layers {

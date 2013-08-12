@@ -6,27 +6,18 @@
 #ifndef GFX_BASICLAYERSIMPL_H
 #define GFX_BASICLAYERSIMPL_H
 
-#include "BasicImplData.h"              // for BasicImplData
-#include "BasicLayers.h"                // for BasicLayerManager
-#include "ReadbackLayer.h"              // for ReadbackLayer
-#include "gfxASurface.h"                // for gfxASurface
-#include "gfxContext.h"                 // for gfxContext, etc
-#include "gfxMatrix.h"                  // for gfxMatrix
-#include "ipc/AutoOpenSurface.h"        // for AutoOpenSurface
-#include "mozilla/Attributes.h"         // for MOZ_DELETE, MOZ_STACK_CLASS
-#include "mozilla/Util.h"               // for Maybe
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsISupportsImpl.h"            // for gfxContext::Release, etc
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "ipc/AutoOpenSurface.h"
+#include "ipc/ShadowLayerChild.h"
+#include "BasicLayers.h"
+#include "BasicImplData.h"
+#include "ReadbackLayer.h"
+#include "ReadbackProcessor.h"
 
 namespace mozilla {
 namespace layers {
 
 class BasicContainerLayer;
-class Layer;
+class ShadowableLayer;
 
 class AutoSetOperator {
 public:

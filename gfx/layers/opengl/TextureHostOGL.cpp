@@ -4,36 +4,25 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TextureHostOGL.h"
-#include "GLContext.h"                  // for GLContext, etc
-#include "SharedSurface.h"              // for SharedSurface
-#include "SharedSurfaceEGL.h"           // for SharedSurface_EGLImage
-#include "SharedSurfaceGL.h"            // for SharedSurface_GLTexture, etc
-#include "SurfaceStream.h"              // for SurfaceStream
-#include "SurfaceTypes.h"               // for SharedSurfaceType, etc
-#include "TiledLayerBuffer.h"           // for TILEDLAYERBUFFER_TILE_SIZE
-#include "gfx2DGlue.h"                  // for ContentForFormat, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
-#include "gfxPoint.h"                   // for gfxIntSize
-#include "gfxReusableSurfaceWrapper.h"  // for gfxReusableSurfaceWrapper
-#include "ipc/AutoOpenSurface.h"        // for AutoOpenSurface
-#include "mozilla/gfx/2D.h"             // for DataSourceSurface
-#include "mozilla/gfx/BaseSize.h"       // for BaseSize
-#include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
-#include "mozilla/layers/ISurfaceAllocator.h"
+#include "ipc/AutoOpenSurface.h"
+#include "gfx2DGlue.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nsRegion.h"                   // for nsIntRegion
+#include "GLContext.h"
+#include "gfxImageSurface.h"
+#include "SurfaceStream.h"
+#include "SharedSurface.h"
+#include "SharedSurfaceGL.h"
+#include "SharedSurfaceEGL.h"
 #ifdef XP_MACOSX
 #include "SharedSurfaceIO.h"
 #endif
+#include "mozilla/layers/CompositorOGL.h"
 
 using namespace mozilla::gl;
 using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
-
-class Compositor; 
 
 TemporaryRef<DeprecatedTextureHost>
 CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,

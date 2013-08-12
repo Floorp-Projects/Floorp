@@ -3,12 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TexturePoolOGL.h"
-#include <stdlib.h>                     // for malloc
-#include "GLContext.h"                  // for GLContext
-#include "mozilla/Monitor.h"            // for Monitor, MonitorAutoLock
-#include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsDebug.h"                    // for NS_ASSERTION, NS_ERROR, etc
-#include "nsDeque.h"                    // for nsDeque
+#include "GLContext.h"
+#include "nsDeque.h"
+#include "mozilla/Monitor.h"
 
 #define TEXTURE_POOL_SIZE 10
 
