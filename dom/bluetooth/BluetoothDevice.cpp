@@ -15,7 +15,6 @@
 #include "nsTArrayHelpers.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
-#include "mozilla/dom/BluetoothDeviceBinding.h"
 
 USING_BLUETOOTH_NAMESPACE
 
@@ -49,16 +48,14 @@ NS_IMPL_RELEASE_INHERITED(BluetoothDevice, nsDOMEventTargetHelper)
 
 BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aWindow,
                                  const nsAString& aAdapterPath,
-                                 const BluetoothValue& aValue)
-  : nsDOMEventTargetHelper(aWindow)
-  , BluetoothPropertyContainer(BluetoothObjectType::TYPE_DEVICE)
-  , mJsUuids(nullptr)
-  , mJsServices(nullptr)
-  , mAdapterPath(aAdapterPath)
-  , mIsRooted(false)
+                                 const BluetoothValue& aValue) :
+  BluetoothPropertyContainer(BluetoothObjectType::TYPE_DEVICE),
+  mJsUuids(nullptr),
+  mJsServices(nullptr),
+  mAdapterPath(aAdapterPath),
+  mIsRooted(false)
 {
   MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(IsDOMBinding());
 
   BindToOwner(aWindow);
   const InfallibleTArray<BluetoothNamedValue>& values =
@@ -198,32 +195,68 @@ BluetoothDevice::Notify(const BluetoothSignal& aData)
   }
 }
 
-JS::Value
-BluetoothDevice::GetUuids(JSContext* aCx, ErrorResult& aRv)
+NS_IMETHODIMP
+BluetoothDevice::GetAddress(nsAString& aAddress)
 {
-  if (!mJsUuids) {
+  aAddress = mAddress;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothDevice::GetName(nsAString& aName)
+{
+  aName = mName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothDevice::GetIcon(nsAString& aIcon)
+{
+  aIcon = mIcon;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothDevice::GetDeviceClass(uint32_t* aClass)
+{
+  *aClass = mClass;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothDevice::GetPaired(bool* aPaired)
+{
+  *aPaired = mPaired;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothDevice::GetConnected(bool* aConnected)
+{
+  *aConnected = mConnected;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BluetoothDevice::GetUuids(JSContext* aCx, JS::Value* aUuids)
+{
+  if (mJsUuids) {
+    aUuids->setObject(*mJsUuids);
+  } else {
     NS_WARNING("UUIDs not yet set!\n");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return JS::NullValue();
+    return NS_ERROR_FAILURE;
   }
-
-  return JS::ObjectValue(*xpc_UnmarkGrayObject(mJsUuids));
+  return NS_OK;
 }
 
-JS::Value
-BluetoothDevice::GetServices(JSContext* aCx, ErrorResult& aRv)
+NS_IMETHODIMP
+BluetoothDevice::GetServices(JSContext* aCx, JS::Value* aServices)
 {
-  if (!mJsServices) {
+  if (mJsServices) {
+    aServices->setObject(*mJsServices);
+  } else {
     NS_WARNING("Services not yet set!\n");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return JS::Value(JSVAL_NULL);
   }
-
-  return JS::ObjectValue(*xpc_UnmarkGrayObject(mJsServices));
+  return NS_OK;
 }
 
-JSObject*
-BluetoothDevice::WrapObject(JSContext* aContext, JS::Handle<JSObject*> aScope)
-{
-  return BluetoothDeviceBinding::Wrap(aContext, aScope, this);
-}

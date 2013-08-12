@@ -24,7 +24,6 @@ struct MediaPlayStatus;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothDevice;
 class BluetoothSignal;
 class BluetoothNamedValue;
 class BluetoothValue;
@@ -96,9 +95,9 @@ public:
   already_AddRefed<DOMRequest> StopDiscovery(ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
-    Pair(BluetoothDevice& aDevice, ErrorResult& aRv);
+    Pair(nsIDOMBluetoothDevice* aDevice, ErrorResult& aRv);
   already_AddRefed<DOMRequest>
-    Unpair(BluetoothDevice& aDevice, ErrorResult& aRv);
+    Unpair(nsIDOMBluetoothDevice* aDevice, ErrorResult& aRv);
   already_AddRefed<DOMRequest>
     GetPairedDevices(ErrorResult& aRv);
   already_AddRefed<DOMRequest>
@@ -163,7 +162,7 @@ private:
   already_AddRefed<mozilla::dom::DOMRequest>
     StartStopDiscovery(bool aStart, ErrorResult& aRv);
   already_AddRefed<mozilla::dom::DOMRequest>
-    PairUnpair(bool aPair, BluetoothDevice& aDevice, ErrorResult& aRv);
+    PairUnpair(bool aPair, nsIDOMBluetoothDevice* aDevice, ErrorResult& aRv);
 
   JS::Heap<JSObject*> mJsUuids;
   JS::Heap<JSObject*> mJsDeviceAddresses;
