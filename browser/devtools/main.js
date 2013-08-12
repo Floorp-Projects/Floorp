@@ -105,7 +105,7 @@ Tools.inspector = {
   },
 
   isTargetSupported: function(target) {
-    return !target.isRemote;
+    return true;
   },
 
   build: function(iframeWindow, toolbox) {
