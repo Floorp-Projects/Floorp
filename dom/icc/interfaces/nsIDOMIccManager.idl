@@ -280,6 +280,8 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
 
   /**
    * Information stored in the device's ICC card.
+   *
+   * Null if the card is not detected.
    */
   readonly attribute nsIDOMMozIccInfo iccInfo;
 
