@@ -3097,7 +3097,7 @@ WrapCallable(JSContext *cx, JSObject *callable, JSObject *sandboxProtoProxy)
 }
 
 template<typename Op>
-bool BindPropertyOp(JSContext *cx, Op &op, PropertyDescriptor *desc, HandleId id,
+bool BindPropertyOp(JSContext *cx, Op &op, JSPropertyDescriptor *desc, HandleId id,
                     unsigned attrFlag, HandleObject sandboxProtoProxy)
 {
     if (!op) {
@@ -3134,7 +3134,7 @@ bool
 xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
                                                 JS::Handle<JSObject*> proxy,
                                                 JS::Handle<jsid> id,
-                                                JS::MutableHandle<PropertyDescriptor> desc,
+                                                JS::MutableHandle<JSPropertyDescriptor> desc,
                                                 unsigned flags)
 {
     JS::RootedObject obj(cx, wrappedObject(proxy));
@@ -3182,7 +3182,7 @@ bool
 xpc::SandboxProxyHandler::getOwnPropertyDescriptor(JSContext *cx,
                                                    JS::Handle<JSObject*> proxy,
                                                    JS::Handle<jsid> id,
-                                                   JS::MutableHandle<PropertyDescriptor> desc,
+                                                   JS::MutableHandle<JSPropertyDescriptor> desc,
                                                    unsigned flags)
 {
     if (!getPropertyDescriptor(cx, proxy, id, desc, flags))

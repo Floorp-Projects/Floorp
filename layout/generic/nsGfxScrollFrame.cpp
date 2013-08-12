@@ -3715,11 +3715,9 @@ nsGfxScrollFrameInner::UpdateOverflow()
     // needing reflow.
     mOuter->PresContext()->PresShell()->FrameNeedsReflow(
       mOuter, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+    return false;  // reflowing will update overflow
   }
-
-  // Scroll frames never have overflow area because they always clip their
-  // children, so return false.
-  return false;
+  return mOuter->nsContainerFrame::UpdateOverflow();
 }
 
 void
