@@ -200,7 +200,8 @@ let FormAssistant = {
   },
 
   ignoredInputTypes: new Set([
-    'button', 'file', 'checkbox', 'radio', 'reset', 'submit', 'image'
+    'button', 'file', 'checkbox', 'radio', 'reset', 'submit', 'image',
+    'range'
   ]),
 
   isKeyboardOpened: false,
@@ -374,8 +375,10 @@ let FormAssistant = {
         break;
 
       case "input":
-        // When the text content changes, notify the keyboard
-        this.updateSelection();
+        if (this.focusedElement) {
+          // When the text content changes, notify the keyboard
+          this.updateSelection();
+        }
         break;
 
       case "keydown":
