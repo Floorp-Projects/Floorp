@@ -195,9 +195,6 @@ static bool sDidShutdown;
 static bool sShuttingDown;
 static int32_t sContextCount;
 
-static PRTime sMaxScriptRunTime;
-static PRTime sMaxChromeScriptRunTime;
-
 static nsIScriptSecurityManager *sSecurityManager;
 
 // nsJSEnvironmentObserver observes the memory-pressure notifications
@@ -679,81 +676,9 @@ DumpString(const nsAString &str)
 }
 #endif
 
-bool
-nsJSContext::DOMOperationCallback(JSContext *cx)
-{
-  // Get the native context
-  nsJSContext *ctx = static_cast<nsJSContext *>(::JS_GetContextPrivate(cx));
-
-  if (!ctx) {
-    // Can happen; see bug 355811
-    return true;
-  }
-
-  // XXX Save the operation callback time so we can restore it after the GC,
-  // because GCing can cause JS to run on our context, causing our
-  // ScriptEvaluated to be called, and clearing our operation callback time.
-  // See bug 302333.
-  PRTime callbackTime = ctx->mOperationCallbackTime;
-  PRTime modalStateTime = ctx->mModalStateTime;
-
-  // Now restore the callback time and count, in case they got reset.
-  ctx->mOperationCallbackTime = callbackTime;
-  ctx->mModalStateTime = modalStateTime;
-
-  PRTime now = PR_Now();
-
-  if (callbackTime == 0) {
-    // Initialize mOperationCallbackTime to start timing how long the
-    // script has run
-    ctx->mOperationCallbackTime = now;
-    return true;
-  }
-
-  if (ctx->mModalStateDepth) {
-    // We're waiting on a modal dialog, nothing more to do here.
-    return true;
-  }
-
-  PRTime duration = now - callbackTime;
-
-  // Check the amount of time this script has been running, or if the
-  // dialog is disabled.
-  JSObject* global = ::JS::CurrentGlobalOrNull(cx);
-  bool isTrackingChromeCodeTime =
-    global && xpc::AccessCheck::isChrome(js::GetObjectCompartment(global));
-  if (duration < (isTrackingChromeCodeTime ?
-                  sMaxChromeScriptRunTime : sMaxScriptRunTime)) {
-    return true;
-  }
-
-  nsCOMPtr<nsPIDOMWindow> domWin = do_QueryInterface(ctx->GetGlobalObject());
-  NS_ENSURE_TRUE(domWin, false);
-  nsGlobalWindow::SlowScriptResponse response =
-    static_cast<nsGlobalWindow*>(domWin.get())->ShowSlowScriptDialog();
-
-  if (response == nsGlobalWindow::KillSlowScript) {
-    return false;
-  }
-  ctx->mOperationCallbackTime = PR_Now();
-  if (response == nsGlobalWindow::AlwaysContinueSlowScript) {
-    if (isTrackingChromeCodeTime) {
-      Preferences::SetInt("dom.max_chrome_script_run_time", 0);
-      sMaxChromeScriptRunTime = NS_UNLIMITED_SCRIPT_RUNTIME;
-    } else {
-      Preferences::SetInt("dom.max_script_run_time", 0);
-      sMaxScriptRunTime = NS_UNLIMITED_SCRIPT_RUNTIME;
-    }
-  }
-  return true;
-}
-
 void
 nsJSContext::EnterModalState()
 {
-  if (!mModalStateDepth) {
-    mModalStateTime =  mOperationCallbackTime ? PR_Now() : 0;
-  }
   ++mModalStateDepth;
 }
 
@@ -767,25 +692,6 @@ nsJSContext::LeaveModalState()
   }
 
   --mModalStateDepth;
-
-  // If we're still in a modal dialog, or mOperationCallbackTime is still
-  // uninitialized, do nothing.
-  if (mModalStateDepth || !mOperationCallbackTime) {
-    return;
-  }
-
-  // If mOperationCallbackTime was set when we entered the first dialog
-  // (and mModalStateTime is thus non-zero), adjust mOperationCallbackTime
-  // to account for time spent in the dialog.
-  // If mOperationCallbackTime got set while the modal dialog was open,
-  // simply set mOperationCallbackTime to the closing time of the dialog so
-  // that we never adjust mOperationCallbackTime to be in the future. 
-  if (mModalStateTime) {
-    mOperationCallbackTime += PR_Now() - mModalStateTime;
-  }
-  else {
-    mOperationCallbackTime = PR_Now();
-  }
 }
 
 #define JS_OPTIONS_DOT_STR "javascript.options."
@@ -960,12 +866,10 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
     Preferences::RegisterCallback(JSOptionChangedCallback,
                                   js_options_dot_str, this);
 
-    ::JS_SetOperationCallback(mContext, DOMOperationCallback);
+    ::JS_SetOperationCallback(mContext, xpc::OperationCallback);
   }
   mIsInitialized = false;
   mScriptsEnabled = true;
-  mOperationCallbackTime = 0;
-  mModalStateTime = 0;
   mModalStateDepth = 0;
   mProcessingScriptTag = false;
 }
@@ -2022,8 +1926,6 @@ nsJSContext::ScriptEvaluated(bool aTerminated)
   }
 
   if (aTerminated) {
-    mOperationCallbackTime = 0;
-    mModalStateTime = 0;
     mActive = true;
   }
 }
@@ -2846,31 +2748,6 @@ nsJSRuntime::Startup()
 }
 
 static int
-MaxScriptRunTimePrefChangedCallback(const char *aPrefName, void *aClosure)
-{
-  // Default limit on script run time to 10 seconds. 0 means let
-  // scripts run forever.
-  bool isChromePref =
-    strcmp(aPrefName, "dom.max_chrome_script_run_time") == 0;
-  int32_t time = Preferences::GetInt(aPrefName, isChromePref ? 20 : 10);
-
-  PRTime t;
-  if (time <= 0) {
-    t = NS_UNLIMITED_SCRIPT_RUNTIME;
-  } else {
-    t = time * PR_USEC_PER_SEC;
-  }
-
-  if (isChromePref) {
-    sMaxChromeScriptRunTime = t;
-  } else {
-    sMaxScriptRunTime = t;
-  }
-
-  return 0;
-}
-
-static int
 ReportAllJSExceptionsPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   bool reportAll = Preferences::GetBool(aPrefName, false);
@@ -3060,12 +2937,6 @@ nsJSRuntime::Init()
   SetDOMCallbacks(sRuntime, &DOMcallbacks);
 
   // Set these global xpconnect options...
-  Preferences::RegisterCallbackAndCall(MaxScriptRunTimePrefChangedCallback,
-                                       "dom.max_script_run_time");
-
-  Preferences::RegisterCallbackAndCall(MaxScriptRunTimePrefChangedCallback,
-                                       "dom.max_chrome_script_run_time");
-
   Preferences::RegisterCallbackAndCall(ReportAllJSExceptionsPrefChangedCallback,
                                        "dom.report_all_js_exceptions");
 

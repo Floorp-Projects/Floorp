@@ -9381,6 +9381,8 @@ nsGlobalWindow::HandleIdleActiveEvent()
 nsGlobalWindow::SlowScriptResponse
 nsGlobalWindow::ShowSlowScriptDialog()
 {
+  MOZ_ASSERT(IsInnerWindow());
+
   nsresult rv;
   AutoJSContext cx;
 
