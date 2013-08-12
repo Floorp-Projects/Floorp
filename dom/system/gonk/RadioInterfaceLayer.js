@@ -2222,21 +2222,14 @@ RadioInterface.prototype = {
     let oldIccInfo = this.rilContext.iccInfo;
     this.rilContext.iccInfo = message;
 
-    let iccInfoChanged = !oldIccInfo ||
-                          oldIccInfo.iccid != message.iccid ||
-                          oldIccInfo.mcc != message.mcc ||
-                          oldIccInfo.mnc != message.mnc ||
-                          oldIccInfo.spn != message.spn ||
-                          oldIccInfo.isDisplayNetworkNameRequired != message.isDisplayNetworkNameRequired ||
-                          oldIccInfo.isDisplaySpnRequired != message.isDisplaySpnRequired ||
-                          oldIccInfo.msisdn != message.msisdn;
-    if (!iccInfoChanged) {
+    if (!this.isInfoChanged(message, oldIccInfo)) {
       return;
     }
     // RIL:IccInfoChanged corresponds to a DOM event that gets fired only
-    // when the MCC or MNC codes have changed.
+    // when iccInfo has changed.
     gMessageManager.sendIccMessage("RIL:IccInfoChanged",
-                                   this.clientId, message);
+                                   this.clientId,
+                                   message.iccType ? message : null);
 
     // Update lastKnownSimMcc.
     if (message.mcc) {
