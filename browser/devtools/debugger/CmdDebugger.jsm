@@ -465,6 +465,11 @@ gcli.addCommand({
         type: "string",
         description: lookup("GlobDesc"),
         defaultValue: null
+      },
+      {
+        name: "invert",
+        type: "boolean",
+        description: lookup("InvertDesc")
       }
     ],
     returnType: "dom",
@@ -484,8 +489,9 @@ gcli.addCommand({
       // Filter the sources down to those that we will need to black box.
 
       function shouldBlackBox(source) {
-        return globRegExp && globRegExp.test(source.url)
+        var value = globRegExp && globRegExp.test(source.url)
           || args.source && source.url == args.source;
+        return args.invert ? !value : value;
       }
 
       const toBlackBox = [s.attachment.source
