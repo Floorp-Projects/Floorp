@@ -11,7 +11,6 @@
 
 #include "jsapi.h"
 #include "jsnum.h"
-#include "jsprvtd.h"
 
 #include "vm/NumericConversions.h"
 

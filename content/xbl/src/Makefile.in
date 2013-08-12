@@ -28,5 +28,3 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../dom/base \
 		-I$(topsrcdir)/xpcom/ds \
 		$(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT

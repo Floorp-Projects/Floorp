@@ -449,7 +449,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 .circularprogressindicator-progressRing {
-  margin: 0 @toolbar_horizontal_spacing@;
+  margin: -2px 18px;
   pointer-events:none;
   position: absolute;
 }

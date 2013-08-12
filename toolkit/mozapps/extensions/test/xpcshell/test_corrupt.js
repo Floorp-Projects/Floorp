@@ -251,10 +251,8 @@ function run_test_1() {
     // serves this purpose). On startup the add-ons manager won't rebuild
     // because there is a file there still.
     shutdownManager();
-    var dbfile = gProfD.clone();
-    dbfile.append("extensions.sqlite");
-    dbfile.remove(true);
-    dbfile.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    gExtensionsJSON.remove(true);
+    gExtensionsJSON.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
     startupManager(false);
 
     // Accessing the add-ons should open and recover the database

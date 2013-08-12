@@ -13,7 +13,6 @@
 <!ENTITY closetab.label        "Close Tab">
 
 <!ENTITY autocompleteResultsHeader.label  "Your Results">
-<!ENTITY autocompleteSearchesHeader.label "Internet Searches">
 
 <!ENTITY appbarErrorConsole.label   "Open error console">
 <!ENTITY appbarJSShell.label        "Open JavaScript shell">

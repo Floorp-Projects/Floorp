@@ -7,6 +7,8 @@
 #ifndef jit_shared_IonAssemblerBufferWithConstantPools_h
 #define jit_shared_IonAssemblerBufferWithConstantPools_h
 
+#include "mozilla/DebugOnly.h"
+
 #include "assembler/wtf/SegmentedVector.h"
 #include "jit/IonSpewer.h"
 #include "jit/shared/IonAssemblerBuffer.h"
@@ -404,7 +406,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             JS_ASSERT(pools[idx].numEntries == 0 && pools[idx].other->numEntries == 0);
         }
         typedef uint8_t Chunk[InstBaseSize];
-        Chunk *start = (Chunk*)dest_;
+        mozilla::DebugOnly<Chunk *> start = (Chunk*)dest_;
         Chunk *dest = (Chunk*)(((uint32_t)dest_ + instBufferAlign - 1) & ~(instBufferAlign -1));
         int curIndex = 0;
         int curInstOffset = 0;
@@ -882,7 +884,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         poolOffset += magicAlign;
         poolOffset += headerSize;
         for (int poolIdx = 0; poolIdx < numPoolKinds; poolIdx++) {
-            bool beforePool = true;
+            mozilla::DebugOnly<bool> beforePool = true;
             Pool *p = &pools[poolIdx];
             // Any entries that happened to be after the place we put our pool will need to be
             // switched from the forward-referenced pool to the backward-refrenced pool.

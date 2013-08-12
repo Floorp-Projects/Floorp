@@ -140,7 +140,7 @@ function run_test_2(uri) {
       do_check_true(newb1.userDisabled);
       check_mapping(uri, newb1.id);
 
-      run_test_3(uri);
+      do_execute_soon(() => run_test_3(uri));
     });
   });
 }
@@ -174,7 +174,7 @@ function run_test_4() {
       let uri = newb1.getResourceURI(".");
       check_mapping(uri, newb1.id);
 
-      run_test_5();
+      do_execute_soon(run_test_5);
     });
   });
 }
@@ -187,7 +187,7 @@ function run_test_5() {
     let uri = b1.getResourceURI(".");
     check_mapping(uri, b1.id);
 
-    run_test_invalidarg();
+    do_execute_soon(run_test_invalidarg);
   });
 }
 

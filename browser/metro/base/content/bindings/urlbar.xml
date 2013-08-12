@@ -157,7 +157,7 @@
           <![CDATA[
             // Grab the actual input field's value, not our value, which could include moz-action:
             let inputVal = this.inputField.value;
-            let selectedVal = inputVal.substring(this.selectionStart, this.electionEnd);
+            let selectedVal = inputVal.substring(this.selectionStart, this.selectionEnd);
 
             // If the selection doesn't start at the beginning or doesn't span the full domain or
             // the URL bar is modified, nothing else to do here.
@@ -485,14 +485,17 @@
 
   <binding id="urlbar-autocomplete">
     <content orient="horizontal">
-      <xul:vbox id="results-vbox" flex="1">
-        <xul:label class="meta-section-title" value="&autocompleteResultsHeader.label;"/>
-        <richgrid id="results-richgrid" rows="3" deferlayout="true" anonid="results" seltype="single" flex="1"/>
+      <xul:vbox id="results-vbox" anonid="results-container" flex="1">
+        <xul:label class="meta-section-title"
+                   value="&autocompleteResultsHeader.label;"/>
+        <richgrid id="results-richgrid" anonid="results" rows="3" flex="1"
+                  seltype="single" deferlayout="true"/>
       </xul:vbox>
 
       <xul:vbox id="searches-vbox" flex="1">
-        <xul:label class="meta-section-title" value="&autocompleteSearchesHeader.label;"/>
-        <richgrid id="searches-richgrid" rows="3" deferlayout="true" anonid="searches" seltype="single" flex="1"/>
+        <xul:label anonid="searches-header" class="meta-section-title"/>
+        <richgrid id="searches-richgrid" anonid="searches" rows="3" flex="1"
+                  seltype="single" deferlayout="true"/>
       </xul:vbox>
     </content>
 
@@ -590,7 +593,11 @@
       <!-- Updating grid content -->
 
       <field name="_grid">null</field>
+
       <field name="_results" readonly="true">document.getAnonymousElementByAttribute(this, 'anonid', 'results');</field>
+      <field name="_resultsContainer" readonly="true">document.getAnonymousElementByAttribute(this, 'anonid', 'results-container');</field>
+
+      <field name="_searchesHeader" readonly="true">document.getAnonymousElementByAttribute(this, 'anonid', 'searches-header');</field>
       <field name="_searches" readonly="true">document.getAnonymousElementByAttribute(this, 'anonid', 'searches');</field>
 
       <property name="_otherGrid" readonly="true">
@@ -620,7 +627,7 @@
               return;
 
             this.updateResults();
-            this.updateSearchEngineSubtitles();
+            this.updateSearchEngineHeader();
           ]]>
         </body>
       </method>
@@ -635,6 +642,13 @@
 
             if (!this.input)
               return;
+
+            let haveNoResults = (this.matchCount == 0);
+            this._resultsContainer.hidden = haveNoResults;
+
+            if (haveNoResults) {
+              return;
+            }
 
             let controller = this.input.controller;
             let lastMatch = this.matchCount - 1;
@@ -706,20 +720,17 @@
         </body>
       </method>
 
-      <method name="updateSearchEngineSubtitles">
+      <method name="updateSearchEngineHeader">
         <body>
           <![CDATA[
             if (!this._isGridBound(this._searches))
               return;
 
             let searchString = this.input.controller.searchString;
-            let label = Strings.browser.formatStringFromName("opensearch.search", [searchString], 1);
+            let label = Strings.browser.formatStringFromName(
+                              "opensearch.search.header", [searchString], 1);
 
-            for (let i = 0, len = this._searches.itemCount; i < len; i++) {
-              let item = this._searches.getItemAtIndex(i);
-              item.setAttribute("label", label);
-              item.refresh && item.refresh();
-            }
+            this._searchesHeader.value = label;
           ]]>
         </body>
       </method>

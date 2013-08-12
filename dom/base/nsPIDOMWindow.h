@@ -727,7 +727,7 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindow, NS_PIDOMWINDOW_IID)
 
-#ifdef _IMPL_NS_LAYOUT
+#ifdef MOZILLA_INTERNAL_API
 PopupControlState
 PushPopupControlState(PopupControlState aState, bool aForce);
 
@@ -748,7 +748,7 @@ PopPopupControlState(PopupControlState aState);
 class NS_AUTO_POPUP_STATE_PUSHER
 {
 public:
-#ifdef _IMPL_NS_LAYOUT
+#ifdef MOZILLA_INTERNAL_API
   NS_AUTO_POPUP_STATE_PUSHER(PopupControlState aState, bool aForce = false)
     : mOldState(::PushPopupControlState(aState, aForce))
   {
@@ -776,7 +776,7 @@ public:
 #endif
 
 protected:
-#ifndef _IMPL_NS_LAYOUT
+#ifndef MOZILLA_INTERNAL_API
   nsCOMPtr<nsPIDOMWindow> mWindow;
 #endif
   PopupControlState mOldState;

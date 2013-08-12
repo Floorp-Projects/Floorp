@@ -27,15 +27,15 @@ struct JSContext;
  * string containing a copy of the container's serialized data, using
  * getDataAsBase64.
  */
-[scriptable, uuid(400a282d-7157-4ed0-85b4-8bdc2fa634cd)]
+[scriptable, uuid(c8852f01-4c05-47c3-acca-253a958f39f6)]
 interface nsIStructuredCloneContainer : nsISupports
 {
   /**
    * Initialize this structured clone container so it contains a clone of the
-   * given variant. aData must be backed by a jsval.
+   * given jsval.
    */
-  [implicit_jscontext]
-  void initFromVariant(in nsIVariant aData);
+  [noscript, implicit_jscontext]
+  void initFromJSVal(in jsval aData);
 
   /**
    * Initialize this structured clone container from a base-64-encoded byte

@@ -136,6 +136,10 @@ public:
   {
     return sXPConnect;
   }
+  static nsIScriptSecurityManager *ScriptSecurityManager()
+  {
+    return sSecMan;
+  }
 
 protected:
   friend nsIClassInfo* NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
@@ -307,6 +311,7 @@ protected:
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj) MOZ_OVERRIDE;
+  NS_IMETHOD PostCreatePrototype(JSContext * cx, JSObject * proto) MOZ_OVERRIDE;
 #ifdef DEBUG
   NS_IMETHOD PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj) MOZ_OVERRIDE

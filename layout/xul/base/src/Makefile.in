@@ -25,5 +25,3 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../style \
 		$(NULL)
 
-DEFINES += -D_IMPL_NS_LAYOUT
-
