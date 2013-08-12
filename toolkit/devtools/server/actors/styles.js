@@ -421,7 +421,79 @@ var PageStyleActor = protocol.ActorClass({
         }
       }
     }
-  }
+  },
+
+  getLayout: method(function(node, options) {
+    this.cssLogic.highlight(node.rawNode);
+
+    let layout = {};
+
+    // First, we update the first part of the layout view, with
+    // the size of the element.
+
+    let clientRect = node.rawNode.getBoundingClientRect();
+    layout.width = Math.round(clientRect.width);
+    layout.height = Math.round(clientRect.height);
+
+    // We compute and update the values of margins & co.
+    let style = node.rawNode.ownerDocument.defaultView.getComputedStyle(node.rawNode);
+    for (let prop of [
+      "margin-top",
+      "margin-right",
+      "margin-bottom",
+      "margin-left",
+      "padding-top",
+      "padding-right",
+      "padding-bottom",
+      "padding-left",
+      "border-top-width",
+      "border-right-width",
+      "border-bottom-width",
+      "border-left-width"
+    ]) {
+      layout[prop] = style.getPropertyValue(prop);
+    }
+
+    if (options.autoMargins) {
+      layout.autoMargins = this.processMargins(this.cssLogic);
+    }
+
+    for (let i in this.map) {
+      let property = this.map[i].property;
+      this.map[i].value = parseInt(style.getPropertyValue(property));
+    }
+
+
+    if (options.margins) {
+      layout.margins = this.processMargins(cssLogic);
+    }
+
+    return layout;
+  }, {
+    request: {
+      node: Arg(0, "domnode"),
+      autoMargins: Option(1, "boolean")
+    },
+    response: RetVal("json")
+  }),
+
+  /**
+   * Find 'auto' margin properties.
+   */
+  processMargins: function(cssLogic) {
+    let margins = {};
+
+    for (let prop of ["top", "bottom", "left", "right"]) {
+      let info = cssLogic.getPropertyInfo("margin-" + prop);
+      let selectors = info.matchedSelectors;
+      if (selectors && selectors.length > 0 && selectors[0].value == "auto") {
+        margins[prop] = "auto";
+      }
+    }
+
+    return margins;
+  },
+
 });
 exports.PageStyleActor = PageStyleActor;
 
