@@ -704,9 +704,11 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
                      p = GetViewList(p)->bufferLink())
                 {
                     if (p == obj)
+                    {
+                        JS_ASSERT(!found);
                         found = true;
+                    }
                 }
-                JS_ASSERT(found);
 #endif
             }
         }
