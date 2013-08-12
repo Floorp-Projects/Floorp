@@ -148,6 +148,8 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_property_database.html \
 		test_priority_preservation.html \
 		test_property_syntax_errors.html \
+		test_redundant_font_download.html \
+		redundant_font_download.sjs \
 		test_rem_unit.html \
 		test_rule_insertion.html \
 		test_rule_serialization.html \
