@@ -476,6 +476,7 @@ webidl_files += \
 
 ifdef MOZ_B2G_BT
 webidl_files += \
+  BluetoothAdapter.webidl \
   BluetoothDeviceEvent.webidl \
   BluetoothManager.webidl \
   BluetoothStatusChangedEvent.webidl \

@@ -55,8 +55,8 @@ public:
 
     const InfallibleTArray<BluetoothNamedValue>& values =
       v.get_ArrayOfBluetoothNamedValue();
-    nsCOMPtr<nsIDOMBluetoothAdapter> adapter;
-    adapter = BluetoothAdapter::Create(mManagerPtr->GetOwner(), values);
+    nsRefPtr<BluetoothAdapter> adapter =
+      BluetoothAdapter::Create(mManagerPtr->GetOwner(), values);
 
     nsresult rv;
     nsIScriptContext* sc = mManagerPtr->GetContextForEventHandlers(&rv);
