@@ -21,13 +21,17 @@ Login Manager test: username/password prompts
 SimpleTest.waitForExplicitFinish();
 
 /** Test for Login Manager: username / password prompts. **/
-var pwmgr, ioService
+var pwmgr, ioService, observerService;
 var tmplogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4, proxyLogin;
 var mozproxy, proxiedHost = "http://mochi.test:8888";
 var proxyChannel;
 var testNum = 1;
 
 function initLogins(pi) {
+  observerService = Cc["@mozilla.org/observer-service;1"].
+                      getService(Ci.nsIObserverService);
+  observerService.addObserver(storageObserver, "passwordmgr-storage-changed", false);
+
   pwmgr = Cc["@mozilla.org/login-manager;1"].
           getService(Ci.nsILoginManager);
   ioService = Cc["@mozilla.org/network/io-service;1"].
@@ -96,6 +100,8 @@ function initLogins(pi) {
 function finishTest() {
   try {
     ok(true, "finishTest removing testing logins...");
+    observerService.removeObserver(storageObserver, "passwordmgr-storage-changed");
+
     dumpLogins(pwmgr);
     ok(true, "removing login 1...");
       pwmgr.removeLogin(login1);
@@ -230,10 +236,6 @@ var storageObserver = SpecialPowers.wrapCallbackObject({
     }
   }
 });
-
-var observerService = Cc["@mozilla.org/observer-service;1"].
-                      getService(Ci.nsIObserverService);
-observerService.addObserver(storageObserver, "passwordmgr-storage-changed", false);
 
 /*
  * handleDialog
