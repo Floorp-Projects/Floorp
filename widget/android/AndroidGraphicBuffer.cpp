@@ -89,7 +89,21 @@ static bool gTryRealloc = true;
 static class GLFunctions
 {
 public:
-  GLFunctions() : mInitialized(false)
+  MOZ_CONSTEXPR GLFunctions() : fGetDisplay(nullptr),
+                                fEGLGetError(nullptr),
+                                fCreateImageKHR(nullptr),
+                                fDestroyImageKHR(nullptr),
+                                fImageTargetTexture2DOES(nullptr),
+                                fBindTexture(nullptr),
+                                fGLGetError(nullptr),
+                                fGraphicBufferCtor(nullptr),
+                                fGraphicBufferDtor(nullptr),
+                                fGraphicBufferLock(nullptr),
+                                fGraphicBufferLockRect(nullptr),
+                                fGraphicBufferUnlock(nullptr),
+                                fGraphicBufferGetNativeBuffer(nullptr),
+                                fGraphicBufferReallocate(nullptr),
+                                mInitialized(false)
   {
   }
 
