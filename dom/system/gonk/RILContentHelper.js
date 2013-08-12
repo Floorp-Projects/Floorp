@@ -75,7 +75,6 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:SelectNetwork",
   "RIL:SelectNetworkAuto",
   "RIL:CallStateChanged",
-  "RIL:EmergencyCbModeChanged",
   "RIL:VoicemailNotification",
   "RIL:VoicemailInfoChanged",
   "RIL:CallError",
@@ -107,8 +106,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:UpdateIccContact",
   "RIL:SetRoamingPreference",
   "RIL:GetRoamingPreference",
-  "RIL:CdmaCallWaiting",
-  "RIL:ExitEmergencyCbMode"
+  "RIL:CdmaCallWaiting"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -1140,24 +1138,6 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  exitEmergencyCbMode: function exitEmergencyCbMode(window) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = this.getRequestId(request);
-
-    cpmm.sendAsyncMessage("RIL:ExitEmergencyCbMode", {
-      clientId: 0,
-      data: {
-        requestId: requestId,
-      }
-    });
-
-    return request;
-  },
-
   _mobileConnectionListeners: null,
   _telephonyListeners: null,
   _cellBroadcastListeners: null,
@@ -1630,15 +1610,6 @@ RILContentHelper.prototype = {
                            "notifyCdmaCallWaiting",
                            [msg.json.data]);
         break;
-      case "RIL:ExitEmergencyCbMode":
-        this.handleExitEmergencyCbMode(msg.json);
-        break;
-      case "RIL:EmergencyCbModeChanged":
-        let data = msg.json.data;
-        this._deliverEvent("_mobileConnectionListeners",
-                           "notifyEmergencyCbModeChanged",
-                           [data.active, data.timeoutMs]);
-        break;
     }
   },
 
@@ -1822,20 +1793,6 @@ RILContentHelper.prototype = {
 
     let status = new DOMCLIRStatus(message);
     this.fireRequestSuccess(message.requestId, status);
-  },
-
-  handleExitEmergencyCbMode: function handleExitEmergencyCbMode(message) {
-    let requestId = message.requestId;
-    let request = this.takeRequest(requestId);
-    if (!request) {
-      return;
-    }
-
-    if (!message.success) {
-      Services.DOMRequest.fireError(request, message.errorMsg);
-      return;
-    }
-    Services.DOMRequest.fireSuccess(request, null);
   },
 
   handleSendCancelMMI: function handleSendCancelMMI(message) {

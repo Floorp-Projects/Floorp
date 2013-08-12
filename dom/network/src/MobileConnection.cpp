@@ -3,16 +3,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MobileConnection.h"
-
+#include "nsIDOMDOMRequest.h"
+#include "nsIDOMClassInfo.h"
+#include "nsDOMEvent.h"
+#include "nsIDOMUSSDReceivedEvent.h"
+#include "nsIDOMDataErrorEvent.h"
+#include "nsIDOMCFStateChangeEvent.h"
 #include "GeneratedEvents.h"
 #include "mozilla/Preferences.h"
-#include "nsDOMEvent.h"
-#include "nsIDOMCFStateChangeEvent.h"
-#include "nsIDOMClassInfo.h"
-#include "nsIDOMDOMRequest.h"
-#include "nsIDOMDataErrorEvent.h"
-#include "nsIDOMMozEmergencyCbModeEvent.h"
-#include "nsIDOMUSSDReceivedEvent.h"
 #include "nsIPermissionManager.h"
 
 #include "nsContentUtils.h"
@@ -76,7 +74,6 @@ NS_IMPL_EVENT_HANDLER(MobileConnection, datachange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
 NS_IMPL_EVENT_HANDLER(MobileConnection, dataerror)
 NS_IMPL_EVENT_HANDLER(MobileConnection, cfstatechange)
-NS_IMPL_EVENT_HANDLER(MobileConnection, emergencycbmodechange)
 
 MobileConnection::MobileConnection()
 {
@@ -441,22 +438,6 @@ MobileConnection::SetCallingLineIdRestriction(unsigned short aClirMode,
   return mProvider->SetCallingLineIdRestriction(GetOwner(), aClirMode, aRequest);
 }
 
-NS_IMETHODIMP
-MobileConnection::ExitEmergencyCbMode(nsIDOMDOMRequest** aRequest)
-{
-  *aRequest = nullptr;
-
-  if (!CheckPermission("mobileconnection")) {
-    return NS_OK;
-  }
-
-  if (!mProvider) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mProvider->ExitEmergencyCbMode(GetOwner(), aRequest);
-}
-
 // nsIMobileConnectionListener
 
 NS_IMETHODIMP
@@ -537,28 +518,6 @@ MobileConnection::NotifyCFStateChange(bool aSuccess,
                                            false, false,
                                            aSuccess, aAction, aReason, aNumber,
                                            aSeconds, aServiceClass);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return DispatchTrustedEvent(ce);
-}
-
-NS_IMETHODIMP
-MobileConnection::NotifyEmergencyCbModeChanged(bool aActive,
-                                               uint32_t aTimeoutMs)
-{
-  if (!CheckPermission("mobileconnection")) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMMozEmergencyCbModeEvent(getter_AddRefs(event), this, nullptr,
-                                   nullptr);
-  MOZ_ASSERT(event);
-
-  nsCOMPtr<nsIDOMMozEmergencyCbModeEvent> ce = do_QueryInterface(event);
-  nsresult rv = ce->InitMozEmergencyCbModeEvent(
-      NS_LITERAL_STRING("emergencycbmodechange"), false, false,
-      aActive, aTimeoutMs);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchTrustedEvent(ce);
