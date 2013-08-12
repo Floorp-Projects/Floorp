@@ -25,6 +25,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.util.EnumSet;
+
 /**
  * Fragment that displays frecency search results in a ListView.
  */
@@ -95,7 +97,9 @@ public class MostVisitedPage extends HomeFragment {
                 }
 
                 final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
-                mUrlOpenListener.onUrlOpen(url);
+
+                // This item is a TwoLinePageRow, so we allow switch-to-tab.
+                mUrlOpenListener.onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
             }
         });
 
