@@ -2005,6 +2005,8 @@ class RopeBuilder {
     }
 };
 
+namespace {
+
 struct ReplaceData
 {
     ReplaceData(JSContext *cx)
@@ -2028,6 +2030,8 @@ struct ReplaceData
     FastInvokeGuard    fig;            /* used for lambda calls, also holds arguments */
     StringBuffer       sb;             /* buffer built during DoMatch */
 };
+
+} /* anonymous namespace */
 
 static bool
 ReplaceRegExp(JSContext *cx, RegExpStatics *res, ReplaceData &rdata);
