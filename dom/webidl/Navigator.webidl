@@ -295,11 +295,9 @@ partial interface Navigator {
 #endif // MOZ_GAMEPAD
 
 #ifdef MOZ_B2G_BT
-// nsIDOMNavigatorBluetooth
-interface MozBluetoothManager;
 partial interface Navigator {
   [Throws, Func="Navigator::HasBluetoothSupport"]
-  readonly attribute MozBluetoothManager mozBluetooth;
+  readonly attribute BluetoothManager mozBluetooth;
 };
 #endif // MOZ_B2G_BT
 
