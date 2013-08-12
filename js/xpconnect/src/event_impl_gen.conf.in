@@ -78,6 +78,7 @@ exclude_automatic_type_include = [
 
 """ Map xpidl interface names to implementation classes. The third column is the canonical interface. """
 xpidl_to_native = [
+    ['nsIDOMBluetoothDevice', 'bluetooth::BluetoothDevice', 'nsIDOMBluetoothDevice'],
     ['nsIDOMDocument', 'nsIDocument', 'nsIDocument'],
     ['nsIDOMElement', 'mozilla::dom::Element', 'mozilla::dom::Element'],
     ['nsIDOMCSSStyleSheet', 'nsCSSStyleSheet', 'nsIStyleSheet'],
