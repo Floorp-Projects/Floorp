@@ -1314,6 +1314,10 @@ let RIL = {
     Buf.simpleRequest(REQUEST_EXIT_EMERGENCY_CALLBACK_MODE, options);
   },
 
+  getCdmaSubscription: function getCdmaSubscription() {
+    Buf.simpleRequest(REQUEST_CDMA_SUBSCRIPTION);
+  },
+
   exitEmergencyCbMode: function exitEmergencyCbMode(options) {
     // The function could be called by an API from RadioInterfaceLayer or by
     // ril_worker itself. From ril_worker, we won't pass the parameter
@@ -2929,6 +2933,9 @@ let RIL = {
       if (newCardState == this.cardState) {
         return;
       }
+      this.iccInfo = {iccType: null};
+      ICCUtilsHelper.handleICCInfoChange();
+
       this.cardState = newCardState;
       this.sendChromeMessage({rilMessageType: "cardstatechange",
                               cardState: this.cardState});
@@ -2980,6 +2987,8 @@ let RIL = {
     // This was moved down from CARD_APPSTATE_READY
     this.requestNetworkInfo();
     if (newCardState == GECKO_CARDSTATE_READY) {
+      this.iccInfo.iccType = GECKO_CARD_TYPE[this.appType];
+
       // For type SIM, we need to check EF_phase first.
       // Other types of ICC we can send Terminal_Profile immediately.
       if (this.appType == CARD_APPTYPE_SIM) {
@@ -5763,7 +5772,21 @@ RIL[REQUEST_GSM_SMS_BROADCAST_ACTIVATION] = null;
 RIL[REQUEST_CDMA_GET_BROADCAST_SMS_CONFIG] = null;
 RIL[REQUEST_CDMA_SET_BROADCAST_SMS_CONFIG] = null;
 RIL[REQUEST_CDMA_SMS_BROADCAST_ACTIVATION] = null;
-RIL[REQUEST_CDMA_SUBSCRIPTION] = null;
+RIL[REQUEST_CDMA_SUBSCRIPTION] = function REQUEST_CDMA_SUBSCRIPTION(length, options) {
+  if (options.rilRequestError) {
+    return;
+  }
+
+  let result = Buf.readStringList();
+
+  this.iccInfo.mdn = result[0];
+  // The result[1] is Home SID. (Already be handled in readCDMAHome())
+  // The result[2] is Home NID. (Already be handled in readCDMAHome())
+  this.iccInfo.min = result[3];
+  // The result[4] is PRL version.
+
+  ICCUtilsHelper.handleICCInfoChange();
+};
 RIL[REQUEST_CDMA_WRITE_SMS_TO_RUIM] = null;
 RIL[REQUEST_CDMA_DELETE_SMS_ON_RUIM] = null;
 RIL[REQUEST_DEVICE_IDENTITY] = function REQUEST_DEVICE_IDENTITY(length, options) {
@@ -12760,6 +12783,7 @@ let RuimRecordHelper = {
     RIL.getIMSI();
     this.readCST();
     this.readCDMAHome();
+    RIL.getCdmaSubscription();
   },
 
   /**

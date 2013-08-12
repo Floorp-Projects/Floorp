@@ -370,6 +370,15 @@ this.CARD_APPTYPE_ISIM = 5;
 
 this.CARD_MAX_APPS = 8;
 
+this.GECKO_CARD_TYPE = [
+  null,
+  "sim",
+  "usim",
+  "ruim",
+  "csim",
+  "isim"
+];
+
 this.NETWORK_STATE_UNKNOWN = "unknown";
 this.NETWORK_STATE_AVAILABLE = "available";
 this.NETWORK_STATE_CONNECTED = "connected";
