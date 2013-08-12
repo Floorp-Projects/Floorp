@@ -2279,9 +2279,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (aDocument != oldDoc) {
       JS::Rooted<JSObject*> obj(cx, currentInner->mJSObject);
       xpc_UnmarkGrayObject(obj);
-      if (!nsWindowSH::InvalidateGlobalScopePolluter(cx, obj)) {
-        return NS_ERROR_FAILURE;
-      }
     }
 
     // We're reusing the inner window, but this still counts as a navigation,
@@ -2498,22 +2495,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   // Add an extra ref in case we release mContext during GC.
   nsCOMPtr<nsIScriptContext> kungFuDeathGrip(mContext);
-
-  // Now that the prototype is all set up, install the global scope
-  // polluter. This must happen after the above prototype fixup. If
-  // the GSP was to be installed on the inner window's real
-  // prototype (as it would be if this was done before the prototype
-  // fixup above) we would end up holding the GSP alive (through
-  // XPConnect's internal marking of wrapper prototypes) as long as
-  // the inner window was around, and if the GSP had properties on
-  // it that held an element alive we'd hold the document alive,
-  // which could hold event handlers alive, which hold the context
-  // alive etc.
-
-  if ((!reUseInnerWindow || aDocument != oldDoc) && !aState) {
-    JS::Rooted<JSObject*> obj(cx, newInnerWindow->mJSObject);
-    nsWindowSH::InstallGlobalScopePolluter(cx, obj);
-  }
 
   aDocument->SetScriptGlobalObject(newInnerWindow);
 
@@ -3395,7 +3376,7 @@ nsGlobalWindow::GetScreen(nsIDOMScreen** aScreen)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetHistory(nsIDOMHistory** aHistory)
+nsGlobalWindow::GetHistory(nsISupports** aHistory)
 {
   FORWARD_TO_INNER(GetHistory, (aHistory), NS_ERROR_NOT_INITIALIZED);
 
@@ -3841,6 +3822,23 @@ nsGlobalWindow::IndexedGetter(uint32_t aIndex, bool& aFound)
   NS_ENSURE_TRUE(windows, nullptr);
 
   return windows->IndexedGetter(aIndex, aFound);
+}
+
+void
+nsGlobalWindow::GetSupportedNames(nsTArray<nsString>& aNames)
+{
+  FORWARD_TO_OUTER_VOID(GetSupportedNames, (aNames));
+
+  nsDOMWindowList* windows = GetWindowList();
+  if (windows) {
+    uint32_t length = windows->GetLength();
+    nsString* name = aNames.AppendElements(length);
+    for (uint32_t i = 0; i < length; ++i, ++name) {
+      nsCOMPtr<nsIDocShellTreeItem> item =
+        windows->GetDocShellTreeItemAt(i);
+      item->GetName(*name);
+    }
+  }
 }
 
 NS_IMETHODIMP

@@ -3,8 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Helper object for APIs that deal with DOMRequests and need to release them
- * when the window goes out of scope.
+ * Helper object for APIs that deal with DOMRequests and Promises and need to
+ * release them when the window goes out of scope.
  */
 const Cu = Components.utils;
 const Cc = Components.classes;
@@ -134,14 +134,32 @@ DOMRequestIpcHelper.prototype = {
     return id;
   },
 
+  getPromiseResolverId: function(aPromiseResolver) {
+    // Delegates to getRequest() since the lookup table is agnostic about
+    // storage.
+    return this.getRequestId(aPromiseResolver);
+  },
+
   getRequest: function(aId) {
     if (this._requests[aId])
       return this._requests[aId];
   },
 
+  getPromiseResolver: function(aId) {
+    // Delegates to getRequest() since the lookup table is agnostic about
+    // storage.
+    return this.getRequest(aId);
+  },
+
   removeRequest: function(aId) {
     if (this._requests[aId])
       delete this._requests[aId];
+  },
+
+  removePromiseResolver: function(aId) {
+    // Delegates to getRequest() since the lookup table is agnostic about
+    // storage.
+    this.removeRequest(aId);
   },
 
   takeRequest: function(aId) {
@@ -150,6 +168,12 @@ DOMRequestIpcHelper.prototype = {
     let request = this._requests[aId];
     delete this._requests[aId];
     return request;
+  },
+
+  takePromiseResolver: function(aId) {
+    // Delegates to getRequest() since the lookup table is agnostic about
+    // storage.
+    return this.takeRequest(aId);
   },
 
   _getRandomId: function() {
@@ -176,5 +200,14 @@ DOMRequestIpcHelper.prototype = {
 
   createRequest: function() {
     return Services.DOMRequest.createRequest(this._window);
+  },
+
+  /**
+   * createPromise() creates a new Promise, with `aPromiseInit` as the
+   * PromiseInit callback. The promise constructor is obtained from the
+   * reference to window owned by this DOMRequestIPCHelper.
+   */
+  createPromise: function(aPromiseInit) {
+    return new this._window.Promise(aPromiseInit);
   }
 }

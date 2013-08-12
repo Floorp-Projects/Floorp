@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style>
+#wrapper {
+  overflow: hidden;
+}
+#testDiv1 {
+  width: 500px;
+  height: 100px;
+  position: relative;
+  overflow: hidden;
+}
+</style>
+<script>
+window.addEventListener("MozReftestInvalidate", function() {
+  testDiv1.style.left = "-500px";
+  testDiv1.style.transform = "translateX(500px)";
+  document.documentElement.removeAttribute("class");
+}, false);
+</script>
+</head>
+<body>
+<div id="wrapper">
+  <div id="testDiv1" style="background:yellow;"></div>
+</div>
+</body>
+</html>

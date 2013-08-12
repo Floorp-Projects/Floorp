@@ -12,8 +12,6 @@ FAIL_ON_WARNINGS = 1
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsTransactionManagerModule
 LIBXUL_LIBRARY	= 1
 
 

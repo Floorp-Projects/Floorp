@@ -32,5 +32,3 @@ INCLUDES += 	\
 		-I$(topsrcdir)/content/xbl/src \
 		-I$(srcdir)/../../../smil \
 		$(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT

@@ -1417,6 +1417,8 @@ WantsQueryInterface<T, true>
 bool
 ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
 
+// vp is allowed to be null; in that case no get will be attempted,
+// and *found will simply indicate whether the property exists.
 bool
 GetPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
                        JS::Handle<jsid> id, bool* found,
@@ -1424,8 +1426,17 @@ GetPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
 
 bool
 HasPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
-                       DOMProxyHandler* handler,
                        JS::Handle<jsid> id);
+
+
+// Append the property names in "names" to "props". If
+// shadowPrototypeProperties is false then skip properties that are also
+// present on the proto chain of proxy.  If shadowPrototypeProperties is true,
+// then the "proxy" argument is ignored.
+bool
+AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
+                       nsTArray<nsString>& names,
+                       bool shadowPrototypeProperties, JS::AutoIdVector& props);
 
 template<class T>
 class OwningNonNull

@@ -7,7 +7,7 @@
 #ifndef frontend_SourceNotes_h
 #define frontend_SourceNotes_h
 
-#include "jsprvtd.h"
+typedef uint8_t jssrcnote;
 
 namespace js {
 

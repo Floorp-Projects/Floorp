@@ -19,8 +19,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
 
-DEFINES += -D_IMPL_NS_LAYOUT
-
 MOCHITEST_FILES = test_ipc.html
 
 # bug: 866734 - move XPCSHEL_TESTS to moz.build
