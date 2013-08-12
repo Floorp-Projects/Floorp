@@ -12,7 +12,7 @@ let Services = tempScope.Services;
 // Disable logging for faster test runs. Set this pref to true if you want to
 // debug a test in your try runs.
 let gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
-Services.prefs.setBoolPref("devtools.debugger.log", false);
+Services.prefs.setBoolPref("devtools.debugger.log", true);
 
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm", tempScope);
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm", tempScope);
