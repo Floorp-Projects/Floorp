@@ -516,7 +516,7 @@ notification {
 
 .buttonContainer {
   background-color: transparent;
-  padding: none;
+  padding: 0;
   border: none;
 }
 
