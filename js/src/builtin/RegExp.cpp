@@ -206,7 +206,7 @@ static bool
 CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 {
     if (args.length() == 0) {
-        RegExpStatics *res = cx->global()->getRegExpStatics();
+        RegExpStatics *res = cx->regExpStatics();
         Rooted<JSAtom*> empty(cx, cx->runtime()->emptyString);
         RegExpObject *reobj = builder.build(empty, res->getFlags());
         if (!reobj)
@@ -295,7 +295,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
     if (!js::RegExpShared::checkSyntax(cx, NULL, escapedSourceStr))
         return false;
 
-    RegExpStatics *res = cx->global()->getRegExpStatics();
+    RegExpStatics *res = cx->regExpStatics();
     RegExpObject *reobj = builder.build(escapedSourceStr, RegExpFlag(flags | res->getFlags()));
     if (!reobj)
         return false;
@@ -397,7 +397,7 @@ static const JSFunctionSpec regexp_methods[] = {
     static bool                                                                 \
     name(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)   \
     {                                                                           \
-        RegExpStatics *res = cx->global()->getRegExpStatics();                  \
+        RegExpStatics *res = cx->regExpStatics();                               \
         code;                                                                   \
     }
 
@@ -423,7 +423,7 @@ DEFINE_STATIC_GETTER(static_paren9_getter,       return res->createParen(cx, 9, 
     static bool                                                                 \
     name(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)\
     {                                                                           \
-        RegExpStatics *res = cx->global()->getRegExpStatics();                  \
+        RegExpStatics *res = cx->regExpStatics();                               \
         code;                                                                   \
         return true;                                                            \
     }
@@ -538,9 +538,7 @@ js::ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
     if (!reobj->getShared(cx, &re))
         return RegExpRunStatus_Error;
 
-    RegExpStatics *res = (staticsUpdate == UpdateRegExpStatics)
-                         ? cx->global()->getRegExpStatics()
-                         : NULL;
+    RegExpStatics *res = (staticsUpdate == UpdateRegExpStatics) ? cx->regExpStatics() : NULL;
 
     /* Step 3. */
     Rooted<JSLinearString*> input(cx, string->ensureLinear(cx));

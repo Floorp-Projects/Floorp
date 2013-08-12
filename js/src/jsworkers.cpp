@@ -601,11 +601,9 @@ WorkerThread::threadLoop()
 }
 
 AutoPauseWorkersForGC::AutoPauseWorkersForGC(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : runtime(rt), needsUnpause(false), oldExclusiveThreadsPaused(rt->exclusiveThreadsPaused)
+  : runtime(rt), needsUnpause(false)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-
-    rt->exclusiveThreadsPaused = true;
 
     if (!runtime->workerThreadState)
         return;
@@ -636,8 +634,6 @@ AutoPauseWorkersForGC::AutoPauseWorkersForGC(JSRuntime *rt MOZ_GUARD_OBJECT_NOTI
 
 AutoPauseWorkersForGC::~AutoPauseWorkersForGC()
 {
-    runtime->exclusiveThreadsPaused = oldExclusiveThreadsPaused;
-
     if (!needsUnpause)
         return;
 

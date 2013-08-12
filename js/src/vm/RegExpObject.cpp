@@ -264,7 +264,7 @@ RegExpObject::createShared(ExclusiveContext *cx, RegExpGuard *g)
     Rooted<RegExpObject*> self(cx, this);
 
     JS_ASSERT(!maybeShared());
-    if (!cx->compartment()->regExps.get(cx, getSource(), getFlags(), g))
+    if (!cx->regExps().get(cx, getSource(), getFlags(), g))
         return false;
 
     self->setShared(cx, **g);

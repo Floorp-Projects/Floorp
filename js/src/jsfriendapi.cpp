@@ -277,7 +277,7 @@ JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *objArg, const JSFunctionSpecWithHelp *fs)
 {
     RootedObject obj(cx, objArg);
-    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    JS_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -338,7 +338,7 @@ js::IsSystemZone(Zone *zone)
 JS_FRIEND_API(bool)
 js::IsAtomsCompartment(JSCompartment *comp)
 {
-    return comp->runtimeFromAnyThread()->isAtomsCompartment(comp);
+    return comp == comp->runtimeFromAnyThread()->atomsCompartment;
 }
 
 JS_FRIEND_API(bool)
@@ -431,7 +431,7 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *objArg, const char *name
                                unsigned nargs, unsigned attrs)
 {
     RootedObject obj(cx, objArg);
-    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAtom *atom = Atomize(cx, name, strlen(name));
@@ -446,7 +446,7 @@ js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsi
                             JSObject *parentArg, const char *name)
 {
     RootedObject parent(cx, parentArg);
-    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
@@ -469,7 +469,7 @@ js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, 
 {
     RootedObject parent(cx, parentArg);
     JS_ASSERT(JSID_IS_STRING(id));
-    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
 

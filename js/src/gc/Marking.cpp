@@ -145,10 +145,12 @@ CheckMarkedThing(JSTracer *trc, T *thing)
     JS_ASSERT(MapTypeToTraceKind<T>::kind == GetGCThingTraceKind(thing));
 
     JS_ASSERT_IF(rt->gcStrictCompartmentChecking,
-                 thing->zone()->isCollecting() || rt->isAtomsZone(thing->zone()));
+                 thing->zone()->isCollecting() ||
+                 thing->zone() == rt->atomsCompartment->zone());
 
     JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && AsGCMarker(trc)->getMarkColor() == GRAY,
-                 thing->zone()->isGCMarkingGray() || rt->isAtomsZone(thing->zone()));
+                 thing->zone()->isGCMarkingGray() ||
+                 thing->zone() == rt->atomsCompartment->zone());
 
     /*
      * Try to assert that the thing is allocated.  This is complicated by the
@@ -740,7 +742,7 @@ gc::IsCellAboutToBeFinalized(Cell **thingp)
 
 #define JS_COMPARTMENT_ASSERT_STR(rt, thing)                            \
     JS_ASSERT((thing)->zone()->isGCMarking() ||                         \
-              (rt)->isAtomsZone((thing)->zone()));
+              (thing)->zone() == (rt)->atomsCompartment->zone());
 
 static void
 PushMarkStack(GCMarker *gcmarker, JSObject *thing)
@@ -1409,7 +1411,8 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         if (v.isString()) {
             JSString *str = v.toString();
             JS_COMPARTMENT_ASSERT_STR(runtime, str);
-            JS_ASSERT(runtime->isAtomsZone(str->zone()) || str->zone() == obj->zone());
+            JS_ASSERT(str->zone() == runtime->atomsCompartment->zone() ||
+                      str->zone() == obj->zone());
             if (str->markIfUnmarked())
                 ScanString(this, str);
         } else if (v.isObject()) {
