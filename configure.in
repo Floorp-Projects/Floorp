@@ -7568,21 +7568,6 @@ if test -n "$MOZ_REFLOW_PERF"; then
 fi
 
 dnl ========================================================
-dnl Enable code size metrics.
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(codesighs,
-[  --enable-codesighs      Enable code size analysis tools],
-    _ENABLE_CODESIGHS=1,
-    _ENABLE_CODESIGHS= )
-if test -n "$_ENABLE_CODESIGHS"; then
-    if test -d $srcdir/tools/codesighs; then
-        MOZ_MAPINFO=1
-    else
-        AC_MSG_ERROR([Codesighs directory $srcdir/tools/codesighs required.])
-    fi
-fi
-
-dnl ========================================================
 dnl = Enable Radio Interface for B2G (Gonk usually)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(b2g-ril,
@@ -8774,7 +8759,6 @@ if test -n "$MOZ_TELEMETRY_REPORTING" || test -n "$MOZ_SERVICES_HEALTHREPORT" ||
 fi
 
 dnl win32 options
-AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
 AC_SUBST(WIN32_REDIST_DIR)
