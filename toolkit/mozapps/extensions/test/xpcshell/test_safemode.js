@@ -33,7 +33,7 @@ function run_test() {
 
   startupManager();
 
-  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
     do_check_eq(a1, null);
     do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
@@ -57,7 +57,7 @@ function run_test() {
 
       run_test_1();
     });
-  });
+  }));
 }
 
 // Disabling an add-on should work
@@ -110,6 +110,6 @@ function run_test_2() {
 
     ensure_test_completed();
 
-    do_test_finished();
+    do_execute_soon(do_test_finished);
   });
 }

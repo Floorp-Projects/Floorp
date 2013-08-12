@@ -165,7 +165,7 @@ SettingsServiceLock.prototype = {
     this._requests.enqueue({ callback: aCallback,
                              intent: "set", 
                              name: aName, 
-                             value: aValue, 
+                             value: this._settingsService._settingsDB.prepareValue(aValue),
                              message: aMessage });
     this.createTransactionAndProcess();
   },

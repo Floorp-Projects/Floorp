@@ -260,10 +260,6 @@
           if (selectionStart != selectionEnd) {
             json.types.push("cut");
             json.types.push("copy");
-            json.string = aTextbox.value.slice(selectionStart, selectionEnd);
-          } else if (aTextbox.value) {
-            json.types.push("copy-all");
-            json.string = aTextbox.value;
           }
 
           if (selectionStart > 0 || selectionEnd < aTextbox.textLength)
