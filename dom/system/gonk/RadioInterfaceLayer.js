@@ -692,6 +692,8 @@ function RadioInterface(options) {
     displayName: null
   };
 
+  this.operatorInfo = {};
+
   // Read the 'ril.radio.disabled' setting in order to start with a known
   // value at boot time.
   let lock = gSettingsService.createLock();
@@ -744,6 +746,19 @@ RadioInterface.prototype = {
 
   debug: function debug(s) {
     dump("-*- RadioInterface[" + this.clientId + "]: " + s + "\n");
+  },
+
+  /**
+   * A utility function to copy objects. The srcInfo may contain
+   * 'rilMessageType', should ignore it.
+   */
+  updateInfo: function updateInfo(srcInfo, destInfo) {
+    for (let key in srcInfo) {
+      if (key === 'rilMessageType') {
+        continue;
+      }
+      destInfo[key] = srcInfo[key];
+    }
   },
 
   /**
@@ -1143,18 +1158,15 @@ RadioInterface.prototype = {
 
     // Batch the *InfoChanged messages together
     if (voiceMessage) {
-      voiceMessage.batch = true;
-      this.updateVoiceConnection(voiceMessage);
+      this.updateVoiceConnection(voiceMessage, true);
     }
 
     if (dataMessage) {
-      dataMessage.batch = true;
-      this.updateDataConnection(dataMessage);
+      this.updateDataConnection(dataMessage, true);
     }
 
     if (operatorMessage) {
-      operatorMessage.batch = true;
-      this.handleOperatorChange(operatorMessage);
+      this.handleOperatorChange(operatorMessage, true);
     }
 
     let voice = this.rilContext.voice;
@@ -1204,13 +1216,13 @@ RadioInterface.prototype = {
   },
 
   /**
-   * Sends the RIL:VoiceInfoChanged message when the voice
-   * connection's state has changed.
+   * Handle data connection changes.
    *
-   * @param newInfo The new voice connection information. When newInfo.batch is true,
-   *                the RIL:VoiceInfoChanged message will not be sent.
+   * @param newInfo The new voice connection information.
+   * @param batch   When batch is true, the RIL:VoiceInfoChanged message will
+   *                not be sent.
    */
-  updateVoiceConnection: function updateVoiceConnection(newInfo) {
+  updateVoiceConnection: function updateVoiceConnection(newInfo, batch) {
     let voiceInfo = this.rilContext.voice;
     voiceInfo.state = newInfo.state;
     voiceInfo.connected = newInfo.connected;
@@ -1220,23 +1232,30 @@ RadioInterface.prototype = {
 
     // Make sure we also reset the operator and signal strength information
     // if we drop off the network.
-    if (newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_HOME &&
-        newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING) {
+    if (newInfo.state !== RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED) {
       voiceInfo.cell = null;
       voiceInfo.network = null;
       voiceInfo.signalStrength = null;
       voiceInfo.relSignalStrength = null;
     } else {
       voiceInfo.cell = newInfo.cell;
+      voiceInfo.network = this.operatorInfo;
     }
 
-    if (!newInfo.batch) {
+    if (!batch) {
       gMessageManager.sendMobileConnectionMessage("RIL:VoiceInfoChanged",
                                                   this.clientId, voiceInfo);
     }
   },
 
-  updateDataConnection: function updateDataConnection(newInfo) {
+  /**
+   * Handle the data connection's state has changed.
+   *
+   * @param newInfo The new data connection information.
+   * @param batch   When batch is true, the RIL:DataInfoChanged message will
+   *                not be sent.
+   */
+  updateDataConnection: function updateDataConnection(newInfo, batch) {
     let dataInfo = this.rilContext.data;
     dataInfo.state = newInfo.state;
     dataInfo.roaming = newInfo.roaming;
@@ -1253,17 +1272,17 @@ RadioInterface.prototype = {
 
     // Make sure we also reset the operator and signal strength information
     // if we drop off the network.
-    if (newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_HOME &&
-        newInfo.regState !== RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING) {
+    if (newInfo.state !== RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED) {
       dataInfo.cell = null;
       dataInfo.network = null;
       dataInfo.signalStrength = null;
       dataInfo.relSignalStrength = null;
     } else {
       dataInfo.cell = newInfo.cell;
+      dataInfo.network = this.operatorInfo;
     }
 
-    if (!newInfo.batch) {
+    if (!batch) {
       gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
                                                   this.clientId, dataInfo);
     }
@@ -1371,11 +1390,21 @@ RadioInterface.prototype = {
       destNetwork.mcc != srcNetwork.mcc;
   },
 
-  handleOperatorChange: function handleOperatorChange(message) {
+  /**
+   * Handle operator information changes.
+   *
+   * @param message The new operator information.
+   * @param batch   When batch is true, the RIL:VoiceInfoChanged and
+   *                RIL:DataInfoChanged message will not be sent.
+   */
+  handleOperatorChange: function handleOperatorChange(message, batch) {
+    let operatorInfo = this.operatorInfo;
     let voice = this.rilContext.voice;
     let data = this.rilContext.data;
 
-    if (this.networkChanged(message, voice.network)) {
+    if (this.networkChanged(message, operatorInfo)) {
+      this.updateInfo(message, operatorInfo);
+
       // Update lastKnownNetwork
       if (message.mcc && message.mnc) {
         try {
@@ -1384,16 +1413,14 @@ RadioInterface.prototype = {
         } catch (e) {}
       }
 
-      voice.network = message;
-      if (!message.batch) {
+      // If the voice is unregistered, no need to send RIL:VoiceInfoChanged.
+      if (voice.network && !batch) {
         gMessageManager.sendMobileConnectionMessage("RIL:VoiceInfoChanged",
                                                     this.clientId, voice);
       }
-    }
 
-    if (this.networkChanged(message, data.network)) {
-      data.network = message;
-      if (!message.batch) {
+      // If the data is unregistered, no need to send RIL:DataInfoChanged.
+      if (data.network && !batch) {
         gMessageManager.sendMobileConnectionMessage("RIL:DataInfoChanged",
                                                     this.clientId, data);
       }
