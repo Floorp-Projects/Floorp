@@ -20,9 +20,12 @@
 .side-menu-widget-item-checkbox {
  -moz-appearance: none;
   padding: 0;
-  margin: 0 -4px 0 4px;
+  margin-top: 4px;
+  margin-bottom: -4px;
+  -moz-margin-start: 4px;
+  -moz-margin-end: -4px;
   opacity: 0;
-  transition: opacity .25s ease 0s;
+  transition: opacity .15s ease 0s;
 }
 
 /* Only show the checkbox when the source is hovered over, is selected, or if it
@@ -31,18 +34,18 @@
 .side-menu-widget-item.selected > .side-menu-widget-item-checkbox,
 .side-menu-widget-item-checkbox:not([checked]) {
   opacity: 1;
-  transition: opacity .25s ease-out 0s;
+  transition: opacity .15s ease-out 0s;
 }
 
 .side-menu-widget-item-checkbox > .checkbox-check {
   -moz-appearance: none;
   background: none;
-  background-image: url(itemToggle.png);
+  background-image: url(blackbox.png);
   background-repeat: no-repeat;
   background-clip: content-box;
-  background-position: -24px 0;
-  width: 24px;
-  height: 24px;
+  background-position: -16px 0;
+  width: 16px;
+  height: 16px;
   border: 0;
 }
 
@@ -125,6 +128,7 @@
 
 .dbg-breakpoint {
   font-family: monospace;
+  -moz-margin-start: -14px;
 }
 
 .dbg-breakpoint-line {
