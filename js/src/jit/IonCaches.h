@@ -143,8 +143,8 @@ class IonCache
     bool is##ickind() const {                                           \
         return kind() == Cache_##ickind;                                \
     }                                                                   \
-    inline ickind##IC &to##ickind();                                    \
-    inline const ickind##IC &to##ickind() const;
+    inline ickind##IC &to##ickind();
+
     IONCACHE_KIND_LIST(CACHEKIND_CASTS)
 #   undef CACHEKIND_CASTS
 
@@ -248,10 +248,10 @@ class IonCache
     }
 #endif
 
-    bool pure() const {
+    bool pure() {
         return pure_;
     }
-    bool idempotent() const {
+    bool idempotent() {
         return idempotent_;
     }
     void setIdempotent() {
@@ -267,7 +267,7 @@ class IonCache
         this->pc = pc;
     }
 
-    void getScriptedLocation(MutableHandleScript pscript, jsbytecode **ppc) const {
+    void getScriptedLocation(MutableHandleScript pscript, jsbytecode **ppc) {
         pscript.set(script);
         *ppc = pc;
     }
@@ -505,10 +505,10 @@ class GetPropertyIC : public RepatchIonCache
     PropertyName *name_;
     TypedOrValueRegister output_;
     bool allowGetters_ : 1;
+    bool hasArrayLengthStub_ : 1;
     bool hasTypedArrayLengthStub_ : 1;
     bool hasStrictArgumentsLengthStub_ : 1;
     bool hasNormalArgumentsLengthStub_ : 1;
-    bool hasGenericProxyStub_ : 1;
 
   public:
     GetPropertyIC(RegisterSet liveRegs,
@@ -520,10 +520,10 @@ class GetPropertyIC : public RepatchIonCache
         name_(name),
         output_(output),
         allowGetters_(allowGetters),
+        hasArrayLengthStub_(false),
         hasTypedArrayLengthStub_(false),
         hasStrictArgumentsLengthStub_(false),
-        hasNormalArgumentsLengthStub_(false),
-        hasGenericProxyStub_(false)
+        hasNormalArgumentsLengthStub_(false)
     {
     }
 
@@ -541,7 +541,10 @@ class GetPropertyIC : public RepatchIonCache
         return output_;
     }
     bool allowGetters() const {
-        return allowGetters_ && !idempotent();
+        return allowGetters_;
+    }
+    bool hasArrayLengthStub() const {
+        return hasArrayLengthStub_;
     }
     bool hasTypedArrayLengthStub() const {
         return hasTypedArrayLengthStub_;
@@ -549,48 +552,16 @@ class GetPropertyIC : public RepatchIonCache
     bool hasArgumentsLengthStub(bool strict) const {
         return strict ? hasStrictArgumentsLengthStub_ : hasNormalArgumentsLengthStub_;
     }
-    bool hasGenericProxyStub() const {
-        return hasGenericProxyStub_;
-    }
 
-    enum NativeGetPropCacheability {
-        CanAttachError,
-        CanAttachNone,
-        CanAttachReadSlot,
-        CanAttachArrayLength,
-        CanAttachCallGetter
-    };
-
-    // Helpers for CanAttachNativeGetProp
-    typedef JSContext * Context;
-    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
-                                 MutableHandleObject holder, MutableHandleShape shape) {
-        return JSObject::lookupProperty(cx, obj, name, holder, shape);
-    }
-    bool lookupNeedsIdempotentChain() const {
-        return idempotent();
-    }
-    bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const;
-
-    // Attach the proper stub, if possible
-    bool tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,
-                       HandlePropertyName name, void *returnAddr, bool *emitted);
-    bool tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
-                        HandlePropertyName name, void *returnAddr, bool *emitted);
-    bool tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject obj,
-                               HandlePropertyName name, void *returnAddr, bool *emitted);
-    bool tryAttachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
-                                   void *returnAddr, bool *emitted);
-    bool tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObject obj,
-                                     HandlePropertyName name, bool resetNeeded,
-                                     void *returnAddr, bool *emitted);
-    bool tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
-                         HandlePropertyName name, void *returnAddr, bool *emitted);
-    bool tryAttachTypedArrayLength(JSContext *cx, IonScript *ion, HandleObject obj,
-                                   HandlePropertyName name, bool *emitted);
-
-    bool tryAttachArgumentsLength(JSContext *cx, IonScript *ion, HandleObject obj,
-                                  HandlePropertyName name, bool *emitted);
+    bool attachReadSlot(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
+                        HandleShape shape);
+    bool attachDOMProxyShadowed(JSContext *cx, IonScript *ion, JSObject *obj, void *returnAddr);
+    bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
+                          HandleShape shape,
+                          const SafepointIndex *safepointIndex, void *returnAddr);
+    bool attachArrayLength(JSContext *cx, IonScript *ion, JSObject *obj);
+    bool attachTypedArrayLength(JSContext *cx, IonScript *ion, JSObject *obj);
+    bool attachArgumentsLength(JSContext *cx, IonScript *ion, JSObject *obj);
 
     static bool update(JSContext *cx, size_t cacheIndex, HandleObject obj, MutableHandleValue vp);
 };
@@ -703,18 +674,6 @@ class GetElementIC : public RepatchIonCache
     void setHasDenseStub() {
         JS_ASSERT(!hasDenseStub());
         hasDenseStub_ = true;
-    }
-
-    // Helpers for CanAttachNativeGetProp
-    typedef JSContext * Context;
-    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
-                                 MutableHandleObject holder, MutableHandleShape shape) {
-        return JSObject::lookupProperty(cx, obj, name, holder, shape);
-    }
-    bool allowGetters() const { return false; }
-    bool lookupNeedsIdempotentChain() const { return false; }
-    bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const {
-        return monitoredResult();
     }
 
     static bool canAttachGetProp(JSObject *obj, const Value &idval, jsid id);
@@ -884,7 +843,8 @@ class NameIC : public RepatchIonCache
     bool attachReadSlot(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject obj,
                         HandleShape shape);
     bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
-                          HandleShape shape, void *returnAddr);
+                          HandleShape shape, const SafepointIndex *safepointIndex,
+                          void *returnAddr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, MutableHandleValue vp);
@@ -988,15 +948,10 @@ class GetPropertyParIC : public ParallelIonCache
         return hasTypedArrayLengthStub_;
     }
 
-    // CanAttachNativeGetProp Helpers
-    typedef LockedJSContext & Context;
-    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
-                                 MutableHandleObject holder, MutableHandleShape shape) {
-        return LookupPropertyPure(obj, NameToId(name), holder.address(), shape.address());
-    }
-    bool lookupNeedsIdempotentChain() const { return true; }
-    bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
-    bool allowGetters() const { return false; }
+    static bool canAttachReadSlot(LockedJSContext &cx, IonCache &cache,
+                                  TypedOrValueRegister output, JSObject *obj,
+                                  PropertyName *name, MutableHandleObject holder,
+                                  MutableHandleShape shape);
 
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, JSObject *holder,
                         Shape *shape);
@@ -1047,16 +1002,6 @@ class GetElementParIC : public ParallelIonCache
         return monitoredResult_;
     }
 
-    // CanAttachNativeGetProp Helpers
-    typedef LockedJSContext & Context;
-    static bool doPropertyLookup(Context cx, HandleObject obj, HandlePropertyName name,
-                                 MutableHandleObject holder, MutableHandleShape shape) {
-        return LookupPropertyPure(obj, NameToId(name), holder.address(), shape.address());
-    }
-    bool lookupNeedsIdempotentChain() const { return true; }
-    bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
-    bool allowGetters() const { return false; }
-
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval,
                         PropertyName *name, JSObject *holder, Shape *shape);
     bool attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval);
@@ -1076,11 +1021,6 @@ class GetElementParIC : public ParallelIonCache
     {                                                                   \
         JS_ASSERT(is##ickind());                                        \
         return *static_cast<ickind##IC *>(this);                        \
-    }                                                                   \
-    const ickind##IC &IonCache::to##ickind() const                      \
-    {                                                                   \
-        JS_ASSERT(is##ickind());                                        \
-        return *static_cast<const ickind##IC *>(this);                  \
     }
 IONCACHE_KIND_LIST(CACHE_CASTS)
 #undef OPCODE_CASTS
