@@ -134,6 +134,37 @@ gTests.push({
   }
 });
 
+function getClipboardCondition(aExpected) {
+  return () => aExpected == SpecialPowers.getClipboardData("text/unicode");
+}
+
+gTests.push({
+  desc: "bug 894715 - URLs selected by touch are copied with trimming",
+  run: function () {
+    gWindow = window;
+    yield showNavBar();
+
+    let edit = document.getElementById("urlbar-edit");
+    edit.value = "http://www.wikipedia.org/";
+
+    sendElementTap(window, edit);
+    edit.select();
+
+    let panel = ContextMenuUI._menuPopup._panel;
+    let promise = waitForEvent(panel, "popupshown")
+    sendContextMenuClickToElement(window, edit);
+    ok((yield promise), "show context menu");
+
+    let copy = document.getElementById("context-copy");
+    ok(!copy.hidden, "copy menu item is visible")
+
+    let condition = getClipboardCondition("http://www.wikipedia.org/");
+    let promise = waitForCondition(condition);
+    sendElementTap(window, copy);
+    ok((yield promise), "copy text onto clipboard")
+  }
+})
+
 function test() {
   if (!isLandscapeMode()) {
     todo(false, "browser_selection_tests need landscape mode to run.");

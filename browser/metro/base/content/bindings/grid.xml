@@ -800,7 +800,7 @@
     <content>
       <html:div anonid="anon-tile" class="tile-content" xbl:inherits="customImage">
         <html:div class="tile-start-container" xbl:inherits="customImage">
-          <html:div class="tile-icon-box"><xul:image anonid="anon-tile-icon" xbl:inherits="src=iconURI"/></html:div>
+          <html:div class="tile-icon-box" anonid="anon-tile-icon-box"><xul:image anonid="anon-tile-icon" xbl:inherits="src=iconURI"/></html:div>
         </html:div>
         <html:div anonid="anon-tile-label" class="tile-desc" xbl:inherits="xbl:text=label"/>
       </html:div>
@@ -817,6 +817,7 @@
       <property name="_textbox" onget="return document.getAnonymousElementByAttribute(this, 'class', 'tile-desc');"/>
       <property name="_top" onget="return document.getAnonymousElementByAttribute(this, 'class', 'tile-start-container');"/>
       <property name="_icon" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-tile-icon');"/>
+      <property name="_iconBox" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-tile-icon-box');"/>
       <property name="_label" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'anon-tile-label');"/>
       <property name="iconSrc"
                 onset="this._icon.src = val; this.setAttribute('iconURI', val);"
@@ -876,9 +877,21 @@
           if (val) {
             this.setAttribute("customColor", val);
             this._contentBox.style.backgroundColor = val;
+
+            // overridden in tiles.css for non-thumbnail types
+            this._label.style.backgroundColor = val.replace(/rgb\(([^\)]+)\)/, 'rgba($1, 0.8)');
+
+            // Small icons get a border+background-color treatment.
+            // See tiles.css for large icon overrides
+            this._iconBox.style.borderColor = val.replace(/rgb\(([^\)]+)\)/, 'rgba($1, 0.6)');
+            this._iconBox.style.backgroundColor = this.hasAttribute("tintColor") ?
+                                                    this.getAttribute("tintColor") : "#fff";
           } else {
             this.removeAttribute("customColor");
             this._contentBox.style.removeProperty("background-color");
+            this._label.style.removeProperty("background-color");
+            this._iconBox.style.removeProperty("border-color");
+            this._iconBox.style.removeProperty("background-color");
           }
         ]]></setter>
       </property>
