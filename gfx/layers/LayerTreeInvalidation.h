@@ -6,10 +6,9 @@
 #ifndef GFX_LAYER_TREE_INVALIDATION_H
 #define GFX_LAYER_TREE_INVALIDATION_H
 
-#include "nsRegion.h"                   // for nsIntRegion
+#include "nsRegion.h"
 
 class nsPresContext;
-struct nsIntPoint;
 
 namespace mozilla {
 namespace layers {

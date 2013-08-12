@@ -7,16 +7,10 @@
 #ifndef MOZILLA_LAYERS_COMPOSITABLEFORWARDER
 #define MOZILLA_LAYERS_COMPOSITABLEFORWARDER
 
-#include <stdint.h>                     // for int32_t, uint64_t
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
-#include "mozilla/layers/LayersTypes.h"  // for LayersBackend
-#include "nsRegion.h"                   // for nsIntRegion
-
-struct nsIntPoint;
-struct nsIntRect;
+#include <stdint.h>
+#include "gfxASurface.h"
+#include "GLDefs.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
 
 namespace mozilla {
 namespace layers {

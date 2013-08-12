@@ -60,7 +60,6 @@
 #endif
 
 #include "Layers.h"
-#include "mozilla/layers/ShadowLayers.h"
 #include "nsIIOService.h"
 
 #include "mozilla/dom/Element.h"

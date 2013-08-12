@@ -6,11 +6,12 @@
 #ifndef GFX_THEBESLAYEROGL_H
 #define GFX_THEBESLAYEROGL_H
 
-#include "LayerManagerOGL.h"            // for LayerOGL
-#include "Layers.h"                     // for Layer (ptr only), etc
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsISupportsImpl.h"
-#include "nsRegion.h"                   // for nsIntRegion
+#include "Layers.h"
+#include "LayerManagerOGL.h"
+#include "gfxImageSurface.h"
+#include "GLContext.h"
+#include "base/task.h"
+
 
 namespace mozilla {
 namespace layers {

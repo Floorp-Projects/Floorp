@@ -6,35 +6,14 @@
 #ifndef MOZILLA_GFX_BUFFERHOST_H
 #define MOZILLA_GFX_BUFFERHOST_H
 
-#include <stdint.h>                     // for uint64_t
-#include <stdio.h>                      // for FILE
-#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
-#include "gfxPoint.h"                   // for gfxSize
-#include "gfxRect.h"                    // for gfxRect
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/RefPtr.h"             // for RefPtr, RefCounted, etc
-#include "mozilla/gfx/Point.h"          // for Point
-#include "mozilla/gfx/Rect.h"           // for Rect
-#include "mozilla/gfx/Types.h"          // for Filter
-#include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
-#include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
+#include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/PCompositableParent.h"
-#include "mozilla/mozalloc.h"           // for operator delete
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nscore.h"                     // for nsACString
-
-class gfxImageSurface;
-struct nsIntPoint;
-struct nsIntRect;
+#include "mozilla/layers/ISurfaceAllocator.h"
+#include "ThebesLayerBuffer.h"
+#include "ClientTiledThebesLayer.h" // for BasicTiledLayerBuffer
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-}
-
 namespace layers {
 
 // Some properties of a Layer required for tiling
@@ -52,11 +31,6 @@ class Layer;
 class DeprecatedTextureHost;
 class TextureHost;
 class SurfaceDescriptor;
-class Compositor;
-class ISurfaceAllocator;
-class ThebesBufferData;
-class TiledLayerComposer;
-struct EffectChain;
 
 /**
  * The compositor-side counterpart to CompositableClient. Responsible for

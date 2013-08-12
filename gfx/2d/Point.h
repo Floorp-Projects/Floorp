@@ -9,8 +9,6 @@
 #include "Types.h"
 #include "BasePoint.h"
 #include "BaseSize.h"
-#include "nsMathUtils.h"                // for NS_lround
-
 
 namespace mozilla {
 namespace gfx {

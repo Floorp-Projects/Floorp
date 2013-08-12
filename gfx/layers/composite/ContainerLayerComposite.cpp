@@ -4,35 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ContainerLayerComposite.h"
-#include <algorithm>                    // for min
-#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
-#include "FrameMetrics.h"               // for FrameMetrics
-#include "Units.h"                      // for LayerRect, LayerPixel, etc
-#include "gfx2DGlue.h"                  // for ToMatrix4x4
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "gfxImageSurface.h"            // for gfxImageSurface
-#include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPlatform.h"                // for gfxPlatform
-#include "gfxUtils.h"                   // for gfxUtils, etc
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr
-#include "mozilla/gfx/BaseRect.h"       // for BaseRect
-#include "mozilla/gfx/Matrix.h"         // for Matrix4x4
-#include "mozilla/gfx/Point.h"          // for Point, IntPoint
-#include "mozilla/gfx/Rect.h"           // for IntRect, Rect
-#include "mozilla/layers/Compositor.h"  // for Compositor, etc
-#include "mozilla/layers/CompositorTypes.h"  // for DIAGNOSTIC_CONTAINER
-#include "mozilla/layers/Effects.h"     // for Effect, EffectChain, etc
-#include "mozilla/layers/TextureHost.h"  // for CompositingRenderTarget
-#include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nsTArray.h"                   // for nsAutoTArray
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "gfxUtils.h"
+#include "mozilla/layers/Compositor.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "gfx2DGlue.h"
 
 namespace mozilla {
 namespace layers {

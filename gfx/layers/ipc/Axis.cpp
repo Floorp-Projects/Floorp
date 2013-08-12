@@ -5,18 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Axis.h"
-#include <math.h>                       // for fabsf, pow, powf
-#include <algorithm>                    // for max
-#include "AsyncPanZoomController.h"     // for AsyncPanZoomController
-#include "FrameMetrics.h"               // for FrameMetrics
-#include "GeckoProfilerFunc.h"          // for TimeDuration
-#include "mozilla/Attributes.h"         // for MOZ_FINAL
-#include "mozilla/Preferences.h"        // for Preferences
-#include "mozilla/gfx/Rect.h"           // for RoundedIn
-#include "mozilla/mozalloc.h"           // for operator new
-#include "nsMathUtils.h"                // for NS_lround
-#include "nsThreadUtils.h"              // for NS_DispatchToMainThread, etc
-#include "nscore.h"                     // for NS_IMETHOD
+#include "AsyncPanZoomController.h"
+#include "mozilla/Preferences.h"
+#include "nsThreadUtils.h"
+#include <algorithm>
 
 namespace mozilla {
 namespace layers {

@@ -6,15 +6,13 @@
 #ifndef GFX_LAYERSTYPES_H
 #define GFX_LAYERSTYPES_H
 
-#include <stdint.h>                     // for uint32_t
-#include "nsPoint.h"                    // for nsIntPoint
-
+#include "nsPoint.h"
 #ifdef MOZ_WIDGET_GONK
 #include <ui/GraphicBuffer.h>
 #endif
 #if defined(DEBUG) || defined(PR_LOGGING)
 #  include <stdio.h>            // FILE
-#  include "prlog.h"            // for PR_LOG
+#  include "prlog.h"
 #  ifndef MOZ_LAYERS_HAVE_LOG
 #    define MOZ_LAYERS_HAVE_LOG
 #  endif

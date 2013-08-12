@@ -6,28 +6,19 @@
 #ifndef GFX_LAYERSLOGGING_H
 #define GFX_LAYERSLOGGING_H
 
-#include "FrameMetrics.h"               // for FrameMetrics, etc
-#include "gfxPattern.h"                 // for gfxPattern, etc
-#include "mozilla/gfx/Point.h"          // for IntSize, etc
-#include "mozilla/gfx/Types.h"          // for Filter, SurfaceFormat
-#include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
-#include "nsAString.h"
-#include "nsPrintfCString.h"            // for nsPrintfCString
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nscore.h"                     // for nsACString, etc
-
-class gfx3DMatrix;
-struct gfxRGBA;
-struct nsIntPoint;
-struct nsIntRect;
-struct nsIntSize;
+#include "Layers.h"
+#include "nsPoint.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/layers/Compositor.h"
+#include "FrameMetrics.h"
+#include "gfxPattern.h"
+#include "gfxColor.h"
+#include "gfx3DMatrix.h"
+#include "nsRegion.h"
+#include "nsPrintfCString.h"
 
 namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-template <class units> struct RectTyped;
-}
-
 namespace layers {
 
 nsACString&

@@ -4,26 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ContainerLayerOGL.h"
-#include <stdint.h>                     // for uint32_t
-#include <algorithm>                    // for min
-#include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
+#include "gfxUtils.h"
+#include "gfxPlatform.h"
 #include "GLContext.h"
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPlatform.h"                // for gfxPlatform
-#include "gfxUtils.h"                   // for gfxUtils, etc
-#include "mozilla/gfx/BaseRect.h"       // for BaseRect
-#include "mozilla/layers/CompositorTypes.h"  // for MaskType, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nsTArray.h"                   // for nsAutoTArray
-#include "LayerManagerOGL.h"            // for LayerManagerOGL, LayerOGL, etc
-#include "LayerManagerOGLProgram.h"     // for ShaderProgramOGL
-class gfxImageSurface;
 
 namespace mozilla {
 namespace layers {

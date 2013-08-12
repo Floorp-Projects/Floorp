@@ -4,11 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageLayers.h"
-#include "ImageContainer.h"             // for ImageContainer
-#include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "gfxRect.h"                    // for gfxRect
-#include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsISupportsImpl.h"            // for ImageContainer::Release, etc
+#include "ImageContainer.h"
 
 namespace mozilla {
 namespace layers {

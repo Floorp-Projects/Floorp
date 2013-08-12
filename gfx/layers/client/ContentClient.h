@@ -6,39 +6,19 @@
 #ifndef MOZILLA_GFX_CONTENTCLIENT_H
 #define MOZILLA_GFX_CONTENTCLIENT_H
 
-#include <stdint.h>                     // for uint32_t
-#include "ThebesLayerBuffer.h"          // for ThebesLayerBuffer, etc
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxPlatform.h"                // for gfxPlatform
-#include "mozilla/Assertions.h"         // for MOZ_CRASH
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
-#include "mozilla/gfx/Point.h"          // for IntSize
-#include "mozilla/layers/CompositableClient.h"  // for CompositableClient
-#include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
-#include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/layers/TextureClient.h"  // for DeprecatedTextureClient
-#include "mozilla/mozalloc.h"           // for operator delete
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsPoint.h"                    // for nsIntPoint
-#include "nsRect.h"                     // for nsIntRect
-#include "nsRegion.h"                   // for nsIntRegion
-#include "nsTArray.h"                   // for nsTArray
-
-class gfxContext;
-struct gfxMatrix;
+#include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/layers/CompositableClient.h"
+#include "gfxReusableSurfaceWrapper.h"
+#include "mozilla/layers/TextureClient.h"
+#include "ThebesLayerBuffer.h"
+#include "ipc/AutoOpenSurface.h"
+#include "ipc/ShadowLayerChild.h"
+#include "gfxPlatform.h"
 
 namespace mozilla {
-namespace gfx {
-class DrawTarget;
-}
-
 namespace layers {
 
 class BasicLayerManager;
-class ThebesLayer;
 
 /**
  * A compositable client for Thebes layers. These are different to Image/Canvas

@@ -4,24 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CompositableHost.h"
-#include <map>                          // for _Rb_tree_iterator, map, etc
-#include <utility>                      // for pair
-#include "ContentHost.h"                // for ContentHostDoubleBuffered, etc
-#include "Effects.h"                    // for EffectMask, Effect, etc
-#include "ImageHost.h"                  // for DeprecatedImageHostBuffered, etc
-#include "TiledContentHost.h"           // for TiledContentHost
-#include "gfxImageSurface.h"            // for gfxImageSurface
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/layers/TextureHost.h"  // for TextureHost, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsDebug.h"                    // for NS_WARNING
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "ImageHost.h"
+#include "ContentHost.h"
+#include "TiledContentHost.h"
+#include "Effects.h"
+#include "mozilla/layers/CompositableTransactionParent.h"
+#include "mozilla/layers/TextureHost.h"
 
 namespace mozilla {
 namespace layers {
-
-class Matrix4x4;
-class Compositor;
 
 CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
   : mTextureInfo(aTextureInfo)

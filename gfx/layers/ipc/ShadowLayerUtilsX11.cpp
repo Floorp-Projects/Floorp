@@ -5,40 +5,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ShadowLayerUtilsX11.h"
-#include <X11/X.h>                      // for Drawable, XID
-#include <X11/Xlib.h>                   // for Display, Visual, etc
-#include <X11/extensions/Xrender.h>     // for XRenderPictFormat, etc
-#include <X11/extensions/render.h>      // for PictFormat
-#include "cairo-xlib.h"
-#include <stdint.h>                     // for uint32_t
-#include "GLDefs.h"                     // for GLenum
-#include "cairo-rename.h"
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxPlatform.h"                // for gfxPlatform
-#include "gfxPoint.h"                   // for gfxIntSize
-#include "gfxXlibSurface.h"             // for gfxXlibSurface
-#include "mozilla/X11Util.h"            // for DefaultXDisplay, FinishX, etc
-#include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/layers/CompositorTypes.h"  // for OpenMode
-#include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator, etc
+#include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/LayerManagerComposite.h"
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
-#include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder, etc
-#include "mozilla/mozalloc.h"           // for operator new
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsDebug.h"                    // for NS_ERROR
-#include "prenv.h"                      // for PR_GetEnv
+#include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/ShadowLayers.h"
+
+#include "gfxPlatform.h"
+
+#include "gfxXlibSurface.h"
+#include "mozilla/X11Util.h"
+#include "cairo-xlib.h"
 
 using namespace mozilla::gl;
 
 namespace mozilla {
-namespace gl {
-class GLContext;
-class TextureImage;
-}
-
 namespace layers {
 
 // Return true if we're likely compositing using X and so should use

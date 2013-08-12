@@ -73,7 +73,6 @@
 #include "prtime.h"
 #include "prprf.h"
 #include "prmem.h"
-#include "prenv.h"
 
 #include "mozilla/WidgetTraceEvent.h"
 #include "nsIAppShell.h"

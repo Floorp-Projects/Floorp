@@ -3,13 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/layers/PLayerTransactionParent.h"
 #include "BasicCanvasLayer.h"
-#include "basic/BasicLayers.h"          // for BasicLayerManager
-#include "mozilla/mozalloc.h"           // for operator new
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsISupportsImpl.h"            // for Layer::AddRef, etc
-class gfxContext;
+#include "gfxImageSurface.h"
+#include "GLContext.h"
+#include "gfxUtils.h"
+#include "gfxPlatform.h"
+#include "mozilla/Preferences.h"
+#include "BasicLayersImpl.h"
+#include "SurfaceStream.h"
+#include "SharedSurfaceGL.h"
+#include "SharedSurfaceEGL.h"
+#include "GeckoProfiler.h"
+
+#include "nsXULAppAPI.h"
 
 using namespace mozilla::gfx;
 using namespace mozilla::gl;

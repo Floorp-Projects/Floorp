@@ -5,33 +5,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Layers.h"
-#include <algorithm>                    // for max, min
-#include "AnimationCommon.h"            // for ComputedTimingFunction
-#include "CompositableHost.h"           // for CompositableHost
-#include "GeckoProfilerFunc.h"          // for TimeStamp, TimeDuration
-#include "ImageContainer.h"             // for ImageContainer, etc
-#include "ImageLayers.h"                // for ImageLayer
-#include "LayerSorter.h"                // for SortLayersBy3DZOrder
-#include "LayersLogging.h"              // for AppendToString
-#include "ReadbackLayer.h"              // for ReadbackLayer
-#include "gfxPlatform.h"                // for gfxPlatform
-#include "gfxUtils.h"                   // for gfxUtils, etc
-#include "mozilla/DebugOnly.h"          // for DebugOnly
-#include "mozilla/Preferences.h"        // for Preferences
-#include "mozilla/Telemetry.h"          // for Accumulate
-#include "mozilla/TelemetryHistogramEnums.h"
-#include "mozilla/gfx/2D.h"             // for DrawTarget
-#include "mozilla/gfx/BaseSize.h"       // for BaseSize
+#include "mozilla/DebugOnly.h"
+
 #include "mozilla/layers/AsyncPanZoomController.h"
-#include "mozilla/layers/Compositor.h"  // for Compositor
-#include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite
-#include "mozilla/layers/LayerTransaction.h"  // for TransformFunction, etc
-#include "nsAString.h"
-#include "nsCSSValue.h"                 // for nsCSSValue::Array, etc
-#include "nsPrintfCString.h"            // for nsPrintfCString
-#include "nsStyleStruct.h"              // for nsTimingFunction, etc
+#include "mozilla/layers/PLayerTransaction.h"
+#include "mozilla/layers/LayerManagerComposite.h"
+#include "mozilla/Telemetry.h"
+#include "CompositableHost.h"
+
+#include "ImageLayers.h"
+#include "ImageContainer.h"
+#include "Layers.h"
+#include "gfxPlatform.h"
+#include "ReadbackLayer.h"
+#include "gfxUtils.h"
+#include "nsPrintfCString.h"
+#include "LayerSorter.h"
+#include "AnimationCommon.h"
+#include "mozilla/layers/Compositor.h"
+#include "LayersLogging.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::gfx;

@@ -6,34 +6,25 @@
 #ifndef MOZILLA_GFX_TEXTURECLIENT_H
 #define MOZILLA_GFX_TEXTURECLIENT_H
 
-#include <stddef.h>                     // for size_t
-#include <stdint.h>                     // for uint32_t, uint8_t, uint64_t
-#include "GLContext.h"                  // for GLContext (ptr only), etc
-#include "GLTextureImage.h"             // for TextureImage
-#include "ImageContainer.h"             // for PlanarYCbCrImage, etc
-#include "ImageTypes.h"                 // for StereoMode
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/RefPtr.h"             // for RefPtr, RefCounted
-#include "mozilla/gfx/2D.h"             // for DrawTarget
-#include "mozilla/gfx/Point.h"          // for IntSize
-#include "mozilla/gfx/Types.h"          // for SurfaceFormat
-#include "mozilla/ipc/Shmem.h"          // for Shmem
-#include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/mozalloc.h"           // for operator delete
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsCOMPtr.h"                   // for already_AddRefed
-#include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
+#include "mozilla/layers/LayersSurfaces.h"
+#include "gfxASurface.h"
+#include "mozilla/layers/CompositorTypes.h" // for TextureInfo
+#include "mozilla/RefPtr.h"
+#include "ImageContainer.h" // for PlanarYCbCrImage::Data
 
 class gfxReusableSurfaceWrapper;
 
 namespace mozilla {
+
+namespace gl {
+class GLContext;
+}
+
 namespace layers {
 
 class ContentClient;
+class PlanarYCbCrImage;
+class Image;
 class CompositableForwarder;
 class ISurfaceAllocator;
 class CompositableClient;

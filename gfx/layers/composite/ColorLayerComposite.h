@@ -6,19 +6,14 @@
 #ifndef GFX_ColorLayerComposite_H
 #define GFX_ColorLayerComposite_H
 
-#include "Layers.h"                     // for ColorLayer, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
-#include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_HAVE_LOG
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "mozilla/layers/PLayerTransaction.h"
+#include "mozilla/layers/ShadowLayers.h"
 
-struct nsIntPoint;
-struct nsIntRect;
+#include "mozilla/layers/LayerManagerComposite.h"
 
 namespace mozilla {
 namespace layers {
 
-class CompositableHost;
 
 class ColorLayerComposite : public ColorLayer,
                             public LayerComposite

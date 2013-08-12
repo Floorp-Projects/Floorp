@@ -15,37 +15,28 @@
 //       which the deadline will be 15ms + throttle threshold
 //#define COMPOSITOR_PERFORMANCE_WARNING
 
-#include <stdint.h>                     // for uint64_t
-#include "GeckoProfilerFunc.h"          // for TimeStamp
-#include "Layers.h"                     // for Layer
-#include "ShadowLayersManager.h"        // for ShadowLayersManager
-#include "base/basictypes.h"            // for DISALLOW_EVIL_CONSTRUCTORS
-#include "base/platform_thread.h"       // for PlatformThreadId
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/Monitor.h"            // for Monitor
-#include "mozilla/RefPtr.h"             // for RefPtr
-#include "mozilla/TimeStamp.h"          // for TimeStamp
-#include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/layers/GeckoContentController.h"
-#include "mozilla/layers/LayerTransaction.h"  // for TargetConfig
 #include "mozilla/layers/PCompositorParent.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsISupportsImpl.h"
-#include "nsSize.h"                     // for nsIntSize
+#include "mozilla/layers/PLayerTransactionParent.h"
+#include "mozilla/layers/APZCTreeManager.h"
+#include "base/thread.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/TimeStamp.h"
+#include "ShadowLayersManager.h"
 
-class CancelableTask;
-class MessageLoop;
-class gfxContext;
 class nsIWidget;
+
+namespace base {
+class Thread;
+}
 
 namespace mozilla {
 namespace layers {
 
 class APZCTreeManager;
-class AsyncCompositionManager;
+class Layer;
 class LayerManagerComposite;
-class LayerTransactionParent;
+class AsyncCompositionManager;
+struct TextureFactoryIdentifier;
 
 struct ScopedLayerTreeRegistration
 {

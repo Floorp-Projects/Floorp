@@ -4,26 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/ContentHost.h"
-#include "LayersLogging.h"              // for AppendToString
-#include "gfx2DGlue.h"                  // for ContentForFormat
-#include "gfxPoint.h"                   // for gfxIntSize
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/gfx/BaseRect.h"       // for BaseRect
-#include "mozilla/layers/Compositor.h"  // for Compositor
-#include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
-#include "mozilla/layers/LayerTransaction.h"  // for ThebesBufferData
-#include "nsAString.h"
-#include "nsPrintfCString.h"            // for nsPrintfCString
-#include "nsString.h"                   // for nsAutoCString
-
-class gfxImageSurface;
+#include "mozilla/layers/Effects.h"
+#include "nsPrintfCString.h"
+#include "gfx2DGlue.h"
 
 namespace mozilla {
-namespace gfx {
-class Matrix4x4;
-}
 using namespace gfx;
-
 namespace layers {
 
 ContentHostBase::ContentHostBase(const TextureInfo& aTextureInfo)

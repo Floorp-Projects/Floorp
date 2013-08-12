@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "GrallocImages.h"
-#include <stddef.h>                     // for size_t
-#include <stdint.h>                     // for int8_t, uint8_t, uint32_t, etc
-#include "nsDebug.h"                    // for NS_WARNING, NS_PRECONDITION
 #include "mozilla/layers/ImageBridgeChild.h"
+
+#include "nsDebug.h"
+#include "ImageContainer.h"
+#include "GrallocImages.h"
 
 #include <OMX_IVCommon.h>
 #include <ColorConverter.h>

@@ -6,20 +6,16 @@
 #ifndef GFX_CanvasLayerComposite_H
 #define GFX_CanvasLayerComposite_H
 
-#include "Layers.h"                     // for CanvasLayer, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
-#include "mozilla/RefPtr.h"             // for RefPtr
-#include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
-#include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
-#include "nsDebug.h"                    // for NS_RUNTIMEABORT
-#include "nsRect.h"                     // for nsIntRect
-#include "nscore.h"                     // for nsACString
-struct nsIntPoint;
+
+#include "mozilla/layers/LayerManagerComposite.h"
+#include "gfxASurface.h"
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+#include "mozilla/X11Util.h"
+#endif
 
 namespace mozilla {
 namespace layers {
 
-class CompositableHost;
 // Canvas layers use ImageHosts (but CanvasClients) because compositing a
 // canvas is identical to compositing an image.
 class ImageHost;
