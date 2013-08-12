@@ -12,7 +12,6 @@
  */
 
 #include "jsiter.h"
-#include "jsprvtd.h"
 #include "jspubtd.h"
 
 #include "vm/Stack.h"

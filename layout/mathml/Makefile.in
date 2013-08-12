@@ -59,4 +59,3 @@ $(DIST)/bin/res/fonts/$(math_properties) $(DESTDIR)$(mozappdir)/res/fonts/$(math
 libs:: $(DIST)/bin/res/fonts/$(math_properties)
 install:: $(DESTDIR)$(mozappdir)/res/fonts/$(math_properties)
 
-DEFINES += -D_IMPL_NS_LAYOUT

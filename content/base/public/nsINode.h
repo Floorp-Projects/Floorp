@@ -946,7 +946,7 @@ public:
 
   bool IsEditable() const
   {
-#ifdef _IMPL_NS_LAYOUT
+#ifdef MOZILLA_INTERNAL_API
     return IsEditableInternal();
 #else
     return IsEditableExternal();
