@@ -709,6 +709,10 @@ documenttab[selected] .documenttab-selection {
   pointer-events: none;
 }
 
+#toolbar[viewstate="snapped"] #toolbar-contextual {
+  visibility: collapse;
+}
+
 .circularprogressindicator-progressButton {
   margin: 0 @toolbar_horizontal_spacing@;
   -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
