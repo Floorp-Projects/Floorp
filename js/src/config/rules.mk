@@ -91,7 +91,15 @@ _EXTRA_EXPORTS := $(filter-out $(EXPORTS),$(SDK_HEADERS))
 EXPORTS += $(_EXTRA_EXPORTS)
 endif
 
-REPORT_BUILD = $(info $(notdir $<))
+ifdef REBUILD_CHECK
+ifdef .PYMAKE
+REPORT_BUILD = @%rebuild_check rebuild_check $@ $^
+else
+REPORT_BUILD = $(info $(shell $(PYTHON) $(MOZILLA_DIR)/config/rebuild_check.py $@ $^))
+endif
+else
+REPORT_BUILD = $(info $(notdir $@))
+endif
 
 ifeq ($(OS_ARCH),OS2)
 EXEC			=
@@ -867,6 +875,7 @@ alltags:
 # creates OBJS, links with LIBS to create Foo
 #
 $(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS) $(EXE_DEF_FILE) $(RESFILE) $(GLOBAL_DEPS)
+	$(REPORT_BUILD)
 	@$(RM) $@.manifest
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(EXPAND_LD) -NOLOGO -OUT:$@ -PDB:$(LINK_PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
@@ -902,6 +911,7 @@ ifdef MOZ_POST_PROGRAM_COMMAND
 endif
 
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
+	$(REPORT_BUILD)
 ifeq (_WINNT,$(GNU_CC)_$(HOST_OS_ARCH))
 	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 ifdef MSMANIFEST_TOOL
@@ -935,6 +945,7 @@ endif
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
 $(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.$(OBJ_SUFFIX) $(EXTRA_DEPS) $(GLOBAL_DEPS)
+	$(REPORT_BUILD)
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(EXPAND_LD) -nologo -out:$@ -pdb:$(LINK_PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 ifdef MSMANIFEST_TOOL
@@ -956,6 +967,7 @@ ifdef MOZ_POST_PROGRAM_COMMAND
 endif
 
 $(HOST_SIMPLE_PROGRAMS): host_%$(HOST_BIN_SUFFIX): host_%.$(OBJ_SUFFIX) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
+	$(REPORT_BUILD)
 ifeq (WINNT_,$(HOST_OS_ARCH)_$(GNU_CC))
 	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
@@ -972,12 +984,14 @@ OBJS += $(DTRACE_PROBE_OBJ)
 endif
 
 $(filter %.$(LIB_SUFFIX),$(LIBRARY)): $(OBJS) $(LOBJS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
+	$(REPORT_BUILD)
 	$(RM) $(LIBRARY)
 	$(EXPAND_AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS)
 	$(RANLIB) $@
 
 $(filter-out %.$(LIB_SUFFIX),$(LIBRARY)): $(filter %.$(LIB_SUFFIX),$(LIBRARY)) $(OBJS) $(LOBJS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 # When we only build a library descriptor, blow out any existing library
+	$(REPORT_BUILD)
 	$(if $(filter %.$(LIB_SUFFIX),$(LIBRARY)),,$(RM) $(REAL_LIBRARY) $(EXPORT_LIBRARY:%=%/$(REAL_LIBRARY)))
 	$(EXPAND_LIBS_GEN) -o $@ $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS)
 
@@ -1004,12 +1018,14 @@ $(DEF_FILE): $(OBJS) $(SHARED_LIBRARY_LIBS)
 	$(ADD_TO_DEF_FILE)
 
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
+	$(REPORT_BUILD)
 	$(RM) $@
 	$(IMPLIB) $@ $^
 	$(RANLIB) $@
 endif # OS/2
 
 $(HOST_LIBRARY): $(HOST_OBJS) Makefile
+	$(REPORT_BUILD)
 	$(RM) $@
 	$(HOST_AR) $(HOST_AR_FLAGS) $(HOST_OBJS)
 	$(HOST_RANLIB) $@
@@ -1032,7 +1048,7 @@ endif
 # so no need to conditionalize on OS version or debugging format.
 
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(LIBRARY) $(EXTRA_DEPS) $(GLOBAL_DEPS)
-	$(info $(notdir $@))
+	$(REPORT_BUILD)
 ifndef INCREMENTAL_LINKER
 	$(RM) $@
 endif
@@ -1130,22 +1146,27 @@ $(COBJS):
 # 'moc' only knows about #defines it gets on the command line (-D...), not in
 # included headers like mozilla-config.h
 moc_%.cpp: %.h
+	$(REPORT_BUILD)
 	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@
 
 moc_%.cc: %.cc
+	$(REPORT_BUILD)
 	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
 
 qrc_%.cpp: %.qrc
+	$(REPORT_BUILD)
 	$(ELOG) $(RCC) -name $* $< $(OUTOPTION)$@
 
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
 $(ASOBJS):
+	$(REPORT_BUILD)
 	$(AS) $(ASOUTOPTION)$@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
 endif
 
 $(SOBJS):
+	$(REPORT_BUILD)
 	$(AS) -o $@ $(ASFLAGS) $(LOCAL_INCLUDES) $(TARGET_LOCAL_INCLUDES) -c $<
 
 $(CPPOBJS):
@@ -1164,27 +1185,35 @@ $(CMOBJS):
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 %.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
+	$(REPORT_BUILD)
 	$(CCC) -S $(COMPILE_CXXFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 %.s: %.cc $(call mkdir_deps,$(MDDEPDIR))
+	$(REPORT_BUILD)
 	$(CCC) -S $(COMPILE_CXXFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 %.s: %.c $(call mkdir_deps,$(MDDEPDIR))
+	$(REPORT_BUILD)
 	$(CC) -S $(COMPILE_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 %.i: %.cpp $(call mkdir_deps,$(MDDEPDIR))
+	$(REPORT_BUILD)
 	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS) > $*.i
 
 %.i: %.cc $(call mkdir_deps,$(MDDEPDIR))
+	$(REPORT_BUILD)
 	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS) > $*.i
 
 %.i: %.c $(call mkdir_deps,$(MDDEPDIR))
+	$(REPORT_BUILD)
 	$(CC) -C -E $(COMPILE_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS) > $*.i
 
 %.i: %.mm $(call mkdir_deps,$(MDDEPDIR))
+	$(REPORT_BUILD)
 	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS) > $*.i
 
 %.res: %.rc
+	$(REPORT_BUILD)
 	@echo Creating Resource file: $@
 ifeq ($(OS_ARCH),OS2)
 	$(RC) $(RCFLAGS:-D%=-d %) -i $(subst /,\,$(srcdir)) -r $< $@
@@ -1259,10 +1288,12 @@ $(_JAVA_DIR)::
 	$(NSINSTALL) -D $@
 
 $(_JAVA_DIR)/%.class: %.java $(GLOBAL_DEPS) $(_JAVA_DIR)
+	$(REPORT_BUILD)
 	$(JAVAC) $(JAVAC_FLAGS) -classpath $(_JAVA_CLASSPATH) \
 			-sourcepath $(_JAVA_SOURCEPATH) -d $(_JAVA_DIR) $(_VPATH_SRCS)
 
 $(JAVA_LIBRARY): $(addprefix $(_JAVA_DIR)/,$(JAVA_SRCS:.java=.class)) $(GLOBAL_DEPS)
+	$(REPORT_BUILD)
 	$(JAR) cf $@ -C $(_JAVA_DIR) .
 
 GARBAGE_DIRS += $(_JAVA_DIR)

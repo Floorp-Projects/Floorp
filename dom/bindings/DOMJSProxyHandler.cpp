@@ -160,8 +160,11 @@ DOMProxyHandler::preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy)
 }
 
 bool
-DOMProxyHandler::getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                                       MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
+BaseDOMProxyHandler::getPropertyDescriptor(JSContext* cx,
+                                           JS::Handle<JSObject*> proxy,
+                                           JS::Handle<jsid> id,
+                                           MutableHandle<JSPropertyDescriptor> desc,
+                                           unsigned flags)
 {
   if (!getOwnPropertyDescriptor(cx, proxy, id, desc, flags)) {
     return false;
@@ -221,7 +224,8 @@ DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
 }
 
 bool
-DOMProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy, AutoIdVector& props)
+BaseDOMProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
+                               AutoIdVector& props)
 {
   JS::Rooted<JSObject*> proto(cx);
   if (!JS_GetPrototype(cx, proxy, &proto))  {
@@ -258,37 +262,6 @@ DOMProxyHandler::has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid
     *bp = protoHasProp;
   }
   return ok;
-}
-
-/* static */
-bool
-DOMProxyHandler::AppendNamedPropertyIds(JSContext* cx,
-                                        JS::Handle<JSObject*> proxy,
-                                        nsTArray<nsString>& names,
-                                        bool shadowPrototypeProperties,
-                                        DOMProxyHandler* handler,
-                                        JS::AutoIdVector& props)
-{
-  for (uint32_t i = 0; i < names.Length(); ++i) {
-    JS::Rooted<JS::Value> v(cx);
-    if (!xpc::NonVoidStringToJsval(cx, names[i], v.address())) {
-      return false;
-    }
-
-    JS::Rooted<jsid> id(cx);
-    if (!JS_ValueToId(cx, v, id.address())) {
-      return false;
-    }
-
-    if (shadowPrototypeProperties ||
-        !HasPropertyOnPrototype(cx, proxy, handler, id)) {
-      if (!props.append(id)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
 }
 
 int32_t
