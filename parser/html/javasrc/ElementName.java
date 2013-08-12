@@ -726,7 +726,7 @@ public final class ElementName
     public static final ElementName QUOTIENT = new ElementName("quotient", "quotient", TreeBuilder.OTHER);
     public static final ElementName SELECTOR = new ElementName("selector", "selector", TreeBuilder.OTHER);
     public static final ElementName TEXTAREA = new ElementName("textarea", "textarea", TreeBuilder.TEXTAREA | SPECIAL);
-    public static final ElementName TEMPLATE = new ElementName("template", "template", TreeBuilder.TEMPLATE | SPECIAL);
+    public static final ElementName TEMPLATE = new ElementName("template", "template", TreeBuilder.TEMPLATE | SPECIAL | SCOPING);
     public static final ElementName TEXTPATH = new ElementName("textpath", "textPath", TreeBuilder.OTHER);
     public static final ElementName VARIANCE = new ElementName("variance", "variance", TreeBuilder.OTHER);
     public static final ElementName ANIMATION = new ElementName("animation", "animation", TreeBuilder.OTHER);

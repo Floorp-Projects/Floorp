@@ -109,10 +109,12 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void endTokenization();
     void startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes, bool selfClosing);
   private:
+    void startTagTitleInHead(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
     void startTagGenericRawText(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
     void startTagScriptInHead(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
     void startTagTemplateInHead(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes);
     bool isTemplateContents();
+    bool isTemplateModeStackEmpty();
     bool isSpecialParentInForeign(nsHtml5StackNode* stackNode);
   public:
     static nsString* extractCharsetFromContent(nsString* attributeValue);
@@ -121,7 +123,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
   public:
     void endTag(nsHtml5ElementName* elementName);
   private:
-    void endTagTemplateInHead(nsIAtom* name);
+    void endTagTemplateInHead();
     int32_t findLastInTableScopeOrRootTemplateTbodyTheadTfoot();
     int32_t findLast(nsIAtom* name);
     int32_t findLastInTableScope(nsIAtom* name);
@@ -357,7 +359,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 #define NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY 19
 #define NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET 20
 #define NS_HTML5TREE_BUILDER_TEXT 21
-#define NS_HTML5TREE_BUILDER_TEMPLATE_CONTENTS 22
+#define NS_HTML5TREE_BUILDER_IN_TEMPLATE 22
 #define NS_HTML5TREE_BUILDER_CHARSET_INITIAL 0
 #define NS_HTML5TREE_BUILDER_CHARSET_C 1
 #define NS_HTML5TREE_BUILDER_CHARSET_H 2
