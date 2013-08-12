@@ -5871,9 +5871,9 @@ nsGlobalWindow::Print()
         printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
       }
 
-      nsCOMPtr<nsIDOMWindow> callerWin = EnterModalState();
+      EnterModalState();
       webBrowserPrint->Print(printSettings, nullptr);
-      LeaveModalState(callerWin);
+      LeaveModalState();
 
       bool savePrintSettings =
         Preferences::GetBool("print.save_print_settings", false);
@@ -7261,7 +7261,7 @@ nsGlobalWindow::ReallyCloseWindow()
   }
 }
 
-nsIDOMWindow *
+void
 nsGlobalWindow::EnterModalState()
 {
   // GetScriptableTop, not GetTop, so that EnterModalState works properly with
@@ -7270,8 +7270,7 @@ nsGlobalWindow::EnterModalState()
 
   if (!topWin) {
     NS_ERROR("Uh, EnterModalState() called w/o a reachable top window?");
-
-    return nullptr;
+    return;
   }
 
   // If there is an active ESM in this window, clear it. Otherwise, this can
@@ -7305,21 +7304,6 @@ nsGlobalWindow::EnterModalState()
     }
   }
   topWin->mModalStateDepth++;
-
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-
-  nsCOMPtr<nsIDOMWindow> callerWin;
-  nsIScriptContext *scx;
-  if (cx && (scx = GetScriptContextFromJSContext(cx))) {
-    scx->EnterModalState();
-    callerWin = do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
-  }
-
-  if (mContext) {
-    mContext->EnterModalState();
-  }
-
-  return callerWin;
 }
 
 // static
@@ -7393,7 +7377,7 @@ private:
 };
 
 void
-nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
+nsGlobalWindow::LeaveModalState()
 {
   nsGlobalWindow* topWin = GetScriptableTop();
 
@@ -7414,19 +7398,6 @@ nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
       mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(currentDoc == mSuspendedDoc);
       mSuspendedDoc = nullptr;
     }
-  }
-
-  if (aCallerWin) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aCallerWin));
-    if (sgo) {
-      nsIScriptContext *scx = sgo->GetContext();
-      if (scx)
-        scx->LeaveModalState();
-    }
-  }
-
-  if (mContext) {
-    mContext->LeaveModalState();
   }
 
   // Remember the time of the last dialog quit.
@@ -7816,7 +7787,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs_,
 
   options.AppendLiteral(",scrollbars=1,centerscreen=1,resizable=0");
 
-  nsCOMPtr<nsIDOMWindow> callerWin = EnterModalState();
+  EnterModalState();
   uint32_t oldMicroTaskLevel = nsContentUtils::MicroTaskLevel();
   nsContentUtils::SetMicroTaskLevel(0);
   nsresult rv = OpenInternal(aURI, EmptyString(), options,
@@ -7830,7 +7801,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs_,
                              nullptr,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
   nsContentUtils::SetMicroTaskLevel(oldMicroTaskLevel);
-  LeaveModalState(callerWin);
+  LeaveModalState();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMModalContentWindow> dialog = do_QueryInterface(dlgWin);
