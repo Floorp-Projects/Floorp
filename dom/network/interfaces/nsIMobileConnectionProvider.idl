@@ -10,7 +10,7 @@ interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMWindow;
 
-[scriptable, uuid(7da2d9f6-eba1-4339-bde1-dc6732d42cdf)]
+[scriptable, uuid(74361840-c913-11e2-8b8b-0800200c9a66)]
 interface nsIMobileConnectionListener : nsISupports
 {
   void notifyVoiceChanged();
@@ -24,15 +24,13 @@ interface nsIMobileConnectionListener : nsISupports
                            in DOMString number,
                            in unsigned short timeSeconds,
                            in unsigned short serviceClass);
-  void notifyEmergencyCbModeChanged(in boolean active,
-                                    in unsigned long timeoutMs);
 };
 
 /**
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(a16681a5-a7f1-4340-a478-e0326a49e988)]
+[scriptable, uuid(12705160-d1b6-11e2-8b8b-0800200c9a66)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -75,6 +73,4 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest setCallingLineIdRestriction(in nsIDOMWindow   window,
                                                in unsigned short clirMode);
   nsIDOMDOMRequest getCallingLineIdRestriction(in nsIDOMWindow   window);
-
-  nsIDOMDOMRequest exitEmergencyCbMode(in nsIDOMWindow window);
 };
