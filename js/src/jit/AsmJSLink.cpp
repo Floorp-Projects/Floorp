@@ -46,17 +46,17 @@ GetDataProperty(JSContext *cx, const Value &objVal, HandlePropertyName field, Mu
     if (!objVal.isObject())
         return LinkFail(cx, "accessing property of non-object");
 
-    JSPropertyDescriptor desc;
+    Rooted<JSPropertyDescriptor> desc(cx);
     if (!JS_GetPropertyDescriptorById(cx, &objVal.toObject(), NameToId(field), 0, &desc))
         return false;
 
-    if (!desc.obj)
+    if (!desc.object())
         return LinkFail(cx, "property not present on object");
 
-    if (desc.attrs & (JSPROP_GETTER | JSPROP_SETTER))
+    if (desc.hasGetterOrSetterObject())
         return LinkFail(cx, "property is not a data property");
 
-    v.set(desc.value);
+    v.set(desc.value());
     return true;
 }
 

@@ -189,7 +189,7 @@ JavaScriptChild::AnswerGetPropertyDescriptor(const ObjectId &objId, const nsStri
         return fail(cx, rs);
 
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, flags, desc.address()))
+    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, flags, &desc))
         return fail(cx, rs);
 
     if (!desc.object())
@@ -222,7 +222,7 @@ JavaScriptChild::AnswerGetOwnPropertyDescriptor(const ObjectId &objId, const nsS
         return fail(cx, rs);
 
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, flags, desc.address()))
+    if (!JS_GetPropertyDescriptorById(cx, obj, internedId, flags, &desc))
         return fail(cx, rs);
 
     if (desc.object() != obj)
@@ -339,10 +339,10 @@ JavaScriptChild::AnswerHasOwn(const ObjectId &objId, const nsString &id, ReturnS
     if (!convertGeckoStringToId(cx, id, &internedId))
         return fail(cx, rs);
 
-    JSPropertyDescriptor desc;
+    Rooted<JSPropertyDescriptor> desc(cx);
     if (!JS_GetPropertyDescriptorById(cx, obj, internedId, 0, &desc))
         return fail(cx, rs);
-    *bp = (desc.obj == obj);
+    *bp = (desc.object() == obj);
 
     return ok(rs);
 }

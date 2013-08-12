@@ -3601,7 +3601,7 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
     if (!LookupPropertyById(cx, obj, id, flags, &obj2, &shape))
         return false;
 
-    JS_ASSERT(desc.isClear());
+    desc.clear();
     if (!shape || (own && obj != obj2))
         return true;
 
@@ -3636,15 +3636,11 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 
 JS_PUBLIC_API(bool)
 JS_GetPropertyDescriptorById(JSContext *cx, JSObject *objArg, jsid idArg, unsigned flags,
-                             JSPropertyDescriptor *desc_)
+                             MutableHandle<JSPropertyDescriptor> desc)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
-    Rooted<PropertyDescriptor> desc(cx);
-    if (!GetPropertyDescriptorById(cx, obj, id, flags, false, &desc))
-        return false;
-    *desc_ = desc;
-    return true;
+    return GetPropertyDescriptorById(cx, obj, id, flags, false, desc);
 }
 
 JS_PUBLIC_API(bool)

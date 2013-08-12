@@ -3478,11 +3478,6 @@ class PropertyDescriptorOperations
     JS::Handle<Value> value() const {
         return JS::Handle<Value>::fromMarkedLocation(&desc()->value);
     }
-
-    bool isClear() const {
-        return desc()->obj == NULL && desc()->attrs == 0 && desc()->getter == NULL &&
-               desc()->setter == NULL && desc()->value.isUndefined();
-    }
 };
 
 template <typename Outer>
@@ -3491,6 +3486,16 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
     JSPropertyDescriptor * desc() { return static_cast<Outer*>(this)->extractMutable(); }
 
   public:
+
+    void clear() {
+        object().set(NULL);
+        setAttributes(0);
+        setShortId(0);
+        setGetter(NULL);
+        setSetter(NULL);
+        value().setUndefined();
+    }
+
     JS::MutableHandle<JSObject*> object() {
         return JS::MutableHandle<JSObject*>::fromMarkedLocation(&desc()->obj);
     }
@@ -3574,7 +3579,7 @@ class MutableHandleBase<JSPropertyDescriptor>
  */
 extern JS_PUBLIC_API(bool)
 JS_GetPropertyDescriptorById(JSContext *cx, JSObject *obj, jsid id, unsigned flags,
-                             JSPropertyDescriptor *desc);
+                             JS::MutableHandle<JSPropertyDescriptor> desc);
 
 extern JS_PUBLIC_API(bool)
 JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, JS::MutableHandle<JS::Value> vp);
