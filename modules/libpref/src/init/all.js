@@ -226,7 +226,7 @@ pref("media.webspeech.recognition.enable", false);
 #endif
 
 // Whether to enable Web Audio support
-pref("media.webaudio.enabled", false);
+pref("media.webaudio.enabled", true);
 
 // Whether to autostart a media element with an |autoplay| attribute
 pref("media.autoplay.enabled", true);
