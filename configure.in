@@ -4208,6 +4208,8 @@ MOZ_TIME_MANAGER=
 MOZ_PAY=
 MOZ_AUDIO_CHANNEL_MANAGER=
 NSS_NO_LIBPKIX=
+MOZ_CONTENT_SANDBOX=
+MOZ_CONTENT_SANDBOX_REPORTER=
 
 case "$target_os" in
     mingw*)
@@ -6491,6 +6493,32 @@ if test -n "$NSS_NO_LIBPKIX"; then
 fi
 AC_SUBST(NSS_NO_LIBPKIX)
 
+dnl ========================================================
+dnl = Content process sandboxing
+dnl ========================================================
+if test -n "$gonkdir"; then
+    MOZ_CONTENT_SANDBOX=1
+fi
+
+MOZ_ARG_ENABLE_BOOL(content-sandbox,
+[  --enable-content-sandbox        Enable sandboxing support for content-processes],
+    MOZ_CONTENT_SANDBOX=1)
+
+if test -n "$MOZ_CONTENT_SANDBOX"; then
+    AC_DEFINE(MOZ_CONTENT_SANDBOX)
+fi
+
+AC_SUBST(MOZ_CONTENT_SANDBOX)
+
+MOZ_ARG_ENABLE_BOOL(content-sandbox-reporter,
+[ --enable-content-sandbox-reporter        Enable syscall reporter to troubleshoot syscalls denied by the content-processes sandbox],
+    MOZ_CONTENT_SANDBOX_REPORTER=1)
+
+if test -n "$MOZ_CONTENT_SANDBOX_REPORTER"; then
+    AC_DEFINE(MOZ_CONTENT_SANDBOX_REPORTER)
+fi
+
+AC_SUBST(MOZ_CONTENT_SANDBOX_REPORTER)
 
 dnl ========================================================
 dnl =
