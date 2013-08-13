@@ -187,8 +187,9 @@ var ContentAreaObserver = {
   },
 
   onBrowserCreated: function onBrowserCreated(aBrowser) {
-    aBrowser.classList.add("content-width");
-    aBrowser.classList.add("content-height");
+    let notificationBox = aBrowser.parentNode.parentNode;
+    notificationBox.classList.add("content-width");
+    notificationBox.classList.add("content-height");
   },
 
   /*
