@@ -1,7 +1,7 @@
 [
 {
-"size": 214609120,
-"digest": "cbda63d37b8db104a0fddcb5d8ffe1da173922805863905cb82e819c80cf6032caffa49903cb74e8c703da35df876cc305a7d7b989a52c045e99845e20718f7e",
+"size": 86149048,
+"digest": "4ff723d8a372e2af95e62efb8739517943f362b515b4cee78006137a8dbc97f3b42edbd2e17429eaa7fa16b7f24594ed058b7032bcb7aa2ecfe9788a212dda4d",
 "algorithm": "sha512",
 "filename": "helix-ics.tar.xz"
 },
