@@ -2402,10 +2402,10 @@ nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 
 // off-main-thread compositor fields and functions
 
-nsRefPtr<mozilla::layers::APZCTreeManager> nsWindow::sApzcTreeManager = 0;
-nsRefPtr<mozilla::layers::LayerManager> nsWindow::sLayerManager = 0;
-nsRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent = 0;
-nsRefPtr<mozilla::layers::CompositorChild> nsWindow::sCompositorChild = 0;
+StaticRefPtr<mozilla::layers::APZCTreeManager> nsWindow::sApzcTreeManager;
+StaticRefPtr<mozilla::layers::LayerManager> nsWindow::sLayerManager;
+StaticRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent;
+StaticRefPtr<mozilla::layers::CompositorChild> nsWindow::sCompositorChild;
 bool nsWindow::sCompositorPaused = true;
 
 void
