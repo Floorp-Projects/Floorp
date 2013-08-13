@@ -63,8 +63,8 @@ exports.CssLogic = CssLogic;
  * Special values for filter, in addition to an href these values can be used
  */
 CssLogic.FILTER = {
-  ALL: "all", // show properties from all user style sheets.
-  UA: "ua",   // ALL, plus user-agent (i.e. browser) style sheets
+  USER: "user", // show properties for all user style sheets.
+  UA: "ua",    // USER, plus user-agent (i.e. browser) style sheets
 };
 
 /**
@@ -112,7 +112,7 @@ CssLogic.prototype = {
   _computedStyle: null,
 
   // Source filter. Only display properties coming from the given source
-  _sourceFilter: CssLogic.FILTER.ALL,
+  _sourceFilter: CssLogic.FILTER.USER,
 
   // Used for tracking unique CssSheet/CssRule/CssSelector objects, in a run of
   // processMatchedSelectors().
@@ -448,7 +448,7 @@ CssLogic.prototype = {
         this._passId++;
         this._matchedSelectors.forEach(function(aValue) {
           aCallback.call(aScope, aValue[0], aValue[1]);
-          aValue[0]._cssRule._passId = this._passId;
+          aValue[0].cssRule._passId = this._passId;
         }, this);
       }
       return;
@@ -468,7 +468,7 @@ CssLogic.prototype = {
       rule.selectors.forEach(function (aSelector) {
         if (aSelector._matchId !== this._matchId &&
            (aSelector.elementStyle ||
-            this.selectorMatchesElement(rule._domRule, aSelector.selectorIndex))) {
+            this.selectorMatchesElement(rule.domRule, aSelector.selectorIndex))) {
 
           aSelector._matchId = this._matchId;
           this._matchedSelectors.push([ aSelector, status ]);
@@ -590,7 +590,7 @@ CssLogic.prototype = {
           sheet._passId = this._passId;
         }
 
-        if (filter === CssLogic.FILTER.ALL && !sheet.contentSheet) {
+        if (filter === CssLogic.FILTER.USER && !sheet.contentSheet) {
           continue;
         }
 
@@ -988,10 +988,10 @@ CssSheet.prototype = {
     this._sheetAllowed = true;
 
     let filter = this._cssLogic.sourceFilter;
-    if (filter === CssLogic.FILTER.ALL && !this.contentSheet) {
+    if (filter === CssLogic.FILTER.USER && !this.contentSheet) {
       this._sheetAllowed = false;
     }
-    if (filter !== CssLogic.FILTER.ALL && filter !== CssLogic.FILTER.UA) {
+    if (filter !== CssLogic.FILTER.USER && filter !== CssLogic.FILTER.UA) {
       this._sheetAllowed = (filter === this.href);
     }
 
@@ -1030,7 +1030,7 @@ CssSheet.prototype = {
     if (cacheId in this._rules) {
       for (let i = 0, rulesLen = this._rules[cacheId].length; i < rulesLen; i++) {
         rule = this._rules[cacheId][i];
-        if (rule._domRule === aDomRule) {
+        if (rule.domRule === aDomRule) {
           ruleFound = true;
           break;
         }
@@ -1134,7 +1134,7 @@ CssSheet.prototype = {
 function CssRule(aCssSheet, aDomRule, aElement)
 {
   this._cssSheet = aCssSheet;
-  this._domRule = aDomRule;
+  this.domRule = aDomRule;
 
   let parentRule = aDomRule.parentRule;
   if (parentRule && parentRule.type == Ci.nsIDOMCSSRule.MEDIA_RULE) {
@@ -1142,9 +1142,9 @@ function CssRule(aCssSheet, aDomRule, aElement)
   }
 
   if (this._cssSheet) {
-    // parse _domRule.selectorText on call to this.selectors
+    // parse domRule.selectorText on call to this.selectors
     this._selectors = null;
-    this.line = domUtils.getRuleLine(this._domRule);
+    this.line = domUtils.getRuleLine(this.domRule);
     this.source = this._cssSheet.shortSource + ":" + this.line;
     if (this.mediaText) {
       this.source += " @media " + this.mediaText;
@@ -1202,7 +1202,7 @@ CssRule.prototype = {
    */
   getPropertyValue: function(aProperty)
   {
-    return this._domRule.style.getPropertyValue(aProperty);
+    return this.domRule.style.getPropertyValue(aProperty);
   },
 
   /**
@@ -1214,7 +1214,7 @@ CssRule.prototype = {
    */
   getPropertyPriority: function(aProperty)
   {
-    return this._domRule.style.getPropertyPriority(aProperty);
+    return this.domRule.style.getPropertyPriority(aProperty);
   },
 
   /**
@@ -1232,11 +1232,11 @@ CssRule.prototype = {
     // Parse the CSSStyleRule.selectorText string.
     this._selectors = [];
 
-    if (!this._domRule.selectorText) {
+    if (!this.domRule.selectorText) {
       return this._selectors;
     }
 
-    let selectors = CssLogic.getSelectors(this._domRule);
+    let selectors = CssLogic.getSelectors(this.domRule);
 
     for (let i = 0, len = selectors.length; i < len; i++) {
       this._selectors.push(new CssSelector(this, selectors[i], i));
@@ -1247,7 +1247,7 @@ CssRule.prototype = {
 
   toString: function CssRule_toString()
   {
-    return "[CssRule " + this._domRule.selectorText + "]";
+    return "[CssRule " + this.domRule.selectorText + "]";
   },
 };
 
@@ -1262,7 +1262,7 @@ CssRule.prototype = {
  */
 function CssSelector(aCssRule, aSelector, aIndex)
 {
-  this._cssRule = aCssRule;
+  this.cssRule = aCssRule;
   this.text = aSelector;
   this.elementStyle = this.text == "@element.style";
   this._specificity = null;
@@ -1282,7 +1282,7 @@ CssSelector.prototype = {
    */
   get source()
   {
-    return this._cssRule.source;
+    return this.cssRule.source;
   },
 
   /**
@@ -1294,7 +1294,7 @@ CssSelector.prototype = {
    */
   get sourceElement()
   {
-    return this._cssRule.sourceElement;
+    return this.cssRule.sourceElement;
   },
 
   /**
@@ -1305,7 +1305,7 @@ CssSelector.prototype = {
    */
   get href()
   {
-    return this._cssRule.href;
+    return this.cssRule.href;
   },
 
   /**
@@ -1316,7 +1316,7 @@ CssSelector.prototype = {
    */
   get contentRule()
   {
-    return this._cssRule.contentRule;
+    return this.cssRule.contentRule;
   },
 
   /**
@@ -1327,7 +1327,7 @@ CssSelector.prototype = {
    */
   get sheetAllowed()
   {
-    return this._cssRule.sheetAllowed;
+    return this.cssRule.sheetAllowed;
   },
 
   /**
@@ -1338,7 +1338,7 @@ CssSelector.prototype = {
    */
   get sheetIndex()
   {
-    return this._cssRule.sheetIndex;
+    return this.cssRule.sheetIndex;
   },
 
   /**
@@ -1349,7 +1349,7 @@ CssSelector.prototype = {
    */
   get ruleLine()
   {
-    return this._cssRule.line;
+    return this.cssRule.line;
   },
 
   /**
@@ -1391,7 +1391,7 @@ CssSelector.prototype = {
       return this._specificity;
     }
 
-    this._specificity = domUtils.getSpecificity(this._cssRule._domRule,
+    this._specificity = domUtils.getSpecificity(this.cssRule.domRule,
                                                 this.selectorIndex);
 
     return this._specificity;
@@ -1534,7 +1534,7 @@ CssPropertyInfo.prototype = {
    */
   _processMatchedSelector: function CssPropertyInfo_processMatchedSelector(aSelector, aStatus)
   {
-    let cssRule = aSelector._cssRule;
+    let cssRule = aSelector.cssRule;
     let value = cssRule.getPropertyValue(this.property);
     if (value &&
         (aStatus == CssLogic.STATUS.MATCHED ||
@@ -1560,7 +1560,7 @@ CssPropertyInfo.prototype = {
     let ruleCount = 0;
 
     let iterator = function(aSelectorInfo) {
-      let cssRule = aSelectorInfo.selector._cssRule;
+      let cssRule = aSelectorInfo.selector.cssRule;
       if (cssRule._passId != passId) {
         if (cssRule.sheetAllowed) {
           ruleCount++;
@@ -1604,7 +1604,7 @@ function CssSelectorInfo(aSelector, aProperty, aValue, aStatus)
   this.value = aValue;
   this.status = aStatus;
 
-  let priority = this.selector._cssRule.getPropertyPriority(this.property);
+  let priority = this.selector.cssRule.getPropertyPriority(this.property);
   this.important = (priority === "important");
 }
 

@@ -478,7 +478,7 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
            GlobalObject::initMapIteratorProto(cx, global) &&
            js_InitSetClass(cx, global) &&
            GlobalObject::initSetIteratorProto(cx, global) &&
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
            js_InitIntlClass(cx, global) &&
 #endif
            true;

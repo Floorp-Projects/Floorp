@@ -163,6 +163,12 @@ public:
     {
     }
 
+    NS_IMETHOD GetProcess(nsACString& aProcess)
+    {
+      aProcess.Assign(mProcess);
+      return NS_OK;
+    }
+
 private:
     int64_t Amount() { return mAmount; }
 
@@ -183,7 +189,6 @@ private:
         return static_cast<ContentParent*>(Manager());
     }
 };
-    
 
 MemoryReportRequestParent::MemoryReportRequestParent()
 {
@@ -1008,8 +1013,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     }
 
     // clear the child memory reporters
-    InfallibleTArray<MemoryReport> empty;
-    SetChildMemoryReporters(empty);
+    ClearChildMemoryReporters();
 
     // remove the global remote preferences observers
     Preferences::RemoveObserver(this, "");
@@ -2076,6 +2080,15 @@ ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& rep
         do_GetService("@mozilla.org/observer-service;1");
     if (obs)
         obs->NotifyObservers(nullptr, "child-memory-reporter-update", nullptr);
+}
+
+void
+ContentParent::ClearChildMemoryReporters()
+{
+    nsCOMPtr<nsIMemoryReporterManager> mgr =
+        do_GetService("@mozilla.org/memory-reporter-manager;1");
+    for (int32_t i = 0; i < mMemoryReporters.Count(); i++)
+        mgr->UnregisterReporter(mMemoryReporters[i]);
 }
 
 PTestShellParent*

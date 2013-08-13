@@ -247,7 +247,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     structuredCloneCallbacks(NULL),
     telemetryCallback(NULL),
     propertyRemovals(0),
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
     thousandsSeparator(0),
     decimalSeparator(0),
     numGrouping(0),
@@ -425,7 +425,7 @@ JSRuntime::~JSRuntime()
     }
 #endif
 
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
     FinishRuntimeNumberState(this);
 #endif
     FinishAtoms(this);

@@ -509,7 +509,9 @@ BrowserGlue.prototype = {
       samples = Services.prefs.getIntPref("browser.slowStartup.samples");
     } catch (e) { }
 
-    averageTime = (averageTime * samples + currentTime) / ++samples;
+    let totalTime = (averageTime * samples) + currentTime;
+    samples++;
+    averageTime = totalTime / samples;
 
     if (samples >= Services.prefs.getIntPref("browser.slowStartup.maxSamples")) {
       if (averageTime > Services.prefs.getIntPref("browser.slowStartup.timeThreshold"))

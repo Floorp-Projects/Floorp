@@ -17,6 +17,9 @@ if not CONFIG['MOZ_NATIVE_NSS']:
 
 include('/config/js/js.mozbuild')
 
+if CONFIG['MOZ_CONTENT_SANDBOX']:
+    add_tier_dir('sandbox', 'security/sandbox')
+
 # the signing related bits of libmar depend on nss
 if CONFIG['MOZ_UPDATER']:
     add_tier_dir('platform', 'modules/libmar')
