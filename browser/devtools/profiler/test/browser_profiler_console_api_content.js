@@ -50,6 +50,6 @@ function runTests() {
     assertSampleAndFinish();
   });
 
-  let profile = gPanel.profiles.get(2);
+  let profile = gPanel.profiles.get(1);
   gPanel.sidebar.selectedItem = gPanel.sidebar.getItemByProfile(profile);
 }

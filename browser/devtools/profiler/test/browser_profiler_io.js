@@ -60,7 +60,7 @@ function test() {
     let file = FileUtils.getFile("TmpD", ["tmpprofile.json"]);
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
-    gPanel.saveProfile(file, gData).then(() => {dump("\n\nsup\n\n");}, () => {dump("\n\n:(((\n\n")})
+    gPanel.saveProfile(file, gData)
       .then(gPanel.loadProfile.bind(gPanel, file))
       .then(checkData);
   });
