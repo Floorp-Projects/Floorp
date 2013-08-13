@@ -461,6 +461,7 @@ OS_LIBS += \
   -lstagefright_omx \
   -lbinder \
   -lgui \
+  $(DEPTH)/widget/gonk/nativewindow/$(LIB_PREFIX)nativewindow.$(LIB_SUFFIX) \
   $(NULL)
 endif
 
