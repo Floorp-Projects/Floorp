@@ -6,6 +6,10 @@
 
 Cu.import("resource://gre/modules/Services.jsm");
 
+// When setting the max-height of the start tab contents, this is the buffer we subtract
+// for the nav bar plus white space above it.
+const kBottomContentMargin = 50;
+
 var StartUI = {
   get startUI() { return document.getElementById("start-container"); },
 
@@ -26,6 +30,8 @@ var StartUI = {
     document.getElementById("bcast_preciseInput").setAttribute("input",
       this.chromeWin.InputSourceHelper.isPrecise ? "precise" : "imprecise");
 
+    this._updateStartHeight();
+
     TopSitesStartView.init();
     BookmarksStartView.init();
     HistoryStartView.init();
@@ -36,6 +42,7 @@ var StartUI = {
     HistoryStartView.show();
     RemoteTabsStartView.show();
 
+    this.chromeWin.document.getElementById("browsers").addEventListener("SizeChanged", this, true);
     this.chromeWin.addEventListener("MozPrecisePointer", this, true);
     this.chromeWin.addEventListener("MozImprecisePointer", this, true);
     Services.obs.addObserver(this, "metro_viewstate_changed", false);
@@ -52,6 +59,7 @@ var StartUI = {
       RemoteTabsStartView.uninit();
 
     if (this.chromeWin) {
+      this.chromeWin.document.getElementById("browsers").removeEventListener("SizeChanged", this, true);
       this.chromeWin.removeEventListener("MozPrecisePointer", this, true);
       this.chromeWin.removeEventListener("MozImprecisePointer", this, true);
     }
@@ -117,7 +125,15 @@ var StartUI = {
         aEvent.preventDefault();
         aEvent.stopPropagation();
         break;
+      case "SizeChanged":
+        this._updateStartHeight();
+        break;
     }
+  },
+
+  _updateStartHeight: function () {
+    document.getElementById("start-container").style.maxHeight =
+      (this.chromeWin.ContentAreaObserver.contentHeight - kBottomContentMargin) + "px";
   },
 
   _adjustDOMforViewState: function() {
