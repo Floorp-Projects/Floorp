@@ -42,19 +42,21 @@ public class HistoryPage extends HomeFragment
         mTabWidget.addTab(R.drawable.icon_most_recent, R.string.home_most_recent_title);
         mTabWidget.addTab(R.drawable.icon_last_tabs, R.string.home_last_tabs_title);
 
+        mTabWidget.setTabSelectionListener(this);
+        mTabWidget.setCurrentTab(mSelectedTab);
+
+        loadIfVisible();
+    }
+
+    @Override
+    public void load() {
         // Show most visited page as the initial page.
         // Since we detach/attach on config change, this prevents from replacing current fragment.
         if (!initializeVisitedPage) {
             showMostVisitedPage();
             initializeVisitedPage = true;
         }
-
-        mTabWidget.setTabSelectionListener(this);
-        mTabWidget.setCurrentTab(mSelectedTab);
     }
-
-    @Override
-    public void load() {}
 
     @Override
     public void onTabChanged(int index) {
