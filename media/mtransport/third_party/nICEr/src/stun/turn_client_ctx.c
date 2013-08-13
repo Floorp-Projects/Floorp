@@ -176,6 +176,11 @@ static int nr_turn_stun_set_auth_params(nr_turn_stun_ctx *ctx,
   if (!ctx->nonce)
     ABORT(R_NO_MEMORY);
 
+  RFREE(ctx->stun->realm);
+  ctx->stun->realm = r_strdup(ctx->realm);
+  if (!ctx->stun->realm)
+    ABORT(R_NO_MEMORY);
+
   ctx->stun->auth_params.realm = ctx->realm;
   ctx->stun->auth_params.nonce = ctx->nonce;
   ctx->stun->auth_params.authenticate = 1;  /* May already be 1 */

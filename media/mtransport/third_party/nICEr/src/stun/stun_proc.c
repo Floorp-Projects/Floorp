@@ -89,7 +89,7 @@ nr_stun_receive_message(nr_stun_message *req, nr_stun_message *msg)
         }
 
         if (NR_STUN_GET_TYPE_METHOD(req->header.type) != NR_STUN_GET_TYPE_METHOD(msg->header.type)) {
-            r_log(NR_LOG_STUN,LOG_NOTICE,"Inconsistent message method: %03x", msg->header.type);
+            r_log(NR_LOG_STUN,LOG_NOTICE,"Inconsistent message method: %03x expected %03x", msg->header.type, req->header.type);
             ABORT(R_REJECTED);
         }
 
