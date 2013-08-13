@@ -26,13 +26,11 @@ function IsWindowsVistaOrLater() {
   return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.0;
 }
 
-function IsWindows7() {
-  var re = /Windows NT (\d.\d)/;
-  var winver = navigator.userAgent.match(re);
-  return winver && winver.length == 2 && parseFloat(winver[1]) == 6.1;
+function IsWindows() {
+  return navigator.userAgent.match(/Windows/) != null;
 }
 
-function getMediaPref(name) {
+function getPref(name) {
   var pref = false;
   try {
     pref = SpecialPowers.getBoolPref(name);
@@ -40,20 +38,18 @@ function getMediaPref(name) {
   return pref;
 }
 
-var haveMp4 = (getMediaPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
-               getMediaPref("media.omx.enabled") ||
-               getMediaPref("media.gstreamer.enabled");
-// TODO:  Add "getMediaPref("media.plugins.enabled")" once MP4 works on Gingerbread.
+var haveMp4 = (getPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
+               getPref("media.omx.enabled") ||
+               getPref("media.gstreamer.enabled");
+// TODO:  Add "getPref("media.plugins.enabled")" once MP4 works on Gingerbread.
              
 check_mp4(document.getElementById('v'), haveMp4);
 
-if (!IsWindows7()) {
-  // Don't check MP3 support on Windows 7. MP3 is disabled on Win7SP0 (bug 852915),
-  // and there's no easy way from JS to distinguish which service pack is installed
-  // on a users system, so we just won't test it. We'll get MP3 support on Win7SP0
-  // via DirectShow once bug 861693 lands.
-  check_mp3(document.getElementById('v'), haveMp4);
-}
+var haveMp3 = getPref("media.directshow.enabled") ||
+              (getPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
+               getPref("media.omx.enabled") ||
+               getPref("media.gstreamer.enabled");
+check_mp3(document.getElementById('v'), haveMp3);
 
 mediaTestCleanup();
 </script>
