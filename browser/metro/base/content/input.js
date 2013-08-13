@@ -448,9 +448,8 @@ var ScrollUtils = {
     let scrollbox = null;
     let qinterface = null;
 
-    // if element is content (but not the startui page), get the browser scroll interface
-    if (!BrowserUI.isStartTabVisible &&
-        elem.ownerDocument == Browser.selectedBrowser.contentDocument) {
+    // if element is content or the startui page, get the browser scroll interface
+    if (elem.ownerDocument == Browser.selectedBrowser.contentDocument) {
       elem = Browser.selectedBrowser;
     }
     for (; elem; elem = elem.parentNode) {
@@ -989,11 +988,6 @@ var GestureModule = {
 
   init: function init() {
     window.addEventListener("MozSwipeGesture", this, true);
-    /*
-    window.addEventListener("MozMagnifyGestureStart", this, true);
-    window.addEventListener("MozMagnifyGestureUpdate", this, true);
-    window.addEventListener("MozMagnifyGesture", this, true);
-    */
     window.addEventListener("CancelTouchSequence", this, true);
   },
 
@@ -1027,21 +1021,6 @@ var GestureModule = {
             aEvent.target.dispatchEvent(event);
           }
           break;
-
-        // Magnify currently doesn't work for Win8 (bug 593168)
-        /*
-        case "MozMagnifyGestureStart":
-          this._pinchStart(aEvent);
-          break;
-
-        case "MozMagnifyGestureUpdate":
-          this._pinchUpdate(aEvent);
-          break;
-
-        case "MozMagnifyGesture":
-          this._pinchEnd(aEvent);
-          break;
-        */
 
         case "CancelTouchSequence":
           this.cancelPending();
