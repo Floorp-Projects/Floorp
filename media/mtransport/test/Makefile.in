@@ -77,11 +77,16 @@ endif
 endif
 endif
 
-ifeq ($(OS_TARGET), Darwin)
+ifneq (,$(filter Darwin DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
 LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/darwin/include
+ifneq (,$(filter DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
+LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/generic/include
+endif
+ifeq ($(OS_TARGET), Darwin)
 DEFINES += \
   -DGTEST_USE_OWN_TR1_TUPLE=1 \
   $(NULL)
+endif
 endif
 
 ifeq ($(OS_TARGET), Linux)
