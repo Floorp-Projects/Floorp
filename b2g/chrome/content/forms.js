@@ -382,6 +382,10 @@ let FormAssistant = {
         break;
 
       case "keydown":
+        if (!this.focusedElement) {
+          break;
+        }
+
         // Don't monitor the text change resulting from key event.
         this._ignoreEditActionOnce = true;
 
@@ -393,6 +397,10 @@ let FormAssistant = {
         break;
 
       case "keyup":
+        if (!this.focusedElement) {
+          break;
+        }
+
         this._ignoreEditActionOnce = false;
         break;
     }
@@ -824,6 +832,10 @@ function getDocumentEncoder(element) {
 
 // Get the visible content text of a content editable element
 function getContentEditableText(element) {
+  if (!element) {
+    return null;
+  }
+
   let doc = element.ownerDocument;
   let range = doc.createRange();
   range.selectNodeContents(element);
