@@ -95,14 +95,6 @@ var StartUI = {
     section.setAttribute("expanded", "true");
   },
 
-  getScrollBoxObject: function () {
-    let startBox = document.getElementById("start-scrollbox");
-    if (!startBox._cachedSBO) {
-      startBox._cachedSBO = startBox.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-    }
-    return startBox._cachedSBO;
-  },
-
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       case "MozPrecisePointer":
@@ -115,11 +107,10 @@ var StartUI = {
         this.onClick(aEvent);
         break;
       case "MozMousePixelScroll":
-        let scroller = this.getScrollBoxObject();
         if (this.startUI.getAttribute("viewstate") == "snapped") {
-          scroller.scrollBy(0, aEvent.detail);
+          window.scrollBy(0, aEvent.detail);
         } else {
-          scroller.scrollBy(aEvent.detail, 0);
+          window.scrollBy(aEvent.detail, 0);
         }
 
         aEvent.preventDefault();
