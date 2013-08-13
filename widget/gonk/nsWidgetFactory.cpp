@@ -36,16 +36,6 @@
 
 using namespace mozilla::widget;
 
-// taken from android/nsWidgetFactory.cpp. GfxInfo is a legacy kludge, unfortunately
-// for the time being we still have to implement it on all platforms.
-#include "GfxInfo.h"
-namespace mozilla {
-namespace widget {
-// This constructor should really be shared with all platforms.
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
-}
-}
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerGonk)
 NS_GENERIC_FACTORY_CONSTRUCTOR(PuppetScreenManager)
@@ -60,7 +50,6 @@ NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
-NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 
 static nsresult
 ScreenManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -78,7 +67,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
     { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceGonkConstructor },
     { &kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor },
-    { &kNS_GFXINFO_CID, false, NULL, mozilla::widget::GfxInfoConstructor },
     { NULL }
 };
 
@@ -90,7 +78,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
     { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
     { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
-    { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
     { NULL }
 };
 
