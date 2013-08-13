@@ -3419,6 +3419,18 @@ Element::SetBoolAttr(nsIAtom* aAttr, bool aValue)
   return UnsetAttr(kNameSpaceID_None, aAttr, true);
 }
 
+Directionality
+Element::GetComputedDirectionality() const
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  if (frame) {
+    return frame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR
+             ? eDir_LTR : eDir_RTL;
+  }
+
+  return GetDirectionality();
+}
+
 float
 Element::FontSizeInflation()
 {

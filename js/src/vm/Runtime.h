@@ -76,7 +76,6 @@ typedef Rooted<JSLinearString*> RootedLinearString;
 class Activation;
 class ActivationIterator;
 class AsmJSActivation;
-class InterpreterFrames;
 class MathCache;
 class WorkerThreadState;
 
@@ -663,6 +662,7 @@ class MarkingValidator;
 typedef Vector<JS::Zone *, 1, SystemAllocPolicy> ZoneVector;
 
 class AutoLockForExclusiveAccess;
+class AutoPauseWorkersForGC;
 
 } // namespace js
 
@@ -758,11 +758,13 @@ struct JSRuntime : public JS::shadow::Runtime,
     PRLock *exclusiveAccessLock;
     mozilla::DebugOnly<PRThread *> exclusiveAccessOwner;
     mozilla::DebugOnly<bool> mainThreadHasExclusiveAccess;
+    mozilla::DebugOnly<bool> exclusiveThreadsPaused;
 
     /* Number of non-main threads with an ExclusiveContext. */
     size_t numExclusiveThreads;
 
     friend class js::AutoLockForExclusiveAccess;
+    friend class js::AutoPauseWorkersForGC;
 
   public:
 #endif // JS_THREADSAFE
@@ -770,6 +772,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool currentThreadHasExclusiveAccess() {
 #if defined(JS_THREADSAFE) && defined(DEBUG)
         return (!numExclusiveThreads && mainThreadHasExclusiveAccess) ||
+            exclusiveThreadsPaused ||
             exclusiveAccessOwner == PR_GetCurrentThread();
 #else
         return true;
@@ -783,9 +786,6 @@ struct JSRuntime : public JS::shadow::Runtime,
         return false;
 #endif
     }
-
-    /* Default compartment. */
-    JSCompartment       *atomsCompartment;
 
     /* Embedders can use this zone however they wish. */
     JS::Zone            *systemZone;
@@ -916,12 +916,6 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* The native stack size limit that runtime should not exceed. */
     size_t              nativeStackQuota;
-
-    /*
-     * Frames currently running in js::Interpret. See InterpreterFrames for
-     * details.
-     */
-    js::InterpreterFrames *interpreterFrames;
 
     /* Context create/destroy callback. */
     JSContextCallback   cxCallback;
@@ -1370,8 +1364,15 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     js::ConservativeGCData conservativeGC;
 
-    /* Pool of maps used during parse/emit. */
-    js::frontend::ParseMapPool parseMapPool;
+    // Pool of maps used during parse/emit. This may be modified by threads
+    // with an ExclusiveContext and requires a lock.
+  private:
+    js::frontend::ParseMapPool parseMapPool_;
+  public:
+    js::frontend::ParseMapPool &parseMapPool() {
+        JS_ASSERT(currentThreadHasExclusiveAccess());
+        return parseMapPool_;
+    }
 
   private:
     JSPrincipals        *trustedPrincipals_;
@@ -1379,8 +1380,29 @@ struct JSRuntime : public JS::shadow::Runtime,
     void setTrustedPrincipals(JSPrincipals *p) { trustedPrincipals_ = p; }
     JSPrincipals *trustedPrincipals() const { return trustedPrincipals_; }
 
-    /* Set of all currently-living atoms. */
-    js::AtomSet         atoms;
+    // Set of all currently-living atoms, and the compartment in which they
+    // reside. The atoms compartment is additionally used to hold runtime
+    // wide Ion code stubs. These may be modified by threads with an
+    // ExclusiveContext and require a lock.
+  private:
+    js::AtomSet atoms_;
+    JSCompartment *atomsCompartment_;
+  public:
+    js::AtomSet &atoms() {
+        JS_ASSERT(currentThreadHasExclusiveAccess());
+        return atoms_;
+    }
+    JSCompartment *atomsCompartment() {
+        JS_ASSERT(currentThreadHasExclusiveAccess());
+        return atomsCompartment_;
+    }
+
+    bool isAtomsCompartment(JSCompartment *comp) {
+        return comp == atomsCompartment_;
+    }
+
+    // The atoms compartment is the only one in its zone.
+    inline bool isAtomsZone(JS::Zone *zone);
 
     union {
         /*
@@ -1400,7 +1422,16 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSPreWrapCallback                      preWrapObjectCallback;
     js::PreserveWrapperCallback            preserveWrapperCallback;
 
-    js::ScriptDataTable scriptDataTable;
+    // Table of bytecode and other data that may be shared across scripts
+    // within the runtime. This may be modified by threads with an
+    // ExclusiveContext and requires a lock.
+  private:
+    js::ScriptDataTable scriptDataTable_;
+  public:
+    js::ScriptDataTable &scriptDataTable() {
+        JS_ASSERT(currentThreadHasExclusiveAccess());
+        return scriptDataTable_;
+    }
 
 #ifdef DEBUG
     size_t              noGCOrAllocationCheck;
