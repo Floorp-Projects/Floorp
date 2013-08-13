@@ -803,13 +803,27 @@ IonBuilder::initParameters()
     if (!info().fun())
         return true;
 
-    MParameter *param = MParameter::New(MParameter::THIS_SLOT,
-                                        cloneTypeSet(types::TypeScript::ThisTypes(script())));
+    // If we are doing OSR on a frame which initially executed in the
+    // interpreter and didn't accumulate type information, try to use that OSR
+    // frame to determine possible initial types for 'this' and parameters.
+
+    types::StackTypeSet *thisTypes = types::TypeScript::ThisTypes(script());
+    if (thisTypes->empty() && baselineFrame_)
+        thisTypes->addType(cx, types::GetValueType(cx, baselineFrame_->thisValue()));
+
+    MParameter *param = MParameter::New(MParameter::THIS_SLOT, cloneTypeSet(thisTypes));
     current->add(param);
     current->initSlot(info().thisSlot(), param);
 
     for (uint32_t i = 0; i < info().nargs(); i++) {
-        param = MParameter::New(i, cloneTypeSet(types::TypeScript::ArgTypes(script(), i)));
+        types::StackTypeSet *argTypes = types::TypeScript::ArgTypes(script(), i);
+        if (argTypes->empty() && baselineFrame_ &&
+            !script_->baselineScript()->modifiesArguments())
+        {
+            argTypes->addType(cx, types::GetValueType(cx, baselineFrame_->argv()[i]));
+        }
+
+        param = MParameter::New(i, cloneTypeSet(argTypes));
         current->add(param);
         current->initSlot(info().argSlotUnchecked(i), param);
     }
@@ -1279,7 +1293,35 @@ IonBuilder::inspectOpcode(JSOp op)
             // convert all arg accesses to go through the arguments object.
             if (info().hasArguments())
                 return abort("NYI: arguments & setarg.");
-            current->setArg(GET_SLOTNO(pc));
+
+            int32_t arg = GET_SLOTNO(pc);
+
+            // If this assignment is at the start of the function and is coercing
+            // the original value for the argument which was passed in, loosen
+            // the type information for that original argument if it is currently
+            // empty due to originally executing in the interpreter.
+            MDefinition *value = current->peek(-1);
+            if (graph().numBlocks() == 1 &&
+                (value->isBitOr() || value->isBitAnd() || value->isMul() /* for JSOP_POS */))
+             {
+                 for (size_t i = 0; i < value->numOperands(); i++) {
+                    MDefinition *op = value->getOperand(i);
+                    if (op->isParameter() &&
+                        op->toParameter()->index() == arg &&
+                        op->resultTypeSet() &&
+                        op->resultTypeSet()->empty())
+                    {
+                        types::TypeSet *argTypes = types::TypeScript::ArgTypes(script(), arg);
+
+                        // During parallel compilation the parameter's type set
+                        // will be a clone of the actual argument type set.
+                        argTypes->addType(cx, types::Type::UnknownType());
+                        op->resultTypeSet()->addType(cx, types::Type::UnknownType());
+                    }
+                }
+            }
+
+            current->setArg(arg);
         }
         return true;
 
