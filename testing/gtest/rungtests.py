@@ -10,7 +10,7 @@ from optparse import OptionParser
 import mozprocess, mozinfo, mozlog, mozcrash
 from contextlib import contextmanager
 
-log = mozlog.getLogger('gtests')
+log = mozlog.getLogger('gtest')
 
 class GTests(object):
     # Time (seconds) to wait for test process to complete
@@ -32,8 +32,7 @@ class GTests(object):
         """
         self.xre_path = xre_path
         env = self.build_environment()
-        basename = os.path.basename(prog)
-        log.info("Running test %s", basename)
+        log.info("Running gtest")
         proc = mozprocess.ProcessHandler([prog, "-unittest"],
                                          cwd=os.getcwd(),
                                          env=env)
@@ -43,17 +42,14 @@ class GTests(object):
                  outputTimeout=GTests.TEST_PROC_NO_OUTPUT_TIMEOUT)
         proc.wait()
         if proc.timedOut:
-            log.testFail("%s | timed out after %d seconds",
-                         basename, GTests.TEST_PROC_TIMEOUT)
+            log.testFail("gtest | timed out after %d seconds", GTests.TEST_PROC_TIMEOUT)
             return False
-        if mozcrash.check_for_crashes(os.getcwd(), symbols_path,
-                                      test_name=basename):
-            log.testFail("%s | test crashed", basename)
+        if mozcrash.check_for_crashes(os.getcwd(), symbols_path, test_name="gtest"):
+            # mozcrash will output the log failure line for us.
             return False
         result = proc.proc.returncode == 0
         if not result:
-            log.testFail("%s | test failed with return code %d",
-                         basename, proc.proc.returncode)
+            log.testFail("gtest | test failed with return code %d", proc.proc.returncode)
         return result
 
     def build_core_environment(self, env = {}):
