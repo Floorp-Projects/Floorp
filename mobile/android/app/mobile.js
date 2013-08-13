@@ -560,7 +560,6 @@ pref("dom.webnotifications.enabled", true);
 
 // prevent tooltips from showing up
 pref("browser.chrome.toolbar_tips", false);
-pref("indexedDB.feature.enabled", true);
 pref("dom.indexedDB.warningQuota", 5);
 
 // prevent video elements from preloading too much data
