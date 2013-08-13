@@ -29,6 +29,7 @@
 #include "vm/ForkJoin.h"
 
 #include "jsboolinlines.h"
+#include "jsscriptinlines.h"
 
 #include "jit/shared/CodeGenerator-shared-inl.h"
 #include "vm/Interpreter-inl.h"

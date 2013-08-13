@@ -1195,7 +1195,7 @@ nsDOMClassInfo::Init()
   AutoSafeJSContext cx;
 
   DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
-    DOM_CLASSINFO_WINDOW_MAP_ENTRIES(nsGlobalWindow::HasIndexedDBSupport())
+    DOM_CLASSINFO_WINDOW_MAP_ENTRIES(true)
 #ifdef MOZ_WEBSPEECH
     DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
 #endif
@@ -1390,7 +1390,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
-    DOM_CLASSINFO_WINDOW_MAP_ENTRIES(nsGlobalWindow::HasIndexedDBSupport())
+    DOM_CLASSINFO_WINDOW_MAP_ENTRIES(true)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMModalContentWindow)
 #ifdef MOZ_WEBSPEECH
     DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)

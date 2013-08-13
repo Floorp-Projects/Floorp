@@ -12,6 +12,10 @@
 #include "mozilla/Preferences.h"
 #include "WinUtils.h"
 
+#ifdef MOZ_DIRECTSHOW
+#include "DirectShowDecoder.h"
+#endif
+
 using namespace mozilla::widget;
 
 namespace mozilla {
@@ -26,7 +30,14 @@ bool
 WMFDecoder::IsMP3Supported()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-  if (!MediaDecoder::IsWMFEnabled()) {
+#ifdef MOZ_DIRECTSHOW
+  if (DirectShowDecoder::IsEnabled()) {
+    // DirectShowDecoder is enabled, we use that in preference to the WMF
+    // backend.
+    return false;
+  }
+#endif
+ if (!MediaDecoder::IsWMFEnabled()) {
     return false;
   }
   if (WinUtils::GetWindowsVersion() != WinUtils::WIN7_VERSION) {
