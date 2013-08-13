@@ -3486,9 +3486,9 @@ static bool
 TypedArrayRequiresFloatingPoint(TypedArrayObject *tarr)
 {
     uint32_t type = tarr->type();
-    return (type == TypedArrayObject::TYPE_UINT32 ||
-            type == TypedArrayObject::TYPE_FLOAT32 ||
-            type == TypedArrayObject::TYPE_FLOAT64);
+    return (type == ScalarTypeRepresentation::TYPE_UINT32 ||
+            type == ScalarTypeRepresentation::TYPE_FLOAT32 ||
+            type == ScalarTypeRepresentation::TYPE_FLOAT64);
 }
 
 static bool
@@ -4664,11 +4664,11 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     regs.take(scratchReg);
     Register secondScratch = regs.takeAny();
 
-    if (type_ == TypedArrayObject::TYPE_FLOAT32 || type_ == TypedArrayObject::TYPE_FLOAT64) {
+    if (type_ == ScalarTypeRepresentation::TYPE_FLOAT32 || type_ == ScalarTypeRepresentation::TYPE_FLOAT64) {
         masm.ensureDouble(value, FloatReg0, &failure);
         masm.storeToTypedFloatArray(type_, FloatReg0, dest);
         EmitReturnFromIC(masm);
-    } else if (type_ == TypedArrayObject::TYPE_UINT8_CLAMPED) {
+    } else if (type_ == ScalarTypeRepresentation::TYPE_UINT8_CLAMPED) {
         Label notInt32;
         masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
         masm.unboxInt32(value, secondScratch);
@@ -5589,7 +5589,7 @@ ICGetProp_TypedArrayLength::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadObjClass(obj, scratch);
     masm.branchPtr(Assembler::Below, scratch, ImmWord(&TypedArrayObject::classes[0]), &failure);
     masm.branchPtr(Assembler::AboveOrEqual, scratch,
-                   ImmWord(&TypedArrayObject::classes[TypedArrayObject::TYPE_MAX]), &failure);
+                   ImmWord(&TypedArrayObject::classes[ScalarTypeRepresentation::TYPE_MAX]), &failure);
 
     // Load length from fixed slot.
     masm.loadValue(Address(obj, TypedArrayObject::lengthOffset()), R0);

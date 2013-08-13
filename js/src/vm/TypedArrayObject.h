@@ -10,6 +10,8 @@
 #include "jsapi.h"
 #include "jsobj.h"
 
+#include "builtin/TypeRepresentation.h"
+#include "gc/Barrier.h"
 #include "js/Class.h"
 
 typedef struct JSProperty JSProperty;
@@ -280,27 +282,8 @@ class TypedArrayObject : public ArrayBufferViewObject
     static const size_t DATA_SLOT      = 7; // private slot, based on alloc kind
 
   public:
-    enum {
-        TYPE_INT8 = 0,
-        TYPE_UINT8,
-        TYPE_INT16,
-        TYPE_UINT16,
-        TYPE_INT32,
-        TYPE_UINT32,
-        TYPE_FLOAT32,
-        TYPE_FLOAT64,
-
-        /*
-         * Special type that's a uint8_t, but assignments are clamped to 0 .. 255.
-         * Treat the raw data type as a uint8_t.
-         */
-        TYPE_UINT8_CLAMPED,
-
-        TYPE_MAX
-    };
-
-    static Class classes[TYPE_MAX];
-    static Class protoClasses[TYPE_MAX];
+    static Class classes[ScalarTypeRepresentation::TYPE_MAX];
+    static Class protoClasses[ScalarTypeRepresentation::TYPE_MAX];
 
     static bool obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                   MutableHandleObject objp, MutableHandleShape propp);
@@ -369,18 +352,18 @@ class TypedArrayObject : public ArrayBufferViewObject
 
     static uint32_t slotWidth(int atype) {
         switch (atype) {
-          case js::TypedArrayObject::TYPE_INT8:
-          case js::TypedArrayObject::TYPE_UINT8:
-          case js::TypedArrayObject::TYPE_UINT8_CLAMPED:
+          case ScalarTypeRepresentation::TYPE_INT8:
+          case ScalarTypeRepresentation::TYPE_UINT8:
+          case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
             return 1;
-          case js::TypedArrayObject::TYPE_INT16:
-          case js::TypedArrayObject::TYPE_UINT16:
+          case ScalarTypeRepresentation::TYPE_INT16:
+          case ScalarTypeRepresentation::TYPE_UINT16:
             return 2;
-          case js::TypedArrayObject::TYPE_INT32:
-          case js::TypedArrayObject::TYPE_UINT32:
-          case js::TypedArrayObject::TYPE_FLOAT32:
+          case ScalarTypeRepresentation::TYPE_INT32:
+          case ScalarTypeRepresentation::TYPE_UINT32:
+          case ScalarTypeRepresentation::TYPE_FLOAT32:
             return 4;
-          case js::TypedArrayObject::TYPE_FLOAT64:
+          case ScalarTypeRepresentation::TYPE_FLOAT64:
             return 8;
           default:
             MOZ_ASSUME_UNREACHABLE("invalid typed array type");
@@ -405,14 +388,14 @@ inline bool
 IsTypedArrayClass(const Class *clasp)
 {
     return &TypedArrayObject::classes[0] <= clasp &&
-           clasp < &TypedArrayObject::classes[TypedArrayObject::TYPE_MAX];
+           clasp < &TypedArrayObject::classes[ScalarTypeRepresentation::TYPE_MAX];
 }
 
 inline bool
 IsTypedArrayProtoClass(const Class *clasp)
 {
     return &TypedArrayObject::protoClasses[0] <= clasp &&
-           clasp < &TypedArrayObject::protoClasses[TypedArrayObject::TYPE_MAX];
+           clasp < &TypedArrayObject::protoClasses[ScalarTypeRepresentation::TYPE_MAX];
 }
 
 bool
