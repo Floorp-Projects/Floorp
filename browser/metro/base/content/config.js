@@ -36,7 +36,6 @@ var ViewConfig = {
 
   filter: function filter(aValue) {
     let row = document.getElementById("editor-row");
-    row.setAttribute("hidden", aValue != "");
 
     let container = this._container;
     container.scrollBoxObject.scrollTo(0, 0);
