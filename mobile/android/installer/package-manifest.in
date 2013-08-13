@@ -283,6 +283,8 @@
 @BINPATH@/components/ConsoleAPI.js
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
+@BINPATH@/components/PhoneNumberService.js
+@BINPATH@/components/PhoneNumberService.manifest
 @BINPATH@/components/SettingsManager.js
 @BINPATH@/components/SettingsManager.manifest
 @BINPATH@/components/SettingsService.js
