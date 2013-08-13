@@ -5,10 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import with_statement
-import sys, os, tempfile, shutil
+import sys, os
 from optparse import OptionParser
 import mozprocess, mozinfo, mozlog, mozcrash
-from contextlib import contextmanager
 
 log = mozlog.getLogger('gtest')
 
