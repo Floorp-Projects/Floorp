@@ -4151,6 +4151,7 @@ MOZ_SAMPLE_TYPE_S16=
 MOZ_OPUS=1
 MOZ_WEBM=1
 MOZ_DASH=
+MOZ_DIRECTSHOW=
 MOZ_WMF=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
@@ -5430,6 +5431,24 @@ MOZ_ARG_DISABLE_BOOL(webm,
 if test -n "$MOZ_WEBM"; then
     AC_DEFINE(MOZ_WEBM)
     MOZ_VP8=1
+fi;
+
+dnl ========================================================
+dnl = DirectShow support
+dnl ========================================================
+if test "$OS_ARCH" = "WINNT"; then
+    dnl Enable DirectShow support by default.
+    MOZ_DIRECTSHOW=1
+fi
+
+MOZ_ARG_DISABLE_BOOL(directshow,
+[  --disable-directshow  Disable support for DirectShow],
+    MOZ_DIRECTSHOW=,
+    MOZ_DIRECTSHOW=1)
+
+if test -n "$MOZ_DIRECTSHOW"; then
+    AC_DEFINE(MOZ_DIRECTSHOW)
+    MOZ_CUBEB=1
 fi;
 
 dnl ========================================================
@@ -8916,6 +8935,7 @@ AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_DASH)
 AC_SUBST(MOZ_WMF)
+AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
