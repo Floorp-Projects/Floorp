@@ -154,7 +154,6 @@ abstract public class GeckoApp
     public static final String ACTION_LOAD          = "org.mozilla.gecko.LOAD";
     public static final String ACTION_LAUNCH_SETTINGS = "org.mozilla.gecko.SETTINGS";
     public static final String ACTION_INIT_PW       = "org.mozilla.gecko.INIT_PW";
-    public static final String SAVED_STATE_INTENT_HANDLED = "intentHandled";
     public static final String SAVED_STATE_IN_BACKGROUND = "inBackground";
     public static final String SAVED_STATE_PRIVATE_SESSION = "privateSession";
 
@@ -186,7 +185,6 @@ abstract public class GeckoApp
     protected GeckoProfile mProfile;
     public static int mOrientation;
     protected boolean mIsRestoringActivity;
-    private boolean mIntentHandled;
     private String mCurrentResponse = "";
     public static boolean sIsUsingCustomProfile = false;
 
@@ -492,11 +490,6 @@ abstract public class GeckoApp
 
         outState.putBoolean(SAVED_STATE_IN_BACKGROUND, isApplicationInBackground());
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
-
-        // Bug 896992 - Replace intent action with ACTION_MAIN on restart.
-        if (mIntentHandled) {
-            outState.putBoolean(SAVED_STATE_INTENT_HANDLED, true);
-        }
     }
 
     void handleFaviconRequest(final String url) {
@@ -1278,17 +1271,12 @@ abstract public class GeckoApp
                 Telemetry.HistogramAdd("FENNEC_WAS_KILLED", 1);
             }
 
-            if (savedInstanceState.getBoolean(SAVED_STATE_INTENT_HANDLED, false)) {
-                Intent thisIntent = getIntent();
-                // Bug 896992 - This intent has already been handled, clear the intent action.
-                thisIntent.setAction(Intent.ACTION_MAIN);
-                setIntent(thisIntent);
-
-                // Persist this flag for reincarnations of this Activity Intent.
-                mIntentHandled = true;
-            }
-
             mPrivateBrowsingSession = savedInstanceState.getString(SAVED_STATE_PRIVATE_SESSION);
+        }
+
+        if (savedInstanceState != null) {
+            // Bug 896992 - This intent has already been handled; reset the intent.
+            setIntent(new Intent(Intent.ACTION_MAIN));
         }
 
         // Perform background initialization.
@@ -1432,8 +1420,12 @@ abstract public class GeckoApp
 
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Restore", restoreMessage));
 
-        if (!mIsRestoringActivity) {
-            loadStartupTab(isExternalURL ? passedUri : null);
+        // External URLs should always be loaded regardless of whether Gecko is
+        // already running.
+        if (isExternalURL) {
+            loadStartupTab(passedUri);
+        } else if (!mIsRestoringActivity) {
+            loadStartupTab(null);
         }
 
         if (mRestoreMode == RESTORE_NORMAL) {
@@ -1472,7 +1464,6 @@ abstract public class GeckoApp
 
         // Check if launched from data reporting notification.
         if (ACTION_LAUNCH_SETTINGS.equals(action)) {
-            mIntentHandled = true;
             Intent settingsIntent = new Intent(GeckoApp.this, GeckoPreferences.class);
             // Copy extras.
             settingsIntent.putExtras(intent);
@@ -1867,15 +1858,9 @@ abstract public class GeckoApp
             return;
         }
 
-        // don't perform any actions if launching from recent apps
-        if ((intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0)
-            return;
-
         final String action = intent.getAction();
 
-        if (Intent.ACTION_MAIN.equals(action)) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(""));
-        } else if (ACTION_LOAD.equals(action)) {
+        if (ACTION_LOAD.equals(action)) {
             String uri = intent.getDataString();
             Tabs.getInstance().loadUrl(uri);
         } else if (Intent.ACTION_VIEW.equals(action)) {
@@ -1893,7 +1878,6 @@ abstract public class GeckoApp
         } else if (ACTION_ALERT_CALLBACK.equals(action)) {
             processAlertCallback(intent);
         } else if (ACTION_LAUNCH_SETTINGS.equals(action)) {
-            mIntentHandled = true;
             // Check if launched from data reporting notification.
             Intent settingsIntent = new Intent(GeckoApp.this, GeckoPreferences.class);
             // Copy extras.
