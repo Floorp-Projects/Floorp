@@ -163,6 +163,12 @@ public:
     {
     }
 
+    NS_IMETHOD GetProcess(nsACString& aProcess)
+    {
+      aProcess.Assign(mProcess);
+      return NS_OK;
+    }
+
 private:
     int64_t Amount() { return mAmount; }
 
