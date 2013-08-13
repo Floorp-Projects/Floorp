@@ -9,8 +9,8 @@
 #include "jscntxt.h"
 
 #ifdef JS_THREADSAFE
-# include "prthread.h"
 # include "prprf.h"
+# include "prthread.h"
 # include "jit/BaselineJIT.h"
 # include "vm/Monitor.h"
 #endif

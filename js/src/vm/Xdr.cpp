@@ -11,9 +11,9 @@
 #include "jsapi.h"
 #include "jsscript.h"
 
-#include "vm/ObjectImpl-inl.h"
-
 #include "vm/Debugger.h"
+
+#include "vm/ObjectImpl-inl.h"
 
 using namespace js;
 

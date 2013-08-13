@@ -13,8 +13,8 @@
 #endif
 
 #include "jsmath.h"
-#include "jsworkers.h"
 #include "jsprf.h"
+#include "jsworkers.h"
 #include "prmjtime.h"
 
 #include "frontend/Parser.h"

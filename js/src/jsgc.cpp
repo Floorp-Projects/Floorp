@@ -4,19 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* JS Mark-and-Sweep Garbage Collector. */
-
-#include "jsgcinlines.h"
-
-#include "mozilla/DebugOnly.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/Move.h"
-#include "mozilla/Util.h"
-
-#include "jsscriptinlines.h"
-
-using mozilla::Swap;
-
 /*
  * This code implements a mark-and-sweep garbage collector. The mark phase is
  * incremental. Most sweeping is done on a background thread. A GC is divided
@@ -45,6 +32,13 @@ using mozilla::Swap;
  * like the C stack and the VM stack, since it would be too expensive to put
  * barriers on them.
  */
+
+#include "jsgcinlines.h"
+
+#include "mozilla/DebugOnly.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
+#include "mozilla/Util.h"
 
 #include <string.h>     /* for memset used when DEBUG */
 #ifndef XP_WIN
@@ -85,6 +79,7 @@ using mozilla::Swap;
 #include "vm/WrapperObject.h"
 
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 #include "vm/Runtime-inl.h"
 #include "vm/Stack-inl.h"
@@ -96,6 +91,7 @@ using namespace js::gc;
 using mozilla::ArrayEnd;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
+using mozilla::Swap;
 
 /* Perform a Full GC every 20 seconds if MaybeGC is called */
 static const uint64_t GC_IDLE_FULL_SPAN = 20 * 1000 * 1000;
