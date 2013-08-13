@@ -1383,9 +1383,9 @@ let RIL = {
    */
   readICCContacts: function readICCContacts(options) {
     if (!this.appType) {
-      options.rilMessageType = "icccontacts";
       options.errorMsg = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
       this.sendChromeMessage(options);
+      return;
     }
 
     ICCContactHelper.readICCContacts(
@@ -1393,12 +1393,10 @@ let RIL = {
       options.contactType,
       function onsuccess(contacts) {
         // Reuse 'options' to get 'requestId' and 'contactType'.
-        options.rilMessageType = "icccontacts";
         options.contacts = contacts;
         RIL.sendChromeMessage(options);
       }.bind(this),
       function onerror(errorMsg) {
-        options.rilMessageType = "icccontacts";
         options.errorMsg = errorMsg;
         RIL.sendChromeMessage(options);
       }.bind(this));
@@ -1415,12 +1413,10 @@ let RIL = {
   updateICCContact: function updateICCContact(options) {
     let onsuccess = function onsuccess() {
       // Reuse 'options' to get 'requestId' and 'contactType'.
-      options.rilMessageType = "icccontactupdate";
       RIL.sendChromeMessage(options);
     }.bind(this);
 
     let onerror = function onerror(errorMsg) {
-      options.rilMessageType = "icccontactupdate";
       options.errorMsg = errorMsg;
       RIL.sendChromeMessage(options);
     }.bind(this);
@@ -2076,12 +2072,16 @@ let RIL = {
     try {
       let str = options.searchListStr;
       this.cellBroadcastConfigs.MMI = this._convertCellBroadcastSearchList(str);
+      options.success = true;
     } catch (e) {
       if (DEBUG) {
         debug("Invalid Cell Broadcast search list: " + e);
       }
-      options.rilRequestError = ERROR_GENERIC_FAILURE;
-      this.sendChromeMessage(options);
+      options.success = false;
+    }
+
+    this.sendChromeMessage(options);
+    if (!options.success) {
       return;
     }
 
@@ -2420,7 +2420,6 @@ let RIL = {
 
     let _sendMMIError = (function _sendMMIError(errorMsg, mmiServiceCode) {
       options.success = false;
-      options.rilMessageType = "sendMMI";
       options.errorMsg = errorMsg;
       if (mmiServiceCode) {
         options.mmiServiceCode = mmiServiceCode;
@@ -2484,8 +2483,6 @@ let RIL = {
       debug("MMI " + JSON.stringify(mmi));
     }
 
-    options.rilMessageType = "sendMMI";
-
     // We check if the MMI service code is supported and in that case we
     // trigger the appropriate RIL request if possible.
     let sc = mmi.serviceCode;
@@ -2514,8 +2511,7 @@ let RIL = {
           return;
         }
 
-        options.rilMessageType = "setCallForward";
-        options.isSendMMI = true;
+        options.isSetCallForward = true;
         options.timeSeconds = mmi.sic;
         this.setCallForward(options);
         return;
@@ -2592,7 +2588,7 @@ let RIL = {
       case MMI_SC_IMEI:
         // A device's IMEI can't change, so we only need to request it once.
         if (this.IMEI == null) {
-          this.getIMEI({mmi: true});
+          this.getIMEI(options);
           return;
         }
         // If we already had the device's IMEI, we just send it to chrome.
@@ -2634,8 +2630,7 @@ let RIL = {
             _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED, MMI_KS_SC_CLIR);
             return;
         }
-        options.rilMessageType = "setCLIR";
-        options.isSendMMI = true;
+        options.isSetCLIR = true;
         this.setCLIR(options);
         return;
 
@@ -2656,7 +2651,8 @@ let RIL = {
         if (mmi.procedure === MMI_PROCEDURE_INTERROGATION) {
           this.queryICCFacilityLock(options);
           return;
-        } else if (mmi.procedure === MMI_PROCEDURE_ACTIVATION) {
+        }
+        if (mmi.procedure === MMI_PROCEDURE_ACTIVATION) {
           options.enabled = 1;
         } else if (mmi.procedure === MMI_PROCEDURE_DEACTIVATION) {
           options.enabled = 0;
@@ -2725,7 +2721,7 @@ let RIL = {
     Buf.newParcel(REQUEST_QUERY_CALL_FORWARD_STATUS, options);
     Buf.writeUint32(CALL_FORWARD_ACTION_QUERY_STATUS);
     Buf.writeUint32(options.reason);
-    Buf.writeUint32(options.serviceClass);
+    Buf.writeUint32(options.serviceClass || ICC_SERVICE_CLASS_NONE);
     Buf.writeUint32(this._toaFromString(options.number));
     Buf.writeString(options.number);
     Buf.writeUint32(0);
@@ -2795,7 +2791,7 @@ let RIL = {
    *        Does use have confirmed the call requested from ICC?
    */
   stkHandleCallSetup: function stkHandleCallSetup(options) {
-     Buf.newParcel(REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM, options);
+     Buf.newParcel(REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM);
      Buf.writeUint32(1);
      Buf.writeUint32(options.hasConfirmed ? 1 : 0);
      Buf.sendParcel();
@@ -4375,8 +4371,8 @@ let RIL = {
                        ? GECKO_SMS_DELIVERY_STATUS_SUCCESS
                        : GECKO_SMS_DELIVERY_STATUS_ERROR;
     this.sendChromeMessage({
-      rilMessageType: "sms-delivery",
-      envelopeId: options.envelopeId,
+      rilMessageType: options.rilMessageType,
+      rilMessageToken: options.rilMessageToken,
       deliveryStatus: deliveryStatus
     });
 
@@ -4492,8 +4488,8 @@ let RIL = {
           // Fall through.
         default:
           this.sendChromeMessage({
-            rilMessageType: "sms-send-failed",
-            envelopeId: options.envelopeId,
+            rilMessageType: options.rilMessageType,
+            rilMessageToken: options.rilMessageToken,
             errorMsg: options.rilRequestError,
           });
           break;
@@ -4517,8 +4513,8 @@ let RIL = {
       }
 
       this.sendChromeMessage({
-        rilMessageType: "sms-sent",
-        envelopeId: options.envelopeId,
+        rilMessageType: options.rilMessageType,
+        rilMessageToken: options.rilMessageToken,
       });
     }
   },
@@ -5403,8 +5399,7 @@ RIL[REQUEST_SET_CLIR] = function REQUEST_SET_CLIR(length, options) {
   options.success = (options.rilRequestError === 0);
   if (!options.success) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-  }
-  if (options.success && options.isSendMMI) {
+  } else if (options.rilMessageType === "sendMMI") {
     switch (options.procedure) {
       case MMI_PROCEDURE_ACTIVATION:
         options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
@@ -5462,8 +5457,7 @@ RIL[REQUEST_SET_CALL_FORWARD] =
     options.success = (options.rilRequestError === 0);
     if (!options.success) {
       options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    }
-    if (options.success && options.isSendMMI) {
+    } else if (options.rilMessageType === "sendMMI") {
       switch (options.action) {
         case CALL_FORWARD_ACTION_ENABLE:
           options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
@@ -5506,12 +5500,10 @@ RIL[REQUEST_SMS_ACKNOWLEDGE] = null;
 RIL[REQUEST_GET_IMEI] = function REQUEST_GET_IMEI(length, options) {
   this.IMEI = Buf.readString();
   // So far we only send the IMEI back to chrome if it was requested via MMI.
-  if (!options.mmi) {
+  if (options.rilMessageType !== "sendMMI") {
     return;
   }
 
-  options.mmiServiceCode = MMI_KS_SC_IMEI;
-  options.rilMessageType = "sendMMI";
   options.success = (options.rilRequestError === 0);
   options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
   if ((!options.success || this.IMEI == null) && !options.errorMsg) {
@@ -5667,8 +5659,6 @@ RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELEC
 RIL[REQUEST_SET_NETWORK_SELECTION_AUTOMATIC] = function REQUEST_SET_NETWORK_SELECTION_AUTOMATIC(length, options) {
   if (options.rilRequestError) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendChromeMessage(options);
-    return;
   }
 
   this.sendChromeMessage(options);
@@ -5676,8 +5666,6 @@ RIL[REQUEST_SET_NETWORK_SELECTION_AUTOMATIC] = function REQUEST_SET_NETWORK_SELE
 RIL[REQUEST_SET_NETWORK_SELECTION_MANUAL] = function REQUEST_SET_NETWORK_SELECTION_MANUAL(length, options) {
   if (options.rilRequestError) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendChromeMessage(options);
-    return;
   }
 
   this.sendChromeMessage(options);
@@ -5685,11 +5673,9 @@ RIL[REQUEST_SET_NETWORK_SELECTION_MANUAL] = function REQUEST_SET_NETWORK_SELECTI
 RIL[REQUEST_QUERY_AVAILABLE_NETWORKS] = function REQUEST_QUERY_AVAILABLE_NETWORKS(length, options) {
   if (options.rilRequestError) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendChromeMessage(options);
-    return;
+  } else {
+    options.networks = this._processNetworks();
   }
-
-  options.networks = this._processNetworks();
   this.sendChromeMessage(options);
 };
 RIL[REQUEST_DTMF_START] = null;
@@ -5857,11 +5843,8 @@ RIL[REQUEST_SET_PREFERRED_NETWORK_TYPE] = function REQUEST_SET_PREFERRED_NETWORK
     return;
   }
 
-  this.sendChromeMessage({
-    rilMessageType: "setPreferredNetworkType",
-    networkType: options.networkType,
-    success: options.rilRequestError == ERROR_SUCCESS
-  });
+  options.success = (options.rilRequestError == ERROR_SUCCESS);
+  this.sendChromeMessage(options);
 };
 RIL[REQUEST_GET_PREFERRED_NETWORK_TYPE] = function REQUEST_GET_PREFERRED_NETWORK_TYPE(length, options) {
   let networkType;
@@ -5885,21 +5868,16 @@ RIL[REQUEST_CDMA_SET_SUBSCRIPTION_SOURCE] = null;
 RIL[REQUEST_CDMA_SET_ROAMING_PREFERENCE] = function REQUEST_CDMA_SET_ROAMING_PREFERENCE(length, options) {
   if (options.rilRequestError) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendChromeMessage(options);
-    return;
   }
-
   this.sendChromeMessage(options);
 };
 RIL[REQUEST_CDMA_QUERY_ROAMING_PREFERENCE] = function REQUEST_CDMA_QUERY_ROAMING_PREFERENCE(length, options) {
   if (options.rilRequestError) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
-    this.sendChromeMessage(options);
-    return;
+  } else {
+    let mode = Buf.readUint32List();
+    options.mode = CDMA_ROAMING_PREFERENCE_TO_GECKO[mode[0]];
   }
-
-  let mode = Buf.readUint32List();
-  options.mode = CDMA_ROAMING_PREFERENCE_TO_GECKO[mode[0]];
   this.sendChromeMessage(options);
 };
 RIL[REQUEST_SET_TTY_MODE] = null;
