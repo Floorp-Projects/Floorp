@@ -143,6 +143,9 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
             mir = mir->toPassArg()->getArgument();
         JS_ASSERT(!mir->isPassArg());
 
+        if (mir->isBox())
+            mir = mir->toBox()->getOperand(0);
+
         MIRType type = mir->isUnused()
                        ? MIRType_Undefined
                        : mir->type();

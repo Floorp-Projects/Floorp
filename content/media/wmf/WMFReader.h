@@ -20,8 +20,8 @@ namespace dom {
 class TimeRanges;
 }
 
-// Decoder backend for reading H.264/AAC in MP4/M4A and MP3 audio files,
-// using Windows Media Foundation.
+// Decoder backend for reading H.264/AAC in MP4/M4A, and MP3 files using
+// Windows Media Foundation.
 class WMFReader : public MediaDecoderReader
 {
 public:

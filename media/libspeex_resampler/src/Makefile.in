@@ -18,7 +18,7 @@ DEFINES += -DOUTSIDE_SPEEX
 # clashes
 DEFINES += -DRANDOM_PREFIX=speex
 # We don't use -fvisibility=hidden
-DEFINES += -DEXPORT=
+DEFINES += -DSPX_RESAMPLE_EXPORT=
 
 ifeq ($(OS_TARGET),Android)
 DEFINES += -DFIXED_POINT
