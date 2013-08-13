@@ -20,6 +20,10 @@
 namespace mozilla {
 namespace dom {
 
+// The maximum latency, in seconds, that we can live with before dropping
+// buffers.
+static const float MAX_LATENCY_S = 0.5;
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptProcessorNode)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptProcessorNode)
@@ -90,9 +94,11 @@ private:
   };
 
 public:
-  SharedBuffers()
+  SharedBuffers(float aSampleRate)
     : mOutputQueue("SharedBuffers::outputQueue")
     , mDelaySoFar(TRACK_TICKS_MAX)
+    , mSampleRate(aSampleRate)
+    , mDroppingBuffers(false)
   {
   }
 
@@ -101,6 +107,29 @@ public:
                                    uint32_t aBufferSize)
   {
     MOZ_ASSERT(NS_IsMainThread());
+
+    TimeStamp now = TimeStamp::Now();
+
+    if (mLastEventTime.IsNull()) {
+      mLastEventTime = now;
+    } else {
+      // When the main thread is blocked, and all the event are processed in a
+      // burst after the main thread unblocks, the |(now - mLastEventTime)|
+      // interval will be very short. |latency - bufferDuration| will be
+      // negative, effectively moving back mLatency to a smaller and smaller
+      // value, until it crosses zero, at which point we stop dropping buffers
+      // and resume normal operation.
+      float latency = (now - mLastEventTime).ToSeconds();
+      float bufferDuration = aBufferSize / mSampleRate;
+      mLatency += latency - bufferDuration;
+      mLastEventTime = now;
+      if (mLatency > MAX_LATENCY_S || (mDroppingBuffers && mLatency > 0.0)) {
+        mDroppingBuffers = true;
+        return;
+      } else {
+        mDroppingBuffers = false;
+      }
+    }
 
     MutexAutoLock lock(mOutputQueue.Lock());
     for (uint32_t offset = 0; offset < aBufferSize; offset += WEBAUDIO_BLOCK_SIZE) {
@@ -158,6 +187,16 @@ private:
   // caused by the main thread lagging behind in producing output buffers.
   // TRACK_TICKS_MAX means that we have not received our first buffer yet.
   TrackTicks mDelaySoFar;
+  // The samplerate of the context.
+  float mSampleRate;
+  // This is the latency caused by the buffering. If this grows too high, we
+  // will drop buffers until it is acceptable.
+  float mLatency;
+  // This is the time at which we last produced a buffer, to detect if the main
+  // thread has been blocked.
+  TimeStamp mLastEventTime;
+  // True if we should be dropping buffers.
+  bool mDroppingBuffers;
 };
 
 class ScriptProcessorNodeEngine : public AudioNodeEngine
@@ -386,7 +425,7 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
               aNumberOfInputChannels,
               mozilla::dom::ChannelCountMode::Explicit,
               mozilla::dom::ChannelInterpretation::Speakers)
-  , mSharedBuffers(new SharedBuffers())
+  , mSharedBuffers(new SharedBuffers(aContext->SampleRate()))
   , mBufferSize(aBufferSize ?
                   aBufferSize : // respect what the web developer requested
                   4096)         // choose our own buffer size -- 4KB for now
