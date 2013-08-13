@@ -39,6 +39,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
 #include "AccessCheck.h"
+#include "nsGlobalWindow.h"
 
 #include "GeckoProfiler.h"
 #include "nsJSPrincipals.h"
@@ -1226,6 +1227,61 @@ XPCJSRuntime::CTypesActivityCallback(JSContext *cx, js::CTypesActivityType type)
   } else if (type == js::CTYPES_CALLBACK_END) {
     xpc::PopJSContextNoScriptContext();
   }
+}
+
+// static
+bool
+XPCJSRuntime::OperationCallback(JSContext *cx)
+{
+    XPCJSRuntime *self = XPCJSRuntime::Get();
+
+    // If this is the first time the operation callback has fired since we last
+    // returned to the event loop, mark the checkpoint.
+    if (self->mSlowScriptCheckpoint.IsNull()) {
+        self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
+        return true;
+    }
+
+    // This is at least the second operation callback we've received since
+    // returning to the event loop. See how long it's been, and what the limit
+    // is.
+    TimeDuration duration = TimeStamp::NowLoRes() - self->mSlowScriptCheckpoint;
+    bool chrome =
+      nsContentUtils::IsSystemPrincipal(nsContentUtils::GetSubjectPrincipal());
+    const char *prefName = chrome ? "dom.max_chrome_script_run_time"
+                                  : "dom.max_script_run_time";
+    int32_t limit = Preferences::GetInt(prefName, chrome ? 20 : 10);
+
+    // If there's no limit, or we're within the limit, let it go.
+    if (limit == 0 || duration.ToSeconds() < limit)
+        return true;
+
+    //
+    // This has gone on long enough! Time to take action. ;-)
+    //
+
+    // Get the DOM window associated with the running script. If the script is
+    // running in a non-DOM scope, we have to just let it keep running.
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+    nsCOMPtr<nsPIDOMWindow> win;
+    if (IS_WN_REFLECTOR(global))
+        win = do_QueryWrappedNative(XPCWrappedNative::Get(global));
+    if (!win)
+        return true;
+
+    // Show the prompt to the user, and kill if requested.
+    nsGlobalWindow::SlowScriptResponse response =
+      static_cast<nsGlobalWindow*>(win.get())->ShowSlowScriptDialog();
+    if (response == nsGlobalWindow::KillSlowScript)
+        return false;
+
+    // The user chose to continue the script. Reset the timer, and disable this
+    // machinery with a pref of the user opted out of future slow-script dialogs.
+    self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
+    if (response == nsGlobalWindow::AlwaysContinueSlowScript)
+        Preferences::SetInt(prefName, 0);
+
+    return true;
 }
 
 size_t
@@ -2877,6 +2933,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetAccumulateTelemetryCallback(runtime, AccumulateTelemetryCallback);
     js::SetActivityCallback(runtime, ActivityCallback, this);
     js::SetCTypesActivityCallback(runtime, CTypesActivityCallback);
+    JS_SetOperationCallback(runtime, OperationCallback);
 
     // The JS engine needs to keep the source code around in order to implement
     // Function.prototype.toSource(). It'd be nice to not have to do this for
