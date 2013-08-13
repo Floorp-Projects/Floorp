@@ -35,7 +35,6 @@ SYNC_JAVA_FILES := \
   background/common/log/writers/StringLogWriter.java \
   background/common/log/writers/TagLogWriter.java \
   background/common/log/writers/ThreadLocalTagLogWriter.java \
-  background/datareporting/TelemetryRecorder.java \
   background/db/CursorDumper.java \
   background/db/Tab.java \
   background/healthreport/Environment.java \
