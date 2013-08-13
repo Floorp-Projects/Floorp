@@ -28,6 +28,9 @@ if CONFIG['MOZ_GSTREAMER']:
 if CONFIG['MOZ_DASH']:
     PARALLEL_DIRS += ['dash']
 
+if CONFIG['MOZ_DIRECTSHOW']:
+    PARALLEL_DIRS += ['directshow']
+
 if CONFIG['MOZ_MEDIA_PLUGINS']:
     PARALLEL_DIRS += ['plugins']
 
