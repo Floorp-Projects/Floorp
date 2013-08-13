@@ -228,6 +228,19 @@
           'cflags_mozilla': [
           ],
         }],
+        ['os_bsd==1', {
+          'include_dirs': [
+          ],
+          'defines': [
+            # avoiding pointless ifdef churn
+            'SIP_OS_OSX',
+            'OSX',
+            'SECLIB_OPENSSL',
+          ],
+
+          'cflags_mozilla': [
+          ],
+        }],
         ['OS=="mac"', {
           'include_dirs': [
           ],
@@ -760,7 +773,7 @@
           ],
 
         }],
-        ['OS=="mac"', {
+        ['OS=="mac" or os_bsd==1', {
 
           'include_dirs': [
           ],
@@ -801,19 +814,34 @@
           ],
 
 
-          'defines' : [
-            'SIP_OS_OSX',
-            '_POSIX_SOURCE',
-            'CPR_MEMORY_LITTLE_ENDIAN',
-            'NO_SOCKET_POLLING',
-            'USE_TIMER_SELECT_BASED',
-            'FULL_BUILD',
-            'STUBBED_OUT',
-            'USE_PRINTF',
-            '_DARWIN_C_SOURCE',
-            'NO_NSPR_10_SUPPORT',
+          'conditions': [
+            ['OS=="mac"', {
+              'defines' : [
+                'SIP_OS_OSX',
+                '_POSIX_SOURCE',
+                'CPR_MEMORY_LITTLE_ENDIAN',
+                'NO_SOCKET_POLLING',
+                'USE_TIMER_SELECT_BASED',
+                'FULL_BUILD',
+                'STUBBED_OUT',
+                'USE_PRINTF',
+                '_DARWIN_C_SOURCE',
+                'NO_NSPR_10_SUPPORT',
+              ],
+            }],
+            ['os_bsd==1', {
+              'defines' : [
+                'SIP_OS_OSX',
+                'CPR_MEMORY_LITTLE_ENDIAN',
+                'NO_SOCKET_POLLING',
+                'USE_TIMER_SELECT_BASED',
+                'FULL_BUILD',
+                'STUBBED_OUT',
+                'USE_PRINTF',
+                'NO_NSPR_10_SUPPORT',
+              ],
+            }],
           ],
-
           'cflags_mozilla': [
           ],
         }],
