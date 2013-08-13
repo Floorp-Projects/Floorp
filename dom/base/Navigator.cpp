@@ -59,7 +59,6 @@
 #include "Telephony.h"
 #endif
 #ifdef MOZ_B2G_BT
-#include "nsIDOMBluetoothManager.h"
 #include "BluetoothManager.h"
 #endif
 #include "nsIDOMCameraManager.h"
@@ -1249,7 +1248,7 @@ Navigator::GetMozMobileConnection(ErrorResult& aRv)
 #endif // MOZ_B2G_RIL
 
 #ifdef MOZ_B2G_BT
-nsIDOMBluetoothManager*
+bluetooth::BluetoothManager*
 Navigator::GetMozBluetooth(ErrorResult& aRv)
 {
   if (!mBluetooth) {
@@ -1276,7 +1275,7 @@ Navigator::EnsureMessagesManager()
   nsresult rv;
   nsCOMPtr<nsIDOMNavigatorSystemMessages> messageManager =
     do_CreateInstance("@mozilla.org/system-message-manager;1", &rv);
-  
+
   nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi =
     do_QueryInterface(messageManager);
   NS_ENSURE_TRUE(gpi, NS_ERROR_FAILURE);
@@ -1601,6 +1600,14 @@ Navigator::HasPowerSupport(JSContext* /* unused */, JSObject* aGlobal)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
   return win && PowerManager::CheckPermission(win);
+}
+
+/* static */
+bool
+Navigator::HasPhoneNumberSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return CheckPermission(win, "phonenumberservice");
 }
 
 /* static */

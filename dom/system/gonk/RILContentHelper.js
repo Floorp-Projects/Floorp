@@ -922,20 +922,24 @@ RILContentHelper.prototype = {
     // Parsing nsDOMContact to Icc Contact format
     let iccContact = {};
 
-    if (contact.name) {
+    if (Array.isArray(contact.name) && contact.name[0]) {
       iccContact.alphaId = contact.name[0];
     }
 
-    if (contact.tel) {
-      iccContact.number = contact.tel[0].value;
+    if (Array.isArray(contact.tel)) {
+      iccContact.number = contact.tel[0] && contact.tel[0].value;
+      let telArray = contact.tel.slice(1);
+      let length = telArray.length;
+      if (length > 0) {
+        iccContact.anr = [];
+      }
+      for (let i = 0; i < telArray.length; i++) {
+        iccContact.anr.push(telArray[i].value);
+      }
     }
 
-    if (contact.email) {
+    if (Array.isArray(contact.email) && contact.email[0]) {
       iccContact.email = contact.email[0].value;
-    }
-
-    if (contact.tel.length > 1) {
-      iccContact.anr = contact.tel.slice(1);
     }
 
     cpmm.sendAsyncMessage("RIL:UpdateIccContact", {

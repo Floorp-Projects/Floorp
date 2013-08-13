@@ -1292,7 +1292,7 @@ let RIL = {
    */
   setICCFacilityLock: function setICCFacilityLock(options) {
     Buf.newParcel(REQUEST_SET_FACILITY_LOCK, options);
-    Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 3 : 4);
+    Buf.writeUint32(RILQUIRKS_V5_LEGACY ? 4 : 5);
     Buf.writeString(options.facility);
     Buf.writeString(options.enabled ? "1" : "0");
     Buf.writeString(options.password);
@@ -2093,10 +2093,10 @@ let RIL = {
                    (this.mergedCellBroadcastConfig != null) &&
                    (this.mergedCellBroadcastConfig.length > 0);
     if (activate) {
-      this.setGsmSmsBroadcastConfig(this.mergedCellBroadcastConfig);
+      this.setSmsBroadcastConfig(this.mergedCellBroadcastConfig);
     } else {
       // It's unnecessary to set config first if we're deactivating.
-      this.setGsmSmsBroadcastActivation(false);
+      this.setSmsBroadcastActivation(false);
     }
   },
 
@@ -2116,8 +2116,48 @@ let RIL = {
     Buf.sendParcel();
   },
 
-  setGsmSmsBroadcastActivation: function setGsmSmsBroadcastActivation(activate) {
-    Buf.newParcel(REQUEST_GSM_SMS_BROADCAST_ACTIVATION);
+  /**
+   * Send CDMA SMS broadcast config.
+   *
+   * @see 3GPP2 C.R1001 Sec. 9.2 and 9.3
+   */
+  setCdmaSmsBroadcastConfig: function setCdmaSmsBroadcastConfig(config) {
+    // |config| is an array of half-closed range: [[from, to), [from, to), ...].
+    // It will be further decomposed, ex: [1, 4) => 1, 2, 3.
+    Buf.newParcel(REQUEST_CDMA_SET_BROADCAST_SMS_CONFIG);
+
+    let numConfigs = 0;
+    for (let i = 0; i < config.length; i += 2) {
+      numConfigs += (config[i+1] - config[i]);
+    }
+
+    Buf.writeUint32(numConfigs);
+    for (let i = 0; i < config.length;) {
+      let begin = config[i++];
+      let end = config[i++];
+
+      for (let j = begin; j < end; ++j) {
+        Buf.writeUint32(j);
+        Buf.writeUint32(0);  // Language Indicator: Unknown or unspecified.
+        Buf.writeUint32(1);
+      }
+    }
+
+    Buf.sendParcel();
+  },
+
+  setSmsBroadcastConfig: function setSmsBroadcastConfig(config) {
+    if (this._isCdma) {
+      this.setCdmaSmsBroadcastConfig(config);
+    } else {
+      this.setGsmSmsBroadcastConfig(config);
+    }
+  },
+
+  setSmsBroadcastActivation: function setSmsBroadcastActivation(activate) {
+    let parcelType = this._isCdma ? REQUEST_CDMA_SMS_BROADCAST_ACTIVATION :
+                                    REQUEST_GSM_SMS_BROADCAST_ACTIVATION;
+    Buf.newParcel(parcelType);
     Buf.writeUint32(1);
     // See hardware/ril/include/telephony/ril.h, 0 - Activate, 1 - Turn off.
     Buf.writeUint32(activate ? 0 : 1);
@@ -4669,25 +4709,47 @@ let RIL = {
     return list;
   },
 
+  _isCellBroadcastConfigReady: function() {
+    if (!("MMI" in this.cellBroadcastConfigs)) {
+      return false;
+    }
+
+    // CBMI should be ready in GSM.
+    if (!this._isCdma &&
+        (!("CBMI" in this.cellBroadcastConfigs) ||
+         !("CBMID" in this.cellBroadcastConfigs) ||
+         !("CBMIR" in this.cellBroadcastConfigs))) {
+      return false;
+    }
+
+    return true;
+  },
+
   /**
    * Merge all members of cellBroadcastConfigs into mergedCellBroadcastConfig.
    */
   _mergeAllCellBroadcastConfigs: function _mergeAllCellBroadcastConfigs() {
-    if (!("CBMI" in this.cellBroadcastConfigs)
-        || !("CBMID" in this.cellBroadcastConfigs)
-        || !("CBMIR" in this.cellBroadcastConfigs)
-        || !("MMI" in this.cellBroadcastConfigs)) {
+    if (!this._isCellBroadcastConfigReady()) {
       if (DEBUG) {
         debug("cell broadcast configs not ready, waiting ...");
       }
       return;
     }
+
+    // Prepare cell broadcast config. CBMI* are only used in GSM.
+    let usedCellBroadcastConfigs = {MMI: this.cellBroadcastConfigs.MMI};
+    if (!this._isCdma) {
+      usedCellBroadcastConfigs.CBMI = this.cellBroadcastConfigs.CBMI;
+      usedCellBroadcastConfigs.CBMID = this.cellBroadcastConfigs.CBMID;
+      usedCellBroadcastConfigs.CBMIR = this.cellBroadcastConfigs.CBMIR;
+    }
+
     if (DEBUG) {
-      debug("Cell Broadcast search lists: " + JSON.stringify(this.cellBroadcastConfigs));
+      debug("Cell Broadcast search lists: " + JSON.stringify(usedCellBroadcastConfigs));
     }
 
     let list = null;
-    for each (let ll in this.cellBroadcastConfigs) {
+    for each (let ll in usedCellBroadcastConfigs) {
       if (ll == null) {
         continue;
       }
@@ -4713,12 +4775,15 @@ let RIL = {
       return false;
     }
 
-    for (let i = 0, f, t; i < CB_NON_MMI_SETTABLE_RANGES.length;) {
-      f = CB_NON_MMI_SETTABLE_RANGES[i++];
-      t = CB_NON_MMI_SETTABLE_RANGES[i++];
-      if ((from < t) && (to > f)) {
-        // Have overlap.
-        return false;
+    if (!this._isCdma) {
+      // GSM not settable ranges.
+      for (let i = 0, f, t; i < CB_NON_MMI_SETTABLE_RANGES.length;) {
+        f = CB_NON_MMI_SETTABLE_RANGES[i++];
+        t = CB_NON_MMI_SETTABLE_RANGES[i++];
+        if ((from < t) && (to > f)) {
+          // Have overlap.
+          return false;
+        }
       }
     }
 
@@ -5851,7 +5916,7 @@ RIL[REQUEST_CDMA_SMS_ACKNOWLEDGE] = null;
 RIL[REQUEST_GSM_GET_BROADCAST_SMS_CONFIG] = null;
 RIL[REQUEST_GSM_SET_BROADCAST_SMS_CONFIG] = function REQUEST_GSM_SET_BROADCAST_SMS_CONFIG(length, options) {
   if (options.rilRequestError == ERROR_SUCCESS) {
-    this.setGsmSmsBroadcastActivation(true);
+    this.setSmsBroadcastActivation(true);
   }
 };
 RIL[REQUEST_GSM_SMS_BROADCAST_ACTIVATION] = null;
