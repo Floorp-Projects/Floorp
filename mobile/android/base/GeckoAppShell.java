@@ -1775,11 +1775,11 @@ public class GeckoAppShell
     }
 
     public static void addPluginView(View view,
-                                     int x, int y,
-                                     int w, int h,
+                                     float x, float y,
+                                     float w, float h,
                                      boolean isFullScreen) {
         if (getGeckoInterface() != null)
-             getGeckoInterface().addPluginView(view, new Rect(x, y, x + w, y + h), isFullScreen);
+             getGeckoInterface().addPluginView(view, new RectF(x, y, x + w, y + h), isFullScreen);
     }
 
     public static void removePluginView(View view, boolean isFullScreen) {
@@ -2028,7 +2028,7 @@ public class GeckoAppShell
         public SensorEventListener getSensorEventListener();
         public void doRestart();
         public void setFullScreen(boolean fullscreen);
-        public void addPluginView(View view, final Rect rect, final boolean isFullScreen);
+        public void addPluginView(View view, final RectF rect, final boolean isFullScreen);
         public void removePluginView(final View view, final boolean isFullScreen);
         public void enableCameraView();
         public void disableCameraView();

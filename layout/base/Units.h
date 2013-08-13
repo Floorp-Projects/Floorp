@@ -132,23 +132,29 @@ struct CSSPixel {
  * 2) the "widget scale" (see nsIWidget::GetDefaultScale)
  */
 struct LayoutDevicePixel {
-  static LayoutDeviceIntPoint FromUntyped(const nsIntPoint& aPoint)
-  {
+  static LayoutDeviceIntPoint FromUntyped(const nsIntPoint& aPoint) {
     return LayoutDeviceIntPoint(aPoint.x, aPoint.y);
   }
-  static nsIntPoint ToUntyped(const LayoutDeviceIntPoint& aPoint)
-  {
+
+  static nsIntPoint ToUntyped(const LayoutDeviceIntPoint& aPoint) {
     return nsIntPoint(aPoint.x, aPoint.y);
   }
 
-  static LayoutDeviceIntPoint FromAppUnits(const nsPoint& aPoint, nscoord aAppUnitsPerDevPixel)
-  {
+  static LayoutDeviceIntRect FromUntyped(const nsIntRect& aRect) {
+    return LayoutDeviceIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
+  }
+
+  static LayoutDeviceIntPoint FromAppUnits(const nsPoint& aPoint, nscoord aAppUnitsPerDevPixel) {
     return LayoutDeviceIntPoint(NSAppUnitsToIntPixels(aPoint.x, aAppUnitsPerDevPixel),
                                 NSAppUnitsToIntPixels(aPoint.y, aAppUnitsPerDevPixel));
   }
 
   static LayoutDeviceIntPoint FromAppUnitsToNearest(const nsPoint& aPoint, nscoord appUnitsPerDevPixel) {
     return FromUntyped(aPoint.ToNearestPixels(appUnitsPerDevPixel));
+  }
+
+  static LayoutDeviceIntRect FromAppUnitsToNearest(const nsRect& aRect, nscoord appUnitsPerDevPixel) {
+    return FromUntyped(aRect.ToNearestPixels(appUnitsPerDevPixel));
   }
 };
 
