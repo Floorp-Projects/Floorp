@@ -124,7 +124,11 @@ struct BaselineScript
 
         // Flag set when discarding JIT code, to indicate this script is
         // on the stack and should not be discarded.
-        ACTIVE         = 1 << 1
+        ACTIVE = 1 << 1,
+
+        // Flag set when the script contains any writes to its on-stack
+        // (rather than call object stored) arguments.
+        MODIFIES_ARGUMENTS = 1 << 2
     };
 
   private:
@@ -179,6 +183,13 @@ struct BaselineScript
 
     void setNeedsArgsObj() {
         flags_ |= NEEDS_ARGS_OBJ;
+    }
+
+    void setModifiesArguments() {
+        flags_ |= MODIFIES_ARGUMENTS;
+    }
+    bool modifiesArguments() {
+        return flags_ & MODIFIES_ARGUMENTS;
     }
 
     uint32_t prologueOffset() const {
