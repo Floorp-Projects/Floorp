@@ -657,6 +657,11 @@ MOCHITEST_FILES_C= \
 		file_CSP_bug663567_allows.xsl \
 		file_CSP_bug663567_blocks.xml \
 		file_CSP_bug663567_blocks.xml^headers^ \
+		test_CSP_bug802872.html \
+		file_CSP_bug802872.html \
+		file_CSP_bug802872.html^headers^ \
+		file_CSP_bug802872.js \
+		file_CSP_bug802872.sjs \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081) or native-fennec
