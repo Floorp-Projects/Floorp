@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class testHistory extends PixelTest {
+public class testHistory extends AboutHomeTest {
     private View mFirstChild;
 
     @Override
@@ -23,11 +23,11 @@ public class testHistory extends PixelTest {
         String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
         String url3 = getAbsoluteUrl("/robocop/robocop_blank_03.html");
 
-        loadAndPaint(url);
+        loadUrl(url);
         verifyPageTitle("Browser Blank Page 01");
-        loadAndPaint(url2);
+        loadUrl(url2);
         verifyPageTitle("Browser Blank Page 02");
-        loadAndPaint(url3);
+        loadUrl(url3);
         verifyPageTitle("Browser Blank Page 03");
 
         /*  Removed by Bug 896576 - [fig] Remove [getHistoryList] from BaseTest
