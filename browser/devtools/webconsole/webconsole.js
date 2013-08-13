@@ -488,6 +488,7 @@ WebConsoleFrame.prototype = {
 
     this._setFilterTextBoxEvents();
     this._initFilterButtons();
+    this._changeClearModifier();
 
     let fontSize = Services.prefs.getIntPref("devtools.webconsole.fontSize");
 
@@ -581,6 +582,21 @@ WebConsoleFrame.prototype = {
 
     this.filterBox.addEventListener("command", onChange, false);
     this.filterBox.addEventListener("input", onChange, false);
+  },
+
+  /**
+   * Changes modifier for the clear output shorcut on Macs.
+   *
+   * @private
+   */
+  _changeClearModifier: function WCF__changeClearModifier()
+  {
+    if (Services.appinfo.OS != "Darwin") {
+      return;
+    }
+
+    let clear = this.document.querySelector("#key_clearOutput");
+    clear.setAttribute("modifiers", "access");
   },
 
   /**
