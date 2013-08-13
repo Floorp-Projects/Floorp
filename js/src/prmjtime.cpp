@@ -33,8 +33,8 @@
 #define NS_HAVE_INVALID_PARAMETER_HANDLER 1
 #endif
 #ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
-#include <stdlib.h>   /* for _set_invalid_parameter_handler */
 #include <crtdbg.h>   /* for _CrtSetReportMode */
+#include <stdlib.h>   /* for _set_invalid_parameter_handler */
 #endif
 
 #ifdef JS_THREADSAFE
