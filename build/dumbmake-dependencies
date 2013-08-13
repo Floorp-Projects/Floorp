@@ -1,7 +1,4 @@
 toolkit/library
-  dom
-    ipc
-    security/sandbox
   ipc
   netwerk/build
     netwerk
