@@ -1591,7 +1591,7 @@ void
 js::SweepScriptData(JSRuntime *rt)
 {
     JS_ASSERT(rt->gcIsFull);
-    ScriptDataTable &table = rt->scriptDataTable;
+    ScriptDataTable &table = rt->scriptDataTable();
 
     bool keepAtoms = false;
     for (ThreadDataIter iter(rt); !iter.done(); iter.next())
@@ -1611,7 +1611,7 @@ js::SweepScriptData(JSRuntime *rt)
 void
 js::FreeScriptData(JSRuntime *rt)
 {
-    ScriptDataTable &table = rt->scriptDataTable;
+    ScriptDataTable &table = rt->scriptDataTable();
     if (!table.initialized())
         return;
 
