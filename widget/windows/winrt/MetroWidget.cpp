@@ -1330,14 +1330,6 @@ MetroWidget::HasPendingInputEvent()
 
 // GeckoContentController interface impl
 
-#include "nsIBrowserDOMWindow.h"
-#include "nsIWebNavigation.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMChromeWindow.h"
-#include "nsIWindowMediator.h"
-#include "nsIInterfaceRequestorUtils.h"
-
 class RequestContentRepaintEvent : public nsRunnable
 {
 public:

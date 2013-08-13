@@ -3543,10 +3543,6 @@ RadioInterface.prototype = {
                              reason: reason});
   },
 
-  getDataCallList: function getDataCallList() {
-    this.worker.postMessage({rilMessageType: "getDataCallList"});
-  },
-
   getCardLockState: function getCardLockState(message) {
     message.rilMessageType = "iccGetCardLockState";
     this.worker.postMessage(message);
