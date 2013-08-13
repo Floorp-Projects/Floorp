@@ -80,7 +80,9 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
 
 #include browser-sets.inc
 
+#ifdef XP_MACOSX
 #include browser-menubar.inc
+#endif
 
   <popupset id="mainPopupSet">
     <tooltip id="aHTMLTooltip" page="true"/>
