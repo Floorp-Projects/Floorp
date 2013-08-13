@@ -228,25 +228,10 @@
          return fd.dispose();
        };
 
-       {
-         // Symbol free() is special.
-         // We override the definition of free() on several platforms.
-         let default_lib = null;
-         try {
-           // On platforms for which we override free(), nspr defines
-           // a special library name "a.out" that will resolve to the
-           // correct implementation free().
-           default_lib = ctypes.open("a.out");
-         } catch (ex) {
-           // On other platforms, well, use the regular version of free.
-           default_lib = libc;
-         }
-
-         UnixFile.free =
-           default_lib.declare("free", ctypes.default_abi,
-             /*return*/ ctypes.void_t,
-             /*ptr*/    ctypes.voidptr_t);
-       }
+       UnixFile.free =
+         libc.declare("free", ctypes.default_abi,
+                       /*return*/ ctypes.void_t,
+                       /*ptr*/    ctypes.voidptr_t);
 
        // Other functions
        UnixFile.access =
