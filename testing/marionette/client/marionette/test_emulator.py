@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import time
-from marionette import Marionette, HTMLElement
+from marionette import Marionette
 
 #
 # Test that Marionette can manage multiple emulators.
