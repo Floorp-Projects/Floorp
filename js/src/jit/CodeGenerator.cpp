@@ -6547,7 +6547,7 @@ template <typename T>
 static inline void
 StoreToTypedArray(MacroAssembler &masm, int arrayType, const LAllocation *value, const T &dest)
 {
-    if (arrayType == TypedArrayObject::TYPE_FLOAT32 || arrayType == TypedArrayObject::TYPE_FLOAT64) {
+    if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT32 || arrayType == ScalarTypeRepresentation::TYPE_FLOAT64) {
         masm.storeToTypedFloatArray(arrayType, ToFloatRegister(value), dest);
     } else {
         if (value->isConstant())
