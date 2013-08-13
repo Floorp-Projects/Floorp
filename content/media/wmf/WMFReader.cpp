@@ -16,9 +16,6 @@
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "WinUtils.h"
-
-using namespace mozilla::widget;
 
 #ifndef MOZ_SAMPLE_TYPE_FLOAT32
 #error We expect 32bit float audio samples on desktop for the Windows Media Foundation media backend.
@@ -105,10 +102,7 @@ WMFReader::OnDecodeThreadFinish()
 bool
 WMFReader::InitializeDXVA()
 {
-  if (!Preferences::GetBool("media.windows-media-foundation.use-dxva", false) ||
-      WinUtils::GetWindowsVersion() == WinUtils::VISTA_VERSION) {
-    // Don't use DXVA on Vista until bug 901944's fix has time to bake on
-    // the release train.
+  if (!Preferences::GetBool("media.windows-media-foundation.use-dxva", false)) {
     return false;
   }
 
@@ -595,10 +589,23 @@ WMFReader::ReadMetadata(VideoInfo* aInfo,
       ULONG_PTR manager = ULONG_PTR(mDXVA2Manager->GetDXVADeviceManager());
       hr = videoDecoder->ProcessMessage(MFT_MESSAGE_SET_D3D_MANAGER,
                                         manager);
+      if (hr == MF_E_TRANSFORM_TYPE_NOT_SET) {
+        // Ignore MF_E_TRANSFORM_TYPE_NOT_SET. Vista returns this here
+        // on some, perhaps all, video cards. This may be because activating
+        // DXVA changes the available output types. It seems to be safe to
+        // ignore this error.
+        hr = S_OK;
+      }
     }
     if (FAILED(hr)) {
       LOG("Failed to set DXVA2 D3D Device manager on decoder");
       mUseHwAccel = false;
+      // Re-run the configuration process, so that the output video format
+      // is set correctly to reflect that hardware acceleration is disabled.
+      // Without this, we'd be running with !mUseHwAccel and the output format
+      // set to NV12, which is the format we expect when using hardware
+      // acceleration. This would cause us to misinterpret the frame contents.
+      hr = ConfigureVideoDecoder();
     }
   }
   if (mInfo.mHasVideo) {

@@ -102,7 +102,13 @@ SyncChannel::ProcessUrgentMessages()
 bool
 SyncChannel::Send(Message* _msg, Message* reply)
 {
-    MOZ_ASSERT(!mPendingReply);
+    if (mPendingReply) {
+        // This is a temporary hack in place, for e10s CPOWs, until bug 901789
+        // and the new followup RPC protocol land. Eventually this will become
+        // an assert again. See bug 900062 for details.
+        NS_ERROR("Nested sync messages are not supported");
+        return false;
+    }
 
     nsAutoPtr<Message> msg(_msg);
 
