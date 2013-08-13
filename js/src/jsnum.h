@@ -23,7 +23,7 @@ class StringBuffer;
 extern bool
 InitRuntimeNumberState(JSRuntime *rt);
 
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
 extern void
 FinishRuntimeNumberState(JSRuntime *rt);
 #endif

@@ -2704,7 +2704,7 @@ ToLocaleFormatHelper(JSContext *cx, HandleObject obj, const char *format, Mutabl
     return true;
 }
 
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
 static bool
 ToLocaleStringHelper(JSContext *cx, Handle<DateObject*> dateObj, MutableHandleValue rval)
 {
@@ -2777,7 +2777,7 @@ date_toLocaleTimeString(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsDate, date_toLocaleTimeString_impl>(cx, args);
 }
-#endif
+#endif /* !EXPOSE_INTL_API */
 
 JS_ALWAYS_INLINE bool
 date_toLocaleFormat_impl(JSContext *cx, CallArgs args)
@@ -2947,7 +2947,7 @@ static const JSFunctionSpec date_methods[] = {
     JS_FN("setUTCMilliseconds",  date_setUTCMilliseconds, 1,0),
     JS_FN("toUTCString",         date_toGMTString,        0,0),
     JS_FN("toLocaleFormat",      date_toLocaleFormat,     0,0),
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
          {js_toLocaleString_str, {NULL, NULL},            0,0, "Date_toLocaleString"},
          {"toLocaleDateString",  {NULL, NULL},            0,0, "Date_toLocaleDateString"},
          {"toLocaleTimeString",  {NULL, NULL},            0,0, "Date_toLocaleTimeString"},

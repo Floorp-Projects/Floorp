@@ -1344,7 +1344,7 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     uint32_t            propertyRemovals;
 
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
     /* Number localization, used by jsnum.cpp. */
     const char          *thousandsSeparator;
     const char          *decimalSeparator;

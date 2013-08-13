@@ -117,11 +117,6 @@ class RecursiveMakeBackend(BuildBackend):
         self._backend_files = {}
         self._ipdl_sources = set()
 
-        self.summary.managed_count = 0
-        self.summary.created_count = 0
-        self.summary.updated_count = 0
-        self.summary.unchanged_count = 0
-
         def detailed(summary):
             return '{:d} total backend files. {:d} created; {:d} updated; {:d} unchanged'.format(
                 summary.managed_count, summary.created_count,
