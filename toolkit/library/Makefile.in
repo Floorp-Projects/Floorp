@@ -468,6 +468,10 @@ ifdef MOZ_WMF
 OS_LIBS += $(call EXPAND_LIBNAME,mfuuid wmcodecdspuuid strmiids)
 endif
 
+ifdef MOZ_DIRECTSHOW
+OS_LIBS += $(call EXPAND_LIBNAME,dmoguids wmcodecdspuuid strmiids msdmo)
+endif
+
 EXTRA_DEPS += \
   $(topsrcdir)/intl/unicharutil/util/objs.mk \
   $(topsrcdir)/rdf/util/src/objs.mk \
