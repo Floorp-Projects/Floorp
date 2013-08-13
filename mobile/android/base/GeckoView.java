@@ -71,6 +71,10 @@ public class GeckoView extends LayerView
         Tabs.getInstance().loadUrl(uri);
     }
 
+    public void loadUrlInNewTab(String uri) {
+        Tabs.getInstance().loadUrl(uri, Tabs.LOADURL_NEW_TAB);
+     }
+
     public void handleMessage(String event, JSONObject message) {
         if (event.equals("Gecko:Ready")) {
             GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoRunning);
