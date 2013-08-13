@@ -995,10 +995,9 @@ WebGLContext::InitAndValidateGL()
     if (IsWebGL2() &&
         (!IsExtensionSupported(OES_vertex_array_object) ||
          !IsExtensionSupported(WEBGL_draw_buffers) ||
+         !IsExtensionSupported(ANGLE_instanced_arrays) ||
          !gl->IsExtensionSupported(gl::GLContext::EXT_gpu_shader4) ||
          !gl->IsExtensionSupported(gl::GLContext::EXT_blend_minmax) ||
-         !gl->IsExtensionSupported(gl::GLContext::XXX_draw_instanced) ||
-         !gl->IsExtensionSupported(gl::GLContext::XXX_instanced_arrays) ||
          (gl->IsGLES2() && !gl->IsExtensionSupported(gl::GLContext::EXT_occlusion_query_boolean))
         ))
     {
@@ -1023,9 +1022,11 @@ WebGLContext::InitAndValidateGL()
     if (IsWebGL2()) {
         EnableExtension(OES_vertex_array_object);
         EnableExtension(WEBGL_draw_buffers);
+        EnableExtension(ANGLE_instanced_arrays);
 
         MOZ_ASSERT(IsExtensionEnabled(OES_vertex_array_object));
         MOZ_ASSERT(IsExtensionEnabled(WEBGL_draw_buffers));
+        MOZ_ASSERT(IsExtensionEnabled(ANGLE_instanced_arrays));
     }
 
     return true;
