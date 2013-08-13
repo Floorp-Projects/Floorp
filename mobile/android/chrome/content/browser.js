@@ -7632,7 +7632,7 @@ var ExternalApps = {
   _getMediaLink: function(aElement) {
     let uri = NativeWindow.contextmenus._getLink(aElement);
     if (uri == null) {
-      if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE && (aElement instanceof Ci.nsIDOMHTMLMediaElement && mediaSrc)) {
+      if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE && (aElement instanceof Ci.nsIDOMHTMLMediaElement)) {
         try {
           let mediaSrc = aElement.currentSrc || aElement.src;
           uri = ContentAreaUtils.makeURI(mediaSrc, null, null);
