@@ -26,7 +26,8 @@ enum BluetoothServiceClass
   HEADSET_AG    = 0x1112,
   HANDSFREE     = 0x111E,
   HANDSFREE_AG  = 0x111F,
-  OBJECT_PUSH   = 0x1105
+  OBJECT_PUSH   = 0x1105,
+  HID           = 0x1124,
 };
 
 class BluetoothUuidHelper
