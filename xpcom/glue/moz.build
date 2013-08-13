@@ -27,7 +27,6 @@ EXPORTS += [
     'nsCycleCollectionNoteRootCallback.h',
     'nsCycleCollectionParticipant.h',
     'nsCycleCollectionTraversalCallback.h',
-    'nsCycleCollectorUtils.h',
     'nsDataHashtable.h',
     'nsDebug.h',
     'nsDeque.h',
