@@ -688,12 +688,12 @@ JS_Init(void)
     if (!ForkJoinSlice::InitializeTLS())
         return false;
 
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
     UErrorCode err = U_ZERO_ERROR;
     u_init(&err);
     if (U_FAILURE(err))
         return false;
-#endif // ENABLE_INTL_API
+#endif // EXPOSE_INTL_API
 
     jsInitState = Running;
     return true;
@@ -716,9 +716,9 @@ JS_ShutDown(void)
 
     PRMJ_NowShutdown();
 
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
     u_cleanup();
-#endif // ENABLE_INTL_API
+#endif // EXPOSE_INTL_API
 
     jsInitState = ShutDown;
 }
@@ -765,7 +765,7 @@ JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn, JS_ICUReallocFn reallocFn, JS_IC
                "must call JS_SetICUMemoryFunctions before any other JSAPI "
                "operation (including JS_Init)");
 
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
     UErrorCode status = U_ZERO_ERROR;
     u_setMemoryFunctions(/* context = */ NULL, allocFn, reallocFn, freeFn, &status);
     return U_SUCCESS(status);
@@ -1396,7 +1396,7 @@ static const JSStdName standard_class_atoms[] = {
     {js_InitParallelArrayClass,         EAGER_ATOM_AND_OCLASP(ParallelArray)},
 #endif
     {js_InitProxyClass,                 EAGER_CLASS_ATOM(Proxy), OCLASP(ObjectProxy)},
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
     {js_InitIntlClass,                  EAGER_ATOM_AND_CLASP(Intl)},
 #endif
 #ifdef ENABLE_BINARYDATA

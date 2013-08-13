@@ -906,6 +906,17 @@ class Value
     Value(const Value& v) = default;
 #endif
 
+    /*
+     * clang 4.1 doesn't corectly create a default assignment operator
+     * for this class, so we need to explicitly declare one.
+     */
+#if defined(__clang__) && (__clang_major__ == 4) && (__clang_minor__ <= 1)
+    Value &operator=(const Value &r) {
+        data = r.data;
+        return *this;
+    }
+#endif
+
     /*** Mutators ***/
 
     void setNull() {

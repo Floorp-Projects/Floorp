@@ -657,7 +657,7 @@ js_num_toString(JSContext *cx, unsigned argc, Value *vp)
     return CallNonGenericMethod<IsNumber, num_toString_impl>(cx, args);
 }
 
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
 JS_ALWAYS_INLINE bool
 num_toLocaleString_impl(JSContext *cx, CallArgs args)
 {
@@ -790,7 +790,7 @@ num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsNumber, num_toLocaleString_impl>(cx, args);
 }
-#endif
+#endif /* !EXPOSE_INTL_API */
 
 JS_ALWAYS_INLINE bool
 num_valueOf_impl(JSContext *cx, CallArgs args)
@@ -939,7 +939,7 @@ static const JSFunctionSpec number_methods[] = {
     JS_FN(js_toSource_str,       num_toSource,          0, 0),
 #endif
     JS_FN(js_toString_str,       js_num_toString,       1, 0),
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
          {js_toLocaleString_str, {NULL, NULL},           0,0, "Number_toLocaleString"},
 #else
     JS_FN(js_toLocaleString_str, num_toLocaleString,     0,0),
@@ -1101,10 +1101,10 @@ js::InitRuntimeNumberState(JSRuntime *rt)
 
     number_constants[NC_MIN_VALUE].dval = mozilla::MinDoubleValue();
 
-    // XXX If ENABLE_INTL_API becomes true all the time at some point,
+    // XXX If EXPOSE_INTL_API becomes true all the time at some point,
     //     js::InitRuntimeNumberState is no longer fallible, and we should
     //     change its return type.
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
     /* Copy locale-specific separators into the runtime strings. */
     const char *thousandsSeparator, *decimalPoint, *grouping;
 #ifdef HAVE_LOCALECONV
@@ -1148,11 +1148,11 @@ js::InitRuntimeNumberState(JSRuntime *rt)
 
     js_memcpy(storage, grouping, groupingSize);
     rt->numGrouping = grouping;
-#endif
+#endif /* !EXPOSE_INTL_API */
     return true;
 }
 
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
 void
 js::FinishRuntimeNumberState(JSRuntime *rt)
 {

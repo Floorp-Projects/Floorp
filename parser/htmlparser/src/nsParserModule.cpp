@@ -79,7 +79,6 @@ Initialize()
 #ifdef DEBUG
   CheckElementTable();
 #endif
-  CNewlineToken::AllocNewline();
 
 #ifdef DEBUG
   nsHTMLTags::TestTagTable();
@@ -93,9 +92,7 @@ Shutdown()
 {
   nsHTMLTags::ReleaseTable();
   nsHTMLEntities::ReleaseTable();
-  nsDTDContext::ReleaseGlobalObjects();
   nsParser::Shutdown();
-  CNewlineToken::FreeNewline();
 }
 
 static mozilla::Module kParserModule = {

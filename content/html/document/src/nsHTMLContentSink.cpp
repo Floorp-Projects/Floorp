@@ -25,7 +25,7 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsINodeInfo.h"
-#include "nsHTMLTokens.h"
+#include "nsToken.h"
 #include "nsIAppShell.h"
 #include "nsCRT.h"
 #include "prtime.h"
@@ -430,14 +430,8 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
 
-  if (aNodeType == eHTMLTag_userdefined) {
-    nsAutoString lower;
-    nsContentUtils::ASCIIToLower(aNode.GetText(), lower);
-    nsCOMPtr<nsIAtom> name = do_GetAtom(lower);
-    nodeInfo = mNodeInfoManager->GetNodeInfo(name, nullptr, kNameSpaceID_XHTML,
-                                             nsIDOMNode::ELEMENT_NODE);
-  }
-  else if (mNodeInfoCache[aNodeType]) {
+  MOZ_ASSERT(aNodeType != eHTMLTag_userdefined);
+  if (mNodeInfoCache[aNodeType]) {
     nodeInfo = mNodeInfoCache[aNodeType];
   }
   else {
@@ -864,25 +858,11 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
   case eToken_text:
   case eToken_whitespace:
   case eToken_newline:
-    rv = AddText(aNode.GetText());
+    MOZ_CRASH();
 
     break;
   case eToken_entity:
-    {
-      nsAutoString tmp;
-      int32_t unicode = aNode.TranslateToUnicodeStr(tmp);
-      if (unicode < 0) {
-        rv = AddText(aNode.GetText());
-      } else {
-        // Map carriage returns to newlines
-        if (!tmp.IsEmpty()) {
-          if (tmp.CharAt(0) == '\r') {
-            tmp.Assign((PRUnichar)'\n');
-          }
-          rv = AddText(tmp);
-        }
-      }
-    }
+    MOZ_CRASH();
 
     break;
   default:
