@@ -224,6 +224,7 @@ webidl_files = \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
   PeriodicWave.webidl \
+  PhoneNumberService.webidl \
   Plugin.webidl \
   PluginArray.webidl \
   Position.webidl \
@@ -476,7 +477,10 @@ webidl_files += \
 
 ifdef MOZ_B2G_BT
 webidl_files += \
+  BluetoothAdapter.webidl \
+  BluetoothDevice.webidl \
   BluetoothDeviceEvent.webidl \
+  BluetoothManager.webidl \
   BluetoothStatusChangedEvent.webidl \
   $(NULL)
 endif

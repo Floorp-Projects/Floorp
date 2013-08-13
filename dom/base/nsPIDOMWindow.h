@@ -58,8 +58,8 @@ class Element;
 }
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xc7f20d00, 0xed38, 0x4d60, \
- { 0x90, 0xf6, 0x3e, 0xde, 0x7b, 0x71, 0xc3, 0xb3 } }
+{ 0x4f4eadf9, 0xe795, 0x48e5, \
+  { 0x89, 0x4b, 0x04, 0x40, 0xb2, 0x5d, 0xa6, 0xfa } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -385,8 +385,8 @@ public:
    * Callback for notifying a window about a modal dialog being
    * opened/closed with the window as a parent.
    */
-  virtual nsIDOMWindow *EnterModalState() = 0;
-  virtual void LeaveModalState(nsIDOMWindow *) = 0;
+  virtual void EnterModalState() = 0;
+  virtual void LeaveModalState() = 0;
 
   virtual bool CanClose() = 0;
   virtual nsresult ForceClose() = 0;

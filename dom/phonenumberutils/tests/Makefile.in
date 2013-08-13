@@ -11,9 +11,14 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MOCHITEST_FILES = \
+  test_phonenumberutils_basics.html \
+  $(NULL)
+
 MOCHITEST_CHROME_FILES = \
   test_phonenumber.xul \
   test_phonenumberutils.xul \
+  test_phonenumberservice.xul \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

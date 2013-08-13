@@ -28,8 +28,8 @@ class nsIDOMWindow;
 class nsIURI;
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x9173717f, 0x0722, 0x44bc, \
-  { 0x99, 0x6c, 0x69, 0xa9, 0xf9, 0x6d, 0x73, 0xac } }
+{ 0xfd05ba99, 0x2906, 0x4c51, \
+  { 0x89, 0xb3, 0xbc, 0xdf, 0xf6, 0x3b, 0xf2, 0xde } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -185,9 +185,6 @@ public:
    * Tell the context we're done reinitializing it.
    */
   virtual void DidInitializeContext() = 0;
-
-  virtual void EnterModalState() = 0;
-  virtual void LeaveModalState() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContext, NS_ISCRIPTCONTEXT_IID)

@@ -239,6 +239,10 @@
 #include "mozilla/dom/SpeechSynthesis.h"
 #endif
 
+#ifdef MOZ_JSDEBUGGER
+#include "jsdIDebuggerService.h"
+#endif
+
 // Apple system headers seem to have a check() macro.  <sigh>
 #ifdef check
 #undef check
@@ -5867,9 +5871,9 @@ nsGlobalWindow::Print()
         printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
       }
 
-      nsCOMPtr<nsIDOMWindow> callerWin = EnterModalState();
+      EnterModalState();
       webBrowserPrint->Print(printSettings, nullptr);
-      LeaveModalState(callerWin);
+      LeaveModalState();
 
       bool savePrintSettings =
         Preferences::GetBool("print.save_print_settings", false);
@@ -7257,7 +7261,7 @@ nsGlobalWindow::ReallyCloseWindow()
   }
 }
 
-nsIDOMWindow *
+void
 nsGlobalWindow::EnterModalState()
 {
   // GetScriptableTop, not GetTop, so that EnterModalState works properly with
@@ -7266,8 +7270,7 @@ nsGlobalWindow::EnterModalState()
 
   if (!topWin) {
     NS_ERROR("Uh, EnterModalState() called w/o a reachable top window?");
-
-    return nullptr;
+    return;
   }
 
   // If there is an active ESM in this window, clear it. Otherwise, this can
@@ -7301,21 +7304,6 @@ nsGlobalWindow::EnterModalState()
     }
   }
   topWin->mModalStateDepth++;
-
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-
-  nsCOMPtr<nsIDOMWindow> callerWin;
-  nsIScriptContext *scx;
-  if (cx && (scx = GetScriptContextFromJSContext(cx))) {
-    scx->EnterModalState();
-    callerWin = do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
-  }
-
-  if (mContext) {
-    mContext->EnterModalState();
-  }
-
-  return callerWin;
 }
 
 // static
@@ -7389,7 +7377,7 @@ private:
 };
 
 void
-nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
+nsGlobalWindow::LeaveModalState()
 {
   nsGlobalWindow* topWin = GetScriptableTop();
 
@@ -7410,19 +7398,6 @@ nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
       mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(currentDoc == mSuspendedDoc);
       mSuspendedDoc = nullptr;
     }
-  }
-
-  if (aCallerWin) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aCallerWin));
-    if (sgo) {
-      nsIScriptContext *scx = sgo->GetContext();
-      if (scx)
-        scx->LeaveModalState();
-    }
-  }
-
-  if (mContext) {
-    mContext->LeaveModalState();
   }
 
   // Remember the time of the last dialog quit.
@@ -7812,7 +7787,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs_,
 
   options.AppendLiteral(",scrollbars=1,centerscreen=1,resizable=0");
 
-  nsCOMPtr<nsIDOMWindow> callerWin = EnterModalState();
+  EnterModalState();
   uint32_t oldMicroTaskLevel = nsContentUtils::MicroTaskLevel();
   nsContentUtils::SetMicroTaskLevel(0);
   nsresult rv = OpenInternal(aURI, EmptyString(), options,
@@ -7826,7 +7801,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs_,
                              nullptr,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
   nsContentUtils::SetMicroTaskLevel(oldMicroTaskLevel);
-  LeaveModalState(callerWin);
+  LeaveModalState();
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMModalContentWindow> dialog = do_QueryInterface(dlgWin);
@@ -9372,6 +9347,167 @@ nsGlobalWindow::HandleIdleActiveEvent()
   }
 
   return NS_OK;
+}
+
+nsGlobalWindow::SlowScriptResponse
+nsGlobalWindow::ShowSlowScriptDialog()
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  nsresult rv;
+  AutoJSContext cx;
+
+  // If it isn't safe to run script, then it isn't safe to bring up the prompt
+  // (since that spins the event loop). In that (rare) case, we just kill the
+  // script and report a warning.
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    JS_ReportWarning(cx, "A long running script was terminated");
+    return KillSlowScript;
+  }
+
+  // Get the nsIPrompt interface from the docshell
+  nsCOMPtr<nsIDocShell> ds = GetDocShell();
+  NS_ENSURE_TRUE(ds, KillSlowScript);
+  nsCOMPtr<nsIPrompt> prompt = do_GetInterface(ds);
+  NS_ENSURE_TRUE(prompt, KillSlowScript);
+
+  // Check if we should offer the option to debug
+  JS::RootedScript script(cx);
+  unsigned lineno;
+  bool hasFrame = JS_DescribeScriptedCaller(cx, script.address(), &lineno);
+
+  bool debugPossible = hasFrame && js::CanCallContextDebugHandler(cx);
+#ifdef MOZ_JSDEBUGGER
+  // Get the debugger service if necessary.
+  if (debugPossible) {
+    bool jsds_IsOn = false;
+    const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
+    nsCOMPtr<jsdIExecutionHook> jsdHook;
+    nsCOMPtr<jsdIDebuggerService> jsds = do_GetService(jsdServiceCtrID, &rv);
+
+    // Check if there's a user for the debugger service that's 'on' for us
+    if (NS_SUCCEEDED(rv)) {
+      jsds->GetDebuggerHook(getter_AddRefs(jsdHook));
+      jsds->GetIsOn(&jsds_IsOn);
+    }
+
+    // If there is a debug handler registered for this runtime AND
+    // ((jsd is on AND has a hook) OR (jsd isn't on (something else debugs)))
+    // then something useful will be done with our request to debug.
+    debugPossible = ((jsds_IsOn && (jsdHook != nullptr)) || !jsds_IsOn);
+  }
+#endif
+
+  // Get localizable strings
+  nsXPIDLString title, msg, stopButton, waitButton, debugButton, neverShowDlg;
+
+  rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                          "KillScriptTitle",
+                                          title);
+
+  nsresult tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                           "StopScriptButton",
+                                           stopButton);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+
+  tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                           "WaitForScriptButton",
+                                           waitButton);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+
+  tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                           "DontAskAgain",
+                                           neverShowDlg);
+  if (NS_FAILED(tmp)) {
+    rv = tmp;
+  }
+
+
+  if (debugPossible) {
+    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             "DebugScriptButton",
+                                             debugButton);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+
+    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             "KillScriptWithDebugMessage",
+                                             msg);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+  }
+  else {
+    tmp = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                             "KillScriptMessage",
+                                             msg);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
+  }
+
+  // GetStringFromName can return NS_OK and still give NULL string
+  if (NS_FAILED(rv) || !title || !msg || !stopButton || !waitButton ||
+      (!debugButton && debugPossible) || !neverShowDlg) {
+    NS_ERROR("Failed to get localized strings.");
+    return ContinueSlowScript;
+  }
+
+  // Append file and line number information, if available
+  if (script) {
+    const char *filename = JS_GetScriptFilename(cx, script);
+    if (filename) {
+      nsXPIDLString scriptLocation;
+      NS_ConvertUTF8toUTF16 filenameUTF16(filename);
+      const PRUnichar *formatParams[] = { filenameUTF16.get() };
+      rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                 "KillScriptLocation",
+                                                 formatParams,
+                                                 scriptLocation);
+
+      if (NS_SUCCEEDED(rv) && scriptLocation) {
+        msg.AppendLiteral("\n\n");
+        msg.Append(scriptLocation);
+        msg.Append(':');
+        msg.AppendInt(lineno);
+      }
+    }
+  }
+
+  int32_t buttonPressed = 0; // In case the user exits dialog by clicking X.
+  bool neverShowDlgChk = false;
+  uint32_t buttonFlags = nsIPrompt::BUTTON_POS_1_DEFAULT +
+                         (nsIPrompt::BUTTON_TITLE_IS_STRING *
+                          (nsIPrompt::BUTTON_POS_0 + nsIPrompt::BUTTON_POS_1));
+
+  // Add a third button if necessary.
+  if (debugPossible)
+    buttonFlags += nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_2;
+
+  // Null out the operation callback while we're re-entering JS here.
+  JSRuntime* rt = JS_GetRuntime(cx);
+  JSOperationCallback old = JS_SetOperationCallback(rt, nullptr);
+
+  // Open the dialog.
+  rv = prompt->ConfirmEx(title, msg, buttonFlags, waitButton, stopButton,
+                         debugButton, neverShowDlg, &neverShowDlgChk,
+                         &buttonPressed);
+
+  JS_SetOperationCallback(rt, old);
+
+  if (NS_SUCCEEDED(rv) && (buttonPressed == 0)) {
+    return neverShowDlgChk ? AlwaysContinueSlowScript : ContinueSlowScript;
+  }
+  if ((buttonPressed == 2) && debugPossible) {
+    return js_CallContextDebugHandler(cx) ? ContinueSlowScript : KillSlowScript;
+  }
+  JS_ClearPendingException(cx);
+  return KillSlowScript;
 }
 
 uint32_t
