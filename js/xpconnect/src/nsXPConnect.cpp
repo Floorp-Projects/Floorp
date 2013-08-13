@@ -48,7 +48,6 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollector.h"
-#include "nsCycleCollectorUtils.h"
 #include "nsDOMMutationObserver.h"
 #include "nsICycleCollectorListener.h"
 #include "nsThread.h"

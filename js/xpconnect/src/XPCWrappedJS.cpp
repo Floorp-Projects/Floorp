@@ -12,7 +12,6 @@
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 #include "nsTextFormatter.h"
-#include "nsCycleCollectorUtils.h"
 
 using namespace mozilla;
 
@@ -155,7 +154,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 nsrefcnt
 nsXPCWrappedJS::AddRef(void)
 {
-    if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
+    if (!MOZ_LIKELY(NS_IsMainThread()))
         MOZ_CRASH();
     nsrefcnt cnt = ++mRefCnt;
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
@@ -171,7 +170,7 @@ nsXPCWrappedJS::AddRef(void)
 nsrefcnt
 nsXPCWrappedJS::Release(void)
 {
-    if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
+    if (!MOZ_LIKELY(NS_IsMainThread()))
         MOZ_CRASH();
     NS_PRECONDITION(0 != mRefCnt, "dup release");
 
@@ -281,7 +280,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
                              nsXPCWrappedJS** wrapperResult)
 {
     // Do a release-mode assert against accessing nsXPCWrappedJS off-main-thread.
-    if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
+    if (!MOZ_LIKELY(NS_IsMainThread()))
         MOZ_CRASH();
 
     AutoJSContext cx;
@@ -567,7 +566,7 @@ nsXPCWrappedJS::CallMethod(uint16_t methodIndex,
                            nsXPTCMiniVariant* params)
 {
     // Do a release-mode assert against accessing nsXPCWrappedJS off-main-thread.
-    if (!MOZ_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
+    if (!MOZ_LIKELY(NS_IsMainThread()))
         MOZ_CRASH();
 
     if (!IsValid())
