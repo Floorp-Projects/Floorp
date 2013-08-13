@@ -824,6 +824,10 @@ function getDocumentEncoder(element) {
 
 // Get the visible content text of a content editable element
 function getContentEditableText(element) {
+  if (!element) {
+    return null;
+  }
+
   let doc = element.ownerDocument;
   let range = doc.createRange();
   range.selectNodeContents(element);
