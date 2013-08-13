@@ -772,38 +772,6 @@ UnpackManagerPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
 }
 
 static void
-GetManagerPropertiesCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
-{
-  RunDBusCallback(aMsg, aBluetoothReplyRunnable,
-                  UnpackManagerPropertiesMessage);
-}
-
-static void
-GetAdapterPropertiesCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
-{
-  RunDBusCallback(aMsg, aBluetoothReplyRunnable,
-                  UnpackAdapterPropertiesMessage);
-}
-
-static void
-GetDevicePropertiesCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable)
-{
-  RunDBusCallback(aMsg, aBluetoothReplyRunnable,
-                  UnpackDevicePropertiesMessage);
-}
-
-static DBusCallback sBluetoothDBusPropCallbacks[] =
-{
-  GetManagerPropertiesCallback,
-  GetAdapterPropertiesCallback,
-  GetDevicePropertiesCallback
-};
-
-static_assert(
-  sizeof(sBluetoothDBusPropCallbacks) == sizeof(sBluetoothDBusIfaces),
-  "DBus Property callback array and DBus interface array must be same size");
-
-static void
 ParsePropertyChange(DBusMessage* aMsg, BluetoothValue& aValue,
                     nsAString& aErrorStr, Properties* aPropertyTypes,
                     const int aPropertyTypeLen)
