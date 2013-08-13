@@ -425,11 +425,15 @@ nsInputStreamPump::OnInputStreamReady(nsIAsyncInputStream *stream)
         if (!mSuspendCount && (stillTransferring || mRetargeting)) {
             mState = nextState;
             mWaiting = false;
-            mStatus = EnsureWaiting();
-            if (NS_SUCCEEDED(mStatus))
+            nsresult rv = EnsureWaiting();
+            if (NS_SUCCEEDED(rv))
                 break;
             
             // Failure to start asynchronous wait: stop transfer.
+            // Do not set mStatus if it was previously set to report a failure.
+            if (NS_SUCCEEDED(mStatus)) {
+                mStatus = rv;
+            }
             nextState = STATE_STOP;
         }
 

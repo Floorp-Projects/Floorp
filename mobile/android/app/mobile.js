@@ -747,11 +747,6 @@ pref("browser.contentHandlers.types.3.uri", "chrome://browser/locale/region.prop
 pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed");
 
 #ifndef RELEASE_BUILD
-// Enable Web Audio for Firefox for Android in Nightly and Aurora
-pref("media.webaudio.enabled", true);
-#endif
-
-#ifndef RELEASE_BUILD
 pref("dom.payment.provider.0.name", "Firefox Marketplace");
 pref("dom.payment.provider.0.description", "marketplace.firefox.com");
 pref("dom.payment.provider.0.uri", "https://marketplace.firefox.com/mozpay/?req=");

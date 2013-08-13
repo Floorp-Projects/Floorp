@@ -653,6 +653,8 @@ HTMLCanvasElement::MozGetAsFile(const nsAString& aName,
                                 const nsAString& aType,
                                 nsIDOMFile** aResult)
 {
+  OwnerDoc()->WarnOnceAbout(nsIDocument::eMozGetAsFile);
+
   // do a trust check if this is a write-only canvas
   if ((mWriteOnly) &&
       !nsContentUtils::IsCallerChrome()) {
