@@ -127,7 +127,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     selfHostingGlobal_(NULL),
     nativeStackBase(0),
     nativeStackQuota(0),
-    interpreterFrames(NULL),
     cxCallback(NULL),
     destroyCompartmentCallback(NULL),
     compartmentNameCallback(NULL),
