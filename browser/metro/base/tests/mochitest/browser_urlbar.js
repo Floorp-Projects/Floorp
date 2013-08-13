@@ -155,6 +155,51 @@ gTests.push({
 });
 
 gTests.push({
+  desc: "Control-Enter in urlbar",
+  setUp: setUp,
+  tearDown: tearDown,
+  run: function () {
+    sendElementTap(window, gEdit);
+    ok(gEdit.isEditing, "focus urlbar: in editing mode");
+
+    EventUtils.sendString("example", window);
+    EventUtils.synthesizeKey("VK_RETURN", { accelKey: true }, window);
+    is(gEdit.value, "www.example.com", "Control-enter adds www. and .com");
+    ok(!gEdit.isEditing, "hit enter in urlbar: not in editing mode");
+  }
+});
+
+gTests.push({
+  desc: "Shift-Enter in urlbar",
+  setUp: setUp,
+  tearDown: tearDown,
+  run: function () {
+    sendElementTap(window, gEdit);
+    ok(gEdit.isEditing, "focus urlbar: in editing mode");
+
+    EventUtils.sendString("example", window);
+    EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true }, window);
+    is(gEdit.value, "www.example.net", "Shift-enter adds www. and .net");
+    ok(!gEdit.isEditing, "hit enter in urlbar: not in editing mode");
+  }
+});
+
+gTests.push({
+  desc: "Control-Shift-Enter in urlbar",
+  setUp: setUp,
+  tearDown: tearDown,
+  run: function () {
+    sendElementTap(window, gEdit);
+    ok(gEdit.isEditing, "focus urlbar: in editing mode");
+
+    EventUtils.sendString("example", window);
+    EventUtils.synthesizeKey("VK_RETURN", { accelKey: true, shiftKey: true }, window);
+    is(gEdit.value, "www.example.org", "Shift-enter adds www. and .org");
+    ok(!gEdit.isEditing, "hit enter in urlbar: not in editing mode");
+  }
+});
+
+gTests.push({
   desc: "display and select a search with keyboard",
   setUp: setUp,
   tearDown: tearDown,

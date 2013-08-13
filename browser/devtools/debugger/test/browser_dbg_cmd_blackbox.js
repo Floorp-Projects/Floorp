@@ -56,6 +56,8 @@ function test() {
       .then(testUnBlackBoxSource)
       .then(testBlackBoxGlob)
       .then(testUnBlackBoxGlob)
+      .then(testBlackBoxInvert)
+      .then(testUnBlackBoxInvert)
       .then(null, function (error) {
         ok(false, "Got an error: " + error.message + "\n" + error.stack);
       })
@@ -121,6 +123,36 @@ function testUnBlackBoxGlob() {
          "blackbox_two should be un-black boxed because it matches the glob");
       ok(getBlackBoxCheckbox(BLACKBOXTHREE_URL).checked,
          "blackbox_three should be un-black boxed because it matches the glob");
+    });
+}
+
+function testBlackBoxInvert() {
+  return cmd("dbg blackbox --invert --glob *blackboxing_t*.js", 3,
+             [/blackboxing_three\.js/g, /blackboxing_two\.js/g])
+    .then(function () {
+      ok(!getBlackBoxCheckbox(BLACKBOXME_URL).checked,
+         "blackboxme should be black boxed because it doesn't match the glob");
+      ok(!getBlackBoxCheckbox(BLACKBOXONE_URL).checked,
+         "blackbox_one should be black boxed because it doesn't match the glob");
+      ok(!getBlackBoxCheckbox(TEST_URL).checked,
+         "TEST_URL should be black boxed because it doesn't match the glob");
+
+      ok(getBlackBoxCheckbox(BLACKBOXTWO_URL).checked,
+         "blackbox_two should not be black boxed because it matches the glob");
+      ok(getBlackBoxCheckbox(BLACKBOXTHREE_URL).checked,
+         "blackbox_three should not be black boxed because it matches the glob");
+    });
+}
+
+function testUnBlackBoxInvert() {
+  return cmd("dbg unblackbox --invert --glob *blackboxing_t*.js", 3)
+    .then(function () {
+      ok(getBlackBoxCheckbox(BLACKBOXME_URL).checked,
+         "blackboxme should be un-black boxed because it does not match the glob");
+      ok(getBlackBoxCheckbox(BLACKBOXONE_URL).checked,
+         "blackbox_one should be un-black boxed because it does not match the glob");
+      ok(getBlackBoxCheckbox(TEST_URL).checked,
+         "TEST_URL should be un-black boxed because it doesn't match the glob");
     });
 }
 
