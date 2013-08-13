@@ -5231,8 +5231,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
         // ]NOCPP]
         // Can't be called for custom elements
-        T elt = createElement("http://www.w3.org/1999/xhtml", elementName.name, attributes, fragment ? null
-                : form);
+        T elt = createElement("http://www.w3.org/1999/xhtml", elementName.name, attributes,
+                form == null || fragment || isTemplateContents() ? null : form);
         StackNode<T> current = stack[currentPtr];
         if (current.isFosterParenting()) {
             fatal();
@@ -5254,7 +5254,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
         // ]NOCPP]
         // Can't be called for custom elements
-        T elt = createElement("http://www.w3.org/1999/xhtml", name, attributes, fragment ? null : form);
+        T elt = createElement("http://www.w3.org/1999/xhtml", name, attributes,
+                form == null || fragment || isTemplateContents() ? null : form);
         StackNode<T> current = stack[currentPtr];
         if (current.isFosterParenting()) {
             fatal();
@@ -5338,7 +5339,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
         // ]NOCPP]
         // Can't be called for custom elements
-        T elt = createElement("http://www.w3.org/1999/xhtml", name, attributes, fragment ? null : form);
+        T elt = createElement("http://www.w3.org/1999/xhtml", name, attributes,
+                form == null || fragment || isTemplateContents() ? null : form);
         StackNode<T> current = stack[currentPtr];
         appendElement(elt, current.node);
         elementPushed("http://www.w3.org/1999/xhtml", name, elt);
