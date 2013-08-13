@@ -338,6 +338,8 @@ public:
             (HasValidDir() || IsHTML(nsGkAtoms::bdi)));
   }
 
+  Directionality GetComputedDirectionality() const;
+
 protected:
   /**
    * Method to get the _intrinsic_ content state of this element.  This is the
