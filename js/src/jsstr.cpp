@@ -808,7 +808,7 @@ str_toLocaleUpperCase(JSContext *cx, unsigned argc, Value *vp)
     return ToUpperCaseHelper(cx, args);
 }
 
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
 static bool
 str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -2005,6 +2005,8 @@ class RopeBuilder {
     }
 };
 
+namespace {
+
 struct ReplaceData
 {
     ReplaceData(JSContext *cx)
@@ -2028,6 +2030,8 @@ struct ReplaceData
     FastInvokeGuard    fig;            /* used for lambda calls, also holds arguments */
     StringBuffer       sb;             /* buffer built during DoMatch */
 };
+
+} /* anonymous namespace */
 
 static bool
 ReplaceRegExp(JSContext *cx, RegExpStatics *res, ReplaceData &rdata);
@@ -3545,7 +3549,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN("trimRight",         str_trimRight,         0,JSFUN_GENERIC_NATIVE),
     JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,JSFUN_GENERIC_NATIVE),
     JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,JSFUN_GENERIC_NATIVE),
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
          {"localeCompare",     {NULL, NULL},          1,0, "String_localeCompare"},
 #else
     JS_FN("localeCompare",     str_localeCompare,     1,JSFUN_GENERIC_NATIVE),
@@ -3653,7 +3657,7 @@ static const JSFunctionSpec string_static_methods[] = {
 
     // This must be at the end because of bug 853075: functions listed after
     // self-hosted methods aren't available in self-hosted code.
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
          {"localeCompare",     {NULL, NULL},          2,0, "String_static_localeCompare"},
 #endif
     JS_FS_END

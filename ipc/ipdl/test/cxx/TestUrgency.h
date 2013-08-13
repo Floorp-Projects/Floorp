@@ -25,6 +25,8 @@ public:
     bool RecvTest1(uint32_t *value);
     bool RecvTest2();
     bool RecvTest3(uint32_t *value);
+    bool RecvTest4_Begin();
+    bool RecvTest4_NestedSync();
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {
@@ -48,6 +50,7 @@ public:
     bool RecvStart();
     bool AnswerReply1(uint32_t *reply);
     bool AnswerReply2(uint32_t *reply);
+    bool AnswerTest4_Reenter();
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
     {

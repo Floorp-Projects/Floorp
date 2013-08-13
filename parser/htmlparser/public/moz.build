@@ -14,7 +14,6 @@ MODULE = 'htmlparser'
 EXPORTS += [
     'nsHTMLTagList.h',
     'nsHTMLTags.h',
-    'nsHTMLTokens.h',
     'nsIContentSink.h',
     'nsIDTD.h',
     'nsIElementObserver.h',
