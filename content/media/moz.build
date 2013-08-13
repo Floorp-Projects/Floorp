@@ -125,3 +125,8 @@ CPP_SOURCES += [
     'VideoUtils.cpp',
     'WebVTTLoadListener.cpp',
 ]
+
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+    CPP_SOURCES += [
+        'AudioNodeEngineNEON.cpp',
+    ]
