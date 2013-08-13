@@ -537,6 +537,8 @@ struct IonScript
     void resetOsrPcMismatchCounter() {
         osrPcMismatchCounter_ = 0;
     }
+
+    static void writeBarrierPre(Zone *zone, IonScript *ionScript);
 };
 
 // Execution information for a basic block which may persist after the
