@@ -1718,6 +1718,9 @@ Tab.prototype = {
     browser.id = "browser-" + this._id;
     this._chromeTab.linkedBrowser = browser;
 
+    // let the content area manager know about this browser.
+    ContentAreaObserver.onBrowserCreated(browser);
+
     browser.setAttribute("type", "content");
 
     let useRemote = Services.prefs.getBoolPref("browser.tabs.remote");
@@ -1731,11 +1734,6 @@ Tab.prototype = {
     stack.setAttribute("flex", "1");
     notification.appendChild(stack);
     Elements.browsers.insertBefore(notification, aInsertBefore);
-
-    notification.dir = "reverse";
-
-     // let the content area manager know about this browser.
-    ContentAreaObserver.onBrowserCreated(browser);
 
     // stop about:blank from loading
     browser.stop();
