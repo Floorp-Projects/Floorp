@@ -209,5 +209,21 @@ DOMRequestIpcHelper.prototype = {
    */
   createPromise: function(aPromiseInit) {
     return new this._window.Promise(aPromiseInit);
-  }
+  },
+
+  forEachRequest: function(aCallback) {
+    Object.keys(this._requests).forEach(function(k) {
+      if (this.getRequest(k) instanceof this._window.DOMRequest) {
+        aCallback(k);
+      }
+    }, this);
+  },
+
+  forEachPromiseResolver: function(aCallback) {
+    Object.keys(this._requests).forEach(function(k) {
+      if (this.getPromiseResolver(k) instanceof this._window.PromiseResolver) {
+        aCallback(k);
+      }
+    }, this);
+  },
 }
