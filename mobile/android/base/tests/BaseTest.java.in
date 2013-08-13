@@ -65,6 +65,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected static final String URL_EDIT_TEXT_ID = "url_edit_text";
     protected static final String URL_BAR_TITLE_ID = "url_bar_title";
 
+    // Settings menu paths
+    protected static final String PRIVACY_LABEL = "Privacy";
+    protected static final String CLEAR_PRIVATE_DATA_LABEL = "Clear private data";
+
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
     protected Solo mSolo;
@@ -195,7 +199,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             @Override
             public boolean test() {
                 EditText urlEditText = mSolo.getEditText(0);
-                return urlEditText.hasFocus();
+                if (urlEditText.isInputMethodTarget()) {
+                    return true;
+                } else {
+                    mSolo.clickOnEditText(0);
+                    return false;
+                }
             }
         }, MAX_WAIT_ENABLED_TEXT_MS);
 
@@ -525,72 +534,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
     }
 
-    protected boolean isBookmark(String[] bookmarks, String aValue) {
-        for (int i = 0; i < bookmarks.length; i++) {
-            if (bookmarks[i].equals(aValue))
-                return true;
-        }
-        return false;
-    }
-
-    public long addOrUpdateBookmark(String title, String url, boolean bookmarklet) {
-        ContentResolver resolver = getActivity().getContentResolver();
-        Uri bookmarksUri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
-        bookmarksUri = bookmarksUri.buildUpon().appendQueryParameter("profile", "default").build();
-        long folderId = -1;
-        Cursor c = null;
-        // NOTE: this is hardcoded to toolbar/mobile and triggered from bookmarklet because the existing
-        //       testcases were written this way
-        String location = "toolbar";
-        if (bookmarklet) {
-            location = "mobile";
-        }
-        try {
-            c = resolver.query(bookmarksUri,
-                               new String[] { "_id" },
-                               "guid = ?",
-                               new String[] { location },
-                               null);
-            if (c.moveToFirst()) {
-                folderId = c.getLong(c.getColumnIndexOrThrow("_id"));
-            }
-        } finally {
-            if (c != null) {
-                c.close();
-            }
-        }
-        ContentValues values = new ContentValues();
-        values.put("title", title);
-        values.put("url", url);
-        values.put("parent", folderId);
-        long now = System.currentTimeMillis();
-        values.put("modified", now);
-        if (!bookmarklet) {
-            values.put("type", 1);
-            values.put("guid", url);
-            values.put("position", 10);
-            values.put("created", now);
-        }
-        int updated = resolver.update(bookmarksUri,
-                                      values,
-                                      "url = ?",
-                                      new String[] { url });
-        if (updated == 0) {
-            Uri uri = resolver.insert(bookmarksUri, values);
-            mAsserter.ok(true, "Inserted at: ", uri.toString());
-            return ContentUris.parseId(uri);
-        }
-        return ContentUris.parseId(bookmarksUri);
-    }
-
-    public void deleteBookmark(String title) {
-        ContentResolver resolver = getActivity().getContentResolver();
-        Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
-        uri = uri.buildUpon().appendQueryParameter("profile", "default")
-                             .appendQueryParameter("sync", "true").build();
-        resolver.delete(uri, "title = ?", new String[] { title });
-    }
-
     public void addTab(String url) {
         Element tabs = null;
         Element addTab = null;
@@ -655,59 +598,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }
     }
 
-    /**
-    * This method will edit the bookmark with index = bookmarkIndex from the list of bookmarks
-    * For the field index:
-    *     fieldIndex = 1 - the Bookmark name
-    *     fieldIndex = 2 - the Bookmark url
-    *     fieldIndex = 3 - the Bookmark keyword
-    */
-    public void editBookmark(int bookmarkIndex, int fieldIndex, String addedText, ListView list) {
-
-        // Open the Edit Bookmark context menu
-        View child;
-        mSolo.clickOnText("Bookmarks");
-        child = list.getChildAt(bookmarkIndex);
-        mAsserter.ok(child != null, "edit item can be retrieved", child != null ? child.toString() : "null!");
-        waitForText("Switch to tab");
-        mSolo.clickLongOnView(child);
-        waitForText("Share");
-        mSolo.clickOnText("Edit");
-        waitForText("Edit Bookmark");
-
-        // Clear the Field
-        mSolo.clearEditText(fieldIndex);
-
-        // Enter the new text
-        mSolo.clickOnEditText(fieldIndex);
-        mActions.sendKeys(addedText);
-        mSolo.clickOnText("OK");
-        waitForText("Bookmark updated");
-    }
-
-    public boolean checkBookmarkEdit(int bookmarkIndex, String addedText, ListView list) {
-        Device mDevice = new Device();
-        // Open the Edit Bookmark context menu
-        View child;
-        mSolo.clickOnText("Bookmarks");
-        child = list.getChildAt(bookmarkIndex);
-        mAsserter.ok(child != null, "check item can be retrieved", child != null ? child.toString() : "null!");
-        waitForText("Switch to tab");
-        mSolo.clickLongOnView(child);
-        waitForText("Share");
-        mSolo.clickOnText("Edit");
-        waitForText("Edit Bookmark");
-
-        // Check if the new text was added
-        if (mSolo.searchText(addedText)) {
-            clickOnButton("Cancel");
-            waitForText("about:home");
-            return true;
-        } else {
-            clickOnButton("Cancel");
-            waitForText("about:home");
-            return false;
-        }
+    public void clearPrivateData() {
+        selectSettingsItem(PRIVACY_LABEL, CLEAR_PRIVATE_DATA_LABEL);
+        Actions.EventExpecter clearData = mActions.expectGeckoEvent("Sanitize:Finished");
+        mSolo.clickOnText("Clear data");
+        clearData.blockForEvent();
+        clearData.unregisterListener();
     }
 
     class Device {
