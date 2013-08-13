@@ -133,17 +133,6 @@ var ContentAreaObserver = {
     let newWidth = width || this.width;
     let newHeight = height || this.contentHeight;
 
-    if (Browser.selectedBrowser) {
-      let notificationBox = Browser.getNotificationBox();
-
-      // If a notification and navbar are visible together,
-      // make the notification appear above the navbar.
-      if (ContextUI.navbarVisible && !notificationBox.notificationsHidden &&
-          notificationBox.allNotifications.length != 0) {
-        newHeight -= Elements.navbar.getBoundingClientRect().height;
-      }
-    }
-
     if (newHeight == oldHeight && newWidth == oldWidth)
       return;
 
@@ -198,9 +187,8 @@ var ContentAreaObserver = {
   },
 
   onBrowserCreated: function onBrowserCreated(aBrowser) {
-    let notificationBox = aBrowser.parentNode.parentNode;
-    notificationBox.classList.add("content-width");
-    notificationBox.classList.add("content-height");
+    aBrowser.classList.add("content-width");
+    aBrowser.classList.add("content-height");
   },
 
   /*
