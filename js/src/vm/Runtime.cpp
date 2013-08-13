@@ -24,10 +24,10 @@
 #include "jsscript.h"
 #include "jswrapper.h"
 
-#include "js/MemoryMetrics.h"
 #include "jit/AsmJSSignalHandlers.h"
 #include "jit/IonCompartment.h"
 #include "jit/PcScriptCache.h"
+#include "js/MemoryMetrics.h"
 #include "yarr/BumpPointerAllocator.h"
 
 #include "jscntxtinlines.h"

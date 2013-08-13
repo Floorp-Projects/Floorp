@@ -13,8 +13,8 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "jsapi.h"
-#include "jsobj.h"
 #include "jslock.h"
+#include "jsobj.h"
 
 #include "js/GCAPI.h"
 #include "js/Vector.h"
