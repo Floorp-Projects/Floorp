@@ -203,7 +203,7 @@ pref("media.peerconnection.use_document_iceservers", true);
 // These values (aec, agc, and noice) are from media/webrtc/trunk/webrtc/common_types.h
 // kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each 
 // setting (for Xxx = Ec, Agc, or Ns).  Defaults are all set to kXxxDefault here.
-pref("media.peerconnection.turn.disable", false);
+pref("media.peerconnection.turn.disable", true);
 pref("media.peerconnection.aec_enabled", true);
 pref("media.peerconnection.aec", 1);
 pref("media.peerconnection.agc_enabled", false);
