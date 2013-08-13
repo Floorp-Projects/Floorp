@@ -471,7 +471,8 @@
         ]]>
       </handler>
 
-      <handler event="keypress" phase="capturing" keycode="VK_RETURN">
+      <handler event="keypress" phase="capturing" keycode="VK_RETURN"
+               modifiers="accel shift any">
         <![CDATA[
           if (this.popup.submitSelected())
             return;
