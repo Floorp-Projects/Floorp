@@ -405,6 +405,13 @@ child:
      */
     Destroy();
 
+
+    /**
+     * Tell the child side if it has to update it's touchable region
+     * to the parent.
+     */
+    SetUpdateHitRegion(bool aEnabled);
+
 /*
  * FIXME: write protocol!
 
