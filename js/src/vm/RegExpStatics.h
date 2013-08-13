@@ -528,12 +528,6 @@ RegExpStatics::checkInvariants()
 #endif /* DEBUG */
 }
 
-inline RegExpStatics *
-ExclusiveContext::regExpStatics()
-{
-    return global()->getRegExpStatics();
-}
-
 } /* namespace js */
 
 #endif /* vm_RegExpStatics_h */
