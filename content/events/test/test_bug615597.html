@@ -24,7 +24,6 @@ window.addEventListener("deviceorientation", function(event) {
   is(event.beta, 2.25);
   is(event.gamma, 3.667);
   is(event.absolute, true);
-  SimpleTest.finish();
 }, true);
 
 var event = DeviceOrientationEvent;
@@ -33,7 +32,6 @@ ok(!!event, "Should have seen DeviceOrientationEvent!");
 event = document.createEvent("DeviceOrientationEvent");
 event.initDeviceOrientationEvent('deviceorientation', true, true, 1.5, 2.25, 3.667, true);
 window.dispatchEvent(event);
-SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>
