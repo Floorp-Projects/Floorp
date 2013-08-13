@@ -2090,7 +2090,7 @@ StackTypeSet::getTypedArrayType()
 
     if (clasp && IsTypedArrayClass(clasp))
         return clasp - &TypedArrayObject::classes[0];
-    return TypedArrayObject::TYPE_MAX;
+    return ScalarTypeRepresentation::TYPE_MAX;
 }
 
 bool
