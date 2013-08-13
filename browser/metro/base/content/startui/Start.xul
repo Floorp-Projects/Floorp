@@ -24,11 +24,11 @@
 #endif
 ]>
 
-<page id="startui-page"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      xmlns:html="http://www.w3.org/1999/xhtml"
-      onload="StartUI.init();"
-      onunload="StartUI.uninit();">
+<!-- we're using html here so we get anonymous scrollbars on the browser element -->
+<html:html id="startui-page"
+           xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+           xmlns:html="http://www.w3.org/1999/xhtml">
+  <html:body id="startui-body" onload="StartUI.init();" onunload="StartUI.uninit();">
 
   <script type="application/javascript" src="chrome://browser/content/startui-scripts.js"/>
 
@@ -38,8 +38,8 @@
     <broadcaster id="bcast_windowState" viewstate=""/>
   </broadcasterset>
 
-  <hbox id="start-container" flex="1" observes="bcast_windowState" class="meta content-height content-width">
-    <scrollbox id="start-scrollbox" observes="bcast_preciseInput" flex="1">
+  <hbox id="start-container" observes="bcast_windowState">
+  <!-- the start-container element has a max-height set in StartUI.js -->
       <vbox id="start-topsites" class="meta-section" expanded="true">
         <label class="meta-section-title wide-title" value="&topSitesHeader.label;"/>
         <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-topsites')">
@@ -73,6 +73,6 @@
         <richgrid id="start-remotetabs-grid" set-name="remoteTabs" seltype="multiple" flex="1"/>
       </vbox>
 #endif
-    </scrollbox>
   </hbox>
-</page>
+  </html:body>
+</html:html>
