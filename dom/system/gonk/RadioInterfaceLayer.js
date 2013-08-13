@@ -256,7 +256,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     ril: null,
 
-    targetsByRequestId: {},
     // Manage message targets in terms of topic. Only the authorized and
     // registered contents can receive related messages.
     targetsByTopic: {},
@@ -544,27 +543,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         clientId: clientId,
         data: data
       });
-    },
-
-    saveRequestTarget: function saveRequestTarget(msg) {
-      let requestId = msg.json.data.requestId;
-      if (!requestId) {
-        // The content is not interested in a response;
-        return;
-      }
-
-      this.targetsByRequestId[requestId] = msg.target;
-    },
-
-    sendRequestResults: function sendRequestResults(requestType, options) {
-      let target = this.targetsByRequestId[options.requestId];
-      delete this.targetsByRequestId[options.requestId];
-
-      if (!target) {
-        return;
-      }
-
-      target.sendAsyncMessage(requestType, options);
     }
   };
 });
@@ -631,8 +609,135 @@ XPCOMUtils.defineLazyGetter(RadioInterfaceLayer.prototype,
   }
 });
 
+function WorkerMessenger(radioInterface, options) {
+  // Initial owning attributes.
+  this.radioInterface = radioInterface;
+  this.tokenCallbackMap = {};
+
+  // Add a convenient alias to |radioInterface.debug()|.
+  this.debug = radioInterface.debug.bind(radioInterface);
+
+  if (DEBUG) this.debug("Starting RIL Worker[" + options.clientId + "]");
+  this.worker = new ChromeWorker("resource://gre/modules/ril_worker.js");
+  this.worker.onerror = this.onerror.bind(this);
+  this.worker.onmessage = this.onmessage.bind(this);
+
+  this.send("setInitialOptions", options);
+
+  gSystemWorkerManager.registerRilWorker(options.clientId, this.worker);
+}
+WorkerMessenger.prototype = {
+  radioInterface: null,
+  worker: null,
+
+  // This gets incremented each time we send out a message.
+  token: 1,
+
+  // Maps tokens we send out with messages to the message callback.
+  tokenCallbackMap: null,
+
+  onerror: function onerror(event) {
+    if (DEBUG) {
+      this.debug("Got an error: " + event.filename + ":" +
+                 event.lineno + ": " + event.message + "\n");
+    }
+    event.preventDefault();
+  },
+
+  /**
+   * Process the incoming message from the RIL worker.
+   */
+  onmessage: function onmessage(event) {
+    let message = event.data;
+    if (DEBUG) {
+      this.debug("Received message from worker: " + JSON.stringify(message));
+    }
+
+    let token = message.rilMessageToken;
+    if (token == null) {
+      // That's an unsolicited message.  Pass to RadioInterface directly.
+      this.radioInterface.handleUnsolicitedWorkerMessage(message);
+      return;
+    }
+
+    let callback = this.tokenCallbackMap[message.rilMessageToken];
+    if (!callback) {
+      if (DEBUG) this.debug("Ignore orphan token: " + message.rilMessageToken);
+      return;
+    }
+
+    let keep = false;
+    try {
+      keep = callback(message);
+    } catch(e) {
+      if (DEBUG) this.debug("callback throws an exception: " + e);
+    }
+
+    if (!keep) {
+      delete this.tokenCallbackMap[message.rilMessageToken];
+    }
+  },
+
+  /**
+   * Send arbitrary message to worker.
+   *
+   * @param rilMessageType
+   *        A text message type.
+   * @param message [optional]
+   *        An optional message object to send.
+   * @param callback [optional]
+   *        An optional callback function which is called when worker replies
+   *        with an message containing a 'rilMessageToken' attribute of the
+   *        same value we passed.  This callback function accepts only one
+   *        parameter -- the reply from worker.  It also returns a boolean
+   *        value true to keep current token-callback mapping and wait for
+   *        another worker reply, or false to remove the mapping.
+   */
+  send: function send(rilMessageType, message, callback) {
+    message = message || {};
+
+    message.rilMessageToken = this.token;
+    this.token++;
+
+    if (callback) {
+      // Only create the map if callback is provided.  For sending a request
+      // and intentionally leaving the callback undefined, that reply will
+      // be dropped in |this.onmessage| because of that orphan token.
+      //
+      // For sending a request that never replied at all, we're fine with this
+      // because no callback shall be passed and we leave nothing to be cleaned
+      // up later.
+      this.tokenCallbackMap[message.rilMessageToken] = callback;
+    }
+
+    message.rilMessageType = rilMessageType;
+    this.worker.postMessage(message);
+  },
+
+  /**
+   * Send message to worker and return worker reply to RILContentHelper.
+   *
+   * @param msg
+   *        A message object from ppmm.
+   * @param rilMessageType
+   *        A text string for worker message type.
+   * @param ipcType [optinal]
+   *        A text string for ipc message type. 'msg.name' if omitted.
+   *
+   * @TODO: Bug 815526 - deprecate RILContentHelper.
+   */
+  sendWithIPCMessage: function sendWithIPCMessage(msg, rilMessageType, ipcType) {
+    this.send(rilMessageType, msg.json.data, function(reply) {
+      ipcType = ipcType || msg.name;
+      msg.target.sendAsyncMessage(ipcType, reply);
+      return false;
+    });
+  }
+};
+
 function RadioInterface(options) {
   this.clientId = options.clientId;
+  this.workerMessenger = new WorkerMessenger(this, options);
 
   this.dataCallSettings = {
     oldEnabled: false,
@@ -648,15 +753,6 @@ function RadioInterface(options) {
       byType: {},
       byAPN: {}
   };
-
-  if (DEBUG) this.debug("Starting RIL Worker[" + this.clientId + "]");
-  this.worker = new ChromeWorker("resource://gre/modules/ril_worker.js");
-  this.worker.onerror = this.onerror.bind(this);
-  this.worker.onmessage = this.onmessage.bind(this);
-
-  // Pass initial options to ril_worker.
-  options.rilMessageType = "setInitialOptions";
-  this.worker.postMessage(options);
 
   this.rilContext = {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
@@ -730,8 +826,6 @@ function RadioInterface(options) {
 
   this.portAddressedSmsApps = {};
   this.portAddressedSmsApps[WAP.WDP_PORT_PUSH] = this.handleSmsWdpPortPush.bind(this);
-
-  gSystemWorkerManager.registerRilWorker(this.clientId, this.worker);
 }
 RadioInterface.prototype = {
 
@@ -743,6 +837,9 @@ RadioInterface.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioInterface,
                                          Ci.nsIObserver,
                                          Ci.nsISettingsServiceCallback]),
+
+  // A private WorkerMessenger instance.
+  workerMessenger: null,
 
   debug: function debug(s) {
     dump("-*- RadioInterface[" + this.clientId + "]: " + s + "\n");
@@ -926,26 +1023,7 @@ RadioInterface.prototype = {
     }
   },
 
-  onerror: function onerror(event) {
-    if (DEBUG) {
-      this.debug("Got an error: " + event.filename + ":" +
-                 event.lineno + ": " + event.message + "\n");
-    }
-    event.preventDefault();
-  },
-
-  /**
-   * Process the incoming message from the RIL worker. This roughly
-   * works as follows:
-   * (1) Update local state.
-   * (2) Update state in related systems such as the audio.
-   * (3) Multiplex the message to callbacks / listeners (typically the DOM).
-   */
-  onmessage: function onmessage(event) {
-    let message = event.data;
-    if (DEBUG) {
-      this.debug("Received message from worker: " + JSON.stringify(message));
-    }
+  handleUnsolicitedWorkerMessage: function handleUnsolicitedWorkerMessage(message) {
     switch (message.rilMessageType) {
       case "callRing":
         this.handleCallRing();
@@ -2590,10 +2668,6 @@ RadioInterface.prototype = {
       byAPN: {},
     };
   },
-
-  // nsIRadioWorker
-
-  worker: null,
 
   // nsIRadioInterface
 
