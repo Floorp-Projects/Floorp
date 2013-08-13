@@ -4212,6 +4212,8 @@ MOZ_TIME_MANAGER=
 MOZ_PAY=
 MOZ_AUDIO_CHANNEL_MANAGER=
 NSS_NO_LIBPKIX=
+MOZ_CONTENT_SANDBOX=
+MOZ_CONTENT_SANDBOX_REPORTER=
 
 case "$target_os" in
     mingw*)
@@ -6477,6 +6479,32 @@ if test -n "$NSS_NO_LIBPKIX"; then
 fi
 AC_SUBST(NSS_NO_LIBPKIX)
 
+dnl ========================================================
+dnl = Content process sandboxing
+dnl ========================================================
+if test -n "$gonkdir"; then
+    MOZ_CONTENT_SANDBOX=1
+fi
+
+MOZ_ARG_ENABLE_BOOL(content-sandbox,
+[  --enable-content-sandbox        Enable sandboxing support for content-processes],
+    MOZ_CONTENT_SANDBOX=1)
+
+if test -n "$MOZ_CONTENT_SANDBOX"; then
+    AC_DEFINE(MOZ_CONTENT_SANDBOX)
+fi
+
+AC_SUBST(MOZ_CONTENT_SANDBOX)
+
+MOZ_ARG_ENABLE_BOOL(content-sandbox-reporter,
+[ --enable-content-sandbox-reporter        Enable syscall reporter to troubleshoot syscalls denied by the content-processes sandbox],
+    MOZ_CONTENT_SANDBOX_REPORTER=1)
+
+if test -n "$MOZ_CONTENT_SANDBOX_REPORTER"; then
+    AC_DEFINE(MOZ_CONTENT_SANDBOX_REPORTER)
+fi
+
+AC_SUBST(MOZ_CONTENT_SANDBOX_REPORTER)
 
 dnl ========================================================
 dnl =
@@ -9384,15 +9412,18 @@ fi
 dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 ac_configure_args="$ac_configure_args --enable-threadsafe"
-# Switch to "$MOZ_BUILD_APP" != "browser" when enabling for desktop builds.
-if test "A" = "A"; then
-    # The Internationalization API isn't on by default except in standalone JS
-    # engine builds.  Bugs to enable it in the browser:
+if test "$NIGHTLY_BUILD" = "1" -a "$MOZ_BUILD_APP" = "browser"; then
+    # In desktop nightlies the Internationalization API is disabled, but all
+    # code for it is still built.  Bug 853301 will remove this so that it's
+    # built and the API is enabled.
+    ac_configure_args="$ac_configure_args --with-intl-api=build"
+else
+    # Internationalization isn't built or exposed by default in non-desktop and
+    # non-nightly builds.  Bugs to enable:
     #
-    #   Desktop:  bug 853301
     #   Android:  bug 864843
     #   B2G:      bug 866301
-    ac_configure_args="$ac_configure_args --disable-intl-api"
+    ac_configure_args="$ac_configure_args --without-intl-api"
 fi
 if test "$BUILD_CTYPES"; then
     # Build js-ctypes on the platforms we can.
