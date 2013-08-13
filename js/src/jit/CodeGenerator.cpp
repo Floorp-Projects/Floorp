@@ -742,22 +742,9 @@ CodeGenerator::emitLambdaInit(const Register &output, const Register &scopeChain
 
     JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
     masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
-
-    // Initialize the JSFunction union with the script / native / lazyScript
-    // corresponding to the flag.
-    ImmGCPtr scriptOrLazyScript(NULL);
-    if (fun->isInterpretedLazy())
-        scriptOrLazyScript = ImmGCPtr(fun->lazyScriptOrNull());
-    else
-        scriptOrLazyScript = ImmGCPtr(fun->nonLazyScript());
-
-    masm.storePtr(scriptOrLazyScript, Address(output, JSFunction::offsetOfNativeOrScript()));
-
-    // Lambda scripted functions are given the scope chain as the environment in
-    // which the caller was at the time of the creation of the lambda.
+    masm.storePtr(ImmGCPtr(fun->nonLazyScript()),
+                  Address(output, JSFunction::offsetOfNativeOrScript()));
     masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
-
-    // Copy the name of the function used for diagnostics.
     masm.storePtr(ImmGCPtr(fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
 }
 
