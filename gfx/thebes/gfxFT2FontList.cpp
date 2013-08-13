@@ -51,6 +51,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIMemory.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/scache/StartupCache.h"

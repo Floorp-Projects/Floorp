@@ -93,10 +93,6 @@ STATIC_LIBS += \
   dombindings_s \
   $(NULL)
 
-ifdef MOZ_CONTENT_SANDBOX #{
-STATIC_LIBS += sandbox_s
-endif #}
-
 ifdef MOZ_B2G_RIL #{
 STATIC_LIBS += mozril_s
 endif #}
@@ -467,6 +463,10 @@ endif
 
 ifdef MOZ_WMF
 OS_LIBS += $(call EXPAND_LIBNAME,mfuuid wmcodecdspuuid strmiids)
+endif
+
+ifdef MOZ_DIRECTSHOW
+OS_LIBS += $(call EXPAND_LIBNAME,dmoguids wmcodecdspuuid strmiids msdmo)
 endif
 
 EXTRA_DEPS += \
