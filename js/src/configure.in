@@ -4246,10 +4246,35 @@ dnl ========================================================
 dnl ECMAScript Internationalization API Support (uses ICU)
 dnl ========================================================
 
-ENABLE_INTL_API=1
-MOZ_ARG_DISABLE_BOOL(intl-api,
-[  --disable-intl-api      Disable the ECMAScript Internationalization API],
-    ENABLE_INTL_API= )
+MOZ_ARG_WITH_STRING(intl-api,
+[  --with-intl-api, --with-intl-api=build, --without-intl-api
+    Determine the status of the ECMAScript Internationalization API.  The first
+    (or lack of any of these) builds and exposes the API.  The second builds it
+    but doesn't use ICU or expose the API to script.  The third doesn't build
+    ICU at all.],
+    _INTL_API=$withval,
+    _INTL_API=yes)
+
+ENABLE_INTL_API=
+EXPOSE_INTL_API=
+case "$_INTL_API" in
+no)
+    ;;
+build)
+    ENABLE_INTL_API=1
+    ;;
+yes)
+    ENABLE_INTL_API=1
+    EXPOSE_INTL_API=1
+    ;;
+*)
+    AC_MSG_ERROR([Invalid value passed to --with-intl-api: $_INTL_API])
+    ;;
+esac
+
+if test -n "$EXPOSE_INTL_API"; then
+    AC_DEFINE(EXPOSE_INTL_API)
+fi
 
 dnl Settings for the implementation of the ECMAScript Internationalization API
 if test -n "$ENABLE_INTL_API"; then
