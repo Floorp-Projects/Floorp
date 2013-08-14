@@ -14,6 +14,7 @@ JS_MODULES_PATH = 'modules/sessionstore'
 
 EXTRA_JS_MODULES = [
     'DocumentUtils.jsm',
+    'SessionCookies.jsm',
     'SessionMigration.jsm',
     'SessionStorage.jsm',
     'SessionWorker.js',

@@ -120,6 +120,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
   "resource:///modules/sessionstore/DocumentUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionCookies",
+  "resource:///modules/sessionstore/SessionCookies.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "_SessionFile",
   "resource:///modules/sessionstore/_SessionFile.jsm");
 
@@ -2402,21 +2404,6 @@ let SessionStoreInternal = {
    *        { tabs: [ ... ], etc. }
    */
   _updateCookies: function ssi_updateCookies(aWindows) {
-    function addCookieToHash(aHash, aHost, aPath, aName, aCookie) {
-      // lazily build up a 3-dimensional hash, with
-      // aHost, aPath, and aName as keys
-      if (!aHash[aHost])
-        aHash[aHost] = {};
-      if (!aHash[aHost][aPath])
-        aHash[aHost][aPath] = {};
-      aHash[aHost][aPath][aName] = aCookie;
-    }
-
-    var jscookies = {};
-    var _this = this;
-    // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision
-    var MAX_EXPIRY = Math.pow(2, 62);
-
     for (let window of aWindows) {
       window.cookies = [];
 
@@ -2429,35 +2416,12 @@ let SessionStoreInternal = {
       }, this);
 
       for (var [host, isPinned] in Iterator(hosts)) {
-        let list;
-        try {
-          list = Services.cookies.getCookiesFromHost(host);
-        }
-        catch (ex) {
-          debug("getCookiesFromHost failed. Host: " + host);
-        }
-        while (list && list.hasMoreElements()) {
-          var cookie = list.getNext().QueryInterface(Ci.nsICookie2);
+        for (let cookie of SessionCookies.getCookiesForHost(host)) {
           // window._hosts will only have hosts with the right privacy rules,
           // so there is no need to do anything special with this call to
           // checkPrivacyLevel.
-          if (cookie.isSession && _this.checkPrivacyLevel(cookie.isSecure, isPinned)) {
-            // use the cookie's host, path, and name as keys into a hash,
-            // to make sure we serialize each cookie only once
-            if (!(cookie.host in jscookies &&
-                  cookie.path in jscookies[cookie.host] &&
-                  cookie.name in jscookies[cookie.host][cookie.path])) {
-              var jscookie = { "host": cookie.host, "value": cookie.value };
-              // only add attributes with non-default values (saving a few bits)
-              if (cookie.path) jscookie.path = cookie.path;
-              if (cookie.name) jscookie.name = cookie.name;
-              if (cookie.isSecure) jscookie.secure = true;
-              if (cookie.isHttpOnly) jscookie.httponly = true;
-              if (cookie.expiry < MAX_EXPIRY) jscookie.expiry = cookie.expiry;
-
-              addCookieToHash(jscookies, cookie.host, cookie.path, cookie.name, jscookie);
-            }
-            window.cookies.push(jscookies[cookie.host][cookie.path][cookie.name]);
+          if (this.checkPrivacyLevel(cookie.secure, isPinned)) {
+            window.cookies.push(cookie);
           }
         }
       }
