@@ -3,26 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Warning
-# =======
-# As of ICU 51.1, ICU as obtained from the ICU repository does not
-# build with the Mozilla build tools for Windows. Check
-# http://bugs.icu-project.org/trac/ticket/9985
-# whether this has been addressed in the version you're updating to.
-# If not, obtain the patch "Make ICU build with Mozilla build for Windows" from
-# https://bugzilla.mozilla.org/show_bug.cgi?id=724533
-# and reapply it after running update-icu.sh (additional updates may be needed).
-# If the bug has been addressed, please delete this warning.
-
-# Warning
-# =======
-# The fix for ICU bug 10045 has been individually backported into this tree.
-# If you update ICU to a version that does not have this fix yet, obtain the
-# patch "Backported fix for formatting 0 with significant digits from ICU" from
-# https://bugzilla.mozilla.org/show_bug.cgi?id=853706
-# and reapply it after running update-icu.sh.
-# If you update ICU to a version that has the fix, please delete this warning.
-
 # Usage: update-icu.sh <URL of ICU SVN with release>
 # E.g., for ICU 50.1.1: update-icu.sh http://source.icu-project.org/repos/icu/icu/tags/release-50-1-1/
 
@@ -57,5 +37,10 @@ rm ${icu_dir}/source/data/translit/*
 
 # Record `svn info`
 svn info $1 > ${icu_dir}/SVN-INFO
+
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-724533
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-853706
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-899722
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-899722-2
 
 hg addremove ${icu_dir}

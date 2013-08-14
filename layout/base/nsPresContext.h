@@ -34,8 +34,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 #include "prclist.h"
-#include "Layers.h"
-#include "nsRefreshDriver.h"
+#include "nsThreadUtils.h"
 
 #ifdef IBMBIDI
 class nsBidiPresUtils;
@@ -71,13 +70,17 @@ class nsTransitionManager;
 class nsAnimationManager;
 class imgIContainer;
 class nsIDOMMediaQueryList;
+class nsRefreshDriver;
 
 #ifdef MOZ_REFLOW_PERF
 class nsRenderingContext;
 #endif
 
 namespace mozilla {
-  class RestyleManager;
+class RestyleManager;
+namespace layers {
+class ContainerLayer;
+}
 }
 
 // supported values for cached bool types
@@ -124,17 +127,6 @@ public:
 
   nsTArray<Request> mRequests;
 };
-
-/**
- * Layer UserData for ContainerLayers that want to be notified
- * of local invalidations of them and their descendant layers.
- * Pass a callback to ComputeDifferences to have these called.
- */
-class ContainerLayerPresContext : public mozilla::layers::LayerUserData {
-public:
-  nsPresContext* mPresContext;
-};
-extern uint8_t gNotifySubDocInvalidationData;
 
 /* Used by nsPresContext::HasAuthorSpecifiedRules */
 #define NS_AUTHOR_SPECIFIED_BACKGROUND      (1 << 0)
@@ -690,18 +682,10 @@ public:
   /**
    * Getter and setter for OMTA time counters
    */
-  bool ThrottledStyleIsUpToDate() const {
-    return mLastUpdateThrottledStyle == mRefreshDriver->MostRecentRefresh();
-  }
-  void TickLastUpdateThrottledStyle() {
-    mLastUpdateThrottledStyle = mRefreshDriver->MostRecentRefresh();
-  }
-  bool StyleUpdateForAllAnimationsIsUpToDate() const {
-    return mLastStyleUpdateForAllAnimations == mRefreshDriver->MostRecentRefresh();
-  }
-  void TickLastStyleUpdateForAllAnimations() {
-    mLastStyleUpdateForAllAnimations = mRefreshDriver->MostRecentRefresh();
-  }
+  bool ThrottledStyleIsUpToDate() const;
+  void TickLastUpdateThrottledStyle();
+  bool StyleUpdateForAllAnimationsIsUpToDate();
+  void TickLastStyleUpdateForAllAnimations();
 
 #ifdef IBMBIDI
   /**
@@ -905,6 +889,8 @@ public:
   // Passed to LayerProperties::ComputeDifference
   static void NotifySubDocInvalidation(mozilla::layers::ContainerLayer* aContainer,
                                        const nsIntRegion& aRegion);
+  void SetNotifySubDocInvalidationData(mozilla::layers::ContainerLayer* aContainer);
+  static void ClearNotifySubDocInvalidationData(mozilla::layers::ContainerLayer* aContainer);
   bool IsDOMPaintEventPending();
   void ClearMozAfterPaintEvents() {
     mInvalidateRequestsSinceLastPaint.mRequests.Clear();

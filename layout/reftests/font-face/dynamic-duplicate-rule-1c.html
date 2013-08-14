@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<meta charset="utf-8">
+
+<!-- Testcase for bug 879963 regression.
+
+     This test is designed to hit the case where we were adding the same
+     proxy font entry to a family multiple times during user font set updates.
+
+     Note that if a platform doesn't have any of the local() fonts listed,
+     the testcase will "pass" harmlessly as a no-op. -->
+
+<style type="text/css" id="style1">
+@font-face {
+  font-family: foo;
+  src: local("Arial"),
+       local("DejaVu Sans"),
+       local("Free Sans"),
+       local("Open Sans"),
+       local("Droid Sans"),
+       local("Roboto");
+}
+</style>
+
+<style type="text/css" id="style2">
+@font-face {
+  font-family: foo;
+  src: local("Arial"),
+       local("DejaVu Sans"),
+       local("Free Sans"),
+       local("Open Sans"),
+       local("Droid Sans"),
+       local("Roboto");
+}
+</style>
+
+<style type="text/css" id="style3">
+@font-face {
+  font-family: foo;
+  src: local("Arial"),
+       local("DejaVu Sans"),
+       local("Free Sans"),
+       local("Open Sans"),
+       local("Droid Sans"),
+       local("Roboto");
+}
+</style>
+
+<style type="text/css">
+body {
+  font-family: serif;
+}
+.test {
+  font-family: foo;
+}
+</style>
+
+<script type="application/javascript">
+function run() {
+  // Disable one of our three identical style elements.
+  // This will trigger an update of the user font set,
+  // and there will still be two identical rules present.
+  document.getElementById("style3").disabled = true;
+
+  // Now we trigger the use of the 'foo' font family,
+  // so that font loading occurs.
+  // If there are duplicate proxy entries in the family,
+  // and only the first one gets replaced by the real face,
+  // blank text will result.
+  document.getElementById("test").className = "test";
+
+  document.documentElement.removeAttribute("class");
+}
+</script>
+
+</head>
+
+<body onload="run()">
+<div>
+foo <span id="test">bar</span> baz
+</div>
+</body>
+
+</html>
