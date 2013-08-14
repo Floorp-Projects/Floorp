@@ -8,6 +8,8 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jsautooplen.h"
+
 #include "builtin/Eval.h"
 #include "frontend/SourceNotes.h"
 #include "jit/BaselineFrame.h"
