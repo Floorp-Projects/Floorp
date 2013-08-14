@@ -364,7 +364,6 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 # Default command macros; can be overridden in <arch>.mk.
 #
 CCC = $(CXX)
-XPIDL_LINK = $(PYTHON) $(LIBXUL_DIST)/sdk/bin/xpt.py link
 
 # Java macros
 JAVA_GEN_DIR  = _javagen
@@ -521,12 +520,8 @@ endif
 endif
 
 # Default location of include files
-IDL_DIR		= $(DIST)/idl
-
-XPIDL_FLAGS += -I$(srcdir) -I$(IDL_DIR)
-ifdef LIBXUL_SDK
-XPIDL_FLAGS += -I$(LIBXUL_SDK)/idl
-endif
+IDL_PARSER_DIR = $(topsrcdir)/xpcom/idl-parser
+IDL_PARSER_CACHE_DIR = $(DEPTH)/xpcom/idl-parser
 
 SDK_LIB_DIR = $(DIST)/sdk/lib
 SDK_BIN_DIR = $(DIST)/sdk/bin
