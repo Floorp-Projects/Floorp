@@ -233,16 +233,34 @@ BasicTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   */
 
   if (useSinglePaintBuffer) {
+    nsRefPtr<gfxContext> ctxt;
+
     const nsIntRect bounds = aPaintRegion.GetBounds();
     {
       PROFILER_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferAlloc");
-      mSinglePaintBuffer = new gfxImageSurface(
-        gfxIntSize(ceilf(bounds.width * mResolution),
-                   ceilf(bounds.height * mResolution)),
-        gfxPlatform::GetPlatform()->OptimalFormatForContent(GetContentType()), !mThebesLayer->CanUseOpaqueSurface());
+      gfxASurface::gfxImageFormat format =
+        gfxPlatform::GetPlatform()->OptimalFormatForContent(
+          GetContentType());
+
+      if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+        mSinglePaintDrawTarget =
+          gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+            gfx::IntSize(ceilf(bounds.width * mResolution),
+                         ceilf(bounds.height * mResolution)),
+            gfx::ImageFormatToSurfaceFormat(format));
+
+        ctxt = new gfxContext(mSinglePaintDrawTarget);
+      } else {
+        mSinglePaintBuffer = new gfxImageSurface(
+          gfxIntSize(ceilf(bounds.width * mResolution),
+                     ceilf(bounds.height * mResolution)),
+          format,
+          !mThebesLayer->CanUseOpaqueSurface());
+        ctxt = new gfxContext(mSinglePaintBuffer);
+      }
+
       mSinglePaintBufferOffset = nsIntPoint(bounds.x, bounds.y);
     }
-    nsRefPtr<gfxContext> ctxt = new gfxContext(mSinglePaintBuffer);
     ctxt->NewPath();
     ctxt->Scale(mResolution, mResolution);
     ctxt->Translate(gfxPoint(-bounds.x, -bounds.y));
@@ -286,6 +304,7 @@ BasicTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   mCallback = nullptr;
   mCallbackData = nullptr;
   mSinglePaintBuffer = nullptr;
+  mSinglePaintDrawTarget = nullptr;
 }
 
 BasicTiledLayerTile
@@ -299,24 +318,61 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
     aTile.mDeprecatedTextureClient = static_cast<DeprecatedTextureClientTile*>(textureClient.get());
   }
   aTile.mDeprecatedTextureClient->EnsureAllocated(gfx::IntSize(GetTileLength(), GetTileLength()), GetContentType());
-  gfxASurface* writableSurface = aTile.mDeprecatedTextureClient->LockImageSurface();
+  gfxImageSurface* writableSurface = aTile.mDeprecatedTextureClient->LockImageSurface();
   // Bug 742100, this gfxContext really should live on the stack.
-  nsRefPtr<gfxContext> ctxt = new gfxContext(writableSurface);
+  nsRefPtr<gfxContext> ctxt;
 
-  if (mSinglePaintBuffer) {
-    gfxRect drawRect(aDirtyRect.x - aTileOrigin.x, aDirtyRect.y - aTileOrigin.y,
-                     aDirtyRect.width, aDirtyRect.height);
+  RefPtr<gfx::DrawTarget> writableDrawTarget;
+  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+    // TODO: Instead of creating a gfxImageSurface to back the tile we should
+    // create an offscreen DrawTarget. This would need to be shared cross-thread
+    // and support copy on write semantics.
+    gfx::SurfaceFormat format =
+      gfx::ImageFormatToSurfaceFormat(writableSurface->Format());
 
+    writableDrawTarget =
+      gfxPlatform::GetPlatform()->CreateDrawTargetForData(
+        writableSurface->Data(),
+        gfx::IntSize(writableSurface->Width(), writableSurface->Height()),
+        writableSurface->Stride(),
+        format);
+    ctxt = new gfxContext(writableDrawTarget);
+  } else {
+    ctxt = new gfxContext(writableSurface);
     ctxt->SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctxt->NewPath();
-    ctxt->SetSource(mSinglePaintBuffer.get(),
-                    gfxPoint((mSinglePaintBufferOffset.x - aDirtyRect.x + drawRect.x) *
-                             mResolution,
-                             (mSinglePaintBufferOffset.y - aDirtyRect.y + drawRect.y) *
-                             mResolution));
-    drawRect.Scale(mResolution, mResolution);
-    ctxt->Rectangle(drawRect, true);
-    ctxt->Fill();
+  }
+
+  gfxRect drawRect(aDirtyRect.x - aTileOrigin.x, aDirtyRect.y - aTileOrigin.y,
+                   aDirtyRect.width, aDirtyRect.height);
+
+  if (mSinglePaintBuffer || mSinglePaintDrawTarget) {
+    if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+      gfx::Rect drawRect(aDirtyRect.x - aTileOrigin.x,
+                         aDirtyRect.y - aTileOrigin.y,
+                         aDirtyRect.width,
+                         aDirtyRect.height);
+      drawRect.Scale(mResolution);
+
+      RefPtr<gfx::SourceSurface> source = mSinglePaintDrawTarget->Snapshot();
+      writableDrawTarget->CopySurface(
+        source,
+        gfx::IntRect(roundf((aDirtyRect.x - mSinglePaintBufferOffset.x) * mResolution),
+                     roundf((aDirtyRect.y - mSinglePaintBufferOffset.y) * mResolution),
+                     drawRect.width,
+                     drawRect.height),
+        gfx::IntPoint(roundf(drawRect.x), roundf(drawRect.y)));
+    } else {
+      gfxRect drawRect(aDirtyRect.x - aTileOrigin.x, aDirtyRect.y - aTileOrigin.y,
+                       aDirtyRect.width, aDirtyRect.height);
+      drawRect.Scale(mResolution, mResolution);
+
+      ctxt->NewPath();
+      ctxt->SetSource(mSinglePaintBuffer.get(),
+                      gfxPoint((mSinglePaintBufferOffset.x - aDirtyRect.x) * mResolution + drawRect.x,
+                               (mSinglePaintBufferOffset.y - aDirtyRect.y) * mResolution + drawRect.y));
+      ctxt->SnappedRectangle(drawRect);
+      ctxt->Fill();
+    }
   } else {
     ctxt->NewPath();
     ctxt->Scale(mResolution, mResolution);
