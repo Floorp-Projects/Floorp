@@ -152,6 +152,7 @@
     macro(void0, void0, "(void 0)") \
     macro(watch, watch, "watch") \
     macro(writable, writable, "writable") \
+    macro(yield, yield, "yield") \
     /* Type names must be contiguous and ordered; see js::TypeName. */ \
     macro(undefined, undefined, "undefined") \
     macro(object, object, "object") \
