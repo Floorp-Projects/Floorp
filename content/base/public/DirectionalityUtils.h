@@ -95,8 +95,12 @@ void SetDirectionFromNewTextNode(nsIContent* aTextNode);
 /**
  * When a text node is removed from a document, find any ancestors whose
  * directionality it determined and redetermine their directionality
+ *
+ * @param aTextNode the text node
+ * @param aNullParent whether the the parent is also being removed
+ *        (passed from UnbindFromTree)
  */
-void ResetDirectionSetByTextNode(nsTextNode* aTextNode);
+void ResetDirectionSetByTextNode(nsTextNode* aTextNode, bool aNullParent);
 
 /**
  * Set the directionality of an element according to the directionality of the
