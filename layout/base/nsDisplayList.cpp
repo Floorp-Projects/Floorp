@@ -3032,14 +3032,12 @@ already_AddRefed<Layer>
 nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerParameters& aContainerParameters) {
-  nsRefPtr<Layer> layer = aManager->GetLayerBuilder()->
+  nsRefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nullptr);
 
   if (mFlags & GENERATE_SUBDOC_INVALIDATIONS) {
-    ContainerLayerPresContext* pres = new ContainerLayerPresContext;
-    pres->mPresContext = mFrame->PresContext();
-    layer->SetUserData(&gNotifySubDocInvalidationData, pres);
+    mFrame->PresContext()->SetNotifySubDocInvalidationData(layer);
   }
   return layer.forget();
 }
