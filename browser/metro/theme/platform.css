@@ -516,7 +516,7 @@ notification {
 
 .buttonContainer {
   background-color: transparent;
-  padding: none;
+  padding: 0;
   border: none;
 }
 
@@ -580,21 +580,6 @@ arrowbox {
   cursor: default;
 }
 
-#start-container[viewstate="snapped"] {
-  padding-top: 0;
-}
-
-#start-container[viewstate="snapped"] .meta-section-title,
-#start-container[viewstate="snapped"] richgrid {
-  margin-top: @metro_spacing_xnormal@;
-  padding: 0;
-}
-
-#start-container:not([viewstate="snapped"]) .meta-section-title.narrow-title,
-#start-container[viewstate="snapped"] .meta-section-title.wide-title {
-  display: none;
-}
-
 .meta-section:not([expanded]) > .meta-section-title.narrow-title:-moz-locale-dir(ltr):after {
   content: ">";
 }
@@ -648,6 +633,10 @@ appbar toolbar toolbarbutton {
   padding: 0;
   /* Don't inherit background-color from toolbarbutton[checked="true"] */
   background-color: transparent;
+}
+
+appbar[viewstate="snapped"] toolbar toolbarbutton {
+  margin: 0 @toolbar_snapped_horizontal_spacing@;
 }
 
 appbar toolbar toolbarbutton[disabled] {

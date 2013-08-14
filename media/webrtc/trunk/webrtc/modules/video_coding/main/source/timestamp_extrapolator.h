@@ -39,7 +39,7 @@ private:
     int32_t         _id;
     Clock*                _clock;
     double                _w[2];
-    double                _P[2][2];
+    double                _pp[2][2];
     int64_t         _startMs;
     int64_t         _prevMs;
     uint32_t        _firstTimestamp;

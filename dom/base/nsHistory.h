@@ -47,13 +47,6 @@ public:
   void ReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
                     const nsAString& aTitle, const nsAString& aUrl,
                     mozilla::ErrorResult& aRv);
-  void GetCurrent(nsString& aRetval, mozilla::ErrorResult& aRv) const;
-  void GetPrevious(nsString& aRetval, mozilla::ErrorResult& aRv) const;
-  void GetNext(nsString& aRetval, mozilla::ErrorResult& aRv) const;
-  void Item(uint32_t aIndex, nsString& aRetval, mozilla::ErrorResult& aRv);
-  void IndexedGetter(uint32_t aIndex, bool &aFound, nsString& aRetval,
-                     mozilla::ErrorResult& aRv);
-  uint32_t Length();
 
 protected:
   nsIDocShell *GetDocShell() const {

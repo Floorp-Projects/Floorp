@@ -16,7 +16,6 @@
 #include "nsCxPusher.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
-#include "nsTArrayHelpers.h"
 #include "nsThreadUtils.h"
 
 #include "CallEvent.h"

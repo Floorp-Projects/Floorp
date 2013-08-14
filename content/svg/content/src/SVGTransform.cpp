@@ -7,7 +7,6 @@
 #include "mozilla/dom/SVGTransform.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "nsError.h"
-#include "nsContentUtils.h"
 #include "nsAttrValueInlines.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGAttrTearoffTable.h"

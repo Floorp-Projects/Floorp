@@ -521,97 +521,100 @@ public class AwesomeBar extends GeckoActivity
         final String keyword = mContextMenuSubject.keyword;
         final int display = mContextMenuSubject.display;
 
-        switch (item.getItemId()) {
-            case R.id.open_private_tab:
-            case R.id.open_new_tab: {
-                if (url == null) {
-                    Log.e(LOGTAG, "Can't open in new tab because URL is null");
-                    break;
-                }
-
-                String newTabUrl = url;
-                if (display == Combined.DISPLAY_READER)
-                    newTabUrl = ReaderModeUtils.getAboutReaderForUrl(url, true);
-
-                int flags = Tabs.LOADURL_NEW_TAB;
-                if (item.getItemId() == R.id.open_private_tab)
-                    flags |= Tabs.LOADURL_PRIVATE;
-
-                Tabs.getInstance().loadUrl(newTabUrl, flags);
-                Toast.makeText(this, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
-                break;
+        final int itemId = item.getItemId();
+        if (itemId == R.id.open_private_tab || itemId == R.id.open_new_tab) {
+            if (url == null) {
+                Log.e(LOGTAG, "Can't open in new tab because URL is null");
             }
-            case R.id.open_in_reader: {
-                if (url == null) {
-                    Log.e(LOGTAG, "Can't open in reader mode because URL is null");
-                    break;
-                }
 
+            String newTabUrl = url;
+            if (display == Combined.DISPLAY_READER)
+                newTabUrl = ReaderModeUtils.getAboutReaderForUrl(url, true);
+
+            int flags = Tabs.LOADURL_NEW_TAB;
+            if (item.getItemId() == R.id.open_private_tab)
+                flags |= Tabs.LOADURL_PRIVATE;
+
+            Tabs.getInstance().loadUrl(newTabUrl, flags);
+            Toast.makeText(this, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
+
+            return true;
+        }
+
+        if (itemId == R.id.open_in_reader) {
+            if (url == null) {
+                Log.e(LOGTAG, "Can't open in reader mode because URL is null");
+            } else {
                 openUrlAndFinish(ReaderModeUtils.getAboutReaderForUrl(url, true));
-                break;
             }
-            case R.id.edit_bookmark: {
-                new EditBookmarkDialog(this).show(id, title, url, keyword);
-                break;
-            }
-            case R.id.remove_bookmark: {
-                (new UiAsyncTask<Void, Void, Integer>(ThreadUtils.getBackgroundHandler()) {
-                    private boolean mInReadingList;
+            return true;
+        }
 
-                    @Override
-                    public void onPreExecute() {
-                        mInReadingList = mAwesomeTabs.isInReadingList();
-                    }
+        if (itemId == R.id.edit_bookmark) {
+            new EditBookmarkDialog(this).show(id, title, url, keyword);
+            return true;
+        }
 
-                    @Override
-                    public Integer doInBackground(Void... params) {
-                        BrowserDB.removeBookmark(getContentResolver(), id);
-                        Integer count = mInReadingList ?
-                            BrowserDB.getReadingListCount(getContentResolver()) : 0;
+        if (itemId == R.id.remove_bookmark) {
+            (new UiAsyncTask<Void, Void, Integer>(ThreadUtils.getBackgroundHandler()) {
+                private boolean mInReadingList;
 
-                        return count;
-                    }
-
-                    @Override
-                    public void onPostExecute(Integer aCount) {
-                        int messageId = R.string.bookmark_removed;
-                        if (mInReadingList) {
-                            messageId = R.string.reading_list_removed;
-
-                            GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", url);
-                            GeckoAppShell.sendEventToGecko(e);
-
-                            // Delete from Awesomebar context menu can alter reading list bookmark count
-                            e = GeckoEvent.createBroadcastEvent("Reader:ListCountUpdated", Integer.toString(aCount));
-                            GeckoAppShell.sendEventToGecko(e);
-                        }
-
-                        Toast.makeText(AwesomeBar.this, messageId, Toast.LENGTH_SHORT).show();
-                    }
-                }).execute();
-                break;
-            }
-            case R.id.remove_history: {
-                (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
-                    @Override
-                    public Void doInBackground(Void... params) {
-                        BrowserDB.removeHistoryEntry(getContentResolver(), id);
-                        return null;
-                    }
-
-                    @Override
-                    public void onPostExecute(Void result) {
-                        Toast.makeText(AwesomeBar.this, R.string.history_removed, Toast.LENGTH_SHORT).show();
-                    }
-                }).execute();
-                break;
-            }
-            case R.id.add_to_launcher: {
-                if (url == null) {
-                    Log.e(LOGTAG, "Can't add to home screen because URL is null");
-                    break;
+                @Override
+                public void onPreExecute() {
+                    mInReadingList = mAwesomeTabs.isInReadingList();
                 }
 
+                @Override
+                public Integer doInBackground(Void... params) {
+                    BrowserDB.removeBookmark(getContentResolver(), id);
+                    Integer count = mInReadingList ?
+                        BrowserDB.getReadingListCount(getContentResolver()) : 0;
+
+                    return count;
+                }
+
+                @Override
+                public void onPostExecute(Integer aCount) {
+                    int messageId = R.string.bookmark_removed;
+                    if (mInReadingList) {
+                        messageId = R.string.reading_list_removed;
+
+                        GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", url);
+                        GeckoAppShell.sendEventToGecko(e);
+
+                        // Delete from Awesomebar context menu can alter reading list bookmark count
+                        e = GeckoEvent.createBroadcastEvent("Reader:ListCountUpdated", Integer.toString(aCount));
+                        GeckoAppShell.sendEventToGecko(e);
+                    }
+
+                    Toast.makeText(AwesomeBar.this, messageId, Toast.LENGTH_SHORT).show();
+                }
+            }).execute();
+
+            return true;
+        }
+
+        if (itemId == R.id.remove_history) {
+            (new UiAsyncTask<Void, Void, Void>(ThreadUtils.getBackgroundHandler()) {
+                @Override
+                public Void doInBackground(Void... params) {
+                    BrowserDB.removeHistoryEntry(getContentResolver(), id);
+                    return null;
+                }
+
+                @Override
+                public void onPostExecute(Void result) {
+                    Toast.makeText(AwesomeBar.this, R.string.history_removed, Toast.LENGTH_SHORT).show();
+                }
+            }).execute();
+
+            return true;
+        }
+
+        if (itemId == R.id.add_to_launcher) {
+            if (url == null) {
+                Log.e(LOGTAG, "Can't add to home screen because URL is null");
+            } else {
                 Bitmap bitmap = null;
                 if (b != null) {
                     bitmap = BitmapUtils.decodeByteArray(b);
@@ -619,23 +622,23 @@ public class AwesomeBar extends GeckoActivity
 
                 String shortcutTitle = TextUtils.isEmpty(title) ? url.replaceAll("^([a-z]+://)?(www\\.)?", "") : title;
                 GeckoAppShell.createShortcut(shortcutTitle, url, bitmap, "");
-                break;
             }
-            case R.id.share: {
-                if (url == null) {
-                    Log.e(LOGTAG, "Can't share because URL is null");
-                    break;
-                }
 
+            return true;
+        }
+
+        if (itemId == R.id.share) {
+            if (url == null) {
+                Log.e(LOGTAG, "Can't share because URL is null");
+            } else {
                 GeckoAppShell.openUriExternal(url, "text/plain", "", "",
                                               Intent.ACTION_SEND, title);
-                break;
             }
-            default: {
-                return super.onContextItemSelected(item);
-            }
+
+            return true;
         }
-        return true;
+
+        return super.onContextItemSelected(item);
     }
 
     public static String getReaderForUrl(String url) {

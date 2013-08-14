@@ -197,9 +197,7 @@ WebGLContext::WebGLContext()
 
     mLastUseIndex = 0;
 
-    mBufferFetchingIsVerified = false;
-    mMaxFetchedVertices = 0;
-    mMaxFetchedInstances = 0;
+    InvalidateBufferFetching();
 
     mIsScreenCleared = false;
 
@@ -1019,6 +1017,8 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
                 return true;
             }
             return false;
+        case ANGLE_instanced_arrays:
+            return WebGLExtensionInstancedArrays::IsSupported(this);
         default:
             // For warnings-as-errors.
             break;
@@ -1118,6 +1118,10 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
     {
         ext = WEBGL_draw_buffers;
     }
+    else if (CompareWebGLExtensionName(name, "ANGLE_instanced_arrays"))
+    {
+        ext = ANGLE_instanced_arrays;
+    }
 
     if (ext == WebGLExtensionID_unknown_extension) {
       return nullptr;
@@ -1183,6 +1187,9 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
             break;
         case OES_vertex_array_object:
             obj = new WebGLExtensionVertexArray(this);
+            break;
+        case ANGLE_instanced_arrays:
+            obj = new WebGLExtensionInstancedArrays(this);
             break;
         default:
             MOZ_ASSERT(false, "should not get there.");
@@ -1592,6 +1599,8 @@ WebGLContext::GetSupportedExtensions(JSContext *cx, Nullable< nsTArray<nsString>
         arr.AppendElement(NS_LITERAL_STRING("WEBGL_draw_buffers"));
     if (IsExtensionSupported(cx, OES_vertex_array_object))
         arr.AppendElement(NS_LITERAL_STRING("OES_vertex_array_object"));
+    if (IsExtensionSupported(cx, ANGLE_instanced_arrays))
+        arr.AppendElement(NS_LITERAL_STRING("ANGLE_instanced_arrays"));
 }
 
 //

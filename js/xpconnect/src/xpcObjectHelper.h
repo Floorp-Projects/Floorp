@@ -53,7 +53,7 @@ public:
 
     already_AddRefed<nsISupports> forgetCanonical()
     {
-        NS_ASSERTION(mCanonical, "Huh, no canonical to forget?");
+        MOZ_ASSERT(mCanonical, "Huh, no canonical to forget?");
 
         if (!mCanonicalStrong)
             mCanonicalStrong = mCanonical;

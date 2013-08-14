@@ -3261,8 +3261,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
             principal = sop->GetPrincipal();
         } else {
             principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-            NS_ASSERTION(NS_FAILED(rv) || principal,
-                         "Bad return from do_CreateInstance");
+            MOZ_ASSERT(NS_FAILED(rv) || principal, "Bad return from do_CreateInstance");
 
             if (!principal || NS_FAILED(rv)) {
                 if (NS_SUCCEEDED(rv)) {
@@ -3860,7 +3859,7 @@ xpc_EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sourc
 
     nsIScriptObjectPrincipal *sop =
         (nsIScriptObjectPrincipal*)xpc_GetJSPrivate(sandbox);
-    NS_ASSERTION(sop, "Invalid sandbox passed");
+    MOZ_ASSERT(sop, "Invalid sandbox passed");
     nsCOMPtr<nsIPrincipal> prin = sop->GetPrincipal();
     NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
 
@@ -4211,7 +4210,7 @@ FunctionWrapper(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedValue v(cx, js::GetFunctionNativeReserved(&args.callee(), 0));
-    NS_ASSERTION(v.isObject(), "weird function");
+    MOZ_ASSERT(v.isObject(), "weird function");
 
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj) {
@@ -4735,7 +4734,7 @@ nsXPCComponents::GetStack(nsIStackFrame * *aStack)
 NS_IMETHODIMP
 nsXPCComponents::GetManager(nsIComponentManager * *aManager)
 {
-    NS_ASSERTION(aManager, "bad param");
+    MOZ_ASSERT(aManager, "bad param");
     return NS_GetComponentManager(aManager);
 }
 
