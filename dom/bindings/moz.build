@@ -22,9 +22,5 @@ EXPORTS.mozilla.dom += [
     'NonRefcountedDOMObject.h',
     'Nullable.h',
     'PrimitiveConversions.h',
-    'PrototypeList.h',
-    'RegisterBindings.h',
     'TypedArray.h',
-    'UnionConversions.h',
-    'UnionTypes.h',
 ]

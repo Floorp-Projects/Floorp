@@ -25,14 +25,14 @@ XPCContext::XPCContext(XPCJSRuntime* aRuntime,
 
     PR_INIT_CLIST(&mScopes);
 
-    NS_ASSERTION(!JS_GetSecondContextPrivate(mJSContext), "Must be null");
+    MOZ_ASSERT(!JS_GetSecondContextPrivate(mJSContext), "Must be null");
     JS_SetSecondContextPrivate(mJSContext, this);
 }
 
 XPCContext::~XPCContext()
 {
     MOZ_COUNT_DTOR(XPCContext);
-    NS_ASSERTION(JS_GetSecondContextPrivate(mJSContext) == this, "Must match this");
+    MOZ_ASSERT(JS_GetSecondContextPrivate(mJSContext) == this, "Must match this");
     JS_SetSecondContextPrivate(mJSContext, nullptr);
     NS_IF_RELEASE(mException);
 

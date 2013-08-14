@@ -4,9 +4,9 @@
 
 #include "base/pickle.h"
 
+#include "mozilla/Alignment.h"
 #include "mozilla/Endian.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/Util.h"
 
 #include <stdlib.h>
 

@@ -185,6 +185,9 @@ class BaselineCompiler : public BaselineCompilerSpecific
     // Native code offset right before the scope chain is initialized.
     CodeOffsetLabel prologueOffset_;
 
+    // Whether any on stack arguments are modified.
+    bool modifiesArguments_;
+
     Label *labelOf(jsbytecode *pc) {
         return &labels_[pc - script->code];
     }

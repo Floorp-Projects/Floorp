@@ -5,9 +5,9 @@
 #ifndef nsIClassInfoImpl_h__
 #define nsIClassInfoImpl_h__
 
+#include "mozilla/Alignment.h"
 #include "nsIClassInfo.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/Util.h"
 
 #include <new>
 

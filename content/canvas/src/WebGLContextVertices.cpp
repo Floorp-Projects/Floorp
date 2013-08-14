@@ -262,7 +262,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
         {
-            if (IsWebGL2())
+            if (IsExtensionEnabled(ANGLE_instanced_arrays))
             {
                 return JS::Int32Value(mBoundVertexArray->mAttribBuffers[index].divisor);
             }
@@ -470,6 +470,16 @@ bool WebGLContext::DrawArrays_check(WebGLint first, WebGLsizei count, WebGLsizei
         return false;
     }
 
+    if (!mBufferFetchingHasPerVertex && !IsWebGL2()) {
+        /* http://www.khronos.org/registry/gles/extensions/ANGLE/ANGLE_instanced_arrays.txt
+         *  If all of the enabled vertex attribute arrays that are bound to active
+         *  generic attributes in the program have a non-zero divisor, the draw
+         *  call should return INVALID_OPERATION.
+         */
+        ErrorInvalidOperation("%s: at least one vertex attribute divisor should be 0", info);
+        return false;
+    }
+
     MakeContextCurrent();
 
     if (mBoundFramebuffer) {
@@ -624,6 +634,16 @@ WebGLContext::DrawElements_check(WebGLsizei count, WebGLenum type, WebGLintptr b
         return false;
     }
 
+    if (!mBufferFetchingHasPerVertex && !IsWebGL2()) {
+        /* http://www.khronos.org/registry/gles/extensions/ANGLE/ANGLE_instanced_arrays.txt
+         *  If all of the enabled vertex attribute arrays that are bound to active
+         *  generic attributes in the program have a non-zero divisor, the draw
+         *  call should return INVALID_OPERATION.
+         */
+        ErrorInvalidOperation("%s: at least one vertex attribute divisor should be 0", info);
+        return false;
+    }
+
     MakeContextCurrent();
 
     if (mBoundFramebuffer) {
@@ -674,7 +694,7 @@ WebGLContext::DrawElementsInstanced(WebGLenum mode, WebGLsizei count, WebGLenum 
         return;
 
     SetupContextLossTimer();
-    gl->fDrawElements(mode, count, type, reinterpret_cast<GLvoid*>(byteOffset));
+    gl->fDrawElementsInstanced(mode, count, type, reinterpret_cast<GLvoid*>(byteOffset), primcount);
 
     Draw_cleanup();
 }
@@ -722,6 +742,7 @@ WebGLContext::ValidateBufferFetching(const char *info)
         return true;
     }
 
+    bool hasPerVertex = false;
     uint32_t maxVertices = UINT32_MAX;
     uint32_t maxInstances = UINT32_MAX;
     uint32_t attribs = mBoundVertexArray->mAttribBuffers.Length();
@@ -768,13 +789,16 @@ WebGLContext::ValidateBufferFetching(const char *info)
             return false;
         }
 
-        if (vd.divisor == 0)
+        if (vd.divisor == 0) {
             maxVertices = std::min(maxVertices, checked_maxAllowedCount.value());
-        else
+            hasPerVertex = true;
+        } else {
             maxInstances = std::min(maxInstances, checked_maxAllowedCount.value() / vd.divisor);
+        }
     }
 
     mBufferFetchingIsVerified = true;
+    mBufferFetchingHasPerVertex = hasPerVertex;
     mMaxFetchedVertices = maxVertices;
     mMaxFetchedInstances = maxInstances;
 

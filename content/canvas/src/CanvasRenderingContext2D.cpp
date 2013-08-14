@@ -73,6 +73,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
+#include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/ContentParent.h"
@@ -797,6 +798,10 @@ CanvasRenderingContext2D::DemoteOldestContextIfNecessary()
 void
 CanvasRenderingContext2D::AddDemotableContext(CanvasRenderingContext2D* context)
 {
+  std::vector<CanvasRenderingContext2D*>::iterator iter = std::find(DemotableContexts().begin(), DemotableContexts().end(), context);
+  if (iter != DemotableContexts().end())
+    return;
+
   DemotableContexts().push_back(context);
 }
 

@@ -51,8 +51,8 @@ void nsJSID::Reset()
 bool
 nsJSID::SetName(const char* name)
 {
-    NS_ASSERTION(!mName || mName == gNoString ,"name already set");
-    NS_ASSERTION(name,"null name");
+    MOZ_ASSERT(!mName || mName == gNoString ,"name already set");
+    MOZ_ASSERT(name,"null name");
     mName = NS_strdup(name);
     return mName ? true : false;
 }
@@ -65,7 +65,7 @@ nsJSID::GetName(char * *aName)
 
     if (!NameIsSet())
         SetNameToNoString();
-    NS_ASSERTION(mName, "name not set");
+    MOZ_ASSERT(mName, "name not set");
     *aName = NS_strdup(mName);
     return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -140,7 +140,7 @@ nsJSID::Initialize(const char *idString)
 bool
 nsJSID::InitWithName(const nsID& id, const char *nameString)
 {
-    NS_ASSERTION(nameString, "no name");
+    MOZ_ASSERT(nameString, "no name");
     Reset();
     mID = id;
     return SetName(nameString);
@@ -753,7 +753,7 @@ nsJSCID::CreateInstance(const JS::Value& iidval, JSContext* cx,
 
     nsCOMPtr<nsISupports> inst;
     rv = compMgr->CreateInstance(mDetails.ID(), nullptr, *iid, getter_AddRefs(inst));
-    NS_ASSERTION(NS_FAILED(rv) || inst, "component manager returned success, but instance is null!");
+    MOZ_ASSERT(NS_FAILED(rv) || inst, "component manager returned success, but instance is null!");
 
     if (NS_FAILED(rv) || !inst)
         return NS_ERROR_XPC_CI_RETURNED_FAILURE;
@@ -781,8 +781,8 @@ nsJSCID::GetService(const JS::Value& iidval, JSContext* cx,
     nsIXPCSecurityManager* sm;
     sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
     if (sm && NS_FAILED(sm->CanCreateInstance(cx, mDetails.ID()))) {
-        NS_ASSERTION(JS_IsExceptionPending(cx),
-                     "security manager vetoed GetService without setting exception");
+        MOZ_ASSERT(JS_IsExceptionPending(cx),
+                   "security manager vetoed GetService without setting exception");
         return NS_OK;
     }
 
@@ -798,7 +798,7 @@ nsJSCID::GetService(const JS::Value& iidval, JSContext* cx,
 
     nsCOMPtr<nsISupports> srvc;
     rv = svcMgr->GetService(mDetails.ID(), *iid, getter_AddRefs(srvc));
-    NS_ASSERTION(NS_FAILED(rv) || srvc, "service manager returned success, but service is null!");
+    MOZ_ASSERT(NS_FAILED(rv) || srvc, "service manager returned success, but service is null!");
     if (NS_FAILED(rv) || !srvc)
         return NS_ERROR_XPC_GS_RETURNED_FAILURE;
 
@@ -847,7 +847,7 @@ nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         // we have a JSObject
         RootedObject obj(cx, &val.toObject());
 
-        NS_ASSERTION(obj, "when is an object not an object?");
+        MOZ_ASSERT(obj, "when is an object not an object?");
 
         // is this really a native xpcom object with a wrapper?
         nsIClassInfo* ci = nullptr;
@@ -918,7 +918,7 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj)
 bool
 xpc_JSObjectIsID(JSContext *cx, JSObject* obj)
 {
-    NS_ASSERTION(cx && obj, "bad param");
+    MOZ_ASSERT(cx && obj, "bad param");
     // NOTE: this call does NOT addref
     XPCWrappedNative* wrapper = nullptr;
     obj = js::CheckedUnwrap(obj);

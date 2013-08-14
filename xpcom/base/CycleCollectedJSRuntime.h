@@ -190,10 +190,6 @@ public:
   nsCycleCollectionParticipant* GCThingParticipant();
   nsCycleCollectionParticipant* ZoneParticipant();
 
-  bool NotifyLeaveMainThread() const;
-  void NotifyEnterCycleCollectionThread() const;
-  void NotifyLeaveCycleCollectionThread() const;
-  void NotifyEnterMainThread() const;
   nsresult BeginCycleCollection(nsCycleCollectionNoteRootCallback &aCb);
   bool UsefulToMergeZones() const;
   void FixWeakMappingGrayBits() const;
