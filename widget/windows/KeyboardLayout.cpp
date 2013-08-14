@@ -23,6 +23,10 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIIdleServiceInternal.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
+
 #include "npapi.h"
 
 #include <windows.h>
@@ -1055,7 +1059,7 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
 
   // If the key event causes dead key event, we don't need to dispatch keypress
   // event.
-  if (mIsDeadKey) {
+  if (mIsDeadKey && mCommittedCharsAndModifiers.IsEmpty()) {
     return false;
   }
 
@@ -1496,18 +1500,33 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
       return;
     }
 
-    // Dead-key followed by another dead-key. Reset dead-key state and
-    // return both dead-key characters.
+    // Dead key followed by another dead key causes inputting both character.
+    // However, at keydown message handling, we need to forget the first
+    // dead key because there is no guarantee coming WM_KEYUP for the second
+    // dead key before next WM_KEYDOWN.  E.g., due to auto key repeat or
+    // pressing another dead key before releasing current key.  Therefore,
+    // we can set only a character for current key for keyup event.
+    if (mActiveDeadKey < 0) {
+      aNativeKey.mCommittedCharsAndModifiers =
+        mVirtualKeys[virtualKeyIndex].GetUniChars(shiftState);
+      return;
+    }
+
     int32_t activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
-#ifdef DEBUG
     if (activeDeadKeyIndex < 0 || activeDeadKeyIndex >= NS_NUM_OF_KEYS) {
+#if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
       nsPrintfCString warning("The virtual key index (%d) of mActiveDeadKey "
                               "(0x%02X) is not a printable key (virtualKey="
                               "0x%02X)",
                               activeDeadKeyIndex, mActiveDeadKey, virtualKey);
       NS_WARNING(warning.get());
+#ifdef MOZ_CRASHREPORTER
+      CrashReporter::AppendAppNotesToCrashReport(
+                       NS_LITERAL_CSTRING("\n") + warning);
+#endif // #ifdef MOZ_CRASHREPORTER
+#endif // #if defined(DEBUG) || defined(MOZ_CRASHREPORTER)
+      MOZ_CRASH("Trying to reference out of range of mVirtualKeys");
     }
-#endif
     UniCharsAndModifiers prevDeadChars =
       mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState);
     UniCharsAndModifiers newChars =
