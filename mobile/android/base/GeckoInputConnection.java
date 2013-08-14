@@ -905,6 +905,10 @@ class GeckoInputConnection
                 resetInputConnection();
                 break;
 
+            case NOTIFY_IME_OPEN_VKB:
+                showSoftInput();
+                break;
+
             default:
                 if (DEBUG) {
                     throw new IllegalArgumentException("Unexpected NOTIFY_IME=" + type);
