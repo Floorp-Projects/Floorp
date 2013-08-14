@@ -2141,7 +2141,7 @@ RadioInterface.prototype = {
         }
         break;
       case kScreenStateChangedTopic:
-        this.workerMessenger.send("setScreenState", { on: (state === "on") });
+        this.workerMessenger.send("setScreenState", { on: (data === "on") });
         break;
     }
   },
