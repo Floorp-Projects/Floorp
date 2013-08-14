@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioParam.h"
-#include "nsContentUtils.h"
 #include "nsIDOMWindow.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/AudioParamBinding.h"

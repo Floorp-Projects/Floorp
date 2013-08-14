@@ -8,10 +8,9 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "nsINode.h"
-#include "nsRange.h"
 #include "nsWrapperCache.h"
-#include "nsRect.h"
-#include "nsClientRect.h"
+
+class nsClientRect;
 
 /**
  * Implementation of a DOM Caret Position, which is a node and offset within

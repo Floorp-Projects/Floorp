@@ -13,7 +13,6 @@
 #include "mozilla/Preferences.h"
 #include "nsIPermissionManager.h"
 
-#include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsJSON.h"
 #include "jsapi.h"
