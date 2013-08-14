@@ -328,6 +328,15 @@ VirtualKey::GetUniChars(ShiftState aShiftState) const
 UniCharsAndModifiers
 VirtualKey::GetNativeUniChars(ShiftState aShiftState) const
 {
+#ifdef DEBUG
+  if (aShiftState < 0 || aShiftState >= ArrayLength(mShiftStates)) {
+    nsPrintfCString warning("Shift state is out of range: "
+                            "aShiftState=%d, ArrayLength(mShiftState)=%d",
+                            aShiftState, ArrayLength(mShiftStates));
+    NS_WARNING(warning.get());
+  }
+#endif
+
   UniCharsAndModifiers result;
   Modifiers modifiers = ShiftStateToModifiers(aShiftState);
   if (IsDeadKey(aShiftState)) {
@@ -547,6 +556,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
       }
       mVirtualKeyCode = mOriginalVirtualKeyCode =
         ComputeVirtualKeyCodeFromScanCodeEx();
+      NS_ASSERTION(mVirtualKeyCode, "Failed to compute virtual keycode");
       break;
     default:
       MOZ_CRASH("Unsupported message");
@@ -1485,6 +1495,15 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     // Dead-key followed by another dead-key. Reset dead-key state and
     // return both dead-key characters.
     int32_t activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
+#ifdef DEBUG
+    if (activeDeadKeyIndex < 0 || activeDeadKeyIndex >= NS_NUM_OF_KEYS) {
+      nsPrintfCString warning("The virtual key index (%d) of mActiveDeadKey "
+                              "(0x%02X) is not a printable key (virtualKey="
+                              "0x%02X)",
+                              activeDeadKeyIndex, mActiveDeadKey, virtualKey);
+      NS_WARNING(warning.get());
+    }
+#endif
     UniCharsAndModifiers prevDeadChars =
       mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState);
     UniCharsAndModifiers newChars =
@@ -2061,9 +2080,18 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
     // care this message as key event.
     case VK_PACKET:
       return 0;
+    // If a key is not mapped to a virtual keycode, 0xFF is used.
+    case 0xFF:
+      NS_WARNING("The key is failed to be converted to a virtual keycode");
+      return 0;
   }
-  NS_WARNING("Unknown key code comes, please check latest MSDN document,"
-             " there may be some new keycodes we have not known.");
+#ifdef DEBUG
+  nsPrintfCString warning("Unknown virtual keycode (0x%08X), please check the "
+                          "latest MSDN document, there may be some new "
+                          "keycodes we've never known.",
+                          aNativeKeyCode);
+  NS_WARNING(warning.get());
+#endif
   return 0;
 }
 
