@@ -819,8 +819,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
-  : mActive(false)
-  , mGCOnDestruction(aGCOnDestruction)
+  : mGCOnDestruction(aGCOnDestruction)
   , mGlobalObjectRef(aGlobalObject)
 {
   mNext = sContextList;
@@ -1903,10 +1902,6 @@ nsJSContext::ScriptEvaluated(bool aTerminated)
     JSAutoCompartment ac(mContext, GetNativeGlobal());
     JS_MaybeGC(mContext);
   }
-
-  if (aTerminated) {
-    mActive = true;
-  }
 }
 
 bool
@@ -1995,34 +1990,6 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
     return;
   }
 
-  // Use zone GC when we're not asked to do a shrinking GC nor
-  // global GC and compartment GC has been called less than
-  // NS_MAX_COMPARTMENT_GC_COUNT times after the previous global GC.
-  if (!sDisableExplicitCompartmentGC &&
-      aShrinking != ShrinkingGC && aCompartment != NonCompartmentGC &&
-      sCompartmentGCCount < NS_MAX_COMPARTMENT_GC_COUNT) {
-    JS::PrepareForFullGC(nsJSRuntime::sRuntime);
-    for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
-      if (!cx->mActive && cx->mContext) {
-        if (JSObject* global = cx->GetNativeGlobal()) {
-          JS::SkipZoneForGC(JS::GetObjectZone(global));
-        }
-      }
-      cx->mActive = false;
-    }
-    if (JS::IsGCScheduled(nsJSRuntime::sRuntime)) {
-      if (aIncremental == IncrementalGC) {
-        JS::IncrementalGC(nsJSRuntime::sRuntime, aReason, aSliceMillis);
-      } else {
-        JS::GCForReason(nsJSRuntime::sRuntime, aReason);
-      }
-    }
-    return;
-  }
-
-  for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
-    cx->mActive = false;
-  }
   JS::PrepareForFullGC(nsJSRuntime::sRuntime);
   if (aIncremental == IncrementalGC) {
     JS::IncrementalGC(nsJSRuntime::sRuntime, aReason, aSliceMillis);
@@ -2517,7 +2484,6 @@ nsJSContext::KillCCTimer()
 void
 nsJSContext::GC(JS::gcreason::Reason aReason)
 {
-  mActive = true;
   PokeGC(aReason);
 }
 
