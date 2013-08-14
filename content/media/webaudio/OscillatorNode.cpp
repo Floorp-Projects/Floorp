@@ -45,7 +45,7 @@ public:
     , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
     , mStart(0)
     , mStop(TRACK_TICKS_MAX)
-    // Keep the default value in sync with the default value in OscillatorNode::OscillatorNode.
+    // Keep the default values in sync with OscillatorNode::OscillatorNode.
     , mFrequency(440.f)
     , mDetune(0.f)
     , mType(OscillatorType::Sine)
