@@ -117,6 +117,8 @@ public class MostRecentPage extends HomeFragment {
     public void onDestroyView() {
         super.onDestroyView();
         mList = null;
+        mTitle = null;
+        mEmptyView = null;
     }
 
     @Override
