@@ -163,7 +163,7 @@ public final class GeckoProfile {
 
     private static File getGuestDir(Context context) {
         if (mGuestDir == null) {
-            mGuestDir = context.getDir("guest", Context.MODE_PRIVATE);
+            mGuestDir = context.getFileStreamPath("guest");
         }
         return mGuestDir;
     }
@@ -181,8 +181,12 @@ public final class GeckoProfile {
     public static boolean maybeCleanupGuestProfile(final Context context) {
         // Don't use profile.getDir() here, so that we don't accidently create the dir
         File guestDir = getGuestDir(context);
+        if (!guestDir.exists()) {
+            return false;
+        }
+
         final GeckoProfile profile = getGuestProfile(context);
-        if (guestDir.exists() && !profile.locked()) {
+        if (!profile.locked()) {
             // if the guest dir exists, but its unlocked, delete it
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
