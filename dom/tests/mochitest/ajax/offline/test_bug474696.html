@@ -15,9 +15,8 @@ function manifestUpdated()
 
 function onFallbackLoad(fallbackIdentification)
 {
-  OfflineTest.is(fallbackIdentification, 1, "Got correct fallback for namespace1 (2)");
+  OfflineTest.is(fallbackIdentification, 1, "Got correct fallback for namespace1");
 
-  applicationCache.onerror = function() {}; // the update invoked by the iframe will finish after we discard the cache, ignore error
   OfflineTest.teardown();
   OfflineTest.finish();
 }

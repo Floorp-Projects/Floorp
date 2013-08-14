@@ -686,13 +686,21 @@ OfflineAppPermForURI(nsIURI *aURI,
     const char *permName = pinned ? "pin-app" : "offline-app";
     permissionManager->TestExactPermission(innerURI, permName, &perm);
 
+    if (perm == nsIPermissionManager::UNKNOWN_ACTION && !pinned) {
+        static const char kPrefName[] = "offline-apps.allow_by_default";
+        if (aPrefBranch) {
+            aPrefBranch->GetBoolPref(kPrefName, aAllowed);
+        } else {
+            *aAllowed = Preferences::GetBool(kPrefName, false);
+        }
+
+        return NS_OK;
+    }
+
     if (perm == nsIPermissionManager::ALLOW_ACTION ||
         perm == nsIOfflineCacheUpdateService::ALLOW_NO_WARN) {
         *aAllowed = true;
     }
-
-    // offline-apps.allow_by_default is now effective at the cache selection
-    // algorithm code (nsContentSink).
 
     return NS_OK;
 }

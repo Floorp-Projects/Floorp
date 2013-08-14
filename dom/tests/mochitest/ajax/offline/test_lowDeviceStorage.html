@@ -46,6 +46,7 @@ if (OfflineTest.setup()) {
           aUpdate.removeObserver(this);
           errorReceived = true;
           OfflineTest.ok(true, "Expected error. Update canceled");
+          finish();
         break;
         case Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED:
           OfflineTest.ok(errorReceived,
