@@ -13,6 +13,7 @@ cache, it can be fetched from the cache successfully.
           src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript"
           src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="offlineByDefault.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body onload="loaded()">
@@ -46,6 +47,7 @@ function finishTest() {
 
   window.removeEventListener("message", handleMessageEvents, false);
 
+  offlineByDefault.reset();
   SimpleTest.finish();  
 }
 
