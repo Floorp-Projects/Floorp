@@ -246,7 +246,7 @@ public:
   SharedTextureHostOGL(uint64_t aID,
                        TextureFlags aFlags,
                        gl::GLContext::SharedTextureShareType aShareType,
-                     gl::SharedTextureHandle aSharedhandle,
+                       gl::SharedTextureHandle aSharedhandle,
                        gfx::IntSize aSize,
                        bool inverted);
 

@@ -22,7 +22,8 @@ using namespace js;
 using namespace js::ion;
 
 BaselineCompiler::BaselineCompiler(JSContext *cx, HandleScript script)
-  : BaselineCompilerSpecific(cx, script)
+  : BaselineCompilerSpecific(cx, script),
+    modifiesArguments_(false)
 {
 }
 
@@ -187,6 +188,9 @@ BaselineCompiler::compile()
                                            ImmWord(uintptr_t(entryAddr)),
                                            ImmWord(uintptr_t(-1)));
     }
+
+    if (modifiesArguments_)
+        baselineScript->setModifiesArguments();
 
     // All barriers are emitted off-by-default, toggle them on if needed.
     if (cx->zone()->needsBarrier())
@@ -2192,6 +2196,8 @@ BaselineCompiler::emit_JSOP_CALLARG()
 bool
 BaselineCompiler::emit_JSOP_SETARG()
 {
+    modifiesArguments_ = true;
+
     uint32_t arg = GET_SLOTNO(pc);
     return emitFormalArgAccess(arg, /* get = */ false);
 }

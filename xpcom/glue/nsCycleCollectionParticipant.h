@@ -616,6 +616,14 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
     NS_IMETHOD_(void) DeleteCycleCollectable(void *n)                          \
     {                                                                          \
       DowncastCCParticipant<_class>(n)->DeleteCycleCollectable();              \
+    }                                                                          \
+    static _class* Downcast(void* s)                                           \
+    {                                                                          \
+      return DowncastCCParticipant<_class>(s);                                 \
+    }                                                                          \
+    static void* Upcast(_class *p)                                             \
+    {                                                                          \
+      return static_cast<void*>(p);                                            \
     }
 
 #define NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(_class)                          \
