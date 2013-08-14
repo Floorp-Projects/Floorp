@@ -301,7 +301,10 @@ let FormAssistant = {
           break;
         }
 
-        if (target instanceof HTMLDocument || target == content) {
+        if (target instanceof HTMLDocument ||
+            // Bug 811177, we don't support editing the entire document.
+            target instanceof HTMLBodyElement ||
+            target == content) {
           break;
         }
 
@@ -856,8 +859,12 @@ function getSelectionRange(element) {
     // Get the selection range of contenteditable elements
     let win = element.ownerDocument.defaultView;
     let sel = win.getSelection();
-    start = getContentEditableSelectionStart(element, sel);
-    end = start + getContentEditableSelectionLength(element, sel);
+    if (sel) {
+      start = getContentEditableSelectionStart(element, sel);
+      end = start + getContentEditableSelectionLength(element, sel);
+    } else {
+      dump("Failed to get window.getSelection()\n");
+    }
    }
    return [start, end];
  }
