@@ -57,7 +57,7 @@ class MarionetteClient(object):
                                            "socket closed?",
                                            status=ErrorCodes.INVALID_RESPONSE)
 
-    def connect(self, timeout=180.0):
+    def connect(self, timeout=240.0):
         """ Connect to the server and process the hello message we expect
             to receive in response.
         """

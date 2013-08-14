@@ -247,64 +247,6 @@ WidgetSpaceToCompensatedViewportSpace(const ScreenPoint& aPoint,
   return aPoint / aCurrentZoom;
 }
 
-nsEventStatus
-AsyncPanZoomController::ReceiveInputEvent(const nsInputEvent& aEvent,
-                                          nsInputEvent* aOutEvent)
-{
-  CSSToScreenScale currentResolution;
-  {
-    ReentrantMonitorAutoEnter lock(mMonitor);
-    currentResolution = mFrameMetrics.CalculateResolution();
-  }
-
-  nsEventStatus status;
-  switch (aEvent.eventStructType) {
-  case NS_TOUCH_EVENT: {
-    MultiTouchInput event(static_cast<const nsTouchEvent&>(aEvent));
-    status = ReceiveInputEvent(event);
-    break;
-  }
-  case NS_MOUSE_EVENT: {
-    MultiTouchInput event(static_cast<const nsMouseEvent&>(aEvent));
-    status = ReceiveInputEvent(event);
-    break;
-  }
-  default:
-    status = nsEventStatus_eIgnore;
-    break;
-  }
-
-  switch (aEvent.eventStructType) {
-  case NS_TOUCH_EVENT: {
-    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aOutEvent);
-    const nsTArray< nsRefPtr<dom::Touch> >& touches = touchEvent->touches;
-    for (uint32_t i = 0; i < touches.Length(); ++i) {
-      dom::Touch* touch = touches[i];
-      if (touch) {
-        CSSPoint refCSSPoint = WidgetSpaceToCompensatedViewportSpace(
-          ScreenPoint::FromUnknownPoint(gfx::Point(
-            touch->mRefPoint.x, touch->mRefPoint.y)),
-          currentResolution);
-        LayoutDevicePoint refPoint = refCSSPoint * mFrameMetrics.mDevPixelsPerCSSPixel;
-        touch->mRefPoint = nsIntPoint(refPoint.x, refPoint.y);
-      }
-    }
-    break;
-  }
-  default: {
-    CSSPoint refCSSPoint = WidgetSpaceToCompensatedViewportSpace(
-      ScreenPoint::FromUnknownPoint(gfx::Point(
-        aOutEvent->refPoint.x, aOutEvent->refPoint.y)),
-      currentResolution);
-    LayoutDevicePoint refPoint = refCSSPoint * mFrameMetrics.mDevPixelsPerCSSPixel;
-    aOutEvent->refPoint = LayoutDeviceIntPoint(refPoint.x, refPoint.y);
-    break;
-  }
-  }
-
-  return status;
-}
-
 nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent) {
   // If we may have touch listeners, we enable the machinery that allows touch
   // listeners to preventDefault any touch inputs. This should not happen unless

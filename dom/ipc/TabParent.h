@@ -187,6 +187,10 @@ public:
     void Activate();
     void Deactivate();
 
+    bool MapEventCoordinatesForChildProcess(nsEvent* aEvent);
+    void MapEventCoordinatesForChildProcess(const LayoutDeviceIntPoint& aOffset,
+                                                   nsEvent* aEvent);
+
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         int32_t aButton, int32_t aClickCount,
                         int32_t aModifiers, bool aIgnoreRootScrollFrame);
