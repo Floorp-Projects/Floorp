@@ -240,6 +240,7 @@ FENNEC_JAVA_FILES = \
   home/SearchLoader.java \
   home/SimpleCursorLoader.java \
   home/SuggestClient.java \
+  home/TabMenuStrip.java \
   home/TopBookmarkItemView.java \
   home/TopBookmarksAdapter.java \
   home/TopBookmarksView.java \
@@ -476,6 +477,7 @@ RES_LAYOUT = \
   res/layout/home_history_list.xml \
   res/layout/home_most_recent_page.xml \
   res/layout/home_most_visited_page.xml \
+  res/layout/home_pager.xml \
   res/layout/home_reading_list_page.xml \
   res/layout/home_search_item_row.xml \
   res/layout/home_suggestion_prompt.xml \
@@ -500,6 +502,7 @@ RES_LAYOUT = \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/search_engine_row.xml \
+  res/layout/tab_menu_strip.xml \
   res/layout/tabs_panel.xml \
   res/layout/tabs_counter.xml \
   res/layout/tabs_panel_header.xml \
@@ -521,6 +524,7 @@ RES_LAYOUT = \
 
 RES_LAYOUT_LARGE_V11 = \
   res/layout-large-v11/browser_toolbar.xml \
+  res/layout-large-v11/home_pager.xml \
   $(NULL)
 
 RES_LAYOUT_LARGE_LAND_V11 = \
@@ -641,6 +645,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/bookmark_folder_closed.png \
   res/drawable-mdpi/bookmark_folder_opened.png \
   res/drawable-mdpi/desktop_notification.png \
+  res/drawable-mdpi/home_tab_menu_strip.9.png \
   res/drawable-mdpi/ic_menu_addons_filler.png \
   res/drawable-mdpi/ic_menu_bookmark_add.png \
   res/drawable-mdpi/ic_menu_bookmark_remove.png \
@@ -749,6 +754,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/alert_mic.png \
   res/drawable-hdpi/alert_mic_camera.png \
   res/drawable-hdpi/arrow_popup_bg.9.png \
+  res/drawable-hdpi/home_tab_menu_strip.9.png \
   res/drawable-hdpi/ic_menu_addons_filler.png \
   res/drawable-hdpi/ic_menu_bookmark_add.png \
   res/drawable-hdpi/ic_menu_bookmark_remove.png \
@@ -844,6 +850,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/alert_mic.png \
   res/drawable-xhdpi/alert_mic_camera.png \
   res/drawable-xhdpi/arrow_popup_bg.9.png \
+  res/drawable-xhdpi/home_tab_menu_strip.9.png \
   res/drawable-xhdpi/ic_menu_addons_filler.png \
   res/drawable-xhdpi/ic_menu_bookmark_add.png \
   res/drawable-xhdpi/ic_menu_bookmark_remove.png \

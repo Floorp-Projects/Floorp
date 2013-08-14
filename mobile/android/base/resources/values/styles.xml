@@ -293,6 +293,11 @@
         <item name="android:textColor">?android:attr/textColorHint</item>
     </style>
 
+    <style name="TextAppearance.Widget.HomePagerTabMenuStrip" parent="TextAppearance.Small">
+        <item name="android:textColor">?android:attr/textColorHint</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
     <style name="TextAppearance.Widget.TwoLinePageRow" />
 
     <style name="TextAppearance.Widget.TwoLinePageRow.Title" parent="TextAppearance.Medium"/>
