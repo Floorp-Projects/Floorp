@@ -903,8 +903,12 @@ gfxPlatform::CreateOffscreenContentDrawTarget(const IntSize& aSize, SurfaceForma
 RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat)
 {
-  NS_ASSERTION(mPreferredCanvasBackend, "No backend.");
-  return Factory::CreateDrawTargetForData(mPreferredCanvasBackend, aData, aSize, aStride, aFormat);
+  NS_ASSERTION(mContentBackend, "No backend.");
+  if (mContentBackend == BACKEND_CAIRO) {
+    nsRefPtr<gfxImageSurface> image = new gfxImageSurface(aData, gfxIntSize(aSize.width, aSize.height), aStride, SurfaceFormatToImageFormat(aFormat)); 
+    return Factory::CreateDrawTargetForCairoSurface(image->CairoSurface(), aSize);
+  }
+  return Factory::CreateDrawTargetForData(mContentBackend, aData, aSize, aStride, aFormat);
 }
 
 /* static */ BackendType
