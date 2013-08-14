@@ -31,23 +31,7 @@
                          android:layout_width="fill_parent"
                          android:layout_height="fill_parent">
 
-                <org.mozilla.gecko.home.HomePager android:id="@+id/home_pager"
-                                                  android:layout_width="fill_parent"
-                                                  android:layout_height="fill_parent"
-                                                  android:background="@android:color/white"
-                                                  android:visibility="gone"
-                                                  android:focusableInTouchMode="true"
-                                                  android:descendantFocusability="afterDescendants">
-
-                    <org.mozilla.gecko.home.HomePagerTabStrip android:layout_width="fill_parent"
-                                                              android:layout_height="32dip"
-                                                              android:layout_gravity="top"
-                                                              android:gravity="bottom"
-                                                              android:background="@color/background_light"
-                                                              gecko:tabIndicatorColor="@color/text_color_highlight"
-                                                              android:textAppearance="@style/TextAppearance.Widget.HomePagerTabStrip"/>
-
-                </org.mozilla.gecko.home.HomePager>
+                <include layout="@layout/home_pager"/>
 
             </FrameLayout>
 
