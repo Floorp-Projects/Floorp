@@ -343,18 +343,21 @@ HiddenBrowser.prototype = {
   },
 
   resize: function (width, height) {
-    if (this._browser) {
-      this._browser.style.width = width + "px";
-      this._browser.style.height = height + "px";
-    } else {
-      this._width = width;
-      this._height = height;
-    }
+    this._width = width;
+    this._height = height;
+    this._applySize();
   },
 
   destroy: function () {
     this._removeBrowser();
     this._timer = clearTimer(this._timer);
+  },
+
+  _applySize: function () {
+    if (this._browser) {
+      this._browser.style.width = this._width + "px";
+      this._browser.style.height = this._height + "px";
+    }
   },
 
   _createBrowser: function () {
@@ -363,6 +366,7 @@ HiddenBrowser.prototype = {
       this._browser = doc.createElementNS(XUL_NS, "browser");
       this._browser.setAttribute("type", "content");
       this._browser.setAttribute("src", NEWTAB_URL);
+      this._applySize();
       doc.getElementById("win").appendChild(this._browser);
     });
   },
