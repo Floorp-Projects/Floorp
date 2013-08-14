@@ -35,6 +35,7 @@
 #include "mozilla/TypedEnum.h"
 #include "nsDirection.h"
 #include <algorithm>
+#include "nsITheme.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"

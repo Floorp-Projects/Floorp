@@ -13,7 +13,6 @@
 
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
-#include "nsITheme.h"
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
@@ -110,6 +109,17 @@ typedef void* nsNativeWidget;
 #define NS_STYLE_WINDOW_SHADOW_MENU             2
 #define NS_STYLE_WINDOW_SHADOW_TOOLTIP          3
 #define NS_STYLE_WINDOW_SHADOW_SHEET            4
+
+/**
+ * Transparency modes
+ */
+
+enum nsTransparencyMode {
+  eTransparencyOpaque = 0,  // Fully opaque
+  eTransparencyTransparent, // Parts of the window may be transparent
+  eTransparencyGlass,       // Transparent parts of the window have Vista AeroGlass effect applied
+  eTransparencyBorderlessGlass // As above, but without a border around the opaque areas when there would otherwise be one with eTransparencyGlass
+};
 
 /**
  * Cursor types.
