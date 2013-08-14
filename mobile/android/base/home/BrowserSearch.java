@@ -401,7 +401,12 @@ public class BrowserSearch extends HomeFragment
                     // never restore private tabs when that happens, so it
                     // should be safe to assume that null means non-private.
                     Tab tab = Tabs.getInstance().getSelectedTab();
-                    if (tab == null || !tab.isPrivate()) {
+                    final boolean isPrivate = (tab != null && tab.isPrivate());
+
+                    // Only create a new instance of SuggestClient if it hasn't been
+                    // set yet. e.g. Robocop tests might set it directly before search
+                    // engines are loaded.
+                    if (mSuggestClient == null && !isPrivate) {
                         mSuggestClient = new SuggestClient(getActivity(), suggestTemplate,
                                 SUGGESTION_TIMEOUT, SUGGESTION_MAX);
                     }
