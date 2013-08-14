@@ -75,9 +75,14 @@
 #ifndef xpcprivate_h___
 #define xpcprivate_h___
 
+#include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Util.h"
 
 #include <math.h>
@@ -100,7 +105,6 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectorUtils.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
 #include "nsDebug.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
@@ -132,9 +136,6 @@
 #include "nsAutoJSValHolder.h"
 
 #include "js/HashTable.h"
-#include "mozilla/GuardObjects.h"
-#include "mozilla/ReentrantMonitor.h"
-#include "mozilla/Mutex.h"
 
 #include "nsThreadUtils.h"
 #include "nsIJSEngineTelemetryStats.h"
