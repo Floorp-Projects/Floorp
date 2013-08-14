@@ -6,8 +6,6 @@
 
 #include "SpeechRecognitionAlternative.h"
 
-#include "nsContentUtils.h"
-
 #include "mozilla/dom/SpeechRecognitionAlternativeBinding.h"
 
 #include "SpeechRecognition.h"

@@ -8,7 +8,6 @@
 #include "nsIVariant.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsIXPConnect.h"
 #include "nsIDOMWindow.h"

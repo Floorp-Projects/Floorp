@@ -8,7 +8,6 @@
 #include "mozilla/dom/SVGMatrix.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGElement.h"
-#include "nsContentUtils.h"
 #include "mozilla/dom/SVGTransformListBinding.h"
 #include "nsError.h"
 #include <algorithm>

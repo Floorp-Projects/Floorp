@@ -14,7 +14,6 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
-#include "nsContentUtils.h"
 #include "nsJSUtils.h"
 
 #include "XPCWrapper.h"
