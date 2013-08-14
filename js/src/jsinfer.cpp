@@ -15,6 +15,7 @@
 #endif
 
 #include "jsapi.h"
+#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jsobj.h"
