@@ -110,7 +110,8 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:SetCallingLineIdRestriction",
   "RIL:GetCallingLineIdRestriction",
   "RIL:SetRoamingPreference",
-  "RIL:GetRoamingPreference"
+  "RIL:GetRoamingPreference",
+  "RIL:ExitEmergencyCbMode"
 ];
 
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
@@ -988,6 +989,9 @@ RadioInterface.prototype = {
       case "RIL:GetCallingLineIdRestriction":
         this.workerMessenger.sendWithIPCMessage(msg, "getCLIR");
         break;
+      case "RIL:ExitEmergencyCbMode":
+        this.workerMessenger.sendWithIPCMessage(msg, "exitEmergencyCbMode");
+        break;
       case "RIL:GetVoicemailInfo":
         // This message is sync.
         return this.voicemailInfo;
@@ -1022,6 +1026,9 @@ RadioInterface.prototype = {
         break;
       case "suppSvcNotification":
         this.handleSuppSvcNotification(message);
+        break;
+      case "emergencyCbModeChange":
+        this.handleEmergencyCbModeChange(message);
         break;
       case "networkinfochanged":
         this.updateNetworkInfo(message);
@@ -1094,6 +1101,9 @@ RadioInterface.prototype = {
       case "setRadioEnabled":
         let lock = gSettingsService.createLock();
         lock.set("ril.radio.disabled", !message.on, null, null);
+        break;
+      case "exitEmergencyCbMode":
+        this.handleExitEmergencyCbMode(message);
         break;
       default:
         throw new Error("Don't know about this message type: " +
@@ -1739,6 +1749,15 @@ RadioInterface.prototype = {
   },
 
   /**
+   * Handle emergency callback mode change.
+   */
+  handleEmergencyCbModeChange: function handleEmergencyCbModeChange(message) {
+    if (DEBUG) this.debug("handleEmergencyCbModeChange: " + JSON.stringify(message));
+    gMessageManager.sendMobileConnectionMessage("RIL:EmergencyCbModeChanged",
+                                                this.clientId, message);
+  },
+
+  /**
    * Handle call error.
    */
   handleCallError: function handleCallError(message) {
@@ -2095,6 +2114,11 @@ RadioInterface.prototype = {
     if (DEBUG) this.debug("handleStkProactiveCommand " + JSON.stringify(message));
     gSystemMessenger.broadcastMessage("icc-stkcommand", message);
     gMessageManager.sendIccMessage("RIL:StkCommand", this.clientId, message);
+  },
+
+  handleExitEmergencyCbMode: function handleExitEmergencyCbMode(message) {
+    if (DEBUG) this.debug("handleExitEmergencyCbMode: " + JSON.stringify(message));
+    gMessageManager.sendRequestResults("RIL:ExitEmergencyCbMode", message);
   },
 
   // nsIObserver
