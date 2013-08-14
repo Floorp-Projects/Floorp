@@ -7,6 +7,7 @@
 #define MOZILLA_IMAGELIB_CLIPPEDIMAGE_H_
 
 #include "ImageWrapper.h"
+#include "mozilla/Util.h" // for Maybe
 
 namespace mozilla {
 namespace image {
