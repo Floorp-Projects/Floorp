@@ -960,22 +960,15 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             JS::Value* aRetValue)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-  nsresult rv;
   if (!mScriptsEnabled) {
     return NS_OK;
   }
 
-  {
-    AutoCxPusher pusher(mContext);
-    nsJSUtils::EvaluateOptions evalOptions;
-    evalOptions.setCoerceToString(aCoerceToString);
-    rv = nsJSUtils::EvaluateString(mContext, aScript, aScopeObject,
+  AutoCxPusher pusher(mContext);
+  nsJSUtils::EvaluateOptions evalOptions;
+  evalOptions.setCoerceToString(aCoerceToString);
+  return nsJSUtils::EvaluateString(mContext, aScript, aScopeObject,
                                    aCompileOptions, evalOptions, aRetValue);
-  }
-
-  // ScriptEvaluated needs to come after we pop the stack
-  ScriptEvaluated(true);
-  return rv;
 }
 
 #ifdef DEBUG
@@ -1895,15 +1888,6 @@ nsJSContext::IsContextInitialized()
   return mIsInitialized;
 }
 
-void
-nsJSContext::ScriptEvaluated(bool aTerminated)
-{
-  if (GetNativeGlobal()) {
-    JSAutoCompartment ac(mContext, GetNativeGlobal());
-    JS_MaybeGC(mContext);
-  }
-}
-
 bool
 nsJSContext::GetScriptsEnabled()
 {
@@ -1940,8 +1924,6 @@ nsJSContext::SetProcessingScriptTag(bool aFlag)
 NS_IMETHODIMP
 nsJSContext::ScriptExecuted()
 {
-  ScriptEvaluated(!::JS_IsRunning(mContext));
-
   return NS_OK;
 }
 
