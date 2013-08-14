@@ -112,20 +112,6 @@ var values = [
   // Long strings with UTF-8.
   [ 'this.is.email.should.be.longer.than.sixty.four.characters.föö@mözillä.tld', true ],
   [ 'this-is-email-should-be-longer-than-sixty-four-characters-föö@mözillä.tld', true, true ],
-  // Long labels.
-  [ 'foo@thislabelisexactly63characterssssssssssssssssssssssssssssssssss', true ],
-  [ 'foo@thislabelisexactly63characterssssssssssssssssssssssssssssssssss.com', true ],
-  [ 'foo@foo.thislabelisexactly63characterssssssssssssssssssssssssssssssssss.com', true ],
-  [ 'foo@foo.thislabelisexactly63characterssssssssssssssssssssssssssssssssss', true ],
-  [ 'foo@thislabelisexactly64charactersssssssssssssssssssssssssssssssssss', false ],
-  [ 'foo@thislabelisexactly64charactersssssssssssssssssssssssssssssssssss.com', false ],
-  [ 'foo@foo.thislabelisexactly64charactersssssssssssssssssssssssssssssssssss.com', false ],
-  [ 'foo@foo.thislabelisexactly64charactersssssssssssssssssssssssssssssssssss', false ],
-  // Long labels with UTF-8.
-  [ 'foo@thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss', false ],
-  [ 'foo@thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss.com', false ],
-  [ 'foo@foo.thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss.com', false ],
-  [ 'foo@foo.thisläbelisexäctly63charäcterssssssssssssssssssssssssssssssssss', false ],
   // The domains labels (sub-domains or tld) can't start or finish with a '-'
   [ 'foo@foo-bar', true ],
   [ 'foo@-foo', false ],
@@ -193,7 +179,7 @@ for (c of legalCharacters) {
   values.push(["foo@foo.bar" + c, true]);
 }
 // Add the concatenation of all legal characters too.
-values.push(["foo@bar." + legalCharacters, true]);
+values.push(["foo@bar.com" + legalCharacters, true]);
 
 // Add domain illegal characters.
 illegalCharacters = "()<>[]:;@\\,!#$%&'*+/=?^_`{|}~ \t";
