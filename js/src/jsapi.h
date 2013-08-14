@@ -24,7 +24,6 @@
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
-#include "js/CharacterEncoding.h"
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
 #include "js/Utility.h"
@@ -34,6 +33,9 @@
 /************************************************************************/
 
 namespace JS {
+
+class Latin1CharsZ;
+class TwoByteChars;
 
 typedef mozilla::RangedPtr<const jschar> CharPtr;
 
