@@ -59,9 +59,5 @@ if CONFIG['MOZ_WEBSPEECH']:
 
 XPIDL_MODULE = 'dom_base'
 
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/interfaces/events',
-]
-
 MODULE = 'dom'
 
