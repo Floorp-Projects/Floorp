@@ -250,6 +250,7 @@
  "layout/forms/test/test_bug572649.html": "TIMED_OUT",
  "layout/forms/test/test_bug644542.html": "TIMED_OUT",
  "layout/forms/test/test_bug672810.html": "",
+ "layout/forms/test/test_bug903715.html":"select elements don't use an in-page popup on Android",
  "layout/forms/test/test_textarea_resize.html": "",
  "layout/forms/test/test_listcontrol_search.html": "select elements don't use an in-page popup on Android",
  "layout/generic/test/test_bug496275.html": "CRASH_DUMP",
