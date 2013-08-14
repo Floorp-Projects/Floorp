@@ -250,22 +250,6 @@ BluetoothServiceChildProcess::SetPairingConfirmationInternal(
   return true;
 }
 
-bool
-BluetoothServiceChildProcess::SetAuthorizationInternal(
-                                                const nsAString& aDeviceAddress,
-                                                bool aAllow,
-                                                BluetoothReplyRunnable* aRunnable)
-{
-  if(aAllow) {
-    SendRequest(aRunnable,
-                ConfirmAuthorizationRequest(nsString(aDeviceAddress)));
-  } else {
-    SendRequest(aRunnable,
-                DenyAuthorizationRequest(nsString(aDeviceAddress)));
-  }
-  return true;
-}
-
 void
 BluetoothServiceChildProcess::Connect(
   const nsAString& aDeviceAddress,

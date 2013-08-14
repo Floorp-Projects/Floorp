@@ -163,12 +163,6 @@ protected:
   DoRequest(const DenyPairingConfirmationRequest& aRequest);
 
   bool
-  DoRequest(const ConfirmAuthorizationRequest& aRequest);
-
-  bool
-  DoRequest(const DenyAuthorizationRequest& aRequest);
-
-  bool
   DoRequest(const ConnectRequest& aRequest);
 
   bool

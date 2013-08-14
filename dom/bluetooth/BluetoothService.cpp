@@ -790,10 +790,6 @@ BluetoothService::Notify(const BluetoothSignal& aData)
   } else if (aData.name().EqualsLiteral("RequestPasskey")) {
     MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
       "RequestPinCode: Wrong length of parameters");
-  } else if (aData.name().EqualsLiteral("Authorize")) {
-    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
-      "Authorize: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-authorize");
   } else if (aData.name().EqualsLiteral("Cancel")) {
     MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 0,
       "Cancel: Wrong length of parameters");

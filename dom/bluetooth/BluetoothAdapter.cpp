@@ -656,34 +656,6 @@ BluetoothAdapter::SetPairingConfirmation(const nsAString& aDeviceAddress,
 }
 
 already_AddRefed<DOMRequest>
-BluetoothAdapter::SetAuthorization(const nsAString& aDeviceAddress, bool aAllow,
-                                   ErrorResult& aRv)
-{
-  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
-  if (!win) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<BluetoothVoidReplyRunnable> results =
-    new BluetoothVoidReplyRunnable(request);
-
-  BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  if (!bs->SetAuthorizationInternal(aDeviceAddress, aAllow, results)) {
-    NS_WARNING("SetAuthorization failed!");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  return request.forget();
-}
-
-already_AddRefed<DOMRequest>
 BluetoothAdapter::Connect(const nsAString& aDeviceAddress,
                           uint16_t aProfileId, ErrorResult& aRv)
 {
