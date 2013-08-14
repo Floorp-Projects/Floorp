@@ -21,6 +21,7 @@ if CONFIG['MOZ_B2G_RIL']:
     XPIDL_SOURCES += [
         'nsIDOMCFStateChangeEvent.idl',
         'nsIDOMMobileConnection.idl',
+        'nsIDOMMozEmergencyCbModeEvent.idl',
         'nsIDOMNetworkStats.idl',
         'nsIDOMNetworkStatsManager.idl',
         'nsIMobileConnectionProvider.idl',

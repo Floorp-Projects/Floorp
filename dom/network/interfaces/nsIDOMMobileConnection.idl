@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(ae82dac0-d1a0-11e2-8b8b-0800200c9a66)]
+[scriptable, builtinclass, uuid(35fbab20-ee07-454d-943d-090a9378f5cf)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -268,7 +268,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    *
    * @param clirMode
    *        Is one of the CLIR_* constants.
-   *        
+   *
    * If successful, the request's onsuccess will be called.
    *
    * Otherwise, the request's onerror will be called, and the request's error
@@ -288,6 +288,16 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * or 'GenericFailure'.
    */
   nsIDOMDOMRequest getCallingLineIdRestriction();
+
+  /**
+   * Exit emergency callback mode.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RequestNotSupported'  or 'GenericFailure'.
+   */
+  nsIDOMDOMRequest exitEmergencyCbMode();
 
   /**
    * The 'voicechange' event is notified whenever the voice connection object
@@ -318,6 +328,12 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * state changes.
    */
   [implicit_jscontext] attribute jsval oncfstatechange;
+
+  /**
+   * The 'emergencycbmodechange' event is notified whenever the emergency
+   * callback mode changes.
+   */
+  [implicit_jscontext] attribute jsval onemergencycbmodechange;
 };
 
 [scriptable, uuid(49706beb-a160-40b7-b745-50f62e389a2c)]

@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+[scriptable, builtinclass, uuid(15cc1010-f051-11e2-945c-60a44c237d2b)]
+interface nsIDOMMozEmergencyCbModeEvent : nsIDOMEvent
+{
+  /**
+   * Whether the mode is activated.
+   */
+  readonly attribute boolean active;
+
+  /**
+   * Automatically exit the mode after the timeoutMs ms.
+   */
+  readonly attribute unsigned long timeoutMs;
+
+  [noscript] void initMozEmergencyCbModeEvent(in DOMString aType,
+                                              in boolean aCanBubble,
+                                              in boolean aCancelable,
+                                              in boolean aActive,
+                                              in unsigned long aTimeoutMs);
+};
+
+dictionary MozEmergencyCbModeEventInit : EventInit
+{
+  boolean active;
+  unsigned long timeoutMs;
+};
