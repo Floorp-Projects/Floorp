@@ -362,7 +362,7 @@ let CustomizableUIInternal = {
         // safely touch elements that have an ID - both because we depend on
         // IDs, and because such elements are not intended to be widgets
         // (eg, titlebar-placeholder elements).
-        if (node.id) {
+        if (node.id && node.getAttribute("skipintoolbarset") != "true") {
           if (this.isWidgetRemovable(node)) {
             if (palette) {
               palette.appendChild(node);
@@ -370,7 +370,7 @@ let CustomizableUIInternal = {
             } else {
               container.removeChild(node);
             }
-          } else if (node.getAttribute("skipintoolbarset") != "true") {
+          } else {
             this.setLocationAttributes(currentNode, aArea);
             node.setAttribute("removable", false);
             LOG("Adding non-removable widget to placements of " + aArea + ": " +
