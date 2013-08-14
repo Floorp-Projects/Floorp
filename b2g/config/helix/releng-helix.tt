@@ -1,0 +1,14 @@
+[
+{
+"size": 214609120,
+"digest": "cbda63d37b8db104a0fddcb5d8ffe1da173922805863905cb82e819c80cf6032caffa49903cb74e8c703da35df876cc305a7d7b989a52c045e99845e20718f7e",
+"algorithm": "sha512",
+"filename": "helix-ics.tar.xz"
+},
+{
+"size": 1570553,
+"digest": "ea03de74df73b05e939c314cd15c54aac7b5488a407b7cc4f5f263f3049a1f69642c567dd35c43d0bc3f0d599d0385a26ab2dd947a6b18f9044e4918b382eea7",
+"algorithm": "sha512",
+"filename": "Adreno200-AU_LINUX_ANDROID_ICS_CHOCO_CS.04.00.03.06.001.zip"
+}
+]

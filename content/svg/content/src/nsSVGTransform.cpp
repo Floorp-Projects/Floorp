@@ -6,7 +6,7 @@
 
 #include "nsError.h"
 #include "nsSVGTransform.h"
-#include "nsContentUtils.h"
+#include "nsContentUtils.h" // for NS_ENSURE_FINITE
 #include "nsTextFormatter.h"
 
 namespace {

@@ -10,17 +10,6 @@ XPIDL_SOURCES += [
     'nsIStyleSheetService.idl',
 ]
 
-if not CONFIG['MOZ_XUL']:
-    XPIDL_SOURCES += [
-        'nsIBoxObject.idl',
-    ]
-    EXPORTS    += [
-        'nsPIBoxObject.h',
-    ]
-    CPP_SOURCES += [
-        'nsBoxObject.cpp',
-    ]
-
 if CONFIG['IBMBIDI']:
     CPP_SOURCES += [
         'nsBidiPresUtils.cpp',

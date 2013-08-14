@@ -183,7 +183,7 @@ private:
           nsAutoString localeStr;
           rv = appLocale->
                GetCategory(NS_LITERAL_STRING(NSILOCALE_TIME), localeStr);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get app locale info");
+          MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to get app locale info");
 
           nsCOMPtr<nsIPlatformCharset> platformCharset =
             do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
@@ -268,7 +268,7 @@ xpc_LocalizeRuntime(JSRuntime *rt)
 
   nsAutoString localeStr;
   rv = appLocale->GetCategory(NS_LITERAL_STRING(NSILOCALE_TIME), localeStr);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get app locale info");
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "failed to get app locale info");
   NS_LossyConvertUTF16toASCII locale(localeStr);
 
   return !!JS_SetDefaultLocale(rt, locale.get());

@@ -15,7 +15,7 @@ this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "RootClient",
                          "debuggerSocketConnect",
                          "LongStringClient",
-                         "GripClient"];
+                         "ObjectClient"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -1518,7 +1518,7 @@ ThreadClient.prototype = {
   },
 
   /**
-   * Return a GripClient object for the given object grip.
+   * Return a ObjectClient object for the given object grip.
    *
    * @param aGrip object
    *        A pause-lifetime object grip returned by the protocol.
@@ -1528,7 +1528,7 @@ ThreadClient.prototype = {
       return this._pauseGrips[aGrip.actor];
     }
 
-    let client = new GripClient(this._client, aGrip);
+    let client = new ObjectClient(this._client, aGrip);
     this._pauseGrips[aGrip.actor] = client;
     return client;
   },
@@ -1581,7 +1581,7 @@ ThreadClient.prototype = {
    * @param aGripCacheName
    *        The property name of the grip cache we want to clear.
    */
-  _clearGripClients: function TC_clearGrips(aGripCacheName) {
+  _clearObjectClients: function TC_clearGrips(aGripCacheName) {
     for each (let grip in this[aGripCacheName]) {
       grip.valid = false;
     }
@@ -1593,7 +1593,7 @@ ThreadClient.prototype = {
    * clients.
    */
   _clearPauseGrips: function TC_clearPauseGrips() {
-    this._clearGripClients("_pauseGrips");
+    this._clearObjectClients("_pauseGrips");
   },
 
   /**
@@ -1601,7 +1601,7 @@ ThreadClient.prototype = {
    * clients.
    */
   _clearThreadGrips: function TC_clearPauseGrips() {
-    this._clearGripClients("_threadGrips");
+    this._clearObjectClients("_threadGrips");
   },
 
   /**
@@ -1758,14 +1758,14 @@ eventSource(TraceClient.prototype);
  * @param aGrip object
  *        A pause-lifetime object grip returned by the protocol.
  */
-function GripClient(aClient, aGrip)
+function ObjectClient(aClient, aGrip)
 {
   this._grip = aGrip;
   this._client = aClient;
   this.request = this._client.request;
 }
 
-GripClient.prototype = {
+ObjectClient.prototype = {
   get actor() { return this._grip.actor },
   get _transport() { return this._client._transport; },
 

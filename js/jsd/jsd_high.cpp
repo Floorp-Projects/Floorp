@@ -10,7 +10,6 @@
 
 #include "jsd.h"
 #include "nsCxPusher.h"
-#include "nsContentUtils.h"
 
 using mozilla::AutoSafeJSContext;
 

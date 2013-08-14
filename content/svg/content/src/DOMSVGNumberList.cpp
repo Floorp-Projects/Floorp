@@ -9,7 +9,6 @@
 #include "nsError.h"
 #include "SVGAnimatedNumberList.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
 #include "mozilla/dom/SVGNumberListBinding.h"
 #include <algorithm>
 

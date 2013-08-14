@@ -128,9 +128,10 @@ JSRuntime::createIonRuntime(JSContext *cx)
         js_delete(ionRuntime_);
         ionRuntime_ = NULL;
 
-        if (cx->runtime()->atomsCompartment->ionCompartment_) {
-            js_delete(cx->runtime()->atomsCompartment->ionCompartment_);
-            cx->runtime()->atomsCompartment->ionCompartment_ = NULL;
+        JSCompartment *comp = cx->runtime()->atomsCompartment();
+        if (comp->ionCompartment_) {
+            js_delete(comp->ionCompartment_);
+            comp->ionCompartment_ = NULL;
         }
 
         return NULL;
@@ -200,7 +201,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
     JSRuntime *rt = runtimeFromMainThread();
 
     JS_ASSERT(cx->compartment() == this);
-    JS_ASSERT(this != rt->atomsCompartment);
+    JS_ASSERT(!rt->isAtomsCompartment(this));
     JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
     JS_ASSERT_IF(existingArg, vp.isObject());
     JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
@@ -224,7 +225,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
 
         /* If the string is an atom, we don't have to copy. */
         if (str->isAtom()) {
-            JS_ASSERT(str->zone() == cx->runtime()->atomsCompartment->zone());
+            JS_ASSERT(cx->runtime()->isAtomsZone(str->zone()));
             return true;
         }
     }

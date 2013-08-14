@@ -22,10 +22,6 @@ LOCAL_INCLUDES = \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += \
-           -DHB_DONT_DEFINE_STDINT \
-           $(NULL)
-
 # Generate the include file containing compact, static definitions
 # for effective TLD data.
 nsEffectiveTLDService.$(OBJ_SUFFIX): etld_data.inc

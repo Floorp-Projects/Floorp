@@ -27,6 +27,7 @@
 #include "MediaDecoder.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/Base64.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/DocumentFragment.h"

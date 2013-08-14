@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/DebugOnly.h"
-
 #include "PluginScriptableObjectParent.h"
-#include "PluginScriptableObjectUtils.h"
 
-#include "nsNPAPIPlugin.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/plugins/PluginIdentifierParent.h"
 #include "mozilla/unused.h"
 #include "nsCxPusher.h"
+#include "nsNPAPIPlugin.h"
+#include "PluginScriptableObjectUtils.h"
 
 using namespace mozilla::plugins;
 using namespace mozilla::plugins::parent;

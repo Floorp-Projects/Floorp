@@ -330,41 +330,39 @@ class ExclusiveContext : public ThreadSafeContext
     // If required, pause this thread until notified to continue by the main thread.
     inline void maybePause() const;
 
-    inline bool typeInferenceEnabled() const;
+    // Threads with an ExclusiveContext may freely access any data in their
+    // compartment and zone.
+    JSCompartment *compartment() const {
+        JS_ASSERT_IF(runtime_->isAtomsCompartment(compartment_),
+                     runtime_->currentThreadHasExclusiveAccess());
+        return compartment_;
+    }
+    JS::Zone *zone() const {
+        JS_ASSERT_IF(!compartment(), !zone_);
+        JS_ASSERT_IF(compartment(), js::GetCompartmentZone(compartment()) == zone_);
+        return zone_;
+    }
 
-    // Per compartment data that can be accessed freely from an ExclusiveContext.
-    inline RegExpCompartment &regExps();
-    inline RegExpStatics *regExpStatics();
-    inline PropertyTree &propertyTree();
-    inline BaseShapeSet &baseShapes();
-    inline InitialShapeSet &initialShapes();
-    inline DtoaCache &dtoaCache();
+    // Zone local methods that can be used freely from an ExclusiveContext.
+    inline bool typeInferenceEnabled() const;
     types::TypeObject *getNewType(Class *clasp, TaggedProto proto, JSFunction *fun = NULL);
 
     // Current global. This is only safe to use within the scope of the
     // AutoCompartment from which it's called.
     inline js::Handle<js::GlobalObject*> global() const;
 
-    // Methods to access runtime wide data that must be protected by locks.
-
+    // Methods to access runtime data that must be protected by locks.
     frontend::ParseMapPool &parseMapPool() {
-        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
-        return runtime_->parseMapPool;
+        return runtime_->parseMapPool();
     }
-
     AtomSet &atoms() {
-        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
-        return runtime_->atoms;
+        return runtime_->atoms();
     }
-
     JSCompartment *atomsCompartment() {
-        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
-        return runtime_->atomsCompartment;
+        return runtime_->atomsCompartment();
     }
-
     ScriptDataTable &scriptDataTable() {
-        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
-        return runtime_->scriptDataTable;
+        return runtime_->scriptDataTable();
     }
 };
 
@@ -383,13 +381,6 @@ struct JSContext : public js::ExclusiveContext,
     ~JSContext();
 
     JSRuntime *runtime() const { return runtime_; }
-    JSCompartment *compartment() const { return compartment_; }
-
-    inline JS::Zone *zone() const {
-        JS_ASSERT_IF(!compartment(), !zone_);
-        JS_ASSERT_IF(compartment(), js::GetCompartmentZone(compartment()) == zone_);
-        return zone_;
-    }
     js::PerThreadData &mainThread() const { return runtime()->mainThread; }
 
     friend class js::ExclusiveContext;

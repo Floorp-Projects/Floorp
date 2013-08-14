@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_SVGIRect_h
 #define mozilla_dom_SVGIRect_h
 
-#include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/SVGRectBinding.h"
 #include "mozilla/Attributes.h"

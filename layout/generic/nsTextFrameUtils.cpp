@@ -5,7 +5,6 @@
 
 #include "nsTextFrameUtils.h"
 
-#include "nsContentUtils.h"
 #include "nsIWordBreaker.h"
 #include "gfxFont.h"
 #include "nsUnicharUtils.h"

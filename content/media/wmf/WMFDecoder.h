@@ -11,8 +11,8 @@
 namespace mozilla {
 
 // Decoder that uses Windows Media Foundation to playback H.264/AAC in MP4
-// and M4A files, and MP3 files. Playback is strictly limited to only those
-// codecs.
+// and M4A files, and MP3 files if the DirectShow backend is disabled.
+// Playback is strictly limited to only those codecs.
 class WMFDecoder : public MediaDecoder
 {
 public:
