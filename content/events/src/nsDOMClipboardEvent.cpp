@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMClipboardEvent.h"
-#include "nsContentUtils.h"
 #include "nsClientRect.h"
 #include "nsDOMDataTransfer.h"
 #include "nsIClipboard.h"

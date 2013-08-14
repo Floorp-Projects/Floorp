@@ -5,7 +5,6 @@
 #include "Gamepad.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
-#include "nsContentUtils.h"
 #include "nsVariant.h"
 #include "mozilla/dom/GamepadBinding.h"
 

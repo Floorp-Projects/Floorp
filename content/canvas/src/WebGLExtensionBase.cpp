@@ -5,7 +5,6 @@
 
 #include "WebGLContext.h"
 #include "WebGLExtensions.h"
-#include "nsContentUtils.h"
 
 using namespace mozilla;
 
