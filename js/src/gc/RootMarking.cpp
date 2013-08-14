@@ -751,24 +751,30 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
 
     if (!rt->isHeapMinorCollecting()) {
         /*
-         * All JSCompartment::mark does is mark the globals for compartements
+         * All JSCompartment::mark does is mark the globals for compartments
          * which have been entered. Globals aren't nursery allocated so there's
          * no need to do this for minor GCs.
          */
         for (CompartmentsIter c(rt); !c.done(); c.next())
             c->mark(trc);
-    }
 
-    /* The embedding can register additional roots here. */
-    for (size_t i = 0; i < rt->gcBlackRootTracers.length(); i++) {
-        const JSRuntime::ExtraTracer &e = rt->gcBlackRootTracers[i];
-        (*e.op)(trc, e.data);
-    }
+        /*
+         * The embedding can register additional roots here.
+         *
+         * We don't need to trace these in a minor GC because all pointers into
+         * the nursery should be in the store buffer, and we want to avoid the
+         * time taken to trace all these roots.
+         */
+        for (size_t i = 0; i < rt->gcBlackRootTracers.length(); i++) {
+            const JSRuntime::ExtraTracer &e = rt->gcBlackRootTracers[i];
+            (*e.op)(trc, e.data);
+        }
 
-    /* During GC, we don't mark gray roots at this stage. */
-    if (JSTraceDataOp op = rt->gcGrayRootTracer.op) {
-        if (!IS_GC_MARKING_TRACER(trc) && !trc->runtime->isHeapMinorCollecting())
-            (*op)(trc, rt->gcGrayRootTracer.data);
+        /* During GC, we don't mark gray roots at this stage. */
+        if (JSTraceDataOp op = rt->gcGrayRootTracer.op) {
+            if (!IS_GC_MARKING_TRACER(trc))
+                (*op)(trc, rt->gcGrayRootTracer.data);
+        }
     }
 }
 
