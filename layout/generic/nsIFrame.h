@@ -830,8 +830,8 @@ public:
    * position.
    */
   nsRect GetRect() const { return mRect; }
-  nsPoint GetPosition() const { return nsPoint(mRect.x, mRect.y); }
-  nsSize GetSize() const { return nsSize(mRect.width, mRect.height); }
+  nsPoint GetPosition() const { return mRect.TopLeft(); }
+  nsSize GetSize() const { return mRect.Size(); }
 
   /**
    * When we change the size of the frame's border-box rect, we may need to
