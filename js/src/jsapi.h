@@ -12,7 +12,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/ThreadLocal.h"
 
 #include <stdarg.h>
 #include <stddef.h>
