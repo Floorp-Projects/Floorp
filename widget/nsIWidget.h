@@ -14,7 +14,6 @@
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
 #include "nsITheme.h"
-#include "nsNativeWidget.h"
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
@@ -61,6 +60,11 @@ class DrawTarget;
  * place.
  */
 typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
+
+// Hide the native window system's real window type so as to avoid
+// including native window system types and APIs. This is necessary
+// to ensure cross-platform code.
+typedef void* nsNativeWidget;
 
 /**
  * Flags for the getNativeData function.
