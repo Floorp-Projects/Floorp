@@ -144,12 +144,14 @@ class TestEmitterBasic(unittest.TestCase):
             LIBRARY_NAME='lib_name',
             LIBS=['fans.lib', 'tans.lib'],
             NO_DIST_INSTALL='1',
-            MODULE='module_name',
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
             SHARED_LIBRARY_LIBS=['fans.sll', 'tans.sll'],
             SIMPLE_PROGRAMS=['fans.x', 'tans.x'],
             SSRCS=['fans.S', 'tans.S'],
-        )
+            XPIDLSRCS=['bar.idl', 'biz.idl', 'foo.idl'],
+            XPIDL_MODULE='module_name',
+            XPIDL_FLAGS=['-Idir1', '-Idir2', '-Idir3'],
+            )
 
         variables = objs[1].variables
         self.assertEqual(len(variables), len(wanted))

@@ -20,6 +20,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_http'
 
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/netwerk/base/public',
+]
+
 MODULE = 'necko'
 
 EXPORTS += [

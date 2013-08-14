@@ -11,5 +11,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_settings'
 
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+
 MODULE = 'dom'
 
