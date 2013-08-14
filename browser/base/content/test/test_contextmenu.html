@@ -16,40 +16,13 @@ Browser context menu tests.
 <pre id="test">
 <script> var perWindowPrivateBrowsing = false; </script>
 <script type="text/javascript" src="privateBrowsingMode.js"></script>
+<script type="text/javascript" src="contextmenu_common.js"></script>
 <script class="testbody" type="text/javascript">
-
-/** Test for Login Manager: multiple login autocomplete. **/
 
 SpecialPowers.Cu.import("resource://gre/modules/InlineSpellChecker.jsm", window);
 SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", window);
 
 const Ci = SpecialPowers.Ci;
-
-function openContextMenuFor(element, shiftkey, waitForSpellCheck) {
-    // Context menu should be closed before we open it again.
-    is(SpecialPowers.wrap(contextMenu).state, "closed", "checking if popup is closed");
-
-    if (lastElement)
-      lastElement.blur();
-    element.focus();
-
-    // Some elements need time to focus and spellcheck before any tests are
-    // run on them.
-    function actuallyOpenContextMenuFor() {
-      lastElement = element;
-      var eventDetails = { type : "contextmenu", button : 2, shiftKey : shiftkey };
-      synthesizeMouse(element, 2, 2, eventDetails, element.ownerDocument.defaultView);
-    }
-
-    if (waitForSpellCheck)
-      onSpellCheck(element, actuallyOpenContextMenuFor);
-    else
-      actuallyOpenContextMenuFor();
-}
-
-function closeContextMenu() {
-    contextMenu.hidePopup();
-}
 
 function executeCopyCommand(command, expectedValue)
 {
@@ -89,165 +62,6 @@ function selectInputText(element) {
   subwindow.getSelection().removeAllRanges();
 
   element.select();
-}
-
-function getVisibleMenuItems(aMenu, aData) {
-    var items = [];
-    var accessKeys = {};
-    for (var i = 0; i < aMenu.childNodes.length; i++) {
-        var item = aMenu.childNodes[i];
-        if (item.hidden)
-            continue;
-
-        var key = item.accessKey;
-        if (key)
-            key = key.toLowerCase();
-
-        var isGenerated = item.hasAttribute("generateditemid");
-
-        if (item.nodeName == "menuitem") {
-            var isSpellSuggestion = item.className == "spell-suggestion";
-            if (isSpellSuggestion) {
-              is(item.id, "", "child menuitem #" + i + " is a spelling suggestion");
-            } else if (isGenerated) {
-              is(item.id, "", "child menuitem #" + i + " is a generated item");
-            } else {
-              ok(item.id, "child menuitem #" + i + " has an ID");
-            }
-            var label = item.getAttribute("label");
-            ok(label.length, "menuitem " + item.id + " has a label");
-            if (isSpellSuggestion) {
-              is(key, "", "Spell suggestions shouldn't have an access key");
-              items.push("*" + label);
-            } else if (isGenerated) {
-              items.push("+" + label);
-            } else if (item.id.indexOf("spell-check-dictionary-") != 0 &&
-                       item.id != "spell-no-suggestions") {
-              ok(key, "menuitem " + item.id + " has an access key");
-              if (accessKeys[key])
-                  ok(false, "menuitem " + item.id + " has same accesskey as " + accessKeys[key]);
-              else
-                  accessKeys[key] = item.id;
-            }
-            if (!isSpellSuggestion && !isGenerated) {
-              items.push(item.id);
-            }
-            if (isGenerated) {
-              var p = {};
-              p.type = item.getAttribute("type");
-              p.icon = item.getAttribute("image");
-              p.checked = item.hasAttribute("checked");
-              p.disabled = item.hasAttribute("disabled");
-              items.push(p);
-            } else {
-              items.push(!item.disabled);
-            }
-        } else if (item.nodeName == "menuseparator") {
-            ok(true, "--- seperator id is " + item.id);
-            items.push("---");
-            items.push(null);
-        } else if (item.nodeName == "menu") {
-            if (isGenerated) {
-                item.id = "generated-submenu-" + aData.generatedSubmenuId++;
-            }
-            ok(item.id, "child menu #" + i + " has an ID");
-            if (!isGenerated) {
-                ok(key, "menu has an access key");
-                if (accessKeys[key])
-                    ok(false, "menu " + item.id + " has same accesskey as " + accessKeys[key]);
-                else
-                    accessKeys[key] = item.id;
-            }
-            items.push(item.id);
-            items.push(!item.disabled);
-            // Add a dummy item to that the indexes in checkMenu are the same
-            // for expectedItems and actualItems.
-            items.push([]);
-            items.push(null);
-        } else {
-            ok(false, "child #" + i + " of menu ID " + aMenu.id +
-                      " has an unknown type (" + item.nodeName + ")");
-        }
-    }
-    return items;
-}
-
-function checkContextMenu(expectedItems) {
-    is(contextMenu.state, "open", "checking if popup is open");
-    var data = { generatedSubmenuId: 1 };
-    checkMenu(contextMenu, expectedItems, data);
-}
-
-/*
- * checkMenu - checks to see if the specified <menupopup> contains the
- * expected items and state.
- * expectedItems is a array of (1) item IDs and (2) a boolean specifying if
- * the item is enabled or not (or null to ignore it). Submenus can be checked
- * by providing a nested array entry after the expected <menu> ID.
- * For example: ["blah", true,              // item enabled
- *               "submenu", null,           // submenu
- *                   ["sub1", true,         // submenu contents
- *                    "sub2", false], null, // submenu contents
- *               "lol", false]              // item disabled
- *
- */
-function checkMenu(menu, expectedItems, data) {
-    var actualItems = getVisibleMenuItems(menu, data);
-    //ok(false, "Items are: " + actualItems);
-    for (var i = 0; i < expectedItems.length; i+=2) {
-        var actualItem   = actualItems[i];
-        var actualEnabled = actualItems[i + 1];
-        var expectedItem = expectedItems[i];
-        var expectedEnabled = expectedItems[i + 1];
-        if (expectedItem instanceof Array) {
-            ok(true, "Checking submenu...");
-            var menuID = expectedItems[i - 2]; // The last item was the menu ID.
-            var submenu = menu.getElementsByAttribute("id", menuID)[0];
-            ok(submenu, "got a submenu element of id='" + menuID + "'");
-            if (submenu) {
-              is(submenu.nodeName, "menu", "submenu element of id='" + menuID +
-                                           "' has expected nodeName");
-              checkMenu(submenu.menupopup, expectedItem, data);
-            }
-        } else {
-            is(actualItem, expectedItem,
-               "checking item #" + i/2 + " (" + expectedItem + ") name");
-
-            if (typeof expectedEnabled == "object" && expectedEnabled != null ||
-                typeof actualEnabled == "object" && actualEnabled != null) {
-
-                ok(!(actualEnabled == null), "actualEnabled is not null");
-                ok(!(expectedEnabled == null), "expectedEnabled is not null");
-                is(typeof actualEnabled, typeof expectedEnabled, "checking types");
-
-                if (typeof actualEnabled != typeof expectedEnabled ||
-                    actualEnabled == null || expectedEnabled == null)
-                  continue;
-
-                is(actualEnabled.type, expectedEnabled.type,
-                   "checking item #" + i/2 + " (" + expectedItem + ") type attr value");
-                var icon = actualEnabled.icon;
-                if (icon) {
-                  var tmp = "";
-                  var j = icon.length - 1;
-                  while (j && icon[j] != "/") {
-                    tmp = icon[j--] + tmp;
-                  }
-                  icon = tmp;
-                }
-                is(icon, expectedEnabled.icon,
-                   "checking item #" + i/2 + " (" + expectedItem + ") icon attr value");
-                is(actualEnabled.checked, expectedEnabled.checked,
-                   "checking item #" + i/2 + " (" + expectedItem + ") has checked attr");
-                is(actualEnabled.disabled, expectedEnabled.disabled,
-                   "checking item #" + i/2 + " (" + expectedItem + ") has disabled attr");
-            } else if (expectedEnabled != null)
-                is(actualEnabled, expectedEnabled,
-                   "checking item #" + i/2 + " (" + expectedItem + ") enabled state");
-        }
-    }
-    // Could find unexpected extra items at the end...
-    is(actualItems.length, expectedItems.length, "checking expected number of menu entries");
 }
 
 /*
@@ -322,27 +136,10 @@ function runTest(testNum) {
         // Context menu for text mailto-link
         checkContextMenu(["context-copyemail", true].concat(inspectItems));
         closeContextMenu();
-        openContextMenuFor(input); // Invoke context menu for next test.
-        break;
-
-    case 5:
-        // Context menu for text input field
-        checkContextMenu(["context-undo",        false,
-                          "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
-                          "context-paste",       null, // ignore clipboard state
-                          "context-delete",      false,
-                          "---",                 null,
-                          "context-selectall",   false,
-                          "---",                 null,
-                          "spell-check-enabled", true
-                         ].concat(inspectItems));
-        closeContextMenu();
         openContextMenuFor(img); // Invoke context menu for next test.
         break;
 
-    case 6:
+    case 5:
         // Context menu for an image
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
@@ -357,7 +154,7 @@ function runTest(testNum) {
         openContextMenuFor(canvas); // Invoke context menu for next test.
         break;
 
-    case 7:
+    case 6:
         // Context menu for a canvas
         checkContextMenu(["context-viewimage",    true,
                           "context-saveimage",    true,
@@ -368,7 +165,7 @@ function runTest(testNum) {
         openContextMenuFor(video_ok); // Invoke context menu for next test.
         break;
 
-    case 8:
+    case 7:
         // Context menu for a video (with a VALID media source)
         checkContextMenu(["context-media-play",         true,
                           "context-media-mute",         true,
@@ -392,7 +189,7 @@ function runTest(testNum) {
         openContextMenuFor(audio_in_video); // Invoke context menu for next test.
         break;
 
-    case 9:
+    case 8:
         // Context menu for a video (with an audio-only file)
           checkContextMenu(["context-media-play",         true,
                             "context-media-mute",         true,
@@ -412,7 +209,7 @@ function runTest(testNum) {
         openContextMenuFor(video_bad); // Invoke context menu for next test.
         break;
 
-    case 10:
+    case 9:
         // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
@@ -436,7 +233,7 @@ function runTest(testNum) {
         openContextMenuFor(video_bad2); // Invoke context menu for next test.
         break;
 
-    case 11:
+    case 10:
         // Context menu for a video (with an INVALID media source)
         checkContextMenu(["context-media-play",         false,
                           "context-media-mute",         false,
@@ -460,7 +257,7 @@ function runTest(testNum) {
         openContextMenuFor(iframe); // Invoke context menu for next test.
         break;
 
-    case 12:
+    case 11:
         // Context menu for an iframe
         checkContextMenu(["context-back",         false,
                           "context-forward",      false,
@@ -493,7 +290,7 @@ function runTest(testNum) {
         openContextMenuFor(video_in_iframe); // Invoke context menu for next test.
         break;
 
-    case 13:
+    case 12:
         // Context menu for a video in an iframe
         checkContextMenu(["context-media-play",         true,
                           "context-media-mute",         true,
@@ -529,7 +326,7 @@ function runTest(testNum) {
         openContextMenuFor(image_in_iframe); // Invoke context menu for next test.
         break;
 
-    case 14:
+    case 13:
         // Context menu for an image in an iframe
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
@@ -556,7 +353,7 @@ function runTest(testNum) {
         openContextMenuFor(textarea, false, true); // Invoke context menu for next test, but wait for the spellcheck.
         break;
 
-    case 15:
+    case 14:
         // Context menu for textarea
         checkContextMenu(["*chubbiness",         true, // spelling suggestion
                           "spell-add-to-dictionary", true,
@@ -581,14 +378,14 @@ function runTest(testNum) {
         openContextMenuFor(text); // Invoke context menu for next test.
         break;
 
-    case 16:
+    case 15:
         // Re-check context menu for plain text to make sure it hasn't changed
         checkContextMenu(plainTextItems);
         closeContextMenu();
         openContextMenuFor(textarea, false, true); // Invoke context menu for next test.
         break;
 
-    case 17:
+    case 16:
         // Context menu for textarea after a word has been added
         // to the dictionary
         checkContextMenu(["spell-undo-add-to-dictionary", true,
@@ -613,34 +410,9 @@ function runTest(testNum) {
         openContextMenuFor(contenteditable, false, true);
         break;
 
-    case 18:
+    case 17:
         // Context menu for contenteditable
         checkContextMenu(["spell-no-suggestions", false,
-                          "spell-add-to-dictionary", true,
-                          "---",                 null,
-                          "context-undo",        false,
-                          "---",                 null,
-                          "context-cut",         false,
-                          "context-copy",        false,
-                          "context-paste",       null, // ignore clipboard state
-                          "context-delete",      false,
-                          "---",                 null,
-                          "context-selectall",   true,
-                          "---",                 null,
-                          "spell-check-enabled", true,
-                          "spell-dictionaries",  true,
-                              ["spell-check-dictionary-en-US", true,
-                               "---",                          null,
-                               "spell-add-dictionaries",       true], null
-                         ].concat(inspectItems));
-
-        closeContextMenu();
-        openContextMenuFor(inputspell, false, true); // Invoke context menu for next test.
-        break;
-
-    case 19:
-        // Context menu for spell-check input
-        checkContextMenu(["*prodigality",        true, // spelling suggestion
                           "spell-add-to-dictionary", true,
                           "---",                 null,
                           "context-undo",        false,
@@ -663,13 +435,13 @@ function runTest(testNum) {
         openContextMenuFor(link); // Invoke context menu for next test.
         break;
 
-    case 20:
+    case 18:
         executeCopyCommand("cmd_copyLink", "http://mozilla.com/");
         closeContextMenu();
         openContextMenuFor(pagemenu); // Invoke context menu for next test.
         break;
 
-    case 21:
+    case 19:
         // Context menu for element with assigned content context menu
         checkContextMenu(["+Plain item",          {type: "", icon: "", checked: false, disabled: false},
                           "+Disabled item",       {type: "", icon: "", checked: false, disabled: true},
@@ -720,7 +492,7 @@ function runTest(testNum) {
         full_screen_element.mozRequestFullScreen();
         break;
 
-        case 22:
+    case 20:
         // Context menu for DOM Fullscreen mode (NOTE: this is *NOT* on an img)
         checkContextMenu(["context-leave-dom-fullscreen", true,
                           "---",                          null,
@@ -749,7 +521,7 @@ function runTest(testNum) {
         subwindow.document.mozCancelFullScreen();
         break;
 
-    case 23:
+    case 21:
         // Context menu for element with assigned content context menu
         // The shift key should bypass content context menu processing
         checkContextMenu(["context-back",         false,
@@ -770,7 +542,7 @@ function runTest(testNum) {
         openContextMenuFor(selecttext); // Invoke context menu for next test.
         return;
 
-    case 24:
+    case 22:
         // Context menu for selected text
         if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -786,7 +558,7 @@ function runTest(testNum) {
         openContextMenuFor(selecttextlink); // Invoke context menu for next test.
         return;
 
-    case 25:
+    case 23:
         // Context menu for selected text which matches valid URL pattern
         if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -826,7 +598,7 @@ function runTest(testNum) {
         openContextMenuFor(imagelink)
         break;
 
-    case 26:
+    case 24:
         // Context menu for image link
         if (perWindowPrivateBrowsing) {
           checkContextMenu(["context-openlinkintab", true,
@@ -869,7 +641,7 @@ function runTest(testNum) {
         openContextMenuFor(select_inputtext); // Invoke context menu for next test.
         return;
 
-    case 27:
+    case 25:
         // Context menu for selected text in input
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
@@ -888,7 +660,7 @@ function runTest(testNum) {
         openContextMenuFor(select_inputtext_password); // Invoke context menu for next test.
         return;
 
-    case 28:
+    case 26:
         // Context menu for selected text in input[type="password"]
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
@@ -911,7 +683,7 @@ function runTest(testNum) {
         openContextMenuFor(plugin);
         return;
 
-    case 29:
+    case 27:
         // Context menu for click-to-play blocked plugin
         checkContextMenu(["context-ctp-play",     true,
                           "context-ctp-hide",     true,
@@ -942,7 +714,7 @@ function runTest(testNum) {
         openContextMenuFor(longdesc);
         return;
 
-    case 30:
+    case 28:
         // Context menu for an image with longdesc
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
@@ -958,7 +730,7 @@ function runTest(testNum) {
         openContextMenuFor(srcdoc);
         return;
 
-    case 31:
+    case 29:
         // Context menu for an iframe with srcdoc attribute set
         checkContextMenu(["context-back",         false,
                           "context-forward",      false,
@@ -990,7 +762,6 @@ function runTest(testNum) {
 
     /*
      * Other things that would be nice to test:
-     *  - spelling / misspelled word (in text input?)
      *  - check state of disabled items
      *  - test execution of menu items (maybe as a separate test?)
      */
@@ -1006,10 +777,10 @@ function runTest(testNum) {
 
 
 var testNum = 1;
-var subwindow, chromeWin, contextMenu, lastElement;
+var subwindow, chromeWin, contextMenu;
 var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
-    inputspell, pagemenu, dom_full_screen, plainTextItems, audio_in_video,
+    pagemenu, dom_full_screen, plainTextItems, audio_in_video,
     selecttext, selecttextlink, imagelink, select_inputtext, select_inputtext_password,
     plugin, longdesc, iframe;
 
@@ -1052,7 +823,6 @@ function startTest() {
     textarea = subwindow.document.getElementById("test-textarea");
     contenteditable = subwindow.document.getElementById("test-contenteditable");
     contenteditable.focus(); // content editable needs to be focused to enable spellcheck
-    inputspell = subwindow.document.getElementById("test-input-spellcheck");
     pagemenu = subwindow.document.getElementById("test-pagemenu");
     dom_full_screen = subwindow.document.getElementById("test-dom-full-screen");
     selecttext = subwindow.document.getElementById("test-select-text");
