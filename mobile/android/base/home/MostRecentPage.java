@@ -164,10 +164,12 @@ public class MostRecentPage extends HomeFragment {
             return;
         }
 
-        // Cursor is empty, so hide the title and set the empty view if it hasn't been set already.
+        // Cursor is empty, so hide the title and set the
+        // empty view if it hasn't been set already.
         if (mTitle != null) {
-            mTitle.setVisibility(View.VISIBLE);
+            mTitle.setVisibility(View.GONE);
         }
+
         if (mEmptyView == null) {
             // Set empty page view. We delay this so that the empty view won't flash.
             ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.home_empty_view_stub);

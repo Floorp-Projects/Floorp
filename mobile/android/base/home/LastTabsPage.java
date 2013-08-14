@@ -158,9 +158,10 @@ public class LastTabsPage extends HomeFragment {
             return;
         }
 
-        // Cursor is empty, so hide the title and set the empty view if it hasn't been set already.
+        // Cursor is empty, so hide the title and set the
+        // empty view if it hasn't been set already.
         if (mTitle != null) {
-            mTitle.setVisibility(View.VISIBLE);
+            mTitle.setVisibility(View.GONE);
         }
         mRestoreButton.setVisibility(View.GONE);
 
