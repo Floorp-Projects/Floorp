@@ -11,6 +11,7 @@
 #include "AudioDestinationNode.h"
 #include "WebAudioUtils.h"
 #include "DelayProcessor.h"
+#include "PlayingRefChangeHandler.h"
 
 namespace mozilla {
 namespace dom {

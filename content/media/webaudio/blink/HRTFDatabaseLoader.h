@@ -29,11 +29,13 @@
 #ifndef HRTFDatabaseLoader_h
 #define HRTFDatabaseLoader_h
 
-#include "HRTFDatabase.h"
-#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 #include "mozilla/RefPtr.h"
-#include "nsIThread.h"
 #include "mozilla/Mutex.h"
+#include "HRTFDatabase.h"
+
+template <class EntryType> class nsTHashtable;
+template <class T> class nsAutoRef;
 
 namespace WebCore {
 
