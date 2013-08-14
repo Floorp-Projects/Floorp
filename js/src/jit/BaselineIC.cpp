@@ -6,6 +6,7 @@
 
 #include "jit/BaselineIC.h"
 
+#include "jsautooplen.h"
 #include "jslibmath.h"
 
 #include "builtin/Eval.h"
