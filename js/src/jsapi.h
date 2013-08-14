@@ -5118,36 +5118,10 @@ JS_GetCurrentThread();
  * thread. Embeddings may check this invariant outside the JS engine by calling
  * JS_AbortIfWrongThread (which will abort if not on the owner thread, even for
  * non-debug builds).
- *
- * It is possible to "move" a runtime between threads. This is accomplished by
- * calling JS_ClearRuntimeThread on a runtime's owner thread and then calling
- * JS_SetRuntimeThread on the new owner thread. The runtime must not be
- * accessed between JS_ClearRuntimeThread and JS_SetRuntimeThread. Also, the
- * caller is responsible for synchronizing the calls to Set/Clear.
  */
 
 extern JS_PUBLIC_API(void)
 JS_AbortIfWrongThread(JSRuntime *rt);
-
-extern JS_PUBLIC_API(void)
-JS_ClearRuntimeThread(JSRuntime *rt);
-
-extern JS_PUBLIC_API(void)
-JS_SetRuntimeThread(JSRuntime *rt);
-
-class JSAutoSetRuntimeThread
-{
-    JSRuntime *runtime_;
-
-  public:
-    JSAutoSetRuntimeThread(JSRuntime *runtime) : runtime_(runtime) {
-        JS_SetRuntimeThread(runtime_);
-    }
-
-    ~JSAutoSetRuntimeThread() {
-        JS_ClearRuntimeThread(runtime_);
-    }
-};
 
 /************************************************************************/
 

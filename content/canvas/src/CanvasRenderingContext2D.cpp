@@ -798,6 +798,10 @@ CanvasRenderingContext2D::DemoteOldestContextIfNecessary()
 void
 CanvasRenderingContext2D::AddDemotableContext(CanvasRenderingContext2D* context)
 {
+  std::vector<CanvasRenderingContext2D*>::iterator iter = std::find(DemotableContexts().begin(), DemotableContexts().end(), context);
+  if (iter != DemotableContexts().end())
+    return;
+
   DemotableContexts().push_back(context);
 }
 

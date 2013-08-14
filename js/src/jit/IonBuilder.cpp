@@ -803,13 +803,27 @@ IonBuilder::initParameters()
     if (!info().fun())
         return true;
 
-    MParameter *param = MParameter::New(MParameter::THIS_SLOT,
-                                        cloneTypeSet(types::TypeScript::ThisTypes(script())));
+    // If we are doing OSR on a frame which initially executed in the
+    // interpreter and didn't accumulate type information, try to use that OSR
+    // frame to determine possible initial types for 'this' and parameters.
+
+    types::StackTypeSet *thisTypes = types::TypeScript::ThisTypes(script());
+    if (thisTypes->empty() && baselineFrame_)
+        thisTypes->addType(cx, types::GetValueType(cx, baselineFrame_->thisValue()));
+
+    MParameter *param = MParameter::New(MParameter::THIS_SLOT, cloneTypeSet(thisTypes));
     current->add(param);
     current->initSlot(info().thisSlot(), param);
 
     for (uint32_t i = 0; i < info().nargs(); i++) {
-        param = MParameter::New(i, cloneTypeSet(types::TypeScript::ArgTypes(script(), i)));
+        types::StackTypeSet *argTypes = types::TypeScript::ArgTypes(script(), i);
+        if (argTypes->empty() && baselineFrame_ &&
+            !script_->baselineScript()->modifiesArguments())
+        {
+            argTypes->addType(cx, types::GetValueType(cx, baselineFrame_->argv()[i]));
+        }
+
+        param = MParameter::New(i, cloneTypeSet(argTypes));
         current->add(param);
         current->initSlot(info().argSlotUnchecked(i), param);
     }
@@ -1279,7 +1293,35 @@ IonBuilder::inspectOpcode(JSOp op)
             // convert all arg accesses to go through the arguments object.
             if (info().hasArguments())
                 return abort("NYI: arguments & setarg.");
-            current->setArg(GET_SLOTNO(pc));
+
+            int32_t arg = GET_SLOTNO(pc);
+
+            // If this assignment is at the start of the function and is coercing
+            // the original value for the argument which was passed in, loosen
+            // the type information for that original argument if it is currently
+            // empty due to originally executing in the interpreter.
+            MDefinition *value = current->peek(-1);
+            if (graph().numBlocks() == 1 &&
+                (value->isBitOr() || value->isBitAnd() || value->isMul() /* for JSOP_POS */))
+             {
+                 for (size_t i = 0; i < value->numOperands(); i++) {
+                    MDefinition *op = value->getOperand(i);
+                    if (op->isParameter() &&
+                        op->toParameter()->index() == arg &&
+                        op->resultTypeSet() &&
+                        op->resultTypeSet()->empty())
+                    {
+                        types::TypeSet *argTypes = types::TypeScript::ArgTypes(script(), arg);
+
+                        // During parallel compilation the parameter's type set
+                        // will be a clone of the actual argument type set.
+                        argTypes->addType(cx, types::Type::UnknownType());
+                        op->resultTypeSet()->addType(cx, types::Type::UnknownType());
+                    }
+                }
+            }
+
+            current->setArg(arg);
         }
         return true;
 
@@ -6490,42 +6532,277 @@ GetElemKnownType(bool needsHoleCheck, types::StackTypeSet *types)
 bool
 IonBuilder::jsop_getelem()
 {
-    MDefinition *obj = current->peek(-2);
-    MDefinition *index = current->peek(-1);
+    MDefinition *index = current->pop();
+    MDefinition *obj = current->pop();
 
-    if (ElementAccessIsDenseNative(obj, index)) {
-        // Don't generate a fast path if there have been bounds check failures
-        // and this access might be on a sparse property.
-        if (!ElementAccessHasExtraIndexedProperty(cx, obj) || !failedBoundsCheck_)
-            return jsop_getelem_dense();
-    }
+    bool emitted = false;
 
-    int arrayType = TypedArrayObject::TYPE_MAX;
-    if (ElementAccessIsTypedArray(obj, index, &arrayType))
-        return jsop_getelem_typed(arrayType);
+    if (!getElemTryDense(&emitted, obj, index) || emitted)
+        return emitted;
 
-    if (obj->type() == MIRType_String)
-        return jsop_getelem_string();
+    if (!getElemTryTypedStatic(&emitted, obj, index) || emitted)
+        return emitted;
 
-    if (obj->type() == MIRType_Magic)
-        return jsop_arguments_getelem();
+    if (!getElemTryTyped(&emitted, obj, index) || emitted)
+        return emitted;
+
+    if (!getElemTryString(&emitted, obj, index) || emitted)
+        return emitted;
+
+    if (!getElemTryArguments(&emitted, obj, index) || emitted)
+        return emitted;
+
+    if (!getElemTryArgumentsInlined(&emitted, obj, index) || emitted)
+        return emitted;
 
     if (script()->argumentsHasVarBinding() && obj->mightBeType(MIRType_Magic))
         return abort("Type is not definitely lazy arguments.");
 
-    current->popn(2);
+    if (!getElemTryCache(&emitted, obj, index) || emitted)
+        return emitted;
 
-    MInstruction *ins;
+    // Emit call.
+    MInstruction *ins = MCallGetElement::New(obj, index);
 
-    bool cacheable = obj->mightBeType(MIRType_Object) && !obj->mightBeType(MIRType_String) &&
-        (index->mightBeType(MIRType_Int32) || index->mightBeType(MIRType_String));
+    current->add(ins);
+    current->push(ins);
 
-    bool nonNativeGetElement = inspector->hasSeenNonNativeGetElement(pc);
+    if (!resumeAfter(ins))
+        return false;
+
+    types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
+    return pushTypeBarrier(ins, types, true);
+}
+
+bool
+IonBuilder::getElemTryDense(bool *emitted, MDefinition *obj, MDefinition *index)
+{
+    JS_ASSERT(*emitted == false);
+
+    if (!ElementAccessIsDenseNative(obj, index))
+        return true;
+
+    // Don't generate a fast path if there have been bounds check failures
+    // and this access might be on a sparse property.
+    if (ElementAccessHasExtraIndexedProperty(cx, obj) && failedBoundsCheck_)
+        return true;
+
+    // Emit dense getelem variant.
+    if (!jsop_getelem_dense(obj, index))
+        return false;
+
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *index)
+{
+    JS_ASSERT(*emitted == false);
+
+    int arrayType = TypedArrayObject::TYPE_MAX;
+    if (!ElementAccessIsTypedArray(obj, index, &arrayType))
+        return true;
+
+    if (!LIRGenerator::allowStaticTypedArrayAccesses())
+        return true;
+
+    if (ElementAccessHasExtraIndexedProperty(cx, obj))
+        return true;
+
+    if (!obj->resultTypeSet())
+        return true;
+
+    JSObject *tarrObj = obj->resultTypeSet()->getSingleton();
+    if (!tarrObj)
+        return true;
+
+    TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
+    ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(tarr);
+
+    // LoadTypedArrayElementStatic currently treats uint32 arrays as int32.
+    if (viewType == ArrayBufferView::TYPE_UINT32)
+        return true;
+
+    MDefinition *ptr = convertShiftToMaskForStaticTypedArray(index, viewType);
+    if (!ptr)
+        return true;
+
+    // Emit LoadTypedArrayElementStatic.
+
+    obj->setFoldedUnchecked();
+
+    MLoadTypedArrayElementStatic *load = MLoadTypedArrayElementStatic::New(tarr, ptr);
+    current->add(load);
+    current->push(load);
+
+    // The load is infallible if an undefined result will be coerced to the
+    // appropriate numeric type if the read is out of bounds. The truncation
+    // analysis picks up some of these cases, but is incomplete with respect
+    // to others. For now, sniff the bytecode for simple patterns following
+    // the load which guarantee a truncation or numeric conversion.
+    if (viewType == ArrayBufferView::TYPE_FLOAT32 || viewType == ArrayBufferView::TYPE_FLOAT64) {
+        jsbytecode *next = pc + JSOP_GETELEM_LENGTH;
+        if (*next == JSOP_POS)
+            load->setInfallible();
+    } else {
+        jsbytecode *next = pc + JSOP_GETELEM_LENGTH;
+        if (*next == JSOP_ZERO && *(next + JSOP_ZERO_LENGTH) == JSOP_BITOR)
+            load->setInfallible();
+    }
+
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::getElemTryTyped(bool *emitted, MDefinition *obj, MDefinition *index)
+{
+    JS_ASSERT(*emitted == false);
+
+    int arrayType = TypedArrayObject::TYPE_MAX;
+    if (!ElementAccessIsTypedArray(obj, index, &arrayType))
+        return true;
+
+    // Emit typed getelem variant.
+    if (!jsop_getelem_typed(obj, index, arrayType))
+        return false;
+
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::getElemTryString(bool *emitted, MDefinition *obj, MDefinition *index)
+{
+    JS_ASSERT(*emitted == false);
+
+    if (obj->type() != MIRType_String)
+        return true;
+
+    // Emit fast path for string[index].
+    MInstruction *idInt32 = MToInt32::New(index);
+    current->add(idInt32);
+    index = idInt32;
+
+    MStringLength *length = MStringLength::New(obj);
+    current->add(length);
+
+    index = addBoundsCheck(index, length);
+
+    MCharCodeAt *charCode = MCharCodeAt::New(obj, index);
+    current->add(charCode);
+
+    MFromCharCode *result = MFromCharCode::New(charCode);
+    current->add(result);
+    current->push(result);
+
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::getElemTryArguments(bool *emitted, MDefinition *obj, MDefinition *index)
+{
+    JS_ASSERT(*emitted == false);
+
+    if (inliningDepth_ > 0)
+        return true;
+
+    if (obj->type() != MIRType_Magic)
+        return true;
+
+    // Emit GetArgument.
+
+    JS_ASSERT(!info().argsObjAliasesFormals());
+
+    // Type Inference has guaranteed this is an optimized arguments object.
+    obj->setFoldedUnchecked();
+
+    // To ensure that we are not looking above the number of actual arguments.
+    MArgumentsLength *length = MArgumentsLength::New();
+    current->add(length);
+
+    // Ensure index is an integer.
+    MInstruction *idInt32 = MToInt32::New(index);
+    current->add(idInt32);
+    index = idInt32;
+
+    // Bailouts if we read more than the number of actual arguments.
+    index = addBoundsCheck(index, length);
+
+    // Load the argument from the actual arguments.
+    MGetArgument *load = MGetArgument::New(index);
+    current->add(load);
+    current->push(load);
+
+    types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
+    if (!pushTypeBarrier(load, types, true))
+        return false;
+
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::getElemTryArgumentsInlined(bool *emitted, MDefinition *obj, MDefinition *index)
+{
+    JS_ASSERT(*emitted == false);
+
+    if (inliningDepth_ == 0)
+        return true;
+
+    if (obj->type() != MIRType_Magic)
+        return true;
+
+    // Emit inlined arguments.
+
+    JS_ASSERT(!info().argsObjAliasesFormals());
+
+    // When the id is constant, we can just return the corresponding inlined argument
+    if (index->isConstant() && index->toConstant()->value().isInt32()) {
+        JS_ASSERT(inliningDepth_ > 0);
+
+        int32_t id = index->toConstant()->value().toInt32();
+        index->setFoldedUnchecked();
+
+        if (id < (int32_t)inlineCallInfo_->argc() && id >= 0)
+            current->push(inlineCallInfo_->getArg(id));
+        else
+            pushConstant(UndefinedValue());
+
+        *emitted = true;
+        return true;
+    }
+
+    // inlined not constant not supported, yet.
+    return abort("NYI inlined not constant get argument element");
+}
+
+bool
+IonBuilder::getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index)
+{
+    JS_ASSERT(*emitted == false);
+
+    // Make sure we have at least an object.
+    if (!obj->mightBeType(MIRType_Object))
+        return true;
+
+    // Don't cache for strings.
+    if (obj->mightBeType(MIRType_String))
+        return true;
+
+    // Index should be integer or string
+    if (!index->mightBeType(MIRType_Int32) && !index->mightBeType(MIRType_String))
+        return true;
 
     // Turn off cacheing if the element is int32 and we've seen non-native objects as the target
     // of this getelem.
+    bool nonNativeGetElement = inspector->hasSeenNonNativeGetElement(pc);
     if (index->mightBeType(MIRType_Int32) && nonNativeGetElement)
-        cacheable = false;
+        return true;
+
+    // Emit GetElementCache.
 
     types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
     bool barrier = PropertyReadNeedsTypeBarrier(cx, obj, NULL, types);
@@ -6535,12 +6812,7 @@ IonBuilder::jsop_getelem()
     if (index->mightBeType(MIRType_String))
         barrier = true;
 
-    if (cacheable) {
-        ins = MGetElementCache::New(obj, index, barrier);
-    } else {
-        ins = MCallGetElement::New(obj, index);
-        barrier = true;
-    }
+    MInstruction *ins = MGetElementCache::New(obj, index, barrier);
 
     current->add(ins);
     current->push(ins);
@@ -6548,7 +6820,8 @@ IonBuilder::jsop_getelem()
     if (!resumeAfter(ins))
         return false;
 
-    if (cacheable && index->type() == MIRType_Int32 && !barrier) {
+    // Spice up type information.
+    if (index->type() == MIRType_Int32 && !barrier) {
         bool needHoleCheck = !ElementAccessIsPacked(cx, obj);
         JSValueType knownType = GetElemKnownType(needHoleCheck, types);
 
@@ -6556,18 +6829,19 @@ IonBuilder::jsop_getelem()
             ins->setResultType(MIRTypeFromValueType(knownType));
     }
 
-    return pushTypeBarrier(ins, types, barrier);
+    if (!pushTypeBarrier(ins, types, barrier))
+        return false;
+
+    *emitted = true;
+    return true;
 }
 
 bool
-IonBuilder::jsop_getelem_dense()
+IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
 {
-    MDefinition *id = current->pop();
-    MDefinition *obj = current->pop();
-
     types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
 
-    if (JSOp(*pc) == JSOP_CALLELEM && !id->mightBeType(MIRType_String) && types->noConstraints()) {
+    if (JSOp(*pc) == JSOP_CALLELEM && !index->mightBeType(MIRType_String) && types->noConstraints()) {
         // Indexed call on an element of an array. Populate the observed types
         // with any objects that could be in the array, to avoid extraneous
         // type barriers.
@@ -6588,10 +6862,10 @@ IonBuilder::jsop_getelem_dense()
     if (!barrier)
         knownType = GetElemKnownType(needsHoleCheck, types);
 
-    // Ensure id is an integer.
-    MInstruction *idInt32 = MToInt32::New(id);
+    // Ensure index is an integer.
+    MInstruction *idInt32 = MToInt32::New(index);
     current->add(idInt32);
-    id = idInt32;
+    index = idInt32;
 
     // Get the elements vector.
     MInstruction *elements = MElements::New(obj);
@@ -6630,15 +6904,15 @@ IonBuilder::jsop_getelem_dense()
         // in-bounds elements, and the array is packed or its holes are not
         // read. This is the best case: we can separate the bounds check for
         // hoisting.
-        id = addBoundsCheck(id, initLength);
+        index = addBoundsCheck(index, initLength);
 
-        load = MLoadElement::New(elements, id, needsHoleCheck, loadDouble);
+        load = MLoadElement::New(elements, index, needsHoleCheck, loadDouble);
         current->add(load);
     } else {
         // This load may return undefined, so assume that we *can* read holes,
         // or that we can read out-of-bounds accesses. In this case, the bounds
         // check is part of the opcode.
-        load = MLoadElementHole::New(elements, id, initLength, needsHoleCheck);
+        load = MLoadElementHole::New(elements, index, initLength, needsHoleCheck);
         current->add(load);
 
         // If maybeUndefined was true, the typeset must have undefined, and
@@ -6723,74 +6997,9 @@ IonBuilder::convertShiftToMaskForStaticTypedArray(MDefinition *id,
 }
 
 bool
-IonBuilder::jsop_getelem_typed_static(bool *psucceeded)
+IonBuilder::jsop_getelem_typed(MDefinition *obj, MDefinition *index, int arrayType)
 {
-    if (!LIRGenerator::allowStaticTypedArrayAccesses())
-        return true;
-
-    MDefinition *id = current->peek(-1);
-    MDefinition *obj = current->peek(-2);
-
-    if (ElementAccessHasExtraIndexedProperty(cx, obj))
-        return true;
-
-    if (!obj->resultTypeSet())
-        return true;
-    JSObject *tarrObj = obj->resultTypeSet()->getSingleton();
-    if (!tarrObj)
-        return true;
-    TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
-
-    ArrayBufferView::ViewType viewType = JS_GetArrayBufferViewType(tarr);
-
-    // LoadTypedArrayElementStatic currently treats uint32 arrays as int32.
-    if (viewType == ArrayBufferView::TYPE_UINT32)
-        return true;
-
-    MDefinition *ptr = convertShiftToMaskForStaticTypedArray(id, viewType);
-    if (!ptr)
-        return true;
-
-    obj->setFoldedUnchecked();
-
-    MLoadTypedArrayElementStatic *load = MLoadTypedArrayElementStatic::New(tarr, ptr);
-    current->add(load);
-
-    // The load is infallible if an undefined result will be coerced to the
-    // appropriate numeric type if the read is out of bounds. The truncation
-    // analysis picks up some of these cases, but is incomplete with respect
-    // to others. For now, sniff the bytecode for simple patterns following
-    // the load which guarantee a truncation or numeric conversion.
-    if (viewType == ArrayBufferView::TYPE_FLOAT32 || viewType == ArrayBufferView::TYPE_FLOAT64) {
-        jsbytecode *next = pc + JSOP_GETELEM_LENGTH;
-        if (*next == JSOP_POS)
-            load->setInfallible();
-    } else {
-        jsbytecode *next = pc + JSOP_GETELEM_LENGTH;
-        if (*next == JSOP_ZERO && *(next + JSOP_ZERO_LENGTH) == JSOP_BITOR)
-            load->setInfallible();
-    }
-
-    current->popn(2);
-    current->push(load);
-
-    *psucceeded = true;
-    return true;
-}
-
-bool
-IonBuilder::jsop_getelem_typed(int arrayType)
-{
-    bool staticAccess = false;
-    if (!jsop_getelem_typed_static(&staticAccess))
-        return false;
-    if (staticAccess)
-        return true;
-
     types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
-
-    MDefinition *id = current->pop();
-    MDefinition *obj = current->pop();
 
     bool maybeUndefined = types->hasType(types::Type::UndefinedType());
 
@@ -6800,9 +7009,9 @@ IonBuilder::jsop_getelem_typed(int arrayType)
     bool allowDouble = types->hasType(types::Type::DoubleType());
 
     // Ensure id is an integer.
-    MInstruction *idInt32 = MToInt32::New(id);
+    MInstruction *idInt32 = MToInt32::New(index);
     current->add(idInt32);
-    id = idInt32;
+    index = idInt32;
 
     if (!maybeUndefined) {
         // Assume the index is in range, so that we can hoist the length,
@@ -6838,14 +7047,14 @@ IonBuilder::jsop_getelem_typed(int arrayType)
         current->add(length);
 
         // Bounds check.
-        id = addBoundsCheck(id, length);
+        index = addBoundsCheck(index, length);
 
         // Get the elements vector.
         MInstruction *elements = getTypedArrayElements(obj);
         current->add(elements);
 
         // Load the element.
-        MLoadTypedArrayElement *load = MLoadTypedArrayElement::New(elements, id, arrayType);
+        MLoadTypedArrayElement *load = MLoadTypedArrayElement::New(elements, index, arrayType);
         current->add(load);
         current->push(load);
 
@@ -6883,36 +7092,12 @@ IonBuilder::jsop_getelem_typed(int arrayType)
         // bounds check will be part of the instruction, and the instruction
         // will always return a Value.
         MLoadTypedArrayElementHole *load =
-            MLoadTypedArrayElementHole::New(obj, id, arrayType, allowDouble);
+            MLoadTypedArrayElementHole::New(obj, index, arrayType, allowDouble);
         current->add(load);
         current->push(load);
 
         return pushTypeBarrier(load, types, needsBarrier);
     }
-}
-
-bool
-IonBuilder::jsop_getelem_string()
-{
-    MDefinition *id = current->pop();
-    MDefinition *str = current->pop();
-
-    MInstruction *idInt32 = MToInt32::New(id);
-    current->add(idInt32);
-    id = idInt32;
-
-    MStringLength *length = MStringLength::New(str);
-    current->add(length);
-
-    id = addBoundsCheck(id, length);
-
-    MCharCodeAt *charCode = MCharCodeAt::New(str, id);
-    current->add(charCode);
-
-    MFromCharCode *result = MFromCharCode::New(charCode);
-    current->add(result);
-    current->push(result);
-    return true;
 }
 
 bool
@@ -7363,60 +7548,6 @@ IonBuilder::jsop_arguments_length()
 
     // We are inlining and know the number of arguments the callee pushed
     return pushConstant(Int32Value(inlineCallInfo_->argv().length()));
-}
-
-bool
-IonBuilder::jsop_arguments_getelem()
-{
-    JS_ASSERT(!info().argsObjAliasesFormals());
-
-    // Get the argument id
-    MDefinition *idx = current->pop();
-
-    // Type Inference has guaranteed this is an optimized arguments object.
-    MDefinition *args = current->pop();
-    args->setFoldedUnchecked();
-
-
-    // When we are not inlining, we can just get the arguments from the stack.
-    if (inliningDepth_ == 0) {
-        // To ensure that we are not looking above the number of actual arguments.
-        MArgumentsLength *length = MArgumentsLength::New();
-        current->add(length);
-
-        // Ensure idx is an integer.
-        MInstruction *index = MToInt32::New(idx);
-        current->add(index);
-
-        // Bailouts if we read more than the number of actual arguments.
-        index = addBoundsCheck(index, length);
-
-        // Load the argument from the actual arguments.
-        MGetArgument *load = MGetArgument::New(index);
-        current->add(load);
-        current->push(load);
-
-        types::StackTypeSet *types = types::TypeScript::BytecodeTypes(script(), pc);
-        return pushTypeBarrier(load, types, true);
-    }
-
-    // When the id is constant, we can just return the corresponding inlined argument
-    if (idx->isConstant() && idx->toConstant()->value().isInt32()) {
-        JS_ASSERT(inliningDepth_ > 0);
-
-        int32_t id = idx->toConstant()->value().toInt32();
-        idx->setFoldedUnchecked();
-
-        if (id < (int32_t)inlineCallInfo_->argc() && id >= 0)
-            current->push(inlineCallInfo_->getArg(id));
-        else
-            pushConstant(UndefinedValue());
-
-        return true;
-    }
-
-    // inlined not constant not supported, yet.
-    return abort("NYI inlined not constant get argument element");
 }
 
 static JSObject *
@@ -8568,6 +8699,9 @@ IonBuilder::jsop_object(JSObject *obj)
 bool
 IonBuilder::jsop_lambda(JSFunction *fun)
 {
+    if (fun->isInterpreted() && !fun->getOrCreateScript(cx))
+        return false;
+
     JS_ASSERT(script()->analysis()->usesScopeChain());
     if (fun->isArrow())
         return abort("bound arrow function");

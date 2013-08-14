@@ -189,6 +189,25 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionInstancedArrays
+    : public WebGLExtensionBase
+{
+public:
+    WebGLExtensionInstancedArrays(WebGLContext* context);
+    virtual ~WebGLExtensionInstancedArrays();
+
+    void DrawArraysInstancedANGLE(WebGLenum mode, WebGLint first,
+                                  WebGLsizei count, WebGLsizei primcount);
+    void DrawElementsInstancedANGLE(WebGLenum mode, WebGLsizei count,
+                                    WebGLenum type, WebGLintptr offset,
+                                    WebGLsizei primcount);
+    void VertexAttribDivisorANGLE(WebGLuint index, WebGLuint divisor);
+
+    static bool IsSupported(const WebGLContext* context);
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
 } // namespace mozilla
 
 #endif // WEBGLEXTENSIONS_H_

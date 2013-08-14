@@ -6559,26 +6559,6 @@ JS_GetCurrentThread()
 #endif
 }
 
-extern JS_PUBLIC_API(void)
-JS_ClearRuntimeThread(JSRuntime *rt)
-{
-    AssertHeapIsIdle(rt);
-    JS_ASSERT(jsInitState == Running);
-#ifdef JS_THREADSAFE
-    rt->clearOwnerThread();
-#endif
-}
-
-extern JS_PUBLIC_API(void)
-JS_SetRuntimeThread(JSRuntime *rt)
-{
-    AssertHeapIsIdle(rt);
-    JS_ASSERT(jsInitState == Running);
-#ifdef JS_THREADSAFE
-    rt->setOwnerThread();
-#endif
-}
-
 extern JS_NEVER_INLINE JS_PUBLIC_API(void)
 JS_AbortIfWrongThread(JSRuntime *rt)
 {

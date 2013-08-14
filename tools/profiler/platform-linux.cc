@@ -158,8 +158,10 @@ static void ProfilerSaveSignalHandler(int signal, siginfo_t* info, void* context
 #define V8_HOST_ARCH_X64 1
 #endif
 static void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
-  if (!Sampler::GetActiveSampler())
+  if (!Sampler::GetActiveSampler()) {
+    sem_post(&sSignalHandlingDone);
     return;
+  }
 
   TickSample sample_obj;
   TickSample* sample = &sample_obj;

@@ -189,28 +189,33 @@ public class AboutHome extends Fragment {
             return true;
         }
 
-        switch (item.getItemId()) {
-            case R.id.abouthome_open_new_tab:
-                mTopSitesView.openNewTab(info);
-                return true;
+        final int itemId = item.getItemId();
 
-            case R.id.abouthome_open_private_tab:
-                mTopSitesView.openNewPrivateTab(info);
-                return true;
-
-            case R.id.abouthome_topsites_edit:
-                mTopSitesView.editSite(info);
-                return true;
-
-            case R.id.abouthome_topsites_unpin:
-                mTopSitesView.unpinSite(info, TopSitesView.UnpinFlags.REMOVE_PIN);
-                return true;
-
-            case R.id.abouthome_topsites_pin:
-                mTopSitesView.pinSite(info);
-                return true;
-
+        if (itemId == R.id.abouthome_open_new_tab) {
+            mTopSitesView.openNewTab(info);
+            return true;
         }
+
+        if (itemId == R.id.abouthome_open_private_tab) {
+            mTopSitesView.openNewPrivateTab(info);
+            return true;
+        }
+
+        if (itemId == R.id.abouthome_topsites_edit) {
+            mTopSitesView.editSite(info);
+            return true;
+        }
+
+        if (itemId == R.id.abouthome_topsites_unpin) {
+            mTopSitesView.unpinSite(info, TopSitesView.UnpinFlags.REMOVE_PIN);
+            return true;
+        }
+
+        if (itemId == R.id.abouthome_topsites_pin) {
+            mTopSitesView.pinSite(info);
+            return true;
+        }
+
         return super.onContextItemSelected(item);
     }
 

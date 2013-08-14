@@ -1605,7 +1605,7 @@ NS_IMETHODIMP_(nsrefcnt)
 nsDocument::Release()
 {
   NS_PRECONDITION(0 != mRefCnt, "dup release");
-  NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(nsDocument);
+  NS_ASSERT_OWNINGTHREAD(nsDocument);
   nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(nsDocument)::Upcast(this);
   nsrefcnt count = mRefCnt.decr(base);
   NS_LOG_RELEASE(this, count, "nsDocument");
