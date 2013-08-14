@@ -20,9 +20,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 XPIDL_MODULE = 'necko_strconv'
 
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/netwerk/base/public',
-]
-
 MODULE = 'necko'
 
