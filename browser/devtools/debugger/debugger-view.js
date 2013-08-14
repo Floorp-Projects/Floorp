@@ -131,7 +131,7 @@ let DebuggerView = {
 
     // Attach a controller that handles interfacing with the debugger protocol.
     VariablesViewController.attach(this.Variables, {
-      getGripClient: aObject => gThreadClient.pauseGrip(aObject)
+      getObjectClient: aObject => gThreadClient.pauseGrip(aObject)
     });
 
     // Relay events from the VariablesView.

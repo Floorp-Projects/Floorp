@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http:mozilla.org/MPL/2.0/. */
 
-#include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "mozilla/net/Dashboard.h"
-#include "mozilla/net/HttpInfo.h"
-#include "mozilla/dom/NetDashboardBinding.h"
+
 #include "jsapi.h"
+#include "mozilla/dom/NetDashboardBinding.h"
+#include "mozilla/net/HttpInfo.h"
+#include "nsCxPusher.h"
 
 using mozilla::AutoSafeJSContext;
 namespace mozilla {

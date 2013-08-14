@@ -469,12 +469,12 @@ inline void XPCNativeSet::Mark()
 #ifdef DEBUG
 inline void XPCNativeSet::ASSERT_NotMarked()
 {
-    NS_ASSERTION(!IsMarked(), "bad");
+    MOZ_ASSERT(!IsMarked(), "bad");
 
     XPCNativeInterface* const * pp = mInterfaces;
 
     for (int i = (int) mInterfaceCount; i > 0; i--, pp++)
-        NS_ASSERTION(!(*pp)->IsMarked(), "bad");
+        MOZ_ASSERT(!(*pp)->IsMarked(), "bad");
 }
 #endif
 
@@ -504,8 +504,8 @@ void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)
 inline
 XPCWrappedNativeTearOff::~XPCWrappedNativeTearOff()
 {
-    NS_ASSERTION(!(GetInterface()||GetNative()||GetJSObjectPreserveColor()),
-                 "tearoff not empty in dtor");
+    MOZ_ASSERT(!(GetInterface() || GetNative() || GetJSObjectPreserveColor()),
+               "tearoff not empty in dtor");
 }
 
 /***************************************************************************/

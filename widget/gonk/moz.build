@@ -20,7 +20,7 @@ EXPORTS += [
     'OrientationObserver.h',
 ]
 
-DIRS += ['libdisplay']
+DIRS += ['libdisplay', 'nativewindow']
 
 CPP_SOURCES += [
     'EventHub.cpp',

@@ -340,12 +340,17 @@ public:
 
     ContentChild* Manager() { return mManager; }
 
+    bool GetUpdateHitRegion() { return mUpdateHitRegion; }
+
+    void UpdateHitRegion(const nsRegion& aRegion);
+
 protected:
     virtual PRenderFrameChild* AllocPRenderFrameChild(ScrollingBehavior* aScrolling,
                                                       TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                                       uint64_t* aLayersId) MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrameChild(PRenderFrameChild* aFrame) MOZ_OVERRIDE;
     virtual bool RecvDestroy() MOZ_OVERRIDE;
+    virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) MOZ_OVERRIDE;
 
     nsEventStatus DispatchWidgetEvent(nsGUIEvent& event);
 
@@ -471,6 +476,7 @@ private:
     bool mContentDocumentIsDisplayed;
     bool mTriedBrowserInit;
     ScreenOrientation mOrientation;
+    bool mUpdateHitRegion;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

@@ -177,7 +177,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 {
     Rooted<GlobalObject*> self(cx, this);
 
-    JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
+    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     JS_ASSERT(isNative());
 
     cx->setDefaultCompartmentObjectIfUnset(self);

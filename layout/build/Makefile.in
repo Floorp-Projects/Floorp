@@ -172,6 +172,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifdef MOZ_DIRECTSHOW
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/directshow/$(LIB_PREFIX)gkcondirectshow_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 ifdef MOZ_WAVE
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/content/media/wave/$(LIB_PREFIX)gkconwave_s.$(LIB_SUFFIX) \
@@ -252,10 +258,6 @@ SHARED_LIBRARY_LIBS += \
 		$(DEPTH)/content/svg/content/src/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
 		$(DEPTH)/content/smil/$(LIB_PREFIX)gkconsmil_s.$(LIB_SUFFIX) \
 		$(NULL)
-
-ifdef ENABLE_EDITOR_API_LOG
-DEFINES += -DENABLE_EDITOR_API_LOG
-endif
 
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/js/xpconnect/src/$(LIB_PREFIX)xpconnect_s.$(LIB_SUFFIX)

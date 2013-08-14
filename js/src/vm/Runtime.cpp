@@ -108,9 +108,9 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     exclusiveAccessLock(NULL),
     exclusiveAccessOwner(NULL),
     mainThreadHasExclusiveAccess(false),
+    exclusiveThreadsPaused(false),
     numExclusiveThreads(0),
 #endif
-    atomsCompartment(NULL),
     systemZone(NULL),
     numCompartments(0),
     localeCallbacks(NULL),
@@ -127,7 +127,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     selfHostingGlobal_(NULL),
     nativeStackBase(0),
     nativeStackQuota(0),
-    interpreterFrames(NULL),
     cxCallback(NULL),
     destroyCompartmentCallback(NULL),
     compartmentNameCallback(NULL),
@@ -254,6 +253,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 #endif
     mathCache_(NULL),
     trustedPrincipals_(NULL),
+    atomsCompartment_(NULL),
     wrapObjectCallback(TransparentObjectWrapper),
     sameCompartmentWrapObjectCallback(NULL),
     preWrapObjectCallback(NULL),
@@ -353,7 +353,7 @@ JSRuntime::init(uint32_t maxbytes)
     atomsZone->setGCLastBytes(8192, GC_NORMAL);
 
     atomsZone.forget();
-    this->atomsCompartment = atomsCompartment.forget();
+    this->atomsCompartment_ = atomsCompartment.forget();
 
     if (!InitAtoms(this))
         return false;
@@ -363,7 +363,7 @@ JSRuntime::init(uint32_t maxbytes)
 
     dateTimeInfo.updateTimeZoneAdjustment();
 
-    if (!scriptDataTable.init())
+    if (!scriptDataTable_.init())
         return false;
 
     if (!threadPool.init())
@@ -401,6 +401,9 @@ JSRuntime::~JSRuntime()
     JS_ASSERT(!exclusiveAccessOwner);
     if (exclusiveAccessLock)
         PR_DestroyLock(exclusiveAccessLock);
+
+    JS_ASSERT(!numExclusiveThreads);
+    exclusiveThreadsPaused = true; // Avoid bogus asserts during teardown.
 #endif
 
     /*
@@ -431,6 +434,8 @@ JSRuntime::~JSRuntime()
     FinishAtoms(this);
 
     js_FinishGC(this);
+    atomsCompartment_ = NULL;
+
 #ifdef JS_THREADSAFE
     if (gcLock)
         PR_DestroyLock(gcLock);
@@ -518,7 +523,7 @@ JSRuntime::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSi
 
     rtSizes->object = mallocSizeOf(this);
 
-    rtSizes->atomsTable = atoms.sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->atomsTable = atoms().sizeOfExcludingThis(mallocSizeOf);
 
     rtSizes->contexts = 0;
     for (ContextIter acx(this); !acx.done(); acx.next())
@@ -540,8 +545,8 @@ JSRuntime::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSi
 
     rtSizes->mathCache = mathCache_ ? mathCache_->sizeOfIncludingThis(mallocSizeOf) : 0;
 
-    rtSizes->scriptData = scriptDataTable.sizeOfExcludingThis(mallocSizeOf);
-    for (ScriptDataTable::Range r = scriptDataTable.all(); !r.empty(); r.popFront())
+    rtSizes->scriptData = scriptDataTable().sizeOfExcludingThis(mallocSizeOf);
+    for (ScriptDataTable::Range r = scriptDataTable().all(); !r.empty(); r.popFront())
         rtSizes->scriptData += mallocSizeOf(r.front());
 }
 

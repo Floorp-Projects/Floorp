@@ -54,7 +54,7 @@ function onConsoleCall(aState, aType, aPacket)
   let args = aPacket.message.arguments;
   onProperties = onProperties.bind(null, aState);
 
-  let client = new GripClient(aState.dbgClient, args[1]);
+  let client = new ObjectClient(aState.dbgClient, args[1]);
   client.getPrototypeAndProperties(onProperties);
 }
 

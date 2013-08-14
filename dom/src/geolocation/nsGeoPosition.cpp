@@ -4,9 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGeoPosition.h"
-#include "nsDOMClassInfoID.h"
-#include "nsIClassInfo.h"
-#include "nsContentUtils.h"
 
 #include "mozilla/dom/PositionBinding.h"
 #include "mozilla/dom/CoordinatesBinding.h"

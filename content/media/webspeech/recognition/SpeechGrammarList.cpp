@@ -6,8 +6,6 @@
 
 #include "SpeechGrammarList.h"
 
-#include "nsContentUtils.h"
-
 #include "mozilla/dom/SpeechGrammarListBinding.h"
 
 namespace mozilla {

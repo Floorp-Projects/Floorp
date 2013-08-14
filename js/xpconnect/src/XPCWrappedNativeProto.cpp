@@ -41,7 +41,7 @@ XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
 
 XPCWrappedNativeProto::~XPCWrappedNativeProto()
 {
-    NS_ASSERTION(!mJSProtoObject, "JSProtoObject still alive");
+    MOZ_ASSERT(!mJSProtoObject, "JSProtoObject still alive");
 
     MOZ_COUNT_DTOR(XPCWrappedNativeProto);
 
@@ -133,7 +133,7 @@ XPCWrappedNativeProto::CallPostCreatePrototype()
 void
 XPCWrappedNativeProto::JSProtoObjectFinalized(js::FreeOp *fop, JSObject *obj)
 {
-    NS_ASSERTION(obj == mJSProtoObject, "huh?");
+    MOZ_ASSERT(obj == mJSProtoObject, "huh?");
 
     // Map locking is not necessary since we are running gc.
 
@@ -179,8 +179,8 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
                                     bool callPostCreatePrototype)
 {
     AutoJSContext cx;
-    NS_ASSERTION(scope, "bad param");
-    NS_ASSERTION(classInfo, "bad param");
+    MOZ_ASSERT(scope, "bad param");
+    MOZ_ASSERT(classInfo, "bad param");
 
     AutoMarkingWrappedNativeProtoPtr proto(cx);
     ClassInfo2WrappedNativeProtoMap* map = nullptr;

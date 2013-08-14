@@ -8,10 +8,10 @@
 #define nsTArray_h__
 
 #include "nsTArrayForwardDeclare.h"
+#include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/Util.h"
 
 #include <string.h>
 

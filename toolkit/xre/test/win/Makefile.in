@@ -11,8 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
 
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
-
 LOCAL_INCLUDES += \
   -I$(srcdir) \
   -I$(topsrcdir)/toolkit/xre \

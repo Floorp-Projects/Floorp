@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
 

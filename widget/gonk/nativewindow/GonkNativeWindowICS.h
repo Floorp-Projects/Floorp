@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef DOM_CAMERA_GONKNATIVEWINDOW_H
-#define DOM_CAMERA_GONKNATIVEWINDOW_H
+#ifndef NATIVEWINDOW_GONKNATIVEWINDOW_ICS_H
+#define NATIVEWINDOW_GONKNATIVEWINDOW_ICS_H
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -349,4 +349,4 @@ protected:
 
 }; // namespace android
 
-#endif // DOM_CAMERA_GONKNATIVEWINDOW_H
+#endif // NATIVEWINDOW_GONKNATIVEWINDOW_ICS_H
