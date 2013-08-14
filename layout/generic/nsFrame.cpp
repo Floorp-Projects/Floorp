@@ -3537,6 +3537,21 @@ nsIFrame::ContentOffsets nsFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoin
   return OffsetsForSingleFrame(this, aPoint);
 }
 
+void
+nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext)
+{
+  if (aImage.GetType() != eStyleImageType_Image) {
+    return;
+  }
+
+  imgIRequest *req = aImage.GetImageData();
+  mozilla::css::ImageLoader* loader =
+    aPresContext->Document()->StyleImageLoader();
+
+  // If this fails there's not much we can do ...
+  loader->AssociateRequestToFrame(req, this);
+}
+
 NS_IMETHODIMP
 nsFrame::GetCursor(const nsPoint& aPoint,
                    nsIFrame::Cursor& aCursor)
