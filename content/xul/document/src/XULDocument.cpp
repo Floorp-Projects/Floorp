@@ -3653,7 +3653,6 @@ XULDocument::ExecuteScript(nsIScriptContext * aContext,
     JS::Rooted<JS::Value> unused(cx);
     if (!JS_ExecuteScript(cx, global, aScriptObject, unused.address()))
         nsJSUtils::ReportPendingException(cx);
-    aContext->ScriptEvaluated(true);
     return NS_OK;
 }
 

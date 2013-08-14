@@ -63,7 +63,6 @@ public:
   virtual nsresult InitContext() MOZ_OVERRIDE;
   virtual bool IsContextInitialized() MOZ_OVERRIDE;
 
-  virtual void ScriptEvaluated(bool aTerminated) MOZ_OVERRIDE;
   virtual bool GetScriptsEnabled() MOZ_OVERRIDE;
   virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts) MOZ_OVERRIDE;
 
