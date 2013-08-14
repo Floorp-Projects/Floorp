@@ -57,9 +57,9 @@ def process(input_dir, cache_dir, header_dir, xpt_dir, deps_dir, module, stems):
         with FileAvoidWrite(header_path) as fh:
             print_header(idl, fh, path)
 
+    # TODO use FileAvoidWrite once it supports binary mode.
     xpt_path = os.path.join(xpt_dir, '%s.xpt' % module)
-    with FileAvoidWrite(xpt_path) as fh:
-        xpt_link(xpts.values()).writefd(fh)
+    xpt_link(xpts.values()).write(xpt_path)
 
     deps_path = os.path.join(deps_dir, '%s.pp' % module)
     with FileAvoidWrite(deps_path) as fh:
