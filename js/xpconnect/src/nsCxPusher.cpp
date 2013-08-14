@@ -102,7 +102,7 @@ nsCxPusher::Pop()
 
 namespace mozilla {
 
-AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull) : mScriptIsRunning(false)
+AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
 {
   MOZ_ASSERT_IF(!allowNull, cx);
 
@@ -112,15 +112,7 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull) : mScriptIsRunning(fal
   if (cx)
     mScx = GetScriptContextFromJSContext(cx);
 
-  // NB: The GetDynamicScriptContext is historical and might not be sane.
   XPCJSContextStack *stack = XPCJSRuntime::Get()->GetJSContextStack();
-  if (cx && nsJSUtils::GetDynamicScriptContext(cx) && stack->HasJSContext(cx))
-  {
-    // If the context is on the stack, that means that a script
-    // is running at the moment in the context.
-    mScriptIsRunning = true;
-  }
-
   if (!stack->Push(cx)) {
     MOZ_CRASH();
   }
@@ -169,16 +161,7 @@ AutoCxPusher::~AutoCxPusher()
   DebugOnly<JSContext*> stackTop;
   MOZ_ASSERT(mPushedContext == nsXPConnect::XPConnect()->GetCurrentJSContext());
   XPCJSRuntime::Get()->GetJSContextStack()->Pop();
-
-  if (!mScriptIsRunning && mScx) {
-    // No JS is running in the context, but executing the event handler might have
-    // caused some JS to run. Tell the script context that it's done.
-
-    mScx->ScriptEvaluated(true);
-  }
-
   mScx = nullptr;
-  mScriptIsRunning = false;
 }
 
 AutoJSContext::AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
