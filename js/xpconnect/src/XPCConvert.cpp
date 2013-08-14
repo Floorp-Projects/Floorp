@@ -82,7 +82,7 @@ bool
 XPCConvert::GetISupportsFromJSObject(JSObject* obj, nsISupports** iface)
 {
     JSClass* jsclass = js::GetObjectJSClass(obj);
-    NS_ASSERTION(jsclass, "obj has no class");
+    MOZ_ASSERT(jsclass, "obj has no class");
     if (jsclass &&
         (jsclass->flags & JSCLASS_HAS_PRIVATE) &&
         (jsclass->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS)) {
@@ -134,7 +134,7 @@ XPCConvert::NativeData2JS(jsval* d, const void* s,
                 return false;
 
 #ifdef STRICT_CHECK_OF_UNICODE
-            NS_ASSERTION(! ILLEGAL_CHAR_RANGE(p) , "passing non ASCII data");
+            MOZ_ASSERT(! ILLEGAL_CHAR_RANGE(p) , "passing non ASCII data");
 #endif // STRICT_CHECK_OF_UNICODE
 
             JSString* str;
@@ -225,7 +225,7 @@ XPCConvert::NativeData2JS(jsval* d, const void* s,
                   if (ILLEGAL_CHAR_RANGE(*t))
                       isAscii = false;
                 }
-                NS_ASSERTION(isAscii, "passing non ASCII data");
+                MOZ_ASSERT(isAscii, "passing non ASCII data");
 #endif // STRICT_CHECK_OF_UNICODE
                 JSString* str;
                 if (!(str = JS_NewStringCopyZ(cx, p)))
@@ -336,8 +336,8 @@ XPCConvert::NativeData2JS(jsval* d, const void* s,
 #ifdef DEBUG
                     JSObject* jsobj = JSVAL_TO_OBJECT(*d);
                     if (jsobj && !js::GetObjectParent(jsobj))
-                        NS_ASSERTION(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
-                                     "Why did we recreate this wrapper?");
+                        MOZ_ASSERT(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
+                                   "Why did we recreate this wrapper?");
 #endif
                 }
                 break;
@@ -724,7 +724,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     case nsXPTType::T_INTERFACE:
     case nsXPTType::T_INTERFACE_IS:
     {
-        NS_ASSERTION(iid,"can't do interface conversions without iid");
+        MOZ_ASSERT(iid,"can't do interface conversions without iid");
 
         if (iid->Equals(NS_GET_IID(nsIVariant))) {
             XPCVariant* variant = XPCVariant::newVariant(cx, s);
@@ -800,8 +800,8 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
                                      bool allowNativeWrapper,
                                      nsresult* pErr)
 {
-    NS_ASSERTION(!Interface || iid,
-                 "Need the iid if you pass in an XPCNativeInterface cache.");
+    MOZ_ASSERT(!Interface || iid,
+               "Need the iid if you pass in an XPCNativeInterface cache.");
 
     *d = JSVAL_NULL;
     if (dest)
@@ -883,7 +883,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
         }
     }
 
-    NS_ASSERTION(!flat || IS_WN_REFLECTOR(flat), "What kind of wrapper is this?");
+    MOZ_ASSERT(!flat || IS_WN_REFLECTOR(flat), "What kind of wrapper is this?");
 
     nsresult rv;
     XPCWrappedNative* wrapper;
@@ -966,9 +966,9 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
                                      nsISupports* aOuter,
                                      nsresult* pErr)
 {
-    NS_ASSERTION(dest, "bad param");
-    NS_ASSERTION(src, "bad param");
-    NS_ASSERTION(iid, "bad param");
+    MOZ_ASSERT(dest, "bad param");
+    MOZ_ASSERT(src, "bad param");
+    MOZ_ASSERT(iid, "bad param");
 
     AutoJSContext cx;
     JSAutoCompartment ac(cx, src);
@@ -1057,7 +1057,7 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
                                JSContext* cx,
                                jsval* jsExceptionPtr)
 {
-    NS_ASSERTION(!cx == !jsExceptionPtr, "Expected cx and jsExceptionPtr to cooccur.");
+    MOZ_ASSERT(!cx == !jsExceptionPtr, "Expected cx and jsExceptionPtr to cooccur.");
 
     static const char format[] = "\'%s\' when calling method: [%s::%s]";
     const char * msg = message;
@@ -1476,9 +1476,9 @@ XPCConvert::JSTypedArray2Native(void** d,
                                 const nsXPTType& type,
                                 nsresult* pErr)
 {
-    NS_ABORT_IF_FALSE(jsArray, "bad param");
-    NS_ABORT_IF_FALSE(d, "bad param");
-    NS_ABORT_IF_FALSE(JS_IsTypedArrayObject(jsArray), "not a typed array");
+    MOZ_ASSERT(jsArray, "bad param");
+    MOZ_ASSERT(d, "bad param");
+    MOZ_ASSERT(JS_IsTypedArrayObject(jsArray), "not a typed array");
 
     // Check the actual length of the input array against the
     // given size_is.
@@ -1579,7 +1579,7 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
                            uint32_t count, const nsXPTType& type,
                            const nsID* iid, nsresult* pErr)
 {
-    NS_ABORT_IF_FALSE(d, "bad param");
+    MOZ_ASSERT(d, "bad param");
 
     AutoJSContext cx;
 
