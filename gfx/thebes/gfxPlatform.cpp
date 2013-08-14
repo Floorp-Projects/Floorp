@@ -284,7 +284,7 @@ gfxPlatform::gfxPlatform()
                                  false);
 
     uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
-    uint32_t contentMask = 0;
+    uint32_t contentMask = 1 << BACKEND_CAIRO;
     InitBackendPrefs(canvasMask, contentMask);
 }
 
