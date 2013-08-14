@@ -451,7 +451,7 @@ LIRGenerator::visitCall(MCall *call)
     // Call anything, using the most generic code.
     LCallGeneric *lir = new LCallGeneric(useFixed(call->getFunction(), CallTempReg0),
         argslot, tempFixed(ArgumentsRectifierReg), tempFixed(CallTempReg2));
-    return (assignSnapshot(lir) && defineReturn(lir, call) && assignSafepoint(lir, call));
+    return defineReturn(lir, call) && assignSafepoint(lir, call);
 }
 
 bool

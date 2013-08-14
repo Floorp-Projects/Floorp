@@ -815,6 +815,21 @@ public:
     void VertexAttribDivisor(WebGLuint index, WebGLuint divisor);
 
 private:
+    // Cache the max number of vertices and instances that can be read from
+    // bound VBOs (result of ValidateBuffers).
+    bool mBufferFetchingIsVerified;
+    bool mBufferFetchingHasPerVertex;
+    uint32_t mMaxFetchedVertices;
+    uint32_t mMaxFetchedInstances;
+
+    inline void InvalidateBufferFetching()
+    {
+        mBufferFetchingIsVerified = false;
+        mBufferFetchingHasPerVertex = false;
+        mMaxFetchedVertices = 0;
+        mMaxFetchedInstances = 0;
+    }
+
     bool DrawArrays_check(WebGLint first, WebGLsizei count, WebGLsizei primcount, const char* info);
     bool DrawElements_check(WebGLsizei count, WebGLenum type, WebGLintptr byteOffset,
                             WebGLsizei primcount, const char* info);
@@ -895,19 +910,6 @@ protected:
     int32_t mGLMaxColorAttachments;
     int32_t mGLMaxDrawBuffers;
 
-    // Cache the max number of vertices and isntances that can be read from
-    // bound VBOs (result of ValidateBuffers).
-    bool mBufferFetchingIsVerified;
-    uint32_t mMaxFetchedVertices;
-    uint32_t mMaxFetchedInstances;
-
-    inline void InvalidateBufferFetching()
-    {
-        mBufferFetchingIsVerified = false;
-        mMaxFetchedVertices = 0;
-        mMaxFetchedInstances = 0;
-    }
-
     // Represents current status, or state, of the context. That is, is it lost
     // or stable and what part of the context lost process are we currently at.
     // This is used to support the WebGL spec's asyncronous nature in handling
@@ -942,6 +944,7 @@ protected:
         WEBGL_depth_texture,
         WEBGL_lose_context,
         WEBGL_draw_buffers,
+        ANGLE_instanced_arrays,
         WebGLExtensionID_unknown_extension
     };
     nsTArray<nsRefPtr<WebGLExtensionBase> > mExtensions;

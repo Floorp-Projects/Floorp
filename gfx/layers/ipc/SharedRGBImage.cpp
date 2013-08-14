@@ -63,15 +63,15 @@ CreateSharedRGBImage(ImageContainer *aImageContainer,
   }
 
   if (gfxPlatform::GetPlatform()->UseDeprecatedTextures()) {
-      nsRefPtr<DeprecatedSharedRGBImage> rgbImageDep = static_cast<DeprecatedSharedRGBImage*>(image.get());
-      rgbImageDep->mSize = gfxIntSize(aSize.width, aSize.height);
-      rgbImageDep->mImageFormat = aImageFormat;
+    nsRefPtr<DeprecatedSharedRGBImage> rgbImageDep = static_cast<DeprecatedSharedRGBImage*>(image.get());
+    rgbImageDep->mSize = gfxIntSize(aSize.width, aSize.height);
+    rgbImageDep->mImageFormat = aImageFormat;
 
-      if (!rgbImageDep->AllocateBuffer(aSize, aImageFormat)) {
-        NS_WARNING("Failed to allocate shared memory for DeprecatedSharedRGBImage");
-        return nullptr;
-      }
-      return rgbImageDep.forget();
+    if (!rgbImageDep->AllocateBuffer(aSize, aImageFormat)) {
+      NS_WARNING("Failed to allocate shared memory for DeprecatedSharedRGBImage");
+      return nullptr;
+    }
+    return rgbImageDep.forget();
   }
   nsRefPtr<SharedRGBImage> rgbImage = static_cast<SharedRGBImage*>(image.get());
   rgbImage->Allocate(gfx::ToIntSize(aSize),

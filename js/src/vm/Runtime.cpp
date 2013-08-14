@@ -460,45 +460,9 @@ JSRuntime::~JSRuntime()
     JS_ASSERT(oldCount > 0);
 
 #ifdef JS_THREADSAFE
-    clearOwnerThread();
-#endif
-}
-
-#ifdef JS_THREADSAFE
-void
-JSRuntime::setOwnerThread()
-{
-    JS_ASSERT(ownerThread_ == (void *)0xc1ea12);  /* "clear" */
-    JS_ASSERT(requestDepth == 0);
-    JS_ASSERT(js::TlsPerThreadData.get() == NULL);
-    ownerThread_ = PR_GetCurrentThread();
-    js::TlsPerThreadData.set(&mainThread);
-    nativeStackBase = GetNativeStackBase();
-    if (nativeStackQuota)
-        JS_SetNativeStackQuota(this, nativeStackQuota);
-#ifdef XP_MACOSX
-    asmJSMachExceptionHandler.setCurrentThread();
-#endif
-}
-
-void
-JSRuntime::clearOwnerThread()
-{
-    JS_ASSERT(CurrentThreadCanAccessRuntime(this));
-    JS_ASSERT(requestDepth == 0);
-    ownerThread_ = (void *)0xc1ea12;  /* "clear" */
     js::TlsPerThreadData.set(NULL);
-    nativeStackBase = 0;
-#if JS_STACK_GROWTH_DIRECTION > 0
-    mainThread.nativeStackLimit = UINTPTR_MAX;
-#else
-    mainThread.nativeStackLimit = 0;
-#endif
-#ifdef XP_MACOSX
-    asmJSMachExceptionHandler.clearCurrentThread();
 #endif
 }
-#endif /* JS_THREADSAFE */
 
 void
 NewObjectCache::clearNurseryObjects(JSRuntime *rt)

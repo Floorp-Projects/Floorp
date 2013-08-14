@@ -73,14 +73,18 @@ class AsmJSModule
             AsmJSMathBuiltin mathBuiltin_;
             double constantValue_;
         } u;
-        RelocatablePtr<PropertyName> name_;
+        PropertyName *name_;
 
         friend class AsmJSModule;
-        Global(Which which) : which_(which) {}
+        Global(Which which, PropertyName *name)
+          : which_(which), name_(name)
+        {
+            JS_ASSERT_IF(name_, name_->isTenured());
+        }
 
         void trace(JSTracer *trc) {
             if (name_)
-                MarkString(trc, &name_, "asm.js global name");
+                MarkStringUnbarriered(trc, &name_, "asm.js global name");
             JS_ASSERT_IF(which_ == Variable && u.var.initKind_ == InitConstant,
                          !u.var.init.constant_.isMarkable());
         }
@@ -205,8 +209,8 @@ class AsmJSModule
 
     class ExportedFunction
     {
-        RelocatablePtr<PropertyName> name_;
-        RelocatablePtr<PropertyName> maybeFieldName_;
+        PropertyName *name_;
+        PropertyName *maybeFieldName_;
         ArgCoercionVector argCoercions_;
         ReturnType returnType_;
         bool hasCodePtr_;
@@ -228,12 +232,13 @@ class AsmJSModule
             hasCodePtr_(false)
         {
             u.codeOffset_ = 0;
+            JS_ASSERT_IF(maybeFieldName_, name_->isTenured());
         }
 
         void trace(JSTracer *trc) {
-            MarkString(trc, &name_, "asm.js export name");
+            MarkStringUnbarriered(trc, &name_, "asm.js export name");
             if (maybeFieldName_)
-                MarkString(trc, &maybeFieldName_, "asm.js export field");
+                MarkStringUnbarriered(trc, &maybeFieldName_, "asm.js export field");
         }
 
       public:
@@ -402,46 +407,41 @@ class AsmJSModule
         JS_ASSERT(funcPtrTableAndExitBytes_ == 0);
         if (numGlobalVars_ == UINT32_MAX)
             return false;
-        Global g(Global::Variable);
+        Global g(Global::Variable, NULL);
         g.u.var.initKind_ = Global::InitConstant;
         g.u.var.init.constant_ = v;
         g.u.var.index_ = *globalIndex = numGlobalVars_++;
         return globals_.append(g);
     }
-    bool addGlobalVarImport(PropertyName *fieldName, AsmJSCoercion coercion, uint32_t *globalIndex) {
+    bool addGlobalVarImport(PropertyName *name, AsmJSCoercion coercion, uint32_t *globalIndex) {
         JS_ASSERT(funcPtrTableAndExitBytes_ == 0);
-        Global g(Global::Variable);
+        Global g(Global::Variable, name);
         g.u.var.initKind_ = Global::InitImport;
         g.u.var.init.coercion_ = coercion;
         g.u.var.index_ = *globalIndex = numGlobalVars_++;
-        g.name_ = fieldName;
         return globals_.append(g);
     }
     bool addFFI(PropertyName *field, uint32_t *ffiIndex) {
         if (numFFIs_ == UINT32_MAX)
             return false;
-        Global g(Global::FFI);
+        Global g(Global::FFI, field);
         g.u.ffiIndex_ = *ffiIndex = numFFIs_++;
-        g.name_ = field;
         return globals_.append(g);
     }
     bool addArrayView(ArrayBufferView::ViewType vt, PropertyName *field) {
         hasArrayView_ = true;
-        Global g(Global::ArrayView);
+        Global g(Global::ArrayView, field);
         g.u.viewType_ = vt;
-        g.name_ = field;
         return globals_.append(g);
     }
     bool addMathBuiltin(AsmJSMathBuiltin mathBuiltin, PropertyName *field) {
-        Global g(Global::MathBuiltin);
+        Global g(Global::MathBuiltin, field);
         g.u.mathBuiltin_ = mathBuiltin;
-        g.name_ = field;
         return globals_.append(g);
     }
-    bool addGlobalConstant(double value, PropertyName *fieldName) {
-        Global g(Global::Constant);
+    bool addGlobalConstant(double value, PropertyName *name) {
+        Global g(Global::Constant, name);
         g.u.constantValue_ = value;
-        g.name_ = fieldName;
         return globals_.append(g);
     }
     bool addFuncPtrTable(unsigned numElems, uint32_t *globalDataOffset) {

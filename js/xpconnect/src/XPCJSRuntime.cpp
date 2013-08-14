@@ -30,7 +30,6 @@
 #include "nsCxPusher.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionNoteRootCallback.h"
-#include "nsCycleCollectorUtils.h"
 #include "nsScriptLoader.h"
 #include "jsfriendapi.h"
 #include "js/MemoryMetrics.h"
@@ -511,8 +510,8 @@ XPCJSRuntime::SuspectWrappedNative(XPCWrappedNative *wrapper,
     if (!wrapper->IsValid() || wrapper->IsWrapperExpired())
         return;
 
-    MOZ_ASSERT(NS_IsMainThread() || NS_IsCycleCollectorThread(),
-               "Suspecting wrapped natives from non-CC thread");
+    MOZ_ASSERT(NS_IsMainThread(),
+               "Suspecting wrapped natives from non-main thread");
 
     // Only record objects that might be part of a cycle as roots, unless
     // the callback wants all traces (a debug feature).
