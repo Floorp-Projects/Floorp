@@ -32,7 +32,7 @@ interface nsIMobileConnectionListener : nsISupports
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(a16681a5-a7f1-4340-a478-e0326a49e988)]
+[scriptable, uuid(576c7c00-7319-4309-aa9e-1dab102e0874)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -54,6 +54,10 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest setRoamingPreference(in nsIDOMWindow window,
                                         in DOMString mode);
   nsIDOMDOMRequest getRoamingPreference(in nsIDOMWindow window);
+
+  nsIDOMDOMRequest setVoicePrivacyMode(in nsIDOMWindow window,
+                                       in bool enabled);
+  nsIDOMDOMRequest getVoicePrivacyMode(in nsIDOMWindow window);
 
   nsIDOMDOMRequest sendMMI(in nsIDOMWindow window, in DOMString mmi);
   nsIDOMDOMRequest cancelMMI(in nsIDOMWindow window);

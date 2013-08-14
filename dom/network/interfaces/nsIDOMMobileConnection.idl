@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(35fbab20-ee07-454d-943d-090a9378f5cf)]
+[scriptable, builtinclass, uuid(8284af62-c39d-4a59-b258-107040040418)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -145,6 +145,34 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * 'IllegalSIMorME', or 'GenericFailure'
    */
   nsIDOMDOMRequest getRoamingPreference();
+
+  /**
+   * Set voice privacy preference.
+   *
+   * @param enabled
+   *        Boolean indicates the preferred voice privacy mode used in voice
+   *        scrambling in CDMA networks. 'True' means the enhanced voice security
+   *        is required.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', 'InvalidParameter', or 'GenericFailure'
+   */
+  nsIDOMDOMRequest setVoicePrivacyMode(in bool enabled);
+
+  /**
+   * Query current voice privacy mode.
+   *
+   * If successful, the request's onsuccess will be called. And the request's
+   * result will be a boolean indicating the current voice privacy mode.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', or 'GenericFailure'
+   */
+  nsIDOMDOMRequest getVoicePrivacyMode();
 
   /**
    * Send a MMI message.
