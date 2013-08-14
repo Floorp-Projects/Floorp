@@ -16,15 +16,9 @@
 <script class="testbody" type="text/javascript">
 
 var result = new Array();
-var expectedUpdates = 3; // 2 iframes and our self
+var expectedUpdates = 2;
 
 init();
-
-function onUpdatePassed()
-{
-  if (!(--expectedUpdates))
-    SimpleTest.executeSoon(finish);
-}
 
 function init()
 {
@@ -41,9 +35,6 @@ function init()
                     .getService(Ci.nsIScriptSecurityManager)
                     .getNoAppCodebasePrincipal(uri);
   pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
-
-  applicationCache.oncached = onUpdatePassed;
-  applicationCache.onnoupdate = onUpdatePassed;
 }
 
 function frameOnLoad(frameid, status)
@@ -61,7 +52,8 @@ function frameOnUpdate(frameid, ok, status)
   result[frameid].updateOK = ok;
   result[frameid].cacheStatus = status;
 
-  onUpdatePassed();
+  if (!(--expectedUpdates))
+    finish();
 }
 
 function finish()
@@ -106,7 +98,6 @@ function cleanCache(manifestURL)
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   var cache = OfflineTest.getActiveCache(manifestURL);
-  dump("Discarding cache for " + manifestURL + " cache=" + cache + "\n");
   if (cache)
     cache.discard();
 }

@@ -19,42 +19,42 @@ ok(applicationCache.mozItems.length == 0,
 
 function updateCanceled()
 {
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/744719-cancel.cacheManifest", false, null);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false, null);
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false, null);
+  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/744719-cancel.cacheManifest", false);
+  OfflineTest.checkCache("http://mochi.test:8888/tests/SimpleTest/SimpleTest.js", false);
+  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/offlineTests.js", false);
 
-  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/nonexistent744719?010", false, null);
+  OfflineTest.checkCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/nonexistent744719?010", false);
 
   var URL = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/subresource744719.html?";
-  OfflineTest.checkCache(URL + "001", false, null);
-  OfflineTest.checkCache(URL + "002", false, null);
-  OfflineTest.checkCache(URL + "003", false, null);
-  OfflineTest.checkCache(URL + "004", false, null);
-  OfflineTest.checkCache(URL + "005", false, null);
-  OfflineTest.checkCache(URL + "006", false, null);
-  OfflineTest.checkCache(URL + "007", false, null);
-  OfflineTest.checkCache(URL + "008", false, null);
-  OfflineTest.checkCache(URL + "009", false, null);
-  OfflineTest.checkCache(URL + "011", false, null);
-  OfflineTest.checkCache(URL + "012", false, null);
-  OfflineTest.checkCache(URL + "013", false, null);
-  OfflineTest.checkCache(URL + "014", false, null);
-  OfflineTest.checkCache(URL + "015", false, null);
-  OfflineTest.checkCache(URL + "016", false, null);
-  OfflineTest.checkCache(URL + "017", false, null);
-  OfflineTest.checkCache(URL + "018", false, null);
-  OfflineTest.checkCache(URL + "019", false, null);
-  OfflineTest.checkCache(URL + "020", false, null);
-  OfflineTest.checkCache(URL + "021", false, null);
-  OfflineTest.checkCache(URL + "022", false, null);
-  OfflineTest.checkCache(URL + "023", false, null);
-  OfflineTest.checkCache(URL + "024", false, null);
-  OfflineTest.checkCache(URL + "025", false, null);
-  OfflineTest.checkCache(URL + "026", false, null);
-  OfflineTest.checkCache(URL + "027", false, null);
-  OfflineTest.checkCache(URL + "028", false, null);
-  OfflineTest.checkCache(URL + "029", false, null);
-  OfflineTest.checkCache(URL + "030", false, null);
+  OfflineTest.checkCache(URL + "001", false);
+  OfflineTest.checkCache(URL + "002", false);
+  OfflineTest.checkCache(URL + "003", false);
+  OfflineTest.checkCache(URL + "004", false);
+  OfflineTest.checkCache(URL + "005", false);
+  OfflineTest.checkCache(URL + "006", false);
+  OfflineTest.checkCache(URL + "007", false);
+  OfflineTest.checkCache(URL + "008", false);
+  OfflineTest.checkCache(URL + "009", false);
+  OfflineTest.checkCache(URL + "011", false);
+  OfflineTest.checkCache(URL + "012", false);
+  OfflineTest.checkCache(URL + "013", false);
+  OfflineTest.checkCache(URL + "014", false);
+  OfflineTest.checkCache(URL + "015", false);
+  OfflineTest.checkCache(URL + "016", false);
+  OfflineTest.checkCache(URL + "017", false);
+  OfflineTest.checkCache(URL + "018", false);
+  OfflineTest.checkCache(URL + "019", false);
+  OfflineTest.checkCache(URL + "020", false);
+  OfflineTest.checkCache(URL + "021", false);
+  OfflineTest.checkCache(URL + "022", false);
+  OfflineTest.checkCache(URL + "023", false);
+  OfflineTest.checkCache(URL + "024", false);
+  OfflineTest.checkCache(URL + "025", false);
+  OfflineTest.checkCache(URL + "026", false);
+  OfflineTest.checkCache(URL + "027", false);
+  OfflineTest.checkCache(URL + "028", false);
+  OfflineTest.checkCache(URL + "029", false);
+  OfflineTest.checkCache(URL + "030", false);
 
   OfflineTest.teardown();
 

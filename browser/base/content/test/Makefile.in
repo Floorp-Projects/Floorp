@@ -35,7 +35,6 @@ MOCHITEST_FILES = \
         test_feed_discovery.html \
         test_offline_gzip.html \
         test_offlineNotification.html \
-        offlineByDefault.js \
         video.ogg \
         $(NULL)
 

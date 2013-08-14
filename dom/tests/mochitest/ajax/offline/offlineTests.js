@@ -58,8 +58,6 @@ fetch: function(callback)
 
 var OfflineTest = {
 
-_allowedByDefault: false,
-
 _hasSlave: false,
 
 // The window where test results should be sent.
@@ -73,11 +71,6 @@ _SJSsStated: [],
 
 setupChild: function()
 {
-  if (this._allowedByDefault) {
-    this._masterWindow = window;
-    return true;
-  }
-
   if (window.parent.OfflineTest._hasSlave) {
     return false;
   }
@@ -97,17 +90,6 @@ setupChild: function()
 setup: function()
 {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  var prefBranch = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  try {
-    this._allowedByDefault = prefBranch.getBoolPref("offline-apps.allow_by_default");
-  } catch (e) {}
-
-  if (this._allowedByDefault) {
-    this._masterWindow = window;
-
-    return true;
-  }
 
   if (!window.opener || !window.opener.OfflineTest ||
       !window.opener.OfflineTest._hasSlave) {
@@ -172,9 +154,7 @@ teardown: function()
 
 finish: function()
 {
-  if (this._allowedByDefault) {
-    SimpleTest.executeSoon(SimpleTest.finish);
-  } else if (this._masterWindow) {
+  if (this._masterWindow) {
     // Slave window: pass control back to master window, close itself.
     this._masterWindow.SimpleTest.executeSoon(this._masterWindow.OfflineTest.finish);
     window.close();
@@ -257,25 +237,12 @@ waitForAdd: function(url, onFinished) {
 
 manifestURL: function(overload)
 {
-  var manifestURLspec;
-  if (overload) {
-    manifestURLspec = overload;
-  } else {
-    var win = window;
-    while (win && !win.document.documentElement.getAttribute("manifest")) {
-      if (win == win.parent)
-        break;
-      win = win.parent;
-    }
-    if (win)
-      manifestURLspec = win.document.documentElement.getAttribute("manifest");
-  }
+  var manifestURLspec = overload || window.top.document.documentElement.getAttribute("manifest");
 
   var ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService)
 
   var baseURI = ios.newURI(window.location.href, null, null);
-  dump("manifestURLspec=" + manifestURLspec + "\n");
   return ios.newURI(manifestURLspec, null, baseURI);
 },
 
@@ -294,17 +261,14 @@ getActiveCache: function(overload)
   var serv = Cc["@mozilla.org/network/application-cache-service;1"]
              .getService(Ci.nsIApplicationCacheService);
   var groupID = serv.buildGroupID(this.manifestURL(overload), this.loadContext());
-  dump("Getting active cache for " + groupID + " (o=" + overload + ")\n");
   return serv.getActiveCache(groupID);
 },
 
 getActiveSession: function()
 {
   var cache = this.getActiveCache();
-  if (!cache) {
-    dump("No active cache\n");
+  if (!cache)
     return null;
-  }
 
   var cacheService = Cc["@mozilla.org/network/cache-service;1"]
                      .getService(Ci.nsICacheService);
@@ -338,7 +302,6 @@ checkCacheEntries: function(entries, callback)
 
 checkCache: function(url, expectEntry, callback)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var cacheSession = this.getActiveSession();
   this._checkCache(cacheSession, url, expectEntry, callback);
 },
@@ -347,11 +310,11 @@ _checkCache: function(cacheSession, url, expectEntry, callback)
 {
   if (!cacheSession) {
     if (expectEntry) {
-      this.ok(false, url + " should exist in the offline cache (no session)");
+      this.ok(false, url + " should exist in the offline cache");
     } else {
-      this.ok(true, url + " should not exist in the offline cache (no session)");
+      this.ok(true, url + " should not exist in the offline cache");
     }
-    if (callback) setTimeout(this.priv(callback), 0);
+    setTimeout(this.priv(callback), 0);
     return;
   }
 
@@ -383,7 +346,7 @@ _checkCache: function(cacheSession, url, expectEntry, callback)
           OfflineTest.ok(false, "got invalid error for " + url);
         }
       }
-      if (callback) setTimeout(OfflineTest.priv(callback), 0);
+      setTimeout(OfflineTest.priv(callback), 0);
     }
   };
 

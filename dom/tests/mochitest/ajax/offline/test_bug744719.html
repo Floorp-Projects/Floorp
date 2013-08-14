@@ -52,10 +52,11 @@ function manifestUpdated()
   OfflineTest.checkCache(URL + "027", true);
   OfflineTest.checkCache(URL + "028", true);
   OfflineTest.checkCache(URL + "029", true);
-  OfflineTest.checkCache(URL + "030", true, function() {
-    OfflineTest.teardown();
-    OfflineTest.finish();
-  });
+  OfflineTest.checkCache(URL + "030", true);
+
+  OfflineTest.teardown();
+
+  OfflineTest.finish();
 }
 
 if (OfflineTest.setup()) {

@@ -84,6 +84,7 @@ nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
   , mManifestURI(aManifestURI)
   , mDocumentURI(aDocumentURI)
   , mExposeCacheUpdateStatus(true)
+  , mDontSetDocumentCache(false)
   , mStatus(nsIDOMOfflineResourceList::IDLE)
   , mCachedKeys(nullptr)
   , mCachedKeysCount(0)
@@ -428,11 +429,6 @@ nsDOMOfflineResourceList::GetStatus(uint16_t *aStatus)
     }
   }
 
-  if (mAvailableApplicationCache) {
-    *aStatus = nsIDOMOfflineResourceList::UPDATEREADY;
-    return NS_OK;
-  }
-
   *aStatus = mStatus;
   return NS_OK;
 }
@@ -458,6 +454,10 @@ nsDOMOfflineResourceList::Update()
   rv = updateService->ScheduleUpdate(mManifestURI, mDocumentURI,
                                      window, getter_AddRefs(update));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Since we are invoking the cache update, cache on the document must not
+  // be updated until swapCache() method is called on applicationCache object.
+  mDontSetDocumentCache = true;
 
   return NS_OK;
 }
@@ -488,8 +488,6 @@ nsDOMOfflineResourceList::SwapCache()
     mAvailableApplicationCache->GetClientID(availClientId);
     if (availClientId == currClientId)
       return NS_ERROR_DOM_INVALID_STATE_ERR;
-  } else if (mStatus != OBSOLETE) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   ClearCachedKeys();
@@ -631,36 +629,16 @@ nsDOMOfflineResourceList::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate,
 NS_IMETHODIMP
 nsDOMOfflineResourceList::ApplicationCacheAvailable(nsIApplicationCache *aApplicationCache)
 {
-  nsCOMPtr<nsIApplicationCache> currentAppCache = GetDocumentAppCache();
-  if (currentAppCache) {
-    // Document already has a cache, we cannot override it.  swapCache is
-    // here to do it on demand.
+  mAvailableApplicationCache = aApplicationCache;
 
-    // If the newly available cache is identical to the current cache, then
-    // just ignore this event.
-    if (aApplicationCache == currentAppCache) {
-      return NS_OK;
-    }
+  if (!mDontSetDocumentCache) {
+    nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer =
+      GetDocumentAppCacheContainer();
 
-    nsCString currClientId, availClientId;
-    currentAppCache->GetClientID(currClientId);
-    aApplicationCache->GetClientID(availClientId);
-    if (availClientId == currClientId) {
-      return NS_OK;
-    }
-
-    mAvailableApplicationCache = aApplicationCache;
-    return NS_OK;
+    if (appCacheContainer)
+      appCacheContainer->SetApplicationCache(aApplicationCache);
   }
 
-  nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer =
-    GetDocumentAppCacheContainer();
-
-  if (appCacheContainer) {
-    appCacheContainer->SetApplicationCache(aApplicationCache);
-  }
-
-  mAvailableApplicationCache = nullptr;
   return NS_OK;
 }
 
@@ -759,12 +737,14 @@ nsDOMOfflineResourceList::UpdateCompleted(nsIOfflineCacheUpdate *aUpdate)
 
   mCacheUpdate->RemoveObserver(this);
   mCacheUpdate = nullptr;
+  mDontSetDocumentCache = false;
 
   if (NS_SUCCEEDED(rv) && succeeded && !partial) {
-    mStatus = nsIDOMOfflineResourceList::IDLE;
     if (isUpgrade) {
+      mStatus = nsIDOMOfflineResourceList::UPDATEREADY;
       SendEvent(NS_LITERAL_STRING(UPDATEREADY_STR));
     } else {
+      mStatus = nsIDOMOfflineResourceList::IDLE;
       SendEvent(NS_LITERAL_STRING(CACHED_STR));
     }
   }

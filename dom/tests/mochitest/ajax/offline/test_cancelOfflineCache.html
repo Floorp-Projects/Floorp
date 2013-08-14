@@ -43,7 +43,6 @@ function onProgress () {
 
 if (OfflineTest.setup()) {
   applicationCache.onerror = OfflineTest.priv(onError);
-  applicationCache.onnoupdate = OfflineTest.failEvent;
   applicationCache.onprogress = OfflineTest.priv(onProgress);
   applicationCache.oncached = OfflineTest.priv(manifestCached);
 }
