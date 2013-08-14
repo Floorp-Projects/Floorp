@@ -22,8 +22,8 @@ class DOMCursor : public DOMRequest
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMDOMCURSOR
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(DOMCursor,
-                                                         DOMRequest)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMCursor,
+                                           DOMRequest)
 
   DOMCursor(nsIDOMWindow* aWindow, nsICursorContinueCallback *aCallback);
 
