@@ -40,5 +40,6 @@ svn info $1 > ${icu_dir}/SVN-INFO
 
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-724533
 patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-853706
+patch -d ${icu_dir}/../../ -p1 < ${icu_dir}/../icu-patches/bug-899722
 
 hg addremove ${icu_dir}
