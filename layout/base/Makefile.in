@@ -40,14 +40,3 @@ LOCAL_INCLUDES += \
 		$(NULL)
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)
-
-ifndef MOZ_XUL
-nsIBoxObject.idl: %: $(topsrcdir)/layout/xul/base/public/%
-	$(INSTALL) $^ .
-nsPIBoxObject.h: %: $(topsrcdir)/layout/xul/base/public/%
-	$(INSTALL) $^ .
-nsBoxObject.cpp: %: $(topsrcdir)/layout/xul/base/src/%
-	$(INSTALL) $^ .
-
-GARBAGE    += nsIBoxObject.idl nsPIBoxObject.h nsBoxObject.cpp
-endif
