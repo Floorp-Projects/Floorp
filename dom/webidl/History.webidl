@@ -26,14 +26,4 @@ interface History {
   void pushState(any data, DOMString title, optional DOMString? url = null);
   [Throws]
   void replaceState(any data, DOMString title, optional DOMString? url = null);
-
-  // Chrome only methods.
-  [Throws, ChromeOnly]
-  readonly attribute DOMString current;
-  [Throws, ChromeOnly]
-  readonly attribute DOMString previous;
-  [Throws, ChromeOnly]
-  readonly attribute DOMString next;
-  [Throws, ChromeOnly]
-  getter DOMString? item(unsigned long index);
 };

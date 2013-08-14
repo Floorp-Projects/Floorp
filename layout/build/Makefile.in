@@ -259,10 +259,6 @@ SHARED_LIBRARY_LIBS += \
 		$(DEPTH)/content/smil/$(LIB_PREFIX)gkconsmil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
-ifdef ENABLE_EDITOR_API_LOG
-DEFINES += -DENABLE_EDITOR_API_LOG
-endif
-
 SHARED_LIBRARY_LIBS += \
 	$(DEPTH)/js/xpconnect/src/$(LIB_PREFIX)xpconnect_s.$(LIB_SUFFIX)
 

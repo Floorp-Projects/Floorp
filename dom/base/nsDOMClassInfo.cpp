@@ -193,13 +193,7 @@
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
 #include "mozilla/dom/Element.h"
-
-#include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
-
-using mozilla::dom::indexedDB::IDBWrapperCache;
-using mozilla::dom::workers::ResolveWorkerClasses;
-
 #include "nsIDOMMediaQueryList.h"
 
 #include "mozilla/dom/Activity.h"
@@ -255,6 +249,7 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using mozilla::dom::workers::ResolveWorkerClasses;
 
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -280,9 +275,6 @@ static const char kDOMStringBundleURL[] =
 #define EVENTTARGET_SCRIPTABLE_FLAGS                                          \
   (DOM_DEFAULT_SCRIPTABLE_FLAGS       |                                       \
    nsIXPCScriptable::WANT_ADDPROPERTY)
-
-#define IDBEVENTTARGET_SCRIPTABLE_FLAGS                                       \
-  (EVENTTARGET_SCRIPTABLE_FLAGS)
 
 #define DOMCLASSINFO_STANDARD_FLAGS                                           \
   (nsIClassInfo::MAIN_THREAD_ONLY |                                           \
@@ -351,29 +343,6 @@ DOMCI_DATA_NO_CLASS(XULPopupElement)
 
 #define NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(_class, _helper, _flags)          \
   NS_DEFINE_CLASSINFO_DATA_HELPER(_class, _helper, _flags, true, true)
-
-namespace {
-
-class IDBEventTargetSH : public nsEventTargetSH
-{
-protected:
-  IDBEventTargetSH(nsDOMClassInfoData* aData) : nsEventTargetSH(aData)
-  { }
-
-  virtual ~IDBEventTargetSH()
-  { }
-
-public:
-  NS_IMETHOD PreCreate(nsISupports *aNativeObj, JSContext *aCx,
-                       JSObject *aGlobalObj, JSObject **aParentObj);
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData *aData)
-  {
-    return new IDBEventTargetSH(aData);
-  }
-};
-
-} // anonymous namespace
 
 
 // This list of NS_DEFINE_CLASSINFO_DATA macros is what gives the DOM
@@ -4157,19 +4126,6 @@ nsEventTargetSH::PreserveWrapper(nsISupports *aNative)
   nsDOMEventTargetHelper *target =
     nsDOMEventTargetHelper::FromSupports(aNative);
   target->PreserveWrapper(aNative);
-}
-
-// IDBEventTarget helper
-
-NS_IMETHODIMP
-IDBEventTargetSH::PreCreate(nsISupports *aNativeObj, JSContext *aCx,
-                            JSObject *aGlobalObj, JSObject **aParentObj)
-{
-  JS::Rooted<JSObject*> globalObj(aCx, aGlobalObj);
-  IDBWrapperCache *target = IDBWrapperCache::FromSupports(aNativeObj);
-  JSObject *parent = target->GetParentObject();
-  *aParentObj = parent ? parent : globalObj;
-  return NS_OK;
 }
 
 // Generic array scriptable helper.

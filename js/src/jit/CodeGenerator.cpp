@@ -742,22 +742,9 @@ CodeGenerator::emitLambdaInit(const Register &output, const Register &scopeChain
 
     JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
     masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
-
-    // Initialize the JSFunction union with the script / native / lazyScript
-    // corresponding to the flag.
-    ImmGCPtr scriptOrLazyScript(NULL);
-    if (fun->isInterpretedLazy())
-        scriptOrLazyScript = ImmGCPtr(fun->lazyScriptOrNull());
-    else
-        scriptOrLazyScript = ImmGCPtr(fun->nonLazyScript());
-
-    masm.storePtr(scriptOrLazyScript, Address(output, JSFunction::offsetOfNativeOrScript()));
-
-    // Lambda scripted functions are given the scope chain as the environment in
-    // which the caller was at the time of the creation of the lambda.
+    masm.storePtr(ImmGCPtr(fun->nonLazyScript()),
+                  Address(output, JSFunction::offsetOfNativeOrScript()));
     masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
-
-    // Copy the name of the function used for diagnostics.
     masm.storePtr(ImmGCPtr(fun->displayAtom()), Address(output, JSFunction::offsetOfAtom()));
 }
 
@@ -1649,7 +1636,7 @@ CodeGenerator::visitCallGetIntrinsicValue(LCallGetIntrinsicValue *lir)
     return callVM(GetIntrinsicValueInfo, lir);
 }
 
-typedef bool (*InvokeFunctionFn)(JSContext *, HandleFunction, uint32_t, Value *, Value *);
+typedef bool (*InvokeFunctionFn)(JSContext *, HandleObject, uint32_t, Value *, Value *);
 static const VMFunction InvokeFunctionInfo = FunctionInfo<InvokeFunctionFn>(InvokeFunction);
 
 bool
@@ -1680,7 +1667,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     Register nargsreg  = ToRegister(call->getNargsReg());
     uint32_t unusedStack = StackOffsetOfPassedArg(call->argslot());
     ExecutionMode executionMode = gen->info().executionMode();
-    Label uncompiled, thunk, makeCall, end;
+    Label invoke, thunk, makeCall, end;
 
     // Known-target case is handled by LCallKnown.
     JS_ASSERT(!call->hasSingleTarget());
@@ -1692,18 +1679,16 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Guard that calleereg is actually a function object.
     masm.loadObjClass(calleereg, nargsreg);
-    masm.cmpPtr(nargsreg, ImmWord(&JSFunction::class_));
-    if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
-        return false;
+    masm.branchPtr(Assembler::NotEqual, nargsreg, ImmWord(&JSFunction::class_), &invoke);
 
     // Guard that calleereg is an interpreted function with a JSScript:
-    masm.branchIfFunctionHasNoScript(calleereg, &uncompiled);
+    masm.branchIfFunctionHasNoScript(calleereg, &invoke);
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
 
     // Load script jitcode.
-    masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &uncompiled);
+    masm.loadBaselineOrIonRaw(objreg, objreg, executionMode, &invoke);
 
     // Nestle the StackPointer up to the argument vector.
     masm.freeStack(unusedStack);
@@ -1743,7 +1728,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.jump(&end);
 
     // Handle uncompiled or native functions.
-    masm.bind(&uncompiled);
+    masm.bind(&invoke);
     switch (executionMode) {
       case SequentialExecution:
         if (!emitCallInvokeFunction(call, calleereg, call->numActualArgs(), unusedStack))

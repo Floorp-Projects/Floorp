@@ -32,7 +32,6 @@
 #endif
 #include "mozilla/ipc/Ril.h"
 #include "nsIObserverService.h"
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"

@@ -747,7 +747,7 @@ Blob(JSContext *cx, unsigned argc, jsval *vp)
   }
 
   nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
-  NS_ASSERTION(initializer, "what?");
+  MOZ_ASSERT(initializer);
 
   nsresult rv = initializer->Initialize(nullptr, cx, nullptr, args);
   if (NS_FAILED(rv)) {
@@ -786,7 +786,7 @@ File(JSContext *cx, unsigned argc, jsval *vp)
   }
 
   nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(native);
-  NS_ASSERTION(initializer, "what?");
+  MOZ_ASSERT(initializer);
 
   nsresult rv = initializer->Initialize(nullptr, cx, nullptr, args);
   if (NS_FAILED(rv)) {
@@ -1684,7 +1684,7 @@ main(int argc, char **argv, char **envp)
         }
 
         const JSSecurityCallbacks *scb = JS_GetSecurityCallbacks(rt);
-        NS_ASSERTION(scb, "We are assuming that nsScriptSecurityManager::Init() has been run");
+        MOZ_ASSERT(scb, "We are assuming that nsScriptSecurityManager::Init() has been run");
         shellSecurityCallbacks = *scb;
         JS_SetSecurityCallbacks(rt, &shellSecurityCallbacks);
 
@@ -1780,7 +1780,7 @@ main(int argc, char **argv, char **envp)
 
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM( NULL );
-    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 
 #ifdef TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN
     // test of late call and release (see above)

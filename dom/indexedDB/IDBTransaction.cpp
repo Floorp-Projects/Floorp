@@ -13,7 +13,6 @@
 
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/storage.h"
-#include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsDOMLists.h"
 #include "nsEventDispatcher.h"

@@ -51,8 +51,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/js/xpconnect/wrappers \
   $(NULL)
 
-DEFINES += -DHB_DONT_DEFINE_STDINT
-
 # gcc requires -msse2 for this file since it uses SSE2 intrinsics.  (See bug
 # 585538 comment 12.)
 ifneq (,$(INTEL_ARCHITECTURE))

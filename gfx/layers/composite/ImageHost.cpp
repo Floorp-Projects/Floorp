@@ -149,6 +149,8 @@ ImageHost::PrintInfo(nsACString& aTo, const char* aPrefix)
 }
 #endif
 
+
+#ifdef MOZ_DUMP_PAINTING
 void
 ImageHost::Dump(FILE* aFile,
                 const char* aPrefix,
@@ -165,6 +167,7 @@ ImageHost::Dump(FILE* aFile,
     fprintf(aFile, aDumpHtml ? " </li></ul> " : " ");
   }
 }
+#endif
 
 LayerRenderState
 ImageHost::GetRenderState()
@@ -356,6 +359,7 @@ DeprecatedImageHostBuffered::MakeDeprecatedTextureHost(TextureIdentifier aTextur
   }
 }
 
+#ifdef MOZ_DUMP_PAINTING
 void
 DeprecatedImageHostSingle::Dump(FILE* aFile,
                                 const char* aPrefix,
@@ -373,7 +377,6 @@ DeprecatedImageHostSingle::Dump(FILE* aFile,
   }
 }
 
-#ifdef MOZ_DUMP_PAINTING
 already_AddRefed<gfxImageSurface>
 DeprecatedImageHostSingle::GetAsSurface()
 {

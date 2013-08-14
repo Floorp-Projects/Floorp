@@ -19,6 +19,7 @@
 #include "mozilla/Attributes.h"
 
 class nsIHttpAuthenticator;
+class nsHttpHandler;
 
 class nsHttpChannelAuthProvider : public nsIHttpChannelAuthProvider
                                 , public nsIAuthPromptCallback
@@ -143,6 +144,8 @@ private:
     uint32_t                          mTriedProxyAuth           : 1;
     uint32_t                          mTriedHostAuth            : 1;
     uint32_t                          mSuppressDefensiveAuth    : 1;
+
+    nsRefPtr<nsHttpHandler>           mHttpHandler;  // keep gHttpHandler alive
 };
 
 #endif // nsHttpChannelAuthProvider_h__

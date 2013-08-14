@@ -14,7 +14,6 @@
 #include "nsJSUtils.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
-#include "prprf.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
@@ -23,12 +22,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsPIDOMWindow.h"
 #include "GeckoProfiler.h"
-
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
-
-#include "nsContentUtils.h"
 #include "nsJSPrincipals.h"
-
 #include "mozilla/dom/BindingUtils.h"
 
 bool

@@ -7,6 +7,7 @@
 #ifndef jit_RegisterSets_h
 #define jit_RegisterSets_h
 
+#include "mozilla/Alignment.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include "jit/IonAllocPolicy.h"

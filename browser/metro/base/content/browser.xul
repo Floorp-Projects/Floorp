@@ -195,6 +195,7 @@
 
       <!-- Content viewport -->
       <stack id="content-viewport">
+        <observes element="bcast_windowState" attribute="startpage"/>
         <deck id="browsers" flex="1" observes="bcast_preciseInput"/>
         <box id="vertical-scroller" class="scroller" orient="vertical" end="0" top="0"/>
         <box id="horizontal-scroller" class="scroller" orient="horizontal" left="0" bottom="0"/>
@@ -383,7 +384,7 @@
         <deck id="updateDeck" orient="vertical">
           <hbox id="updateButtonBox" align="center">
             <button id="updateButton" align="start"
-                    oncommand="FlyoutPanelsUI.AboutFlyout.appUpdater.buttonOnCommand();"/>
+                    oncommand="FlyoutPanelsUI.AboutFlyoutPanel.appUpdater.buttonOnCommand();"/>
             <spacer flex="1"/>
           </hbox>
           <hbox id="checkingForUpdates" align="center">

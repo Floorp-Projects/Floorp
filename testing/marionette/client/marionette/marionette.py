@@ -149,15 +149,15 @@ class Actions(object):
 
     def flick(self, element, x1, y1, x2, y2, duration=200):
         element = element.id
-        time = 0
+        elapsed = 0
         time_increment = 10
         if time_increment >= duration:
             time_increment = duration
         move_x = time_increment*1.0/duration * (x2 - x1)
         move_y = time_increment*1.0/duration * (y2 - y1)
         self.action_chain.append(['press', element, x1, y1])
-        while (time < duration):
-            time += time_increment
+        while elapsed < duration:
+            elapsed += time_increment
             self.action_chain.append(['moveByOffset', move_x, move_y])
             self.action_chain.append(['wait', time_increment/1000])
         self.action_chain.append(['release'])

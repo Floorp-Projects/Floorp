@@ -46,19 +46,13 @@ nsHttpChannelAuthProvider::nsHttpChannelAuthProvider()
     , mTriedProxyAuth(false)
     , mTriedHostAuth(false)
     , mSuppressDefensiveAuth(false)
+    , mHttpHandler(gHttpHandler)
 {
-    // grab a reference to the handler to ensure that it doesn't go away.
-    nsHttpHandler *handler = gHttpHandler;
-    NS_ADDREF(handler);
 }
 
 nsHttpChannelAuthProvider::~nsHttpChannelAuthProvider()
 {
     MOZ_ASSERT(!mAuthChannel, "Disconnect wasn't called");
-
-    // release our reference to the handler
-    nsHttpHandler *handler = gHttpHandler;
-    NS_RELEASE(handler);
 }
 
 NS_IMETHODIMP

@@ -344,7 +344,7 @@ NS_IMETHODIMP_(nsrefcnt)
 nsExpirationTracker<T,K>::ExpirationTrackerObserver::AddRef(void)
 {
   MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
-  NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(ExpirationTrackerObserver);
+  NS_ASSERT_OWNINGTHREAD(ExpirationTrackerObserver);
   ++mRefCnt;
   NS_LOG_ADDREF(this, mRefCnt, "ExpirationTrackerObserver", sizeof(*this));
   return mRefCnt;
@@ -355,7 +355,7 @@ NS_IMETHODIMP_(nsrefcnt)
 nsExpirationTracker<T,K>::ExpirationTrackerObserver::Release(void)
 {
   MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
-  NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(ExpirationTrackerObserver);
+  NS_ASSERT_OWNINGTHREAD(ExpirationTrackerObserver);
   --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "ExpirationTrackerObserver");
   if (mRefCnt == 0) {
