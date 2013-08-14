@@ -104,8 +104,6 @@ static PRLogModuleInfo* gJSDiagnostics;
 
 #define NS_FULL_GC_DELAY            60000 // ms
 
-#define NS_MAX_COMPARTMENT_GC_COUNT 20
-
 // Maximum amount of time that should elapse between incremental GC slices
 #define NS_INTERSLICE_GC_DELAY      100 // ms
 
@@ -167,7 +165,6 @@ static uint32_t sCCollectedWaitingForGC;
 static uint32_t sLikelyShortLivingObjectsNeedingGC;
 static bool sPostGCEventsToConsole;
 static bool sPostGCEventsToObserver;
-static bool sDisableExplicitCompartmentGC;
 static uint32_t sCCTimerFireCount = 0;
 static uint32_t sMinForgetSkippableTime = UINT32_MAX;
 static uint32_t sMaxForgetSkippableTime = 0;
@@ -175,7 +172,6 @@ static uint32_t sTotalForgetSkippableTime = 0;
 static uint32_t sRemovedPurples = 0;
 static uint32_t sForgetSkippableBeforeCC = 0;
 static uint32_t sPreviousSuspectedCount = 0;
-static uint32_t sCompartmentGCCount = NS_MAX_COMPARTMENT_GC_COUNT;
 static uint32_t sCleanupsSinceLastGC = UINT32_MAX;
 static bool sNeedsFullCC = false;
 static nsJSContext *sContextList = nullptr;
@@ -692,8 +688,6 @@ static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinferenc
 static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
 static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
 static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
-static const char js_disable_explicit_compartment_gc[] =
-  JS_OPTIONS_DOT_STR "mem.disable_explicit_compartment_gc";
 static const char js_asmjs_content_str[]      = JS_OPTIONS_DOT_STR "asmjs";
 static const char js_baselinejit_content_str[] = JS_OPTIONS_DOT_STR "baselinejit.content";
 static const char js_baselinejit_chrome_str[]  = JS_OPTIONS_DOT_STR "baselinejit.chrome";
@@ -711,8 +705,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
   sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
   sPostGCEventsToObserver = Preferences::GetBool(js_memnotify_option_str);
-  sDisableExplicitCompartmentGC =
-    Preferences::GetBool(js_disable_explicit_compartment_gc);
 
   bool strict = Preferences::GetBool(js_strict_option_str);
   if (strict)
@@ -2550,7 +2542,6 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
     nsJSContext::MaybePokeCC();
 
     if (aDesc.isCompartment_) {
-      ++sCompartmentGCCount;
       if (!sFullGCTimer && !sShuttingDown) {
         CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);
         JS::gcreason::Reason reason = JS::gcreason::FULL_GC_TIMER;
@@ -2560,7 +2551,6 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
                                            nsITimer::TYPE_ONE_SHOT);
       }
     } else {
-      sCompartmentGCCount = 0;
       nsJSContext::KillFullGCTimer();
 
       // Avoid shrinking during heavy activity, which is suggested by
@@ -2655,7 +2645,6 @@ nsJSRuntime::Startup()
   sCCollectedWaitingForGC = 0;
   sLikelyShortLivingObjectsNeedingGC = 0;
   sPostGCEventsToConsole = false;
-  sDisableExplicitCompartmentGC = false;
   sNeedsFullCC = false;
   gNameSpaceManager = nullptr;
   sRuntimeService = nullptr;
