@@ -106,7 +106,9 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:SetRoamingPreference",
   "RIL:GetRoamingPreference",
   "RIL:CdmaCallWaiting",
-  "RIL:ExitEmergencyCbMode"
+  "RIL:ExitEmergencyCbMode",
+  "RIL:SetVoicePrivacyMode",
+  "RIL:GetVoicePrivacyMode"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -662,6 +664,43 @@ RILContentHelper.prototype = {
     let requestId = this.getRequestId(request);
 
     cpmm.sendAsyncMessage("RIL:GetRoamingPreference", {
+      clientId: 0,
+      data: {
+        requestId: requestId
+      }
+    });
+    return request;
+  },
+
+  setVoicePrivacyMode: function setVoicePrivacyMode(window, enabled) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:SetVoicePrivacyMode", {
+      clientId: 0,
+      data: {
+        requestId: requestId,
+        enabled: enabled
+      }
+    });
+    return request;
+  },
+
+  getVoicePrivacyMode: function getVoicePrivacyMode(window) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:GetVoicePrivacyMode", {
       clientId: 0,
       data: {
         requestId: requestId
@@ -1634,6 +1673,13 @@ RILContentHelper.prototype = {
         this._deliverEvent("_mobileConnectionListeners",
                            "notifyEmergencyCbModeChanged",
                            [data.active, data.timeoutMs]);
+        break;
+      case "RIL:SetVoicePrivacyMode":
+        this.handleSimpleRequest(msg.json.requestId, msg.json.errorMsg, null);
+        break;
+      case "RIL:GetVoicePrivacyMode":
+        this.handleSimpleRequest(msg.json.requestId, msg.json.errorMsg,
+                                 msg.json.enabled);
         break;
     }
   },
