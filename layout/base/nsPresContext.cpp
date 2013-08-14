@@ -69,6 +69,7 @@
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "RestyleManager.h"
+#include "nsRefreshDriver.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -1507,6 +1508,30 @@ already_AddRefed<nsISupports>
 nsPresContext::GetContainerExternal() const
 {
   return GetContainerInternal();
+}
+
+bool
+nsPresContext::ThrottledStyleIsUpToDate() const
+{
+  return mLastUpdateThrottledStyle == mRefreshDriver->MostRecentRefresh();
+}
+
+void
+nsPresContext::TickLastUpdateThrottledStyle()
+{
+  mLastUpdateThrottledStyle = mRefreshDriver->MostRecentRefresh();
+}
+
+bool
+nsPresContext::StyleUpdateForAllAnimationsIsUpToDate()
+{
+  return mLastStyleUpdateForAllAnimations == mRefreshDriver->MostRecentRefresh();
+}
+
+void
+nsPresContext::TickLastStyleUpdateForAllAnimations()
+{
+  mLastStyleUpdateForAllAnimations = mRefreshDriver->MostRecentRefresh();
 }
 
 #ifdef IBMBIDI
