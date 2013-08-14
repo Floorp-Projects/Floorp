@@ -272,7 +272,7 @@ OpusTrackEncoder::GetEncodedTrack(nsTArray<uint8_t>* aOutput,
     if (!chunk.IsNull()) {
       // Append the interleaved data to the end of pcm buffer.
       InterleaveTrackData(chunk, frameToCopy, mChannels,
-                          pcm.Elements() + frameCopied);
+                          pcm.Elements() + frameCopied * mChannels);
     } else {
       for (int i = 0; i < frameToCopy * mChannels; i++) {
         pcm.AppendElement(0);
