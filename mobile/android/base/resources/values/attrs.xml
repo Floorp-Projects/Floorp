@@ -216,5 +216,9 @@
         <attr name="android:verticalSpacing"/>
     </declare-styleable>
 
+    <declare-styleable name="TabMenuStrip">
+        <attr name="strip" format="reference"/>
+    </declare-styleable>
+
 </resources>
 

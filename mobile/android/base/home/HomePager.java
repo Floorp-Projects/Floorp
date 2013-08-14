@@ -14,10 +14,13 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.view.ViewGroup.LayoutParams;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
+import android.view.View;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -29,6 +32,7 @@ public class HomePager extends ViewPager {
 
     private final Context mContext;
     private volatile boolean mLoaded;
+    private Decor mDecor;
 
     // List of pages in order.
     public enum Page {
@@ -51,6 +55,21 @@ public class HomePager extends ViewPager {
         public void onNewTabs(String[] urls);
     }
 
+    interface OnTitleClickListener {
+        public void onTitleClicked(int index);
+    }
+
+    /**
+     * Special type of child views that could be added as pager decorations by default.
+     */
+    interface Decor {
+        public void onAddPagerView(String title);
+        public void removeAllPagerViews();
+        public void onPageSelected(int position);
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels);
+        public void setOnTitleClickListener(OnTitleClickListener onTitleClickListener);
+    }
+
     public HomePager(Context context) {
         this(context, null);
     }
@@ -62,6 +81,30 @@ public class HomePager extends ViewPager {
         // This is to keep all 3 pages in memory after they are
         // selected in the pager.
         setOffscreenPageLimit(2);
+    }
+
+    @Override
+    public void addView(View child, int index, ViewGroup.LayoutParams params) {
+        if (child instanceof Decor) {
+            ((ViewPager.LayoutParams) params).isDecor = true;
+            mDecor = (Decor) child;
+            setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                @Override
+                public void onPageSelected(int position) {
+                    mDecor.onPageSelected(position);
+                }
+
+                @Override
+                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                    mDecor.onPageScrolled(position, positionOffset, positionOffsetPixels);
+                }
+
+                @Override
+                public void onPageScrollStateChanged(int state) { }
+            });
+        }
+
+        super.addView(child, index, params);
     }
 
     /**
@@ -113,7 +156,8 @@ public class HomePager extends ViewPager {
         return mLoaded;
     }
 
-    class TabsAdapter extends FragmentStatePagerAdapter {
+    class TabsAdapter extends FragmentStatePagerAdapter
+                      implements OnTitleClickListener {
         private final ArrayList<TabInfo> mTabs = new ArrayList<TabInfo>();
 
         final class TabInfo {
@@ -132,12 +176,26 @@ public class HomePager extends ViewPager {
 
         public TabsAdapter(FragmentManager fm) {
             super(fm);
+
+            if (mDecor != null) {
+                mDecor.removeAllPagerViews();
+                mDecor.setOnTitleClickListener(this);
+            }
         }
 
         public void addTab(Page page, Class<?> clss, Bundle args, String title) {
             TabInfo info = new TabInfo(page, clss, args, title);
             mTabs.add(info);
             notifyDataSetChanged();
+
+            if (mDecor != null) {
+                mDecor.onAddPagerView(title);
+            }
+        }
+
+        @Override
+        public void onTitleClicked(int index) {
+            setCurrentItem(index, true);
         }
 
         public int getItemPosition(Page page) {

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="wrap_content"
+          android:layout_height="fill_parent"
+          android:minWidth="@dimen/tabs_strip_button_width"
+          android:background="@drawable/tabs_panel_indicator"
+          android:paddingLeft="@dimen/tabs_strip_button_padding"
+          android:paddingRight="@dimen/tabs_strip_button_padding"
+          android:gravity="center"
+          android:focusable="true"
+          style="@style/TextAppearance.Widget.HomePagerTabMenuStrip"/>
