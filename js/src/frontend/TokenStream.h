@@ -407,13 +407,6 @@ class MOZ_STACK_CLASS TokenStream
     JSVersion versionNumber() const { return VersionNumber(options().version); }
     JSVersion versionWithFlags() const { return options().version; }
 
-    PropertyName *currentName() const {
-        if (isCurrentTokenType(TOK_YIELD))
-            return cx->names().yield;
-        JS_ASSERT(isCurrentTokenType(TOK_NAME));
-        return currentToken().name();
-    }
-
     bool isCurrentTokenAssignment() const {
         return TokenKindIsAssignment(currentToken().type);
     }

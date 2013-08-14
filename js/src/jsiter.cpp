@@ -1475,13 +1475,6 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
     JS_ASSERT(stackRegs.stackDepth() == 0);
     StackFrame *stackfp = stackRegs.fp();
 
-    JS_ASSERT(stackfp->script()->isGenerator());
-
-    if (stackfp->script()->isStarGenerator()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_ES6_UNIMPLEMENTED);
-        return NULL;
-    }
-
     Rooted<GlobalObject*> global(cx, &stackfp->global());
     RootedObject obj(cx);
     {
