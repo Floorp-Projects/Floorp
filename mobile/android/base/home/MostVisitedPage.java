@@ -21,7 +21,9 @@ import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -42,6 +44,12 @@ public class MostVisitedPage extends HomeFragment {
 
     // The view shown by the fragment.
     private ListView mList;
+
+    // The title for this HomeFragment page.
+    private TextView mTitle;
+
+    // Reference to the View to display when there are no results.
+    private View mEmptyView;
 
     // Callbacks used for the search and favicon cursor loaders
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
@@ -83,10 +91,9 @@ public class MostVisitedPage extends HomeFragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        final TextView title = (TextView) view.findViewById(R.id.title);
-        if (title != null) {
-            title.setText(R.string.home_most_visited_title);
-            title.setVisibility(View.VISIBLE);
+        mTitle = (TextView) view.findViewById(R.id.title);
+        if (mTitle != null) {
+            mTitle.setText(R.string.home_most_visited_title);
         }
 
         mList = (HomeListView) view.findViewById(R.id.list);
@@ -113,6 +120,8 @@ public class MostVisitedPage extends HomeFragment {
     public void onDestroyView() {
         super.onDestroyView();
         mList = null;
+        mTitle = null;
+        mEmptyView = null;
     }
 
     @Override
@@ -133,6 +142,35 @@ public class MostVisitedPage extends HomeFragment {
     @Override
     protected void load() {
         getLoaderManager().initLoader(LOADER_ID_FRECENCY, null, mCursorLoaderCallbacks);
+    }
+
+    private void updateUiFromCursor(Cursor c) {
+        if (c != null && c.getCount() > 0) {
+            if (mTitle != null) {
+                mTitle.setVisibility(View.VISIBLE);
+            }
+            return;
+        }
+
+        // Cursor is empty, so hide the title and set the
+        // empty view if it hasn't been set already.
+        if (mTitle != null) {
+            mTitle.setVisibility(View.GONE);
+        }
+
+        if (mEmptyView == null) {
+            // Set empty page view. We delay this so that the empty view won't flash.
+            ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.home_empty_view_stub);
+            mEmptyView = emptyViewStub.inflate();
+
+            final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
+            emptyIcon.setImageResource(R.drawable.icon_most_visited_empty);
+
+            final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
+            emptyText.setText(R.string.home_most_visited_empty);
+
+            mList.setEmptyView(mEmptyView);
+        }
     }
 
     private static class FrecencyCursorLoader extends SimpleCursorLoader {
@@ -185,6 +223,7 @@ public class MostVisitedPage extends HomeFragment {
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             if (loader.getId() == LOADER_ID_FRECENCY) {
                 mAdapter.swapCursor(c);
+                updateUiFromCursor(c);
                 loadFavicons(c);
             } else {
                 super.onLoadFinished(loader, c);

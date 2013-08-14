@@ -666,6 +666,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/icon_most_recent.png \
   res/drawable-mdpi/icon_most_recent_empty.png \
   res/drawable-mdpi/icon_most_visited.png \
+  res/drawable-mdpi/icon_most_visited_empty.png \
   res/drawable-mdpi/icon_pageaction.png \
   res/drawable-mdpi/progress_spinner.png \
   res/drawable-mdpi/tab_indicator_divider.9.png \
@@ -775,6 +776,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/icon_most_recent.png \
   res/drawable-hdpi/icon_most_recent_empty.png \
   res/drawable-hdpi/icon_most_visited.png \
+  res/drawable-hdpi/icon_most_visited_empty.png \
   res/drawable-hdpi/icon_pageaction.png \
   res/drawable-hdpi/tab_indicator_divider.9.png \
   res/drawable-hdpi/tab_indicator_selected.9.png \
@@ -871,6 +873,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/icon_most_recent.png \
   res/drawable-xhdpi/icon_most_recent_empty.png \
   res/drawable-xhdpi/icon_most_visited.png \
+  res/drawable-xhdpi/icon_most_visited_empty.png \
   res/drawable-xhdpi/icon_pageaction.png \
   res/drawable-xhdpi/spinner_default.9.png \
   res/drawable-xhdpi/spinner_focused.9.png \
