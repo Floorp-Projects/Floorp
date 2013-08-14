@@ -5743,50 +5743,30 @@ HTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
   uint32_t i = 0;
   uint32_t length = value.Length();
 
-  // Email addresses can't be empty and can't end with a '.' or '-'.
-  if (length == 0 || value[length - 1] == '.' || value[length - 1] == '-') {
-    return false;
-  }
-
-  uint32_t atPos = (uint32_t)value.FindChar('@');
-  // Email addresses must contain a '@', but can't begin or end with it.
-  if (atPos == (uint32_t)kNotFound || atPos == 0 || atPos == length - 1) {
-    return false;
-  }
-
   // Puny-encode the string if needed before running the validation algorithm.
   nsCOMPtr<nsIIDNService> idnSrv = do_GetService(NS_IDNSERVICE_CONTRACTID);
   if (idnSrv) {
-    // ConvertUTF8toACE() treats 'username@domain' as a single label so we need
-    // to puny-encode the username and domain parts separately.
-    const nsDependentCSubstring username = Substring(value, 0, atPos);
     bool ace;
-    if (NS_SUCCEEDED(idnSrv->IsACE(username, &ace)) && !ace) {
-      nsAutoCString usernameACE;
-      // TODO: Bug 901347: Usernames longer than 63 chars are not converted by
-      // ConvertUTF8toACE(). For now, continue on even if the conversion fails.
-      if (NS_SUCCEEDED(idnSrv->ConvertUTF8toACE(username, usernameACE))) {
-        value.Replace(0, atPos, usernameACE);
-        atPos = usernameACE.Length();
+    if (NS_SUCCEEDED(idnSrv->IsACE(value, &ace)) && !ace) {
+      nsAutoCString punyCodedValue;
+      if (NS_SUCCEEDED(idnSrv->ConvertUTF8toACE(value, punyCodedValue))) {
+        value = punyCodedValue;
+        length = value.Length();
       }
     }
-
-    const nsDependentCSubstring domain = Substring(value, atPos + 1);
-    if (NS_SUCCEEDED(idnSrv->IsACE(domain, &ace)) && !ace) {
-      nsAutoCString domainACE;
-      if (NS_FAILED(idnSrv->ConvertUTF8toACE(domain, domainACE))) {
-        return false;
-      }
-      value.Replace(atPos + 1, domain.Length(), domainACE);
-    }
-
-    length = value.Length();
   } else {
     NS_ERROR("nsIIDNService isn't present!");
   }
 
+  // If the email address is empty, begins with an '@'
+  // or ends with a '.' or '-', we know it's invalid.
+  if (length == 0 || value[0] == '@' || value[length-1] == '.' ||
+      value[length-1] == '-') {
+    return false;
+  }
+
   // Parsing the username.
-  for (; i < atPos; ++i) {
+  for (; i < length && value[i] != '@'; ++i) {
     PRUnichar c = value[i];
 
     // The username characters have to be in this list to be valid.
@@ -5799,8 +5779,10 @@ HTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
     }
   }
 
-  // Skip the '@'.
-  ++i;
+  // If there is no domain name, that's not a valid email address.
+  if (++i >= length) {
+    return false;
+  }
 
   // The domain name can't begin with a dot or a dash.
   if (value[i] == '.' || value[i] == '-') {
