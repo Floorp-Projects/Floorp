@@ -310,6 +310,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
         setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
             @Override
             public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                // We don't the context menu while editing
+                if (isEditing()) {
+                    return;
+                }
+
                 MenuInflater inflater = mActivity.getMenuInflater();
                 inflater.inflate(R.menu.titlebar_contextmenu, menu);
 
@@ -423,20 +428,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     if (text.getSelectionStart() == text.getSelectionEnd())
                         return false;
 
-                    // mActivity.getActionBar().show();
                     return false;
                 }
 
                 return false;
-            }
-        });
-
-        mUrlEditText.setOnSelectionChangedListener(new CustomEditText.OnSelectionChangedListener() {
-            @Override
-            public void onSelectionChanged(int selStart, int selEnd) {
-                if (Build.VERSION.SDK_INT >= 11 && selStart == selEnd) {
-                    // mActivity.getActionBar().hide();
-                }
             }
         });
 
@@ -770,10 +765,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (!hasCompositionString(s) ||
             InputMethods.isGestureKeyboard(mUrlEditText.getContext())) {
             updateGoButton(text);
-        }
-
-        if (Build.VERSION.SDK_INT >= 11) {
-            // mActivity.getActionBar().hide();
         }
     }
 
