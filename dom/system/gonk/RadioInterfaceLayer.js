@@ -111,7 +111,9 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:GetCallingLineIdRestriction",
   "RIL:SetRoamingPreference",
   "RIL:GetRoamingPreference",
-  "RIL:ExitEmergencyCbMode"
+  "RIL:ExitEmergencyCbMode",
+  "RIL:SetVoicePrivacyMode",
+  "RIL:GetVoicePrivacyMode"
 ];
 
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
@@ -1021,6 +1023,12 @@ RadioInterface.prototype = {
         break;
       case "RIL:GetRoamingPreference":
         this.workerMessenger.sendWithIPCMessage(msg, "queryRoamingPreference");
+        break;
+      case "RIL:SetVoicePrivacyMode":
+        this.workerMessenger.sendWithIPCMessage(msg, "setVoicePrivacyMode");
+        break;
+      case "RIL:GetVoicePrivacyMode":
+        this.workerMessenger.sendWithIPCMessage(msg, "queryVoicePrivacyMode");
         break;
     }
   },
