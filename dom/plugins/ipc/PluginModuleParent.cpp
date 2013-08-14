@@ -18,6 +18,7 @@
 #include "mozilla/dom/PCrashReporterParent.h"
 #include "mozilla/ipc/SyncChannel.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
+#include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
