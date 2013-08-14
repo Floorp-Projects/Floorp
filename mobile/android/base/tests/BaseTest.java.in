@@ -16,6 +16,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.SystemClock;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.DisplayMetrics;
 import android.view.inputmethod.InputMethodManager;
@@ -220,6 +223,11 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         // Get the URL text from the URL bar EditText view
         String urlBarText = mDriver.findElement(mActivity, URL_EDIT_TEXT_ID).getText();
         mAsserter.is(url, urlBarText, "URL typed properly");
+    }
+
+    protected final Fragment getBrowserSearch() {
+        final FragmentManager fm = ((FragmentActivity) getActivity()).getSupportFragmentManager();
+        return fm.findFragmentByTag("browser_search");
     }
 
     protected final void hitEnterAndWait() {
