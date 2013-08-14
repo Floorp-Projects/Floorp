@@ -1829,7 +1829,7 @@ ScriptAnalysis::needsArgsObj(JSContext *cx)
      *
      * FIXME: Don't build arguments for ES6 generator expressions.
      */
-    if (cx->compartment()->debugMode() || script_->isGenerator())
+    if (cx->compartment()->debugMode() || script_->isGenerator)
         return true;
 
     /*

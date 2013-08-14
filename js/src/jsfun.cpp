@@ -526,7 +526,6 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
     do {
         switch (ts.getToken()) {
           case TOK_NAME:
-          case TOK_YIELD:
             if (nest == 0)
                 onward = false;
             break;
@@ -1229,7 +1228,14 @@ fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    JS_SET_RVAL(cx, vp, BooleanValue(fun->isGenerator()));
+    bool result = false;
+    if (fun->hasScript()) {
+        JSScript *script = fun->nonLazyScript();
+        JS_ASSERT(script->length != 0);
+        result = script->isGenerator;
+    }
+
+    JS_SET_RVAL(cx, vp, BooleanValue(result));
     return true;
 }
 
@@ -1450,15 +1456,10 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
                     return false;
                 }
 
-                if (tt == TOK_YIELD && ts.versionNumber() < JSVERSION_1_7)
-                    tt = TOK_NAME;
-
                 if (tt != TOK_NAME) {
                     if (tt == TOK_TRIPLEDOT) {
                         hasRest = true;
                         tt = ts.getToken();
-                        if (tt == TOK_YIELD && ts.versionNumber() < JSVERSION_1_7)
-                            tt = TOK_NAME;
                         if (tt != TOK_NAME) {
                             if (tt != TOK_ERROR)
                                 ts.reportError(JSMSG_NO_REST_NAME);
@@ -1469,7 +1470,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
                     }
                 }
 
-                if (!formals.append(ts.currentName()))
+                if (!formals.append(ts.currentToken().name()))
                     return false;
 
                 /*

@@ -4625,7 +4625,7 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     AsmJSParseContext *outerpc = m.parser().pc;
 
     Directives directives(outerpc);
-    FunctionBox *funbox = m.parser().newFunctionBox(fn, fun, outerpc, directives, NotGenerator);
+    FunctionBox *funbox = m.parser().newFunctionBox(fn, fun, outerpc, directives);
     if (!funbox)
         return false;
 

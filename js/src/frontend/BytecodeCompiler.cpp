@@ -69,7 +69,7 @@ CheckArgumentsWithinEval(JSContext *cx, Parser<FullParseHandler> &parser, Handle
     }
 
     // It's an error to use |arguments| in a legacy generator expression.
-    if (script->isGeneratorExp && script->isLegacyGenerator()) {
+    if (script->isGeneratorExp && script->isLegacyGenerator) {
         parser.report(ParseError, false, NULL, JSMSG_BAD_GENEXP_BODY, js_arguments_str);
         return false;
     }
@@ -293,8 +293,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
              */
             JSFunction *fun = evalCaller->functionOrCallerFunction();
             Directives directives(/* strict = */ fun->strict());
-            ObjectBox *funbox = parser.newFunctionBox(/* fn = */ NULL, fun, pc.addr(),
-                                                      directives, fun->generatorKind());
+            ObjectBox *funbox = parser.newFunctionBox(/* fn = */ NULL, fun, pc.addr(), directives);
             if (!funbox)
                 return NULL;
             bce.objectList.add(funbox);
@@ -414,9 +413,7 @@ frontend::CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *cha
     uint32_t staticLevel = lazy->staticLevel(cx);
 
     Rooted<JSFunction*> fun(cx, lazy->function());
-    JS_ASSERT(!lazy->isLegacyGenerator());
-    ParseNode *pn = parser.standaloneLazyFunction(fun, staticLevel, lazy->strict(),
-                                                  lazy->generatorKind());
+    ParseNode *pn = parser.standaloneLazyFunction(fun, staticLevel, lazy->strict());
     if (!pn)
         return false;
 
@@ -520,7 +517,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
     ParseNode *fn;
     while (true) {
         Directives newDirectives = directives;
-        fn = parser.standaloneFunctionBody(fun, formals, NotGenerator, directives, &newDirectives);
+        fn = parser.standaloneFunctionBody(fun, formals, directives, &newDirectives);
         if (fn)
             break;
 

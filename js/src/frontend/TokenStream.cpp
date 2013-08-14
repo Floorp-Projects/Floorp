@@ -932,10 +932,10 @@ TokenStream::checkForKeyword(const jschar *s, size_t length, TokenKind *ttp)
             return reportError(JSMSG_RESERVED_ID, kw->chars);
         }
 
-        // The keyword is not in this version. Treat it as an identifier, unless
-        // it is let which we treat as TOK_STRICT_RESERVED by falling through to
-        // the code below (ES5 forbids it in strict mode).
-        if (kw->tokentype != TOK_LET)
+        // The keyword is not in this version. Treat it as an identifier,
+        // unless it is let or yield which we treat as TOK_STRICT_RESERVED by
+        // falling through to the code below (ES5 forbids them in strict mode).
+        if (kw->tokentype != TOK_LET && kw->tokentype != TOK_YIELD)
             return true;
     }
 
