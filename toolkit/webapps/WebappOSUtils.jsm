@@ -75,6 +75,7 @@ this.WebappOSUtils = {
       appRegKey.close();
     }
 
+    installLocation = installLocation.substring(1, installLocation.length - 1);
     let initWithPath = CC("@mozilla.org/file/local;1",
                           "nsILocalFile", "initWithPath");
     let launchTarget = initWithPath(installLocation);
