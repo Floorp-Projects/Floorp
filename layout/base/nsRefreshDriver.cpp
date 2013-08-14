@@ -49,6 +49,7 @@ typedef HRESULT (WINAPI*DwmGetCompositionTimingInfoProc)(HWND hWnd, DWM_TIMING_I
 #include "nsPerformance.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "RestyleManager.h"
+#include "Layers.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
