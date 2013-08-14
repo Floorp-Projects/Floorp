@@ -144,7 +144,7 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, unsigned argc, jsval *vp)
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-    NS_ASSERTION(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
+    MOZ_ASSERT(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
 
     RootedObject realObject(cx, GetDoubleWrappedJSObject(ccx, wrapper));
     if (!realObject) {
@@ -404,7 +404,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
     // else...
 
-    NS_ASSERTION(member->IsAttribute(), "way broken!");
+    MOZ_ASSERT(member->IsAttribute(), "way broken!");
 
     propFlags |= JSPROP_GETTER | JSPROP_SHARED;
     JSObject* funobj = JSVAL_TO_OBJECT(funval);
@@ -944,7 +944,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, HandleObject obj, HandleId id, unsigned 
     }
 
     old = ccx.SetResolveName(old);
-    NS_ASSERTION(old == id, "bad nest");
+    MOZ_ASSERT(old == id, "bad nest");
 
     if (NS_FAILED(rv)) {
         return Throw(rv, cx);
@@ -1122,8 +1122,8 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, HandleObject obj)
 XPCNativeScriptableInfo*
 XPCNativeScriptableInfo::Construct(const XPCNativeScriptableCreateInfo* sci)
 {
-    NS_ASSERTION(sci, "bad param");
-    NS_ASSERTION(sci->GetCallback(), "bad param");
+    MOZ_ASSERT(sci, "bad param");
+    MOZ_ASSERT(sci->GetCallback(), "bad param");
 
     XPCNativeScriptableInfo* newObj =
         new XPCNativeScriptableInfo(sci->GetCallback());
@@ -1157,7 +1157,7 @@ XPCNativeScriptableInfo::Construct(const XPCNativeScriptableCreateInfo* sci)
 void
 XPCNativeScriptableShared::PopulateJSClass()
 {
-    NS_ASSERTION(mJSClass.base.name, "bad state!");
+    MOZ_ASSERT(mJSClass.base.name, "bad state!");
 
     mJSClass.base.flags = WRAPPER_SLOTS |
                           JSCLASS_PRIVATE_IS_NSISUPPORTS |
@@ -1293,7 +1293,7 @@ FixUpThisIfBroken(JSObject *obj, JSObject *funobj)
 bool
 XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
 {
-    NS_ASSERTION(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
+    MOZ_ASSERT(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
     RootedObject funobj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
 
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
@@ -1318,7 +1318,7 @@ XPC_WN_CallMethod(JSContext *cx, unsigned argc, jsval *vp)
 bool
 XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
 {
-    NS_ASSERTION(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
+    MOZ_ASSERT(JS_TypeOfValue(cx, JS_CALLEE(cx, vp)) == JSTYPE_FUNCTION, "bad function");
     RootedObject funobj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
 
     RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
@@ -1355,11 +1355,11 @@ XPC_WN_GetterSetter(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 XPC_WN_Shared_Proto_Enumerate(JSContext *cx, HandleObject obj)
 {
-    NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
-                 js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass ||
-                 js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
-                 js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
-                 "bad proto");
+    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
+               js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass ||
+               js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
+               js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
+               "bad proto");
     XPCWrappedNativeProto* self =
         (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
     if (!self)
@@ -1416,9 +1416,9 @@ XPC_WN_Shared_Proto_Trace(JSTracer *trc, JSObject *obj)
 static bool
 XPC_WN_ModsAllowed_Proto_Resolve(JSContext *cx, HandleObject obj, HandleId id)
 {
-    NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
-                 js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass,
-                 "bad proto");
+    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_WithCall_Proto_JSClass ||
+               js::GetObjectClass(obj) == &XPC_WN_ModsAllowed_NoCall_Proto_JSClass,
+               "bad proto");
 
     XPCWrappedNativeProto* self =
         (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
@@ -1496,9 +1496,9 @@ static bool
 XPC_WN_OnlyIWrite_Proto_AddPropertyStub(JSContext *cx, HandleObject obj, HandleId id,
                                         MutableHandleValue vp)
 {
-    NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
-                 js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
-                 "bad proto");
+    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
+               js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
+               "bad proto");
 
     XPCWrappedNativeProto* self =
         (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
@@ -1526,9 +1526,9 @@ XPC_WN_OnlyIWrite_Proto_SetPropertyStub(JSContext *cx, HandleObject obj, HandleI
 static bool
 XPC_WN_NoMods_Proto_Resolve(JSContext *cx, HandleObject obj, HandleId id)
 {
-    NS_ASSERTION(js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
-                 js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
-                 "bad proto");
+    MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
+               js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,
+               "bad proto");
 
     XPCWrappedNativeProto* self =
         (XPCWrappedNativeProto*) xpc_GetJSPrivate(obj);
