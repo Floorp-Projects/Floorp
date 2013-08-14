@@ -6,6 +6,7 @@
 
 #include "vm/TypedArrayObject.h"
 
+#include "mozilla/Alignment.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
