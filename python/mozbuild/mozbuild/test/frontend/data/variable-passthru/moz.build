@@ -2,7 +2,9 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-MODULE = 'module_name'
+XPIDL_SOURCES += ['bar.idl', 'biz.idl', 'foo.idl']
+XPIDL_MODULE = 'module_name'
+XPIDL_FLAGS += ['-Idir1', '-Idir2', '-Idir3']
 
 ASFILES += ['fans.asm', 'tans.s']
 

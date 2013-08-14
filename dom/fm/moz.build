@@ -11,6 +11,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_fm'
 
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+
 MODULE = 'dom'
 
 CPP_SOURCES += [

@@ -295,8 +295,10 @@ VARIABLES = {
         """Module name.
 
         Historically, this variable was used to describe where to install header
-        files, but that feature is now handled by EXPORTS_NAMESPACES. MODULE
-        will likely be removed in the future.
+        files, but that feature is now handled by EXPORTS_NAMESPACES. Currently
+        it is used as the XPIDL module name if XPIDL_MODULE is not defined, but
+        using XPIDL_MODULE directly is preferred. MODULE will likely be removed
+        in the future.
         """),
 
     'EXPORTS': (HierarchicalStringList, list, HierarchicalStringList(),
@@ -351,6 +353,14 @@ VARIABLES = {
         This is the name of the .xpt file that is created by linking
         XPIDL_SOURCES together. If unspecified, it defaults to be the same as
         MODULE.
+        """),
+
+    'XPIDL_FLAGS': (list, list, [],
+        """XPCOM Interface Definition Module Flags.
+
+        This is a list of extra flags that are passed to the IDL compiler.
+        Typically this is a set of -I flags that denote extra include
+        directories to search for included .idl files.
         """),
 
     'IPDL_SOURCES': (StrictOrderingOnAppendList, list, [],

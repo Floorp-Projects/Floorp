@@ -29,6 +29,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_system_gonk'
 
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/network/interfaces',
+]
+
 MODULE = 'dom'
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
