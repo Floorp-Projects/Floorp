@@ -278,6 +278,38 @@ MobileConnection::GetRoamingPreference(nsIDOMDOMRequest** aDomRequest)
 }
 
 NS_IMETHODIMP
+MobileConnection::SetVoicePrivacyMode(bool aEnabled, nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetVoicePrivacyMode(GetOwner(), aEnabled, aDomRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::GetVoicePrivacyMode(nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetVoicePrivacyMode(GetOwner(), aDomRequest);
+}
+
+NS_IMETHODIMP
 MobileConnection::SendMMI(const nsAString& aMMIString,
                           nsIDOMDOMRequest** aRequest)
 {
