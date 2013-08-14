@@ -91,8 +91,6 @@ interface BluetoothAdapter : EventTarget {
   DOMRequest setPasskey(DOMString deviceAddress, unsigned long passkey);
   [Creator, Throws]
   DOMRequest setPairingConfirmation(DOMString deviceAddress, boolean confirmation);
-  [Creator, Throws]
-  DOMRequest setAuthorization(DOMString deviceAddress, boolean allow);
 
   /**
    * Connect/Disconnect to a specific service of a target remote device.
