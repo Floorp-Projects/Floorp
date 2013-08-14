@@ -218,11 +218,9 @@ FrameAnimator::SetAnimationMode(uint16_t aAnimationMode)
 }
 
 void
-FrameAnimator::InitAnimationFrameTimeIfNecessary()
+FrameAnimator::InitAnimationFrameTime()
 {
-  if (mCurrentAnimationFrameTime.IsNull()) {
-    mCurrentAnimationFrameTime = TimeStamp::Now();
-  }
+  mCurrentAnimationFrameTime = TimeStamp::Now();
 }
 
 void
