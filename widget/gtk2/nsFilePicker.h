@@ -40,7 +40,7 @@ public:
   NS_IMETHODIMP Show(int16_t *aReturn);
 
   // nsBaseFilePicker
-  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle, int16_t aMode);
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle);
 
   static void Shutdown();
 
@@ -57,7 +57,6 @@ protected:
   nsCOMPtr<nsIFilePickerShownCallback> mCallback;
   nsCOMArray<nsIFile> mFiles;
 
-  int16_t   mMode;
   int16_t   mSelectedType;
   int16_t   mResult;
   bool      mRunning;

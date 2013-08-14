@@ -92,8 +92,7 @@ static void SetShowHiddenFileState(NSSavePanel* panel)
 }
 
 nsFilePicker::nsFilePicker()
-: mMode(0)
-, mSelectedTypeIndex(0)
+: mSelectedTypeIndex(0)
 {
 }
 
@@ -102,11 +101,9 @@ nsFilePicker::~nsFilePicker()
 }
 
 void
-nsFilePicker::InitNative(nsIWidget *aParent, const nsAString& aTitle,
-                         int16_t aMode)
+nsFilePicker::InitNative(nsIWidget *aParent, const nsAString& aTitle)
 {
   mTitle = aTitle;
-  mMode = aMode;
 }
 
 NSView* nsFilePicker::GetAccessoryView()

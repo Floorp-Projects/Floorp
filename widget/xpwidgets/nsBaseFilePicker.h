@@ -34,17 +34,18 @@ public:
   NS_IMETHOD SetDisplayDirectory(nsIFile * aDisplayDirectory);
   NS_IMETHOD GetAddToRecentDocs(bool *aFlag);
   NS_IMETHOD SetAddToRecentDocs(bool aFlag);
+  NS_IMETHOD GetMode(int16_t *aMode);
 
   NS_IMETHOD GetDomfile(nsIDOMFile** aDomfile);
   NS_IMETHOD GetDomfiles(nsISimpleEnumerator** aDomfiles);
 
 protected:
 
-  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle,
-                          int16_t aMode) = 0;
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle) = 0;
 
   bool mAddToRecentDocs;
   nsCOMPtr<nsIFile> mDisplayDirectory;
+  int16_t mMode;
 };
 
 #endif // nsBaseFilePicker_h__

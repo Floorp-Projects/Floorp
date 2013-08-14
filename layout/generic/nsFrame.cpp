@@ -3537,6 +3537,21 @@ nsIFrame::ContentOffsets nsFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoin
   return OffsetsForSingleFrame(this, aPoint);
 }
 
+void
+nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext)
+{
+  if (aImage.GetType() != eStyleImageType_Image) {
+    return;
+  }
+
+  imgIRequest *req = aImage.GetImageData();
+  mozilla::css::ImageLoader* loader =
+    aPresContext->Document()->StyleImageLoader();
+
+  // If this fails there's not much we can do ...
+  loader->AssociateRequestToFrame(req, this);
+}
+
 NS_IMETHODIMP
 nsFrame::GetCursor(const nsPoint& aPoint,
                    nsIFrame::Cursor& aCursor)
@@ -7700,7 +7715,7 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
 
       // ensure our size is what we think is should be. Someone could have
       // reset the frame to be smaller or something dumb like that. 
-      SetSize(nsSize(ourRect.width, ourRect.height));
+      SetSize(ourRect.Size());
     }
   }
 

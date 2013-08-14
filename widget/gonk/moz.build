@@ -53,6 +53,7 @@ CPP_SOURCES += [
     'nsLookAndFeel.cpp',
     'nsWidgetFactory.cpp',
     'nsWindow.cpp',
+    'GfxInfo.cpp',
 ]
 
 if CONFIG['ANDROID_VERSION'] == '15':
