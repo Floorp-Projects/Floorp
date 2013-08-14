@@ -70,6 +70,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "RestyleManager.h"
 #include "nsRefreshDriver.h"
+#include "Layers.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -94,6 +95,16 @@ using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 uint8_t gNotifySubDocInvalidationData;
+
+/**
+ * Layer UserData for ContainerLayers that want to be notified
+ * of local invalidations of them and their descendant layers.
+ * Pass a callback to ComputeDifferences to have these called.
+ */
+class ContainerLayerPresContext : public LayerUserData {
+public:
+  nsPresContext* mPresContext;
+};
 
 namespace {
 
@@ -2350,6 +2361,20 @@ nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
     rect.MoveBy(-topLeft);
     data->mPresContext->NotifyInvalidation(rect, 0);
   }
+}
+
+void
+nsPresContext::SetNotifySubDocInvalidationData(ContainerLayer* aContainer)
+{
+  ContainerLayerPresContext* pres = new ContainerLayerPresContext;
+  pres->mPresContext = this;
+  aContainer->SetUserData(&gNotifySubDocInvalidationData, pres);
+}
+
+/* static */ void
+nsPresContext::ClearNotifySubDocInvalidationData(ContainerLayer* aContainer)
+{
+  aContainer->SetUserData(&gNotifySubDocInvalidationData, nullptr);
 }
 
 struct NotifyDidPaintSubdocumentCallbackClosure {

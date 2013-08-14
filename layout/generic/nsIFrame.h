@@ -35,6 +35,8 @@
 #include "nsDirection.h"
 #include <algorithm>
 #include "nsITheme.h"
+#include "gfx3DMatrix.h"
+#include "gfxASurface.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
