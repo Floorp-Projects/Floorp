@@ -131,116 +131,10 @@ NS_MEMORY_REPORTER_IMPLEMENT(TextureMemoryUsage,
     GetTextureMemoryUsage,
     "Memory used for storing GL textures.")
 
-static bool
-ParseGLVersion(GLContext* gl, unsigned int* version)
-{
-    GLenum error = gl->fGetError();
-    if (error != LOCAL_GL_NO_ERROR) {
-        MOZ_ASSERT(false, "An OpenGL error has been triggered before.");
-        return false;
-    }
-
-    { // Anon scope to allow identifier reuse
-        /**
-         * OpenGL 3.1 and OpenGL ES 3.0 both introduce GL_{MAJOR,MINOR}_VERSION
-         * with GetIntegerv. So we first try those constantes even we might not
-         * have an OpenGL, to prevent error in parsing GL_VERSION.
-         */
-        GLint majorVersion = 0;
-        GLint minorVersion = 0;
-
-        gl->fGetIntegerv(LOCAL_GL_MAJOR_VERSION, &majorVersion);
-        gl->fGetIntegerv(LOCAL_GL_MINOR_VERSION, &minorVersion);
-
-        // If it's not an OpenGL (ES) 3.0, we will have an error
-        error = gl->fGetError();
-        if (error == LOCAL_GL_NO_ERROR &&
-            majorVersion > 0 &&
-            minorVersion >= 0)
-        {
-            *version = majorVersion * 100 + minorVersion * 10;
-            return true;
-        }
-    }
-
-    /**
-     * We were not able to use GL_{MAJOR,MINOR}_VERSION, so we parse
-     * GL_VERSION.
-     *
-     *
-     * OpenGL 2.x, 3.x, 4.x specifications:
-     *  The VERSION and SHADING_LANGUAGE_VERSION strings are laid out as follows:
-     *
-     *    <version number><space><vendor-specific information>
-     *
-     *  The version number is either of the form major_number.minor_number or
-     *  major_number.minor_number.release_number, where the numbers all have
-     *  one or more digits.
-     *
-     *
-     * OpenGL ES 2.0, 3.0 specifications:
-     *  The VERSION string is laid out as follows:
-     *
-     *     "OpenGL ES N.M vendor-specific information"
-     *
-     *  The version number is either of the form major_number.minor_number or
-     *  major_number.minor_number.release_number, where the numbers all have
-     *  one or more digits.
-     *
-     *
-     * Note:
-     *  We don't care about release_number.
-     */
-    const char* versionString = (const char*)gl->fGetString(LOCAL_GL_VERSION);
-
-    error = gl->fGetError();
-    if (error != LOCAL_GL_NO_ERROR) {
-        MOZ_ASSERT(false, "glGetString(GL_VERSION) has generated an error");
-        return false;
-    } else if (!versionString) {
-        MOZ_ASSERT(false, "glGetString(GL_VERSION) has returned 0");
-        return false;
-    }
-
-    const char kGLESVersionPrefix[] = "OpenGL ES ";
-    if (strncmp(versionString, kGLESVersionPrefix, strlen(kGLESVersionPrefix)) == 0) {
-        versionString += strlen(kGLESVersionPrefix);
-    }
-
-    const char* itr = versionString;
-    char* end = nullptr;
-    int majorVersion = (int)strtol(itr, &end, 10);
-
-    if (!end) {
-        MOZ_ASSERT(false, "Failed to parse the GL major version number.");
-        return false;
-    } else if (*end != '.') {
-        MOZ_ASSERT(false, "Failed to parse GL's major-minor version number separator.");
-        return false;
-    }
-
-    // we skip the '.' between the major and the minor version
-    itr = end + 1;
-
-    end = nullptr;
-
-    int minorVersion = (int)strtol(itr, &end, 10);
-    if (!end) {
-        MOZ_ASSERT(false, "Failed to parse GL's minor version number.");
-        return false;
-    }
-
-    if (majorVersion <= 0 || majorVersion >= 100) {
-        MOZ_ASSERT(false, "Invalid major version.");
-        return false;
-    } else if (minorVersion < 0 || minorVersion >= 10) {
-        MOZ_ASSERT(false, "Invalid minor version.");
-        return false;
-    }
-
-    *version = (unsigned int)(majorVersion * 100 + minorVersion * 10);
-    return true;
-}
+/*
+ * XXX - we should really know the ARB/EXT variants of these
+ * instead of only handling the symbol if it's exposed directly.
+ */
 
 bool
 GLContext::InitWithPrefix(const char *prefix, bool trygl)
@@ -400,18 +294,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
     };
 
     mInitialized = LoadSymbols(&symbols[0], trygl, prefix);
-
-    if (mInitialized) {
-        unsigned int version = 0;
-
-        bool parseSuccess = ParseGLVersion(this, &version);
-
-        if (version >= mVersion) {
-            mVersion = version;
-        } else if (parseSuccess) {
-            MOZ_ASSERT(false, "Parsed version less than expected.");
-        }
-    }
 
     // Load OpenGL ES 2.0 symbols, or desktop if we aren't using ES 2.
     if (mInitialized) {
