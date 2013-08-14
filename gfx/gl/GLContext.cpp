@@ -1994,7 +1994,7 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
     do {
         // calculate portion of the tile that is going to be painted to
         nsIntRect dstSubRect;
-        nsIntRect dstTextureRect = aDst->GetTileRect();
+        nsIntRect dstTextureRect = ThebesIntRect(aDst->GetTileRect());
         dstSubRect.IntersectRect(aDstRect, dstTextureRect);
 
         // this tile is not part of the destination rectangle aDstRect
@@ -2016,7 +2016,7 @@ GLContext::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
         do {
             // calculate portion of the source tile that is in the source rect
             nsIntRect srcSubRect;
-            nsIntRect srcTextureRect = aSrc->GetTileRect();
+            nsIntRect srcTextureRect = ThebesIntRect(aSrc->GetTileRect());
             srcSubRect.IntersectRect(aSrcRect, srcTextureRect);
 
             // this tile is not part of the source rect

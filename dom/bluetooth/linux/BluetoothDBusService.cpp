@@ -20,6 +20,7 @@
 #include "BluetoothDBusService.h"
 #include "BluetoothA2dpManager.h"
 #include "BluetoothHfpManager.h"
+#include "BluetoothHidManager.h"
 #include "BluetoothOppManager.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothUnixSocketConnector.h"
@@ -69,6 +70,7 @@ USING_BLUETOOTH_NAMESPACE
 #define DBUS_AGENT_IFACE   BLUEZ_DBUS_BASE_IFC  ".Agent"
 #define DBUS_SINK_IFACE    BLUEZ_DBUS_BASE_IFC  ".AudioSink"
 #define DBUS_CTL_IFACE     BLUEZ_DBUS_BASE_IFC  ".Control"
+#define DBUS_INPUT_IFACE   BLUEZ_DBUS_BASE_IFC  ".Input"
 #define BLUEZ_DBUS_BASE_PATH      "/org/bluez"
 #define BLUEZ_DBUS_BASE_IFC       "org.bluez"
 #define BLUEZ_ERROR_IFC           "org.bluez.Error"
@@ -139,6 +141,10 @@ static Properties sControlProperties[] = {
   {"Connected", DBUS_TYPE_BOOLEAN}
 };
 
+static Properties sInputProperties[] = {
+  {"Connected", DBUS_TYPE_BOOLEAN}
+};
+
 static const char* sBluetoothDBusIfaces[] =
 {
   DBUS_MANAGER_IFACE,
@@ -175,7 +181,6 @@ static Monitor sStopBluetoothMonitor("BluetoothService.sStopBluetoothMonitor");
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 typedef bool (*FilterFunc)(const BluetoothValue&);
-typedef void (*SinkCallback)(DBusMessage*, void*);
 
 static bool
 GetConnectedDevicesFilter(const BluetoothValue& aValue)
@@ -283,6 +288,35 @@ public:
     BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
     NS_ENSURE_TRUE(a2dp, NS_ERROR_FAILURE);
     a2dp->HandleSinkPropertyChanged(mSignal);
+    return NS_OK;
+  }
+
+private:
+  BluetoothSignal mSignal;
+};
+
+class InputPropertyChangedHandler : public nsRunnable
+{
+public:
+  InputPropertyChangedHandler(const BluetoothSignal& aSignal)
+    : mSignal(aSignal)
+  {
+  }
+
+  NS_IMETHOD
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mSignal.name().EqualsLiteral("PropertyChanged"));
+    MOZ_ASSERT(mSignal.value().type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+    // Replace object path with device address
+    nsString address = GetAddressFromObjectPath(mSignal.path());
+    mSignal.path() = address;
+
+    BluetoothHidManager* hid = BluetoothHidManager::Get();
+    NS_ENSURE_TRUE(hid, NS_ERROR_FAILURE);
+    hid->HandleInputPropertyChanged(mSignal);
     return NS_OK;
   }
 
@@ -490,6 +524,15 @@ CheckForError(DBusMessage* aMsg, void *aParam, const nsAString& aError)
 #endif
 
 static void
+InputDisconnectCallback(DBusMessage* aMsg, void* aParam)
+{
+#ifdef DEBUG
+  NS_NAMED_LITERAL_STRING(errorStr, "Failed to disconnect input device");
+  CheckForError(aMsg, aParam, errorStr);
+#endif
+}
+
+static void
 SinkConnectCallback(DBusMessage* aMsg, void* aParam)
 {
 #ifdef DEBUG
@@ -503,7 +546,7 @@ SinkDisconnectCallback(DBusMessage* aMsg, void* aParam)
 {
 #ifdef DEBUG
   NS_NAMED_LITERAL_STRING(errorStr, "Failed to disconnect sink");
-  CheckForError(false, aMsg, errorStr);
+  CheckForError(aMsg, aParam, errorStr);
 #endif
 }
 
@@ -1558,6 +1601,13 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
                         errorStr,
                         sControlProperties,
                         ArrayLength(sControlProperties));
+  } else if (dbus_message_is_signal(aMsg, DBUS_INPUT_IFACE,
+                                    "PropertyChanged")) {
+    ParsePropertyChange(aMsg,
+                        v,
+                        errorStr,
+                        sInputProperties,
+                        ArrayLength(sInputProperties));
   } else {
     errorStr = NS_ConvertUTF8toUTF16(dbus_message_get_member(aMsg));
     errorStr.AppendLiteral(" Signal not handled!");
@@ -1574,6 +1624,8 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
     task = new SinkPropertyChangedHandler(signal);
   } else if (signalInterface.EqualsLiteral(DBUS_CTL_IFACE)) {
     task = new ControlPropertyChangedHandler(signal);
+  } else if (signalInterface.EqualsLiteral(DBUS_INPUT_IFACE)) {
+    task = new InputPropertyChangedHandler(signal);
   } else {
     task = new DistributeBluetoothSignalTask(signal);
   }
@@ -1883,6 +1935,43 @@ BluetoothDBusService::SendDiscoveryMessage(const char* aMessageName,
 }
 
 nsresult
+BluetoothDBusService::SendInputMessage(const nsAString& aDeviceAddress,
+                                       const nsAString& aMessage,
+                                       BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mConnection);
+  MOZ_ASSERT(aMessage.EqualsLiteral("Connect") ||
+             aMessage.EqualsLiteral("Disconnect"));
+
+  NS_ENSURE_TRUE(IsReady(), NS_ERROR_FAILURE);
+
+  DBusCallback callback;
+  if (aMessage.EqualsLiteral("Connect")) {
+    callback = GetVoidCallback;
+  } else if (aMessage.EqualsLiteral("Disconnect")) {
+    callback = InputDisconnectCallback;
+  }
+
+  nsRefPtr<BluetoothReplyRunnable> runnable(aRunnable);
+
+  nsString objectPath = GetObjectPathFromAddress(sAdapterPath, aDeviceAddress);
+  bool ret = dbus_func_args_async(mConnection,
+                                  -1,
+                                  callback,
+                                  static_cast<void*>(runnable.get()),
+                                  NS_ConvertUTF16toUTF8(objectPath).get(),
+                                  DBUS_INPUT_IFACE,
+                                  NS_ConvertUTF16toUTF8(aMessage).get(),
+                                  DBUS_TYPE_INVALID);
+  NS_ENSURE_TRUE(ret, NS_ERROR_FAILURE);
+
+  runnable.forget();
+
+  return NS_OK;
+}
+
+nsresult
 BluetoothDBusService::SendSinkMessage(const nsAString& aDeviceAddress,
                                       const nsAString& aMessage)
 {
@@ -1890,7 +1979,7 @@ BluetoothDBusService::SendSinkMessage(const nsAString& aDeviceAddress,
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(IsEnabled());
 
-  SinkCallback callback;
+  DBusCallback callback;
   if (aMessage.EqualsLiteral("Connect")) {
     callback = SinkConnectCallback;
   } else if (aMessage.EqualsLiteral("Disconnect")) {
@@ -1909,8 +1998,8 @@ BluetoothDBusService::SendSinkMessage(const nsAString& aDeviceAddress,
                                   DBUS_SINK_IFACE,
                                   NS_ConvertUTF16toUTF8(aMessage).get(),
                                   DBUS_TYPE_INVALID);
-
   NS_ENSURE_TRUE(ret, NS_ERROR_FAILURE);
+
   return NS_OK;
 }
 
@@ -2022,6 +2111,8 @@ BluetoothDBusService::GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
   if (aProfileId == BluetoothServiceClass::HANDSFREE ||
       aProfileId == BluetoothServiceClass::HEADSET) {
     profile = BluetoothHfpManager::Get();
+  } else if (aProfileId == BluetoothServiceClass::HID) {
+    profile = BluetoothHidManager::Get();
   } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
     profile = BluetoothOppManager::Get();
   } else {
@@ -2489,6 +2580,9 @@ BluetoothDBusService::Connect(const nsAString& aDeviceAddress,
   } else if (aProfileId == BluetoothServiceClass::HEADSET) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     hfp->Connect(aDeviceAddress, false, aRunnable);
+  } else if (aProfileId == BluetoothServiceClass::HID) {
+    BluetoothHidManager* hid = BluetoothHidManager::Get();
+    hid->Connect(aDeviceAddress, aRunnable);
   } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     opp->Connect(aDeviceAddress, aRunnable);
@@ -2508,6 +2602,9 @@ BluetoothDBusService::Disconnect(const uint16_t aProfileId,
       aProfileId == BluetoothServiceClass::HEADSET) {
     BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
     hfp->Disconnect();
+  } else if (aProfileId == BluetoothServiceClass::HID) {
+    BluetoothHidManager* hid = BluetoothHidManager::Get();
+    hid->Disconnect();
   } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     opp->Disconnect();
@@ -2531,6 +2628,8 @@ BluetoothDBusService::IsConnected(const uint16_t aProfileId)
   if (aProfileId == BluetoothServiceClass::HANDSFREE ||
       aProfileId == BluetoothServiceClass::HEADSET) {
     profile = BluetoothHfpManager::Get();
+  } else if (aProfileId == BluetoothServiceClass::HID) {
+    profile = BluetoothHidManager::Get();
   } else if (aProfileId == BluetoothServiceClass::OBJECT_PUSH) {
     profile = BluetoothOppManager::Get();
   } else {

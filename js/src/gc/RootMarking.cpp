@@ -688,7 +688,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     }
 
     if (!trc->runtime->isHeapMinorCollecting() &&
-        (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment->zone()->isCollecting()))
+        (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment()->zone()->isCollecting()))
     {
         MarkAtoms(trc);
 #ifdef JS_ION

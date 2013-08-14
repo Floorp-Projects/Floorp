@@ -1727,7 +1727,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   }
 
   if (option) {
-    option->GetIndex(&aCurIndex);
+    aCurIndex = option->Index();
     MOZ_ASSERT(aCurIndex >= 0);
     return NS_OK;
   }

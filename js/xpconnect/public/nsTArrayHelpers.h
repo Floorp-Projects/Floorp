@@ -5,6 +5,10 @@
 #ifndef __NSTARRAYHELPERS_H__
 #define __NSTARRAYHELPERS_H__
 
+#include "jsapi.h"
+#include "nsContentUtils.h"
+#include "nsTArray.h"
+
 template <class T>
 inline nsresult
 nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,

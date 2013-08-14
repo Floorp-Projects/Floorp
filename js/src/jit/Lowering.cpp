@@ -988,15 +988,19 @@ CanEmitBitAndAtUses(MInstruction *ins)
     if (ins->getOperand(0)->type() != MIRType_Int32 || ins->getOperand(1)->type() != MIRType_Int32)
         return false;
 
-    MUseDefIterator iter(ins);
-    if (!iter)
+    MUseIterator iter(ins->usesBegin());
+    if (iter == ins->usesEnd())
         return false;
 
-    if (!iter.def()->isTest())
+    MNode *node = iter->consumer();
+    if (!node->isDefinition())
+        return false;
+
+    if (!node->toDefinition()->isTest())
         return false;
 
     iter++;
-    return !iter;
+    return iter == ins->usesEnd();
 }
 
 bool

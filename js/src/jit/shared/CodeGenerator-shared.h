@@ -7,6 +7,9 @@
 #ifndef jit_shared_CodeGenerator_shared_h
 #define jit_shared_CodeGenerator_shared_h
 
+#include "mozilla/Alignment.h"
+#include "mozilla/Util.h"
+
 #include "jit/IonCaches.h"
 #include "jit/IonFrames.h"
 #include "jit/IonMacroAssembler.h"

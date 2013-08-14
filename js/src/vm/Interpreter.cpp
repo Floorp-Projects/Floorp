@@ -975,30 +975,6 @@ TryNoteIter::settle()
             goto error;                                                       \
     JS_END_MACRO
 
-template<typename T>
-class GenericInterruptEnabler : public InterpreterFrames::InterruptEnablerBase {
-  public:
-    GenericInterruptEnabler(T *variable, T value) : variable(variable), value(value) { }
-    void enable() const { *variable = value; }
-
-  private:
-    T *variable;
-    T value;
-};
-
-inline InterpreterFrames::InterpreterFrames(JSContext *cx, FrameRegs *regs,
-                                            const InterruptEnablerBase &enabler)
-  : context(cx), regs(regs), enabler(enabler)
-{
-    older = cx->runtime()->interpreterFrames;
-    cx->runtime()->interpreterFrames = this;
-}
-
-inline InterpreterFrames::~InterpreterFrames()
-{
-    context->runtime()->interpreterFrames = older;
-}
-
 /*
  * Ensure that the interpreter switch can close call-bytecode cases in the
  * same way as non-call bytecodes.
@@ -1287,10 +1263,19 @@ Interpret(JSContext *cx, RunState &state)
 
 #define CHECK_PCCOUNT_INTERRUPTS() JS_ASSERT_IF(script->hasScriptCounts, switchMask == -1)
 
+    /*
+     * When Debugger puts a script in single-step mode, all js::Interpret
+     * invocations that might be presently running that script must have
+     * interrupts enabled. It's not practical to simply check
+     * script->stepModeEnabled() at each point some callee could have changed
+     * it, because there are so many places js::Interpret could possibly cause
+     * JavaScript to run: each place an object might be coerced to a primitive
+     * or a number, for example. So instead, we expose a simple mechanism to
+     * let Debugger tweak the affected js::Interpret frames when an onStep
+     * handler is added: setting switchMask to -1 will enable interrupts.
+     */
     register int switchMask = 0;
     int switchOp;
-    typedef GenericInterruptEnabler<int> InterruptEnabler;
-    InterruptEnabler interrupts(&switchMask, -1);
 
 # define DO_OP()            goto do_op
 
@@ -1345,7 +1330,7 @@ Interpret(JSContext *cx, RunState &state)
     JS_BEGIN_MACRO                                                            \
         script = (s);                                                         \
         if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts) \
-            interrupts.enable();                                              \
+            switchMask = -1; /* Enable interrupts. */                         \
     JS_END_MACRO
 
     FrameRegs regs;
@@ -1364,13 +1349,7 @@ Interpret(JSContext *cx, RunState &state)
 
     JS_ASSERT_IF(entryFrame->isEvalFrame(), state.script()->isActiveEval);
 
-    InterpreterActivation activation(cx, entryFrame, regs);
-
-    /*
-     * Help Debugger find frames running scripts that it has put in
-     * single-step mode.
-     */
-    InterpreterFrames interpreterFrame(cx, &regs, interrupts);
+    InterpreterActivation activation(cx, entryFrame, regs, &switchMask);
 
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime();
@@ -1450,7 +1429,7 @@ Interpret(JSContext *cx, RunState &state)
     len = 0;
 
     if (rt->profilingScripts || cx->runtime()->debugHooks.interruptHook)
-        interrupts.enable();
+        switchMask = -1; /* Enable interrupts. */
 
     goto advanceAndDoOp;
 

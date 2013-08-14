@@ -12,7 +12,6 @@
 // Helper Classes
 #include "nsIServiceManager.h"
 #include "nsAutoPtr.h"
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
 
 // Interfaces needed to be included

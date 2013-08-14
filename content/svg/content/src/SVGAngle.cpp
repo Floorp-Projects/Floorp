@@ -6,7 +6,6 @@
 #include "SVGAngle.h"
 #include "nsSVGAngle.h"
 #include "mozilla/dom/SVGAngleBinding.h"
-#include "nsContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

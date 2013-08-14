@@ -7631,13 +7631,11 @@ var ExternalApps = {
   // extend _getLink to pickup html5 media links.
   _getMediaLink: function(aElement) {
     let uri = NativeWindow.contextmenus._getLink(aElement);
-    if (uri == null) {
-      if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE && (aElement instanceof Ci.nsIDOMHTMLMediaElement && mediaSrc)) {
-        try {
-          let mediaSrc = aElement.currentSrc || aElement.src;
-          uri = ContentAreaUtils.makeURI(mediaSrc, null, null);
-        } catch (e) {}
-      }
+    if (uri == null && aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE && (aElement instanceof Ci.nsIDOMHTMLMediaElement)) {
+      try {
+        let mediaSrc = aElement.currentSrc || aElement.src;
+        uri = ContentAreaUtils.makeURI(mediaSrc, null, null);
+      } catch (e) {}
     }
     return uri;
   },

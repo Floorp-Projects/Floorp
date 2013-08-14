@@ -12,7 +12,6 @@
 #include "nsSVGAttrTearoffTable.h"
 #include "SVGPathSegUtils.h"
 #include "mozilla/dom/SVGPathSegListBinding.h"
-#include "nsContentUtils.h"
 
 // See the comment in this file's header.
 

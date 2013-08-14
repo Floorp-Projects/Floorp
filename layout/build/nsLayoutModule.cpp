@@ -170,12 +170,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserUtils)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
-#ifdef ENABLE_EDITOR_API_LOG
-#include "nsHTMLEditorLog.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditorLog)
-#else
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
-#endif
 
 #include "nsHTMLCanvasFrame.h"
 
@@ -770,11 +765,7 @@ NS_DEFINE_NAMED_CID(NS_FMRADIO_CID);
 
 NS_DEFINE_NAMED_CID(NS_AUDIOCHANNELAGENT_CID);
 
-#ifdef ENABLE_EDITOR_API_LOG
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
-#else
-NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_EDITORCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITINGCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCOMMANDTABLE_CID);
@@ -1060,11 +1051,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_FMRADIO_CID, true, NULL, FMRadioConstructor },
 #endif
   { &kNS_AUDIOCHANNELAGENT_CID, true, NULL, AudioChannelAgentConstructor },
-#ifdef ENABLE_EDITOR_API_LOG
-  { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorLogConstructor },
-#else
   { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorConstructor },
-#endif
   { &kNS_EDITORCONTROLLER_CID, false, NULL, nsEditorControllerConstructor },
   { &kNS_EDITINGCONTROLLER_CID, false, NULL, nsEditingControllerConstructor },
   { &kNS_EDITORCOMMANDTABLE_CID, false, NULL, nsEditorCommandTableConstructor },
@@ -1221,11 +1208,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_FMRADIO_CONTRACTID, &kNS_FMRADIO_CID },
 #endif
   { NS_AUDIOCHANNELAGENT_CONTRACTID, &kNS_AUDIOCHANNELAGENT_CID },
-#ifdef ENABLE_EDITOR_API_LOG
   { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
-#else
-  { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
-#endif
   { "@mozilla.org/editor/editorcontroller;1", &kNS_EDITORCONTROLLER_CID },
   { "@mozilla.org/editor/editingcontroller;1", &kNS_EDITINGCONTROLLER_CID },
   { "@mozilla.org/textservices/textservicesdocument;1", &kNS_TEXTSERVICESDOCUMENT_CID },

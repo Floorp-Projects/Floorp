@@ -6,8 +6,16 @@
 
 MODULE = 'test_plugins'
 
-CPP_SOURCES += [
-    'BadPlugin.cpp',
-    'GoodPlugin.cpp',
+sources = [
+    'BadPlugin',
+    'GoodPlugin',
 ]
 
+CPP_SOURCES += [
+    '%s.cpp' % s for s in sources
+]
+
+bin_suffix = CONFIG['BIN_SUFFIX']
+SIMPLE_PROGRAMS += [
+    '%s%s' % (s, bin_suffix) for s in sources
+]

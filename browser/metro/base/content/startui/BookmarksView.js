@@ -302,7 +302,7 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
       case "TabClose":
         // Flush any pending actions - appbar will call us back
         // before this returns with 'MozAppbarDismissing' above.
-        StartUI.chromeWin.ContextUI.dismiss();
+        StartUI.chromeWin.ContextUI.dismissContextAppbar();
       break;
     }
   }

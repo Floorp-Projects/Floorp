@@ -6,7 +6,15 @@
 
 MODULE = 'xpcom'
 
-CPP_SOURCES += [
-    'TestMinStringAPI.cpp',
+sources = [
+    'TestMinStringAPI',
 ]
 
+CPP_SOURCES += [
+    '%s.cpp' % s for s in sources
+]
+
+bin_suffix = CONFIG['BIN_SUFFIX']
+SIMPLE_PROGRAMS += [
+    '%s%s' % (s, bin_suffix) for s in sources
+]

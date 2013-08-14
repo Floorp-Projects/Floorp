@@ -394,6 +394,12 @@ struct JSCompartment
 #endif
 };
 
+inline bool
+JSRuntime::isAtomsZone(JS::Zone *zone)
+{
+    return zone == atomsCompartment_->zone();
+}
+
 // For use when changing the debug mode flag on one or more compartments.
 // Do not run scripts in any compartment that is scheduled for GC using this
 // object. See comment in updateForDebugMode.

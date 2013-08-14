@@ -963,9 +963,9 @@ def writeQuickStub(f, customMethodCalls, stringtable, member, stubName,
             checkSuccess = "NS_SUCCEEDED(debug_rv)"
             if canFail:
                 checkSuccess += " == NS_SUCCEEDED(rv)"
-            f.write("    NS_ASSERTION(%s && "
+            f.write("    MOZ_ASSERT(%s && "
                     "xpc_qsSameResult(debug_result, result),\n"
-                    "                 \"Got the wrong answer from the custom "
+                    "               \"Got the wrong answer from the custom "
                     "method call!\");\n" % checkSuccess)
             f.write("#endif\n")
 

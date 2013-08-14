@@ -9,7 +9,6 @@
 #include "WebGLRenderbuffer.h"
 #include "WebGLTexture.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "nsContentUtils.h"
 #include "WebGLTexture.h"
 #include "WebGLRenderbuffer.h"
 

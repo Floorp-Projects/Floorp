@@ -16,7 +16,6 @@
  */
 
 #include "base/basictypes.h"
-#include "GonkCameraHwMgr.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include "mozilla/layers/ImageBridgeChild.h"
