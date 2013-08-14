@@ -197,12 +197,6 @@ public:
   static LayoutDeviceIntPoint GetChildProcessOffset(nsFrameLoader* aFrameLoader,
                                                     const nsEvent& aEvent);
 
-  static void MapEventCoordinatesForChildProcess(nsFrameLoader* aFrameLoader,
-                                                 nsEvent* aEvent);
-
-  static void MapEventCoordinatesForChildProcess(const LayoutDeviceIntPoint& aOffset,
-                                                 nsEvent* aEvent);
-
   // Holds the point in screen coords that a mouse event was dispatched to,
   // before we went into pointer lock mode. This is constantly updated while
   // the pointer is not locked, but we don't update it while the pointer is
