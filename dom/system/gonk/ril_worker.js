@@ -1459,6 +1459,58 @@ let RIL = {
   },
 
   /**
+   * Query call waiting status via MMI.
+   */
+  _handleQueryMMICallWaiting: function _handleQueryMMICallWaiting(options) {
+    function callback(options) {
+      options.length = Buf.readUint32();
+      options.enabled = (Buf.readUint32() === 1);
+      let services = Buf.readUint32();
+      if (options.enabled) {
+        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED_FOR;
+        let serviceClass = [];
+        for (let serviceClassMask = 1;
+             serviceClassMask <= ICC_SERVICE_CLASS_MAX;
+             serviceClassMask <<= 1) {
+          if ((serviceClassMask & services) !== 0) {
+            serviceClass.push(MMI_KS_SERVICE_CLASS_MAPPING[serviceClassMask]);
+          }
+        }
+        options.additionalInformation = serviceClass;
+      } else {
+        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
+      }
+
+      // Prevent DataCloneError when sending chrome messages.
+      delete options.callback;
+      this.sendChromeMessage(options);
+    }
+
+    options.callback = callback;
+    this.queryCallWaiting(options);
+  },
+
+  /**
+   * Set call waiting status via MMI.
+   */
+  _handleSetMMICallWaiting: function _handleSetMMICallWaiting(options) {
+    function callback(options) {
+      if (options.enabled) {
+        options.statusMessage = MMI_SM_KS_SERVICE_ENABLED;
+      } else {
+        options.statusMessage = MMI_SM_KS_SERVICE_DISABLED;
+      }
+
+      // Prevent DataCloneError when sending chrome messages.
+      delete options.callback;
+      this.sendChromeMessage(options);
+    }
+
+    options.callback = callback;
+    this.setCallWaiting(options);
+  },
+
+  /**
    * Query call waiting status.
    *
    */
@@ -1481,7 +1533,8 @@ let RIL = {
     Buf.newParcel(REQUEST_SET_CALL_WAITING, options);
     Buf.writeUint32(2);
     Buf.writeUint32(options.enabled ? 1 : 0);
-    Buf.writeUint32(ICC_SERVICE_CLASS_VOICE);
+    Buf.writeUint32(options.serviceClass !== undefined ?
+                    options.serviceClass : ICC_SERVICE_CLASS_VOICE);
     Buf.sendParcel();
   },
 
@@ -2690,9 +2743,31 @@ let RIL = {
         }
         this.setICCFacilityLock(options);
         return;
+
       // Call waiting
       case MMI_SC_CALL_WAITING:
-        _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED);
+        if (!_isRadioAvailable(MMI_KS_SC_CALL_WAITING)) {
+          return;
+        }
+
+        options.mmiServiceCode = MMI_KS_SC_CALL_WAITING;
+
+        if (mmi.procedure === MMI_PROCEDURE_INTERROGATION) {
+          this._handleQueryMMICallWaiting(options);
+          return;
+        }
+
+        if (mmi.procedure === MMI_PROCEDURE_ACTIVATION) {
+          options.enabled = true;
+        } else if (mmi.procedure === MMI_PROCEDURE_DEACTIVATION) {
+          options.enabled = false;
+        } else {
+          _sendMMIError(MMI_ERROR_KS_NOT_SUPPORTED, MMI_KS_SC_CALL_WAITING);
+          return;
+        }
+
+        options.serviceClass = this._siToServiceClass(mmi.sia);
+        this._handleSetMMICallWaiting(options);
         return;
     }
 
@@ -5544,6 +5619,12 @@ RIL[REQUEST_QUERY_CALL_WAITING] =
     this.sendChromeMessage(options);
     return;
   }
+
+  if (options.callback) {
+    options.callback.call(this, options);
+    return;
+  }
+
   options.length = Buf.readUint32();
   options.enabled = ((Buf.readUint32() == 1) &&
                      ((Buf.readUint32() & ICC_SERVICE_CLASS_VOICE) == 0x01));
@@ -5554,7 +5635,15 @@ RIL[REQUEST_SET_CALL_WAITING] = function REQUEST_SET_CALL_WAITING(length, option
   options.success = (options.rilRequestError === 0);
   if (!options.success) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendChromeMessage(options);
+    return;
   }
+
+  if (options.callback) {
+    options.callback.call(this, options);
+    return;
+  }
+
   this.sendChromeMessage(options);
 };
 RIL[REQUEST_SMS_ACKNOWLEDGE] = null;

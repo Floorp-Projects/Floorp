@@ -857,12 +857,6 @@ add_test(function test_sendMMI_call_barring_BAIC_procedure_not_supported() {
   run_next_test();
 });
 
-add_test(function test_sendMMI_call_waiting() {
-  testSendMMI("*43#", MMI_ERROR_KS_NOT_SUPPORTED);
-
-  run_next_test();
-});
-
 add_test(function test_sendMMI_USSD() {
   let workerhelper = getWorker();
   let worker = workerhelper.worker;
@@ -910,5 +904,79 @@ add_test(function test_sendMMI_USSD_error() {
   do_check_false(postedMessage.success);
   do_check_false(worker.RIL._ussdSession);
 
+  run_next_test();
+});
+
+function setCallWaitingSuccess(mmi) {
+  let workerhelper = getWorker();
+  let worker = workerhelper.worker;
+
+  worker.RIL.setCallWaiting = function fakeSetCallWaiting(options) {
+    worker.RIL[REQUEST_SET_CALL_WAITING](0, {
+      rilRequestError: ERROR_SUCCESS
+    });
+  };
+
+  worker.RIL.radioState = GECKO_RADIOSTATE_READY;
+  worker.RIL.sendMMI({mmi: mmi});
+
+  let postedMessage = workerhelper.postedMessage;
+
+  do_check_eq(postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
+  do_check_true(postedMessage.success);
+}
+
+add_test(function test_sendMMI_call_waiting_activation() {
+  setCallWaitingSuccess("*43*10#");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_call_waiting_deactivation() {
+  setCallWaitingSuccess("#43#");
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_call_waiting_registration() {
+  testSendMMI("**43#", MMI_ERROR_KS_NOT_SUPPORTED);
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_call_waiting_erasure() {
+  testSendMMI("##43#", MMI_ERROR_KS_NOT_SUPPORTED);
+
+  run_next_test();
+});
+
+add_test(function test_sendMMI_call_waiting_interrogation() {
+  let workerhelper = getWorker();
+  let worker = workerhelper.worker;
+
+  worker.Buf.readUint32 = function fakeReadUint32() {
+    return worker.Buf.int32Array.pop();
+  };
+
+  worker.RIL.queryCallWaiting = function fakeQueryCallWaiting(options) {
+    worker.Buf.int32Array = [
+      7,   // serviceClass
+      1,   // enabled
+      2    // length
+    ];
+    worker.RIL[REQUEST_QUERY_CALL_WAITING](1, {
+      rilRequestError: ERROR_SUCCESS
+    });
+  };
+
+  worker.RIL.radioState = GECKO_RADIOSTATE_READY;
+  worker.RIL.sendMMI({mmi: "*#43#"});
+
+  let postedMessage = workerhelper.postedMessage;
+
+  do_check_eq(postedMessage.errorMsg, GECKO_ERROR_SUCCESS);
+  do_check_true(postedMessage.success);
+  do_check_eq(postedMessage.length, 2);
+  do_check_true(postedMessage.enabled);
   run_next_test();
 });
