@@ -419,13 +419,23 @@ function nextNetdCommand() {
 
 function setInterfaceUp(params, callback) {
   let command = "interface setcfg " + params.ifname + " " + params.ip + " " +
-                params.prefix + " " + "[" + params.link + "]";
+                params.prefix + " ";
+  if (SDK_VERSION >= 16) {
+    command += params.link;
+  } else {
+    command += "[" + params.link + "]";
+  }
   return doCommand(command, callback);
 }
 
 function setInterfaceDown(params, callback) {
   let command = "interface setcfg " + params.ifname + " " + params.ip + " " +
-                params.prefix + " " + "[" + params.link + "]";
+                params.prefix + " ";
+  if (SDK_VERSION >= 16) {
+    command += params.link;
+  } else {
+    command += "[" + params.link + "]";
+  }
   return doCommand(command, callback);
 }
 
