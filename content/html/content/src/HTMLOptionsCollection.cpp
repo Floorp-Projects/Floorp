@@ -358,6 +358,11 @@ HTMLOptionsCollection::Add(const HTMLOptionOrOptGroupElement& aElement,
                            const Nullable<HTMLElementOrLong>& aBefore,
                            ErrorResult& aError)
 {
+  if (!mSelect) {
+    aError.Throw(NS_ERROR_NOT_INITIALIZED);
+    return;
+  }
+
   mSelect->Add(aElement, aBefore, aError);
 }
 
