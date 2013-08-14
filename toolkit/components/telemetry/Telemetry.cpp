@@ -49,6 +49,9 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/mozPoisonWrite.h"
+#if defined(MOZ_ENABLE_PROFILER_SPS)
+#include "shared-libraries.h"
+#endif
 
 namespace {
 
