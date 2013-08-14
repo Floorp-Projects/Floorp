@@ -1747,7 +1747,7 @@ RILContentHelper.prototype = {
 
     if (changed) {
       this._deliverEvent("_voicemailListeners",
-                         "voicemailNotification",
+                         "notifyStatusChanged",
                          [this.voicemailStatus]);
     }
   },
