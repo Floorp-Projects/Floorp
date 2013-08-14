@@ -32,23 +32,25 @@ function openWindow(aEvent) {
 }
 container.addEventListener('mozbrowseropenwindow', openWindow);
 
-let specialpowers = {};
-let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
-loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js", specialpowers);
-let specialPowersObserver = new specialpowers.SpecialPowersObserver();
-specialPowersObserver.init();
+if (outOfProcess) {
+  let specialpowers = {};
+  let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
+  loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js", specialpowers);
+  let specialPowersObserver = new specialpowers.SpecialPowersObserver();
+  specialPowersObserver.init();
 
-let mm = container.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
-mm.addMessageListener("SPPrefService", specialPowersObserver);
-mm.addMessageListener("SPProcessCrashService", specialPowersObserver);
-mm.addMessageListener("SPPingService", specialPowersObserver);
-mm.addMessageListener("SpecialPowers.Quit", specialPowersObserver);
-mm.addMessageListener("SpecialPowers.Focus", specialPowersObserver);
-mm.addMessageListener("SPPermissionManager", specialPowersObserver);
+  let mm = container.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+  mm.addMessageListener("SPPrefService", specialPowersObserver);
+  mm.addMessageListener("SPProcessCrashService", specialPowersObserver);
+  mm.addMessageListener("SPPingService", specialPowersObserver);
+  mm.addMessageListener("SpecialPowers.Quit", specialPowersObserver);
+  mm.addMessageListener("SpecialPowers.Focus", specialPowersObserver);
+  mm.addMessageListener("SPPermissionManager", specialPowersObserver);
 
-mm.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
-mm.loadFrameScript(CHILD_SCRIPT_API, true);
-mm.loadFrameScript(CHILD_SCRIPT, true);
-specialPowersObserver._isFrameScriptLoaded = true;
+  mm.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
+  mm.loadFrameScript(CHILD_SCRIPT_API, true);
+  mm.loadFrameScript(CHILD_SCRIPT, true);
+  specialPowersObserver._isFrameScriptLoaded = true;
+}
 
 container.src = mochitestUrl;
