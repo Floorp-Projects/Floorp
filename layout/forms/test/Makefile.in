@@ -48,6 +48,12 @@ MOCHITEST_FILES =	test_bug231389.html \
 		test_select_prevent_default.html \
 		$(NULL)
 
+ifneq ($(OS_TARGET),Android)
+MOCHITEST_FILES += \
+		test_bug903715.html \
+		$(NULL)
+endif
+
 MOCHITEST_CHROME_FILES = \
 		     bug536567_iframe.html \
 		test_bug536567_perwindowpb.html \
