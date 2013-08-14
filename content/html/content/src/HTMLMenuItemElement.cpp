@@ -3,10 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "HTMLMenuItemElement.h"
+#include "mozilla/dom/HTMLMenuItemElement.h"
+
 #include "mozilla/dom/HTMLMenuItemElementBinding.h"
-#include "nsEventDispatcher.h"
 #include "nsAttrValueInlines.h"
+#include "nsContentUtils.h"
+#include "nsEventDispatcher.h"
 
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(MenuItem)
