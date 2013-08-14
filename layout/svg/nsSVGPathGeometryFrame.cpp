@@ -120,6 +120,23 @@ nsSVGPathGeometryFrame::AttributeChanged(int32_t         aNameSpaceID,
   return NS_OK;
 }
 
+/* virtual */ void
+nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  nsSVGPathGeometryFrameBase::DidSetStyleContext(aOldStyleContext);
+
+  if (aOldStyleContext) {
+    float oldOpacity = aOldStyleContext->PeekStyleDisplay()->mOpacity;
+    float newOpacity = StyleDisplay()->mOpacity;
+    if (newOpacity != oldOpacity &&
+        nsSVGUtils::CanOptimizeOpacity(this)) {
+      // nsIFrame::BuildDisplayListForStackingContext() is not going to create an
+      // nsDisplayOpacity display list item, so DLBI won't invalidate for us.
+      InvalidateFrame();
+    }
+  }
+}
+
 nsIAtom *
 nsSVGPathGeometryFrame::GetType() const
 {
