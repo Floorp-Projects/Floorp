@@ -12,7 +12,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsIObserver.h"
-#include "nsIXPCScriptNotify.h"
 #include "prtime.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIXPConnect.h"
@@ -32,8 +31,7 @@ template <class> class Maybe;
 // a page) and doing the actual GC.
 #define NS_GC_DELAY                 4000 // ms
 
-class nsJSContext : public nsIScriptContext,
-                    public nsIXPCScriptNotify
+class nsJSContext : public nsIScriptContext
 {
 public:
   nsJSContext(JSRuntime* aRuntime, bool aGCOnDestruction,
@@ -80,8 +78,6 @@ public:
                              JS::Handle<JSScript*> aScriptObject) MOZ_OVERRIDE;
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                JS::MutableHandle<JSScript*> aResult) MOZ_OVERRIDE;
-
-  NS_DECL_NSIXPCSCRIPTNOTIFY
 
   static void LoadStart();
   static void LoadEnd();
