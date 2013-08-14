@@ -1366,7 +1366,18 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void enterEditingMode() {
-        enterEditingMode(null);
+        String url = null;
+
+        final Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null) {
+            final String userSearch = tab.getUserSearch();
+
+            // Check to see if there's a user-entered search term,
+            // which we save whenever the user performs a search.
+            url = (TextUtils.isEmpty(userSearch) ? tab.getURL() : userSearch);
+        }
+
+        enterEditingMode(url);
     }
 
     /**
@@ -1374,17 +1385,8 @@ abstract public class BrowserApp extends GeckoApp
      * always open the VISITED page on about:home.
      */
     private void enterEditingMode(String url) {
-        // If we don't have a specific url to show, show the current tab's url.
-        if (TextUtils.isEmpty(url)) {
-            Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null) {
-                // Check to see if there's a user-entered search term, which we save
-                // whenever the user performs a search.
-                url = tab.getUserSearch();
-                if (TextUtils.isEmpty(url)) {
-                    url = tab.getURL();
-                }
-            }
+        if (url == null) {
+            throw new IllegalArgumentException("Cannot handle null URLs in enterEditingMode");
         }
 
         final PropertyAnimator animator = new PropertyAnimator(300);
