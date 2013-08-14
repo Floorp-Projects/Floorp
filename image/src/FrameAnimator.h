@@ -99,10 +99,9 @@ public:
   void UnionFirstFrameRefreshArea(const nsIntRect& aRect);
 
   /**
-   * If the animation frame time has not yet been set, set it to
-   * TimeStamp::Now().
+   * Set the animation frame time to TimeStamp::Now().
    */
-  void InitAnimationFrameTimeIfNecessary();
+  void InitAnimationFrameTime();
 
   /**
    * Set the animation frame time to @aTime.
