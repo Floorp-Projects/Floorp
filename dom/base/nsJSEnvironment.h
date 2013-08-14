@@ -167,7 +167,6 @@ private:
   nsrefcnt GetCCRefcnt();
 
   JSContext *mContext;
-  bool mActive;
 
   bool mIsInitialized;
   bool mScriptsEnabled;
