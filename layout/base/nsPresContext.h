@@ -35,7 +35,6 @@
 #include "mozilla/TimeStamp.h"
 #include "prclist.h"
 #include "Layers.h"
-#include "nsRefreshDriver.h"
 
 #ifdef IBMBIDI
 class nsBidiPresUtils;
@@ -71,6 +70,7 @@ class nsTransitionManager;
 class nsAnimationManager;
 class imgIContainer;
 class nsIDOMMediaQueryList;
+class nsRefreshDriver;
 
 #ifdef MOZ_REFLOW_PERF
 class nsRenderingContext;
@@ -690,18 +690,10 @@ public:
   /**
    * Getter and setter for OMTA time counters
    */
-  bool ThrottledStyleIsUpToDate() const {
-    return mLastUpdateThrottledStyle == mRefreshDriver->MostRecentRefresh();
-  }
-  void TickLastUpdateThrottledStyle() {
-    mLastUpdateThrottledStyle = mRefreshDriver->MostRecentRefresh();
-  }
-  bool StyleUpdateForAllAnimationsIsUpToDate() const {
-    return mLastStyleUpdateForAllAnimations == mRefreshDriver->MostRecentRefresh();
-  }
-  void TickLastStyleUpdateForAllAnimations() {
-    mLastStyleUpdateForAllAnimations = mRefreshDriver->MostRecentRefresh();
-  }
+  bool ThrottledStyleIsUpToDate() const;
+  void TickLastUpdateThrottledStyle();
+  bool StyleUpdateForAllAnimationsIsUpToDate();
+  void TickLastStyleUpdateForAllAnimations();
 
 #ifdef IBMBIDI
   /**
