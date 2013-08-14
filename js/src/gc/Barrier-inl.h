@@ -263,8 +263,8 @@ RelocatableValue::operator=(const Value &v)
         post();
     } else if (value.isMarkable()) {
         JSRuntime *rt = runtimeFromMainThread(value);
-        value = v;
         relocate(rt);
+        value = v;
     } else {
         value = v;
     }
@@ -281,8 +281,8 @@ RelocatableValue::operator=(const RelocatableValue &v)
         post();
     } else if (value.isMarkable()) {
         JSRuntime *rt = runtimeFromMainThread(value);
-        value = v.value;
         relocate(rt);
+        value = v.value;
     } else {
         value = v.value;
     }
