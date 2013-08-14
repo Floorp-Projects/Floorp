@@ -72,6 +72,10 @@ class FunctionContextFlags
     // This class's data is all private and so only visible to these friends.
     friend class FunctionBox;
 
+    // We parsed a yield statement in the function, which can happen in JS1.7+
+    // mode.
+    bool isLegacyGenerator:1;
+
     // The function or a function that encloses it may define new local names
     // at runtime through means other than calling eval.
     bool mightAliasLocals:1;
@@ -125,7 +129,8 @@ class FunctionContextFlags
 
   public:
     FunctionContextFlags()
-     :  mightAliasLocals(false),
+     :  isLegacyGenerator(false),
+        mightAliasLocals(false),
         hasExtensibleScope(false),
         needsDeclEnvObject(false),
         argumentsHasLocalBinding(false),
@@ -259,8 +264,6 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint32_t        startLine;
     uint32_t        startColumn;
     uint16_t        ndefaults;
-
-    uint8_t         generatorKindBits_;     /* The GeneratorKind of this function. */
     bool            inWith:1;               /* some enclosing scope is a with-statement */
     bool            inGenexpLambda:1;       /* lambda from generator expression */
     bool            hasDestructuringArgs:1; /* arguments list contains destructuring expression */
@@ -276,30 +279,21 @@ class FunctionBox : public ObjectBox, public SharedContext
     template <typename ParseHandler>
     FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunction *fun,
                 ParseContext<ParseHandler> *pc, Directives directives,
-                bool extraWarnings, GeneratorKind generatorKind);
+                bool extraWarnings);
 
     ObjectBox *toObjectBox() { return this; }
     JSFunction *function() const { return &object->as<JSFunction>(); }
 
-    GeneratorKind generatorKind() const { return GeneratorKindFromBits(generatorKindBits_); }
-    bool isGenerator() const { return generatorKind() != NotGenerator; }
-    bool isLegacyGenerator() const { return generatorKind() == LegacyGenerator; }
-    bool isStarGenerator() const { return generatorKind() == StarGenerator; }
-
-    void setGeneratorKind(GeneratorKind kind) {
-        // A generator kind can be set at initialization, or when "yield" is
-        // first seen.  In both cases the transition can only happen from
-        // NotGenerator.
-        JS_ASSERT(!isGenerator());
-        generatorKindBits_ = GeneratorKindAsBits(kind);
-    }
-
+    // In the future, isGenerator will also return true for ES6 generators.
+    bool isGenerator()              const { return isLegacyGenerator(); }
+    bool isLegacyGenerator()        const { return funCxFlags.isLegacyGenerator; }
     bool mightAliasLocals()         const { return funCxFlags.mightAliasLocals; }
     bool hasExtensibleScope()       const { return funCxFlags.hasExtensibleScope; }
     bool needsDeclEnvObject()       const { return funCxFlags.needsDeclEnvObject; }
     bool argumentsHasLocalBinding() const { return funCxFlags.argumentsHasLocalBinding; }
     bool definitelyNeedsArgsObj()   const { return funCxFlags.definitelyNeedsArgsObj; }
 
+    void setIsLegacyGenerator()            { funCxFlags.isLegacyGenerator        = true; }
     void setMightAliasLocals()             { funCxFlags.mightAliasLocals         = true; }
     void setHasExtensibleScope()           { funCxFlags.hasExtensibleScope       = true; }
     void setNeedsDeclEnvObject()           { funCxFlags.needsDeclEnvObject       = true; }

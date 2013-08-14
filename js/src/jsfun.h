@@ -282,18 +282,6 @@ class JSFunction : public JSObject
         return u.i.s.lazy_;
     }
 
-    js::GeneratorKind generatorKind() const {
-        if (!isInterpreted())
-            return js::NotGenerator;
-        return hasScript() ? nonLazyScript()->generatorKind() : lazyScript()->generatorKind();
-    }
-
-    bool isGenerator() const { return generatorKind() != js::NotGenerator; }
-
-    bool isLegacyGenerator() const { return generatorKind() == js::LegacyGenerator; }
-
-    bool isStarGenerator() const { return generatorKind() == js::StarGenerator; }
-
     inline void setScript(JSScript *script_);
     inline void initScript(JSScript *script_);
     void initLazyScript(js::LazyScript *lazy) {
