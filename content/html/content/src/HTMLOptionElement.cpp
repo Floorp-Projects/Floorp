@@ -99,8 +99,7 @@ HTMLOptionElement::SetSelected(bool aValue)
   // so defer to it to get the answer
   HTMLSelectElement* selectInt = GetSelect();
   if (selectInt) {
-    int32_t index;
-    GetIndex(&index);
+    int32_t index = Index();
     // This should end up calling SetSelectedInternal
     selectInt->SetOptionsSelectedByIndex(index, index, aValue,
                                          false, true, true);
@@ -120,22 +119,30 @@ NS_IMPL_BOOL_ATTR(HTMLOptionElement, Disabled, disabled)
 NS_IMETHODIMP
 HTMLOptionElement::GetIndex(int32_t* aIndex)
 {
-  // When the element is not in a list of options, the index is 0.
-  *aIndex = 0;
+  *aIndex = Index();
+  return NS_OK;
+}
+
+int32_t
+HTMLOptionElement::Index()
+{
+  static int32_t defaultIndex = 0;
 
   // Only select elements can contain a list of options.
   HTMLSelectElement* selectElement = GetSelect();
   if (!selectElement) {
-    return NS_OK;
+    return defaultIndex;
   }
 
   HTMLOptionsCollection* options = selectElement->GetOptions();
   if (!options) {
-    return NS_OK;
+    return defaultIndex;
   }
 
-  // aIndex will not be set if GetOptionsIndex fails.
-  return options->GetOptionIndex(this, 0, true, aIndex);
+  int32_t index = defaultIndex;
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    options->GetOptionIndex(this, 0, true, &index)));
+  return index;
 }
 
 bool
@@ -199,8 +206,7 @@ HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsIAtom* aName,
   bool inSetDefaultSelected = mIsInSetDefaultSelected;
   mIsInSetDefaultSelected = true;
 
-  int32_t index;
-  GetIndex(&index);
+  int32_t index = Index();
   // This should end up calling SetSelectedInternal, which we will allow to
   // take effect so that parts of SetOptionsSelectedByIndex that might depend
   // on it working don't get confused.
