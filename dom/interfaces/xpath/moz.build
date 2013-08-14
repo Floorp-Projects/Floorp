@@ -15,5 +15,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_xpath'
 
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/core',
+]
+
 MODULE = 'dom'
 

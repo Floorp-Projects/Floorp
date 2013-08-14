@@ -10,6 +10,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'necko_viewsource'
 
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/netwerk/base/public',
+]
+
 MODULE = 'necko'
 
 CPP_SOURCES += [

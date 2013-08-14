@@ -33,10 +33,6 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   XPIDL_MODULE \
   $(NULL)
 
-_DEPRECATED_VARIABLES := \
-  XPIDL_FLAGS \
-  $(NULL)
-
 ifndef EXTERNALLY_MANAGED_MAKE_FILE
 # Using $(firstword) may not be perfect. But it should be good enough for most
 # scenarios.
@@ -44,10 +40,6 @@ _current_makefile = $(CURDIR)/$(firstword $(MAKEFILE_LIST))
 
 $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(if $($(var)),\
     $(error Variable $(var) is defined in $(_current_makefile). It should only be defined in moz.build files),\
-    ))
-
-$(foreach var,$(_DEPRECATED_VARIABLES),$(if $($(var)),\
-    $(error Variable $(var) is defined in $(_current_makefile). This variable has been deprecated. It does nothing. It must be removed in order to build)\
     ))
 
 ifneq (,$(XPIDLSRCS)$(SDK_XPIDLSRCS))
@@ -424,6 +416,8 @@ endif
 ifeq ($(SOLARIS_SUNPRO_CXX),1)
 GARBAGE_DIRS += SunWS_cache
 endif
+
+XPIDL_GEN_DIR		= _xpidlgen
 
 ifdef MOZ_UPDATE_XTERM
 # Its good not to have a newline at the end of the titlebar string because it
@@ -1394,23 +1388,98 @@ endif
 endif
 
 ################################################################################
-# Install a linked .xpt into the appropriate place.
-# This should ideally be performed by the non-recursive idl make file. Some day.
-ifdef XPT_NAME #{
+# Export the elements of $(XPIDLSRCS)
+# generating .h and .xpt files and moving them to the appropriate places.
+
+ifneq ($(XPIDLSRCS),) #{
+
+export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS))
+
+ifndef XPIDL_MODULE
+XPIDL_MODULE		= $(MODULE)
+endif
+
+ifeq ($(XPIDL_MODULE),) # we need $(XPIDL_MODULE) to make $(XPIDL_MODULE).xpt
+export:: FORCE
+	@echo
+	@echo "*** Error processing XPIDLSRCS:"
+	@echo "Please define MODULE or XPIDL_MODULE when defining XPIDLSRCS,"
+	@echo "so we have a module name to use when creating MODULE.xpt."
+	@echo; sleep 2; false
+endif
+
+# generate .h files from into $(XPIDL_GEN_DIR), then export to $(DIST)/include;
+# warn against overriding existing .h file.
+
+XPIDL_DEPS = \
+  $(LIBXUL_DIST)/sdk/bin/header.py \
+  $(LIBXUL_DIST)/sdk/bin/typelib.py \
+  $(LIBXUL_DIST)/sdk/bin/xpidl.py \
+  $(NULL)
+
+xpidl-preqs = \
+  $(call mkdir_deps,$(XPIDL_GEN_DIR)) \
+  $(call mkdir_deps,$(MDDEPDIR)) \
+  $(NULL)
+
+$(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_DEPS) $(xpidl-preqs)
+	$(REPORT_BUILD)
+	$(PYTHON_PATH) \
+	  $(PLY_INCLUDE) \
+	  $(LIBXUL_DIST)/sdk/bin/header.py $(XPIDL_FLAGS) $(_VPATH_SRCS) -d $(MDDEPDIR)/$(@F).pp -o $@
+	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
+	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
+
+# generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
+# into $(XPIDL_MODULE).xpt and export it to $(FINAL_TARGET)/components.
+$(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_DEPS) $(xpidl-preqs)
+	$(REPORT_BUILD)
+	$(PYTHON_PATH) \
+	  $(PLY_INCLUDE) \
+	  -I$(topsrcdir)/xpcom/typelib/xpt/tools \
+	  $(LIBXUL_DIST)/sdk/bin/typelib.py $(XPIDL_FLAGS) $(_VPATH_SRCS) -d $(MDDEPDIR)/$(@F).pp -o $@
+
+# no need to link together if XPIDLSRCS contains only XPIDL_MODULE
+ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
+XPT_PY = $(filter %/xpt.py,$(XPIDL_LINK))
+
+xpidl-idl2xpt = $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
+xpidl-module-deps = $(xpidl-idl2xpt) $(GLOBAL_DEPS) $(XPT_PY)
+
+$(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(xpidl-module-deps)
+	$(XPIDL_LINK) $@ $(xpidl-idl2xpt)
+
+$(XPT_PY):
+	$(MAKE) -C $(DEPTH)/xpcom/typelib/xpt/tools libs
+
+endif # XPIDL_MODULE.xpt != XPIDLSRCS
 
 ifndef NO_DIST_INSTALL
-_XPT_NAME_FILES := $(DEPTH)/config/makefiles/xpidl/xpt/$(XPT_NAME)
-_XPT_NAME_DEST := $(FINAL_TARGET)/components
-INSTALL_TARGETS += _XPT_NAME
+XPIDL_MODULE_FILES := $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
+XPIDL_MODULE_DEST := $(FINAL_TARGET)/components
+INSTALL_TARGETS += XPIDL_MODULE
 
 ifndef NO_INTERFACES_MANIFEST
 libs:: $(call mkdir_deps,$(FINAL_TARGET)/components)
-	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/interfaces.manifest "interfaces $(XPT_NAME)"
+	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/interfaces.manifest "interfaces $(XPIDL_MODULE).xpt"
 	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest "manifest components/interfaces.manifest"
 endif
 endif
 
-endif #} XPT_NAME
+GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
+
+ifndef NO_DIST_INSTALL
+XPIDL_HEADERS_FILES := $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS))
+XPIDL_HEADERS_DEST := $(DIST)/include
+XPIDL_HEADERS_TARGET := export
+INSTALL_TARGETS += XPIDL_HEADERS
+
+XPIDLSRCS_FILES := $(XPIDLSRCS)
+XPIDLSRCS_DEST := $(IDL_DIR)
+XPIDLSRCS_TARGET := export
+INSTALL_TARGETS += XPIDLSRCS
+endif
+endif #} XPIDLSRCS
 
 ################################################################################
 # Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components
@@ -1622,7 +1691,7 @@ endif
 #   it.
 
 ifneq (,$(filter-out all chrome default export realchrome tools clean clobber clobber_all distclean realclean,$(MAKECMDGOALS)))
-MDDEPEND_FILES		:= $(strip $(wildcard $(foreach file,$(sort $(OBJS) $(PROGOBJS) $(HOST_OBJS) $(HOST_PROGOBJS) $(TARGETS)),$(MDDEPDIR)/$(notdir $(file)).pp) $(addprefix $(MDDEPDIR)/,$(EXTRA_MDDEPEND_FILES))))
+MDDEPEND_FILES		:= $(strip $(wildcard $(foreach file,$(sort $(OBJS) $(PROGOBJS) $(HOST_OBJS) $(HOST_PROGOBJS) $(TARGETS) $(XPIDLSRCS:.idl=.h) $(XPIDLSRCS:.idl=.xpt)),$(MDDEPDIR)/$(notdir $(file)).pp) $(addprefix $(MDDEPDIR)/,$(EXTRA_MDDEPEND_FILES))))
 
 ifneq (,$(MDDEPEND_FILES))
 ifdef .PYMAKE
@@ -1815,6 +1884,7 @@ FREEZE_VARIABLES = \
   CSRCS \
   CPPSRCS \
   EXPORTS \
+  XPIDLSRCS \
   DIRS \
   LIBRARY \
   MODULE \

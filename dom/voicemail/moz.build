@@ -13,6 +13,12 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_voicemail'
 
+XPIDL_FLAGS += [
+    '-I$(topsrcdir)/dom/base',
+    '-I$(topsrcdir)/dom/interfaces/base',
+    '-I$(topsrcdir)/dom/interfaces/events',
+]
+
 MODULE = 'dom'
 
 EXPORTS.mozilla.dom += [
