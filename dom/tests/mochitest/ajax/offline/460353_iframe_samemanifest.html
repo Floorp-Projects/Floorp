@@ -12,6 +12,10 @@ applicationCache.oncached = function() {
   parent.frameOnUpdate("same", true, applicationCache.status);
 }
 
+applicationCache.onnoupdate = function() {
+  parent.frameOnUpdate("same", true, applicationCache.status);
+}
+
 </script>
 
 </head>

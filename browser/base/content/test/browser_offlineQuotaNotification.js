@@ -14,6 +14,7 @@ registerCleanupFunction(function() {
   var principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
   Services.perms.removeFromPrincipal(principal, "offline-app");
   Services.prefs.clearUserPref("offline-apps.quota.warn");
+  Services.prefs.clearUserPref("offline-apps.allow_by_default");
 });
 
 // Check that the "preferences" UI is opened and showing which websites have
@@ -70,5 +71,6 @@ function test() {
     PopupNotifications.panel.firstElementChild.button.click();
   }, true);
 
+  Services.prefs.setBoolPref("offline-apps.allow_by_default", false);
   gBrowser.contentWindow.location = URL;
 }
