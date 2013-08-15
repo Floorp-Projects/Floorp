@@ -5038,7 +5038,16 @@ nu
 *.nz
 
 // om : http://en.wikipedia.org/wiki/.om
-*.om
+om
+co.om
+com.om
+edu.om
+gov.om
+med.om
+museum.om
+net.om
+org.om
+pro.om
 !mediaphone.om
 !nawrastelecom.om
 !nawras.om
@@ -5742,8 +5751,13 @@ store.st
 // su : http://en.wikipedia.org/wiki/.su
 su
 
-// sv : http://www.svnet.org.sv/svpolicy.html
-*.sv
+// sv : http://www.svnet.org.sv/niveldos.pdf
+sv
+com.sv
+edu.sv
+gob.sv
+org.sv
+red.sv
 
 // sx : http://en.wikipedia.org/wiki/.sx
 // Confirmed by registry <jcvignes@openregistry.com> 2012-05-31
