@@ -54,6 +54,7 @@ static const char *sExtensionNames[] = {
     "GL_OES_depth32",
     "GL_OES_stencil8",
     "GL_OES_texture_npot",
+    "GL_ARB_depth_texture",
     "GL_OES_depth_texture",
     "GL_OES_packed_depth_stencil",
     "GL_IMG_read_format",
@@ -62,6 +63,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_texture_non_power_of_two",
     "GL_ARB_pixel_buffer_object",
     "GL_ARB_ES2_compatibility",
+    "GL_ARB_ES3_compatibility",
     "GL_OES_texture_float",
     "GL_OES_texture_float_linear",
     "GL_ARB_texture_float",
@@ -101,6 +103,7 @@ static const char *sExtensionNames[] = {
     "GL_NV_instanced_arrays",
     "GL_ANGLE_instanced_arrays",
     "GL_EXT_occlusion_query_boolean",
+    "GL_ARB_occlusion_query2",
     nullptr
 };
 
@@ -317,14 +320,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 { (PRFuncPtr*) &mSymbols.fMapBuffer, { "MapBuffer", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fUnmapBuffer, { "UnmapBuffer", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fPointParameterf, { "PointParameterf", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQuery", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetQueryObjectuiv, { "GetQueryObjectuiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGenQueries, { "GenQueries", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fDeleteQueries, { "DeleteQueries", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetQueryiv, { "GetQueryiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fEndQuery, { "EndQuery", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fIsQuery, { "IsQuery", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fDrawBuffer, { "DrawBuffer", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fDrawBuffers, { "DrawBuffers", nullptr } },
                 { nullptr, { nullptr } },
@@ -657,8 +652,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             }
         }
 
-        if (IsGLES2() &&
-            IsExtensionSupported(EXT_occlusion_query_boolean)) {
+        if (IsExtensionSupported(XXX_query_objects)) {
             SymLoadStruct queryObjectsSymbols[] = {
                 { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQuery", "BeginQueryEXT", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fGenQueries, { "GenQueries", "GenQueriesEXT", nullptr } },
@@ -671,17 +665,34 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             };
 
             if (!LoadSymbols(queryObjectsSymbols, trygl, prefix)) {
-                NS_ERROR("GL ES supports query objects without supplying its functions.");
+                NS_ERROR("GL supports query objects without supplying its functions.");
 
-                MarkExtensionUnsupported(EXT_occlusion_query_boolean);
+                mInitialized &= MarkExtensionGroupUnsupported(XXX_query_objects);
+                mInitialized &= MarkExtensionGroupUnsupported(XXX_get_query_object_iv);
+                mInitialized &= MarkExtensionGroupUnsupported(XXX_occlusion_query);
+                MarkExtensionGroupUnsupported(XXX_occlusion_query_boolean);
+                MarkExtensionGroupUnsupported(XXX_occlusion_query2);
                 mSymbols.fBeginQuery = nullptr;
                 mSymbols.fGenQueries = nullptr;
                 mSymbols.fDeleteQueries = nullptr;
                 mSymbols.fEndQuery = nullptr;
                 mSymbols.fGetQueryiv = nullptr;
-                mSymbols.fGetQueryObjectiv = nullptr;
                 mSymbols.fGetQueryObjectuiv = nullptr;
                 mSymbols.fIsQuery = nullptr;
+            }
+        }
+
+        if (IsExtensionSupported(XXX_get_query_object_iv)) {
+            SymLoadStruct queryObjectsSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fGetQueryObjectiv, { "GetQueryObjectiv", "GetQueryObjectivEXT", nullptr } },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(queryObjectsSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports query objects iv getter without supplying its function.");
+
+                mInitialized &= MarkExtensionGroupUnsupported(XXX_get_query_object_iv);
+                mSymbols.fGetQueryObjectiv = nullptr;
             }
         }
 
@@ -2956,7 +2967,7 @@ GLContext::CreatedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNam
 }
 
 static void
-RemoveNamesFromArray(GLContext *aOrigin, GLsizei aCount, GLuint *aNames, nsTArray<GLContext::NamedResource>& aArray)
+RemoveNamesFromArray(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames, nsTArray<GLContext::NamedResource>& aArray)
 {
     for (GLsizei j = 0; j < aCount; ++j) {
         GLuint name = aNames[j];
@@ -2992,7 +3003,7 @@ GLContext::DeletedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames)
 }
 
 void
-GLContext::DeletedQueries(GLContext *aOrigin, GLsizei aCount, GLuint *aNames)
+GLContext::DeletedQueries(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames)
 {
     RemoveNamesFromArray(aOrigin, aCount, aNames, mTrackedQueries);
 }
