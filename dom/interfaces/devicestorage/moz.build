@@ -11,10 +11,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_devicestorage'
 
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/interfaces/base',
-    '-I$(topsrcdir)/dom/interfaces/events',
-]
-
 MODULE = 'dom'
 

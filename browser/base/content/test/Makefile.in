@@ -38,13 +38,15 @@ MOCHITEST_FILES = \
         video.ogg \
         $(NULL)
 
-# test_contextmenu.html is disabled on Linux due to bug 513558
+# test_contextmenu.html and test_contextmenu_input are disabled on Linux due to bug 513558
 ifndef MOZ_WIDGET_GTK
 MOCHITEST_FILES += \
         audio.ogg \
         privateBrowsingMode.js \
         subtst_contextmenu.html \
+        contextmenu_common.js \
         test_contextmenu.html \
+        test_contextmenu_input.html \
         $(NULL)
 endif
 

@@ -686,16 +686,17 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
       // UiaReturnRawElementProvider passing the return result from FrameworkView
       // OnAutomationProviderRequested as the hwnd (me scratches head) which results in
       // GetLastError always being set to invalid handle (6) after CallWindowProc returns.
-      if (dwObjId == UiaRootObjectId) {
-        NS_ASSERTION(gProviderRoot.Get(), "gProviderRoot is null??");
+      if (dwObjId == UiaRootObjectId && gProviderRoot) {
         ComPtr<IRawElementProviderSimple> simple;
         gProviderRoot.As(&simple);
-        LRESULT res = UiaReturnRawElementProvider(aWnd, aWParam, aLParam, simple.Get());
-        if (res) {
-          return res;
+        if (simple) {
+          LRESULT res = UiaReturnRawElementProvider(aWnd, aWParam, aLParam, simple.Get());
+          if (res) {
+            return res;
+          }
+          NS_ASSERTION(res, "UiaReturnRawElementProvider failed!");
+          Log("UiaReturnRawElementProvider failed! GetLastError=%X", GetLastError());
         }
-        NS_ASSERTION(res, "UiaReturnRawElementProvider failed!");
-        Log("UiaReturnRawElementProvider failed! GetLastError=%X", GetLastError());
       }
       break;
     }

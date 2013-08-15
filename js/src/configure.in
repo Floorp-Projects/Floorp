@@ -3263,10 +3263,13 @@ if test -z "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
 elif test "$GNU_CC"; then
     # Prevent the following GCC warnings from being treated as errors:
     # -Wuninitialized - too many false positives
+    # -Wmaybe-uninitialized - too many false positives
     # -Wdeprecated-declarations - we don't want our builds held hostage when a
     #   platform-specific API becomes deprecated.
     MOZ_C_SUPPORTS_WARNING(-W, no-error=uninitialized, ac_c_has_noerror_uninitialized)
     MOZ_CXX_SUPPORTS_WARNING(-W, no-error=uninitialized, ac_cxx_has_noerror_uninitialized)
+    MOZ_C_SUPPORTS_WARNING(-W, no-error=maybe-uninitialized, ac_c_has_noerror_maybe_uninitialized)
+    MOZ_CXX_SUPPORTS_WARNING(-W, no-error=maybe-uninitialized, ac_cxx_has_noerror_maybe_uninitialized)
     MOZ_C_SUPPORTS_WARNING(-W, no-error=deprecated-declarations, ac_c_has_noerror_deprecated_declarations)
     MOZ_CXX_SUPPORTS_WARNING(-W, no-error=deprecated-declarations, ac_cxx_has_noerror_deprecated_declarations)
 fi
@@ -4290,7 +4293,7 @@ if test -n "$ENABLE_INTL_API"; then
         WINNT)
             ICU_LIB_NAMES="icuin icuuc icudt"
             ;;
-        Darwin|Linux)
+        Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
             ICU_LIB_NAMES="icui18n icuuc icudata"
             ;;
         *)
@@ -4336,6 +4339,9 @@ if test -n "$ENABLE_INTL_API" ; then
             ;;
         WINNT)
             ICU_TARGET=MSYS/MSVC
+            ;;
+        DragonFly|FreeBSD|NetBSD|OpenBSD)
+            ICU_TARGET=BSD
             ;;
     esac
 
