@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService", "resource://gre/modules/SocialService.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils", "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-this.EXPORTED_SYMBOLS = ["MozSocialAPI", "openChatWindow", "findChromeWindowForChats"];
+this.EXPORTED_SYMBOLS = ["MozSocialAPI", "openChatWindow", "findChromeWindowForChats", "closeAllChatWindows"];
 
 this.MozSocialAPI = {
   _enabled: false,
@@ -314,4 +314,28 @@ this.openChatWindow =
   // getAttention is ignored if the target window is already foreground, so
   // we can call it unconditionally.
   chromeWindow.getAttention();
+}
+
+this.closeAllChatWindows =
+ function closeAllChatWindows(provider) {
+  // close all attached chat windows
+  let winEnum = Services.wm.getEnumerator("navigator:browser");
+  while (winEnum.hasMoreElements()) {
+    let win = winEnum.getNext();
+    if (!win.SocialChatBar)
+      continue;
+    let chats = [c for (c of win.SocialChatBar.chatbar.children) if (c.content.getAttribute("origin") == provider.origin)];
+    [c.close() for (c of chats)];
+  }
+
+  // close all standalone chat windows
+  winEnum = Services.wm.getEnumerator("Social:Chat");
+  while (winEnum.hasMoreElements()) {
+    let win = winEnum.getNext();
+    if (win.closed)
+      continue;
+    let origin = win.document.getElementById("chatter").content.getAttribute("origin");
+    if (provider.origin == origin)
+      win.close();
+  }
 }
