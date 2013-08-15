@@ -17,6 +17,7 @@ XPIDL_SOURCES += [
 ]
 
 MODULE = 'jar'
+LIBRARY_NAME	= 'jar'
 
 EXPORTS += [
     'nsJARURI.h',
