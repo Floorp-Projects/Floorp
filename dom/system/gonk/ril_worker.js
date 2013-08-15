@@ -9551,62 +9551,14 @@ let CdmaPDUHelper = {
 
 let StkCommandParamsFactory = {
   createParam: function createParam(cmdDetails, ctlvs) {
-    let param;
-    switch (cmdDetails.typeOfCommand) {
-      case STK_CMD_REFRESH:
-        param = this.processRefresh(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_POLL_INTERVAL:
-        param = this.processPollInterval(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_POLL_OFF:
-        param = this.processPollOff(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_PROVIDE_LOCAL_INFO:
-        param = this.processProvideLocalInfo(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_SET_UP_EVENT_LIST:
-        param = this.processSetUpEventList(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_SET_UP_MENU:
-      case STK_CMD_SELECT_ITEM:
-        param = this.processSelectItem(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_DISPLAY_TEXT:
-        param = this.processDisplayText(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_SET_UP_IDLE_MODE_TEXT:
-        param = this.processSetUpIdleModeText(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_GET_INKEY:
-        param = this.processGetInkey(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_GET_INPUT:
-        param = this.processGetInput(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_SEND_SS:
-      case STK_CMD_SEND_USSD:
-      case STK_CMD_SEND_SMS:
-      case STK_CMD_SEND_DTMF:
-        param = this.processEventNotify(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_SET_UP_CALL:
-        param = this.processSetupCall(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_LAUNCH_BROWSER:
-        param = this.processLaunchBrowser(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_PLAY_TONE:
-        param = this.processPlayTone(cmdDetails, ctlvs);
-        break;
-      case STK_CMD_TIMER_MANAGEMENT:
-        param = this.processTimerManagement(cmdDetails, ctlvs);
-        break;
-      default:
-        if (DEBUG) debug("unknown proactive command");
-        break;
+    let method = StkCommandParamsFactory[cmdDetails.typeOfCommand];
+    if (typeof method != "function") {
+      if (DEBUG) {
+        debug("Unknown proactive command " + cmdDetails.typeOfCommand.toString(16));
+      }
+      return null;
     }
-    return param;
+    return method.call(this, cmdDetails, ctlvs);
   },
 
   /**
@@ -10014,6 +9966,63 @@ let StkCommandParamsFactory = {
 
     return timer;
   }
+};
+StkCommandParamsFactory[STK_CMD_REFRESH] = function STK_CMD_REFRESH(cmdDetails, ctlvs) {
+  return this.processRefresh(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_POLL_INTERVAL] = function STK_CMD_POLL_INTERVAL(cmdDetails, ctlvs) {
+  return this.processPollInterval(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_POLL_OFF] = function STK_CMD_POLL_OFF(cmdDetails, ctlvs) {
+  return this.processPollOff(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_PROVIDE_LOCAL_INFO] = function STK_CMD_PROVIDE_LOCAL_INFO(cmdDetails, ctlvs) {
+  return this.processProvideLocalInfo(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SET_UP_EVENT_LIST] = function STK_CMD_SET_UP_EVENT_LIST(cmdDetails, ctlvs) {
+  return this.processSetUpEventList(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SET_UP_MENU] = function STK_CMD_SET_UP_MENU(cmdDetails, ctlvs) {
+  return this.processSelectItem(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SELECT_ITEM] = function STK_CMD_SELECT_ITEM(cmdDetails, ctlvs) {
+  return this.processSelectItem(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_DISPLAY_TEXT] = function STK_CMD_DISPLAY_TEXT(cmdDetails, ctlvs) {
+  return this.processDisplayText(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SET_UP_IDLE_MODE_TEXT] = function STK_CMD_SET_UP_IDLE_MODE_TEXT(cmdDetails, ctlvs) {
+  return this.processSetUpIdleModeText(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_GET_INKEY] = function STK_CMD_GET_INKEY(cmdDetails, ctlvs) {
+  return this.processGetInkey(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_GET_INPUT] = function STK_CMD_GET_INPUT(cmdDetails, ctlvs) {
+  return this.processGetInput(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SEND_SS] = function STK_CMD_SEND_SS(cmdDetails, ctlvs) {
+  return this.processEventNotify(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SEND_USSD] = function STK_CMD_SEND_USSD(cmdDetails, ctlvs) {
+  return this.processEventNotify(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SEND_SMS] = function STK_CMD_SEND_SMS(cmdDetails, ctlvs) {
+  return this.processEventNotify(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SEND_DTMF] = function STK_CMD_SEND_DTMF(cmdDetails, ctlvs) {
+  return this.processEventNotify(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_SET_UP_CALL] = function STK_CMD_SET_UP_CALL(cmdDetails, ctlvs) {
+  return this.processSetupCall(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_LAUNCH_BROWSER] = function STK_CMD_LAUNCH_BROWSER(cmdDetails, ctlvs) {
+  return this.processLaunchBrowser(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_PLAY_TONE] = function STK_CMD_PLAY_TONE(cmdDetails, ctlvs) {
+  return this.processPlayTone(cmdDetails, ctlvs);
+};
+StkCommandParamsFactory[STK_CMD_TIMER_MANAGEMENT] = function STK_CMD_TIMER_MANAGEMENT(cmdDetails, ctlvs) {
+  return this.processTimerManagement(cmdDetails, ctlvs);
 };
 
 let StkProactiveCmdHelper = {
