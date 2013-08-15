@@ -134,7 +134,7 @@ gTests.push({
     is(getTrimmedSelection(gFrame).toString(), "started", "selection test");
 
     let promise = waitForEvent(document, "popupshown");
-    sendContextMenuClickToSelection(gFrame.contentDocument.defaultView);
+    sendContextMenuClick(527, 188);
 
     yield promise;
     ok(promise && !(promise instanceof Error), "promise error");
