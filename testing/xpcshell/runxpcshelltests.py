@@ -1023,7 +1023,7 @@ class XPCShellTests(object):
                     self.todoCount += 1
                     xunit_result["todo"] = True
 
-            if mozcrash.check_for_crashes(test_dir, self.symbolsPath, test_name=name):
+            if mozcrash.check_for_crashes(self.tempDir, self.symbolsPath, test_name=name):
                 message = "PROCESS-CRASH | %s | application crashed" % name
                 self.failCount += 1
                 xunit_result["passed"] = False
