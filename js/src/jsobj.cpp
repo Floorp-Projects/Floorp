@@ -3485,7 +3485,6 @@ DefinePropertyOrElement(ExclusiveContext *cx, HandleObject obj, HandleId id,
         }
     }
 
-
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
     RootedShape shape(cx, JSObject::putProperty(cx, obj, id, getter, setter, SHAPE_INVALID_SLOT,
@@ -3947,8 +3946,9 @@ js::HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
                    typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
                    typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
 {
-    JSAutoResolveFlags rf(cx, 0);
     if (lookup) {
+        JSAutoResolveFlags rf(cx, 0);
+
         if (!allowGC)
             return false;
         if (!lookup(cx,
@@ -3960,9 +3960,16 @@ js::HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
             return false;
         }
     } else {
-        if (!baseops::LookupProperty<allowGC>(cx, obj, id, objp, propp))
+        bool done;
+        if (!LookupOwnPropertyWithFlagsInline<allowGC>(cx, obj, id, 0, objp, propp, &done))
             return false;
+        if (!done) {
+            objp.set(NULL);
+            propp.set(NULL);
+            return true;
+        }
     }
+
     if (!propp)
         return true;
 
