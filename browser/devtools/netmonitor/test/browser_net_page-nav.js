@@ -15,11 +15,11 @@ function test() {
     function testNavigate(aCallback) {
       info("Navigating forward...");
 
-      aMonitor.panelWin.once("NetMonitor:TargetWillNavigate", () => {
+      aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.TARGET_WILL_NAVIGATE, () => {
         is(aDebuggee.location, SIMPLE_URL,
           "Target started navigating to the correct location.");
 
-        aMonitor.panelWin.once("NetMonitor:TargetNavigate", () => {
+        aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.TARGET_DID_NAVIGATE, () => {
           is(aDebuggee.location, NAVIGATE_URL,
             "Target finished navigating to the correct location.");
 
@@ -33,11 +33,11 @@ function test() {
     function testNavigateBack(aCallback) {
       info("Navigating backward...");
 
-      aMonitor.panelWin.once("NetMonitor:TargetWillNavigate", () => {
+      aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.TARGET_WILL_NAVIGATE, () => {
         is(aDebuggee.location, NAVIGATE_URL,
           "Target started navigating back to the previous location.");
 
-        aMonitor.panelWin.once("NetMonitor:TargetNavigate", () => {
+        aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.TARGET_DID_NAVIGATE, () => {
           is(aDebuggee.location, SIMPLE_URL,
             "Target finished navigating back to the previous location.");
 
