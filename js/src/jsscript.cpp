@@ -2004,14 +2004,6 @@ JSScript::numNotes()
     return sn - notes_ + 1;    /* +1 for the terminator */
 }
 
-bool
-JSScript::isShortRunning()
-{
-    return length < 100 &&
-           hasAnalysis() &&
-           !analysis()->hasFunctionCalls();
-}
-
 js::GlobalObject&
 JSScript::uninlinedGlobal() const
 {
