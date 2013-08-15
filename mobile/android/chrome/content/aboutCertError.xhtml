@@ -179,8 +179,8 @@
 
       function toggle(id) {
         var el = document.getElementById(id);
-        if (el.getAttribute("collapsed"))
-          el.setAttribute("collapsed", false);
+        if (el.hasAttribute("collapsed"))
+          el.removeAttribute("collapsed");
         else
           el.setAttribute("collapsed", true);
       }
@@ -214,12 +214,12 @@
         <!-- The following sections can be unhidden by default by setting the
              "browser.xul.error_pages.expert_bad_cert" pref to true -->
         <div id="technicalContent" collapsed="true">
-          <h2 onclick="toggle('technicalContent');" id="technicalContentHeading">&certerror.technical.heading;</h2>
+          <h2 class="expander" onclick="toggle('technicalContent');" id="technicalContentHeading">&certerror.technical.heading;</h2>
           <p id="technicalContentText"/>
         </div>
 
         <div id="expertContent" collapsed="true">
-          <h2 onclick="toggle('expertContent');" id="expertContentHeading">&certerror.expert.heading;</h2>
+          <h2 class="expander" onclick="toggle('expertContent');" id="expertContentHeading">&certerror.expert.heading;</h2>
           <div>
             <p>&certerror.expert.content;</p>
             <p>&certerror.expert.contentPara2;</p>
