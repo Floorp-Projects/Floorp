@@ -507,8 +507,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node orExpr1();
     Node unaryExpr();
     Node memberExpr(TokenKind tt, bool allowCallSyntax);
-    Node objectLiteral();
-    Node arrayInitializer();
     Node primaryExpr(TokenKind tt);
     Node parenExpr(bool *genexp = NULL);
 
@@ -573,6 +571,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node pushLexicalScope(Handle<StaticBlockObject*> blockObj, StmtInfoPC *stmt);
     Node pushLetScope(Handle<StaticBlockObject*> blockObj, StmtInfoPC *stmt);
     bool noteNameUse(HandlePropertyName name, Node pn);
+    Node objectLiteral();
+    Node arrayInitializer();
     Node newRegExp();
 
     Node newBindingNode(PropertyName *name, bool functionScope, VarContext varContext = HoistVars);
