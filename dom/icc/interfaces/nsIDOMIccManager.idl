@@ -241,7 +241,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
 
   /**
    * Send the "Timer Expiration" Envelope command to ICC for TIMER MANAGEMENT.
-  `*
+   *
    * @param timer
    *        The identifier and value for a timer.
    *        timerId: Identifier of the timer that has expired.
@@ -297,7 +297,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    * Possible values: null, 'unknown', 'absent', 'pinRequired', 'pukRequired',
    * 'personalizationInProgress', 'networkLocked', 'corporateLocked',
    * 'serviceProviderLocked', 'networkPukRequired', 'corporatePukRequired',
-   * 'serviceProviderPukRequired', 'ready'.
+   * 'serviceProviderPukRequired', 'personalizationReady', 'ready'.
    */
   readonly attribute DOMString cardState;
 
