@@ -36,24 +36,58 @@
 namespace mozilla {
 namespace widget {
 
-  NS_IMPL_ISUPPORTS1(myDownloadObserver, nsIDownloadObserver)
+NS_IMPL_ISUPPORTS1(myDownloadObserver, nsIDownloadObserver)
 #ifdef MOZ_PLACES
-  NS_IMPL_ISUPPORTS1(AsyncFaviconDataReady, nsIFaviconDataCallback)
+NS_IMPL_ISUPPORTS1(AsyncFaviconDataReady, nsIFaviconDataCallback)
 #endif
-  NS_IMPL_ISUPPORTS1(AsyncEncodeAndWriteIcon, nsIRunnable)
-  NS_IMPL_ISUPPORTS1(AsyncDeleteIconFromDisk, nsIRunnable)
-  NS_IMPL_ISUPPORTS1(AsyncDeleteAllFaviconsFromDisk, nsIRunnable)
+NS_IMPL_ISUPPORTS1(AsyncEncodeAndWriteIcon, nsIRunnable)
+NS_IMPL_ISUPPORTS1(AsyncDeleteIconFromDisk, nsIRunnable)
+NS_IMPL_ISUPPORTS1(AsyncDeleteAllFaviconsFromDisk, nsIRunnable)
 
 
-  const char FaviconHelper::kJumpListCacheDir[] = "jumpListCache";
-  const char FaviconHelper::kShortcutCacheDir[] = "shortcutCache";
+const char FaviconHelper::kJumpListCacheDir[] = "jumpListCache";
+const char FaviconHelper::kShortcutCacheDir[] = "shortcutCache";
 
 // apis available on vista and up.
 WinUtils::SHCreateItemFromParsingNamePtr WinUtils::sCreateItemFromParsingName = NULL;
 WinUtils::SHGetKnownFolderPathPtr WinUtils::sGetKnownFolderPath = NULL;
 
-static const PRUnichar kSehllLibraryName[] =  L"shell32.dll";
+// We just leak these DLL HMODULEs. There's no point in calling FreeLibrary
+// on them during shutdown anyway.
+static const PRUnichar kShellLibraryName[] =  L"shell32.dll";
 static HMODULE sShellDll = NULL;
+static const PRUnichar kDwmLibraryName[] = L"dwmapi.dll";
+static HMODULE sDwmDll = NULL;
+
+WinUtils::DwmExtendFrameIntoClientAreaProc WinUtils::dwmExtendFrameIntoClientAreaPtr = NULL;
+WinUtils::DwmIsCompositionEnabledProc WinUtils::dwmIsCompositionEnabledPtr = NULL;
+WinUtils::DwmSetIconicThumbnailProc WinUtils::dwmSetIconicThumbnailPtr = NULL;
+WinUtils::DwmSetIconicLivePreviewBitmapProc WinUtils::dwmSetIconicLivePreviewBitmapPtr = NULL;
+WinUtils::DwmGetWindowAttributeProc WinUtils::dwmGetWindowAttributePtr = NULL;
+WinUtils::DwmSetWindowAttributeProc WinUtils::dwmSetWindowAttributePtr = NULL;
+WinUtils::DwmInvalidateIconicBitmapsProc WinUtils::dwmInvalidateIconicBitmapsPtr = NULL;
+WinUtils::DwmDefWindowProcProc WinUtils::dwmDwmDefWindowProcPtr = NULL;
+
+/* static */
+void
+WinUtils::Initialize()
+{
+  if (!sDwmDll && WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+    sDwmDll = ::LoadLibraryW(kDwmLibraryName);
+
+    // MSDN: "If the function succeeds, the return value is greater than 31."
+    if (uintptr_t(sDwmDll) > 31) {
+      dwmExtendFrameIntoClientAreaPtr = (DwmExtendFrameIntoClientAreaProc)::GetProcAddress(sDwmDll, "DwmExtendFrameIntoClientArea");
+      dwmIsCompositionEnabledPtr = (DwmIsCompositionEnabledProc)::GetProcAddress(sDwmDll, "DwmIsCompositionEnabled");
+      dwmSetIconicThumbnailPtr = (DwmSetIconicThumbnailProc)::GetProcAddress(sDwmDll, "DwmSetIconicThumbnail");
+      dwmSetIconicLivePreviewBitmapPtr = (DwmSetIconicLivePreviewBitmapProc)::GetProcAddress(sDwmDll, "DwmSetIconicLivePreviewBitmap");
+      dwmGetWindowAttributePtr = (DwmGetWindowAttributeProc)::GetProcAddress(sDwmDll, "DwmGetWindowAttribute");
+      dwmSetWindowAttributePtr = (DwmSetWindowAttributeProc)::GetProcAddress(sDwmDll, "DwmSetWindowAttribute");
+      dwmInvalidateIconicBitmapsPtr = (DwmInvalidateIconicBitmapsProc)::GetProcAddress(sDwmDll, "DwmInvalidateIconicBitmaps");
+      dwmDwmDefWindowProcPtr = (DwmDefWindowProcProc)::GetProcAddress(sDwmDll, "DwmDefWindowProc");
+    }
+  }
+}
 
 /* static */ 
 WinUtils::WinVersion
@@ -466,7 +500,7 @@ WinUtils::SHCreateItemFromParsingName(PCWSTR pszPath, IBindCtx *pbc,
   }
 
   if (!sShellDll) {
-    sShellDll = ::LoadLibraryW(kSehllLibraryName);
+    sShellDll = ::LoadLibraryW(kShellLibraryName);
     if (!sShellDll) {
       return false;
     }
@@ -492,7 +526,7 @@ WinUtils::SHGetKnownFolderPath(REFKNOWNFOLDERID rfid,
   }
 
   if (!sShellDll) {
-    sShellDll = ::LoadLibraryW(kSehllLibraryName);
+    sShellDll = ::LoadLibraryW(kShellLibraryName);
     if (!sShellDll) {
       return false;
     }
