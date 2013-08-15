@@ -105,6 +105,7 @@ class ResourceUriFileReader:
         'ril_worker.js':          'modules/ril_worker.js',
         'ril_consts.js':          'modules/ril_consts.js',
         'systemlibs.js':          'modules/systemlibs.js',
+        'worker_buf.js':          'modules/workers/worker_buf.js',
     }
 
     CODE_OPEN_CHANNEL_BY_URI = '''
@@ -356,3 +357,6 @@ class TestRILCodeQuality(MarionetteTestCase):
 
     def test_ril_consts(self):
         self._check('ril_consts.js')
+
+    def test_worker_buf(self):
+        self._check('worker_buf.js')
