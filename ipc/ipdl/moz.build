@@ -11,3 +11,5 @@ MODULE = 'ipdlgen'
 
 LIBXUL_LIBRARY = True
 
+LIBRARY_NAME = 'mozipdlgen_s'
+

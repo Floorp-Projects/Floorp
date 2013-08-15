@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= jsdombase_s
 include $(topsrcdir)/dom/dom-config.mk
 
 ifdef MOZ_JSDEBUGGER

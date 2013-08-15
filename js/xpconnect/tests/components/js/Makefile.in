@@ -10,7 +10,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = xpctest
 IS_COMPONENT = 1
 MODULE_NAME = xpconnect_test
 
