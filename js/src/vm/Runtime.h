@@ -692,7 +692,7 @@ struct JSRuntime : public JS::shadow::Runtime,
      * as possible.
      */
 #ifdef JS_THREADSAFE
-    mozilla::Atomic<int32_t> interrupt;
+    mozilla::Atomic<int32_t, mozilla::Relaxed> interrupt;
 #else
     int32_t interrupt;
 #endif
