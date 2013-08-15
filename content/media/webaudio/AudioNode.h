@@ -10,21 +10,24 @@
 #include "nsDOMEventTargetHelper.h"
 #include "mozilla/dom/AudioNodeBinding.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Attributes.h"
 #include "EnableWebAudioCheck.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "AudioContext.h"
+#include "AudioParamTimeline.h"
 #include "MediaStreamGraph.h"
 #include "WebAudioUtils.h"
 
+struct JSContext;
+
 namespace mozilla {
+
+class ErrorResult;
 
 namespace dom {
 
-class AudioContext;
-class AudioBufferSourceNode;
 class AudioParam;
-class AudioParamTimeline;
 struct ThreeDPoint;
 
 template<class T>

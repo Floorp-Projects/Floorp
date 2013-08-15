@@ -6,6 +6,7 @@
 
 #include "MediaElementAudioSourceNode.h"
 #include "mozilla/dom/MediaElementAudioSourceNodeBinding.h"
+#include "mozilla/dom/HTMLMediaElement.h"
 
 namespace mozilla {
 namespace dom {

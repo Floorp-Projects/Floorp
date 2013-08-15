@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioNode.h"
+#include "AudioContext.h"
 #include "mozilla/ErrorResult.h"
 #include "AudioNodeStream.h"
 

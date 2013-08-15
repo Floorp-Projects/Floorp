@@ -11,9 +11,13 @@
 #include "nsAutoPtr.h"
 
 namespace mozilla {
+
+class AudioNodeStream;
+
 namespace dom {
 
 class AudioContext;
+class ScriptProcessorNodeEngine;
 class SharedBuffers;
 
 class ScriptProcessorNode : public AudioNode

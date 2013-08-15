@@ -23,6 +23,8 @@ namespace mozilla {
 
 namespace dom {
 
+class AudioContext;
+
 class AudioListener MOZ_FINAL : public nsWrapperCache,
                                 public EnableWebAudioCheck
 {
