@@ -9,7 +9,7 @@
 
 interface imgIRequest;
 
-[ChromeOnly]
+[ChromeOnly, OverrideBuiltins]
 interface ImageDocument : HTMLDocument {
   /* Whether the pref for image resizing has been set. */
   readonly attribute boolean imageResizingEnabled;
