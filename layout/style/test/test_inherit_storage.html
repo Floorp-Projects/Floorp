@@ -79,6 +79,23 @@ function test_property(property)
   if ("subproperties" in info)
     for (var idx in info.subproperties)
       check_final(info.subproperties[idx]);
+
+  // can all properties be removed from the style?
+  function test_remove_all_properties(property, value) {
+    var i, p = [];
+    for (i = 0; i < gDeclaration.length; i++) p.push(gDeclaration[i]);
+    for (i = 0; i < p.length; i++) gDeclaration.removeProperty(p[i]);
+    var errstr = "when setting property " + property + " to " + value;
+    is(gDeclaration.length, 0, "unremovable properties " + errstr);
+    is(gDeclaration.cssText, "", "non-empty serialization after removing all properties " + errstr);
+  }
+
+  // sanity check shorthands to make sure disabled props aren't exposed
+  if (info.type != CSS_TYPE_LONGHAND) {
+    gDeclaration.setProperty(property, "inherit", "");
+    test_remove_all_properties(property, "inherit");
+    gDeclaration.removeProperty(property);
+  }
 }
 
 for (var prop in gCSSProperties)
