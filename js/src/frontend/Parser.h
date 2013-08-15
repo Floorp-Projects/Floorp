@@ -574,6 +574,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node pushLetScope(Handle<StaticBlockObject*> blockObj, StmtInfoPC *stmt);
     bool noteNameUse(HandlePropertyName name, Node pn);
     Node newRegExp();
+
     Node newBindingNode(PropertyName *name, bool functionScope, VarContext varContext = HoistVars);
     bool checkDestructuring(BindData<ParseHandler> *data, Node left, bool toplevel = true);
     bool bindDestructuringVar(BindData<ParseHandler> *data, Node pn);

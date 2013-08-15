@@ -3543,7 +3543,8 @@ ParseNode::getConstantValue(ExclusiveContext *cx, bool strictChecks, MutableHand
         return true;
       }
       case PNK_OBJECT: {
-        JS_ASSERT(isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
+        JS_ASSERT(isOp(JSOP_NEWINIT));
+        JS_ASSERT(!(pn_xflags & PNX_NONCONST));
 
         gc::AllocKind kind = GuessObjectGCKind(pn_count);
         RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_, kind, MaybeSingletonObject));
