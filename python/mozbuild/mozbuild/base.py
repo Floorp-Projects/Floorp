@@ -380,6 +380,9 @@ class MozbuildObject(ProcessExecutionMixin):
         if srcdir:
             fn = self._run_command_in_srcdir
 
+        append_env = dict(append_env or ())
+        append_env[b'MACH'] = '1'
+
         params = {
             'args': args,
             'line_handler': line_handler,
