@@ -6898,6 +6898,10 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
         if (op == JSOP_FUNAPPLY)
             return true;
 
+        // If callee is not an interpreted constructor, we have to throw.
+        if (constructing && !fun->isInterpretedConstructor())
+            return true;
+
         RootedScript calleeScript(cx, fun->nonLazyScript());
         if (!calleeScript->hasBaselineScript() && !calleeScript->hasIonScript())
             return true;
@@ -7315,7 +7319,10 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
         Address expectedScript(BaselineStubReg, ICCall_Scripted::offsetOfCalleeScript());
         masm.branchPtr(Assembler::NotEqual, expectedScript, callee, &failure);
     } else {
-        masm.branchIfFunctionHasNoScript(callee, &failure);
+        if (isConstructing_)
+            masm.branchIfNotInterpretedConstructor(callee, regs.getAny(), &failure);
+        else
+            masm.branchIfFunctionHasNoScript(callee, &failure);
         masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
     }
 
