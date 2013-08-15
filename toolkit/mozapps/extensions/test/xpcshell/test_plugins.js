@@ -8,7 +8,6 @@ var gID = null;
 function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  Services.prefs.setBoolPref("plugins.click_to_play", true);
 
   startupManager();
   AddonManager.addAddonListener(AddonListener);
@@ -170,8 +169,6 @@ function run_test_4() {
   AddonManager.getAddonByID(gID, function(p) {
     do_check_neq(p, null);
     do_check_eq(p.name, "Test Plug-in");
-
-    Services.prefs.clearUserPref("plugins.click_to_play");
 
     do_test_finished();
   });
