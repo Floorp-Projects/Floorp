@@ -774,6 +774,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     friend class js::AutoPauseWorkersForGC;
 
   public:
+    void setUsedByExclusiveThread(JS::Zone *zone);
+    void clearUsedByExclusiveThread(JS::Zone *zone);
+
 #endif // JS_THREADSAFE
 
     bool currentThreadHasExclusiveAccess() {
@@ -1298,7 +1301,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     js::GCHelperThread  gcHelperThread;
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(JS_ION)
     js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
 #endif
 
@@ -1402,6 +1405,8 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     // The atoms compartment is the only one in its zone.
     inline bool isAtomsZone(JS::Zone *zone);
+
+    inline bool atomsZoneNeedsBarrier();
 
     union {
         /*

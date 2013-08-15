@@ -208,6 +208,9 @@ typedef bool                    JSCallOnceType;
 typedef bool                    (*JSInitCallback)(void);
 
 namespace JS {
+
+typedef void (*OffThreadCompileCallback)(JSScript *script, void *callbackData);
+
 namespace shadow {
 
 struct Runtime
