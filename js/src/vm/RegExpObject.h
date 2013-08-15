@@ -10,22 +10,12 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
-#include <stddef.h>
-
 #include "jscntxt.h"
-#include "jsobj.h"
-#include "jsproxy.h"
 
-#include "gc/Barrier.h"
 #include "gc/Marking.h"
-#include "vm/MatchPairs.h"
-#include "vm/Runtime.h"
-#include "yarr/MatchResult.h"
-#include "yarr/Yarr.h"
 #if ENABLE_YARR_JIT
 #include "yarr/YarrJIT.h"
 #endif
-#include "yarr/YarrSyntaxChecker.h"
 
 /*
  * JavaScript Regular Expressions
@@ -47,7 +37,11 @@
  */
 namespace js {
 
+class MatchConduit;
+class MatchPair;
+class MatchPairs;
 class RegExpShared;
+
 namespace frontend { class TokenStream; }
 
 enum RegExpFlag

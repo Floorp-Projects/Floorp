@@ -1680,8 +1680,12 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.loadObjClass(calleereg, nargsreg);
     masm.branchPtr(Assembler::NotEqual, nargsreg, ImmWord(&JSFunction::class_), &invoke);
 
-    // Guard that calleereg is an interpreted function with a JSScript:
-    masm.branchIfFunctionHasNoScript(calleereg, &invoke);
+    // Guard that calleereg is an interpreted function with a JSScript.
+    // If we are constructing, also ensure the callee is a constructor.
+    if (call->mir()->isConstructing())
+        masm.branchIfNotInterpretedConstructor(calleereg, nargsreg, &invoke);
+    else
+        masm.branchIfFunctionHasNoScript(calleereg, &invoke);
 
     // Knowing that calleereg is a non-native function, load the JSScript.
     masm.loadPtr(Address(calleereg, JSFunction::offsetOfNativeOrScript()), objreg);
@@ -1789,6 +1793,8 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     JS_ASSERT(!target->isNative());
     // Missing arguments must have been explicitly appended by the IonBuilder.
     JS_ASSERT(target->nargs <= call->numStackArgs());
+
+    JS_ASSERT_IF(call->mir()->isConstructing(), target->isInterpretedConstructor());
 
     masm.checkStackAlignment();
 
