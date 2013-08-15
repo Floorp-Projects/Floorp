@@ -507,6 +507,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node orExpr1();
     Node unaryExpr();
     Node memberExpr(TokenKind tt, bool allowCallSyntax);
+    Node objectLiteral();
+    Node arrayInitializer();
     Node primaryExpr(TokenKind tt);
     Node parenExpr(bool *genexp = NULL);
 
