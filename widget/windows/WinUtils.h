@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <shobjidl.h>
 #include <uxtheme.h>
+#include <dwmapi.h>
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsRegion.h"
@@ -285,6 +286,7 @@ public:
   typedef HRESULT (WINAPI*DwmSetWindowAttributeProc)(HWND hWnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
   typedef HRESULT (WINAPI*DwmInvalidateIconicBitmapsProc)(HWND hWnd);
   typedef HRESULT (WINAPI*DwmDefWindowProcProc)(HWND hWnd, UINT msg, LPARAM lParam, WPARAM wParam, LRESULT *aRetValue);
+  typedef HRESULT (WINAPI*DwmGetCompositionTimingInfoProc)(HWND hWnd, DWM_TIMING_INFO *info);
 
   static DwmExtendFrameIntoClientAreaProc dwmExtendFrameIntoClientAreaPtr;
   static DwmIsCompositionEnabledProc dwmIsCompositionEnabledPtr;
@@ -294,6 +296,7 @@ public:
   static DwmSetWindowAttributeProc dwmSetWindowAttributePtr;
   static DwmInvalidateIconicBitmapsProc dwmInvalidateIconicBitmapsPtr;
   static DwmDefWindowProcProc dwmDwmDefWindowProcPtr;
+  static DwmGetCompositionTimingInfoProc dwmGetCompositionTimingInfoPtr;
 
   static void Initialize();
 
