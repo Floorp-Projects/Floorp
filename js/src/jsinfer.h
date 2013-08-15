@@ -13,8 +13,8 @@
 
 #include "jsfriendapi.h"
 
-#include "ds/LifoAlloc.h"
 #include "ds/IdValuePair.h"
+#include "ds/LifoAlloc.h"
 #include "gc/Barrier.h"
 #include "js/Utility.h"
 

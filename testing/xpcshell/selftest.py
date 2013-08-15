@@ -84,6 +84,43 @@ add_task(function test() {
 });
 '''
 
+ADD_TEST_THROW_STRING = '''
+function run_test() {do_throw("Passing a string to do_throw")};
+'''
+
+ADD_TEST_THROW_OBJECT = '''
+let error = {
+  message: "Error object",
+  fileName: "failure.js",
+  stack: "ERROR STACK",
+  toString: function() {return this.message;}
+};
+function run_test() {do_throw(error)};
+'''
+
+ADD_TEST_REPORT_OBJECT = '''
+let error = {
+  message: "Error object",
+  fileName: "failure.js",
+  stack: "ERROR STACK",
+  toString: function() {return this.message;}
+};
+function run_test() {do_report_unexpected_exception(error)};
+'''
+
+# A test for genuine JS-generated Error objects
+ADD_TEST_REPORT_REF_ERROR = '''
+function run_test() {
+  let obj = {blah: 0};
+  try {
+    obj.noSuchFunction();
+  }
+  catch (error) {
+    do_report_unexpected_exception(error);
+  }
+};
+'''
+
 class XPCShellTestsTests(unittest.TestCase):
     """
     Yes, these are unit tests for a unit test harness.
@@ -138,7 +175,8 @@ tail =
                                           mozInfo={},
                                           shuffle=shuffle,
                                           testsRootDir=self.tempdir,
-                                          xunitFilename=xunitFilename),
+                                          xunitFilename=xunitFilename,
+                                          sequential=True),
                           msg="""Tests should have %s, log:
 ========
 %s
@@ -445,6 +483,66 @@ tail =
 
         self.assertTrue(testcases[1].find("failure") is not None)
         self.assertTrue(testcases[2].find("skipped") is not None)
+
+    def testDoThrowString(self):
+        """
+        Check that do_throw produces reasonable messages when the
+        input is a string instead of an object
+        """
+        self.writeFile("test_error.js", ADD_TEST_THROW_STRING)
+        self.writeManifest(["test_error.js"])
+
+        self.assertTestResult(False)
+        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog("Passing a string to do_throw")
+        self.assertNotInLog("TEST-PASS")
+
+    def testDoThrowForeignObject(self):
+        """
+        Check that do_throw produces reasonable messages when the
+        input is a generic object with 'filename', 'message' and 'stack' attributes
+        but 'object instanceof Error' returns false
+        """
+        self.writeFile("test_error.js", ADD_TEST_THROW_OBJECT)
+        self.writeManifest(["test_error.js"])
+
+        self.assertTestResult(False)
+        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog("failure.js")
+        self.assertInLog("Error object")
+        self.assertInLog("ERROR STACK")
+        self.assertNotInLog("TEST-PASS")
+
+    def testDoReportForeignObject(self):
+        """
+        Check that do_report_unexpected_exception produces reasonable messages when the
+        input is a generic object with 'filename', 'message' and 'stack' attributes
+        but 'object instanceof Error' returns false
+        """
+        self.writeFile("test_error.js", ADD_TEST_REPORT_OBJECT)
+        self.writeManifest(["test_error.js"])
+
+        self.assertTestResult(False)
+        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog("failure.js")
+        self.assertInLog("Error object")
+        self.assertInLog("ERROR STACK")
+        self.assertNotInLog("TEST-PASS")
+
+    def testDoReportRefError(self):
+        """
+        Check that do_report_unexpected_exception produces reasonable messages when the
+        input is a JS-generated Error
+        """
+        self.writeFile("test_error.js", ADD_TEST_REPORT_REF_ERROR)
+        self.writeManifest(["test_error.js"])
+
+        self.assertTestResult(False)
+        self.assertInLog("TEST-UNEXPECTED-FAIL")
+        self.assertInLog("test_error.js")
+        self.assertInLog("obj.noSuchFunction is not a function")
+        self.assertInLog("run_test@")
+        self.assertNotInLog("TEST-PASS")
 
 if __name__ == "__main__":
     unittest.main()

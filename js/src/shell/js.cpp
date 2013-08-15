@@ -23,8 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef XP_UNIX
-# include <sys/wait.h>
 # include <sys/types.h>
+# include <sys/wait.h>
 # include <unistd.h>
 #endif
 

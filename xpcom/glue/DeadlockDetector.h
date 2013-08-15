@@ -31,9 +31,11 @@ private:
     typedef nsTMStackTraceID callstack_id;
     // needs to be a macro to avoid disturbing the backtrace
 #   define NS_GET_BACKTRACE() NS_TraceMallocGetStackTrace()
+#   define NS_DEADLOCK_DETECTOR_CONSTEXPR
 #else
     typedef void* callstack_id;
 #   define NS_GET_BACKTRACE() 0
+#   define NS_DEADLOCK_DETECTOR_CONSTEXPR MOZ_CONSTEXPR
 #endif  // ifdef NS_TRACE_MALLOC
 
     callstack_id mCallStack;
@@ -51,10 +53,12 @@ public:
      * constructor: it *will* construct a backtrace.  This can cause
      * unexpected performance issues.
      */
+    NS_DEADLOCK_DETECTOR_CONSTEXPR
     CallStack(const callstack_id aCallStack = NS_GET_BACKTRACE()) :
         mCallStack(aCallStack)
     {
     }
+    NS_DEADLOCK_DETECTOR_CONSTEXPR
     CallStack(const CallStack& aFrom) :
         mCallStack(aFrom.mCallStack)
     {

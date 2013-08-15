@@ -49,6 +49,5 @@ function test_pause_frame()
       recurse();
     };
     recurse();
-    ")"
   } + ")()");
 }

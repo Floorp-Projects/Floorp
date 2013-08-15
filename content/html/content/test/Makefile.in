@@ -148,7 +148,6 @@ MOCHITEST_FILES = \
 		test_bug569955.html \
 		test_bug573969.html \
 		test_bug561640.html \
-		test_bug566064.html \
 		test_bug582412-1.html \
 		test_bug582412-2.html \
 		test_bug558788-1.html \

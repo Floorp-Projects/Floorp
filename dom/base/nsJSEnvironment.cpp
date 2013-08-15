@@ -104,8 +104,6 @@ static PRLogModuleInfo* gJSDiagnostics;
 
 #define NS_FULL_GC_DELAY            60000 // ms
 
-#define NS_MAX_COMPARTMENT_GC_COUNT 20
-
 // Maximum amount of time that should elapse between incremental GC slices
 #define NS_INTERSLICE_GC_DELAY      100 // ms
 
@@ -167,7 +165,6 @@ static uint32_t sCCollectedWaitingForGC;
 static uint32_t sLikelyShortLivingObjectsNeedingGC;
 static bool sPostGCEventsToConsole;
 static bool sPostGCEventsToObserver;
-static bool sDisableExplicitCompartmentGC;
 static uint32_t sCCTimerFireCount = 0;
 static uint32_t sMinForgetSkippableTime = UINT32_MAX;
 static uint32_t sMaxForgetSkippableTime = 0;
@@ -175,7 +172,6 @@ static uint32_t sTotalForgetSkippableTime = 0;
 static uint32_t sRemovedPurples = 0;
 static uint32_t sForgetSkippableBeforeCC = 0;
 static uint32_t sPreviousSuspectedCount = 0;
-static uint32_t sCompartmentGCCount = NS_MAX_COMPARTMENT_GC_COUNT;
 static uint32_t sCleanupsSinceLastGC = UINT32_MAX;
 static bool sNeedsFullCC = false;
 static nsJSContext *sContextList = nullptr;
@@ -692,8 +688,6 @@ static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinferenc
 static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
 static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
 static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
-static const char js_disable_explicit_compartment_gc[] =
-  JS_OPTIONS_DOT_STR "mem.disable_explicit_compartment_gc";
 static const char js_asmjs_content_str[]      = JS_OPTIONS_DOT_STR "asmjs";
 static const char js_baselinejit_content_str[] = JS_OPTIONS_DOT_STR "baselinejit.content";
 static const char js_baselinejit_chrome_str[]  = JS_OPTIONS_DOT_STR "baselinejit.chrome";
@@ -711,8 +705,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
   sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
   sPostGCEventsToObserver = Preferences::GetBool(js_memnotify_option_str);
-  sDisableExplicitCompartmentGC =
-    Preferences::GetBool(js_disable_explicit_compartment_gc);
 
   bool strict = Preferences::GetBool(js_strict_option_str);
   if (strict)
@@ -819,8 +811,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
-  : mActive(false)
-  , mGCOnDestruction(aGCOnDestruction)
+  : mGCOnDestruction(aGCOnDestruction)
   , mGlobalObjectRef(aGlobalObject)
 {
   mNext = sContextList;
@@ -930,8 +921,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
   NS_INTERFACE_MAP_ENTRY(nsIScriptContext)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptNotify)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptContext)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 
@@ -961,22 +951,15 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             JS::Value* aRetValue)
 {
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-  nsresult rv;
   if (!mScriptsEnabled) {
     return NS_OK;
   }
 
-  {
-    AutoCxPusher pusher(mContext);
-    nsJSUtils::EvaluateOptions evalOptions;
-    evalOptions.setCoerceToString(aCoerceToString);
-    rv = nsJSUtils::EvaluateString(mContext, aScript, aScopeObject,
+  AutoCxPusher pusher(mContext);
+  nsJSUtils::EvaluateOptions evalOptions;
+  evalOptions.setCoerceToString(aCoerceToString);
+  return nsJSUtils::EvaluateString(mContext, aScript, aScopeObject,
                                    aCompileOptions, evalOptions, aRetValue);
-  }
-
-  // ScriptEvaluated needs to come after we pop the stack
-  ScriptEvaluated(true);
-  return rv;
 }
 
 #ifdef DEBUG
@@ -1896,19 +1879,6 @@ nsJSContext::IsContextInitialized()
   return mIsInitialized;
 }
 
-void
-nsJSContext::ScriptEvaluated(bool aTerminated)
-{
-  if (GetNativeGlobal()) {
-    JSAutoCompartment ac(mContext, GetNativeGlobal());
-    JS_MaybeGC(mContext);
-  }
-
-  if (aTerminated) {
-    mActive = true;
-  }
-}
-
 bool
 nsJSContext::GetScriptsEnabled()
 {
@@ -1940,14 +1910,6 @@ void
 nsJSContext::SetProcessingScriptTag(bool aFlag)
 {
   mProcessingScriptTag = aFlag;
-}
-
-NS_IMETHODIMP
-nsJSContext::ScriptExecuted()
-{
-  ScriptEvaluated(!::JS_IsRunning(mContext));
-
-  return NS_OK;
 }
 
 void
@@ -1995,34 +1957,6 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
     return;
   }
 
-  // Use zone GC when we're not asked to do a shrinking GC nor
-  // global GC and compartment GC has been called less than
-  // NS_MAX_COMPARTMENT_GC_COUNT times after the previous global GC.
-  if (!sDisableExplicitCompartmentGC &&
-      aShrinking != ShrinkingGC && aCompartment != NonCompartmentGC &&
-      sCompartmentGCCount < NS_MAX_COMPARTMENT_GC_COUNT) {
-    JS::PrepareForFullGC(nsJSRuntime::sRuntime);
-    for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
-      if (!cx->mActive && cx->mContext) {
-        if (JSObject* global = cx->GetNativeGlobal()) {
-          JS::SkipZoneForGC(JS::GetObjectZone(global));
-        }
-      }
-      cx->mActive = false;
-    }
-    if (JS::IsGCScheduled(nsJSRuntime::sRuntime)) {
-      if (aIncremental == IncrementalGC) {
-        JS::IncrementalGC(nsJSRuntime::sRuntime, aReason, aSliceMillis);
-      } else {
-        JS::GCForReason(nsJSRuntime::sRuntime, aReason);
-      }
-    }
-    return;
-  }
-
-  for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
-    cx->mActive = false;
-  }
   JS::PrepareForFullGC(nsJSRuntime::sRuntime);
   if (aIncremental == IncrementalGC) {
     JS::IncrementalGC(nsJSRuntime::sRuntime, aReason, aSliceMillis);
@@ -2517,7 +2451,6 @@ nsJSContext::KillCCTimer()
 void
 nsJSContext::GC(JS::gcreason::Reason aReason)
 {
-  mActive = true;
   PokeGC(aReason);
 }
 
@@ -2609,7 +2542,6 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
     nsJSContext::MaybePokeCC();
 
     if (aDesc.isCompartment_) {
-      ++sCompartmentGCCount;
       if (!sFullGCTimer && !sShuttingDown) {
         CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);
         JS::gcreason::Reason reason = JS::gcreason::FULL_GC_TIMER;
@@ -2619,7 +2551,6 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
                                            nsITimer::TYPE_ONE_SHOT);
       }
     } else {
-      sCompartmentGCCount = 0;
       nsJSContext::KillFullGCTimer();
 
       // Avoid shrinking during heavy activity, which is suggested by
@@ -2714,7 +2645,6 @@ nsJSRuntime::Startup()
   sCCollectedWaitingForGC = 0;
   sLikelyShortLivingObjectsNeedingGC = 0;
   sPostGCEventsToConsole = false;
-  sDisableExplicitCompartmentGC = false;
   sNeedsFullCC = false;
   gNameSpaceManager = nullptr;
   sRuntimeService = nullptr;

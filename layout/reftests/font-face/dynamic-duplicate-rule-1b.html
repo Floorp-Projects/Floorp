@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+<meta charset="utf-8">
+
+<!-- Testcase for bug 879963 regression.
+     Identical to dynamic-duplicate-rule-1a, except that we disable the
+     second rule (rather than the first), to allow for the possibility of
+     changes in how rules are ordered/searched. -->
+
+<style type="text/css" id="style1">
+@font-face {
+  font-family: foo;
+  src: local("Arial"),
+       local("DejaVu Sans"),
+       local("Free Sans"),
+       local("Open Sans"),
+       local("Droid Sans"),
+       local("Roboto");
+}
+</style>
+
+<style type="text/css" id="style2">
+@font-face {
+  font-family: foo;
+  src: local("Arial"),
+       local("DejaVu Sans"),
+       local("Free Sans"),
+       local("Open Sans"),
+       local("Droid Sans"),
+       local("Roboto");
+}
+</style>
+
+<style type="text/css">
+body {
+  font-family: serif;
+}
+.test {
+  font-family: foo;
+}
+</style>
+
+<script type="application/javascript">
+function run() {
+  document.getElementById("style2").disabled = true;
+  document.documentElement.removeAttribute("class");
+}
+</script>
+
+</head>
+
+<body onload="run()">
+<div>
+foo <span class="test">bar</span> baz
+</div>
+</body>
+
+</html>

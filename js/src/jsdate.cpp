@@ -6,16 +6,7 @@
 
 /*
  * JS date methods.
- */
-
-#include "jsdate.h"
-
-#include "js/Date.h"
-
-#include "mozilla/FloatingPoint.h"
-#include "mozilla/Util.h"
-
-/*
+ *
  * "For example, OS/360 devotes 26 bytes of the permanently
  *  resident date-turnover routine to the proper handling of
  *  December 31 on leap years (when it is Day 366).  That
@@ -23,6 +14,11 @@
  *
  * Frederick Brooks, 'The Second-System Effect'.
  */
+
+#include "jsdate.h"
+
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/Util.h"
 
 #include <ctype.h>
 #include <math.h>
@@ -38,6 +34,7 @@
 #include "jsutil.h"
 #include "prmjtime.h"
 
+#include "js/Date.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
