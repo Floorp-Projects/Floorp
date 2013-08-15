@@ -3,25 +3,39 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import errno
 
 def mtime(path):
-    return os.stat(path).st_mtime
+    try:
+        return os.stat(path).st_mtime
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            return -1
+        raise
 
 def rebuild_check(args):
     target = args[0]
     deps = args[1:]
-    if not os.path.exists(target):
+    t = mtime(target)
+    if t < 0:
         print target
         return
-    t = mtime(target)
 
     newer = []
+    removed = []
     for dep in deps:
-        if mtime(dep) > t:
+        deptime = mtime(dep)
+        if deptime < 0:
+            removed.append(dep)
+        elif mtime(dep) > t:
             newer.append(dep)
 
-    if newer:
+    if newer and removed:
+        print 'Rebuilding %s because %s changed and %s was removed' % (target, ', '.join(newer), ', '.join(removed))
+    elif newer:
         print 'Rebuilding %s because %s changed' % (target, ', '.join(newer))
+    elif removed:
+        print 'Rebuilding %s because %s was removed' % (target, ', '.join(removed))
     else:
         print 'Rebuilding %s for an unknown reason' % target
 
