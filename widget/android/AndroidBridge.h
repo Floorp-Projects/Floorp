@@ -126,6 +126,7 @@ public:
     enum {
         // Values for NotifyIME, in addition to values from the Gecko
         // NotificationToIME enum; use negative values here to prevent conflict
+        NOTIFY_IME_OPEN_VKB = -2,
         NOTIFY_IME_REPLY_EVENT = -1,
     };
 

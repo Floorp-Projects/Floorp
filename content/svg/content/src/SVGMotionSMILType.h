@@ -71,10 +71,8 @@ public:
                                         float aRotateAngle);
 
 private:
-  // Private constructor & destructor: prevent instances beyond my singleton,
-  // and prevent others from deleting my singleton.
-  SVGMotionSMILType()  {}
-  ~SVGMotionSMILType() {}
+  // Private constructor: prevent instances beyond my singleton.
+  MOZ_CONSTEXPR SVGMotionSMILType() {}
 };
 
 } // namespace mozilla

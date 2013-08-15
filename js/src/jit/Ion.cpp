@@ -15,8 +15,8 @@
 #endif
 
 #include "gc/Marking.h"
-#include "jit/AsmJSModule.h"
 #include "jit/AliasAnalysis.h"
+#include "jit/AsmJSModule.h"
 #include "jit/BacktrackingAllocator.h"
 #include "jit/BaselineCompiler.h"
 #include "jit/BaselineInspector.h"

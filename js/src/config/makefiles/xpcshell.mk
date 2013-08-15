@@ -36,6 +36,7 @@ endif #} NO_XPCSHELL_MANIFEST_CHECK
 # Execute all tests in the $(XPCSHELL_TESTS) directories.
 # See also testsuite-targets.mk 'xpcshell-tests' target for global execution.
 xpcshell-tests:
+	$(info Please consider running xpcshell tests via |mach xpcshell-test|. mach is more powerful, easier to use, and will be the only supported way to run tests in the future. Consider switching to mach today!)
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
 	  -I$(DEPTH)/build \
 	  -I$(topsrcdir)/build \
@@ -71,6 +72,7 @@ xpcshell-tests-remote:
 # start the test. Instead, present the xpcshell prompt so the user can
 # attach a debugger and then start the test.
 check-interactive:
+	$(info Please consider running xpcshell tests via mach: |mach xpcshell-test --interactive path/to/test|.)
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
 	  -I$(DEPTH)/build \
 	  -I$(topsrcdir)/build \
@@ -88,6 +90,7 @@ check-interactive:
 
 # Execute a single test, specified in $(SOLO_FILE)
 check-one:
+	$(info Please consider running xpcshell tests via mach: |mach xpcshell-test path/to/test|.)
 	$(PYTHON) -u $(topsrcdir)/config/pythonpath.py \
 	  -I$(DEPTH)/build \
 	  -I$(topsrcdir)/build \

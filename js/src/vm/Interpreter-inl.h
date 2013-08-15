@@ -21,8 +21,8 @@
 #include "vm/ForkJoin.h"
 
 #include "jsatominlines.h"
-#include "jsobjinlines.h"
 #include "jsinferinlines.h"
+#include "jsobjinlines.h"
 
 #include "vm/GlobalObject-inl.h"
 #include "vm/Stack-inl.h"
