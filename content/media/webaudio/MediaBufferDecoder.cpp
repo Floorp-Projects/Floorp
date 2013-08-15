@@ -8,7 +8,6 @@
 #include "AbstractMediaDecoder.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/dom/AudioContextBinding.h"
 #include <speex/speex_resampler.h>
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
@@ -17,6 +16,8 @@
 #include "DecoderTraits.h"
 #include "AudioContext.h"
 #include "AudioBuffer.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"

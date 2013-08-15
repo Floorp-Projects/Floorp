@@ -23,7 +23,6 @@
  */
 
 #include "HRTFPanner.h"
-#include "HRTFDatabaseLoader.h"
 
 #include "FFTConvolver.h"
 #include "HRTFDatabase.h"

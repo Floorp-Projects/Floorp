@@ -6,7 +6,6 @@
 
 #include "AudioProcessingEvent.h"
 #include "mozilla/dom/AudioProcessingEventBinding.h"
-#include "AudioContext.h"
 
 namespace mozilla {
 namespace dom {

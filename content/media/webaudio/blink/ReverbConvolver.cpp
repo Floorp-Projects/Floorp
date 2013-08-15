@@ -27,7 +27,6 @@
  */
 
 #include "ReverbConvolver.h"
-#include "ReverbConvolverStage.h"
 
 using namespace mozilla;
 

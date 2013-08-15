@@ -11,7 +11,6 @@
 #include "WebAudioUtils.h"
 #include "blink/Biquad.h"
 #include "mozilla/Preferences.h"
-#include "AudioParamTimeline.h"
 
 namespace mozilla {
 namespace dom {
