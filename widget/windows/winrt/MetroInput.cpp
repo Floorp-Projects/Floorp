@@ -980,13 +980,9 @@ MetroInput::HandleSingleTap(const LayoutDeviceIntPoint& aPoint)
   POINT point;
   if (GetCursorPos(&point)) {
     ScreenToClient((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW), &point);
-    Foundation::Point oldMousePosition;
-    oldMousePosition.X = static_cast<FLOAT>(point.x);
-    oldMousePosition.Y = static_cast<FLOAT>(point.y);
-    mouseEvent.refPoint = aPoint;
+    mouseEvent.refPoint = LayoutDeviceIntPoint(point.x, point.y);
     mouseEvent.message = NS_MOUSE_MOVE;
     mouseEvent.button = 0;
-
     DispatchEventIgnoreStatus(&mouseEvent);
   }
 
