@@ -336,9 +336,6 @@ var BrowserApp = {
     ExternalApps.init();
     Distribution.init();
     Tabs.init();
-#ifdef MOZ_TELEMETRY_REPORTING
-    Telemetry.init();
-#endif
 #ifdef ACCESSIBILITY
     AccessFu.attach(window);
 #endif
@@ -657,9 +654,6 @@ var BrowserApp = {
     ExternalApps.uninit();
     Distribution.uninit();
     Tabs.uninit();
-#ifdef MOZ_TELEMETRY_REPORTING
-    Telemetry.uninit();
-#endif
   },
 
   // This function returns false during periods where the browser displayed document is
@@ -7088,25 +7082,9 @@ var RemoteDebugger = {
 var Telemetry = {
   SHARED_PREF_TELEMETRY_ENABLED: "datareporting.telemetry.enabled",
 
-  init: function init() {
-    Services.obs.addObserver(this, "Telemetry:Add", false);
-  },
-
-  uninit: function uninit() {
-    Services.obs.removeObserver(this, "Telemetry:Add");
-  },
-
   addData: function addData(aHistogramId, aValue) {
-    let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-    let histogram = telemetry.getHistogramById(aHistogramId);
+    let histogram = Services.telemetry.getHistogramById(aHistogramId);
     histogram.add(aValue);
-  },
-
-  observe: function observe(aSubject, aTopic, aData) {
-    if (aTopic == "Telemetry:Add") {
-      let json = JSON.parse(aData);
-      this.addData(json.name, json.value);
-    }
   },
 };
 
