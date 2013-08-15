@@ -35,8 +35,10 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -848,6 +850,29 @@ public class BrowserSearch extends HomeFragment
                 mSelectedEngineRow.onDeselected();
                 mSelectedEngineRow = null;
             }
+        }
+    }
+
+    /**
+     * HomeSearchListView is a list view for displaying search engine results on the awesome screen.
+     */
+    public static class HomeSearchListView extends HomeListView {
+        public HomeSearchListView(Context context, AttributeSet attrs) {
+            this(context, attrs, R.attr.homeListViewStyle);
+        }
+
+        public HomeSearchListView(Context context, AttributeSet attrs, int defStyle) {
+            super(context, attrs, defStyle);
+        }
+
+        @Override
+        public boolean onInterceptTouchEvent(MotionEvent event) {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                // Dismiss the soft keyboard.
+                requestFocus();
+            }
+
+            return false;
         }
     }
 }
