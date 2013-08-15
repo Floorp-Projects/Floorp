@@ -2452,23 +2452,6 @@ ContentParent::RecvCloseAlert(const nsString& aName)
 }
 
 bool
-ContentParent::RecvTestPermissionFromPrincipal(const IPC::Principal& aPrincipal,
-                                               const nsCString& aType,
-                                               uint32_t* permission)
-{
-    nsCOMPtr<nsIPermissionManager> permissionManager =
-        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-    NS_ENSURE_TRUE(permissionManager, false);
-
-    nsresult rv = permissionManager->TestPermissionFromPrincipal(aPrincipal,
-                                                                 aType.get(),
-                                                                 permission);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    return true;
-}
-
-bool
 ContentParent::RecvSyncMessage(const nsString& aMsg,
                                const ClonedMessageData& aData,
                                const InfallibleTArray<CpowEntry>& aCpows,
