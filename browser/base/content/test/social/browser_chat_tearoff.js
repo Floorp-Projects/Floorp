@@ -29,7 +29,6 @@ function test() {
 var tests = {
   testTearoffChat: function(next) {
     let chats = document.getElementById("pinnedchats");
-    let chatTitle;
     let port = Social.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {
@@ -42,14 +41,6 @@ var tests = {
           // chatbox is open, lets detach. The new chat window will be caught in
           // the window watcher below
           let doc = chats.selectedChat.contentDocument;
-          // This message is (sometimes!) received a second time
-          // before we start our tests from the onCloseWindow
-          // callback.
-          if (doc.location == "about:blank")
-            return;
-          chatTitle = doc.title;
-          ok(chats.selectedChat.getAttribute("label") == chatTitle,
-             "the new chatbox should show the title of the chat window");
           let div = doc.createElement("div");
           div.setAttribute("id", "testdiv");
           div.setAttribute("test", "1");
@@ -75,8 +66,6 @@ var tests = {
                  chats.selectedChat.contentDocument.readyState == "complete";
         },function () {
           ok(chats.selectedChat, "should have a chatbox in our window again");
-          ok(chats.selectedChat.getAttribute("label") == chatTitle,
-             "the new chatbox should show the title of the chat window again");
           let testdiv = chats.selectedChat.contentDocument.getElementById("testdiv");
           is(testdiv.getAttribute("test"), "2", "docshell should have been swapped");
           chats.selectedChat.close();
@@ -91,7 +80,6 @@ var tests = {
           is(doc.documentElement.getAttribute("windowtype"), "Social:Chat", "Social:Chat window opened");
           is(doc.location.href, "chrome://browser/content/chatWindow.xul", "Should have seen the right window open");
           let chatbox = doc.getElementById("chatter");
-          ok(chatbox.getAttribute("label") == chatTitle, "detached window should show the title of the chat window");
           let testdiv = chatbox.contentDocument.getElementById("testdiv");
           is(testdiv.getAttribute("test"), "1", "docshell should have been swapped");
           testdiv.setAttribute("test", "2");
