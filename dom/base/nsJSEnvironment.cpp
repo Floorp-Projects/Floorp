@@ -1593,14 +1593,16 @@ TraceMallocOpenLogFile(JSContext *cx, unsigned argc, JS::Value *vp)
 static bool
 TraceMallocChangeLogFD(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+    CallArgs args = CallArgsFromVp(cx, vp);
+
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return false;
 
     int32_t fd, oldfd;
-    if (argc == 0) {
+    if (args.length() == 0) {
         oldfd = -1;
     } else {
-        if (!JS_ValueToECMAInt32(cx, JS_ARGV(cx, vp)[0], &fd))
+        if (!JS::ToInt32(cx, args[0], &fd))
             return false;
         oldfd = NS_TraceMallocChangeLogFD(fd);
         if (oldfd == -2) {
@@ -1608,23 +1610,27 @@ TraceMallocChangeLogFD(JSContext *cx, unsigned argc, JS::Value *vp)
             return false;
         }
     }
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(oldfd));
+    args.rval().setInt32(oldfd);
     return true;
 }
 
 static bool
 TraceMallocCloseLogFD(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+    CallArgs args = CallArgsFromVp(cx, vp);
+
     if (!CheckUniversalXPConnectForTraceMalloc(cx))
         return false;
 
     int32_t fd;
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
-    if (argc == 0)
+    if (args.length() == 0) {
+        args.rval().setUndefined();
         return true;
-    if (!JS_ValueToECMAInt32(cx, JS_ARGV(cx, vp)[0], &fd))
+    }
+    if (!JS::ToInt32(cx, args[0], &fd))
         return false;
     NS_TraceMallocCloseLogFD((int) fd);
+    args.rval().setInt32(fd);
     return true;
 }
 
