@@ -6392,75 +6392,74 @@ Parser<ParseHandler>::objectLiteral()
                 return null();
             pn3 = newNumber(tokenStream.currentToken());
             break;
-          case TOK_NAME:
-            {
+          case TOK_NAME: {
+            atom = tokenStream.currentToken().name();
+            if (atom == context->names().get) {
+                op = JSOP_INITPROP_GETTER;
+            } else if (atom == context->names().set) {
+                op = JSOP_INITPROP_SETTER;
+            } else {
+                pn3 = handler.newIdentifier(atom, pos());
+                if (!pn3)
+                    return null();
+                break;
+            }
+
+            tt = tokenStream.getToken(TokenStream::KeywordIsName);
+            if (tt == TOK_NAME) {
                 atom = tokenStream.currentToken().name();
-                if (atom == context->names().get) {
-                    op = JSOP_INITPROP_GETTER;
-                } else if (atom == context->names().set) {
-                    op = JSOP_INITPROP_SETTER;
-                } else {
-                    pn3 = handler.newIdentifier(atom, pos());
+                pn3 = newName(atom->asPropertyName());
+                if (!pn3)
+                    return null();
+            } else if (tt == TOK_STRING) {
+                atom = tokenStream.currentToken().atom();
+
+                uint32_t index;
+                if (atom->isIndex(&index)) {
+                    pn3 = handler.newNumber(index, NoDecimal, pos());
                     if (!pn3)
                         return null();
-                    break;
-                }
-
-                tt = tokenStream.getToken(TokenStream::KeywordIsName);
-                if (tt == TOK_NAME) {
-                    atom = tokenStream.currentToken().name();
-                    pn3 = newName(atom->asPropertyName());
-                    if (!pn3)
-                        return null();
-                } else if (tt == TOK_STRING) {
-                    atom = tokenStream.currentToken().atom();
-
-                    uint32_t index;
-                    if (atom->isIndex(&index)) {
-                        pn3 = handler.newNumber(index, NoDecimal, pos());
-                        if (!pn3)
-                            return null();
-                        tmp = DoubleValue(index);
-                        atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
-                        if (!atom)
-                            return null();
-                    } else {
-                        pn3 = stringLiteral();
-                        if (!pn3)
-                            return null();
-                    }
-                } else if (tt == TOK_NUMBER) {
-                    double number = tokenStream.currentToken().number();
-                    tmp = DoubleValue(number);
+                    tmp = DoubleValue(index);
                     atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
                     if (!atom)
                         return null();
-                    pn3 = newNumber(tokenStream.currentToken());
-                    if (!pn3)
-                        return null();
                 } else {
-                    tokenStream.ungetToken();
-                    pn3 = handler.newIdentifier(atom, pos());
+                    pn3 = stringLiteral();
                     if (!pn3)
                         return null();
-                    break;
                 }
-
-                JS_ASSERT(op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER);
-
-                handler.setListFlag(pn, PNX_NONCONST);
-
-                /* NB: Getter function in { get x(){} } is unnamed. */
-                Rooted<PropertyName*> funName(context, NULL);
-                TokenStream::Position start(keepAtoms);
-                tokenStream.tell(&start);
-                pn2 = functionDef(funName, start, op == JSOP_INITPROP_GETTER ? Getter : Setter,
-                                  Expression);
-                if (!pn2)
+            } else if (tt == TOK_NUMBER) {
+                double number = tokenStream.currentToken().number();
+                tmp = DoubleValue(number);
+                atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
+                if (!atom)
                     return null();
-                pn2 = handler.newBinary(PNK_COLON, pn3, pn2, op);
-                goto skip;
+                pn3 = newNumber(tokenStream.currentToken());
+                if (!pn3)
+                    return null();
+            } else {
+                tokenStream.ungetToken();
+                pn3 = handler.newIdentifier(atom, pos());
+                if (!pn3)
+                    return null();
+                break;
             }
+
+            JS_ASSERT(op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER);
+
+            handler.setListFlag(pn, PNX_NONCONST);
+
+            /* NB: Getter function in { get x(){} } is unnamed. */
+            Rooted<PropertyName*> funName(context, NULL);
+            TokenStream::Position start(keepAtoms);
+            tokenStream.tell(&start);
+            pn2 = functionDef(funName, start, op == JSOP_INITPROP_GETTER ? Getter : Setter,
+                              Expression);
+            if (!pn2)
+                return null();
+            pn2 = handler.newBinary(PNK_COLON, pn3, pn2, op);
+            goto skip;
+          }
           case TOK_STRING: {
             atom = tokenStream.currentToken().atom();
             uint32_t index;
