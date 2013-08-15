@@ -17,11 +17,12 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(TextTrackCue,
-                                        mDocument,
-                                        mTrack,
-                                        mTrackElement,
-                                        mDisplayState)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_4(TextTrackCue,
+                                     nsDOMEventTargetHelper,
+                                     mDocument,
+                                     mTrack,
+                                     mTrackElement,
+                                     mDisplayState)
 
 NS_IMPL_ADDREF_INHERITED(TextTrackCue, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TextTrackCue, nsDOMEventTargetHelper)
