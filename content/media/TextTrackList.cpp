@@ -9,7 +9,10 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(TextTrackList, mGlobal, mTextTracks)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(TextTrackList,
+                                     nsDOMEventTargetHelper,
+                                     mGlobal,
+                                     mTextTracks)
 
 NS_IMPL_ADDREF_INHERITED(TextTrackList, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TextTrackList, nsDOMEventTargetHelper)
