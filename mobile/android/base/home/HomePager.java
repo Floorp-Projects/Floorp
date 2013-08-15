@@ -10,6 +10,7 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -126,7 +127,7 @@ public class HomePager extends ViewPager {
         setCurrentItem(adapter.getItemPosition(page), false);
         setVisibility(VISIBLE);
 
-        if (animator != null) {
+        if (animator != null && Build.VERSION.SDK_INT >= 11) {
             ViewHelper.setAlpha(this, 0.0f);
 
             animator.attach(this,
