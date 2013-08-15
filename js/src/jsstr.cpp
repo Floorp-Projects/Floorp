@@ -4022,17 +4022,6 @@ js_strlen(const jschar *s)
 }
 
 jschar *
-js_strchr(const jschar *s, jschar c)
-{
-    while (*s != 0) {
-        if (*s == c)
-            return (jschar *)s;
-        s++;
-    }
-    return NULL;
-}
-
-jschar *
 js_strdup(JSContext *cx, const jschar *s)
 {
     size_t n = js_strlen(s);
