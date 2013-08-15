@@ -29,6 +29,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "xpcpublic.h"
 
 
 struct nsGlobalNameStruct

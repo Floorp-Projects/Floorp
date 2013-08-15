@@ -16,9 +16,7 @@
 #include "nsIObserverService.h"
 #include "nsIWeakReference.h"
 #include "mozilla/Services.h"
-#include "nsWeakReference.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
