@@ -2446,7 +2446,7 @@ Parser<ParseHandler>::functionStmt()
 
     RootedPropertyName name(context);
     GeneratorKind generatorKind = NotGenerator;
-    TokenKind tt = tokenStream.getToken(TokenStream::KeywordIsName);
+    TokenKind tt = tokenStream.getToken();
 
     if (tt == TOK_MUL) {
         tokenStream.tell(&start);
@@ -2481,7 +2481,7 @@ Parser<ParseHandler>::functionExpr()
 
     RootedPropertyName name(context);
     GeneratorKind generatorKind = NotGenerator;
-    TokenKind tt = tokenStream.getToken(TokenStream::KeywordIsName);
+    TokenKind tt = tokenStream.getToken();
 
     if (tt == TOK_MUL) {
         tokenStream.tell(&start);
