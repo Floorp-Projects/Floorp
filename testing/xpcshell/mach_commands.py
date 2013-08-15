@@ -45,7 +45,7 @@ class XPCShellRunner(MozbuildObject):
         return self._run_xpcshell_harness(manifest=manifest, **kwargs)
 
     def run_test(self, test_file, debug=False, interactive=False,
-        keep_going=False, shuffle=False):
+        keep_going=False, sequential=False, shuffle=False):
         """Runs an individual xpcshell test."""
         # TODO Bug 794506 remove once mach integrates with virtualenv.
         build_path = os.path.join(self.topobjdir, 'build')
@@ -54,7 +54,7 @@ class XPCShellRunner(MozbuildObject):
 
         if test_file == 'all':
             self.run_suite(debug=debug, interactive=interactive,
-                keep_going=keep_going, shuffle=shuffle)
+                keep_going=keep_going, shuffle=shuffle, sequential=sequential)
             return
 
         path_arg = self._wrap_path_argument(test_file)
@@ -81,6 +81,7 @@ class XPCShellRunner(MozbuildObject):
             'interactive': interactive,
             'keep_going': keep_going,
             'shuffle': shuffle,
+            'sequential': sequential,
             'test_dirs': xpcshell_dirs,
         }
 
@@ -91,7 +92,7 @@ class XPCShellRunner(MozbuildObject):
 
     def _run_xpcshell_harness(self, test_dirs=None, manifest=None,
         test_path=None, debug=False, shuffle=False, interactive=False,
-        keep_going=False):
+        keep_going=False, sequential=False):
 
         # Obtain a reference to the xpcshell test runner.
         import runxpcshelltests
@@ -110,6 +111,7 @@ class XPCShellRunner(MozbuildObject):
             'interactive': interactive,
             'keepGoing': keep_going,
             'logfiles': False,
+            'sequential': sequential,
             'shuffle': shuffle,
             'testsRootDir': tests_dir,
             'testingModulesDir': modules_dir,
@@ -149,6 +151,9 @@ class XPCShellRunner(MozbuildObject):
 
         self.log_manager.disable_unstructured()
 
+        if not result and not sequential:
+            print("Tests were run in parallel. Try running with --sequential \
+                   to make sure the failures were not caused by this.")
         return int(not result)
 
 
@@ -165,6 +170,8 @@ class MachCommands(MachCommandBase):
         help='Open an xpcshell prompt before running tests.')
     @CommandArgument('--keep-going', '-k', action='store_true',
         help='Continue running tests after a SIGINT is received.')
+    @CommandArgument('--sequential', action='store_true',
+        help='Run the tests sequentially.')
     @CommandArgument('--shuffle', '-s', action='store_true',
         help='Randomize the execution order of tests.')
     def run_xpcshell_test(self, **params):

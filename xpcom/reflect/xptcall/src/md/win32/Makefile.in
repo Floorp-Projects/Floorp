@@ -17,8 +17,6 @@ MOZILLA_INTERNAL_API = 1
 LOCAL_INCLUDES += -I$(srcdir)/../../../../xptinfo/src
 
 
-include $(topsrcdir)/config/config.mk
-
 ifneq ($(TARGET_CPU),x86_64)
 ifndef GNU_CXX
 # FIXME: bug 413019

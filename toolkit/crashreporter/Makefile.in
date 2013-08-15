@@ -37,7 +37,6 @@ endif
 LOCAL_INCLUDES += -I$(srcdir)/google-breakpad/src
 DEFINES += -DUNICODE -D_UNICODE
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

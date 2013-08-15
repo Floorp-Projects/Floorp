@@ -58,10 +58,8 @@ protected:
                                nsSMILValue& aResult) const MOZ_OVERRIDE;
 
 private:
-  // Private constructor & destructor: prevent instances beyond my singleton,
-  // and prevent others from deleting my singleton.
-  SVGOrientSMILType()  {}
-  ~SVGOrientSMILType() {}
+  // Private constructor: prevent instances beyond my singleton.
+  MOZ_CONSTEXPR SVGOrientSMILType() {}
 };
 
 } // namespace mozilla

@@ -22,9 +22,7 @@
 // mmsystem isn't part of WIN32_LEAN_AND_MEAN, so we have
 // to manually include it
 #include <mmsystem.h>
-
-#include <dwmapi.h>
-typedef HRESULT (WINAPI*DwmGetCompositionTimingInfoProc)(HWND hWnd, DWM_TIMING_INFO *info);
+#include "WinUtils.h"
 #endif
 
 #include "mozilla/Util.h"
@@ -49,11 +47,10 @@ typedef HRESULT (WINAPI*DwmGetCompositionTimingInfoProc)(HWND hWnd, DWM_TIMING_I
 #include "nsPerformance.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "RestyleManager.h"
-
-using mozilla::TimeStamp;
-using mozilla::TimeDuration;
+#include "Layers.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gLog = nullptr;
@@ -306,44 +303,15 @@ protected:
 #ifdef XP_WIN
 /*
  * Uses vsync timing on windows with DWM. Falls back dynamically to fixed rate if required.
- * - Call LoadDll() before usage and UnloadDll() when done (static, nesting unsupported)
  */
 class PreciseRefreshDriverTimerWindowsDwmVsync :
   public PreciseRefreshDriverTimer
 {
 public:
-  static void LoadDll()
-  {
-    if (sDwmGetCompositionTimingInfoPtr) {
-      return; // Already loaded.
-    }
-
-    sDwmDll = ::LoadLibraryW(L"dwmapi.dll");
-    if (sDwmDll) {
-      sDwmGetCompositionTimingInfoPtr = (DwmGetCompositionTimingInfoProc)::GetProcAddress(sDwmDll, "DwmGetCompositionTimingInfo");
-    }
-
-    if (!sDwmDll || !sDwmGetCompositionTimingInfoPtr) {
-      UnloadDll();
-    }
-  }
-
   // Checks if the vsync API is accessible.
-  // Return value is meaningful after calling LoadDll() and before UnloadDll(), and false otherwise.
-  // Even when supported, API calls could still fail when DWM is disabled (can change at runtime)
   static bool IsSupported()
   {
-    return sDwmGetCompositionTimingInfoPtr ? true : false;
-  }
-
-  // OK to call even if never loaded and/or if load failed.
-  static void UnloadDll()
-  {
-    if (sDwmDll) {
-      FreeLibrary(sDwmDll);
-    }
-    sDwmDll = nullptr;
-    sDwmGetCompositionTimingInfoPtr = nullptr;
+    return WinUtils::dwmGetCompositionTimingInfoPtr != nullptr;
   }
 
   PreciseRefreshDriverTimerWindowsDwmVsync(double aRate, bool aPreferHwTiming = false)
@@ -359,11 +327,12 @@ protected:
 
   nsresult GetVBlankInfo(mozilla::TimeStamp &aLastVBlank, mozilla::TimeDuration &aInterval)
   {
-    MOZ_ASSERT(sDwmGetCompositionTimingInfoPtr, "DwmGetCompositionTimingInfoPtr is unavailable (windows vsync)");
+    MOZ_ASSERT(WinUtils::dwmGetCompositionTimingInfoPtr,
+               "DwmGetCompositionTimingInfoPtr is unavailable (windows vsync)");
 
     DWM_TIMING_INFO timingInfo;
     timingInfo.cbSize = sizeof(DWM_TIMING_INFO);
-    HRESULT hr = sDwmGetCompositionTimingInfoPtr(0, &timingInfo); // For the desktop window instead of a specific one.
+    HRESULT hr = WinUtils::dwmGetCompositionTimingInfoPtr(0, &timingInfo); // For the desktop window instead of a specific one.
 
     if (FAILED(hr)) {
       // This happens first time this is called.
@@ -443,14 +412,7 @@ protected:
 
     mTargetTime = newTarget;
   }
-
-private:
-  static HMODULE sDwmDll;
-  static DwmGetCompositionTimingInfoProc sDwmGetCompositionTimingInfoPtr;
 };
-
-HMODULE PreciseRefreshDriverTimerWindowsDwmVsync::sDwmDll = nullptr;
-DwmGetCompositionTimingInfoProc PreciseRefreshDriverTimerWindowsDwmVsync::sDwmGetCompositionTimingInfoPtr = nullptr;
 #endif
 
 /*
@@ -611,10 +573,6 @@ static nsITimer *sDisableHighPrecisionTimersTimer = nullptr;
 /* static */ void
 nsRefreshDriver::InitializeStatics()
 {
-#ifdef XP_WIN
-  PreciseRefreshDriverTimerWindowsDwmVsync::LoadDll();
-#endif
-
 #ifdef PR_LOGGING
   if (!gLog) {
     gLog = PR_NewLogModule("nsRefreshDriver");
@@ -633,8 +591,6 @@ nsRefreshDriver::Shutdown()
   sThrottledRateTimer = nullptr;
 
 #ifdef XP_WIN
-  PreciseRefreshDriverTimerWindowsDwmVsync::UnloadDll();
-
   if (sDisableHighPrecisionTimersTimer) {
     sDisableHighPrecisionTimersTimer->Cancel();
     NS_RELEASE(sDisableHighPrecisionTimersTimer);

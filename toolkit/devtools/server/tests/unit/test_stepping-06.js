@@ -71,20 +71,20 @@ function test_simple_stepping()
   });
 
   gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-                 "function f() {\n" + // line0 + 1
-                 "  debugger;\n" +    // line0 + 2
-                 "  var a = 10;\n" +  // line0 + 3
-                 "  return a;\n" +    // line0 + 4
-                 "}\n" +              // line0 + 5
-                 "function g() {\n" + // line0 + 6
-                 "  debugger;\n" +    // line0 + 7
-                 "}\n" +              // line0 + 8
-                 "function h() {\n" + // line0 + 9
-                 "  debugger;\n" +    // line0 + 10
-                 "  throw 'ah';\n" +  // line0 + 11
-                 "  return 2;\n" +    // line0 + 12
-                 "}\n" +              // line0 + 13
-                 "f();\n" +           // line0 + 14
-                 "g();\n" +           // line0 + 15
-                 "h();\n");           // line0 + 16
+                 "function f() {\n" +                   // line0 + 1
+                 "  debugger;\n" +                      // line0 + 2
+                 "  var a = 10;\n" +                    // line0 + 3
+                 "  return a;\n" +                      // line0 + 4
+                 "}\n" +                                // line0 + 5
+                 "function g() {\n" +                   // line0 + 6
+                 "  debugger;\n" +                      // line0 + 7
+                 "}\n" +                                // line0 + 8
+                 "function h() {\n" +                   // line0 + 9
+                 "  debugger;\n" +                      // line0 + 10
+                 "  throw 'ah';\n" +                    // line0 + 11
+                 "  return 2;\n" +                      // line0 + 12
+                 "}\n" +                                // line0 + 13
+                 "f();\n" +                             // line0 + 14
+                 "g();\n" +                             // line0 + 15
+                 "try { h() } catch (ex) { };\n");      // line0 + 16
 }
