@@ -536,9 +536,9 @@ nsWindow::Create(nsIWidget *aParent,
     return NS_ERROR_FAILURE;
   }
 
-  if (mIsRTL && nsUXThemeData::dwmSetWindowAttributePtr) {
+  if (mIsRTL && WinUtils::dwmSetWindowAttributePtr) {
     DWORD dwAttribute = TRUE;    
-    nsUXThemeData::dwmSetWindowAttributePtr(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
+    WinUtils::dwmSetWindowAttributePtr(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
   }
 
   if (mWindowType != eWindowType_plugin &&
@@ -2645,9 +2645,9 @@ void nsWindow::UpdateGlass()
           margins.cxRightWidth, margins.cyBottomHeight));
 
   // Extends the window frame behind the client area
-  if(nsUXThemeData::CheckForCompositor()) {
-    nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(mWnd, &margins);
-    nsUXThemeData::dwmSetWindowAttributePtr(mWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
+  if (nsUXThemeData::CheckForCompositor()) {
+    WinUtils::dwmExtendFrameIntoClientAreaPtr(mWnd, &margins);
+    WinUtils::dwmSetWindowAttributePtr(mWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
   }
 }
 #endif
@@ -4487,7 +4487,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
   LRESULT dwmHitResult;
   if (mCustomNonClient &&
       nsUXThemeData::CheckForCompositor() &&
-      nsUXThemeData::dwmDwmDefWindowProcPtr(mWnd, msg, wParam, lParam, &dwmHitResult)) {
+      WinUtils::dwmDwmDefWindowProcPtr(mWnd, msg, wParam, lParam, &dwmHitResult)) {
     *aRetValue = dwmHitResult;
     return true;
   }
