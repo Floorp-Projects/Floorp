@@ -4721,24 +4721,6 @@ IonBuilder::createThis(HandleFunction target, MDefinition *callee)
 }
 
 bool
-IonBuilder::anyFunctionIsCloneAtCallsite(types::StackTypeSet *funTypes)
-{
-    uint32_t count = funTypes->getObjectCount();
-    if (count < 1)
-        return false;
-
-    for (uint32_t i = 0; i < count; i++) {
-        JSObject *obj = funTypes->getSingleObject(i);
-        if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted() &&
-            obj->as<JSFunction>().nonLazyScript()->shouldCloneAtCallsite)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool
 IonBuilder::jsop_funcall(uint32_t argc)
 {
     // Stack for JSOP_FUNCALL:
