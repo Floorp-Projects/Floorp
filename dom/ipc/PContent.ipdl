@@ -344,22 +344,6 @@ parent:
 
     CloseAlert(nsString name);
 
-    /**
-     * Tests permission for a provided principal using the permission
-     * manager.
-     *
-     * @param principal
-     *   The principal to test for the permissions.
-     * @param type
-     *   The type of permission to for the principal.
-     *
-     * NOTE: The principal is untrusted in the parent process. Only
-     *       principals that can live in the content process should
-     *       be provided.
-     */
-    sync TestPermissionFromPrincipal(Principal principal, nsCString type)
-        returns (uint32_t permission);
-
     PExternalHelperApp(OptionalURIParams uri, nsCString aMimeContentType,
                        nsCString aContentDisposition, bool aForceSave,
                        int64_t aContentLength, OptionalURIParams aReferrer);
