@@ -143,10 +143,6 @@ class FullParseHandler
         return new_<ConditionalExpression>(cond, thenExpr, elseExpr);
     }
 
-    ParseNode *newElision() {
-        return new_<NullaryNode>(PNK_ELISION, pos());
-    }
-
     void markAsSetCall(ParseNode *pn) {
         pn->pn_xflags |= PNX_SETCALL;
     }
@@ -190,6 +186,42 @@ class FullParseHandler
     }
 
     // Expressions
+
+    ParseNode *newArrayLiteral(uint32_t begin, unsigned blockid) {
+        ParseNode *literal = new_<ListNode>(PNK_ARRAY, TokenPos(begin, begin + 1));
+        // Later in this stack: remove dependency on this opcode.
+        if (literal) {
+            literal->setOp(JSOP_NEWINIT);
+            literal->pn_blockid = blockid;
+        }
+        return literal;
+    }
+
+    bool addElision(ParseNode *literal, const TokenPos &pos) {
+        ParseNode *elision = new_<NullaryNode>(PNK_ELISION, pos);
+        if (!elision)
+            return false;
+        literal->append(elision);
+        literal->pn_xflags |= PNX_SPECIALARRAYINIT | PNX_NONCONST;
+        return true;
+    }
+
+    bool addSpreadElement(ParseNode *literal, uint32_t begin, ParseNode *inner) {
+        TokenPos pos(begin, inner->pn_pos.end);
+        ParseNode *spread = new_<UnaryNode>(PNK_SPREAD, JSOP_NOP, pos, inner);
+        if (!spread)
+            return null();
+        literal->append(spread);
+        literal->pn_xflags |= PNX_SPECIALARRAYINIT | PNX_NONCONST;
+        return true;
+    }
+
+    bool addArrayElement(ParseNode *literal, ParseNode *element) {
+        if (!element->isConstant())
+            literal->pn_xflags |= PNX_NONCONST;
+        literal->append(element);
+        return true;
+    }
 
     ParseNode *newObjectLiteral(uint32_t begin) {
         ParseNode *literal = new_<ListNode>(PNK_OBJECT, TokenPos(begin, begin + 1));

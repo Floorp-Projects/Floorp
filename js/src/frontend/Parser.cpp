@@ -6236,20 +6236,16 @@ Parser<ParseHandler>::arrayInitializer()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_LB));
 
-    TokenKind tt;
-    Node pn2;
-
-    Node pn = handler.newList(PNK_ARRAY, null(), JSOP_NEWINIT);
-    if (!pn)
+    Node literal = handler.newArrayLiteral(pos().begin, pc->blockidGen);
+    if (!literal)
         return null();
-    handler.setBlockId(pn, pc->blockidGen);
 
     if (tokenStream.matchToken(TOK_RB, TokenStream::Operand)) {
         /*
          * Mark empty arrays as non-constant, since we cannot easily
          * determine their type.
          */
-        handler.setListFlag(pn, PNX_NONCONST);
+        handler.setListFlag(literal, PNX_NONCONST);
     } else {
         bool spread = false, missingTrailingComma = false;
         uint32_t index = 0;
@@ -6259,39 +6255,32 @@ Parser<ParseHandler>::arrayInitializer()
                 return null();
             }
 
-            tt = tokenStream.peekToken(TokenStream::Operand);
+            TokenKind tt = tokenStream.peekToken(TokenStream::Operand);
             if (tt == TOK_RB)
                 break;
 
             if (tt == TOK_COMMA) {
                 tokenStream.consumeKnownToken(TOK_COMMA);
-                pn2 = handler.newElision();
-                if (!pn2)
+                if (!handler.addElision(literal, pos()))
                     return null();
-                handler.setListFlag(pn, PNX_SPECIALARRAYINIT | PNX_NONCONST);
             } else if (tt == TOK_TRIPLEDOT) {
                 spread = true;
-                handler.setListFlag(pn, PNX_SPECIALARRAYINIT | PNX_NONCONST);
-
                 tokenStream.consumeKnownToken(TOK_TRIPLEDOT);
                 uint32_t begin = pos().begin;
                 Node inner = assignExpr();
                 if (!inner)
                     return null();
-
-                pn2 = handler.newUnary(PNK_SPREAD, JSOP_NOP, begin, inner);
-                if (!pn2)
+                if (!handler.addSpreadElement(literal, begin, inner))
                     return null();
             } else {
-                pn2 = assignExpr();
-                if (!pn2)
+                Node element = assignExpr();
+                if (!element)
                     return null();
-                if (foldConstants && !FoldConstants(context, &pn2, this))
+                if (foldConstants && !FoldConstants(context, &element, this))
                     return null();
-                if (!handler.isConstant(pn2))
-                    handler.setListFlag(pn, PNX_NONCONST);
+                if (!handler.addArrayElement(literal, element))
+                    return null();
             }
-            handler.addList(pn, pn2);
 
             if (tt != TOK_COMMA) {
                 /* If we didn't already match TOK_COMMA in above case. */
@@ -6344,14 +6333,14 @@ Parser<ParseHandler>::arrayInitializer()
          * where <array> is the index of array's stack slot.
          */
         if (index == 0 && !spread && tokenStream.matchToken(TOK_FOR) && missingTrailingComma) {
-            if (!arrayInitializerComprehensionTail(pn))
+            if (!arrayInitializerComprehensionTail(literal))
                 return null();
         }
 
         MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_LIST);
     }
-    handler.setEndPosition(pn, pos().end);
-    return pn;
+    handler.setEndPosition(literal, pos().end);
+    return literal;
 }
 
 template <typename ParseHandler>
