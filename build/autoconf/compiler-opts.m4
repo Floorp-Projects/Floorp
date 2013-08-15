@@ -115,6 +115,30 @@ if test -z "$GNU_CC"; then
     esac
 fi
 
+if test "$GNU_CC" -a -n "$DEVELOPER_OPTIONS"; then
+    dnl if the default linker is BFD ld, check if gold is available and try to use it
+    dnl for local builds only.
+    if $CC -Wl,--version 2>&1 | grep -q "GNU ld"; then
+        GOLD=$($CC -print-prog-name=ld.gold)
+        case "$GOLD" in
+        /*)
+            ;;
+        *)
+            GOLD=$(which $GOLD)
+            ;;
+        esac
+        if test -n "$GOLD"; then
+            mkdir -p $_objdir/build/unix/gold
+            ln -s "$GOLD" $_objdir/build/unix/gold/ld
+            if $CC -B $_objdir/build/unix/gold -Wl,--version 2>&1 | grep -q "GNU gold"; then
+                LDFLAGS="$LDFLAGS -B $_objdir/build/unix/gold"
+            else
+                rm -rf $_objdir/build/unix/gold
+            fi
+        fi
+    fi
+fi
+
 if test "$GNU_CC"; then
     CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
     CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections -fno-exceptions"
