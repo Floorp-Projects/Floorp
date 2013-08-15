@@ -15,6 +15,7 @@
 #endif
 
 #include "jsapi.h"
+#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsgc.h"
 #include "jsobj.h"
@@ -346,64 +347,6 @@ TypeSet::isSubset(TypeSet *other)
             if (!obj)
                 continue;
             if (!other->hasType(Type::ObjectType(obj)))
-                return false;
-        }
-    }
-
-    return true;
-}
-
-bool
-TypeSet::isSubsetIgnorePrimitives(TypeSet *other)
-{
-    TypeFlags otherFlags = other->baseFlags() | TYPE_FLAG_PRIMITIVE;
-    if ((baseFlags() & otherFlags) != baseFlags())
-        return false;
-
-    if (unknownObject()) {
-        JS_ASSERT(other->unknownObject());
-    } else {
-        for (unsigned i = 0; i < getObjectCount(); i++) {
-            TypeObjectKey *obj = getObject(i);
-            if (!obj)
-                continue;
-            if (!other->hasType(Type::ObjectType(obj)))
-                return false;
-        }
-    }
-
-    return true;
-}
-
-bool
-TypeSet::intersectionEmpty(TypeSet *other)
-{
-    // For unknown/unknownObject there is no reason they couldn't intersect.
-    // I.e. we eagerly return their intersection isn't empty.
-    // That's ok, since we can't make predictions that can be checked to not hold.
-    if (unknown() || other->unknown())
-        return false;
-
-    if (unknownObject() && other->unknownObject())
-        return false;
-
-    if (unknownObject() && other->getObjectCount() > 0)
-        return false;
-
-    if (other->unknownObject() && getObjectCount() > 0)
-        return false;
-
-    // Test if there is an intersection in the baseFlags
-    if ((baseFlags() & other->baseFlags()) != 0)
-        return false;
-
-    // Test if there are object that are in both TypeSets
-    if (!unknownObject()) {
-        for (unsigned i = 0; i < getObjectCount(); i++) {
-            TypeObjectKey *obj = getObject(i);
-            if (!obj)
-                continue;
-            if (other->hasType(Type::ObjectType(obj)))
                 return false;
         }
     }
@@ -2001,22 +1944,6 @@ HeapTypeSet::knownNonEmpty(JSContext *cx)
     addFreeze(cx);
 
     return false;
-}
-
-bool
-StackTypeSet::knownNonStringPrimitive()
-{
-    TypeFlags flags = baseFlags();
-
-    if (baseObjectCount() > 0)
-        return false;
-
-    if (flags >= TYPE_FLAG_STRING)
-        return false;
-
-    if (baseFlags() == 0)
-        return false;
-    return true;
 }
 
 bool
@@ -4788,29 +4715,6 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
     TypeScript::AddFreezeConstraints(cx, script_);
 }
 
-bool
-ScriptAnalysis::integerOperation(jsbytecode *pc)
-{
-    JS_ASSERT(uint32_t(pc - script_->code) < script_->length);
-
-    switch (JSOp(*pc)) {
-      case JSOP_ADD:
-      case JSOP_SUB:
-      case JSOP_MUL:
-      case JSOP_DIV:
-        if (pushedTypes(pc, 0)->getKnownTypeTag() != JSVAL_TYPE_INT32)
-            return false;
-        if (poppedTypes(pc, 0)->getKnownTypeTag() != JSVAL_TYPE_INT32)
-            return false;
-        if (poppedTypes(pc, 1)->getKnownTypeTag() != JSVAL_TYPE_INT32)
-            return false;
-        return true;
-
-      default:
-        return true;
-    }
-}
-
 /*
  * Persistent constraint clearing out newScript and definite properties from
  * an object should a property on another object get a getter or setter.
@@ -6657,102 +6561,6 @@ TypeScript::AddFreezeConstraints(JSContext *cx, JSScript *script)
             continue;
         JS_ASSERT(types->constraintsPurged());
         types->add(cx, cx->analysisLifoAlloc().new_<TypeConstraintFreezeStack>(script), false);
-    }
-}
-
-/* static */ void
-TypeScript::Purge(JSContext *cx, HandleScript script)
-{
-    if (!script->types)
-        return;
-
-    unsigned num = NumTypeSets(script);
-    TypeSet *typeArray = script->types->typeArray();
-    TypeSet *returnTypes = ReturnTypes(script);
-
-    bool ranInference = script->hasAnalysis() && script->analysis()->ranInference();
-
-    script->clearAnalysis();
-
-    if (!ranInference && !script->hasFreezeConstraints) {
-        /*
-         * Even if the script hasn't been analyzed by TI, TypeConstraintCall
-         * can still add constraints on 'this' for 'new' calls.
-         */
-        ThisTypes(script)->constraintList = NULL;
-#ifdef DEBUG
-        for (size_t i = 0; i < num; i++) {
-            TypeSet *types = &typeArray[i];
-            JS_ASSERT_IF(types != returnTypes, !types->constraintList);
-        }
-#endif
-        return;
-    }
-
-    for (size_t i = 0; i < num; i++) {
-        TypeSet *types = &typeArray[i];
-        if (types != returnTypes)
-            types->constraintList = NULL;
-    }
-
-    if (script->hasFreezeConstraints)
-        TypeScript::AddFreezeConstraints(cx, script);
-}
-
-void
-TypeCompartment::maybePurgeAnalysis(JSContext *cx, bool force)
-{
-    // FIXME bug 781657
-    return;
-
-    JS_ASSERT(this == &cx->compartment()->types);
-    JS_ASSERT(!cx->compartment()->activeAnalysis);
-
-    if (!cx->typeInferenceEnabled())
-        return;
-
-    size_t triggerBytes = cx->runtime()->analysisPurgeTriggerBytes;
-    size_t beforeUsed = cx->compartment()->analysisLifoAlloc.used();
-
-    if (!force) {
-        if (!triggerBytes || triggerBytes >= beforeUsed)
-            return;
-    }
-
-    AutoEnterAnalysis enter(cx);
-
-    /* Reset the analysis pool, making its memory available for reuse. */
-    cx->compartment()->analysisLifoAlloc.releaseAll();
-
-    uint64_t start = PRMJ_Now();
-
-    for (gc::CellIter i(cx->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-        RootedScript script(cx, i.get<JSScript>());
-        if (script->compartment() == cx->compartment())
-            TypeScript::Purge(cx, script);
-    }
-
-    uint64_t done = PRMJ_Now();
-
-    if (cx->runtime()->analysisPurgeCallback) {
-        size_t afterUsed = cx->compartment()->analysisLifoAlloc.used();
-        size_t typeUsed = cx->typeLifoAlloc().used();
-
-        char buf[1000];
-        JS_snprintf(buf, sizeof(buf),
-                    "Total Time %.2f ms, %d bytes before, %d bytes after\n",
-                    (done - start) / double(PRMJ_USEC_PER_MSEC),
-                    (int) (beforeUsed + typeUsed),
-                    (int) (afterUsed + typeUsed));
-
-        JSString *desc = JS_NewStringCopyZ(cx, buf);
-        if (!desc) {
-            cx->clearPendingException();
-            return;
-        }
-
-        JS::Rooted<JSFlatString*> flat(cx, &desc->asFlat());
-        cx->runtime()->analysisPurgeCallback(cx->runtime(), flat);
     }
 }
 

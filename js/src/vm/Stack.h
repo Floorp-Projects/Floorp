@@ -9,7 +9,6 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "jsautooplen.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsscript.h"
@@ -1018,12 +1017,7 @@ class FrameRegs
         fp_ = &fp;
     }
 
-    void setToEndOfScript() {
-        JSScript *script = fp()->script();
-        sp = fp()->base();
-        pc = script->code + script->length - JSOP_STOP_LENGTH;
-        JS_ASSERT(*pc == JSOP_STOP);
-    }
+    void setToEndOfScript();
 
     MutableHandleValue stackHandleAt(int i) {
         return MutableHandleValue::fromMarkedLocation(&sp[i]);

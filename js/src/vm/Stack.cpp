@@ -8,6 +8,7 @@
 
 #include "mozilla/PodOperations.h"
 
+#include "jsautooplen.h"
 #include "jscntxt.h"
 
 #include "gc/Marking.h"
@@ -446,6 +447,19 @@ js::MarkInterpreterActivations(JSRuntime *rt, JSTracer *trc)
             MarkInterpreterActivation(trc, act->asInterpreter());
     }
 
+}
+
+/*****************************************************************************/
+
+// Unlike the other methods of this calss, this method is defined here so that
+// we don't have to #include jsautooplen.h in vm/Stack.h.
+void
+FrameRegs::setToEndOfScript()
+{
+    JSScript *script = fp()->script();
+    sp = fp()->base();
+    pc = script->code + script->length - JSOP_STOP_LENGTH;
+    JS_ASSERT(*pc == JSOP_STOP);
 }
 
 /*****************************************************************************/

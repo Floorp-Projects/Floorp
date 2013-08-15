@@ -229,7 +229,7 @@ class IonBuilder : public MIRGenerator
                             AutoObjectVector &targets,
                             uint32_t maxTargets,
                             bool *gotLambda);
-    bool canInlineTarget(JSFunction *target);
+    bool canInlineTarget(JSFunction *target, bool constructing);
 
     void popCfgStack();
     DeferredEdge *filterDeadDeferredEdges(DeferredEdge *edge);
@@ -577,7 +577,6 @@ class IonBuilder : public MIRGenerator
                                   MTypeObjectDispatch *dispatch, MGetPropertyCache *cache,
                                   MBasicBlock **fallbackTarget);
 
-    bool anyFunctionIsCloneAtCallsite(types::StackTypeSet *funTypes);
     MDefinition *makeCallsiteClone(HandleFunction target, MDefinition *fun);
     MCall *makeCallHelper(HandleFunction target, CallInfo &callInfo, bool cloneAtCallsite);
     bool makeCall(HandleFunction target, CallInfo &callInfo, bool cloneAtCallsite);

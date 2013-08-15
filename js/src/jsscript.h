@@ -803,9 +803,6 @@ class JSScript : public js::gc::Cell
     inline void clearAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
 
-    /* Heuristic to check if the function is expected to be "short running". */
-    bool isShortRunning();
-
     inline void clearPropertyReadTypes();
 
     inline js::GlobalObject &global() const;

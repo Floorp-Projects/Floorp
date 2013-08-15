@@ -8,7 +8,6 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsprf.h"
 #include "mozilla/Util.h"
 #include "nsDOMException.h"
 #include "nsTraceRefcnt.h"

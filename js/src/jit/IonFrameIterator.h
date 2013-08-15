@@ -155,15 +155,12 @@ class IonFrameIterator
 
     bool isConstructing() const;
 
-    bool isEntryJSFrame() const;
-
     void *calleeToken() const;
     JSFunction *callee() const;
     JSFunction *maybeCallee() const;
     unsigned numActualArgs() const;
     JSScript *script() const;
     void baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) const;
-    Value *nativeVp() const;
     Value *actualArgs() const;
 
     // Returns the return address of the frame above this one (that is, the

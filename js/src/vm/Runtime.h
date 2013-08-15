@@ -1171,7 +1171,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool needZealousGC() {
         if (gcNextScheduled > 0 && --gcNextScheduled == 0) {
             if (gcZeal() == js::gc::ZealAllocValue ||
-                gcZeal() == js::gc::ZealPurgeAnalysisValue ||
                 (gcZeal() >= js::gc::ZealIncrementalRootsThenFinish &&
                  gcZeal() <= js::gc::ZealIncrementalMultipleSlices))
             {
@@ -1194,9 +1193,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSFinalizeCallback  gcFinalizeCallback;
 
     void                *gcCallbackData;
-
-    js::AnalysisPurgeCallback analysisPurgeCallback;
-    uint64_t            analysisPurgeTriggerBytes;
 
   private:
     /*

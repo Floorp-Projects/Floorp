@@ -385,6 +385,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchTest32(Assembler::NonZero, address, Imm32(bit), label);
     }
 
+    void branchIfNotInterpretedConstructor(Register fun, Register scratch, Label *label);
+
     using MacroAssemblerSpecific::Push;
     using MacroAssemblerSpecific::Pop;
 

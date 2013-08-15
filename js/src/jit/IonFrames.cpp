@@ -160,27 +160,6 @@ IonFrameIterator::isParallelFunctionFrame() const
     return GetCalleeTokenTag(calleeToken()) == CalleeToken_ParallelFunction;
 }
 
-bool
-IonFrameIterator::isEntryJSFrame() const
-{
-    if (prevType() == IonFrame_OptimizedJS || prevType() == IonFrame_Unwound_OptimizedJS)
-        return false;
-
-    if (prevType() == IonFrame_BaselineStub || prevType() == IonFrame_Unwound_BaselineStub)
-        return false;
-
-    if (prevType() == IonFrame_Entry)
-        return true;
-
-    IonFrameIterator iter(*this);
-    ++iter;
-    for (; !iter.done(); ++iter) {
-        if (iter.isScripted())
-            return false;
-    }
-    return true;
-}
-
 JSScript *
 IonFrameIterator::script() const
 {
@@ -219,13 +198,6 @@ IonFrameIterator::baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) 
         // be computed from the pc mapping table.
         *pcRes = script->baselineScript()->pcForReturnAddress(script, retAddr);
     }
-}
-
-Value *
-IonFrameIterator::nativeVp() const
-{
-    JS_ASSERT(isNative());
-    return exitFrame()->nativeExit()->vp();
 }
 
 Value *

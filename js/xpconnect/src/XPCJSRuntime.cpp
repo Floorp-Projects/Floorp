@@ -1832,7 +1832,7 @@ ReportZoneStats(const JS::ZoneStats &zStats,
             "memory.\n\n"
             "These headers may contain the string data itself, if the string "
             "is short enough.  If so, the string won't have any memory reported "
-            "under 'string-chars/.",
+            "under 'string-chars'.",
             JS::NotableStringInfo::notableSize()));
         gcTotal += info.totalGCThingSizeOf();
 

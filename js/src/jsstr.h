@@ -225,9 +225,6 @@ extern size_t
 js_strlen(const jschar *s);
 
 extern jschar *
-js_strchr(const jschar *s, jschar c);
-
-extern jschar *
 js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 
 static JS_ALWAYS_INLINE void

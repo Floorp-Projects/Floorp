@@ -31,7 +31,6 @@
 #include "jsfriendapi.h"
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
-#include "jsprf.h"
 #include "js/MemoryMetrics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"

@@ -12,7 +12,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/ThreadLocal.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -24,7 +23,6 @@
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
-#include "js/CharacterEncoding.h"
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
 #include "js/Utility.h"
@@ -34,6 +32,9 @@
 /************************************************************************/
 
 namespace JS {
+
+class Latin1CharsZ;
+class TwoByteChars;
 
 typedef mozilla::RangedPtr<const jschar> CharPtr;
 
@@ -2783,18 +2784,15 @@ typedef enum JSGCParamKey {
     /* If true, high-frequency GCs will use a longer mark slice. */
     JSGC_DYNAMIC_MARK_SLICE = 18,
 
-    /* Number of megabytes of analysis data to allocate before purging. */
-    JSGC_ANALYSIS_PURGE_TRIGGER = 19,
-
     /* Lower limit after which we limit the heap growth. */
-    JSGC_ALLOCATION_THRESHOLD = 20,
+    JSGC_ALLOCATION_THRESHOLD = 19,
 
     /*
      * We decommit memory lazily. If more than this number of megabytes is
      * available to be decommitted, then JS_MaybeGC will trigger a shrinking GC
      * to decommit it.
      */
-    JSGC_DECOMMIT_THRESHOLD = 21
+    JSGC_DECOMMIT_THRESHOLD = 20
 } JSGCParamKey;
 
 typedef enum JSGCMode {

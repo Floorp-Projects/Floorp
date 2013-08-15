@@ -4808,8 +4808,6 @@ gc::RunDebugGC(JSContext *cx)
         {
             rt->gcIncrementalLimit = rt->gcZealFrequency / 2;
         }
-    } else if (type == ZealPurgeAnalysisValue) {
-        cx->compartment()->types.maybePurgeAnalysis(cx, /* force = */ true);
     } else {
         Collect(rt, false, SliceBudget::Unlimited, GC_NORMAL, JS::gcreason::DEBUG_GC);
     }
