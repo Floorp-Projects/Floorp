@@ -229,7 +229,7 @@ class IonBuilder : public MIRGenerator
                             AutoObjectVector &targets,
                             uint32_t maxTargets,
                             bool *gotLambda);
-    bool canInlineTarget(JSFunction *target);
+    bool canInlineTarget(JSFunction *target, bool constructing);
 
     void popCfgStack();
     DeferredEdge *filterDeadDeferredEdges(DeferredEdge *edge);

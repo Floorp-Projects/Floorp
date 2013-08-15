@@ -1421,6 +1421,47 @@ MacroAssembler::finish()
 }
 
 void
+MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch, Label *label)
+{
+    // 16-bit loads are slow and unaligned 32-bit loads may be too so
+    // perform an aligned 32-bit load and adjust the bitmask accordingly.
+    JS_STATIC_ASSERT(offsetof(JSFunction, nargs) % sizeof(uint32_t) == 0);
+    JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
+    JS_STATIC_ASSERT(IS_LITTLE_ENDIAN);
+
+    // Emit code for the following test:
+    //
+    // bool isInterpretedConstructor() const {
+    //     return isInterpreted() && !isFunctionPrototype() &&
+    //         (!isSelfHostedBuiltin() || isSelfHostedConstructor());
+    // }
+
+    // First, ensure it's a scripted function.
+    load32(Address(fun, offsetof(JSFunction, nargs)), scratch);
+    branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::INTERPRETED << 16), label);
+
+    // Common case: if both IS_FUN_PROTO and SELF_HOSTED are not set,
+    // we're done.
+    Label done;
+    uint32_t bits = (JSFunction::IS_FUN_PROTO | JSFunction::SELF_HOSTED) << 16;
+    branchTest32(Assembler::Zero, scratch, Imm32(bits), &done);
+    {
+        // The callee is either Function.prototype or self-hosted. Fail if
+        // SELF_HOSTED_CTOR is not set. This means the callee must be
+        // Function.prototype or a self-hosted function that's not a
+        // constructor.
+        branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::SELF_HOSTED_CTOR << 16), label);
+
+#ifdef DEBUG
+        // Function.prototype should not have the SELF_HOSTED_CTOR flag.
+        branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::IS_FUN_PROTO << 16), &done);
+        breakpoint();
+#endif
+    }
+    bind(&done);
+}
+
+void
 MacroAssembler::branchEqualTypeIfNeeded(MIRType type, MDefinition *def, const Register &tag,
                                         Label *label)
 {
