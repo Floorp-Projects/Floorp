@@ -80,7 +80,6 @@ nsDOMCameraManager::CheckPermission(nsPIDOMWindow* aWindow)
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
   permMgr->TestPermissionFromWindow(aWindow, "camera", &permission);
   if (permission != nsIPermissionManager::ALLOW_ACTION) {
-    NS_WARNING("No permission to access camera");
     return false;
   }
 
