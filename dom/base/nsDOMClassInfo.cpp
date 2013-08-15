@@ -15,7 +15,6 @@
 // JavaScript includes
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsdbgapi.h"
 #include "WrapperFactory.h"
 #include "AccessCheck.h"
 #include "XrayWrapper.h"
@@ -23,8 +22,6 @@
 #include "xpcpublic.h"
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
-#include "XPCQuickStubs.h"
-#include "nsDOMQS.h"
 
 #include "mozilla/dom/RegisterBindings.h"
 
@@ -32,25 +29,19 @@
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
-#include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCSecurityManager.h"
-#include "nsIStringBundle.h"
-#include "nsIConsoleService.h"
-#include "nsIScriptError.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
-#include "nsUnicharUtils.h"
 #include "xptcall.h"
-#include "prprf.h"
 #include "nsTArray.h"
-#include "nsCSSValue.h"
-#include "nsThreadUtils.h"
 #include "nsDOMEventTargetHelper.h"
+#include "nsIDOMHTMLCanvasElement.h"
+#include "nsContentList.h"
+#include "nsHTMLDocument.h"
+#include "nsDOMBlobBuilder.h"
 
 // General helper includes
 #include "nsGlobalWindow.h"
@@ -61,21 +52,16 @@
 #include "nsIDOMEventListener.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
-#include "nsDOMWindowUtils.h"
+#include "nsIDOMWindowUtils.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
-#include "mozilla/Preferences.h"
 #include "nsLocation.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Telemetry.h"
 
 // Window scriptable helper includes
 #include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeNode.h"
 #include "nsIScriptExternalNameSet.h"
 #include "nsJSUtils.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsJSEnvironment.h"
@@ -85,7 +71,6 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMJSWindow.h"
-#include "nsIDOMWindowCollection.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMConstructor.h"
@@ -93,7 +78,6 @@
 // DOM core includes
 #include "nsError.h"
 #include "nsIDOMDOMException.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsIDOMGeoPositionError.h"
@@ -104,43 +88,21 @@
 #include "nsIDOMXULPopupElement.h"
 
 // Event related includes
-#include "nsEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
 
 // CSS related includes
 #include "nsCSSRules.h"
-#include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSRule.h"
 #include "nsICSSRuleList.h"
-#include "nsIDOMRect.h"
-#include "nsDOMCSSAttrDeclaration.h"
-
-// XBL related includes.
-#include "nsXBLService.h"
-#include "nsXBLBinding.h"
-#include "nsBindingManager.h"
-#include "nsIFrame.h"
-#include "nsIPresShell.h"
-#include "nsIDOMElement.h"
-#include "nsStyleContext.h"
 #include "nsAutoPtr.h"
 #include "nsMemory.h"
 
 // Tranformiix
-#include "nsIDOMXPathEvaluator.h"
 #include "nsIXSLTProcessor.h"
 #include "nsIXSLTProcessorPrivate.h"
 
-#include "nsXMLHttpRequest.h"
-#include "nsIDOMContactManager.h"
-#include "nsIDOMPermissionSettings.h"
-#include "nsIDOMApplicationRegistry.h"
-
 // includes needed for the prototype chain interfaces
-#include "nsIDOMDocumentXBL.h"
-#include "nsIDOMElementCSSInlineStyle.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMCSSCharsetRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSMediaRule.h"
@@ -165,45 +127,38 @@
 #include "nsITreeContentView.h"
 #include "nsITreeView.h"
 #include "nsIXULTemplateBuilder.h"
-#include "nsTreeColumns.h"
+#include "nsITreeColumns.h"
 #endif
 #include "nsIDOMXPathExpression.h"
 #include "nsIDOMNSXPathExpression.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMXPathResult.h"
-#include "nsIDOMMozBrowserFrame.h"
 
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGNumber.h"
 
 // Storage includes
-#include "DOMStorage.h"
+#include "nsIDOMStorage.h"
+#include "nsPIDOMStorage.h"
 
 // Drag and drop
 #include "nsIDOMDataTransfer.h"
 
-// Geolocation
-#include "nsIDOMGeoPositionCoords.h"
-
 // Workers
 #include "mozilla/dom/workers/Workers.h"
 
-#include "nsDOMFile.h"
+#include "nsIDOMFile.h"
 
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/indexedDB/IDBKeyRange.h"
 #include "nsIDOMMediaQueryList.h"
-
-#include "mozilla/dom/Activity.h"
 
 #include "nsDOMTouchEvent.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
 
-#include "BatteryManager.h"
 #include "nsIDOMPowerManager.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIDOMMobileMessageManager.h"
@@ -229,14 +184,11 @@
 #include "BluetoothDevice.h"
 #endif
 
-#include "DOMCameraManager.h"
-#include "DOMCameraControl.h"
-#include "DOMCameraCapabilities.h"
+#include "nsIDOMCameraManager.h"
 #include "nsIOpenWindowEventDetail.h"
 #include "nsIAsyncScrollEventDetail.h"
 #include "nsIDOMGlobalObjectConstructor.h"
-#include "nsIDOMCanvasRenderingContext2D.h"
-#include "LockedFile.h"
+#include "nsIDOMLockedFile.h"
 #include "nsDebug.h"
 
 #include "mozilla/dom/BindingUtils.h"
