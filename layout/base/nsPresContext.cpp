@@ -1755,7 +1755,6 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
   mUsesRootEMUnits = false;
   mUsesViewportUnits = false;
   RebuildUserFontSet();
-  AnimationManager()->KeyframesListIsDirty();
 
   RestyleManager()->RebuildAllStyleData(aExtraHint);
 }
