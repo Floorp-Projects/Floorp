@@ -2,130 +2,184 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- *  This defines the look-and-feel styling of the error pages.
- *  (see: netError.xhtml)
- *
- *  Original styling by William Price <bugzilla@mob.rice.edu>
- *  Updated for mobile by: Wes Johnston <wjohnston@mozilla.com>
- */
-
+html,
 body {
   margin: 0;
-  padding: 0 8px 8px;
-  font-family: "Nokia Sans", Tahoma, sans-serif !important;
+  padding: 0;
+}
+
+body {
+  /* Add a set of stripes at the top of pages */
+  background-image: linear-gradient(-45deg, #dfe8ee,     #dfe8ee 33%,
+                                            #ecf0f3 33%, #ecf0f3 66%,
+                                            #dfe8ee 66%, #dfe8ee);
+  background-size: 64px 32px;
+  background-repeat: repeat-x;
+
+  background-color: #f1f1f1;
+  min-height: 100%;
+  padding: 0 20px;
+
+  font-weight: 300;
+  font-size: 13px;
+  -moz-text-size-adjust: none;
+  font-family: "Open Sans", sans-serif;
+}
+
+
+ul {
+  /* Shove the list indicator so that its left aligned, but use outside so that text
+   * doesn't don't wrap the text around it */
+  padding: 1em;
+  margin: 0;
+  list-style: round outside none;
+}
+
+li:not(:last-of-type),
+#errorLongDesc,
+#errorLongContent {
+  padding-bottom: 10px;
 }
 
 h1 {
-  font-size: 22px;
+  padding: 1rem 0;
+  font-weight: 300;
+  border-bottom: 1px solid #e0e2e5;
 }
 
 h2 {
-  font-size: 16px;
+  font-size: small;
+  padding: 0;
+  margin: 0;
 }
 
-ul {
-  margin: 0px;
-  padding: 0px 0px 0px 1em;
-}
-
-li {
-  margin: 0px;
-  padding: 8px 0px;
-}
-
-#errorPage {
-  background-color: #CEE6F4;
-}
-
-#errorPage.certerror {
-  background-color: #EFD400;
-}
-
-#errorPage.blockedsite {
-  background-color: #BF0000;
-}
-
-#errorTitle {
-  background: url("chrome://browser/skin/images/errorpage-warning.png") left center no-repeat;
-  /* Scaled by .666 of their actual size */
-  background-size: 40px 40px;
-  background-origin: content-box;
-  min-height: 60px;
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-#errorPage.certerror #errorTitle {
-  background-image: url("chrome://browser/skin/images/errorpage-larry-black.png");
-}
-
-#errorPage.blockedsite #errorTitle {
-  background-image: url("chrome://browser/skin/images/errorpage-larry-white.png");
-  color: white;
-}
-
-.errorTitleText {
-  padding: 0px 0px 0px 50px;
-  display: inline-block;
-  vertical-align: middle
-}
-
-#errorPageContainer {
-  background-color: white;
-  border: 1px solid #999999;
-  border-radius: 6px;
-  padding: 6px 20px 20px;
-  font-size: 14px;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-#errorShortDesc > p:empty {
-  display: none;
-}
-
-#errorShortDesc > p {
-  overflow: auto;
-  border-bottom: 1px solid #999999;
-  padding-bottom: 1em;
-}
-
-#errorPage.blockedsite #errorShortDesc > p {
-  font-weight: bold;
-  border-bottom: none;
-  padding-bottom: 0px;
-}
-
-#securityOverrideDiv {
-  padding-top: 10px;
-}
-
-div[collapsed] {
-  padding-left: 15px;
-  background-image: url("chrome://browser/skin/images/arrowright-16.png");
-  background-size: 11px 11px;
-  background-repeat: no-repeat;
-  background-position: left 0.3em;  
-}
-
-div[collapsed="true"] {
-  background-image: url("chrome://browser/skin/images/arrowright-16.png");
-}
-
-div[collapsed="false"] {
-  background-image: url("chrome://browser/skin/images/arrowdown-16.png");
-}
-
-div[collapsed="true"] > p,
-div[collapsed="true"] > div {
-  display: none;
+p {
+  margin-top: 0;
 }
 
 button {
-  padding: 0.3em !important;
+  width: 100%;
+  border: none;
+  padding: 1rem;
+  font-family: "Open Sans", sans-serif;
+  background-color: #e0e2e5;
+  font-size: 1rem; /* Not sure why this has to be specified. See bug 892843. */
+  font-weight: 300;
+  border-radius: 2px;
+  background-image: none;
+}
+
+button + button {
+  margin-top: 1em;  
+}
+
+.certerror {
+  background-image: linear-gradient(-45deg, #f0d000,     #f0d000 33%,
+                                            #fedc00 33%, #fedc00 66%,
+                                            #f0d000 66%, #f0d000);
+}
+
+.blockedsite {
+  background-image: linear-gradient(-45deg, #9b2e2e,     #9b2e2e 33%,
+                                            #a83232 33%, #a83232 66%,
+                                            #9b2e2e 66%, #9b2e2e);
+  background-color: #b14646;
+  color: white;
+}
+
+#errorPageContainer {
+  /* If the page is greater than 550px center the content.
+   * This number should be kept in sync with the media query for tablets below */
+  max-width: 550px;
+  margin-left: auto;
+  margin-right: auto;
+
+  padding-top: 1rem;
+  /* Ensure that there's some space at the bottom of the page.
+   * On about:blocked we have an absolutely positioned link that should take this space */
+  padding-bottom: 5rem;
+}
+
+/* Expanders have a structure of
+ * <div collapsed="true/false">
+ *   <h2 class="expander">Title</h2>
+ *   <p>Content</p>
+ * </div>
+ *
+ * This shows an arrow to the right of the h2 element, and hides the content when collapsed="true". */
+.expander {
+  margin: 1rem 0;
+  background-image: url("chrome://browser/skin/images/dropmarker.svg");
+  background-repeat: no-repeat;
+  /* dropmarker.svg is 10x7. Ensure that its centered in the middle of an 18x18 box */
+  background-position: 3px 5.5px;
+  background-size: 10px 7px;
+  padding-left: 18px;
+}
+
+.expander:first-of-type {
+  /* Double the margin here so that the space above the first expander
+   * is the same as the space between multiple expanders */
+  margin-top: 20px;
+}
+
+div[collapsed="true"] > .expander {
+  background-image: url("chrome://browser/skin/images/dropmarker-right.svg");
+  /* dropmarker.svg is 7x10. Ensure that its centered in the middle of an 18x18 box */
+  background-size: 7px 10px;
+  background-position: 5.5px 4px;
+}
+
+/* Hide the first element after the expander */
+div[collapsed="true"] > .expander + * {
+  display: none;
+}
+
+.blockedsite h1 {
+  border-bottom-color: #9b2e2e;
+}
+
+.blockedsite button {
+  background-color: #9b2e2e;
+  color: white;
+}
+
+/* Style warning button to look like a small text link in the
+   bottom. This is preferable to just using a text link
+   since there is already a mechanism in browser.js for trapping
+   oncommand events from unprivileged chrome pages (ErrorPageEventHandler).*/
+#ignoreWarningButton {
+ width: 100%;
+ -moz-appearance: none;
+ background: #b14646;
+ border: none;
+ text-decoration: underline;
+ margin: 0;
+ font-size: smaller;
+ border-bottom: none;
+ position: absolute;
+ bottom: 0;
+ left: 0;
+}
+
+/* On large screen devices (hopefully a 7+ inch tablet, we already center content (see #errorPageContainer above).
+   Apply tablet specific styles here */
+@media (min-width: 550px) {
+  button {
+    min-width: 160px;
+    width: auto;
+  }
+
+  button + button {
+    margin-top: 0;
+  }
+
+  /* If the tablet is tall as well, add some padding to make content feel a bit more centered */
+  @media (min-height: 550px) {
+    #errorPageContainer {
+      padding-top: 64px;
+    }
+  }
+
+
 }

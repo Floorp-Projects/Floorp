@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 
-<svg width="10px" height="7px" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <polyline points="1 1 5 6 9 1" stroke="#414141" stroke-width="2" stroke-linecap="round"
-            fill="transparent" stroke-linejoin="round"/>
+<svg width="7px" height="10px" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <polyline points="1 1 6 5 1 9" stroke="#414141" stroke-width="2"
+            stroke-linecap="round" fill="transparent" stroke-linejoin="round"/>
 </svg>
