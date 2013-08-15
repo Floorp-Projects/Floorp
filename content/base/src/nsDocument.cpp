@@ -1952,15 +1952,6 @@ nsDocument::Init()
   mRadioGroups.Init();
   mCustomPrototypes.Init();
 
-  // If after creation the owner js global is not set for a document
-  // we use the default compartment for this document, instead of creating
-  // wrapper in some random compartment when the document is exposed to js
-  // via some events.
-  nsCOMPtr<nsIGlobalObject> global = xpc::GetJunkScopeGlobal();
-  NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-  mScopeObject = do_GetWeakReference(global);
-  MOZ_ASSERT(mScopeObject);
-
   // Force initialization.
   nsINode::nsSlots* slots = Slots();
 
@@ -1990,6 +1981,15 @@ nsDocument::Init()
                     "Bad NodeType in aNodeInfo");
 
   NS_ASSERTION(OwnerDoc() == this, "Our nodeinfo is busted!");
+
+  // If after creation the owner js global is not set for a document
+  // we use the default compartment for this document, instead of creating
+  // wrapper in some random compartment when the document is exposed to js
+  // via some events.
+  nsCOMPtr<nsIGlobalObject> global = xpc::GetJunkScopeGlobal();
+  NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+  mScopeObject = do_GetWeakReference(global);
+  MOZ_ASSERT(mScopeObject);
 
   mScriptLoader = new nsScriptLoader(this);
 
