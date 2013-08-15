@@ -129,61 +129,6 @@ js::InformalValueTypeName(const Value &v)
     return "value";
 }
 
-template <AllowGC allowGC>
-bool
-js::HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
-                   typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
-                   typename MaybeRooted<jsid, allowGC>::HandleType id,
-                   typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
-                   typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
-{
-    JSAutoResolveFlags rf(cx, 0);
-    if (lookup) {
-        if (!allowGC)
-            return false;
-        if (!lookup(cx,
-                    MaybeRooted<JSObject*, allowGC>::toHandle(obj),
-                    MaybeRooted<jsid, allowGC>::toHandle(id),
-                    MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
-                    MaybeRooted<Shape*, allowGC>::toMutableHandle(propp)))
-        {
-            return false;
-        }
-    } else {
-        if (!baseops::LookupProperty<allowGC>(cx, obj, id, objp, propp))
-            return false;
-    }
-    if (!propp)
-        return true;
-
-    if (objp == obj)
-        return true;
-
-    JSObject *outer = NULL;
-    if (JSObjectOp op = objp->getClass()->ext.outerObject) {
-        if (!allowGC)
-            return false;
-        RootedObject inner(cx, objp);
-        outer = op(cx, inner);
-        if (!outer)
-            return false;
-    }
-
-    if (outer != objp)
-        propp.set(NULL);
-    return true;
-}
-
-template bool
-js::HasOwnProperty<CanGC>(JSContext *cx, LookupGenericOp lookup,
-                          HandleObject obj, HandleId id,
-                          MutableHandleObject objp, MutableHandleShape propp);
-
-template bool
-js::HasOwnProperty<NoGC>(JSContext *cx, LookupGenericOp lookup,
-                         JSObject *obj, jsid id,
-                         FakeMutableHandle<JSObject*> objp, FakeMutableHandle<Shape*> propp);
-
 bool
 js::NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc,
                                 MutableHandleValue vp)
@@ -3971,6 +3916,61 @@ js::LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleOb
     objp.set(scope);
     return true;
 }
+
+template <AllowGC allowGC>
+bool
+js::HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
+                   typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
+                   typename MaybeRooted<jsid, allowGC>::HandleType id,
+                   typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+                   typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
+{
+    JSAutoResolveFlags rf(cx, 0);
+    if (lookup) {
+        if (!allowGC)
+            return false;
+        if (!lookup(cx,
+                    MaybeRooted<JSObject*, allowGC>::toHandle(obj),
+                    MaybeRooted<jsid, allowGC>::toHandle(id),
+                    MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
+                    MaybeRooted<Shape*, allowGC>::toMutableHandle(propp)))
+        {
+            return false;
+        }
+    } else {
+        if (!baseops::LookupProperty<allowGC>(cx, obj, id, objp, propp))
+            return false;
+    }
+    if (!propp)
+        return true;
+
+    if (objp == obj)
+        return true;
+
+    JSObject *outer = NULL;
+    if (JSObjectOp op = objp->getClass()->ext.outerObject) {
+        if (!allowGC)
+            return false;
+        RootedObject inner(cx, objp);
+        outer = op(cx, inner);
+        if (!outer)
+            return false;
+    }
+
+    if (outer != objp)
+        propp.set(NULL);
+    return true;
+}
+
+template bool
+js::HasOwnProperty<CanGC>(JSContext *cx, LookupGenericOp lookup,
+                          HandleObject obj, HandleId id,
+                          MutableHandleObject objp, MutableHandleShape propp);
+
+template bool
+js::HasOwnProperty<NoGC>(JSContext *cx, LookupGenericOp lookup,
+                         JSObject *obj, jsid id,
+                         FakeMutableHandle<JSObject*> objp, FakeMutableHandle<Shape*> propp);
 
 template <AllowGC allowGC>
 static JS_ALWAYS_INLINE bool
