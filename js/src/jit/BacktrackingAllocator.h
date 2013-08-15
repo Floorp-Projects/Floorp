@@ -212,7 +212,6 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
 
     struct PrintLiveIntervalRange;
 
-    CodePosition minimalDefEnd(LInstruction *ins);
     bool minimalDef(const LiveInterval *interval, LInstruction *ins);
     bool minimalUse(const LiveInterval *interval, LInstruction *ins);
     bool minimalInterval(const LiveInterval *interval, bool *pfixed = NULL);
