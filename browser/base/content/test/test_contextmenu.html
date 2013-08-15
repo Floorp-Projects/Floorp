@@ -754,6 +754,23 @@ function runTest(testNum) {
                           "context-viewsource",   true,
                           "context-viewinfo",     true
         ].concat(inspectItems));
+        closeContextMenu();
+        openContextMenuFor(inputspellfalse, false, true); // Invoke context menu for next test.
+        break;
+
+    case 30:
+        // Context menu for text input field with spellcheck=false
+        checkContextMenu(["context-undo",        false,
+                          "---",                 null,
+                          "context-cut",         false,
+                          "context-copy",        false,
+                          "context-paste",       null, // ignore clipboard state
+                          "context-delete",      false,
+                          "---",                 null,
+                          "context-selectall",   true,
+                          "---",                 null,
+                          "spell-add-dictionaries-main",  true,
+                         ].concat(inspectItems));
 
         // finish test
         subwindow.close();
@@ -782,7 +799,7 @@ var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
     pagemenu, dom_full_screen, plainTextItems, audio_in_video,
     selecttext, selecttextlink, imagelink, select_inputtext, select_inputtext_password,
-    plugin, longdesc, iframe;
+    plugin, longdesc, iframe, inputspellfalse;
 
 function startTest() {
     chromeWin = SpecialPowers.wrap(subwindow)
@@ -823,6 +840,8 @@ function startTest() {
     textarea = subwindow.document.getElementById("test-textarea");
     contenteditable = subwindow.document.getElementById("test-contenteditable");
     contenteditable.focus(); // content editable needs to be focused to enable spellcheck
+    inputspellfalse = subwindow.document.getElementById("test-contenteditable-spellcheck-false");
+    inputspellfalse.focus(); // content editable needs to be focused to enable spellcheck
     pagemenu = subwindow.document.getElementById("test-pagemenu");
     dom_full_screen = subwindow.document.getElementById("test-dom-full-screen");
     selecttext = subwindow.document.getElementById("test-select-text");
