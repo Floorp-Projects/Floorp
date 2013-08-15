@@ -7,8 +7,8 @@
 #ifndef TraceLogging_h
 #define TraceLogging_h
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 class JSScript;
 

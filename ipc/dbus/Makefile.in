@@ -17,7 +17,6 @@ ifdef MOZ_ENABLE_DBUS
 	LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
 endif
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

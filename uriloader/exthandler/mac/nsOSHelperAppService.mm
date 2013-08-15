@@ -564,8 +564,3 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
   return NS_OK;
 }
 
-void
-nsOSHelperAppService::FixFilePermissions(nsIFile* aFile)
-{
-  aFile->SetPermissions(mPermissions);
-}
