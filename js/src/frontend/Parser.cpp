@@ -6360,10 +6360,6 @@ Parser<ParseHandler>::objectLiteral()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_LC));
 
-    TokenKind tt;
-    JSOp op;
-    Node pn2, pn3, pnval;
-
     /*
      * A map from property names we've seen thus far to a mask of property
      * assignment types.
@@ -6376,22 +6372,28 @@ Parser<ParseHandler>::objectLiteral()
         VALUE   = 0x4 | GET | SET
     };
 
-    Node pn = handler.newList(PNK_OBJECT, null(), JSOP_NEWINIT);
-    if (!pn)
+    Node literal = handler.newObjectLiteral(pos().begin);
+    if (!literal)
         return null();
 
     RootedAtom atom(context);
     Value tmp;
     for (;;) {
         TokenKind ltok = tokenStream.getToken(TokenStream::KeywordIsName);
+        if (ltok == TOK_RC)
+            break;
+
+        JSOp op = JSOP_INITPROP;
+        Node propname;
         switch (ltok) {
           case TOK_NUMBER:
             tmp = DoubleValue(tokenStream.currentToken().number());
             atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
             if (!atom)
                 return null();
-            pn3 = newNumber(tokenStream.currentToken());
+            propname = newNumber(tokenStream.currentToken());
             break;
+
           case TOK_NAME: {
             atom = tokenStream.currentToken().name();
             if (atom == context->names().get) {
@@ -6399,33 +6401,35 @@ Parser<ParseHandler>::objectLiteral()
             } else if (atom == context->names().set) {
                 op = JSOP_INITPROP_SETTER;
             } else {
-                pn3 = handler.newIdentifier(atom, pos());
-                if (!pn3)
+                propname = handler.newIdentifier(atom, pos());
+                if (!propname)
                     return null();
                 break;
             }
 
-            tt = tokenStream.getToken(TokenStream::KeywordIsName);
+            // We have parsed |get| or |set|. Look for an accessor property
+            // name next.
+            TokenKind tt = tokenStream.getToken(TokenStream::KeywordIsName);
             if (tt == TOK_NAME) {
                 atom = tokenStream.currentToken().name();
-                pn3 = newName(atom->asPropertyName());
-                if (!pn3)
+                propname = newName(atom->asPropertyName());
+                if (!propname)
                     return null();
             } else if (tt == TOK_STRING) {
                 atom = tokenStream.currentToken().atom();
 
                 uint32_t index;
                 if (atom->isIndex(&index)) {
-                    pn3 = handler.newNumber(index, NoDecimal, pos());
-                    if (!pn3)
+                    propname = handler.newNumber(index, NoDecimal, pos());
+                    if (!propname)
                         return null();
                     tmp = DoubleValue(index);
                     atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
                     if (!atom)
                         return null();
                 } else {
-                    pn3 = stringLiteral();
-                    if (!pn3)
+                    propname = stringLiteral();
+                    if (!propname)
                         return null();
                 }
             } else if (tt == TOK_NUMBER) {
@@ -6434,101 +6438,101 @@ Parser<ParseHandler>::objectLiteral()
                 atom = ToAtom<CanGC>(context, HandleValue::fromMarkedLocation(&tmp));
                 if (!atom)
                     return null();
-                pn3 = newNumber(tokenStream.currentToken());
-                if (!pn3)
+                propname = newNumber(tokenStream.currentToken());
+                if (!propname)
                     return null();
             } else {
+                // Not an accessor property after all.
                 tokenStream.ungetToken();
-                pn3 = handler.newIdentifier(atom, pos());
-                if (!pn3)
+                propname = handler.newIdentifier(atom, pos());
+                if (!propname)
                     return null();
+                op = JSOP_INITPROP;
                 break;
             }
 
             JS_ASSERT(op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER);
-
-            handler.setListFlag(pn, PNX_NONCONST);
-
-            /* NB: Getter function in { get x(){} } is unnamed. */
-            Rooted<PropertyName*> funName(context, NULL);
-            TokenStream::Position start(keepAtoms);
-            tokenStream.tell(&start);
-            pn2 = functionDef(funName, start, op == JSOP_INITPROP_GETTER ? Getter : Setter,
-                              Expression);
-            if (!pn2)
-                return null();
-            pn2 = handler.newBinary(PNK_COLON, pn3, pn2, op);
-            goto skip;
+            break;
           }
+
           case TOK_STRING: {
             atom = tokenStream.currentToken().atom();
             uint32_t index;
             if (atom->isIndex(&index)) {
-                pn3 = handler.newNumber(index, NoDecimal, pos());
-                if (!pn3)
+                propname = handler.newNumber(index, NoDecimal, pos());
+                if (!propname)
                     return null();
             } else {
-                pn3 = stringLiteral();
-                if (!pn3)
+                propname = stringLiteral();
+                if (!propname)
                     return null();
             }
             break;
           }
-          case TOK_RC:
-            goto end_obj_init;
+
           default:
             report(ParseError, false, null(), JSMSG_BAD_PROP_ID);
             return null();
         }
 
-        op = JSOP_INITPROP;
-        tt = tokenStream.getToken();
-        if (tt == TOK_COLON) {
-            pnval = assignExpr();
-            if (!pnval)
-                return null();
+        if (op == JSOP_INITPROP) {
+            TokenKind tt = tokenStream.getToken();
+            Node propexpr;
+            if (tt == TOK_COLON) {
+                propexpr = assignExpr();
+                if (!propexpr)
+                    return null();
 
-            if (foldConstants && !FoldConstants(context, &pnval, this))
-                return null();
+                if (foldConstants && !FoldConstants(context, &propexpr, this))
+                    return null();
 
-            /*
-             * Treat initializers which mutate __proto__ as non-constant,
-             * so that we can later assume singleton objects delegate to
-             * the default Object.prototype.
-             */
-            if (!handler.isConstant(pnval) || atom == context->names().proto)
-                handler.setListFlag(pn, PNX_NONCONST);
-        }
+                /*
+                 * Treat initializers which mutate __proto__ as non-constant,
+                 * so that we can later assume singleton objects delegate to
+                 * the default Object.prototype.
+                 */
+                if (!handler.isConstant(propexpr) || atom == context->names().proto)
+                    handler.setListFlag(literal, PNX_NONCONST);
+
+                if (!handler.addPropertyDefinition(literal, propname, propexpr))
+                    return null();
+            }
 #if JS_HAS_DESTRUCTURING_SHORTHAND
-        else if (ltok == TOK_NAME && (tt == TOK_COMMA || tt == TOK_RC)) {
-            /*
-             * Support, e.g., |var {x, y} = o| as destructuring shorthand
-             * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
-             */
-            if (!abortIfSyntaxParser())
-                return null();
-            tokenStream.ungetToken();
-            if (!tokenStream.checkForKeyword(atom->charsZ(), atom->length(), NULL))
-                return null();
-            handler.setListFlag(pn, PNX_DESTRUCT | PNX_NONCONST);
-            PropertyName *name = handler.isName(pn3);
-            JS_ASSERT(atom);
-            pn3 = newName(name);
-            if (!pn3)
-                return null();
-            pnval = pn3;
-        }
+            else if (ltok == TOK_NAME && (tt == TOK_COMMA || tt == TOK_RC)) {
+                /*
+                 * Support, e.g., |var {x, y} = o| as destructuring shorthand
+                 * for |var {x: x, y: y} = o|, per proposed JS2/ES4 for JS1.8.
+                 */
+                if (!abortIfSyntaxParser())
+                    return null();
+                tokenStream.ungetToken();
+                if (!tokenStream.checkForKeyword(atom->charsZ(), atom->length(), NULL))
+                    return null();
+                PropertyName *name = handler.isName(propname);
+                JS_ASSERT(atom);
+                propname = newName(name);
+                if (!propname)
+                    return null();
+                if (!handler.addShorthandPropertyDefinition(literal, propname))
+                    return null();
+            }
 #endif
-        else {
-            report(ParseError, false, null(), JSMSG_COLON_AFTER_ID);
-            return null();
+            else {
+                report(ParseError, false, null(), JSMSG_COLON_AFTER_ID);
+                return null();
+            }
+        } else {
+            /* NB: Getter function in { get x(){} } is unnamed. */
+            Rooted<PropertyName*> funName(context, NULL);
+            TokenStream::Position start(keepAtoms);
+            tokenStream.tell(&start);
+            Node accessor = functionDef(funName, start, op == JSOP_INITPROP_GETTER ? Getter : Setter,
+                                        Expression);
+            if (!accessor)
+                return null();
+            if (!handler.addAccessorPropertyDefinition(literal, propname, accessor, op))
+                return null();
         }
-
-        pn2 = handler.newBinary(PNK_COLON, pn3, pnval, op);
-      skip:
-        if (!pn2)
-            return null();
-        handler.addList(pn, pn2);
 
         /*
          * Check for duplicate property names.  Duplicate data properties
@@ -6537,15 +6541,14 @@ Parser<ParseHandler>::objectLiteral()
          * any part of an accessor property.
          */
         AssignmentType assignType;
-        if (op == JSOP_INITPROP) {
+        if (op == JSOP_INITPROP)
             assignType = VALUE;
-        } else if (op == JSOP_INITPROP_GETTER) {
+        else if (op == JSOP_INITPROP_GETTER)
             assignType = GET;
-        } else if (op == JSOP_INITPROP_SETTER) {
+        else if (op == JSOP_INITPROP_SETTER)
             assignType = SET;
-        } else {
+        else
             MOZ_ASSUME_UNREACHABLE("bad opcode in object initializer");
-        }
 
         AtomIndexAddPtr p = seen.lookupForAdd(atom);
         if (p) {
@@ -6574,18 +6577,17 @@ Parser<ParseHandler>::objectLiteral()
                 return null();
         }
 
-        tt = tokenStream.getToken();
+        TokenKind tt = tokenStream.getToken();
         if (tt == TOK_RC)
-            goto end_obj_init;
+            break;
         if (tt != TOK_COMMA) {
             report(ParseError, false, null(), JSMSG_CURLY_AFTER_LIST);
             return null();
         }
     }
 
-  end_obj_init:
-    handler.setEndPosition(pn, pos().end);
-    return pn;
+    handler.setEndPosition(literal, pos().end);
+    return literal;
 }
 
 template <typename ParseHandler>
