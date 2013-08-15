@@ -18,12 +18,23 @@
       <vbox id="PanelUI-mainView-spring"/>
 
       <footer id="PanelUI-footer">
-        <toolbarbutton id="PanelUI-customize-btn" label="&appMenuCustomize.label;" tabindex="0"
-                       oncommand="gCustomizeMode.toggle()"/>
         <!-- The parentNode is used so that the footer is presented as the anchor
              instead of just the button being the anchor. -->
-        <toolbarbutton id="PanelUI-help-btn" aria-label="&helpMenu.label;" tabindex="0"
+        <toolbarbutton id="PanelUI-help" label="&helpMenu.label;" tabindex="0"
                        oncommand="PanelUI.showHelpView(this.parentNode);"/>
+        <toolbarbutton id="PanelUI-customize" label="&appMenuCustomize.label;" tabindex="0"
+                       oncommand="gCustomizeMode.toggle();"/>
+        <toolbarbutton id="PanelUI-quit" tabindex="0"
+#ifdef XP_WIN
+                       label="&quitApplicationCmdWin.label;"
+#else
+#ifdef XP_MACOSX
+                       label="&quitApplicationCmdMac.label;"
+#else
+                       label="&quitApplicationCmd.label;"
+#endif
+#endif
+                       command="cmd_quitApplication"/>
       </footer>
     </panelview>
 
@@ -85,7 +96,7 @@
 
     <panelview id="PanelUI-feeds" flex="1" oncommand="FeedHandler.subscribeToFeed(null, event);"></panelview>
 
-    <panelview id="PanelUI-help" flex="1">
+    <panelview id="PanelUI-helpView" flex="1">
       <label value="&helpMenu.label;"/>
       <vbox id="PanelUI-helpItems"/>
     </panelview>

@@ -204,54 +204,49 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   min-height: 4em;
 }
 
-#PanelUI-help-btn,
-#PanelUI-customize-btn {
+#PanelUI-help,
+#PanelUI-customize,
+#PanelUI-quit {
   margin: -1px 0 0;
-  padding: 12px;
+  padding: 10px;
   -moz-appearance: none;
   box-shadow: none;
   background-image: none;
-  border: none;
-  border-top: 1px solid transparent;
+  border: 1px solid transparent;
+  border-bottom-style: none;
   border-radius: 0;
   transition: background-color;
+  -moz-box-orient: vertical;
+  flex: auto;
 }
-#PanelUI-help-btn {
-  -moz-border-start: 1px solid transparent;
+:-moz-any(#PanelUI-help, #PanelUI-customize, #PanelUI-quit) > .toolbarbutton-icon {
+  margin: 0 0 3px;
+}
+#PanelUI-help {
+  -moz-border-start-style: none;
   list-style-image: url(chrome://global/skin/icons/question-16.png);
 }
-#PanelUI-customize-btn {
-  flex: auto;
-  -moz-border-end: 1px solid transparent;
+#PanelUI-customize {
+  list-style-image: url(chrome://browser/skin/menuPanel-small.png);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+#PanelUI-quit {
+  -moz-border-end-style: none;
   list-style-image: url(chrome://browser/skin/menuPanel-small.png);
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#PanelUI-help-btn[disabled] {
+#PanelUI-help[disabled] {
   opacity: 0.4;
 }
 
-#PanelUI-help-btn:not([disabled]):hover,
-#PanelUI-customize-btn:hover {
-  border-top: 1px solid rgba(8,25,42,0.1);
+#PanelUI-help:not([disabled]):hover,
+#PanelUI-customize:hover,
+#PanelUI-quit:hover {
+  border-color: rgba(8,25,42,0.2);
+  border-top-color: rgba(8,25,42,0.1);
   background-color: rgba(0,0,0,0.1);
   box-shadow: none;
-}
-
-#PanelUI-help-btn:not([disabled]):hover {
-  -moz-border-start: 1px solid rgba(8,25,42,0.2);
-}
-
-#PanelUI-customize-btn:hover {
-  -moz-border-end: 1px solid rgba(8,25,42,0.2);
-}
-
-#PanelUI-help-btn > .toolbarbutton-text {
-  display: none;
-}
-
-#PanelUI-customize-btn > .toolbarbutton-text {
-  text-align: start;
 }
 
 #customization-palette .toolbarbutton-text {
@@ -319,7 +314,7 @@ panelview toolbarseparator {
 }
 
 #PanelUI-footer.panel-multiview-anchor,
-#PanelUI-footer.panel-multiview-anchor > #PanelUI-help-btn,
+#PanelUI-footer.panel-multiview-anchor > #PanelUI-help,
 toolbarbutton.panel-multiview-anchor {
   background-color: Highlight;
   background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
