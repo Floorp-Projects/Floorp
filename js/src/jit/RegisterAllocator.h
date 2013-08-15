@@ -352,6 +352,22 @@ class RegisterAllocator
         }
         return i;
     }
+
+    CodePosition minimalDefEnd(LInstruction *ins) {
+        // Compute the shortest interval that captures vregs defined by ins.
+        // Watch for instructions that are followed by an OSI point and/or Nop.
+        // If moves are introduced between the instruction and the OSI point then
+        // safepoint information for the instruction may be incorrect. This is
+        // pretty disgusting and should be fixed somewhere else in the compiler.
+        while (true) {
+            LInstruction *next = insData[outputOf(ins).next()].ins();
+            if (!next->isNop() && !next->isOsiPoint())
+                break;
+            ins = next;
+        }
+
+        return outputOf(ins);
+    }
 };
 
 static inline AnyRegister
