@@ -22,7 +22,7 @@ const PanelUI = {
       contents: "PanelUI-contents",
       mainView: "PanelUI-mainView",
       multiView: "PanelUI-multiView",
-      helpView: "PanelUI-help",
+      helpView: "PanelUI-helpView",
       menuButton: "PanelUI-menu-button",
       panel: "PanelUI-popup",
       scroller: "PanelUI-contents-scroller"
@@ -203,7 +203,7 @@ const PanelUI = {
    */
   showHelpView: function(aAnchor) {
     this._ensureEventListenersAdded();
-    this.multiView.showSubView("PanelUI-help", aAnchor);
+    this.multiView.showSubView("PanelUI-helpView", aAnchor);
   },
 
   /**
