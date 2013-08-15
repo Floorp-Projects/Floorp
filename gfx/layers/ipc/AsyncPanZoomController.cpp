@@ -1146,30 +1146,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   bool isDefault = mFrameMetrics.IsDefault();
   mFrameMetrics.mMayHaveTouchListeners = aLayerMetrics.mMayHaveTouchListeners;
 
-  // TODO: Once a mechanism for calling UpdateScrollOffset() when content does
-  //       a scrollTo() is implemented for metro (bug 898580), this block can be removed.
-#ifdef MOZ_METRO
-  if (!mPaintThrottler.IsOutstanding()) {
-    // No paint was requested, but we got one anyways. One possible cause of this
-    // is that content could have fired a scrollTo(). In this case, we should take
-    // the new scroll offset. Document/viewport changes are handled elsewhere.
-    // Also note that, since NotifyLayersUpdated() is called whenever there's a
-    // layers update, we didn't necessarily get a new scroll offset, but we're
-    // updating our local copy of it anyways just in case.
-    switch (mState) {
-    case NOTHING:
-    case FLING:
-    case TOUCHING:
-    case WAITING_LISTENERS:
-      mFrameMetrics.mScrollOffset = aLayerMetrics.mScrollOffset;
-      break;
-    // Don't clobber if we're in other states.
-    default:
-      break;
-    }
-  }
-#endif
-
   mPaintThrottler.TaskComplete(GetFrameTime());
   bool needContentRepaint = false;
   if (aLayerMetrics.mCompositionBounds.width == mFrameMetrics.mCompositionBounds.width &&
