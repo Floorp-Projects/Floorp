@@ -81,7 +81,6 @@ SocialUI = {
           this._updateMenuItems();
 
           SocialFlyout.unload();
-          SocialChatBar.closeWindows();
           SocialChatBar.update();
           SocialShare.update();
           SocialSidebar.update();
@@ -339,14 +338,6 @@ SocialUI = {
 }
 
 SocialChatBar = {
-  closeWindows: function() {
-    // close all windows of type Social:Chat
-    let windows = Services.wm.getEnumerator("Social:Chat");
-    while (windows.hasMoreElements()) {
-      let win = windows.getNext();
-      win.close();
-    }
-  },
   get chatbar() {
     return document.getElementById("pinnedchats");
   },
@@ -373,7 +364,6 @@ SocialChatBar = {
   update: function() {
     let command = document.getElementById("Social:FocusChat");
     if (!this.isAvailable) {
-      this.chatbar.removeAll();
       this.chatbar.hidden = command.hidden = true;
     } else {
       this.chatbar.hidden = command.hidden = false;
