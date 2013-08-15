@@ -27,7 +27,7 @@
          should be updated. If this page starts using a different favicon
          than neterrorm nsFaviconService->SetAndLoadFaviconForPage
          should be updated to ignore this one as well. -->
-    <link rel="icon" type="image/png" id="favicon" sizes="64x64" href="chrome://global/skin/icons/warning-64.png"/>
+    <link rel="icon" type="image/png" id="favicon" sizes="64x64" href="chrome://browser/skin/images/certerror-warning.png"/>
 
     <script type="application/javascript"><![CDATA[
       // Error url MUST be formatted like this:
@@ -189,13 +189,13 @@
 
   <body id="errorPage" class="certerror" dir="&locale.dir;">
 
-   <!-- Error Title -->
-   <div id="errorTitle">
-     <h1 class="errorTitleText">&certerror.longpagetitle;</h1>
-   </div>
-
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div id="errorPageContainer">
+
+      <!-- Error Title -->
+      <div id="errorTitle">
+        <h1 class="errorTitleText">&certerror.longpagetitle;</h1>
+      </div>
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
       <div id="errorLongContent">
