@@ -693,16 +693,12 @@ Range::abs(const Range *op)
 Range *
 Range::min(const Range *lhs, const Range *rhs)
 {
-    // Get the lower and upper values of the operand, and adjust them
-    // for infinities. Range's constructor treats any value beyond the
-    // int32_t range as infinity.
-    int64_t leftLower = (int64_t)lhs->lower() - lhs->isLowerInfinite();
-    int64_t leftUpper = (int64_t)lhs->upper() + lhs->isUpperInfinite();
-    int64_t rightLower = (int64_t)rhs->lower() - rhs->isLowerInfinite();
-    int64_t rightUpper = (int64_t)rhs->upper() + rhs->isUpperInfinite();
+    // If either operand is NaN (implied by isInfinite here), the result is NaN.
+    if (lhs->isInfinite() || rhs->isInfinite())
+        return new Range();
 
-    return new Range(Min(leftLower, rightLower),
-                     Min(leftUpper, rightUpper),
+    return new Range(Min(lhs->lower(), rhs->lower()),
+                     Min(lhs->upper(), rhs->upper()),
                      lhs->isDecimal() || rhs->isDecimal(),
                      Max(lhs->exponent(), rhs->exponent()));
 }
@@ -710,16 +706,12 @@ Range::min(const Range *lhs, const Range *rhs)
 Range *
 Range::max(const Range *lhs, const Range *rhs)
 {
-    // Get the lower and upper values of the operand, and adjust them
-    // for infinities. Range's constructor treats any value beyond the
-    // int32_t range as infinity.
-    int64_t leftLower = (int64_t)lhs->lower() - lhs->isLowerInfinite();
-    int64_t leftUpper = (int64_t)lhs->upper() + lhs->isUpperInfinite();
-    int64_t rightLower = (int64_t)rhs->lower() - rhs->isLowerInfinite();
-    int64_t rightUpper = (int64_t)rhs->upper() + rhs->isUpperInfinite();
+    // If either operand is NaN (implied by isInfinite here), the result is NaN.
+    if (lhs->isInfinite() || rhs->isInfinite())
+        return new Range();
 
-    return new Range(Max(leftLower, rightLower),
-                     Max(leftUpper, rightUpper),
+    return new Range(Max(lhs->lower(), rhs->lower()),
+                     Max(lhs->upper(), rhs->upper()),
                      lhs->isDecimal() || rhs->isDecimal(),
                      Max(lhs->exponent(), rhs->exponent()));
 }
