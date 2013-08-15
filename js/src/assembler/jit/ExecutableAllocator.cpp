@@ -44,8 +44,6 @@ ExecutablePool::~ExecutablePool()
 void
 ExecutableAllocator::sizeOfCode(JS::CodeSizes *sizes) const
 {
-    *sizes = JS::CodeSizes();
-
     if (m_pools.initialized()) {
         for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {
             ExecutablePool* pool = r.front();
@@ -61,6 +59,33 @@ ExecutableAllocator::sizeOfCode(JS::CodeSizes *sizes) const
                                                        - pool->m_otherCodeBytes;
         }
     }
+}
+
+void
+ExecutableAllocator::toggleAllCodeAsAccessible(bool accessible)
+{
+    if (!m_pools.initialized())
+        return;
+
+    for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {
+        ExecutablePool* pool = r.front();
+        pool->toggleAllCodeAsAccessible(accessible);
+    }
+}
+
+bool
+ExecutableAllocator::codeContains(char* address)
+{
+    if (!m_pools.initialized())
+        return false;
+
+    for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {
+        ExecutablePool* pool = r.front();
+        if (pool->codeContains(address))
+            return true;
+    }
+
+    return false;
 }
 
 }

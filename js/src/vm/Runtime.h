@@ -697,6 +697,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     int32_t interrupt;
 #endif
 
+    /* Set when handling a signal for a thread associated with this runtime. */
+    bool handlingSignal;
+
     /* Branch callback */
     JSOperationCallback operationCallback;
 
@@ -1534,7 +1537,15 @@ struct JSRuntime : public JS::shadow::Runtime,
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes);
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes, JSContext *cx);
 
-    void triggerOperationCallback();
+    // Ways in which the operation callback on the runtime can be triggered,
+    // varying based on which thread is triggering the callback.
+    enum OperationCallbackTrigger {
+        TriggerCallbackMainThread,
+        TriggerCallbackAnyThread,
+        TriggerCallbackAnyThreadDontStopIon
+    };
+
+    void triggerOperationCallback(OperationCallbackTrigger trigger);
 
     void setJitHardening(bool enabled);
     bool getJitHardening() const {

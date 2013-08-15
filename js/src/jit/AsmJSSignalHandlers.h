@@ -16,6 +16,11 @@ struct JSRuntime;
 
 namespace js {
 
+// Returns whether signal handlers for asm.js and for IonRuntime access
+// violations have been installed.
+bool
+EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt);
+
 // Force any currently-executing asm.js code to call
 // js_HandleExecutionInterrupt.
 extern void

@@ -28,7 +28,7 @@ class Linker
         return NULL;
     }
 
-    IonCode *newCode(JSContext *cx, IonCompartment *comp, JSC::CodeKind kind) {
+    IonCode *newCode(JSContext *cx, JSC::ExecutableAllocator *execAlloc, JSC::CodeKind kind) {
         JS_ASSERT(kind == JSC::ION_CODE ||
                   kind == JSC::BASELINE_CODE ||
                   kind == JSC::OTHER_CODE);
@@ -41,7 +41,7 @@ class Linker
         if (bytesNeeded >= MAX_BUFFER_SIZE)
             return fail(cx);
 
-        uint8_t *result = (uint8_t *)comp->execAlloc()->alloc(bytesNeeded, &pool, kind);
+        uint8_t *result = (uint8_t *)execAlloc->alloc(bytesNeeded, &pool, kind);
         if (!result)
             return fail(cx);
 
@@ -74,7 +74,24 @@ class Linker
     }
 
     IonCode *newCode(JSContext *cx, JSC::CodeKind kind) {
-        return newCode(cx, cx->compartment()->ionCompartment(), kind);
+        return newCode(cx, cx->compartment()->ionCompartment()->execAlloc(), kind);
+    }
+
+    IonCode *newCodeForIonScript(JSContext *cx) {
+#ifdef JS_CPU_ARM
+        // ARM does not yet use implicit interrupt checks, see bug 864220.
+        return newCode(cx, JSC::ION_CODE);
+#else
+        // The caller must lock the runtime against operation callback triggers,
+        // as the triggering thread may use the executable allocator below.
+        JS_ASSERT(cx->runtime()->currentThreadOwnsOperationCallbackLock());
+
+        JSC::ExecutableAllocator *alloc = cx->runtime()->ionRuntime()->getIonAlloc(cx);
+        if (!alloc)
+            return NULL;
+
+        return newCode(cx, alloc, JSC::ION_CODE);
+#endif
     }
 };
 

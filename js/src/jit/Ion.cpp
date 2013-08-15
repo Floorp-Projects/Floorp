@@ -17,6 +17,7 @@
 #include "gc/Marking.h"
 #include "jit/AliasAnalysis.h"
 #include "jit/AsmJSModule.h"
+#include "jit/AsmJSSignalHandlers.h"
 #include "jit/BacktrackingAllocator.h"
 #include "jit/BaselineCompiler.h"
 #include "jit/BaselineInspector.h"
@@ -169,6 +170,7 @@ ion::InitializeIon()
 
 IonRuntime::IonRuntime()
   : execAlloc_(NULL),
+    ionAlloc_(NULL),
     exceptionTail_(NULL),
     bailoutTail_(NULL),
     enterJIT_(NULL),
@@ -180,7 +182,9 @@ IonRuntime::IonRuntime()
     debugTrapHandler_(NULL),
     functionWrappers_(NULL),
     osrTempData_(NULL),
-    flusher_(NULL)
+    flusher_(NULL),
+    signalHandlersInstalled_(false),
+    ionCodeProtected_(false)
 {
 }
 
@@ -188,11 +192,17 @@ IonRuntime::~IonRuntime()
 {
     js_delete(functionWrappers_);
     freeOsrTempData();
+
+    // Note: the operation callback lock is not taken here as IonRuntime is
+    // only destroyed along with its containing JSRuntime.
+    js_delete(ionAlloc_);
 }
 
 bool
 IonRuntime::initialize(JSContext *cx)
 {
+    JS_ASSERT(cx->runtime()->currentThreadOwnsOperationCallbackLock());
+
     AutoLockForExclusiveAccess lock(cx);
     AutoCompartment ac(cx, cx->atomsCompartment());
 
@@ -273,6 +283,8 @@ IonRuntime::initialize(JSContext *cx)
             return false;
     }
 
+    signalHandlersInstalled_ = EnsureAsmJSSignalHandlersInstalled(cx->runtime());
+
     return true;
 }
 
@@ -301,6 +313,148 @@ IonRuntime::freeOsrTempData()
 {
     js_free(osrTempData_);
     osrTempData_ = NULL;
+}
+
+JSC::ExecutableAllocator *
+IonRuntime::createIonAlloc(JSContext *cx)
+{
+    JS_ASSERT(cx->runtime()->currentThreadOwnsOperationCallbackLock());
+
+    JSC::AllocationBehavior randomize =
+        cx->runtime()->jitHardening ? JSC::AllocationCanRandomize : JSC::AllocationDeterministic;
+    ionAlloc_ = js_new<JSC::ExecutableAllocator>(randomize);
+    if (!ionAlloc_)
+        js_ReportOutOfMemory(cx);
+    return ionAlloc_;
+}
+
+void
+IonRuntime::ensureIonCodeProtected(JSRuntime *rt)
+{
+    JS_ASSERT(rt->currentThreadOwnsOperationCallbackLock());
+
+    if (!signalHandlersInstalled_ || ionCodeProtected_ || !ionAlloc_)
+        return;
+
+    // Protect all Ion code in the runtime to trigger an access violation the
+    // next time any of it runs on the main thread.
+    ionAlloc_->toggleAllCodeAsAccessible(false);
+    ionCodeProtected_ = true;
+}
+
+bool
+IonRuntime::handleAccessViolation(JSRuntime *rt, void *faultingAddress)
+{
+    if (!signalHandlersInstalled_ || !ionAlloc_ || !ionAlloc_->codeContains((char *) faultingAddress))
+        return false;
+
+#ifdef JS_THREADSAFE
+    // All places where the operation callback lock is taken must either ensure
+    // that Ion code memory won't be accessed within, or call ensureIonCodeAccessible
+    // to render the memory safe for accessing. Otherwise taking the lock below
+    // will deadlock the process.
+    JS_ASSERT(!rt->currentThreadOwnsOperationCallbackLock());
+#endif
+
+    // Taking this lock is necessary to prevent the interrupting thread from marking
+    // the memory as inaccessible while we are patching backedges. This will cause us
+    // to SEGV while still inside the signal handler, and the process will terminate.
+    JSRuntime::AutoLockForOperationCallback lock(rt);
+
+    ensureIonCodeAccessible(rt);
+    return true;
+}
+
+void
+IonRuntime::ensureIonCodeAccessible(JSRuntime *rt)
+{
+    JS_ASSERT(rt->currentThreadOwnsOperationCallbackLock());
+
+    // This can only be called on the main thread and while handling signals,
+    // which happens on a separate thread in OS X.
+#ifndef XP_MACOSX
+    JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
+#endif
+
+    if (!ionCodeProtected_)
+        return;
+
+    // Ion code in the runtime faulted after it was made inaccessible. Reset
+    // the code privileges and patch all loop backedges to perform an interrupt
+    // check instead.
+    ionAlloc_->toggleAllCodeAsAccessible(true);
+    ionCodeProtected_ = false;
+
+    if (rt->interrupt) {
+        // The interrupt handler needs to be invoked by this thread, but we
+        // are inside a signal handler and have no idea what is above us on the
+        // stack (probably we are executing Ion code at an arbitrary point, but
+        // we could be elsewhere, say repatching a jump for an IonCache).
+        // Patch all backedges in the runtime so they will invoke the interrupt
+        // handler the next time they execute.
+        patchIonBackedges(rt, BackedgeInterruptCheck);
+    }
+}
+
+void
+IonRuntime::patchIonBackedges(JSRuntime *rt, BackedgeTarget target)
+{
+#ifndef XP_MACOSX
+    JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
+#endif
+
+    // Patch all loop backedges in Ion code so that they either jump to the
+    // normal loop header or to an interrupt handler each time they run.
+    for (InlineListIterator<PatchableBackedge> iter(backedgeList_.begin());
+         iter != backedgeList_.end();
+         iter++)
+    {
+        PatchableBackedge *patchableBackedge = *iter;
+        PatchJump(patchableBackedge->backedge, target == BackedgeLoopHeader
+                                               ? patchableBackedge->loopHeader
+                                               : patchableBackedge->interruptCheck);
+    }
+}
+
+void
+ion::TriggerOperationCallbackForIonCode(JSRuntime *rt,
+                                        JSRuntime::OperationCallbackTrigger trigger)
+{
+    IonRuntime *ion = rt->ionRuntime();
+    if (!ion)
+        return;
+
+    JS_ASSERT(rt->currentThreadOwnsOperationCallbackLock());
+
+    // The mechanism for interrupting normal ion code varies between how the
+    // interrupt is being triggered.
+    switch (trigger) {
+      case JSRuntime::TriggerCallbackMainThread:
+        // When triggering an interrupt from the main thread, Ion loop
+        // backedges can be patched directly. Make sure we don't segv while
+        // patching the backedges, to avoid deadlocking inside the signal
+        // handler.
+        JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
+        ion->ensureIonCodeAccessible(rt);
+        break;
+
+      case JSRuntime::TriggerCallbackAnyThread:
+        // When triggering an interrupt from off the main thread, protect
+        // Ion code memory so that the main thread will fault and enter a
+        // signal handler when trying to execute the code. The signal
+        // handler will unprotect the code and patch loop backedges so
+        // that the interrupt handler is invoked afterwards.
+        ion->ensureIonCodeProtected(rt);
+        break;
+
+      case JSRuntime::TriggerCallbackAnyThreadDontStopIon:
+        // When the trigger does not require Ion code to be interrupted,
+        // nothing more needs to be done.
+        break;
+
+      default:
+        MOZ_ASSUME_UNREACHABLE("Bad trigger");
+    }
 }
 
 IonCompartment::IonCompartment(IonRuntime *rt)
@@ -503,8 +657,17 @@ IonCode::trace(JSTracer *trc)
 void
 IonCode::finalize(FreeOp *fop)
 {
+    // Make sure this can't race with an interrupting thread, which may try
+    // to read the contents of the pool we are releasing references in.
+    JS_ASSERT(fop->runtime()->currentThreadOwnsOperationCallbackLock());
+
+#ifdef DEBUG
     // Buffer can be freed at any time hereafter. Catch use-after-free bugs.
-    JS_POISON(code_, JS_FREE_PATTERN, bufferSize_);
+    // Don't do this if the Ion code is protected, as the signal handler will
+    // deadlock trying to reaqcuire the operation callback lock.
+    if (!fop->runtime()->ionRuntime()->ionCodeProtected())
+        JS_POISON(code_, JS_FREE_PATTERN, bufferSize_);
+#endif
 
     // Horrible hack: if we are using perf integration, we don't
     // want to reuse code addresses, so we just leak the memory instead.
@@ -593,6 +756,8 @@ IonScript::IonScript()
     scriptEntries_(0),
     callTargetList_(0),
     callTargetEntries_(0),
+    backedgeList_(0),
+    backedgeEntries_(0),
     refcount_(0),
     recompileInfo_(),
     osrPcMismatchCounter_(0),
@@ -607,7 +772,7 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
                size_t osiIndices, size_t cacheEntries, size_t runtimeSize,
                size_t safepointsSize, size_t scriptEntries,
-               size_t callTargetEntries)
+               size_t callTargetEntries, size_t backedgeEntries)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t)))
@@ -629,6 +794,7 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
     size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
     size_t paddedScriptSize = AlignBytes(scriptEntries * sizeof(JSScript *), DataAlignment);
     size_t paddedCallTargetSize = AlignBytes(callTargetEntries * sizeof(JSScript *), DataAlignment);
+    size_t paddedBackedgeSize = AlignBytes(backedgeEntries * sizeof(PatchableBackedge), DataAlignment);
     size_t bytes = paddedSnapshotsSize +
                    paddedBailoutSize +
                    paddedConstantsSize +
@@ -638,7 +804,8 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
                    paddedRuntimeSize +
                    paddedSafepointSize +
                    paddedScriptSize +
-                   paddedCallTargetSize;
+                   paddedCallTargetSize +
+                   paddedBackedgeSize;
     uint8_t *buffer = (uint8_t *)cx->malloc_(sizeof(IonScript) + bytes);
     if (!buffer)
         return NULL;
@@ -687,6 +854,10 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
     script->callTargetList_ = offsetCursor;
     script->callTargetEntries_ = callTargetEntries;
     offsetCursor += paddedCallTargetSize;
+
+    script->backedgeList_ = offsetCursor;
+    script->backedgeEntries_ = backedgeEntries;
+    offsetCursor += paddedBackedgeSize;
 
     script->frameSlots_ = frameSlots;
     script->frameSize_ = frameSize;
@@ -762,6 +933,29 @@ IonScript::copyCallTargetEntries(JSScript **callTargets)
 {
     for (size_t i = 0; i < callTargetEntries_; i++)
         callTargetList()[i] = callTargets[i];
+}
+
+void
+IonScript::copyPatchableBackedges(JSContext *cx, IonCode *code,
+                                  PatchableBackedgeInfo *backedges)
+{
+    for (size_t i = 0; i < backedgeEntries_; i++) {
+        const PatchableBackedgeInfo &info = backedges[i];
+        PatchableBackedge *patchableBackedge = &backedgeList()[i];
+
+        CodeLocationJump backedge(code, info.backedge);
+        CodeLocationLabel loopHeader(code, CodeOffsetLabel(info.loopHeader->offset()));
+        CodeLocationLabel interruptCheck(code, CodeOffsetLabel(info.interruptCheck->offset()));
+        new(patchableBackedge) PatchableBackedge(backedge, loopHeader, interruptCheck);
+
+        // Point the backedge to either of its possible targets, according to
+        // whether an interrupt is currently desired, matching the targets
+        // established by ensureIonCodeAccessible() above. We don't handle the
+        // interrupt immediately as the operation callback lock is held here.
+        PatchJump(backedge, cx->runtime()->interrupt ? interruptCheck : loopHeader);
+
+        cx->runtime()->ionRuntime()->addPatchableBackedge(patchableBackedge);
+    }
 }
 
 void
@@ -887,6 +1081,7 @@ void
 IonScript::Destroy(FreeOp *fop, IonScript *script)
 {
     script->destroyCaches();
+    script->destroyBackedges(fop->runtime());
     script->detachDependentAsmJSModules(fop);
     fop->free_(script);
 }
@@ -943,6 +1138,20 @@ IonScript::detachDependentAsmJSModules(FreeOp *fop) {
     }
     fop->delete_(dependentAsmJSModules);
     dependentAsmJSModules = NULL;
+}
+
+void
+IonScript::destroyBackedges(JSRuntime *rt)
+{
+    for (size_t i = 0; i < backedgeEntries_; i++) {
+        PatchableBackedge *backedge = &backedgeList()[i];
+        rt->ionRuntime()->removePatchableBackedge(backedge);
+    }
+
+    // Clear the list of backedges, so that this method is idempotent. It is
+    // called during destruction, and may be additionally called when the
+    // script is invalidated.
+    backedgeEntries_ = 0;
 }
 
 void
@@ -2068,6 +2277,12 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
         // prevent lastJump_ from appearing to be a bogus pointer, just
         // in case anyone tries to read it.
         ionScript->purgeCaches(script->zone());
+
+        // The writes to the executable buffer below may clobber backedge
+        // jumps, so make sure that those backedges are unlinked from the
+        // runtime and not reclobbered with garbage if an interrupt is
+        // triggered.
+        ionScript->destroyBackedges(fop->runtime());
 
         // This frame needs to be invalidated. We do the following:
         //
