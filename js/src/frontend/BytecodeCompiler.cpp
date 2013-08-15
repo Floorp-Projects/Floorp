@@ -194,7 +194,8 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
         return NULL;
 
     // Saving source is not yet supported when parsing off thread.
-    JS_ASSERT_IF(!cx->isJSContext(), !extraSct && options.sourcePolicy == CompileOptions::NO_SOURCE);
+    JS_ASSERT_IF(!cx->isJSContext(),
+                 !extraSct && options.sourcePolicy != CompileOptions::SAVE_SOURCE);
 
     SourceCompressionToken *sct = extraSct;
     Maybe<SourceCompressionToken> mysct;

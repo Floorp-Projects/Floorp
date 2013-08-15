@@ -1440,6 +1440,9 @@ js_GetClassPrototype(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableH
 
 namespace js {
 
+JSObject *
+GetClassPrototypePure(GlobalObject *global, JSProtoKey protoKey);
+
 extern bool
 SetClassAndProto(JSContext *cx, HandleObject obj,
                  Class *clasp, Handle<TaggedProto> proto, bool checkForCycles);

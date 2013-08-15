@@ -5105,6 +5105,21 @@ js::IsDelegate(JSContext *cx, HandleObject obj, const js::Value &v, bool *result
     }
 }
 
+JSObject *
+js::GetClassPrototypePure(GlobalObject *global, JSProtoKey protoKey)
+{
+    JS_ASSERT(JSProto_Null <= protoKey);
+    JS_ASSERT(protoKey < JSProto_LIMIT);
+
+    if (protoKey != JSProto_Null) {
+        const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
+        if (v.isObject())
+            return &v.toObject();
+    }
+
+    return NULL;
+}
+
 /*
  * The first part of this function has been hand-expanded and optimized into
  * NewBuiltinClassInstance in jsobjinlines.h.
@@ -5113,15 +5128,9 @@ bool
 js_GetClassPrototype(ExclusiveContext *cx, JSProtoKey protoKey,
                      MutableHandleObject protop, Class *clasp)
 {
-    JS_ASSERT(JSProto_Null <= protoKey);
-    JS_ASSERT(protoKey < JSProto_LIMIT);
-
-    if (protoKey != JSProto_Null) {
-        const Value &v = cx->global()->getReservedSlot(JSProto_LIMIT + protoKey);
-        if (v.isObject()) {
-            protop.set(&v.toObject());
-            return true;
-        }
+    if (JSObject *proto = GetClassPrototypePure(cx->global(), protoKey)) {
+        protop.set(proto);
+        return true;
     }
 
     RootedValue v(cx);

@@ -1080,6 +1080,12 @@ js::AddObjectRoot(JSContext *cx, JSObject **rp, const char *name)
 }
 
 extern bool
+js::AddObjectRoot(JSRuntime *rt, JSObject **rp, const char *name)
+{
+    return AddRoot(rt, rp, name, JS_GC_ROOT_OBJECT_PTR);
+}
+
+extern bool
 js::AddScriptRoot(JSContext *cx, JSScript **rp, const char *name)
 {
     return AddRoot(cx, rp, name, JS_GC_ROOT_SCRIPT_PTR);
@@ -1218,7 +1224,7 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind)
          * background finalization runs and can modify head or cursor at any
          * moment. So we always allocate a new arena in that case.
          */
-        maybeLock.lock(zone->runtimeFromMainThread());
+        maybeLock.lock(zone->runtimeFromAnyThread());
         if (*bfs == BFS_RUN) {
             JS_ASSERT(!*al->cursor);
             chunk = PickChunk(zone);
@@ -4769,6 +4775,50 @@ js::NewCompartment(JSContext *cx, Zone *zone, JSPrincipals *principals,
 }
 
 void
+gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
+{
+    JSRuntime *rt = source->runtimeFromMainThread();
+    AutoPrepareForTracing prepare(rt);
+
+    // Cleanup tables and other state in the source compartment that will be
+    // meaningless after merging into the target compartment.
+
+    source->clearTables();
+
+    // Fixup compartment pointers in source to refer to target.
+
+    for (CellIter iter(source->zone(), FINALIZE_SCRIPT); !iter.done(); iter.next()) {
+        JSScript *script = iter.get<JSScript>();
+        JS_ASSERT(script->compartment() == source);
+        script->compartment_ = target;
+    }
+
+    for (CellIter iter(source->zone(), FINALIZE_BASE_SHAPE); !iter.done(); iter.next()) {
+        BaseShape *base = iter.get<BaseShape>();
+        JS_ASSERT(base->compartment() == source);
+        base->compartment_ = target;
+    }
+
+    // Fixup zone pointers in source's zone to refer to target's zone.
+
+    for (size_t thingKind = 0; thingKind != FINALIZE_LIMIT; thingKind++) {
+        for (ArenaIter aiter(source->zone(), AllocKind(thingKind)); !aiter.done(); aiter.next()) {
+            ArenaHeader *aheader = aiter.get();
+            aheader->zone = target->zone();
+        }
+    }
+
+    // The source should be the only compartment in its zone.
+    for (CompartmentsInZoneIter c(source->zone()); !c.done(); c.next())
+        JS_ASSERT(c.get() == source);
+
+    // Merge the allocator in source's zone into target's zone.
+    target->zone()->allocator.arenas.adoptArenas(rt, &source->zone()->allocator.arenas);
+    target->zone()->gcBytes += source->zone()->gcBytes;
+    source->zone()->gcBytes = 0;
+}
+
+void
 gc::RunDebugGC(JSContext *cx)
 {
 #ifdef JS_GC_ZEAL
@@ -5042,6 +5092,7 @@ ArenaLists::adoptArenas(JSRuntime *rt, ArenaLists *fromArenaLists)
 
             toList->insert(fromHeader);
         }
+        fromList->cursor = &fromList->head;
     }
 }
 
