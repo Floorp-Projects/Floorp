@@ -1349,8 +1349,7 @@ const int ZealIncrementalMarkAllThenFinish = 9;
 const int ZealIncrementalMultipleSlices = 10;
 const int ZealVerifierPostValue = 11;
 const int ZealFrameVerifierPostValue = 12;
-const int ZealPurgeAnalysisValue = 13;
-const int ZealLimit = 13;
+const int ZealLimit = 12;
 
 enum VerifierType {
     PreBarrierVerifier,

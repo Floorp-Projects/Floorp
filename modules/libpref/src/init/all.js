@@ -851,8 +851,6 @@ pref("javascript.options.mem.gc_dynamic_mark_slice", true);
 pref("javascript.options.mem.gc_allocation_threshold_mb", 30);
 pref("javascript.options.mem.gc_decommit_threshold_mb", 32);
 
-pref("javascript.options.mem.analysis_purge_mb", 100);
-
 pref("javascript.options.showInConsole", false);
 
 // advanced prefs

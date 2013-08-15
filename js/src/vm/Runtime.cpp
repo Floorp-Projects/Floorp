@@ -215,8 +215,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcCallback(NULL),
     gcSliceCallback(NULL),
     gcFinalizeCallback(NULL),
-    analysisPurgeCallback(NULL),
-    analysisPurgeTriggerBytes(0),
     gcMallocBytes(0),
     scriptAndCountsVector(NULL),
     NaNValue(UndefinedValue()),
