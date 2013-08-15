@@ -32,12 +32,16 @@
 #include "ReverbConvolver.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "AudioSegment.h"
 
 namespace mozilla {
 class ThreadSharedFloatArrayBufferList;
 }
 
 namespace WebCore {
+
+class DirectConvolver;
+class FFTConvolver;
 
 // Multi-channel convolution reverb with channel matrixing - one or more ReverbConvolver objects are used internally.
 

@@ -26,7 +26,6 @@
 #define HRTFPanner_h
 
 #include "FFTConvolver.h"
-#include "HRTFDatabaseLoader.h"
 #include "DelayProcessor.h"
 
 namespace mozilla {
@@ -34,6 +33,8 @@ struct AudioChunk;
 }
 
 namespace WebCore {
+
+class HRTFDatabaseLoader;
 
 using mozilla::AudioChunk;
 
