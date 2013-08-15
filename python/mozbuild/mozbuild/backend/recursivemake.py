@@ -442,6 +442,11 @@ class RecursiveMakeBackend(CommonBackend):
         self._update_from_avoid_write(result)
         self.summary.managed_count += 1
 
+        # The Makefile can't regenerate itself because of custom substitution.
+        # We need to list it here to ensure changes cause regeneration.
+        self.backend_input_files.add(os.path.join(self.environment.topsrcdir,
+            'config', 'makefiles', 'xpidl', 'Makefile.in'))
+
     def _process_program(self, program, backend_file):
         backend_file.write('PROGRAM = %s\n' % program)
 
