@@ -391,7 +391,7 @@ argumentUnboxingTemplates = {
 
     'short':
         "    int32_t ${name}_i32;\n"
-        "    if (!JS::ToInt32(cx, ${argVal}, &${name}_i32))\n"
+        "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name}_i32))\n"
         "        return false;\n"
         "    int16_t ${name} = (int16_t) ${name}_i32;\n",
 
@@ -403,7 +403,7 @@ argumentUnboxingTemplates = {
 
     'long':
         "    int32_t ${name};\n"
-        "    if (!JS::ToInt32(cx, ${argVal}, &${name}))\n"
+        "    if (!JS_ValueToECMAInt32(cx, ${argVal}, &${name}))\n"
         "        return false;\n",
 
     'unsigned long':
