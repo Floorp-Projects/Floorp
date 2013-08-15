@@ -16,7 +16,6 @@
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
-#include "jsprf.h"
 
 #include "xpcpublic.h"
 

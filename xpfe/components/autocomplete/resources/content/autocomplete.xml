@@ -873,6 +873,13 @@
                 killEvent = this.keyNavigation(aEvent);
               }
               break;
+
+            case KeyEvent.DOM_VK_BACK_SPACE:
+              if (!aEvent.ctrlKey && !aEvent.altKey && !aEvent.shiftKey &&
+                  this.mDefaultMatchFilled) {
+                  this.mDefaultMatchFilled = false;
+                this.value = this.currentSearchString.substring(0, this.selectionStart);
+              }
           }
           
           if (killEvent) {
