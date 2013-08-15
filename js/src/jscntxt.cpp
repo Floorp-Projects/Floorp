@@ -1002,7 +1002,7 @@ js_InvokeOperationCallback(JSContext *cx)
      * thread is racing us here we will accumulate another callback request
      * which will be serviced at the next opportunity.
      */
-    JS_ATOMIC_SET(&rt->interrupt, 0);
+    rt->interrupt = 0;
 
     /* IonMonkey sets its stack limit to UINTPTR_MAX to trigger operaton callbacks. */
     rt->resetIonStackLimit();
