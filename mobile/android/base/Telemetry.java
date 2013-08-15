@@ -5,9 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -18,18 +15,9 @@ public class Telemetry {
     // toolkit/components/telemetry/Histograms.json
     public static void HistogramAdd(String name,
                                     int value) {
-        try {
-            JSONObject jsonData = new JSONObject();
-
-            jsonData.put("name", name);
-            jsonData.put("value", value);
-
-            GeckoEvent event =
-                GeckoEvent.createBroadcastEvent("Telemetry:Add", jsonData.toString());
-            GeckoAppShell.sendEventToGecko(event);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSON exception: ", e);
-        }
+        GeckoEvent event =
+            GeckoEvent.createTelemetryHistogramAddEvent(name, value);
+        GeckoAppShell.sendEventToGecko(event);
     }
 
     public static class Timer {

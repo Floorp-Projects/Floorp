@@ -564,6 +564,11 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         break;
     }
 
+    case AndroidGeckoEvent::TELEMETRY_HISTOGRAM_ADD:
+        Telemetry::Accumulate(NS_ConvertUTF16toUTF8(curEvent->Characters()).get(),
+                              curEvent->Count());
+        break;
+
     case AndroidGeckoEvent::NOOP:
         break;
 
