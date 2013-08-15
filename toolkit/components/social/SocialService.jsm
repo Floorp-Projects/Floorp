@@ -891,6 +891,7 @@ SocialProvider.prototype = {
   },
 
   _terminate: function _terminate() {
+    closeAllChatWindows(this);
     if (this.workerURL) {
       try {
         getFrameWorkerHandle(this.workerURL).terminate();
