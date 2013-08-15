@@ -265,9 +265,6 @@ CodeGeneratorX86::visitImplicitThis(LImplicitThis *lir)
     return true;
 }
 
-typedef bool (*InterruptCheckFn)(JSContext *);
-static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
-
 bool
 CodeGeneratorX86::visitInterruptCheck(LInterruptCheck *lir)
 {
@@ -321,10 +318,8 @@ CodeGeneratorX86::visitCompareBAndBranch(LCompareBAndBranch *lir)
 
     JS_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
 
-    if (mir->jsop() == JSOP_STRICTEQ)
-        masm.branchTestBoolean(Assembler::NotEqual, lhs, lir->ifFalse()->lir()->label());
-    else
-        masm.branchTestBoolean(Assembler::NotEqual, lhs, lir->ifTrue()->lir()->label());
+    Assembler::Condition cond = masm.testBoolean(Assembler::NotEqual, lhs);
+    jumpToBlock((mir->jsop() == JSOP_STRICTEQ) ? lir->ifFalse() : lir->ifTrue(), cond);
 
     if (rhs->isConstant())
         masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
@@ -373,14 +368,10 @@ CodeGeneratorX86::visitCompareVAndBranch(LCompareVAndBranch *lir)
     JS_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
               mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
 
-    Label *notEqual;
-    if (cond == Assembler::Equal)
-        notEqual = lir->ifFalse()->lir()->label();
-    else
-        notEqual = lir->ifTrue()->lir()->label();
+    MBasicBlock *notEqual = (cond == Assembler::Equal) ? lir->ifFalse() : lir->ifTrue();
 
     masm.cmp32(lhs.typeReg(), rhs.typeReg());
-    masm.j(Assembler::NotEqual, notEqual);
+    jumpToBlock(notEqual, Assembler::NotEqual);
     masm.cmp32(lhs.payloadReg(), rhs.payloadReg());
     emitBranch(cond, lir->ifTrue(), lir->ifFalse());
 

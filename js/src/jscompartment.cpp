@@ -119,6 +119,13 @@ JSCompartment::init(JSContext *cx)
 ion::IonRuntime *
 JSRuntime::createIonRuntime(JSContext *cx)
 {
+    // The runtime will only be created on its owning thread, but reads of a
+    // runtime's ionRuntime() can occur when another thread is triggering an
+    // operation callback.
+    AutoLockForOperationCallback lock(this);
+
+    JS_ASSERT(!ionRuntime_);
+
     ionRuntime_ = cx->new_<ion::IonRuntime>();
 
     if (!ionRuntime_)

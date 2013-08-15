@@ -5430,7 +5430,7 @@ JS_GetOperationCallback(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSRuntime *rt)
 {
-    rt->triggerOperationCallback();
+    rt->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThread);
 }
 
 JS_PUBLIC_API(bool)

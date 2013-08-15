@@ -455,7 +455,12 @@ FinalizeArenas(FreeOp *fop,
         return FinalizeTypedArenas<JSExternalString>(fop, src, dest, thingKind, budget);
       case FINALIZE_IONCODE:
 #ifdef JS_ION
+      {
+        // IonCode finalization may release references on an executable
+        // allocator that is accessed when triggering interrupts.
+        JSRuntime::AutoLockForOperationCallback lock(fop->runtime());
         return FinalizeTypedArenas<ion::IonCode>(fop, src, dest, thingKind, budget);
+      }
 #endif
       default:
         MOZ_ASSUME_UNREACHABLE("Invalid alloc kind");
@@ -1913,7 +1918,7 @@ TriggerOperationCallback(JSRuntime *rt, JS::gcreason::Reason reason)
 
     rt->gcIsNeeded = true;
     rt->gcTriggerReason = reason;
-    rt->triggerOperationCallback();
+    rt->triggerOperationCallback(JSRuntime::TriggerCallbackMainThread);
 }
 
 void

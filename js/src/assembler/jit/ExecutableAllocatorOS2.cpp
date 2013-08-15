@@ -53,6 +53,12 @@ void ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
     DosFreeMem(alloc.pages);
 }
 
+void
+ExecutablePool::toggleAllCodeAsAccessible(bool accessible)
+{
+    MOZ_CRASH();
+}
+
 #if ENABLE_ASSEMBLER_WX_EXCLUSIVE
 #error "ASSEMBLER_WX_EXCLUSIVE not yet suported on this platform."
 #endif
