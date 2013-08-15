@@ -66,4 +66,25 @@
          <item name="android:nextFocusUp">@+id/info</item>
     </style>
 
+    <style name="Toast">
+        <item name="android:layout_width">300dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_centerHorizontal">true</item>
+
+        <!-- Copied from root Toast style. Margin-left/right were removed since they
+             large tablets are never going to be 300dp wide. -->
+        <item name="android:layout_alignParentBottom">true</item>
+        <item name="android:layout_marginBottom">64dp</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:background">@drawable/toast</item>
+        <item name="android:clickable">true</item>
+        <item name="android:showDividers">middle</item>
+        <item name="android:dividerPadding">16dp</item>
+
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:paddingLeft">0dp</item>
+        <item name="android:paddingRight">0dp</item>
+    </style>
+
 </resources>
