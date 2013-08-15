@@ -364,7 +364,6 @@ MediaDecoder::MediaDecoder() :
   mInitialVolume(0.0),
   mInitialPlaybackRate(1.0),
   mInitialPreservesPitch(true),
-  mRequestedSeekTime(-1.0),
   mDuration(-1),
   mTransportSeekable(true),
   mMediaSeekable(true),
@@ -373,6 +372,7 @@ MediaDecoder::MediaDecoder() :
   mIsDormant(false),
   mPlayState(PLAY_STATE_PAUSED),
   mNextState(PLAY_STATE_PAUSED),
+  mRequestedSeekTime(-1.0),
   mCalledResourceLoaded(false),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
@@ -753,7 +753,6 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
 
   // Only inform the element of FirstFrameLoaded if not doing a load() in order
   // to fulfill a seek, otherwise we'll get multiple loadedfirstframe events.
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   bool notifyResourceIsLoaded = !mCalledResourceLoaded &&
                                 IsDataCachedToEndOfResource();
   if (mOwner) {
