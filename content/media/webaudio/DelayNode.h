@@ -9,12 +9,12 @@
 
 #include "AudioNode.h"
 #include "AudioParam.h"
+#include "PlayingRefChangeHandler.h"
 
 namespace mozilla {
 namespace dom {
 
 class AudioContext;
-template <class T> class PlayingRefChangeHandler;
 
 class DelayNode : public AudioNode
 {

@@ -8,6 +8,9 @@
 #define PannerNode_h_
 
 #include "AudioNode.h"
+#include "AudioParam.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/TypedEnum.h"
 #include "mozilla/dom/PannerNodeBinding.h"
 #include "ThreeDPoint.h"
 #include "mozilla/WeakPtr.h"

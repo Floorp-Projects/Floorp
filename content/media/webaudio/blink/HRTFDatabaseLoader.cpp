@@ -27,6 +27,7 @@
  */
 
 #include "HRTFDatabaseLoader.h"
+
 #include "HRTFDatabase.h"
 
 using namespace mozilla;

@@ -6,7 +6,6 @@
 
 #include "OfflineAudioCompletionEvent.h"
 #include "mozilla/dom/OfflineAudioCompletionEventBinding.h"
-#include "AudioContext.h"
 
 namespace mozilla {
 namespace dom {

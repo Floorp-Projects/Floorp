@@ -10,7 +10,7 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"
-#include "AudioParamTimeline.h"
+#include "PannerNode.h"
 #include "speex/speex_resampler.h"
 #include <limits>
 
