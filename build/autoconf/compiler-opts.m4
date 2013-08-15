@@ -81,6 +81,18 @@ fi
 dnl A high level macro for selecting compiler options.
 AC_DEFUN([MOZ_COMPILER_OPTS],
 [
+  DEVELOPER_OPTIONS=1
+  MOZ_ARG_ENABLE_BOOL(release,
+  [  --enable-release        Build with more conservative, release engineering-oriented options.
+                          This may slow down builds.],
+      DEVELOPER_OPTIONS=)
+
+  if test -n "$MOZILLA_OFFICIAL" -a -n "$DEVELOPER_OPTIONS"; then
+    AC_MSG_ERROR([You cannot set MOZILLA_OFFICIAL without --enable-release])
+  fi
+  AC_SUBST(DEVELOPER_OPTIONS)
+
+  MOZ_DEBUGGING_OPTS
   MOZ_RTTI
 if test "$CLANG_CXX"; then
     ## We disable return-type-c-linkage because jsval is defined as a C++ type but is
