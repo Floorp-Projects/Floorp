@@ -93,12 +93,12 @@ var ContextCommands = {
       let y = ContextMenuUI.popupState.y;
       let json = {x: x, y: y, command: "paste" };
       target.messageManager.sendAsyncMessage("Browser:ContextCommand", json);
+      SelectionHelperUI.closeEditSession();
     } else {
       // chrome
       CommandUpdater.doCommand("cmd_paste");
       target.focus();
     }
-    SelectionHelperUI.closeEditSession();
   },
 
   pasteAndGo: function cc_pasteAndGo() {
