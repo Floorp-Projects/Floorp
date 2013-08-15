@@ -273,7 +273,7 @@ private:
         nsConnectionEntry(nsHttpConnectionInfo *ci);
         ~nsConnectionEntry();
 
-        nsHttpConnectionInfo        *mConnInfo;
+        nsRefPtr<nsHttpConnectionInfo> mConnInfo;
         nsTArray<nsHttpTransaction*> mPendingQ;    // pending transaction queue
         nsTArray<nsHttpConnection*>  mActiveConns; // active connections
         nsTArray<nsHttpConnection*>  mIdleConns;   // idle persistent connections
@@ -393,10 +393,10 @@ private:
         NS_DECL_THREADSAFE_ISUPPORTS
         NS_DECL_NSAHTTPCONNECTION(mConn)
 
-        nsConnectionHandle(nsHttpConnection *conn) { NS_ADDREF(mConn = conn); }
+        nsConnectionHandle(nsHttpConnection *conn) : mConn(conn) { }
         virtual ~nsConnectionHandle();
 
-        nsHttpConnection *mConn;
+        nsRefPtr<nsHttpConnection> mConn;
     };
 
     // nsHalfOpenSocket is used to hold the state of an opening TCP socket
