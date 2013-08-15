@@ -128,37 +128,39 @@
     <key id="key_backspace" keycode="VK_BACK" command="cmd_handleBackspace"/>
     <key id="key_shift_backspace" keycode="VK_BACK" command="cmd_handleShiftBackspace" modifiers="shift"/>
     <key id="key_reload" keycode="VK_F5" command="cmd_reload"/>
-    <key id="key_reload2" key="r" modifiers="accel" command="cmd_reload"/>
+    <key id="key_reload2" key="&reload.key;" modifiers="accel" command="cmd_reload"/>
     <key id="key_forceReload" keycode="VK_F5" modifiers="shift" command="cmd_forceReload"/>
-    <key id="key_forceReload2" key="r" modifiers="accel,shift" command="cmd_forceReload"/>
-    <key id="key_focusURL" key="l" modifiers="accel" command="cmd_openLocation"/>
+    <key id="key_forceReload2" key="&reload.key;" modifiers="accel,shift" command="cmd_forceReload"/>
+    <key id="key_focusURL" key="&focusURL.key;" modifiers="accel" command="cmd_openLocation"/>
     <key id="key_focusURL2" key="&urlbar.accesskey;" modifiers="alt" command="cmd_openLocation"/>
     <key id="key_home" keycode="VK_HOME" modifiers="accel" command="cmd_home"/>
-    <key id="key_open" key="o" modifiers="accel" command="cmd_openFile"/>
-    <key id="key_save" key="s" modifiers="accel" command="cmd_savePage"/>
+    <key id="key_open" key="&openFile.key;" modifiers="accel" command="cmd_openFile"/>
+    <key id="key_save" key="&savePage.key;" modifiers="accel" command="cmd_savePage"/>
 
     <!-- misc -->
-    <key id="key_find" key="f" modifiers="accel" command="cmd_find"/>
+    <key id="key_find" key="&find.key;" modifiers="accel" command="cmd_find"/>
     <key id="key_find" key="/" command="cmd_find"/>
     <key id="key_findNext" keycode="VK_F3" command="cmd_findNext"/>
-    <key id="key_findNext2" key="g" modifiers="accel" command="cmd_findNext"/>
+    <key id="key_findNext2" key="&findNext.key;" modifiers="accel" command="cmd_findNext"/>
     <key id="key_findPrevious" keycode="VK_F3" modifiers="shift" command="cmd_findPrevious"/>
-    <key id="key_findPrevious2" key="g" modifiers="accel,shift" command="cmd_findPrevious"/>
-    <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
-    <key id="key_addBoomkark" key="d" modifiers="accel" command="cmd_addBookmark"/>
-    <key id="key_console" key="j" modifiers="accel,shift" oncommand="PanelUI.show('console-container')"/>
-    <key id="key_options" key="o" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('PrefsFlyoutPanel')" />
+    <key id="key_findPrevious2" key="&findNext.key;" modifiers="accel,shift" command="cmd_findPrevious"/>
+    <key id="key_quit" key="&quit.key;" modifiers="accel" command="cmd_quit"/>
+    <key id="key_addBoomkark" key="&addBookmark.key;" modifiers="accel" command="cmd_addBookmark"/>
+
+    <!-- development/testing -->
+    <key id="key_console" key="&jsConsole.key;" modifiers="accel,shift" oncommand="PanelUI.show('console-container')"/>
+    <key id="key_options" key="&optionsFlyout.key;" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('PrefsFlyoutPanel')" />
 #ifdef MOZ_SERVICES_SYNC
-    <key id="key_options" key="s" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('SyncFlyoutPanel')" />
+    <key id="key_options" key="&syncFlyout.key;" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('SyncFlyoutPanel')" />
 #endif
-    <key id="key_options" key="a" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyoutPanel')" />
+    <key id="key_options" key="&aboutFlyout.key;" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyoutPanel')" />
 
     <!-- manage tabs -->
-    <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
-    <key id="key_newTab2" key="n" modifiers="accel" command="cmd_newTab"/>
-    <key id="key_closeTab" key="w" modifiers="accel" command="cmd_closeTab"/>
+    <key id="key_newTab" key="&newTab.key;" modifiers="accel" command="cmd_newTab"/>
+    <key id="key_newTab2" key="&newTab2.key;" modifiers="accel" command="cmd_newTab"/>
+    <key id="key_closeTab" key="&closeTab.key;" modifiers="accel" command="cmd_closeTab"/>
     <key id="key_closeTab2" keycode="VK_F4" modifiers="accel" command="cmd_closeTab"/>
-    <key id="key_undoCloseTab" key="t" modifiers="accel,shift" command="cmd_undoCloseTab"/>
+    <key id="key_undoCloseTab" key="&newTab.key;" modifiers="accel,shift" command="cmd_undoCloseTab"/>
 
     <!-- tab selection -->
     <key id="key_nextTab" oncommand="BrowserUI.selectNextTab();" keycode="VK_TAB" modifiers="accel"/>
