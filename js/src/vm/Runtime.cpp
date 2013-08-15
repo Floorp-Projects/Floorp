@@ -713,6 +713,22 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
 
 #ifdef JS_THREADSAFE
 
+void
+JSRuntime::setUsedByExclusiveThread(Zone *zone)
+{
+    JS_ASSERT(!zone->usedByExclusiveThread);
+    zone->usedByExclusiveThread = true;
+    numExclusiveThreads++;
+}
+
+void
+JSRuntime::clearUsedByExclusiveThread(Zone *zone)
+{
+    JS_ASSERT(zone->usedByExclusiveThread);
+    zone->usedByExclusiveThread = false;
+    numExclusiveThreads--;
+}
+
 bool
 js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
 {

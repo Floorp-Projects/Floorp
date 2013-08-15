@@ -28,7 +28,7 @@ class CompartmentChecker
 
   public:
     explicit CompartmentChecker(ExclusiveContext *cx)
-      : compartment(cx->compartment_)
+      : compartment(cx->compartment())
     {}
 
     /*
@@ -47,14 +47,14 @@ class CompartmentChecker
 
     /* Note: should only be used when neither c1 nor c2 may be the atoms compartment. */
     static void check(JSCompartment *c1, JSCompartment *c2) {
-        JS_ASSERT(!c1->runtimeFromMainThread()->isAtomsCompartment(c1));
-        JS_ASSERT(!c2->runtimeFromMainThread()->isAtomsCompartment(c2));
+        JS_ASSERT(!c1->runtimeFromAnyThread()->isAtomsCompartment(c1));
+        JS_ASSERT(!c2->runtimeFromAnyThread()->isAtomsCompartment(c2));
         if (c1 != c2)
             fail(c1, c2);
     }
 
     void check(JSCompartment *c) {
-        if (c && !compartment->runtimeFromMainThread()->isAtomsCompartment(c)) {
+        if (c && !compartment->runtimeFromAnyThread()->isAtomsCompartment(c)) {
             if (!compartment)
                 compartment = c;
             else if (c != compartment)

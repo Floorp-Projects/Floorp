@@ -3235,6 +3235,13 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
 
 #ifdef JS_THREADSAFE
 
+static void
+OffThreadCompileScriptCallback(JSScript *script, void *callbackData)
+{
+    // This callback is invoked off the main thread and there isn't a good way
+    // to pass the script on to the main thread. Just let the script leak.
+}
+
 static bool
 OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -3271,8 +3278,11 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_AddStringRoot(cx, permanentRoot))
         return false;
 
-    if (!StartOffThreadParseScript(cx, options, chars, length))
+    if (!StartOffThreadParseScript(cx, options, chars, length, cx->global(),
+                                   OffThreadCompileScriptCallback, NULL))
+    {
         return false;
+    }
 
     args.rval().setUndefined();
     return true;

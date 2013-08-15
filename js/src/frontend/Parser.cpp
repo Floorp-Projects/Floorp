@@ -1232,7 +1232,8 @@ Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
         pc = pc->parent;
 
     RootedObject parent(context);
-    parent = pc->sc->isFunctionBox() ? NULL : pc->sc->asGlobalSharedContext()->scopeChain();
+    if (!pc->sc->isFunctionBox() && options().compileAndGo)
+        parent = pc->sc->asGlobalSharedContext()->scopeChain();
 
     RootedFunction fun(context);
     JSFunction::Flags flags = (kind == Expression)
@@ -1242,17 +1243,10 @@ Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
                                 : JSFunction::INTERPRETED;
     fun = NewFunction(context, NullPtr(), NULL, 0, flags, parent, atom,
                       JSFunction::FinalizeKind, MaybeSingletonObject);
+    if (!fun)
+        return NULL;
     if (options().selfHostingMode)
         fun->setIsSelfHostedBuiltin();
-    if (fun && !options().compileAndGo) {
-        if (!context->shouldBeJSContext())
-            return NULL;
-        if (!JSObject::clearParent(context->asJSContext(), fun))
-            return NULL;
-        if (!JSObject::clearType(context->asJSContext(), fun))
-            return NULL;
-        fun->setEnvironment(NULL);
-    }
     return fun;
 }
 
