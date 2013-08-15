@@ -6,7 +6,6 @@
 
 #include "MediaStreamAudioDestinationNode.h"
 #include "nsIDocument.h"
-#include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/MediaStreamAudioDestinationNodeBinding.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"

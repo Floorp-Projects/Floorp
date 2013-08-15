@@ -6,6 +6,7 @@
 
 #include "WebAudioUtils.h"
 #include "AudioNodeStream.h"
+#include "AudioParamTimeline.h"
 #include "blink/HRTFDatabaseLoader.h"
 
 namespace mozilla {

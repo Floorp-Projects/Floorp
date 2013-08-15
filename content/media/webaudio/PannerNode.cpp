@@ -10,6 +10,7 @@
 #include "AudioListener.h"
 #include "AudioBufferSourceNode.h"
 #include "blink/HRTFPanner.h"
+#include "blink/HRTFDatabaseLoader.h"
 
 using WebCore::HRTFDatabaseLoader;
 using WebCore::HRTFPanner;
