@@ -140,8 +140,11 @@ if test "$GNU_CC" -a -n "$DEVELOPER_OPTIONS"; then
 fi
 
 if test "$GNU_CC"; then
-    CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
-    CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections -fno-exceptions"
+    if test -z "$DEVELOPER_OPTIONS"; then
+        CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
+        CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
+    fi
+    CXXFLAGS="$CXXFLAGS -fno-exceptions"
 fi
 
 dnl ========================================================
@@ -153,7 +156,7 @@ MOZ_ARG_DISABLE_BOOL(icf,
     MOZ_DISABLE_ICF=1,
     MOZ_DISABLE_ICF= )
 
-if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$MOZ_DISABLE_ICF"; then
+if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$MOZ_DISABLE_ICF" -a -z "$DEVELOPER_OPTIONS"; then
     AC_CACHE_CHECK([whether the linker supports Identical Code Folding],
         LD_SUPPORTS_ICF,
         [echo 'int foo() {return 42;}' \
@@ -184,7 +187,7 @@ dnl ========================================================
 dnl = Automatically remove dead symbols
 dnl ========================================================
 
-if test "$GNU_CC" -a "$GCC_USE_GNU_LD"; then
+if test "$GNU_CC" -a "$GCC_USE_GNU_LD" -a -z "$DEVELOPER_OPTIONS"; then
     if test -n "$MOZ_DEBUG_FLAGS"; then
         dnl See bug 670659
         AC_CACHE_CHECK([whether removing dead symbols breaks debugging],
