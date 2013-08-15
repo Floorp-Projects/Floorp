@@ -22,6 +22,7 @@ import android.content.ContentValues;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.CursorWrapper;
+import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
@@ -752,23 +753,23 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     @Override
     public Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls) {
         StringBuilder selection = new StringBuilder();
-        String[] selectionArgs = new String[urls.size()];
+        selection.append(Favicons.URL + " IN (");
 
         for (int i = 0; i < urls.size(); i++) {
-          final String url = urls.get(i);
+            final String url = urls.get(i);
 
-          if (i > 0)
-            selection.append(" OR ");
+            if (i > 0)
+                selection.append(", ");
 
-          selection.append(Favicons.URL + " = ?");
-          selectionArgs[i] = url;
+            DatabaseUtils.appendEscapedSQLString(selection, url);
         }
+
+        selection.append(")");
 
         return cr.query(mCombinedUriWithProfile,
                         new String[] { Combined.URL, Combined.FAVICON },
                         selection.toString(),
-                        selectionArgs,
-                        null);
+                        null, null);
     }
 
     @Override
