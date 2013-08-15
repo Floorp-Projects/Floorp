@@ -418,7 +418,8 @@ public:
 
 #define CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(iter_, prop_)                    \
   for (const nsCSSProperty* iter_ = nsCSSProps::SubpropertyEntryFor(prop_);   \
-       *iter_ != eCSSProperty_UNKNOWN; ++iter_)
+       *iter_ != eCSSProperty_UNKNOWN; ++iter_) \
+    if (nsCSSProps::IsEnabled(*iter_))
 
   // Keyword/Enum value tables
   static const int32_t kAnimationDirectionKTable[];
