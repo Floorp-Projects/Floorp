@@ -6319,25 +6319,25 @@ function undoCloseTab(aIndex) {
   if (gBrowser.tabs.length == 1 && isTabEmpty(gBrowser.selectedTab))
     blankTabToRemove = gBrowser.selectedTab;
 
+  var tab = null;
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
   let numberOfTabsToUndoClose = 0;
-  let index = Number(aIndex);
-  if (index) {
-    if (index < 0 || index >= ss.getClosedTabCount(window)) {
-      return null;
+  if (Number.isInteger(aIndex)) {
+    if (ss.getClosedTabCount(window) > aIndex) {
+      numberOfTabsToUndoClose = 1;
+    } else {
+      return tab;
     }
-    numberOfTabsToUndoClose = 1;
   } else {
     numberOfTabsToUndoClose = ss.getNumberOfTabsClosedLast(window);
-    index = 0;
+    aIndex = 0;
   }
 
-  let tab = null;
   while (numberOfTabsToUndoClose > 0 &&
          numberOfTabsToUndoClose--) {
     TabView.prepareUndoCloseTab(blankTabToRemove);
-    tab = ss.undoCloseTab(window, index);
+    tab = ss.undoCloseTab(window, aIndex);
     TabView.afterUndoCloseTab();
     if (blankTabToRemove) {
       gBrowser.removeTab(blankTabToRemove);
