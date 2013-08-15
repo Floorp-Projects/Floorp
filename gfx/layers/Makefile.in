@@ -20,7 +20,6 @@ VPATH       = \
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME   = layers
 ifdef MOZ_DEBUG
 DEFINES += -DD3D_DEBUG_INFO
 endif

@@ -31,3 +31,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
 
 LIBXUL_LIBRARY = True
 
+LIBRARY_NAME = 'domwifi_s'
+
