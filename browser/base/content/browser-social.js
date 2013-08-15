@@ -353,7 +353,7 @@ SocialChatBar = {
   // Whether the chatbar is available for this window.  Note that in full-screen
   // mode chats are available, but not shown.
   get isAvailable() {
-    return SocialUI.enabled && Social.haveLoggedInUser();
+    return SocialUI.enabled;
   },
   // Does this chatbar have any chats (whether minimized, collapsed or normal)
   get hasChats() {
