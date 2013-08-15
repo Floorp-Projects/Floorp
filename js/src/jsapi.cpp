@@ -271,7 +271,6 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             }
             break;
         }
-        RootedValue arg(cx, *sp);
         switch (c) {
           case 'b':
             *va_arg(ap, bool *) = ToBoolean(*sp);
@@ -281,7 +280,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
                 return false;
             break;
           case 'i':
-            if (!ToInt32(cx, arg, va_arg(ap, int32_t *)))
+            if (!JS_ValueToECMAInt32(cx, *sp, va_arg(ap, int32_t *)))
                 return false;
             break;
           case 'u':
@@ -475,6 +474,12 @@ JS_DoubleToUint32(double d)
     return ToUint32(d);
 }
 
+JS_PUBLIC_API(bool)
+JS_ValueToECMAInt32(JSContext *cx, jsval valueArg, int32_t *ip)
+{
+    RootedValue value(cx, valueArg);
+    return JS::ToInt32(cx, value, ip);
+}
 
 JS_PUBLIC_API(bool)
 JS_ValueToECMAUint32(JSContext *cx, jsval valueArg, uint32_t *ip)
