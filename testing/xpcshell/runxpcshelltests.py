@@ -683,6 +683,8 @@ class XPCShellTests(object):
         """
         # Make assertions fatal
         self.env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
+        # Enable crash reporting
+        self.env["MOZ_CRASHREPORTER"] = "1"
         # Don't launch the crash reporter client
         self.env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
         # Capturing backtraces is very slow on some platforms, and it's

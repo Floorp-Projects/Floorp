@@ -1601,6 +1601,13 @@ main(int argc, char **argv, char **envp)
         argv += 2;
     }
 
+#ifdef MOZ_CRASHREPORTER
+    // This is needed during startup and also shutdown, so keep it out
+    // of the nested scope.
+    // Special exception: will remain usable after NS_ShutdownXPCOM
+    nsCOMPtr<nsICrashReporter> crashReporter;
+#endif
+
     {
         if (argc > 1 && !strcmp(argv[1], "--greomni")) {
             nsCOMPtr<nsIFile> greOmni;
@@ -1625,6 +1632,14 @@ main(int argc, char **argv, char **envp)
             printf("NS_InitXPCOM2 failed!\n");
             return 1;
         }
+
+#ifdef MOZ_CRASHREPORTER
+        const char *val = getenv("MOZ_CRASHREPORTER");
+        crashReporter = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+        if (val && *val) {
+            crashReporter->SetEnabled(true);
+        }
+#endif
 
         nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
         // get the JSRuntime from the runtime svc
@@ -1770,13 +1785,6 @@ main(int argc, char **argv, char **envp)
 
     if (!XRE_ShutdownTestShell())
         NS_ERROR("problem shutting down testshell");
-
-#ifdef MOZ_CRASHREPORTER
-    // Get the crashreporter service while XPCOM is still active.
-    // This is a special exception: it will remain usable after NS_ShutdownXPCOM().
-    nsCOMPtr<nsICrashReporter> crashReporter =
-        do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-#endif
 
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM( NULL );

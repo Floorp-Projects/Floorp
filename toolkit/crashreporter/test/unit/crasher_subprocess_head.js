@@ -12,12 +12,10 @@ let crashReporter =
   Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
     .getService(Components.interfaces.nsICrashReporter);
 
-// the crash reporter is already enabled in content processes,
-// and setting the minidump path is not allowed
+// Setting the minidump path is not allowed in content processes
 let processType = Components.classes["@mozilla.org/xre/runtime;1"].
       getService(Components.interfaces.nsIXULRuntime).processType;
 if (processType == Components.interfaces.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
-  crashReporter.enabled = true;
   crashReporter.minidumpPath = _tmpd;
 }
 
