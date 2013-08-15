@@ -72,22 +72,6 @@ AutoScriptEvaluate::~AutoScriptEvaluate()
 
     JS_EndRequest(mJSContext);
 
-    // If this is a JSContext that has a private context that provides a
-    // nsIXPCScriptNotify interface, then notify the object the script has
-    // been executed.
-    //
-    // Note: We rely on the rule that if any JSContext in our JSRuntime has
-    // private data that points to an nsISupports subclass, it has also set
-    // the JSOPTION_PRIVATE_IS_NSISUPPORTS option.
-
-    if (JS_GetOptions(mJSContext) & JSOPTION_PRIVATE_IS_NSISUPPORTS) {
-        nsCOMPtr<nsIXPCScriptNotify> scriptNotify =
-            do_QueryInterface(static_cast<nsISupports*>
-                                         (JS_GetContextPrivate(mJSContext)));
-        if (scriptNotify)
-            scriptNotify->ScriptExecuted();
-    }
-
     if (mErrorReporterSet)
         JS_SetErrorReporter(mJSContext, NULL);
 }

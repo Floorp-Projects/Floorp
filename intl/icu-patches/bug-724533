@@ -1,0 +1,443 @@
+# HG changeset patch
+# Parent f0198ba6d08bc0bfc3f67f16ccb54c6f6681ee0c
+# User Norbert Lindenberg <mozilladev@lindenbergsoftware.com>
+Bug 724533 - Make ICU build with Mozilla build for Windows. r=gps
+
+diff --git a/intl/icu/source/aclocal.m4 b/intl/icu/source/aclocal.m4
+--- a/intl/icu/source/aclocal.m4
++++ b/intl/icu/source/aclocal.m4
+@@ -33,17 +33,20 @@ powerpc*-*-linux*)
+ *-*-linux*|*-*-gnu|*-*-k*bsd*-gnu|*-*-kopensolaris*-gnu) icu_cv_host_frag=mh-linux ;;
+ *-*-cygwin|*-*-mingw32)
+ 	if test "$GCC" = yes; then
+ 		AC_TRY_COMPILE([
+ #ifndef __MINGW32__
+ #error This is not MinGW
+ #endif], [], icu_cv_host_frag=mh-mingw, icu_cv_host_frag=mh-cygwin)
+ 	else
+-		icu_cv_host_frag=mh-cygwin-msvc
++	        case "${host}" in
++		*-*-mingw32) icu_cv_host_frag=mh-msys-msvc ;;
++		*-*-cygwin) icu_cv_host_frag=mh-cygwin-msvc ;;
++		esac
+ 	fi ;;
+ *-*-*bsd*|*-*-dragonfly*) 	icu_cv_host_frag=mh-bsd-gcc ;;
+ *-*-aix*)
+ 	if test "$GCC" = yes; then
+ 		icu_cv_host_frag=mh-aix-gcc
+ 	else
+ 		icu_cv_host_frag=mh-aix-va
+ 	fi ;;
+@@ -456,27 +459,31 @@ AC_DEFUN(AC_CHECK_STRICT_COMPILE,
+             # We use -std=c99 to disable the gnu99 defaults and its associated warnings
+             CFLAGS="$CFLAGS -Wall -std=c99 -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wwrite-strings"
+         else
+             case "${host}" in
+             *-*-cygwin)
+                 if test "`$CC /help 2>&1 | head -c9`" = "Microsoft"
+                 then
+                     CFLAGS="$CFLAGS /W4"
+-                fi
++                fi ;;
++            *-*-mingw32)
++                CFLAGS="$CFLAGS -W4" ;;
+             esac
+         fi
+         if test "$GXX" = yes
+         then
+             CXXFLAGS="$CXXFLAGS -W -Wall -pedantic -Wpointer-arith -Wwrite-strings -Wno-long-long"
+         else
+             case "${host}" in
+             *-*-cygwin)
+                 if test "`$CXX /help 2>&1 | head -c9`" = "Microsoft"
+                 then
+                     CXXFLAGS="$CXXFLAGS /W4"
+-                fi
++                fi ;;
++            *-*-mingw32)
++                CXXFLAGS="$CXXFLAGS -W4" ;;
+             esac
+         fi
+     fi
+ ])
+ 
+ 
+diff --git a/intl/icu/source/config/mh-cygwin-msvc b/intl/icu/source/config/mh-msys-msvc
+copy from intl/icu/source/config/mh-cygwin-msvc
+copy to intl/icu/source/config/mh-msys-msvc
+--- a/intl/icu/source/config/mh-cygwin-msvc
++++ b/intl/icu/source/config/mh-msys-msvc
+@@ -1,22 +1,22 @@
+-## Cygwin with Microsoft Visual C++ compiler specific setup
++## MSYS with Microsoft Visual C++ compiler specific setup
+ ## Copyright (c) 2001-2012, International Business Machines Corporation and
+ ## others. All Rights Reserved.
+ 
+ # We install sbin tools into the same bin directory because
+ # pkgdata needs some of the tools in sbin, and we can't always depend on
+ # icu-config working on Windows.
+ sbindir=$(bindir)
+ 
+ ## Commands to generate dependency files
+ GEN_DEPS.c=	:
+ GEN_DEPS.cc=	:
+-#GEN_DEPS.c=	$(COMPILE.c) /E
+-#GEN_DEPS.cc=	$(COMPILE.cc) /E
++#GEN_DEPS.c=	$(COMPILE.c) -E
++#GEN_DEPS.cc=	$(COMPILE.cc) -E
+ 
+ ## Flags to create/use a static library
+ ifneq ($(ENABLE_SHARED),YES)
+ ## Make sure that the static libraries can be built and used
+ CPPFLAGS += -DU_STATIC_IMPLEMENTATION#M#
+ else
+ ## Make sure that the static libraries can be built
+ STATICCPPFLAGS = -DU_STATIC_IMPLEMENTATION
+@@ -36,63 +36,63 @@ CPPFLAGS+=-DU_RELEASE=1#M#
+ endif
+ 
+ ifeq ($(ENABLE_DEBUG),1)
+ # Pass debugging flag through
+ CPPFLAGS+=-D_DEBUG=1#M#
+ ICULIBSUFFIX:=$(ICULIBSUFFIX)d#M#
+ endif
+ 
+-# /GF pools strings and places them into read-only memory
+-# /EHsc enables exception handling
+-# /Zc:wchar_t makes wchar_t a native type. Required for C++ ABI compatibility.
++# -GF pools strings and places them into read-only memory
++# -EHsc enables exception handling
++# -Zc:wchar_t makes wchar_t a native type. Required for C++ ABI compatibility.
+ # -D_CRT_SECURE_NO_DEPRECATE is needed to quiet warnings about using standard C functions.
+-CFLAGS+=/GF /nologo
+-CXXFLAGS+=/GF /nologo /EHsc /Zc:wchar_t
++CFLAGS+=-GF -nologo
++CXXFLAGS+=-GF -nologo -EHsc -Zc:wchar_t
+ CPPFLAGS+=-D_CRT_SECURE_NO_DEPRECATE
+ DEFS+=-DWIN32 -DCYGWINMSVC
+-LDFLAGS+=/nologo
++LDFLAGS+=-nologo
+ 
+ # Commands to compile
+-COMPILE.c=	$(CC) $(CPPFLAGS) $(DEFS) $(CFLAGS) /c
+-COMPILE.cc=	$(CXX) $(CPPFLAGS) $(DEFS) $(CXXFLAGS) /c
++COMPILE.c=	$(CC) $(CPPFLAGS) $(DEFS) $(CFLAGS) -c
++COMPILE.cc=	$(CXX) $(CPPFLAGS) $(DEFS) $(CXXFLAGS) -c
+ 
+ # Commands to link
+-LINK.c=		LINK.EXE /subsystem:console $(LDFLAGS)
+-LINK.cc=	LINK.EXE /subsystem:console $(LDFLAGS)
++LINK.c=		LINK.EXE -subsystem:console $(LDFLAGS)
++LINK.cc=	LINK.EXE -subsystem:console $(LDFLAGS)
+ 
+ ## Commands to make a shared library
+-SHLIB.c=	LINK.EXE /DLL $(LDFLAGS)
+-SHLIB.cc=	LINK.EXE /DLL $(LDFLAGS)
++SHLIB.c=	LINK.EXE -DLL $(LDFLAGS)
++SHLIB.cc=	LINK.EXE -DLL $(LDFLAGS)
+ 
+ ## Compiler switch to embed a runtime search path
+ LD_RPATH=	
+ LD_RPATH_PRE=
+ 
+ ## Compiler switch to embed a library name
+-LD_SONAME = /IMPLIB:$(SO_TARGET:.dll=.lib)
++LD_SONAME = -IMPLIB:$(SO_TARGET:.dll=.lib)
+ 
+ ## Shared object suffix
+ SO = dll
+ ## Non-shared intermediate object suffix
+ STATIC_O = ao
+ # OUTOPT is for creating a specific output name
+-OUTOPT = /out:
++OUTOPT = -out:
+ 
+ # Static library prefix and file extension
+ LIBSICU = $(STATIC_PREFIX)$(ICUPREFIX)
+ A = lib
+ 
+ # Cygwin's ar can't handle Win64 right now. So we use Microsoft's tool instead.
+ AR = LIB.EXE#M#
+-ARFLAGS := /nologo $(ARFLAGS:r=)#M#
++ARFLAGS := -nologo $(ARFLAGS:r=)#M#
+ RANLIB = ls -s#M#
+-AR_OUTOPT = /OUT:#M#
++AR_OUTOPT = -OUT:#M#
+ 
+-## An import library is needed for z/OS, MSVC and Cygwin
++## An import library is needed for z-OS, MSVC and Cygwin
+ IMPORT_LIB_EXT = .lib
+ 
+ LIBPREFIX=
+ DEFAULT_LIBS = advapi32.lib
+ 
+ # Change the stubnames so that poorly working FAT disks and installation programs can work.
+ # This is also for backwards compatibility.
+ DATA_STUBNAME = dt
+@@ -109,47 +109,35 @@ LIBICUUC=	$(LIBDIR)/$(LIBICU)$(COMMON_ST
+ LIBICUI18N=	$(LIBDIR)/$(LIBICU)$(I18N_STUBNAME)$(ICULIBSUFFIX).lib
+ LIBICULE=	$(LIBDIR)/$(LIBICU)$(LAYOUT_STUBNAME)$(ICULIBSUFFIX).lib
+ LIBICULX=	$(LIBDIR)/$(LIBICU)$(LAYOUTEX_STUBNAME)$(ICULIBSUFFIX).lib
+ LIBICUIO=	$(LIBDIR)/$(LIBICU)$(IO_STUBNAME)$(ICULIBSUFFIX).lib
+ LIBCTESTFW=	$(top_builddir)/tools/ctestfw/$(LIBICU)$(CTESTFW_STUBNAME)$(ICULIBSUFFIX).lib
+ LIBICUTOOLUTIL=	$(LIBDIR)/$(LIBICU)$(TOOLUTIL_STUBNAME)$(ICULIBSUFFIX).lib
+ 
+ ## These are the library specific LDFLAGS
+-LDFLAGSICUDT+=	/base:"0x4ad00000" /NOENTRY# The NOENTRY option is required for creating a resource-only DLL.
+-LDFLAGSICUUC=	/base:"0x4a800000"# in-uc = 1MB
+-LDFLAGSICUI18N=	/base:"0x4a900000"# io-in = 2MB
+-LDFLAGSICUIO=	/base:"0x4ab00000"# le-io = 1MB
+-LDFLAGSICULE=	/base:"0x4ac00000"# lx-le = 512KB
+-LDFLAGSICULX=	/base:"0x4ac80000"
++LDFLAGSICUDT+=	-base:"0x4ad00000" -NOENTRY# The NOENTRY option is required for creating a resource-only DLL.
++LDFLAGSICUUC=	-base:"0x4a800000"# in-uc = 1MB
++LDFLAGSICUI18N=	-base:"0x4a900000"# io-in = 2MB
++LDFLAGSICUIO=	-base:"0x4ab00000"# le-io = 1MB
++LDFLAGSICULE=	-base:"0x4ac00000"# lx-le = 512KB
++LDFLAGSICULX=	-base:"0x4ac80000"
+ LDFLAGSCTESTFW=# Unused for now.
+-LDFLAGSICUTOOLUTIL=	/base:"0x4ac00000"# Same as layout. Layout and tools probably won't mix.
+-
+-# The #M# is used to delete lines for icu-config
+-# Current full path directory.
+-CURR_FULL_DIR=$(subst \,/,$(shell cygpath -da .))#M# -m isn't used because it doesn't work on Win98
+-# Current full path directory for use in source code in a -D compiler option.
+-CURR_SRCCODE_FULL_DIR=$(subst \,\\,$(shell cygpath -da .))#M#
+-
+-ifeq ($(srcdir),.)
+-SOURCE_FILE=$<
+-else
+-SOURCE_FILE=$(shell cygpath -dma $<)#M#
+-endif
++LDFLAGSICUTOOLUTIL=	-base:"0x4ac00000"# Same as layout. Layout and tools probably won't mix.
+ 
+ ## Compilation rules
+ %.$(STATIC_O): $(srcdir)/%.c
+-	$(COMPILE.c) $(STATICCPPFLAGS) $(STATICCFLAGS) /Fo$@ $(SOURCE_FILE)
++	$(COMPILE.c) $(STATICCPPFLAGS) $(STATICCFLAGS) -Fo$@ $<
+ %.o: $(srcdir)/%.c
+-	$(COMPILE.c) $(DYNAMICCPPFLAGS) $(DYNAMICCFLAGS) /Fo$@ $(SOURCE_FILE)
++	$(COMPILE.c) $(DYNAMICCPPFLAGS) $(DYNAMICCFLAGS) -Fo$@ $<
+ 
+ %.$(STATIC_O): $(srcdir)/%.cpp
+-	$(COMPILE.cc) $(STATICCPPFLAGS) $(STATICCXXFLAGS) /Fo$@ $(SOURCE_FILE)
++	$(COMPILE.cc) $(STATICCPPFLAGS) $(STATICCXXFLAGS) -Fo$@ $<
+ %.o: $(srcdir)/%.cpp
+-	$(COMPILE.cc) $(DYNAMICCPPFLAGS) $(DYNAMICCXXFLAGS) /Fo$@ $(SOURCE_FILE)
++	$(COMPILE.cc) $(DYNAMICCPPFLAGS) $(DYNAMICCXXFLAGS) -Fo$@ $<
+ 
+ 
+ ## Dependency rules
+ ## This is a start to how depdendencies could work
+ # The commented out rules may not properly delete the file when ^C is pressed
+ #   or the compiler fails.
+ # make currently doesn't like rules with C:\\PROGRA~1\\.. in the depedency.
+ #   So system headers are ignored by ignoring \\
+@@ -170,34 +158,34 @@ endif
+ #	@echo -n "$@ $(basename $<).o : " > $@
+ #	@$(SHELL) -ec '$(GEN_DEPS.cc) $< \
+ #		| grep "#line 1 " | grep -v \\\\ | cut -d " " -f 3 \
+ #		| /usr/bin/sort -u | sed s/\"$$/\\\\/ | sed s/^\"/\	/ >> $@ \
+ #		|| (rm -f $@ && echo $@ && false)'
+ 
+ ## Compile a Windows resource file
+ %.res : $(srcdir)/%.rc
+-	rc.exe /fo$@ $(CPPFLAGS) $(SOURCE_FILE)
++	rc.exe -fo$@ $(CPPFLAGS) $<
+ 
+ ## Versioned target for a shared library.
+ FINAL_SO_TARGET= $(basename $(SO_TARGET))$(SO_TARGET_VERSION_MAJOR).$(SO)
+ MIDDLE_SO_TARGET=$(FINAL_SO_TARGET)
+ 
+ ## Starting in MSVC 2005, manifest files are required. This reduces the obnoxiousness of this feature.
+ 	POST_SO_BUILD_STEP = @([ -e $<.manifest ] && \
+ 	( echo Embedding manifest into $< && mt.exe -nologo -manifest $<.manifest -outputresource:"$<;2" && rm -rf $<.manifest )) \
+ 	|| true
+ 	POST_BUILD_STEP = @([ -e $@.manifest ] && \
+ 	( echo Embedding manifest into $@ && mt.exe -nologo -manifest $@.manifest -outputresource:"$@;1" && rm -rf $@.manifest )) \
+ 	|| true
+ 
+ ## Special pkgdata information that is needed
+ PKGDATA_VERSIONING = -r $(SO_TARGET_VERSION_MAJOR)
+-ICUPKGDATA_INSTALL_DIR = $(shell mkdir -p  $(DESTDIR)$(ICUPKGDATA_DIR) ;  cygpath -dma $(DESTDIR)$(ICUPKGDATA_DIR))#M#
+-ICUPKGDATA_INSTALL_LIBDIR = $(shell mkdir -p  $(DESTDIR)$(libdir) ; cygpath -dma $(DESTDIR)$(libdir))#M#
++ICUPKGDATA_INSTALL_DIR = $(shell mkdir -p  $(DESTDIR)$(ICUPKGDATA_DIR) ;  echo $(DESTDIR)$(ICUPKGDATA_DIR))#M#
++ICUPKGDATA_INSTALL_LIBDIR = $(shell mkdir -p  $(DESTDIR)$(libdir) ; echo $(DESTDIR)$(libdir))#M#
+ 
+ ## Versioned import library names. The library names are versioned,
+ ## but the import libraries do not need versioning.
+ IMPORT_LIB = $(basename $(SO_TARGET))$(IMPORT_LIB_EXT)#M#
+ MIDDLE_IMPORT_LIB = $(IMPORT_LIB)#M#
+ FINAL_IMPORT_LIB = $(MIDDLE_IMPORT_LIB)#M#
+ 
+ # The following is for Makefile.inc's use.
+@@ -220,10 +208,10 @@ INSTALL-L=$(INSTALL_PROGRAM)
+ LDLIBRARYPATH_ENVVAR = PATH
+ 
+ # These are needed to allow the pkgdata nmake files to work
+ PKGDATA_INVOKE_OPTS = MAKEFLAGS=
+ 
+ # Include the version information in the shared library
+ ENABLE_SO_VERSION_DATA=1
+ 
+-## End Cygwin-specific setup
++## End MSYS-specific setup
+ 
+diff --git a/intl/icu/source/configure b/intl/icu/source/configure
+--- a/intl/icu/source/configure
++++ b/intl/icu/source/configure
+@@ -4068,29 +4068,33 @@ fi
+             # We use -std=c99 to disable the gnu99 defaults and its associated warnings
+             CFLAGS="$CFLAGS -Wall -std=c99 -pedantic -Wshadow -Wpointer-arith -Wmissing-prototypes -Wwrite-strings"
+         else
+             case "${host}" in
+             *-*-cygwin)
+                 if test "`$CC /help 2>&1 | head -c9`" = "Microsoft"
+                 then
+                     CFLAGS="$CFLAGS /W4"
+-                fi
++                fi ;;
++            *-*-mingw32)
++                CFLAGS="$CFLAGS -W4" ;;
+             esac
+         fi
+         if test "$GXX" = yes
+         then
+             CXXFLAGS="$CXXFLAGS -W -Wall -pedantic -Wpointer-arith -Wwrite-strings -Wno-long-long"
+         else
+             case "${host}" in
+             *-*-cygwin)
+                 if test "`$CXX /help 2>&1 | head -c9`" = "Microsoft"
+                 then
+                     CXXFLAGS="$CXXFLAGS /W4"
+-                fi
++                fi ;;
++            *-*-mingw32)
++                CXXFLAGS="$CXXFLAGS -W4" ;;
+             esac
+         fi
+     fi
+ 
+ 
+ # Check if we can build and use 64-bit libraries
+ 
+ 
+@@ -4864,17 +4868,20 @@ main ()
+ _ACEOF
+ if ac_fn_c_try_compile "$LINENO"; then :
+   icu_cv_host_frag=mh-mingw
+ else
+   icu_cv_host_frag=mh-cygwin
+ fi
+ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+ 	else
+-		icu_cv_host_frag=mh-cygwin-msvc
++	        case "${host}" in
++		*-*-mingw32) icu_cv_host_frag=mh-msys-msvc ;;
++		*-*-cygwin) icu_cv_host_frag=mh-cygwin-msvc ;;
++		esac
+ 	fi ;;
+ *-*-*bsd*|*-*-dragonfly*) 	icu_cv_host_frag=mh-bsd-gcc ;;
+ *-*-aix*)
+ 	if test "$GCC" = yes; then
+ 		icu_cv_host_frag=mh-aix-gcc
+ 	else
+ 		icu_cv_host_frag=mh-aix-va
+ 	fi ;;
+@@ -5106,17 +5113,17 @@ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $enabled" >&5
+ $as_echo "$enabled" >&6; }
+ 
+ 
+ # MSVC floating-point option
+ MSVC_RELEASE_FLAG=""
+ if test $enabled = yes
+ then
+-    if test $icu_cv_host_frag = mh-cygwin-msvc
++    if test $icu_cv_host_frag = mh-cygwin-msvc -o $icu_cv_host_frag = mh-msys-msvc
+     then
+         cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+     #if defined _MSC_VER && _MSC_VER >= 1400
+     #else
+     Microsoft Visual C++ < 2005
+     #endif
+diff --git a/intl/icu/source/configure.in b/intl/icu/source/configure.in
+--- a/intl/icu/source/configure.in
++++ b/intl/icu/source/configure.in
+@@ -313,18 +313,18 @@ AC_ARG_ENABLE(auto-cleanup,
+     esac],
+ )
+ AC_MSG_RESULT($enabled)
+ AC_SUBST(UCLN_NO_AUTO_CLEANUP)
+ 
+ # MSVC floating-point option
+ MSVC_RELEASE_FLAG=""
+ if test $enabled = yes
+-then  
+-    if test $icu_cv_host_frag = mh-cygwin-msvc
++then
++    if test $icu_cv_host_frag = mh-cygwin-msvc -o $icu_cv_host_frag = mh-msys-msvc
+     then
+         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+     #if defined _MSC_VER && _MSC_VER >= 1400
+     #else
+     Microsoft Visual C++ < 2005
+     #endif
+         ]], [[]])],[MSVC_RELEASE_FLAG="/fp:precise"],[MSVC_RELEASE_FLAG="/Op"])
+         
+diff --git a/intl/icu/source/data/Makefile.in b/intl/icu/source/data/Makefile.in
+--- a/intl/icu/source/data/Makefile.in
++++ b/intl/icu/source/data/Makefile.in
+@@ -345,17 +345,18 @@ GENRBOPTS=-k
+ -include $(MISCSRCDIR)/misclocal.mk
+ MSC_SOURCE= $(MISC_SOURCE) $(MISC_SOURCE_LOCAL)
+ MSC_SRC_FILES=$(MSC_SOURCE:%=$(MISCSRCDIR)/%)
+ 
+ ifeq ($(ENABLE_SO_VERSION_DATA),1)
+ ifeq ($(PKGDATA_MODE),dll)
+ SO_VERSION_DATA = $(OUTTMPDIR)/icudata.res
+ $(SO_VERSION_DATA) : $(MISCSRCDIR)/icudata.rc
+-	rc.exe /i$(srcdir)/../common /i$(top_builddir)/common /fo$@ $(CPPFLAGS) $(SOURCE_FILE)
++        # fixme: need to tell whether to use - or /, $(SOURCEFILE) or $<
++	rc.exe -i$(srcdir)/../common -i$(top_builddir)/common -fo$@ $(CPPFLAGS) $<
+ endif
+ endif
+ 
+ INDEX_NAME=res_index
+ INDEX_FILE=$(OUTTMPDIR)/$(INDEX_NAME).txt
+ 
+ ALL_RES_SRC= $(RES_SRC) $(TRNS_SOURCE) $(MSC_SOURCE)
+ RES_FILES = $(ALL_RES_SRC:%.txt=$(BUILDDIR)/%.res) $(BUILDDIR)/$(INDEX_NAME).res $(BUILDDIR)/pool.res
+diff --git a/intl/icu/source/runConfigureICU b/intl/icu/source/runConfigureICU
+--- a/intl/icu/source/runConfigureICU
++++ b/intl/icu/source/runConfigureICU
+@@ -279,16 +279,27 @@ case $platform in
+         DEBUG_CXXFLAGS='-g -O0'
+         ;;
+     MinGW)
+         THE_OS="MinGW"
+         THE_COMP="the GNU C++"
+         RELEASE_CFLAGS='-O3'
+         RELEASE_CXXFLAGS='-O3'
+         ;;
++    MSYS/MSVC)
++        THE_OS="MSYS"
++        THE_COMP="Microsoft Visual C++"
++        CC=cl; export CC
++        CXX=cl; export CXX
++        RELEASE_CFLAGS='-Gy -MD'
++        RELEASE_CXXFLAGS='-Gy -MD'
++        DEBUG_CFLAGS='-Zi -MDd'
++        DEBUG_CXXFLAGS='-Zi -MDd'
++        DEBUG_LDFLAGS='-DEBUG'
++        ;;
+     *BSD)
+         THE_OS="BSD"
+         THE_COMP="the GNU C++"
+         CC=gcc; export CC
+         CXX=g++; export CXX
+         DEBUG_CFLAGS='-g -O0'
+         DEBUG_CXFLAGS='-g -O0'
+         ;;

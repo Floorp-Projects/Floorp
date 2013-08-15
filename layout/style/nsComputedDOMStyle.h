@@ -30,6 +30,7 @@ class nsIPresShell;
 class nsDOMCSSValueList;
 class nsROCSSPrimitiveValue;
 class nsStyleContext;
+class gfx3DMatrix;
 
 class nsComputedDOMStyle MOZ_FINAL : public nsDOMCSSDeclaration
 {

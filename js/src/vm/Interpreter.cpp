@@ -1313,7 +1313,7 @@ Interpret(JSContext *cx, RunState &state)
      */
 #define CHECK_BRANCH()                                                        \
     JS_BEGIN_MACRO                                                            \
-        if (cx->runtime()->interrupt && !js_HandleExecutionInterrupt(cx))       \
+        if (cx->runtime()->interrupt && !js_HandleExecutionInterrupt(cx))     \
             goto error;                                                       \
     JS_END_MACRO
 

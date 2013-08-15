@@ -19,8 +19,8 @@
 #include "vm/ArrayObject.h"
 #include "vm/Runtime.h"
 #include "vm/Shape.h"
-#include "vm/WrapperObject.h"
 #include "vm/String.h"
+#include "vm/WrapperObject.h"
 
 #include "vm/ObjectImpl-inl.h"
 

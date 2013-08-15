@@ -47,7 +47,7 @@ public:
 
 protected:
 
-  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle, int16_t aMode);
+  virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle);
 
   // actual implementations of get/put dialogs using NSOpenPanel & NSSavePanel
   // aFile is an existing but unspecified file. These functions must specify it.
@@ -62,7 +62,6 @@ protected:
   NSView* GetAccessoryView();
                                                 
   nsString               mTitle;
-  int16_t                mMode;
   nsCOMArray<nsIFile>    mFiles;
   nsString               mDefault;
 

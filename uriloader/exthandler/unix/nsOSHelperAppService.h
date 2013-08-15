@@ -47,7 +47,6 @@ protected:
   already_AddRefed<nsMIMEInfoBase> GetFromType(const nsCString& aMimeType);
   already_AddRefed<nsMIMEInfoBase> GetFromExtension(const nsCString& aFileExt);
 
-  virtual void FixFilePermissions(nsIFile* aFile);
 private:
   uint32_t mPermissions;
 

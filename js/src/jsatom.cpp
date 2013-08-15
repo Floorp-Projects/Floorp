@@ -202,7 +202,7 @@ js::SweepAtoms(JSRuntime *rt)
         bool isDying = IsStringAboutToBeFinalized(&atom);
 
         /* Pinned or interned key cannot be finalized. */
-        JS_ASSERT_IF(entry.isTagged(), !isDying);
+        JS_ASSERT_IF(rt->hasContexts() && entry.isTagged(), !isDying);
 
         if (isDying)
             e.removeFront();

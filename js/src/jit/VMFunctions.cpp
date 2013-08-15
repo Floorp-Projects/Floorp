@@ -16,11 +16,11 @@
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 
+#include "jsinferinlines.h"
+
 #include "jit/BaselineFrame-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/StringObject-inl.h"
-
-#include "jsinferinlines.h"
 
 using namespace js;
 using namespace js::ion;
