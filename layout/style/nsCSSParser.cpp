@@ -42,6 +42,7 @@
 #include "CSSCalc.h"
 #include "nsMediaFeatures.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 
@@ -8513,6 +8514,8 @@ CSSParserImpl::ParseFont()
     eCSSProperty_font_weight
   };
 
+  bool featuresEnabled =
+    mozilla::Preferences::GetBool("layout.css.font-features.enabled");
   nsCSSValue  family;
   if (ParseVariant(family, VARIANT_HK, nsCSSProps::kFontKTable)) {
     if (ExpectEndProperty()) {
@@ -8529,14 +8532,16 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_font_size_adjust, family);
         AppendValue(eCSSProperty_font_feature_settings, family);
         AppendValue(eCSSProperty_font_language_override, family);
-        AppendValue(eCSSProperty_font_kerning, family);
-        AppendValue(eCSSProperty_font_synthesis, family);
-        AppendValue(eCSSProperty_font_variant_alternates, family);
-        AppendValue(eCSSProperty_font_variant_caps, family);
-        AppendValue(eCSSProperty_font_variant_east_asian, family);
-        AppendValue(eCSSProperty_font_variant_ligatures, family);
-        AppendValue(eCSSProperty_font_variant_numeric, family);
-        AppendValue(eCSSProperty_font_variant_position, family);
+        if (featuresEnabled) {
+          AppendValue(eCSSProperty_font_kerning, family);
+          AppendValue(eCSSProperty_font_synthesis, family);
+          AppendValue(eCSSProperty_font_variant_alternates, family);
+          AppendValue(eCSSProperty_font_variant_caps, family);
+          AppendValue(eCSSProperty_font_variant_east_asian, family);
+          AppendValue(eCSSProperty_font_variant_ligatures, family);
+          AppendValue(eCSSProperty_font_variant_numeric, family);
+          AppendValue(eCSSProperty_font_variant_position, family);
+        }
       }
       else {
         AppendValue(eCSSProperty__x_system_font, family);
@@ -8551,14 +8556,16 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_font_size_adjust, systemFont);
         AppendValue(eCSSProperty_font_feature_settings, systemFont);
         AppendValue(eCSSProperty_font_language_override, systemFont);
-        AppendValue(eCSSProperty_font_kerning, systemFont);
-        AppendValue(eCSSProperty_font_synthesis, systemFont);
-        AppendValue(eCSSProperty_font_variant_alternates, systemFont);
-        AppendValue(eCSSProperty_font_variant_caps, systemFont);
-        AppendValue(eCSSProperty_font_variant_east_asian, systemFont);
-        AppendValue(eCSSProperty_font_variant_ligatures, systemFont);
-        AppendValue(eCSSProperty_font_variant_numeric, systemFont);
-        AppendValue(eCSSProperty_font_variant_position, systemFont);
+        if (featuresEnabled) {
+          AppendValue(eCSSProperty_font_kerning, systemFont);
+          AppendValue(eCSSProperty_font_synthesis, systemFont);
+          AppendValue(eCSSProperty_font_variant_alternates, systemFont);
+          AppendValue(eCSSProperty_font_variant_caps, systemFont);
+          AppendValue(eCSSProperty_font_variant_east_asian, systemFont);
+          AppendValue(eCSSProperty_font_variant_ligatures, systemFont);
+          AppendValue(eCSSProperty_font_variant_numeric, systemFont);
+          AppendValue(eCSSProperty_font_variant_position, systemFont);
+        }
       }
       return true;
     }
@@ -8623,22 +8630,24 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None));
       AppendValue(eCSSProperty_font_feature_settings, nsCSSValue(eCSSUnit_Normal));
       AppendValue(eCSSProperty_font_language_override, nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_kerning,
-                  nsCSSValue(NS_FONT_KERNING_AUTO, eCSSUnit_Enumerated));
-      AppendValue(eCSSProperty_font_synthesis,
-                  nsCSSValue(NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE,
-                             eCSSUnit_Enumerated));
-      AppendValue(eCSSProperty_font_variant_alternates,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_caps, nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_east_asian,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_ligatures,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_numeric,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_position,
-                  nsCSSValue(eCSSUnit_Normal));
+      if (featuresEnabled) {
+        AppendValue(eCSSProperty_font_kerning,
+                    nsCSSValue(NS_FONT_KERNING_AUTO, eCSSUnit_Enumerated));
+        AppendValue(eCSSProperty_font_synthesis,
+                    nsCSSValue(NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE,
+                               eCSSUnit_Enumerated));
+        AppendValue(eCSSProperty_font_variant_alternates,
+                    nsCSSValue(eCSSUnit_Normal));
+        AppendValue(eCSSProperty_font_variant_caps, nsCSSValue(eCSSUnit_Normal));
+        AppendValue(eCSSProperty_font_variant_east_asian,
+                    nsCSSValue(eCSSUnit_Normal));
+        AppendValue(eCSSProperty_font_variant_ligatures,
+                    nsCSSValue(eCSSUnit_Normal));
+        AppendValue(eCSSProperty_font_variant_numeric,
+                    nsCSSValue(eCSSUnit_Normal));
+        AppendValue(eCSSProperty_font_variant_position,
+                    nsCSSValue(eCSSUnit_Normal));
+      }
       return true;
     }
   }
