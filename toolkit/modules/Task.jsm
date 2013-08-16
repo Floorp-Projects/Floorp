@@ -126,8 +126,14 @@ this.Task = {
    */
   spawn: function Task_spawn(aTask) {
     if (aTask && typeof(aTask) == "function") {
-      // Let's call into the function ourselves.
-      aTask = aTask();
+      try {
+        // Let's call into the function ourselves.
+        aTask = aTask();
+      } catch (ex if ex instanceof Task.Result) {
+        return Promise.resolve(ex.value);
+      } catch (ex) {
+        return Promise.reject(ex);
+      }
     }
 
     if (aTask && typeof(aTask.send) == "function") {
