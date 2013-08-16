@@ -24,8 +24,11 @@ import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.EnumSet;
 
@@ -41,6 +44,12 @@ public class ReadingListPage extends HomeFragment {
 
     // The view shown by the fragment
     private ListView mList;
+
+    // Reference to the View to display when there are no results.
+    private View mEmptyView;
+
+    // Reference to top view.
+    private View mTopView;
 
     // Callbacks used for the reading list and favicon cursor loaders
     private CursorLoaderCallbacks mCursorLoaderCallbacks;
@@ -69,14 +78,16 @@ public class ReadingListPage extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mList = (HomeListView) inflater.inflate(R.layout.home_reading_list_page, container, false);
-        return mList;
+        return inflater.inflate(R.layout.home_reading_list_page, container, false);
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        mTopView = view;
+
+        mList = (ListView) view.findViewById(R.id.list);
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -100,6 +111,8 @@ public class ReadingListPage extends HomeFragment {
     public void onDestroyView() {
         super.onDestroyView();
         mList = null;
+        mTopView = null;
+        mEmptyView = null;
     }
 
     @Override
@@ -130,6 +143,23 @@ public class ReadingListPage extends HomeFragment {
     @Override
     protected void load() {
         getLoaderManager().initLoader(LOADER_ID_READING_LIST, null, mCursorLoaderCallbacks);
+    }
+
+    private void updateUiFromCursor(Cursor c) {
+        // We delay setting the empty view until the cursor is actually empty.
+        // This avoids image flashing.
+        if ((c == null || c.getCount() == 0) && mEmptyView == null) {
+            final ViewStub emptyViewStub = (ViewStub) mTopView.findViewById(R.id.home_empty_view_stub);
+            mEmptyView = emptyViewStub.inflate();
+
+            final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
+            emptyIcon.setImageResource(R.drawable.icon_reading_list_empty);
+
+            final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
+            emptyText.setText(R.string.home_reading_list_empty);
+
+            mList.setEmptyView(mEmptyView);
+        }
     }
 
     /**
@@ -187,6 +217,8 @@ public class ReadingListPage extends HomeFragment {
                     mAdapter.swapCursor(c);
                     break;
            }
+
+           updateUiFromCursor(c);
         }
 
         @Override
