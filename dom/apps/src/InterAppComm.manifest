@@ -10,3 +10,6 @@ contract @mozilla.org/dom/inter-app-message-port;1 {c66e0f8c-e3cb-11e2-9e85-43ef
 component {3dd15ce6-e7be-11e2-82bc-77967e7a63e6} InterAppCommService.js
 contract @mozilla.org/inter-app-communication-service;1 {3dd15ce6-e7be-11e2-82bc-77967e7a63e6}
 category profile-after-change InterAppCommService @mozilla.org/inter-app-communication-service;1
+
+component {d7c7a466-f91d-11e2-812a-6fab12ece58e} InterAppConnection.js
+contract @mozilla.org/dom/system-messages/wrapper/connection;1 {d7c7a466-f91d-11e2-812a-6fab12ece58e}
