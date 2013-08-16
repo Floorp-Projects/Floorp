@@ -1395,7 +1395,7 @@ abstract public class BrowserApp extends GeckoApp
             throw new IllegalArgumentException("Cannot handle null URLs in enterEditingMode");
         }
 
-        final PropertyAnimator animator = new PropertyAnimator(300);
+        final PropertyAnimator animator = new PropertyAnimator(250);
         animator.setUseHardwareLayer(false);
 
         mBrowserToolbar.startEditing(url, animator);
