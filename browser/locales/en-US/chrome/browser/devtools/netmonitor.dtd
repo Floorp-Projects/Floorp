@@ -177,6 +177,16 @@
   -  for the Copy URL menu item displayed in the context menu for a request -->
 <!ENTITY netmonitorUI.context.copyUrl.accesskey  "C">
 
+<!-- LOCALIZATION NOTE (netmonitorUI.context.newTab):  This is the label
+  -  for the Open in New Tab menu item displayed in the context menu of the
+  -  network container  -->
+<!ENTITY netmonitorUI.context.newTab      "Open in New Tab">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.newTab.accesskey): This is the access key
+  -  for the Open in New Tab menu item displayed in the context menu of the
+  -  network container -->
+<!ENTITY netmonitorUI.context.newTab.accesskey  "O">
+
 <!-- LOCALIZATION NOTE (debuggerUI.summary.editAndResend): This is the label displayed
   -  on the button in the headers tab that opens a form to edit and resend the currently
      displayed request -->
