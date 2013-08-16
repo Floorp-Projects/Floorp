@@ -721,9 +721,11 @@ bool
 Sprinter::realloc_(size_t newSize)
 {
     JS_ASSERT(newSize > (size_t) offset);
-    char *newBuf = (char *) context->realloc_(base, newSize);
-    if (!newBuf)
+    char *newBuf = (char *) js_realloc(base, newSize);
+    if (!newBuf) {
+        reportOutOfMemory();
         return false;
+    }
     base = newBuf;
     size = newSize;
     base[size - 1] = 0;
@@ -751,9 +753,11 @@ bool
 Sprinter::init()
 {
     JS_ASSERT(!initialized);
-    base = (char *) context->malloc_(DefaultSize);
-    if (!base)
+    base = (char *) js_malloc(DefaultSize);
+    if (!base) {
+        reportOutOfMemory();
         return false;
+    }
 #ifdef DEBUG
     initialized = true;
 #endif
@@ -900,7 +904,8 @@ Sprinter::reportOutOfMemory()
 {
     if (reportedOOM)
         return;
-    js_ReportOutOfMemory(context);
+    if (context)
+        js_ReportOutOfMemory(context);
     reportedOOM = true;
 }
 
