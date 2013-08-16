@@ -276,6 +276,7 @@ size. -->
 <!ENTITY home_most_recent_title "Most recent">
 <!ENTITY home_most_recent_empty "Websites you visited most recently show up here.">
 <!ENTITY home_most_visited_title "Most visited">
+<!ENTITY home_reading_list_empty "Articles you save for later show up here.">
 <!ENTITY home_most_visited_empty "Websites you visit most frequently show up here.">
 <!ENTITY pin_bookmark_dialog_hint "Enter a search keyword">
 
