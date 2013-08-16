@@ -1,0 +1,40 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+interface nsIURI;
+
+/**
+ * Implemented by the contract id @mozilla.org/inter-app-communication-service;1
+ *
+ * This interface contains helpers for Inter-App Communication API [1] related
+ * purposes. A singleton service of this interface will be instantiated during
+ * the system boot-up, which plays the role of the central service receiving
+ * messages from and interacting with the content processes.
+ *
+ * [1] https://wiki.mozilla.org/WebAPI/Inter_App_Communication_Alt_proposal
+ */
+[scriptable, uuid(7fdd8b68-0b0a-11e3-9b4c-afbc236da250)]
+interface nsIInterAppCommService : nsISupports
+{
+  /*
+   * Registration of a page that wants to be connected to other apps through
+   * the Inter-App Communication API.
+   *
+   * @param keyword        The connection's keyword.
+   * @param handlerPageURI The URI of the handler's page.
+   * @param manifestURI    The webapp's manifest URI.
+   * @param description    The connection's description.
+   * @param appStatus      The app status can be Ci.nsIPrincipal.APP_STATUS_[
+   *                       NOT_INSTALLED, INSTALLED, PRIVILEGED, CERTIFIED].
+   * @param rules          The connection's rules.
+   */
+  void registerConnection(in DOMString      keyword,
+                          in nsIURI         handlerPageURI,
+                          in nsIURI         manifestURI,
+                          in DOMString      description,
+                          in unsigned short appStatus,
+                          in jsval          rules);
+};
