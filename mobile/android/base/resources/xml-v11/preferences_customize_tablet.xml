@@ -15,12 +15,6 @@
     <org.mozilla.gecko.SyncPreference android:title="@string/pref_sync"
                                       android:persistent="false" />
 
-    <PreferenceScreen android:title="@string/pref_category_search"
-                      android:fragment="org.mozilla.gecko.GeckoPreferenceFragment" >
-        <extra android:name="resource"
-               android:value="preferences_search"/>
-    </PreferenceScreen>
-
     <org.mozilla.gecko.AndroidImportPreference
             android:key="android.not_a_preference.import_android"
             gecko:entries="@array/pref_import_android_entries"
@@ -30,6 +24,11 @@
             android:positiveButtonText="@string/bookmarkhistory_button_import"
             android:negativeButtonText="@string/button_cancel"
             android:persistent="false" />
+
+    <CheckBoxPreference android:key="browser.search.suggest.enabled"
+                        android:title="@string/pref_search_suggestions"
+                        android:defaultValue="true"
+                        android:persistent="false" />
 
     <ListPreference android:key="android.not_a_preference.restoreSession2"
                     android:title="@string/pref_restore"
