@@ -1107,7 +1107,7 @@ function DownloadError(aResult, aMessage, aInferCause)
   if (aMessage) {
     this.message = aMessage;
   } else {
-    let exception = new Components.Exception(this.result);
+    let exception = new Components.Exception("", this.result);
     this.message = exception.toString();
   }
   if (aInferCause) {
