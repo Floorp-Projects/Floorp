@@ -203,7 +203,7 @@ Download.prototype = {
    *
    * This property is relevant while the download is in progress, and also if it
    * failed or has been canceled.  If the download has been completed
-   * successfully, this property is not relevant anymore.
+   * successfully, this property is always false.
    *
    * Whether partial data can actually be retained depends on the saver and the
    * download source, and may not be known before the download is started.
@@ -382,6 +382,7 @@ Download.prototype = {
         // Update the status properties for a successful download.
         this.progress = 100;
         this.succeeded = true;
+        this.hasPartialData = false;
       } catch (ex) {
         // Fail with a generic status code on cancellation, so that the caller
         // is forced to actually check the status properties to see if the
@@ -623,6 +624,47 @@ Download.prototype = {
   },
 
   /**
+   * Updates the state of a finished, failed, or canceled download based on the
+   * current state in the file system.  If the download is in progress or it has
+   * been finalized, this method has no effect, and it returns a resolved
+   * promise.
+   *
+   * This allows the properties of the download to be updated in case the user
+   * moved or deleted the target file or its associated ".part" file.
+   *
+   * @return {Promise}
+   * @resolves When the operation has completed.
+   * @rejects Never.
+   */
+  refresh: function ()
+  {
+    return Task.spawn(function () {
+      if (!this.stopped || this._finalized) {
+        return;
+      }
+
+      // Update the current progress from disk if we retained partial data.
+      if (this.hasPartialData && this.target.partFilePath) {
+        let stat = yield OS.File.stat(this.target.partFilePath);
+
+        // Ignore the result if the state has changed meanwhile.
+        if (!this.stopped || this._finalized) {
+          return;
+        }
+
+        // Update the bytes transferred and the related progress properties.
+        this.currentBytes = stat.size;
+        if (this.totalBytes > 0) {
+          this.hasProgress = true;
+          this.progress = Math.floor(this.currentBytes /
+                                         this.totalBytes * 100);
+        }
+        this._notifyChange();
+      }
+    }.bind(this)).then(null, Cu.reportError);
+  },
+
+  /**
    * True if the "finalize" method has been called.  This prevents the download
    * from starting again after having been stopped.
    */
@@ -761,19 +803,53 @@ Download.prototype = {
       serializable.saver = saver;
     }
 
-    if (this.launcherPath) {
-      serializable.launcherPath = this.launcherPath;
+    if (!this.stopped) {
+      serializable.stopped = false;
     }
 
-    if (this.launchWhenSucceeded) {
-      serializable.launchWhenSucceeded = true;
+    if (this.error && ("message" in this.error)) {
+      serializable.error = { message: this.error.message };
     }
 
-    if (this.contentType) {
-      serializable.contentType = this.contentType;
+    // These are serialized unless they are false, null, or empty strings.
+    let propertiesToSerialize = [
+      "succeeded",
+      "canceled",
+      "startTime",
+      "totalBytes",
+      "hasPartialData",
+      "tryToKeepPartialData",
+      "launcherPath",
+      "launchWhenSucceeded",
+      "contentType",
+    ];
+
+    for (let property of propertiesToSerialize) {
+      if (this[property]) {
+        serializable[property] = this[property];
+      }
     }
 
     return serializable;
+  },
+
+  /**
+   * Returns a value that changes only when one of the properties of a Download
+   * object that should be saved into a file also change.  This excludes
+   * properties whose value doesn't usually change during the download lifetime.
+   *
+   * This function is used to determine whether the download should be
+   * serialized after a property change notification has been received.
+   *
+   * @return String representing the relevant download state.
+   */
+  getSerializationHash: function ()
+  {
+    // The "succeeded", "canceled", "error", and startTime properties are not
+    // taken into account because they all change before the "stopped" property
+    // changes, and are not altered in other cases.
+    return this.stopped + "," + this.totalBytes + "," + this.hasPartialData +
+           "," + this.contentType;
   },
 };
 
@@ -816,16 +892,28 @@ Download.fromSerializable = function (aSerializable) {
   }
   download.saver.download = download;
 
-  if ("launchWhenSucceeded" in aSerializable) {
-    download.launchWhenSucceeded = !!aSerializable.launchWhenSucceeded;
+  let propertiesToDeserialize = [
+    "startTime",
+    "totalBytes",
+    "hasPartialData",
+    "tryToKeepPartialData",
+    "launcherPath",
+    "launchWhenSucceeded",
+    "contentType",
+  ];
+
+  // If the download should not be restarted automatically, update its state to
+  // reflect success or failure during a previous session.
+  if (!("stopped" in aSerializable) || aSerializable.stopped) {
+    propertiesToDeserialize.push("succeeded");
+    propertiesToDeserialize.push("canceled");
+    propertiesToDeserialize.push("error");
   }
 
-  if ("contentType" in aSerializable) {
-    download.contentType = aSerializable.contentType;
-  }
-
-  if ("launcherPath" in aSerializable) {
-    download.launcherPath = aSerializable.launcherPath;
+  for (let property of propertiesToDeserialize) {
+    if (property in aSerializable) {
+      download[property] = aSerializable[property];
+    }
   }
 
   return download;
@@ -1191,6 +1279,13 @@ DownloadCopySaver.prototype = {
   _canceled: false,
 
   /**
+   * String corresponding to the entityID property of the nsIResumableChannel
+   * used to execute the download, or null if the channel was not resumable or
+   * the saver was instructed not to keep partially downloaded data.
+   */
+  entityID: null,
+
+  /**
    * Implements "DownloadSaver.execute".
    */
   execute: function DCS_execute(aSetProgressBytesFn, aSetPropertiesFn)
@@ -1428,8 +1523,13 @@ DownloadCopySaver.prototype = {
    */
   toSerializable: function ()
   {
-    // Simplify the representation since we don't have other details for now.
-    return "copy";
+    // Simplify the representation if we don't have other details.
+    if (!this.entityID) {
+      return "copy";
+    }
+
+    return { type: "copy",
+             entityID: this.entityID };
   },
 };
 
@@ -1443,8 +1543,11 @@ DownloadCopySaver.prototype = {
  * @return The newly created DownloadCopySaver object.
  */
 DownloadCopySaver.fromSerializable = function (aSerializable) {
-  // We don't have other state details for now.
-  return new DownloadCopySaver();
+  let saver = new DownloadCopySaver();
+  if ("entityID" in aSerializable) {
+    saver.entityID = aSerializable.entityID;
+  }
+  return saver;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1575,6 +1678,13 @@ DownloadLegacySaver.prototype = {
   copySaver: null,
 
   /**
+   * String corresponding to the entityID property of the nsIResumableChannel
+   * used to execute the download, or null if the channel was not resumable or
+   * the saver was instructed not to keep partially downloaded data.
+   */
+  entityID: null,
+
+  /**
    * Implements "DownloadSaver.execute".
    */
   execute: function DLS_execute(aSetProgressBytesFn)
@@ -1674,7 +1784,7 @@ DownloadLegacySaver.prototype = {
     // thus it cannot be rebuilt during deserialization.  To support resuming
     // across different browser sessions, this object is transformed into a
     // DownloadCopySaver for the purpose of serialization.
-    return "copy";
+    return DownloadCopySaver.prototype.toSerializable.call(this);
   },
 };
 

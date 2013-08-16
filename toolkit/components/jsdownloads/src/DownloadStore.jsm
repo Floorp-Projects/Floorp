@@ -89,6 +89,12 @@ DownloadStore.prototype = {
   path: "",
 
   /**
+   * This function is called with a Download object as its first argument, and
+   * should return true if the item should be saved.
+   */
+  onsaveitem: () => true,
+
+  /**
    * Loads persistent downloads from the file to the list.
    *
    * @return {Promise}
@@ -111,7 +117,23 @@ DownloadStore.prototype = {
       // Create live downloads based on the static snapshot.
       for (let downloadData of storeData.list) {
         try {
-          this.list.add(yield Downloads.createDownload(downloadData));
+          let download = yield Downloads.createDownload(downloadData);
+          try {
+            if (("stopped" in downloadData) && !downloadData.stopped) {
+              // Try to restart the download if it was in progress during the
+              // previous session.
+              download.start();
+            } else {
+              // If the download was not in progress, try to update the current
+              // progress from disk.  This is relevant in case we retained
+              // partially downloaded data.
+              yield download.refresh();
+            }
+          } finally {
+            // Add the download to the list if we succeeded in creating it,
+            // after we have updated its initial state.
+            this.list.add(download);
+          }
         } catch (ex) {
           // If an item is unrecognized, don't prevent others from being loaded.
           Cu.reportError(ex);
@@ -139,6 +161,9 @@ DownloadStore.prototype = {
       let atLeastOneDownload = false;
       for (let download of downloads) {
         try {
+          if (!this.onsaveitem(download)) {
+            continue;
+          }
           storeData.list.push(download.toSerializable());
           atLeastOneDownload = true;
         } catch (ex) {
