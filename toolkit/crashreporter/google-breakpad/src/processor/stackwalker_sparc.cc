@@ -72,7 +72,8 @@ StackFrame* StackwalkerSPARC::GetContextFrame() {
 }
 
 
-StackFrame* StackwalkerSPARC::GetCallerFrame(const CallStack* stack) {
+StackFrame* StackwalkerSPARC::GetCallerFrame(const CallStack* stack,
+                                             bool stack_scan_allowed) {
   if (!memory_ || !stack) {
     BPLOG(ERROR) << "Can't get caller frame without memory or stack";
     return NULL;
