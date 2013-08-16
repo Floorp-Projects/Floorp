@@ -718,72 +718,41 @@ ParseProperties(DBusMessageIter* aIter,
   aValue = props;
 }
 
-static void
-UnpackPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
-                        BluetoothValue& aValue, nsAString& aErrorStr,
-                        Properties* aPropertyTypes,
-                        const int aPropertyTypeLen)
-{
-  if (!IsDBusMessageError(aMsg, aErr, aErrorStr) &&
-      dbus_message_get_type(aMsg) == DBUS_MESSAGE_TYPE_METHOD_RETURN) {
-    DBusMessageIter iter;
-    if (!dbus_message_iter_init(aMsg, &iter)) {
-      aErrorStr.AssignLiteral("Cannot create dbus message iter!");
-    } else {
-      ParseProperties(&iter, aValue, aErrorStr, aPropertyTypes,
-                      aPropertyTypeLen);
-    }
-  }
-}
-
-static void
-UnpackAdapterPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
-                               BluetoothValue& aValue,
-                               nsAString& aErrorStr)
-{
-  UnpackPropertiesMessage(aMsg, aErr, aValue, aErrorStr,
-                          sAdapterProperties,
-                          ArrayLength(sAdapterProperties));
-}
-
-static void
-UnpackDevicePropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
-                              BluetoothValue& aValue,
-                              nsAString& aErrorStr)
-{
-  UnpackPropertiesMessage(aMsg, aErr, aValue, aErrorStr,
-                          sDeviceProperties,
-                          ArrayLength(sDeviceProperties));
-}
-
-static void
-UnpackManagerPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
-                               BluetoothValue& aValue,
-                               nsAString& aErrorStr)
-{
-  UnpackPropertiesMessage(aMsg, aErr, aValue, aErrorStr,
-                          sManagerProperties,
-                          ArrayLength(sManagerProperties));
-}
-
 static bool
 UnpackPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
-                        BluetoothValue& aValue,
-                        const char* aIface)
+                        BluetoothValue& aValue, const char* aIface)
 {
-  nsAutoString replyError;
+  Properties* propertyTypes;
+  int propertyTypesLength;
+
+  nsAutoString errorStr;
+  if (IsDBusMessageError(aMsg, aErr, errorStr) ||
+      dbus_message_get_type(aMsg) != DBUS_MESSAGE_TYPE_METHOD_RETURN) {
+    return true;
+  }
+
+  DBusMessageIter iter;
+  if (!dbus_message_iter_init(aMsg, &iter)) {
+    BT_WARNING("Cannot create dbus message iter!");
+    return false;
+  }
 
   if (!strcmp(aIface, DBUS_DEVICE_IFACE)) {
-    UnpackDevicePropertiesMessage(aMsg, aErr, aValue, replyError);
+    propertyTypes = sDeviceProperties;
+    propertyTypesLength = ArrayLength(sDeviceProperties);
   } else if (!strcmp(aIface, DBUS_ADAPTER_IFACE)) {
-    UnpackAdapterPropertiesMessage(aMsg, aErr, aValue, replyError);
+    propertyTypes = sAdapterProperties;
+    propertyTypesLength = ArrayLength(sAdapterProperties);
   } else if (!strcmp(aIface, DBUS_MANAGER_IFACE)) {
-    UnpackManagerPropertiesMessage(aMsg, aErr, aValue, replyError);
+    propertyTypes = sManagerProperties;
+    propertyTypesLength = ArrayLength(sManagerProperties);
   } else {
     return false;
   }
 
-  return replyError.IsEmpty();
+  ParseProperties(&iter, aValue, errorStr, propertyTypes,
+                  propertyTypesLength);
+  return true;
 }
 
 static void
