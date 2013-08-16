@@ -254,6 +254,16 @@ static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
         }
     },
     {
+        "XXX_transform_feedback",
+        300, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::EXT_transform_feedback,
+            GLContext::NV_transform_feedback,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "XXX_vertex_array_object",
         300, // OpenGL version
         300, // OpenGL ES version

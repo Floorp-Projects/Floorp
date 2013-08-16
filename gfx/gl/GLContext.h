@@ -379,6 +379,8 @@ public:
         ANGLE_instanced_arrays,
         EXT_occlusion_query_boolean,
         ARB_occlusion_query2,
+        EXT_transform_feedback,
+        NV_transform_feedback,
         Extensions_Max,
         Extensions_End
     };
@@ -493,6 +495,7 @@ public:
         XXX_texture_float,
         XXX_texture_float_linear,
         XXX_texture_non_power_of_two,
+        XXX_transform_feedback,
         XXX_vertex_array_object,
         ExtensionGroup_Max
     };
