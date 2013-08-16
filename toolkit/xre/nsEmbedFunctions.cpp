@@ -397,8 +397,11 @@ XRE_InitChildProcess(int aArgc,
       printf("\n\nCHILDCHILDCHILDCHILD\n  debug me @%d\n\n", getpid());
       sleep(30);
 #elif defined(OS_WIN)
-      printf("\n\nCHILDCHILDCHILDCHILD\n  debug me @%d\n\n", _getpid());
-      Sleep(30000);
+      // Windows has a decent JIT debugging story, so NS_DebugBreak does the
+      // right thing.
+      NS_DebugBreak(NS_DEBUG_BREAK,
+                    "Invoking NS_DebugBreak() to debug child process",
+                    nullptr, __FILE__, __LINE__);
 #endif
   }
 
