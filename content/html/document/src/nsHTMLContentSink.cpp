@@ -77,7 +77,6 @@
 #include "nsIDocShellTreeItem.h"
 
 #include "nsEscape.h"
-#include "nsIElementObserver.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"

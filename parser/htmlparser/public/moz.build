@@ -16,7 +16,6 @@ EXPORTS += [
     'nsHTMLTags.h',
     'nsIContentSink.h',
     'nsIDTD.h',
-    'nsIElementObserver.h',
     'nsIFragmentContentSink.h',
     'nsIHTMLContentSink.h',
     'nsIParser.h',
