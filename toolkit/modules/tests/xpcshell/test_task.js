@@ -118,6 +118,30 @@ add_test(function test_spawn_function()
   });
 });
 
+add_test(function test_spawn_function_exceptions()
+{
+  Task.spawn(function () {
+    throw new Error("Exception uncaught by task.");
+  }).then(function (result) {
+    do_throw("Unexpected success!");
+  }, function (ex) {
+    do_check_eq("Exception uncaught by task.", ex.message);
+    run_next_test();
+  });
+});
+
+add_test(function test_spawn_function_taskresult()
+{
+  Task.spawn(function () {
+    throw new Task.Result("Task result");
+  }).then(function (result) {
+    do_check_eq("Task result", result);
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
 add_test(function test_yielded_undefined()
 {
   Task.spawn(function () {
