@@ -137,6 +137,8 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_parser_diagnostics_unprintables.html \
 		test_pixel_lengths.html \
 		test_pointer-events.html \
+		file_position_sticky.html \
+		test_position_sticky.html \
 		test_property_database.html \
 		test_priority_preservation.html \
 		test_property_syntax_errors.html \
