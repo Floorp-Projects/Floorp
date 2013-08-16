@@ -301,7 +301,13 @@ class AsmJSModule
             endCodeOffset(end),
             lineno(line),
             columnIndex(column)
-        { }
+        {
+            JS_ASSERT(name->isTenured());
+        }
+
+        void trace(JSTracer *trc) {
+            MarkStringUnbarriered(trc, &name, "asm.js profiled function name");
+        }
     };
 #endif
 
@@ -391,6 +397,16 @@ class AsmJSModule
             if (exitIndexToGlobalDatum(i).fun)
                 MarkObject(trc, &exitIndexToGlobalDatum(i).fun, "asm.js imported function");
         }
+#if defined(MOZ_VTUNE)
+        for (unsigned i = 0; i < profiledFunctions_.length(); i++)
+            profiledFunctions_[i].trace(trc);
+#endif
+#if defined(JS_ION_PERF)
+        for (unsigned i = 0; i < perfProfiledFunctions_.length(); i++)
+            perfProfiledFunctions_[i].trace(trc);
+        for (unsigned i = 0; i < perfProfiledBlocksFunctions_.length(); i++)
+            perfProfiledBlocksFunctions_[i].trace(trc);
+#endif
         if (maybeHeap_)
             MarkObject(trc, &maybeHeap_, "asm.js heap");
 

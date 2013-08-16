@@ -89,25 +89,6 @@ WebGLProgram::UpdateInfo()
     return true;
 }
 
-bool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
-{
-    switch (cap) {
-        case LOCAL_GL_BLEND:
-        case LOCAL_GL_CULL_FACE:
-        case LOCAL_GL_DEPTH_TEST:
-        case LOCAL_GL_DITHER:
-        case LOCAL_GL_POLYGON_OFFSET_FILL:
-        case LOCAL_GL_SAMPLE_ALPHA_TO_COVERAGE:
-        case LOCAL_GL_SAMPLE_COVERAGE:
-        case LOCAL_GL_SCISSOR_TEST:
-        case LOCAL_GL_STENCIL_TEST:
-            return true;
-        default:
-            ErrorInvalidEnumInfo(info, cap);
-            return false;
-    }
-}
-
 bool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode, const char *info)
 {
     switch (mode) {
@@ -899,7 +880,7 @@ WebGLContext::InitAndValidateGL()
         mGLMaxVertexUniformVectors = MINVALUE_GL_MAX_VERTEX_UNIFORM_VECTORS;
         mGLMaxVaryingVectors = MINVALUE_GL_MAX_VARYING_VECTORS;
     } else {
-        if (gl->HasES2Compatibility()) {
+        if (gl->IsExtensionSupported(gl::GLContext::XXX_ES2_compatibility)) {
             gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS, &mGLMaxFragmentUniformVectors);
             gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS, &mGLMaxVertexUniformVectors);
             gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, &mGLMaxVaryingVectors);
@@ -998,7 +979,8 @@ WebGLContext::InitAndValidateGL()
          !IsExtensionSupported(ANGLE_instanced_arrays) ||
          !gl->IsExtensionSupported(gl::GLContext::EXT_gpu_shader4) ||
          !gl->IsExtensionSupported(gl::GLContext::EXT_blend_minmax) ||
-         (gl->IsGLES2() && !gl->IsExtensionSupported(gl::GLContext::EXT_occlusion_query_boolean))
+         (!gl->IsExtensionSupported(gl::GLContext::XXX_occlusion_query) &&
+          !gl->IsExtensionSupported(gl::GLContext::XXX_occlusion_query_boolean))
         ))
     {
         // Todo: Bug 898404: Only allow WebGL2 on GL>=3.0 on desktop GL.

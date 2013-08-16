@@ -65,20 +65,16 @@ void
 CodeGeneratorX86Shared::emitBranch(Assembler::Condition cond, MBasicBlock *mirTrue,
                                    MBasicBlock *mirFalse, Assembler::NaNCond ifNaN)
 {
-    LBlock *ifTrue = mirTrue->lir();
-    LBlock *ifFalse = mirFalse->lir();
-
     if (ifNaN == Assembler::NaN_IsFalse)
-        masm.j(Assembler::Parity, ifFalse->label());
+        jumpToBlock(mirFalse, Assembler::Parity);
     else if (ifNaN == Assembler::NaN_IsTrue)
-        masm.j(Assembler::Parity, ifTrue->label());
+        jumpToBlock(mirTrue, Assembler::Parity);
 
-    if (isNextBlock(ifFalse)) {
-        masm.j(cond, ifTrue->label());
+    if (isNextBlock(mirFalse->lir())) {
+        jumpToBlock(mirTrue, cond);
     } else {
-        masm.j(Assembler::InvertCondition(cond), ifFalse->label());
-        if (!isNextBlock(ifTrue))
-            masm.jmp(ifTrue->label());
+        jumpToBlock(mirFalse, Assembler::InvertCondition(cond));
+        jumpToBlock(mirTrue);
     }
 }
 

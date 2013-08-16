@@ -129,61 +129,6 @@ js::InformalValueTypeName(const Value &v)
     return "value";
 }
 
-template <AllowGC allowGC>
-bool
-js::HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
-                   typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
-                   typename MaybeRooted<jsid, allowGC>::HandleType id,
-                   typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
-                   typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
-{
-    JSAutoResolveFlags rf(cx, 0);
-    if (lookup) {
-        if (!allowGC)
-            return false;
-        if (!lookup(cx,
-                    MaybeRooted<JSObject*, allowGC>::toHandle(obj),
-                    MaybeRooted<jsid, allowGC>::toHandle(id),
-                    MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
-                    MaybeRooted<Shape*, allowGC>::toMutableHandle(propp)))
-        {
-            return false;
-        }
-    } else {
-        if (!baseops::LookupProperty<allowGC>(cx, obj, id, objp, propp))
-            return false;
-    }
-    if (!propp)
-        return true;
-
-    if (objp == obj)
-        return true;
-
-    JSObject *outer = NULL;
-    if (JSObjectOp op = objp->getClass()->ext.outerObject) {
-        if (!allowGC)
-            return false;
-        RootedObject inner(cx, objp);
-        outer = op(cx, inner);
-        if (!outer)
-            return false;
-    }
-
-    if (outer != objp)
-        propp.set(NULL);
-    return true;
-}
-
-template bool
-js::HasOwnProperty<CanGC>(JSContext *cx, LookupGenericOp lookup,
-                          HandleObject obj, HandleId id,
-                          MutableHandleObject objp, MutableHandleShape propp);
-
-template bool
-js::HasOwnProperty<NoGC>(JSContext *cx, LookupGenericOp lookup,
-                         JSObject *obj, jsid id,
-                         FakeMutableHandle<JSObject*> objp, FakeMutableHandle<Shape*> propp);
-
 bool
 js::NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc,
                                 MutableHandleValue vp)
@@ -3540,7 +3485,6 @@ DefinePropertyOrElement(ExclusiveContext *cx, HandleObject obj, HandleId id,
         }
     }
 
-
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
     RootedShape shape(cx, JSObject::putProperty(cx, obj, id, getter, setter, SHAPE_INVALID_SLOT,
@@ -3764,6 +3708,66 @@ CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
 template <AllowGC allowGC>
 static JS_ALWAYS_INLINE bool
+LookupOwnPropertyWithFlagsInline(ExclusiveContext *cx,
+                                 typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
+                                 typename MaybeRooted<jsid, allowGC>::HandleType id,
+                                 unsigned flags,
+                                 typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+                                 typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp,
+                                 bool *donep)
+{
+    // Check for a native dense element.
+    if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
+        objp.set(obj);
+        MarkDenseElementFound<allowGC>(propp);
+        *donep = true;
+        return true;
+    }
+
+    // Check for a native property.
+    if (Shape *shape = obj->nativeLookup(cx, id)) {
+        objp.set(obj);
+        propp.set(shape);
+        *donep = true;
+        return true;
+    }
+
+    // id was not found in obj. Try obj's resolve hook, if any.
+    if (obj->getClass()->resolve != JS_ResolveStub) {
+        if (!cx->shouldBeJSContext() || !allowGC)
+            return false;
+
+        bool recursed;
+        if (!CallResolveOp(cx->asJSContext(),
+                           MaybeRooted<JSObject*, allowGC>::toHandle(obj),
+                           MaybeRooted<jsid, allowGC>::toHandle(id),
+                           flags,
+                           MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
+                           MaybeRooted<Shape*, allowGC>::toMutableHandle(propp),
+                           &recursed))
+        {
+            return false;
+        }
+
+        if (recursed) {
+            objp.set(NULL);
+            propp.set(NULL);
+            *donep = true;
+            return true;
+        }
+
+        if (propp) {
+            *donep = true;
+            return true;
+        }
+    }
+
+    *donep = false;
+    return true;
+}
+
+template <AllowGC allowGC>
+static JS_ALWAYS_INLINE bool
 LookupPropertyWithFlagsInline(ExclusiveContext *cx,
                               typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
                               typename MaybeRooted<jsid, allowGC>::HandleType id,
@@ -3780,49 +3784,11 @@ LookupPropertyWithFlagsInline(ExclusiveContext *cx,
     typename MaybeRooted<JSObject*, allowGC>::RootType current(cx, obj);
 
     while (true) {
-        /* Search for a native dense element or property. */
-        {
-            if (JSID_IS_INT(id) && current->containsDenseElement(JSID_TO_INT(id))) {
-                objp.set(current);
-                MarkDenseElementFound<allowGC>(propp);
-                return true;
-            }
-
-            Shape *shape = current->nativeLookup(cx, id);
-            if (shape) {
-                objp.set(current);
-                propp.set(shape);
-                return true;
-            }
-        }
-
-        /* Try obj's class resolve hook if id was not found in obj's scope. */
-        if (current->getClass()->resolve != JS_ResolveStub) {
-            if (!cx->shouldBeJSContext() || !allowGC)
-                return false;
-
-            bool recursed;
-            if (!CallResolveOp(cx->asJSContext(),
-                               MaybeRooted<JSObject*, allowGC>::toHandle(current),
-                               MaybeRooted<jsid, allowGC>::toHandle(id),
-                               flags,
-                               MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
-                               MaybeRooted<Shape*, allowGC>::toMutableHandle(propp),
-                               &recursed))
-            {
-                return false;
-            }
-
-            if (recursed)
-                break;
-            if (propp) {
-                /*
-                 * For stats we do not recalculate protoIndex even if it was
-                 * resolved on some other object.
-                 */
-                return true;
-            }
-        }
+        bool done;
+        if (!LookupOwnPropertyWithFlagsInline<allowGC>(cx, current, id, flags, objp, propp, &done))
+            return false;
+        if (done)
+            return true;
 
         typename MaybeRooted<JSObject*, allowGC>::RootType proto(cx, current->getProto());
 
@@ -3971,6 +3937,69 @@ js::LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleOb
     objp.set(scope);
     return true;
 }
+
+template <AllowGC allowGC>
+bool
+js::HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
+                   typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
+                   typename MaybeRooted<jsid, allowGC>::HandleType id,
+                   typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+                   typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
+{
+    if (lookup) {
+        JSAutoResolveFlags rf(cx, 0);
+
+        if (!allowGC)
+            return false;
+        if (!lookup(cx,
+                    MaybeRooted<JSObject*, allowGC>::toHandle(obj),
+                    MaybeRooted<jsid, allowGC>::toHandle(id),
+                    MaybeRooted<JSObject*, allowGC>::toMutableHandle(objp),
+                    MaybeRooted<Shape*, allowGC>::toMutableHandle(propp)))
+        {
+            return false;
+        }
+    } else {
+        bool done;
+        if (!LookupOwnPropertyWithFlagsInline<allowGC>(cx, obj, id, 0, objp, propp, &done))
+            return false;
+        if (!done) {
+            objp.set(NULL);
+            propp.set(NULL);
+            return true;
+        }
+    }
+
+    if (!propp)
+        return true;
+
+    if (objp == obj)
+        return true;
+
+    JSObject *outer = NULL;
+    if (JSObjectOp op = objp->getClass()->ext.outerObject) {
+        if (!allowGC)
+            return false;
+        RootedObject inner(cx, objp);
+        outer = op(cx, inner);
+        if (!outer)
+            return false;
+    }
+
+    if (outer != objp)
+        propp.set(NULL);
+    return true;
+}
+
+template bool
+js::HasOwnProperty<CanGC>(JSContext *cx, LookupGenericOp lookup,
+                          HandleObject obj, HandleId id,
+                          MutableHandleObject objp, MutableHandleShape propp);
+
+template bool
+js::HasOwnProperty<NoGC>(JSContext *cx, LookupGenericOp lookup,
+                         JSObject *obj, jsid id,
+                         FakeMutableHandle<JSObject*> objp, FakeMutableHandle<Shape*> propp);
 
 template <AllowGC allowGC>
 static JS_ALWAYS_INLINE bool
@@ -5105,6 +5134,21 @@ js::IsDelegate(JSContext *cx, HandleObject obj, const js::Value &v, bool *result
     }
 }
 
+JSObject *
+js::GetClassPrototypePure(GlobalObject *global, JSProtoKey protoKey)
+{
+    JS_ASSERT(JSProto_Null <= protoKey);
+    JS_ASSERT(protoKey < JSProto_LIMIT);
+
+    if (protoKey != JSProto_Null) {
+        const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
+        if (v.isObject())
+            return &v.toObject();
+    }
+
+    return NULL;
+}
+
 /*
  * The first part of this function has been hand-expanded and optimized into
  * NewBuiltinClassInstance in jsobjinlines.h.
@@ -5113,15 +5157,9 @@ bool
 js_GetClassPrototype(ExclusiveContext *cx, JSProtoKey protoKey,
                      MutableHandleObject protop, Class *clasp)
 {
-    JS_ASSERT(JSProto_Null <= protoKey);
-    JS_ASSERT(protoKey < JSProto_LIMIT);
-
-    if (protoKey != JSProto_Null) {
-        const Value &v = cx->global()->getReservedSlot(JSProto_LIMIT + protoKey);
-        if (v.isObject()) {
-            protop.set(&v.toObject());
-            return true;
-        }
+    if (JSObject *proto = GetClassPrototypePure(cx->global(), protoKey)) {
+        protop.set(proto);
+        return true;
     }
 
     RootedValue v(cx);

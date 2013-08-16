@@ -280,9 +280,6 @@ CodeGeneratorX64::visitImplicitThis(LImplicitThis *lir)
     return true;
 }
 
-typedef bool (*InterruptCheckFn)(JSContext *);
-static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
-
 bool
 CodeGeneratorX64::visitInterruptCheck(LInterruptCheck *lir)
 {

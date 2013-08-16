@@ -6,17 +6,21 @@
 #define URL_h___
 
 #include "nscore.h"
-#include "mozilla/dom/URLBinding.h"
+#include "nsString.h"
 
 class nsIDOMBlob;
+class nsISupports;
 
 namespace mozilla {
 
+class ErrorResult;
 class DOMMediaStream;
 
 namespace dom {
 
 class MediaSource;
+class GlobalObject;
+struct objectURLOptions;
 
 class URL MOZ_FINAL
 {

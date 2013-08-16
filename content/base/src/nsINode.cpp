@@ -1324,6 +1324,25 @@ AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
   return NS_OK;
 }
 
+static nsresult
+CheckForOutdatedParent(nsINode* aParent, nsINode* aNode)
+{
+  if (JSObject* existingObj = aNode->GetWrapper()) {
+    nsIGlobalObject* global = aParent->OwnerDoc()->GetScopeObject();
+    MOZ_ASSERT(global);
+
+    if (js::GetGlobalForObjectCrossCompartment(existingObj) !=
+        global->GetGlobalJSObject()) {
+      AutoJSContext cx;
+      JS::Rooted<JSObject*> rooted(cx, existingObj);
+      nsresult rv = ReparentWrapper(cx, rooted);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
                          bool aNotify, nsAttrAndChildArray& aChildArray)
@@ -1342,6 +1361,9 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
 
   if (OwnerDoc() != aKid->OwnerDoc()) {
     rv = AdoptNodeIntoOwnerDoc(this, aKid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (OwnerDoc()->DidDocumentOpen()) {
+    rv = CheckForOutdatedParent(this, aKid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1953,8 +1975,13 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   // DocumentType nodes are the only nodes that can have a null
   // ownerDocument according to the DOM spec, and we need to allow
   // inserting them w/o calling AdoptNode().
-  if (OwnerDoc() != newContent->OwnerDoc()) {
+  if (doc != newContent->OwnerDoc()) {
     aError = AdoptNodeIntoOwnerDoc(this, aNewChild);
+    if (aError.Failed()) {
+      return nullptr;
+    }
+  } else if (doc->DidDocumentOpen()) {
+    aError = CheckForOutdatedParent(this, aNewChild);
     if (aError.Failed()) {
       return nullptr;
     }

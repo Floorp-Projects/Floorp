@@ -423,17 +423,6 @@ LIRGeneratorARM::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *in
 }
 
 bool
-LIRGeneratorARM::visitInterruptCheck(MInterruptCheck *ins)
-{
-    LInterruptCheck *lir = new LInterruptCheck();
-    if (!add(lir))
-        return false;
-    if (!assignSafepoint(lir, ins))
-        return false;
-    return true;
-}
-
-bool
 LIRGeneratorARM::lowerUrshD(MUrsh *mir)
 {
     MDefinition *lhs = mir->lhs();

@@ -8,18 +8,23 @@
 #define mozilla_dom_Navigator_h
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ErrorResult.h"
 #include "nsIDOMNavigator.h"
-#include "nsIDOMMobileMessageManager.h"
 #include "nsIMozNavigatorNetwork.h"
 #include "nsAutoPtr.h"
-#include "nsWeakReference.h"
-#include "DeviceStorage.h"
 #include "nsWrapperCache.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 class nsPluginArray;
 class nsMimeTypeArray;
 class nsPIDOMWindow;
 class nsIDOMMozConnection;
+class nsIDOMMozMobileMessageManager;
+class nsIDOMNavigatorSystemMessages;
+class nsIMediaStreamOptions;
+class nsDOMCameraManager;
+class nsDOMDeviceStorage;
 
 namespace mozilla {
 namespace dom {
@@ -28,20 +33,12 @@ class systemMessageCallback;
 }
 }
 
-#ifdef MOZ_MEDIA_NAVIGATOR
-#include "nsIDOMNavigatorUserMedia.h"
-#endif
-
 #ifdef MOZ_B2G_RIL
 class nsIDOMMozMobileConnection;
 class nsIDOMMozCellBroadcast;
 class nsIDOMMozVoicemail;
 class nsIDOMMozIccManager;
 #endif // MOZ_B2G_RIL
-
-#include "nsIDOMNavigatorSystemMessages.h"
-
-#include "DOMCameraManager.h"
 
 //*****************************************************************************
 // Navigator: Script "navigator" object
