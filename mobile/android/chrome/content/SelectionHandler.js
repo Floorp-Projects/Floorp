@@ -174,14 +174,6 @@ var SelectionHandler = {
     };
   },
 
-  notifySelectionChanged: function sh_notifySelectionChanged(aDocument, aSelection, aReason) {
-    // If the selection was collapsed to Start or to End, always close it
-    if ((aReason & Ci.nsISelectionListener.COLLAPSETOSTART_REASON) ||
-        (aReason & Ci.nsISelectionListener.COLLAPSETOEND_REASON)) {
-      this._closeSelection();
-    }
-  },
-
   /*
    * Called from browser.js when the user long taps on text or chooses
    * the "Select Word" context menu item. Initializes SelectionHandler,
@@ -210,9 +202,6 @@ var SelectionHandler = {
       this._closeSelection();
       return;
     }
-
-    // Add a listener to end the selection if it's removed programatically
-    selection.QueryInterface(Ci.nsISelectionPrivate).addSelectionListener(this);
 
     // Initialize the cache
     this._cache = { start: {}, end: {}};
@@ -474,8 +463,6 @@ var SelectionHandler = {
     if (this._activeType == this.TYPE_SELECTION) {
       let selection = this._getSelection();
       if (selection) {
-        // Remove our listener before we removeAllRanges()
-        selection.QueryInterface(Ci.nsISelectionPrivate).removeSelectionListener(this);
         selection.removeAllRanges();
       }
     }
