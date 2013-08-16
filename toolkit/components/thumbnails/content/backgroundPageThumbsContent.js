@@ -52,8 +52,6 @@ const backgroundPageThumbsContent = {
       PageThumbs._captureToCanvas(content, canvas);
       let captureTime = new Date() - captureDate;
 
-      let channel = docShell.currentDocumentChannel;
-      let isErrorResponse = PageThumbs._isChannelErrorResponse(channel);
       let finalURL = this._webNav.currentURI.spec;
       let fileReader = Cc["@mozilla.org/files/filereader;1"].
                        createInstance(Ci.nsIDOMFileReader);
@@ -66,7 +64,6 @@ const backgroundPageThumbsContent = {
             CAPTURE_PAGE_LOAD_TIME_MS: pageLoadTime,
             CAPTURE_CANVAS_DRAW_TIME_MS: captureTime,
           },
-          wasErrorResponse: isErrorResponse,
         });
       };
       canvas.toBlob(blob => fileReader.readAsArrayBuffer(blob));
