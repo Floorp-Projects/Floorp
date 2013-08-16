@@ -2591,8 +2591,10 @@ AutoFlushCache::updateTop(uintptr_t p, size_t len)
 {
     IonContext *ictx = GetIonContext();
     IonRuntime *irt = ictx->runtime->ionRuntime();
-    AutoFlushCache *afc = irt->flusher();
-    afc->update(p, len);
+    if (!irt || !irt->flusher())
+        JSC::ExecutableAllocator::cacheFlush((void*)p, len);
+    else
+        irt->flusher()->update(p, len);
 }
 
 AutoFlushCache::AutoFlushCache(const char *nonce, IonRuntime *rt)
