@@ -506,6 +506,7 @@
 @BINPATH@/components/PushServiceLauncher.js
 
 @BINPATH@/components/InterAppComm.manifest
+@BINPATH@/components/InterAppCommService.js
 @BINPATH@/components/InterAppConnection.js
 @BINPATH@/components/InterAppMessagePort.js
 
