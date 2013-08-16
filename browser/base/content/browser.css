@@ -5,14 +5,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-#main-window:not([chromehidden~="toolbar"]) {
-%ifdef XP_MACOSX
-  min-width: 425px;
-%else
-  min-width: 390px;
-%endif
-}
-
 searchbar {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
 }
