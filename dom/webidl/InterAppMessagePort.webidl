@@ -11,6 +11,7 @@
 
 [HeaderFile="mozilla/dom/InterAppComm.h",
  Func="mozilla::dom::InterAppComm::EnabledForScope",
+ Constructor(DOMString keyword, DOMString messagePortID, boolean isPublisher),
  JSImplementation="@mozilla.org/dom/inter-app-message-port;1"]
 interface MozInterAppMessagePort : EventTarget {
   void postMessage(any message);
