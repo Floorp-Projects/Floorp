@@ -993,8 +993,8 @@ AddCSSValueCanonicalCalc(double aCoeff1, const nsCSSValue &aValue1,
 }
 
 static void
-AddCSSValueAngle(const nsCSSValue &aValue1, double aCoeff1,
-                 const nsCSSValue &aValue2, double aCoeff2,
+AddCSSValueAngle(double aCoeff1, const nsCSSValue &aValue1,
+                 double aCoeff2, const nsCSSValue &aValue2,
                  nsCSSValue &aResult)
 {
   aResult.SetFloatValue(aCoeff1 * aValue1.GetAngleValueInRadians() +
@@ -1093,8 +1093,8 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
 }
 
 static void
-AddTransformTranslate(const nsCSSValue &aValue1, double aCoeff1,
-                      const nsCSSValue &aValue2, double aCoeff2,
+AddTransformTranslate(double aCoeff1, const nsCSSValue &aValue1,
+                      double aCoeff2, const nsCSSValue &aValue2,
                       nsCSSValue &aResult)
 {
   NS_ABORT_IF_FALSE(aValue1.GetUnit() == eCSSUnit_Percent ||
@@ -1119,8 +1119,8 @@ AddTransformTranslate(const nsCSSValue &aValue1, double aCoeff1,
 }
 
 static void
-AddTransformScale(const nsCSSValue &aValue1, double aCoeff1,
-                  const nsCSSValue &aValue2, double aCoeff2,
+AddTransformScale(double aCoeff1, const nsCSSValue &aValue1,
+                  double aCoeff2, const nsCSSValue &aValue2,
                   nsCSSValue &aResult)
 {
   // Handle scale, and the two matrix components where identity is 1, by
@@ -1517,8 +1517,8 @@ nsStyleAnimation::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
 }
 
 static nsCSSValueList*
-AddDifferentTransformLists(const nsCSSValueList* aList1, double aCoeff1,
-                           const nsCSSValueList* aList2, double aCoeff2)
+AddDifferentTransformLists(double aCoeff1, const nsCSSValueList* aList1,
+                           double aCoeff2, const nsCSSValueList* aList2)
 {
   nsAutoPtr<nsCSSValueList> result;
   nsCSSValueList **resultTail = getter_Transfers(result);
@@ -1548,8 +1548,8 @@ TransformFunctionsMatch(nsCSSKeyword func1, nsCSSKeyword func2)
 }
 
 static nsCSSValueList*
-AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
-                  const nsCSSValueList* aList2, double aCoeff2)
+AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
+                  double aCoeff2, const nsCSSValueList* aList2)
 {
   nsAutoPtr<nsCSSValueList> result;
   nsCSSValueList **resultTail = getter_Transfers(result);
@@ -1577,11 +1577,11 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
       case eCSSKeyword_translate3d: {
           NS_ABORT_IF_FALSE(a1->Count() == 4, "unexpected count");
           NS_ABORT_IF_FALSE(a2->Count() == 4, "unexpected count");
-          AddTransformTranslate(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
+          AddTransformTranslate(aCoeff1, a1->Item(1), aCoeff2, a2->Item(1),
                                 arr->Item(1));
-          AddTransformTranslate(a1->Item(2), aCoeff1, a2->Item(2), aCoeff2,
+          AddTransformTranslate(aCoeff1, a1->Item(2), aCoeff2, a2->Item(2),
                                 arr->Item(2));
-          AddTransformTranslate(a1->Item(3), aCoeff1, a2->Item(3), aCoeff2,
+          AddTransformTranslate(aCoeff1, a1->Item(3), aCoeff2, a2->Item(3),
                                 arr->Item(3));
           break;
       }
@@ -1589,11 +1589,11 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
           NS_ABORT_IF_FALSE(a1->Count() == 4, "unexpected count");
           NS_ABORT_IF_FALSE(a2->Count() == 4, "unexpected count");
 
-          AddTransformScale(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
+          AddTransformScale(aCoeff1, a1->Item(1), aCoeff2, a2->Item(1),
                             arr->Item(1));
-          AddTransformScale(a1->Item(2), aCoeff1, a2->Item(2), aCoeff2,
+          AddTransformScale(aCoeff1, a1->Item(2), aCoeff2, a2->Item(2),
                             arr->Item(2));
-          AddTransformScale(a1->Item(3), aCoeff1, a2->Item(3), aCoeff2,
+          AddTransformScale(aCoeff1, a1->Item(3), aCoeff2, a2->Item(3),
                             arr->Item(3));
 
           break;
@@ -1611,15 +1611,15 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
 
         nsCSSValue zero(0.0f, eCSSUnit_Radian);
         // Add Y component of skew.
-        AddCSSValueAngle(a1->Count() == 3 ? a1->Item(2) : zero,
-                         aCoeff1,
-                         a2->Count() == 3 ? a2->Item(2) : zero,
+        AddCSSValueAngle(aCoeff1,
+                         a1->Count() == 3 ? a1->Item(2) : zero,
                          aCoeff2,
+                         a2->Count() == 3 ? a2->Item(2) : zero,
                          arr->Item(2));
 
         // Add X component of skew (which can be merged with case below
         // in non-DEBUG).
-        AddCSSValueAngle(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
+        AddCSSValueAngle(aCoeff1, a1->Item(1), aCoeff2, a2->Item(1),
                          arr->Item(1));
 
         break;
@@ -1633,7 +1633,7 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
         NS_ABORT_IF_FALSE(a1->Count() == 2, "unexpected count");
         NS_ABORT_IF_FALSE(a2->Count() == 2, "unexpected count");
 
-        AddCSSValueAngle(a1->Item(1), aCoeff1, a2->Item(1), aCoeff2,
+        AddCSSValueAngle(aCoeff1, a1->Item(1), aCoeff2, a2->Item(1),
                          arr->Item(1));
 
         break;
@@ -1653,10 +1653,10 @@ AddTransformLists(const nsCSSValueList* aList1, double aCoeff1,
 
         if (aList1 == aList2) {
           *resultTail =
-            AddDifferentTransformLists(&tempList1, aCoeff1, &tempList1, aCoeff2);
+            AddDifferentTransformLists(aCoeff1, &tempList1, aCoeff2, &tempList1);
         } else {
           *resultTail =
-            AddDifferentTransformLists(&tempList1, aCoeff1, &tempList2, aCoeff2);
+            AddDifferentTransformLists(aCoeff1, &tempList1, aCoeff2, &tempList2);
         }
 
         // Now advance resultTail to point to the new tail slot.
@@ -2079,11 +2079,11 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
             result->mValue.SetNoneValue();
           }
         } else {
-          result = AddTransformLists(list2, 0, list2, aCoeff2);
+          result = AddTransformLists(0, list2, aCoeff2, list2);
         }
       } else {
         if (list2->mValue.GetUnit() == eCSSUnit_None) {
-          result = AddTransformLists(list1, 0, list1, aCoeff1);
+          result = AddTransformLists(0, list1, aCoeff1, list1);
         } else {
           bool match = true;
 
@@ -2109,9 +2109,9 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
           }
 
           if (match) {
-            result = AddTransformLists(list1, aCoeff1, list2, aCoeff2);
+            result = AddTransformLists(aCoeff1, list1, aCoeff2, list2);
           } else {
-            result = AddDifferentTransformLists(list1, aCoeff1, list2, aCoeff2);
+            result = AddDifferentTransformLists(aCoeff1, list1, aCoeff2, list2);
           }
         }
       }
