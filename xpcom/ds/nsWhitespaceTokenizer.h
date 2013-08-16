@@ -6,18 +6,17 @@
 #ifndef __nsWhitespaceTokenizer_h
 #define __nsWhitespaceTokenizer_h
 
-#include "mozilla/RangedPtr.h"
 #include "nsDependentSubstring.h"
 
 class nsWhitespaceTokenizer
 {
 public:
     nsWhitespaceTokenizer(const nsSubstring& aSource)
-        : mIter(aSource.Data(), aSource.Length()),
-          mEnd(aSource.Data() + aSource.Length(), aSource.Data(),
-               aSource.Length())
     {
-        while (mIter < mEnd && isWhitespace(*mIter)) {
+        aSource.BeginReading(mIter);
+        aSource.EndReading(mEnd);
+
+        while (mIter != mEnd && isWhitespace(*mIter)) {
             ++mIter;
         }
     }
@@ -27,7 +26,7 @@ public:
      */
     bool hasMoreTokens()
     {
-        return mIter < mEnd;
+        return mIter != mEnd;
     }
 
     /**
@@ -35,20 +34,19 @@ public:
      */
     const nsDependentSubstring nextToken()
     {
-        const mozilla::RangedPtr<const PRUnichar> tokenStart = mIter;
-        while (mIter < mEnd && !isWhitespace(*mIter)) {
+        nsSubstring::const_char_iterator begin = mIter;
+        while (mIter != mEnd && !isWhitespace(*mIter)) {
             ++mIter;
         }
-        const mozilla::RangedPtr<const PRUnichar> tokenEnd = mIter;
-        while (mIter < mEnd && isWhitespace(*mIter)) {
+        nsSubstring::const_char_iterator end = mIter;
+        while (mIter != mEnd && isWhitespace(*mIter)) {
             ++mIter;
         }
-        return Substring(tokenStart.get(), tokenEnd.get());
+        return Substring(begin, end);
     }
 
 private:
-    mozilla::RangedPtr<const PRUnichar> mIter;
-    const mozilla::RangedPtr<const PRUnichar> mEnd;
+    nsSubstring::const_char_iterator mIter, mEnd;
 
     bool isWhitespace(PRUnichar aChar)
     {
@@ -62,11 +60,11 @@ class nsCWhitespaceTokenizer
 {
 public:
     nsCWhitespaceTokenizer(const nsCSubstring& aSource)
-        : mIter(aSource.Data(), aSource.Length()),
-          mEnd(aSource.Data() + aSource.Length(), aSource.Data(),
-               aSource.Length())
     {
-        while (mIter < mEnd && isWhitespace(*mIter)) {
+        aSource.BeginReading(mIter);
+        aSource.EndReading(mEnd);
+
+        while (mIter != mEnd && isWhitespace(*mIter)) {
             ++mIter;
         }
     }
@@ -76,7 +74,7 @@ public:
      */
     bool hasMoreTokens()
     {
-        return mIter < mEnd;
+        return mIter != mEnd;
     }
 
     /**
@@ -84,20 +82,19 @@ public:
      */
     const nsDependentCSubstring nextToken()
     {
-        const mozilla::RangedPtr<const char> tokenStart = mIter;
-        while (mIter < mEnd && !isWhitespace(*mIter)) {
+        nsCSubstring::const_char_iterator begin = mIter;
+        while (mIter != mEnd && !isWhitespace(*mIter)) {
             ++mIter;
         }
-        const mozilla::RangedPtr<const char> tokenEnd = mIter;
-        while (mIter < mEnd && isWhitespace(*mIter)) {
+        nsCSubstring::const_char_iterator end = mIter;
+        while (mIter != mEnd && isWhitespace(*mIter)) {
             ++mIter;
         }
-        return Substring(tokenStart.get(), tokenEnd.get());
+        return Substring(begin, end);
     }
 
 private:
-    mozilla::RangedPtr<const char> mIter;
-    const mozilla::RangedPtr<const char> mEnd;
+    nsCSubstring::const_char_iterator mIter, mEnd;
 
     bool isWhitespace(char aChar)
     {
