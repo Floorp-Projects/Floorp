@@ -13,6 +13,7 @@ import org.json.JSONObject;
 
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +34,14 @@ public final class PrefsHelper {
     }
 
     public static int getPrefs(String[] prefNames, PrefHandler callback) {
+        JSONArray prefs = new JSONArray();
+        for (String p : prefNames) {
+            prefs.put(p);
+        }
+        return getPrefs(prefs, callback);
+    }
+
+    public static int getPrefs(ArrayList<String> prefNames, PrefHandler callback) {
         JSONArray prefs = new JSONArray();
         for (String p : prefNames) {
             prefs.put(p);
