@@ -10,6 +10,7 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.util.FloatUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.graphics.PointF;
 import android.graphics.RectF;
@@ -33,7 +34,9 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
      */
     private float SHOW_MARGINS_THRESHOLD = 0.20f;
 
-    /* This rect stores the maximum value margins can grow to when scrolling */
+    /* This rect stores the maximum value margins can grow to when scrolling. When writing
+     * to this member variable, or when reading from this member variable on a non-UI thread,
+     * you must synchronize on the LayerMarginsAnimator instance. */
     private final RectF mMaxMargins;
     /* If this boolean is true, scroll changes will not affect margins */
     private boolean mMarginsPinned;
@@ -86,6 +89,8 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
      * Sets the maximum values for margins to grow to, in pixels.
      */
     public synchronized void setMaxMargins(float left, float top, float right, float bottom) {
+        ThreadUtils.assertOnUiThread();
+
         mMaxMargins.set(left, top, right, bottom);
 
         // Update the Gecko-side global for fixed viewport margins.
@@ -93,6 +98,10 @@ public class LayerMarginsAnimator implements TouchEventInterceptor {
             GeckoEvent.createBroadcastEvent("Viewport:FixedMarginsChanged",
                 "{ \"top\" : " + top + ", \"right\" : " + right
                 + ", \"bottom\" : " + bottom + ", \"left\" : " + left + " }"));
+    }
+
+    RectF getMaxMargins() {
+        return mMaxMargins;
     }
 
     private void animateMargins(final float left, final float top, final float right, final float bottom, boolean immediately) {
