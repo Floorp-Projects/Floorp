@@ -5,6 +5,7 @@
 #include "nsXULAppAPI.h"
 
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/TabChild.h"
 
 #include "nsISettingsService.h"
 
