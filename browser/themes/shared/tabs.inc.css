@@ -265,6 +265,5 @@
 /* New tab button */
 
 .tabs-newtab-button {
-  clip-path: url(chrome://browser/content/browser.xul#tab-clip-path-outer);
   width: 66px;
 }
