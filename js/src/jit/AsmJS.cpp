@@ -1689,8 +1689,6 @@ class FunctionCompiler
     LabeledBlockMap        labeledBreaks_;
     LabeledBlockMap        labeledContinues_;
 
-    AutoFlushCache         autoFlushCache_;
-
   public:
     FunctionCompiler(ModuleCompiler &m, ParseNode *fn, LifoAlloc &lifo)
       : m_(m),
@@ -1708,8 +1706,7 @@ class FunctionCompiler
         unlabeledBreaks_(m.cx()),
         unlabeledContinues_(m.cx()),
         labeledBreaks_(m.cx()),
-        labeledContinues_(m.cx()),
-        autoFlushCache_("asm.js")
+        labeledContinues_(m.cx())
     {}
 
     ModuleCompiler &    m() const      { return m_; }
