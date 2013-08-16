@@ -2943,6 +2943,25 @@ LIRGenerator::visitInstruction(MInstruction *ins)
             return false;
     }
 
+    // Check the computed range for this instruction, if the option is set. Note
+    // that this code is quite invasive; it adds numerous additional
+    // instructions for each MInstruction with a computed range, and it uses
+    // registers, so it also affects register allocation.
+    if (js_IonOptions.checkRangeAnalysis) {
+        if (Range *r = ins->range()) {
+           switch (ins->type()) {
+           case MIRType_Int32:
+               add(new LRangeAssert(useRegisterAtStart(ins), *r));
+               break;
+           case MIRType_Double:
+               add(new LDoubleRangeAssert(useRegister(ins), tempFloat(), *r));
+               break;
+           default:
+               break;
+           }
+        }
+    }
+
     return true;
 }
 

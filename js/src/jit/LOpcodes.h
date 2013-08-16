@@ -245,7 +245,9 @@
     _(AsmJSPassStackArg)            \
     _(AsmJSCall)                    \
     _(AsmJSCheckOverRecursed)       \
-    _(CheckInterruptPar)
+    _(CheckInterruptPar)            \
+    _(RangeAssert)                  \
+    _(DoubleRangeAssert)
 
 #if defined(JS_CPU_X86)
 # include "jit/x86/LOpcodes-x86.h"
