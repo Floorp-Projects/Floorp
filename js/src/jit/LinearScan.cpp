@@ -352,7 +352,23 @@ LinearScanAllocator::reifyAllocations()
             if (def->policy() == LDefinition::PRESET && def->output()->isRegister()) {
                 AnyRegister fixedReg = def->output()->toRegister();
                 LiveInterval *from = fixedIntervals[fixedReg.code()];
-                if (!moveAfter(outputOf(reg->ins()), from, interval))
+
+                // Insert the move after any OsiPoint or Nop instructions
+                // following this one. See minimalDefEnd for more info.
+                CodePosition defEnd = minimalDefEnd(reg->ins());
+
+                // If we just skipped an OsiPoint, and it uses this vreg, it
+                // should use the fixed register instead.
+                for (UsePositionIterator usePos(interval->usesBegin());
+                     usePos != interval->usesEnd();
+                     usePos++)
+                {
+                    if (usePos->pos > defEnd)
+                        break;
+                    *static_cast<LAllocation *>(usePos->use) = LAllocation(fixedReg);
+                }
+
+                if (!moveAfter(defEnd, from, interval))
                     return false;
                 spillFrom = from->getAllocation();
             } else {

@@ -120,7 +120,8 @@ function processStsHeader(host, header, status) {
   if (header != null) {
     try {
       var uri = Services.io.newURI("https://" + host.name, null, null);
-      gSSService.processStsHeader(uri, header, 0, maxAge, includeSubdomains);
+      gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
+                               uri, header, 0, maxAge, includeSubdomains);
     }
     catch (e) {
       dump("ERROR: could not process header '" + header + "' from " +
@@ -213,9 +214,13 @@ function output(sortedStatuses, currentList) {
     writeTo(PREFIX, fos);
     for (var status of hstsStatuses) {
 
-      if (status.error == ERROR_CONNECTING_TO_HOST &&
+      // If we've encountered an error for this entry (other than the site not
+      // sending an HSTS header), be safe and don't remove it from the list
+      // (given that it was already on the list).
+      if (status.error != ERROR_NONE &&
+          status.error != ERROR_NO_HSTS_HEADER &&
           status.name in currentList) {
-        dump("INFO: " + status.name + " could not be connected to - using previous status on list\n");
+        dump("INFO: error connecting to or processing " + status.name + " - using previous status on list\n");
         writeTo(status.name + ": " + status.error + "\n", eos);
         status.maxAge = MINIMUM_REQUIRED_MAX_AGE;
         status.includeSubdomains = currentList[status.name];

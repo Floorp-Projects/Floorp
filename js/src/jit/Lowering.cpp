@@ -1779,6 +1779,23 @@ LIRGenerator::visitGuardThreadLocalObject(MGuardThreadLocalObject *ins)
 }
 
 bool
+LIRGenerator::visitInterruptCheck(MInterruptCheck *ins)
+{
+    // Implicit interrupt checks require asm.js signal handlers to be
+    // installed. ARM does not yet use implicit interrupt checks, see
+    // bug 864220.
+#ifndef JS_CPU_ARM
+    if (GetIonContext()->runtime->ionRuntime()->signalHandlersInstalled()) {
+        LInterruptCheckImplicit *lir = new LInterruptCheckImplicit();
+        return add(lir) && assignSafepoint(lir, ins);
+    }
+#endif
+
+    LInterruptCheck *lir = new LInterruptCheck();
+    return add(lir) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitCheckInterruptPar(MCheckInterruptPar *ins)
 {
     LCheckInterruptPar *lir =

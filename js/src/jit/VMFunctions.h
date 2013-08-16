@@ -387,6 +387,9 @@ template <class> struct MatchContext { };
 template <> struct MatchContext<JSContext *> {
     static const ExecutionMode execMode = SequentialExecution;
 };
+template <> struct MatchContext<ExclusiveContext *> {
+    static const ExecutionMode execMode = SequentialExecution;
+};
 template <> struct MatchContext<ForkJoinSlice *> {
     static const ExecutionMode execMode = ParallelExecution;
 };

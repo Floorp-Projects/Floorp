@@ -8,15 +8,9 @@
 #define nsDOMClassInfo_h___
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMClassInfo.h"
 #include "nsIXPCScriptable.h"
-#include "jsapi.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIScriptContext.h"
-#include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 #include "nsIScriptGlobalObject.h"
-#include "xpcpublic.h"
-#include "nsIRunnable.h"
+#include "nsIDOMScriptObjectFactory.h"
 
 #ifdef XP_WIN
 #undef GetClassName
@@ -25,16 +19,7 @@
 class nsContentList;
 class nsDocument;
 class nsGlobalWindow;
-class nsIDOMWindow;
-class nsIForm;
-class nsNPAPIPluginInstance;
-class nsObjectLoadingContent;
-class nsIObjectLoadingContent;
-
-class nsIDOMCrypto;
-#ifndef MOZ_DISABLE_CRYPTOLEGACY
-class nsIDOMCRMFObject;
-#endif
+class nsIScriptSecurityManager;
 
 struct nsDOMClassInfoData;
 

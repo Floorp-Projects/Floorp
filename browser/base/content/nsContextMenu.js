@@ -350,7 +350,7 @@ nsContextMenu.prototype = {
   },
 
   initSpellingItems: function() {
-    var canSpell = InlineSpellCheckerUI.canSpellCheck;
+    var canSpell = InlineSpellCheckerUI.canSpellCheck && this.canSpellCheck;
     var onMisspelling = InlineSpellCheckerUI.overMisspelling;
     var showUndo = canSpell && InlineSpellCheckerUI.canUndo();
     this.showItem("spell-check-enabled", canSpell);
@@ -375,7 +375,7 @@ nsContextMenu.prototype = {
       this.showItem("spell-no-suggestions", false);
 
     // dictionary list
-    this.showItem("spell-dictionaries", InlineSpellCheckerUI.enabled);
+    this.showItem("spell-dictionaries", canSpell && InlineSpellCheckerUI.enabled);
     if (canSpell) {
       var dictMenu = document.getElementById("spell-dictionaries-menu");
       var dictSep = document.getElementById("spell-language-separator");
@@ -547,6 +547,7 @@ nsContextMenu.prototype = {
     this.onEditableArea    = false;
     this.isDesignMode      = false;
     this.onCTPPlugin       = false;
+    this.canSpellCheck     = false;
 
     // Remember the node that was clicked.
     this.target = aNode;
@@ -648,6 +649,13 @@ nsContextMenu.prototype = {
                this.target.mozMatchesSelector(":-moz-handler-clicktoplay")) {
         this.onCTPPlugin = true;
       }
+
+      this.canSpellCheck = this._isSpellCheckEnabled(this.target);
+    }
+    else if (this.target.nodeType == Node.TEXT_NODE) {
+      // For text nodes, look at the parent node to determine the spellcheck attribute.
+      this.canSpellCheck = this.target.parentNode &&
+                           this._isSpellCheckEnabled(this.target);
     }
 
     // Second, bubble out, looking for items of interest that can have childen.
@@ -749,7 +757,7 @@ nsContextMenu.prototype = {
           this.isDesignMode      = true;
           this.onEditableArea = true;
           InlineSpellCheckerUI.init(editingSession.getEditorForWindow(win));
-          var canSpell = InlineSpellCheckerUI.canSpellCheck;
+          var canSpell = InlineSpellCheckerUI.canSpellCheck && this.canSpellCheck;
           InlineSpellCheckerUI.initFromEvent(aRangeParent, aRangeOffset);
           this.showItem("spell-check-enabled", canSpell);
           this.showItem("spell-separator", canSpell);
@@ -800,6 +808,23 @@ nsContextMenu.prototype = {
     }
 
     return aRemotePrincipal;
+  },
+
+  _isSpellCheckEnabled: function(aNode) {
+    // We can always force-enable spellchecking on textboxes
+    if (this.isTargetATextBox(aNode)) {
+      return true;
+    }
+    // We can never spell check something which is not content editable
+    var editable = aNode.isContentEditable;
+    if (!editable && aNode.ownerDocument) {
+      editable = aNode.ownerDocument.designMode == "on";
+    }
+    if (!editable) {
+      return false;
+    }
+    // Otherwise make sure that nothing in the parent chain disables spellchecking
+    return aNode.spellcheck;
   },
 
   // Open linked-to URL in a new window.

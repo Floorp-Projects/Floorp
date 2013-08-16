@@ -9,10 +9,11 @@
 
 #include "nsDOMEvent.h"
 #include "AudioBuffer.h"
-#include "AudioContext.h"
 
 namespace mozilla {
 namespace dom {
+
+class AudioContext;
 
 class OfflineAudioCompletionEvent : public nsDOMEvent,
                                     public EnableWebAudioCheck

@@ -678,5 +678,72 @@ CodeGeneratorShared::callTraceLIR(uint32_t blockIndex, LInstruction *lir,
     return true;
 }
 
+typedef bool (*InterruptCheckFn)(JSContext *);
+const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
+
+Label *
+CodeGeneratorShared::labelForBackedgeWithImplicitCheck(MBasicBlock *mir)
+{
+    // If this is a loop backedge to a loop header with an implicit interrupt
+    // check, use a patchable jump. Skip this search if compiling without a
+    // script for asm.js, as there will be no interrupt check instruction.
+    // Due to critical edge unsplitting there may no longer be unique loop
+    // backedges, so just look for any edge going to an earlier block in RPO.
+    if (!gen->compilingAsmJS() && mir->isLoopHeader() && mir->id() <= current->mir()->id()) {
+        for (LInstructionIterator iter = mir->lir()->begin(); iter != mir->lir()->end(); iter++) {
+            if (iter->isLabel() || iter->isMoveGroup()) {
+                // Continue searching for an interrupt check.
+            } else if (iter->isInterruptCheckImplicit()) {
+                return iter->toInterruptCheckImplicit()->oolEntry();
+            } else {
+                // The interrupt check should be the first instruction in the
+                // loop header other than the initial label and move groups.
+                JS_ASSERT(iter->isInterruptCheck() || iter->isCheckInterruptPar());
+                return NULL;
+            }
+        }
+    }
+
+    return NULL;
+}
+
+void
+CodeGeneratorShared::jumpToBlock(MBasicBlock *mir)
+{
+    // No jump necessary if we can fall through to the next block.
+    if (isNextBlock(mir->lir()))
+        return;
+
+    if (Label *oolEntry = labelForBackedgeWithImplicitCheck(mir)) {
+        // Note: the backedge is initially a jump to the next instruction.
+        // It will be patched to the target block's label during link().
+        RepatchLabel rejoin;
+        CodeOffsetJump backedge = masm.jumpWithPatch(&rejoin);
+        masm.bind(&rejoin);
+
+        if (!patchableBackedges_.append(PatchableBackedgeInfo(backedge, mir->lir()->label(), oolEntry)))
+            MOZ_CRASH();
+    } else {
+        masm.jump(mir->lir()->label());
+    }
+}
+
+void
+CodeGeneratorShared::jumpToBlock(MBasicBlock *mir, Assembler::Condition cond)
+{
+    if (Label *oolEntry = labelForBackedgeWithImplicitCheck(mir)) {
+        // Note: the backedge is initially a jump to the next instruction.
+        // It will be patched to the target block's label during link().
+        RepatchLabel rejoin;
+        CodeOffsetJump backedge = masm.jumpWithPatch(&rejoin, cond);
+        masm.bind(&rejoin);
+
+        if (!patchableBackedges_.append(PatchableBackedgeInfo(backedge, mir->lir()->label(), oolEntry)))
+            MOZ_CRASH();
+    } else {
+        masm.j(cond, mir->lir()->label());
+    }
+}
+
 } // namespace ion
 } // namespace js

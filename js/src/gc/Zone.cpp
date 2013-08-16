@@ -73,6 +73,9 @@ Zone::setNeedsBarrier(bool needs, ShouldUpdateIon updateIon)
     }
 #endif
 
+    if (needs && runtimeFromMainThread()->isAtomsZone(this))
+        JS_ASSERT(!runtimeFromMainThread()->exclusiveThreadsPresent());
+
     needsBarrier_ = needs;
 }
 
