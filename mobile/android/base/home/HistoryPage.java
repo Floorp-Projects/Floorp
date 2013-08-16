@@ -90,6 +90,10 @@ public class HistoryPage extends HomeFragment
     }
 
     private void showSubPage(Fragment subPage) {
+        final Bundle args = new Bundle();
+        args.putBoolean(HomePager.CAN_LOAD_ARG, getCanLoadHint());
+        subPage.setArguments(args);
+
         getChildFragmentManager().beginTransaction()
                 .addToBackStack(null).replace(R.id.visited_page_container, subPage)
                 .commitAllowingStateLoss();

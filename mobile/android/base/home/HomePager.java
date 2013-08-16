@@ -71,6 +71,8 @@ public class HomePager extends ViewPager {
         public void setOnTitleClickListener(OnTitleClickListener onTitleClickListener);
     }
 
+    static final String CAN_LOAD_ARG = "canLoad";
+
     public HomePager(Context context) {
         this(context, null);
     }
@@ -115,19 +117,27 @@ public class HomePager extends ViewPager {
      */
     public void show(FragmentManager fm, Page page, PropertyAnimator animator) {
         mLoaded = true;
-        TabsAdapter adapter = new TabsAdapter(fm);
+        final TabsAdapter adapter = new TabsAdapter(fm);
+
+        // Only animate on post-HC devices, when a non-null animator is given
+        final boolean shouldAnimate = (animator != null && Build.VERSION.SDK_INT >= 11);
 
         // Add the pages to the adapter in order.
-        adapter.addTab(Page.HISTORY, HistoryPage.class, null, getContext().getString(R.string.home_history_title));
-        adapter.addTab(Page.BOOKMARKS, BookmarksPage.class, null, getContext().getString(R.string.bookmarks_title));
-        adapter.addTab(Page.READING_LIST, ReadingListPage.class, null, getContext().getString(R.string.reading_list));
+        adapter.addTab(Page.HISTORY, HistoryPage.class, new Bundle(),
+                getContext().getString(R.string.home_history_title));
+        adapter.addTab(Page.BOOKMARKS, BookmarksPage.class, new Bundle(),
+                getContext().getString(R.string.bookmarks_title));
+        adapter.addTab(Page.READING_LIST, ReadingListPage.class, new Bundle(),
+                getContext().getString(R.string.reading_list));
+
+        adapter.setCanLoadHint(!shouldAnimate);
 
         setAdapter(adapter);
 
         setCurrentItem(adapter.getItemPosition(page), false);
         setVisibility(VISIBLE);
 
-        if (animator != null && Build.VERSION.SDK_INT >= 11) {
+        if (shouldAnimate) {
             animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
                 @Override
                 public void onPropertyAnimationStart() {
@@ -137,6 +147,7 @@ public class HomePager extends ViewPager {
                 @Override
                 public void onPropertyAnimationEnd() {
                     setLayerType(View.LAYER_TYPE_NONE, null);
+                    adapter.setCanLoadHint(true);
                 }
             });
 
@@ -253,6 +264,19 @@ public class HomePager extends ViewPager {
             super.destroyItem(container, position, object);
 
             mPages.remove(mTabs.get(position).page);
+        }
+
+        public void setCanLoadHint(boolean canLoadHint) {
+            // Update fragment arguments for future instances
+            for (TabInfo info : mTabs) {
+                info.args.putBoolean(CAN_LOAD_ARG, canLoadHint);
+            }
+
+            // Enable/disable loading on all existing pages
+            for (Fragment page : mPages.values()) {
+                final HomeFragment homePage = (HomeFragment) page;
+                homePage.setCanLoadHint(canLoadHint);
+            }
         }
     }
 

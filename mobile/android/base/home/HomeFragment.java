@@ -22,6 +22,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
@@ -45,6 +46,28 @@ abstract class HomeFragment extends Fragment {
 
     // URL to Title replacement regex.
     private static final String REGEX_URL_TO_TITLE = "^([a-z]+://)?(www\\.)?";
+
+    // Whether the fragment can load its content or not
+    // This is used to defer data loading until the editing
+    // mode animation ends.
+    private boolean mCanLoadHint;
+
+    // Whether the fragment has loaded its content
+    private boolean mIsLoaded;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        final Bundle args = getArguments();
+        if (args != null) {
+            mCanLoadHint = args.getBoolean(HomePager.CAN_LOAD_ARG, false);
+        } else {
+            mCanLoadHint = false;
+        }
+
+        mIsLoaded = false;
+    }
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
@@ -172,14 +195,30 @@ abstract class HomeFragment extends Fragment {
         loadIfVisible();
     }
 
-    protected abstract void load();
-
-    protected void loadIfVisible() {
-        if (!isVisible() || !getUserVisibleHint()) {
+    void setCanLoadHint(boolean canLoadHint) {
+        if (mCanLoadHint == canLoadHint) {
             return;
         }
 
-        load();
+        mCanLoadHint = canLoadHint;
+        loadIfVisible();
+    }
+
+    boolean getCanLoadHint() {
+        return mCanLoadHint;
+    }
+
+    protected abstract void load();
+
+    protected void loadIfVisible() {
+        if (!mCanLoadHint || !isVisible() || !getUserVisibleHint()) {
+            return;
+        }
+
+        if (!mIsLoaded) {
+            load();
+            mIsLoaded = true;
+        }
     }
 
     private static class RemoveBookmarkTask extends UiAsyncTask<Void, Void, Void> {
