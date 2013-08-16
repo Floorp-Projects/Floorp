@@ -191,6 +191,10 @@ abstract class HomeFragment extends Fragment {
 
     @Override
     public void setUserVisibleHint (boolean isVisibleToUser) {
+        if (isVisibleToUser == getUserVisibleHint()) {
+            return;
+        }
+
         super.setUserVisibleHint(isVisibleToUser);
         loadIfVisible();
     }
