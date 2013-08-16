@@ -171,6 +171,11 @@ DownloadList.prototype = {
    *            // Called after aDownload is removed from the list.
    *          },
    *        }
+   *
+   * @note The onDownloadAdded notifications are sent synchronously.  This
+   *       allows for a complete initialization of the view used for detecting
+   *       changes to downloads to be persisted, before other callers get a
+   *       chance to modify them.
    */
   addView: function DL_addView(aView)
   {
