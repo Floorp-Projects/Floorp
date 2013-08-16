@@ -9,6 +9,7 @@ TEST_DIRS += ['test']
 XPIDL_SOURCES += [
     'nsIDOMDOMCursor.idl',
     'nsIDOMDOMRequest.idl',
+    'nsIDOMDOMWindowResizeEventDetail.idl',
     'nsIEntropyCollector.idl',
     'nsIScriptChannel.idl',
     'nsISiteSpecificUserAgent.idl',
@@ -67,13 +68,13 @@ CPP_SOURCES += [
     'DOMError.cpp',
     'DOMRequest.cpp',
     'Navigator.cpp',
-    'URL.cpp',
     'nsContentPermissionHelper.cpp',
     'nsDOMClassInfo.cpp',
     'nsDOMException.cpp',
     'nsDOMNavigationTiming.cpp',
     'nsDOMScriptObjectFactory.cpp',
     'nsDOMWindowList.cpp',
+    'nsDOMWindowResizeEventDetail.cpp',
     'nsDOMWindowUtils.cpp',
     'nsFocusManager.cpp',
     'nsGlobalWindow.cpp',
@@ -93,6 +94,7 @@ CPP_SOURCES += [
     'nsWindowMemoryReporter.cpp',
     'nsWindowRoot.cpp',
     'nsWrapperCache.cpp',
+    'URL.cpp',
     'WindowNamedPropertiesHandler.cpp',
 ]
 
