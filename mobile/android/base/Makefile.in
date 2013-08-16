@@ -469,6 +469,7 @@ RES_LAYOUT = \
   res/layout/gecko_app.xml \
   res/layout/home_bookmarks_page.xml \
   res/layout/home_empty_page.xml \
+  res/layout/home_empty_reading_page.xml \
   res/layout/home_item_row.xml \
   res/layout/home_header_row.xml \
   res/layout/home_history_page.xml \
@@ -716,6 +717,7 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/top_bookmark_add.png \
   res/drawable-mdpi/urlbar_stop.png \
   res/drawable-mdpi/reader.png \
+  res/drawable-mdpi/reader_cropped.png \
   res/drawable-mdpi/reader_active.png \
   res/drawable-mdpi/reading_list.png \
   res/drawable-mdpi/validation_arrow.png \
@@ -822,6 +824,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/top_bookmark_add.png \
   res/drawable-hdpi/urlbar_stop.png \
   res/drawable-hdpi/reader.png \
+  res/drawable-hdpi/reader_cropped.png \
   res/drawable-hdpi/reader_active.png \
   res/drawable-hdpi/reading_list.png \
   res/drawable-hdpi/validation_arrow.png \
@@ -895,6 +898,7 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/top_bookmark_add.png \
   res/drawable-xhdpi/urlbar_stop.png \
   res/drawable-xhdpi/reader.png \
+  res/drawable-xhdpi/reader_cropped.png \
   res/drawable-xhdpi/reader_active.png \
   res/drawable-xhdpi/reading_list.png \
   res/drawable-xhdpi/larry.png \
@@ -1102,6 +1106,7 @@ RES_DRAWABLE += \
   res/drawable/url_bar_nav_button.xml                 \
   res/drawable/url_bar_right_edge.xml                 \
   res/drawable/bookmark_folder.xml                    \
+  res/drawable/divider_horizontal.xml                 \
   res/drawable/divider_vertical.xml                   \
   res/drawable/favicon_bg.xml                         \
   res/drawable/handle_end_level.xml                   \
