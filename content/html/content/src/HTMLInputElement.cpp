@@ -240,13 +240,13 @@ class HTMLInputElementState MOZ_FINAL : public nsISupports
       mValue = aValue;
     }
 
-    const nsCOMArray<nsIDOMFile>& GetFiles() {
+    const nsTArray<nsCOMPtr<nsIDOMFile> >& GetFiles() {
       return mFiles;
     }
 
-    void SetFiles(const nsCOMArray<nsIDOMFile>& aFiles) {
+    void SetFiles(const nsTArray<nsCOMPtr<nsIDOMFile> >& aFiles) {
       mFiles.Clear();
-      mFiles.AppendObjects(aFiles);
+      mFiles.AppendElements(aFiles);
     }
 
     HTMLInputElementState()
@@ -257,7 +257,7 @@ class HTMLInputElementState MOZ_FINAL : public nsISupports
 
   protected:
     nsString mValue;
-    nsCOMArray<nsIDOMFile> mFiles;
+    nsTArray<nsCOMPtr<nsIDOMFile> > mFiles;
     bool mChecked;
     bool mCheckedSet;
 };
@@ -326,7 +326,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
   bool multi = mode == static_cast<int16_t>(nsIFilePicker::modeOpenMultiple);
 
   // Collect new selected filenames
-  nsCOMArray<nsIDOMFile> newFiles;
+  nsTArray<nsCOMPtr<nsIDOMFile> > newFiles;
   if (multi) {
     nsCOMPtr<nsISimpleEnumerator> iter;
     nsresult rv = mFilePicker->GetDomfiles(getter_AddRefs(iter));
@@ -345,7 +345,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
       nsCOMPtr<nsIDOMFile> domFile = do_QueryInterface(tmp);
       MOZ_ASSERT(domFile);
 
-      newFiles.AppendObject(domFile);
+      newFiles.AppendElement(domFile);
 
       if (!prefSaved) {
         // Store the last used directory using the content pref service
@@ -360,7 +360,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     nsresult rv = mFilePicker->GetDomfile(getter_AddRefs(domFile));
     NS_ENSURE_SUCCESS(rv, rv);
     if (domFile) {
-      newFiles.AppendObject(domFile);
+      newFiles.AppendElement(domFile);
 
       // Store the last used directory using the content pref service
       HTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(
@@ -368,7 +368,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     }
   }
 
-  if (!newFiles.Count()) {
+  if (newFiles.IsEmpty()) {
     return NS_OK;
   }
 
@@ -584,12 +584,12 @@ HTMLInputElement::InitFilePicker()
   // Set default directry and filename
   nsAutoString defaultName;
 
-  const nsCOMArray<nsIDOMFile>& oldFiles = GetFilesInternal();
+  const nsTArray<nsCOMPtr<nsIDOMFile> >& oldFiles = GetFilesInternal();
 
   nsCOMPtr<nsIFilePickerShownCallback> callback =
     new HTMLInputElement::nsFilePickerShownCallback(this, filePicker);
 
-  if (oldFiles.Count()) {
+  if (!oldFiles.IsEmpty()) {
     nsString path;
 
     oldFiles[0]->GetMozFullPathInternal(path);
@@ -608,7 +608,7 @@ HTMLInputElement::InitFilePicker()
     // Unfortunately nsIFilePicker doesn't allow multiple files to be
     // default-selected, so only select something by default if exactly
     // one file was selected before.
-    if (oldFiles.Count() == 1) {
+    if (oldFiles.Length() == 1) {
       nsAutoString leafName;
       oldFiles[0]->GetName(leafName);
       if (!leafName.IsEmpty()) {
@@ -906,7 +906,7 @@ HTMLInputElement::Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const
         GetDisplayFileName(it->mStaticDocFileList);
       } else {
         it->mFiles.Clear();
-        it->mFiles.AppendObjects(mFiles);
+        it->mFiles.AppendElements(mFiles);
       }
       break;
     case VALUE_MODE_DEFAULT_ON:
@@ -1264,7 +1264,7 @@ HTMLInputElement::GetValueInternal(nsAString& aValue) const
 
     case VALUE_MODE_FILENAME:
       if (nsContentUtils::IsCallerChrome()) {
-        if (mFiles.Count()) {
+        if (!mFiles.IsEmpty()) {
           return mFiles[0]->GetMozFullPath(aValue);
         }
         else {
@@ -1272,7 +1272,7 @@ HTMLInputElement::GetValueInternal(nsAString& aValue) const
         }
       } else {
         // Just return the leaf name
-        if (mFiles.Count() == 0 || NS_FAILED(mFiles[0]->GetName(aValue))) {
+        if (mFiles.IsEmpty() || NS_FAILED(mFiles[0]->GetName(aValue))) {
           aValue.Truncate();
         }
       }
@@ -1818,7 +1818,7 @@ HTMLInputElement::StepUp(int32_t n, uint8_t optional_argc)
 void
 HTMLInputElement::MozGetFileNameArray(nsTArray< nsString >& aArray)
 {
-  for (int32_t i = 0; i < mFiles.Count(); i++) {
+  for (uint32_t i = 0; i < mFiles.Length(); i++) {
     nsString str;
     mFiles[i]->GetMozFullPathInternal(str);
     aArray.AppendElement(str);
@@ -1857,7 +1857,7 @@ HTMLInputElement::MozGetFileNameArray(uint32_t* aLength, PRUnichar*** aFileNames
 void
 HTMLInputElement::MozSetFileNameArray(const Sequence< nsString >& aFileNames)
 {
-  nsCOMArray<nsIDOMFile> files;
+  nsTArray<nsCOMPtr<nsIDOMFile> > files;
   for (uint32_t i = 0; i < aFileNames.Length(); ++i) {
     nsCOMPtr<nsIFile> file;
 
@@ -1876,7 +1876,7 @@ HTMLInputElement::MozSetFileNameArray(const Sequence< nsString >& aFileNames)
 
     if (file) {
       nsCOMPtr<nsIDOMFile> domFile = new nsDOMFileFile(file);
-      files.AppendObject(domFile);
+      files.AppendElement(domFile);
     } else {
       continue; // Not much we can do if the file doesn't exist
     }
@@ -2068,14 +2068,14 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
     return;
   }
 
-  if (mFiles.Count() == 1) {
+  if (mFiles.Length() == 1) {
     mFiles[0]->GetName(aValue);
     return;
   }
 
   nsXPIDLString value;
 
-  if (mFiles.Count() == 0) {
+  if (mFiles.IsEmpty()) {
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
       nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                          "NoFilesSelected", value);
@@ -2085,7 +2085,7 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
     }
   } else {
     nsString count;
-    count.AppendInt(mFiles.Count());
+    count.AppendInt(mFiles.Length());
 
     const PRUnichar* params[] = { count.get() };
     nsContentUtils::FormatLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
@@ -2096,11 +2096,11 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
 }
 
 void
-HTMLInputElement::SetFiles(const nsCOMArray<nsIDOMFile>& aFiles,
+HTMLInputElement::SetFiles(const nsTArray<nsCOMPtr<nsIDOMFile> >& aFiles,
                            bool aSetValueChanged)
 {
   mFiles.Clear();
-  mFiles.AppendObjects(aFiles);
+  mFiles.AppendElements(aFiles);
 
   AfterSetFiles(aSetValueChanged);
 }
@@ -2117,7 +2117,7 @@ HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
     for (uint32_t i = 0; i < listLength; i++) {
       nsCOMPtr<nsIDOMFile> file;
       aFiles->Item(i, getter_AddRefs(file));
-      mFiles.AppendObject(file);
+      mFiles.AppendElement(file);
     }
   }
 
@@ -2185,8 +2185,8 @@ HTMLInputElement::UpdateFileList()
   if (mFileList) {
     mFileList->Clear();
 
-    const nsCOMArray<nsIDOMFile>& files = GetFilesInternal();
-    for (int32_t i = 0; i < files.Count(); ++i) {
+    const nsTArray<nsCOMPtr<nsIDOMFile> >& files = GetFilesInternal();
+    for (uint32_t i = 0; i < files.Length(); ++i) {
       if (!mFileList->Append(files[i])) {
         return NS_ERROR_FAILURE;
       }
@@ -4574,13 +4574,13 @@ HTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   if (mType == NS_FORM_INPUT_FILE) {
     // Submit files
 
-    const nsCOMArray<nsIDOMFile>& files = GetFilesInternal();
+    const nsTArray<nsCOMPtr<nsIDOMFile> >& files = GetFilesInternal();
 
-    for (int32_t i = 0; i < files.Count(); ++i) {
+    for (uint32_t i = 0; i < files.Length(); ++i) {
       aFormSubmission->AddNameFilePair(name, files[i], NullString());
     }
 
-    if (files.Count() == 0) {
+    if (files.IsEmpty()) {
       // If no file was selected, pretend we had an empty file with an
       // empty filename.
       aFormSubmission->AddNameFilePair(name, nullptr, NullString());
@@ -4617,7 +4617,7 @@ HTMLInputElement::SaveState()
       }
       break;
     case VALUE_MODE_FILENAME:
-      if (mFiles.Count()) {
+      if (!mFiles.IsEmpty()) {
         inputState = new HTMLInputElementState();
         inputState->SetFiles(mFiles);
       }
@@ -4790,7 +4790,7 @@ HTMLInputElement::RestoreState(nsPresState* aState)
         break;
       case VALUE_MODE_FILENAME:
         {
-          const nsCOMArray<nsIDOMFile>& files = inputState->GetFiles();
+          const nsTArray<nsCOMPtr<nsIDOMFile> >& files = inputState->GetFiles();
           SetFiles(files, true);
         }
         break;
@@ -5257,8 +5257,8 @@ HTMLInputElement::IsValueMissing() const
       return IsValueEmpty();
     case VALUE_MODE_FILENAME:
     {
-      const nsCOMArray<nsIDOMFile>& files = GetFilesInternal();
-      return !files.Count();
+      const nsTArray<nsCOMPtr<nsIDOMFile> >& files = GetFilesInternal();
+      return files.IsEmpty();
     }
     case VALUE_MODE_DEFAULT_ON:
       // This should not be used for type radio.
