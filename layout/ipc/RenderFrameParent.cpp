@@ -1016,6 +1016,15 @@ RenderFrameParent::UpdateZoomConstraints(bool aAllowZoom, float aMinZoom, float 
   }
 }
 
+void
+RenderFrameParent::UpdateScrollOffset(uint32_t aPresShellId, ViewID aViewId, const CSSIntPoint& aScrollOffset)
+{
+  if (GetApzcTreeManager()) {
+    GetApzcTreeManager()->UpdateScrollOffset(ScrollableLayerGuid(mLayersId, aPresShellId, aViewId),
+                                             aScrollOffset);
+  }
+}
+
 bool
 RenderFrameParent::HitTest(const nsRect& aRect)
 {

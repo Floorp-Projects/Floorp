@@ -199,7 +199,7 @@ this.AppsUtils = {
 #ifdef MOZ_WIDGET_GONK
     isCoreApp = app.basePath == this.getCoreAppsBasePath();
 #endif
-    debug(app.name + " isCoreApp: " + isCoreApp);
+    debug(app.basePath + " isCoreApp: " + isCoreApp);
     return { "basePath":  app.basePath + "/",
              "isCoreApp": isCoreApp };
   },
