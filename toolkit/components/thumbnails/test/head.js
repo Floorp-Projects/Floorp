@@ -52,8 +52,13 @@ let TestRunner = {
   next: function () {
     try {
       let value = TestRunner._iter.next();
-      if (value && typeof value.then == "function")
-        value.then(next);
+      if (value && typeof value.then == "function") {
+        value.then(result => {
+          next(result);
+        }, error => {
+          ok(false, error + "\n" + error.stack);
+        });
+      }
     } catch (e if e instanceof StopIteration) {
       finish();
     }
@@ -129,20 +134,33 @@ function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
 function retrieveImageDataForURL(aURL, aCallback) {
   let width = 100, height = 100;
   let thumb = PageThumbs.getThumbnailURL(aURL, width, height);
+  // create a tab with a chrome:// URL so it can host the thumbnail image.
+  // Note that we tried creating the element directly in the top-level chrome
+  // document, but this caused a strange problem:
+  // * call this with the url of an image.
+  // * immediately change the image content.
+  // * call this again with the same url (now holding different content)
+  // The original image data would be used.  Maybe the img hadn't been
+  // collected yet and the platform noticed the same URL, so reused the
+  // content?  Not sure - but this solves the problem.
+  addTab("chrome://global/content/mozilla.xhtml", () => {
+    let doc = gBrowser.selectedBrowser.contentDocument;
+    let htmlns = "http://www.w3.org/1999/xhtml";
+    let img = doc.createElementNS(htmlns, "img");
+    img.setAttribute("src", thumb);
 
-  let htmlns = "http://www.w3.org/1999/xhtml";
-  let img = document.createElementNS(htmlns, "img");
-  img.setAttribute("src", thumb);
+    whenLoaded(img, function () {
+      let canvas = document.createElementNS(htmlns, "canvas");
+      canvas.setAttribute("width", width);
+      canvas.setAttribute("height", height);
 
-  whenLoaded(img, function () {
-    let canvas = document.createElementNS(htmlns, "canvas");
-    canvas.setAttribute("width", width);
-    canvas.setAttribute("height", height);
-
-    // Draw the image to a canvas and compare the pixel color values.
-    let ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, width, height);
-    aCallback(ctx.getImageData(0, 0, 100, 100).data);
+      // Draw the image to a canvas and compare the pixel color values.
+      let ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      let result = ctx.getImageData(0, 0, 100, 100).data;
+      gBrowser.removeTab(gBrowser.selectedTab);
+      aCallback(result);
+    });
   });
 }
 
