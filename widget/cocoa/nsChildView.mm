@@ -140,8 +140,10 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 - (void)forceRefreshOpenGL;
 
 // set up a gecko mouse event based on a cocoa mouse event
+- (void) convertCocoaMouseWheelEvent:(NSEvent*)aMouseEvent
+                        toGeckoEvent:(WidgetWheelEvent*)outWheelEvent;
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent
-                   toGeckoEvent:(WidgetInputEvent*)outGeckoEvent;
+                   toGeckoEvent:(WidgetInputEvent*)outWheelEvent;
 
 - (NSMenu*)contextMenu;
 
@@ -2796,6 +2798,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
     mPendingDisplay = NO;
     mBlockedLastMouseDown = NO;
+    mExpectingWheelStop = NO;
 
     mLastMouseDownEvent = nil;
     mClickThroughMouseDownEvent = nil;
@@ -4728,6 +4731,22 @@ static int32_t RoundUp(double aDouble)
                        static_cast<int32_t>(ceil(aDouble));
 }
 
+- (void)sendWheelStartOrStop:(uint32_t)msg forEvent:(NSEvent *)theEvent
+{
+  WidgetWheelEvent wheelEvent(true, msg, mGeckoChild);
+  [self convertCocoaMouseWheelEvent:theEvent toGeckoEvent:&wheelEvent];
+  mExpectingWheelStop = (msg == NS_WHEEL_START);
+  mGeckoChild->DispatchWindowEvent(wheelEvent);
+}
+
+- (void)sendWheelCondition:(BOOL)condition first:(uint32_t)first second:(uint32_t)second forEvent:(NSEvent *)theEvent
+{
+  if (mExpectingWheelStop == condition) {
+    [self sendWheelStartOrStop:first forEvent:theEvent];
+  }
+  [self sendWheelStartOrStop:second forEvent:theEvent];
+}
+
 - (void)scrollWheel:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -4744,24 +4763,21 @@ static int32_t RoundUp(double aDouble)
     return;
   }
 
-  WheelEvent wheelEvent(true, NS_WHEEL_WHEEL, mGeckoChild);
-  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&wheelEvent];
-  wheelEvent.deltaMode =
-    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true) ?
-      nsIDOMWheelEvent::DOM_DELTA_PIXEL : nsIDOMWheelEvent::DOM_DELTA_LINE;
+  NSEventPhase phase = [theEvent phase];
 
-  // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
-  // assertion and an Objective-C NSInternalInconsistencyException if the
-  // underlying "Carbon" event doesn't contain pixel scrolling information.
-  // For these events, carbonEventKind is kEventMouseWheelMoved instead of
-  // kEventMouseScroll.
-  if (wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
-    EventRef theCarbonEvent = [theEvent _eventRef];
-    UInt32 carbonEventKind = theCarbonEvent ? ::GetEventKind(theCarbonEvent) : 0;
-    if (carbonEventKind != kEventMouseScroll) {
-      wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
-    }
+  // Fire NS_WHEEL_START/STOP events when 2 fingers touch/release the touchpad.
+  if (phase & NSEventPhaseMayBegin) {
+    [self sendWheelCondition:YES first:NS_WHEEL_STOP second:NS_WHEEL_START forEvent:theEvent];
+    return;
   }
+  
+  if (phase & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
+    [self sendWheelCondition:NO first:NS_WHEEL_START second:NS_WHEEL_STOP forEvent:theEvent];
+    return;
+  }
+
+  WidgetWheelEvent wheelEvent(true, NS_WHEEL_WHEEL, mGeckoChild);
+  [self convertCocoaMouseWheelEvent:theEvent toGeckoEvent:&wheelEvent];
 
   wheelEvent.lineOrPageDeltaX = RoundUp(-[theEvent deltaX]);
   wheelEvent.lineOrPageDeltaY = RoundUp(-[theEvent deltaY]);
@@ -4792,8 +4808,6 @@ static int32_t RoundUp(double aDouble)
     // No sense in firing off a Gecko event.
     return;
   }
-
-  wheelEvent.isMomentum = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
 
   NPCocoaEvent cocoaEvent;
   ChildViewMouseTracker::AttachPluginEvent(wheelEvent, self, theEvent,
@@ -4868,6 +4882,29 @@ static int32_t RoundUp(double aDouble)
   return nil;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+- (void) convertCocoaMouseWheelEvent:(NSEvent*)aMouseEvent
+                        toGeckoEvent:(WidgetWheelEvent*)outWheelEvent
+{
+  [self convertCocoaMouseEvent:aMouseEvent toGeckoEvent:outWheelEvent];
+  outWheelEvent->deltaMode =
+    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true) ?
+      nsIDOMWheelEvent::DOM_DELTA_PIXEL : nsIDOMWheelEvent::DOM_DELTA_LINE;
+
+  // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
+  // assertion and an Objective-C NSInternalInconsistencyException if the
+  // underlying "Carbon" event doesn't contain pixel scrolling information.
+  // For these events, carbonEventKind is kEventMouseWheelMoved instead of
+  // kEventMouseScroll.
+  if (outWheelEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
+    EventRef theCarbonEvent = [aMouseEvent _eventRef];
+    UInt32 carbonEventKind = theCarbonEvent ? ::GetEventKind(theCarbonEvent) : 0;
+    if (carbonEventKind != kEventMouseScroll) {
+      outWheelEvent->deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
+    }
+  }
+  outWheelEvent->isMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
 }
 
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent
