@@ -3276,15 +3276,13 @@ Tab.prototype = {
     let remeasureNeeded = false;
 
     if (hasHorizontalMargins) {
-      let screenWidth = gScreenWidth + gViewportMargins.left + gViewportMargins.right;
-      let viewportShouldExcludeHorizontalMargins = (Math.round(pageWidth) <= screenWidth);
+      let viewportShouldExcludeHorizontalMargins = (pageWidth <= gScreenWidth - 0.5);
       if (viewportShouldExcludeHorizontalMargins != this.viewportExcludesHorizontalMargins) {
         remeasureNeeded = true;
       }
     }
     if (hasVerticalMargins) {
-      let screenHeight = gScreenHeight + gViewportMargins.top + gViewportMargins.bottom;
-      let viewportShouldExcludeVerticalMargins = (Math.round(pageHeight) <= screenHeight);
+      let viewportShouldExcludeVerticalMargins = (pageHeight <= gScreenHeight - 0.5);
       if (viewportShouldExcludeVerticalMargins != this.viewportExcludesVerticalMargins) {
         remeasureNeeded = true;
       }
