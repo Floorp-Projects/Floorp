@@ -193,11 +193,16 @@ struct Zone : private JS::shadow::Zone,
     }
 
     void scheduleGC() {
-        JS_ASSERT(!runtimeFromMainThread()->isHeapBusy());
+        JSRuntime *rt = runtimeFromMainThread();
+        JS_ASSERT(!rt->isHeapBusy());
 
         /* Note: zones cannot be collected while in use by other threads. */
-        if (!usedByExclusiveThread)
-            gcScheduled = true;
+        if (usedByExclusiveThread)
+            return;
+        if (rt->isAtomsZone(this) && rt->exclusiveThreadsPresent())
+            return;
+
+        gcScheduled = true;
     }
 
     void unscheduleGC() {
