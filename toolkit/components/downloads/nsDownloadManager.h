@@ -242,6 +242,7 @@ private:
   nsresult ResumeAllDownloads(nsCOMArray<nsDownload>& aDownloads, bool aResumeAll);
   nsresult RemoveDownloadsForURI(mozIStorageStatement* aStatement, nsIURI *aURI);
 
+  bool mUseJSTransfer;
   nsCOMArray<nsIDownloadProgressListener> mListeners;
   nsCOMArray<nsIDownloadProgressListener> mPrivacyAwareListeners;
   nsCOMPtr<nsIStringBundle> mBundle;
