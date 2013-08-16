@@ -37,6 +37,7 @@ static const uint32_t SNAPSHOT_MAX_NARGS = 127;
 
 class MacroAssembler;
 class CodeOffsetLabel;
+class PatchableBackedge;
 
 class IonCode : public gc::Cell
 {
@@ -146,6 +147,7 @@ class SafepointWriter;
 class SafepointIndex;
 class OsiIndex;
 class IonCache;
+struct PatchableBackedgeInfo;
 
 // Describes a single AsmJSModule which jumps (via an FFI exit with the given
 // index) directly into an IonScript.
@@ -257,6 +259,10 @@ struct IonScript
     uint32_t callTargetList_;
     uint32_t callTargetEntries_;
 
+    // List of patchable backedges which are threaded into the runtime's list.
+    uint32_t backedgeList_;
+    uint32_t backedgeEntries_;
+
     // Number of references from invalidation records.
     size_t refcount_;
 
@@ -310,6 +316,9 @@ struct IonScript
     JSScript **callTargetList() {
         return (JSScript **) &bottomBuffer()[callTargetList_];
     }
+    PatchableBackedge *backedgeList() {
+        return (PatchableBackedge *) &bottomBuffer()[backedgeList_];
+    }
     bool addDependentAsmJSModule(JSContext *cx, DependentAsmJSModuleExit exit);
     void removeDependentAsmJSModule(DependentAsmJSModuleExit exit) {
         JS_ASSERT(dependentAsmJSModules);
@@ -336,7 +345,7 @@ struct IonScript
                           size_t constants, size_t safepointIndexEntries, size_t osiIndexEntries,
                           size_t cacheEntries, size_t runtimeSize,
                           size_t safepointsSize, size_t scriptEntries,
-                          size_t callTargetEntries);
+                          size_t callTargetEntries, size_t backedgeEntries);
     static void Trace(JSTracer *trc, IonScript *script);
     static void Destroy(FreeOp *fop, IonScript *script);
 
@@ -502,6 +511,7 @@ struct IonScript
     void toggleBarriers(bool enabled);
     void purgeCaches(JS::Zone *zone);
     void destroyCaches();
+    void destroyBackedges(JSRuntime *rt);
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const Value *vp);
@@ -512,6 +522,8 @@ struct IonScript
     void copySafepoints(const SafepointWriter *writer);
     void copyScriptEntries(JSScript **scripts);
     void copyCallTargetEntries(JSScript **callTargets);
+    void copyPatchableBackedges(JSContext *cx, IonCode *code,
+                                PatchableBackedgeInfo *backedges);
 
     bool invalidated() const {
         return refcount_ != 0;

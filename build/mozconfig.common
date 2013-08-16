@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Common mozconfig for all users
+# Common mozconfig for official builds.
 #
 # Add options to this file that will be inherited by all in-tree mozconfigs.
 # This is useful for eg try builds with nondefault options that apply to all
@@ -13,3 +13,5 @@
 mk_add_options AUTOCLOBBER=1
 
 ac_add_options --enable-crashreporter
+
+ac_add_options --enable-release

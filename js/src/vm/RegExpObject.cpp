@@ -681,6 +681,13 @@ RegExpCompartment::sweep(JSRuntime *rt)
     }
 }
 
+void
+RegExpCompartment::clearTables()
+{
+    JS_ASSERT(inUse_.empty());
+    map_.clear();
+}
+
 bool
 RegExpCompartment::get(ExclusiveContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g)
 {

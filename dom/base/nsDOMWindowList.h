@@ -6,13 +6,10 @@
 #define nsDOMWindowList_h___
 
 #include "nsCOMPtr.h"
-#include "nsISupports.h"
 #include "nsIDOMWindowCollection.h"
-#include "nsString.h"
 #include <stdint.h>
 #include "nsIDocShellTreeItem.h"
 
-class nsIDocShellTreeNode;
 class nsIDocShell;
 class nsIDOMWindow;
 

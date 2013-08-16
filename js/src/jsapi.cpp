@@ -4841,6 +4841,69 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options, const char 
     return script;
 }
 
+JS_PUBLIC_API(bool)
+JS::CanCompileOffThread(JSContext *cx, const CompileOptions &options)
+{
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+    if (!cx->runtime()->useHelperThreads() || !cx->runtime()->helperThreadCount())
+        return false;
+
+    // Off thread compilation can't occur during incremental collections on the
+    // atoms compartment, to avoid triggering barriers. Outside the atoms
+    // compartment, the compilation will use a new zone which doesn't require
+    // barriers itself.
+    if (cx->runtime()->atomsZoneNeedsBarrier())
+        return false;
+
+    // Blacklist filenames which cause mysterious assertion failures in
+    // graphics code on OS X. These seem to tickle some preexisting race
+    // condition unrelated to off thread compilation. See bug 897655.
+    static const char *blacklist[] = {
+#ifdef XP_MACOSX
+        "chrome://browser/content/places/editBookmarkOverlay.js",
+        "chrome://browser/content/nsContextMenu.js",
+        "chrome://browser/content/newtab/newTab.js",
+        "chrome://browser/content/places/browserPlacesViews.js",
+#endif
+        NULL
+    };
+
+    const char *filename = options.filename;
+    for (const char **ptest = blacklist; *ptest; ptest++) {
+        if (!strcmp(*ptest, filename))
+            return false;
+    }
+
+    return true;
+#else
+    return false;
+#endif
+}
+
+JS_PUBLIC_API(bool)
+JS::CompileOffThread(JSContext *cx, Handle<JSObject*> obj, CompileOptions options,
+                     const jschar *chars, size_t length,
+                     OffThreadCompileCallback callback, void *callbackData)
+{
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+    JS_ASSERT(CanCompileOffThread(cx, options));
+    return StartOffThreadParseScript(cx, options, chars, length, obj, callback, callbackData);
+#else
+    MOZ_ASSUME_UNREACHABLE("Off thread compilation is only available with JS_ION");
+#endif
+}
+
+JS_PUBLIC_API(void)
+JS::FinishOffThreadScript(JSRuntime *rt, JSScript *script)
+{
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+    JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
+    rt->workerThreadState->finishParseTaskForScript(script);
+#else
+    MOZ_ASSUME_UNREACHABLE("Off thread compilation is only available with JS_ION");
+#endif
+}
+
 JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *objArg, JSPrincipals *principals,
                                 const jschar *chars, size_t length,
@@ -5430,7 +5493,7 @@ JS_GetOperationCallback(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_TriggerOperationCallback(JSRuntime *rt)
 {
-    rt->triggerOperationCallback();
+    rt->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThread);
 }
 
 JS_PUBLIC_API(bool)

@@ -27,7 +27,6 @@ VPATH += $(topsrcdir)/build/
 
 SHARED_LIBRARY_LIBS += \
   $(DEPTH)/media/kiss_fft/$(LIB_PREFIX)kiss_fft.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/components/osfile/$(LIB_PREFIX)osfile_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/xre/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
   $(NULL)
 
@@ -92,6 +91,10 @@ STATIC_LIBS += \
   hal_s \
   dombindings_s \
   $(NULL)
+
+ifdef MOZ_CONTENT_SANDBOX #{
+STATIC_LIBS += sandbox_s
+endif #}
 
 ifdef MOZ_B2G_RIL #{
 STATIC_LIBS += mozril_s

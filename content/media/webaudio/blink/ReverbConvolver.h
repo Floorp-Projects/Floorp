@@ -29,14 +29,9 @@
 #ifndef ReverbConvolver_h
 #define ReverbConvolver_h
 
-#include "DirectConvolver.h"
-#include "FFTConvolver.h"
 #include "ReverbAccumulationBuffer.h"
-#include "ReverbConvolverStage.h"
 #include "ReverbInputBuffer.h"
 #include "nsAutoPtr.h"
-#include "nsTArray.h"
-#include "nsCOMPtr.h"
 #ifdef LOG
 #undef LOG
 #endif
@@ -46,7 +41,7 @@
 
 namespace WebCore {
 
-class AudioChannel;
+class ReverbConvolverStage;
 
 class ReverbConvolver {
 public:

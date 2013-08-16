@@ -8440,8 +8440,11 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
     RootedFunction setter(cx, commonSetter);
 
     // Try emitting dom call.
-    if (!setPropTryCommonDOMSetter(emitted, obj, value, setter, isDOM) || emitted)
-        return emitted;
+    if (!setPropTryCommonDOMSetter(emitted, obj, value, setter, isDOM))
+        return false;
+
+    if (*emitted)
+        return true;
 
     // Don't call the setter with a primitive value.
     if (objTypes->getKnownTypeTag() != JSVAL_TYPE_OBJECT) {

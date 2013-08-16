@@ -80,7 +80,6 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins);
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
-    bool visitInterruptCheck(MInterruptCheck *ins);
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
 };
 

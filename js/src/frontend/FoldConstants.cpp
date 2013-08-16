@@ -613,7 +613,7 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
                 return true;
             RootedString left(cx, pn1->pn_atom);
             RootedString right(cx, pn2->pn_atom);
-            RootedString str(cx, ConcatStrings<CanGC>(cx->asJSContext(), left, right));
+            RootedString str(cx, ConcatStrings<CanGC>(cx, left, right));
             if (!str)
                 return false;
             pn->pn_atom = AtomizeString<CanGC>(cx, str);
