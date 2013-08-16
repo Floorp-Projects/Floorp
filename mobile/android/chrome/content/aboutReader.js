@@ -580,6 +580,23 @@ AboutReader.prototype = {
     this._doc.title = error;
   },
 
+  // This function is the JS version of Java's StringUtils.stripCommonSubdomains.
+  _stripHost: function Reader_stripHost(host) {
+    if (!host)
+      return host;
+
+    let start = 0;
+
+    if (host.startsWith("www"))
+      start = 4;
+    else if (host.startsWith("m"))
+      start = 2;
+    else if (host.startsWith("mobile"))
+      start = 7;
+
+    return host.substring(start);
+  },
+
   _showContent: function Reader_showContent(article) {
     this._messageElement.style.display = "none";
 
@@ -587,7 +604,7 @@ AboutReader.prototype = {
 
     this._domainElement.href = article.url;
     let articleUri = Services.io.newURI(article.url, null, null);
-    this._domainElement.innerHTML = articleUri.host;
+    this._domainElement.innerHTML = this._stripHost(articleUri.host);
 
     this._creditsElement.innerHTML = article.byline;
 
