@@ -191,12 +191,12 @@ public:
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
-  const nsCOMArray<nsIDOMFile>& GetFilesInternal() const
+  const nsTArray<nsCOMPtr<nsIDOMFile> >& GetFilesInternal() const
   {
     return mFiles;
   }
 
-  void SetFiles(const nsCOMArray<nsIDOMFile>& aFiles, bool aSetValueChanged);
+  void SetFiles(const nsTArray<nsCOMPtr<nsIDOMFile> >& aFiles, bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
 
   void SetCheckedChangedInternal(bool aCheckedChanged);
@@ -734,7 +734,7 @@ protected:
   bool IsValueEmpty() const;
 
   void ClearFiles(bool aSetValueChanged) {
-    nsCOMArray<nsIDOMFile> files;
+    nsTArray<nsCOMPtr<nsIDOMFile> > files;
     SetFiles(files, aSetValueChanged);
   }
 
@@ -1122,7 +1122,7 @@ protected:
    * the frame. Whenever the frame wants to change the filename it has to call
    * SetFileNames to update this member.
    */
-  nsCOMArray<nsIDOMFile>   mFiles;
+  nsTArray<nsCOMPtr<nsIDOMFile> >   mFiles;
 
   nsRefPtr<nsDOMFileList>  mFileList;
 
