@@ -309,6 +309,25 @@ LinearScanAllocator::moveInputAlloc(CodePosition pos, LAllocation *from, LAlloca
     return moves->add(from, to);
 }
 
+static inline void
+SetOsiPointUses(LiveInterval *interval, CodePosition defEnd, const LAllocation &allocation)
+{
+    // Moves are inserted after OsiPoint instructions. This function sets
+    // any OsiPoint uses of this interval to the allocation of the value
+    // before the move.
+
+    JS_ASSERT(interval->index() == 0);
+
+    for (UsePositionIterator usePos(interval->usesBegin());
+         usePos != interval->usesEnd();
+         usePos++)
+    {
+        if (usePos->pos > defEnd)
+            break;
+        *static_cast<LAllocation *>(usePos->use) = allocation;
+    }
+}
+
 /*
  * This function takes the allocations assigned to the live intervals and
  * erases all virtual registers in the function with the allocations
@@ -349,24 +368,17 @@ LinearScanAllocator::reifyAllocations()
             LDefinition *def = reg->def();
             LAllocation *spillFrom;
 
+            // Insert the moves after any OsiPoint or Nop instructions
+            // following this one. See minimalDefEnd for more info.
+            CodePosition defEnd = minimalDefEnd(reg->ins());
+
             if (def->policy() == LDefinition::PRESET && def->output()->isRegister()) {
                 AnyRegister fixedReg = def->output()->toRegister();
                 LiveInterval *from = fixedIntervals[fixedReg.code()];
 
-                // Insert the move after any OsiPoint or Nop instructions
-                // following this one. See minimalDefEnd for more info.
-                CodePosition defEnd = minimalDefEnd(reg->ins());
-
-                // If we just skipped an OsiPoint, and it uses this vreg, it
-                // should use the fixed register instead.
-                for (UsePositionIterator usePos(interval->usesBegin());
-                     usePos != interval->usesEnd();
-                     usePos++)
-                {
-                    if (usePos->pos > defEnd)
-                        break;
-                    *static_cast<LAllocation *>(usePos->use) = LAllocation(fixedReg);
-                }
+                // If we insert the move after an OsiPoint that uses this vreg,
+                // it should use the fixed register instead.
+                SetOsiPointUses(interval, defEnd, LAllocation(fixedReg));
 
                 if (!moveAfter(defEnd, from, interval))
                     return false;
@@ -401,11 +413,14 @@ LinearScanAllocator::reifyAllocations()
             if (reg->mustSpillAtDefinition() && !reg->ins()->isPhi() &&
                 (*reg->canonicalSpill() != *spillFrom))
             {
-                // Insert a spill at the input of the next instruction. Control
-                // instructions never have outputs, so the next instruction is
-                // always valid. Note that we explicitly ignore phis, which
-                // should have been handled in resolveControlFlow().
-                LMoveGroup *moves = getMoveGroupAfter(outputOf(reg->ins()));
+                // If we move the spill after an OsiPoint, the OsiPoint should
+                // use the original location instead.
+                SetOsiPointUses(interval, defEnd, *spillFrom);
+
+                // Insert a spill after this instruction (or after any OsiPoint
+                // or Nop instructions). Note that we explicitly ignore phis,
+                // which should have been handled in resolveControlFlow().
+                LMoveGroup *moves = getMoveGroupAfter(defEnd);
                 if (!moves->add(spillFrom, reg->canonicalSpill()))
                     return false;
             }

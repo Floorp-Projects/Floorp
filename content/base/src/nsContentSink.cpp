@@ -1061,8 +1061,11 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
       action = CACHE_SELECTION_RESELECT_WITHOUT_MANIFEST;
     }
     else {
-      // Only continue if the document has permission to use offline APIs.
-      if (!nsContentUtils::OfflineAppAllowed(mDocument->NodePrincipal())) {
+      // Only continue if the document has permission to use offline APIs or
+      // when preferences indicate to permit it automatically.
+      if (!nsContentUtils::OfflineAppAllowed(mDocument->NodePrincipal()) &&
+          !nsContentUtils::MaybeAllowOfflineAppByDefault(mDocument->NodePrincipal()) &&
+          !nsContentUtils::OfflineAppAllowed(mDocument->NodePrincipal())) {
         return;
       }
 

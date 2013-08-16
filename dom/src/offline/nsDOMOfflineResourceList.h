@@ -157,7 +157,6 @@ private:
   nsCOMPtr<nsIApplicationCache> mAvailableApplicationCache;
   nsCOMPtr<nsIOfflineCacheUpdate> mCacheUpdate;
   bool mExposeCacheUpdateStatus;
-  bool mDontSetDocumentCache;
   uint16_t mStatus;
 
   // The set of dynamic keys for this application cache object.
