@@ -6,8 +6,6 @@
 #ifndef __nsCharSeparatedTokenizer_h
 #define __nsCharSeparatedTokenizer_h
 
-#include "mozilla/RangedPtr.h"
-
 #include "nsDependentSubstring.h"
 #include "nsCRT.h"
 
@@ -46,13 +44,13 @@ public:
           mLastTokenEndedWithWhitespace(false),
           mLastTokenEndedWithSeparator(false),
           mSeparatorChar(aSeparatorChar),
-          mFlags(aFlags),
-          mIter(aSource.Data(), aSource.Length()),
-          mEnd(aSource.Data() + aSource.Length(), aSource.Data(),
-               aSource.Length())
+          mFlags(aFlags)
     {
+        aSource.BeginReading(mIter);
+        aSource.EndReading(mEnd);
+
         // Skip initial whitespace
-        while (mIter < mEnd && IsWhitespace(*mIter)) {
+        while (mIter != mEnd && IsWhitespace(*mIter)) {
             mFirstTokenBeganWithWhitespace = true;
             ++mIter;
         }
@@ -66,7 +64,7 @@ public:
         NS_ASSERTION(mIter == mEnd || !IsWhitespace(*mIter),
                      "Should be at beginning of token if there is one");
 
-        return mIter < mEnd;
+        return mIter != mEnd;
     }
 
     bool firstTokenBeganWithWhitespace() const
@@ -89,24 +87,24 @@ public:
      */
     const nsDependentSubstring nextToken()
     {
-        mozilla::RangedPtr<const PRUnichar> tokenStart = mIter, tokenEnd = mIter;
+        nsSubstring::const_char_iterator end = mIter, begin = mIter;
 
         NS_ASSERTION(mIter == mEnd || !IsWhitespace(*mIter),
                      "Should be at beginning of token if there is one");
 
         // Search until we hit separator or end (or whitespace, if separator
         // isn't required -- see clause with 'break' below).
-        while (mIter < mEnd && *mIter != mSeparatorChar) {
+        while (mIter != mEnd && *mIter != mSeparatorChar) {
           // Skip to end of current word.
-          while (mIter < mEnd &&
+          while (mIter != mEnd &&
                  !IsWhitespace(*mIter) && *mIter != mSeparatorChar) {
               ++mIter;
           }
-          tokenEnd = mIter;
+          end = mIter;
 
           // Skip whitespace after current word.
           mLastTokenEndedWithWhitespace = false;
-          while (mIter < mEnd && IsWhitespace(*mIter)) {
+          while (mIter != mEnd && IsWhitespace(*mIter)) {
               mLastTokenEndedWithWhitespace = true;
               ++mIter;
           }
@@ -120,7 +118,7 @@ public:
         mLastTokenEndedWithSeparator = (mIter != mEnd &&
                                         *mIter == mSeparatorChar);
         NS_ASSERTION((mFlags & SEPARATOR_OPTIONAL) ||
-                     (mLastTokenEndedWithSeparator == (mIter < mEnd)),
+                     (mLastTokenEndedWithSeparator == (mIter != mEnd)),
                      "If we require a separator and haven't hit the end of "
                      "our string, then we shouldn't have left the loop "
                      "unless we hit a separator");
@@ -129,17 +127,16 @@ public:
         if (mLastTokenEndedWithSeparator) {
             ++mIter;
 
-            while (mIter < mEnd && IsWhitespace(*mIter)) {
+            while (mIter != mEnd && IsWhitespace(*mIter)) {
                 ++mIter;
             }
         }
 
-        return Substring(tokenStart.get(), tokenEnd.get());
+        return Substring(begin, end);
     }
 
 private:
-    mozilla::RangedPtr<const PRUnichar> mIter;
-    const mozilla::RangedPtr<const PRUnichar> mEnd;
+    nsSubstring::const_char_iterator mIter, mEnd;
     bool mFirstTokenBeganWithWhitespace;
     bool mLastTokenEndedWithWhitespace;
     bool mLastTokenEndedWithSeparator;
@@ -163,13 +160,12 @@ class nsCCharSeparatedTokenizer
 public:
     nsCCharSeparatedTokenizer(const nsCSubstring& aSource,
                               char aSeparatorChar)
-        : mSeparatorChar(aSeparatorChar),
-          mIter(aSource.Data(), aSource.Length()),
-          mEnd(aSource.Data() + aSource.Length(), aSource.Data(),
-               aSource.Length())
+        : mSeparatorChar(aSeparatorChar)
     {
+        aSource.BeginReading(mIter);
+        aSource.EndReading(mEnd);
 
-        while (mIter < mEnd && isWhitespace(*mIter)) {
+        while (mIter != mEnd && isWhitespace(*mIter)) {
             ++mIter;
         }
     }
@@ -179,7 +175,7 @@ public:
      */
     bool hasMoreTokens()
     {
-        return mIter < mEnd;
+        return mIter != mEnd;
     }
 
     /**
@@ -187,37 +183,36 @@ public:
      */
     const nsDependentCSubstring nextToken()
     {
-        mozilla::RangedPtr<const char> tokenStart = mIter,tokenEnd = mIter;
+        nsCSubstring::const_char_iterator end = mIter, begin = mIter;
 
         // Search until we hit separator or end.
-        while (mIter < mEnd && *mIter != mSeparatorChar) {
-          while (mIter < mEnd &&
+        while (mIter != mEnd && *mIter != mSeparatorChar) {
+          while (mIter != mEnd &&
                  !isWhitespace(*mIter) && *mIter != mSeparatorChar) {
               ++mIter;
           }
-          tokenEnd = mIter;
+          end = mIter;
 
-          while (mIter < mEnd && isWhitespace(*mIter)) {
+          while (mIter != mEnd && isWhitespace(*mIter)) {
               ++mIter;
           }
         }
 
         // Skip separator (and any whitespace after it).
-        if (mIter < mEnd) {
+        if (mIter != mEnd) {
             NS_ASSERTION(*mIter == mSeparatorChar, "Ended loop too soon");
             ++mIter;
 
-            while (mIter < mEnd && isWhitespace(*mIter)) {
+            while (mIter != mEnd && isWhitespace(*mIter)) {
                 ++mIter;
             }
         }
 
-        return Substring(tokenStart.get(), tokenEnd.get());
+        return Substring(begin, end);
     }
 
 private:
-    mozilla::RangedPtr<const char> mIter;
-    const mozilla::RangedPtr<const char> mEnd;
+    nsCSubstring::const_char_iterator mIter, mEnd;
     char mSeparatorChar;
 
     bool isWhitespace(unsigned char aChar)
