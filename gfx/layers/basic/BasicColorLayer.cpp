@@ -14,7 +14,8 @@ namespace layers {
 class BasicColorLayer : public ColorLayer, public BasicImplData {
 public:
   BasicColorLayer(BasicLayerManager* aLayerManager) :
-    ColorLayer(aLayerManager, static_cast<BasicImplData*>(this))
+    ColorLayer(aLayerManager,
+               static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST()))
   {
     MOZ_COUNT_CTOR(BasicColorLayer);
   }

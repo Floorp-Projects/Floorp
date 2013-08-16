@@ -61,6 +61,8 @@ pref("browser.cache.disk_cache_ssl",        true);
 pref("browser.cache.check_doc_frequency",   3);
 
 pref("browser.cache.offline.enable",           true);
+// enable offline apps by default, disable prompt
+pref("offline-apps.allow_by_default",          true);
 
 // offline cache capacity in kilobytes
 pref("browser.cache.offline.capacity",         512000);

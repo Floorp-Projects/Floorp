@@ -38,7 +38,7 @@ function waitForLocations(frames, doneFunc)
   if (frame)
     // toString() might cause problems when this test will
     // completely be changed to test IDN behavior.
-    OfflineTest.waitForAdd(frame.location.toString(), function()
+    OfflineTest.waitForAdd(frame, function()
       {
         waitForLocations(frames, doneFunc);
       }
@@ -94,7 +94,7 @@ function frameLoad(version)
   {
     var call = gCallOnUpdatingFrameLoad;
     gCallOnUpdatingFrameLoad = null;
-    OfflineTest.priv(call)();
+    SimpleTest.executeSoon(OfflineTest.priv(call));
   }
 }
 
@@ -112,12 +112,15 @@ function manifestCached()
   OfflineTest.is(gStep, 0, "Got manifestCached in step 0, gStep=" + gStep);
 
   reloadLocations([fallbackFrame1, fallbackFrame2]);
-  waitForLocations([fallbackFrame1, fallbackFrame2],
-      fallbackLoaded);
+  waitForLocations(
+    ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/fallback.html"],
+    fallbackLoaded
+  );
 }
 
 function fallbackLoaded()
 {
+  dump("in fallbackLoaded\n");
   applicationCache.mozAdd("http://mochi.test:8888/tests/SimpleTest/EventUtils.js");
   OfflineTest.waitForAdd("http://mochi.test:8888/tests/SimpleTest/EventUtils.js",
       dynamicLoaded);
@@ -126,7 +129,7 @@ function fallbackLoaded()
 function dynamicLoaded()
 {
   window.open("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingImplicit.html");
-  // window.onload invokes implicitLoaded()
+  // window.applicationCache.noupdate invokes implicitLoaded()
 }
 
 function implicitLoaded(aWindow, errorOccured)
@@ -237,8 +240,8 @@ function manifestUpdated()
         OfflineTest.setSJSState("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingIframe.sjs", "second");
 
         gGotFrameVersion = 0;
-        gCallOnUpdatingFrameLoad = function() {applicationCache.update();};
         updatingFrame.location.reload();
+        // Since the frame is offline-cached, reload of it invokes update
       });
 
     break;
@@ -298,6 +301,7 @@ function manifestNoUpdate()
   applicationCache.onnoupdate = null;
 
   OfflineTest.ok(gStep == 3, "Got manifestNoUpdate in step 3, gStep=" + gStep);
+  ++gStep;
 
   OfflineTest.is(applicationCache.status, SpecialPowers.Ci.nsIDOMOfflineResourceList.UPDATEREADY,
         "we have associated application cache and update is pending (4)");
@@ -314,8 +318,7 @@ function checkNewVersionOfIFrame()
 {
   OfflineTest.is(gGotFrameVersion, 2, "IFrame version 2");
 
-  OfflineTest.teardown();
-  OfflineTest.finish();
+  OfflineTest.teardownAndFinish();
 }
 
 // End of the test function chain

@@ -1405,6 +1405,38 @@ nsContentUtils::OfflineAppAllowed(nsIPrincipal *aPrincipal)
   return NS_SUCCEEDED(rv) && allowed;
 }
 
+bool
+nsContentUtils::MaybeAllowOfflineAppByDefault(nsIPrincipal *aPrincipal)
+{
+  if (!Preferences::GetRootBranch())
+    return false;
+
+  nsresult rv;
+
+  bool allowedByDefault;
+  rv = Preferences::GetRootBranch()->GetBoolPref(
+    "offline-apps.allow_by_default", &allowedByDefault);
+  if (NS_FAILED(rv))
+    return false;
+
+  if (!allowedByDefault)
+    return false;
+
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (!permissionManager)
+    return false;
+
+  rv = permissionManager->AddFromPrincipal(
+    aPrincipal, "offline-app", nsIPermissionManager::ALLOW_ACTION,
+    nsIPermissionManager::EXPIRE_NEVER, 0);
+  if (NS_FAILED(rv))
+    return false;
+
+  // We have added the permission
+  return true;
+}
+
 // static
 void
 nsContentUtils::Shutdown()
@@ -3191,9 +3223,12 @@ nsContentUtils::IsEventAttributeName(nsIAtom* aName, int32_t aType)
 uint32_t
 nsContentUtils::GetEventId(nsIAtom* aName)
 {
-  EventNameMapping mapping;
-  if (sAtomEventTable->Get(aName, &mapping))
-    return mapping.mId;
+  if (aName) {
+    EventNameMapping mapping;
+    if (sAtomEventTable->Get(aName, &mapping)) {
+      return mapping.mId;
+    }
+  }
 
   return NS_USER_DEFINED_EVENT;
 }

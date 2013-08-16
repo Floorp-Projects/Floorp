@@ -15,10 +15,10 @@ function manifestUpdated()
 
 function onFallbackLoad(fallbackIdentification)
 {
-  OfflineTest.is(fallbackIdentification, 1, "Got correct fallback for namespace1");
+  OfflineTest.is(fallbackIdentification, 1, "Got correct fallback for namespace1 (2)");
 
-  OfflineTest.teardown();
-  OfflineTest.finish();
+  applicationCache.onerror = function() {}; // the update invoked by the iframe will finish after we discard the cache, ignore error
+  OfflineTest.teardownAndFinish();
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -26,7 +26,6 @@ SimpleTest.waitForExplicitFinish();
 if (OfflineTest.setup()) {
   applicationCache.onerror = OfflineTest.failEvent;
   applicationCache.onupdateready = OfflineTest.failEvent;
-  applicationCache.onnoupdate = OfflineTest.failEvent;
   applicationCache.oncached = OfflineTest.priv(manifestUpdated);
 }
 
