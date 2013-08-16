@@ -200,6 +200,11 @@ class CodeGeneratorShared : public LInstructionVisitor
         return index;
     }
 
+#ifdef CHECK_OSIPOINT_REGISTERS
+    bool shouldVerifyOsiPointRegs(LSafepoint *safepoint);
+    void verifyOsiPointRegs(LSafepoint *safepoint);
+#endif
+
   public:
     // This is needed by addCache to update the cache with the jump
     // informations provided by the out-of-line path.

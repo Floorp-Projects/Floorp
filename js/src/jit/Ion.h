@@ -92,6 +92,14 @@ struct IonOptions
     // Default: true iff there are at least two CPUs available
     bool parallelCompilation;
 
+#ifdef CHECK_OSIPOINT_REGISTERS
+    // Emit extra code to verify live regs at the start of a VM call
+    // are not modified before its OsiPoint.
+    //
+    // Default: false
+    bool checkOsiPointRegisters;
+#endif
+
     // How many invocations or loop iterations are needed before functions
     // are compiled with the baseline compiler.
     //
@@ -207,6 +215,9 @@ struct IonOptions
         uce(true),
         eaa(true),
         parallelCompilation(false),
+#ifdef CHECK_OSIPOINT_REGISTERS
+        checkOsiPointRegisters(false),
+#endif
         baselineUsesBeforeCompile(10),
         usesBeforeCompile(1000),
         usesBeforeInliningFactor(.125),
