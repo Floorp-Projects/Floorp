@@ -180,11 +180,6 @@ public:
 #endif
 
 protected:
-  // If aCheckIfPresent is true, will only set an attribute in cases
-  // when it's not already set.
-  nsresult AddAttributes(const nsIParserNode& aNode, nsIContent* aContent,
-                         bool aNotify = false,
-                         bool aCheckIfPresent = false);
   already_AddRefed<nsGenericHTMLElement>
   CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType);
 
@@ -332,91 +327,6 @@ HTMLContentSink::SinkTraceNode(uint32_t aBit,
   }
 }
 #endif
-
-nsresult
-HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
-                               nsIContent* aContent, bool aNotify,
-                               bool aCheckIfPresent)
-{
-  // Add tag attributes to the content attributes
-
-  int32_t ac = aNode.GetAttributeCount();
-
-  if (ac == 0) {
-    // No attributes, nothing to do. Do an early return to avoid
-    // constructing the nsAutoString object for nothing.
-
-    return NS_OK;
-  }
-
-  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-
-  // The attributes are on the parser node in the order they came in in the
-  // source.  What we want to happen if a single attribute is set multiple
-  // times on an element is that the first time should "win".  That is, <input
-  // value="foo" value="bar"> should show "foo".  So we loop over the
-  // attributes backwards; this ensures that the first attribute in the set
-  // wins.  This does mean that we do some extra work in the case when the same
-  // attribute is set multiple times, but we save a HasAttr call in the much
-  // more common case of reasonable HTML.  Note that if aCheckIfPresent is set
-  // then we actually want to loop _forwards_ to preserve the "first attribute
-  // wins" behavior.  That does mean that when aCheckIfPresent is set the order
-  // of attributes will get "reversed" from the point of view of the
-  // serializer.  But aCheckIfPresent is only true for malformed documents with
-  // multiple <html>, <head>, or <body> tags, so we're doing fixup anyway at
-  // that point.
-
-  int32_t i, limit, step;
-  if (aCheckIfPresent) {
-    i = 0;
-    limit = ac;
-    step = 1;
-  } else {
-    i = ac - 1;
-    limit = -1;
-    step = -1;
-  }
-  
-  nsAutoString key;
-  for (; i != limit; i += step) {
-    // Get lower-cased key
-    nsresult rv = nsContentUtils::ASCIIToLower(aNode.GetKeyAt(i), key);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(key);
-
-    if (aCheckIfPresent && aContent->HasAttr(kNameSpaceID_None, keyAtom)) {
-      continue;
-    }
-
-    // Get value and remove mandatory quotes
-    static const char* kWhitespace = "\n\r\t\b";
-
-    // Bug 114997: Don't trim whitespace on <input value="...">:
-    // Using ?: outside the function call would be more efficient, but
-    // we don't trust ?: with references.
-    const nsAString& v =
-      nsContentUtils::TrimCharsInSet(
-        (nodeType == eHTMLTag_input &&
-          keyAtom == nsGkAtoms::value) ?
-        "" : kWhitespace, aNode.GetValueAt(i));
-
-    if (nodeType == eHTMLTag_a && keyAtom == nsGkAtoms::name) {
-      NS_ConvertUTF16toUTF8 cname(v);
-      NS_ConvertUTF8toUTF16 uv(nsUnescape(cname.BeginWriting()));
-
-      // Add attribute to content
-      aContent->SetAttr(kNameSpaceID_None, keyAtom, uv, aNotify);
-    } else {
-      // Add attribute to content
-      aContent->SetAttr(kNameSpaceID_None, keyAtom, v, aNotify);
-    }
-  }
-
-  return NS_OK;
-}
 
 /**
  * Factory subroutine to create all of the html content objects.
@@ -641,13 +551,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mNumFlushed = 0;
   mStack[mStackPos].mInsertionPoint = -1;
   ++mStackPos;
-
-  rv = mSink->AddAttributes(aNode, content);
-
   mStack[mStackPos - 2].Add(content);
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
   if (mSink->IsMonolithicContainer(nodeType)) {
     mSink->mInMonolithicContainer++;
   }
@@ -828,9 +732,6 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       nsRefPtr<nsGenericHTMLElement> content =
         mSink->CreateContentObject(aNode, nodeType);
       NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
-
-      rv = mSink->AddAttributes(aNode, content);
-      NS_ENSURE_SUCCESS(rv, rv);
 
       // Add new leaf to its parent
       AddLeaf(content);
@@ -1614,9 +1515,8 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 
   CloseHeadContext();  // do this just in case if the HEAD was left open!
 
-  // Add attributes, if any, to the current BODY node
+  // if we already have a body we're done
   if (mBody) {
-    AddAttributes(aNode, mBody, true, true);
     return NS_OK;
   }
 
@@ -1714,7 +1614,6 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
     case eHTMLTag_head:
       rv = OpenHeadContext();
       if (NS_SUCCEEDED(rv)) {
-        rv = AddAttributes(aNode, mHead, true, mHaveSeenHead);
         mHaveSeenHead = true;
       }
       break;
@@ -1723,9 +1622,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       break;
     case eHTMLTag_html:
       if (mRoot) {
-        // If we've already hit this code once, need to check for
-        // already-present attributes on the root.
-        AddAttributes(aNode, mRoot, true, mNotifiedRootInsertion);
+        // If we've already hit this code once, then we're done
         if (!mNotifiedRootInsertion) {
           NotifyRootInsertion();
         }
