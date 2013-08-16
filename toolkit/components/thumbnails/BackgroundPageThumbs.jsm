@@ -354,8 +354,7 @@ Capture.prototype = {
       callOnDones();
       return;
     }
-    PageThumbs._store(this.url, data.finalURL, data.imageData, data.wasErrorResponse)
-              .then(callOnDones);
+    PageThumbs._store(this.url, data.finalURL, data.imageData).then(callOnDones);
   },
 };
 
