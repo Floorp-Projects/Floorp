@@ -9,7 +9,6 @@
 #include "nsISupports.h"
 #include "nsStringGlue.h"
 #include "nsHTMLTags.h"
-#include "nsIElementObserver.h"
 
 class nsIParser;
 class nsIParserNode;
