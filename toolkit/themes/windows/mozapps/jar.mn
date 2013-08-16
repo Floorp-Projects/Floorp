@@ -60,6 +60,7 @@ toolkit.jar:
         skin/classic/mozapps/places/defaultFavicon.png             (places/defaultFavicon.png)
 #endif
         skin/classic/mozapps/plugins/pluginProblem.css             (../../shared/plugins/pluginProblem.css)
+        skin/classic/mozapps/aboutNetworking.css                   (../../shared/aboutNetworking.css)
         skin/classic/mozapps/plugins/contentPluginActivate.png     (../../shared/plugins/contentPluginActivate.png)
         skin/classic/mozapps/plugins/contentPluginBlocked.png      (../../shared/plugins/contentPluginBlocked.png)
         skin/classic/mozapps/plugins/contentPluginClose.png        (../../shared/plugins/contentPluginClose.png)
@@ -140,6 +141,7 @@ toolkit.jar:
         skin/classic/aero/mozapps/places/defaultFavicon.png                (places/defaultFavicon.png)
 #endif
         skin/classic/aero/mozapps/plugins/pluginProblem.css                (../../shared/plugins/pluginProblem.css)
+        skin/classic/aero/mozapps/aboutNetworking.css                           (../../shared/aboutNetworking.css)
         skin/classic/aero/mozapps/plugins/contentPluginActivate.png        (../../shared/plugins/contentPluginActivate.png)
         skin/classic/aero/mozapps/plugins/contentPluginBlocked.png         (../../shared/plugins/contentPluginBlocked.png)
         skin/classic/aero/mozapps/plugins/contentPluginClose.png           (../../shared/plugins/contentPluginClose.png)
