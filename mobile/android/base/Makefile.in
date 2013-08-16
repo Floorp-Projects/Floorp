@@ -233,7 +233,6 @@ FENNEC_JAVA_FILES = \
   menu/MenuItemDefault.java \
   menu/MenuPanel.java \
   menu/MenuPopup.java \
-  preferences/SearchPreferenceCategory.java \
   widget/AboutHome.java \
   widget/AboutHomeView.java \
   widget/AboutHomeSection.java \
@@ -310,7 +309,6 @@ FENNEC_PP_JAVA_FILES = \
 
 FENNEC_PP_XML_FILES = \
   res/xml/preferences.xml \
-  res/xml/preferences_customize.xml \
   res/xml/searchable.xml \
   $(NULL)
 
@@ -572,8 +570,8 @@ RES_VALUES_V14 = \
   $(NULL)
 
 RES_XML = \
+  res/xml/preferences_customize.xml \
   res/xml/preferences_display.xml \
-  res/xml/preferences_search.xml \
   res/xml/preferences_privacy.xml \
   res/xml/preferences_vendor.xml \
   res/xml/preferences_devtools.xml \
@@ -581,7 +579,6 @@ RES_XML = \
   $(NULL)
 
 RES_XML_V11 = \
-  res/xml-v11/preferences_customize.xml \
   res/xml-v11/preference_headers.xml \
   res/xml-v11/preferences_customize_tablet.xml \
   res/xml-v11/preferences.xml \

@@ -65,7 +65,6 @@
     <dimen name="prompt_service_min_list_item_height">48dp</dimen>
     <dimen name="remote_tab_child_row_height">64dp</dimen>
     <dimen name="remote_tab_group_row_height">26dp</dimen>
-    <dimen name="searchpreferences_icon_size">32dp</dimen>
     <dimen name="tab_thumbnail_height">90dp</dimen>
     <dimen name="tab_thumbnail_width">160dp</dimen>
     <dimen name="tabs_counter_size">22sp</dimen>
