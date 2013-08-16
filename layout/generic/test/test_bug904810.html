@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=904810
+-->
+<head>
+  <title>Test for Bug 904810</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=904810">Mozilla Bug 904810</a>
+<p id="display">
+<textarea dir="ltr" id="textarea904810">
+first line
+second line
+third line
+</textarea></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 904810 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function test() {
+  function shiftLeft(i) {
+    for ( ; i > 0; --i)
+      synthesizeKey("VK_LEFT", {shiftKey:true});
+  }
+
+  function shiftRight(i) {
+    for ( ; i > 0; --i)
+      synthesizeKey("VK_RIGHT", {shiftKey:true});
+  }
+
+  const isWindows = /WINNT/.test(SpecialPowers.OS);
+  
+  var textarea = document.getElementById('textarea904810');
+  textarea.focus();
+
+  // Testing VK_DOWN with forward selection
+  textarea.selectionStart = 1;
+  textarea.selectionEnd = 1;
+  shiftRight(7);
+  synthesizeKey("VK_DOWN", {});
+  if (isWindows) {
+    is(textarea.selectionStart, 19, "caret moved to next line below selection end");
+    is(textarea.selectionEnd, 19, "caret moved to next line below selection end");
+  } else {
+    is(textarea.selectionStart, 8, "caret moved to visual end of selection");
+    is(textarea.selectionEnd, 8, "caret moved to visual end of selection");
+  }
+
+  // Testing VK_DOWN with backward selection
+  textarea.selectionStart = 8;
+  textarea.selectionEnd = 8;
+  shiftLeft(7);
+  synthesizeKey("VK_DOWN", {});
+  if (isWindows) {
+    is(textarea.selectionStart, 12, "caret moved to next line below selection start");
+    is(textarea.selectionEnd, 12, "caret moved to next line below selection start");
+  } else {
+    is(textarea.selectionStart, 8, "caret moved to visual end of selection");
+    is(textarea.selectionEnd, 8, "caret moved to visual end of selection");
+  }
+
+  // Testing VK_UP with forward selection
+  textarea.selectionStart = 12;
+  textarea.selectionEnd = 12;
+  shiftRight(7);
+  synthesizeKey("VK_UP", {});
+  var result = textarea.selectionEnd
+  if (isWindows) {
+    is(textarea.selectionStart, 8, "caret moved to previous line above selection end");
+    is(textarea.selectionEnd, 8, "caret moved to previous line above selection end");
+  } else {
+    is(textarea.selectionStart, 12, "caret moved to visual start of selection");
+    is(textarea.selectionEnd, 12, "caret moved to visual start of selection");
+  }
+
+  // Testing VK_UP with backward selection
+  textarea.selectionStart = 19;
+  textarea.selectionEnd = 19;
+  shiftLeft(7);
+  synthesizeKey("VK_UP", {});
+  var result = textarea.selectionEnd
+  if (isWindows) {
+    is(textarea.selectionStart, 1, "caret moved to previous line above selection start");
+    is(textarea.selectionEnd, 1, "caret moved to previous line above selection start");
+  } else {
+    is(textarea.selectionStart, 12, "caret moved to visual start of selection");
+    is(textarea.selectionEnd, 12, "caret moved to visual start of selection");
+  }
+
+ 
+
+  SimpleTest.finish();
+});
+
+
+
+
+</script>
+</pre>
+</body>
+</html>
