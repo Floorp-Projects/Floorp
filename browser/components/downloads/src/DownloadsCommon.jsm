@@ -718,7 +718,7 @@ DownloadsDataCtor.prototype = {
       return;
     }
 
-    this._downloadToDataItemMap.remove(aDownload);
+    this._downloadToDataItemMap.delete(aDownload);
     this.dataItems[dataItem.downloadGuid] = null;
     for (let view of this._views) {
       view.onDataItemRemoved(dataItem);
@@ -1344,7 +1344,7 @@ DownloadsDataItem.prototype = {
     this.currBytes = this._download.currentBytes;
     this.maxBytes = this._download.totalBytes;
     this.resumable = this._download.hasPartialData;
-    this.speed = 0;
+    this.speed = this._download.speed;
     this.percentComplete = this._download.progress;
   },
 
