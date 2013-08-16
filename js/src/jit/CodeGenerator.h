@@ -302,6 +302,9 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitNameIC(OutOfLineUpdateCache *ool, NameIC *ic);
     bool visitCallsiteCloneIC(OutOfLineUpdateCache *ool, CallsiteCloneIC *ic);
 
+    bool visitRangeAssert(LRangeAssert *ins);
+    bool visitDoubleRangeAssert(LDoubleRangeAssert *ins);
+
     IonScriptCounts *extractUnassociatedScriptCounts() {
         IonScriptCounts *counts = unassociatedScriptCounts_;
         unassociatedScriptCounts_ = NULL;  // prevent delete in dtor

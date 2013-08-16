@@ -7,6 +7,7 @@
 #ifndef jit_LIR_Common_h
 #define jit_LIR_Common_h
 
+#include "RangeAnalysis.h"
 #include "jit/shared/Assembler-shared.h"
 
 // This file declares LIR instructions that are common to every platform.
@@ -4939,6 +4940,55 @@ class LAsmJSCheckOverRecursed : public LInstructionHelper<0, 0, 0>
 
     MAsmJSCheckOverRecursed *mir() const {
         return mir_->toAsmJSCheckOverRecursed();
+    }
+};
+
+class LRangeAssert : public LInstructionHelper<0, 1, 0>
+{
+    Range range_;
+
+  public:
+    LIR_HEADER(RangeAssert)
+
+    LRangeAssert(const LAllocation &input, Range r)
+      : range_(r)
+    {
+        setOperand(0, input);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+
+    Range *range() {
+        return &range_;
+    }
+};
+
+class LDoubleRangeAssert : public LInstructionHelper<0, 1, 1>
+{
+    Range range_;
+
+  public:
+    LIR_HEADER(DoubleRangeAssert)
+
+    LDoubleRangeAssert(const LAllocation &input, const LDefinition &temp, Range r)
+      : range_(r)
+    {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    Range *range() {
+        return &range_;
     }
 };
 
