@@ -145,6 +145,7 @@ abstract class Axis {
     protected abstract float getViewportLength();
     protected abstract float getPageStart();
     protected abstract float getPageLength();
+    protected abstract boolean marginsHidden();
 
     Axis(SubdocumentScrollHelper subscroller) {
         mSubscroller = subscroller;
@@ -251,6 +252,13 @@ abstract class Axis {
         // if we are axis locked, return false
         if (mScrollingDisabled) {
             return false;
+        }
+
+        // if there are margins on this axis but they are currently hidden,
+        // we must be able to scroll in order to make them visible, so allow
+        // scrolling in that case
+        if (marginsHidden()) {
+            return true;
         }
 
         // there is scrollable space, and we're not disabled, or the document fits the viewport
