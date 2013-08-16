@@ -19,9 +19,11 @@
  * chosen by foreign.html page.
  */
 
+var win;
+
 function manifestUpdated()
 {
-  var appCacheService = SpecialPowers.Components.classes["@mozilla.org/network/application-cache-service;1"]
+  var appCacheService = SpecialPowers.Cc["@mozilla.org/network/application-cache-service;1"]
     .getService(SpecialPowers.Ci.nsIApplicationCacheService);
 
   foreign1cache = appCacheService.chooseApplicationCache(
@@ -30,7 +32,13 @@ function manifestUpdated()
   OfflineTest.ok(foreign1cache, "foreign2.html chosen from foreign1 cache");
   OfflineTest.is(foreign1cache.manifestURI.asciiSpec, "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign1.cacheManifest")
 
-  window.location = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html";
+  win = window.open("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/foreign2.html");
+}
+
+function onDone() // called by the open window after stuff is finished
+{
+  win.close();
+  OfflineTest.teardownAndFinish();
 }
 
 SimpleTest.waitForExplicitFinish();

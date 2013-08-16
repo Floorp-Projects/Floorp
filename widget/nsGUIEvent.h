@@ -688,6 +688,9 @@ public:
 
   // Additional type info for user defined events
   nsCOMPtr<nsIAtom>     userType;
+
+  nsString typeString; // always set on non-main-thread events
+
   // Event targets, needed by DOM Events
   nsCOMPtr<mozilla::dom::EventTarget> target;
   nsCOMPtr<mozilla::dom::EventTarget> currentTarget;

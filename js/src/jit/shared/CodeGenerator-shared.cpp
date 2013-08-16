@@ -422,6 +422,159 @@ CodeGeneratorShared::markOsiPoint(LOsiPoint *ins, uint32_t *callPointOffset)
     return osiIndices_.append(OsiIndex(*callPointOffset, so));
 }
 
+#ifdef CHECK_OSIPOINT_REGISTERS
+template <class Op>
+static void
+HandleRegisterDump(Op op, MacroAssembler &masm, RegisterSet liveRegs, Register activation,
+                   Register scratch)
+{
+    const size_t baseOffset = JitActivation::offsetOfRegs();
+
+    // Handle live GPRs.
+    for (GeneralRegisterIterator iter(liveRegs.gprs()); iter.more(); iter++) {
+        Register reg = *iter;
+        Address dump(activation, baseOffset + RegisterDump::offsetOfRegister(reg));
+
+        if (reg == activation) {
+            // To use the original value of the activation register (that's
+            // now on top of the stack), we need the scratch register.
+            masm.push(scratch);
+            masm.loadPtr(Address(StackPointer, sizeof(uintptr_t)), scratch);
+            op(scratch, dump);
+            masm.pop(scratch);
+        } else {
+            op(reg, dump);
+        }
+    }
+
+    // Handle live FPRs.
+    for (FloatRegisterIterator iter(liveRegs.fpus()); iter.more(); iter++) {
+        FloatRegister reg = *iter;
+        Address dump(activation, baseOffset + RegisterDump::offsetOfRegister(reg));
+        op(reg, dump);
+    }
+}
+
+class StoreOp
+{
+    MacroAssembler &masm;
+
+  public:
+    StoreOp(MacroAssembler &masm)
+      : masm(masm)
+    {}
+
+    void operator()(Register reg, Address dump) {
+        masm.storePtr(reg, dump);
+    }
+    void operator()(FloatRegister reg, Address dump) {
+        masm.storeDouble(reg, dump);
+    }
+};
+
+static void
+StoreAllLiveRegs(MacroAssembler &masm, RegisterSet liveRegs)
+{
+    // Store a copy of all live registers before performing the call.
+    // When we reach the OsiPoint, we can use this to check nothing
+    // modified them in the meantime.
+
+    // Load pointer to the JitActivation in a scratch register.
+    GeneralRegisterSet allRegs(GeneralRegisterSet::All());
+    Register scratch = allRegs.takeAny();
+    masm.push(scratch);
+    masm.loadJitActivation(scratch);
+
+    Address checkRegs(scratch, JitActivation::offsetOfCheckRegs());
+    masm.store32(Imm32(1), checkRegs);
+
+    StoreOp op(masm);
+    HandleRegisterDump<StoreOp>(op, masm, liveRegs, scratch, allRegs.getAny());
+
+    masm.pop(scratch);
+}
+
+class VerifyOp
+{
+    MacroAssembler &masm;
+    Label *failure_;
+
+  public:
+    VerifyOp(MacroAssembler &masm, Label *failure)
+      : masm(masm), failure_(failure)
+    {}
+
+    void operator()(Register reg, Address dump) {
+        masm.branchPtr(Assembler::NotEqual, dump, reg, failure_);
+    }
+    void operator()(FloatRegister reg, Address dump) {
+        masm.loadDouble(dump, ScratchFloatReg);
+        masm.branchDouble(Assembler::DoubleNotEqual, ScratchFloatReg, reg, failure_);
+    }
+};
+
+static void
+OsiPointRegisterCheckFailed()
+{
+    // Any live register captured by a safepoint (other than temp registers)
+    // must remain unchanged between the call and the OsiPoint instruction.
+    MOZ_ASSUME_UNREACHABLE("Modified registers between VM call and OsiPoint");
+}
+
+void
+CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
+{
+    // Ensure the live registers stored by callVM did not change between
+    // the call and this OsiPoint. Try-catch relies on this invariant.
+
+    // Load pointer to the JitActivation in a scratch register.
+    GeneralRegisterSet allRegs(GeneralRegisterSet::All());
+    Register scratch = allRegs.takeAny();
+    masm.push(scratch);
+    masm.loadJitActivation(scratch);
+
+    // If we should not check registers (because the instruction did not call
+    // into the VM, or a GC happened), we're done.
+    Label failure, done;
+    Address checkRegs(scratch, JitActivation::offsetOfCheckRegs());
+    masm.branch32(Assembler::Equal, checkRegs, Imm32(0), &done);
+
+    // Ignore temp registers. Some instructions (like LValueToInt32) modify
+    // temps after calling into the VM. This is fine because no other
+    // instructions (including this OsiPoint) will depend on them.
+    RegisterSet liveRegs = safepoint->liveRegs();
+    liveRegs = RegisterSet::Intersect(liveRegs, RegisterSet::Not(safepoint->tempRegs()));
+
+    VerifyOp op(masm, &failure);
+    HandleRegisterDump<VerifyOp>(op, masm, liveRegs, scratch, allRegs.getAny());
+
+    masm.jump(&done);
+
+    masm.bind(&failure);
+    masm.setupUnalignedABICall(0, scratch);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, OsiPointRegisterCheckFailed));
+    masm.breakpoint();
+
+    masm.bind(&done);
+    masm.pop(scratch);
+}
+
+bool
+CodeGeneratorShared::shouldVerifyOsiPointRegs(LSafepoint *safepoint)
+{
+    if (!js_IonOptions.checkOsiPointRegisters)
+        return false;
+
+    if (gen->info().executionMode() != SequentialExecution)
+        return false;
+
+    if (safepoint->liveRegs().empty(true) && safepoint->liveRegs().empty(false))
+        return false; // No registers to check.
+
+    return true;
+}
+#endif
+
 // Before doing any call to Cpp, you should ensure that volatile
 // registers are evicted by the register allocator.
 bool
@@ -454,6 +607,11 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
     IonCode *wrapper = gen->ionRuntime()->getVMWrapper(fun);
     if (!wrapper)
         return false;
+
+#ifdef CHECK_OSIPOINT_REGISTERS
+    if (shouldVerifyOsiPointRegs(ins->safepoint()))
+        StoreAllLiveRegs(masm, ins->safepoint()->liveRegs());
+#endif
 
     // Call the wrapper function.  The wrapper is in charge to unwind the stack
     // when returning from the call.  Failures are handled with exceptions based
