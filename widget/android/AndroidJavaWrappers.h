@@ -629,6 +629,7 @@ protected:
     void ReadCharactersField(JNIEnv *jenv);
     void ReadCharactersExtraField(JNIEnv *jenv);
     void ReadDataField(JNIEnv *jenv);
+    void ReadStringFromJString(nsString &aString, JNIEnv *jenv, jstring s);
 
     uint32_t ReadDomKeyLocation(JNIEnv* jenv, jobject jGeckoEventObj);
 
