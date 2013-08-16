@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.view.Choreographer;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
@@ -149,7 +150,29 @@ public class PropertyAnimator implements Runnable {
                 element.view.setDrawingCacheEnabled(true);
         }
 
-        mFramePoster.postFirstAnimationFrame();
+        // Get ViewTreeObserver from any of the participant views
+        // in the animation.
+        final ViewTreeObserver treeObserver;
+        if (mElementsList.size() > 0) {
+            treeObserver = mElementsList.get(0).view.getViewTreeObserver();
+        } else {
+            treeObserver = null;
+        }
+
+        // Try to start animation after any on-going layout round
+        // in the current view tree.
+        if (treeObserver != null && treeObserver.isAlive()) {
+            treeObserver.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    treeObserver.removeOnPreDrawListener(this);
+                    mFramePoster.postFirstAnimationFrame();
+                    return true;
+                }
+            });
+        } else {
+            mFramePoster.postFirstAnimationFrame();
+        }
 
         if (mListeners != null) {
             for (PropertyAnimationListener listener : mListeners) {
