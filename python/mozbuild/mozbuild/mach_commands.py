@@ -793,18 +793,20 @@ class MachDebug(object):
         print('object directory:\n\t%s' % mb.topobjdir)
 
         if mozconfig:
-            print('mozconfig objdir:\n\t%s' % mozconfig['topobjdir'])
             print('mozconfig configure args:')
-            for arg in mozconfig['configure_args']:
-                print('\t%s' % arg)
+            if mozconfig['configure_args']:
+                for arg in mozconfig['configure_args']:
+                    print('\t%s' % arg)
 
             print('mozconfig extra make args:')
-            for arg in mozconfig['make_extra']:
-                print('\t%s' % arg)
+            if mozconfig['make_extra']:
+                for arg in mozconfig['make_extra']:
+                    print('\t%s' % arg)
 
             print('mozconfig make flags:')
-            for arg in mozconfig['make_flags']:
-                print('\t%s' % arg)
+            if mozconfig['make_flags']:
+                for arg in mozconfig['make_flags']:
+                    print('\t%s' % arg)
 
         config = None
 

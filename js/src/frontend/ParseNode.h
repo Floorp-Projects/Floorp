@@ -1408,7 +1408,8 @@ ParseNode::isConstant()
         return true;
       case PNK_ARRAY:
       case PNK_OBJECT:
-        return isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST);
+        JS_ASSERT(isOp(JSOP_NEWINIT));
+        return !(pn_xflags & PNX_NONCONST);
       default:
         return false;
     }

@@ -57,7 +57,8 @@ function getVisibleMenuItems(aMenu, aData) {
             } else if (isGenerated) {
               items.push("+" + label);
             } else if (item.id.indexOf("spell-check-dictionary-") != 0 &&
-                       item.id != "spell-no-suggestions") {
+                       item.id != "spell-no-suggestions" &&
+                       item.id != "spell-add-dictionaries-main") {
               ok(key, "menuitem " + item.id + " has an access key");
               if (accessKeys[key])
                   ok(false, "menuitem " + item.id + " has same accesskey as " + accessKeys[key]);
