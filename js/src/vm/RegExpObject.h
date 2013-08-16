@@ -319,6 +319,7 @@ class RegExpCompartment
 
     bool init(JSContext *cx);
     void sweep(JSRuntime *rt);
+    void clearTables();
 
     bool get(ExclusiveContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g);
 

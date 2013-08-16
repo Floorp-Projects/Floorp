@@ -143,7 +143,41 @@ InnermostAsmJSActivation()
 
     return threadData->asmJSActivationStackFromOwnerThread();
 }
-#endif
+
+static JSRuntime *
+RuntimeForCurrentThread()
+{
+    PerThreadData *threadData = TlsPerThreadData.get();
+    if (!threadData)
+        return NULL;
+
+    return threadData->runtimeFromMainThread();
+}
+#endif // !defined(XP_MACOSX)
+
+// Crashing inside the signal handler can cause the handler to be recursively
+// invoked, eventually blowing the stack without actually showing a crash
+// report dialog via Breakpad. To guard against this we watch for such
+// recursion and fall through to the next handler immediately rather than
+// trying to handle it.
+class AutoSetHandlingSignal
+{
+    JSRuntime *rt;
+
+  public:
+    AutoSetHandlingSignal(JSRuntime *rt)
+      : rt(rt)
+    {
+        JS_ASSERT(!rt->handlingSignal);
+        rt->handlingSignal = true;
+    }
+
+    ~AutoSetHandlingSignal()
+    {
+        JS_ASSERT(rt->handlingSignal);
+        rt->handlingSignal = false;
+    }
+};
 
 // For platforms that install a single, process-wide signal handler (Unix and
 // Windows), the InstallSignalHandlersMutex prevents races between JSRuntimes
@@ -408,22 +442,32 @@ HandleException(PEXCEPTION_POINTERS exception)
     if (record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
         return false;
 
-    AsmJSActivation *activation = InnermostAsmJSActivation();
-    if (!activation)
-        return false;
-
     uint8_t **ppc = ContextToPC(context);
     uint8_t *pc = *ppc;
     JS_ASSERT(pc == record->ExceptionAddress);
 
+    if (record->NumberParameters < 2)
+        return false;
+
+    void *faultingAddress = (void*)record->ExceptionInformation[1];
+
+    JSRuntime *rt = RuntimeForCurrentThread();
+
+    // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
+    if (!rt || rt->handlingSignal)
+        return false;
+    AutoSetHandlingSignal handling(rt);
+
+    if (rt->ionRuntime() && rt->ionRuntime()->handleAccessViolation(rt, faultingAddress))
+        return true;
+
+    AsmJSActivation *activation = InnermostAsmJSActivation();
+    if (!activation)
+        return false;
+
     const AsmJSModule &module = activation->module();
     if (!module.containsPC(pc))
         return false;
-
-	if (record->NumberParameters < 2)
-		return false;
-
-    void *faultingAddress = (void*)record->ExceptionInformation[1];
 
     // If we faulted trying to execute code in 'module', this must be an
     // operation callback (see TriggerOperationCallbackForAsmJSCode). Redirect
@@ -587,6 +631,11 @@ struct ExceptionRequest
 static bool
 HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
 {
+    // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
+    if (rt->handlingSignal)
+        return false;
+    AutoSetHandlingSignal handling(rt);
+
     // Get the port of the JSRuntime's thread from the message.
     mach_port_t rtThread = request.body.thread.name;
 
@@ -598,21 +647,24 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     if (kret != KERN_SUCCESS)
         return false;
 
-    AsmJSActivation *activation = rt->mainThread.asmJSActivationStackFromAnyThread();
-    if (!activation)
-        return false;
-
     uint8_t **ppc = ContextToPC(state);
     uint8_t *pc = *ppc;
-
-    const AsmJSModule &module = activation->module();
-    if (!module.containsPC(pc))
-        return false;
 
     if (request.body.exception != EXC_BAD_ACCESS || request.body.codeCnt != 2)
         return false;
 
     void *faultingAddress = (void*)request.body.code[1];
+
+    if (rt->ionRuntime() && rt->ionRuntime()->handleAccessViolation(rt, faultingAddress))
+        return true;
+
+    AsmJSActivation *activation = rt->mainThread.asmJSActivationStackFromAnyThread();
+    if (!activation)
+        return false;
+
+    const AsmJSModule &module = activation->module();
+    if (!module.containsPC(pc))
+        return false;
 
     // If we faulted trying to execute code in 'module', this must be an
     // operation callback (see TriggerOperationCallbackForAsmJSCode). Redirect
@@ -824,19 +876,29 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
 static bool
 HandleSignal(int signum, siginfo_t *info, void *ctx)
 {
-    AsmJSActivation *activation = InnermostAsmJSActivation();
-    if (!activation)
-        return false;
-
     CONTEXT *context = (CONTEXT *)ctx;
     uint8_t **ppc = ContextToPC(context);
     uint8_t *pc = *ppc;
 
+    void *faultingAddress = info->si_addr;
+
+    JSRuntime *rt = RuntimeForCurrentThread();
+
+    // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
+    if (!rt || rt->handlingSignal)
+        return false;
+    AutoSetHandlingSignal handling(rt);
+
+    if (rt->ionRuntime() && rt->ionRuntime()->handleAccessViolation(rt, faultingAddress))
+        return true;
+
+    AsmJSActivation *activation = InnermostAsmJSActivation();
+    if (!activation)
+        return false;
+
     const AsmJSModule &module = activation->module();
     if (!module.containsPC(pc))
         return false;
-
-    void *faultingAddress = info->si_addr;
 
     // If we faulted trying to execute code in 'module', this must be an
     // operation callback (see TriggerOperationCallbackForAsmJSCode). Redirect
@@ -916,7 +978,7 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
 # endif
 
 bool
-EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
+js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
 {
 #if defined(XP_MACOSX)
     // On OSX, each JSRuntime gets its own handler.
@@ -935,7 +997,12 @@ EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
     struct sigaction sigAction;
     sigAction.sa_sigaction = &AsmJSFaultHandler;
     sigemptyset(&sigAction.sa_mask);
-    sigAction.sa_flags = SA_SIGINFO;
+
+    // Note: SA_NODEFER allows us to reenter the signal handler if we crash
+    // while handling the signal, and fall through to the Breakpad handler
+    // by testing handlingSignal.
+    sigAction.sa_flags = SA_SIGINFO | SA_NODEFER;
+
     if (sigaction(SIGSEGV, &sigAction, &sPrevSegvHandler))
         return false;
     if (sigaction(SIGBUS, &sigAction, &sPrevBusHandler))

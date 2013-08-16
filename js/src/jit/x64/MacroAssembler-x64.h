@@ -531,11 +531,16 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         JmpSrc src = jmpSrc(label);
         return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
     }
+
+    CodeOffsetJump jumpWithPatch(RepatchLabel *label, Condition cond) {
+        JmpSrc src = jSrc(cond, label);
+        return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
+    }
+
     template <typename S, typename T>
     CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, RepatchLabel *label) {
         cmpPtr(lhs, ptr);
-        JmpSrc src = jSrc(cond, label);
-        return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
+        return jumpWithPatch(label, cond);
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         cmpPtr(lhs, rhs);

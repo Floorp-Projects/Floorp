@@ -432,6 +432,9 @@ ifdef MOZ_UPDATE_XTERM
 UPDATE_TITLE = printf "\033]0;%s in %s\007" $(1) $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$(2) ;
 endif
 
+ifdef MACH
+BUILDSTATUS=@echo BUILDSTATUS $1
+endif
 # Static directories are largely independent of our build system. But, they
 # could share the same build mechanism (like moz.build files). We need to
 # prevent leaking of our backend state to these independent build systems. This
@@ -444,9 +447,9 @@ define SUBMAKE # $(call SUBMAKE,target,directory,static)
 endef # The extra line is important here! don't delete it
 
 define TIER_DIR_SUBMAKE
-@echo "BUILDSTATUS TIERDIR_START  $(2)"
+$(call BUILDSTATUS,TIERDIR_START  $(2))
 $(call SUBMAKE,$(1),$(2),$(3))
-@echo "BUILDSTATUS TIERDIR_FINISH $(2)"
+$(call BUILDSTATUS,TIERDIR_FINISH $(2))
 
 endef # Ths empty line is important.
 
@@ -682,7 +685,7 @@ SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 ifndef SUPPRESS_DEFAULT_RULES
 ifdef TIERS
 default all alldep::
-	@echo "BUILDSTATUS TIERS $(TIERS)"
+	$(call BUILDSTATUS,TIERS $(TIERS))
 	$(foreach tier,$(TIERS),$(call SUBMAKE,tier_$(tier)))
 else
 
@@ -719,33 +722,26 @@ endif
 # from the user.
 define CREATE_TIER_RULE
 tier_$(1)::
-	@echo "BUILDSTATUS TIER_START $(1)"
-	@printf "BUILDSTATUS SUBTIERS"
+	$(call BUILDSTATUS,TIER_START $(1))
+	$(call BUILDSTATUS,SUBTIERS $(if $(tier_$(1)_staticdirs),static )$(if $(tier_$(1)_dirs),export libs tools))
+	$(call BUILDSTATUS,STATICDIRS $$($$@_staticdirs))
+	$(call BUILDSTATUS,DIRS $$($$@_dirs))
 ifneq (,$(tier_$(1)_staticdirs))
-	@printf " static"
-endif
-ifneq (,$(tier_$(1)_dirs))
-	@printf " export libs tools"
-endif
-	@printf "\n"
-	@echo "BUILDSTATUS STATICDIRS $$($$@_staticdirs)"
-	@echo "BUILDSTATUS DIRS $$($$@_dirs)"
-ifneq (,$(tier_$(1)_staticdirs))
-	@echo "BUILDSTATUS SUBTIER_START $(1) static"
+	$(call BUILDSTATUS,SUBTIER_START $(1) static)
 	$$(foreach dir,$$($$@_staticdirs),$$(call TIER_DIR_SUBMAKE,,$$(dir),1))
-	@echo "BUILDSTATUS SUBTIER_FINISH $(1) static"
+	$(call BUILDSTATUS,SUBTIER_FINISH $(1) static)
 endif
 ifneq (,$(tier_$(1)_dirs))
-	@echo "BUILDSTATUS SUBTIER_START $(1) export"
+	$(call BUILDSTATUS,SUBTIER_START $(1) export)
 	$$(MAKE) export_$$@
-	@echo "BUILDSTATUS SUBTIER_FINISH $(1) export"
-	@echo "BUILDSTATUS SUBTIER_START $(1) libs"
+	$(call BUILDSTATUS,SUBTIER_FINISH $(1) export)
+	$(call BUILDSTATUS,SUBTIER_START $(1) libs)
 	$$(MAKE) libs_$$@
-	@echo "BUILDSTATUS SUBTIER_FINISH $(1) libs"
-	@echo "BUILDSTATUS SUBTIER_START $(1) tools"
+	$(call BUILDSTATUS,SUBTIER_FINISH $(1) libs)
+	$(call BUILDSTATUS,SUBTIER_START $(1) tools)
 	$$(MAKE) tools_$$@
-	@echo "BUILDSTATUS SUBTIER_FINISH $(1) tools"
-	@echo "BUILDSTATUS TIER_FINISH $(1)"
+	$(call BUILDSTATUS,SUBTIER_FINISH $(1) tools)
+	$(call BUILDSTATUS TIER_FINISH $(1))
 endif
 endef
 

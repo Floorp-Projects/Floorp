@@ -5,7 +5,6 @@
 #ifndef nsPerformance_h___
 #define nsPerformance_h___
 
-#include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
@@ -13,7 +12,6 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsContentUtils.h"
 
-class nsIURI;
 class nsITimedChannel;
 class nsIDOMWindow;
 class nsPerformance;

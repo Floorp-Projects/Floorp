@@ -21,7 +21,6 @@ var ContextUI = {
   init: function init() {
     Elements.browsers.addEventListener("mousedown", this, true);
     Elements.browsers.addEventListener("touchstart", this, true);
-    Elements.browsers.addEventListener("AlertActive", this, true);
 
     Elements.browsers.addEventListener('URLChanged', this, true);
     Elements.tabList.addEventListener('TabSelect', this, true);
@@ -170,6 +169,7 @@ var ContextUI = {
   // Display the nav bar
   displayNavbar: function () {
     Elements.navbar.show();
+    ContentAreaObserver.updateContentArea();
   },
 
   // Display the tab tray
@@ -182,6 +182,7 @@ var ContextUI = {
   dismissNavbar: function dismissNavbar() {
     if (!BrowserUI.isStartTabVisible) {
       Elements.navbar.dismiss();
+      ContentAreaObserver.updateContentArea();
     }
   },
 
@@ -274,12 +275,14 @@ var ContextUI = {
       case "mousedown":
         if (BrowserUI.isStartTabVisible)
           break;
-        if (aEvent.button == 0 && this.isVisible)
+        let box = Browser.getNotificationBox();
+        if (!box.contains(aEvent.target) &&
+            aEvent.button == 0 && this.isVisible) {
           this.dismiss();
+        }
         break;
       case "ToolPanelShown":
       case "ToolPanelHidden":
-      case "AlertActive":
         this.dismiss();
         break;
       case "touchstart":

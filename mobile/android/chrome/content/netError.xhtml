@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
     <!-- If the location of the favicon is changed here, the FAVICON_ERRORPAGE_URL symbol in
          toolkit/components/places/src/nsFaviconService.h should be updated. -->
-    <link rel="icon" type="image/png" id="favicon" sizes="64x64" href="chrome://global/skin/icons/warning-64.png"/>
+    <link rel="icon" type="image/png" id="favicon" sizes="64x64" href="chrome://browser/skin/images/errorpage-warning.png"/>
 
     <script type="application/javascript"><![CDATA[
       // Error url MUST be formatted like this:
@@ -330,13 +330,13 @@
       </div>
     </div>
 
-    <!-- Error Title -->
-    <div id="errorTitle">
-      <h1 class="errorTitleText" />
-    </div>
-
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div id="errorPageContainer">
+
+      <!-- Error Title -->
+      <div id="errorTitle">
+        <h1 class="errorTitleText" />
+      </div>
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
       <div id="errorLongContent">

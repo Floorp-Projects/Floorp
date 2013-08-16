@@ -10,8 +10,6 @@
 #include "AudioNode.h"
 
 namespace mozilla {
-class DOMMediaStream;
-
 namespace dom {
 
 class MediaStreamAudioDestinationNode : public AudioNode

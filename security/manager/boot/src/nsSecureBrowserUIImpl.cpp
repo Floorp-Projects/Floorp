@@ -100,17 +100,17 @@ static PLDHashTableOps gMapOps = {
 #ifdef DEBUG
 class nsAutoAtomic {
   public:
-    nsAutoAtomic(int32_t &i)
+    nsAutoAtomic(Atomic<int32_t> &i)
     :mI(i) {
-      PR_ATOMIC_INCREMENT(&mI);
+      mI++;
     }
 
     ~nsAutoAtomic() {
-      PR_ATOMIC_DECREMENT(&mI);
+      mI--;
     }
 
   protected:
-    int32_t &mI;
+    Atomic<int32_t> &mI;
 
   private:
     nsAutoAtomic(); // not accessible

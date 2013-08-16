@@ -6,8 +6,6 @@
 #include "nsPerformance.h"
 #include "TimeStamp.h"
 #include "nsCOMPtr.h"
-#include "nscore.h"
-#include "nsIDocShell.h"
 #include "nsITimedChannel.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsContentUtils.h"

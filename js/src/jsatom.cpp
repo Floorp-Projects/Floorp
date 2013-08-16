@@ -350,16 +350,9 @@ js::AtomizeString(ExclusiveContext *cx, JSString *str,
         return &atom;
     }
 
-    const jschar *chars;
-    if (str->isLinear()) {
-        chars = str->asLinear().chars();
-    } else {
-        if (!cx->shouldBeJSContext())
-            return NULL;
-        chars = str->getChars(cx->asJSContext());
-        if (!chars)
-            return NULL;
-    }
+    const jschar *chars = str->getChars(cx);
+    if (!chars)
+        return NULL;
 
     if (JSAtom *atom = AtomizeAndCopyChars<NoGC>(cx, chars, str->length(), ib))
         return atom;

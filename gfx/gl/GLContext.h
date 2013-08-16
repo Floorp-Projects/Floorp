@@ -273,14 +273,6 @@ public:
         return IsAtLeast(ContextProfile::OpenGLES, 200);
     }
 
-    /**
-     * Returns true if either this is the GLES2 API, or had the GL_ARB_ES2_compatibility extension
-     * We would like to introduce a XXX_ES2_compatibility
-     */
-    bool HasES2Compatibility() const {
-        return IsGLES2() || IsExtensionSupported(ARB_ES2_compatibility);
-    }
-
 
 protected:
 
@@ -337,6 +329,7 @@ public:
         OES_depth32,
         OES_stencil8,
         OES_texture_npot,
+        ARB_depth_texture,
         OES_depth_texture,
         OES_packed_depth_stencil,
         IMG_read_format,
@@ -345,6 +338,7 @@ public:
         ARB_texture_non_power_of_two,
         ARB_pixel_buffer_object,
         ARB_ES2_compatibility,
+        ARB_ES3_compatibility,
         OES_texture_float,
         OES_texture_float_linear,
         ARB_texture_float,
@@ -384,6 +378,9 @@ public:
         NV_instanced_arrays,
         ANGLE_instanced_arrays,
         EXT_occlusion_query_boolean,
+        ARB_occlusion_query2,
+        EXT_transform_feedback,
+        NV_transform_feedback,
         Extensions_Max,
         Extensions_End
     };
@@ -477,15 +474,28 @@ public:
      * This enum should be sorted by name.
      */
     enum GLExtensionGroup {
+        XXX_depth_texture,
         XXX_draw_buffers,
         XXX_draw_instanced,
+        XXX_element_index_uint,
+        XXX_ES2_compatibility,
+        XXX_ES3_compatibility,
         XXX_framebuffer_blit,
         XXX_framebuffer_multisample,
         XXX_framebuffer_object,
+        XXX_get_query_object_iv,
         XXX_instanced_arrays,
+        XXX_occlusion_query,
+        XXX_occlusion_query_boolean,
+        XXX_occlusion_query2,
+        XXX_packed_depth_stencil,
+        XXX_query_objects,
         XXX_robustness,
+        XXX_standard_derivatives,
         XXX_texture_float,
+        XXX_texture_float_linear,
         XXX_texture_non_power_of_two,
+        XXX_transform_feedback,
         XXX_vertex_array_object,
         ExtensionGroup_Max
     };
@@ -1044,27 +1054,6 @@ public:
         return retval;
     }
 
-    void fGetQueryiv(GLenum target, GLenum pname, GLint* params) {
-        BEFORE_GL_CALL;
-        ASSERT_SYMBOL_PRESENT(fGetQueryiv);
-        mSymbols.fGetQueryiv(target, pname, params);
-        AFTER_GL_CALL;
-    }
-
-    void fGetQueryObjectiv(GLuint id, GLenum pname, GLint* params) {
-        BEFORE_GL_CALL;
-        ASSERT_SYMBOL_PRESENT(fGetQueryObjectiv);
-        mSymbols.fGetQueryObjectiv(id, pname, params);
-        AFTER_GL_CALL;
-    }
-
-    void fGetQueryObjectuiv(GLuint id, GLenum pname, GLuint* params) {
-        BEFORE_GL_CALL;
-        ASSERT_SYMBOL_PRESENT(fGetQueryObjectuiv);
-        mSymbols.fGetQueryObjectuiv(id, pname, params);
-        AFTER_GL_CALL;
-    }
-
 private:
     void raw_fGetIntegerv(GLenum pname, GLint *params) {
         BEFORE_GL_CALL;
@@ -1269,14 +1258,6 @@ public:
     realGLboolean fIsProgram(GLuint program) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsProgram(program);
-        AFTER_GL_CALL;
-        return retval;
-    }
-
-    realGLboolean fIsQuery(GLuint query) {
-        BEFORE_GL_CALL;
-        ASSERT_SYMBOL_PRESENT(fIsQuery);
-        realGLboolean retval = mSymbols.fIsQuery(query);
         AFTER_GL_CALL;
         return retval;
     }
@@ -1841,13 +1822,6 @@ private:
         AFTER_GL_CALL;
     }
 
-    void GLAPIENTRY raw_fGenQueries(GLsizei n, GLuint* names) {
-        BEFORE_GL_CALL;
-        ASSERT_SYMBOL_PRESENT(fGenQueries);
-        mSymbols.fGenQueries(n, names);
-        AFTER_GL_CALL;
-    }
-
     void GLAPIENTRY raw_fGenRenderbuffers(GLsizei n, GLuint* names) {
         BEFORE_GL_CALL;
         mSymbols.fGenRenderbuffers(n, names);
@@ -1881,11 +1855,6 @@ public:
     void fGenFramebuffers(GLsizei n, GLuint* names) {
         raw_fGenFramebuffers(n, names);
         TRACKING_CONTEXT(CreatedFramebuffers(this, n, names));
-    }
-
-    void fGenQueries(GLsizei n, GLuint* names) {
-        raw_fGenQueries(n, names);
-        TRACKING_CONTEXT(CreatedQueries(this, n, names));
     }
 
     void fGenRenderbuffers(GLsizei n, GLuint* names) {
@@ -1935,18 +1904,7 @@ private:
         AFTER_GL_CALL;
     }
 
-    void GLAPIENTRY raw_fDeleteQueries(GLsizei n, GLuint* names) {
-        BEFORE_GL_CALL;
-        ASSERT_SYMBOL_PRESENT(fDeleteQueries);
-        mSymbols.fDeleteQueries(n, names);
-        AFTER_GL_CALL;
-    }
-
 public:
-    void GLAPIENTRY fDeleteQueries(GLsizei n, GLuint* names) {
-        raw_fDeleteQueries(n, names);
-        TRACKING_CONTEXT(DeletedQueries(this, n, names));
-    }
 
     void fDeleteProgram(GLuint program) {
         raw_fDeleteProgram(program);
@@ -2151,6 +2109,80 @@ public:
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fVertexAttribDivisor);
         mSymbols.fVertexAttribDivisor(index, divisor);
+        AFTER_GL_CALL;
+    }
+
+
+// -----------------------------------------------------------------------------
+// Package XXX_query_objects
+/**
+ * XXX_query_objects:
+ *  - provide all followed entry points
+ *
+ * XXX_occlusion_query2:
+ *  - depends on XXX_query_objects
+ *  - provide ANY_SAMPLES_PASSED
+ *
+ * XXX_occlusion_query_boolean:
+ *  - depends on XXX_occlusion_query2
+ *  - provide ANY_SAMPLES_PASSED_CONSERVATIVE
+ */
+public:
+    void fDeleteQueries(GLsizei n, const GLuint* names) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDeleteQueries);
+        mSymbols.fDeleteQueries(n, names);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(DeletedQueries(this, n, names));
+    }
+
+    void fGenQueries(GLsizei n, GLuint* names) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGenQueries);
+        mSymbols.fGenQueries(n, names);
+        AFTER_GL_CALL;
+        TRACKING_CONTEXT(CreatedQueries(this, n, names));
+    }
+
+    void fGetQueryiv(GLenum target, GLenum pname, GLint* params) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetQueryiv);
+        mSymbols.fGetQueryiv(target, pname, params);
+        AFTER_GL_CALL;
+    }
+
+    void fGetQueryObjectuiv(GLuint id, GLenum pname, GLuint* params) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetQueryObjectuiv);
+        mSymbols.fGetQueryObjectuiv(id, pname, params);
+        AFTER_GL_CALL;
+    }
+
+    realGLboolean fIsQuery(GLuint query) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fIsQuery);
+        realGLboolean retval = mSymbols.fIsQuery(query);
+        AFTER_GL_CALL;
+        return retval;
+    }
+
+
+// -----------------------------------------------------------------------------
+// Package XXX_get_query_object_iv
+/**
+ * XXX_get_query_object_iv:
+ *  - depends on XXX_query_objects
+ *  - provide the followed entry point
+ *
+ * XXX_occlusion_query:
+ *  - depends on XXX_get_query_object_iv
+ *  - provide LOCAL_GL_SAMPLES_PASSED
+ */
+public:
+    void fGetQueryObjectiv(GLuint id, GLenum pname, GLint* params) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetQueryObjectiv);
+        mSymbols.fGetQueryObjectiv(id, pname, params);
         AFTER_GL_CALL;
     }
 
@@ -3286,7 +3318,7 @@ public:
     void DeletedProgram(GLContext *aOrigin, GLuint aName);
     void DeletedShader(GLContext *aOrigin, GLuint aName);
     void DeletedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
-    void DeletedQueries(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void DeletedQueries(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames);
     void DeletedTextures(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
     void DeletedFramebuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
     void DeletedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);

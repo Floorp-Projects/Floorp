@@ -4,10 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
 #include <algorithm>
 
-/* This must occur *after* base/basictypes.h to avoid typedefs conflicts. */
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
@@ -26,16 +24,26 @@
 #include "nsIIdleService.h"
 #include "nsIPowerManagerService.h"
 #include "nsISizeOfEventTarget.h"
-#include "nsIPermissionManager.h"
+#include "nsDOMJSUtils.h"
+#include "nsArrayUtils.h"
+#include "nsIDOMWindowCollection.h"
+#include "nsDOMWindowList.h"
+#include "nsIDOMWakeLock.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIScriptContext.h"
+#include "nsIScriptTimeoutHandler.h"
 
 #ifdef XP_WIN
+// Thanks so much, Microsoft! :(
 #ifdef GetClassName
 #undef GetClassName
 #endif // GetClassName
+#ifdef CreateEvent
+#undef CreateEvent
+#endif
 #endif // XP_WIN
 
 // Helper Classes
-#include "nsXPIDLString.h"
 #include "nsJSUtils.h"
 #include "jsapi.h"              // for JSAutoRequest
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
@@ -44,30 +52,15 @@
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSEnvironment.h"
-#include "nsCharSeparatedTokenizer.h" // for Accept-Language parsing
-#include "nsUnicharUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
 
 // Other Classes
 #include "nsEventListenerManager.h"
-#include "nsEscape.h"
-#include "nsStyleCoord.h"
-#include "nsMimeTypeArray.h"
-#include "nsNetUtil.h"
-#include "nsICachingChannel.h"
-#include "nsPluginArray.h"
-#include "nsIPluginHost.h"
-#include "nsPluginHost.h"
-#include "nsIPluginInstanceOwner.h"
-#include "nsGeolocation.h"
 #include "mozilla/dom/BarProps.h"
-#include "mozilla/dom/DesktopNotification.h"
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
 #include "nsCCUncollectableMarker.h"
-#include "nsAutoJSValHolder.h"
-#include "nsDOMMediaQueryList.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "nsJSPrincipals.h"
 #include "mozilla/Attributes.h"
@@ -80,39 +73,29 @@
 #include "nsIBaseWindow.h"
 #include "nsDeviceSensors.h"
 #include "nsIContent.h"
-#include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellLoadInfo.h"
 #include "nsIDocCharset.h"
 #include "nsIDocument.h"
-#include "nsIHTMLDocument.h"
-#include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLElement.h"
+#ifdef MOZ_DISABLE_CRYPTOLEGACY
 #include "Crypto.h"
+#else
+#include "nsIDOMCryptoLegacy.h"
+#endif
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPopStateEvent.h"
 #include "nsIDOMHashChangeEvent.h"
 #include "nsIDOMOfflineResourceList.h"
-#include "nsIDOMGeoGeolocation.h"
 #include "nsPIDOMStorage.h"
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsThreadUtils.h"
-#include "nsEventStateManager.h"
-#include "nsIHttpProtocolHandler.h"
-#include "nsIJSRuntimeService.h"
 #include "nsILoadContext.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIPresShell.h"
-#include "nsIProgrammingLanguage.h"
-#include "nsIServiceManager.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsView.h"
@@ -124,10 +107,8 @@
 #include "nsIPromptFactory.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsIWebNavigation.h"
-#include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserFind.h"  // For window.find()
-#include "nsIWebContentHandlerRegistrar.h"
 #include "nsIWindowMediator.h"  // For window.find()
 #include "nsComputedDOMStyle.h"
 #include "nsIEntropyCollector.h"
@@ -136,9 +117,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIContentViewer.h"
-#include "nsIJSNativeInitializer.h"
 #include "nsIScriptError.h"
-#include "nsIConsoleService.h"
 #include "nsIControllers.h"
 #include "nsIControllerContext.h"
 #include "nsGlobalWindowCommands.h"
@@ -149,27 +128,24 @@
 #include "nsIDOMFile.h"
 #include "nsIDOMFileList.h"
 #include "nsIURIFixup.h"
+#ifndef DEBUG
 #include "nsIAppStartup.h"
 #include "nsToolkitCompsCID.h"
+#endif
 #include "nsCDefaultURIFixup.h"
 #include "nsEventDispatcher.h"
 #include "nsIObserverService.h"
-#include "nsIXULAppInfo.h"
-#include "nsNetUtil.h"
 #include "nsFocusManager.h"
 #include "nsIXULWindow.h"
 #include "nsEventStateManager.h"
 #include "nsITimedChannel.h"
-#include "nsICookiePermission.h"
 #include "nsServiceManagerUtils.h"
 #ifdef MOZ_XUL
-#include "nsXULPopupManager.h"
 #include "nsIDOMXULControlElement.h"
 #include "nsMenuPopupFrame.h"
 #endif
 
 #include "xpcprivate.h"
-#include "nsDOMEvent.h"
 
 #ifdef NS_PRINTING
 #include "nsIPrintSettings.h"
@@ -219,18 +195,15 @@
 #endif
 
 #include "nsRefreshDriver.h"
-#include "mozAutoDocUpdate.h"
 
 #include "mozilla/Telemetry.h"
 #include "nsLocation.h"
 #include "nsHTMLDocument.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMEventTargetHelper.h"
-#include "nsIAppsService.h"
 #include "prrng.h"
 #include "nsSandboxFlags.h"
 #include "TimeChangeObserver.h"
-#include "nsPISocketTransportService.h"
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WindowBinding.h"
@@ -243,8 +216,13 @@
 #include "jsdIDebuggerService.h"
 #endif
 
+#ifdef MOZ_B2G
+#include "nsPISocketTransportService.h"
+#endif
+
 // Apple system headers seem to have a check() macro.  <sigh>
 #ifdef check
+class nsIScriptTimeoutHandler;
 #undef check
 #endif // check
 #include "AccessCheck.h"

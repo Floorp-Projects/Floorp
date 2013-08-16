@@ -105,6 +105,20 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
 
+    // Expressions
+
+    Node newArrayLiteral(uint32_t begin, unsigned blockid) { return NodeGeneric; }
+    bool addElision(Node literal, const TokenPos &pos) { return true; }
+    bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
+    bool addArrayElement(Node literal, Node element) { return true; }
+
+    Node newObjectLiteral(uint32_t begin) { return NodeGeneric; }
+    bool addPropertyDefinition(Node literal, Node name, Node expr) { return true; }
+    bool addShorthandPropertyDefinition(Node literal, Node name) { return true; }
+    bool addAccessorPropertyDefinition(Node literal, Node name, Node fn, JSOp op) { return true; }
+
+    // Statements
+
     Node newStatementList(unsigned blockid, const TokenPos &pos) { return NodeGeneric; }
     void addStatementToList(Node list, Node stmt, ParseContext<SyntaxParseHandler> *pc) {}
     Node newEmptyStatement(const TokenPos &pos) { return NodeGeneric; }

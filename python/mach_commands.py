@@ -56,6 +56,8 @@ class MachCommands(MachCommandBase):
         description='Run Python.')
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def python(self, args):
+        # Avoid logging the command
+        self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
         return self.run_process([self.python_executable] + args,
             pass_thru=True, # Allow user to run Python interactively.
             ensure_exit_code=False, # Don't throw on non-zero exit code.

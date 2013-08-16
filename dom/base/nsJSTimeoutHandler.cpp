@@ -5,21 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
-#include "nsIScriptContext.h"
 #include "nsIDocument.h"
-#include "nsIArray.h"
 #include "nsIScriptTimeoutHandler.h"
 #include "nsIXPConnect.h"
-#include "nsIJSRuntimeService.h"
 #include "nsJSUtils.h"
-#include "nsDOMJSUtils.h"
 #include "nsContentUtils.h"
-#include "nsJSEnvironment.h"
-#include "nsServiceManagerUtils.h"
 #include "nsError.h"
 #include "nsGlobalWindow.h"
 #include "nsIContentSecurityPolicy.h"
-#include "nsAlgorithm.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include <algorithm>

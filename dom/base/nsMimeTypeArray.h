@@ -8,14 +8,14 @@
 #define nsMimeTypeArray_h___
 
 #include "nsString.h"
-#include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsWeakReference.h"
 #include "nsWrapperCache.h"
-#include "nsPluginArray.h"
+#include "nsIWeakReferenceUtils.h"
+#include "nsAutoPtr.h"
 
 class nsPIDOMWindow;
 class nsMimeType;
+class nsPluginElement;
 
 class nsMimeTypeArray MOZ_FINAL : public nsISupports,
                                   public nsWrapperCache

@@ -16,14 +16,12 @@
 #include "nsGeolocation.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsICachingChannel.h"
-#include "nsIDocShell.h"
 #include "nsIWebContentHandlerRegistrar.h"
 #include "nsICookiePermission.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsVariant.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
@@ -31,9 +29,7 @@
 #include "nsIDOMWakeLock.h"
 #include "nsIPowerManagerService.h"
 #include "mozilla/dom/MobileMessageManager.h"
-#include "nsISmsService.h"
 #include "mozilla/Hal.h"
-#include "nsIWebNavigation.h"
 #include "nsISiteSpecificUserAgent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
@@ -51,6 +47,8 @@
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
 #include "TimeManager.h"
+#include "DeviceStorage.h"
+#include "nsIDOMNavigatorSystemMessages.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
@@ -61,7 +59,6 @@
 #ifdef MOZ_B2G_BT
 #include "BluetoothManager.h"
 #endif
-#include "nsIDOMCameraManager.h"
 #include "DOMCameraManager.h"
 
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
