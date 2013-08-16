@@ -29,8 +29,8 @@ this.AccessFu = {
     Utils.init(aWindow);
 
     try {
-      Cc['@mozilla.org/android/bridge;1'].
-        getService(Ci.nsIAndroidBridge).handleGeckoMessage(
+      let bridgeCc = Cc['@mozilla.org/android/bridge;1'];
+      bridgeCc.getService(Ci.nsIAndroidBridge).handleGeckoMessage(
           JSON.stringify({ type: 'Accessibility:Ready' }));
       Services.obs.addObserver(this, 'Accessibility:Settings', false);
     } catch (x) {
