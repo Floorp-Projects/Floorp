@@ -35,6 +35,8 @@ class nsIURI;
    know what language we have is a little silly... */
 #define SCRIPTVERSION_DEFAULT JSVERSION_DEFAULT
 
+class nsIOffThreadScriptReceiver;
+
 /**
  * It is used by the application to initialize a runtime and run scripts.
  * A script runtime would implement this interface.
@@ -175,6 +177,25 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContext, NS_ISCRIPTCONTEXT_IID)
+
+#define NS_IOFFTHREADSCRIPTRECEIVER_IID \
+{0x3a980010, 0x878d, 0x46a9,            \
+  {0x93, 0xad, 0xbc, 0xfd, 0xd3, 0x8e, 0xa0, 0xc2}}
+
+class nsIOffThreadScriptReceiver : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOFFTHREADSCRIPTRECEIVER_IID)
+
+  /**
+   * Notify this object that a previous CompileScript call specifying this as
+   * aOffThreadReceiver has completed. The script being passed in must be
+   * rooted before any call which could trigger GC.
+   */
+  NS_IMETHOD OnScriptCompileComplete(JSScript* aScript, nsresult aStatus) = 0;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIOffThreadScriptReceiver, NS_IOFFTHREADSCRIPTRECEIVER_IID)
 
 #endif // nsIScriptContext_h__
 

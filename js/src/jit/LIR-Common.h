@@ -644,6 +644,29 @@ class LCheckOverRecursedPar : public LInstructionHelper<0, 1, 1>
     }
 };
 
+// Alternative to LInterruptCheck which does not emit an explicit check of the
+// interrupt flag but relies on the loop backedge being patched via a signal
+// handler.
+class LInterruptCheckImplicit : public LInstructionHelper<0, 0, 0>
+{
+    Label *oolEntry_;
+
+  public:
+    LIR_HEADER(InterruptCheckImplicit)
+
+    LInterruptCheckImplicit()
+      : oolEntry_(NULL)
+    {}
+
+    Label *oolEntry() {
+        return oolEntry_;
+    }
+
+    void setOolEntry(Label *oolEntry) {
+        oolEntry_ = oolEntry;
+    }
+};
+
 class LCheckInterruptPar : public LInstructionHelper<0, 1, 1>
 {
   public:
@@ -1342,11 +1365,11 @@ class LTestOAndBranch : public LControlInstructionHelper<2, 1, 1>
         return getTemp(0);
     }
 
-    Label *ifTruthy() {
-        return getSuccessor(0)->lir()->label();
+    MBasicBlock *ifTruthy() {
+        return getSuccessor(0);
     }
-    Label *ifFalsy() {
-        return getSuccessor(1)->lir()->label();
+    MBasicBlock *ifFalsy() {
+        return getSuccessor(1);
     }
 
     MTest *mir() {
@@ -1388,11 +1411,11 @@ class LTestVAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 3>
         return getTemp(2);
     }
 
-    Label *ifTruthy() {
-        return getSuccessor(0)->lir()->label();
+    MBasicBlock *ifTruthy() {
+        return getSuccessor(0);
     }
-    Label *ifFalsy() {
-        return getSuccessor(1)->lir()->label();
+    MBasicBlock *ifFalsy() {
+        return getSuccessor(1);
     }
 
     MTest *mir() const {

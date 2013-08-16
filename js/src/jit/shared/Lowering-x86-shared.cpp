@@ -32,17 +32,6 @@ LIRGeneratorX86Shared::newLTableSwitchV(MTableSwitch *tableswitch)
 }
 
 bool
-LIRGeneratorX86Shared::visitInterruptCheck(MInterruptCheck *ins)
-{
-    LInterruptCheck *lir = new LInterruptCheck();
-    if (!add(lir, ins))
-        return false;
-    if (!assignSafepoint(lir, ins))
-        return false;
-    return true;
-}
-
-bool
 LIRGeneratorX86Shared::visitGuardShape(MGuardShape *ins)
 {
     JS_ASSERT(ins->obj()->type() == MIRType_Object);

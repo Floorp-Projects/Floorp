@@ -13,6 +13,8 @@
 #include "nsISupportsArray.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 // For PR_snprintf
 #include "prprf.h"

@@ -78,15 +78,11 @@ CodeGeneratorARM::generateEpilogue()
 void
 CodeGeneratorARM::emitBranch(Assembler::Condition cond, MBasicBlock *mirTrue, MBasicBlock *mirFalse)
 {
-    LBlock *ifTrue = mirTrue->lir();
-    LBlock *ifFalse = mirFalse->lir();
-    if (isNextBlock(ifFalse)) {
-        masm.ma_b(ifTrue->label(), cond);
+    if (isNextBlock(mirFalse->lir())) {
+        jumpToBlock(mirTrue, cond);
     } else {
-        masm.ma_b(ifFalse->label(), Assembler::InvertCondition(cond));
-        if (!isNextBlock(ifTrue)) {
-            masm.ma_b(ifTrue->label());
-        }
+        jumpToBlock(mirFalse, Assembler::InvertCondition(cond));
+        jumpToBlock(mirTrue);
     }
 }
 
@@ -101,19 +97,19 @@ bool
 CodeGeneratorARM::visitTestIAndBranch(LTestIAndBranch *test)
 {
     const LAllocation *opd = test->getOperand(0);
-    LBlock *ifTrue = test->ifTrue()->lir();
-    LBlock *ifFalse = test->ifFalse()->lir();
+    MBasicBlock *ifTrue = test->ifTrue();
+    MBasicBlock *ifFalse = test->ifFalse();
 
     // Test the operand
     masm.ma_cmp(ToRegister(opd), Imm32(0));
 
-    if (isNextBlock(ifFalse)) {
-        masm.ma_b(ifTrue->label(), Assembler::NonZero);
-    } else if (isNextBlock(ifTrue)) {
-        masm.ma_b(ifFalse->label(), Assembler::Zero);
+    if (isNextBlock(ifFalse->lir())) {
+        jumpToBlock(ifTrue, Assembler::NonZero);
+    } else if (isNextBlock(ifTrue->lir())) {
+        jumpToBlock(ifFalse, Assembler::Zero);
     } else {
-        masm.ma_b(ifFalse->label(), Assembler::Zero);
-        masm.ma_b(ifTrue->label());
+        jumpToBlock(ifFalse, Assembler::Zero);
+        jumpToBlock(ifTrue);
     }
     return true;
 }
@@ -1321,16 +1317,15 @@ CodeGeneratorARM::visitTestDAndBranch(LTestDAndBranch *test)
     masm.ma_vcmpz(ToFloatRegister(opd));
     masm.as_vmrs(pc);
 
-    LBlock *ifTrue = test->ifTrue()->lir();
-    LBlock *ifFalse = test->ifFalse()->lir();
+    MBasicBlock *ifTrue = test->ifTrue();
+    MBasicBlock *ifFalse = test->ifFalse();
     // If the compare set the  0 bit, then the result
     // is definately false.
-    masm.ma_b(ifFalse->label(), Assembler::Zero);
+    jumpToBlock(ifFalse, Assembler::Zero);
     // it is also false if one of the operands is NAN, which is
     // shown as Overflow.
-    masm.ma_b(ifFalse->label(), Assembler::Overflow);
-    if (!isNextBlock(ifTrue))
-        masm.ma_b(ifTrue->label());
+    jumpToBlock(ifFalse, Assembler::Overflow);
+    jumpToBlock(ifTrue);
     return true;
 }
 
@@ -1398,10 +1393,8 @@ CodeGeneratorARM::visitCompareBAndBranch(LCompareBAndBranch *lir)
 
     JS_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
 
-    if (mir->jsop() == JSOP_STRICTEQ)
-        masm.branchTestBoolean(Assembler::NotEqual, lhs, lir->ifFalse()->lir()->label());
-    else
-        masm.branchTestBoolean(Assembler::NotEqual, lhs, lir->ifTrue()->lir()->label());
+    Assembler::Condition cond = masm.testBoolean(Assembler::NotEqual, lhs);
+    jumpToBlock((mir->jsop() == JSOP_STRICTEQ) ? lir->ifFalse() : lir->ifTrue(), cond);
 
     if (rhs->isConstant())
         masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
@@ -1451,14 +1444,10 @@ CodeGeneratorARM::visitCompareVAndBranch(LCompareVAndBranch *lir)
     JS_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
               mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
 
-    Label *notEqual;
-    if (cond == Assembler::Equal)
-        notEqual = lir->ifFalse()->lir()->label();
-    else
-        notEqual = lir->ifTrue()->lir()->label();
+    MBasicBlock *notEqual = (cond == Assembler::Equal) ? lir->ifFalse() : lir->ifTrue();
 
     masm.cmp32(lhs.typeReg(), rhs.typeReg());
-    masm.j(Assembler::NotEqual, notEqual);
+    jumpToBlock(notEqual, Assembler::NotEqual);
     masm.cmp32(lhs.payloadReg(), rhs.payloadReg());
     emitBranch(cond, lir->ifTrue(), lir->ifFalse());
 
@@ -1711,9 +1700,6 @@ CodeGeneratorARM::visitImplicitThis(LImplicitThis *lir)
     masm.moveValue(UndefinedValue(), out);
     return true;
 }
-
-typedef bool (*InterruptCheckFn)(JSContext *);
-static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
 
 bool
 CodeGeneratorARM::visitInterruptCheck(LInterruptCheck *lir)

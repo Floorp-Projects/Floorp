@@ -8,11 +8,9 @@
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
-#include "nsDOMClassInfoID.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsLayoutUtils.h"
 #include "nsDOMEvent.h"
-#include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
 #include "mozilla/dom/ScreenBinding.h"
 
