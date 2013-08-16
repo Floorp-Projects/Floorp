@@ -7367,14 +7367,14 @@ CodeGenerator::visitDoubleRangeAssert(LDoubleRangeAssert *ins)
     if (!r->isInfinite()) {
         // Check the bounds implied by the maximum exponent.
         Label exponentLoOk;
-        masm.loadConstantDouble(pow(2, r->exponent() + 1), temp);
+        masm.loadConstantDouble(pow(2.0, r->exponent() + 1), temp);
         masm.branchDouble(Assembler::DoubleUnordered, input, input, &exponentLoOk);
         masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, temp, &exponentLoOk);
         masm.breakpoint();
         masm.bind(&exponentLoOk);
 
         Label exponentHiOk;
-        masm.loadConstantDouble(-pow(2, r->exponent() + 1), temp);
+        masm.loadConstantDouble(-pow(2.0, r->exponent() + 1), temp);
         masm.branchDouble(Assembler::DoubleUnordered, input, input, &exponentHiOk);
         masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, temp, &exponentHiOk);
         masm.breakpoint();
