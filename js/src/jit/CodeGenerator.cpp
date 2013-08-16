@@ -970,18 +970,6 @@ CodeGenerator::visitCallee(LCallee *lir)
 }
 
 bool
-CodeGenerator::visitForceUseV(LForceUseV *lir)
-{
-    return true;
-}
-
-bool
-CodeGenerator::visitForceUseT(LForceUseT *lir)
-{
-    return true;
-}
-
-bool
 CodeGenerator::visitStart(LStart *lir)
 {
     return true;
