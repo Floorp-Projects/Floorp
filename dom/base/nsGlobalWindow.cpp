@@ -33,6 +33,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptTimeoutHandler.h"
+#include "nsDOMWindowResizeEventDetail.h"
 
 #ifdef XP_WIN
 // Thanks so much, Microsoft! :(
@@ -145,6 +146,7 @@
 #include "nsIDOMXULControlElement.h"
 #include "nsMenuPopupFrame.h"
 #endif
+#include "nsIDOMCustomEvent.h"
 
 #include "xpcprivate.h"
 
@@ -4949,6 +4951,39 @@ nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
   return defaultActionEnabled;
 }
 
+// NOTE: Arguments to this function should be CSS pixels, not device pixels.
+bool
+nsGlobalWindow::DispatchResizeEvent(const nsIntSize& aSize)
+{
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDoc);
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = domDoc->CreateEvent(NS_LITERAL_STRING("CustomEvent"),
+                                    getter_AddRefs(event));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsIWritableVariant> detailVariant = new nsVariant();
+  nsCOMPtr<nsIDOMDOMWindowResizeEventDetail> detail =
+    new nsDOMWindowResizeEventDetail(aSize);
+  rv = detailVariant->SetAsISupports(detail);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsIDOMCustomEvent> customEvent = do_QueryInterface(event);
+  customEvent->InitCustomEvent(NS_LITERAL_STRING("DOMWindowResize"),
+                               /* bubbles = */ true,
+                               /* cancelable = */ true,
+                               detailVariant);
+  customEvent->SetTrusted(true);
+  customEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+
+  nsCOMPtr<EventTarget> target = do_QueryInterface(GetOuterWindow());
+  customEvent->SetTarget(target);
+
+  bool defaultActionEnabled = true;
+  target->DispatchEvent(event, &defaultActionEnabled);
+
+  return defaultActionEnabled;
+}
+
 void
 nsGlobalWindow::RefreshCompartmentPrincipal()
 {
@@ -5943,6 +5978,19 @@ nsGlobalWindow::ResizeTo(int32_t aWidth, int32_t aHeight)
   FORWARD_TO_OUTER(ResizeTo, (aWidth, aHeight), NS_ERROR_NOT_INITIALIZED);
 
   /*
+   * If caller is a browser-element then dispatch a resize event to
+   * the embedder.
+   */
+  if (mDocShell->GetIsBrowserOrApp()) {
+    nsIntSize size(aWidth, aHeight);
+    if (!DispatchResizeEvent(size)) {
+      // The embedder chose to prevent the default action for this
+      // event, so let's not resize this window after all...
+      return NS_OK;
+    }
+  }
+
+  /*
    * If caller is not chrome and the user has not explicitly exempted the site,
    * prevent window.resizeTo() by exiting early
    */
@@ -5968,6 +6016,25 @@ NS_IMETHODIMP
 nsGlobalWindow::ResizeBy(int32_t aWidthDif, int32_t aHeightDif)
 {
   FORWARD_TO_OUTER(ResizeBy, (aWidthDif, aHeightDif), NS_ERROR_NOT_INITIALIZED);
+
+  /*
+   * If caller is a browser-element then dispatch a resize event to
+   * parent.
+   */
+  if (mDocShell->GetIsBrowserOrApp()) {
+    CSSIntSize size;
+    nsresult rv = GetInnerSize(size);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+
+    size.width += aWidthDif;
+    size.height += aHeightDif;
+
+    if (!DispatchResizeEvent(nsIntSize(size.width, size.height))) {
+      // The embedder chose to prevent the default action for this
+      // event, so let's not resize this window after all...
+      return NS_OK;
+    }
+  }
 
   /*
    * If caller is not chrome and the user has not explicitly exempted the site,
