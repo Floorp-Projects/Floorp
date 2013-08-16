@@ -166,6 +166,22 @@ abstract class HomeFragment extends Fragment {
         return false;
     }
 
+    @Override
+    public void setUserVisibleHint (boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        loadIfVisible();
+    }
+
+    protected abstract void load();
+
+    protected void loadIfVisible() {
+        if (!isVisible() || !getUserVisibleHint()) {
+            return;
+        }
+
+        load();
+    }
+
     private static class RemoveBookmarkTask extends UiAsyncTask<Void, Void, Void> {
         private final Context mContext;
         private final int mId;
@@ -224,21 +240,5 @@ abstract class HomeFragment extends Fragment {
         public void onPostExecute(Void result) {
             Toast.makeText(mContext, R.string.history_removed, Toast.LENGTH_SHORT).show();
         }
-    }
-
-    @Override
-    public void setUserVisibleHint (boolean isVisibleToUser) {
-        super.setUserVisibleHint(isVisibleToUser);
-        loadIfVisible();
-    }
-
-    protected abstract void load();
-
-    protected void loadIfVisible() {
-        if (!isVisible() || !getUserVisibleHint()) {
-            return;
-        }
-
-        load();
     }
 }
