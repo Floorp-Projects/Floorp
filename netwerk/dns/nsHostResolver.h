@@ -244,6 +244,12 @@ private:
     void     DeQueue(PRCList &aQ, nsHostRecord **aResult);
     void     ClearPendingQueue(PRCList *aPendingQueue);
     nsresult ConditionallyCreateThread(nsHostRecord *rec);
+
+    /**
+     * Starts a new lookup in the background for entries that are in the grace
+     * period with a failed connect or all cached entries are negative.
+     */
+    nsresult ConditionallyRefreshRecord(nsHostRecord *rec, const char *host);
     
     static void  MoveQueue(nsHostRecord *aRec, PRCList &aDestQ);
     
