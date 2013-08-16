@@ -766,6 +766,26 @@ UnpackManagerPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                           ArrayLength(sManagerProperties));
 }
 
+static bool
+UnpackPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
+                        BluetoothValue& aValue,
+                        const char* aIface)
+{
+  nsAutoString replyError;
+
+  if (!strcmp(aIface, DBUS_DEVICE_IFACE)) {
+    UnpackDevicePropertiesMessage(aMsg, aErr, aValue, replyError);
+  } else if (!strcmp(aIface, DBUS_ADAPTER_IFACE)) {
+    UnpackAdapterPropertiesMessage(aMsg, aErr, aValue, replyError);
+  } else if (!strcmp(aIface, DBUS_MANAGER_IFACE)) {
+    UnpackManagerPropertiesMessage(aMsg, aErr, aValue, replyError);
+  } else {
+    return false;
+  }
+
+  return replyError.IsEmpty();
+}
+
 static void
 ParsePropertyChange(DBusMessage* aMsg, BluetoothValue& aValue,
                     nsAString& aErrorStr, Properties* aPropertyTypes,
@@ -809,25 +829,15 @@ GetPropertiesInternal(const nsAString& aPath,
                                             "GetProperties",
                                             DBUS_TYPE_INVALID);
 
-  nsAutoString replyError;
-  if (!strcmp(aIface, DBUS_DEVICE_IFACE)) {
-    UnpackDevicePropertiesMessage(msg, &err, aValue, replyError);
-  } else if (!strcmp(aIface, DBUS_ADAPTER_IFACE)) {
-    UnpackAdapterPropertiesMessage(msg, &err, aValue, replyError);
-  } else if (!strcmp(aIface, DBUS_MANAGER_IFACE)) {
-    UnpackManagerPropertiesMessage(msg, &err, aValue, replyError);
-  } else {
-    NS_WARNING("Unknown interface for GetProperties!");
-    return false;
-  }
-
-  if (!replyError.IsEmpty()) {
-    NS_WARNING("Failed to get device properties");
-    return false;
-  }
+  bool success = UnpackPropertiesMessage(msg, &err, aValue, aIface);
 
   if (msg) {
     dbus_message_unref(msg);
+  }
+
+  if (!success) {
+    BT_WARNING("Failed to get device properties");
+    return false;
   }
 
   return true;
