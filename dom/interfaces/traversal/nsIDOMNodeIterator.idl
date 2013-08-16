@@ -6,9 +6,7 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMNodeIterator;
 interface nsIDOMNodeFilter;
-
 
 [scriptable, uuid(a86bdac9-ff89-4c94-8160-4fe86733bab8)]
 // Introduced in DOM Level 2, updated to DOM Level 4:
