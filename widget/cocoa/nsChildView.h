@@ -205,6 +205,12 @@ typedef NSInteger NSEventGestureAxis;
 #endif // #ifdef __LP64__
 #endif // #if !defined(MAC_OS_X_VERSION_10_7) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
 
+#if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
+enum {
+  NSEventPhaseMayBegin    = 0x1 << 5
+};
+#endif // #if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
+
 // Undocumented scrollPhase flag that lets us discern between real scrolls and
 // automatically firing momentum scroll events.
 @interface NSEvent (ScrollPhase)
@@ -251,6 +257,11 @@ typedef NSInteger NSEventGestureAxis;
   NSMutableArray* mPendingDirtyRects;
   BOOL mPendingFullDisplay;
   BOOL mPendingDisplay;
+  
+  // WheelStart/Stop events should always come in pairs. This BOOL records the
+  // last received event so that, when we receive one of the events, we make sure
+  // to send its pair event first, in case we didn't yet for any reason.
+  BOOL mExpectingWheelStop;
 
   // Holds our drag service across multiple drag calls. The reference to the
   // service is obtained when the mouse enters the view and is released when
@@ -353,6 +364,8 @@ typedef NSInteger NSEventGestureAxis;
 - (void)smartMagnifyWithEvent:(NSEvent *)anEvent;
 - (void)rotateWithEvent:(NSEvent *)anEvent;
 - (void)endGestureWithEvent:(NSEvent *)anEvent;
+
+- (void)scrollWheel:(NSEvent *)anEvent;
 
 // Helper function for Lion smart magnify events
 + (BOOL)isLionSmartMagnifyEvent:(NSEvent*)anEvent;
