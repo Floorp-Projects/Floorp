@@ -21,6 +21,9 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ImageSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -152,11 +155,18 @@ public class ReadingListPage extends HomeFragment {
             final ViewStub emptyViewStub = (ViewStub) mTopView.findViewById(R.id.home_empty_view_stub);
             mEmptyView = emptyViewStub.inflate();
 
-            final ImageView emptyIcon = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
-            emptyIcon.setImageResource(R.drawable.icon_reading_list_empty);
+            final TextView emptyHint = (TextView) mEmptyView.findViewById(R.id.home_empty_hint);
+            String readingListHint = emptyHint.getText().toString();
 
-            final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
-            emptyText.setText(R.string.home_reading_list_empty);
+            // Use an ImageSpan to include the reader icon in the "Tip".
+            int imageSpanIndex = readingListHint.indexOf("%I");
+            if (imageSpanIndex != -1) {
+                final ImageSpan readingListIcon = new ImageSpan(getActivity(), R.drawable.reader_cropped, ImageSpan.ALIGN_BOTTOM);
+                final SpannableStringBuilder hintBuilder = new SpannableStringBuilder(readingListHint);
+                hintBuilder.setSpan(readingListIcon, imageSpanIndex, imageSpanIndex + 2, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+                emptyHint.setText(hintBuilder, TextView.BufferType.SPANNABLE);
+            }
 
             mList.setEmptyView(mEmptyView);
         }
