@@ -53,6 +53,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
+                                  "resource://gre/modules/DownloadUIHelper.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
@@ -68,26 +70,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadsLogger",
 
 const nsIDM = Ci.nsIDownloadManager;
 
-const kDownloadsStringBundleUrl =
-  "chrome://browser/locale/downloads/downloads.properties";
-
 const kPrefBdmScanWhenDone =   "browser.download.manager.scanWhenDone";
 const kPrefBdmAlertOnExeOpen = "browser.download.manager.alertOnEXEOpen";
-
-const kDownloadsStringsRequiringFormatting = {
-  sizeWithUnits: true,
-  shortTimeLeftSeconds: true,
-  shortTimeLeftMinutes: true,
-  shortTimeLeftHours: true,
-  shortTimeLeftDays: true,
-  statusSeparator: true,
-  statusSeparatorBeforeNumber: true,
-  fileExecutableSecurityWarning: true
-};
-
-const kDownloadsStringsRequiringPluralForm = {
-  otherDownloads2: true
-};
 
 XPCOMUtils.defineLazyGetter(this, "DownloadsLocalFileCtor", function () {
   return Components.Constructor("@mozilla.org/file/local;1",
@@ -162,41 +146,6 @@ this.DownloadsCommon = {
       DownloadsLogger.reportError.apply(DownloadsLogger, aMessageArgs);
     }
     this.error.apply(this, aMessageArgs);
-  },
-  /**
-   * Returns an object whose keys are the string names from the downloads string
-   * bundle, and whose values are either the translated strings or functions
-   * returning formatted strings.
-   */
-  get strings()
-  {
-    let strings = {};
-    let sb = Services.strings.createBundle(kDownloadsStringBundleUrl);
-    let enumerator = sb.getSimpleEnumeration();
-    while (enumerator.hasMoreElements()) {
-      let string = enumerator.getNext().QueryInterface(Ci.nsIPropertyElement);
-      let stringName = string.key;
-      if (stringName in kDownloadsStringsRequiringFormatting) {
-        strings[stringName] = function () {
-          // Convert "arguments" to a real array before calling into XPCOM.
-          return sb.formatStringFromName(stringName,
-                                         Array.slice(arguments, 0),
-                                         arguments.length);
-        };
-      } else if (stringName in kDownloadsStringsRequiringPluralForm) {
-        strings[stringName] = function (aCount) {
-          // Convert "arguments" to a real array before calling into XPCOM.
-          let formattedString = sb.formatStringFromName(stringName,
-                                         Array.slice(arguments, 0),
-                                         arguments.length);
-          return PluralForm.get(aCount, formattedString);
-        };
-      } else {
-        strings[stringName] = string.value;
-      }
-    }
-    delete this.strings;
-    return this.strings = strings;
   },
 
   /**
@@ -480,65 +429,44 @@ this.DownloadsCommon = {
     if (!(aOwnerWindow instanceof Ci.nsIDOMWindow))
       throw new Error("aOwnerWindow must be a dom-window object");
 
-    // Confirm opening executable files if required.
+    let promiseShouldLaunch;
     if (aFile.isExecutable()) {
-      let showAlert = true;
-      try {
-        showAlert = Services.prefs.getBoolPref(kPrefBdmAlertOnExeOpen);
-      } catch (ex) { }
-
-      // On Vista and above, we rely on native security prompting for
-      // downloaded content unless it's disabled.
-      if (DownloadsCommon.isWinVistaOrHigher) {
-        try {
-          if (Services.prefs.getBoolPref(kPrefBdmScanWhenDone)) {
-            showAlert = false;
-          }
-        } catch (ex) { }
-      }
-
-      if (showAlert) {
-        let name = aFile.leafName;
-        let message =
-          DownloadsCommon.strings.fileExecutableSecurityWarning(name, name);
-        let title =
-          DownloadsCommon.strings.fileExecutableSecurityWarningTitle;
-        let dontAsk =
-          DownloadsCommon.strings.fileExecutableSecurityWarningDontAsk;
-
-        let checkbox = { value: false };
-        let open = Services.prompt.confirmCheck(aOwnerWindow, title, message,
-                                                dontAsk, checkbox);
-        if (!open) {
-          return;
-        }
-
-        Services.prefs.setBoolPref(kPrefBdmAlertOnExeOpen,
-                                   !checkbox.value);
-      }
+      // We get a prompter for the provided window here, even though anchoring
+      // to the most recently active window should work as well.
+      promiseShouldLaunch =
+        DownloadUIHelper.getPrompter(aOwnerWindow)
+                        .confirmLaunchExecutable(aFile.path);
+    } else {
+      promiseShouldLaunch = Promise.resolve(true);
     }
 
-    // Actually open the file.
-    try {
-      if (aMimeInfo && aMimeInfo.preferredAction == aMimeInfo.useHelperApp) {
-        aMimeInfo.launchWithFile(aFile);
+    promiseShouldLaunch.then(shouldLaunch => {
+      if (!shouldLaunch) {
         return;
       }
-    }
-    catch(ex) { }
-
-    // If either we don't have the mime info, or the preferred action failed,
-    // attempt to launch the file directly.
-    try {
-      aFile.launch();
-    }
-    catch(ex) {
-      // If launch fails, try sending it through the system's external "file:"
-      // URL handler.
-      Cc["@mozilla.org/uriloader/external-protocol-service;1"]
-        .getService(Ci.nsIExternalProtocolService)
-        .loadUrl(NetUtil.newURI(aFile));
-    }
+  
+      // Actually open the file.
+      try {
+        if (aMimeInfo && aMimeInfo.preferredAction == aMimeInfo.useHelperApp) {
+          aMimeInfo.launchWithFile(aFile);
+          return;
+        }
+      }
+      catch(ex) { }
+  
+      // If either we don't have the mime info, or the preferred action failed,
+      // attempt to launch the file directly.
+      try {
+        aFile.launch();
+      }
+      catch(ex) {
+        // If launch fails, try sending it through the system's external "file:"
+        // URL handler.
+        Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+          .getService(Ci.nsIExternalProtocolService)
+          .loadUrl(NetUtil.newURI(aFile));
+      }
+    }).then(null, Cu.reportError);
   },
 
   /**
@@ -573,6 +501,15 @@ this.DownloadsCommon = {
     }
   }
 };
+
+/**
+ * Returns an object whose keys are the string names from the downloads string
+ * bundle, and whose values are either the translated strings or functions
+ * returning formatted strings.
+ */
+XPCOMUtils.defineLazyGetter(DownloadsCommon, "strings", function () {
+  return DownloadUIHelper.strings;
+});
 
 /**
  * Returns true if we are executing on Windows Vista or a later version.
