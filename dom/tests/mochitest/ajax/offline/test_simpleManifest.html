@@ -49,8 +49,7 @@ function removeItem()
                          false,
                          function() {
                            // We're done
-                           OfflineTest.teardown();
-                           OfflineTest.finish();
+                           OfflineTest.teardownAndFinish();
                          });
 }
 
