@@ -23,17 +23,34 @@ EventTarget::RemoveEventListener(const nsAString& aType,
 }
 
 EventHandlerNonNull*
-EventTarget::GetEventHandler(nsIAtom* aType)
+EventTarget::GetEventHandler(nsIAtom* aType, const nsAString& aTypeString)
 {
   nsEventListenerManager* elm = GetListenerManager(false);
-  return elm ? elm->GetEventHandler(aType) : nullptr;
+  return elm ? elm->GetEventHandler(aType, aTypeString) : nullptr;
 }
 
 void
-EventTarget::SetEventHandler(nsIAtom* aType, EventHandlerNonNull* aHandler,
+EventTarget::SetEventHandler(const nsAString& aType,
+                             EventHandlerNonNull* aHandler,
                              ErrorResult& rv)
 {
-  rv = GetListenerManager(true)->SetEventHandler(aType, aHandler);
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIAtom> type = do_GetAtom(aType);
+    return SetEventHandler(type, EmptyString(), aHandler, rv);
+  }
+  return SetEventHandler(nullptr,
+                         Substring(aType, 2), // Remove "on"
+                         aHandler, rv);
+}
+
+void
+EventTarget::SetEventHandler(nsIAtom* aType, const nsAString& aTypeString,
+                             EventHandlerNonNull* aHandler,
+                             ErrorResult& rv)
+{
+  rv = GetListenerManager(true)->SetEventHandler(aType,
+                                                 aTypeString,
+                                                 aHandler);
 }
 
 } // namespace dom
