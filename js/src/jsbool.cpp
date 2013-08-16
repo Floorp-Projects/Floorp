@@ -176,7 +176,7 @@ js_InitBooleanClass(JSContext *cx, HandleObject obj)
 }
 
 JSString *
-js_BooleanToString(ExclusiveContext *cx, JSBool b)
+js_BooleanToString(ExclusiveContext *cx, bool b)
 {
     return b ? cx->names().true_ : cx->names().false_;
 }
@@ -198,8 +198,7 @@ js::ToBooleanSlow(const Value &v)
 bool
 js::BooleanGetPrimitiveValueSlow(HandleObject wrappedBool, JSContext *cx)
 {
-    JS_ASSERT(wrappedBool->is<ProxyObject>());
-    JSObject *obj = Wrapper::wrappedObject(wrappedBool);
+    JSObject *obj = wrappedBool->as<ProxyObject>().target();
     JS_ASSERT(obj);
     return obj->as<BooleanObject>().unbox();
 }

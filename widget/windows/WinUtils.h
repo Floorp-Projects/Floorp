@@ -9,6 +9,8 @@
 #include "nscore.h"
 #include <windows.h>
 #include <shobjidl.h>
+#include <uxtheme.h>
+#include <dwmapi.h>
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsRegion.h"
@@ -26,6 +28,7 @@
 #include "mozilla/Attributes.h"
 
 class nsWindow;
+class nsWindowBase;
 struct KeyPair;
 
 namespace mozilla {
@@ -134,12 +137,15 @@ public:
                               bool aStopIfNotPopup = true);
 
   /**
-   * SetNSWindowPtr() associates an nsWindow to aWnd.  If aWindow is NULL,
-   * it dissociate any nsWindow pointer from aWnd.
-   * GetNSWindowPtr() returns an nsWindow pointer which was associated by
-   * SetNSWindowPtr().
+   * SetNSWindowBasePtr() associates an nsWindowBase to aWnd.  If aWidget is NULL,
+   * it dissociate any nsBaseWidget pointer from aWnd.
+   * GetNSWindowBasePtr() returns an nsWindowBase pointer which was associated by
+   * SetNSWindowBasePtr().
+   * GetNSWindowPtr() is a legacy api for win32 nsWindow and should be avoided
+   * outside of nsWindow src.
    */
-  static bool SetNSWindowPtr(HWND aWnd, nsWindow* aWindow);
+  static bool SetNSWindowBasePtr(HWND aWnd, nsWindowBase* aWidget);
+  static nsWindowBase* GetNSWindowBasePtr(HWND aWnd);
   static nsWindow* GetNSWindowPtr(HWND aWnd);
 
   /**
@@ -271,6 +277,29 @@ public:
   static void SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray,
                                         uint32_t aModifiers);
 
+  // dwmapi.dll function typedefs and declarations
+  typedef HRESULT (WINAPI*DwmExtendFrameIntoClientAreaProc)(HWND hWnd, const MARGINS *pMarInset);
+  typedef HRESULT (WINAPI*DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
+  typedef HRESULT (WINAPI*DwmSetIconicThumbnailProc)(HWND hWnd, HBITMAP hBitmap, DWORD dwSITFlags);
+  typedef HRESULT (WINAPI*DwmSetIconicLivePreviewBitmapProc)(HWND hWnd, HBITMAP hBitmap, POINT *pptClient, DWORD dwSITFlags);
+  typedef HRESULT (WINAPI*DwmGetWindowAttributeProc)(HWND hWnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
+  typedef HRESULT (WINAPI*DwmSetWindowAttributeProc)(HWND hWnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
+  typedef HRESULT (WINAPI*DwmInvalidateIconicBitmapsProc)(HWND hWnd);
+  typedef HRESULT (WINAPI*DwmDefWindowProcProc)(HWND hWnd, UINT msg, LPARAM lParam, WPARAM wParam, LRESULT *aRetValue);
+  typedef HRESULT (WINAPI*DwmGetCompositionTimingInfoProc)(HWND hWnd, DWM_TIMING_INFO *info);
+
+  static DwmExtendFrameIntoClientAreaProc dwmExtendFrameIntoClientAreaPtr;
+  static DwmIsCompositionEnabledProc dwmIsCompositionEnabledPtr;
+  static DwmSetIconicThumbnailProc dwmSetIconicThumbnailPtr;
+  static DwmSetIconicLivePreviewBitmapProc dwmSetIconicLivePreviewBitmapPtr;
+  static DwmGetWindowAttributeProc dwmGetWindowAttributePtr;
+  static DwmSetWindowAttributeProc dwmSetWindowAttributePtr;
+  static DwmInvalidateIconicBitmapsProc dwmInvalidateIconicBitmapsPtr;
+  static DwmDefWindowProcProc dwmDwmDefWindowProcPtr;
+  static DwmGetCompositionTimingInfoProc dwmGetCompositionTimingInfoPtr;
+
+  static void Initialize();
+
 private:
   typedef HRESULT (WINAPI * SHCreateItemFromParsingNamePtr)(PCWSTR pszPath,
                                                             IBindCtx *pbc,
@@ -323,6 +352,7 @@ private:
   nsAutoString mIconPath;
   nsAutoCString mMimeTypeOfInputData;
   nsAutoArrayPtr<uint8_t> mBuffer;
+  HMODULE sDwmDLL;
   uint32_t mBufferLength;
   uint32_t mStride;
   uint32_t mWidth;

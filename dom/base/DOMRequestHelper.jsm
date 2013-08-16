@@ -3,8 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Helper object for APIs that deal with DOMRequests and need to release them
- * when the window goes out of scope.
+ * Helper object for APIs that deal with DOMRequests and Promises and need to
+ * release them when the window goes out of scope.
  */
 const Cu = Components.utils;
 const Cc = Components.classes;
@@ -40,7 +40,7 @@ this.DOMRequestIpcHelperMessageListener = function(aHelper, aWindow, aMessages) 
 
   this._messages = aMessages;
   this._messages.forEach(function(msgName) {
-    cpmm.addMessageListener(msgName, this);
+    cpmm.addWeakMessageListener(msgName, this);
   }, this);
 
   Services.obs.addObserver(this, "inner-window-destroyed", /* weakRef */ true);
@@ -91,7 +91,7 @@ DOMRequestIpcHelperMessageListener.prototype = {
     Services.obs.removeObserver(this, "inner-window-destroyed");
 
     this._messages.forEach(function(msgName) {
-      cpmm.removeMessageListener(msgName, this);
+      cpmm.removeWeakMessageListener(msgName, this);
     }, this);
     this._messages = null;
 
@@ -117,7 +117,7 @@ DOMRequestIpcHelper.prototype = {
       new DOMRequestIpcHelperMessageListener(this, aWindow, aMessages);
 
     this._window = aWindow;
-    this._requests = [];
+    this._requests = {};
     this._id = this._getRandomId();
 
     if (this._window) {
@@ -134,14 +134,32 @@ DOMRequestIpcHelper.prototype = {
     return id;
   },
 
+  getPromiseResolverId: function(aPromiseResolver) {
+    // Delegates to getRequest() since the lookup table is agnostic about
+    // storage.
+    return this.getRequestId(aPromiseResolver);
+  },
+
   getRequest: function(aId) {
     if (this._requests[aId])
       return this._requests[aId];
   },
 
+  getPromiseResolver: function(aId) {
+    // Delegates to getRequest() since the lookup table is agnostic about
+    // storage.
+    return this.getRequest(aId);
+  },
+
   removeRequest: function(aId) {
     if (this._requests[aId])
       delete this._requests[aId];
+  },
+
+  removePromiseResolver: function(aId) {
+    // Delegates to getRequest() since the lookup table is agnostic about
+    // storage.
+    this.removeRequest(aId);
   },
 
   takeRequest: function(aId) {
@@ -150,6 +168,12 @@ DOMRequestIpcHelper.prototype = {
     let request = this._requests[aId];
     delete this._requests[aId];
     return request;
+  },
+
+  takePromiseResolver: function(aId) {
+    // Delegates to getRequest() since the lookup table is agnostic about
+    // storage.
+    return this.takeRequest(aId);
   },
 
   _getRandomId: function() {
@@ -166,7 +190,7 @@ DOMRequestIpcHelper.prototype = {
     this._destroyed = true;
 
     this._DOMRequestIpcHelperMessageListener.destroy();
-    this._requests = [];
+    this._requests = {};
     this._window = null;
 
     if(this.uninit) {
@@ -176,5 +200,30 @@ DOMRequestIpcHelper.prototype = {
 
   createRequest: function() {
     return Services.DOMRequest.createRequest(this._window);
-  }
+  },
+
+  /**
+   * createPromise() creates a new Promise, with `aPromiseInit` as the
+   * PromiseInit callback. The promise constructor is obtained from the
+   * reference to window owned by this DOMRequestIPCHelper.
+   */
+  createPromise: function(aPromiseInit) {
+    return new this._window.Promise(aPromiseInit);
+  },
+
+  forEachRequest: function(aCallback) {
+    Object.keys(this._requests).forEach(function(k) {
+      if (this.getRequest(k) instanceof this._window.DOMRequest) {
+        aCallback(k);
+      }
+    }, this);
+  },
+
+  forEachPromiseResolver: function(aCallback) {
+    Object.keys(this._requests).forEach(function(k) {
+      if (this.getPromiseResolver(k) instanceof this._window.PromiseResolver) {
+        aCallback(k);
+      }
+    }, this);
+  },
 }

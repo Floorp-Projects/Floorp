@@ -3,9 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define MAC_OS_X_VERSION_MASK     0x0000FFFF // Not supported
-#define MAC_OS_X_VERSION_10_4_HEX 0x00001040 // Not supported
-#define MAC_OS_X_VERSION_10_5_HEX 0x00001050
+#define MAC_OS_X_VERSION_MASK     0x0000FFFF
 #define MAC_OS_X_VERSION_10_6_HEX 0x00001060
 #define MAC_OS_X_VERSION_10_7_HEX 0x00001070
 #define MAC_OS_X_VERSION_10_8_HEX 0x00001080

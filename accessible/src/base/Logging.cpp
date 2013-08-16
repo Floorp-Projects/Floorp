@@ -391,19 +391,18 @@ logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
 
   nsCOMPtr<nsIDOMWindow> DOMWindow;
   aWebProgress->GetDOMWindow(getter_AddRefs(DOMWindow));
-  if (!DOMWindow) {
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(DOMWindow);
+  if (!window) {
     MsgEnd();
     return;
   }
 
-  nsCOMPtr<nsIDOMDocument> DOMDocument;
-  DOMWindow->GetDocument(getter_AddRefs(DOMDocument));
-  if (!DOMDocument) {
+  nsCOMPtr<nsIDocument> documentNode = window->GetDoc();
+  if (!documentNode) {
     MsgEnd();
     return;
   }
 
-  nsCOMPtr<nsIDocument> documentNode(do_QueryInterface(DOMDocument));
   DocAccessible* document = GetExistingDocAccessible(documentNode);
 
   LogDocInfo(documentNode, document);

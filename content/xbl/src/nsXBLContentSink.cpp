@@ -11,7 +11,6 @@
 #include "nsIDOMNode.h"
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
-#include "nsHTMLTokens.h"
 #include "nsIURI.h"
 #include "nsTextFragment.h"
 #ifdef MOZ_XUL

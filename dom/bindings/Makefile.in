@@ -7,13 +7,13 @@ topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
 
+include $(DEPTH)/config/autoconf.mk
+
 LIBRARY_NAME     = dombindings_s
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY   = 1
 EXPORT_LIBRARY   = 1
 FAIL_ON_WARNINGS := 1
-
-include $(topsrcdir)/config/config.mk
 
 # Need this to find all our DOM source files.
 include $(topsrcdir)/dom/dom-config.mk
@@ -112,6 +112,19 @@ ifdef GNU_CC
 CXXFLAGS += -Wno-uninitialized
 endif
 
+# Install auto-generated GlobalGen files. The rules for the install must
+# be in the same target/subtier as GlobalGen.py, otherwise the files will not
+# get installed into the appropriate location as they are generated.
+globalgen_headers_FILES := \
+  PrototypeList.h \
+  RegisterBindings.h \
+  UnionConversions.h \
+  UnionTypes.h \
+  $(NULL)
+globalgen_headers_DEST = $(DIST)/include/mozilla/dom
+globalgen_headers_TARGET := webidl
+INSTALL_TARGETS += globalgen_headers
+
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
@@ -199,13 +212,16 @@ $(CACHE_DIR)/.done:
 
 # Running GlobalGen.py updates ParserResults.pkl as a side-effect
 ParserResults.pkl: $(globalgen_dependencies)
+	$(info Generating global WebIDL files)
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \
 	  $(srcdir)/GlobalGen.py $(srcdir)/Bindings.conf . \
 	  --cachedir=$(CACHE_DIR) \
 	  $(all_webidl_files)
 
-# Make sure .deps actually exists, since we'll try to write to it from 
+$(globalgen_headers_FILES): ParserResults.pkl
+
+# Make sure .deps actually exists, since we'll try to write to it from
 # BindingGen.py but we're typically running in the export phase, which is
 # before anyone has bothered creating .deps.
 # Then, pass our long lists through files to try to avoid blowing out the
@@ -215,6 +231,7 @@ ParserResults.pkl: $(globalgen_dependencies)
 # Finally, touch the .BindingGen file so that we don't have to keep redoing
 # all that until something else actually changes.
 .BindingGen: $(bindinggen_dependencies) $(binding_dependency_trackers)
+	$(info Generating WebIDL bindings)
 	$(MKDIR) -p .deps
 	echo $(all_webidl_files) > .all-webidl-file-list
 	echo $? > .changed-dependency-list
@@ -243,7 +260,7 @@ GARBAGE += \
 # headers they depend on.  This is really only needed for the test files, since
 # the non-test headers are all exported above anyway.  Note that this means that
 # we do all of our codegen during export.
-webidl: $(binding_header_files)
+webidl:: $(binding_header_files)
 
 .PHONY: webidl
 

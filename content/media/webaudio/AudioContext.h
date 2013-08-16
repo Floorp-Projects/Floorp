@@ -9,10 +9,7 @@
 
 #include "EnableWebAudioCheck.h"
 #include "MediaBufferDecoder.h"
-#include "MediaStreamGraph.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/AudioContextBinding.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -20,7 +17,6 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
-#include "StreamBuffer.h"
 
 // X11 has a #define for CurrentTime. Unbelievable :-(.
 // See content/media/DOMMediaStream.h for more fun!
@@ -34,8 +30,10 @@ class nsPIDOMWindow;
 
 namespace mozilla {
 
+class DOMMediaStream;
 class ErrorResult;
-struct WebAudioDecodeJob;
+class MediaStream;
+class MediaStreamGraph;
 
 namespace dom {
 
@@ -56,7 +54,6 @@ class HTMLMediaElement;
 class MediaElementAudioSourceNode;
 class MediaStreamAudioDestinationNode;
 class MediaStreamAudioSourceNode;
-class OfflineRenderSuccessCallback;
 class PannerNode;
 class ScriptProcessorNode;
 class WaveShaperNode;

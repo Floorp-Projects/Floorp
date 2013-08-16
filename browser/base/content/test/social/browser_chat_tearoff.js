@@ -74,10 +74,33 @@ var tests = {
         Services.wm.removeListener(this);
         // wait for load to ensure the window is ready for us to test
         domwindow.addEventListener("load", function _load() {
-          domwindow.removeEventListener("load", _load, false);
           let doc = domwindow.document;
+          if (doc.location.href != "chrome://browser/content/chatWindow.xul")
+            return;
+          domwindow.removeEventListener("load", _load, false);
+
+          domwindow.addEventListener("unload", function _close() {
+            domwindow.removeEventListener("unload", _close, false);
+            info("window has been closed");
+            waitForCondition(function() {
+              return chats.selectedChat && chats.selectedChat.contentDocument &&
+                     chats.selectedChat.contentDocument.readyState == "complete";
+            },function () {
+              ok(chats.selectedChat, "should have a chatbox in our window again");
+              ok(chats.selectedChat.getAttribute("label") == chatTitle,
+                 "the new chatbox should show the title of the chat window again");
+              let testdiv = chats.selectedChat.contentDocument.getElementById("testdiv");
+              is(testdiv.getAttribute("test"), "2", "docshell should have been swapped");
+              chats.selectedChat.close();
+              waitForCondition(function() {
+                return chats.children.length == 0;
+              },function () {
+                next();
+              });
+            });
+          }, false);
+
           is(doc.documentElement.getAttribute("windowtype"), "Social:Chat", "Social:Chat window opened");
-          is(doc.location.href, "chrome://browser/content/chatWindow.xul", "Should have seen the right window open");
           // window is loaded, but the docswap does not happen until after load,
           // and we have no event to wait on, so we'll wait for document state
           // to be ready
@@ -97,25 +120,76 @@ var tests = {
             swap.click();
           }, domwindow);
         }, false);
-        domwindow.addEventListener("unload", function _close() {
-          domwindow.removeEventListener("unload", _close, false);
-          info("window has been closed");
-          waitForCondition(function() {
-            return chats.selectedChat && chats.selectedChat.contentDocument &&
-                   chats.selectedChat.contentDocument.readyState == "complete";
-          },function () {
-            ok(chats.selectedChat, "should have a chatbox in our window again");
-            ok(chats.selectedChat.getAttribute("label") == chatTitle,
-               "the new chatbox should show the title of the chat window again");
-            let testdiv = chats.selectedChat.contentDocument.getElementById("testdiv");
-            is(testdiv.getAttribute("test"), "2", "docshell should have been swapped");
-            chats.selectedChat.close();
-            next();
-          });
-        }, false);
       }
     });
 
     port.postMessage({topic: "test-init", data: { id: 1 }});
-  }
+  },
+
+  testCloseOnLogout: function(next) {
+    let chats = document.getElementById("pinnedchats");
+    const chatUrl = "https://example.com/browser/browser/base/content/test/social/social_chat.html";
+    let port = Social.provider.getWorkerPort();
+    ok(port, "provider has a port");
+    port.postMessage({topic: "test-init"});
+    port.onmessage = function (e) {
+      let topic = e.data.topic;
+      switch (topic) {
+        case "got-chatbox-visibility":
+          // chatbox is open, lets detach. The new chat window will be caught in
+          // the window watcher below
+          let doc = chats.selectedChat.contentDocument;
+          // This message is (sometimes!) received a second time
+          // before we start our tests from the onCloseWindow
+          // callback.
+          if (doc.location == "about:blank")
+            return;
+          info("chatbox is open, detach from window");
+          let swap = document.getAnonymousElementByAttribute(chats.selectedChat, "anonid", "swap");
+          swap.click();
+          break;
+      }
+    }
+
+    Services.wm.addListener({
+      onWindowTitleChange: function() {},
+      onCloseWindow: function(xulwindow) {},
+      onOpenWindow: function(xulwindow) {
+        let domwindow = xulwindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                              .getInterface(Components.interfaces.nsIDOMWindow);
+        Services.wm.removeListener(this);
+        // wait for load to ensure the window is ready for us to test, make sure
+        // we're not getting called for about:blank
+        domwindow.addEventListener("load", function _load() {
+          let doc = domwindow.document;
+          if (doc.location.href != "chrome://browser/content/chatWindow.xul")
+            return;
+          domwindow.removeEventListener("load", _load, false);
+
+          domwindow.addEventListener("unload", function _close() {
+            domwindow.removeEventListener("unload", _close, false);
+            ok(true, "window has been closed");
+            next();
+          }, false);
+
+          is(doc.documentElement.getAttribute("windowtype"), "Social:Chat", "Social:Chat window opened");
+          // window is loaded, but the docswap does not happen until after load,
+          // and we have no event to wait on, so we'll wait for document state
+          // to be ready
+          let chatbox = doc.getElementById("chatter");
+          waitForCondition(function() {
+            return chats.children.length == 0 &&
+                   chatbox.contentDocument &&
+                   chatbox.contentDocument.readyState == "complete";
+          },function() {
+            // logout, we should get unload next
+            port.postMessage({topic: "test-logout"});
+          }, domwindow);
+
+        }, false);
+      }
+    });
+
+    port.postMessage({topic: "test-worker-chat", data: chatUrl});
+  },
 }

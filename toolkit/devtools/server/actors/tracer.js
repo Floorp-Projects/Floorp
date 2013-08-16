@@ -558,35 +558,41 @@ function serializeCompletionValue(aType, { value }) {
  *        A primitive value or a grip object.
  */
 function createValueGrip(aValue, aUseDescriptor) {
-  let type = typeof aValue;
-
-  if (type === "string" && aValue.length >= DebuggerServer.LONG_STRING_LENGTH) {
-    return {
-      type: "longString",
-      initial: aValue.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH),
-      length: aValue.length
-    };
+  switch (typeof aValue) {
+    case "boolean":
+      return aValue;
+    case "string":
+      if (aValue.length >= DebuggerServer.LONG_STRING_LENGTH) {
+        return {
+          type: "longString",
+          initial: aValue.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH),
+          length: aValue.length
+        };
+      }
+      return aValue;
+    case "number":
+      if (aValue === Infinity) {
+        return { type: "Infinity" };
+      } else if (aValue === -Infinity) {
+        return { type: "-Infinity" };
+      } else if (Number.isNaN(aValue)) {
+        return { type: "NaN" };
+      } else if (!aValue && 1 / aValue === -Infinity) {
+        return { type: "-0" };
+      }
+      return aValue;
+    case "undefined":
+      return { type: "undefined" };
+    case "object":
+      if (aValue === null) {
+        return { type: "null" };
+      }
+      return aUseDescriptor ? objectDescriptor(aValue) : objectGrip(aValue);
+    default:
+      reportException("TraceActor",
+                      new Error("Failed to provide a grip for: " + aValue));
+      return null;
   }
-
-  if (type === "boolean" || type === "string" || type === "number") {
-    return aValue;
-  }
-
-  if (aValue === null) {
-    return { type: "null" };
-  }
-
-  if (aValue === undefined) {
-    return { type: "undefined" };
-  }
-
-  if (typeof(aValue) === "object") {
-    return aUseDescriptor ? objectDescriptor(aValue) : objectGrip(aValue);
-  }
-
-  reportException("TraceActor",
-                  new Error("Failed to provide a grip for: " + aValue));
-  return null;
 }
 
 /**

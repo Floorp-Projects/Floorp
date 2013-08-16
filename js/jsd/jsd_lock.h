@@ -33,7 +33,7 @@ extern void
 jsd_Unlock(JSDStaticLock* lock);
 
 #ifdef DEBUG
-extern JSBool
+extern bool
 jsd_IsLocked(JSDStaticLock* lock);
 #endif /* DEBUG */
 

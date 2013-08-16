@@ -13,6 +13,13 @@
 class nsIDOMDOMRequest;
 class nsIDOMWindow;
 
+namespace mozilla {
+class ErrorResult;
+namespace dom {
+class DOMRequest;
+}
+}
+
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothNamedValue;
@@ -20,11 +27,11 @@ class BluetoothNamedValue;
 class BluetoothPropertyContainer
 {
 public:
-  nsresult FirePropertyAlreadySet(nsIDOMWindow* aOwner,
-                                  nsIDOMDOMRequest** aRequest);
-  nsresult SetProperty(nsIDOMWindow* aOwner,
-                       const BluetoothNamedValue& aProperty,
-                       nsIDOMDOMRequest** aRequest);
+  already_AddRefed<mozilla::dom::DOMRequest>
+    FirePropertyAlreadySet(nsIDOMWindow* aOwner, ErrorResult& aRv);
+  already_AddRefed<mozilla::dom::DOMRequest>
+    SetProperty(nsIDOMWindow* aOwner, const BluetoothNamedValue& aProperty,
+                ErrorResult& aRv);
   virtual void SetPropertyByValue(const BluetoothNamedValue& aValue) = 0;
   nsString GetPath()
   {

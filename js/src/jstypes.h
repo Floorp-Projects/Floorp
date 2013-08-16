@@ -22,7 +22,7 @@
 #define jstypes_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Util.h"
+#include "mozilla/Types.h"
 
 #include "js-config.h"
 
@@ -179,16 +179,6 @@
 #else
 # error "Implement me"
 #endif
-
-
-/************************************************************************
-** TYPES:       JSBool
-** DESCRIPTION:
-**  This type is deprecated;  avoid it.  See bug 898914.
-************************************************************************/
-typedef int JSBool;
-#define JS_TRUE_DEPRECATED  (int)1
-#define JS_FALSE_DEPRECATED (int)0
 
 /***********************************************************************
 ** MACROS:      JS_LIKELY

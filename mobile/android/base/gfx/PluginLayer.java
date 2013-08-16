@@ -35,7 +35,7 @@ public class PluginLayer extends TileLayer {
                 1.0f, 0.0f, // bottom right
     };
 
-    public PluginLayer(View view, Rect rect, int maxDimension) {
+    public PluginLayer(View view, RectF rect, int maxDimension) {
         super(new BufferedCairoImage(null, 0, 0, 0), TileLayer.PaintMode.NORMAL);
 
         mView = view;
@@ -93,7 +93,7 @@ public class PluginLayer extends TileLayer {
         mContainer.removeView(mView);
     }
 
-    public void reset(Rect rect) {
+    public void reset(RectF rect) {
         mLayoutParams.reset(rect);
     }
 
@@ -125,7 +125,7 @@ public class PluginLayer extends TileLayer {
         private int mMaxDimension;
         private float mLastResolution;
 
-        public PluginLayoutParams(Rect rect, int maxDimension) {
+        public PluginLayoutParams(RectF rect, int maxDimension) {
             super(0, 0, 0, 0);
 
             mMaxDimension = maxDimension;
@@ -144,8 +144,8 @@ public class PluginLayer extends TileLayer {
             }
         }
 
-        public void reset(Rect rect) {
-            mRect = new RectF(rect);
+        public void reset(RectF rect) {
+            mRect = rect;
         }
 
         public void reposition(RectF viewport, float zoomFactor) {

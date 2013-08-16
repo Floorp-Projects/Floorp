@@ -9,13 +9,14 @@
 
 #include "jsalloc.h"
 #include "jsapi.h"
-#include "jsfriendapi.h"
-#include "jsprvtd.h"
+#include "jsdbgapi.h"
 
 #include "gc/Barrier.h"
 #include "js/HashTable.h"
 
 namespace js {
+
+struct WeakMapTracer;
 
 struct WatchKey {
     WatchKey() {}

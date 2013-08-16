@@ -28,7 +28,7 @@ function test() {
         document.querySelectorAll("#details-pane tab")[3]);
 
       NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
-        is(aEditor.getText().indexOf("\u044F"), 189, // я
+        is(aEditor.getText().indexOf("\u044F"), 302, // я
           "The text shown in the source editor is incorrect.");
         is(aEditor.getMode(), SourceEditor.MODES.HTML,
           "The mode active in the source editor is incorrect.");

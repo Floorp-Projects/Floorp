@@ -11,11 +11,13 @@
 #include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
+#ifndef JS_MORE_DETERMINISTIC
 #include "jsprf.h"
+#endif
 #include "jswrapper.h"
 
-#include "ion/AsmJS.h"
-#include "ion/AsmJSLink.h"
+#include "jit/AsmJS.h"
+#include "jit/AsmJSLink.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 
@@ -199,7 +201,7 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
      * object, we collect the object's compartment (and any other compartments
      * scheduled for GC). Otherwise, we collect all compartments.
      */
-    JSBool compartment = false;
+    bool compartment = false;
     if (argc == 1) {
         Value arg = vp[2];
         if (arg.isString()) {

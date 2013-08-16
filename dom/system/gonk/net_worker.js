@@ -214,8 +214,8 @@ self.onmessage = function onmessage(event) {
 };
 
 /**
-* Set DNS servers for given network interface.
-*/
+ * Set DNS servers for given network interface.
+ */
 function setDNS(options) {
   let ifprops = getIFProperties(options.ifname);
   let dns1_str = options.dns1_str || ifprops.dns1_str;
@@ -419,13 +419,23 @@ function nextNetdCommand() {
 
 function setInterfaceUp(params, callback) {
   let command = "interface setcfg " + params.ifname + " " + params.ip + " " +
-                params.prefix + " " + "[" + params.link + "]";
+                params.prefix + " ";
+  if (SDK_VERSION >= 16) {
+    command += params.link;
+  } else {
+    command += "[" + params.link + "]";
+  }
   return doCommand(command, callback);
 }
 
 function setInterfaceDown(params, callback) {
   let command = "interface setcfg " + params.ifname + " " + params.ip + " " +
-                params.prefix + " " + "[" + params.link + "]";
+                params.prefix + " ";
+  if (SDK_VERSION >= 16) {
+    command += params.link;
+  } else {
+    command += "[" + params.link + "]";
+  }
   return doCommand(command, callback);
 }
 
@@ -483,7 +493,8 @@ function tetherInterface(params, callback) {
 }
 
 function preTetherInterfaceList(params, callback) {
-  let command = "tether interface list 0";
+  let command = (SDK_VERSION >= 16) ? "tether interface list"
+                                    : "tether interface list 0";
   return doCommand(command, callback);
 }
 
@@ -531,11 +542,21 @@ function wifiFirmwareReload(params, callback) {
 }
 
 function startAccessPointDriver(params, callback) {
+  // Skip the command for sdk version >= 16.
+  if (SDK_VERSION >= 16) {
+    callback(false, {code: "", reason: ""});
+    return true;
+  }
   let command = "softap start " + params.ifname;
   return doCommand(command, callback);
 }
 
 function stopAccessPointDriver(params, callback) {
+  // Skip the command for sdk version >= 16.
+  if (SDK_VERSION >= 16) {
+    callback(false, {code: "", reason: ""});
+    return true;
+  }
   let command = "softap stop " + params.ifname;
   return doCommand(command, callback);
 }
@@ -567,14 +588,39 @@ function escapeQuote(str) {
   return str.replace(/"/g, "\\\"");
 }
 
-// The command format is "softap set wlan0 wl0.1 hotspot456 open null 6 0 8".
+/**
+ * Command format for sdk version < 16
+ *   Arguments:
+ *     argv[2] - wlan interface
+ *     argv[3] - SSID
+ *     argv[4] - Security
+ *     argv[5] - Key
+ *     argv[6] - Channel
+ *     argv[7] - Preamble
+ *     argv[8] - Max SCB
+ *
+ * Command format for sdk version >= 16
+ *   Arguments:
+ *     argv[2] - wlan interface
+ *     argv[3] - SSID
+ *     argv[4] - Security
+ *     argv[5] - Key
+ */
 function setAccessPoint(params, callback) {
-  let command = "softap set " + params.ifname +
-                " " + params.wifictrlinterfacename +
-                " \"" + escapeQuote(params.ssid) + "\"" +
-                " " + params.security +
-                " \"" + escapeQuote(params.key) + "\"" +
-                " " + "6 0 8";
+  let command;
+  if (SDK_VERSION >= 16) {
+    command = "softap set " + params.ifname +
+              " \"" + escapeQuote(params.ssid) + "\"" +
+              " " + params.security +
+              " \"" + escapeQuote(params.key) + "\"";
+  } else {
+    command = "softap set " + params.ifname +
+              " " + params.wifictrlinterfacename +
+              " \"" + escapeQuote(params.ssid) + "\"" +
+              " " + params.security +
+              " \"" + escapeQuote(params.key) + "\"" +
+              " " + "6 0 8";
+  }
   return doCommand(command, callback);
 }
 

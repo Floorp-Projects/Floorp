@@ -12,16 +12,12 @@
 #include "mozilla/PodOperations.h"
 
 #include "jscntxt.h"
-#include "jscompartment.h"
 
-#include "ion/BaselineFrame.h"
+#include "jit/BaselineFrame.h"
+#include "vm/ScopeObject.h"
 
-#include "jsscriptinlines.h"
-
-#include "ion/BaselineFrame-inl.h"
-#include "ion/IonFrameIterator-inl.h"
-#include "vm/ArgumentsObject-inl.h"
-#include "vm/ScopeObject-inl.h"
+#include "jit/BaselineFrame-inl.h"
+#include "jit/IonFrameIterator-inl.h"
 
 namespace js {
 
@@ -837,11 +833,12 @@ Activation::~Activation()
     cx_->mainThread().activation_ = prev_;
 }
 
-InterpreterActivation::InterpreterActivation(JSContext *cx, StackFrame *entry, FrameRegs &regs)
+InterpreterActivation::InterpreterActivation(JSContext *cx, StackFrame *entry, FrameRegs &regs,
+                                             int *const switchMask)
   : Activation(cx, Interpreter),
     entry_(entry),
-    current_(entry),
-    regs_(regs)
+    regs_(regs),
+    switchMask_(switchMask)
 #ifdef DEBUG
   , oldFrameCount_(cx_->runtime()->interpreterStack().frameCount_)
 #endif
@@ -850,8 +847,8 @@ InterpreterActivation::InterpreterActivation(JSContext *cx, StackFrame *entry, F
 InterpreterActivation::~InterpreterActivation()
 {
     // Pop all inline frames.
-    while (current_ != entry_)
-        popInlineFrame(current_);
+    while (regs_.fp() != entry_)
+        popInlineFrame(regs_.fp());
 
     JS_ASSERT(oldFrameCount_ == cx_->runtime()->interpreterStack().frameCount_);
     JS_ASSERT_IF(oldFrameCount_ == 0, cx_->runtime()->interpreterStack().allocator_.used() == 0);
@@ -864,18 +861,15 @@ InterpreterActivation::pushInlineFrame(const CallArgs &args, HandleScript script
     if (!cx_->runtime()->interpreterStack().pushInlineFrame(cx_, regs_, args, script, initial))
         return false;
     JS_ASSERT(regs_.fp()->script()->compartment() == compartment_);
-    current_ = regs_.fp();
     return true;
 }
 
 inline void
 InterpreterActivation::popInlineFrame(StackFrame *frame)
 {
-    JS_ASSERT(current_ == frame);
-    JS_ASSERT(current_ != entry_);
-
-    current_ = frame->prev();
-    JS_ASSERT(current_);
+    (void)frame; // Quell compiler warning.
+    JS_ASSERT(regs_.fp() == frame);
+    JS_ASSERT(regs_.fp() != entry_);
 
     cx_->runtime()->interpreterStack().popInlineFrame(regs_);
 }

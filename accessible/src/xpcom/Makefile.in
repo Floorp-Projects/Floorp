@@ -1,4 +1,3 @@
-#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -47,18 +46,6 @@ ifneq ($(A11Y_LOG),0)
   DEFINES += -DA11Y_LOG
 endif
 
-xpcAccEvents.h: $(srcdir)/AccEvents.conf \
-                   $(srcdir)/AccEventGen.py \
-                   $(LIBXUL_DIST)/sdk/bin/header.py \
-                   $(LIBXUL_DIST)/sdk/bin/xpidl.py \
-                   $(DEPTH)/js/src/js-confdefs.h
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(LIBXUL_DIST)/sdk/bin \
-	  $(srcdir)/AccEventGen.py \
-	  -I $(DEPTH)/dist/idl \
-	  --header-output xpcAccEvents.h \
-	  $(srcdir)/AccEvents.conf
-
 xpcAccEvents.cpp: $(srcdir)/AccEvents.conf \
                      $(srcdir)/AccEventGen.py \
                      $(LIBXUL_DIST)/sdk/bin/header.py \
@@ -72,6 +59,8 @@ xpcAccEvents.cpp: $(srcdir)/AccEvents.conf \
 	  --stub-output xpcAccEvents.cpp \
 	  --makedepend-output $(MDDEPDIR)/xpcAccEvents.pp \
 	  $(srcdir)/AccEvents.conf
+
+xpcAccEvents.h: xpcAccEvents.cpp
 
 GARBAGE += \
   xpcAccEvents.cpp \

@@ -41,7 +41,8 @@ struct SurfaceBufferInfo
 };
 } // anonymous namespace
 
-static SurfaceBufferInfo* GetBufferInfo(uint8_t* aBuffer)
+static SurfaceBufferInfo*
+GetBufferInfo(uint8_t* aBuffer)
 {
   return reinterpret_cast<SurfaceBufferInfo*>(aBuffer);
 }
@@ -63,7 +64,6 @@ ImageDataSerializer::ComputeMinBufferSize(gfx::IntSize aSize,
 {
   // Note that at the moment we pack the image data with the minimum possible
   // stride, we may decide to change that if we want aligned stride.
-  gfxIntSize gfxSize = gfxIntSize(aSize.width, aSize.height);
   uint32_t bufsize = aSize.height * gfx::BytesPerPixel(aFormat) * aSize.width;
   return SurfaceBufferInfo::GetOffset()
        + gfx::GetAlignedStride<16>(bufsize);

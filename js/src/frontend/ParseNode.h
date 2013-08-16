@@ -21,6 +21,8 @@ template <typename ParseHandler>
 struct ParseContext;
 
 class FullParseHandler;
+class FunctionBox;
+class ObjectBox;
 
 /*
  * Indicates a location in the stack that an upvar value can be retrieved from
@@ -1406,7 +1408,8 @@ ParseNode::isConstant()
         return true;
       case PNK_ARRAY:
       case PNK_OBJECT:
-        return isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST);
+        JS_ASSERT(isOp(JSOP_NEWINIT));
+        return !(pn_xflags & PNX_NONCONST);
       default:
         return false;
     }

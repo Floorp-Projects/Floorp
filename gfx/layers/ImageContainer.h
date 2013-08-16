@@ -6,6 +6,7 @@
 #ifndef GFX_IMAGECONTAINER_H
 #define GFX_IMAGECONTAINER_H
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "gfxASurface.h" // for gfxImageFormat
@@ -13,7 +14,6 @@
 #include "mozilla/TimeStamp.h"
 #include "ImageTypes.h"
 #include "nsTArray.h"
-#include "pratom.h"
 
 #ifdef XP_WIN
 struct ID3D10Texture2D;
@@ -103,7 +103,7 @@ public:
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
     mImplData(aImplData),
-    mSerial(PR_ATOMIC_INCREMENT(&sSerialCounter)),
+    mSerial(++sSerialCounter),
     mFormat(aFormat),
     mSent(false)
   {}
@@ -113,7 +113,7 @@ protected:
   void* mImplData;
   int32_t mSerial;
   ImageFormat mFormat;
-  static int32_t sSerialCounter;
+  static mozilla::Atomic<int32_t> sSerialCounter;
   bool mSent;
 };
 

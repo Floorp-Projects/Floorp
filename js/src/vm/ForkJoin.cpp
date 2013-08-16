@@ -9,17 +9,17 @@
 #include "jscntxt.h"
 
 #ifdef JS_THREADSAFE
-# include "prthread.h"
 # include "prprf.h"
-# include "ion/BaselineJIT.h"
+# include "prthread.h"
+# include "jit/BaselineJIT.h"
 # include "vm/Monitor.h"
 #endif
 
 #if defined(DEBUG) && defined(JS_THREADSAFE) && defined(JS_ION)
-# include "ion/Ion.h"
-# include "ion/IonCompartment.h"
-# include "ion/MIR.h"
-# include "ion/MIRGraph.h"
+# include "jit/Ion.h"
+# include "jit/IonCompartment.h"
+# include "jit/MIR.h"
+# include "jit/MIRGraph.h"
 #endif // DEBUG && THREADSAFE && ION
 
 #include "vm/Interpreter-inl.h"
@@ -1609,7 +1609,9 @@ ForkJoinShared::setAbortFlag(bool fatal)
     abort_ = true;
     fatal_ = fatal_ || fatal;
 
-    cx_->runtime()->triggerOperationCallback();
+    // Note: DontStopIon here avoids the expensive memory protection needed to
+    // interrupt Ion code compiled for sequential execution.
+    cx_->runtime()->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThreadDontStopIon);
 }
 
 void

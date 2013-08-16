@@ -18,7 +18,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIPrincipal.h"
-#include "nsContentUtils.h"
+#include "nsContentUtils.h" // for kLoadAsData
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsAutoPtr.h"

@@ -30,7 +30,6 @@
 #include "Biquad.h"
 
 #include <algorithm>
-#include <stdio.h>
 
 namespace WebCore {
 

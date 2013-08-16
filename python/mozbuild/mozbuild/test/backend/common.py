@@ -75,6 +75,11 @@ CONFIGS = {
         'non_global_defines': [],
         'substs': [],
     },
+    'xpidl': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [],
+    },
 }
 
 
@@ -95,9 +100,7 @@ class BackendTester(unittest.TestCase):
         return ConfigEnvironment(srcdir, objdir, **config)
 
     def _emit(self, name, env=None):
-        if not env:
-            env = self._get_environment(name)
-
+        env = env or self._get_environment(name)
         reader = BuildReader(env)
         emitter = TreeMetadataEmitter(env)
 

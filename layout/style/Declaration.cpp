@@ -179,9 +179,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       // The system-font subproperty and the *-source properties don't count.
       continue;
     }
-    if (!nsCSSProps::IsEnabled(*p)) {
-      continue;
-    }
     ++totalCount;
     const nsCSSValue *val = mData->ValueFor(*p);
     NS_ABORT_IF_FALSE(!val || !mImportantData || !mImportantData->ValueFor(*p),
@@ -682,35 +679,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         return;
       }
 
-      const nsCSSValue *textBlink =
-        data->ValueFor(eCSSProperty_text_blink);
-      const nsCSSValue *decorationLine =
-        data->ValueFor(eCSSProperty_text_decoration_line);
-
-      NS_ABORT_IF_FALSE(textBlink->GetUnit() == eCSSUnit_Enumerated,
-                        nsPrintfCString("bad text-blink unit %d",
-                                        textBlink->GetUnit()).get());
-      NS_ABORT_IF_FALSE(decorationLine->GetUnit() == eCSSUnit_Enumerated,
-                        nsPrintfCString("bad text-decoration-line unit %d",
-                                        decorationLine->GetUnit()).get());
-
-      bool blinkNone = (textBlink->GetIntValue() == NS_STYLE_TEXT_BLINK_NONE);
-      bool lineNone =
-        (decorationLine->GetIntValue() == NS_STYLE_TEXT_DECORATION_LINE_NONE);
-
-      if (blinkNone && lineNone) {
-        AppendValueToString(eCSSProperty_text_decoration_line, aValue);
-      } else {
-        if (!blinkNone) {
-          AppendValueToString(eCSSProperty_text_blink, aValue);
-        }
-        if (!lineNone) {
-          if (!aValue.IsEmpty()) {
-            aValue.Append(PRUnichar(' '));
-          }
-          AppendValueToString(eCSSProperty_text_decoration_line, aValue);
-        }
-      }
+      AppendValueToString(eCSSProperty_text_decoration_line, aValue);
       break;
     }
     case eCSSProperty_transition: {

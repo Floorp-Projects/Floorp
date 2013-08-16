@@ -6,6 +6,8 @@
 
 #include "WebAudioUtils.h"
 #include "AudioNodeStream.h"
+#include "AudioParamTimeline.h"
+#include "blink/HRTFDatabaseLoader.h"
 
 namespace mozilla {
 
@@ -59,6 +61,12 @@ WebAudioUtils::ConvertAudioParamToTicks(AudioParamTimeline& aParam,
   ctth.mSourceStream = aSource;
   ctth.mDestinationStream = aDest;
   aParam.ConvertEventTimesToTicks(ConvertTimeToTickHelper::Convert, &ctth, aDest->SampleRate());
+}
+
+void
+WebAudioUtils::Shutdown()
+{
+  WebCore::HRTFDatabaseLoader::shutdown();
 }
 
 }

@@ -321,13 +321,6 @@ class MochitestOptions(optparse.OptionParser):
           "metavar": "PREF=VALUE",
           "help": "defines an extra user preference",
         }],
-        [["--build-info-json"],
-        { "action": "store",
-          "type": "string",
-          "default": None,
-          "dest": "mozInfo",
-          "help": "path to mozinfo.json to determine build time options",
-        }],
     ]
 
     def __init__(self, automation=None, **kwargs):
@@ -465,15 +458,6 @@ class MochitestOptions(optparse.OptionParser):
                 self.error("--run-until-failure can only be used together with --test-path specifying a single test.")
             if not options.repeat:
                 options.repeat = 29
-
-        if not options.mozInfo:
-            if build_obj:
-                options.mozInfo = os.path.join(build_obj.topobjdir, 'mozinfo.json')
-            else:
-                options.mozInfo = os.path.abspath('mozinfo.json')
-
-        if not os.path.isfile(options.mozInfo):
-            self.error("Unable to file build information file (mozinfo.json) at this location: %s" % options.mozInfo)
 
         return options
 

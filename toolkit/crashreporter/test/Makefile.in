@@ -20,7 +20,6 @@ VPATH += \
   $(NULL)
 
 LOCAL_INCLUDES += \
-  -I$(XPIDL_GEN_DIR) \
   -I$(srcdir)/../google-breakpad/src/ \
   $(NULL)
 EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(MOZ_COMPONENT_LIBS) $(XPCOM_GLUE_LDOPTS)

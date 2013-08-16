@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '0.8.377';
-PDFJS.build = 'c682c25';
+PDFJS.version = '0.8.423';
+PDFJS.build = 'e2993a7';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -840,33 +840,35 @@ var Page = (function PageClosure() {
       dataPromises.then(function(data) {
         var contentStream = data[0];
 
-        partialEvaluator.getOperatorList(contentStream, self.resources).then(
-          function(data) {
-            pageListPromise.resolve(data);
-          },
-          reject
-        );
+
+        var opList = new OperatorList(handler, self.pageIndex);
+
+        handler.send('StartRenderPage', {
+          transparency: partialEvaluator.hasBlendModes(self.resources),
+          pageIndex: self.pageIndex
+        });
+        partialEvaluator.getOperatorList(contentStream, self.resources, opList);
+        pageListPromise.resolve(opList);
       });
 
       var annotationsPromise = pdfManager.ensure(this, 'annotations');
       Promise.all([pageListPromise, annotationsPromise]).then(function(datas) {
-        var pageData = datas[0];
-        var pageQueue = pageData.queue;
+        var pageOpList = datas[0];
         var annotations = datas[1];
 
         if (annotations.length === 0) {
-          PartialEvaluator.optimizeQueue(pageQueue);
-          promise.resolve(pageData);
+          PartialEvaluator.optimizeQueue(pageOpList);
+          pageOpList.flush(true);
+          promise.resolve(pageOpList);
           return;
         }
 
-        var dependencies = pageData.dependencies;
         var annotationsReadyPromise = Annotation.appendToOperatorList(
-          annotations, pageQueue, pdfManager, dependencies, partialEvaluator);
+          annotations, pageOpList, pdfManager, partialEvaluator);
         annotationsReadyPromise.then(function () {
-          PartialEvaluator.optimizeQueue(pageQueue);
-
-          promise.resolve(pageData);
+          PartialEvaluator.optimizeQueue(pageOpList);
+          pageOpList.flush(true);
+          promise.resolve(pageOpList);
         }, reject);
       }, reject);
 
@@ -901,12 +903,9 @@ var Page = (function PageClosure() {
               self.pageIndex, 'p' + self.pageIndex + '_',
               self.idCounters);
 
-        partialEvaluator.getTextContent(
-            contentStream, self.resources).then(function(bidiTexts) {
-          textContentPromise.resolve({
-            bidiTexts: bidiTexts
-          });
-        });
+        var bidiTexts = partialEvaluator.getTextContent(contentStream,
+                                                        self.resources);
+        textContentPromise.resolve(bidiTexts);
       });
 
       return textContentPromise;
@@ -1114,9 +1113,13 @@ var PDFDocument = (function PDFDocumentClosure() {
         PDFFormatVersion: this.pdfFormatVersion,
         IsAcroFormPresent: !!this.acroForm
       };
-      if (this.xref.trailer.has('Info')) {
-        var infoDict = this.xref.trailer.get('Info');
-
+      var infoDict;
+      try {
+        infoDict = this.xref.trailer.get('Info');
+      } catch (err) {
+        info('The document information dictionary is invalid.');
+      }
+      if (infoDict) {
         var validEntries = DocumentInfoValidators.entries;
         // Only fill the document info with valid entries from the spec.
         for (var key in validEntries) {
@@ -1125,7 +1128,7 @@ var PDFDocument = (function PDFDocumentClosure() {
             // Make sure the value conforms to the spec.
             if (validEntries[key](value)) {
               docInfo[key] = typeof value !== 'string' ? value :
-                             stringToPDFString(value);
+                stringToPDFString(value);
             } else {
               info('Bad value in document info for "' + key + '"');
             }
@@ -1432,12 +1435,8 @@ var Util = PDFJS.Util = (function UtilClosure() {
   };
 
   Util.makeCssCmyk = function Util_makeCssCmyk(cmyk) {
-    var cs = new DeviceCmykCS();
-    Util.makeCssCmyk = function makeCssCmyk(cmyk) {
-      var rgb = cs.getRgb(cmyk, 0);
-      return Util.makeCssRgb(rgb);
-    };
-    return Util.makeCssCmyk(cmyk);
+    var rgb = ColorSpace.singletons.cmyk.getRgb(cmyk, 0);
+    return Util.makeCssRgb(rgb);
   };
 
   // Concatenates two transformation matrices together and returns the result.
@@ -1921,8 +1920,12 @@ var Promise = PDFJS.Promise = (function PromiseClosure() {
         var now = Date.now();
         for (var i = 0; i < this.unhandledRejections.length; i++) {
           if (now - this.unhandledRejections[i].time > REJECTION_TIMEOUT) {
-            warn('Unhandled rejection: ' +
-                 this.unhandledRejections[i].promise._value);
+            var unhandled = this.unhandledRejections[i].promise._value;
+            var msg = 'Unhandled rejection: ' + unhandled;
+            if (unhandled.stack) {
+              msg += '\n' + unhandled.stack;
+            }
+            warn(msg);
             this.unhandledRejections.splice(i);
             i--;
           }
@@ -2054,14 +2057,14 @@ var StatTimer = (function StatTimerClosure() {
       if (!this.enabled)
         return;
       if (name in this.started)
-        throw 'Timer is already running for ' + name;
+        warn('Timer is already running for ' + name);
       this.started[name] = Date.now();
     },
     timeEnd: function StatTimer_timeEnd(name) {
       if (!this.enabled)
         return;
       if (!(name in this.started))
-        throw 'Timer has not been started for ' + name;
+        warn('Timer has not been started for ' + name);
       this.times.push({
         'name': name,
         'start': this.started[name],
@@ -2300,8 +2303,10 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
     this.stats.enabled = !!globalScope.PDFJS.enableStats;
     this.commonObjs = transport.commonObjs;
     this.objs = new PDFObjects();
-    this.renderInProgress = false;
+    this.receivingOperatorList  = false;
     this.cleanupAfterRender = false;
+    this.pendingDestroy = false;
+    this.renderTasks = [];
   }
   PDFPageProxy.prototype = {
     /**
@@ -2369,20 +2374,27 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
      *                               rendering call the function that is the
      *                               first argument to the callback.
      * }.
-     * @return {Promise} A promise that is resolved when the page finishes
-     * rendering.
+     * @return {RenderTask} An extended promise that is resolved when the page
+     * finishes rendering (see RenderTask).
      */
     render: function PDFPageProxy_render(params) {
-      this.renderInProgress = true;
-
-      var promise = new Promise();
       var stats = this.stats;
       stats.time('Overall');
+
+      // If there was a pending destroy cancel it so no cleanup happens during
+      // this call to render.
+      this.pendingDestroy = false;
+
       // If there is no displayReadyPromise yet, then the operatorList was never
       // requested before. Make the request and create the promise.
       if (!this.displayReadyPromise) {
+        this.receivingOperatorList = true;
         this.displayReadyPromise = new Promise();
-        this.destroyed = false;
+        this.operatorList = {
+          fnArray: [],
+          argsArray: [],
+          lastChunk: false
+        };
 
         this.stats.time('Page Request');
         this.transport.messageHandler.send('RenderPageRequest', {
@@ -2390,128 +2402,49 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
         });
       }
 
+      var internalRenderTask = new InternalRenderTask(complete, params,
+                                       this.objs, this.commonObjs,
+                                       this.operatorList, this.pageNumber);
+      this.renderTasks.push(internalRenderTask);
+      var renderTask = new RenderTask(internalRenderTask);
+
       var self = this;
-      function complete(error) {
-        self.renderInProgress = false;
-        if (self.destroyed || self.cleanupAfterRender) {
-          delete self.displayReadyPromise;
-          delete self.operatorList;
-          self.objs.clear();
-        }
-
-        if (error)
-          promise.reject(error);
-        else
-          promise.resolve();
-      }
-      var continueCallback = params.continueCallback;
-
-      // Once the operatorList and fonts are loaded, do the actual rendering.
       this.displayReadyPromise.then(
-        function pageDisplayReadyPromise() {
-          if (self.destroyed) {
+        function pageDisplayReadyPromise(transparency) {
+          if (self.pendingDestroy) {
             complete();
             return;
           }
-
-          var gfx = new CanvasGraphics(params.canvasContext, this.commonObjs,
-            this.objs, params.textLayer, params.imageLayer);
-          try {
-            this.display(gfx, params.viewport, complete, continueCallback);
-          } catch (e) {
-            complete(e);
-          }
-        }.bind(this),
+          stats.time('Rendering');
+          internalRenderTask.initalizeGraphics(transparency);
+          internalRenderTask.operatorListChanged();
+        },
         function pageDisplayReadPromiseError(reason) {
           complete(reason);
         }
       );
 
-      return promise;
-    },
-    /**
-     * For internal use only.
-     */
-    startRenderingFromOperatorList:
-      function PDFPageProxy_startRenderingFromOperatorList(operatorList,
-                                                           fonts) {
-      var self = this;
-      this.operatorList = operatorList;
+      function complete(error) {
+        var i = self.renderTasks.indexOf(internalRenderTask);
+        if (i >= 0) {
+            self.renderTasks.splice(i, 1);
+        }
 
-      this.ensureFonts(fonts,
-        function pageStartRenderingFromOperatorListEnsureFonts() {
-          self.displayReadyPromise.resolve();
+        if (self.cleanupAfterRender) {
+          self.pendingDestroy = true;
         }
-      );
-    },
-    /**
-     * For internal use only.
-     */
-    ensureFonts: function PDFPageProxy_ensureFonts(fonts, callback) {
-      this.stats.time('Font Loading');
-      // Convert the font names to the corresponding font obj.
-      var fontObjs = [];
-      for (var i = 0, ii = fonts.length; i < ii; i++) {
-        var obj = this.commonObjs.getData(fonts[i]);
-        if (obj.error) {
-          warn('Error during font loading: ' + obj.error);
-          continue;
+        self._tryDestroy();
+
+        if (error) {
+          renderTask.reject(error);
+        } else {
+          renderTask.resolve();
         }
-        if (!obj.coded) {
-          this.transport.embeddedFontsUsed = true;
-        }
-        fontObjs.push(obj);
+        stats.timeEnd('Rendering');
+        stats.timeEnd('Overall');
       }
 
-      // Load all the fonts
-      FontLoader.bind(
-        fontObjs,
-        function pageEnsureFontsFontObjs(fontObjs) {
-          this.stats.timeEnd('Font Loading');
-
-          callback.call(this);
-        }.bind(this)
-      );
-    },
-    /**
-     * For internal use only.
-     */
-    display: function PDFPageProxy_display(gfx, viewport, callback,
-                                           continueCallback) {
-      var stats = this.stats;
-      stats.time('Rendering');
-
-      var operatorList = this.operatorList;
-      gfx.beginDrawing(viewport, operatorList.transparency);
-
-      var startIdx = 0;
-      var length = operatorList.fnArray.length;
-      var stepper = null;
-      if (PDFJS.pdfBug && 'StepperManager' in globalScope &&
-          globalScope['StepperManager'].enabled) {
-        stepper = globalScope['StepperManager'].create(this.pageNumber - 1);
-        stepper.init(operatorList);
-        stepper.nextBreakPoint = stepper.getNextBreakPoint();
-      }
-
-      var continueWrapper;
-      if (continueCallback)
-        continueWrapper = function() { continueCallback(next); };
-      else
-        continueWrapper = next;
-
-      var self = this;
-      function next() {
-        startIdx = gfx.executeOperatorList(operatorList, startIdx,
-                                           continueWrapper, stepper);
-        if (startIdx == length) {
-          gfx.endDrawing();
-          stats.timeEnd('Rendering');
-          stats.timeEnd('Overall');
-          if (callback) callback();
-        }
-      }
-      continueWrapper();
+      return renderTask;
     },
     /**
      * @return {Promise} That is resolved with the a {string} that is the text
@@ -2544,12 +2477,50 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
      * Destroys resources allocated by the page.
      */
     destroy: function PDFPageProxy_destroy() {
-      this.destroyed = true;
+      this.pendingDestroy = true;
+      this._tryDestroy();
+    },
+    /**
+     * For internal use only. Attempts to clean up if rendering is in a state
+     * where that's possible.
+     */
+    _tryDestroy: function PDFPageProxy__destroy() {
+      if (!this.pendingDestroy ||
+          this.renderTasks.length !== 0 ||
+          this.receivingOperatorList) {
+        return;
+      }
 
-      if (!this.renderInProgress) {
-        delete this.operatorList;
-        delete this.displayReadyPromise;
-        this.objs.clear();
+      delete this.operatorList;
+      delete this.displayReadyPromise;
+      this.objs.clear();
+      this.pendingDestroy = false;
+    },
+    /**
+     * For internal use only.
+     */
+    _startRenderPage: function PDFPageProxy_startRenderPage(transparency) {
+      this.displayReadyPromise.resolve(transparency);
+    },
+    /**
+     * For internal use only.
+     */
+    _renderPageChunk: function PDFPageProxy_renderPageChunk(operatorListChunk) {
+      // Add the new chunk to the current operator list.
+      Util.concatenateToArray(this.operatorList.fnArray,
+                              operatorListChunk.fnArray);
+      Util.concatenateToArray(this.operatorList.argsArray,
+                              operatorListChunk.argsArray);
+      this.operatorList.lastChunk = operatorListChunk.lastChunk;
+
+      // Notify all the rendering tasks there are more operators to be consumed.
+      for (var i = 0; i < this.renderTasks.length; i++) {
+        this.renderTasks[i].operatorListChanged();
+      }
+
+      if (operatorListChunk.lastChunk) {
+        this.receivingOperatorList = false;
+        this._tryDestroy();
       }
     }
   };
@@ -2724,12 +2695,17 @@ var WorkerTransport = (function WorkerTransportClosure() {
         promise.resolve(annotations);
       }, this);
 
-      messageHandler.on('RenderPage', function transportRender(data) {
+      messageHandler.on('StartRenderPage', function transportRender(data) {
         var page = this.pageCache[data.pageIndex];
-        var depFonts = data.depFonts;
 
         page.stats.timeEnd('Page Request');
-        page.startRenderingFromOperatorList(data.operatorList, depFonts);
+        page._startRenderPage(data.transparency);
+      }, this);
+
+      messageHandler.on('RenderPageChunk', function transportRender(data) {
+        var page = this.pageCache[data.pageIndex];
+
+        page._renderPageChunk(data.operatorList);
       }, this);
 
       messageHandler.on('commonobj', function transportObj(data) {
@@ -2742,14 +2718,22 @@ var WorkerTransport = (function WorkerTransportClosure() {
           case 'Font':
             var exportedData = data[2];
 
-            // At this point, only the font object is created but the font is
-            // not yet attached to the DOM. This is done in `FontLoader.bind`.
             var font;
-            if ('error' in exportedData)
-              font = new ErrorFont(exportedData.error);
-            else
+            if ('error' in exportedData) {
+              var error = exportedData.error;
+              warn('Error during font loading: ' + error);
+              this.commonObjs.resolve(id, error);
+              break;
+            } else {
               font = new Font(exportedData);
-            this.commonObjs.resolve(id, font);
+            }
+
+            FontLoader.bind(
+              [font],
+              function fontReady(fontObjs) {
+                this.commonObjs.resolve(id, font);
+              }.bind(this)
+            );
             break;
           default:
             error('Got unknown common object type ' + type);
@@ -2893,6 +2877,132 @@ var WorkerTransport = (function WorkerTransportClosure() {
   };
   return WorkerTransport;
 
+})();
+
+/**
+ * RenderTask is basically a promise but adds a cancel function to terminate it.
+ */
+var RenderTask = (function RenderTaskClosure() {
+  function RenderTask(internalRenderTask) {
+    this.internalRenderTask = internalRenderTask;
+    Promise.call(this);
+  }
+
+  RenderTask.prototype = Object.create(Promise.prototype);
+
+  /**
+   * Cancel the rendering task. If the task is curently rendering it will not be
+   * cancelled until graphics pauses with a timeout. The promise that this
+   * object extends will resolved when cancelled.
+   */
+  RenderTask.prototype.cancel = function RenderTask_cancel() {
+    this.internalRenderTask.cancel();
+  };
+
+  return RenderTask;
+})();
+
+var InternalRenderTask = (function InternalRenderTaskClosure() {
+
+  function InternalRenderTask(callback, params, objs, commonObjs, operatorList,
+                              pageNumber) {
+    this.callback = callback;
+    this.params = params;
+    this.objs = objs;
+    this.commonObjs = commonObjs;
+    this.operatorListIdx = null;
+    this.operatorList = operatorList;
+    this.pageNumber = pageNumber;
+    this.running = false;
+    this.graphicsReadyCallback = null;
+    this.graphicsReady = false;
+    this.cancelled = false;
+  }
+
+  InternalRenderTask.prototype = {
+
+    initalizeGraphics:
+        function InternalRenderTask_initalizeGraphics(transparency) {
+
+      if (this.cancelled) {
+        return;
+      }
+      if (PDFJS.pdfBug && 'StepperManager' in globalScope &&
+          globalScope.StepperManager.enabled) {
+        this.stepper = globalScope.StepperManager.create(this.pageNumber - 1);
+        this.stepper.init(this.operatorList);
+        this.stepper.nextBreakPoint = this.stepper.getNextBreakPoint();
+      }
+
+      var params = this.params;
+      this.gfx = new CanvasGraphics(params.canvasContext, this.commonObjs,
+                                    this.objs, params.textLayer,
+                                    params.imageLayer);
+
+      this.gfx.beginDrawing(params.viewport, transparency);
+      this.operatorListIdx = 0;
+      this.graphicsReady = true;
+      if (this.graphicsReadyCallback) {
+        this.graphicsReadyCallback();
+      }
+    },
+
+    cancel: function InternalRenderTask_cancel() {
+      this.running = false;
+      this.cancelled = true;
+      this.callback('cancelled');
+    },
+
+    operatorListChanged: function InternalRenderTask_operatorListChanged() {
+      if (!this.graphicsReady) {
+        if (!this.graphicsReadyCallback) {
+          this.graphicsReadyCallback = this._continue.bind(this);
+        }
+        return;
+      }
+
+      if (this.stepper) {
+        this.stepper.updateOperatorList(this.operatorList);
+      }
+
+      if (this.running) {
+        return;
+      }
+      this._continue();
+    },
+
+    _continue: function InternalRenderTask__continue() {
+      this.running = true;
+      if (this.cancelled) {
+        return;
+      }
+      if (this.params.continueCallback) {
+        this.params.continueCallback(this._next.bind(this));
+      } else {
+        this._next();
+      }
+    },
+
+    _next: function InternalRenderTask__next() {
+      if (this.cancelled) {
+        return;
+      }
+      this.operatorListIdx = this.gfx.executeOperatorList(this.operatorList,
+                                        this.operatorListIdx,
+                                        this._continue.bind(this),
+                                        this.stepper);
+      if (this.operatorListIdx === this.operatorList.fnArray.length) {
+        this.running = false;
+        if (this.operatorList.lastChunk) {
+          this.gfx.endDrawing();
+          this.callback();
+        }
+      }
+    }
+
+  };
+
+  return InternalRenderTask;
 })();
 
 
@@ -3234,9 +3344,9 @@ var CanvasExtraState = (function CanvasExtraStateClosure() {
     this.textRenderingMode = TextRenderingMode.FILL;
     this.textRise = 0;
     // Color spaces
-    this.fillColorSpace = new DeviceGrayCS();
+    this.fillColorSpace = ColorSpace.singletons.gray;
     this.fillColorSpaceObj = null;
-    this.strokeColorSpace = new DeviceGrayCS();
+    this.strokeColorSpace = ColorSpace.singletons.gray;
     this.strokeColorSpaceObj = null;
     this.fillColorObj = null;
     this.strokeColorObj = null;
@@ -3283,6 +3393,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
     this.imageLayer = imageLayer;
     this.groupStack = [];
     this.processingType3 = null;
+    // Patterns are painted relative to the initial page/form transform, see pdf
+    // spec 8.7.2 NOTE 1.
+    this.baseTransform = null;
+    this.baseTransformStack = [];
     if (canvasCtx) {
       addContextCurrentTransform(canvasCtx);
     }
@@ -3385,6 +3499,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
 
       var transform = viewport.transform;
+      this.baseTransform = transform.slice();
       this.ctx.save();
       this.ctx.transform.apply(this.ctx, transform);
 
@@ -3541,7 +3656,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
             this.setFlatness(value);
             break;
           case 'Font':
-            this.setFont(state[1], state[2]);
+            this.setFont(value[0], value[1]);
             break;
           case 'CA':
             this.current.strokeAlpha = state[1];
@@ -3918,11 +4033,10 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
     },
 
-    showText: function CanvasGraphics_showText(str, skipTextSelection) {
+    showText: function CanvasGraphics_showText(glyphs, skipTextSelection) {
       var ctx = this.ctx;
       var current = this.current;
       var font = current.font;
-      var glyphs = font.charsToGlyphs(str);
       var fontSize = current.fontSize;
       var fontSizeScale = current.fontSizeScale;
       var charSpacing = current.charSpacing;
@@ -4117,15 +4231,13 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
           if (textSelection)
             spacingAccumulator += spacingLength;
-        } else if (isString(e)) {
+        } else {
           var shownCanvasWidth = this.showText(e, true);
 
           if (textSelection) {
             canvasWidth += spacingAccumulator + shownCanvasWidth;
             spacingAccumulator = 0;
           }
-        } else {
-          error('TJ array element ' + e + ' is not string or num');
         }
       }
 
@@ -4194,7 +4306,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           color = base.getRgb(args, 0);
         }
         var pattern = new TilingPattern(IR, color, this.ctx, this.objs,
-                                        this.commonObjs);
+                                        this.commonObjs, this.baseTransform);
       } else if (IR[0] == 'RadialAxial' || IR[0] == 'Dummy') {
         var pattern = Pattern.shadingFromIR(IR);
       } else {
@@ -4228,8 +4340,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       }
     },
     setStrokeGray: function CanvasGraphics_setStrokeGray(gray) {
-      if (!(this.current.strokeColorSpace instanceof DeviceGrayCS))
-        this.current.strokeColorSpace = new DeviceGrayCS();
+      this.current.strokeColorSpace = ColorSpace.singletons.gray;
 
       var rgbColor = this.current.strokeColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
@@ -4237,8 +4348,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.current.strokeColor = color;
     },
     setFillGray: function CanvasGraphics_setFillGray(gray) {
-      if (!(this.current.fillColorSpace instanceof DeviceGrayCS))
-        this.current.fillColorSpace = new DeviceGrayCS();
+      this.current.fillColorSpace = ColorSpace.singletons.gray;
 
       var rgbColor = this.current.fillColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
@@ -4246,8 +4356,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.current.fillColor = color;
     },
     setStrokeRGBColor: function CanvasGraphics_setStrokeRGBColor(r, g, b) {
-      if (!(this.current.strokeColorSpace instanceof DeviceRgbCS))
-        this.current.strokeColorSpace = new DeviceRgbCS();
+      this.current.strokeColorSpace = ColorSpace.singletons.rgb;
 
       var rgbColor = this.current.strokeColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
@@ -4255,8 +4364,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.current.strokeColor = color;
     },
     setFillRGBColor: function CanvasGraphics_setFillRGBColor(r, g, b) {
-      if (!(this.current.fillColorSpace instanceof DeviceRgbCS))
-        this.current.fillColorSpace = new DeviceRgbCS();
+      this.current.fillColorSpace = ColorSpace.singletons.rgb;
 
       var rgbColor = this.current.fillColorSpace.getRgb(arguments, 0);
       var color = Util.makeCssRgb(rgbColor);
@@ -4264,16 +4372,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.current.fillColor = color;
     },
     setStrokeCMYKColor: function CanvasGraphics_setStrokeCMYKColor(c, m, y, k) {
-      if (!(this.current.strokeColorSpace instanceof DeviceCmykCS))
-        this.current.strokeColorSpace = new DeviceCmykCS();
+      this.current.strokeColorSpace = ColorSpace.singletons.cmyk;
 
       var color = Util.makeCssCmyk(arguments);
       this.ctx.strokeStyle = color;
       this.current.strokeColor = color;
     },
     setFillCMYKColor: function CanvasGraphics_setFillCMYKColor(c, m, y, k) {
-      if (!(this.current.fillColorSpace instanceof DeviceCmykCS))
-        this.current.fillColorSpace = new DeviceCmykCS();
+      this.current.fillColorSpace = ColorSpace.singletons.cmyk;
 
       var color = Util.makeCssCmyk(arguments);
       this.ctx.fillStyle = color;
@@ -4329,9 +4435,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
                                                                         bbox) {
       this.save();
       this.current.paintFormXObjectDepth++;
+      this.baseTransformStack.push(this.baseTransform);
 
       if (matrix && isArray(matrix) && 6 == matrix.length)
         this.transform.apply(this, matrix);
+
+      this.baseTransform = this.ctx.mozCurrentTransform;
 
       if (bbox && isArray(bbox) && 4 == bbox.length) {
         var width = bbox[2] - bbox[0];
@@ -4349,6 +4458,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         // some pdf don't close all restores inside object
         // closing those for them
       } while (this.current.paintFormXObjectDepth >= depth);
+      this.baseTransform = this.baseTransformStack.pop();
     },
 
     beginGroup: function CanvasGraphics_beginGroup(group) {
@@ -6138,7 +6248,7 @@ var Annotation = (function AnnotationClosure() {
       data.borderWidth = borderStyle.has('W') ? borderStyle.get('W') : 1;
     } else {
       var borderArray = dict.get('Border') || [0, 0, 1];
-      data.borderWidth = borderArray[2];
+      data.borderWidth = borderArray[2] || 0;
     }
 
     this.appearance = getDefaultAppearance(dict);
@@ -6204,13 +6314,7 @@ var Annotation = (function AnnotationClosure() {
       var promise = new Promise();
 
       if (!this.appearance) {
-        promise.resolve({
-          queue: {
-            fnArray: [],
-            argsArray: []
-          },
-          dependency: {}
-        });
+        promise.resolve(new OperatorList());
         return promise;
       }
 
@@ -6234,19 +6338,11 @@ var Annotation = (function AnnotationClosure() {
       var border = data.border;
 
       resourcesPromise.then(function(resources) {
-        var listPromise = evaluator.getOperatorList(this.appearance, resources);
-        listPromise.then(function(appearanceStreamData) {
-          var fnArray = appearanceStreamData.queue.fnArray;
-          var argsArray = appearanceStreamData.queue.argsArray;
-
-          fnArray.unshift('beginAnnotation');
-          argsArray.unshift([data.rect, transform, matrix]);
-
-          fnArray.push('endAnnotation');
-          argsArray.push([]);
-
-          promise.resolve(appearanceStreamData);
-        });
+        var opList = new OperatorList();
+        opList.addOp('beginAnnotation', [data.rect, transform, matrix]);
+        evaluator.getOperatorList(this.appearance, resources, opList);
+        opList.addOp('endAnnotation', []);
+        promise.resolve(opList);
       }.bind(this));
 
       return promise;
@@ -6326,7 +6422,7 @@ var Annotation = (function AnnotationClosure() {
   };
 
   Annotation.appendToOperatorList = function Annotation_appendToOperatorList(
-      annotations, pageQueue, pdfManager, dependencies, partialEvaluator) {
+      annotations, opList, pdfManager, partialEvaluator) {
 
     function reject(e) {
       annotationsReadyPromise.reject(e);
@@ -6338,22 +6434,13 @@ var Annotation = (function AnnotationClosure() {
     for (var i = 0, n = annotations.length; i < n; ++i) {
       annotationPromises.push(annotations[i].getOperatorList(partialEvaluator));
     }
-
     Promise.all(annotationPromises).then(function(datas) {
-      var fnArray = pageQueue.fnArray;
-      var argsArray = pageQueue.argsArray;
-      fnArray.push('beginAnnotations');
-      argsArray.push([]);
+      opList.addOp('beginAnnotations', []);
       for (var i = 0, n = datas.length; i < n; ++i) {
-        var annotationData = datas[i];
-        var annotationQueue = annotationData.queue;
-        Util.concatenateToArray(fnArray, annotationQueue.fnArray);
-        Util.concatenateToArray(argsArray, annotationQueue.argsArray);
-        Util.extendObj(dependencies, annotationData.dependencies);
+        var annotOpList = datas[i];
+        opList.addOpList(annotOpList);
       }
-      fnArray.push('endAnnotations');
-      argsArray.push([]);
-
+      opList.addOp('endAnnotations', []);
       annotationsReadyPromise.resolve();
     }, reject);
 
@@ -6500,8 +6587,8 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
 
     getOperatorList: function TextWidgetAnnotation_getOperatorList(evaluator) {
 
-
       var promise = new Promise();
+      var opList = new OperatorList();
       var data = this.data;
 
       // Even if there is an appearance stream, ignore it. This is the
@@ -6509,65 +6596,44 @@ var TextWidgetAnnotation = (function TextWidgetAnnotationClosure() {
 
       var defaultAppearance = data.defaultAppearance;
       if (!defaultAppearance) {
-        promise.resolve({
-          queue: {
-            fnArray: [],
-            argsArray: []
-          },
-          dependency: {}
-        });
+        promise.resolve(opList);
         return promise;
       }
 
       // Include any font resources found in the default appearance
 
       var stream = new Stream(stringToBytes(defaultAppearance));
-      var listPromise = evaluator.getOperatorList(stream, this.fieldResources);
-      listPromise.then(function(appearanceStreamData) {
-        var appearanceFnArray = appearanceStreamData.queue.fnArray;
-        var appearanceArgsArray = appearanceStreamData.queue.argsArray;
-        var fnArray = [];
-        var argsArray = [];
+      evaluator.getOperatorList(stream, this.fieldResources, opList);
+      var appearanceFnArray = opList.fnArray;
+      var appearanceArgsArray = opList.argsArray;
+      var fnArray = [];
+      var argsArray = [];
 
-        // TODO(mack): Add support for stroke color
-        data.rgb = [0, 0, 0];
-        for (var i = 0, n = fnArray.length; i < n; ++i) {
-          var fnName = appearanceFnArray[i];
-          var args = appearanceArgsArray[i];
-          if (fnName === 'dependency') {
-            var dependency = args[i];
-            if (dependency.indexOf('g_font_') === 0) {
-              data.fontRefName = dependency;
-            }
-            fnArray.push(fnName);
-            argsArray.push(args);
-          } else if (fnName === 'setFont') {
-            data.fontRefName = args[0];
-            var size = args[1];
-            if (size < 0) {
-              data.fontDirection = -1;
-              data.fontSize = -size;
-            } else {
-              data.fontDirection = 1;
-              data.fontSize = size;
-            }
-          } else if (fnName === 'setFillRGBColor') {
-            data.rgb = args;
-          } else if (fnName === 'setFillGray') {
-            var rgbValue = args[0] * 255;
-            data.rgb = [rgbValue, rgbValue, rgbValue];
+      // TODO(mack): Add support for stroke color
+      data.rgb = [0, 0, 0];
+      // TODO THIS DOESN'T MAKE ANY SENSE SINCE THE fnArray IS EMPTY!
+      for (var i = 0, n = fnArray.length; i < n; ++i) {
+        var fnName = appearanceFnArray[i];
+        var args = appearanceArgsArray[i];
+
+        if (fnName === 'setFont') {
+          data.fontRefName = args[0];
+          var size = args[1];
+          if (size < 0) {
+            data.fontDirection = -1;
+            data.fontSize = -size;
+          } else {
+            data.fontDirection = 1;
+            data.fontSize = size;
           }
+        } else if (fnName === 'setFillRGBColor') {
+          data.rgb = args;
+        } else if (fnName === 'setFillGray') {
+          var rgbValue = args[0] * 255;
+          data.rgb = [rgbValue, rgbValue, rgbValue];
         }
-        promise.resolve({
-          queue: {
-            fnArray: fnArray,
-            argsArray: argsArray
-          },
-          dependency: {}
-        });
-
-      });
-
+      }
+      promise.resolve(opList);
       return promise;
     }
   });
@@ -6599,13 +6665,7 @@ var TextAnnotation = (function TextAnnotationClosure() {
 
     getOperatorList: function TextAnnotation_getOperatorList(evaluator) {
       var promise = new Promise();
-      promise.resolve({
-        queue: {
-          fnArray: [],
-          argsArray: []
-        },
-        dependency: {}
-      });
+      promise.resolve(new OperatorList());
       return promise;
     },
 
@@ -14785,11 +14845,11 @@ var ColorSpace = (function ColorSpaceClosure() {
 
     switch (name) {
       case 'DeviceGrayCS':
-        return new DeviceGrayCS();
+        return this.singletons.gray;
       case 'DeviceRgbCS':
-        return new DeviceRgbCS();
+        return this.singletons.rgb;
       case 'DeviceCmykCS':
-        return new DeviceCmykCS();
+        return this.singletons.cmyk;
       case 'PatternCS':
         var basePatternCS = IR[1];
         if (basePatternCS)
@@ -14937,6 +14997,18 @@ var ColorSpace = (function ColorSpaceClosure() {
         return false;
     }
     return true;
+  };
+
+  ColorSpace.singletons = {
+    get gray() {
+      return shadow(this, 'gray', new DeviceGrayCS());
+    },
+    get rgb() {
+      return shadow(this, 'rgb', new DeviceRgbCS());
+    },
+    get cmyk() {
+      return shadow(this, 'cmyk', new DeviceCmykCS());
+    }
   };
 
   return ColorSpace;
@@ -16199,24 +16271,51 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
   var TILING_PATTERN = 1, SHADING_PATTERN = 2;
 
-  function createOperatorList(fnArray, argsArray, dependencies) {
-    return {
-      queue: {
-        fnArray: fnArray || [],
-        argsArray: argsArray || []
-      },
-      dependencies: dependencies || {}
-    };
-  }
-
   PartialEvaluator.prototype = {
+    hasBlendModes: function PartialEvaluator_hasBlendModes(resources) {
+      if (!isDict(resources)) {
+        return false;
+      }
+
+      var nodes = [resources];
+      while (nodes.length) {
+        var node = nodes.shift();
+        // First check the current resources for blend modes.
+        var graphicStates = node.get('ExtGState');
+        if (isDict(graphicStates)) {
+          graphicStates = graphicStates.getAll();
+          for (var key in graphicStates) {
+            var graphicState = graphicStates[key];
+            var bm = graphicState['BM'];
+            if (isName(bm) && bm.name !== 'Normal') {
+              return true;
+            }
+          }
+        }
+        // Descend into the XObjects to look for more resources and blend modes.
+        var xObjects = node.get('XObject');
+        if (!isDict(xObjects)) {
+          continue;
+        }
+        xObjects = xObjects.getAll();
+        for (var key in xObjects) {
+          var xObject = xObjects[key];
+          if (!isStream(xObject)) {
+            continue;
+          }
+          var xResources = xObject.dict.get('Resources');
+          if (isDict(xResources)) {
+            nodes.push(xResources);
+          }
+        }
+      }
+      return false;
+    },
 
     buildFormXObject: function PartialEvaluator_buildFormXObject(resources,
-                                                                 xobj, smask) {
+                                                                 xobj, smask,
+                                                                 operatorList) {
       var self = this;
-      var promise = new Promise();
-      var fnArray = [];
-      var argsArray = [];
 
       var matrix = xobj.dict.get('Matrix');
       var bbox = xobj.dict.get('BBox');
@@ -16237,44 +16336,22 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           // There is also a group colorspace, but since we put everything in
           // RGB I'm not sure we need it.
         }
-        fnArray.push('beginGroup');
-        argsArray.push([groupOptions]);
+        operatorList.addOp('beginGroup', [groupOptions]);
       }
 
-      fnArray.push('paintFormXObjectBegin');
-      argsArray.push([matrix, bbox]);
+      operatorList.addOp('paintFormXObjectBegin', [matrix, bbox]);
 
-      // Pass in the current `queue` object. That means the `fnArray`
-      // and the `argsArray` in this scope is reused and new commands
-      // are added to them.
-      var opListPromise = this.getOperatorList(xobj,
-          xobj.dict.get('Resources') || resources);
-      opListPromise.then(function(data) {
-        var queue = data.queue;
-        var dependencies = data.dependencies;
-        Util.prependToArray(queue.fnArray, fnArray);
-        Util.prependToArray(queue.argsArray, argsArray);
-        self.insertDependencies(queue, dependencies);
+      this.getOperatorList(xobj, xobj.dict.get('Resources') || resources,
+                           operatorList);
+      operatorList.addOp('paintFormXObjectEnd', []);
 
-        queue.fnArray.push('paintFormXObjectEnd');
-        queue.argsArray.push([]);
-
-        if (group) {
-          queue.fnArray.push('endGroup');
-          queue.argsArray.push([groupOptions]);
-        }
-
-        promise.resolve({
-          queue: queue,
-          dependencies: dependencies
-        });
-      });
-
-      return promise;
+      if (group) {
+        operatorList.addOp('endGroup', [groupOptions]);
+      }
     },
 
     buildPaintImageXObject: function PartialEvaluator_buildPaintImageXObject(
-                                resources, image, inline) {
+                                resources, image, inline, operatorList) {
       var self = this;
       var dict = image.dict;
       var w = dict.get('Width', 'W');
@@ -16282,13 +16359,8 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
       if (PDFJS.maxImageSize !== -1 && w * h > PDFJS.maxImageSize) {
         warn('Image exceeded maximum allowed size and was removed.');
-        return null;
+        return;
       }
-
-      var dependencies = {};
-      var retData = {
-        dependencies: dependencies
-      };
 
       var imageMask = dict.get('ImageMask', 'IM') || false;
       if (imageMask) {
@@ -16305,10 +16377,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         var decode = dict.get('Decode', 'D');
         var inverseDecode = !!decode && decode[0] > 0;
 
-        retData.fn = 'paintImageMaskXObject';
-        retData.args = [PDFImage.createMask(imgArray, width, height,
-                                            inverseDecode)];
-        return retData;
+        operatorList.addOp('paintImageMaskXObject',
+          [PDFImage.createMask(imgArray, width, height,
+                                            inverseDecode)]
+        );
+        return;
       }
 
       var softMask = dict.get('SMask', 'SM') || false;
@@ -16322,64 +16395,53 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         var imageObj = new PDFImage(this.xref, resources, image,
                                     inline, null, null);
         var imgData = imageObj.getImageData();
-        retData.fn = 'paintInlineImageXObject';
-        retData.args = [imgData];
-        return retData;
+        operatorList.addOp('paintInlineImageXObject', [imgData]);
+        return;
       }
 
       // If there is no imageMask, create the PDFImage and a lot
       // of image processing can be done here.
       var uniquePrefix = this.uniquePrefix || '';
       var objId = 'img_' + uniquePrefix + (++this.idCounters.obj);
-      dependencies[objId] = true;
-      retData.args = [objId, w, h];
+      operatorList.addDependency(objId);
+      var args = [objId, w, h];
 
       if (!softMask && !mask && image instanceof JpegStream &&
           image.isNativelySupported(this.xref, resources)) {
         // These JPEGs don't need any more processing so we can just send it.
-        retData.fn = 'paintJpegXObject';
+        operatorList.addOp('paintJpegXObject', args);
         this.handler.send(
             'obj', [objId, this.pageIndex, 'JpegStream', image.getIR()]);
-        return retData;
+        return;
       }
 
-      retData.fn = 'paintImageXObject';
 
       PDFImage.buildImage(function(imageObj) {
           var imgData = imageObj.getImageData();
           self.handler.send('obj', [objId, self.pageIndex, 'Image', imgData]);
         }, self.handler, self.xref, resources, image, inline);
 
-      return retData;
+      operatorList.addOp('paintImageXObject', args);
     },
 
     handleTilingType: function PartialEvaluator_handleTilingType(
-                          fn, args, resources, pattern, patternDict) {
-      var self = this;
+                          fn, args, resources, pattern, patternDict,
+                          operatorList) {
       // Create an IR of the pattern code.
-      var promise = new Promise();
-      var opListPromise = this.getOperatorList(pattern,
-          patternDict.get('Resources') || resources);
-      opListPromise.then(function(data) {
-        var opListData = createOperatorList([], [], data.dependencies);
-        var queue = opListData.queue;
-
-        // Add the dependencies that are required to execute the
-        // operatorList.
-        self.insertDependencies(queue, data.dependencies);
-        queue.fnArray.push(fn);
-        queue.argsArray.push(
-          TilingPattern.getIR(data.queue, patternDict, args));
-        promise.resolve(opListData);
-      });
-
-      return promise;
+      var tilingOpList = this.getOperatorList(pattern,
+                                  patternDict.get('Resources') || resources);
+      // Add the dependencies to the parent operator list so they are resolved
+      // before sub operator list is executed synchronously.
+      operatorList.addDependencies(tilingOpList.dependencies);
+      operatorList.addOp(fn, TilingPattern.getIR({
+                               fnArray: tilingOpList.fnArray,
+                               argsArray: tilingOpList.argsArray
+                              }, patternDict, args));
     },
 
     handleSetFont: function PartialEvaluator_handleSetFont(
-                      resources, fontArgs, font) {
+                      resources, fontArgs, fontRef, operatorList) {
 
-      var promise = new Promise();
       // TODO(mack): Not needed?
       var fontName;
       if (fontArgs) {
@@ -16387,69 +16449,28 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         fontName = fontArgs[0].name;
       }
       var self = this;
-      var fontPromise = this.loadFont(fontName, font, this.xref, resources);
-      fontPromise.then(function(data) {
-        var font = data.font;
-        var loadedName = font.loadedName;
-        if (!font.sent) {
-          var fontData = font.translated.exportData();
+      var font = this.loadFont(fontName, fontRef, this.xref, resources,
+                               operatorList);
+      this.state.font = font;
+      var loadedName = font.loadedName;
+      if (!font.sent) {
+        var fontData = font.translated.exportData();
 
-          self.handler.send('commonobj', [
-            loadedName,
-            'Font',
-            fontData
-          ]);
-          font.sent = true;
-        }
-
-        // Ensure the font is ready before the font is set
-        // and later on used for drawing.
-        // OPTIMIZE: This should get insert to the operatorList only once per
-        // page.
-        var fnArray = [];
-        var argsArray = [];
-        var queue = {
-          fnArray: fnArray,
-          argsArray: argsArray
-        };
-        var dependencies = data.dependencies;
-        dependencies[loadedName] = true;
-        self.insertDependencies(queue, dependencies);
-        if (fontArgs) {
-          fontArgs[0] = loadedName;
-          fnArray.push('setFont');
-          argsArray.push(fontArgs);
-        }
-        promise.resolve({
-          loadedName: loadedName,
-          queue: queue,
-          dependencies: dependencies
-        });
-      });
-      return promise;
-    },
-
-    insertDependencies: function PartialEvaluator_insertDependencies(
-                            queue, dependencies) {
-
-      var fnArray = queue.fnArray;
-      var argsArray = queue.argsArray;
-      var depList = Object.keys(dependencies);
-      if (depList.length) {
-        fnArray.push('dependency');
-        argsArray.push(depList);
+        self.handler.send('commonobj', [
+          loadedName,
+          'Font',
+          fontData
+        ]);
+        font.sent = true;
       }
+
+      return loadedName;
     },
 
-    setGState: function PartialEvaluator_setGState(resources, gState) {
+    setGState: function PartialEvaluator_setGState(resources, gState,
+                                                   operatorList) {
 
       var self = this;
-      var opListData = createOperatorList();
-      var queue = opListData.queue;
-      var fnArray = queue.fnArray;
-      var argsArray = queue.argsArray;
-      var dependencies = opListData.dependencies;
-
       // TODO(mack): This should be rewritten so that this function returns
       // what should be added to the queue during each iteration
       function setGStateForKey(gStateObj, key, value) {
@@ -16468,21 +16489,12 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             gStateObj.push([key, value]);
             break;
           case 'Font':
-            var promise = new Promise();
-            self.handleSetFont(resources, null, value[0]).then(function(data) {
-              var gState = ['Font', data.loadedName, value[1]];
-              promise.resolve({
-                gState: gState,
-                queue: data.queue,
-                dependencies: data.dependencies
-              });
-            });
-            gStateObj.push(['promise', promise]);
+            var loadedName = self.handleSetFont(resources, null, value[0],
+                                                operatorList);
+            operatorList.addDependency(loadedName);
+            gStateObj.push([key, [loadedName, value[1]]]);
             break;
           case 'BM':
-            if (!isName(value) || value.name !== 'Normal') {
-              queue.transparency = true;
-            }
             gStateObj.push([key, value]);
             break;
           case 'SMask':
@@ -16523,47 +16535,18 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         setGStateForKey(gStateObj, key, value);
       }
 
-      var promises = [];
-      var indices = [];
-      for (var i = 0, n = gStateObj.length; i < n; ++i) {
-        var value = gStateObj[i];
-        if (value[0] === 'promise') {
-          promises.push(value[1]);
-          indices.push(i);
-        }
-      }
-
-      var promise = new Promise();
-      Promise.all(promises).then(function(datas) {
-        for (var i = 0, n = datas.length; i < n; ++i) {
-          var data = datas[i];
-          var index = indices[i];
-          gStateObj[index] = data.gState;
-          var subQueue = data.queue;
-          Util.concatenateToArray(fnArray, subQueue.fnArray);
-          Util.concatenateToArray(argsArray, subQueue.argsArray);
-          queue.transparency = subQueue.transparency || queue.transparency;
-          Util.extendObj(dependencies, data.dependencies);
-        }
-        fnArray.push('setGState');
-        argsArray.push([gStateObj]);
-        promise.resolve(opListData);
-      });
-
-      return promise;
+      operatorList.addOp('setGState', [gStateObj]);
     },
 
     loadFont: function PartialEvaluator_loadFont(fontName, font, xref,
-                                                 resources) {
-      function errorFont(promise) {
-        promise.resolve({
-          font: {
-            translated: new ErrorFont('Font ' + fontName + ' is not available'),
-            loadedName: 'g_font_error'
-          },
-          dependencies: {}
-        });
-        return promise;
+                                                 resources,
+                                                 parentOperatorList) {
+
+      function errorFont() {
+        return {
+          translated: new ErrorFont('Font ' + fontName + ' is not available'),
+          loadedName: 'g_font_error'
+        };
       }
 
       var fontRef;
@@ -16576,20 +16559,19 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           fontRef = fontRes.getRaw(fontName);
         } else {
           warn('fontRes not available');
-          return errorFont(new Promise());
+          return errorFont();
         }
       }
       if (this.fontCache.has(fontRef)) {
         return this.fontCache.get(fontRef);
       }
 
-      var promise = new Promise();
-      this.fontCache.put(fontRef, promise);
 
       font = xref.fetchIfRef(fontRef);
       if (!isDict(font)) {
-        return errorFont(promise);
+        return errorFont();
       }
+      this.fontCache.put(fontRef, font);
 
       // keep track of each font we translated so the caller can
       // load them asynchronously before calling display on a page
@@ -16608,55 +16590,37 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       if (font.translated.loadCharProcs) {
         var charProcs = font.get('CharProcs').getAll();
         var fontResources = font.get('Resources') || resources;
-        var opListPromises = [];
         var charProcKeys = Object.keys(charProcs);
+        var charProcOperatorList = {};
         for (var i = 0, n = charProcKeys.length; i < n; ++i) {
           var key = charProcKeys[i];
           var glyphStream = charProcs[key];
-          opListPromises.push(
-            this.getOperatorList(glyphStream, fontResources));
-        }
-        Promise.all(opListPromises).then(function(datas) {
-          var charProcOperatorList = {};
-          var dependencies = {};
-          for (var i = 0, n = charProcKeys.length; i < n; ++i) {
-            var key = charProcKeys[i];
-            var data = datas[i];
-            charProcOperatorList[key] = data.queue;
-            Util.extendObj(dependencies, data.dependencies);
+          var operatorList = this.getOperatorList(glyphStream, fontResources);
+          charProcOperatorList[key] = operatorList.getIR();
+          if (!parentOperatorList) {
+            continue;
           }
-          font.translated.charProcOperatorList = charProcOperatorList;
-          font.loaded = true;
-          promise.resolve({
-            font: font,
-            dependencies: dependencies
-          });
-        }.bind(this));
+          // Add the dependencies to the parent operator list so they are
+          // resolved before sub operator list is executed synchronously.
+          parentOperatorList.addDependencies(charProcOperatorList.dependencies);
+        }
+        font.translated.charProcOperatorList = charProcOperatorList;
+        font.loaded = true;
       } else {
         font.loaded = true;
-        promise.resolve({
-          font: font,
-          dependencies: {}
-        });
       }
-      return promise;
+      return font;
     },
 
     getOperatorList: function PartialEvaluator_getOperatorList(stream,
-                                                               resources) {
+                                                               resources,
+                                                               operatorList) {
 
       var self = this;
       var xref = this.xref;
       var handler = this.handler;
 
-      var fnArray = [];
-      var argsArray = [];
-      var queue = {
-        transparency: false,
-        fnArray: fnArray,
-        argsArray: argsArray
-      };
-      var dependencies = {};
+      operatorList = operatorList || new OperatorList();
 
       resources = resources || new Dict();
       var xobjs = resources.get('XObject') || new Dict();
@@ -16667,6 +16631,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
       var promise = new Promise();
       var args = [];
+      nextOp:
       while (true) {
 
         var obj = parser.getObj();
@@ -16723,10 +16688,10 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               var typeNum = dict.get('PatternType');
 
               if (typeNum == TILING_PATTERN) {
-                var patternPromise = self.handleTilingType(
-                    fn, args, resources, pattern, dict);
-                fn = 'promise';
-                args = [patternPromise];
+                self.handleTilingType(fn, args, resources, pattern, dict,
+                                      operatorList);
+                args = [];
+                continue;
               } else if (typeNum == SHADING_PATTERN) {
                 var shading = dict.get('Shading');
                 var matrix = dict.get('Matrix');
@@ -16752,37 +16717,51 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               );
 
               if ('Form' == type.name) {
-                fn = 'promise';
-                args = [self.buildFormXObject(resources, xobj)];
+                self.buildFormXObject(resources, xobj, null, operatorList);
+                args = [];
+                continue;
               } else if ('Image' == type.name) {
-                var data = self.buildPaintImageXObject(
-                    resources, xobj, false);
-                if (!data) {
-                  args = [];
-                  continue;
-                }
-                Util.extendObj(dependencies, data.dependencies);
-                self.insertDependencies(queue, data.dependencies);
-                fn = data.fn;
-                args = data.args;
+                self.buildPaintImageXObject(resources, xobj, false,
+                                            operatorList);
+                args = [];
+                continue;
               } else {
                 error('Unhandled XObject subtype ' + type.name);
               }
             }
           } else if (cmd == 'Tf') { // eagerly collect all fonts
-            fn = 'promise';
-            args = [self.handleSetFont(resources, args)];
+            var loadedName = self.handleSetFont(resources, args, null,
+                                                operatorList);
+            operatorList.addDependency(loadedName);
+            fn = 'setFont';
+            args[0] = loadedName;
           } else if (cmd == 'EI') {
-            var data = self.buildPaintImageXObject(
-                resources, args[0], true);
-            if (!data) {
-              args = [];
-              continue;
+            self.buildPaintImageXObject(resources, args[0], true, operatorList);
+            args = [];
+            continue;
+          } else if (cmd === 'q') { // save
+            var old = this.state;
+            this.stateStack.push(this.state);
+            this.state = old.clone();
+          } else if (cmd === 'Q') { // restore
+            var prev = this.stateStack.pop();
+            if (prev) {
+              this.state = prev;
             }
-            Util.extendObj(dependencies, data.dependencies);
-            self.insertDependencies(queue, data.dependencies);
-            fn = data.fn;
-            args = data.args;
+          } else if (cmd === 'Tj') { // showText
+            args[0] = this.state.font.translated.charsToGlyphs(args[0]);
+          } else if (cmd === 'TJ') { // showSpacedText
+            var arr = args[0];
+            var arrLength = arr.length;
+            for (var i = 0; i < arrLength; ++i) {
+              if (isString(arr[i])) {
+                arr[i] = this.state.font.translated.charsToGlyphs(arr[i]);
+              }
+            }
+          } else if (cmd === '\'') { // nextLineShowText
+            args[0] = this.state.font.translated.charsToGlyphs(args[0]);
+          } else if (cmd === '"') { // nextLineSetSpacingShowText
+            args[2] = this.state.font.translated.charsToGlyphs(args[2]);
           }
 
           switch (fn) {
@@ -16814,12 +16793,12 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
                 break;
 
               var gState = extGState.get(dictName.name);
-              fn = 'promise';
-              args = [self.setGState(resources, gState)];
+              self.setGState(resources, gState, operatorList);
+              args = [];
+              continue nextOp;
           } // switch
 
-          fnArray.push(fn);
-          argsArray.push(args);
+          operatorList.addOp(fn, args);
           args = [];
           parser.saveState();
         } else if (obj !== null && obj !== undefined) {
@@ -16828,163 +16807,86 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         }
       }
 
-      var subQueuePromises = [];
-      for (var i = 0; i < fnArray.length; ++i) {
-        if (fnArray[i] === 'promise') {
-          subQueuePromises.push(argsArray[i][0]);
-        }
-      }
-      Promise.all(subQueuePromises).then(function(datas) {
-        // TODO(mack): Optimize by using repositioning elements
-        // in original queue rather than creating new queue
-
-        for (var i = 0, n = datas.length; i < n; ++i) {
-          var data = datas[i];
-          var subQueue = data.queue;
-          queue.transparency = subQueue.transparency || queue.transparency;
-          Util.extendObj(dependencies, data.dependencies);
-        }
-
-        var newFnArray = [];
-        var newArgsArray = [];
-        var currOffset = 0;
-        var subQueueIdx = 0;
-        for (var i = 0, n = fnArray.length; i < n; ++i) {
-          var offset = i + currOffset;
-          if (fnArray[i] === 'promise') {
-            var data = datas[subQueueIdx++];
-            var subQueue = data.queue;
-            var subQueueFnArray = subQueue.fnArray;
-            var subQueueArgsArray = subQueue.argsArray;
-            for (var j = 0, nn = subQueueFnArray.length; j < nn; ++j) {
-              newFnArray[offset + j] = subQueueFnArray[j];
-              newArgsArray[offset + j] = subQueueArgsArray[j];
-            }
-            currOffset += subQueueFnArray.length - 1;
-          } else {
-            newFnArray[offset] = fnArray[i];
-            newArgsArray[offset] = argsArray[i];
-          }
-        }
-
-        promise.resolve({
-          queue: {
-            fnArray: newFnArray,
-            argsArray: newArgsArray,
-            transparency: queue.transparency
-          },
-          dependencies: dependencies
-        });
-      });
-
-      return promise;
+      return operatorList;
     },
 
     getTextContent: function PartialEvaluator_getTextContent(
-                                                    stream, resources) {
+                                                    stream, resources, state) {
 
+      var bidiTexts;
       var SPACE_FACTOR = 0.35;
       var MULTI_SPACE_FACTOR = 1.5;
+
+      if (!state) {
+        bidiTexts = [];
+        state = {
+          bidiTexts: bidiTexts
+        };
+      } else {
+        bidiTexts = state.bidiTexts;
+      }
+
       var self = this;
+      var xref = this.xref;
 
-      var statePromise = new Promise();
-
-      function handleSetFont(fontName, fontRef, resources) {
-        var promise = new Promise();
-        self.loadFont(fontName, fontRef, self.xref, resources).then(
-          function(data) {
-            promise.resolve(data.font.translated);
-          }
-        );
-        return promise;
+      function handleSetFont(fontName, fontRef) {
+        return self.loadFont(fontName, fontRef, xref, resources, null);
       }
 
-      function getBidiText(str, startLevel, vertical) {
-        if (str) {
-          return PDFJS.bidi(str, -1, vertical);
-        }
-      }
-
-      resources = this.xref.fetchIfRef(resources) || new Dict();
+      resources = xref.fetchIfRef(resources) || new Dict();
       // The xobj is parsed iff it's needed, e.g. if there is a `DO` cmd.
       var xobjs = null;
 
       var parser = new Parser(new Lexer(stream), false);
+      var res = resources;
+      var args = [], obj;
 
-      var chunkPromises = [];
-      var fontPromise;
-      var args = [];
-
-      while (true) {
-        var obj = parser.getObj();
-        if (isEOF(obj)) {
-          break;
-        }
-
+      var chunk = '';
+      var font = null;
+      while (!isEOF(obj = parser.getObj())) {
         if (isCmd(obj)) {
           var cmd = obj.cmd;
           switch (cmd) {
             // TODO: Add support for SAVE/RESTORE and XFORM here.
             case 'Tf':
-              fontPromise = handleSetFont(args[0].name, null, resources);
-              //.translated;
+              font = handleSetFont(args[0].name).translated;
               break;
             case 'TJ':
-              var chunkPromise = new Promise();
-              chunkPromises.push(chunkPromise);
-              fontPromise.then(function(items, chunkPromise, font) {
-                var chunk = '';
-                for (var j = 0, jj = items.length; j < jj; j++) {
-                  if (typeof items[j] === 'string') {
-                    chunk += fontCharsToUnicode(items[j], font);
-                  } else if (items[j] < 0 && font.spaceWidth > 0) {
-                    var fakeSpaces = -items[j] / font.spaceWidth;
-                    if (fakeSpaces > MULTI_SPACE_FACTOR) {
-                      fakeSpaces = Math.round(fakeSpaces);
-                      while (fakeSpaces--) {
-                        chunk += ' ';
-                      }
-                    } else if (fakeSpaces > SPACE_FACTOR) {
+              var items = args[0];
+              for (var j = 0, jj = items.length; j < jj; j++) {
+                if (typeof items[j] === 'string') {
+                  chunk += fontCharsToUnicode(items[j], font);
+                } else if (items[j] < 0 && font.spaceWidth > 0) {
+                  var fakeSpaces = -items[j] / font.spaceWidth;
+                  if (fakeSpaces > MULTI_SPACE_FACTOR) {
+                    fakeSpaces = Math.round(fakeSpaces);
+                    while (fakeSpaces--) {
                       chunk += ' ';
                     }
+                  } else if (fakeSpaces > SPACE_FACTOR) {
+                    chunk += ' ';
                   }
                 }
-                chunkPromise.resolve(
-                    getBidiText(chunk, -1, font.vertical));
-              }.bind(null, args[0], chunkPromise));
+              }
               break;
             case 'Tj':
-              var chunkPromise = new Promise();
-              chunkPromises.push(chunkPromise);
-              fontPromise.then(function(charCodes, chunkPromise, font) {
-                var chunk = fontCharsToUnicode(charCodes, font);
-                chunkPromise.resolve(
-                    getBidiText(chunk, -1, font.vertical));
-              }.bind(null, args[0], chunkPromise));
+              chunk += fontCharsToUnicode(args[0], font);
               break;
             case '\'':
-              // For search, adding a extra white space for line breaks
-              // would be better here, but that causes too much spaces in
-              // the text-selection divs.
-              var chunkPromise = new Promise();
-              chunkPromises.push(chunkPromise);
-              fontPromise.then(function(charCodes, chunkPromise, font) {
-                var chunk = fontCharsToUnicode(charCodes, font);
-                chunkPromise.resolve(
-                    getBidiText(chunk, -1, font.vertical));
-              }.bind(null, args[0], chunkPromise));
+              // For search, adding a extra white space for line breaks would be
+              // better here, but that causes too much spaces in the
+              // text-selection divs.
+              chunk += fontCharsToUnicode(args[0], font);
               break;
             case '"':
               // Note comment in "'"
-              var chunkPromise = new Promise();
-              chunkPromises.push(chunkPromise);
-              fontPromise.then(function(charCodes, chunkPromise, font) {
-                var chunk = fontCharsToUnicode(charCodes, font);
-                chunkPromise.resolve(
-                    getBidiText(chunk, -1, font.vertical));
-              }.bind(null, args[2], chunkPromise));
+              chunk += fontCharsToUnicode(args[2], font);
               break;
             case 'Do':
+              // Set the chunk such that the following if won't add something
+              // to the state.
+              chunk = '';
+
               if (args[0].code) {
                 break;
               }
@@ -16997,8 +16899,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               var xobj = xobjs.get(name);
               if (!xobj)
                 break;
-              assertWellFormed(isStream(xobj),
-                               'XObject should be a stream');
+              assertWellFormed(isStream(xobj), 'XObject should be a stream');
 
               var type = xobj.dict.get('Subtype');
               assertWellFormed(
@@ -17009,11 +16910,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               if ('Form' !== type.name)
                 break;
 
-              var chunkPromise = self.getTextContent(
+              state = this.getTextContent(
                 xobj,
-                xobj.dict.get('Resources') || resources
+                xobj.dict.get('Resources') || resources,
+                state
               );
-              chunkPromises.push(chunkPromise);
               break;
             case 'gs':
               var dictName = args[0];
@@ -17026,37 +16927,27 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
               for (var i = 0; i < gsState.length; i++) {
                 if (gsState[i] === 'Font') {
-                  fontPromise = handleSetFont(
-                      args[0].name, null, resources);
+                  font = handleSetFont(args[0].name).translated;
                 }
               }
               break;
           } // switch
 
+          if (chunk !== '') {
+            var bidiText = PDFJS.bidi(chunk, -1, font.vertical);
+            bidiTexts.push(bidiText);
+
+            chunk = '';
+          }
+
           args = [];
-          parser.saveState();
         } else if (obj !== null && obj !== undefined) {
           assertWellFormed(args.length <= 33, 'Too many arguments');
           args.push(obj);
         }
       } // while
 
-      Promise.all(chunkPromises).then(function(datas) {
-        var bidiTexts = [];
-        for (var i = 0, n = datas.length; i < n; ++i) {
-          var bidiText = datas[i];
-          if (!bidiText) {
-            continue;
-          } else if (isArray(bidiText)) {
-            Util.concatenateToArray(bidiTexts, bidiText);
-          } else {
-            bidiTexts.push(bidiText);
-          }
-        }
-        statePromise.resolve(bidiTexts);
-      });
-
-      return statePromise;
+      return state;
     },
 
     extractDataStructures: function
@@ -17685,25 +17576,82 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
   return PartialEvaluator;
 })();
 
+
+var OperatorList = (function OperatorListClosure() {
+  var CHUNK_SIZE = 100;
+
+  function OperatorList(messageHandler, pageIndex) {
+    this.messageHandler = messageHandler;
+    this.fnArray = [];
+    this.argsArray = [];
+    this.dependencies = {},
+    this.pageIndex = pageIndex;
+  }
+
+  OperatorList.prototype = {
+
+    addOp: function(fn, args) {
+      this.fnArray.push(fn);
+      this.argsArray.push(args);
+      if (this.messageHandler && this.fnArray.length >= CHUNK_SIZE) {
+        this.flush();
+      }
+    },
+
+    addDependency: function(dependency) {
+      if (dependency in this.dependencies) {
+        return;
+      }
+      this.dependencies[dependency] = true;
+      this.addOp('dependency', [dependency]);
+    },
+
+    addDependencies: function(dependencies) {
+      for (var key in dependencies) {
+        this.addDependency(key);
+      }
+    },
+
+    addOpList: function(opList) {
+      Util.concatenateToArray(this.fnArray, opList.fnArray);
+      Util.concatenateToArray(this.argsArray, opList.argsArray);
+      Util.extendObj(this.dependencies, opList.dependencies);
+    },
+
+    getIR: function() {
+      return {
+        fnArray: this.fnArray,
+        argsArray: this.argsArray
+      };
+    },
+
+    flush: function(lastChunk) {
+      PartialEvaluator.optimizeQueue(this);
+      this.messageHandler.send('RenderPageChunk', {
+        operatorList: {
+          fnArray: this.fnArray,
+          argsArray: this.argsArray,
+          lastChunk: lastChunk
+        },
+        pageIndex: this.pageIndex
+      });
+      this.dependencies = [];
+      this.fnArray = [];
+      this.argsArray = [];
+    }
+  };
+
+  return OperatorList;
+})();
+
 var EvalState = (function EvalStateClosure() {
   function EvalState() {
-    // Are soft masks and alpha values shapes or opacities?
-    this.alphaIsShape = false;
-    this.fontSize = 0;
-    this.textMatrix = IDENTITY_MATRIX;
-    this.leading = 0;
-    // Start of text line (in text coordinates)
-    this.lineX = 0;
-    this.lineY = 0;
-    // Character and word spacing
-    this.charSpacing = 0;
-    this.wordSpacing = 0;
-    this.textHScale = 1;
-    // Color spaces
-    this.fillColorSpace = null;
-    this.strokeColorSpace = null;
+    this.font = null;
   }
   EvalState.prototype = {
+    clone: function CanvasExtraState_clone() {
+      return Object.create(this);
+    },
   };
   return EvalState;
 })();
@@ -20964,7 +20912,8 @@ var Font = (function FontClosure() {
       }
 
       function sanitizeGlyphLocations(loca, glyf, numGlyphs,
-                                      isGlyphLocationsLong, hintsValid) {
+                                      isGlyphLocationsLong, hintsValid,
+                                      dupFirstEntry) {
         var itemSize, itemDecode, itemEncode;
         if (isGlyphLocationsLong) {
           itemSize = 4;
@@ -21023,7 +20972,22 @@ var Font = (function FontClosure() {
           return;
         }
 
-        glyf.data = newGlyfData.subarray(0, writeOffset);
+        if (dupFirstEntry) {
+          var firstEntryLength = itemDecode(locaData, itemSize);
+          if (newGlyfData.length > firstEntryLength + writeOffset) {
+            glyf.data = newGlyfData.subarray(0, firstEntryLength + writeOffset);
+          } else {
+            glyf.data = new Uint8Array(firstEntryLength + writeOffset);
+            glyf.data.set(newGlyfData.subarray(0, writeOffset));
+          }
+          glyf.data.set(newGlyfData.subarray(0, firstEntryLength), writeOffset);
+          loca.data = new Uint8Array(locaData.length + itemSize);
+          loca.data.set(locaData);
+          itemEncode(loca.data, locaData.length,
+                     writeOffset + firstEntryLength);
+        } else {
+          glyf.data = newGlyfData.subarray(0, writeOffset);
+        }
       }
 
       function readPostScriptTable(post, properties, maxpNumGlyphs) {
@@ -21412,6 +21376,16 @@ var Font = (function FontClosure() {
         maxFunctionDefs = int16(font.getBytes(2));
       }
 
+      var dupFirstEntry = false;
+      if (properties.type == 'CIDFontType2' && properties.toUnicode &&
+          properties.toUnicode[0] > 0) {
+        // oracle's defect (see 3427), duplicating first entry
+        dupFirstEntry = true;
+        numGlyphs++;
+        tables.maxp.data[4] = numGlyphs >> 8;
+        tables.maxp.data[5] = numGlyphs & 255;
+      }
+
       var hintsValid = sanitizeTTPrograms(tables.fpgm, tables.prep,
                                           maxFunctionDefs);
       if (!hintsValid) {
@@ -21452,7 +21426,7 @@ var Font = (function FontClosure() {
                                           tables.head.data[51]]);
 
         sanitizeGlyphLocations(tables.loca, tables.glyf, numGlyphs,
-                               isGlyphLocationsLong, hintsValid);
+                               isGlyphLocationsLong, hintsValid, dupFirstEntry);
       }
 
       if (!tables.hhea) {
@@ -21505,6 +21479,13 @@ var Font = (function FontClosure() {
             if (!gidToCidMap[i])
               gidToCidMap[i] = nextCid++;
           }
+        } else {
+          for (var i = 1; i < numGlyphs; i++) {
+            gidToCidMap[i] = i;
+          }
+          if (dupFirstEntry) {
+            gidToCidMap[numGlyphs - 1] = 0;
+          }
         }
 
         glyphs = [];
@@ -21514,7 +21495,7 @@ var Font = (function FontClosure() {
         var unassignedUnicodeItems = [];
         var toFontChar = this.cidToFontChar || this.toFontChar;
         for (var i = 1; i < numGlyphs; i++) {
-          var cid = gidToCidMap[i] || i;
+          var cid = gidToCidMap[i];
           var unicode = toFontChar[cid];
           if (!unicode || typeof unicode !== 'number' ||
               isSpecialUnicode(unicode) || unicode in usedUnicodes) {
@@ -21525,6 +21506,7 @@ var Font = (function FontClosure() {
           glyphs.push({ unicode: unicode, code: cid });
           ids.push(i);
         }
+
         // unassigned codepoints will never be used for non-Identity CMap
         // because the input will be Unicode
         if (!this.cidToFontChar) {
@@ -21533,7 +21515,7 @@ var Font = (function FontClosure() {
           var unusedUnicode = CMAP_GLYPH_OFFSET;
           for (var j = 0, jj = unassignedUnicodeItems.length; j < jj; j++) {
             var i = unassignedUnicodeItems[j];
-            var cid = gidToCidMap[i] || i;
+            var cid = gidToCidMap[i];
             while (unusedUnicode in usedUnicodes)
               unusedUnicode++;
             if (unusedUnicode >= CMAP_GLYPH_OFFSET + GLYPH_AREA_SIZE)
@@ -34022,7 +34004,7 @@ var TilingPattern = (function TilingPatternClosure() {
 
   var MAX_PATTERN_SIZE = 8192;
 
-  function TilingPattern(IR, color, ctx, objs, commonObjs) {
+  function TilingPattern(IR, color, ctx, objs, commonObjs, baseTransform) {
     this.name = IR[1][0].name;
     this.operatorList = IR[2];
     this.matrix = IR[3] || [1, 0, 0, 1, 0, 0];
@@ -34034,7 +34016,7 @@ var TilingPattern = (function TilingPatternClosure() {
     this.color = color;
     this.objs = objs;
     this.commonObjs = commonObjs;
-    this.curMatrix = ctx.mozCurrentTransform;
+    this.baseTransform = baseTransform;
     this.type = 'Pattern';
     this.ctx = ctx;
   }
@@ -34079,7 +34061,8 @@ var TilingPattern = (function TilingPatternClosure() {
 
       // Obtain scale from matrix and current transformation matrix.
       var matrixScale = Util.singularValueDecompose2dScale(this.matrix);
-      var curMatrixScale = Util.singularValueDecompose2dScale(this.curMatrix);
+      var curMatrixScale = Util.singularValueDecompose2dScale(
+                             this.baseTransform);
       var combinedScale = [matrixScale[0] * curMatrixScale[0],
                            matrixScale[1] * curMatrixScale[1]];
 
@@ -34148,7 +34131,7 @@ var TilingPattern = (function TilingPatternClosure() {
           context.strokeStyle = ctx.strokeStyle;
           break;
         case PaintType.UNCOLORED:
-          var rgbColor = new DeviceRgbCS().getRgb(color, 0);
+          var rgbColor = ColorSpace.singletons.rgb.getRgb(color, 0);
           var cssColor = Util.makeCssRgb(rgbColor);
           context.fillStyle = cssColor;
           context.strokeStyle = cssColor;
@@ -34163,7 +34146,7 @@ var TilingPattern = (function TilingPatternClosure() {
       this.createPatternCanvas(temporaryPatternCanvas);
 
       var ctx = this.ctx;
-      ctx.setTransform.apply(ctx, this.curMatrix);
+      ctx.setTransform.apply(ctx, this.baseTransform);
       ctx.transform.apply(ctx, this.matrix);
       this.scaleToContext();
 
@@ -36856,31 +36839,11 @@ var WorkerMessageHandler = {
         var pageNum = data.pageIndex + 1;
         var start = Date.now();
         // Pre compile the pdf page and fetch the fonts/images.
-        page.getOperatorList(handler).then(function(opListData) {
-
-          var operatorList = opListData.queue;
-          var dependency = Object.keys(opListData.dependencies);
-
-          // The following code does quite the same as
-          // Page.prototype.startRendering, but stops at one point and sends the
-          // result back to the main thread.
+        page.getOperatorList(handler).then(function(operatorList) {
 
           log('page=%d - getOperatorList: time=%dms, len=%d', pageNum,
               Date.now() - start, operatorList.fnArray.length);
 
-          // Filter the dependecies for fonts.
-          var fonts = {};
-          for (var i = 0, ii = dependency.length; i < ii; i++) {
-            var dep = dependency[i];
-            if (dep.indexOf('g_font_') === 0) {
-              fonts[dep] = true;
-            }
-          }
-          handler.send('RenderPage', {
-            pageIndex: data.pageIndex,
-            operatorList: operatorList,
-            depFonts: Object.keys(fonts)
-          });
         }, function(e) {
 
           var minimumStackMessage =
@@ -38957,26 +38920,50 @@ var Jbig2Image = (function Jbig2ImageClosure() {
           this.clow &= 0xFFFF;
         }
       },
-      readBit: function ArithmeticDecoder_readBit(cx) {
-        var qeIcx = QeTable[cx.index].qe;
+      readBit: function ArithmeticDecoder_readBit(contexts, pos) {
+        // contexts are packed into 1 byte: 
+        // highest 7 bits carry cx.index, lowest bit carries cx.mps
+        var cx_index = contexts[pos] >> 1, cx_mps = contexts[pos] & 1;
+        var qeTableIcx = QeTable[cx_index];
+        var qeIcx = qeTableIcx.qe;
+        var nmpsIcx = qeTableIcx.nmps;
+        var nlpsIcx = qeTableIcx.nlps;
+        var switchIcx = qeTableIcx.switchFlag;
+        var d;
         this.a -= qeIcx;
 
         if (this.chigh < qeIcx) {
-          var d = this.exchangeLps(cx);
-          this.renormD();
-          return d;
+          // exchangeLps
+          if (this.a < qeIcx) {
+            this.a = qeIcx;
+            d = cx_mps;
+            cx_index = nmpsIcx;
+          } else {
+            this.a = qeIcx;
+            d = 1 - cx_mps;
+            if (switchIcx) {
+              cx_mps = d;
+            }
+            cx_index = nlpsIcx;
+          }
         } else {
           this.chigh -= qeIcx;
-          if ((this.a & 0x8000) === 0) {
-            var d = this.exchangeMps(cx);
-            this.renormD();
-            return d;
+          if ((this.a & 0x8000) !== 0) {
+            return cx_mps;
+          }
+          // exchangeMps
+          if (this.a < qeIcx) {
+            d = 1 - cx_mps;
+            if (switchIcx) {
+              cx_mps = d;
+            }
+            cx_index = nlpsIcx;
           } else {
-            return cx.mps;
+            d = cx_mps;
+            cx_index = nmpsIcx;
           }
         }
-      },
-      renormD: function ArithmeticDecoder_renormD() {
+        // renormD;
         do {
           if (this.ct === 0)
             this.byteIn();
@@ -38986,39 +38973,8 @@ var Jbig2Image = (function Jbig2ImageClosure() {
           this.clow = (this.clow << 1) & 0xFFFF;
           this.ct--;
         } while ((this.a & 0x8000) === 0);
-      },
-      exchangeMps: function ArithmeticDecoder_exchangeMps(cx) {
-        var d;
-        var qeTableIcx = QeTable[cx.index];
-        if (this.a < qeTableIcx.qe) {
-          d = 1 - cx.mps;
 
-          if (qeTableIcx.switchFlag == 1) {
-            cx.mps = 1 - cx.mps;
-          }
-          cx.index = qeTableIcx.nlps;
-        } else {
-          d = cx.mps;
-          cx.index = qeTableIcx.nmps;
-        }
-        return d;
-      },
-      exchangeLps: function ArithmeticDecoder_exchangeLps(cx) {
-        var d;
-        var qeTableIcx = QeTable[cx.index];
-        if (this.a < qeTableIcx.qe) {
-          this.a = qeTableIcx.qe;
-          d = cx.mps;
-          cx.index = qeTableIcx.nmps;
-        } else {
-          this.a = qeTableIcx.qe;
-          d = 1 - cx.mps;
-
-          if (qeTableIcx.switchFlag == 1) {
-            cx.mps = 1 - cx.mps;
-          }
-          cx.index = qeTableIcx.nlps;
-        }
+        contexts[pos] = cx_index << 1 | cx_mps;
         return d;
       }
     };
@@ -39033,7 +38989,7 @@ var Jbig2Image = (function Jbig2ImageClosure() {
     getContexts: function(id) {
       if (id in this)
         return this[id];
-      return (this[id] = []);
+      return (this[id] = new Int8Array(1<<16));
     }
   };
 
@@ -39063,10 +39019,7 @@ var Jbig2Image = (function Jbig2ImageClosure() {
     var state = 1, v = 0, s;
     var toRead = 32, offset = 4436; // defaults for state 7
     while (state) {
-      var cx = contexts[prev];
-      if (!cx)
-        contexts[prev] = cx = {index: 0, mps: 0};
-      var bit = decoder.readBit(cx);
+      var bit = decoder.readBit(contexts, prev);
       prev = prev < 256 ? (prev << 1) | bit :
         (((prev << 1) | bit) & 511) | 256;
       switch (state) {
@@ -39121,10 +39074,7 @@ var Jbig2Image = (function Jbig2ImageClosure() {
 
     var prev = 1;
     for (var i = 0; i < codeLength; i++) {
-      var cx = contexts[prev];
-      if (!cx)
-        contexts[prev] = cx = {index: 0, mps: 0};
-      var bit = decoder.readBit(cx);
+      var bit = decoder.readBit(contexts, prev);
       prev = (prev * 2) + bit;
     }
     if (codeLength < 31)
@@ -39241,10 +39191,7 @@ var Jbig2Image = (function Jbig2ImageClosure() {
     var ltp = 0;
     for (var i = 0; i < height; i++) {
       if (prediction) {
-        var cx = contexts[pseudoPixelContext];
-        if (!cx)
-          contexts[pseudoPixelContext] = cx = {index: 0, mps: 0};
-        var sltp = decoder.readBit(cx);
+        var sltp = decoder.readBit(contexts, pseudoPixelContext);
         ltp ^= sltp;
       }
       if (ltp) {
@@ -39266,10 +39213,7 @@ var Jbig2Image = (function Jbig2ImageClosure() {
           else
             contextLabel = (contextLabel << 1) | bitmap[i0][j0];
         }
-        var cx = contexts[contextLabel];
-        if (!cx)
-          contexts[contextLabel] = cx = {index: 0, mps: 0};
-        var pixel = decoder.readBit(cx);
+        var pixel = decoder.readBit(contexts, contextLabel);
         row[j] = pixel;
       }
     }
@@ -39312,10 +39256,7 @@ var Jbig2Image = (function Jbig2ImageClosure() {
     var ltp = 0;
     for (var i = 0; i < height; i++) {
       if (prediction) {
-        var cx = contexts[pseudoPixelContext];
-        if (!cx)
-          contexts[pseudoPixelContext] = cx = {index: 0, mps: 0};
-        var sltp = decoder.readBit(cx);
+        var sltp = decoder.readBit(contexts, pseudoPixelContext);
         ltp ^= sltp;
       }
       var row = new Uint8Array(width);
@@ -39340,10 +39281,7 @@ var Jbig2Image = (function Jbig2ImageClosure() {
           else
             contextLabel = (contextLabel << 1) | referenceBitmap[i0][j0];
         }
-        var cx = contexts[contextLabel];
-        if (!cx)
-          contexts[contextLabel] = cx = {index: 0, mps: 0};
-        var pixel = decoder.readBit(cx);
+        var pixel = decoder.readBit(contexts, contextLabel);
         row[j] = pixel;
       }
     }

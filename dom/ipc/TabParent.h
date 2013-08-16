@@ -187,6 +187,10 @@ public:
     void Activate();
     void Deactivate();
 
+    bool MapEventCoordinatesForChildProcess(nsEvent* aEvent);
+    void MapEventCoordinatesForChildProcess(const LayoutDeviceIntPoint& aOffset,
+                                                   nsEvent* aEvent);
+
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         int32_t aButton, int32_t aClickCount,
                         int32_t aModifiers, bool aIgnoreRootScrollFrame);
@@ -215,7 +219,7 @@ public:
             const bool& stickDocument) MOZ_OVERRIDE;
     virtual bool DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* actor);
 
-    JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
+    bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAUTHPROMPTPROVIDER

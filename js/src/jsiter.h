@@ -228,7 +228,7 @@ js_IteratorMore(JSContext *cx, js::HandleObject iterobj, js::MutableHandleValue 
 extern bool
 js_IteratorNext(JSContext *cx, js::HandleObject iterobj, js::MutableHandleValue rval);
 
-extern JSBool
+extern bool
 js_ThrowStopIteration(JSContext *cx);
 
 namespace js {

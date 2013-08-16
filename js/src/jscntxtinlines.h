@@ -9,20 +9,13 @@
 
 #include "jscntxt.h"
 
-#include "jscompartment.h"
-#include "jsfriendapi.h"
-#include "jsgc.h"
 #include "jsiter.h"
-#include "jsworkers.h"
 
-#include "builtin/Object.h" // For js::obj_construct
-#include "frontend/ParseMaps.h"
-#include "ion/IonFrames.h" // For GetPcScript
+#include "builtin/Object.h"
+#include "jit/IonFrames.h"
+#include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
-#include "vm/Probes.h"
-#include "vm/RegExpObject.h"
-
-#include "jsgcinlines.h"
+#include "vm/ProxyObject.h"
 
 #include "vm/ObjectImpl-inl.h"
 
@@ -35,7 +28,7 @@ class CompartmentChecker
 
   public:
     explicit CompartmentChecker(ExclusiveContext *cx)
-      : compartment(cx->compartment_)
+      : compartment(cx->compartment())
     {}
 
     /*
@@ -52,16 +45,16 @@ class CompartmentChecker
         MOZ_CRASH();
     }
 
-    /* Note: should only be used when neither c1 nor c2 may be the default compartment. */
+    /* Note: should only be used when neither c1 nor c2 may be the atoms compartment. */
     static void check(JSCompartment *c1, JSCompartment *c2) {
-        JS_ASSERT(c1 != c1->runtimeFromMainThread()->atomsCompartment);
-        JS_ASSERT(c2 != c2->runtimeFromMainThread()->atomsCompartment);
+        JS_ASSERT(!c1->runtimeFromAnyThread()->isAtomsCompartment(c1));
+        JS_ASSERT(!c2->runtimeFromAnyThread()->isAtomsCompartment(c2));
         if (c1 != c2)
             fail(c1, c2);
     }
 
     void check(JSCompartment *c) {
-        if (c && c != compartment->runtimeFromMainThread()->atomsCompartment) {
+        if (c && !compartment->runtimeFromAnyThread()->isAtomsCompartment(c)) {
             if (!compartment)
                 compartment = c;
             else if (c != compartment)
@@ -293,7 +286,7 @@ CallJSPropertyOp(JSContext *cx, PropertyOp op, HandleObject receiver, HandleId i
     JS_CHECK_RECURSION(cx, return false);
 
     assertSameCompartment(cx, receiver, id, vp);
-    JSBool ok = op(cx, receiver, id, vp);
+    bool ok = op(cx, receiver, id, vp);
     if (ok)
         assertSameCompartment(cx, vp);
     return ok;
@@ -301,7 +294,7 @@ CallJSPropertyOp(JSContext *cx, PropertyOp op, HandleObject receiver, HandleId i
 
 JS_ALWAYS_INLINE bool
 CallJSPropertyOpSetter(JSContext *cx, StrictPropertyOp op, HandleObject obj, HandleId id,
-                       JSBool strict, MutableHandleValue vp)
+                       bool strict, MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -311,7 +304,7 @@ CallJSPropertyOpSetter(JSContext *cx, StrictPropertyOp op, HandleObject obj, Han
 
 static inline bool
 CallJSDeletePropertyOp(JSContext *cx, JSDeletePropertyOp op, HandleObject receiver, HandleId id,
-                       JSBool *succeeded)
+                       bool *succeeded)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -321,7 +314,7 @@ CallJSDeletePropertyOp(JSContext *cx, JSDeletePropertyOp op, HandleObject receiv
 
 inline bool
 CallSetter(JSContext *cx, HandleObject obj, HandleId id, StrictPropertyOp op, unsigned attrs,
-           unsigned shortid, JSBool strict, MutableHandleValue vp)
+           unsigned shortid, bool strict, MutableHandleValue vp)
 {
     if (attrs & JSPROP_SETTER) {
         RootedValue opv(cx, CastAsObjectJsval(op));
@@ -343,36 +336,6 @@ inline uintptr_t
 GetNativeStackLimit(ExclusiveContext *cx)
 {
     return cx->perThreadData->nativeStackLimit;
-}
-
-inline RegExpCompartment &
-ExclusiveContext::regExps()
-{
-    return compartment_->regExps;
-}
-
-inline PropertyTree&
-ExclusiveContext::propertyTree()
-{
-    return compartment_->propertyTree;
-}
-
-inline BaseShapeSet &
-ExclusiveContext::baseShapes()
-{
-    return compartment_->baseShapes;
-}
-
-inline InitialShapeSet &
-ExclusiveContext::initialShapes()
-{
-    return compartment_->initialShapes;
-}
-
-inline DtoaCache &
-ExclusiveContext::dtoaCache()
-{
-    return compartment_->dtoaCache;
 }
 
 inline void
@@ -512,7 +475,7 @@ inline void
 js::ExclusiveContext::setCompartment(JSCompartment *comp)
 {
     // ExclusiveContexts can only be in the atoms zone or in exclusive zones.
-    JS_ASSERT_IF(!isJSContext() && comp != runtime_->atomsCompartment,
+    JS_ASSERT_IF(!isJSContext() && !runtime_->isAtomsCompartment(comp),
                  comp->zone()->usedByExclusiveThread);
 
     // Normal JSContexts cannot enter exclusive zones.
@@ -520,12 +483,12 @@ js::ExclusiveContext::setCompartment(JSCompartment *comp)
                  !comp->zone()->usedByExclusiveThread);
 
     // Only one thread can be in the atoms compartment at a time.
-    JS_ASSERT_IF(comp == runtime_->atomsCompartment,
+    JS_ASSERT_IF(runtime_->isAtomsCompartment(comp),
                  runtime_->currentThreadHasExclusiveAccess());
 
     // Make sure that the atoms compartment has its own zone.
-    JS_ASSERT_IF(comp && comp != runtime_->atomsCompartment,
-                 comp->zone() != runtime_->atomsCompartment->zone());
+    JS_ASSERT_IF(comp && !runtime_->isAtomsCompartment(comp),
+                 !runtime_->isAtomsZone(comp->zone()));
 
     // Both the current and the new compartment should be properly marked as
     // entered at this point.

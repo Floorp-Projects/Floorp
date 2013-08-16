@@ -69,12 +69,14 @@ reflectBoolean({
 reflectString({
   element: document.createElement("button"),
   attribute: "formTarget",
+  otherValues: [ "_blank", "_self", "_parent", "_top" ],
 });
 
 // .name
 reflectString({
   element: document.createElement("button"),
   attribute: "name",
+  otherValues: [ "isindex", "_charset_" ]
 });
 
 // .type
@@ -92,6 +94,42 @@ reflectString({
   element: document.createElement("button"),
   attribute: "value",
 });
+
+// .willValidate
+ok("willValidate" in document.createElement("button"),
+   "willValidate should be an IDL attribute of the button element");
+is(typeof(document.createElement("button").willValidate), "boolean",
+   "button.willValidate should be a boolean");
+
+// .validity
+ok("validity" in document.createElement("button"),
+   "validity should be an IDL attribute of the button element");
+is(typeof(document.createElement("button").validity), "object",
+   "button.validity should be an object");
+ok(document.createElement("button").validity instanceof ValidityState,
+   "button.validity sohuld be an instance of ValidityState");
+
+// .validationMessage
+ok("validationMessage" in document.createElement("button"),
+   "validationMessage should be an IDL attribute of the button element");
+is(typeof(document.createElement("button").validationMessage), "string",
+   "button.validationMessage should be a string");
+
+// .checkValidity()
+ok("checkValidity" in document.createElement("button"),
+   "checkValidity() should be a method of the button element");
+is(typeof(document.createElement("button").checkValidity), "function",
+   "button.checkValidity should be a function");
+
+// .setCustomValidity()
+ok("setCustomValidity" in document.createElement("button"),
+   "setCustomValidity() should be a method of the button element");
+is(typeof(document.createElement("button").setCustomValidity), "function",
+   "button.setCustomValidity should be a function");
+
+// .labels
+todo("labels" in document.createElement("button"),
+     "button.labels isn't implemented yet");
 
 </script>
 </pre>

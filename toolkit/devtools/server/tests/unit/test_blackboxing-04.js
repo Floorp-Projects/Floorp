@@ -53,7 +53,7 @@ function test_black_box()
     "" + function runTest() { // line 1
       doStuff(                // line 2
         function (n) {        // line 3
-          n;                  // line 4
+          return n;           // line 4
         }                     // line 5
       );                      // line 6
     }                         // line 7

@@ -12,8 +12,8 @@
 #include "gfxMatrix.h"
 #include "nsISupportsImpl.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Alignment.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/Util.h"
 
 class gfxContext;
 class gfxASurface;

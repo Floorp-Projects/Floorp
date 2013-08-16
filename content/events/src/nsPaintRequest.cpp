@@ -6,7 +6,6 @@
 #include "nsPaintRequest.h"
 
 #include "nsIFrame.h"
-#include "nsContentUtils.h"
 #include "mozilla/dom/PaintRequestBinding.h"
 #include "mozilla/dom/PaintRequestListBinding.h"
 

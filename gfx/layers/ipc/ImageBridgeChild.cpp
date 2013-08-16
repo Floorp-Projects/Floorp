@@ -99,8 +99,8 @@ ImageBridgeChild::RemoveTexture(CompositableClient* aCompositable,
                                 TextureFlags aFlags)
 {
   mTxn->AddNoSwapEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
-                      aTexture,
-                      aFlags));
+                                      aTexture,
+                                      aFlags));
 }
 
 void
@@ -108,7 +108,7 @@ ImageBridgeChild::UseTexture(CompositableClient* aCompositable,
                              TextureClient* aTexture)
 {
   mTxn->AddNoSwapEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
-                      aTexture->GetID()));
+                                   aTexture->GetID()));
 }
 
 void
@@ -382,6 +382,10 @@ ImageBridgeChild::EndTransaction()
   MOZ_ASSERT(!mTxn->Finished(), "forgot BeginTransaction?");
 
   AutoEndTransaction _(mTxn);
+
+  if (mTxn->IsEmpty()) {
+    return;
+  }
 
   AutoInfallibleTArray<CompositableOperation, 10> cset;
   cset.SetCapacity(mTxn->mOperations.size());

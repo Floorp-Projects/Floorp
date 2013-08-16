@@ -149,9 +149,10 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
       mTexImage->GetSize() != size ||
       mTexImage->GetContentType() != gfx::ContentForFormat(aSurface->GetFormat())) {
     if (mAllowBigImage) {
-      // XXX - clarify the which size we want to use. Some use cases may
-      // require the size of the destnation surface to be different from
+      // XXX - clarify which size we want to use. IncrementalContentHost will
+      // require the size of the destination surface to be different from
       // the size of aSurface.
+      // See bug 893300 (tracks the implementation of ContentHost for new textures).
       mTexImage = mGL->CreateTextureImage(size,
                                           gfx::ContentForFormat(aSurface->GetFormat()),
                                           WrapMode(mGL, aFlags & TEXTURE_ALLOW_REPEAT),
@@ -178,10 +179,9 @@ TextureImageTextureSourceOGL::GetSize() const
 {
   if (mTexImage) {
     if (mIterating) {
-      nsIntRect rect = mTexImage->GetTileRect();
-      return gfx::IntSize(rect.width, rect.height);
+      return mTexImage->GetTileRect().Size();
     }
-    return gfx::IntSize(mTexImage->GetSize().width, mTexImage->GetSize().height);
+    return mTexImage->GetSize();
   }
   NS_WARNING("Trying to query the size of an empty TextureSource.");
   return gfx::IntSize(0, 0);
@@ -192,6 +192,11 @@ TextureImageTextureSourceOGL::GetFormat() const
 {
   MOZ_ASSERT(mTexImage);
   return mTexImage->GetTextureFormat();
+}
+
+nsIntRect TextureImageTextureSourceOGL::GetTileRect()
+{
+  return ThebesIntRect(mTexImage->GetTileRect());
 }
 
 void
@@ -256,7 +261,7 @@ SharedTextureSourceOGL::SetCompositor(CompositorOGL* aCompositor)
 bool
 SharedTextureSourceOGL::IsValid() const
 {
-  return gl() != nullptr;
+  return !!gl();
 }
 
 gl::GLContext*
@@ -308,7 +313,7 @@ SharedTextureHostOGL::Lock()
     }
 
     GLenum wrapMode = LOCAL_GL_CLAMP_TO_EDGE;
-    mTextureSource = new SharedTextureSourceOGL(nullptr, // Compositor
+    mTextureSource = new SharedTextureSourceOGL(mCompositor,
                                                 mSharedHandle,
                                                 handleDetails.mTextureFormat,
                                                 handleDetails.mTarget,
@@ -358,12 +363,16 @@ TextureImageDeprecatedTextureHostOGL::GetSize() const
 {
   if (mTexture) {
     if (mIterating) {
-      nsIntRect rect = mTexture->GetTileRect();
-      return gfx::IntSize(rect.width, rect.height);
+      return mTexture->GetTileRect().Size();
     }
-    return gfx::IntSize(mTexture->GetSize().width, mTexture->GetSize().height);
+    return mTexture->GetSize();
   }
   return gfx::IntSize(0, 0);
+}
+
+nsIntRect TextureImageDeprecatedTextureHostOGL::GetTileRect()
+{
+  return ThebesIntRect(mTexture->GetTileRect());
 }
 
 void
@@ -1209,7 +1218,7 @@ GrallocDeprecatedTextureHostOGL::GetAsSurface() {
     : nullptr;
   return surf.forget();
 }
-#endif
+#endif // MOZ_WIDGET_GONK
 
 } // namespace
 } // namespace

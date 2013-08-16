@@ -12,7 +12,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsIObserver.h"
-#include "nsIXPCScriptNotify.h"
 #include "prtime.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIXPConnect.h"
@@ -32,8 +31,7 @@ template <class> class Maybe;
 // a page) and doing the actual GC.
 #define NS_GC_DELAY                 4000 // ms
 
-class nsJSContext : public nsIScriptContext,
-                    public nsIXPCScriptNotify
+class nsJSContext : public nsIScriptContext
 {
 public:
   nsJSContext(JSRuntime* aRuntime, bool aGCOnDestruction,
@@ -50,17 +48,6 @@ public:
                                   bool aCoerceToString,
                                   JS::Value* aRetValue) MOZ_OVERRIDE;
 
-  virtual nsresult CompileScript(const PRUnichar* aText,
-                                 int32_t aTextLength,
-                                 nsIPrincipal *principal,
-                                 const char *aURL,
-                                 uint32_t aLineNo,
-                                 uint32_t aVersion,
-                                 JS::MutableHandle<JSScript*> aScriptObject,
-                                 bool aSaveSource = false) MOZ_OVERRIDE;
-  virtual nsresult ExecuteScript(JSScript* aScriptObject,
-                                 JSObject* aScopeObject) MOZ_OVERRIDE;
-
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
                                             JS::Handle<JSObject*> aScope,
                                             JS::Handle<JSObject*> aHandler,
@@ -74,7 +61,6 @@ public:
   virtual nsresult InitContext() MOZ_OVERRIDE;
   virtual bool IsContextInitialized() MOZ_OVERRIDE;
 
-  virtual void ScriptEvaluated(bool aTerminated) MOZ_OVERRIDE;
   virtual bool GetScriptsEnabled() MOZ_OVERRIDE;
   virtual void SetScriptsEnabled(bool aEnabled, bool aFireTimeouts) MOZ_OVERRIDE;
 
@@ -82,8 +68,6 @@ public:
 
   virtual bool GetProcessingScriptTag() MOZ_OVERRIDE;
   virtual void SetProcessingScriptTag(bool aResult) MOZ_OVERRIDE;
-
-  virtual bool GetExecutingScript() MOZ_OVERRIDE;
 
   virtual nsresult InitClasses(JS::Handle<JSObject*> aGlobalObj) MOZ_OVERRIDE;
 
@@ -94,11 +78,6 @@ public:
                              JS::Handle<JSScript*> aScriptObject) MOZ_OVERRIDE;
   virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                JS::MutableHandle<JSScript*> aResult) MOZ_OVERRIDE;
-
-  virtual void EnterModalState() MOZ_OVERRIDE;
-  virtual void LeaveModalState() MOZ_OVERRIDE;
-
-  NS_DECL_NSIXPCSCRIPTNOTIFY
 
   static void LoadStart();
   static void LoadEnd();
@@ -183,14 +162,12 @@ private:
   nsrefcnt GetCCRefcnt();
 
   JSContext *mContext;
-  bool mActive;
 
   bool mIsInitialized;
   bool mScriptsEnabled;
   bool mGCOnDestruction;
   bool mProcessingScriptTag;
 
-  uint32_t mExecuteDepth;
   uint32_t mDefaultJSOptions;
   PRTime mOperationCallbackTime;
 
@@ -206,7 +183,7 @@ private:
 
   static int JSOptionChangedCallback(const char *pref, void *data);
 
-  static JSBool DOMOperationCallback(JSContext *cx);
+  static bool DOMOperationCallback(JSContext *cx);
 };
 
 class nsIJSRuntimeService;
@@ -263,9 +240,9 @@ JSObject* NS_DOMReadStructuredClone(JSContext* cx,
                                     JSStructuredCloneReader* reader, uint32_t tag,
                                     uint32_t data, void* closure);
 
-JSBool NS_DOMWriteStructuredClone(JSContext* cx,
-                                  JSStructuredCloneWriter* writer,
-                                  JS::Handle<JSObject*> obj, void *closure);
+bool NS_DOMWriteStructuredClone(JSContext* cx,
+                                JSStructuredCloneWriter* writer,
+                                JS::Handle<JSObject*> obj, void *closure);
 
 void NS_DOMStructuredCloneError(JSContext* cx, uint32_t errorid);
 

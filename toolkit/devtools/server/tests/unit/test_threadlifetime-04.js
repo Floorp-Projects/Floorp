@@ -49,6 +49,5 @@ function test_thread_lifetime()
       debugger;
     };
     stopMe({obj: true});
-    ")"
   } + ")()");
 }

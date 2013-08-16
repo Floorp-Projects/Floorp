@@ -357,7 +357,6 @@
 
 .side-menu-widget-item-other {
   background: url(background-noise-toolbar.png), hsla(208,11%,27%, 0.65);
-  -moz-margin-start: -22px;
 }
 
 .side-menu-widget-item-other.selected {
@@ -411,13 +410,8 @@
 }
 
 .variables-view-scope > .variables-view-element-details:not(:empty) {
-  margin-top: 1px;
   -moz-margin-start: 2px;
   -moz-margin-end: 1px;
-}
-
-.variables-view-scope > .variables-view-element-details.enum:not(:empty) {
-  border-bottom: 1px solid #ddd;
 }
 
 /* Generic traits applied to both variables and properties */

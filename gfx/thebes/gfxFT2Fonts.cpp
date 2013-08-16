@@ -591,10 +591,14 @@ gfxFT2Font::GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry, aStyle);
     if (!font) {
         cairo_scaled_font_t *scaledFont = aFontEntry->CreateScaledFont(aStyle);
+        if (!scaledFont) {
+            return nullptr;
+        }
         font = new gfxFT2Font(scaledFont, aFontEntry, aStyle, aNeedsBold);
         cairo_scaled_font_destroy(scaledFont);
-        if (!font)
+        if (!font) {
             return nullptr;
+        }
         gfxFontCache::GetCache()->AddNew(font);
     }
     return font.forget().downcast<gfxFT2Font>();

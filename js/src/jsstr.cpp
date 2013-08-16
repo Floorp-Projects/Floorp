@@ -15,14 +15,14 @@
  * allocations in the same native method.
  */
 
-#include "jsstrinlines.h"
+#include "jsstr.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
-#include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 
 #include "jsapi.h"
@@ -35,7 +35,6 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsprf.h"
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jsversion.h"
@@ -47,7 +46,6 @@
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/ScopeObject.h"
-#include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 
 #include "jsinferinlines.h"
@@ -364,7 +362,7 @@ const JSSubString js_EmptySubString = {0, js_empty_ucstr};
 
 static const unsigned STRING_ELEMENT_ATTRS = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
 
-static JSBool
+static bool
 str_enumerate(JSContext *cx, HandleObject obj)
 {
     RootedString str(cx, obj->as<StringObject>().unbox());
@@ -764,7 +762,7 @@ js_toUpperCase(JSContext *cx, JSString *str)
     return str;
 }
 
-static JSBool
+static bool
 ToUpperCaseHelper(JSContext *cx, CallReceiver call)
 {
     RootedString str(cx, ThisToStringForStringProto(cx, call));
@@ -810,7 +808,7 @@ str_toLocaleUpperCase(JSContext *cx, unsigned argc, Value *vp)
     return ToUpperCaseHelper(cx, args);
 }
 
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
 static bool
 str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1090,6 +1088,56 @@ js::StringHasPattern(const jschar *text, uint32_t textlen,
 {
     return StringMatch(text, textlen, pat, patlen) != -1;
 }
+
+// When an algorithm does not need a string represented as a single linear
+// array of characters, this range utility may be used to traverse the string a
+// sequence of linear arrays of characters. This avoids flattening ropes.
+class StringSegmentRange
+{
+    // If malloc() shows up in any profiles from this vector, we can add a new
+    // StackAllocPolicy which stashes a reusable freed-at-gc buffer in the cx.
+    AutoStringVector stack;
+    Rooted<JSLinearString*> cur;
+
+    bool settle(JSString *str) {
+        while (str->isRope()) {
+            JSRope &rope = str->asRope();
+            if (!stack.append(rope.rightChild()))
+                return false;
+            str = rope.leftChild();
+        }
+        cur = &str->asLinear();
+        return true;
+    }
+
+  public:
+    StringSegmentRange(JSContext *cx)
+      : stack(cx), cur(cx)
+    {}
+
+    JS_WARN_UNUSED_RESULT bool init(JSString *str) {
+        JS_ASSERT(stack.empty());
+        return settle(str);
+    }
+
+    bool empty() const {
+        return cur == NULL;
+    }
+
+    JSLinearString *front() const {
+        JS_ASSERT(!cur->isRope());
+        return cur;
+    }
+
+    JS_WARN_UNUSED_RESULT bool popFront() {
+        JS_ASSERT(!empty());
+        if (stack.empty()) {
+            cur = NULL;
+            return true;
+        }
+        return settle(stack.popCopy());
+    }
+};
 
 /*
  * RopeMatch takes the text to search and the pattern to search for in the text.
@@ -1488,8 +1536,8 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
-js_TrimString(JSContext *cx, Value *vp, JSBool trimLeft, JSBool trimRight)
+static bool
+js_TrimString(JSContext *cx, Value *vp, bool trimLeft, bool trimRight)
 {
     CallReceiver call = CallReceiverFromVp(vp);
     RootedString str(cx, ThisToStringForStringProto(cx, call));
@@ -1878,7 +1926,7 @@ js::str_match(JSContext *cx, unsigned argc, Value *vp)
     if (!g.normalizeRegExp(cx, false, 1, args))
         return false;
 
-    RegExpStatics *res = cx->regExpStatics();
+    RegExpStatics *res = cx->global()->getRegExpStatics();
     Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
         return false;
@@ -1916,7 +1964,7 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
 
     const jschar *chars = linearStr->chars();
     size_t length = linearStr->length();
-    RegExpStatics *res = cx->regExpStatics();
+    RegExpStatics *res = cx->global()->getRegExpStatics();
 
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
@@ -1933,6 +1981,31 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setInt32(match.start);
     return true;
 }
+
+// Utility for building a rope (lazy concatenation) of strings.
+class RopeBuilder {
+    JSContext *cx;
+    RootedString res;
+
+    RopeBuilder(const RopeBuilder &other) MOZ_DELETE;
+    void operator=(const RopeBuilder &other) MOZ_DELETE;
+
+  public:
+    RopeBuilder(JSContext *cx)
+      : cx(cx), res(cx, cx->runtime()->emptyString)
+    {}
+
+    inline bool append(HandleString str) {
+        res = ConcatStrings<CanGC>(cx, res, str);
+        return !!res;
+    }
+
+    inline JSString *result() {
+        return res;
+    }
+};
+
+namespace {
 
 struct ReplaceData
 {
@@ -1957,6 +2030,8 @@ struct ReplaceData
     FastInvokeGuard    fig;            /* used for lambda calls, also holds arguments */
     StringBuffer       sb;             /* buffer built during DoMatch */
 };
+
+} /* anonymous namespace */
 
 static bool
 ReplaceRegExp(JSContext *cx, RegExpStatics *res, ReplaceData &rdata);
@@ -2552,13 +2627,13 @@ str_replace_regexp_remove(JSContext *cx, CallArgs args, HandleString str, RegExp
     /* If unmatched, return the input string. */
     if (!lastIndex) {
         if (startIndex > 0)
-            cx->regExpStatics()->updateLazily(cx, stableStr, &re, lazyIndex);
+            cx->global()->getRegExpStatics()->updateLazily(cx, stableStr, &re, lazyIndex);
         args.rval().setString(str);
         return true;
     }
 
     /* The last successful match updates the RegExpStatics. */
-    cx->regExpStatics()->updateLazily(cx, stableStr, &re, lazyIndex);
+    cx->global()->getRegExpStatics()->updateLazily(cx, stableStr, &re, lazyIndex);
 
     /* Include any remaining part of the string. */
     if (lastIndex < charsLen) {
@@ -2589,7 +2664,7 @@ str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
     rdata.leftIndex = 0;
     rdata.calledBack = false;
 
-    RegExpStatics *res = cx->regExpStatics();
+    RegExpStatics *res = cx->global()->getRegExpStatics();
     RegExpShared &re = rdata.g.regExp();
 
     /* Optimize removal. */
@@ -2940,7 +3015,7 @@ SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, const Ma
 
         /* Step 13(c)(iii)(6-7). */
         if (Matcher::returnsCaptures) {
-            RegExpStatics *res = cx->regExpStatics();
+            RegExpStatics *res = cx->global()->getRegExpStatics();
             const MatchPairs &matches = res->getMatches();
             for (size_t i = 0; i < matches.parenCount(); i++) {
                 /* Steps 13(c)(iii)(7)(a-c). */
@@ -3121,7 +3196,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
         SplitStringMatcher matcher(cx, sepstr);
         aobj = SplitHelper(cx, linearStr, limit, matcher, type);
     } else {
-        SplitRegExpMatcher matcher(*re, cx->regExpStatics());
+        SplitRegExpMatcher matcher(*re, cx->global()->getRegExpStatics());
         aobj = SplitHelper(cx, linearStr, limit, matcher, type);
     }
     if (!aobj)
@@ -3361,7 +3436,7 @@ tagify(JSContext *cx, const char *begin, HandleLinearString param, const char *e
     return true;
 }
 
-static JSBool
+static bool
 tagify_value(JSContext *cx, CallArgs args, const char *begin, const char *end)
 {
     RootedLinearString param(cx, ArgToRootedString(cx, args, 0));
@@ -3474,7 +3549,7 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN("trimRight",         str_trimRight,         0,JSFUN_GENERIC_NATIVE),
     JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,JSFUN_GENERIC_NATIVE),
     JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,JSFUN_GENERIC_NATIVE),
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
          {"localeCompare",     {NULL, NULL},          1,0, "String_localeCompare"},
 #else
     JS_FN("localeCompare",     str_localeCompare,     1,JSFUN_GENERIC_NATIVE),
@@ -3582,7 +3657,7 @@ static const JSFunctionSpec string_static_methods[] = {
 
     // This must be at the end because of bug 853075: functions listed after
     // self-hosted methods aren't available in self-hosted code.
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
          {"localeCompare",     {NULL, NULL},          2,0, "String_static_localeCompare"},
 #endif
     JS_FS_END
@@ -3944,17 +4019,6 @@ js_strlen(const jschar *s)
     for (t = s; *t != 0; t++)
         continue;
     return (size_t)(t - s);
-}
-
-jschar *
-js_strchr(const jschar *s, jschar c)
-{
-    while (*s != 0) {
-        if (*s == c)
-            return (jschar *)s;
-        s++;
-    }
-    return NULL;
 }
 
 jschar *

@@ -10,8 +10,6 @@
 
 #include "mozilla/storage.h"
 #include "nsComponentManagerUtils.h"
-#include "nsContentUtils.h"
-#include "nsDOMClassInfoID.h"
 #include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"

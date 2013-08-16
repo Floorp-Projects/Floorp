@@ -159,6 +159,7 @@ function makeInfallible(aHandler, aName) {
          */
         Cu.reportError(msg);
       }
+      return undefined;
     }
   }
 }

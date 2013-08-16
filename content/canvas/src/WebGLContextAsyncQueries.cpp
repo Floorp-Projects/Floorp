@@ -30,9 +30,25 @@ GetQueryTargetEnumString(WebGLenum target)
         default:
             break;
     }
-    
+
     MOZ_ASSERT(false, "Unknown query `target`.");
     return "UNKNOWN_QUERY_TARGET";
+}
+
+static inline GLenum
+SimulateOcclusionQueryTarget(const gl::GLContext* gl, GLenum target)
+{
+    MOZ_ASSERT(target == LOCAL_GL_ANY_SAMPLES_PASSED ||
+               target == LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE,
+               "unknown occlusion query target");
+
+    if (gl->IsExtensionSupported(gl::GLContext::XXX_occlusion_query_boolean)) {
+        return target;
+    } else if (gl->IsExtensionSupported(gl::GLContext::XXX_occlusion_query2)) {
+        return LOCAL_GL_ANY_SAMPLES_PASSED;
+    }
+
+    return LOCAL_GL_SAMPLES_PASSED;
 }
 
 already_AddRefed<WebGLQuery>
@@ -149,11 +165,7 @@ WebGLContext::BeginQuery(WebGLenum target, WebGLQuery *query)
 
     MakeContextCurrent();
 
-    if (!gl->IsGLES2()) {
-        gl->fBeginQuery(LOCAL_GL_SAMPLES_PASSED, query->mGLName);
-    } else {
-        gl->fBeginQuery(target, query->mGLName);
-    }
+    gl->fBeginQuery(SimulateOcclusionQueryTarget(gl, target), query->mGLName);
 
     GetActiveQueryByTarget(target) = query;
 }
@@ -190,11 +202,7 @@ WebGLContext::EndQuery(WebGLenum target)
 
     MakeContextCurrent();
 
-    if (!gl->IsGLES2()) {
-        gl->fEndQuery(LOCAL_GL_SAMPLES_PASSED);
-    } else {
-        gl->fEndQuery(target);
-    }
+    gl->fEndQuery(SimulateOcclusionQueryTarget(gl, target));
 
     GetActiveQueryByTarget(target) = nullptr;
 }

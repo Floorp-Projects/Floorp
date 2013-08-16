@@ -54,7 +54,7 @@ HashNativeKey(PLDHashTable *table, const void *key)
     }
 
     if (!Set) {
-        NS_ASSERTION(Addition, "bad key");
+        MOZ_ASSERT(Addition, "bad key");
         // This would be an XOR like below.
         // But "0 ^ x == x". So it does not matter.
         h = (js::HashNumber) NS_PTR_TO_INT32(Addition) >> 2;
@@ -86,7 +86,7 @@ JSObject2WrappedJSMap::FindDyingJSObjects(nsTArray<nsXPCWrappedJS*>* dying)
 {
     for (Map::Range r = mTable.all(); !r.empty(); r.popFront()) {
         nsXPCWrappedJS* wrapper = r.front().value;
-        NS_ASSERTION(wrapper, "found a null JS wrapper!");
+        MOZ_ASSERT(wrapper, "found a null JS wrapper!");
 
         // walk the wrapper chain and find any whose JSObject is to be finalized
         while (wrapper) {
@@ -102,8 +102,8 @@ JSObject2WrappedJSMap::ShutdownMarker(JSRuntime* rt)
 {
     for (Map::Range r = mTable.all(); !r.empty(); r.popFront()) {
         nsXPCWrappedJS* wrapper = r.front().value;
-        NS_ASSERTION(wrapper, "found a null JS wrapper!");
-        NS_ASSERTION(wrapper->IsValid(), "found an invalid JS wrapper!");
+        MOZ_ASSERT(wrapper, "found a null JS wrapper!");
+        MOZ_ASSERT(wrapper->IsValid(), "found an invalid JS wrapper!");
         wrapper->SystemIsBeingShutDown(rt);
     }
 }
@@ -582,7 +582,7 @@ XPCNativeScriptableSharedMap::~XPCNativeScriptableSharedMap()
         PL_DHashTableDestroy(mTable);
 }
 
-JSBool
+bool
 XPCNativeScriptableSharedMap::GetNewOrUsed(uint32_t flags,
                                            char* name,
                                            uint32_t interfacesBitmap,

@@ -5,11 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHistory.h"
-
+#include "mozilla/dom/HistoryBinding.h"
 #include "nsCOMPtr.h"
-#include "nscore.h"
 #include "nsPIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -17,209 +15,142 @@
 #include "nsIWebNavigation.h"
 #include "nsIHistoryEntry.h"
 #include "nsIURI.h"
-#include "nsIServiceManager.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsDOMClassInfoID.h"
-#include "nsError.h"
 #include "nsContentUtils.h"
 #include "nsISHistoryInternal.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
-static const char* sAllowPushStatePrefStr  =
+static const char* sAllowPushStatePrefStr =
   "browser.history.allowPushState";
 static const char* sAllowReplaceStatePrefStr =
   "browser.history.allowReplaceState";
 
 //
-//  History class implementation 
+//  History class implementation
 //
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsHistory)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsHistory)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHistory)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHistory)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHistory) // Empty, needed for extension compat
+NS_INTERFACE_MAP_END
+
 nsHistory::nsHistory(nsPIDOMWindow* aInnerWindow)
   : mInnerWindow(do_GetWeakReference(aInnerWindow))
 {
+  SetIsDOMBinding();
 }
 
 nsHistory::~nsHistory()
 {
 }
 
-
-DOMCI_DATA(History, nsHistory)
-
-// QueryInterface implementation for nsHistory
-NS_INTERFACE_MAP_BEGIN(nsHistory)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMHistory)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHistory)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(History)
-NS_INTERFACE_MAP_END
-
-
-NS_IMPL_ADDREF(nsHistory)
-NS_IMPL_RELEASE(nsHistory)
-
-
-NS_IMETHODIMP
-nsHistory::GetLength(int32_t* aLength)
+nsPIDOMWindow*
+nsHistory::GetParentObject() const
 {
   nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
-  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
-    return NS_ERROR_DOM_SECURITY_ERR;
+  return win;
+}
 
-  nsCOMPtr<nsISHistory>   sHistory;
+JSObject*
+nsHistory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return HistoryBinding::Wrap(aCx, aScope, this);
+}
+
+uint32_t
+nsHistory::GetLength(ErrorResult& aRv) const
+{
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
+  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow())) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+
+    return 0;
+  }
 
   // Get session History from docshell
-  GetSessionHistoryFromDocShell(GetDocShell(), getter_AddRefs(sHistory));
-  NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
-  return sHistory->GetCount(aLength);
+  nsCOMPtr<nsISHistory> sHistory = GetSessionHistory();
+  if (!sHistory) {
+    aRv.Throw(NS_ERROR_FAILURE);
+
+    return 0;
+  }
+
+  int32_t len;
+  nsresult rv = sHistory->GetCount(&len);
+
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+
+    return 0;
+  }
+
+  return len >= 0 ? len : 0;
 }
 
-NS_IMETHODIMP
-nsHistory::GetCurrent(nsAString& aCurrent)
-{
-  if (!nsContentUtils::IsCallerChrome())
-    return NS_ERROR_DOM_SECURITY_ERR;
-
-  int32_t curIndex=0;
-  nsAutoCString curURL;
-  nsCOMPtr<nsISHistory> sHistory;
-
-  // Get SessionHistory from docshell
-  GetSessionHistoryFromDocShell(GetDocShell(), getter_AddRefs(sHistory));
-  NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
-
-  // Get the current index at session History
-  sHistory->GetIndex(&curIndex);
-  nsCOMPtr<nsIHistoryEntry> curEntry;
-  nsCOMPtr<nsIURI>     uri;
-
-  // Get the SH entry for the current index
-  sHistory->GetEntryAtIndex(curIndex, false, getter_AddRefs(curEntry));
-  NS_ENSURE_TRUE(curEntry, NS_ERROR_FAILURE);
-
-  // Get the URI for the current entry
-  curEntry->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-  uri->GetSpec(curURL);
-  CopyUTF8toUTF16(curURL, aCurrent);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHistory::GetPrevious(nsAString& aPrevious)
-{
-  if (!nsContentUtils::IsCallerChrome())
-    return NS_ERROR_DOM_SECURITY_ERR;
-
-  int32_t curIndex;
-  nsAutoCString prevURL;
-  nsCOMPtr<nsISHistory>  sHistory;
-
-  // Get session History from docshell
-  GetSessionHistoryFromDocShell(GetDocShell(), getter_AddRefs(sHistory));
-  NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
-
-  // Get the current index at session History
-  sHistory->GetIndex(&curIndex);
-  nsCOMPtr<nsIHistoryEntry> prevEntry;
-  nsCOMPtr<nsIURI>     uri;
-
-  // Get the previous SH entry
-  sHistory->GetEntryAtIndex((curIndex-1), false, getter_AddRefs(prevEntry));
-  NS_ENSURE_TRUE(prevEntry, NS_ERROR_FAILURE);
-
-  // Get the URI for the previous entry
-  prevEntry->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-  uri->GetSpec(prevURL);
-  CopyUTF8toUTF16(prevURL, aPrevious);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHistory::GetNext(nsAString& aNext)
-{
-  if (!nsContentUtils::IsCallerChrome())
-    return NS_ERROR_DOM_SECURITY_ERR;
-
-  int32_t curIndex;
-  nsAutoCString nextURL;
-  nsCOMPtr<nsISHistory>  sHistory;
-
-  // Get session History from docshell
-  GetSessionHistoryFromDocShell(GetDocShell(), getter_AddRefs(sHistory));
-  NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
-
-  // Get the current index at session History
-  sHistory->GetIndex(&curIndex);
-  nsCOMPtr<nsIHistoryEntry> nextEntry;
-  nsCOMPtr<nsIURI>     uri;
-
-  // Get the next SH entry
-  sHistory->GetEntryAtIndex((curIndex+1), false, getter_AddRefs(nextEntry));
-  NS_ENSURE_TRUE(nextEntry, NS_ERROR_FAILURE);
-
-  // Get the URI for the next entry
-  nextEntry->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
-  uri->GetSpec(nextURL); 
-  CopyUTF8toUTF16(nextURL, aNext);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHistory::Back()
+JS::Value
+nsHistory::GetState(JSContext* aCx, ErrorResult& aRv) const
 {
   nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
-  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
-    return NS_ERROR_DOM_SECURITY_ERR;
+  if (!win) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
 
-  nsCOMPtr<nsISHistory>  sHistory;
+    return JS::UndefinedValue();
+  }
 
-  GetSessionHistoryFromDocShell(GetDocShell(), getter_AddRefs(sHistory));
-  NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
+  if (!nsContentUtils::CanCallerAccess(win->GetOuterWindow())) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
 
-  //QI SHistory to WebNavigation
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(sHistory));
-  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-  webNav->GoBack();
+    return JS::UndefinedValue();
+  }
 
-  return NS_OK;
+  nsCOMPtr<nsIDocument> doc =
+    do_QueryInterface(win->GetExtantDoc());
+  if (!doc) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+
+    return JS::UndefinedValue();
+  }
+
+  nsCOMPtr<nsIVariant> variant;
+  doc->GetStateObject(getter_AddRefs(variant));
+
+  if (variant) {
+    JS::Rooted<JS::Value> jsData(aCx);
+    aRv = variant->GetAsJSVal(jsData.address());
+
+    if (aRv.Failed()) {
+      return JS::UndefinedValue();
+    }
+
+    if (!JS_WrapValue(aCx, jsData.address())) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return JS::UndefinedValue();
+    }
+
+    return jsData;
+  }
+
+  return JS::UndefinedValue();
 }
 
-NS_IMETHODIMP
-nsHistory::Forward()
+void
+nsHistory::Go(int32_t aDelta, ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
-  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
-    return NS_ERROR_DOM_SECURITY_ERR;
+  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow())) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
 
-  nsCOMPtr<nsISHistory>  sHistory;
+    return;
+  }
 
-  GetSessionHistoryFromDocShell(GetDocShell(), getter_AddRefs(sHistory));
-  NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
-
-  //QI SHistory to WebNavigation
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(sHistory));
-  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-  webNav->GoForward();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHistory::Go(int32_t aDelta)
-{
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
-  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
-    return NS_ERROR_DOM_SECURITY_ERR;
-
-  if (aDelta == 0) {
+  if (!aDelta) {
     nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(GetDocShell()));
 
     if (window && window->IsHandlingResizeEvent()) {
@@ -239,170 +170,146 @@ nsHistory::Go(int32_t aDelta)
         pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
       }
 
-      return NS_OK;
+      return;
     }
   }
 
-  nsCOMPtr<nsISHistory> session_history;
-
-  GetSessionHistoryFromDocShell(GetDocShell(), getter_AddRefs(session_history));
-  NS_ENSURE_TRUE(session_history, NS_ERROR_FAILURE);
-
-  // QI SHistory to nsIWebNavigation
+  nsCOMPtr<nsISHistory> session_history = GetSessionHistory();
   nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(session_history));
-  NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
+  if (!webnav) {
+    aRv.Throw(NS_ERROR_FAILURE);
 
-  int32_t curIndex=-1;
+    return;
+  }
+
+  int32_t curIndex = -1;
   int32_t len = 0;
   session_history->GetIndex(&curIndex);
   session_history->GetCount(&len);
 
   int32_t index = curIndex + aDelta;
-  if (index > -1  &&  index < len)
+  if (index > -1 && index < len)
     webnav->GotoIndex(index);
 
-  // We always want to return a NS_OK, since returning errors 
+  // Ignore the return value from GotoIndex(), since returning errors
   // from GotoIndex() can lead to exceptions and a possible leak
   // of history length
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHistory::PushState(nsIVariant *aData, const nsAString& aTitle,
-                     const nsAString& aURL, JSContext* aCx)
+void
+nsHistory::Back(ErrorResult& aRv)
 {
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
+  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow())) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+
+    return;
+  }
+
+  nsCOMPtr<nsISHistory> sHistory = GetSessionHistory();
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(sHistory));
+  if (!webNav) {
+    aRv.Throw(NS_ERROR_FAILURE);
+
+    return;
+  }
+
+  webNav->GoBack();
+}
+
+void
+nsHistory::Forward(ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
+  if (!win || !nsContentUtils::CanCallerAccess(win->GetOuterWindow())) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+
+    return;
+  }
+
+  nsCOMPtr<nsISHistory> sHistory = GetSessionHistory();
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(sHistory));
+  if (!webNav) {
+    aRv.Throw(NS_ERROR_FAILURE);
+
+    return;
+  }
+
+  webNav->GoForward();
+}
+
+void
+nsHistory::PushState(JSContext* aCx, JS::Handle<JS::Value> aData,
+                     const nsAString& aTitle, const nsAString& aUrl,
+                     ErrorResult& aRv)
+{
+  PushOrReplaceState(aCx, aData, aTitle, aUrl, aRv, false);
+}
+
+void
+nsHistory::ReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
+                        const nsAString& aTitle, const nsAString& aUrl,
+                        ErrorResult& aRv)
+{
+  PushOrReplaceState(aCx, aData, aTitle, aUrl, aRv, true);
+}
+
+void
+nsHistory::PushOrReplaceState(JSContext* aCx, JS::Value aData,
+                              const nsAString& aTitle, const nsAString& aUrl,
+                              ErrorResult& aRv, bool aReplace)
+{
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
+  if (!win) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+
+    return;
+  }
+
+  if (!nsContentUtils::CanCallerAccess(win->GetOuterWindow())) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+
+    return;
+  }
+
   // Check that PushState hasn't been pref'ed off.
-  if (!Preferences::GetBool(sAllowPushStatePrefStr, false)) {
-    return NS_OK;
+  if (!Preferences::GetBool(aReplace ? sAllowReplaceStatePrefStr :
+                            sAllowPushStatePrefStr, false)) {
+    return;
   }
-
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
-  if (!win)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  if (!nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
-    return NS_ERROR_DOM_SECURITY_ERR;
 
   // AddState might run scripts, so we need to hold a strong reference to the
   // docShell here to keep it from going away.
   nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
 
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  if (!docShell) {
+    aRv.Throw(NS_ERROR_FAILURE);
 
-  // false tells the docshell to add a new history entry instead of
-  // modifying the current one.
-  nsresult rv = docShell->AddState(aData, aTitle, aURL, false, aCx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHistory::ReplaceState(nsIVariant *aData, const nsAString& aTitle,
-                        const nsAString& aURL, JSContext* aCx)
-{
-  // Check that ReplaceState hasn't been pref'ed off
-  if (!Preferences::GetBool(sAllowReplaceStatePrefStr, false)) {
-    return NS_OK;
+    return;
   }
 
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
-  if (!win)
-    return NS_ERROR_NOT_AVAILABLE;
+  // The "replace" argument tells the docshell to whether to add a new
+  // history entry or modify the current one.
 
-  if (!nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
-    return NS_ERROR_DOM_SECURITY_ERR;
-
-  // AddState might run scripts, so we need to hold a strong reference to the
-  // docShell here to keep it from going away.
-  nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
-
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-  // true tells the docshell to modify the current SHEntry, rather than
-  // create a new one.
-  return docShell->AddState(aData, aTitle, aURL, true, aCx);
+  aRv = docShell->AddState(aData, aTitle, aUrl, aReplace, aCx);
 }
 
-NS_IMETHODIMP
-nsHistory::GetState(nsIVariant **aState)
+already_AddRefed<nsISHistory>
+nsHistory::GetSessionHistory() const
 {
-  *aState = nullptr;
-
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
-  if (!win)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  if (!nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
-    return NS_ERROR_DOM_SECURITY_ERR;
-
-  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
-  if (!doc)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  return doc->GetStateObject(aState);
-}
-
-NS_IMETHODIMP
-nsHistory::Item(uint32_t aIndex, nsAString& aReturn)
-{
-  aReturn.Truncate();
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsISHistory>  session_history;
-
-  GetSessionHistoryFromDocShell(GetDocShell(), getter_AddRefs(session_history));
-  NS_ENSURE_TRUE(session_history, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIHistoryEntry> sh_entry;
-  nsCOMPtr<nsIURI> uri;
-
-  rv = session_history->GetEntryAtIndex(aIndex, false,
-                                        getter_AddRefs(sh_entry));
-
-  if (sh_entry) {
-    rv = sh_entry->GetURI(getter_AddRefs(uri));
-  }
-
-  if (uri) {
-    nsAutoCString urlCString;
-    rv = uri->GetSpec(urlCString);
-
-    CopyUTF8toUTF16(urlCString, aReturn);
-  }
-
-  return rv;
-}
-
-nsresult
-nsHistory::GetSessionHistoryFromDocShell(nsIDocShell * aDocShell, 
-                                         nsISHistory ** aReturn)
-{
-
-  NS_ENSURE_TRUE(aDocShell, NS_ERROR_FAILURE);
-  /* The docshell we have may or may not be
-   * the root docshell. So, get a handle to
-   * SH from the root docshell
-   */
-  
-  // QI mDocShell to nsIDocShellTreeItem
-  NS_ENSURE_TRUE(aDocShell, NS_ERROR_FAILURE);
+  nsIDocShell *docShell = GetDocShell();
+  NS_ENSURE_TRUE(docShell, nullptr);
 
   // Get the root DocShell from it
   nsCOMPtr<nsIDocShellTreeItem> root;
-  aDocShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
-  NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
-  
-  //QI root to nsIWebNavigation
-  nsCOMPtr<nsIWebNavigation>   webNav(do_QueryInterface(root));
-  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+  docShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(root));
+  NS_ENSURE_TRUE(webNav, nullptr);
 
-  //Get  SH from nsIWebNavigation
-  return webNav->GetSessionHistory(aReturn);
-  
+  nsCOMPtr<nsISHistory> shistory;
+
+  // Get SH from nsIWebNavigation
+  webNav->GetSessionHistory(getter_AddRefs(shistory));
+
+  return shistory.forget();
 }
-

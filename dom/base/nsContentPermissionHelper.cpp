@@ -5,7 +5,6 @@
 #include "nsContentPermissionHelper.h"
 #include "nsIContentPermissionPrompt.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"

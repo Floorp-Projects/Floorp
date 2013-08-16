@@ -76,7 +76,7 @@ public:
   virtual TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat) MOZ_OVERRIDE;
 
-  virtual void Detach() MOZ_OVERRIDE
+  virtual void OnDetach() MOZ_OVERRIDE
   {
     mBuffer = nullptr;
   }

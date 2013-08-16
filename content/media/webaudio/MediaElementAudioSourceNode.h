@@ -12,8 +12,6 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLMediaElement;
-
 class MediaElementAudioSourceNode : public MediaStreamAudioSourceNode
 {
 public:

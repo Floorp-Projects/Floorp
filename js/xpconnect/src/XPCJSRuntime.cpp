@@ -30,7 +30,6 @@
 #include "nsCxPusher.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionNoteRootCallback.h"
-#include "nsCycleCollectorUtils.h"
 #include "nsScriptLoader.h"
 #include "jsfriendapi.h"
 #include "js/MemoryMetrics.h"
@@ -39,6 +38,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
 #include "AccessCheck.h"
+#include "nsGlobalWindow.h"
 
 #include "GeckoProfiler.h"
 #include "nsJSPrincipals.h"
@@ -510,8 +510,8 @@ XPCJSRuntime::SuspectWrappedNative(XPCWrappedNative *wrapper,
     if (!wrapper->IsValid() || wrapper->IsWrapperExpired())
         return;
 
-    MOZ_ASSERT(NS_IsMainThread() || NS_IsCycleCollectorThread(),
-               "Suspecting wrapped natives from non-CC thread");
+    MOZ_ASSERT(NS_IsMainThread(),
+               "Suspecting wrapped natives from non-main thread");
 
     // Only record objects that might be part of a cycle as roots, unless
     // the callback wants all traces (a debug feature).
@@ -659,7 +659,7 @@ XPCJSRuntime::CustomGCCallback(JSGCStatus status)
 }
 
 /* static */ void
-XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool isCompartmentGC)
+XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartmentGC)
 {
     XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
     if (!self)
@@ -668,12 +668,12 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
     switch (status) {
         case JSFINALIZE_GROUP_START:
         {
-            NS_ASSERTION(!self->mDoingFinalization, "bad state");
+            MOZ_ASSERT(!self->mDoingFinalization, "bad state");
 
             // mThreadRunningGC indicates that GC is running
             { // scoped lock
                 XPCAutoLock lock(self->GetMapLock());
-                NS_ASSERTION(!self->mThreadRunningGC, "bad state");
+                MOZ_ASSERT(!self->mThreadRunningGC, "bad state");
                 self->mThreadRunningGC = PR_GetCurrentThread();
             }
 
@@ -698,7 +698,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
         }
         case JSFINALIZE_GROUP_END:
         {
-            NS_ASSERTION(self->mDoingFinalization, "bad state");
+            MOZ_ASSERT(self->mDoingFinalization, "bad state");
             self->mDoingFinalization = false;
 
             // Release all the members whose JSObjects are now known
@@ -712,7 +712,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
             // Clear it and notify waiters.
             { // scoped lock
                 XPCAutoLock lock(self->GetMapLock());
-                NS_ASSERTION(self->mThreadRunningGC == PR_GetCurrentThread(), "bad state");
+                MOZ_ASSERT(self->mThreadRunningGC == PR_GetCurrentThread(), "bad state");
                 self->mThreadRunningGC = nullptr;
                 xpc_NotifyAll(self->GetMapLock());
             }
@@ -724,7 +724,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
             // mThreadRunningGC indicates that GC is running
             { // scoped lock
                 XPCAutoLock lock(self->GetMapLock());
-                NS_ASSERTION(!self->mThreadRunningGC, "bad state");
+                MOZ_ASSERT(!self->mThreadRunningGC, "bad state");
                 self->mThreadRunningGC = PR_GetCurrentThread();
             }
 
@@ -885,7 +885,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
             // Clear it and notify waiters.
             { // scoped lock
                 XPCAutoLock lock(self->GetMapLock());
-                NS_ASSERTION(self->mThreadRunningGC == PR_GetCurrentThread(), "bad state");
+                MOZ_ASSERT(self->mThreadRunningGC == PR_GetCurrentThread(), "bad state");
                 self->mThreadRunningGC = nullptr;
                 xpc_NotifyAll(self->GetMapLock());
             }
@@ -1206,7 +1206,7 @@ xpc::SimulateActivityCallback(bool aActive)
 
 //static
 void
-XPCJSRuntime::ActivityCallback(void *arg, JSBool active)
+XPCJSRuntime::ActivityCallback(void *arg, bool active)
 {
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
     self->mWatchdogManager->RecordRuntimeActivity(active);
@@ -1226,6 +1226,61 @@ XPCJSRuntime::CTypesActivityCallback(JSContext *cx, js::CTypesActivityType type)
   } else if (type == js::CTYPES_CALLBACK_END) {
     xpc::PopJSContextNoScriptContext();
   }
+}
+
+// static
+bool
+XPCJSRuntime::OperationCallback(JSContext *cx)
+{
+    XPCJSRuntime *self = XPCJSRuntime::Get();
+
+    // If this is the first time the operation callback has fired since we last
+    // returned to the event loop, mark the checkpoint.
+    if (self->mSlowScriptCheckpoint.IsNull()) {
+        self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
+        return true;
+    }
+
+    // This is at least the second operation callback we've received since
+    // returning to the event loop. See how long it's been, and what the limit
+    // is.
+    TimeDuration duration = TimeStamp::NowLoRes() - self->mSlowScriptCheckpoint;
+    bool chrome =
+      nsContentUtils::IsSystemPrincipal(nsContentUtils::GetSubjectPrincipal());
+    const char *prefName = chrome ? "dom.max_chrome_script_run_time"
+                                  : "dom.max_script_run_time";
+    int32_t limit = Preferences::GetInt(prefName, chrome ? 20 : 10);
+
+    // If there's no limit, or we're within the limit, let it go.
+    if (limit == 0 || duration.ToSeconds() < limit)
+        return true;
+
+    //
+    // This has gone on long enough! Time to take action. ;-)
+    //
+
+    // Get the DOM window associated with the running script. If the script is
+    // running in a non-DOM scope, we have to just let it keep running.
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+    nsCOMPtr<nsPIDOMWindow> win;
+    if (IS_WN_REFLECTOR(global))
+        win = do_QueryWrappedNative(XPCWrappedNative::Get(global));
+    if (!win)
+        return true;
+
+    // Show the prompt to the user, and kill if requested.
+    nsGlobalWindow::SlowScriptResponse response =
+      static_cast<nsGlobalWindow*>(win.get())->ShowSlowScriptDialog();
+    if (response == nsGlobalWindow::KillSlowScript)
+        return false;
+
+    // The user chose to continue the script. Reset the timer, and disable this
+    // machinery with a pref of the user opted out of future slow-script dialogs.
+    self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
+    if (response == nsGlobalWindow::AlwaysContinueSlowScript)
+        Preferences::SetInt(prefName, 0);
+
+    return true;
 }
 
 size_t
@@ -1296,7 +1351,7 @@ DEBUG_WrapperChecker(PLDHashTable *table, PLDHashEntryHdr *hdr,
                      uint32_t number, void *arg)
 {
     XPCWrappedNative* wrapper = (XPCWrappedNative*)((PLDHashEntryStub*)hdr)->key;
-    NS_ASSERTION(!wrapper->IsValid(), "found a 'valid' wrapper!");
+    MOZ_ASSERT(!wrapper->IsValid(), "found a 'valid' wrapper!");
     ++ *((int*)arg);
     return PL_DHASH_NEXT;
 }
@@ -1457,7 +1512,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
 #ifdef DEBUG
     for (uint32_t i = 0; i < XPCCCX_STRING_CACHE_SIZE; ++i) {
-        NS_ASSERTION(!mScratchStrings[i].mInUse, "Uh, string wrapper still in use!");
+        MOZ_ASSERT(!mScratchStrings[i].mInUse, "Uh, string wrapper still in use!");
     }
 #endif
 }
@@ -1777,7 +1832,7 @@ ReportZoneStats(const JS::ZoneStats &zStats,
             "memory.\n\n"
             "These headers may contain the string data itself, if the string "
             "is short enough.  If so, the string won't have any memory reported "
-            "under 'string-chars/.",
+            "under 'string-chars'.",
             JS::NotableStringInfo::notableSize()));
         gcTotal += info.totalGCThingSizeOf();
 
@@ -1970,7 +2025,7 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
     // sundries, which would be a pain.
     size_t asmJSHeap    = cStats.objectsExtra.elementsAsmJSHeap;
     size_t asmJSNonHeap = cStats.objectsExtra.elementsAsmJSNonHeap;
-    JS_ASSERT(asmJSHeap == 0 || asmJSNonHeap == 0);
+    MOZ_ASSERT(asmJSHeap == 0 || asmJSNonHeap == 0);
     if (asmJSHeap > 0) {
         REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/elements/asm.js"),
                      KIND_HEAP, asmJSHeap,
@@ -2616,7 +2671,7 @@ JSMemoryMultiReporter::CollectReports(WindowPaths *windowPaths,
 } // namespace xpc
 
 #ifdef MOZ_CRASHREPORTER
-static JSBool
+static bool
 DiagnosticMemoryCallback(void *ptr, size_t size)
 {
     return CrashReporter::RegisterAppMemory(ptr, size) == NS_OK;
@@ -2749,7 +2804,7 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, uint32
     rv = scriptStream->Read(reinterpret_cast<char *>(ptr), end - ptr, &bytesRead);
     if (NS_FAILED(rv))
       return rv;
-    NS_ASSERTION(bytesRead > 0, "stream promised more bytes before EOF");
+    MOZ_ASSERT(bytesRead > 0, "stream promised more bytes before EOF");
     ptr += bytesRead;
   }
 
@@ -2877,6 +2932,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetAccumulateTelemetryCallback(runtime, AccumulateTelemetryCallback);
     js::SetActivityCallback(runtime, ActivityCallback, this);
     js::SetCTypesActivityCallback(runtime, CTypesActivityCallback);
+    JS_SetOperationCallback(runtime, OperationCallback);
 
     // The JS engine needs to keep the source code around in order to implement
     // Function.prototype.toSource(). It'd be nice to not have to do this for
@@ -2947,7 +3003,7 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
 // InternStaticDictionaryJSVals is automatically generated.
 bool InternStaticDictionaryJSVals(JSContext* aCx);
 
-JSBool
+bool
 XPCJSRuntime::OnJSContextNew(JSContext *cx)
 {
     // If we were the first cx ever created (like the SafeJSContext), the caller
@@ -3120,14 +3176,14 @@ XPCJSRuntime::DebugDump(int16_t depth)
 void
 XPCRootSetElem::AddToRootSet(XPCLock *lock, XPCRootSetElem **listHead)
 {
-    NS_ASSERTION(!mSelfp, "Must be not linked");
+    MOZ_ASSERT(!mSelfp, "Must be not linked");
 
     XPCAutoLock autoLock(lock);
 
     mSelfp = listHead;
     mNext = *listHead;
     if (mNext) {
-        NS_ASSERTION(mNext->mSelfp == listHead, "Must be list start");
+        MOZ_ASSERT(mNext->mSelfp == listHead, "Must be list start");
         mNext->mSelfp = &mNext;
     }
     *listHead = this;
@@ -3139,11 +3195,11 @@ XPCRootSetElem::RemoveFromRootSet(XPCLock *lock)
     nsXPConnect *xpc = nsXPConnect::XPConnect();
     JS::PokeGC(xpc->GetRuntime()->Runtime());
 
-    NS_ASSERTION(mSelfp, "Must be linked");
+    MOZ_ASSERT(mSelfp, "Must be linked");
 
     XPCAutoLock autoLock(lock);
 
-    NS_ASSERTION(*mSelfp == this, "Link invariant");
+    MOZ_ASSERT(*mSelfp == this, "Link invariant");
     *mSelfp = mNext;
     if (mNext)
         mNext->mSelfp = mSelfp;
@@ -3156,14 +3212,14 @@ XPCRootSetElem::RemoveFromRootSet(XPCLock *lock)
 void
 XPCJSRuntime::AddGCCallback(xpcGCCallback cb)
 {
-    NS_ASSERTION(cb, "null callback");
+    MOZ_ASSERT(cb, "null callback");
     extraGCCallbacks.AppendElement(cb);
 }
 
 void
 XPCJSRuntime::RemoveGCCallback(xpcGCCallback cb)
 {
-    NS_ASSERTION(cb, "null callback");
+    MOZ_ASSERT(cb, "null callback");
     bool found = extraGCCallbacks.RemoveElement(cb);
     if (!found) {
         NS_ERROR("Removing a callback which was never added.");
@@ -3173,14 +3229,14 @@ XPCJSRuntime::RemoveGCCallback(xpcGCCallback cb)
 void
 XPCJSRuntime::AddContextCallback(xpcContextCallback cb)
 {
-    NS_ASSERTION(cb, "null callback");
+    MOZ_ASSERT(cb, "null callback");
     extraContextCallbacks.AppendElement(cb);
 }
 
 void
 XPCJSRuntime::RemoveContextCallback(xpcContextCallback cb)
 {
-    NS_ASSERTION(cb, "null callback");
+    MOZ_ASSERT(cb, "null callback");
     bool found = extraContextCallbacks.RemoveElement(cb);
     if (!found) {
         NS_ERROR("Removing a callback which was never added.");

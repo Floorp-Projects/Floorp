@@ -10,9 +10,7 @@ function createRootActor()
       this._tabActors = [];
       for each (let g in gTestGlobals) {
         let actor = new BrowserTabActor(this.conn);
-        actor.thread = new ThreadActor({});
-        actor.thread.addDebuggee(g);
-        actor.thread.global = g;
+        actor.thread = new ThreadActor({}, g);
 
         actor.json = function() {
           return { actor: actor.actorID,

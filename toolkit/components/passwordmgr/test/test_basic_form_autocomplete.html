@@ -9,86 +9,14 @@
 </head>
 <body>
 Login Manager test: multiple login autocomplete
-<p id="display"></p>
 
-<!-- we presumably can't hide the content for this test. -->
-<div id="content">
-
-  <!-- form1 tests multiple matching logins -->
-  <form id="form1" action="http://autocomplete:8888/formtest.js" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- other forms test single logins, with autocomplete=off set -->
-  <form id="form2" action="http://autocomplete2" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword" autocomplete="off">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form3" action="http://autocomplete2" onsubmit="return false;">
-    <input  type="text"       name="uname" autocomplete="off">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form4" action="http://autocomplete2" onsubmit="return false;" autocomplete="off">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <form id="form5" action="http://autocomplete2" onsubmit="return false;">
-    <input  type="text"       name="uname" autocomplete="off">
-    <input  type="password"   name="pword" autocomplete="off">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- control -->
-  <form id="form6" action="http://autocomplete2" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- This form will be manipulated to insert a different username field. -->
-  <form id="form7" action="http://autocomplete3" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- test for no autofill after onblur with blank username -->
-  <form id="form8" action="http://autocomplete4" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
-  <!-- test autocomplete dropdown -->
-  <form id="form9" action="http://autocomplete5" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-</div>
-
-<pre id="test">
-<script class="testbody" type="text/javascript">
-
-/** Test for Login Manager: multiple login autocomplete. **/
-
+<script>
 commonInit();
-
-var uname = $_(1, "uname");
-var pword = $_(1, "pword");
-const shiftModifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
+SimpleTest.waitForExplicitFinish();
 
 // Get the pwmgr service
-var pwmgr = SpecialPowers.wrap(Components).classes["@mozilla.org/login-manager;1"]
-                         .getService(Components.interfaces.nsILoginManager);
+var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
+                         .getService(SpecialPowers.Ci.nsILoginManager);
 ok(pwmgr != null, "nsLoginManager service");
 
 // Create some logins just for this form, since we'll be deleting them.
@@ -164,6 +92,82 @@ try {
     ok(false, "addLogin threw: " + e);
 }
 
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+
+  <!-- form1 tests multiple matching logins -->
+  <form id="form1" action="http://autocomplete:8888/formtest.js" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- other forms test single logins, with autocomplete=off set -->
+  <form id="form2" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form3" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname" autocomplete="off">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form4" action="http://autocomplete2" onsubmit="return false;" autocomplete="off">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <form id="form5" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname" autocomplete="off">
+    <input  type="password"   name="pword" autocomplete="off">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- control -->
+  <form id="form6" action="http://autocomplete2" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- This form will be manipulated to insert a different username field. -->
+  <form id="form7" action="http://autocomplete3" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- test for no autofill after onblur with blank username -->
+  <form id="form8" action="http://autocomplete4" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- test autocomplete dropdown -->
+  <form id="form9" action="http://autocomplete5" onsubmit="return false;">
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+    <button type="submit">Submit</button>
+  </form>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: multiple login autocomplete. **/
+
+
+var uname = $_(1, "uname");
+var pword = $_(1, "pword");
+const shiftModifier = Components.interfaces.nsIDOMEvent.SHIFT_MASK;
 
 // Restore the form to the default state.
 function restoreForm() {
@@ -812,8 +816,6 @@ function startTest() {
 }
 
 window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

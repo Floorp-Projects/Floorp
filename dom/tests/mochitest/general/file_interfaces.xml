@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<bindings id="xbltestBindings" xmlns="http://www.mozilla.org/xbl">
+  <binding id="xbltest">
+    <content>PASS</content>
+    <implementation>
+      <constructor>
+        var win = XPCNativeWrapper.unwrap(window);
+        var SpecialPowers = win.SpecialPowers;
+        var is = win.is;
+        var ok = win.ok;
+        var interfaceNamesInGlobalScope = win.interfaceNamesInGlobalScope;
+        var interfaceNamesInXBLScope = win.interfaceNamesInXBLScope;
+        eval(win.runTest.toString());
+        runTest(window, true);
+        win.SimpleTest.finish();
+      </constructor>
+    </implementation>
+  </binding>
+</bindings>

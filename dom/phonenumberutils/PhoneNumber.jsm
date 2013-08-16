@@ -9,19 +9,18 @@
 this.EXPORTED_SYMBOLS = ["PhoneNumber"];
 
 Components.utils.import("resource://gre/modules/PhoneNumberMetaData.jsm");
+Components.utils.import("resource://gre/modules/PhoneNumberNormalizer.jsm");
 
 this.PhoneNumber = (function (dataBase) {
   // Use strict in our context only - users might not want it
   'use strict';
 
   const MAX_PHONE_NUMBER_LENGTH = 50;
-  const UNICODE_DIGITS = /[\uFF10-\uFF19\u0660-\u0669\u06F0-\u06F9]/g;
   const NON_ALPHA_CHARS = /[^a-zA-Z]/g;
   const NON_DIALABLE_CHARS = /[^,#+\*\d]/g;
   const NON_DIALABLE_CHARS_ONCE = new RegExp(NON_DIALABLE_CHARS.source);
   const BACKSLASH = /\\/g;
   const SPLIT_FIRST_GROUP = /^(\d+)(.*)$/;
-  const VALID_ALPHA_PATTERN = /[a-zA-Z]/g;
   const LEADING_PLUS_CHARS_PATTERN = /^[+\uFF0B]+/g;
 
   // Format of the string encoded meta data. If the name contains "^" or "$"
@@ -225,40 +224,6 @@ this.PhoneNumber = (function (dataBase) {
     }
   };
 
-  // Map letters to numbers according to the ITU E.161 standard
-  var E161 = {
-    'a': 2, 'b': 2, 'c': 2,
-    'd': 3, 'e': 3, 'f': 3,
-    'g': 4, 'h': 4, 'i': 4,
-    'j': 5, 'k': 5, 'l': 5,
-    'm': 6, 'n': 6, 'o': 6,
-    'p': 7, 'q': 7, 'r': 7, 's': 7,
-    't': 8, 'u': 8, 'v': 8,
-    'w': 9, 'x': 9, 'y': 9, 'z': 9
-  };
-
-  // Normalize a number by converting unicode numbers and symbols to their
-  // ASCII equivalents and removing all non-dialable characters.
-  function NormalizeNumber(number, numbersOnly) {
-    if (typeof number !== 'string') {
-      return '';
-    }
-
-    number = number.replace(UNICODE_DIGITS,
-                            function (ch) {
-                              return String.fromCharCode(48 + (ch.charCodeAt(0) & 0xf));
-                            });
-    if (!numbersOnly) {
-      number = number.replace(VALID_ALPHA_PATTERN,
-                              function (ch) {
-                                return String(E161[ch.toLowerCase()] || 0);
-                              });
-    }
-    number = number.replace(LEADING_PLUS_CHARS_PATTERN, "+");
-    number = number.replace(NON_DIALABLE_CHARS, "");
-    return number;
-  }
-
   // Check whether the number is valid for the given region.
   function IsValidNumber(number, md) {
     return md.possiblePattern.test(number);
@@ -329,7 +294,7 @@ this.PhoneNumber = (function (dataBase) {
     var ret;
 
     // Remove formating characters and whitespace.
-    number = NormalizeNumber(number);
+    number = PhoneNumberNormalizer.Normalize(number);
 
     // If there is no defaultRegion, we can't parse international access codes.
     if (!defaultRegion && number[0] !== '+')
@@ -404,6 +369,5 @@ this.PhoneNumber = (function (dataBase) {
   return {
     IsPlain: IsPlainPhoneNumber,
     Parse: ParseNumber,
-    Normalize: NormalizeNumber
   };
 })(PHONE_NUMBER_META_DATA);

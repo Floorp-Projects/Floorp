@@ -8,6 +8,7 @@
 #include "AbstractMediaDecoder.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/dom/AudioContextBinding.h"
 #include <speex/speex_resampler.h>
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
@@ -16,8 +17,6 @@
 #include "DecoderTraits.h"
 #include "AudioContext.h"
 #include "AudioBuffer.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptContext.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
@@ -96,6 +95,8 @@ public:
   virtual int64_t GetMediaDuration() MOZ_FINAL MOZ_OVERRIDE;
 
   virtual void SetMediaDuration(int64_t aDuration) MOZ_FINAL MOZ_OVERRIDE;
+
+  virtual void UpdateMediaDuration(int64_t aDuration) MOZ_FINAL MOZ_OVERRIDE;
 
   virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
 
@@ -210,6 +211,12 @@ BufferDecoder::GetMediaDuration()
 
 void
 BufferDecoder::SetMediaDuration(int64_t aDuration)
+{
+  // ignore
+}
+
+void
+BufferDecoder::UpdateMediaDuration(int64_t aDuration)
 {
   // ignore
 }

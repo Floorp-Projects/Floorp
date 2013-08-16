@@ -9,6 +9,8 @@
 
 #include "gc/Barrier.h"
 
+#include "jscompartment.h"
+
 #include "gc/Marking.h"
 #include "gc/StoreBuffer.h"
 
@@ -180,7 +182,7 @@ HeapValue::set(Zone *zone, const Value &v)
 #ifdef DEBUG
     if (value.isMarkable()) {
         JS_ASSERT(ZoneOfValue(value) == zone ||
-                  ZoneOfValue(value) == zone->runtimeFromMainThread()->atomsCompartment->zone());
+                  zone->runtimeFromAnyThread()->isAtomsZone(ZoneOfValue(value)));
     }
 #endif
 
@@ -261,8 +263,8 @@ RelocatableValue::operator=(const Value &v)
         post();
     } else if (value.isMarkable()) {
         JSRuntime *rt = runtimeFromMainThread(value);
-        value = v;
         relocate(rt);
+        value = v;
     } else {
         value = v;
     }
@@ -279,8 +281,8 @@ RelocatableValue::operator=(const RelocatableValue &v)
         post();
     } else if (value.isMarkable()) {
         JSRuntime *rt = runtimeFromMainThread(value);
-        value = v.value;
         relocate(rt);
+        value = v.value;
     } else {
         value = v.value;
     }

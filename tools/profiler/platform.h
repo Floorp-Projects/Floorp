@@ -144,6 +144,9 @@ class OS {
   // Sleep for a number of milliseconds.
   static void Sleep(const int milliseconds);
 
+  // Sleep for a number of microseconds.
+  static void SleepMicro(const int microseconds);
+
   // Factory method for creating platform dependent Mutex.
   // Please use delete to reclaim the storage for the returned Mutex.
   static Mutex* CreateMutex();
@@ -286,10 +289,10 @@ class TableTicker;
 class Sampler {
  public:
   // Initialize sampler.
-  explicit Sampler(int interval, bool profiling, int entrySize);
+  explicit Sampler(double interval, bool profiling, int entrySize);
   virtual ~Sampler();
 
-  int interval() const { return interval_; }
+  double interval() const { return interval_; }
 
   // This method is called for each sampling period with the current
   // program counter.
@@ -357,7 +360,7 @@ class Sampler {
  private:
   void SetActive(bool value) { NoBarrier_Store(&active_, value); }
 
-  const int interval_;
+  const double interval_;
   const bool profiling_;
   Atomic32 paused_;
   Atomic32 active_;

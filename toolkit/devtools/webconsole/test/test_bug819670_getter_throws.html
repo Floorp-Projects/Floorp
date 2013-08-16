@@ -41,7 +41,7 @@ function onEvaluate(aState, aResponse)
   ok(!aResponse.helperResult, "no helper result");
 
   onInspect = onInspect.bind(null, aState);
-  let client = new GripClient(aState.dbgClient, aResponse.result);
+  let client = new ObjectClient(aState.dbgClient, aResponse.result);
   client.getPrototypeAndProperties(onInspect);
 }
 

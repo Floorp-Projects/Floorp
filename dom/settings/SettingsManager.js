@@ -17,7 +17,7 @@ Cu.import("resource://gre/modules/SettingsQueue.jsm");
 Cu.import("resource://gre/modules/SettingsDB.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/ObjectWrapper.jsm")
+Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -189,8 +189,10 @@ SettingsLock.prototype = {
     // parse(stringify(obj)) because that breaks things like Blobs, Files and
     // Dates, so we use stringify's replacer and parse's reviver parameters to
     // preserve binaries.
+    let manager = this._settingsManager;
     let binaries = Object.create(null);
     let stringified = JSON.stringify(aObject, function(key, value) {
+      value = manager._settingsDB.prepareValue(value);
       let kind = ObjectWrapper.getObjectKind(value);
       if (kind == "file" || kind == "blob" || kind == "date") {
         let uuid = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)

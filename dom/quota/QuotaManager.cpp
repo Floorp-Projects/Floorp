@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include "GeckoProfiler.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/dom/file/FileService.h"
 #include "mozilla/dom/indexedDB/Client.h"
 #include "mozilla/LazyIdleThread.h"
@@ -36,7 +37,6 @@
 #include "nsScriptSecurityManager.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-#include "pratom.h"
 #include "xpcpublic.h"
 
 #include "AcquireListener.h"
@@ -260,7 +260,7 @@ END_QUOTA_NAMESPACE
 namespace {
 
 QuotaManager* gInstance = nullptr;
-int32_t gShutdown = 0;
+mozilla::Atomic<uint32_t> gShutdown(0);
 
 int32_t gStorageQuotaMB = DEFAULT_QUOTA_MB;
 
@@ -1200,7 +1200,7 @@ QuotaManager::Observe(nsISupports* aSubject,
   if (!strcmp(aTopic, PROFILE_BEFORE_CHANGE_OBSERVER_ID)) {
     // Setting this flag prevents the service from being recreated and prevents
     // further storagess from being created.
-    if (PR_ATOMIC_SET(&gShutdown, 1)) {
+    if (gShutdown.exchange(1)) {
       NS_ERROR("Shutdown more than once?!");
     }
 
@@ -2171,7 +2171,7 @@ AsyncUsageRunnable::Run()
 NS_IMETHODIMP
 AsyncUsageRunnable::Cancel()
 {
-  if (PR_ATOMIC_SET(&mCanceled, 1)) {
+  if (mCanceled.exchange(1)) {
     NS_WARNING("Canceled more than once?!");
     return NS_ERROR_UNEXPECTED;
   }

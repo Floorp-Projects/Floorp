@@ -6645,6 +6645,11 @@ za.com
 // c.la : http://www.c.la/
 c.la
 
+// cloudControl : https://www.cloudcontrol.com/
+// Requested by Tobias Wilken <tw@cloudcontrol.com> 2013-07-23
+cloudcontrolled.com
+cloudcontrolapp.com
+
 // co.ca : http://registry.co.ca/
 co.ca
 
@@ -6948,6 +6953,10 @@ global.prod.fastly.net
 // GitHub, Inc.
 // Requested by Ben Toews <btoews@github.com> 2013-04-18
 github.io
+
+// GlobeHosting, Inc.
+// Requested by Zoltan Egresi <egresi@globehosting.com> 2013-07-12
+ro.com
 
 // Google, Inc.
 // Requested by Eduardo Vela <evn@google.com> 2012-10-24

@@ -37,8 +37,6 @@ vpath %.mm \
   $(srcdir)/src/chrome/common \
   $(NULL)
 
-include $(topsrcdir)/config/config.mk
-
 ifneq ($(OS_ARCH),WINNT) # (if OS_POSIX) {
 ifeq ($(OS_TARGET),Android)
 DEFINES += -DANDROID -D_POSIX_MONOTONIC_CLOCK=0

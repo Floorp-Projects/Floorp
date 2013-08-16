@@ -108,7 +108,7 @@ public:
                               uint32_t aTag,
                               uint32_t aData,
                               void* aClosure);
-  static JSBool
+  static bool
   StructuredCloneWriteCallback(JSContext* aCx,
                                JSStructuredCloneWriter* aWriter,
                                JS::Handle<JSObject*> aObj,

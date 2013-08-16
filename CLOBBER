@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Add an WebIDL interface for bug 892978 requires a clobber for Windows.
+touching resources in Android requires a clobber, and I did that in bug 880259

@@ -567,23 +567,38 @@
               !tipElement.hasAttribute('title')) {
             let files = tipElement.files;
 
-            if (files.length == 0) {
-              try {
-                var bundle = Components.classes['@mozilla.org/intl/stringbundle;1']
-                                       .getService(Components.interfaces.nsIStringBundleService)
-                                       .createBundle("chrome://global/locale/layout/HtmlForm.properties");
+            try {
+              var bundle = Components.classes['@mozilla.org/intl/stringbundle;1']
+                                     .getService(Components.interfaces.nsIStringBundleService)
+                                     .createBundle("chrome://global/locale/layout/HtmlForm.properties");
+              if (files.length == 0) {
                 if (tipElement.multiple) {
                   titleText = bundle.GetStringFromName("NoFilesSelected");
                 } else {
                   titleText = bundle.GetStringFromName("NoFileSelected");
                 }
-              } catch(e) {}
-            } else {
-              titleText = files[0].name;
-              for (let i=1; i<files.length; ++i) {
-                titleText += "\n" + files[i].name;
+              } else {
+                titleText = files[0].name;
+                // For UX and performance (jank) reasons we cap the number of
+                // files that we list in the tooltip to 20 plus a "and xxx more"
+                // line, or to 21 if exactly 21 files were picked.
+                const TRUNCATED_FILE_COUNT = 20;
+                let count = Math.min(files.length, TRUNCATED_FILE_COUNT);
+                for (let i = 1; i < count; ++i) {
+                  titleText += "\n" + files[i].name;
+                }
+                if (files.length == TRUNCATED_FILE_COUNT + 1) {
+                  titleText += "\n" + files[TRUNCATED_FILE_COUNT].name;
+                } else if (files.length > TRUNCATED_FILE_COUNT + 1) {
+                  let xmoreStr = bundle.GetStringFromName("AndXMoreFiles");
+                  let xmoreNum = files.length - TRUNCATED_FILE_COUNT;
+                  let tmp = {};
+                  Components.utils.import("resource://gre/modules/PluralForm.jsm", tmp);
+                  let andXMoreStr = tmp.PluralForm.get(xmoreNum, xmoreStr).replace("%S", xmoreNum);
+                  titleText += "\n" + andXMoreStr;
+                }
               }
-            }
+            } catch(e) {}
           }
 
           while ((titleText == null) && (XLinkTitleText == null) &&

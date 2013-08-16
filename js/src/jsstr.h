@@ -7,40 +7,24 @@
 #ifndef jsstr_h
 #define jsstr_h
 
+#include "mozilla/HashFunctions.h"
 #include "mozilla/PodOperations.h"
 
-#include <ctype.h>
-
 #include "jsapi.h"
-#include "jsatom.h"
-#include "jslock.h"
 #include "jsutil.h"
 
-#include "js/HashTable.h"
+#include "js/RootingAPI.h"
 #include "vm/Unicode.h"
 
 class JSFlatString;
+class JSLinearString;
 class JSStableString;
 
 namespace js {
 
-/* Implemented in jsstrinlines.h */
 class StringBuffer;
 
-/*
- * When an algorithm does not need a string represented as a single linear
- * array of characters, this range utility may be used to traverse the string a
- * sequence of linear arrays of characters. This avoids flattening ropes.
- *
- * Implemented in jsstrinlines.h.
- */
-class StringSegmentRange;
 class MutatingRopeSegmentRange;
-
-/*
- * Utility for building a rope (lazy concatenation) of strings.
- */
-class RopeBuilder;
 
 template <AllowGC allowGC>
 extern JSString *
@@ -239,9 +223,6 @@ StringHasPattern(const jschar *text, uint32_t textlen,
 
 extern size_t
 js_strlen(const jschar *s);
-
-extern jschar *
-js_strchr(const jschar *s, jschar c);
 
 extern jschar *
 js_strchr_limit(const jschar *s, jschar c, const jschar *limit);

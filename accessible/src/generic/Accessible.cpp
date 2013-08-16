@@ -26,7 +26,6 @@
 #include "TableCellAccessible.h"
 #include "TreeWalker.h"
 
-#include "nsContentUtils.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeFilter.h"

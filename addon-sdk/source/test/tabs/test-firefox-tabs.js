@@ -141,6 +141,9 @@ exports.testTabPropertiesInNewWindow = function(test) {
 exports.testTabPropertiesInSameWindow = function(test) {
   test.waitUntilDone();
 
+  // Get current count of tabs so we know the index of the
+  // new tab, bug 893846
+  let tabCount = tabs.length;
   let count = 0;
   function onReadyOrLoad (tab) {
     if (count++) {
@@ -156,7 +159,7 @@ exports.testTabPropertiesInSameWindow = function(test) {
       test.assertEqual(tab.url, url, "URL of the new tab matches");
       test.assert(tab.favicon, "favicon of the new tab is not empty");
       test.assertEqual(tab.style, null, "style of the new tab matches");
-      test.assertEqual(tab.index, 1, "index of the new tab matches");
+      test.assertEqual(tab.index, tabCount, "index of the new tab matches");
       test.assertNotEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
       test.assertNotEqual(tab.id, null, "a tab object always has an id property.");
 
@@ -167,7 +170,7 @@ exports.testTabPropertiesInSameWindow = function(test) {
       test.assertEqual(tab.url, url, "URL of the new tab matches");
       test.assert(tab.favicon, "favicon of the new tab is not empty");
       test.assertEqual(tab.style, null, "style of the new tab matches");
-      test.assertEqual(tab.index, 1, "index of the new tab matches");
+      test.assertEqual(tab.index, tabCount, "index of the new tab matches");
       test.assertNotEqual(tab.getThumbnail(), null, "thumbnail of the new tab matches");
       test.assertNotEqual(tab.id, null, "a tab object always has an id property.");
 
@@ -481,53 +484,54 @@ exports.testTabsEvent_onClose = function(test) {
 // TEST: onClose event handler when a window is closed
 exports.testTabsEvent_onCloseWindow = function(test) {
   test.waitUntilDone();
+  let closeCount = 0;
+  let individualCloseCount = 0;
 
-  openBrowserWindow(function(window, browser) {
-    let closeCount = 0, individualCloseCount = 0;
-    function listener() {
-      closeCount++;
+  openBrowserWindow(function(window) {
+    tabs.on("close", function listener() {
+      if (++closeCount == 4) {
+        tabs.removeListener("close", listener);
+      }
+    });
+
+    function endTest() {
+      if (++individualCloseCount < 3) {
+        return;
+      }
+
+      test.assertEqual(closeCount, 4, "Correct number of close events received");
+      test.assertEqual(individualCloseCount, 3,
+                       "Each tab with an attached onClose listener received a close " +
+                       "event when the window was closed");
+
+      test.done();
     }
-    tabs.on('close', listener);
 
     // One tab is already open with the window
     let openTabs = 1;
     function testCasePossiblyLoaded() {
       if (++openTabs == 4) {
-        beginCloseWindow();
+        window.close();
       }
     }
 
     tabs.open({
       url: "data:text/html;charset=utf-8,tab2",
-      onOpen: function() testCasePossiblyLoaded(),
-      onClose: function() individualCloseCount++
+      onOpen: testCasePossiblyLoaded,
+      onClose: endTest
     });
 
     tabs.open({
       url: "data:text/html;charset=utf-8,tab3",
-      onOpen: function() testCasePossiblyLoaded(),
-      onClose: function() individualCloseCount++
+      onOpen: testCasePossiblyLoaded,
+      onClose: endTest
     });
 
     tabs.open({
       url: "data:text/html;charset=utf-8,tab4",
-      onOpen: function() testCasePossiblyLoaded(),
-      onClose: function() individualCloseCount++
+      onOpen: testCasePossiblyLoaded,
+      onClose: endTest
     });
-
-    function beginCloseWindow() {
-      closeBrowserWindow(window, function testFinished() {
-        tabs.removeListener("close", listener);
-
-        test.assertEqual(closeCount, 4, "Correct number of close events received");
-        test.assertEqual(individualCloseCount, 3,
-                         "Each tab with an attached onClose listener received a close " +
-                         "event when the window was closed");
-
-        test.done();
-      });
-    }
-
   });
 }
 
@@ -831,18 +835,31 @@ exports.testAttachUnwrapped = function (test) {
 
 exports['test window focus changes active tab'] = function(test) {
   test.waitUntilDone();
+
+  let url1 = "data:text/html;charset=utf-8," + encodeURIComponent("test window focus changes active tab</br><h1>Window #1");
+
   let win1 = openBrowserWindow(function() {
+    test.pass("window 1 is open");
+
     let win2 = openBrowserWindow(function() {
-      tabs.on("activate", function onActivate() {
-        tabs.removeListener("activate", onActivate);
-        test.pass("activate was called on windows focus change.");
-        closeBrowserWindow(win1, function() {
-          closeBrowserWindow(win2, function() { test.done(); });
+      test.pass("window 2 is open");
+
+      focus(win2).then(function() {
+        tabs.on("activate", function onActivate(tab) {
+          tabs.removeListener("activate", onActivate);
+          test.pass("activate was called on windows focus change.");
+          test.assertEqual(tab.url, url1, 'the activated tab url is correct');
+
+          close(win2).then(function() {
+            test.pass('window 2 was closed');
+            return close(win1);
+          }).then(test.done.bind(test));
         });
+
+        win1.focus();
       });
-      win1.focus();
     }, "data:text/html;charset=utf-8,test window focus changes active tab</br><h1>Window #2");
-  }, "data:text/html;charset=utf-8,test window focus changes active tab</br><h1>Window #1");
+  }, url1);
 };
 
 exports['test ready event on new window tab'] = function(test) {
@@ -945,40 +962,6 @@ exports.testOnLoadEventWithImage = function(test) {
     tabs.open({
       url: base64png,
       inBackground: true
-    });
-  });
-};
-
-exports.testOnPageShowEvent = function (test) {
-  test.waitUntilDone();
-
-  let firstUrl = 'data:text/html;charset=utf-8,First';
-  let secondUrl = 'data:text/html;charset=utf-8,Second';
-
-  openBrowserWindow(function(window, browser) {
-    let counter = 0;
-    tabs.on('pageshow', function onPageShow(tab, persisted) {
-      counter++;
-      if (counter === 1) {
-        test.assert(!persisted, 'page should not be cached on initial load');
-        tab.url = secondUrl;
-      }
-      else if (counter === 2) {
-        test.assert(!persisted, 'second test page should not be cached either');
-        tab.attach({
-          contentScript: 'setTimeout(function () { window.history.back(); }, 0)'
-        });
-      }
-      else {
-        test.assert(persisted, 'when we get back to the fist page, it has to' +
-                               'come from cache');
-        tabs.removeListener('pageshow', onPageShow);
-        closeBrowserWindow(window, function() test.done());
-      }
-    });
-
-    tabs.open({
-      url: firstUrl
     });
   });
 };

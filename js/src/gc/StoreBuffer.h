@@ -17,8 +17,6 @@
 #include "mozilla/ReentrancyGuard.h"
 
 #include "jsalloc.h"
-#include "jsgc.h"
-#include "jsobj.h"
 
 #include "ds/LifoAlloc.h"
 #include "gc/Nursery.h"
@@ -409,17 +407,29 @@ class StoreBuffer
     }
 
     /* Insert or update a single edge in the Relocatable buffer. */
-    void putRelocatableValue(Value *v) {
-        bufferRelocVal.put(ValueEdge(v));
+    void putRelocatableValue(Value *valuep) {
+        ValueEdge edge(valuep);
+        if (!edge.inRememberedSet(nursery_))
+            return;
+        bufferRelocVal.put(edge);
     }
-    void putRelocatableCell(Cell **c) {
-        bufferRelocCell.put(CellPtrEdge(c));
+    void putRelocatableCell(Cell **cellp) {
+        CellPtrEdge edge(cellp);
+        if (!edge.inRememberedSet(nursery_))
+            return;
+        bufferRelocCell.put(edge);
     }
-    void removeRelocatableValue(Value *v) {
-        bufferRelocVal.unput(ValueEdge(v));
+    void removeRelocatableValue(Value *valuep) {
+        ValueEdge edge(valuep);
+        if (!edge.inRememberedSet(nursery_))
+            return;
+        bufferRelocVal.unput(edge);
     }
-    void removeRelocatableCell(Cell **c) {
-        bufferRelocCell.unput(CellPtrEdge(c));
+    void removeRelocatableCell(Cell **cellp) {
+        CellPtrEdge edge(cellp);
+        if (!edge.inRememberedSet(nursery_))
+            return;
+        bufferRelocCell.unput(edge);
     }
 
     /* Insert an entry into the generic buffer. */

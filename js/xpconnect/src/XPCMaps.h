@@ -142,10 +142,10 @@ public:
         NS_PRECONDITION(wrapper,"bad param");
 #ifdef DEBUG
         XPCWrappedNative* wrapperInMap = Find(wrapper->GetIdentityObject());
-        NS_ASSERTION(!wrapperInMap || wrapperInMap == wrapper,
-                     "About to remove a different wrapper with the same "
-                     "nsISupports identity! This will most likely cause serious "
-                     "problems!");
+        MOZ_ASSERT(!wrapperInMap || wrapperInMap == wrapper,
+                   "About to remove a different wrapper with the same "
+                   "nsISupports identity! This will most likely cause serious "
+                   "problems!");
 #endif
         PL_DHashTableOperate(mTable, wrapper->GetIdentityObject(), PL_DHASH_REMOVE);
     }
@@ -564,8 +564,8 @@ public:
 
     static XPCNativeScriptableSharedMap* newMap(int size);
 
-    JSBool GetNewOrUsed(uint32_t flags, char* name, uint32_t interfacesBitmap,
-                        XPCNativeScriptableInfo* si);
+    bool GetNewOrUsed(uint32_t flags, char* name, uint32_t interfacesBitmap,
+                      XPCNativeScriptableInfo* si);
 
     inline uint32_t Count() {return mTable->entryCount;}
     inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)

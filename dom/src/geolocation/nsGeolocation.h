@@ -5,18 +5,15 @@
 #ifndef nsGeoLocation_h
 #define nsGeoLocation_h
 
-#include "mozilla/dom/PContentPermissionRequestChild.h"
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
 #include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
 #include "nsIObserver.h"
-#include "nsIURI.h"
 #include "nsWrapperCache.h"
 
 #include "nsWeakPtr.h"
@@ -32,8 +29,6 @@
 #include "mozilla/dom/PositionErrorBinding.h"
 #include "mozilla/dom/CallbackObject.h"
 
-#include "nsPIDOMWindow.h"
-
 #include "nsIGeolocationProvider.h"
 #include "nsIContentPermissionPrompt.h"
 #include "DictionaryHelpers.h"
@@ -41,6 +36,7 @@
 #include "mozilla/Attributes.h"
 
 class nsGeolocationService;
+class nsIDOMWindow;
 
 namespace mozilla {
 namespace dom {

@@ -65,6 +65,7 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
       for (size_t j = 0; j < mTouches.Length(); j++) {
         if (mTouches[j].mIdentifier == event.mTouches[i].mIdentifier) {
           foundAlreadyExistingTouch = true;
+          break;
         }
       }
 

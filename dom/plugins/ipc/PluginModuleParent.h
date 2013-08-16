@@ -4,31 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef dom_plugins_PluginModuleParent_h
-#define dom_plugins_PluginModuleParent_h 1
+#ifndef mozilla_plugins_PluginModuleParent_h
+#define mozilla_plugins_PluginModuleParent_h
 
-#include <cstring>
-
-#include "base/basictypes.h"
-
-#include "prlink.h"
-
-#include "npapi.h"
-#include "npfunctions.h"
-
-#include "base/string_util.h"
-
+#include "base/process.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/PluginLibrary.h"
-#include "mozilla/plugins/PPluginModuleParent.h"
-#include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginProcessParent.h"
-#include "mozilla/plugins/PluginIdentifierParent.h"
-
+#include "mozilla/plugins/PPluginModuleParent.h"
+#include "npapi.h"
+#include "npfunctions.h"
 #include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
-#include "nsIFileStreams.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -44,6 +32,8 @@ namespace plugins {
 //-----------------------------------------------------------------------------
 
 class BrowserStreamParent;
+class PluginIdentifierParent;
+class PluginInstanceParent;
 
 #ifdef XP_WIN
 class PluginHangUIParent;
@@ -370,4 +360,4 @@ private:
 } // namespace plugins
 } // namespace mozilla
 
-#endif  // ifndef dom_plugins_PluginModuleParent_h
+#endif // mozilla_plugins_PluginModuleParent_h

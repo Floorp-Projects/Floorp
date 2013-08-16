@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
   "resource:///modules/devtools/VariablesViewController.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "GripClient",
+XPCOMUtils.defineLazyModuleGetter(this, "ObjectClient",
   "resource://gre/modules/devtools/dbg-client.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
@@ -135,7 +135,10 @@ var Scratchpad = {
    * Retrieve the xul:notificationbox DOM element. It notifies the user when
    * the current code execution context is SCRATCHPAD_CONTEXT_BROWSER.
    */
-  get notificationBox() document.getElementById("scratchpad-notificationbox"),
+  get notificationBox()
+  {
+    return document.getElementById("scratchpad-notificationbox");
+  },
 
   /**
    * Get the selected text from the editor.
@@ -143,7 +146,10 @@ var Scratchpad = {
    * @return string
    *         The selected text.
    */
-  get selectedText() this.editor.getSelectedText(),
+  get selectedText()
+  {
+    return this.editor.getSelectedText();
+  },
 
   /**
    * Get the editor content, in the given range. If no range is given you get
@@ -252,7 +258,10 @@ var Scratchpad = {
   /**
    * Get the most recent chrome window of type navigator:browser.
    */
-  get browserWindow() Services.wm.getMostRecentWindow("navigator:browser"),
+  get browserWindow()
+  {
+    return Services.wm.getMostRecentWindow("navigator:browser");
+  },
 
   /**
    * Get the gBrowser object of the most recent browser window.
@@ -490,8 +499,8 @@ var Scratchpad = {
         this._writePrimitiveAsComment(aResult).then(resolve, reject);
       }
       else {
-        let gripClient = new GripClient(this.debuggerClient, aResult);
-        gripClient.getDisplayString(aResponse => {
+        let objectClient = new ObjectClient(this.debuggerClient, aResult);
+        objectClient.getDisplayString(aResponse => {
           if (aResponse.error) {
             reportError("display", aResponse);
             reject(aResponse);
@@ -584,7 +593,7 @@ var Scratchpad = {
     }
     else {
       let reject = aReason => deferred.reject(aReason);
-      let gripClient = new GripClient(this.debuggerClient, aError);
+      let objectClient = new ObjectClient(this.debuggerClient, aError);
 
       // Because properties on Error objects are lazily added, this roundabout
       // way of getting all the properties is required, rather than simply
@@ -593,7 +602,7 @@ var Scratchpad = {
       let promises = names.map(aName => {
         let deferred = promise.defer();
 
-        gripClient.getProperty(aName, aResponse => {
+        objectClient.getProperty(aName, aResponse => {
           if (aResponse.error) {
             deferred.reject(aResponse);
           }
@@ -612,7 +621,7 @@ var Scratchpad = {
         // We also need to use getPrototypeAndProperties to retrieve any
         // safeGetterValues in case this is a DOM error.
         let deferred = promise.defer();
-        gripClient.getPrototypeAndProperties(aResponse => {
+        objectClient.getPrototypeAndProperties(aResponse => {
           if (aResponse.error) {
             deferred.reject(aResponse);
           }
@@ -666,7 +675,7 @@ var Scratchpad = {
           deferred.resolve(error.message + stack);
         }
         else {
-          gripClient.getDisplayString(aResult => {
+          objectClient.getDisplayString(aResult => {
             if (aResult.error) {
               deferred.reject(aResult);
             }
@@ -1767,8 +1776,8 @@ ScratchpadSidebar.prototype = {
         });
 
         VariablesViewController.attach(this.variablesView, {
-          getGripClient: aGrip => {
-            return new GripClient(this._scratchpad.debuggerClient, aGrip);
+          getObjectClient: aGrip => {
+            return new ObjectClient(this._scratchpad.debuggerClient, aGrip);
           },
           getLongStringClient: aActor => {
             return this._scratchpad.webConsoleClient.longString(aActor);

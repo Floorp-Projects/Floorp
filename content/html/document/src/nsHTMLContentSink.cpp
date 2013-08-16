@@ -25,7 +25,7 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsINodeInfo.h"
-#include "nsHTMLTokens.h"
+#include "nsToken.h"
 #include "nsIAppShell.h"
 #include "nsCRT.h"
 #include "prtime.h"
@@ -430,14 +430,8 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
 
-  if (aNodeType == eHTMLTag_userdefined) {
-    nsAutoString lower;
-    nsContentUtils::ASCIIToLower(aNode.GetText(), lower);
-    nsCOMPtr<nsIAtom> name = do_GetAtom(lower);
-    nodeInfo = mNodeInfoManager->GetNodeInfo(name, nullptr, kNameSpaceID_XHTML,
-                                             nsIDOMNode::ELEMENT_NODE);
-  }
-  else if (mNodeInfoCache[aNodeType]) {
+  MOZ_ASSERT(aNodeType != eHTMLTag_userdefined);
+  if (mNodeInfoCache[aNodeType]) {
     nodeInfo = mNodeInfoCache[aNodeType];
   }
   else {
@@ -864,25 +858,11 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
   case eToken_text:
   case eToken_whitespace:
   case eToken_newline:
-    rv = AddText(aNode.GetText());
+    MOZ_CRASH();
 
     break;
   case eToken_entity:
-    {
-      nsAutoString tmp;
-      int32_t unicode = aNode.TranslateToUnicodeStr(tmp);
-      if (unicode < 0) {
-        rv = AddText(aNode.GetText());
-      } else {
-        // Map carriage returns to newlines
-        if (!tmp.IsEmpty()) {
-          if (tmp.CharAt(0) == '\r') {
-            tmp.Assign((PRUnichar)'\n');
-          }
-          rv = AddText(tmp);
-        }
-      }
-    }
+    MOZ_CRASH();
 
     break;
   default:
@@ -933,9 +913,6 @@ SinkContext::GrowStack()
   }
 
   Node* stack = new Node[newSize];
-  if (!stack) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   if (mStackPos != 0) {
     memcpy(stack, mStack, sizeof(Node) * mStackPos);
@@ -967,9 +944,6 @@ SinkContext::AddText(const nsAString& aText)
   // Create buffer when we first need it
   if (mTextSize == 0) {
     mText = new PRUnichar[4096];
-    if (!mText) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     mTextSize = 4096;
   }
 
@@ -1205,10 +1179,6 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
 
   nsRefPtr<HTMLContentSink> it = new HTMLContentSink();
 
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   nsresult rv = it->Init(aDoc, aURI, aContainer, aChannel);
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1402,7 +1372,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mRoot->AppendChildTo(mHead, false);
 
   mCurrentContext = new SinkContext(this);
-  NS_ENSURE_TRUE(mCurrentContext, NS_ERROR_OUT_OF_MEMORY);
   mCurrentContext->Begin(eHTMLTag_html, mRoot, 0, -1);
   mContextStack.AppendElement(mCurrentContext);
 
@@ -1879,7 +1848,6 @@ HTMLContentSink::OpenHeadContext()
 
   if (!mHeadContext) {
     mHeadContext = new SinkContext(this);
-    NS_ENSURE_TRUE(mHeadContext, NS_ERROR_OUT_OF_MEMORY);
 
     nsresult rv = mHeadContext->Begin(eHTMLTag_head, mHead, 0, -1);
     NS_ENSURE_SUCCESS(rv, rv);

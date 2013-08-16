@@ -7,6 +7,7 @@
 #include "SpeechStreamListener.h"
 
 #include "SpeechRecognition.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace dom {

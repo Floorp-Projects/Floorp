@@ -126,6 +126,7 @@ public:
     enum {
         // Values for NotifyIME, in addition to values from the Gecko
         // NotificationToIME enum; use negative values here to prevent conflict
+        NOTIFY_IME_OPEN_VKB = -2,
         NOTIFY_IME_REPLY_EVENT = -1,
     };
 
@@ -381,7 +382,7 @@ public:
                           bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
                           bool aIsFirstPaint, LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset);
 
-    void AddPluginView(jobject view, const gfxRect& rect, bool isFullScreen);
+    void AddPluginView(jobject view, const LayoutDeviceRect& rect, bool isFullScreen);
     void RemovePluginView(jobject view, bool isFullScreen);
 
     // These methods don't use a ScreenOrientation because it's an
@@ -421,7 +422,7 @@ public:
                             const int32_t      aPort,
                             nsACString & aResult);
 protected:
-    static nsRefPtr<AndroidBridge> sBridge;
+    static StaticRefPtr<AndroidBridge> sBridge;
     nsTArray<nsCOMPtr<nsIMobileMessageCallback> > mSmsRequests;
 
     // the global JavaVM

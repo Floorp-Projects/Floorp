@@ -8,7 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-
+Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 Cu.import("resource://gre/modules/WspPduHelper.jsm", this);
 
 const DEBUG = false; // set to true to see debug messages
@@ -109,7 +109,14 @@ this.WapPushManager = {
       };
     }
 
+    let sender = PhoneNumberUtils.normalize(options.sourceAddress, false);
+    let parsedSender = PhoneNumberUtils.parse(sender);
+    if (parsedSender && parsedSender.internationalNumber) {
+      sender = parsedSender.internationalNumber;
+    }
+
     gSystemMessenger.broadcastMessage("wappush-received", {
+      sender:         sender,
       contentType:    msg.contentType,
       content:        msg.content
     });

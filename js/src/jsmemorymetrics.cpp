@@ -14,14 +14,15 @@
 #include "jsobj.h"
 #include "jsscript.h"
 
-#include "ion/BaselineJIT.h"
-#include "ion/Ion.h"
+#include "jit/BaselineJIT.h"
+#include "jit/Ion.h"
+#include "vm/ArrayObject.h"
 #include "vm/Runtime.h"
 #include "vm/Shape.h"
-#include "vm/WrapperObject.h"
 #include "vm/String.h"
+#include "vm/WrapperObject.h"
 
-#include "jsobjinlines.h"
+#include "vm/ObjectImpl-inl.h"
 
 using mozilla::DebugOnly;
 using mozilla::Move;

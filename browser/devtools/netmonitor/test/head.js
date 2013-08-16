@@ -148,41 +148,41 @@ function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
     if (genericEvents == (aGetRequests + aPostRequests) * 13 &&
         postEvents == aPostRequests * 2) {
 
-      panel.off("NetMonitor:NetworkEventUpdating:RequestHeaders", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdated:RequestHeaders", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdating:RequestCookies", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdating:RequestPostData", onPostEvent);
-      panel.off("NetMonitor:NetworkEventUpdated:RequestPostData", onPostEvent);
-      panel.off("NetMonitor:NetworkEventUpdated:RequestCookies", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdating:ResponseHeaders", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdated:ResponseHeaders", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdating:ResponseCookies", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdated:ResponseCookies", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdating:ResponseStart", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdating:ResponseContent", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdated:ResponseContent", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdating:EventTimings", onGenericEvent);
-      panel.off("NetMonitor:NetworkEventUpdated:EventTimings", onGenericEvent);
+      panel.off(panel.EVENTS.UPDATING_REQUEST_HEADERS, onGenericEvent);
+      panel.off(panel.EVENTS.RECEIVED_REQUEST_HEADERS, onGenericEvent);
+      panel.off(panel.EVENTS.UPDATING_REQUEST_COOKIES, onGenericEvent);
+      panel.off(panel.EVENTS.RECEIVED_REQUEST_COOKIES, onGenericEvent);
+      panel.off(panel.EVENTS.UPDATING_REQUEST_POST_DATA, onPostEvent);
+      panel.off(panel.EVENTS.RECEIVED_REQUEST_POST_DATA, onPostEvent);
+      panel.off(panel.EVENTS.UPDATING_RESPONSE_HEADERS, onGenericEvent);
+      panel.off(panel.EVENTS.RECEIVED_RESPONSE_HEADERS, onGenericEvent);
+      panel.off(panel.EVENTS.UPDATING_RESPONSE_COOKIES, onGenericEvent);
+      panel.off(panel.EVENTS.RECEIVED_RESPONSE_COOKIES, onGenericEvent);
+      panel.off(panel.EVENTS.STARTED_RECEIVING_RESPONSE, onGenericEvent);
+      panel.off(panel.EVENTS.UPDATING_RESPONSE_CONTENT, onGenericEvent);
+      panel.off(panel.EVENTS.RECEIVED_RESPONSE_CONTENT, onGenericEvent);
+      panel.off(panel.EVENTS.UPDATING_EVENT_TIMINGS, onGenericEvent);
+      panel.off(panel.EVENTS.RECEIVED_EVENT_TIMINGS, onGenericEvent);
 
       executeSoon(deferred.resolve);
     }
   }
 
-  panel.on("NetMonitor:NetworkEventUpdating:RequestHeaders", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdated:RequestHeaders", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdating:RequestCookies", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdating:RequestPostData", onPostEvent);
-  panel.on("NetMonitor:NetworkEventUpdated:RequestPostData", onPostEvent);
-  panel.on("NetMonitor:NetworkEventUpdated:RequestCookies", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdating:ResponseHeaders", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdated:ResponseHeaders", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdating:ResponseCookies", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdated:ResponseCookies", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdating:ResponseStart", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdating:ResponseContent", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdated:ResponseContent", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdating:EventTimings", onGenericEvent);
-  panel.on("NetMonitor:NetworkEventUpdated:EventTimings", onGenericEvent);
+  panel.on(panel.EVENTS.UPDATING_REQUEST_HEADERS, onGenericEvent);
+  panel.on(panel.EVENTS.RECEIVED_REQUEST_HEADERS, onGenericEvent);
+  panel.on(panel.EVENTS.UPDATING_REQUEST_COOKIES, onGenericEvent);
+  panel.on(panel.EVENTS.RECEIVED_REQUEST_COOKIES, onGenericEvent);
+  panel.on(panel.EVENTS.UPDATING_REQUEST_POST_DATA, onPostEvent);
+  panel.on(panel.EVENTS.RECEIVED_REQUEST_POST_DATA, onPostEvent);
+  panel.on(panel.EVENTS.UPDATING_RESPONSE_HEADERS, onGenericEvent);
+  panel.on(panel.EVENTS.RECEIVED_RESPONSE_HEADERS, onGenericEvent);
+  panel.on(panel.EVENTS.UPDATING_RESPONSE_COOKIES, onGenericEvent);
+  panel.on(panel.EVENTS.RECEIVED_RESPONSE_COOKIES, onGenericEvent);
+  panel.on(panel.EVENTS.STARTED_RECEIVING_RESPONSE, onGenericEvent);
+  panel.on(panel.EVENTS.UPDATING_RESPONSE_CONTENT, onGenericEvent);
+  panel.on(panel.EVENTS.RECEIVED_RESPONSE_CONTENT, onGenericEvent);
+  panel.on(panel.EVENTS.UPDATING_EVENT_TIMINGS, onGenericEvent);
+  panel.on(panel.EVENTS.RECEIVED_EVENT_TIMINGS, onGenericEvent);
 
   return deferred.promise;
 }

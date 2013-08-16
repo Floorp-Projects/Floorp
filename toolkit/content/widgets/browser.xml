@@ -669,7 +669,7 @@
       <constructor>
         <![CDATA[
           try {
-            if (!this.hasAttribute("disablehistory")) {
+            if (this.docShell && !this.hasAttribute("disablehistory")) {
               var os = Components.classes["@mozilla.org/observer-service;1"]
                                  .getService(Components.interfaces.nsIObserverService);
               os.addObserver(this, "browser:purge-session-history", false);
@@ -678,7 +678,7 @@
                       Components.classes["@mozilla.org/browser/shistory;1"]
                                 .createInstance(Components.interfaces.nsISHistory);
               // enable global history if we weren't told otherwise
-              if (this.docShell && !this.hasAttribute("disableglobalhistory"))
+              if (!this.hasAttribute("disableglobalhistory"))
                 this.docShell.useGlobalHistory = true;
             }
           }

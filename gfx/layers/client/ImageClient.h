@@ -73,7 +73,7 @@ public:
 
   virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags);
 
-  virtual void Detach() MOZ_OVERRIDE;
+  virtual void OnDetach() MOZ_OVERRIDE;
 
   virtual void AddTextureClient(TextureClient* aTexture) MOZ_OVERRIDE;
 
@@ -89,7 +89,7 @@ protected:
 };
 
 /**
- * An image client which uses a two texture clients.
+ * An image client which uses two texture clients.
  */
 class ImageClientBuffered : public ImageClientSingle
 {
@@ -100,7 +100,7 @@ public:
 
   virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags);
 
-  virtual void Detach() MOZ_OVERRIDE;
+  virtual void OnDetach() MOZ_OVERRIDE;
 
 protected:
   RefPtr<TextureClient> mBackBuffer;

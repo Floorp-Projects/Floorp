@@ -19,6 +19,7 @@ const STRING_TYPE_NAME       = "type.%ID%.name";
 XPCOMUtils.defineLazyModuleGetter(this, "getFrameWorkerHandle", "resource://gre/modules/FrameWorker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WorkerAPI", "resource://gre/modules/WorkerAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MozSocialAPI", "resource://gre/modules/MozSocialAPI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "closeAllChatWindows", "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "etld",
@@ -830,6 +831,7 @@ SocialProvider.prototype = {
   updateUserProfile: function(profile) {
     if (!profile)
       profile = {};
+    let accountChanged = !this.profile || this.profile.userName != profile.userName;
     this.profile = profile;
 
     // Sanitize the portrait from any potential script-injection.
@@ -862,6 +864,8 @@ SocialProvider.prototype = {
     }
 
     Services.obs.notifyObservers(null, "social:profile-changed", this.origin);
+    if (accountChanged)
+      closeAllChatWindows(this);
   },
 
   // Called by the workerAPI to add/update a notification icon.
@@ -887,6 +891,7 @@ SocialProvider.prototype = {
   },
 
   _terminate: function _terminate() {
+    closeAllChatWindows(this);
     if (this.workerURL) {
       try {
         getFrameWorkerHandle(this.workerURL).terminate();

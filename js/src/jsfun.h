@@ -6,17 +6,21 @@
 
 #ifndef jsfun_h
 #define jsfun_h
+
 /*
  * JS function definitions.
  */
 
 #include "jsobj.h"
-#include "jsprvtd.h"
 #include "jsscript.h"
 
-#include "gc/Barrier.h"
+namespace js {
+class FunctionExtended;
 
-namespace js { class FunctionExtended; }
+typedef JSNative           Native;
+typedef JSParallelNative   ParallelNative;
+typedef JSThreadSafeNative ThreadSafeNative;
+}
 
 class JSFunction : public JSObject
 {
@@ -137,6 +141,8 @@ class JSFunction : public JSObject
         return isNative() || isSelfHostedBuiltin();
     }
     bool isInterpretedConstructor() const {
+        // Note: the JITs inline this check, so be careful when making changes
+        // here. See IonMacroAssembler::branchIfNotInterpretedConstructor.
         return isInterpreted() && !isFunctionPrototype() &&
                (!isSelfHostedBuiltin() || isSelfHostedConstructor());
     }
@@ -322,7 +328,6 @@ class JSFunction : public JSObject
     }
 
     static unsigned offsetOfNativeOrScript() {
-        JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, i.s.lazy_));
         JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, i.s.script_));
         JS_STATIC_ASSERT(offsetof(U, n.native) == offsetof(U, nativeOrScript));
         return offsetof(JSFunction, u.nativeOrScript);
@@ -411,7 +416,7 @@ DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,
                gc::AllocKind allocKind = JSFunction::FinalizeKind,
                NewObjectKind newKind = GenericObject);
 
-extern JSBool
+extern bool
 fun_resolve(JSContext *cx, js::HandleObject obj, js::HandleId id,
             unsigned flags, js::MutableHandleObject objp);
 

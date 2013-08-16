@@ -18,14 +18,14 @@
 #include "jsgc.h"
 #include "jsobj.h"
 #include "jsopcode.h"
-#include "jsprvtd.h"
+#include "jsprf.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jstypes.h"
 #include "jswatchpoint.h"
 
 #include "frontend/SourceNotes.h"
-#include "ion/AsmJSModule.h"
+#include "jit/AsmJSModule.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
@@ -43,20 +43,20 @@ using namespace js::gc;
 
 using mozilla::PodZero;
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_GetDebugMode(JSContext *cx)
 {
     return cx->compartment()->debugMode();
 }
 
-JS_PUBLIC_API(JSBool)
-JS_SetDebugMode(JSContext *cx, JSBool debug)
+JS_PUBLIC_API(bool)
+JS_SetDebugMode(JSContext *cx, bool debug)
 {
     return JS_SetDebugModeForCompartment(cx, cx->compartment(), debug);
 }
 
 JS_PUBLIC_API(void)
-JS_SetRuntimeDebugMode(JSRuntime *rt, JSBool debug)
+JS_SetRuntimeDebugMode(JSRuntime *rt, bool debug)
 {
     rt->debugMode = !!debug;
 }
@@ -111,7 +111,7 @@ js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, bool okArg)
 {
     JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
 
-    JSBool ok = okArg;
+    bool ok = okArg;
 
     // We don't add hook data for self-hosted scripts, so we don't need to check for them, here.
     if (void *hookData = frame.maybeHookData()) {
@@ -169,8 +169,8 @@ js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
     return status;
 }
 
-JS_FRIEND_API(JSBool)
-JS_SetDebugModeForAllCompartments(JSContext *cx, JSBool debug)
+JS_FRIEND_API(bool)
+JS_SetDebugModeForAllCompartments(JSContext *cx, bool debug)
 {
     AutoDebugModeGC dmgc(cx->runtime());
 
@@ -184,17 +184,17 @@ JS_SetDebugModeForAllCompartments(JSContext *cx, JSBool debug)
     return true;
 }
 
-JS_FRIEND_API(JSBool)
-JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
+JS_FRIEND_API(bool)
+JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, bool debug)
 {
     AutoDebugModeGC dmgc(cx->runtime());
     return comp->setDebugModeFromC(cx, !!debug, dmgc);
 }
 
-static JSBool
+static bool
 CheckDebugMode(JSContext *cx)
 {
-    JSBool debugMode = JS_GetDebugMode(cx);
+    bool debugMode = JS_GetDebugMode(cx);
     /*
      * :TODO:
      * This probably should be an assertion, since it's indicative of a severe
@@ -207,8 +207,8 @@ CheckDebugMode(JSContext *cx)
     return debugMode;
 }
 
-JS_PUBLIC_API(JSBool)
-JS_SetSingleStepMode(JSContext *cx, JSScript *scriptArg, JSBool singleStep)
+JS_PUBLIC_API(bool)
+JS_SetSingleStepMode(JSContext *cx, JSScript *scriptArg, bool singleStep)
 {
     RootedScript script(cx, scriptArg);
     assertSameCompartment(cx, script);
@@ -219,7 +219,7 @@ JS_SetSingleStepMode(JSContext *cx, JSScript *scriptArg, JSBool singleStep)
     return script->setStepModeFlag(cx, singleStep);
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_SetTrap(JSContext *cx, JSScript *scriptArg, jsbytecode *pc, JSTrapHandler handler, jsval closureArg)
 {
     RootedScript script(cx, scriptArg);
@@ -262,17 +262,21 @@ JS_ClearAllTrapsForCompartment(JSContext *cx)
     cx->compartment()->clearTraps(cx->runtime()->defaultFreeOp());
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_SetInterrupt(JSRuntime *rt, JSInterruptHook hook, void *closure)
 {
     rt->debugHooks.interruptHook = hook;
     rt->debugHooks.interruptHookData = closure;
-    for (InterpreterFrames *f = rt->interpreterFrames; f; f = f->older)
-        f->enableInterruptsUnconditionally();
+
+    for (ActivationIterator iter(rt); !iter.done(); ++iter) {
+        if (iter.activation()->isInterpreter())
+            iter.activation()->asInterpreter()->enableInterruptsUnconditionally();
+    }
+
     return true;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
 {
     if (hoop)
@@ -286,7 +290,7 @@ JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
 
 /************************************************************************/
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id_,
                  JSWatchPointHandler handler, JSObject *closure_)
 {
@@ -348,7 +352,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id_,
     return wpmap->watch(cx, obj, propid, handler, closure);
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
                    JSWatchPointHandler *handlerp, JSObject **closurep)
 {
@@ -359,7 +363,7 @@ JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
     return true;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
@@ -369,7 +373,7 @@ JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj)
     return true;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_ClearAllWatchPoints(JSContext *cx)
 {
     if (JSCompartment *comp = cx->compartment()) {
@@ -399,7 +403,7 @@ JS_EndPC(JSContext *cx, JSScript *script)
     return script->code + script->length;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_GetLinePCs(JSContext *cx, JSScript *script,
               unsigned startLine, unsigned maxLines,
               unsigned* count, unsigned** retLines, jsbytecode*** retPCs)
@@ -456,7 +460,7 @@ JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
     return fun->nargs;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_FunctionHasLocalNames(JSContext *cx, JSFunction *fun)
 {
     return fun->nonLazyScript()->bindings.count() > 0;
@@ -625,7 +629,7 @@ JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
 
 /* This all should be reworked to avoid requiring JSScopeProperty types. */
 
-static JSBool
+static bool
 GetPropertyDesc(JSContext *cx, JSObject *obj_, HandleShape shape, JSPropertyDesc *pd)
 {
     assertSameCompartment(cx, obj_);
@@ -633,7 +637,7 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, HandleShape shape, JSPropertyDesc
 
     RootedObject obj(cx, obj_);
 
-    JSBool wasThrowing = cx->isExceptionPending();
+    bool wasThrowing = cx->isExceptionPending();
     RootedValue lastException(cx, UndefinedValue());
     if (wasThrowing)
         lastException = cx->getPendingException();
@@ -666,7 +670,7 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, HandleShape shape, JSPropertyDesc
     return true;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
 {
     RootedObject obj(cx, obj_);
@@ -774,7 +778,7 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 
 /************************************************************************/
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_SetDebuggerHandler(JSRuntime *rt, JSDebuggerHandler handler, void *closure)
 {
     rt->debugHooks.debuggerHandler = handler;
@@ -782,7 +786,7 @@ JS_SetDebuggerHandler(JSRuntime *rt, JSDebuggerHandler handler, void *closure)
     return true;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure)
 {
     rt->debugHooks.sourceHandler = handler;
@@ -790,7 +794,7 @@ JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure)
     return true;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 {
     rt->debugHooks.executeHook = hook;
@@ -798,7 +802,7 @@ JS_SetExecuteHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
     return true;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
 {
     rt->debugHooks.callHook = hook;
@@ -806,7 +810,7 @@ JS_SetCallHook(JSRuntime *rt, JSInterpreterHook hook, void *closure)
     return true;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_SetThrowHook(JSRuntime *rt, JSThrowHook hook, void *closure)
 {
     rt->debugHooks.throwHook = hook;
@@ -814,7 +818,7 @@ JS_SetThrowHook(JSRuntime *rt, JSThrowHook hook, void *closure)
     return true;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_SetDebugErrorHook(JSRuntime *rt, JSDebugErrorHook hook, void *closure)
 {
     rt->debugHooks.debugErrorHook = hook;
@@ -930,7 +934,23 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
 #endif
 }
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(bool)
+js::CanCallContextDebugHandler(JSContext *cx)
+{
+    return !!cx->runtime()->debugHooks.debuggerHandler;
+}
+
+static JSTrapStatus
+CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval)
+{
+    if (!cx->runtime()->debugHooks.debuggerHandler)
+        return JSTRAP_RETURN;
+
+    return cx->runtime()->debugHooks.debuggerHandler(cx, script, bc, rval,
+                                                     cx->runtime()->debugHooks.debuggerHandlerData);
+}
+
+JS_FRIEND_API(bool)
 js_CallContextDebugHandler(JSContext *cx)
 {
     NonBuiltinScriptFrameIter iter(cx);
@@ -938,7 +958,7 @@ js_CallContextDebugHandler(JSContext *cx)
 
     RootedValue rval(cx);
     RootedScript script(cx, iter.script());
-    switch (js::CallContextDebugHandler(cx, script, iter.pc(), rval.address())) {
+    switch (CallContextDebugHandler(cx, script, iter.pc(), rval.address())) {
       case JSTRAP_ERROR:
         JS_ClearPendingException(cx);
         return false;
@@ -1030,7 +1050,7 @@ FormatValue(JSContext *cx, const Value &vArg, JSAutoByteString &bytes)
 
 static char *
 FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int num,
-            JSBool showArgs, JSBool showLocals, JSBool showThisProps)
+            bool showArgs, bool showLocals, bool showThisProps)
 {
     JS_ASSERT(!cx->isExceptionPending());
     RootedScript script(cx, iter.script());
@@ -1228,9 +1248,7 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
 }
 
 JS_PUBLIC_API(char *)
-JS::FormatStackDump(JSContext *cx, char *buf,
-                      JSBool showArgs, JSBool showLocals,
-                      JSBool showThisProps)
+JS::FormatStackDump(JSContext *cx, char *buf, bool showArgs, bool showLocals, bool showThisProps)
 {
     int num = 0;
 

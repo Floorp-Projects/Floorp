@@ -9,20 +9,21 @@
 #include "Layers.h"
 #include "nsTArray.h"
 
-// Create layer tree from a simple layer tree description syntax.
-// Each index is either the first letter of the layer type or
-// a '(',')' to indicate the start/end of the child layers.
-// The aim of this function is to remove hard to read
-// layer tree creation code.
-//
-// Example "c(c(c(tt)t))" would yield:
-//          c
-//          |
-//          c
-//         / \
-//        c   t
-//       / \
-//      t   t
+/* Create layer tree from a simple layer tree description syntax.
+ * Each index is either the first letter of the layer type or
+ * a '(',')' to indicate the start/end of the child layers.
+ * The aim of this function is to remove hard to read
+ * layer tree creation code.
+ *
+ * Example "c(c(c(tt)t))" would yield:
+ *          c
+ *          |
+ *          c
+ *         / \
+ *        c   t
+ *       / \
+ *      t   t
+ */
 already_AddRefed<mozilla::layers::Layer> CreateLayerTree(
     const char* aLayerTreeDescription,
     nsIntRegion* aVisibleRegions,

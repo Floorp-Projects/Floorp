@@ -244,8 +244,8 @@ forward-declare it rather than #include that header.
 == Preprocessor ==
 
 Include guards should be named by determining the fully-qualified include path,
-then substituting _ for / and . in it, and finally appending a trailing _.  For
-example, "mozilla/Assertions.h" becomes mozilla_Assertions_h_.
+and substituting _ for / and . in it.  For example, "mozilla/Assertions.h"
+becomes mozilla_Assertions_h.
 
 Nested preprocessor directives indent the directive name (but not the #) by two
 spaces.

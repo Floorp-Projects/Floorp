@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "DOMMediaStream.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/Monitor.h"
 
 #include "VideoUtils.h"
 #include "MediaEngine.h"
@@ -48,12 +49,11 @@ public:
   virtual nsresult Config(bool aEchoOn, uint32_t aEcho,
                           bool aAgcOn, uint32_t aAGC,
                           bool aNoiseOn, uint32_t aNoise) { return NS_OK; };
-  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,
                           TrackID aId,
                           StreamTime aDesiredTime,
-                          TrackTicks &aLastEndTime) {}
+                          TrackTicks &aLastEndTime);
 
   virtual bool IsFake() {
     return true;
@@ -67,10 +67,15 @@ protected:
 
   TrackID mTrackID;
   nsCOMPtr<nsITimer> mTimer;
+  // mMonitor protects mImage access/changes, and transitions of mState
+  // from kStarted to kStopped (which are combined with EndTrack() and
+  // image changes).  Note that mSources is not accessed from other threads
+  // for video and is not protected.
+  Monitor mMonitor;
+  nsRefPtr<layers::Image> mImage;
+
   nsRefPtr<layers::ImageContainer> mImageContainer;
 
-  SourceMediaStream* mSource;
-  layers::PlanarYCbCrImage* mImage;
   MediaEnginePrefs mOpts;
   int mCb;
   int mCr;
@@ -94,7 +99,6 @@ public:
   virtual nsresult Config(bool aEchoOn, uint32_t aEcho,
                           bool aAgcOn, uint32_t aAGC,
                           bool aNoiseOn, uint32_t aNoise) { return NS_OK; };
-  virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime);
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,
                           TrackID aId,

@@ -8,7 +8,6 @@
 #include "mozilla/dom/ChannelSplitterNodeBinding.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
-#include "mozilla/PodOperations.h"
 
 namespace mozilla {
 namespace dom {

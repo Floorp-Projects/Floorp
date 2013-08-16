@@ -331,14 +331,12 @@ NSString
                                                                 @"org.mozilla.aurora",
                                                                 @"org.mozilla.firefox", nil];
 
-  //if they provided a manual override, use that.  If they made an error, it will fail to launch
+  // If they provided a binary ID, use that.
   if (alternateBinaryID != nil && ([alternateBinaryID length] > 0)) {
     binaryPath = [[NSWorkspace sharedWorkspace] absolutePathForAppBundleWithIdentifier:alternateBinaryID];
-    if (binaryPath == nil || [binaryPath length] == 0) {
-      @throw MakeException(@"Web Runtime Not Found",
-                            [NSString stringWithFormat:@"Failed to locate specified override Web Runtime with signature '%@'", alternateBinaryID]);
+    if (binaryPath && [binaryPath length] > 0) {
+      return binaryPath;
     }
-    return binaryPath;
   }
 
   //No override found, loop through the various flavors of firefox we have

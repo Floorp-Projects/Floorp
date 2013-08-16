@@ -20,13 +20,10 @@
  */
 
 #include "nsDOMScriptObjectFactory.h"
-#include "xpcexception.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIObserverService.h"
 #include "nsJSEnvironment.h"
-#include "nsJSEventListener.h"
 #include "nsGlobalWindow.h"
-#include "nsISupportsPrimitives.h"
 #include "nsDOMException.h"
 #include "nsCRT.h"
 #ifdef MOZ_XUL

@@ -9,9 +9,9 @@
 #include "jsgc.h"
 
 #ifdef JS_ION
-#include "ion/BaselineJIT.h"
-#include "ion/Ion.h"
-#include "ion/IonCompartment.h"
+#include "jit/BaselineJIT.h"
+#include "jit/Ion.h"
+#include "jit/IonCompartment.h"
 #endif
 #include "vm/Debugger.h"
 #include "vm/Runtime.h"
@@ -72,6 +72,9 @@ Zone::setNeedsBarrier(bool needs, ShouldUpdateIon updateIon)
         ionUsingBarriers_ = needs;
     }
 #endif
+
+    if (needs && runtimeFromMainThread()->isAtomsZone(this))
+        JS_ASSERT(!runtimeFromMainThread()->exclusiveThreadsPresent());
 
     needsBarrier_ = needs;
 }

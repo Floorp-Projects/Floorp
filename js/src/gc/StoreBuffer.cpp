@@ -210,6 +210,7 @@ StoreBuffer::GenericBuffer::mark(JSTracer *trc)
 void
 StoreBuffer::CellPtrEdge::mark(JSTracer *trc)
 {
+    JS_ASSERT(GetGCThingTraceKind(*edge) == JSTRACE_OBJECT);
     MarkObjectRoot(trc, reinterpret_cast<JSObject**>(edge), "store buffer edge");
 }
 
@@ -304,7 +305,7 @@ void
 StoreBuffer::setAboutToOverflow()
 {
     aboutToOverflow = true;
-    runtime->triggerOperationCallback();
+    runtime->triggerOperationCallback(JSRuntime::TriggerCallbackMainThread);
 }
 
 bool
