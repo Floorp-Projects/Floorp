@@ -1245,28 +1245,6 @@ public:
    */
   static void DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent);
 
-  /**
-   * Keep the JS objects held by aScriptObjectHolder alive.
-   *
-   * @param aScriptObjectHolder the object that holds JS objects that we want to
-   *                            keep alive
-   * @param aTracer the tracer for aScriptObject
-   */
-  static void HoldJSObjects(void* aScriptObjectHolder,
-                            nsScriptObjectTracer* aTracer);
-
-  /**
-   * Drop the JS objects held by aScriptObjectHolder.
-   *
-   * @param aScriptObjectHolder the object that holds JS objects that we want to
-   *                            drop
-   */
-  static void DropJSObjects(void* aScriptObjectHolder);
-
-#ifdef DEBUG
-  static bool AreJSObjectsHeld(void* aScriptObjectHolder); 
-#endif
-
   static void DeferredFinalize(nsISupports* aSupports);
   static void DeferredFinalize(mozilla::DeferredFinalizeAppendFunction aAppendFunc,
                                mozilla::DeferredFinalizeFunction aFunc,

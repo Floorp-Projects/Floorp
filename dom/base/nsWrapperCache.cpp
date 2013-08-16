@@ -8,6 +8,7 @@
 
 #include "jsproxy.h"
 #include "mozilla/dom/DOMJSProxyHandler.h"
+#include "nsCycleCollectionHoldDrop.h"
 #include "nsCycleCollectionTraversalCallback.h"
 #include "nsCycleCollector.h"
 
@@ -18,7 +19,7 @@ using namespace mozilla::dom;
 nsWrapperCache::HoldJSObjects(void* aScriptObjectHolder,
                               nsScriptObjectTracer* aTracer)
 {
-  cyclecollector::AddJSHolder(aScriptObjectHolder, aTracer);
+  cyclecollector::HoldJSObjectsImpl(aScriptObjectHolder, aTracer);
 }
 
 void
@@ -33,7 +34,7 @@ nsWrapperCache::ReleaseWrapper(void* aScriptObjectHolder)
       DOMProxyHandler::GetAndClearExpandoObject(obj);
     }
     SetPreservingWrapper(false);
-    cyclecollector::RemoveJSHolder(aScriptObjectHolder);
+    cyclecollector::DropJSObjectsImpl(aScriptObjectHolder);
   }
 }
 

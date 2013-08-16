@@ -1286,13 +1286,7 @@ nsGlobalWindow::CleanupCachedXBLHandlers(nsGlobalWindow* aWindow)
   if (aWindow->mCachedXBLPrototypeHandlers.IsInitialized() &&
       aWindow->mCachedXBLPrototypeHandlers.Count() > 0) {
     aWindow->mCachedXBLPrototypeHandlers.Clear();
-
-    nsISupports* supports;
-    aWindow->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                            reinterpret_cast<void**>(&supports));
-    NS_ASSERTION(supports, "Failed to QI to nsCycleCollectionISupports?!");
-
-    nsContentUtils::DropJSObjects(supports);
+    mozilla::DropJSObjects(aWindow);
   }
 }
 
@@ -7635,19 +7629,7 @@ nsGlobalWindow::CacheXBLPrototypeHandler(nsXBLPrototypeHandler* aKey,
   }
 
   if (!mCachedXBLPrototypeHandlers.Count()) {
-    // Can't use macros to get the participant because nsGlobalChromeWindow also
-    // runs through this code. Use QueryInterface to get the correct objects.
-    nsXPCOMCycleCollectionParticipant* participant;
-    CallQueryInterface(this, &participant);
-    NS_ASSERTION(participant,
-                 "Failed to QI to nsXPCOMCycleCollectionParticipant!");
-
-    nsISupports* thisSupports;
-    QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                   reinterpret_cast<void**>(&thisSupports));
-    NS_ASSERTION(thisSupports, "Failed to QI to nsCycleCollectionISupports!");
-
-    nsContentUtils::HoldJSObjects(thisSupports, participant);
+    mozilla::HoldJSObjects(this);
   }
 
   mCachedXBLPrototypeHandlers.Put(aKey, aHandler);

@@ -148,7 +148,7 @@ nsJSScriptTimeoutHandler::ReleaseJSObjects()
     mFunction = nullptr;
     mArgs.Clear();
   }
-  NS_DROP_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
+  mozilla::DropJSObjects(this);
 }
 
 nsresult
@@ -279,7 +279,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
       }
     } // if there's no document, we don't have to do anything.
 
-    NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
+    mozilla::HoldJSObjects(this);
 
     mExpr = JS_FORGET_STRING_FLATNESS(expr);
 
@@ -289,7 +289,7 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
       mFileName.Assign(filename);
     }
   } else if (funobj) {
-    NS_HOLD_JS_OBJECTS(this, nsJSScriptTimeoutHandler);
+    mozilla::HoldJSObjects(this);
 
     mFunction = new Function(funobj);
 
