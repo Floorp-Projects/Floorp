@@ -32,7 +32,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "messenger",
 
 const kMessages =["Webapps:Connect",
                   "Webapps:GetConnections",
-                  "InterAppConnection:Cancel"];
+                  "InterAppConnection:Cancel",
+                  "InterAppMessagePort:PostMessage",
+                  "InterAppMessagePort:Register",
+                  "InterAppMessagePort:Unregister",
+                  "child-process-shutdown"];
 
 function InterAppCommService() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
@@ -167,6 +171,44 @@ function InterAppCommService() {
   //       |requestID| is the ID specifying the promise resolver to return,
   //       |target| is the target of the process requesting the connection.
   this._promptUICallers = {};
+
+  // This matrix is used for saving the pair of message ports, which is indexed
+  // by a random UUID, so that each port can know whom it should talk to.
+  // An example of the object literal is shown as below:
+  //
+  // {
+  //   "UUID1": {
+  //     keyword: "keyword1",
+  //     publisher: {
+  //       manifestURL: "app://pubApp1.gaiamobile.org/manifest.webapp",
+  //       target: pubAppTarget1,
+  //       pageURL: "app://pubApp1.gaiamobile.org/caller.html",
+  //       messageQueue: [...]
+  //     },
+  //     subscriber: {
+  //       manifestURL: "app://subApp1.gaiamobile.org/manifest.webapp",
+  //       target: subAppTarget1,
+  //       pageURL: "app://pubApp1.gaiamobile.org/handler.html",
+  //       messageQueue: [...]
+  //     }
+  //   },
+  //   "UUID2": {
+  //     keyword: "keyword2",
+  //     publisher: {
+  //       manifestURL: "app://pubApp2.gaiamobile.org/manifest.webapp",
+  //       target: pubAppTarget2,
+  //       pageURL: "app://pubApp2.gaiamobile.org/caller.html",
+  //       messageQueue: [...]
+  //     },
+  //     subscriber: {
+  //       manifestURL: "app://subApp2.gaiamobile.org/manifest.webapp",
+  //       target: subAppTarget2,
+  //       pageURL: "app://pubApp2.gaiamobile.org/handler.html",
+  //       messageQueue: [...]
+  //     }
+  //   }
+  // }
+  this._messagePortPairs = {};
 }
 
 InterAppCommService.prototype = {
@@ -306,9 +348,11 @@ InterAppCommService.prototype = {
     return true;
   },
 
-  _dispatchMessagePorts: function(aKeyword, aAllowedSubAppManifestURLs,
+  _dispatchMessagePorts: function(aKeyword, aPubAppManifestURL,
+                                  aAllowedSubAppManifestURLs,
                                   aTarget, aOuterWindowID, aRequestID) {
     debug("_dispatchMessagePorts: aKeyword: " + aKeyword +
+          " aPubAppManifestURL: " + aPubAppManifestURL +
           " aAllowedSubAppManifestURLs: " + aAllowedSubAppManifestURLs);
 
     if (aAllowedSubAppManifestURLs.length == 0) {
@@ -335,7 +379,20 @@ InterAppCommService.prototype = {
         return;
       }
 
+      // The message port ID is aimed for identifying the coupling targets
+      // to deliver messages with each other. This ID is centrally generated
+      // by the parent and dispatched to both the sender and receiver ends
+      // for creating their own message ports respectively.
       let messagePortID = UUIDGenerator.generateUUID().toString();
+      this._messagePortPairs[messagePortID] = {
+        keyword: aKeyword,
+        publisher: {
+          manifestURL: aPubAppManifestURL
+        },
+        subscriber: {
+          manifestURL: aAllowedSubAppManifestURL
+        }
+      };
 
       // Fire system message to deliver the message port to the subscriber.
       messenger.sendMessage("connection",
@@ -345,7 +402,7 @@ InterAppCommService.prototype = {
         Services.io.newURI(subscribedInfo.manifestURL, null, null));
 
       messagePortIDs.push(messagePortID);
-    });
+    }, this);
 
     if (messagePortIDs.length == 0) {
       debug("No apps are subscribed to connect. Returning.");
@@ -373,7 +430,8 @@ InterAppCommService.prototype = {
     let subAppManifestURLs = this._registeredConnections[keyword];
     if (!subAppManifestURLs) {
       debug("No apps are subscribed for this connection. Returning.")
-      this._dispatchMessagePorts(keyword, [], aTarget, outerWindowID, requestID);
+      this._dispatchMessagePorts(keyword, pubAppManifestURL, [],
+                                 aTarget, outerWindowID, requestID);
       return;
     }
 
@@ -417,7 +475,8 @@ InterAppCommService.prototype = {
     if (appsToSelect.length == 0) {
       debug("No additional apps need to be selected for this connection. " +
             "Just dispatch message ports for the existing connections.");
-      this._dispatchMessagePorts(keyword, allowedSubAppManifestURLs,
+      this._dispatchMessagePorts(keyword, pubAppManifestURL,
+                                 allowedSubAppManifestURLs,
                                  aTarget, outerWindowID, requestID);
       return;
     }
@@ -514,6 +573,143 @@ InterAppCommService.prototype = {
         delete this._allowedConnections[keyword];
       }
     }
+
+    debug("Unregistering message ports based on this connection.");
+    let messagePortIDs = [];
+    for (let messagePortID in this._messagePortPairs) {
+      let pair = this._messagePortPairs[messagePortID];
+      if (pair.keyword == keyword &&
+          pair.publisher.manifestURL == pubAppManifestURL &&
+          pair.subscriber.manifestURL == subAppManifestURL) {
+        messagePortIDs.push(messagePortID);
+      }
+    }
+    messagePortIDs.forEach(function(aMessagePortID) {
+      delete this._messagePortPairs[aMessagePortID];
+    }, this);
+  },
+
+  _identifyMessagePort: function(aMessagePortID, aManifestURL) {
+    let pair = this._messagePortPairs[aMessagePortID];
+    if (!pair) {
+      debug("Error! The message port ID is invalid: " + aMessagePortID +
+            ", which should have been generated by parent.");
+      return null;
+    }
+
+    // Check it the message port is for publisher.
+    if (pair.publisher.manifestURL == aManifestURL) {
+      return { pair: pair, isPublisher: true };
+    }
+
+    // Check it the message port is for subscriber.
+    if (pair.subscriber.manifestURL == aManifestURL) {
+      return { pair: pair, isPublisher: false };
+    }
+
+    debug("Error! The manifest URL is invalid: " + aManifestURL +
+          ", which might be a hacked app.");
+    return null;
+  },
+
+  _registerMessagePort: function(aMessage, aTarget) {
+    let messagePortID = aMessage.messagePortID;
+    let manifestURL = aMessage.manifestURL;
+    let pageURL = aMessage.pageURL;
+
+    let identity = this._identifyMessagePort(messagePortID, manifestURL);
+    if (!identity) {
+      debug("Cannot identify the message port. Failed to register.");
+      return;
+    }
+
+    debug("Registering message port for " + manifestURL);
+    let pair = identity.pair;
+    let isPublisher = identity.isPublisher;
+
+    let sender = isPublisher ? pair.publisher : pair.subscriber;
+    sender.target = aTarget;
+    sender.pageURL = pageURL;
+    sender.messageQueue = [];
+
+    // Check if the other port has queued messages. Deliver them if needed.
+    debug("Checking if the other port used to send messages but queued.");
+    let receiver = isPublisher ? pair.subscriber : pair.publisher;
+    if (receiver.messageQueue) {
+      while (receiver.messageQueue.length) {
+        let message = receiver.messageQueue.shift();
+        debug("Delivering message: " + JSON.stringify(message));
+        sender.target.sendAsyncMessage("InterAppMessagePort:OnMessage",
+                                       { message: message,
+                                         manifestURL: sender.manifestURL,
+                                         pageURL: sender.pageURL,
+                                         messagePortID: messagePortID });
+      }
+    }
+  },
+
+  _unregisterMessagePort: function(aMessage) {
+    let messagePortID = aMessage.messagePortID;
+    let manifestURL = aMessage.manifestURL;
+
+    let identity = this._identifyMessagePort(messagePortID, manifestURL);
+    if (!identity) {
+      debug("Cannot identify the message port. Failed to unregister.");
+      return;
+    }
+
+    debug("Unregistering message port for " + manifestURL);
+    delete this._messagePortPairs[messagePortID];
+  },
+
+  _removeTarget: function(aTarget) {
+    if (!aTarget) {
+      debug("Error! aTarget cannot be null/undefined in any way.");
+      return
+    }
+
+    debug("Unregistering message ports based on this target.");
+    let messagePortIDs = [];
+    for (let messagePortID in this._messagePortPairs) {
+      let pair = this._messagePortPairs[messagePortID];
+      if (pair.publisher.target === aTarget ||
+          pair.subscriber.target === aTarget) {
+        messagePortIDs.push(messagePortID);
+      }
+    }
+    messagePortIDs.forEach(function(aMessagePortID) {
+      delete this._messagePortPairs[aMessagePortID];
+    }, this);
+  },
+
+  _postMessage: function(aMessage) {
+    let messagePortID = aMessage.messagePortID;
+    let manifestURL = aMessage.manifestURL;
+    let message = aMessage.message;
+
+    let identity = this._identifyMessagePort(messagePortID, manifestURL);
+    if (!identity) {
+      debug("Cannot identify the message port. Failed to post.");
+      return;
+    }
+
+    let pair = identity.pair;
+    let isPublisher = identity.isPublisher;
+
+    let receiver = isPublisher ? pair.subscriber : pair.publisher;
+    if (!receiver.target) {
+      debug("The receiver's target is not ready yet. Queuing the message.");
+      let sender = isPublisher ? pair.publisher : pair.subscriber;
+      sender.messageQueue.push(message);
+      return;
+    }
+
+    debug("Delivering message: " + JSON.stringify(message));
+    receiver.target.sendAsyncMessage("InterAppMessagePort:OnMessage",
+                                     { manifestURL: receiver.manifestURL,
+                                       pageURL: receiver.pageURL,
+                                       messagePortID: messagePortID,
+                                       message: message });
   },
 
   _handleSelectcedApps: function(aData) {
@@ -536,7 +732,8 @@ InterAppCommService.prototype = {
 
     if (selectedApps.length == 0) {
       debug("No apps are selected to connect.")
-      this._dispatchMessagePorts(keyword, [], target, outerWindowID, requestID);
+      this._dispatchMessagePorts(keyword, manifestURL, [],
+                                 target, outerWindowID, requestID);
       return;
     }
 
@@ -560,7 +757,7 @@ InterAppCommService.prototype = {
 
     // Finally, dispatch the message ports for the allowed connections,
     // including the old connections and the newly selected connection.
-    this._dispatchMessagePorts(keyword, allowedSubAppManifestURLs,
+    this._dispatchMessagePorts(keyword, manifestURL, allowedSubAppManifestURLs,
                                target, outerWindowID, requestID);
   },
 
@@ -571,7 +768,8 @@ InterAppCommService.prototype = {
 
     // To prevent the hacked child process from sending commands to parent
     // to do illegal connections, we need to check its manifest URL.
-    if (kMessages.indexOf(aMessage.name) != -1) {
+    if (aMessage.name !== "child-process-shutdown" &&
+        kMessages.indexOf(aMessage.name) != -1) {
       if (!target.assertContainApp(message.manifestURL)) {
         debug("Got message from a child process carrying illegal manifest URL.");
         return null;
@@ -587,6 +785,18 @@ InterAppCommService.prototype = {
         break;
       case "InterAppConnection:Cancel":
         this._cancelConnection(message);
+        break;
+      case "InterAppMessagePort:PostMessage":
+        this._postMessage(message);
+        break;
+      case "InterAppMessagePort:Register":
+        this._registerMessagePort(message, target);
+        break;
+      case "InterAppMessagePort:Unregister":
+        this._unregisterMessagePort(message);
+        break;
+      case "child-process-shutdown":
+        this._removeTarget(target);
         break;
     }
   },
