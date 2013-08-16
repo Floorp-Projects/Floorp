@@ -59,20 +59,6 @@ LIRGenerator::visitCallee(MCallee *ins)
 }
 
 bool
-LIRGenerator::visitForceUse(MForceUse *ins)
-{
-    if (ins->input()->type() == MIRType_Value) {
-        LForceUseV *lir = new LForceUseV();
-        if (!useBox(lir, 0, ins->input()))
-            return false;
-        return add(lir);
-    }
-
-    LForceUseT *lir = new LForceUseT(useAnyOrConstant(ins->input()));
-    return add(lir);
-}
-
-bool
 LIRGenerator::visitGoto(MGoto *ins)
 {
     return add(new LGoto(ins->target()));

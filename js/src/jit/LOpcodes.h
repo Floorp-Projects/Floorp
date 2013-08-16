@@ -18,8 +18,6 @@
     _(Value)                        \
     _(Parameter)                    \
     _(Callee)                       \
-    _(ForceUseV)                    \
-    _(ForceUseT)                    \
     _(TableSwitch)                  \
     _(TableSwitchV)                 \
     _(Goto)                         \
