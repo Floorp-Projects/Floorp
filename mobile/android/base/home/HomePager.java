@@ -128,6 +128,18 @@ public class HomePager extends ViewPager {
         setVisibility(VISIBLE);
 
         if (animator != null && Build.VERSION.SDK_INT >= 11) {
+            animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+                @Override
+                public void onPropertyAnimationStart() {
+                    setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                }
+
+                @Override
+                public void onPropertyAnimationEnd() {
+                    setLayerType(View.LAYER_TYPE_NONE, null);
+                }
+            });
+
             ViewHelper.setAlpha(this, 0.0f);
 
             animator.attach(this,
