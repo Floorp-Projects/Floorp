@@ -849,7 +849,7 @@ WebAudioDecodeJob::WebAudioDecodeJob(const nsACString& aContentType,
              (!aSuccessCallback && !aFailureCallback),
              "If a success callback is not passed, no failure callback should be passed either");
 
-  nsContentUtils::HoldJSObjects(this, NS_CYCLE_COLLECTION_PARTICIPANT(WebAudioDecodeJob));
+  mozilla::HoldJSObjects(this);
 }
 
 WebAudioDecodeJob::~WebAudioDecodeJob()
@@ -857,7 +857,7 @@ WebAudioDecodeJob::~WebAudioDecodeJob()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_DTOR(WebAudioDecodeJob);
   mArrayBuffer = nullptr;
-  nsContentUtils::DropJSObjects(this);
+  mozilla::DropJSObjects(this);
 }
 
 void
