@@ -89,25 +89,6 @@ WebGLProgram::UpdateInfo()
     return true;
 }
 
-bool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
-{
-    switch (cap) {
-        case LOCAL_GL_BLEND:
-        case LOCAL_GL_CULL_FACE:
-        case LOCAL_GL_DEPTH_TEST:
-        case LOCAL_GL_DITHER:
-        case LOCAL_GL_POLYGON_OFFSET_FILL:
-        case LOCAL_GL_SAMPLE_ALPHA_TO_COVERAGE:
-        case LOCAL_GL_SAMPLE_COVERAGE:
-        case LOCAL_GL_SCISSOR_TEST:
-        case LOCAL_GL_STENCIL_TEST:
-            return true;
-        default:
-            ErrorInvalidEnumInfo(info, cap);
-            return false;
-    }
-}
-
 bool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode, const char *info)
 {
     switch (mode) {
