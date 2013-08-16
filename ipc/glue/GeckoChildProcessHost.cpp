@@ -309,6 +309,9 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
       timeoutTicks = timeoutTicks - elapsed;
       waitStart = current;
     }
+    else {
+      break;
+    }
   }
 
   return mProcessState == PROCESS_CONNECTED;
