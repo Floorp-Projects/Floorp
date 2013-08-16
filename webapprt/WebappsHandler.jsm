@@ -10,6 +10,7 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
@@ -17,12 +18,6 @@ Cu.import("resource://gre/modules/WebappsInstaller.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 
 this.WebappsHandler = {
-  init: function() {
-    Services.obs.addObserver(this, "webapps-ask-install", false);
-    Services.obs.addObserver(this, "webapps-launch", false);
-    Services.obs.addObserver(this, "webapps-uninstall", false);
-  },
-
   observe: function(subject, topic, data) {
     data = JSON.parse(data);
     data.mm = subject;
@@ -83,5 +78,12 @@ this.WebappsHandler = {
     } else {
       DOMApplicationRegistry.denyInstall(data);
     }
-  }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference])
 };
+
+Services.obs.addObserver(WebappsHandler, "webapps-ask-install", false);
+Services.obs.addObserver(WebappsHandler, "webapps-launch", false);
+Services.obs.addObserver(WebappsHandler, "webapps-uninstall", false);
