@@ -3,7 +3,18 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.home.HomeListView xmlns:android="http://schemas.android.com/apk/res/android"
-                                     style="@style/Widget.ReadingListView"
-                                     android:layout_width="fill_parent"
-                                     android:layout_height="fill_parent"/>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical">
+
+    <ViewStub android:id="@+id/home_empty_view_stub"
+              android:layout="@layout/home_empty_page"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"/>
+
+    <org.mozilla.gecko.home.HomeListView android:id="@+id/list"
+                                         style="@style/Widget.ReadingListView"
+                                         android:layout_width="fill_parent"
+                                         android:layout_height="wrap_content"/>
+</LinearLayout>
