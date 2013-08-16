@@ -291,13 +291,13 @@ IonFrameIterator::machineState() const
     SafepointReader reader(ionScript(), safepoint());
     uintptr_t *spill = spillBase();
 
-    // see CodeGeneratorShared::saveLive, we are only copying GPRs for now, FPUs
-    // are stored after but are not saved in the safepoint.  This means that we
-    // are unable to restore any FPUs registers from an OOL VM call.  This can
-    // cause some trouble for f.arguments.
     MachineState machine;
-    for (GeneralRegisterBackwardIterator iter(reader.allSpills()); iter.more(); iter++)
+    for (GeneralRegisterBackwardIterator iter(reader.allGprSpills()); iter.more(); iter++)
         machine.setRegisterLocation(*iter, --spill);
+
+    double *floatSpill = reinterpret_cast<double *>(spill);
+    for (FloatRegisterBackwardIterator iter(reader.allFloatSpills()); iter.more(); iter++)
+        machine.setRegisterLocation(*iter, --floatSpill);
 
     return machine;
 }
@@ -779,7 +779,7 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
     uintptr_t *spill = frame.spillBase();
     GeneralRegisterSet gcRegs = safepoint.gcSpills();
     GeneralRegisterSet valueRegs = safepoint.valueSpills();
-    for (GeneralRegisterBackwardIterator iter(safepoint.allSpills()); iter.more(); iter++) {
+    for (GeneralRegisterBackwardIterator iter(safepoint.allGprSpills()); iter.more(); iter++) {
         --spill;
         if (gcRegs.has(*iter))
             gc::MarkGCThingRoot(trc, reinterpret_cast<void **>(spill), "ion-gc-spill");
@@ -812,7 +812,7 @@ MarkIonJSFrame(JSTracer *trc, const IonFrameIterator &frame)
 
         GeneralRegisterSet slotsRegs = safepoint.slotsOrElementsSpills();
         spill = frame.spillBase();
-        for (GeneralRegisterBackwardIterator iter(safepoint.allSpills()); iter.more(); iter++) {
+        for (GeneralRegisterBackwardIterator iter(safepoint.allGprSpills()); iter.more(); iter++) {
             --spill;
             if (slotsRegs.has(*iter))
                 trc->runtime->gcNursery.forwardBufferPointer(reinterpret_cast<HeapSlot **>(spill));
