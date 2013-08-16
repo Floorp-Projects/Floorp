@@ -188,6 +188,7 @@ WEBIDL_FILES = [
     'InspectorUtils.webidl',
     'InterAppConnection.webidl',
     'InterAppConnectionRequest.webidl',
+    'InterAppMessageEvent.webidl',
     'InterAppMessagePort.webidl',
     'KeyboardEvent.webidl',
     'KeyEvent.webidl',
