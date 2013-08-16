@@ -81,7 +81,6 @@ SocialUI = {
           this._updateMenuItems();
 
           SocialFlyout.unload();
-          SocialChatBar.closeWindows();
           SocialChatBar.update();
           SocialShare.update();
           SocialSidebar.update();
@@ -339,21 +338,13 @@ SocialUI = {
 }
 
 SocialChatBar = {
-  closeWindows: function() {
-    // close all windows of type Social:Chat
-    let windows = Services.wm.getEnumerator("Social:Chat");
-    while (windows.hasMoreElements()) {
-      let win = windows.getNext();
-      win.close();
-    }
-  },
   get chatbar() {
     return document.getElementById("pinnedchats");
   },
   // Whether the chatbar is available for this window.  Note that in full-screen
   // mode chats are available, but not shown.
   get isAvailable() {
-    return SocialUI.enabled && Social.haveLoggedInUser();
+    return SocialUI.enabled;
   },
   // Does this chatbar have any chats (whether minimized, collapsed or normal)
   get hasChats() {
@@ -373,7 +364,6 @@ SocialChatBar = {
   update: function() {
     let command = document.getElementById("Social:FocusChat");
     if (!this.isAvailable) {
-      this.chatbar.removeAll();
       this.chatbar.hidden = command.hidden = true;
     } else {
       this.chatbar.hidden = command.hidden = false;
