@@ -818,6 +818,20 @@ CodeGenerator::visitOsiPoint(LOsiPoint *lir)
     LSafepoint *safepoint = lir->associatedSafepoint();
     JS_ASSERT(!safepoint->osiCallPointOffset());
     safepoint->setOsiCallPointOffset(osiCallPointOffset);
+
+#ifdef DEBUG
+    // There should be no movegroups or other instructions between
+    // an instruction and its OsiPoint. This is necessary because
+    // we use the OsiPoint's snapshot from within VM calls.
+    for (LInstructionReverseIterator iter(current->rbegin(lir)); iter != current->rend(); iter++) {
+        if (*iter == lir || iter->isNop())
+            continue;
+        JS_ASSERT(!iter->isMoveGroup());
+        JS_ASSERT(iter->safepoint() == safepoint);
+        break;
+    }
+#endif
+
     return true;
 }
 
