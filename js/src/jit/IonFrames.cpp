@@ -1021,6 +1021,16 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 static void
 MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 {
+#ifdef CHECK_OSIPOINT_REGISTERS
+    if (js_IonOptions.checkOsiPointRegisters) {
+        // GC can modify spilled registers, breaking our register checks.
+        // To handle this, we disable these checks for the current VM call
+        // when a GC happens.
+        JitActivation *activation = activations.activation()->asJit();
+        activation->setCheckRegs(false);
+    }
+#endif
+
     for (IonFrameIterator frames(activations); !frames.done(); ++frames) {
         switch (frames.type()) {
           case IonFrame_Exit:
