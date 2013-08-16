@@ -174,9 +174,6 @@ class Range : public TempObject {
           symbolicLower_(NULL),
           symbolicUpper_(NULL)
     {
-        JS_ASSERT(e >= (h == INT64_MIN ? MaxDoubleExponent : mozilla::FloorLog2(mozilla::Abs(h))));
-        JS_ASSERT(e >= (l == INT64_MIN ? MaxDoubleExponent : mozilla::FloorLog2(mozilla::Abs(l))));
-
         setLowerInit(l);
         setUpperInit(h);
         rectifyExponent();
