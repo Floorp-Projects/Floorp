@@ -893,6 +893,16 @@ DisableSPSProfiling(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
+EnableOsiPointRegisterChecks(JSContext *, unsigned, jsval *vp)
+{
+#ifdef CHECK_OSIPOINT_REGISTERS
+    ion::js_IonOptions.checkOsiPointRegisters = true;
+#endif
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return true;
+}
+
+static bool
 DisplayName(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1135,6 +1145,11 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("disableSPSProfiling", DisableSPSProfiling, 1, 0,
 "disableSPSProfiling()",
 "  Disables SPS instrumentation"),
+
+    JS_FN_HELP("enableOsiPointRegisterChecks", EnableOsiPointRegisterChecks, 0, 0,
+"enableOsiPointRegisterChecks()",
+"Emit extra code to verify live regs at the start of a VM call are not\n"
+"modified before its OsiPoint."),
 
     JS_FN_HELP("displayName", DisplayName, 1, 0,
 "displayName(fn)",

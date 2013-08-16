@@ -139,7 +139,8 @@ class ClientContainerLayer : public ContainerLayer,
 
 public:
   ClientContainerLayer(ClientLayerManager* aManager) :
-    ContainerLayer(aManager, static_cast<ClientLayer*>(this))
+    ContainerLayer(aManager,
+                   static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
   {
     MOZ_COUNT_CTOR(ClientContainerLayer);
     mSupportsComponentAlphaChildren = true;
@@ -250,7 +251,8 @@ class ClientRefLayer : public RefLayer,
                        public ClientLayer {
 public:
   ClientRefLayer(ClientLayerManager* aManager) :
-    RefLayer(aManager, static_cast<ClientLayer*>(this))
+    RefLayer(aManager,
+             static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
   {
     MOZ_COUNT_CTOR(ClientRefLayer);
   }
