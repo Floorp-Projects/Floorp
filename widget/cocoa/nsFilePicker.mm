@@ -92,8 +92,7 @@ static void SetShowHiddenFileState(NSSavePanel* panel)
 }
 
 nsFilePicker::nsFilePicker()
-: mMode(0)
-, mSelectedTypeIndex(0)
+: mSelectedTypeIndex(0)
 {
 }
 
@@ -102,11 +101,9 @@ nsFilePicker::~nsFilePicker()
 }
 
 void
-nsFilePicker::InitNative(nsIWidget *aParent, const nsAString& aTitle,
-                         int16_t aMode)
+nsFilePicker::InitNative(nsIWidget *aParent, const nsAString& aTitle)
 {
   mTitle = aTitle;
-  mMode = aMode;
 }
 
 NSView* nsFilePicker::GetAccessoryView()
@@ -321,7 +318,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
   }
 
   if (theDir) {
-    [thePanel setDirectoryURL:[[NSURL alloc] initFileURLWithPath:theDir isDirectory:YES]];
+    [thePanel setDirectoryURL:[NSURL fileURLWithPath:theDir isDirectory:YES]];
   }
 
   int result;
@@ -414,7 +411,7 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsIFile** outFile)
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
   if (theDir) {
-    [thePanel setDirectoryURL:[[NSURL alloc] initFileURLWithPath:theDir isDirectory:YES]];
+    [thePanel setDirectoryURL:[NSURL fileURLWithPath:theDir isDirectory:YES]];
   }
   nsCocoaUtils::PrepareForNativeAppModalDialog();
   int result = [thePanel runModal];
@@ -465,7 +462,7 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
   if (theDir) {
-    [thePanel setDirectoryURL:[[NSURL alloc] initFileURLWithPath:theDir isDirectory:YES]];
+    [thePanel setDirectoryURL:[NSURL fileURLWithPath:theDir isDirectory:YES]];
   }
 
   // load the panel

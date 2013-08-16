@@ -20,10 +20,12 @@ class FilteringWrapper : public Base {
     virtual ~FilteringWrapper();
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                       JS::Handle<jsid> id, js::PropertyDescriptor *desc,
+                                       JS::Handle<jsid> id,
+                                       JS::MutableHandle<JSPropertyDescriptor> desc,
                                        unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                          JS::Handle<jsid> id, js::PropertyDescriptor *desc,
+                                          JS::Handle<jsid> id,
+                                          JS::MutableHandle<JSPropertyDescriptor> desc,
                                           unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                      js::AutoIdVector &props) MOZ_OVERRIDE;

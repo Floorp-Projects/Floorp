@@ -58,6 +58,7 @@ function goUpdateConsoleCommands() {
     <key key="&findCmd.key;" command="cmd_find" modifiers="accel"/>
     <key key="&clearOutputCmd.key;" command="consoleCmd_clearOutput" modifiers="accel"/>
     <key key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
+    <key id="key_clearOutput" key="&clearOutputCtrl.key;" command="consoleCmd_clearOutput" modifiers="accel"/>
   </keyset>
   <keyset id="editMenuKeys"/>
 
@@ -138,7 +139,7 @@ function goUpdateConsoleCommands() {
         <toolbarbutton label="&btnPageLogging.label;" type="menu-button"
                        category="logging" class="devtools-toolbarbutton webconsole-filter-button"
                        tooltiptext="&btnPageLogging.tooltip;"
-                       accesskey="&btnPageLogging.accesskey;"
+                       accesskey="&btnPageLogging.accesskey2;"
                        tabindex="7">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox"
@@ -154,7 +155,6 @@ function goUpdateConsoleCommands() {
 
         <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
                        label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"
-                       accesskey="&btnClear.accesskey;"
                        tabindex="8"/>
 
         <spacer flex="1"/>

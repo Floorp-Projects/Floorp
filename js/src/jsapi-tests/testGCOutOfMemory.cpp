@@ -31,7 +31,7 @@ BEGIN_TEST(testGCOutOfMemory)
         "        array.push({});"
         "    array = []; array.push(0);"
         "})();";
-    JSBool ok = JS_EvaluateScript(cx, global, source, strlen(source), "", 1,
+    bool ok = JS_EvaluateScript(cx, global, source, strlen(source), "", 1,
                                   root.address());
 
     /* Check that we get OOM. */
@@ -55,7 +55,11 @@ BEGIN_TEST(testGCOutOfMemory)
 }
 
 virtual JSRuntime * createRuntime() {
-    return JS_NewRuntime(768 * 1024, JS_USE_HELPER_THREADS);
+    JSRuntime *rt = JS_NewRuntime(768 * 1024, JS_USE_HELPER_THREADS);
+    if (!rt)
+        return NULL;
+    setNativeStackQuota(rt);
+    return rt;
 }
 
 virtual void destroyRuntime() {

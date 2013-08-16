@@ -304,11 +304,11 @@ private:
 private:
 
     // cached services
-    nsCOMPtr<nsIIOService>              mIOService;
-    nsCOMPtr<nsIStreamConverterService> mStreamConvSvc;
-    nsCOMPtr<nsIObserverService>        mObserverService;
-    nsCOMPtr<nsICookieService>          mCookieService;
-    nsCOMPtr<nsISiteSecurityService>    mSSService;
+    nsMainThreadPtrHandle<nsIIOService>              mIOService;
+    nsMainThreadPtrHandle<nsIStreamConverterService> mStreamConvSvc;
+    nsMainThreadPtrHandle<nsIObserverService>        mObserverService;
+    nsMainThreadPtrHandle<nsICookieService>          mCookieService;
+    nsMainThreadPtrHandle<nsISiteSecurityService>    mSSService;
 
     // the authentication credentials cache
     nsHttpAuthCache mAuthCache;

@@ -852,7 +852,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_QUOTIENT = new nsHtml5ElementName(nsHtml5Atoms::quotient, nsHtml5Atoms::quotient, NS_HTML5TREE_BUILDER_OTHER);
   ELT_SELECTOR = new nsHtml5ElementName(nsHtml5Atoms::selector, nsHtml5Atoms::selector, NS_HTML5TREE_BUILDER_OTHER);
   ELT_TEXTAREA = new nsHtml5ElementName(nsHtml5Atoms::textarea, nsHtml5Atoms::textarea, NS_HTML5TREE_BUILDER_TEXTAREA | NS_HTML5ELEMENT_NAME_SPECIAL);
-  ELT_TEMPLATE = new nsHtml5ElementName(nsHtml5Atoms::template_, nsHtml5Atoms::template_, NS_HTML5TREE_BUILDER_TEMPLATE | NS_HTML5ELEMENT_NAME_SPECIAL);
+  ELT_TEMPLATE = new nsHtml5ElementName(nsHtml5Atoms::template_, nsHtml5Atoms::template_, NS_HTML5TREE_BUILDER_TEMPLATE | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_SCOPING);
   ELT_TEXTPATH = new nsHtml5ElementName(nsHtml5Atoms::textpath, nsHtml5Atoms::textPath, NS_HTML5TREE_BUILDER_OTHER);
   ELT_VARIANCE = new nsHtml5ElementName(nsHtml5Atoms::variance, nsHtml5Atoms::variance, NS_HTML5TREE_BUILDER_OTHER);
   ELT_ANIMATION = new nsHtml5ElementName(nsHtml5Atoms::animation, nsHtml5Atoms::animation, NS_HTML5TREE_BUILDER_OTHER);

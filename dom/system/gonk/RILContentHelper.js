@@ -75,6 +75,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:SelectNetwork",
   "RIL:SelectNetworkAuto",
   "RIL:CallStateChanged",
+  "RIL:EmergencyCbModeChanged",
   "RIL:VoicemailNotification",
   "RIL:VoicemailInfoChanged",
   "RIL:CallError",
@@ -82,10 +83,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:CardLockResult",
   "RIL:CardLockRetryCount",
   "RIL:USSDReceived",
-  "RIL:SendMMI:Return:OK",
-  "RIL:SendMMI:Return:KO",
-  "RIL:CancelMMI:Return:OK",
-  "RIL:CancelMMI:Return:KO",
+  "RIL:SendMMI",
+  "RIL:CancelMMI",
   "RIL:StkCommand",
   "RIL:StkSessionEnd",
   "RIL:DataError",
@@ -105,7 +104,11 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:ReadIccContacts",
   "RIL:UpdateIccContact",
   "RIL:SetRoamingPreference",
-  "RIL:GetRoamingPreference"
+  "RIL:GetRoamingPreference",
+  "RIL:CdmaCallWaiting",
+  "RIL:ExitEmergencyCbMode",
+  "RIL:SetVoicePrivacyMode",
+  "RIL:GetVoicePrivacyMode"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -669,6 +672,43 @@ RILContentHelper.prototype = {
     return request;
   },
 
+  setVoicePrivacyMode: function setVoicePrivacyMode(window, enabled) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:SetVoicePrivacyMode", {
+      clientId: 0,
+      data: {
+        requestId: requestId,
+        enabled: enabled
+      }
+    });
+    return request;
+  },
+
+  getVoicePrivacyMode: function getVoicePrivacyMode(window) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:GetVoicePrivacyMode", {
+      clientId: 0,
+      data: {
+        requestId: requestId
+      }
+    });
+    return request;
+  },
+
   getCardLockState: function getCardLockState(window, lockType) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
@@ -921,20 +961,24 @@ RILContentHelper.prototype = {
     // Parsing nsDOMContact to Icc Contact format
     let iccContact = {};
 
-    if (contact.name) {
+    if (Array.isArray(contact.name) && contact.name[0]) {
       iccContact.alphaId = contact.name[0];
     }
 
-    if (contact.tel) {
-      iccContact.number = contact.tel[0].value;
+    if (Array.isArray(contact.tel)) {
+      iccContact.number = contact.tel[0] && contact.tel[0].value;
+      let telArray = contact.tel.slice(1);
+      let length = telArray.length;
+      if (length > 0) {
+        iccContact.anr = [];
+      }
+      for (let i = 0; i < telArray.length; i++) {
+        iccContact.anr.push(telArray[i].value);
+      }
     }
 
-    if (contact.email) {
+    if (Array.isArray(contact.email) && contact.email[0]) {
       iccContact.email = contact.email[0].value;
-    }
-
-    if (contact.tel.length > 1) {
-      iccContact.anr = contact.tel.slice(1);
     }
 
     cpmm.sendAsyncMessage("RIL:UpdateIccContact", {
@@ -1127,6 +1171,24 @@ RILContentHelper.prototype = {
       data: {
         requestId: requestId,
         clirMode: clirMode
+      }
+    });
+
+    return request;
+  },
+
+  exitEmergencyCbMode: function exitEmergencyCbMode(window) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    cpmm.sendAsyncMessage("RIL:ExitEmergencyCbMode", {
+      clientId: 0,
+      data: {
+        requestId: requestId,
       }
     });
 
@@ -1516,10 +1578,8 @@ RILContentHelper.prototype = {
                            [data.message, data.sessionEnded]);
         break;
       }
-      case "RIL:SendMMI:Return:OK":
-      case "RIL:CancelMMI:Return:OK":
-      case "RIL:SendMMI:Return:KO":
-      case "RIL:CancelMMI:Return:KO":
+      case "RIL:SendMMI":
+      case "RIL:CancelMMI":
         this.handleSendCancelMMI(msg.json);
         break;
       case "RIL:StkCommand":
@@ -1599,6 +1659,27 @@ RILContentHelper.prototype = {
       case "RIL:GetRoamingPreference":
         this.handleSimpleRequest(msg.json.requestId, msg.json.errorMsg,
                                  msg.json.mode);
+        break;
+      case "RIL:CdmaCallWaiting":
+        this._deliverEvent("_telephonyListeners",
+                           "notifyCdmaCallWaiting",
+                           [msg.json.data]);
+        break;
+      case "RIL:ExitEmergencyCbMode":
+        this.handleExitEmergencyCbMode(msg.json);
+        break;
+      case "RIL:EmergencyCbModeChanged":
+        let data = msg.json.data;
+        this._deliverEvent("_mobileConnectionListeners",
+                           "notifyEmergencyCbModeChanged",
+                           [data.active, data.timeoutMs]);
+        break;
+      case "RIL:SetVoicePrivacyMode":
+        this.handleSimpleRequest(msg.json.requestId, msg.json.errorMsg, null);
+        break;
+      case "RIL:GetVoicePrivacyMode":
+        this.handleSimpleRequest(msg.json.requestId, msg.json.errorMsg,
+                                 msg.json.enabled);
         break;
     }
   },
@@ -1741,7 +1822,7 @@ RILContentHelper.prototype = {
 
     if (changed) {
       this._deliverEvent("_voicemailListeners",
-                         "voicemailNotification",
+                         "notifyStatusChanged",
                          [this.voicemailStatus]);
     }
   },
@@ -1783,6 +1864,20 @@ RILContentHelper.prototype = {
 
     let status = new DOMCLIRStatus(message);
     this.fireRequestSuccess(message.requestId, status);
+  },
+
+  handleExitEmergencyCbMode: function handleExitEmergencyCbMode(message) {
+    let requestId = message.requestId;
+    let request = this.takeRequest(requestId);
+    if (!request) {
+      return;
+    }
+
+    if (!message.success) {
+      Services.DOMRequest.fireError(request, message.errorMsg);
+      return;
+    }
+    Services.DOMRequest.fireSuccess(request, null);
   },
 
   handleSendCancelMMI: function handleSendCancelMMI(message) {

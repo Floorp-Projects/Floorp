@@ -59,7 +59,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMJSClass.h"
-#include "jsfriendapi.h"
 #include "jsprf.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
@@ -795,7 +794,7 @@ CycleCollectedJSRuntime::GCCallback(JSRuntime* aRuntime,
   self->OnGC(aStatus);
 }
 
-/* static */ JSBool
+/* static */ bool
 CycleCollectedJSRuntime::ContextCallback(JSContext* aContext,
                                          unsigned aOperation,
                                          void* aData)
@@ -931,38 +930,6 @@ nsCycleCollectionParticipant*
 CycleCollectedJSRuntime::ZoneParticipant()
 {
     return &mJSZoneCycleCollectorGlobal;
-}
-
-bool
-CycleCollectedJSRuntime::NotifyLeaveMainThread() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (JS_IsInRequest(mJSRuntime)) {
-    return false;
-  }
-  JS_ClearRuntimeThread(mJSRuntime);
-  return true;
-}
-
-void
-CycleCollectedJSRuntime::NotifyEnterCycleCollectionThread() const
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  JS_SetRuntimeThread(mJSRuntime);
-}
-
-void
-CycleCollectedJSRuntime::NotifyLeaveCycleCollectionThread() const
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  JS_ClearRuntimeThread(mJSRuntime);
-}
-
-void
-CycleCollectedJSRuntime::NotifyEnterMainThread() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  JS_SetRuntimeThread(mJSRuntime);
 }
 
 nsresult

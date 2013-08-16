@@ -250,22 +250,6 @@ BluetoothServiceChildProcess::SetPairingConfirmationInternal(
   return true;
 }
 
-bool
-BluetoothServiceChildProcess::SetAuthorizationInternal(
-                                                const nsAString& aDeviceAddress,
-                                                bool aAllow,
-                                                BluetoothReplyRunnable* aRunnable)
-{
-  if(aAllow) {
-    SendRequest(aRunnable,
-                ConfirmAuthorizationRequest(nsString(aDeviceAddress)));
-  } else {
-    SendRequest(aRunnable,
-                DenyAuthorizationRequest(nsString(aDeviceAddress)));
-  }
-  return true;
-}
-
 void
 BluetoothServiceChildProcess::Connect(
   const nsAString& aDeviceAddress,
@@ -411,6 +395,14 @@ BluetoothServiceChildProcess::IsConnected(uint16_t aProfileId)
 nsresult
 BluetoothServiceChildProcess::SendSinkMessage(const nsAString& aDeviceAddresses,
                                               const nsAString& aMessage)
+{
+  MOZ_CRASH("This should never be called!");
+}
+
+nsresult
+BluetoothServiceChildProcess::SendInputMessage(const nsAString& aDeviceAddresses,
+                                               const nsAString& aMessage,
+                                               BluetoothReplyRunnable* aRunnable)
 {
   MOZ_CRASH("This should never be called!");
 }

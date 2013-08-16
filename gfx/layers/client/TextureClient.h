@@ -32,7 +32,7 @@ class CompositableClient;
 /**
  * TextureClient is the abstraction that allows us to share data between the
  * content and the compositor side.
- * TextureClient can also provide with some more more "producer" facing APIs
+ * TextureClient can also provide with some more "producer" facing APIs
  * such as TextureClientSurface and TextureClientYCbCr, that can be queried
  * using AsTextureCLientSurface(), etc.
  */
@@ -72,12 +72,12 @@ public:
  * - Use it to serialize image data that is not IPC-friendly (most likely
  * involving a copy into shared memory)
  * - preallocate it and paint directly into it, which avoids copy but requires
- * the painting code to be aware of TextureClient (or at least the underlying 
- * shared memory)
+ * the painting code to be aware of TextureClient (or at least the underlying
+ * shared memory).
  *
  * There is always one and only one TextureClient per TextureHost, and the
  * TextureClient/Host pair only owns one buffer of image data through its
- * lifetime. This means that to the lifetime of the underlying shared data
+ * lifetime. This means that the lifetime of the underlying shared data
  * matches the lifetime of the TextureClient/Host pair. It also means
  * TextureClient/Host do not implement double buffering, which is the
  * responsibility of the compositable (which would use two Texture pairs).
@@ -113,16 +113,6 @@ public:
     return mID;
   }
 
-  void SetNextSibling(TextureClient* aNext)
-  {
-    mNextSibling = aNext;
-  }
-
-  TextureClient* GetNextSibling()
-  {
-    return mNextSibling;
-  }
-
   virtual bool IsAllocated() const = 0;
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
@@ -132,7 +122,7 @@ public:
   TextureFlags GetFlags() const { return mFlags; }
 
   /**
-   * After being shared ith the compositor side, an immutable texture is never
+   * After being shared with the compositor side, an immutable texture is never
    * modified, it can only be read. It is safe to not Lock/Unlock immutable
    * textures.
    */
@@ -158,7 +148,6 @@ protected:
   }
 
   uint64_t mID;
-  RefPtr<TextureClient> mNextSibling;
   TextureFlags mFlags;
 };
 
@@ -345,7 +334,15 @@ public:
    */
   virtual gfxImageSurface* LockImageSurface() { return nullptr; }
   virtual gfxASurface* LockSurface() { return nullptr; }
+  // If you implement LockDrawTarget, you MUST implement BackendType()
   virtual gfx::DrawTarget* LockDrawTarget() { return nullptr; }
+
+  // The type of draw target returned by LockDrawTarget.
+  virtual gfx::BackendType BackendType()
+  {
+    return gfx::BACKEND_NONE;
+  }
+
 
   virtual SurfaceDescriptor* LockSurfaceDescriptor() { return GetDescriptor(); }
   virtual void ReleaseResources() {}
@@ -432,6 +429,10 @@ public:
   virtual gfxImageSurface* LockImageSurface() MOZ_OVERRIDE;
   virtual gfxASurface* LockSurface() MOZ_OVERRIDE { return GetSurface(); }
   virtual gfx::DrawTarget* LockDrawTarget();
+  virtual gfx::BackendType BackendType() MOZ_OVERRIDE
+  {
+    return gfx::BACKEND_CAIRO;
+  }
   virtual void Unlock() MOZ_OVERRIDE;
   virtual bool EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
 

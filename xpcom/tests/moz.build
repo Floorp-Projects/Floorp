@@ -14,41 +14,52 @@ DIRS += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['windows']
 
+if CONFIG['DEHYDRA_PATH']:
+    DIRS += ['static-checker']
+
 EXPORTS.testing += [
     'TestHarness.h',
 ]
 
+sources = [
+    'TestArguments',
+    'TestBlockingProcess',
+    'TestCallTemplates',
+    'TestINIParser',
+    'TestPRIntN',
+    'TestQuickReturn',
+    'TestRacingServiceManager',
+    'TestRegistrationOrder',
+    'TestThreadPoolListener',
+    'TestTimers',
+    'TestUnicodeArguments',
+    'nsIFileEnumerator',
+]
+
 if CONFIG['OS_TARGET'] == 'WINNT':
-    CPP_SOURCES += [
-        'TestBase64.cpp',
+    sources += [
+        'TestBase64',
     ]
 
 if CONFIG['WRAP_STL_INCLUDES']:
-    CPP_SOURCES += [
-        'TestSTLWrappers.cpp',
+    sources += [
+        'TestSTLWrappers',
     ]
 
-if CONFIG['DEHYDRA_PATH']:
-    DIRS += ['static-checker']
+sources.sort()
+
+CPP_SOURCES += [
+    '%s.cpp' % s for s in sources
+]
+
+bin_suffix = CONFIG['BIN_SUFFIX']
+SIMPLE_PROGRAMS += [
+    '%s%s' % (s, bin_suffix) for s in sources
+]
 
 MODULE = 'xpcom'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
-
-CPP_SOURCES += [
-    'TestArguments.cpp',
-    'TestBlockingProcess.cpp',
-    'TestCallTemplates.cpp',
-    'TestINIParser.cpp',
-    'TestPRIntN.cpp',
-    'TestQuickReturn.cpp',
-    'TestRacingServiceManager.cpp',
-    'TestRegistrationOrder.cpp',
-    'TestThreadPoolListener.cpp',
-    'TestTimers.cpp',
-    'TestUnicodeArguments.cpp',
-    'nsIFileEnumerator.cpp',
-]
 
 CPP_UNIT_TESTS += [
     'ShowAlignments.cpp',

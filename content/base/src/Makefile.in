@@ -23,7 +23,6 @@ endif
 
 GQI_SRCS = contentbase.gqi
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
@@ -50,9 +49,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/netwerk/base/src \
   -I$(topsrcdir)/js/xpconnect/wrappers \
   $(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT
-DEFINES += -DHB_DONT_DEFINE_STDINT
 
 # gcc requires -msse2 for this file since it uses SSE2 intrinsics.  (See bug
 # 585538 comment 12.)

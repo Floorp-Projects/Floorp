@@ -540,6 +540,9 @@ def main(args=sys.argv[1:]):
     auto.setRemoteLog(options.remoteLogFile)
     auto.setServerInfo(options.webServer, options.httpPort, options.sslPort)
 
+    # Hack in a symbolic link for jsreftest
+    os.system("ln -s %s %s" % (os.path.join('..', 'jsreftest'), os.path.join(SCRIPT_DIRECTORY, 'jsreftest')))
+
     # Dynamically build the reftest URL if possible, beware that args[0] should exist 'inside' the webroot
     manifest = args[0]
     if os.path.exists(os.path.join(SCRIPT_DIRECTORY, args[0])):

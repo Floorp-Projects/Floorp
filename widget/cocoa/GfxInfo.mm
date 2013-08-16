@@ -26,8 +26,6 @@
 
 #define MAC_OS_X_VERSION_MASK       0x0000FFFF
 #define MAC_OS_X_VERSION_MAJOR_MASK 0x0000FFF0
-#define MAC_OS_X_VERSION_10_4_HEX   0x00001040 // Not supported
-#define MAC_OS_X_VERSION_10_5_HEX   0x00001050
 #define MAC_OS_X_VERSION_10_6_HEX   0x00001060
 #define MAC_OS_X_VERSION_10_7_HEX   0x00001070
 #define MAC_OS_X_VERSION_10_8_HEX   0x00001080
@@ -47,8 +45,6 @@ static OperatingSystem
 OSXVersionToOperatingSystem(uint32_t aOSXVersion)
 {
   switch (aOSXVersion & MAC_OS_X_VERSION_MAJOR_MASK) {
-    case MAC_OS_X_VERSION_10_5_HEX:
-      return DRIVER_OS_OS_X_10_5;
     case MAC_OS_X_VERSION_10_6_HEX:
       return DRIVER_OS_OS_X_10_6;
     case MAC_OS_X_VERSION_10_7_HEX:

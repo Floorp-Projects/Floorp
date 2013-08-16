@@ -4,7 +4,12 @@
 
 from __future__ import unicode_literals
 
+import logging
 import os
+
+from mach.mixin.logging import LoggingMixin
+
+import mozpack.path as mozpath
 
 from .data import (
     ConfigFileSubstitution,
@@ -14,13 +19,17 @@ from .data import (
     Program,
     ReaderSummary,
     VariablePassthru,
+    XPIDLFile,
     XpcshellManifests,
 )
 
-from .reader import MozbuildSandbox
+from .reader import (
+    MozbuildSandbox,
+    SandboxValidationError,
+)
 
 
-class TreeMetadataEmitter(object):
+class TreeMetadataEmitter(LoggingMixin):
     """Converts the executed mozbuild files into data structures.
 
     This is a bridge between reader.py and data.py. It takes what was read by
@@ -29,6 +38,8 @@ class TreeMetadataEmitter(object):
     """
 
     def __init__(self, config):
+        self.populate_logger()
+
         self.config = config
 
     def emit(self, output):
@@ -74,6 +85,27 @@ class TreeMetadataEmitter(object):
             sub.relpath = path
             yield sub
 
+        # XPIDL source files get processed and turned into .h and .xpt files.
+        # If there are multiple XPIDL files in a directory, they get linked
+        # together into a final .xpt, which has the name defined by either
+        # MODULE or XPIDL_MODULE (if the latter is defined).
+        xpidl_module = sandbox['MODULE']
+        if sandbox['XPIDL_MODULE']:
+            xpidl_module = sandbox['XPIDL_MODULE']
+
+        if sandbox['XPIDL_SOURCES'] and not xpidl_module:
+            raise SandboxValidationError('MODULE or XPIDL_MODULE must be '
+                'defined if XPIDL_SOURCES is defined.')
+
+        if sandbox['XPIDL_SOURCES'] and sandbox['NO_DIST_INSTALL']:
+            self.log(logging.WARN, 'mozbuild_warning', dict(
+                path=sandbox.main_path),
+                '{path}: NO_DIST_INSTALL has no effect on XPIDL_SOURCES.')
+
+        for idl in sandbox['XPIDL_SOURCES']:
+            yield XPIDLFile(sandbox, mozpath.join(sandbox['SRCDIR'], idl),
+                xpidl_module)
+
         # Proxy some variables as-is until we have richer classes to represent
         # them. We should aim to keep this set small because it violates the
         # desired abstraction of the build definition away from makefiles.
@@ -104,10 +136,7 @@ class TreeMetadataEmitter(object):
             SHARED_LIBRARY_LIBS='SHARED_LIBRARY_LIBS',
             SIMPLE_PROGRAMS='SIMPLE_PROGRAMS',
             SSRCS='SSRCS',
-            XPIDL_FLAGS='XPIDL_FLAGS',
-            XPIDL_MODULE='XPIDL_MODULE',
-            XPIDLSRCS='XPIDL_SOURCES',
-            )
+        )
         for mak, moz in varmap.items():
             if sandbox[moz]:
                 passthru.variables[mak] = sandbox[moz]

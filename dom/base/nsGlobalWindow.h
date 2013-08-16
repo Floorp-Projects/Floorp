@@ -7,7 +7,9 @@
 #ifndef nsGlobalWindow_h___
 #define nsGlobalWindow_h___
 
-#include "mozilla/XPCOM.h" // for TimeStamp/TimeDuration
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
+#include "nsRefPtrHashtable.h"
 
 // Local Includes
 // Helper Classes
@@ -19,56 +21,34 @@
 #include "nsCycleCollectionParticipant.h"
 
 // Interfaces Needed
-#include "nsDOMWindowList.h"
-#include "nsIBaseWindow.h"
 #include "nsIBrowserDOMWindow.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsIDOMJSWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptContext.h"
-#include "nsIScriptObjectPrincipal.h"
-#include "nsIScriptTimeoutHandler.h"
 #include "nsITimer.h"
-#include "nsIWebBrowserChrome.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMModalContentWindow.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsEventListenerManager.h"
-#include "nsIDOMDocument.h"
 #include "nsIPrincipal.h"
-#include "nsIXPCScriptable.h"
-#include "nsPoint.h"
 #include "nsSize.h"
 #include "nsRect.h"
 #include "mozFlushType.h"
 #include "prclist.h"
 #include "nsIDOMStorageEvent.h"
 #include "nsIDOMStorageIndexedDB.h"
-#include "nsIDOMOfflineResourceList.h"
-#include "nsIArray.h"
 #include "nsFrameMessageManager.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIInlineEventHandlers.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsIIdleObserver.h"
-#include "nsIDOMWakeLock.h"
-#ifdef MOZ_GAMEPAD
-#include "mozilla/dom/Gamepad.h"
-#endif
 #include "nsIDocument.h"
 #include "nsIDOMTouchEvent.h"
 
 #include "mozilla/dom/EventTarget.h"
 #include "Units.h"
-
-// JS includes
-#include "jsapi.h"
 
 #ifdef MOZ_B2G
 #include "nsIDOMWindowB2G.h"
@@ -95,25 +75,26 @@
 // Min idle notification time in seconds.
 #define MIN_IDLE_NOTIFICATION_TIME_S 1
 
+class nsIArray;
+class nsIBaseWindow;
 class nsIContent;
-class nsIDocument;
-class nsPresContext;
+class nsIDocShellTreeOwner;
 class nsIDOMCrypto;
-class nsIDOMEvent;
+class nsIDOMOfflineResourceList;
+class nsIDOMMozWakeLock;
 class nsIScrollableFrame;
 class nsIControllers;
+class nsIScriptContext;
+class nsIScriptTimeoutHandler;
+class nsIWebBrowserChrome;
 
+class nsDOMWindowList;
 class nsLocation;
 class nsScreen;
 class nsHistory;
-class nsIDocShellLoadInfo;
-class WindowStateHolder;
 class nsGlobalWindowObserver;
 class nsGlobalWindow;
-class PostMessageEvent;
-class nsRunnable;
 class nsDOMEventTargetHelper;
-class nsDOMOfflineResourceList;
 class nsDOMWindowUtils;
 class nsIIdleService;
 
@@ -122,8 +103,8 @@ class nsWindowSizes;
 namespace mozilla {
 namespace dom {
 class BarProp;
+class Gamepad;
 class Navigator;
-class URL;
 class SpeechSynthesis;
 namespace indexedDB {
 class IDBFactory;
@@ -446,8 +427,8 @@ public:
   // Outer windows only.
   virtual NS_HIDDEN_(void) EnsureSizeUpToDate();
 
-  virtual NS_HIDDEN_(nsIDOMWindow*) EnterModalState();
-  virtual NS_HIDDEN_(void) LeaveModalState(nsIDOMWindow* aWindow);
+  virtual NS_HIDDEN_(void) EnterModalState();
+  virtual NS_HIDDEN_(void) LeaveModalState();
 
   virtual NS_HIDDEN_(bool) CanClose();
   virtual NS_HIDDEN_(nsresult) ForceClose();
@@ -469,6 +450,8 @@ public:
   // WebIDL interface.
   uint32_t GetLength();
   already_AddRefed<nsIDOMWindow> IndexedGetter(uint32_t aIndex, bool& aFound);
+
+  void GetSupportedNames(nsTArray<nsString>& aNames);
 
   // Object Management
   nsGlobalWindow(nsGlobalWindow *aOuterWindow);
@@ -666,8 +649,6 @@ public:
     return innerWindow && innerWindow->IsInnerWindow() ? innerWindow : nullptr;
   }
 
-  static bool HasIndexedDBSupport();
-
   static WindowByIdTable* GetWindowsTable() {
     return sWindowsById;
   }
@@ -689,6 +670,13 @@ public:
   {
     mAllowScriptsToClose = true;
   }
+
+  enum SlowScriptResponse {
+    ContinueSlowScript = 0,
+    AlwaysContinueSlowScript,
+    KillSlowScript
+  };
+  SlowScriptResponse ShowSlowScriptDialog();
 
 #ifdef MOZ_GAMEPAD
   void AddGamepad(uint32_t aIndex, mozilla::dom::Gamepad* aGamepad);

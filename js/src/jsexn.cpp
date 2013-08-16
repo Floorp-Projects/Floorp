@@ -32,6 +32,7 @@
 
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -51,7 +52,7 @@ exn_trace(JSTracer *trc, JSObject *obj);
 static void
 exn_finalize(FreeOp *fop, JSObject *obj);
 
-static JSBool
+static bool
 exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp);
 
@@ -382,7 +383,7 @@ exn_finalize(FreeOp *fop, JSObject *obj)
     }
 }
 
-static JSBool
+static bool
 exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp)
 {
@@ -896,7 +897,7 @@ static const struct exnname { char *name; char *exception; } errortoexnname[] = 
 };
 #endif /* DEBUG */
 
-JSBool
+bool
 js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
                     JSErrorCallback callback, void *userRef)
 {
@@ -985,7 +986,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
 static bool
 IsDuckTypedErrorObject(JSContext *cx, HandleObject exnObject, const char **filename_strp)
 {
-    JSBool found;
+    bool found;
     if (!JS_HasProperty(cx, exnObject, js_message_str, &found) || !found)
         return false;
 
@@ -1004,7 +1005,7 @@ IsDuckTypedErrorObject(JSContext *cx, HandleObject exnObject, const char **filen
     return true;
 }
 
-JSBool
+bool
 js_ReportUncaughtException(JSContext *cx)
 {
     JSErrorReport *reportp, report;

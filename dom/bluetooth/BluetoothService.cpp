@@ -9,7 +9,9 @@
 #include "BluetoothService.h"
 
 #include "BluetoothCommon.h"
+#include "BluetoothHfpManager.h"
 #include "BluetoothManager.h"
+#include "BluetoothOppManager.h"
 #include "BluetoothParent.h"
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothServiceChildProcess.h"
@@ -475,6 +477,14 @@ BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  if (!aStart) {
+    BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+    hfp->Disconnect();
+
+    BluetoothOppManager* opp = BluetoothOppManager::Get();
+    opp->Disconnect();
+  }
+
   nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(aStart, aIsStartup);
   rv = mBluetoothCommandThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -583,7 +593,7 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
   }
 
   // First, check if the string equals to BLUETOOTH_DEBUGGING_SETTING
-  JSBool match;
+  bool match;
   if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_DEBUGGING_SETTING, &match)) {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     return NS_ERROR_OUT_OF_MEMORY;
@@ -780,10 +790,6 @@ BluetoothService::Notify(const BluetoothSignal& aData)
   } else if (aData.name().EqualsLiteral("RequestPasskey")) {
     MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 3,
       "RequestPinCode: Wrong length of parameters");
-  } else if (aData.name().EqualsLiteral("Authorize")) {
-    MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 2,
-      "Authorize: Wrong length of parameters");
-    type.AssignLiteral("bluetooth-authorize");
   } else if (aData.name().EqualsLiteral("Cancel")) {
     MOZ_ASSERT(aData.value().get_ArrayOfBluetoothNamedValue().Length() == 0,
       "Cancel: Wrong length of parameters");

@@ -96,7 +96,7 @@ function end_test() {
 
   Services.prefs.clearUserPref(PREF_EM_STRICT_COMPATIBILITY);
 
-  do_test_finished();
+  do_execute_soon(do_test_finished);
 }
 
 // Test that the test extensions are all installed

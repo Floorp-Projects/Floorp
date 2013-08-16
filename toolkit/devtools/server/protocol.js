@@ -824,6 +824,12 @@ let Actor = Class({
       message: err.toString()
     });
   },
+
+  _queueResponse: function(create) {
+    let pending = this._pendingResponse || promise.resolve(null);
+    let response = create(pending);
+    this._pendingResponse = response;
+  }
 });
 exports.Actor = Actor;
 
@@ -870,8 +876,8 @@ let actorProto = function(actorProto) {
       let frozenSpec = desc.value._methodSpec;
       let spec = {};
       spec.name = frozenSpec.name || name;
-      spec.request = Request(object.merge({type: spec.name}, frozenSpec.request));
-      spec.response = Response(frozenSpec.response);
+      spec.request = Request(object.merge({type: spec.name}, frozenSpec.request || undefined));
+      spec.response = Response(frozenSpec.response || undefined);
       spec.telemetry = frozenSpec.telemetry;
       spec.release = frozenSpec.release;
       spec.oneway = frozenSpec.oneway;
@@ -915,14 +921,16 @@ let actorProto = function(actorProto) {
           conn.send(response);
         };
 
-        if (ret && ret.then) {
-          ret.then(sendReturn).then(null, this.writeError.bind(this));
-        } else {
-          sendReturn(ret);
-        }
-
+        this._queueResponse(p => {
+          return p
+            .then(() => ret)
+            .then(sendReturn)
+            .then(null, this.writeError.bind(this));
+        })
       } catch(e) {
-        this.writeError(e);
+        this._queueResponse(p => {
+          return p.then(() => this.writeError(e));
+        });
       }
     };
 

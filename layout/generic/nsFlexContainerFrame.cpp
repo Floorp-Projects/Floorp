@@ -2413,10 +2413,11 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     if (i == 0 && flexContainerAscent == nscoord_MIN) {
       ResolveReflowedChildAscent(curItem.Frame(), childDesiredSize);
 
-      // (We subtract mComputedOffsets.top because we don't want relative
-      // positioning on the child to affect the baseline that we read from it).
-      flexContainerAscent = physicalPosn.y + childDesiredSize.ascent -
-        childReflowState.mComputedOffsets.top;
+      // (We use GetNormalPosition() instead of physicalPosn because we don't
+      // want relative positioning on the child to affect the baseline that we
+      // read from it).
+      flexContainerAscent = curItem.Frame()->GetNormalPosition().y +
+        childDesiredSize.ascent;
     }
   }
 

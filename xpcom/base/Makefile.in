@@ -27,7 +27,6 @@ endif
 
 endif #if OS_ARCH == WINNT
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

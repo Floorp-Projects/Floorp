@@ -496,7 +496,7 @@ nsImageBoxFrame::GetPrefSize(nsBoxLayoutState& aState)
      GetImageSize();
 
   if (!mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0))
-    size = nsSize(mSubRect.width, mSubRect.height);
+    size = mSubRect.Size();
   else
     size = mImageSize;
 

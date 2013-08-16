@@ -233,6 +233,10 @@ var FullZoom = {
    *        (optional) browser object displaying the document
    */
   onLocationChange: function FullZoom_onLocationChange(aURI, aIsTabSwitch, aBrowser) {
+    // Bug 691614 - zooming support for electrolysis
+    if (gMultiProcessBrowser)
+      return;
+
     // Ignore all pending async zoom accesses in the browser.  Pending accesses
     // that started before the location change will be prevented from applying
     // to the new location.
@@ -435,9 +439,9 @@ var FullZoom = {
    * operations that access the given browser's zoom should use this method to
    * capture the token before starting and use token.isCurrent to determine if
    * it's safe to access the zoom when done.  If token.isCurrent is false, then
-   * the zoom of the browser was changed after the async operation started, and
-   * depending on what the operation is doing, it may no longer be safe to set
-   * the zoom or get it to then use in some manner.
+   * after the async operation started, either the browser's zoom was changed or
+   * the browser was destroyed, and depending on what the operation is doing, it
+   * may no longer be safe to set and get its zoom.
    *
    * @param browser  The token of this browser will be returned.
    * @return  An object with an "isCurrent" getter.
@@ -450,7 +454,12 @@ var FullZoom = {
     return {
       token: map.get(outerID),
       get isCurrent() {
-        return map.get(outerID) === this.token;
+        // At this point, the browser may have been destructed and unbound but
+        // its outer ID not removed from the map because outer-window-destroyed
+        // hasn't been received yet.  In that case, the browser is unusable, it
+        // has no properties, so return false.  Check for this case by getting a
+        // property, say, docShell.
+        return map.get(outerID) === this.token && browser.docShell;
       },
     };
   },
@@ -537,14 +546,14 @@ var FullZoom = {
   },
 
   /**
-   * Asynchronously broadcasts a "browser-fullZoom:locationChange" notification
-   * so that tests can select tabs, load pages, etc. and be notified when the
-   * zoom levels on those pages change.  The notification is always asynchronous
-   * so that observers are guaranteed a consistent behavior.
+   * Asynchronously broadcasts "FullZoom:TESTS:location-change" so that tests
+   * can select tabs, load pages, etc. and be notified when the zoom levels on
+   * those pages change.  The notification is always asynchronous so that
+   * observers are guaranteed a consistent behavior.
    */
   _notifyOnLocationChange: function FullZoom__notifyOnLocationChange() {
     this._executeSoon(function () {
-      Services.obs.notifyObservers(null, "browser-fullZoom:locationChange", "");
+      Services.obs.notifyObservers(null, "FullZoom:TESTS:location-change", "");
     });
   },
 

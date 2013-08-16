@@ -43,7 +43,6 @@ var interfaceNamesInGlobalScope =
     "CanvasRenderingContext2D",
     "CDATASection",
     "CharacterData",
-    "ChromeWindow",
     "ClientRect",
     "ClientRectList",
     "ClipboardEvent",
@@ -464,36 +463,60 @@ var interfaceNamesInGlobalScope =
     "XPathNSResolver",
     "XPathResult",
     "XSLTProcessor",
-    "XULButtonElement",
-    "XULCheckboxElement",
-    "XULCommandDispatcher",
-    "XULCommandEvent",
-    "XULControlElement",
-    "XULDocument",
     "XULElement",
-    "XULLabeledControlElement",
-    "XULPopupElement",
   ]
 // IMPORTANT: Do not change this list without review from a DOM peer!
 
 // If your interface is named nsIDOMSomeInterface and you don't mean to expose
 // it to every webpage, simply change its name to nsISomeInterface to fix this problem.
 
-for (var i in SpecialPowers.Components.interfaces) {
-  var s = i.toString();
-  var name = null;
-  if (s.indexOf("nsIDOM") == 0) {
-    name = s.substring("nsIDOM".length);
-  } else if (s.indexOf("nsI") == 0) {
-    name = s.substring("nsI".length);
+  var interfaceNamesInXBLScope = [
+    "BoxObject",
+    "ChromeWindow",
+    "DOMConstructor",
+    "TreeColumn",
+    "TreeColumns",
+    "TreeContentView",
+    "TreeSelection",
+    "XULButtonElement",
+    "XULCheckboxElement",
+    "XULCommandDispatcher",
+    "XULCommandEvent",
+    "XULControlElement",
+    "XULControllers",
+    "XULDocument",
+    "XULLabeledControlElement",
+    "XULPopupElement",
+    "XULTemplateBuilder",
+    "XULTreeBuilder",
+  ];
+
+function runTest(win, isXBLScope) {
+  for (var i in SpecialPowers.Components.interfaces) {
+    var s = i.toString();
+    var name = null;
+    if (s.indexOf("nsIDOM") == 0) {
+      name = s.substring("nsIDOM".length);
+    } else if (s.indexOf("nsI") == 0) {
+      name = s.substring("nsI".length);
+    }
+    if (name && (name in win)) {
+      ok(interfaceNamesInGlobalScope.indexOf(name) >= 0 ||
+         (isXBLScope && interfaceNamesInXBLScope.indexOf(name) >= 0),
+         "If this is failing: DANGER, are you sure you want to expose the new interface " + name + " to all webpages as a property on the window?");
+    }
   }
-  if (name && (name in window)) {
-    ok(interfaceNamesInGlobalScope.indexOf(name) >= 0,
-       "If this is failing: DANGER, are you sure you want to expose the new interface " + name + " to all webpages as a property on the window?");
+  for (var name of interfaceNamesInXBLScope) {
+    is(name in win, isXBLScope,
+       name + " should" + (isXBLScope ? "" : " NOT") + " be present in the global scope");
   }
 }
 
+runTest(window, false);
+SimpleTest.waitForExplicitFinish();
+
 </script>
+<span id="span" style="-moz-binding: url(file_interfaces.xml)"></span>
 </pre>
 </body>
 </html>

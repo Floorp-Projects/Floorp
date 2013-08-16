@@ -17,7 +17,12 @@ from mach.decorators import (
 
 from mach.mixin.logging import LoggingMixin
 
-from mozbuild.base import MachCommandBase
+from mozbuild.base import (
+    MachCommandBase,
+    MozbuildObject,
+    MozconfigFindException,
+    MozconfigLoadException,
+)
 
 
 BUILD_WHAT_HELP = '''
@@ -743,3 +748,83 @@ class Makefiles(MachCommandBase):
                 if f == 'Makefile.in':
                     yield os.path.join(root, f)
 
+@CommandProvider
+class MachDebug(object):
+    def __init__(self, context):
+        self.context = context
+
+    @Command('environment', category='build-dev',
+        description='Show info about the mach and build environment.')
+    @CommandArgument('--verbose', '-v', action='store_true',
+        help='Print verbose output.')
+    def environment(self, verbose=False):
+        import platform
+        print('platform:\n\t%s' % platform.platform())
+        print('python version:\n\t%s' % sys.version)
+        print('python prefix:\n\t%s' % sys.prefix)
+        print('mach cwd:\n\t%s' % self.context.cwd)
+        print('os cwd:\n\t%s' % os.getcwd())
+        print('mach directory:\n\t%s' % self.context.topdir)
+        print('state directory:\n\t%s' % self.context.state_dir)
+
+        mb = MozbuildObject(self.context.topdir, self.context.settings,
+            self.context.log_manager)
+
+        mozconfig = None
+
+        try:
+            mozconfig = mb.mozconfig
+            print('mozconfig path:\n\t%s' % mozconfig['path'])
+        except MozconfigFindException as e:
+            print('Unable to find mozconfig: %s' % e.message)
+            return 1
+
+        except MozconfigLoadException as e:
+            print('Error loading mozconfig: %s' % e.path)
+            print(e.message)
+
+            if e.output:
+                print('mozconfig evaluation output:')
+                for line in e.output:
+                    print(line)
+
+            return 1
+
+        print('object directory:\n\t%s' % mb.topobjdir)
+
+        if mozconfig:
+            print('mozconfig configure args:')
+            if mozconfig['configure_args']:
+                for arg in mozconfig['configure_args']:
+                    print('\t%s' % arg)
+
+            print('mozconfig extra make args:')
+            if mozconfig['make_extra']:
+                for arg in mozconfig['make_extra']:
+                    print('\t%s' % arg)
+
+            print('mozconfig make flags:')
+            if mozconfig['make_flags']:
+                for arg in mozconfig['make_flags']:
+                    print('\t%s' % arg)
+
+        config = None
+
+        try:
+            config = mb.config_environment
+
+        except Exception:
+            pass
+
+        if config:
+            print('config topsrcdir:\n\t%s' % config.topsrcdir)
+            print('config topobjdir:\n\t%s' % config.topobjdir)
+
+            if verbose:
+                print('config substitutions:')
+                for k in sorted(config.substs):
+                    print('\t%s: %s' % (k, config.substs[k]))
+
+                print('config defines:')
+                for k in sorted(config.defines):
+                    print('\t%s' % k)

@@ -6,7 +6,15 @@
 
 MODULE = 'TestXPTC'
 
+sources = [
+    'TestXPTCInvoke',
+]
+
 CPP_SOURCES += [
-    'TestXPTCInvoke.cpp',
+    '%s.cpp' % s for s in sources
+]
+
+SIMPLE_PROGRAMS += [
+    '%s%s' % (s, bin_suffix) for s in sources
 ]
 

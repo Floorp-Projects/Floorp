@@ -35,7 +35,7 @@ const tagsrv = Cc['@mozilla.org/browser/tagging-service;1'].
 exports.testBookmarksCreate = function (assert, done) {
   let items = [{
     title: 'my title',
-    url: 'http://moz.com',
+    url: 'http://test-places-host.com/testBookmarksCreate/',
     tags: ['some', 'tags', 'yeah'],
     type: 'bookmark'
   }, {
@@ -71,26 +71,26 @@ exports.testBookmarksCreateFail = function (assert, done) {
     return send('sdk-places-bookmarks-create', item).then(null, function (reason) {
       assert.ok(reason, 'bookmark create should fail');
     });
-  })).then(function () {
-    done();
-  });
+  })).then(done);
 };
 
 exports.testBookmarkLastUpdated = function (assert, done) {
   let timestamp;
   let item;
-  createBookmark().then(function (data) {
+  createBookmark({
+    url: 'http://test-places-host.com/testBookmarkLastUpdated'
+  }).then(function (data) {
     item = data;
     timestamp = item.updated;
     return send('sdk-places-bookmarks-last-updated', { id: item.id });
   }).then(function (updated) {
+    let { resolve, promise } = defer();
     assert.equal(timestamp, updated, 'should return last updated time');
     item.title = 'updated mozilla';
-    return send('sdk-places-bookmarks-save', item).then(function (data) {
-      let deferred = defer();
-      setTimeout(function () deferred.resolve(data), 100);
-      return deferred.promise;
-    });
+    setTimeout(() => {
+      resolve(send('sdk-places-bookmarks-save', item));
+    }, 100);
+    return promise;
   }).then(function (data) {
     assert.ok(data.updated > timestamp, 'time has elapsed and updated the updated property');
     done();
@@ -99,7 +99,9 @@ exports.testBookmarkLastUpdated = function (assert, done) {
 
 exports.testBookmarkRemove = function (assert, done) {
   let id;
-  createBookmark().then(function (data) {
+  createBookmark({
+    url: 'http://test-places-host.com/testBookmarkRemove/'
+  }).then(function (data) {
     id = data.id;
     compareWithHost(assert, data); // ensure bookmark exists
     bmsrv.getItemTitle(id); // does not throw an error
@@ -114,7 +116,9 @@ exports.testBookmarkRemove = function (assert, done) {
 
 exports.testBookmarkGet = function (assert, done) {
   let bookmark;
-  createBookmark().then(function (data) {
+  createBookmark({
+    url: 'http://test-places-host.com/testBookmarkGet/'
+  }).then(function (data) {
     bookmark = data;
     return send('sdk-places-bookmarks-get', { id: data.id });
   }).then(function (data) {
@@ -136,7 +140,9 @@ exports.testBookmarkGet = function (assert, done) {
 
 exports.testTagsTag = function (assert, done) {
   let url;
-  createBookmark().then(function (data) {
+  createBookmark({
+    url: 'http://test-places-host.com/testTagsTag/',
+  }).then(function (data) {
     url = data.url;
     return send('sdk-places-tags-tag', {
       url: data.url, tags: ['mozzerella', 'foxfire']
@@ -153,7 +159,10 @@ exports.testTagsTag = function (assert, done) {
 
 exports.testTagsUntag = function (assert, done) {
   let item;
-  createBookmark({tags: ['tag1', 'tag2', 'tag3']}).then(function (data) {
+  createBookmark({
+    url: 'http://test-places-host.com/testTagsUntag/',
+    tags: ['tag1', 'tag2', 'tag3']
+  }).then(data => {
     item = data;
     return send('sdk-places-tags-untag', {
       url: item.url,
@@ -172,7 +181,9 @@ exports.testTagsUntag = function (assert, done) {
 
 exports.testTagsGetURLsByTag = function (assert, done) {
   let item;
-  createBookmark().then(function (data) {
+  createBookmark({
+    url: 'http://test-places-host.com/testTagsGetURLsByTag/'
+  }).then(function (data) {
     item = data;
     return send('sdk-places-tags-get-urls-by-tag', {
       tag: 'firefox'
@@ -186,7 +197,10 @@ exports.testTagsGetURLsByTag = function (assert, done) {
 
 exports.testTagsGetTagsByURL = function (assert, done) {
   let item;
-  createBookmark({ tags: ['firefox', 'mozilla', 'metal']}).then(function (data) {
+  createBookmark({
+    url: 'http://test-places-host.com/testTagsGetURLsByTag/',
+    tags: ['firefox', 'mozilla', 'metal']
+  }).then(function (data) {
     item = data;
     return send('sdk-places-tags-get-tags-by-url', {
       url: data.url,
@@ -202,9 +216,15 @@ exports.testTagsGetTagsByURL = function (assert, done) {
 
 exports.testHostQuery = function (assert, done) {
   all([
-    createBookmark({ url: 'http://firefox.com', tags: ['firefox', 'mozilla'] }),
-    createBookmark({ url: 'http://mozilla.com', tags: ['mozilla'] }),
-    createBookmark({ url: 'http://thunderbird.com' })
+    createBookmark({
+      url: 'http://firefox.com/testHostQuery/',
+      tags: ['firefox', 'mozilla']
+    }),
+    createBookmark({
+      url: 'http://mozilla.com/testHostQuery/',
+      tags: ['mozilla']
+    }),
+    createBookmark({ url: 'http://thunderbird.com/testHostQuery/' })
   ]).then(data => {
     return send('sdk-places-query', {
       queries: { tags: ['mozilla'] }, 
@@ -212,34 +232,44 @@ exports.testHostQuery = function (assert, done) {
     });
   }).then(results => {
     assert.equal(results.length, 2, 'should only return two');
-    assert.equal(results[0].url, 'http://mozilla.com/', 'is sorted by URI asc');
+    assert.equal(results[0].url,
+      'http://mozilla.com/testHostQuery/', 'is sorted by URI asc');
     return send('sdk-places-query', {
       queries: { tags: ['mozilla'] }, 
       options: { sortingMode: 5, queryType: 1 } // sort by URI descending, bookmarks only
     });
   }).then(results => {
     assert.equal(results.length, 2, 'should only return two');
-    assert.equal(results[0].url, 'http://firefox.com/', 'is sorted by URI desc');
+    assert.equal(results[0].url,
+      'http://firefox.com/testHostQuery/', 'is sorted by URI desc');
     done();
   });
 };
 
 exports.testHostMultiQuery = function (assert, done) {
   all([
-    createBookmark({ url: 'http://firefox.com', tags: ['firefox', 'mozilla'] }),
-    createBookmark({ url: 'http://mozilla.com', tags: ['mozilla'] }),
-    createBookmark({ url: 'http://thunderbird.com' })
+    createBookmark({
+      url: 'http://firefox.com/testHostMultiQuery/',
+      tags: ['firefox', 'mozilla']
+    }),
+    createBookmark({
+      url: 'http://mozilla.com/testHostMultiQuery/',
+      tags: ['mozilla']
+    }),
+    createBookmark({ url: 'http://thunderbird.com/testHostMultiQuery/' })
   ]).then(data => {
     return send('sdk-places-query', {
-      queries: [{ tags: ['firefox'] }, { uri: 'http://thunderbird.com/' }],
+      queries: [{ tags: ['firefox'] }, { uri: 'http://thunderbird.com/testHostMultiQuery/' }],
       options: { sortingMode: 5, queryType: 1 } // sort by URI descending, bookmarks only
     });
   }).then(results => {
     assert.equal(results.length, 2, 'should return 2 results ORing queries');
-    assert.equal(results[0].url, 'http://firefox.com/', 'should match URL or tag');
-    assert.equal(results[1].url, 'http://thunderbird.com/', 'should match URL or tag');
+    assert.equal(results[0].url,
+      'http://firefox.com/testHostMultiQuery/', 'should match URL or tag');
+    assert.equal(results[1].url,
+      'http://thunderbird.com/testHostMultiQuery/', 'should match URL or tag');
     return send('sdk-places-query', {
-      queries: [{ tags: ['firefox'], url: 'http://mozilla.com/' }],
+      queries: [{ tags: ['firefox'], url: 'http://mozilla.com/testHostMultiQuery/' }],
       options: { sortingMode: 5, queryType: 1 } // sort by URI descending, bookmarks only
     });
   }).then(results => {
@@ -268,7 +298,6 @@ exports.testGetAllChildren = function (assert, done) {
     done();
   });
 };
-
 
 before(exports, (name, assert, done) => resetPlaces(done));
 after(exports, (name, assert, done) => resetPlaces(done));

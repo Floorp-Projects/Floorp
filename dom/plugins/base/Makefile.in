@@ -13,8 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= gkplugin
 MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
-IS_COMPONENT    = 1
-MODULE_NAME	= nsPluginModule
 LIBXUL_LIBRARY = 1
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
@@ -42,7 +40,6 @@ LOCAL_INCLUDES += \
   $(NULL)
 
 include $(topsrcdir)/dom/dom-config.mk
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

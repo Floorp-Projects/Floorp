@@ -199,6 +199,7 @@
 
     <declare-styleable name="GeckoView">
         <attr name="url" format="string"/>
+        <attr name="doinit" format="boolean"/>
     </declare-styleable>
 
     <declare-styleable name="IconTabWidget">

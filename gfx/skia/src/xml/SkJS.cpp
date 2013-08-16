@@ -73,7 +73,7 @@ extern "C" {
 }
 #endif
 
-static JSBool
+static bool
 global_enumerate(JSContext *cx, JSObject *obj)
 {
 #ifdef LAZY_STANDARD_CLASSES
@@ -83,12 +83,12 @@ global_enumerate(JSContext *cx, JSObject *obj)
 #endif
 }
 
-static JSBool
+static bool
 global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
     if ((flags & JSRESOLVE_ASSIGNING) == 0) {
-        JSBool resolved;
+        bool resolved;
 
         if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
             return false;
@@ -107,7 +107,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags, JSObject **o
          */
         char *path, *comp, *full;
         const char *name;
-        JSBool ok, found;
+        bool ok, found;
         JSFunction *fun;
 
         if (!JSVAL_IS_STRING(id))

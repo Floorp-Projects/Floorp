@@ -9,14 +9,13 @@
 
 #include "nsIDOMLocation.h"
 #include "nsString.h"
-#include "nsWeakReference.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsIURI;
 class nsIDocShell;
 struct JSContext;
-class nsIDocument;
 class nsIDocShellLoadInfo;
 
 //*****************************************************************************

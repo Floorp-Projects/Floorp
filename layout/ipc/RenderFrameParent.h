@@ -104,6 +104,8 @@ public:
 
   void UpdateZoomConstraints(bool aAllowZoom, float aMinZoom, float aMaxZoom);
 
+  bool HitTest(const nsRect& aRect);
+
 protected:
   void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
@@ -111,6 +113,8 @@ protected:
 
   virtual bool RecvCancelDefaultPanZoom() MOZ_OVERRIDE;
   virtual bool RecvDetectScrollableSubframe() MOZ_OVERRIDE;
+
+  virtual bool RecvUpdateHitRegion(const nsRegion& aRegion) MOZ_OVERRIDE;
 
   virtual PLayerTransactionParent* AllocPLayerTransactionParent() MOZ_OVERRIDE;
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
@@ -160,6 +164,8 @@ private:
   bool mFrameLoaderDestroyed;
   // this is gfxRGBA because that's what ColorLayer wants.
   gfxRGBA mBackgroundColor;
+
+  nsRegion mTouchRegion;
 };
 
 } // namespace layout
@@ -189,6 +195,9 @@ public:
   virtual already_AddRefed<Layer>
   BuildLayer(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
              const ContainerParameters& aContainerParameters) MOZ_OVERRIDE;
+
+  void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+               HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE;
 
   NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
 

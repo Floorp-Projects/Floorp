@@ -6,13 +6,18 @@
 
 TEST_DIRS += ['tests']
 
+EXTRA_COMPONENTS += [
+    'PhoneNumberService.js',
+    'PhoneNumberService.manifest',
+]
+
 EXTRA_JS_MODULES += [
     'PhoneNumber.jsm',
     'PhoneNumberMetaData.jsm',
+    'PhoneNumberNormalizer.jsm',
     'mcc_iso3166_table.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [
     'PhoneNumberUtils.jsm',
 ]
-

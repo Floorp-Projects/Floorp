@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="Windows-1252" ?>
 
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -51,9 +51,10 @@
   <script type="application/javascript" src="chrome://browser/content/apzc.js"/>
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing" disabled="false"/>
-    <broadcaster id="bcast_urlbarState" mode="view"/>
+    <broadcaster id="bcast_urlbarState" mode="editing"/>
     <broadcaster id="bcast_preciseInput" input="precise"/>
     <broadcaster id="bcast_windowState" viewstate=""/>
+    <broadcaster id="bcast_loadingState" loading="false"/>
   </broadcasterset>
 
   <observerset id="observerset">
@@ -63,7 +64,7 @@
   <commandset id="mainCommandSet">
     <!-- basic navigation -->
     <command id="cmd_back" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_forward" disabled="true" oncommand="CommandUpdater.doCommand(this.id);" observes="bcast_urlbarState"/>
+    <command id="cmd_forward" disabled="true" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_handleBackspace" oncommand="BrowserUI.handleBackspace();" />
     <command id="cmd_handleShiftBackspace" oncommand="BrowserUI.handleShiftBackspace();" />
     <command id="cmd_reload" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -127,37 +128,39 @@
     <key id="key_backspace" keycode="VK_BACK" command="cmd_handleBackspace"/>
     <key id="key_shift_backspace" keycode="VK_BACK" command="cmd_handleShiftBackspace" modifiers="shift"/>
     <key id="key_reload" keycode="VK_F5" command="cmd_reload"/>
-    <key id="key_reload2" key="r" modifiers="accel" command="cmd_reload"/>
+    <key id="key_reload2" key="&reload.key;" modifiers="accel" command="cmd_reload"/>
     <key id="key_forceReload" keycode="VK_F5" modifiers="shift" command="cmd_forceReload"/>
-    <key id="key_forceReload2" key="r" modifiers="accel,shift" command="cmd_forceReload"/>
-    <key id="key_focusURL" key="l" modifiers="accel" command="cmd_openLocation"/>
+    <key id="key_forceReload2" key="&reload.key;" modifiers="accel,shift" command="cmd_forceReload"/>
+    <key id="key_focusURL" key="&focusURL.key;" modifiers="accel" command="cmd_openLocation"/>
     <key id="key_focusURL2" key="&urlbar.accesskey;" modifiers="alt" command="cmd_openLocation"/>
     <key id="key_home" keycode="VK_HOME" modifiers="accel" command="cmd_home"/>
-    <key id="key_open" key="o" modifiers="accel" command="cmd_openFile"/>
-    <key id="key_save" key="s" modifiers="accel" command="cmd_savePage"/>
+    <key id="key_open" key="&openFile.key;" modifiers="accel" command="cmd_openFile"/>
+    <key id="key_save" key="&savePage.key;" modifiers="accel" command="cmd_savePage"/>
 
     <!-- misc -->
-    <key id="key_find" key="f" modifiers="accel" command="cmd_find"/>
+    <key id="key_find" key="&find.key;" modifiers="accel" command="cmd_find"/>
     <key id="key_find" key="/" command="cmd_find"/>
     <key id="key_findNext" keycode="VK_F3" command="cmd_findNext"/>
-    <key id="key_findNext2" key="g" modifiers="accel" command="cmd_findNext"/>
+    <key id="key_findNext2" key="&findNext.key;" modifiers="accel" command="cmd_findNext"/>
     <key id="key_findPrevious" keycode="VK_F3" modifiers="shift" command="cmd_findPrevious"/>
-    <key id="key_findPrevious2" key="g" modifiers="accel,shift" command="cmd_findPrevious"/>
-    <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
-    <key id="key_addBoomkark" key="d" modifiers="accel" command="cmd_addBookmark"/>
-    <key id="key_console" key="j" modifiers="accel,shift" oncommand="PanelUI.show('console-container')"/>
-    <key id="key_options" key="o" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('PrefsFlyoutPanel')" />
+    <key id="key_findPrevious2" key="&findNext.key;" modifiers="accel,shift" command="cmd_findPrevious"/>
+    <key id="key_quit" key="&quit.key;" modifiers="accel" command="cmd_quit"/>
+    <key id="key_addBoomkark" key="&addBookmark.key;" modifiers="accel" command="cmd_addBookmark"/>
+
+    <!-- development/testing -->
+    <key id="key_console" key="&jsConsole.key;" modifiers="accel,shift" oncommand="PanelUI.show('console-container')"/>
+    <key id="key_options" key="&optionsFlyout.key;" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('PrefsFlyoutPanel')" />
 #ifdef MOZ_SERVICES_SYNC
-    <key id="key_options" key="s" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('SyncFlyoutPanel')" />
+    <key id="key_options" key="&syncFlyout.key;" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('SyncFlyoutPanel')" />
 #endif
-    <key id="key_options" key="a" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyoutPanel')" />
+    <key id="key_options" key="&aboutFlyout.key;" modifiers="accel,shift" oncommand="FlyoutPanelsUI.show('AboutFlyoutPanel')" />
 
     <!-- manage tabs -->
-    <key id="key_newTab" key="t" modifiers="accel" command="cmd_newTab"/>
-    <key id="key_newTab2" key="n" modifiers="accel" command="cmd_newTab"/>
-    <key id="key_closeTab" key="w" modifiers="accel" command="cmd_closeTab"/>
+    <key id="key_newTab" key="&newTab.key;" modifiers="accel" command="cmd_newTab"/>
+    <key id="key_newTab2" key="&newTab2.key;" modifiers="accel" command="cmd_newTab"/>
+    <key id="key_closeTab" key="&closeTab.key;" modifiers="accel" command="cmd_closeTab"/>
     <key id="key_closeTab2" keycode="VK_F4" modifiers="accel" command="cmd_closeTab"/>
-    <key id="key_undoCloseTab" key="t" modifiers="accel,shift" command="cmd_undoCloseTab"/>
+    <key id="key_undoCloseTab" key="&newTab.key;" modifiers="accel,shift" command="cmd_undoCloseTab"/>
 
     <!-- tab selection -->
     <key id="key_nextTab" oncommand="BrowserUI.selectNextTab();" keycode="VK_TAB" modifiers="accel"/>
@@ -190,50 +193,11 @@
             <toolbarbutton id="newtab-button" command="cmd_newTab" label="&newtab.label;"/>
           </vbox>
         </hbox>
-
-        <!-- Start UI -->
-        <hbox id="start-container" flex="1" observes="bcast_windowState" class="meta content-height content-width">
-          <!-- portrait/landscape/filled view -->
-
-          <scrollbox id="start-scrollbox" observes="bcast_preciseInput" flex="1">
-            <vbox id="start-topsites" class="meta-section" expanded="true">
-              <label class="meta-section-title wide-title" value="&topSitesHeader.label;"/>
-              <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-topsites')">
-                &narrowTopSitesHeader.label;
-              </html:div>
-              <richgrid id="start-topsites-grid" set-name="topSites" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
-            </vbox>
-
-            <vbox id="start-bookmarks" class="meta-section">
-              <label class="meta-section-title wide-title" value="&bookmarksHeader.label;"/>
-              <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-bookmarks')">
-                &narrowBookmarksHeader.label;
-              </html:div>
-              <richgrid id="start-bookmarks-grid" set-name="bookmarks" seltype="multiple" flex="1"/>
-            </vbox>
-
-            <vbox id="start-history" class="meta-section">
-              <label class="meta-section-title wide-title" value="&recentHistoryHeader.label;"/>
-              <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-history')">
-                &narrowRecentHistoryHeader.label;
-              </html:div>
-              <richgrid id="start-history-grid" set-name="recentHistory" seltype="multiple" flex="1"/>
-            </vbox>
-
-            <vbox id="start-remotetabs" class="meta-section">
-              <label class="meta-section-title wide-title" value="&remoteTabsHeader.label;"/>
-              <html:div id="snappedRemoteTabsLabel" class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-remotetabs')">
-                &narrowRemoteTabsHeader.label;
-              </html:div>
-              <richgrid id="start-remotetabs-grid" set-name="remoteTabs" seltype="multiple" flex="1"/>
-            </vbox>
-
-          </scrollbox>
-        </hbox>
       </vbox> <!-- end tray -->
 
       <!-- Content viewport -->
       <stack id="content-viewport">
+        <observes element="bcast_windowState" attribute="startpage"/>
         <deck id="browsers" flex="1" observes="bcast_preciseInput"/>
         <box id="vertical-scroller" class="scroller" orient="vertical" end="0" top="0"/>
         <box id="horizontal-scroller" class="scroller" orient="horizontal" left="0" bottom="0"/>
@@ -267,7 +231,9 @@
           <toolbarbutton id="forward-button" class="appbar-primary"
                          command="cmd_forward"/>
 
-          <hbox id="urlbar" flex="1" observes="bcast_urlbarState">
+          <hbox id="urlbar" flex="1">
+            <observes element="bcast_urlbarState" attribute="*"/>
+            <observes element="bcast_loadingState" attribute="*"/>
             <box id="identity-box" align="center" role="button">
               <image id="identity-icon"/>
             </box>
@@ -291,7 +257,6 @@
           <stack id="toolbar-contextual">
             <observes element="bcast_windowState" attribute="*"/>
             <observes element="bcast_urlbarState" attribute="*"/>
-
             <hbox id="toolbar-context-page" pack="end">
               <circularprogressindicator id="download-progress"
                                      oncommand="Appbar.onDownloadButton()"/>
@@ -421,7 +386,7 @@
         <deck id="updateDeck" orient="vertical">
           <hbox id="updateButtonBox" align="center">
             <button id="updateButton" align="start"
-                    oncommand="FlyoutPanelsUI.AboutFlyout.appUpdater.buttonOnCommand();"/>
+                    oncommand="FlyoutPanelsUI.AboutFlyoutPanel.appUpdater.buttonOnCommand();"/>
             <spacer flex="1"/>
           </hbox>
           <hbox id="checkingForUpdates" align="center">

@@ -121,10 +121,8 @@ public:
 
 
 private:
-  // Private constructor & destructor: prevent instances beyond my singleton,
-  // and prevent others from deleting my singleton.
-  SVGTransformListSMILType() {}
-  ~SVGTransformListSMILType() {}
+  // Private constructor: prevent instances beyond my singleton.
+  MOZ_CONSTEXPR SVGTransformListSMILType() {}
 };
 
 } // end namespace mozilla

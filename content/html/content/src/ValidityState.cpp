@@ -7,7 +7,6 @@
 #include "mozilla/dom/ValidityStateBinding.h"
 
 #include "nsCycleCollectionParticipant.h"
-#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace dom {

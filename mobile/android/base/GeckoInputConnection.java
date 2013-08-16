@@ -422,6 +422,13 @@ class GeckoInputConnection
     public void onTextChange(String text, int start, int oldEnd, int newEnd) {
 
         if (mUpdateRequest == null) {
+            // Android always expects selection updates when not in extracted mode;
+            // in extracted mode, the selection is reported through updateExtractedText
+            final Editable editable = getEditable();
+            if (editable != null) {
+                onSelectionChange(Selection.getSelectionStart(editable),
+                                  Selection.getSelectionEnd(editable));
+            }
             return;
         }
 
@@ -896,6 +903,10 @@ class GeckoInputConnection
             case NOTIFY_IME_OF_BLUR:
                 // Showing/hiding vkb is done in notifyIMEContext
                 resetInputConnection();
+                break;
+
+            case NOTIFY_IME_OPEN_VKB:
+                showSoftInput();
                 break;
 
             default:

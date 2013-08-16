@@ -8,6 +8,39 @@
 </head>
 <body>
 Login Manager test: forms and logins without a username.
+<script>
+commonInit();
+SimpleTest.waitForExplicitFinish();
+
+var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
+                         .getService(SpecialPowers.Ci.nsILoginManager);
+
+var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Components.interfaces.nsILoginInfo);
+ok(nsLoginInfo != null, "nsLoginInfo constructor");
+
+// pwlogin1 uses a unique formSubmitURL, to check forms where no other logins
+// will apply. pwlogin2 uses the normal formSubmitURL, so that we can test
+// forms with a mix of username and non-username logins that might apply.
+//
+// Note: pwlogin2 is deleted at the end of the test.
+
+pwlogin1 = new nsLoginInfo();
+pwlogin2 = new nsLoginInfo();
+
+pwlogin1.init("http://mochi.test:8888", "http://mochi.test:1111", null,
+    "", "1234", "uname", "pword");
+
+pwlogin2.init("http://mochi.test:8888", "http://mochi.test:8888", null,
+    "", "1234", "uname", "pword");
+
+try {
+    pwmgr.addLogin(pwlogin1);
+    pwmgr.addLogin(pwlogin2);
+} catch (e) {
+    ok(false, "addLogin threw: " + e);
+}
+
+</script>
 <p id="display"></p>
 
 <div id="content" style="display: none">
@@ -154,8 +187,6 @@ password-only, the other is username+password)
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: password-only logins **/
-
-commonInit();
 function startTest() {
 
     checkForm(1, "1234");
@@ -181,48 +212,7 @@ function startTest() {
     SimpleTest.finish();
 }
 
-
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-// Get the pwmgr service
-var Cc_pwmgr = Components.classes["@mozilla.org/login-manager;1"];
-ok(Cc_pwmgr != null, "Access Cc[@mozilla.org/login-manager;1]");
-
-var Ci_pwmgr = Components.interfaces.nsILoginManager;
-ok(Ci_pwmgr != null, "Access Ci.nsILoginManager");
-
-var pwmgr = Cc_pwmgr.getService(Ci_pwmgr);
-ok(pwmgr != null, "pwmgr getService()");
-
-
-var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Components.interfaces.nsILoginInfo);
-ok(nsLoginInfo != null, "nsLoginInfo constructor");
-
-// pwlogin1 uses a unique formSubmitURL, to check forms where no other logins
-// will apply. pwlogin2 uses the normal formSubmitURL, so that we can test
-// forms with a mix of username and non-username logins that might apply.
-//
-// Note: pwlogin2 is deleted at the end of the test.
-
-pwlogin1 = new nsLoginInfo();
-pwlogin2 = new nsLoginInfo();
-
-pwlogin1.init("http://mochi.test:8888", "http://mochi.test:1111", null,
-    "", "1234", "uname", "pword");
-
-pwlogin2.init("http://mochi.test:8888", "http://mochi.test:8888", null,
-    "", "1234", "uname", "pword");
-
-try {
-    pwmgr.addLogin(pwlogin1);
-    pwmgr.addLogin(pwlogin2);
-} catch (e) {
-    ok(false, "addLogin threw: " + e);
-}
-
 window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

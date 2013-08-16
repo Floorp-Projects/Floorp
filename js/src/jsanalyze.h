@@ -9,18 +9,17 @@
 #ifndef jsanalyze_h
 #define jsanalyze_h
 
-#include "mozilla/PodOperations.h"
-
 #include "jscompartment.h"
-#include "jsinfer.h"
-#include "jsscript.h"
-
-#include "vm/Runtime.h"
 
 class JSScript;
 
 namespace js {
 namespace analyze {
+
+class LoopAnalysis;
+class SlotValue;
+class SSAValue;
+class SSAUseChain;
 
 /*
  * There are three analyses we can perform on a JSScript, outlined below.
@@ -80,15 +79,6 @@ class Bytecode
 
     /* Whether this is a catch/finally entry point. */
     bool exceptionEntry : 1;
-
-    /* Whether this is in a try block. */
-    bool inTryBlock : 1;
-
-    /* Whether this is in a loop. */
-    bool inLoop : 1;
-
-    /* Method JIT safe point. */
-    bool safePoint : 1;
 
     /*
      * Side effects of this bytecode were not determined by type inference.
@@ -296,13 +286,6 @@ static inline uint32_t GetBytecodeSlot(JSScript *script, jsbytecode *pc)
     }
 }
 
-/* Slot opcodes which update SSA information. */
-static inline bool
-BytecodeUpdatesSlot(JSOp op)
-{
-    return (op == JSOP_SETARG || op == JSOP_SETLOCAL);
-}
-
 /*
  * Information about the lifetime of a local or argument. These form a linked
  * list describing successive intervals in the program where the variable's
@@ -326,13 +309,6 @@ struct Lifetime
     uint32_t savedEnd;
 
     /*
-     * This is an artificial segment extending the lifetime of this variable
-     * when it is live at the head of the loop. It will not be used until the
-     * next iteration.
-     */
-    bool loopTail;
-
-    /*
      * The start of this lifetime is a bytecode writing the variable. Each
      * write to a variable is associated with a lifetime.
      */
@@ -343,7 +319,7 @@ struct Lifetime
 
     Lifetime(uint32_t offset, uint32_t savedEnd, Lifetime *next)
         : start(offset), end(offset), savedEnd(savedEnd),
-          loopTail(false), write(false), next(next)
+          write(false), next(next)
     {}
 };
 
@@ -362,29 +338,6 @@ class LoopAnalysis
      * between the head and the backedge forms the loop body.
      */
     uint32_t backedge;
-
-    /* Target offset of the initial jump or fallthrough into the loop. */
-    uint32_t entry;
-
-    /*
-     * Start of the last basic block in the loop, excluding the initial jump to
-     * entry. All code between lastBlock and the backedge runs in every
-     * iteration, and if entry >= lastBlock all code between entry and the
-     * backedge runs when the loop is initially entered.
-     */
-    uint32_t lastBlock;
-
-    /* Loop nesting depth, 0 for the outermost loop. */
-    uint16_t depth;
-
-    /*
-     * This loop contains safe points in its body which the interpreter might
-     * join at directly.
-     */
-    bool hasSafePoints;
-
-    /* This loop has calls or inner loops. */
-    bool hasCallsLoops;
 };
 
 /* Current lifetime information for a variable. */
@@ -712,11 +665,7 @@ class ScriptAnalysis
 
     /* --------- Bytecode analysis --------- */
 
-    bool usesReturnValue_:1;
     bool usesScopeChain_:1;
-    bool usesThisValue_:1;
-    bool hasFunctionCalls_:1;
-    bool modifiesArguments_:1;
     bool localsAliasStack_:1;
     bool isIonInlineable:1;
     bool canTrackVars:1;
@@ -764,23 +713,12 @@ class ScriptAnalysis
     /* Number of property read opcodes in the script. */
     uint32_t numPropertyReads() const { return numPropertyReads_; }
 
-    /* Whether there are POPV/SETRVAL bytecodes which can write to the frame's rval. */
-    bool usesReturnValue() const { return usesReturnValue_; }
-
     /* Whether there are NAME bytecodes which can access the frame's scope chain. */
     bool usesScopeChain() const { return usesScopeChain_; }
 
-    bool usesThisValue() const { return usesThisValue_; }
-    bool hasFunctionCalls() const { return hasFunctionCalls_; }
     uint32_t numReturnSites() const { return numReturnSites_; }
 
     bool hasLoops() const { return hasLoops_; }
-
-    /*
-     * True if all named formal arguments are not modified. If the arguments
-     * object cannot escape, the arguments are never modified within the script.
-     */
-    bool modifiesArguments() { return modifiesArguments_; }
 
     /*
      * True if there are any LOCAL opcodes aliasing values on the stack (above
@@ -863,9 +801,6 @@ class ScriptAnalysis
     inline types::StackTypeSet *poppedTypes(uint32_t offset, uint32_t which);
     inline types::StackTypeSet *poppedTypes(const jsbytecode *pc, uint32_t which);
 
-    /* Whether an arithmetic operation is operating on integers, with an integer result. */
-    bool integerOperation(jsbytecode *pc);
-
     bool trackUseChain(const SSAValue &v) {
         JS_ASSERT_IF(v.kind() == SSAValue::VAR, trackSlot(v.varSlot()));
         return v.kind() != SSAValue::EMPTY &&
@@ -877,12 +812,6 @@ class ScriptAnalysis
      * scripts where localsAliasStack(). You have been warned!
      */
     inline SSAUseChain *& useChain(const SSAValue &v);
-
-    LoopAnalysis *getLoop(uint32_t offset) {
-        JS_ASSERT(offset < script_->length);
-        return getCode(offset).loop;
-    }
-    LoopAnalysis *getLoop(const jsbytecode *pc) { return getLoop(pc - script_->code); }
 
 
     /* For a JSOP_CALL* op, get the pc of the corresponding JSOP_CALL/NEW/etc. */

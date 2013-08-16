@@ -27,7 +27,7 @@ function add_test_incoming_parcel(parcel, handler) {
     if (!parcel) {
       parcel = newIncomingParcel(-1,
                                  worker.RESPONSE_TYPE_UNSOLICITED,
-                                 worker.REQUEST_REGISTRATION_STATE,
+                                 worker.REQUEST_VOICE_REGISTRATION_STATE,
                                  [0, 0, 0, 0]);
     }
 
@@ -106,7 +106,7 @@ add_test(function test_incoming_parcel_buffer_overwritten() {
   }
 
   // Do nothing in handleParcel().
-  let request = worker.REQUEST_REGISTRATION_STATE;
+  let request = worker.REQUEST_VOICE_REGISTRATION_STATE;
   worker.RIL[request] = null;
 
   // Prepare two parcels, whose sizes are both smaller than the incoming buffer

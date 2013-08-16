@@ -14,11 +14,14 @@
 #include "nsComponentManagerUtils.h"
 #include <objbase.h>
 #include <initguid.h>
+#include "WinUtils.h"
 
 #include "nsUXThemeData.h"
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
+
+using namespace mozilla::widget;
 
 nsToolkit* nsToolkit::gToolkit = nullptr;
 HINSTANCE nsToolkit::mDllInstance = 0;
@@ -74,6 +77,7 @@ void
 nsToolkit::Startup(HMODULE hModule)
 {
     nsToolkit::mDllInstance = hModule;
+    WinUtils::Initialize();
     nsUXThemeData::Initialize();
 }
 

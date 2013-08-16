@@ -69,6 +69,9 @@ interface WebGL2RenderingContext : WebGLRenderingContext {
 
     void vertexAttribDivisor(GLuint index, GLuint divisor);
 
+    /* transform feedback */
+    const GLenum RASTERIZER_DISCARD          = 0x8C89;
+
 
     void beginQuery(GLenum target, WebGLQuery? queryObject);
     void bindVertexArray(WebGLVertexArray? arrayObject);

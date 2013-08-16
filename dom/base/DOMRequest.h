@@ -10,7 +10,6 @@
 #include "nsIDOMDOMRequest.h"
 #include "nsDOMEventTargetHelper.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/DOMRequestBinding.h"
 
 #include "nsCOMPtr.h"

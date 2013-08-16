@@ -43,7 +43,7 @@ GetSecurityManager()
   return nsXPConnect::gScriptSecurityManager;
 }
 
-inline JSBool
+inline bool
 IsSecurityWrapper(JSObject *wrapper)
 {
   return js::IsWrapper(wrapper);

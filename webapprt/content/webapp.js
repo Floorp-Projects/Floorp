@@ -128,15 +128,22 @@ function updateMenuItems() {
 #endif
 }
 
+#ifndef XP_MACOSX
+let gEditUIVisible = true;
+#endif
+
 function updateEditUIVisibility() {
 #ifndef XP_MACOSX
   let editMenuPopupState = document.getElementById("menu_EditPopup").state;
+  let contextMenuPopupState = document.getElementById("contentAreaContextMenu").state;
 
   // The UI is visible if the Edit menu is opening or open, if the context menu
   // is open, or if the toolbar has been customized to include the Cut, Copy,
   // or Paste toolbar buttons.
   gEditUIVisible = editMenuPopupState == "showing" ||
-                   editMenuPopupState == "open";
+                   editMenuPopupState == "open" ||
+                   contextMenuPopupState == "showing" ||
+                   contextMenuPopupState == "open";
 
   // If UI is visible, update the edit commands' enabled state to reflect
   // whether or not they are actually enabled for the current focus/selection.
@@ -177,3 +184,60 @@ function updateCrashReportURL(aURI) {
   gCrashReporter.annotateCrashReport("URL", uri.spec);
 #endif
 }
+
+// Context menu handling code.
+// At the moment there isn't any built-in menu, we only support HTML5 custom
+// menus.
+
+let gContextMenu = null;
+
+XPCOMUtils.defineLazyGetter(this, "PageMenu", function() {
+  let tmp = {};
+  Cu.import("resource://gre/modules/PageMenu.jsm", tmp);
+  return new tmp.PageMenu();
+});
+
+function showContextMenu(aEvent, aXULMenu) {
+  if (aEvent.target != aXULMenu) {
+    return true;
+  }
+
+  gContextMenu = new nsContextMenu(aXULMenu);
+  if (gContextMenu.shouldDisplay) {
+    updateEditUIVisibility();
+  }
+
+  return gContextMenu.shouldDisplay;
+}
+
+function hideContextMenu(aEvent, aXULMenu) {
+  if (aEvent.target != aXULMenu) {
+    return;
+  }
+
+  gContextMenu = null;
+
+  updateEditUIVisibility();
+}
+
+function nsContextMenu(aXULMenu) {
+  this.initMenu(aXULMenu);
+}
+
+nsContextMenu.prototype = {
+  initMenu: function(aXULMenu) {
+    this.hasPageMenu = PageMenu.maybeBuildAndAttachMenu(document.popupNode,
+                                                        aXULMenu);
+    this.shouldDisplay = this.hasPageMenu;
+
+    this.showItem("page-menu-separator", this.hasPageMenu);
+  },
+
+  showItem: function(aItemOrID, aShow) {
+    let item = aItemOrID.constructor == String ?
+      document.getElementById(aItemOrID) : aItemOrID;
+    if (item) {
+      item.hidden = !aShow;
+    }
+  }
+};

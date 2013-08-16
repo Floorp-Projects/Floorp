@@ -9,9 +9,7 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "blink/Reverb.h"
-
-#include <cmath>
-#include "nsMathUtils.h"
+#include "PlayingRefChangeHandler.h"
 
 namespace mozilla {
 namespace dom {

@@ -31,6 +31,7 @@
 #include "nsSVGTextPathFrame.h"
 #include "nsIRootBox.h"
 #include "nsIDOMMutationEvent.h"
+#include "nsContentUtils.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -345,7 +346,7 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
 
     nsIFrame* cb = aFrame->GetContainingBlock();
     const nsSize size = cb->GetContentRectRelativeToSelf().Size();
-    const nsPoint oldOffsets = aFrame->GetRelativeOffset();
+    nsPoint position = aFrame->GetNormalPosition();
     nsMargin newOffsets;
 
     // Move the frame
@@ -355,8 +356,8 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
     NS_ASSERTION(newOffsets.left == -newOffsets.right &&
                  newOffsets.top == -newOffsets.bottom,
                  "ComputeRelativeOffsets should return valid results");
-    aFrame->SetPosition(aFrame->GetPosition() - oldOffsets +
-                        nsPoint(newOffsets.left, newOffsets.top));
+    nsHTMLReflowState::ApplyRelativePositioning(aFrame, newOffsets, &position);
+    aFrame->SetPosition(position);
 
     return true;
   }

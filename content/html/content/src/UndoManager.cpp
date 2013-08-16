@@ -7,6 +7,7 @@
 #include "mozilla/dom/DOMTransactionBinding.h"
 
 #include "nsDOMClassInfoID.h"
+#include "nsDOMEvent.h"
 #include "nsIClassInfo.h"
 #include "nsIXPCScriptable.h"
 #include "nsIVariant.h"
@@ -1139,23 +1140,9 @@ UndoManager::DispatchTransactionEvent(JSContext* aCx, const nsAString& aType,
     return;
   }
 
-  nsIDocument* ownerDoc = mHostNode->OwnerDoc();
-  if (!ownerDoc) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(ownerDoc);
-  if (!domDoc) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = domDoc->CreateEvent(NS_LITERAL_STRING("domtransaction"),
-                                    getter_AddRefs(event));
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  nsRefPtr<nsDOMEvent> event = mHostNode->OwnerDoc()->CreateEvent(
+    NS_LITERAL_STRING("domtransaction"), aRv);
+  if (aRv.Failed()) {
     return;
   }
 
@@ -1172,8 +1159,9 @@ UndoManager::DispatchTransactionEvent(JSContext* aCx, const nsAString& aType,
       return;
     }
     nsCOMPtr<nsIVariant> txVariant;
-    rv = nsContentUtils::XPConnect()->JSToVariant(aCx, txVal,
-                                                  getter_AddRefs(txVariant));
+    nsresult rv =
+      nsContentUtils::XPConnect()->JSToVariant(aCx, txVal,
+                                               getter_AddRefs(txVariant));
     if (NS_SUCCEEDED(rv)) {
       keepAlive.AppendObject(txVariant);
       transactionItems.AppendElement(txVariant.get());

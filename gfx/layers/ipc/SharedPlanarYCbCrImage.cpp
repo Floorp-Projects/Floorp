@@ -68,7 +68,7 @@ SharedPlanarYCbCrImage::SetData(const PlanarYCbCrImage::Data& aData)
   if (!mTextureClient->IsAllocated()) {
     Data data = aData;
     if (!Allocate(data)) {
-      printf("SharedPlanarYCbCrImage::SetData failed to allocate :(\n");
+      NS_WARNING("SharedPlanarYCbCrImage::SetData failed to allocate");
       return;
     }
   }

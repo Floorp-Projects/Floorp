@@ -197,9 +197,7 @@ WebGLContext::WebGLContext()
 
     mLastUseIndex = 0;
 
-    mBufferFetchingIsVerified = false;
-    mMaxFetchedVertices = 0;
-    mMaxFetchedInstances = 0;
+    InvalidateBufferFetching();
 
     mIsScreenCleared = false;
 
@@ -741,9 +739,6 @@ WebGLContext::GetInputStream(const char* aMimeType,
     const char encoderPrefix[] = "@mozilla.org/image/encoder;2?type=";
     nsAutoArrayPtr<char> conid(new char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
 
-    if (!conid)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     strcpy(conid, encoderPrefix);
     strcat(conid, aMimeType);
 
@@ -974,22 +969,16 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
 
     switch (ext) {
         case OES_element_index_uint:
-            if (!gl->IsGLES2())
-                return true;
-            return gl->IsExtensionSupported(GLContext::OES_element_index_uint);
+            return gl->IsExtensionSupported(GLContext::XXX_element_index_uint);
         case OES_standard_derivatives:
-            if (!gl->IsGLES2())
-                return true;
-            return gl->IsExtensionSupported(GLContext::OES_standard_derivatives);
+            return gl->IsExtensionSupported(GLContext::XXX_standard_derivatives);
         case WEBGL_lose_context:
             // We always support this extension.
             return true;
         case OES_texture_float:
-            return gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float
-                                                          : GLContext::ARB_texture_float);
+            return gl->IsExtensionSupported(GLContext::XXX_texture_float);
         case OES_texture_float_linear:
-            return gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float_linear
-                                                          : GLContext::ARB_texture_float);
+            return gl->IsExtensionSupported(GLContext::XXX_texture_float_linear);
         case OES_vertex_array_object:
             return WebGLExtensionVertexArray::IsSupported(this);
         case EXT_texture_filter_anisotropic:
@@ -1010,18 +999,10 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
         case WEBGL_compressed_texture_pvrtc:
             return gl->IsExtensionSupported(GLContext::IMG_texture_compression_pvrtc);
         case WEBGL_depth_texture:
-            if (gl->IsGLES2() &&
-                gl->IsExtensionSupported(GLContext::OES_packed_depth_stencil) &&
-                gl->IsExtensionSupported(GLContext::OES_depth_texture))
-            {
-                return true;
-            }
-            else if (!gl->IsGLES2() &&
-                     gl->IsExtensionSupported(GLContext::EXT_packed_depth_stencil))
-            {
-                return true;
-            }
-            return false;
+            return gl->IsExtensionSupported(GLContext::XXX_packed_depth_stencil) &&
+                   gl->IsExtensionSupported(GLContext::XXX_depth_texture);
+        case ANGLE_instanced_arrays:
+            return WebGLExtensionInstancedArrays::IsSupported(this);
         default:
             // For warnings-as-errors.
             break;
@@ -1121,6 +1102,10 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
     {
         ext = WEBGL_draw_buffers;
     }
+    else if (CompareWebGLExtensionName(name, "ANGLE_instanced_arrays"))
+    {
+        ext = ANGLE_instanced_arrays;
+    }
 
     if (ext == WebGLExtensionID_unknown_extension) {
       return nullptr;
@@ -1186,6 +1171,9 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
             break;
         case OES_vertex_array_object:
             obj = new WebGLExtensionVertexArray(this);
+            break;
+        case ANGLE_instanced_arrays:
+            obj = new WebGLExtensionInstancedArrays(this);
             break;
         default:
             MOZ_ASSERT(false, "should not get there.");
@@ -1595,6 +1583,8 @@ WebGLContext::GetSupportedExtensions(JSContext *cx, Nullable< nsTArray<nsString>
         arr.AppendElement(NS_LITERAL_STRING("WEBGL_draw_buffers"));
     if (IsExtensionSupported(cx, OES_vertex_array_object))
         arr.AppendElement(NS_LITERAL_STRING("OES_vertex_array_object"));
+    if (IsExtensionSupported(cx, ANGLE_instanced_arrays))
+        arr.AppendElement(NS_LITERAL_STRING("ANGLE_instanced_arrays"));
 }
 
 //

@@ -27,6 +27,7 @@
 #include "MediaDecoder.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/Base64.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -1756,7 +1757,7 @@ nsContentUtils::IsImageSrcSetDisabled()
 // static
 bool
 nsContentUtils::LookupBindingMember(JSContext* aCx, nsIContent *aContent,
-                                    JS::HandleId aId, JSPropertyDescriptor* aDesc)
+                                    JS::HandleId aId, JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
   nsXBLBinding* binding = aContent->GetXBLBinding();
   if (!binding)

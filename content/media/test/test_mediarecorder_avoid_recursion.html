@@ -1,0 +1,44 @@
+<html>
+<head>
+  <title>MediaRecorder infinite recursion with requestData() calls in "dataavailable" event</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=897776">Mozill
+a Bug 897776</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+function startTest() {
+  navigator.mozGetUserMedia({audio: true, fake: true}, function(stream) {
+    var mediaRecorder = new MediaRecorder(stream);
+    var count = 0;
+    mediaRecorder.start();
+    mediaRecorder.ondataavailable = function (e) {
+      if (count++ == 30) {
+        stream.stop();
+      }
+      if (mediaRecorder.state == 'recording') {
+        mediaRecorder.requestData();
+      }
+    }
+    mediaRecorder.requestData();
+    mediaRecorder.onstop = function () {
+      ok(true, "requestData within ondataavailable successfully avoided infinite recursion");
+      SimpleTest.finish();
+    }
+  }, function(err) {
+    ok(false, 'Unexpected error fired with: ' + err);
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+startTest();
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -14,7 +14,6 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
-#include "pratom.h"
 #include "prlog.h"
 #include "nsCRT.h"
 #include "netCore.h"
@@ -23,6 +22,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsIHttpChannelInternal.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Telemetry.h"
 #include "nsAutoPtr.h"
 #include "mozilla/net/PSpdyPush3.h"
@@ -1056,7 +1056,7 @@ public:
 
     nsLoadGroupConnectionInfo();
 private:
-    int32_t       mBlockingTransactionCount; // signed for PR_ATOMIC_*
+    Atomic<uint32_t>       mBlockingTransactionCount;
     nsAutoPtr<mozilla::net::SpdyPushCache3> mSpdyCache3;
 };
 
@@ -1071,14 +1071,14 @@ NS_IMETHODIMP
 nsLoadGroupConnectionInfo::GetBlockingTransactionCount(uint32_t *aBlockingTransactionCount)
 {
     NS_ENSURE_ARG_POINTER(aBlockingTransactionCount);
-    *aBlockingTransactionCount = static_cast<uint32_t>(mBlockingTransactionCount);
+    *aBlockingTransactionCount = mBlockingTransactionCount;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLoadGroupConnectionInfo::AddBlockingTransaction()
 {
-    PR_ATOMIC_INCREMENT(&mBlockingTransactionCount);
+    mBlockingTransactionCount++;
     return NS_OK;
 }
 
@@ -1086,8 +1086,8 @@ NS_IMETHODIMP
 nsLoadGroupConnectionInfo::RemoveBlockingTransaction(uint32_t *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval =
-        static_cast<uint32_t>(PR_ATOMIC_DECREMENT(&mBlockingTransactionCount));
+        mBlockingTransactionCount--;
+        *_retval = mBlockingTransactionCount;
     return NS_OK;
 }
 

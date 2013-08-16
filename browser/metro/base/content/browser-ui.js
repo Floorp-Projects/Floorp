@@ -11,9 +11,6 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm")
  * Constants
  */
 
-// Page for which the start UI is shown
-const kStartOverlayURI = "about:start";
-
 // Devtools Messages
 const debugServerStateChanged = "devtools.debugger.remote-enabled";
 const debugServerPortChanged = "devtools.debugger.remote-port";
@@ -33,6 +30,7 @@ let Elements = {};
 [
   ["contentShowing",     "bcast_contentShowing"],
   ["urlbarState",        "bcast_urlbarState"],
+  ["loadingState",       "bcast_loadingState"],
   ["windowState",        "bcast_windowState"],
   ["mainKeyset",         "mainKeyset"],
   ["stack",              "stack"],
@@ -40,7 +38,6 @@ let Elements = {};
   ["tabs",               "tabs-container"],
   ["controls",           "browser-controls"],
   ["panelUI",            "panel-container"],
-  ["startUI",            "start-container"],
   ["tray",               "tray"],
   ["toolbar",            "toolbar"],
   ["browsers",           "browsers"],
@@ -109,7 +106,6 @@ var BrowserUI = {
 
     // Init core UI modules
     ContextUI.init();
-    StartUI.init();
     PanelUI.init();
     FlyoutPanelsUI.init();
     PageThumbs.init();
@@ -184,7 +180,6 @@ var BrowserUI = {
     messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
     PanelUI.uninit();
-    StartUI.uninit();
     Downloads.uninit();
     SettingsCharm.uninit();
     messageManager.removeMessageListener("Content:StateChange", this);
@@ -231,7 +226,7 @@ var BrowserUI = {
   },
 
   showContent: function showContent(aURI) {
-    StartUI.update(aURI);
+    this.updateStartURIAttributes(aURI);
     ContextUI.dismissTabs();
     ContextUI.dismissContextAppbar();
     FlyoutPanelsUI.hide();
@@ -329,7 +324,7 @@ var BrowserUI = {
     let flags = aFlags || 0;
     if (!(flags & this.NO_STARTUI_VISIBILITY)) {
       let uri = this.getDisplayURI(Browser.selectedBrowser);
-      StartUI.update(uri);
+      this.updateStartURIAttributes(uri);
     }
     this._updateButtons();
     this._updateToolbar();
@@ -340,6 +335,25 @@ var BrowserUI = {
     let uri = this.getDisplayURI(Browser.selectedBrowser);
     let cleanURI = Util.isURLEmpty(uri) ? "" : uri;
     this._edit.value = cleanURI;
+  },
+
+  get isStartTabVisible() {
+    return this.isStartURI();
+  },
+
+  isStartURI: function isStartURI(aURI) {
+    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
+    return aURI == kStartURI;
+  },
+
+  updateStartURIAttributes: function (aURI) {
+    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
+    if (this.isStartURI(aURI)) {
+      ContextUI.displayNavbar();
+      Elements.windowState.setAttribute("startpage", "true");
+    } else if (aURI != "about:blank") { // about:blank is loaded briefly for new tabs; ignore it
+      Elements.windowState.removeAttribute("startpage");
+    }
   },
 
   getDisplayURI: function(browser) {
@@ -422,7 +436,7 @@ var BrowserUI = {
    */
 
   newTab: function newTab(aURI, aOwner, aPeekTabs) {
-    aURI = aURI || kStartOverlayURI;
+    aURI = aURI || kStartURI;
     if (aPeekTabs) {
       ContextUI.peekTabs(kNewTabAnimationDelayMsec);
     }
@@ -690,13 +704,11 @@ var BrowserUI = {
   },
 
   _updateToolbar: function _updateToolbar() {
-    let mode = Elements.urlbarState.getAttribute("mode");
-    let isLoading = Browser.selectedTab.isLoading();
-
-    if (isLoading && mode != "loading")
-      Elements.urlbarState.setAttribute("mode", "loading");
-    else if (!isLoading && mode != "edit")
-      Elements.urlbarState.setAttribute("mode", "view");
+    if (Browser.selectedTab.isLoading()) {
+      Elements.loadingState.setAttribute("loading", true);
+    } else {
+      Elements.loadingState.removeAttribute("loading");
+    }
   },
 
   _closeOrQuit: function _closeOrQuit() {
@@ -781,12 +793,6 @@ var BrowserUI = {
       return;
     }
 
-    if (StartUI.hide()) {
-      // When escaping from the start screen, hide the toolbar too.
-      ContextUI.dismiss();
-      return;
-    }
-
     if (Browser.selectedTab.isLoading()) {
       Browser.selectedBrowser.stop();
       return;
@@ -863,7 +869,6 @@ var BrowserUI = {
         let referrerURI = null;
         if (json.referrer)
           referrerURI = Services.io.newURI(json.referrer, null, null);
-        //Browser.addTab(json.uri, json.bringFront, Browser.selectedTab, { referrerURI: referrerURI });
         this.goToURI(json.uri);
         break;
       case "Content:StateChange":
@@ -1110,139 +1115,6 @@ var BrowserUI = {
 
   crashReportingPrefChanged: function crashReportingPrefChanged(aState) {
     CrashReporter.submitReports = aState;
-  }
-};
-
-var StartUI = {
-  get isVisible() { return this.isStartPageVisible; },
-  get isStartPageVisible() { return Elements.windowState.hasAttribute("startpage"); },
-
-  get maxResultsPerSection() {
-    return Services.prefs.getIntPref("browser.display.startUI.maxresults");
-  },
-
-  sections: [
-    "TopSitesStartView",
-    "BookmarksStartView",
-    "HistoryStartView",
-    "RemoteTabsStartView"
-  ],
-
-  init: function init() {
-    Elements.startUI.addEventListener("contextmenu", this, false);
-    Elements.startUI.addEventListener("click", this, false);
-    Elements.startUI.addEventListener("MozMousePixelScroll", this, false);
-
-    this.sections.forEach(function (sectionName) {
-      let section = window[sectionName];
-      if (section.init)
-        section.init();
-    });
-  },
-
-  uninit: function() {
-    this.sections.forEach(function (sectionName) {
-      let section = window[sectionName];
-      if (section.uninit)
-        section.uninit();
-    });
-  },
-
-  /** Show the Firefox start page / "new tab" page */
-  show: function show() {
-    if (this.isStartPageVisible)
-      return false;
-
-    ContextUI.displayNavbar();
-
-    Elements.contentShowing.setAttribute("disabled", "true");
-    Elements.windowState.setAttribute("startpage", "true");
-
-    this.sections.forEach(function (sectionName) {
-      let section = window[sectionName];
-      if (section.show)
-        section.show();
-    });
-    return true;
-  },
-
-  /** Hide the Firefox start page */
-  hide: function hide(aURI) {
-    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
-    if (!this.isStartPageVisible || this.isStartURI(aURI))
-      return false;
-
-    Elements.contentShowing.removeAttribute("disabled");
-    Elements.windowState.removeAttribute("startpage");
-    return true;
-  },
-
-  /** Is the current tab supposed to show the Firefox start page? */
-  isStartURI: function isStartURI(aURI) {
-    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
-    return aURI == kStartOverlayURI || aURI == "about:home";
-  },
-
-  /** Call this to show or hide the start page when switching tabs or pages */
-  update: function update(aURI) {
-    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
-    if (this.isStartURI(aURI)) {
-      this.show();
-    } else if (aURI != "about:blank") { // about:blank is loaded briefly for new tabs; ignore it
-      this.hide(aURI);
-    }
-  },
-
-  onClick: function onClick(aEvent) {
-    // If someone clicks / taps in empty grid space, take away
-    // focus from the nav bar edit so the soft keyboard will hide.
-    if (BrowserUI.blurNavBar()) {
-      // Advanced notice to CAO, so we can shuffle the nav bar in advance
-      // of the keyboard transition.
-      ContentAreaObserver.navBarWillBlur();
-    }
-
-    if (aEvent.button == 0)
-      ContextUI.dismissTabs();
-  },
-
-  onNarrowTitleClick: function onNarrowTitleClick(sectionId) {
-    let section = document.getElementById(sectionId);
-
-    if (section.hasAttribute("expanded"))
-      return;
-
-    for (let expandedSection of Elements.startUI.querySelectorAll(".meta-section[expanded]"))
-      expandedSection.removeAttribute("expanded")
-
-    section.setAttribute("expanded", "true");
-  },
-
-  handleEvent: function handleEvent(aEvent) {
-    switch (aEvent.type) {
-      case "contextmenu":
-        let event = document.createEvent("Events");
-        event.initEvent("MozEdgeUICompleted", true, false);
-        window.dispatchEvent(event);
-        break;
-      case "click":
-        this.onClick(aEvent);
-        break;
-
-      case "MozMousePixelScroll":
-        let startBox = document.getElementById("start-scrollbox");
-        let [, scrollInterface] = ScrollUtils.getScrollboxFromElement(startBox);
-
-        if (Elements.windowState.getAttribute("viewstate") == "snapped") {
-          scrollInterface.scrollBy(0, aEvent.detail);
-        } else {
-          scrollInterface.scrollBy(aEvent.detail, 0);
-        }
-
-        aEvent.preventDefault();
-        aEvent.stopPropagation();
-        break;
-    }
   }
 };
 

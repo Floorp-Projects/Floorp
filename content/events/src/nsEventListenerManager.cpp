@@ -669,9 +669,7 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
   } else {
     nsCOMPtr<nsPIDOMWindow> win = GetTargetAsInnerWindow();
     if (win) {
-      nsCOMPtr<nsIDOMDocument> domdoc;
-      win->GetDocument(getter_AddRefs(domdoc));
-      doc = do_QueryInterface(domdoc);
+      doc = win->GetDoc();
       global = do_QueryInterface(win);
     } else {
       global = do_QueryInterface(mTarget);
@@ -1200,7 +1198,6 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
                               ls.mFlags.mCapture,
                               ls.mFlags.mAllowUntrustedEvents,
                               ls.mFlags.mInSystemGroup);
-    NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
     aList->AppendObject(info);
   }
   return NS_OK;

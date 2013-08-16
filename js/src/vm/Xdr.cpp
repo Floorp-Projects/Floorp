@@ -9,13 +9,11 @@
 #include <string.h>
 
 #include "jsapi.h"
-#include "jsprf.h"
 #include "jsscript.h"
 
 #include "vm/Debugger.h"
-#include "vm/Runtime.h"
 
-#include "jsscriptinlines.h"
+#include "vm/ObjectImpl-inl.h"
 
 using namespace js;
 

@@ -8,7 +8,6 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsprf.h"
 #include "mozilla/Util.h"
 #include "nsDOMException.h"
 #include "nsTraceRefcnt.h"
@@ -125,7 +124,7 @@ private:
     return true;
   }
 
-  static JSBool
+  static bool
   GetProperty(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
               JS::MutableHandle<JS::Value> aVp)
   {
@@ -146,7 +145,7 @@ private:
     return true;
   }
 
-  static JSBool
+  static bool
   GetConstant(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> idval,
               JS::MutableHandle<JS::Value> aVp)
   {

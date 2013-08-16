@@ -36,7 +36,6 @@ static PRLogModuleInfo* sFilePickerLog = nullptr;
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
 nsFilePicker::nsFilePicker()
-    : mMode(nsIFilePicker::modeOpen)
 {
 #ifdef PR_LOGGING
     if (!sFilePickerLog)
@@ -289,11 +288,10 @@ nsFilePicker::Show(int16_t* aReturn)
     return NS_OK;
 }
 
-void nsFilePicker::InitNative(nsIWidget *aParent, const nsAString &aTitle, int16_t mode)
+void nsFilePicker::InitNative(nsIWidget *aParent, const nsAString &aTitle)
 {
     PR_LOG(sFilePickerLog, PR_LOG_DEBUG, ("nsFilePicker::InitNative"));
     nsAutoString str(aTitle);
     mCaption = QString::fromUtf16(str.get());
     mParent = aParent;
-    mMode = mode;
 }

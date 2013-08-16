@@ -10,15 +10,17 @@
 #include <cmath>
 #include <limits>
 #include "mozilla/TypeTraits.h"
-#include "mozilla/Assertions.h"
-#include "AudioParamTimeline.h"
+#include "mozilla/FloatingPoint.h"
 #include "MediaSegment.h"
 
 namespace mozilla {
 
 class AudioNodeStream;
+class MediaStream;
 
 namespace dom {
+
+class AudioParamTimeline;
 
 struct WebAudioUtils {
   // This is an arbitrary large number used to protect against OOMs.
@@ -210,6 +212,8 @@ struct WebAudioUtils {
     // Otherwise, this conversion must be well defined.
     return IntType(f);
   }
+
+  static void Shutdown();
 };
 
 }

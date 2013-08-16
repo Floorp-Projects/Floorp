@@ -13,6 +13,7 @@
 
 #include "gc/Marking.h"
 
+#include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
 
 using namespace js;
@@ -250,7 +251,7 @@ JSRope::getCharsNonDestructiveInternal(ThreadSafeContext *cx, ScopedJSFreePtr<js
 
 template<JSRope::UsingBarrier b>
 JSFlatString *
-JSRope::flattenInternal(JSContext *maybecx)
+JSRope::flattenInternal(ExclusiveContext *maybecx)
 {
     /*
      * Perform a depth-first dag traversal, splatting each node's characters
@@ -392,7 +393,7 @@ JSRope::flattenInternal(JSContext *maybecx)
 }
 
 JSFlatString *
-JSRope::flatten(JSContext *maybecx)
+JSRope::flatten(ExclusiveContext *maybecx)
 {
 #if JSGC_INCREMENTAL
     if (zone()->needsBarrier())
@@ -470,7 +471,7 @@ JSDependentString::getCharsZNonDestructive(ThreadSafeContext *cx, ScopedJSFreePt
 }
 
 JSFlatString *
-JSDependentString::undepend(JSContext *cx)
+JSDependentString::undepend(ExclusiveContext *cx)
 {
     JS_ASSERT(JSString::isDependent());
 
@@ -501,7 +502,7 @@ JSDependentString::undepend(JSContext *cx)
 }
 
 JSStableString *
-JSInlineString::uninline(JSContext *maybecx)
+JSInlineString::uninline(ExclusiveContext *maybecx)
 {
     JS_ASSERT(isInline());
     size_t n = length();
@@ -570,8 +571,8 @@ ScopedThreadSafeStringInspector::ensureChars(ThreadSafeContext *cx)
     if (chars_)
         return true;
 
-    if (cx->isJSContext()) {
-        JSLinearString *linear = str_->ensureLinear(cx->asJSContext());
+    if (cx->isExclusiveContext()) {
+        JSLinearString *linear = str_->ensureLinear(cx->asExclusiveContext());
         if (!linear)
             return false;
         chars_ = linear->chars();
@@ -626,7 +627,7 @@ bool
 StaticStrings::init(JSContext *cx)
 {
     AutoLockForExclusiveAccess lock(cx);
-    AutoCompartment ac(cx, cx->runtime()->atomsCompartment);
+    AutoCompartment ac(cx, cx->runtime()->atomsCompartment());
 
     for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
         jschar buffer[] = { jschar(i), '\0' };

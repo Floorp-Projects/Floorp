@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
@@ -297,7 +298,6 @@ MozInputMethod.prototype = {
     cpmm.removeMessageListener('Keyboard:GetContext:Result:OK', this);
 
     this._window = null;
-    this._inputcontextHandler = null;
     this._mgmt = null;
   },
 
@@ -307,6 +307,7 @@ MozInputMethod.prototype = {
     switch(msg.name) {
       case 'Keyboard:FocusChange':
         if (json.type !== 'blur') {
+          // XXX Bug 904339 could receive 'text' event twice
           this.setInputContext(json);
         }
         else {
@@ -336,12 +337,12 @@ MozInputMethod.prototype = {
      return this._inputcontext;
   },
 
-  set oninputcontextchange(val) {
-    this._inputcontextHandler = val;
+  set oninputcontextchange(handler) {
+    this.__DOM_IMPL__.setEventHandler("oninputcontextchange", handler);
   },
 
   get oninputcontextchange() {
-    return this._inputcontextHandler;
+    return this.__DOM_IMPL__.getEventHandler("oninputcontextchange");
   },
 
   setInputContext: function mozKeyboardContextChange(data) {
@@ -355,13 +356,9 @@ MozInputMethod.prototype = {
       this._inputcontext.init(this._window);
     }
 
-    let handler = this._inputcontextHandler;
-    if (!handler || !(handler instanceof Ci.nsIDOMEventListener))
-      return;
-
-    let evt = new this._window.CustomEvent("inputcontextchange",
-        ObjectWrapper.wrap({}, this._window));
-    handler.handleEvent(evt);
+    let event = new this._window.Event("inputcontextchange",
+                                       ObjectWrapper.wrap({}, this._window));
+    this.__DOM_IMPL__.dispatchEvent(event);
   }
 };
 
@@ -412,7 +409,6 @@ MozInputContext.prototype = {
     this._window = win;
     this._utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindowUtils);
-
     this.initDOMRequestHelper(win,
       ["Keyboard:GetText:Result:OK",
        "Keyboard:GetText:Result:Error",
@@ -427,21 +423,20 @@ MozInputContext.prototype = {
 
     // All requests that are still pending need to be invalidated
     // because the context is no longer valid.
-    Object.keys(self._requests).forEach(function(k) {
-      // takeRequest also does a delete from context
-      let req = self.takeRequest(k);
-      Services.DOMRequest.fireError(req, "InputContext got destroyed");
+    this.forEachPromiseResolver(function(k) {
+      self.takePromiseResolver(k).reject("InputContext got destroyed");
     });
-
     this.destroyDOMRequestHelper();
 
-    // A consuming application might still hold a cached version of this
-    // object. After destroying the DOMRequestHelper all methods will throw
-    // because we cannot create new requests anymore, but we still hold
+    // A consuming application might still hold a cached version of
+    // this object. After destroying all methods will throw because we
+    // cannot create new promises anymore, but we still hold
     // (outdated) information in the context. So let's clear that out.
-    for (var k in this._context)
-      if (this._context.hasOwnProperty(k))
+    for (var k in this._context) {
+      if (this._context.hasOwnProperty(k)) {
         this._context[k] = null;
+      }
+    }
   },
 
   receiveMessage: function ic_receiveMessage(msg) {
@@ -451,35 +446,35 @@ MozInputContext.prototype = {
     }
 
     let json = msg.json;
-    let request = json.requestId ? this.takeRequest(json.requestId) : null;
+    let resolver = this.takePromiseResolver(json.requestId);
 
-    if (!request) {
+    if (!resolver) {
       return;
     }
 
     switch (msg.name) {
       case "Keyboard:SendKey:Result:OK":
-        Services.DOMRequest.fireSuccess(request, null);
+        resolver.resolve();
         break;
       case "Keyboard:GetText:Result:OK":
-        Services.DOMRequest.fireSuccess(request, json.text);
+        resolver.resolve(json.text);
         break;
       case "Keyboard:GetText:Result:Error":
-        Services.DOMRequest.fireError(request, json.error);
+        resolver.reject(json.error);
         break;
       case "Keyboard:SetSelectionRange:Result:OK":
       case "Keyboard:ReplaceSurroundingText:Result:OK":
-        Services.DOMRequest.fireSuccess(request,
+        resolver.resolve(
           ObjectWrapper.wrap(json.selectioninfo, this._window));
         break;
       case "Keyboard:SequenceError":
         // Occurs when a new element got focus, but the inputContext was
         // not invalidated yet...
-        Services.DOMRequest.fireError(request, "InputContext has expired");
+        resolver.reject("InputContext has expired");
         break;
       default:
-        Services.DOMRequest.fireError(request, "Could not find a handler for " +
-          msg.name);
+        dump("Could not find a handler for " + msg.name);
+        resolver.reject();
         break;
     }
   },
@@ -500,31 +495,28 @@ MozInputContext.prototype = {
     this._context.textAfterCursor = ctx.textAfterCursor;
 
     if (selectionDirty) {
-      this._fireEvent(this._onselectionchange, "selectionchange", {
+      this._fireEvent("selectionchange", {
         selectionStart: ctx.selectionStart,
         selectionEnd: ctx.selectionEnd
       });
     }
 
     if (surroundDirty) {
-      this._fireEvent(this._onsurroundingtextchange, "surroundingtextchange", {
+      this._fireEvent("surroundingtextchange", {
         beforeString: ctx.textBeforeCursor,
         afterString: ctx.textAfterCursor
       });
     }
   },
 
-  _fireEvent: function ic_fireEvent(handler, eventName, aDetail) {
-    if (!handler || !(handler instanceof Ci.nsIDOMEventListener))
-      return;
-
+  _fireEvent: function ic_fireEvent(eventName, aDetail) {
     let detail = {
       detail: aDetail
     };
 
-    let evt = new this._window.CustomEvent(eventName,
-        ObjectWrapper.wrap(aDetail, this._window));
-    handler.handleEvent(evt);
+    let event = new this._window.Event(eventName,
+                                       ObjectWrapper.wrap(aDetail, this._window));
+    this.__DOM_IMPL__.dispatchEvent(event);
   },
 
   // tag name of the input field
@@ -546,16 +538,16 @@ MozInputContext.prototype = {
   },
 
   getText: function ic_getText(offset, length) {
-    let request = this.createRequest();
-
-    cpmm.sendAsyncMessage('Keyboard:GetText', {
-      contextId: this._contextId,
-      requestId: this.getRequestId(request),
-      offset: offset,
-      length: length
+    let self = this;
+    return this.createPromise(function(resolver) {
+      let resolverId = self.getPromiseResolverId(resolver);
+      cpmm.sendAsyncMessage('Keyboard:GetText', {
+        contextId: self._contextId,
+        requestId: resolverId,
+        offset: offset,
+        length: length
+      });
     });
-
-    return request;
   },
 
   get selectionStart() {
@@ -575,46 +567,46 @@ MozInputContext.prototype = {
   },
 
   setSelectionRange: function ic_setSelectionRange(start, length) {
-    let request = this.createRequest();
-
-    cpmm.sendAsyncMessage("Keyboard:SetSelectionRange", {
-      contextId: this._contextId,
-      requestId: this.getRequestId(request),
-      selectionStart: start,
-      selectionEnd: start + length
+    let self = this;
+    return this.createPromise(function(resolver) {
+      let resolverId = self.getPromiseResolverId(resolver);
+      cpmm.sendAsyncMessage("Keyboard:SetSelectionRange", {
+        contextId: self._contextId,
+        requestId: resolverId,
+        selectionStart: start,
+        selectionEnd: start + length
+      });
     });
-
-    return request;
   },
 
   get onsurroundingtextchange() {
-    return this._onsurroundingtextchange;
+    return this.__DOM_IMPL__.getEventHandler("onsurroundingtextchange");
   },
 
   set onsurroundingtextchange(handler) {
-    this._onsurroundingtextchange = handler;
+    this.__DOM_IMPL__.setEventHandler("onsurroundingtextchange");
   },
 
   get onselectionchange() {
-    return this._onselectionchange;
+    return this.__DOM_IMPL__.getEventHandler("onselectionchange");
   },
 
   set onselectionchange(handler) {
-    this._onselectionchange = handler;
+    this.__DOM_IMPL__.setEventHandler("onselectionchange");
   },
 
   replaceSurroundingText: function ic_replaceSurrText(text, offset, length) {
-    let request = this.createRequest();
-
-    cpmm.sendAsyncMessage('Keyboard:ReplaceSurroundingText', {
-      contextId: this._contextId,
-      requestId: this.getRequestId(request),
-      text: text,
-      beforeLength: offset || 0,
-      afterLength: length || 0
+    let self = this;
+    return this.createPromise(function(resolver) {
+      let resolverId = self.getPromiseResolverId(resolver);
+      cpmm.sendAsyncMessage('Keyboard:ReplaceSurroundingText', {
+        contextId: self._contextId,
+        requestId: resolverId,
+        text: text,
+        beforeLength: offset || 0,
+        afterLength: length || 0
+      });
     });
-
-    return request;
   },
 
   deleteSurroundingText: function ic_deleteSurrText(offset, length) {
@@ -622,27 +614,27 @@ MozInputContext.prototype = {
   },
 
   sendKey: function ic_sendKey(keyCode, charCode, modifiers) {
-    let request = this.createRequest();
-
-    cpmm.sendAsyncMessage('Keyboard:SendKey', {
-      contextId: this._contextId,
-      requestId: this.getRequestId(request),
-      keyCode: keyCode,
-      charCode: charCode,
-      modifiers: modifiers
+    let self = this;
+    return this.createPromise(function(resolver) {
+      let resolverId = self.getPromiseResolverId(resolver);
+      cpmm.sendAsyncMessage('Keyboard:SendKey', {
+        contextId: self._contextId,
+        requestId: resolverId,
+        keyCode: keyCode,
+        charCode: charCode,
+        modifiers: modifiers
+      });
     });
-
-    return request;
   },
 
   setComposition: function ic_setComposition(text, cursor) {
-    throw "Not implemented";
+    throw new this._window.DOMError("NotSupportedError", "Not implemented");
   },
 
   endComposition: function ic_endComposition(text) {
-    throw "Not implemented";
+    throw new this._window.DOMError("NotSupportedError", "Not implemented");
   }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
-  [MozKeyboard, MozInputMethodManager, MozInputMethod]);
+  [MozKeyboard, MozInputMethod]);

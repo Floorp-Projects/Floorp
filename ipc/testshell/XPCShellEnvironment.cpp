@@ -16,7 +16,6 @@
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
-#include "jsprf.h"
 
 #include "xpcpublic.h"
 
@@ -34,7 +33,6 @@
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
 
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsJSUtils.h"
 #include "nsJSPrincipals.h"
@@ -112,7 +110,7 @@ Print(JSContext *cx,
     return true;
 }
 
-static JSBool
+static bool
 GetLine(char *bufp,
         FILE *file,
         const char *prompt)
@@ -289,7 +287,7 @@ DumpHeap(JSContext *cx,
     size_t maxDepth = (size_t)-1;
     void *thingToIgnore = NULL;
     FILE *dumpFile;
-    JSBool ok;
+    bool ok;
 
     JS::Value *argv = JS_ARGV(cx, vp);
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
@@ -401,14 +399,14 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
                                  JS::Handle<JSObject*> obj,
                                  const char *filename,
                                  FILE *file,
-                                 JSBool forceTTY)
+                                 bool forceTTY)
 {
     XPCShellEnvironment* env = this;
 
     JSScript *script;
     JS::Rooted<JS::Value> result(cx);
     int lineno, startline;
-    JSBool ok, hitEOF;
+    bool ok, hitEOF;
     char *bufp, buffer[4096];
     JSString *str;
 
@@ -702,7 +700,7 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   }
 
   JS::Rooted<JS::Value> result(cx);
-  JSBool ok = JS_ExecuteScript(cx, global, script, result.address());
+  bool ok = JS_ExecuteScript(cx, global, script, result.address());
   if (ok && result != JSVAL_VOID) {
       JSErrorReporter old = JS_SetErrorReporter(cx, NULL);
       JSString* str = JS_ValueToString(cx, result);

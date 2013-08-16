@@ -91,6 +91,18 @@ __asm void ExecutableAllocator::cacheFlush(void* code, size_t size)
 }
 #endif
 
+void
+ExecutablePool::toggleAllCodeAsAccessible(bool accessible)
+{
+    char* begin = m_allocation.pages;
+    size_t size = m_freePtr - begin;
+
+    if (size) {
+        if (mprotect(begin, size, accessible ? PROT_READ | PROT_WRITE | PROT_EXEC : PROT_NONE))
+            MOZ_CRASH();
+    }
+}
+
 }
 
 #endif // HAVE(ASSEMBLER)

@@ -216,10 +216,7 @@ BluetoothOppManager::Get()
   }
 
   // If we're in shutdown, don't create a new instance
-  if (sInShutdown) {
-    NS_WARNING("BluetoothOppManager can't be created during shutdown");
-    return nullptr;
-  }
+  NS_ENSURE_FALSE(sInShutdown, nullptr);
 
   // Create a new instance, register, and return
   BluetoothOppManager *manager = new BluetoothOppManager();
@@ -515,10 +512,7 @@ BluetoothOppManager::CreateFile()
   path.Append(mFileName);
 
   mDsFile = DeviceStorageFile::CreateUnique(path, nsIFile::NORMAL_FILE_TYPE, 0644);
-  if (!mDsFile) {
-    NS_WARNING("Couldn't create the file");
-    return false;
-  }
+  NS_ENSURE_TRUE(mDsFile, false);
 
   nsCOMPtr<nsIFile> f;
   mDsFile->mFile->Clone(getter_AddRefs(f));

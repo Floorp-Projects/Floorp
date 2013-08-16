@@ -93,79 +93,76 @@ abstract class HomeFragment extends Fragment {
         HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
         final Context context = getActivity().getApplicationContext();
 
-        switch(item.getItemId()) {
-            case R.id.home_share: {
-                if (info.url == null) {
-                    Log.e(LOGTAG, "Can't share because URL is null");
-                    break;
-                }
-
+        final int itemId = item.getItemId();
+        if (itemId == R.id.home_share) {
+            if (info.url == null) {
+                Log.e(LOGTAG, "Can't share because URL is null");
+            } else {
                 GeckoAppShell.openUriExternal(info.url, SHARE_MIME_TYPE, "", "",
                                               Intent.ACTION_SEND, info.title);
-                return true;
-            }
-
-            case R.id.home_add_to_launcher: {
-                if (info.url == null) {
-                    Log.e(LOGTAG, "Can't add to home screen because URL is null");
-                    break;
-                }
-
-                // FIXME: bug 897772
-                Bitmap bitmap = null;
-                if (info.favicon != null) {
-                    bitmap = BitmapUtils.decodeByteArray(info.favicon);
-                }
-
-                String shortcutTitle = TextUtils.isEmpty(info.title) ? info.url.replaceAll(REGEX_URL_TO_TITLE, "") : info.title;
-                GeckoAppShell.createShortcut(shortcutTitle, info.url, bitmap, "");
-                return true;
-            }
-
-            case R.id.home_open_private_tab:
-            case R.id.home_open_new_tab: {
-                if (info.url == null) {
-                    Log.e(LOGTAG, "Can't open in new tab because URL is null");
-                    break;
-                }
-
-                int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
-                if (item.getItemId() == R.id.home_open_private_tab)
-                    flags |= Tabs.LOADURL_PRIVATE;
-
-                final String url = (info.inReadingList ? ReaderModeUtils.getAboutReaderForUrl(info.url, true) : info.url);
-                Tabs.getInstance().loadUrl(url, flags);
-                Toast.makeText(context, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
-                return true;
-            }
-
-            case R.id.home_edit_bookmark: {
-                // UI Dialog associates to the activity context, not the applications'.
-                new EditBookmarkDialog(getActivity()).show(info.url);
-                return true;
-            }
-
-            case R.id.home_open_in_reader: {
-                final String url = ReaderModeUtils.getAboutReaderForUrl(info.url, true);
-                Tabs.getInstance().loadUrl(url, Tabs.LOADURL_NONE);
-                return true;
-            }
-
-            case R.id.home_remove: {
-                // Prioritize removing a history entry over a bookmark in the case of a combined item.
-                final int historyId = info.historyId;
-                if (historyId > -1) {
-                    new RemoveHistoryTask(context, historyId).execute();
-                    return true;
-                }
-
-                final int bookmarkId = info.bookmarkId;
-                if (bookmarkId > -1) {
-                    new RemoveBookmarkTask(context, bookmarkId, info.url, info.inReadingList).execute();
-                    return true;
-                }
             }
         }
+
+        if (itemId == R.id.home_add_to_launcher) {
+            if (info.url == null) {
+                Log.e(LOGTAG, "Can't add to home screen because URL is null");
+                return false;
+            }
+
+            // FIXME: bug 897772
+            Bitmap bitmap = null;
+            if (info.favicon != null) {
+                bitmap = BitmapUtils.decodeByteArray(info.favicon);
+            }
+
+            String shortcutTitle = TextUtils.isEmpty(info.title) ? info.url.replaceAll(REGEX_URL_TO_TITLE, "") : info.title;
+            GeckoAppShell.createShortcut(shortcutTitle, info.url, bitmap, "");
+            return true;
+        }
+
+        if (itemId == R.id.home_open_private_tab || itemId == R.id.home_open_new_tab) {
+            if (info.url == null) {
+                Log.e(LOGTAG, "Can't open in new tab because URL is null");
+                return false;
+            }
+
+            int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
+            if (item.getItemId() == R.id.home_open_private_tab)
+                flags |= Tabs.LOADURL_PRIVATE;
+
+            final String url = (info.inReadingList ? ReaderModeUtils.getAboutReaderForUrl(info.url, true) : info.url);
+            Tabs.getInstance().loadUrl(url, flags);
+            Toast.makeText(context, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        if (itemId == R.id.home_edit_bookmark) {
+            // UI Dialog associates to the activity context, not the applications'.
+            new EditBookmarkDialog(getActivity()).show(info.url);
+            return true;
+        }
+
+        if (itemId == R.id.home_open_in_reader) {
+            final String url = ReaderModeUtils.getAboutReaderForUrl(info.url, true);
+            Tabs.getInstance().loadUrl(url, Tabs.LOADURL_NONE);
+            return true;
+        }
+
+        if (itemId == R.id.home_remove) {
+            // Prioritize removing a history entry over a bookmark in the case of a combined item.
+            final int historyId = info.historyId;
+            if (historyId > -1) {
+                new RemoveHistoryTask(context, historyId).execute();
+                return true;
+            }
+
+            final int bookmarkId = info.bookmarkId;
+            if (bookmarkId > -1) {
+                new RemoveBookmarkTask(context, bookmarkId, info.url, info.inReadingList).execute();
+                return true;
+            }
+        }
+
         return false;
     }
 

@@ -5,17 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIDOMLinkStyle.idl',
     'nsIDOMMediaList.idl',
     'nsIDOMStyleSheet.idl',
     'nsIDOMStyleSheetList.idl',
 ]
 
 XPIDL_MODULE = 'dom_stylesheets'
-
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/interfaces/base',
-]
 
 MODULE = 'dom'
 

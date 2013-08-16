@@ -48,6 +48,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsIStyleSheet.h"
@@ -77,6 +78,7 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
+#include "nsJSPrincipals.h"
 #include "nsDOMAttributeMap.h"
 #include "nsGkAtoms.h"
 #include "nsXULContentUtils.h"
@@ -2546,13 +2548,56 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
     return rv;
 }
 
+class NotifyOffThreadScriptCompletedRunnable : public nsRunnable
+{
+    nsRefPtr<nsIOffThreadScriptReceiver> mReceiver;
+
+    // Note: there is no need to root the script, it is protected against GC
+    // until FinishOffThreadScript is called on it.
+    JSScript *mScript;
+
+public:
+    NotifyOffThreadScriptCompletedRunnable(already_AddRefed<nsIOffThreadScriptReceiver> aReceiver,
+                                           JSScript *aScript)
+      : mReceiver(aReceiver), mScript(aScript)
+    {}
+
+    NS_DECL_NSIRUNNABLE
+};
+
+NS_IMETHODIMP
+NotifyOffThreadScriptCompletedRunnable::Run()
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Note: this unroots mScript so that it is available to be collected by the
+    // JS GC. The receiver needs to root the script before performing a call that
+    // could GC.
+    JS::FinishOffThreadScript(nsJSRuntime::sRuntime, mScript);
+
+    return mReceiver->OnScriptCompileComplete(mScript, mScript ? NS_OK : NS_ERROR_FAILURE);
+}
+
+static void
+OffThreadScriptReceiverCallback(JSScript *script, void *ptr)
+{
+    // Be careful not to adjust the refcount on the receiver, as this callback
+    // may be invoked off the main thread.
+    nsIOffThreadScriptReceiver* aReceiver = static_cast<nsIOffThreadScriptReceiver*>(ptr);
+    nsRefPtr<NotifyOffThreadScriptCompletedRunnable> notify =
+        new NotifyOffThreadScriptCompletedRunnable(
+            already_AddRefed<nsIOffThreadScriptReceiver>(aReceiver), script);
+    NS_DispatchToMainThread(notify);
+}
+
 nsresult
 nsXULPrototypeScript::Compile(const PRUnichar* aText,
                               int32_t aTextLength,
                               nsIURI* aURI,
                               uint32_t aLineNo,
                               nsIDocument* aDocument,
-                              nsIScriptGlobalObject* aGlobal)
+                              nsIScriptGlobalObject* aGlobal,
+                              nsIOffThreadScriptReceiver *aOffThreadReceiver /* = nullptr */)
 {
     // We'll compile the script using the prototype document's special
     // script object as the parent. This ensures that we won't end up
@@ -2581,29 +2626,45 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
     // Ok, compile it to create a prototype script object!
 
-    JSAutoRequest ar(context->GetNativeContext());
-    JS::Rooted<JSScript*> newScriptObject(context->GetNativeContext());
+    JSContext* cx = context->GetNativeContext();
+    AutoCxPusher pusher(cx);
 
+    bool ok = false;
+    nsresult rv = nsContentUtils::GetSecurityManager()->
+                    CanExecuteScripts(cx, aDocument->NodePrincipal(), &ok);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(ok, NS_OK);
+    NS_ENSURE_TRUE(JSVersion(mLangVersion) != JSVERSION_UNKNOWN, NS_OK);
+
+    JS::CompileOptions options(cx);
+    options.setPrincipals(nsJSPrincipals::get(aDocument->NodePrincipal()))
+           .setFileAndLine(urlspec.get(), aLineNo)
+           .setVersion(JSVersion(mLangVersion));
     // If the script was inline, tell the JS parser to save source for
     // Function.prototype.toSource(). If it's out of line, we retrieve the
     // source from the files on demand.
-    bool saveSource = !mOutOfLine;
+    options.setSourcePolicy(mOutOfLine ? JS::CompileOptions::LAZY_SOURCE
+                                       : JS::CompileOptions::SAVE_SOURCE);
+    JS::RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
+    xpc_UnmarkGrayObject(scope);
 
-    nsresult rv = context->CompileScript(aText, aTextLength,
-                                         // Use the enclosing document's principal
-                                         // XXX is this right? or should we use the
-                                         // protodoc's?
-                                         // If we start using the protodoc's, make sure
-                                         // the DowngradePrincipalIfNeeded stuff in
-                                         // XULDocument::OnStreamComplete still works!
-                                         aDocument->NodePrincipal(),
-                                         urlspec.get(), aLineNo, mLangVersion,
-                                         &newScriptObject, saveSource);
-    if (NS_FAILED(rv))
-        return rv;
-
-    Set(newScriptObject);
-    return rv;
+    if (aOffThreadReceiver && JS::CanCompileOffThread(cx, options)) {
+        if (!JS::CompileOffThread(cx, scope, options,
+                                  static_cast<const jschar*>(aText), aTextLength,
+                                  OffThreadScriptReceiverCallback,
+                                  static_cast<void*>(aOffThreadReceiver))) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        // This reference will be consumed by the NotifyOffThreadScriptCompletedRunnable.
+        NS_ADDREF(aOffThreadReceiver);
+    } else {
+        JSScript* script = JS::Compile(cx, scope, options,
+                                   static_cast<const jschar*>(aText), aTextLength);
+        if (!script)
+            return NS_ERROR_OUT_OF_MEMORY;
+        Set(script);
+    }
+    return NS_OK;
 }
 
 void

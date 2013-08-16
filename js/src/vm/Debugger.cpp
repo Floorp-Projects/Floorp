@@ -15,13 +15,16 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
-#include "ion/BaselineJIT.h"
+#include "jit/BaselineJIT.h"
 #include "js/Vector.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/WrapperObject.h"
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
+#include "jsobjinlines.h"
 #include "jsopcodeinlines.h"
+#include "jsscriptinlines.h"
 
 #include "vm/Stack-inl.h"
 
@@ -4127,7 +4130,7 @@ DebuggerFrame_setOnPop(JSContext *cx, unsigned argc, Value *vp)
  * environment; either way, |frame|'s scope is where newly declared variables
  * go. In this case, |frame| must have a computed 'this' value, equal to |thisv|.
  */
-JSBool
+bool
 js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
                   StableCharPtr chars, unsigned length, const char *filename, unsigned lineno,
                   MutableHandleValue rval)
@@ -4631,7 +4634,7 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* Bug: This can cause the debuggee to run! */
-    AutoPropertyDescriptorRooter desc(cx);
+    Rooted<PropertyDescriptor> desc(cx);
     {
         Maybe<AutoCompartment> ac;
         ac.construct(cx, obj);
@@ -4643,28 +4646,26 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    if (desc.obj) {
+    if (desc.object()) {
         /* Rewrap the debuggee values in desc for the debugger. */
-        RootedValue value(cx, desc.value);
-        if (!dbg->wrapDebuggeeValue(cx, &value))
+        if (!dbg->wrapDebuggeeValue(cx, desc.value()))
             return false;
-        desc.value = value;
 
-        if (desc.attrs & JSPROP_GETTER) {
-            RootedValue get(cx, ObjectOrNullValue(CastAsObject(desc.getter)));
+        if (desc.hasGetterObject()) {
+            RootedValue get(cx, ObjectOrNullValue(desc.getterObject()));
             if (!dbg->wrapDebuggeeValue(cx, &get))
                 return false;
-            desc.getter = CastAsPropertyOp(get.toObjectOrNull());
+            desc.setGetterObject(get.toObjectOrNull());
         }
-        if (desc.attrs & JSPROP_SETTER) {
-            RootedValue set(cx, ObjectOrNullValue(CastAsObject(desc.setter)));
+        if (desc.hasSetterObject()) {
+            RootedValue set(cx, ObjectOrNullValue(desc.setterObject()));
             if (!dbg->wrapDebuggeeValue(cx, &set))
                 return false;
-            desc.setter = CastAsStrictPropertyOp(set.toObjectOrNull());
+            desc.setSetterObject(set.toObjectOrNull());
         }
     }
 
-    return NewPropertyDescriptorObject(cx, &desc, args.rval());
+    return NewPropertyDescriptorObject(cx, desc, args.rval());
 }
 
 static bool
@@ -4828,7 +4829,7 @@ DebuggerObject_deleteProperty(JSContext *cx, unsigned argc, Value *vp)
     if (!cx->compartment()->wrap(cx, &nameArg))
         return false;
 
-    JSBool succeeded;
+    bool succeeded;
     ErrorCopier ec(ac, dbg->toJSObject());
     if (!JSObject::deleteByValue(cx, obj, nameArg, &succeeded))
         return false;
@@ -5480,7 +5481,7 @@ static const JSFunctionSpec DebuggerEnv_methods[] = {
 
 /*** Glue ****************************************************************************************/
 
-extern JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(bool)
 JS_DefineDebuggerObject(JSContext *cx, JSObject *obj_)
 {
     RootedObject obj(cx, obj_);

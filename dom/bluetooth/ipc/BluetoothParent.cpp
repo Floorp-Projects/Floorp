@@ -206,12 +206,8 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_SetPasskeyRequest());
     case Request::TConfirmPairingConfirmationRequest:
       return actor->DoRequest(aRequest.get_ConfirmPairingConfirmationRequest());
-    case Request::TConfirmAuthorizationRequest:
-      return actor->DoRequest(aRequest.get_ConfirmAuthorizationRequest());
     case Request::TDenyPairingConfirmationRequest:
       return actor->DoRequest(aRequest.get_DenyPairingConfirmationRequest());
-    case Request::TDenyAuthorizationRequest:
-      return actor->DoRequest(aRequest.get_DenyAuthorizationRequest());
     case Request::TConnectRequest:
       return actor->DoRequest(aRequest.get_ConnectRequest());
     case Request::TDisconnectRequest:
@@ -455,22 +451,6 @@ BluetoothRequestParent::DoRequest(const ConfirmPairingConfirmationRequest&
 }
 
 bool
-BluetoothRequestParent::DoRequest(const ConfirmAuthorizationRequest& aRequest)
-{
-  MOZ_ASSERT(mService);
-  MOZ_ASSERT(mRequestType == Request::TConfirmAuthorizationRequest);
-
-  bool result =
-    mService->SetAuthorizationInternal(aRequest.path(),
-                                       true,
-                                       mReplyRunnable.get());
-
-  NS_ENSURE_TRUE(result, false);
-
-  return true;
-}
-
-bool
 BluetoothRequestParent::DoRequest(const DenyPairingConfirmationRequest&
                                   aRequest)
 {
@@ -481,22 +461,6 @@ BluetoothRequestParent::DoRequest(const DenyPairingConfirmationRequest&
     mService->SetPairingConfirmationInternal(aRequest.path(),
                                              false,
                                              mReplyRunnable.get());
-
-  NS_ENSURE_TRUE(result, false);
-
-  return true;
-}
-
-bool
-BluetoothRequestParent::DoRequest(const DenyAuthorizationRequest& aRequest)
-{
-  MOZ_ASSERT(mService);
-  MOZ_ASSERT(mRequestType == Request::TDenyAuthorizationRequest);
-
-  bool result =
-    mService->SetAuthorizationInternal(aRequest.path(),
-                                       false,
-                                       mReplyRunnable.get());
 
   NS_ENSURE_TRUE(result, false);
 

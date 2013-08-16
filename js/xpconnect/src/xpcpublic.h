@@ -9,7 +9,6 @@
 #define xpcpublic_h
 
 #include "jsapi.h"
-#include "js/MemoryMetrics.h"
 #include "jsclass.h"
 #include "jsfriendapi.h"
 #include "jspubtd.h"
@@ -69,6 +68,12 @@ IsSandboxPrototypeProxy(JSObject *obj);
 
 } /* namespace xpc */
 
+namespace JS {
+
+struct RuntimeStats;
+
+}
+
 #define XPCONNECT_GLOBAL_FLAGS                                                \
     JSCLASS_DOM_GLOBAL | JSCLASS_HAS_PRIVATE |                                \
     JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_IMPLEMENTS_BARRIERS |            \
@@ -118,7 +123,7 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
 // The JS GC marks objects gray that are held alive directly or
 // indirectly by an XPConnect root. The cycle collector explores only
 // this subset of the JS heap.
-inline JSBool
+inline bool
 xpc_IsGrayGCThing(void *thing)
 {
     return JS::GCThingIsMarkedGray(thing);
@@ -126,7 +131,7 @@ xpc_IsGrayGCThing(void *thing)
 
 // The cycle collector only cares about some kinds of GCthings that are
 // reachable from an XPConnect root. Implemented in nsXPConnect.cpp.
-extern JSBool
+extern bool
 xpc_GCThingIsGrayCCThing(void *thing);
 
 // Unmark gray for known-nonnull cases

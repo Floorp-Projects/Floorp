@@ -42,7 +42,7 @@ interface nsIURI;
 interface nsIDOMEventTarget;
 interface nsIRunnable;
 
-[scriptable, uuid(cbe333d7-5b2c-4a9b-b99b-e6e388afa62b)]
+[scriptable, uuid(ff1cec22-b183-40d3-8b42-b81a2f0ba4e6)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1034,26 +1034,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * Put the window into a state where scripts are frozen and events
    * suppressed, for use when the window has launched a modal prompt.
    */
-  [noscript] void enterModalState();
+  void enterModalState();
 
   /**
    * Resume normal window state, where scripts can run and events are
    * delivered.
    */
-  [noscript] void leaveModalState();
-
-  /**
-   * Same as enterModalState, but returns the window associated with the
-   * current JS context.
-   */
-  nsIDOMWindow enterModalStateWithWindow();
-
-  /**
-   * Same as leaveModalState, but takes a window associated with the active
-   * context when enterModalStateWithWindow was called. The currently context
-   * might be different at the moment (see bug 621764).
-   */
-  void leaveModalStateWithWindow(in nsIDOMWindow aWindow);
+  void leaveModalState();
 
   /**
    * Is the window is in a modal state? [See enterModalState()]

@@ -18,7 +18,7 @@
 
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "ion/IonCompartment.h"
+#include "jit/IonCompartment.h"
 #endif
 #include "js/RootingAPI.h"
 #include "vm/StopIterationObject.h"
@@ -26,7 +26,8 @@
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
+#include "jsinferinlines.h"
+#include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
 
@@ -118,6 +119,13 @@ JSCompartment::init(JSContext *cx)
 ion::IonRuntime *
 JSRuntime::createIonRuntime(JSContext *cx)
 {
+    // The runtime will only be created on its owning thread, but reads of a
+    // runtime's ionRuntime() can occur when another thread is triggering an
+    // operation callback.
+    AutoLockForOperationCallback lock(this);
+
+    JS_ASSERT(!ionRuntime_);
+
     ionRuntime_ = cx->new_<ion::IonRuntime>();
 
     if (!ionRuntime_)
@@ -127,9 +135,10 @@ JSRuntime::createIonRuntime(JSContext *cx)
         js_delete(ionRuntime_);
         ionRuntime_ = NULL;
 
-        if (cx->runtime()->atomsCompartment->ionCompartment_) {
-            js_delete(cx->runtime()->atomsCompartment->ionCompartment_);
-            cx->runtime()->atomsCompartment->ionCompartment_ = NULL;
+        JSCompartment *comp = cx->runtime()->atomsCompartment();
+        if (comp->ionCompartment_) {
+            js_delete(comp->ionCompartment_);
+            comp->ionCompartment_ = NULL;
         }
 
         return NULL;
@@ -199,7 +208,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
     JSRuntime *rt = runtimeFromMainThread();
 
     JS_ASSERT(cx->compartment() == this);
-    JS_ASSERT(this != rt->atomsCompartment);
+    JS_ASSERT(!rt->isAtomsCompartment(this));
     JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
     JS_ASSERT_IF(existingArg, vp.isObject());
     JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
@@ -223,7 +232,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
 
         /* If the string is an atom, we don't have to copy. */
         if (str->isAtom()) {
-            JS_ASSERT(str->zone() == cx->runtime()->atomsCompartment->zone());
+            JS_ASSERT(cx->runtime()->isAtomsZone(str->zone()));
             return true;
         }
     }
@@ -418,25 +427,21 @@ JSCompartment::wrap(JSContext *cx, StrictPropertyOp *propp)
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc)
+JSCompartment::wrap(JSContext *cx, MutableHandle<PropertyDescriptor> desc)
 {
-    if (!wrap(cx, &desc->obj))
+    if (!wrap(cx, desc.object().address()))
         return false;
 
-    if (desc->attrs & JSPROP_GETTER) {
-        if (!wrap(cx, &desc->getter))
+    if (desc.hasGetterObject()) {
+        if (!wrap(cx, &desc.getter()))
             return false;
     }
-    if (desc->attrs & JSPROP_SETTER) {
-        if (!wrap(cx, &desc->setter))
+    if (desc.hasSetterObject()) {
+        if (!wrap(cx, &desc.setter()))
             return false;
     }
 
-    RootedValue value(cx, desc->value);
-    if (!wrap(cx, &value))
-        return false;
-    desc->value = value.get();
-    return true;
+    return wrap(cx, desc.value());
 }
 
 bool
@@ -610,6 +615,34 @@ void
 JSCompartment::purge()
 {
     dtoaCache.purge();
+}
+
+void
+JSCompartment::clearTables()
+{
+    global_ = NULL;
+
+    regExps.clearTables();
+
+    // No scripts should have run in this compartment. This is used when
+    // merging a compartment that has been used off thread into another
+    // compartment and zone.
+    JS_ASSERT(crossCompartmentWrappers.empty());
+    JS_ASSERT_IF(callsiteClones.initialized(), callsiteClones.empty());
+    JS_ASSERT(!ionCompartment_);
+    JS_ASSERT(!debugScopes);
+    JS_ASSERT(!gcWeakMapList);
+    JS_ASSERT(!analysisLifoAlloc.used());
+    JS_ASSERT(enumerators->next() == enumerators);
+
+    if (baseShapes.initialized())
+        baseShapes.clear();
+    if (initialShapes.initialized())
+        initialShapes.clear();
+    if (newTypeObjects.initialized())
+        newTypeObjects.clear();
+    if (lazyTypeObjects.initialized())
+        lazyTypeObjects.clear();
 }
 
 bool

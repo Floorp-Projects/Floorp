@@ -10,22 +10,12 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
-#include <stddef.h>
-
 #include "jscntxt.h"
-#include "jsobj.h"
-#include "jsproxy.h"
 
-#include "gc/Barrier.h"
 #include "gc/Marking.h"
-#include "vm/MatchPairs.h"
-#include "vm/Runtime.h"
-#include "yarr/MatchResult.h"
-#include "yarr/Yarr.h"
 #if ENABLE_YARR_JIT
 #include "yarr/YarrJIT.h"
 #endif
-#include "yarr/YarrSyntaxChecker.h"
 
 /*
  * JavaScript Regular Expressions
@@ -46,6 +36,24 @@
  * a regexp) must indicate the RegExpShared is active via RegExpGuard.
  */
 namespace js {
+
+class MatchConduit;
+class MatchPair;
+class MatchPairs;
+class RegExpShared;
+
+namespace frontend { class TokenStream; }
+
+enum RegExpFlag
+{
+    IgnoreCaseFlag  = 0x01,
+    GlobalFlag      = 0x02,
+    MultilineFlag   = 0x04,
+    StickyFlag      = 0x08,
+
+    NoFlags         = 0x00,
+    AllFlags        = 0x0f
+};
 
 enum RegExpRunStatus
 {
@@ -311,6 +319,7 @@ class RegExpCompartment
 
     bool init(JSContext *cx);
     void sweep(JSRuntime *rt);
+    void clearTables();
 
     bool get(ExclusiveContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g);
 

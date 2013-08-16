@@ -9,19 +9,10 @@
 #ifndef jscntxt_h
 #define jscntxt_h
 
-#include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 
-#include <string.h>
-
-#include "jsapi.h"
-#include "jsfriendapi.h"
-#include "jsprvtd.h"
-
-#include "js/HashTable.h"
 #include "js/Vector.h"
 #include "vm/Runtime.h"
-#include "vm/Stack.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -107,10 +98,11 @@ extern void
 TraceCycleDetectionSet(JSTracer *trc, ObjectSet &set);
 
 struct AutoResolving;
-
+class DtoaCache;
 class ForkJoinSlice;
 class RegExpCompartment;
-class DtoaCache;
+class RegExpStatics;
+class ForkJoinSlice;
 
 /*
  * Execution Context Overview:
@@ -285,7 +277,6 @@ struct WorkerThread;
 class ExclusiveContext : public ThreadSafeContext
 {
     friend class gc::ArenaLists;
-    friend class CompartmentChecker;
     friend class AutoCompartment;
     friend class AutoLockForExclusiveAccess;
     friend struct StackBaseShape;
@@ -338,41 +329,39 @@ class ExclusiveContext : public ThreadSafeContext
     // If required, pause this thread until notified to continue by the main thread.
     inline void maybePause() const;
 
-    inline bool typeInferenceEnabled() const;
+    // Threads with an ExclusiveContext may freely access any data in their
+    // compartment and zone.
+    JSCompartment *compartment() const {
+        JS_ASSERT_IF(runtime_->isAtomsCompartment(compartment_),
+                     runtime_->currentThreadHasExclusiveAccess());
+        return compartment_;
+    }
+    JS::Zone *zone() const {
+        JS_ASSERT_IF(!compartment(), !zone_);
+        JS_ASSERT_IF(compartment(), js::GetCompartmentZone(compartment()) == zone_);
+        return zone_;
+    }
 
-    // Per compartment data that can be accessed freely from an ExclusiveContext.
-    inline RegExpCompartment &regExps();
-    inline RegExpStatics *regExpStatics();
-    inline PropertyTree &propertyTree();
-    inline BaseShapeSet &baseShapes();
-    inline InitialShapeSet &initialShapes();
-    inline DtoaCache &dtoaCache();
+    // Zone local methods that can be used freely from an ExclusiveContext.
+    inline bool typeInferenceEnabled() const;
     types::TypeObject *getNewType(Class *clasp, TaggedProto proto, JSFunction *fun = NULL);
 
     // Current global. This is only safe to use within the scope of the
     // AutoCompartment from which it's called.
     inline js::Handle<js::GlobalObject*> global() const;
 
-    // Methods to access runtime wide data that must be protected by locks.
-
+    // Methods to access runtime data that must be protected by locks.
     frontend::ParseMapPool &parseMapPool() {
-        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
-        return runtime_->parseMapPool;
+        return runtime_->parseMapPool();
     }
-
     AtomSet &atoms() {
-        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
-        return runtime_->atoms;
+        return runtime_->atoms();
     }
-
     JSCompartment *atomsCompartment() {
-        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
-        return runtime_->atomsCompartment;
+        return runtime_->atomsCompartment();
     }
-
     ScriptDataTable &scriptDataTable() {
-        JS_ASSERT(runtime_->currentThreadHasExclusiveAccess());
-        return runtime_->scriptDataTable;
+        return runtime_->scriptDataTable();
     }
 };
 
@@ -391,13 +380,6 @@ struct JSContext : public js::ExclusiveContext,
     ~JSContext();
 
     JSRuntime *runtime() const { return runtime_; }
-    JSCompartment *compartment() const { return compartment_; }
-
-    inline JS::Zone *zone() const {
-        JS_ASSERT_IF(!compartment(), !zone_);
-        JS_ASSERT_IF(compartment(), js::GetCompartmentZone(compartment()) == zone_);
-        return zone_;
-    }
     js::PerThreadData &mainThread() const { return runtime()->mainThread; }
 
     friend class js::ExclusiveContext;
@@ -452,9 +434,6 @@ struct JSContext : public js::ExclusiveContext,
 
     /* Per-context optional error reporter. */
     JSErrorReporter     errorReporter;
-
-    /* Branch callback. */
-    JSOperationCallback operationCallback;
 
     /* Client opaque pointers. */
     void                *data;
@@ -730,10 +709,10 @@ enum ErrorArgumentsType {
 } /* namespace js */
 
 #ifdef va_start
-extern JSBool
+extern bool
 js_ReportErrorVA(JSContext *cx, unsigned flags, const char *format, va_list ap);
 
-extern JSBool
+extern bool
 js_ReportErrorNumberVA(JSContext *cx, unsigned flags, JSErrorCallback callback,
                        void *userRef, const unsigned errorNumber,
                        js::ErrorArgumentsType argumentsType, va_list ap);
@@ -744,7 +723,7 @@ js_ReportErrorNumberUCArray(JSContext *cx, unsigned flags, JSErrorCallback callb
                             const jschar **args);
 #endif
 
-extern JSBool
+extern bool
 js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                         void *userRef, const unsigned errorNumber,
                         char **message, JSErrorReport *reportp,
@@ -780,7 +759,7 @@ js_ReportIsNotDefined(JSContext *cx, const char *name);
 /*
  * Report an attempt to access the property of a null or undefined value (v).
  */
-extern JSBool
+extern bool
 js_ReportIsNullOrUndefined(JSContext *cx, int spindex, js::HandleValue v,
                            js::HandleString fallback);
 
@@ -792,7 +771,7 @@ js_ReportMissingArg(JSContext *cx, js::HandleValue v, unsigned arg);
  * the first argument for the error message. If the error message has less
  * then 3 arguments, use null for arg1 or arg2.
  */
-extern JSBool
+extern bool
 js_ReportValueErrorFlags(JSContext *cx, unsigned flags, const unsigned errorNumber,
                          int spindex, js::HandleValue v, js::HandleString fallback,
                          const char *arg1, const char *arg2);
@@ -821,7 +800,7 @@ extern const JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
  * Invoke the operation callback and return false if the current execution
  * is to be terminated.
  */
-extern JSBool
+extern bool
 js_InvokeOperationCallback(JSContext *cx);
 
 extern bool

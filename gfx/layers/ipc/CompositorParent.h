@@ -201,7 +201,7 @@ public:
   static void SetTimeAndSampleAnimations(TimeStamp aTime, bool aIsTesting);
 
   /**
-   * Returns true if the calling thrad is the compositor thread.
+   * Returns true if the calling thread is the compositor thread.
    */
   static bool IsInCompositorThread();
 protected:

@@ -135,7 +135,7 @@ public:
   }
 
   /**
-   * Should be overriden in order to deallocate the data that is associated
+   * Should be overridden in order to deallocate the data that is associated
    * with the rendering backend, such as GL textures.
    */
   virtual void DeallocateDeviceData() = 0;
@@ -208,6 +208,7 @@ public:
     SetUpdateSerial(0);
   }
 
+#ifdef DEBUG
   /**
    * Provide read access to the data as a DataSourceSurface.
    *
@@ -215,6 +216,8 @@ public:
    * XXX - implement everywhere and make it pure virtual.
    */
   virtual TemporaryRef<gfx::DataSourceSurface> ReadBack() { return nullptr; };
+#endif
+
 private:
   uint32_t mUpdateSerial;
 };
@@ -314,13 +317,13 @@ public:
   virtual void SetCompositor(Compositor* aCompositor) {}
 
   /**
-   * Should be overriden in order to deallocate the data that is associated
+   * Should be overridden in order to deallocate the data that is associated
    * with the rendering backend, such as GL textures.
    */
   virtual void DeallocateDeviceData() {}
 
   /**
-   * Should be overriden in order to deallocate the data that is shared with
+   * Should be overridden in order to deallocate the data that is shared with
    * the content side, such as shared memory.
    */
   virtual void DeallocateSharedData() {}
@@ -349,7 +352,7 @@ public:
 
   /**
    * Debug facility.
-   * XXX - cool kids use Moz2D
+   * XXX - cool kids use Moz2D. See bug 882113.
    */
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() = 0;
 
@@ -371,7 +374,7 @@ public:
    */
   virtual LayerRenderState GetRenderState()
   {
-    // By default we return an empty render state, this should be overriden
+    // By default we return an empty render state, this should be overridden
     // by the TextureHost implementations that are used on B2G with Composer2D
     return LayerRenderState();
   }
@@ -437,9 +440,9 @@ public:
    */
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
-
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
+
+  virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;
 
 protected:
   bool Upload(nsIntRegion *aRegion = nullptr);

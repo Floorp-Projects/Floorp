@@ -54,7 +54,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
 {
     jsval val = GetJSValPreserveColor();
 
-    NS_ASSERTION(JSVAL_IS_GCTHING(val), "Must be traceable or unlinked");
+    MOZ_ASSERT(JSVAL_IS_GCTHING(val), "Must be traceable or unlinked");
 
     // If val is JSVAL_STRING, we don't need to clean anything up; simply
     // removing the string from the root set is good.
@@ -153,9 +153,9 @@ private:
     static const Type StateTable[tTypeCount][tTypeCount-1];
 
 public:
-    static JSBool GetTypeForArray(JSContext* cx, HandleObject array,
-                                  uint32_t length,
-                                  nsXPTType* resultType, nsID* resultID);
+    static bool GetTypeForArray(JSContext* cx, HandleObject array,
+                                uint32_t length,
+                                nsXPTType* resultType, nsID* resultID);
 };
 
 
@@ -177,7 +177,7 @@ XPCArrayHomogenizer::StateTable[tTypeCount][tTypeCount-1] = {
 /* tUnk  */{tNull,tInt ,tDbl ,tBool,tStr ,tID  ,tVar ,tISup }};
 
 // static
-JSBool
+bool
 XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
                                      uint32_t length,
                                      nsXPTType* resultType, nsID* resultID)
@@ -205,7 +205,7 @@ XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
         } else if (val.isString()) {
             type = tStr;
         } else {
-            NS_ASSERTION(val.isObject(), "invalid type of jsval!");
+            MOZ_ASSERT(val.isObject(), "invalid type of jsval!");
             jsobj = &val.toObject();
             if (JS_IsArrayObject(cx, jsobj))
                 type = tArr;
@@ -215,15 +215,15 @@ XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
                 type = tISup;
         }
 
-        NS_ASSERTION(state != tErr, "bad state table!");
-        NS_ASSERTION(type  != tErr, "bad type!");
-        NS_ASSERTION(type  != tVar, "bad type!");
-        NS_ASSERTION(type  != tUnk, "bad type!");
+        MOZ_ASSERT(state != tErr, "bad state table!");
+        MOZ_ASSERT(type  != tErr, "bad type!");
+        MOZ_ASSERT(type  != tVar, "bad type!");
+        MOZ_ASSERT(type  != tUnk, "bad type!");
 
         state = StateTable[state][type];
 
-        NS_ASSERTION(state != tErr, "bad state table!");
-        NS_ASSERTION(state != tUnk, "bad state table!");
+        MOZ_ASSERT(state != tErr, "bad state table!");
+        MOZ_ASSERT(state != tUnk, "bad state table!");
 
         if (state == tVar)
             break;
@@ -268,7 +268,7 @@ XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
     return true;
 }
 
-JSBool XPCVariant::InitializeData(JSContext* cx)
+bool XPCVariant::InitializeData(JSContext* cx)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -292,8 +292,8 @@ JSBool XPCVariant::InitializeData(JSContext* cx)
         // Don't use nsVariant::SetFromWStringWithSize, because that will copy
         // the data.  Just handle this ourselves.  Note that it's ok to not
         // copy because we added mJSVal as a GC root.
-        NS_ASSERTION(mData.mType == nsIDataType::VTYPE_EMPTY,
-                     "Why do we already have data?");
+        MOZ_ASSERT(mData.mType == nsIDataType::VTYPE_EMPTY,
+                   "Why do we already have data?");
 
         // Despite the fact that the variant holds the length, there are
         // implicit assumptions that mWStringValue[mWStringLength] == 0
@@ -312,7 +312,7 @@ JSBool XPCVariant::InitializeData(JSContext* cx)
     }
 
     // leaving only JSObject...
-    NS_ASSERTION(val.isObject(), "invalid type of jsval!");
+    MOZ_ASSERT(val.isObject(), "invalid type of jsval!");
 
     RootedObject jsobj(cx, &val.toObject());
 
@@ -372,7 +372,7 @@ XPCVariant::GetAsJSVal(jsval* result)
 }
 
 // static
-JSBool
+bool
 XPCVariant::VariantDataToJS(nsIVariant* variant,
                             nsresult* pErr, jsval* pJSVal)
 {
@@ -398,9 +398,9 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
 
     nsCOMPtr<XPCVariant> xpcvariant = do_QueryInterface(variant);
     if (xpcvariant && xpcvariant->mReturnRawObject) {
-        NS_ASSERTION(type == nsIDataType::VTYPE_INTERFACE ||
-                     type == nsIDataType::VTYPE_INTERFACE_IS,
-                     "Weird variant");
+        MOZ_ASSERT(type == nsIDataType::VTYPE_INTERFACE ||
+                   type == nsIDataType::VTYPE_INTERFACE_IS,
+                   "Weird variant");
 
         if (!JS_WrapValue(cx, realVal.address()))
             return false;

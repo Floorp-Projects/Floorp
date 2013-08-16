@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsContentUtils.h"
+#include "nsHtml5Parser.h"
+
+#include "mozilla/AutoRestore.h"
+#include "nsContentUtils.h" // for kLoadAsData
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
-#include "nsHtml5Parser.h"
 #include "nsHtml5AtomTable.h"
 #include "nsHtml5DependentUTF16Buffer.h"
 #include "nsIInputStreamChannel.h"

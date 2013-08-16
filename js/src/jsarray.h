@@ -17,7 +17,7 @@ namespace js {
 const uint32_t MAX_ARRAY_INDEX = 4294967294u;
 }
 
-inline JSBool
+inline bool
 js_IdIsIndex(jsid id, uint32_t *indexp)
 {
     if (JSID_IS_INT(id)) {
@@ -87,13 +87,13 @@ WouldDefinePastNonwritableLength(ExclusiveContext *cx,
 extern bool
 CanonicalizeArrayLengthValue(JSContext *cx, HandleValue v, uint32_t *canonicalized);
 
-extern JSBool
+extern bool
 GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp);
 
-extern JSBool
+extern bool
 SetLengthProperty(JSContext *cx, HandleObject obj, double length);
 
-extern JSBool
+extern bool
 ObjectMayHaveExtraIndexedProperties(JSObject *obj);
 
 /*
@@ -143,7 +143,7 @@ js_ArrayInfo(JSContext *cx, unsigned argc, js::Value *vp);
  * extending the array to accommodate the element will never make the array
  * sparse, which requires that the array be completely filled.)
  */
-extern JSBool
+extern bool
 js_NewbornArrayPush(JSContext *cx, js::HandleObject obj, const js::Value &v);
 
 /* Array constructor native. Exposed only so the JIT can know its address. */

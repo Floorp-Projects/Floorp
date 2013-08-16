@@ -74,18 +74,18 @@ endif
 
 # Ion
 ifdef ENABLE_ION
-VPATH +=	$(srcdir)/ion
-VPATH +=	$(srcdir)/ion/shared
+VPATH +=	$(srcdir)/jit
+VPATH +=	$(srcdir)/jit/shared
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
-VPATH +=	$(srcdir)/ion/x64
+VPATH +=	$(srcdir)/jit/x64
 else
-VPATH +=	$(srcdir)/ion/x86
+VPATH +=	$(srcdir)/jit/x86
 endif
 endif
 ifeq (arm, $(findstring arm, $(TARGET_CPU)))
-VPATH +=	$(srcdir)/ion/arm
+VPATH +=	$(srcdir)/jit/arm
 endif
 endif #ENABLE_ION
 
@@ -148,8 +148,6 @@ SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
-
-include $(topsrcdir)/config/config.mk
 
 ifeq (,$(MOZ_GLUE_PROGRAM_LDFLAGS))
 # When building standalone, we need to include mfbt sources, and to declare

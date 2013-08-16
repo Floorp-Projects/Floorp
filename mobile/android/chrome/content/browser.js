@@ -149,15 +149,11 @@ const kDoNotTrackPrefState = Object.freeze({
 });
 
 function dump(a) {
-  Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
-}
-
-function getBridge() {
-  return Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
+  Services.console.logStringMessage(a);
 }
 
 function sendMessageToJava(aMessage) {
-  return getBridge().handleGeckoMessage(JSON.stringify(aMessage));
+  return Services.androidBridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
 
 function doChangeMaxLineBoxWidth(aWidth) {
@@ -269,7 +265,7 @@ var BrowserApp = {
     BrowserEventHandler.init();
     ViewportHandler.init();
 
-    getBridge().browserApp = this;
+    Services.androidBridge.browserApp = this;
 
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
@@ -672,7 +668,7 @@ var BrowserApp = {
   // off to the compositor.
   isBrowserContentDocumentDisplayed: function() {
     try {
-      if (!getBridge().isContentDocumentDisplayed())
+      if (!Services.androidBridge.isContentDocumentDisplayed())
         return false;
     } catch (e) {
       return false;
@@ -686,7 +682,7 @@ var BrowserApp = {
 
   contentDocumentChanged: function() {
     window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).isFirstPaint = true;
-    getBridge().contentDocumentChanged();
+    Services.androidBridge.contentDocumentChanged();
   },
 
   get tabs() {
@@ -2563,7 +2559,7 @@ function Tab(aURL, aParams) {
   this.viewportExcludesHorizontalMargins = true;
   this.viewportExcludesVerticalMargins = true;
   this.viewportMeasureCallback = null;
-  this.lastPageSizeUsedForViewportChange = { width: 0, height: 0 };
+  this.lastPageSizeAfterViewportRemeasure = { width: 0, height: 0 };
   this.contentDocumentIsDisplayed = true;
   this.pluginDoorhangerTimeout = null;
   this.shouldShowPluginDoorhanger = true;
@@ -3253,7 +3249,7 @@ Tab.prototype = {
 
   sendViewportUpdate: function(aPageSizeUpdate) {
     let viewport = this.getViewport();
-    let displayPort = getBridge().getDisplayPort(aPageSizeUpdate, BrowserApp.isBrowserContentDocumentDisplayed(), this.id, viewport);
+    let displayPort = Services.androidBridge.getDisplayPort(aPageSizeUpdate, BrowserApp.isBrowserContentDocumentDisplayed(), this.id, viewport);
     if (displayPort != null)
       this.setDisplayPort(displayPort);
   },
@@ -3305,8 +3301,8 @@ Tab.prototype = {
           let pageWidth = viewport.pageRight - viewport.pageLeft;
           let pageHeight = viewport.pageBottom - viewport.pageTop;
 
-          if (Math.abs(pageWidth - this.lastPageSizeUsedForViewportChange.width) >= 0.5 ||
-              Math.abs(pageHeight - this.lastPageSizeUsedForViewportChange.height) >= 0.5) {
+          if (Math.abs(pageWidth - this.lastPageSizeAfterViewportRemeasure.width) >= 0.5 ||
+              Math.abs(pageHeight - this.lastPageSizeAfterViewportRemeasure.height) >= 0.5) {
             this.updateViewportSize(gScreenWidth);
           }
         }.bind(this), kViewportRemeasureThrottle);
@@ -3886,13 +3882,6 @@ Tab.prototype = {
         this.viewportExcludesVerticalMargins = false;
       }
 
-      // Store the page size that was used to calculate the viewport so that we
-      // can verify it's changed when we consider remeasuring in updateViewportForPageSize
-      this.lastPageSizeUsedForViewportChange = {
-        width: pageWidth,
-        height: pageHeight
-      };
-
       minScale = screenW / pageWidth;
     }
     minScale = this.clampZoom(minScale);
@@ -3921,6 +3910,14 @@ Tab.prototype = {
     this.setResolution(zoom, false);
     this.setScrollClampingSize(zoom);
     this.sendViewportUpdate();
+
+    // Store the page size that was used to calculate the viewport so that we
+    // can verify it's changed when we consider remeasuring in updateViewportForPageSize
+    let viewport = this.getViewport();
+    this.lastPageSizeAfterViewportRemeasure = {
+      width: viewport.pageRight - viewport.pageLeft,
+      height: viewport.pageBottom - viewport.pageTop
+    };
   },
 
   sendViewportMetadata: function sendViewportMetadata() {
@@ -7635,13 +7632,11 @@ var ExternalApps = {
   // extend _getLink to pickup html5 media links.
   _getMediaLink: function(aElement) {
     let uri = NativeWindow.contextmenus._getLink(aElement);
-    if (uri == null) {
-      if (aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE && (aElement instanceof Ci.nsIDOMHTMLMediaElement && mediaSrc)) {
-        try {
-          let mediaSrc = aElement.currentSrc || aElement.src;
-          uri = ContentAreaUtils.makeURI(mediaSrc, null, null);
-        } catch (e) {}
-      }
+    if (uri == null && aElement.nodeType == Ci.nsIDOMNode.ELEMENT_NODE && (aElement instanceof Ci.nsIDOMHTMLMediaElement)) {
+      try {
+        let mediaSrc = aElement.currentSrc || aElement.src;
+        uri = ContentAreaUtils.makeURI(mediaSrc, null, null);
+      } catch (e) {}
     }
     return uri;
   },

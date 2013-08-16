@@ -7,15 +7,14 @@
 #ifndef mozilla_dom_TabChild_h
 #define mozilla_dom_TabChild_h
 
-#ifndef _IMPL_NS_LAYOUT
 #include "mozilla/dom/PBrowserChild.h"
-#endif
 #ifdef DEBUG
 #include "PCOMContentPermissionRequestChild.h"
 #endif /* DEBUG */
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
+#include "nsEventDispatcher.h"
 #include "nsIWebBrowserChrome2.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebBrowserChromeFocus.h"
@@ -117,6 +116,13 @@ public:
                                                     aUseCapture,
                                                     aWantsUntrusted,
                                                     optional_argc);
+  }
+
+  nsresult
+  PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+  {
+    aVisitor.mForceContentDispatch = true;
+    return NS_OK;
   }
 
   virtual JSContext* GetJSContextForEventHandlers() MOZ_OVERRIDE;
@@ -334,12 +340,17 @@ public:
 
     ContentChild* Manager() { return mManager; }
 
+    bool GetUpdateHitRegion() { return mUpdateHitRegion; }
+
+    void UpdateHitRegion(const nsRegion& aRegion);
+
 protected:
     virtual PRenderFrameChild* AllocPRenderFrameChild(ScrollingBehavior* aScrolling,
                                                       TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                                       uint64_t* aLayersId) MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrameChild(PRenderFrameChild* aFrame) MOZ_OVERRIDE;
     virtual bool RecvDestroy() MOZ_OVERRIDE;
+    virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) MOZ_OVERRIDE;
 
     nsEventStatus DispatchWidgetEvent(nsGUIEvent& event);
 
@@ -465,6 +476,7 @@ private:
     bool mContentDocumentIsDisplayed;
     bool mTriedBrowserInit;
     ScreenOrientation mOrientation;
+    bool mUpdateHitRegion;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

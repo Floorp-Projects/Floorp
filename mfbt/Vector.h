@@ -9,6 +9,7 @@
 #ifndef mozilla_Vector_h
 #define mozilla_Vector_h
 
+#include "mozilla/Alignment.h"
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -19,7 +20,7 @@
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/Util.h"
+#include "mozilla/Util.h" // for PointerRangeSize
 
 #include <new> // for placement new
 

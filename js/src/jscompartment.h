@@ -8,16 +8,9 @@
 #define jscompartment_h
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
-
-#include "jscntxt.h"
-#include "jsgc.h"
-#include "jsobj.h"
 
 #include "gc/Zone.h"
 #include "vm/GlobalObject.h"
-#include "vm/RegExpObject.h"
-#include "vm/Shape.h"
 
 namespace js {
 
@@ -295,7 +288,7 @@ struct JSCompartment
     bool wrapId(JSContext *cx, jsid *idp);
     bool wrap(JSContext *cx, js::PropertyOp *op);
     bool wrap(JSContext *cx, js::StrictPropertyOp *op);
-    bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
+    bool wrap(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
     bool putWrapper(const js::CrossCompartmentKey& wrapped, const js::Value& wrapper);
@@ -317,6 +310,7 @@ struct JSCompartment
     void sweep(js::FreeOp *fop, bool releaseTypes);
     void sweepCrossCompartmentWrappers();
     void purge();
+    void clearTables();
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 
@@ -400,6 +394,18 @@ struct JSCompartment
     }
 #endif
 };
+
+inline bool
+JSRuntime::isAtomsZone(JS::Zone *zone)
+{
+    return zone == atomsCompartment_->zone();
+}
+
+inline bool
+JSRuntime::atomsZoneNeedsBarrier()
+{
+    return atomsCompartment_->zone()->needsBarrier();
+}
 
 // For use when changing the debug mode flag on one or more compartments.
 // Do not run scripts in any compartment that is scheduled for GC using this

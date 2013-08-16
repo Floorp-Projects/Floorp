@@ -6,8 +6,6 @@
 
 #include "AudioListener.h"
 #include "AudioContext.h"
-#include "nsContentUtils.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/AudioListenerBinding.h"
 
 namespace mozilla {

@@ -30,6 +30,9 @@
 #include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
+#ifdef MOZ_CONTENT_SANDBOX
+#include "mozilla/Sandbox.h"
+#endif
 #include "mozilla/unused.h"
 
 #include "nsIMemoryReporter.h"
@@ -546,6 +549,13 @@ ContentChild::RecvSetProcessPrivileges(const ChildPrivileges& aPrivs)
                           aPrivs;
   // If this fails, we die.
   SetCurrentProcessPrivileges(privs);
+#ifdef MOZ_CONTENT_SANDBOX
+  // SetCurrentProcessSandbox should be moved close to process initialization
+  // time if/when possible. SetCurrentProcessPrivileges should probably be
+  // moved as well. Right now this is set ONLY if we receive the
+  // RecvSetProcessPrivileges message. See bug 880808.
+  SetCurrentProcessSandbox();
+#endif
   return true;
 }
 

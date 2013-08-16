@@ -54,6 +54,7 @@ var Downloads = {
     Services.obs.addObserver(this, "dl-done", true);
     Services.obs.addObserver(this, "dl-run", true);
     Services.obs.addObserver(this, "dl-failed", true);
+    Services.obs.addObserver(this, "dl-request", true);
 
     this._notificationBox = Browser.getNotificationBox();
 
@@ -69,6 +70,7 @@ var Downloads = {
       Services.obs.removeObserver(this, "dl-done");
       Services.obs.removeObserver(this, "dl-run");
       Services.obs.removeObserver(this, "dl-failed");
+      Services.obs.removeObserver(this, "dl-request");
     }
   },
 
@@ -443,6 +445,11 @@ var Downloads = {
       case "dl-failed":
         download = aSubject.QueryInterface(Ci.nsIDownload);
         this._showDownloadFailedNotification(download);
+        break;
+      case "dl-request":
+        setTimeout(function() {
+          ContextUI.displayNavbar();
+        }, 1000);
         break;
     }
   },

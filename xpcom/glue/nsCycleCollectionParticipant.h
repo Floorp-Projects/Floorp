@@ -459,7 +459,7 @@ public:                                                                        \
   const_cast<type*>(reinterpret_cast<const type*>(participant))
 
 #define NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                 \
-  static nsXPCOMCycleCollectionParticipant* GetParticipant()                   \
+  static MOZ_CONSTEXPR nsXPCOMCycleCollectionParticipant* GetParticipant()     \
   {                                                                            \
     return &_class::NS_CYCLE_COLLECTION_INNERNAME;                             \
   }
@@ -616,6 +616,14 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
     NS_IMETHOD_(void) DeleteCycleCollectable(void *n)                          \
     {                                                                          \
       DowncastCCParticipant<_class>(n)->DeleteCycleCollectable();              \
+    }                                                                          \
+    static _class* Downcast(void* s)                                           \
+    {                                                                          \
+      return DowncastCCParticipant<_class>(s);                                 \
+    }                                                                          \
+    static void* Upcast(_class *p)                                             \
+    {                                                                          \
+      return static_cast<void*>(p);                                            \
     }
 
 #define NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(_class)                          \
@@ -627,7 +635,7 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
    : public nsCycleCollectionParticipant                                       \
   {                                                                            \
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
-    static nsCycleCollectionParticipant* GetParticipant()                      \
+    static MOZ_CONSTEXPR nsCycleCollectionParticipant* GetParticipant()        \
     {                                                                          \
       return &_class::NS_CYCLE_COLLECTION_INNERNAME;                           \
     }                                                                          \
@@ -644,7 +652,7 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
   {                                                                            \
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
     NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure); \
-    static nsScriptObjectTracer* GetParticipant()                              \
+    static MOZ_CONSTEXPR nsScriptObjectTracer* GetParticipant()                \
     {                                                                          \
       return &_class::NS_CYCLE_COLLECTION_INNERNAME;                           \
     }                                                                          \

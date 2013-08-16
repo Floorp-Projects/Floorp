@@ -7,7 +7,6 @@
 #include "mozilla/dom/SVGMatrix.h"
 #include "nsError.h"
 #include <math.h>
-#include "nsContentUtils.h"
 #include "mozilla/dom/SVGMatrixBinding.h"
 
 const double radPerDegree = 2.0 * M_PI / 360.0;

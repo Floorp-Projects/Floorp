@@ -14,11 +14,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/SignInToWebsite.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
-                                  "resource:///modules/AboutHome.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "ContentClick",
+                                  "resource:///modules/ContentClick.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
@@ -465,7 +465,9 @@ BrowserGlue.prototype = {
     SignInToWebsiteUX.init();
     PdfJs.init();
     webrtcUI.init();
-    AboutHome.init();
+
+    if (Services.prefs.getBoolPref("browser.tabs.remote"))
+      ContentClick.init();
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
   },
@@ -507,7 +509,9 @@ BrowserGlue.prototype = {
       samples = Services.prefs.getIntPref("browser.slowStartup.samples");
     } catch (e) { }
 
-    averageTime = (averageTime * samples + currentTime) / ++samples;
+    let totalTime = (averageTime * samples) + currentTime;
+    samples++;
+    averageTime = totalTime / samples;
 
     if (samples >= Services.prefs.getIntPref("browser.slowStartup.maxSamples")) {
       if (averageTime > Services.prefs.getIntPref("browser.slowStartup.timeThreshold"))

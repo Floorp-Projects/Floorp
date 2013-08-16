@@ -7,7 +7,6 @@
 #ifndef WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_BASEFILTER_H_
 #define WEBRTC_MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_BASEFILTER_H_
 
-#include <assert.h>
 #include "dshow.h"
 #include <comdef.h>
 #include "DShowTools.h"
@@ -56,7 +55,7 @@ public:
   // |aClsID| is the clsid of the filter.
   BaseFilter(const wchar_t* aName, REFCLSID aClsID);
 
-  ~BaseFilter() {}
+  virtual ~BaseFilter() {}
 
   STDMETHODIMP QueryInterface(REFIID aIId, void **aInterface);
   STDMETHODIMP_(ULONG) AddRef();

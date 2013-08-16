@@ -26,7 +26,7 @@ loader.lazyGetter(this, "ConsoleOutput",
                   () => require("devtools/webconsole/console-output").ConsoleOutput);
 loader.lazyGetter(this, "Messages",
                   () => require("devtools/webconsole/console-output").Messages);
-loader.lazyImporter(this, "GripClient", "resource://gre/modules/devtools/dbg-client.jsm");
+loader.lazyImporter(this, "ObjectClient", "resource://gre/modules/devtools/dbg-client.jsm");
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
 
@@ -488,6 +488,7 @@ WebConsoleFrame.prototype = {
 
     this._setFilterTextBoxEvents();
     this._initFilterButtons();
+    this._changeClearModifier();
 
     let fontSize = Services.prefs.getIntPref("devtools.webconsole.fontSize");
 
@@ -581,6 +582,21 @@ WebConsoleFrame.prototype = {
 
     this.filterBox.addEventListener("command", onChange, false);
     this.filterBox.addEventListener("input", onChange, false);
+  },
+
+  /**
+   * Changes modifier for the clear output shorcut on Macs.
+   *
+   * @private
+   */
+  _changeClearModifier: function WCF__changeClearModifier()
+  {
+    if (Services.appinfo.OS != "Darwin") {
+      return;
+    }
+
+    let clear = this.document.querySelector("#key_clearOutput");
+    clear.setAttribute("modifiers", "access");
   },
 
   /**
@@ -3422,8 +3438,8 @@ JSTerm.prototype = {
     view.lazyAppend = this._lazyVariablesView;
 
     VariablesViewController.attach(view, {
-      getGripClient: aGrip => {
-        return new GripClient(this.hud.proxy.client, aGrip);
+      getObjectClient: aGrip => {
+        return new ObjectClient(this.hud.proxy.client, aGrip);
       },
       getLongStringClient: aGrip => {
         return this.webConsoleClient.longString(aGrip);

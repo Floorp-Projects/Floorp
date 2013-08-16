@@ -14,6 +14,8 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_CHROME_FILES	= \
 	inspector-helpers.js \
 	inspector-traversal-data.html \
+	inspector-styles-data.html \
+	inspector-styles-data.css \
 	test_inspector-changeattrs.html \
 	test_inspector-changevalue.html \
 	test_inspector-hide.html \
@@ -28,6 +30,10 @@ MOCHITEST_CHROME_FILES	= \
 	test_inspector-retain.html \
 	test_inspector-pseudoclass-lock.html \
 	test_inspector-traversal.html \
+	test_styles-applied.html \
+	test_styles-computed.html \
+	test_styles-matched.html \
+	test_styles-modify.html \
 	test_unsafeDereference.html \
 	nonchrome_unsafeDereference.html \
 	$(NULL)

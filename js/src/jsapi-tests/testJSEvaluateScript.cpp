@@ -18,7 +18,7 @@ BEGIN_TEST(testJSEvaluateScript)
     CHECK(JS_EvaluateScript(cx, obj, src, sizeof(src) - 1, __FILE__, __LINE__,
                             retval.address()));
 
-    JSBool hasProp = true;
+    bool hasProp = true;
     CHECK(JS_AlreadyHasOwnProperty(cx, obj, "x", &hasProp));
     CHECK(!hasProp);
 

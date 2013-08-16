@@ -97,6 +97,7 @@
 #include <limits>
 
 #include "nsIColorPicker.h"
+#include "nsIStringEnumerator.h"
 
 // input type=date
 #include "js/Date.h"
@@ -263,10 +264,9 @@ NS_IMPL_ISUPPORTS1(HTMLInputElementState, HTMLInputElementState)
 NS_DEFINE_STATIC_IID_ACCESSOR(HTMLInputElementState, NS_INPUT_ELEMENT_STATE_IID)
 
 HTMLInputElement::nsFilePickerShownCallback::nsFilePickerShownCallback(
-  HTMLInputElement* aInput, nsIFilePicker* aFilePicker, bool aMulti)
+  HTMLInputElement* aInput, nsIFilePicker* aFilePicker)
   : mFilePicker(aFilePicker)
   , mInput(aInput)
-  , mMulti(aMulti)
 {
 }
 
@@ -319,9 +319,13 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     return NS_OK;
   }
 
+  int16_t mode;
+  mFilePicker->GetMode(&mode);
+  bool multi = mode == static_cast<int16_t>(nsIFilePicker::modeOpenMultiple);
+
   // Collect new selected filenames
   nsCOMArray<nsIDOMFile> newFiles;
-  if (mMulti) {
+  if (multi) {
     nsCOMPtr<nsISimpleEnumerator> iter;
     nsresult rv = mFilePicker->GetDomfiles(getter_AddRefs(iter));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -581,7 +585,7 @@ HTMLInputElement::InitFilePicker()
   const nsCOMArray<nsIDOMFile>& oldFiles = GetFilesInternal();
 
   nsCOMPtr<nsIFilePickerShownCallback> callback =
-    new HTMLInputElement::nsFilePickerShownCallback(this, filePicker, multi);
+    new HTMLInputElement::nsFilePickerShownCallback(this, filePicker);
 
   if (oldFiles.Count()) {
     nsString path;
@@ -2839,17 +2843,6 @@ SelectTextFieldOnFocus()
   return gSelectTextFieldOnFocus == 1;
 }
 
-static bool
-IsLTR(Element* aElement)
-{
-  nsIFrame* frame = aElement->GetPrimaryFrame();
-  if (frame) {
-    return frame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
-  }
-  // at least for HTML, directionality is exclusively LTR or RTL
-  return aElement->GetDirectionality() == eDir_LTR;
-}
-
 bool
 HTMLInputElement::ShouldPreventDOMActivateDispatch(EventTarget* aOriginalTarget)
 {
@@ -3111,21 +3104,18 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               if (container) {
                 nsAutoString name;
                 GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-                nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
+                nsRefPtr<HTMLInputElement> selectedRadioButton;
                 container->GetNextRadioButton(name, isMovingBack, this,
                                               getter_AddRefs(selectedRadioButton));
-                nsCOMPtr<nsIContent> radioContent =
-                  do_QueryInterface(selectedRadioButton);
-                if (radioContent) {
-                  nsCOMPtr<nsIDOMHTMLElement> elem = do_QueryInterface(selectedRadioButton);
-                  rv = elem->Focus();
+                if (selectedRadioButton) {
+                  rv = selectedRadioButton->Focus();
                   if (NS_SUCCEEDED(rv)) {
                     nsEventStatus status = nsEventStatus_eIgnore;
                     nsMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
                                        NS_MOUSE_CLICK, nullptr,
                                        nsMouseEvent::eReal);
                     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
-                    rv = nsEventDispatcher::Dispatch(radioContent,
+                    rv = nsEventDispatcher::Dispatch(ToSupports(selectedRadioButton),
                                                      aVisitor.mPresContext,
                                                      &event, nullptr, &status);
                     if (NS_SUCCEEDED(rv)) {
@@ -3183,10 +3173,12 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               Decimal newValue;
               switch (keyEvent->keyCode) {
                 case  NS_VK_LEFT:
-                  newValue = value + (IsLTR(this) ? -step : step);
+                  newValue = value + (GetComputedDirectionality() == eDir_RTL
+                                        ? step : -step);
                   break;
                 case  NS_VK_RIGHT:
-                  newValue = value + (IsLTR(this) ? step : -step);
+                  newValue = value + (GetComputedDirectionality() == eDir_RTL
+                                        ? -step : step);
                   break;
                 case  NS_VK_UP:
                   // Even for horizontal range, "up" means "increase"
@@ -4975,8 +4967,7 @@ HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* 
   nsAutoString name;
   GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
 
-  nsCOMPtr<nsIDOMHTMLInputElement> currentRadio = container->GetCurrentRadioButton(name);
-  if (currentRadio) {
+  if (container->GetCurrentRadioButton(name)) {
     *aTabIndex = -1;
   }
   *aIsFocusable = defaultFocusable;

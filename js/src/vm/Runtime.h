@@ -11,28 +11,27 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/TemplateLib.h"
 #include "mozilla/ThreadLocal.h"
 
 #include <setjmp.h>
-#include <string.h>
 
-#include "jsapi.h"
 #include "jsatom.h"
 #include "jsclist.h"
-#include "jsfriendapi.h"
 #include "jsgc.h"
-#include "jsprvtd.h"
+#include "jsproxy.h"
+#include "jsscript.h"
 
 #include "ds/FixedSizeHash.h"
-#include "ds/LifoAlloc.h"
 #include "frontend/ParseMaps.h"
 #include "gc/Nursery.h"
 #include "gc/Statistics.h"
 #include "gc/StoreBuffer.h"
-#include "ion/AsmJSSignalHandlers.h"
+#ifdef XP_MACOSX
+#include "jit/AsmJSSignalHandlers.h"
+#endif
 #include "js/HashTable.h"
 #include "js/Vector.h"
+#include "vm/CommonPropertyNames.h"
 #include "vm/DateTime.h"
 #include "vm/SPSProfiler.h"
 #include "vm/Stack.h"
@@ -46,6 +45,9 @@
 #endif
 
 namespace js {
+
+class PerThreadData;
+class ThreadSafeContext;
 
 /* Thread Local Storage slot for storing the runtime for a thread. */
 extern mozilla::ThreadLocal<PerThreadData*> TlsPerThreadData;
@@ -63,20 +65,25 @@ js_ReportAllocationOverflow(js::ThreadSafeContext *cx);
 extern void
 js_ReportOverRecursed(js::ThreadSafeContext *cx);
 
+namespace JSC { class ExecutableAllocator; }
+
+namespace WTF { class BumpPointerAllocator; }
+
 namespace js {
 
 typedef Rooted<JSLinearString*> RootedLinearString;
 
+class Activation;
+class ActivationIterator;
+class AsmJSActivation;
 class MathCache;
+class WorkerThreadState;
 
 namespace ion {
 class IonRuntime;
+class JitActivation;
 struct PcScriptCache;
 }
-
-class AsmJSActivation;
-class InterpreterFrames;
-class WorkerThreadState;
 
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -655,6 +662,7 @@ class MarkingValidator;
 typedef Vector<JS::Zone *, 1, SystemAllocPolicy> ZoneVector;
 
 class AutoLockForExclusiveAccess;
+class AutoPauseWorkersForGC;
 
 } // namespace js
 
@@ -683,7 +691,17 @@ struct JSRuntime : public JS::shadow::Runtime,
      * If non-zero, we were been asked to call the operation callback as soon
      * as possible.
      */
-    volatile int32_t    interrupt;
+#ifdef JS_THREADSAFE
+    mozilla::Atomic<int32_t, mozilla::Relaxed> interrupt;
+#else
+    int32_t interrupt;
+#endif
+
+    /* Set when handling a signal for a thread associated with this runtime. */
+    bool handlingSignal;
+
+    /* Branch callback */
+    JSOperationCallback operationCallback;
 
 #ifdef JS_THREADSAFE
   private:
@@ -747,18 +765,24 @@ struct JSRuntime : public JS::shadow::Runtime,
     PRLock *exclusiveAccessLock;
     mozilla::DebugOnly<PRThread *> exclusiveAccessOwner;
     mozilla::DebugOnly<bool> mainThreadHasExclusiveAccess;
+    mozilla::DebugOnly<bool> exclusiveThreadsPaused;
 
     /* Number of non-main threads with an ExclusiveContext. */
     size_t numExclusiveThreads;
 
     friend class js::AutoLockForExclusiveAccess;
+    friend class js::AutoPauseWorkersForGC;
 
   public:
+    void setUsedByExclusiveThread(JS::Zone *zone);
+    void clearUsedByExclusiveThread(JS::Zone *zone);
+
 #endif // JS_THREADSAFE
 
     bool currentThreadHasExclusiveAccess() {
 #if defined(JS_THREADSAFE) && defined(DEBUG)
         return (!numExclusiveThreads && mainThreadHasExclusiveAccess) ||
+            exclusiveThreadsPaused ||
             exclusiveAccessOwner == PR_GetCurrentThread();
 #else
         return true;
@@ -772,9 +796,6 @@ struct JSRuntime : public JS::shadow::Runtime,
         return false;
 #endif
     }
-
-    /* Default compartment. */
-    JSCompartment       *atomsCompartment;
 
     /* Embedders can use this zone however they wish. */
     JS::Zone            *systemZone;
@@ -794,13 +815,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Default JSVersion. */
     JSVersion defaultVersion_;
 
-    /* See comment for JS_AbortIfWrongThread in jsapi.h. */
 #ifdef JS_THREADSAFE
-  public:
-    void *ownerThread() const { return ownerThread_; }
-    void clearOwnerThread();
-    void setOwnerThread();
   private:
+    /* See comment for JS_AbortIfWrongThread in jsapi.h. */
     void *ownerThread_;
     friend bool js::CurrentThreadCanAccessRuntime(JSRuntime *rt);
   public:
@@ -905,12 +922,6 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* The native stack size limit that runtime should not exceed. */
     size_t              nativeStackQuota;
-
-    /*
-     * Frames currently running in js::Interpret. See InterpreterFrames for
-     * details.
-     */
-    js::InterpreterFrames *interpreterFrames;
 
     /* Context create/destroy callback. */
     JSContextCallback   cxCallback;
@@ -1166,7 +1177,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool needZealousGC() {
         if (gcNextScheduled > 0 && --gcNextScheduled == 0) {
             if (gcZeal() == js::gc::ZealAllocValue ||
-                gcZeal() == js::gc::ZealPurgeAnalysisValue ||
                 (gcZeal() >= js::gc::ZealIncrementalRootsThenFinish &&
                  gcZeal() <= js::gc::ZealIncrementalMultipleSlices))
             {
@@ -1189,9 +1199,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSFinalizeCallback  gcFinalizeCallback;
 
     void                *gcCallbackData;
-
-    js::AnalysisPurgeCallback analysisPurgeCallback;
-    uint64_t            analysisPurgeTriggerBytes;
 
   private:
     /*
@@ -1259,7 +1266,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     JS_SourceHook       sourceHook;
 
-    /* Per runtime debug hooks -- see jsprvtd.h and jsdbgapi.h. */
+    /* Per runtime debug hooks -- see jsdbgapi.h. */
     JSDebugHooks        debugHooks;
 
     /* If true, new compartments are initially in debug mode. */
@@ -1294,7 +1301,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     js::GCHelperThread  gcHelperThread;
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(JS_ION)
     js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
 #endif
 
@@ -1333,7 +1340,7 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     uint32_t            propertyRemovals;
 
-#if !ENABLE_INTL_API
+#if !EXPOSE_INTL_API
     /* Number localization, used by jsnum.cpp. */
     const char          *thousandsSeparator;
     const char          *decimalSeparator;
@@ -1359,8 +1366,15 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     js::ConservativeGCData conservativeGC;
 
-    /* Pool of maps used during parse/emit. */
-    js::frontend::ParseMapPool parseMapPool;
+    // Pool of maps used during parse/emit. This may be modified by threads
+    // with an ExclusiveContext and requires a lock.
+  private:
+    js::frontend::ParseMapPool parseMapPool_;
+  public:
+    js::frontend::ParseMapPool &parseMapPool() {
+        JS_ASSERT(currentThreadHasExclusiveAccess());
+        return parseMapPool_;
+    }
 
   private:
     JSPrincipals        *trustedPrincipals_;
@@ -1368,8 +1382,31 @@ struct JSRuntime : public JS::shadow::Runtime,
     void setTrustedPrincipals(JSPrincipals *p) { trustedPrincipals_ = p; }
     JSPrincipals *trustedPrincipals() const { return trustedPrincipals_; }
 
-    /* Set of all currently-living atoms. */
-    js::AtomSet         atoms;
+    // Set of all currently-living atoms, and the compartment in which they
+    // reside. The atoms compartment is additionally used to hold runtime
+    // wide Ion code stubs. These may be modified by threads with an
+    // ExclusiveContext and require a lock.
+  private:
+    js::AtomSet atoms_;
+    JSCompartment *atomsCompartment_;
+  public:
+    js::AtomSet &atoms() {
+        JS_ASSERT(currentThreadHasExclusiveAccess());
+        return atoms_;
+    }
+    JSCompartment *atomsCompartment() {
+        JS_ASSERT(currentThreadHasExclusiveAccess());
+        return atomsCompartment_;
+    }
+
+    bool isAtomsCompartment(JSCompartment *comp) {
+        return comp == atomsCompartment_;
+    }
+
+    // The atoms compartment is the only one in its zone.
+    inline bool isAtomsZone(JS::Zone *zone);
+
+    inline bool atomsZoneNeedsBarrier();
 
     union {
         /*
@@ -1389,7 +1426,16 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSPreWrapCallback                      preWrapObjectCallback;
     js::PreserveWrapperCallback            preserveWrapperCallback;
 
-    js::ScriptDataTable scriptDataTable;
+    // Table of bytecode and other data that may be shared across scripts
+    // within the runtime. This may be modified by threads with an
+    // ExclusiveContext and requires a lock.
+  private:
+    js::ScriptDataTable scriptDataTable_;
+  public:
+    js::ScriptDataTable &scriptDataTable() {
+        JS_ASSERT(currentThreadHasExclusiveAccess());
+        return scriptDataTable_;
+    }
 
 #ifdef DEBUG
     size_t              noGCOrAllocationCheck;
@@ -1496,7 +1542,15 @@ struct JSRuntime : public JS::shadow::Runtime,
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes);
     JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes, JSContext *cx);
 
-    void triggerOperationCallback();
+    // Ways in which the operation callback on the runtime can be triggered,
+    // varying based on which thread is triggering the callback.
+    enum OperationCallbackTrigger {
+        TriggerCallbackMainThread,
+        TriggerCallbackAnyThread,
+        TriggerCallbackAnyThreadDontStopIon
+    };
+
+    void triggerOperationCallback(OperationCallbackTrigger trigger);
 
     void setJitHardening(bool enabled);
     bool getJitHardening() const {
