@@ -80,6 +80,13 @@ function isString(aValue) {
          (typeof aValue == "object" && "charAt" in aValue);
 }
 
+/**
+ * This determines the minimum time interval between updates to the number of
+ * bytes transferred, and is a limiting factor to the sequence of readings used
+ * in calculating the speed of the download.
+ */
+const kProgressUpdateIntervalMs = 400;
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Download
 
@@ -182,6 +189,13 @@ Download.prototype = {
    *       individual state properties instead.
    */
   currentBytes: 0,
+
+  /**
+   * Fractional number representing the speed of the download, in bytes per
+   * second.  This value is zero when the download is stopped, and may be
+   * updated regardless of the value of hasProgress.
+   */
+  speed: 0,
 
   /**
    * Indicates whether, at this time, there is any partially downloaded data
@@ -302,6 +316,9 @@ Download.prototype = {
     let currentAttempt = deferAttempt.promise;
     this._currentAttempt = currentAttempt;
 
+    // Restart the progress and speed calculations from scratch.
+    this._lastProgressTimeMs = 0;
+
     // This function propagates progress from the DownloadSaver object, unless
     // it comes in late from a download attempt that was replaced by a new one.
     function DS_setProgressBytes(aCurrentBytes, aTotalBytes, aHasPartialData)
@@ -387,6 +404,7 @@ Download.prototype = {
         if (this._currentAttempt == currentAttempt || !this._currentAttempt) {
           this._currentAttempt = null;
           this.stopped = true;
+          this.speed = 0;
           this._notifyChange();
           if (this.succeeded) {
             this._deferSucceeded.resolve();
@@ -647,7 +665,18 @@ Download.prototype = {
   },
 
   /**
+   * Indicates the time of the last progress notification, expressed as the
+   * number of milliseconds since January 1, 1970, 00:00:00 UTC.  This is zero
+   * until some bytes have actually been transferred.
+   */
+  _lastProgressTimeMs: 0,
+
+  /**
    * Updates progress notifications based on the number of bytes transferred.
+   *
+   * The number of bytes transferred is not updated unless enough time passed
+   * since this function was last called.  This limits the computation load, in
+   * particular when the listeners update the user interface in response.
    *
    * @param aCurrentBytes
    *        Number of bytes transferred until now.
@@ -658,16 +687,57 @@ Download.prototype = {
    *        restarting the download if it fails or is canceled.
    */
   _setBytes: function D_setBytes(aCurrentBytes, aTotalBytes, aHasPartialData) {
-    this.currentBytes = aCurrentBytes;
+    let changeMade = (this.hasPartialData != aHasPartialData);
     this.hasPartialData = aHasPartialData;
-    if (aTotalBytes != -1) {
+
+    // Unless aTotalBytes is -1, we can report partial download progress.  In
+    // this case, notify when the related properties changed since last time.
+    if (aTotalBytes != -1 && (!this.hasProgress ||
+                              this.totalBytes != aTotalBytes)) {
       this.hasProgress = true;
       this.totalBytes = aTotalBytes;
-      if (aTotalBytes > 0) {
-        this.progress = Math.floor(aCurrentBytes / aTotalBytes * 100);
+      changeMade = true;
+    }
+
+    // Updating the progress and computing the speed require that enough time
+    // passed since the last update, or that we haven't started throttling yet.
+    let currentTimeMs = Date.now();
+    let intervalMs = currentTimeMs - this._lastProgressTimeMs;
+    if (intervalMs >= kProgressUpdateIntervalMs) {
+      // Don't compute the speed unless we started throttling notifications.
+      if (this._lastProgressTimeMs != 0) {
+        // Calculate the speed in bytes per second.
+        let rawSpeed = (aCurrentBytes - this.currentBytes) / intervalMs * 1000;
+        if (this.speed == 0) {
+          // When the previous speed is exactly zero instead of a fractional
+          // number, this can be considered the first element of the series.
+          this.speed = rawSpeed;
+        } else {
+          // Apply exponential smoothing, with a smoothing factor of 0.1.
+          this.speed = rawSpeed * 0.1 + this.speed * 0.9;
+        }
+      }
+
+      // Start throttling notifications only when we have actually received some
+      // bytes for the first time.  The timing of the first part of the download
+      // is not reliable, due to possible latency in the initial notifications.
+      // This also allows automated tests to receive and verify the number of
+      // bytes initially transferred.
+      if (aCurrentBytes > 0) {
+        this._lastProgressTimeMs = currentTimeMs;
+
+        // Update the progress now that we don't need its previous value.
+        this.currentBytes = aCurrentBytes;
+        if (this.totalBytes > 0) {
+          this.progress = Math.floor(this.currentBytes / this.totalBytes * 100);
+        }
+        changeMade = true;
       }
     }
-    this._notifyChange();
+
+    if (changeMade) {
+      this._notifyChange();
+    }
   },
 
   /**
