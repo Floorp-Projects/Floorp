@@ -14,11 +14,9 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/dom/TypedArray.h"
-#include <utility>
 
 namespace mozilla {
 
-class MediaDecoderReader;
 namespace dom {
 class AudioBuffer;
 class AudioContext;

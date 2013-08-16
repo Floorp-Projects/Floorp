@@ -236,11 +236,13 @@ public:
      used by other production code.
   */
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
-  already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint);
+  already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint, gfx3DMatrix& aTransformToApzcOut,
+                                                         gfx3DMatrix& aTransformToScreenOut);
 private:
   /* Recursive helpers */
   AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid);
-  AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc, gfxPoint aHitTestPoint);
+  AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& aHitTestPoint,
+                                         gfx3DMatrix& aTransformToApzcOut, gfx3DMatrix& aTransformToScreenOut);
 
   /**
    * Recursive helper function to build the APZC tree. The tree of APZC instances has

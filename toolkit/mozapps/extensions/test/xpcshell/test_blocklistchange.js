@@ -335,12 +335,12 @@ const ADDON_IDS = ["softblock1@tests.mozilla.org",
 // Don't need the full interface, attempts to call other methods will just
 // throw which is just fine
 var WindowWatcher = {
-  openWindow: function(parent, url, name, features, arguments) {
+  openWindow: function(parent, url, name, features, openArgs) {
     // Should be called to list the newly blocklisted items
     do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
 
     // Simulate auto-disabling any softblocks
-    var list = arguments.wrappedJSObject.list;
+    var list = openArgs.wrappedJSObject.list;
     list.forEach(function(aItem) {
       if (!aItem.blocked)
         aItem.disable = true;
@@ -531,10 +531,10 @@ function manual_update(aVersion, aCallback) {
 // Checks that an add-ons properties match expected values
 function check_addon(aAddon, aExpectedVersion, aExpectedUserDisabled,
                      aExpectedSoftDisabled, aExpectedState) {
+  do_check_neq(aAddon, null);
   dump("Testing " + aAddon.id + " version " + aAddon.version + "\n");
   dump(aAddon.userDisabled + " " + aAddon.softDisabled + "\n");
 
-  do_check_neq(aAddon, null);
   do_check_eq(aAddon.version, aExpectedVersion);
   do_check_eq(aAddon.blocklistState, aExpectedState);
   do_check_eq(aAddon.userDisabled, aExpectedUserDisabled);
@@ -706,11 +706,7 @@ add_test(function run_app_update_schema_test() {
   function update_schema_2() {
     shutdownManager();
 
-    var dbfile = gProfD.clone();
-    dbfile.append("extensions.sqlite");
-    var db = Services.storage.openDatabase(dbfile);
-    db.schemaVersion = 100;
-    db.close();
+    changeXPIDBVersion(100);
     gAppInfo.version = "2";
     startupManager(true);
 
@@ -738,11 +734,7 @@ add_test(function run_app_update_schema_test() {
     restartManager();
 
     shutdownManager();
-    var dbfile = gProfD.clone();
-    dbfile.append("extensions.sqlite");
-    var db = Services.storage.openDatabase(dbfile);
-    db.schemaVersion = 100;
-    db.close();
+    changeXPIDBVersion(100);
     gAppInfo.version = "2.5";
     startupManager(true);
 
@@ -764,11 +756,7 @@ add_test(function run_app_update_schema_test() {
   function update_schema_4() {
     shutdownManager();
 
-    var dbfile = gProfD.clone();
-    dbfile.append("extensions.sqlite");
-    var db = Services.storage.openDatabase(dbfile);
-    db.schemaVersion = 100;
-    db.close();
+    changeXPIDBVersion(100);
     startupManager(false);
 
     AddonManager.getAddonsByIDs(ADDON_IDS, function([s1, s2, s3, s4, s5, h, r]) {
@@ -789,11 +777,7 @@ add_test(function run_app_update_schema_test() {
   function update_schema_5() {
     shutdownManager();
 
-    var dbfile = gProfD.clone();
-    dbfile.append("extensions.sqlite");
-    var db = Services.storage.openDatabase(dbfile);
-    db.schemaVersion = 100;
-    db.close();
+    changeXPIDBVersion(100);
     gAppInfo.version = "1";
     startupManager(true);
 
@@ -1345,7 +1329,7 @@ add_test(function run_manual_update_2_test() {
 
   startupManager(false);
 
-  AddonManager.getAddonsByIDs(ADDON_IDS, function([s1, s2, s3, s4, s5, h, r]) {
+  AddonManager.getAddonsByIDs(ADDON_IDS, callback_soon(function([s1, s2, s3, s4, s5, h, r]) {
 
     check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
     check_addon(s2, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1363,7 +1347,8 @@ add_test(function run_manual_update_2_test() {
     manual_update("2", function manual_update_2_2() {
       restartManager();
 
-      AddonManager.getAddonsByIDs(ADDON_IDS, function([s1, s2, s3, s4, s5, h, r]) {
+      AddonManager.getAddonsByIDs(ADDON_IDS,
+       callback_soon(function([s1, s2, s3, s4, s5, h, r]) {
 
         check_addon(s1, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
         check_addon(s2, "2.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1391,9 +1376,9 @@ add_test(function run_manual_update_2_test() {
             run_next_test();
           });
         });
-      });
+      }));
     });
-  });
+  }));
 });
 
 // Uses the API to install blocked add-ons from the local filesystem

@@ -6,10 +6,7 @@
 
 #include "DOMRequest.h"
 
-#include "mozilla/Util.h"
 #include "DOMError.h"
-#include "nsEventDispatcher.h"
-#include "nsDOMEvent.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsThreadUtils.h"

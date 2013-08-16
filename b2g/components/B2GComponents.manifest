@@ -22,7 +22,6 @@ category JavaScript-navigator-property mozKeyboard @mozilla.org/b2g-keyboard;1
 
 component {4607330d-e7d2-40a4-9eb8-43967eae0142} MozKeyboard.js
 contract @mozilla.org/b2g-inputmethod;1 {4607330d-e7d2-40a4-9eb8-43967eae0142}
-category JavaScript-navigator-property mozInputMethod @mozilla.org/b2g-inputmethod;1
 
 # DirectoryProvider.js
 component {9181eb7c-6f87-11e1-90b1-4f59d80dd2e5} DirectoryProvider.js
@@ -40,7 +39,8 @@ category app-startup ProcessGlobal service,@mozilla.org/b2g-process-global;1
 
 # ContentHandler.js
 component {d18d0216-d50c-11e1-ba54-efb18d0ef0ac} ContentHandler.js
-contract @mozilla.org/uriloader/content-handler;1?type=application/pdf {d18d0216-d50c-11e1-ba54-efb18d0ef0ac}
+contract @mozilla.org/b2g/activities-content-handler;1 {d18d0216-d50c-11e1-ba54-efb18d0ef0ac}
+category app-startup ContentHandler service,@mozilla.org/b2g/activities-content-handler;1
 
 # PaymentGlue.js
 component {8b83eabc-7929-47f4-8b48-4dea8d887e4b} PaymentGlue.js

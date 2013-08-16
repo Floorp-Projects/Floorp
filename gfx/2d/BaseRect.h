@@ -56,6 +56,15 @@ struct BaseRect {
   bool IsEmpty() const { return height <= 0 || width <= 0; }
   void SetEmpty() { width = height = 0; }
 
+  // "Finite" means not inf and not NaN
+  bool IsFinite() const
+  {
+    return (std::isfinite(x) &&
+            std::isfinite(y) &&
+            std::isfinite(width) &&
+            std::isfinite(height));
+  }
+
   // Returns true if this rectangle contains the interior of aRect. Always
   // returns true if aRect is empty, and always returns false is aRect is
   // nonempty but this rect is empty.

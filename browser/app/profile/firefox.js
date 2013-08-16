@@ -624,9 +624,6 @@ pref("network.protocol-handler.expose.news", false);
 pref("network.protocol-handler.expose.snews", false);
 pref("network.protocol-handler.expose.nntp", false);
 
-// Warning for about:networking page
-pref("network.warnOnAboutNetworking", true);
-
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.linksonly", false);
@@ -1286,11 +1283,6 @@ pref("security.mixed_content.block_active_content", true);
 
 // Override the Gecko-default value of false for Firefox.
 pref("plain_text.wrap_long_lines", true);
-
-#ifndef RELEASE_BUILD
-// Enable Web Audio for Firefox Desktop in Nightly and Aurora
-pref("media.webaudio.enabled", true);
-#endif
 
 // If this turns true, Moz*Gesture events are not called stopPropagation()
 // before content.

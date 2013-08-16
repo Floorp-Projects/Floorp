@@ -15,6 +15,9 @@
 #include "prlog.h"
 #include "prenv.h"
 #include "mozilla/HangMonitor.h"
+#include "mozilla/unused.h"
+
+using mozilla::unused;
 
 #define NOTIFY_TOKEN 0xFA
 
@@ -45,7 +48,7 @@ nsAppShell::EventProcessorCallback(GIOChannel *source,
     nsAppShell *self = static_cast<nsAppShell *>(data);
 
     unsigned char c;
-    read(self->mPipeFDs[0], &c, 1);
+    unused << read(self->mPipeFDs[0], &c, 1);
     NS_ASSERTION(c == (unsigned char) NOTIFY_TOKEN, "wrong token");
 
     self->NativeEventCallback();
@@ -126,7 +129,7 @@ void
 nsAppShell::ScheduleNativeEventCallback()
 {
     unsigned char buf[] = { NOTIFY_TOKEN };
-    write(mPipeFDs[1], buf, 1);
+    unused << write(mPipeFDs[1], buf, 1);
 }
 
 bool

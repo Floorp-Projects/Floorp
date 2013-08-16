@@ -13,7 +13,6 @@ import platform
 import shutil
 import socket
 import subprocess
-import sys
 from telnetlib import Telnet
 import tempfile
 import time
@@ -462,16 +461,14 @@ waitFor(
         """ Set up TCP port forwarding to the specified port on the device,
             using any availble local port, and return the local port.
         """
-
-        import socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind(("",0))
         local_port = s.getsockname()[1]
         s.close()
 
-        output = self._run_adb(['forward',
-                                'tcp:%d' % local_port,
-                                'tcp:%d' % remote_port])
+        self._run_adb(['forward',
+                       'tcp:%d' % local_port,
+                       'tcp:%d' % remote_port])
 
         self.marionette_port = local_port
 

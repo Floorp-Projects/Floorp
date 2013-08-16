@@ -413,39 +413,54 @@ static PLDHashOperator DetachFontEntries(const nsAString& aKey,
   return PL_DHASH_NEXT;
 }
 
+static PLDHashOperator RemoveIfEmpty(const nsAString& aKey,
+                                     nsRefPtr<gfxMixedFontFamily>& aFamily,
+                                     void* aUserArg)
+{
+  return aFamily->GetFontList().Length() ? PL_DHASH_NEXT : PL_DHASH_REMOVE;
+}
+
 bool
 nsUserFontSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
 {
   bool modified = false;
 
-  // destroy any current loaders, as the entries they refer to
-  // may be about to get replaced
-  if (mLoaders.Count() > 0) {
-    modified = true; // trigger reflow so that any necessary downloads
-                        // will be reinitiated
-  }
-  mLoaders.EnumerateEntries(DestroyIterator, nullptr);
+  // The @font-face rules that make up the user font set have changed,
+  // so we need to update the set. However, we want to preserve existing
+  // font entries wherever possible, so that we don't discard and then
+  // re-download resources in the (common) case where at least some of the
+  // same rules are still present.
 
   nsTArray<FontFaceRuleRecord> oldRules;
   mRules.SwapElements(oldRules);
 
-  // destroy the font family records; we need to re-create them
-  // because we might end up with faces in a different order,
-  // even if they're the same font entries as before
+  // Remove faces from the font family records; we need to re-insert them
+  // because we might end up with faces in a different order even if they're
+  // the same font entries as before. (The order can affect font selection
+  // where multiple faces match the requested style, perhaps with overlapping
+  // unicode-range coverage.)
   mFontFamilies.Enumerate(DetachFontEntries, nullptr);
-  mFontFamilies.Clear();
 
   for (uint32_t i = 0, i_end = aRules.Length(); i < i_end; ++i) {
-    // insert each rule into our list, migrating old font entries if possible
+    // Insert each rule into our list, migrating old font entries if possible
     // rather than creating new ones; set  modified  to true if we detect
-    // that rule ordering has changed, or if a new entry is created
+    // that rule ordering has changed, or if a new entry is created.
     InsertRule(aRules[i].mRule, aRules[i].mSheetType, oldRules, modified);
   }
 
-  // if any rules are left in the old list, note that the set has changed
+  // Remove any residual families that have no font entries (i.e., they were
+  // not defined at all by the updated set of @font-face rules).
+  mFontFamilies.Enumerate(RemoveIfEmpty, nullptr);
+
+  // If any rules are left in the old list, note that the set has changed
+  // (even if the new set was built entirely by migrating old font entries).
   if (oldRules.Length() > 0) {
     modified = true;
-    // any in-progress loaders for obsolete rules should be cancelled
+    // Any in-progress loaders for obsolete rules should be cancelled,
+    // as the resource being downloaded will no longer be required.
+    // We need to explicitly remove any loaders here, otherwise the loaders
+    // will keep their "orphaned" font entries alive until they complete,
+    // even after the oldRules array is deleted.
     size_t count = oldRules.Length();
     for (size_t i = 0; i < count; ++i) {
       gfxFontEntry *fe = oldRules[i].mFontEntry;
@@ -453,9 +468,10 @@ nsUserFontSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
         continue;
       }
       gfxProxyFontEntry *proxy = static_cast<gfxProxyFontEntry*>(fe);
-      if (proxy->mLoader != nullptr) {
-        proxy->mLoader->Cancel();
-        RemoveLoader(proxy->mLoader);
+      nsFontFaceLoader *loader = proxy->mLoader;
+      if (loader) {
+        loader->Cancel();
+        RemoveLoader(loader);
       }
     }
   }
@@ -515,7 +531,7 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule *aRule, uint8_t aSheetType,
   // this is a new rule:
 
   uint32_t weight = NS_STYLE_FONT_WEIGHT_NORMAL;
-  uint32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  int32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
   uint32_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   nsString languageOverride;
 
@@ -674,10 +690,13 @@ nsUserFontSet::ReplaceFontEntry(gfxMixedFontFamily *aFamily,
                                 gfxProxyFontEntry *aProxy,
                                 gfxFontEntry *aFontEntry)
 {
+  // aProxy is being supplanted by the "real" font aFontEntry, so we need to
+  // update any rules that refer to it. Note that there may be multiple rules
+  // that refer to the same proxy - e.g. if a stylesheet was loaded multiple
+  // times, so that several identical @font-face rules are present.
   for (uint32_t i = 0; i < mRules.Length(); ++i) {
     if (mRules[i].mFontEntry == aProxy) {
       mRules[i].mFontEntry = aFontEntry;
-      break;
     }
   }
   aFamily->ReplaceFontEntry(aProxy, aFontEntry);

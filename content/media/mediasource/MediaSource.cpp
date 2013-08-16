@@ -10,7 +10,6 @@
 #include "MediaSourceInputAdapter.h"
 #include "SourceBuffer.h"
 #include "SourceBufferList.h"
-#include "nsContentUtils.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaSourceLog;

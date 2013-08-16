@@ -20,7 +20,7 @@ endif
 
 default::
 
-include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/config/makefiles/functions.mk
 
 NSS_LIBS = \
   nss3 \
@@ -394,8 +394,6 @@ nss3.def: $(NSS_STATIC_LIBS_DEFS) $(DEPTH)/db/sqlite3/src/sqlite-processed.def
 	mv $@.tmp $@
 endif
 
-# Force the linker to include everything from the static libraries.
-EXPAND_LIBS_EXEC += --extract
 else
 $(NSS_DIST_DLL_FILES) $(NSS_SDK_LIB_FILES): libs-nss/lib
 endif # MOZ_FOLD_LIBS
@@ -403,6 +401,9 @@ endif # MOZ_FOLD_LIBS
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_FOLD_LIBS
+# Force the linker to include everything from the static libraries.
+EXPAND_LIBS_EXEC += --extract
+
 $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS)
 
 EXTRA_DSO_LDOPTS += $(REALTIME_LIBS)

@@ -28,7 +28,7 @@ function runTests(doc) {
     let selectorText = selectors[i];
     let selector = new CssSelector(cssRule, selectorText, i);
     let expected = getExpectedSpecificity(selectorText);
-    let specificity = DOMUtils.getSpecificity(selector._cssRule,
+    let specificity = DOMUtils.getSpecificity(selector.cssRule,
                                               selector.selectorIndex)
     is(specificity, expected,
       'selector "' + selectorText + '" has a specificity of ' + expected);

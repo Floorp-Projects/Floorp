@@ -14,8 +14,6 @@ LIBRARY_NAME	= gkcontentsvg_s
 LIBXUL_LIBRARY	= 1
 FAIL_ON_WARNINGS	= 1
 
-include $(topsrcdir)/config/config.mk
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
@@ -32,5 +30,3 @@ INCLUDES += 	\
 		-I$(topsrcdir)/content/xbl/src \
 		-I$(srcdir)/../../../smil \
 		$(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT

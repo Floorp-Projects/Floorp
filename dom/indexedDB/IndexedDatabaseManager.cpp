@@ -24,7 +24,6 @@
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
-#include "pratom.h"
 
 #include "IDBEvents.h"
 #include "IDBFactory.h"
@@ -46,8 +45,8 @@ namespace {
 
 mozilla::StaticRefPtr<IndexedDatabaseManager> gInstance;
 
-int32_t gInitialized = 0;
-int32_t gClosed = 0;
+mozilla::Atomic<int32_t> gInitialized(0);
+mozilla::Atomic<int32_t> gClosed(0);
 
 class AsyncDeleteFileRunnable MOZ_FINAL : public nsIRunnable
 {
@@ -141,7 +140,7 @@ IndexedDatabaseManager::~IndexedDatabaseManager()
 }
 
 bool IndexedDatabaseManager::sIsMainProcess = false;
-int32_t IndexedDatabaseManager::sLowDiskSpaceMode = 0;
+mozilla::Atomic<int32_t> IndexedDatabaseManager::sLowDiskSpaceMode(0);
 
 // static
 IndexedDatabaseManager*
@@ -180,7 +179,7 @@ IndexedDatabaseManager::GetOrCreate()
     nsresult rv = instance->Init();
     NS_ENSURE_SUCCESS(rv, nullptr);
 
-    if (PR_ATOMIC_SET(&gInitialized, 1)) {
+    if (gInitialized.exchange(1)) {
       NS_ERROR("Initialized more than once?!");
     }
 
@@ -244,7 +243,7 @@ IndexedDatabaseManager::Destroy()
 {
   // Setting the closed flag prevents the service from being recreated.
   // Don't set it though if there's no real instance created.
-  if (!!gInitialized && PR_ATOMIC_SET(&gClosed, 1)) {
+  if (!!gInitialized && gClosed.exchange(1)) {
     NS_ERROR("Shutdown more than once?!");
   }
 
@@ -526,7 +525,7 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
 
   JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(aObj));
 
-  JSBool hasIndexedDB;
+  bool hasIndexedDB;
   if (!JS_HasProperty(aCx, obj, "indexedDB", &hasIndexedDB)) {
     return NS_ERROR_FAILURE;
   }
@@ -589,10 +588,10 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject, const char* aTopic,
     const nsDependentString data(aData);
 
     if (data.EqualsLiteral(LOW_DISK_SPACE_DATA_FULL)) {
-      PR_ATOMIC_SET(&sLowDiskSpaceMode, 1);
+      sLowDiskSpaceMode = 1;
     }
     else if (data.EqualsLiteral(LOW_DISK_SPACE_DATA_FREE)) {
-      PR_ATOMIC_SET(&sLowDiskSpaceMode, 0);
+      sLowDiskSpaceMode = 0;
     }
     else {
       NS_NOTREACHED("Unknown data value!");

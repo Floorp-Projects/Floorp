@@ -32,6 +32,7 @@
 #include <algorithm>
 
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Constants.h"
 #include "WebAudioUtils.h"
 
 using namespace std;

@@ -6,7 +6,6 @@
 
 #include "ArchiveEvent.h"
 
-#include "nsContentUtils.h"
 #include "nsCExternalHandlerService.h"
 #include "nsProxyRelease.h"
 

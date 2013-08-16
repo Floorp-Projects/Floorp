@@ -203,9 +203,11 @@ public:
 
   virtual void Attach(Layer* aLayer, Compositor* aCompositor) MOZ_OVERRIDE;
 
+#ifdef MOZ_DUMP_PAINTING
   virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
+#endif
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);

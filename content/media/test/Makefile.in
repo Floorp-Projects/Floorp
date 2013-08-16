@@ -116,6 +116,9 @@ MOCHITEST_FILES = \
 		test_video_to_canvas.html \
 		test_audiowrite.html \
 		test_mediarecorder_creation.html \
+		test_mediarecorder_avoid_recursion.html \
+		test_mediarecorder_record_audiocontext.html \
+		test_mediarecorder_record_stopms.html \
 		test_mozHasAudio.html \
 		test_source_media.html \
 		test_autoplay_contentEditable.html \
@@ -258,6 +261,7 @@ MOCHITEST_FILES += \
 		test-6-5.1.opus \
 		test-7-6.1.opus \
 		test-8-7.1.opus \
+		vbr.mp3 \
 		video-overhang.ogg \
 		file_a4_tone.ogg \
 		detodos.opus \

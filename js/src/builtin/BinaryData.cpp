@@ -6,8 +6,6 @@
 
 #include "builtin/BinaryData.h"
 
-#include "mozilla/FloatingPoint.h"
-
 #include "jscompartment.h"
 #include "jsfun.h"
 #include "jsobj.h"
@@ -1124,7 +1122,7 @@ BinaryArray::fill(JSContext *cx, unsigned int argc, Value *vp)
     return FillBinaryArrayWithValue(cx, thisObj, val);
 }
 
-JSBool
+bool
 BinaryArray::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                 MutableHandleObject objp, MutableHandleShape propp)
 {
@@ -1155,7 +1153,7 @@ BinaryArray::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
     return JSObject::lookupGeneric(cx, proto, id, objp, propp);
 }
 
-JSBool
+bool
 BinaryArray::obj_lookupProperty(JSContext *cx,
                                 HandleObject obj,
                                 HandlePropertyName name,
@@ -1166,7 +1164,7 @@ BinaryArray::obj_lookupProperty(JSContext *cx,
     return obj_lookupGeneric(cx, obj, id, objp, propp);
 }
 
-JSBool
+bool
 BinaryArray::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                                 MutableHandleObject objp, MutableHandleShape propp)
 {
@@ -1188,7 +1186,7 @@ BinaryArray::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
     return true;
 }
 
-JSBool
+bool
 BinaryArray::obj_lookupSpecial(JSContext *cx, HandleObject obj,
                                HandleSpecialId sid, MutableHandleObject objp,
                                MutableHandleShape propp)
@@ -1197,7 +1195,7 @@ BinaryArray::obj_lookupSpecial(JSContext *cx, HandleObject obj,
     return obj_lookupGeneric(cx, obj, id, objp, propp);
 }
 
-JSBool
+bool
 BinaryArray::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
                              HandleId id, MutableHandleValue vp)
 {
@@ -1211,7 +1209,7 @@ BinaryArray::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiv
     return obj_getProperty(cx, obj, receiver, name, vp);
 }
 
-JSBool
+bool
 BinaryArray::obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
                               HandlePropertyName name, MutableHandleValue vp)
 {
@@ -1224,7 +1222,7 @@ BinaryArray::obj_getProperty(JSContext *cx, HandleObject obj, HandleObject recei
     return JSObject::getProperty(cx, proto, receiver, name, vp);
 }
 
-JSBool
+bool
 BinaryArray::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
                              uint32_t index, MutableHandleValue vp)
 {
@@ -1245,7 +1243,7 @@ BinaryArray::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiv
     return JSObject::getElement(cx, proto, receiver, index, vp);
 }
 
-JSBool
+bool
 BinaryArray::obj_getElementIfPresent(JSContext *cx, HandleObject obj,
                                      HandleObject receiver, uint32_t index,
                                      MutableHandleValue vp, bool *present)
@@ -1262,7 +1260,7 @@ BinaryArray::obj_getElementIfPresent(JSContext *cx, HandleObject obj,
     return true;
 }
 
-JSBool
+bool
 BinaryArray::obj_getSpecial(JSContext *cx, HandleObject obj,
                             HandleObject receiver, HandleSpecialId sid,
                             MutableHandleValue vp)
@@ -1271,9 +1269,9 @@ BinaryArray::obj_getSpecial(JSContext *cx, HandleObject obj,
     return obj_getGeneric(cx, obj, receiver, id, vp);
 }
 
-JSBool
+bool
 BinaryArray::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                             MutableHandleValue vp, JSBool strict)
+                             MutableHandleValue vp, bool strict)
 {
 	uint32_t index;
 	if (js_IdIsIndex(id, &index)) {
@@ -1289,18 +1287,18 @@ BinaryArray::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
 	return true;
 }
 
-JSBool
+bool
 BinaryArray::obj_setProperty(JSContext *cx, HandleObject obj,
                              HandlePropertyName name, MutableHandleValue vp,
-                             JSBool strict)
+                             bool strict)
 {
     RootedId id(cx, NameToId(name));
     return obj_setGeneric(cx, obj, id, vp, strict);
 }
 
-JSBool
+bool
 BinaryArray::obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
-                             MutableHandleValue vp, JSBool strict)
+                             MutableHandleValue vp, bool strict)
 {
     RootedObject type(cx, GetType(obj));
     if (index >= ArrayType::length(cx, type)) {
@@ -1328,16 +1326,16 @@ BinaryArray::obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
     return true;
 }
 
-JSBool
+bool
 BinaryArray::obj_setSpecial(JSContext *cx, HandleObject obj,
                              HandleSpecialId sid, MutableHandleValue vp,
-                             JSBool strict)
+                             bool strict)
 {
     RootedId id(cx, SPECIALID_TO_JSID(sid));
     return obj_setGeneric(cx, obj, id, vp, strict);
 }
 
-JSBool
+bool
 BinaryArray::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
                                        HandleId id, unsigned *attrsp)
 {
@@ -1358,7 +1356,7 @@ BinaryArray::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
     return false;
 }
 
-JSBool
+bool
 BinaryArray::obj_getPropertyAttributes(JSContext *cx, HandleObject obj,
                                         HandlePropertyName name,
                                         unsigned *attrsp)
@@ -1367,7 +1365,7 @@ BinaryArray::obj_getPropertyAttributes(JSContext *cx, HandleObject obj,
     return obj_getGenericAttributes(cx, obj, id, attrsp);
 }
 
-JSBool
+bool
 BinaryArray::obj_getElementAttributes(JSContext *cx, HandleObject obj,
                                        uint32_t index, unsigned *attrsp)
 {
@@ -1375,7 +1373,7 @@ BinaryArray::obj_getElementAttributes(JSContext *cx, HandleObject obj,
     return obj_getGenericAttributes(cx, obj, id, attrsp);
 }
 
-JSBool
+bool
 BinaryArray::obj_getSpecialAttributes(JSContext *cx, HandleObject obj,
                                        HandleSpecialId sid, unsigned *attrsp)
 {
@@ -1383,7 +1381,7 @@ BinaryArray::obj_getSpecialAttributes(JSContext *cx, HandleObject obj,
     return obj_getGenericAttributes(cx, obj, id, attrsp);
 }
 
-JSBool
+bool
 BinaryArray::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                             MutableHandleValue statep, MutableHandleId idp)
 {
@@ -1866,7 +1864,7 @@ BinaryStruct::obj_trace(JSTracer *tracer, JSObject *obj)
     MarkObject(tracer, &type, "binarystruct.type");
 }
 
-JSBool
+bool
 BinaryStruct::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                             MutableHandleValue statep, MutableHandleId idp)
 {
@@ -1906,7 +1904,7 @@ BinaryStruct::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op
     return true;
 }
 
-JSBool
+bool
 BinaryStruct::obj_getGeneric(JSContext *cx, HandleObject obj,
                              HandleObject receiver, HandleId id,
                              MutableHandleValue vp)
@@ -1940,7 +1938,7 @@ BinaryStruct::obj_getGeneric(JSContext *cx, HandleObject obj,
     return Reify(cx, fieldType, obj, fieldInfo->offset, vp);
 }
 
-JSBool
+bool
 BinaryStruct::obj_getProperty(JSContext *cx, HandleObject obj,
                               HandleObject receiver, HandlePropertyName name,
                               MutableHandleValue vp)
@@ -1949,7 +1947,7 @@ BinaryStruct::obj_getProperty(JSContext *cx, HandleObject obj,
     return obj_getGeneric(cx, obj, receiver, id, vp);
 }
 
-JSBool
+bool
 BinaryStruct::obj_getSpecial(JSContext *cx, HandleObject obj,
                              HandleObject receiver, HandleSpecialId sid,
                              MutableHandleValue vp)
@@ -1958,9 +1956,9 @@ BinaryStruct::obj_getSpecial(JSContext *cx, HandleObject obj,
     return obj_getGeneric(cx, obj, receiver, id, vp);
 }
 
-JSBool
+bool
 BinaryStruct::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                             MutableHandleValue vp, JSBool strict)
+                             MutableHandleValue vp, bool strict)
 {
     if (!IsBinaryStruct(obj)) {
         char *valueStr = JS_EncodeString(cx, JS_ValueToString(cx, ObjectValue(*obj)));
@@ -1992,10 +1990,10 @@ BinaryStruct::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
     return true;
 }
 
-JSBool
+bool
 BinaryStruct::obj_setProperty(JSContext *cx, HandleObject obj,
                               HandlePropertyName name, MutableHandleValue vp,
-                              JSBool strict)
+                              bool strict)
 {
     RootedId id(cx, NON_INTEGER_ATOM_TO_JSID(&(*name)));
     return obj_setGeneric(cx, obj, id, vp, strict);

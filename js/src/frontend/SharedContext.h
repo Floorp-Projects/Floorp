@@ -9,7 +9,6 @@
 
 #include "jsatom.h"
 #include "jsopcode.h"
-#include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsscript.h"
 #include "jstypes.h"

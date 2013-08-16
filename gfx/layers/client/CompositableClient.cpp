@@ -31,7 +31,7 @@ CompositableClient::~CompositableClient()
 {
   MOZ_COUNT_DTOR(CompositableClient);
   Destroy();
-  MOZ_ASSERT(mTexturesToRemove.size() == 0, "would leak textures pending fore deletion");
+  MOZ_ASSERT(mTexturesToRemove.Length() == 0, "would leak textures pending for deletion");
 }
 
 LayersBackend
@@ -194,17 +194,17 @@ void
 CompositableClient::RemoveTextureClient(TextureClient* aClient)
 {
   MOZ_ASSERT(aClient);
-  mTexturesToRemove.push_back(aClient->GetID());
+  mTexturesToRemove.AppendElement(aClient->GetID());
   aClient->SetID(0);
 }
 
 void
 CompositableClient::OnTransaction()
 {
-  for (unsigned i = 0; i < mTexturesToRemove.size(); ++i) {
+  for (unsigned i = 0; i < mTexturesToRemove.Length(); ++i) {
     mForwarder->RemoveTexture(this, mTexturesToRemove[i]);
   }
-  mTexturesToRemove.clear();
+  mTexturesToRemove.Clear();
 }
 
 } // namespace layers

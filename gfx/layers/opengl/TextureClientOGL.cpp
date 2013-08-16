@@ -15,7 +15,9 @@ namespace mozilla {
 namespace layers {
 
 SharedTextureClientOGL::SharedTextureClientOGL()
-: mHandle(0), mIsCrossProcess(false), mInverted(false)
+  : mHandle(0)
+  , mIsCrossProcess(false)
+  , mInverted(false)
 {
 }
 

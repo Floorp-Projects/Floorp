@@ -105,7 +105,6 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectionNoteRootCallback.h"
-#include "nsCycleCollectorUtils.h"
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
 #include "nsDeque.h"
@@ -117,7 +116,6 @@
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
 #include "nsIConsoleService.h"
-#include "nsThreadUtils.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 #include "nsICycleCollectorListener.h"
@@ -131,14 +129,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef WIN32
-#include <io.h>
-#include <process.h>
-#endif
-
-#ifdef XP_WIN
-#include <windows.h>
-#endif
 
 #include "mozilla/CondVar.h"
 #include "mozilla/Likely.h"
@@ -157,16 +147,6 @@ using namespace mozilla;
 
 // One to do the freeing, then another to detect there is no more work to do.
 #define NORMAL_SHUTDOWN_COLLECTIONS 2
-
-#if defined(XP_WIN)
-// Defined in nsThreadManager.cpp.
-extern DWORD gTLSThreadIDIndex;
-#elif defined(NS_TLS)
-// Defined in nsThreadManager.cpp.
-extern NS_TLS mozilla::threads::ID gTLSThreadID;
-#else
-PRThread* gCycleCollectorThread = nullptr;
-#endif
 
 // Cycle collector environment variables
 //
@@ -903,8 +883,6 @@ enum ccType {
     ShutdownCC   /* Shutdown CC, used for finding leaks. */
 };
 
-class nsCycleCollectorRunner;
-
 ////////////////////////////////////////////////////////////////////////
 // Top level structure for the cycle collector.
 ////////////////////////////////////////////////////////////////////////
@@ -922,8 +900,6 @@ class nsCycleCollector
 
     GCGraph mGraph;
 
-    // Strong reference
-    nsCycleCollectorRunner *mRunner;
     nsIThread* mThread;
 
 public:
@@ -977,11 +953,8 @@ public:
     // returns whether anything was collected
     bool CollectWhite(nsICycleCollectorListener *aListener);
 
-    nsCycleCollector(CCThreadingModel aModel);
+    nsCycleCollector();
     ~nsCycleCollector();
-
-    nsresult Init();
-    void ShutdownThreads();
 
     void Suspect(void *n, nsCycleCollectionParticipant *cp,
                  nsCycleCollectingAutoRefCnt *aRefCnt);
@@ -1027,168 +1000,6 @@ public:
                              size_t *aWhiteNodeSize,
                              size_t *aPurpleBufferSize) const;
 };
-
-class nsCycleCollectorRunner : public nsRunnable
-{
-    nsCycleCollector *mCollector;
-    CCThreadingModel mModel;
-    nsICycleCollectorListener *mListener;
-    nsCOMPtr<nsIThread> mThread;
-    Mutex mLock;
-    CondVar mRequest;
-    CondVar mReply;
-    bool mRunning;
-    bool mShutdown;
-    bool mCollected;
-    ccType mCCType;
-
-public:
-    nsCycleCollectorRunner(nsCycleCollector *collector,
-                           CCThreadingModel aModel)
-        : mCollector(collector),
-          mModel(aModel),
-          mListener(nullptr),
-          mLock("cycle collector lock"),
-          mRequest(mLock, "cycle collector request condvar"),
-          mReply(mLock, "cycle collector reply condvar"),
-          mRunning(false),
-          mShutdown(false),
-          mCollected(false),
-          mCCType(ScheduledCC)
-    {
-        collector->CheckThreadSafety();
-    }
-
-    NS_IMETHOD Run();
-
-    nsresult Init()
-    {
-        if (mModel == CCSingleThread)
-            return NS_OK;
-
-        return NS_NewThread(getter_AddRefs(mThread), this);
-    }
-
-    void Collect(ccType aCCType,
-                 nsCycleCollectorResults *aResults,
-                 nsICycleCollectorListener *aListener);
-
-    void Shutdown()
-    {
-        mCollector->CheckThreadSafety();
-
-        if (!mThread)
-            return;
-
-        MutexAutoLock autoLock(mLock);
-
-        mShutdown = true;
-
-        if (!mRunning)
-            return;
-
-        mRunning = false;
-        mRequest.Notify();
-        mReply.Wait();
-
-        nsCOMPtr<nsIThread> thread;
-        thread.swap(mThread);
-        thread->Shutdown();
-    }
-};
-
-NS_IMETHODIMP
-nsCycleCollectorRunner::Run()
-{
-    MOZ_ASSERT(mModel == CCWithTraverseThread);
-
-    PR_SetCurrentThreadName("XPCOM CC");
-
-#ifdef XP_WIN
-    TlsSetValue(gTLSThreadIDIndex,
-                (void*) mozilla::threads::CycleCollector);
-#elif defined(NS_TLS)
-    gTLSThreadID = mozilla::threads::CycleCollector;
-#else
-    gCycleCollectorThread = PR_GetCurrentThread();
-#endif
-
-    MOZ_ASSERT(NS_IsCycleCollectorThread() && !NS_IsMainThread(),
-               "Wrong thread!");
-
-    MutexAutoLock autoLock(mLock);
-
-    if (mShutdown)
-        return NS_OK;
-
-    mRunning = true;
-
-    while (1) {
-        mRequest.Wait();
-
-        if (!mRunning) {
-            mReply.Notify();
-            return NS_OK;
-        }
-
-        mCollector->JSRuntime()->NotifyEnterCycleCollectionThread();
-        mCollected = mCollector->BeginCollection(mCCType, mListener);
-        mCollector->JSRuntime()->NotifyLeaveCycleCollectionThread();
-
-        mReply.Notify();
-    }
-
-    return NS_OK;
-}
-
-void
-nsCycleCollectorRunner::Collect(ccType aCCType,
-                                nsCycleCollectorResults *aResults,
-                                nsICycleCollectorListener *aListener)
-{
-    mCollector->CheckThreadSafety();
-
-    // On a WantAllTraces CC, force a synchronous global GC to prevent
-    // hijinks from ForgetSkippable and compartmental GCs.
-    bool wantAllTraces = false;
-    if (aListener) {
-        aListener->GetWantAllTraces(&wantAllTraces);
-    }
-    mCollector->FixGrayBits(wantAllTraces);
-
-    MutexAutoLock autoLock(mLock);
-
-    if (mModel == CCWithTraverseThread && !mRunning)
-        return;
-
-    nsAutoTArray<PtrInfo*, 4000> whiteNodes;
-    if (!mCollector->PrepareForCollection(aResults, &whiteNodes))
-        return;
-
-    mCollector->FreeSnowWhite(true);
-
-    MOZ_ASSERT(!mListener, "Should have cleared this already!");
-    if (aListener && NS_FAILED(aListener->Begin()))
-        aListener = nullptr;
-    mListener = aListener;
-    mCCType = aCCType;
-
-    if (mModel == CCWithTraverseThread &&
-        mCollector->JSRuntime()->NotifyLeaveMainThread()) {
-        mRequest.Notify();
-        mReply.Wait();
-        mCollector->JSRuntime()->NotifyEnterMainThread();
-    } else {
-        mCollected = mCollector->BeginCollection(aCCType, mListener);
-    }
-
-    mListener = nullptr;
-
-    if (mCollected) {
-        mCollector->FinishCollection(aListener);
-        mCollector->CleanupAfterCollection();
-    }
-}
 
 /**
  * GraphWalker is templatized over a Visitor class that must provide
@@ -1252,16 +1063,6 @@ static void
 Fault(const char *msg, PtrInfo *pi)
 {
     Fault(msg, pi->mPointer);
-}
-
-static inline void
-AbortIfOffMainThreadIfCheckFast()
-{
-#if defined(XP_WIN) || defined(NS_TLS)
-    if (!NS_IsMainThread() && !NS_IsCycleCollectorThread()) {
-        NS_RUNTIMEABORT("Main-thread-only object used off the main thread");
-    }
-#endif
 }
 
 static inline void
@@ -2670,12 +2471,11 @@ NS_IMPL_ISUPPORTS1(CycleCollectorMultiReporter, nsIMemoryMultiReporter)
 // Collector implementation
 ////////////////////////////////////////////////////////////////////////
 
-nsCycleCollector::nsCycleCollector(CCThreadingModel aModel) :
+nsCycleCollector::nsCycleCollector() :
     mCollectionInProgress(false),
     mScanInProgress(false),
     mResults(nullptr),
     mJSRuntime(nullptr),
-    mRunner(nullptr),
     mThread(NS_GetCurrentThread()),
     mWhiteNodes(nullptr),
     mWhiteNodeCount(0),
@@ -2687,31 +2487,11 @@ nsCycleCollector::nsCycleCollector(CCThreadingModel aModel) :
     mUnmergedNeeded(0),
     mMergedInARow(0)
 {
-    nsRefPtr<nsCycleCollectorRunner> runner =
-        new nsCycleCollectorRunner(this, aModel);
-    runner.forget(&mRunner);
 }
 
 nsCycleCollector::~nsCycleCollector()
 {
-    NS_ASSERTION(!mRunner, "Destroying cycle collector without destroying its runner, may leak");
     NS_UnregisterMemoryMultiReporter(mReporter);
-}
-
-nsresult
-nsCycleCollector::Init()
-{
-  return mRunner->Init();
-}
-
-void
-nsCycleCollector::ShutdownThreads()
-{
-    if (mRunner) {
-        nsRefPtr<nsCycleCollectorRunner> runner;
-        runner.swap(mRunner);
-        runner->Shutdown();
-    }
 }
 
 void
@@ -2917,7 +2697,34 @@ nsCycleCollector::Collect(ccType aCCType,
                           nsCycleCollectorResults *aResults,
                           nsICycleCollectorListener *aListener)
 {
-    mRunner->Collect(aCCType, aResults, aListener);
+    CheckThreadSafety();
+
+    // On a WantAllTraces CC, force a synchronous global GC to prevent
+    // hijinks from ForgetSkippable and compartmental GCs.
+    bool wantAllTraces = false;
+    if (aListener) {
+        aListener->GetWantAllTraces(&wantAllTraces);
+    }
+
+    FixGrayBits(wantAllTraces);
+
+    nsAutoTArray<PtrInfo*, 4000> whiteNodes;
+    if (!PrepareForCollection(aResults, &whiteNodes)) {
+        return;
+    }
+
+    FreeSnowWhite(true);
+
+    if (aListener && NS_FAILED(aListener->Begin())) {
+        aListener = nullptr;
+    }
+
+    if (!BeginCollection(aCCType, aListener)) {
+        return;
+    }
+
+    FinishCollection(aListener);
+    CleanupAfterCollection();
 }
 
 // Don't merge too many times in a row, and do at least a minimum
@@ -3252,8 +3059,8 @@ nsCycleCollector_init()
     return sCollectorData.init();
 }
 
-nsresult
-nsCycleCollector_startup(CCThreadingModel aThreadingModel)
+void
+nsCycleCollector_startup()
 {
     MOZ_ASSERT(sCollectorData.initialized(),
                "Forgot to call nsCycleCollector_init!");
@@ -3261,18 +3068,12 @@ nsCycleCollector_startup(CCThreadingModel aThreadingModel)
         MOZ_CRASH();
     }
 
-    nsAutoPtr<nsCycleCollector> collector(new nsCycleCollector(aThreadingModel));
+    nsAutoPtr<nsCycleCollector> collector(new nsCycleCollector());
+    nsAutoPtr<CollectorData> data(new CollectorData);
+    data->mRuntime = nullptr;
+    data->mCollector = collector.forget();
 
-    nsresult rv = collector->Init();
-    if (NS_SUCCEEDED(rv)) {
-        nsAutoPtr<CollectorData> data(new CollectorData);
-        data->mRuntime = nullptr;
-        data->mCollector = collector.forget();
-
-        sCollectorData.set(data.forget());
-    }
-
-    return rv;
+    sCollectorData.set(data.forget());
 }
 
 void
@@ -3359,18 +3160,6 @@ nsCycleCollector_collect(bool aManuallyTriggered,
     }
 
     data->mCollector->Collect(aManuallyTriggered ? ManualCC : ScheduledCC, aResults, listener);
-}
-
-void
-nsCycleCollector_shutdownThreads()
-{
-    CollectorData *data = sCollectorData.get();
-
-    MOZ_ASSERT(data);
-    MOZ_ASSERT(data->mCollector);
-
-    data->mCollector->CheckThreadSafety();
-    data->mCollector->ShutdownThreads();
 }
 
 void

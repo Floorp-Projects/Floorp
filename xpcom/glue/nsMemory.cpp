@@ -5,6 +5,7 @@
 
 #include "nsXPCOM.h"
 #include "nsMemory.h"
+#include "nsIMemory.h"
 #include "nsXPCOMPrivate.h"
 #include "nsDebug.h"
 #include "nsISupportsUtils.h"

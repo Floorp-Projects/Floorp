@@ -27,7 +27,6 @@ using namespace mozilla::dom;
 using namespace JS;
 using namespace mozilla;
 
-using js::PropertyDescriptor;
 using js::Wrapper;
 using js::IsCrossCompartmentWrapper;
 using js::UncheckedUnwrap;
@@ -134,14 +133,16 @@ public:
 
     virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
                                        HandleObject holder, HandleId id,
-                                       JSPropertyDescriptor *desc, unsigned flags) = 0;
+                                       MutableHandle<JSPropertyDescriptor> desc,
+                                       unsigned flags) = 0;
     // NB: resolveOwnProperty may decide whether or not to cache what it finds
     // on the holder. If the result is not cached, the lookup will happen afresh
     // for each access, which is the right thing for things like dynamic NodeList
     // properties.
     virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                                     HandleObject wrapper, HandleObject holder,
-                                    HandleId id, JSPropertyDescriptor *desc, unsigned flags);
+                                    HandleId id, MutableHandle<JSPropertyDescriptor> desc,
+                                    unsigned flags);
 
     static bool call(JSContext *cx, HandleObject wrapper,
                      const JS::CallArgs &args, js::Wrapper& baseInstance)
@@ -188,13 +189,13 @@ public:
 
     virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
                                        HandleObject holder, HandleId id,
-                                       JSPropertyDescriptor *desc, unsigned flags);
+                                       MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
     virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper, HandleObject wrapper,
                                     HandleObject holder, HandleId id,
-                                    JSPropertyDescriptor *desc, unsigned flags);
+                                    MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
     static bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                               PropertyDescriptor *desc,
-                               Handle<PropertyDescriptor> existingDesc, bool *defined);
+                               MutableHandle<JSPropertyDescriptor> desc,
+                               Handle<JSPropertyDescriptor> existingDesc, bool *defined);
     static bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
                                AutoIdVector &props);
     static bool call(JSContext *cx, HandleObject wrapper,
@@ -206,7 +207,7 @@ public:
 
     static bool resolveDOMCollectionProperty(JSContext *cx, HandleObject wrapper,
                                              HandleObject holder, HandleId id,
-                                             PropertyDescriptor *desc, unsigned flags);
+                                             MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
 
     static XPCWrappedNative* getWN(JSObject *wrapper) {
         return XPCWrappedNative::Get(getTargetObject(wrapper));
@@ -234,13 +235,13 @@ public:
 
     virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
                                        HandleObject holder, HandleId id,
-                                       JSPropertyDescriptor *desc, unsigned flags);
+                                       MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
     virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper, HandleObject wrapper,
                                     HandleObject holder, HandleId id,
-                                    JSPropertyDescriptor *desc, unsigned flags);
+                                    MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
     static bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                               PropertyDescriptor *desc,
-                               Handle<PropertyDescriptor> existingDesc, bool *defined);
+                               MutableHandle<JSPropertyDescriptor> desc,
+                               Handle<JSPropertyDescriptor> existingDesc, bool *defined);
     static bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
                                AutoIdVector &props);
     static bool call(JSContext *cx, HandleObject wrapper,
@@ -535,7 +536,7 @@ XPCWrappedNativeXrayTraits::isResolving(JSContext *cx, JSObject *holder,
 // Some DOM objects have shared properties that don't have an explicit
 // getter/setter and rely on the class getter/setter. We install a
 // class getter/setter on the holder object to trigger them.
-JSBool
+bool
 holder_get(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue vp)
 {
     // JSClass::getProperty is wacky enough that it's hard to be sure someone
@@ -559,8 +560,8 @@ holder_get(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue 
     return true;
 }
 
-JSBool
-holder_set(JSContext *cx, HandleObject wrapper, HandleId id, JSBool strict, MutableHandleValue vp)
+bool
+holder_set(JSContext *cx, HandleObject wrapper, HandleId id, bool strict, MutableHandleValue vp)
 {
     // JSClass::setProperty is wacky enough that it's hard to be sure someone
     // can't inherit this getter by prototyping a random object to an
@@ -614,7 +615,8 @@ private:
 bool
 XPCWrappedNativeXrayTraits::resolveDOMCollectionProperty(JSContext *cx, HandleObject wrapper,
                                                          HandleObject holder, HandleId id,
-                                                         PropertyDescriptor *desc, unsigned flags)
+                                                         MutableHandle<JSPropertyDescriptor> desc,
+                                                         unsigned flags)
 {
     // If we are not currently resolving this id and resolveNative is called
     // we don't do anything. (see defineProperty in case of shadowing is forbidden).
@@ -692,11 +694,11 @@ XPCWrappedNativeXrayTraits::preserveWrapper(JSObject *target)
 bool
 XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
                                                   HandleObject holder, HandleId id,
-                                                  JSPropertyDescriptor *desc, unsigned flags)
+                                                  MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
     MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
 
-    desc->obj = NULL;
+    desc.object().set(NULL);
 
     // This will do verification and the method lookup for us.
     RootedObject target(cx, getTargetObject(wrapper));
@@ -725,16 +727,16 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
         return resolveDOMCollectionProperty(cx, wrapper, holder, id, desc, flags);
     }
 
-    desc->obj = holder;
-    desc->attrs = JSPROP_ENUMERATE;
-    desc->getter = NULL;
-    desc->setter = NULL;
-    desc->shortid = 0;
-    desc->value = JSVAL_VOID;
+    desc.object().set(holder);
+    desc.setAttributes(JSPROP_ENUMERATE);
+    desc.setGetter(NULL);
+    desc.setSetter(NULL);
+    desc.setShortId(0);
+    desc.value().set(JSVAL_VOID);
 
     RootedValue fval(cx, JSVAL_VOID);
     if (member->IsConstant()) {
-        if (!member->GetConstantValue(ccx, iface, &desc->value)) {
+        if (!member->GetConstantValue(ccx, iface, desc.value().address())) {
             JS_ReportError(cx, "Failed to convert constant native property to JS value");
             return false;
         }
@@ -745,16 +747,18 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
             return false;
         }
 
-        desc->attrs |= JSPROP_GETTER;
+        unsigned attrs = desc.attributes();
+        attrs |= JSPROP_GETTER;
         if (member->IsWritableAttribute())
-            desc->attrs |= JSPROP_SETTER;
+            attrs |= JSPROP_SETTER;
 
         // Make the property shared on the holder so no slot is allocated
         // for it. This avoids keeping garbage alive through that slot.
-        desc->attrs |= JSPROP_SHARED;
+        attrs |= JSPROP_SHARED;
+        desc.setAttributes(attrs);
     } else {
         // This is a method. Clone a function for it.
-        if (!member->NewFunctionObject(ccx, iface, wrapper, &desc->value)) {
+        if (!member->NewFunctionObject(ccx, iface, wrapper, desc.value().address())) {
             JS_ReportError(cx, "Failed to clone function object for native function");
             return false;
         }
@@ -763,24 +767,24 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
         // don't have one, we have to avoid calling the scriptable helper's
         // GetProperty method for this property, so stub out the getter and
         // setter here explicitly.
-        desc->getter = JS_PropertyStub;
-        desc->setter = JS_StrictPropertyStub;
+        desc.setGetter(JS_PropertyStub);
+        desc.setSetter(JS_StrictPropertyStub);
     }
 
-    if (!JS_WrapValue(cx, &desc->value) || !JS_WrapValue(cx, fval.address()))
+    if (!JS_WrapValue(cx, desc.value().address()) || !JS_WrapValue(cx, fval.address()))
         return false;
 
-    if (desc->attrs & JSPROP_GETTER)
-        desc->getter = js::CastAsJSPropertyOp(JSVAL_TO_OBJECT(fval));
-    if (desc->attrs & JSPROP_SETTER)
-        desc->setter = js::CastAsJSStrictPropertyOp(JSVAL_TO_OBJECT(fval));
+    if (desc.hasGetterObject())
+        desc.setGetterObject(&fval.toObject());
+    if (desc.hasSetterObject())
+        desc.setSetterObject(&fval.toObject());
 
     // Define the property.
-    return JS_DefinePropertyById(cx, holder, id, desc->value,
-                                 desc->getter, desc->setter, desc->attrs);
+    return JS_DefinePropertyById(cx, holder, id, desc.value(),
+                                 desc.getter(), desc.setter(), desc.attributes());
 }
 
-static JSBool
+static bool
 wrappedJSObject_getter(JSContext *cx, HandleObject wrapper, HandleId id, MutableHandleValue vp)
 {
     if (!IsWrapper(wrapper) || !WrapperFactory::IsXrayWrapper(wrapper)) {
@@ -796,9 +800,9 @@ wrappedJSObject_getter(JSContext *cx, HandleObject wrapper, HandleId id, Mutable
 bool
 XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                                HandleObject wrapper, HandleObject holder, HandleId id,
-                               PropertyDescriptor *desc, unsigned flags)
+                               MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
-    desc->obj = NULL;
+    desc.object().set(NULL);
     RootedObject target(cx, getTargetObject(wrapper));
     RootedObject expando(cx, getExpandoObject(cx, target, wrapper));
 
@@ -809,11 +813,11 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
         if (!JS_GetPropertyDescriptorById(cx, expando, id, 0, desc))
             return false;
     }
-    if (desc->obj) {
+    if (desc.object()) {
         if (!JS_WrapPropertyDescriptor(cx, desc))
             return false;
         // Pretend the property lives on the wrapper.
-        desc->obj = wrapper;
+        desc.object().set(wrapper);
         return true;
     }
     return true;
@@ -822,12 +826,13 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
 bool
 XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                                                HandleObject wrapper, HandleObject holder,
-                                               HandleId id, PropertyDescriptor *desc, unsigned flags)
+                                               HandleId id, MutableHandle<JSPropertyDescriptor> desc,
+                                               unsigned flags)
 {
     // Call the common code.
     bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder,
                                              id, desc, flags);
-    if (!ok || desc->obj)
+    if (!ok || desc.object())
         return ok;
 
     // Check for indexed access on a window.
@@ -847,7 +852,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
                     // It's gone?
                     return xpc::Throw(cx, NS_ERROR_FAILURE);
                 }
-                desc->value = ObjectValue(*obj);
+                desc.value().setObject(*obj);
                 mozilla::dom::FillPropertyDescriptor(desc, wrapper, true);
                 return JS_WrapPropertyDescriptor(cx, desc);
             }
@@ -858,7 +863,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
     // in the wrapper's compartment here, not the wrappee.
     MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
 
-    JSBool hasProp;
+    bool hasProp;
     if (!JS_HasPropertyById(cx, holder, id, &hasProp)) {
         return false;
     }
@@ -902,22 +907,22 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper
 
 bool
 XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                                           PropertyDescriptor *desc,
-                                           Handle<PropertyDescriptor> existingDesc, bool *defined)
+                                           MutableHandle<JSPropertyDescriptor> desc,
+                                           Handle<JSPropertyDescriptor> existingDesc, bool *defined)
 {
     *defined = false;
     JSObject *holder = singleton.ensureHolder(cx, wrapper);
     if (isResolving(cx, holder, id)) {
-        if (!(desc->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-            if (!desc->getter)
-                desc->getter = holder_get;
-            if (!desc->setter)
-                desc->setter = holder_set;
+        if (!desc.hasAttributes(JSPROP_GETTER | JSPROP_SETTER)) {
+            if (!desc.getter())
+                desc.setGetter(holder_get);
+            if (!desc.setter())
+                desc.setSetter(holder_set);
         }
 
         *defined = true;
-        return JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter, desc->setter,
-                                     desc->attrs);
+        return JS_DefinePropertyById(cx, holder, id, desc.value(), desc.getter(), desc.setter(),
+                                     desc.attributes());
     }
 
     // Check for an indexed property on a Window.  If that's happening, do
@@ -947,7 +952,7 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, 
     // Go through the properties we got and enumerate all native ones.
     for (size_t n = 0; n < wnProps.length(); ++n) {
         RootedId id(cx, wnProps[n]);
-        JSBool hasProp;
+        bool hasProp;
         if (!JS_HasPropertyById(cx, wrapper, id, &hasProp))
             return false;
         if (hasProp)
@@ -1024,14 +1029,13 @@ XPCWrappedNativeXrayTraits::construct(JSContext *cx, HandleObject wrapper,
 bool
 DOMXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
                                      HandleObject holder, HandleId id,
-                                     JSPropertyDescriptor *desc, unsigned flags)
+                                     MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
     RootedObject obj(cx, getTargetObject(wrapper));
     if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc))
         return false;
 
-    NS_ASSERTION(!desc->obj || desc->obj == wrapper,
-                 "What did we resolve this on?");
+    MOZ_ASSERT(!desc.object() || desc.object() == wrapper, "What did we resolve this on?");
 
     return true;
 }
@@ -1039,30 +1043,29 @@ DOMXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
 bool
 DOMXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper, HandleObject wrapper,
                                   HandleObject holder, HandleId id,
-                                  JSPropertyDescriptor *desc, unsigned flags)
+                                  MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
     // Call the common code.
     bool ok = XrayTraits::resolveOwnProperty(cx, jsWrapper, wrapper, holder,
                                              id, desc, flags);
-    if (!ok || desc->obj)
+    if (!ok || desc.object())
         return ok;
 
     RootedObject obj(cx, getTargetObject(wrapper));
     if (!XrayResolveOwnProperty(cx, wrapper, obj, id, desc, flags))
         return false;
 
-    NS_ASSERTION(!desc->obj || desc->obj == wrapper,
-                 "What did we resolve this on?");
+    MOZ_ASSERT(!desc.object() || desc.object() == wrapper, "What did we resolve this on?");
 
     return true;
 }
 
 bool
 DOMXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                              PropertyDescriptor *desc,
-                              Handle<PropertyDescriptor> existingDesc, bool *defined)
+                              MutableHandle<JSPropertyDescriptor> desc,
+                              Handle<JSPropertyDescriptor> existingDesc, bool *defined)
 {
-    if (!existingDesc.obj())
+    if (!existingDesc.object())
         return true;
 
     JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
@@ -1165,11 +1168,11 @@ namespace XrayUtils {
 JSObject *
 GetNativePropertiesObject(JSContext *cx, JSObject *wrapper)
 {
-    NS_ASSERTION(js::IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper),
-                 "bad object passed in");
+    MOZ_ASSERT(js::IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper),
+               "bad object passed in");
 
     JSObject *holder = GetHolder(wrapper);
-    NS_ASSERTION(holder, "uninitialized wrapper being used?");
+    MOZ_ASSERT(holder, "uninitialized wrapper being used?");
     return holder;
 }
 
@@ -1195,14 +1198,14 @@ HasNativeProperty(JSContext *cx, HandleObject wrapper, HandleId id, bool *hasPro
     RootedObject holder(cx, traits->ensureHolder(cx, wrapper));
     NS_ENSURE_TRUE(holder, false);
     *hasProp = false;
-    Rooted<PropertyDescriptor> desc(cx);
+    Rooted<JSPropertyDescriptor> desc(cx);
     Wrapper *handler = Wrapper::wrapperHandler(wrapper);
 
     // Try resolveOwnProperty.
     Maybe<ResolvingId> resolvingId;
     if (traits == &XPCWrappedNativeXrayTraits::singleton)
         resolvingId.construct(cx, wrapper, id);
-    if (!traits->resolveOwnProperty(cx, *handler, wrapper, holder, id, desc.address(), 0))
+    if (!traits->resolveOwnProperty(cx, *handler, wrapper, holder, id, &desc, 0))
         return false;
     if (desc.object()) {
         *hasProp = true;
@@ -1210,7 +1213,7 @@ HasNativeProperty(JSContext *cx, HandleObject wrapper, HandleId id, bool *hasPro
     }
 
     // Try the holder.
-    JSBool found = false;
+    bool found = false;
     if (!JS_AlreadyHasOwnPropertyById(cx, holder, id, &found))
         return false;
     if (found) {
@@ -1219,7 +1222,7 @@ HasNativeProperty(JSContext *cx, HandleObject wrapper, HandleId id, bool *hasPro
     }
 
     // Try resolveNativeProperty.
-    if (!traits->resolveNativeProperty(cx, wrapper, holder, id, desc.address(), 0))
+    if (!traits->resolveNativeProperty(cx, wrapper, holder, id, &desc, 0))
         return false;
     *hasProp = !!desc.object();
     return true;
@@ -1335,12 +1338,13 @@ XrayWrapper<Base, Traits>::preventExtensions(JSContext *cx, HandleObject wrapper
 template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
-                                                 PropertyDescriptor *desc, unsigned flags)
+                                                 JS::MutableHandle<JSPropertyDescriptor> desc,
+                                                 unsigned flags)
 {
     assertEnteredPolicy(cx, wrapper, id);
     RootedObject holder(cx, Traits::singleton.ensureHolder(cx, wrapper));
     if (Traits::isResolving(cx, holder, id)) {
-        desc->obj = NULL;
+        desc.object().set(NULL);
         return true;
     }
 
@@ -1355,12 +1359,12 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     if (AccessCheck::wrapperSubsumes(wrapper) &&
         id == rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
-        desc->obj = wrapper;
-        desc->attrs = JSPROP_ENUMERATE|JSPROP_SHARED;
-        desc->getter = wrappedJSObject_getter;
-        desc->setter = NULL;
-        desc->shortid = 0;
-        desc->value = JSVAL_VOID;
+        desc.object().set(wrapper);
+        desc.setAttributes(JSPROP_ENUMERATE|JSPROP_SHARED);
+        desc.setGetter(wrappedJSObject_getter);
+        desc.setSetter(NULL);
+        desc.setShortId(0);
+        desc.value().set(JSVAL_VOID);
         return true;
     }
 
@@ -1388,10 +1392,10 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         return false;
 
     // Check the holder.
-    if (!desc->obj && !JS_GetPropertyDescriptorById(cx, holder, id, 0, desc))
+    if (!desc.object() && !JS_GetPropertyDescriptorById(cx, holder, id, 0, desc))
         return false;
-    if (desc->obj) {
-        desc->obj = wrapper;
+    if (desc.object()) {
+        desc.object().set(wrapper);
         return true;
     }
 
@@ -1406,7 +1410,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     // resolveNativeProperty, which we don't want for something dynamic like
     // named access. So we just handle it separately here.
     nsGlobalWindow *win;
-    if (!desc->obj && Traits::Type == XrayForWrappedNative && JSID_IS_STRING(id) &&
+    if (!desc.object() && Traits::Type == XrayForWrappedNative && JSID_IS_STRING(id) &&
         (win = static_cast<nsGlobalWindow*>(As<nsPIDOMWindow>(wrapper))))
     {
         nsDependentJSString name(id);
@@ -1423,7 +1427,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         }
     }
 
-    if (!desc->obj &&
+    if (!desc.object() &&
         id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING))
     {
 
@@ -1431,12 +1435,12 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         if (!toString)
             return false;
 
-        desc->obj = wrapper;
-        desc->attrs = 0;
-        desc->getter = NULL;
-        desc->setter = NULL;
-        desc->shortid = 0;
-        desc->value.setObject(*JS_GetFunctionObject(toString));
+        desc.object().set(wrapper);
+        desc.setAttributes(0);
+        desc.setGetter(NULL);
+        desc.setSetter(NULL);
+        desc.setShortId(0);
+        desc.value().setObject(*JS_GetFunctionObject(toString));
     }
 
     // If we're a special scope for in-content XBL, our script expects to see
@@ -1454,39 +1458,40 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     //
     // Make sure to assert this.
     nsCOMPtr<nsIContent> content;
-    if (!desc->obj &&
+    if (!desc.object() &&
         EnsureCompartmentPrivate(wrapper)->scope->IsXBLScope() &&
         (content = do_QueryInterfaceNative(cx, wrapper)))
     {
         if (!nsContentUtils::LookupBindingMember(cx, content, id, desc))
             return false;
-        DEBUG_CheckXBLLookup(cx, desc);
+        DEBUG_CheckXBLLookup(cx, desc.address());
     }
 
     // If we still have nothing, we're done.
-    if (!desc->obj)
+    if (!desc.object())
         return true;
 
-    if (!JS_DefinePropertyById(cx, holder, id, desc->value, desc->getter,
-                               desc->setter, desc->attrs) ||
+    if (!JS_DefinePropertyById(cx, holder, id, desc.value(), desc.getter(),
+                               desc.setter(), desc.attributes()) ||
         !JS_GetPropertyDescriptorById(cx, holder, id, flags, desc))
     {
         return false;
     }
-    MOZ_ASSERT(desc->obj);
-    desc->obj = wrapper;
+    MOZ_ASSERT(desc.object());
+    desc.object().set(wrapper);
     return true;
 }
 
 template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
-                                                    PropertyDescriptor *desc, unsigned flags)
+                                                    JS::MutableHandle<JSPropertyDescriptor> desc,
+                                                    unsigned flags)
 {
     assertEnteredPolicy(cx, wrapper, id);
     RootedObject holder(cx, Traits::singleton.ensureHolder(cx, wrapper));
     if (Traits::isResolving(cx, holder, id)) {
-        desc->obj = NULL;
+        desc.object().set(NULL);
         return true;
     }
 
@@ -1497,8 +1502,8 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, HandleObject 
 
     if (!Traits::singleton.resolveOwnProperty(cx, *this, wrapper, holder, id, desc, flags))
         return false;
-    if (desc->obj)
-        desc->obj = wrapper;
+    if (desc.object())
+        desc.object().set(wrapper);
     return true;
 }
 
@@ -1517,8 +1522,8 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, HandleObject 
 // to the content object. This is ok, because the the expando object is only
 // ever accessed by code across the compartment boundary.
 static bool
-RecreateLostWaivers(JSContext *cx, PropertyDescriptor *orig,
-                    MutableHandle<PropertyDescriptor> wrapped)
+RecreateLostWaivers(JSContext *cx, JSPropertyDescriptor *orig,
+                    MutableHandle<JSPropertyDescriptor> wrapped)
 {
     // Compute whether the original objects were waived, and implicitly, whether
     // they were objects at all.
@@ -1562,14 +1567,14 @@ RecreateLostWaivers(JSContext *cx, PropertyDescriptor *orig,
 template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
-                                          HandleId id, PropertyDescriptor *desc)
+                                          HandleId id, MutableHandle<JSPropertyDescriptor> desc)
 {
     assertEnteredPolicy(cx, wrapper, id);
 
     // NB: We still need JSRESOLVE_ASSIGNING here for the time being, because it
     // tells things like nodelists whether they should create the property or not.
-    Rooted<PropertyDescriptor> existing_desc(cx);
-    if (!getOwnPropertyDescriptor(cx, wrapper, id, existing_desc.address(), JSRESOLVE_ASSIGNING))
+    Rooted<JSPropertyDescriptor> existing_desc(cx);
+    if (!getOwnPropertyDescriptor(cx, wrapper, id, &existing_desc, JSRESOLVE_ASSIGNING))
         return false;
 
     if (existing_desc.object() && existing_desc.isPermanent())
@@ -1593,12 +1598,12 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
         return false;
 
     // Wrap the property descriptor for the target compartment.
-    Rooted<PropertyDescriptor> wrappedDesc(cx, *desc);
-    if (!JS_WrapPropertyDescriptor(cx, wrappedDesc.address()))
+    Rooted<JSPropertyDescriptor> wrappedDesc(cx, desc);
+    if (!JS_WrapPropertyDescriptor(cx, &wrappedDesc))
         return false;
 
     // Fix up Xray waivers.
-    if (!RecreateLostWaivers(cx, desc, &wrappedDesc))
+    if (!RecreateLostWaivers(cx, desc.address(), &wrappedDesc))
         return false;
 
     return JS_DefinePropertyById(cx, expandoObject, id, wrappedDesc.value(),

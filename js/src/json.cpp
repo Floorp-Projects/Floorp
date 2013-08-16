@@ -8,8 +8,6 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include <string.h>
-
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -26,6 +24,7 @@
 
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -135,9 +134,9 @@ class StringifyContext
     uint32_t depth;
 };
 
-static JSBool Str(JSContext *cx, const Value &v, StringifyContext *scx);
+static bool Str(JSContext *cx, const Value &v, StringifyContext *scx);
 
-static JSBool
+static bool
 WriteIndent(JSContext *cx, StringifyContext *scx, uint32_t limit)
 {
     if (!scx->gap.empty()) {
@@ -265,7 +264,7 @@ IsFilteredValue(const Value &v)
 }
 
 /* ES5 15.12.3 JO. */
-static JSBool
+static bool
 JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
 {
     /*
@@ -355,7 +354,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
 }
 
 /* ES5 15.12.3 JA. */
-static JSBool
+static bool
 JA(JSContext *cx, HandleObject obj, StringifyContext *scx)
 {
     /*
@@ -429,7 +428,7 @@ JA(JSContext *cx, HandleObject obj, StringifyContext *scx)
     return scx->sb.append(']');
 }
 
-static JSBool
+static bool
 Str(JSContext *cx, const Value &v, StringifyContext *scx)
 {
     /* Step 11 must be handled by the caller. */
@@ -481,7 +480,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
     RootedObject obj(cx, &v.toObject());
 
     scx->depth++;
-    JSBool ok;
+    bool ok;
     if (ObjectClassIs(obj, ESClass_Array, cx))
         ok = JA(cx, obj, scx);
     else
@@ -492,7 +491,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 }
 
 /* ES5 15.12.3. */
-JSBool
+bool
 js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value space_,
              StringBuffer &sb)
 {
@@ -691,7 +690,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
 
                 if (newElement.isUndefined()) {
                     /* Step 2a(iii)(2). */
-                    JSBool succeeded;
+                    bool succeeded;
                     if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &succeeded))
                         return false;
                 } else {
@@ -720,7 +719,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
 
                 if (newElement.isUndefined()) {
                     /* Step 2b(ii)(2). */
-                    JSBool succeeded;
+                    bool succeeded;
                     if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &succeeded))
                         return false;
                 } else {

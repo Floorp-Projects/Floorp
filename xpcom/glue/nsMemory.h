@@ -7,7 +7,8 @@
 #define nsMemory_h__
 
 #include "nsXPCOM.h"
-#include "nsIMemory.h"
+
+class nsIMemory;
 
 #define NS_MEMORY_CONTRACTID "@mozilla.org/xpcom/memory-service;1"
 #define NS_MEMORY_CID                                \

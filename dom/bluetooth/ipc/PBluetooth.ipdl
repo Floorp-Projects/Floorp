@@ -78,16 +78,6 @@ struct DenyPairingConfirmationRequest
   nsString path;
 };
 
-struct ConfirmAuthorizationRequest
-{
-  nsString path;
-};
-
-struct DenyAuthorizationRequest
-{
-  nsString path;
-};
-
 struct PairedDevicePropertiesRequest
 {
   nsString[] addresses;
@@ -171,8 +161,6 @@ union Request
   SetPasskeyRequest;
   ConfirmPairingConfirmationRequest;
   DenyPairingConfirmationRequest;
-  ConfirmAuthorizationRequest;
-  DenyAuthorizationRequest;
   ConnectedDevicePropertiesRequest;
   PairedDevicePropertiesRequest;
   ConnectRequest;

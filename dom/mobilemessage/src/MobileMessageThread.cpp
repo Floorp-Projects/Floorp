@@ -8,7 +8,6 @@
 #include "jsapi.h"           // For OBJECT_TO_JSVAL and JS_NewDateObjectMsec
 #include "jsfriendapi.h"     // For js_DateGetMsecSinceEpoch
 #include "nsJSUtils.h"       // For nsDependentJSString
-#include "nsContentUtils.h"  // For nsTArrayHelpers.h
 #include "nsTArrayHelpers.h" // For nsTArrayToJSArray
 #include "Constants.h"       // For MessageType
 

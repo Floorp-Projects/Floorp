@@ -260,8 +260,8 @@ private:
   
   void FixUpURLS(const nsString &name, nsAString &value);
 #ifdef MOZ_WIDGET_ANDROID
-  gfxRect GetPluginRect();
-  bool AddPluginView(const gfxRect& aRect = gfxRect(0, 0, 0, 0));
+  mozilla::LayoutDeviceRect GetPluginRect();
+  bool AddPluginView(const mozilla::LayoutDeviceRect& aRect = mozilla::LayoutDeviceRect(0, 0, 0, 0));
   void RemovePluginView();
 
   bool mFullScreen;

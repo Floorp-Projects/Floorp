@@ -257,7 +257,6 @@ pref("layers.async-pan-zoom.enabled", true);
 pref("notification.feature.enabled", true);
 
 // IndexedDB
-pref("indexedDB.feature.enabled", true);
 pref("dom.indexedDB.warningQuota", 5);
 
 // prevent video elements from preloading too much data

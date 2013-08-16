@@ -1544,30 +1544,37 @@ ThreadActor.prototype = {
     if (!aPool) {
       aPool = this._pausePool;
     }
-    let type = typeof(aValue);
 
-    if (type === "string" && this._stringIsLong(aValue)) {
-      return this.longStringGrip(aValue, aPool);
+    switch (typeof aValue) {
+      case "boolean":
+        return aValue;
+      case "string":
+        if (this._stringIsLong(aValue)) {
+          return this.longStringGrip(aValue, aPool);
+        }
+        return aValue;
+      case "number":
+        if (aValue === Infinity) {
+          return { type: "Infinity" };
+        } else if (aValue === -Infinity) {
+          return { type: "-Infinity" };
+        } else if (Number.isNaN(aValue)) {
+          return { type: "NaN" };
+        } else if (!aValue && 1 / aValue === -Infinity) {
+          return { type: "-0" };
+        }
+        return aValue;
+      case "undefined":
+        return { type: "undefined" };
+      case "object":
+        if (aValue === null) {
+          return { type: "null" };
+        }
+        return this.objectGrip(aValue, aPool);
+      default:
+        dbg_assert(false, "Failed to provide a grip for: " + aValue);
+        return null;
     }
-
-    if (type === "boolean" || type === "string" || type === "number") {
-      return aValue;
-    }
-
-    if (aValue === null) {
-      return { type: "null" };
-    }
-
-    if (aValue === undefined) {
-      return { type: "undefined" }
-    }
-
-    if (typeof(aValue) === "object") {
-      return this.objectGrip(aValue, aPool);
-    }
-
-    dbg_assert(false, "Failed to provide a grip for: " + aValue);
-    return null;
   },
 
   /**
@@ -2326,7 +2333,8 @@ ObjectActor.prototype = {
           toString = desc.value;
           break;
         }
-      } while (obj = obj.proto)
+        obj = obj.proto;
+      } while ((obj));
     } catch (e) {
       dumpn(e);
     }

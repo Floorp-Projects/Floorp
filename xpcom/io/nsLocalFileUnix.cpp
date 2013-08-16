@@ -207,15 +207,12 @@ nsDirEnumeratorUnix::GetNextFile(nsIFile **_retval)
     }
 
     nsCOMPtr<nsIFile> file = new nsLocalFile();
-    if (!file)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     if (NS_FAILED(rv = file->InitWithNativePath(mParentPath)) ||
         NS_FAILED(rv = file->AppendNative(nsDependentCString(mEntry->d_name))))
         return rv;
 
-    *_retval = file;
-    NS_ADDREF(*_retval);
+    file.forget(_retval);
     return GetNextEntry();
 }
 
@@ -262,8 +259,6 @@ nsLocalFile::nsLocalFileConstructor(nsISupports *outer,
     *aInstancePtr = nullptr;
 
     nsCOMPtr<nsIFile> inst = new nsLocalFile();
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY;
     return inst->QueryInterface(aIID, aInstancePtr);
 }
 
@@ -282,12 +277,8 @@ NS_IMETHODIMP
 nsLocalFile::Clone(nsIFile **file)
 {
     // Just copy-construct ourselves
-    *file = new nsLocalFile(*this);
-    if (!*file)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*file);
-    
+    nsRefPtr<nsLocalFile> copy = new nsLocalFile(*this);
+    copy.forget(file);
     return NS_OK;
 }
 
@@ -929,8 +920,6 @@ nsLocalFile::Remove(bool recursive)
 
     if (recursive) {
         nsDirEnumeratorUnix *dir = new nsDirEnumeratorUnix();
-        if (!dir)
-            return NS_ERROR_OUT_OF_MEMORY;
 
         nsCOMPtr<nsISimpleEnumerator> dirRef(dir); // release on exit
 
@@ -1656,17 +1645,13 @@ nsLocalFile::SetFollowLinks(bool aFollowLinks)
 NS_IMETHODIMP
 nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator **entries)
 {
-    nsDirEnumeratorUnix *dir = new nsDirEnumeratorUnix();
-    if (!dir)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsRefPtr<nsDirEnumeratorUnix> dir = new nsDirEnumeratorUnix();
 
-    NS_ADDREF(dir);
     nsresult rv = dir->Init(this, false);
     if (NS_FAILED(rv)) {
         *entries = nullptr;
-        NS_RELEASE(dir);
     } else {
-        *entries = dir; // transfer reference
+        dir.forget(entries);
     }
 
     return rv;
@@ -1871,21 +1856,17 @@ nsLocalFile::Launch()
 nsresult
 NS_NewNativeLocalFile(const nsACString &path, bool followSymlinks, nsIFile **result)
 {
-    nsLocalFile *file = new nsLocalFile();
-    if (!file)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(file);
+    nsRefPtr<nsLocalFile> file = new nsLocalFile();
 
     file->SetFollowLinks(followSymlinks);
 
     if (!path.IsEmpty()) {
         nsresult rv = file->InitWithNativePath(path);
         if (NS_FAILED(rv)) {
-            NS_RELEASE(file);
             return rv;
         }
     }
-    *result = file;
+    file.forget(result);
     return NS_OK;
 }
 
@@ -2440,38 +2421,30 @@ NS_IMETHODIMP nsLocalFile::InitWithFile(nsIFile *aFile)
 nsresult
 NS_NewLocalFileWithFSRef(const FSRef* aFSRef, bool aFollowLinks, nsILocalFileMac** result)
 {
-  nsLocalFile* file = new nsLocalFile();
-  if (file == nullptr)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(file);
+  nsRefPtr<nsLocalFile> file = new nsLocalFile();
 
   file->SetFollowLinks(aFollowLinks);
 
   nsresult rv = file->InitWithFSRef(aFSRef);
   if (NS_FAILED(rv)) {
-    NS_RELEASE(file);
     return rv;
   }
-  *result = file;
+  file.forget(result);
   return NS_OK;
 }
 
 nsresult
 NS_NewLocalFileWithCFURL(const CFURLRef aURL, bool aFollowLinks, nsILocalFileMac** result)
 {
-  nsLocalFile* file = new nsLocalFile();
-  if (!file)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(file);
+  nsRefPtr<nsLocalFile> file = new nsLocalFile();
 
   file->SetFollowLinks(aFollowLinks);
 
   nsresult rv = file->InitWithCFURL(aURL);
   if (NS_FAILED(rv)) {
-    NS_RELEASE(file);
     return rv;
   }
-  *result = file;
+  file.forget(result);
   return NS_OK;
 }
 

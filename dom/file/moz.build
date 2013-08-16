@@ -13,12 +13,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_file'
 
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/base',
-    '-I$(topsrcdir)/dom/interfaces/base',
-    '-I$(topsrcdir)/dom/interfaces/events',
-]
-
 MODULE = 'dom'
 
 EXPORTS += [

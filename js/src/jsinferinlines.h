@@ -11,29 +11,19 @@
 
 #include "jsinfer.h"
 
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
 #include "jsanalyze.h"
-#include "jsarray.h"
-#include "jscompartment.h"
-#include "jsprf.h"
-#include "jsproxy.h"
 
 #include "builtin/ParallelArray.h"
-#include "ion/IonFrames.h"
-#include "js/RootingAPI.h"
 #include "vm/ArrayObject.h"
 #include "vm/BooleanObject.h"
-#include "vm/GlobalObject.h"
 #include "vm/NumberObject.h"
 #include "vm/StringObject.h"
 #include "vm/TypedArrayObject.h"
 
 #include "jsanalyzeinlines.h"
 #include "jscntxtinlines.h"
-
-#include "gc/Barrier-inl.h"
 
 inline bool
 js::TaggedProto::isObject() const

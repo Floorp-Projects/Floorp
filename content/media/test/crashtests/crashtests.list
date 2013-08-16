@@ -33,7 +33,7 @@ load 876249.html
 load 876252.html
 load 876834.html
 load 877820.html
-load 878014.html
+skip-if(B2G) load 878014.html # timeout-prone, bug 833371
 load 878328.html
 load 878407.html
 load 878478.html
@@ -44,7 +44,7 @@ load 880342-1.html
 load 880342-2.html
 load 880384.html
 load 880404.html
-load 880724.html
+skip-if(B2G) load 880724.html # timeout-prone, bug 833371
 load 881775.html
 load 882956.html
 test-pref(media.webvtt.enabled,true) load 882549.html

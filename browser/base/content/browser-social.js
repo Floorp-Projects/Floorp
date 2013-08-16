@@ -42,16 +42,9 @@ SocialUI = {
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
 
-    SocialChatBar.init();
-    SocialMark.init();
-    SocialShare.init();
-    SocialMenu.init();
-    SocialToolbar.init();
-    SocialSidebar.init();
-
     if (!Social.initialized) {
       Social.init();
-    } else {
+    } else if (Social.enabled) {
       // social was previously initialized, so it's not going to notify us of
       // anything, so handle that now.
       this.observe(null, "social:providers-changed", null);
@@ -88,7 +81,6 @@ SocialUI = {
           this._updateMenuItems();
 
           SocialFlyout.unload();
-          SocialChatBar.closeWindows();
           SocialChatBar.update();
           SocialShare.update();
           SocialSidebar.update();
@@ -346,23 +338,13 @@ SocialUI = {
 }
 
 SocialChatBar = {
-  init: function() {
-  },
-  closeWindows: function() {
-    // close all windows of type Social:Chat
-    let windows = Services.wm.getEnumerator("Social:Chat");
-    while (windows.hasMoreElements()) {
-      let win = windows.getNext();
-      win.close();
-    }
-  },
   get chatbar() {
     return document.getElementById("pinnedchats");
   },
   // Whether the chatbar is available for this window.  Note that in full-screen
   // mode chats are available, but not shown.
   get isAvailable() {
-    return SocialUI.enabled && Social.haveLoggedInUser();
+    return SocialUI.enabled;
   },
   // Does this chatbar have any chats (whether minimized, collapsed or normal)
   get hasChats() {
@@ -382,7 +364,6 @@ SocialChatBar = {
   update: function() {
     let command = document.getElementById("Social:FocusChat");
     if (!this.isAvailable) {
-      this.chatbar.removeAll();
       this.chatbar.hidden = command.hidden = true;
     } else {
       this.chatbar.hidden = command.hidden = false;
@@ -586,9 +567,6 @@ SocialFlyout = {
 }
 
 SocialShare = {
-  // Called once, after window load, when the Social.provider object is initialized
-  init: function() {},
-
   get panel() {
     return document.getElementById("social-share-panel");
   },
@@ -846,10 +824,6 @@ SocialShare = {
 };
 
 SocialMark = {
-  // Called once, after window load, when the Social.provider object is initialized
-  init: function SSB_init() {
-  },
-
   get button() {
     return document.getElementById("social-mark-button");
   },
@@ -925,9 +899,6 @@ SocialMark = {
 };
 
 SocialMenu = {
-  init: function SocialMenu_init() {
-  },
-
   populate: function SocialMenu_populate() {
     let submenu = document.getElementById("menu_social-statusarea-popup");
     let ambientMenuItems = submenu.getElementsByClassName("ambient-menuitem");
@@ -961,8 +932,10 @@ SocialMenu = {
 SocialToolbar = {
   // Called once, after window load, when the Social.provider object is
   // initialized.
-  init: function SocialToolbar_init() {
+  get _dynamicResizer() {
+    delete this._dynamicResizer;
     this._dynamicResizer = new DynamicResizeWatcher();
+    return this._dynamicResizer;
   },
 
   update: function() {
@@ -1299,14 +1272,6 @@ SocialToolbar = {
 }
 
 SocialSidebar = {
-  // Called once, after window load, when the Social.provider object is initialized
-  init: function SocialSidebar_init() {
-    let sbrowser = document.getElementById("social-sidebar-browser");
-    Social.setErrorListener(sbrowser, this.setSidebarErrorMessage.bind(this));
-    // setting isAppTab causes clicks on untargeted links to open new tabs
-    sbrowser.docShell.isAppTab = true;
-  },
-
   // Whether the sidebar can be shown for this window.
   get canShow() {
     return SocialUI.enabled && Social.provider.sidebarURL;
@@ -1367,6 +1332,9 @@ SocialSidebar = {
 
       // Make sure the right sidebar URL is loaded
       if (sbrowser.getAttribute("src") != Social.provider.sidebarURL) {
+        Social.setErrorListener(sbrowser, this.setSidebarErrorMessage.bind(this));
+        // setting isAppTab causes clicks on untargeted links to open new tabs
+        sbrowser.docShell.isAppTab = true;
         sbrowser.setAttribute("src", Social.provider.sidebarURL);
         PopupNotifications.locationChange(sbrowser);
       }

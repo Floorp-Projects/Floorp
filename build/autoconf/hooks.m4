@@ -24,3 +24,7 @@ define([AC_OUTPUT_SUBDIRS],
 _MOZ_AC_OUTPUT_SUBDIRS($1)
 MOZ_CONFIG_LOG_TRAP
 ])
+
+dnl Print error messages in config.log as well as stderr
+define([AC_MSG_ERROR],
+[{ echo "configure: error: $1" 1>&2; echo "configure: error: $1" 1>&5; exit 1; }])

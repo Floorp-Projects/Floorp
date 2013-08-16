@@ -17,10 +17,6 @@ LIBS		= \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-MAPFILE=triplescat.map
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(TK_CFLAGS)

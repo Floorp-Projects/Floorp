@@ -68,8 +68,6 @@
         // initialize the search sessions
         if (this.hasAttribute("autocompletesearch"))
           this.initAutoCompleteSearch();
-        if (this.hasAttribute("searchSessions"))
-          this.initSearchSessions();
         
         // hack to work around lack of bottom-up constructor calling
         if ("initialize" in this.popup)
@@ -239,30 +237,6 @@
       <property name="focused"
                 onget="return this.getAttribute('focused') == 'true';"/>
 
-      <!-- space-delimited string of search session types to use -->
-      <property name="searchSessions" readonly="true" onget="return this.getAttribute('searchSessions') || ''"/>
-
-      <method name="initSearchSessions">
-        <body><![CDATA[
-          var list = this.searchSessions.split(" ");
-          for (var i = 0; i < list.length; i++) {
-            var name = list[i];
-            var contractid = "@mozilla.org/autocompleteSession;1?type=" + name;
-            if (contractid in Components.classes) {
-              try {
-                var session =
-                  Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSession);
-                this.addSession(session, name);
-              } catch (e) {
-                dump("### ERROR - unable to create search session \"" + name + "\".\n");
-              }
-            } else {
-              dump("search session \"" + name + "\" not found - skipping.\n");
-            }
-          }
-        ]]></body>
-      </method>
-
       <method name="initAutoCompleteSearch">
         <body><![CDATA[
           var list = this.getAttribute("autocompletesearch").split(" ");
@@ -271,10 +245,11 @@
             var contractid = "@mozilla.org/autocomplete/search;1?name=" + name;
             if (contractid in Components.classes) {
               try {
-                var search =
+                this.mSessions[name] =
                   Components.classes[contractid].getService(Components.interfaces.nsIAutoCompleteSearch);
-                var session = new (this.mAutoCompleteSession)(search);
-                this.addSession(session, name);
+                this.mLastResults[name] = null;
+                this.mLastRows[name] = 0;
+                ++this.sessionCount;
               } catch (e) {
                 dump("### ERROR - unable to create search \"" + name + "\".\n");
               }
@@ -345,9 +320,8 @@
       <!-- =================== PRIVATE PROPERTIES =================== -->
 
       <field name="mSessions">({})</field>
-      <field name="mListeners">({})</field>
       <field name="mLastResults">({})</field>
-      <field name="mLastStatus">({})</field>
+      <field name="mLastRows">({})</field>
       <field name="mLastKeyCode">null</field>
       <field name="mAutoCompleteTimer">0</field>
       <field name="mMenuOpen">false</field>
@@ -402,88 +376,15 @@
         })
       ]]></field>
 
-      <field name="mAutoCompleteSession"><![CDATA[
-        var session = function(aSession) { this.session = aSession };
-        session.prototype = {
-          session: null,
-          param: this,
-          onStartLookup: function(aSearchString, aPreviousSearchResult, aListener) {
-            this.session.startSearch(aSearchString,
-                         this.param.searchParam,
-                         aPreviousSearchResult && aPreviousSearchResult.lastResult,
-                         aListener);
-          },
-          onStopLookup: function() {
-            this.session.stopSearch();
-          },
-          onAutoComplete: function() {
+      <field name="mAutoCompleteObserver"><![CDATA[
+        ({
+          self: this,
+          onSearchResult: function(aSearch, aResult) {
+            for (var name in this.self.mSessions)
+              if (this.self.mSessions[name] == aSearch)
+                this.self.processResults(name, aResult);
           }
-        };
-        session;
-      ]]></field>
-
-      <field name="mAutoCompleteListener"><![CDATA[
-        var listener = function(aName) { this.sessionName = aName };
-        listener.prototype = {
-          param: this,
-          sessionName: null,
-          lastResult: null,
-          lastItems: [],
-          onAutoComplete: function(aResults, aStatus) 
-          {
-            this.param.processResults(this.sessionName, aResults, aStatus);
-          },
-          onSearchResult: function(aSearch, aResult)
-          {
-            this.lastResult = aResult;
-            this.lastItems = new Array(aResult.matchCount);
-            const nsIAutoCompleteStatus = Components.interfaces.nsIAutoCompleteStatus;
-            var status = nsIAutoCompleteStatus.failed;
-            if (aResult.errorDescription) {
-              status = nsIAutoCompleteStatus.failureItems;
-              this.lastItems = [{
-                value: aResult.errorDescription,
-                comment: null,
-                className: null,
-                param: null
-              }];
-            }
-            else if (aResult.searchResult == aResult.RESULT_IGNORED)
-              status = nsIAutoCompleteStatus.ignored;
-            else if (aResult.searchResult == aResult.RESULT_NOMATCH)
-              status = nsIAutoCompleteStatus.noMatch;
-            else if (aResult.searchResult == aResult.RESULT_SUCCESS)
-              status = nsIAutoCompleteStatus.matchFound;
-            else if (aResult.searchResult == aResult.RESULT_NOMATCH_ONGOING)
-              status = nsIAutoCompleteStatus.noMatchYet;
-            else if (aResult.searchResult == aResult.RESULT_SUCCESS_ONGOING)
-              status = nsIAutoCompleteStatus.matchSoFar;
-            this.param.processResults(this.sessionName, {
-              searchString: aResult.searchString,
-              items: this,
-              defaultItemIndex: aResult.defaultIndex,
-              param: null,
-              lastResult: aResult
-            }, status);
-          },
-          Count: function() {
-            return this.lastItems.length;
-          },
-          QueryElementAt: function(aIndex, aIID) {
-            if (aIndex < 0 || aIndex >= this.lastItems.length)
-              return null;
-            if (!this.lastItems[aIndex]) {
-              this.lastItems[aIndex] = {
-                value: this.lastResult.getValueAt(aIndex),
-                comment: this.lastResult.getCommentAt(aIndex),
-                className: this.lastResult.getStyleAt(aIndex),
-                param: null
-              }
-            }
-            return this.lastItems[aIndex];
-          }
-        };
-        listener;
+        })
       ]]></field>
 
       <field name="mInputElt"><![CDATA[
@@ -498,32 +399,14 @@
 
       <!-- =================== PUBLIC METHODS =================== -->
 
-      <!-- get the result object from the autocomplete results from a specific session -->
-      <method name="getResultAt">
+      <method name="getErrorAt">
         <parameter name="aIndex"/>
         <body><![CDATA[
-          var obj = this.convertIndexToSession(aIndex);
-          if (obj && this.mLastResults[obj.session]) {
-            const nsIAutoCompleteItem = Components.interfaces.nsIAutoCompleteItem;
-            if (obj.index >= 0) {
-              var item = this.mLastResults[obj.session].items.QueryElementAt(obj.index, nsIAutoCompleteItem);
-              return item;
-            }
-          }
-          return null;
+          var obj = aIndex < 0 ? null : this.convertIndexToSession(aIndex);
+          return obj && this.mLastResults[obj.session] &&
+                        this.mLastResults[obj.session].errorDescription;
         ]]></body>
       </method>
-
-      <!-- get the autocomplete session status returned by the session
-           that a given item came from -->
-      <method name="getSessionStatusAt">
-        <parameter name="aIndex"/>
-        <body><![CDATA[
-          var obj = this.convertIndexToSession(aIndex);
-          return obj ? this.mLastStatus[obj.session] : null;
-        ]]></body>
-      </method>
-
 
       <!-- get a value from the autocomplete results as a string via an absolute index-->
       <method name="getResultValueAt">
@@ -534,29 +417,13 @@
         ]]></body>
       </method>
 
-      <!-- get the result object from the autocomplete results from a specific session -->
-      <method name="getSessionResultAt">
-        <parameter name="aSession"/>
-        <parameter name="aIndex"/>
-        <body><![CDATA[
-          var session = this.mLastResults[aSession];
-          if (session) {
-            var item = session.items.QueryElementAt(aIndex, Components.interfaces.nsIAutoCompleteItem);
-            return item;
-          }
-          return null;
-        ]]></body>
-      </method>
-
       <!-- get a value from the autocomplete results as a string from a specific session -->
       <method name="getSessionValueAt">
         <parameter name="aSession"/>
         <parameter name="aIndex"/>
         <body><![CDATA[
-          var result = this.getSessionResultAt(aSession, aIndex);
-          if (result)
-            return result.value;
-          return null;
+          var result = this.mLastResults[aSession];
+          return result.errorDescription || result.getValueAt(aIndex);
         ]]></body>
       </method>
 
@@ -567,86 +434,12 @@
         ]]></body>
       </method>
 
-      <!-- get a session object by index -->
-      <method name="getSession">
-        <parameter name="aIndex"/>
-        <body><![CDATA[
-          var idx = -1;
-          for (var name in this.mSessions)
-            if (++idx == aIndex)
-              return this.mSessions[name];
-
-          return null;
-        ]]></body>
-      </method>
-
-      <!-- get a session object by name -->
-      <method name="getSessionByName">
-        <parameter name="aSessionName"/>
-        <body><![CDATA[
-          return this.mSessions[aSessionName];
-        ]]></body>
-      </method>
-
-      <!-- add a session by reference -->
-      <method name="addSession">
-        <parameter name="aSession"/>
-        <parameter name="aName"/>
-        <body><![CDATA[
-          ++this.sessionCount;
-          var name = aName || ("anon_" + this.sessionCount);
-          this.mSessions[name] = aSession;
-          this.mListeners[name] = new (this.mAutoCompleteListener)(name);
-          this.mLastResults[name] = null;
-          this.mLastStatus[name] = null;
-          return this.mSessions[name];
-        ]]></body>
-      </method>
-
-      <!-- remove a session by reference -->
-      <method name="removeSession">
-        <parameter name="aSession"/>
-        <body><![CDATA[
-          for (var name in this.mSessions) {
-            if (this.mSessions[name] == aSession) {
-              delete this.mSessions[name];
-              delete this.mListeners[name];
-              delete this.mLastResults[name];
-              delete this.mLastStatus[name];
-              --this.sessionCount;
-              break;
-            }
-          }
-        ]]></body>
-      </method>
-
-      <!-- make this widget listen to all of the same autocomplete sessions 
-           from another autocomplete widget -->
-      <method name="syncSessions">
-        <parameter name="aCopyFrom"/>
-        <body><![CDATA[
-          this.sessionCount = aCopyFrom.sessionCount;
-          this.mSessions = {};
-          this.mListeners = {};
-          this.mLastResults = {};
-          this.mLastStatus = {};
-          for (var name in aCopyFrom.mSessions) {
-            this.mSessions[name] = aCopyFrom.mSessions[name];
-            this.mListeners[name] = new (this.mAutoCompleteListener)(name);
-            this.mLastResults[name] = null;
-            this.mLastStatus[name] = null;
-          }
-        ]]></body>
-      </method>
-
       <!-- get the first session that has results -->
       <method name="getDefaultSession">
         <body><![CDATA[
           for (var name in this.mLastResults) {
             var results = this.mLastResults[name];
-            var status = this.mLastStatus[name];
-            if (results && results.items.Count() > 0 && status !=
-                Components.interfaces.nsIAutoCompleteStatus.failureItems)
+            if (results && results.matchCount > 0 && !results.errorDescription)
               return name;
           }
           return null;
@@ -689,10 +482,6 @@
             case "stopLookup":
               me.stopLookup();
               break;
-
-            case "autoComplete":
-              me.autoComplete();
-              break;
           }
         ]]></body>
       </method>
@@ -719,7 +508,7 @@
           // tell each session to start searching...
           for (var name in this.mSessions)
             try {
-              this.mSessions[name].onStartLookup(str, this.mLastResults[name], this.mListeners[name]);
+              this.mSessions[name].startSearch(str, this.searchParam, this.mLastResults[name], this.mAutoCompleteObserver);
             } catch (e) {
               --this.mSessionReturns;
               this.searchFailed();
@@ -731,17 +520,7 @@
       <method name="stopLookup">
         <body><![CDATA[
           for (var name in this.mSessions)
-            this.mSessions[name].onStopLookup();
-        ]]></body>
-      </method>
-
-      <!--  -->
-      <method name="autoComplete">
-        <body><![CDATA[
-          for (var name in this.mSessions)
-            this.mSessions[name].onAutoComplete(this.value, 
-                                                this.mLastResults[name],
-                                                this.mListeners[name]);
+            this.mSessions[name].stopSearch();
         ]]></body>
       </method>
 
@@ -749,25 +528,25 @@
       <method name="processResults">
         <parameter name="aSessionName"/>
         <parameter name="aResults"/>
-        <parameter name="aStatus"/>
         <body><![CDATA[
           if (this.disableAutoComplete)
             return;
 
-          if (aStatus != Components.interfaces.nsIAutoCompleteStatus.noMatchYet &&
-              aStatus != Components.interfaces.nsIAutoCompleteStatus.matchSoFar)
+          const ACR = Components.interfaces.nsIAutoCompleteResult;
+          var status = aResults.searchResult;
+          if (status != ACR.RESULT_NOMATCH_ONGOING &&
+              status != ACR.RESULT_SUCCESS_ONGOING)
             --this.mSessionReturns;
 
-          this.mLastStatus[aSessionName] = aStatus;
-
           // check the many criteria for failure
-          if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failed ||
-              aStatus == Components.interfaces.nsIAutoCompleteStatus.ignored || 
-              aStatus == Components.interfaces.nsIAutoCompleteStatus.noMatch ||
-              aStatus == Components.interfaces.nsIAutoCompleteStatus.noMatchYet ||
-              aResults == null ||
-              aResults.items.Count() == 0 ||
-              aResults.searchString != this.currentSearchString)
+          if (aResults.errorDescription)
+            ++this.mFailureItems;
+          else if (status == ACR.RESULT_IGNORED ||
+                   status == ACR.RESULT_FAILURE ||
+                   status == ACR.RESULT_NOMATCH ||
+                   status == ACR.RESULT_NOMATCH_ONGOING ||
+                   aResults.matchCount == 0 ||
+                   aResults.searchString != this.currentSearchString)
           {
             this.mLastResults[aSessionName] = null;
             if (this.mFirstReturn)
@@ -776,8 +555,6 @@
             this.searchFailed();
             return;
           }
-          if (aStatus == Components.interfaces.nsIAutoCompleteStatus.failureItems)
-            ++this.mFailureItems;
           
           if (this.mFirstReturn) {
             if (this.view.mTree)
@@ -790,8 +567,7 @@
           // it's smart and doesn't try to open itself multiple times...
           // be sure to add our result elements before calling openResultPopuup as we need
           // to know the total # of results found so far.
-          this.addResultElements(aResults, this.mLastResults[aSessionName]);
-          this.mLastResults[aSessionName] = aResults;
+          this.addResultElements(aSessionName, aResults);
 
           this.autoFillInput(aSessionName, aResults, false);
           if (this.mFirstReturn && this.view.mTree)
@@ -838,7 +614,8 @@
           var failed = true;
           for (var name in this.mSessions) {
             if (this.mLastResults[name])
-              failed = this.mLastResults[name].items.Count() < 1;
+              failed = this.mLastResults[name].errorDescription ||
+                       this.mLastResults[name].matchCount == 0;
             if (!failed)
               break;
           }
@@ -890,9 +667,10 @@
               // default item index...
               for (var name in this.mLastResults) {
                 var results = this.mLastResults[name];
-                if (results && results.items.Count() > 0 && results.defaultItemIndex != -1)
+                if (results && results.matchCount > 0 &&
+                    !results.errorDescription && results.defaultIndex != -1)
                 {
-                  val = this.getSessionValueAt(name, results.defaultItemIndex);
+                  val = this.getSessionValueAt(name, results.defaultIndex);
                   this.setTextValue(val);
                   this.mDefaultMatchFilled = true;
                   this.mNeedToFinish = false;
@@ -923,9 +701,6 @@
 
             this.stopLookup();
 
-            if (!this.noMatch)
-              this.autoComplete();
-
             this.closePopup();
           }
           
@@ -941,24 +716,19 @@
       <method name="onResultClick">
         <body><![CDATA[
          // set textbox value to either override value, or the clicked result
-          var errItem=null;
+          var errItem = this.getErrorAt(this.popup.selectedIndex);
           var val = this.popup.overrideValue;
             if (val)
               this.setTextValue(val);
           else if (this.popup.selectedIndex != -1) {
-            if (this.getSessionStatusAt(this.popup.selectedIndex) ==
-                Components.interfaces.nsIAutoCompleteStatus.failureItems) {
+            if (errItem) {
               this.setTextValue(this.currentSearchString);
               this.mTransientValue = true;
-              errItem = this.getResultAt(this.popup.selectedIndex);
             } else { 
               this.setTextValue(this.getResultValueAt(
                                              this.popup.selectedIndex));
             }
           }
-
-          if (!this.noMatch)
-            this.autoComplete();
 
           this.mNeedToFinish = false;
           this.mNeedToComplete = false;
@@ -993,14 +763,10 @@
       <method name="convertIndexToSession">
         <parameter name="aIndex"/>
         <body><![CDATA[
-          var idx = 0;
-          for (var name in this.mLastResults) {
-            if (this.mLastResults[name]) {
-              if ((idx+this.mLastResults[name].items.Count())-1 >= aIndex) {
-                return {session: name, index: aIndex-idx};
-              }
-              idx += this.mLastResults[name].items.Count();
-            }
+          for (var name in this.mLastRows) {
+            if (aIndex < this.mLastRows[name])
+              return { session: name, index: aIndex };
+            aIndex -= this.mLastRows[name];
           }
           return null;
         ]]></body>
@@ -1056,12 +822,7 @@
             case KeyEvent.DOM_VK_RETURN:
 
               // if this is a failure item, save it for fireErrorCommand
-              var errItem = null;
-              if (this.popup.selectedIndex != -1 && 
-                  this.getSessionStatusAt(this.popup.selectedIndex) ==
-                  Components.interfaces.nsIAutoCompleteStatus.failureItems) {
-                errItem = this.getResultAt(this.popup.selectedIndex);
-              }
+              var errItem = this.getErrorAt(this.popup.selectedIndex);
 
               killEvent = this.mMenuOpen;
               this.finishAutoComplete(true, true, aEvent);
@@ -1112,6 +873,13 @@
                 killEvent = this.keyNavigation(aEvent);
               }
               break;
+
+            case KeyEvent.DOM_VK_BACK_SPACE:
+              if (!aEvent.ctrlKey && !aEvent.altKey && !aEvent.shiftKey &&
+                  this.mDefaultMatchFilled) {
+                  this.mDefaultMatchFilled = false;
+                this.value = this.currentSearchString.substring(0, this.selectionStart);
+              }
           }
           
           if (killEvent) {
@@ -1179,8 +947,7 @@
             // determine which value to place in the textbox
             this.ignoreInputEvent = true;
             if (selected != -1) {
-              if (this.getSessionStatusAt(selected) == 
-                  Components.interfaces.nsIAutoCompleteStatus.failureItems) { 
+              if (this.getErrorAt(selected)) {
                 if (this.currentSearchString)
                   this.setTextValue(this.currentSearchString);
               } else {
@@ -1216,7 +983,7 @@
               (this.autoFill || this.completeDefaultIndex) && 
               this.mLastKeyCode != KeyEvent.DOM_VK_BACK_SPACE &&
               this.mLastKeyCode != KeyEvent.DOM_VK_DELETE) {
-            var indexToUse = aResults.defaultItemIndex;
+            var indexToUse = aResults.defaultIndex;
             if (aUseFirstMatchIfNoDefault && indexToUse == -1)
               indexToUse = 0; 
 
@@ -1280,13 +1047,22 @@
 
       <!--  -->
       <method name="addResultElements">
+        <parameter name="aSession"/>
         <parameter name="aResults"/>
-        <parameter name="aOldResults"/>
         <body><![CDATA[
+          var count = aResults.errorDescription ? 1 : aResults.matchCount;
           if (this.focused && this.showPopup) {
-            this.view.replaceResults(aResults, aOldResults);
+            var row = 0;
+            for (var name in this.mSessions) {
+              row += this.mLastRows[name];
+              if (name == aSession)
+                break;
+            }
+            this.view.updateResults(row, count - this.mLastRows[name]);
             this.popup.adjustHeight();
           }
+          this.mLastResults[aSession] = aResults;
+          this.mLastRows[aSession] = count;
         ]]></body>
       </method>
 
@@ -1294,6 +1070,8 @@
       <method name="clearResultElements">
         <parameter name="aInvalidate"/>
         <body><![CDATA[
+          for (var name in this.mSessions)
+            this.mLastRows[name] = 0;
           this.view.clearResults();
           if (aInvalidate)
             this.popup.adjustHeight();
@@ -1322,21 +1100,8 @@
       <!--  -->
       <method name="clearResultData">
         <body><![CDATA[
-          const nsIAutoCompleteItem =
-            Components.interfaces.nsIAutoCompleteItem;
-          for (var name in this.mSessions) {
-            // clearing out mLastResults[name] does not guarantee that
-            // each result will go away right now (it might be gc'ed later)
-            // so we have to clear the 'param' element manually
-            var session = this.mLastResults[name];
-            if (session) {
-              const resultCount = session.items.Count();
-              for (var i=0; i<resultCount; i++)
-                  session.items.QueryElementAt(i, nsIAutoCompleteItem).param = null;
-              this.mLastResults[name] = null;
-            }
-            this.mLastStatus[name] = null;
-          }
+          for (var name in this.mSessions)
+            this.mLastResults[name] = null;
         ]]></body>
       </method>
 
@@ -1392,16 +1157,12 @@
           mTextbox: this,
           mTree: null,
           mSelection: null,
-          mResults: [],
-          mCounts: [],
           mRowCount: 0,
           
           clearResults: function()
           {
             var oldCount = this.mRowCount;
             this.mRowCount = 0;  
-            this.mResults = [];
-            this.mCounts = [];
             
             if (this.mTree) {
               this.mTree.rowCountChanged(0, -oldCount);
@@ -1409,25 +1170,12 @@
             }
           },
           
-          replaceResults: function(aResults, aOldResults)
+          updateResults: function(aRow, aCount)
           {
-            var count = aResults.items.Count();
-            var row = this.mRowCount;
-            var oldIndex = this.mResults.indexOf(aOldResults);
-            if (oldIndex == -1) {
-              this.mResults.push(aResults);
-              this.mCounts.push(count);
-            } else {
-              this.mResults[oldIndex] = aResults;
-              count -= this.mCounts[oldIndex];
-              this.mCounts[oldIndex] += count;
-              while (++oldIndex < this.mCounts.length)
-                row -= this.mCounts[oldIndex];
-            }
-            this.mRowCount += count;
+            this.mRowCount += aCount;
             
             if (this.mTree)
-              this.mTree.rowCountChanged(row, count);
+              this.mTree.rowCountChanged(aRow, aCount);
           },
           
           //////////////////////////////////////////////////////////
@@ -1460,12 +1208,25 @@
           
           getCellText: function(aRow, aCol)
           {
-            var result = this.mTextbox.getResultAt(aRow);
-            if (!result) return "";
-            return aCol.id == "treecolAutoCompleteValue" ? result.value : (aCol.id == "treecolAutoCompleteComment" ? result.comment : "");
+            for (var name in this.mTextbox.mSessions) {
+              if (aRow < this.mTextbox.mLastRows[name]) {
+                var result = this.mTextbox.mLastResults[name];
+                switch (aCol.id) {
+                  case "treecolAutoCompleteValue":
+                    return result.errorDescription || result.getValueAt(aRow);
+                  case "treecolAutoCompleteComment":
+                    if (!result.errorDescription)
+                      return result.getCommentAt(aRow);
+                  default:
+                    return "";
+                }
+              }
+              aRow -= this.mTextbox.mLastRows[name];
+            }
+            return "";
           },
 
-          getRowProperties: function(aIndex) 
+          getRowProperties: function(aIndex)
           {
             return "";
           },
@@ -1475,15 +1236,17 @@
             // for the value column, append nsIAutoCompleteItem::className
             // to the property list so that we can style this column
             // using that property
-            try { 
-              if (aCol.id == "treecolAutoCompleteValue") {
-                return this.mTextbox.getResultAt(aIndex).className;
+            if (aCol.id == "treecolAutoCompleteValue") {
+              for (var name in this.mTextbox.mSessions) {
+                if (aIndex < this.mTextbox.mLastRows[name]) {
+                  var result = this.mTextbox.mLastResults[name];
+                  if (result.errorDescription)
+                    return "";
+                  return result.getStyleAt(aIndex);
+                }
+                aIndex -= this.mTextbox.mLastRows[name];
               }
-            } catch (ex) {
-              // the ability to style here is a frill, so don't abort
-              // if there's a problem
-            } 
-
+            }
             return "";
           },
 

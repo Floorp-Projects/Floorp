@@ -25,6 +25,7 @@
 
 class nsHttpRequestHead;
 class nsHttpResponseHead;
+class nsHttpHandler;
 
 //-----------------------------------------------------------------------------
 // nsHttpConnection - represents a connection to a HTTP server (or proxy)
@@ -205,6 +206,8 @@ private:
     // mTransaction only points to the HTTP Transaction callbacks if the
     // transaction is open, otherwise it is null.
     nsRefPtr<nsAHttpTransaction>    mTransaction;
+
+    nsRefPtr<nsHttpHandler>         mHttpHandler; // keep gHttpHandler alive
 
     mozilla::Mutex                  mCallbacksLock;
     nsMainThreadPtrHandle<nsIInterfaceRequestor> mCallbacks;

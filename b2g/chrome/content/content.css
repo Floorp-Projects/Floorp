@@ -17,6 +17,7 @@ html xul|scrollbar {
   background-image: none !important;
   border: 0px solid transparent !important;
   z-index: 2147483647;
+  pointer-events: none;
   opacity: 1;
 }
 

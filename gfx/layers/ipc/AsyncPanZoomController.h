@@ -101,19 +101,6 @@ public:
   nsEventStatus ReceiveInputEvent(const InputData& aEvent);
 
   /**
-   * Special handler for nsInputEvents. Also sets |aOutEvent| (which is assumed
-   * to be an already-existing instance of an nsInputEvent which may be an
-   * nsTouchEvent) to have its touch points in DOM space. This is so that the
-   * touches can be passed through the DOM and content can handle them.
-   *
-   * NOTE: Be careful of invoking the nsInputEvent variant. This can only be
-   * called on the main thread. See widget/InputData.h for more information on
-   * why we have InputData and nsInputEvent separated.
-   */
-  nsEventStatus ReceiveInputEvent(const nsInputEvent& aEvent,
-                                  nsInputEvent* aOutEvent);
-
-  /**
    * Updates the composition bounds, i.e. the dimensions of the final size of
    * the frame this is tied to during composition onto, in device pixels. In
    * general, this will just be:
@@ -642,9 +629,15 @@ private:
    * hit-testing to see which APZC instance should handle touch events.
    */
 public:
-  void SetLayerHitTestData(const LayerRect& aRect, const gfx3DMatrix& aTransform) {
+  void SetLayerHitTestData(const LayerRect& aRect, const gfx3DMatrix& aTransformToLayer,
+                           const gfx3DMatrix& aTransformForLayer) {
     mVisibleRect = aRect;
-    mCSSTransform = aTransform;
+    mAncestorTransform = aTransformToLayer;
+    mCSSTransform = aTransformForLayer;
+  }
+
+  gfx3DMatrix GetAncestorTransform() const {
+    return mAncestorTransform;
   }
 
   gfx3DMatrix GetCSSTransform() const {
@@ -661,8 +654,10 @@ private:
    * applied to any layers, whether they are CSS transforms or async
    * transforms. */
   LayerRect mVisibleRect;
-  /* This is the cumulative layer transform from the parent APZC down to this
-   * one. */
+  /* This is the cumulative CSS transform for all the layers between the parent
+   * APZC and this one (not inclusive) */
+  gfx3DMatrix mAncestorTransform;
+  /* This is the CSS transform for this APZC's layer. */
   gfx3DMatrix mCSSTransform;
 };
 

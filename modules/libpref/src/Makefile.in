@@ -13,15 +13,12 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= pref
 MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsPrefModule
 LIBXUL_LIBRARY = 1
 
 DEFINES += -DOS_ARCH=$(OS_ARCH) \
            -DMOZ_WIDGET_TOOLKIT=$(MOZ_WIDGET_TOOLKIT) \
            $(NULL)
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

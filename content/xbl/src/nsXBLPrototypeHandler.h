@@ -136,8 +136,8 @@ public:
     return (mType & NS_HANDLER_ALLOW_UNTRUSTED) != 0;
   }
 
-  nsresult Read(nsIScriptContext* aContext, nsIObjectInputStream* aStream);
-  nsresult Write(nsIScriptContext* aContext, nsIObjectOutputStream* aStream);
+  nsresult Read(nsIObjectInputStream* aStream);
+  nsresult Write(nsIObjectOutputStream* aStream);
 
 public:
   static uint32_t gRefCnt;

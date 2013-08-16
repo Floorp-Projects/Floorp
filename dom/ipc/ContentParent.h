@@ -143,6 +143,7 @@ public:
     bool IsForApp();
 
     void SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report);
+    void ClearChildMemoryReporters();
 
     GeckoChildProcessHost* Process() {
         return mSubprocess;
@@ -369,10 +370,6 @@ private:
                                            const nsString& aBidi, const nsString& aLang);
 
     virtual bool RecvCloseAlert(const nsString& aName);
-
-    virtual bool RecvTestPermissionFromPrincipal(const IPC::Principal& aPrincipal,
-                                                 const nsCString& aType,
-                                                 uint32_t* permission);
 
     virtual bool RecvLoadURIExternal(const URIParams& uri);
 

@@ -29,7 +29,6 @@
 #include "nsDOMClassInfoID.h" // DOMCI_DATA
 #include "mozilla/CORSMode.h"
 #include "mozilla/Attributes.h"
-#include "nsContentUtils.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/dom/Attr.h"
 #include "nsISMILAttr.h"
@@ -337,6 +336,8 @@ public:
     return (!HasFixedDir() &&
             (HasValidDir() || IsHTML(nsGkAtoms::bdi)));
   }
+
+  Directionality GetComputedDirectionality() const;
 
 protected:
   /**

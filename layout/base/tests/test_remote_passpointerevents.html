@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+    <script type="application/javascript;version=1.7">
+      "use strict";
+
+      SimpleTest.waitForExplicitFinish();
+
+      function checkPointerEvents() {
+        let iframe = this;
+        let fRect = iframe.getBoundingClientRect();
+        let e1 = document.elementFromPoint(fRect.left + 10, fRect.top + 10);
+        let e2 = document.elementFromPoint(fRect.left + 110, fRect.top + 110);
+        if (e1 === document.body && e2 === iframe) {
+          is(e1, document.body, "check point in transparent region of the iframe");
+          is(e2, iframe, "check point in opaque region of the iframe");
+          SimpleTest.finish();
+        }
+        else {
+          SimpleTest.executeSoon(checkPointerEvents.bind(iframe));
+        }
+      }
+
+      function runTest() {
+        let iframe = document.createElement("iframe");
+        SpecialPowers.wrap(iframe).setAttribute('mozbrowser', 'true');
+        SpecialPowers.wrap(iframe).setAttribute('mozpasspointerevents', 'true');
+        SpecialPowers.wrap(iframe).setAttribute('remote', 'true');
+        iframe.style = "border:none; width:400px; height:400px; pointer-events:none";
+        iframe.src = "data:text/html,<html style='pointer-events:none'><div style='margin:100px; width:100px; height:100px; background:yellow; pointer-events:auto'>";
+
+        document.body.appendChild(iframe);
+
+        SimpleTest.executeSoon(checkPointerEvents.bind(iframe));
+      }
+      addEventListener("load", function() {
+        SpecialPowers.addPermission("browser", true, document);
+        SpecialPowers.addPermission("embed-apps", true, document);
+        SpecialPowers.pushPrefEnv({
+          "set": [
+            ["dom.ipc.browser_frames.oop_by_default", true],
+            ["dom.mozBrowserFramesEnabled", true]
+          ]
+        }, runTest);
+      });
+    </script>
+  </body>
+</html>

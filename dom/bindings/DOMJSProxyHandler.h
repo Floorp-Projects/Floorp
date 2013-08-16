@@ -27,29 +27,43 @@ enum {
 
 template<typename T> struct Prefable;
 
-class DOMProxyHandler : public js::BaseProxyHandler
+class BaseDOMProxyHandler : public js::BaseProxyHandler
+{
+public:
+  BaseDOMProxyHandler(void* aProxyFamily)
+    : js::BaseProxyHandler(aProxyFamily)
+  {}
+
+  // Implementations of traps that can be implemented in terms of
+  // fundamental traps.
+  bool enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
+                 JS::AutoIdVector& props) MOZ_OVERRIDE;
+  bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy,
+                             JS::Handle<jsid> id,
+                             JS::MutableHandle<JSPropertyDescriptor> desc,
+                             unsigned flags) MOZ_OVERRIDE;
+};
+
+class DOMProxyHandler : public BaseDOMProxyHandler
 {
 public:
   DOMProxyHandler(const DOMClass& aClass)
-    : js::BaseProxyHandler(ProxyFamily()),
+    : BaseDOMProxyHandler(ProxyFamily()),
       mClass(aClass)
   {
   }
 
   bool preventExtensions(JSContext *cx, JS::Handle<JSObject*> proxy) MOZ_OVERRIDE;
-  bool getPropertyDescriptor(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                            JSPropertyDescriptor* desc, unsigned flags) MOZ_OVERRIDE;
   bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                      JSPropertyDescriptor* desc) MOZ_OVERRIDE
+                      JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE
   {
     bool unused;
     return defineProperty(cx, proxy, id, desc, &unused);
   }
   virtual bool defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
-                              JSPropertyDescriptor* desc, bool* defined);
+                              JS::MutableHandle<JSPropertyDescriptor> desc, bool* defined);
   bool delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
                JS::Handle<jsid> id, bool* bp) MOZ_OVERRIDE;
-  bool enumerate(JSContext* cx, JS::Handle<JSObject*> proxy, JS::AutoIdVector& props) MOZ_OVERRIDE;
   bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id, bool* bp) MOZ_OVERRIDE;
   bool isExtensible(JSContext *cx, JS::Handle<JSObject*> proxy, bool *extensible) MOZ_OVERRIDE;
 
@@ -76,16 +90,6 @@ public:
                                        JS::Handle<JSObject*> obj);
 
   const DOMClass& mClass;
-
-  // Append the property names in "names" to "props". If
-  // shadowPrototypeProperties is false then skip properties that are also
-  // present on our proto chain.  If shadowPrototypeProperties is true,
-  // then the "proxy" and "handler" arguments are ignored.
-  static bool AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                     nsTArray<nsString>& names,
-                                     bool shadowPrototypeProperties,
-                                     DOMProxyHandler* handler,
-                                     JS::AutoIdVector& props);
 };
 
 extern jsid s_length_id;
@@ -123,19 +127,20 @@ IsArrayIndex(int32_t index)
 }
 
 inline void
-FillPropertyDescriptor(JSPropertyDescriptor* desc, JSObject* obj, bool readonly)
+FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc, JSObject* obj, bool readonly)
 {
-  desc->obj = obj;
-  desc->attrs = (readonly ? JSPROP_READONLY : 0) | JSPROP_ENUMERATE;
-  desc->getter = NULL;
-  desc->setter = NULL;
-  desc->shortid = 0;
+  desc.object().set(obj);
+  desc.setAttributes((readonly ? JSPROP_READONLY : 0) | JSPROP_ENUMERATE);
+  desc.setGetter(nullptr);
+  desc.setSetter(nullptr);
+  desc.setShortId(0);
 }
 
 inline void
-FillPropertyDescriptor(JSPropertyDescriptor* desc, JSObject* obj, JS::Value v, bool readonly)
+FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc, JSObject* obj, JS::Value v,
+                       bool readonly)
 {
-  desc->value = v;
+  desc.value().set(v);
   FillPropertyDescriptor(desc, obj, readonly);
 }
 

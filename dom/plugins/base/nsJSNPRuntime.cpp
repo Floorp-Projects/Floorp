@@ -16,7 +16,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h"
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsIDocument.h"
 #include "nsIJSRuntimeService.h"
@@ -108,28 +107,28 @@ NPClass nsJSObjWrapper::sJSObjWrapperNPClass =
     nsJSObjWrapper::NP_Construct
   };
 
-static JSBool
+static bool
 NPObjWrapper_AddProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
 
-static JSBool
-NPObjWrapper_DelProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JSBool *succeeded);
+static bool
+NPObjWrapper_DelProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, bool *succeeded);
 
-static JSBool
-NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JSBool strict,
+static bool
+NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, bool strict,
                          JS::MutableHandle<JS::Value> vp);
 
-static JSBool
+static bool
 NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
 
-static JSBool
+static bool
 NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp enum_op,
                           JS::Value *statep, jsid *idp);
 
-static JSBool
+static bool
 NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, unsigned flags,
                         JS::MutableHandle<JSObject*> objp);
 
-static JSBool
+static bool
 NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType type, JS::MutableHandle<JS::Value> vp);
 
 static void
@@ -141,7 +140,7 @@ NPObjWrapper_Call(JSContext *cx, unsigned argc, JS::Value *vp);
 static bool
 NPObjWrapper_Construct(JSContext *cx, unsigned argc, JS::Value *vp);
 
-static JSBool
+static bool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject *npobj,
                      JS::Handle<jsid> id, NPVariant* getPropertyResult, JS::Value *vp);
 
@@ -170,7 +169,7 @@ typedef struct NPObjectMemberPrivate {
     NPP   npp;
 } NPObjectMemberPrivate;
 
-static JSBool
+static bool
 NPObjectMember_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType type, JS::MutableHandle<JS::Value> vp);
 
 static void
@@ -467,7 +466,7 @@ ThrowJSException(JSContext *cx, const char *message)
   }
 }
 
-static JSBool
+static bool
 ReportExceptionIfPending(JSContext *cx)
 {
   const char *ex = PeekException();
@@ -539,7 +538,7 @@ nsJSObjWrapper::NP_Invalidate(NPObject *npobj)
   }
 }
 
-static JSBool
+static bool
 GetProperty(JSContext *cx, JSObject *obj, NPIdentifier id, JS::MutableHandle<JS::Value> rval)
 {
   NS_ASSERTION(NPIdentifierIsInt(id) || NPIdentifierIsString(id),
@@ -574,7 +573,7 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier id)
   AutoJSExceptionReporter reporter(cx);
 
   JS::Rooted<JS::Value> v(cx);
-  JSBool ok = GetProperty(cx, npjsobj->mJSObj, id, &v);
+  bool ok = GetProperty(cx, npjsobj->mJSObj, id, &v);
 
   return ok && !JSVAL_IS_PRIMITIVE(v) &&
     ::JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(v));
@@ -710,7 +709,7 @@ nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier id)
   }
 
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
-  JSBool found, ok = false;
+  bool found, ok = false;
 
   nsCxPusher pusher;
   pusher.Push(cx);
@@ -809,7 +808,7 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier id)
   }
 
   nsJSObjWrapper *npjsobj = (nsJSObjWrapper *)npobj;
-  JSBool ok = false;
+  bool ok = false;
 
   nsCxPusher pusher;
   pusher.Push(cx);
@@ -824,7 +823,7 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier id)
     // FIXME: See bug 425823, we shouldn't need to do this, and once
     // that bug is fixed we can remove this code.
 
-    JSBool hasProp;
+    bool hasProp;
     ok = ::JS_HasPropertyById(cx, npjsobj->mJSObj, NPIdentifierToJSId(id), &hasProp);
 
     if (ok && hasProp) {
@@ -1100,7 +1099,7 @@ GetNPObject(JSContext *cx, JSObject *obj)
 
 // Does not actually add a property because this is always followed by a
 // SetProperty call.
-static JSBool
+static bool
 NPObjWrapper_AddProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp)
 {
   NPObject *npobj = GetNPObject(cx, obj);
@@ -1119,7 +1118,7 @@ NPObjWrapper_AddProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
   PluginDestructionGuard pdg(LookupNPP(npobj));
 
   NPIdentifier identifier = JSIdToNPIdentifier(id);
-  JSBool hasProperty = npobj->_class->hasProperty(npobj, identifier);
+  bool hasProperty = npobj->_class->hasProperty(npobj, identifier);
   if (!ReportExceptionIfPending(cx))
     return false;
 
@@ -1128,7 +1127,7 @@ NPObjWrapper_AddProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
 
   // We must permit methods here since JS_DefineUCFunction() will add
   // the function as a property
-  JSBool hasMethod = npobj->_class->hasMethod(npobj, identifier);
+  bool hasMethod = npobj->_class->hasMethod(npobj, identifier);
   if (!ReportExceptionIfPending(cx))
     return false;
 
@@ -1141,8 +1140,8 @@ NPObjWrapper_AddProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
   return true;
 }
 
-static JSBool
-NPObjWrapper_DelProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JSBool *succeeded)
+static bool
+NPObjWrapper_DelProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, bool *succeeded)
 {
   NPObject *npobj = GetNPObject(cx, obj);
 
@@ -1158,7 +1157,7 @@ NPObjWrapper_DelProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
   NPIdentifier identifier = JSIdToNPIdentifier(id);
 
   if (!NPObjectIsOutOfProcessProxy(npobj)) {
-    JSBool hasProperty = npobj->_class->hasProperty(npobj, identifier);
+    bool hasProperty = npobj->_class->hasProperty(npobj, identifier);
     if (!ReportExceptionIfPending(cx))
       return false;
 
@@ -1174,8 +1173,8 @@ NPObjWrapper_DelProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
   return ReportExceptionIfPending(cx);
 }
 
-static JSBool
-NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JSBool strict,
+static bool
+NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, bool strict,
                          JS::MutableHandle<JS::Value> vp)
 {
   NPObject *npobj = GetNPObject(cx, obj);
@@ -1202,7 +1201,7 @@ NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
   NPIdentifier identifier = JSIdToNPIdentifier(id);
 
   if (!NPObjectIsOutOfProcessProxy(npobj)) {
-    JSBool hasProperty = npobj->_class->hasProperty(npobj, identifier);
+    bool hasProperty = npobj->_class->hasProperty(npobj, identifier);
     if (!ReportExceptionIfPending(cx))
       return false;
 
@@ -1220,7 +1219,7 @@ NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
     return false;
   }
 
-  JSBool ok = npobj->_class->setProperty(npobj, identifier, &npv);
+  bool ok = npobj->_class->setProperty(npobj, identifier, &npv);
   _releasevariantvalue(&npv); // Release the variant
   if (!ReportExceptionIfPending(cx))
     return false;
@@ -1234,7 +1233,7 @@ NPObjWrapper_SetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
   return true;
 }
 
-static JSBool
+static bool
 NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp)
 {
   NPObject *npobj = GetNPObject(cx, obj);
@@ -1272,8 +1271,8 @@ NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
     if (!actor)
       return false;
 
-    JSBool success = actor->GetPropertyHelper(identifier, &hasProperty,
-                                              &hasMethod, &npv);
+    bool success = actor->GetPropertyHelper(identifier, &hasProperty,
+                                            &hasMethod, &npv);
     if (!ReportExceptionIfPending(cx)) {
       if (success)
         _releasevariantvalue(&npv);
@@ -1321,7 +1320,7 @@ NPObjWrapper_GetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<js
   return true;
 }
 
-static JSBool
+static bool
 CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
                      JS::Value *argv, JS::Value *rval, bool ctorCall)
 {
@@ -1378,7 +1377,7 @@ CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
   VOID_TO_NPVARIANT(v);
 
   JSObject *funobj = JSVAL_TO_OBJECT(argv[-2]);
-  JSBool ok;
+  bool ok;
   const char *msg = "Error calling method on NPObject!";
 
   if (ctorCall) {
@@ -1464,7 +1463,7 @@ struct NPObjectEnumerateState {
   NPIdentifier *value;
 };
 
-static JSBool
+static bool
 NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp enum_op,
                           JS::Value *statep, jsid *idp)
 {
@@ -1544,7 +1543,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
   return true;
 }
 
-static JSBool
+static bool
 NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id, unsigned flags,
                         JS::MutableHandle<JSObject*> objp)
 {
@@ -1598,7 +1597,7 @@ NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsi
   return true;
 }
 
-static JSBool
+static bool
 NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::MutableHandle<JS::Value> vp)
 {
   JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
@@ -1940,7 +1939,7 @@ LookupNPP(NPObject *npobj)
   return entry->mNpp;
 }
 
-JSBool
+bool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
                      JS::Handle<jsid> id,  NPVariant* getPropertyResult, JS::Value *vp)
 {
@@ -2016,7 +2015,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
   return true;
 }
 
-static JSBool
+static bool
 NPObjectMember_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType type, JS::MutableHandle<JS::Value> vp)
 {
   NPObjectMemberPrivate *memberPrivate =
@@ -2114,7 +2113,7 @@ NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
 
 
   NPVariant npv;
-  JSBool ok;
+  bool ok;
   ok = npobj->_class->invoke(npobj, JSIdToNPIdentifier(memberPrivate->methodName),
                              npargs, argc, &npv);
 

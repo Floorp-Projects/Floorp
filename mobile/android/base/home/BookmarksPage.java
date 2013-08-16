@@ -230,57 +230,55 @@ public class BookmarksPage extends HomeFragment {
         TopBookmarksContextMenuInfo info = (TopBookmarksContextMenuInfo) menuInfo;
         final Activity activity = getActivity();
 
-        switch(item.getItemId()) {
-            case R.id.top_bookmarks_open_new_tab:
-            case R.id.top_bookmarks_open_private_tab: {
-                if (info.url == null) {
-                    Log.e(LOGTAG, "Can't open in new tab because URL is null");
-                    break;
+        final int itemId = item.getItemId();
+        if (itemId == R.id.top_bookmarks_open_new_tab || itemId == R.id.top_bookmarks_open_private_tab) {
+            if (info.url == null) {
+                Log.e(LOGTAG, "Can't open in new tab because URL is null");
+                return false;
+            }
+
+            int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
+            if (item.getItemId() == R.id.top_bookmarks_open_private_tab)
+                flags |= Tabs.LOADURL_PRIVATE;
+
+            Tabs.getInstance().loadUrl(info.url, flags);
+            Toast.makeText(activity, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
+            return true;
+        }
+
+        if (itemId == R.id.top_bookmarks_pin) {
+            final String url = info.url;
+            final String title = info.title;
+            final int position = info.position;
+            final Context context = getActivity().getApplicationContext();
+
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    BrowserDB.pinSite(context.getContentResolver(), url, title, position);
                 }
+            });
 
-                int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
-                if (item.getItemId() == R.id.top_bookmarks_open_private_tab)
-                    flags |= Tabs.LOADURL_PRIVATE;
+            return true;
+        }
 
-                Tabs.getInstance().loadUrl(info.url, flags);
-                Toast.makeText(activity, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
-                return true;
-            }
+        if (itemId == R.id.top_bookmarks_unpin) {
+            final int position = info.position;
+            final Context context = getActivity().getApplicationContext();
 
-            case R.id.top_bookmarks_pin: {
-                final String url = info.url;
-                final String title = info.title;
-                final int position = info.position;
-                final Context context = getActivity().getApplicationContext();
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    BrowserDB.unpinSite(context.getContentResolver(), position);
+                }
+            });
 
-                ThreadUtils.postToBackgroundThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        BrowserDB.pinSite(context.getContentResolver(), url, title, position);
-                    }
-                });
+            return true;
+        }
 
-                return true;
-            }
-
-            case R.id.top_bookmarks_unpin: {
-                final int position = info.position;
-                final Context context = getActivity().getApplicationContext();
-
-                ThreadUtils.postToBackgroundThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        BrowserDB.unpinSite(context.getContentResolver(), position);
-                    }
-                });
-
-                return true;
-            }
-
-            case R.id.top_bookmarks_edit: {
-                mPinBookmarkListener.onPinBookmark(info.position);
-                return true;
-            }
+        if (itemId == R.id.top_bookmarks_edit) {
+            mPinBookmarkListener.onPinBookmark(info.position);
+            return true;
         }
 
         return false;

@@ -12,6 +12,12 @@ namespace gl {
 
 const size_t kMAX_EXTENSION_GROUP_SIZE = 5;
 
+// ARB_ES2_compatibility is natively supported in OpenGL 4.1.
+static const unsigned int kGLCoreVersionForES2Compat = 410;
+
+// ARB_ES3_compatibility is natively supported in OpenGL 4.3.
+static const unsigned int kGLCoreVersionForES3Compat = 430;
+
 struct ExtensionGroupInfo
 {
     const char* mName;
@@ -21,6 +27,16 @@ struct ExtensionGroupInfo
 };
 
 static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
+    {
+        "XXX_depth_texture",
+        200, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::ARB_depth_texture,
+            GLContext::OES_depth_texture,
+            GLContext::Extensions_End
+        }
+    },
     {
         "XXX_draw_buffers",
         200, // OpenGL version
@@ -40,6 +56,33 @@ static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
             GLContext::EXT_draw_instanced,
             GLContext::NV_draw_instanced,
             GLContext::ANGLE_instanced_arrays,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "XXX_element_index_uint",
+        200, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::OES_element_index_uint,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "XXX_ES2_compatibility",
+        kGLCoreVersionForES2Compat,
+        200, // OpenGL ES version
+        {
+            GLContext::ARB_ES2_compatibility,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "XXX_ES3_compatibility",
+        kGLCoreVersionForES3Compat,
+        300, // OpenGL ES version
+        {
+            GLContext::ARB_ES3_compatibility,
             GLContext::Extensions_End
         }
     },
@@ -74,6 +117,18 @@ static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
         }
     },
     {
+        "XXX_get_query_object_iv",
+        200, // OpenGL version
+        0,   // OpenGL ES version
+        {
+            GLContext::Extensions_End
+        }
+        /*
+         * XXX_get_query_object_iv only provide GetQueryObjectiv provided by
+         * ARB_occlusion_query (added by OpenGL 2.0).
+         */
+    },
+    {
         "XXX_instanced_arrays",
         330, // OpenGL version
         300, // OpenGL ES version
@@ -85,12 +140,86 @@ static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
         }
     },
     {
+        "XXX_occlusion_query",
+        200, // OpenGL version
+        0,   // OpenGL ES version
+        {
+            GLContext::Extensions_End
+        }
+        // XXX_occlusion_query depend on ARB_occlusion_query (added in OpenGL 2.0)
+    },
+    {
+        "XXX_occlusion_query_boolean",
+        kGLCoreVersionForES3Compat,
+        300, // OpenGL ES version
+        {
+            GLContext::ARB_ES3_compatibility,
+            GLContext::EXT_occlusion_query_boolean,
+            GLContext::Extensions_End
+        }
+        /*
+         * XXX_occlusion_query_boolean provide ANY_SAMPLES_PASSED_CONSERVATIVE,
+         * but EXT_occlusion_query_boolean is only a OpenGL ES extension. But
+         * it is supported on desktop if ARB_ES3_compatibility because 
+         * EXT_occlusion_query_boolean (added in OpenGL ES 3.0).
+         */
+    },
+    {
+        "XXX_occlusion_query2",
+        330, // = min(330, kGLCoreVersionForES3Compat),
+        300, // OpenGL ES version
+        {
+            GLContext::ARB_occlusion_query2,
+            GLContext::ARB_ES3_compatibility,
+            GLContext::EXT_occlusion_query_boolean,
+            GLContext::Extensions_End
+        }
+        /*
+         * XXX_occlusion_query2 (add in OpenGL 3.3) provide ANY_SAMPLES_PASSED,
+         * which is provided by ARB_occlusion_query2, EXT_occlusion_query_boolean
+         * (added in OpenGL ES 3.0) and ARB_ES3_compatibility
+         */
+    },
+    {
+        "XXX_packed_depth_stencil",
+        300, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::EXT_packed_depth_stencil,
+            GLContext::OES_packed_depth_stencil,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "XXX_query_objects",
+        200, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::EXT_occlusion_query_boolean,
+            GLContext::Extensions_End
+        }
+        /*
+         * XXX_query_objects only provide entry points commonly supported by
+         * ARB_occlusion_query (added in OpenGL 2.0) and EXT_occlusion_query_boolean
+         * (added in OpenGL ES 3.0)
+         */
+    },
+    {
         "XXX_robustness",
         0,   // OpenGL version
         0,   // OpenGL ES version
         {
             GLContext::ARB_robustness,
             GLContext::EXT_robustness,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "XXX_standard_derivatives",
+        200, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::OES_standard_derivatives,
             GLContext::Extensions_End
         }
     },
@@ -105,12 +234,32 @@ static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
         }
     },
     {
+        "XXX_texture_float_linear",
+        310, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::ARB_texture_float,
+            GLContext::OES_texture_float_linear,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "XXX_texture_non_power_of_two",
         200, // OpenGL version
         300, // OpenGL ES version
         {
             GLContext::ARB_texture_non_power_of_two,
             GLContext::OES_texture_npot,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "XXX_transform_feedback",
+        300, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::EXT_transform_feedback,
+            GLContext::NV_transform_feedback,
             GLContext::Extensions_End
         }
     },

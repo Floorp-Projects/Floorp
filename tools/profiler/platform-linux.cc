@@ -30,6 +30,7 @@
 # vim: sw=2
 */
 #include <stdio.h>
+#include <math.h>
 
 #include <pthread.h>
 #include <semaphore.h>
@@ -157,8 +158,10 @@ static void ProfilerSaveSignalHandler(int signal, siginfo_t* info, void* context
 #define V8_HOST_ARCH_X64 1
 #endif
 static void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
-  if (!Sampler::GetActiveSampler())
+  if (!Sampler::GetActiveSampler()) {
+    sem_post(&sSignalHandlingDone);
     return;
+  }
 
   TickSample sample_obj;
   TickSample* sample = &sample_obj;
@@ -281,15 +284,16 @@ static void* SignalSender(void* arg) {
     // Convert ms to us and subtract 100 us to compensate delays
     // occuring during signal delivery.
     // TODO measure and confirm this.
-    const useconds_t interval =
-      SamplerRegistry::sampler->interval() * 1000 - 100;
-    //int result = usleep(interval);
-    usleep(interval);
+    int interval = floor(SamplerRegistry::sampler->interval() * 1000 + 0.5) - 100;
+    if (interval <= 0) {
+      interval = 1;
+    }
+    OS::SleepMicro(interval);
   }
   return initialize_atfork; // which is guaranteed to be NULL
 }
 
-Sampler::Sampler(int interval, bool profiling, int entrySize)
+Sampler::Sampler(double interval, bool profiling, int entrySize)
     : interval_(interval),
       profiling_(profiling),
       paused_(false),
@@ -434,4 +438,9 @@ void OS::RegisterStartHandler()
   }
 }
 #endif
+
+void OS::SleepMicro(int microseconds)
+{
+  usleep(microseconds);
+}
 

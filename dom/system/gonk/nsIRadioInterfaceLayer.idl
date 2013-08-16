@@ -79,17 +79,10 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(715c972b-97c5-48fd-a8b1-d50e6852153a)]
+[scriptable, uuid(5efcd358-080e-46d6-a7f7-4f36c204eec3)]
 interface nsIRadioInterface : nsISupports
 {
-  /**
-   * Activates or deactivates radio power.
-   */
-  void setRadioEnabled(in bool value);
-
   readonly attribute nsIRilContext rilContext;
-
-  readonly attribute nsIVoicemailInfo voicemailInfo;
 
   /**
    * PDP APIs
@@ -97,15 +90,6 @@ interface nsIRadioInterface : nsISupports
   void setupDataCallByType(in DOMString apntype);
   void deactivateDataCallByType(in DOMString apntype);
   long getDataCallStateByType(in DOMString apntype);
-  void setupDataCall(in long radioTech,
-                     in DOMString apn,
-                     in DOMString user,
-                     in DOMString passwd,
-                     in long chappap,
-                     in DOMString pdptype);
-  void deactivateDataCall(in DOMString cid,
-                          in DOMString reason);
-  void getDataCallList();
 
   void registerDataCallCallback(in nsIRILDataCallback callback);
   void unregisterDataCallCallback(in nsIRILDataCallback callback);

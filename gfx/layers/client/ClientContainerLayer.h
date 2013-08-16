@@ -171,7 +171,7 @@ public:
             transform3D.Is2D(&transform) && 
             !transform.HasNonIntegerTranslation()) {
           SetSupportsComponentAlphaChildren(
-            gfxPlatform::GetPlatform()->UsesSubpixelAATextRendering());
+            gfxPlatform::ComponentAlphaEnabled());
         }
       }
     } else {

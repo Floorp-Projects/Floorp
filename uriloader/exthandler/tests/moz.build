@@ -14,6 +14,16 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
 
-CPP_SOURCES += [
-    'WriteArgument.cpp',
+sources = [
+    'WriteArgument',
 ]
+
+CPP_SOURCES += [
+    '%s.cpp' % s for s in sources
+]
+
+bin_suffix = CONFIG['BIN_SUFFIX']
+SIMPLE_PROGRAMS += [
+    '%s%s' % (s, bin_suffix) for s in sources
+]
+

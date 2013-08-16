@@ -36,5 +36,3 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../dom/base \
 		-I$(topsrcdir)/content/xul/content/src \
 		$(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT

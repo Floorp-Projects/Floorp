@@ -19,12 +19,6 @@
 #include "prtypes.h"
 #include "nsDeque.h"
 #include "nsScanner.h"
-#include "nsHTMLTokens.h"
-#include "nsDTDUtils.h"
-
-/***************************************************************
-  Notes: 
- ***************************************************************/
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4275 )
@@ -42,33 +36,6 @@ public:
   virtual ~nsHTMLTokenizer();
 
   static uint32_t GetFlags(const nsIContentSink* aSink);
-
-protected:
-
-  nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,bool& aFlushTokens);
-  nsresult ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,bool& aFlushTokens);
-  nsresult ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  nsresult ConsumeAttributes(PRUnichar aChar, CToken* aToken, nsScanner& aScanner);
-  nsresult ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  nsresult ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  nsresult ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  nsresult ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  nsresult ConsumeText(CToken*& aToken,nsScanner& aScanner);
-  nsresult ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-
-  nsresult ScanDocStructure(bool aIsFinalChunk);
-
-  static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,nsTokenAllocator* aTokenAllocator);
-
-  nsDeque            mTokenDeque;
-  bool               mIsFinalChunk;
-  nsTokenAllocator*  mTokenAllocator;
-  // This variable saves the position of the last tag we inspected in
-  // ScanDocStructure. We start scanning the general well-formedness of the
-  // document starting at this position each time.
-  int32_t            mTokenScanPos;
-  uint32_t           mFlags;
 };
 
 #endif

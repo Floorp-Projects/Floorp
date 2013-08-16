@@ -9,7 +9,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <android/log.h>
-#include <mozilla/Util.h>
+
+#include "mozilla/Alignment.h"
 
 #include <vector>
 

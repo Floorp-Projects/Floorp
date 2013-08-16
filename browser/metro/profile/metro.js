@@ -12,7 +12,12 @@ pref("devtools.errorconsole.enabled", true);
 #endif
 
 // Automatically submit crash reports
+#ifdef RELEASE_BUILD
 pref("app.crashreporter.autosubmit", false);
+#else
+// For Nightly and Aurora we turn this on by default
+pref("app.crashreporter.autosubmit", true);
+#endif
 // Has the user been prompted about crash reporting?
 pref("app.crashreporter.prompted", false);
 

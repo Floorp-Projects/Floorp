@@ -9,7 +9,7 @@
 
 #include <stddef.h>
 
-#include "jsgc.h"
+struct JSRuntime;
 
 namespace js {
 namespace gc {

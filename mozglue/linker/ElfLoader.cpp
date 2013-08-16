@@ -541,6 +541,7 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
    *   ...
    *   envp[n] (likewise)
    *   NULL
+   *   ... (more NULLs on some platforms such as Android 4.3)
    *   auxv[0] (first ELF auxiliary vector)
    *   auxv[1] (second ELF auxiliary vector)
    *   ...
@@ -587,6 +588,11 @@ ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(NULL)
   /* Finally, scan forward to find the last environment variable pointer and
    * thus the first auxiliary vector. */
   while (*scan++);
+
+  /* Some platforms have more NULLs here, so skip them if we encounter them */
+  while (!*scan)
+    scan++;
+
   AuxVector *auxv = reinterpret_cast<AuxVector *>(scan);
 
   /* The two values of interest in the auxiliary vectors are AT_PHDR and

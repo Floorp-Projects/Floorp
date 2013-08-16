@@ -44,8 +44,5 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/mac
 endif
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-
-DEFINES += -D_IMPL_NS_LAYOUT

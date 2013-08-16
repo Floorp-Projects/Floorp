@@ -3005,9 +3005,16 @@ VariablesView.isPrimitive = function(aDescriptor) {
     return true;
   }
 
-  // For convenience, undefined, null and long strings are considered types.
+  // For convenience, undefined, null, Infinity, -Infinity, NaN, -0, and long
+  // strings are considered types.
   let type = grip.type;
-  if (type == "undefined" || type == "null" || type == "longString") {
+  if (type == "undefined" ||
+      type == "null" ||
+      type == "Infinity" ||
+      type == "-Infinity" ||
+      type == "NaN" ||
+      type == "-0" ||
+      type == "longString") {
     return true;
   }
 
@@ -3054,9 +3061,12 @@ VariablesView.isFalsy = function(aDescriptor) {
     return !grip;
   }
 
-  // For convenience, undefined and null are both considered types.
+  // For convenience, undefined, null, NaN, and -0 are all considered types.
   let type = grip.type;
-  if (type == "undefined" || type == "null") {
+  if (type == "undefined" ||
+      type == "null" ||
+      type == "NaN" ||
+      type == "-0") {
     return true;
   }
 
@@ -3082,16 +3092,38 @@ VariablesView.isVariable = function(aValue) {
  *         The value's grip.
  */
 VariablesView.getGrip = function(aValue) {
-  if (aValue === undefined) {
-    return { type: "undefined" };
+  switch (typeof aValue) {
+    case "boolean":
+    case "string":
+      return aValue;
+    case "number":
+      if (aValue === Infinity) {
+        return { type: "Infinity" };
+      } else if (aValue === -Infinity) {
+        return { type: "-Infinity" };
+      } else if (Number.isNaN(aValue)) {
+        return { type: "NaN" };
+      } else if (1 / aValue === -Infinity) {
+        return { type: "-0" };
+      }
+      return aValue;
+    case "undefined":
+      // document.all is also "undefined"
+      if (aValue === undefined) {
+        return { type: "undefined" };
+      }
+    case "object":
+      if (aValue === null) {
+        return { type: "null" };
+      }
+    case "function":
+      return { type: "object",
+               class: WebConsoleUtils.getObjectClassName(aValue) };
+    default:
+      Cu.reportError("Failed to provide a grip for value of " + typeof value +
+                     ": " + aValue);
+      return null;
   }
-  if (aValue === null) {
-    return { type: "null" };
-  }
-  if (typeof aValue == "object" || typeof aValue == "function") {
-    return { type: "object", class: WebConsoleUtils.getObjectClassName(aValue) };
-  }
-  return aValue;
 };
 
 /**
@@ -3108,27 +3140,33 @@ VariablesView.getString = function(aGrip, aConciseFlag) {
   if (aGrip && typeof aGrip == "object") {
     switch (aGrip.type) {
       case "undefined":
-        return "undefined";
       case "null":
-        return "null";
+      case "NaN":
+      case "Infinity":
+      case "-Infinity":
+      case "-0":
+        return aGrip.type;
       case "longString":
         return "\"" + aGrip.initial + "\"";
       default:
         if (!aConciseFlag) {
           return "[" + aGrip.type + " " + aGrip.class + "]";
-        } else {
-          return aGrip.class;
         }
-    }
-  } else {
-    switch (typeof aGrip) {
-      case "string":
-        return "\"" + aGrip + "\"";
-      case "boolean":
-        return aGrip ? "true" : "false";
+        return aGrip.class;
     }
   }
-  return aGrip + "";
+  switch (typeof aGrip) {
+    case "string":
+      return "\"" + aGrip + "\"";
+    case "boolean":
+      return aGrip ? "true" : "false";
+    case "number":
+      if (!aGrip && 1 / aGrip === -Infinity) {
+        return "-0";
+      }
+    default:
+      return aGrip + "";
+  }
 };
 
 /**
@@ -3146,20 +3184,25 @@ VariablesView.getClass = function(aGrip) {
         return "token-undefined";
       case "null":
         return "token-null";
+      case "Infinity":
+      case "-Infinity":
+      case "NaN":
+      case "-0":
+        return "token-number";
       case "longString":
         return "token-string";
     }
-  } else {
-    switch (typeof aGrip) {
-      case "string":
-        return "token-string";
-      case "boolean":
-        return "token-boolean";
-      case "number":
-        return "token-number";
-    }
   }
-  return "token-other";
+  switch (typeof aGrip) {
+    case "string":
+      return "token-string";
+    case "boolean":
+      return "token-boolean";
+    case "number":
+      return "token-number";
+    default:
+      return "token-other";
+  }
 };
 
 /**

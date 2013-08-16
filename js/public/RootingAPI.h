@@ -10,9 +10,9 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TypeTraits.h"
 
-#include "js/Utility.h"
-
 #include "jspubtd.h"
+
+#include "js/Utility.h"
 
 /*
  * Moving GC Stack Rooting

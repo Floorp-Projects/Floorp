@@ -10,7 +10,7 @@
 #include "nsSVGElement.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsError.h"
-#include "nsContentUtils.h"
+#include "nsContentUtils.h" // for NS_ENSURE_FINITE
 
 // See the architecture comment in DOMSVGAnimatedNumberList.h.
 

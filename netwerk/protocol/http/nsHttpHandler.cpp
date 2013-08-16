@@ -257,11 +257,12 @@ nsHttpHandler::Init()
     if (NS_FAILED(rv))
         return rv;
 
-    mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIIOService> service = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("unable to continue without io service");
         return rv;
     }
+    mIOService = new nsMainThreadPtrHolder<nsIIOService>(service);
 
     if (IsNeckoChild())
         NeckoChild::InitNeckoChild();
@@ -341,7 +342,8 @@ nsHttpHandler::Init()
                                   static_cast<nsISupports*>(static_cast<void*>(this)),
                                   NS_HTTP_STARTUP_TOPIC);
 
-    mObserverService = services::GetObserverService();
+    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+    mObserverService = new nsMainThreadPtrHolder<nsIObserverService>(obsService);
     if (mObserverService) {
         mObserverService->AddObserver(this, "profile-change-net-teardown", true);
         mObserverService->AddObserver(this, "profile-change-net-restore", true);
@@ -475,8 +477,11 @@ nsHttpHandler::GetStreamConverterService(nsIStreamConverterService **result)
 {
     if (!mStreamConvSvc) {
         nsresult rv;
-        mStreamConvSvc = do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIStreamConverterService> service =
+            do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv))
+            return rv;
+        mStreamConvSvc = new nsMainThreadPtrHolder<nsIStreamConverterService>(service);
     }
     *result = mStreamConvSvc;
     NS_ADDREF(*result);
@@ -486,16 +491,20 @@ nsHttpHandler::GetStreamConverterService(nsIStreamConverterService **result)
 nsISiteSecurityService*
 nsHttpHandler::GetSSService()
 {
-    if (!mSSService)
-      mSSService = do_GetService(NS_SSSERVICE_CONTRACTID);
+    if (!mSSService) {
+        nsCOMPtr<nsISiteSecurityService> service = do_GetService(NS_SSSERVICE_CONTRACTID);
+        mSSService = new nsMainThreadPtrHolder<nsISiteSecurityService>(service);
+    }
     return mSSService;
 }
 
 nsICookieService *
 nsHttpHandler::GetCookieService()
 {
-    if (!mCookieService)
-        mCookieService = do_GetService(NS_COOKIESERVICE_CONTRACTID);
+    if (!mCookieService) {
+        nsCOMPtr<nsICookieService> service = do_GetService(NS_COOKIESERVICE_CONTRACTID);
+        mCookieService = new nsMainThreadPtrHolder<nsICookieService>(service);
+    }
     return mCookieService;
 }
 

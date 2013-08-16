@@ -18,8 +18,8 @@ PARSER_SRCS = \
 
 SDK_BINARY = \
   $(PARSER_SRCS) \
-  xpidllex.py \
-  xpidlyacc.py \
+  $(IDL_PARSER_CACHE_DIR)/xpidllex.py \
+  $(IDL_PARSER_CACHE_DIR)/xpidlyacc.py \
   $(NULL)
 
 SDK_BINARY_TARGET = xpidl-parser
@@ -39,13 +39,13 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 # Generate the PLY lexer and parser.
-xpidllex.py: $(PARSER_SRCS) $(PLY_FILES)
+$(IDL_PARSER_CACHE_DIR)/xpidllex.py: $(PARSER_SRCS) $(PLY_FILES)
 	$(PYTHON_PATH) \
 	  $(PLY_INCLUDE) \
-	  $(srcdir)/header.py --cachedir=. --regen
+	  $(srcdir)/header.py --cachedir=$(IDL_PARSER_CACHE_DIR) --regen
 
 # generating xpidllex.py generates xpidlyacc.py too
-xpidlyacc.py: xpidllex.py
+$(IDL_PARSER_CACHE_DIR)/xpidlyacc.py: $(IDL_PARSER_CACHE_DIR)/xpidllex.py
 
 check::
 	$(PYTHON_PATH) \
@@ -53,10 +53,12 @@ check::
 	  -I. \
 	  $(srcdir)/runtests.py
 
-GARBAGE += \
+garbage_files := \
   xpidllex.py \
   xpidllex.pyc \
   xpidlyacc.py \
   xpidlyacc.pyc \
   xpidl_debug \
   $(NULL)
+
+GARBAGE += $(addprefix $(IDL_PARSER_CACHE_DIR)/,$(garbage_files))

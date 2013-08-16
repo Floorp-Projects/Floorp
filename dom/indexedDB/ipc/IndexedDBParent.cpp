@@ -18,7 +18,6 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/unused.h"
 #include "mozilla/Util.h"
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
 
 #include "AsyncConnectionHelper.h"

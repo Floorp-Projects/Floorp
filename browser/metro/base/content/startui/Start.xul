@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://browser/skin/platform.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+%globalDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+%browserDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
+#ifdef MOZ_SERVICES_SYNC
+<!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+%syncBrandDTD;
+<!ENTITY % syncDTD SYSTEM "chrome://browser/locale/sync.dtd">
+%syncDTD;
+#endif
+]>
+
+<!-- we're using html here so we get anonymous scrollbars on the browser element -->
+<html:html id="startui-page"
+           xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+           xmlns:html="http://www.w3.org/1999/xhtml">
+  <html:body id="startui-body" onload="StartUI.init();" onunload="StartUI.uninit();">
+
+  <script type="application/javascript" src="chrome://browser/content/startui-scripts.js"/>
+
+  <!-- mimic broadcasts in browser.xul. note browser.xul broadcasters do not propagate down here! -->
+  <broadcasterset id="broadcasterset">
+    <broadcaster id="bcast_preciseInput" input="precise"/>
+    <broadcaster id="bcast_windowState" viewstate=""/>
+  </broadcasterset>
+
+  <hbox id="start-container" observes="bcast_windowState">
+  <!-- the start-container element has a max-height set in StartUI.js -->
+      <vbox id="start-topsites" class="meta-section" expanded="true">
+        <label class="meta-section-title wide-title" value="&topSitesHeader.label;"/>
+        <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-topsites')">
+          &narrowTopSitesHeader.label;
+        </html:div>
+        <richgrid id="start-topsites-grid" set-name="topSites" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
+      </vbox>
+
+      <vbox id="start-bookmarks" class="meta-section">
+        <label class="meta-section-title wide-title" value="&bookmarksHeader.label;"/>
+        <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-bookmarks')">
+          &narrowBookmarksHeader.label;
+        </html:div>
+        <richgrid id="start-bookmarks-grid" set-name="bookmarks" seltype="multiple" flex="1"/>
+      </vbox>
+
+      <vbox id="start-history" class="meta-section">
+        <label class="meta-section-title wide-title" value="&recentHistoryHeader.label;"/>
+        <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-history')">
+          &narrowRecentHistoryHeader.label;
+        </html:div>
+        <richgrid id="start-history-grid" set-name="recentHistory" seltype="multiple" flex="1"/>
+      </vbox>
+
+#ifdef MOZ_SERVICES_SYNC
+      <vbox id="start-remotetabs" class="meta-section">
+        <label class="meta-section-title wide-title" value="&remoteTabsHeader.label;"/>
+        <html:div id="snappedRemoteTabsLabel" class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-remotetabs')">
+          &narrowRemoteTabsHeader.label;
+        </html:div>
+        <richgrid id="start-remotetabs-grid" set-name="remoteTabs" seltype="multiple" flex="1"/>
+      </vbox>
+#endif
+  </hbox>
+  </html:body>
+</html:html>

@@ -27,12 +27,12 @@ function run_test()
 
 function test_cached_original_sources()
 {
-  writeFile("temp.foobar", "initial content");
+  writeFile("temp.js", "initial content");
 
   gClient.addOneTimeListener("newSource", onNewSource);
 
   let node = new SourceNode(1, 0,
-                            getFileUrl("temp.foobar"),
+                            getFileUrl("temp.js"),
                             "function funcFromTemp() {}\n");
   let { code, map } = node.toStringWithSourceMap({
     file: "abc.js"
@@ -52,7 +52,7 @@ function onNewSource(aEvent, aPacket) {
     do_check_eq(aResponse.source, "initial content",
                 "The correct source content should be sent");
 
-    writeFile("temp.foobar", "new content");
+    writeFile("temp.js", "new content");
 
     sourceClient.source(function (aResponse) {
       do_check_true(!aResponse.error,
@@ -60,7 +60,7 @@ function onNewSource(aEvent, aPacket) {
       do_check_eq(aResponse.source, "new content",
                   "The correct source content should not be cached, so we should get the new content");
 
-      do_get_file("temp.foobar").remove(false);
+      do_get_file("temp.js").remove(false);
       finishClient(gClient);
     });
   });

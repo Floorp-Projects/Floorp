@@ -157,10 +157,7 @@ public:
     mIterating = false;
   }
 
-  virtual nsIntRect GetTileRect() MOZ_OVERRIDE
-  {
-    return mTexImage->GetTileRect();
-  }
+  virtual nsIntRect GetTileRect() MOZ_OVERRIDE;
 
   virtual size_t GetTileCount() MOZ_OVERRIDE
   {
@@ -249,7 +246,7 @@ public:
   SharedTextureHostOGL(uint64_t aID,
                        TextureFlags aFlags,
                        gl::GLContext::SharedTextureShareType aShareType,
-                     gl::SharedTextureHandle aSharedhandle,
+                       gl::SharedTextureHandle aSharedhandle,
                        gfx::IntSize aSize,
                        bool inverted);
 
@@ -397,10 +394,7 @@ public:
     mIterating = false;
   }
 
-  nsIntRect GetTileRect() MOZ_OVERRIDE
-  {
-    return mTexture->GetTileRect();
-  }
+  nsIntRect GetTileRect() MOZ_OVERRIDE;
 
   size_t GetTileCount() MOZ_OVERRIDE
   {

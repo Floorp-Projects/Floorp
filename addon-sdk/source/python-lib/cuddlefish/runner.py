@@ -35,7 +35,7 @@ RUN_TIMEOUT = 1.5 * 60 * 60 # 1.5 Hour
 # Maximum time we'll wait for tests to emit output, in seconds.
 # The purpose of this timeout is to recover from hangs.  It should be longer
 # than the amount of time any test takes to report results.
-OUTPUT_TIMEOUT = 60 # one minute
+OUTPUT_TIMEOUT = 60 * 5 # five minutes
 
 def follow_file(filename):
     """

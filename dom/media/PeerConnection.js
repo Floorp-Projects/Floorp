@@ -370,7 +370,17 @@ RTCPeerConnection.prototype = {
     }
     function mustValidateServer(server) {
       let url = nicerNewURI(server.url, errorMsg);
-      if (!(url.scheme in { stun:1, stuns:1, turn:1, turns:1 })) {
+      if (url.scheme in { turn:1, turns:1 }) {
+        if (!server.username) {
+          throw new Components.Exception(errorMsg + " - missing username: " +
+                                         server.url, Cr.NS_ERROR_MALFORMED_URI);
+        }
+        if (!server.credential) {
+          throw new Components.Exception(errorMsg + " - missing credential: " +
+                                         server.url, Cr.NS_ERROR_MALFORMED_URI);
+        }
+      }
+      else if (!(url.scheme in { stun:1, stuns:1 })) {
         throw new Components.Exception(errorMsg + " - improper scheme: " + url.scheme,
                                        Cr.NS_ERROR_MALFORMED_URI);
       }

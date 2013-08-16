@@ -114,8 +114,6 @@ public:
   // by sending gecko events and forwarding these input events to its
   // GestureRecognizer to be processed into more complex input events
   // (tap, rightTap, rotate, etc)
-  HRESULT OnPointerWheelChanged(ICoreWindow* aSender,
-                                IPointerEventArgs* aArgs);
   HRESULT OnPointerPressed(ICoreWindow* aSender,
                            IPointerEventArgs* aArgs);
   HRESULT OnPointerReleased(ICoreWindow* aSender,
@@ -243,7 +241,6 @@ private:
   EventRegistrationToken mTokenPointerMoved;
   EventRegistrationToken mTokenPointerEntered;
   EventRegistrationToken mTokenPointerExited;
-  EventRegistrationToken mTokenPointerWheelChanged;
 
   // When we register ourselves to handle edge gestures, we receive a
   // token. To we unregister ourselves, we must use the token we received.

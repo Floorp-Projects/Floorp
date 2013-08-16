@@ -3254,12 +3254,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
-@media (min-resolution: 2dppx) {
-  #plugins-notification-icon {
-    list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);
-  }
-}
-
 #mixed-content-blocked-notification-icon {
   list-style-image: url(chrome://browser/skin/mixed-content-blocked-16.png);
 }

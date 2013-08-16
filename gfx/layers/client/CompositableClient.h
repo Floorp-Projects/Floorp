@@ -124,18 +124,18 @@ public:
   virtual void RemoveTextureClient(TextureClient* aClient);
 
   /**
-   * A hook for the Compositable to execute whatever it held off for next trasanction.
+   * A hook for the Compositable to execute whatever it held off for next transaction.
    */
   virtual void OnTransaction();
 
   /**
    * A hook for the when the Compositable is detached from it's layer.
    */
-  virtual void Detach() {}
+  virtual void OnDetach() {}
 
 protected:
   // The textures to destroy in the next transaction;
-  std::vector<uint64_t> mTexturesToRemove;
+  nsTArray<uint64_t> mTexturesToRemove;
   uint64_t mNextTextureID;
   CompositableChild* mCompositableChild;
   CompositableForwarder* mForwarder;

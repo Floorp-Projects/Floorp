@@ -219,7 +219,7 @@ DocumentInfoHashtableTraverser(nsIURI* key,
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(userArg);
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mDocumentTable value");
-  cb->NoteXPCOMChild(static_cast<nsIScriptGlobalObjectOwner*>(di));
+  cb->NoteXPCOMChild(di);
   return PL_DHASH_NEXT;
 }
 
@@ -1078,9 +1078,9 @@ nsBindingManager::ClearInsertionPointsRecursively(nsIContent* aContent)
     static_cast<XBLChildrenElement*>(aContent)->ClearInsertedChildrenAndInsertionParents();
   }
 
-  uint32_t childCount = aContent->GetChildCount();
-  for (uint32_t c = 0; c < childCount; c++) {
-    ClearInsertionPointsRecursively(aContent->GetChildAt(c));
+  for (nsIContent* child = aContent->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    ClearInsertionPointsRecursively(child);
   }
 }
 

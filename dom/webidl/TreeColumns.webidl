@@ -5,7 +5,7 @@
 interface MozTreeBoxObject;
 interface MozTreeColumn;
 
-[ChromeOnly]
+[Func="IsChromeOrXBL"]
 interface TreeColumns {
   /**
    * The tree widget for these columns.

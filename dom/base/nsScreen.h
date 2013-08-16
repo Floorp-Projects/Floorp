@@ -6,19 +6,14 @@
 #define nsScreen_h___
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/EventHandlerBinding.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Hal.h"
 #include "nsIDOMScreen.h"
-#include "nsISupports.h"
-#include "nsIScriptContext.h"
 #include "nsCOMPtr.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsRect.h"
 
-class nsIDocShell;
 class nsDeviceContext;
 
 // Script "screen" object

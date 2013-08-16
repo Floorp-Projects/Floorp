@@ -8,6 +8,59 @@ This page lists more theoretical in-depth articles about the SDK.
 
 <hr>
 
+<h2><a name="contributors-guide">Contributor's Guide</a></h2>
+
+<table class="catalog">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+  <tr>
+    <td>
+      <h4><a href="dev-guide/guides/contributors-guide/getting-started.html">Getting Started</a></h4>
+      Learn how to contribute to the SDK: getting the code, opening/taking a
+      bug, filing a patch, getting reviews, and getting help.
+    </td>
+
+    <td>
+      <h4><a href="dev-guide/guides/contributors-guide/private-properties.html">Private Properties</a></h4>
+      Learn how private properties can be implemented in JavaScript using
+      prefixes, closures, and WeakMaps, and how the SDK supports private
+      properties by using namespaces (which are a generalization of WeakMaps).
+    </td>
+
+  </tr>
+  <tr>
+    <td>
+      <h4><a href="dev-guide/guides/contributors-guide/modules.html">Modules</a></h4>
+      Learn about the module system used by the SDK (which is based on the
+      CommonJS specification), how sandboxes and compartments can be used to
+      improve security, and about the built-in SDK module loader, known as
+      Cuddlefish.
+    </td>
+
+    <td>
+      <h4><a href="dev-guide/guides/contributors-guide/content-processes.html">Content Processes</a></h4>
+      The SDK was designed to work in an environment where the code to
+      manipulate web content runs in a different process from the main add-on
+      code. This article highlights the main features of that design.
+    </td>
+
+  </tr>
+  <tr>
+    <td>
+      <h4><a href="dev-guide/guides/contributors-guide/classes-and-inheritance.html">Classes and Inheritance</a></h4>
+      Learn how classes and inheritance can be implemented in JavaScript, using
+      constructors and prototypes, and about the helper functions provided by
+      the SDK to simplify this.
+    </td>
+
+    <td>
+    </td>
+
+  </tr>
+</table>
+
 <h2><a name="sdk-infrastructure">SDK Infrastructure</a></h2>
 
 <table class="catalog">

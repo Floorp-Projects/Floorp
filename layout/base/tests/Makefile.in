@@ -141,6 +141,7 @@ MOCHITEST_FILES =	\
 		test_bug770106.html \
 		test_maxLineBoxWidth.html \
 		test_remote_frame.html \
+		test_remote_passpointerevents.html \
 		test_bug842853.html \
 		test_bug842853-2.html \
 		  file_bug842853.sjs \
