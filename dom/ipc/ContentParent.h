@@ -425,6 +425,9 @@ private:
 
     virtual bool RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsState) MOZ_OVERRIDE;
 
+    virtual bool RecvKeywordToURI(const nsCString& aKeyword, OptionalInputStreamParams* aPostData,
+                                  OptionalURIParams* aURI);
+
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
     // If you add strong pointers to cycle collected objects here, be sure to
