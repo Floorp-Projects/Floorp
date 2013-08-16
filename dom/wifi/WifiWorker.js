@@ -2880,7 +2880,7 @@ WifiWorker.prototype = {
             self._stateRequests[0].callback.call(self, self._stateRequests[0].enabled);
           } else {
             WifiManager.setWifiEnabled(self._stateRequests[0].enabled,
-                                       self._setWifiEnabledCallback.bind(this));
+                                       self._setWifiEnabledCallback.bind(self));
           }
           timer = null;
         };
