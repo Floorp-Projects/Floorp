@@ -3170,8 +3170,11 @@
       <handler event="overflow"><![CDATA[
         if (event.detail == 0)
           return; // Ignore vertical events
-
         var tabs = document.getBindingParent(this);
+        var numberOfTabs = tabs.tabbrowser.visibleTabs.length;
+        if (numberOfTabs == 1)
+          return;
+
         tabs.setAttribute("overflow", "true");
         tabs._positionPinnedTabs();
         tabs._handleTabSelect(false);
@@ -3729,12 +3732,14 @@
 
               TabsInTitlebar.updateAppearance();
 
-              var width = this.mTabstrip.boxObject.width;
-              if (width != this.mTabstripWidth) {
-                this.adjustTabstrip();
-                this._fillTrailingGap();
-                this._handleTabSelect();
-                this.mTabstripWidth = width;
+              if (this.tabbrowser.visibleTabs.length > 1) {
+                var width = this.mTabstrip.boxObject.width;
+                if (width != this.mTabstripWidth) {
+                  this.adjustTabstrip();
+                  this._fillTrailingGap();
+                  this._handleTabSelect();
+                  this.mTabstripWidth = width;
+                }
               }
 
               this.tabbrowser.updateWindowResizers();
