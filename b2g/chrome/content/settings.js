@@ -206,6 +206,8 @@ let AdbController = {
   locked: undefined,
   remoteDebuggerEnabled: undefined,
   lockEnabled: undefined,
+  disableAdbTimer: null,
+  disableAdbTimeoutHours: 12,
 
   debug: function(str) {
     dump("AdbController: " + str + "\n");
@@ -233,6 +235,57 @@ let AdbController = {
       this.debug("setRemoteDebuggerState = " + this.remoteDebuggerEnabled);
     }
     this.updateState();
+  },
+
+  startDisableAdbTimer: function() {
+    if (this.disableAdbTimer) {
+      this.disableAdbTimer.cancel();
+    } else {
+      this.disableAdbTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      try {
+        this.disableAdbTimeoutHours =
+          Services.prefs.getIntPref("b2g.adb.timeout-hours");
+      } catch (e) {
+        // This happens if the pref doesn't exist, in which case
+        // disableAdbTimeoutHours will still be set to the default.
+      }
+    }
+    if (this.disableAdbTimeoutHours <= 0) {
+      if (this.DEBUG) {
+        this.debug("Timer to disable ADB not started due to zero timeout");
+      }
+      return;
+    }
+
+    if (this.DEBUG) {
+      this.debug("Starting timer to disable ADB in " +
+                 this.disableAdbTimeoutHours + " hours");
+    }
+    let timeoutMilliseconds = this.disableAdbTimeoutHours * 60 * 60 * 1000;
+    this.disableAdbTimer.initWithCallback(this, timeoutMilliseconds,
+                                          Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  stopDisableAdbTimer: function() {
+    if (this.DEBUG) {
+      this.debug("Stopping timer to disable ADB");
+    }
+    if (this.disableAdbTimer) {
+      this.disableAdbTimer.cancel();
+      this.disableAdbTimer = null;
+    }
+  },
+
+  notify: function(aTimer) {
+    if (aTimer == this.disableAdbTimer) {
+      this.disableAdbTimer = null;
+      // The following dump will be the last thing that shows up in logcat,
+      // and will at least give the user a clue about why logcat was
+      // disconnected, if the user happens to be using logcat.
+      dump("AdbController: ADB timer expired - disabling ADB\n");
+      navigator.mozSettings.createLock().set(
+        {'devtools.debugger.remote-enabled': false});
+    }
   },
 
   updateState: function() {
@@ -263,6 +316,7 @@ let AdbController = {
     }
     let enableAdb = this.remoteDebuggerEnabled &&
       !(this.lockEnabled && this.locked);
+    let useDisableAdbTimer = true;
     try {
       if (Services.prefs.getBoolPref("marionette.defaultPrefs.enabled")) {
         // Marionette is enabled. Marionette requires that adb be on (and also
@@ -270,6 +324,7 @@ let AdbController = {
         // is enabled also implies that we're doing a non-production build, so
         // we want adb enabled all of the time.
         enableAdb = true;
+        useDisableAdbTimer = false;
       }
     } catch (e) {
       // This means that the pref doesn't exist. Which is fine. We just leave
@@ -308,6 +363,13 @@ let AdbController = {
         libcutils.property_set("persist.sys.usb.config", newConfig);
       } catch(e) {
         dump("Error configuring adb: " + e);
+      }
+    }
+    if (useDisableAdbTimer) {
+      if (enableAdb) {
+        this.startDisableAdbTimer();
+      } else {
+        this.stopDisableAdbTimer();
       }
     }
   }
