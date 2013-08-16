@@ -36,6 +36,7 @@ MOCHITEST_FILES = \
         test_offline_gzip.html \
         test_offlineNotification.html \
         video.ogg \
+        offlineByDefault.js \
         $(NULL)
 
 # test_contextmenu.html and test_contextmenu_input are disabled on Linux due to bug 513558

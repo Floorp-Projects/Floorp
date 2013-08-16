@@ -818,6 +818,25 @@ CodeGenerator::visitOsiPoint(LOsiPoint *lir)
     LSafepoint *safepoint = lir->associatedSafepoint();
     JS_ASSERT(!safepoint->osiCallPointOffset());
     safepoint->setOsiCallPointOffset(osiCallPointOffset);
+
+#ifdef DEBUG
+    // There should be no movegroups or other instructions between
+    // an instruction and its OsiPoint. This is necessary because
+    // we use the OsiPoint's snapshot from within VM calls.
+    for (LInstructionReverseIterator iter(current->rbegin(lir)); iter != current->rend(); iter++) {
+        if (*iter == lir || iter->isNop())
+            continue;
+        JS_ASSERT(!iter->isMoveGroup());
+        JS_ASSERT(iter->safepoint() == safepoint);
+        break;
+    }
+#endif
+
+#ifdef CHECK_OSIPOINT_REGISTERS
+    if (shouldVerifyOsiPointRegs(safepoint))
+        verifyOsiPointRegs(safepoint);
+#endif
+
     return true;
 }
 
@@ -2716,6 +2735,20 @@ CodeGenerator::generateBody()
                 if (!markArgumentSlots(iter->safepoint()))
                     return false;
             }
+
+#ifdef CHECK_OSIPOINT_REGISTERS
+            if (iter->safepoint() && shouldVerifyOsiPointRegs(iter->safepoint())) {
+                // Set checkRegs to 0. If we perform a VM call, the instruction
+                // will set it to 1.
+                GeneralRegisterSet allRegs(GeneralRegisterSet::All());
+                Register scratch = allRegs.takeAny();
+                masm.push(scratch);
+                masm.loadJitActivation(scratch);
+                Address checkRegs(scratch, JitActivation::offsetOfCheckRegs());
+                masm.store32(Imm32(0), checkRegs);
+                masm.pop(scratch);
+            }
+#endif
 
             if (!callTraceLIR(i, *iter))
                 return false;

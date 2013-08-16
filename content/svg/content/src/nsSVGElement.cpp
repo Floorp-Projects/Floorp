@@ -666,7 +666,7 @@ nsSVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsIAtom* aName,
       nsEventListenerManager* manager = GetListenerManager(false);
       if (manager) {
         nsIAtom* eventName = GetEventNameForAttr(aName);
-        manager->RemoveEventHandler(eventName);
+        manager->RemoveEventHandler(eventName, EmptyString());
       }
       return;
     }
