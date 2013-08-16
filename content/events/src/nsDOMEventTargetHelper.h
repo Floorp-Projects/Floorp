@@ -168,12 +168,21 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
 #define IMPL_EVENT_HANDLER(_event)                                        \
   inline mozilla::dom::EventHandlerNonNull* GetOn##_event()               \
   {                                                                       \
-    return GetEventHandler(nsGkAtoms::on##_event);                        \
+    if (NS_IsMainThread()) {                                              \
+      return GetEventHandler(nsGkAtoms::on##_event, EmptyString());       \
+    }                                                                     \
+    return GetEventHandler(nullptr, NS_LITERAL_STRING(#_event));          \
   }                                                                       \
   inline void SetOn##_event(mozilla::dom::EventHandlerNonNull* aCallback, \
                             mozilla::ErrorResult& aRv)                    \
   {                                                                       \
-    SetEventHandler(nsGkAtoms::on##_event, aCallback, aRv);               \
+    if (NS_IsMainThread()) {                                              \
+      SetEventHandler(nsGkAtoms::on##_event, EmptyString(),               \
+                      aCallback, aRv);                                    \
+    } else {                                                              \
+      SetEventHandler(nullptr, NS_LITERAL_STRING(#_event),                \
+                      aCallback, aRv);                                    \
+    }                                                                     \
   }
 
 /* Use this macro to declare functions that forward the behavior of this
