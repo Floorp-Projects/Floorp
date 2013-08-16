@@ -1110,9 +1110,6 @@
     <svg:clipPath id="tab-curve-clip-path-end" clipPathUnits="objectBoundingBox">
       <svg:path d="m 0,0.0625 -0.05,0 0,0.938 1,0 0,-0.028 C 0.67917542,0.95840561 0.56569036,0.81970962 0.51599998,0.5625 0.48279998,0.3905 0.465,0.0659 0,0.0625 z"/>
     </svg:clipPath>
-    <svg:clipPath id="tab-clip-path-outer" clipPathUnits="objectBoundingBox">
-      <svg:path d="m 0.1894,0 0,0.4194 C 0.1742,0.5484 0.1667,0.6774 0.1364,0.7903 0.1123,0.8935 0,0.9032 0,0.9032 l 0,0.0968 1,0 0,-0.0968 c 0,0 -0.1121,0 -0.1364,-0.1129 C 0.8333,0.6774 0.8258,0.5452 0.8106,0.4194 l 0,-0.4194 z"/>
-    </svg:clipPath>
 
 #ifndef XP_UNIX
     <svg:clipPath id="windows-keyhole-forward-clip-path" clipPathUnits="objectBoundingBox">
