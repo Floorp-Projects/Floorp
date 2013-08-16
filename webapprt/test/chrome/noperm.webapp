@@ -1,0 +1,5 @@
+{
+  "name": "No Permissions Test Webapp",
+  "description": "A webapp for testing permission installation.",
+  "launch_path": "/webapprtChrome/webapprt/test/chrome/noperm.html"
+}
