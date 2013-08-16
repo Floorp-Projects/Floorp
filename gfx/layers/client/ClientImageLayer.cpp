@@ -17,7 +17,8 @@ class ClientImageLayer : public ImageLayer,
                          public ClientLayer {
 public:
   ClientImageLayer(ClientLayerManager* aLayerManager)
-    : ImageLayer(aLayerManager, static_cast<ClientLayer*>(this))
+    : ImageLayer(aLayerManager,
+                 static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
     , mImageClientTypeContainer(BUFFER_UNKNOWN)
   {
     MOZ_COUNT_CTOR(ClientImageLayer);
