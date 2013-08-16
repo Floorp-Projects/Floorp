@@ -7,7 +7,7 @@
 #ifndef jit_LIR_Common_h
 #define jit_LIR_Common_h
 
-#include "RangeAnalysis.h"
+#include "jit/RangeAnalysis.h"
 #include "jit/shared/Assembler-shared.h"
 
 // This file declares LIR instructions that are common to every platform.
