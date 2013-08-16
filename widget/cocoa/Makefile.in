@@ -53,6 +53,7 @@ CMMSRCS = \
   GfxInfo.mm \
   WidgetTraceEvent.mm \
   NativeKeyBindings.mm \
+  nsColorPicker.mm \
   $(NULL)
 
 ifeq (x86_64,$(TARGET_CPU))
