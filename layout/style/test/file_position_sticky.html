@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=886646
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    #scroller {
+      width: 100px;
+      height: 100px;
+      padding: 10px;
+      border: 10px solid black;
+      margin: 10px;
+      overflow: hidden;
+    }
+    #container {
+      width: 50px;
+      height: 50px;
+    }
+    #sticky {
+      position: sticky;
+      width: 10px;
+      height: 10px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+<div id="display">
+  <div id="scroller">
+    <div id="container">
+      <div id="sticky"></div>
+    </div>
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 886646 - sticky positioning offsets **/
+
+// Use "is()", "ok()", and "todo()" from parent document.
+var is = parent.is;
+var ok = parent.ok;
+var todo = parent.todo;
+
+// Test that percentage sticky offsets are computed in terms of the
+// scroll container's content box
+var offsets = {
+  "top":    10,
+  "left":   20,
+  "bottom": 30,
+  "right":  40,
+};
+var scroller = document.getElementById("scroller");
+var container = document.getElementById("container");
+var sticky = document.getElementById("sticky");
+var cs = getComputedStyle(sticky, "");
+
+for (var prop in offsets) {
+  sticky.style[prop] = offsets[prop] + "%";
+  is(cs[prop], offsets[prop] + "px");
+}
+
+// ... even in the presence of scrollbars
+scroller.style.overflow = "scroll";
+container.style.width = "100%";
+container.style.height = "100%";
+
+var ccs = getComputedStyle(container, "");
+
+function isApproximatelyEqual(a, b) {
+  return Math.abs(a - b) < 0.001;
+}
+
+for (var prop in offsets) {
+  sticky.style[prop] = offsets[prop] + "%";
+  var basis = parseFloat(ccs[prop == "left" || prop == "right" ?
+                             "width" : "height"]) / 100;
+  ok(isApproximatelyEqual(parseFloat(cs[prop]), offsets[prop] * basis));
+}
+
+parent.finish();
+</script>
+</pre>
+</body>
+</html>
