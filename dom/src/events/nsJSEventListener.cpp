@@ -11,7 +11,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIXPConnect.h"
 #include "nsGUIEvent.h"
-#include "nsContentUtils.h"
 #include "nsIMutableArray.h"
 #include "nsVariant.h"
 #include "nsIDOMBeforeUnloadEvent.h"
@@ -51,7 +50,7 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
   : nsIJSEventListener(aContext, aScopeObject, aTarget, aType, aHandler)
 {
   if (mScopeObject) {
-    NS_HOLD_JS_OBJECTS(this, nsJSEventListener);
+    mozilla::HoldJSObjects(this);
   }
 }
 
@@ -59,7 +58,7 @@ nsJSEventListener::~nsJSEventListener()
 {
   if (mScopeObject) {
     mScopeObject = nullptr;
-    NS_DROP_JS_OBJECTS(this, nsJSEventListener);
+    mozilla::DropJSObjects(this);
   }
 }
 
@@ -69,9 +68,9 @@ nsJSEventListener::UpdateScopeObject(JS::Handle<JSObject*> aScopeObject)
 {
   if (mScopeObject && !aScopeObject) {
     mScopeObject = nullptr;
-    NS_DROP_JS_OBJECTS(this, nsJSEventListener);
+    mozilla::DropJSObjects(this);
   } else if (aScopeObject && !mScopeObject) {
-    NS_HOLD_JS_OBJECTS(this, nsJSEventListener);
+    mozilla::HoldJSObjects(this);
   }
   mScopeObject = aScopeObject;
 }
@@ -81,7 +80,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
   if (tmp->mScopeObject) {
     tmp->mScopeObject = nullptr;
-    NS_DROP_JS_OBJECTS(tmp, nsJSEventListener);
+    mozilla::DropJSObjects(tmp);
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   }
   tmp->mHandler.ForgetHandler();

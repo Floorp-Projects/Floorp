@@ -4325,30 +4325,6 @@ nsContentUtils::DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent)
 
 /* static */
 void
-nsContentUtils::HoldJSObjects(void* aScriptObjectHolder,
-                              nsScriptObjectTracer* aTracer)
-{
-  cyclecollector::AddJSHolder(aScriptObjectHolder, aTracer);
-}
-
-/* static */
-void
-nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
-{
-  cyclecollector::RemoveJSHolder(aScriptObjectHolder);
-}
-
-#ifdef DEBUG
-/* static */
-bool
-nsContentUtils::AreJSObjectsHeld(void* aScriptObjectHolder)
-{
-  return cyclecollector::IsJSHolder(aScriptObjectHolder);
-}
-#endif
-
-/* static */
-void
 nsContentUtils::NotifyInstalledMenuKeyboardListener(bool aInstalling)
 {
   nsIMEStateManager::OnInstalledMenuKeyboardListener(aInstalling);

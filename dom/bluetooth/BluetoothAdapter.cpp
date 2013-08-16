@@ -6,7 +6,6 @@
 
 #include "base/basictypes.h"
 #include "GeneratedEvents.h"
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsDOMClassInfo.h"
 #include "nsIDOMBluetoothDeviceEvent.h"
@@ -205,7 +204,7 @@ BluetoothAdapter::Unroot()
   }
   mJsUuids = nullptr;
   mJsDeviceAddresses = nullptr;
-  NS_DROP_JS_OBJECTS(this, BluetoothAdapter);
+  mozilla::DropJSObjects(this);
   mIsRooted = false;
 }
 
@@ -215,7 +214,7 @@ BluetoothAdapter::Root()
   if (mIsRooted) {
     return;
   }
-  NS_HOLD_JS_OBJECTS(this, BluetoothAdapter);
+  mozilla::HoldJSObjects(this);
   mIsRooted = true;
 }
 
