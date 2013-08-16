@@ -10027,46 +10027,15 @@ StkCommandParamsFactory[STK_CMD_TIMER_MANAGEMENT] = function STK_CMD_TIMER_MANAG
 
 let StkProactiveCmdHelper = {
   retrieve: function retrieve(tag, length) {
-    switch (tag) {
-      case COMPREHENSIONTLV_TAG_COMMAND_DETAILS:
-        return this.retrieveCommandDetails(length);
-      case COMPREHENSIONTLV_TAG_DEVICE_ID:
-        return this.retrieveDeviceId(length);
-      case COMPREHENSIONTLV_TAG_ALPHA_ID:
-        return this.retrieveAlphaId(length);
-      case COMPREHENSIONTLV_TAG_DURATION:
-        return this.retrieveDuration(length);
-      case COMPREHENSIONTLV_TAG_ADDRESS:
-        return this.retrieveAddress(length);
-      case COMPREHENSIONTLV_TAG_TEXT_STRING:
-        return this.retrieveTextString(length);
-      case COMPREHENSIONTLV_TAG_TONE:
-        return this.retrieveTone(length);
-      case COMPREHENSIONTLV_TAG_ITEM:
-        return this.retrieveItem(length);
-      case COMPREHENSIONTLV_TAG_ITEM_ID:
-        return this.retrieveItemId(length);
-      case COMPREHENSIONTLV_TAG_RESPONSE_LENGTH:
-        return this.retrieveResponseLength(length);
-      case COMPREHENSIONTLV_TAG_FILE_LIST:
-        return this.retrieveFileList(length);
-      case COMPREHENSIONTLV_TAG_DEFAULT_TEXT:
-        return this.retrieveDefaultText(length);
-      case COMPREHENSIONTLV_TAG_EVENT_LIST:
-        return this.retrieveEventList(length);
-      case COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER:
-        return this.retrieveTimerId(length);
-      case COMPREHENSIONTLV_TAG_TIMER_VALUE:
-        return this.retrieveTimerValue(length);
-      case COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE:
-        return this.retrieveImmediaResponse(length);
-      case COMPREHENSIONTLV_TAG_URL:
-        return this.retrieveUrl(length);
-      default:
-        if (DEBUG) debug("StkProactiveCmdHelper: unknown tag " + tag.toString(16));
-        Buf.seekIncoming(length * PDU_HEX_OCTET_SIZE);
-        return null;
+    let method = StkProactiveCmdHelper[tag];
+    if (typeof method != "function") {
+      if (DEBUG) {
+        debug("Unknown comprehension tag " + tag.toString(16));
+      }
+      Buf.seekIncoming(length * PDU_HEX_OCTET_SIZE);
+      return null;
     }
+    return method.call(this, length);
   },
 
   /**
@@ -10385,6 +10354,57 @@ let StkProactiveCmdHelper = {
     }
     return null;
   },
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_COMMAND_DETAILS] = function COMPREHENSIONTLV_TAG_COMMAND_DETAILS(length) {
+  return this.retrieveCommandDetails(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_DEVICE_ID] = function COMPREHENSIONTLV_TAG_DEVICE_ID(length) {
+  return this.retrieveDeviceId(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_ALPHA_ID] = function COMPREHENSIONTLV_TAG_ALPHA_ID(length) {
+  return this.retrieveAlphaId(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_DURATION] = function COMPREHENSIONTLV_TAG_DURATION(length) {
+  return this.retrieveDuration(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_ADDRESS] = function COMPREHENSIONTLV_TAG_ADDRESS(length) {
+  return this.retrieveAddress(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_TEXT_STRING] = function COMPREHENSIONTLV_TAG_TEXT_STRING(length) {
+  return this.retrieveTextString(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_TONE] = function COMPREHENSIONTLV_TAG_TONE(length) {
+  return this.retrieveTone(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_ITEM] = function COMPREHENSIONTLV_TAG_ITEM(length) {
+  return this.retrieveItem(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_ITEM_ID] = function COMPREHENSIONTLV_TAG_ITEM_ID(length) {
+  return this.retrieveItemId(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_RESPONSE_LENGTH] = function COMPREHENSIONTLV_TAG_RESPONSE_LENGTH(length) {
+  return this.retrieveResponseLength(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_FILE_LIST] = function COMPREHENSIONTLV_TAG_FILE_LIST(length) {
+  return this.retrieveFileList(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_DEFAULT_TEXT] = function COMPREHENSIONTLV_TAG_DEFAULT_TEXT(length) {
+  return this.retrieveDefaultText(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_EVENT_LIST] = function COMPREHENSIONTLV_TAG_EVENT_LIST(length) {
+  return this.retrieveEventList(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER] = function COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER(length) {
+  return this.retrieveTimerId(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_TIMER_VALUE] = function COMPREHENSIONTLV_TAG_TIMER_VALUE(length) {
+  return this.retrieveTimerValue(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE] = function COMPREHENSIONTLV_TAG_IMMEDIATE_RESPONSE(length) {
+  return this.retrieveImmediaResponse(length);
+};
+StkProactiveCmdHelper[COMPREHENSIONTLV_TAG_URL] = function COMPREHENSIONTLV_TAG_URL(length) {
+  return this.retrieveUrl(length);
 };
 
 let ComprehensionTlvHelper = {
