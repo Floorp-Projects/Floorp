@@ -5234,6 +5234,7 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fu
 #else
     newScript = (TypeNewScript *) cx->calloc_(numBytes);
 #endif
+    new (newScript) TypeNewScript();
     type->addendum = newScript;
 
     if (!newScript) {
@@ -6780,7 +6781,15 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes)
 bool
 TypeObject::addBinaryDataAddendum(JSContext *cx, TypeRepresentation *repr)
 {
+    if (!cx->typeInferenceEnabled())
+        return true;
+
     JS_ASSERT(repr);
+
+    if (flags & OBJECT_FLAG_ADDENDUM_CLEARED)
+        return true;
+
+    JS_ASSERT(!unknownProperties());
 
     if (addendum) {
         JS_ASSERT(hasBinaryData());
@@ -6795,7 +6804,20 @@ TypeObject::addBinaryDataAddendum(JSContext *cx, TypeRepresentation *repr)
     return true;
 }
 
+/////////////////////////////////////////////////////////////////////
+// Type object addenda constructor
+/////////////////////////////////////////////////////////////////////
+
+TypeObjectAddendum::TypeObjectAddendum(Kind kind)
+  : kind(kind)
+{}
+
+TypeNewScript::TypeNewScript()
+  : TypeObjectAddendum(NewScript)
+{}
+
 TypeBinaryData::TypeBinaryData(TypeRepresentation *repr)
-  : typeRepr(repr)
+  : TypeObjectAddendum(BinaryData),
+    typeRepr(repr)
 {
 }
