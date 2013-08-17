@@ -346,7 +346,8 @@ WebappsApplication.prototype = {
                               "Webapps:PackageEvent",
                               "Webapps:ClearBrowserData:Return",
                               "Webapps:Connect:Return:OK",
-                              "Webapps:Connect:Return:KO"]);
+                              "Webapps:Connect:Return:KO",
+                              "Webapps:GetConnections:Return:OK"]);
 
     cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
                           ["Webapps:OfflineCache",
@@ -477,7 +478,12 @@ WebappsApplication.prototype = {
   },
 
   getConnections: function() {
-    // TODO
+    return this.createPromise(function (aResolver) {
+      cpmm.sendAsyncMessage("Webapps:GetConnections",
+                            { manifestURL: this.manifestURL,
+                              outerWindowID: this._id,
+                              requestID: this.getPromiseResolverId(aResolver) });
+    }.bind(this));
   },
 
   uninit: function() {
@@ -501,7 +507,8 @@ WebappsApplication.prototype = {
     let msg = aMessage.json;
     let req;
     if (aMessage.name == "Webapps:Connect:Return:OK" ||
-        aMessage.name == "Webapps:Connect:Return:KO") {
+        aMessage.name == "Webapps:Connect:Return:KO" ||
+        aMessage.name == "Webapps:GetConnections:Return:OK") {
       req = this.takePromiseResolver(msg.requestID);
     } else {
       req = this.takeRequest(msg.requestID);
@@ -640,6 +647,17 @@ WebappsApplication.prototype = {
         break;
       case "Webapps:Connect:Return:KO":
         req.reject("No connections registered");
+        break;
+      case "Webapps:GetConnections:Return:OK":
+        let connections = [];
+        msg.connections.forEach(function(aConnection) {
+          let connection =
+            new this._window.MozInterAppConnection(aConnection.keyword,
+                                                   aConnection.pubAppManifestURL,
+                                                   aConnection.subAppManifestURL);
+          connections.push(connection);
+        }, this);
+        req.resolve(connections);
         break;
     }
   },
