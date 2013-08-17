@@ -45,7 +45,6 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_net_resend.js \
 	browser_net_req-resp-bodies.js \
 	browser_net_copy_url.js \
-	browser_net_open_request_in_tab.js \
 	head.js \
 	$(NULL)
 
