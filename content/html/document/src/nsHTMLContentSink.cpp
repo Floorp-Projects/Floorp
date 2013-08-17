@@ -222,7 +222,7 @@ protected:
 
   // Routines for tags that require special handling
   nsresult CloseHTML();
-  nsresult OpenBody(const nsIParserNode& aNode);
+  nsresult OpenBody(nsHTMLTag aNodeType);
   nsresult CloseBody();
 
   nsresult OpenHeadContext();
@@ -1503,7 +1503,7 @@ HTMLContentSink::OpenHead()
 }
 
 nsresult
-HTMLContentSink::OpenBody(const nsIParserNode& aNode)
+HTMLContentSink::OpenBody(nsHTMLTag aNodeType)
 {
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenBody", 
@@ -1518,7 +1518,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     return NS_OK;
   }
 
-  nsresult rv = mCurrentContext->OpenContainer(nsHTMLTag(aNode.GetNodeType()));
+  nsresult rv = mCurrentContext->OpenContainer(aNodeType);
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -1616,7 +1616,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       }
       break;
     case eHTMLTag_body:
-      rv = OpenBody(aNode);
+      rv = OpenBody(nsHTMLTag(aNode.GetNodeType()));
       break;
     case eHTMLTag_html:
       if (mRoot) {
