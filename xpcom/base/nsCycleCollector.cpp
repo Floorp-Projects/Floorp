@@ -2962,7 +2962,7 @@ cyclecollector::RemoveJSHolder(void* aHolder)
 
 #ifdef DEBUG
 bool
-cyclecollector::TestJSHolder(void* aHolder)
+cyclecollector::IsJSHolder(void* aHolder)
 {
     CollectorData *data = sCollectorData.get();
 
@@ -2972,7 +2972,7 @@ cyclecollector::TestJSHolder(void* aHolder)
     // And we should have a runtime.
     MOZ_ASSERT(data->mRuntime);
 
-    return data->mRuntime->TestJSHolder(aHolder);
+    return data->mRuntime->IsJSHolder(aHolder);
 }
 #endif
 

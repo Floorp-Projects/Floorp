@@ -411,6 +411,9 @@ parent:
     async CreateFakeVolume(nsString fsName, nsString mountPoint);
     async SetFakeVolumeState(nsString fsName, int32_t fsState);
 
+    sync KeywordToURI(nsCString keyword)
+        returns (OptionalInputStreamParams postData, OptionalURIParams uri);
+
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows);
 };

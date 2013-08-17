@@ -59,20 +59,6 @@ LIRGenerator::visitCallee(MCallee *ins)
 }
 
 bool
-LIRGenerator::visitForceUse(MForceUse *ins)
-{
-    if (ins->input()->type() == MIRType_Value) {
-        LForceUseV *lir = new LForceUseV();
-        if (!useBox(lir, 0, ins->input()))
-            return false;
-        return add(lir);
-    }
-
-    LForceUseT *lir = new LForceUseT(useAnyOrConstant(ins->input()));
-    return add(lir);
-}
-
-bool
 LIRGenerator::visitGoto(MGoto *ins)
 {
     return add(new LGoto(ins->target()));
@@ -1785,7 +1771,7 @@ LIRGenerator::visitInterruptCheck(MInterruptCheck *ins)
     // installed. ARM does not yet use implicit interrupt checks, see
     // bug 864220.
 #ifndef JS_CPU_ARM
-    if (GetIonContext()->runtime->ionRuntime()->signalHandlersInstalled()) {
+    if (GetIonContext()->runtime->signalHandlersInstalled()) {
         LInterruptCheckImplicit *lir = new LInterruptCheckImplicit();
         return add(lir) && assignSafepoint(lir, ins);
     }
@@ -2955,6 +2941,25 @@ LIRGenerator::visitInstruction(MInstruction *ins)
     if (LOsiPoint *osiPoint = popOsiPoint()) {
         if (!add(osiPoint))
             return false;
+    }
+
+    // Check the computed range for this instruction, if the option is set. Note
+    // that this code is quite invasive; it adds numerous additional
+    // instructions for each MInstruction with a computed range, and it uses
+    // registers, so it also affects register allocation.
+    if (js_IonOptions.checkRangeAnalysis) {
+        if (Range *r = ins->range()) {
+           switch (ins->type()) {
+           case MIRType_Int32:
+               add(new LRangeAssert(useRegisterAtStart(ins), *r));
+               break;
+           case MIRType_Double:
+               add(new LDoubleRangeAssert(useRegister(ins), tempFloat(), *r));
+               break;
+           default:
+               break;
+           }
+        }
     }
 
     return true;

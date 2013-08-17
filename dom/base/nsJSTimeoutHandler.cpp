@@ -191,11 +191,15 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, bool *aIsInterval,
   }
 
   int32_t interval = 0;
-  if (argc > 1 && !::JS_ValueToECMAInt32(cx, argv[1], &interval)) {
-    ::JS_ReportError(cx,
-                     "Second argument to %s must be a millisecond interval",
-                     aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
-    return NS_ERROR_DOM_TYPE_ERR;
+  if (argc > 1) {
+    JS::Rooted<JS::Value> arg(cx, argv[1]);
+
+    if (!JS::ToInt32(cx, arg, &interval)) {
+      ::JS_ReportError(cx,
+                       "Second argument to %s must be a millisecond interval",
+                       aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
+      return NS_ERROR_DOM_TYPE_ERR;
+    }
   }
 
   if (argc == 1) {

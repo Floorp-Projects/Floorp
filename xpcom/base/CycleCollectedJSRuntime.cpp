@@ -892,7 +892,7 @@ CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
 
 #ifdef DEBUG
 bool
-CycleCollectedJSRuntime::TestJSHolder(void* aHolder)
+CycleCollectedJSRuntime::IsJSHolder(void* aHolder)
 {
   return mJSHolders.Get(aHolder, nullptr);
 }

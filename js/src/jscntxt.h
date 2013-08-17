@@ -34,6 +34,8 @@ js_ReportOverRecursed(js::ThreadSafeContext *cx);
 
 namespace js {
 
+namespace ion { class IonContext; }
+
 struct CallsiteCloneKey {
     /* The original function that we are cloning. */
     JSFunction *original;
@@ -264,7 +266,10 @@ struct ThreadSafeContext : ContextFriendFields,
 
     // GCs cannot happen while non-main threads are running.
     uint64_t gcNumber() { return runtime_->gcNumber; }
+    size_t gcSystemPageSize() { return runtime_->gcSystemPageSize; }
     bool isHeapBusy() { return runtime_->isHeapBusy(); }
+    bool signalHandlersInstalled() const { return runtime_->signalHandlersInstalled(); }
+    bool jitSupportsFloatingPoint() const { return runtime_->jitSupportsFloatingPoint; }
 
     // Thread local data that may be accessed freely.
     DtoaState *dtoaState() {
@@ -281,6 +286,7 @@ class ExclusiveContext : public ThreadSafeContext
     friend class AutoLockForExclusiveAccess;
     friend struct StackBaseShape;
     friend void JSScript::initCompartment(ExclusiveContext *cx);
+    friend class ion::IonContext;
 
     // The worker on which this context is running, if this is not a JSContext.
     WorkerThread *workerThread;
@@ -363,6 +369,15 @@ class ExclusiveContext : public ThreadSafeContext
     ScriptDataTable &scriptDataTable() {
         return runtime_->scriptDataTable();
     }
+
+#if defined(JS_ION) && defined(JS_THREADSAFE)
+    // Since JSRuntime::workerThreadState is necessarily initialized from the
+    // main thread before the first worker thread can access it, there is no
+    // possibility for a race read/writing it.
+    WorkerThreadState *workerThreadState() {
+        return runtime_->workerThreadState;
+    }
+#endif
 };
 
 inline void
