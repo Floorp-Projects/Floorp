@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<!-- Fieldset is barred -->
+<style>
+  fieldset:valid { display: none; }
+</style>
+<body onload="document.getElementById('f').setCustomValidity('foo'); document.documentElement.className='';">
+<fieldset id="f">
+</fieldset>
+</body>
+</html>
