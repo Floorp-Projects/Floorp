@@ -42,12 +42,9 @@ CNavDTD::BuildModel(nsITokenizer* aTokenizer,
     return NS_ERROR_HTMLPARSER_STOPPARSING;
   }
 
-  nsParserNode html(eHTMLTag_html);
-  nsParserNode body(eHTMLTag_body);
-
-  nsresult rv = sink->OpenContainer(html);
+  nsresult rv = sink->OpenContainer(eHTMLTag_html);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = sink->OpenContainer(body);
+  rv = sink->OpenContainer(eHTMLTag_body);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = sink->CloseContainer(eHTMLTag_body);
