@@ -236,14 +236,6 @@ public:
   nsresult End();
 
   nsresult GrowStack();
-  nsresult AddText(const nsAString& aText);
-  nsresult FlushText(bool* aDidFlush = nullptr,
-                     bool aReleaseLast = false);
-  nsresult FlushTextAndRelease(bool* aDidFlush = nullptr)
-  {
-    return FlushText(aDidFlush, true);
-  }
-
   nsresult FlushTags();
 
   bool     IsCurrentContainer(nsHTMLTag mType);
@@ -260,8 +252,6 @@ private:
 public:
   HTMLContentSink* mSink;
   int32_t mNotifyLevel;
-  nsCOMPtr<nsIContent> mLastTextNode;
-  int32_t mLastTextNodeSize;
 
   struct Node {
     nsHTMLTag mType;
@@ -275,13 +265,6 @@ public:
   Node* mStack;
   int32_t mStackSize;
   int32_t mStackPos;
-
-  PRUnichar* mText;
-  int32_t mTextLength;
-  int32_t mTextSize;
-
-private:
-  bool mLastTextCharWasCR;
 };
 
 //----------------------------------------------------------------------
@@ -352,14 +335,9 @@ CreateHTMLElement(uint32_t aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
 SinkContext::SinkContext(HTMLContentSink* aSink)
   : mSink(aSink),
     mNotifyLevel(0),
-    mLastTextNodeSize(0),
     mStack(nullptr),
     mStackSize(0),
-    mStackPos(0),
-    mText(nullptr),
-    mTextLength(0),
-    mTextSize(0),
-    mLastTextCharWasCR(false)
+    mStackPos(0)
 {
   MOZ_COUNT_CTOR(SinkContext);
 }
@@ -374,8 +352,6 @@ SinkContext::~SinkContext()
     }
     delete [] mStack;
   }
-
-  delete [] mText;
 }
 
 nsresult
@@ -397,7 +373,6 @@ SinkContext::Begin(nsHTMLTag aNodeType,
   mStack[0].mInsertionPoint = aInsertionPoint;
   NS_ADDREF(aRoot);
   mStackPos = 1;
-  mTextLength = 0;
 
   return NS_OK;
 }
@@ -460,8 +435,6 @@ SinkContext::DidAddContent(nsIContent* aContent)
 nsresult
 SinkContext::OpenBody()
 {
-  FlushTextAndRelease();
-
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "SinkContext::OpenContainer", 
                   eHTMLTag_body,
@@ -534,10 +507,6 @@ nsresult
 SinkContext::CloseContainer(const nsHTMLTag aTag)
 {
   nsresult result = NS_OK;
-
-  // Flush any collected text content. Release the last text
-  // node to indicate that no more should be added to it.
-  FlushTextAndRelease();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "SinkContext::CloseContainer", 
@@ -659,7 +628,6 @@ SinkContext::End()
   }
 
   mStackPos = 0;
-  mTextLength = 0;
 
   return NS_OK;
 }
@@ -681,63 +649,6 @@ SinkContext::GrowStack()
 
   mStack = stack;
   mStackSize = newSize;
-
-  return NS_OK;
-}
-
-/**
- * Add textual content to the current running text buffer. If the text buffer
- * overflows, flush out the text by creating a text content object and adding
- * it to the content tree.
- */
-
-// XXX If we get a giant string grow the buffer instead of chopping it
-// up???
-nsresult
-SinkContext::AddText(const nsAString& aText)
-{
-  int32_t addLen = aText.Length();
-  if (addLen == 0) {
-    return NS_OK;
-  }
-  
-  // Create buffer when we first need it
-  if (mTextSize == 0) {
-    mText = new PRUnichar[4096];
-    mTextSize = 4096;
-  }
-
-  // Copy data from string into our buffer; flush buffer when it fills up
-  int32_t offset = 0;
-
-  while (addLen != 0) {
-    int32_t amount = mTextSize - mTextLength;
-
-    if (amount > addLen) {
-      amount = addLen;
-    }
-
-    if (amount == 0) {
-      // Don't release last text node so we can add to it again
-      nsresult rv = FlushText();
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      // Go back to the top of the loop so we re-calculate amount and
-      // don't fall through to CopyNewlineNormalizedUnicodeTo with a
-      // zero-length amount (which invalidates mLastTextCharWasCR).
-      continue;
-    }
-
-    mTextLength +=
-      nsContentUtils::CopyNewlineNormalizedUnicodeTo(aText, offset,
-                                                     &mText[mTextLength],
-                                                     amount,
-                                                     mLastTextCharWasCR);
-    offset += amount;
-    addLen -= amount;
-  }
 
   return NS_OK;
 }
@@ -765,9 +676,6 @@ SinkContext::FlushTags()
     mozAutoDocUpdate updateBatch(mSink->mDocument, UPDATE_CONTENT_MODEL,
                                  true);
     mSink->mBeganUpdate = true;
-
-    // Don't release last text node in case we need to add to it again
-    FlushText();
 
     // Start from the base of the stack (growing downward) and do
     // a notification from the node that is closest to the root of
@@ -853,80 +761,6 @@ SinkContext::UpdateChildCounts()
 
   mNotifyLevel = mStackPos - 1;
 }
-
-/**
- * Flush any buffered text out by creating a text content object and
- * adding it to the content.
- */
-nsresult
-SinkContext::FlushText(bool* aDidFlush, bool aReleaseLast)
-{
-  nsresult rv = NS_OK;
-  bool didFlush = false;
-
-  if (mTextLength != 0) {
-    if (mLastTextNode) {
-      if ((mLastTextNodeSize + mTextLength) > mSink->mMaxTextRun) {
-        mLastTextNodeSize = 0;
-        mLastTextNode = nullptr;
-        FlushText(aDidFlush, aReleaseLast);
-      } else {
-        bool notify = HaveNotifiedForCurrentContent();
-        // We could probably always increase mInNotification here since
-        // if AppendText doesn't notify it shouldn't trigger evil code.
-        // But just in case it does, we don't want to mask any notifications.
-        if (notify) {
-          ++mSink->mInNotification;
-        }
-        rv = mLastTextNode->AppendText(mText, mTextLength, notify);
-        if (notify) {
-          --mSink->mInNotification;
-        }
-
-        mLastTextNodeSize += mTextLength;
-        mTextLength = 0;
-        didFlush = true;
-      }
-    } else {
-      nsRefPtr<nsTextNode> textContent =
-        new nsTextNode(mSink->mNodeInfoManager);
-
-      mLastTextNode = textContent;
-
-      // Set the text in the text node
-      mLastTextNode->SetText(mText, mTextLength, false);
-
-      // Eat up the rest of the text up in state.
-      mLastTextNodeSize += mTextLength;
-      mTextLength = 0;
-
-      rv = AddLeaf(mLastTextNode);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      didFlush = true;
-    }
-  }
-
-  if (aDidFlush) {
-    *aDidFlush = didFlush;
-  }
-
-  if (aReleaseLast) {
-    mLastTextNodeSize = 0;
-    mLastTextNode = nullptr;
-    mLastTextCharWasCR = false;
-  }
-
-#ifdef DEBUG
-  if (didFlush &&
-      SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
-    mSink->ForceReflow();
-  }
-#endif
-
-  return rv;
-}
-
 
 nsresult
 NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
@@ -1247,8 +1081,6 @@ HTMLContentSink::CloseHTML()
       mContextStack.RemoveElementAt(numContexts);
     }
 
-    NS_ASSERTION(mHeadContext->mTextLength == 0, "Losing text");
-
     mHeadContext->End();
 
     delete mHeadContext;
@@ -1324,12 +1156,6 @@ HTMLContentSink::CloseBody()
                   mCurrentContext->mStackPos - 1, 
                   this);
 
-  bool didFlush;
-  nsresult rv = mCurrentContext->FlushTextAndRelease(&didFlush);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   // Flush out anything that's left
   SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
              ("HTMLContentSink::CloseBody: layout final body content"));
@@ -1399,7 +1225,6 @@ HTMLContentSink::CloseHeadContext()
     if (!mCurrentContext->IsCurrentContainer(eHTMLTag_head))
       return;
 
-    mCurrentContext->FlushTextAndRelease();
     mCurrentContext->FlushTags();
   }
 
@@ -1504,9 +1329,6 @@ HTMLContentSink::FlushPendingNotifications(mozFlushType aType)
     if (mIsDocumentObserver) {
       if (aType >= Flush_ContentAndNotify) {
         FlushTags();
-      }
-      else if (mCurrentContext) {
-        mCurrentContext->FlushText();
       }
     }
     if (aType >= Flush_InterruptibleLayout) {
