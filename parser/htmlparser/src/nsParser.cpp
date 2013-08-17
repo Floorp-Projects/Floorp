@@ -162,10 +162,6 @@ void nsParser::Shutdown()
   NS_IF_RELEASE(sCharsetConverterManager);
 }
 
-#ifdef DEBUG
-static bool gDumpContent=false;
-#endif
-
 /**
  *  default constructor
  */
@@ -182,12 +178,6 @@ nsParser::~nsParser()
 void
 nsParser::Initialize(bool aConstructor)
 {
-#ifdef DEBUG
-  if (!gDumpContent) {
-    gDumpContent = PR_GetEnv("PARSER_DUMP_CONTENT") != nullptr;
-  }
-#endif
-
   if (aConstructor) {
     // Raw pointer
     mParserContext = 0;
@@ -215,20 +205,6 @@ nsParser::Initialize(bool aConstructor)
 void
 nsParser::Cleanup()
 {
-#ifdef DEBUG
-  if (gDumpContent) {
-    if (mSink) {
-      // Sink (HTMLContentSink at this time) supports nsIDebugDumpContent
-      // interface. We can get to the content model through the sink.
-      nsresult result = NS_OK;
-      nsCOMPtr<nsIDebugDumpContent> trigger = do_QueryInterface(mSink, &result);
-      if (NS_SUCCEEDED(result)) {
-        trigger->DumpContentModel();
-      }
-    }
-  }
-#endif
-
 #ifdef DEBUG
   if (mParserContext && mParserContext->mPrevContext) {
     NS_WARNING("Extra parser contexts still on the parser stack");

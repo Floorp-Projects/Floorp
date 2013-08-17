@@ -58,23 +58,6 @@ enum eParserDocType {
 
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
 
-/** 
- *  FOR DEBUG PURPOSE ONLY
- *
- *  Use this interface to query objects that contain content information.
- *  Ex. Parser can trigger dump content by querying the sink that has
- *      access to the content.
- *  
- *  @update  harishd 05/25/00
- */
-class nsIDebugDumpContent : public nsISupports {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDEBUG_DUMP_CONTENT_IID)
-  NS_IMETHOD DumpContentModel()=0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIDebugDumpContent, NS_IDEBUG_DUMP_CONTENT_IID)
-
 /**
  * This GECKO-INTERNAL interface is on track to being REMOVED (or refactored
  * to the point of being near-unrecognizable).
