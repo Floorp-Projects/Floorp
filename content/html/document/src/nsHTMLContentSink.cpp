@@ -216,7 +216,6 @@ protected:
   nsresult OpenBody(nsHTMLTag aNodeType);
   nsresult CloseBody();
 
-  nsresult OpenHeadContext();
   void CloseHeadContext();
 
   // nsContentSink overrides
@@ -1461,37 +1460,6 @@ NS_IMETHODIMP
 HTMLContentSink::WillResume()
 {
   return WillResumeImpl();
-}
-
-nsresult
-HTMLContentSink::OpenHeadContext()
-{
-  if (mCurrentContext && mCurrentContext->IsCurrentContainer(eHTMLTag_head))
-    return NS_OK;
-
-  // Flush everything in the current context so that we don't have
-  // to worry about insertions resulting in inconsistent frame creation.
-  //
-  // Try to do this only if needed (costly), i.e., only if we are sure
-  // we are changing contexts from some other context to the head.
-  //
-  // PERF: This call causes approximately a 2% slowdown in page load time
-  // according to jrgm's page load tests, but seems to be a necessary evil
-  if (mCurrentContext && (mCurrentContext != mHeadContext)) {
-    mCurrentContext->FlushTags();
-  }
-
-  if (!mHeadContext) {
-    mHeadContext = new SinkContext(this);
-
-    nsresult rv = mHeadContext->Begin(eHTMLTag_head, mHead, 0, -1);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  mContextStack.AppendElement(mCurrentContext);
-  mCurrentContext = mHeadContext;
-
-  return NS_OK;
 }
 
 void
