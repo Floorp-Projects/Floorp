@@ -25,7 +25,7 @@ $(call BUILDSTATUS,SUBTIER_FINISH precompile $(1))
 endef
 
 export::
-	$(call BUILDSTATUS,SUBTIERS IPDL WebIDL XPIDL)
+	$(call BUILDSTATUS,SUBTIERS IPDL WebIDL XPIDL XPIDLParser)
 
 export:: ipdl webidl xpidl-parser xpidl
 

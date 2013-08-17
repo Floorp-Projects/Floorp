@@ -46,6 +46,36 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             """)
         self.assertFalse(main_process)
 
+    def test_remote_frame_revisit(self):
+        # test if we can revisit a remote frame (this takes a different codepath)
+        self.marionette.navigate(self.marionette.absolute_url("test.html"))
+        self.marionette.execute_script("SpecialPowers.addPermission('browser', true, document)")
+        self.marionette.execute_script("""
+            let iframe = document.createElement("iframe");
+            SpecialPowers.wrap(iframe).mozbrowser = true;
+            SpecialPowers.wrap(iframe).remote = true;
+            iframe.id = "remote_iframe";
+            iframe.style.height = "100px";
+            iframe.style.width = "100%%";
+            iframe.src = "%s";
+            document.body.appendChild(iframe);
+            """ % self.marionette.absolute_url("test.html"))
+        self.marionette.switch_to_frame("remote_iframe")
+        main_process = self.marionette.execute_script("""
+            return SpecialPowers.isMainProcess();
+            """)
+        self.assertFalse(main_process)
+        self.marionette.switch_to_frame()
+        main_process = self.marionette.execute_script("""
+            return SpecialPowers.isMainProcess();
+            """)
+        self.assertTrue(main_process)
+        self.marionette.switch_to_frame("remote_iframe")
+        main_process = self.marionette.execute_script("""
+            return SpecialPowers.isMainProcess();
+            """)
+        self.assertFalse(main_process)
+
     def tearDown(self):
         if self.oop_by_default is None:
             self.marionette.execute_script("""
