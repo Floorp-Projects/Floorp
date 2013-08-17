@@ -1275,6 +1275,7 @@ public:
   virtual void SaveSubtreeState() MOZ_OVERRIDE;
 
   // nsIFormControl
+  virtual mozilla::dom::HTMLFieldSetElement* GetFieldSet();
   virtual mozilla::dom::Element* GetFormElement() MOZ_OVERRIDE;
   mozilla::dom::HTMLFormElement* GetForm() const
   {
