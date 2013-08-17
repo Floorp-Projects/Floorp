@@ -5547,42 +5547,19 @@ CodeGenerator::link()
 {
     JSContext *cx = GetIonContext()->cx;
 
-    // Lock the runtime against operation callbacks during the link.
-    // We don't want an operation callback to protect the code for the script
-    // before it has been filled in, as we could segv before the runtime's
-    // patchable backedges have been fully updated.
-    JSRuntime::AutoLockForOperationCallback lock(cx->runtime());
+    // Check to make sure we didn't have a mid-build invalidation. If so, we
+    // will trickle to ion::Compile() and return Method_Skipped.
+    if (cx->compartment()->types.compiledInfo.compilerOutput(cx)->isInvalidated())
+        return true;
 
-    // Make sure we don't segv while filling in the code, to avoid deadlocking
-    // inside the signal handler.
-    cx->runtime()->ionRuntime()->ensureIonCodeAccessible(cx->runtime());
-
-    // Implicit interrupts are used only for sequential code. In parallel mode
-    // use the normal executable allocator so that we cannot segv during
-    // execution off the main thread.
     ExecutionMode executionMode = gen->info().executionMode();
-
-    Linker linker(masm);
-    IonCode *code = (executionMode == SequentialExecution)
-                    ? linker.newCodeForIonScript(cx)
-                    : linker.newCode(cx, JSC::ION_CODE);
-    if (!code)
-        return false;
-
-    // We encode safepoints after the OSI-point offsets have been determined.
-    encodeSafepoints();
-
-    JSScript *script = gen->info().script();
-    JS_ASSERT(!HasIonScript(script, executionMode));
 
     uint32_t scriptFrameSize = frameClass_ == FrameSizeClass::None()
                            ? frameDepth_
                            : FrameSizeClass::FromDepth(frameDepth_).frameSize();
 
-    // Check to make sure we didn't have a mid-build invalidation. If so, we
-    // will trickle to ion::Compile() and return Method_Skipped.
-    if (cx->compartment()->types.compiledInfo.compilerOutput(cx)->isInvalidated())
-        return true;
+    // We encode safepoints after the OSI-point offsets have been determined.
+    encodeSafepoints();
 
     // List of possible scripts that this graph may call. Currently this is
     // only tracked when compiling for parallel execution.
@@ -5597,6 +5574,31 @@ CodeGenerator::link()
                      cacheList_.length(), runtimeData_.length(),
                      safepoints_.size(), graph.mir().numScripts(),
                      callTargets.length(), patchableBackedges_.length());
+    if (!ionScript)
+        return false;
+
+    // Lock the runtime against operation callbacks during the link.
+    // We don't want an operation callback to protect the code for the script
+    // before it has been filled in, as we could segv before the runtime's
+    // patchable backedges have been fully updated.
+    JSRuntime::AutoLockForOperationCallback lock(cx->runtime());
+
+    // Make sure we don't segv while filling in the code, to avoid deadlocking
+    // inside the signal handler.
+    cx->runtime()->ionRuntime()->ensureIonCodeAccessible(cx->runtime());
+
+    // Implicit interrupts are used only for sequential code. In parallel mode
+    // use the normal executable allocator so that we cannot segv during
+    // execution off the main thread.
+    Linker linker(masm);
+    IonCode *code = (executionMode == SequentialExecution)
+                    ? linker.newCodeForIonScript(cx)
+                    : linker.newCode(cx, JSC::ION_CODE);
+    if (!code)
+        return false;
+
+    JSScript *script = gen->info().script();
+    JS_ASSERT(!HasIonScript(script, executionMode));
 
     ionScript->setMethod(code);
     ionScript->setSkipArgCheckEntryOffset(getSkipArgCheckEntryOffset());
@@ -5613,8 +5615,6 @@ CodeGenerator::link()
     if (callTargets.length() != 0)
         ionScript->setHasUncompiledCallTarget();
 
-    if (!ionScript)
-        return false;
     invalidateEpilogueData_.fixup(&masm);
     Assembler::patchDataWithValueCheck(CodeLocationLabel(code, invalidateEpilogueData_),
                                        ImmWord(uintptr_t(ionScript)),
