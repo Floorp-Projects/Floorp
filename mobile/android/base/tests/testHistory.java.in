@@ -30,9 +30,10 @@ public class testHistory extends AboutHomeTest {
         loadUrl(url3);
         verifyPageTitle("Browser Blank Page 03");
 
-        /*  Removed by Bug 896576 - [fig] Remove [getHistoryList] from BaseTest
-        final ListView hList = getHistoryList("Today|Yesterday");
-        mAsserter.ok(hList != null, "checking history exists", "history exists");
+        openAboutHomeTab(AboutHomeTabs.MOST_RECENT);
+
+        final ListView hList = findListViewWithTag("most_recent");
+        mAsserter.is(waitForListToLoad(hList), true, "list is properly loaded");
 
         // Click on the history item and wait for the page to load
         // wait for the history list to be populated
@@ -65,7 +66,6 @@ public class testHistory extends AboutHomeTest {
 
         mAsserter.isnot(mFirstChild, null, "Got history item");
         mSolo.clickOnView(mFirstChild);
-        */
 
         // The first item here (since it was just visited) should be a "Switch to tab" item
         // i.e. don't expect a DOMCOntentLoaded event
