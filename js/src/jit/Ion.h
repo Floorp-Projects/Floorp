@@ -77,6 +77,12 @@ struct IonOptions
     // Default: true
     bool rangeAnalysis;
 
+    // Whether to enable extra code to perform dynamic validation of
+    // RangeAnalysis results.
+    //
+    // Default: false
+    bool checkRangeAnalysis;
+
     // Toggles whether Unreachable Code Elimination is performed.
     //
     // Default: true
@@ -212,6 +218,7 @@ struct IonOptions
         inlining(true),
         edgeCaseAnalysis(true),
         rangeAnalysis(true),
+        checkRangeAnalysis(false),
         uce(true),
         eaa(true),
         parallelCompilation(false),
@@ -266,6 +273,7 @@ class IonContext
 {
   public:
     IonContext(JSContext *cx, TempAllocator *temp);
+    IonContext(ExclusiveContext *cx, TempAllocator *temp);
     IonContext(JSRuntime *rt, JSCompartment *comp, TempAllocator *temp);
     IonContext(JSRuntime *rt);
     ~IonContext();
