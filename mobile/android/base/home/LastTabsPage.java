@@ -103,6 +103,7 @@ public class LastTabsPage extends HomeFragment {
         }
 
         mList = (ListView) view.findViewById(R.id.list);
+        mList.setTag(HomePager.LIST_TAG_LAST_TABS);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
