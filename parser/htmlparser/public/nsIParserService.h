@@ -11,7 +11,6 @@
 #include "nsHTMLTags.h"
 
 class nsIParser;
-class nsIParserNode;
 
 #define NS_PARSERSERVICE_CONTRACTID "@mozilla.org/parser/parser-service;1"
 
