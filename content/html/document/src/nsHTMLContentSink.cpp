@@ -181,7 +181,7 @@ public:
 
 protected:
   already_AddRefed<nsGenericHTMLElement>
-  CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType);
+  CreateContentObject(nsHTMLTag aNodeType);
 
 #ifdef DEBUG
   void SinkTraceNode(uint32_t aBit,
@@ -332,8 +332,7 @@ HTMLContentSink::SinkTraceNode(uint32_t aBit,
  * Factory subroutine to create all of the html content objects.
  */
 already_AddRefed<nsGenericHTMLElement>
-HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
-                                     nsHTMLTag aNodeType)
+HTMLContentSink::CreateContentObject(nsHTMLTag aNodeType)
 {
   // Find/create atom for the tag name
 
@@ -541,7 +540,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   // Create new container content object
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   nsGenericHTMLElement* content =
-    mSink->CreateContentObject(aNode, nodeType).get();
+    mSink->CreateContentObject(nodeType).get();
   if (!content) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -730,7 +729,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       // Create new leaf content object
       nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
       nsRefPtr<nsGenericHTMLElement> content =
-        mSink->CreateContentObject(aNode, nodeType);
+        mSink->CreateContentObject(nodeType);
       NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
       // Add new leaf to its parent
