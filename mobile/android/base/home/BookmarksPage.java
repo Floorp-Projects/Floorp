@@ -116,6 +116,7 @@ public class BookmarksPage extends HomeFragment {
         mPinBookmarkListener = new PinBookmarkListener();
 
         mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
+        mList.setTag(HomePager.LIST_TAG_BOOKMARKS);
         mList.setOnUrlOpenListener(listener);
 
         mTopBookmarks.setOnUrlOpenListener(listener);
