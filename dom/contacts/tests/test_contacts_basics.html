@@ -1394,6 +1394,12 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
+    // Android does not support published/updated fields. Skip this.
+    if (isAndroid) {
+      next();
+      return;
+    }
+
     ok(true, "Test sorting with published");
     var options = {sortBy: "familyName",
                    sortOrder: "descending"};
