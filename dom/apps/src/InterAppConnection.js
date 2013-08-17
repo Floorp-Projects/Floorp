@@ -8,6 +8,15 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
+                                   "@mozilla.org/childprocessmessagemanager;1",
+                                   "nsIMessageSender");
+
+XPCOMUtils.defineLazyServiceGetter(this, "appsService",
+                                   "@mozilla.org/AppsService;1",
+                                   "nsIAppsService");
 
 function debug(aMsg) {
   // dump("-- InterAppConnection: " + Date.now() + ": " + aMsg + "\n");
@@ -25,13 +34,16 @@ function InterAppConnection() {
 };
 
 InterAppConnection.prototype = {
+  __proto__: DOMRequestIpcHelper.prototype,
+
   classDescription: "MozInterAppConnection",
 
   classID: Components.ID("{9dbfa904-0718-11e3-8e77-0721a45514b8}"),
 
   contractID: "@mozilla.org/dom/inter-app-connection;1",
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer,
+                                         Ci.nsISupportsWeakReference]),
 
   __init: function(aKeyword, aPublisher, aSubscriber) {
     debug("__init: aKeyword: " + aKeyword +
@@ -41,8 +53,23 @@ InterAppConnection.prototype = {
     this.subscriber = aSubscriber;
   },
 
+  // Ci.nsIDOMGlobalPropertyInitializer implementation.
+  init: function(aWindow) {
+    debug("init");
+
+    this.initDOMRequestHelper(aWindow, []);
+    let principal = aWindow.document.nodePrincipal;
+    this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
+  },
+
   cancel: function() {
-    // TODO
+    debug("cancel");
+
+    cpmm.sendAsyncMessage("InterAppConnection:Cancel",
+                          { keyword: this.keyword,
+                            pubAppManifestURL: this.publisher,
+                            subAppManifestURL: this.subscriber,
+                            manifestURL: this._manifestURL });
   }
 };
 

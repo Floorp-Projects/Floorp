@@ -30,7 +30,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "messenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
 
-const kMessages =["Webapps:Connect"];
+const kMessages =["Webapps:Connect",
+                  "Webapps:GetConnections",
+                  "InterAppConnection:Cancel"];
 
 function InterAppCommService() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
@@ -455,6 +457,65 @@ InterAppCommService.prototype = {
                        selectedApps: appsToSelect }));
   },
 
+  _getConnections: function(aMessage, aTarget) {
+    let outerWindowID = aMessage.outerWindowID;
+    let requestID = aMessage.requestID;
+
+    let connections = [];
+    for (let keyword in this._allowedConnections) {
+      let allowedPubAppManifestURLs = this._allowedConnections[keyword];
+      for (let allowedPubAppManifestURL in allowedPubAppManifestURLs) {
+        let allowedSubAppManifestURLs =
+          allowedPubAppManifestURLs[allowedPubAppManifestURL];
+        allowedSubAppManifestURLs.forEach(function(allowedSubAppManifestURL) {
+          connections.push({ keyword: keyword,
+                             pubAppManifestURL: allowedPubAppManifestURL,
+                             subAppManifestURL: allowedSubAppManifestURL });
+        });
+      }
+    }
+
+    aTarget.sendAsyncMessage("Webapps:GetConnections:Return:OK",
+                             { connections: connections,
+                               oid: outerWindowID, requestID: requestID });
+  },
+
+  _cancelConnection: function(aMessage) {
+    let keyword = aMessage.keyword;
+    let pubAppManifestURL = aMessage.pubAppManifestURL;
+    let subAppManifestURL = aMessage.subAppManifestURL;
+
+    let allowedPubAppManifestURLs = this._allowedConnections[keyword];
+    if (!allowedPubAppManifestURLs) {
+      debug("keyword is not found: " + keyword);
+      return;
+    }
+
+    let allowedSubAppManifestURLs =
+      allowedPubAppManifestURLs[pubAppManifestURL];
+    if (!allowedSubAppManifestURLs) {
+      debug("publisher is not found: " + pubAppManifestURL);
+      return;
+    }
+
+    let index = allowedSubAppManifestURLs.indexOf(subAppManifestURL);
+    if (index == -1) {
+      debug("subscriber is not found: " + subAppManifestURL);
+      return;
+    }
+
+    debug("Cancelling the connection.");
+    allowedSubAppManifestURLs.splice(index, 1);
+
+    // Clean up the parent entries if needed.
+    if (allowedSubAppManifestURLs.length == 0) {
+      delete allowedPubAppManifestURLs[pubAppManifestURL];
+      if (Object.keys(allowedPubAppManifestURLs).length == 0) {
+        delete this._allowedConnections[keyword];
+      }
+    }
+  },
+
   _handleSelectcedApps: function(aData) {
     let callerID = aData.callerID;
     let caller = this._promptUICallers[callerID];
@@ -520,6 +581,12 @@ InterAppCommService.prototype = {
     switch (aMessage.name) {
       case "Webapps:Connect":
         this._connect(message, target);
+        break;
+      case "Webapps:GetConnections":
+        this._getConnections(message, target);
+        break;
+      case "InterAppConnection:Cancel":
+        this._cancelConnection(message);
         break;
     }
   },
