@@ -65,12 +65,14 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTML_CONTENT_SINK_IID)
 
+  enum ElementType { eHTML, eBody };
+
     /**
    * This method is used to open a generic container in the sink.
    *
    * @update 4/1/98 gess
    */     
-  NS_IMETHOD OpenContainer(nsHTMLTag aNodeType) = 0;
+  NS_IMETHOD OpenContainer(ElementType aNodeType) = 0;
 
   /**
    *  This method gets called by the parser when a close
@@ -78,7 +80,7 @@ public:
    *
    * @param  aTag - The tag to be closed.
    */     
-  NS_IMETHOD CloseContainer(const nsHTMLTag aTag) = 0;
+  NS_IMETHOD CloseContainer(ElementType aTag) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLContentSink, NS_IHTML_CONTENT_SINK_IID)
