@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1376092730000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1376427851000">
   <emItems>
       <emItem  blockID="i350" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -147,8 +147,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i429" id="{B40794A0-7477-4335-95C5-8CB9BBC5C4A5}">
+      <emItem  blockID="i443" id="{B40794A0-7477-4335-95C5-8CB9BBC5C4A5}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                                <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i11" id="yslow@yahoo-inc.com">
@@ -196,6 +198,10 @@
                   </emItem>
       <emItem  blockID="i98" id="youtubeeing@youtuberie.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i442" id="pennerdu@faceobooks.ws">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i168" id="flashX@adobe.com">
