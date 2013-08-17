@@ -1103,8 +1103,12 @@ window.addEventListener('ContentStart', function cr_onContentStart() {
 });
 
 window.addEventListener('ContentStart', function update_onContentStart() {
-  let updatePrompt = Cc["@mozilla.org/updates/update-prompt;1"]
-                       .createInstance(Ci.nsIUpdatePrompt);
+  let promptCc = Cc["@mozilla.org/updates/update-prompt;1"];
+  if (!promptCc) {
+    return;
+  }
+
+  let updatePrompt = promptCc.createInstance(Ci.nsIUpdatePrompt);
   if (!updatePrompt) {
     return;
   }
