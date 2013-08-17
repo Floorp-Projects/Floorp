@@ -251,7 +251,7 @@ public:
 
   nsresult Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,
                  uint32_t aNumFlushed, int32_t aInsertionPoint);
-  nsresult OpenContainer(const nsIParserNode& aNode);
+  nsresult OpenContainer(nsHTMLTag aNodeType);
   nsresult CloseContainer(const nsHTMLTag aTag);
   nsresult AddLeaf(const nsIParserNode& aNode);
   nsresult AddLeaf(nsIContent* aContent);
@@ -513,13 +513,13 @@ SinkContext::DidAddContent(nsIContent* aContent)
 }
 
 nsresult
-SinkContext::OpenContainer(const nsIParserNode& aNode)
+SinkContext::OpenContainer(nsHTMLTag aNodeType)
 {
   FlushTextAndRelease();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "SinkContext::OpenContainer", 
-                  nsHTMLTag(aNode.GetNodeType()), 
+                  aNodeType,
                   mStackPos, 
                   mSink);
 
@@ -538,25 +538,24 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   }
 
   // Create new container content object
-  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   nsGenericHTMLElement* content =
-    mSink->CreateContentObject(nodeType).get();
+    mSink->CreateContentObject(aNodeType).get();
   if (!content) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mStack[mStackPos].mType = nodeType;
+  mStack[mStackPos].mType = aNodeType;
   mStack[mStackPos].mContent = content;
   mStack[mStackPos].mNumFlushed = 0;
   mStack[mStackPos].mInsertionPoint = -1;
   ++mStackPos;
   mStack[mStackPos - 2].Add(content);
-  if (mSink->IsMonolithicContainer(nodeType)) {
+  if (mSink->IsMonolithicContainer(aNodeType)) {
     mSink->mInMonolithicContainer++;
   }
 
   // Special handling for certain tags
-  switch (nodeType) {
+  switch (aNodeType) {
     case eHTMLTag_form:
       MOZ_CRASH("Must not use HTMLContentSink for forms.");
 
@@ -1519,7 +1518,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
     return NS_OK;
   }
 
-  nsresult rv = mCurrentContext->OpenContainer(aNode);
+  nsresult rv = mCurrentContext->OpenContainer(nsHTMLTag(aNode.GetNodeType()));
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -1632,7 +1631,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       MOZ_CRASH("Must not use HTMLContentSink for forms.");
 
     default:
-      rv = mCurrentContext->OpenContainer(aNode);
+      rv = mCurrentContext->OpenContainer(nsHTMLTag(aNode.GetNodeType()));
       break;
   }
 
