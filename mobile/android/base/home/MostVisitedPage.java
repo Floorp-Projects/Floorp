@@ -97,6 +97,7 @@ public class MostVisitedPage extends HomeFragment {
         }
 
         mList = (HomeListView) view.findViewById(R.id.list);
+        mList.setTag(HomePager.LIST_TAG_MOST_VISITED);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

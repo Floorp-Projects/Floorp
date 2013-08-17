@@ -98,6 +98,8 @@ public class MostRecentPage extends HomeFragment {
         }
 
         mList = (ListView) view.findViewById(R.id.list);
+        mList.setTag(HomePager.LIST_TAG_MOST_RECENT);
+
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
