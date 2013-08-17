@@ -129,9 +129,6 @@ class HTMLContentSink;
  * Don't bother adding new stuff in this file.
  */
 class HTMLContentSink : public nsContentSink,
-#ifdef DEBUG
-                        public nsIDebugDumpContent,
-#endif
                         public nsIHTMLContentSink
 {
 public:
@@ -164,11 +161,6 @@ public:
   // nsIHTMLContentSink
   NS_IMETHOD OpenContainer(ElementType aNodeType);
   NS_IMETHOD CloseContainer(ElementType aTag);
-
-#ifdef DEBUG
-  // nsIDebugDumpContent
-  NS_IMETHOD DumpContentModel();
-#endif
 
 protected:
   already_AddRefed<nsGenericHTMLElement>
@@ -1094,9 +1086,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLContentSink)
   NS_INTERFACE_TABLE_BEGIN
     NS_INTERFACE_TABLE_ENTRY(HTMLContentSink, nsIContentSink)
     NS_INTERFACE_TABLE_ENTRY(HTMLContentSink, nsIHTMLContentSink)
-#if DEBUG
-    NS_INTERFACE_TABLE_ENTRY(HTMLContentSink, nsIDebugDumpContent)
-#endif
   NS_INTERFACE_TABLE_END
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsContentSink)
 
@@ -1655,40 +1644,3 @@ HTMLContentSink::IsScriptExecuting()
 {
   return IsScriptExecutingImpl();
 }
-
-#ifdef DEBUG
-/**
- *  This will dump content model into the output file.
- *
- *  @update  harishd 05/25/00
- *  @param
- *  @return  NS_OK all went well, error on failure
- */
-
-NS_IMETHODIMP
-HTMLContentSink::DumpContentModel()
-{
-  FILE* out = ::fopen("rtest_html.txt", "a");
-  if (out) {
-    if (mDocument) {
-      Element* root = mDocument->GetRootElement();
-      if (root) {
-        if (mDocumentURI) {
-          nsAutoCString buf;
-          mDocumentURI->GetSpec(buf);
-          fputs(buf.get(), out);
-        }
-
-        fputs(";", out);
-        root->DumpContent(out, 0, false);
-        fputs(";\n", out);
-      }
-    }
-
-    fclose(out);
-  }
-
-  return NS_OK;
-}
-#endif
-
