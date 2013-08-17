@@ -53,7 +53,7 @@
 #include "nsHTMLTags.h"
 
 #define NS_IHTML_CONTENT_SINK_IID \
-  {0xb08b0f29, 0xe61c, 0x4647, {0xaf, 0x1e, 0x05, 0x1a, 0x75, 0x2f, 0xe6, 0x3d}}
+  {0xefc5af86, 0x5cfd, 0x4918, {0x9d, 0xd3, 0x5f, 0x7a, 0xb2, 0x88, 0xb2, 0x68}}
 
 /**
  * This interface is OBSOLETE and in the process of being REMOVED.
@@ -64,12 +64,6 @@ class nsIHTMLContentSink : public nsIContentSink
 public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTML_CONTENT_SINK_IID)
-
-  /**
-   * @update 01/09/2003 harishd
-   * @param aTag - Check if this tag is enabled or not.
-   */
-  NS_IMETHOD IsEnabled(int32_t aTag, bool* aReturn) = 0;
 
     /**
    * This method is used to open a generic container in the sink.
