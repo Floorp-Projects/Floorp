@@ -85,16 +85,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#ifdef DEBUG
-static PRLogModuleInfo* gSinkLogModuleInfo;
-
-#define SINK_TRACE_NODE(_bit, _msg, _tag, _sp, _obj) \
-  _obj->SinkTraceNode(_bit, _msg, _tag, _sp, this)
-
-#else
-#define SINK_TRACE_NODE(_bit, _msg, _tag, _sp, _obj)
-#endif
-
 //----------------------------------------------------------------------
 
 typedef nsGenericHTMLElement*
@@ -163,14 +153,6 @@ public:
   NS_IMETHOD CloseContainer(ElementType aTag);
 
 protected:
-#ifdef DEBUG
-  void SinkTraceNode(uint32_t aBit,
-                     const char* aMsg,
-                     const nsHTMLTag aTag,
-                     int32_t aStackPos,
-                     void* aThis);
-#endif
-
   nsCOMPtr<nsIHTMLDocument> mHTMLDocument;
 
   // The maximum length of a text run
@@ -216,10 +198,6 @@ protected:
   void NotifyRootInsertion();
   
   bool IsMonolithicContainer(nsHTMLTag aTag);
-
-#ifdef DEBUG
-  void ForceReflow();
-#endif
 };
 
 class SinkContext
@@ -265,28 +243,6 @@ public:
   int32_t mStackSize;
   int32_t mStackPos;
 };
-
-//----------------------------------------------------------------------
-
-#ifdef DEBUG
-void
-HTMLContentSink::SinkTraceNode(uint32_t aBit,
-                               const char* aMsg,
-                               const nsHTMLTag aTag,
-                               int32_t aStackPos,
-                               void* aThis)
-{
-  if (SINK_LOG_TEST(gSinkLogModuleInfo, aBit)) {
-    nsIParserService *parserService = nsContentUtils::GetParserService();
-    if (!parserService)
-      return;
-
-    NS_ConvertUTF16toUTF8 tag(parserService->HTMLIdToStringTag(aTag));
-    PR_LogPrint("%s: this=%p node='%s' stackPos=%d", 
-                aMsg, aThis, tag.get(), aStackPos);
-  }
-}
-#endif
 
 nsresult
 NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -402,31 +358,12 @@ SinkContext::DidAddContent(nsIContent* aContent)
       mStack[mStackPos - 1].mNumFlushed <
       mStack[mStackPos - 1].mContent->GetChildCount()) {
     nsIContent* parent = mStack[mStackPos - 1].mContent;
-
-#ifdef DEBUG
-    // Tracing code
-    nsIParserService *parserService = nsContentUtils::GetParserService();
-    if (parserService) {
-      nsHTMLTag tag = nsHTMLTag(mStack[mStackPos - 1].mType);
-      NS_ConvertUTF16toUTF8 str(parserService->HTMLIdToStringTag(tag));
-
-      SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
-                 ("SinkContext::DidAddContent: Insertion notification for "
-                  "parent=%s at position=%d and stackPos=%d",
-                  str.get(), mStack[mStackPos - 1].mInsertionPoint - 1,
-                  mStackPos - 1));
-    }
-#endif
-
     int32_t childIndex = mStack[mStackPos - 1].mInsertionPoint - 1;
     NS_ASSERTION(parent->GetChildAt(childIndex) == aContent,
                  "Flushing the wrong child.");
     mSink->NotifyInsert(parent, aContent, childIndex);
     mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
   } else if (mSink->IsTimeToNotify()) {
-    SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
-               ("SinkContext::DidAddContent: Notification as a result of the "
-                "interval expiring; backoff count: %d", mSink->mBackoffCount));
     FlushTags();
   }
 }
@@ -434,12 +371,6 @@ SinkContext::DidAddContent(nsIContent* aContent)
 nsresult
 SinkContext::OpenBody()
 {
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::OpenContainer", 
-                  eHTMLTag_body,
-                  mStackPos, 
-                  mSink);
-
   if (mStackPos <= 0) {
     NS_ERROR("container w/o parent");
 
@@ -506,11 +437,6 @@ nsresult
 SinkContext::CloseContainer(const nsHTMLTag aTag)
 {
   nsresult result = NS_OK;
-
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::CloseContainer", 
-                  aTag, mStackPos - 1, mSink);
-
   NS_ASSERTION(mStackPos > 0,
                "stack out of bounds. wrong context probably!");
 
@@ -536,16 +462,6 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
     // notification
 
     if (mStack[mStackPos].mNumFlushed < content->GetChildCount()) {
-#ifdef DEBUG
-      {
-        // Tracing code
-        SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
-                   ("SinkContext::CloseContainer: reflow on notifyImmediate "
-                    "tag=%s newIndex=%d stackPos=%d",
-                    nsAtomCString(mStack[mStackPos].mContent->Tag()).get(),
-                    mStack[mStackPos].mNumFlushed, mStackPos));
-      }
-#endif
       mSink->NotifyAppend(content, mStack[mStackPos].mNumFlushed);
       mStack[mStackPos].mNumFlushed = content->GetChildCount();
     }
@@ -590,12 +506,6 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
   }
 
   NS_IF_RELEASE(content);
-
-#ifdef DEBUG
-  if (SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
-    mSink->ForceReflow();
-  }
-#endif
 
   return result;
 }
@@ -674,16 +584,6 @@ SinkContext::FlushTags()
       childCount = content->GetChildCount();
 
       if (!flushed && (mStack[stackPos].mNumFlushed < childCount)) {
-#ifdef DEBUG
-        {
-          // Tracing code
-          SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
-                     ("SinkContext::FlushTags: tag=%s from newindex=%d at "
-                      "stackPos=%d",
-                      nsAtomCString(mStack[stackPos].mContent->Tag()).get(),
-                      mStack[stackPos].mNumFlushed, stackPos));
-        }
-#endif
         if (mStack[stackPos].mInsertionPoint != -1) {
           // We might have popped the child off our stack already
           // but not notified on it yet, which is why we have to get it
@@ -766,13 +666,6 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
 HTMLContentSink::HTMLContentSink()
 {
   // Note: operator new zeros our memory
-
-
-#ifdef DEBUG
-  if (!gSinkLogModuleInfo) {
-    gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");
-  }
-#endif
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -946,13 +839,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mCurrentContext->Begin(eHTMLTag_html, mRoot, 0, -1);
   mContextStack.AppendElement(mCurrentContext);
 
-#ifdef DEBUG
-  nsAutoCString spec;
-  (void)aURI->GetSpec(spec);
-  SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_CALLS,
-             ("HTMLContentSink::Init: this=%p url='%s'",
-              this, spec.get()));
-#endif
   return NS_OK;
 }
 
@@ -995,16 +881,10 @@ HTMLContentSink::DidBuildModel(bool aTerminated)
 
   // Reflow the last batch of content
   if (mBody) {
-    SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
-               ("HTMLContentSink::DidBuildModel: layout final content"));
     mCurrentContext->FlushTags();
   } else if (!mLayoutStarted) {
     // We never saw the body, and layout never got started. Force
     // layout *now*, to get an initial reflow.
-    SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
-               ("HTMLContentSink::DidBuildModel: forcing reflow on empty "
-                "document"));
-
     // NOTE: only force the layout if we are NOT destroying the
     // docshell. If we are destroying it, then starting layout will
     // likely cause us to crash, or at best waste a lot of time as we
@@ -1048,10 +928,6 @@ HTMLContentSink::SetParser(nsParserBase* aParser)
 nsresult
 HTMLContentSink::CloseHTML()
 {
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                 "HTMLContentSink::CloseHTML", 
-                 eHTMLTag_html, 0, this);
-
   if (mHeadContext) {
     if (mCurrentContext == mHeadContext) {
       uint32_t numContexts = mContextStack.Length();
@@ -1073,12 +949,6 @@ HTMLContentSink::CloseHTML()
 nsresult
 HTMLContentSink::OpenBody()
 {
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenBody", 
-                  eHTMLTag_body,
-                  mCurrentContext->mStackPos, 
-                  this);
-
   CloseHeadContext();  // do this just in case if the HEAD was left open!
 
   // if we already have a body we're done
@@ -1130,16 +1000,7 @@ HTMLContentSink::OpenBody()
 nsresult
 HTMLContentSink::CloseBody()
 {
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseBody", 
-                  eHTMLTag_body,
-                  mCurrentContext->mStackPos - 1, 
-                  this);
-
   // Flush out anything that's left
-  SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
-             ("HTMLContentSink::CloseBody: layout final body content"));
-
   mCurrentContext->FlushTags();
   mCurrentContext->CloseContainer(eHTMLTag_body);
 
@@ -1215,14 +1076,6 @@ HTMLContentSink::CloseHeadContext()
     mContextStack.RemoveElementAt(n);
   }
 }
-
-#ifdef DEBUG
-void
-HTMLContentSink::ForceReflow()
-{
-  mCurrentContext->FlushTags();
-}
-#endif
 
 void
 HTMLContentSink::NotifyInsert(nsIContent* aContent,
