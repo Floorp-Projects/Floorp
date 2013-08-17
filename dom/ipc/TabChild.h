@@ -436,9 +436,6 @@ private:
 
     // Get the DOMWindowUtils for the top-level window in this tab.
     already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils();
-    // Get the DOMWindowUtils for the window corresponding to the givent content
-    // element. This might be an iframe inside the tab, for instance.
-    already_AddRefed<nsIDOMWindowUtils> GetDOMWindowUtils(nsIContent* aContent);
 
     class CachedFileDescriptorInfo;
     class CachedFileDescriptorCallbackRunnable;

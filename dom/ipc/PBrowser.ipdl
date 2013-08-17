@@ -31,6 +31,7 @@ using gfxMatrix;
 using gfxSize;
 using CSSRect;
 using mozilla::layers::FrameMetrics;
+using FrameMetrics::ViewID;
 using mozilla::layout::ScrollingBehavior;
 using mozilla::void_t;
 using mozilla::WindowsHandle;
@@ -287,6 +288,13 @@ parent:
      * is useful for control logic that resides outside of the remote browser.
      */
     UpdateZoomConstraints(bool aAllowZoom, float aMinZoom, float aMaxZoom);
+
+    /**
+     * Notifies the parent about a scroll event. The pres shell ID and
+     * view ID identify which scrollable (sub-)frame was scrolled, and
+     * the new scroll offset for that frame is sent.
+     */
+    UpdateScrollOffset(uint32_t aPresShellId, ViewID aViewId, CSSIntPoint aScrollOffset);
 
     __delete__();
 
