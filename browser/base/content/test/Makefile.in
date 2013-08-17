@@ -182,6 +182,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_bug818118.js \
                  browser_bug820497.js \
                  browser_bug822367.js \
+                 browser_bug902156.js \
                  browser_bug832435.js \
                  browser_bug839103.js \
                  browser_bug880101.js \
@@ -296,6 +297,10 @@ MOCHITEST_BROWSER_FILES = \
                  file_bug822367_4B.html \
                  file_bug822367_5.html \
                  file_bug822367_6.html \
+                 file_bug902156_1.html \
+                 file_bug902156_2.html \
+                 file_bug902156_3.html \
+                 file_bug902156.js \
                  file_fullscreen-window-open.html \
                  healthreport_testRemoteCommands.html \
                  moz.png \
