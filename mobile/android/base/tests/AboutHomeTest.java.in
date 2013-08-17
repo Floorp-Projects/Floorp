@@ -10,6 +10,7 @@ import android.support.v4.view.ViewPager;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.TabWidget;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import java.lang.reflect.Method;
@@ -73,6 +74,31 @@ abstract class AboutHomeTest extends BaseTest {
         uri = uri.buildUpon().appendQueryParameter("profile", "default")
                              .appendQueryParameter("sync", "true").build();
         return uri;
+    }
+
+    /**
+     * Waits for the given ListView to have a non-empty adapter.
+     *
+     * This method will fail if the given ListView or its adapter are null.
+     */
+    protected boolean waitForListToLoad(final ListView listView) {
+        boolean result = waitForTest(new BooleanTest() {
+            @Override
+            public boolean test() {
+                if (listView == null) {
+                    return false;
+                }
+
+                final ListAdapter adapter = listView.getAdapter();
+                if (adapter == null) {
+                    return false;
+                }
+
+                return (adapter.getCount() > 0);
+            }
+        }, MAX_WAIT_MS);
+
+        return result;
     }
 
     /**
