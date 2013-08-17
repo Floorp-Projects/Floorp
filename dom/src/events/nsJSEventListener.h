@@ -11,7 +11,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIJSEventListener.h"
 #include "nsIDOMEventListener.h"
-#include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIScriptContext.h"

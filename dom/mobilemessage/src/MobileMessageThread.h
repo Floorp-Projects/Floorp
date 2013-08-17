@@ -10,7 +10,6 @@
 #include "mozilla/dom/mobilemessage/SmsTypes.h"
 #include "nsIDOMMozMobileMessageThread.h"
 #include "nsString.h"
-#include "jspubtd.h"
 
 namespace mozilla {
 namespace dom {
