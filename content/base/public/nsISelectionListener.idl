@@ -8,7 +8,7 @@
 interface nsIDOMDocument;
 interface nsISelection;
 
-[scriptable, uuid(A6CF90E2-15B3-11d2-932E-00805F8ADD32)]
+[scriptable, uuid(280cd784-23c2-468d-8624-354e0b3804bd)]
 interface nsISelectionListener : nsISupports
 {
   const short NO_REASON=0;
@@ -17,6 +17,8 @@ interface nsISelectionListener : nsISupports
   const short MOUSEUP_REASON=4;/*bitflags*/
   const short KEYPRESS_REASON=8;/*bitflags*/
   const short SELECTALL_REASON=16;
+  const short COLLAPSETOSTART_REASON=32;
+  const short COLLAPSETOEND_REASON=64;
 
 	void			notifySelectionChanged(in nsIDOMDocument doc, in nsISelection sel, in short reason);
 };
