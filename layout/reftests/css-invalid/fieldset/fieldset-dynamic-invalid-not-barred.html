@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <head>
+    <style>
+      fieldset:invalid { display: none; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById('i').readOnly = false;
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <fieldset id="fieldset">
+      <input id='i' required readonly>
+    </fieldset>
+  </body>
+</html>

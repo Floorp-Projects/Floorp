@@ -89,8 +89,8 @@ function checkConstraintValidationAPIDefaultValues(element)
 function checkDefaultPseudoClass()
 {
   is(window.getComputedStyle(document.getElementById('f'), null)
-       .getPropertyValue('background-color'), "rgb(0, 0, 0)",
-     "Nor :valid and :invalid should apply");
+       .getPropertyValue('background-color'), "rgb(0, 255, 0)",
+     ":valid should apply");
 
   is(window.getComputedStyle(document.getElementById('o'), null)
        .getPropertyValue('background-color'), "rgb(0, 255, 0)",
@@ -227,9 +227,16 @@ function checkCustomError(element, isBarred)
   ok(element.validity.customError, "The element should suffer from a custom error");
   ok(!element.validity.valid, "The element should not be valid with a custom error");
 
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
-     isBarred ? "rgb(0, 0, 0)" : "rgb(255, 0, 0)",
-     ":invalid pseudo-classs should apply");
+  if (element.tagName == "FIELDSET") {
+    is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+       isBarred ? "rgb(0, 255, 0)" : "rgb(255, 0, 0)",
+       ":invalid pseudo-classs should apply" + element.tagName);
+  }
+  else {
+    is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+       isBarred ? "rgb(0, 0, 0)" : "rgb(255, 0, 0)",
+       ":invalid pseudo-classs should apply" + element.tagName);
+  }
 
   element.setCustomValidity("");
   is(element.validationMessage, "", "The element should not have a validation message when reseted");
@@ -237,7 +244,7 @@ function checkCustomError(element, isBarred)
   ok(element.validity.valid, "The element should now be valid");
 
   is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
-     isBarred ? "rgb(0, 0, 0)" : "rgb(0, 255, 0)",
+     isBarred && element.tagName != "FIELDSET" ? "rgb(0, 0, 0)" : "rgb(0, 255, 0)",
      ":valid pseudo-classs should apply");
 }
 
