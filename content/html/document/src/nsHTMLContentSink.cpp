@@ -196,8 +196,6 @@ protected:
                     nsIContent* aChildContent,
                     int32_t aIndexInContainer);
   void NotifyRootInsertion();
-  
-  bool IsMonolithicContainer(nsHTMLTag aTag);
 };
 
 class SinkContext
@@ -209,7 +207,7 @@ public:
   nsresult Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,
                  uint32_t aNumFlushed, int32_t aInsertionPoint);
   nsresult OpenBody();
-  nsresult CloseContainer(const nsHTMLTag aTag);
+  nsresult CloseBody();
   nsresult End();
 
   nsresult GrowStack();
@@ -434,9 +432,8 @@ SinkContext::Node::Add(nsIContent *child)
 }
 
 nsresult
-SinkContext::CloseContainer(const nsHTMLTag aTag)
+SinkContext::CloseBody()
 {
-  nsresult result = NS_OK;
   NS_ASSERTION(mStackPos > 0,
                "stack out of bounds. wrong context probably!");
 
@@ -445,9 +442,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
   }
 
   --mStackPos;
-  nsHTMLTag nodeType = mStack[mStackPos].mType;
-
-  NS_ASSERTION(nodeType == aTag,
+  NS_ASSERTION(mStack[mStackPos].mType == eHTMLTag_body,
                "Tag mismatch.  Closing tag on wrong context or something?");
 
   nsGenericHTMLElement* content = mStack[mStackPos].mContent;
@@ -470,44 +465,10 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
     mNotifyLevel = mStackPos - 1;
   }
 
-  if (mSink->IsMonolithicContainer(nodeType)) {
-    --mSink->mInMonolithicContainer;
-  }
-
   DidAddContent(content);
-
-  // Special handling for certain tags
-  switch (nodeType) {
-  case eHTMLTag_noembed:
-  case eHTMLTag_noframes:
-    MOZ_CRASH("Must not use HTMLContentSink for noembed/noframes.");
-
-  case eHTMLTag_form:
-    MOZ_CRASH("Must not use HTMLContentSink for forms.");
-
-  case eHTMLTag_video:
-  case eHTMLTag_audio:
-  case eHTMLTag_select:
-  case eHTMLTag_textarea:
-  case eHTMLTag_object:
-  case eHTMLTag_applet:
-  case eHTMLTag_title:
-    content->DoneAddingChildren(HaveNotifiedForCurrentContent());
-    break;
-
-  case eHTMLTag_script:
-    MOZ_CRASH("Must not use HTMLContentSink to run scripts.");
-
-  case eHTMLTag_style:
-    MOZ_CRASH("Must not use HTMLContentSink for styles.");
-
-  default:
-    break;
-  }
-
   NS_IF_RELEASE(content);
 
-  return result;
+  return NS_OK;
 }
 
 nsresult
@@ -1002,7 +963,7 @@ HTMLContentSink::CloseBody()
 {
   // Flush out anything that's left
   mCurrentContext->FlushTags();
-  mCurrentContext->CloseContainer(eHTMLTag_body);
+  mCurrentContext->CloseBody();
 
   return NS_OK;
 }
@@ -1123,19 +1084,6 @@ HTMLContentSink::NotifyRootInsertion()
   // contexts, since we just inserted the root and notified on
   // our whole tree
   UpdateChildCounts();
-}
-
-bool
-HTMLContentSink::IsMonolithicContainer(nsHTMLTag aTag)
-{
-  if (aTag == eHTMLTag_tr     ||
-      aTag == eHTMLTag_select ||
-      aTag == eHTMLTag_applet ||
-      aTag == eHTMLTag_object) {
-    return true;
-  }
-
-  return false;
 }
 
 void
