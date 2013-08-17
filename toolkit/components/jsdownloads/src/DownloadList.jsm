@@ -205,19 +205,28 @@ DownloadList.prototype = {
   },
 
   /**
-   * Removes downloads from the list based on the given test function.
+   * Removes downloads from the list that have finished, have failed, or have
+   * been canceled without keeping partial data.  A filter function may be
+   * specified to remove only a subset of those downloads.
    *
-   * @param aTestFn
-   *        The test function.
+   * This method finalizes each removed download, ensuring that any partially
+   * downloaded data associated with it is also removed.
+   *
+   * @param aFilterFn
+   *        The filter function is called with each download as its only
+   *        argument, and should return true to remove the download and false
+   *        to keep it.  This parameter may be null or omitted to have no
+   *        additional filter.
    */
-  _removeWhere: function DL__removeWhere(aTestFn) {
+  removeFinished: function DL_removeFinished(aFilterFn) {
     Task.spawn(function() {
       let list = yield this.getAll();
       for (let download of list) {
         // Remove downloads that have been canceled, even if the cancellation
         // operation hasn't completed yet so we don't check "stopped" here.
-        if ((download.succeeded || download.canceled || download.error) &&
-            aTestFn(download)) {
+        // Failed downloads with partial data are also removed.
+        if (download.stopped && (!download.hasPartialData || download.error) &&
+            (!aFilterFn || aFilterFn(download))) {
           // Remove the download first, so that the views don't get the change
           // notifications that may occur during finalization.
           this.remove(download);
@@ -225,23 +234,10 @@ DownloadList.prototype = {
           // This works even if the download state has changed meanwhile.  We
           // don't need to wait for the procedure to be complete before
           // processing the other downloads in the list.
-          download.finalize(true);
+          download.finalize(true).then(null, Cu.reportError);
         }
       }
     }.bind(this)).then(null, Cu.reportError);
-  },
-
-  /**
-   * Removes downloads within the given period of time.
-   *
-   * @param aStartTime
-   *        The start time date object.
-   * @param aEndTime
-   *        The end time date object.
-   */
-  removeByTimeframe: function DL_removeByTimeframe(aStartTime, aEndTime) {
-    this._removeWhere(download => download.startTime >= aStartTime &&
-                                  download.startTime <= aEndTime);
   },
 
   ////////////////////////////////////////////////////////////////////////////
@@ -253,12 +249,12 @@ DownloadList.prototype = {
   //// nsINavHistoryObserver
 
   onDeleteURI: function DL_onDeleteURI(aURI, aGUID) {
-    this._removeWhere(download => aURI.equals(NetUtil.newURI(
-                                                      download.source.url)));
+    this.removeFinished(download => aURI.equals(NetUtil.newURI(
+                                                download.source.url)));
   },
 
   onClearHistory: function DL_onClearHistory() {
-    this._removeWhere(() => true);
+    this.removeFinished();
   },
 
   onTitleChanged: function () {},
