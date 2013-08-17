@@ -162,17 +162,9 @@ public:
   virtual bool IsScriptExecuting();
 
   // nsIHTMLContentSink
+  NS_IMETHOD IsEnabled(int32_t, bool*);
   NS_IMETHOD OpenContainer(nsHTMLTag aNodeType);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
-  NS_IMETHOD CloseMalformedContainer(const nsHTMLTag aTag);
-  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
-  NS_IMETHOD DidProcessTokens(void);
-  NS_IMETHOD WillProcessAToken(void);
-  NS_IMETHOD DidProcessAToken(void);
-  NS_IMETHOD BeginContext(int32_t aID);
-  NS_IMETHOD EndContext(int32_t aID);
-  NS_IMETHOD OpenHead();
-  NS_IMETHOD IsEnabled(int32_t aTag, bool* aReturn);
 
 #ifdef DEBUG
   // nsIDebugDumpContent
@@ -253,7 +245,6 @@ public:
                  uint32_t aNumFlushed, int32_t aInsertionPoint);
   nsresult OpenContainer(nsHTMLTag aNodeType);
   nsresult CloseContainer(const nsHTMLTag aTag);
-  nsresult AddLeaf(const nsIParserNode& aNode);
   nsresult AddLeaf(nsIContent* aContent);
   nsresult End();
 
@@ -708,66 +699,6 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
 #endif
 
   return result;
-}
-
-nsresult
-SinkContext::AddLeaf(const nsIParserNode& aNode)
-{
-  SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::AddLeaf", 
-                  nsHTMLTag(aNode.GetNodeType()), 
-                  mStackPos, mSink);
-
-  nsresult rv = NS_OK;
-
-  switch (aNode.GetTokenType()) {
-  case eToken_start:
-    {
-      FlushTextAndRelease();
-
-      // Create new leaf content object
-      nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-      nsRefPtr<nsGenericHTMLElement> content =
-        mSink->CreateContentObject(nodeType);
-      NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
-
-      // Add new leaf to its parent
-      AddLeaf(content);
-
-      // Additional processing needed once the element is in the tree
-      switch (nodeType) {
-      case eHTMLTag_meta:
-        MOZ_CRASH("Must not use HTMLContentSink for metas.");
-
-      case eHTMLTag_input:
-        content->DoneCreatingElement();
-        break;
-
-      case eHTMLTag_menuitem:
-        content->DoneCreatingElement();
-        break;
-
-      default:
-        break;
-      }
-    }
-    break;
-
-  case eToken_text:
-  case eToken_whitespace:
-  case eToken_newline:
-    MOZ_CRASH();
-
-    break;
-  case eToken_entity:
-    MOZ_CRASH();
-
-    break;
-  default:
-    break;
-  }
-
-  return rv;
 }
 
 nsresult
@@ -1372,102 +1303,6 @@ HTMLContentSink::SetParser(nsParserBase* aParser)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLContentSink::BeginContext(int32_t aPosition)
-{
-  NS_PRECONDITION(aPosition > -1, "out of bounds");
-
-  if (!mCurrentContext) {
-    NS_ERROR("Nonexistent context");
-
-    return NS_ERROR_FAILURE;
-  }
-
-  // Flush everything in the current context so that we don't have
-  // to worry about insertions resulting in inconsistent frame creation.
-  mCurrentContext->FlushTags();
-
-  // Sanity check.
-  if (mCurrentContext->mStackPos <= aPosition) {
-    NS_ERROR("Out of bounds position");
-    return NS_ERROR_FAILURE;
-  }
-
-  int32_t insertionPoint = -1;
-  nsHTMLTag nodeType      = mCurrentContext->mStack[aPosition].mType;
-  nsGenericHTMLElement* content = mCurrentContext->mStack[aPosition].mContent;
-
-  // If the content under which the new context is created
-  // has a child on the stack, the insertion point is
-  // before the last child.
-  if (aPosition < (mCurrentContext->mStackPos - 1)) {
-    insertionPoint = content->GetChildCount() - 1;
-  }
-
-  SinkContext* sc = new SinkContext(this);
-  sc->Begin(nodeType,
-            content,
-            mCurrentContext->mStack[aPosition].mNumFlushed,
-            insertionPoint);
-  NS_ADDREF(sc->mSink);
-
-  mContextStack.AppendElement(mCurrentContext);
-  mCurrentContext = sc;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::EndContext(int32_t aPosition)
-{
-  NS_PRECONDITION(mCurrentContext && aPosition > -1, "nonexistent context");
-
-  uint32_t n = mContextStack.Length() - 1;
-  SinkContext* sc = mContextStack.ElementAt(n);
-
-  const SinkContext::Node &bottom = mCurrentContext->mStack[0];
-  
-  NS_ASSERTION(sc->mStack[aPosition].mType == bottom.mType,
-               "ending a wrong context");
-
-  mCurrentContext->FlushTextAndRelease();
-  
-  NS_ASSERTION(bottom.mContent->GetChildCount() == bottom.mNumFlushed,
-               "Node at base of context stack not fully flushed.");
-
-  // Flushing tags before the assertion on the previous line would
-  // undoubtedly prevent the assertion from failing, but it shouldn't
-  // be failing anyway, FlushTags or no.  Flushing here is nevertheless
-  // a worthwhile precaution, since we lose some information (e.g.,
-  // mInsertionPoints) when we end the current context.
-  mCurrentContext->FlushTags();
-
-  sc->mStack[aPosition].mNumFlushed = bottom.mNumFlushed;
-
-  for (int32_t i = 0; i<mCurrentContext->mStackPos; i++) {
-    NS_IF_RELEASE(mCurrentContext->mStack[i].mContent);
-  }
-
-  delete [] mCurrentContext->mStack;
-
-  mCurrentContext->mStack      = nullptr;
-  mCurrentContext->mStackPos   = 0;
-  mCurrentContext->mStackSize  = 0;
-
-  delete [] mCurrentContext->mText;
-
-  mCurrentContext->mText       = nullptr;
-  mCurrentContext->mTextLength = 0;
-  mCurrentContext->mTextSize   = 0;
-
-  NS_IF_RELEASE(mCurrentContext->mSink);
-
-  delete mCurrentContext;
-
-  mCurrentContext = sc;
-  mContextStack.RemoveElementAt(n);
-  return NS_OK;
-}
-
 nsresult
 HTMLContentSink::CloseHTML()
 {
@@ -1493,13 +1328,6 @@ HTMLContentSink::CloseHTML()
   }
 
   return NS_OK;
-}
-
-nsresult
-HTMLContentSink::OpenHead()
-{
-  nsresult rv = OpenHeadContext();
-  return rv;
 }
 
 nsresult
@@ -1665,49 +1493,6 @@ HTMLContentSink::CloseContainer(const eHTMLTags aTag)
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::CloseMalformedContainer(const eHTMLTags aTag)
-{
-  return mCurrentContext->CloseContainer(aTag);
-}
-
-NS_IMETHODIMP
-HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
-{
-  nsresult rv;
-
-  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-  switch (nodeType) {
-  case eHTMLTag_link:
-    MOZ_CRASH("Must not use HTMLContentSink for links.");
-
-  default:
-    rv = mCurrentContext->AddLeaf(aNode);
-
-    break;
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::DidProcessTokens(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::WillProcessAToken(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::DidProcessAToken(void)
-{
-  return DidProcessATokenImpl();
 }
 
 NS_IMETHODIMP
