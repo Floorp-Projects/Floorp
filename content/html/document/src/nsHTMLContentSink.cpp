@@ -162,8 +162,8 @@ public:
   virtual bool IsScriptExecuting();
 
   // nsIHTMLContentSink
-  NS_IMETHOD OpenContainer(nsHTMLTag aNodeType);
-  NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
+  NS_IMETHOD OpenContainer(ElementType aNodeType);
+  NS_IMETHOD CloseContainer(ElementType aTag);
 
 #ifdef DEBUG
   // nsIDebugDumpContent
@@ -1412,24 +1412,15 @@ HTMLContentSink::CloseBody()
 }
 
 NS_IMETHODIMP
-HTMLContentSink::OpenContainer(nsHTMLTag aNodeType)
+HTMLContentSink::OpenContainer(ElementType aElementType)
 {
   nsresult rv = NS_OK;
 
-  switch (aNodeType) {
-    case eHTMLTag_frameset:
-      MOZ_CRASH("Must not use HTMLContentSink for frames.");
-
-    case eHTMLTag_head:
-      rv = OpenHeadContext();
-      if (NS_SUCCEEDED(rv)) {
-        mHaveSeenHead = true;
-      }
+  switch (aElementType) {
+    case eBody:
+      rv = OpenBody(eHTMLTag_body);
       break;
-    case eHTMLTag_body:
-      rv = OpenBody(aNodeType);
-      break;
-    case eHTMLTag_html:
+    case eHTML:
       if (mRoot) {
         // If we've already hit this code once, then we're done
         if (!mNotifiedRootInsertion) {
@@ -1438,40 +1429,22 @@ HTMLContentSink::OpenContainer(nsHTMLTag aNodeType)
         ProcessOfflineManifest(mRoot);
       }
       break;
-    case eHTMLTag_form:
-      MOZ_CRASH("Must not use HTMLContentSink for forms.");
-
-    default:
-      rv = mCurrentContext->OpenContainer(aNodeType);
-      break;
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-HTMLContentSink::CloseContainer(const eHTMLTags aTag)
+HTMLContentSink::CloseContainer(const ElementType aTag)
 {
   nsresult rv = NS_OK;
 
   switch (aTag) {
-    case eHTMLTag_frameset:
-      MOZ_CRASH("Must not use HTMLContentSink for frames.");
-
-    case eHTMLTag_head:
-      CloseHeadContext();
-      break;
-    case eHTMLTag_body:
+    case eBody:
       rv = CloseBody();
       break;
-    case eHTMLTag_html:
+    case eHTML:
       rv = CloseHTML();
-      break;
-    case eHTMLTag_form:
-      MOZ_CRASH("Must not use HTMLContentSink for forms.");
-
-    default:
-      rv = mCurrentContext->CloseContainer(aTag);
       break;
   }
 

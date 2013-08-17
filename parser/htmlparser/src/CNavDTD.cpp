@@ -41,14 +41,14 @@ CNavDTD::BuildModel(nsITokenizer* aTokenizer,
     return NS_ERROR_HTMLPARSER_STOPPARSING;
   }
 
-  nsresult rv = sink->OpenContainer(eHTMLTag_html);
+  nsresult rv = sink->OpenContainer(nsIHTMLContentSink::eHTML);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = sink->OpenContainer(eHTMLTag_body);
+  rv = sink->OpenContainer(nsIHTMLContentSink::eBody);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = sink->CloseContainer(eHTMLTag_body);
+  rv = sink->CloseContainer(nsIHTMLContentSink::eBody);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  rv = sink->CloseContainer(eHTMLTag_html);
+  rv = sink->CloseContainer(nsIHTMLContentSink::eHTML);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   return NS_OK;
