@@ -63,7 +63,8 @@ class StackwalkerSPARC : public Stackwalker {
   // Implementation of Stackwalker, using sparc context (%fp, %sp, %pc) and
   // stack conventions
   virtual StackFrame* GetContextFrame();
-  virtual StackFrame* GetCallerFrame(const CallStack* stack);
+  virtual StackFrame* GetCallerFrame(const CallStack* stack,
+                                     bool stack_scan_allowed);
 
   // Stores the CPU context corresponding to the innermost stack frame to
   // be returned by GetContextFrame.

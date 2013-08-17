@@ -4324,7 +4324,7 @@ nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
 bool
 nsContentUtils::AreJSObjectsHeld(void* aScriptObjectHolder)
 {
-  return cyclecollector::TestJSHolder(aScriptObjectHolder);
+  return cyclecollector::IsJSHolder(aScriptObjectHolder);
 }
 #endif
 

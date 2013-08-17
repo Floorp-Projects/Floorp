@@ -94,6 +94,10 @@ class Stackwalker {
   }
   static uint32_t max_frames() { return max_frames_; }
 
+  static void set_max_frames_scanned(uint32_t max_frames_scanned) {
+    max_frames_scanned_ = max_frames_scanned;
+  }
+
  protected:
   // system_info identifies the operating system, NULL or empty if unknown.
   // memory identifies a MemoryRegion that provides the stack memory
@@ -193,8 +197,11 @@ class Stackwalker {
   // return NULL on failure or when there are no more caller frames (when
   // the end of the stack has been reached).  GetCallerFrame allocates a new
   // StackFrame (or StackFrame subclass), ownership of which is taken by
-  // the caller.
-  virtual StackFrame* GetCallerFrame(const CallStack* stack) = 0;
+  // the caller.  |stack_scan_allowed| controls whether stack scanning is
+  // an allowable frame-recovery method, since it is desirable to be able to
+  // disable stack scanning in performance-critical use cases.
+  virtual StackFrame* GetCallerFrame(const CallStack* stack,
+                                     bool stack_scan_allowed) = 0;
 
   // The maximum number of frames Stackwalker will walk through.
   // This defaults to 1024 to prevent infinite loops.
@@ -204,6 +211,12 @@ class Stackwalker {
   // it affects whether or not an error message is printed in the case
   // where an unwind got stopped by the limit.
   static bool max_frames_set_;
+
+  // The maximum number of stack-scanned and otherwise untrustworthy
+  // frames allowed.  Stack-scanning can be expensive, so the option to
+  // disable or limit it is helpful in cases where unwind performance is
+  // important.  This defaults to 1024, the same as max_frames_.
+  static uint32_t max_frames_scanned_;
 };
 
 }  // namespace google_breakpad
