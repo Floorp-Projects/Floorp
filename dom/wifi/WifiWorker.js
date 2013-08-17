@@ -163,6 +163,9 @@ var WifiManager = (function() {
   }
 
   var driverLoaded = false;
+
+  manager.getDriverLoaded = function() { return driverLoaded; }
+
   function loadDriver(callback) {
     if (driverLoaded) {
       callback(0);
@@ -2840,6 +2843,7 @@ WifiWorker.prototype = {
 
     // First, notify all of the requests that were trying to make this change.
     let state = this._stateRequests[0].enabled;
+    let driverLoaded = WifiManager.getDriverLoaded();
 
     // It is callback function's responsibility to handle the pending request.
     // So we just return here.
@@ -2848,9 +2852,12 @@ WifiWorker.prototype = {
       return;
     }
 
-    // If the new state is not the same as state, then we weren't processing
-    // the first request (we were racing somehow) so don't notify.
-    if (!success || state === newState) {
+    // If the new state is not the same as state or new state is not the same as
+    // driver loaded state, then we weren't processing the first request (we
+    // were racing somehow) so don't notify.
+    // For newState is false(disable), we expect driverLoaded is false(driver unloaded)
+    // to proceed, and vice versa.
+    if (!success || (newState === driverLoaded && state === newState)) {
       do {
         if (!("callback" in this._stateRequests[0])) {
           this._stateRequests.shift();
@@ -2864,16 +2871,27 @@ WifiWorker.prototype = {
     // If there were requests queued after this one, run them.
     if (this._stateRequests.length > 0) {
       let self = this;
+      let callback = null;
       this._callbackTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      this._callbackTimer.initWithCallback(function(timer) {
-        if ("callback" in self._stateRequests[0]) {
-          self._stateRequests[0].callback.call(self, self._stateRequests[0].enabled);
-        } else {
-          WifiManager.setWifiEnabled(self._stateRequests[0].enabled,
-                                     self._setWifiEnabledCallback.bind(self));
-        }
-        timer = null;
-      }, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+      if (newState === driverLoaded) {
+        // Driver status is as same as new state, proceed next request.
+        callback = function(timer) {
+          if ("callback" in self._stateRequests[0]) {
+            self._stateRequests[0].callback.call(self, self._stateRequests[0].enabled);
+          } else {
+            WifiManager.setWifiEnabled(self._stateRequests[0].enabled,
+                                       self._setWifiEnabledCallback.bind(this));
+          }
+          timer = null;
+        };
+      } else {
+        // Driver status is not as same as new state, wait driver.
+        callback = function(timer) {
+          self._notifyAfterStateChange(success, newState);
+          timer = null;
+        };
+      }
+      this._callbackTimer.initWithCallback(callback, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
     }
   },
 
