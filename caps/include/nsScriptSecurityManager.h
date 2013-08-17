@@ -489,9 +489,6 @@ private:
     InitDomainPolicy(JSContext* cx, const char* aPolicyName,
                      DomainPolicy* aDomainPolicy);
 
-    // JS strings we need to clean up on shutdown
-    static jsid sEnabledID;
-
     inline void
     ScriptSecurityPrefChanged();
 
