@@ -24,9 +24,10 @@ dl.google.com: did not receive HSTS header
 docs.google.com: did not receive HSTS header
 drive.google.com: did not receive HSTS header
 dropcam.com: did not receive HSTS header
-emailprivacytester.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-hsts-000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
+emailprivacytester.com: did not receive HSTS header
 encrypted.google.com: did not receive HSTS header
 epoxate.com: max-age too low: 259200
+factor.cc: could not connect to host
 fatzebra.com.au: did not receive HSTS header
 fj.simple.com: did not receive HSTS header
 gmail.com: did not receive HSTS header
@@ -36,7 +37,6 @@ googleplex.com: could not connect to host
 greplin.com: did not receive HSTS header
 grepular.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsIStrictTransportSecurityService.processStsHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-hsts-000000000000/getHSTSPreloadList.js :: processStsHeader :: line 123"  data: no]
 groups.google.com: did not receive HSTS header
-haste.ch: could not connect to host
 health.google.com: did not receive HSTS header
 history.google.com: did not receive HSTS header
 hostedtalkgadget.google.com: did not receive HSTS header
