@@ -11,7 +11,6 @@
 #include "nsIParser.h"
 #include "CNavDTD.h"
 #include "nsIHTMLContentSink.h"
-#include "nsParserNode.h"
 
 NS_IMPL_ISUPPORTS1(CNavDTD, nsIDTD);
 

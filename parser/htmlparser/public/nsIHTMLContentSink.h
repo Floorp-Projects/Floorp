@@ -49,7 +49,6 @@
  * NOTE: I haven't figured out how sub-documents (non-frames)
  *       are going to be handled. Stay tuned.
  */
-#include "nsIParserNode.h"
 #include "nsIContentSink.h"
 #include "nsHTMLTags.h"
 
@@ -76,7 +75,6 @@ public:
    * This method is used to open a generic container in the sink.
    *
    * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
    */     
   NS_IMETHOD OpenContainer(nsHTMLTag aNodeType) = 0;
 
