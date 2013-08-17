@@ -69,7 +69,8 @@ class StackwalkerAMD64 : public Stackwalker {
   // Implementation of Stackwalker, using amd64 context (stack pointer in %rsp,
   // stack base in %rbp) and stack conventions (saved stack pointer at 0(%rbp))
   virtual StackFrame* GetContextFrame();
-  virtual StackFrame* GetCallerFrame(const CallStack* stack);
+  virtual StackFrame* GetCallerFrame(const CallStack* stack,
+                                     bool stack_scan_allowed);
 
   // Use cfi_frame_info (derived from STACK CFI records) to construct
   // the frame that called frames.back(). The caller takes ownership

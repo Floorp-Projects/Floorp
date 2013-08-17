@@ -49,12 +49,10 @@ ExecutableAllocator::sizeOfCode(JS::CodeSizes *sizes) const
             ExecutablePool* pool = r.front();
             sizes->ion      += pool->m_ionCodeBytes;
             sizes->baseline += pool->m_baselineCodeBytes;
-            sizes->asmJS    += pool->m_asmJSCodeBytes;
             sizes->regexp   += pool->m_regexpCodeBytes;
             sizes->other    += pool->m_otherCodeBytes;
             sizes->unused   += pool->m_allocation.size - pool->m_ionCodeBytes
                                                        - pool->m_baselineCodeBytes
-                                                       - pool->m_asmJSCodeBytes
                                                        - pool->m_regexpCodeBytes
                                                        - pool->m_otherCodeBytes;
         }

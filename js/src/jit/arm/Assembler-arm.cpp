@@ -2748,11 +2748,6 @@ void
 AutoFlushCache::update(uintptr_t newStart, size_t len)
 {
     uintptr_t newStop = newStart + len;
-    if (this == NULL) {
-        // just flush right here and now.
-        JSC::ExecutableAllocator::cacheFlush((void*)newStart, len);
-        return;
-    }
     used_ = true;
     if (!start_) {
         IonSpewCont(IonSpew_CacheFlush,  ".");

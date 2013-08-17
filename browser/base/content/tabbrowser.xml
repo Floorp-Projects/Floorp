@@ -2275,7 +2275,7 @@
               Components.utils.reportError("gBrowser.addProgressListener was " +
                                            "called with a second argument, " +
                                            "which is not supported. See bug " +
-                                           "608628.");
+                                           "608628. Call stack: " + new Error().stack);
             }
 
             this.mProgressListeners.push(aListener);

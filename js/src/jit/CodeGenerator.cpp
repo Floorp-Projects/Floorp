@@ -970,18 +970,6 @@ CodeGenerator::visitCallee(LCallee *lir)
 }
 
 bool
-CodeGenerator::visitForceUseV(LForceUseV *lir)
-{
-    return true;
-}
-
-bool
-CodeGenerator::visitForceUseT(LForceUseT *lir)
-{
-    return true;
-}
-
-bool
 CodeGenerator::visitStart(LStart *lir)
 {
     return true;
@@ -7313,6 +7301,86 @@ CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
                    AbsoluteAddress(limitAddr),
                    StackPointer,
                    lir->mir()->onError());
+    return true;
+}
+
+bool
+CodeGenerator::visitRangeAssert(LRangeAssert *ins)
+{
+     Register input = ToRegister(ins->input());
+     Range *r = ins->range();
+
+    // Check the lower bound.
+    if (r->lower() != INT32_MIN) {
+        Label success;
+        masm.branch32(Assembler::GreaterThanOrEqual, input, Imm32(r->lower()), &success);
+        masm.breakpoint();
+        masm.bind(&success);
+    }
+
+    // Check the upper bound.
+    if (r->upper() != INT32_MAX) {
+        Label success;
+        masm.branch32(Assembler::LessThanOrEqual, input, Imm32(r->upper()), &success);
+        masm.breakpoint();
+        masm.bind(&success);
+    }
+
+    // For r->isDecimal() and r->exponent(), there's nothing to check, because
+    // if we ended up in the integer range checking code, the value is already
+    // in an integer register in the integer range.
+
+    return true;
+}
+
+bool
+CodeGenerator::visitDoubleRangeAssert(LDoubleRangeAssert *ins)
+{
+     FloatRegister input = ToFloatRegister(ins->input());
+     FloatRegister temp = ToFloatRegister(ins->temp());
+     Range *r = ins->range();
+
+    // Check the lower bound.
+    if (!r->isLowerInfinite()) {
+        Label success;
+        masm.loadConstantDouble(r->lower(), temp);
+        if (r->isUpperInfinite())
+            masm.branchDouble(Assembler::DoubleUnordered, input, input, &success);
+        masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, temp, &success);
+        masm.breakpoint();
+        masm.bind(&success);
+    }
+    // Check the upper bound.
+    if (!r->isUpperInfinite()) {
+        Label success;
+        masm.loadConstantDouble(r->upper(), temp);
+        if (r->isLowerInfinite())
+            masm.branchDouble(Assembler::DoubleUnordered, input, input, &success);
+        masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, temp, &success);
+        masm.breakpoint();
+        masm.bind(&success);
+    }
+
+    // This code does not yet check r->isDecimal(). This would require new
+    // assembler interfaces to make rounding instructions available.
+
+    if (!r->isInfinite()) {
+        // Check the bounds implied by the maximum exponent.
+        Label exponentLoOk;
+        masm.loadConstantDouble(pow(2.0, r->exponent() + 1), temp);
+        masm.branchDouble(Assembler::DoubleUnordered, input, input, &exponentLoOk);
+        masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, temp, &exponentLoOk);
+        masm.breakpoint();
+        masm.bind(&exponentLoOk);
+
+        Label exponentHiOk;
+        masm.loadConstantDouble(-pow(2.0, r->exponent() + 1), temp);
+        masm.branchDouble(Assembler::DoubleUnordered, input, input, &exponentHiOk);
+        masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, temp, &exponentHiOk);
+        masm.breakpoint();
+        masm.bind(&exponentHiOk);
+    }
+
     return true;
 }
 

@@ -434,7 +434,7 @@ class LifoAlloc
         // Move the read position forward by |size| bytes.
         void popFront(size_t size) {
             ensureSpaceAndAlignment(size);
-            position_ = detail::AlignPtr(position_ + size);
+            position_ = position_ + size;
         }
 
         // Update the bytes at the current position with a new value.
