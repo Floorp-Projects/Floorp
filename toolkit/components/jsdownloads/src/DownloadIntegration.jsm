@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadStore",
                                   "resource://gre/modules/DownloadStore.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadImport",
                                   "resource://gre/modules/DownloadImport.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
+                                  "resource://gre/modules/DownloadUIHelper.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -61,6 +63,7 @@ XPCOMUtils.defineLazyGetter(this, "gParentalControlsService", function() {
   return null;
 });
 
+// This will be replaced by "DownloadUIHelper.strings" (see bug 905123).
 XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
   return Services.strings.
     createBundle("chrome://mozapps/locale/downloads/downloads.properties");
@@ -414,6 +417,24 @@ this.DownloadIntegration = {
     let deferred = Task.spawn(function DI_launchDownload_task() {
       let file = new FileUtils.File(aDownload.target.path);
 
+      // Ask for confirmation if the file is executable.  We do this here,
+      // instead of letting the caller handle the prompt separately in the user
+      // interface layer, for two reasons.  The first is because of its security
+      // nature, so that add-ons cannot forget to do this check.  The second is
+      // that the system-level security prompt, if enabled, would be displayed
+      // at launch time in any case.
+      if (file.isExecutable() && !this.dontOpenFileAndFolder) {
+        // We don't anchor the prompt to a specific window intentionally, not
+        // only because this is the same behavior as the system-level prompt,
+        // but also because the most recently active window is the right choice
+        // in basically all cases.
+        let shouldLaunch = yield DownloadUIHelper.getPrompter()
+                                   .confirmLaunchExecutable(file.path);
+        if (!shouldLaunch) {
+          return;
+        }
+      }
+
       // In case of a double extension, like ".tar.gz", we only
       // consider the last one, because the MIME service cannot
       // handle multiple extensions.
@@ -560,7 +581,11 @@ this.DownloadIntegration = {
    */
   _createDownloadsDirectory: function DI_createDownloadsDirectory(aName) {
     let directory = this._getDirectory(aName);
-    directory.append(gStringBundle.GetStringFromName("downloadsFolder"));
+
+    // We read the name of the directory from the list of translated strings
+    // that is kept by the UI helper module, even if this string is not strictly
+    // displayed in the user interface.
+    directory.append(DownloadUIHelper.strings.downloadsFolder);
 
     // Create the Downloads folder and ignore if it already exists.
     return OS.File.makeDir(directory.path, { ignoreExisting: true }).
