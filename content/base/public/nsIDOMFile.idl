@@ -6,8 +6,6 @@
 #include "domstubs.idl"
 
 %{C++
-#include "jsapi.h"
-
 namespace mozilla {
 namespace dom {
 namespace indexedDB {

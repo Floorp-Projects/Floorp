@@ -19,7 +19,6 @@
 #include "nsTArray.h"
 #include "nsIURI.h"
 #include "mozilla/dom/EventTarget.h"
-#include "js/RootingAPI.h"
 
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"

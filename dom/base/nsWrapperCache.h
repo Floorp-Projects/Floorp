@@ -8,7 +8,8 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Assertions.h"
-#include "js/Value.h"
+#include "js/Value.h"       // must come before js/RootingAPI.h
+#include "js/RootingAPI.h"
 
 struct JSTracer;
 class JSObject;

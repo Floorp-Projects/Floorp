@@ -23,19 +23,26 @@
 #include "xptinfo.h"
 #include "nsAXPCNativeCallContext.h"
 
+struct JSFreeOp;
+
+namespace JS {
+template <typename T> class Handle;
+template <typename T> class MutableHandle;
+}
+
 class nsWrapperCache;
 %}
 
 /***************************************************************************/
 
-// NB: jsval and jsid are declared in nsIVariant.idl
+// NB: jsval and jsid are declared in nsrootidl.idl
 
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSClassPtr(JSClass);
 [ptr] native JSFreeOpPtr(JSFreeOp);
 [ptr] native JSObjectPtr(JSObject);
-[ptr] native JSValPtr(jsval);
-[ptr] native JSValConstPtr(const jsval);
+[ptr] native JSValPtr(JS::Value);
+[ptr] native JSValConstPtr(const JS::Value);
       native JSPropertyOp(JSPropertyOp);
       native JSEqualityOp(JSEqualityOp);
 [ptr] native JSScriptPtr(JSScript);
@@ -46,7 +53,7 @@ class nsWrapperCache;
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
 [ref] native JSCompartmentOptions(JS::CompartmentOptions);
 [ref] native JSCallArgsRef(const JS::CallArgs);
-      native JSHandleId(JS::HandleId);
+      native JSHandleId(JS::Handle<jsid>);
 
 /***************************************************************************/
 
