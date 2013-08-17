@@ -163,9 +163,6 @@ public:
   NS_IMETHOD CloseContainer(ElementType aTag);
 
 protected:
-  already_AddRefed<nsGenericHTMLElement>
-  CreateContentObject(nsHTMLTag aNodeType);
-
 #ifdef DEBUG
   void SinkTraceNode(uint32_t aBit,
                      const char* aMsg,
@@ -205,7 +202,7 @@ protected:
 
   // Routines for tags that require special handling
   nsresult CloseHTML();
-  nsresult OpenBody(nsHTMLTag aNodeType);
+  nsresult OpenBody();
   nsresult CloseBody();
 
   void CloseHeadContext();
@@ -233,7 +230,7 @@ public:
 
   nsresult Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,
                  uint32_t aNumFlushed, int32_t aInsertionPoint);
-  nsresult OpenContainer(nsHTMLTag aNodeType);
+  nsresult OpenBody();
   nsresult CloseContainer(const nsHTMLTag aTag);
   nsresult AddLeaf(nsIContent* aContent);
   nsresult End();
@@ -308,39 +305,6 @@ HTMLContentSink::SinkTraceNode(uint32_t aBit,
   }
 }
 #endif
-
-/**
- * Factory subroutine to create all of the html content objects.
- */
-already_AddRefed<nsGenericHTMLElement>
-HTMLContentSink::CreateContentObject(nsHTMLTag aNodeType)
-{
-  // Find/create atom for the tag name
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-
-  MOZ_ASSERT(aNodeType != eHTMLTag_userdefined);
-  if (mNodeInfoCache[aNodeType]) {
-    nodeInfo = mNodeInfoCache[aNodeType];
-  }
-  else {
-    nsIParserService *parserService = nsContentUtils::GetParserService();
-    if (!parserService)
-      return nullptr;
-
-    nsIAtom *name = parserService->HTMLIdToAtomTag(aNodeType);
-    NS_ASSERTION(name, "What? Reverse mapping of id to string broken!!!");
-
-    nodeInfo = mNodeInfoManager->GetNodeInfo(name, nullptr, kNameSpaceID_XHTML,
-                                             nsIDOMNode::ELEMENT_NODE);
-    NS_IF_ADDREF(mNodeInfoCache[aNodeType] = nodeInfo);
-  }
-
-  NS_ENSURE_TRUE(nodeInfo, nullptr);
-
-  // Make the content object
-  return CreateHTMLElement(aNodeType, nodeInfo.forget(), FROM_PARSER_NETWORK);
-}
 
 nsresult
 NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -494,13 +458,13 @@ SinkContext::DidAddContent(nsIContent* aContent)
 }
 
 nsresult
-SinkContext::OpenContainer(nsHTMLTag aNodeType)
+SinkContext::OpenBody()
 {
   FlushTextAndRelease();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "SinkContext::OpenContainer", 
-                  aNodeType,
+                  eHTMLTag_body,
                   mStackPos, 
                   mSink);
 
@@ -518,48 +482,25 @@ SinkContext::OpenContainer(nsHTMLTag aNodeType)
     }
   }
 
-  // Create new container content object
-  nsGenericHTMLElement* content =
-    mSink->CreateContentObject(aNodeType).get();
-  if (!content) {
+    nsCOMPtr<nsINodeInfo> nodeInfo =
+      mSink->mNodeInfoManager->GetNodeInfo(nsGkAtoms::body, nullptr,
+                                           kNameSpaceID_XHTML,
+                                           nsIDOMNode::ELEMENT_NODE);
+  NS_ENSURE_TRUE(nodeInfo, NS_ERROR_UNEXPECTED);
+
+  // Make the content object
+  nsRefPtr<nsGenericHTMLElement> body =
+    NS_NewHTMLBodyElement(nodeInfo.forget(), FROM_PARSER_NETWORK);
+  if (!body) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mStack[mStackPos].mType = aNodeType;
-  mStack[mStackPos].mContent = content;
+  mStack[mStackPos].mType = eHTMLTag_body;
+  body.forget(&mStack[mStackPos].mContent);
   mStack[mStackPos].mNumFlushed = 0;
   mStack[mStackPos].mInsertionPoint = -1;
   ++mStackPos;
-  mStack[mStackPos - 2].Add(content);
-  if (mSink->IsMonolithicContainer(aNodeType)) {
-    mSink->mInMonolithicContainer++;
-  }
-
-  // Special handling for certain tags
-  switch (aNodeType) {
-    case eHTMLTag_form:
-      MOZ_CRASH("Must not use HTMLContentSink for forms.");
-
-    case eHTMLTag_frameset:
-      MOZ_CRASH("Must not use HTMLContentSink for frames.");
-
-    case eHTMLTag_noembed:
-    case eHTMLTag_noframes:
-      MOZ_CRASH("Must not use HTMLContentSink for noembed/noframes.");
-
-    case eHTMLTag_script:
-    case eHTMLTag_style:
-      MOZ_CRASH("Must not use HTMLContentSink for styles and scripts.");
-
-    case eHTMLTag_button:
-    case eHTMLTag_audio:
-    case eHTMLTag_video:
-      content->DoneCreatingElement();
-      break;
-
-    default:
-      break;
-  }
+  mStack[mStackPos - 2].Add(mStack[mStackPos - 1].mContent);
 
   return NS_OK;
 }
@@ -1318,7 +1259,7 @@ HTMLContentSink::CloseHTML()
 }
 
 nsresult
-HTMLContentSink::OpenBody(nsHTMLTag aNodeType)
+HTMLContentSink::OpenBody()
 {
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenBody", 
@@ -1333,7 +1274,7 @@ HTMLContentSink::OpenBody(nsHTMLTag aNodeType)
     return NS_OK;
   }
 
-  nsresult rv = mCurrentContext->OpenContainer(aNodeType);
+  nsresult rv = mCurrentContext->OpenBody();
 
   if (NS_FAILED(rv)) {
     return rv;
@@ -1406,7 +1347,7 @@ HTMLContentSink::OpenContainer(ElementType aElementType)
 
   switch (aElementType) {
     case eBody:
-      rv = OpenBody(eHTMLTag_body);
+      rv = OpenBody();
       break;
     case eHTML:
       if (mRoot) {
