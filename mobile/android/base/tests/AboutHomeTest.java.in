@@ -7,6 +7,7 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v4.view.ViewPager;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.TabWidget;
 import android.widget.ListView;
@@ -72,6 +73,26 @@ abstract class AboutHomeTest extends BaseTest {
         uri = uri.buildUpon().appendQueryParameter("profile", "default")
                              .appendQueryParameter("sync", "true").build();
         return uri;
+    }
+
+    /**
+     * Get an active ListView with the specified tag .
+     *
+     * This method uses the predefined tags in HomePager.
+     */
+    protected final ListView findListViewWithTag(String tag) {
+        for (ListView listView : mSolo.getCurrentListViews()) {
+            final String listTag = (String) listView.getTag();
+            if (TextUtils.isEmpty(listTag)) {
+                continue;
+            }
+
+            if (TextUtils.equals(listTag, tag)) {
+                return listView;
+            }
+        }
+
+        return null;
     }
 
     protected void addOrUpdateMobileBookmark(String title, String url) {
