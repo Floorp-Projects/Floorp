@@ -69,7 +69,8 @@ class StackwalkerARM : public Stackwalker {
  private:
   // Implementation of Stackwalker, using arm context and stack conventions.
   virtual StackFrame* GetContextFrame();
-  virtual StackFrame* GetCallerFrame(const CallStack* stack);
+  virtual StackFrame* GetCallerFrame(const CallStack* stack,
+                                     bool stack_scan_allowed);
 
   // Use cfi_frame_info (derived from STACK CFI records) to construct
   // the frame that called frames.back(). The caller takes ownership

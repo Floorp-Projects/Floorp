@@ -139,8 +139,8 @@ nsXPConnect::~nsXPConnect()
 
 // static
 void
-    nsXPConnect::InitStatics()
-    {
+nsXPConnect::InitStatics()
+{
     gSelf = new nsXPConnect();
     gOnceAliveNowDead = false;
     if (!gSelf->mRuntime) {
@@ -1348,12 +1348,6 @@ PopJSContextNoScriptContext()
     XPCJSRuntime::Get()->GetJSContextStack()->Pop();
 }
 
-bool
-IsJSContextOnStack(JSContext *aCx)
-{
-  return XPCJSRuntime::Get()->GetJSContextStack()->HasJSContext(aCx);
-}
-
 } // namespace xpc
 
 nsIPrincipal*
@@ -1398,13 +1392,6 @@ nsXPConnect::HoldObject(JSContext *aJSContext, JSObject *aObjectArg,
 }
 
 namespace xpc {
-
-bool
-DeferredRelease(nsISupports *obj)
-{
-    nsContentUtils::DeferredFinalize(obj);
-    return true;
-}
 
 NS_EXPORT_(bool)
 Base64Encode(JSContext *cx, JS::Value val, JS::Value *out)
@@ -1730,9 +1717,10 @@ namespace dom {
 bool
 IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
 {
-  JSCompartment* compartment = js::GetContextCompartment(cx);
-  return AccessCheck::isChrome(compartment) ||
-         IsXBLScope(compartment);
+    MOZ_ASSERT(NS_IsMainThread());
+    JSCompartment* compartment = js::GetContextCompartment(cx);
+    return AccessCheck::isChrome(compartment) ||
+           IsXBLScope(compartment);
 }
 
 } // namespace dom
