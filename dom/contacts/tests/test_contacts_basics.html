@@ -240,7 +240,8 @@ function removeAndroidDefaultCategory(category) {
   }
 
   for (var i = 0; i < category.length; i++) {
-    if (category[i] == "My Contacts") {
+    // Some devices may return the full group name (prefixed with "System Group: ")
+    if (category[i] == "My Contacts" || category[i] == "System Group: My Contacts") {
       category.splice(i, 1);
     }
   }
@@ -1393,6 +1394,12 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
+    // Android does not support published/updated fields. Skip this.
+    if (isAndroid) {
+      next();
+      return;
+    }
+
     ok(true, "Test sorting with published");
     var options = {sortBy: "familyName",
                    sortOrder: "descending"};

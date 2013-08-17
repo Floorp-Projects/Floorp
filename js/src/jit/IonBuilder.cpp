@@ -3716,11 +3716,6 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     returnBlock->inheritSlots(current);
     returnBlock->pop();
 
-    // If callee is not a constant, add an MForceUse with the callee to make sure that
-    // it gets kept alive across the inlined body.
-    if (!callInfo.fun()->isConstant())
-        returnBlock->add(MForceUse::New(callInfo.fun()));
-
     // Accumulate return values.
     MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
     if (exits.length() == 0) {

@@ -12,6 +12,7 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
+		test__content.html \
 		file_MozEnteredDomFullscreen.html \
 		test_outerHTML.html \
 		test_outerHTML.xhtml \
