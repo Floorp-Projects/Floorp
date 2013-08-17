@@ -2230,9 +2230,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
       childReflowState.SetComputedHeight(curItem.GetMainSize());
     }
 
-    nsresult rv =
-      SizeItemInCrossAxis(aPresContext, axisTracker,
-                          childReflowState, curItem);
+    nsresult rv = SizeItemInCrossAxis(aPresContext, axisTracker,
+                                      childReflowState, curItem);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

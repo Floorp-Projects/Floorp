@@ -343,7 +343,7 @@ ExclusiveContext::maybePause() const
 {
 #ifdef JS_WORKER_THREADS
     if (workerThread && runtime_->workerThreadState->shouldPause) {
-        AutoLockWorkerThreadState lock(runtime_);
+        AutoLockWorkerThreadState lock(*runtime_->workerThreadState);
         workerThread->pause();
     }
 #endif
