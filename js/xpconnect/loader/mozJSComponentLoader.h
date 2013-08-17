@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "plhash.h"
-#include "jsapi.h"
 #include "mozilla/ModuleLoader.h"
 #include "nsIJSRuntimeService.h"
 #include "nsISupports.h"
