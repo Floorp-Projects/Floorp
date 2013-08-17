@@ -162,7 +162,6 @@ public:
   virtual bool IsScriptExecuting();
 
   // nsIHTMLContentSink
-  NS_IMETHOD IsEnabled(int32_t, bool*);
   NS_IMETHOD OpenContainer(nsHTMLTag aNodeType);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
 
@@ -1408,22 +1407,6 @@ HTMLContentSink::CloseBody()
 
   mCurrentContext->FlushTags();
   mCurrentContext->CloseContainer(eHTMLTag_body);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLContentSink::IsEnabled(int32_t aTag, bool* aReturn)
-{
-  nsHTMLTag theHTMLTag = nsHTMLTag(aTag);
-
-  if (theHTMLTag == eHTMLTag_script) {
-    *aReturn = mScriptEnabled;
-  } else if (theHTMLTag == eHTMLTag_frameset) {
-    *aReturn = mFramesEnabled;
-  } else {
-    *aReturn = false;
-  }
 
   return NS_OK;
 }
