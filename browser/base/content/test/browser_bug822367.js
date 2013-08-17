@@ -5,7 +5,11 @@
 
 const PREF_DISPLAY = "security.mixed_content.block_display_content";
 const PREF_ACTIVE = "security.mixed_content.block_active_content";
+
+// We alternate for even and odd test cases to simulate different hosts
 const gHttpTestRoot = "https://example.com/browser/browser/base/content/test/";
+const gHttpTestRoot2 = "https://test1.example.com/browser/browser/base/content/test/";
+
 var origBlockDisplay;
 var origBlockActive;
 var gTestBrowser = null;
@@ -62,7 +66,7 @@ function MixedTest1C() {
 //Mixed Display Test - Doorhanger should not appear
 function MixedTest2() {
   gTestBrowser.addEventListener("load", MixedTest2A, true);
-  var url = gHttpTestRoot + "file_bug822367_2.html";
+  var url = gHttpTestRoot2 + "file_bug822367_2.html";
   gTestBrowser.contentWindow.location = url;
 }
 
@@ -102,7 +106,7 @@ function MixedTest3D() {
 function MixedTest4() {
   gTestBrowser.removeEventListener("load", MixedTest3B, true);
   gTestBrowser.addEventListener("load", MixedTest4A, true);
-  var url = gHttpTestRoot + "file_bug822367_4.html";
+  var url = gHttpTestRoot2 + "file_bug822367_4.html";
   gTestBrowser.contentWindow.location = url;
 }
 function MixedTest4A() {
@@ -152,7 +156,7 @@ function MixedTest5C() {
 function MixedTest6() {
   gTestBrowser.removeEventListener("load", MixedTest5B, true);
   gTestBrowser.addEventListener("load", MixedTest6A, true);
-  var url = gHttpTestRoot + "file_bug822367_6.html";
+  var url = gHttpTestRoot2 + "file_bug822367_6.html";
   gTestBrowser.contentWindow.location = url;
 }
 function MixedTest6A() {
