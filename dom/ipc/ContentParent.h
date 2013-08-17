@@ -475,10 +475,11 @@ private:
     bool mSendPermissionUpdates;
     bool mIsForBrowser;
 
-    // These variables track whether we've called Close() and CloseWithError()
-    // on our channel.
+    // These variables track whether we've called Close(), CloseWithError()
+    // and KillHard() on our channel.
     bool mCalledClose;
     bool mCalledCloseWithError;
+    bool mCalledKillHard;
 
     friend class CrashReporterParent;
 

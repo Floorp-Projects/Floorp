@@ -1184,6 +1184,7 @@ ContentParent::ContentParent(mozIApplication* aApp,
     , mIsForBrowser(aIsForBrowser)
     , mCalledClose(false)
     , mCalledCloseWithError(false)
+    , mCalledKillHard(false)
 {
     // No more than one of !!aApp, aIsForBrowser, and aIsForPreallocated should
     // be true.
@@ -1921,6 +1922,13 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
 void
 ContentParent::KillHard()
 {
+    // On Windows, calling KillHard multiple times causes problems - the
+    // process handle becomes invalid on the first call, causing a second call
+    // to crash our process - more details in bug 890840.
+    if (mCalledKillHard) {
+        return;
+    }
+    mCalledKillHard = true;
     mForceKillTask = nullptr;
     // This ensures the process is eventually killed, but doesn't
     // immediately KILLITWITHFIRE because we want to get a minidump if
