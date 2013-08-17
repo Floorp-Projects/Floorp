@@ -232,7 +232,6 @@ public:
                  uint32_t aNumFlushed, int32_t aInsertionPoint);
   nsresult OpenBody();
   nsresult CloseContainer(const nsHTMLTag aTag);
-  nsresult AddLeaf(nsIContent* aContent);
   nsresult End();
 
   nsresult GrowStack();
@@ -599,25 +598,6 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
 #endif
 
   return result;
-}
-
-nsresult
-SinkContext::AddLeaf(nsIContent* aContent)
-{
-  NS_ASSERTION(mStackPos > 0, "leaf w/o container");
-  if (mStackPos <= 0) {
-    return NS_ERROR_FAILURE;
-  }
-  
-  DidAddContent(mStack[mStackPos - 1].Add(aContent));
-
-#ifdef DEBUG
-  if (SINK_LOG_TEST(gSinkLogModuleInfo, SINK_ALWAYS_REFLOW)) {
-    mSink->ForceReflow();
-  }
-#endif
-
-  return NS_OK;
 }
 
 nsresult
