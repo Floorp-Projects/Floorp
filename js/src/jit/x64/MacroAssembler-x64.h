@@ -1117,12 +1117,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     // See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
-    void patchAsmJSGlobalAccess(unsigned offset, uint8_t *code, unsigned codeBytes,
+    void patchAsmJSGlobalAccess(unsigned offset, uint8_t *code, uint8_t *globalData,
                                 unsigned globalDataOffset)
     {
         uint8_t *nextInsn = code + offset;
-        JS_ASSERT(nextInsn <= code + codeBytes);
-        uint8_t *target = code + codeBytes + globalDataOffset;
+        JS_ASSERT(nextInsn <= globalData);
+        uint8_t *target = globalData + globalDataOffset;
         ((int32_t *)nextInsn)[-1] = target - nextInsn;
     }
     void memIntToValue(Address Source, Address Dest) {

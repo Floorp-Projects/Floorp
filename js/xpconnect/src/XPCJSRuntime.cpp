@@ -2039,6 +2039,14 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      "This memory lives outside both the malloc heap and the JS heap.");
     }
 
+    REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/non-heap/code/asm.js"),
+                 KIND_NONHEAP, cStats.objectsExtra.asmJSModuleCode,
+                 "Memory allocated for AOT-compiled asm.js code.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/asm.js-module-data"),
+                   cStats.objectsExtra.asmJSModuleData,
+                   "Memory allocated for asm.js module data.");
+
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/arguments-data"),
                    cStats.objectsExtra.argumentsData,
                    "Memory allocated on the malloc heap for data belonging to arguments objects.");
@@ -2238,10 +2246,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/baseline"),
                   KIND_NONHEAP, rtStats.runtime.code.baseline,
                   "Memory used by the Baseline JIT to hold generated code.");
-
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/asm.js"),
-                  KIND_NONHEAP, rtStats.runtime.code.asmJS,
-                  "Memory used by AOT-compiled asm.js code.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/regexp"),
                   KIND_NONHEAP, rtStats.runtime.code.regexp,

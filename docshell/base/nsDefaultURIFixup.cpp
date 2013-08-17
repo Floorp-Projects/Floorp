@@ -21,6 +21,9 @@
 #include "nsIURIFixup.h"
 #include "nsDefaultURIFixup.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/ipc/URIUtils.h"
 #include "nsIObserverService.h"
 
 using namespace mozilla;
@@ -334,6 +337,28 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
         keyword.Cut(0, 1);
     }
     keyword.Trim(" ");
+
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+        dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
+        if (!contentChild) {
+            return NS_ERROR_NOT_AVAILABLE;
+        }
+
+        ipc::OptionalInputStreamParams postData;
+        ipc::OptionalURIParams uri;
+        if (!contentChild->SendKeywordToURI(keyword, &postData, &uri)) {
+            return NS_ERROR_FAILURE;
+        }
+
+        if (aPostData) {
+            nsCOMPtr<nsIInputStream> temp = DeserializeInputStream(postData);
+            temp.forget(aPostData);
+        }
+
+        nsCOMPtr<nsIURI> temp = DeserializeURI(uri);
+        temp.forget(aURI);
+        return NS_OK;
+    }
 
 #ifdef MOZ_TOOLKIT_SEARCH
     // Try falling back to the search service's default search engine
