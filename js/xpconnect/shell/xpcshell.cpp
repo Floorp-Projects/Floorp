@@ -1718,6 +1718,8 @@ main(int argc, char **argv, char **envp)
         if (NS_FAILED(rv))
             return 1;
 
+        // Workaround for bug 905926.
+        xpc->GetSafeJSContext();
         {
             JS::Rooted<JSObject*> glob(cx, holder->GetJSObject());
             if (!glob) {
