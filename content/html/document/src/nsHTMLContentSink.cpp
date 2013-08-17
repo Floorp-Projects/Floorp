@@ -162,7 +162,7 @@ public:
   virtual bool IsScriptExecuting();
 
   // nsIHTMLContentSink
-  NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
+  NS_IMETHOD OpenContainer(nsHTMLTag aNodeType);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD CloseMalformedContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
@@ -1601,11 +1601,11 @@ HTMLContentSink::IsEnabled(int32_t aTag, bool* aReturn)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
+HTMLContentSink::OpenContainer(nsHTMLTag aNodeType)
 {
   nsresult rv = NS_OK;
 
-  switch (aNode.GetNodeType()) {
+  switch (aNodeType) {
     case eHTMLTag_frameset:
       MOZ_CRASH("Must not use HTMLContentSink for frames.");
 
@@ -1616,7 +1616,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       }
       break;
     case eHTMLTag_body:
-      rv = OpenBody(nsHTMLTag(aNode.GetNodeType()));
+      rv = OpenBody(aNodeType);
       break;
     case eHTMLTag_html:
       if (mRoot) {
@@ -1631,7 +1631,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       MOZ_CRASH("Must not use HTMLContentSink for forms.");
 
     default:
-      rv = mCurrentContext->OpenContainer(nsHTMLTag(aNode.GetNodeType()));
+      rv = mCurrentContext->OpenContainer(aNodeType);
       break;
   }
 
