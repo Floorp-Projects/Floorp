@@ -2288,9 +2288,11 @@ TabChild::InitRenderingState()
           NS_WARNING("failed to get CompositorChild instance");
           return false;
         }
+        nsTArray<LayersBackend> backends;
+        backends.AppendElement(mTextureFactoryIdentifier.mParentBackend);
         bool success;
         shadowManager =
-            compositorChild->SendPLayerTransactionConstructor(mTextureFactoryIdentifier.mParentBackend,
+            compositorChild->SendPLayerTransactionConstructor(backends,
                                                               id, &mTextureFactoryIdentifier, &success);
         if (!success) {
           NS_WARNING("failed to properly allocate layer transaction");

@@ -914,14 +914,27 @@ void nsBaseWidget::CreateCompositor()
   CreateCompositor(rect.width, rect.height);
 }
 
-mozilla::layers::LayersBackend
-nsBaseWidget::GetPreferredCompositorBackend()
+void
+nsBaseWidget::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
 {
   if (mUseLayersAcceleration) {
-    return mozilla::layers::LAYERS_OPENGL;
+    aHints.AppendElement(LAYERS_OPENGL);
   }
 
-  return mozilla::layers::LAYERS_BASIC;
+  aHints.AppendElement(LAYERS_BASIC);
+}
+
+static void
+CheckForBasicBackends(nsTArray<LayersBackend>& aHints)
+{
+  for (size_t i = 0; i < aHints.Length(); ++i) {
+    if (aHints[i] == LAYERS_BASIC &&
+        !Preferences::GetBool("layers.offmainthreadcomposition.force-basic", false) &&
+        !Preferences::GetBool("browser.tabs.remote", false)) {
+      // basic compositor is not stable enough for regular use
+      aHints[i] = LAYERS_NONE;
+    }
+  }
 }
 
 void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
@@ -945,19 +958,15 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   TextureFactoryIdentifier textureFactoryIdentifier;
   PLayerTransactionChild* shadowManager;
-  mozilla::layers::LayersBackend backendHint = GetPreferredCompositorBackend();
+  nsTArray<LayersBackend> backendHints;
+  GetPreferredCompositorBackends(backendHints);
 
-  if (backendHint == LAYERS_BASIC &&
-      !Preferences::GetBool("layers.offmainthreadcomposition.force-basic", false) &&
-      !Preferences::GetBool("browser.tabs.remote", false)) {
-    // basic compositor is not stable enough for regular use
-    backendHint = LAYERS_NONE;
-  }
+  CheckForBasicBackends(backendHints);
 
   bool success = false;
-  if (backendHint) {
+  if (!backendHints.IsEmpty()) {
     shadowManager = mCompositorChild->SendPLayerTransactionConstructor(
-      backendHint, 0, &textureFactoryIdentifier, &success);
+      backendHints, 0, &textureFactoryIdentifier, &success);
   }
 
   if (success) {
