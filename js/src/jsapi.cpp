@@ -4847,7 +4847,7 @@ JS::CanCompileOffThread(JSContext *cx, const CompileOptions &options)
     // atoms compartment, to avoid triggering barriers. Outside the atoms
     // compartment, the compilation will use a new zone which doesn't require
     // barriers itself.
-    if (cx->runtime()->atomsZoneNeedsBarrier())
+    if (cx->runtime()->activeGCInAtomsZone())
         return false;
 
     // Blacklist filenames which cause mysterious assertion failures in
