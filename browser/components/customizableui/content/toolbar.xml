@@ -13,6 +13,8 @@
       <stylesheet src="chrome://global/skin/toolbar.css"/>
     </resources>
     <implementation implements="nsIAccessibleProvider">
+      <field name="_initialChildCount">0</field>
+
       <property name="accessibleType" readonly="true">
         <getter>
           return Components.interfaces.nsIAccessibleProvider.XULToolbar;
@@ -20,6 +22,10 @@
       </property>
 
       <constructor><![CDATA[
+          // Stash the initial child count so that later, after overlays are
+          // loaded, we can report to CustomizableUI's registerToolbar function
+          // whether or not we've been overlayed by comparing child counts.
+          this._initialChildCount = this.childElementCount;
           if (document.readyState == "complete") {
             this._init();
           } else {
@@ -54,7 +60,10 @@
             }
           }
 
-          CustomizableUI.registerToolbar(this);
+          // If the child count does not match the child count that we recorded
+          // when the constructor fired, then we were overlayed.
+          let isOverlayed = this._initialChildCount != this.childElementCount;
+          CustomizableUI.registerToolbar(this, isOverlayed);
         ]]></body>
       </method>
 
@@ -345,9 +354,15 @@
       and immediately direct such content elsewhere. -->
   <binding id="addonbar-delegating">
     <implementation>
+      <field name="_initialChildCount">0</field>
+
       <constructor><![CDATA[
           // Reading these immediately so nobody messes with them anymore:
           this._delegatingToolbar = this.getAttribute("toolbar-delegate");
+          // Stash the initial child count so that later, after overlays are
+          // loaded, we can report to CustomizableUI's registerToolbar function
+          // whether or not we've been overlayed by comparing child counts.
+          this._initialChildCount = this.childElementCount;
           // Leaving those in here to unbreak some code:
           if (document.readyState == "complete") {
             this._init();
@@ -377,7 +392,11 @@
               }
             }
           }
-          CustomizableUI.registerToolbar(this);
+
+          // If the child count does not match the child count that we recorded
+          // when the constructor fired, then we were overlayed.
+          let isOverlayed = this._initialChildCount != this.childElementCount;
+          CustomizableUI.registerToolbar(this, isOverlayed);
           this.evictNodes();
           // We can't easily use |this| or strong bindings for the observer fn here
           // because that creates leaky circular references when the node goes away,
