@@ -3615,20 +3615,8 @@ XULDocument::OnScriptCompileComplete(JSScript* aScript, nsresult aStatus)
             // Ignore the return value, as we don't need to propagate
             // a failure to write to the FastLoad file, because this
             // method aborts that whole process on error.
-            nsIScriptGlobalObject* global =
-                mCurrentPrototype->GetScriptGlobalObject();
-
-            NS_ASSERTION(global != nullptr, "master prototype w/o global?!");
-            if (global) {
-                nsIScriptContext *scriptContext =
-                    global->GetScriptContext();
-                NS_ASSERTION(scriptContext != nullptr,
-                             "Failed to get script context for language");
-                if (scriptContext)
-                    scriptProto->SerializeOutOfLine(nullptr, global);
-            }
+            scriptProto->SerializeOutOfLine(nullptr, mCurrentPrototype);
         }
-
         // ignore any evaluation errors
     }
 
