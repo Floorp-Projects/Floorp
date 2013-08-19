@@ -170,10 +170,6 @@ window.addEventListener("pageshow", function () {
   window.gObserver.observe(document.documentElement, { attributes: true });
   fitToWidth();
   window.addEventListener("resize", fitToWidth);
-
-  // Ask chrome to update snippets.
-  var event = new CustomEvent('AboutHomeLoad', {bubbles:true});
-  document.dispatchEvent(event);
 });
 
 window.addEventListener("pagehide", function() {
