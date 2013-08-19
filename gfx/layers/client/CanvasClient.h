@@ -132,7 +132,6 @@ public:
 
 private:
   RefPtr<DeprecatedTextureClient> mDeprecatedTextureClient;
-  bool mNeedsUpdate;
 };
 
 }
