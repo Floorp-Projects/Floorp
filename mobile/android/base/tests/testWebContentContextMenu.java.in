@@ -4,23 +4,12 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 import android.util.DisplayMetrics;
 
-import java.util.Arrays;
-
 /* Test the context menu on web content: Long click on a link,
  * verify that the context menu is shown and verify that some
  * of the menu actions work.
  */
 
-public class testWebContentContextMenu extends AboutHomeTest {
-
-    // URLs and page titles. Make sure there is a title for each 
-    private final String URLS [] = {"/robocop/robocop_big_link.html", "/robocop/robocop_big_mailto.html", "/robocop/robocop_picture_link.html"};
-    private final String URL_TITLES [] = {"Big Link", "Big Mailto", "Picture Link"};
-
-    // Menu content strings
-    private final String LINK_MENU_ITEMS [] = {"Open Link in New Tab", "Open Link in Private Tab", "Copy Link", "Share Link", "Bookmark Link"};
-    private final String MAILTO_MENU_ITEMS [] = {"Open With an App", "Copy Email Address", "Share Email Address"};
-    private final String PHOTO_MENU_ITEMS [] = {"Copy Image Location", "Share Image", "Set Image As", "Save Image"};
+public class testWebContentContextMenu extends PixelTest {
 
     @Override
     protected int getTestType() {
@@ -31,15 +20,18 @@ public class testWebContentContextMenu extends AboutHomeTest {
     public void testWebContentContextMenu() {
         blockForGeckoReady();
 
-        verfyLinkContextMenu();
-        verfyMailtoContextMenu();
-        verfyPhotoContextMenu();
+        String urls [] = { "/robocop/robocop_big_link.html", "/robocop/robocop_big_mailto.html", "/robocop/robocop_picture_link.html"};
+        String linkMenuItems [] = { "Open Link in New Tab", "Open Link in Private Tab", "Copy Link", "Share Link", "Bookmark Link"};
+        String mailtoMenuItems [] = { "Open With an App", "Copy Email Address", "Share Email Address"};
+        String photoMenuItems [] = { "Copy Image Location", "Share Image", "Set Image As", "Save Image"};
 
-        // Clear data to remove the saved files
-        clearPrivateData();
+        verfyLinkContextMenu(linkMenuItems, urls);
+        verfyMailtoContextMenu(mailtoMenuItems, urls);
+        verfyPhotoContextMenu(photoMenuItems, urls);
+
     }
 
-    public void openContextMenu(String pageLink) {
+    public void openContextMenu(int i, String urls []) {
         DisplayMetrics dm = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
 
@@ -47,27 +39,24 @@ public class testWebContentContextMenu extends AboutHomeTest {
         float top = mDriver.getGeckoTop() + 30 * dm.density;
         float left = mDriver.getGeckoLeft() + mDriver.getGeckoWidth() / 2;
 
-        String url = getAbsoluteUrl(pageLink);
+        String url = getAbsoluteUrl(urls [i]);
         getInstrumentation().waitForIdleSync();
-        loadUrl(url);
-        int pageIndex = Arrays.asList(URLS).indexOf(pageLink);
-        waitForText(URL_TITLES [pageIndex]);
+        loadAndPaint(url);
         mAsserter.dumpLog("long-clicking at "+left+", "+top);
-        mActions.clickLongOnScreen(left, top);
+        mSolo.clickLongOnScreen(left, top);
     }
 
-    public void accessContextMenuOption(String pageLink, String opt) {
-        openContextMenu(pageLink);
-        mAsserter.ok(mSolo.waitForText(opt), "Waiting for " + opt + " option", "The " + opt + " option is present");
+    public void accessSection(int i, String opt, String urls []) {
+        openContextMenu(i, urls);
+        mAsserter.ok(mSolo.waitForText(opt), "Waiting for  " + opt + "  option", "The " + opt + "  option is present");
         mSolo.clickOnText(opt);
     }
 
-    public void verfyLinkContextMenu() {
-        String blankPage1 = getAbsoluteUrl("/robocop/robocop_blank_01.html");
-        for (String opt:LINK_MENU_ITEMS) {
+    public void verfyLinkContextMenu(String items [], String urls []) {
+        for (String opt:items) {
             if (opt.equals("Open Link in New Tab")) {
-                openContextMenu(URLS [0]);
-                mAsserter.ok(mSolo.waitForText(opt), "Waiting for " + opt + " option", "The " + opt + " option is present");
+                openContextMenu(0, urls);
+                mAsserter.ok(mSolo.waitForText(opt), "Waiting for  " + opt + "  option", "The " + opt + "  option is present");
                 Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
                 Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
                 mSolo.clickOnText(opt);
@@ -79,7 +68,7 @@ public class testWebContentContextMenu extends AboutHomeTest {
                 contentEventExpecter.unregisterListener();
 
                 // See tab count
-                Element tabCount = mDriver.findElement(getActivity(), "tabs_counter");
+                Element tabCount = mDriver.findElement(getActivity(), "tabs_count");
                 String tabCountText = null;
                 if (tabCount != null) {
                     tabCountText = tabCount.getText();
@@ -88,29 +77,28 @@ public class testWebContentContextMenu extends AboutHomeTest {
             }
             else {
                 if (opt.equals("Open Link in Private Tab")) {
-                    accessContextMenuOption(URLS [2], opt);
+                    accessSection(2, opt, urls);
                     mAsserter.ok(mSolo.waitForText("New private tab opened"), "Waiting for private tab to open", "The private tab is opened");
 
-                    // Move to the Most Recent tab
-                    openAboutHomeTab(AboutHomeTabs.MOST_RECENT);
-
-                    // Verify that only the page loaded in a normal tab is saved in the history
-                    mAsserter.ok(mSolo.waitForText("Browser Blank Page 01"), "Looking in History for the page loaded in the normal tab", "Found it");
+                    // Verifying if the private data is not listed in Awesomescreen
+                    focusUrlBar();
+                    mSolo.clickOnText("History");
+                    mAsserter.ok(mSolo.waitForText("Browser Blank Page 01"), "Looking in History for the page loaded in the normal tab", "Fount it");
                     mAsserter.ok(mSolo.waitForText("Browser Blank Page 02") == false, "Looking in History for the page loaded in the private tab", "Page is not present in History");
                 }
                 else {
                     if (opt.equals("Copy Link")) {
-                        accessContextMenuOption(URLS [0], opt);
+                        accessSection(0, opt, urls);
 
                         // Verifying if the link was copied
                         mSolo.clickLongOnText("Big Link");
                         mAsserter.ok(mSolo.waitForText("^Paste$"), "Verify if the 'Paste' option is present", "The 'Paste' option is present");
                         mSolo.clickOnText("^Paste$");
-                        mAsserter.ok(mSolo.waitForText(blankPage1), "Verify link", "The link was properly copied");
+                        mAsserter.ok(mSolo.waitForText("robocop_blank_01.html"), "Verify link", "The link was properly copied");
                     }
                     else {
                         if (opt.equals("Share Link")) {
-                            accessContextMenuOption(URLS [0], opt);
+                            accessSection(0, opt, urls);
 
                             // Verifying if the Share Link option menu is opened
                             mAsserter.ok(mSolo.waitForText("Share via"), "Waiting for the Share Link option menu to open", "The Share Link option menu is opened");
@@ -119,9 +107,31 @@ public class testWebContentContextMenu extends AboutHomeTest {
                         }
                         else {
                             if (opt.equals("Bookmark Link")) {
-                                accessContextMenuOption(URLS [0], opt);
+                                Navigation nav = new Navigation(mDevice);
+
+                                accessSection(0, opt, urls);
                                 mAsserter.is(mSolo.waitForText("Bookmark added"), true, "Bookmark added verified");
-                                mAsserter.ok(isBookmark(blankPage1), "Checking to see if the link was bookmarked","The link was bookmarked");
+
+                                // This waitForIdleSync improves reliability of the following loadUrl.
+                                // TODO: understand why!
+                                getInstrumentation().waitForIdleSync();
+
+                                // We know that the link test page points to robocop_blank_01.html, so lets
+                                // load it and see if the page is bookmarked
+                                String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+                                loadAndPaint(url);
+
+                                // Pause briefly, to ensure that the bookmark addition, above, updates database tables and
+                                // completes before checking that the bookmark exists.
+                                // TODO: Find a better way to wait for completion of bookmark operations.
+                                try { Thread.sleep(2000); } catch(Exception e) {}
+
+                                // TODO: This doesn't work for some reason. We got a 'Bookmark added' and
+                                // will check for 'Bookmark removed'
+                                mAsserter.todo_is(mSolo.isTextChecked("Bookmark"), true, "Page is bookmarked");
+
+                                nav.bookmark();
+                                mAsserter.is(mSolo.waitForText("Bookmark removed"), true, "Bookmark removal verified");
                             }
                         }
                     }
@@ -130,11 +140,11 @@ public class testWebContentContextMenu extends AboutHomeTest {
         }
     }
 
-    public void verfyMailtoContextMenu() {
-        for (String opt:MAILTO_MENU_ITEMS) {
+    public void verfyMailtoContextMenu(String items [], String urls []) {
+        for (String opt:items) {
             if (opt.equals("Copy Email Address")) {
-                openContextMenu(URLS [1]);
-                mAsserter.ok(mSolo.waitForText(opt), "Waiting for " + opt + " option", "The " + opt + " option is present");
+                openContextMenu(1, urls);
+                mAsserter.ok(mSolo.waitForText(opt), "Waiting for  " + opt + "  option", "The " + opt + "  option is present");
                 mSolo.clickOnText(opt);
 
                 // Verifying if the email address was copied
@@ -145,7 +155,7 @@ public class testWebContentContextMenu extends AboutHomeTest {
             }
             else {
                 if (opt.equals("Share Email Address")) {
-                    accessContextMenuOption(URLS [1], opt);
+                    accessSection(1, opt, urls);
 
                     // Verifying if the Share email address option menu is opened
                     mAsserter.ok(mSolo.waitForText("Share via"), "Waiting for the Share email address option menu to open", "The Share email address option menu is opened");
@@ -157,14 +167,14 @@ public class testWebContentContextMenu extends AboutHomeTest {
     }
 
     // Load a picture test page and test for allowed menu actions
-    public void verfyPhotoContextMenu() {
-        for (String opt:PHOTO_MENU_ITEMS) {
+    public void verfyPhotoContextMenu(String items [], String urls []) {
+        for (String opt:items) {
             if (opt.equals("Copy Image Location")) {
 
                 // This waitForIdleSync improves reliability of the following loadUrl.
                 // TODO: understand why!
                 getInstrumentation().waitForIdleSync();
-                accessContextMenuOption(URLS [2], opt);
+                accessSection(2, opt, urls);
 
                 // Verifying if the photo's link was copied
                 mSolo.clickLongOnText("Picture Link");
@@ -174,7 +184,7 @@ public class testWebContentContextMenu extends AboutHomeTest {
             }
             else {
                 if (opt.equals("Share Image")) {
-                    accessContextMenuOption(URLS [2], opt);
+                    accessSection(2, opt, urls);
 
                     // Verifying if the Share Image option menu is opened
                     mAsserter.ok(mSolo.waitForText("Share via"), "Waiting for the Share Image option menu to open", "The Share Image option menu is opened");
@@ -183,12 +193,11 @@ public class testWebContentContextMenu extends AboutHomeTest {
                 }
                 else {
                     if (opt.equals("Set Image As")) {
-                        openContextMenu(URLS [2]);
-                        mAsserter.ok(mSolo.waitForText(opt), "Waiting for " + opt + " option", "The " + opt + " option is present");
+                        openContextMenu(2, urls);
+                        mAsserter.ok(mSolo.waitForText(opt), "Waiting for  " + opt + "  option", "The " + opt + "  option is present");
                     }
                     else {
                         if (opt.equals("Save Image")) {
-                            mAsserter.ok(mSolo.searchText(opt), "Verify that the Save Image option exits", "The Save Image option exits");
                             mSolo.clickOnText(opt);
                             mAsserter.ok(mSolo.waitForText("Download started"), "Verify that the download started", "The download started");
                             mSolo.waitForText("Picture Link");
