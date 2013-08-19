@@ -788,8 +788,8 @@ function DownloadsPlacesView(aRichListBox, aActive = true) {
   // Register as a downloads view. The places data will be initialized by
   // the places setter.
   this._initiallySelectedElement = null;
-  let downloadsData = DownloadsCommon.getData(window.opener || window);
-  downloadsData.addView(this);
+  this._downloadsData = DownloadsCommon.getData(window.opener || window);
+  this._downloadsData.addView(this);
 
   // Get the Download button out of the attention state since we're about to
   // view all downloads.
@@ -798,7 +798,7 @@ function DownloadsPlacesView(aRichListBox, aActive = true) {
   // Make sure to unregister the view if the window is closed.
   window.addEventListener("unload", function() {
     window.controllers.removeController(this);
-    downloadsData.removeView(this);
+    this._downloadsData.removeView(this);
     this.result = null;
   }.bind(this), true);
   // Resizing the window may change items visibility.
@@ -1448,11 +1448,7 @@ DownloadsPlacesView.prototype = {
         this._downloadURLFromClipboard();
         break;
       case "downloadsCmd_clearDownloads":
-        if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-          Services.downloads.cleanUpPrivate();
-        } else {
-          Services.downloads.cleanUp();
-        }
+        this._downloadsData.removeFinished();
         if (this.result) {
           Cc["@mozilla.org/browser/download-history;1"]
             .getService(Ci.nsIDownloadHistory)
