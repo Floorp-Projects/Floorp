@@ -222,6 +222,8 @@ function startup(data, reasonCode) {
       resultFile: options.resultFile,
       // Arguments passed as --static-args
       staticArgs: options.staticArgs,
+      // Add-on preferences branch name
+      preferencesBranch: options.preferencesBranch,
 
       // Arguments related to test runner.
       modules: {

@@ -42,29 +42,20 @@ const DOCUMENT_URL = "data:text/html,"+encodeURIComponent(
 
 
 
-function selectNode(aInspector)
+function selectNode(aInspector, aComputedView)
 {
   inspector = aInspector;
+  computedView = aComputedView;
 
   let span = doc.querySelector("span");
   ok(span, "captain, we have the span");
 
-  aInspector.selection.setNode(span);
-
-  aInspector.sidebar.once("computedview-ready", function() {
-    aInspector.sidebar.select("computedview");
-
-    computedView = getComputedView(aInspector);
-
-    Services.obs.addObserver(testInlineStyle, "StyleInspector-populated", false);
-  });
+  inspector.selection.setNode(span);
+  inspector.once("inspector-updated", testInlineStyle);
 }
 
 function testInlineStyle()
 {
-  Services.obs.removeObserver(testInlineStyle, "StyleInspector-populated");
-
-  info("expanding property");
   expandProperty(0, function propertyExpanded() {
     Services.ww.registerNotification(function onWindow(aSubject, aTopic) {
       if (aTopic != "domwindowopened") {
@@ -137,12 +128,13 @@ function validateStyleEditorSheet(aEditor, aExpectedSheetIndex)
 
 function expandProperty(aIndex, aCallback)
 {
+  info("expanding property " + aIndex);
   let contentDoc = computedView.styleDocument;
   let expando = contentDoc.querySelectorAll(".expandable")[aIndex];
+
   expando.click();
 
-  // We use executeSoon to give the property time to expand.
-  executeSoon(aCallback);
+  inspector.once("computed-view-property-expanded", aCallback);
 }
 
 function getLinkByIndex(aIndex)
@@ -168,7 +160,7 @@ function test()
     gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee,
       true);
     doc = content.document;
-    waitForFocus(function () { openInspector(selectNode); }, content);
+    waitForFocus(function () { openComputedView(selectNode); }, content);
   }, true);
 
   content.location = DOCUMENT_URL;

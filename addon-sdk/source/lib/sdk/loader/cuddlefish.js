@@ -48,7 +48,6 @@ const { override, load } = loaderModule;
  * @returns {Error}
  */
 function incompatibility(module) {
-
   let { metadata, id } = module;
 
   // if metadata or engines are not specified we assume compatibility is not
