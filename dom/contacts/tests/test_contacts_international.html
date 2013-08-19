@@ -30,6 +30,11 @@ SpecialPowers.addPermission("contacts-write", true, document);
 SpecialPowers.addPermission("contacts-read", true, document);
 SpecialPowers.addPermission("contacts-create", true, document);
 
+var isAndroid = (navigator.userAgent.indexOf("Android") !== -1);
+var androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
+                                  .getService(SpecialPowers.Ci.nsIPropertyBag2)
+                                  .getProperty('version');
+
 function onFailure() {
   ok(false, "in on Failure!");
 }
@@ -247,8 +252,14 @@ function next() {
   index += 1;
 }
 
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(next);
+// Skip tests on Android < 4.0 due to test failures on tbpl (see bugs 897924 & 888891)
+if (!isAndroid || androidVersion >= 14) {
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(next);
+} else {
+  info("Skip tests on Android < 4.0 (bugs 897924 & 888891");
+}
+
 </script>
 </pre>
 </body>
