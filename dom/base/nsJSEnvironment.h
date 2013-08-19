@@ -33,8 +33,7 @@ template <class> class Maybe;
 class nsJSContext : public nsIScriptContext
 {
 public:
-  nsJSContext(JSRuntime* aRuntime, bool aGCOnDestruction,
-              nsIScriptGlobalObject* aGlobalObject);
+  nsJSContext(bool aGCOnDestruction, nsIScriptGlobalObject* aGlobalObject);
   virtual ~nsJSContext();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -90,6 +89,9 @@ public:
     IncrementalGC,
     NonIncrementalGC
   };
+
+  // Setup all the statics etc - safe to call multiple times after Startup().
+  void EnsureStatics();
 
   static void GarbageCollectNow(JS::gcreason::Reason reason,
                                 IsIncremental aIncremental = NonIncrementalGC,
@@ -184,12 +186,8 @@ class nsIJSRuntimeService;
 
 namespace nsJSRuntime
 {
-  extern JSRuntime *sRuntime;
-
   void Startup();
   void Shutdown();
-  // Setup all the statics etc - safe to call multiple times after Startup()
-  nsresult Init();
   // Get the NameSpaceManager, creating if necessary
   nsScriptNameSpaceManager* GetNameSpaceManager();
 

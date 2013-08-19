@@ -179,12 +179,13 @@ static nsJSContext *sContextList = nullptr;
 static nsScriptNameSpaceManager *gNameSpaceManager;
 
 static nsIJSRuntimeService *sRuntimeService;
-JSRuntime *nsJSRuntime::sRuntime;
 
 static const char kJSRuntimeServiceContractID[] =
   "@mozilla.org/js/xpc/RuntimeService;1";
 
 static PRTime sFirstCollectionTime;
+
+static JSRuntime *sRuntime;
 
 static bool sIsInitialized;
 static bool sDidShutdown;
@@ -809,11 +810,13 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   return 0;
 }
 
-nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
+nsJSContext::nsJSContext(bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
   : mGCOnDestruction(aGCOnDestruction)
   , mGlobalObjectRef(aGlobalObject)
 {
+  EnsureStatics();
+
   mNext = sContextList;
   mPrev = &sContextList;
   if (sContextList) {
@@ -825,7 +828,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime, bool aGCOnDestruction,
 
   mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS;
 
-  mContext = ::JS_NewContext(aRuntime, gStackSize);
+  mContext = ::JS_NewContext(sRuntime, gStackSize);
   if (mContext) {
     ::JS_SetContextPrivate(mContext, static_cast<nsIScriptContext *>(this));
 
@@ -1925,22 +1928,22 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
   sPendingLoadCount = 0;
   sLoadingInProgress = false;
 
-  if (!nsContentUtils::XPConnect() || !nsJSRuntime::sRuntime) {
+  if (!nsContentUtils::XPConnect() || !sRuntime) {
     return;
   }
 
   if (sCCLockedOut && aIncremental == IncrementalGC) {
     // We're in the middle of incremental GC. Do another slice.
-    JS::PrepareForIncrementalGC(nsJSRuntime::sRuntime);
-    JS::IncrementalGC(nsJSRuntime::sRuntime, aReason, aSliceMillis);
+    JS::PrepareForIncrementalGC(sRuntime);
+    JS::IncrementalGC(sRuntime, aReason, aSliceMillis);
     return;
   }
 
-  JS::PrepareForFullGC(nsJSRuntime::sRuntime);
+  JS::PrepareForFullGC(sRuntime);
   if (aIncremental == IncrementalGC) {
-    JS::IncrementalGC(nsJSRuntime::sRuntime, aReason, aSliceMillis);
+    JS::IncrementalGC(sRuntime, aReason, aSliceMillis);
   } else {
-    JS::GCForReason(nsJSRuntime::sRuntime, aReason);
+    JS::GCForReason(sRuntime, aReason);
   }
 }
 
@@ -1952,7 +1955,7 @@ nsJSContext::ShrinkGCBuffersNow()
 
   KillShrinkGCBuffersTimer();
 
-  JS::ShrinkGCBuffers(nsJSRuntime::sRuntime);
+  JS::ShrinkGCBuffers(sRuntime);
 }
 
 static void
@@ -1960,8 +1963,8 @@ FinishAnyIncrementalGC()
 {
   if (sCCLockedOut) {
     // We're in the middle of an incremental GC, so finish it.
-    JS::PrepareForIncrementalGC(nsJSRuntime::sRuntime);
-    JS::FinishIncrementalGC(nsJSRuntime::sRuntime, JS::gcreason::CC_FORCED);
+    JS::PrepareForIncrementalGC(sRuntime);
+    JS::FinishIncrementalGC(sRuntime, JS::gcreason::CC_FORCED);
   }
 }
 
@@ -2599,7 +2602,7 @@ SetMemoryHighWaterMarkPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   int32_t highwatermark = Preferences::GetInt(aPrefName, 128);
 
-  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_MALLOC_BYTES,
+  JS_SetGCParameter(sRuntime, JSGC_MAX_MALLOC_BYTES,
                     highwatermark * 1024L * 1024L);
   return 0;
 }
@@ -2610,7 +2613,7 @@ SetMemoryMaxPrefChangedCallback(const char* aPrefName, void* aClosure)
   int32_t pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   uint32_t max = (pref <= 0 || pref >= 0x1000) ? -1 : (uint32_t)pref * 1024 * 1024;
-  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MAX_BYTES, max);
+  JS_SetGCParameter(sRuntime, JSGC_MAX_BYTES, max);
   return 0;
 }
 
@@ -2627,7 +2630,7 @@ SetMemoryGCModePrefChangedCallback(const char* aPrefName, void* aClosure)
   } else {
     mode = JSGC_MODE_GLOBAL;
   }
-  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_MODE, mode);
+  JS_SetGCParameter(sRuntime, JSGC_MODE, mode);
   return 0;
 }
 
@@ -2637,7 +2640,7 @@ SetMemoryGCSliceTimePrefChangedCallback(const char* aPrefName, void* aClosure)
   int32_t pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   if (pref > 0 && pref < 100000)
-    JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_SLICE_TIME_BUDGET, pref);
+    JS_SetGCParameter(sRuntime, JSGC_SLICE_TIME_BUDGET, pref);
   return 0;
 }
 
@@ -2647,7 +2650,7 @@ SetMemoryGCPrefChangedCallback(const char* aPrefName, void* aClosure)
   int32_t pref = Preferences::GetInt(aPrefName, -1);
   // handle overflow and negative pref values
   if (pref >= 0 && pref < 10000)
-    JS_SetGCParameter(nsJSRuntime::sRuntime, (JSGCParamKey)(intptr_t)aClosure, pref);
+    JS_SetGCParameter(sRuntime, (JSGCParamKey)(intptr_t)aClosure, pref);
   return 0;
 }
 
@@ -2655,7 +2658,7 @@ static int
 SetMemoryGCDynamicHeapGrowthPrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   bool pref = Preferences::GetBool(aPrefName);
-  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_DYNAMIC_HEAP_GROWTH, pref);
+  JS_SetGCParameter(sRuntime, JSGC_DYNAMIC_HEAP_GROWTH, pref);
   return 0;
 }
 
@@ -2663,7 +2666,7 @@ static int
 SetMemoryGCDynamicMarkSlicePrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   bool pref = Preferences::GetBool(aPrefName);
-  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_DYNAMIC_MARK_SLICE, pref);
+  JS_SetGCParameter(sRuntime, JSGC_DYNAMIC_MARK_SLICE, pref);
   return 0;
 }
 
@@ -2736,29 +2739,34 @@ NS_DOMStructuredCloneError(JSContext* cx,
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
-nsresult
-nsJSRuntime::Init()
+void
+nsJSContext::EnsureStatics()
 {
   if (sIsInitialized) {
-    if (!nsContentUtils::XPConnect())
-      return NS_ERROR_NOT_AVAILABLE;
-
-    return NS_OK;
+    if (!nsContentUtils::XPConnect()) {
+      MOZ_CRASH();
+    }
+    return;
   }
 
   nsresult rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
                                &sSecurityManager);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    MOZ_CRASH();
+  }
 
   rv = CallGetService(kJSRuntimeServiceContractID, &sRuntimeService);
-  // get the JSRuntime from the runtime svc, if possible
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    MOZ_CRASH();
+  }
 
   rv = sRuntimeService->GetRuntime(&sRuntime);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    MOZ_CRASH();
+  }
 
   // Let's make sure that our main thread is the same as the xpcom main thread.
-  NS_ASSERTION(NS_IsMainThread(), "bad");
+  MOZ_ASSERT(NS_IsMainThread());
 
   sPrevGCSliceCallback = JS::SetGCSliceCallback(sRuntime, DOMGCSliceCallback);
 
@@ -2833,8 +2841,9 @@ nsJSRuntime::Init()
                                        (void *)JSGC_DECOMMIT_THRESHOLD);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (!obs)
-    return NS_ERROR_FAILURE;
+  if (!obs) {
+    MOZ_CRASH();
+  }
 
   Preferences::AddBoolVarCache(&sGCOnMemoryPressure,
                                "javascript.options.gc_on_memory_pressure",
@@ -2854,8 +2863,6 @@ nsJSRuntime::Init()
   }
 
   sIsInitialized = true;
-
-  return NS_OK;
 }
 
 nsScriptNameSpaceManager*
