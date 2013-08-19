@@ -63,6 +63,7 @@
                   android:title="@string/apps"/>
 
             <item android:id="@+id/new_guest_session"
+                  android:icon="@drawable/ic_menu_guest"
                   android:visible="false"
                   android:title="@string/new_guest_session"/>
 
@@ -80,6 +81,7 @@
           android:title="@string/settings" />
 
     <item android:id="@+id/exit_guest_session"
+          android:icon="@drawable/ic_menu_guest"
           android:visible="false"
           android:title="@string/exit_guest_session"/>
 </menu>
