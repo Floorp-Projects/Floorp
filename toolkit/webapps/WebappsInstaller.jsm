@@ -178,7 +178,8 @@ NativeApp.prototype = {
       "registryDir": registryFolder.path,
       "app": {
         "manifest": aManifest,
-        "origin": aData.app.origin
+        "origin": aData.app.origin,
+        "manifestURL": aData.app.manifestURL
       }
     };
 

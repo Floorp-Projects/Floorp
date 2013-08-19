@@ -1,0 +1,11 @@
+{
+    "id": "predefined-id@test",
+    "fullName": "predefined ID test",
+    "author": "Erik Vold",
+    "preferences": [{
+        "name": "test",
+        "type": "integer",
+        "title": "test",
+        "value": 5
+    }]
+}

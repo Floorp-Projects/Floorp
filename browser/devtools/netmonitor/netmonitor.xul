@@ -25,8 +25,8 @@
                 accesskey="&netmonitorUI.context.copyUrl.accesskey;"
                 oncommand="NetMonitorView.RequestsMenu.copyUrl();"/>
       <menuitem id="request-menu-context-resend"
-                label="&netmonitorUI.summary.resend;"
-                accesskey="&netmonitorUI.summary.resend.accesskey;"
+                label="&netmonitorUI.summary.editAndResend;"
+                accesskey="&netmonitorUI.summary.editAndResend.accesskey;"
                 oncommand="NetMonitorView.RequestsMenu.cloneSelectedRequest();"/>
     </menupopup>
   </popupset>
@@ -314,7 +314,7 @@
                        crop="end"
                        flex="1"/>
                 <button id="headers-summary-resend"
-                       label="&netmonitorUI.summary.resend;"
+                       label="&netmonitorUI.summary.editAndResend;"
                        class="devtools-toolbarbutton"
                        onclick="NetMonitorView.RequestsMenu.cloneSelectedRequest();"/>
               </hbox>

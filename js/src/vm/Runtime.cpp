@@ -716,6 +716,13 @@ JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
     return NULL;
 }
 
+bool
+JSRuntime::activeGCInAtomsZone()
+{
+    Zone *zone = atomsCompartment_->zone();
+    return zone->needsBarrier() || zone->isGCScheduled() || zone->wasGCStarted();
+}
+
 #ifdef JS_THREADSAFE
 
 void

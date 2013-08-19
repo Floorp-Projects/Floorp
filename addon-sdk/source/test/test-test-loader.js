@@ -57,4 +57,4 @@ exports["test LoaderWithHookedConsole"] = function (assert) {
   assert.equal(count, 6, "Called for all messages");
 };
 
-require("test").run(exports);
+require("sdk/test").run(exports);

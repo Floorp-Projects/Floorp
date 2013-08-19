@@ -20,6 +20,8 @@ function HistoryView(aSet, aLimit, aFilterUnpinned) {
   StartUI.chromeWin.addEventListener('MozAppbarDismissing', this, false);
   StartUI.chromeWin.addEventListener('HistoryNeedsRefresh', this, false);
   window.addEventListener("TabClose", this, true);
+
+  this._adjustDOMforViewState();
 }
 
 HistoryView.prototype = Util.extend(Object.create(View.prototype), {

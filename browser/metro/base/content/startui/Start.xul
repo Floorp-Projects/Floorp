@@ -45,7 +45,7 @@
         <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-topsites')">
           &narrowTopSitesHeader.label;
         </html:div>
-        <richgrid id="start-topsites-grid" set-name="topSites" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
+        <richgrid id="start-topsites-grid" observes="bcast_windowState" set-name="topSites" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
       </vbox>
 
       <vbox id="start-bookmarks" class="meta-section">
@@ -53,7 +53,7 @@
         <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-bookmarks')">
           &narrowBookmarksHeader.label;
         </html:div>
-        <richgrid id="start-bookmarks-grid" set-name="bookmarks" seltype="multiple" flex="1"/>
+        <richgrid id="start-bookmarks-grid" observes="bcast_windowState" set-name="bookmarks" seltype="multiple" flex="1"/>
       </vbox>
 
       <vbox id="start-history" class="meta-section">
@@ -61,7 +61,7 @@
         <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-history')">
           &narrowRecentHistoryHeader.label;
         </html:div>
-        <richgrid id="start-history-grid" set-name="recentHistory" seltype="multiple" flex="1"/>
+        <richgrid id="start-history-grid" observes="bcast_windowState" set-name="recentHistory" seltype="multiple" flex="1"/>
       </vbox>
 
 #ifdef MOZ_SERVICES_SYNC
@@ -70,7 +70,7 @@
         <html:div id="snappedRemoteTabsLabel" class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-remotetabs')">
           &narrowRemoteTabsHeader.label;
         </html:div>
-        <richgrid id="start-remotetabs-grid" set-name="remoteTabs" seltype="multiple" flex="1"/>
+        <richgrid id="start-remotetabs-grid" observes="bcast_windowState" set-name="remoteTabs" seltype="multiple" flex="1"/>
       </vbox>
 #endif
   </hbox>

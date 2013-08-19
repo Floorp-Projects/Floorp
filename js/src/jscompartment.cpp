@@ -629,7 +629,9 @@ JSCompartment::clearTables()
     // compartment and zone.
     JS_ASSERT(crossCompartmentWrappers.empty());
     JS_ASSERT_IF(callsiteClones.initialized(), callsiteClones.empty());
+#ifdef JS_ION
     JS_ASSERT(!ionCompartment_);
+#endif
     JS_ASSERT(!debugScopes);
     JS_ASSERT(!gcWeakMapList);
     JS_ASSERT(!analysisLifoAlloc.used());

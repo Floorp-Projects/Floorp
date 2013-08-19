@@ -15,45 +15,33 @@ function createDocument()
     '<span id="matches" class="matches">Some styled text</span>';
   doc.title = "Tests that the no results placeholder works properly";
 
-  openInspector(openComputedView);
+  openComputedView(runStyleInspectorTests);
 }
 
-function openComputedView(aInspector)
+function runStyleInspectorTests(aInspector, aComputedView)
 {
   inspector = aInspector;
-
-  inspector.sidebar.once("computedview-ready", function() {
-    inspector.sidebar.select("computedview");
-    computedView = getComputedView(inspector);
-
-    runStyleInspectorTests();
-  });
-}
-
-
-function runStyleInspectorTests()
-{
-  Services.obs.addObserver(SI_AddFilterText, "StyleInspector-populated", false);
+  computedView = aComputedView;
 
   let span = doc.querySelector("#matches");
   ok(span, "captain, we have the matches span");
 
   inspector.selection.setNode(span);
+  inspector.once("inspector-updated", () => {
+    is(span, computedView.viewedElement.rawNode(),
+      "style inspector node matches the selected node");
+    SI_AddFilterText();
+  });
 
-  is(span, computedView.viewedElement,
-    "style inspector node matches the selected node");
-  is(computedView.viewedElement, computedView.cssLogic.viewedElement,
-     "cssLogic node matches the cssHtmlTree node");
 }
 
 function SI_AddFilterText()
 {
-  Services.obs.removeObserver(SI_AddFilterText, "StyleInspector-populated");
-
   let searchbar = computedView.searchField;
   let searchTerm = "xxxxx";
 
-  Services.obs.addObserver(SI_checkPlaceholderVisible, "StyleInspector-populated", false);
+  inspector.once("computed-view-refreshed", SI_checkPlaceholderVisible);
+
   info("setting filter text to \"" + searchTerm + "\"");
   searchbar.focus();
   for each (let c in searchTerm) {
@@ -63,7 +51,6 @@ function SI_AddFilterText()
 
 function SI_checkPlaceholderVisible()
 {
-  Services.obs.removeObserver(SI_checkPlaceholderVisible, "StyleInspector-populated");
   info("SI_checkPlaceholderVisible called");
   let placeholder = computedView.noResults;
   let win = computedView.styleWindow;
@@ -78,7 +65,7 @@ function SI_ClearFilterText()
 {
   let searchbar = computedView.searchField;
 
-  Services.obs.addObserver(SI_checkPlaceholderHidden, "StyleInspector-populated", false);
+  inspector.once("computed-view-refreshed", SI_checkPlaceholderHidden);
   info("clearing filter text");
   searchbar.focus();
   searchbar.value = "";
@@ -87,7 +74,6 @@ function SI_ClearFilterText()
 
 function SI_checkPlaceholderHidden()
 {
-  Services.obs.removeObserver(SI_checkPlaceholderHidden, "StyleInspector-populated");
   let placeholder = computedView.noResults;
   let win = computedView.styleWindow;
   let display = win.getComputedStyle(placeholder).display;

@@ -1,0 +1,10 @@
+<script>
+addon.port.on('X', function(msg) {
+  // last message
+  addon.port.emit('X', msg + '3');
+});
+
+// start messaging chain
+addon.port.emit('Y', '1');
+</script>
+SIDEBAR TEST

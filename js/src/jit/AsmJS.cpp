@@ -4497,7 +4497,7 @@ CheckReturnType(FunctionCompiler &f, ParseNode *usepn, RetType retType)
 
     if (f.returnedType() != retType) {
         return f.failf(usepn, "%s incompatible with previous return of type %s",
-                       f.returnedType().toType().toChars(), retType.toType().toChars());
+                       retType.toType().toChars(), f.returnedType().toType().toChars());
     }
 
     return true;
@@ -4666,12 +4666,15 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
     for (; stmtIter; stmtIter = NextNode(stmtIter)) {
         if (!CheckStatement(f, stmtIter))
             return false;
-        if (!IsExpressionStatement(stmtIter))
+        if (!IsEmptyStatement(stmtIter))
             lastNonEmptyStmt = stmtIter;
     }
 
     RetType retType;
     if (!CheckFinalReturn(f, lastNonEmptyStmt, &retType))
+        return false;
+
+    if (!CheckReturnType(f, lastNonEmptyStmt, retType))
         return false;
 
     Signature sig(Move(argTypes), retType);

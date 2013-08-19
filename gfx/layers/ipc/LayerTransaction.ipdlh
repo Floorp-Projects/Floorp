@@ -17,6 +17,7 @@ include "mozilla/TimeStamp.h";
 include "mozilla/dom/ScreenOrientation.h";
 include "nsCSSProperty.h";
 include "gfxipc/ShadowLayerUtils.h";
+include "mozilla/GfxMessageUtils.h";
 include "ImageLayers.h";
 include "mozilla/layers/CompositorTypes.h";
 

@@ -140,7 +140,7 @@ public:
                                         LayersBackend aBackendHint = mozilla::layers::LAYERS_NONE,
                                         LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                         bool* aAllowRetaining = nullptr);
-  virtual mozilla::layers::LayersBackend GetPreferredCompositorBackend() { return mozilla::layers::LAYERS_D3D11; }
+  virtual void GetPreferredCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aHints) { aHints.AppendElement(mozilla::layers::LAYERS_D3D11); }
 
   // IME related interfaces
   NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
