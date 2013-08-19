@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=877673
+-->
+<window title="Mozilla Bug 877673"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+      SimpleTest.waitForExplicitFinish();
+      const Cu = Components.utils;
+      var sb = new Cu.Sandbox("http://example.org", {wantExportHelpers: true});
+      sb.ok = ok;
+
+      function executeIn(frame, script, exceptionCb) {
+        sb.frame = frame;
+        sb.exceptionCb = exceptionCb;
+        if (exceptionCb) {
+          return Cu.evalInSandbox("try {evalInWindow('" + script + "',frame); ok(false, 'Exception should have been thrown.')} catch(e) {exceptionCb(e)}", sb);
+        }
+
+        return Cu.evalInSandbox("evalInWindow('" + script + "',frame)", sb);
+      }
+
+      function testSameOrigin(frame) {
+        frame.contentWindow.document.wrappedJSObject.str = "foobar";
+        is(executeIn(frame.contentWindow, "document.str"), "foobar",
+           "Same origin string property access.");
+
+        executeIn(frame.contentWindow, 'document.obj = {prop: "foobar"}');
+        is((executeIn(frame.contentWindow, "document.obj")).prop, "foobar",
+           "Same origin object property access (cloning).");
+        isnot(executeIn(frame.contentWindow, "document.obj"), frame.contentWindow.document.wrappedJSObject.obj,
+              "Ensure cloning for js objects.");
+        is(executeIn(frame.contentWindow, "document"), frame.contentWindow.document,
+           "Xrayables should just pass without cloning.");
+        is( executeIn(frame.contentWindow, "({a:{doc: document}})").a.doc, frame.contentWindow.document,
+           "Deep cloning works.");
+
+        executeIn(frame.contentWindow, "throw 42", function(e){is(e, 42,
+                                                                  "Exception was thrown from script.")});
+
+        executeIn(frame.contentDocument, "var a = 42;", function(e){ok(e.toString().indexOf("Second argument must be a window") > -1,
+                                                                       "Passing non-window to evalInWindow should throw.");});
+        testDone();
+      }
+
+      function testCrossOrigin(frame) {
+        executeIn(frame.contentWindow, "var a = 42;", function(e){ok(e.toString().indexOf("Permission denied") > -1,
+                                                                     "Executing script in a window from cross origin should throw.");});
+        testDone();
+      }
+
+      var testsRun = 0;
+      function testDone() {
+        if (++testsRun == 2)
+          SimpleTest.finish();
+      }
+  ]]></script>
+  <iframe src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"
+          onload="testSameOrigin(this)">
+  </iframe>
+  <iframe src="http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_empty.html"
+          onload="testCrossOrigin(this)">
+  </iframe>
+</window>
