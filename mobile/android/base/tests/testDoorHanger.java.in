@@ -1,6 +1,16 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
+import @ANDROID_PACKAGE_NAME@.*;
+
+import android.app.Activity;
+import android.content.SharedPreferences;
+import java.lang.reflect.Method;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /* This test will test if doorhangers are displayed and dismissed
    The test will test:
    * geolocation doorhangers - sharing and not sharing the location dismisses the doorhanger
@@ -67,6 +77,45 @@ public class testDoorHanger extends BaseTest {
         mAsserter.is(mSolo.searchText(GEO_MESSAGE), false, "Geolocation doorhanger notification is hidden when opening a new tab");
         */
 
+
+        boolean offlineAllowedByDefault = true;
+        try {
+            // Save offline-allow-by-default preferences first
+            JSONArray getPrefData = new JSONArray();
+            getPrefData.put("offline-apps.allow_by_default");
+            JSONObject message = new JSONObject();
+            message.put("requestId", "testDoorHanger");
+            message.put("preferences", getPrefData);
+
+            Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
+            mActions.sendGeckoEvent("Preferences:Get", message.toString());
+
+            JSONObject data = null;
+            String requestId = "";
+
+            // Wait until we get the correct "Preferences:Data" event
+            while (!requestId.equals("testDoorHanger")) {
+                data = new JSONObject(eventExpecter.blockForEventData());
+                requestId = data.getString("requestId");
+            }
+            eventExpecter.unregisterListener();
+
+            JSONArray preferences = data.getJSONArray("preferences");
+            if (preferences.length() > 0) {
+                JSONObject pref = (JSONObject) preferences.get(0);
+                offlineAllowedByDefault = pref.getBoolean("value");
+            }
+
+            // Turn off offline-allow-by-default
+            JSONObject jsonPref = new JSONObject();
+            jsonPref.put("name", "offline-apps.allow_by_default");
+            jsonPref.put("type", "bool");
+            jsonPref.put("value", false);
+            mActions.sendGeckoEvent("Preferences:Set", jsonPref.toString());
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception getting preference", e.toString());
+        }
+
         // Load offline storage page
         loadUrl(OFFLINE_STORAGE_URL);
         waitForText(OFFLINE_MESSAGE);
@@ -85,6 +134,18 @@ public class testDoorHanger extends BaseTest {
         mAsserter.is(mSolo.searchText(OFFLINE_MESSAGE), false, "Offline storage doorhanger notification is hidden when allowing storage");
         loadUrl(OFFLINE_STORAGE_URL);
         mAsserter.is(mSolo.searchText(OFFLINE_MESSAGE), false, "Offline storage doorhanger is no longer triggered");
+
+        try {
+            // Revert offline setting
+            JSONObject jsonPref = new JSONObject();
+            jsonPref.put("name", "offline-apps.allow_by_default");
+            jsonPref.put("type", "boolean");
+            jsonPref.put("value", offlineAllowedByDefault);
+            mActions.sendGeckoEvent("Preferences:Set", jsonPref.toString());
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception setting preference", e.toString());
+        }
+
 
         // Load login page
         loadUrl(LOGIN_URL);

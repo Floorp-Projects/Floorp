@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
+#include "ImageTypes.h"
 #include "yuv_convert.h"
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"

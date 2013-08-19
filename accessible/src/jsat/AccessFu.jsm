@@ -29,8 +29,8 @@ this.AccessFu = {
     Utils.init(aWindow);
 
     try {
-      Cc['@mozilla.org/android/bridge;1'].
-        getService(Ci.nsIAndroidBridge).handleGeckoMessage(
+      let bridgeCc = Cc['@mozilla.org/android/bridge;1'];
+      bridgeCc.getService(Ci.nsIAndroidBridge).handleGeckoMessage(
           JSON.stringify({ type: 'Accessibility:Ready' }));
       Services.obs.addObserver(this, 'Accessibility:Settings', false);
     } catch (x) {
@@ -116,6 +116,7 @@ this.AccessFu = {
     Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
     Services.obs.addObserver(this, 'Accessibility:Focus', false);
     Services.obs.addObserver(this, 'Accessibility:ActivateObject', false);
+    Services.obs.addObserver(this, 'Accessibility:LongPress', false);
     Services.obs.addObserver(this, 'Accessibility:MoveByGranularity', false);
     Utils.win.addEventListener('TabOpen', this);
     Utils.win.addEventListener('TabClose', this);
@@ -159,6 +160,7 @@ this.AccessFu = {
     Services.obs.removeObserver(this, 'Accessibility:PreviousObject');
     Services.obs.removeObserver(this, 'Accessibility:Focus');
     Services.obs.removeObserver(this, 'Accessibility:ActivateObject');
+    Services.obs.removeObserver(this, 'Accessibility:LongPress');
     Services.obs.removeObserver(this, 'Accessibility:MoveByGranularity');
 
     if (this.doneCallback) {
@@ -275,6 +277,9 @@ this.AccessFu = {
         break;
       case 'Accessibility:ActivateObject':
         this.Input.activateCurrent(JSON.parse(aData));
+        break;
+      case 'Accessibility:LongPress':
+        this.Input.sendContextMenuMessage();
         break;
       case 'Accessibility:Focus':
         this._focused = JSON.parse(aData);

@@ -13,11 +13,90 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES	= \
 	offlineTests.js \
+	test_badManifestMagic.html \
+	test_bypass.html \
+	test_missingFile.html \
+	test_noManifest.html \
+	test_simpleManifest.html \
+	test_identicalManifest.html \
+	test_changingManifest.html \
+	test_refetchManifest.html \
+	test_offlineIFrame.html \
 	test_bug445544.html \
+	test_bug460353.html \
+	test_bug474696.html \
+	test_bug544462.html \
+	test_bug744719.html \
+	744719.cacheManifest \
+	744719.cacheManifest^headers^ \
+	test_bug765203.html \
+	unknownSection.cacheManifest \
+	unknownSection.cacheManifest^headers^ \
+	test_bug744719-cancel.html \
+	744719-cancel.cacheManifest \
+	744719-cancel.cacheManifest^headers^ \
+	subresource744719.html \
+	test_foreign.html \
+	test_fallback.html \
+	test_overlap.html \
+	test_redirectManifest.html \
+	test_redirectUpdateItem.html \
+	overlap.cacheManifest \
+	overlap.cacheManifest^headers^ \
+	test_updatingManifest.html \
+	test_updateCheck.html \
 	445544_part1.html \
 	445544_part2.html \
 	445544.cacheManifest \
 	445544.cacheManifest^headers^ \
+	460353_iframe_nomanifest.html \
+	460353_iframe_ownmanifest.html \
+	460353_iframe_samemanifest.html \
+	test_obsolete.html \
+	obsolete.html \
+	obsoletingManifest.sjs \
+	badManifestMagic.cacheManifest \
+	badManifestMagic.cacheManifest^headers^ \
+	bypass.cacheManifest \
+	bypass.cacheManifest^headers^ \
+	bypass.html \
+	dynamicRedirect.sjs \
+	explicitRedirect.sjs \
+	fallback.html \
+	fallback2.html \
+	fallbackTop.html \
+	fallback.cacheManifest \
+	fallback.cacheManifest^headers^ \
+	foreign1.cacheManifest \
+	foreign1.cacheManifest^headers^ \
+	foreign2.cacheManifest \
+	foreign2.cacheManifest^headers^ \
+	foreign2.html \
+	notonwhitelist.html \
+	onwhitelist.html \
+	onwhitelist.html^headers^ \
+	updatingIframe.sjs \
+	updatingImplicit.html \
+	manifestRedirect.sjs \
+	missingFile.cacheManifest \
+	missingFile.cacheManifest^headers^ \
+	redirects.sjs \
+	simpleManifest.cacheManifest \
+	simpleManifest.cacheManifest^headers^ \
+	wildcardManifest.cacheManifest \
+	wildcardManifest.cacheManifest^headers^ \
+	updatingManifest.sjs \
+	changing1Sec.sjs \
+	changing1Hour.sjs \
+	changingManifest.sjs \
+	offlineChild.html \
+	test_xhtmlManifest.xhtml \
+	test_missingManifest.html \
+	missing.html \
+	jupiter.jpg \
+	test_cancelOfflineCache.html \
+	test_lowDeviceStorage.html \
+	test_lowDeviceStorageDuringUpdate.html \
 	$(NULL)
 
 # test_offlineMode.html disabled due to bug 656943

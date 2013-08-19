@@ -2929,6 +2929,7 @@ void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime,
   metadata->mChannels = aChannels;
   metadata->mRate = aRate;
   metadata->mHasAudio = aHasAudio;
+  metadata->mHasVideo = aHasVideo;
   metadata->mTags = aTags;
   mMetadataManager.QueueMetadata(metadata);
 }

@@ -1936,13 +1936,17 @@ void do_breakpad_unwind_Buffer(/*OUT*/PCandSP** pairs,
   // spending a lot of time looping on corrupted stacks.
   sw->set_max_frames(256);
 
+  // Set the max number of scanned or otherwise dubious frames
+  // to the user specified limit
+  sw->set_max_frames_scanned((sUnwindStackScan > 256) ? 256
+                             : (sUnwindStackScan < 0) ? 0
+                             : sUnwindStackScan);
+
   bool b = sw->Walk(stack, modules_without_symbols);
   (void)b;
   delete modules_without_symbols;
 
   unsigned int n_frames = stack->frames()->size();
-  unsigned int n_frames_good = 0;
-  unsigned int n_frames_dubious = 0;
 
   *pairs  = (PCandSP*)calloc(n_frames, sizeof(PCandSP));
   *nPairs = n_frames;
@@ -1955,26 +1959,6 @@ void do_breakpad_unwind_Buffer(/*OUT*/PCandSP** pairs,
     for (unsigned int frame_index = 0; 
          frame_index < n_frames; ++frame_index) {
       google_breakpad::StackFrame *frame = stack->frames()->at(frame_index);
-
-      bool dubious
-        = frame->trust == google_breakpad::StackFrame::FRAME_TRUST_SCAN
-          || frame->trust == google_breakpad::StackFrame::FRAME_TRUST_CFI_SCAN
-          || frame->trust == google_breakpad::StackFrame::FRAME_TRUST_NONE;
-
-      if (dubious) {
-        n_frames_dubious++;
-      } else {
-        n_frames_good++;
-      }
-
-      /* Once we've seen more than some threshhold number of dubious
-         frames, give up.  Doing that gives better results than
-         polluting the profiling results with junk frames.  Because
-         the entries are put into the pairs array starting at the end,
-         this will leave some initial section of pairs containing
-         (0,0) values, which correspond to the skipped frames. */
-      if (n_frames_dubious > (unsigned int)sUnwindStackScan)
-        break;
 
       if (LOGLEVEL >= 2)
         stats_notify_frame(frame->trust);
@@ -2025,9 +2009,8 @@ void do_breakpad_unwind_Buffer(/*OUT*/PCandSP** pairs,
   }
 
   if (LOGLEVEL >= 3) {
-    LOGF("BPUnw: unwinder: seqNo %llu, buf %d: got %u frames "
-         "(%u trustworthy)", 
-         (unsigned long long int)buff->seqNo, buffNo, n_frames, n_frames_good);
+    LOGF("BPUnw: unwinder: seqNo %llu, buf %d: got %u frames",
+         (unsigned long long int)buff->seqNo, buffNo, n_frames);
   }
 
   if (LOGLEVEL >= 2) {

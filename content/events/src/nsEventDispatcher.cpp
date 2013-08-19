@@ -52,64 +52,27 @@ private:
 class nsEventTargetChainItem
 {
 private:
-  nsEventTargetChainItem(EventTarget* aTarget,
-                         nsEventTargetChainItem* aChild = nullptr);
-
-  // This is the ETCI recycle pool, which is used to avoid some malloc/free
-  // churn.  It's implemented as a linked list.
-  static nsEventTargetChainItem* sEtciRecyclePool;
-  static uint32_t sNumRecycledEtcis;
-  static const uint32_t kMaxNumRecycledEtcis = 128;
-
+  nsEventTargetChainItem(EventTarget* aTarget);
 public:
-  static nsEventTargetChainItem* Create(EventTarget* aTarget,
+  nsEventTargetChainItem()
+  : mFlags(0), mItemFlags(0)
+  {
+  }
+
+  static nsEventTargetChainItem* Create(nsTArray<nsEventTargetChainItem>& aChain,
+                                        EventTarget* aTarget,
                                         nsEventTargetChainItem* aChild = nullptr)
   {
-    // Allocate from the ETCI recycle pool if possible.
-    void* place = nullptr;
-    if (sNumRecycledEtcis > 0) {
-      MOZ_ASSERT(sEtciRecyclePool);
-      place = sEtciRecyclePool;
-      sEtciRecyclePool = sEtciRecyclePool->mNext;
-      --sNumRecycledEtcis;
-    } else {
-      place = malloc(sizeof(nsEventTargetChainItem));
-    }
-    return place
-      ? ::new (place) nsEventTargetChainItem(aTarget, aChild)
-      : nullptr;
+    MOZ_ASSERT(!aChild || &aChain.ElementAt(aChain.Length() - 1) == aChild);
+    return new (aChain.AppendElement()) nsEventTargetChainItem(aTarget);
   }
 
-  static void Destroy(nsEventTargetChainItem* aItem)
+  static void DestroyLast(nsTArray<nsEventTargetChainItem>& aChain,
+                          nsEventTargetChainItem* aItem)
   {
-    // ::Destroy deletes ancestor chain.
-    nsEventTargetChainItem* item = aItem;
-    if (item->mChild) {
-      item->mChild->mParent = nullptr;
-      item->mChild = nullptr;
-    }
-    // Put destroyed ETCIs into the recycle pool if it's not already full.
-    while (item) {
-      nsEventTargetChainItem* parent = item->mParent;
-      item->~nsEventTargetChainItem();
-      if (sNumRecycledEtcis < kMaxNumRecycledEtcis) {
-        item->mNext = sEtciRecyclePool;
-        sEtciRecyclePool = item;
-        ++sNumRecycledEtcis;
-      } else {
-        free(item);
-      }
-      item = parent;
-    }
-  }
-
-  static void ShutdownRecyclePool()
-  {
-    while (sEtciRecyclePool) {
-      nsEventTargetChainItem* tmp = sEtciRecyclePool;
-      sEtciRecyclePool = sEtciRecyclePool->mNext;
-      free(tmp);
-    }
+    uint32_t lastIndex = aChain.Length() - 1;
+    MOZ_ASSERT(&aChain[lastIndex] == aItem);
+    aChain.RemoveElementAt(lastIndex);
   }
 
   bool IsValid()
@@ -181,10 +144,11 @@ public:
    * and system event group and calls also PostHandleEvent for each
    * item in the chain.
    */
-  nsresult HandleEventTargetChain(nsEventChainPostVisitor& aVisitor,
-                                  nsDispatchingCallback* aCallback,
-                                  ELMCreationDetector& aCd,
-                                  nsCxPusher* aPusher);
+  static void HandleEventTargetChain(nsTArray<nsEventTargetChainItem>& aChain,
+                                     nsEventChainPostVisitor& aVisitor,
+                                     nsDispatchingCallback* aCallback,
+                                     ELMCreationDetector& aCd,
+                                     nsCxPusher* aPusher);
 
   /**
    * Resets aVisitor object and calls PreHandleEvent.
@@ -233,21 +197,7 @@ public:
   nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor,
                            nsCxPusher* aPusher);
 
-  static uint32_t MaxEtciCount() { return sMaxEtciCount; }
-
-  static void ResetMaxEtciCount()
-  {
-    MOZ_ASSERT(!sCurrentEtciCount, "Wrong time to call ResetMaxEtciCount()!");
-    sMaxEtciCount = 0;
-  }
-
   nsCOMPtr<EventTarget>             mTarget;
-  nsEventTargetChainItem*           mChild;
-  union {
-    nsEventTargetChainItem*         mParent;
-     // This is used only when recycling ETCIs.
-    nsEventTargetChainItem*         mNext;
-  };
   uint16_t                          mFlags;
   uint16_t                          mItemFlags;
   nsCOMPtr<nsISupports>             mItemData;
@@ -255,22 +205,12 @@ public:
   nsCOMPtr<EventTarget>             mNewTarget;
   // Cache mTarget's event listener manager.
   nsRefPtr<nsEventListenerManager>  mManager;
-
-  static uint32_t                   sMaxEtciCount;
-  static uint32_t                   sCurrentEtciCount;
 };
 
-nsEventTargetChainItem* nsEventTargetChainItem::sEtciRecyclePool = nullptr;
-uint32_t nsEventTargetChainItem::sNumRecycledEtcis = 0;
-
-nsEventTargetChainItem::nsEventTargetChainItem(EventTarget* aTarget,
-                                               nsEventTargetChainItem* aChild)
-: mTarget(aTarget), mChild(aChild), mParent(nullptr), mFlags(0), mItemFlags(0)
+nsEventTargetChainItem::nsEventTargetChainItem(EventTarget* aTarget)
+: mTarget(aTarget), mFlags(0), mItemFlags(0)
 {
   MOZ_ASSERT(!aTarget || mTarget == aTarget->GetTargetForEventTargetChain());
-  if (mChild) {
-    mChild->mParent = this;
-  }
 }
 
 nsresult
@@ -297,8 +237,9 @@ nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor,
   return NS_OK;
 }
 
-nsresult
+void
 nsEventTargetChainItem::HandleEventTargetChain(
+                          nsTArray<nsEventTargetChainItem>& aChain,
                           nsEventChainPostVisitor& aVisitor,
                           nsDispatchingCallback* aCallback,
                           ELMCreationDetector& aCd,
@@ -306,50 +247,49 @@ nsEventTargetChainItem::HandleEventTargetChain(
 {
   // Save the target so that it can be restored later.
   nsCOMPtr<EventTarget> firstTarget = aVisitor.mEvent->target;
+  uint32_t chainLength = aChain.Length();
 
   // Capture
-  nsEventTargetChainItem* item = this;
   aVisitor.mEvent->mFlags.mInCapturePhase = true;
   aVisitor.mEvent->mFlags.mInBubblingPhase = false;
-  while (item->mChild) {
+  for (uint32_t i = chainLength - 1; i > 0; --i) {
+    nsEventTargetChainItem& item = aChain[i];
     if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
-         item->ForceContentDispatch()) &&
+         item.ForceContentDispatch()) &&
         !aVisitor.mEvent->mFlags.mPropagationStopped) {
-      item->HandleEvent(aVisitor, aCd, aPusher);
+      item.HandleEvent(aVisitor, aCd, aPusher);
     }
 
-    if (item->GetNewTarget()) {
+    if (item.GetNewTarget()) {
       // item is at anonymous boundary. Need to retarget for the child items.
-      nsEventTargetChainItem* nextTarget = item->mChild;
-      while (nextTarget) {
-        EventTarget* newTarget = nextTarget->GetNewTarget();
+      for (uint32_t j = i; j > 0; --j) {
+        uint32_t childIndex = j - 1;
+        EventTarget* newTarget = aChain[childIndex].GetNewTarget();
         if (newTarget) {
           aVisitor.mEvent->target = newTarget;
           break;
         }
-        nextTarget = nextTarget->mChild;
       }
     }
-
-    item = item->mChild;
   }
 
   // Target
   aVisitor.mEvent->mFlags.mInBubblingPhase = true;
+  nsEventTargetChainItem& targetItem = aChain[0];
   if (!aVisitor.mEvent->mFlags.mPropagationStopped &&
       (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
-       item->ForceContentDispatch())) {
-    item->HandleEvent(aVisitor, aCd, aPusher);
+       targetItem.ForceContentDispatch())) {
+    targetItem.HandleEvent(aVisitor, aCd, aPusher);
   }
   if (aVisitor.mEvent->mFlags.mInSystemGroup) {
-    item->PostHandleEvent(aVisitor, aPusher);
+    targetItem.PostHandleEvent(aVisitor, aPusher);
   }
 
   // Bubble
   aVisitor.mEvent->mFlags.mInCapturePhase = false;
-  item = item->mParent;
-  while (item) {
-    EventTarget* newTarget = item->GetNewTarget();
+  for (uint32_t i = 1; i < chainLength; ++i) {
+    nsEventTargetChainItem& item = aChain[i];
+    EventTarget* newTarget = item.GetNewTarget();
     if (newTarget) {
       // Item is at anonymous boundary. Need to retarget for the current item
       // and for parent items.
@@ -358,15 +298,14 @@ nsEventTargetChainItem::HandleEventTargetChain(
 
     if (aVisitor.mEvent->mFlags.mBubbles || newTarget) {
       if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
-           item->ForceContentDispatch()) &&
+           item.ForceContentDispatch()) &&
           !aVisitor.mEvent->mFlags.mPropagationStopped) {
-        item->HandleEvent(aVisitor, aCd, aPusher);
+        item.HandleEvent(aVisitor, aCd, aPusher);
       }
       if (aVisitor.mEvent->mFlags.mInSystemGroup) {
-        item->PostHandleEvent(aVisitor, aPusher);
+        item.PostHandleEvent(aVisitor, aPusher);
       }
     }
-    item = item->mParent;
   }
   aVisitor.mEvent->mFlags.mInBubblingPhase = false;
 
@@ -390,7 +329,8 @@ nsEventTargetChainItem::HandleEventTargetChain(
     // Setting back the target which was used also for default event group.
     aVisitor.mEvent->target = firstTarget;
     aVisitor.mEvent->mFlags.mInSystemGroup = true;
-    HandleEventTargetChain(aVisitor,
+    HandleEventTargetChain(aChain,
+                           aVisitor,
                            aCallback,
                            aCd,
                            aPusher);
@@ -401,17 +341,11 @@ nsEventTargetChainItem::HandleEventTargetChain(
     aVisitor.mEvent->mFlags.mPropagationStopped = false;
     aVisitor.mEvent->mFlags.mImmediatePropagationStopped = false;
   }
-
-  return NS_OK;
-}
-
-void NS_ShutdownEventTargetChainItemRecyclePool()
-{
-  nsEventTargetChainItem::ShutdownRecyclePool();
 }
 
 nsEventTargetChainItem*
-EventTargetChainItemForChromeTarget(nsINode* aNode,
+EventTargetChainItemForChromeTarget(nsTArray<nsEventTargetChainItem>& aChain,
+                                    nsINode* aNode,
                                     nsEventTargetChainItem* aChild = nullptr)
 {
   if (!aNode->IsInDoc()) {
@@ -422,11 +356,11 @@ EventTargetChainItemForChromeTarget(nsINode* aNode,
   NS_ENSURE_TRUE(piTarget, nullptr);
 
   nsEventTargetChainItem* etci =
-    nsEventTargetChainItem::Create(piTarget->GetTargetForEventTargetChain(),
+    nsEventTargetChainItem::Create(aChain,
+                                   piTarget->GetTargetForEventTargetChain(),
                                    aChild);
-  NS_ENSURE_TRUE(etci, nullptr);
   if (!etci->IsValid()) {
-    nsEventTargetChainItem::Destroy(etci);
+    nsEventTargetChainItem::DestroyLast(aChain, etci);
     return nullptr;
   }
   return etci;
@@ -522,12 +456,13 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   // event dispatching is finished.
   nsRefPtr<nsPresContext> kungFuDeathGrip(aPresContext);
 
+  nsTArray<nsEventTargetChainItem> chain(128);
+
   // Create the event target chain item for the event target.
   nsEventTargetChainItem* targetEtci =
-    nsEventTargetChainItem::Create(target->GetTargetForEventTargetChain());
-  NS_ENSURE_TRUE(targetEtci, NS_ERROR_OUT_OF_MEMORY);
+    nsEventTargetChainItem::Create(chain, target->GetTargetForEventTargetChain());
   if (!targetEtci->IsValid()) {
-    nsEventTargetChainItem::Destroy(targetEtci);
+    nsEventTargetChainItem::DestroyLast(chain, targetEtci);
     return NS_ERROR_FAILURE;
   }
 
@@ -570,8 +505,8 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
   if (!preVisitor.mCanHandle && preVisitor.mAutomaticChromeDispatch && content) {
     // Event target couldn't handle the event. Try to propagate to chrome.
-    nsEventTargetChainItem::Destroy(targetEtci);
-    targetEtci = EventTargetChainItemForChromeTarget(content);
+    nsEventTargetChainItem::DestroyLast(chain, targetEtci);
+    targetEtci = EventTargetChainItemForChromeTarget(chain, content);
     NS_ENSURE_STATE(targetEtci);
     targetEtci->PreHandleEvent(preVisitor);
   }
@@ -584,12 +519,9 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     while (preVisitor.mParentTarget) {
       EventTarget* parentTarget = preVisitor.mParentTarget;
       nsEventTargetChainItem* parentEtci =
-        nsEventTargetChainItem::Create(preVisitor.mParentTarget, topEtci);
-      if (!parentEtci) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        break;
-      }
+        nsEventTargetChainItem::Create(chain, preVisitor.mParentTarget, topEtci);
       if (!parentEtci->IsValid()) {
+        nsEventTargetChainItem::DestroyLast(chain, parentEtci);
         rv = NS_ERROR_FAILURE;
         break;
       }
@@ -606,14 +538,15 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
       if (preVisitor.mCanHandle) {
         topEtci = parentEtci;
       } else {
-        nsEventTargetChainItem::Destroy(parentEtci);
+        nsEventTargetChainItem::DestroyLast(chain, parentEtci);
         parentEtci = nullptr;
         if (preVisitor.mAutomaticChromeDispatch && content) {
           // Even if the current target can't handle the event, try to
           // propagate to chrome.
           nsCOMPtr<nsINode> disabledTarget = do_QueryInterface(parentTarget);
           if (disabledTarget) {
-            parentEtci = EventTargetChainItemForChromeTarget(disabledTarget,
+            parentEtci = EventTargetChainItemForChromeTarget(chain,
+                                                             disabledTarget,
                                                              topEtci);
             if (parentEtci) {
               parentEtci->PreHandleEvent(preVisitor);
@@ -631,20 +564,20 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     if (NS_SUCCEEDED(rv)) {
       if (aTargets) {
         aTargets->Clear();
-        nsEventTargetChainItem* item = targetEtci;
-        while(item) {
-          aTargets->AppendObject(item->CurrentTarget()->GetTargetForDOMEvent());
-          item = item->mParent;
+        aTargets->SetCapacity(chain.Length());
+        for (uint32_t i = 0; i < chain.Length(); ++i) {
+          aTargets->AppendObject(chain[i].CurrentTarget()->GetTargetForDOMEvent());
         }
       } else {
         // Event target chain is created. Handle the chain.
         nsEventChainPostVisitor postVisitor(preVisitor);
         nsCxPusher pusher;
         ELMCreationDetector cd;
-        rv = topEtci->HandleEventTargetChain(postVisitor,
-                                             aCallback,
-                                             cd,
-                                             &pusher);
+        nsEventTargetChainItem::HandleEventTargetChain(chain,
+                                                       postVisitor,
+                                                       aCallback,
+                                                       cd,
+                                                       &pusher);
 
         preVisitor.mEventStatus = postVisitor.mEventStatus;
         // If the DOM event was created during event flow.
@@ -655,7 +588,9 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     }
   }
 
-  nsEventTargetChainItem::Destroy(targetEtci);
+  // Note, nsEventTargetChainItem objects are deleted when the chain goes out of
+  // the scope.
+
   targetEtci = nullptr;
 
   aEvent->mFlags.mIsBeingDispatched = false;

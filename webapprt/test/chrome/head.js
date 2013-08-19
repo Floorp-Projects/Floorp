@@ -6,8 +6,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 // Some of the code we want to provide to chrome mochitests is in another file
 // so we can share it with the mochitest shim window, thus we need to load it.
-Services.scriptloader.loadSubScript("chrome://webapprt/content/mochitest.js",
-                                    this);
+Services.scriptloader
+        .loadSubScript("chrome://webapprt/content/mochitest-shared.js", this);
 
 const MANIFEST_URL_BASE = Services.io.newURI(
   "http://test/webapprtChrome/webapprt/test/chrome/", null, null);
