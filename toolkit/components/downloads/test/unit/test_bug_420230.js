@@ -10,6 +10,10 @@ const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
 
 function run_test()
 {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   // Don't finish until the download is finished
   do_test_pending();
 

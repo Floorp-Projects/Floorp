@@ -9,6 +9,10 @@
 
 function run_test()
 {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   let dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
   let db = dm.DBConnection;
