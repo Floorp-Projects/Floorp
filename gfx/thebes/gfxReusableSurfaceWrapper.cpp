@@ -3,52 +3,42 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxReusableSurfaceWrapper.h"
-#include "gfxImageSurface.h"
+#include "gfxSharedImageSurface.h"
 
-gfxReusableSurfaceWrapper::gfxReusableSurfaceWrapper(gfxImageSurface* aSurface)
-  : mSurface(aSurface)
-  , mFormat(aSurface->Format())
-  , mSurfaceData(aSurface->Data())
-  , mReadCount(0)
+using mozilla::ipc::Shmem;
+using mozilla::layers::ISurfaceAllocator;
+
+gfxReusableSurfaceWrapper::gfxReusableSurfaceWrapper(ISurfaceAllocator* aAllocator,
+                                                     gfxSharedImageSurface* aSurface)
+  : mAllocator(aAllocator)
+  , mSurface(aSurface)
 {
   MOZ_COUNT_CTOR(gfxReusableSurfaceWrapper);
+  ReadLock();
 }
-
-class DeleteImageOnMainThread : public nsRunnable {
-public:
-  DeleteImageOnMainThread(gfxImageSurface *aImage)
-  : mImage(aImage)
-  {}
-
-  NS_IMETHOD Run()
-  {
-    return NS_OK;
-  }
-private:
-  nsRefPtr<gfxImageSurface> mImage;
-};
 
 gfxReusableSurfaceWrapper::~gfxReusableSurfaceWrapper()
 {
-  NS_ABORT_IF_FALSE(mReadCount == 0, "Should not be locked when released");
   MOZ_COUNT_DTOR(gfxReusableSurfaceWrapper);
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(new DeleteImageOnMainThread(mSurface));
-  }
+  ReadUnlock();
 }
 
 void
 gfxReusableSurfaceWrapper::ReadLock()
 {
-  NS_CheckThreadSafe(_mOwningThread.GetThread(), "Only the owner thread can call ReadOnlyLock");
-  mReadCount++;
+  NS_CheckThreadSafe(_mOwningThread.GetThread(), "Only the owner thread can call ReadLock");
+  mSurface->ReadLock();
 }
 
 void
 gfxReusableSurfaceWrapper::ReadUnlock()
 {
-  mReadCount--;
-  NS_ABORT_IF_FALSE(mReadCount >= 0, "Should not be negative");
+  int32_t readCount = mSurface->ReadUnlock();
+  NS_ABORT_IF_FALSE(readCount >= 0, "Read count should not be negative");
+
+  if (readCount == 0) {
+    mAllocator->DeallocShmem(mSurface->GetShmem());
+  }
 }
 
 gfxReusableSurfaceWrapper*
@@ -56,18 +46,52 @@ gfxReusableSurfaceWrapper::GetWritable(gfxImageSurface** aSurface)
 {
   NS_CheckThreadSafe(_mOwningThread.GetThread(), "Only the owner thread can call GetWritable");
 
-  if (mReadCount == 0) {
+  int32_t readCount = mSurface->GetReadCount();
+  NS_ABORT_IF_FALSE(readCount > 0, "A ReadLock must be held when calling GetWritable");
+  if (readCount == 1) {
     *aSurface = mSurface;
     return this;
   }
 
   // Something else is reading the surface, copy it
-  gfxImageSurface* copySurface = new gfxImageSurface(mSurface->GetSize(), mSurface->Format(), false);
+  nsRefPtr<gfxSharedImageSurface> copySurface =
+    gfxSharedImageSurface::CreateUnsafe(mAllocator, mSurface->GetSize(), mSurface->Format());
   copySurface->CopyFrom(mSurface);
   *aSurface = copySurface;
 
-  // We need to create a new wrapper since this wrapper has a read only lock.
-  gfxReusableSurfaceWrapper* wrapper = new gfxReusableSurfaceWrapper(copySurface);
+  // We need to create a new wrapper since this wrapper has an external ReadLock
+  gfxReusableSurfaceWrapper* wrapper = new gfxReusableSurfaceWrapper(mAllocator, copySurface);
+
+  // No need to release the ReadLock on the surface, this will happen when
+  // the wrapper is destroyed.
+
   return wrapper;
 }
 
+const unsigned char*
+gfxReusableSurfaceWrapper::GetReadOnlyData() const
+{
+  NS_ABORT_IF_FALSE(mSurface->GetReadCount() > 0, "Should have read lock");
+  return mSurface->Data();
+}
+
+gfxASurface::gfxImageFormat
+gfxReusableSurfaceWrapper::Format()
+{
+  return mSurface->Format();
+}
+
+Shmem&
+gfxReusableSurfaceWrapper::GetShmem()
+{
+  return mSurface->GetShmem();
+}
+
+/* static */ already_AddRefed<gfxReusableSurfaceWrapper>
+gfxReusableSurfaceWrapper::Open(ISurfaceAllocator* aAllocator, const Shmem& aShmem)
+{
+  nsRefPtr<gfxSharedImageSurface> sharedImage = gfxSharedImageSurface::Open(aShmem);
+  nsRefPtr<gfxReusableSurfaceWrapper> wrapper = new gfxReusableSurfaceWrapper(aAllocator, sharedImage);
+  wrapper->ReadUnlock();
+  return wrapper.forget();
+}

@@ -15,6 +15,7 @@
 #include "BasicLayers.h" // for PaintContext
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "gfxReusableSurfaceWrapper.h"
+#include "gfxSharedImageSurface.h"
 #include "gfxPlatform.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "gfx2DGlue.h"
@@ -462,9 +463,10 @@ DeprecatedTextureClientShmemYCbCr::EnsureAllocated(gfx::IntSize aSize,
 
 
 DeprecatedTextureClientTile::DeprecatedTextureClientTile(CompositableForwarder* aForwarder,
-                                     const TextureInfo& aTextureInfo)
+                                                         const TextureInfo& aTextureInfo,
+                                                         gfxReusableSurfaceWrapper* aSurface)
   : DeprecatedTextureClient(aForwarder, aTextureInfo)
-  , mSurface(nullptr)
+  , mSurface(aSurface)
 {
   mTextureInfo.mDeprecatedTextureHostFlags = TEXTURE_HOST_TILED;
 }
@@ -474,10 +476,11 @@ DeprecatedTextureClientTile::EnsureAllocated(gfx::IntSize aSize, gfxASurface::gf
 {
   if (!mSurface ||
       mSurface->Format() != gfxPlatform::GetPlatform()->OptimalFormatForContent(aType)) {
-    gfxImageSurface* tmpTile = new gfxImageSurface(gfxIntSize(aSize.width, aSize.height),
-                                                   gfxPlatform::GetPlatform()->OptimalFormatForContent(aType),
-                                                   aType != gfxASurface::CONTENT_COLOR);
-    mSurface = new gfxReusableSurfaceWrapper(tmpTile);
+    nsRefPtr<gfxSharedImageSurface> sharedImage =
+      gfxSharedImageSurface::CreateUnsafe(mForwarder,
+                                          gfxIntSize(aSize.width, aSize.height),
+                                          gfxPlatform::GetPlatform()->OptimalFormatForContent(aType));
+    mSurface = new gfxReusableSurfaceWrapper(mForwarder, sharedImage);
     mContentType = aType;
   }
   return true;
