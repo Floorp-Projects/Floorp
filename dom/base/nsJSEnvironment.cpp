@@ -135,7 +135,7 @@ static PRLogModuleInfo* gJSDiagnostics;
 
 #define NS_MAJOR_FORGET_SKIPPABLE_CALLS 2
 
-// if you add statics here, add them to the list in nsJSRuntime::Startup
+// if you add statics here, add them to the list in StartupJSEnvironment
 
 static nsITimer *sGCTimer;
 static nsITimer *sShrinkGCBuffersTimer;
@@ -1153,7 +1153,7 @@ nsJSContext::InitContext()
 nsresult
 nsJSContext::InitializeExternalClasses()
 {
-  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
   return nameSpaceManager->InitForContext(this);
@@ -2565,7 +2565,7 @@ nsJSContext::LikelyShortLivingObjectCreated()
 }
 
 void
-nsJSRuntime::Startup()
+mozilla::dom::StartupJSEnvironment()
 {
   // initialize all our statics, so that we can restart XPCOM
   sGCTimer = sFullGCTimer = sCCTimer = nullptr;
@@ -2866,7 +2866,7 @@ nsJSContext::EnsureStatics()
 }
 
 nsScriptNameSpaceManager*
-nsJSRuntime::GetNameSpaceManager()
+mozilla::dom::GetNameSpaceManager()
 {
   if (sDidShutdown)
     return nullptr;
@@ -2883,7 +2883,7 @@ nsJSRuntime::GetNameSpaceManager()
 }
 
 void
-nsJSRuntime::Shutdown()
+mozilla::dom::ShutdownJSEnvironment()
 {
   KillTimers();
 
