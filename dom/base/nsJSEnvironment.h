@@ -184,14 +184,17 @@ private:
 
 class nsIJSRuntimeService;
 
-namespace nsJSRuntime
-{
-  void Startup();
-  void Shutdown();
-  // Get the NameSpaceManager, creating if necessary
-  nsScriptNameSpaceManager* GetNameSpaceManager();
+namespace mozilla {
+namespace dom {
 
-};
+void StartupJSEnvironment();
+void ShutdownJSEnvironment();
+
+// Get the NameSpaceManager, creating if necessary
+nsScriptNameSpaceManager* GetNameSpaceManager();
+
+} // namespace dom
+} // namespace mozilla
 
 // An interface for fast and native conversion to/from nsIArray. If an object
 // supports this interface, JS can reach directly in for the argv, and avoid

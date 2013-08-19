@@ -31,6 +31,8 @@
 #endif
 #include "nsThreadUtils.h"
 
+using mozilla::dom::GetNameSpaceManager;
+
 nsIExceptionProvider* gExceptionProvider = nullptr;
 
 nsDOMScriptObjectFactory::nsDOMScriptObjectFactory()
@@ -76,7 +78,7 @@ nsDOMScriptObjectFactory::GetClassInfoInstance(nsDOMClassInfoID aID)
 NS_IMETHODIMP_(nsISupports *)
 nsDOMScriptObjectFactory::GetExternalClassInfoInstance(const nsAString& aName)
 {
-  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, nullptr);
 
   const nsGlobalNameStruct *globalStruct = nameSpaceManager->LookupName(aName);
@@ -153,7 +155,7 @@ nsDOMScriptObjectFactory::RegisterDOMClassInfo(const char *aName,
 					       bool aHasClassInterface,
 					       const nsCID *aConstructorCID)
 {
-  nsScriptNameSpaceManager *nameSpaceManager = nsJSRuntime::GetNameSpaceManager();
+  nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
   return nameSpaceManager->RegisterDOMCIData(aName,
