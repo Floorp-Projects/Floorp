@@ -5,62 +5,53 @@
 #ifndef GFXCOWSURFACEWRAPPER
 #define GFXCOWSURFACEWRAPPER
 
-#include "gfxASurface.h"
+#include "gfxImageSurface.h"
 #include "nsISupportsImpl.h"
 #include "nsAutoPtr.h"
-#include "mozilla/Atomics.h"
-#include "mozilla/layers/ISurfaceAllocator.h"
 
-class gfxSharedImageSurface;
 
 /**
- * Provides a cross thread wrapper for a gfxSharedImageSurface
- * that has copy-on-write schemantics.
+ * Provides an interface to implement a cross thread/process wrapper for a
+ * gfxImageSurface that has copy-on-write semantics.
  *
- * Only the owner thread can write to the surface and aquire
- * read locks.
+ * Only the owner thread can write to the surface and acquire
+ * read locks. Destroying a gfxReusableSurfaceWrapper releases
+ * a read lock.
  *
  * OMTC Usage:
  * 1) Content creates a writable copy of this surface
- *    wrapper which be optimized to the same wrapper if there
+ *    wrapper which will be optimized to the same wrapper if there
  *    are no readers.
  * 2) The surface is sent from content to the compositor once
- *    or potentially many time, each increasing a read lock.
- * 3) When the compositor has processed the surface and uploaded
- *    the content it then releases the read lock.
+ *    or potentially many times, each increasing a read lock.
+ * 3) When the compositor receives the surface, it adopts the
+ *    read lock.
+ * 4) Once the compositor has processed the surface and uploaded
+ *    the content, it then releases the read lock by dereferencing
+ *    its wrapper.
  */
 class gfxReusableSurfaceWrapper {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxReusableSurfaceWrapper)
 public:
+  virtual ~gfxReusableSurfaceWrapper() {}
+
   /**
-   * Pass the gfxSharedImageSurface to the wrapper. The wrapper will ReadLock
-   * on creation and ReadUnlock on destruction.
+   * Returns a read-only pointer to the image data.
    */
-  gfxReusableSurfaceWrapper(mozilla::layers::ISurfaceAllocator* aAllocator, gfxSharedImageSurface* aSurface);
-
-  ~gfxReusableSurfaceWrapper();
-
-  const unsigned char* GetReadOnlyData() const;
-
-  mozilla::ipc::Shmem& GetShmem();
+  virtual const unsigned char* GetReadOnlyData() const = 0;
 
   /**
-   * Create a gfxReusableSurfaceWrapper from the shared memory segment of a
-   * gfxSharedImageSurface. A ReadLock must be held, which will be adopted by
-   * the returned gfxReusableSurfaceWrapper.
+   * Returns the image surface format.
    */
-  static already_AddRefed<gfxReusableSurfaceWrapper>
-  Open(mozilla::layers::ISurfaceAllocator* aAllocator, const mozilla::ipc::Shmem& aShmem);
-
-  gfxASurface::gfxImageFormat Format();
+  virtual gfxASurface::gfxImageFormat Format() = 0;
 
   /**
-   * Get a writable copy of the image.
+   * Returns a writable copy of the image.
    * If necessary this will copy the wrapper. If there are no contention
    * the same wrapper will be returned. A ReadLock must be held when
    * calling this function, and calling it will give up this lock.
    */
-  gfxReusableSurfaceWrapper* GetWritable(gfxImageSurface** aSurface);
+  virtual gfxReusableSurfaceWrapper* GetWritable(gfxImageSurface** aSurface) = 0;
 
   /**
    * A read only lock count is recorded, any attempts to
@@ -71,13 +62,11 @@ public:
    * deallocated. It is the responsibility of the user to make sure
    * that all locks are matched with an equal number of unlocks.
    */
-  void ReadLock();
-  void ReadUnlock();
+  virtual void ReadLock() = 0;
+  virtual void ReadUnlock() = 0;
 
-private:
+protected:
   NS_DECL_OWNINGTHREAD
-  mozilla::layers::ISurfaceAllocator*     mAllocator;
-  nsRefPtr<gfxSharedImageSurface>         mSurface;
 };
 
 #endif // GFXCOWSURFACEWRAPPER

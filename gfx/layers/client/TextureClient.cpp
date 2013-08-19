@@ -14,7 +14,7 @@
 #include "GLContext.h"
 #include "BasicLayers.h" // for PaintContext
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
-#include "gfxReusableSurfaceWrapper.h"
+#include "gfxReusableSharedImageSurfaceWrapper.h"
 #include "gfxSharedImageSurface.h"
 #include "gfxPlatform.h"
 #include "mozilla/layers/ImageDataSerializer.h"
@@ -480,7 +480,7 @@ DeprecatedTextureClientTile::EnsureAllocated(gfx::IntSize aSize, gfxASurface::gf
       gfxSharedImageSurface::CreateUnsafe(mForwarder,
                                           gfxIntSize(aSize.width, aSize.height),
                                           gfxPlatform::GetPlatform()->OptimalFormatForContent(aType));
-    mSurface = new gfxReusableSurfaceWrapper(mForwarder, sharedImage);
+    mSurface = new gfxReusableSharedImageSurfaceWrapper(mForwarder, sharedImage);
     mContentType = aType;
   }
   return true;

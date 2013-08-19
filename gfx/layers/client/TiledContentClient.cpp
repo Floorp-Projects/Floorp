@@ -7,6 +7,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MathAlgorithms.h"
 #include "ClientTiledThebesLayer.h"
+#include "gfxReusableSharedImageSurfaceWrapper.h"
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
 #include "cairo.h"
@@ -79,7 +80,7 @@ TiledContentClient::LockCopyAndWrite(TiledBufferType aType)
 
   // Take an extra ReadLock on behalf of the TiledContentHost. This extra
   // reference will be adopted when the descriptor is opened by
-  // gfxReusableSurfaceWrapper::Open.
+  // gfxReusableSharedImageSurfaceWrapper::Open.
   buffer->ReadLock();
 
   mForwarder->PaintedTiledLayerBuffer(this, buffer->GetSurfaceDescriptorTiles());
@@ -115,14 +116,14 @@ BasicTiledLayerBuffer::GetContentType() const
 BasicTileDescriptor
 BasicTiledLayerTile::GetTileDescriptor()
 {
-  return BasicTileDescriptor(GetSurface()->GetShmem());
+  return BasicTileDescriptor(static_cast<gfxReusableSharedImageSurfaceWrapper*>(GetSurface())->GetShmem());
 }
 
 /* static */ BasicTiledLayerTile
 BasicTiledLayerTile::OpenDescriptor(ISurfaceAllocator *aAllocator, const BasicTileDescriptor& aDesc)
 {
   nsRefPtr<gfxReusableSurfaceWrapper> surface =
-    gfxReusableSurfaceWrapper::Open(aAllocator, aDesc.reusableSurface());
+    gfxReusableSharedImageSurfaceWrapper::Open(aAllocator, aDesc.reusableSurface());
   return BasicTiledLayerTile(
     new DeprecatedTextureClientTile(nullptr, TextureInfo(BUFFER_TILED), surface));
 }
