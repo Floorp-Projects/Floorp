@@ -5,10 +5,11 @@
 #ifndef mozilla_PositionedEventTargeting_h
 #define mozilla_PositionedEventTargeting_h
 
-#include "nsPoint.h"
-#include "nsGUIEvent.h"
+#include <stdint.h>
 
 class nsIFrame;
+class nsGUIEvent;
+struct nsPoint;
 
 namespace mozilla {
 

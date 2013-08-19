@@ -9,8 +9,8 @@
  */
 
 #include "RestyleTracker.h"
-#include "nsCSSFrameConstructor.h"
 #include "nsStyleChangeList.h"
+#include "RestyleManager.h"
 #include "GeckoProfiler.h"
 
 namespace mozilla {

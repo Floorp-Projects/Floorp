@@ -17,24 +17,15 @@
 #include "nsILayoutHistoryState.h"
 #include "nsQuoteList.h"
 #include "nsCounterManager.h"
-#include "nsHashKeys.h"
-#include "nsThreadUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
-#include "RestyleManager.h"
 
-class nsIDocument;
 struct nsFrameItems;
 struct nsAbsoluteItems;
 class nsStyleContext;
-struct nsStyleContent;
 struct nsStyleDisplay;
-class nsIPresShell;
 class nsIDOMHTMLSelectElement;
-class nsPresContext;
-class nsStyleChangeList;
-class nsIFrame;
 struct nsGenConInitializer;
 
 class nsICSSAnonBoxPseudo;

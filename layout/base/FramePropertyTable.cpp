@@ -7,8 +7,6 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "prlog.h"
-
 namespace mozilla {
 
 void

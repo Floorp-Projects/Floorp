@@ -15,50 +15,27 @@
 
 /* storage of the frame tree and information about it */
 
-#include "mozilla/DebugOnly.h"
-
 #include "nscore.h"
-#include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsStyleSet.h"
-#include "nsCSSFrameConstructor.h"
 #include "nsStyleContext.h"
-#include "nsStyleChangeList.h"
-#include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "prthread.h"
 #include "plhash.h"
 #include "nsPlaceholderFrame.h"
 #include "nsGkAtoms.h"
-#include "nsCSSPseudoElements.h"
-#ifdef DEBUG
-#include "nsIStyleRule.h"
-#endif
 #include "nsILayoutHistoryState.h"
 #include "nsPresState.h"
-#include "nsIContent.h"
-#include "nsINameSpaceManager.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
-#include "nsIScrollableFrame.h"
 
-#include "nsIDOMNodeList.h"
-#include "nsIDOMHTMLCollection.h"
-#include "nsIFormControl.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMHTMLFormElement.h"
-#include "nsIForm.h"
 #include "nsContentUtils.h"
-#include "nsReadableUtils.h"
-#include "nsUnicharUtils.h"
 #include "nsError.h"
-#include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
-#include "imgIRequest.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "ChildIterator.h"
 
 #include "nsFrameManager.h"
 #include "GeckoProfiler.h"
+#include "nsIStatefulFrame.h"
 
   #ifdef DEBUG
     //#define DEBUG_UNDISPLAYED_MAP
