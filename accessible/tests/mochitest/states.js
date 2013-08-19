@@ -78,8 +78,10 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
   var id = prettyName(aAccOrElmOrID) + (aTestName ? " [" + aTestName + "]": "");
 
   // Primary test.
-  isState(state & aState, aState, false,
-          "wrong state bits for " + id + "!");
+  if (aState) {
+    isState(state & aState, aState, false,
+            "wrong state bits for " + id + "!");
+  }
 
   if (aExtraState)
     isState(extraState & aExtraState, aExtraState, true,
