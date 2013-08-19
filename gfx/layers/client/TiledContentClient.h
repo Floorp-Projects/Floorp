@@ -70,8 +70,8 @@ struct BasicTiledLayerTile {
     GetSurface()->ReadLock();
   }
 
-  BasicTileDescriptor GetTileDescriptor();
-  static BasicTiledLayerTile OpenDescriptor(ISurfaceAllocator *aAllocator, const BasicTileDescriptor& aDesc);
+  TileDescriptor GetTileDescriptor();
+  static BasicTiledLayerTile OpenDescriptor(ISurfaceAllocator *aAllocator, const TileDescriptor& aDesc);
 
   gfxReusableSurfaceWrapper* GetSurface() {
     return mDeprecatedTextureClient->GetReusableSurfaceWrapper();
@@ -135,8 +135,7 @@ public:
       if (aTiles[i].type() == TileDescriptor::TPlaceholderTileDescriptor) {
         mRetainedTiles.AppendElement(GetPlaceholderTile());
       } else {
-        const BasicTileDescriptor& basicTileDesc = aTiles[i].get_BasicTileDescriptor();
-        mRetainedTiles.AppendElement(BasicTiledLayerTile::OpenDescriptor(aAllocator, basicTileDesc));
+        mRetainedTiles.AppendElement(BasicTiledLayerTile::OpenDescriptor(aAllocator, aTiles[i]));
       }
     }
   }

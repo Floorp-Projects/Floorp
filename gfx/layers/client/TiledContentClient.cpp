@@ -80,7 +80,7 @@ TiledContentClient::LockCopyAndWrite(TiledBufferType aType)
 
   // Take an extra ReadLock on behalf of the TiledContentHost. This extra
   // reference will be adopted when the descriptor is opened by
-  // gfxReusableSharedImageSurfaceWrapper::Open.
+  // BasicTiledLayerTile::OpenDescriptor.
   buffer->ReadLock();
 
   mForwarder->PaintedTiledLayerBuffer(this, buffer->GetSurfaceDescriptorTiles());
@@ -113,19 +113,49 @@ BasicTiledLayerBuffer::GetContentType() const
 }
 
 
-BasicTileDescriptor
+TileDescriptor
 BasicTiledLayerTile::GetTileDescriptor()
 {
-  return BasicTileDescriptor(static_cast<gfxReusableSharedImageSurfaceWrapper*>(GetSurface())->GetShmem());
+  gfxReusableSurfaceWrapper* surface = GetSurface();
+  switch (surface->GetType()) {
+  case gfxReusableSurfaceWrapper::TYPE_IMAGE :
+    return BasicTileDescriptor(uintptr_t(surface));
+
+  case gfxReusableSurfaceWrapper::TYPE_SHARED_IMAGE :
+    return BasicShmTileDescriptor(static_cast<gfxReusableSharedImageSurfaceWrapper*>(surface)->GetShmem());
+
+  default :
+    NS_NOTREACHED("Unhandled gfxReusableSurfaceWrapper type");
+    return PlaceholderTileDescriptor();
+  }
 }
 
+
 /* static */ BasicTiledLayerTile
-BasicTiledLayerTile::OpenDescriptor(ISurfaceAllocator *aAllocator, const BasicTileDescriptor& aDesc)
+BasicTiledLayerTile::OpenDescriptor(ISurfaceAllocator *aAllocator, const TileDescriptor& aDesc)
 {
-  nsRefPtr<gfxReusableSurfaceWrapper> surface =
-    gfxReusableSharedImageSurfaceWrapper::Open(aAllocator, aDesc.reusableSurface());
-  return BasicTiledLayerTile(
-    new DeprecatedTextureClientTile(nullptr, TextureInfo(BUFFER_TILED), surface));
+  switch (aDesc.type()) {
+  case TileDescriptor::TBasicShmTileDescriptor : {
+    nsRefPtr<gfxReusableSurfaceWrapper> surface =
+      gfxReusableSharedImageSurfaceWrapper::Open(
+        aAllocator, aDesc.get_BasicShmTileDescriptor().reusableSurface());
+    return BasicTiledLayerTile(
+      new DeprecatedTextureClientTile(nullptr, TextureInfo(BUFFER_TILED), surface));
+  }
+
+  case TileDescriptor::TBasicTileDescriptor : {
+    nsRefPtr<gfxReusableSurfaceWrapper> surface =
+      reinterpret_cast<gfxReusableSurfaceWrapper*>(
+        aDesc.get_BasicTileDescriptor().reusableSurface());
+    surface->ReadUnlock();
+    return BasicTiledLayerTile(
+      new DeprecatedTextureClientTile(nullptr, TextureInfo(BUFFER_TILED), surface));
+  }
+
+  default :
+    NS_NOTREACHED("Unknown tile descriptor type!");
+    return nullptr;
+  }
 }
 
 SurfaceDescriptorTiles
