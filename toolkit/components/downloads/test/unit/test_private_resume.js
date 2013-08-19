@@ -7,6 +7,10 @@
 // Private resumed request sends times=1 cookie, completes
 
 function run_test() {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   // Allow all cookies.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
 

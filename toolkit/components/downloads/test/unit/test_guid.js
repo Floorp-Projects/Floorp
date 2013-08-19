@@ -6,6 +6,10 @@ const dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManage
 
 function run_test()
 {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   let server = new HttpServer();
   server.start(-1);
   let dl = addDownload(server);
