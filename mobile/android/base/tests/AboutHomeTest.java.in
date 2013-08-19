@@ -307,6 +307,18 @@ abstract class AboutHomeTest extends BaseTest {
         }
     }
 
+   // A wait in order for the about:home tab to be rendered after drag/tab selection
+    private void waitForAboutHomeTab(final int tabIndex) {
+        boolean correctTab = waitForTest(new BooleanTest() {
+            @Override
+            public boolean test() {
+              ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
+              return (pager.getCurrentItem() == tabIndex);
+            }
+        }, MAX_WAIT_MS);
+        mAsserter.ok(correctTab, "Checking that the correct tab is displayed", "The " + aboutHomeTabs.get(tabIndex) + " tab is displayed");
+    }
+ 
     /**
      * This method can be used to open the different tabs of about:home
      * @param AboutHomeTabs enum item {MOST_VISITED, MOST_RECENT, TABS_FROM_LAST_TIME, BOOKMARKS, READING_LIST}
@@ -318,47 +330,42 @@ abstract class AboutHomeTest extends BaseTest {
         ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
         switch (tab) {
             case BOOKMARKS : {
-                 mSolo.clickOnText(BOOKMARKS_LABEL);
-                 waitForEnabledText(BOOKMARKS_LABEL);
-                 mAsserter.is(pager.getCurrentItem(), aboutHomeTabs.indexOf(tab.toString()), "Bookmarks page is selected");
-                 break;
+                mSolo.clickOnText(BOOKMARKS_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
+                break;
             }
             case MOST_RECENT: {
                 mSolo.clickOnText(BOOKMARKS_LABEL);
-                waitForEnabledText(BOOKMARKS_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
                 mActions.drag(0, halfWidth, halfHeight, halfHeight);
-                waitForEnabledText(HISTORY_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(HISTORY_LABEL));
                 TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
-                mAsserter.is(pager.getCurrentItem(), aboutHomeTabs.indexOf(HISTORY_LABEL), "The history tab is selected");
                 mSolo.clickOnView(tabwidget.getChildAt(1));
                 mAsserter.ok(waitForText(MOST_RECENT_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
                 break;
             }
             case READING_LIST: {
                 mSolo.clickOnText(BOOKMARKS_LABEL);
-                waitForEnabledText(BOOKMARKS_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
                 mActions.drag(halfWidth, 0, halfHeight, halfHeight);
-                waitForEnabledText(READING_LIST_LABEL);
-                mAsserter.is(pager.getCurrentItem(), aboutHomeTabs.indexOf(tab.toString()), "Reading List is selected");
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
                 break;
             }
             case MOST_VISITED: {
                 mSolo.clickOnText(BOOKMARKS_LABEL);
-                waitForEnabledText(BOOKMARKS_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
                 mActions.drag(0, halfWidth, halfHeight, halfHeight);
-                waitForEnabledText(HISTORY_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(HISTORY_LABEL));
                 TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
-                mAsserter.is(pager.getCurrentItem(), aboutHomeTabs.indexOf(HISTORY_LABEL), "The history tab is selected");
                 mSolo.clickOnView(tabwidget.getChildAt(0));
                 break;
             }
             case TABS_FROM_LAST_TIME: {
                 mSolo.clickOnText(BOOKMARKS_LABEL);
-                waitForEnabledText(BOOKMARKS_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
                 mActions.drag(0, halfWidth, halfHeight, halfHeight);
-                waitForEnabledText(HISTORY_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(HISTORY_LABEL));
                 TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
-                mAsserter.is(pager.getCurrentItem(), aboutHomeTabs.indexOf(HISTORY_LABEL), "The history tab is selected");
                 mSolo.clickOnView(tabwidget.getChildAt(2));
                 mAsserter.ok(waitForText(TABS_FROM_LAST_TIME_LABEL), "Checking that we are in the Tabs from last time tab of about:home", "We are in the Tabs from last time tab");
                 break;
