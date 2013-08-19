@@ -713,28 +713,18 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         // DEPRECATED!
         // Use BaseTest.toggleBookmark() in new code.
         public void bookmark() {
-            if (devType.equals("tablet")) {
-                if (!osVersion.equals("4.x")){
-                    Element bookmarkBtn = mDriver.findElement(getActivity(), "bookmark");
+            mActions.sendSpecialKey(Actions.SpecialKey.MENU);
+            waitForText("^New Tab$");
+            if (mSolo.searchText("^Bookmark$")) {
+                // This is the Android 2.x so the button has text
+                mSolo.clickOnText("^Bookmark$");
+            } else {
+                Element bookmarkBtn = mDriver.findElement(getActivity(), "bookmark");
+                if (bookmarkBtn != null) {
+                    // We are on Android 4.x so the button is an image button
                     bookmarkBtn.click();
                 }
-                else {
-                    mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-                    mSolo.waitForText("^New Tab$");
-                    mSolo.clickOnText("^Bookmark$");
-                }
             }
-            else {
-                mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-                mSolo.waitForText("^New Tab$");
-                if (!osVersion.equals("2.x")) {
-                    Element bookmarkBtn = mDriver.findElement(getActivity(), "bookmark");
-                    bookmarkBtn.click();
-                }
-                else {
-                    mSolo.clickOnText("^Bookmark$");
-                }
-            }
-        }
+         }
     }
 }
