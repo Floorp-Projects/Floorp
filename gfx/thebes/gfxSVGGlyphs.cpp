@@ -357,18 +357,28 @@ void
 gfxSVGGlyphsDocument::InsertGlyphId(Element *aGlyphElement)
 {
     nsAutoString glyphIdStr;
-    if (!aGlyphElement->GetAttr(kNameSpaceID_None, nsGkAtoms::glyphid, glyphIdStr)) {
+    static const uint32_t glyphPrefixLength = 5;
+    // The maximum glyph ID is 65535 so the maximum length of the numeric part
+    // is 5.
+    if (!aGlyphElement->GetAttr(kNameSpaceID_None, nsGkAtoms::id, glyphIdStr) ||
+        !StringBeginsWith(glyphIdStr, NS_LITERAL_STRING("glyph")) ||
+        glyphIdStr.Length() > glyphPrefixLength + 5) {
         return;
     }
 
-    nsresult rv;
-    uint32_t glyphId = glyphIdStr.ToInteger(&rv);
-
-    if (NS_FAILED(rv)) {
+    uint32_t id = 0;
+    for (uint32_t i = glyphPrefixLength; i < glyphIdStr.Length(); ++i) {
+      PRUnichar ch = glyphIdStr.CharAt(i);
+      if (ch < '0' || ch > '9') {
         return;
+      }
+      if (ch == '0' && i == glyphPrefixLength) {
+        return;
+      }
+      id = id * 10 + (ch - '0');
     }
 
-    mGlyphIdMap.Put(glyphId, aGlyphElement);
+    mGlyphIdMap.Put(id, aGlyphElement);
 }
 
 void
