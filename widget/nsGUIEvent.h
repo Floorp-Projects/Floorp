@@ -8,10 +8,8 @@
 
 #include "mozilla/MathAlgorithms.h"
 
-#include "nsCOMArray.h"
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsRegion.h"
 #include "nsEvent.h"
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"
@@ -25,7 +23,6 @@
 #include "nsTArray.h"
 #include "nsTraceRefcnt.h"
 #include "nsITransferable.h"
-#include "nsIVariant.h"
 #include "nsStyleConsts.h"
 #include "nsAutoPtr.h"
 #include "mozilla/dom/EventTarget.h"

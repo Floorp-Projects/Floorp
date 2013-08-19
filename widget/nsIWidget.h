@@ -9,11 +9,11 @@
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsRect.h"
-#include "nsStringGlue.h"
 
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
 #include "nsWidgetInitData.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/layers/LayersTypes.h"
