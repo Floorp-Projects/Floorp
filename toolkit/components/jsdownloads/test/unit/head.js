@@ -256,6 +256,8 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
 
   // Apply decoding if required by the "Content-Encoding" header.
   persist.persistFlags &= ~Ci.nsIWebBrowserPersist.PERSIST_FLAGS_NO_CONVERSION;
+  persist.persistFlags |=
+    Ci.nsIWebBrowserPersist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 
   // We must create the nsITransfer implementation using its class ID because
   // the "@mozilla.org/transfer;1" contract is currently implemented in
@@ -424,12 +426,14 @@ function promiseVerifyContents(aPath, aExpectedContents)
       do_check_true(Components.isSuccessCode(aStatus));
       let contents = NetUtil.readInputStreamToString(aInputStream,
                                                      aInputStream.available());
-      if (contents.length <= TEST_DATA_SHORT.length * 2) {
-        do_check_eq(contents, aExpectedContents);
-      } else {
+      if (contents.length > TEST_DATA_SHORT.length * 2 ||
+          /[^\x20-\x7E]/.test(contents)) {
         // Do not print the entire content string to the test log.
         do_check_eq(contents.length, aExpectedContents.length);
         do_check_true(contents == aExpectedContents);
+      } else {
+        // Print the string if it is short and made of printable characters.
+        do_check_eq(contents, aExpectedContents);
       }
       deferred.resolve();
     });

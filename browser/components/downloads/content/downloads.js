@@ -137,7 +137,11 @@ const DownloadsPanel = {
     // Ensure that the Download Manager service is running.  This resumes
     // active downloads if required.  If there are downloads to be shown in the
     // panel, starting the service will make us load their data asynchronously.
-    Services.downloads;
+    if (DownloadsCommon.useJSTransfer) {
+      DownloadsCommon.initializeAllDataLinks();
+    } else {
+      Services.downloads;
+    }
 
     // Now that data loading has eventually started, load the required XUL
     // elements and initialize our views.
@@ -1344,11 +1348,7 @@ const DownloadsViewController = {
   {
     // Handle commands that are not selection-specific.
     if (aCommand == "downloadsCmd_clearList") {
-      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-        return Services.downloads.canCleanUpPrivate;
-      } else {
-        return Services.downloads.canCleanUp;
-      }
+      return DownloadsCommon.getData(window).canRemoveFinished;
     }
 
     // Other commands are selection-specific.
@@ -1395,11 +1395,7 @@ const DownloadsViewController = {
   commands: {
     downloadsCmd_clearList: function DVC_downloadsCmd_clearList()
     {
-      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-        Services.downloads.cleanUpPrivate();
-      } else {
-        Services.downloads.cleanUp();
-      }
+      DownloadsCommon.getData(window).removeFinished();
     }
   }
 };

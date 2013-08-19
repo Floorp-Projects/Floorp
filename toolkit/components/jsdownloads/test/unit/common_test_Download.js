@@ -1324,7 +1324,7 @@ add_task(function test_with_content_encoding()
     aResponse.setHeader("Content-Length",
                         "" + TEST_DATA_SHORT_GZIP_ENCODED.length, false);
 
-    let bos =  new BinaryOutputStream(aResponse.bodyOutputStream);
+    let bos = new BinaryOutputStream(aResponse.bodyOutputStream);
     bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED,
                        TEST_DATA_SHORT_GZIP_ENCODED.length);
   });
@@ -1337,6 +1337,46 @@ add_task(function test_with_content_encoding()
 
   // Ensure the content matches the decoded test data.
   yield promiseVerifyContents(download.target.path, TEST_DATA_SHORT);
+
+  cleanup();
+});
+
+/**
+ * Checks that the file is not decoded if the extension matches the encoding.
+ */
+add_task(function test_with_content_encoding_ignore_extension()
+{
+  let sourcePath = "/test_with_content_encoding_ignore_extension.gz";
+  let sourceUrl = httpUrl("test_with_content_encoding_ignore_extension.gz");
+
+  function cleanup() {
+    gHttpServer.registerPathHandler(sourcePath, null);
+  }
+  do_register_cleanup(cleanup);
+
+  gHttpServer.registerPathHandler(sourcePath, function (aRequest, aResponse) {
+    aResponse.setHeader("Content-Type", "text/plain", false);
+    aResponse.setHeader("Content-Encoding", "gzip", false);
+    aResponse.setHeader("Content-Length",
+                        "" + TEST_DATA_SHORT_GZIP_ENCODED.length, false);
+
+    let bos = new BinaryOutputStream(aResponse.bodyOutputStream);
+    bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED,
+                       TEST_DATA_SHORT_GZIP_ENCODED.length);
+  });
+
+  let download = yield promiseStartDownload(sourceUrl);
+  yield promiseDownloadStopped(download);
+
+  do_check_eq(download.progress, 100);
+  do_check_eq(download.totalBytes, TEST_DATA_SHORT_GZIP_ENCODED.length);
+
+  // Ensure the content matches the encoded test data.  We convert the data to a
+  // string before executing the content check.
+  yield promiseVerifyContents(download.target.path,
+        String.fromCharCode.apply(String, TEST_DATA_SHORT_GZIP_ENCODED));
+
+  cleanup();
 });
 
 /**

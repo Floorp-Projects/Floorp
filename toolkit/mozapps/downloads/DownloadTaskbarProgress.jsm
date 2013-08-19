@@ -13,6 +13,12 @@ this.EXPORTED_SYMBOLS = [
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
 const kTaskbarIDWin = "@mozilla.org/windows-taskbar;1";
 const kTaskbarIDMac = "@mozilla.org/widget/macdocksupport;1";
@@ -110,6 +116,15 @@ var DownloadTaskbarProgressUpdater =
       return; // Already initialized
     }
     this._initialized = true;
+
+    // Taskbar progress is disabled until this component is updated to use the
+    // asynchronous JavaScript API for downloads.
+    try {
+      if (Services.prefs.getBoolPref("browser.download.useJSTransfer")) {
+        DownloadTaskbarProgressUpdater = null;
+        return;
+      }
+    } catch (ex) { }
 
     if (kTaskbarIDWin in Cc) {
       this._taskbar = Cc[kTaskbarIDWin].getService(Ci.nsIWinTaskbar);
