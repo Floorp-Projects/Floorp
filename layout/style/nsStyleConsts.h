@@ -750,6 +750,18 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_TEXT_SIZE_ADJUST_AUTO          1
 
 // See nsStyleText
+#define NS_STYLE_TEXT_ORIENTATION_AUTO          0
+#define NS_STYLE_TEXT_ORIENTATION_UPRIGHT       1
+#define NS_STYLE_TEXT_ORIENTATION_SIDEWAYS      2
+
+// See nsStyleText
+#define NS_STYLE_TEXT_COMBINE_HORIZ_NONE        0
+#define NS_STYLE_TEXT_COMBINE_HORIZ_ALL         1
+#define NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_2    2
+#define NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_3    3
+#define NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_4    4
+
+// See nsStyleText
 #define NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT       0
 
 // See nsStyleText
