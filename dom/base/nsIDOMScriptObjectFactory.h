@@ -9,7 +9,6 @@
 #include "nsISupports.h"
 #include "nsIDOMClassInfo.h"
 #include "nsStringGlue.h"
-#include "nsIScriptRuntime.h"
 
 #define NS_IDOM_SCRIPT_OBJECT_FACTORY_IID \
 { 0x2a50e17c, 0x46ff, 0x4150, \
@@ -18,6 +17,7 @@
 class nsIScriptContext;
 class nsIScriptGlobalObject;
 class nsIDOMEventListener;
+class nsJSRuntime;
 
 typedef nsXPCClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
   (const char* aName);
@@ -42,13 +42,8 @@ public:
                                   bool aHasClassInterface,
                                   const nsCID *aConstructorCID) = 0;
 
-  nsIScriptRuntime* GetJSRuntime()
-  {
-    return mJSRuntime;
-  }
-
 protected:
-  nsCOMPtr<nsIScriptRuntime> mJSRuntime;
+  nsRefPtr<nsJSRuntime> mJSRuntime;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMScriptObjectFactory,

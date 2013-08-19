@@ -31,8 +31,6 @@
 #endif
 #include "nsThreadUtils.h"
 
-static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
 nsIExceptionProvider* gExceptionProvider = nullptr;
 
 nsDOMScriptObjectFactory::nsDOMScriptObjectFactory()
@@ -169,42 +167,6 @@ nsDOMScriptObjectFactory::RegisterDOMClassInfo(const char *aName,
                                              aHasClassInterface,
                                              aConstructorCID);
 }
-
-
-// Factories
-nsresult
-NS_GetJSRuntime(nsIScriptRuntime** aLanguage)
-{
-  nsCOMPtr<nsIDOMScriptObjectFactory> factory =
-    do_GetService(kDOMScriptObjectFactoryCID);
-  NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
-
-  NS_IF_ADDREF(*aLanguage = factory->GetJSRuntime());
-  return NS_OK;
-}
-
-nsresult NS_GetScriptRuntime(const nsAString &aLanguageName,
-                             nsIScriptRuntime **aLanguage)
-{
-  *aLanguage = NULL;
-
-  NS_ENSURE_TRUE(aLanguageName.EqualsLiteral("application/javascript"),
-                 NS_ERROR_FAILURE);
-
-  return NS_GetJSRuntime(aLanguage);
-}
-
-nsresult NS_GetScriptRuntimeByID(uint32_t aScriptTypeID,
-                                 nsIScriptRuntime **aLanguage)
-{
-  *aLanguage = NULL;
-
-  NS_ENSURE_TRUE(aScriptTypeID == nsIProgrammingLanguage::JAVASCRIPT,
-                 NS_ERROR_FAILURE);
-
-  return NS_GetJSRuntime(aLanguage);
-}
-
 
 NS_IMPL_ISUPPORTS1(nsDOMExceptionProvider, nsIExceptionProvider)
 
