@@ -75,6 +75,31 @@ function checkField(field1, field2) {
   is(field1.pref, field2.pref, "Same pref");
 }
 
+function checkCategory(category1, category2) {
+  // Android adds contacts to the a default category. This should be removed from the
+  // results before comparing them
+  if (isAndroid) {
+    category1 = removeAndroidDefaultCategory(category1);
+    category2 = removeAndroidDefaultCategory(category2);
+  }
+  checkStrArray(category1, category2, "Same Category")
+}
+
+function removeAndroidDefaultCategory(category) {
+  if (category == undefined) {
+    return;
+  }
+
+  for (var i = 0; i < category.length; i++) {
+    // Some devices may return the full group name (prefixed with "System Group: ")
+    if (category[i] == "My Contacts" || category[i] == "System Group: My Contacts") {
+      category.splice(i, 1);
+    }
+  }
+
+  return category;
+}
+
 function checkDBContacts(dbContact1, dbContact2) {
   let contact1 = dbContact1.properties;
   let contact2 = dbContact2.properties;
@@ -86,7 +111,7 @@ function checkDBContacts(dbContact1, dbContact2) {
   checkStrArray(contact1.familyName, contact2.familyName, "Same familyName");
   checkStrArray(contact1.honorificSuffix, contact2.honorificSuffix, "Same honorificSuffix");
   checkStrArray(contact1.nickname, contact2.nickname, "Same nickname");
-  checkStrArray(contact1.category, contact2.category, "Same category");
+  checkCategory(contact1.category, contact2.category, "Same category");
   checkStrArray(contact1.org, contact2.org, "Same org");
   checkStrArray(contact1.jobTitle, contact2.jobTitle, "Same jobTitle");
   is(contact1.bday ? contact1.bday.valueOf() : null, contact2.bday ? contact2.bday.valueOf() : null, "Same birthday");
