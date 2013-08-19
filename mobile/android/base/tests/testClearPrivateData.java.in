@@ -19,7 +19,7 @@ public class testClearPrivateData extends AboutHomeTest  {
     private void clearHistory() {
         // Loading a page so we are sure that there is at least one history entry
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
-        loadUrl(url);
+        inputAndLoadUrl(url);
 
         /*  Removed by Bug 896576 - [fig] Remove [getHistoryList] from BaseTest
         // Checking that the history list is not empty

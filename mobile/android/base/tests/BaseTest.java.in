@@ -244,7 +244,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      * This method waits synchronously for the <code>DOMContentLoaded</code>
      * message from Gecko before returning.
      */
-    protected final void loadUrl(String url) {
+    protected final void inputAndLoadUrl(String url) {
         enterUrl(url);
         hitEnterAndWait();
     }
@@ -565,7 +565,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mAsserter.ok(addTab.click(), "checking that add_tab clicked", "add_tab element clicked");
 
         // Adding a new tab opens about:home, so now we just need to load the url in it.
-        loadUrl(url);
+        inputAndLoadUrl(url);
     }
 
     public final void runOnUiThreadSync(Runnable runnable) {

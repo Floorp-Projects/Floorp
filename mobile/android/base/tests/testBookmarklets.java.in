@@ -22,7 +22,7 @@ public class testBookmarklets extends AboutHomeTest {
         blockForGeckoReady();
 
         // load a standard page so bookmarklets work
-        loadUrl(url);
+        inputAndLoadUrl(url);
 
         // verify that user-entered bookmarklets do *not* work
         enterUrl(js);
