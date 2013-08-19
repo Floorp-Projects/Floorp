@@ -18,7 +18,9 @@ const nsIDM = Ci.nsIDownloadManager;
 const nsIWBP = Ci.nsIWebBrowserPersist;
 const nsIWPL = Ci.nsIWebProgressListener;
 const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDM);
-dm.cleanUp();
+if (!oldDownloadManagerDisabled()) {
+  dm.cleanUp();
+}
 
 function notify(aTopic)
 {
@@ -29,6 +31,10 @@ function notify(aTopic)
 
 function run_test()
 {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   /**
    * 0. Speed up the resume on wake delay from 10 seconds
    */
