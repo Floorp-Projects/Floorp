@@ -283,6 +283,16 @@ this.PromiseWalker = {
   },
 
   /**
+   * Sets up the PromiseWalker loop to start on the next tick of the event loop
+   */
+  scheduleWalkerLoop: function()
+  {
+    this.walkerLoopScheduled = true;
+    Services.tm.currentThread.dispatch(this.walkerLoop,
+                                       Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
+  /**
    * Schedules the resolution or rejection handlers registered on the provided
    * promise for processing.
    *
@@ -300,9 +310,7 @@ this.PromiseWalker = {
 
     // Schedule the walker loop on the next tick of the event loop.
     if (!this.walkerLoopScheduled) {
-      this.walkerLoopScheduled = true;
-      Services.tm.currentThread.dispatch(this.walkerLoop,
-                                         Ci.nsIThread.DISPATCH_NORMAL);
+      this.scheduleWalkerLoop();
     }
   },
 
@@ -321,15 +329,21 @@ this.PromiseWalker = {
    */
   walkerLoop: function ()
   {
-    // Allow rescheduling the walker loop immediately.  This makes this walker
-    // resilient to the case where one handler does not return, but starts a
-    // nested event loop.  In that case, the newly scheduled walker will take
-    // over.  In the common case, the newly scheduled walker will be invoked
+    // If there is more than one handler waiting, reschedule the walker loop
+    // immediately.  Otherwise, use walkerLoopScheduled to tell schedulePromise()
+    // to reschedule the loop if it adds more handlers to the queue.  This makes
+    // this walker resilient to the case where one handler does not return, but
+    // starts a nested event loop.  In that case, the newly scheduled walker will
+    // take over.  In the common case, the newly scheduled walker will be invoked
     // after this one has returned, with no actual handler to process.  This
     // small overhead is required to make nested event loops work correctly, but
     // occurs at most once per resolution chain, thus having only a minor
     // impact on overall performance.
-    this.walkerLoopScheduled = false;
+    if (this.handlers.length > 1) {
+      this.scheduleWalkerLoop();
+    } else {
+      this.walkerLoopScheduled = false;
+    }
 
     // Process all the known handlers eagerly.
     while (this.handlers.length > 0) {
