@@ -61,6 +61,12 @@ var testFuncs = [
 
 function test()
 {
+  try {
+    if (Services.prefs.getBoolPref("browser.download.useJSTransfer")) {
+      return;
+    }
+  } catch (ex) { }
+
   var dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
   var db = dm.DBConnection;
