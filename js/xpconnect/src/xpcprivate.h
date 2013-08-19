@@ -3700,6 +3700,7 @@ struct SandboxOptions {
         : wantXrays(true)
         , wantComponents(true)
         , wantXHRConstructor(false)
+        , wantExportHelpers(false)
         , proto(xpc_GetSafeJSContext())
         , sameZoneAs(xpc_GetSafeJSContext())
     { }
@@ -3707,6 +3708,7 @@ struct SandboxOptions {
     bool wantXrays;
     bool wantComponents;
     bool wantXHRConstructor;
+    bool wantExportHelpers;
     JS::RootedObject proto;
     nsCString sandboxName;
     JS::RootedObject sameZoneAs;
