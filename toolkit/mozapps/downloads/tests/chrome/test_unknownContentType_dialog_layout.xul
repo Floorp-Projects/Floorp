@@ -68,6 +68,13 @@ let windowObserver = {
 };
 
 function init() {
+  var dmui = getDMUI();
+  if (!dmui) {
+    todo(false, "skip test for toolkit download manager UI");
+    SimpleTest.finish();
+    return;
+  }
+
   ww.registerNotification(windowObserver);
   loadNextTest();
 }
