@@ -615,6 +615,8 @@ MOCHITEST_FILES_C= \
 		file_mixed_content_frameNavigation_secure.html \
 		file_mixed_content_frameNavigation_secure_grandchild.html \
 		file_mixed_content_frameNavigation_blankTarget.html \
+		file_bug902350.html \
+		file_bug902350_frame.html \
 		test_bug789856.html \
 		file_bug804395.jar \
 		test_bug804395.html \
@@ -705,6 +707,7 @@ MOCHITEST_FILES_PARTS = $(foreach s,A B C,MOCHITEST_FILES_$(s))
 
 MOCHITEST_BROWSER_FILES = \
 		browser_bug593387.js \
+		browser_bug902350.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
