@@ -1284,6 +1284,7 @@ var gBrowserInit = {
       // Bug 862519 - Backspace doesn't work in electrolysis builds.
       // We bypass the problem by disabling the backspace-to-go-back command.
       document.getElementById("cmd_handleBackspace").setAttribute("disabled", true);
+      document.getElementById("key_delete").setAttribute("disabled", true);
     }
 
     SessionStore.promiseInitialized.then(() => {
