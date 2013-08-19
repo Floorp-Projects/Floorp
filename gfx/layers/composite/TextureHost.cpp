@@ -226,7 +226,8 @@ BufferTextureHost::Updated(const nsIntRegion* aRegion)
     mPartialUpdate = false;
   }
   if (GetFlags() & TEXTURE_IMMEDIATE_UPLOAD) {
-    MaybeUpload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr);
+    DebugOnly<bool> result = MaybeUpload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr);
+    MOZ_ASSERT(result);
   }
 }
 
