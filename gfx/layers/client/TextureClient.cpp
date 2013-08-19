@@ -164,6 +164,7 @@ bool
 BufferTextureClient::UpdateSurface(gfxASurface* aSurface)
 {
   MOZ_ASSERT(aSurface);
+  MOZ_ASSERT(!IsImmutable());
 
   ImageDataSerializer serializer(GetBuffer());
   if (!serializer.IsValid()) {

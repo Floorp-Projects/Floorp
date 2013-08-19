@@ -380,6 +380,9 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     }
 
     RefPtr<gfx::DataSourceSurface> surf = deserializer.GetAsSurface();
+    if (!surf) {
+      return false;
+    }
 
     if (!mFirstSource->Update(surf.get(), mFlags, aRegion)) {
       NS_WARNING("failed to update the DataTextureSource");
