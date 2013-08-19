@@ -530,8 +530,10 @@ public:
   static const int32_t kTableLayoutKTable[];
   static const int32_t kTextAlignKTable[];
   static const int32_t kTextAlignLastKTable[];
+  static const int32_t kTextCombineHorizontalKTable[];
   static const int32_t kTextDecorationLineKTable[];
   static const int32_t kTextDecorationStyleKTable[];
+  static const int32_t kTextOrientationKTable[];
   static const int32_t kTextOverflowKTable[];
   static const int32_t kTextTransformKTable[];
   static const int32_t kTransitionTimingFunctionKTable[];

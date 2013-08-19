@@ -3987,6 +3987,19 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
               NS_STYLE_TEXT_SIZE_ADJUST_NONE, // none value
               0, 0);
 
+  // text-orientation: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForTextOrientation(), text->mTextOrientation,
+              canStoreInRuleTree, SETDSC_ENUMERATED,
+              parentText->mTextOrientation,
+              NS_STYLE_TEXT_ORIENTATION_AUTO, 0, 0, 0, 0);
+
+  // text-combine-horizontal: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForTextCombineHorizontal(),
+              text->mTextCombineHorizontal,
+              canStoreInRuleTree, SETDSC_ENUMERATED,
+              parentText->mTextCombineHorizontal,
+              NS_STYLE_TEXT_COMBINE_HORIZ_NONE, 0, 0, 0, 0);
+
   COMPUTE_END_INHERITED(Text, text)
 }
 

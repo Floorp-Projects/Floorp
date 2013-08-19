@@ -833,6 +833,20 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     int32_t intValue = GetIntValue();
     switch(aProperty) {
 
+
+    case eCSSProperty_text_combine_horizontal:
+      if (intValue <= NS_STYLE_TEXT_COMBINE_HORIZ_ALL) {
+        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
+                           aResult);
+      } else if (intValue == NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_2) {
+        aResult.AppendLiteral("digits 2");
+      } else if (intValue == NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_3) {
+        aResult.AppendLiteral("digits 3");
+      } else {
+        aResult.AppendLiteral("digits 4");
+      }
+      break;
+
     case eCSSProperty_text_decoration_line:
       if (NS_STYLE_TEXT_DECORATION_LINE_NONE == intValue) {
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
