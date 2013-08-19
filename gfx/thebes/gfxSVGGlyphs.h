@@ -33,8 +33,7 @@ class gfxSVGGlyphsDocument
     typedef gfxFont::DrawMode DrawMode;
 
 public:
-    gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen,
-                         hb_blob_t *aCmapTable);
+    gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen);
 
     Element *GetGlyphElement(uint32_t aGlyphId);
 
@@ -49,10 +48,9 @@ private:
 
     nsresult SetupPresentation();
 
-    void FindGlyphElements(Element *aElement, hb_blob_t *aCmapTable);
+    void FindGlyphElements(Element *aElement);
 
     void InsertGlyphId(Element *aGlyphElement);
-    void InsertGlyphChar(Element *aGlyphElement, hb_blob_t *aCmapTable);
 
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsIContentViewer> mViewer;
@@ -78,16 +76,15 @@ public:
 
     /**
      * @param aSVGTable The SVG table from the OpenType font
-     * @param aCmapTable The CMAP table from the OpenType font
      *
      * The gfxSVGGlyphs object takes over ownership of the blob references
      * that are passed in, and will hb_blob_destroy() them when finished;
      * the caller should -not- destroy these references.
      */
-    gfxSVGGlyphs(hb_blob_t *aSVGTable, hb_blob_t *aCmapTable);
+    gfxSVGGlyphs(hb_blob_t *aSVGTable);
 
     /**
-     * Releases our references to the SVG and cmap tables.
+     * Releases our references to the SVG table.
      */
     ~gfxSVGGlyphs();
 
@@ -127,7 +124,6 @@ private:
     nsBaseHashtable<nsUint32HashKey, Element*, Element*> mGlyphIdMap;
 
     hb_blob_t *mSVGData;
-    hb_blob_t *mCmapData;
 
     const struct Header {
         mozilla::AutoSwap_PRUint16 mVersion;
