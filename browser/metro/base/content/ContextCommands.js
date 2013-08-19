@@ -111,7 +111,8 @@ var ContextCommands = {
   select: function cc_select() {
     SelectionHelperUI.openEditSession(ContextMenuUI.popupState.target,
                                       ContextMenuUI.popupState.xPos,
-                                      ContextMenuUI.popupState.yPos);
+                                      ContextMenuUI.popupState.yPos,
+                                      true);
   },
 
   selectAll: function cc_selectAll() {
