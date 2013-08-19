@@ -35,6 +35,7 @@ pref("prompts.tab_modal.enabled", true);
 // Enable off main thread compositing
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-pan-zoom.enabled", false);
+pref("layers.componentalpha.enabled", false);
 pref("gfx.axis.fling_friction", "0.002");
 
 // Enable Microsoft TSF support by default for imes.

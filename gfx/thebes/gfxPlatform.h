@@ -487,6 +487,8 @@ public:
     static bool CanUseDirect3D9();
     static int  GetPrefLayoutFrameRate();
 
+    static bool OffMainThreadCompositionRequired();
+
     /**
      * Is it possible to use buffer rotation
      */
