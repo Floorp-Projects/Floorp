@@ -77,6 +77,32 @@ function testLocationData(aMessageObject) {
     is(aMessageObject.arguments[i], a, "correct arg " + i);
   });
 
+  startNativeCallbackTest();
+}
+
+function startNativeCallbackTest() {
+  // Reset the observer function to cope with the fabricated test data.
+  ConsoleObserver.observe = function CO_observe(aSubject, aTopic, aData) {
+    try {
+      testNativeCallback(aSubject.wrappedJSObject);
+    } catch (ex) {
+      // XXX Bug 906593 - Exceptions in this function currently aren't
+      // reported, because of some XPConnect weirdness, so report them manually
+      ok(false, "Exception thrown in CO_observe: " + ex);
+    }
+  };
+
+  let button = gWindow.document.getElementById("test-nativeCallback");
+  ok(button, "found #test-nativeCallback button");
+  EventUtils.synthesizeMouseAtCenter(button, {}, gWindow);
+}
+
+function testNativeCallback(aMessageObject) {
+  is(aMessageObject.level, "log", "expected level received");
+  is(aMessageObject.filename, "", "filename matches");
+  is(aMessageObject.lineNumber, 0, "lineNumber matches");
+  is(aMessageObject.functionName, "", "functionName matches");
+
   startGroupTest();
 }
 
@@ -86,8 +112,8 @@ function startGroupTest() {
     try {
       testConsoleGroup(aSubject.wrappedJSObject);
     } catch (ex) {
-      // XXX Exceptions in this function currently aren't reported, because of
-      // some XPConnect weirdness, so report them manually
+      // XXX Bug 906593 - Exceptions in this function currently aren't
+      // reported, because of some XPConnect weirdness, so report them manually
       ok(false, "Exception thrown in CO_observe: " + ex);
     }
   };
@@ -149,8 +175,8 @@ function startLocationTest() {
     try {
       testLocationData(aSubject.wrappedJSObject);
     } catch (ex) {
-      // XXX Exceptions in this function currently aren't reported, because of
-      // some XPConnect weirdness, so report them manually
+      // XXX Bug 906593 - Exceptions in this function currently aren't
+      // reported, because of some XPConnect weirdness, so report them manually
       ok(false, "Exception thrown in CO_observe: " + ex);
     }
   };
@@ -259,8 +285,8 @@ function startTimeTest() {
     try {
       testConsoleTime(aSubject.wrappedJSObject);
     } catch (ex) {
-      // XXX Exceptions in this function currently aren't reported, because of
-      // some XPConnect weirdness, so report them manually
+      // XXX Bug 906593 - Exceptions in this function currently aren't
+      // reported, because of some XPConnect weirdness, so report them manually
       ok(false, "Exception thrown in CO_observe: " + ex);
     }
   };
@@ -302,8 +328,8 @@ function startTimeEndTest() {
     try {
       testConsoleTimeEnd(aSubject.wrappedJSObject);
     } catch (ex) {
-      // XXX Exceptions in this function currently aren't reported, because of
-      // some XPConnect weirdness, so report them manually
+      // XXX Bug 906593 - Exceptions in this function currently aren't
+      // reported, because of some XPConnect weirdness, so report them manually
       ok(false, "Exception thrown in CO_observe: " + ex);
     }
   };
@@ -349,8 +375,8 @@ function startEmptyTimerTest() {
     try {
       testEmptyTimer(aSubject.wrappedJSObject);
     } catch (ex) {
-      // XXX Exceptions in this function currently aren't reported, because of
-      // some XPConnect weirdness, so report them manually
+      // XXX Bug 906593 - Exceptions in this function currently aren't
+      // reported, because of some XPConnect weirdness, so report them manually
       ok(false, "Exception thrown in CO_observe: " + ex);
     }
   };
@@ -392,8 +418,8 @@ var ConsoleObserver = {
     try {
       testConsoleData(aSubject.wrappedJSObject);
     } catch (ex) {
-      // XXX Exceptions in this function currently aren't reported, because of
-      // some XPConnect weirdness, so report them manually
+      // XXX Bug 906593 - Exceptions in this function currently aren't
+      // reported, because of some XPConnect weirdness, so report them manually
       ok(false, "Exception thrown in CO_observe: " + ex);
     }
   }
