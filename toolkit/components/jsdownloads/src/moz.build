@@ -11,6 +11,7 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'DownloadCore.jsm',
+    'DownloadImport.jsm',
     'DownloadList.jsm',
     'DownloadStore.jsm',
     'DownloadUIHelper.jsm',

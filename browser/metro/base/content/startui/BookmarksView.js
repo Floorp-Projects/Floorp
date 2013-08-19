@@ -30,6 +30,7 @@ function BookmarksView(aSet, aLimit, aRoot, aFilterUnpinned) {
   StartUI.chromeWin.addEventListener('BookmarksNeedsRefresh', this, false);
   window.addEventListener("TabClose", this, true);
 
+  this._adjustDOMforViewState();
   this.root = aRoot;
 }
 

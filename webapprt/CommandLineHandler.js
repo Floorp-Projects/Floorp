@@ -8,7 +8,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://webapprt/modules/WebappRT.jsm");
 
 function CommandLineHandler() {}
 
@@ -30,12 +29,15 @@ CommandLineHandler.prototype = {
                              "chrome,dialog=no",
                              args);
     } else {
-      args.setProperty("url", WebappRT.launchURI);
-      Services.ww.openWindow(null,
-                             "chrome://webapprt/content/webapp.xul",
-                             "_blank",
-                             "chrome,dialog=no,resizable,scrollbars,centerscreen",
-                             args);
+      // We're opening the window here in order to show it as soon as possible.
+      let window = Services.ww.openWindow(null,
+                                          "chrome://webapprt/content/webapp.xul",
+                                          "_blank",
+                                          "chrome,dialog=no,resizable,scrollbars,centerscreen",
+                                          null);
+      // Load the module to start up the app
+      Cu.import("resource://webapprt/modules/Startup.jsm");
+      startup(window);
     }
   },
 

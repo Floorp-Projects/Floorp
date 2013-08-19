@@ -53,45 +53,39 @@ function test() {
 
     instance.setSize(500, 500);
 
-    openInspector(onInspectorUIOpen);
+    openComputedView(onInspectorUIOpen);
   }
 
-  function onInspectorUIOpen(aInspector) {
+  function onInspectorUIOpen(aInspector, aComputedView) {
     inspector = aInspector;
     ok(inspector, "Got inspector instance");
-    inspector.sidebar.select("computedview");
 
     let div = content.document.getElementsByTagName("div")[0];
 
-    inspector.sidebar.once("computedview-ready", function() {
-      Services.obs.addObserver(testShrink, "StyleInspector-populated", false);
-      inspector.selection.setNode(div);
-    });
+    inspector.selection.setNode(div);
+    inspector.once("inspector-updated", testShrink);
+
   }
 
   function testShrink() {
-    Services.obs.removeObserver(testShrink, "StyleInspector-populated");
-
     computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
     ok(computedView, "We have access to the Computed View object");
 
     is(computedWidth(), "500px", "Should show 500px initially.");
 
-    Services.obs.addObserver(function onShrink() {
-      Services.obs.removeObserver(onShrink, "StyleInspector-populated");
+    inspector.once("computed-view-refreshed", function onShrink() {
       is(computedWidth(), "100px", "div should be 100px after shrinking.");
       testGrow();
-    }, "StyleInspector-populated", false);
+    });
 
     instance.setSize(100, 100);
   }
 
   function testGrow() {
-    Services.obs.addObserver(function onGrow() {
-      Services.obs.removeObserver(onGrow, "StyleInspector-populated");
+    inspector.once("computed-view-refreshed", function onGrow() {
       is(computedWidth(), "500px", "Should be 500px after growing.");
       finishUp();
-    }, "StyleInspector-populated", false);
+    });
 
     instance.setSize(500, 500);
   }
