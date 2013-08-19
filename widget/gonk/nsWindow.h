@@ -17,6 +17,7 @@
 #define nsWindow_h
 
 #include "nsBaseWidget.h"
+#include "nsRegion.h"
 #include "nsIIdleServiceInternal.h"
 
 extern nsIntRect gScreenBounds;

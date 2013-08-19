@@ -8,7 +8,6 @@
 #include "nsIEventListenerService.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMEventTarget.h"
 #include "nsString.h"
 #include "nsCycleCollectionParticipant.h"
 #include "jsapi.h"
