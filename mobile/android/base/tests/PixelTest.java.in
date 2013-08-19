@@ -8,7 +8,7 @@ abstract class PixelTest extends BaseTest {
 
     protected final PaintedSurface loadAndGetPainted(String url) {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
-        loadUrl(url);
+        inputAndLoadUrl(url);
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
         paintExpecter.unregisterListener();
         PaintedSurface p = mDriver.getPaintedSurface();

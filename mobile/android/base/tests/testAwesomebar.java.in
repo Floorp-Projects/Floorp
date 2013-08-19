@@ -11,7 +11,7 @@ public class testAwesomebar extends BaseTest {
         blockForGeckoReady();
 
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
-        loadUrl(url);
+        inputAndLoadUrl(url);
 
         mDriver.setupScrollHandling();
         // Calculate where we should be dragging.

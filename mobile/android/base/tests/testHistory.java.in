@@ -23,11 +23,11 @@ public class testHistory extends AboutHomeTest {
         String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
         String url3 = getAbsoluteUrl("/robocop/robocop_blank_03.html");
 
-        loadUrl(url);
+        inputAndLoadUrl(url);
         verifyPageTitle("Browser Blank Page 01");
-        loadUrl(url2);
+        inputAndLoadUrl(url2);
         verifyPageTitle("Browser Blank Page 02");
-        loadUrl(url3);
+        inputAndLoadUrl(url3);
         verifyPageTitle("Browser Blank Page 03");
 
         openAboutHomeTab(AboutHomeTabs.MOST_RECENT);

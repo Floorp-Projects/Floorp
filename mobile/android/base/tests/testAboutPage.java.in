@@ -26,7 +26,7 @@ public class testAboutPage extends PixelTest {
 
         // Open a new page to remove the about: page from the current tab
         url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
-        loadUrl(url);
+        inputAndLoadUrl(url);
 
         // Set up listeners to catch the page load we're about to do
         Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
