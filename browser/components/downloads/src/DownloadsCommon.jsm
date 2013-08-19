@@ -637,15 +637,19 @@ DownloadsDataCtor.prototype = {
   {
     // Start receiving real-time events.
     if (DownloadsCommon.useJSTransfer) {
-      let promiseList = this._isPrivate ? Downloads.getPrivateDownloadList()
-                                        : Downloads.getPublicDownloadList();
-      promiseList.then(list => list.addView(this)).then(null, Cu.reportError);
+      if (!this._dataLinkInitialized) {
+        let promiseList = this._isPrivate ? Downloads.getPrivateDownloadList()
+                                          : Downloads.getPublicDownloadList();
+        promiseList.then(list => list.addView(this)).then(null, Cu.reportError);
+        this._dataLinkInitialized = true;
+      }
     } else {
       aDownloadManagerService.addPrivacyAwareListener(this);
       Services.obs.addObserver(this, "download-manager-remove-download-guid",
                                false);
     }
   },
+  _dataLinkInitialized: false,
 
   /**
    * Stops receiving events for current downloads and cancels any pending read.
@@ -662,6 +666,46 @@ DownloadsDataCtor.prototype = {
     // Stop receiving real-time events.
     Services.obs.removeObserver(this, "download-manager-remove-download-guid");
     Services.downloads.removeListener(this);
+  },
+
+  /**
+   * True if there are finished downloads that can be removed from the list.
+   */
+  get canRemoveFinished()
+  {
+    if (DownloadsCommon.useJSTransfer) {
+      for (let [, dataItem] of Iterator(this.dataItems)) {
+        if (dataItem && !dataItem.inProgress) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      if (this._isPrivate) {
+        return Services.downloads.canCleanUpPrivate;
+      } else {
+        return Services.downloads.canCleanUp;
+      }
+    }
+  },
+
+  /**
+   * Asks the back-end to remove finished downloads from the list.
+   */
+  removeFinished: function DD_removeFinished()
+  {
+    if (DownloadsCommon.useJSTransfer) {
+      let promiseList = this._isPrivate ? Downloads.getPrivateDownloadList()
+                                        : Downloads.getPublicDownloadList();
+      promiseList.then(list => list.removeFinished())
+                 .then(null, Cu.reportError);
+    } else {
+      if (this._isPrivate) {
+        Services.downloads.cleanUpPrivate();
+      } else {
+        Services.downloads.cleanUp();
+      }
+    }
   },
 
   //////////////////////////////////////////////////////////////////////////////
