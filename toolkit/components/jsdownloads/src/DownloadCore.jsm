@@ -807,29 +807,13 @@ Download.prototype = {
       serializable.saver = saver;
     }
 
-    if (!this.stopped) {
-      serializable.stopped = false;
-    }
-
     if (this.error && ("message" in this.error)) {
       serializable.error = { message: this.error.message };
     }
 
     // These are serialized unless they are false, null, or empty strings.
-    let propertiesToSerialize = [
-      "succeeded",
-      "canceled",
-      "startTime",
-      "totalBytes",
-      "hasPartialData",
-      "tryToKeepPartialData",
-      "launcherPath",
-      "launchWhenSucceeded",
-      "contentType",
-    ];
-
-    for (let property of propertiesToSerialize) {
-      if (this[property]) {
+    for (let property of kSerializableDownloadProperties) {
+      if (property != "error" && this[property]) {
         serializable[property] = this[property];
       }
     }
@@ -856,6 +840,22 @@ Download.prototype = {
            "," + this.contentType;
   },
 };
+
+/**
+ * Defines which properties of the Download object are serializable.
+ */
+const kSerializableDownloadProperties = [
+  "succeeded",
+  "canceled",
+  "error",
+  "startTime",
+  "totalBytes",
+  "hasPartialData",
+  "tryToKeepPartialData",
+  "launcherPath",
+  "launchWhenSucceeded",
+  "contentType",
+];
 
 /**
  * Creates a new Download object from a serializable representation.  This
@@ -896,25 +896,7 @@ Download.fromSerializable = function (aSerializable) {
   }
   download.saver.download = download;
 
-  let propertiesToDeserialize = [
-    "startTime",
-    "totalBytes",
-    "hasPartialData",
-    "tryToKeepPartialData",
-    "launcherPath",
-    "launchWhenSucceeded",
-    "contentType",
-  ];
-
-  // If the download should not be restarted automatically, update its state to
-  // reflect success or failure during a previous session.
-  if (!("stopped" in aSerializable) || aSerializable.stopped) {
-    propertiesToDeserialize.push("succeeded");
-    propertiesToDeserialize.push("canceled");
-    propertiesToDeserialize.push("error");
-  }
-
-  for (let property of propertiesToDeserialize) {
+  for (let property of kSerializableDownloadProperties) {
     if (property in aSerializable) {
       download[property] = aSerializable[property];
     }
