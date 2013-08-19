@@ -40,6 +40,7 @@
         <item name="android:paddingRight">100dp</item>
         <item name="android:paddingTop">30dp</item>
         <item name="android:scrollbarStyle">outsideOverlay</item>
+        <item name="topDivider">true</item>
     </style>
 
     <style name="Widget.Home.HistoryTabWidget">
