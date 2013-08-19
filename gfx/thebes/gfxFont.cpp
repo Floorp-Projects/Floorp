@@ -282,6 +282,15 @@ gfxFontEntry::NotifyFontDestroyed(gfxFont* aFont)
     mFontsUsingSVGGlyphs.RemoveElement(aFont);
 }
 
+void
+gfxFontEntry::NotifyGlyphsChanged()
+{
+    for (uint32_t i = 0, count = mFontsUsingSVGGlyphs.Length(); i < count; ++i) {
+        gfxFont* font = mFontsUsingSVGGlyphs[i];
+        font->NotifyGlyphsChanged();
+    }
+}
+
 /**
  * FontTableBlobData
  *
@@ -2957,6 +2966,28 @@ gfxFont::Measure(gfxTextRun *aTextRun,
 
     metrics.mAdvanceWidth = x*direction;
     return metrics;
+}
+
+static PLDHashOperator
+NotifyGlyphChangeObservers(nsPtrHashKey<gfxFont::GlyphChangeObserver>* aKey,
+                           void* aClosure)
+{
+    aKey->GetKey()->NotifyGlyphsChanged();
+    return PL_DHASH_NEXT;
+}
+
+void
+gfxFont::NotifyGlyphsChanged()
+{
+    uint32_t i, count = mGlyphExtentsArray.Length();
+    for (i = 0; i < count; ++i) {
+        // Flush cached extents array
+        mGlyphExtentsArray[i]->NotifyGlyphsChanged();
+    }
+
+    if (mGlyphChangeObservers) {
+        mGlyphChangeObservers->EnumerateEntries(NotifyGlyphChangeObservers, nullptr);
+    }
 }
 
 static bool
