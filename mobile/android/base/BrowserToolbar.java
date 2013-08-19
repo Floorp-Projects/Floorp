@@ -126,6 +126,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     private static final int FORWARD_ANIMATION_DURATION = 450;
     private final ForegroundColorSpan mUrlColor;
+    private final ForegroundColorSpan mBlockedColor;
     private final ForegroundColorSpan mDomainColor;
     private final ForegroundColorSpan mPrivateDomainColor;
 
@@ -182,6 +183,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         Resources res = getResources();
         mUrlColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_urltext));
+        mBlockedColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_blockedtext));
         mDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext));
         mPrivateDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext_private));
 
@@ -466,6 +468,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     updateForwardButton(tab.canDoForward());
                     setProgressVisibility(false);
                     // Reset the title in case we haven't navigated to a new page yet.
+                    updateTitle();
+                }
+                break;
+            case LOADED:
+                if (Tabs.getInstance().isSelectedTab(tab)) {
                     updateTitle();
                 }
                 break;
@@ -938,6 +945,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
         // Setting a null title will ensure we just see the "Enter Search or Address" placeholder text.
         if ("about:home".equals(url) || "about:privatebrowsing".equals(url)) {
             setTitle(null);
+            return;
+        }
+
+        // Show the about:blocked page title in red, regardless of prefs
+        if (tab.getErrorType() == Tab.ErrorType.BLOCKED) {
+            String title = tab.getDisplayTitle();
+            SpannableStringBuilder builder = new SpannableStringBuilder(title);
+            builder.setSpan(mBlockedColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+            setTitle(builder);
             return;
         }
 
