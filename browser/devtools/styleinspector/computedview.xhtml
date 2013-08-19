@@ -98,12 +98,12 @@
               <a target="_blank" class="link theme-link"
                   onclick="${selector.openStyleEditor}"
                   onkeydown="${selector.maybeOpenStyleEditor}"
-                  title="${selector.selectorInfo.href}"
-                  tabindex="0">${selector.selectorInfo.source}</a>
+                  title="${selector.href}"
+                  tabindex="0">${selector.source}</a>
             </span>
             <span dir="ltr" class="rule-text ${selector.statusClass} theme-fg-color3" title="${selector.statusText}">
-              ${selector.text(__element)}
-              <span class="other-property-value theme-fg-color1">${selector.selectorInfo.value}</span>
+              ${selector.sourceText}
+              <span class="other-property-value theme-fg-color1">${selector.value}</span>
             </span>
           </p>
         </loop>

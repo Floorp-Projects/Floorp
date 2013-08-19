@@ -3,20 +3,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 let doc;
-let ruleDialog;
+let ruleWindow;
 let ruleView;
-
-var gRuleViewChanged = false;
-function ruleViewChanged()
-{
-  gRuleViewChanged = true;
-}
-
-function expectChange()
-{
-  ok(gRuleViewChanged, "Rule view should have fired a change event.");
-  gRuleViewChanged = false;
-}
+let inspector;
 
 function startTest()
 {
@@ -32,18 +21,13 @@ function startTest()
   doc.body.innerHTML = '<div id="testid" class="testclass">Styled Node</div>';
   let testElement = doc.getElementById("testid");
 
-  ruleDialog = openDialog("chrome://browser/content/devtools/cssruleview.xhtml",
-                          "cssruleviewtest",
-                          "width=200,height=350");
-  ruleDialog.addEventListener("load", function onLoad(evt) {
-    ruleDialog.removeEventListener("load", onLoad, true);
-    let doc = ruleDialog.document;
-    ruleView = new CssRuleView(doc);
-    doc.documentElement.appendChild(ruleView.element);
-    ruleView.element.addEventListener("CssRuleViewChanged", ruleViewChanged, false);
-    ruleView.highlight(testElement);
-    waitForFocus(testCancelNew, ruleDialog);
-  }, true);
+  openRuleView((aInspector, aRuleView) => {
+    inspector = aInspector;
+    ruleView = aRuleView;
+    ruleWindow = aRuleView.doc.defaultView;
+    inspector.selection.setNode(testElement);
+    inspector.once("inspector-updated", testCancelNew);
+  });
 }
 
 function testCancelNew()
@@ -55,7 +39,7 @@ function testCancelNew()
     is(inplaceEditor(elementRuleEditor.newPropSpan), aEditor, "Next focused editor should be the new property editor.");
     let input = aEditor.input;
     waitForEditorBlur(aEditor, function () {
-      ok(!gRuleViewChanged, "Shouldn't get a change event after a cancel.");
+      ok(!elementRuleEditor.rule._applyingModifications, "Shouldn't have an outstanding request after a cancel.");
       is(elementRuleEditor.rule.textProps.length,  0, "Should have canceled creating a new text property.");
       ok(!elementRuleEditor.propertyList.hasChildNodes(), "Should not have any properties.");
       testCreateNew();
@@ -64,7 +48,7 @@ function testCancelNew()
   });
   EventUtils.synthesizeMouse(elementRuleEditor.closeBrace, 1, 1,
                              { },
-                             ruleDialog);
+                             ruleWindow);
 }
 
 function testCreateNew()
@@ -77,26 +61,28 @@ function testCreateNew()
     input.value = "background-color";
 
     waitForEditorFocus(elementRuleEditor.element, function onNewValue(aEditor) {
-      expectChange();
-      is(elementRuleEditor.rule.textProps.length,  1, "Should have created a new text property.");
-      is(elementRuleEditor.propertyList.children.length, 1, "Should have created a property editor.");
-      let textProp = elementRuleEditor.rule.textProps[0];
-      is(aEditor, inplaceEditor(textProp.editor.valueSpan), "Should be editing the value span now.");
-      aEditor.input.value = "#XYZ";
-      waitForEditorBlur(aEditor, function() {
-        expectChange();
-        is(textProp.value, "#XYZ", "Text prop should have been changed.");
-        is(textProp.editor._validate(), false, "#XYZ should not be a valid entry");
-        testEditProperty();
-      });
-      aEditor.input.blur();
+      promiseDone(expectRuleChange(elementRuleEditor.rule).then(() => {
+        is(elementRuleEditor.rule.textProps.length,  1, "Should have created a new text property.");
+        is(elementRuleEditor.propertyList.children.length, 1, "Should have created a property editor.");
+        let textProp = elementRuleEditor.rule.textProps[0];
+        is(aEditor, inplaceEditor(textProp.editor.valueSpan), "Should be editing the value span now.");
+        aEditor.input.value = "#XYZ";
+        waitForEditorBlur(aEditor, function() {
+          promiseDone(expectRuleChange(elementRuleEditor.rule).then(() => {
+            is(textProp.value, "#XYZ", "Text prop should have been changed.");
+            is(textProp.editor._validate(), false, "#XYZ should not be a valid entry");
+            testEditProperty();
+          }));
+        });
+        aEditor.input.blur();
+      }));
     });
-    EventUtils.synthesizeKey("VK_RETURN", {}, ruleDialog);
+    EventUtils.synthesizeKey("VK_RETURN", {}, ruleWindow);
   });
 
   EventUtils.synthesizeMouse(elementRuleEditor.closeBrace, 1, 1,
                              { },
-                             ruleDialog);
+                             ruleWindow);
 }
 
 function testEditProperty()
@@ -107,38 +93,37 @@ function testEditProperty()
     is(inplaceEditor(propEditor.nameSpan), aEditor, "Next focused editor should be the name editor.");
     let input = aEditor.input;
     waitForEditorFocus(propEditor.element, function onNewName(aEditor) {
-      expectChange();
-      input = aEditor.input;
-      is(inplaceEditor(propEditor.valueSpan), aEditor, "Focus should have moved to the value.");
+      promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {
+        input = aEditor.input;
+        is(inplaceEditor(propEditor.valueSpan), aEditor, "Focus should have moved to the value.");
 
-      waitForEditorBlur(aEditor, function() {
-        expectChange();
-        let value = idRuleEditor.rule.style.getPropertyValue("border-color");
-        is(value, "red", "border-color should have been set.");
-        is(propEditor._validate(), true, "red should be a valid entry");
-        finishTest();
-      });
+        waitForEditorBlur(aEditor, function() {
+          promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {
+            let value = idRuleEditor.rule.domRule._rawStyle().getPropertyValue("border-color");
+            is(value, "red", "border-color should have been set.");
+            is(propEditor._validate(), true, "red should be a valid entry");
+            finishTest();
+          }));
+        });
 
-      for each (let ch in "red;") {
-        EventUtils.sendChar(ch, ruleDialog);
-      }
+        for (let ch of "red;") {
+          EventUtils.sendChar(ch, ruleWindow);
+        }
+      }));
     });
-    for each (let ch in "border-color:") {
-      EventUtils.sendChar(ch, ruleDialog);
+    for (let ch of "border-color:") {
+      EventUtils.sendChar(ch, ruleWindow);
     }
   });
 
   EventUtils.synthesizeMouse(propEditor.nameSpan, 32, 1,
                              { },
-                             ruleDialog);
+                             ruleWindow);
 }
 
 function finishTest()
 {
-  ruleView.element.removeEventListener("CssRuleViewChanged", ruleViewChanged, false);
-  ruleView.clear();
-  ruleDialog.close();
-  ruleDialog = ruleView = null;
+  inspector = ruleWindow = ruleView = null;
   doc = null;
   gBrowser.removeCurrentTab();
   finish();
