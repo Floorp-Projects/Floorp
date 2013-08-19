@@ -189,6 +189,27 @@ nsJSUtils::CompileFunction(JSContext* aCx,
   return NS_OK;
 }
 
+class MOZ_STACK_CLASS AutoDontReportUncaught {
+  JSContext* mContext;
+  bool mWasSet;
+
+public:
+  AutoDontReportUncaught(JSContext* aContext) : mContext(aContext) {
+    MOZ_ASSERT(aContext);
+    uint32_t oldOptions = JS_GetOptions(mContext);
+    mWasSet = oldOptions & JSOPTION_DONT_REPORT_UNCAUGHT;
+    if (!mWasSet) {
+      JS_SetOptions(mContext, oldOptions | JSOPTION_DONT_REPORT_UNCAUGHT);
+    }
+  }
+  ~AutoDontReportUncaught() {
+    if (!mWasSet) {
+      JS_SetOptions(mContext,
+                    JS_GetOptions(mContext) & ~JSOPTION_DONT_REPORT_UNCAUGHT);
+    }
+  }
+};
+
 nsresult
 nsJSUtils::EvaluateString(JSContext* aCx,
                           const nsAString& aScript,
@@ -223,6 +244,13 @@ nsJSUtils::EvaluateString(JSContext* aCx,
                   CanExecuteScripts(aCx, nsJSPrincipals::get(p), &ok);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(ok, NS_OK);
+
+  mozilla::Maybe<AutoDontReportUncaught> dontReport;
+  if (!aEvaluateOptions.reportUncaught) {
+    // We need to prevent AutoLastFrameCheck from reporting and clearing
+    // any pending exceptions.
+    dontReport.construct(aCx);
+  }
 
   // Scope the JSAutoCompartment so that we can later wrap the return value
   // into the caller's cx.
