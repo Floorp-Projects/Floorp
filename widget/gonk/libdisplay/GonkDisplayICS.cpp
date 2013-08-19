@@ -163,6 +163,10 @@ GonkDisplayICS::GetHWCDevice()
 bool
 GonkDisplayICS::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
 {
+    // Should be called when composition rendering is complete for a frame.
+    // Only HWC v1.0 needs this call. ICS gonk always needs the call.
+    mFBSurface->compositionComplete();
+
     if (!mHwc)
         return eglSwapBuffers(dpy, sur);
 

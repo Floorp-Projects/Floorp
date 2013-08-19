@@ -96,6 +96,10 @@ var tests = [test_get_download_empty_queue, test_connection,
 var httpserv = null;
 function run_test()
 {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   httpserv = new HttpServer();
   httpserv.registerDirectory("/", do_get_cwd());
   httpserv.start(-1);

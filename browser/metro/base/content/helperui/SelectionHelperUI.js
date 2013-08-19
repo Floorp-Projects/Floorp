@@ -380,23 +380,26 @@ var SelectionHelperUI = {
 
   /*
    * openEditSession
-   * 
+   *
    * Attempts to select underlying text at a point and begins editing
    * the section.
    *
    * @param aMsgTarget - Browser or chrome message target
    * @param aX, aY - Browser relative client coordinates.
+   * @param aSetFocus - (optional) For form inputs, requests that the focus
+   * be set to the element.
    */
-  openEditSession: function openEditSession(aMsgTarget, aX, aY) {
+  openEditSession: function openEditSession(aMsgTarget, aX, aY, aSetFocus) {
     if (!aMsgTarget || this.isActive)
       return;
     this._init(aMsgTarget);
     this._setupDebugOptions();
-
+    let setFocus = aSetFocus || false;
     // Send this over to SelectionHandler in content, they'll message us
     // back with information on the current selection. SelectionStart
     // takes client coordinates.
     this._sendAsyncMessage("Browser:SelectionStart", {
+      setFocus: setFocus,
       xPos: aX,
       yPos: aY
     });
@@ -404,7 +407,7 @@ var SelectionHelperUI = {
 
   /*
    * attachEditSession
-   * 
+   *
    * Attaches to existing selection and begins editing.
    *
    * @param aMsgTarget - Browser or chrome message target

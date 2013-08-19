@@ -240,3 +240,12 @@ Services.prefs.setBoolPref("browser.download.manager.showAlertOnComplete", false
 do_register_cleanup(function() {
   Services.obs.notifyObservers(null, "quit-application", null);
 });
+
+function oldDownloadManagerDisabled() {
+  try {
+    if (Services.prefs.getBoolPref("browser.download.useJSTransfer")) {
+      return true;
+    }
+  } catch (ex) { }
+  return false;
+}

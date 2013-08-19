@@ -4,6 +4,12 @@
 
 function test()
 {
+  try {
+    if (Services.prefs.getBoolPref("browser.download.useJSTransfer")) {
+      return;
+    }
+  } catch (ex) { }
+
   const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
   var dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);

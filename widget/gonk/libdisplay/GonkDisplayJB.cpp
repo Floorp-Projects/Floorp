@@ -166,6 +166,13 @@ GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
     StopBootAnimation();
     mBootAnimBuffer = nullptr;
 
+    // Should be called when composition rendering is complete for a frame.
+    // Only HWC v1.0 needs this call.
+    // HWC > v1.0 case, do not call compositionComplete().
+    // mFBDevice is present only when HWC is v1.0.
+    if (mFBDevice && mFBDevice->compositionComplete) {
+        mFBDevice->compositionComplete(mFBDevice);
+    }
     mList->outbuf = nullptr;
     mList->outbufAcquireFenceFd = -1;
     eglSwapBuffers(dpy, sur);
