@@ -273,19 +273,22 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
   nsHTMLReflowMetrics baseSize;
   nsHTMLReflowMetrics subScriptSize;
   nsHTMLReflowMetrics supScriptSize;
+  nsHTMLReflowMetrics multiSubSize, multiSupSize;
   baseFrame = nullptr;
   nsIFrame* subScriptFrame = nullptr;
   nsIFrame* supScriptFrame = nullptr;
   nsIFrame* prescriptsFrame = nullptr; // frame of <mprescripts/>, if there.
 
   bool firstPrescriptsPair = false;
-  nsBoundingMetrics bmBase, bmSubScript, bmSupScript;
+  nsBoundingMetrics bmBase, bmSubScript, bmSupScript, bmMultiSub, bmMultiSup;
+  multiSubSize.ascent = multiSupSize.ascent = -0x7FFFFFFF;
+  bmMultiSub.ascent = bmMultiSup.ascent = -0x7FFFFFFF;
+  bmMultiSub.descent = bmMultiSup.descent = -0x7FFFFFFF;
   nscoord italicCorrection = 0;
 
   nsBoundingMetrics boundingMetrics;
   boundingMetrics.width = 0;
   boundingMetrics.ascent = boundingMetrics.descent = -0x7FFFFFFF;
-  nscoord ascent = -0x7FFFFFFF, descent = -0x7FFFFFFF;
   aDesiredSize.width = aDesiredSize.height = 0;
 
   int32_t count = 0;
@@ -370,9 +373,13 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
         // parameter v, Rule 18a, App. G, TeXbook
         minSubScriptShift = bmBase.descent + subDrop;
         trySubScriptShift = std::max(minSubScriptShift,subScriptShift);
-        boundingMetrics.descent =
-          std::max(boundingMetrics.descent,bmSubScript.descent);
-        descent = std::max(descent,subScriptSize.height - subScriptSize.ascent);
+        multiSubSize.ascent = std::max(multiSubSize.ascent,
+                                       subScriptSize.ascent);
+        bmMultiSub.ascent = std::max(bmMultiSub.ascent, bmSubScript.ascent);
+        bmMultiSub.descent = std::max(bmMultiSub.descent, bmSubScript.descent);
+        multiSubSize.height = 
+          std::max(multiSubSize.height,
+                   subScriptSize.height - subScriptSize.ascent);
         if (bmSubScript.width)
           width = bmSubScript.width + aScriptSpace;
         rightBearing = bmSubScript.rightBearing;
@@ -402,11 +409,17 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
         // = d(x) + 1/4 * sigma_5, Rule 18c, App. G, TeXbook
         minShiftFromXHeight = NSToCoordRound
           ((bmSupScript.descent + (1.0f/4.0f) * xHeight));
-        trySupScriptShift =
-          std::max(minSupScriptShift,std::max(minShiftFromXHeight,supScriptShift));
-        boundingMetrics.ascent =
-          std::max(boundingMetrics.ascent,bmSupScript.ascent);
-        ascent = std::max(ascent,supScriptSize.ascent);
+        trySupScriptShift = std::max(minSupScriptShift,
+                                     std::max(minShiftFromXHeight,
+                                              supScriptShift));
+        multiSupSize.ascent = std::max(multiSupSize.ascent,
+                                       supScriptSize.ascent);
+        bmMultiSup.ascent = std::max(bmMultiSup.ascent, bmSupScript.ascent);
+        bmMultiSup.descent = std::max(bmMultiSup.descent, bmSupScript.descent);
+        multiSupSize.height = 
+          std::max(multiSupSize.height,
+                   supScriptSize.height - supScriptSize.ascent);
+
         if (bmSupScript.width)
           width = std::max(width, bmSupScript.width + aScriptSpace);
         rightBearing = std::max(rightBearing, bmSupScript.rightBearing);
@@ -486,18 +499,39 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
   boundingMetrics.rightBearing += prescriptsWidth;
   boundingMetrics.width += prescriptsWidth;
 
+  // Zero out the shifts in where a frame isn't present to avoid the potential
+  // for overflow.
+  if (!subScriptFrame)
+    maxSubScriptShift = 0;
+  if (!supScriptFrame)
+    maxSupScriptShift = 0;
+
   // we left out the base during our bounding box updates, so ...
-  boundingMetrics.ascent =
-    std::max(boundingMetrics.ascent+maxSupScriptShift,bmBase.ascent);
-  boundingMetrics.descent =
-    std::max(boundingMetrics.descent+maxSubScriptShift,bmBase.descent);
+  if (tag == nsGkAtoms::msub_) {
+    boundingMetrics.ascent = std::max(bmBase.ascent,
+                                      bmMultiSub.ascent - maxSubScriptShift);
+  } else {
+    boundingMetrics.ascent =
+      std::max(bmBase.ascent, (bmMultiSup.ascent + maxSupScriptShift));
+  }
+  if (tag == nsGkAtoms::msup_) {
+    boundingMetrics.descent = std::max(bmBase.descent,
+                                       bmMultiSup.descent - maxSupScriptShift);
+  } else {
+    boundingMetrics.descent =
+      std::max(bmBase.descent, (bmMultiSub.descent + maxSubScriptShift));
+  }
   aFrame->SetBoundingMetrics(boundingMetrics);
 
   // get the reflow metrics ...
-  aDesiredSize.ascent =
-    std::max(ascent+maxSupScriptShift,baseSize.ascent);
+  aDesiredSize.ascent = 
+    std::max(baseSize.ascent, 
+             std::max(multiSubSize.ascent - maxSubScriptShift,
+                      multiSupSize.ascent + maxSupScriptShift));
   aDesiredSize.height = aDesiredSize.ascent +
-    std::max(descent+maxSubScriptShift,baseSize.height - baseSize.ascent);
+    std::max(baseSize.height - baseSize.ascent,
+             std::max(multiSubSize.height + maxSubScriptShift,
+                      multiSupSize.height - maxSupScriptShift));
   aDesiredSize.width = boundingMetrics.width;
   aDesiredSize.mBoundingMetrics = boundingMetrics;
 
