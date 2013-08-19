@@ -4201,10 +4201,6 @@ function setToolbarVisibility(toolbar, isVisible) {
   PlacesToolbarHelper.init();
   BookmarkingUI.onToolbarVisibilityChange();
   gBrowser.updateWindowResizers();
-
-#ifdef CAN_DRAW_IN_TITLEBAR
-  updateTitlebarDisplay();
-#endif
 }
 
 var TabsInTitlebar = {
@@ -4226,6 +4222,8 @@ var TabsInTitlebar = {
     let menu = document.getElementById("toolbar-menubar");
     this._menuObserver = new MutationObserver(this._onMenuMutate);
     this._menuObserver.observe(menu, {attributes: true});
+
+    gNavToolbox.addEventListener("customization-transitionend", this);
     this._initialized = true;
 #endif
   },
@@ -4262,6 +4260,12 @@ var TabsInTitlebar = {
       this._readPref();
   },
 
+  handleEvent: function(ev) {
+    if (ev.type == "customization-transitionend") {
+      this._update(true);
+    }
+  },
+
   _onMenuMutate: function (aMutations) {
     for (let mutation of aMutations) {
       if (mutation.attributeName == "inactive" ||
@@ -4285,6 +4289,7 @@ var TabsInTitlebar = {
   _update: function (aForce=false) {
     function $(id) document.getElementById(id);
     function rect(ele) ele.getBoundingClientRect();
+    function verticalMargins(cstyle) parseInt(cstyle.marginBottom, 10) + parseInt(cstyle.marginTop, 10);
 
     if (!this._initialized || window.fullScreen)
       return;
@@ -4312,12 +4317,6 @@ var TabsInTitlebar = {
     let titlebarContent = $("titlebar-content");
     let menubar = $("toolbar-menubar");
 
-    // Reset the margins and padding that _update modifies so that we can take
-    // accurate measurements.
-    titlebarContent.style.marginBottom = "";
-    titlebar.style.marginBottom = "";
-    menubar.style.paddingBottom = "";
-
     if (allowed) {
       // We set the tabsintitlebar attribute first so that our CSS for
       // tabsintitlebar manifests before we do our measurements.
@@ -4325,51 +4324,100 @@ var TabsInTitlebar = {
 
       // Try to avoid reflows in this code by calculating dimensions first and
       // then later set the properties affecting layout together in a batch.
+
+      // Buttons first:
       let captionButtonsBoxWidth = rect($("titlebar-buttonbox")).width;
-      let titlebarContentHeight = rect(titlebarContent).height;
-      let menuHeight = this._outerHeight(menubar);
-      let tabsToolbar = $("TabsToolbar");
-      let tabsToolbarOuterHeight = this._outerHeight(tabsToolbar);
 #ifdef XP_MACOSX
       let fullscreenButtonWidth = rect($("titlebar-fullscreen-button")).width;
+      // No need to look up the menubar stuff on OS X:
+      let menuHeight = 0;
+      let fullMenuHeight = 0;
+#else
+      // Otherwise, get the height and margins separately for the menubar
+      let menuHeight = rect(menubar).height;
+      let menuStyles = window.getComputedStyle(menubar);
+      let fullMenuHeight = verticalMargins(menuStyles) + menuHeight;
 #endif
+      // Get the full height of the tabs toolbar:
+      let tabsToolbar = $("TabsToolbar");
+      let tabsStyles = window.getComputedStyle(tabsToolbar);
+      let fullTabsHeight = rect(tabsToolbar).height + verticalMargins(tabsStyles);
+
+      // If the navbar overlaps the tabbar using negative margins, we need to take those into
+      // account so we don't overlap it
+      let navbarMarginTop = parseInt(window.getComputedStyle($("nav-bar")).marginTop, 10);
+      navbarMarginTop = Math.min(navbarMarginTop, 0);
+
+      // And get the height of what's in the titlebar:
+      let titlebarContentHeight = rect(titlebarContent).height;
+
+      // Padding surrounds the tab-view-deck when we are in customization mode,
+      // so take that into account:
+      let areCustomizing = document.documentElement.hasAttribute("customizing") ||
+                           document.documentElement.hasAttribute("customize-exiting");
+      let customizePadding = 0;
+      if (areCustomizing) {
+        let deckStyle = window.getComputedStyle($("tab-view-deck"));
+        customizePadding = parseInt(deckStyle.paddingTop, 10);
+      }
 
       // Begin setting CSS properties which will cause a reflow
+
+      // If the menubar is around (menuHeight is non-zero), try to adjust
+      // its full height (i.e. including margins) to match the titlebar,
+      // by changing the menubar's bottom padding
+      if (menuHeight) {
+        // Calculate the difference between the titlebar's height and that of the menubar
+        let menuTitlebarDelta = titlebarContentHeight - fullMenuHeight;
+        let paddingBottom;
+        // The titlebar is bigger:
+        if (menuTitlebarDelta > 0) {
+          fullMenuHeight += menuTitlebarDelta;
+          // If there is already padding on the menubar, we need to add that
+          // to the difference so the total padding is correct:
+          if ((paddingBottom = menuStyles.paddingBottom)) {
+            menuTitlebarDelta += parseInt(paddingBottom, 10);
+          }
+          menubar.style.paddingBottom = menuTitlebarDelta + "px";
+        // The menubar is bigger, but has bottom padding we can remove:
+        } else if (menuTitlebarDelta < 0 && (paddingBottom = menuStyles.paddingBottom)) {
+          let existingPadding = parseInt(paddingBottom, 10);
+          // menuTitlebarDelta is negative; work out what's left, but don't set negative padding:
+          let desiredPadding = Math.max(0, existingPadding + menuTitlebarDelta);
+          menubar.style.paddingBottom = desiredPadding + "px";
+          // We've changed the menu height now:
+          fullMenuHeight += desiredPadding - existingPadding;
+        }
+      }
+
+      // Next, we calculate how much we need to stretch the titlebar down to
+      // go all the way to the bottom of the tab strip, if necessary.
+      let tabAndMenuHeight = fullTabsHeight + fullMenuHeight;
+      // Oh, and don't forget customization mode:
+      if (areCustomizing) {
+        tabAndMenuHeight += customizePadding;
+      }
+
+      if (tabAndMenuHeight > titlebarContentHeight) {
+        // We need to increase the titlebar content's outer height (ie including margins)
+        // to match the tab and menu height:
+        let extraMargin = tabAndMenuHeight - titlebarContentHeight;
+        // We need to reduce the height by the amount of navbar overlap
+        // (this value is 0 or negative):
+        extraMargin += navbarMarginTop;
+        titlebarContent.style.marginBottom = extraMargin + "px";
+        titlebarContentHeight += extraMargin;
+      }
+
+      // Then we bring up the titlebar by the same amount, but we add any negative margin:
+      titlebar.style.marginBottom = "-" + titlebarContentHeight + "px";
+
+
+      // Finally, size the placeholders:
 #ifdef XP_MACOSX
       this._sizePlaceholder("fullscreen-button", fullscreenButtonWidth);
 #endif
       this._sizePlaceholder("caption-buttons", captionButtonsBoxWidth);
-
-      // If the titlebar is taller than the menubar, add more padding to the
-      // bottom of the menubar so that it matches.
-      if (menuHeight && titlebarContentHeight > menuHeight) {
-        let menuTitlebarDelta = titlebarContentHeight - menuHeight;
-        menubar.style.paddingBottom = menuTitlebarDelta + "px";
-        menuHeight += menuTitlebarDelta;
-      }
-
-      // Next, we calculate how much we need to stretch the titlebar down to
-      // go all the way to the bottom of the tab strip.
-      let tabAndMenuHeight = tabsToolbarOuterHeight + menuHeight;
-      titlebarContent.style.marginBottom = tabAndMenuHeight + "px";
-
-      // Finally, we have to determine how much to bring up the elements below
-      // the titlebar. We start with a baseHeight of tabAndMenuHeight, to offset
-      // the amount we added to the titlebar content. Then, we have two cases:
-      //
-      // 1) The titlebar is larger than the tabAndMenuHeight. This can happen in
-      //    large font mode with the menu autohidden. In this case, we want to
-      //    add tabAndMenuHeight, since this should line up the bottom of the
-      //    tabstrip with the bottom of the titlebar.
-      //
-      // 2) The titlebar is equal to or smaller than the tabAndMenuHeight. This
-      //    is the more common case, and occurs with normal font sizes. In this
-      //    case, we want to bring the menu and tabstrip right up to the top of
-      //    the titlebar, so we add the titlebarContentHeight to the baseHeight.
-      let baseHeight = tabAndMenuHeight;
-      baseHeight += (titlebarContentHeight > tabAndMenuHeight) ? tabAndMenuHeight
-                                                               : titlebarContentHeight;
-      titlebar.style.marginBottom = "-" + baseHeight + "px";
 
       if (!this._draghandles) {
         this._draghandles = {};
@@ -4388,29 +4436,16 @@ var TabsInTitlebar = {
       }
     } else {
       document.documentElement.removeAttribute("tabsintitlebar");
+      // Reset the margins and padding that might have been modified:
+      titlebarContent.style.marginBottom = "";
+      titlebar.style.marginBottom = "";
+      menubar.style.paddingBottom = "";
     }
   },
 
   _sizePlaceholder: function (type, width) {
     Array.forEach(document.querySelectorAll(".titlebar-placeholder[type='"+ type +"']"),
                   function (node) { node.width = width; });
-  },
-
-  /**
-   * Retrieve the height of an element, including its top and bottom
-   * margins.
-   *
-   * @param ele
-   *        The element to measure.
-   * @return
-   *        The height and margins as an integer. If the height of the element
-   *        is 0, then this returns 0, regardless of what the margins are.
-   */
-  _outerHeight: function (ele) {
-    let cstyle = document.defaultView.getComputedStyle(ele);
-    let margins = parseInt(cstyle.marginTop) + parseInt(cstyle.marginBottom);
-    let height = ele.getBoundingClientRect().height;
-    return height > 0 ? Math.abs(height + margins) : 0;
   },
 #endif
 

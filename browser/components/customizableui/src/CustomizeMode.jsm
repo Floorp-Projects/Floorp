@@ -283,6 +283,7 @@ CustomizeMode.prototype = {
       if (!aEntering) {
         this.document.documentElement.removeAttribute("customize-exiting");
       }
+      this.dispatchToolboxEvent("customization-transitionend", aEntering);
 
       deferred.resolve();
     }.bind(this);
