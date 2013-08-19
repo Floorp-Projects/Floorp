@@ -6,7 +6,6 @@
 #define nsJSEnvironment_h
 
 #include "nsIScriptContext.h"
-#include "nsIScriptRuntime.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
 #include "jsapi.h"
@@ -183,7 +182,7 @@ private:
 
 class nsIJSRuntimeService;
 
-class nsJSRuntime MOZ_FINAL : public nsIScriptRuntime
+class nsJSRuntime MOZ_FINAL : public nsISupports
 {
 public:
   // let people who can see us use our runtime for convenience.
@@ -192,10 +191,6 @@ public:
 public:
   // nsISupports
   NS_DECL_ISUPPORTS
-
-  virtual already_AddRefed<nsIScriptContext>
-  CreateContext(bool aGCOnDestruction,
-                nsIScriptGlobalObject* aGlobalObject) MOZ_OVERRIDE;
 
   static void Startup();
   static void Shutdown();
@@ -226,7 +221,7 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSArgArray, NS_IJSARGARRAY_IID)
 
 /* factory functions */
-nsresult NS_CreateJSRuntime(nsIScriptRuntime **aRuntime);
+nsresult NS_CreateJSRuntime(nsJSRuntime **aRuntime);
 
 /* prototypes */
 void NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);

@@ -15,7 +15,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIScriptRuntime.h"
 #include "nsIServiceManager.h"
 #include "nsIArray.h"
 #include "nsIURI.h"
