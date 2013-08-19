@@ -114,10 +114,7 @@ public:
 
     JSObject* GetCompilationGlobal();
 
-    void MarkInCCGeneration(uint32_t aCCGeneration)
-    {
-        mCCGeneration = aCCGeneration;
-    }
+    void MarkInCCGeneration(uint32_t aCCGeneration);
 
     NS_DECL_CYCLE_COLLECTION_CLASS(nsXULPrototypeDocument)
 
