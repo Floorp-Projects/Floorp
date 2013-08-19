@@ -143,7 +143,7 @@ function init() {
   // Event delegation on #menu element
   let menu = document.getElementById("menu");
   menu.addEventListener("click", function click(e) {
-    if (e.target)
+    if (e.target && e.target.parentNode == menu)
       show(e.target);
   });
 }
