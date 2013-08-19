@@ -13,9 +13,7 @@
 #include "nsRenderingContext.h"
 
 #include "nsMathMLmunderoverFrame.h"
-#include "nsMathMLmsubsupFrame.h"
-#include "nsMathMLmsupFrame.h"
-#include "nsMathMLmsubFrame.h"
+#include "nsMathMLmmultiscriptsFrame.h"
 #include <algorithm>
 
 //
@@ -310,27 +308,27 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
     //place like sub sup or subsup
     nscoord scriptSpace = nsPresContext::CSSPointsToAppUnits(0.5f);
     if (tag == nsGkAtoms::munderover_) {
-      return nsMathMLmsubsupFrame::PlaceSubSupScript(PresContext(),
-                                                     aRenderingContext,
-                                                     aPlaceOrigin,
-                                                     aDesiredSize,
-                                                     this, 0, 0,
-                                                     scriptSpace);
+      return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
+                                                          aRenderingContext,
+                                                          aPlaceOrigin,
+                                                          aDesiredSize,
+                                                          this, 0, 0,
+                                                          scriptSpace);
     } else if (tag == nsGkAtoms::munder_) {
-      return nsMathMLmsubFrame::PlaceSubScript(PresContext(),
-                                               aRenderingContext,
-                                               aPlaceOrigin,
-                                               aDesiredSize,
-                                               this, 0,
-                                               scriptSpace);
+      return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
+                                                          aRenderingContext,
+                                                          aPlaceOrigin,
+                                                          aDesiredSize,
+                                                          this, 0, 0,
+                                                          scriptSpace);
     } else {
       NS_ASSERTION(tag == nsGkAtoms::mover_, "mContent->Tag() not recognized");
-      return nsMathMLmsupFrame::PlaceSuperScript(PresContext(),
-                                                 aRenderingContext,
-                                                 aPlaceOrigin,
-                                                 aDesiredSize,
-                                                 this, 0,
-                                                 scriptSpace);
+      return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
+                                                          aRenderingContext,
+                                                          aPlaceOrigin,
+                                                          aDesiredSize,
+                                                          this, 0, 0,
+                                                          scriptSpace);
     }
     
   }
