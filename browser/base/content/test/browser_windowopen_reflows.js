@@ -83,7 +83,7 @@ let observer = {
     for (let expectedStack of EXPECTED_REFLOWS) {
       if (path.startsWith(expectedStack) ||
           // Accept an empty function name for gBrowserInit._delayedStartup or TabsInTitlebar._update to workaround bug 906578.
-          path.startsWith(expectedStack.replace("|gBrowserInit._delayedStartup@", "|@").replace("|TabsInTitlebar._update@", "|@"))) {
+          path.startsWith(expectedStack.replace(/(^|\|)(gBrowserInit\._delayedStartup|TabsInTitlebar\._update)@/, "$1@"))) {
         ok(true, "expected uninterruptible reflow '" + expectedStack + "'");
         return;
       }
