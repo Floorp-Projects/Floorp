@@ -21,28 +21,44 @@ bool ots_svg_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   OpenTypeSVG *svg = new OpenTypeSVG;
   file->svg = svg;
 
-  std::map<uint32_t, uint32_t> doc_locations;
-  typedef std::map<uint32_t, uint32_t>::iterator lociter_t;
-
   uint16_t version;
-  uint16_t index_length;
-  if (!table.ReadU16(&version) ||
-      !table.ReadU16(&index_length)) {
+  if (!table.ReadU16(&version)) {
     NONFATAL_FAILURE("Couldn't read SVG table header");
   }
-
   if (version != 0) {
     NONFATAL_FAILURE("Unknown SVG table version");
   }
 
-  uint32_t max_address = 0;
-  uint32_t total_docs_length = 0;
+  uint32_t doc_index_offset;
+  if (!table.ReadU32(&doc_index_offset)) {
+    NONFATAL_FAILURE("Couldn't read doc index offset from SVG table header");
+  }
+  if (doc_index_offset == 0 || doc_index_offset >= length) {
+    NONFATAL_FAILURE("Invalid doc index offset");
+  }
+
+  uint32_t color_palettes_offset;
+  if (!table.ReadU32(&color_palettes_offset)) {
+    NONFATAL_FAILURE("Couldn't read color palettes offset from SVG table header");
+  }
+  if (color_palettes_offset >= length) {
+    NONFATAL_FAILURE("Invalid doc index offset");
+  }
 
   uint16_t start_glyph;
   uint16_t end_glyph;
   uint32_t doc_offset;
   uint32_t doc_length;
   uint16_t last_end_glyph = 0;
+
+  table.set_offset(doc_index_offset);
+  uint16_t index_length;
+  if (!table.ReadU16(&index_length)) {
+    NONFATAL_FAILURE("Couldn't read SVG documents index");
+  }
+  if (index_length == 0) {
+    NONFATAL_FAILURE("Zero-length documents index");
+  }
 
   for (uint16_t i = 0; i < index_length; i++) {
     if (!table.ReadU16(&start_glyph) ||
@@ -60,42 +76,16 @@ bool ots_svg_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       NONFATAL_FAILURE("SVG table index range overlapping or not sorted");
     }
 
-    if (doc_locations.find(doc_offset) != doc_locations.end()) {
-      if (doc_locations[doc_offset] != doc_length) {
-        NONFATAL_FAILURE("SVG table contains overlapping document range");
-      }
-    } else {
-      doc_locations[doc_offset] = doc_length;
-      total_docs_length += doc_length;
-      if (doc_offset + doc_length > max_address) {
-        max_address = doc_offset + doc_length;
-      }
-    }
-
     if (doc_offset > 1024 * 1024 * 1024 ||
-        doc_length > 1024 * 1024 * 1024 ||
-        total_docs_length > 1024 * 1024 * 1024) {
+        doc_length > 1024 * 1024 * 1024) {
       NONFATAL_FAILURE("Bad SVG document length");
     }
 
-    last_end_glyph = end_glyph;
-  }
-
-  uint32_t last_end = 4 + 12 * index_length;
-  for (lociter_t iter = doc_locations.begin();
-       iter != doc_locations.end(); ++iter) {
-    if (iter->first != last_end) {
-      NONFATAL_FAILURE("SVG table contains overlapping document range");
+    if (uint64_t(doc_index_offset) + doc_offset + doc_length > length) {
+      NONFATAL_FAILURE("SVG table document overflows table");
     }
-    last_end = iter->first + iter->second;
-  }
 
-  if (max_address != length) {
-    NONFATAL_FAILURE("Bad SVG document length");
-  }
-
-  if (!table.Skip(total_docs_length)) {
-    NONFATAL_FAILURE("SVG table is too short");
+    last_end_glyph = end_glyph;
   }
 
   svg->data = data;
