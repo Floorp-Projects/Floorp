@@ -59,7 +59,7 @@ gTests.push({
   setUp: setUpAndTearDown,
   tearDown: setUpAndTearDown,
   run: function test() {
-    gInput.focus();
+    gInput.blur();
     gInput.selectionStart = gInput.selectionEnd = 0;
 
     let promise = waitForEvent(document, "popupshown");
@@ -81,6 +81,7 @@ gTests.push({
       }, kCommonWaitMs, kCommonPollMs);
 
     is(getTrimmedSelection(gInput).toString(), "went", "selection test");
+    is(gWindow.document.activeElement, gInput, "input focused");
   },
 });
 
