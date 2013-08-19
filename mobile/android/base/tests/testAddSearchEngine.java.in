@@ -29,7 +29,7 @@ public class testAddSearchEngine extends PixelTest {
         String searchEngineURL = getAbsoluteUrl("/robocop/robocop_search.html");
 
         blockForGeckoReady();
-        loadUrl(blankPageURL);
+        inputAndLoadUrl(blankPageURL);
         waitForText("Browser Blank Page 01");
 
         // Get the searchengine data by clicking the awesomebar - this causes Gecko to send Java the list
@@ -54,7 +54,7 @@ public class testAddSearchEngine extends PixelTest {
         verifyDisplayedSearchEnginesCount("Browser Blank Page 01", initialNumSearchEngines);
 
         // Load the page for the search engine to add.
-        loadUrl(searchEngineURL);
+        inputAndLoadUrl(searchEngineURL);
         waitForText("Robocop Search Engine");
 
         // Used to long-tap on the search input box for the search engine to add.

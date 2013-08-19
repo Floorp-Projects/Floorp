@@ -35,7 +35,7 @@ public class testShareLink extends BaseTest {
         ArrayList<String> shareOptions;
         blockForGeckoReady();
 
-        loadUrl(url);
+        inputAndLoadUrl(url);
         waitForText(urlTitle); // Waiting for page title to ensure the page is loaded
         selectMenuItem("Share");
         if (Build.VERSION.SDK_INT >= 14) {
