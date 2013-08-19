@@ -127,15 +127,21 @@ private:
 
     const struct Header {
         mozilla::AutoSwap_PRUint16 mVersion;
-        mozilla::AutoSwap_PRUint16 mIndexLength;
+        mozilla::AutoSwap_PRUint32 mDocIndexOffset;
+        mozilla::AutoSwap_PRUint32 mColorPalettesOffset;
     } *mHeader;
 
-    const struct IndexEntry {
+    struct IndexEntry {
         mozilla::AutoSwap_PRUint16 mStartGlyph;
         mozilla::AutoSwap_PRUint16 mEndGlyph;
         mozilla::AutoSwap_PRUint32 mDocOffset;
         mozilla::AutoSwap_PRUint32 mDocLength;
-    } *mIndex;
+    };
+
+    const struct DocIndex {
+      mozilla::AutoSwap_PRUint16 mNumEntries;
+      IndexEntry mEntries[1]; /* actual length = mNumEntries */
+    } *mDocIndex;
 
     static int CompareIndexEntries(const void *_a, const void *_b);
 };
