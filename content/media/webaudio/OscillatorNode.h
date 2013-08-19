@@ -23,6 +23,7 @@ class OscillatorNode : public AudioNode,
 {
 public:
   explicit OscillatorNode(AudioContext* aContext);
+  virtual ~OscillatorNode();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OscillatorNode, AudioNode)
