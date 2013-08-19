@@ -24,6 +24,9 @@ function indirectCallCannotGC(caller, name)
     if (name == "params" && caller == "PR_ExplodeTime")
         return true;
 
+    if (name == "op" && /GetWeakmapKeyDelegate/.test(caller))
+        return true;
+
     var CheckCallArgs = "AsmJS.cpp:uint8 CheckCallArgs(FunctionCompiler*, js::frontend::ParseNode*, (uint8)(FunctionCompiler*,js::frontend::ParseNode*,Type)*, FunctionCompiler::Call*)";
     if (name == "checkArg" && caller == CheckCallArgs)
         return true;
@@ -68,6 +71,8 @@ var ignoreCallees = {
     "js::ion::LInstruction.getDef" : true, // virtual but no implementation can GC
     "js::ion::IonCache.kind" : true, // macro generated virtuals just return a constant
     "icu_50::UObject.__deleting_dtor" : true, // destructors in ICU code can't cause GC
+    "mozilla::CycleCollectedJSRuntime.DescribeCustomObjects" : true, // During tracing, cannot GC.
+    "mozilla::CycleCollectedJSRuntime.NoteCustomGCThingXPCOMChildren" : true, // During tracing, cannot GC.
 };
 
 function fieldCallCannotGC(csu, fullfield)

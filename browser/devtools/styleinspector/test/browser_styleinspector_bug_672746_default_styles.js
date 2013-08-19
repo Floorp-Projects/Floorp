@@ -16,43 +16,27 @@ function createDocument()
     '</div>';
   doc.title = "Style Inspector Default Styles Test";
 
-  openInspector(openComputedView);
+  openComputedView(SI_inspectNode);
 }
 
-function openComputedView(aInspector)
+function SI_inspectNode(aInspector, aComputedView)
 {
   inspector = aInspector;
+  computedView = aComputedView;
 
-  inspector.sidebar.once("computedview-ready", function() {
-    inspector.sidebar.select("computedview");
-    computedView = getComputedView(inspector);
-
-    runStyleInspectorTests();
-  });
-}
-
-function runStyleInspectorTests()
-{
-  Services.obs.addObserver(SI_check, "StyleInspector-populated", false);
-  SI_inspectNode();
-}
-
-function SI_inspectNode()
-{
   let span = doc.querySelector("#matches");
   ok(span, "captain, we have the matches span");
 
   inspector.selection.setNode(span);
-
-  is(span, computedView.viewedElement,
-    "style inspector node matches the selected node");
-  is(computedView.viewedElement, computedView.cssLogic.viewedElement,
-     "cssLogic node matches the cssHtmlTree node");
+  inspector.once("inspector-updated", () => {
+    is(span, computedView.viewedElement.rawNode(),
+      "style inspector node matches the selected node");
+    SI_check();
+  });
 }
 
 function SI_check()
 {
-  Services.obs.removeObserver(SI_check, "StyleInspector-populated");
   is(propertyVisible("color"), true,
     "span #matches color property is visible");
   is(propertyVisible("background-color"), false,
@@ -66,14 +50,13 @@ function SI_toggleDefaultStyles()
   // Click on the checkbox.
   let doc = computedView.styleDocument;
   let checkbox = doc.querySelector(".includebrowserstyles");
-  Services.obs.addObserver(SI_checkDefaultStyles, "StyleInspector-populated", false);
+  inspector.once("computed-view-refreshed", SI_checkDefaultStyles);
 
   checkbox.click();
 }
 
 function SI_checkDefaultStyles()
 {
-  Services.obs.removeObserver(SI_checkDefaultStyles, "StyleInspector-populated");
   // Check that the default styles are now applied.
   is(propertyVisible("color"), true,
       "span color property is visible");

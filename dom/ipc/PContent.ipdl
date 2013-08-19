@@ -30,10 +30,12 @@ include URIParams;
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
+include "mozilla/dom/Element.h";
 include "mozilla/HalTypes.h";
 include "mozilla/layout/RenderFrameUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
 include "nsGeoPositionIPCSerialiser.h";
+include "gfxPoint.h";
 
 using GeoPosition;
 using PrefTuple;
@@ -410,6 +412,9 @@ parent:
     // called by the child (test code only) to propagate volume changes to the parent
     async CreateFakeVolume(nsString fsName, nsString mountPoint);
     async SetFakeVolumeState(nsString fsName, int32_t fsState);
+
+    sync KeywordToURI(nsCString keyword)
+        returns (OptionalInputStreamParams postData, OptionalURIParams uri);
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows);

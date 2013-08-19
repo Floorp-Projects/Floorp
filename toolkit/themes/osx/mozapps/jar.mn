@@ -56,6 +56,7 @@ toolkit.jar:
   skin/classic/mozapps/passwordmgr/key-16@2x.png                  (passwordmgr/key-16@2x.png)
   skin/classic/mozapps/passwordmgr/key-64.png                     (passwordmgr/key-64.png)
   skin/classic/mozapps/plugins/pluginProblem.css                  (../../shared/plugins/pluginProblem.css)
+  skin/classic/mozapps/aboutNetworking.css                        (../../shared/aboutNetworking.css)
   skin/classic/mozapps/plugins/contentPluginActivate.png          (../../shared/plugins/contentPluginActivate.png)
   skin/classic/mozapps/plugins/contentPluginBlocked.png           (../../shared/plugins/contentPluginBlocked.png)
   skin/classic/mozapps/plugins/contentPluginClose.png             (../../shared/plugins/contentPluginClose.png)

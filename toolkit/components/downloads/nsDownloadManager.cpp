@@ -36,6 +36,8 @@
 
 #include "SQLFunctions.h"
 
+#include "mozilla/Preferences.h"
+
 #ifdef XP_WIN
 #include <shlobj.h>
 #ifdef DOWNLOAD_SCANNER
@@ -60,6 +62,7 @@ using mozilla::downloads::GenerateGUID;
 
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
 #define DOWNLOAD_MANAGER_ALERT_ICON "chrome://mozapps/skin/downloads/downloadIcon.png"
+#define PREF_BD_USEJSTRANSFER "browser.download.useJSTransfer"
 #define PREF_BDM_SHOWALERTONCOMPLETE "browser.download.manager.showAlertOnComplete"
 #define PREF_BDM_SHOWALERTINTERVAL "browser.download.manager.showAlertInterval"
 #define PREF_BDM_RETENTION "browser.download.manager.retention"
@@ -923,6 +926,21 @@ nsDownloadManager::InitStatements(mozIStorageConnection* aDBConn,
 nsresult
 nsDownloadManager::Init()
 {
+  nsresult rv;
+
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    mozilla::services::GetStringBundleService();
+  if (!bundleService)
+    return NS_ERROR_FAILURE;
+
+  rv = bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE,
+                                   getter_AddRefs(mBundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mUseJSTransfer = Preferences::GetBool(PREF_BD_USEJSTRANSFER, false);
+  if (mUseJSTransfer)
+    return NS_OK;
+
   // Clean up any old downloads.rdf files from before Firefox 3
   {
     nsCOMPtr<nsIFile> oldDownloadsFile;
@@ -939,16 +957,7 @@ nsDownloadManager::Init()
   if (!mObserverService)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    mozilla::services::GetStringBundleService();
-  if (!bundleService)
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = InitDB();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE,
-                                   getter_AddRefs(mBundle));
+  rv = InitDB();
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DOWNLOAD_SCANNER
@@ -1281,6 +1290,8 @@ nsDownloadManager::SendEvent(nsDownload *aDownload, const char *aTopic)
 NS_IMETHODIMP
 nsDownloadManager::GetActivePrivateDownloadCount(int32_t* aResult)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   *aResult = mCurrentPrivateDownloads.Count();
   return NS_OK;
 }
@@ -1288,6 +1299,8 @@ nsDownloadManager::GetActivePrivateDownloadCount(int32_t* aResult)
 NS_IMETHODIMP
 nsDownloadManager::GetActiveDownloadCount(int32_t *aResult)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   *aResult = mCurrentDownloads.Count();
 
   return NS_OK;
@@ -1296,12 +1309,16 @@ nsDownloadManager::GetActiveDownloadCount(int32_t *aResult)
 NS_IMETHODIMP
 nsDownloadManager::GetActiveDownloads(nsISimpleEnumerator **aResult)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   return NS_NewArrayEnumerator(aResult, mCurrentDownloads);
 }
 
 NS_IMETHODIMP
 nsDownloadManager::GetActivePrivateDownloads(nsISimpleEnumerator **aResult)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   return NS_NewArrayEnumerator(aResult, mCurrentPrivateDownloads);
 }
 
@@ -1523,6 +1540,8 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
                                bool aIsPrivate,
                                nsIDownload **aDownload)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   NS_ENSURE_ARG_POINTER(aSource);
   NS_ENSURE_ARG_POINTER(aTarget);
   NS_ENSURE_ARG_POINTER(aDownload);
@@ -1655,6 +1674,8 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
 NS_IMETHODIMP
 nsDownloadManager::GetDownload(uint32_t aID, nsIDownload **aDownloadItem)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   NS_WARNING("Using integer IDs without compat mode enabled");
 
   nsDownload *itm = FindDownload(aID);
@@ -1699,6 +1720,8 @@ NS_IMETHODIMP
 nsDownloadManager::GetDownloadByGUID(const nsACString& aGUID,
                                      nsIDownloadManagerResult* aCallback)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   nsDownload *itm = FindDownload(aGUID);
 
   nsresult rv = NS_OK;
@@ -1748,6 +1771,8 @@ nsDownloadManager::FindDownload(const nsACString& aGUID)
 NS_IMETHODIMP
 nsDownloadManager::CancelDownload(uint32_t aID)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   NS_WARNING("Using integer IDs without compat mode enabled");
 
   // We AddRef here so we don't lose access to member variables when we remove
@@ -1774,6 +1799,8 @@ nsDownloadManager::RetryDownload(const nsACString& aGUID)
 NS_IMETHODIMP
 nsDownloadManager::RetryDownload(uint32_t aID)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   NS_WARNING("Using integer IDs without compat mode enabled");
 
   nsRefPtr<nsDownload> dl;
@@ -1876,6 +1903,8 @@ nsDownloadManager::RemoveDownload(const nsACString& aGUID)
 NS_IMETHODIMP
 nsDownloadManager::RemoveDownload(uint32_t aID)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   NS_WARNING("Using integer IDs without compat mode enabled");
 
   nsRefPtr<nsDownload> dl = FindDownload(aID);
@@ -1982,6 +2011,8 @@ NS_IMETHODIMP
 nsDownloadManager::RemoveDownloadsByTimeframe(int64_t aStartTime,
                                               int64_t aEndTime)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   nsresult rv = DoRemoveDownloadsByTimeframe(mDBConn, aStartTime, aEndTime);
   nsresult rv2 = DoRemoveDownloadsByTimeframe(mPrivateDBConn, aStartTime, aEndTime);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1994,12 +2025,16 @@ nsDownloadManager::RemoveDownloadsByTimeframe(int64_t aStartTime,
 NS_IMETHODIMP
 nsDownloadManager::CleanUp()
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   return CleanUp(mDBConn);
 }
 
 NS_IMETHODIMP
 nsDownloadManager::CleanUpPrivate()
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   return CleanUp(mPrivateDBConn);
 }
 
@@ -2083,18 +2118,24 @@ DoGetCanCleanUp(mozIStorageConnection* aDBConn, bool *aResult)
 NS_IMETHODIMP
 nsDownloadManager::GetCanCleanUp(bool *aResult)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   return DoGetCanCleanUp(mDBConn, aResult);
 }
 
 NS_IMETHODIMP
 nsDownloadManager::GetCanCleanUpPrivate(bool *aResult)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   return DoGetCanCleanUp(mPrivateDBConn, aResult);
 }
 
 NS_IMETHODIMP
 nsDownloadManager::PauseDownload(uint32_t aID)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   NS_WARNING("Using integer IDs without compat mode enabled");
 
   nsDownload *dl = FindDownload(aID);
@@ -2107,6 +2148,8 @@ nsDownloadManager::PauseDownload(uint32_t aID)
 NS_IMETHODIMP
 nsDownloadManager::ResumeDownload(uint32_t aID)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   NS_WARNING("Using integer IDs without compat mode enabled");
 
   nsDownload *dl = FindDownload(aID);
@@ -2119,6 +2162,8 @@ nsDownloadManager::ResumeDownload(uint32_t aID)
 NS_IMETHODIMP
 nsDownloadManager::GetDBConnection(mozIStorageConnection **aDBConn)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   NS_ADDREF(*aDBConn = mDBConn);
 
   return NS_OK;
@@ -2127,6 +2172,8 @@ nsDownloadManager::GetDBConnection(mozIStorageConnection **aDBConn)
 NS_IMETHODIMP
 nsDownloadManager::GetPrivateDBConnection(mozIStorageConnection **aDBConn)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   NS_ADDREF(*aDBConn = mPrivateDBConn);
 
   return NS_OK;
@@ -2135,6 +2182,8 @@ nsDownloadManager::GetPrivateDBConnection(mozIStorageConnection **aDBConn)
 NS_IMETHODIMP
 nsDownloadManager::AddListener(nsIDownloadProgressListener *aListener)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   mListeners.AppendObject(aListener);
   return NS_OK;
 }
@@ -2142,6 +2191,8 @@ nsDownloadManager::AddListener(nsIDownloadProgressListener *aListener)
 NS_IMETHODIMP
 nsDownloadManager::AddPrivacyAwareListener(nsIDownloadProgressListener *aListener)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   mPrivacyAwareListeners.AppendObject(aListener);
   return NS_OK;
 }
@@ -2149,6 +2200,8 @@ nsDownloadManager::AddPrivacyAwareListener(nsIDownloadProgressListener *aListene
 NS_IMETHODIMP
 nsDownloadManager::RemoveListener(nsIDownloadProgressListener *aListener)
 {
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   mListeners.RemoveObject(aListener);
   mPrivacyAwareListeners.RemoveObject(aListener);
   return NS_OK;
@@ -2231,6 +2284,10 @@ nsDownloadManager::NotifyListenersOnStateChange(nsIWebProgress *aProgress,
 NS_IMETHODIMP
 nsDownloadManager::OnBeginUpdateBatch()
 {
+  // This method in not normally invoked when mUseJSTransfer is enabled, however
+  // we provide an extra check in case it is called manually by add-ons.
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   // We already have a transaction, so don't make another
   if (mHistoryTransaction)
     return NS_OK;
@@ -2272,6 +2329,10 @@ nsDownloadManager::OnDeleteURI(nsIURI *aURI,
                                const nsACString& aGUID,
                                uint16_t aReason)
 {
+  // This method in not normally invoked when mUseJSTransfer is enabled, however
+  // we provide an extra check in case it is called manually by add-ons.
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   nsresult rv = RemoveDownloadsForURI(mGetIdsForURIStatement, aURI);
   nsresult rv2 = RemoveDownloadsForURI(mGetPrivateIdsForURIStatement, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2311,6 +2372,10 @@ nsDownloadManager::Observe(nsISupports *aSubject,
                            const char *aTopic,
                            const PRUnichar *aData)
 {
+  // This method in not normally invoked when mUseJSTransfer is enabled, however
+  // we provide an extra check in case it is called manually by add-ons.
+  NS_ENSURE_STATE(!mUseJSTransfer);
+
   // We need to count the active public downloads that could be lost
   // by quitting, and add any active private ones as well, since per-window
   // private browsing may be active.

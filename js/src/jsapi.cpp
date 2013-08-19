@@ -271,6 +271,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             }
             break;
         }
+        RootedValue arg(cx, *sp);
         switch (c) {
           case 'b':
             *va_arg(ap, bool *) = ToBoolean(*sp);
@@ -280,7 +281,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
                 return false;
             break;
           case 'i':
-            if (!JS_ValueToECMAInt32(cx, *sp, va_arg(ap, int32_t *)))
+            if (!ToInt32(cx, arg, va_arg(ap, int32_t *)))
                 return false;
             break;
           case 'u':
@@ -474,12 +475,6 @@ JS_DoubleToUint32(double d)
     return ToUint32(d);
 }
 
-JS_PUBLIC_API(bool)
-JS_ValueToECMAInt32(JSContext *cx, jsval valueArg, int32_t *ip)
-{
-    RootedValue value(cx, valueArg);
-    return JS::ToInt32(cx, value, ip);
-}
 
 JS_PUBLIC_API(bool)
 JS_ValueToECMAUint32(JSContext *cx, jsval valueArg, uint32_t *ip)
@@ -4852,7 +4847,7 @@ JS::CanCompileOffThread(JSContext *cx, const CompileOptions &options)
     // atoms compartment, to avoid triggering barriers. Outside the atoms
     // compartment, the compilation will use a new zone which doesn't require
     // barriers itself.
-    if (cx->runtime()->atomsZoneNeedsBarrier())
+    if (cx->runtime()->activeGCInAtomsZone())
         return false;
 
     // Blacklist filenames which cause mysterious assertion failures in
@@ -4898,7 +4893,7 @@ JS::FinishOffThreadScript(JSRuntime *rt, JSScript *script)
 {
 #if defined(JS_THREADSAFE) && defined(JS_ION)
     JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    rt->workerThreadState->finishParseTaskForScript(script);
+    rt->workerThreadState->finishParseTaskForScript(rt, script);
 #else
     MOZ_ASSUME_UNREACHABLE("Off thread compilation is only available with JS_ION");
 #endif

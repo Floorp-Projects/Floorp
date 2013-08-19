@@ -622,20 +622,19 @@ IsEmpty(const Histogram *h)
 bool
 JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  if (!argc) {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+  if (!args.length()) {
     JS_ReportError(cx, "Expected one argument");
     return false;
   }
 
-  JS::Value v = JS_ARGV(cx, vp)[0];
-
-  if (!(JSVAL_IS_NUMBER(v) || JSVAL_IS_BOOLEAN(v))) {
+  if (!(args[0].isNumber() || args[0].isBoolean())) {
     JS_ReportError(cx, "Not a number");
     return false;
   }
 
   int32_t value;
-  if (!JS_ValueToECMAInt32(cx, v, &value)) {
+  if (!JS::ToInt32(cx, args[0], &value)) {
     return false;
   }
 

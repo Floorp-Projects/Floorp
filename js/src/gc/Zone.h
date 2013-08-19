@@ -189,14 +189,15 @@ struct Zone : private JS::shadow::Zone,
 
     void setGCState(CompartmentGCState state) {
         JS_ASSERT(runtimeFromMainThread()->isHeapBusy());
+        JS_ASSERT_IF(state != NoGC, canCollect());
         gcState = state;
     }
 
     void scheduleGC() {
         JS_ASSERT(!runtimeFromMainThread()->isHeapBusy());
 
-        /* Note: zones cannot be collected while in use by other threads. */
-        if (!usedByExclusiveThread)
+        // Ignore attempts to schedule GCs on zones which can't be collected.
+        if (canCollect())
             gcScheduled = true;
     }
 
@@ -210,6 +211,16 @@ struct Zone : private JS::shadow::Zone,
 
     void setPreservingCode(bool preserving) {
         gcPreserveCode = preserving;
+    }
+
+    bool canCollect() {
+        // Zones cannot be collected while in use by other threads.
+        if (usedByExclusiveThread)
+            return false;
+        JSRuntime *rt = runtimeFromMainThread();
+        if (rt->isAtomsZone(this) && rt->exclusiveThreadsPresent())
+            return false;
+        return true;
     }
 
     bool wasGCStarted() const {
