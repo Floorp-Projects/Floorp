@@ -46,9 +46,21 @@ gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable)
 {
     mSVGData = aSVGTable;
 
-    const char* svgData = hb_blob_get_data(mSVGData, nullptr);
+    unsigned int length;
+    const char* svgData = hb_blob_get_data(mSVGData, &length);
     mHeader = reinterpret_cast<const Header*>(svgData);
-    mIndex = reinterpret_cast<const IndexEntry*>(svgData + sizeof(Header));
+    mDocIndex = nullptr;
+
+    if (sizeof(Header) <= length && uint16_t(mHeader->mVersion) == 0 &&
+        uint64_t(mHeader->mDocIndexOffset) + 2 <= length) {
+        const DocIndex* docIndex = reinterpret_cast<const DocIndex*>
+            (svgData + mHeader->mDocIndexOffset);
+        // Limit the number of documents to avoid overflow
+        if (uint64_t(mHeader->mDocIndexOffset) + 2 +
+                uint16_t(docIndex->mNumEntries) * sizeof(IndexEntry) <= length) {
+            mDocIndex = docIndex;
+        }
+    }
 
     mGlyphDocs.Init();
     mGlyphIdMap.Init();
@@ -88,13 +100,13 @@ gfxSVGGlyphs::CompareIndexEntries(const void *aKey, const void *aEntry)
 gfxSVGGlyphsDocument *
 gfxSVGGlyphs::FindOrCreateGlyphsDocument(uint32_t aGlyphId)
 {
-    if (uint16_t(mHeader->mVersion) != 0) {
-        // Version not understood
+    if (!mDocIndex) {
+        // Invalid table
         return nullptr;
     }
 
-    IndexEntry *entry = (IndexEntry*)bsearch(&aGlyphId, mIndex,
-                                             uint16_t(mHeader->mIndexLength),
+    IndexEntry *entry = (IndexEntry*)bsearch(&aGlyphId, mDocIndex->mEntries,
+                                             uint16_t(mDocIndex->mNumEntries),
                                              sizeof(IndexEntry),
                                              CompareIndexEntries);
     if (!entry) {
@@ -104,10 +116,14 @@ gfxSVGGlyphs::FindOrCreateGlyphsDocument(uint32_t aGlyphId)
     gfxSVGGlyphsDocument *result = mGlyphDocs.Get(entry->mDocOffset);
 
     if (!result) {
-        const uint8_t *data = (const uint8_t*)hb_blob_get_data(mSVGData, nullptr);
-        result = new gfxSVGGlyphsDocument(data + entry->mDocOffset,
-                                          entry->mDocLength);
-        mGlyphDocs.Put(entry->mDocOffset, result);
+        unsigned int length;
+        const uint8_t *data = (const uint8_t*)hb_blob_get_data(mSVGData, &length);
+        if (entry->mDocOffset > 0 &&
+            uint64_t(mHeader->mDocIndexOffset) + entry->mDocOffset + entry->mDocLength <= length) {
+            result = new gfxSVGGlyphsDocument(data + mHeader->mDocIndexOffset + entry->mDocOffset,
+                                              entry->mDocLength);
+            mGlyphDocs.Put(entry->mDocOffset, result);
+        }
     }
 
     return result;
