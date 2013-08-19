@@ -86,13 +86,13 @@ ClientCanvasLayer::RenderLayer()
       flags |= TEXTURE_NEEDS_Y_FLIP;
     }
 
-    bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
-    //Append TEXTURE_DEALLOCATE_CLIENT flag for streaming buffer under OOPC case
-    if (isCrossProcess && mGLContext) {
-      GLScreenBuffer* screen = mGLContext->Screen();
-      if (screen && screen->Stream()) {
-        flags |= TEXTURE_DEALLOCATE_CLIENT;
-      }
+    if (!mGLContext) {
+      // GLContext's SurfaceStream handles ownership itself,
+      // and doesn't require layers to do any deallocation.
+      flags |= TEXTURE_DEALLOCATE_HOST;
+
+      // We don't support locking for buffer surfaces currently
+      flags |= TEXTURE_IMMEDIATE_UPLOAD;
     }
     mCanvasClient = CanvasClient::CreateCanvasClient(GetCanvasClientType(),
                                                      ClientManager(), flags);
