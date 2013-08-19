@@ -7,8 +7,6 @@
 #ifndef nsBidi_h__
 #define nsBidi_h__
 
-#include "nsCOMPtr.h"
-#include "nsString.h"
 #include "nsBidiUtils.h"
 
 // Bidi reordering engine from ICU

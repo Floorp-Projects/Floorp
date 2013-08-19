@@ -42,6 +42,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/Element.h"
 #include <algorithm>
 
 using namespace mozilla;

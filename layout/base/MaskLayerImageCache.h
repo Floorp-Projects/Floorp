@@ -6,7 +6,7 @@
 #ifndef MASKLAYERIMAGECACHE_H_
 #define MASKLAYERIMAGECACHE_H_
 
-#include "FrameLayerBuilder.h"
+#include "gfxMatrix.h"
 #include "DisplayItemClip.h"
 #include "nsPresContext.h"
 

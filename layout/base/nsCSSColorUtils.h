@@ -8,8 +8,6 @@
 #ifndef __nsCSSColorUtils_h
 #define __nsCSSColorUtils_h
 
-#include "mozilla/MathAlgorithms.h"
-
 #include "nsColor.h"
 
 // "Sufficient contrast" is determined by
