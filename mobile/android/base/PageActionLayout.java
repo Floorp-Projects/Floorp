@@ -91,6 +91,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
                 final String id = message.getString("id");
                 final String title = message.getString("title");
                 final String imageURL = message.optString("icon");
+                final boolean mImportant = message.getBoolean("important");
 
                 addPageAction(id, title, imageURL, new OnPageActionClickListeners() {
                     @Override
@@ -103,7 +104,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
                         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PageActions:LongClicked", id));
                         return true;
                     }
-                });
+                }, mImportant);
             } else if (event.equals("PageActions:Remove")) {
                 final String id = message.getString("id");
 
@@ -114,9 +115,14 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
         }
     }
 
-    public void addPageAction(final String id, final String title, final String imageData, final OnPageActionClickListeners mOnPageActionClickListeners) {
-        final PageAction pageAction = new PageAction(id, title, null, mOnPageActionClickListeners);
-        mPageActionList.add(pageAction);
+    public void addPageAction(final String id, final String title, final String imageData, final OnPageActionClickListeners mOnPageActionClickListeners, boolean mImportant) {
+        final PageAction pageAction = new PageAction(id, title, null, mOnPageActionClickListeners, mImportant);
+
+        int insertAt = mPageActionList.size();
+        while(insertAt > 0 && mPageActionList.get(insertAt-1).isImportant()) {
+          insertAt--;
+        }
+        mPageActionList.add(insertAt, pageAction);
 
         BitmapUtils.getDrawable(mContext, imageData, new BitmapUtils.BitmapLoader() {
             @Override
@@ -293,12 +299,18 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
         private String mTitle;
         private String mId;
         private int key;
+        private boolean mImportant;
 
-        public PageAction(String id, String title, Drawable image, OnPageActionClickListeners mOnPageActionClickListeners) {
+        public PageAction(String id,
+                          String title,
+                          Drawable image,
+                          OnPageActionClickListeners mOnPageActionClickListeners,
+                          boolean mImportant) {
             this.mId = id;
             this.mTitle = title;
             this.mDrawable = image;
             this.mOnPageActionClickListeners = mOnPageActionClickListeners;
+            this.mImportant = mImportant;
 
             this.key = UUID.fromString(mId.subSequence(1, mId.length() - 2).toString()).hashCode();
         }
@@ -321,6 +333,10 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
 
         public int key() {
             return key;
+        }
+
+        public boolean isImportant() {
+            return mImportant;
         }
 
         public void onClick() {
