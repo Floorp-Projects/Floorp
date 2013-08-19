@@ -8635,6 +8635,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
     uint32_t contentType;
     bool isNewDocShell = false;
+    bool isTargetTopLevelDocShell = false;
     nsCOMPtr<nsIDocShell> targetDocShell;
     if (aWindowTarget && *aWindowTarget) {
         // Locate the target DocShell.
@@ -8646,8 +8647,23 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // If the targetDocShell doesn't exist, then this is a new docShell
         // and we should consider this a TYPE_DOCUMENT load
         isNewDocShell = !targetDocShell;
+
+        // If the targetDocShell and the rootDocShell are the same, then the
+        // targetDocShell is the top level document and hence we should
+        // consider this TYPE_DOCUMENT
+        if (targetDocShell) {
+          nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
+          targetDocShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+          NS_ASSERTION(sameTypeRoot, "No document shell root tree item from targetDocShell!");
+          nsCOMPtr<nsIDocShell> rootShell = do_QueryInterface(sameTypeRoot);
+          NS_ASSERTION(rootShell, "No root docshell from document shell root tree item.");
+
+          if (targetDocShell == rootShell) {
+            isTargetTopLevelDocShell = true;
+          }
+        }
     }
-    if (IsFrame() && !isNewDocShell) {
+    if (IsFrame() && !isNewDocShell && !isTargetTopLevelDocShell) {
         NS_ASSERTION(requestingElement, "A frame but no DOM element!?");
         contentType = nsIContentPolicy::TYPE_SUBDOCUMENT;
     } else {
