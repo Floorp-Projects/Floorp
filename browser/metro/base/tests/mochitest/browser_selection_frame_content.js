@@ -134,7 +134,7 @@ gTests.push({
     is(getTrimmedSelection(gFrame).toString(), "started", "selection test");
 
     let promise = waitForEvent(document, "popupshown");
-    sendContextMenuClick(527, 188);
+    sendContextMenuClickToSelection(gFrame.contentDocument.defaultView);
 
     yield promise;
     ok(promise && !(promise instanceof Error), "promise error");
@@ -216,7 +216,5 @@ function test() {
     todo(false, "browser_selection_tests need landscape mode to run.");
     return;
   }
-
-  requestLongerTimeout(3);
   runTests();
 }

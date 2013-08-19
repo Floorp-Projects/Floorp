@@ -86,6 +86,9 @@ gTests.push({
     ok(edit.popup.popupOpen, "bug: popup should be showing");
 
     clearSelection(edit);
+    yield waitForCondition(function () {
+      return !SelectionHelperUI.isSelectionUIVisible;
+    });
   }
 });
 
@@ -101,7 +104,6 @@ gTests.push({
 
     let editCoords = logicalCoordsForElement(edit);
     SelectionHelperUI.attachEditSession(ChromeSelectionHandler, editCoords.x, editCoords.y);
-
     ok(SelectionHelperUI.isSelectionUIVisible, "selection enabled");
 
     let selection = edit.QueryInterface(Components.interfaces.nsIDOMXULTextBoxElement)
@@ -115,6 +117,9 @@ gTests.push({
     ok(SelectionHelperUI.isCaretUIVisible, "caret browsing enabled");
 
     clearSelection(edit);
+    yield waitForCondition(function () {
+      return !SelectionHelperUI.isSelectionUIVisible;
+    });
   }
 });
 
@@ -131,6 +136,9 @@ gTests.push({
     edit.blur();
     ok(!SelectionHelperUI.isSelectionUIVisible, "selection no longer enabled");
     clearSelection(edit);
+    yield waitForCondition(function () {
+      return !SelectionHelperUI.isSelectionUIVisible;
+    });
   }
 });
 

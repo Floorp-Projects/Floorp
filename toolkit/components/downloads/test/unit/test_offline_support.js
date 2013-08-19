@@ -18,7 +18,9 @@ const nsIDM = Ci.nsIDownloadManager;
 const nsIWBP = Ci.nsIWebBrowserPersist;
 const nsIWPL = Ci.nsIWebProgressListener;
 const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDM);
-dm.cleanUp();
+if (!oldDownloadManagerDisabled()) {
+  dm.cleanUp();
+}
 
 function setOnlineState(aOnline)
 {
@@ -36,6 +38,10 @@ function setOnlineState(aOnline)
 
 function run_test()
 {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   /**
    * 1. Create data for http server to send
    */
