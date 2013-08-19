@@ -335,8 +335,10 @@ function check_results(aQuery, aSortBy, aReverseOrder, aShowLocal) {
  *         How the results are sorted (e.g. "name")
  * @param  aReverseOrder
  *         Boolean representing if the results are in reverse default order
+ * @param  aLocalOnly
+ *         Boolean representing if the results are local only, can be undefined
  */
-function check_filtered_results(aQuery, aSortBy, aReverseOrder) {
+function check_filtered_results(aQuery, aSortBy, aReverseOrder, aLocalOnly) {
   var localFilter = gManagerWindow.document.getElementById("search-filter-local");
   var remoteFilter = gManagerWindow.document.getElementById("search-filter-remote");
 
@@ -348,8 +350,9 @@ function check_filtered_results(aQuery, aSortBy, aReverseOrder) {
   check_results(aQuery, aSortBy, aReverseOrder, true);
 
   // Check with showing remote add-ons
+  aLocalOnly = aLocalOnly || false;
   EventUtils.synthesizeMouseAtCenter(remoteFilter, { }, gManagerWindow);
-  check_results(aQuery, aSortBy, aReverseOrder, false);
+  check_results(aQuery, aSortBy, aReverseOrder, aLocalOnly);
 }
 
 /*
@@ -647,3 +650,35 @@ add_test(function() {
   });
 });
 
+function bug_815120_test_search(aLocalOnly) {
+  restart_manager(gManagerWindow, "addons://list/extension", function(aWindow) {
+    gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+    // Installed add-on is considered local on new search
+    gAddonInstalled = true;
+
+    // Check the search setup
+    if (aLocalOnly) {
+      var localFilterSelected = aWindow.document.getElementById("search-filter-local").selected;
+      ok(localFilterSelected, "Local filter should be selected if remote plugin installation is disabled");      
+    }    
+    var remoteFilterButton = aWindow.document.getElementById("search-filter-remote");
+    is(aLocalOnly, is_hidden(remoteFilterButton), "Remote filter button visibility does not match, aLocalOnly = " + aLocalOnly);
+
+    search(QUERY, false, function() {
+      check_filtered_results(QUERY, "relevancescore", false, aLocalOnly);
+      run_next_test();
+    });
+  });
+}
+
+// Tests for Bug 815120
+add_test(function() {
+  Services.prefs.setBoolPref(PREF_XPI_ENABLED, false);
+  bug_815120_test_search(true);
+});
+add_test(function() {
+  Services.prefs.setBoolPref(PREF_XPI_ENABLED, true);
+  bug_815120_test_search(false);
+});
