@@ -182,22 +182,17 @@ private:
 
 class nsIJSRuntimeService;
 
-class nsJSRuntime MOZ_FINAL : public nsISupports
+namespace nsJSRuntime
 {
-public:
-  // let people who can see us use our runtime for convenience.
-  static JSRuntime *sRuntime;
+  extern JSRuntime *sRuntime;
 
-public:
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  static void Startup();
-  static void Shutdown();
+  void Startup();
+  void Shutdown();
   // Setup all the statics etc - safe to call multiple times after Startup()
-  static nsresult Init();
+  nsresult Init();
   // Get the NameSpaceManager, creating if necessary
-  static nsScriptNameSpaceManager* GetNameSpaceManager();
+  nsScriptNameSpaceManager* GetNameSpaceManager();
+
 };
 
 // An interface for fast and native conversion to/from nsIArray. If an object
@@ -219,9 +214,6 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSArgArray, NS_IJSARGARRAY_IID)
-
-/* factory functions */
-nsresult NS_CreateJSRuntime(nsJSRuntime **aRuntime);
 
 /* prototypes */
 void NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);

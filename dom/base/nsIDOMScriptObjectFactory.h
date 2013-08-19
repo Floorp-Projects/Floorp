@@ -17,7 +17,6 @@
 class nsIScriptContext;
 class nsIScriptGlobalObject;
 class nsIDOMEventListener;
-class nsJSRuntime;
 
 typedef nsXPCClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
   (const char* aName);
@@ -41,9 +40,6 @@ public:
                                   uint32_t aScriptableFlags,
                                   bool aHasClassInterface,
                                   const nsCID *aConstructorCID) = 0;
-
-protected:
-  nsRefPtr<nsJSRuntime> mJSRuntime;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMScriptObjectFactory,
