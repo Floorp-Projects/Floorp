@@ -304,7 +304,7 @@ public:
       msg.hwnd = aWnd;
       msg.message = mIsDeadKey ? WM_DEADCHAR : WM_CHAR;
       msg.wParam = static_cast<WPARAM>(mCharCode);
-      msg.lParam = static_cast<LPARAM>(mScanCode);
+      msg.lParam = static_cast<LPARAM>(mScanCode << 16);
       msg.time = 0;
       msg.pt.x = msg.pt.y = 0;
       return msg;

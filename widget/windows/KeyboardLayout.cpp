@@ -2285,8 +2285,8 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
     }
     ::SetKeyboardState(kbdState);
     ModifierKeyState modKeyState;
-    UINT scanCode = ComputeScanCodeForVirtualKeyCode(
-      argumentKeySpecific ? argumentKeySpecific : aNativeKeyCode);
+    UINT scanCode =
+      ComputeScanCodeForVirtualKeyCode(keySpecific ? keySpecific : key);
     LPARAM lParam = static_cast<LPARAM>(scanCode << 16);
     // Add extended key flag to the lParam for right control key and right alt
     // key.
@@ -2340,8 +2340,8 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
     }
     ::SetKeyboardState(kbdState);
     ModifierKeyState modKeyState;
-    UINT scanCode = ComputeScanCodeForVirtualKeyCode(
-      argumentKeySpecific ? argumentKeySpecific : aNativeKeyCode);
+    UINT scanCode =
+      ComputeScanCodeForVirtualKeyCode(keySpecific ? keySpecific : key);
     LPARAM lParam = static_cast<LPARAM>(scanCode << 16);
     // Add extended key flag to the lParam for right control key and right alt
     // key.
