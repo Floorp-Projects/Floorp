@@ -45,6 +45,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     mBuffer = nullptr;
   }
 
+  bool bufferCreated = false;
   if (!mBuffer) {
     bool isOpaque = (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
     gfxASurface::gfxContentType contentType = isOpaque
@@ -56,7 +57,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     MOZ_ASSERT(mBuffer->AsTextureClientSurface());
     mBuffer->AsTextureClientSurface()->AllocateForSurface(aSize);
 
-    AddTextureClient(mBuffer);
+    bufferCreated = true;
   }
 
   if (!mBuffer->Lock(OPEN_READ_WRITE)) {
@@ -69,6 +70,10 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   }
 
   mBuffer->Unlock();
+
+  if (bufferCreated) {
+    AddTextureClient(mBuffer);
+  }
 
   if (surface) {
     GetForwarder()->UpdatedTexture(this, mBuffer, nullptr);
