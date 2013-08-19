@@ -382,6 +382,7 @@ ShadowLayerForwarder::AddTexture(CompositableClient* aCompositable,
     NS_WARNING("Failed to serialize a TextureClient");
     return;
   }
+  MOZ_ASSERT(aTexture->GetFlags() != 0);
   mTxn->AddEdit(OpAddTexture(nullptr, aCompositable->GetIPDLActor(),
                              aTexture->GetID(),
                              descriptor,
