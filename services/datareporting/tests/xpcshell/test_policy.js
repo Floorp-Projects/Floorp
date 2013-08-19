@@ -668,11 +668,11 @@ add_test(function test_polling_implicit_acceptance() {
 
   // Redefine intervals with shorter, test-friendly values.
   Object.defineProperty(policy, "POLL_INTERVAL_MSEC", {
-    value: 250,
+    value: 1000,
   });
 
   Object.defineProperty(policy, "IMPLICIT_ACCEPTANCE_INTERVAL_MSEC", {
-    value: 750,
+    value: 3000,
   });
 
   let count = 0;
@@ -707,7 +707,7 @@ add_test(function test_polling_implicit_acceptance() {
         listener.lastNotifyRequest.onUserNotifyComplete();
       }
 
-      if (delta <= (750 + 250)) {
+      if (delta <= (4000)) {
         do_check_false(policy.dataSubmissionPolicyAccepted);
         do_check_eq(listener.requestDataUploadCount, 0);
       } else if (count > 3) {
