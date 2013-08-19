@@ -6,9 +6,12 @@
 <!ENTITY  no_space_to_start_error "There is not enough space available for &brandShortName; to start.">
 <!ENTITY  error_loading_file "An error occurred when trying to load files required to run &brandShortName;">
 
-<!ENTITY  all_pages_title "Top Sites">
+<!-- Localization note: These are used as the titles of different pages on the home screen.
+     They are automatically converted to all caps by the Android platform. -->
 <!ENTITY  bookmarks_title "Bookmarks">
 <!ENTITY  history_title "History">
+<!ENTITY  reading_list_title "Reading List">
+
 <!ENTITY  switch_to_tab "Switch to tab">
 
 <!ENTITY  crash_reporter_title "&brandShortName; Crash Reporter">
@@ -246,7 +249,6 @@ size. -->
 <!ENTITY site_settings_clear        "Clear">
 <!ENTITY site_settings_no_settings  "There are no settings to clear.">
 
-<!ENTITY reading_list "Reading List">
 <!ENTITY reading_list_added "Page added to your Reading List">
 <!ENTITY reading_list_removed "Page removed from your Reading List">
 <!ENTITY reading_list_failed "Failed to add page to your Reading List">

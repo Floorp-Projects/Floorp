@@ -137,7 +137,7 @@ public class HomePager extends ViewPager {
         adapter.addTab(Page.BOOKMARKS, BookmarksPage.class, new Bundle(),
                 getContext().getString(R.string.bookmarks_title));
         adapter.addTab(Page.READING_LIST, ReadingListPage.class, new Bundle(),
-                getContext().getString(R.string.reading_list));
+                getContext().getString(R.string.reading_list_title));
 
         adapter.setCanLoadHint(!shouldAnimate);
 

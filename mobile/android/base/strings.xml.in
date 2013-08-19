@@ -21,9 +21,10 @@
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
 
-  <string name="all_pages_title">&all_pages_title;</string>
   <string name="bookmarks_title">&bookmarks_title;</string>
   <string name="history_title">&history_title;</string>
+  <string name="reading_list_title">&reading_list_title;</string>
+
   <string name="switch_to_tab">&switch_to_tab;</string>
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
@@ -201,7 +202,6 @@
   <string name="site_settings_clear">&site_settings_clear;</string>
   <string name="site_settings_no_settings">&site_settings_no_settings;</string>
 
-  <string name="reading_list">&reading_list;</string>
   <string name="reading_list_added">&reading_list_added;</string>
   <string name="reading_list_removed">&reading_list_removed;</string>
   <string name="reading_list_failed">&reading_list_failed;</string>
