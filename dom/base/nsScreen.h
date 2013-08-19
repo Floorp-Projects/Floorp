@@ -104,9 +104,6 @@ public:
   bool MozLockOrientation(const mozilla::dom::Sequence<nsString>& aOrientations, ErrorResult& aRv);
   void MozUnlockOrientation();
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsScreen,
-                                           nsDOMEventTargetHelper)
-
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
