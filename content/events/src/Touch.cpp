@@ -5,17 +5,74 @@
 
 #include "mozilla/dom/Touch.h"
 
+#include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/TouchBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
 #include "nsDOMTouchEvent.h"
-#include "nsGUIEvent.h"
 #include "nsPresContext.h"
 
 namespace mozilla {
 namespace dom {
 
-/* static */ bool
+Touch::Touch(mozilla::dom::EventTarget* aTarget,
+             int32_t aIdentifier,
+             int32_t aPageX,
+             int32_t aPageY,
+             int32_t aScreenX,
+             int32_t aScreenY,
+             int32_t aClientX,
+             int32_t aClientY,
+             int32_t aRadiusX,
+             int32_t aRadiusY,
+             float aRotationAngle,
+             float aForce)
+{
+  SetIsDOMBinding();
+  mTarget = aTarget;
+  mIdentifier = aIdentifier;
+  mPagePoint = CSSIntPoint(aPageX, aPageY);
+  mScreenPoint = nsIntPoint(aScreenX, aScreenY);
+  mClientPoint = CSSIntPoint(aClientX, aClientY);
+  mRefPoint = nsIntPoint(0, 0);
+  mPointsInitialized = true;
+  mRadius.x = aRadiusX;
+  mRadius.y = aRadiusY;
+  mRotationAngle = aRotationAngle;
+  mForce = aForce;
+
+  mChanged = false;
+  mMessage = 0;
+  nsJSContext::LikelyShortLivingObjectCreated();
+}
+
+Touch::Touch(int32_t aIdentifier,
+             nsIntPoint aPoint,
+             nsIntPoint aRadius,
+             float aRotationAngle,
+             float aForce)
+{
+  SetIsDOMBinding();
+  mIdentifier = aIdentifier;
+  mPagePoint = CSSIntPoint(0, 0);
+  mScreenPoint = nsIntPoint(0, 0);
+  mClientPoint = CSSIntPoint(0, 0);
+  mRefPoint = aPoint;
+  mPointsInitialized = false;
+  mRadius = aRadius;
+  mRotationAngle = aRotationAngle;
+  mForce = aForce;
+
+  mChanged = false;
+  mMessage = 0;
+  nsJSContext::LikelyShortLivingObjectCreated();
+}
+
+Touch::~Touch()
+{
+}
+
+ /* static */ bool
 Touch::PrefEnabled()
 {
   return nsDOMTouchEvent::PrefEnabled();
@@ -58,6 +115,12 @@ Touch::InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent)
   mScreenPoint = nsDOMEvent::GetScreenCoords(aPresContext, aEvent,
     LayoutDeviceIntPoint::FromUntyped(mRefPoint));
   mPointsInitialized = true;
+}
+
+void
+Touch::SetTarget(mozilla::dom::EventTarget* aTarget)
+{
+  mTarget = aTarget;
 }
 
 bool
