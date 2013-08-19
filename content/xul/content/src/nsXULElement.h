@@ -40,6 +40,7 @@
 class nsIDocument;
 class nsString;
 class nsIDocShell;
+class nsXULPrototypeDocument;
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -231,7 +232,7 @@ public:
     nsresult Compile(const PRUnichar* aText, int32_t aTextLength,
                      nsIURI* aURI, uint32_t aLineNo,
                      nsIDocument* aDocument,
-                     nsIScriptGlobalObject* aGlobal,
+                     nsXULPrototypeDocument* aProtoDoc,
                      nsIOffThreadScriptReceiver *aOffThreadReceiver = nullptr);
 
     void UnlinkJSObjects();
