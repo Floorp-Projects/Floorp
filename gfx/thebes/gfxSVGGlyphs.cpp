@@ -31,10 +31,14 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsContentUtils.h"
+#include "gfxFont.h"
+#include "nsSMILAnimationController.h"
 #include "harfbuzz/hb.h"
 
 #define SVG_CONTENT_TYPE NS_LITERAL_CSTRING("image/svg+xml")
 #define UTF8_CHARSET NS_LITERAL_CSTRING("utf-8")
+
+using namespace mozilla;
 
 typedef mozilla::dom::Element Element;
 
@@ -44,10 +48,10 @@ const float gfxSVGGlyphs::SVG_UNITS_PER_EM = 1000.0f;
 
 const gfxRGBA SimpleTextContextPaint::sZero = gfxRGBA(0.0f, 0.0f, 0.0f, 0.0f);
 
-gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable)
+gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable, gfxFontEntry *aFontEntry)
+    : mSVGData(aSVGTable)
+    , mFontEntry(aFontEntry)
 {
-    mSVGData = aSVGTable;
-
     unsigned int length;
     const char* svgData = hb_blob_get_data(mSVGData, &length);
     mHeader = reinterpret_cast<const Header*>(svgData);
@@ -68,6 +72,12 @@ gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable)
 gfxSVGGlyphs::~gfxSVGGlyphs()
 {
     hb_blob_destroy(mSVGData);
+}
+
+void
+gfxSVGGlyphs::DidRefresh()
+{
+    mFontEntry->NotifyGlyphsChanged();
 }
 
 /*
@@ -120,7 +130,7 @@ gfxSVGGlyphs::FindOrCreateGlyphsDocument(uint32_t aGlyphId)
         if (entry->mDocOffset > 0 &&
             uint64_t(mHeader->mDocIndexOffset) + entry->mDocOffset + entry->mDocLength <= length) {
             result = new gfxSVGGlyphsDocument(data + mHeader->mDocIndexOffset + entry->mDocOffset,
-                                              entry->mDocLength);
+                                              entry->mDocLength, this);
             mGlyphDocs.Put(entry->mDocOffset, result);
         }
     }
@@ -131,8 +141,6 @@ gfxSVGGlyphs::FindOrCreateGlyphsDocument(uint32_t aGlyphId)
 nsresult
 gfxSVGGlyphsDocument::SetupPresentation()
 {
-    mDocument->SetIsBeingUsedAsImage();
-
     nsCOMPtr<nsICategoryManager> catMan = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
     nsXPIDLCString contractId;
     nsresult rv = catMan->GetCategoryEntry("Gecko-Content-Viewers", "image/svg+xml", getter_Copies(contractId));
@@ -154,20 +162,34 @@ gfxSVGGlyphsDocument::SetupPresentation()
     nsCOMPtr<nsIPresShell> presShell;
     rv = viewer->GetPresShell(getter_AddRefs(presShell));
     NS_ENSURE_SUCCESS(rv, rv);
-    presShell->GetPresContext()->SetIsGlyph(true);
+    nsPresContext* presContext = presShell->GetPresContext();
+    presContext->SetIsGlyph(true);
 
     if (!presShell->DidInitialize()) {
-        nsRect rect = presShell->GetPresContext()->GetVisibleArea();
+        nsRect rect = presContext->GetVisibleArea();
         rv = presShell->Initialize(rect.width, rect.height);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
     mDocument->FlushPendingNotifications(Flush_Layout);
 
+    nsSMILAnimationController* controller = mDocument->GetAnimationController();
+    if (controller) {
+      controller->Resume(nsSMILTimeContainer::PAUSE_IMAGE);
+    }
+    mDocument->SetImagesNeedAnimating(true);
+
     mViewer = viewer;
     mPresShell = presShell;
+    mPresShell->AddPostRefreshObserver(this);
 
     return NS_OK;
+}
+
+void
+gfxSVGGlyphsDocument::DidRefresh()
+{
+    mOwner->DidRefresh();
 }
 
 /**
@@ -251,7 +273,10 @@ gfxSVGGlyphsDocument::GetGlyphElement(uint32_t aGlyphId)
     return mGlyphIdMap.Get(aGlyphId);
 }
 
-gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBufLen)
+gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t *aBuffer,
+                                           uint32_t aBufLen,
+                                           gfxSVGGlyphs *aSVGGlyphs)
+    : mOwner(aSVGGlyphs)
 {
     ParseDocument(aBuffer, aBufLen);
     if (!mDocument) {
@@ -272,6 +297,22 @@ gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t *aBuffer, uint32_t aBuf
     }
 
     FindGlyphElements(root);
+}
+
+gfxSVGGlyphsDocument::~gfxSVGGlyphsDocument()
+{
+    if (mDocument) {
+        nsSMILAnimationController* controller = mDocument->GetAnimationController();
+        if (controller) {
+            controller->Pause(nsSMILTimeContainer::PAUSE_PAGEHIDE);
+        }
+    }
+    if (mPresShell) {
+        mPresShell->RemovePostRefreshObserver(this);
+    }
+    if (mViewer) {
+        mViewer->Destroy();
+    }
 }
 
 static nsresult
@@ -339,6 +380,8 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
 
     channel->SetOwner(principal);
 
+    // Set this early because various decisions during page-load depend on it.
+    document->SetIsBeingUsedAsImage();
     document->SetReadyStateInternal(nsIDocument::READYSTATE_UNINITIALIZED);
 
     nsCOMPtr<nsIStreamListener> listener;
