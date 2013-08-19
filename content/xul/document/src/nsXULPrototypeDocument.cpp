@@ -349,7 +349,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
                break;
             }
 
-            tmp = pi->Deserialize(aStream, mGlobalObject, mURI, &nodeInfos);
+            tmp = pi->Deserialize(aStream, this, mURI, &nodeInfos);
             if (NS_FAILED(tmp)) {
               rv = tmp;
             }
@@ -358,7 +358,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
               rv = tmp;
             }
         } else if ((nsXULPrototypeNode::Type)type == nsXULPrototypeNode::eType_Element) {
-            tmp = mRoot->Deserialize(aStream, mGlobalObject, mURI, &nodeInfos);
+            tmp = mRoot->Deserialize(aStream, this, mURI, &nodeInfos);
             if (NS_FAILED(tmp)) {
               rv = tmp;
             }
@@ -508,20 +508,17 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     }
 
     // Now serialize the document contents
-    nsIScriptGlobalObject* globalObject = GetScriptGlobalObject();
-    NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
-
     count = mProcessingInstructions.Length();
     for (i = 0; i < count; ++i) {
         nsXULPrototypePI* pi = mProcessingInstructions[i];
-        tmp = pi->Serialize(aStream, globalObject, &nodeInfos);
+        tmp = pi->Serialize(aStream, this, &nodeInfos);
         if (NS_FAILED(tmp)) {
           rv = tmp;
         }
     }
 
     if (mRoot) {
-      tmp = mRoot->Serialize(aStream, globalObject, &nodeInfos);
+      tmp = mRoot->Serialize(aStream, this, &nodeInfos);
       if (NS_FAILED(tmp)) {
         rv = tmp;
       }
