@@ -1773,8 +1773,6 @@ nsGlobalWindow::UnmarkGrayTimers()
 // nsGlobalWindow::nsIScriptGlobalObject
 //*****************************************************************************
 
-static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
 nsresult
 nsGlobalWindow::EnsureScriptEnvironment()
 {
@@ -1787,10 +1785,9 @@ nsGlobalWindow::EnsureScriptEnvironment()
   NS_ASSERTION(!GetCurrentInnerWindowInternal(),
                "mJSObject is null, but we have an inner window?");
 
-  // NB: The existing ownership model requires us to get the script object
-  // factory before we can access the nsJSRuntime. This will go away shortly.
-  nsCOMPtr<nsIDOMScriptObjectFactory> factory = do_GetService(kDOMScriptObjectFactoryCID);
-  NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
+  // Ensure that nsJSRuntime has been initialized. This is idempotent.
+  nsresult rv = nsJSRuntime::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // If this window is a [i]frame, don't bother GC'ing when the frame's context
   // is destroyed since a GC will happen when the frameset or host document is
@@ -1802,7 +1799,7 @@ nsGlobalWindow::EnsureScriptEnvironment()
   // should probably assert the context is clean???
   context->WillInitializeContext();
 
-  nsresult rv = context->InitContext();
+  rv = context->InitContext();
   NS_ENSURE_SUCCESS(rv, rv);
 
   mContext = context;
