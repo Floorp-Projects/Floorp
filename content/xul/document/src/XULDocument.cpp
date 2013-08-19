@@ -65,7 +65,6 @@
 #include "nsIObjectOutputStream.h"
 #include "nsContentList.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptRuntime.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNodeInfoManager.h"
