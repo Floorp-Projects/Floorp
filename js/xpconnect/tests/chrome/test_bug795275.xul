@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
   /** Test for Warning in content scopes about Components. **/
 
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({set: [['dom.omit_components_in_content', false]]}, startLoad);
+  SimpleTest.executeSoon(startLoad);
   function startLoad() {
     for (var i = 1; i <= document.getElementsByTagName('iframe').length; ++i) {
       var frame = document.getElementById('frame' + i);
@@ -60,10 +60,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
   function go() {
     getWin('frame1').touchComponents();
     getWin('frame2').touchInterfaces();
-    getWin('frame3').touchLookupMethod();
+    ok(getWin('frame3').touchLookupMethod(), "Components.lookupMethod should be undefined");
     getWin('frame4').touchComponents();
     getWin('frame4').touchInterfaces();
-    getWin('frame4').touchLookupMethod();
+    ok(getWin('frame4').touchLookupMethod(), "Components.lookupMethod should be undefined");
     // This shouldn't warn.
     getWin('frame5').touchViaXBL();
 
