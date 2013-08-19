@@ -232,6 +232,12 @@ public:
 #define NS_CYCLE_COLLECTION_UPCAST(obj, clazz)                                 \
   NS_CYCLE_COLLECTION_CLASSNAME(clazz)::Upcast(obj)
 
+#ifdef DEBUG
+#define NS_CHECK_FOR_RIGHT_PARTICIPANT(_ptr) _ptr->CheckForRightParticipant()
+#else
+#define NS_CHECK_FOR_RIGHT_PARTICIPANT(_ptr)
+#endif
+
 // The default implementation of this class template is empty, because it
 // should never be used: see the partial specializations below.
 template <typename T,
@@ -249,7 +255,9 @@ struct DowncastCCParticipantImpl<T, true>
     nsISupports *s = static_cast<nsISupports*>(p);
     MOZ_ASSERT(NS_CYCLE_COLLECTION_CLASSNAME(T)::CheckForRightISupports(s),
                "not the nsISupports pointer we expect");
-    return NS_CYCLE_COLLECTION_CLASSNAME(T)::Downcast(s);
+    T *rval =  NS_CYCLE_COLLECTION_CLASSNAME(T)::Downcast(s);
+    NS_CHECK_FOR_RIGHT_PARTICIPANT(rval);
+    return rval;
   }
 };
 
@@ -432,6 +440,21 @@ T* DowncastCCParticipant(void *p)
 // Helpers for implementing a concrete nsCycleCollectionParticipant
 ///////////////////////////////////////////////////////////////////////////////
 
+// If a class defines a participant, then QIing an instance of that class to
+// nsXPCOMCycleCollectionParticipant should produce that participant.
+#ifdef DEBUG
+#define NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                            \
+    virtual void CheckForRightParticipant()                                    \
+    {                                                                          \
+      nsXPCOMCycleCollectionParticipant *p;                                    \
+      CallQueryInterface(this, &p);                                            \
+      MOZ_ASSERT(p == &NS_CYCLE_COLLECTION_INNERNAME,                          \
+                 #_class " should QI to its own CC participant");              \
+    }
+#else
+#define NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)
+#endif
+
 #define NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(_class, _base)           \
 public:                                                                        \
   NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);        \
@@ -483,6 +506,7 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                           \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                           \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
 };                                                                             \
+NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                    \
 static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;           \
   NOT_INHERITED_CANT_OVERRIDE
 
@@ -504,6 +528,7 @@ private:                                                                        
   NS_IMETHOD_(bool) CanSkipThisReal(void *p);                                    \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                         \
 };                                                                               \
+NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                      \
 static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;             \
 NOT_INHERITED_CANT_OVERRIDE
 
@@ -518,6 +543,7 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
   NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure);           \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
 };                                                                                     \
+NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                            \
 static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME; \
 NOT_INHERITED_CANT_OVERRIDE
 
@@ -536,6 +562,7 @@ private:                                                                        
   NS_IMETHOD_(bool) CanSkipThisReal(void *p);                                             \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                                  \
 };                                                                                        \
+NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                               \
 static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME; \
 NOT_INHERITED_CANT_OVERRIDE
 
@@ -554,6 +581,7 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
   NS_IMETHOD_(bool) CanSkipThisReal(void *p);                                          \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
 }; \
+NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)  \
 static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
 #define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(_class)  \
@@ -581,6 +609,7 @@ public:                                                                        \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)           \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
 };                                                                             \
+NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                    \
 static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
 #define NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(_class,             \
@@ -592,6 +621,7 @@ public:                                                                        \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY_NO_UNLINK(_class, _base_class) \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
 };                                                                             \
+NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                    \
 static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
 #define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(_class,                 \
@@ -603,6 +633,7 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
   NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure);           \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
 };                                                                                     \
+NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                            \
 static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
 // Cycle collector participant declarations.

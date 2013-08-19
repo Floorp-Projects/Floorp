@@ -2267,6 +2267,7 @@ public:
       NS_IMETHOD Unroot(void *p) { return NS_OK; }
       NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(XPCWrappedNative)
     };
+    NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(XPCWrappedNative);
     static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
     void DeleteCycleCollectable() {}
