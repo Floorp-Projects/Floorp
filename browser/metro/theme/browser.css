@@ -292,12 +292,27 @@ documenttab[selected] .documenttab-selection {
 }
 
 .selectionhandle {
-  list-style-image: url("chrome://browser/skin/images/selection-monocle.png");
-  border: 0px solid gray;
+  background-image: url("chrome://browser/skin/images/selection-monocle.png");
+  background-repeat: no-repeat;
+  background-size: 18px 18px;
   padding: 0px;
-  margin-top: -30px;
-  margin-left: -18px;
+  margin-top: -19px;
+  margin-left: -9px;
   pointer-events: auto;
+}
+
+@media (min-resolution: @min_res_140pc@) {
+  /* Load 140% image when scaled by 140% */
+  .selectionhandle {
+    background-image: url("chrome://browser/skin/images/selection-monocle@1.4x.png");
+  }
+}
+
+@media (min-resolution: @min_res_180pc@) {
+  /* Load 180% image when scaled by 180% */
+  .selectionhandle {
+    background-image: url("chrome://browser/skin/images/selection-monocle@1.8x.png");
+  }
 }
 
 /* content scrollbars */
