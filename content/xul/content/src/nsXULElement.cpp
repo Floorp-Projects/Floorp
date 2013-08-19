@@ -2375,6 +2375,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
                                 const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsIScriptContext *context = aGlobal->GetScriptContext();
+    AutoPushJSContext cx(context->GetNativeContext());
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nullptr ||
                  !mScriptObject,
                  "script source still loading when serializing?!");
@@ -2388,17 +2389,15 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
     rv = aStream->Write32(mLangVersion);
     if (NS_FAILED(rv)) return rv;
 
-    // And delegate the writing to the nsIScriptContext.
-    //
     // Calling fromMarkedLocation() is safe because we trace mScriptObject in
     // TraceScriptObject() and because its value is never changed after it has
     // been set.
     JS::Handle<JSScript*> script =
         JS::Handle<JSScript*>::fromMarkedLocation(mScriptObject.address());
-    rv = context->Serialize(aStream, script);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
+    MOZ_ASSERT(!strcmp(JS_GetClass(JS::CurrentGlobalOrNull(cx))->name,
+                       "nsXULPrototypeScript compilation scope"));
+    return nsContentUtils::XPConnect()->WriteScript(aStream, cx,
+                                                    xpc_UnmarkGrayScript(script));
 }
 
 nsresult
@@ -2454,8 +2453,6 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
                                   nsIURI* aDocumentURI,
                                   const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
-    nsresult rv;
-
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nullptr ||
                  !mScriptObject,
                  "prototype script not well-initialized when deserializing?!");
@@ -2465,15 +2462,16 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     aStream->Read32(&mLangVersion);
 
     nsIScriptContext *context = aGlobal->GetScriptContext();
+    AutoPushJSContext cx(context->GetNativeContext());
     NS_ASSERTION(context != nullptr, "Have no context for deserialization");
     NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
-    JSAutoRequest ar(context->GetNativeContext());
-    JS::Rooted<JSScript*> newScriptObject(context->GetNativeContext());
-    rv = context->Deserialize(aStream, &newScriptObject);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("Language deseralization failed");
-        return rv;
-    }
+    JSAutoRequest ar(cx);
+    JS::Rooted<JSScript*> newScriptObject(cx);
+    MOZ_ASSERT(!strcmp(JS_GetClass(JS::CurrentGlobalOrNull(cx))->name,
+                       "nsXULPrototypeScript compilation scope"));
+    nsresult rv = nsContentUtils::XPConnect()->ReadScript(aStream, cx,
+                                                          newScriptObject.address());
+    NS_ENSURE_SUCCESS(rv, rv);
     Set(newScriptObject);
     return NS_OK;
 }

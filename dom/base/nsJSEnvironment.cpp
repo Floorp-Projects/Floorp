@@ -1065,33 +1065,6 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget,
   return rv;
 }
 
-// serialization
-nsresult
-nsJSContext::Serialize(nsIObjectOutputStream* aStream,
-                       JS::Handle<JSScript*> aScriptObject)
-{
-  if (!aScriptObject)
-    return NS_ERROR_FAILURE;
-
-  AutoPushJSContext cx(mContext);
-  return nsContentUtils::XPConnect()->WriteScript(aStream, cx,
-                                                  xpc_UnmarkGrayScript(aScriptObject));
-}
-
-nsresult
-nsJSContext::Deserialize(nsIObjectInputStream* aStream,
-                         JS::MutableHandle<JSScript*> aResult)
-{
-  AutoPushJSContext cx(mContext);
-  JS::Rooted<JSScript*> script(cx);
-  nsresult rv = nsContentUtils::XPConnect()->ReadScript(aStream, cx,
-                                                        script.address());
-  if (NS_FAILED(rv)) return rv;
-
-  aResult.set(script);
-  return NS_OK;
-}
-
 nsIScriptGlobalObject *
 nsJSContext::GetGlobalObject()
 {
