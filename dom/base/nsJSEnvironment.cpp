@@ -2567,21 +2567,12 @@ nsJSContext::LikelyShortLivingObjectCreated()
 
 // QueryInterface implementation for nsJSRuntime
 NS_INTERFACE_MAP_BEGIN(nsJSRuntime)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptRuntime)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 
 NS_IMPL_ADDREF(nsJSRuntime)
 NS_IMPL_RELEASE(nsJSRuntime)
-
-already_AddRefed<nsIScriptContext>
-nsJSRuntime::CreateContext(bool aGCOnDestruction,
-                           nsIScriptGlobalObject* aGlobalObject)
-{
-  nsCOMPtr<nsIScriptContext> scriptContext =
-    new nsJSContext(sRuntime, aGCOnDestruction, aGlobalObject);
-  return scriptContext.forget();
-}
 
 //static
 void
@@ -2910,7 +2901,7 @@ nsJSRuntime::Shutdown()
 }
 
 // A factory for the runtime.
-nsresult NS_CreateJSRuntime(nsIScriptRuntime **aRuntime)
+nsresult NS_CreateJSRuntime(nsJSRuntime **aRuntime)
 {
   nsresult rv = nsJSRuntime::Init();
   NS_ENSURE_SUCCESS(rv, rv);

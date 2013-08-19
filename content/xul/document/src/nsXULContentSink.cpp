@@ -30,7 +30,6 @@
 #include "nsINodeInfo.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptRuntime.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsParserBase.h"
