@@ -3,8 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "StackArena.h"
-
-#include "mozilla/MemoryReporting.h"
+#include "nsAlgorithm.h"
+#include "nsDebug.h"
 
 namespace mozilla {
 

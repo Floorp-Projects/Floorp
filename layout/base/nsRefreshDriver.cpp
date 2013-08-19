@@ -35,8 +35,6 @@
 #include "prlog.h"
 #include "nsAutoPtr.h"
 #include "nsIDocument.h"
-#include "nsGUIEvent.h"
-#include "nsEventDispatcher.h"
 #include "jsapi.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"

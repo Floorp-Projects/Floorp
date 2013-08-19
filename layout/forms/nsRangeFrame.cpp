@@ -24,6 +24,8 @@
 #include "nsRenderingContext.h"
 #include "mozilla/dom/Element.h"
 #include "prtypes.h"
+#include "nsStyleSet.h"
+#include "nsThemeConstants.h"
 
 #include <algorithm>
 

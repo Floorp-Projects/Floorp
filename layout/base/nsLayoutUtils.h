@@ -19,30 +19,27 @@ class nsFontMetrics;
 class nsClientRectList;
 class nsFontFaceList;
 class nsIImageLoadingContent;
+class nsStyleContext;
+class nsBlockFrame;
+class gfxDrawable;
+class nsView;
+class imgIContainer;
 
 #include "mozilla/MemoryReporting.h"
 #include "nsChangeHint.h"
-#include "nsStyleContext.h"
 #include "nsAutoPtr.h"
-#include "nsStyleSet.h"
 #include "nsIFrame.h"
 #include "nsThreadUtils.h"
 #include "nsIPresShell.h"
 #include "nsIPrincipal.h"
 #include "gfxPattern.h"
-#include "imgIContainer.h"
 #include "nsCSSPseudoElements.h"
 #include "nsHTMLReflowState.h"
-#include "nsIFrameLoader.h"
 #include "FrameMetrics.h"
 #include "gfx3DMatrix.h"
 
 #include <limits>
 #include <algorithm>
-
-class nsBlockFrame;
-class gfxDrawable;
-class nsView;
 
 namespace mozilla {
 class SVGImageContext;

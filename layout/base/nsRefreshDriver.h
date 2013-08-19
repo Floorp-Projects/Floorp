@@ -14,10 +14,8 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozFlushType.h"
-#include "nsCOMPtr.h"
 #include "nsTObserverArray.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "nsTHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"

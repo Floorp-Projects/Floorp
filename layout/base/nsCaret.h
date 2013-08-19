@@ -11,12 +11,12 @@
 
 #include "nsCoord.h"
 #include "nsISelectionListener.h"
-#include "nsITimer.h"
-#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsFrameSelection.h"
 
 class nsRenderingContext;
 class nsDisplayListBuilder;
+class nsITimer;
 
 //-----------------------------------------------------------------------------
 class nsCaret : public nsISelectionListener
