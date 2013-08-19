@@ -259,6 +259,14 @@ public:
   ReportChildCountError();
 
   /*
+   * Helper to call ReportErrorToConsole when certain tags have
+   * invalid child tags
+   * @param aChildTag The tag which is forbidden in this context
+   */
+  nsresult
+  ReportInvalidChildError(nsIAtom* aChildTag);
+
+  /*
    * Helper to call ReportToConsole when an error occurs.
    * @param aParams see nsContentUtils::ReportToConsole
    */
