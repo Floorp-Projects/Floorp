@@ -62,42 +62,38 @@ function highlightNode()
   // Highlight a node.
   let div = content.document.getElementsByTagName("div")[0];
 
-  inspector.selection.once("new-node", function() {
+  inspector.selection.setNode(div);
+  inspector.once("inspector-updated", () => {
     is(inspector.selection.node, div, "selection matches the div element");
     testInlineStyle();
-  });
-  executeSoon(function() {
-    inspector.selection.setNode(div);
-  });
+  }).then(null, console.error);
 }
 
 function testInlineStyle()
 {
-  executeSoon(function() {
-    info("clicking an inline style");
+  info("clicking an inline style");
 
-    Services.ww.registerNotification(function onWindow(aSubject, aTopic) {
-      if (aTopic != "domwindowopened") {
-        return;
-      }
+  Services.ww.registerNotification(function onWindow(aSubject, aTopic) {
+    if (aTopic != "domwindowopened") {
+      return;
+    }
 
-      win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.addEventListener("load", function windowLoad() {
-        win.removeEventListener("load", windowLoad);
-        let windowType = win.document.documentElement.getAttribute("windowtype");
-        is(windowType, "navigator:view-source", "view source window is open");
-        win.close();
-        Services.ww.unregisterNotification(onWindow);
-        executeSoon(() => {
-          testInlineStyleSheet();
-        });
+    win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    win.addEventListener("load", function windowLoad() {
+      win.removeEventListener("load", windowLoad);
+      let windowType = win.document.documentElement.getAttribute("windowtype");
+      is(windowType, "navigator:view-source", "view source window is open");
+      win.close();
+      Services.ww.unregisterNotification(onWindow);
+      executeSoon(() => {
+        testInlineStyleSheet();
       });
     });
-
-    let link = getLinkByIndex(0);
-    link.scrollIntoView();
-    link.click();
   });
+
+  let link = getLinkByIndex(0);
+  link.scrollIntoView();
+  link.click();
 }
 
 function testInlineStyleSheet()

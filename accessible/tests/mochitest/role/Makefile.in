@@ -14,6 +14,7 @@ MOCHITEST_A11Y_FILES =\
 		test_aria.html \
 		test_aria.xul \
 		test_general.html \
+		test_general.xul \
 		test_svg.html \
 		$(NULL)
 

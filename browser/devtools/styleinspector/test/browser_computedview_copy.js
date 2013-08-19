@@ -32,33 +32,24 @@ function createDocument()
     '</div>';
   doc.title = "Computed view context menu test";
 
-  openInspector(selectNode)
+  openComputedView(selectNode)
 }
 
-function selectNode(aInspector)
+function selectNode(aInspector, aComputedView)
 {
+  computedView = aComputedView;
+  win = aInspector.sidebar.getWindowForTab("computedview");
+
   let span = doc.querySelector("span");
   ok(span, "captain, we have the span");
 
   aInspector.selection.setNode(span);
-
-  aInspector.sidebar.once("computedview-ready", function() {
-    aInspector.sidebar.select("computedview");
-
-    computedView = getComputedView(aInspector);
-    win = aInspector.sidebar.getWindowForTab("computedview");
-
-    Services.obs.addObserver(runStyleInspectorTests,
-      "StyleInspector-populated", false);
-  });
+  aInspector.once("inspector-updated", runStyleInspectorTests);
 }
 
 
 function runStyleInspectorTests()
 {
-  Services.obs.removeObserver(runStyleInspectorTests,
-    "StyleInspector-populated", false);
-
   let contentDocument = computedView.styleDocument;
   let prop = contentDocument.querySelector(".property-view");
   ok(prop, "captain, we have the property-view node");

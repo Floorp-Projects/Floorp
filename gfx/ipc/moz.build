@@ -6,6 +6,10 @@
 
 MODULE = 'gfxipc'
 
+EXPORTS.mozilla += [
+    'GfxMessageUtils.h'
+]
+
 EXPORTS.mozilla.gfx += [
     'SharedDIB.h',
 ]

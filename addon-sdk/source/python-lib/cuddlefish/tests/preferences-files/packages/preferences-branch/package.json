@@ -1,0 +1,14 @@
+{
+    "id": "test-preferences-branch",
+    "fullName": "preferences-branch test",
+    "author": "Tomislav Jovanovic",
+
+    "preferences": [{
+        "name": "test42",
+        "type": "bool",
+        "title": "test42",
+        "value": true
+    }],
+
+    "preferences-branch": "human-readable"
+}

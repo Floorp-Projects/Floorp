@@ -13,7 +13,7 @@ const kBottomContentMargin = 50;
 var StartUI = {
   get startUI() { return document.getElementById("start-container"); },
 
-  get maxResultsPerSection() { 
+  get maxResultsPerSection() {
     return Services.prefs.getIntPref("browser.display.startUI.maxresults");
   },
 
@@ -31,6 +31,7 @@ var StartUI = {
       this.chromeWin.InputSourceHelper.isPrecise ? "precise" : "imprecise");
 
     this._updateStartHeight();
+    this._adjustDOMforViewState();
 
     TopSitesStartView.init();
     BookmarksStartView.init();
@@ -145,6 +146,11 @@ var StartUI = {
           break;
       }
       document.getElementById("bcast_windowState").setAttribute("viewstate", currViewState);
+      if (currViewState == "snapped") {
+        document.getElementById("start-topsites-grid").removeAttribute("tiletype");
+      } else {
+        document.getElementById("start-topsites-grid").setAttribute("tiletype", "thumbnail");
+      }
     }
   },
 

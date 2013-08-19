@@ -9,18 +9,12 @@ let doc;
 let inspector;
 let stylePanel;
 
-function openRuleView()
+function selectNode(aInspector, aRuleView)
 {
-  var target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-    inspector = toolbox.getCurrentPanel();
-    inspector.sidebar.select("ruleview");
-
-    // Highlight a node.
-    let node = content.document.getElementsByTagName("h1")[0];
-
-    inspector.sidebar.once("ruleview-ready", testFocus);
-  });
+  inspector = aInspector;
+  let node = content.document.getElementsByTagName("h1")[0];
+  inspector.selection.setNode(node);
+  inspector.once("inspector-updated", testFocus);
 }
 
 function testFocus()
@@ -64,7 +58,7 @@ function test()
     gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee, true);
     doc = content.document;
     doc.title = "Rule View Test";
-    waitForFocus(openRuleView, content);
+    waitForFocus(() => openRuleView(selectNode), content);
   }, true);
 
   content.location = "data:text/html,<h1>Some header text</h1>";

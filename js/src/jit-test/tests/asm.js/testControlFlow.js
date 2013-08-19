@@ -8,6 +8,11 @@ assertEq(asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; if ((i|0) == 0) re
 assertEq(asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; if ((i|0) == 0) return 10; else if ((i|0) == 1) return 12; else if ((i|0) == 2) return 14; else return 16; return 0} return f"))(3), 16);
 assertEq(asmLink(asmCompile(USE_ASM + "function f(i) { i=i|0; if ((i|0) == 0) i = 10; else if ((i|0) == 1) return 12; return (i|0) } return f"))(0), 10);
 
+assertAsmTypeFail(USE_ASM + "function f(i) { i=i|0; if (i) return 0; } return f");
+assertAsmTypeFail(USE_ASM + "function f(i) { i=i|0; if (i) return 0; else return 1 } return f");
+assertAsmTypeFail(USE_ASM + "function f(i) { i=i|0; if (i) return 0; return 1.0 } return f");
+assertAsmTypeFail(USE_ASM + "function f() { return 0; 1 } return f");
+
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { while (0) {} return 0} return f"))(), 0);
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { for (;0;) {} return 0} return f"))(), 0);
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { do {} while(0); return 0} return f"))(), 0);
