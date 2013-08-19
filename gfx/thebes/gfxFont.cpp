@@ -89,6 +89,61 @@ gfxCharacterMap::NotifyReleased()
     delete this;
 }
 
+gfxFontEntry::gfxFontEntry() :
+    mItalic(false), mFixedPitch(false),
+    mIsProxy(false), mIsValid(true),
+    mIsBadUnderlineFont(false),
+    mIsUserFont(false),
+    mIsLocalUserFont(false),
+    mStandardFace(false),
+    mSymbolFont(false),
+    mIgnoreGDEF(false),
+    mIgnoreGSUB(false),
+    mSVGInitialized(false),
+    mHasSpaceFeaturesInitialized(false),
+    mHasSpaceFeatures(false),
+    mHasSpaceFeaturesKerning(false),
+    mHasSpaceFeaturesNonKerning(false),
+    mHasSpaceFeaturesSubDefault(false),
+    mCheckedForGraphiteTables(false),
+    mHasCmapTable(false),
+    mGrFaceInitialized(false),
+    mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
+    mUVSOffset(0), mUVSData(nullptr),
+    mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    mHBFace(nullptr),
+    mGrFace(nullptr),
+    mGrFaceRefCnt(0)
+{
+}
+
+gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
+    mName(aName), mItalic(false), mFixedPitch(false),
+    mIsProxy(false), mIsValid(true),
+    mIsBadUnderlineFont(false), mIsUserFont(false),
+    mIsLocalUserFont(false), mStandardFace(aIsStandardFace),
+    mSymbolFont(false),
+    mIgnoreGDEF(false),
+    mIgnoreGSUB(false),
+    mSVGInitialized(false),
+    mHasSpaceFeaturesInitialized(false),
+    mHasSpaceFeatures(false),
+    mHasSpaceFeaturesKerning(false),
+    mHasSpaceFeaturesNonKerning(false),
+    mHasSpaceFeaturesSubDefault(false),
+    mCheckedForGraphiteTables(false),
+    mHasCmapTable(false),
+    mGrFaceInitialized(false),
+    mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
+    mUVSOffset(0), mUVSData(nullptr),
+    mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
+    mHBFace(nullptr),
+    mGrFace(nullptr),
+    mGrFaceRefCnt(0)
+{
+    memset(&mHasSpaceFeaturesSub, 0, sizeof(mHasSpaceFeaturesSub));
+}
+
 gfxFontEntry::~gfxFontEntry()
 {
     // For downloaded fonts, we need to tell the user font cache that this
@@ -102,11 +157,6 @@ gfxFontEntry::~gfxFontEntry()
     // face objects should have been released.
     MOZ_ASSERT(!mHBFace);
     MOZ_ASSERT(!mGrFaceInitialized);
-
-    if (mSVGGlyphs) {
-        delete mSVGGlyphs;
-    }
-    delete mUserFontData;
 }
 
 bool gfxFontEntry::IsSymbolFont() 
@@ -266,7 +316,7 @@ gfxFontEntry::TryGetSVGData(gfxFont* aFont)
 
         // gfxSVGGlyphs will hb_blob_destroy() the table when it is finished
         // with it.
-        mSVGGlyphs = new gfxSVGGlyphs(svgTable);
+        mSVGGlyphs = new gfxSVGGlyphs(svgTable, this);
     }
 
     if (!mFontsUsingSVGGlyphs.Contains(aFont)) {

@@ -228,35 +228,7 @@ class gfxFontEntry {
 public:
     NS_INLINE_DECL_REFCOUNTING(gfxFontEntry)
 
-    gfxFontEntry(const nsAString& aName, bool aIsStandardFace = false) :
-        mName(aName), mItalic(false), mFixedPitch(false),
-        mIsProxy(false), mIsValid(true), 
-        mIsBadUnderlineFont(false), mIsUserFont(false),
-        mIsLocalUserFont(false), mStandardFace(aIsStandardFace),
-        mSymbolFont(false),
-        mIgnoreGDEF(false),
-        mIgnoreGSUB(false),
-        mSVGInitialized(false),
-        mHasSpaceFeaturesInitialized(false),
-        mHasSpaceFeatures(false),
-        mHasSpaceFeaturesKerning(false),
-        mHasSpaceFeaturesNonKerning(false),
-        mHasSpaceFeaturesSubDefault(false),
-        mCheckedForGraphiteTables(false),
-        mHasCmapTable(false),
-        mGrFaceInitialized(false),
-        mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
-        mUVSOffset(0), mUVSData(nullptr),
-        mUserFontData(nullptr),
-        mSVGGlyphs(nullptr),
-        mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
-        mHBFace(nullptr),
-        mGrFace(nullptr),
-        mGrFaceRefCnt(0)
-    {
-        memset(&mHasSpaceFeaturesSub, 0, sizeof(mHasSpaceFeaturesSub));
-    }
-
+    gfxFontEntry(const nsAString& aName, bool aIsStandardFace = false);
     virtual ~gfxFontEntry();
 
     // unique name for the face, *not* the family; not necessarily the
@@ -462,8 +434,8 @@ public:
     nsRefPtr<gfxCharacterMap> mCharacterMap;
     uint32_t         mUVSOffset;
     nsAutoArrayPtr<uint8_t> mUVSData;
-    gfxUserFontData* mUserFontData;
-    gfxSVGGlyphs    *mSVGGlyphs;
+    nsAutoPtr<gfxUserFontData> mUserFontData;
+    nsAutoPtr<gfxSVGGlyphs> mSVGGlyphs;
     // list of gfxFonts that are using SVG glyphs
     nsTArray<gfxFont*> mFontsUsingSVGGlyphs;
     nsTArray<gfxFontFeature> mFeatureSettings;
@@ -476,34 +448,7 @@ protected:
     friend class gfxFontFamily;
     friend class gfxSingleFaceMacFontFamily;
 
-    gfxFontEntry() :
-        mItalic(false), mFixedPitch(false),
-        mIsProxy(false), mIsValid(true), 
-        mIsBadUnderlineFont(false),
-        mIsUserFont(false),
-        mIsLocalUserFont(false),
-        mStandardFace(false),
-        mSymbolFont(false),
-        mIgnoreGDEF(false),
-        mIgnoreGSUB(false),
-        mSVGInitialized(false),
-        mHasSpaceFeaturesInitialized(false),
-        mHasSpaceFeatures(false),
-        mHasSpaceFeaturesKerning(false),
-        mHasSpaceFeaturesNonKerning(false),
-        mHasSpaceFeaturesSubDefault(false),
-        mCheckedForGraphiteTables(false),
-        mHasCmapTable(false),
-        mGrFaceInitialized(false),
-        mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
-        mUVSOffset(0), mUVSData(nullptr),
-        mUserFontData(nullptr),
-        mSVGGlyphs(nullptr),
-        mLanguageOverride(NO_FONT_LANGUAGE_OVERRIDE),
-        mHBFace(nullptr),
-        mGrFace(nullptr),
-        mGrFaceRefCnt(0)
-    { }
+    gfxFontEntry();
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold) {
         NS_NOTREACHED("oops, somebody didn't override CreateFontInstance");
