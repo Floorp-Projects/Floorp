@@ -185,9 +185,9 @@ protected:
   nsRefPtr<nsPresContext>     mPresContext;
   nsCOMPtr<mozilla::dom::EventTarget> mExplicitOriginalTarget;
   nsCOMPtr<nsPIDOMWindow>     mOwner; // nsPIDOMWindow for now.
-  nsString                    mCachedType;
   bool                        mEventIsInternal;
   bool                        mPrivateDataDuplicated;
+  bool                        mIsMainThreadEvent;
 };
 
 #define NS_FORWARD_TO_NSDOMEVENT \

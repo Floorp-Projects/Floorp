@@ -171,8 +171,8 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mRefPtrMonitor("RefPtrMonitor"),
      mMonitor("AsyncPanZoomController"),
      mTouchListenerTimeoutTask(nullptr),
-     mX(this),
-     mY(this),
+     mX(MOZ_THIS_IN_INITIALIZER_LIST()),
+     mY(MOZ_THIS_IN_INITIALIZER_LIST()),
      mAllowZoom(true),
      mMinZoom(MIN_ZOOM),
      mMaxZoom(MAX_ZOOM),
@@ -1116,8 +1116,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   mFrameMetrics.mMayHaveTouchListeners = aLayerMetrics.mMayHaveTouchListeners;
 
   // TODO: Once a mechanism for calling UpdateScrollOffset() when content does
-  //       a scrollTo() is implemented for B2G (bug 895905), this block can be removed.
-#ifndef MOZ_WIDGET_ANDROID
+  //       a scrollTo() is implemented for metro (bug 898580), this block can be removed.
+#ifdef MOZ_METRO
   if (!mPaintThrottler.IsOutstanding()) {
     // No paint was requested, but we got one anyways. One possible cause of this
     // is that content could have fired a scrollTo(). In this case, we should take
@@ -1418,9 +1418,9 @@ void AsyncPanZoomController::UpdateScrollOffset(const CSSPoint& aScrollOffset)
 
 bool AsyncPanZoomController::Matches(const ScrollableLayerGuid& aGuid)
 {
-  // TODO: also check the presShellId and mScrollId, once those are
-  // fully propagated everywhere in RenderFrameParent and AndroidJNI.
-  return aGuid.mLayersId == mLayersId;
+  // TODO: also check the presShellId, once that is fully propagated
+  // everywhere in RenderFrameParent and AndroidJNI.
+  return aGuid.mLayersId == mLayersId && aGuid.mScrollId == mFrameMetrics.mScrollId;
 }
 
 }

@@ -31,8 +31,7 @@ function finishTheTest()
 {
   OfflineTest.is(gImageLoaded[1], true, "Image from a different origin not cointained in the offline cache has loaded");
   OfflineTest.is(gImageLoaded[2], true, "Image not cointained in the offline cache has loaded");
-  OfflineTest.teardown();
-  OfflineTest.finish();
+  OfflineTest.teardownAndFinish();
 }
 
 if (OfflineTest.setup()) {

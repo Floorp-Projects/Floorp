@@ -3153,6 +3153,50 @@
     "n_buckets": 15,
     "description": "Time (ms) for a WAL checkpoint after collecting all measurements."
   },
+  "PDF_VIEWER_USED": {
+    "kind": "boolean",
+    "description": "How many times PDF Viewer was used"
+  },
+  "PDF_VIEWER_FALLBACK_SHOWN": {
+    "kind": "boolean",
+    "description": "How many times PDF Viewer fallback bar was shown"
+  },
+  "PDF_VIEWER_PRINT": {
+    "kind": "boolean",
+    "description": "How many times PDF Viewer print functionality was used"
+  },
+  "PDF_VIEWER_DOCUMENT_VERSION": {
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "The PDF document version (1.1, 1.2, etc.)"
+  },
+  "PDF_VIEWER_DOCUMENT_GENERATOR": {
+    "kind": "enumerated",
+    "n_values": 30,
+    "description": "The PDF document generator"
+  },
+  "PDF_VIEWER_DOCUMENT_SIZE_KB": {
+    "kind": "exponential",
+    "low": "2",
+    "high": "64 * 1024",
+    "n_buckets": 20,
+    "description": "The PDF document size (KB)"
+  },
+  "PDF_VIEWER_FORM": {
+    "kind": "boolean",
+    "description": "A PDF form expected: true for AcroForm and false for XFA"
+  },
+  "PDF_VIEWER_STREAM_TYPES": {
+    "kind": "enumerated",
+    "n_values": 9,
+    "description": "The PDF document compression stream types used"
+  },
+  "PDF_VIEWER_TIME_TO_VIEW_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent to display first page in PDF Viewer (ms)"
+  },
   "POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS": {
     "kind": "linear",
     "low": 25,

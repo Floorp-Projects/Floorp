@@ -16,6 +16,7 @@
 #include "mozilla/Observer.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 template <class T>
 class nsRevocableEventPtr;

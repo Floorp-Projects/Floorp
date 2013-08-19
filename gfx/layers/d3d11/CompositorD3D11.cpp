@@ -847,6 +847,7 @@ CompositorD3D11::SetSamplerForFilter(Filter aFilter)
 {
   ID3D11SamplerState *sampler;
   switch (aFilter) {
+  default:
   case FILTER_LINEAR:
     sampler = mAttachments->mLinearSamplerState;
     break;

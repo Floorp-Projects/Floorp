@@ -98,6 +98,8 @@ struct ObjectsExtraSizes
     size_t elementsNonAsmJS;
     size_t elementsAsmJSHeap;
     size_t elementsAsmJSNonHeap;
+    size_t asmJSModuleCode;
+    size_t asmJSModuleData;
     size_t argumentsData;
     size_t regExpStatics;
     size_t propertyIteratorData;
@@ -112,6 +114,8 @@ struct ObjectsExtraSizes
         this->elementsNonAsmJS     += sizes.elementsNonAsmJS;
         this->elementsAsmJSHeap    += sizes.elementsAsmJSHeap;
         this->elementsAsmJSNonHeap += sizes.elementsAsmJSNonHeap;
+        this->asmJSModuleCode      += sizes.asmJSModuleCode;
+        this->asmJSModuleData      += sizes.asmJSModuleData;
         this->argumentsData        += sizes.argumentsData;
         this->regExpStatics        += sizes.regExpStatics;
         this->propertyIteratorData += sizes.propertyIteratorData;
@@ -148,7 +152,6 @@ struct TypeInferenceSizes
 struct CodeSizes
 {
     size_t ion;
-    size_t asmJS;
     size_t baseline;
     size_t regexp;
     size_t other;

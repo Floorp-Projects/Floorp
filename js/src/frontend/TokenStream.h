@@ -420,6 +420,8 @@ class MOZ_STACK_CLASS TokenStream
     bool reportError(unsigned errorNumber, ...);
     bool reportWarning(unsigned errorNumber, ...);
 
+    static const uint32_t NoOffset = UINT32_MAX;
+
     // General-purpose error reporters.  You should avoid calling these
     // directly, and instead use the more succinct alternatives (e.g.
     // reportError()) in TokenStream, Parser, and BytecodeEmitter.

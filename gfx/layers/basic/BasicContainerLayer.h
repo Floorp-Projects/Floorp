@@ -178,7 +178,8 @@ class BasicContainerLayer : public ContainerLayer, public BasicImplData {
 
 public:
   BasicContainerLayer(BasicLayerManager* aManager) :
-    ContainerLayer(aManager, static_cast<BasicImplData*>(this))
+    ContainerLayer(aManager,
+                   static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST()))
   {
     MOZ_COUNT_CTOR(BasicContainerLayer);
     mSupportsComponentAlphaChildren = true;

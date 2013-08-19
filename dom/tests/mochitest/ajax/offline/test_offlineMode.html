@@ -99,8 +99,7 @@ function finalize()
     OfflineTest.is(gGotDynamicVersion, 1, "Dynamic entry loaded");
     OfflineTest.ok(gGotOnError, "Got onerror event invoked by implicit page load in offline mode");
 
-    OfflineTest.teardown();
-    OfflineTest.finish();
+    OfflineTest.teardownAndFinish();
   }
 }
 

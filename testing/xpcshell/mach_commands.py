@@ -152,8 +152,8 @@ class XPCShellRunner(MozbuildObject):
         self.log_manager.disable_unstructured()
 
         if not result and not sequential:
-            print("Tests were run in parallel. Try running with --sequential \
-                   to make sure the failures were not caused by this.")
+            print("Tests were run in parallel. Try running with --sequential "
+                  "to make sure the failures were not caused by this.")
         return int(not result)
 
 
