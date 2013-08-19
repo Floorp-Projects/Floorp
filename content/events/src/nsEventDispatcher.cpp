@@ -461,6 +461,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   // Create the event target chain item for the event target.
   nsEventTargetChainItem* targetEtci =
     nsEventTargetChainItem::Create(chain, target->GetTargetForEventTargetChain());
+  MOZ_ASSERT(&chain[0] == targetEtci);
   if (!targetEtci->IsValid()) {
     nsEventTargetChainItem::DestroyLast(chain, targetEtci);
     return NS_ERROR_FAILURE;
@@ -508,6 +509,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     nsEventTargetChainItem::DestroyLast(chain, targetEtci);
     targetEtci = EventTargetChainItemForChromeTarget(chain, content);
     NS_ENSURE_STATE(targetEtci);
+    MOZ_ASSERT(&chain[0] == targetEtci);
     targetEtci->PreHandleEvent(preVisitor);
   }
   if (preVisitor.mCanHandle) {
@@ -516,6 +518,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     nsCOMPtr<EventTarget> t = do_QueryInterface(aEvent->target);
     targetEtci->SetNewTarget(t);
     nsEventTargetChainItem* topEtci = targetEtci;
+    targetEtci = nullptr;
     while (preVisitor.mParentTarget) {
       EventTarget* parentTarget = preVisitor.mParentTarget;
       nsEventTargetChainItem* parentEtci =
@@ -551,7 +554,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
             if (parentEtci) {
               parentEtci->PreHandleEvent(preVisitor);
               if (preVisitor.mCanHandle) {
-                targetEtci->SetNewTarget(parentTarget);
+                chain[0].SetNewTarget(parentTarget);
                 topEtci = parentEtci;
                 continue;
               }
@@ -590,8 +593,6 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
   // Note, nsEventTargetChainItem objects are deleted when the chain goes out of
   // the scope.
-
-  targetEtci = nullptr;
 
   aEvent->mFlags.mIsBeingDispatched = false;
   aEvent->mFlags.mDispatchedAtLeastOnce = true;
