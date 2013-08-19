@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=553917
+-->
+<html>
+  <head>
+    <title>Test for error handling aspect of Bug 827713</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <script type="application/javascript">
+
+      var stringBundleService = 
+        SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
+                    .getService(SpecialPowers.Ci.nsIStringBundleService);
+      var g_bundl =
+        stringBundleService.createBundle("chrome://global/locale/mathml/mathml.properties");
+      
+      var g_errorInfo = {
+        InvalidChild: {
+          status : [false, false, false, false, false, false],
+          args : [["mprescripts", "msubsup"], ["mprescripts", "msubsup"],
+                 ["mprescripts", "msub"], ["none", "msub"], ["none","msup"],
+                 ["none","msubsup"]]
+        },
+
+        MMultiscriptsErrors: {
+          status: [false, false],
+          args: ["NoBase", "SubSupMismatch"]
+        }
+    };
+      
+      var g_errorTypes = ["InvalidChild", "MMultiscriptsErrors"];
+      
+      function getErrorMessage(name,idx)
+      {
+        if (name != "MMultiscriptsErrors") {
+          return g_bundl.formatStringFromName(name,g_errorInfo[name].args[idx], 
+                                            g_errorInfo[name].args[idx].length);
+        }
+        else {
+          return g_bundl.GetStringFromName(g_errorInfo[name].args[idx]);
+        }
+      }
+    
+    /** Checks the roll call to see if all expected error messages were present. */
+    function processRollCall()
+    {
+      for (var i=0; i<g_errorTypes.length;i++) {
+        for (var j = 0; j < g_errorInfo[g_errorTypes[i]].status.length; j++) {
+          ok(g_errorInfo[g_errorTypes[i]].status[j],
+             "\"" + getErrorMessage(g_errorTypes[i], j)
+                  + "\" was expected to be in the error console.");
+        }
+      }
+    }
+    
+    /** Tests a candidate to see if it is one of the expected messages and updates the 
+        g_errorInfo structure if it is. */
+    function doRollCall(msg)
+    {
+      for (var i = 0; i < g_errorTypes.length; i++) {
+        for (var j = 0; j < g_errorInfo[g_errorTypes[i]].status.length; j++) {
+          if (msg == getErrorMessage(g_errorTypes[i], j))
+          {
+            g_errorInfo[g_errorTypes[i]].status[j] = true;
+          }
+        }
+      }
+    }
+    
+    SpecialPowers.registerConsoleListener(
+      function (msg) {
+        if (msg.message == "SENTINEL") {
+          processRollCall();
+          SimpleTest.finish();
+        } else if (msg.isScriptError) {
+          doRollCall(msg.errorMessage);
+        }
+      });
+      
+    SimpleTest.waitForExplicitFinish();
+  </script>
+  </head>
+  <body onload="SpecialPowers.postConsoleSentinel();">
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=827713">Mozilla Bug 827713</a>
+    
+    <!-- InvalidChild -->
+    <math>
+      <msubsup>
+        <mprescripts/>
+      </msubsup>
+    </math>
+
+    <math>
+      <msubsup>
+        <mprescripts/>
+        <mprescripts/>
+      </msubsup>
+    </math>
+
+    <math>
+      <msub>
+        <mtext>a</mtext>
+        <mprescripts/>
+        <mtext>a</mtext>
+        <mprescripts/>
+      </msub>
+    </math>
+
+    <math>
+      <msub>
+        <mtext>a</mtext>
+        <none/>
+      </msub>
+    </math>
+
+    <math>
+      <msup>
+        <mtext>a</mtext>
+        <none/>
+      </msup>
+    </math>
+
+    <math>
+      <msubsup>
+        <mtext>a</mtext>
+        <mtext>b</mtext>
+        <none/>
+      </msubsup>
+    </math>
+
+    <!-- NoBase -->
+    <math>
+      <mmultiscripts>
+        <none/>
+        <mtext>b</mtext>
+        <mtext>c</mtext>
+      </mmultiscripts>
+    </math>
+
+    <!-- SubSupMismatch -->
+    <math>
+      <mmultiscripts>
+        <mtext>b</mtext>
+        <mtext>c</mtext>
+        <mprescripts/>
+        <mtext>a</mtext>
+      </mmultiscripts>
+    </math>
+  </body>
+</html>
