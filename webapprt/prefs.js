@@ -16,9 +16,6 @@ pref("extensions.installDistroAddons", false);
 // Disable the add-on compatibility dialog
 pref("extensions.showMismatchUI", false);
 
-// Whether or not we've ever run.  We use this to set permissions on firstrun.
-pref("webapprt.firstrun", false);
-
 // Set reportURL for crashes
 pref("breakpad.reportURL", "https://crash-stats.mozilla.com/report/index/");
 
