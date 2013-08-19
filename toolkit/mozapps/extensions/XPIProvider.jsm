@@ -192,9 +192,10 @@ var gLazyObjectsLoaded = false;
 
 function loadLazyObjects() {
   let scope = {};
+  scope.AddonInternal = AddonInternal;
+  scope.XPIProvider = XPIProvider;
   Services.scriptloader.loadSubScript("resource://gre/modules/XPIProviderUtils.js",
                                       scope);
-  scope.XPIProvider = XPIProvider;
 
   for (let name of LAZY_OBJECTS) {
     delete gGlobalScope[name];
@@ -2803,8 +2804,10 @@ var XPIProvider = {
           newAddon = loadManifestFromFile(file);
         }
         // The add-on in the manifest should match the add-on ID.
-        if (newAddon.id != aId)
-          throw new Error("Incorrect id in install manifest");
+        if (newAddon.id != aId) {
+          throw new Error("Invalid addon ID: expected addon ID " + aId +
+                          ", found " + newAddon.id + " in manifest");
+        }
       }
       catch (e) {
         WARN("Add-on is invalid", e);
@@ -4245,7 +4248,6 @@ var XPIProvider = {
       AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type, false);
   }
 };
-
 
 function getHashStringForCrypto(aCrypto) {
   // return the two-digit hexadecimal code for a byte
