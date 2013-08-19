@@ -40,9 +40,10 @@
 .side-menu-widget-item-checkbox > .checkbox-check {
   -moz-appearance: none;
   background: none;
-  background-image: url(blackbox.png);
+  background-image: url(itemToggle.png);
   background-repeat: no-repeat;
   background-clip: content-box;
+  background-size: 32px 16px;
   background-position: -16px 0;
   width: 16px;
   height: 16px;

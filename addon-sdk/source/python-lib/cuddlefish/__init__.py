@@ -234,6 +234,10 @@ parser_groups = (
                                        default=False,
                                        cmds=['test', 'testpkgs', 'testaddons',
                                              'testall'])),
+        (("", "--output-file",), dict(dest="output_file",
+                                      help="Where to put the finished .xpi",
+                                      default=None,
+                                      cmds=['xpi'])),
         ]
      ),
 
@@ -892,7 +896,11 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
             key,value = kv.split("=", 1)
             extra_harness_options[key] = value
         # Generate xpi filepath
-        xpi_path = XPI_FILENAME % target_cfg.name
+        if options.output_file:
+          xpi_path = options.output_file
+        else:
+          xpi_path = XPI_FILENAME % target_cfg.name
+
         print >>stdout, "Exporting extension to %s." % xpi_path
         build_xpi(template_root_dir=app_extension_dir,
                   manifest=manifest_rdf,

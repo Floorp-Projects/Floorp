@@ -598,8 +598,47 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
   }
 }
 
+void
+CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackendHints)
+{
+  NS_ASSERTION(!mLayerManager, "Already initialised mLayerManager");
+
+  for (size_t i = 0; i < aBackendHints.Length(); ++i) {
+    RefPtr<LayerManagerComposite> layerManager;
+    if (aBackendHints[i] == LAYERS_OPENGL) {
+      layerManager =
+        new LayerManagerComposite(new CompositorOGL(mWidget,
+                                                    mEGLSurfaceSize.width,
+                                                    mEGLSurfaceSize.height,
+                                                    mUseExternalSurfaceSize));
+    } else if (aBackendHints[i] == LAYERS_BASIC) {
+      layerManager =
+        new LayerManagerComposite(new BasicCompositor(mWidget));
+#ifdef XP_WIN
+    } else if (aBackendHints[i] == LAYERS_D3D11) {
+      layerManager =
+        new LayerManagerComposite(new CompositorD3D11(mWidget));
+    } else if (aBackendHints[i] == LAYERS_D3D9) {
+      layerManager =
+        new LayerManagerComposite(new CompositorD3D9(mWidget));
+#endif
+    }
+
+    if (!layerManager) {
+      continue;
+    }
+
+    layerManager->SetCompositorID(mCompositorID);
+
+    if (layerManager->Initialize()) {
+      mLayerManager = layerManager;
+      return;
+    }
+  }
+}
+
 PLayerTransactionParent*
-CompositorParent::AllocPLayerTransactionParent(const LayersBackend& aBackendHint,
+CompositorParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
                                                const uint64_t& aId,
                                                TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                                bool *aSuccess)
@@ -610,35 +649,11 @@ CompositorParent::AllocPLayerTransactionParent(const LayersBackend& aBackendHint
   // nullptr before returning from this method, to avoid accessing it elsewhere.
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
-
-  if (aBackendHint == mozilla::layers::LAYERS_OPENGL) {
-    mLayerManager =
-      new LayerManagerComposite(new CompositorOGL(mWidget,
-                                                  mEGLSurfaceSize.width,
-                                                  mEGLSurfaceSize.height,
-                                                  mUseExternalSurfaceSize));
-  } else if (aBackendHint == mozilla::layers::LAYERS_BASIC) {
-    mLayerManager =
-      new LayerManagerComposite(new BasicCompositor(mWidget));
-#ifdef XP_WIN
-  } else if (aBackendHint == mozilla::layers::LAYERS_D3D11) {
-    mLayerManager =
-      new LayerManagerComposite(new CompositorD3D11(mWidget));
-  } else if (aBackendHint == mozilla::layers::LAYERS_D3D9) {
-    mLayerManager =
-      new LayerManagerComposite(new CompositorD3D9(mWidget));
-#endif
-  } else {
-    NS_WARNING("Unsupported backend selected for Async Compositor");
-    *aSuccess = false;
-    return new LayerTransactionParent(nullptr, this, 0);
-  }
-
+  InitializeLayerManager(aBackendHints);
   mWidget = nullptr;
-  mLayerManager->SetCompositorID(mCompositorID);
 
-  if (!mLayerManager->Initialize()) {
-    NS_WARNING("Failed to init Compositor");
+  if (!mLayerManager) {
+    NS_WARNING("Failed to initialise Compositor");
     *aSuccess = false;
     return new LayerTransactionParent(nullptr, this, 0);
   }
@@ -834,7 +849,7 @@ public:
   virtual bool RecvFlushRendering() MOZ_OVERRIDE { return true; }
 
   virtual PLayerTransactionParent*
-    AllocPLayerTransactionParent(const LayersBackend& aBackendType,
+    AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
                                  const uint64_t& aId,
                                  TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                  bool *aSuccess) MOZ_OVERRIDE;
@@ -916,7 +931,7 @@ CrossProcessCompositorParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 PLayerTransactionParent*
-CrossProcessCompositorParent::AllocPLayerTransactionParent(const LayersBackend& aBackendType,
+CrossProcessCompositorParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>&,
                                                            const uint64_t& aId,
                                                            TextureFactoryIdentifier* aTextureFactoryIdentifier,
                                                            bool *aSuccess)

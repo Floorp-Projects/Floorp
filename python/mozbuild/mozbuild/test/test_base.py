@@ -4,8 +4,11 @@
 
 from __future__ import unicode_literals
 
+import json
 import os
+import shutil
 import sys
+import tempfile
 import unittest
 
 from mozfile.mozfile import NamedTemporaryFile
@@ -30,6 +33,16 @@ log_manager = LoggingManager()
 
 
 class TestMozbuildObject(unittest.TestCase):
+    def setUp(self):
+        self._old_cwd = os.getcwd()
+        self._old_env = dict(os.environ)
+        os.environ.pop('MOZCONFIG', None)
+
+    def tearDown(self):
+        os.chdir(self._old_cwd)
+        os.environ.clear()
+        os.environ.update(self._old_env)
+
     def get_base(self):
         return MozbuildObject(topsrcdir, None, log_manager)
 
@@ -45,8 +58,6 @@ class TestMozbuildObject(unittest.TestCase):
             self.assertTrue(os.path.isabs(base.topobjdir))
             self.assertTrue(base.topobjdir.startswith(topsrcdir))
 
-        del os.environ[b'MOZCONFIG']
-
     def test_objdir_trailing_slash(self):
         """Trailing slashes in topobjdir should be removed."""
         base = self.get_base()
@@ -60,7 +71,76 @@ class TestMozbuildObject(unittest.TestCase):
                 'foo'))
             self.assertTrue(base.topobjdir.endswith('foo'))
 
-        del os.environ[b'MOZCONFIG']
+    @unittest.skip('Failing on buildbot.')
+    def test_objdir_config_status(self):
+        """Ensure @CONFIG_GUESS@ is handled when loading mozconfig."""
+        base = self.get_base()
+        guess = base._config_guess
+
+        # There may be symlinks involved, so we use real paths to ensure
+        # path consistency.
+        d = os.path.realpath(tempfile.mkdtemp())
+        try:
+            mozconfig = os.path.join(d, 'mozconfig')
+            with open(mozconfig, 'wt') as fh:
+                fh.write('mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/foo/@CONFIG_GUESS@')
+            print('Wrote mozconfig %s' % mozconfig)
+
+            topobjdir = os.path.join(d, 'foo', guess)
+            os.makedirs(topobjdir)
+
+            # Create a fake topsrcdir.
+            guess_path = os.path.join(d, 'build', 'autoconf', 'config.guess')
+            os.makedirs(os.path.dirname(guess_path))
+            shutil.copy(os.path.join(topsrcdir, 'build', 'autoconf',
+                'config.guess',), guess_path)
+
+            mozinfo = os.path.join(topobjdir, 'mozinfo.json')
+            with open(mozinfo, 'wt') as fh:
+                json.dump(dict(
+                    topsrcdir=d,
+                    mozconfig=mozconfig,
+                ), fh)
+
+            os.environ[b'MOZCONFIG'] = mozconfig
+            os.chdir(topobjdir)
+
+            obj = MozbuildObject.from_environment()
+
+            self.assertEqual(obj.topobjdir, topobjdir)
+        finally:
+            shutil.rmtree(d)
+
+    @unittest.skip('Failing on buildbot.')
+    def test_relative_objdir(self):
+        """Relative defined objdirs are loaded properly."""
+        d = os.path.realpath(tempfile.mkdtemp())
+        try:
+            mozconfig = os.path.join(d, 'mozconfig')
+            with open(mozconfig, 'wt') as fh:
+                fh.write('mk_add_options MOZ_OBJDIR=./objdir')
+
+            topobjdir = os.path.join(d, 'objdir')
+            os.mkdir(topobjdir)
+
+            mozinfo = os.path.join(topobjdir, 'mozinfo.json')
+            with open(mozinfo, 'wt') as fh:
+                json.dump(dict(
+                    topsrcdir=d,
+                    mozconfig=mozconfig,
+                ), fh)
+
+            os.environ[b'MOZCONFIG'] = mozconfig
+            child = os.path.join(topobjdir, 'foo', 'bar')
+            os.makedirs(child)
+            os.chdir(child)
+
+            obj = MozbuildObject.from_environment()
+
+            self.assertEqual(obj.topobjdir, topobjdir)
+
+        finally:
+            shutil.rmtree(d)
 
     def test_config_guess(self):
         # It's difficult to test for exact values from the output of

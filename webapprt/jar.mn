@@ -6,5 +6,6 @@ webapprt.jar:
 % content webapprt %content/
 * content/webapp.js                     (content/webapp.js)
 * content/webapp.xul                    (content/webapp.xul)
+  content/mochitest-shared.js           (content/mochitest-shared.js)
   content/mochitest.js                  (content/mochitest.js)
   content/mochitest.xul                 (content/mochitest.xul)

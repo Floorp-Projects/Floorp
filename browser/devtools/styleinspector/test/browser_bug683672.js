@@ -13,6 +13,7 @@ const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/tes
 
 let tempScope = {};
 let {CssHtmlTree, PropertyView} = devtools.require("devtools/styleinspector/computed-view");
+let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 
 function test()
 {
@@ -25,49 +26,49 @@ function tabLoaded()
 {
   browser.removeEventListener("load", tabLoaded, true);
   doc = content.document;
-  openInspector(selectNode);
+  openComputedView(selectNode);
 }
 
-function selectNode(aInspector)
+function selectNode(aInspector, aComputedView)
 {
   inspector = aInspector;
+  computedView = aComputedView;
 
   div = content.document.getElementById("test");
   ok(div, "captain, we have the div");
 
   inspector.selection.setNode(div);
-
-  inspector.sidebar.once("computedview-ready", function() {
-    computedView = getComputedView(inspector);
-
-    inspector.sidebar.select("computedview");
-    runTests();
-  });
+  inspector.once("inspector-updated", runTests);
 }
 
 function runTests()
 {
-  testMatchedSelectors();
-
-  info("finishing up");
-  finishUp();
+  testMatchedSelectors().then(() => {
+    info("finishing up");
+    finishUp();
+  });
 }
 
 function testMatchedSelectors()
 {
   info("checking selector counts, matched rules and titles");
 
-  is(div, computedView.viewedElement,
+  is(div, computedView.viewedElement.rawNode(),
       "style inspector node matches the selected node");
 
   let propertyView = new PropertyView(computedView, "color");
-  let numMatchedSelectors = propertyView.propertyInfo.matchedSelectors.length;
+  propertyView.buildMain();
+  propertyView.buildSelectorContainer();
+  propertyView.matchedExpanded = true;
+  return propertyView.refreshMatchedSelectors().then(() => {
+    let numMatchedSelectors = propertyView.matchedSelectors.length;
 
-  is(numMatchedSelectors, 6,
-      "CssLogic returns the correct number of matched selectors for div");
+    is(numMatchedSelectors, 6,
+        "CssLogic returns the correct number of matched selectors for div");
 
-  is(propertyView.hasMatchedSelectors, true,
-      "hasMatchedSelectors returns true");
+    is(propertyView.hasMatchedSelectors, true,
+        "hasMatchedSelectors returns true");
+  }).then(null, (err) => console.error(err));
 }
 
 function finishUp()

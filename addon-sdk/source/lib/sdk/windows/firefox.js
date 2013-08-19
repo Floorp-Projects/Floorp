@@ -18,9 +18,9 @@ const { Cc, Ci, Cr } = require('chrome'),
       { WindowTrackerTrait } = windowUtils,
       { ns } = require('../core/namespace'),
       { observer: windowObserver } = require('./observer'),
-      { getOwnerWindow } = require('../private-browsing/window/utils'),
-      viewNS = require('../core/namespace').ns(),
-      { isPrivateBrowsingSupported } = require('../self');
+      { getOwnerWindow } = require('../private-browsing/window/utils');
+const { windowNS } = require('../window/namespace');
+const { isPrivateBrowsingSupported } = require('../self');
 const { ignoreWindow } = require('sdk/private-browsing/utils');
 
 /**
@@ -74,7 +74,7 @@ const BrowserWindowTrait = Trait.compose(
 
       this._load();
 
-      viewNS(this._public).window = this._window;
+      windowNS(this._public).window = this._window;
       getOwnerWindow.implement(this._public, getChromeWindow);
 
       return this;
@@ -256,7 +256,7 @@ const browserWindows = Trait.resolve({ toString: null }).compose(
 )();
 
 function getChromeWindow(window) {
-  return viewNS(window).window;
+  return windowNS(window).window;
 }
 
 exports.browserWindows = browserWindows;

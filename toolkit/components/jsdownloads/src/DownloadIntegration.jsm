@@ -27,6 +27,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadStore",
                                   "resource://gre/modules/DownloadStore.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadImport",
+                                  "resource://gre/modules/DownloadImport.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
+                                  "resource://gre/modules/DownloadUIHelper.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -59,10 +63,42 @@ XPCOMUtils.defineLazyGetter(this, "gParentalControlsService", function() {
   return null;
 });
 
+// This will be replaced by "DownloadUIHelper.strings" (see bug 905123).
 XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
   return Services.strings.
     createBundle("chrome://mozapps/locale/downloads/downloads.properties");
 });
+
+const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
+                                     "initWithCallback");
+
+/**
+ * Indicates the delay between a change to the downloads data and the related
+ * save operation.  This value is the result of a delicate trade-off, assuming
+ * the host application uses the browser history instead of the download store
+ * to save completed downloads.
+ *
+ * If a download takes less than this interval to complete (for example, saving
+ * a page that is already displayed), then no input/output is triggered by the
+ * download store except for an existence check, resulting in the best possible
+ * efficiency.
+ *
+ * Conversely, if the browser is closed before this interval has passed, the
+ * download will not be saved.  This prevents it from being restored in the next
+ * session, and if there is partial data associated with it, then the ".part"
+ * file will not be deleted when the browser starts again.
+ *
+ * In all cases, for best efficiency, this value should be high enough that the
+ * input/output for opening or closing the target file does not overlap with the
+ * one for saving the list of downloads.
+ */
+const kSaveDelayMs = 1500;
+
+/**
+ * This pref indicates if we have already imported (or attempted to import)
+ * the downloads database from the previous SQLite storage.
+ */
+const kPrefImportedFromSqlite = "browser.download.importedFromSqlite";
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadIntegration
@@ -105,26 +141,91 @@ this.DownloadIntegration = {
    * @param aList
    *        DownloadList object to be populated with the download objects
    *        serialized from the previous session.  This list will be persisted
-   *        to disk during the session lifetime or when the session terminates.
+   *        to disk during the session lifetime.
    *
    * @return {Promise}
    * @resolves When the list has been populated.
    * @rejects JavaScript exception.
    */
-  loadPersistent: function DI_loadPersistent(aList)
+  initializePublicDownloadList: function(aList) {
+    return Task.spawn(function task_DI_initializePublicDownloadList() {
+      if (this.dontLoad) {
+        return;
+      }
+
+      if (this._store) {
+        throw new Error("initializePublicDownloadList may be called only once.");
+      }
+
+      this._store = new DownloadStore(aList, OS.Path.join(
+                                                OS.Constants.Path.profileDir,
+                                                "downloads.json"));
+      this._store.onsaveitem = this.shouldPersistDownload.bind(this);
+
+      if (this._importedFromSqlite) {
+        try {
+          yield this._store.load();
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      } else {
+        let sqliteDBpath = OS.Path.join(OS.Constants.Path.profileDir,
+                                        "downloads.sqlite");
+
+        if (yield OS.File.exists(sqliteDBpath)) {
+          let sqliteImport = new DownloadImport(aList, sqliteDBpath);
+          yield sqliteImport.import();
+
+          let importCount = (yield aList.getAll()).length;
+          if (importCount > 0) {
+            try {
+              yield this._store.save();
+            } catch (ex) { }
+          }
+
+          // No need to wait for the file removal.
+          OS.File.remove(sqliteDBpath).then(null, Cu.reportError);
+        }
+
+        Services.prefs.setBoolPref(kPrefImportedFromSqlite, true);
+
+        // Don't even report error here because this file is pre Firefox 3
+        // and most likely doesn't exist.
+        OS.File.remove(OS.Path.join(OS.Constants.Path.profileDir,
+                                    "downloads.rdf"));
+
+      }
+
+      // After the list of persisten downloads have been loaded, add
+      // the DownloadAutoSaveView (even if the load operation failed).
+      new DownloadAutoSaveView(aList, this._store);
+    }.bind(this));
+  },
+
+  /**
+   * Determines if a Download object from the list of persistent downloads
+   * should be saved into a file, so that it can be restored across sessions.
+   *
+   * This function allows filtering out downloads that the host application is
+   * not interested in persisting across sessions, for example downloads that
+   * finished successfully.
+   *
+   * @param aDownload
+   *        The Download object to be inspected.  This is originally taken from
+   *        the global DownloadList object for downloads that were not started
+   *        from a private browsing window.  The item may have been removed
+   *        from the list since the save operation started, though in this case
+   *        the save operation will be repeated later.
+   *
+   * @return True to save the download, false otherwise.
+   */
+  shouldPersistDownload: function (aDownload)
   {
-    if (this.dontLoad) {
-      return Promise.resolve();
-    }
-
-    if (this._store) {
-      throw new Error("loadPersistent may be called only once.");
-    }
-
-    this._store = new DownloadStore(aList, OS.Path.join(
-                                              OS.Constants.Path.profileDir,
-                                              "downloads.json"));
-    return this._store.load();
+    // In the default implementation, we save all the downloads currently in
+    // progress, as well as stopped downloads for which we retained partially
+    // downloaded data.  Stopped downloads for which we don't need to track the
+    // presence of a ".part" file are only retained in the browser history.
+    return aDownload.hasPartialData || !aDownload.stopped;
   },
 
   /**
@@ -139,7 +240,7 @@ this.DownloadIntegration = {
         // This explicitly makes this function a generator for Task.jsm. We
         // need this because calls to the "yield" operator below may be
         // preprocessed out on some platforms.
-        yield;
+        yield undefined;
         throw new Task.Result(this._downloadsDirectory);
       }
 
@@ -316,6 +417,24 @@ this.DownloadIntegration = {
     let deferred = Task.spawn(function DI_launchDownload_task() {
       let file = new FileUtils.File(aDownload.target.path);
 
+      // Ask for confirmation if the file is executable.  We do this here,
+      // instead of letting the caller handle the prompt separately in the user
+      // interface layer, for two reasons.  The first is because of its security
+      // nature, so that add-ons cannot forget to do this check.  The second is
+      // that the system-level security prompt, if enabled, would be displayed
+      // at launch time in any case.
+      if (file.isExecutable() && !this.dontOpenFileAndFolder) {
+        // We don't anchor the prompt to a specific window intentionally, not
+        // only because this is the same behavior as the system-level prompt,
+        // but also because the most recently active window is the right choice
+        // in basically all cases.
+        let shouldLaunch = yield DownloadUIHelper.getPrompter()
+                                   .confirmLaunchExecutable(file.path);
+        if (!shouldLaunch) {
+          return;
+        }
+      }
+
       // In case of a double extension, like ".tar.gz", we only
       // consider the last one, because the MIME service cannot
       // handle multiple extensions.
@@ -462,7 +581,11 @@ this.DownloadIntegration = {
    */
   _createDownloadsDirectory: function DI_createDownloadsDirectory(aName) {
     let directory = this._getDirectory(aName);
-    directory.append(gStringBundle.GetStringFromName("downloadsFolder"));
+
+    // We read the name of the directory from the list of translated strings
+    // that is kept by the UI helper module, even if this string is not strictly
+    // displayed in the user interface.
+    directory.append(DownloadUIHelper.strings.downloadsFolder);
 
     // Create the Downloads folder and ignore if it already exists.
     return OS.File.makeDir(directory.path, { ignoreExisting: true }).
@@ -493,6 +616,10 @@ this.DownloadIntegration = {
    * @resolves When the views and observers are added.
    */
   addListObservers: function DI_addListObservers(aList, aIsPrivate) {
+    if (this.dontLoad) {
+      return Promise.resolve();
+    }
+
     DownloadObserver.registerView(aList, aIsPrivate);
     if (!DownloadObserver.observersAdded) {
       DownloadObserver.observersAdded = true;
@@ -501,10 +628,27 @@ this.DownloadIntegration = {
       Services.obs.addObserver(DownloadObserver, "last-pb-context-exiting", true);
     }
     return Promise.resolve();
-  }
+  },
+
+  /**
+   * Checks if we have already imported (or attempted to import)
+   * the downloads database from the previous SQLite storage.
+   *
+   * @return boolean True if we the previous DB was imported.
+   */
+  get _importedFromSqlite() {
+    try {
+      return Services.prefs.getBoolPref(kPrefImportedFromSqlite);
+    } catch (ex) {
+      return false;
+    }
+  },
 };
 
-let DownloadObserver = {
+////////////////////////////////////////////////////////////////////////////////
+//// DownloadObserver
+
+this.DownloadObserver = {
   /**
    * Flag to determine if the observers have been added previously.
    */
@@ -656,4 +800,135 @@ let DownloadObserver = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference])
+};
+
+////////////////////////////////////////////////////////////////////////////////
+//// DownloadAutoSaveView
+
+/**
+ * This view can be added to a DownloadList object to trigger a save operation
+ * in the given DownloadStore object when a relevant change occurs.
+ *
+ * @param aStore
+ *        The DownloadStore object used for saving.
+ */
+function DownloadAutoSaveView(aList, aStore) {
+  this._store = aStore;
+  this._downloadsMap = new Map();
+
+  // We set _initialized to true after adding the view, so that onDownloadAdded
+  // doesn't cause a save to occur.
+  aList.addView(this);
+  this._initialized = true;
+}
+
+DownloadAutoSaveView.prototype = {
+  /**
+   * True when the initial state of the downloads has been loaded.
+   */
+  _initialized: false,
+
+  /**
+   * The DownloadStore object used for saving.
+   */
+  _store: null,
+
+  /**
+   * This map contains only Download objects that should be saved to disk, and
+   * associates them with the result of their getSerializationHash function, for
+   * the purpose of detecting changes to the relevant properties.
+   */
+  _downloadsMap: null,
+
+  /**
+   * This is set to true when the save operation should be triggered.  This is
+   * required so that a new operation can be scheduled while the current one is
+   * in progress, without re-entering the save method.
+   */
+  _shouldSave: false,
+
+  /**
+   * nsITimer used for triggering the save operation after a delay, or null if
+   * saving has finished and there is no operation scheduled for execution.
+   *
+   * The logic here is different from the DeferredTask module in that multiple
+   * requests will never delay the operation for longer than the expected time
+   * (no grace delay), and the operation is never re-entered during execution.
+   */
+  _timer: null,
+
+  /**
+   * Timer callback used to serialize the list of downloads.
+   */
+  _save: function ()
+  {
+    Task.spawn(function () {
+      // Any save request received during execution will be handled later.
+      this._shouldSave = false;
+
+      // Execute the asynchronous save operation.
+      try {
+        yield this._store.save();
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+
+      // Handle requests received during the operation.
+      this._timer = null;
+      if (this._shouldSave) {
+        this.saveSoon();
+      }
+    }.bind(this)).then(null, Cu.reportError);
+  },
+
+  /**
+   * Called when the list of downloads changed, this triggers the asynchronous
+   * serialization of the list of downloads.
+   */
+  saveSoon: function ()
+  {
+    this._shouldSave = true;
+    if (!this._timer) {
+      this._timer = new Timer(this._save.bind(this), kSaveDelayMs,
+                              Ci.nsITimer.TYPE_ONE_SHOT);
+    }
+  },
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// DownloadList view
+
+  onDownloadAdded: function (aDownload)
+  {
+    if (DownloadIntegration.shouldPersistDownload(aDownload)) {
+      this._downloadsMap.set(aDownload, aDownload.getSerializationHash());
+      if (this._initialized) {
+        this.saveSoon();
+      }
+    }
+  },
+
+  onDownloadChanged: function (aDownload)
+  {
+    if (!DownloadIntegration.shouldPersistDownload(aDownload)) {
+      if (this._downloadsMap.has(aDownload)) {
+        this._downloadsMap.delete(aDownload);
+        this.saveSoon();
+      }
+      return;
+    }
+
+    let hash = aDownload.getSerializationHash();
+    if (this._downloadsMap.get(aDownload) != hash) {
+      this._downloadsMap.set(aDownload, hash);
+      this.saveSoon();
+    }
+  },
+
+  onDownloadRemoved: function (aDownload)
+  {
+    if (this._downloadsMap.has(aDownload)) {
+      this._downloadsMap.delete(aDownload);
+      this.saveSoon();
+    }
+  },
 };

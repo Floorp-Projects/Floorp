@@ -239,7 +239,7 @@ add_task(function test_history_expiration()
 
   // Start download two and then cancel it.
   downloadTwo.start();
-  let promiseCanceled = downloadTwo.cancel();
+  yield downloadTwo.cancel();
 
   // Force a history expiration.
   let expire = Cc["@mozilla.org/places/expiration;1"]
@@ -247,7 +247,6 @@ add_task(function test_history_expiration()
   expire.observe(null, "places-debug-start-expiration", -1);
 
   yield deferred.promise;
-  yield promiseCanceled;
 
   cleanup();
 });
@@ -284,4 +283,50 @@ add_task(function test_history_clear()
   PlacesUtils.history.removeAllPages();
 
   yield deferred.promise;
+});
+
+/**
+ * Tests the removeFinished method to ensure that it only removes
+ * finished downloads.
+ */
+add_task(function test_removeFinished()
+{
+  let list = yield promiseNewDownloadList();
+  let downloadOne = yield promiseNewDownload();
+  let downloadTwo = yield promiseNewDownload();
+  let downloadThree = yield promiseNewDownload();
+  let downloadFour = yield promiseNewDownload();
+  list.add(downloadOne);
+  list.add(downloadTwo);
+  list.add(downloadThree);
+  list.add(downloadFour);
+
+  let deferred = Promise.defer();
+  let removeNotifications = 0;
+  let downloadView = {
+    onDownloadRemoved: function (aDownload) {
+      do_check_true(aDownload == downloadOne ||
+                    aDownload == downloadTwo ||
+                    aDownload == downloadThree);
+      do_check_true(removeNotifications < 3);
+      if (++removeNotifications == 3) {
+        deferred.resolve();
+      }
+    },
+  };
+  list.addView(downloadView);
+
+  // Start three of the downloads, but don't start downloadTwo, then set
+  // downloadFour to have partial data. All downloads except downloadFour
+  // should be removed.
+  yield downloadOne.start();
+  yield downloadThree.start();
+  yield downloadFour.start();
+  downloadFour.hasPartialData = true;
+
+  list.removeFinished();
+  yield deferred.promise;
+
+  let downloads = yield list.getAll()
+  do_check_eq(downloads.length, 1);
 });

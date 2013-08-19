@@ -11,9 +11,11 @@ const { emit, off } = require("./event/core");
 const { when: unload } = require("./system/unload");
 const { PrefsTarget } = require("./preferences/event-target");
 const { id } = require("./self");
+const { preferencesBranch } = require('@loader/options');
+
 const observers = require("./deprecated/observer-service");
 
-const ADDON_BRANCH = "extensions." + id + ".";
+const ADDON_BRANCH = "extensions." + preferencesBranch + ".";
 const BUTTON_PRESSED = id + "-cmdPressed";
 
 const target = PrefsTarget({ branchName: ADDON_BRANCH });

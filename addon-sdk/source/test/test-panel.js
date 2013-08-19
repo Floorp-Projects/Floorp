@@ -132,26 +132,27 @@ exports["test Document Reload"] = function(assert, done) {
   let url2 = "data:text/html;charset=utf-8,page2";
   let content =
     "<script>" +
-    "window.onload = function() {" +
-    "  setTimeout(function () {" +
-    "    window.location = '" + url2 + "';" +
-    "  }, 0);" +
-    "}" +
+    "window.addEventListener('message', function() {"+
+    "  window.location = '" + url2 + "';" +
+    '}, false);' +
     "</script>";
   let messageCount = 0;
   let panel = Panel({
     // using URL here is intentional, see bug 859009
     contentURL: URL("data:text/html;charset=utf-8," + encodeURIComponent(content)),
-    contentScript: "self.postMessage(window.location.href)",
+    contentScript: "self.postMessage(window.location.href);" +
+                   // initiate change to url2
+                   "self.port.once('move', function() document.defaultView.postMessage('move', '*'));",
     onMessage: function (message) {
       messageCount++;
-      assert.notEqual(message, 'about:blank', 'about:blank is not a message ' + messageCount);
+      assert.notEqual(message, "about:blank", "about:blank is not a message " + messageCount);
 
       if (messageCount == 1) {
-        assert.ok(/data:text\/html/.test(message), "First document had a content script " + message);
+        assert.ok(/data:text\/html/.test(message), "First document had a content script; " + message);
+        panel.port.emit('move');
       }
       else if (messageCount == 2) {
-        assert.equal(message, url2, "Second document too");
+        assert.equal(message, url2, "Second document too; " + message);
         panel.destroy();
         done();
       }

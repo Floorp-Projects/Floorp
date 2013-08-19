@@ -1,0 +1,15 @@
+{
+  "name": "Hosted Permissions Test Webapp",
+  "description": "A webapp for testing permission installation.",
+  "launch_path": "/webapprtChrome/webapprt/test/chrome/webperm.html",
+  "permissions": {
+    "storage": { "description": "I need to store 1 million dollars in your bank account" },
+    "geolocation": { "description": "Desc" },
+    "camera": { "description": "Desc" },
+    "alarms": { "description": "Desc" },
+    "tcp-socket": { "description": "Desc" },
+    "network-events": { "description": "Desc" },
+    "webapps-manage": { "description": "Desc" },
+    "desktop-notification": { "description": "Desc" }
+  }
+}
