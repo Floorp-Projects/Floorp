@@ -77,6 +77,7 @@ MOCHITEST_FILES := \
   test_OfflineAudioContext.html \
   test_offlineDestinationChannelCountLess.html \
   test_offlineDestinationChannelCountMore.html \
+  test_oscillatorNode.html \
   test_pannerNode.html \
   test_pannerNode_equalPower.html \
   test_periodicWave.html \

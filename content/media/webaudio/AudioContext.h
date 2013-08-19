@@ -54,6 +54,7 @@ class HTMLMediaElement;
 class MediaElementAudioSourceNode;
 class MediaStreamAudioDestinationNode;
 class MediaStreamAudioSourceNode;
+class OscillatorNode;
 class PannerNode;
 class ScriptProcessorNode;
 class WaveShaperNode;
@@ -192,6 +193,9 @@ public:
 
   already_AddRefed<BiquadFilterNode>
   CreateBiquadFilter();
+
+  already_AddRefed<OscillatorNode>
+  CreateOscillator();
 
   already_AddRefed<PeriodicWave>
   CreatePeriodicWave(const Float32Array& aRealData, const Float32Array& aImagData,
