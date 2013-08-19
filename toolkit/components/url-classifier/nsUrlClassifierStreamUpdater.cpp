@@ -15,8 +15,12 @@
 #include "nsToolkitCompsCID.h"
 #include "nsUrlClassifierStreamUpdater.h"
 #include "prlog.h"
+#include "nsIInterfaceRequestor.h"
+#include "mozilla/LoadContext.h"
 
 static const char* gQuitApplicationMessage = "quit-application";
+
+#undef LOG
 
 // NSPR_LOG_MODULES=UrlClassifierStreamUpdater:5
 #if defined(PR_LOGGING)
@@ -123,6 +127,14 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
       (NS_SUCCEEDED(aUpdateUrl->SchemeIs("data", &match)) && match)) {
     mChannel->SetContentType(NS_LITERAL_CSTRING("application/vnd.google.safebrowsing-update"));
   }
+
+   // Create a custom LoadContext for SafeBrowsing, so we can use callbacks on
+   // the channel to query the appId which allows separation of safebrowsing
+   // cookies in a separate jar.
+  nsCOMPtr<nsIInterfaceRequestor> sbContext =
+    new mozilla::LoadContext(NECKO_SAFEBROWSING_APP_ID);
+  rv = mChannel->SetNotificationCallbacks(sbContext);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Make the request
   rv = mChannel->AsyncOpen(this, nullptr);
