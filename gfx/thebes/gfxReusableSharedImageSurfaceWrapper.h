@@ -26,6 +26,11 @@ public:
   void ReadLock() MOZ_OVERRIDE;
   void ReadUnlock() MOZ_OVERRIDE;
 
+  Type GetType()
+  {
+    return TYPE_SHARED_IMAGE;
+  }
+
   /**
    * Returns the shared memory segment that backs the shared image surface.
    */

@@ -14,11 +14,17 @@
 #include "GLContext.h"
 #include "BasicLayers.h" // for PaintContext
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
-#include "gfxReusableSharedImageSurfaceWrapper.h"
-#include "gfxSharedImageSurface.h"
 #include "gfxPlatform.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "gfx2DGlue.h"
+
+#ifdef MOZ_ANDROID_OMTC
+#  include "gfxReusableImageSurfaceWrapper.h"
+#  include "gfxImageSurface.h"
+#else
+#  include "gfxReusableSharedImageSurfaceWrapper.h"
+#  include "gfxSharedImageSurface.h"
+#endif
 
 #include <stdint.h>
 
@@ -476,11 +482,21 @@ DeprecatedTextureClientTile::EnsureAllocated(gfx::IntSize aSize, gfxASurface::gf
 {
   if (!mSurface ||
       mSurface->Format() != gfxPlatform::GetPlatform()->OptimalFormatForContent(aType)) {
+#ifdef MOZ_ANDROID_OMTC
+    // If we're using OMTC, we can save some cycles by not using shared
+    // memory. Using shared memory here is a small, but significant
+    // performance regression.
+    gfxImageSurface* tmpTile = new gfxImageSurface(gfxIntSize(aSize.width, aSize.height),
+                                                   gfxPlatform::GetPlatform()->OptimalFormatForContent(aType),
+                                                   aType != gfxASurface::CONTENT_COLOR);
+    mSurface = new gfxReusableImageSurfaceWrapper(tmpTile);
+#else
     nsRefPtr<gfxSharedImageSurface> sharedImage =
       gfxSharedImageSurface::CreateUnsafe(mForwarder,
                                           gfxIntSize(aSize.width, aSize.height),
                                           gfxPlatform::GetPlatform()->OptimalFormatForContent(aType));
     mSurface = new gfxReusableSharedImageSurfaceWrapper(mForwarder, sharedImage);
+#endif
     mContentType = aType;
   }
   return true;
