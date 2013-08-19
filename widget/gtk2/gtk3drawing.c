@@ -675,8 +675,8 @@ ensure_tree_header_cell_widget()
         gtk_tree_view_append_column(GTK_TREE_VIEW(gTreeViewWidget), lastTreeViewColumn);
 
         /* Use the middle column's header for our button */
-        /* TODO, but they can't be NULL */
-        gTreeHeaderCellWidget = gtk_button_new_with_label("M");
+        gTreeHeaderCellWidget = gtk_tree_view_column_get_button(gMiddleTreeViewColumn);
+        /* TODO, but it can't be NULL */
         gTreeHeaderSortArrowWidget = gtk_button_new();
     }
     return MOZ_GTK_SUCCESS;
@@ -3255,9 +3255,7 @@ moz_gtk_shutdown()
     if (gProtoWindow)
         gtk_widget_destroy(gProtoWindow);
 
-    /* TODO - replace it with appropriate widgets */
-    if (gTreeHeaderCellWidget)
-        gtk_widget_destroy(gTreeHeaderCellWidget);
+    /* TODO - replace it with appropriate widget */
     if (gTreeHeaderSortArrowWidget)
         gtk_widget_destroy(gTreeHeaderSortArrowWidget);
 
