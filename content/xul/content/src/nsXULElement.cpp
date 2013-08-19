@@ -2594,7 +2594,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                               nsIURI* aURI,
                               uint32_t aLineNo,
                               nsIDocument* aDocument,
-                              nsIScriptGlobalObject* aGlobal,
+                              nsXULPrototypeDocument* aProtoDoc,
                               nsIOffThreadScriptReceiver *aOffThreadReceiver /* = nullptr */)
 {
     // We'll compile the script using the prototype document's special
@@ -2607,33 +2607,16 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     // our script object would reference the first document, and the
     // first document would indirectly reference the prototype document
     // because it keeps the prototype cache alive. Circularity!
-    NS_ASSERTION(aGlobal, "prototype doc has no script global");
-    if (!aGlobal) {
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Use the prototype document's special context
-    nsIScriptContext *context = aGlobal->GetScriptContext();
-    NS_ASSERTION(context, "no context for script global");
-    if (! context) {
-      return NS_ERROR_UNEXPECTED;
-    }
+    MOZ_ASSERT(aProtoDoc);
+    NS_ENSURE_TRUE(aProtoDoc->GetCompilationGlobal(), NS_ERROR_UNEXPECTED);
+    AutoSafeJSContext cx;
+    JSAutoCompartment ac(cx, aProtoDoc->GetCompilationGlobal());
 
     nsAutoCString urlspec;
     nsContentUtils::GetWrapperSafeScriptFilename(aDocument, aURI, urlspec);
 
     // Ok, compile it to create a prototype script object!
-
-    JSContext* cx = context->GetNativeContext();
-    AutoCxPusher pusher(cx);
-
-    bool ok = false;
-    nsresult rv = nsContentUtils::GetSecurityManager()->
-                    CanExecuteScripts(cx, aDocument->NodePrincipal(), &ok);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(ok, NS_OK);
     NS_ENSURE_TRUE(JSVersion(mLangVersion) != JSVERSION_UNKNOWN, NS_OK);
-
     JS::CompileOptions options(cx);
     options.setPrincipals(nsJSPrincipals::get(aDocument->NodePrincipal()))
            .setFileAndLine(urlspec.get(), aLineNo)

@@ -629,6 +629,13 @@ nsXULPrototypeDocument::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
     mNodeInfoManager->SetDocumentPrincipal(aPrincipal);
 }
 
+JSObject*
+nsXULPrototypeDocument::GetCompilationGlobal()
+{
+  GetScriptGlobalObject()->EnsureScriptEnvironment();
+  return GetScriptGlobalObject()->GetGlobalJSObject();
+}
+
 nsNodeInfoManager*
 nsXULPrototypeDocument::GetNodeInfoManager()
 {
