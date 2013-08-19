@@ -72,7 +72,7 @@ function test() {
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
   gTestBrowser.addEventListener("load", pageLoad, true);
-  prepareTest(test1, gTestRoot + "plugin_unknown.html");
+  prepareTest(runAfterPluginBindingAttached(test1), gTestRoot + "plugin_unknown.html");
 }
 
 function finishTest() {
