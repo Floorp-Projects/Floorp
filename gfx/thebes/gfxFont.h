@@ -324,7 +324,7 @@ public:
     // can be safely dereferenced.
     virtual nsresult ReadCMAP();
 
-    bool TryGetSVGData();
+    bool TryGetSVGData(gfxFont* aFont);
     bool HasSVGGlyph(uint32_t aGlyphId);
     bool GetSVGGlyphExtents(gfxContext *aContext, uint32_t aGlyphId,
                             gfxRect *aResult);
@@ -414,6 +414,10 @@ public:
     // Caller must call gfxFontEntry::ReleaseGrFace when finished with it.
     gr_face* GetGrFace();
     virtual void ReleaseGrFace(gr_face* aFace);
+
+    // Called to notify that aFont is being destroyed. Needed when we're tracking
+    // the fonts belonging to this font entry.
+    void NotifyFontDestroyed(gfxFont* aFont);
     
     // For memory reporting
     virtual void SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
@@ -457,7 +461,8 @@ public:
     nsAutoArrayPtr<uint8_t> mUVSData;
     gfxUserFontData* mUserFontData;
     gfxSVGGlyphs    *mSVGGlyphs;
-
+    // list of gfxFonts that are using SVG glyphs
+    nsTArray<gfxFont*> mFontsUsingSVGGlyphs;
     nsTArray<gfxFontFeature> mFeatureSettings;
     uint32_t         mLanguageOverride;
 
