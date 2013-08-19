@@ -256,16 +256,16 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      * This method does not wait for any confirmation from Gecko before
      * returning.
      */
-    protected final void loadUrlInTab(final String url) {
+    protected final void loadUrl(final String url) {
         try {
             ClassLoader classLoader = getActivity().getClassLoader();
             Class tabsClass = classLoader.loadClass("org.mozilla.gecko.Tabs");
             Method getInstance = tabsClass.getMethod("getInstance");
-            Method loadUrlInTab = tabsClass.getMethod("loadUrlInTab", String.class);
+            Method loadUrl = tabsClass.getMethod("loadUrl", String.class);
             Object tabs = getInstance.invoke(null);
-            loadUrlInTab.invoke(tabs, new Object[] { url });
+            loadUrl.invoke(tabs, new Object[] { url });
         } catch (Exception e) {
-            mAsserter.dumpLog("Exception in loadUrlInTab", e);
+            mAsserter.dumpLog("Exception in loadUrl", e);
             throw new RuntimeException(e);
         }
     }
