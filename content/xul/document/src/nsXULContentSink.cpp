@@ -985,7 +985,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           // file right away.  Otherwise we'll end up reloading the script and
           // corrupting the FastLoad file trying to serialize it, in the case
           // where it's already there.
-          script->DeserializeOutOfLine(nullptr, mPrototype->GetScriptGlobalObject());
+          script->DeserializeOutOfLine(nullptr, mPrototype);
       }
 
       nsPrototypeArray* children = nullptr;

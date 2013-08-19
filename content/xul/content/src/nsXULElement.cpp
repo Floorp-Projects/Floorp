@@ -47,7 +47,6 @@
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptRuntime.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "mozilla/css/StyleRule.h"
@@ -1991,7 +1990,7 @@ nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
 
 nsresult
 nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
-                                 nsIScriptGlobalObject* aGlobal,
+                                 nsXULPrototypeDocument* aProtoDoc,
                                  const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
@@ -2053,7 +2052,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
         case eType_Element:
         case eType_Text:
         case eType_PI:
-            tmp = child->Serialize(aStream, aGlobal, aNodeInfos);
+            tmp = child->Serialize(aStream, aProtoDoc, aNodeInfos);
             if (NS_FAILED(tmp)) {
               rv = tmp;
             }
@@ -2070,7 +2069,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
               rv = tmp;
             }
             if (! script->mOutOfLine) {
-                tmp = script->Serialize(aStream, aGlobal, aNodeInfos);
+                tmp = script->Serialize(aStream, aProtoDoc, aNodeInfos);
                 if (NS_FAILED(tmp)) {
                   rv = tmp;
                 }
@@ -2088,7 +2087,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
                     // muxed document is already there (written by a prior
                     // session, or by an earlier cache episode during this
                     // session).
-                    tmp = script->SerializeOutOfLine(aStream, aGlobal);
+                    tmp = script->SerializeOutOfLine(aStream, aProtoDoc);
                     if (NS_FAILED(tmp)) {
                       rv = tmp;
                     }
@@ -2103,7 +2102,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
 
 nsresult
 nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
-                                   nsIScriptGlobalObject* aGlobal,
+                                   nsXULPrototypeDocument* aProtoDoc,
                                    nsIURI* aDocumentURI,
                                    const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
@@ -2177,7 +2176,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
 
-                tmp = child->Deserialize(aStream, aGlobal, aDocumentURI,
+                tmp = child->Deserialize(aStream, aProtoDoc, aDocumentURI,
                                          aNodeInfos);
                 if (NS_FAILED(tmp)) {
                   rv = tmp;
@@ -2189,7 +2188,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
 
-                tmp = child->Deserialize(aStream, aGlobal, aDocumentURI,
+                tmp = child->Deserialize(aStream, aProtoDoc, aDocumentURI,
                                          aNodeInfos);
                 if (NS_FAILED(tmp)) {
                   rv = tmp;
@@ -2201,7 +2200,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                     return NS_ERROR_OUT_OF_MEMORY;
                 child->mType = childType;
 
-                tmp = child->Deserialize(aStream, aGlobal, aDocumentURI,
+                tmp = child->Deserialize(aStream, aProtoDoc, aDocumentURI,
                                          aNodeInfos);
                 if (NS_FAILED(tmp)) {
                   rv = tmp;
@@ -2220,7 +2219,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                   rv = tmp;
                 }
                 if (! script->mOutOfLine) {
-                    tmp = script->Deserialize(aStream, aGlobal, aDocumentURI,
+                    tmp = script->Deserialize(aStream, aProtoDoc, aDocumentURI,
                                               aNodeInfos);
                     if (NS_FAILED(tmp)) {
                       rv = tmp;
@@ -2231,7 +2230,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                       rv = tmp;
                     }
 
-                    tmp = script->DeserializeOutOfLine(aStream, aGlobal);
+                    tmp = script->DeserializeOutOfLine(aStream, aProtoDoc);
                     if (NS_FAILED(tmp)) {
                       rv = tmp;
                     }
@@ -2371,11 +2370,14 @@ nsXULPrototypeScript::~nsXULPrototypeScript()
 
 nsresult
 nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
-                                nsIScriptGlobalObject* aGlobal,
+                                nsXULPrototypeDocument* aProtoDoc,
                                 const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
-    nsIScriptContext *context = aGlobal->GetScriptContext();
-    AutoPushJSContext cx(context->GetNativeContext());
+    AutoSafeJSContext cx;
+    JS::Rooted<JSObject*> global(cx, aProtoDoc->GetCompilationGlobal());
+    NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
+    JSAutoCompartment ac(cx, global);
+
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nullptr ||
                  !mScriptObject,
                  "script source still loading when serializing?!");
@@ -2402,7 +2404,7 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
 
 nsresult
 nsXULPrototypeScript::SerializeOutOfLine(nsIObjectOutputStream* aStream,
-                                         nsIScriptGlobalObject* aGlobal)
+                                         nsXULPrototypeDocument* aProtoDoc)
 {
     nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
 
@@ -2432,7 +2434,7 @@ nsXULPrototypeScript::SerializeOutOfLine(nsIObjectOutputStream* aStream,
     rv = cache->GetOutputStream(mSrcURI, getter_AddRefs(oos));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    nsresult tmp = Serialize(oos, aGlobal, nullptr);
+    nsresult tmp = Serialize(oos, aProtoDoc, nullptr);
     if (NS_FAILED(tmp)) {
       rv = tmp;
     }
@@ -2449,7 +2451,7 @@ nsXULPrototypeScript::SerializeOutOfLine(nsIObjectOutputStream* aStream,
 
 nsresult
 nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
-                                  nsIScriptGlobalObject* aGlobal,
+                                  nsXULPrototypeDocument* aProtoDoc,
                                   nsIURI* aDocumentURI,
                                   const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
@@ -2461,11 +2463,11 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     aStream->Read32(&mLineNo);
     aStream->Read32(&mLangVersion);
 
-    nsIScriptContext *context = aGlobal->GetScriptContext();
-    AutoPushJSContext cx(context->GetNativeContext());
-    NS_ASSERTION(context != nullptr, "Have no context for deserialization");
-    NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
-    JSAutoRequest ar(cx);
+    AutoSafeJSContext cx;
+    JS::Rooted<JSObject*> global(cx, aProtoDoc->GetCompilationGlobal());
+    NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
+    JSAutoCompartment ac(cx, global);
+
     JS::Rooted<JSScript*> newScriptObject(cx);
     MOZ_ASSERT(!strcmp(JS_GetClass(JS::CurrentGlobalOrNull(cx))->name,
                        "nsXULPrototypeScript compilation scope"));
@@ -2479,7 +2481,7 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
 
 nsresult
 nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
-                                           nsIScriptGlobalObject* aGlobal)
+                                           nsXULPrototypeDocument* aProtoDoc)
 {
     // Keep track of failure via rv, so we can
     // AbortCaching if things look bad.
@@ -2523,7 +2525,7 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
             // We're better off slow-loading than bailing out due to a
             // error.
             if (NS_SUCCEEDED(rv))
-                rv = Deserialize(objectInput, aGlobal, nullptr, nullptr);
+                rv = Deserialize(objectInput, aProtoDoc, nullptr, nullptr);
 
             if (NS_SUCCEEDED(rv)) {
                 if (useXULCache && mSrcURI) {
@@ -2678,7 +2680,7 @@ nsXULPrototypeScript::Set(JSScript* aObject)
 
 nsresult
 nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
-                              nsIScriptGlobalObject* aGlobal,
+                              nsXULPrototypeDocument* aProtoDoc,
                               const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
@@ -2696,7 +2698,7 @@ nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
 
 nsresult
 nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
-                                nsIScriptGlobalObject* aGlobal,
+                                nsXULPrototypeDocument* aProtoDoc,
                                 nsIURI* aDocumentURI,
                                 const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
@@ -2714,7 +2716,7 @@ nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
 
 nsresult
 nsXULPrototypePI::Serialize(nsIObjectOutputStream* aStream,
-                            nsIScriptGlobalObject* aGlobal,
+                            nsXULPrototypeDocument* aProtoDoc,
                             const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
@@ -2736,7 +2738,7 @@ nsXULPrototypePI::Serialize(nsIObjectOutputStream* aStream,
 
 nsresult
 nsXULPrototypePI::Deserialize(nsIObjectInputStream* aStream,
-                              nsIScriptGlobalObject* aGlobal,
+                              nsXULPrototypeDocument* aProtoDoc,
                               nsIURI* aDocumentURI,
                               const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
