@@ -31,7 +31,7 @@ bool ots_svg_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     NONFATAL_FAILURE("Couldn't read SVG table header");
   }
 
-  if (version != 1) {
+  if (version != 0) {
     NONFATAL_FAILURE("Unknown SVG table version");
   }
 
