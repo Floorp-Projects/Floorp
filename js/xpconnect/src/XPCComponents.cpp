@@ -37,6 +37,8 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
 #include "nsDOMClassInfoID.h"
+#include "nsGlobalWindow.h"
+
 
 using namespace mozilla;
 using namespace js;
@@ -2935,6 +2937,353 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+bool
+NewFunctionForwarder(JSContext *cx, HandleId id, HandleObject callable,
+                     bool doclone, MutableHandleValue vp);
+
+/*
+ * Instead of simply wrapping a function into another compartment,
+ * this helper function creates a native function in the target
+ * compartment and forwards the call to the original function.
+ * That call will be different than a regular JS function call in
+ * that, the |this| is left unbound, and all the non-native JS
+ * object arguments will be cloned using the structured clone
+ * algorithm.
+ * The return value is the new forwarder function, wrapped into
+ * the caller's compartment.
+ * The 3rd argument is the name of the property that will
+ * be set on the target scope, with the forwarder function as
+ * the value.
+ * The principal of the caller must subsume that of the target.
+ *
+ * Expected type of the arguments and the return value:
+ * function exportFunction(function funToExport,
+ *                         object targetScope,
+ *                         string name)
+ */
+static bool
+ExportFunction(JSContext *cx, unsigned argc, jsval *vp)
+{
+    MOZ_ASSERT(cx);
+    if (argc < 3) {
+        JS_ReportError(cx, "Function requires at least 3 arguments");
+        return false;
+    }
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args[0].isObject() || !args[1].isObject() || !args[2].isString()) {
+        JS_ReportError(cx, "Invalid argument");
+        return false;
+    }
+
+    RootedObject funObj(cx, &args[0].toObject());
+    RootedObject targetScope(cx, &args[1].toObject());
+    RootedString funName(cx, args[2].toString());
+
+    // We can only export functions to scopes those are transparent for us,
+    // so if there is a security wrapper around targetScope we must throw.
+    targetScope = CheckedUnwrap(targetScope);
+    if (!targetScope) {
+        JS_ReportError(cx, "Permission denied to export function into scope");
+        return false;
+    }
+
+    if (JS_GetStringLength(funName) == 0) {
+        JS_ReportError(cx, "3rd argument should be a non-empty string");
+        return false;
+    }
+
+    {
+        // We need to operate in the target scope from here on, let's enter
+        // its compartment.
+        JSAutoCompartment ac(cx, targetScope);
+
+        // Unwrapping to see if we have a callable.
+        funObj = UncheckedUnwrap(funObj);
+        if (!JS_ObjectIsCallable(cx, funObj)) {
+            JS_ReportError(cx, "First argument must be a function");
+            return false;
+        }
+
+        // The function forwarder will live in the target compartment. Since
+        // this function will be referenced from its private slot, to avoid a
+        // GC hazard, we must wrap it to the same compartment.
+        if (!JS_WrapObject(cx, funObj.address()))
+            return false;
+
+        RootedId id(cx);
+        if (!JS_ValueToId(cx, args[2], id.address()))
+            return false;
+
+        // And now, let's create the forwarder function in the target compartment
+        // for the function the be exported.
+        if (!NewFunctionForwarder(cx, id, funObj, /* doclone = */ true, args.rval())) {
+            JS_ReportError(cx, "Exporting function failed");
+            return false;
+        }
+
+        // We have the forwarder function in the target compartment, now
+        // we have to add it to the target scope as a property.
+        if (!JS_DefinePropertyById(cx, targetScope, id, args.rval(),
+                                   JS_PropertyStub, JS_StrictPropertyStub,
+                                   JSPROP_ENUMERATE))
+            return false;
+    }
+
+    // Finally we have to re-wrap the exported function back to the caller compartment.
+    if (!JS_WrapValue(cx, args.rval().address()))
+        return false;
+
+    return true;
+}
+
+static bool
+GetFilenameAndLineNumber(JSContext *cx, nsACString &filename, unsigned &lineno)
+{
+    JSScript *script;
+    if (JS_DescribeScriptedCaller(cx, &script, &lineno)) {
+        if (const char *cfilename = JS_GetScriptFilename(cx, script)) {
+            filename.Assign(nsDependentCString(cfilename));
+            return true;
+        }
+    }
+    return false;
+}
+
+namespace xpc {
+bool
+IsReflector(JSObject *obj)
+{
+    return IS_WN_REFLECTOR(obj) || dom::IsDOMObject(obj);
+}
+} /* namespace xpc */
+
+enum ForwarderCloneTags {
+    SCTAG_BASE = JS_SCTAG_USER_MIN,
+    SCTAG_REFLECTOR
+};
+
+static JSObject *
+CloneNonReflectorsRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t tag,
+                       uint32_t data, void *closure)
+{
+    MOZ_ASSERT(closure, "Null pointer!");
+    AutoObjectVector *reflectors = static_cast<AutoObjectVector *>(closure);
+    if (tag == SCTAG_REFLECTOR) {
+        MOZ_ASSERT(!data);
+
+        size_t idx;
+        if (JS_ReadBytes(reader, &idx, sizeof(size_t))) {
+            RootedObject reflector(cx, reflectors->handleAt(idx));
+            MOZ_ASSERT(reflector, "No object pointer?");
+            MOZ_ASSERT(IsReflector(reflector), "Object pointer must be a reflector!");
+
+            JS_WrapObject(cx, reflector.address());
+            JS_ASSERT(WrapperFactory::IsXrayWrapper(reflector) ||
+                      IsReflector(reflector));
+
+            return reflector;
+        }
+    }
+
+    JS_ReportError(cx, "CloneNonReflectorsRead error");
+    return nullptr;
+}
+
+static bool
+CloneNonReflectorsWrite(JSContext *cx, JSStructuredCloneWriter *writer,
+                        Handle<JSObject *> obj, void *closure)
+{
+    MOZ_ASSERT(closure, "Null pointer!");
+
+    // We need to maintain a list of reflectors to make sure all these objects
+    // are properly rooter. Only their indices will be serialized.
+    AutoObjectVector *reflectors = static_cast<AutoObjectVector *>(closure);
+    if (IsReflector(obj)) {
+        if (!reflectors->append(obj))
+            return false;
+
+        size_t idx = reflectors->length()-1;
+        if (JS_WriteUint32Pair(writer, SCTAG_REFLECTOR, 0) &&
+            JS_WriteBytes(writer, &idx, sizeof(size_t))) {
+            return true;
+        }
+    }
+
+    JS_ReportError(cx, "CloneNonReflectorsWrite error");
+    return false;
+}
+
+JSStructuredCloneCallbacks gForwarderStructuredCloneCallbacks = {
+    CloneNonReflectorsRead,
+    CloneNonReflectorsWrite,
+    nullptr
+};
+
+/*
+ * This is a special structured cloning, that clones only non-reflectors.
+ * The function assumes the cx is already entered the compartment we want
+ * to clone to, and that if val is an object is from the compartment we
+ * clone from.
+ */
+bool
+CloneNonReflectors(JSContext *cx, MutableHandleValue val)
+{
+    JSAutoStructuredCloneBuffer buffer;
+    AutoObjectVector rootedReflectors(cx);
+    {
+        // For parsing val we have to enter its compartment.
+        // (unless it's a primitive)
+        Maybe<JSAutoCompartment> ac;
+        if (val.isObject()) {
+            ac.construct(cx, &val.toObject());
+        }
+
+        if (!buffer.write(cx, val,
+            &gForwarderStructuredCloneCallbacks,
+            &rootedReflectors))
+        {
+            return false;
+        }
+    }
+
+    // Now recreate the clones in the target compartment.
+    RootedValue rval(cx);
+    if (!buffer.read(cx, val.address(),
+        &gForwarderStructuredCloneCallbacks,
+        &rootedReflectors))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+/*
+ * Similar to evalInSandbox except this one is used to eval a script in the
+ * scope of a window. Also note, that the return value and the possible exceptions
+ * in the script are structured cloned, unless they are natives (then they are just
+ * wrapped).
+ * Principal of the caller must subsume the target's.
+ *
+ * Expected type of the arguments:
+ * value evalInWindow(string script,
+ *                    object window)
+ */
+static bool
+EvalInWindow(JSContext *cx, unsigned argc, jsval *vp)
+{
+    MOZ_ASSERT(cx);
+    if (argc < 2) {
+        JS_ReportError(cx, "Function requires two arguments");
+        return false;
+    }
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args[0].isString() || !args[1].isObject()) {
+        JS_ReportError(cx, "Invalid arguments");
+        return false;
+    }
+
+    RootedString srcString(cx, args[0].toString());
+    RootedObject targetScope(cx, &args[1].toObject());
+
+    // If we cannot unwrap we must not eval in it.
+    targetScope = CheckedUnwrap(targetScope);
+    if (!targetScope) {
+        JS_ReportError(cx, "Permission denied to eval in target scope");
+        return false;
+    }
+
+    // Make sure that we have a window object.
+    RootedObject inner(cx, CheckedUnwrap(targetScope, /* stopAtOuter = */ false));
+    nsCOMPtr<nsIGlobalObject> global;
+    nsCOMPtr<nsPIDOMWindow> window;
+    if (!JS_IsGlobalObject(inner) ||
+        !(global = GetNativeForGlobal(inner)) ||
+        !(window = do_QueryInterface(global)))
+    {
+        JS_ReportError(cx, "Second argument must be a window");
+        return false;
+    }
+
+    nsCOMPtr<nsIScriptContext> context =
+        (static_cast<nsGlobalWindow*>(window.get()))->GetScriptContext();
+    if (!context) {
+        JS_ReportError(cx, "Script context needed");
+        return false;
+    }
+
+    if (!context->GetScriptsEnabled()) {
+        JS_ReportError(cx, "Scripts are disabled in this window");
+        return false;
+    }
+
+    nsCString filename;
+    unsigned lineNo;
+    if (!GetFilenameAndLineNumber(cx, filename, lineNo)) {
+        // Default values for non-scripted callers.
+        filename.Assign("Unknown");
+        lineNo = 0;
+    }
+
+    nsDependentJSString srcDepString;
+    srcDepString.init(cx, srcString);
+
+    {
+        // CompileOptions must be created from the context
+        // we will execute this script in.
+        JSContext *wndCx = context->GetNativeContext();
+        AutoCxPusher pusher(wndCx);
+        JS::CompileOptions compileOptions(wndCx);
+        compileOptions.setFileAndLine(filename.get(), lineNo);
+
+        // We don't want the JS engine to automatically report
+        // uncaught exceptions.
+        nsJSUtils::EvaluateOptions evaluateOptions;
+        evaluateOptions.setReportUncaught(false);
+
+        nsresult rv = nsJSUtils::EvaluateString(wndCx,
+                                                srcDepString,
+                                                targetScope,
+                                                compileOptions,
+                                                evaluateOptions,
+                                                args.rval().address());
+
+        if (NS_FAILED(rv)) {
+            // If there was an exception we get it as a return value, if
+            // the evaluation failed for some other reason, then a default
+            // exception is raised.
+            MOZ_ASSERT(!JS_IsExceptionPending(wndCx),
+                       "Exception should be delivered as return value.");
+            if (args.rval().isUndefined()) {
+                MOZ_ASSERT(rv == NS_ERROR_OUT_OF_MEMORY);
+                return false;
+            }
+
+            // If there was an exception thrown we should set it
+            // on the calling context.
+            RootedValue exn(wndCx, args.rval());
+            // First we should reset the return value.
+            args.rval().set(UndefinedValue());
+
+            // Then clone the exception.
+            if (CloneNonReflectors(cx, &exn))
+                JS_SetPendingException(cx, exn);
+
+            return false;
+        }
+    }
+
+    // Let's clone the return value back to the callers compartment.
+    if (!CloneNonReflectors(cx, args.rval())) {
+        args.rval().set(UndefinedValue());
+        return false;
+    }
+
+    return true;
+}
+
 static bool
 sandbox_enumerate(JSContext *cx, HandleObject obj)
 {
@@ -3350,6 +3699,12 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
         if (options.wantXHRConstructor &&
             !JS_DefineFunction(cx, sandbox, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR))
             return NS_ERROR_XPC_UNEXPECTED;
+
+        if (options.wantExportHelpers &&
+            (!JS_DefineFunction(cx, sandbox, "exportFunction", ExportFunction, 3, 0) ||
+             !JS_DefineFunction(cx, sandbox, "evalInWindow", EvalInWindow, 2, 0)))
+            return NS_ERROR_XPC_UNEXPECTED;
+
     }
 
     if (vp) {
@@ -3618,6 +3973,10 @@ ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
 
     rv = GetBoolPropFromOptions(cx, optionsObject,
                                 "wantXHRConstructor", &options.wantXHRConstructor);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetBoolPropFromOptions(cx, optionsObject,
+                                "wantExportHelpers", &options.wantExportHelpers);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetStringPropFromOptions(cx, optionsObject,
@@ -4205,7 +4564,7 @@ nsXPCComponents_Utils::CreateDateIn(const Value &vobj, int64_t msec, JSContext *
 }
 
 bool
-FunctionWrapper(JSContext *cx, unsigned argc, Value *vp)
+NonCloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -4219,17 +4578,54 @@ FunctionWrapper(JSContext *cx, unsigned argc, Value *vp)
     return JS_CallFunctionValue(cx, obj, v, args.length(), args.array(), vp);
 }
 
+/*
+ * Forwards the call to the exported function. Clones all the non reflectors, ignores
+ * the |this| argument.
+ */
 bool
-WrapCallable(JSContext *cx, HandleObject obj, HandleId id, HandleObject propobj,
-             MutableHandleValue vp)
+CloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSFunction *fun = js::NewFunctionByIdWithReserved(cx, FunctionWrapper, 0, 0,
-                                                      JS_GetGlobalForObject(cx, obj), id);
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedValue v(cx, js::GetFunctionNativeReserved(&args.callee(), 0));
+    NS_ASSERTION(v.isObject(), "weird function");
+    RootedObject origFunObj(cx, UncheckedUnwrap(&v.toObject()));
+    {
+        JSAutoCompartment ac(cx, origFunObj);
+        // Note: only the arguments are cloned not the |this| or the |callee|.
+        // Function forwarder does not use those.
+        for (unsigned i = 0; i < args.length(); i++) {
+            if (!CloneNonReflectors(cx, args[i])) {
+                return false;
+            }
+        }
+
+        // JS API does not support any JSObject to JSFunction conversion,
+        // so let's use JS_CallFunctionValue instead.
+        RootedValue functionVal(cx);
+        functionVal.setObject(*origFunObj);
+
+        if (!JS_CallFunctionValue(cx, nullptr, functionVal, args.length(), args.array(), vp))
+            return false;
+    }
+
+    // Return value must be wrapped.
+    return JS_WrapValue(cx, vp);
+}
+
+bool
+NewFunctionForwarder(JSContext *cx, HandleId id, HandleObject callable, bool doclone,
+                     MutableHandleValue vp)
+{
+    JSFunction *fun = js::NewFunctionByIdWithReserved(cx, doclone ? CloningFunctionForwarder :
+                                                                    NonCloningFunctionForwarder,
+                                                                    0,0, JS::CurrentGlobalOrNull(cx), id);
+
     if (!fun)
         return false;
 
     JSObject *funobj = JS_GetFunctionObject(fun);
-    js::SetFunctionNativeReserved(funobj, 0, ObjectValue(*propobj));
+    js::SetFunctionNativeReserved(funobj, 0, ObjectValue(*callable));
     vp.setObject(*funobj);
     return true;
 }
@@ -4267,7 +4663,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(const Value &vobj, JSContext *cx)
         if (!js::IsWrapper(propobj) || !JS_ObjectIsCallable(cx, propobj))
             continue;
 
-        if (!WrapCallable(cx, obj, id, propobj, &v) ||
+        if (!NewFunctionForwarder(cx, id, propobj, /* doclone = */ false, &v) ||
             !JS_SetPropertyById(cx, obj, id, v))
             return NS_ERROR_FAILURE;
     }
