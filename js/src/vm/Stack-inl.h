@@ -228,9 +228,12 @@ InterpreterStack::purge(JSRuntime *rt)
 uint8_t *
 InterpreterStack::allocateFrame(JSContext *cx, size_t size)
 {
-    size_t maxFrames = cx->compartment()->principals == cx->runtime()->trustedPrincipals()
-                       ? MAX_FRAMES_TRUSTED
-                       : MAX_FRAMES;
+    size_t maxFrames;
+    if (cx->compartment()->principals == cx->runtime()->trustedPrincipals())
+        maxFrames = MAX_FRAMES_TRUSTED;
+    else
+        maxFrames = MAX_FRAMES;
+
     if (JS_UNLIKELY(frameCount_ >= maxFrames)) {
         js_ReportOverRecursed(cx);
         return NULL;

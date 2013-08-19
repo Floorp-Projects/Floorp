@@ -1534,8 +1534,7 @@ nsChildView::ComputeShouldAccelerate(bool aDefault)
 bool
 nsChildView::ShouldUseOffMainThreadCompositing()
 {
-  // Don't use OMTC (which requires OpenGL) for transparent windows or for
-  // popup windows.
+  // Don't use OMTC for transparent windows or for popup windows.
   if (!mView || ![[mView window] isOpaque] ||
       [[mView window] isKindOfClass:[PopupWindow class]])
     return false;
