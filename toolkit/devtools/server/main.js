@@ -835,7 +835,6 @@ DebuggerServerConnection.prototype = {
 
   _unknownError: function DSC__unknownError(aPrefix, aError) {
     let errorString = safeErrorString(aError);
-    errorString += "\n" + aError.stack;
     Cu.reportError(errorString);
     dumpn(errorString);
     return {
