@@ -70,6 +70,7 @@ private:
   cairo_t* mCtx;
 };
 
+
 } // end anonymous namespace
 
 static bool
@@ -147,7 +148,7 @@ ReleaseData(void* aData)
  * result when it is done with it.
  */
 cairo_surface_t*
-GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
+GetCairoSurfaceForSourceSurface(SourceSurface *aSurface, bool aExistingOnly = false)
 {
   if (aSurface->GetType() == SURFACE_CAIRO) {
     cairo_surface_t* surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
@@ -160,6 +161,10 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
       static_cast<const DataSourceSurfaceCairo*>(aSurface)->GetSurface();
     cairo_surface_reference(surf);
     return surf;
+  }
+
+  if (aExistingOnly) {
+    return nullptr;
   }
 
   RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
@@ -188,6 +193,56 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
  				                      ReleaseData);
   return surf;
 }
+
+// An RAII class to temporarily clear any device offset set
+// on a surface. Note that this does not take a reference to the
+// surface.
+class AutoClearDeviceOffset
+{
+public:
+  AutoClearDeviceOffset(SourceSurface* aSurface)
+    : mSurface(nullptr)
+  {
+    Init(aSurface);
+  }
+
+  AutoClearDeviceOffset(const Pattern& aPattern)
+    : mSurface(nullptr)
+  {
+    if (aPattern.GetType() == PATTERN_SURFACE) {
+      const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);
+      Init(pattern.mSurface);
+    }
+  }
+
+  ~AutoClearDeviceOffset()
+  {
+    if (mSurface) {
+      cairo_surface_set_device_offset(mSurface, mX, mY);
+    }
+  }
+
+private:
+  void Init(SourceSurface* aSurface)
+  {
+    cairo_surface_t* surface = GetCairoSurfaceForSourceSurface(aSurface, true);
+    if (surface) {
+      Init(surface);
+      cairo_surface_destroy(surface);
+    }
+  }
+
+  void Init(cairo_surface_t *aSurface)
+  {
+    mSurface = aSurface;
+    cairo_surface_get_device_offset(mSurface, &mX, &mY);
+    cairo_surface_set_device_offset(mSurface, 0, 0);
+  }
+
+  cairo_surface_t* mSurface;
+  double mX;
+  double mY;
+};
 
 // Never returns nullptr. As such, you must always pass in Cairo-compatible
 // patterns, most notably gradients with a GradientStopCairo.
@@ -361,6 +416,7 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
                              const DrawOptions &aOptions)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  AutoClearDeviceOffset clear(aSurface);
 
   float sx = aSource.Width() / aDest.Width();
   float sy = aSource.Height() / aDest.Height();
@@ -411,6 +467,8 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   if (aSurface->GetType() != SURFACE_CAIRO) {
     return;
   }
+  
+  AutoClearDeviceOffset clear(aSurface);
 
   Float width = Float(aSurface->GetSize().width);
   Float height = Float(aSurface->GetSize().height);
@@ -480,6 +538,8 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
   if (!PatternIsCompatible(aPattern)) {
     return;
   }
+  
+  AutoClearDeviceOffset clear(aPattern);
 
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
   cairo_set_source(mContext, pat);
@@ -539,6 +599,7 @@ DrawTargetCairo::CopySurface(SourceSurface *aSurface,
                              const IntPoint &aDest)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  AutoClearDeviceOffset clear(aSurface);
 
   if (!aSurface || aSurface->GetType() != SURFACE_CAIRO) {
     gfxWarning() << "Unsupported surface type specified";
@@ -641,6 +702,7 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
                             const GlyphRenderingOptions*)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  AutoClearDeviceOffset clear(aPattern);
 
   ScaledFontBase* scaledFont = static_cast<ScaledFontBase*>(aFont);
   cairo_set_scaled_font(mContext, scaledFont->GetCairoScaledFont());
@@ -666,6 +728,8 @@ DrawTargetCairo::Mask(const Pattern &aSource,
                       const DrawOptions &aOptions /* = DrawOptions() */)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  AutoClearDeviceOffset clearSource(aSource);
+  AutoClearDeviceOffset clearMask(aMask);
 
   cairo_pattern_t* source = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
   cairo_set_source(mContext, source);
@@ -684,6 +748,8 @@ DrawTargetCairo::MaskSurface(const Pattern &aSource,
                              const DrawOptions &aOptions)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  AutoClearDeviceOffset clearSource(aSource);
+  AutoClearDeviceOffset clearMask(aMask);
 
   if (!PatternIsCompatible(aSource)) {
     return;
