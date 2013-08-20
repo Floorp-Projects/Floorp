@@ -834,13 +834,12 @@ DebuggerServerConnection.prototype = {
   },
 
   _unknownError: function DSC__unknownError(aPrefix, aError) {
-    let errorString = safeErrorString(aError);
-    errorString += "\n" + aError.stack;
+    let errorString = aPrefix + ": " + safeErrorString(aError);
     Cu.reportError(errorString);
     dumpn(errorString);
     return {
       error: "unknownError",
-      message: (aPrefix + "': " + errorString)
+      message: errorString
     };
   },
 
