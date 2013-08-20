@@ -17,6 +17,10 @@ const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDM);
 
 function run_test()
 {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   /**
    * 1. Create data for http server to send
    */

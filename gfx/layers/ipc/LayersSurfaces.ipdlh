@@ -53,6 +53,32 @@ struct SharedTextureDescriptor {
   bool inverted;
 };
 
+struct BasicShmTileDescriptor {
+  Shmem reusableSurface;
+};
+
+struct BasicTileDescriptor {
+  uintptr_t reusableSurface;
+};
+
+struct PlaceholderTileDescriptor {
+};
+
+union TileDescriptor {
+  BasicTileDescriptor;
+  BasicShmTileDescriptor;
+  PlaceholderTileDescriptor;
+};
+
+struct SurfaceDescriptorTiles {
+  nsIntRegion validRegion;
+  nsIntRegion paintedRegion;
+  TileDescriptor[] tiles;
+  int         retainedWidth;
+  int         retainedHeight;
+  float       resolution;
+};
+
 // XXX - soon to be removed
 struct SurfaceDescriptorGralloc {
   PGrallocBuffer buffer;

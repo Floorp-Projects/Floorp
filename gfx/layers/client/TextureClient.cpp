@@ -14,10 +14,17 @@
 #include "GLContext.h"
 #include "BasicLayers.h" // for PaintContext
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
-#include "gfxReusableSurfaceWrapper.h"
 #include "gfxPlatform.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "gfx2DGlue.h"
+
+#ifdef MOZ_ANDROID_OMTC
+#  include "gfxReusableImageSurfaceWrapper.h"
+#  include "gfxImageSurface.h"
+#else
+#  include "gfxReusableSharedImageSurfaceWrapper.h"
+#  include "gfxSharedImageSurface.h"
+#endif
 
 #include <stdint.h>
 
@@ -320,7 +327,11 @@ DeprecatedTextureClientShmem::EnsureAllocated(gfx::IntSize aSize,
       NS_WARNING("creating SurfaceDescriptor failed!");
     }
     if (mContentType == gfxASurface::CONTENT_COLOR_ALPHA) {
-      nsRefPtr<gfxContext> context = new gfxContext(GetSurface());
+      gfxASurface* surface = GetSurface();
+      if (!surface) {
+        return false;
+      }
+      nsRefPtr<gfxContext> context = new gfxContext(surface);
       context->SetColor(gfxRGBA(0, 0, 0, 0));
       context->SetOperator(gfxContext::OPERATOR_SOURCE);
       context->Paint();
@@ -332,16 +343,17 @@ DeprecatedTextureClientShmem::EnsureAllocated(gfx::IntSize aSize,
 void
 DeprecatedTextureClientShmem::SetDescriptor(const SurfaceDescriptor& aDescriptor)
 {
-  if (IsSurfaceDescriptorValid(aDescriptor)) {
-    ReleaseResources();
-    mDescriptor = aDescriptor;
-  } else {
+  if (aDescriptor.type() == SurfaceDescriptor::Tnull_t) {
     EnsureAllocated(mSize, mContentType);
+    return;
   }
 
-  MOZ_ASSERT(!mSurface);
+  ReleaseResources();
+  mDescriptor = aDescriptor;
 
-  NS_ASSERTION(mDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorGralloc ||
+  MOZ_ASSERT(!mSurface);
+  NS_ASSERTION(mDescriptor.type() == SurfaceDescriptor::T__None ||
+               mDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorGralloc ||
                mDescriptor.type() == SurfaceDescriptor::TShmem ||
                mDescriptor.type() == SurfaceDescriptor::TMemoryImage ||
                mDescriptor.type() == SurfaceDescriptor::TRGBImage,
@@ -375,6 +387,10 @@ DeprecatedTextureClientShmem::LockDrawTarget()
   }
 
   gfxASurface* surface = GetSurface();
+  if (!surface) {
+    return nullptr;
+  }
+
   mDrawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surface, mSize);
 
   return mDrawTarget;
@@ -394,7 +410,11 @@ gfxImageSurface*
 DeprecatedTextureClientShmem::LockImageSurface()
 {
   if (!mSurfaceAsImage) {
-    mSurfaceAsImage = GetSurface()->GetAsImageSurface();
+    gfxASurface* surface = GetSurface();
+    if (!surface) {
+      return nullptr;
+    }
+    mSurfaceAsImage = surface->GetAsImageSurface();
   }
 
   return mSurfaceAsImage.get();
@@ -417,13 +437,13 @@ DeprecatedTextureClientShmemYCbCr::ReleaseResources()
 void
 DeprecatedTextureClientShmemYCbCr::SetDescriptor(const SurfaceDescriptor& aDescriptor)
 {
-  MOZ_ASSERT(aDescriptor.type() == SurfaceDescriptor::TYCbCrImage);
+  MOZ_ASSERT(aDescriptor.type() == SurfaceDescriptor::TYCbCrImage ||
+             aDescriptor.type() == SurfaceDescriptor::T__None);
 
   if (IsSurfaceDescriptorValid(mDescriptor)) {
     GetForwarder()->DestroySharedSurface(&mDescriptor);
   }
   mDescriptor = aDescriptor;
-  MOZ_ASSERT(IsSurfaceDescriptorValid(mDescriptor));
 }
 
 void
@@ -449,9 +469,10 @@ DeprecatedTextureClientShmemYCbCr::EnsureAllocated(gfx::IntSize aSize,
 
 
 DeprecatedTextureClientTile::DeprecatedTextureClientTile(CompositableForwarder* aForwarder,
-                                     const TextureInfo& aTextureInfo)
+                                                         const TextureInfo& aTextureInfo,
+                                                         gfxReusableSurfaceWrapper* aSurface)
   : DeprecatedTextureClient(aForwarder, aTextureInfo)
-  , mSurface(nullptr)
+  , mSurface(aSurface)
 {
   mTextureInfo.mDeprecatedTextureHostFlags = TEXTURE_HOST_TILED;
 }
@@ -461,10 +482,21 @@ DeprecatedTextureClientTile::EnsureAllocated(gfx::IntSize aSize, gfxASurface::gf
 {
   if (!mSurface ||
       mSurface->Format() != gfxPlatform::GetPlatform()->OptimalFormatForContent(aType)) {
+#ifdef MOZ_ANDROID_OMTC
+    // If we're using OMTC, we can save some cycles by not using shared
+    // memory. Using shared memory here is a small, but significant
+    // performance regression.
     gfxImageSurface* tmpTile = new gfxImageSurface(gfxIntSize(aSize.width, aSize.height),
                                                    gfxPlatform::GetPlatform()->OptimalFormatForContent(aType),
                                                    aType != gfxASurface::CONTENT_COLOR);
-    mSurface = new gfxReusableSurfaceWrapper(tmpTile);
+    mSurface = new gfxReusableImageSurfaceWrapper(tmpTile);
+#else
+    nsRefPtr<gfxSharedImageSurface> sharedImage =
+      gfxSharedImageSurface::CreateUnsafe(mForwarder,
+                                          gfxIntSize(aSize.width, aSize.height),
+                                          gfxPlatform::GetPlatform()->OptimalFormatForContent(aType));
+    mSurface = new gfxReusableSharedImageSurfaceWrapper(mForwarder, sharedImage);
+#endif
     mContentType = aType;
   }
   return true;

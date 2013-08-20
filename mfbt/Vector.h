@@ -548,8 +548,8 @@ class VectorBase : private AllocPolicy
     void swap(ThisVector& other);
 
   private:
-    VectorBase(const ThisVector&) MOZ_DELETE;
-    void operator=(const ThisVector&) MOZ_DELETE;
+    VectorBase(const VectorBase&) MOZ_DELETE;
+    void operator=(const VectorBase&) MOZ_DELETE;
 };
 
 /* This does the re-entrancy check plus several other sanity checks. */

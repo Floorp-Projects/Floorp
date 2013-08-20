@@ -345,10 +345,10 @@ WorkerThreadState::init(JSRuntime *rt)
         helper.thread = PR_CreateThread(PR_USER_THREAD,
                                         WorkerThread::ThreadMain, &helper,
                                         PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
-        if (!helper.thread) {
+        if (!helper.thread || !helper.threadData.ref().init()) {
             for (size_t j = 0; j < numThreads; j++)
                 threads[j].destroy();
-            js_delete(threads);
+            js_free(threads);
             threads = NULL;
             numThreads = 0;
             return false;
@@ -368,7 +368,7 @@ WorkerThreadState::~WorkerThreadState()
     if (threads) {
         for (size_t i = 0; i < numThreads; i++)
             threads[i].destroy();
-        js_delete(threads);
+        js_free(threads);
     }
 
     if (workerLock)
@@ -555,8 +555,10 @@ WorkerThread::destroy()
         PR_JoinThread(thread);
     }
 
-    if (!threadData.empty())
+    if (!threadData.empty()) {
         threadData.ref().removeFromThreadList();
+        threadData.destroy();
+    }
 }
 
 /* static */

@@ -245,9 +245,7 @@ struct OpSetDiagnosticTypes { DiagnosticTypes diagnostics; };
 // Paint (buffer update)
 struct OpPaintTiledLayerBuffer {
   PCompositable compositable;
-  // Bug 747811
-  // FIXME: We need to support sharing tile across process.
-  uintptr_t tiledLayerBuffer;
+  SurfaceDescriptorTiles tileLayerDescriptor;
 };
 
 struct OpCreatedTexture {

@@ -6637,7 +6637,7 @@ var gIdentityHandler = {
       return;
 
     let helplink = document.getElementById("mixed-content-blocked-helplink");
-    helplink.href = Services.urlFormatter.formatURLPref("browser.mixedcontent.warning.infoURL");
+    helplink.setAttribute("onclick", "openHelpLink('mixed-content');");
 
     let brandBundle = document.getElementById("bundle_brand");
     let brandShortName = brandBundle.getString("brandShortName");
