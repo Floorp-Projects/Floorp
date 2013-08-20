@@ -19,8 +19,6 @@
 
 #include "nsPresArena.h"
 
-#include "mozilla/MemoryChecking.h"
-#include "mozilla/MemoryReporting.h"
 #include "mozilla/Poison.h"
 #include "nsDebug.h"
 #include "nsArenaMemoryStats.h"
