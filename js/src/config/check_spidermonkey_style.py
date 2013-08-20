@@ -337,7 +337,8 @@ class Include(object):
         # handling.
         if module == module_name(self.inclname) or \
            module == 'jsmemorymetrics' and self.inclname == 'js/MemoryMetrics.h' or \
-           module == 'vm/PropertyKey' and self.inclname == 'js/PropertyKey.h':
+           module == 'vm/PropertyKey' and self.inclname == 'js/PropertyKey.h' or \
+           module == 'vm/StructuredClone' and self.inclname == 'js/StructuredClone.h':
             return 0
 
         if '/' in self.inclname:
