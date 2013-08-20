@@ -10,30 +10,52 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=790732
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-  /** Test for the Components shim. We split into two files because this stuff
-      is currently pref-controlled. **/
-  SimpleTest.waitForExplicitFinish();
+  // Basic stuff
+  ok(Components, "Components shim exists!");
+  var Ci = Components.interfaces;
+  ok(Ci, "interfaces shim exists!");
+  is(typeof Components.classes, 'undefined', "Shouldn't have a Cc");
 
-  function prepare() {
-    SpecialPowers.pushPrefEnv({set: [['dom.omit_components_in_content', true]]},
-                              function () { $('ifr').onload = go;
-                                            $('ifr').contentWindow.location =
-                                              '/tests/js/xpconnect/tests/mochitest/file_bug790732.html'; }
-                             );
-  }
+  // Check each interface that we shim. We start by checking specific
+  // constants for a couple of interfaces, and then once it's pretty clear that
+  // it's working as intended we just check that the objects themselves are the
+  // same.
+  is(Ci.nsIDOMFileReader.DONE, FileReader.DONE);
+  is(Ci.nsIXMLHttpRequest.HEADERS_RECEIVED, XMLHttpRequest.HEADERS_RECEIVED);
+  is(Ci.nsIDOMDOMException.DATA_CLONE_ERR, DOMException.DATA_CLONE_ERR);
+  is(Ci.nsIDOMNode.DOCUMENT_NODE, Node.DOCUMENT_NODE);
+  is(Ci.nsIDOMUserDataHandler.NODE_CLONED, UserDataHandler.NODE_CLONED);
+  is(Ci.nsIDOMCSSPrimitiveValue.CSS_PX, CSSPrimitiveValue.CSS_PX);
+  is(Ci.nsIDOMCSSRule.NAMESPACE_RULE, CSSRule.NAMESPACE_RULE);
+  is(Ci.nsIDOMCSSValue.CSS_PRIMITIVE_VALUE, CSSValue.CSS_PRIMITIVE_VALUE);
+  is(Ci.nsIDOMEvent.FOCUS, Event.FOCUS);
+  is(Ci.nsIDOMNSEvent.CLICK, Event.CLICK);
+  is(Ci.nsIDOMKeyEvent, KeyEvent);
+  is(Ci.nsIDOMMouseEvent, MouseEvent);
+  is(Ci.nsIDOMMouseScrollEvent, MouseScrollEvent);
+  is(Ci.nsIDOMMutationEvent, MutationEvent);
+  is(Ci.nsIDOMSimpleGestureEvent, SimpleGestureEvent);
+  is(Ci.nsIDOMUIEvent, UIEvent);
+  is(Ci.nsIDOMGeoPositionError, GeoPositionError);
+  is(Ci.nsIDOMHTMLMediaElement, HTMLMediaElement);
+  is(Ci.nsIDOMMediaError, MediaError);
+  is(Ci.nsIDOMLoadStatus, LoadStatus);
+  is(Ci.nsIDOMOfflineResourceList, OfflineResourceList);
+  is(Ci.nsIDOMRange, Range);
+  is(Ci.nsIDOMSVGLength, SVGLength);
+  is(Ci.nsIDOMNodeFilter, NodeFilter);
+  is(Ci.nsIDOMXPathNamespace, XPathNamespace);
+  is(Ci.nsIDOMXPathResult, XPathResult);
 
-  function go() {
-    ok(true, "Started test");
-    var iwin = $('ifr').contentWindow;
-    iwin.ok = ok;
-    iwin.is = is;
-    iwin.testShim();
-    SimpleTest.finish();
+  // Test for Bug 895231
+  for (var k of Object.keys(Components.interfaces)) {
+    ok(SpecialPowers.Ci.hasOwnProperty(k),
+       k + " should be removed from the Components shim");
   }
 
   </script>
 </head>
-<body onload="prepare()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=790732">Mozilla Bug 790732</a>
 <p id="display"></p>
 <div id="content" style="display: none">

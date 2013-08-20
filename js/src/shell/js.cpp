@@ -5379,7 +5379,7 @@ main(int argc, char **argv, char **envp)
         || !op.addStringOption('\0', "ion-edgecase-analysis", "on/off",
                                "Find edge cases where Ion can avoid bailouts (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-range-analysis", "on/off",
-                               "Range analysis (default: off, on to enable)")
+                               "Range analysis (default: on, off to disable)")
         || !op.addBoolOption('\0', "ion-check-range-analysis",
                                "Range analysis checking")
         || !op.addStringOption('\0', "ion-inlining", "on/off",

@@ -196,8 +196,8 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       TiledLayerComposer* tileComposer = compositable->AsTiledLayerComposer();
       NS_ASSERTION(tileComposer, "compositable is not a tile composer");
 
-      BasicTiledLayerBuffer* p = reinterpret_cast<BasicTiledLayerBuffer*>(op.tiledLayerBuffer());
-      tileComposer->PaintedTiledLayerBuffer(p);
+      const SurfaceDescriptorTiles& tileDesc = op.tileLayerDescriptor();
+      tileComposer->PaintedTiledLayerBuffer(this, tileDesc);
       break;
     }
     case CompositableOperation::TOpUseTexture: {

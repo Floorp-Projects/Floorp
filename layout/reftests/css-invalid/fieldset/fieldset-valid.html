@@ -1,12 +1,14 @@
 <!DOCTYPE html>
+<!-- Valid fieldset. -->
 <html>
-  <!-- Test: fieldset is always barred from constraint validation.
-             It should not be affected by :invalid pseudo-class. -->
-  <style>
-    fieldset { background-color: green; }
-    fieldset:invalid { background-color: red; }
-  </style>
+  <head>
+    <style>
+      fieldset:valid { display: none ;}
+    </style>
+  </head>
   <body>
-    <fieldset></fieldset>
+    <fieldset>
+    </fieldset>
   </body>
 </html>
+

@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include "nsQueryFrame.h"
+#include "nsRegion.h"
 #include "nsStyleContext.h"
 #include "nsStyleStruct.h"
 #include "nsStyleStructFwd.h"

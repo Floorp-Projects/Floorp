@@ -474,7 +474,8 @@ class DeprecatedTextureClientTile : public DeprecatedTextureClient
 public:
   DeprecatedTextureClientTile(const DeprecatedTextureClientTile& aOther);
   DeprecatedTextureClientTile(CompositableForwarder* aForwarder,
-                    const TextureInfo& aTextureInfo);
+                              const TextureInfo& aTextureInfo,
+                              gfxReusableSurfaceWrapper* aSurface = nullptr);
   ~DeprecatedTextureClientTile();
 
   virtual bool EnsureAllocated(gfx::IntSize aSize,

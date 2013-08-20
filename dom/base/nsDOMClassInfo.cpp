@@ -3577,10 +3577,16 @@ const InterfaceShimEntry kInterfaceShimMap[] =
   { "nsIDOMXPathResult", "XPathResult" } };
 
 static nsresult
-DefineComponentsShim(JSContext *cx, JS::HandleObject global)
+DefineComponentsShim(JSContext *cx, JS::HandleObject global, nsPIDOMWindow *win)
 {
   // Keep track of how often this happens.
   Telemetry::Accumulate(Telemetry::COMPONENTS_SHIM_ACCESSED_BY_CONTENT, true);
+
+  // Warn once.
+  nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
+  if (doc) {
+    doc->WarnOnceAbout(nsIDocument::eComponents, /* asError = */ true);
+  }
 
   // Create a fake Components object.
   JS::Rooted<JSObject*> components(cx, JS_NewObject(cx, nullptr, nullptr, global));
@@ -3637,13 +3643,14 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   MOZ_ASSERT(*_retval == true); // guaranteed by XPC_WN_Helper_NewResolve
-  if (id == XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS)) {
-    *objp = obj;
-    return DefineComponentsShim(cx, obj);
-  }
 
   nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
   MOZ_ASSERT(win->IsInnerWindow());
+
+  if (id == XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS)) {
+    *objp = obj;
+    return DefineComponentsShim(cx, obj, win);
+  }
 
   nsIScriptContext *my_context = win->GetContextInternal();
 
