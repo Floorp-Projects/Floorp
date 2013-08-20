@@ -2018,9 +2018,19 @@ MmsService.prototype = {
                                        null,
                                        DELIVERY_STATUS_PENDING,
                                        null,
-                                       this.retrieveMessage(url,
-                                                            responseNotify.bind(this),
-                                                            aDomMessage));
+                                       (function (rv) {
+          let success = Components.isSuccessCode(rv);
+          if (!success) {
+            if (DEBUG) debug("Could not change the delivery status: MMS " +
+                             domMessage.id + ", error code " + rv);
+            aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+            return;
+          }
+
+          this.retrieveMessage(url,
+                               responseNotify.bind(this),
+                               aDomMessage);
+        }).bind(this));
     }).bind(this));
   },
 
