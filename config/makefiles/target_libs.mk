@@ -14,7 +14,7 @@ PARALLEL_DIRS_libs = $(addsuffix _libs,$(PARALLEL_DIRS))
 ###############
 $(addprefix libs_tier_,$(TIERS)): libs_tier_%:
 	@$(ECHO) "$@"
-	$(foreach dir,$(tier_$*_dirs),$(call TIER_DIR_SUBMAKE,libs,$(dir)))
+	$(foreach dir,$(tier_$*_dirs),$(call TIER_DIR_SUBMAKE,$*,libs,$(dir),libs))
 
 #################
 ## Common targets

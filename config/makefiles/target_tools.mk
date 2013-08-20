@@ -14,7 +14,7 @@ PARALLEL_DIRS_tools = $(addsuffix _tools,$(PARALLEL_DIRS))
 ###############
 $(addprefix tools_tier_,$(TIERS)): tools_tier_%:
 	@$(ECHO) "$@"
-	$(foreach dir,$(tier_$*_dirs),$(call TIER_DIR_SUBMAKE,tools,$(dir)))
+	$(foreach dir,$(tier_$*_dirs),$(call TIER_DIR_SUBMAKE,$*,tools,$(dir),tools))
 
 #################
 ## Common targets
