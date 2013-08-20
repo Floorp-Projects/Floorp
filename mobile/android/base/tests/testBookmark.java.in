@@ -42,7 +42,7 @@ public class testBookmark extends AboutHomeTest {
         mDatabaseHelper.addOrUpdateMobileBookmark(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, BOOKMARK_URL);
         waitForBookmarked(true);
 
-        mAsserter.ok(isBookmarkDisplayed(BOOKMARK_URL), "Checking if " + BOOKMARK_URL + " is displayed in the Bookmarks Tab", "The bookmark is displayed");
+        isBookmarkDisplayed(BOOKMARK_URL);
         loadBookmark(BOOKMARK_URL);
         waitForText(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
         verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
