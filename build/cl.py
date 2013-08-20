@@ -19,13 +19,17 @@ def InvokeClWithDependencyGeneration(cmdline):
     if target == None:
         print >>sys.stderr, "No target set" and sys.exit(1)
 
+    # Assume the source file is the last argument
+    source = cmdline[-1]
+    assert not source.startswith('-')
+
     # The deps target lives here
     depstarget = os.path.basename(target) + ".pp"
 
     cmdline += ['-showIncludes']
     cl = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
 
-    deps = set()
+    deps = set([os.path.normcase(source).replace(os.sep, '/')])
     for line in cl.stdout:
         # cl -showIncludes prefixes every header with "Note: including file:"
         # and an indentation corresponding to the depth (which we don't need)
@@ -34,8 +38,8 @@ def InvokeClWithDependencyGeneration(cmdline):
             # We can't handle pathes with spaces properly in mddepend.pl, but
             # we can assume that anything in a path with spaces is a system
             # header and throw it away.
-            if dep.find(' ') == -1:
-                deps.add(dep)
+            if ' ' not in dep:
+                deps.add(os.path.normcase(dep).replace(os.sep, '/'))
         else:
             sys.stdout.write(line) # Make sure we preserve the relevant output
                                    # from cl
@@ -54,10 +58,13 @@ def InvokeClWithDependencyGeneration(cmdline):
                  # cost of masking failure to create the directory.  We'll just
                  # die on the next line though, so it's not that much of a loss.
 
-    f = open(depstarget, "w")
-    for dep in sorted(deps):
-        print >>f, "%s: %s" % (target, dep)
-        print >>f, "%s:" % dep
+    with open(depstarget, "w") as f:
+        f.write("%s: %s" % (target, source))
+        for dep in sorted(deps):
+            f.write(" \\\n%s" % dep)
+        f.write('\n')
+        for dep in sorted(deps):
+            f.write("%s:\n" % dep)
 
 if __name__ == "__main__":
     InvokeClWithDependencyGeneration(sys.argv[1:])
