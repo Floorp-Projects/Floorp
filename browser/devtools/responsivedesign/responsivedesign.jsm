@@ -687,6 +687,7 @@ ResponsiveUI.prototype = {
       this.stack.removeAttribute("notransition");
     }
     this.ignoreY = false;
+    this.ignoreX = false;
     this.isResizing = false;
   },
 
