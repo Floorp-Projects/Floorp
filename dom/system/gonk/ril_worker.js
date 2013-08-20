@@ -11077,11 +11077,11 @@ let ICCRecordHelper = {
     function callback(options) {
       let contact = GsmPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
       if (!contact ||
-          (RIL.iccInfo.mbdn !== undefined &&
-           RIL.iccInfo.mbdn === contact.number)) {
+          (RIL.iccInfoPrivate.mbdn !== undefined &&
+           RIL.iccInfoPrivate.mbdn === contact.number)) {
         return;
       }
-      RIL.iccInfo.mbdn = contact.number;
+      RIL.iccInfoPrivate.mbdn = contact.number;
       if (DEBUG) {
         debug("MBDN, alphaId="+contact.alphaId+" number="+contact.number);
       }
