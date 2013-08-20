@@ -91,13 +91,7 @@ Telephony::Telephony()
 
 Telephony::~Telephony()
 {
-  if (mListener) {
-    mListener->Disconnect();
-
-    if (mProvider) {
-      mProvider->UnregisterTelephonyMsg(mListener);
-    }
-  }
+  Shutdown();
 
   NS_ASSERTION(gTelephonyList, "This should never be null!");
   NS_ASSERTION(gTelephonyList->Contains(this), "Should be in the list!");
@@ -105,9 +99,23 @@ Telephony::~Telephony()
   if (gTelephonyList->Length() == 1) {
     delete gTelephonyList;
     gTelephonyList = nullptr;
-  }
-  else {
+  } else {
     gTelephonyList->RemoveElement(this);
+  }
+}
+
+void
+Telephony::Shutdown()
+{
+  if (mListener) {
+    mListener->Disconnect();
+
+    if (mProvider) {
+      mProvider->UnregisterTelephonyMsg(mListener);
+      mProvider = nullptr;
+    }
+
+    mListener = nullptr;
   }
 }
 
@@ -309,6 +317,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Telephony,
                                                 nsDOMEventTargetHelper)
+  tmp->Shutdown();
   tmp->mActiveCall = nullptr;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCalls)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallsList)

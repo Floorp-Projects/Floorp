@@ -176,6 +176,9 @@ private:
 
   bool
   MoveCall(uint32_t aCallIndex, bool aIsConference);
+
+  void
+  Shutdown();
 };
 
 END_TELEPHONY_NAMESPACE
