@@ -97,17 +97,6 @@ CodeGeneratorX86::visitValue(LValue *value)
 }
 
 bool
-CodeGeneratorX86::visitOsrValue(LOsrValue *value)
-{
-    const LAllocation *frame   = value->getOperand(0);
-    const ValueOperand out     = ToOutValue(value);
-    const ptrdiff_t frameOffset = value->mir()->frameOffset();
-
-    masm.loadValue(Address(ToRegister(frame), frameOffset), out);
-    return true;
-}
-
-bool
 CodeGeneratorX86::visitBox(LBox *box)
 {
     const LDefinition *type = box->getDef(TYPE_INDEX);

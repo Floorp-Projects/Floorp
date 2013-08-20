@@ -36,7 +36,6 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
 
   public:
     bool visitValue(LValue *value);
-    bool visitOsrValue(LOsrValue *value);
     bool visitBox(LBox *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitLoadSlotV(LLoadSlotV *ins);

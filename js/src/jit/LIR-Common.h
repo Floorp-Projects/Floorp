@@ -2996,6 +2996,22 @@ class LOsrScopeChain : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Materialize a JSObject scope chain stored in an interpreter frame for OSR.
+class LOsrReturnValue : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(OsrReturnValue)
+
+    LOsrReturnValue(const LAllocation &entry)
+    {
+        setOperand(0, entry);
+    }
+
+    const MOsrReturnValue *mir() {
+        return mir_->toOsrReturnValue();
+    }
+};
+
 // Materialize a JSObject ArgumentsObject stored in an interpreter frame for OSR.
 class LOsrArgumentsObject : public LInstructionHelper<1, 1, 0>
 {
