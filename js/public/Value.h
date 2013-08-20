@@ -1907,6 +1907,13 @@ extern JS_PUBLIC_DATA(const jsval) JSVAL_FALSE;
 extern JS_PUBLIC_DATA(const jsval) JSVAL_TRUE;
 extern JS_PUBLIC_DATA(const jsval) JSVAL_VOID;
 
+namespace JS {
+
+extern JS_PUBLIC_DATA(const Handle<Value>) NullHandleValue;
+extern JS_PUBLIC_DATA(const Handle<Value>) UndefinedHandleValue;
+
+}
+
 #undef JS_VALUE_IS_CONSTEXPR
 #undef JS_RETURN_LAYOUT_FROM_BITS
 

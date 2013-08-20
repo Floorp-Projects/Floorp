@@ -5087,9 +5087,6 @@ JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
 
 namespace JS {
 
-extern JS_PUBLIC_DATA(const Handle<Value>) NullHandleValue;
-extern JS_PUBLIC_DATA(const Handle<Value>) UndefinedHandleValue;
-
 extern JS_PUBLIC_DATA(const Handle<jsid>) JSID_VOIDHANDLE;
 extern JS_PUBLIC_DATA(const Handle<jsid>) JSID_EMPTYHANDLE;
 
