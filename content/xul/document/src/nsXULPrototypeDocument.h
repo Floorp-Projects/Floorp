@@ -11,7 +11,6 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsISerializable.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -37,8 +36,7 @@ class XULDocument;
  * objects, from which the real DOM tree is built later in
  * XULDocument::ResumeWalk.
  */
-class nsXULPrototypeDocument : public nsIScriptGlobalObjectOwner,
-                               public nsISerializable
+class nsXULPrototypeDocument : public nsISerializable
 {
 public:
     static nsresult
@@ -114,16 +112,11 @@ public:
 
     nsNodeInfoManager *GetNodeInfoManager();
 
-    // nsIScriptGlobalObjectOwner methods
-    virtual nsIScriptGlobalObject* GetScriptGlobalObject() MOZ_OVERRIDE;
+    JSObject* GetCompilationGlobal();
 
-    void MarkInCCGeneration(uint32_t aCCGeneration)
-    {
-        mCCGeneration = aCCGeneration;
-    }
+    void MarkInCCGeneration(uint32_t aCCGeneration);
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULPrototypeDocument,
-                                             nsIScriptGlobalObjectOwner)
+    NS_DECL_CYCLE_COLLECTION_CLASS(nsXULPrototypeDocument)
 
     void TraceProtos(JSTracer* aTrc, uint32_t aGCNumber);
 

@@ -12,6 +12,7 @@
   locale/browser/aboutCertError.dtd       (%chrome/aboutCertError.dtd)
   locale/browser/browser.dtd              (%chrome/browser.dtd)
   locale/browser/browser.properties       (%chrome/browser.properties)
+  locale/browser/region.properties        (%chrome/region.properties)
   locale/browser/config.dtd               (%chrome/config.dtd)
   locale/browser/preferences.dtd          (%chrome/preferences.dtd)
   locale/browser/aboutPanel.dtd           (%chrome/aboutPanel.dtd)
@@ -34,7 +35,6 @@
 @AB_CD@.jar:
 relativesrcdir browser/locales:
   locale/browser/syncBrand.dtd            (%chrome/browser/syncBrand.dtd)
-  locale/browser/region.properties        (%chrome/browser-region/region.properties)
   locale/browser/netError.dtd             (%chrome/overrides/netError.dtd)
 % override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
   locale/browser/appstrings.properties    (%chrome/overrides/appstrings.properties)
