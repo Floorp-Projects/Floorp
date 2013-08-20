@@ -3991,28 +3991,6 @@ class MOsrScopeChain : public MUnaryInstruction
     }
 };
 
-// MIR representation of the return value on the OSR StackFrame.
-// The Value is indexed off of OsrFrameReg.
-class MOsrReturnValue : public MUnaryInstruction
-{
-  private:
-    MOsrReturnValue(MOsrEntry *entry)
-      : MUnaryInstruction(entry)
-    {
-        setResultType(MIRType_Value);
-    }
-
-  public:
-    INSTRUCTION_HEADER(OsrReturnValue)
-    static MOsrReturnValue *New(MOsrEntry *entry) {
-        return new MOsrReturnValue(entry);
-    }
-
-    MOsrEntry *entry() {
-        return getOperand(0)->toOsrEntry();
-    }
-};
-
 // Check the current frame for over-recursion past the global stack limit.
 class MCheckOverRecursed : public MNullaryInstruction
 {
