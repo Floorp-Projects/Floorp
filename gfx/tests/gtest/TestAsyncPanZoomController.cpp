@@ -45,8 +45,8 @@ class TestAPZCContainerLayer : public ContainerLayer {
 
 class TestAsyncPanZoomController : public AsyncPanZoomController {
 public:
-  TestAsyncPanZoomController(uint64_t aLayersId, MockContentController* mcc)
-    : AsyncPanZoomController(aLayersId, mcc)
+  TestAsyncPanZoomController(uint64_t aLayersId, MockContentController* aMcc)
+    : AsyncPanZoomController(aLayersId, nullptr, aMcc)
   {}
 
   void SetFrameMetrics(const FrameMetrics& metrics) {
