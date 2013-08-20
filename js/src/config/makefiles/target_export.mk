@@ -12,7 +12,7 @@ PARALLEL_DIRS_export = $(addsuffix _export,$(PARALLEL_DIRS))
 ###############
 ## TIER targets
 ###############
-export_tier_%:
+$(addprefix export_tier_,$(TIERS)): export_tier_%:
 	@$(ECHO) "$@"
 	$(foreach dir,$(tier_$*_dirs),$(call TIER_DIR_SUBMAKE,export,$(dir)))
 
