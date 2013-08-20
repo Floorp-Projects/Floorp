@@ -23,9 +23,6 @@
 
   <script type="application/javascript">
   <![CDATA[
-    if (MAC)
-      SimpleTest.expectAssertions(1);
-
     function testThis(aID, aAcc, aRole, aAnchorCount, aAnchorName, aURI,
                       aStartIndex, aEndIndex, aValid)
     {
