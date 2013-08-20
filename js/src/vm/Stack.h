@@ -921,10 +921,6 @@ class StackFrame
         return offsetof(StackFrame, scopeChain_);
     }
 
-    static size_t offsetOfReturnValue() {
-        return offsetof(StackFrame, rval_);
-    }
-
     static ptrdiff_t offsetOfThis(JSFunction *fun) {
         return fun == NULL
                ? -1 * ptrdiff_t(sizeof(Value))
