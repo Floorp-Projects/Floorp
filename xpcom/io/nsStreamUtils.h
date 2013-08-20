@@ -8,6 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsStringFwd.h"
 #include "nsIInputStream.h"
+#include "nsTArray.h"
 
 class nsIOutputStream;
 class nsIInputStreamCallback;
@@ -231,5 +232,22 @@ struct nsWriteSegmentThunk {
   nsWriteSegmentFun  mFun;
   void              *mClosure;
 };
+
+/**
+ * Read data from aInput and store in aDest.  A non-zero aKeep will keep that
+ * many bytes from aDest (from the end).  New data is appended after the kept
+ * bytes (if any).  aDest's new length on returning from this function is
+ * aKeep + aNewBytes and is guaranteed to be less than or equal to aDest's
+ * current capacity.
+ * @param aDest the array to fill
+ * @param aInput the stream to read from
+ * @param aKeep number of bytes to keep (0 <= aKeep <= aDest.Length())
+ * @param aNewBytes (out) number of bytes read from aInput or zero if Read()
+ *        failed
+ * @return the result from aInput->Read(...)
+ */
+extern NS_METHOD
+NS_FillArray(FallibleTArray<char> &aDest, nsIInputStream *aInput,
+             uint32_t aKeep, uint32_t *aNewBytes);
 
 #endif // !nsStreamUtils_h__

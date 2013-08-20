@@ -12,9 +12,9 @@ PARALLEL_DIRS_libs = $(addsuffix _libs,$(PARALLEL_DIRS))
 ###############
 ## TIER targets
 ###############
-libs_tier_%:
+$(addprefix libs_tier_,$(TIERS)): libs_tier_%:
 	@$(ECHO) "$@"
-	$(foreach dir,$(tier_$*_dirs),$(call TIER_DIR_SUBMAKE,libs,$(dir)))
+	$(foreach dir,$(tier_$*_dirs),$(call TIER_DIR_SUBMAKE,$*,libs,$(dir),libs))
 
 #################
 ## Common targets
@@ -43,7 +43,7 @@ GARBAGE += $(foreach lib,$(LIBRARY),$(EXPORT_LIBRARY)/$(lib))
 endif
 endif # EXPORT_LIBRARY
 
-libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
+libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS)
 ifndef NO_DIST_INSTALL
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
@@ -116,16 +116,6 @@ ifdef HOST_LIBRARY
 HOST_LIBRARY_FILES = $(HOST_LIBRARY)
 HOST_LIBRARY_DEST ?= $(DIST)/host/lib
 INSTALL_TARGETS += HOST_LIBRARY
-endif
-
-ifdef JAVA_LIBRARY
-JAVA_LIBRARY_FILES = $(JAVA_LIBRARY)
-ifdef IS_COMPONENT
-JAVA_LIBRARY_DEST ?= $(FINAL_TARGET)/components
-else
-JAVA_LIBRARY_DEST ?= $(FINAL_TARGET)
-endif
-INSTALL_TARGETS += JAVA_LIBRARY
 endif
 
 endif # !NO_DIST_INSTALL

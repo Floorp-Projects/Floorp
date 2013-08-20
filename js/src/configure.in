@@ -4361,7 +4361,8 @@ if test -n "$ENABLE_INTL_API" ; then
 
     abs_srcdir=`(cd $srcdir; pwd)`
     mkdir -p $_objdir/intl/icu
-    (cd $_objdir/intl/icu; \
+    (cd $_objdir/intl/icu
+     MOZ_SUBCONFIGURE_WRAP([.],[
      CC="$CC" CXX="$CXX" \
      CFLAGS="$ICU_CFLAGS" CPPFLAGS="$ICU_CPPFLAGS" CXXFLAGS="$ICU_CXXFLAGS" \
             $SHELL $abs_srcdir/../../intl/icu/source/runConfigureICU \
@@ -4370,6 +4371,7 @@ if test -n "$ENABLE_INTL_API" ; then
             $ICU_LINK_OPTS \
             --enable-extras=no --enable-icuio=no  --enable-layout=no \
             --enable-tests=no --enable-samples=no || exit 1
+     ])
     ) || exit 1
 fi
 
