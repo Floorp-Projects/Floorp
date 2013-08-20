@@ -1216,17 +1216,10 @@ else
 endif
 endif
 
-# Cancel these implicit rules
-#
-%: %,v
-
-%: RCS/%,v
-
-%: RCS/%
-
-%: s.%
-
-%: SCCS/s.%
+# Cancel GNU make built-in implicit rules
+ifndef .PYMAKE
+MAKEFLAGS += -r
+endif
 
 ###############################################################################
 # Java rules
