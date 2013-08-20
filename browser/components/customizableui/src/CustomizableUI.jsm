@@ -129,22 +129,31 @@ let CustomizableUIInternal = {
     this._defineBuiltInWidgets();
     this.loadSavedState();
 
+    let panelPlacements = [
+      "edit-controls",
+      "zoom-controls",
+      "new-window-button",
+      "privatebrowsing-button",
+      "save-page-button",
+      "print-button",
+      "history-panelmenu",
+      "fullscreen-button",
+      "find-button",
+      "preferences-button",
+      "add-ons-button",
+    ];
+    let showCharacterEncoding = Services.prefs.getComplexValue(
+      "browser.menu.showCharacterEncoding",
+      Ci.nsIPrefLocalizedString
+    ).data;
+    if (showCharacterEncoding == "true") {
+      panelPlacements.push("characterencoding-button");
+    }
+
     this.registerArea(CustomizableUI.AREA_PANEL, {
       anchor: "PanelUI-menu-button",
       type: CustomizableUI.TYPE_MENU_PANEL,
-      defaultPlacements: [
-        "edit-controls",
-        "zoom-controls",
-        "new-window-button",
-        "privatebrowsing-button",
-        "save-page-button",
-        "print-button",
-        "history-panelmenu",
-        "fullscreen-button",
-        "find-button",
-        "preferences-button",
-        "add-ons-button",
-      ]
+      defaultPlacements: panelPlacements
     });
     this.registerArea(CustomizableUI.AREA_NAVBAR, {
       legacy: true,
@@ -1515,6 +1524,7 @@ let CustomizableUIInternal = {
   //XXXunf Log some warnings here, when the data provided isn't up to scratch.
   normalizeWidget: function(aData, aSource) {
     let widget = {
+      implementation: aData,
       source: aSource || "addon",
       instances: new Map(),
       currentArea: null,
@@ -1531,6 +1541,9 @@ let CustomizableUIInternal = {
       ERROR("Given an illegal id in normalizeWidget: " + aData.id);
       return null;
     }
+
+    delete widget.implementation.currentArea;
+    widget.implementation.__defineGetter__("currentArea", function() widget.currentArea);
 
     const kReqStringProps = ["id"];
     for (let prop of kReqStringProps) {
@@ -1573,9 +1586,8 @@ let CustomizableUIInternal = {
 
     widget.disabled = aData.disabled === true;
 
-    widget.onClick = typeof aData.onClick == "function" ? aData.onClick : null;
-
-    widget.onCreated = typeof aData.onCreated == "function" ? aData.onCreated : null;
+    this.wrapWidgetEventHandler("onClick", widget);
+    this.wrapWidgetEventHandler("onCreated", widget);
 
     if (widget.type == "button") {
       widget.onCommand = typeof aData.onCommand == "function" ?
@@ -1589,16 +1601,10 @@ let CustomizableUIInternal = {
       }
       widget.viewId = aData.viewId;
 
-      widget.onViewShowing = typeof aData.onViewShowing == "function" ?
-                                 aData.onViewShowing :
-                                 null;
-      widget.onViewHiding = typeof aData.onViewHiding == "function" ? 
-                                 aData.onViewHiding :
-                                 null;
+      this.wrapWidgetEventHandler("onViewShowing", widget);
+      this.wrapWidgetEventHandler("onViewHiding", widget);
     } else if (widget.type == "custom") {
-      widget.onBuild = typeof aData.onBuild == "function" ?
-                                 aData.onBuild :
-                                 null;
+      this.wrapWidgetEventHandler("onBuild", widget);
     }
 
     if (gPalette.has(widget.id)) {
@@ -1606,6 +1612,27 @@ let CustomizableUIInternal = {
     }
 
     return widget;
+  },
+
+  wrapWidgetEventHandler: function(aEventName, aWidget) {
+    if (typeof aWidget.implementation[aEventName] != "function") {
+      aWidget[aEventName] = null;
+      return;
+    }
+    aWidget[aEventName] = function(...aArgs) {
+      // Wrap inside a try...catch to properly log errors, until bug 862627 is
+      // fixed, which in turn might help bug 503244.
+      try {
+        // Don't copy the function to the normalized widget object, instead
+        // keep it on the original object provided to the API so that
+        // additional methods can be implemented and used by the event
+        // handlers.
+        return aWidget.implementation[aEventName].apply(aWidget.implementation,
+                                                        aArgs);
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    };
   },
 
   destroyWidget: function(aWidgetId) {
@@ -1948,7 +1975,7 @@ this.CustomizableUI = {
   },
   removePanelCloseListeners: function(aPanel) {
     CustomizableUIInternal.removePanelCloseListeners(aPanel);
-  },
+  }
 };
 Object.freeze(this.CustomizableUI);
 
