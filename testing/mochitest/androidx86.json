@@ -111,7 +111,7 @@
  "content/xul/content/test/test_bug486990.xul": "TIMED_OUT",
  "docshell/test/navigation/test_bug13871.html": "RANDOM",
  "docshell/test/navigation/test_bug430723.html": "TIMED_OUT",
- "docshell/test/navigation/test_not-opener.html", "x86 only",
+ "docshell/test/navigation/test_not-opener.html": "x86 only",
  "docshell/test/navigation/test_popup-navigates-children.html": "bug 783589",
  "docshell/test/navigation/test_sessionhistory.html": "RANDOM",
  "docshell/test/navigation/test_bug344861.html": "",

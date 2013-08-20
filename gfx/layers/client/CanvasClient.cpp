@@ -45,6 +45,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     mBuffer = nullptr;
   }
 
+  bool bufferCreated = false;
   if (!mBuffer) {
     bool isOpaque = (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
     gfxASurface::gfxContentType contentType = isOpaque
@@ -56,7 +57,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     MOZ_ASSERT(mBuffer->AsTextureClientSurface());
     mBuffer->AsTextureClientSurface()->AllocateForSurface(aSize);
 
-    AddTextureClient(mBuffer);
+    bufferCreated = true;
   }
 
   if (!mBuffer->Lock(OPEN_READ_WRITE)) {
@@ -69,6 +70,10 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   }
 
   mBuffer->Unlock();
+
+  if (bufferCreated) {
+    AddTextureClient(mBuffer);
+  }
 
   if (surface) {
     GetForwarder()->UpdatedTexture(this, mBuffer, nullptr);
@@ -128,17 +133,13 @@ DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 void
 DeprecatedCanvasClientSurfaceStream::Updated()
 {
-  if (mNeedsUpdate) {
-    mForwarder->UpdateTextureNoSwap(this, 1, mDeprecatedTextureClient->GetDescriptor());
-    mNeedsUpdate = false;
-  }
+  mForwarder->UpdateTextureNoSwap(this, 1, mDeprecatedTextureClient->GetDescriptor());
 }
 
 
 DeprecatedCanvasClientSurfaceStream::DeprecatedCanvasClientSurfaceStream(CompositableForwarder* aFwd,
                                                                          TextureFlags aFlags)
 : CanvasClient(aFwd, aFlags)
-, mNeedsUpdate(false)
 {
   mTextureInfo.mCompositableType = BUFFER_IMAGE_SINGLE;
 }
@@ -180,7 +181,6 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
     printf_stderr("isCrossProcess, but not MOZ_WIDGET_GONK! Someone needs to write some code!");
     MOZ_ASSERT(false);
 #endif
-    mNeedsUpdate = true;
   } else {
     SurfaceStreamHandle handle = stream->GetShareHandle();
     SurfaceDescriptor *desc = mDeprecatedTextureClient->GetDescriptor();
@@ -193,7 +193,6 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
       // Ref this so the SurfaceStream doesn't disappear unexpectedly. The
       // Compositor will need to unref it when finished.
       aLayer->mGLContext->AddRef();
-      mNeedsUpdate = true;
     }
   }
 
