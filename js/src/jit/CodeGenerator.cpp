@@ -6171,7 +6171,7 @@ CodeGenerator::visitBindNameIC(OutOfLineUpdateCache *ool, BindNameIC *ic)
 }
 
 typedef bool (*SetPropertyFn)(JSContext *, HandleObject,
-                              HandlePropertyName, const HandleValue, bool, int);
+                              HandlePropertyName, const HandleValue, bool, jsbytecode *);
 static const VMFunction SetPropertyInfo =
     FunctionInfo<SetPropertyFn>(SetProperty);
 
@@ -6181,9 +6181,8 @@ CodeGenerator::visitCallSetProperty(LCallSetProperty *ins)
     ConstantOrRegister value = TypedOrValueRegister(ToValue(ins, LCallSetProperty::Value));
 
     const Register objReg = ToRegister(ins->getOperand(0));
-    JSOp op = JSOp(*ins->mir()->resumePoint()->pc());
 
-    pushArg(Imm32(op));
+    pushArg(ImmWord(ins->mir()->resumePoint()->pc()));
     pushArg(Imm32(ins->mir()->strict()));
 
     pushArg(value);
@@ -6217,11 +6216,8 @@ CodeGenerator::visitSetPropertyCacheV(LSetPropertyCacheV *ins)
     RegisterSet liveRegs = ins->safepoint()->liveRegs();
     Register objReg = ToRegister(ins->getOperand(0));
     ConstantOrRegister value = TypedOrValueRegister(ToValue(ins, LSetPropertyCacheV::Value));
-    jsbytecode *pc = ins->mir()->resumePoint()->pc();
-    bool isSetName = JSOp(*pc) == JSOP_SETNAME || JSOp(*pc) == JSOP_SETGNAME;
 
-    SetPropertyIC cache(liveRegs, objReg, ins->mir()->name(), value,
-                        isSetName, ins->mir()->strict());
+    SetPropertyIC cache(liveRegs, objReg, ins->mir()->name(), value, ins->mir()->strict());
     return addCache(ins, allocateCache(cache));
 }
 
@@ -6231,16 +6227,13 @@ CodeGenerator::visitSetPropertyCacheT(LSetPropertyCacheT *ins)
     RegisterSet liveRegs = ins->safepoint()->liveRegs();
     Register objReg = ToRegister(ins->getOperand(0));
     ConstantOrRegister value;
-    jsbytecode *pc = ins->mir()->resumePoint()->pc();
-    bool isSetName = JSOp(*pc) == JSOP_SETNAME || JSOp(*pc) == JSOP_SETGNAME;
 
     if (ins->getOperand(1)->isConstant())
         value = ConstantOrRegister(*ins->getOperand(1)->toConstant());
     else
         value = TypedOrValueRegister(ins->valueType(), ToAnyRegister(ins->getOperand(1)));
 
-    SetPropertyIC cache(liveRegs, objReg, ins->mir()->name(), value,
-                        isSetName, ins->mir()->strict());
+    SetPropertyIC cache(liveRegs, objReg, ins->mir()->name(), value, ins->mir()->strict());
     return addCache(ins, allocateCache(cache));
 }
 

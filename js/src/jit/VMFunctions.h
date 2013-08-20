@@ -614,7 +614,7 @@ bool CharCodeAt(JSContext *cx, HandleString str, int32_t index, uint32_t *code);
 JSFlatString *StringFromCharCode(JSContext *cx, int32_t code);
 
 bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
-                 bool strict, int jsop);
+                 bool strict, jsbytecode *pc);
 
 bool InterruptCheck(JSContext *cx);
 

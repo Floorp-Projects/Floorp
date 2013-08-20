@@ -165,8 +165,8 @@ class IonCache
     CodeLocationLabel fallbackLabel_;
 
     // Location of this operation, NULL for idempotent caches.
-    JSScript *script;
-    jsbytecode *pc;
+    JSScript *script_;
+    jsbytecode *pc_;
 
   private:
     static const size_t MAX_STUBS;
@@ -184,8 +184,8 @@ class IonCache
         disabled_(false),
         stubCount_(0),
         fallbackLabel_(),
-        script(NULL),
-        pc(NULL)
+        script_(NULL),
+        pc_(NULL)
     {
     }
 
@@ -256,20 +256,25 @@ class IonCache
     }
     void setIdempotent() {
         JS_ASSERT(!idempotent_);
-        JS_ASSERT(!script);
-        JS_ASSERT(!pc);
+        JS_ASSERT(!script_);
+        JS_ASSERT(!pc_);
         idempotent_ = true;
     }
 
     void setScriptedLocation(JSScript *script, jsbytecode *pc) {
         JS_ASSERT(!idempotent_);
-        this->script = script;
-        this->pc = pc;
+        script_ = script;
+        pc_ = pc;
     }
 
     void getScriptedLocation(MutableHandleScript pscript, jsbytecode **ppc) const {
-        pscript.set(script);
-        *ppc = pc;
+        pscript.set(script_);
+        *ppc = pc_;
+    }
+
+    jsbytecode *pc() const {
+        JS_ASSERT(pc_);
+        return pc_;
     }
 };
 
@@ -605,17 +610,15 @@ class SetPropertyIC : public RepatchIonCache
     Register object_;
     PropertyName *name_;
     ConstantOrRegister value_;
-    bool isSetName_;
     bool strict_;
 
   public:
     SetPropertyIC(RegisterSet liveRegs, Register object, PropertyName *name,
-                  ConstantOrRegister value, bool isSetName, bool strict)
+                  ConstantOrRegister value, bool strict)
       : liveRegs_(liveRegs),
         object_(object),
         name_(name),
         value_(value),
-        isSetName_(isSetName),
         strict_(strict)
     {
     }
@@ -630,9 +633,6 @@ class SetPropertyIC : public RepatchIonCache
     }
     ConstantOrRegister value() const {
         return value_;
-    }
-    bool isSetName() const {
-        return isSetName_;
     }
     bool strict() const {
         return strict_;
