@@ -118,7 +118,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
 
         bool newApzc = (apzc == nullptr);
         if (newApzc) {
-          apzc = new AsyncPanZoomController(aLayersId, state->mController,
+          apzc = new AsyncPanZoomController(aLayersId, this, state->mController,
                                             AsyncPanZoomController::USE_GESTURE_DETECTOR);
           apzc->SetCompositorParent(aCompositor);
         } else {

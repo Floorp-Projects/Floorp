@@ -200,6 +200,7 @@ AsyncPanZoomController::InitializeGlobalState()
 }
 
 AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
+                                               APZCTreeManager* aTreeManager,
                                                GeckoContentController* aGeckoContentController,
                                                GestureBehavior aGestures)
   :  mLayersId(aLayersId),
@@ -221,7 +222,8 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mAsyncScrollTimeoutTask(nullptr),
      mDisableNextTouchBatch(false),
      mHandlingTouchQueue(false),
-     mDelayPanning(false)
+     mDelayPanning(false),
+     mTreeManager(aTreeManager)
 {
   MOZ_COUNT_CTOR(AsyncPanZoomController);
 
@@ -262,6 +264,7 @@ AsyncPanZoomController::Destroy()
   mPrevSibling = nullptr;
   mLastChild = nullptr;
   mParent = nullptr;
+  mTreeManager = nullptr;
 }
 
 /* static */float
