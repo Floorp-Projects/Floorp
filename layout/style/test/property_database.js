@@ -4253,6 +4253,24 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
 			initial_values: [ "horizontal-tb" ],
 			other_values: [ "vertical-lr", "vertical-rl" ],
 			invalid_values: [ "10px", "30%", "justify", "auto", "1em" ]
+		},
+		"text-orientation": {
+			domProp: "textOrientation",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "auto" ],
+			other_values: [ "upright", "sideways" ],
+			invalid_values: [ "none", "3em" ]
+		},
+		"text-combine-horizontal": {
+			domProp: "textCombineHorizontal",
+			inherited: true,
+			type: CSS_TYPE_LONGHAND,
+			initial_values: [ "none" ],
+			other_values: [ "all", "digits", "digits 2", "digits 3", "digits 4", "digits     3" ],
+			invalid_values: [ "auto", "all 2", "none all", "digits -3", "digits 0",
+			                  "digits 12", "none 3", "digits 3.1415", "digits3",
+			                  "digits 3 all", "digits foo", "digits all", "digits 3.0" ]
 		}
 	};
 	for (var prop in verticalTextProperties) {

@@ -2105,6 +2105,12 @@ nsGenericHTMLFormElement::GetFormElement()
   return mForm;
 }
 
+HTMLFieldSetElement*
+nsGenericHTMLFormElement::GetFieldSet()
+{
+  return mFieldSet;
+}
+
 nsresult
 nsGenericHTMLFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {

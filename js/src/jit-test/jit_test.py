@@ -144,6 +144,7 @@ def main(argv):
         flags = [
             [], # no flags, normal baseline and ion
             ['--ion-eager'], # implies --baseline-eager
+            ['--ion-eager', '--ion-check-range-analysis'],
             ['--baseline-eager'],
             ['--baseline-eager', '--no-ti', '--no-fpu'],
             ['--no-baseline', '--no-ion'],

@@ -2111,9 +2111,7 @@ CreateNativeGlobalForInner(JSContext* aCx,
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
 
   // Determine if we need the Components object.
-  bool componentsInContent = !Preferences::GetBool("dom.omit_components_in_content", true);
-  bool needComponents = componentsInContent ||
-                        nsContentUtils::IsSystemPrincipal(aPrincipal) ||
+  bool needComponents = nsContentUtils::IsSystemPrincipal(aPrincipal) ||
                         TreatAsRemoteXUL(aPrincipal);
   uint32_t flags = needComponents ? 0 : nsIXPConnect::OMIT_COMPONENTS_OBJECT;
 

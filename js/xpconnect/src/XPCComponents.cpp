@@ -5231,35 +5231,6 @@ nsXPCComponents::SetProperty(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN;
 }
 
-static bool
-ContentComponentsGetterOp(JSContext *cx, HandleObject obj, HandleId id,
-                          MutableHandleValue vp)
-{
-    // If chrome is accessing the Components object of content, allow.
-    MOZ_ASSERT(nsContentUtils::GetCurrentJSContext() == cx);
-    if (nsContentUtils::IsCallerChrome())
-        return true;
-
-    // If the caller is XBL, this is ok.
-    if (nsContentUtils::IsCallerXBL())
-        return true;
-
-    // Do Telemetry on how often this happens.
-    Telemetry::Accumulate(Telemetry::COMPONENTS_OBJECT_ACCESSED_BY_CONTENT, true);
-
-    // Warn once.
-    JSAutoCompartment ac(cx, obj);
-    nsCOMPtr<nsPIDOMWindow> win =
-        do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(obj));
-    if (win) {
-        nsCOMPtr<nsIDocument> doc = win->GetExtantDoc();
-        if (doc)
-            doc->WarnOnceAbout(nsIDocument::eComponents, /* asError = */ true);
-    }
-
-    return true;
-}
-
 // static
 bool
 nsXPCComponents::AttachComponentsObject(JSContext* aCx,
@@ -5273,10 +5244,8 @@ nsXPCComponents::AttachComponentsObject(JSContext* aCx,
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, aCx));
 
     RootedId id(aCx, XPCJSRuntime::Get()->GetStringID(XPCJSRuntime::IDX_COMPONENTS));
-    JSPropertyOp getter = AccessCheck::isChrome(global) ? nullptr
-                                                        : &ContentComponentsGetterOp;
     return JS_DefinePropertyById(aCx, global, id, js::ObjectValue(*components),
-                                 getter, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
+                                 nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 /* void lookupMethod (); */
@@ -5324,12 +5293,6 @@ nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, c
 {
     static const char* const allowed[] = { "isSuccessCode", "lookupMethod", nullptr };
     *_retval = xpc_CheckAccessList(methodName, allowed);
-    if (*_retval &&
-        methodName[0] == 'l' &&
-        !nsContentUtils::IsCallerXBL())
-    {
-        Telemetry::Accumulate(Telemetry::COMPONENTS_LOOKUPMETHOD_ACCESSED_BY_CONTENT, true);
-    }
     return NS_OK;
 }
 
@@ -5339,12 +5302,6 @@ nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName
 {
     static const char* const allowed[] = { "interfaces", "interfacesByID", "results", nullptr};
     *_retval = xpc_CheckAccessList(propertyName, allowed);
-    if (*_retval &&
-        propertyName[0] == 'i' &&
-        !nsContentUtils::IsCallerXBL())
-    {
-        Telemetry::Accumulate(Telemetry::COMPONENTS_INTERFACES_ACCESSED_BY_CONTENT, true);
-    }
     return NS_OK;
 }
 
