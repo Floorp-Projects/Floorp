@@ -25,6 +25,7 @@ namespace ion {
     _(Beta)                                                                 \
     _(OsrValue)                                                             \
     _(OsrScopeChain)                                                        \
+    _(OsrReturnValue)                                                       \
     _(ReturnFromCtor)                                                       \
     _(CheckOverRecursed)                                                    \
     _(DefVar)                                                               \
