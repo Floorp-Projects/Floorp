@@ -787,7 +787,12 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
   }
 
   int32_t caretStyle = Preferences::GetInt("layout.selection.caret_style", 0);
-  if (caretStyle == 0) {
+  if (caretStyle == 0
+#ifdef XP_WIN
+      && aKeycode != nsIDOMKeyEvent::DOM_VK_UP
+      && aKeycode != nsIDOMKeyEvent::DOM_VK_DOWN
+#endif
+     ) {
     // Put caret at the selection edge in the |aKeycode| direction.
     caretStyle = 2;
   }
