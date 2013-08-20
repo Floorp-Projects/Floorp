@@ -433,6 +433,8 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
   cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(aSurfOptions.mFilter));
   cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
 
+  cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
+
   cairo_translate(mContext, aDest.X(), aDest.Y());
 
   if (IsOperatorBoundByMask(aOptions.mCompositionOp)) {
@@ -544,6 +546,8 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
   cairo_set_source(mContext, pat);
 
+  cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
+
   if (NeedIntermediateSurface(aPattern, aOptions) ||
       !IsOperatorBoundByMask(aOptions.mCompositionOp)) {
     cairo_push_group_with_content(mContext, CAIRO_CONTENT_COLOR_ALPHA);
@@ -612,6 +616,7 @@ DrawTargetCairo::CopySurface(SourceSurface *aSurface,
 
   cairo_set_source_surface(mContext, surf, aDest.x - aSource.x, aDest.y - aSource.y);
   cairo_set_operator(mContext, CAIRO_OPERATOR_SOURCE);
+  cairo_set_antialias(mContext, CAIRO_ANTIALIAS_NONE);
 
   cairo_reset_clip(mContext);
   cairo_new_path(mContext);
@@ -624,6 +629,7 @@ DrawTargetCairo::ClearRect(const Rect& aRect)
 {
   AutoPrepareForDrawing prep(this, mContext);
 
+  cairo_set_antialias(mContext, CAIRO_ANTIALIAS_NONE);
   cairo_new_path(mContext);
   cairo_set_operator(mContext, CAIRO_OPERATOR_CLEAR);
   cairo_rectangle(mContext, aRect.X(), aRect.Y(),
@@ -711,6 +717,8 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
   cairo_set_source(mContext, pat);
   cairo_pattern_destroy(pat);
 
+  cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
+
   // Convert our GlyphBuffer into an array of Cairo glyphs.
   std::vector<cairo_glyph_t> glyphs(aBuffer.mNumGlyphs);
   for (uint32_t i = 0; i < aBuffer.mNumGlyphs; ++i) {
@@ -730,6 +738,8 @@ DrawTargetCairo::Mask(const Pattern &aSource,
   AutoPrepareForDrawing prep(this, mContext);
   AutoClearDeviceOffset clearSource(aSource);
   AutoClearDeviceOffset clearMask(aMask);
+
+  cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   cairo_pattern_t* source = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
   cairo_set_source(mContext, source);
@@ -754,6 +764,8 @@ DrawTargetCairo::MaskSurface(const Pattern &aSource,
   if (!PatternIsCompatible(aSource)) {
     return;
   }
+
+  cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
   cairo_set_source(mContext, pat);
