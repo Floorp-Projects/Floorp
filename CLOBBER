@@ -18,4 +18,6 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-touching resources in Android requires a clobber, and I did that in bug 880259
+In Bug 863306 comment #42 sheriff KWierso states that we should CLOBBER every time
+that WebRTC code is changed, which will be awesome.
+
