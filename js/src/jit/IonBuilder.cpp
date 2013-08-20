@@ -516,11 +516,14 @@ IonBuilder::build()
     // start instruction, but the snapshot is encoded *at* the start
     // instruction, which means generating any code that could load into
     // registers is illegal.
-    {
-        MInstruction *scope = MConstant::New(UndefinedValue());
-        current->add(scope);
-        current->initSlot(info().scopeChainSlot(), scope);
-    }
+    MInstruction *scope = MConstant::New(UndefinedValue());
+    current->add(scope);
+    current->initSlot(info().scopeChainSlot(), scope);
+
+    // Initialize the return value.
+    MInstruction *returnValue = MConstant::New(UndefinedValue());
+    current->add(returnValue);
+    current->initSlot(info().returnValueSlot(), returnValue);
 
     // Initialize the arguments object slot to undefined if necessary.
     if (info().hasArguments()) {
@@ -677,11 +680,14 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
         return false;
 
     // Initialize scope chain slot to Undefined.  It's set later by |initScopeChain|.
-    {
-        MInstruction *scope = MConstant::New(UndefinedValue());
-        current->add(scope);
-        current->initSlot(info().scopeChainSlot(), scope);
-    }
+    MInstruction *scope = MConstant::New(UndefinedValue());
+    current->add(scope);
+    current->initSlot(info().scopeChainSlot(), scope);
+
+    // Initialize |return value| slot.
+    MInstruction *returnValue = MConstant::New(UndefinedValue());
+    current->add(returnValue);
+    current->initSlot(info().returnValueSlot(), returnValue);
 
     // Initialize |arguments| slot.
     if (info().hasArguments()) {
@@ -1124,6 +1130,7 @@ IonBuilder::snoopControlFlow(JSOp op)
 
       case JSOP_RETURN:
       case JSOP_STOP:
+      case JSOP_RETRVAL:
         return processReturn(op);
 
       case JSOP_THROW:
@@ -1575,6 +1582,12 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_INSTANCEOF:
         return jsop_instanceof();
+
+      case JSOP_SETRVAL:
+      case JSOP_POPV:
+        JS_ASSERT(!script()->noScriptRval);
+        current->setSlot(info().returnValueSlot(), current->pop());
+        return true;
 
       default:
 #ifdef DEBUG
@@ -3355,16 +3368,24 @@ IonBuilder::processReturn(JSOp op)
     MDefinition *def;
     switch (op) {
       case JSOP_RETURN:
+        // Return the last instruction.
         def = current->pop();
         break;
 
       case JSOP_STOP:
-      {
-        MInstruction *ins = MConstant::New(UndefinedValue());
-        current->add(ins);
-        def = ins;
+        // Return undefined eagerly if script doesn't use return value.
+        if (script()->noScriptRval) {
+            MInstruction *ins = MConstant::New(UndefinedValue());
+            current->add(ins);
+            def = ins;
+            break;
+        }
+
+        // Fall through
+      case JSOP_RETRVAL:
+        // Return the value in the return value slot.
+        def = current->getSlot(info().returnValueSlot());
         break;
-      }
 
       default:
         def = NULL;
@@ -5744,6 +5765,17 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 
         osrBlock->add(scopev);
         osrBlock->initSlot(slot, scopev);
+    }
+
+    // Initialize |return value|
+    {
+        MInstruction *returnValue;
+        if (!script()->noScriptRval)
+            returnValue = MOsrReturnValue::New(entry);
+        else
+            returnValue = MConstant::New(UndefinedValue());
+        osrBlock->add(returnValue);
+        osrBlock->initSlot(info().returnValueSlot(), returnValue);
     }
 
     // Initialize arguments object.  Ion will not allow OSR-ing into scripts

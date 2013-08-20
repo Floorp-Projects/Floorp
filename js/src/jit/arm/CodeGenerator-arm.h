@@ -133,7 +133,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool visitBoxDouble(LBoxDouble *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
-    bool visitOsrValue(LOsrValue *value);
     bool visitDouble(LDouble *ins);
 
     bool visitLoadSlotV(LLoadSlotV *load);

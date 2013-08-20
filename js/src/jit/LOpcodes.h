@@ -126,6 +126,7 @@
     _(OsrEntry)                     \
     _(OsrValue)                     \
     _(OsrScopeChain)                \
+    _(OsrReturnValue)               \
     _(RegExp)                       \
     _(RegExpTest)                   \
     _(Lambda)                       \
