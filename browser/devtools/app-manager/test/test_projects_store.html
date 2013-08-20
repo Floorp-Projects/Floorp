@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+
+<!--
+Bug 907206 - data store for local apps 
+-->
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      const Cu = Components.utils;
+
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+        const {require} = devtools;
+
+        const { AppProjects } = require("devtools/app-manager/app-projects");
+
+        function testHosted(projects) {
+          let manifestURL = document.location.href.replace("test_projects_store.html", "hosted_app/webapp.manifest");
+          AppProjects.addHosted(manifestURL)
+            .then(function (app) {
+              is(projects.length, 1,
+                 "Hosted app has been added");
+              is(projects[0], app);
+              is(app.type, "hosted", "valid type");
+              is(app.location, manifestURL, "valid location");
+              is(AppProjects.get(manifestURL), app,
+                 "get() returns the same app object");
+              AppProjects.remove(manifestURL)
+                .then(function () {
+                  is(projects.length, 0,
+                     "Hosted app has been removed");
+                  SimpleTest.finish();
+                });
+            });
+        }
+
+        AppProjects.once("ready", function (event, projects) {
+          is(projects, AppProjects.store.object.projects,
+             "The ready event data is the store projects list");
+          testHosted(projects);
+        });
+
+      }
+
+    </script>
+  </body>
+</html>
