@@ -269,7 +269,7 @@ var tanh_data = [
     [1e-10, 1e-10],
 ];
 
-for (let [x, y] of tanh_data)
+for (var [x, y] of tanh_data)
     assertNear(Math.atanh(x), y);
 
 assertNear(Math.atanh(+3 / 5), +Math.log(2));

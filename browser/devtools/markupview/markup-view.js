@@ -1219,80 +1219,101 @@ ElementEditor.prototype = {
     return this.node.startModifyingAttributes();
   },
 
-  _createAttribute: function EE_createAttribute(aAttr, aBefore)
+  _createAttribute: function EE_createAttribute(aAttr, aBefore = null)
   {
-    if (this.attrs.hasOwnProperty(aAttr.name)) {
-      var attr = this.attrs[aAttr.name];
-      var name = attr.querySelector(".attrname");
-      var val = attr.querySelector(".attrvalue");
-    } else {
-      // Create the template editor, which will save some variables here.
-      let data = {
-        attrName: aAttr.name,
-      };
-      this.template("attribute", data);
-      var {attr, inner, name, val} = data;
+    // Create the template editor, which will save some variables here.
+    let data = {
+      attrName: aAttr.name,
+    };
+    this.template("attribute", data);
+    var {attr, inner, name, val} = data;
 
-      // Figure out where we should place the attribute.
-      let before = aBefore || null;
-      if (aAttr.name == "id") {
-        before = this.attrList.firstChild;
-      } else if (aAttr.name == "class") {
-        let idNode = this.attrs["id"];
-        before = idNode ? idNode.nextSibling : this.attrList.firstChild;
-      }
-      this.attrList.insertBefore(attr, before);
+    // Double quotes need to be handled specially to prevent DOMParser failing.
+    // name="v"a"l"u"e" when editing -> name='v"a"l"u"e"'
+    // name="v'a"l'u"e" when editing -> name="v'a&quot;l'u&quot;e"
+    let editValueDisplayed = aAttr.value;
+    let hasDoubleQuote = editValueDisplayed.contains('"');
+    let hasSingleQuote = editValueDisplayed.contains("'");
+    let initial = aAttr.name + '="' + editValueDisplayed + '"';
 
-      // Make the attribute editable.
-      editableField({
-        element: inner,
-        trigger: "dblclick",
-        stopOnReturn: true,
-        selectAll: false,
-        contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
-        popup: this.markup.popup,
-        start: (aEditor, aEvent) => {
-          // If the editing was started inside the name or value areas,
-          // select accordingly.
-          if (aEvent && aEvent.target === name) {
-            aEditor.input.setSelectionRange(0, name.textContent.length);
-          } else if (aEvent && aEvent.target === val) {
-            let length = val.textContent.length;
-            let editorLength = aEditor.input.value.length;
-            let start = editorLength - (length + 1);
-            aEditor.input.setSelectionRange(start, start + length);
-          } else {
-            aEditor.input.select();
-          }
-        },
-        done: (aVal, aCommit) => {
-          if (!aCommit) {
-            return;
-          }
-
-          let doMods = this._startModifyingAttributes();
-          let undoMods = this._startModifyingAttributes();
-
-          // Remove the attribute stored in this editor and re-add any attributes
-          // parsed out of the input element. Restore original attribute if
-          // parsing fails.
-          try {
-            this._saveAttribute(aAttr.name, undoMods);
-            doMods.removeAttribute(aAttr.name);
-            this._applyAttributes(aVal, attr, doMods, undoMods);
-            this.undo.do(() => {
-              doMods.apply();
-            }, () => {
-              undoMods.apply();
-            })
-          } catch(ex) {
-            console.error(ex);
-          }
-        }
-      });
-
-      this.attrs[aAttr.name] = attr;
+    // Can't just wrap value with ' since the value contains both " and '.
+    if (hasDoubleQuote && hasSingleQuote) {
+        editValueDisplayed = editValueDisplayed.replace(/\"/g, "&quot;");
+        initial = aAttr.name + '="' + editValueDisplayed + '"';
     }
+
+    // Wrap with ' since there are no single quotes in the attribute value.
+    if (hasDoubleQuote && !hasSingleQuote) {
+        initial = aAttr.name + "='" + editValueDisplayed + "'";
+    }
+
+    // Make the attribute editable.
+    editableField({
+      element: inner,
+      trigger: "dblclick",
+      stopOnReturn: true,
+      selectAll: false,
+      initial: initial,
+      contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
+      popup: this.markup.popup,
+      start: (aEditor, aEvent) => {
+        // If the editing was started inside the name or value areas,
+        // select accordingly.
+        if (aEvent && aEvent.target === name) {
+          aEditor.input.setSelectionRange(0, name.textContent.length);
+        } else if (aEvent && aEvent.target === val) {
+          let length = editValueDisplayed.length;
+          let editorLength = aEditor.input.value.length;
+          let start = editorLength - (length + 1);
+          aEditor.input.setSelectionRange(start, start + length);
+        } else {
+          aEditor.input.select();
+        }
+      },
+      done: (aVal, aCommit) => {
+        if (!aCommit) {
+          return;
+        }
+
+        let doMods = this._startModifyingAttributes();
+        let undoMods = this._startModifyingAttributes();
+
+        // Remove the attribute stored in this editor and re-add any attributes
+        // parsed out of the input element. Restore original attribute if
+        // parsing fails.
+        try {
+          this._saveAttribute(aAttr.name, undoMods);
+          doMods.removeAttribute(aAttr.name);
+          this._applyAttributes(aVal, attr, doMods, undoMods);
+          this.undo.do(() => {
+            doMods.apply();
+          }, () => {
+            undoMods.apply();
+          })
+        } catch(ex) {
+          console.error(ex);
+        }
+      }
+    });
+
+
+    // Figure out where we should place the attribute.
+    let before = aBefore;
+    if (aAttr.name == "id") {
+      before = this.attrList.firstChild;
+    } else if (aAttr.name == "class") {
+      let idNode = this.attrs["id"];
+      before = idNode ? idNode.nextSibling : this.attrList.firstChild;
+    }
+    this.attrList.insertBefore(attr, before);
+
+    // Remove the old version of this attribute from the DOM.
+    let oldAttr = this.attrs[aAttr.name];
+    if (oldAttr && oldAttr.parentNode) {
+      oldAttr.parentNode.removeChild(oldAttr);
+    }
+
+    this.attrs[aAttr.name] = attr;
 
     name.textContent = aAttr.name;
     val.textContent = aAttr.value;

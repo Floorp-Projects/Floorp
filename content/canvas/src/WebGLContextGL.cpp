@@ -128,47 +128,6 @@ WebGLContext::BindAttribLocation(WebGLProgram *prog, WebGLuint location,
 }
 
 void
-WebGLContext::BindBuffer(WebGLenum target, WebGLBuffer *buf)
-{
-    if (!IsContextStable())
-        return;
-
-    if (!ValidateObjectAllowDeletedOrNull("bindBuffer", buf))
-        return;
-
-    WebGLuint bufname = buf ? buf->GLName() : 0;
-
-    // silently ignore a deleted buffer
-    if (buf && buf->IsDeleted())
-        return;
-
-    if (target != LOCAL_GL_ARRAY_BUFFER &&
-        target != LOCAL_GL_ELEMENT_ARRAY_BUFFER)
-    {
-        return ErrorInvalidEnumInfo("bindBuffer: target", target);
-    }
-
-    if (buf) {
-        if ((buf->Target() != LOCAL_GL_NONE) && (target != buf->Target()))
-            return ErrorInvalidOperation("bindBuffer: buffer already bound to a different target");
-        buf->SetTarget(target);
-        buf->SetHasEverBeenBound(true);
-    }
-
-    // we really want to do this AFTER all the validation is done, otherwise our bookkeeping could get confused.
-    // see bug 656752
-    if (target == LOCAL_GL_ARRAY_BUFFER) {
-        mBoundArrayBuffer = buf;
-    } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
-        mBoundVertexArray->mBoundElementArrayBuffer = buf;
-    }
-
-    MakeContextCurrent();
-
-    gl->fBindBuffer(target, bufname);
-}
-
-void
 WebGLContext::BindFramebuffer(WebGLenum target, WebGLFramebuffer *wfb)
 {
     if (!IsContextStable())
@@ -350,220 +309,6 @@ GLenum WebGLContext::CheckedBufferData(GLenum target,
         gl->fBufferData(target, size, data, usage);
         return LOCAL_GL_NO_ERROR;
     }
-}
-
-void
-WebGLContext::BufferData(WebGLenum target, WebGLsizeiptr size,
-                         WebGLenum usage)
-{
-    if (!IsContextStable())
-        return;
-
-    WebGLBuffer *boundBuffer = nullptr;
-
-    if (target == LOCAL_GL_ARRAY_BUFFER) {
-        boundBuffer = mBoundArrayBuffer;
-    } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
-        boundBuffer = mBoundVertexArray->mBoundElementArrayBuffer;
-    } else {
-        return ErrorInvalidEnumInfo("bufferData: target", target);
-    }
-
-    if (size < 0)
-        return ErrorInvalidValue("bufferData: negative size");
-
-    if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
-        return;
-
-    if (!boundBuffer)
-        return ErrorInvalidOperation("bufferData: no buffer bound!");
-
-    void* zeroBuffer = calloc(size, 1);
-    if (!zeroBuffer)
-        return ErrorOutOfMemory("bufferData: out of memory");
-
-    MakeContextCurrent();
-    InvalidateBufferFetching();
-
-    GLenum error = CheckedBufferData(target, size, zeroBuffer, usage);
-    free(zeroBuffer);
-
-    if (error) {
-        GenerateWarning("bufferData generated error %s", ErrorName(error));
-        return;
-    }
-
-    boundBuffer->SetByteLength(size);
-    if (!boundBuffer->ElementArrayCacheBufferData(nullptr, size)) {
-        return ErrorOutOfMemory("bufferData: out of memory");
-    }
-}
-
-void
-WebGLContext::BufferData(WebGLenum target,
-                         const Nullable<ArrayBuffer> &maybeData,
-                         WebGLenum usage)
-{
-    if (!IsContextStable())
-        return;
-
-    if (maybeData.IsNull()) {
-        // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
-        return ErrorInvalidValue("bufferData: null object passed");
-    }
-
-    const ArrayBuffer& data = maybeData.Value();
-
-    WebGLBuffer *boundBuffer = nullptr;
-
-    if (target == LOCAL_GL_ARRAY_BUFFER) {
-        boundBuffer = mBoundArrayBuffer;
-    } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
-        boundBuffer = mBoundVertexArray->mBoundElementArrayBuffer;
-    } else {
-        return ErrorInvalidEnumInfo("bufferData: target", target);
-    }
-
-    if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
-        return;
-
-    if (!boundBuffer)
-        return ErrorInvalidOperation("bufferData: no buffer bound!");
-
-    MakeContextCurrent();
-    InvalidateBufferFetching();
-
-    GLenum error = CheckedBufferData(target, data.Length(), data.Data(), usage);
-
-    if (error) {
-        GenerateWarning("bufferData generated error %s", ErrorName(error));
-        return;
-    }
-
-    boundBuffer->SetByteLength(data.Length());
-    if (!boundBuffer->ElementArrayCacheBufferData(data.Data(), data.Length())) {
-        return ErrorOutOfMemory("bufferData: out of memory");
-    }
-}
-
-void
-WebGLContext::BufferData(WebGLenum target, const ArrayBufferView& data,
-                         WebGLenum usage)
-{
-    if (!IsContextStable())
-        return;
-
-    WebGLBuffer *boundBuffer = nullptr;
-
-    if (target == LOCAL_GL_ARRAY_BUFFER) {
-        boundBuffer = mBoundArrayBuffer;
-    } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
-        boundBuffer = mBoundVertexArray->mBoundElementArrayBuffer;
-    } else {
-        return ErrorInvalidEnumInfo("bufferData: target", target);
-    }
-
-    if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
-        return;
-
-    if (!boundBuffer)
-        return ErrorInvalidOperation("bufferData: no buffer bound!");
-
-    InvalidateBufferFetching();
-    MakeContextCurrent();
-
-    GLenum error = CheckedBufferData(target, data.Length(), data.Data(), usage);
-    if (error) {
-        GenerateWarning("bufferData generated error %s", ErrorName(error));
-        return;
-    }
-
-    boundBuffer->SetByteLength(data.Length());
-    if (!boundBuffer->ElementArrayCacheBufferData(data.Data(), data.Length())) {
-        return ErrorOutOfMemory("bufferData: out of memory");
-    }
-}
-
-void
-WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
-                            const Nullable<ArrayBuffer> &maybeData)
-{
-    if (!IsContextStable())
-        return;
-
-    if (maybeData.IsNull()) {
-        // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
-        return;
-    }
-
-    const ArrayBuffer& data = maybeData.Value();
-
-    WebGLBuffer *boundBuffer = nullptr;
-
-    if (target == LOCAL_GL_ARRAY_BUFFER) {
-        boundBuffer = mBoundArrayBuffer;
-    } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
-        boundBuffer = mBoundVertexArray->mBoundElementArrayBuffer;
-    } else {
-        return ErrorInvalidEnumInfo("bufferSubData: target", target);
-    }
-
-    if (byteOffset < 0)
-        return ErrorInvalidValue("bufferSubData: negative offset");
-
-    if (!boundBuffer)
-        return ErrorInvalidOperation("bufferData: no buffer bound!");
-
-    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data.Length();
-    if (!checked_neededByteLength.isValid())
-        return ErrorInvalidValue("bufferSubData: integer overflow computing the needed byte length");
-
-    if (checked_neededByteLength.value() > boundBuffer->ByteLength())
-        return ErrorInvalidValue("bufferSubData: not enough data - operation requires %d bytes, but buffer only has %d bytes",
-                                     checked_neededByteLength.value(), boundBuffer->ByteLength());
-
-    MakeContextCurrent();
-
-    boundBuffer->ElementArrayCacheBufferSubData(byteOffset, data.Data(), data.Length());
-
-    gl->fBufferSubData(target, byteOffset, data.Length(), data.Data());
-}
-
-void
-WebGLContext::BufferSubData(WebGLenum target, WebGLsizeiptr byteOffset,
-                            const ArrayBufferView& data)
-{
-    if (!IsContextStable())
-        return;
-
-    WebGLBuffer *boundBuffer = nullptr;
-
-    if (target == LOCAL_GL_ARRAY_BUFFER) {
-        boundBuffer = mBoundArrayBuffer;
-    } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
-        boundBuffer = mBoundVertexArray->mBoundElementArrayBuffer;
-    } else {
-        return ErrorInvalidEnumInfo("bufferSubData: target", target);
-    }
-
-    if (byteOffset < 0)
-        return ErrorInvalidValue("bufferSubData: negative offset");
-
-    if (!boundBuffer)
-        return ErrorInvalidOperation("bufferSubData: no buffer bound!");
-
-    CheckedUint32 checked_neededByteLength = CheckedUint32(byteOffset) + data.Length();
-    if (!checked_neededByteLength.isValid())
-        return ErrorInvalidValue("bufferSubData: integer overflow computing the needed byte length");
-
-    if (checked_neededByteLength.value() > boundBuffer->ByteLength())
-        return ErrorInvalidValue("bufferSubData: not enough data -- operation requires %d bytes, but buffer only has %d bytes",
-                                     checked_neededByteLength.value(), boundBuffer->ByteLength());
-
-    boundBuffer->ElementArrayCacheBufferSubData(byteOffset, data.Data(), data.Length());
-
-    MakeContextCurrent();
-    gl->fBufferSubData(target, byteOffset, data.Length(), data.Data());
 }
 
 WebGLenum
@@ -942,34 +687,6 @@ WebGLContext::CullFace(WebGLenum face)
 
     MakeContextCurrent();
     gl->fCullFace(face);
-}
-
-void
-WebGLContext::DeleteBuffer(WebGLBuffer *buf)
-{
-    if (!IsContextStable())
-        return;
-
-    if (!ValidateObjectAllowDeletedOrNull("deleteBuffer", buf))
-        return;
-
-    if (!buf || buf->IsDeleted())
-        return;
-
-    if (mBoundArrayBuffer == buf)
-        BindBuffer(LOCAL_GL_ARRAY_BUFFER,
-                   static_cast<WebGLBuffer*>(nullptr));
-
-    if (mBoundVertexArray->mBoundElementArrayBuffer == buf)
-        BindBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER,
-                   static_cast<WebGLBuffer*>(nullptr));
-
-    for (int32_t i = 0; i < mGLMaxVertexAttribs; i++) {
-        if (mBoundVertexArray->mAttribBuffers[i].buf == buf)
-            mBoundVertexArray->mAttribBuffers[i].buf = nullptr;
-    }
-
-    buf->RequestDelete();
 }
 
 void
@@ -1731,15 +1448,6 @@ WebGLContext::GetRenderbufferParameter(WebGLenum target, WebGLenum pname)
     return JS::NullValue();
 }
 
-already_AddRefed<WebGLBuffer>
-WebGLContext::CreateBuffer()
-{
-    if (!IsContextStable())
-        return nullptr;
-    nsRefPtr<WebGLBuffer> globj = new WebGLBuffer(this);
-    return globj.forget();
-}
-
 already_AddRefed<WebGLTexture>
 WebGLContext::CreateTexture()
 {
@@ -2203,17 +1911,6 @@ WebGLContext::Hint(WebGLenum target, WebGLenum mode)
         return ErrorInvalidEnum("hint: invalid hint");
 
     gl->fHint(target, mode);
-}
-
-bool
-WebGLContext::IsBuffer(WebGLBuffer *buffer)
-{
-    if (!IsContextStable())
-        return false;
-
-    return ValidateObjectAllowDeleted("isBuffer", buffer) &&
-        !buffer->IsDeleted() &&
-        buffer->HasEverBeenBound();
 }
 
 bool

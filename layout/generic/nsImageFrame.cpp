@@ -68,6 +68,8 @@
 #include "gfxRect.h"
 #include "ImageLayers.h"
 #include "ImageContainer.h"
+#include "nsStyleSet.h"
+#include "nsBlockFrame.h"
 
 #include "mozilla/Preferences.h"
 

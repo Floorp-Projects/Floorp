@@ -7,7 +7,6 @@
 
 #include "gfxContext.h"
 #include "nsPresContext.h"
-#include "nsDisplayList.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
 

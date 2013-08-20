@@ -164,7 +164,11 @@ var WifiManager = (function() {
 
   var driverLoaded = false;
 
-  manager.getDriverLoaded = function() { return driverLoaded; }
+  manager.checkDriverState = function(expectState) {
+    if (!unloadDriverEnabled)
+      return true;
+    return (expectState === driverLoaded);
+  }
 
   function loadDriver(callback) {
     if (driverLoaded) {
@@ -2843,7 +2847,7 @@ WifiWorker.prototype = {
 
     // First, notify all of the requests that were trying to make this change.
     let state = this._stateRequests[0].enabled;
-    let driverLoaded = WifiManager.getDriverLoaded();
+    let driverReady = WifiManager.checkDriverState(newState);
 
     // It is callback function's responsibility to handle the pending request.
     // So we just return here.
@@ -2857,7 +2861,7 @@ WifiWorker.prototype = {
     // were racing somehow) so don't notify.
     // For newState is false(disable), we expect driverLoaded is false(driver unloaded)
     // to proceed, and vice versa.
-    if (!success || (newState === driverLoaded && state === newState)) {
+    if (!success || (driverReady && state === newState)) {
       do {
         if (!("callback" in this._stateRequests[0])) {
           this._stateRequests.shift();
@@ -2873,8 +2877,8 @@ WifiWorker.prototype = {
       let self = this;
       let callback = null;
       this._callbackTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      if (newState === driverLoaded) {
-        // Driver status is as same as new state, proceed next request.
+      if (driverReady) {
+        // Driver is ready for next request.
         callback = function(timer) {
           if ("callback" in self._stateRequests[0]) {
             self._stateRequests[0].callback.call(self, self._stateRequests[0].enabled);
@@ -2885,7 +2889,7 @@ WifiWorker.prototype = {
           timer = null;
         };
       } else {
-        // Driver status is not as same as new state, wait driver.
+        // Wait driver until it's ready.
         callback = function(timer) {
           self._notifyAfterStateChange(success, newState);
           timer = null;
