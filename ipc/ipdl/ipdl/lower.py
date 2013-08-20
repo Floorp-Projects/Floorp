@@ -1539,7 +1539,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         msgenum = TypeEnum('MessageType')
         msgstart = _messageStartName(self.protocol.decl.type) +' << 16'
         msgenum.addId(self.protocol.name + 'Start', msgstart)
-        msgenum.addId(self.protocol.name +'PreStart', '('+ msgstart +') - 1')
+        #msgenum.addId(self.protocol.name +'PreStart', '('+ msgstart +') - 1')
 
         for md in p.messageDecls:
             msgenum.addId(md.msgId())
@@ -1593,7 +1593,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             args=[ _backstagePass(),
                    p.callGetChannel(parentvar), p.callOtherProcess(parentvar),
                    p.callGetChannel(childvar), p.callOtherProcess(childvar),
-                   _protocolId(p.decl.type)
+                   _protocolId(p.decl.type),
+                   ExprVar(_messageStartName(p.decl.type) + 'Child')
                    ])))
         return bridgefunc
 
@@ -1613,7 +1614,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             args=[ _backstagePass(),
                    p.callGetChannel(openervar), p.callOtherProcess(openervar),
                    _sideToTransportMode(localside),
-                   _protocolId(p.decl.type)
+                   _protocolId(p.decl.type),
+                   ExprVar(_messageStartName(p.decl.type) + 'Child')
                    ])))
         return openfunc
 
@@ -3992,7 +3994,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 iffailalloc,
                 StmtBreak()
             ])
-            return CaseLabel(_protocolId(actor.ptype).name), case
+            label = _messageStartName(actor.ptype)
+            if actor.side is 'child':
+                label += 'Child'
+            return CaseLabel(label), case
 
         pswitch = StmtSwitch(pvar)
         for actor in actors:
