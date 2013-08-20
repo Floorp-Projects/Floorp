@@ -14,7 +14,7 @@ var log1p_data = [
     [ 0.011404608812881634, 0.011340066517988035 ],
 ];
 
-for (let [x, y] of log1p_data)
+for (var [x, y] of log1p_data)
     assertNear(Math.log1p(x), y);
 
 reportCompare(0, 0, "ok");
