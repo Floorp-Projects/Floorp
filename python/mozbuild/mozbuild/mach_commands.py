@@ -223,12 +223,12 @@ class BuildOutputManager(LoggingMixin):
         self.t = terminal
         self.footer = BuildProgressFooter(terminal, monitor)
 
-        self.handler = TerminalLoggingHandler()
-        self.handler.setFormatter(log_manager.terminal_formatter)
-        self.handler.footer = self.footer
+        self._handler = TerminalLoggingHandler()
+        self._handler.setFormatter(log_manager.terminal_formatter)
+        self._handler.footer = self.footer
 
-        old = log_manager.replace_terminal_handler(self.handler)
-        self.handler.level = old.level
+        old = log_manager.replace_terminal_handler(self._handler)
+        self._handler.level = old.level
 
     def __enter__(self):
         return self
@@ -236,6 +236,8 @@ class BuildOutputManager(LoggingMixin):
     def __exit__(self, exc_type, exc_value, traceback):
         if self.footer:
             self.footer.clear()
+            # Prevents the footer from being redrawn if logging occurs.
+            self._handler.footer = None
 
     def write_line(self, line):
         if self.footer:
@@ -289,6 +291,8 @@ class Build(MachCommandBase):
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0, verbose=False):
         from mozbuild.controller.building import BuildMonitor
         from mozbuild.util import resolve_target_to_make
+
+        self.log_manager.register_structured_logger(logging.getLogger('mozbuild'))
 
         warnings_path = self._get_state_filename('warnings.json')
         monitor = self._spawn(BuildMonitor)
@@ -353,6 +357,7 @@ class Build(MachCommandBase):
                     if status != 0:
                         break
             else:
+                monitor.start_resource_recording()
                 status = self._run_make(srcdir=True, filename='client.mk',
                     line_handler=output.on_line, log=False, print_directory=False,
                     allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
@@ -362,7 +367,7 @@ class Build(MachCommandBase):
                     {'count': len(monitor.warnings_database)},
                     '{count} compiler warnings present.')
 
-            monitor.finish()
+            monitor.finish(record_usage=status==0)
 
         high_finder, finder_percent = monitor.have_high_finder_usage()
         if high_finder:
