@@ -22,13 +22,6 @@ class ImageContainer;
  */
 class ImageLayer : public Layer {
 public:
-  enum ScaleMode {
-    SCALE_NONE,
-    SCALE_STRETCH,
-    SCALE_SENTINEL
-  // Unimplemented - SCALE_PRESERVE_ASPECT_RATIO_CONTAIN
-  };
-
   /**
    * CONSTRUCTION PHASE ONLY
    * Set the ImageContainer. aContainer must have the same layer manager

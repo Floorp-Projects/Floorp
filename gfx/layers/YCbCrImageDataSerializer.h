@@ -12,6 +12,7 @@
 #include "base/basictypes.h"
 #include "Shmem.h"
 #include "gfxPoint.h"
+#include "ImageTypes.h"
 
 namespace mozilla {
 namespace ipc {
