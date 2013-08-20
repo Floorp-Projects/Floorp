@@ -63,11 +63,6 @@ include backend.mk
 endif
 endif
 
-ifdef TIERS
-DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_dirs))
-STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
-endif
-
 ifndef MOZILLA_DIR
 MOZILLA_DIR = $(topsrcdir)
 endif
@@ -680,12 +675,7 @@ SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 # of something else. Makefiles which use this var *must* provide a sensible
 # default rule before including rules.mk
 ifndef SUPPRESS_DEFAULT_RULES
-ifdef TIERS
-default all alldep::
-	$(call BUILDSTATUS,TIERS $(TIERS))
-	$(foreach tier,$(TIERS),$(call SUBMAKE,tier_$(tier)))
-else
-
+ifndef TIERS
 default all::
 ifneq (,$(strip $(STATIC_DIRS)))
 	$(foreach dir,$(STATIC_DIRS),$(call SUBMAKE,,$(dir),1))
@@ -712,44 +702,6 @@ ECHO := true
 QUIET := -q
 endif
 
-# This function is called and evaluated to produce the rule to build the
-# specified tier.
-#
-# Tiers are traditionally composed of directories that are invoked either
-# once (so-called "static" directories) or 3 times with the export, libs, and
-# tools sub-tiers.
-#
-# If the TIER_$(tier)_CUSTOM variable is defined, then these traditional
-# tier rules are ignored and each directory in the tier is executed via a
-# sub-make invocation (make -C).
-define CREATE_TIER_RULE
-tier_$(1)::
-ifdef TIER_$(1)_CUSTOM
-	$$(foreach dir,$$($$@_dirs),$$(call SUBMAKE,,$$(dir)))
-else
-	$(call BUILDSTATUS,TIER_START $(1) $(if $(tier_$(1)_staticdirs),static )$(if $(tier_$(1)_dirs),export libs tools))
-ifneq (,$(tier_$(1)_staticdirs))
-	$(call BUILDSTATUS,SUBTIER_START  $(1) static $$($$@_staticdirs))
-	$$(foreach dir,$$($$@_staticdirs),$$(call TIER_DIR_SUBMAKE,$(1),static,$$(dir),,1))
-	$(call BUILDSTATUS,SUBTIER_FINISH $(1) static)
-endif
-ifneq (,$(tier_$(1)_dirs))
-	$(call BUILDSTATUS,SUBTIER_START  $(1) export $$($$@_dirs))
-	$$(MAKE) export_$$@
-	$(call BUILDSTATUS,SUBTIER_FINISH $(1) export)
-	$(call BUILDSTATUS,SUBTIER_START  $(1) libs $$($$@_dirs))
-	$$(MAKE) libs_$$@
-	$(call BUILDSTATUS,SUBTIER_FINISH $(1) libs)
-	$(call BUILDSTATUS,SUBTIER_START  $(1) tools $$($$@_dirs))
-	$$(MAKE) tools_$$@
-	$(call BUILDSTATUS,SUBTIER_FINISH $(1) tools)
-endif
-	$(call BUILDSTATUS,TIER_FINISH $(1))
-endif
-endef
-
-$(foreach tier,$(TIERS),$(eval $(call CREATE_TIER_RULE,$(tier))))
-
 # Do everything from scratch
 everything::
 	$(MAKE) clean
@@ -766,8 +718,34 @@ ifneq (,$(DIRS)$(TOOL_DIRS)$(PARALLEL_DIRS))
 	$(LOOP_OVER_TOOL_DIRS)
 endif
 
-include $(topsrcdir)/config/makefiles/target_export.mk
-include $(topsrcdir)/config/makefiles/target_tools.mk
+#########################
+# Tier traversal handling
+#########################
+define CREATE_SUBTIER_TRAVERSAL_RULE
+PARALLEL_DIRS_$(1) = $$(addsuffix _$(1),$$(PARALLEL_DIRS))
+
+.PHONY: $(1) $$(PARALLEL_DIRS_$(1))
+
+ifdef PARALLEL_DIRS
+$(1):: $$(PARALLEL_DIRS_$(1))
+
+$$(PARALLEL_DIRS_$(1)): %_$(1): %/Makefile
+	+@$$(call SUBMAKE,$(1),$$*)
+endif
+
+endef
+
+$(foreach subtier,export libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
+
+export:: $(SUBMAKEFILES) $(MAKE_DIRS)
+	$(LOOP_OVER_DIRS)
+	$(LOOP_OVER_TOOL_DIRS)
+
+
+tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
+	$(LOOP_OVER_DIRS)
+	$(foreach dir,$(TOOL_DIRS),$(call SUBMAKE,libs,$(dir)))
+
 
 ifneq (,$(filter-out %.$(LIB_SUFFIX),$(SHARED_LIBRARY_LIBS)))
 $(error SHARED_LIBRARY_LIBS must contain .$(LIB_SUFFIX) files only)

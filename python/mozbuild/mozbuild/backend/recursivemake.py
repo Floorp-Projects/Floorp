@@ -332,11 +332,13 @@ class RecursiveMakeBackend(CommonBackend):
 
             if dirs:
                 fh.write('tier_%s_dirs += %s\n' % (tier, ' '.join(dirs)))
+                fh.write('DIRS += $(tier_%s_dirs)\n' % tier)
 
             # tier_static_dirs should have the same keys as tier_dirs.
             if obj.tier_static_dirs[tier]:
                 fh.write('tier_%s_staticdirs += %s\n' % (
                     tier, ' '.join(obj.tier_static_dirs[tier])))
+                fh.write('STATIC_DIRS += $(tier_%s_staticdirs)' % tier)
 
                 static = ' '.join(obj.tier_static_dirs[tier])
                 fh.write('EXTERNAL_DIRS += %s\n' % static)
