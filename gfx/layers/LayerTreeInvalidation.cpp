@@ -335,7 +335,7 @@ struct ImageLayerProperties : public LayerPropertiesBase
   nsRefPtr<ImageContainer> mContainer;
   gfxPattern::GraphicsFilter mFilter;
   gfxIntSize mScaleToSize;
-  ImageLayer::ScaleMode mScaleMode;
+  ScaleMode mScaleMode;
 };
 
 LayerPropertiesBase*

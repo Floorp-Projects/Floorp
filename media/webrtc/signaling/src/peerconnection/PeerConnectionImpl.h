@@ -30,9 +30,7 @@
 
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/net/DataChannel.h"
-#include "Layers.h"
 #include "VideoUtils.h"
-#include "ImageLayers.h"
 #include "VideoSegment.h"
 #include "nsNSSShutDown.h"
 #else

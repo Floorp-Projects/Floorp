@@ -9,9 +9,9 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Matrix.h"
 #include "gfxMatrix.h"
-#include "Layers.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/layers/CompositorTypes.h"
+#include "Units.h"
 
 /**
  * Different elements of a web pages are rendered into separate "layers" before
