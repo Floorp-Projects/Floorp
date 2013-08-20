@@ -243,11 +243,20 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
           mApzcForInputBlock = RootAPZCForLayersId(mApzcForInputBlock);
           APZC_LOG("Using APZC %p as the root APZC for multi-touch\n", mApzcForInputBlock.get());
         }
+
+        // Cache transformToApzc so it can be used for future events in this block.
+        if (mApzcForInputBlock) {
+          GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
+          mCachedTransformToApzcForInputBlock = transformToApzc;
+        }
       } else if (mApzcForInputBlock) {
         APZC_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
       }
       if (mApzcForInputBlock) {
-        GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
+        // Use the cached transform to compute the point to send to the APZC.
+        // This ensures that the sequence of touch points an APZC sees in an
+        // input block are all in the same coordinate space.
+        transformToApzc = mCachedTransformToApzcForInputBlock;
         MultiTouchInput inputForApzc(multiTouchInput);
         for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
           ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
@@ -314,16 +323,28 @@ APZCTreeManager::ReceiveInputEvent(const nsInputEvent& aEvent,
           mApzcForInputBlock = RootAPZCForLayersId(mApzcForInputBlock);
           APZC_LOG("Using APZC %p as the root APZC for multi-touch\n", mApzcForInputBlock.get());
         }
+        if (mApzcForInputBlock) {
+          // Cache transformToApzc so it can be used for future events in this block.
+          GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
+          mCachedTransformToApzcForInputBlock = transformToApzc;
+        }
       } else if (mApzcForInputBlock) {
         APZC_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
       }
       if (mApzcForInputBlock) {
-        GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
+        // For computing the input for the APZC, used the cached transform.
+        // This ensures that the sequence of touch points an APZC sees in an
+        // input block are all in the same coordinate space.
+        transformToApzc = mCachedTransformToApzcForInputBlock;
         MultiTouchInput inputForApzc(touchEvent);
         for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
           ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
         }
 
+        // For computing the event to pass back to Gecko, use the up-to-date transforms.
+        // This ensures that transformToApzc and transformToScreen are in sync
+        // (note that transformToScreen isn't cached).
+        GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
         gfx3DMatrix outTransform = transformToApzc * transformToScreen;
         nsTouchEvent* outEvent = static_cast<nsTouchEvent*>(aOutEvent);
         for (size_t i = 0; i < outEvent->touches.Length(); i++) {
@@ -457,6 +478,29 @@ APZCTreeManager::ClearTree()
     apzcsToDestroy[i]->Destroy();
   }
   mRootApzc = nullptr;
+}
+
+void
+APZCTreeManager::HandleOverscroll(AsyncPanZoomController* aChild, ScreenPoint aStartPoint, ScreenPoint aEndPoint)
+{
+  AsyncPanZoomController* parent = aChild->GetParent();
+  if (parent == nullptr)
+    return;
+
+  gfx3DMatrix transformToApzc;
+  gfx3DMatrix transformToScreen;  // ignored
+
+  // Convert start and end points to untransformed screen coordinates.
+  GetInputTransforms(aChild, transformToApzc, transformToScreen);
+  ApplyTransform(&aStartPoint, transformToApzc.Inverse());
+  ApplyTransform(&aEndPoint, transformToApzc.Inverse());
+
+  // Convert start and end points to parent's transformed screen coordinates.
+  GetInputTransforms(parent, transformToApzc, transformToScreen);
+  ApplyTransform(&aStartPoint, transformToApzc);
+  ApplyTransform(&aEndPoint, transformToApzc);
+
+  parent->AttemptScroll(aStartPoint, aEndPoint);
 }
 
 already_AddRefed<AsyncPanZoomController>
