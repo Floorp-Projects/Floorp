@@ -654,6 +654,95 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             }
         }
 
+        if (IsExtensionSupported(XXX_transform_feedback)) {
+            SymLoadStruct transformFeedbackSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fBindBufferBase,
+                  { "BindBufferBase",
+                    "BindBufferBaseEXT",
+                    "BindBufferBaseNV",
+                    nullptr
+                  }
+                },
+                { (PRFuncPtr*) &mSymbols.fBindBufferRange,
+                  { "BindBufferRange",
+                    "BindBufferRangeEXT",
+                    "BindBufferRangeNV",
+                    nullptr
+                  }
+                },
+                { (PRFuncPtr*) &mSymbols.fBeginTransformFeedback,
+                  { "BeginTransformFeedback",
+                    "BeginTransformFeedbackEXT",
+                    "BeginTransformFeedbackNV",
+                    nullptr
+                  }
+                },
+                { (PRFuncPtr*) &mSymbols.fEndTransformFeedback,
+                  { "EndTransformFeedback",
+                    "EndTransformFeedbackEXT",
+                    "EndTransformFeedbackNV",
+                    nullptr
+                  }
+                },
+                { (PRFuncPtr*) &mSymbols.fTransformFeedbackVaryings,
+                  { "TransformFeedbackVaryings",
+                    "TransformFeedbackVaryingsEXT",
+                    "TransformFeedbackVaryingsNV",
+                    nullptr
+                  }
+                },
+                { (PRFuncPtr*) &mSymbols.fGetTransformFeedbackVarying,
+                  { "GetTransformFeedbackVarying",
+                    "GetTransformFeedbackVaryingEXT",
+                    "GetTransformFeedbackVaryingNV",
+                    nullptr
+                  }
+                },
+                { (PRFuncPtr*) &mSymbols.fGetIntegeri_v,
+                  { "GetIntegeri_v",
+                    "GetIntegerIndexedvEXT",
+                    "GetIntegerIndexedvNV",
+                    nullptr
+                  }
+                },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(transformFeedbackSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports transform feedback without supplying its functions.");
+
+                MarkExtensionGroupUnsupported(XXX_transform_feedback);
+                MarkExtensionGroupUnsupported(XXX_bind_buffer_offset);
+                mSymbols.fBindBufferBase = nullptr;
+                mSymbols.fBindBufferRange = nullptr;
+                mSymbols.fBeginTransformFeedback = nullptr;
+                mSymbols.fEndTransformFeedback = nullptr;
+                mSymbols.fTransformFeedbackVaryings = nullptr;
+                mSymbols.fGetTransformFeedbackVarying = nullptr;
+                mSymbols.fGetIntegeri_v = nullptr;
+            }
+        }
+
+        if (IsExtensionSupported(XXX_bind_buffer_offset)) {
+            SymLoadStruct bindBufferOffsetSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fBindBufferOffset,
+                  { "BindBufferOffset",
+                    "BindBufferOffsetEXT",
+                    "BindBufferOffsetNV",
+                    nullptr
+                  }
+                },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(bindBufferOffsetSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports BindBufferOffset without supplying its function.");
+
+                MarkExtensionGroupUnsupported(XXX_bind_buffer_offset);
+                mSymbols.fBindBufferOffset = nullptr;
+            }
+        }
+
         if (IsExtensionSupported(XXX_query_objects)) {
             SymLoadStruct queryObjectsSymbols[] = {
                 { (PRFuncPtr*) &mSymbols.fBeginQuery, { "BeginQuery", "BeginQueryEXT", nullptr } },

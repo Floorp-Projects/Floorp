@@ -239,6 +239,79 @@ function test() {
         });
       }
     },
+
+    {
+      desc: "Modify inline style containing \"",
+      before: function() {
+        assertAttributes(doc.querySelector("#node26"), {
+          id: "node26",
+          style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F");'
+        });
+      },
+      execute: function(after) {
+        inspector.once("markupmutation", after);
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node26")).editor;
+        let attr = editor.attrs["style"].querySelector(".editable");
+
+
+        attr.focus();
+        EventUtils.sendKey("return", inspector.panelWin);
+
+        let input = inplaceEditor(attr).input;
+        let value = input.value;
+
+        is (value,
+          "style='background-image: url(\"moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F\");'",
+          "Value contains actual double quotes"
+        );
+
+        value = value.replace(/mozilla\.org/, "mozilla.com");
+        input.value = value;
+
+        EventUtils.sendKey("return", inspector.panelWin);
+      },
+      after: function() {
+        assertAttributes(doc.querySelector("#node26"), {
+          id: "node26",
+          style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.com%2F");'
+        });
+      }
+    },
+
+    {
+      desc: "Modify inline style containing \" and \'",
+      before: function() {
+        assertAttributes(doc.querySelector("#node27"), {
+          id: "node27",
+          class: 'Double " and single \''
+        });
+      },
+      execute: function(after) {
+        inspector.once("markupmutation", after);
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node27")).editor;
+        let attr = editor.attrs["class"].querySelector(".editable");
+
+        attr.focus();
+        EventUtils.sendKey("return", inspector.panelWin);
+
+        let input = inplaceEditor(attr).input;
+        let value = input.value;
+
+        is (value, "class=\"Double &quot; and single '\"", "Value contains &quot;");
+
+        value = value.replace(/Double/, "&quot;").replace(/single/, "'");
+        input.value = value;
+
+        EventUtils.sendKey("return", inspector.panelWin);
+      },
+      after: function() {
+        assertAttributes(doc.querySelector("#node27"), {
+          id: "node27",
+          class: '" " and \' \''
+        });
+      }
+    },
+
     {
       desc: "Add an attribute value without closing \"",
       enteredText: 'style="display: block;',

@@ -262,7 +262,7 @@ var cosh_data = [
     [1875817529344, 28.953212876533797]
 ];
 
-for (let [x, y] of cosh_data)
+for (var [x, y] of cosh_data)
     assertNear(Math.acosh(x), y);
 
 for (var i = 0; i <= 100; i++) {

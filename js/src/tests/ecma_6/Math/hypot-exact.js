@@ -2,7 +2,7 @@
 
 // If any argument is +∞, the result is +∞.
 // If any argument is −∞, the result is +∞.
-for (let inf of [Infinity, -Infinity]) {
+for (var inf of [Infinity, -Infinity]) {
     assertEq(Math.hypot(inf, 0), Infinity);
     assertEq(Math.hypot(0, inf), Infinity);
     assertEq(Math.hypot(inf, inf), Infinity);

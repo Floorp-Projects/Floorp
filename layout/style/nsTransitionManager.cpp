@@ -30,6 +30,8 @@
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
 #include "nsStyleChangeList.h"
+#include "nsStyleSet.h"
+#include "RestyleManager.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;

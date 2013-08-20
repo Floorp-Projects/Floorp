@@ -74,13 +74,17 @@ var SelectionHandler = {
             this.copySelection();
           else
             this._closeSelection();
+        } else if (this._activeType == this.TYPE_CURSOR) {
+          // attachCaret() is called in the "Gesture:SingleTap" handler in BrowserEventHandler
+          // We're guaranteed to call this first, because this observer was added last
+          this._closeSelection();
         }
         break;
       }
       case "Tab:Selected":
         this._closeSelection();
         break;
-  
+
       case "Window:Resize": {
         if (this._activeType == this.TYPE_SELECTION) {
           // Knowing when the page is done drawing is hard, so let's just cancel

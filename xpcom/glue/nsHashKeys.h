@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Move.h"
 
 namespace mozilla {
 
@@ -471,6 +472,13 @@ public:
 
   nsCharPtrHashKey(const char* aKey) : mKey(strdup(aKey)) { }
   nsCharPtrHashKey(const nsCharPtrHashKey& toCopy) : mKey(strdup(toCopy.mKey)) { }
+
+  nsCharPtrHashKey(mozilla::MoveRef<nsCharPtrHashKey> other)
+    : mKey(other->mKey)
+  {
+    other->mKey = nullptr;
+  }
+
   ~nsCharPtrHashKey() { if (mKey) free(const_cast<char *>(mKey)); }
 
   const char* GetKey() const { return mKey; }
@@ -501,6 +509,13 @@ public:
 
   nsUnicharPtrHashKey(const PRUnichar* aKey) : mKey(NS_strdup(aKey)) { }
   nsUnicharPtrHashKey(const nsUnicharPtrHashKey& toCopy) : mKey(NS_strdup(toCopy.mKey)) { }
+
+  nsUnicharPtrHashKey(mozilla::MoveRef<nsUnicharPtrHashKey> other)
+    : mKey(other->mKey)
+  {
+    other->mKey = nullptr;
+  }
+
   ~nsUnicharPtrHashKey() { if (mKey) NS_Free(const_cast<PRUnichar *>(mKey)); }
 
   const PRUnichar* GetKey() const { return mKey; }

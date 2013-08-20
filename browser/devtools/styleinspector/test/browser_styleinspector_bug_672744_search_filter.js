@@ -37,7 +37,7 @@ function SI_inspectNode()
     is(span, computedView.viewedElement.rawNode(),
       "style inspector node matches the selected node");
     SI_toggleDefaultStyles();
-  }).then(null, (err) => console.error(err));
+  });
 }
 
 function SI_toggleDefaultStyles()

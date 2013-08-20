@@ -42,7 +42,7 @@ function simpleInherit(aInspector, aRuleView)
     styleNode.parentNode.removeChild(styleNode);
 
     emptyInherit();
-  }).then(null, console.error);
+  });
 }
 
 function emptyInherit()
@@ -68,7 +68,7 @@ function emptyInherit()
     styleNode.parentNode.removeChild(styleNode);
 
     elementStyleInherit();
-  }).then(null, console.error);
+  });
 }
 
 function elementStyleInherit()
@@ -92,7 +92,7 @@ function elementStyleInherit()
     is(inheritProp.name, "color", "color should have been inherited.");
 
     finishTest();
-  }).then(null, console.error);
+  });
 }
 
 function finishTest()

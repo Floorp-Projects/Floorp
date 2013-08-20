@@ -9,10 +9,7 @@
  */
 
 #include "nsStyleChangeList.h"
-#include "nsStyleConsts.h"
-#include "nsIFrame.h"
 #include "nsIContent.h"
-#include "nsCRT.h"
 
 static const uint32_t kGrowArrayBy = 10;
 

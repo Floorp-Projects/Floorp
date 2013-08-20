@@ -20,8 +20,6 @@
 #define _nsFrameManager_h_
 
 #include "nsIFrame.h"
-#include "nsIStatefulFrame.h"
-#include "nsChangeHint.h"
 #include "nsFrameManagerBase.h"
 
 namespace mozilla {

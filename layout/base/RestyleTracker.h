@@ -14,7 +14,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsDataHashtable.h"
 #include "nsIFrame.h"
-#include "nsTPriorityQueue.h"
 #include "mozilla/SplayTree.h"
 
 namespace mozilla {

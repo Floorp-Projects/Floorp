@@ -514,13 +514,19 @@ ion::PropagateAbortPar(JSScript *outermostScript, JSScript *currentScript)
 }
 
 void
-ion::CallToUncompiledScriptPar(JSFunction *func)
+ion::CallToUncompiledScriptPar(JSObject *obj)
 {
     JS_ASSERT(InParallelSection());
 
 #ifdef DEBUG
     static const int max_bound_function_unrolling = 5;
 
+    if (!obj->is<JSFunction>()) {
+        Spew(SpewBailouts, "Call to non-function");
+        return;
+    }
+
+    JSFunction *func = &obj->as<JSFunction>();
     if (func->hasScript()) {
         JSScript *script = func->nonLazyScript();
         Spew(SpewBailouts, "Call to uncompiled script: %p:%s:%d",

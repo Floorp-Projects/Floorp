@@ -6,12 +6,9 @@
 #ifdef IBMBIDI
 
 #include "nsBidiPresUtils.h"
-#include "nsTextFragment.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
-#include "nsIServiceManager.h"
-#include "nsFrameManager.h"
 #include "nsBidiUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsContainerFrame.h"
@@ -20,7 +17,7 @@
 #include "nsFirstLetterFrame.h"
 #include "nsUnicodeProperties.h"
 #include "nsTextFrame.h"
-#include "nsStyleStructInlines.h"
+#include "nsBlockFrame.h"
 #include <algorithm>
 
 #undef NOISY_BIDI
