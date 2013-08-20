@@ -383,6 +383,10 @@ class Build(MachCommandBase):
         else:
             print('Your build was successful!')
 
+        if monitor.have_resource_usage:
+            print('To view resource usage of the build, run |mach '
+                'resource-usage|.')
+
         # Only for full builds because incremental builders likely don't
         # need to be burdened with this.
         if not what:
@@ -414,6 +418,34 @@ class Build(MachCommandBase):
 
         return status
 
+    @Command('resource-usage', category='post-build',
+        description='Show information about system resource usage for a build.')
+    @CommandArgument('--address', default='localhost',
+        help='Address the HTTP server should listen on.')
+    @CommandArgument('--port', type=int, default=0,
+        help='Port number the HTTP server should listen on.')
+    @CommandArgument('--browser', default='firefox',
+        help='Web browser to automatically open. See webbrowser Python module.')
+    def resource_usage(self, address=None, port=None, browser=None):
+        import webbrowser
+        from mozbuild.html_build_viewer import BuildViewerServer
+
+        last = self._get_state_filename('build_resources.json')
+        if not os.path.exists(last):
+            print('Build resources not available. If you have performed a '
+                'build and receive this message, the psutil Python package '
+                'likely failed to initialize properly.')
+            return 1
+
+        server = BuildViewerServer(address, port)
+        server.add_resource_json_file('last', last)
+        try:
+            webbrowser.get(browser).open_new_tab(server.url)
+        except Exception:
+            print('Please open %s in a browser.' % server.url)
+
+        print('Hit CTRL+c to stop server.')
+        server.run()
 
     @Command('clobber', category='build',
         description='Clobber the tree (delete the object directory).')
