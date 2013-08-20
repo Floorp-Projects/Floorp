@@ -20,7 +20,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIJSEventListener.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptRuntime.h"
 #include "nsLayoutUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"

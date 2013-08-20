@@ -3,6 +3,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test runner
@@ -660,6 +661,59 @@ tests.push(
 
     return Promise.all([p1, p2]);
   }));
+
+// Test deadlock in Promise.jsm with nested event loops
+// The scenario being tested is:
+// promise_1.then({
+//   do some work that will asynchronously signal done
+//   start an event loop waiting for the done signal
+// }
+// where the async work uses resolution of a second promise to 
+// trigger the "done" signal. While this would likely work in a
+// naive implementation, our constant-stack implementation needs
+// a special case to avoid deadlock. Note that this test is
+// sensitive to the implementation-dependent order in which then()
+// clauses for two different promises are executed, so it is
+// possible for other implementations to pass this test and still
+// have similar deadlocks.
+tests.push(
+  make_promise_test(function promise_nested_eventloop_deadlock(test) {
+    // Set up a (long enough to be noticeable) timeout to
+    // exit the nested event loop and throw if the test run is hung
+    let shouldExitNestedEventLoop = false;
+
+    function event_loop() {
+      let thr = Services.tm.mainThread;
+      while(!shouldExitNestedEventLoop) {
+        thr.processNextEvent(true);
+      }
+    }
+
+    // I wish there was a way to cancel xpcshell do_timeout()s
+    do_timeout(2000, () => {
+      if (!shouldExitNestedEventLoop) {
+        shouldExitNestedEventLoop = true;
+        do_throw("Test timed out");
+      }
+    });
+
+    let promise1 = Promise.resolve(1);
+    let promise2 = Promise.resolve(2);
+
+    do_print("Setting wait for first promise");
+    promise1.then(value => {
+      do_print("Starting event loop");
+      event_loop();
+    }, null);
+
+    do_print("Setting wait for second promise");
+    return promise2.then(null, error => {return 3;})
+    .then(
+      count => {
+        shouldExitNestedEventLoop = true;
+      });
+  }));
+
 
 function run_test()
 {

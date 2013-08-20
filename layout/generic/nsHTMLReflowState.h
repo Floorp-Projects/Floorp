@@ -411,7 +411,7 @@ public:
                     const nsSize&            aAvailableSpace,
                     uint32_t                 aFlags = 0);
 
-  // Initialize a reflow state for a child frames reflow. Some state
+  // Initialize a reflow state for a child frame's reflow. Some state
   // is copied from the parent reflow state; the remaining state is
   // computed. 
   nsHTMLReflowState(nsPresContext*           aPresContext,
