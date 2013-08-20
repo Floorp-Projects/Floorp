@@ -223,19 +223,6 @@ bool WebGLContext::ValidateFaceEnum(WebGLenum face, const char *info)
     }
 }
 
-bool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
-{
-    switch (target) {
-        case LOCAL_GL_STREAM_DRAW:
-        case LOCAL_GL_STATIC_DRAW:
-        case LOCAL_GL_DYNAMIC_DRAW:
-            return true;
-        default:
-            ErrorInvalidEnumInfo(info, target);
-            return false;
-    }
-}
-
 bool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
 {
     switch (mode) {
