@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bug 746015: Off-screen overflow column rules are not properly drawn.</title>
+    <style type="text/css">
+    * {
+    	margin: 0 0;
+    	padding: 0 0;
+    }
+
+    body,html {
+        padding: 0 0;
+        margin: 0 0;
+        line-height: 1.0;
+    }
+
+    body {
+        position: absolute;
+        left: -570px;
+    }
+
+    div.content {
+      width: 180px;
+      height: 875px;
+      background: blue;
+    }
+
+    div.multicolumn {
+        height: 175px;
+        overflow: visible;
+
+        -moz-column-width: 180px;
+        -moz-column-gap: 10px;
+        -moz-column-rule: 10px solid green;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="multicolumn"><div class="content"></div></div>
+  </body>
+</html>
