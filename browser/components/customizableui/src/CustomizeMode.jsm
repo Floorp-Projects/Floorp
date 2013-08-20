@@ -272,7 +272,7 @@ CustomizeMode.prototype = {
     let deferred = Promise.defer();
 
     let deck = this.document.getElementById("tab-view-deck");
-    deck.addEventListener("transitionend", function customizeTransitionEnd(aEvent) {
+    let customizeTransitionEnd = function(aEvent) {
       if (aEvent.originalTarget != deck || aEvent.propertyName != "padding-top") {
         return;
       }
@@ -283,7 +283,8 @@ CustomizeMode.prototype = {
       }
 
       deferred.resolve();
-    }.bind(this));
+    }.bind(this);
+    deck.addEventListener("transitionend", customizeTransitionEnd);
 
     if (aEntering) {
       this.document.documentElement.setAttribute("customizing", true);
