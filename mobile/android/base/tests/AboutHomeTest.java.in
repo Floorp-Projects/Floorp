@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * This class is an extension of BaseTest that helps with interaction with about:home
@@ -61,13 +62,16 @@ abstract class AboutHomeTest extends PixelTest {
     }
 
     // Returns true if the bookmark is displayed in the bookmarks tab, false otherwise - does not check in folders
-    protected boolean isBookmarkDisplayed(String url) {
-        View bookmark = getDisplayedBookmark(url);
-        if (bookmark != null) {
-            return true;
-        } else {
-            return false;
-        }
+    protected void isBookmarkDisplayed(final String url) {
+        boolean isCorrect = waitForTest(new BooleanTest() {
+            @Override
+            public boolean test() {
+                View bookmark = getDisplayedBookmark(url);
+                return bookmark != null;
+            }
+        }, MAX_WAIT_MS);
+
+        mAsserter.ok(isCorrect, "Checking that " + url + " displayed as a bookmark", url + " displayed");
     }
 
     // Loads a bookmark by tapping on the bookmark view in the Bookmarks tab
@@ -79,7 +83,7 @@ abstract class AboutHomeTest extends PixelTest {
             contentEventExpecter.blockForEvent();
             contentEventExpecter.unregisterListener();
         } else {
-            mAsserter.ok(false, url + " is not one of the displayed bookmarks", "Please make sure the url provided is ookmarked");
+            mAsserter.ok(false, url + " is not one of the displayed bookmarks", "Please make sure the url provided is bookmarked");
         }
     }
 
@@ -87,8 +91,9 @@ abstract class AboutHomeTest extends PixelTest {
     protected void openBookmarkContextMenu(String url) {
         View bookmark = getDisplayedBookmark(url);
         if (bookmark != null) {
-            mSolo.clickLongOnView(bookmark);
-            waitForText("Share");
+            mSolo.waitForView(bookmark);
+            mSolo.clickLongOnView(bookmark, LONG_PRESS_TIME);
+            mSolo.waitForDialogToOpen();
         } else {
             mAsserter.ok(false, url + " is not one of the displayed bookmarks", "Please make sure the url provided is bookmarked");
         }
@@ -97,6 +102,8 @@ abstract class AboutHomeTest extends PixelTest {
     // @return the View associated with bookmark for the provided url or null if the link is not bookmarked
     protected View getDisplayedBookmark(String url) {
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
+        mSolo.hideSoftKeyboard();
+        getInstrumentation().waitForIdleSync();
         ListView bookmarksTabList = findListViewWithTag("bookmarks");
         waitForNonEmptyListToLoad(bookmarksTabList);
         ListAdapter adapter = bookmarksTabList.getAdapter();
@@ -112,7 +119,7 @@ abstract class AboutHomeTest extends PixelTest {
                          if (bookmarkContent instanceof android.widget.LinearLayout) {
                              ViewGroup bookmarkItemLayout = (ViewGroup) bookmarkContent;
                              for (int k = 0 ; k < bookmarkItemLayout.getChildCount(); k++) {
-                                  // Both the title and url are represented as text views so we can cast the view without any ssues
+                                  // Both the title and url are represented as text views so we can cast the view without any issues
                                   TextView bookmarkTextContent = (TextView)bookmarkItemLayout.getChildAt(k);
                                   if (url.equals(bookmarkTextContent.getText().toString())) {
                                       return bookmarkView;
@@ -174,62 +181,6 @@ abstract class AboutHomeTest extends PixelTest {
         }
 
         return null;
-    }
-
-   /**
-    * FIXME: rewrite this to work with fig when rewriting the testBookmarksTab test
-    * This method will edit the bookmark with index = bookmarkIndex from the list of bookmarks
-    * For the field index:
-    *     fieldIndex = 1 - the Bookmark name
-    *     fieldIndex = 2 - the Bookmark url
-    *     fieldIndex = 3 - the Bookmark keyword
-    */
-    protected void editBookmark(int bookmarkIndex, int fieldIndex, String addedText, ListView list) {
-
-        // Open the Edit Bookmark context menu
-        View child;
-        mSolo.clickOnText("Bookmarks");
-        child = list.getChildAt(bookmarkIndex);
-        mAsserter.ok(child != null, "edit item can be retrieved", child != null ? child.toString() : "null!");
-        waitForText("Switch to tab");
-        mSolo.clickLongOnView(child);
-        waitForText("Share");
-        mSolo.clickOnText("Edit");
-        waitForText("Edit Bookmark");
-
-        // Clear the Field
-        mSolo.clearEditText(fieldIndex);
-
-        // Enter the new text
-        mSolo.clickOnEditText(fieldIndex);
-        mActions.sendKeys(addedText);
-        mSolo.clickOnText("OK");
-        waitForText("Bookmark updated");
-    }
-
-    // FIXME: rewrite this to work with fig when rewriting the testBookmarksTab test
-    protected boolean checkBookmarkEdit(int bookmarkIndex, String addedText, ListView list) {
-        // Open the Edit Bookmark context menu
-        View child;
-        mSolo.clickOnText("Bookmarks");
-        child = list.getChildAt(bookmarkIndex);
-        mAsserter.ok(child != null, "check item can be retrieved", child != null ? child.toString() : "null!");
-        waitForText("Switch to tab");
-        mSolo.clickLongOnView(child);
-        waitForText("Share");
-        mSolo.clickOnText("Edit");
-        waitForText("Edit Bookmark");
-
-        // Check if the new text was added
-        if (mSolo.searchText(addedText)) {
-            clickOnButton("Cancel");
-            waitForText("about:home");
-            return true;
-        } else {
-            clickOnButton("Cancel");
-            waitForText("about:home");
-            return false;
-        }
     }
 
     // A wait in order for the about:home tab to be rendered after drag/tab selection
