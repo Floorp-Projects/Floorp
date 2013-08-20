@@ -9,12 +9,6 @@
 
 .newattr {
   cursor: pointer;
-}
-
-/* Give some padding to focusable elements to match the editor input
- * that will replace them. */
-span[tabindex] {
-  display: inline-block;
   padding: 1px 0;
 }
 

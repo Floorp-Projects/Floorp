@@ -61,6 +61,7 @@
 #include "nsIDOMEvent.h"
 #include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
+#include "nsThemeConstants.h"
 #include <algorithm>
 
 // Needed for Print Preview

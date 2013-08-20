@@ -397,9 +397,9 @@ IonCache::linkAndAttachStub(JSContext *cx, MacroAssembler &masm, StubAttacher &a
 
     attachStub(masm, attacher, code);
 
-    if (pc) {
+    if (pc_) {
         IonSpew(IonSpew_InlineCaches, "Cache %p(%s:%d/%d) generated %s %s stub at %p",
-                this, script->filename(), script->lineno, pc - script->code,
+                this, script_->filename(), script_->lineno, pc_ - script_->code,
                 attachKind, CacheName(kind()), code->raw());
     } else {
         IonSpew(IonSpew_InlineCaches, "Cache %p generated %s %s stub at %p",
@@ -2287,7 +2287,7 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     RootedShape oldShape(cx, obj->lastProperty());
 
     // Set/Add the property on the object, the inlined cache are setup for the next execution.
-    if (!SetProperty(cx, obj, name, value, cache.strict(), cache.isSetName()))
+    if (!SetProperty(cx, obj, name, value, cache.strict(), cache.pc()))
         return false;
 
     // The property did not exist before, now we can try to inline the property add.

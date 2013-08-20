@@ -282,7 +282,7 @@ var sinh_data = [
     [1581915832320, 28.78280496108106]
 ];
 
-for (let [x, y] of sinh_data)
+for (var [x, y] of sinh_data)
     assertNear(Math.asinh(x), y);
 
 for (var i = 0; i <= 80; i++) {

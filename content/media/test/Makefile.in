@@ -145,6 +145,7 @@ MOCHITEST_FILES = \
 		test_VideoPlaybackQuality_disabled.html \
 		test_webvtt_disabled.html \
 		test_playback_rate_playpause.html \
+		test_bug895305.html \
 		$(NULL)
 
 # Disabled on Windows for frequent intermittent failures

@@ -159,10 +159,8 @@ IonBuilder::getSingleCallTarget(types::StackTypeSet *calleeTypes)
 }
 
 bool
-IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
-                               AutoObjectVector &targets,
-                               uint32_t maxTargets,
-                               bool *gotLambda)
+IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes, bool constructing,
+                               AutoObjectVector &targets, uint32_t maxTargets, bool *gotLambda)
 {
     JS_ASSERT(targets.length() == 0);
     JS_ASSERT(gotLambda);
@@ -183,18 +181,13 @@ IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
         return false;
     for(unsigned i = 0; i < objCount; i++) {
         JSObject *obj = calleeTypes->getSingleObject(i);
+        JSFunction *fun;
         if (obj) {
             if (!obj->is<JSFunction>()) {
                 targets.clear();
                 return true;
             }
-            if (obj->as<JSFunction>().isInterpreted() &&
-                !obj->as<JSFunction>().getOrCreateScript(cx))
-            {
-                return false;
-            }
-            DebugOnly<bool> appendOk = targets.append(obj);
-            JS_ASSERT(appendOk);
+            fun = &obj->as<JSFunction>();
         } else {
             types::TypeObject *typeObj = calleeTypes->getTypeObject(i);
             JS_ASSERT(typeObj);
@@ -202,13 +195,24 @@ IonBuilder::getPolyCallTargets(types::StackTypeSet *calleeTypes,
                 targets.clear();
                 return true;
             }
-            if (!typeObj->interpretedFunction->getOrCreateScript(cx))
-                return false;
-            DebugOnly<bool> appendOk = targets.append(typeObj->interpretedFunction);
-            JS_ASSERT(appendOk);
 
+            fun = typeObj->interpretedFunction;
             *gotLambda = true;
         }
+
+        if (fun->isInterpreted() && !fun->getOrCreateScript(cx))
+            return false;
+
+        // Don't optimize if we're constructing and the callee is not a
+        // constructor, so that CallKnown does not have to handle this case
+        // (it should always throw).
+        if (constructing && !fun->isInterpretedConstructor() && !fun->isNativeConstructor()) {
+            targets.clear();
+            return true;
+        }
+
+        DebugOnly<bool> appendOk = targets.append(fun);
+        JS_ASSERT(appendOk);
     }
 
     // For now, only inline "singleton" lambda calls
@@ -4947,7 +4951,7 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     bool gotLambda = false;
     types::StackTypeSet *calleeTypes = current->peek(calleeDepth)->resultTypeSet();
     if (calleeTypes) {
-        if (!getPolyCallTargets(calleeTypes, originals, 4, &gotLambda))
+        if (!getPolyCallTargets(calleeTypes, constructing, originals, 4, &gotLambda))
             return false;
     }
     JS_ASSERT_IF(gotLambda, originals.length() <= 1);
@@ -4983,15 +4987,8 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
 
     // No inline, just make the call.
     RootedFunction target(cx, NULL);
-    if (targets.length() == 1) {
+    if (targets.length() == 1)
         target = &targets[0]->as<JSFunction>();
-
-        // Don't optimize if we're constructing and the callee is not an
-        // interpreted constructor, so that CallKnown does not have to
-        // handle this case (it should always throw).
-        if (constructing && !target->isInterpretedConstructor())
-            target = NULL;
-    }
 
     return makeCall(target, callInfo, hasClones);
 }
@@ -5266,7 +5263,8 @@ IonBuilder::makeCall(HandleFunction target, CallInfo &callInfo, bool cloneAtCall
 {
     // Constructor calls to non-constructors should throw. We don't want to use
     // CallKnown in this case.
-    JS_ASSERT_IF(callInfo.constructing() && target, target->isInterpretedConstructor());
+    JS_ASSERT_IF(callInfo.constructing() && target,
+                 target->isInterpretedConstructor() || target->isNativeConstructor());
 
     MCall *call = makeCallHelper(target, callInfo, cloneAtCallsite);
     if (!call)

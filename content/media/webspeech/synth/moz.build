@@ -3,39 +3,40 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MODULE = 'content'
+if CONFIG['MOZ_WEBSPEECH']:
+    MODULE = 'content'
 
-TEST_DIRS += ['test', 'ipc/test']
+    TEST_DIRS += ['test', 'ipc/test']
 
-XPIDL_MODULE = 'dom_webspeechsynth'
+    XPIDL_MODULE = 'dom_webspeechsynth'
 
-XPIDL_SOURCES += [
-    'nsIDOMSpeechSynthesisEvent.idl',
-    'nsISpeechService.idl',
-    'nsISynthVoiceRegistry.idl'
+    XPIDL_SOURCES += [
+        'nsIDOMSpeechSynthesisEvent.idl',
+        'nsISpeechService.idl',
+        'nsISynthVoiceRegistry.idl'
     ]
 
-EXPORTS.mozilla.dom += [
-    'EnableSpeechSynthesisCheck.h',
-    'SpeechSynthesis.h',
-    'SpeechSynthesisUtterance.h',
-    'SpeechSynthesisVoice.h',
-    'ipc/SpeechSynthesisChild.h',
-    'ipc/SpeechSynthesisParent.h',
-    'nsSpeechTask.h',
-    'nsSynthVoiceRegistry.h',
-]
+    EXPORTS.mozilla.dom += [
+        'EnableSpeechSynthesisCheck.h',
+        'SpeechSynthesis.h',
+        'SpeechSynthesisUtterance.h',
+        'SpeechSynthesisVoice.h',
+        'ipc/SpeechSynthesisChild.h',
+        'ipc/SpeechSynthesisParent.h',
+        'nsSpeechTask.h',
+        'nsSynthVoiceRegistry.h',
+    ]
 
-CPP_SOURCES += [
-    'EnableSpeechSynthesisCheck.cpp',
-    'SpeechSynthesis.cpp',
-    'SpeechSynthesisChild.cpp',
-    'SpeechSynthesisParent.cpp',
-    'SpeechSynthesisUtterance.cpp',
-    'SpeechSynthesisVoice.cpp',
-    'nsSpeechTask.cpp',
-    'nsSynthVoiceRegistry.cpp',
-]
+    CPP_SOURCES += [
+        'EnableSpeechSynthesisCheck.cpp',
+        'SpeechSynthesis.cpp',
+        'SpeechSynthesisChild.cpp',
+        'SpeechSynthesisParent.cpp',
+        'SpeechSynthesisUtterance.cpp',
+        'SpeechSynthesisVoice.cpp',
+        'nsSpeechTask.cpp',
+        'nsSynthVoiceRegistry.cpp',
+    ]
 
 IPDL_SOURCES += [
     'ipc/PSpeechSynthesis.ipdl',
