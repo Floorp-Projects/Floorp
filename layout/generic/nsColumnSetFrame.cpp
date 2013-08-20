@@ -1038,8 +1038,8 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
   aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-      nsDisplayGeneric(aBuilder, this, ::PaintColumnRule, "ColumnRule",
-                       nsDisplayItem::TYPE_COLUMN_RULE));
+      nsDisplayGenericOverflow(aBuilder, this, ::PaintColumnRule, "ColumnRule",
+                               nsDisplayItem::TYPE_COLUMN_RULE));
   
   // Our children won't have backgrounds so it doesn't matter where we put them.
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
