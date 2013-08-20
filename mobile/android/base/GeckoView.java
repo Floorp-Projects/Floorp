@@ -39,6 +39,12 @@ public class GeckoView extends LayerView
         if (!doInit)
             return;
 
+        // If running outside of a GeckoActivity (eg, from a library project),
+        // load the native code and disable content providers
+        if (!(context instanceof GeckoActivity)) {
+            BrowserDB.setEnableContentProviders(false);
+        }
+
         if (url != null) {
             GeckoThread.setUri(url);
             GeckoThread.setAction(Intent.ACTION_VIEW);
