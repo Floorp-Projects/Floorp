@@ -1136,15 +1136,15 @@ $(COBJS):
 # DEFINES and ACDEFINES are needed here to enable conditional compilation of Q_OBJECTs:
 # 'moc' only knows about #defines it gets on the command line (-D...), not in
 # included headers like mozilla-config.h
-moc_%.cpp: %.h
+$(filter moc_%.cpp,$(CPPSRCS)): moc_%.cpp: %.h
 	$(REPORT_BUILD)
 	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@
 
-moc_%.cc: %.cc
+$(filter moc_%.cc,$(CPPSRCS)): moc_%.cc: %.cc
 	$(REPORT_BUILD)
 	$(ELOG) $(MOC) $(DEFINES) $(ACDEFINES) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
 
-qrc_%.cpp: %.qrc
+$(filter qrc_%.cpp,$(CPPSRCS)): qrc_%.cpp: %.qrc
 	$(REPORT_BUILD)
 	$(ELOG) $(RCC) -name $* $< $(OUTOPTION)$@
 
@@ -1175,35 +1175,35 @@ $(CMOBJS):
 	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
-%.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
+$(filter %.s,$(CPPSRCS:%.cpp=%.s)): %.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
 	$(CCC) -S $(COMPILE_CXXFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
-%.s: %.cc $(call mkdir_deps,$(MDDEPDIR))
+$(filter %.s,$(CPPSRCS:%.cc=%.s)): %.s: %.cc $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
 	$(CCC) -S $(COMPILE_CXXFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
-%.s: %.c $(call mkdir_deps,$(MDDEPDIR))
+$(filter %.s,$(CSRCS:%.c=%.s)): %.s: %.c $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
 	$(CC) -S $(COMPILE_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
-%.i: %.cpp $(call mkdir_deps,$(MDDEPDIR))
+$(filter %.i,$(CPPSRCS:%.cpp=%.i)): %.i: %.cpp $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
 	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS) > $*.i
 
-%.i: %.cc $(call mkdir_deps,$(MDDEPDIR))
+$(filter %.i,$(CPPSRCS:%.cc=%.i)): %.i: %.cc $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
 	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS) > $*.i
 
-%.i: %.c $(call mkdir_deps,$(MDDEPDIR))
+$(filter %.i,$(CSRCS:%.c=%.i)): %.i: %.c $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
 	$(CC) -C -E $(COMPILE_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS) > $*.i
 
-%.i: %.mm $(call mkdir_deps,$(MDDEPDIR))
+$(filter %.i,$(CMMSRCS:%.mm=%.i)): %.i: %.mm $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
 	$(CCC) -C -E $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS) > $*.i
 
-%.res: %.rc
+$(RESFILE): %.res: %.rc
 	$(REPORT_BUILD)
 	@echo Creating Resource file: $@
 ifeq ($(OS_ARCH),OS2)
