@@ -31,14 +31,39 @@ Tickler::Tickler()
   MOZ_ASSERT(NS_IsMainThread());
 }
 
+class TicklerThreadDestructor  : public nsRunnable
+{
+public:
+  explicit TicklerThreadDestructor(nsIThread *aThread)
+    : mThread(aThread) { }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mThread)
+      mThread->Shutdown();
+    return NS_OK;
+  }
+
+private:
+  ~TicklerThreadDestructor() { }
+  nsCOMPtr<nsIThread> mThread;
+};
+
 Tickler::~Tickler()
 {
   // non main thread uses of the tickler should hold weak
   // references to it if they must hold a reference at all
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mThread)
+  // Shutting down a thread can spin the event loop - which is a surprising
+  // thing to do from a dtor. Running it on its own event is safer.
+  nsRefPtr<nsIRunnable> event = new TicklerThreadDestructor(mThread);
+  if (NS_FAILED(NS_DispatchToCurrentThread(event))) {
     mThread->Shutdown();
+  }
+  mThread = nullptr;
+
   if (mTimer)
     mTimer->Cancel();
   if (mFD)
