@@ -721,7 +721,7 @@ class SetElementIC : public RepatchIonCache
         return object_;
     }
     Register tempToUnboxIndex() const {
-        return temp_;
+        return tempToUnboxIndex_;
     }
     Register temp() const {
         return temp_;
