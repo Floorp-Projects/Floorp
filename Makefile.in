@@ -99,6 +99,13 @@ TIER_precompile_CUSTOM := 1
 
 include $(topsrcdir)/config/rules.mk
 
+default all alldep::
+	$(call BUILDSTATUS,TIERS $(TIERS))
+	$(foreach tier,$(TIERS),$(call SUBMAKE,tier_$(tier)))
+
+include $(topsrcdir)/config/makefiles/tiers.mk
+$(foreach tier,$(TIERS),$(eval $(call CREATE_TIER_RULE,$(tier))))
+
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
 	$(RM) unallmakefiles $(DIST_GARBAGE)

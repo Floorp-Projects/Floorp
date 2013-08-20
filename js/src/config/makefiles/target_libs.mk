@@ -5,31 +5,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS_libs = $(addsuffix _libs,$(PARALLEL_DIRS))
-
-.PHONY: libs $(PARALLEL_DIRS_libs)
-
-###############
-## TIER targets
-###############
-$(addprefix libs_tier_,$(TIERS)): libs_tier_%:
-	@$(ECHO) "$@"
-	$(foreach dir,$(tier_$*_dirs),$(call TIER_DIR_SUBMAKE,$*,libs,$(dir),libs))
-
-#################
-## Common targets
-#################
-ifdef PARALLEL_DIRS
-libs:: $(PARALLEL_DIRS_libs)
-
-$(PARALLEL_DIRS_libs): %_libs: %/Makefile
-	+@$(call SUBMAKE,libs,$*)
-endif
-
-
-####################
-##
-####################
 ifdef EXPORT_LIBRARY
 ifeq ($(EXPORT_LIBRARY),1)
 ifdef IS_COMPONENT
