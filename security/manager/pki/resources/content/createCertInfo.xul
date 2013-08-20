@@ -9,7 +9,7 @@
 
 <window
   id="domainMismatch" title="&createCertInfo.title;"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="onLoad();"
   onclose="onClose();"
 >
@@ -23,7 +23,7 @@
 
   <description>&createCertInfo.msg1;</description>
   <separator/>
-  <description style="font-weight: bold; text-align: center; text-decoration: blink;">&createCertInfo.msg2;</description>
+  <description style="font-weight: bold; text-align: center;">&createCertInfo.msg2;</description>
   <separator/>
 
 </vbox>
