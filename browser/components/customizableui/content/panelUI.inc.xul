@@ -106,6 +106,20 @@
       <vbox id="PanelUI-developerItems"/>
     </panelview>
 
+    <panelview id="PanelUI-characterEncodingView" flex="1">
+      <label value="&charsetMenu.label;"/>
+      <toolbarbutton label="&charsetCustomize.label;"
+                     oncommand="PanelUI.onCharsetCustomizeCommand();"/>
+
+      <vbox id="PanelUI-characterEncodingView-customlist"
+            class="PanelUI-characterEncodingView-list"/>
+      <vbox>
+        <label value="&charsetMenuAutodet.label;"/>
+        <vbox id="PanelUI-characterEncodingView-autodetect"
+              class="PanelUI-characterEncodingView-list"/>
+      </vbox>
+    </panelview>
+
   </panelmultiview>
   <popupset id="customizationContextMenus">
     <menupopup id="customizationContextMenu">

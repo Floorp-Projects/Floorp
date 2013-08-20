@@ -280,6 +280,17 @@ const PanelUI = {
     }
   },
 
+  /**
+   * Open a dialog window that allow the user to customize listed character sets.
+   */
+  onCharsetCustomizeCommand: function() {
+    this.hide();
+    window.openDialog("chrome://global/content/customizeCharset.xul",
+                      "PrefWindow",
+                      "chrome,modal=yes,resizable=yes",
+                      "browser");
+  },
+
   /** 
    * Signal that we're about to make a lot of changes to the contents of the
    * panels all at once. For performance, we ignore the mutations.

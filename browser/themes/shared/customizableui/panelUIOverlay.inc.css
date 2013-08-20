@@ -352,3 +352,17 @@ toolbarbutton.panel-multiview-anchor {
   border-bottom-left-radius: 2px;
 }
 
+.PanelUI-characterEncodingView-list > toolbarbutton[current] {
+  -moz-padding-start: 2px;
+}
+
+.PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text,
+#customizationui-widget-panel .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text {
+  -moz-padding-start: 0px;
+}
+
+.PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
+  content: "✓";
+  display: -moz-box;
+  width: 12px;
+}
