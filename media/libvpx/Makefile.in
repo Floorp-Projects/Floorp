@@ -430,6 +430,13 @@ asm_com_offsets.s: CFLAGS += -DINLINE_ASM
 
 OFFSET_PATTERN := '^[a-zA-Z0-9_]* EQU'
 
+# This rule, as well as the rule for asm_enc_offsets.s further below are here
+# because the generic rule in rules.mk was made to not be implicit, and we
+# can't put the C files in CSRCS.
+asm_com_offsets.s: asm_com_offsets.c
+	$(REPORT_BUILD)
+	$(CC) -S $(COMPILE_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
+
 asm_com_offsets.asm: asm_com_offsets.s
 	grep $(OFFSET_PATTERN) $< | sed -e 's/[$$\#]//g' \
 	    $(if $(VPX_AS_CONVERSION),| $(VPX_AS_CONVERSION)) > $@
@@ -439,6 +446,10 @@ GARBAGE += asm_com_offsets.s asm_com_offsets.asm
 ifdef MOZ_VP8_ENCODER
 
 asm_enc_offsets.s: CFLAGS += -DINLINE_ASM
+
+asm_enc_offsets.s: asm_enc_offsets.c
+	$(REPORT_BUILD)
+	$(CC) -S $(COMPILE_CFLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 asm_enc_offsets.asm: asm_enc_offsets.s
 	grep $(OFFSET_PATTERN) $< | sed -e 's/[$$\#]//g' \

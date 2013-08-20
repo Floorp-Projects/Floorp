@@ -2557,6 +2557,12 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time spent blocking the main thread while restoring a window state (ms)"
   },
+  "FX_SESSION_RESTORE_SESSION_LENGTH": {
+    "kind": "exponential",
+    "high": "365",
+    "n_buckets": 15,
+    "description": "Session restore: Days elapsed since the session was first started"
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "kind": "boolean",
     "description": "Deleted or to-be-reused innerwindow which has had mutation event listeners."

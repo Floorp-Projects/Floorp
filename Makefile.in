@@ -94,6 +94,9 @@ ifdef ENABLE_TESTS
 include $(topsrcdir)/testing/testsuite-targets.mk
 endif
 
+# Hacky way for precompile tier to bypass default tier traversal mechanism.
+TIER_precompile_CUSTOM := 1
+
 include $(topsrcdir)/config/rules.mk
 
 distclean::

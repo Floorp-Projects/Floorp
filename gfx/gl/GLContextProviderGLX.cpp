@@ -263,6 +263,7 @@ GLXLibrary::EnsureInitialized(LibType libType)
     }
 
     mIsATI = serverVendor && DoesStringMatch(serverVendor, "ATI");
+    mIsNVIDIA = serverVendor && DoesStringMatch(serverVendor, "NVIDIA Corporation");
     mClientIsMesa = clientVendor && DoesStringMatch(clientVendor, "Mesa");
 
     mInitialized = true;
@@ -367,7 +368,10 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
         // again).
         //
         // This checks that the depth matches in one of the two ways.
-        if (depth != format->depth && depth != format->depth - alphaSize) {
+        // NVIDIA now forces format->depth == depth so only the first way
+        // is checked for NVIDIA
+        if (depth != format->depth &&
+            (mIsNVIDIA || depth != format->depth - alphaSize) ) {
             continue;
         }
 

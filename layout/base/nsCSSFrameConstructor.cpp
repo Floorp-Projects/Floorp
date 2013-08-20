@@ -17,18 +17,12 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
 #include "nsAbsoluteContainingBlock.h"
-#include "nsCRT.h"
 #include "nsIAtom.h"
-#include "nsIURL.h"
-#include "nsIHTMLDocument.h"
-#include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsILinkHandler.h"
 #include "nsIDocument.h"
 #include "nsTableFrame.h"
-#include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsHTMLParts.h"
@@ -38,37 +32,26 @@
 #include "nsViewManager.h"
 #include "nsEventStates.h"
 #include "nsStyleConsts.h"
-#include "nsTableOuterFrame.h"
 #include "nsIDOMXULElement.h"
 #include "nsContainerFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
-#include "nsISelectControlFrame.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsIFormControl.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsTextFragment.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsLegendFrame.h"
-#include "nsIContentIterator.h"
-#include "nsBoxLayoutState.h"
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"
-#include "nsITheme.h"
-#include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
-#include "nsIDocShell.h"
+#ifdef XP_MACOSX
 #include "nsIDocShellTreeItem.h"
-#include "nsObjectFrame.h"
-#include "nsRuleNode.h"
-#include "nsIDOMMutationEvent.h"
+#endif
 #include "ChildIterator.h"
-#include "nsCSSRendering.h"
 #include "nsError.h"
 #include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
@@ -77,31 +60,21 @@
 #include "nsFlexContainerFrame.h"
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
-#include "nsIPrincipal.h"
-#include "nsBox.h"
 #include "nsTArray.h"
 #include "nsGenericDOMDataNode.h"
 #include "mozilla/dom/Element.h"
-#include "FrameLayerBuilder.h"
 #include "nsAutoLayoutPhase.h"
-#include "nsCSSRenderingBorders.h"
-#include "nsRenderingContext.h"
 #include "nsStyleStructInlines.h"
-#include "nsViewportFrame.h"
 #include "nsPageContentFrame.h"
-#include <algorithm>
+#include "RestyleManager.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
-#include "nsIDOMXULCommandDispatcher.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIXULDocument.h"
 #endif
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
 
-#include "nsInlineFrame.h"
 #include "nsBlockFrame.h"
 
 #include "nsIScrollableFrame.h"
@@ -112,14 +85,10 @@
 
 #include "nsMathMLParts.h"
 #include "mozilla/dom/SVGTests.h"
-#include "nsSVGEffects.h"
-#include "nsSVGTextFrame2.h"
-#include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
 
 #include "nsRefreshDriver.h"
 #include "nsRuleProcessorData.h"
-#include "GeckoProfiler.h"
 #include "nsTextNode.h"
 
 using namespace mozilla;
@@ -197,13 +166,10 @@ NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-#include "nsIScrollable.h"
 #include "nsINodeInfo.h"
 #include "prenv.h"
-#include "nsWidgetsCID.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsIServiceManager.h"
 
 #ifdef DEBUG
 // Set the environment variable GECKO_FRAMECTOR_DEBUG_FLAGS to one or
@@ -230,7 +196,6 @@ static FrameCtorDebugFlags gFlags[] = {
 
 #ifdef MOZ_XUL
 #include "nsMenuFrame.h"
-#include "nsMenuPopupFrame.h"
 #include "nsPopupSetFrame.h"
 #include "nsTreeColFrame.h"
 #include "nsIBoxObject.h"
