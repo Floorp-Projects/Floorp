@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!--  fieldset with one valid element which is made valid dynamically -->
+<html>
+  <head>
+    <style>
+      fieldset:valid {display: none;}
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById('i').value = 'foo';
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload="onloadHandler();">
+    <fieldset id="fieldset">
+      <input id='i' required>
+    </fieldset>
+  </body>
+</html>

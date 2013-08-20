@@ -313,7 +313,7 @@ MacroAssemblerX64::handleFailureWithHandlerTail()
 Assembler::Condition
 MacroAssemblerX64::testNegativeZero(const FloatRegister &reg, const Register &scratch)
 {
-    movqsd(reg, scratch);
+    movq(reg, scratch);
     subq(Imm32(1), scratch);
     return Overflow;
 }
