@@ -19,9 +19,32 @@ MOZ_CONFIG_LOG_TRAP
 
 dnl Disable the trap when running sub-configures.
 define([_MOZ_AC_OUTPUT_SUBDIRS], defn([AC_OUTPUT_SUBDIRS]))
+define([MOZ_SUBCONFIGURE_WRAP],
+[ _CONFIG_SHELL=${CONFIG_SHELL-/bin/sh}
+case "$host" in
+*-mingw*)
+    _CONFIG_SHELL=$(cd $(dirname $_CONFIG_SHELL); pwd -W)/$(basename $_CONFIG_SHELL)
+    if test ! -e "$_CONFIG_SHELL" -a -e "${_CONFIG_SHELL}.exe"; then
+        _CONFIG_SHELL="${_CONFIG_SHELL}.exe"
+    fi
+    ;;
+esac
+
+if test -d "$1"; then
+    (cd "$1"; $PYTHON $_topsrcdir/build/subconfigure.py dump "$_CONFIG_SHELL")
+fi
+$2
+(cd "$1"; $PYTHON $_topsrcdir/build/subconfigure.py adjust)
+])
+
 define([AC_OUTPUT_SUBDIRS],
 [trap '' EXIT
-_MOZ_AC_OUTPUT_SUBDIRS($1)
+for moz_config_dir in $1; do
+  MOZ_SUBCONFIGURE_WRAP([$moz_config_dir],[
+    _MOZ_AC_OUTPUT_SUBDIRS($moz_config_dir)
+  ])
+done
+
 MOZ_CONFIG_LOG_TRAP
 ])
 

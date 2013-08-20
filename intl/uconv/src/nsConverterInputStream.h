@@ -7,12 +7,10 @@
 #include "nsIConverterInputStream.h"
 #include "nsIUnicharLineInputStream.h"
 #include "nsString.h"
-
+#include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsIByteBuffer.h"
-#include "nsIUnicharBuffer.h"
 #include "nsReadLine.h"
 
 #define NS_CONVERTERINPUTSTREAM_CONTRACTID "@mozilla.org/intl/converter-input-stream;1"
@@ -49,8 +47,8 @@ class nsConverterInputStream : public nsIConverterInputStream,
     uint32_t Fill(nsresult *aErrorCode);
     
     nsCOMPtr<nsIUnicodeDecoder> mConverter;
-    nsCOMPtr<nsIByteBuffer> mByteData;
-    nsCOMPtr<nsIUnicharBuffer> mUnicharData;
+    FallibleTArray<char> mByteData;
+    FallibleTArray<PRUnichar> mUnicharData;
     nsCOMPtr<nsIInputStream> mInput;
 
     nsresult  mLastErrorCode;

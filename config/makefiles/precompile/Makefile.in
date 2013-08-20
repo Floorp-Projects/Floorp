@@ -24,10 +24,12 @@ $(call BUILDSTATUS,SUBTIER_FINISH precompile $(1))
 
 endef
 
-export::
-	$(call BUILDSTATUS,SUBTIERS IPDL WebIDL XPIDL XPIDLParser)
+default::
+	$(call BUILDSTATUS,TIER_START  precompile IPDL WebIDL XPIDL)
+	+$(MAKE) export
+	$(call BUILDSTATUS,TIER_FINISH precompile)
 
-export:: ipdl webidl xpidl-parser xpidl
+export:: ipdl webidl xpidl
 
 ipdl:
 	$(call make_subtier_dir,IPDL,$(DEPTH)/ipc/ipdl,ipdl)
@@ -35,9 +37,9 @@ ipdl:
 webidl:
 	$(call make_subtier_dir,WebIDL,$(DEPTH)/dom/bindings,webidl)
 
-xpidl-parser:
-	$(call make_subtier_dir,XPIDLParser,$(DEPTH)/xpcom/idl-parser,xpidl-parser)
-
-xpidl: xpidl-parser
+xpidl:
+	$(call BUILDSTATUS,SUBTIER_START  precompile XPIDL)
+	+$(MAKE) -C $(DEPTH)/xpcom/idl-parser xpidl-parser
 	$(call py_action,process_install_manifest,$(DIST)/idl $(DEPTH)/_build_manifests/install/dist_idl)
-	$(call make_subtier_dir,XPIDL,$(DEPTH)/config/makefiles/xpidl,xpidl)
+	+$(MAKE) -C $(DEPTH)/config/makefiles/xpidl xpidl
+	$(call BUILDSTATUS,SUBTIER_FINISH precompile XPIDL)
