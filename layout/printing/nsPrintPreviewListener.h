@@ -9,10 +9,15 @@
 
 // Interfaces needed to be included
 #include "nsIDOMEventListener.h"
-#include "mozilla/dom/EventTarget.h"
 // Helper Classes
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
+
+namespace mozilla {
+namespace dom {
+class EventTarget;
+}
+}
 
 //
 // class nsPrintPreviewListener
@@ -30,6 +35,7 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
   nsPrintPreviewListener(mozilla::dom::EventTarget* aTarget);
+  ~nsPrintPreviewListener();
 
   // Add/remove the relevant listeners, based on what interfaces
   // the embedding chrome implements.

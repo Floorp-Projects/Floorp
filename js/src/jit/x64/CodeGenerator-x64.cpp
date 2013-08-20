@@ -87,7 +87,7 @@ CodeGeneratorX64::visitBox(LBox *box)
     if (box->type() != MIRType_Double)
         masm.boxValue(ValueTypeFromMIRType(box->type()), ToRegister(in), ToRegister(result));
     else
-        masm.movqsd(ToFloatRegister(in), ToRegister(result));
+        masm.movq(ToFloatRegister(in), ToRegister(result));
     return true;
 }
 

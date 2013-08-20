@@ -23,6 +23,7 @@
 #include "nsWindowDbg.h"
 #include "cairo.h"
 #include "nsITimer.h"
+#include "nsRegion.h"
 #include "mozilla/TimeStamp.h"
 
 #ifdef CAIRO_HAS_D2D_SURFACE
@@ -52,6 +53,7 @@
 class nsNativeDragTarget;
 class nsIRollupListener;
 class nsIFile;
+class nsIntRegion;
 class imgIContainer;
 
 namespace mozilla {
