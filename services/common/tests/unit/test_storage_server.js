@@ -346,7 +346,7 @@ add_test(function test_bso_if_unmodified_since() {
   let coll = server.user("123").collection("test");
   do_check_neq(coll, null);
 
-  let time = coll.timestamp;
+  let time = coll.bso("bso").modified;
 
   _("Ensure we get a 412 for specified times older than server time.");
   let request = localRequest(server, "/2.0/123/storage/test/bso",
