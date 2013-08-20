@@ -40,6 +40,7 @@ using mozilla::unused;
 #include "LayerManagerOGL.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 

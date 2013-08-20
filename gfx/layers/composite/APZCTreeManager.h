@@ -10,6 +10,7 @@
 #include "FrameMetrics.h"               // for FrameMetrics, etc
 #include "Units.h"                      // for CSSPoint, CSSRect, etc
 #include "gfxPoint.h"                   // for gfxPoint
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Monitor.h"            // for Monitor
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -246,6 +247,18 @@ public:
    */
   static float GetDPI() { return sDPI; }
 
+  /**
+   * This is a callback for AsyncPanZoomController to call when a touch-move
+   * event causes overscroll. The overscroll will be passed on to the parent
+   * APZC. |aStartPoint| and |aEndPoint| are in |aAPZC|'s transformed screen
+   * coordinates (i.e. the same coordinates in which touch points are given to
+   * APZCs). The amount of the overscroll is represented by two points rather
+   * than a displacement because with certain 3D transforms, the same
+   * displacement between different points in transformed coordinates can
+   * represent different displacements in untransformed coordinates.
+   */
+  void HandleOverscroll(AsyncPanZoomController* aAPZC, ScreenPoint aStartPoint, ScreenPoint aEndPoint);
+
 protected:
   /**
    * Debug-build assertion that can be called to ensure code is running on the
@@ -303,6 +316,14 @@ private:
    * input delivery thread, and so does not require locking.
    */
   nsRefPtr<AsyncPanZoomController> mApzcForInputBlock;
+  /* The transform from root screen coordinates into mApzcForInputBlock's
+   * screen coordinates, as returned through the 'aTransformToApzcOut' parameter
+   * of GetInputTransform(), at the start of the input block. This is cached
+   * because this transform can change over the course of the input block,
+   * but for some operations we need to use the initial tranform.
+   * Meaningless if mApzcForInputBlock is nullptr.
+   */
+  gfx3DMatrix mCachedTransformToApzcForInputBlock;
 
   static float sDPI;
 };
