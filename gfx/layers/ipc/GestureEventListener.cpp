@@ -8,6 +8,7 @@
 #include <math.h>                       // for fabsf
 #include <stddef.h>                     // for size_t
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController
+#include "mozilla/layers/APZCTreeManager.h"  // for APZCTreeManager
 #include "base/task.h"                  // for CancelableTask, etc
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
