@@ -271,9 +271,6 @@ class SnapshotIterator : public SnapshotReader
         else
             skip();
 
-        // Skip slot for return value.
-        skip();
-
         // Skip slot for arguments object.
         if (script->argumentsHasVarBinding())
             skip();
@@ -420,9 +417,9 @@ class InlineFrameIteratorMaybeGC
             SnapshotIterator parent_s(it.snapshotIterator());
 
             // Skip over all slots untill we get to the last slots (= arguments slots of callee)
-            // the +2 is for [this], [returnvalue], [scopechain], and maybe +1 for [argsObj]
-            JS_ASSERT(parent_s.slots() >= nactual + 3 + argsObjAdj);
-            unsigned skip = parent_s.slots() - nactual - 3 - argsObjAdj;
+            // the +2 is for [this] and [scopechain], and maybe +1 for [argsObj]
+            JS_ASSERT(parent_s.slots() >= nactual + 2 + argsObjAdj);
+            unsigned skip = parent_s.slots() - nactual - 2 - argsObjAdj;
             for (unsigned j = 0; j < skip; j++)
                 parent_s.skip();
 
@@ -465,9 +462,6 @@ class InlineFrameIteratorMaybeGC
         SnapshotIterator s(si_);
 
         // scopeChain
-        s.skip();
-
-        // return value
         s.skip();
 
         // Arguments object.
