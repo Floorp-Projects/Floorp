@@ -695,8 +695,8 @@ Range::abs(const Range *op)
 Range *
 Range::min(const Range *lhs, const Range *rhs)
 {
-    // If either operand is NaN (implied by isInfinite here), the result is NaN.
-    if (lhs->isInfinite() || rhs->isInfinite())
+    // If either operand is NaN, the result is NaN.
+    if (!lhs->isInt32() || !rhs->isInt32())
         return new Range();
 
     return new Range(Min(lhs->lower(), rhs->lower()),
@@ -708,8 +708,8 @@ Range::min(const Range *lhs, const Range *rhs)
 Range *
 Range::max(const Range *lhs, const Range *rhs)
 {
-    // If either operand is NaN (implied by isInfinite here), the result is NaN.
-    if (lhs->isInfinite() || rhs->isInfinite())
+    // If either operand is NaN, the result is NaN.
+    if (!lhs->isInt32() || !rhs->isInt32())
         return new Range();
 
     return new Range(Max(lhs->lower(), rhs->lower()),
@@ -1061,7 +1061,7 @@ MMod::computeRange()
 
     // If either operand is a NaN, the result is NaN. This also conservatively
     // handles Infinity cases.
-    if (lhs.isInfinite() || rhs.isInfinite())
+    if (!lhs.isInt32() || !rhs.isInt32())
         return;
 
     // If RHS can be zero, the result can be NaN.
