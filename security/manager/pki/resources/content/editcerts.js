@@ -23,34 +23,30 @@ function setWindowName()
 
   //  Get the cert from the cert database
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-  //var pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);
-  //var isupport = pkiParams.getISupportAtIndex(1);
-  //cert = isupport.QueryInterface(nsIX509Cert);
   cert = certdb.findCertByDBKey(dbkey, null);
 
   var bundle = document.getElementById("pippki_bundle");
-  var windowReference = document.getElementById('editCaCert');
 
   var message1 = bundle.getFormattedString("editTrustCA", [cert.commonName]);
   setText("certmsg", message1);
 
   var ssl = document.getElementById("trustSSL");
-  if (certdb.isCertTrusted(cert, nsIX509Cert.CA_CERT, 
-                          nsIX509CertDB.TRUSTED_SSL)) {
+  if (certdb.isCertTrusted(cert, nsIX509Cert.CA_CERT,
+                           nsIX509CertDB.TRUSTED_SSL)) {
     ssl.setAttribute("checked", "true");
   } else {
     ssl.setAttribute("checked", "false");
   }
   var email = document.getElementById("trustEmail");
-  if (certdb.isCertTrusted(cert, nsIX509Cert.CA_CERT, 
-                          nsIX509CertDB.TRUSTED_EMAIL)) {
+  if (certdb.isCertTrusted(cert, nsIX509Cert.CA_CERT,
+                           nsIX509CertDB.TRUSTED_EMAIL)) {
     email.setAttribute("checked", "true");
   } else {
     email.setAttribute("checked", "false");
   }
   var objsign = document.getElementById("trustObjSign");
-  if (certdb.isCertTrusted(cert, nsIX509Cert.CA_CERT,  
-                          nsIX509CertDB.TRUSTED_OBJSIGN)) {
+  if (certdb.isCertTrusted(cert, nsIX509Cert.CA_CERT,
+                           nsIX509CertDB.TRUSTED_OBJSIGN)) {
     objsign.setAttribute("checked", "true");
   } else {
     objsign.setAttribute("checked", "false");
@@ -68,7 +64,7 @@ function doOK()
   //
   //  Set the cert trust
   //
-  certdb.setCertTrust(cert, nsIX509Cert.CA_CERT, 
+  certdb.setCertTrust(cert, nsIX509Cert.CA_CERT,
                       trustssl | trustemail | trustobjsign);
   return true;
 }
@@ -82,7 +78,6 @@ function doLoadForEmailCert()
   cert = certdb.findCertByDBKey(dbkey, null);
 
   var bundle = document.getElementById("pippki_bundle");
-  var windowReference = document.getElementById('editEmailCert');
 
   var message1 = bundle.getFormattedString("editTrustEmail", [cert.commonName]);
   setText("certmsg", message1);
@@ -95,7 +90,7 @@ function doLoadForEmailCert()
      setText("explanations", bundle.getString("issuerNotKnown"));
   }
   else if(certdb.isCertTrusted(cacert, nsIX509Cert.CA_CERT,
-                                                nsIX509CertDB.TRUSTED_EMAIL))
+                               nsIX509CertDB.TRUSTED_EMAIL))
   {
      setText("explanations", bundle.getString("issuerTrusted"));
   }
@@ -103,15 +98,8 @@ function doLoadForEmailCert()
   {
      setText("explanations", bundle.getString("issuerNotTrusted"));
   }
-/*
-  if(cacert == null)
-  {
-     var editButton = document.getElementById('editca-button');
-	 editButton.setAttribute("disabled","true");
-  }
-*/  
   var sslTrust = document.getElementById("sslTrustGroup");
-  sslTrust.value = certdb.isCertTrusted(cert, nsIX509Cert.EMAIL_CERT, 
+  sslTrust.value = certdb.isCertTrusted(cert, nsIX509Cert.EMAIL_CERT,
                                         nsIX509CertDB.TRUSTED_EMAIL);
 }
 
@@ -143,7 +131,6 @@ function editCaTrust()
 
 function getCaCertForEntityCert(cert)
 {
-   var i=1;
    var nextCertInChain;
    nextCertInChain = cert;
    var lastSubjectName="";
@@ -153,7 +140,7 @@ function getCaCertForEntityCert(cert)
      {
         return null;
      }
-     if((nextCertInChain.type == nsIX509Cert.CA_CERT) || 
+     if((nextCertInChain.type == nsIX509Cert.CA_CERT) ||
         (nextCertInChain.subjectName == lastSubjectName))
      {
         break;
@@ -165,4 +152,3 @@ function getCaCertForEntityCert(cert)
 
    return nextCertInChain;
 }
-
