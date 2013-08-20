@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HTML a11y spec tests</title>
+  <link id="link" rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../states.js"></script>
+  <script type="application/javascript"
+          src="../attributes.js"></script>
+  <script type="application/javascript"
+          src="../relations.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+
+  <script type="application/javascript">
+    function testElm(aID, aTreeObj)
+    {
+      testAccessibleTree(aID, aTreeObj, kSkipTreeFullCheck);
+    }
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:a@href
+
+      var obj = {
+        role: ROLE_LINK,
+        states: STATE_LINKED,
+        actions: "jump",
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText, nsIAccessibleHyperLink ],
+        children: [ // all kids inherits linked state and jump action
+          {
+            role: ROLE_TEXT_LEAF,
+            states: STATE_LINKED,
+            actions: "jump"
+          }
+        ]
+      };
+      testElm("a_href", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:a no @href
+
+      obj = {
+        todo_role: ROLE_TEXT_CONTAINER,
+        absentStates: STATE_LINKED,
+        actions: null,
+        children: [
+          {
+            role: ROLE_TEXT_LEAF,
+            absentStates: STATE_LINKED,
+            actions: null
+          }
+        ]
+      };
+      testElm("a_nohref", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:abbr contained by HTML:td
+
+      obj = {
+        role: ROLE_CELL,
+        attributes: { abbr: "WWW" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+        children: [
+          {
+            role: ROLE_TEXT_CONTAINER,
+            children: [ { role: ROLE_TEXT_LEAF } ]
+          }
+        ]
+      };
+      testElm("td_abbr", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:address
+
+      obj = {
+        todo_role: ROLE_PARAGRAPH,
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+      };
+      testElm("address", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:area@href
+
+      obj = {
+        role: ROLE_LINK,
+        states: STATE_LINKED,
+        actions: "jump",
+        interfaces: [ nsIAccessibleHyperLink ],
+        children: []
+      };
+      testElm(getAccessible("imgmap").firstChild, obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:area no @href
+
+      obj = {
+        todo_role: "ROLE_SHAPE",
+        absentStates: STATE_LINKED,
+        children: []
+      };
+      testElm(getAccessible("imgmap").lastChild, obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:article
+      obj = {
+        role: ROLE_DOCUMENT,
+        states: STATE_READONLY,
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+      };
+      testElm("article", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:aside
+      obj = {
+        role: ROLE_NOTE,
+        attributes: { "xml-roles": "complementary" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("aside", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      obj = { // HTML:audio
+        role: ROLE_GROUPING
+      };
+      testElm("audio", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      obj = { // HTML:b contained by paragraph
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "font-weight": kBoldFontWeight }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:b text
+        ]
+      }
+      testElm("b_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      obj = { // HTML:bdi contained by paragraph
+        role: ROLE_PARAGRAPH,
+        todo_textAttrs: {
+          0: { },
+          5: { "writing-mode": "rl" },
+          8: { }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF }, // HTML:bdi text
+          { role: ROLE_TEXT_LEAF } // plain text
+        ]
+      }
+      testElm("bdi_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:bdo contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        todo_textAttrs: {
+          0: { },
+          6: { "writing-mode": "rl" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+        ]
+      }
+      testElm("bdo_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:blockquote
+
+      obj = {
+        role: ROLE_SECTION,
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+        children: [ { role: ROLE_PARAGRAPH } ]
+      };
+      testElm("blockquote", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:br
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        children: [ { role: ROLE_WHITESPACE } ]
+      };
+      testElm("br_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      obj = { // HTML:button
+        role: ROLE_PUSHBUTTON,
+        absentStates: STATE_DEFAULT,
+        actions: "press",
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("button", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:button@type="submit" (default button)
+
+      obj = {
+        role: ROLE_PUSHBUTTON,
+        states: STATE_DEFAULT,
+        actions: "press"
+      };
+      testElm("button_default", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:canvas
+
+      obj = {
+        role: ROLE_CANVAS
+      };
+      testElm("canvas", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:caption under table
+
+      obj = {
+        role: ROLE_TABLE,
+        relations: {
+          RELATION_LABELLED_BY: "caption"
+        },
+        interfaces: nsIAccessibleTable,
+        children: [
+          {
+            role: ROLE_CAPTION,
+            relations: {
+              RELATION_LABEL_FOR: "table"
+            },
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+          },
+          { // td inside thead
+            role: ROLE_ROW,
+            children: [
+              {
+                role: ROLE_COLUMNHEADER,
+                interfaces: [ nsIAccessibleTableCell, nsIAccessibleText, nsIAccessibleHyperText ]
+              },
+              { role: ROLE_COLUMNHEADER }
+            ]
+          },
+          { // td inside tbody
+            role: ROLE_ROW,
+            children: [
+              {
+                role: ROLE_ROWHEADER,
+                interfaces: [ nsIAccessibleTableCell, nsIAccessibleText, nsIAccessibleHyperText ]
+              },
+              {
+                role: ROLE_CELL,
+                interfaces: [ nsIAccessibleTableCell, nsIAccessibleText, nsIAccessibleHyperText ]
+              }
+            ]
+          },
+          { // td inside tfoot
+            role: ROLE_ROW
+          }
+        ]
+      };
+      testElm("table", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:cite contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "font-style": "italic" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:cite text
+        ]
+      };
+      testElm("cite_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:code contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "font-family": kMonospaceFontFamily }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:code text
+        ]
+      };
+      testElm("code_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:col and HTML:colgroup under table
+
+      obj =
+        { TABLE : [
+          { ROW :[
+            { role: ROLE_CELL },
+            { role: ROLE_CELL },
+            { role: ROLE_CELL }
+          ] }
+        ] };
+      testElm("colNcolgroup_table", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:data contained by paragraph
+
+      obj =
+        { PARAGRAPH: [
+          { TEXT_LEAF: [] } // HTML:data text
+        ] };
+      testElm("data_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:datalist associated with input
+
+      todo(false, "datalist and summary tree hierarchy test missed");
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:dd, HTML:dl, HTML:dd
+
+      obj = {
+        role: ROLE_DEFINITION_LIST,
+        states: STATE_READONLY,
+        children: [ // dl
+          {
+            role: ROLE_TERM,
+            states: STATE_READONLY,
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+            children: [ // dt
+              { role: ROLE_TEXT_LEAF }
+            ]
+          },
+          {
+            role: ROLE_DEFINITION,
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+            children: [ // dd
+              { role: ROLE_TEXT_LEAF }
+            ]
+          }
+        ]
+      };
+      testElm("dl", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:del contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "text-line-through-style": "solid" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:del text
+        ]
+      };
+      testElm("del_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:details
+
+      todo(isAccessible("details"), "details element is not accessible");
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:dfn contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { "font-style": "italic" },
+          12: { }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // HTML:dfn text
+          { role: ROLE_TEXT_LEAF } // plain text
+        ]
+      };
+      testElm("dfn_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:dialog
+
+      todo(isAccessible("dialog"), "dialog element is not accessible");
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:div
+
+      obj = {
+        role: ROLE_SECTION,
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+        children: [
+          { role: ROLE_TEXT_LEAF } // plain text
+        ]
+      };
+      testElm("div", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:em in a paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "font-style": "italic" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:em text
+        ]
+      };
+      testElm("em_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:embed (windowless and windowed plugins)
+
+      if (WIN) {
+        obj = {
+          role: ROLE_EMBEDDED_OBJECT,
+          states: STATE_UNAVAILABLE
+        };
+
+        testElm("embed_plugin_windowless", obj);
+
+        obj = {
+          role: ROLE_EMBEDDED_OBJECT,
+          absentStates: STATE_UNAVAILABLE
+        };
+        testElm("embed_plugin_windowed", obj);
+      }
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:fieldset and HTML:legend
+
+      obj = {
+        role: ROLE_GROUPING,
+        relations: {
+          RELATION_LABELLED_BY: "legend"
+        },
+        children: [
+          {
+            role: ROLE_LABEL,
+            relations: {
+              RELATION_LABEL_FOR: "fieldset"
+            },
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+          },
+          {
+            role: ROLE_ENTRY
+          }
+        ]
+      };
+      testElm("fieldset", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:figure and HTML:figcaption
+
+      obj = {
+        role: ROLE_FIGURE,
+        attributes: { "xml-roles": "figure" },
+        relations: {
+          RELATION_LABELLED_BY: "figcaption"
+        },
+        children: [
+          { role: ROLE_GRAPHIC },
+          {
+            role: ROLE_CAPTION,
+            relations: {
+              RELATION_LABEL_FOR: "figure"
+            },
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+          }
+        ]
+      };
+      testElm("figure", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:footer
+
+      obj = {
+        role: ROLE_FOOTER,
+        attributes: { "xml-roles": "contentinfo" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("footer", obj);
+
+      obj = {
+        role: ROLE_FOOTER,
+        absentAttributes: { "xml-roles": "contentinfo" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("footer_in_article", obj);
+      testElm("footer_in_section", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:form
+
+      obj = {
+        role: ROLE_FORM
+      };
+      testElm("form", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // // HTML:frameset, HTML:frame and HTML:iframe
+
+      obj = {
+        INTERNAL_FRAME: [ { // HTML:iframe
+          DOCUMENT: [ {
+            INTERNAL_FRAME: [ { // HTML:frame
+              DOCUMENT: [ { role: ROLE_TEXT_LEAF} ]
+            } ]
+          } ]
+        } ]
+      };
+      testElm("frameset_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:h1, HTML:h2, HTML:h3, HTML:h4, HTML:h5, HTML:h6
+
+      obj = {
+        role: ROLE_HEADING,
+        attributes: { "level": "1" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("h1", obj);
+
+      obj = {
+        role: ROLE_HEADING,
+        attributes: { "level": "2" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("h2", obj);
+
+      obj = {
+        role: ROLE_HEADING,
+        attributes: { "level": "3" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("h3", obj);
+
+      obj = {
+        role: ROLE_HEADING,
+        attributes: { "level": "4" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("h4", obj);
+
+      obj = {
+        role: ROLE_HEADING,
+        attributes: { "level": "5" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("h5", obj);
+
+      obj = {
+        role: ROLE_HEADING,
+        attributes: { "level": "6" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("h6", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:header
+
+      obj = {
+        role: ROLE_HEADER,
+        attributes: { "xml-roles": "banner" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("header", obj);
+
+      obj = {
+        role: ROLE_HEADER,
+        absentAttributes: { "xml-roles": "banner" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("header_in_article", obj);
+      testElm("header_in_section", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:hr
+
+      obj = {
+        role: ROLE_SEPARATOR,
+      };
+      testElm("hr", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      obj = { // HTML:i contained by paragraph
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "font-style": "italic" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:i text
+        ]
+      }
+      testElm("i_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:img
+
+      obj = {
+        role: ROLE_GRAPHIC,
+        interfaces: [ nsIAccessibleImage ]
+      };
+      testElm("img", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="button"
+
+      obj = {
+        role: ROLE_PUSHBUTTON,
+        absentStates: STATE_DEFAULT
+      };
+      testElm("input_button", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="checkbox"
+
+      obj = {
+        role: ROLE_CHECKBUTTON,
+        states: STATE_CHECKABLE,
+        absentStates: STATE_CHECKED,
+        actions: "check"
+      };
+      testElm("input_checkbox", obj);
+
+      obj = {
+        role: ROLE_CHECKBUTTON,
+        states: STATE_CHECKABLE | STATE_CHECKED,
+        actions: "uncheck"
+      };
+      testElm("input_checkbox_true", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="file"
+
+      obj = {
+        TEXT_CONTAINER: [
+          { role: ROLE_PUSHBUTTON },
+          { role: ROLE_LABEL }
+        ]
+      };
+      testElm("input_file", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="image"
+
+      obj = {
+        role: ROLE_PUSHBUTTON,
+        absentStates: STATE_DEFAULT,
+        actions: "press"
+      };
+      testElm("input_image", obj);
+      testElm("input_submit", obj);
+
+      obj = {
+        role: ROLE_PUSHBUTTON,
+        actions: "press",
+        states: STATE_DEFAULT
+      };
+      testElm("input_image_default", obj);
+      testElm("input_submit_default", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="number" and etc
+
+      obj = {
+        role: ROLE_ENTRY,
+        extraStates: EXT_STATE_EDITABLE | EXT_STATE_SINGLE_LINE,
+        actions: "activate",
+        interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ],
+        children: [
+          { role: ROLE_TEXT_LEAF }
+        ]
+      };
+      testElm("input_number", obj);
+      testElm("input_email", obj);
+      testElm("input_search", obj);
+      testElm("input_tel", obj);
+      testElm("input_text", obj);
+      testElm("input_url", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="password"
+
+      obj = {
+        role: ROLE_PASSWORD_TEXT,
+        states: STATE_PROTECTED,
+        extraStates: EXT_STATE_EDITABLE,
+        actions: "activate",
+        children: [ ]
+      };
+      testElm("input_password", obj);
+
+      obj = {
+        role: ROLE_PASSWORD_TEXT,
+        states: STATE_PROTECTED | STATE_READONLY,
+        actions: "activate",
+        children: [ ]
+      };
+      testElm("input_password_readonly", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="radio"
+
+      obj = {
+        role: ROLE_RADIOBUTTON,
+        states: STATE_CHECKABLE,
+        absentStates: STATE_CHECKED,
+        actions: "select"
+      };
+      testElm("input_radio", obj);
+
+      obj = {
+        role: ROLE_RADIOBUTTON,
+        states: STATE_CHECKABLE | STATE_CHECKED,
+        actions: "select"
+      };
+      testElm("input_radio_true", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="range"
+
+      obj = {
+        role: ROLE_SLIDER
+      };
+      testElm("input_range", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:input@type="reset"
+
+      obj = {
+        role: ROLE_PUSHBUTTON,
+        actions: "press",
+        absentStates: STATE_DEFAULT
+      };
+      testElm("input_reset", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:ins contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "text-underline-style": "solid" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:ins text
+        ]
+      };
+      testElm("ins_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:kbd contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "font-family": kMonospaceFontFamily }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:kbd text
+        ]
+      };
+      testElm("kbd_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:keygen
+
+      obj = {
+        role: ROLE_COMBOBOX,
+        states: STATE_COLLAPSED | STATE_HASPOPUP,
+        extraStates: EXT_STATE_EXPANDABLE,
+        actions: "open",
+        children: [ 
+          { COMBOBOX_LIST: [
+            { role: ROLE_COMBOBOX_OPTION }, // high grade
+            { role: ROLE_COMBOBOX_OPTION } // medium grade
+          ] }
+        ]
+      };
+      testElm("keygen", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:label
+
+      obj = {
+        role: ROLE_LABEL,
+        todo_relations: {
+          RELATION_LABEL_FOR: "label_input"
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          {
+            role: ROLE_ENTRY,
+            relations: {
+              RELATION_LABELLED_BY: "label"
+            }
+          }
+        ]
+      };
+      testElm("label", obj);
+
+      obj = {
+        role: ROLE_LABEL,
+        relations: {
+          RELATION_LABEL_FOR: "label_for_input"
+        }
+      };
+      testElm("label_for", obj);
+
+      obj = {
+        role: ROLE_ENTRY,
+        relations: {
+          RELATION_LABELLED_BY: "label_for"
+        }
+      };
+      testElm("label_for_input", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:ul, HTML:ol, HTML:li
+
+      obj = { // ul or ol
+        role: ROLE_LIST,
+        states: STATE_READONLY,
+        children: [
+          { // li
+            role: ROLE_LISTITEM,
+            states: STATE_READONLY,
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+          }
+        ]
+      };
+      testElm("ul", obj);
+      testElm("ol", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:link
+
+      ok(!isAccessible("link"), "link element is not accessible");
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:main
+
+      obj = {
+        todo_role: ROLE_GROUPING,
+        attributes: { "xml-roles": "main" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("main", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:map
+
+      ok(!isAccessible("map_imagemap"),
+         "map element is not accessible if used as an image map");
+
+      obj = {
+        role: ROLE_TEXT_CONTAINER
+      };
+      testElm("map", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:mark contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "background-color": "rgb(255, 255, 0)" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:mark text
+        ]
+      };
+      testElm("mark_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:math
+
+      obj = {
+        role: ROLE_EQUATION
+      };
+      testElm("math", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:menu
+
+      obj = {
+        todo_role: ROLE_MENUPOPUP
+      };
+      testElm("menu", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:meter
+
+      todo(isAccessible("meter"), "meter element is not accessible");
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:nav
+
+      obj = {
+        role: ROLE_SECTION,
+        attributes: { "xml-roles": "navigation" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("nav", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:object (windowless and windowed plugins) and HTML:param
+
+      if (WIN) {
+        obj = {
+          role: ROLE_EMBEDDED_OBJECT,
+          states: STATE_UNAVAILABLE,
+          children: [ ] // no child for HTML:param
+        };
+        testElm("object_plugin_windowless", obj);
+
+        obj = {
+          role: ROLE_EMBEDDED_OBJECT,
+          absentStates: STATE_UNAVAILABLE
+        };
+        testElm("object_plugin_windowed", obj);
+      }
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:select, HTML:optgroup and HTML:option
+
+      obj = { // HMTL:select@size > 1
+        role: ROLE_LISTBOX,
+        states: STATE_FOCUSABLE,
+        absentStates: STATE_MULTISELECTABLE,
+        interfaces: [ nsIAccessibleSelectable ],
+        children: [
+          { GROUPING: [ // HTML:optgroup
+            { role: ROLE_STATICTEXT },
+            { role: ROLE_OPTION }, // HTML:option
+            { role: ROLE_OPTION }
+          ] },
+          {
+            role: ROLE_OPTION,
+            states: STATE_FOCUSABLE,
+            actions: "select",
+            interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+          }
+        ]
+      };
+      testElm("select_listbox", obj);
+
+      obj = { // HTML:select@multiple
+        role: ROLE_LISTBOX,
+        states: STATE_FOCUSABLE | STATE_MULTISELECTABLE,
+        children: [
+          { role: ROLE_OPTION },
+          { role: ROLE_OPTION },
+          { role: ROLE_OPTION }
+        ]
+      };
+      testElm("select_listbox_multiselectable", obj);
+
+      obj = { // HTML:select
+        role: ROLE_COMBOBOX,
+        states: STATE_FOCUSABLE,
+        children: [
+          {
+            role: ROLE_COMBOBOX_LIST,
+            children: [
+              { role: ROLE_COMBOBOX_OPTION },
+              { role: ROLE_COMBOBOX_OPTION },
+              { role: ROLE_COMBOBOX_OPTION }
+            ]
+          }
+        ]
+      };
+      testElm("select_combobox", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:output
+
+      obj = {
+        role: ROLE_SECTION,
+        attributes: { "live": "polite" },
+        todo_relations: {
+          RELATION_CONTROLLED_BY: "output_input"
+        },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("output", obj);
+
+      obj = {
+        role: ROLE_ENTRY,
+        relations: {
+          RELATION_CONTROLLER_FOR: "output"
+        }
+      };
+      testElm("output_input", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:pre
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("pre", obj);
+
+      ///////////////////////////////////////////////////////////////////////////
+      // HTML:progress
+
+      obj = {
+        role: ROLE_PROGRESSBAR,
+        absentStates: STATE_MIXED,
+        interfaces: [ nsIAccessibleValue ]
+      };
+      testElm("progress", obj);
+
+      obj = {
+        role: ROLE_PROGRESSBAR,
+        states: STATE_MIXED
+      };
+      testElm("progress_indeterminate", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:q
+
+      obj = {
+        role: ROLE_TEXT_CONTAINER,
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+        children: [
+          { role: ROLE_STATICTEXT }, // left quote
+          { role: ROLE_TEXT_LEAF }, // quoted text
+          { role: ROLE_STATICTEXT } // right quote
+        ]
+      };
+      testElm("q", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:ruby
+
+      todo(isAccessible("ruby"), "ruby element is not accessible");
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:s contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "text-line-through-style": "solid" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:i text
+        ]
+      };
+      testElm("s_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:samp contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:samp text
+        ]
+      };
+      testElm("samp_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:section
+
+      obj = {
+        role: ROLE_SECTION,
+        attributes: { "xml-roles": "region" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("section", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:small contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "font-size": "10pt" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:small text
+        ]
+      };
+      testElm("small_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:source
+
+      ok(!isAccessible("source"), "source element is not accessible");
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:span
+
+      ok(!isAccessible("span"), "span element is not accessible");
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:strong contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:strong text
+        ]
+      };
+      testElm("strong_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:sub contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "text-position": "sub" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:sub text
+        ]
+      };
+      testElm("sub_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:sup contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "text-position": "super" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:sup text
+        ]
+      };
+      testElm("sup_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:svg
+
+      obj = {
+        todo_role: ROLE_GRAPHIC
+      };
+      testElm("svg", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:textarea
+
+      obj = {
+        role: ROLE_ENTRY,
+        extraStates: EXT_STATE_MULTI_LINE | EXT_STATE_EDITABLE,
+        actions: "activate",
+        interfaces: [ nsIAccessibleText, nsIAccessibleEditableText ]
+      };
+      testElm("textarea", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:time
+
+      ok(!isAccessible("time"), "time element is not accessible");
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:u contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        textAttrs: {
+          0: { },
+          6: { "text-underline-style" : "solid" }
+        },
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:u text
+        ]
+      };
+      testElm("u_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:var contained by paragraph
+
+      obj = {
+        role: ROLE_PARAGRAPH,
+        children: [
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF }, // HTML:var text
+          { role: ROLE_TEXT_LEAF }, // plain text
+          { role: ROLE_TEXT_LEAF } // HTML:var text
+        ]
+      };
+      testElm("var_container", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      obj = { // HTML:video
+        role: ROLE_GROUPING
+      };
+      testElm("video", obj);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+
+  
+    </script>
+</head>
+<body>
+
+  <a target="_blank"
+    title="Implement figure and figcaption accessibility"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=658272">
+     Mozilla Bug 658272
+  </a><br/>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <a id="a_href" href="www.mozilla.com">mozilla site</a>
+  <a id="a_nohref">anchor</a>
+  <table>
+    <tr>
+      <td id="td_abbr"><abbr title="World Wide Web">WWW</abbr></td>
+    </tr>
+  </table>
+  <address id="address">
+    Mozilla Foundation<br>
+    1981 Landings Drive<br>
+    Building K<br>
+    Mountain View, CA 94043-0801<br>
+    USA
+  </address>
+
+  <map name="atoz_map">
+    <area id="area_href"
+          href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+          coords="17,0,30,14" alt="b" shape="rect">
+    <area id="area_nohref"
+          coords="0,0,13,14" alt="a" shape="rect">
+  </map>
+  <img id="imgmap" width="447" height="15"
+       usemap="#atoz_map"
+       src="../letters.gif">
+
+  <article id="article">A document</article>
+  <audio id="audio" controls="true">
+    <source id="source" src="../bug461281.ogg" type="video/ogg">
+  </audio>
+
+  <aside id="aside">
+    <p>Some content related to an &lt;article&gt;</p>
+  </aside>
+
+  <p id="b_container">normal<b>bold</b></p>
+  <p id="bdi_container">User <bdi>إيان</bdi>: 90 points</p>
+  <p id="bdo_container"><bdo dir="rtl">This text will go right to left.</bdo></p>
+
+  <blockquote id="blockquote" cite="http://developer.mozilla.org">
+    <p>This is a quotation taken from the Mozilla Developer Center.</p>
+  </blockquote>
+
+  <p id="br_container"><br></p>
+
+  <button id="button">button</button>
+  <form>
+    <button id="button_default" type="submit">button</button>
+  </form>
+
+  <canvas id="canvas"></canvas>
+
+  <table id="table">
+    <caption id="caption">caption</caption>
+    <thead>
+      <tr>
+        <th>col1</th><th>col2</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>col1</th><td>cell2</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>cell5</td><td>cell6</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <p id="cite_container">normal<cite>cite</cite></p>
+  <p id="code_container">normal<code>code</code></p>
+
+  <table id="colNcolgroup_table">
+    <colgroup>
+      <col>
+      <col span="2">
+    </colgroup>
+    <tr>
+      <td>Lime</td>
+      <td>Lemon</td>
+      <td>Orange</td>
+    </tr>
+  </table>
+
+  <p id="data_container"><data value="8">Eight</data></p>
+
+  <datalist id="datalist">
+    <summary id="summary">details</summary>
+    <option>Paris</option>
+    <option>San Francisco</option>
+  </datalist>
+  <input id="autocomplete_datalist" list="datalist">
+
+  <dl id="dl">
+    <dt>item1</dt><dd>description</dd>
+  </dl>
+
+  <p id="del_container">normal<del>Removed</del></p>
+
+  <details id="details" open="open">
+    <summary>Information</summary>
+    <p>If your browser supports this element, it should allow you to expand and collapse these details.</p>
+  </details>
+
+  <p id="dfn_container"><dfn id="def-internet">The Internet</dfn> is a global
+    system of interconnected networks that use the Internet Protocol Suite (TCP/IP)
+    to serve billions of users worldwide.</p>
+
+  <dialog id="dialog" open="true">This is a dialog</dialog>
+
+  <div id="div">div</div>
+
+  <p id="em_container">normal<em>emphasis</em></p>
+
+  <embed id="embed_plugin_windowless" type="application/x-test"
+         width="300" height="300"></embed>
+  <embed id="embed_plugin_windowed" type="application/x-test" wmode="window"
+         width="300" height="300"></embed>
+
+  <fieldset id="fieldset">
+    <legend id="legend">legend</legend>
+    <input />
+  </fieldset>
+
+  <figure id="figure">
+    <img src="../moz.png" alt="An awesome picture">
+    <figcaption id="figcaption">Caption for the awesome picture</figcaption>
+  </figure>
+
+  <footer id="footer">Some copyright info</footer>
+  <article>
+    <footer id="footer_in_article">Some copyright info</footer>
+  </article>
+  <section>
+    <footer id="footer_in_section">Some copyright info</footer>
+  </section>
+
+  <form id="form"></form>
+
+  <iframe id="frameset_container"
+          src="data:text/html,<html><frameset><frame src='data:text/html,hi'></frame></frameset></html>">
+  </iframe>
+
+  <h1 id="h1">heading1</h1>
+  <h2 id="h2">heading2</h2>
+  <h3 id="h3">heading3</h3>
+  <h4 id="h4">heading4</h4>
+  <h5 id="h5">heading5</h5>
+  <h6 id="h6">heading6</h6>
+
+  <header id="header">A logo</header>
+  <article>
+    <header id="header_in_article">Not logo</header>
+  </article>
+  <section>
+    <header id="header_in_section">Not logo</header>
+  </section>
+
+  <hr id="hr">
+  <p id="i_container">normal<i>italic</i></p>
+  <img id="img" src="../moz.png">
+
+  <input id="input_button" type="button" value="Button">
+  <input id="input_checkbox" type="checkbox">
+  <input id="input_checkbox_true" type="checkbox" checked>
+  <input id="input_file" type="file">
+  <input id="input_image" type="image">
+  <form>
+    <input id="input_image_default" type="image">
+  </form>
+  <input id="input_submit" type="submit">
+  <form>
+    <input id="input_submit_default" type="submit">
+  </form>
+  <input id="input_number" type="number" value="44">
+  <input id="input_text" type="text" value="hi">
+  <input id="input_search" type="search" value="cats">
+  <input id="input_email" type="email" value="me@mozilla.com">
+  <input id="input_tel" type="tel" value="111.111.1111">
+  <input id="input_url" type="url" value="www.mozilla.com">
+  <input id="input_password" type="password" value="44">
+  <input id="input_password_readonly" type="password" value="44" readonly>
+  <input id="input_radio" type="radio">
+  <input id="input_radio_true" type="radio" checked>
+  <input id="input_range" type="range">
+  <form>
+    <input id="input_reset" type="reset">
+  </form>
+
+  <p id="ins_container">normal<ins>Inserted</ins></p>
+  <p id="kbd_container">normal<kbd>cmd</kbd></p>
+  <keygen id="keygen" name="RSA public key" challenge="123456789" keytype="RSA">
+
+  <label id="label">label<input id="label_input"></label>
+  <label id="label_for" for="label_for_input">label</label>
+  <input id="label_for_input">
+
+  <ul id="ul">
+    <li>item1</li>
+  </ul>
+  <ol id="ol">
+    <li>item1</li>
+  </ol>
+
+  <main id="main">main</main>
+
+  <map id="map_imagemap" name="atoz_map">
+    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+          coords="17,0,30,14" alt="b" shape="rect">
+    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
+          coords="0,0,13,14" alt="a" shape="rect">
+  </map>
+  <img id="imgmap" width="447" height="15"
+       usemap="#atoz_map"
+       src="../letters.gif">
+
+  <map id="map" title="Navigation Bar" name="mapgroup">
+    <p>
+      [<a href="#how">Bypass navigation bar</a>]
+      [<a href="home.html">Home</a>]
+    </p>
+  </map>
+
+  <p id="mark_container">normal<mark>highlighted</mark></p>
+
+  <math id="math">
+    <mrow>
+      <mrow>
+        <msup>
+          <mi>a</mi>
+          <mn>2</mn>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>b</mi>
+          <mn>2</mn>
+        </msup>
+      </mrow>
+      <mo>=</mo>
+      <msup>
+        <mi>c</mi>
+        <mn>2</mn>
+      </msup>
+    </mrow>
+  </math>
+
+  <menu id="menu" type="toolbar">
+    <li>
+      <menu label="File">
+        <button type="button" onclick="new()">New...</button>
+        <button type="button" onclick="save()">Save...</button>
+      </menu>
+    </li>
+    <li>
+      <menu label="Edit">
+        <button type="button" onclick="cut()">Cut...</button>
+        <button type="button" onclick="copy()">Copy...</button>
+        <button type="button" onclick="paste()">Paste...</button>
+      </menu>
+    </li>
+  </menu>
+
+  <meter id="meter" min="0" max="1000" low="300" high="700" value="200">200 Euro</meter>
+
+  <nav id="nav">
+    <ul>
+      <li><a href="#">Home</a></li>
+      <li><a href="#">About</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+  </nav>
+
+  <object id="object_plugin_windowless" type="application/x-test"
+         width="300" height="300">
+    <param name="foo" value="bar">
+  </object>
+  <object id="object_plugin_windowed" type="application/x-test" wmode="window"
+         width="300" height="300"></object>
+
+  <select id="select_listbox" size="4">
+    <optgroup label="Colors">
+      <option>Red</option>
+      <option>Blue</option>
+    </optgroup>
+    <option>Animal</option>
+  </select>
+
+  <select id="select_listbox_multiselectable" multiple>
+    <option>Red</option>
+    <option>Blue</option>
+    <option>Green</option>
+  </select>
+
+  <select id="select_combobox">
+    <option>Red</option>
+    <option>Blue</option>
+    <option>Green</option>
+  </select>
+
+  <input id="output_input">
+  <output id="output" for="output_input"></output>
+
+  <pre id="pre">pre</pre>
+
+  <progress id="progress" min="0" value="21" max="42"></progress>
+  <progress id="progress_indeterminate"></progress>
+
+  <q id="q" cite="http://en.wikipedia.org/wiki/Kenny_McCormick#Cultural_impact">
+    Oh my God, they killed Kenny!
+  </q>
+
+  <ruby id="ruby">
+    漢 <rp>(</rp><rt>Kan</rt><rp>)</rp>
+    字 <rp>(</rp><rt>ji</rt><rp>)</rp>
+  </ruby>
+
+  <p id="s_container">normal<s>striked</s></p>
+  <p id="samp_container">normal<samp>sample</samp></p>
+  <section id="section">section</section>
+  <p id="small_container">normal<small>small</small></p>
+  <span id="span"></span>
+  <p id="strong_container">normal<strong>strong</strong></p>
+  <p id="sub_container">normal<sub>sub</sub></p>
+  <p id="sup_container">normal<sup>sup</sup></p>
+
+  <svg id="svg"></svg>
+  <textarea id="textarea"></textarea>
+
+  <p>The concert took place on <time id="time" datetime="2001-05-15 19:00">May 15</time></p>
+  <p id="u_container">normal<u>underline</u></p>
+  <p id="var_container">An equation: <var>x</var> = <var>y</var></p>
+
+  <video id="video" controls="true">
+    <source id="source" src="../bug461281.ogg" type="video/ogg">
+  </video>
+
+</video>
+</body>
+</html>

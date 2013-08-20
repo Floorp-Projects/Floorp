@@ -28,8 +28,8 @@ class nsIDOMWindow;
 class nsIURI;
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x6219173f, 0x4a61, 0x4c99, \
-  { 0xb1, 0xfd, 0x8e, 0x7a, 0xf0, 0xdc, 0xe0, 0x56 } }
+{ 0x1d931a17, 0x453a, 0x47fb, \
+  { 0x94, 0x66, 0x2d, 0x3e, 0xd1, 0xef, 0x7a, 0xc5 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -131,14 +131,6 @@ public:
    * @return NS_OK if the method is successful
    */
   virtual void GC(JS::gcreason::Reason aReason) = 0;
-
-  virtual nsresult Serialize(nsIObjectOutputStream* aStream,
-                             JS::Handle<JSScript*> aScriptObject) = 0;
-  
-  /* Deserialize a script from a stream.
-   */
-  virtual nsresult Deserialize(nsIObjectInputStream* aStream,
-                               JS::MutableHandle<JSScript*> aResult) = 0;
 
   /**
    * Called to disable/enable script execution in this context.
