@@ -69,6 +69,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
   ["MasterPassword", "chrome://browser/content/MasterPassword.js"],
   ["PluginHelper", "chrome://browser/content/PluginHelper.js"],
   ["OfflineApps", "chrome://browser/content/OfflineApps.js"],
+  ["Linkifier", "chrome://browser/content/Linkify.js"],
 ].forEach(function (aScript) {
   let [name, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -3539,6 +3540,12 @@ Tab.prototype = {
           type: "Content:PageShow",
           tabID: this.id
         });
+
+        if (!aEvent.persisted && Services.prefs.getBoolPref("browser.ui.linkify.phone")) {
+          if (!this._linkifier)
+            this._linkifier = new Linkifier();
+          this._linkifier.linkifyNumbers(this.browser.contentWindow.document);
+        }
 
         if (!Reader.isEnabledForParseOnLoad)
           return;
