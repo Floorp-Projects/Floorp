@@ -122,7 +122,8 @@ function getVisibleMenuItems(aMenu, aData) {
             } else if (isGenerated) {
               items.push("+" + label);
             } else if (item.id.indexOf("spell-check-dictionary-") != 0 &&
-                       item.id != "spell-no-suggestions") {
+                       item.id != "spell-no-suggestions" &&
+                       item.id != "spell-add-dictionaries-main") {
               ok(key, "menuitem " + item.id + " has an access key");
               if (accessKeys[key])
                   ok(false, "menuitem " + item.id + " has same accesskey as " + accessKeys[key]);
@@ -660,16 +661,34 @@ function runTest(testNum) {
                          ].concat(inspectItems));
 
         closeContextMenu();
-        openContextMenuFor(link); // Invoke context menu for next test.
+        openContextMenuFor(inputspellfalse, false, true); // Invoke context menu for next test.
         break;
 
     case 20:
+        // Context menu for text input field with spellcheck=false
+        checkContextMenu(["context-undo",        false,
+                          "---",                 null,
+                          "context-cut",         false,
+                          "context-copy",        false,
+                          "context-paste",       null, // ignore clipboard state
+                          "context-delete",      false,
+                          "---",                 null,
+                          "context-selectall",   true,
+                          "---",                 null,
+                          "spell-add-dictionaries-main",  true,
+                         ].concat(inspectItems));
+
+        closeContextMenu();
+        openContextMenuFor(link); // Invoke context menu for next test.
+        break;
+
+    case 21:
         executeCopyCommand("cmd_copyLink", "http://mozilla.com/");
         closeContextMenu();
         openContextMenuFor(pagemenu); // Invoke context menu for next test.
         break;
 
-    case 21:
+    case 22:
         // Context menu for element with assigned content context menu
         checkContextMenu(["+Plain item",          {type: "", icon: "", checked: false, disabled: false},
                           "+Disabled item",       {type: "", icon: "", checked: false, disabled: true},
@@ -720,7 +739,7 @@ function runTest(testNum) {
         full_screen_element.mozRequestFullScreen();
         break;
 
-        case 22:
+    case 23:
         // Context menu for DOM Fullscreen mode (NOTE: this is *NOT* on an img)
         checkContextMenu(["context-leave-dom-fullscreen", true,
                           "---",                          null,
@@ -749,7 +768,7 @@ function runTest(testNum) {
         subwindow.document.mozCancelFullScreen();
         break;
 
-    case 23:
+    case 24:
         // Context menu for element with assigned content context menu
         // The shift key should bypass content context menu processing
         checkContextMenu(["context-back",         false,
@@ -770,7 +789,7 @@ function runTest(testNum) {
         openContextMenuFor(selecttext); // Invoke context menu for next test.
         return;
 
-    case 24:
+    case 25:
         // Context menu for selected text
         if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -786,7 +805,7 @@ function runTest(testNum) {
         openContextMenuFor(selecttextlink); // Invoke context menu for next test.
         return;
 
-    case 25:
+    case 26:
         // Context menu for selected text which matches valid URL pattern
         if (SpecialPowers.Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -826,7 +845,7 @@ function runTest(testNum) {
         openContextMenuFor(imagelink)
         break;
 
-    case 26:
+    case 27:
         // Context menu for image link
         if (perWindowPrivateBrowsing) {
           checkContextMenu(["context-openlinkintab", true,
@@ -869,7 +888,7 @@ function runTest(testNum) {
         openContextMenuFor(select_inputtext); // Invoke context menu for next test.
         return;
 
-    case 27:
+    case 28:
         // Context menu for selected text in input
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
@@ -888,7 +907,7 @@ function runTest(testNum) {
         openContextMenuFor(select_inputtext_password); // Invoke context menu for next test.
         return;
 
-    case 28:
+    case 29:
         // Context menu for selected text in input[type="password"]
         checkContextMenu(["context-undo",        false,
                           "---",                 null,
@@ -911,7 +930,7 @@ function runTest(testNum) {
         openContextMenuFor(plugin);
         return;
 
-    case 29:
+    case 30:
         // Context menu for click-to-play blocked plugin
         checkContextMenu(["context-ctp-play",     true,
                           "context-ctp-hide",     true,
@@ -942,7 +961,7 @@ function runTest(testNum) {
         openContextMenuFor(longdesc);
         return;
 
-    case 30:
+    case 31:
         // Context menu for an image with longdesc
         checkContextMenu(["context-viewimage",            true,
                           "context-copyimage-contents",   true,
@@ -958,7 +977,7 @@ function runTest(testNum) {
         openContextMenuFor(srcdoc);
         return;
 
-    case 31:
+    case 32:
         // Context menu for an iframe with srcdoc attribute set
         checkContextMenu(["context-back",         false,
                           "context-forward",      false,
@@ -1011,7 +1030,7 @@ var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
     inputspell, pagemenu, dom_full_screen, plainTextItems, audio_in_video,
     selecttext, selecttextlink, imagelink, select_inputtext, select_inputtext_password,
-    plugin, longdesc, iframe;
+    plugin, longdesc, iframe, inputspellfalse;
 
 function startTest() {
     chromeWin = SpecialPowers.wrap(subwindow)
@@ -1053,6 +1072,7 @@ function startTest() {
     contenteditable = subwindow.document.getElementById("test-contenteditable");
     contenteditable.focus(); // content editable needs to be focused to enable spellcheck
     inputspell = subwindow.document.getElementById("test-input-spellcheck");
+    inputspellfalse = subwindow.document.getElementById("test-contenteditable-spellcheck-false");
     pagemenu = subwindow.document.getElementById("test-pagemenu");
     dom_full_screen = subwindow.document.getElementById("test-dom-full-screen");
     selecttext = subwindow.document.getElementById("test-select-text");
