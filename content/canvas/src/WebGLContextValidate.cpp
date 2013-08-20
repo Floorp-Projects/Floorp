@@ -807,6 +807,7 @@ WebGLContext::InitAndValidateGL()
     mBoundCubeMapTextures.Clear();
 
     mBoundArrayBuffer = nullptr;
+    mBoundTransformFeedbackBuffer = nullptr;
     mCurrentProgram = nullptr;
 
     mBoundFramebuffer = nullptr;
@@ -906,8 +907,12 @@ WebGLContext::InitAndValidateGL()
                 default:
                     GenerateWarning("GL error 0x%x occurred during WebGL context initialization!", error);
                     return false;
-            }   
+            }
         }
+    }
+
+    if (IsWebGL2()) {
+        gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, &mGLMaxTransformFeedbackSeparateAttribs);
     }
 
     // Always 1 for GLES2

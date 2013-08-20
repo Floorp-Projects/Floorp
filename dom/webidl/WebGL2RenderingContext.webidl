@@ -70,7 +70,20 @@ interface WebGL2RenderingContext : WebGLRenderingContext {
     void vertexAttribDivisor(GLuint index, GLuint divisor);
 
     /* transform feedback */
-    const GLenum RASTERIZER_DISCARD          = 0x8C89;
+    const GLenum RASTERIZER_DISCARD                      = 0x8C89;
+    const GLenum TRANSFORM_FEEDBACK_BUFFER               = 0x8C8E;
+    const GLenum TRANSFORM_FEEDBACK_BUFFER_BINDING       = 0x8C8F;
+    const GLenum TRANSFORM_FEEDBACK_BUFFER_START         = 0x8C84;
+    const GLenum TRANSFORM_FEEDBACK_BUFFER_SIZE          = 0x8C85;
+    const GLenum MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS = 0x8C8B;
+
+    /* buffer objects */
+    void bindBufferBase(GLenum target, GLuint index, WebGLBuffer? buffer);
+    void bindBufferRange(GLenum target, GLuint index, WebGLBuffer? buffer,
+                         GLintptr offset, GLsizeiptr size);
+
+    /* state requests */
+    any getParameterIndexed(GLenum pname, GLuint index);
 
 
     void beginQuery(GLenum target, WebGLQuery? queryObject);
