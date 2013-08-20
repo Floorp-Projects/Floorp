@@ -509,6 +509,14 @@ UpdatePrompt.prototype = {
       this._applyPromptTimer = null;
       this.finishUpdate();
       this._update = null;
+      return;
+    }
+    if (aTimer == this._watchdogTimer) {
+      log("Download watchdog fired");
+      this._watchdogTimer = null;
+      this._autoRestartDownload = true;
+      Services.aus.pauseDownload();
+      return;
     }
   },
 
@@ -523,26 +531,29 @@ UpdatePrompt.prototype = {
   _startedSent: false,
 
   _watchdogTimer: null,
-  _watchdogTimeout: 0,
 
   _autoRestartDownload: false,
   _autoRestartCount: 0,
 
-  watchdogTimerFired: function UP_watchdogTimerFired() {
-    log("Download watchdog fired");
-    this._autoRestartDownload = true;
-    Services.aus.pauseDownload();
-  },
-
   startWatchdogTimer: function UP_startWatchdogTimer() {
+    let watchdogTimeout = 120000;  // 120 seconds
+    try {
+      watchdogTimeout = Services.prefs.getIntPref(PREF_DOWNLOAD_WATCHDOG_TIMEOUT);
+    } catch (e) {
+      // This means that the preference doesn't exist. watchdogTimeout will
+      // retain its default assigned above.
+    }
+    if (watchdogTimeout <= 0) {
+      // 0 implies don't bother using the watchdog timer at all.
+      this._watchdogTimer = null;
+      return;
+    }
     if (this._watchdogTimer) {
       this._watchdogTimer.cancel();
     } else {
       this._watchdogTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      this._watchdogTimeout = Services.prefs.getIntPref(PREF_DOWNLOAD_WATCHDOG_TIMEOUT);
     }
-    this._watchdogTimer.initWithCallback(this.watchdogTimerFired.bind(this),
-                                         this._watchdogTimeout,
+    this._watchdogTimer.initWithCallback(this, watchdogTimeout,
                                          Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
