@@ -744,6 +744,9 @@ private:
 // Buffer Objects (WebGLContextBuffers.cpp)
 public:
     void BindBuffer(WebGLenum target, WebGLBuffer* buf);
+    void BindBufferBase(WebGLenum target, WebGLuint index, WebGLBuffer* buffer);
+    void BindBufferRange(WebGLenum target, WebGLuint index, WebGLBuffer* buffer,
+                         WebGLintptr offset, WebGLsizeiptr size);
     void BufferData(WebGLenum target, WebGLsizeiptr size, WebGLenum usage);
     void BufferData(WebGLenum target, const dom::ArrayBufferView &data,
                     WebGLenum usage);
@@ -759,10 +762,15 @@ public:
     bool IsBuffer(WebGLBuffer *buffer);
 
 private:
-    // ARRAY_BUFFER binding point
+    // ARRAY_BUFFER slot
     WebGLRefPtr<WebGLBuffer> mBoundArrayBuffer;
 
-    bool ValidateBufferTarget(GLenum target, const char* infos);
+    // TRANSFORM_FEEDBACK_BUFFER slot
+    WebGLRefPtr<WebGLBuffer> mBoundTransformFeedbackBuffer;
+
+    // these two functions emit INVALID_ENUM for invalid `target`.
+    WebGLRefPtr<WebGLBuffer>* GetBufferSlotByTarget(GLenum target, const char* infos);
+    WebGLRefPtr<WebGLBuffer>* GetBufferSlotByTargetIndexed(GLenum target, GLuint index, const char* infos);
     bool ValidateBufferUsageEnum(WebGLenum target, const char* infos);
 
 // -----------------------------------------------------------------------------
@@ -771,6 +779,7 @@ public:
     void Disable(WebGLenum cap);
     void Enable(WebGLenum cap);
     JS::Value GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv);
+    JS::Value GetParameterIndexed(JSContext* cx, WebGLenum pname, WebGLuint index);
     bool IsEnabled(WebGLenum cap);
 
 private:
@@ -927,6 +936,7 @@ protected:
     int32_t mGLMaxVertexUniformVectors;
     int32_t mGLMaxColorAttachments;
     int32_t mGLMaxDrawBuffers;
+    uint32_t mGLMaxTransformFeedbackSeparateAttribs;
 
     // Represents current status, or state, of the context. That is, is it lost
     // or stable and what part of the context lost process are we currently at.
