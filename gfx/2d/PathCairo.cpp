@@ -252,7 +252,7 @@ PathCairo::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule
 bool
 PathCairo::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
 {
-  CairoTempMatrix(*mPathContext, mTransform);
+  CairoTempMatrix temp(*mPathContext, mTransform);
 
   Matrix inverse = aTransform;
   inverse.Invert();
@@ -268,7 +268,7 @@ PathCairo::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
                                const Point &aPoint,
                                const Matrix &aTransform) const
 {
-  CairoTempMatrix(*mPathContext, mTransform);
+  CairoTempMatrix temp(*mPathContext, mTransform);
 
   Matrix inverse = aTransform;
   inverse.Invert();
@@ -281,7 +281,7 @@ PathCairo::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
 Rect
 PathCairo::GetBounds(const Matrix &aTransform) const
 {
-  CairoTempMatrix(*mPathContext, mTransform);
+  CairoTempMatrix temp(*mPathContext, mTransform);
 
   double x1, y1, x2, y2;
 
@@ -294,7 +294,7 @@ Rect
 PathCairo::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
                             const Matrix &aTransform) const
 {
-  CairoTempMatrix(*mPathContext, mTransform);
+  CairoTempMatrix temp(*mPathContext, mTransform);
 
   double x1, y1, x2, y2;
 
