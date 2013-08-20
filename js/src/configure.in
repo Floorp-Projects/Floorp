@@ -1637,7 +1637,10 @@ ia64*-hpux*)
         XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT -RELEASE"
+        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
+        if test -z "$DEVELOPER_OPTIONS"; then
+            LDFLAGS="$LDFLAGS -RELEASE"
+        fi
         dnl For profile-guided optimization
         PROFILE_GEN_CFLAGS="-GL"
         PROFILE_GEN_LDFLAGS="-LTCG:PGINSTRUMENT"
