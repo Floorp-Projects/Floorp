@@ -509,6 +509,7 @@ protected:
   bool ParseSize();
   bool ParseTextDecoration();
   bool ParseTextDecorationLine(nsCSSValue& aValue);
+  bool ParseTextCombineHorizontal(nsCSSValue& aValue);
   bool ParseTextOverflow(nsCSSValue& aValue);
 
   bool ParseShadowItem(nsCSSValue& aValue, bool aIsBoxShadow);
@@ -6608,6 +6609,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
         return ParseMarks(aValue);
       case eCSSProperty_text_decoration_line:
         return ParseTextDecorationLine(aValue);
+      case eCSSProperty_text_combine_horizontal:
+        return ParseTextCombineHorizontal(aValue);
       case eCSSProperty_text_overflow:
         return ParseTextOverflow(aValue);
       default:
@@ -8515,8 +8518,9 @@ CSSParserImpl::ParseFont()
     eCSSProperty_font_weight
   };
 
+  // font-variant-alternates enabled ==> layout.css.font-features.enabled is true
   bool featuresEnabled =
-    mozilla::Preferences::GetBool("layout.css.font-features.enabled");
+    nsCSSProps::IsEnabled(eCSSProperty_font_variant_alternates);
   nsCSSValue  family;
   if (ParseVariant(family, VARIANT_HK, nsCSSProps::kFontKTable)) {
     if (ExpectEndProperty()) {
@@ -9664,6 +9668,43 @@ CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
     aValue.SetPairValue(left, right);
   else {
     aValue = left;
+  }
+  return true;
+}
+
+bool
+CSSParserImpl::ParseTextCombineHorizontal(nsCSSValue& aValue)
+{
+  if (!ParseVariant(aValue, VARIANT_HK,
+                    nsCSSProps::kTextCombineHorizontalKTable)) {
+    return false;
+  }
+
+  // if 'digits', need to check for an explicit number [2, 3, 4]
+  if (eCSSUnit_Enumerated == aValue.GetUnit() &&
+      aValue.GetIntValue() == NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_2) {
+    if (!GetToken(true)) {
+      return true;
+    }
+    if (mToken.mType == eCSSToken_Number && mToken.mIntegerValid) {
+      switch (mToken.mInteger) {
+        case 2:  // already set, nothing to do
+          break;
+        case 3:
+          aValue.SetIntValue(NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_3,
+                             eCSSUnit_Enumerated);
+          break;
+        case 4:
+          aValue.SetIntValue(NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_4,
+                             eCSSUnit_Enumerated);
+          break;
+        default:
+          // invalid digits value
+          return false;
+      }
+    } else {
+      UngetToken();
+    }
   }
   return true;
 }

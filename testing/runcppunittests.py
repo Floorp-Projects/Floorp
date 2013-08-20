@@ -7,16 +7,10 @@
 from __future__ import with_statement
 import sys, os, tempfile, shutil
 from optparse import OptionParser
-import mozprocess, mozinfo, mozlog, mozcrash
+import mozprocess, mozinfo, mozlog, mozcrash, mozfile
 from contextlib import contextmanager
 
 log = mozlog.getLogger('cppunittests')
-
-@contextmanager
-def TemporaryDirectory():
-    tempdir = tempfile.mkdtemp()
-    yield tempdir
-    shutil.rmtree(tempdir)
 
 class CPPUnitTests(object):
     # Time (seconds) to wait for test process to complete
@@ -38,7 +32,7 @@ class CPPUnitTests(object):
         """
         basename = os.path.basename(prog)
         log.info("Running test %s", basename)
-        with TemporaryDirectory() as tempdir:
+        with mozfile.TemporaryDirectory() as tempdir:
             proc = mozprocess.ProcessHandler([prog],
                                              cwd=tempdir,
                                              env=env)

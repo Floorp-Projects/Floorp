@@ -412,9 +412,12 @@ nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
   NS_ABORT_IF_FALSE(gFontDescTable, "no lookup table, needs addref");
   nsCSSFontDesc which = nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
 
+  // font-variant-alternates enabled ==> layout.css.font-features.enabled is true
+  bool fontFeaturesEnabled =
+    nsCSSProps::IsEnabled(eCSSProperty_font_variant_alternates);
+
   // check for unprefixed font-feature-settings/font-language-override
-  if (which == eCSSFontDesc_UNKNOWN &&
-      mozilla::Preferences::GetBool("layout.css.font-features.enabled")) {
+  if (which == eCSSFontDesc_UNKNOWN && fontFeaturesEnabled) {
     nsAutoString prefixedProp;
     prefixedProp.AppendLiteral("-moz-");
     prefixedProp.Append(aFontDesc);
@@ -1435,6 +1438,13 @@ const int32_t nsCSSProps::kTextAlignLastKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const int32_t nsCSSProps::kTextCombineHorizontalKTable[] = {
+  eCSSKeyword_none, NS_STYLE_TEXT_COMBINE_HORIZ_NONE,
+  eCSSKeyword_all, NS_STYLE_TEXT_COMBINE_HORIZ_ALL,
+  eCSSKeyword_digits, NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_2,  // w/o number ==> 2
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const int32_t nsCSSProps::kTextDecorationLineKTable[] = {
   eCSSKeyword_none, NS_STYLE_TEXT_DECORATION_LINE_NONE,
   eCSSKeyword_underline, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
@@ -1453,6 +1463,13 @@ const int32_t nsCSSProps::kTextDecorationStyleKTable[] = {
   eCSSKeyword_dashed, NS_STYLE_TEXT_DECORATION_STYLE_DASHED,
   eCSSKeyword_wavy, NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
   eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kTextOrientationKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_TEXT_ORIENTATION_AUTO,
+  eCSSKeyword_upright, NS_STYLE_TEXT_ORIENTATION_UPRIGHT,
+  eCSSKeyword_sideways, NS_STYLE_TEXT_ORIENTATION_SIDEWAYS,
+  eCSSKeyword_UNKNOWN, -1
 };
 
 const int32_t nsCSSProps::kTextOverflowKTable[] = {

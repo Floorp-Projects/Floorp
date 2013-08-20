@@ -128,6 +128,16 @@ GetObjectZone(JSObject *obj)
 static JS_ALWAYS_INLINE bool
 GCThingIsMarkedGray(void *thing)
 {
+#ifdef JSGC_GENERATIONAL
+    /*
+     * GC things residing in the nursery cannot be gray: they have no mark bits.
+     * All live objects in the nursery are moved to tenured at the beginning of
+     * each GC slice, so the gray marker never sees nursery things.
+     */
+    JS::shadow::Runtime *rt = js::gc::GetGCThingRuntime(thing);
+    if (uintptr_t(thing) >= rt->gcNurseryStart_ && uintptr_t(thing) < rt->gcNurseryEnd_)
+        return false;
+#endif
     uintptr_t *word, mask;
     js::gc::GetGCThingMarkWordAndMask(thing, js::gc::GRAY, &word, &mask);
     return *word & mask;

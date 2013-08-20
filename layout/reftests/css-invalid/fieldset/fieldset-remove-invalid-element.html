@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!-- fieldset with one invalid element and the element is dynamically removed -->
+<html class='reftest-wait'>
+  <head>
+    <style>
+      fieldset:valid { display: none; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById("fieldset").removeChild(document.getElementById('i'));
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <fieldset id="fieldset">
+      <input id='i' type='email' value='foo'>
+    </fieldset>
+  </body>
+</html>

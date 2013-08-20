@@ -76,6 +76,10 @@ function checkRecentDocsFor(aFileName) {
 var httpserv = null;
 function run_test()
 {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   // This test functionality only implemented on Windows.
   // Is there a better way of doing this?
   var httpPH = Cc["@mozilla.org/network/protocol;1?name=http"].
