@@ -590,11 +590,11 @@
                 if (files.length == TRUNCATED_FILE_COUNT + 1) {
                   titleText += "\n" + files[TRUNCATED_FILE_COUNT].name;
                 } else if (files.length > TRUNCATED_FILE_COUNT + 1) {
-                  let xmoreStr = bundle.GetStringFromName("AndXMoreFiles");
+                  let xmoreStr = bundle.GetStringFromName("AndNMoreFiles");
                   let xmoreNum = files.length - TRUNCATED_FILE_COUNT;
                   let tmp = {};
                   Components.utils.import("resource://gre/modules/PluralForm.jsm", tmp);
-                  let andXMoreStr = tmp.PluralForm.get(xmoreNum, xmoreStr).replace("%S", xmoreNum);
+                  let andXMoreStr = tmp.PluralForm.get(xmoreNum, xmoreStr).replace("#1", xmoreNum);
                   titleText += "\n" + andXMoreStr;
                 }
               }
