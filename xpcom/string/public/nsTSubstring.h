@@ -342,8 +342,8 @@ class nsTSubstring_CharT
       void NS_FASTCALL Assign( char_type c );
       bool NS_FASTCALL Assign( char_type c, const fallible_t& ) NS_WARN_UNUSED_RESULT;
 
-      void NS_FASTCALL
-        Assign( const char_type* data, size_type length = size_type(-1) );
+      void NS_FASTCALL Assign( const char_type* data );
+      void NS_FASTCALL Assign( const char_type* data, size_type length );
       bool NS_FASTCALL Assign( const char_type* data, size_type length, const fallible_t& ) NS_WARN_UNUSED_RESULT;
 
       void NS_FASTCALL Assign( const self_type& );
