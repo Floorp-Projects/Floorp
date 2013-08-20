@@ -1675,20 +1675,20 @@ eventSource(ThreadClient.prototype);
 function TraceClient(aClient, aActor) {
   this._client = aClient;
   this._actor = aActor;
-  this._traces = Object.create(null);
-  this._activeTraces = 0;
+  this._activeTraces = new Set();
+  this._waitingPackets = new Map();
+  this._expectedPacket = 0;
 
-  this._client.addListener(UnsolicitedNotifications.enteredFrame,
-                           this.onEnteredFrame.bind(this));
-  this._client.addListener(UnsolicitedNotifications.exitedFrame,
-                           this.onExitedFrame.bind(this));
+  this.onPacket = this.onPacket.bind(this);
+  this._client.addListener(UnsolicitedNotifications.enteredFrame, this.onPacket);
+  this._client.addListener(UnsolicitedNotifications.exitedFrame, this.onPacket);
 
   this.request = this._client.request;
 }
 
 TraceClient.prototype = {
   get actor()   { return this._actor; },
-  get tracing() { return this._activeTraces > 0; },
+  get tracing() { return this._activeTraces.size > 0; },
 
   get _transport() { return this._client._transport; },
 
@@ -1720,15 +1720,11 @@ TraceClient.prototype = {
         return aResponse;
       }
 
-      let name = aResponse.name;
-
-      if (!this._traces[name] || !this._traces[name].active) {
-        this._activeTraces++;
+      if (!this.tracing) {
+        this._waitingPackets.clear();
+        this._expectedPacket = 0;
       }
-
-      this._traces[name] = {
-        active: true
-      };
+      this._activeTraces.add(aResponse.name);
 
       return aResponse;
     },
@@ -1754,8 +1750,7 @@ TraceClient.prototype = {
         return aResponse;
       }
 
-      this._traces[aResponse.name].active = false;
-      this._activeTraces--;
+      this._activeTraces.delete(aResponse.name);
 
       return aResponse;
     },
@@ -1763,17 +1758,24 @@ TraceClient.prototype = {
   }),
 
   /**
-   * Called when the trace actor notifies that a frame has been entered.
+   * Called when the trace actor notifies that a frame has been
+   * entered or exited.
+   *
+   * @param aEvent string
+   *        The type of the unsolicited packet (enteredFrame|exitedFrame).
+   *
+   * @param aPacket object
+   *        Packet received over the RDP from the trace actor.
    */
-  onEnteredFrame: function JSTC_onEnteredFrame(aEvent, aResponse) {
-    this.notify("enteredFrame", aResponse);
-  },
+  onPacket: function JSTC_onPacket(aEvent, aPacket) {
+    this._waitingPackets.set(aPacket.sequence, aPacket);
 
-  /**
-   * Called when the trace actor notifies that a frame has been exited.
-   */
-  onExitedFrame: function JSTC_onExitedFrame(aEvent, aResponse) {
-    this.notify("exitedFrame", aResponse);
+    while (this._waitingPackets.has(this._expectedPacket)) {
+      let packet = this._waitingPackets.get(this._expectedPacket);
+      this._waitingPackets.delete(this._expectedPacket);
+      this.notify(packet.type, packet);
+      this._expectedPacket++;
+    }
   }
 };
 
