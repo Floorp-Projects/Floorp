@@ -1577,6 +1577,13 @@ LIRGenerator::visitOsrValue(MOsrValue *value)
 }
 
 bool
+LIRGenerator::visitOsrReturnValue(MOsrReturnValue *value)
+{
+    LOsrReturnValue *lir = new LOsrReturnValue(useRegister(value->entry()));
+    return defineBox(lir, value);
+}
+
+bool
 LIRGenerator::visitOsrScopeChain(MOsrScopeChain *object)
 {
     LOsrScopeChain *lir = new LOsrScopeChain(useRegister(object->entry()));

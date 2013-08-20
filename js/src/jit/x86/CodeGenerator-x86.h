@@ -52,7 +52,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitBoxFloatingPoint(LBoxFloatingPoint *box);
     bool visitUnbox(LUnbox *unbox);
     bool visitValue(LValue *value);
-    bool visitOsrValue(LOsrValue *value);
     bool visitLoadSlotV(LLoadSlotV *load);
     bool visitLoadSlotT(LLoadSlotT *load);
     bool visitStoreSlotT(LStoreSlotT *store);

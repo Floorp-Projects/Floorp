@@ -66,19 +66,6 @@ CodeGeneratorX64::visitValue(LValue *value)
 }
 
 bool
-CodeGeneratorX64::visitOsrValue(LOsrValue *value)
-{
-    const LAllocation *frame  = value->getOperand(0);
-    const LDefinition *target = value->getDef(0);
-
-    const ptrdiff_t valueOffset = value->mir()->frameOffset();
-
-    masm.loadPtr(Address(ToRegister(frame), valueOffset), ToRegister(target));
-
-    return true;
-}
-
-bool
 CodeGeneratorX64::visitBox(LBox *box)
 {
     const LAllocation *in = box->getOperand(0);
