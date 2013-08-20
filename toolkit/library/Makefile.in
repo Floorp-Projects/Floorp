@@ -491,19 +491,6 @@ else
 SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
-# See bug 653662 - some builders are hitting an internal size limit on
-# incremental builds. Disable incremental linking for debug builds on VC8 or
-# on 32-bit hosts.
-# See: http://social.msdn.microsoft.com/Forums/en-US/vcgeneral/thread/c34d5c37-ca4a-4580-9c7c-4379a8c76d1f/
-ifeq ($(OS_ARCH),WINNT)
-IS_32BIT_HOST := $(if $(filter AMD64,$(PROCESSOR_ARCHITECTURE) $(PROCESSOR_ARCHITEW6432)),,yes)
-ifneq (,$(or $(filter 1400,$(_MSC_VER)),$(IS_32BIT_HOST)))
-ifdef MOZ_DEBUG
-EXTRA_DSO_LDOPTS += -INCREMENTAL:NO
-endif
-endif
-endif
-
 EXTRA_DSO_LDOPTS += $(LIBS_DIR)
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS) $(MOZALLOC_LIB)
