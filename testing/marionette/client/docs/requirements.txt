@@ -1,0 +1,9 @@
+# this is just taken verbatim from the deps list in setup.py
+manifestdestiny
+mozcrash >= 0.5
+mozdevice >= 0.22
+mozhttpd >= 0.5
+moznetwork >= 0.21
+mozprocess >= 0.9
+mozprofile >= 0.7
+mozrunner >= 5.15

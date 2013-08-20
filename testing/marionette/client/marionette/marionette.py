@@ -18,6 +18,9 @@ import geckoinstance
 
 
 class HTMLElement(object):
+    """
+    Represents a DOM Element.
+    """
 
     CLASS = "class name"
     SELECTOR = "css selector"
@@ -40,25 +43,56 @@ class HTMLElement(object):
         return self.id == other_element.id
 
     def find_element(self, method, target):
+        '''
+        Returns an HTMLElement instance that matches the specified method and target, relative to the current element.
+
+        For more details on this function, see the find_element method in the
+        Marionette class.
+        '''
         return self.marionette.find_element(method, target, self.id)
 
     def find_elements(self, method, target):
+        '''
+        Returns a list of all HTMLElement instances that match the specified method and target in the current context.
+
+        For more details on this function, see the find_elements method in the
+        Marionette class.
+        '''
         return self.marionette.find_elements(method, target, self.id)
 
     def get_attribute(self, attribute):
+        '''
+        Returns the requested attribute (or None, if no attribute is set).
+
+        :param attribute: The name of the attribute.
+        '''
         return self.marionette._send_message('getElementAttribute', 'value', element=self.id, name=attribute)
 
     def click(self):
         return self.marionette._send_message('clickElement', 'ok', element=self.id)
 
     def tap(self, x=None, y=None):
+        '''
+        Simulates a set of tap events on the element.
+
+        :param x: X-coordinate of tap event. If not given, default to the
+         center of the element.
+        :param x: X-coordinate of tap event. If not given, default to the
+         center of the element.
+        '''
         return self.marionette._send_message('singleTap', 'ok', element=self.id, x=x, y=y)
 
     @property
     def text(self):
+        '''
+        Returns the visible text of the element, and its child elements.
+        '''
         return self.marionette._send_message('getElementText', 'value', element=self.id)
 
     def send_keys(self, *string):
+        '''
+        Sends the string via synthesized keypresses to the element.
+        '''
         typing = []
         for val in string:
             if isinstance(val, Keys):
@@ -73,73 +107,203 @@ class HTMLElement(object):
         return self.marionette._send_message('sendKeysToElement', 'ok', element=self.id, value=typing)
 
     def clear(self):
+        '''
+        Clears the input of the element.
+        '''
         return self.marionette._send_message('clearElement', 'ok', element=self.id)
 
     def is_selected(self):
+        '''
+        Returns True if the element is selected.
+        '''
         return self.marionette._send_message('isElementSelected', 'value', element=self.id)
 
     def is_enabled(self):
+        '''
+        Returns True if the element is enabled.
+        '''
         return self.marionette._send_message('isElementEnabled', 'value', element=self.id)
 
     def is_displayed(self):
+        '''
+        Returns True if the element is displayed.
+        '''
         return self.marionette._send_message('isElementDisplayed', 'value', element=self.id)
 
     @property
     def size(self):
+        '''
+        A dictionary with the size of the element.
+        '''
         return self.marionette._send_message('getElementSize', 'value', element=self.id)
 
     @property
     def tag_name(self):
+        '''
+        The tag name of the element.
+        '''
         return self.marionette._send_message('getElementTagName', 'value', element=self.id)
 
     @property
     def location(self):
+        '''
+        A dictionary with the x and y location of an element
+        '''
         return self.marionette._send_message('getElementPosition', 'value', element=self.id)
 
     def value_of_css_property(self, property_name):
+        '''
+        Gets the value of the specified CSS property name.
+
+        :param property_name: Property name to get the value of.
+        '''
         return self.marionette._send_message('getElementValueOfCssProperty', 'value',
                                              element=self.id,
                                              propertyName=property_name)
 
 class Actions(object):
+    '''
+    An Action object represents a set of actions that are executed in a particular order.
+
+    All action methods (press, etc.) return the Actions object itself, to make
+    it easy to create a chain of events.
+
+    Example usage:
+
+    ::
+
+        # get html file
+        testAction = marionette.absolute_url("testFool.html")
+        # navigate to the file
+        marionette.navigate(testAction)
+        # find element1 and element2
+        element1 = marionette.find_element("id", "element1")
+        element2 = marionette.find_element("id", "element2")
+        # create action object
+        action = Actions(marionette)
+        # add actions (press, wait, move, release) into the object
+        action.press(element1).wait(5). move(element2).release()
+        # fire all the added events
+        action.perform()
+    '''
+
     def __init__(self, marionette):
         self.action_chain = []
         self.marionette = marionette
         self.current_id = None
 
     def press(self, element, x=None, y=None):
+        '''
+        Sends a 'touchstart' event to this element.
+
+        If no coordinates are given, it will be targeted at the center of the
+        element. If given, it will be targeted at the (x,y) coordinates
+        relative to the top-left corner of the element.
+
+        :param element: The element to press on.
+        :param x: Optional, x-coordinate to tap, relative to the top-left
+         corner of the element.
+        :param y: Optional, y-coordinate to tap, relative to the top-left
+         corner of the element.
+        '''
         element=element.id
         self.action_chain.append(['press', element, x, y])
         return self
 
     def release(self):
+        '''
+        Sends a 'touchend' event to this element.
+
+        May only be called if press() has already be called on this element.
+
+        If press and release are chained without a move action between them,
+        then it will be processed as a 'tap' event, and will dispatch the
+        expected mouse events ('mousemove' (if necessary), 'mousedown',
+        'mouseup', 'mouseclick') after the touch events. If there is a wait
+        period between press and release that will trigger a contextmenu,
+        then the 'contextmenu' menu event will be fired instead of the
+        touch/mouse events.
+        '''
         self.action_chain.append(['release'])
         return self
 
     def move(self, element):
+        '''
+        Sends a 'touchmove' event at the center of the target element.
+
+        :param element: Element to move towards.
+
+        May only be called if press() has already be called.
+        '''
         element=element.id
         self.action_chain.append(['move', element])
         return self
 
     def move_by_offset(self, x, y):
+        '''
+        Sends 'touchmove' event to the given x, y coordinates relative to the top-left of the currently touched element.
+
+        May only be called if press() has already be called.
+
+        :param x: Specifies x-coordinate of move event, relative to the
+         top-left corner of the element.
+        :param y: Specifies y-coordinate of move event, relative to the
+         top-left corner of the element.
+        '''
         self.action_chain.append(['moveByOffset', x, y])
         return self
 
     def wait(self, time=None):
+        '''
+        Waits for specified time period.
+
+        :param time: Time in seconds to wait. If time is None then this has no effect for a single action chain. If used inside a multi-action chain, then time being None indicates that we should wait for all other currently executing actions that are part of the chain to complete.
+        '''
         self.action_chain.append(['wait', time])
         return self
 
     def cancel(self):
+        '''
+        Sends 'touchcancel' event to the target of the original 'touchstart' event.
+
+        May only be called if press() has already be called.
+        '''
         self.action_chain.append(['cancel'])
         return self
 
     def tap(self, element, x=None, y=None):
+        '''
+        Performs a quick tap on the target element.
+
+        :param element: The element to tap.
+        :param x: Optional, x-coordinate of tap, relative to the top-left
+         corner of the element. If not specified, default to center of
+         element.
+        :param y: Optional, y-coordinate of tap, relative to the top-left
+         corner of the element. If not specified, default to center of
+         element.
+
+        This is equivalent to calling:
+
+        ::
+
+          action.press(element, x, y).release()
+        '''
         element=element.id
         self.action_chain.append(['press', element, x, y])
         self.action_chain.append(['release'])
         return self
 
     def double_tap(self, element, x=None, y=None):
+        '''
+        Performs a double tap on the target element.
+
+        :param element: The element to double tap.
+        :param x: Optional, x-coordinate of double tap, relative to the
+         top-left corner of the element.
+        :param y: Optional, y-coordinate of double tap, relative to the
+         top-left corner of the element.
+        '''
         element=element.id
         self.action_chain.append(['press', element, x, y])
         self.action_chain.append(['release'])
@@ -148,6 +312,21 @@ class Actions(object):
         return self
 
     def flick(self, element, x1, y1, x2, y2, duration=200):
+        '''
+        Performs a flick gesture on the target element.
+
+        :param element: The element to perform the flick gesture on.
+        :param x1: Starting x-coordinate of flick, relative to the top left
+         corner of the element.
+        :param y1: Starting y-coordinate of flick, relative to the top left
+         corner of the element.
+        :param x1: Ending x-coordinate of flick, relative to the top left
+         corner of the element.
+        :param x1: Ending y-coordinate of flick, relative to the top left
+         corner of the element.
+        :param duration: Time needed for the flick gesture for complete (in
+         milliseconds).
+        '''
         element = element.id
         elapsed = 0
         time_increment = 10
@@ -164,6 +343,12 @@ class Actions(object):
         return self
 
     def long_press(self, element, time_in_seconds):
+        '''
+        Performs a long press gesture on the target element.
+
+        :param element: The element to press.
+        :param time_in_seconds: Time in seconds to wait before releasing the press.
+        '''
         element = element.id
         self.action_chain.append(['press', element])
         self.action_chain.append(['wait', time_in_seconds])
@@ -171,29 +356,63 @@ class Actions(object):
         return self
 
     def perform(self):
+        '''
+        Sends the action chain built so far to the server side for execution and clears the current chain of actions.
+        '''
         self.current_id = self.marionette._send_message('actionChain', 'value', chain=self.action_chain, nextId=self.current_id)
         self.action_chain = []
         return self
 
 class MultiActions(object):
+    '''
+    A MultiActions object represents a sequence of actions that may be
+    performed at the same time. Its intent is to allow the simulation
+    of multi-touch gestures.
+    Usage example:
+
+    ::
+
+      # create multiaction object
+      multitouch = MultiActions(marionette)
+      # create several action objects
+      action_1 = Actions(marionette)
+      action_2 = Actions(marionette)
+      # add actions to each action object/finger
+      action_1.press(element1).move_to(element2).release()
+      action_2.press(element3).wait().release(element3)
+      # fire all the added events
+      multitouch.add(action_1).add(action_2).perform()
+    '''
+
     def __init__(self, marionette):
         self.multi_actions = []
         self.max_length = 0
         self.marionette = marionette
 
     def add(self, action):
+        '''
+        Adds a set of actions to perform.
+
+        :param action: An Actions object.
+        '''
         self.multi_actions.append(action.action_chain)
         if len(action.action_chain) > self.max_length:
           self.max_length = len(action.action_chain)
         return self
 
     def perform(self):
+        '''
+        Perform all the actions added to this object.
+        '''
         return self.marionette._send_message('multiAction', 'ok', value=self.multi_actions, max_length=self.max_length)
 
 class Marionette(object):
+    """
+    Represents a Marionette connection to a browser or device.
+    """
 
-    CONTEXT_CHROME = 'chrome'
-    CONTEXT_CONTENT = 'content'
+    CONTEXT_CHROME = 'chrome' # non-browser content: windows, dialogs, etc.
+    CONTEXT_CONTENT = 'content' # browser content: iframes, divs, etc.
     TIMEOUT_SEARCH = 'implicit'
     TIMEOUT_SCRIPT = 'script'
     TIMEOUT_PAGE = 'page load'
@@ -434,12 +653,22 @@ class Marionette(object):
         return crashed
 
     def absolute_url(self, relative_url):
+        '''
+        Returns an absolute url for files served from Marionette's www directory.
+
+        :param relative_url: The url of a static file, relative to Marionette's www directory.
+        '''
         return "%s%s" % (self.baseurl, relative_url)
 
     def status(self):
         return self._send_message('getStatus', 'value')
 
     def start_session(self, desired_capabilities=None):
+        '''
+        Creates a new Marionette session.
+
+        You must call this method before performing any other action.
+        '''
         try:
             # We are ignoring desired_capabilities, at least for now.
             self.session = self._send_message('newSession', 'value')
@@ -469,59 +698,129 @@ class Marionette(object):
 
     @property
     def session_capabilities(self):
+        '''
+        A JSON dictionary representing the capabilities of the current session.
+        '''
         response = self._send_message('getSessionCapabilities', 'value')
         return response
 
     def set_script_timeout(self, timeout):
+        '''
+        Sets the maximum number of ms that an asynchronous script is allowed to run.
+
+        If a script does not return in the specified amount of time, a
+        ScriptTimeoutException is raised.
+
+        :param timeout: The maximum number of milliseconds an asynchronous
+         script can run without causing an ScriptTimeoutException to be raised
+        '''
         response = self._send_message('setScriptTimeout', 'ok', value=timeout)
         return response
 
     def set_search_timeout(self, timeout):
+        '''
+        Sets a timeout for the find methods.
+
+        When searching for an element using either
+        :class:`Marionette.find_element` or :class:`Marionette.find_elements`,
+        the method will continue trying to locate the element for up to timeout
+        ms. This can be useful if, for example, the element you're looking for
+        might not exist immediately, because it belongs to a page which is
+        currently being loaded.
+
+        :param timeout: Timeout in milliseconds.
+        '''
         response = self._send_message('setSearchTimeout', 'ok', value=timeout)
         return response
 
     @property
     def current_window_handle(self):
+        '''
+        A reference to the current window.
+        '''
         self.window = self._send_message('getWindow', 'value')
         return self.window
 
     @property
     def title(self):
-        response = self._send_message('getTitle', 'value') 
+        '''
+        Current title of the active window.
+        '''
+        response = self._send_message('getTitle', 'value')
         return response
 
     @property
     def window_handles(self):
+        '''
+        A list of references to all available browser windows if called in
+        content context. If called while in the chrome context, it will list
+        all available windows, not just browser windows (ie: not just
+        'navigator:browser';).
+        '''
         response = self._send_message('getWindows', 'value')
         return response
 
     @property
     def page_source(self):
+        '''
+        A string representation of the DOM.
+        '''
         response = self._send_message('getPageSource', 'value')
         return response
 
     def close(self, window_id=None):
+        '''
+        Closes the window that is in use by Marionette.
+
+        :param window_id: id of the window you wish to closed
+        '''
         if not window_id:
             window_id = self.current_window_handle
         response = self._send_message('closeWindow', 'ok', value=window_id)
         return response
 
     def set_context(self, context):
+        '''
+        Sets the context that marionette commands are running in.
+
+        :param context: Context, may be one of the class properties
+         `CONTEXT_CHROME` or `CONTEXT_CONTENT`.
+
+        Usage example:
+
+        ::
+
+          marionette.set_context(marionette.CONTEXT_CHROME)
+        '''
         assert(context == self.CONTEXT_CHROME or context == self.CONTEXT_CONTENT)
         return self._send_message('setContext', 'ok', value=context)
 
     def switch_to_window(self, window_id):
+        '''
+        Switch to the specified window; subsequent commands will be directed at the new window.
+
+        :param window_id: The id or name of the window to switch to.
+        '''
         response = self._send_message('switchToWindow', 'ok', value=window_id)
         self.window = window_id
         return response
 
     def get_active_frame(self):
+        '''
+        Returns an HTMLElement representing the frame Marionette is currently acting on.
+        '''
         response = self._send_message('getActiveFrame', 'value')
         if response:
             return HTMLElement(self, response)
         return None
 
     def switch_to_frame(self, frame=None, focus=True):
+        '''
+        Switch the current context to the specified frame. Subsequent commands will operate in the context of the specified frame, if applicable.
+
+        :param frame: A reference to the frame to switch to: this can be an HTMLElement, an index, name or an id attribute. If you call switch_to_frame() without an argument, it will switch to the top-level frame.
+        :param focus: A boolean value which determins whether to focus the frame that we just switched to.
+        '''
         if isinstance(frame, HTMLElement):
             response = self._send_message('switchToFrame', 'ok', element=frame.id, focus=focus)
         else:
@@ -529,14 +828,28 @@ class Marionette(object):
         return response
 
     def get_url(self):
+        '''
+        Returns the url of the active page in the browser.
+        '''
         response = self._send_message('getUrl', 'value')
         return response
 
     def get_window_type(self):
+        '''
+        Gets the windowtype attribute of the window Marionette is currently acting on.
+
+        This command only makes sense in a chrome context. You might use this
+        method to distinguish a browser window from an editor window.
+        '''
         response = self._send_message('getWindowType', 'value')
         return response
 
     def navigate(self, url):
+        '''
+        Causes the browser to navigate to the specified url.
+
+        :param url: The url to navigate to.
+        '''
         response = self._send_message('goUrl', 'ok', value=url)
         return response
 
@@ -546,14 +859,23 @@ class Marionette(object):
         return response
 
     def go_back(self):
+        '''
+        Causes the browser to perform a back navigation.
+        '''
         response = self._send_message('goBack', 'ok')
         return response
 
     def go_forward(self):
+        '''
+        Causes the browser to perform a forward navigation.
+        '''
         response = self._send_message('goForward', 'ok')
         return response
 
     def refresh(self):
+        '''
+        Causes the browser to perform to refresh the current page.
+        '''
         response = self._send_message('refresh', 'ok')
         return response
 
@@ -608,6 +930,67 @@ class Marionette(object):
         return self.unwrapValue(response)
 
     def execute_script(self, script, script_args=None, new_sandbox=True, special_powers=False, script_timeout=None):
+        '''
+        Executes a synchronous JavaScript script, and returns the result (or None if the script does return a value).
+
+        The script is executed in the context set by the most recent
+        set_context() call, or to the CONTEXT_CONTENT context if set_context()
+        has not been called.
+
+        :param script: A string containing the JavaScript to execute.
+        :param script_args: A list of arguments to pass to the script.
+        :param special_powers: Whether or not you want access to SpecialPowers
+         in your script. Set to False by default because it shouldn't really
+         be used, since you already have access to chrome-level commands if you
+         set context to chrome and do an execute_script. This method was added
+         only to help us run existing Mochitests.
+        :param new_sandbox: If False, preserve global variables from the last
+         execute_*script call. This is True by default, in which case no
+         globals are preserved.
+
+        Simple usage example:
+
+        ::
+
+          result = marionette.execute_script("return 1;")
+          assert result == 1
+
+        You can use the `script_args` parameter to pass arguments to the
+        script:
+
+        ::
+
+          result = marionette.execute_script("return arguments[0] + arguments[1];",
+                                             script_args=[2, 3])
+          assert result == 5
+          some_element = marionette.find_element("id", "someElement")
+          sid = marionette.execute_script("return arguments[0].id;", script_args=[some_element])
+          assert some_element.get_attribute("id") == sid
+
+        Scripts wishing to access non-standard properties of the window object must use
+        window.wrappedJSObject:
+
+        ::
+
+          result = marionette.execute_script("""
+            window.wrappedJSObject.test1 = 'foo';
+            window.wrappedJSObject.test2 = 'bar';
+            return window.wrappedJSObject.test1 + window.wrappedJSObject.test2;
+            """)
+          assert result == "foobar"
+
+        Global variables set by individual scripts do not persist between
+        script calls by default.  If you wish to persist data between script
+        calls, you can set new_sandbox to False on your next call, and add any
+        new variables to a new 'global' object like this:
+
+        ::
+
+          marionette.execute_script("global.test1 = 'foo';")
+          result = self.marionette.execute_script("return global.test1;", new_sandbox=False)
+          assert result == 'foo'
+
+        '''
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
@@ -625,6 +1008,37 @@ class Marionette(object):
         return self.unwrapValue(response)
 
     def execute_async_script(self, script, script_args=None, new_sandbox=True, special_powers=False, script_timeout=None):
+        '''
+        Executes an asynchronous JavaScript script, and returns the result (or None if the script does return a value).
+
+        The script is executed in the context set by the most recent
+        set_context() call, or to the CONTEXT_CONTENT context if set_context()
+        has not been called.
+
+        :param script: A string containing the JavaScript to execute.
+        :param script_args: A list of arguments to pass to the script.
+        :param special_powers: Whether or not you want access to SpecialPowers
+         in your script. Set to False by default because it shouldn't really
+         be used, since you already have access to chrome-level commands if you
+         set context to chrome and do an execute_script. This method was added
+         only to help us run existing Mochitests.
+        :param new_sandbox: If False, preserve global variables from the last
+         execute_*script call. This is True by default, in which case no
+         globals are preserved.
+
+        Usage example:
+
+        ::
+
+          marionette.set_script_timeout(10000) # set timeout period of 10 seconds
+          result = self.marionette.execute_async_script("""
+            // this script waits 5 seconds, and then returns the number 1
+            setTimeout(function() {
+              marionetteScriptFinished(1);
+            }, 5000);
+          """)
+          assert result == 1
+        '''
         if script_args is None:
             script_args = []
         args = self.wrapArguments(script_args)
@@ -642,6 +1056,26 @@ class Marionette(object):
         return self.unwrapValue(response)
 
     def find_element(self, method, target, id=None):
+        '''
+        Returns an HTMLElement instances that matches the specified method and target in the current context.
+
+        An HTMLElement instance may be used to call other methods on the
+        element, such as click().  If no element is immediately found, the
+        attempt to locate an element will be repeated for up to the amount of
+        time set by set_search_timeout(). If multiple elements match the given
+        criteria, only the first is returned. If no element matches, a
+        NoSuchElementException will be raised.
+
+        :param method: The method to use to locate the element; one of: "id",
+         "name", "class name", "tag name", "css selector", "link text",
+         "partial link text" and "xpath". Note that the methods supported in
+         the chrome dom are only "id", "class name", "tag name" and "xpath".
+        :param target: The target of the search.  For example, if method =
+         "tag", target might equal "div".  If method = "id", target would be
+         an element id.
+        :param id: If specified, search for elements only inside the element
+         with the specified id.
+        '''
         kwargs = { 'value': target, 'using': method }
         if id:
             kwargs['element'] = id
@@ -650,6 +1084,24 @@ class Marionette(object):
         return element
 
     def find_elements(self, method, target, id=None):
+        '''
+        Returns a list of all HTMLElement instances that match the specified method and target in the current context.
+
+        An HTMLElement instance may be used to call other methods on the
+        element, such as click().  If no element is immediately found, the
+        attempt to locate an element will be repeated for up to the amount of
+        time set by set_search_timeout().
+
+        :param method: The method to use to locate the elements; one of:
+         "id", "name", "class name", "tag name", "css selector", "link text",
+         "partial link text" and "xpath". Note that the methods supported in
+         the chrome dom are only "id", "class name", "tag name" and "xpath".
+        :param target: The target of the search.  For example, if method =
+         "tag", target might equal "div".  If method = "id", target would be
+         an element id.
+        :param id: If specified, search for elements only inside the element
+         with the specified id.
+        '''
         kwargs = { 'value': target, 'using': method }
         if id:
             kwargs['element'] = id
@@ -665,12 +1117,57 @@ class Marionette(object):
         return HTMLElement(self, response)
 
     def log(self, msg, level=None):
+        '''
+        Stores a timestamped log message in the Marionette server for later retrieval.
+
+        :param msg: String with message to log.
+        :param level: String with log level (e.g. "INFO" or "DEBUG"). If None,
+         defaults to "INFO".
+        '''
         return self._send_message('log', 'ok', value=msg, level=level)
 
     def get_logs(self):
+        '''
+        Returns the list of logged messages.
+
+        Each log message is an array with three string elements: the level,
+        the message, and a date.
+
+        Usage example:
+
+        ::
+
+          marionette.log("I AM INFO")
+          marionette.log("I AM ERROR", "ERROR")
+          logs = marionette.get_logs()
+          assert logs[0][1] == "I AM INFO"
+          assert logs[1][1] == "I AM ERROR"
+        '''
         return self._send_message('getLogs', 'value')
 
     def import_script(self, js_file):
+        '''
+        Imports a script into the scope of the execute_script and execute_async_script calls.
+
+        This is particularly useful if you wish to import your own libraries.
+
+        :param js_file: Filename of JavaScript file to import.
+
+        For example, Say you have a script, importfunc.js, that contains:
+
+        ::
+
+          let testFunc = function() { return "i'm a test function!";};
+
+        Assuming this file is in the same directory as the test, you could do
+        something like:
+
+        ::
+
+          js = os.path.abspath(os.path.join(__file__, os.path.pardir, "importfunc.js"))
+          marionette.import_script(js)
+          assert "i'm a test function!" == self.marionette.execute_script("return testFunc();")
+        '''
         js = ''
         with open(js_file, 'r') as f:
             js = f.read()
@@ -678,43 +1175,53 @@ class Marionette(object):
 
     def add_cookie(self, cookie):
         """
-           Adds a cookie to your current session.
+        Adds a cookie to your current session.
 
-           :Args:
-           - cookie_dict: A dictionary object, with required keys - "name" and "value";
-           optional keys - "path", "domain", "secure", "expiry"
+        :param cookie: A dictionary object, with required keys - "name" and
+         "value"; optional keys - "path", "domain", "secure", "expiry".
 
-           Usage:
-              driver.add_cookie({'name' : 'foo', 'value' : 'bar'})
-              driver.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/'})
-              driver.add_cookie({'name' : 'foo', 'value' : 'bar', 'path' : '/',
-                                 'secure':True})
+        Usage example:
+
+        ::
+
+          driver.add_cookie({'name': 'foo', 'value': 'bar'})
+          driver.add_cookie({'name': 'foo', 'value': 'bar', 'path': '/'})
+          driver.add_cookie({'name': 'foo', 'value': 'bar', 'path': '/',
+                             'secure': True})
         """
         return self._send_message('addCookie', 'ok', cookie=cookie)
 
     def delete_all_cookies(self):
         """
-            Delete all cookies in the scope of the session.
-            :Usage:
-                driver.delete_all_cookies()
+        Delete all cookies in the scope of the current session.
+
+        Usage example:
+
+        ::
+
+          driver.delete_all_cookies()
         """
         return self._send_message('deleteAllCookies', 'ok')
 
     def delete_cookie(self, name):
         """
-            Delete a cookie by its name
-            :Usage:
-                driver.delete_cookie('foo')
+        Delete a cookie by its name.
 
+        :param name: Name of cookie to delete.
+
+        Usage example:
+
+        ::
+
+          driver.delete_cookie('foo')
         """
         return self._send_message('deleteCookie', 'ok', name=name);
 
     def get_cookie(self, name):
         """
-            Get a single cookie by name. Returns the cookie if found, None if not.
+        Get a single cookie by name. Returns the cookie if found, None if not.
 
-            :Usage:
-                driver.get_cookie('my_cookie')
+        :param name: Name of cookie to get.
         """
         cookies = self.get_cookies()
         for cookie in cookies:
@@ -723,6 +1230,9 @@ class Marionette(object):
         return None
 
     def get_cookies(self):
+        '''
+        Gets all cookies in the scope of the current session.
+        '''
         return self._send_message("getAllCookies", "value")
 
     @property
@@ -730,6 +1240,14 @@ class Marionette(object):
         return ApplicationCache(self)
 
     def screenshot(self, element=None, highlights=None):
+        '''
+        Creates a base64-encoded screenshot of the element, or the current frame if no element is specified.
+
+        :param element: The element to take a screenshot of. If None, will
+         take a screenshot of the current frame.
+        :param highlights: A list of HTMLElement objects to draw a red box around in the
+         returned screenshot.
+        '''
         if element is not None:
             element = element.id
         return self._send_message("screenShot", 'value', element=element, highlights=highlights)
