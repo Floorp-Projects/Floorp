@@ -52,7 +52,7 @@ bool
 Bridge(const PrivateIPDLInterface&,
        AsyncChannel* aParentChannel, ProcessHandle aParentProcess,
        AsyncChannel* aChildChannel, ProcessHandle aChildProcess,
-       ProtocolId aProtocol)
+       ProtocolId aProtocol, ProtocolId aChildProtocol)
 {
   ProcessId parentId = GetProcId(aParentProcess);
   ProcessId childId = GetProcId(aChildProcess);
@@ -71,7 +71,7 @@ Bridge(const PrivateIPDLInterface&,
                                               aProtocol)) ||
       !aChildChannel->Send(new ChannelOpened(childSide,
                                              parentId,
-                                             aProtocol))) {
+                                             aChildProtocol))) {
     CloseDescriptor(parentSide);
     CloseDescriptor(childSide);
     return false;
@@ -83,7 +83,7 @@ bool
 Open(const PrivateIPDLInterface&,
      AsyncChannel* aOpenerChannel, ProcessHandle aOtherProcess,
      Transport::Mode aOpenerMode,
-     ProtocolId aProtocol)
+     ProtocolId aProtocol, ProtocolId aChildProtocol)
 {
   bool isParent = (Transport::MODE_SERVER == aOpenerMode);
   ProcessHandle thisHandle = GetCurrentProcessHandle();
@@ -102,7 +102,7 @@ Open(const PrivateIPDLInterface&,
   }
 
   Message* parentMsg = new ChannelOpened(parentSide, childId, aProtocol);
-  Message* childMsg = new ChannelOpened(childSide, parentId, aProtocol);
+  Message* childMsg = new ChannelOpened(childSide, parentId, aChildProtocol);
   nsAutoPtr<Message> messageForUs(isParent ? parentMsg : childMsg);
   nsAutoPtr<Message> messageForOtherSide(!isParent ? parentMsg : childMsg);
   if (!aOpenerChannel->Echo(messageForUs.forget()) ||

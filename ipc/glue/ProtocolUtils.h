@@ -122,12 +122,12 @@ struct PrivateIPDLInterface {};
 bool
 Bridge(const PrivateIPDLInterface&,
        AsyncChannel*, base::ProcessHandle, AsyncChannel*, base::ProcessHandle,
-       ProtocolId);
+       ProtocolId, ProtocolId);
 
 bool
 Open(const PrivateIPDLInterface&,
      AsyncChannel*, base::ProcessHandle, Transport::Mode,
-     ProtocolId);
+     ProtocolId, ProtocolId);
 
 bool
 UnpackChannelOpened(const PrivateIPDLInterface&,
