@@ -5,11 +5,11 @@
     },
     "global": {
         "talos_repo": "http://hg.mozilla.org/build/talos",
-        "talos_revision": "592a42000e98"
+        "talos_revision": "2a32cc64e7ff"
     },
     "suites": {
         "chromez": {
-            "tests": ["tresize"],
+            "tests": ["tresize", "tcanvasmark"],
             "talos_options": [
                 "--mozAfterPaint",
                 "--filter",
@@ -41,7 +41,7 @@
             ]
         },
         "other": {
-            "tests": ["tscrollr", "a11yr", "ts_paint", "tpaint"],
+            "tests": ["tscrollx", "a11yr", "ts_paint", "tpaint"],
             "talos_options": [
                 "--mozAfterPaint",
                 "--filter",
@@ -51,7 +51,7 @@
             ]
         },
         "svgr": {
-            "tests": ["tsvgr", "tsvgr_opacity"],
+            "tests": ["tsvgx", "tsvgr_opacity"],
             "talos_options": [
                 "--filter",
                 "ignore_first:5",
@@ -60,7 +60,7 @@
             ]
         },
         "rafx": {
-            "tests": ["tscrollx", "tsvgx", "tcanvasmark"],
+            "tests": ["tscrollr", "tsvgr"],
             "talos_options": [
                 "--filter",
                 "ignore_first:5",
