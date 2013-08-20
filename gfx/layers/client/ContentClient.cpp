@@ -472,14 +472,20 @@ ContentClientDoubleBuffered::SyncFrontBufferToBackBuffer()
   AutoDeprecatedTextureClient autoTextureFront;
   AutoDeprecatedTextureClient autoTextureFrontOnWhite;
   if (SupportsAzureContent()) {
-    RotatedBuffer frontBuffer(autoTextureFront.GetDrawTarget(mFrontClient),
-                              autoTextureFrontOnWhite.GetDrawTarget(mFrontClientOnWhite),
+    // We need to ensure that we lock these two buffers in the same
+    // order as the compositor to prevent deadlocks.
+    DrawTarget* dt = autoTextureFront.GetDrawTarget(mFrontClient);
+    DrawTarget* dtOnWhite = autoTextureFrontOnWhite.GetDrawTarget(mFrontClientOnWhite);
+    RotatedBuffer frontBuffer(dt,
+                              dtOnWhite,
                               mFrontBufferRect,
                               mFrontBufferRotation);
     UpdateDestinationFrom(frontBuffer, updateRegion);
   } else {
-    RotatedBuffer frontBuffer(autoTextureFront.GetSurface(mFrontClient),
-                              autoTextureFrontOnWhite.GetSurface(mFrontClientOnWhite),
+    gfxASurface* surf = autoTextureFront.GetSurface(mFrontClient);
+    gfxASurface* surfOnWhite = autoTextureFrontOnWhite.GetSurface(mFrontClientOnWhite);
+    RotatedBuffer frontBuffer(surf,
+                              surfOnWhite,
                               mFrontBufferRect,
                               mFrontBufferRotation);
     UpdateDestinationFrom(frontBuffer, updateRegion);
