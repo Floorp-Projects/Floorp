@@ -49,7 +49,11 @@ const EXPECTED_REFLOWS = [
 
   // tabPreviews.capture()
   "tabPreviews_capture@chrome://browser/content/browser.js|" +
-    "tabPreviews_handleEvent/<@chrome://browser/content/browser.js|"
+    "tabPreviews_handleEvent/<@chrome://browser/content/browser.js|",
+
+  // tabPreviews.capture()
+  "tabPreviews_capture@chrome://browser/content/browser.js|" +
+    "@chrome://browser/content/browser.js|"
 ];
 
 const PREF_PRELOAD = "browser.newtab.preload";
