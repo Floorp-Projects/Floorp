@@ -537,6 +537,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // Initialize BaselineFrame's scopeChain and argsObj
     JSObject *scopeChain = nullptr;
+    Value returnValue;
     ArgumentsObject *argsObj = nullptr;
     BailoutKind bailoutKind = iter.bailoutKind();
     if (bailoutKind == Bailout_ArgumentCheck) {
@@ -546,6 +547,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         // which calls |EnsureHasScopeObjects|.
         IonSpew(IonSpew_BaselineBailouts, "      Bailout_ArgumentCheck! (no valid scopeChain)");
         iter.skip();
+
+        // skip |return value|
+        iter.skip();
+        returnValue = UndefinedValue();
 
         // Scripts with |argumentsHasVarBinding| have an extra slot.
         if (script->argumentsHasVarBinding()) {
@@ -582,7 +587,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             }
         }
 
-        // If script maybe has an arguments object, the second slot will hold it.
+        // Second slot holds the return value.
+        returnValue = iter.read();
+
+        // If script maybe has an arguments object, the third slot will hold it.
         if (script->argumentsHasVarBinding()) {
             v = iter.read();
             JS_ASSERT(v.isObject() || v.isUndefined());
@@ -592,6 +600,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     }
     IonSpew(IonSpew_BaselineBailouts, "      ScopeChain=%p", scopeChain);
     blFrame->setScopeChain(scopeChain);
+    IonSpew(IonSpew_BaselineBailouts, "      ReturnValue=%016llx", *((uint64_t *) &returnValue));
+    blFrame->setReturnValue(returnValue);
 
     // Do not need to initialize scratchValue or returnValue fields in BaselineFrame.
 

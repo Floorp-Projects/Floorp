@@ -143,6 +143,7 @@
     _(OsrEntry)                     \
     _(OsrValue)                     \
     _(OsrScopeChain)                \
+    _(OsrReturnValue)               \
     _(OsrArgumentsObject)           \
     _(RegExp)                       \
     _(RegExpTest)                   \
