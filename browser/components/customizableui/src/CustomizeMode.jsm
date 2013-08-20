@@ -154,6 +154,7 @@ CustomizeMode.prototype = {
       window.PanelUI.menuButton.disabled = true;
 
       window.document.getElementById("PanelUI-help").disabled = true;
+      window.document.getElementById("PanelUI-quit").disabled = true;
 
       this._updateResetButton();
 
@@ -230,6 +231,7 @@ CustomizeMode.prototype = {
       window.PanelUI.menuButton.disabled = false;
 
       window.document.getElementById("PanelUI-help").disabled = false;
+      window.document.getElementById("PanelUI-quit").disabled = false;
 
       // We need to set self._customizing to false before removing the tab
       // or the TabSelect event handler will think that we are exiting
