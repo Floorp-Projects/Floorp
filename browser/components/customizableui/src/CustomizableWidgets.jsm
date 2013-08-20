@@ -12,6 +12,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "CharsetManager",
+                                   "@mozilla.org/charset-converter-manager;1",
+                                   "nsICharsetConverterManager");
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
@@ -588,5 +591,215 @@ const CustomizableWidgets = [{
       if (!feeds || !feeds.length) {
         node.setAttribute("disabled", "true");
       }
+    }
+  }, {
+    id: "characterencoding-button",
+    type: "view",
+    viewId: "PanelUI-characterEncodingView",
+    removable: true,
+    defaultArea: CustomizableUI.AREA_PANEL,
+    allowedAreas: [CustomizableUI.AREA_PANEL],
+    maybeDisableMenu: function(aDocument) {
+      let window = aDocument.defaultView;
+      return !(window.gBrowser &&
+               window.gBrowser.docShell &&
+               window.gBrowser.docShell.mayEnableCharacterEncodingMenu);
+    },
+    getCharsetList: function(aSection, aDocument) {
+      let currCharset = aDocument.defaultView.content.document.characterSet;
+
+      let list = "";
+      try {
+        let pref = "intl.charsetmenu.browser." + aSection;
+        list = Services.prefs.getComplexValue(pref,
+                                              Ci.nsIPrefLocalizedString).data;
+      } catch (e) {}
+
+      list = list.trim();
+      if (!list)
+        return [];
+
+      list = list.split(",");
+
+      let items = [];
+      for (let charset of list) {
+        charset = charset.trim();
+
+        let notForBrowser = false;
+        try {
+          notForBrowser = CharsetManager.getCharsetData(charset,
+                                                        "notForBrowser");
+        } catch (e) {}
+
+        if (notForBrowser)
+          continue;
+
+        let title = charset;
+        try {
+          title = CharsetManager.getCharsetTitle(charset);
+        } catch (e) {}
+
+        items.push({value: charset, name: title, current: charset == currCharset});
+      }
+
+      return items;
+    },
+    getAutoDetectors: function(aDocument) {
+      let detectorEnum = CharsetManager.GetCharsetDetectorList();
+      let currDetector;
+      try {
+        currDetector = Services.prefs.getComplexValue(
+          "intl.charset.detector", Ci.nsIPrefLocalizedString).data;
+      } catch (e) {}
+      if (!currDetector)
+        currDetector = "off";
+      currDetector = "chardet." + currDetector;
+
+      let items = [];
+
+      while (detectorEnum.hasMore()) {
+        let detector = detectorEnum.getNext();
+
+        let title = detector;
+        try {
+          title = CharsetManager.getCharsetTitle(detector);
+        } catch (e) {}
+
+        items.push({value: detector, name: title, current: detector == currDetector});
+      }
+
+      items.sort((aItem1, aItem2) => {
+        return aItem1.name.localeCompare(aItem2.name);
+      });
+
+      return items;
+    },
+    populateList: function(aDocument, aContainerId, aSection) {
+      let containerElem = aDocument.getElementById(aContainerId);
+
+      while (containerElem.firstChild) {
+        containerElem.removeChild(containerElem.firstChild);
+      }
+
+      containerElem.addEventListener("command", this.onCommand, false);
+
+      let list = [];
+      if (aSection == "autodetect") {
+        list = this.getAutoDetectors(aDocument);
+      } else if (aSection == "browser") {
+        let staticList = this.getCharsetList("static", aDocument);
+        let cacheList = this.getCharsetList("cache", aDocument);
+        // Combine lists, and de-duplicate.
+        let checkedIn = new Set();
+        for (let item of staticList.concat(cacheList)) {
+          let itemName = item.name.toLowerCase();
+          if (!checkedIn.has(itemName)) {
+            list.push(item);
+            checkedIn.add(itemName);
+          }
+        }
+      }
+
+      // Update the appearance of the buttons when it's not possible to
+      // customize encoding.
+      let disabled = this.maybeDisableMenu(aDocument);
+      for (let item of list) {
+        let elem = aDocument.createElementNS(kNSXUL, "toolbarbutton");
+        elem.setAttribute("label", item.name);
+        elem.section = aSection;
+        elem.value = item.value;
+        if (item.current)
+          elem.setAttribute("current", "true");
+        if (disabled)
+          elem.setAttribute("disabled", "true");
+        containerElem.appendChild(elem);
+      }
+    },
+    onViewShowing: function(aEvent) {
+      let document = aEvent.target.ownerDocument;
+
+      this.populateList(document,
+                        "PanelUI-characterEncodingView-customlist",
+                        "browser");
+      this.populateList(document,
+                        "PanelUI-characterEncodingView-autodetect",
+                        "autodetect");
+    },
+    onCommand: function(aEvent) {
+      let node = aEvent.target;
+      if (!node.hasAttribute || !node.section) {
+        return;
+      }
+
+      CustomizableUI.hidePanelForNode(node);
+      let window = node.ownerDocument.defaultView;
+      let section = node.section;
+      let value = node.value;
+
+      // The behavior as implemented here is directly based off of the
+      // `MultiplexHandler()` method in browser.js.
+      if (section == "browser") {
+        window.BrowserSetForcedCharacterSet(value);
+      } else if (section == "autodetect") {
+        value = value.replace(/^chardet\./, "");
+        if (value == "off") {
+          value = "";
+        }
+        // Set the detector pref.
+        try {
+          let str = Cc["@mozilla.org/supports-string;1"]
+                      .createInstance(Ci.nsISupportsString);
+          str.data = value;
+          Services.prefs.setComplexValue("intl.charset.detector", Ci.nsISupportsString, str);
+        } catch (e) {
+          Cu.reportError("Failed to set the intl.charset.detector preference.");
+        }
+        // Prepare a browser page reload with a changed charset.
+        window.BrowserCharsetReload();
+      }
+    },
+    onCreated: function(aNode) {
+      const kPanelId = "PanelUI-popup";
+      let document = aNode.ownerDocument;
+
+      let updateButton = () => {
+        if (this.maybeDisableMenu(document))
+          aNode.setAttribute("disabled", "true");
+        else
+          aNode.removeAttribute("disabled");
+      };
+
+      if (this.currentArea == CustomizableUI.AREA_PANEL) {
+        let panel = document.getElementById(kPanelId);
+        panel.addEventListener("popupshowing", updateButton);
+      }
+
+      let listener = {
+        onWidgetAdded: (aWidgetId, aArea) => {
+          if (aWidgetId != this.id)
+            return;
+          if (aArea == CustomizableUI.AREA_PANEL) {
+            let panel = document.getElementById(kPanelId);
+            panel.addEventListener("popupshowing", updateButton);
+          }
+        },
+        onWidgetRemoved: (aWidgetId, aPrevArea) => {
+          if (aWidgetId != this.id)
+            return;
+          if (aPrevArea == CustomizableUI.AREA_PANEL) {
+            let panel = document.getElementById(kPanelId);
+            panel.removeEventListener("popupshowing", updateButton);
+          }
+        },
+        onWidgetInstanceRemoved: (aWidgetId, aDoc) => {
+          if (aWidgetId != this.id || aDoc != document)
+            return;
+
+          CustomizableUI.removeListener(listener);
+          let panel = aDoc.getElementById(kPanelId);
+          panel.removeEventListener("popupshowing", updateButton);
+        }
+      };
+      CustomizableUI.addListener(listener);
     }
   }];

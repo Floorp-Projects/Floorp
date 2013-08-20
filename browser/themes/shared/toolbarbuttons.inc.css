@@ -66,6 +66,10 @@
   -moz-image-region: rect(0, 288px, 18px, 270px);
 }
 
+#characterencoding-button[customizableui-areatype="toolbar"]{
+  -moz-image-region: rect(0, 324px, 18px, 306px);
+}
+
 #new-window-button[customizableui-areatype="toolbar"] {
   -moz-image-region: rect(0, 342px, 18px, 324px);
 }

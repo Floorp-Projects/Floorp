@@ -60,6 +60,11 @@ toolbarpaletteitem[place="palette"] > #social-share-button {
   -moz-image-region: rect(0px, 448px, 32px, 416px);
 }
 
+#characterencoding-button[customizableui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #characterencoding-button {
+  -moz-image-region: rect(0px, 480px, 32px, 448px);
+}
+
 #new-window-button[customizableui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #new-window-button {
   -moz-image-region: rect(0px, 512px, 32px, 480px);

@@ -475,8 +475,12 @@ toolbarbutton.bookmark-item > menupopup {
     -moz-image-region: rect(18px, 306px, 36px, 288px);
   }
 
-  #charset-button@toolbarButtonPressed@ {
+  #characterencoding-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 324px, 36px, 306px);
+  }
+
+  #characterencoding-button[open] {
+    -moz-image-region: rect(36px, 324px, 54px, 306px);
   }
 
   #new-window-button@toolbarButtonPressed@ {
@@ -694,6 +698,18 @@ toolbarbutton.bookmark-item > menupopup {
 
   #feed-button[customizableui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 576px, 72px, 540px);
+  }
+
+  #characterencoding-button[customizableui-areatype="toolbar"] {
+    -moz-image-region: rect(0, 648px, 36px, 612px);
+  }
+
+  #characterencoding-button[customizableui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
+    -moz-image-region: rect(36px, 648px, 72px, 612px);
+  }
+
+  #characterencoding-button[customizableui-areatype="toolbar"][open] {
+    -moz-image-region: rect(72px, 648px, 108px, 612px);
   }
 
   #new-window-button[customizableui-areatype="toolbar"] {
@@ -916,6 +932,11 @@ toolbarbutton.bookmark-item > menupopup {
   #social-share-button[customizableui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #social-share-button {
     -moz-image-region: rect(0px, 896px, 64px, 832px);
+  }
+
+  #characterencoding-button[customizableui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > #characterencoding-button {
+    -moz-image-region: rect(0, 960px, 64px, 896px);
   }
 
   #new-window-button[customizableui-areatype="menu-panel"],

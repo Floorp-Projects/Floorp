@@ -715,18 +715,18 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu&state=disabled");
 }
 
-#characterencoding-panelmenu[customizableui-areatype="toolbar"],
+#characterencoding-button[customizableui-areatype="toolbar"],
 #developer-button[customizableui-areatype="toolbar"] {
   list-style-image: url(chrome://browser/skin/menuPanel.png);
 }
 
-#characterencoding-panelmenu[customizableui-areatype="toolbar"] > .toolbarbutton-icon,
+#characterencoding-button[customizableui-areatype="toolbar"] > .toolbarbutton-icon,
 #developer-button[customizableui-areatype="toolbar"] > .toolbarbutton-icon {
   height: 24px;
 }
 
-#characterencoding-panelmenu[customizableui-areatype="toolbar"] {
-  -moz-image-region: rect(0px, 216px, 24px, 192px);
+#characterencoding-button[customizableui-areatype="toolbar"] {
+  -moz-image-region: rect(0px, 480px, 32px, 448px);
 }
 
 #developer-button[customizableui-areatype="toolbar"] {
