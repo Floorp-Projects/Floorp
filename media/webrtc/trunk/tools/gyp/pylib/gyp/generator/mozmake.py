@@ -6,6 +6,7 @@ import collections
 import gyp
 import gyp.common
 import sys
+import platform
 import os
 import re
 import shlex
@@ -114,15 +115,25 @@ def ensure_directory_exists(path):
 
 def GetFlavor(params):
   """Returns |params.flavor| if it's set, the system's default flavor else."""
+  system = platform.system().lower()
   flavors = {
-    'win32': 'win',
-    'darwin': 'mac',
-    'sunos5': 'solaris',
-    'freebsd7': 'freebsd',
-    'freebsd8': 'freebsd',
+    'microsoft': 'win',
+    'windows'  : 'win',
+    'cygwin'   : 'win',
+    'darwin'   : 'mac',
+    'sunos'    : 'solaris',
+    'dragonfly': 'dragonfly',
+    'freebsd'  : 'freebsd',
+    'netbsd'   : 'netbsd',
+    'openbsd'  : 'openbsd',
   }
-  flavor = flavors.get(sys.platform, 'linux')
-  return params.get('flavor', flavor)
+
+  if 'flavor' in params:
+    return params['flavor']
+  if system in flavors:
+    return flavors[system]
+
+  return 'linux'
 
 
 def CalculateVariables(default_variables, params):
