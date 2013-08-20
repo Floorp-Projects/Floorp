@@ -242,7 +242,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-help:not([disabled]):hover,
 #PanelUI-customize:hover,
-#PanelUI-quit:hover {
+#PanelUI-quit:not([disabled]):hover {
   border-color: rgba(8,25,42,0.2);
   border-top-color: rgba(8,25,42,0.1);
   background-color: rgba(0,0,0,0.1);
