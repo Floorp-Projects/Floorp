@@ -255,6 +255,7 @@ static cairo_pattern_t*
 GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 {
   cairo_pattern_t* pat;
+  const Matrix* matrix = nullptr;
 
   switch (aPattern.GetType())
   {
@@ -272,14 +273,7 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 
       pat = cairo_pattern_create_for_surface(surf);
 
-      // The pattern matrix is a matrix that transforms the pattern into user
-      // space. Cairo takes a matrix that converts from user space to pattern
-      // space. Cairo therefore needs the inverse.
-
-      cairo_matrix_t mat;
-      GfxMatrixToCairoMatrix(pattern.mMatrix, mat);
-      cairo_matrix_invert(&mat);
-      cairo_pattern_set_matrix(pat, &mat);
+      matrix = &pattern.mMatrix;
 
       cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(pattern.mFilter));
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(pattern.mExtendMode));
@@ -298,6 +292,8 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
       MOZ_ASSERT(pattern.mStops->GetBackendType() == BACKEND_CAIRO);
       GradientStopsCairo* cairoStops = static_cast<GradientStopsCairo*>(pattern.mStops.get());
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(cairoStops->GetExtendMode()));
+
+      matrix = &pattern.mMatrix;
 
       const std::vector<GradientStop>& stops = cairoStops->GetStops();
       for (size_t i = 0; i < stops.size(); ++i) {
@@ -320,6 +316,8 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
       GradientStopsCairo* cairoStops = static_cast<GradientStopsCairo*>(pattern.mStops.get());
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(cairoStops->GetExtendMode()));
 
+      matrix = &pattern.mMatrix;
+
       const std::vector<GradientStop>& stops = cairoStops->GetStops();
       for (size_t i = 0; i < stops.size(); ++i) {
         const GradientStop& stop = stops[i];
@@ -335,6 +333,16 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
       // We should support all pattern types!
       MOZ_ASSERT(false);
     }
+  }
+
+  // The pattern matrix is a matrix that transforms the pattern into user
+  // space. Cairo takes a matrix that converts from user space to pattern
+  // space. Cairo therefore needs the inverse.
+  if (matrix) {
+    cairo_matrix_t mat;
+    GfxMatrixToCairoMatrix(*matrix, mat);
+    cairo_matrix_invert(&mat);
+    cairo_pattern_set_matrix(pat, &mat);
   }
 
   return pat;
