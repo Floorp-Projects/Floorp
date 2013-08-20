@@ -87,8 +87,7 @@ Sanitizer.prototype = {
               item.clear();
           } catch(er) {
             seenError = true;
-            Components.utils.reportError("Error sanitizing " + itemName +
-                                         ": " + er + "\n");
+            Cu.reportError("Error sanitizing " + itemName + ": " + er + "\n");
           }
           onItemComplete();
         };
@@ -322,7 +321,7 @@ Sanitizer.prototype = {
 
             let privateList = yield Downloads.getPrivateDownloadList();
             privateList.removeFinished(filterByTime);
-          }.bind(this)).then(null, Components.utils.reportError);
+          }.bind(this)).then(null, Cu.reportError);
         }
         else {
           var dlMgr = Components.classes["@mozilla.org/download-manager;1"]
