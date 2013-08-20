@@ -216,6 +216,10 @@ if test -n "$gonkdir" ; then
         ;;
     18)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include"
+        if test -d "$gonkdir/external/bluetooth/bluez"; then
+            GONK_INCLUDES+=" -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib"
+            MOZ_B2G_BT=1
+        fi
         ;;
     *)
         AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])

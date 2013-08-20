@@ -115,6 +115,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       mFrontBuffer = nullptr;
     }
 
+    bool bufferCreated = false;
     if (!mFrontBuffer) {
       mFrontBuffer = CreateBufferTextureClient(gfx::FORMAT_YUV);
       gfx::IntSize ySize(data->mYSize.width, data->mYSize.height);
@@ -123,7 +124,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
         mFrontBuffer = nullptr;
         return false;
       }
-      AddTextureClient(mFrontBuffer);
+      bufferCreated = true;
     }
 
     if (!mFrontBuffer->Lock(OPEN_READ_WRITE)) {
@@ -131,6 +132,10 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     }
     bool status = mFrontBuffer->AsTextureClientYCbCr()->UpdateYCbCr(*data);
     mFrontBuffer->Unlock();
+
+    if (bufferCreated) {
+      AddTextureClient(mFrontBuffer);
+    }
 
     if (status) {
       GetForwarder()->UpdatedTexture(this, mFrontBuffer, nullptr);
@@ -152,6 +157,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       mFrontBuffer = nullptr;
     }
 
+    bool bufferCreated = false;
     if (!mFrontBuffer) {
       gfxASurface::gfxImageFormat format
         = gfxPlatform::GetPlatform()->OptimalFormatForContent(surface->GetContentType());
@@ -159,7 +165,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       MOZ_ASSERT(mFrontBuffer->AsTextureClientSurface());
       mFrontBuffer->AsTextureClientSurface()->AllocateForSurface(size);
 
-      AddTextureClient(mFrontBuffer);
+      bufferCreated = true;
     }
 
     if (!mFrontBuffer->Lock(OPEN_READ_WRITE)) {
@@ -167,6 +173,11 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     }
     bool status = mFrontBuffer->AsTextureClientSurface()->UpdateSurface(surface);
     mFrontBuffer->Unlock();
+
+    if (bufferCreated) {
+      AddTextureClient(mFrontBuffer);
+    }
+
     if (status) {
       GetForwarder()->UpdatedTexture(this, mFrontBuffer, nullptr);
       GetForwarder()->UseTexture(this, mFrontBuffer);
