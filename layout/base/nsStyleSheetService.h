@@ -10,12 +10,12 @@
 
 #include "nsIStyleSheetService.h"
 #include "nsCOMArray.h"
-#include "nsIStyleSheet.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
 class nsISimpleEnumerator;
 class nsICategoryManager;
+class nsIStyleSheet;
 
 #define NS_STYLESHEETSERVICE_CID \
 {0xfcca6f83, 0x9f7d, 0x44e4, {0xa7, 0x4b, 0xb5, 0x94, 0x33, 0xe6, 0xc8, 0xc3}}
