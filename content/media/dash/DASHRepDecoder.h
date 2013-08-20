@@ -16,13 +16,16 @@
 #define DASHRepDecoder_h_
 
 #include "Representation.h"
-#include "ImageLayers.h"
 #include "DASHDecoder.h"
 #include "WebMDecoder.h"
 #include "WebMReader.h"
 #include "MediaDecoder.h"
 
 namespace mozilla {
+
+namespace layers {
+class ImageContainer;
+}
 
 class DASHDecoder;
 class DASHRepReader;

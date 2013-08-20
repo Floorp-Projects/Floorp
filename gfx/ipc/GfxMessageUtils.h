@@ -27,7 +27,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "FrameMetrics.h"
-#include "ImageLayers.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -39,7 +38,6 @@ typedef gfxASurface::gfxContentType gfxContentType;
 typedef gfxASurface::gfxImageFormat PixelFormat;
 typedef gfxASurface::gfxSurfaceType gfxSurfaceType;
 typedef gfxPattern::GraphicsFilter GraphicsFilterType;
-typedef layers::ImageLayer::ScaleMode ScaleMode;
 
 } // namespace mozilla
 
@@ -216,10 +214,10 @@ struct ParamTraits<mozilla::layers::LayersBackend>
 {};
 
 template <>
-struct ParamTraits<mozilla::ScaleMode>
-  : public EnumSerializer<mozilla::ScaleMode,
-                          mozilla::layers::ImageLayer::SCALE_NONE,
-                          mozilla::layers::ImageLayer::SCALE_SENTINEL>
+struct ParamTraits<mozilla::layers::ScaleMode>
+  : public EnumSerializer<mozilla::layers::ScaleMode,
+                          mozilla::layers::SCALE_NONE,
+                          mozilla::layers::SCALE_SENTINEL>
 {};
 
 template <>
