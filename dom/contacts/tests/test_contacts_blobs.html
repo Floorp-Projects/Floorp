@@ -30,11 +30,6 @@ SpecialPowers.addPermission("contacts-write", true, document);
 SpecialPowers.addPermission("contacts-read", true, document);
 SpecialPowers.addPermission("contacts-create", true, document);
 
-var isAndroid = (navigator.userAgent.indexOf("Android") !== -1);
-var androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
-                                  .getService(SpecialPowers.Ci.nsIPropertyBag2)
-                                  .getProperty('version');
-
 var utils = SpecialPowers.getDOMWindowUtils(window);
 
 function getView(size)
@@ -308,14 +303,8 @@ function next() {
   index += 1;
 }
 
-// Skip tests on Android < 4.0 due to test failures on tbpl (see bugs 897924 & 888891)
-if (!isAndroid || androidVersion >= 14) {
-  SimpleTest.waitForExplicitFinish();
-  addLoadEvent(next);
-} else {
-  info("Skip tests on Android < 4.0 (bugs 897924 & 888891");
-}
-
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
 </script>
 </pre>
 </body>
