@@ -104,7 +104,7 @@ class BuildProgressFooter(object):
         self._monitor = monitor
 
     def _clear_lines(self, n):
-        self._fh.write(self._t.move(self._t.height - n, 0))
+        self._fh.write(self._t.move_x(0))
         self._fh.write(self._t.clear_eos())
 
     def clear(self):
@@ -199,8 +199,9 @@ class BuildProgressFooter(object):
 
                 write_pieces.append(part)
                 written += len(part)
-
-        self._fh.write(''.join(write_pieces))
+        with self._t.location():
+            self._t.move(self._t.height-1,0)
+            self._fh.write(''.join(write_pieces))
         self._fh.flush()
 
 
