@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os, posixpath, shlex, subprocess, sys, traceback
+import os, shlex, subprocess, sys, traceback
 
 def add_libdir_to_path():
     from os.path import dirname, exists, join, realpath
@@ -74,23 +74,6 @@ def main(argv):
                   help='Run tests with all IonMonkey option combinations (ignores --jitflags)')
     op.add_option('-j', '--worker-count', dest='max_jobs', type=int, default=max_jobs_default,
                   help='Number of tests to run in parallel (default %default)')
-    op.add_option('--remote', action='store_true',
-                  help='Run tests on a remote device')
-    op.add_option('--deviceIP', action='store',
-                  type='string', dest='device_ip',
-                  help='IP address of remote device to test')
-    op.add_option('--devicePort', action='store',
-                  type=int, dest='device_port', default=20701,
-                  help='port of remote device to test')
-    op.add_option('--deviceTransport', action='store',
-                  type='string', dest='device_transport', default='sut',
-                  help='The transport to use to communicate with device: [adb|sut]; default=sut')
-    op.add_option('--remoteTestRoot', dest='remote_test_root', action='store',
-                  type='string', default='/data/local/tests',
-                  help='The remote directory to use as test root (eg. /data/local/tests)')
-    op.add_option('--localLib', dest='local_lib', action='store',
-                  type='string',
-                  help='The location of libraries to push -- preferably stripped')
 
     options, args = op.parse_args(argv)
     if len(args) < 1:
@@ -188,11 +171,7 @@ def main(argv):
                 job_list.append(new_test)
 
     prefix = [os.path.abspath(args[0])] + shlex.split(options.shell_args)
-    prolog = os.path.join(jittests.LIB_DIR, 'prolog.js')
-    if options.remote:
-        prolog = posixpath.join(options.remote_test_root, 'jit-tests/lib/prolog.js')
-
-    prefix += ['-f', prolog]
+    prefix += ['-f', os.path.join(jittests.LIB_DIR, 'prolog.js')]
     if options.debug:
         if len(job_list) > 1:
             print 'Multiple tests match command line arguments, debugger can only run one'
@@ -207,9 +186,7 @@ def main(argv):
 
     try:
         ok = None
-        if options.remote:
-            ok = jittests.run_tests_remote(job_list, prefix, options)
-        elif options.max_jobs > 1 and jittests.HAVE_MULTIPROCESSING:
+        if options.max_jobs > 1 and jittests.HAVE_MULTIPROCESSING:
             ok = jittests.run_tests_parallel(job_list, prefix, options)
         else:
             ok = jittests.run_tests(job_list, prefix, options)
