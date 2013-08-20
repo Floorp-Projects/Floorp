@@ -4,7 +4,6 @@
 
     COMPONENT(CATEGORYMANAGER, nsCategoryManager::Create)
 
-    COMPONENT(BYTEBUFFER, ByteBufferImpl::Create)
     COMPONENT(SCRIPTABLEINPUTSTREAM, nsScriptableInputStream::Create)
     COMPONENT(BINARYINPUTSTREAM, nsBinaryInputStreamConstructor)
     COMPONENT(BINARYOUTPUTSTREAM, nsBinaryOutputStreamConstructor)

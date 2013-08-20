@@ -43,8 +43,7 @@ if CONFIG['MOZ_OMX_DECODER']:
     PARALLEL_DIRS += ['omx']
     PARALLEL_DIRS += ['omx/mediaresourcemanager']
 
-if CONFIG['MOZ_WEBSPEECH']:
-    PARALLEL_DIRS += ['webspeech']
+PARALLEL_DIRS += ['webspeech']
 
 TEST_DIRS += ['test']
 

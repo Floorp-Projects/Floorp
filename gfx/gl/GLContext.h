@@ -474,6 +474,7 @@ public:
      * This enum should be sorted by name.
      */
     enum GLExtensionGroup {
+        XXX_bind_buffer_offset,
         XXX_depth_texture,
         XXX_draw_buffers,
         XXX_draw_instanced,
@@ -2035,6 +2036,18 @@ public:
 
 
 // -----------------------------------------------------------------------------
+// Package XXX_bind_buffer_offset
+public:
+    void fBindBufferOffset(GLenum target, GLuint index, GLuint buffer, GLintptr offset)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBindBufferOffset);
+        mSymbols.fBindBufferOffset(target, index, buffer, offset);
+        AFTER_GL_CALL;
+    }
+
+
+// -----------------------------------------------------------------------------
 // Package XXX_draw_buffers
 public:
     void fDrawBuffers(GLsizei n, const GLenum* bufs) {
@@ -2183,6 +2196,66 @@ public:
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fGetQueryObjectiv);
         mSymbols.fGetQueryObjectiv(id, pname, params);
+        AFTER_GL_CALL;
+    }
+
+
+// -----------------------------------------------------------------------------
+// Package XXX_transform_feedback
+public:
+    void fBindBufferBase(GLenum target, GLuint index, GLuint buffer)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBindBufferBase);
+        mSymbols.fBindBufferBase(target, index, buffer);
+        AFTER_GL_CALL;
+    }
+
+    void fBindBufferRange(GLenum target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBindBufferRange);
+        mSymbols.fBindBufferRange(target, index, buffer, offset, size);
+        AFTER_GL_CALL;
+    }
+
+    void fBeginTransformFeedback(GLenum primitiveMode)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBeginTransformFeedback);
+        mSymbols.fBeginTransformFeedback(primitiveMode);
+        AFTER_GL_CALL;
+    }
+
+    void fEndTransformFeedback()
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fEndTransformFeedback);
+        mSymbols.fEndTransformFeedback();
+        AFTER_GL_CALL;
+    }
+
+    void fTransformFeedbackVaryings(GLuint program, GLsizei count, const GLchar* const* varyings, GLenum bufferMode)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fTransformFeedbackVaryings);
+        mSymbols.fTransformFeedbackVaryings(program, count, varyings, bufferMode);
+        AFTER_GL_CALL;
+    }
+
+    void fGetTransformFeedbackVarying(GLuint program, GLuint index, GLsizei bufSize, GLsizei* length, GLsizei* size, GLenum* type, GLchar* name)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetTransformFeedbackVarying);
+        mSymbols.fGetTransformFeedbackVarying(program, index, bufSize, length, size, type, name);
+        AFTER_GL_CALL;
+    }
+
+    void fGetIntegeri_v(GLenum param, GLuint index, GLint* values)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetIntegeri_v);
+        mSymbols.fGetIntegeri_v(param, index, values);
         AFTER_GL_CALL;
     }
 

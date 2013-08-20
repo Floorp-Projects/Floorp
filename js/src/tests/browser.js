@@ -346,7 +346,7 @@ function jsTestDriverBrowserInit()
     {
       properties.version = '1.7';
     }
-    else if (properties.test.match(/^js1_8|^ecma_6/))
+    else if (properties.test.match(/^js1_8/))
     {
       properties.version = '1.8';
     }

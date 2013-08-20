@@ -80,3 +80,35 @@ class TestVisibility(MarionetteTestCase):
         self.marionette.navigate(test_html)
         overflow_x = self.marionette.find_element("id", "assertMe2")
         self.assertFalse(overflow_x.is_displayed())
+
+    def testShouldShowElementNotVisibleWithHiddenAttribute(self):
+        test_html = self.marionette.absolute_url("hidden.html")
+        self.marionette.navigate(test_html)
+        singleHidden = self.marionette.find_element('id', 'singleHidden')
+        self.assertFalse(singleHidden.is_displayed())
+
+    def testShouldShowElementNotVisibleWhenParentElementHasHiddenAttribute(self):
+        test_html = self.marionette.absolute_url("hidden.html")
+        self.marionette.navigate(test_html)
+        child = self.marionette.find_element('id', 'child')
+        self.assertFalse(child.is_displayed())
+
+    def testShouldClickOnELementPartiallyOffLeft(self):
+        test_html = self.marionette.absolute_url("element_left.html")
+        self.marionette.navigate(test_html)
+        self.marionette.find_element('css selector', '.element').click()
+
+    def testShouldClickOnELementPartiallyOffRight(self):
+        test_html = self.marionette.absolute_url("element_right.html")
+        self.marionette.navigate(test_html)
+        self.marionette.find_element('css selector', '.element').click()
+
+    def testShouldClickOnELementPartiallyOffTop(self):
+        test_html = self.marionette.absolute_url("element_top.html")
+        self.marionette.navigate(test_html)
+        self.marionette.find_element('css selector', '.element').click()
+
+    def testShouldClickOnELementPartiallyOffBottom(self):
+        test_html = self.marionette.absolute_url("element_bottom.html")
+        self.marionette.navigate(test_html)
+        self.marionette.find_element('css selector', '.element').click()

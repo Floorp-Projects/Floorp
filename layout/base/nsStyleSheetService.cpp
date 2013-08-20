@@ -5,16 +5,13 @@
 
 /* implementation of interface for managing user and user-agent style sheets */
 
-#include "prlog.h"
 #include "nsStyleSheetService.h"
 #include "nsIStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Loader.h"
 #include "nsCSSStyleSheet.h"
 #include "nsIURI.h"
-#include "nsContentCID.h"
 #include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNetUtil.h"
