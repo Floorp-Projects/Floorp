@@ -593,45 +593,6 @@ CodeGenerator::visitTypeObjectDispatch(LTypeObjectDispatch *lir)
     return true;
 }
 
-bool
-CodeGenerator::visitPolyInlineDispatch(LPolyInlineDispatch *lir)
-{
-    MPolyInlineDispatch *mir = lir->mir();
-    Register inputReg = ToRegister(lir->input());
-
-    InlinePropertyTable *inlinePropTable = mir->propTable();
-    if (inlinePropTable) {
-        // Temporary register is only assigned in the TypeObject case.
-        Register tempReg = ToRegister(lir->temp());
-        masm.loadPtr(Address(inputReg, JSObject::offsetOfType()), tempReg);
-
-        // Detect functions by TypeObject.
-        for (size_t i = 0; i < inlinePropTable->numEntries(); i++) {
-            types::TypeObject *typeObj = inlinePropTable->getTypeObject(i);
-            JSFunction *func = inlinePropTable->getFunction(i);
-            LBlock *target = mir->getFunctionBlock(func)->lir();
-            masm.branchPtr(Assembler::Equal, tempReg, ImmGCPtr(typeObj), target->label());
-        }
-
-        // Unknown function: jump to fallback block.
-        LBlock *fallback = mir->fallbackPrepBlock()->lir();
-        masm.jump(fallback->label());
-        return true;
-    }
-
-    // Compare function pointers directly.
-    for (size_t i = 0; i < mir->numCallees() - 1; i++) {
-        JSFunction *func = mir->getFunction(i);
-        LBlock *target = mir->getFunctionBlock(i)->lir();
-        masm.branchPtr(Assembler::Equal, inputReg, ImmGCPtr(func), target->label());
-    }
-
-    // There's no fallback case, so a final guard isn't necessary.
-    LBlock *target = mir->getFunctionBlock(mir->numCallees() - 1)->lir();
-    masm.jump(target->label());
-    return true;
-}
-
 typedef JSFlatString *(*IntToStringFn)(ThreadSafeContext *, int);
 typedef ParallelResult (*IntToStringParFn)(ForkJoinSlice *, int, MutableHandleString);
 static const VMFunctionsModal IntToStringInfo = VMFunctionsModal(

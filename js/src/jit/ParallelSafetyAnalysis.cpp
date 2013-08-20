@@ -270,7 +270,6 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(GuardThreadLocalObject)
     SAFE_OP(CheckInterruptPar)
     SAFE_OP(CheckOverRecursedPar)
-    SAFE_OP(PolyInlineDispatch)
     SAFE_OP(FunctionDispatch)
     SAFE_OP(TypeObjectDispatch)
     SAFE_OP(IsCallable)
