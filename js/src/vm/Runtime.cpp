@@ -744,7 +744,7 @@ JSRuntime::clearUsedByExclusiveThread(Zone *zone)
 bool
 js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
 {
-    PerThreadData *pt = js::TlsPerThreadData.get();
+    DebugOnly<PerThreadData *> pt = js::TlsPerThreadData.get();
     JS_ASSERT(pt && pt->associatedWith(rt));
     return rt->ownerThread_ == PR_GetCurrentThread() || InExclusiveParallelSection();
 }
@@ -752,7 +752,7 @@ js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
 bool
 js::CurrentThreadCanAccessZone(Zone *zone)
 {
-    PerThreadData *pt = js::TlsPerThreadData.get();
+    DebugOnly<PerThreadData *> pt = js::TlsPerThreadData.get();
     JS_ASSERT(pt && pt->associatedWith(zone->runtime_));
     return !InParallelSection() || InExclusiveParallelSection();
 }
