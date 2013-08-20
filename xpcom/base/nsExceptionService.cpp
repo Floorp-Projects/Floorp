@@ -52,7 +52,7 @@ public:
   nsExceptionManager *mNextThread; // not ref-counted.
   nsExceptionService *mService; // not ref-counted
 #ifdef DEBUG
-  static int32_t totalInstances;
+  static Atomic<int32_t> totalInstances;
 #endif
 
 private:
@@ -61,7 +61,7 @@ private:
 
 
 #ifdef DEBUG
-int32_t nsExceptionManager::totalInstances = 0;
+Atomic<int32_t> nsExceptionManager::totalInstances;
 #endif
 
 // Note this object is single threaded - the service itself ensures
@@ -76,7 +76,7 @@ nsExceptionManager::nsExceptionManager(nsExceptionService *svc) :
 {
   /* member initializers and constructor code */
 #ifdef DEBUG
-  PR_ATOMIC_INCREMENT(&totalInstances);
+  ++totalInstances;
 #endif
 }
 
@@ -84,7 +84,7 @@ nsExceptionManager::~nsExceptionManager()
 {
   /* destructor code */
 #ifdef DEBUG
-  PR_ATOMIC_DECREMENT(&totalInstances);
+  --totalInstances;
 #endif // DEBUG
 }
 
@@ -120,7 +120,7 @@ Mutex *nsExceptionService::sLock = nullptr;
 nsExceptionManager *nsExceptionService::firstThread = nullptr;
 
 #ifdef DEBUG
-int32_t nsExceptionService::totalInstances = 0;
+Atomic<int32_t> nsExceptionService::totalInstances;
 #endif
 
 NS_IMPL_ISUPPORTS3(nsExceptionService,
@@ -132,7 +132,7 @@ nsExceptionService::nsExceptionService()
   : mProviders(4, true) /* small, thread-safe hashtable */
 {
 #ifdef DEBUG
-  if (PR_ATOMIC_INCREMENT(&totalInstances)!=1) {
+  if (++totalInstances != 1) {
     NS_ERROR("The nsExceptionService is a singleton!");
   }
 #endif
@@ -157,7 +157,7 @@ nsExceptionService::~nsExceptionService()
   Shutdown();
   /* destructor code */
 #ifdef DEBUG
-  PR_ATOMIC_DECREMENT(&totalInstances);
+  --totalInstances;
 #endif
 }
 
