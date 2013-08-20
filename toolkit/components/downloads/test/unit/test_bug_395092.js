@@ -30,6 +30,10 @@ var httpserv = null;
 var timer = null;
 function run_test()
 {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   httpserv = new HttpServer();
   httpserv.registerDirectory("/", do_get_cwd());
   httpserv.start(-1);

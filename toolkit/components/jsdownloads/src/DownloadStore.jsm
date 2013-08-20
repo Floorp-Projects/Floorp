@@ -119,7 +119,7 @@ DownloadStore.prototype = {
         try {
           let download = yield Downloads.createDownload(downloadData);
           try {
-            if (("stopped" in downloadData) && !downloadData.stopped) {
+            if (!download.succeeded && !download.canceled && !download.error) {
               // Try to restart the download if it was in progress during the
               // previous session.
               download.start();

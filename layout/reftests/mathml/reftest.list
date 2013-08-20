@@ -122,6 +122,7 @@ fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 == number-size-1.xhtml number-size-1-ref.xhtml
+== multiscripts-1.html multiscripts-1-ref.html
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1.html menclose-1-ref.html

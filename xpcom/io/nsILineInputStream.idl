@@ -6,8 +6,6 @@
 
 #include "nsISupports.idl"
 
-interface nsILineInputStream;
-
 [scriptable, uuid(c97b466c-1e6e-4773-a4ab-2b2b3190a7a6)]
 interface nsILineInputStream : nsISupports
 {

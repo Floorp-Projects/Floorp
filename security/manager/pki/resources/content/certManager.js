@@ -248,7 +248,6 @@ function websites_enableButtons()
 
   var enable_delete = false;
   var enable_view = false;
-  var enable_edit = false;
 
   if (count_ranges > 0) {
     enable_delete = true;
@@ -266,12 +265,6 @@ function websites_enableButtons()
           if (ti.cert) {
             enable_view = true;
           }
-          // Trust editing is not possible for override
-          // entries that are bound to host:port,
-          // where the cert is stored for convenince only.
-          if (!ti.hostPort.length) {
-            enable_edit = true;
-          }
         }
       }
       catch (e) {
@@ -281,8 +274,6 @@ function websites_enableButtons()
 
   var enableViewButton=document.getElementById('websites_viewButton');
   enableViewButton.setAttribute("disabled", !enable_view);
-  var enableEditButton=document.getElementById('websites_editButton');
-  enableEditButton.setAttribute("disabled", !enable_edit);
   var enableExportButton=document.getElementById('websites_exportButton');
   enableExportButton.setAttribute("disabled", !enable_view);
   var enableDeleteButton=document.getElementById('websites_deleteButton');
@@ -363,13 +354,6 @@ function editCerts()
                         'chrome,centerscreen,modal');
     } else if (document.getElementById("others_tab").selected) {
       window.openDialog('chrome://pippki/content/editemailcert.xul', certkey,
-                        'chrome,centerscreen,modal');
-    } else if (!document.getElementById("websites_tab").selected
-               || !serverTreeView.isHostPortOverride(selected_index[t])) {
-      // If the web sites tab is select, trust editing is only allowed
-      // if the entry refers to a real cert, but not if it's
-      // a host:port override, where the cert is stored for convenince only.
-      window.openDialog('chrome://pippki/content/editsslcert.xul', certkey,
                         'chrome,centerscreen,modal');
     }
   }

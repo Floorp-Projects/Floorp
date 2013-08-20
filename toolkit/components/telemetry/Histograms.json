@@ -3007,18 +3007,6 @@
     "description": "The device supports touch input",
     "cpp_guard": "XP_WIN"
   },
-  "COMPONENTS_OBJECT_ACCESSED_BY_CONTENT": {
-    "kind": "flag",
-    "description": "Whether content ever accesed the Components object in this session"
-  },
-  "COMPONENTS_LOOKUPMETHOD_ACCESSED_BY_CONTENT": {
-    "kind": "flag",
-    "description": "Whether content ever accesed Components.lookupMethod in this session"
-  },
-  "COMPONENTS_INTERFACES_ACCESSED_BY_CONTENT": {
-    "kind": "flag",
-    "description": "Whether content ever accesed Components.interfaces in this session"
-  },
   "COMPONENTS_SHIM_ACCESSED_BY_CONTENT": {
     "kind": "flag",
     "description": "Whether content ever accesed the Components shim in this session"

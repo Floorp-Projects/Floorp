@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<!-- fieldset with input in div should become invalid -->
+<html>
+  <head>
+    <style>
+      fieldset:invalid { display: none ;}
+    </style>
+  </head>
+  <body>
+    <fieldset>
+      <div>
+        <input required value="">
+      </div>
+    </fieldset>
+  </body>
+</html>
+

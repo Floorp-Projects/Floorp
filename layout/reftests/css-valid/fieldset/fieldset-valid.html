@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
-  <!-- Test: fieldset is always barred from constraint validation.
-             It should not be affected by :valid pseudo-class. -->
+  <!-- Test: fieldset undergoes constraint validation.
+             It should be affected by :valid pseudo-class. -->
   <style>
-    fieldset { background-color: green; }
-    fieldset:valid { background-color: red; }
+    fieldset:valid { display: none; }
   </style>
   <body>
-    <fieldset></fieldset>
+    <fieldset>
+    </fieldset>
   </body>
 </html>
