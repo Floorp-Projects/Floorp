@@ -303,10 +303,6 @@ LIBRARY := $(NULL)
 endif
 endif
 
-ifdef JAVA_LIBRARY_NAME
-JAVA_LIBRARY := $(JAVA_LIBRARY_NAME).jar
-endif
-
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
 
@@ -1221,9 +1217,6 @@ ifndef .PYMAKE
 MAKEFLAGS += -r
 endif
 
-###############################################################################
-# Java rules
-###############################################################################
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SEP := ;
 else
@@ -1248,39 +1241,12 @@ else
 normalizepath = $(1)
 endif
 
+###############################################################################
+# Java rules
+###############################################################################
 ifneq (,$(value JAVAFILES)$(value RESFILES))
   include $(topsrcdir)/config/makefiles/java-build.mk
 endif
-
-_srcdir = $(call normalizepath,$(srcdir))
-ifdef JAVA_SOURCEPATH
-SP = $(subst $(SPACE),$(SEP),$(call normalizepath,$(strip $(JAVA_SOURCEPATH))))
-_JAVA_SOURCEPATH = ".$(SEP)$(_srcdir)$(SEP)$(SP)"
-else
-_JAVA_SOURCEPATH = ".$(SEP)$(_srcdir)"
-endif
-
-ifdef JAVA_CLASSPATH
-CP = $(subst $(SPACE),$(SEP),$(call normalizepath,$(strip $(JAVA_CLASSPATH))))
-_JAVA_CLASSPATH = ".$(SEP)$(CP)"
-else
-_JAVA_CLASSPATH = .
-endif
-
-_JAVA_DIR = _java
-$(_JAVA_DIR)::
-	$(NSINSTALL) -D $@
-
-$(_JAVA_DIR)/%.class: %.java $(GLOBAL_DEPS) $(_JAVA_DIR)
-	$(REPORT_BUILD)
-	$(JAVAC) $(JAVAC_FLAGS) -classpath $(_JAVA_CLASSPATH) \
-			-sourcepath $(_JAVA_SOURCEPATH) -d $(_JAVA_DIR) $(_VPATH_SRCS)
-
-$(JAVA_LIBRARY): $(addprefix $(_JAVA_DIR)/,$(JAVA_SRCS:.java=.class)) $(GLOBAL_DEPS)
-	$(REPORT_BUILD)
-	$(JAR) cf $@ -C $(_JAVA_DIR) .
-
-GARBAGE_DIRS += $(_JAVA_DIR)
 
 ###############################################################################
 # Update Files Managed by Build Backend
