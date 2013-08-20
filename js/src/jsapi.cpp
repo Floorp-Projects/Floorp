@@ -128,15 +128,6 @@ const jsid JSID_VOID  = { size_t(JSID_TYPE_VOID) };
 const jsid JSID_EMPTY = { size_t(JSID_TYPE_OBJECT) };
 #endif
 
-const jsval JSVAL_NULL  = IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_NULL,      0));
-const jsval JSVAL_ZERO  = IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_INT32,     0));
-const jsval JSVAL_ONE   = IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_INT32,     1));
-const jsval JSVAL_FALSE = IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   false));
-const jsval JSVAL_TRUE  = IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_BOOLEAN,   true));
-const jsval JSVAL_VOID  = IMPL_TO_JSVAL(BUILD_JSVAL(JSVAL_TAG_UNDEFINED, 0));
-const HandleValue JS::NullHandleValue = HandleValue::fromMarkedLocation(&JSVAL_NULL);
-const HandleValue JS::UndefinedHandleValue = HandleValue::fromMarkedLocation(&JSVAL_VOID);
-
 const jsid voidIdValue = JSID_VOID;
 const jsid emptyIdValue = JSID_EMPTY;
 const HandleId JS::JSID_VOIDHANDLE = HandleId::fromMarkedLocation(&voidIdValue);
