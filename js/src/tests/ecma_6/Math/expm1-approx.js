@@ -18,7 +18,7 @@ var expm1_data = [
     [ 0.0000031404608812881633, 0.0000031404658125405988 ]
 ];
 
-for (let [x, y] of expm1_data)
+for (var [x, y] of expm1_data)
     assertNear(Math.expm1(x), y);
 
 reportCompare(0, 0, "ok");

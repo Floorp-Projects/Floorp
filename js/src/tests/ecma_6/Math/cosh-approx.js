@@ -269,7 +269,7 @@ var cosh_data = [
     [28.953212876533797, 1875817529343.9976],
 ];
 
-for (let [x, y] of cosh_data)
+for (var [x, y] of cosh_data)
     assertNear(Math.cosh(x), y);
 
 reportCompare(0, 0, "ok");
