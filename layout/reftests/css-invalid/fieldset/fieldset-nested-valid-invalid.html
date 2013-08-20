@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!-- Nested fieldsets should be assigned validation correctly -->
+<html>
+  <head>
+    <style>
+      fieldset:valid { background-color: green; }
+      fieldset:invalid { background-color: red; }
+    </style>
+  </head>
+  <body>
+    <fieldset>
+      <fieldset>
+        <input>
+      </fieldset>
+      <fieldset>
+        <input required>
+      </fieldset>
+    </fieldset>
+  </body>
+</html>
+
