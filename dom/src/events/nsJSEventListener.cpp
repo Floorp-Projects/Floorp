@@ -9,7 +9,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptRuntime.h"
 #include "nsIXPConnect.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"

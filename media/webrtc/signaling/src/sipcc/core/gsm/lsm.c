@@ -984,6 +984,7 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                     media->src_port = open_rcv.port;
                 }
 
+                attrs.rtcp_mux = media->rtcp_mux;
                 if ( media->cap_index == CC_VIDEO_1 ) {
                     attrs.video.opaque = media->video;
                 } else {
@@ -1220,6 +1221,8 @@ lsm_tx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
             media->xmit_chan = TRUE;
 
             attrs.mute = FALSE;
+
+            attrs.rtcp_mux = media->rtcp_mux;
             if ( CC_IS_VIDEO(media->cap_index)) {
                 attrs.video.opaque = media->video;
                 if (lcb->vid_mute) {

@@ -226,7 +226,8 @@ BufferTextureHost::Updated(const nsIntRegion* aRegion)
     mPartialUpdate = false;
   }
   if (GetFlags() & TEXTURE_IMMEDIATE_UPLOAD) {
-    MaybeUpload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr);
+    DebugOnly<bool> result = MaybeUpload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr);
+    MOZ_ASSERT(result);
   }
 }
 
@@ -380,6 +381,9 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     }
 
     RefPtr<gfx::DataSourceSurface> surf = deserializer.GetAsSurface();
+    if (!surf) {
+      return false;
+    }
 
     if (!mFirstSource->Update(surf.get(), mFlags, aRegion)) {
       NS_WARNING("failed to update the DataTextureSource");

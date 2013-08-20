@@ -30,7 +30,6 @@
 #include "nsINodeInfo.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptRuntime.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsParserBase.h"
@@ -567,8 +566,7 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
             script->mOutOfLine = false;
             if (doc)
                 script->Compile(mText, mTextLength, mDocumentURL,
-                                script->mLineNo, doc,
-                                mPrototype->GetScriptGlobalObject());
+                                script->mLineNo, doc, mPrototype);
         }
 
         FlushText(false);
@@ -986,8 +984,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           // file right away.  Otherwise we'll end up reloading the script and
           // corrupting the FastLoad file trying to serialize it, in the case
           // where it's already there.
-          if (globalObject)
-                script->DeserializeOutOfLine(nullptr, globalObject);
+          script->DeserializeOutOfLine(nullptr, mPrototype);
       }
 
       nsPrototypeArray* children = nullptr;
