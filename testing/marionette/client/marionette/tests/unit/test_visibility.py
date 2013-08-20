@@ -81,6 +81,18 @@ class TestVisibility(MarionetteTestCase):
         overflow_x = self.marionette.find_element("id", "assertMe2")
         self.assertFalse(overflow_x.is_displayed())
 
+    def testShouldShowElementNotVisibleWithHiddenAttribute(self):
+        test_html = self.marionette.absolute_url("hidden.html")
+        self.marionette.navigate(test_html)
+        singleHidden = self.marionette.find_element('id', 'singleHidden')
+        self.assertFalse(singleHidden.is_displayed())
+
+    def testShouldShowElementNotVisibleWhenParentElementHasHiddenAttribute(self):
+        test_html = self.marionette.absolute_url("hidden.html")
+        self.marionette.navigate(test_html)
+        child = self.marionette.find_element('id', 'child')
+        self.assertFalse(child.is_displayed())
+
     def testShouldClickOnELementPartiallyOffLeft(self):
         test_html = self.marionette.absolute_url("element_left.html")
         self.marionette.navigate(test_html)
