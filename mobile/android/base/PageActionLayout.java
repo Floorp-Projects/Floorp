@@ -31,7 +31,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import java.util.UUID;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 
 public class PageActionLayout extends LinearLayout implements GeckoEventListener,
                                                               View.OnClickListener,
@@ -40,7 +40,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
     private final String MENU_BUTTON_KEY = "MENU_BUTTON_KEY";
     private final int DEFAULT_PAGE_ACTIONS_SHOWN = 2;
 
-    private LinkedHashMap<String, PageAction> mPageActionList;
+    private ArrayList<PageAction> mPageActionList;
     private GeckoPopupMenu mPageActionsMenu;
     private Context mContext;
     private LinearLayout mLayout;
@@ -53,7 +53,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
         mContext = context;
         mLayout = this;
 
-        mPageActionList = new LinkedHashMap<String, PageAction>();
+        mPageActionList = new ArrayList<PageAction>();
         setNumberShown(DEFAULT_PAGE_ACTIONS_SHOWN);
         refreshPageActionIcons();
 
@@ -91,6 +91,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
                 final String id = message.getString("id");
                 final String title = message.getString("title");
                 final String imageURL = message.optString("icon");
+                final boolean mImportant = message.getBoolean("important");
 
                 addPageAction(id, title, imageURL, new OnPageActionClickListeners() {
                     @Override
@@ -103,7 +104,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
                         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("PageActions:LongClicked", id));
                         return true;
                     }
-                });
+                }, mImportant);
             } else if (event.equals("PageActions:Remove")) {
                 final String id = message.getString("id");
 
@@ -114,14 +115,19 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
         }
     }
 
-    public void addPageAction(final String id, final String title, final String imageData, final OnPageActionClickListeners mOnPageActionClickListeners) {
-        final PageAction pageAction = new PageAction(id, title, null, mOnPageActionClickListeners);
-        mPageActionList.put(id, pageAction);
+    public void addPageAction(final String id, final String title, final String imageData, final OnPageActionClickListeners mOnPageActionClickListeners, boolean mImportant) {
+        final PageAction pageAction = new PageAction(id, title, null, mOnPageActionClickListeners, mImportant);
+
+        int insertAt = mPageActionList.size();
+        while(insertAt > 0 && mPageActionList.get(insertAt-1).isImportant()) {
+          insertAt--;
+        }
+        mPageActionList.add(insertAt, pageAction);
 
         BitmapUtils.getDrawable(mContext, imageData, new BitmapUtils.BitmapLoader() {
             @Override
             public void onBitmapFound(final Drawable d) {
-                if (mPageActionList.containsKey(id)) {
+                if (mPageActionList.contains(pageAction)) {
                     pageAction.setDrawable(d);
                     refreshPageActionIcons();
                 }
@@ -130,8 +136,13 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
     }
 
     public void removePageAction(String id) {
-        mPageActionList.remove(id);
-        refreshPageActionIcons();
+        for(int i = 0; i < mPageActionList.size(); i++) {
+            if (mPageActionList.get(i).getID().equals(id)) {
+                mPageActionList.remove(i);
+                refreshPageActionIcons();
+                return;
+            }
+        }
     }
 
     private ImageButton createImageButton() {
@@ -150,7 +161,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
             if (buttonClickedId.equals(MENU_BUTTON_KEY)) {
                 showMenu(v, mPageActionList.size() - mMaxVisiblePageActions + 1);
             } else {
-                mPageActionList.get(buttonClickedId).onClick();
+                getPageActionWithId(buttonClickedId).onClick();
             }
         }
     }
@@ -162,7 +173,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
             showMenu(v, mPageActionList.size() - mMaxVisiblePageActions + 1);
             return true;
         } else {
-            return mPageActionList.get(buttonClickedId).onLongClick();
+            return getPageActionWithId(buttonClickedId).onLongClick();
         }
     }
 
@@ -230,18 +241,17 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
 
         if (mPageActionList.size() > buttonIndex) {
             // Return the pageactions starting from the end of the list for the number of visible pageactions.
-            return getPageActionAt((mPageActionList.size() - totalVisibleButtons) + buttonIndex);
+            return mPageActionList.get((mPageActionList.size() - totalVisibleButtons) + buttonIndex);
         }
         return null;
     }
 
-    private PageAction getPageActionAt(int index) {
-        int count = 0;
-        for(PageAction pageAction : mPageActionList.values()) {
-            if (count == index) {
+    private PageAction getPageActionWithId(String id) {
+        for(int i = 0; i < mPageActionList.size(); i++) {
+            PageAction pageAction = mPageActionList.get(i);
+            if (pageAction.getID().equals(id)) {
                 return pageAction;
             }
-            count++;
         }
         return null;
     }
@@ -253,25 +263,27 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
             mPageActionsMenu.setOnMenuItemClickListener(new GeckoPopupMenu.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
-                    for(PageAction pageAction : mPageActionList.values()) {
-                        if (pageAction.key() == item.getItemId()) {
+                    int id = item.getItemId();
+                    for(int i = 0; i < mPageActionList.size(); i++) {
+                        PageAction pageAction = mPageActionList.get(i);
+                        if (pageAction.key() == id) {
                             pageAction.onClick();
+                            return true;
                         }
                     }
-                    return true;
+                    return false;
                 }
             });
         }
         Menu menu = mPageActionsMenu.getMenu();
         menu.clear();
 
-        int count = 0;
-        for(PageAction pageAction : mPageActionList.values()) {
-            if (count < toShow) {
+        for(int i = 0; i < mPageActionList.size(); i++) {
+            if (i < toShow) {
+                PageAction pageAction = mPageActionList.get(i);
                 MenuItem item = menu.add(Menu.NONE, pageAction.key(), Menu.NONE, pageAction.getTitle());
                 item.setIcon(pageAction.getDrawable());
             }
-            count++;
         }
         mPageActionsMenu.show();
     }
@@ -287,12 +299,18 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
         private String mTitle;
         private String mId;
         private int key;
+        private boolean mImportant;
 
-        public PageAction(String id, String title, Drawable image, OnPageActionClickListeners mOnPageActionClickListeners) {
+        public PageAction(String id,
+                          String title,
+                          Drawable image,
+                          OnPageActionClickListeners mOnPageActionClickListeners,
+                          boolean mImportant) {
             this.mId = id;
             this.mTitle = title;
             this.mDrawable = image;
             this.mOnPageActionClickListeners = mOnPageActionClickListeners;
+            this.mImportant = mImportant;
 
             this.key = UUID.fromString(mId.subSequence(1, mId.length() - 2).toString()).hashCode();
         }
@@ -315,6 +333,10 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
 
         public int key() {
             return key;
+        }
+
+        public boolean isImportant() {
+            return mImportant;
         }
 
         public void onClick() {

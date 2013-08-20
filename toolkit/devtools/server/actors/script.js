@@ -2070,6 +2070,34 @@ ThreadActor.prototype = {
     return true;
   },
 
+
+  /**
+   * Get prototypes and properties of multiple objects.
+   */
+  onPrototypesAndProperties: function TA_onPrototypesAndProperties(aRequest) {
+    let result = {};
+    for (let actorID of aRequest.actors) {
+      // This code assumes that there are no lazily loaded actors returned
+      // by this call.
+      let actor = this.conn.getActor(actorID);
+      if (!actor) {
+        return { from: this.actorID,
+                 error: "noSuchActor" };
+      }
+      let handler = actor.onPrototypeAndProperties;
+      if (!handler) {
+        return { from: this.actorID,
+                 error: "unrecognizedPacketType",
+                 message: ('Actor "' + actorID +
+                           '" does not recognize the packet type ' +
+                           '"prototypeAndProperties"') };
+      }
+      result[actorID] = handler.call(actor, {});
+    }
+    return { from: this.actorID,
+             actors: result };
+  }
+
 };
 
 ThreadActor.prototype.requestTypes = {
@@ -2084,7 +2112,8 @@ ThreadActor.prototype.requestTypes = {
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "setBreakpoint": ThreadActor.prototype.onSetBreakpoint,
   "sources": ThreadActor.prototype.onSources,
-  "threadGrips": ThreadActor.prototype.onThreadGrips
+  "threadGrips": ThreadActor.prototype.onThreadGrips,
+  "prototypesAndProperties": ThreadActor.prototype.onPrototypesAndProperties
 };
 
 
