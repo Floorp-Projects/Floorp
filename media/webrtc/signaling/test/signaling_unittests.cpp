@@ -37,6 +37,7 @@ MtransportTestUtils *test_utils;
 nsCOMPtr<nsIThread> gThread;
 
 static int kDefaultTimeout = 5000;
+static bool fRtcpMux = false;
 
 static std::string callerName = "caller";
 static std::string calleeName = "callee";
@@ -1683,11 +1684,14 @@ TEST_F(SignalingTest, FullCall)
   // Check the low-level media pipeline
   // for RTP and RTCP flows
   // The first Local pipeline gets stored at 0
-  a1_.CheckMediaPipeline(0, 0,
-    PIPELINE_LOCAL | PIPELINE_RTCP_MUX | PIPELINE_SEND);
+  a1_.CheckMediaPipeline(0, 0, fRtcpMux ?
+    PIPELINE_LOCAL | PIPELINE_RTCP_MUX | PIPELINE_SEND :
+    PIPELINE_LOCAL | PIPELINE_SEND);
 
   // The first Remote pipeline gets stored at 1
-  a2_.CheckMediaPipeline(0, 1, PIPELINE_RTCP_MUX);
+  a2_.CheckMediaPipeline(0, 1, fRtcpMux ?
+    PIPELINE_RTCP_MUX :
+    0);
 }
 
 TEST_F(SignalingTest, FullCallAudioOnly)
@@ -2410,8 +2414,10 @@ TEST_F(SignalingTest, FullCallAudioNoMuxVideoMux)
 
   // Answer should have only one a=rtcp-mux line
   size_t match = a2_.getLocalDescription().find("\r\na=rtcp-mux");
-  ASSERT_NE(match, std::string::npos);
-  match = a2_.getLocalDescription().find("\r\na=rtcp-mux", match + 1);
+  if (fRtcpMux) {
+    ASSERT_NE(match, std::string::npos);
+    match = a2_.getLocalDescription().find("\r\na=rtcp-mux", match + 1);
+  }
   ASSERT_EQ(match, std::string::npos);
 
   ASSERT_TRUE_WAIT(a1_.IceCompleted() == true, kDefaultTimeout);
@@ -2431,14 +2437,17 @@ TEST_F(SignalingTest, FullCallAudioNoMuxVideoMux)
   a1_.CheckMediaPipeline(0, 0, PIPELINE_LOCAL | PIPELINE_SEND);
 
   // Now check video mux.
-  a1_.CheckMediaPipeline(0, 1,
-    PIPELINE_LOCAL | PIPELINE_RTCP_MUX | PIPELINE_SEND | PIPELINE_VIDEO);
+  a1_.CheckMediaPipeline(0, 1, fRtcpMux ?
+    PIPELINE_LOCAL | PIPELINE_RTCP_MUX | PIPELINE_SEND | PIPELINE_VIDEO :
+    PIPELINE_LOCAL | PIPELINE_SEND | PIPELINE_VIDEO);
 
   // The first Remote pipeline gets stored at 1
   a2_.CheckMediaPipeline(0, 1, 0);
 
   // Now check video mux.
-  a2_.CheckMediaPipeline(0, 2, PIPELINE_RTCP_MUX | PIPELINE_VIDEO);
+  a2_.CheckMediaPipeline(0, 2, fRtcpMux ?
+    PIPELINE_RTCP_MUX | PIPELINE_VIDEO :
+    PIPELINE_VIDEO);
 }
 
 } // End namespace test.
