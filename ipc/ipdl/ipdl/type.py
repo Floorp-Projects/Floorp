@@ -1623,7 +1623,7 @@ class ProcessGraph:
         for b in cls.iterbridges():
             if b.parent == actor:
                 endpoints.append(Actor(b.bridgeProto, 'parent'))
-            elif b.child == actor:
+            if b.child == actor:
                 endpoints.append(Actor(b.bridgeProto, 'child'))
         return endpoints
 
@@ -1776,11 +1776,12 @@ class BuildProcessGraph(TcheckVisitor):
 
             if pproc == cproc:
                 if parentSideActor is not None:
-                    self.error(bridges.loc,
-                               "ambiguous bridge `%s' between `%s' and `%s'",
-                               bridgeProto.name(),
-                               parentSideProto.name(),
-                               childSideProto.name())
+                    if parentSideProto != childSideProto:
+                        self.error(bridges.loc,
+                                   "ambiguous bridge `%s' between `%s' and `%s'",
+                                   bridgeProto.name(),
+                                   parentSideProto.name(),
+                                   childSideProto.name())
                 else:
                     parentSideActor, childSideActor = pactor.other(), cactor.other()
 
