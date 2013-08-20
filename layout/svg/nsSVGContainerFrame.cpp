@@ -13,6 +13,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGTextFrame2.h"
+#include "RestyleManager.h"
 
 using namespace mozilla;
 

@@ -223,19 +223,6 @@ bool WebGLContext::ValidateFaceEnum(WebGLenum face, const char *info)
     }
 }
 
-bool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
-{
-    switch (target) {
-        case LOCAL_GL_STREAM_DRAW:
-        case LOCAL_GL_STATIC_DRAW:
-        case LOCAL_GL_DYNAMIC_DRAW:
-            return true;
-        default:
-            ErrorInvalidEnumInfo(info, target);
-            return false;
-    }
-}
-
 bool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
 {
     switch (mode) {
@@ -820,6 +807,7 @@ WebGLContext::InitAndValidateGL()
     mBoundCubeMapTextures.Clear();
 
     mBoundArrayBuffer = nullptr;
+    mBoundTransformFeedbackBuffer = nullptr;
     mCurrentProgram = nullptr;
 
     mBoundFramebuffer = nullptr;
@@ -919,8 +907,12 @@ WebGLContext::InitAndValidateGL()
                 default:
                     GenerateWarning("GL error 0x%x occurred during WebGL context initialization!", error);
                     return false;
-            }   
+            }
         }
+    }
+
+    if (IsWebGL2()) {
+        gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, &mGLMaxTransformFeedbackSeparateAttribs);
     }
 
     // Always 1 for GLES2

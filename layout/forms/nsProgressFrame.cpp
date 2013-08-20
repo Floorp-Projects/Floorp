@@ -21,6 +21,8 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLProgressElement.h"
 #include "nsContentList.h"
+#include "nsStyleSet.h"
+#include "nsThemeConstants.h"
 #include <algorithm>
 
 using namespace mozilla::dom;

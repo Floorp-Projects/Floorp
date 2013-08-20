@@ -271,7 +271,7 @@ var tanh_data = [
     [1e-10, 1e-10],
 ];
 
-for (let [x, y] of tanh_data)
+for (var [x, y] of tanh_data)
     assertNear(Math.tanh(y), x);
 
 reportCompare(0, 0, "ok");

@@ -11,7 +11,7 @@ var cbrt_data = [
     [ Math.SQRT2, 1.1224620483093728 ]
 ];
 
-for (let [x, y] of cbrt_data)
+for (var [x, y] of cbrt_data)
     assertNear(Math.cbrt(x), y);
 
 reportCompare(0, 0, "ok");
