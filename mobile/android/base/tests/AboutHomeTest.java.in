@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * This class is an extension of BaseTest that helps with interaction with about:home
@@ -97,6 +98,10 @@ abstract class AboutHomeTest extends BaseTest {
     // @return the View associated with bookmark for the provided url or null if the link is not bookmarked
     protected View getDisplayedBookmark(String url) {
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
+        if (!mDevice.type.equals("tablet")) {
+            toggleVKB(); // dismiss the keyboard to make sure this works on small screen devices
+        }
+        getInstrumentation().waitForIdleSync();
         ListView bookmarksTabList = findListViewWithTag("bookmarks");
         waitForNonEmptyListToLoad(bookmarksTabList);
         ListAdapter adapter = bookmarksTabList.getAdapter();
@@ -177,59 +182,30 @@ abstract class AboutHomeTest extends BaseTest {
     }
 
    /**
-    * FIXME: rewrite this to work with fig when rewriting the testBookmarksTab test
-    * This method will edit the bookmark with index = bookmarkIndex from the list of bookmarks
-    * For the field index:
-    *     fieldIndex = 1 - the Bookmark name
-    *     fieldIndex = 2 - the Bookmark url
-    *     fieldIndex = 3 - the Bookmark keyword
+    * @param1 a String with the original url
+    * @param2 a String array with the new values for all fields
     */
-    protected void editBookmark(int bookmarkIndex, int fieldIndex, String addedText, ListView list) {
-
-        // Open the Edit Bookmark context menu
-        View child;
-        mSolo.clickOnText("Bookmarks");
-        child = list.getChildAt(bookmarkIndex);
-        mAsserter.ok(child != null, "edit item can be retrieved", child != null ? child.toString() : "null!");
-        waitForText("Switch to tab");
-        mSolo.clickLongOnView(child);
-        waitForText("Share");
+    protected void editBookmark(String originalUrl, String[] newValues) {
+        openBookmarkContextMenu(originalUrl);
         mSolo.clickOnText("Edit");
         waitForText("Edit Bookmark");
-
-        // Clear the Field
-        mSolo.clearEditText(fieldIndex);
-
-        // Enter the new text
-        mSolo.clickOnEditText(fieldIndex);
-        mActions.sendKeys(addedText);
-        mSolo.clickOnText("OK");
+        for (String value:newValues) {
+            mSolo.clearEditText(Arrays.asList(newValues).indexOf(value));
+            mSolo.clickOnEditText(Arrays.asList(newValues).indexOf(value));
+            mActions.sendKeys(value);
+        }
+        mSolo.clickOnButton("OK");
         waitForText("Bookmark updated");
     }
 
-    // FIXME: rewrite this to work with fig when rewriting the testBookmarksTab test
-    protected boolean checkBookmarkEdit(int bookmarkIndex, String addedText, ListView list) {
-        // Open the Edit Bookmark context menu
-        View child;
-        mSolo.clickOnText("Bookmarks");
-        child = list.getChildAt(bookmarkIndex);
-        mAsserter.ok(child != null, "check item can be retrieved", child != null ? child.toString() : "null!");
-        waitForText("Switch to tab");
-        mSolo.clickLongOnView(child);
-        waitForText("Share");
+    protected void checkBookmarkEdit(String bookmarkUrl, String[] values) {
+        openBookmarkContextMenu(bookmarkUrl);
         mSolo.clickOnText("Edit");
-        waitForText("Edit Bookmark");
-
-        // Check if the new text was added
-        if (mSolo.searchText(addedText)) {
-            clickOnButton("Cancel");
-            waitForText("about:home");
-            return true;
-        } else {
-            clickOnButton("Cancel");
-            waitForText("about:home");
-            return false;
+        for (String value:values) {
+            mAsserter.ok(mSolo.searchText(value), "Checking that the value is correct", "The value = " + value + " is correct");
         }
+        clickOnButton("Cancel");
+        waitForText("BOOKMARKS");
     }
 
     // A wait in order for the about:home tab to be rendered after drag/tab selection
