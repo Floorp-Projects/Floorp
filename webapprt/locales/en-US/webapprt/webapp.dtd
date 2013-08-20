@@ -18,11 +18,13 @@
 <!-- On Mac, we create the Quit and Hide command labels dynamically,
    - using properties in window.properties, in order to include the name
    - of the webapp in the labels without creating a DTD file for it. -->
-<!ENTITY quitApplicationCmdMac.key          "Q">
 <!ENTITY hideThisAppCmdMac.key              "H">
 <!ENTITY hideOtherAppsCmdMac.label          "Hide Others">
 <!ENTITY hideOtherAppsCmdMac.key            "H">
 <!ENTITY showAllAppsCmdMac.label            "Show All">
+
+<!-- LOCALIZATION NOTE(quitApplicationCmdUnix.key): This keyboard shortcut is used by both Linux and OSX -->
+<!ENTITY quitApplicationCmdUnix.key          "Q">
 
 <!ENTITY editMenu.label                     "Edit">
 <!ENTITY editMenu.accesskey                 "E">

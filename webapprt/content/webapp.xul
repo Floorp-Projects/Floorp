@@ -45,7 +45,7 @@
   <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
   <key id="key_quitApplication"
-       key="&quitApplicationCmdMac.key;"
+       key="&quitApplicationCmdUnix.key;"
        command="cmd_quitApplication"
        modifiers="accel"/>
   <key id="key_hideThisAppCmdMac"
