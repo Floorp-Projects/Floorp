@@ -14,6 +14,8 @@
 
 #include "jsscript.h"
 
+#include "js/ProfilingStack.h"
+
 /*
  * SPS Profiler integration with the JS Engine
  * https://developer.mozilla.org/en/Performance/Profiling_with_the_Built-in_Profiler
