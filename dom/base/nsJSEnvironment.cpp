@@ -174,6 +174,7 @@ static uint32_t sForgetSkippableBeforeCC = 0;
 static uint32_t sPreviousSuspectedCount = 0;
 static uint32_t sCleanupsSinceLastGC = UINT32_MAX;
 static bool sNeedsFullCC = false;
+static bool sNeedsGCAfterCC = false;
 static nsJSContext *sContextList = nullptr;
 
 static nsScriptNameSpaceManager *gNameSpaceManager;
@@ -2055,7 +2056,8 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   // If we collected a substantial amount of cycles, poke the GC since more objects
   // might be unreachable now.
   if (sCCollectedWaitingForGC > 250 ||
-      sLikelyShortLivingObjectsNeedingGC > 2500) {
+      sLikelyShortLivingObjectsNeedingGC > 2500 ||
+      sNeedsGCAfterCC) {
     PokeGC(JS::gcreason::CC_WAITING);
   }
 
@@ -2170,6 +2172,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   sRemovedPurples = 0;
   sForgetSkippableBeforeCC = 0;
   sNeedsFullCC = false;
+  sNeedsGCAfterCC = false;
 }
 
 // static
@@ -2317,6 +2320,14 @@ nsJSContext::PokeGC(JS::gcreason::Reason aReason, int aDelay)
 {
   if (sGCTimer || sShuttingDown) {
     // There's already a timer for GC'ing, just return
+    return;
+  }
+
+  if (sCCTimer) {
+    // Make sure CC is called...
+    sNeedsFullCC = true;
+    // and GC after it.
+    sNeedsGCAfterCC = true;
     return;
   }
 
@@ -2585,6 +2596,7 @@ mozilla::dom::StartupJSEnvironment()
   sLikelyShortLivingObjectsNeedingGC = 0;
   sPostGCEventsToConsole = false;
   sNeedsFullCC = false;
+  sNeedsGCAfterCC = false;
   gNameSpaceManager = nullptr;
   sRuntimeService = nullptr;
   sRuntime = nullptr;
