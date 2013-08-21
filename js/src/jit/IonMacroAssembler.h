@@ -579,8 +579,12 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    template<typename S, typename T>
-    void storeToTypedFloatArray(int arrayType, const S &value, const T &dest) {
+    template<typename T>
+    void storeToTypedFloatArray(int arrayType, FloatRegister value, const T &dest) {
+#ifdef JS_MORE_DETERMINISTIC
+        // See the comment in ToDoubleForTypedArray.
+        canonicalizeDouble(value);
+#endif
         switch (arrayType) {
           case TypedArrayObject::TYPE_FLOAT32:
             convertDoubleToFloat(value, ScratchFloatReg);
