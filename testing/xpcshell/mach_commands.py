@@ -8,6 +8,7 @@ from __future__ import unicode_literals, print_function
 
 import mozpack.path
 import os
+import shutil
 import sys
 
 from StringIO import StringIO
@@ -46,7 +47,8 @@ class XPCShellRunner(MozbuildObject):
 
     def run_test(self, test_file, interactive=False,
                  keep_going=False, sequential=False, shuffle=False,
-                 debugger=None, debuggerArgs=None, debuggerInteractive=None):
+                 debugger=None, debuggerArgs=None, debuggerInteractive=None,
+                 rerun_failures=False):
         """Runs an individual xpcshell test."""
         # TODO Bug 794506 remove once mach integrates with virtualenv.
         build_path = os.path.join(self.topobjdir, 'build')
@@ -57,7 +59,8 @@ class XPCShellRunner(MozbuildObject):
             self.run_suite(interactive=interactive,
                            keep_going=keep_going, shuffle=shuffle, sequential=sequential,
                            debugger=debugger, debuggerArgs=debuggerArgs,
-                           debuggerInteractive=debuggerInteractive)
+                           debuggerInteractive=debuggerInteractive,
+                           rerun_failures=rerun_failures)
             return
 
         path_arg = self._wrap_path_argument(test_file)
@@ -88,6 +91,7 @@ class XPCShellRunner(MozbuildObject):
             'debugger': debugger,
             'debuggerArgs': debuggerArgs,
             'debuggerInteractive': debuggerInteractive,
+            'rerun_failures': rerun_failures
         }
 
         if os.path.isfile(path_arg.srcdir_path()):
@@ -98,7 +102,8 @@ class XPCShellRunner(MozbuildObject):
     def _run_xpcshell_harness(self, test_dirs=None, manifest=None,
                               test_path=None, shuffle=False, interactive=False,
                               keep_going=False, sequential=False,
-                              debugger=None, debuggerArgs=None, debuggerInteractive=None):
+                              debugger=None, debuggerArgs=None, debuggerInteractive=None,
+                              rerun_failures=False):
 
         # Obtain a reference to the xpcshell test runner.
         import runxpcshelltests
@@ -143,6 +148,22 @@ class XPCShellRunner(MozbuildObject):
 
         if test_path is not None:
             args['testPath'] = test_path
+
+        # A failure manifest is written by default. If --rerun-failures is
+        # specified and a prior failure manifest is found, the prior manifest
+        # will be run. A new failure manifest is always written over any
+        # prior failure manifest.
+        failure_manifest_path = os.path.join(self.statedir, 'xpcshell.failures.ini')
+        rerun_manifest_path = os.path.join(self.statedir, 'xpcshell.rerun.ini')
+        if os.path.exists(failure_manifest_path) and rerun_failures:
+            shutil.move(failure_manifest_path, rerun_manifest_path)
+            args['manifest'] = rerun_manifest_path
+        elif os.path.exists(failure_manifest_path):
+            os.remove(failure_manifest_path)
+        elif rerun_failures:
+            print("No failures were found to re-run.")
+            return 0
+        args['failureManifest'] = failure_manifest_path
 
         # Python through 2.7.2 has issues with unicode in some of the
         # arguments. Work around that.
@@ -191,6 +212,8 @@ class MachCommands(MachCommandBase):
         help='Run the tests sequentially.')
     @CommandArgument('--shuffle', '-s', action='store_true',
         help='Randomize the execution order of tests.')
+    @CommandArgument('--rerun-failures', action='store_true',
+        help='Reruns failures from last time.')
     def run_xpcshell_test(self, **params):
         # We should probably have a utility function to ensure the tree is
         # ready to run tests. Until then, we just create the state dir (in
