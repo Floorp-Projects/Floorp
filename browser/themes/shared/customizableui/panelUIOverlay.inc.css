@@ -236,7 +236,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-#PanelUI-help[disabled] {
+#PanelUI-help[disabled],
+#PanelUI-quit[disabled] {
   opacity: 0.4;
 }
 
