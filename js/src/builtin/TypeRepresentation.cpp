@@ -260,7 +260,7 @@ StructTypeRepresentation::init(JSContext *cx,
 
 JSObject *
 TypeRepresentation::addToTableOrFree(JSContext *cx,
-                                     TypeRepresentationSet::AddPtr &p)
+                                     TypeRepresentationHash::AddPtr &p)
 {
     JS_ASSERT(!ownerObject_);
 
@@ -298,7 +298,7 @@ ScalarTypeRepresentation::Create(JSContext *cx,
     JSCompartment *comp = cx->compartment();
 
     ScalarTypeRepresentation sample(type);
-    TypeRepresentationSet::AddPtr p = comp->typeReprs.lookupForAdd(&sample);
+    TypeRepresentationHash::AddPtr p = comp->typeReprs.lookupForAdd(&sample);
     if (p)
         return (*p)->ownerObject();
 
@@ -332,7 +332,7 @@ ArrayTypeRepresentation::Create(JSContext *cx,
     }
 
     ArrayTypeRepresentation sample(element, length);
-    TypeRepresentationSet::AddPtr p = comp->typeReprs.lookupForAdd(&sample);
+    TypeRepresentationHash::AddPtr p = comp->typeReprs.lookupForAdd(&sample);
     if (p)
         return (*p)->ownerObject();
 
@@ -364,7 +364,7 @@ StructTypeRepresentation::Create(JSContext *cx,
     if (!ptr->init(cx, ids, typeReprOwners))
         return NULL;
 
-    TypeRepresentationSet::AddPtr p = comp->typeReprs.lookupForAdd(ptr);
+    TypeRepresentationHash::AddPtr p = comp->typeReprs.lookupForAdd(ptr);
     if (p) {
         js_free(ptr); // do not finalize, not present in the table
         return (*p)->ownerObject();
@@ -540,10 +540,10 @@ StructTypeRepresentation::appendStringStruct(JSContext *cx, StringBuffer &conten
 // Misc
 
 const StructField *
-StructTypeRepresentation::fieldNamed(HandleId id) const
+StructTypeRepresentation::fieldNamed(jsid id) const
 {
     for (size_t i = 0; i < fieldCount(); i++) {
-        if (field(i).id.get() == id.get())
+        if (field(i).id.get() == id)
             return &field(i);
     }
     return NULL;

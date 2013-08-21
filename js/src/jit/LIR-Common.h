@@ -501,6 +501,32 @@ public:
     }
 };
 
+class LNewDerivedTypedObject : public LCallInstructionHelper<1, 3, 0>
+{
+  public:
+    LIR_HEADER(NewDerivedTypedObject);
+
+    LNewDerivedTypedObject(const LAllocation &type,
+                           const LAllocation &owner,
+                           const LAllocation &offset) {
+        setOperand(0, type);
+        setOperand(1, owner);
+        setOperand(2, offset);
+    }
+
+    const LAllocation *type() {
+        return getOperand(0);
+    }
+
+    const LAllocation *owner() {
+        return getOperand(1);
+    }
+
+    const LAllocation *offset() {
+        return getOperand(2);
+    }
+};
+
 class LNewStringObject : public LInstructionHelper<1, 1, 1>
 {
   public:
@@ -3035,6 +3061,20 @@ class LTypedArrayElements : public LInstructionHelper<1, 1, 0>
     LIR_HEADER(TypedArrayElements)
 
     LTypedArrayElements(const LAllocation &object) {
+        setOperand(0, object);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+};
+
+// Load a typed array's elements vector.
+class LTypedObjectElements : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(TypedObjectElements)
+
+    LTypedObjectElements(const LAllocation &object) {
         setOperand(0, object);
     }
     const LAllocation *object() {
