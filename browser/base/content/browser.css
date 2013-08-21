@@ -159,7 +159,7 @@ toolbar[overflowable] > .customization-target {
   display: none;
 }
 
-toolbar[overflowable][overflowing]:not([customizing]) > .overflow-button {
+#main-window:not([chromehidden~="toolbar"]) toolbar[overflowable][overflowing]:not([customizing]) > .overflow-button {
   display: -moz-box;
 }
 
