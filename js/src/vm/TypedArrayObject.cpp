@@ -1357,6 +1357,14 @@ js::ToDoubleForTypedArray(JSContext *cx, JS::HandleValue vp, double *d)
         *d = js_NaN;
     }
 
+#ifdef JS_MORE_DETERMINISTIC
+    // It's possible to have a NaN value with the sign bit set. The spec allows
+    // this but it can confuse differential testing when this value is stored
+    // to a float array and then read back as integer. To work around this, we
+    // always canonicalize NaN values in more-deterministic builds.
+    *d = JS_CANONICALIZE_NAN(*d);
+#endif
+
     return true;
 }
 
