@@ -540,7 +540,11 @@ nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMetho
 }
 
 static void
+#if (MOZ_WIDGET_GTK == 3)
+print_callback(GtkPrintJob *aJob, gpointer aData, const GError *aError) {
+#else
 print_callback(GtkPrintJob *aJob, gpointer aData, GError *aError) {
+#endif
   g_object_unref(aJob);
   ((nsIFile*) aData)->Remove(false);
 }

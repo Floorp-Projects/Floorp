@@ -163,6 +163,7 @@ MetroWidget::MetroWidget() :
   mWnd(NULL),
   mMetroWndProc(NULL),
   mTempBasicLayerInUse(false),
+  mRootLayerTreeId(),
   nsWindowBase()
 {
   // Global initialization
@@ -270,6 +271,14 @@ MetroWidget::Destroy()
   mOnDestroyCalled = true;
 
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+  if (ShouldUseAPZC()) {
+    nsresult rv;
+    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      observerService->RemoveObserver(this, "scroll-offset-changed");
+    }
+  }
 
   RemoveSubclass();
   NotifyWindowDestroyed();
@@ -829,6 +838,13 @@ CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfa
   if (ShouldUseAPZC()) {
     CompositorParent::SetControllerForLayerTree(compositor->RootLayerTreeId(), this);
     MetroWidget::sAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
+    mRootLayerTreeId = compositor->RootLayerTreeId();
+
+    nsresult rv;
+    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      observerService->AddObserver(this, "scroll-offset-changed", false);
+    }
   }
 
   return compositor;
@@ -1445,4 +1461,31 @@ MetroWidget::HandlePanEnd()
 {
   LogFunction();
   MetroUtils::FireObserver("apzc-handle-pan-end", L"");
+}
+
+NS_IMETHODIMP
+MetroWidget::Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
+{
+  NS_ENSURE_ARG_POINTER(topic);
+  if (!strcmp(topic, "scroll-offset-changed")) {
+    uint64_t scrollId;
+    int32_t presShellId;
+    CSSIntPoint scrollOffset;
+    int matched = sscanf(NS_LossyConvertUTF16toASCII(data).get(),
+                         "%llu %d (%d, %d)",
+                         &scrollId,
+                         &presShellId,
+                         &scrollOffset.x,
+                         &scrollOffset.y);
+    if (matched != 4) {
+      NS_WARNING("Malformed scroll-offset-changed message");
+      return NS_ERROR_UNEXPECTED;
+    }
+    if (MetroWidget::sAPZC) {
+      MetroWidget::sAPZC->UpdateScrollOffset(
+          ScrollableLayerGuid(mRootLayerTreeId, presShellId, scrollId),
+          scrollOffset);
+    }
+  }
+  return NS_OK;
 }

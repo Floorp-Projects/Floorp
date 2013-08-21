@@ -18,6 +18,7 @@ BEGIN_TELEPHONY_NAMESPACE
 class TelephonyCall MOZ_FINAL : public nsDOMEventTargetHelper
 {
   nsRefPtr<Telephony> mTelephony;
+  nsRefPtr<TelephonyCallGroup> mGroup;
 
   nsString mNumber;
   nsString mSecondNumber;
@@ -35,6 +36,8 @@ public:
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TelephonyCall,
                                            nsDOMEventTargetHelper)
+
+  friend class Telephony;
 
   nsPIDOMWindow*
   GetParentObject() const
@@ -74,6 +77,9 @@ public:
   already_AddRefed<DOMError>
   GetError() const;
 
+  already_AddRefed<TelephonyCallGroup>
+  GetGroup() const;
+
   void
   Answer(ErrorResult& aRv);
 
@@ -97,11 +103,12 @@ public:
   IMPL_EVENT_HANDLER(held)
   IMPL_EVENT_HANDLER(resuming)
   IMPL_EVENT_HANDLER(error)
+  IMPL_EVENT_HANDLER(groupchange)
 
   static already_AddRefed<TelephonyCall>
   Create(Telephony* aTelephony, const nsAString& aNumber, uint16_t aCallState,
          uint32_t aCallIndex = kOutgoingPlaceholderCallIndex,
-         bool aEmergency = false);
+         bool aEmergency = false, bool aIsConference = false);
 
   void
   ChangeState(uint16_t aCallState)
@@ -149,6 +156,9 @@ public:
 
   void
   NotifyError(const nsAString& aError);
+
+  void
+  ChangeGroup(TelephonyCallGroup* aGroup);
 
 private:
   TelephonyCall();

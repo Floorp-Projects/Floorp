@@ -90,7 +90,11 @@ const RIL_IPC_TELEPHONY_MSG_NAMES = [
   "RIL:RejectCall",
   "RIL:HoldCall",
   "RIL:ResumeCall",
-  "RIL:RegisterTelephonyMsg"
+  "RIL:RegisterTelephonyMsg",
+  "RIL:ConferenceCall",
+  "RIL:SeparateCall",
+  "RIL:HoldConference",
+  "RIL:ResumeConference"
 ];
 
 const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
@@ -930,6 +934,19 @@ RadioInterface.prototype = {
       case "RIL:ResumeCall":
         this.workerMessenger.send("resumeCall", { callIndex: msg.json.data });
         break;
+      case "RIL:ConferenceCall":
+        this.workerMessenger.send("conferenceCall");
+        break;
+      case "RIL:SeparateCall":
+        this.workerMessenger.send("separateCall",
+                                  { callIndex: msg.json.data });
+        break;
+      case "RIL:HoldConference":
+        this.workerMessenger.send("holdConference");
+        break;
+      case "RIL:ResumeConference":
+        this.workerMessenger.send("resumeConference");
+        break;
       case "RIL:GetAvailableNetworks":
         this.workerMessenger.sendWithIPCMessage(msg, "getAvailableNetworks");
         break;
@@ -1045,6 +1062,9 @@ RadioInterface.prototype = {
       case "callDisconnected":
         // This one will handle its own notifications.
         this.handleCallDisconnected(message.call);
+        break;
+      case "conferenceCallStateChanged":
+        this.handleConferenceCallStateChanged(message.state);
         break;
       case "cdmaCallWaiting":
         gMessageManager.sendTelephonyMessage("RIL:CdmaCallWaiting",
@@ -1657,7 +1677,35 @@ RadioInterface.prototype = {
    * Track the active call and update the audio system as its state changes.
    */
   _activeCall: null,
-  updateCallAudioState: function updateCallAudioState(call) {
+  updateCallAudioState: function updateCallAudioState(options) {
+    if (options.conferenceState === nsITelephonyProvider.CALL_STATE_CONNECTED) {
+      gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
+      if (this.speakerEnabled) {
+        gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
+                                     nsIAudioManager.FORCE_SPEAKER);
+      }
+      return;
+    }
+    if (options.conferenceState === nsITelephonyProvider.CALL_STATE_UNKNOWN ||
+        options.conferenceState === nsITelephonyProvider.CALL_STATE_HELD) {
+      if (!this._activeCall) {
+        gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+      }
+      return;
+    }
+
+    if (!options.call) {
+      return;
+    }
+
+    if (options.call.isConference) {
+      if (this._activeCall && this._activeCall.callIndex == options.call.callIndex) {
+        this._activeCall = null;
+      }
+      return;
+    }
+
+    let call = options.call;
     switch (call.state) {
       case nsITelephonyProvider.CALL_STATE_DIALING: // Fall through...
       case nsITelephonyProvider.CALL_STATE_ALERTING:
@@ -1751,7 +1799,7 @@ RadioInterface.prototype = {
     if (call.state == nsITelephonyProvider.CALL_STATE_DIALING) {
       gSystemMessenger.broadcastMessage("telephony-new-call", {});
     }
-    this.updateCallAudioState(call);
+    this.updateCallAudioState({call: call});
     gMessageManager.sendTelephonyMessage("RIL:CallStateChanged",
                                          this.clientId, call);
   },
@@ -1770,9 +1818,18 @@ RadioInterface.prototype = {
       direction: call.isOutgoing ? "outgoing" : "incoming"
     };
     gSystemMessenger.broadcastMessage("telephony-call-ended", data);
-    this.updateCallAudioState(call);
+    this.updateCallAudioState({call: call});
     gMessageManager.sendTelephonyMessage("RIL:CallStateChanged",
                                          this.clientId, call);
+  },
+
+  handleConferenceCallStateChanged: function handleConferenceCallStateChanged(state) {
+    debug("handleConferenceCallStateChanged: " + state);
+    state = state != null ? convertRILCallState(state) :
+                            nsITelephonyProvider.CALL_STATE_UNKNOWN;
+    this.updateCallAudioState({conferenceState: state});
+    gMessageManager.sendTelephonyMessage("RIL:ConferenceCallStateChanged",
+                                         this.clientId, state);
   },
 
   /**
