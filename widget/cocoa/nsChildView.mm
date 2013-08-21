@@ -3552,6 +3552,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)beginGestureWithEvent:(NSEvent *)anEvent
 {
+  NS_ASSERTION(mGestureState == eGestureState_None, "mGestureState should be eGestureState_None");
+
   if (!anEvent)
     return;
 
@@ -3917,7 +3919,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   __block BOOL animationCanceled = NO;
-  __block BOOL geckoSwipeEventSent = NO;
   // At this point, anEvent is the first scroll wheel event in a two-finger
   // horizontal gesture that we've decided to treat as a swipe.  When we call
   // [NSEvent trackSwipeEventWithOptions:...], the OS interprets all
@@ -3971,7 +3972,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
                direction:0.0
                    delta:gestureAmount];
 
-    if (phase == NSEventPhaseEnded && !geckoSwipeEventSent) {
+    if (phase == NSEventPhaseEnded) {
       // The result of the swipe is now known, so the main event can be sent.
       // The animation might continue even after this event was sent, so
       // don't tear down the animation overlay yet.
@@ -3984,7 +3985,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
       // gestureAmount is negative when it will be '-1' at isComplete, and
       // positive when it will be '1'.  And phase is never equal to
       // NSEventPhaseEnded when gestureAmount will be '0' at isComplete.
-      geckoSwipeEventSent = YES;
       [self sendSwipeEvent:anEvent
                   withKind:NS_SIMPLE_GESTURE_SWIPE
          allowedDirections:&allowedDirectionsCopy
