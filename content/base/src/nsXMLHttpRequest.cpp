@@ -583,7 +583,7 @@ static void LogMessage(const char* aWarning, nsPIDOMWindow* aWindow)
     doc = aWindow->GetExtantDoc();
   }
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM", doc,
+                                  NS_LITERAL_CSTRING("DOM"), doc,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   aWarning);
 }

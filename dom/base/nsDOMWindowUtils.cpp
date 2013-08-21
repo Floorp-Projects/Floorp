@@ -2565,7 +2565,7 @@ nsDOMWindowUtils::GetOuterWindowWithId(uint64_t aWindowID,
 
   // XXX This method is deprecated.  See bug 865664.
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM",
+                                  NS_LITERAL_CSTRING("DOM"),
                                   nsContentUtils::GetDocumentFromCaller(),
                                   nsContentUtils::eDOM_PROPERTIES,
                                   "GetWindowWithOuterIdWarning");
