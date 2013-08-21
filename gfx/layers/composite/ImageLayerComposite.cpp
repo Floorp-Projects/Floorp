@@ -146,7 +146,7 @@ void
 ImageLayerComposite::CleanupResources()
 {
   if (mImageHost) {
-    mImageHost->Detach();
+    mImageHost->Detach(this);
   }
   mImageHost = nullptr;
 }
