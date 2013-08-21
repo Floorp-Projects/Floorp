@@ -17,6 +17,7 @@ const timer = require("sdk/timers");
 const self = require("sdk/self");
 const windowUtils = require("sdk/deprecated/window-utils");
 const { getMostRecentBrowserWindow } = require('sdk/window/utils');
+const { close } = require("sdk/window/helpers");
 
 let jetpackID = "testID";
 try {
@@ -25,9 +26,7 @@ try {
 
 const australis = !!require("sdk/window/utils").getMostRecentBrowserWindow().CustomizableUI;
 
-exports.testConstructor = function(test) {
-  test.waitUntilDone();
-
+exports.testConstructor = function(assert, done) {
   let browserWindow = windowUtils.activeBrowserWindow;
   let doc = browserWindow.document;
   let AddonsMgrListener;
@@ -38,7 +37,8 @@ exports.testConstructor = function(test) {
       onUninstalling: () => {},
       onUninstalled: () => {}
     };
-  } else {
+  }
+  else {
     AddonsMgrListener = browserWindow.AddonsMgrListener;
   }
 
@@ -52,81 +52,81 @@ exports.testConstructor = function(test) {
   AddonsMgrListener.onInstalling();
   let w = widgets.Widget({ id: "fooID", label: "foo", content: "bar" });
   AddonsMgrListener.onInstalled();
-  test.assertEqual(widgetCount(), widgetStartCount + 1, "panel has correct number of child elements after widget construction");
+  assert.equal(widgetCount(), widgetStartCount + 1, "panel has correct number of child elements after widget construction");
 
   // test widget height
-  test.assertEqual(widgetNode(0).firstChild.boxObject.height, 16, "widget has correct default height");
+  assert.equal(widgetNode(0).firstChild.boxObject.height, 16, "widget has correct default height");
 
   AddonsMgrListener.onUninstalling();
   w.destroy();
   AddonsMgrListener.onUninstalled();
   w.destroy();
-  test.pass("Multiple destroys do not cause an error");
-  test.assertEqual(widgetCount(), widgetStartCount, "panel has correct number of child elements after destroy");
+  assert.pass("Multiple destroys do not cause an error");
+  assert.equal(widgetCount(), widgetStartCount, "panel has correct number of child elements after destroy");
 
   // Test automatic widget destroy on unload
   let loader = Loader(module);
   let widgetsFromLoader = loader.require("sdk/widget");
   let widgetStartCount = widgetCount();
   let w = widgetsFromLoader.Widget({ id: "fooID", label: "foo", content: "bar" });
-  test.assertEqual(widgetCount(), widgetStartCount + 1, "widget has been correctly added");
+  assert.equal(widgetCount(), widgetStartCount + 1, "widget has been correctly added");
   loader.unload();
-  test.assertEqual(widgetCount(), widgetStartCount, "widget has been destroyed on module unload");
+  assert.equal(widgetCount(), widgetStartCount, "widget has been destroyed on module unload");
 
   // Test nothing
-  test.assertRaises(
+  assert.throws(
     function() widgets.Widget({}),
-    "The widget must have a non-empty label property.",
+    /^The widget must have a non-empty label property\.$/,
     "throws on no properties");
 
   // Test no label
-  test.assertRaises(
+  assert.throws(
     function() widgets.Widget({content: "foo"}),
-    "The widget must have a non-empty label property.",
+    /^The widget must have a non-empty label property\.$/,
     "throws on no label");
 
   // Test empty label
-  test.assertRaises(
+  assert.throws(
     function() widgets.Widget({label: "", content: "foo"}),
-    "The widget must have a non-empty label property.",
+    /^The widget must have a non-empty label property\.$/,
     "throws on empty label");
 
   // Test no content or image
-  test.assertRaises(
+  assert.throws(
     function() widgets.Widget({id: "fooID", label: "foo"}),
-    "No content or contentURL property found. Widgets must have one or the other.",
+    /^No content or contentURL property found\. Widgets must have one or the other\.$/,
     "throws on no content");
 
   // Test empty content, no image
-  test.assertRaises(
+  assert.throws(
     function() widgets.Widget({id:"fooID", label: "foo", content: ""}),
-    "No content or contentURL property found. Widgets must have one or the other.",
+    /^No content or contentURL property found\. Widgets must have one or the other\.$/,
     "throws on empty content");
 
   // Test empty image, no content
-  test.assertRaises(
+  assert.throws(
     function() widgets.Widget({id:"fooID", label: "foo", image: ""}),
-    "No content or contentURL property found. Widgets must have one or the other.",
+    /^No content or contentURL property found\. Widgets must have one or the other\.$/,
     "throws on empty content");
 
   // Test empty content, empty image
-  test.assertRaises(
+  assert.throws(
     function() widgets.Widget({id:"fooID", label: "foo", content: "", image: ""}),
-    "No content or contentURL property found. Widgets must have one or the other.",
+    /^No content or contentURL property found. Widgets must have one or the other\.$/,
     "throws on empty content");
 
   // Test duplicated ID
   let duplicateID = widgets.Widget({id: "foo", label: "foo", content: "bar"});
-  test.assertRaises(
+  assert.throws(
     function() widgets.Widget({id: "foo", label: "bar", content: "bar"}),
-    /This widget ID is already used:/,
+    /^This widget ID is already used: foo$/,
     "throws on duplicated id");
   duplicateID.destroy();
 
   // Test Bug 652527
-  test.assertRaises(
+  assert.throws(
     function() widgets.Widget({id: "", label: "bar", content: "bar"}),
-    /You have to specify a unique value for the id property of/,
+    /^You have to specify a unique value for the id property of your widget in order for the application to remember its position\./,
     "throws on falsey id");
 
   // Test duplicate label, different ID
@@ -141,11 +141,11 @@ exports.testConstructor = function(test) {
   let w2 = widgets.Widget({id: "second", label:"second", content: "bar"});
   let w3 = widgets.Widget({id: "third", label:"third", content: "bar"});
   // Remove the middle widget
-  test.assertEqual(widgetNode(1).getAttribute("label"), "second", "second widget is the second widget inserted");
+  assert.equal(widgetNode(1).getAttribute("label"), "second", "second widget is the second widget inserted");
   w2.destroy();
-  test.assertEqual(widgetNode(1).getAttribute("label"), "third", "second widget is removed, so second widget is now the third one");
+  assert.equal(widgetNode(1).getAttribute("label"), "third", "second widget is removed, so second widget is now the third one");
   w2 = widgets.Widget({id: "second", label:"second", content: "bar"});
-  test.assertEqual(widgetNode(1).getAttribute("label"), "second", "second widget is created again, at the same location");
+  assert.equal(widgetNode(1).getAttribute("label"), "second", "second widget is created again, at the same location");
   // Cleanup this testcase
   AddonsMgrListener.onUninstalling();
   w1.destroy();
@@ -157,26 +157,26 @@ exports.testConstructor = function(test) {
   if (!australis) {
     let loader = Loader(module);
     let anotherWidgetsInstance = loader.require("sdk/widget");
-    test.assert(container().collapsed, "UI is hidden when no widgets");
+    assert.ok(container().collapsed, "UI is hidden when no widgets");
     AddonsMgrListener.onInstalling();
     let w1 = widgets.Widget({id: "foo", label: "foo", content: "bar"});
     // Ideally we would let AddonsMgrListener display the addon bar
     // But, for now, addon bar is immediatly displayed by sdk code
     // https://bugzilla.mozilla.org/show_bug.cgi?id=627484
-    test.assert(!container().collapsed, "UI is already visible when we just added the widget");
+    assert.ok(!container().collapsed, "UI is already visible when we just added the widget");
     AddonsMgrListener.onInstalled();
-    test.assert(!container().collapsed, "UI become visible when we notify AddonsMgrListener about end of addon installation");
+    assert.ok(!container().collapsed, "UI become visible when we notify AddonsMgrListener about end of addon installation");
     let w2 = anotherWidgetsInstance.Widget({id: "bar", label: "bar", content: "foo"});
-    test.assert(!container().collapsed, "UI still visible when we add a second widget");
+    assert.ok(!container().collapsed, "UI still visible when we add a second widget");
     AddonsMgrListener.onUninstalling();
     w1.destroy();
     AddonsMgrListener.onUninstalled();
-    test.assert(!container().collapsed, "UI still visible when we remove one of two widgets");
+    assert.ok(!container().collapsed, "UI still visible when we remove one of two widgets");
     AddonsMgrListener.onUninstalling();
     w2.destroy();
-    test.assert(!container().collapsed, "UI is still visible when we have removed all widget but still not called onUninstalled");
+    assert.ok(!container().collapsed, "UI is still visible when we have removed all widget but still not called onUninstalled");
     AddonsMgrListener.onUninstalled();
-    test.assert(container().collapsed, "UI is hidden when we have removed all widget and called onUninstalled");
+    assert.ok(container().collapsed, "UI is hidden when we have removed all widget and called onUninstalled");
   }
   // Helper for testing a single widget.
   // Confirms proper addition and content setup.
@@ -189,13 +189,13 @@ exports.testConstructor = function(test) {
     let startCount = widgetCount();
     let widget = widgets.Widget(widgetOptions);
     let node = widgetNode(startCount);
-    test.assert(node, "widget node at index");
-    test.assertEqual(node.tagName, "toolbaritem", "widget element is correct");
-    test.assertEqual(widget.width + "px", node.style.minWidth, "widget width is correct");
-    test.assertEqual(widgetCount(), startCount + 1, "container has correct number of child elements");
+    assert.ok(node, "widget node at index");
+    assert.equal(node.tagName, "toolbaritem", "widget element is correct");
+    assert.equal(widget.width + "px", node.style.minWidth, "widget width is correct");
+    assert.equal(widgetCount(), startCount + 1, "container has correct number of child elements");
     let content = node.firstElementChild;
-    test.assert(content, "found content");
-    test.assertMatches(content.tagName, /iframe|image/, "content is iframe or image");
+    assert.ok(content, "found content");
+    assert.ok(/iframe|image/.test(content.tagName), "content is iframe or image");
     return widget;
   }
 
@@ -203,9 +203,9 @@ exports.testConstructor = function(test) {
   // and a function to test them.
   let tests = [];
   function nextTest() {
-    test.assertEqual(widgetCount(), 0, "widget in last test property cleaned itself up");
+    assert.equal(widgetCount(), 0, "widget in last test property cleaned itself up");
     if (!tests.length)
-      test.done();
+      done();
     else
       timer.setTimeout(tests.shift(), 0);
   }
@@ -219,7 +219,7 @@ exports.testConstructor = function(test) {
     contentScript: "self.postMessage(document.body.innerHTML);",
     contentScriptWhen: "end",
     onMessage: function (message) {
-      test.assertEqual(this.content, message, "content matches");
+      assert.equal(this.content, message, "content matches");
       this.destroy();
       doneTest();
     }
@@ -233,7 +233,7 @@ exports.testConstructor = function(test) {
     contentScript: "self.postMessage(document.body.innerHTML);",
     contentScriptWhen: "end",
     onMessage: function (message) {
-      test.assertEqual(this.content, message, "content matches");
+      assert.equal(this.content, message, "content matches");
       this.destroy();
       doneTest();
     }
@@ -249,9 +249,9 @@ exports.testConstructor = function(test) {
                    "content: document.body.firstElementChild.innerHTML});",
     contentScriptWhen: "end",
     onMessage: function (message) {
-      test.assertEqual(message.title, "foo", "title matches");
-      test.assertEqual(message.tag, "P", "element matches");
-      test.assertEqual(message.content, "bar", "element content matches");
+      assert.equal(message.title, "foo", "title matches");
+      assert.equal(message.tag, "P", "element matches");
+      assert.equal(message.content, "bar", "element content matches");
       this.destroy();
       doneTest();
     }
@@ -267,9 +267,9 @@ exports.testConstructor = function(test) {
                    "content: document.body.firstElementChild.innerHTML});",
     contentScriptWhen: "end",
     onMessage: function (message) {
-      test.assertEqual(message.title, "foo", "title matches");
-      test.assertEqual(message.tag, "P", "element matches");
-      test.assertEqual(message.content, "bar", "element content matches");
+      assert.equal(message.title, "foo", "title matches");
+      assert.equal(message.tag, "P", "element matches");
+      assert.equal(message.content, "bar", "element content matches");
       this.destroy();
       doneTest();
     }
@@ -284,7 +284,7 @@ exports.testConstructor = function(test) {
                    "document.getElementById('me').dispatchEvent(evt);",
     contentScriptWhen: "end",
     onClick: function() {
-      test.pass("onClick called");
+      assert.pass("onClick called");
       this.destroy();
       doneTest();
     }
@@ -299,7 +299,7 @@ exports.testConstructor = function(test) {
                    "document.getElementById('me').dispatchEvent(evt);",
     contentScriptWhen: "end",
     onMouseover: function() {
-      test.pass("onMouseover called");
+      assert.pass("onMouseover called");
       this.destroy();
       doneTest();
     }
@@ -314,7 +314,7 @@ exports.testConstructor = function(test) {
                    "document.getElementById('me').dispatchEvent(evt);",
     contentScriptWhen: "end",
     onMouseout: function() {
-      test.pass("onMouseout called");
+      assert.pass("onMouseout called");
       this.destroy();
       doneTest();
     }
@@ -329,7 +329,7 @@ exports.testConstructor = function(test) {
                    "document.body.firstElementChild.dispatchEvent(evt);",
     contentScriptWhen: "end",
     onClick: function() {
-      test.pass("onClick called");
+      assert.pass("onClick called");
       this.destroy();
       doneTest();
     }
@@ -344,7 +344,7 @@ exports.testConstructor = function(test) {
                    "document.body.firstElementChild.dispatchEvent(evt);",
     contentScriptWhen: "end",
     onMouseover: function() {
-      test.pass("onMouseover called");
+      assert.pass("onMouseover called");
       this.destroy();
       doneTest();
     }
@@ -359,7 +359,7 @@ exports.testConstructor = function(test) {
                    "document.body.firstElementChild.dispatchEvent(evt);",
     contentScriptWhen: "end",
     onMouseout: function() {
-      test.pass("onMouseout called");
+      assert.pass("onMouseout called");
       this.destroy();
       doneTest();
     }
@@ -390,7 +390,7 @@ exports.testConstructor = function(test) {
         this.flag = 1;
       }
       else {
-        test.assertEqual(this.content, "<div id='me'>bar</div>");
+        assert.equal(this.content, "<div id='me'>bar</div>", 'content is as expected');
         this.destroy();
         doneTest();
       }
@@ -409,14 +409,14 @@ exports.testConstructor = function(test) {
     contentScriptWhen: "end",
     onMessage: function(message) {
       if (!this.flag) {
-        test.assertEqual(this.contentURL.toString(), url1);
-        test.assertEqual(message, url1);
+        assert.equal(this.contentURL.toString(), url1);
+        assert.equal(message, url1);
         this.contentURL = url2;
         this.flag = 1;
       }
       else {
-        test.assertEqual(this.contentURL.toString(), url2);
-        test.assertEqual(message, url2);
+        assert.equal(this.contentURL.toString(), url2);
+        assert.equal(message, url2);
         this.destroy();
         doneTest();
       }
@@ -432,7 +432,7 @@ exports.testConstructor = function(test) {
     contentScript: "self.postMessage(1)",
     contentScriptWhen: "ready",
     onMessage: function(message) {
-      test.assertEqual(this.tooltip, "foo", "tooltip matches");
+      assert.equal(this.tooltip, "foo", "tooltip matches");
       this.destroy();
       doneTest();
     }
@@ -446,7 +446,7 @@ exports.testConstructor = function(test) {
     contentScript: "self.postMessage(1)",
     contentScriptWhen: "ready",
     onMessage: function(message) {
-      test.assertEqual(this.tooltip, this.label, "tooltip fallbacks to label");
+      assert.equal(this.tooltip, this.label, "tooltip fallbacks to label");
       this.destroy();
       doneTest();
     }
@@ -463,7 +463,7 @@ exports.testConstructor = function(test) {
     contentScriptWhen: "ready",
     onMessage: function(message) {
       this.tooltip = "bar";
-      test.assertEqual(this.tooltip, "bar", "tooltip gets updated");
+      assert.equal(this.tooltip, "bar", "tooltip gets updated");
       this.destroy();
       doneTest();
     }
@@ -476,7 +476,7 @@ exports.testConstructor = function(test) {
     content: "<script>document.title = 'ok';</script>",
     contentScript: "self.postMessage(document.title)",
     onMessage: function(message) {
-      test.assertEqual(message, "ok", "scripts are evaluated by default");
+      assert.equal(message, "ok", "scripts are evaluated by default");
       this.destroy();
       doneTest();
     }
@@ -489,7 +489,7 @@ exports.testConstructor = function(test) {
     content: "<script>document.title = 'ok';</script>",
     contentScript: "self.postMessage(document.title)",
     onMessage: function(message) {
-      test.assertEqual(message, "ok", "scripts are evaluated when we want to");
+      assert.equal(message, "ok", "scripts are evaluated when we want to");
       this.destroy();
       doneTest();
     }
@@ -502,7 +502,7 @@ exports.testConstructor = function(test) {
     allow: {script: false},
     contentScript: "self.postMessage(document.title)",
     onMessage: function(message) {
-      test.assertNotEqual(message, "ok", "scripts aren't evaluated when " +
+      assert.notEqual(message, "ok", "scripts aren't evaluated when " +
                                          "explicitly blocked it");
       this.destroy();
       doneTest();
@@ -522,20 +522,18 @@ exports.testConstructor = function(test) {
 
       let w1Opts = {id:"first", label: "first widget", content: "first content"};
       let w1 = testSingleWidget(w1Opts);
-      test.assertEqual(widgetCount2(), widgetStartCount2 + 1, "2nd window has correct number of child elements after first widget");
+      assert.equal(widgetCount2(), widgetStartCount2 + 1, "2nd window has correct number of child elements after first widget");
 
       let w2Opts = {id:"second", label: "second widget", content: "second content"};
       let w2 = testSingleWidget(w2Opts);
-      test.assertEqual(widgetCount2(), widgetStartCount2 + 2, "2nd window has correct number of child elements after second widget");
+      assert.equal(widgetCount2(), widgetStartCount2 + 2, "2nd window has correct number of child elements after second widget");
 
       w1.destroy();
-      test.assertEqual(widgetCount2(), widgetStartCount2 + 1, "2nd window has correct number of child elements after first destroy");
+      assert.equal(widgetCount2(), widgetStartCount2 + 1, "2nd window has correct number of child elements after first destroy");
       w2.destroy();
-      test.assertEqual(widgetCount2(), widgetStartCount2, "2nd window has correct number of child elements after second destroy");
+      assert.equal(widgetCount2(), widgetStartCount2, "2nd window has correct number of child elements after second destroy");
 
-      closeBrowserWindow(browserWindow, function() {
-        doneTest();
-      });
+      close(browserWindow).then(doneTest);
     }});
   });
 
@@ -554,14 +552,14 @@ exports.testConstructor = function(test) {
     // 2/ Retrieve a WidgetView for the initial browser window
     let acceptDetach = false;
     let mainView = widget.getView(windows.activeWindow);
-    test.assert(mainView, "Got first widget view");
+    assert.ok(mainView, "Got first widget view");
     mainView.on("detach", function () {
       // 8/ End of our test. Accept detach event only when it occurs after
       // widget.destroy()
       if (acceptDetach)
         doneTest();
       else
-        test.fail("View on initial window should not be destroyed");
+        assert.fail("View on initial window should not be destroyed");
     });
     mainView.port.on("event", function () {
       // 7/ Receive event sent during 6/ and cleanup our test
@@ -575,17 +573,17 @@ exports.testConstructor = function(test) {
       onOpen: function(window) {
         // 4/ Retrieve a WidgetView for this new window
         let view = widget.getView(window);
-        test.assert(view, "Got second widget view");
+        assert.ok(view, "Got second widget view");
         view.port.on("event", function () {
-          test.fail("We should not receive event on the detach view");
+          assert.fail("We should not receive event on the detach view");
         });
         view.on("detach", function () {
           // The related view is destroyed
           // 6/ Send a custom event
-          test.assertRaises(function () {
+          assert.throws(function () {
               view.port.emit("event");
             },
-            /The widget has been destroyed and can no longer be used./,
+            /^The widget has been destroyed and can no longer be used.$/,
             "emit on a destroyed view should throw");
           widget.port.emit("event");
         });
@@ -602,8 +600,8 @@ exports.testConstructor = function(test) {
 
       // Hide the addon-bar
       browserWindow.setToolbarVisibility(container(), false);
-      test.assert(container().collapsed,
-                  "1st window starts with an hidden addon-bar");
+      assert.ok(container().collapsed,
+                "1st window starts with an hidden addon-bar");
 
       // Then open a browser window and verify that the addon-bar remains hidden
       tabBrowser.addTab("about:blank", { inNewWindow: true, onLoad: function(e) {
@@ -612,28 +610,26 @@ exports.testConstructor = function(test) {
         function container2() doc2.getElementById("addon-bar");
         function widgetCount2() container2() ? container2().childNodes.length : 0;
         let widgetStartCount2 = widgetCount2();
-        test.assert(container2().collapsed,
-                    "2nd window starts with an hidden addon-bar");
+        assert.ok(container2().collapsed,
+                  "2nd window starts with an hidden addon-bar");
 
         let w1Opts = {id:"first", label: "first widget", content: "first content"};
         let w1 = testSingleWidget(w1Opts);
-        test.assertEqual(widgetCount2(), widgetStartCount2 + 1,
-                         "2nd window has correct number of child elements after" +
-                         "widget creation");
+        assert.equal(widgetCount2(), widgetStartCount2 + 1,
+                     "2nd window has correct number of child elements after" +
+                     "widget creation");
         w1.destroy();
-        test.assertEqual(widgetCount2(), widgetStartCount2,
-                         "2nd window has correct number of child elements after" +
-                         "widget destroy");
+        assert.equal(widgetCount2(), widgetStartCount2,
+                     "2nd window has correct number of child elements after" +
+                     "widget destroy");
 
-        test.assert(container().collapsed, "1st window has an hidden addon-bar");
-        test.assert(container2().collapsed, "2nd window has an hidden addon-bar");
+        assert.ok(container().collapsed, "1st window has an hidden addon-bar");
+        assert.ok(container2().collapsed, "2nd window has an hidden addon-bar");
 
         // Reset addon-bar visibility before exiting this test
         browserWindow.setToolbarVisibility(container(), true);
 
-        closeBrowserWindow(browserWindow2, function() {
-          doneTest();
-        });
+        close(browserWindow2).then(doneTest);
       }});
     });
   }
@@ -647,14 +643,14 @@ exports.testConstructor = function(test) {
     contentScript: "self.postMessage(1)",
     contentScriptWhen: "ready",
     onMessage: function(message) {
-      test.assertEqual(this.width, 200);
+      assert.equal(this.width, 200, 'width is 200');
 
       let node = widgetNode(0);
-      test.assertEqual(this.width, node.style.minWidth.replace("px", ""));
-      test.assertEqual(this.width, node.firstElementChild.style.width.replace("px", ""));
+      assert.equal(this.width, node.style.minWidth.replace("px", ""));
+      assert.equal(this.width, node.firstElementChild.style.width.replace("px", ""));
       this.width = 300;
-      test.assertEqual(this.width, node.style.minWidth.replace("px", ""));
-      test.assertEqual(this.width, node.firstElementChild.style.width.replace("px", ""));
+      assert.equal(this.width, node.style.minWidth.replace("px", ""));
+      assert.equal(this.width, node.firstElementChild.style.width.replace("px", ""));
 
       this.destroy();
       doneTest();
@@ -682,7 +678,7 @@ exports.testConstructor = function(test) {
     contentScriptWhen: "end",
     onClick: function() clickCount++,
     onMouseover: function() {
-      test.assertEqual(clickCount, 1, "only left click was sent to click handler");
+      assert.equal(clickCount, 1, "only left click was sent to click handler");
       this.destroy();
       doneTest();
     }
@@ -692,7 +688,7 @@ exports.testConstructor = function(test) {
   doneTest();
 };
 
-exports.testWidgetWithValidPanel = function(test) {
+exports.testWidgetWithValidPanel = function(assert, done) {
   const widgets = require("sdk/widget");
 
   let widget1 = widgets.Widget({
@@ -709,21 +705,20 @@ exports.testWidgetWithValidPanel = function(test) {
         let widgetEle = document.getElementById("widget:" + jetpackID + "-" + widget1.id);
         let panelEle = document.getElementById('mainPopupSet').lastChild;
         // See bug https://bugzilla.mozilla.org/show_bug.cgi?id=859592
-        test.assertEqual(panelEle.getAttribute("type"), "arrow", 'the panel is a arrow type');
-        test.assertStrictEqual(panelEle.anchorNode, widgetEle, 'the panel is properly anchored to the widget');
+        assert.equal(panelEle.getAttribute("type"), "arrow", 'the panel is a arrow type');
+        assert.strictEqual(panelEle.anchorNode, widgetEle, 'the panel is properly anchored to the widget');
 
         widget1.destroy();
-        test.pass("panel displayed on click");
-        test.done();
+        assert.pass("panel displayed on click");
+        done();
       }
     })
   });
-  test.waitUntilDone();
 };
 
-exports.testWidgetWithInvalidPanel = function(test) {
+exports.testWidgetWithInvalidPanel = function(assert) {
   const widgets = require("sdk/widget");
-  test.assertRaises(
+  assert.throws(
     function() {
       widgets.Widget({
         id: "panel2",
@@ -731,12 +726,11 @@ exports.testWidgetWithInvalidPanel = function(test) {
         panel: {}
       });
     },
-    "The option \"panel\" must be one of the following types: null, undefined, object",
-    "widget.panel must be a Panel object"
-  );
+    /^The option \"panel\" must be one of the following types: null, undefined, object$/,
+    "widget.panel must be a Panel object");
 };
 
-exports.testPanelWidget3 = function testPanelWidget3(test) {
+exports.testPanelWidget3 = function testPanelWidget3(assert, done) {
   const widgets = require("sdk/widget");
   let onClickCalled = false;
   let widget3 = widgets.Widget({
@@ -753,20 +747,17 @@ exports.testPanelWidget3 = function testPanelWidget3(test) {
     panel: require("sdk/panel").Panel({
       contentURL: "data:text/html;charset=utf-8,<body>Look ma, a panel!</body>",
       onShow: function() {
-        test.assert(
+        assert.ok(
           onClickCalled,
-          "onClick called on click for widget with both panel and onClick"
-        );
+          "onClick called on click for widget with both panel and onClick");
         widget3.destroy();
-        test.done();
+        done();
       }
     })
   });
-  test.waitUntilDone();
 };
 
-exports.testWidgetMessaging = function testWidgetMessaging(test) {
-  test.waitUntilDone();
+exports.testWidgetMessaging = function testWidgetMessaging(assert, done) {
   let origMessage = "foo";
   const widgets = require("sdk/widget");
   let widget = widgets.Widget({
@@ -779,16 +770,15 @@ exports.testWidgetMessaging = function testWidgetMessaging(test) {
       if (message == "ready")
         widget.postMessage(origMessage);
       else {
-        test.assertEqual(origMessage, message);
+        assert.equal(origMessage, message);
         widget.destroy();
-        test.done();
+        done();
       }
     }
   });
 };
 
-exports.testWidgetViews = function testWidgetViews(test) {
-  test.waitUntilDone();
+exports.testWidgetViews = function testWidgetViews(assert, done) {
   const widgets = require("sdk/widget");
   let widget = widgets.Widget({
     id: "foo",
@@ -797,22 +787,20 @@ exports.testWidgetViews = function testWidgetViews(test) {
     contentScriptWhen: "ready",
     contentScript: "self.on('message', function(data) self.postMessage(data)); self.postMessage('ready')",
     onAttach: function(view) {
-      test.pass("WidgetView created");
+      assert.pass("WidgetView created");
       view.on("message", function () {
-        test.pass("Got message in WidgetView");
+        assert.pass("Got message in WidgetView");
         widget.destroy();
       });
       view.on("detach", function () {
-        test.pass("WidgetView destroyed");
-        test.done();
+        assert.pass("WidgetView destroyed");
+        done();
       });
     }
   });
-
 };
 
-exports.testWidgetViewsUIEvents = function testWidgetViewsUIEvents(test) {
-  test.waitUntilDone();
+exports.testWidgetViewsUIEvents = function testWidgetViewsUIEvents(assert, done) {
   const widgets = require("sdk/widget");
   let view = null;
   let widget = widgets.Widget({
@@ -824,22 +812,21 @@ exports.testWidgetViewsUIEvents = function testWidgetViewsUIEvents(test) {
     contentScriptWhen: "ready",
     onAttach: function(attachView) {
       view = attachView;
-      test.pass("Got attach event");
+      assert.pass("Got attach event");
     },
     onClick: function (eventView) {
-      test.assertEqual(view, eventView,
+      assert.equal(view, eventView,
                          "event first argument is equal to the WidgetView");
       let view2 = widget.getView(require("sdk/windows").browserWindows.activeWindow);
-      test.assertEqual(view, view2,
+      assert.equal(view, view2,
                          "widget.getView return the same WidgetView");
       widget.destroy();
-      test.done();
+      done();
     }
   });
 };
 
-exports.testWidgetViewsCustomEvents = function testWidgetViewsCustomEvents(test) {
-  test.waitUntilDone();
+exports.testWidgetViewsCustomEvents = function testWidgetViewsCustomEvents(assert, done) {
   const widgets = require("sdk/widget");
   let widget = widgets.Widget({
     id: "foo",
@@ -849,21 +836,19 @@ exports.testWidgetViewsCustomEvents = function testWidgetViewsCustomEvents(test)
     contentScriptWhen: "ready",
     onAttach: function(view) {
       view.port.on("event", function (data) {
-        test.assertEqual(data, "ok",
+        assert.equal(data, "ok",
                          "event argument is valid on WidgetView");
       });
     },
   });
   widget.port.on("event", function (data) {
-    test.assertEqual(data, "ok",
-                     "event argument is valid on Widget");
+    assert.equal(data, "ok", "event argument is valid on Widget");
     widget.destroy();
-    test.done();
+    done();
   });
 };
 
-exports.testWidgetViewsTooltip = function testWidgetViewsTooltip(test) {
-  test.waitUntilDone();
+exports.testWidgetViewsTooltip = function testWidgetViewsTooltip(assert, done) {
   const widgets = require("sdk/widget");
 
   let widget = new widgets.Widget({
@@ -873,17 +858,15 @@ exports.testWidgetViewsTooltip = function testWidgetViewsTooltip(test) {
   });
   let view = widget.getView(require("sdk/windows").browserWindows.activeWindow);
   widget.tooltip = null;
-  test.assertEqual(view.tooltip, "foo",
-                   "view tooltip defaults to base widget label");
-  test.assertEqual(widget.tooltip, "foo",
-                   "tooltip defaults to base widget label");
+  assert.equal(view.tooltip, "foo",
+               "view tooltip defaults to base widget label");
+  assert.equal(widget.tooltip, "foo",
+               "tooltip defaults to base widget label");
   widget.destroy();
-  test.done();
+  done();
 };
 
-exports.testWidgetMove = function testWidgetMove(test) {
-  test.waitUntilDone();
-
+exports.testWidgetMove = function testWidgetMove(assert, done) {
   let windowUtils = require("sdk/deprecated/window-utils");
   let widgets = require("sdk/widget");
 
@@ -903,20 +886,21 @@ exports.testWidgetMove = function testWidgetMove(test) {
     onMessage: function(message) {
       if (message == "ready") {
         if (!gotFirstReady) {
-          test.pass("Got first ready event");
+          assert.pass("Got first ready event");
           let widgetNode = doc.querySelector('toolbaritem[label="' + label + '"]');
           let parent = widgetNode.parentNode;
           parent.insertBefore(widgetNode, parent.firstChild);
           gotFirstReady = true;
-        } else {
-          test.pass("Got second ready event");
+        }
+        else {
+          assert.pass("Got second ready event");
           widget.postMessage(origMessage);
         }
       }
       else {
-        test.assertEqual(origMessage, message, "Got message after node move");
+        assert.equal(origMessage, message, "Got message after node move");
         widget.destroy();
-        test.done();
+        done();
       }
     }
   });
@@ -929,15 +913,13 @@ content is converted to a data URI, the underlying iframe doesn't
 consider the content change a navigation change, so doesn't load
 the new content.
 */
-exports.testWidgetWithPound = function testWidgetWithPound(test) {
-  test.waitUntilDone();
-
+exports.testWidgetWithPound = function testWidgetWithPound(assert, done) {
   function getWidgetContent(widget) {
     let windowUtils = require("sdk/deprecated/window-utils");
     let browserWindow = windowUtils.activeBrowserWindow;
     let doc = browserWindow.document;
     let widgetNode = doc.querySelector('toolbaritem[label="' + widget.label + '"]');
-    test.assert(widgetNode, 'found widget node in the front-end');
+    assert.ok(widgetNode, 'found widget node in the front-end');
     return widgetNode.firstChild.contentDocument.body.innerHTML;
   }
 
@@ -954,17 +936,15 @@ exports.testWidgetWithPound = function testWidgetWithPound(test) {
         widget.content = "foo#";
       }
       else {
-        test.assertEqual(getWidgetContent(widget), "foo#", "content updated to pound?");
+        assert.equal(getWidgetContent(widget), "foo#", "content updated to pound?");
         widget.destroy();
-        test.done();
+        done();
       }
     }
   });
 };
 
-exports.testContentScriptOptionsOption = function(test) {
-  test.waitUntilDone();
-
+exports.testContentScriptOptionsOption = function(assert, done) {
   let widget = require("sdk/widget").Widget({
       id: "fooz",
       label: "fooz",
@@ -973,35 +953,31 @@ exports.testContentScriptOptionsOption = function(test) {
       contentScriptWhen: "end",
       contentScriptOptions: {a: true, b: [1,2,3], c: "string", d: function(){ return 'test'}},
       onMessage: function(msg) {
-        test.assertEqual( msg[0], 'undefined', 'functions are stripped from contentScriptOptions' );
-        test.assertEqual( typeof msg[1], 'object', 'object as contentScriptOptions' );
-        test.assertEqual( msg[1].a, true, 'boolean in contentScriptOptions' );
-        test.assertEqual( msg[1].b.join(), '1,2,3', 'array and numbers in contentScriptOptions' );
-        test.assertEqual( msg[1].c, 'string', 'string in contentScriptOptions' );
+        assert.equal( msg[0], 'undefined', 'functions are stripped from contentScriptOptions' );
+        assert.equal( typeof msg[1], 'object', 'object as contentScriptOptions' );
+        assert.equal( msg[1].a, true, 'boolean in contentScriptOptions' );
+        assert.equal( msg[1].b.join(), '1,2,3', 'array and numbers in contentScriptOptions' );
+        assert.equal( msg[1].c, 'string', 'string in contentScriptOptions' );
         widget.destroy();
-        test.done();
+        done();
       }
     });
 };
 
-exports.testOnAttachWithoutContentScript = function(test) {
-  test.waitUntilDone();
-
+exports.testOnAttachWithoutContentScript = function(assert, done) {
   let widget = require("sdk/widget").Widget({
       id: "onAttachNoCS",
       label: "onAttachNoCS",
       content: "onAttachNoCS",
       onAttach: function (view) {
-        test.pass("received attach event");
+        assert.pass("received attach event");
         widget.destroy();
-        test.done();
+        done();
       }
     });
 };
 
-exports.testPostMessageOnAttach = function(test) {
-  test.waitUntilDone();
-
+exports.testPostMessageOnAttach = function(assert, done) {
   let widget = require("sdk/widget").Widget({
       id: "onAttach",
       label: "onAttach",
@@ -1014,16 +990,14 @@ exports.testPostMessageOnAttach = function(test) {
       contentScript: "self.on('message', self.postMessage);",
       // 3) Listen to this forwarded message
       onMessage: function (msg) {
-        test.assertEqual( msg, "ok", "postMessage works on `attach` event");
+        assert.equal( msg, "ok", "postMessage works on `attach` event");
         widget.destroy();
-        test.done();
+        done();
       }
     });
 };
 
-exports.testPostMessageOnLocationChange = function(test) {
-  test.waitUntilDone();
-
+exports.testPostMessageOnLocationChange = function(assert, done) {
   let attachEventCount = 0;
   let messagesCount = 0;
   let widget = require("sdk/widget").Widget({
@@ -1041,26 +1015,24 @@ exports.testPostMessageOnLocationChange = function(test) {
       onMessage: function (msg) {
         messagesCount++;
         if (messagesCount == 1) {
-          test.assertEqual(msg, "ready", "First document is loaded");
+          assert.equal(msg, "ready", "First document is loaded");
           widget.content = "location changed";
         }
         else if (messagesCount == 2) {
-          test.assertEqual(msg, "ready", "Second document is loaded");
+          assert.equal(msg, "ready", "Second document is loaded");
           widget.postMessage("ok");
         }
         else if (messagesCount == 3) {
-          test.assertEqual(msg, "ok",
-                           "We receive the message sent to the 2nd document");
+          assert.equal(msg, "ok",
+                       "We receive the message sent to the 2nd document");
           widget.destroy();
-          test.done();
+          done();
         }
       }
     });
 };
 
-exports.testSVGWidget = function(test) {
-  test.waitUntilDone();
-
+exports.testSVGWidget = function(assert, done) {
   // use of capital SVG here is intended, that was failing..
   let SVG_URL = self.data.url("mofo_logo.SVG");
 
@@ -1071,17 +1043,15 @@ exports.testSVGWidget = function(test) {
     contentScript: "self.postMessage({count: window.document.images.length, src: window.document.images[0].src});",
     onMessage: function(data) {
       widget.destroy();
-      test.assertEqual(data.count, 1, 'only one image');
-      test.assertEqual(data.src, SVG_URL, 'only one image');
-      test.done();
+      assert.equal(data.count, 1, 'only one image');
+      assert.equal(data.src, SVG_URL, 'only one image');
+      done();
     }
   });
 };
 
 if (!australis) {
-  exports.testNavigationBarWidgets = function testNavigationBarWidgets(test) {
-    test.waitUntilDone();
-
+  exports.testNavigationBarWidgets = function testNavigationBarWidgets(assert, done) {
     let w1 = widgets.Widget({id: "1st", label: "1st widget", content: "1"});
     let w2 = widgets.Widget({id: "2nd", label: "2nd widget", content: "2"});
     let w3 = widgets.Widget({id: "3rd", label: "3rd widget", content: "3"});
@@ -1146,19 +1116,17 @@ if (!australis) {
         let searchBox = doc.getElementById("search-container");
 
         // Ensure that 1st is in addon bar
-        test.assertEqual(getWidgetNode(addonBar, 0).getAttribute("label"), w1.label);
+        assert.equal(getWidgetNode(addonBar, 0).getAttribute("label"), w1.label);
         // And that 2nd and 3rd keep their original positions in navigation bar,
         // i.e. right after search box
-        test.assertEqual(searchBox.nextSibling.getAttribute("label"), w2.label);
-        test.assertEqual(searchBox.nextSibling.nextSibling.getAttribute("label"), w3.label);
+        assert.equal(searchBox.nextSibling.getAttribute("label"), w2.label);
+        assert.equal(searchBox.nextSibling.nextSibling.getAttribute("label"), w3.label);
 
         w1.destroy();
         w2.destroy();
         w3.destroy();
 
-        closeBrowserWindow(browserWindow2, function() {
-          test.done();
-        });
+        close(browserWindow2).then(done);
       }
       w1.on("attach", onAttach);
       w2.on("attach", onAttach);
@@ -1169,15 +1137,4 @@ if (!australis) {
   };
 }
 
-/******************* helpers *********************/
-
-// Helper for calling code at window close
-function closeBrowserWindow(window, callback) {
-  timer.setTimeout(function() {
-    window.addEventListener("unload", function onUnload() {
-      window.removeEventListener("unload", onUnload, false);
-      callback();
-    }, false);
-    window.close();
-  }, 0);
-}
+require("sdk/test").run(exports);
