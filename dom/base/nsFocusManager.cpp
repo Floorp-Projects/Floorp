@@ -1158,7 +1158,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
       (fullscreenAncestor = nsContentUtils::GetFullscreenAncestor(contentToFocus->OwnerDoc())) &&
       nsContentUtils::HasPluginWithUncontrolledEventDispatch(contentToFocus)) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    "DOM",
+                                    NS_LITERAL_CSTRING("DOM"),
                                     contentToFocus->OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "FocusedWindowedPluginWhileFullScreen");

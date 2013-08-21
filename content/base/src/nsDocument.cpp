@@ -210,6 +210,7 @@
 #include "mozilla/css/Rule.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"
+#include "nsCharSeparatedTokenizer.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2463,7 +2464,7 @@ CSPErrorQueue::Flush(nsIDocument* aDocument)
 {
   for (uint32_t i = 0; i < mErrors.Length(); i++) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-        "CSP", aDocument,
+        NS_LITERAL_CSTRING("CSP"), aDocument,
         nsContentUtils::eSECURITY_PROPERTIES,
         mErrors[i]);
   }
@@ -4496,7 +4497,7 @@ void
 nsDocument::ReportEmptyGetElementByIdArg()
 {
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM", this,
+                                  NS_LITERAL_CSTRING("DOM"), this,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   "EmptyGetElementByIdParam");
 }
@@ -6151,7 +6152,7 @@ nsDocument::GetBoxObjectFor(Element* aElement, ErrorResult& aRv)
   if (!mHasWarnedAboutBoxObjects && !aElement->IsXUL()) {
     mHasWarnedAboutBoxObjects = true;
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    "BoxObjects", this,
+                                    NS_LITERAL_CSTRING("BoxObjects"), this,
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "UseOfGetBoxObjectForWarning");
   }
@@ -9048,7 +9049,7 @@ nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
   uint32_t flags = asError ? nsIScriptError::errorFlag
                            : nsIScriptError::warningFlag;
   nsContentUtils::ReportToConsole(flags,
-                                  "DOM Core", this,
+                                  NS_LITERAL_CSTRING("DOM Core"), this,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   kWarnings[aOperation]);
 }
@@ -10032,7 +10033,7 @@ LogFullScreenDenied(bool aLogFailure, const char* aMessage, nsIDocument* aDoc)
                         false);
   e->PostDOMEvent();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM", aDoc,
+                                  NS_LITERAL_CSTRING("DOM"), aDoc,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   aMessage);
 }

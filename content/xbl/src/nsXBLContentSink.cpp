@@ -213,7 +213,7 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
   const PRUnichar* params[] = { elementName.get() };
 
   return nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                         "XBL Content Sink",
+                                         NS_LITERAL_CSTRING("XBL Content Sink"),
                                          mDocument,
                                          nsContentUtils::eXBL_PROPERTIES,
                                          "UnexpectedElement",
@@ -556,7 +556,7 @@ nsXBLContentSink::ConstructBinding(uint32_t aLineNumber)
     }
   } else {
     nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    "XBL Content Sink", nullptr,
+                                    NS_LITERAL_CSTRING("XBL Content Sink"), nullptr,
                                     nsContentUtils::eXBL_PROPERTIES,
                                     "MissingIdAttr", nullptr, 0,
                                     mDocumentURI,
@@ -645,7 +645,7 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, uint32_t aLineNumber
     // shorthand syntax.
     mState = eXBL_Error;
     nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    "XBL Content Sink",
+                                    NS_LITERAL_CSTRING("XBL Content Sink"),
                                     mDocument,
                                     nsContentUtils::eXBL_PROPERTIES,
                                     "CommandNotInChrome", nullptr, 0,
