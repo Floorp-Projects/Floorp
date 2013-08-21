@@ -7,11 +7,12 @@
 # jit_test.py -- Python harness for JavaScript trace tests.
 
 from __future__ import print_function
-import os, sys, tempfile, traceback, time
+import os, posixpath, sys, tempfile, traceback, time
 import subprocess
 from subprocess import Popen, PIPE
 from threading import Thread
 import signal
+import StringIO
 
 try:
     from multiprocessing import Process, Manager, cpu_count
@@ -152,15 +153,29 @@ class Test:
 
         return test
 
-    def command(self, prefix):
-        scriptdir_var = os.path.dirname(self.path);
+    def command(self, prefix, libdir, remote_prefix=None):
+        path = self.path
+        if remote_prefix:
+            path = self.path.replace(TEST_DIR, remote_prefix)
+
+        scriptdir_var = os.path.dirname(path);
         if not scriptdir_var.endswith('/'):
             scriptdir_var += '/'
-        expr = ("const platform=%r; const libdir=%r; const scriptdir=%r"
-                % (sys.platform, LIB_DIR, scriptdir_var))
+
+        # Platforms where subprocess immediately invokes exec do not care
+        # whether we use double or single quotes. On windows and when using
+        # a remote device, however, we have to be careful to use the quote
+        # style that is the opposite of what the exec wrapper uses.
+        # This uses %r to get single quotes on windows and special cases
+        # the remote device.
+        fmt = 'const platform=%r; const libdir=%r; const scriptdir=%r'
+        if remote_prefix:
+            fmt = 'const platform="%s"; const libdir="%s"; const scriptdir="%s"'
+        expr = fmt % (sys.platform, libdir, scriptdir_var)
+
         # We may have specified '-a' or '-d' twice: once via --jitflags, once
         # via the "|jit-test|" line.  Remove dups because they are toggles.
-        cmd = prefix + list(set(self.jitflags)) + ['-e', expr, '-f', self.path]
+        cmd = prefix + list(set(self.jitflags)) + ['-e', expr, '-f', path]
         if self.valgrind:
             cmd = self.VALGRIND_CMD + cmd
         return cmd
@@ -268,7 +283,7 @@ def run_cmd_avoid_stdio(cmdline, env, timeout):
     return read_and_unlink(stdoutPath), read_and_unlink(stderrPath), code
 
 def run_test(test, prefix, options):
-    cmd = test.command(prefix)
+    cmd = test.command(prefix, LIB_DIR)
     if options.show_cmd:
         print(subprocess.list2cmdline(cmd))
 
@@ -283,6 +298,26 @@ def run_test(test, prefix, options):
 
     out, err, code, timed_out = run(cmd, env, options.timeout)
     return TestOutput(test, cmd, out, err, code, None, timed_out)
+
+def run_test_remote(test, device, prefix, options):
+    cmd = test.command(prefix, posixpath.join(options.remote_test_root, 'lib/'), posixpath.join(options.remote_test_root, 'tests'))
+    if options.show_cmd:
+        print(subprocess.list2cmdline(cmd))
+
+    env = {}
+    if test.tz_pacific:
+        env['TZ'] = 'PST8PDT'
+
+    env['LD_LIBRARY_PATH'] = options.remote_test_root
+
+    buf = StringIO.StringIO()
+    returncode = device.shell(cmd, buf, env=env, cwd=options.remote_test_root,
+                              timeout=int(options.timeout))
+
+    out = buf.getvalue()
+    # We can't distinguish between stdout and stderr so we pass
+    # the same buffer to both.
+    return TestOutput(test, cmd, out, out, returncode, None, False)
 
 def check_output(out, err, rc, test):
     if test.expect_error:
@@ -538,6 +573,58 @@ def get_serial_results(tests, prefix, options):
 
 def run_tests(tests, prefix, options):
     gen = get_serial_results(tests, prefix, options)
+    ok = process_test_results(gen, len(tests), options)
+    return ok
+
+def get_remote_results(tests, device, prefix, options):
+    for test in tests:
+        yield run_test_remote(test, device, prefix, options)
+
+def push_libs(options, device):
+    # This saves considerable time in pushing unnecessary libraries
+    # to the device but needs to be updated if the dependencies change.
+    required_libs = ['libnss3.so', 'libmozglue.so']
+
+    for file in os.listdir(options.local_lib):
+        if file in required_libs:
+            remote_file = posixpath.join(options.remote_test_root, file)
+            device.pushFile(os.path.join(options.local_lib, file), remote_file)
+
+def push_progs(options, device, progs):
+    for local_file in progs:
+        remote_file = posixpath.join(options.remote_test_root, os.path.basename(local_file))
+        device.pushFile(local_file, remote_file)
+
+def run_tests_remote(tests, prefix, options):
+    # Setup device with everything needed to run our tests.
+    from mozdevice import devicemanager, devicemanagerADB, devicemanagerSUT
+
+    if options.device_transport == 'adb':
+        if options.device_ip:
+            dm = devicemanagerADB.DeviceManagerADB(options.device_ip, options.devicePort, packageName=None, deviceRoot=options.remoteTestRoot)
+        else:
+            dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remote_test_root)
+    else:
+        dm = devicemanagerSUT.DeviceManagerSUT(options.device_ip, options.device_port, deviceRoot=options.remote_test_root)
+        if options.device_ip == None:
+            print('Error: you must provide a device IP to connect to via the --device option')
+            sys.exit(1)
+
+    # Update the test root to point to our test directory.
+    options.remote_test_root = posixpath.join(options.remote_test_root, 'jit-tests')
+
+    # Push js shell and libraries.
+    if dm.dirExists(options.remote_test_root):
+        dm.removeDir(options.remote_test_root)
+    dm.mkDir(options.remote_test_root)
+    push_libs(options, dm)
+    push_progs(options, dm, [prefix[0]])
+    dm.chmodDir(options.remote_test_root)
+    dm.pushDir(os.path.dirname(TEST_DIR), options.remote_test_root)
+    prefix[0] = os.path.join(options.remote_test_root, 'js')
+
+    # Run all tests.
+    gen = get_remote_results(tests, dm, prefix, options)
     ok = process_test_results(gen, len(tests), options)
     return ok
 
