@@ -74,7 +74,9 @@ var observer = {
 };
 
 Services.obs.addObserver(observer, "earlyformsubmit", false);
-Services.prefs.getBranch("signon.").addObserver("", observer.onPrefChange, false);
+var prefBranch = Services.prefs.getBranch("signon.");
+prefBranch.addObserver("", observer.onPrefChange, false);
+
 observer.onPrefChange(); // read initial values
 
 
