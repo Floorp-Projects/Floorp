@@ -36,7 +36,7 @@ interface nsISpeechTaskCallback : nsISupports
  * A task is associated with a single utterance. It is provided by the browser
  * to the service in the speak() method.
  */
-[scriptable, builtinclass, uuid(3a60c397-7a04-4cf7-99ea-7432e7a0a1c1)]
+[scriptable, builtinclass, uuid(ad59949c-2437-4b35-8eeb-d760caab75c5)]
 interface nsISpeechTask : nsISupports
 {
   /**
@@ -60,6 +60,9 @@ interface nsISpeechTask : nsISupports
    */
   [implicit_jscontext]
   void sendAudio(in jsval aData, in jsval aLandmarks);
+
+  [noscript]
+  void sendAudioNative([array, size_is(aDataLen)] in short aData, in unsigned long aDataLen);
 
   /**
    * Dispatch start event.
