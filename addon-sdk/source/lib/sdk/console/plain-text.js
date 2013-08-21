@@ -20,7 +20,7 @@ const SDK_LOG_LEVEL_PREF = "extensions.sdk.console.logLevel";
 
 let logLevel = DEFAULT_LOG_LEVEL;
 function setLogLevel() {
-  logLevel = prefs.get(ADDON_LOG_LEVEL_PREF, 
+  logLevel = prefs.get(ADDON_LOG_LEVEL_PREF,
                            prefs.get(SDK_LOG_LEVEL_PREF,
                                      DEFAULT_LOG_LEVEL));
 }
