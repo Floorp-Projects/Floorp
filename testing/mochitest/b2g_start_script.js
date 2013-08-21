@@ -50,6 +50,9 @@ if (outOfProcess) {
   mm.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
   mm.loadFrameScript(CHILD_SCRIPT_API, true);
   mm.loadFrameScript(CHILD_SCRIPT, true);
+  //Workaround for bug 848411, once that bug is fixed, the following line can be removed
+  mm.loadFrameScript('data:,addEventListener%28%22DOMWindowCreated%22%2C%20function%28e%29%20%7B%0A%20%20removeEventListener%28%22DOMWindowCreated%22%2C%20arguments.callee%2C%20false%29%3B%0A%20%20var%20window%20%3D%20e.target.defaultView%3B%0A%20%20window.wrappedJSObject.SpecialPowers.addPermission%28%22allowXULXBL%22%2C%20true%2C%20window.document%29%3B%0A%7D%0AB', true);
+
   specialPowersObserver._isFrameScriptLoaded = true;
 }
 

@@ -113,7 +113,6 @@ public class HomeListView extends ListView
         public int bookmarkId;
         public int historyId;
         public String url;
-        public byte[] favicon;
         public String title;
         public int display;
         public boolean isFolder;
@@ -163,13 +162,6 @@ public class HomeListView extends ListView
                 historyId = cursor.getInt(historyIdCol);
             } else {
                 historyId = -1;
-            }
-
-            final int faviconCol = cursor.getColumnIndex(Combined.FAVICON);
-            if (faviconCol != -1) {
-                favicon = cursor.getBlob(faviconCol);
-            } else {
-                favicon = null;
             }
 
             // We only have the parent column in cursors from getBookmarksInFolder.
