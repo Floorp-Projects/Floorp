@@ -33,4 +33,10 @@ public class testPictureLinkContextMenu extends ContentContextMenuTest {
         verifyShareOption(photoMenuItems[7], PICTURE_PAGE_TITLE); // Test the "Share Link" option
         verifyBookmarkLinkOption(photoMenuItems[8],BLANK_PAGE_URL); // Test the "Bookmark Link" option
     }
+
+    @Override
+    public void tearDown() throws Exception {
+        mDatabaseHelper.deleteBookmark(BLANK_PAGE_URL);
+        super.tearDown();
+    }
 }
