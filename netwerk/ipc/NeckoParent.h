@@ -86,7 +86,7 @@ protected:
   virtual PWebSocketParent* AllocPWebSocketParent(PBrowserParent* browser,
                                                   const SerializedLoadContext& aSerialized);
   virtual bool DeallocPWebSocketParent(PWebSocketParent*);
-virtual PTCPSocketParent* AllocPTCPSocketParent();
+  virtual PTCPSocketParent* AllocPTCPSocketParent();
 
   virtual PRemoteOpenFileParent* AllocPRemoteOpenFileParent(const URIParams& aFileURI,
                                                             PBrowserParent* aBrowser)
