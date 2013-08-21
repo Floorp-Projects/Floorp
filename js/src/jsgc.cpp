@@ -5140,12 +5140,6 @@ AutoMaybeTouchDeadZones::~AutoMaybeTouchDeadZones()
     runtime->gcManipulatingDeadZones = manipulatingDeadZones;
 }
 
-AutoSuppressGC::AutoSuppressGC(JSRuntime *rt)
-  : suppressGC_(rt->mainThread.suppressGC)
-{
-    suppressGC_++;
-}
-
 AutoSuppressGC::AutoSuppressGC(JSContext *cx)
   : suppressGC_(cx->runtime()->mainThread.suppressGC)
 {
