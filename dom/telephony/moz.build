@@ -17,5 +17,6 @@ CPP_SOURCES += [
     'CallsList.cpp',
     'Telephony.cpp',
     'TelephonyCall.cpp',
+    'TelephonyCallGroup.cpp',
 ]
 
