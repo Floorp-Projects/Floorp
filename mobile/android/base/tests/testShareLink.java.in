@@ -35,7 +35,7 @@ public class testShareLink extends BaseTest {
         ArrayList<String> shareOptions;
         blockForGeckoReady();
 
-        loadUrl(url);
+        inputAndLoadUrl(url);
         waitForText(urlTitle); // Waiting for page title to ensure the page is loaded
         selectMenuItem("Share");
         if (Build.VERSION.SDK_INT >= 14) {
@@ -53,10 +53,10 @@ public class testShareLink extends BaseTest {
              mAsserter.ok(optionDisplayed(option, displayedOptions), "Share option found", option);
         }
 
-        // Test share from the awesomebar context menu
+        // Test share from the urlbar context menu
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Close the share menu
         mSolo.clickLongOnText(urlTitle);
-        verifySharePopup(shareOptions,"Awesomebar");
+        verifySharePopup(shareOptions,"urlbar");
 
         // Test link Context Menu
         DisplayMetrics dm = new DisplayMetrics();
@@ -68,6 +68,8 @@ public class testShareLink extends BaseTest {
         mSolo.clickLongOnScreen(left, top);
         verifySharePopup(shareOptions,"Link");
 
+        /* FIXME: disabled on fig - bug 880060
+        //  Removed by Bug 896576 - [fig] Remove [getAllPagesList] from BaseTest
         // Test share popup in Top Sites
         ListView tslist = getAllPagesList(url);
 
@@ -86,17 +88,20 @@ public class testShareLink extends BaseTest {
             mAsserter.todo_isnot(allpages, null, "View should not be null but sometimes it is");
         }
 
+        //  Removed by Bug 896576 - [fig] Remove [getBookmarksList] from BaseTest
         // Test the share popup in the Bookmarks tab
         ListView blist = getBookmarksList("about:firefox");
         View bookmark = blist.getChildAt(1); // Getting child at 1 because 0 might be the Desktop folder
         mSolo.clickLongOnView(bookmark);
         verifySharePopup(shareOptions,"bookmarks");
 
+        //  Removed by Bug 896576 - [fig] Remove [getHistoryList] from BaseTest
         // Test the share popup in the History tab
         ListView hlist = getHistoryList("Today|Yesterday");
         View history = hlist.getChildAt(1); // Getting child at 1 because 0 might be the "Today" label
         mSolo.clickLongOnView(history);
         verifySharePopup(shareOptions,"history");
+        */
     }
 
     public void verifySharePopup(ArrayList<String> shareOptions, String openedFrom) {
@@ -106,7 +111,7 @@ public class testShareLink extends BaseTest {
         ArrayList<String> displayedOptions = getSharePopupOption();
         for (String option:shareOptions) {
              // Verify if the option is present in the list of displayed share options
-             mAsserter.ok(optionDisplayed(option, displayedOptions), "Share option for " + openedFrom + (openedFrom.equals("Awesomebar") ? "" : " item") + " found", option);
+             mAsserter.ok(optionDisplayed(option, displayedOptions), "Share option for " + openedFrom + (openedFrom.equals("urlbar") ? "" : " item") + " found", option);
         }
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         /**
