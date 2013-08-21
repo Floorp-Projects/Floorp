@@ -102,7 +102,7 @@ public:
   CompositableChild* GetIPDLActor() const;
 
   // should only be called by a CompositableForwarder
-  void SetIPDLActor(CompositableChild* aChild);
+  virtual void SetIPDLActor(CompositableChild* aChild);
 
   CompositableForwarder* GetForwarder() const
   {
