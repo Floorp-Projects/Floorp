@@ -6034,6 +6034,8 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
         return NULL;
 
     TypeObjectSet::AddPtr p = newTypeObjects.lookupForAdd(TypeObjectSet::Lookup(clasp, proto_));
+    SkipRoot skipHash(this, &p); /* Prevent the hash from being poisoned. */
+
     if (p) {
         TypeObject *type = *p;
 
