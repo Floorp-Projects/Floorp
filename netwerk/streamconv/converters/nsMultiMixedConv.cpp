@@ -565,8 +565,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
     int32_t tokenLinefeed = 1;
     while ( (token = FindToken(cursor, bufLen)) ) {
 
-        if (((token + mTokenLen - cursor) < bufLen) &&
-            (*(token + mTokenLen + 1) == '-')) {
+        if (*(token+mTokenLen+1) == '-') {
             // This was the last delimiter so we can stop processing
             rv = SendData(cursor, LengthToToken(cursor, token));
             if (NS_FAILED(rv)) return rv;
