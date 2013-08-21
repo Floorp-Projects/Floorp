@@ -1664,6 +1664,14 @@ WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder, nsD
           if (!aTemp->IsEmpty()) {
             aOutput->AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder, aFrame, aTemp, aIndex++));
           }
+          // Override item's clipping with our current clip state (if any). Since we're
+          // bubbling up a preserve-3d transformed child to a preserve-3d parent,
+          // we can be sure the child doesn't have clip state of its own.
+          NS_ASSERTION(!item->GetClip().HasClip(), "Unexpected clip on item");
+          const DisplayItemClip* clip = aBuilder->ClipState().GetCurrentCombinedClip(aBuilder);
+          if (clip) {
+            item->SetClip(aBuilder, *clip);
+          }
           aOutput->AppendToTop(item);
           break;
         }
