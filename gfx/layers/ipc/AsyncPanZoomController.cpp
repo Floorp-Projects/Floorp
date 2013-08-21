@@ -255,6 +255,7 @@ AsyncPanZoomController::Destroy()
   }
   mPrevSibling = nullptr;
   mLastChild = nullptr;
+  mParent = nullptr;
 }
 
 /* static */float
