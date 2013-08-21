@@ -361,7 +361,7 @@ class LinkedList
       for (slow = sentinel.next,
            fast1 = sentinel.next->next,
            fast2 = sentinel.next->next->next;
-           slow != sentinel && fast1 != sentinel && fast2 != sentinel;
+           slow != &sentinel && fast1 != &sentinel && fast2 != &sentinel;
            slow = slow->next, fast1 = fast2->next, fast2 = fast1->next)
       {
         MOZ_ASSERT(slow != fast1);
@@ -372,7 +372,7 @@ class LinkedList
       for (slow = sentinel.prev,
            fast1 = sentinel.prev->prev,
            fast2 = sentinel.prev->prev->prev;
-           slow != sentinel && fast1 != sentinel && fast2 != sentinel;
+           slow != &sentinel && fast1 != &sentinel && fast2 != &sentinel;
            slow = slow->prev, fast1 = fast2->prev, fast2 = fast1->prev)
       {
         MOZ_ASSERT(slow != fast1);
@@ -384,14 +384,14 @@ class LinkedList
        * isSentinel == true.
        */
       for (const LinkedListElement<T>* elem = sentinel.next;
-           elem != sentinel;
+           elem != &sentinel;
            elem = elem->next)
       {
         MOZ_ASSERT(!elem->isSentinel);
       }
 
       /* Check that the next/prev pointers match up. */
-      const LinkedListElement<T>* prev = sentinel;
+      const LinkedListElement<T>* prev = &sentinel;
       const LinkedListElement<T>* cur = sentinel.next;
       do {
           MOZ_ASSERT(cur->prev == prev);
@@ -399,7 +399,7 @@ class LinkedList
 
           prev = cur;
           cur = cur->next;
-      } while (cur != sentinel);
+      } while (cur != &sentinel);
 #endif /* ifdef DEBUG */
     }
 
