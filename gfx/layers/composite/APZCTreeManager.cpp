@@ -211,25 +211,37 @@ ApplyTransform(nsIntPoint* aPoint, const gfx3DMatrix& aMatrix)
 nsEventStatus
 APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
 {
-  nsRefPtr<AsyncPanZoomController> apzc;
   gfx3DMatrix transformToApzc;
   gfx3DMatrix transformToScreen;
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
-      apzc = GetTargetAPZC(ScreenPoint(multiTouchInput.mTouches[0].mScreenPoint),
-                           transformToApzc, transformToScreen);
-      if (apzc) {
+      if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_START) {
+        mApzcForInputBlock = GetTargetAPZC(ScreenPoint(multiTouchInput.mTouches[0].mScreenPoint),
+                                           transformToApzc, transformToScreen);
+      } else {
+        if (mApzcForInputBlock) {
+          APZC_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
+          GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
+          // If we have an mApzcForInputBlock and it's the end of the touch sequence
+          // then null it out so we don't keep a dangling reference and leak things.
+          if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_CANCEL ||
+              (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_END && multiTouchInput.mTouches.Length() == 1)) {
+            mApzcForInputBlock = nullptr;
+          }
+        }
+      }
+      if (mApzcForInputBlock) {
         MultiTouchInput inputForApzc(multiTouchInput);
         for (int i = inputForApzc.mTouches.Length() - 1; i >= 0; i--) {
           ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
         }
-        apzc->ReceiveInputEvent(inputForApzc);
+        mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
       }
       break;
     } case PINCHGESTURE_INPUT: {
       const PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
-      apzc = GetTargetAPZC(pinchInput.mFocusPoint, transformToApzc, transformToScreen);
+      nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(pinchInput.mFocusPoint, transformToApzc, transformToScreen);
       if (apzc) {
         PinchGestureInput inputForApzc(pinchInput);
         ApplyTransform(&(inputForApzc.mFocusPoint), transformToApzc);
@@ -238,7 +250,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
       break;
     } case TAPGESTURE_INPUT: {
       const TapGestureInput& tapInput = aEvent.AsTapGestureInput();
-      apzc = GetTargetAPZC(ScreenPoint(tapInput.mPoint), transformToApzc, transformToScreen);
+      nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(tapInput.mPoint), transformToApzc, transformToScreen);
       if (apzc) {
         TapGestureInput inputForApzc(tapInput);
         ApplyTransform(&(inputForApzc.mPoint), transformToApzc);
@@ -256,37 +268,50 @@ APZCTreeManager::ReceiveInputEvent(const nsInputEvent& aEvent,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<AsyncPanZoomController> apzc;
   gfx3DMatrix transformToApzc;
   gfx3DMatrix transformToScreen;
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       const nsTouchEvent& touchEvent = static_cast<const nsTouchEvent&>(aEvent);
-      if (touchEvent.touches.Length() > 0) {
+      if (touchEvent.touches.Length() == 0) {
+        break;
+      }
+      if (touchEvent.message == NS_TOUCH_START) {
         nsIntPoint point = touchEvent.touches[0]->mRefPoint;
-        apzc = GetTargetAPZC(ScreenPoint::FromUnknownPoint(gfx::Point(point.x, point.y)),
-                             transformToApzc, transformToScreen);
-        if (apzc) {
-          MultiTouchInput inputForApzc(touchEvent);
-          for (int i = inputForApzc.mTouches.Length() - 1; i >= 0; i--) {
-            ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
+        mApzcForInputBlock = GetTargetAPZC(ScreenPoint(point.x, point.y),
+                                           transformToApzc, transformToScreen);
+      } else {
+        if (mApzcForInputBlock) {
+          APZC_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
+          GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
+          // If we have an mApzcForInputBlock and it's the end of the touch sequence
+          // then null it out so we don't keep a dangling reference and leak things.
+          if (touchEvent.message == NS_TOUCH_CANCEL ||
+              (touchEvent.message == NS_TOUCH_END && touchEvent.touches.Length() == 1)) {
+            mApzcForInputBlock = nullptr;
           }
-
-          gfx3DMatrix outTransform = transformToApzc * transformToScreen;
-          nsTouchEvent* outEvent = static_cast<nsTouchEvent*>(aOutEvent);
-          for (int i = outEvent->touches.Length() - 1; i >= 0; i--) {
-            ApplyTransform(&(outEvent->touches[i]->mRefPoint), outTransform);
-          }
-
-          return apzc->ReceiveInputEvent(inputForApzc);
         }
+      }
+      if (mApzcForInputBlock) {
+        MultiTouchInput inputForApzc(touchEvent);
+        for (int i = inputForApzc.mTouches.Length() - 1; i >= 0; i--) {
+          ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
+        }
+
+        gfx3DMatrix outTransform = transformToApzc * transformToScreen;
+        nsTouchEvent* outEvent = static_cast<nsTouchEvent*>(aOutEvent);
+        for (int i = outEvent->touches.Length() - 1; i >= 0; i--) {
+          ApplyTransform(&(outEvent->touches[i]->mRefPoint), outTransform);
+        }
+
+        return mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
       }
       break;
     } case NS_MOUSE_EVENT: {
       const nsMouseEvent& mouseEvent = static_cast<const nsMouseEvent&>(aEvent);
-      apzc = GetTargetAPZC(ScreenPoint::FromUnknownPoint(gfx::Point(mouseEvent.refPoint.x,
-                                                                    mouseEvent.refPoint.y)),
-                           transformToApzc, transformToScreen);
+      nsRefPtr<AsyncPanZoomController> apzc =
+        GetTargetAPZC(ScreenPoint(mouseEvent.refPoint.x, mouseEvent.refPoint.y),
+                      transformToApzc, transformToScreen);
       if (apzc) {
         MultiTouchInput inputForApzc(mouseEvent);
         ApplyTransform(&(inputForApzc.mTouches[0].mScreenPoint), transformToApzc);
