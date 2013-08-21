@@ -1400,6 +1400,7 @@ class AutoSuppressGC
     int32_t &suppressGC_;
 
   public:
+    AutoSuppressGC(JSRuntime *rt);
     AutoSuppressGC(ExclusiveContext *cx);
     AutoSuppressGC(JSCompartment *comp);
 
