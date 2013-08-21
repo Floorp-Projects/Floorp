@@ -405,7 +405,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     }
     case Edit::TOpAttachCompositable: {
       const OpAttachCompositable& op = edit.get_OpAttachCompositable();
-      Attach(cast(op.layerParent()), cast(op.compositableParent()), false);
+      Attach(cast(op.layerParent()), cast(op.compositableParent()));
       cast(op.compositableParent())->SetCompositorID(
         mLayerManager->GetCompositor()->GetCompositorID());
       break;
@@ -414,7 +414,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       const OpAttachAsyncCompositable& op = edit.get_OpAttachAsyncCompositable();
       CompositableParent* compositableParent = CompositableMap::Get(op.containerID());
       MOZ_ASSERT(compositableParent, "CompositableParent not found in the map");
-      Attach(cast(op.layerParent()), compositableParent, true);
+      Attach(cast(op.layerParent()), compositableParent);
       compositableParent->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
       break;
     }
@@ -501,9 +501,7 @@ LayerTransactionParent::RecvGetTransform(PLayerParent* aParent,
 }
 
 void
-LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,
-                               CompositableParent* aCompositable,
-                               bool aIsAsyncVideo)
+LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent, CompositableParent* aCompositable)
 {
   LayerComposite* layer = aLayerParent->AsLayer()->AsLayerComposite();
   MOZ_ASSERT(layer);
@@ -514,12 +512,7 @@ LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,
   CompositableHost* compositable = aCompositable->GetCompositableHost();
   MOZ_ASSERT(compositable);
   layer->SetCompositableHost(compositable);
-  compositable->Attach(aLayerParent->AsLayer(),
-                       compositor,
-                       aIsAsyncVideo
-                         ? CompositableHost::ALLOW_REATTACH
-                           | CompositableHost::KEEP_ATTACHED
-                         : CompositableHost::NO_FLAGS);
+  compositable->Attach(aLayerParent->AsLayer(), compositor);
 }
 
 bool
