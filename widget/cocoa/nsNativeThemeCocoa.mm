@@ -2381,7 +2381,12 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
           if (isHorizontal) {
             macRect.origin.y += 2.0;
           } else {
-            macRect.origin.x += 3.0;
+            if (aFrame->StyleVisibility()->mDirection !=
+                  NS_STYLE_DIRECTION_RTL) {
+              macRect.origin.x += 3.0;
+            } else {
+              macRect.origin.x -= 1.0;
+            }
           }
         }
         const BOOL isOnTopOfDarkBackground = IsDarkBackground(aFrame);
