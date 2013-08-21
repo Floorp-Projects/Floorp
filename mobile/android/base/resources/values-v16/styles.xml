@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="TextAppearance.EmptyMessage" parent="TextAppearance.Large">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+    <style name="TextAppearance.Widget.TwoLinePageRow.Title" parent="TextAppearance.Medium">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+    <style name="TextAppearance.Widget.Home.PageTitle" parent="TextAppearance.Medium">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+</resources>

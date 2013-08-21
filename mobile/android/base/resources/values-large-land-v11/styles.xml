@@ -9,4 +9,44 @@
          <item name="android:orientation">vertical</item>
     </style>
 
+    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
+        <item name="android:paddingLeft">60dip</item>
+        <item name="android:drawablePadding">10dip</item>
+        <item name="android:drawableLeft">@drawable/bookmark_folder</item>
+    </style>
+
+    <style name="Widget.BookmarkItemView" parent="Widget.TwoLinePageRow">
+        <item name="android:paddingLeft">50dp</item>
+        <item name="android:paddingRight">50dp</item>
+    </style>
+
+    <style name="Widget.BookmarksListView" parent="Widget.HomeListView">
+        <item name="android:paddingLeft">120dp</item>
+        <item name="android:paddingRight">120dp</item>
+        <item name="android:scrollbarStyle">outsideOverlay</item>
+    </style>
+
+    <style name="Widget.TopBookmarksView" parent="Widget.GridView">
+        <item name="android:paddingLeft">55dp</item>
+        <item name="android:paddingRight">55dp</item>
+        <item name="android:paddingTop">30dp</item>
+        <item name="android:paddingBottom">30dp</item>
+        <item name="android:horizontalSpacing">20dp</item>
+        <item name="android:verticalSpacing">20dp</item>
+    </style>
+
+    <style name="Widget.Home.HistoryListView">
+        <item name="android:paddingLeft">50dp</item>
+        <item name="android:paddingRight">100dp</item>
+        <item name="android:paddingTop">30dp</item>
+        <item name="android:scrollbarStyle">outsideOverlay</item>
+    </style>
+
+    <style name="Widget.Home.HistoryTabWidget">
+        <item name="android:showDividers">beginning|middle|end</item>
+        <item name="android:dividerPadding">0dp</item>
+        <item name="android:paddingLeft">100dp</item>
+        <item name="android:paddingTop">30dp</item>
+    </style>
+
 </resources>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:background="@drawable/url_bar_bg">
+
+    <LinearLayout android:id="@+id/prompt"
+                  android:focusable="true"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="horizontal"
+                  android:minHeight="@dimen/search_row_height"
+                  android:gravity="center_vertical"
+                  android:padding="10dip">
+
+        <TextView android:id="@+id/suggestions_prompt_title"
+                  android:layout_height="wrap_content"
+                  android:layout_width="0dp"
+                  android:textColor="@color/url_bar_title"
+                  android:layout_marginLeft="6dip"
+                  android:textSize="14sp"
+                  android:layout_weight="1" />
+
+        <TextView android:id="@+id/suggestions_prompt_yes"
+                  android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:textSize="14sp"
+                  android:layout_marginLeft="15dip"
+                  android:background="@drawable/suggestion_selector"
+                  android:paddingLeft="15dp"
+                  android:paddingRight="15dp"
+                  android:paddingTop="7dp"
+                  android:paddingBottom="7dp"
+                  android:focusable="true"
+                  android:text="@string/button_yes" />
+
+        <TextView android:id="@+id/suggestions_prompt_no"
+                  android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:textSize="14sp"
+                  android:layout_marginLeft="6dip"
+                  android:background="@drawable/suggestion_selector"
+                  android:nextFocusRight="@+id/suggestions_prompt_no"
+                  android:paddingLeft="15dp"
+                  android:paddingRight="15dp"
+                  android:paddingTop="7dp"
+                  android:paddingBottom="7dp"
+                  android:focusable="true"
+                  android:text="@string/button_no" />
+
+    </LinearLayout>
+
+</FrameLayout>

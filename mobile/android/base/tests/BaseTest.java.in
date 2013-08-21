@@ -16,11 +16,16 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.SystemClock;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.DisplayMetrics;
 import android.view.inputmethod.InputMethodManager;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -39,11 +44,33 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     public static final int TEST_TALOS = 1;
 
     private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
-    private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
+    private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME ="@ANDROID_PACKAGE_NAME@.App";
     private static final int VERIFY_URL_TIMEOUT = 2000;
     private static final int MAX_LIST_ATTEMPTS = 3;
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
     public static final int MAX_WAIT_MS = 3000;
+
+    // Note: DEFAULT_BOOKMARKS_TITLES.length == DEFAULT_BOOKMARKS_URLS.length
+    protected static final String[] DEFAULT_BOOKMARKS_TITLES = new String[] {
+        "Firefox: About your browser",
+        "Firefox: Support",
+        "Firefox: Customize with add-ons"
+    };
+    protected static final String[] DEFAULT_BOOKMARKS_URLS = new String[] {
+        "about:firefox",
+        "http://support.mozilla.org/en-US/products/mobile",
+        "https://addons.mozilla.org/en-US/android/"
+    };
+    protected static final int DEFAULT_BOOKMARKS_COUNT = DEFAULT_BOOKMARKS_TITLES.length;
+
+    // IDs for UI views
+    private static final String BROWSER_TOOLBAR_ID = "browser_toolbar";
+    protected static final String URL_EDIT_TEXT_ID = "url_edit_text";
+    protected static final String URL_BAR_TITLE_ID = "url_bar_title";
+
+    // Settings menu paths
+    protected static final String PRIVACY_LABEL = "Privacy";
+    protected static final String CLEAR_PRIVATE_DATA_LABEL = "Clear private data";
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
@@ -164,64 +191,43 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     /**
-     * Click on the specified element and return the resulting activity.
-     * @return The created activity, or null if the element cannot be clicked.
+     * Click on the URL bar to focus it and enter editing mode.
      */
-    protected final Activity getActivityFromClick(Element element) {
-        Instrumentation inst = getInstrumentation();
-        Instrumentation.ActivityMonitor monitor = inst.addMonitor((String)null, null, false);
-        boolean clicked = element.click();
-        if (!clicked) {
-            mAsserter.ok(clicked != false, "checking that awesome bar clicked", "awesome bar was clicked");
-            return null;
-        }
-        inst.waitForMonitor(monitor);
-        // Give the activity time to render itself and initialize views 
-        // before continuing, so that views are created before access
-        // attempts are made. Again, waitForIdleSync was used here
-        // previously, but replaced with a sleep to avoid hangs.
-        // TODO: Investigate and document why these pauses are required.
-        mSolo.sleep(2000);
+    protected final void focusUrlBar() {
+        // Click on the browser toolbar to enter editing mode
+        mDriver.findElement(mActivity, BROWSER_TOOLBAR_ID).click();
 
-        return mSolo.getCurrentActivity();
-    }
-
-    /**
-     * Click on the awesome bar element and return the resulting activity.
-     * @return The created activity, or null if the awesome bar cannot be clicked.
-     */
-    private Activity mAwesomeActivity;
-    protected final Activity clickOnAwesomeBar() {
-        mAwesomeActivity = null;
+        // Wait for highlighed text to gain focus
         boolean success = waitForTest(new BooleanTest() {
             @Override
             public boolean test() {
-                Element awesomebar = mDriver.findElement(mActivity, "browser_toolbar");
-                if (awesomebar != null) {
-                    mAwesomeActivity = getActivityFromClick(awesomebar);
-                    if (mAwesomeActivity == null) {
-                        mAsserter.dumpLog("failed to click on awesome bar!");
-                    }
-                    return mSolo.waitForText("History", 1, MAX_WAIT_MS);
+                EditText urlEditText = mSolo.getEditText(0);
+                if (urlEditText.isInputMethodTarget()) {
+                    return true;
+                } else {
+                    mSolo.clickOnEditText(0);
+                    return false;
                 }
-                return false;
             }
-        }, MAX_WAIT_MS*5);
+        }, MAX_WAIT_ENABLED_TEXT_MS);
 
-        if (!success)
-            mAsserter.dumpLog("failed to find History");
-        return mAwesomeActivity;
+        mAsserter.ok(success, "waiting for urlbar text to gain focus", "urlbar text gained focus");
     }
 
     protected final void enterUrl(String url) {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
+        focusUrlBar();
+
+        // Send the keys for the URL we want to enter
         mActions.sendKeys(url);
-        String urlbarText = null;
-        if (urlbar != null) {
-            urlbarText = urlbar.getText();
-        }
-        mAsserter.is(urlbarText, url, "Awesomebar URL typed properly");
+
+        // Get the URL text from the URL bar EditText view
+        String urlBarText = mDriver.findElement(mActivity, URL_EDIT_TEXT_ID).getText();
+        mAsserter.is(url, urlBarText, "URL typed properly");
+    }
+
+    protected final Fragment getBrowserSearch() {
+        final FragmentManager fm = ((FragmentActivity) getActivity()).getSupportFragmentManager();
+        return fm.findFragmentByTag("browser_search");
     }
 
     protected final void hitEnterAndWait() {
@@ -233,12 +239,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     /**
-     * Load <code>url</code> using the awesome bar UI and sending key strokes.
+     * Load <code>url</code> by sending key strokes to the URL bar UI.
      *
      * This method waits synchronously for the <code>DOMContentLoaded</code>
      * message from Gecko before returning.
      */
-    protected final void loadUrl(String url) {
+    protected final void inputAndLoadUrl(String url) {
         enterUrl(url);
         hitEnterAndWait();
     }
@@ -250,43 +256,43 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      * This method does not wait for any confirmation from Gecko before
      * returning.
      */
-    protected final void loadUrlInTab(final String url) {
+    protected final void loadUrl(final String url) {
         try {
             ClassLoader classLoader = getActivity().getClassLoader();
             Class tabsClass = classLoader.loadClass("org.mozilla.gecko.Tabs");
             Method getInstance = tabsClass.getMethod("getInstance");
-            Method loadUrlInTab = tabsClass.getMethod("loadUrlInTab", String.class);
+            Method loadUrl = tabsClass.getMethod("loadUrl", String.class);
             Object tabs = getInstance.invoke(null);
-            loadUrlInTab.invoke(tabs, new Object[] { url });
+            loadUrl.invoke(tabs, new Object[] { url });
         } catch (Exception e) {
-            mAsserter.dumpLog("Exception in loadUrlInTab", e);
+            mAsserter.dumpLog("Exception in loadUrl", e);
             throw new RuntimeException(e);
         }
     }
 
     public final void verifyUrl(String url) {
-        Activity awesomeBarActivity = clickOnAwesomeBar();
-        Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
-        String urlbarText = null;
-        if (urlbar != null) {
+        Element urlEditText = mDriver.findElement(mActivity, URL_EDIT_TEXT_ID);
+        String urlBarText = null;
+        if (urlEditText != null) {
             // wait for a short time for the expected text, in case there is a delay
             // in updating the view
-            waitForTest(new VerifyUrlTest(urlbar, url), VERIFY_URL_TIMEOUT);
-            urlbarText = urlbar.getText();
+            waitForTest(new VerifyUrlTest(urlEditText, url), VERIFY_URL_TIMEOUT);
+            urlBarText = urlEditText.getText();
         }
-        mAsserter.is(urlbarText, url, "Awesomebar URL stayed the same");
+        mAsserter.is(urlBarText, url, "Browser toolbar URL stayed the same");
     }
 
     class VerifyUrlTest implements BooleanTest {
-        private Element mUrlbar;
+        private Element mUrlEditText;
         private String mUrl;
-        public VerifyUrlTest(Element urlbar, String url) {
-            mUrlbar = urlbar;
+        public VerifyUrlTest(Element urlEditText, String url) {
+            mUrlEditText = urlEditText;
             mUrl = url;
         }
+
         @Override
         public boolean test() {
-            String urlbarText = mUrlbar.getText();
+            String urlbarText = mUrlEditText.getText();
             if (urlbarText.equals(mUrl)) {
                 return true;
             }
@@ -478,27 +484,28 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyPageTitle(String title) {
-        Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar_title");
+        Element urlBarTitle = mDriver.findElement(getActivity(), URL_BAR_TITLE_ID);
         String pageTitle = null;
-        if (awesomebar != null) {
+        if (urlBarTitle != null) {
             // Wait for the title to make sure it has been displayed in case the view
             // does not update fast enough
-            waitForTest(new VerifyTitle(awesomebar, title), MAX_WAIT_MS);
-            pageTitle = awesomebar.getText();
+            waitForTest(new VerifyTitle(urlBarTitle, title), MAX_WAIT_MS);
+            pageTitle = urlBarTitle.getText();
         }
         mAsserter.is(pageTitle, title, "Page title is correct");
     }
 
     class VerifyTitle implements BooleanTest {
-        private Element mAwesomebar;
+        private Element mUrlBarTitle;
         private String mTitle;
-        public VerifyTitle(Element awesomebar, String title) {
-            mAwesomebar = awesomebar;
+        public VerifyTitle(Element urlBarTitle, String title) {
+            mUrlBarTitle = urlBarTitle;
             mTitle = title;
         }
+
         @Override
         public boolean test() {
-            String pageTitle = mAwesomebar.getText();
+            String pageTitle = mUrlBarTitle.getText();
             if (pageTitle.equals(mTitle)) {
                 return true;
             }
@@ -535,147 +542,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
     }
 
-    protected boolean isBookmark(String[] bookmarks, String aValue) {
-        for (int i = 0; i < bookmarks.length; i++) {
-            if (bookmarks[i].equals(aValue))
-                return true;
-        }
-        return false;
-    }
-
-    private ListView getAwesomeList(String waitText, int expectedChildCount,
-         String clickText, String tagName, String callerName) {
-        ArrayList<ListView> views;
-        ListView tabView = null;
-        int childCount = 0;
-        for (int i = 0; i < MAX_LIST_ATTEMPTS; i++) {
-            tabView = null;
-            childCount = 0;
-            Activity awesomeBarActivity = clickOnAwesomeBar();
-            mSolo.clickOnText(clickText);
-            if (waitForText(waitText)) {
-                views = mSolo.getCurrentListViews();
-                for (ListView view : views) {
-                    if (view.getTag().equals(tagName)) {
-                        tabView = view;
-                        ListAdapter adapter = view.getAdapter();
-                        if (adapter != null) {
-                            childCount = adapter.getCount();
-                        } else {
-                            childCount = 0;
-                        }
-                        if (expectedChildCount < 0 || expectedChildCount == childCount) {
-                            return view;
-                        }
-                    }
-                }
-            }
-        }
-        if (tabView == null) {
-            mAsserter.dumpLog(callerName+" did not find ListView");
-        } else if (expectedChildCount >= 0) {
-            mAsserter.dumpLog(callerName+" found ListView with "+childCount+" children");
-        }
-        return null;
-    }
-
-    /**
-     * Click on the awesome bar, click on the Top Sites tab, and return 
-     * the ListView for the All Pages ("Top Sites") tab.
-     */
-    protected ListView getAllPagesList(String waitText, int expectedChildCount) {
-        return getAwesomeList(waitText, expectedChildCount, 
-            "Top Sites", "allPages", "getAllPagesList");
-    }
-
-    protected ListView getAllPagesList(String waitText) {
-        return getAllPagesList(waitText, -1);
-    }
-
-    /** 
-     * Click on the awesome bar, click on the Bookmarks tab, and return
-     * the ListView for the Bookmarks tab.
-     */
-    protected ListView getBookmarksList(String waitText, int expectedChildCount) {
-        return getAwesomeList(waitText, expectedChildCount, 
-            "Bookmarks", "bookmarks", "getBookmarksList");
-    }
-
-    protected ListView getBookmarksList(String waitText) {
-        return getBookmarksList(waitText, -1);
-    }
-
-    /**
-     * Click on the awesome bar, click on the History tab, and return
-     * the ListView for the History tab.
-     */
-    protected ListView getHistoryList(String waitText, int expectedChildCount) {
-        return getAwesomeList(waitText, expectedChildCount, 
-            "History", "history", "getHistoryList");
-    }
-
-    protected ListView getHistoryList(String waitText) {
-        return getHistoryList(waitText, -1);
-    }
-
-    public long addOrUpdateBookmark(String title, String url, boolean bookmarklet) {
-        ContentResolver resolver = getActivity().getContentResolver();
-        Uri bookmarksUri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
-        bookmarksUri = bookmarksUri.buildUpon().appendQueryParameter("profile", "default").build();
-        long folderId = -1;
-        Cursor c = null;
-        // NOTE: this is hardcoded to toolbar/mobile and triggered from bookmarklet because the existing
-        //       testcases were written this way
-        String location = "toolbar";
-        if (bookmarklet) {
-            location = "mobile";
-        }
-        try {
-            c = resolver.query(bookmarksUri,
-                               new String[] { "_id" },
-                               "guid = ?",
-                               new String[] { location },
-                               null);
-            if (c.moveToFirst()) {
-                folderId = c.getLong(c.getColumnIndexOrThrow("_id"));
-            }
-        } finally {
-            if (c != null) {
-                c.close();
-            }
-        }
-        ContentValues values = new ContentValues();
-        values.put("title", title);
-        values.put("url", url);
-        values.put("parent", folderId);
-        long now = System.currentTimeMillis();
-        values.put("modified", now);
-        if (!bookmarklet) {
-            values.put("type", 1);
-            values.put("guid", url);
-            values.put("position", 10);
-            values.put("created", now);
-        }
-        int updated = resolver.update(bookmarksUri,
-                                      values,
-                                      "url = ?",
-                                      new String[] { url });
-        if (updated == 0) {
-            Uri uri = resolver.insert(bookmarksUri, values);
-            mAsserter.ok(true, "Inserted at: ", uri.toString());
-            return ContentUris.parseId(uri);
-        }
-        return ContentUris.parseId(bookmarksUri);
-    }
-
-    public void deleteBookmark(String title) {
-        ContentResolver resolver = getActivity().getContentResolver();
-        Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
-        uri = uri.buildUpon().appendQueryParameter("profile", "default")
-                             .appendQueryParameter("sync", "true").build();
-        resolver.delete(uri, "title = ?", new String[] { title });
-    }
-
     public void addTab(String url) {
         Element tabs = null;
         Element addTab = null;
@@ -697,11 +563,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }, MAX_WAIT_MS);
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
         mAsserter.ok(addTab.click(), "checking that add_tab clicked", "add_tab element clicked");
-        // must pause before sending keys, until awesome bar is displayed; waiting for known text is simple
-        waitForText("History");
-        // cannot use loadUrl(): getText fails because we are using a different urlbar
-        mActions.sendKeys(url);
-        hitEnterAndWait();
+
+        // Adding a new tab opens about:home, so now we just need to load the url in it.
+        inputAndLoadUrl(url);
     }
 
     public final void runOnUiThreadSync(Runnable runnable) {
@@ -742,59 +606,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }
     }
 
-    /**
-    * This method will edit the bookmark with index = bookmarkIndex from the list of bookmarks
-    * For the field index:
-    *     fieldIndex = 1 - the Bookmark name
-    *     fieldIndex = 2 - the Bookmark url
-    *     fieldIndex = 3 - the Bookmark keyword
-    */
-    public void editBookmark(int bookmarkIndex, int fieldIndex, String addedText, ListView list) {
-
-        // Open the Edit Bookmark context menu
-        View child;
-        mSolo.clickOnText("Bookmarks");
-        child = list.getChildAt(bookmarkIndex);
-        mAsserter.ok(child != null, "edit item can be retrieved", child != null ? child.toString() : "null!");
-        waitForText("Switch to tab");
-        mSolo.clickLongOnView(child);
-        waitForText("Share");
-        mSolo.clickOnText("Edit");
-        waitForText("Edit Bookmark");
-
-        // Clear the Field
-        mSolo.clearEditText(fieldIndex);
-
-        // Enter the new text
-        mSolo.clickOnEditText(fieldIndex);
-        mActions.sendKeys(addedText);
-        mSolo.clickOnText("OK");
-        waitForText("Bookmark updated");
-    }
-
-    public boolean checkBookmarkEdit(int bookmarkIndex, String addedText, ListView list) {
-        Device mDevice = new Device();
-        // Open the Edit Bookmark context menu
-        View child;
-        mSolo.clickOnText("Bookmarks");
-        child = list.getChildAt(bookmarkIndex);
-        mAsserter.ok(child != null, "check item can be retrieved", child != null ? child.toString() : "null!");
-        waitForText("Switch to tab");
-        mSolo.clickLongOnView(child);
-        waitForText("Share");
-        mSolo.clickOnText("Edit");
-        waitForText("Edit Bookmark");
-
-        // Check if the new text was added
-        if (mSolo.searchText(addedText)) {
-            clickOnButton("Cancel");
-            waitForText("about:home");
-            return true;
-        } else {
-            clickOnButton("Cancel");
-            waitForText("about:home");
-            return false;
-        }
+    public void clearPrivateData() {
+        selectSettingsItem(PRIVACY_LABEL, CLEAR_PRIVATE_DATA_LABEL);
+        Actions.EventExpecter clearData = mActions.expectGeckoEvent("Sanitize:Finished");
+        mSolo.clickOnText("Clear data");
+        clearData.blockForEvent();
+        clearData.unregisterListener();
     }
 
     class Device {
