@@ -19,7 +19,10 @@
 %define toolbar_vertical_spacing 5px
 %define toolbar_horizontal_spacing 20px
 %define toolbar_snapped_horizontal_spacing 10px
-%define toolbar_height 68px
+
+% XXX Per UX mockups, this should be 68px, but we need to make this
+% one pixel higher to reduce button clipping until bug 905453 is resolved
+%define toolbar_height 69px
 %define labelled_toolbar_height 90px
 %define tabs_height 178px
 %define findbar_height 54px

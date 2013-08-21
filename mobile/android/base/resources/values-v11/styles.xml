@@ -21,6 +21,8 @@
 
     <style name="Widget.BaseListView" parent="android:style/Widget.Holo.ListView"/>
 
+    <style name="Widget.BaseGridView" parent="android:style/Widget.Holo.GridView"/>
+
     <style name="Widget.BaseTextView" parent="android:style/Widget.Holo.Light.TextView"/>
 
 
@@ -39,13 +41,6 @@
         <item name="android:ellipsize">marquee</item>
     </style>
 
-    <!-- AwesomeBar -->
-    <style name="AwesomeBar">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">@dimen/browser_toolbar_height</item>
-        <item name="android:orientation">horizontal</item>
-    </style>
- 
     <!-- ActionBar -->
     <style name="ActionBar" parent="android:style/Widget.Holo.ActionBar" />
  

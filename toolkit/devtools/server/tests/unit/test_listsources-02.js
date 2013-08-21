@@ -24,9 +24,6 @@ function run_test()
       return request.call(this, aRequest, aOnResponse);
     };
   }(gClient.request));
-  // Make sure that the eval script from addTestGlobal() won't interfere with
-  // the test.
-  gc();
   gClient.connect(function () {
     attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
