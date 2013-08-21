@@ -49,7 +49,7 @@ static bool GetModulePath(CStringW& aPathBuffer)
   WCHAR buffer[MAX_PATH];
   memset(buffer, 0, sizeof(buffer));
 
-  if (!GetModuleFileName(NULL, buffer, MAX_PATH)) {
+  if (!GetModuleFileName(nullptr, buffer, MAX_PATH)) {
     Log(L"GetModuleFileName failed.");
     return false;
   }
@@ -68,7 +68,7 @@ template <class T>void SafeRelease(T **ppT)
 {
   if (*ppT) {
     (*ppT)->Release();
-    *ppT = NULL;
+    *ppT = nullptr;
   }
 }
 
@@ -89,8 +89,8 @@ public:
 
   CExecuteCommandVerb() :
     mRef(1),
-    mShellItemArray(NULL),
-    mUnkSite(NULL),
+    mShellItemArray(nullptr),
+    mUnkSite(nullptr),
     mTargetIsFileSystemLink(false),
     mTargetIsDefaultBrowser(false),
     mTargetIsBrowser(false),
@@ -176,9 +176,9 @@ public:
 #ifdef SHOW_CONSOLE
     Log(L"SetSelection param count: %d", count);
     for (DWORD idx = 0; idx < count; idx++) {
-      IShellItem* item = NULL;
+      IShellItem* item = nullptr;
       if (SUCCEEDED(aArray->GetItemAt(idx, &item))) {
-        LPWSTR str = NULL;
+        LPWSTR str = nullptr;
         if (FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, &str))) {
           if (FAILED(item->GetDisplayName(SIGDN_URL, &str))) {
             Log(L"Failed to get a shell item array item.");
@@ -193,7 +193,7 @@ public:
     }
 #endif
 
-    IShellItem* item = NULL;
+    IShellItem* item = nullptr;
     if (FAILED(aArray->GetItemAt(0, &item))) {
       return E_FAIL;
     }
@@ -211,7 +211,7 @@ public:
 
   IFACEMETHODIMP GetSelection(REFIID aRefID, void **aInt)
   {
-    *aInt = NULL;
+    *aInt = nullptr;
     return mShellItemArray ? mShellItemArray->QueryInterface(aRefID, aInt) : E_FAIL;
   }
 
@@ -235,7 +235,7 @@ public:
 
   IFACEMETHODIMP GetSite(REFIID aRefID, void **aInt)
   {
-    *aInt = NULL;
+    *aInt = nullptr;
     return mUnkSite ? mUnkSite->QueryInterface(aRefID, aInt) : E_FAIL;
   }
 
@@ -252,14 +252,14 @@ public:
     }
 
     HRESULT hr;
-    IServiceProvider* pSvcProvider = NULL;
+    IServiceProvider* pSvcProvider = nullptr;
     hr = mUnkSite->QueryInterface(IID_IServiceProvider, (void**)&pSvcProvider);
     if (!pSvcProvider) {
       Log(L"Couldn't get IServiceProvider service from explorer. (%X)", hr);
       return S_OK;
     }
 
-    IExecuteCommandHost* pHost = NULL;
+    IExecuteCommandHost* pHost = nullptr;
     // If we can't get this it's a conventional desktop launch
     hr = pSvcProvider->QueryService(SID_ExecuteCommandHost,
                                     IID_IExecuteCommandHost, (void**)&pHost);
@@ -340,7 +340,7 @@ public:
   {
     IApplicationAssociationRegistration* pAAR;
     HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
-                                  NULL,
+                                  nullptr,
                                   CLSCTX_INPROC,
                                   IID_IApplicationAssociationRegistration,
                                   (void**)&pAAR);
@@ -416,7 +416,7 @@ static bool GetDefaultBrowserPath(CStringW& aPathBuffer)
 
   if (FAILED(AssocQueryStringW(ASSOCF_NOTRUNCATE | ASSOCF_INIT_IGNOREUNKNOWN,
                                ASSOCSTR_EXECUTABLE,
-                               kDefaultMetroBrowserIDPathKey, NULL,
+                               kDefaultMetroBrowserIDPathKey, nullptr,
                                buffer, &length))) {
     Log(L"AssocQueryString failed.");
     return false;
@@ -451,7 +451,7 @@ static bool GetDefaultBrowserAppModelID(WCHAR* aIDBuffer,
   }
   DWORD len = aCharLength * sizeof(WCHAR);
   memset(aIDBuffer, 0, len);
-  if (RegQueryValueExW(key, L"AppUserModelID", NULL, NULL,
+  if (RegQueryValueExW(key, L"AppUserModelID", nullptr, nullptr,
                        (LPBYTE)aIDBuffer, &len) != ERROR_SUCCESS || !len) {
     RegCloseKey(key);
     return false;
@@ -513,7 +513,7 @@ bool CExecuteCommandVerb::SetTargetPath(IShellItem* aItem)
   CComPtr<IDataObject> object;
   // Check the underlying data object first to insure we get
   // absolute uri. See chromium bug 157184.
-  if (SUCCEEDED(aItem->BindToHandler(NULL, BHID_DataObject,
+  if (SUCCEEDED(aItem->BindToHandler(nullptr, BHID_DataObject,
                                      IID_IDataObject,
                                      reinterpret_cast<void**>(&object))) &&
       GetPlainText(object, cstrText)) {
@@ -537,7 +537,7 @@ bool CExecuteCommandVerb::SetTargetPath(IShellItem* aItem)
   Log(L"No data object or data object has no text.");
 
   // Use the shell item display name
-  LPWSTR str = NULL;
+  LPWSTR str = nullptr;
   mTargetIsFileSystemLink = true;
   if (FAILED(aItem->GetDisplayName(SIGDN_FILESYSPATH, &str))) {
     mTargetIsFileSystemLink = false;
@@ -596,12 +596,12 @@ void CExecuteCommandVerb::LaunchDesktopBrowser()
   SHELLEXECUTEINFOW seinfo;
   memset(&seinfo, 0, sizeof(seinfo));
   seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
-  seinfo.fMask  = NULL;
-  seinfo.hwnd   = NULL;
-  seinfo.lpVerb = NULL;
+  seinfo.fMask  = 0;
+  seinfo.hwnd   = nullptr;
+  seinfo.lpVerb = nullptr;
   seinfo.lpFile = browserPath;
   seinfo.lpParameters =  params;
-  seinfo.lpDirectory  = NULL;
+  seinfo.lpDirectory  = nullptr;
   seinfo.nShow  = SW_SHOWNORMAL;
         
   ShellExecuteExW(&seinfo);
@@ -635,9 +635,9 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
   }
 
   // Launch into Metro
-  IApplicationActivationManager* activateMgr = NULL;
+  IApplicationActivationManager* activateMgr = nullptr;
   DWORD processID;
-  if (FAILED(CoCreateInstance(CLSID_ApplicationActivationManager, NULL,
+  if (FAILED(CoCreateInstance(CLSID_ApplicationActivationManager, nullptr,
                               CLSCTX_LOCAL_SERVER,
                               IID_IApplicationActivationManager,
                               (void**)&activateMgr))) {
@@ -657,7 +657,7 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
 
   // Hand off focus rights to the out-of-process activation server. Without
   // this the metro interface won't launch.
-  hr = CoAllowSetForegroundWindow(activateMgr, NULL);
+  hr = CoAllowSetForegroundWindow(activateMgr, nullptr);
   if (FAILED(hr)) {
     Log(L"CoAllowSetForegroundWindow result %X", hr);
     activateMgr->Release();
@@ -727,7 +727,7 @@ ClassFactory::Register(CLSCTX aClass, REGCLS aUse)
 STDMETHODIMP
 ClassFactory::QueryInterface(REFIID riid, void **ppv)
 {
-  IUnknown *punk = NULL;
+  IUnknown *punk = nullptr;
   if (riid == IID_IUnknown || riid == IID_IClassFactory) {
     punk = static_cast<IClassFactory*>(this);
   }
@@ -743,7 +743,7 @@ ClassFactory::QueryInterface(REFIID riid, void **ppv)
 STDMETHODIMP
 ClassFactory::CreateInstance(IUnknown *punkOuter, REFIID riid, void **ppv)
 {
-  *ppv = NULL;
+  *ppv = nullptr;
   if (punkOuter)
     return CLASS_E_NOAGGREGATION;
   return mUnkObject->QueryInterface(riid, ppv);
@@ -771,7 +771,7 @@ int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR pszCmdLine, int)
 
   if (!wcslen(pszCmdLine) || StrStrI(pszCmdLine, L"-Embedding"))
   {
-      CoInitialize(NULL);
+      CoInitialize(nullptr);
 
       CExecuteCommandVerb *pHandler = new CExecuteCommandVerb();
       if (!pHandler)
@@ -784,13 +784,13 @@ int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR pszCmdLine, int)
 
       ClassFactory classFactory(ppi);
       ppi->Release();
-      ppi = NULL;
+      ppi = nullptr;
 
       // REGCLS_SINGLEUSE insures we only get used once and then discarded.
       if (FAILED(classFactory.Register(CLSCTX_LOCAL_SERVER, REGCLS_SINGLEUSE)))
         return -1;
 
-      if (!SetTimer(NULL, 1, HEARTBEAT_MSEC, NULL)) {
+      if (!SetTimer(nullptr, 1, HEARTBEAT_MSEC, nullptr)) {
         Log(L"Failed to set timer, can't process request.");
         return -1;
       }

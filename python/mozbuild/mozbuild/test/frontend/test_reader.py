@@ -26,16 +26,16 @@ data_path = os.path.join(data_path, 'data')
 
 
 class TestBuildReader(unittest.TestCase):
-    def config(self, name):
+    def config(self, name, **kwargs):
         path = os.path.join(data_path, name)
 
-        return MockConfig(path)
+        return MockConfig(path, **kwargs)
 
     def reader(self, name, enable_tests=False):
-        config = self.config(name)
-
+        extra = {}
         if enable_tests:
-            config.substs['ENABLE_TESTS'] = '1'
+            extra['ENABLE_TESTS'] = '1'
+        config = self.config(name, extra_substs=extra)
 
         return BuildReader(config)
 

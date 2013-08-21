@@ -286,6 +286,13 @@ nsTSubstring_CharT::Assign( char_type c, const fallible_t& )
   }
 
 void
+nsTSubstring_CharT::Assign( const char_type* data )
+  {
+    if (!Assign(data, size_type(-1), fallible_t()))
+      NS_RUNTIMEABORT("OOM");
+  }
+
+void
 nsTSubstring_CharT::Assign( const char_type* data, size_type length )
   {
     if (!Assign(data, length, fallible_t()))

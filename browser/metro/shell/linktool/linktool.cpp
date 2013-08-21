@@ -37,10 +37,13 @@ HRESULT
 SetShortcutProps(LPCWSTR aShortcutPath, LPCWSTR aAppModelID, bool aSetID, bool aSetMode) 
 {
   HRESULT hres; 
-  ::CoInitialize(NULL);
+  ::CoInitialize(nullptr);
 
-  IPropertyStore *m_pps = NULL;
-  if (FAILED(hres = SHGetPropertyStoreFromParsingName(aShortcutPath, NULL, GPS_READWRITE, IID_PPV_ARGS(&m_pps)))) {
+  IPropertyStore *m_pps = nullptr;
+  if (FAILED(hres = SHGetPropertyStoreFromParsingName(aShortcutPath,
+                                                      nullptr,
+                                                      GPS_READWRITE,
+                                                      IID_PPV_ARGS(&m_pps)))) {
     printf("SHGetPropertyStoreFromParsingName failed\n");
     goto Exit;
   }
@@ -79,10 +82,13 @@ HRESULT
 PrintShortcutProps(LPCWSTR aTargetPath) 
 {
   HRESULT hres; 
-  ::CoInitialize(NULL);
+  ::CoInitialize(nullptr);
 
-  IPropertyStore *m_pps = NULL;
-  if (FAILED(hres = SHGetPropertyStoreFromParsingName(aTargetPath, NULL, GPS_READWRITE, IID_PPV_ARGS(&m_pps)))) {
+  IPropertyStore *m_pps = nullptr;
+  if (FAILED(hres = SHGetPropertyStoreFromParsingName(aTargetPath,
+                                                      nullptr,
+                                                      GPS_READWRITE,
+                                                      IID_PPV_ARGS(&m_pps)))) {
     printf("SHGetPropertyStoreFromParsingName failed\n");
     goto Exit;
   }
@@ -125,9 +131,9 @@ CreateLink(LPCWSTR aTargetPath, LPCWSTR aShortcutPath, LPCWSTR aDescription)
  
     wprintf(L"creating shortcut: '%s'\n",  aShortcutPath);
 
-    CoInitialize(NULL);
+    CoInitialize(nullptr);
 
-    hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+    hres = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
                             IID_IShellLink, (LPVOID*)&psl);
     if (FAILED(hres)) {
       CoUninitialize();
@@ -140,7 +146,7 @@ CreateLink(LPCWSTR aTargetPath, LPCWSTR aShortcutPath, LPCWSTR aDescription)
       psl->SetDescription(L"");
     }
  
-    IPersistFile* ppf = NULL;
+    IPersistFile* ppf = nullptr;
     hres = psl->QueryInterface(IID_IPersistFile, (LPVOID*)&ppf);
  
     if (SUCCEEDED(hres)) {
@@ -261,7 +267,9 @@ int wmain(int argc, WCHAR* argv[])
   }
 
   if (createShortcutFound) {
-    if (FAILED(hres = CreateLink(targetPathStr, shortcutPathStr, (descriptionFound ? descriptionStr : NULL)))) {
+    if (FAILED(hres = CreateLink(targetPathStr,
+                                 shortcutPathStr,
+                                 (descriptionFound ? descriptionStr : nullptr)))) {
       printf("failed creating shortcut HRESULT=%X\n", hres);
       return -1;
     }
@@ -275,7 +283,9 @@ int wmain(int argc, WCHAR* argv[])
   }
 
   if (appModelIDFound || modeFound) {
-    if (FAILED(hres = SetShortcutProps(target, (appModelIDFound ? appModelIDStr : NULL), appModelIDFound, modeFound))) {
+    if (FAILED(hres = SetShortcutProps(target,
+                                       (appModelIDFound ? appModelIDStr : nullptr),
+                                       appModelIDFound, modeFound))) {
       printf("failed adding property HRESULT=%X\n", hres);
       return -1;
     }

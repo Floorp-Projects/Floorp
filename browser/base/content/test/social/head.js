@@ -417,8 +417,8 @@ function get3ChatsForCollapsing(mode, cb) {
 
 function makeChat(mode, uniqueid, cb) {
   info("making a chat window '" + uniqueid +"'");
-  const chatUrl = "https://example.com/browser/browser/base/content/test/social/social_chat.html";
   let provider = Social.provider;
+  const chatUrl = provider.origin + "/browser/browser/base/content/test/social/social_chat.html";
   let isOpened = window.SocialChatBar.openChat(provider, chatUrl + "?id=" + uniqueid, function(chat) {
     info("chat window has opened");
     // we can't callback immediately or we might close the chat during

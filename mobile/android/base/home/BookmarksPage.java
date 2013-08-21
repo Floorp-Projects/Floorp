@@ -149,6 +149,10 @@ public class BookmarksPage extends HomeFragment {
         });
         mList.setAdapter(mListAdapter);
 
+        // Invalidate the cached value that keeps track of whether or
+        // not desktop bookmarks (or reading list items) exist.
+        BrowserDB.invalidateCachedState();
+
         // Create callbacks before the initial loader is started.
         mLoaderCallbacks = new CursorLoaderCallbacks(activity, getLoaderManager());
         mThumbnailsLoaderCallbacks = new ThumbnailsLoaderCallbacks();
@@ -362,7 +366,7 @@ public class BookmarksPage extends HomeFragment {
         @Override
         public Cursor loadCursor() {
             final int max = getContext().getResources().getInteger(R.integer.number_of_top_sites);
-            return BrowserDB.getTopSites(getContext().getContentResolver(), max);
+            return BrowserDB.getTopBookmarks(getContext().getContentResolver(), max);
         }
     }
 

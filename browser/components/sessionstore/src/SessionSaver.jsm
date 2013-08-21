@@ -262,6 +262,12 @@ let SessionSaverInternal = {
       return;
     }
 
+    // We update the time stamp before writing so that we don't write again
+    // too soon, if saving is requested before the write completes. Without
+    // this update we may save repeatedly if actions cause a runDelayed
+    // before writing has completed. See Bug 902280
+    this.updateLastSaveTime();
+
     // Write (atomically) to a session file, using a tmp file. Once the session
     // file is successfully updated, save the time stamp of the last save and
     // notify the observers.

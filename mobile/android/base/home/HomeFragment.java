@@ -6,6 +6,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.EditBookmarkDialog;
+import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
@@ -132,14 +133,8 @@ abstract class HomeFragment extends Fragment {
                 return false;
             }
 
-            // FIXME: bug 897772
-            Bitmap bitmap = null;
-            if (info.favicon != null) {
-                bitmap = BitmapUtils.decodeByteArray(info.favicon);
-            }
-
             String shortcutTitle = TextUtils.isEmpty(info.title) ? info.url.replaceAll(REGEX_URL_TO_TITLE, "") : info.title;
-            GeckoAppShell.createShortcut(shortcutTitle, info.url, bitmap, "");
+            new AddToLauncherTask(info.url, shortcutTitle).execute();
             return true;
         }
 
@@ -222,6 +217,35 @@ abstract class HomeFragment extends Fragment {
         if (!mIsLoaded) {
             load();
             mIsLoaded = true;
+        }
+    }
+
+    private static class AddToLauncherTask extends UiAsyncTask<Void, Void, String> {
+        private final String mUrl;
+        private final String mTitle;
+
+        public AddToLauncherTask(String url, String title) {
+            super(ThreadUtils.getBackgroundHandler());
+
+            mUrl = url;
+            mTitle = title;
+        }
+
+        @Override
+        public String doInBackground(Void... params) {
+            return Favicons.getInstance().getFaviconUrlForPageUrl(mUrl);
+        }
+
+        @Override
+        public void onPostExecute(String faviconUrl) {
+            Favicons.OnFaviconLoadedListener listener = new Favicons.OnFaviconLoadedListener() {
+                @Override
+                public void onFaviconLoaded(String url, Bitmap favicon) {
+                    GeckoAppShell.createShortcut(mTitle, mUrl, favicon, "");
+                }
+            };
+
+            Favicons.getInstance().loadFavicon(mUrl, faviconUrl, 0, listener);
         }
     }
 
