@@ -1574,7 +1574,8 @@ class AttrDefiner(PropertyDefiner):
                 accessor = ("genericLenientGetter" if attr.hasLenientThis()
                             else "genericGetter")
                 jitinfo = "&%s_getterinfo" % attr.identifier.name
-            return "{ (JSPropertyOp)%s, %s }" % (accessor, jitinfo)
+            return "{ JS_CAST_NATIVE_TO(%s, JSPropertyOp), %s }" % \
+                   (accessor, jitinfo)
 
         def setter(attr):
             if attr.readonly and attr.getExtendedAttribute("PutForwards") is None:
@@ -1586,7 +1587,8 @@ class AttrDefiner(PropertyDefiner):
                 accessor = ("genericLenientSetter" if attr.hasLenientThis()
                             else "genericSetter")
                 jitinfo = "&%s_setterinfo" % attr.identifier.name
-            return "{ (JSStrictPropertyOp)%s, %s }" % (accessor, jitinfo)
+            return "{ JS_CAST_NATIVE_TO(%s, JSStrictPropertyOp), %s }" % \
+                   (accessor, jitinfo)
 
         def specData(attr):
             return (attr.identifier.name, flags(attr), getter(attr),
@@ -1595,7 +1597,7 @@ class AttrDefiner(PropertyDefiner):
         return self.generatePrefableArray(
             array, name,
             '  { "%s", 0, %s, %s, %s}',
-            '  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }',
+            '  JS_PS_END',
             'JSPropertySpec',
             PropertyDefiner.getControllingCondition, specData, doIdArrays)
 
