@@ -23,7 +23,7 @@ Log(const wchar_t *fmt, ...)
 #if !defined(SHOW_CONSOLE)
   return;
 #endif
-  va_list a = NULL;
+  va_list a = nullptr;
   wchar_t szDebugString[1024];
   if(!lstrlenW(fmt))
     return;
@@ -34,8 +34,8 @@ Log(const wchar_t *fmt, ...)
     return;
 
   DWORD len;
-  WriteConsoleW(sCon, szDebugString, lstrlenW(szDebugString), &len, NULL);
-  WriteConsoleW(sCon, L"\n", 1, &len, NULL);
+  WriteConsoleW(sCon, szDebugString, lstrlenW(szDebugString), &len, nullptr);
+  WriteConsoleW(sCon, L"\n", 1, &len, nullptr);
 
   if (IsDebuggerPresent()) {  
     OutputDebugStringW(szDebugString);
@@ -53,7 +53,7 @@ SetupConsole()
   int fd = _open_osfhandle(reinterpret_cast<intptr_t>(sCon), 0);
   fp = _fdopen(fd, "w");
   *stdout = *fp;
-  setvbuf(stdout, NULL, _IONBF, 0);
+  setvbuf(stdout, nullptr, _IONBF, 0);
 }
 #endif
 
@@ -104,19 +104,19 @@ IsDX10Available()
 
   CComPtr<ID3D10Device1> device;
   // Try for DX10.1
-  if (FAILED(createD3DDevice(adapter1, D3D10_DRIVER_TYPE_HARDWARE, NULL,
+  if (FAILED(createD3DDevice(adapter1, D3D10_DRIVER_TYPE_HARDWARE, nullptr,
                              D3D10_CREATE_DEVICE_BGRA_SUPPORT |
                              D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
                              D3D10_FEATURE_LEVEL_10_1,
                              D3D10_1_SDK_VERSION, &device))) {
     // Try for DX10
-    if (FAILED(createD3DDevice(adapter1, D3D10_DRIVER_TYPE_HARDWARE, NULL,
+    if (FAILED(createD3DDevice(adapter1, D3D10_DRIVER_TYPE_HARDWARE, nullptr,
                                D3D10_CREATE_DEVICE_BGRA_SUPPORT |
                                D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
                                D3D10_FEATURE_LEVEL_10_0,
                                D3D10_1_SDK_VERSION, &device))) {
       // Try for DX9.3 (we fall back to cairo and cairo has support for D3D 9.3)
-      if (FAILED(createD3DDevice(adapter1, D3D10_DRIVER_TYPE_HARDWARE, NULL,
+      if (FAILED(createD3DDevice(adapter1, D3D10_DRIVER_TYPE_HARDWARE, nullptr,
                                  D3D10_CREATE_DEVICE_BGRA_SUPPORT |
                                  D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
                                  D3D10_FEATURE_LEVEL_9_3,

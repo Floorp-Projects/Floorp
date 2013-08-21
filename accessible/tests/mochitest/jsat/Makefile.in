@@ -18,6 +18,7 @@ test_alive.html \
 test_braille.html \
 test_explicit_names.html \
 test_landmarks.html \
+test_live_regions.html \
 test_tables.html \
 test_utterance_order.html \
 $(NULL)

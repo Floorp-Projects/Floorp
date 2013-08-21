@@ -266,6 +266,15 @@ this.Utils = {
     return true;
   },
 
+  matchAttributeValue: function matchAttributeValue(aAttributeValue, values) {
+    let attrSet = new Set(aAttributeValue.split(' '));
+    for (let value of values) {
+      if (attrSet.has(value)) {
+        return value;
+      }
+    }
+  },
+
   getLandmarkName: function getLandmarkName(aAccessible) {
     const landmarks = [
       'banner',
@@ -281,11 +290,7 @@ this.Utils = {
     }
 
     // Looking up a role that would match a landmark.
-    for (let landmark of landmarks) {
-      if (roles.indexOf(landmark) > -1) {
-        return landmark;
-      }
-    }
+    return this.matchAttributeValue(roles, landmarks);
   }
 };
 
@@ -422,12 +427,15 @@ this.Logger = {
  * for a given accessible and its relationship with another accessible.
  */
 this.PivotContext = function PivotContext(aAccessible, aOldAccessible,
-                                          aStartOffset, aEndOffset) {
+  aStartOffset, aEndOffset, aIgnoreAncestry = false,
+  aIncludeInvisible = false) {
   this._accessible = aAccessible;
   this._oldAccessible =
     this._isDefunct(aOldAccessible) ? null : aOldAccessible;
   this.startOffset = aStartOffset;
   this.endOffset = aEndOffset;
+  this._ignoreAncestry = aIgnoreAncestry;
+  this._includeInvisible = aIncludeInvisible;
 }
 
 PivotContext.prototype = {
@@ -497,7 +505,7 @@ PivotContext.prototype = {
    */
   get oldAncestry() {
     if (!this._oldAncestry) {
-      if (!this._oldAccessible) {
+      if (!this._oldAccessible || this._ignoreAncestry) {
         this._oldAncestry = [];
       } else {
         this._oldAncestry = this._getAncestry(this._oldAccessible);
@@ -512,7 +520,8 @@ PivotContext.prototype = {
    */
   get currentAncestry() {
     if (!this._currentAncestry) {
-      this._currentAncestry = this._getAncestry(this._accessible);
+      this._currentAncestry = this._ignoreAncestry ? [] :
+        this._getAncestry(this._accessible);
     }
     return this._currentAncestry;
   },
@@ -524,7 +533,7 @@ PivotContext.prototype = {
    */
   get newAncestry() {
     if (!this._newAncestry) {
-      this._newAncestry = [currentAncestor for (
+      this._newAncestry = this._ignoreAncestry ? [] : [currentAncestor for (
         [index, currentAncestor] of Iterator(this.currentAncestry)) if (
           currentAncestor !== this.oldAncestry[index])];
     }
@@ -543,9 +552,14 @@ PivotContext.prototype = {
     }
     let child = aAccessible.firstChild;
     while (child) {
-      let state = {};
-      child.getState(state, {});
-      if (!(state.value & Ci.nsIAccessibleStates.STATE_INVISIBLE)) {
+      let include;
+      if (this._includeInvisible) {
+        include = true;
+      } else {
+        let [state,] = Utils.getStates(child);
+        include = !(state.value & Ci.nsIAccessibleStates.STATE_INVISIBLE);
+      }
+      if (include) {
         if (aPreorder) {
           yield child;
           [yield node for (node of this._traverse(child, aPreorder, aStop))];
@@ -703,7 +717,6 @@ PrefCache.prototype = {
     if (!this.type) {
       this.type = aBranch.getPrefType(this.name);
     }
-
     switch (this.type) {
       case Ci.nsIPrefBranch.PREF_STRING:
         return aBranch.getCharPref(this.name);
