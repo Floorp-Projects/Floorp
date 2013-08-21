@@ -13,6 +13,7 @@
 #include "mozilla/net/FTPChannelParent.h"
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/net/RemoteOpenFileParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/network/TCPSocketParent.h"
 #include "mozilla/dom/network/TCPServerSocketParent.h"
@@ -25,6 +26,7 @@
 #include "nsEscape.h"
 #include "RemoteOpenFileParent.h"
 
+using mozilla::dom::ContentParent;
 using mozilla::dom::TabParent;
 using mozilla::net::PTCPSocketParent;
 using mozilla::dom::TCPSocketParent;
@@ -73,6 +75,47 @@ PBOverrideStatusFromLoadContext(const SerializedLoadContext& aSerialized)
       kPBOverride_NotPrivate;
   }
   return kPBOverride_Unset;
+}
+
+const char*
+NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
+                                 PContentParent* aContent,
+                                 uint32_t* aAppId,
+                                 bool* aInBrowserElement)
+{
+  *aAppId = NECKO_UNKNOWN_APP_ID;
+  *aInBrowserElement = false;
+
+  if (UsingNeckoIPCSecurity()) {
+    if (!aSerialized.IsNotNull()) {
+      return "SerializedLoadContext from child is null";
+    }
+  }
+
+  const InfallibleTArray<PBrowserParent*>& browsers = aContent->ManagedPBrowserParent();
+  for (uint32_t i = 0; i < browsers.Length(); i++) {
+    // GetValidatedAppInfo returning null means we passed security checks.
+    if (!GetValidatedAppInfo(aSerialized, browsers[i], aAppId, aInBrowserElement)) {
+      return nullptr;
+    }
+  }
+
+  if (browsers.Length() == 0) {
+    if (UsingNeckoIPCSecurity()) {
+      return "ContentParent does not have any PBrowsers";
+    }
+    if (aSerialized.IsNotNull()) {
+      *aAppId = aSerialized.mAppId;
+      *aInBrowserElement = aSerialized.mIsInBrowserElement;
+    } else {
+      *aAppId = NECKO_NO_APP_ID;
+    }
+    return nullptr;
+  }
+
+  // If we reached this point, we failed the security check.
+  // Try to return a reasonable error message.
+  return GetValidatedAppInfo(aSerialized, browsers[0], aAppId, aInBrowserElement);
 }
 
 const char*
