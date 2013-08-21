@@ -270,7 +270,12 @@ const testcases = [
 
     // Katakana and Hangul
     ["ハングル한글",
-                 "xn--qck1c2d4a2366lkmzb",           false, false, false]
+                 "xn--qck1c2d4a2366lkmzb",           false, false, false],
+
+    // Thai (also tests that node with over 63 UTF-8 octets doesn't fail)
+    ["เครื่องทําน้ําทําน้ําแข็ง",
+                 "xn--22cdjb2fanb9fyepcbbb9dwh4a3igze4fdcd",
+                                                     false, true, true]
 ];
 
 
