@@ -9,14 +9,15 @@
                                             android:layout_width="wrap_content"
                                             android:layout_height="fill_parent"
                                             android:tabStripEnabled="false"
-                                            android:divider="@drawable/tab_indicator_divider"/>
+                                            android:divider="@drawable/tab_indicator_divider"
+                                            android:layout="@layout/tabs_panel_indicator"/>
 
     <View android:layout_width="0dip"
           android:layout_height="fill_parent"
           android:layout_weight="1.0"/>
 
     <ImageButton android:id="@+id/add_tab"
-                 style="@style/AddressBar.ImageButton"
+                 style="@style/UrlBar.ImageButton"
                  android:layout_width="@dimen/browser_toolbar_height"
                  android:layout_height="@dimen/browser_toolbar_height"
                  android:padding="@dimen/browser_toolbar_button_padding"

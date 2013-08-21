@@ -67,8 +67,6 @@ public class testSystemPages extends PixelTest {
             String expectedUrl = item[1][0];
 
             expectedTabCount++;
-            mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Press back to dismiss the awesomebar
-            mSolo.sleep(AFTER_BACK_SLEEP_MS);
 
             // Set up listeners to catch the page load we're about to do
             tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");

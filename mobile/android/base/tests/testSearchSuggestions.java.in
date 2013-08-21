@@ -4,6 +4,7 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
 import android.content.Context;
+import android.support.v4.app.Fragment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -40,21 +41,32 @@ public class testSearchSuggestions extends BaseTest {
         final int suggestionLayoutId = mDriver.findElement(getActivity(), "suggestion_layout").getId();
         final int suggestionTextId = mDriver.findElement(getActivity(), "suggestion_text").getId();
 
-        Actions.EventExpecter enginesEventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
-        final Activity awesomeBarActivity = clickOnAwesomeBar();
-        enginesEventExpecter.blockForEvent();
-        enginesEventExpecter.unregisterListener();
-        connectSuggestClient(awesomeBarActivity);
+        focusUrlBar();
 
         for (int i = 0; i < TEST_QUERY.length(); i++) {
+            Actions.EventExpecter enginesEventExpecter = null;
+
+            if (i == 0) {
+                enginesEventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
+            }
+
             mActions.sendKeys(TEST_QUERY.substring(i, i+1));
+
+            // The BrowserSearch UI only shows up once a non-empty
+            // search term is entered
+            if (enginesEventExpecter != null) {
+                connectSuggestClient(getActivity());
+                enginesEventExpecter.blockForEvent();
+                enginesEventExpecter.unregisterListener();
+                enginesEventExpecter = null;
+            }
 
             final String query = TEST_QUERY.substring(0, i+1);
             boolean success = waitForTest(new BooleanTest() {
                 @Override
                 public boolean test() {
                     // get the first suggestion row
-                    ViewGroup suggestionGroup = (ViewGroup) awesomeBarActivity.findViewById(suggestionLayoutId);
+                    ViewGroup suggestionGroup = (ViewGroup) getActivity().findViewById(suggestionLayoutId);
                     if (suggestionGroup == null)
                         return false;
 
@@ -72,6 +84,7 @@ public class testSearchSuggestions extends BaseTest {
                     return true;
                 }
             }, SUGGESTION_TIMEOUT);
+
             mAsserter.is(success, true, "Results for query '" + query + "' matched expected suggestions");
         }
     }
@@ -88,17 +101,15 @@ public class testSearchSuggestions extends BaseTest {
         suggestMap.put("foo barz", new ArrayList<String>() {{ add("foo barz"); }});
     }
 
-    private void connectSuggestClient(final Activity awesomeBarActivity) {
-        final int awesomeBarTabsId = mDriver.findElement(getActivity(), "awesomebar_tabs").getId();
-
+    private void connectSuggestClient(final Activity activity) {
         try {
             // create a SuggestClient that uses robocop_suggestions.sjs
             ClassLoader classLoader = getActivity().getApplicationContext().getClassLoader();
-            Class suggestClass = classLoader.loadClass("org.mozilla.gecko.SuggestClient");
+            Class suggestClass = classLoader.loadClass("org.mozilla.gecko.home.SuggestClient");
             Constructor suggestConstructor = suggestClass.getConstructor(
                     new Class[] { Context.class, String.class, int.class, int.class });
             String suggestTemplate = getAbsoluteRawUrl(SUGGESTION_TEMPLATE);
-            Object client = suggestConstructor.newInstance(awesomeBarActivity, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
+            Object client = suggestConstructor.newInstance(activity, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
 
             // enable offline HTTP requests for testing
             final Field checkNetworkField = suggestClass.getDeclaredField("mCheckNetwork");
@@ -106,25 +117,20 @@ public class testSearchSuggestions extends BaseTest {
             checkNetworkField.setBoolean(client, false);
 
             // replace mSuggestClient with test client
-            final Class awesomeBarTabsClass = classLoader.loadClass("org.mozilla.gecko.AwesomeBarTabs");
-            final Method getAllPagesTabMethod = awesomeBarTabsClass.getMethod("getAllPagesTab");
-            final View awesomeBarTabs = (View) awesomeBarActivity.findViewById(awesomeBarTabsId);
-            final Class allPagesTabClass = classLoader.loadClass("org.mozilla.gecko.AllPagesTab");
-            final Field suggestClientField = allPagesTabClass.getDeclaredField("mSuggestClient");
-            final Object allPagesTab = getAllPagesTabMethod.invoke(awesomeBarTabs);
+            final Class browserSearchClass = classLoader.loadClass("org.mozilla.gecko.home.BrowserSearch");
+            final Field suggestClientField = browserSearchClass.getDeclaredField("mSuggestClient");
             suggestClientField.setAccessible(true);
+
             waitForTest(new BooleanTest() {
                 @Override
                 public boolean test() {
-                    // wait for mSuggestClient to be set before we replace it
-                    try {
-                        return suggestClientField.get(allPagesTab) != null;
-                    } catch (IllegalAccessException e) {
-                        return false;
-                    }
+                    final Fragment browserSearch = getBrowserSearch();
+                    return (browserSearch != null);
                 }
             }, SUGGESTION_TIMEOUT);
-            suggestClientField.set(allPagesTab, client);
+
+            final Fragment browserSearch = getBrowserSearch();
+            suggestClientField.set(browserSearch, client);
         } catch (Exception e) {
            throw new RuntimeException("Error setting SuggestClient", e);
         }

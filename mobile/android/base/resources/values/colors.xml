@@ -4,8 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
-  <color name="awesomebar_header_row">#FFD2DAE2</color>
-  <color name="awesomebar_header_row_focused">#FFA2AAB2</color>
+  <color name="background_light">#FFECF0F3</color>
   <color name="background_normal">#FFCED7DE</color>
   <color name="background_private">#FF292C29</color>
   <color name="background_tabs">#FF363B40</color>
@@ -37,7 +36,7 @@
   -->
   <!-- Default colors -->
   <color name="text_color_primary">#222222</color>
-  <color name="text_color_secondary">#666666</color>
+  <color name="text_color_secondary">#777777</color>
   <color name="text_color_tertiary">#9198A1</color>
 
   <!-- Default inverse colors -->
@@ -75,10 +74,8 @@
   <color name="url_bar_text_highlight_pb">#FFD06BFF</color>
   <color name="suggestion_primary">#dddddd</color>
   <color name="suggestion_pressed">#bbbbbb</color>
-  <color name="abouthome_thumbnail_bg">#5FFF</color>
-  <color name="abouthome_topsite_shadow">#1000</color>
   <color name="tab_row_pressed">#4D000000</color>
-  <color name="abouthome_topsite_pin">#55000000</color>
+  <color name="top_bookmark_pin">#55000000</color>
   <color name="dialogtitle_textcolor">#ffffff</color>
 
   <color name="textbox_background">#FFF</color>
@@ -90,6 +87,8 @@
   <color name="url_bar_domaintext">#000</color>
   <color name="url_bar_domaintext_private">#FFF</color>
   <color name="url_bar_blockedtext">#b14646</color>
+
+  <color name="home_last_tab_bar_bg">#FFF5F7F9</color>
 
 </resources>
 

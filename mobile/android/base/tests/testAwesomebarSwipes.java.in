@@ -22,7 +22,8 @@ public class testAwesomebarSwipes extends BaseTest {
     public void testAwesomebarSwipes() {
         blockForGeckoReady();
 
-        ListView list = getAllPagesList("about:firefox");
+        //  Removed by Bug 896576 - [fig] Remove [getAllPagesList] from BaseTest
+        //  ListView list = getAllPagesList("about:firefox");
 
         // Test normal sliding of the list left and right
         ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
