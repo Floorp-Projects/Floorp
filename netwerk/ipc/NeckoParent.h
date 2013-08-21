@@ -46,14 +46,14 @@ public:
   /*
    * Creates LoadContext for parent-side of an e10s channel.
    *
-   * Values from PBrowserParent are more secure, and override those set in
-   * SerializedLoadContext.
+   * PContentParent corresponds to the process that is requesting the load.
    *
    * Returns null if successful, or an error string if failed.
    */
   MOZ_WARN_UNUSED_RESULT
   static const char*
   CreateChannelLoadContext(PBrowserParent* aBrowser,
+                           PContentParent* aContent,
                            const SerializedLoadContext& aSerialized,
                            nsCOMPtr<nsILoadContext> &aResult);
 
