@@ -25,8 +25,8 @@ skip-if(B2G) asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref
 == text-ltr-alignment-test.html text-ltr-alignment-ref.html
 == text-rtl-alignment-test.html text-rtl-alignment-ref.html
 
-== text-horzline-with-bottom.html text-horzline.html
-== text-horzline-with-top.html text-horzline.html
+fuzzy-if(B2G&&azureSkiaGL,1,256) == text-horzline-with-bottom.html text-horzline.html
+fuzzy-if(B2G&&azureSkiaGL,1,256) == text-horzline-with-top.html text-horzline.html
 
 != text-big-stroke.html text-blank.html
 != text-big-stroke.html text-big-fill.html

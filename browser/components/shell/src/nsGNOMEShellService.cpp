@@ -152,7 +152,8 @@ nsGNOMEShellService::KeyMatchesAppName(const char *aKeyValue) const
 
   gchar *commandPath;
   if (mUseLocaleFilenames) {
-    gchar *nativePath = g_filename_from_utf8(aKeyValue, -1, NULL, NULL, NULL);
+    gchar *nativePath = g_filename_from_utf8(aKeyValue, -1,
+                                             nullptr, nullptr, nullptr);
     if (!nativePath) {
       NS_ERROR("Error converting path to filesystem encoding");
       return false;
@@ -182,7 +183,7 @@ nsGNOMEShellService::CheckHandlerMatchesAppName(const nsACString &handler) const
   // The string will be something of the form: [/path/to/]browser "%s"
   // We want to remove all of the parameters and get just the binary name.
 
-  if (g_shell_parse_argv(command.get(), &argc, &argv, NULL) && argc > 0) {
+  if (g_shell_parse_argv(command.get(), &argc, &argv, nullptr) && argc > 0) {
     command.Assign(argv[0]);
     g_strfreev(argv);
   }
@@ -380,7 +381,7 @@ WriteImage(const nsCString& aPath, imgIContainer* aImage)
   if (!pixbuf)
       return NS_ERROR_NOT_AVAILABLE;
 
-  gboolean res = gdk_pixbuf_save(pixbuf, aPath.get(), "png", NULL, NULL);
+  gboolean res = gdk_pixbuf_save(pixbuf, aPath.get(), "png", nullptr, nullptr);
 
   g_object_unref(pixbuf);
   return res ? NS_OK : NS_ERROR_FAILURE;
@@ -454,7 +455,7 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
     gsettings->GetCollectionForSchema(
       NS_LITERAL_CSTRING(kDesktopBGSchema), getter_AddRefs(background_settings));
     if (background_settings) {
-      gchar *file_uri = g_filename_to_uri(filePath.get(), NULL, NULL);
+      gchar *file_uri = g_filename_to_uri(filePath.get(), nullptr, nullptr);
       if (!file_uri)
          return NS_ERROR_FAILURE;
 
@@ -615,7 +616,7 @@ nsGNOMEShellService::OpenApplication(int32_t aApplication)
   // Perform shell argument expansion
   int argc;
   char **argv;
-  if (!g_shell_parse_argv(appCommand.get(), &argc, &argv, NULL))
+  if (!g_shell_parse_argv(appCommand.get(), &argc, &argv, nullptr))
     return NS_ERROR_FAILURE;
 
   char **newArgv = new char*[argc + 1];
@@ -630,8 +631,8 @@ nsGNOMEShellService::OpenApplication(int32_t aApplication)
 
   newArgv[newArgc] = nullptr;
 
-  gboolean err = g_spawn_async(NULL, newArgv, NULL, G_SPAWN_SEARCH_PATH,
-                               NULL, NULL, NULL, NULL);
+  gboolean err = g_spawn_async(nullptr, newArgv, nullptr, G_SPAWN_SEARCH_PATH,
+                               nullptr, nullptr, nullptr, nullptr);
 
   g_strfreev(argv);
   delete[] newArgv;

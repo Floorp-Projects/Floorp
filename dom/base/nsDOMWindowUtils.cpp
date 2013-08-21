@@ -1695,6 +1695,16 @@ nsDOMWindowUtils::FindElementWithViewId(nsViewID aID,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetViewId(nsIDOMElement* aElement, nsViewID* aResult)
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  if (content && nsLayoutUtils::FindIDFor(content, aResult)) {
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetScreenPixelsPerCSSPixel(float* aScreenPixels)
 {
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);

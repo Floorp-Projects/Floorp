@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(3fb573c3-6fc4-41d3-80c1-f0e60662691e)]
+[scriptable, uuid(a5818719-e1b6-4fdc-8551-006055fa9996)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -22,13 +22,27 @@ interface nsITelephonyListener : nsISupports
    *        Indicates whether this call is outgoing or incoming.
    * @param isEmergency
    *        Indicates whether this call is an emergency call.
+   * @param isConference
+   *        Indicates whether this call is a conference call.
    */
   void callStateChanged(in unsigned long callIndex,
                         in unsigned short callState,
                         in AString number,
                         in boolean isActive,
                         in boolean isOutgoing,
-                        in boolean isEmergency);
+                        in boolean isEmergency,
+                        in boolean isConference);
+
+  /**
+   * Called when participants of a conference call have been updated, and the
+   * conference call state changes.
+   *
+   * @param callState
+   *        Possible values are: nsITelephonyProvider::CALL_STATE_UNKNOWN,
+   *        nsITelephonyProvider::CALL_STATE_HELD,
+   *        nsITelephonyProvider::CALL_STATE_CONNECTED.
+   */
+  void conferenceCallStateChanged(in unsigned short callState);
 
   /**
    * Called when enumeration asked by nsITelephonyProvider::enumerateCalls
@@ -51,7 +65,8 @@ interface nsITelephonyListener : nsISupports
    *        Indicates whether this call is the active one.
    * @param isOutgoing
    *        Indicates whether this call is outgoing or incoming.
-   *
+   * @param isConference
+   *        Indicates whether this call is a conference call.
    * @return true to continue enumeration or false to cancel.
    */
   boolean enumerateCallState(in unsigned long callIndex,
@@ -59,7 +74,8 @@ interface nsITelephonyListener : nsISupports
                              in AString number,
                              in boolean isActive,
                              in boolean isOutgoing,
-                             in boolean isEmergency);
+                             in boolean isEmergency,
+                             in boolean isConference);
 
   /**
    * Notify when RIL receives supplementary service notification.
@@ -96,7 +112,7 @@ interface nsITelephonyListener : nsISupports
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(eddb7ff6-29af-4973-83de-1159365c7d7d)]
+[scriptable, uuid(45a2f856-4e07-499a-94c6-624f90c3345b)]
 interface nsITelephonyProvider : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -142,6 +158,11 @@ interface nsITelephonyProvider : nsISupports
   void rejectCall(in unsigned long callIndex);
   void holdCall(in unsigned long callIndex);
   void resumeCall(in unsigned long callIndex);
+
+  void conferenceCall();
+  void separateCall(in unsigned long callIndex);
+  void holdConference();
+  void resumeConference();
 
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
