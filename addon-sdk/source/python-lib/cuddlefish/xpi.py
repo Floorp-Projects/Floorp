@@ -77,15 +77,14 @@ def build_xpi(template_root_dir, manifest, xpi_path,
         validate_prefs(harness_options["preferences"])
 
         opts_xul = parse_options(harness_options["preferences"],
-                                 harness_options["jetpackID"],
-                                 harness_options["preferencesBranch"])
+                                 harness_options["jetpackID"])
         open('.options.xul', 'wb').write(opts_xul.encode("utf-8"))
         zf.write('.options.xul', 'options.xul')
         os.remove('.options.xul')
 
         from options_defaults import parse_options_defaults
         prefs_js = parse_options_defaults(harness_options["preferences"],
-                                          harness_options["preferencesBranch"])
+                                          harness_options["jetpackID"])
         open('.prefs.js', 'wb').write(prefs_js.encode("utf-8"))
 
     else:

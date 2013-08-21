@@ -22,8 +22,11 @@ public class testTabHistory extends PixelTest {
 
         // Create tab history
         loadAndPaint(url);
+        verifyPageTitle("Browser Blank Page 01");
         loadAndPaint(url2);
+        verifyPageTitle("Browser Blank Page 02");
         loadAndPaint(url3);
+        verifyPageTitle("Browser Blank Page 03");
 
         // Get the device information and create the navigation for it
         Navigation nav = new Navigation(mDevice);

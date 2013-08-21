@@ -243,10 +243,10 @@ public class Favicons {
     public void attachToContext(Context context) {
         mContext = context;
         if (sFaviconSmallSize < 0) {
-            sFaviconSmallSize = Math.round(mContext.getResources().getDimension(R.dimen.awesomebar_row_favicon_size_small));
+            sFaviconSmallSize = Math.round(mContext.getResources().getDimension(R.dimen.favicon_size_small));
         }
         if (sFaviconLargeSize < 0) {
-            sFaviconLargeSize = Math.round(mContext.getResources().getDimension(R.dimen.awesomebar_row_favicon_size_large));
+            sFaviconLargeSize = Math.round(mContext.getResources().getDimension(R.dimen.favicon_size_large));
         }
     }
 

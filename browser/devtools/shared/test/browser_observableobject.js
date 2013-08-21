@@ -4,7 +4,7 @@
 function test() {
   let tmp = {};
   Cu.import("resource://gre/modules/devtools/Loader.jsm", tmp);
-  let {ObservableObject} = tmp.devtools.require("devtools/shared/observable-object");
+  let ObservableObject = tmp.devtools.require("devtools/shared/observable-object");
 
   let rawObject = {};
   let oe = new ObservableObject(rawObject);
@@ -40,10 +40,15 @@ function test() {
     {type: "get", path: "foo", value: [{a:42}]},
     {type: "get", path: "foo.0", value: {a:42}},
     {type: "set", path: "foo.0.a", value: 2},
+    {type: "get", path: "foo", value: [{a:2}]},
+    {type: "get", path: "bar", value: {}},
+    {type: "set", path: "foo.1", value: {}},
   ];
 
   function callback(event, path, value) {
     oe.off("get", callback);
+    ok(event, "event defined");
+    ok(path, "path defined");
     let e = expected[index];
     is(event, e.type, "[" + index + "] Right event received");
     is(path.join("."), e.path, "[" + index + "] Path valid");
@@ -51,9 +56,6 @@ function test() {
     index++;
     areObjectsSynced();
     oe.on("get", callback);
-    if (index == expected.length) {
-      finish();
-    }
   }
 
   oe.on("set", callback);
@@ -72,4 +74,9 @@ function test() {
   oe.object.foo = [{a:42}];
   oe.object.foo[0].a;
   oe.object.foo[0].a = 2;
+  oe.object.foo[1] = oe.object.bar;
+
+  is(index, expected.length, "Event count is right");
+
+  finish();
 }
