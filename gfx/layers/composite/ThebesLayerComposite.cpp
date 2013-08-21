@@ -169,7 +169,7 @@ void
 ThebesLayerComposite::CleanupResources()
 {
   if (mBuffer) {
-    mBuffer->Detach(this);
+    mBuffer->Detach();
   }
   mBuffer = nullptr;
 }
