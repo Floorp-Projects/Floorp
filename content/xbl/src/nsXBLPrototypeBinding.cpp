@@ -1621,7 +1621,7 @@ nsXBLPrototypeBinding::ResolveBaseBinding()
       if (!CheckTagNameWhiteList(nameSpaceID, tagName)) {
         const PRUnichar* params[] = { display.get() };
         nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                        "XBL", nullptr,
+                                        NS_LITERAL_CSTRING("XBL"), nullptr,
                                         nsContentUtils::eXBL_PROPERTIES,
                                        "InvalidExtendsBinding",
                                         params, ArrayLength(params),
