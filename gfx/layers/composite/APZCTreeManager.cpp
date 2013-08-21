@@ -218,6 +218,11 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
       const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
       if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_START) {
         mApzcForInputBlock = GetTargetAPZC(ScreenPoint(multiTouchInput.mTouches[0].mScreenPoint));
+        for (size_t i = 1; i < multiTouchInput.mTouches.Length(); i++) {
+          nsRefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(ScreenPoint(multiTouchInput.mTouches[i].mScreenPoint));
+          mApzcForInputBlock = CommonAncestor(mApzcForInputBlock.get(), apzc2.get());
+          APZC_LOG("Using APZC %p as the common ancestor\n", mApzcForInputBlock.get());
+        }
       } else if (mApzcForInputBlock) {
         APZC_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
         // If we have an mApzcForInputBlock and it's the end of the touch sequence
@@ -278,6 +283,13 @@ APZCTreeManager::ReceiveInputEvent(const nsInputEvent& aEvent,
       if (touchEvent.message == NS_TOUCH_START) {
         nsIntPoint point = touchEvent.touches[0]->mRefPoint;
         mApzcForInputBlock = GetTargetAPZC(ScreenPoint(point.x, point.y));
+        for (size_t i = 1; i < touchEvent.touches.Length(); i++) {
+          point = touchEvent.touches[i]->mRefPoint;
+          nsRefPtr<AsyncPanZoomController> apzc2 =
+            GetTargetAPZC(ScreenPoint(point.x, point.y));
+          mApzcForInputBlock = CommonAncestor(mApzcForInputBlock.get(), apzc2.get());
+          APZC_LOG("Using APZC %p as the common ancestor\n", mApzcForInputBlock.get());
+        }
       } else if (mApzcForInputBlock) {
         APZC_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
         // If we have an mApzcForInputBlock and it's the end of the touch sequence
@@ -603,6 +615,48 @@ APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& 
     // the required output as explained in the comment above GetTargetAPZC. Note that any missing terms
     // are async transforms that are guaranteed to be identity transforms.
   }
+}
+
+AsyncPanZoomController*
+APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2)
+{
+  // If either aApzc1 or aApzc2 is null, min(depth1, depth2) will be 0 and this function
+  // will return null.
+
+  // Calculate depth of the APZCs in the tree
+  int depth1 = 0, depth2 = 0;
+  for (AsyncPanZoomController* parent = aApzc1; parent; parent = parent->GetParent()) {
+    depth1++;
+  }
+  for (AsyncPanZoomController* parent = aApzc2; parent; parent = parent->GetParent()) {
+    depth2++;
+  }
+
+  // At most one of the following two loops will be executed; the deeper APZC pointer
+  // will get walked up to the depth of the shallower one.
+  int minDepth = depth1 < depth2 ? depth1 : depth2;
+  while (depth1 > minDepth) {
+    depth1--;
+    aApzc1 = aApzc1->GetParent();
+  }
+  while (depth2 > minDepth) {
+    depth2--;
+    aApzc2 = aApzc2->GetParent();
+  }
+
+  // Walk up the ancestor chains of both APZCs, always staying at the same depth for
+  // either APZC, and return the the first common ancestor encountered.
+  while (true) {
+    if (aApzc1 == aApzc2) {
+      return aApzc1;
+    }
+    if (depth1 <= 0) {
+      break;
+    }
+    aApzc1 = aApzc1->GetParent();
+    aApzc2 = aApzc2->GetParent();
+  }
+  return nullptr;
 }
 
 }
