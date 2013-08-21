@@ -18,52 +18,38 @@
       AccessFuTest.nextTest();
     }
 
-    function makeEventManagerListener(waitForMessage, callback) {
-      return {
-        observe: function observe(aMessage) {
-          // Ignore unexpected messages.
-          if (!(aMessage instanceof Components.interfaces.nsIConsoleMessage)) {
-            return;
-          }
-          if (aMessage.message.indexOf(waitForMessage) < 0) {
-            return;
-          }
-          Services.console.unregisterListener(this);
-          callback();
-        }
-      };
+    // Listen for 'EventManager.stop' and enable AccessFu again.
+    function onStop() {
+      ok(true, "EventManager was stopped.");
+      isnot(AccessFu._enabled, true, "AccessFu was disabled.");
+      AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
+      AccessFu._enable();
     }
 
-    function testEventManagerStartStop() {
-      // Firs listen for initial 'EventManager.start' and disable AccessFu.
-      var initialStartListener = makeEventManagerListener("EventManager.start",
-        function () {
-          ok(true, "EventManager was started.");
-          Services.console.registerListener(stopListener);
-          AccessFu._disable();
-        });
-      // Listen for 'EventManager.stop' and enable AccessFu again.
-      var stopListener = makeEventManagerListener("EventManager.stop",
-        function () {
-          ok(true, "EventManager was stopped.");
-          isnot(AccessFu._enabled, true, "AccessFu was disabled.");
-          Services.console.registerListener(finalStartListener);
-          AccessFu._enable();
-        });
-      // Make sure EventManager is started again.
-      var finalStartListener = makeEventManagerListener("EventManager.start",
-        function () {
-          ok(true, "EventManager was started again.");
-          ok(AccessFu._enabled, "AccessFu was enabled again.");
-          AccessFuTest.finish();
-        });
+    // Make sure EventManager is started again.
+    function onFinalStart() {
+      ok(true, "EventManager was started again.");
+      ok(AccessFu._enabled, "AccessFu was enabled again.");
+      AccessFuTest.finish();
+    }
 
-      Services.console.registerListener(initialStartListener);
+    // Listen for initial 'EventManager.start' and disable AccessFu.
+    function onInitialStart() {
+      ok(true, "EventManager was started.");
+      AccessFuTest.once_log("EventManager.stop", AccessFuTest.nextTest);
+      AccessFu._disable();
+    }
+
+    function init() {
+      AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
     }
 
     function doTest() {
       AccessFuTest.addFunc(confirmAccessFuStart);
-      AccessFuTest.addFunc(testEventManagerStartStop);
+      AccessFuTest.addFunc(init);
+      AccessFuTest.addFunc(onInitialStart);
+      AccessFuTest.addFunc(onStop);
+      AccessFuTest.addFunc(onFinalStart);
       AccessFuTest.waitForExplicitFinish();
       AccessFuTest.runTests();  // Will call SimpleTest.finish();
     }

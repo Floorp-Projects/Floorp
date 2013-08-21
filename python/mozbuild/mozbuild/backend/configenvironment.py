@@ -6,6 +6,7 @@ import ntpath
 import os
 import posixpath
 import re
+import sys
 
 from os.path import relpath
 
@@ -14,7 +15,14 @@ from Preprocessor import Preprocessor
 from ..util import (
     ensureParentDir,
     FileAvoidWrite,
+    ReadOnlyDict,
 )
+
+
+if sys.version_info.major == 2:
+    text_type = unicode
+else:
+    text_type = str
 
 
 RE_SHELL_ESCAPE = re.compile('''([ \t`#$^&*(){}\\|;'"<>?\[\]])''')
@@ -105,7 +113,7 @@ class ConfigEnvironment(object):
     def __init__(self, topsrcdir, topobjdir, defines=[], non_global_defines=[],
             substs=[]):
 
-        self.defines = dict(defines)
+        self.defines = ReadOnlyDict(defines)
         self.substs = dict(substs)
         self.topsrcdir = topsrcdir
         self.topobjdir = topobjdir
@@ -119,6 +127,29 @@ class ConfigEnvironment(object):
             for name in self.substs if not self.substs[name]]))
         self.substs['ALLDEFINES'] = '\n'.join(sorted(['#define %s %s' % (name,
             self.defines[name]) for name in global_defines]))
+
+        self.substs = ReadOnlyDict(self.substs)
+
+        # Populate a Unicode version of substs. This is an optimization to make
+        # moz.build reading faster, since each sandbox needs a Unicode version
+        # of these variables and doing it over a thousand times is a hotspot
+        # during sandbox execution!
+        # Bug 844509 tracks moving everything to Unicode.
+        self.substs_unicode = {}
+        for k, v in self.substs.items():
+            if not isinstance(v, text_type):
+                try:
+                    v = v.decode('utf-8')
+                except UnicodeDecodeError:
+                    log(self._log, logging.INFO, 'lossy_encoding',
+                        {'variable': k},
+                        'Lossy Unicode encoding for {variable}. See bug 844509.')
+
+                    v = v.decode('utf-8', 'replace')
+
+            self.substs_unicode[k] = v
+
+        self.substs_unicode = ReadOnlyDict(self.substs_unicode)
 
     @staticmethod
     def from_config_status(path):
@@ -225,4 +256,3 @@ class ConfigEnvironment(object):
 
                 output.write(l)
             return output.close()
-

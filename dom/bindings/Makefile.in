@@ -108,10 +108,6 @@ EXPORTS_GENERATED_DEST := $(DIST)/include/$(binding_include_path)
 EXPORTS_GENERATED_TARGET := export
 INSTALL_TARGETS += EXPORTS_GENERATED
 
-ifdef GNU_CC
-CXXFLAGS += -Wno-uninitialized
-endif
-
 # Install auto-generated GlobalGen files. The rules for the install must
 # be in the same target/subtier as GlobalGen.py, otherwise the files will not
 # get installed into the appropriate location as they are generated.
@@ -127,6 +123,10 @@ INSTALL_TARGETS += globalgen_headers
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
+ifdef GNU_CC
+CXXFLAGS += -Wno-uninitialized
+endif
 
 # If you change bindinggen_dependencies here, change it in
 # dom/bindings/test/Makefile.in too.
