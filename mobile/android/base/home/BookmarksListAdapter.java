@@ -60,13 +60,18 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
 
     /**
      * Moves to parent folder, if one exists.
+     *
+     * @return Whether the adapter successfully moved to a parent folder.
      */
-    public void moveToParentFolder() {
+    public boolean moveToParentFolder() {
         // If we're already at the root, we can't move to a parent folder
-        if (mParentStack.size() != 1) {
-            mParentStack.removeFirst();
-            refreshCurrentFolder();
+        if (mParentStack.size() == 1) {
+            return false;
         }
+
+        mParentStack.removeFirst();
+        refreshCurrentFolder();
+        return true;
     }
 
     /**
