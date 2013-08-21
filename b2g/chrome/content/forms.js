@@ -212,6 +212,7 @@ let FormAssistant = {
   scrollIntoViewTimeout: null,
   _focusedElement: null,
   _focusCounter: 0, // up one for every time we focus a new element
+  _observer: null,
   _documentEncoder: null,
   _editor: null,
   _editing: false,
@@ -230,12 +231,18 @@ let FormAssistant = {
   },
 
   setFocusedElement: function fa_setFocusedElement(element) {
+    let self = this;
+
     if (element === this.focusedElement)
       return;
 
     if (this.focusedElement) {
       this.focusedElement.removeEventListener('mousedown', this);
       this.focusedElement.removeEventListener('mouseup', this);
+      if (this._observer) {
+        this._observer.disconnect();
+        this._observer = null;
+      }
       if (!element) {
         this.focusedElement.blur();
       }
@@ -265,6 +272,24 @@ let FormAssistant = {
         // element.
         this._editor.addEditorObserver(this);
       }
+
+      // If our focusedElement is removed from DOM we want to handle it properly
+      let MutationObserver = element.ownerDocument.defaultView.MutationObserver;
+      this._observer = new MutationObserver(function(mutations) {
+        var del = [].some.call(mutations, function(m) {
+          return [].some.call(m.removedNodes, function(n) {
+            return n === element;
+          });
+        });
+        if (del && element === this.focusedElement) {
+          // item was deleted, fake a blur so all state gets set correctly
+          self.handleEvent({ target: element, type: "blur" });
+        }
+      });
+
+      this._observer.observe(element.parentNode, {
+        childList: true
+      });
     }
 
     this.focusedElement = element;
