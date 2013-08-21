@@ -492,8 +492,9 @@ APZCTreeManager::GetTargetAPZC(const ScreenPoint& aPoint,
   // The root may have siblings, so check those too
   gfxPoint point(aPoint.x, aPoint.y);
   for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
-    target = GetAPZCAtPoint(apzc, point, aTransformToApzcOut, aTransformToScreenOut);
+    target = GetAPZCAtPoint(apzc, point);
     if (target) {
+      GetInputTransforms(target, aTransformToApzcOut, aTransformToScreenOut);
       break;
     }
   }
@@ -518,8 +519,7 @@ APZCTreeManager::FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableL
 }
 
 AsyncPanZoomController*
-APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& aHitTestPoint,
-                                gfx3DMatrix& aTransformToApzcOut, gfx3DMatrix& aTransformToScreenOut)
+APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& aHitTestPoint)
 {
   // The comments below assume there is a chain of layers L..R with L and P having APZC instances as
   // explained in the comment on GetTargetAPZC. This function will recurse with aApzc at L and P, and the
@@ -543,30 +543,55 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& a
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
   for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
-    AsyncPanZoomController* match = GetAPZCAtPoint(child, untransformed, aTransformToApzcOut, aTransformToScreenOut);
+    AsyncPanZoomController* match = GetAPZCAtPoint(child, untransformed);
     if (match) {
-      // This code is not run in the recursion at layer L.
-      // aTransformToApzcOut is RC.Inverse() * QC.Inverse() * PA.Inverse() * PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse()
-      // at recursion level for P
-      aTransformToApzcOut = untransformSinceLastApzc * aTransformToApzcOut;
-      // aTransformToScreenOut is LA.Inverse() * MC * NC * OC * PC * QC * RC at recursion level for P
-      aTransformToScreenOut = aTransformToScreenOut * aApzc->GetCSSTransform() * aApzc->GetAncestorTransform();
-      // The above values for aTransformToApzcOut and aTransformToScreenOut at recursion level for P match
-      // the required output as explained in the comment above GetTargetAPZC. Note that any missing terms
-      // are async transforms that are guaranteed to be identity transforms.
       return match;
     }
   }
   if (aApzc->VisibleRegionContains(LayerPoint(untransformed.x, untransformed.y))) {
     APZC_LOG("Successfully matched untransformed point %f %f to visible region for APZC %p\n", untransformed.x, untransformed.y, aApzc);
-    // This code is not run in the recursion at layer P.
-    // aTransformToApzcOut is OC.Inverse() * NC.Inverse() * MC.Inverse() at recursion level for L.
-    aTransformToApzcOut = ancestorUntransform;
-    // aTransformToScreenOut is LA.Inverse() * MC * NC * OC at recursion level for L.
-    aTransformToScreenOut = asyncUntransform * aApzc->GetAncestorTransform();
     return aApzc;
   }
   return nullptr;
+}
+
+void
+APZCTreeManager::GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& aTransformToApzcOut,
+                                    gfx3DMatrix& aTransformToScreenOut)
+{
+  // The comments below assume there is a chain of layers L..R with L and P having APZC instances as
+  // explained in the comment on GetTargetAPZC. This function is called with aApzc at L, and the loop
+  // below performs one iteration, where parent is at P. The comments explain what values are stored
+  // in the variables at these two levels. All the comments use standard matrix notation where the
+  // leftmost matrix in a multiplication is applied first.
+
+  // ancestorUntransform is OC.Inverse() * NC.Inverse() * MC.Inverse()
+  gfx3DMatrix ancestorUntransform = aApzc->GetAncestorTransform().Inverse();
+  // asyncUntransform is LA.Inverse()
+  gfx3DMatrix asyncUntransform = gfx3DMatrix(aApzc->GetCurrentAsyncTransform()).Inverse();
+
+  // aTransformToApzcOut is initialized to OC.Inverse() * NC.Inverse() * MC.Inverse()
+  aTransformToApzcOut = ancestorUntransform;
+  // aTransformToScreenOut is initialized to LA.Inverse() * MC * NC * OC
+  aTransformToScreenOut = asyncUntransform * aApzc->GetAncestorTransform();
+
+  for (AsyncPanZoomController* parent = aApzc->GetParent(); parent; parent = parent->GetParent()) {
+    // ancestorUntransform is updated to RC.Inverse() * QC.Inverse() when parent == P
+    ancestorUntransform = parent->GetAncestorTransform().Inverse();
+    // asyncUntransform is updated to PA.Inverse() when parent == P
+    asyncUntransform = gfx3DMatrix(parent->GetCurrentAsyncTransform()).Inverse();
+    // untransformSinceLastApzc is RC.Inverse() * QC.Inverse() * PA.Inverse() * PC.Inverse()
+    gfx3DMatrix untransformSinceLastApzc = ancestorUntransform * asyncUntransform * parent->GetCSSTransform().Inverse();
+
+    // aTransformToApzcOut is RC.Inverse() * QC.Inverse() * PA.Inverse() * PC.Inverse() * OC.Inverse() * NC.Inverse() * MC.Inverse()
+    aTransformToApzcOut = untransformSinceLastApzc * aTransformToApzcOut;
+    // aTransformToScreenOut is LA.Inverse() * MC * NC * OC * PC * QC * RC
+    aTransformToScreenOut = aTransformToScreenOut * parent->GetCSSTransform() * parent->GetAncestorTransform();
+
+    // The above values for aTransformToApzcOut and aTransformToScreenOut when parent == P match
+    // the required output as explained in the comment above GetTargetAPZC. Note that any missing terms
+    // are async transforms that are guaranteed to be identity transforms.
+  }
 }
 
 }
