@@ -185,7 +185,7 @@ const PanelUI = {
         CustomizableUI.registerMenuPanel(this.contents);
         this.endBatchUpdate();
       }
-    }.bind(this)).then(null, ERROR);
+    }.bind(this)).then(null, Cu.reportError);
   },
 
   /**
