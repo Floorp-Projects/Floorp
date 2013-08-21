@@ -142,7 +142,6 @@ public:
    * General handler for incoming input events. Manipulates the frame metrics
    * based on what type of input it is. For example, a PinchGestureEvent will
    * cause scaling. This should only be called externally to this class.
-   * HandleInputEvent() should be used internally.
    */
   nsEventStatus ReceiveInputEvent(const InputData& aEvent);
 
@@ -286,6 +285,12 @@ private:
    * is considered part of the APZC tree management state. */
   mozilla::Monitor mTreeLock;
   nsRefPtr<AsyncPanZoomController> mRootApzc;
+  /* This tracks the APZC that should receive all inputs for the current input event block.
+   * This allows touch points to move outside the thing they started on, but still have the
+   * touch events delivered to the same initial APZC. This will only ever be touched on the
+   * input delivery thread, and so does not require locking.
+   */
+  nsRefPtr<AsyncPanZoomController> mApzcForInputBlock;
 };
 
 }
