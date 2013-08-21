@@ -153,7 +153,6 @@ extern const char js_typeof_str[];
 extern const char js_void_str[];
 extern const char js_while_str[];
 extern const char js_with_str[];
-extern const char js_yield_str[];
 
 namespace js {
 

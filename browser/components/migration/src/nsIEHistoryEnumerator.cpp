@@ -45,7 +45,7 @@ NS_IMPL_ISUPPORTS1(nsIEHistoryEnumerator, nsISimpleEnumerator)
 
 nsIEHistoryEnumerator::nsIEHistoryEnumerator()
 {
-  ::CoInitialize(NULL);  
+  ::CoInitialize(nullptr);  
 }
 
 nsIEHistoryEnumerator::~nsIEHistoryEnumerator()
@@ -60,7 +60,7 @@ nsIEHistoryEnumerator::EnsureInitialized()
     return;
 
   HRESULT hr = ::CoCreateInstance(CLSID_CUrlHistory,
-                                  NULL,
+                                  nullptr,
                                   CLSCTX_INPROC_SERVER,
                                   IID_IUrlHistoryStg2,
                                   getter_AddRefs(mIEHistory));

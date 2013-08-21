@@ -587,11 +587,11 @@ AboutReader.prototype = {
 
     let start = 0;
 
-    if (host.startsWith("www"))
+    if (host.startsWith("www."))
       start = 4;
-    else if (host.startsWith("m"))
+    else if (host.startsWith("m."))
       start = 2;
-    else if (host.startsWith("mobile"))
+    else if (host.startsWith("mobile."))
       start = 7;
 
     return host.substring(start);

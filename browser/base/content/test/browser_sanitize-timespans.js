@@ -2,10 +2,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 // Bug 453440 - Test the timespan-based logic of the sanitizer code
-var now_uSec = Date.now() * 1000;
+let now_mSec = Date.now();
+let now_uSec = now_mSec * 1000;
 
-const dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-
+const kMsecPerMin = 60 * 1000;
 const kUsecPerMin = 60 * 1000000;
 
 let tempScope = {};
@@ -14,6 +14,7 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
 let Sanitizer = tempScope.Sanitizer;
 
 let FormHistory = (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
+let Downloads = (Components.utils.import("resource://gre/modules/Downloads.jsm", {})).Downloads;
 
 function promiseFormHistoryRemoved() {
   let deferred = Promise.defer();
@@ -24,15 +25,30 @@ function promiseFormHistoryRemoved() {
   return deferred.promise;
 }
 
+function promiseDownloadRemoved(list) {
+  let deferred = Promise.defer();
+
+  let view = {
+    onDownloadRemoved: function(download) {
+      list.removeView(view);
+      deferred.resolve();
+    }
+  };
+
+  list.addView(view);
+
+  return deferred.promise;
+}
+
 function test() {
   waitForExplicitFinish();
 
   Task.spawn(function() {
-    setupDownloads();
+    yield setupDownloads();
     yield setupFormHistory();
     yield setupHistory();
     yield onHistoryReady();
-  }).then(finish);
+  }).then(null, ex => ok(false, ex)).then(finish);
 }
 
 function countEntries(name, message, check) {
@@ -80,12 +96,16 @@ function onHistoryReady() {
   itemPrefs.setBoolPref("sessions", false);
   itemPrefs.setBoolPref("siteSettings", false);
 
+  let publicList = yield Downloads.getPublicDownloadList();
+  let downloadPromise = promiseDownloadRemoved(publicList);
+
   // Clear 10 minutes ago
   s.range = [now_uSec - 10*60*1000000, now_uSec];
   s.sanitize();
   s.range = null;
 
   yield promiseFormHistoryRemoved();
+  yield downloadPromise;
 
   ok(!(yield promiseIsURIVisited(makeURI("http://10minutes.com"))),
      "Pretend visit to 10minutes.com should now be deleted");
@@ -122,23 +142,26 @@ function onHistoryReady() {
     yield countEntries("today", "today form entry should still exist", checkOne);
   yield countEntries("b4today", "b4today form entry should still exist", checkOne);
 
-  ok(!downloadExists(5555555), "10 minute download should now be deleted");
-  ok(downloadExists(5555551), "<1 hour download should still be present");
-  ok(downloadExists(5555556), "1 hour 10 minute download should still be present");
-  ok(downloadExists(5555550), "Year old download should still be present");
-  ok(downloadExists(5555552), "<2 hour old download should still be present");
-  ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
-  ok(downloadExists(5555553), "<4 hour old download should still be present");
-  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
+  ok(!(yield downloadExists(publicList, "fakefile-10-minutes")), "10 minute download should now be deleted");
+  ok((yield downloadExists(publicList, "fakefile-1-hour")), "<1 hour download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-1-hour-10-minutes")), "1 hour 10 minute download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-old")), "Year old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-2-hour")), "<2 hour old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-2-hour-10-minutes")), "2 hour 10 minute download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-4-hour")), "<4 hour old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-4-hour-10-minutes")), "4 hour 10 minute download should still be present");
 
   if (minutesSinceMidnight > 10)
-    ok(downloadExists(5555554), "'Today' download should still be present");
+    ok((yield downloadExists(publicList, "fakefile-today")), "'Today' download should still be present");
+
+  downloadPromise = promiseDownloadRemoved(publicList);
 
   // Clear 1 hour
   Sanitizer.prefs.setIntPref("timeSpan", 1);
   s.sanitize();
 
   yield promiseFormHistoryRemoved();
+  yield downloadPromise;
 
   ok(!(yield promiseIsURIVisited(makeURI("http://1hour.com"))),
      "Pretend visit to 1hour.com should now be deleted");
@@ -169,23 +192,26 @@ function onHistoryReady() {
     yield countEntries("today", "today form entry should still exist", checkOne);
   yield countEntries("b4today", "b4today form entry should still exist", checkOne);
 
-  ok(!downloadExists(5555551), "<1 hour download should now be deleted");
-  ok(downloadExists(5555556), "1 hour 10 minute download should still be present");
-  ok(downloadExists(5555550), "Year old download should still be present");
-  ok(downloadExists(5555552), "<2 hour old download should still be present");
-  ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
-  ok(downloadExists(5555553), "<4 hour old download should still be present");
-  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
+  ok(!(yield downloadExists(publicList, "fakefile-1-hour")), "<1 hour download should now be deleted");
+  ok((yield downloadExists(publicList, "fakefile-1-hour-10-minutes")), "1 hour 10 minute download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-old")), "Year old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-2-hour")), "<2 hour old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-2-hour-10-minutes")), "2 hour 10 minute download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-4-hour")), "<4 hour old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-4-hour-10-minutes")), "4 hour 10 minute download should still be present");
 
   if (hoursSinceMidnight > 1)
-    ok(downloadExists(5555554), "'Today' download should still be present");
+    ok((yield downloadExists(publicList, "fakefile-today")), "'Today' download should still be present");
   
+  downloadPromise = promiseDownloadRemoved(publicList);
+
   // Clear 1 hour 10 minutes
   s.range = [now_uSec - 70*60*1000000, now_uSec];
   s.sanitize();
   s.range = null;
 
   yield promiseFormHistoryRemoved();
+  yield downloadPromise;
 
   ok(!(yield promiseIsURIVisited(makeURI("http://1hour10minutes.com"))),
      "Pretend visit to 1hour10minutes.com should now be deleted");
@@ -213,20 +239,23 @@ function onHistoryReady() {
     yield countEntries("today", "today form entry should still exist", checkOne);
   yield countEntries("b4today", "b4today form entry should still exist", checkOne);
 
-  ok(!downloadExists(5555556), "1 hour 10 minute old download should now be deleted");
-  ok(downloadExists(5555550), "Year old download should still be present");
-  ok(downloadExists(5555552), "<2 hour old download should still be present");
-  ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
-  ok(downloadExists(5555553), "<4 hour old download should still be present");
-  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
+  ok(!(yield downloadExists(publicList, "fakefile-1-hour-10-minutes")), "1 hour 10 minute old download should now be deleted");
+  ok((yield downloadExists(publicList, "fakefile-old")), "Year old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-2-hour")), "<2 hour old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-2-hour-10-minutes")), "2 hour 10 minute download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-4-hour")), "<4 hour old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-4-hour-10-minutes")), "4 hour 10 minute download should still be present");
   if (minutesSinceMidnight > 70)
-    ok(downloadExists(5555554), "'Today' download should still be present");
+    ok((yield downloadExists(publicList, "fakefile-today")), "'Today' download should still be present");
+
+  downloadPromise = promiseDownloadRemoved(publicList);
 
   // Clear 2 hours
   Sanitizer.prefs.setIntPref("timeSpan", 2);
   s.sanitize();
 
   yield promiseFormHistoryRemoved();
+  yield downloadPromise;
 
   ok(!(yield promiseIsURIVisited(makeURI("http://2hour.com"))),
      "Pretend visit to 2hour.com should now be deleted");
@@ -251,20 +280,23 @@ function onHistoryReady() {
     yield countEntries("today", "today form entry should still exist", checkOne);
   yield countEntries("b4today", "b4today form entry should still exist", checkOne);
 
-  ok(!downloadExists(5555552), "<2 hour old download should now be deleted");
-  ok(downloadExists(5555550), "Year old download should still be present");
-  ok(downloadExists(5555557), "2 hour 10 minute download should still be present");
-  ok(downloadExists(5555553), "<4 hour old download should still be present");
-  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
+  ok(!(yield downloadExists(publicList, "fakefile-2-hour")), "<2 hour old download should now be deleted");
+  ok((yield downloadExists(publicList, "fakefile-old")), "Year old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-2-hour-10-minutes")), "2 hour 10 minute download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-4-hour")), "<4 hour old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-4-hour-10-minutes")), "4 hour 10 minute download should still be present");
   if (hoursSinceMidnight > 2)
-    ok(downloadExists(5555554), "'Today' download should still be present");
+    ok((yield downloadExists(publicList, "fakefile-today")), "'Today' download should still be present");
   
+  downloadPromise = promiseDownloadRemoved(publicList);
+
   // Clear 2 hours 10 minutes
   s.range = [now_uSec - 130*60*1000000, now_uSec];
   s.sanitize();
   s.range = null;
 
   yield promiseFormHistoryRemoved();
+  yield downloadPromise;
 
   ok(!(yield promiseIsURIVisited(makeURI("http://2hour10minutes.com"))),
      "Pretend visit to 2hour10minutes.com should now be deleted");
@@ -286,18 +318,21 @@ function onHistoryReady() {
     yield countEntries("today", "today form entry should still exist", checkOne);
   yield countEntries("b4today", "b4today form entry should still exist", checkOne);
 
-  ok(!downloadExists(5555557), "2 hour 10 minute old download should now be deleted");
-  ok(downloadExists(5555553), "<4 hour old download should still be present");
-  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
-  ok(downloadExists(5555550), "Year old download should still be present");
+  ok(!(yield downloadExists(publicList, "fakefile-2-hour-10-minutes")), "2 hour 10 minute old download should now be deleted");
+  ok((yield downloadExists(publicList, "fakefile-4-hour")), "<4 hour old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-4-hour-10-minutes")), "4 hour 10 minute download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-old")), "Year old download should still be present");
   if (minutesSinceMidnight > 130)
-    ok(downloadExists(5555554), "'Today' download should still be present");
+    ok((yield downloadExists(publicList, "fakefile-today")), "'Today' download should still be present");
+
+  downloadPromise = promiseDownloadRemoved(publicList);
 
   // Clear 4 hours
   Sanitizer.prefs.setIntPref("timeSpan", 3);
   s.sanitize();
 
   yield promiseFormHistoryRemoved();
+  yield downloadPromise;
 
   ok(!(yield promiseIsURIVisited(makeURI("http://4hour.com"))),
      "Pretend visit to 4hour.com should now be deleted");
@@ -316,11 +351,13 @@ function onHistoryReady() {
     yield countEntries("today", "today form entry should still exist", checkOne);
   yield countEntries("b4today", "b4today form entry should still exist", checkOne);
 
-  ok(!downloadExists(5555553), "<4 hour old download should now be deleted");
-  ok(downloadExists(5555558), "4 hour 10 minute download should still be present");
-  ok(downloadExists(5555550), "Year old download should still be present");
+  ok(!(yield downloadExists(publicList, "fakefile-4-hour")), "<4 hour old download should now be deleted");
+  ok((yield downloadExists(publicList, "fakefile-4-hour-10-minutes")), "4 hour 10 minute download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-old")), "Year old download should still be present");
   if (hoursSinceMidnight > 4)
-    ok(downloadExists(5555554), "'Today' download should still be present");
+    ok((yield downloadExists(publicList, "fakefile-today")), "'Today' download should still be present");
+
+  downloadPromise = promiseDownloadRemoved(publicList);
 
   // Clear 4 hours 10 minutes
   s.range = [now_uSec - 250*60*1000000, now_uSec];
@@ -328,6 +365,7 @@ function onHistoryReady() {
   s.range = null;
 
   yield promiseFormHistoryRemoved();
+  yield downloadPromise;
 
   ok(!(yield promiseIsURIVisited(makeURI("http://4hour10minutes.com"))),
      "Pretend visit to 4hour10minutes.com should now be deleted");
@@ -343,48 +381,60 @@ function onHistoryReady() {
     yield countEntries("today", "today form entry should still exist", checkOne);
   yield countEntries("b4today", "b4today form entry should still exist", checkOne);
   
-  ok(!downloadExists(5555558), "4 hour 10 minute download should now be deleted");
-  ok(downloadExists(5555550), "Year old download should still be present");
+  ok(!(yield downloadExists(publicList, "fakefile-4-hour-10-minutes")), "4 hour 10 minute download should now be deleted");
+  ok((yield downloadExists(publicList, "fakefile-old")), "Year old download should still be present");
   if (minutesSinceMidnight > 250)
-    ok(downloadExists(5555554), "'Today' download should still be present");
+    ok((yield downloadExists(publicList, "fakefile-today")), "'Today' download should still be present");
+
+  // The 'Today' download might have been already deleted, in which case we
+  // should not wait for a download removal notification.
+  if (minutesSinceMidnight > 250) {
+    downloadPromise = promiseDownloadRemoved(publicList);
+  } else {
+    downloadPromise = Promise.resolve();
+  }
 
   // Clear Today
   Sanitizer.prefs.setIntPref("timeSpan", 4);
   s.sanitize();
 
   yield promiseFormHistoryRemoved();
+  yield downloadPromise;
 
   // Be careful.  If we add our objectss just before midnight, and sanitize
   // runs immediately after, they won't be expired.  This is expected, but
   // we should not test in that case.  We cannot just test for opposite
   // condition because we could cross midnight just one moment after we
   // cache our time, then we would have an even worse random failure.
-  var today = isToday(new Date(now_uSec/1000));
+  var today = isToday(new Date(now_mSec));
   if (today) {
     ok(!(yield promiseIsURIVisited(makeURI("http://today.com"))),
        "Pretend visit to today.com should now be deleted");
 
     yield countEntries("today", "today form entry should be deleted", checkZero);
-    ok(!downloadExists(5555554), "'Today' download should now be deleted");
+    ok(!(yield downloadExists(publicList, "fakefile-today")), "'Today' download should now be deleted");
   }
 
   ok((yield promiseIsURIVisited(makeURI("http://before-today.com"))),
      "Pretend visit to before-today.com should still exist");
   yield countEntries("b4today", "b4today form entry should still exist", checkOne);
-  ok(downloadExists(5555550), "Year old download should still be present");
+  ok((yield downloadExists(publicList, "fakefile-old")), "Year old download should still be present");
+
+  downloadPromise = promiseDownloadRemoved(publicList);
 
   // Choose everything
   Sanitizer.prefs.setIntPref("timeSpan", 0);
   s.sanitize();
 
   yield promiseFormHistoryRemoved();
+  yield downloadPromise;
 
   ok(!(yield promiseIsURIVisited(makeURI("http://before-today.com"))),
      "Pretend visit to before-today.com should now be deleted");
 
   yield countEntries("b4today", "b4today form entry should be deleted", checkZero);
 
-  ok(!downloadExists(5555550), "Year old download should now be deleted");
+  ok(!(yield downloadExists(publicList, "fakefile-old")), "Year old download should now be deleted");
 }
 
 function setupHistory() {
@@ -562,227 +612,103 @@ function setupFormHistory() {
 
 function setupDownloads() {
 
-  // Add 10-minutes download to DB
-  let data = {
-    id:   "5555555",
-    name: "fakefile-10-minutes",
-    source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
-    target: "fakefile-10-minutes",
-    startTime: now_uSec - 10 * kUsecPerMin, // 10 minutes ago, in uSec
-    endTime: now_uSec - 11 * kUsecPerMin, // 1 minute later
-    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
-    guid: "a1bcD23eF4g5"
-  };
+  let publicList = yield Downloads.getPublicDownloadList();
 
-  let db = dm.DBConnection;
-  let stmt = db.createStatement(
-    "INSERT INTO moz_downloads (id, name, source, target, startTime, endTime, " +
-      "state, currBytes, maxBytes, preferredAction, autoResume, guid) " +
-    "VALUES (:id, :name, :source, :target, :startTime, :endTime, :state, " +
-      ":currBytes, :maxBytes, :preferredAction, :autoResume, :guid)");
-  try {
-    for (let prop in data)
-      stmt.params[prop] = data[prop];
-    stmt.execute();
-  }
-  finally {
-    stmt.reset();
-  }
-  
-  // Add within-1-hour download to DB
-  data = {
-    id:   "5555551",
-    name: "fakefile-1-hour",
+  let download = yield Downloads.createDownload({
+    source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
+    target: "fakefile-10-minutes"
+  });
+  download.startTime = new Date(now_mSec - 10 * kMsecPerMin), // 10 minutes ago
+  download.canceled = true;
+  publicList.add(download);
+
+  download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-1-hour",
-    startTime: now_uSec - 45 * kUsecPerMin, // 45 minutes ago, in uSec
-    endTime: now_uSec - 44 * kUsecPerMin, // 1 minute later
-    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
-    guid: "1bcD23eF4g5a"
-  };
+    target: "fakefile-1-hour"
+  });
+  download.startTime = new Date(now_mSec - 45 * kMsecPerMin), // 45 minutes ago
+  download.canceled = true;
+  publicList.add(download);
 
-  try {
-    for (let prop in data)
-      stmt.params[prop] = data[prop];
-    stmt.execute();
-  }
-  finally {
-    stmt.reset();
-  }
-  
-  // Add 1-hour-10-minutes download to DB
-  data = {
-    id:   "5555556",
-    name: "fakefile-1-hour-10-minutes",
+  download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
-    target: "fakefile-1-hour-10-minutes",
-    startTime: now_uSec - 70 * kUsecPerMin, // 70 minutes ago, in uSec
-    endTime: now_uSec - 71 * kUsecPerMin, // 1 minute later
-    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
-    guid: "a1cbD23e4Fg5"
-  };
+    target: "fakefile-1-hour-10-minutes"
+  });
+  download.startTime = new Date(now_mSec - 70 * kMsecPerMin), // 70 minutes ago
+  download.canceled = true;
+  publicList.add(download);
 
-  try {
-    for (let prop in data)
-      stmt.params[prop] = data[prop];
-    stmt.execute();
-  }
-  finally {
-    stmt.reset();
-  }
-
-  // Add within-2-hour download  
-  data = {
-    id:   "5555552",
-    name: "fakefile-2-hour",
+  download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-2-hour",
-    startTime: now_uSec - 90 * kUsecPerMin, // 90 minutes ago, in uSec
-    endTime: now_uSec - 89 * kUsecPerMin, // 1 minute later
-    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
-    guid: "b1aDc23eFg54"
-  };
+    target: "fakefile-2-hour"
+  });
+  download.startTime = new Date(now_mSec - 90 * kMsecPerMin), // 90 minutes ago
+  download.canceled = true;
+  publicList.add(download);
 
-  try {
-    for (let prop in data)
-      stmt.params[prop] = data[prop];
-    stmt.execute();
-  }
-  finally {
-    stmt.reset();
-  }
-  
-  // Add 2-hour-10-minutes download  
-  data = {
-    id:   "5555557",
-    name: "fakefile-2-hour-10-minutes",
+  download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
-    target: "fakefile-2-hour-10-minutes",
-    startTime: now_uSec - 130 * kUsecPerMin, // 130 minutes ago, in uSec
-    endTime: now_uSec - 131 * kUsecPerMin, // 1 minute later
-    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
-    guid: "z1bcD23eF4g5"
-  };
+    target: "fakefile-2-hour-10-minutes"
+  });
+  download.startTime = new Date(now_mSec - 130 * kMsecPerMin), // 130 minutes ago
+  download.canceled = true;
+  publicList.add(download);
 
-  try {
-    for (let prop in data)
-      stmt.params[prop] = data[prop];
-    stmt.execute();
-  }
-  finally {
-    stmt.reset();
-  }
-
-  // Add within-4-hour download
-  data = {
-    id:   "5555553",
-    name: "fakefile-4-hour",
+  download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-4-hour",
-    startTime: now_uSec - 180 * kUsecPerMin, // 180 minutes ago, in uSec
-    endTime: now_uSec - 179 * kUsecPerMin, // 1 minute later
-    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
-    guid: "zzzcD23eF4g5"
-  };
-  
-  try {
-    for (let prop in data)
-      stmt.params[prop] = data[prop];
-    stmt.execute();
-  }
-  finally {
-    stmt.reset();
-  }
-  
-  // Add 4-hour-10-minutes download
-  data = {
-    id:   "5555558",
-    name: "fakefile-4-hour-10-minutes",
+    target: "fakefile-4-hour"
+  });
+  download.startTime = new Date(now_mSec - 180 * kMsecPerMin), // 180 minutes ago
+  download.canceled = true;
+  publicList.add(download);
+
+  download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
-    target: "fakefile-4-hour-10-minutes",
-    startTime: now_uSec - 250 * kUsecPerMin, // 250 minutes ago, in uSec
-    endTime: now_uSec - 251 * kUsecPerMin, // 1 minute later
-    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
-    guid: "z1bzz23eF4gz"
-  };
-  
-  try {
-    for (let prop in data)
-      stmt.params[prop] = data[prop];
-    stmt.execute();
-  }
-  finally {
-    stmt.reset();
-  }
+    target: "fakefile-4-hour-10-minutes"
+  });
+  download.startTime = new Date(now_mSec - 250 * kMsecPerMin), // 250 minutes ago
+  download.canceled = true;
+  publicList.add(download);
 
   // Add "today" download
   let today = new Date();
   today.setHours(0);
   today.setMinutes(0);
   today.setSeconds(1);
-  
-  data = {
-    id:   "5555554",
-    name: "fakefile-today",
+
+  download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-today",
-    startTime: today.getTime() * 1000,  // 12:00:30am this morning, in uSec
-    endTime: (today.getTime() + 1000) * 1000, // 1 second later
-    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
-    guid: "ffffD23eF4g5"
-  };
-  
-  try {
-    for (let prop in data)
-      stmt.params[prop] = data[prop];
-    stmt.execute();
-  }
-  finally {
-    stmt.reset();
-  }
+    target: "fakefile-today"
+  });
+  download.startTime = today, // 12:00:01 AM this morning
+  download.canceled = true;
+  publicList.add(download);
   
   // Add "before today" download
   let lastYear = new Date();
   lastYear.setFullYear(lastYear.getFullYear() - 1);
-  data = {
-    id:   "5555550",
-    name: "fakefile-old",
+
+  download = yield Downloads.createDownload({
     source: "https://bugzilla.mozilla.org/show_bug.cgi?id=453440",
-    target: "fakefile-old",
-    startTime: lastYear.getTime() * 1000, // 1 year ago, in uSec
-    endTime: (lastYear.getTime() + 1000) * 1000, // 1 second later
-    state: Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0,
-    guid: "ggggg23eF4g5"
-  };
-  
-  try {
-    for (let prop in data)
-      stmt.params[prop] = data[prop];
-    stmt.execute();
-  }
-  finally {
-    stmt.finalize();
-  }
+    target: "fakefile-old"
+  });
+  download.startTime = lastYear,
+  download.canceled = true;
+  publicList.add(download);
   
   // Confirm everything worked
-  ok(downloadExists(5555550), "Pretend download for everything case should exist");
-  ok(downloadExists(5555555), "Pretend download for 10-minutes case should exist");
-  ok(downloadExists(5555551), "Pretend download for 1-hour case should exist");
-  ok(downloadExists(5555556), "Pretend download for 1-hour-10-minutes case should exist");
-  ok(downloadExists(5555552), "Pretend download for 2-hour case should exist");
-  ok(downloadExists(5555557), "Pretend download for 2-hour-10-minutes case should exist");
-  ok(downloadExists(5555553), "Pretend download for 4-hour case should exist");
-  ok(downloadExists(5555558), "Pretend download for 4-hour-10-minutes case should exist");
-  ok(downloadExists(5555554), "Pretend download for Today case should exist");
+  let downloads = yield publicList.getAll();
+  is(downloads.length, 9, "9 Pretend downloads added");
+
+  ok((yield downloadExists(publicList, "fakefile-old")), "Pretend download for everything case should exist");
+  ok((yield downloadExists(publicList, "fakefile-10-minutes")), "Pretend download for 10-minutes case should exist");
+  ok((yield downloadExists(publicList, "fakefile-1-hour")), "Pretend download for 1-hour case should exist");
+  ok((yield downloadExists(publicList, "fakefile-1-hour-10-minutes")), "Pretend download for 1-hour-10-minutes case should exist");
+  ok((yield downloadExists(publicList, "fakefile-2-hour")), "Pretend download for 2-hour case should exist");
+  ok((yield downloadExists(publicList, "fakefile-2-hour-10-minutes")), "Pretend download for 2-hour-10-minutes case should exist");
+  ok((yield downloadExists(publicList, "fakefile-4-hour")), "Pretend download for 4-hour case should exist");
+  ok((yield downloadExists(publicList, "fakefile-4-hour-10-minutes")), "Pretend download for 4-hour-10-minutes case should exist");
+  ok((yield downloadExists(publicList, "fakefile-today")), "Pretend download for Today case should exist");
 }
 
 /**
@@ -791,18 +717,12 @@ function setupDownloads() {
  * @param aID
  *        The ids of the downloads to check.
  */
-function downloadExists(aID)
+function downloadExists(list, path)
 {
-  let db = dm.DBConnection;
-  let stmt = db.createStatement(
-    "SELECT * " +
-    "FROM moz_downloads " +
-    "WHERE id = :id"
-  );
-  stmt.params.id = aID;
-  var rows = stmt.executeStep();
-  stmt.finalize();
-  return rows;
+  return Task.spawn(function() {
+    let listArray = yield list.getAll();
+    throw new Task.Result(listArray.some(i => i.target.path == path));
+  });
 }
 
 function isToday(aDate) {

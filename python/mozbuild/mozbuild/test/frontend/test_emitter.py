@@ -31,9 +31,10 @@ data_path = os.path.join(data_path, 'data')
 
 class TestEmitterBasic(unittest.TestCase):
     def reader(self, name):
-        config = MockConfig(os.path.join(data_path, name))
-        config.substs['ENABLE_TESTS'] = '1'
-        config.substs['BIN_SUFFIX'] = '.prog'
+        config = MockConfig(os.path.join(data_path, name), extra_substs=dict(
+            ENABLE_TESTS='1',
+            BIN_SUFFIX='.prog',
+        ))
 
         return BuildReader(config)
 
