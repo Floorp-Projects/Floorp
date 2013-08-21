@@ -1771,3 +1771,4 @@ random-if(Android&&AndroidVersion>=15) == 875060-1.html 875060-1-ref.html #Bug 8
 == 883987-1f.html 883987-1-ref.html
 == 890495-1.html 890495-1-ref.html
 == 894931-1.html 894931-1-ref.html
+fuzzy-if(Android,4,245) == 906199-1.html 906199-1-ref.html
