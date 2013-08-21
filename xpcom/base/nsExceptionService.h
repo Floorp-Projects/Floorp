@@ -6,7 +6,6 @@
 #ifndef nsExceptionService_h__
 #define nsExceptionService_h__
 
-#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 
@@ -53,7 +52,7 @@ public:
   static unsigned tlsIndex;
   static void ThreadDestruct( void *data );
 #ifdef DEBUG
-  static mozilla::Atomic<int32_t> totalInstances;
+  static int32_t totalInstances;
 #endif
 
 private:

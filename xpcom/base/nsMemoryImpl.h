@@ -6,8 +6,6 @@
 #ifndef nsMemoryImpl_h__
 #define nsMemoryImpl_h__
 
-#include "mozilla/Atomics.h"
-
 #include "nsIMemory.h"
 #include "nsIRunnable.h"
 #include "prtime.h"
@@ -39,7 +37,7 @@ protected:
         const PRUnichar* mReason;
     };
 
-    static mozilla::Atomic<int32_t> sIsFlushing;
+    static int32_t    sIsFlushing;
     static FlushEvent sFlushEvent;
     static PRIntervalTime sLastFlushTime;
 };

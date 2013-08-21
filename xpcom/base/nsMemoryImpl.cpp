@@ -114,7 +114,7 @@ nsMemoryImpl::FlushMemory(const PRUnichar* aReason, bool aImmediate)
         }
     }
 
-    int32_t lastVal = sIsFlushing.exchange(1);
+    int32_t lastVal = PR_ATOMIC_SET(&sIsFlushing, 1);
     if (lastVal)
         return NS_OK;
 
@@ -183,8 +183,8 @@ nsMemoryImpl::FlushEvent::Run()
     return NS_OK;
 }
 
-mozilla::Atomic<int32_t>
-nsMemoryImpl::sIsFlushing;
+int32_t
+nsMemoryImpl::sIsFlushing = 0;
 
 PRIntervalTime
 nsMemoryImpl::sLastFlushTime = 0;
