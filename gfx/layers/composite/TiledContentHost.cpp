@@ -67,11 +67,9 @@ TiledLayerBufferComposite::ValidateTile(TiledTexture aTile,
 }
 
 void
-TiledContentHost::Attach(Layer* aLayer,
-                         Compositor* aCompositor,
-                         AttachFlags aFlags /* = NO_FLAGS */)
+TiledContentHost::Attach(Layer* aLayer, Compositor* aCompositor)
 {
-  CompositableHost::Attach(aLayer, aCompositor, aFlags);
+  CompositableHost::Attach(aLayer, aCompositor);
   static_cast<ThebesLayerComposite*>(aLayer)->EnsureTiled();
 }
 

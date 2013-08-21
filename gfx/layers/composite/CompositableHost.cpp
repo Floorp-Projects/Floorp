@@ -28,7 +28,6 @@ CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
   , mCompositor(nullptr)
   , mLayer(nullptr)
   , mAttached(false)
-  , mKeepAttached(false)
 {
   MOZ_COUNT_CTOR(CompositableHost);
 }
