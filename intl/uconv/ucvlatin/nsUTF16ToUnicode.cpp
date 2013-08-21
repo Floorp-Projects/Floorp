@@ -78,7 +78,7 @@ nsUTF16ToUnicodeBase::UTF16ConvertToUnicode(const char * aSrc,
     // previous run while the 2nd byte has to come from |*src|.
     mState = STATE_NORMAL;
 #ifdef IS_BIG_ENDIAN
-    u = (mOddByte << 8) | *src++; // safe, we know we have at least one byte.
+    u = (mOddByte << 8) | uint8_t(*src++); // safe, we know we have at least one byte.
 #else
     u = (*src++ << 8) | mOddByte; // safe, we know we have at least one byte.
 #endif
