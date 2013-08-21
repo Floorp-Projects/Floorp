@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set sw=4 ts=8 et tw=78:
- *
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -933,12 +932,12 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
 
     // Various optimized versions of steps 7-10
     if (!locale && !seplen && obj->is<ArrayObject>() && !ObjectMayHaveExtraIndexedProperties(obj)) {
-        uint32_t i;
-        for (i = 0; i < obj->getDenseInitializedLength(); ++i) {
+        const Value *start = obj->getDenseElements();
+        const Value *end = start + obj->getDenseInitializedLength();
+        const Value *elem;
+        for (elem = start; elem < end; elem++) {
             if (!JS_CHECK_OPERATION_LIMIT(cx))
                 return false;
-
-            const Value *elem = &obj->getDenseElement(i);
 
             /*
              * Object stringifying is slow; delegate it to a separate loop to
@@ -954,7 +953,7 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
         }
 
         RootedValue v(cx);
-        for (; i < length; ++i) {
+        for (uint32_t i = uint32_t(PointerRangeSize(start, elem)); i < length; i++) {
             if (!JS_CHECK_OPERATION_LIMIT(cx))
                 return false;
 
