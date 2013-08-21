@@ -21,10 +21,11 @@
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
 
-  <string name="awesomebar_all_pages_title">&awesomebar_all_pages_title;</string>
-  <string name="awesomebar_bookmarks_title">&awesomebar_bookmarks_title;</string>
-  <string name="awesomebar_history_title">&awesomebar_history_title;</string>
-  <string name="awesomebar_switch_to_tab">&awesomebar_switch_to_tab;</string>
+  <string name="bookmarks_title">&bookmarks_title;</string>
+  <string name="history_title">&history_title;</string>
+  <string name="reading_list_title">&reading_list_title;</string>
+
+  <string name="switch_to_tab">&switch_to_tab;</string>
 
   <string name="crash_reporter_title">&crash_reporter_title;</string>
   <string name="crash_message2">&crash_message2;</string>
@@ -45,10 +46,7 @@
 
   <string name="choose_file">&choose_file;</string>
 
-  <string name="awesomebar_default_text">&awesomebar_default_text;</string>
-
-  <string name="remote_tabs">&remote_tabs;</string>
-  <string name="remote_tabs_show_all">&remote_tabs_show_all;</string>
+  <string name="url_bar_default_text">&url_bar_default_text;</string>
 
   <string name="quit">&quit;</string>
   <string name="bookmark">&bookmark;</string>
@@ -204,7 +202,6 @@
   <string name="site_settings_clear">&site_settings_clear;</string>
   <string name="site_settings_no_settings">&site_settings_no_settings;</string>
 
-  <string name="reading_list">&reading_list;</string>
   <string name="reading_list_added">&reading_list_added;</string>
   <string name="reading_list_removed">&reading_list_removed;</string>
   <string name="reading_list_failed">&reading_list_failed;</string>
@@ -215,8 +212,7 @@
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
   <string name="contextmenu_open_private_tab">&contextmenu_open_private_tab;</string>
   <string name="contextmenu_open_in_reader">&contextmenu_open_in_reader;</string>
-  <string name="contextmenu_remove_history">&contextmenu_remove_history;</string>
-  <string name="contextmenu_remove_bookmark">&contextmenu_remove_bookmark;</string>
+  <string name="contextmenu_remove">&contextmenu_remove;</string>
   <string name="contextmenu_add_to_launcher">&contextmenu_add_to_launcher;</string>
   <string name="contextmenu_share">&contextmenu_share;</string>
   <string name="contextmenu_pasteandgo">&contextmenu_pasteandgo;</string>
@@ -225,6 +221,9 @@
   <string name="contextmenu_edit_bookmark">&contextmenu_edit_bookmark;</string>
   <string name="contextmenu_subscribe">&contextmenu_subscribe;</string>
   <string name="contextmenu_site_settings">&contextmenu_site_settings;</string>
+  <string name="contextmenu_top_bookmarks_edit">&contextmenu_top_bookmarks_edit;</string>
+  <string name="contextmenu_top_bookmarks_pin">&contextmenu_top_bookmarks_pin;</string>
+  <string name="contextmenu_top_bookmarks_unpin">&contextmenu_top_bookmarks_unpin;</string>
 
   <string name="pref_titlebar_mode">&pref_titlebar_mode;</string>
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
@@ -232,6 +231,7 @@
 
   <string name="history_removed">&history_removed;</string>
 
+  <string name="bookmark_add">&bookmark_add;</string>
   <string name="bookmark_edit_title">&bookmark_edit_title;</string>
   <string name="bookmark_edit_name">&bookmark_edit_name;</string>
   <string name="bookmark_edit_location">&bookmark_edit_location;</string>
@@ -251,19 +251,17 @@
   <string name="button_yes">&button_yes;</string>
   <string name="button_no">&button_no;</string>
 
-  <string name="abouthome_addons_title">&abouthome_addons_title;</string>
-  <string name="abouthome_addons_browse">&abouthome_addons_browse;</string>
-  <string name="abouthome_last_tabs_title">&abouthome_last_tabs_title;</string>
-  <string name="abouthome_last_tabs_open">&abouthome_last_tabs_open;</string>
-  <string name="abouthome_top_sites_title">&abouthome_top_sites_title;</string>
-  <string name="abouthome_about_sync">&abouthome_about_sync3;</string>
-  <string name="abouthome_about_apps">&abouthome_about_apps3;</string>
-  <string name="abouthome_sync_bold_name">&abouthome_sync_bold_name;</string>
-  <string name="abouthome_apps_bold_name">&abouthome_apps_bold_name2;</string>
-
-  <string name="abouthome_topsites_edit">&abouthome_topsites_edit;</string>
-  <string name="abouthome_topsites_pin">&abouthome_topsites_pin;</string>
-  <string name="abouthome_topsites_unpin">&abouthome_topsites_unpin;</string>
+  <string name="home_history_title">&home_history_title;</string>
+  <string name="home_last_tabs_title">&home_last_tabs_title;</string>
+  <string name="home_last_tabs_open">&home_last_tabs_open;</string>
+  <string name="home_last_tabs_empty">&home_last_tabs_empty;</string>
+  <string name="home_most_recent_title">&home_most_recent_title;</string>
+  <string name="home_most_recent_empty">&home_most_recent_empty;</string>
+  <string name="home_most_visited_title">&home_most_visited_title;</string>
+  <string name="home_most_visited_empty">&home_most_visited_empty;</string>
+  <string name="home_reading_list_empty">&home_reading_list_empty;</string>
+  <string name="home_reading_list_hint">&home_reading_list_hint;</string>
+  <string name="pin_bookmark_dialog_hint">&pin_bookmark_dialog_hint;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
   <string name="filepicker_audio_title">&filepicker_audio_title;</string>
@@ -282,9 +280,6 @@
   <string name="bookmarkdefaults_title_support">@bookmarks_support@</string>
   <string name="bookmarkdefaults_url_support">http://support.mozilla.org/@AB_CD@/products/mobile</string>
   <string name="bookmarkdefaults_favicon_abouthome">chrome/chrome/content/branding/favicon64.png</string>
-
-  <string name="bookmarkdefaults_title_abouthome">@bookmarks_aboutHome@</string>
-  <string name="bookmarkdefaults_url_abouthome">about:home</string>
 
   <!-- Site identity popup -->
   <string name="identity_connected_to">&identity_connected_to;</string>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<!--
+Bug 901519 - [app manager] data store for connections
+-->
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <div id="root">
+      <span id="status" template='{"type":"textContent","path":"status"}'></span>
+      <span id="host" template='{"type":"textContent","path":"host"}'></span>
+      <span id="port" template='{"type":"textContent","path":"port"}'></span>
+    </div>
+
+    <script type="application/javascript;version=1.8" src="chrome://browser/content/devtools/app-manager/template.js"></script>
+    <script type="application/javascript;version=1.8">
+      const Cu = Components.utils;
+      Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+      DebuggerServer.init(function () { return true; });
+      DebuggerServer.addBrowserActors();
+
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        Cu.import("resource://gre/modules/Services.jsm");
+        Cu.import("resource:///modules/devtools/gDevTools.jsm");
+
+        const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+        const {require} = devtools;
+
+        const {ConnectionManager} = require("devtools/client/connection-manager");
+        const ConnectionStore = require("devtools/app-manager/connection-store");
+
+        let connection = ConnectionManager.createConnection();
+        let store = new ConnectionStore(connection);
+
+        let root = document.querySelector("#root");
+        let status = root.querySelector("#status");
+        let host = root.querySelector("#host");
+        let port = root.querySelector("#port");
+        let template = new Template(root, store, () => {});
+        template.start();
+
+        connection.host = "foobar";
+        connection.port = 42;
+
+        is(host.textContent, "foobar", "host updated");
+        is(port.textContent, 42, "port updated");
+
+        let been_through_connecting = false;
+        let been_through_connected = false;
+        let been_through_disconnected = false;
+
+        is(status.textContent, "disconnected", "status updated (diconnected)");
+
+        connection.once("connecting", (e) => {
+          SimpleTest.executeSoon(() => {
+            been_through_connecting = true;
+            is(status.textContent, "connecting", "status updated (connecting)");
+          })
+        });
+
+        connection.once("connected", (e) => {
+          SimpleTest.executeSoon(() => {
+            been_through_connected = true;
+            is(status.textContent, "connected", "status updated (connected)");
+            connection.disconnect();
+          })
+        });
+
+        connection.once("disconnected", (e) => {
+          SimpleTest.executeSoon(() => {
+            been_through_disconnected = true;
+            is(status.textContent, "disconnected", "status updated (disconnected)");
+            connection.destroy();
+            finishup();
+          })
+        });
+
+        function finishup() {
+          ok(been_through_connecting &&
+            been_through_connected &&
+            been_through_disconnected, "All updates happened");
+          DebuggerServer.destroy();
+          SimpleTest.finish();
+        }
+
+        connection.host = null; // force pipe
+        connection.port = null;
+
+        connection.connect();
+      }
+
+    </script>
+  </body>
+</html>
