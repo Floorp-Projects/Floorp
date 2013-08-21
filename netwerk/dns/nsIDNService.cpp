@@ -623,11 +623,16 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
       else
         rv = encodeToACE(strPrep, out);
     }
-  }
-
-  if (out.Length() > kMaxDNSNodeLen) {
-    NS_WARNING("IDN node too large");
-    return NS_ERROR_FAILURE;
+    // Check that the encoded output isn't larger than the maximum length of an
+    // DNS node per RFC 1034.
+    // This test isn't necessary in the code paths above where the input is
+    // ASCII (since the output will be the same length as the input) or where
+    // we convert to UTF-8 (since the output is only used for display in the
+    // UI and not passed to DNS and can legitimately be longer than the limit).
+    if (out.Length() > kMaxDNSNodeLen) {
+      NS_WARNING("IDN node too large");
+      return NS_ERROR_FAILURE;
+    }
   }
 
   return rv;
