@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<img id="img1" src="about:blank">
+<img id="img2" src="about:blank" alt="alt2">
+<script>
+function doTest() {
+  document.getElementById("img1").setAttribute("alt", "alt1");
+  document.getElementById("img2").removeAttribute("alt");
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("load", doTest, false);
+</script>
+</body>
+</html>
