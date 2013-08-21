@@ -15,7 +15,6 @@
 
 #include "nsTArray.h"
 
-#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/TimeStamp.h"
@@ -53,7 +52,7 @@ public:
 private:
   ~TimerThread();
 
-  mozilla::Atomic<int32_t> mInitInProgress;
+  int32_t mInitInProgress;
   bool    mInitialized;
 
   // These two internal helper methods must be called while mLock is held.

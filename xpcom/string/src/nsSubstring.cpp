@@ -8,7 +8,6 @@
 #define ENABLE_STRING_STATS
 #endif
 
-#include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 
 #ifdef ENABLE_STRING_STATS
@@ -21,11 +20,10 @@
 #include "nsStringBuffer.h"
 #include "nsDependentString.h"
 #include "nsMemory.h"
+#include "pratom.h"
 #include "prprf.h"
 #include "nsStaticAtom.h"
 #include "nsCOMPtr.h"
-
-using mozilla::Atomic;
 
 // ---------------------------------------------------------------------------
 
@@ -52,31 +50,31 @@ class nsStringStats
             return;
 
           printf("nsStringStats\n");
-          printf(" => mAllocCount:     % 10d\n", (int)mAllocCount);
-          printf(" => mReallocCount:   % 10d\n", (int)mReallocCount);
-          printf(" => mFreeCount:      % 10d", (int)mFreeCount);
+          printf(" => mAllocCount:     % 10d\n", mAllocCount);
+          printf(" => mReallocCount:   % 10d\n", mReallocCount);
+          printf(" => mFreeCount:      % 10d", mFreeCount);
           if (mAllocCount > mFreeCount)
             printf("  --  LEAKED %d !!!\n", mAllocCount - mFreeCount);
           else
             printf("\n");
-          printf(" => mShareCount:     % 10d\n", (int)mShareCount);
-          printf(" => mAdoptCount:     % 10d\n", (int)mAdoptCount);
-          printf(" => mAdoptFreeCount: % 10d", (int)mAdoptFreeCount);
+          printf(" => mShareCount:     % 10d\n", mShareCount);
+          printf(" => mAdoptCount:     % 10d\n", mAdoptCount);
+          printf(" => mAdoptFreeCount: % 10d", mAdoptFreeCount);
           if (mAdoptCount > mAdoptFreeCount)
             printf("  --  LEAKED %d !!!\n", mAdoptCount - mAdoptFreeCount);
           else
             printf("\n");
         }
 
-      Atomic<int32_t> mAllocCount;
-      Atomic<int32_t> mReallocCount;
-      Atomic<int32_t> mFreeCount;
-      Atomic<int32_t> mShareCount;
-      Atomic<int32_t> mAdoptCount;
-      Atomic<int32_t> mAdoptFreeCount;
+      int32_t mAllocCount;
+      int32_t mReallocCount;
+      int32_t mFreeCount;
+      int32_t mShareCount;
+      int32_t mAdoptCount;
+      int32_t mAdoptFreeCount;
   };
 static nsStringStats gStringStats;
-#define STRING_STAT_INCREMENT(_s) (gStringStats.m ## _s ## Count)++
+#define STRING_STAT_INCREMENT(_s) PR_ATOMIC_INCREMENT(&gStringStats.m ## _s ## Count)
 #else
 #define STRING_STAT_INCREMENT(_s)
 #endif
@@ -150,7 +148,7 @@ class nsACStringAccessor : public nsACString
 void
 nsStringBuffer::AddRef()
   {
-    ++mRefCount;
+    PR_ATOMIC_INCREMENT(&mRefCount);
     STRING_STAT_INCREMENT(Share);
     NS_LOG_ADDREF(this, mRefCount, "nsStringBuffer", sizeof(*this));
   }
@@ -158,7 +156,7 @@ nsStringBuffer::AddRef()
 void
 nsStringBuffer::Release()
   {
-    int32_t count = --mRefCount;
+    int32_t count = PR_ATOMIC_DECREMENT(&mRefCount);
     NS_LOG_RELEASE(this, count, "nsStringBuffer");
     if (count == 0)
       {
