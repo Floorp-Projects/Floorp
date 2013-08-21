@@ -15,9 +15,11 @@ interface Telephony : EventTarget {
   [Throws]
   attribute boolean speakerEnabled;
 
-  readonly attribute TelephonyCall? active;
+  readonly attribute (TelephonyCall or TelephonyCallGroup)? active;
 
+  // A call is contained either in Telephony or in TelephonyCallGroup.
   readonly attribute CallsList calls;
+  readonly attribute TelephonyCallGroup conferenceGroup;
 
   [Throws]
   void startTone(DOMString tone);
