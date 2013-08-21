@@ -121,7 +121,13 @@ DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
   if (!mDeprecatedTextureClient) {
     mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_CONTENT);
-    MOZ_ASSERT(mDeprecatedTextureClient, "Failed to create texture client");
+    if (!mDeprecatedTextureClient) {
+      mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_FALLBACK);
+      if (!mDeprecatedTextureClient) {
+        NS_WARNING("Could not create texture client");
+        return;
+      }
+    }
   }
 
   bool isOpaque = (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
@@ -129,8 +135,11 @@ DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
                                               ? gfxASurface::CONTENT_COLOR
                                               : gfxASurface::CONTENT_COLOR_ALPHA;
 
-  mDeprecatedTextureClient->EnsureAllocated(aSize, contentType);
   if (!mDeprecatedTextureClient->EnsureAllocated(aSize, contentType)) {
+    // We might already be on the fallback texture client if we couldn't create a
+    // better one above. In which case this call to create is wasted. But I don't
+    // think this will happen often enough to be worth complicating the code with
+    // further checks.
     mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_FALLBACK);
     MOZ_ASSERT(mDeprecatedTextureClient, "Failed to create texture client");
     if (!mDeprecatedTextureClient->EnsureAllocated(aSize, contentType)) {

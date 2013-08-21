@@ -138,7 +138,8 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
     break;
   case TEXTURE_FALLBACK:
 #ifdef XP_WIN
-    if (parentBackend == LAYERS_D3D9) {
+    if (parentBackend == LAYERS_D3D11 ||
+        parentBackend == LAYERS_D3D9) {
       result = new DeprecatedTextureClientShmem(GetForwarder(), GetTextureInfo());
     }
 #endif
