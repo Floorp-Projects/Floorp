@@ -366,6 +366,11 @@ MediaPluginReader::ImageBufferCallback::operator()(size_t aWidth, size_t aHeight
       rgbImage = mozilla::layers::CreateSharedRGBImage(mImageContainer,
                                                        nsIntSize(aWidth, aHeight),
                                                        gfxASurface::ImageFormatRGB16_565);
+      if (!rgbImage) {
+        NS_WARNING("Could not create rgb image");
+        return nullptr;
+      }
+
       mImage = rgbImage;
       return rgbImage->AsSharedImage()->GetBuffer();
     case MPAPI::YCbCr:

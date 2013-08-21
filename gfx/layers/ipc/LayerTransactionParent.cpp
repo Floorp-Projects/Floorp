@@ -395,7 +395,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     }
     case Edit::TOpAttachCompositable: {
       const OpAttachCompositable& op = edit.get_OpAttachCompositable();
-      Attach(cast(op.layerParent()), cast(op.compositableParent()));
+      Attach(cast(op.layerParent()), cast(op.compositableParent()), false);
       cast(op.compositableParent())->SetCompositorID(
         mLayerManager->GetCompositor()->GetCompositorID());
       break;
@@ -404,7 +404,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       const OpAttachAsyncCompositable& op = edit.get_OpAttachAsyncCompositable();
       CompositableParent* compositableParent = CompositableMap::Get(op.containerID());
       MOZ_ASSERT(compositableParent, "CompositableParent not found in the map");
-      Attach(cast(op.layerParent()), compositableParent);
+      Attach(cast(op.layerParent()), compositableParent, true);
       compositableParent->SetCompositorID(mLayerManager->GetCompositor()->GetCompositorID());
       break;
     }
@@ -491,7 +491,9 @@ LayerTransactionParent::RecvGetTransform(PLayerParent* aParent,
 }
 
 void
-LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent, CompositableParent* aCompositable)
+LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,
+                               CompositableParent* aCompositable,
+                               bool aIsAsyncVideo)
 {
   LayerComposite* layer = aLayerParent->AsLayer()->AsLayerComposite();
   MOZ_ASSERT(layer);
@@ -502,7 +504,12 @@ LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent, CompositablePare
   CompositableHost* compositable = aCompositable->GetCompositableHost();
   MOZ_ASSERT(compositable);
   layer->SetCompositableHost(compositable);
-  compositable->Attach(aLayerParent->AsLayer(), compositor);
+  compositable->Attach(aLayerParent->AsLayer(),
+                       compositor,
+                       aIsAsyncVideo
+                         ? CompositableHost::ALLOW_REATTACH
+                           | CompositableHost::KEEP_ATTACHED
+                         : CompositableHost::NO_FLAGS);
 }
 
 bool
