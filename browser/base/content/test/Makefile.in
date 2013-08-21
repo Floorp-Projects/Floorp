@@ -196,7 +196,6 @@ MOCHITEST_BROWSER_FILES = \
                  browser_clearplugindata.js \
                  browser_contentAreaClick.js \
                  browser_contextSearchTabPosition.js \
-                 browser_CTP_context_menu.js \
                  browser_CTP_drag_drop.js \
                  browser_CTP_data_urls.js \
                  browser_ctrlTab.js \
