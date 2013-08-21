@@ -193,14 +193,14 @@ CustomizeMode.prototype = {
     let documentElement = document.documentElement;
 
     Task.spawn(function() {
+      yield this.depopulatePalette();
+
       yield this._doTransition(false);
 
       let customizer = document.getElementById("customization-container");
       customizer.hidden = true;
       let browser = document.getElementById("browser");
       browser.parentNode.selectedPanel = browser;
-
-      yield this.depopulatePalette();
 
       window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
 
