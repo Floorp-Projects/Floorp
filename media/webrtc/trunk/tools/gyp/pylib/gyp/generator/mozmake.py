@@ -468,8 +468,8 @@ def GenerateOutput(target_list, target_dicts, data, params):
                  "--depth=%s" % topsrcdir_path(options.depth),
                  "--generator-output=%s" % objdir_path(options.generator_output),
                  "--toplevel-dir=$(topsrcdir)",
-                 #XXX: handle other generator_flags gracefully?
                  "-G OBJDIR=$(DEPTH)"] + \
+                 ['-G %s' % g for g in options.generator_flags if not g.startswith('OBJDIR=')] + \
                  ['-D%s' % d for d in options.defines] + \
                  [topsrcdir_path(b) for b in params['build_files']]
 
