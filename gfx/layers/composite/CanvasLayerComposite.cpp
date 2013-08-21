@@ -112,7 +112,7 @@ void
 CanvasLayerComposite::CleanupResources()
 {
   if (mImageHost) {
-    mImageHost->Detach();
+    mImageHost->Detach(this);
   }
   mImageHost = nullptr;
 }

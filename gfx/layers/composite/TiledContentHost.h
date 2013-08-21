@@ -201,7 +201,9 @@ public:
     mLowPrecisionVideoMemoryTiledBuffer.SetCompositor(aCompositor);
   }
 
-  virtual void Attach(Layer* aLayer, Compositor* aCompositor) MOZ_OVERRIDE;
+  virtual void Attach(Layer* aLayer,
+                      Compositor* aCompositor,
+                      AttachFlags aFlags = NO_FLAGS) MOZ_OVERRIDE;
 
   virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
