@@ -2492,7 +2492,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 #ifdef __LP64__
     mCancelSwipeAnimation = nil;
-    mCurrentSwipeDir = 0;
 #endif
 
     mTopLeftCornerMask = NULL;
@@ -3776,6 +3775,18 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return eventCancelled; // event cancelled == swipe should start
 }
 
+- (void)cancelSwipeIfRunning
+{
+  // Clear gesture state.
+  mGestureState = eGestureState_None;
+
+  if (mCancelSwipeAnimation) {
+    mCancelSwipeAnimation();
+    [mCancelSwipeAnimation release];
+    mCancelSwipeAnimation = nil;
+  }
+}
+
 - (void)sendSwipeEndEvent:(NSEvent *)anEvent
         allowedDirections:(uint32_t)aAllowedDirections
 {
@@ -3788,19 +3799,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
                    delta:0.0];
 }
 
-// Support fluid swipe tracking on OS X 10.7 and higher. We must be careful
-// to only invoke this support on a two-finger gesture that really
+// Support fluid swipe tracking on OS X 10.7 and higher.  We must be careful
+// to only invoke this support on a horizontal two-finger gesture that really
 // is a swipe (and not a scroll) -- in other words, the app is responsible
-// for deciding which is which. But once the decision is made, the OS tracks
+// for deciding which is which.  But once the decision is made, the OS tracks
 // the swipe until it has finished, and decides whether or not it succeeded.
-// A horizontal swipe has the same functionality as the Back and Forward
-// buttons.
-// This method is partly based on Apple sample code available at
-// developer.apple.com/library/mac/#releasenotes/Cocoa/AppKitOlderNotes.html
-// (under Fluid Swipe Tracking API).
+// A swipe has the same functionality as the Back and Forward buttons.  For
+// now swipe animation is unsupported (e.g. no bounces).  This method is
+// partly based on Apple sample code available at
+// http://developer.apple.com/library/mac/#releasenotes/Cocoa/AppKit.html
 - (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent
-                     scrollOverflowX:(double)overflowX
-                     scrollOverflowY:(double)overflowY
+                      scrollOverflow:(double)overflow
 {
   if (!nsCocoaFeatures::OnLionOrLater()) {
     return;
@@ -3815,17 +3824,23 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-  // Verify that this is a scroll wheel event with proper phase to be tracked
-  // by the OS.
-  if ([anEvent type] != NSScrollWheel || [anEvent phase] == NSEventPhaseNone) {
+  if ([anEvent type] != NSScrollWheel) {
     return;
   }
 
   // Only initiate tracking if the user has tried to scroll past the edge of
-  // the current page (as indicated by 'overflowX' or 'overflowY' being
-  // non-zero).  Gecko only sets nsMouseScrollEvent.scrollOverflow when it's
-  // processing NS_MOUSE_PIXEL_SCROLL events (not NS_MOUSE_SCROLL events).
-  if (overflowX == 0.0 && overflowY == 0.0) {
+  // the current page (as indicated by 'overflow' being non-zero).  Gecko only
+  // sets nsMouseScrollEvent.scrollOverflow when it's processing
+  // NS_MOUSE_PIXEL_SCROLL events (not NS_MOUSE_SCROLL events).
+  // nsMouseScrollEvent.scrollOverflow only indicates left or right overflow
+  // for horizontal NS_MOUSE_PIXEL_SCROLL events.
+  if (!overflow) {
+    return;
+  }
+
+  // Only initiate tracking for gestures that have just begun -- otherwise a
+  // scroll to one side of the page can have a swipe tacked on to it.
+  if ([anEvent phase] != NSEventPhaseBegan) {
     return;
   }
 
@@ -3833,92 +3848,43 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if ([anEvent hasPreciseScrollingDeltas]) {
     deltaX = [anEvent scrollingDeltaX];
     deltaY = [anEvent scrollingDeltaY];
+  } else {
+    deltaX = [anEvent deltaX];
+    deltaY = [anEvent deltaY];
   }
-  else {
+  // Only initiate tracking for events whose horizontal element is at least
+  // eight times larger than its vertical element.  This minimizes performance
+  // problems with vertical scrolls (by minimizing the possibility that they'll
+  // be misinterpreted as horizontal swipes), while still tolerating a small
+  // vertical element to a true horizontal swipe.  The number '8' was arrived
+  // at by trial and error.
+  if ((deltaX == 0) || (fabs(deltaX) <= fabs(deltaY) * 8)) {
     return;
   }
 
-  uint32_t vDirs = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_DOWN |
-                   (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_UP;
-  uint32_t direction = 0;
-  // Only initiate horizontal tracking for events whose horizontal element is
-  // at least eight times larger than its vertical element. This minimizes
-  // performance problems with vertical scrolls (by minimizing the possibility
-  // that they'll be misinterpreted as horizontal swipes), while still
-  // tolerating a small vertical element to a true horizontal swipe.  The number
-  // '8' was arrived at by trial and error.
-  if (overflowX != 0.0 && deltaX != 0.0 &&
-      fabsf(deltaX) > fabsf(deltaY) * 8) {
-    // Only initiate horizontal tracking for gestures that have just begun --
-    // otherwise a scroll to one side of the page can have a swipe tacked on
-    // to it.
-    if ([anEvent phase] != NSEventPhaseBegan)
-      return;
+  // If a swipe is currently being tracked kill it -- it's been interrupted by
+  // another gesture or legacy scroll wheel event.
+  [self cancelSwipeIfRunning];
 
-    if (deltaX < 0.0)
-      direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
-    else
-      direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
-  }
-  // Only initiate vertical tracking for events whose vertical element is
-  // at least two times larger than its horizontal element. This minimizes
-  // performance problems. The number '2' was arrived at by trial and error.
-  else if (overflowY != 0.0 && deltaY != 0.0 &&
-           fabsf(deltaY) > fabsf(deltaX) * 2) {
-    if (deltaY < 0.0)
-      direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_DOWN;
-    else
-      direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_UP;
-
-    if ((mCurrentSwipeDir & vDirs) && (mCurrentSwipeDir != direction)) {
-      // If a swipe is currently being tracked kill it -- it's been interrupted
-      // by another gesture event.
-      if (mCancelSwipeAnimation && *mCancelSwipeAnimation == NO) {
-        *mCancelSwipeAnimation = YES;
-        mCancelSwipeAnimation = nil;
-        [self sendSwipeEndEvent:anEvent allowedDirections:0];
-      }
-      return;
-    }
-  }
-  else {
-    return;
-  }
-
-  // Track the direction we're going in.
-  mCurrentSwipeDir = direction;
-
-  // If a swipe is currently being tracked kill it -- it's been interrupted
-  // by another gesture event.
-  if (mCancelSwipeAnimation && *mCancelSwipeAnimation == NO) {
-    *mCancelSwipeAnimation = YES;
-    mCancelSwipeAnimation = nil;
-  }
-
-  uint32_t allowedDirections = 0;
   // We're ready to start the animation. Tell Gecko about it, and at the same
   // time ask it if it really wants to start an animation for this event.
   // This event also reports back the directions that we can swipe in.
+  uint32_t allowedDirections = 0;
   bool shouldStartSwipe = [self sendSwipeEvent:anEvent
-                                      withKind:NS_SIMPLE_GESTURE_SWIPE_START
-                             allowedDirections:&allowedDirections
-                                     direction:direction
-                                         delta:0.0];
+                                        withKind:NS_SIMPLE_GESTURE_SWIPE_START
+                               allowedDirections:&allowedDirections
+                                       direction:0
+                                           delta:0.0];
 
   if (!shouldStartSwipe) {
     return;
   }
 
-  CGFloat min = 0.0;
-  CGFloat max = 0.0;
-  if (!(direction & vDirs)) {
-    min = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_RIGHT) ?
-          -1.0 : 0.0;
-    max = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_LEFT) ?
-          1.0 : 0.0;
-  }
+  double min = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_RIGHT) ? -1 : 0;
+  double max = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_LEFT) ? 1 : 0;
 
-  __block BOOL animationCanceled = NO;
+  __block BOOL animationCancelled = NO;
+  __block BOOL geckoSwipeEventSent = NO;
   // At this point, anEvent is the first scroll wheel event in a two-finger
   // horizontal gesture that we've decided to treat as a swipe.  When we call
   // [NSEvent trackSwipeEventWithOptions:...], the OS interprets all
@@ -3934,72 +3900,67 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // the anEvent object because it's retained by the block, see bug 682445.
   // The block will release it when the block goes away at the end of the
   // animation, or when the animation is canceled.
-  [anEvent trackSwipeEventWithOptions:NSEventSwipeTrackingLockDirection |
-                                      NSEventSwipeTrackingClampGestureAmount
+  [anEvent trackSwipeEventWithOptions:NSEventSwipeTrackingLockDirection
              dampenAmountThresholdMin:min
                                   max:max
-                         usingHandler:^(CGFloat gestureAmount,
-                                        NSEventPhase phase,
-                                        BOOL isComplete,
-                                        BOOL *stop) {
-    uint32_t allowedDirectionsCopy = allowedDirections;
-    // Since this tracking handler can be called asynchronously, mGeckoChild
-    // might have become NULL here (our child widget might have been
-    // destroyed).
-    // Checking for gestureAmount == 0.0 also works around bug 770626, which
-    // happens when DispatchWindowEvent() triggers a modal dialog, which spins
-    // the event loop and confuses the OS. This results in several re-entrant
-    // calls to this handler.
-    if (animationCanceled || !mGeckoChild || gestureAmount == 0.0) {
-      *stop = YES;
-      animationCanceled = YES;
-      if (gestureAmount == 0.0 ||
-          ((direction & vDirs) && (direction != mCurrentSwipeDir))) {
-        if (mCancelSwipeAnimation)
-          *mCancelSwipeAnimation = YES;
-        mCancelSwipeAnimation = nil;
-        [self sendSwipeEndEvent:anEvent
-              allowedDirections:allowedDirectionsCopy];
+                         usingHandler:^(CGFloat gestureAmount, NSEventPhase phase, BOOL isComplete, BOOL *stop) {
+      // Since this tracking handler can be called asynchronously, mGeckoChild
+      // might have become NULL here (our child widget might have been
+      // destroyed).
+      if (animationCancelled || !mGeckoChild) {
+        *stop = YES;
+        return;
       }
-      mCurrentSwipeDir = 0;
-      return;
-    }
 
-    // Update animation overlay to match gestureAmount.
-    [self sendSwipeEvent:anEvent
-                withKind:NS_SIMPLE_GESTURE_SWIPE_UPDATE
-       allowedDirections:&allowedDirectionsCopy
-               direction:0.0
-                   delta:gestureAmount];
+      uint32_t allowedDirectionsCopy = allowedDirections;
 
-    if (phase == NSEventPhaseEnded) {
-      // The result of the swipe is now known, so the main event can be sent.
-      // The animation might continue even after this event was sent, so
-      // don't tear down the animation overlay yet.
-
-      uint32_t directionCopy = direction;
-
-      // gestureAmount is documented to be '-1', '0' or '1' when isComplete
-      // is TRUE, but the docs don't say anything about its value at other
-      // times.  However, tests show that, when phase == NSEventPhaseEnded,
-      // gestureAmount is negative when it will be '-1' at isComplete, and
-      // positive when it will be '1'.  And phase is never equal to
-      // NSEventPhaseEnded when gestureAmount will be '0' at isComplete.
+      // Update animation overlay to match gestureAmount.
       [self sendSwipeEvent:anEvent
-                  withKind:NS_SIMPLE_GESTURE_SWIPE
+                  withKind:NS_SIMPLE_GESTURE_SWIPE_UPDATE
          allowedDirections:&allowedDirectionsCopy
-                 direction:directionCopy
-                     delta:0.0];
-    }
+                 direction:0
+                     delta:gestureAmount];
 
-    if (isComplete) {
-      [self sendSwipeEndEvent:anEvent allowedDirections:allowedDirectionsCopy];
-      mCurrentSwipeDir = 0;
-      mCancelSwipeAnimation = nil;
-    }
-  }];
+      if (phase == NSEventPhaseEnded && !geckoSwipeEventSent) {
+        // The result of the swipe is now known, so the main event can be sent.
+        // The animation might continue even after this event was sent, so
+        // don't tear down the animation overlay yet.
+        // gestureAmount is documented to be '-1', '0' or '1' when isComplete
+        // is TRUE, but the docs don't say anything about its value at other
+        // times.  However, tests show that, when phase == NSEventPhaseEnded,
+        // gestureAmount is negative when it will be '-1' at isComplete, and
+        // positive when it will be '1'.  And phase is never equal to
+        // NSEventPhaseEnded when gestureAmount will be '0' at isComplete.
+        uint32_t direction = gestureAmount > 0 ?
+          (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_LEFT :
+          (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
+        // If DispatchWindowEvent() does something to trigger a modal dialog
+        // (which spins the event loop), the OS gets confused and makes
+        // several re-entrant calls to this handler, all of which have
+        // 'phase' set to NSEventPhaseEnded.  Unless we do something about
+        // it, this results in an equal number of re-entrant calls to
+        // DispatchWindowEvent(), and to our modal-event handling code.
+        // Probably because of bug 478703, this really messes things up,
+        // and requires a force quit to get out of.  We avoid this by
+        // avoiding re-entrant calls to DispatchWindowEvent().  See bug
+        // 770626.
+        geckoSwipeEventSent = YES;
+        [self sendSwipeEvent:anEvent
+                    withKind:NS_SIMPLE_GESTURE_SWIPE
+           allowedDirections:&allowedDirectionsCopy
+                  direction:direction
+                       delta:0.0];
+      }
 
-  mCancelSwipeAnimation = &animationCanceled;
+      if (isComplete) {
+        [self cancelSwipeIfRunning];
+        [self sendSwipeEndEvent:anEvent allowedDirections:allowedDirections];
+      }
+    }];
+
+  mCancelSwipeAnimation = [^{
+    animationCancelled = YES;
+  } copy];
 }
 #endif // #ifdef __LP64__
 
@@ -4126,7 +4087,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   NPCocoaEvent cocoaEvent;
-
+	
   nsMouseEvent geckoEvent(true, NS_MOUSE_BUTTON_UP, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   if ([theEvent modifierFlags] & NSControlKeyMask)
@@ -4575,14 +4536,12 @@ static int32_t RoundUp(double aDouble)
   }
 
 #ifdef __LP64__
-  // overflowDeltaX and overflowDeltaY tell us when the user has tried to
-  // scroll past the edge of a page (in those cases it's non-zero).
-  if ((wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) &&
-      (wheelEvent.viewPortIsScrollTargetParent) &&
-      (wheelEvent.deltaX != 0.0 || wheelEvent.deltaY != 0.0)) {
+  // overflowDeltaX tells us when the user has tried to scroll past the edge
+  // of a page to the left or the right (in those cases it's non-zero).
+  if (wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL &&
+      wheelEvent.deltaX != 0.0) {
     [self maybeTrackScrollEventAsSwipe:theEvent
-                       scrollOverflowX:wheelEvent.overflowDeltaX
-                       scrollOverflowY:wheelEvent.overflowDeltaY];
+                        scrollOverflow:wheelEvent.overflowDeltaX];
   }
 #endif // #ifdef __LP64__
 
