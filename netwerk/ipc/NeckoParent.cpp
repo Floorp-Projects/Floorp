@@ -385,8 +385,7 @@ NeckoParent::DeallocPTCPServerSocketParent(PTCPServerSocketParent* actor)
 }
 
 PRemoteOpenFileParent*
-NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI,
-                                        PBrowserParent* aBrowser)
+NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(uri);
@@ -396,30 +395,37 @@ NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI,
 
   // security checks
   if (UsingNeckoIPCSecurity()) {
-    if (!aBrowser) {
-      printf_stderr("NeckoParent::AllocPRemoteOpenFile: "
-                    "FATAL error: missing TabParent: KILLING CHILD PROCESS\n");
-      return nullptr;
-    }
-    nsRefPtr<TabParent> tabParent = static_cast<TabParent*>(aBrowser);
-    uint32_t appId = tabParent->OwnOrContainingAppId();
     nsCOMPtr<nsIAppsService> appsService =
       do_GetService(APPS_SERVICE_CONTRACTID);
     if (!appsService) {
       return nullptr;
     }
-    nsCOMPtr<mozIDOMApplication> domApp;
-    nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(domApp));
-    if (!domApp) {
-      return nullptr;
-    }
-    nsCOMPtr<mozIApplication> mozApp = do_QueryInterface(domApp);
-    if (!mozApp) {
-      return nullptr;
-    }
+    bool haveValidBrowser = false;
     bool hasManage = false;
-    rv = mozApp->HasPermission("webapps-manage", &hasManage);
-    if (NS_FAILED(rv)) {
+    nsCOMPtr<mozIApplication> mozApp;
+    for (uint32_t i = 0; i < Manager()->ManagedPBrowserParent().Length(); i++) {
+      nsRefPtr<TabParent> tabParent =
+        static_cast<TabParent*>(Manager()->ManagedPBrowserParent()[i]);
+      uint32_t appId = tabParent->OwnOrContainingAppId();
+      nsCOMPtr<mozIDOMApplication> domApp;
+      nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(domApp));
+      if (!domApp) {
+        continue;
+      }
+      mozApp = do_QueryInterface(domApp);
+      if (!mozApp) {
+        continue;
+      }
+      hasManage = false;
+      rv = mozApp->HasPermission("webapps-manage", &hasManage);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+      haveValidBrowser = true;
+      break;
+    }
+
+    if (!haveValidBrowser) {
       return nullptr;
     }
 
@@ -462,7 +468,7 @@ NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI,
     } else {
       // regular packaged apps can only access their own application.zip file
       nsAutoString basePath;
-      rv = mozApp->GetBasePath(basePath);
+      nsresult rv = mozApp->GetBasePath(basePath);
       if (NS_FAILED(rv)) {
         return nullptr;
       }
@@ -491,8 +497,7 @@ NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI,
 
 bool
 NeckoParent::RecvPRemoteOpenFileConstructor(PRemoteOpenFileParent* aActor,
-                                            const URIParams& aFileURI,
-                                            PBrowserParent* aBrowser)
+                                            const URIParams& aFileURI)
 {
   return static_cast<RemoteOpenFileParent*>(aActor)->OpenSendCloseDelete();
 }

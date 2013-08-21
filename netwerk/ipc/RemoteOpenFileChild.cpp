@@ -184,7 +184,7 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
   URIParams uri;
   SerializeURI(mURI, uri);
 
-  gNeckoChild->SendPRemoteOpenFileConstructor(this, uri, mTabChild);
+  gNeckoChild->SendPRemoteOpenFileConstructor(this, uri);
 
   // The chrome process now has a logical ref to us until it calls Send__delete.
   AddIPDLReference();
