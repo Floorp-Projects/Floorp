@@ -87,7 +87,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor, Laye
                                 &apzcsToDestroy);
   }
 
-  for (int i = apzcsToDestroy.Length() - 1; i >= 0; i--) {
+  for (size_t i = 0; i < apzcsToDestroy.Length(); i++) {
     APZC_LOG("Destroying APZC at %p\n", apzcsToDestroy[i].get());
     apzcsToDestroy[i]->Destroy();
   }
@@ -235,7 +235,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
       if (mApzcForInputBlock) {
         GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
         MultiTouchInput inputForApzc(multiTouchInput);
-        for (int i = inputForApzc.mTouches.Length() - 1; i >= 0; i--) {
+        for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
           ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
         }
         mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
@@ -302,13 +302,13 @@ APZCTreeManager::ReceiveInputEvent(const nsInputEvent& aEvent,
       if (mApzcForInputBlock) {
         GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
         MultiTouchInput inputForApzc(touchEvent);
-        for (int i = inputForApzc.mTouches.Length() - 1; i >= 0; i--) {
+        for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
           ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
         }
 
         gfx3DMatrix outTransform = transformToApzc * transformToScreen;
         nsTouchEvent* outEvent = static_cast<nsTouchEvent*>(aOutEvent);
-        for (int i = outEvent->touches.Length() - 1; i >= 0; i--) {
+        for (size_t i = 0; i < outEvent->touches.Length(); i++) {
           ApplyTransform(&(outEvent->touches[i]->mRefPoint), outTransform);
         }
 
@@ -426,7 +426,7 @@ APZCTreeManager::ClearTree()
   // If this is too slow feel free to change it to a recursive walk.
   nsTArray< nsRefPtr<AsyncPanZoomController> > apzcsToDestroy;
   Collect(mRootApzc, &apzcsToDestroy);
-  for (int i = apzcsToDestroy.Length() - 1; i >= 0; i--) {
+  for (size_t i = 0; i < apzcsToDestroy.Length(); i++) {
     apzcsToDestroy[i]->Destroy();
   }
   mRootApzc = nullptr;
