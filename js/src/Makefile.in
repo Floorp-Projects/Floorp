@@ -342,17 +342,12 @@ endif
 endif
 
 DIST_GARBAGE = config.cache config.log config.status* \
-   config/autoconf.mk config/emptyvars.mk \
-   unallmakefiles $(JS_CONFIG_NAME) js-config.h js-confdefs.h \
-   backend.mk config/backend.mk devtools/backend.mk editline/backend.mk \
-   gdb/backend.mk jsapi-tests/backend.mk shell/backend.mk tests/backend.mk \
-   backend.RecursiveMakeBackend.built backend.RecursiveMakeBackend.built.pp \
-   devtools/rootAnalysis/Makefile
+   config/autoconf.mk \
+   unallmakefiles $(JS_CONFIG_NAME) js-config.h js-confdefs.h
 
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
 	$(RM) $(DIST_GARBAGE)
-	rm -rf intl _virtualenv
 
 DEFINES		+= -DEXPORT_JS_API
 
@@ -676,30 +671,3 @@ endif
 #
 # END kludges for the Nitro assembler
 ###############################################
-
-###############################################
-# Generating source package tarballs
-# (only possible when tar is found)
-ifneq (,$(TAR))
-
-source-package:
-	SRCDIR=$(srcdir) \
-	DIST=$(DIST) \
-	MAKE=$(MAKE) \
-	MKDIR=$(MKDIR) \
-	TAR=$(TAR) \
-	MOZJS_MAJOR_VERSION=$(MOZJS_MAJOR_VERSION) \
-	MOZJS_MINOR_VERSION=$(MOZJS_MINOR_VERSION) \
-	MOZJS_PATCH_VERSION=$(MOZJS_PATCH_VERSION) \
-	MOZJS_ALPHA=$(MOZJS_ALPHA) \
-	$(srcdir)/make-source-package.sh
-
-clean::
-	DIST=$(DIST) \
-	MOZJS_MAJOR_VERSION=$(MOZJS_MAJOR_VERSION) \
-	MOZJS_MINOR_VERSION=$(MOZJS_MINOR_VERSION) \
-	MOZJS_PATCH_VERSION=$(MOZJS_PATCH_VERSION) \
-	MOZJS_ALPHA=$(MOZJS_ALPHA) \
-	$(srcdir)/make-source-package.sh clean
-
-endif
