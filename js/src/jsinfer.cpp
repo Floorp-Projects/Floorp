@@ -6054,6 +6054,9 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
         return type;
     }
 
+    JSContext *cx = asJSContext();
+    SkipRoot skipHash(cx, &p); /* Prevent the hash from being poisoned. */
+
     Rooted<TaggedProto> proto(this, proto_);
     RootedFunction fun(this, fun_);
 
@@ -6075,7 +6078,6 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
     if (!typeInferenceEnabled())
         return type;
 
-    JSContext *cx = asJSContext();
     AutoEnterAnalysis enter(cx);
 
     /*
