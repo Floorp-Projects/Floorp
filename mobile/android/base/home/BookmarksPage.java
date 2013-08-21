@@ -149,6 +149,10 @@ public class BookmarksPage extends HomeFragment {
         });
         mList.setAdapter(mListAdapter);
 
+        // Invalidate the cached value that keeps track of whether or
+        // not desktop bookmarks (or reading list items) exist.
+        BrowserDB.invalidateCachedState();
+
         // Create callbacks before the initial loader is started.
         mLoaderCallbacks = new CursorLoaderCallbacks(activity, getLoaderManager());
         mThumbnailsLoaderCallbacks = new ThumbnailsLoaderCallbacks();
