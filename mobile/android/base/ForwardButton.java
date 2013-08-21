@@ -66,7 +66,7 @@ public class ForwardButton extends ShapedButton {
         canvas.drawPath(mBorderPath, isPrivateMode() ? mBorderPrivatePaint : mBorderPaint);
     }
 
-    // The drawable is constructed as per @drawable/address_bar_nav_button.
+    // The drawable is constructed as per @drawable/url_bar_nav_button.
     @Override
     public void onLightweightThemeChanged() {
         Drawable drawable = mActivity.getLightweightTheme().getDrawable(this);
@@ -88,6 +88,6 @@ public class ForwardButton extends ShapedButton {
 
     @Override
     public void onLightweightThemeReset() {
-        setBackgroundResource(R.drawable.address_bar_nav_button);
+        setBackgroundResource(R.drawable.url_bar_nav_button);
     }
 }

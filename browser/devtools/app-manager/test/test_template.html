@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <div id="root">
+    <span template='{"type":"textContent","path":"title"}'></span>
+    <span template='{"type":"attribute","name":"title","path":"title"}'></span>
+    <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'></span>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'></div>
+  </div>
+
+  <div id="ref0">
+    <span template='{"type":"textContent","path":"title"}'>ttt</span>
+    <span title="ttt" template='{"type":"attribute","name":"title","path":"title"}'></span>
+    <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:foo_l10n/bar_l10n</span>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0."}'>b</span>
+      </div>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1."}'>xx1</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1."}'>b</span>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="ref1">
+    <span template='{"type":"textContent","path":"title"}'>xxx</span>
+    <span title="xxx" template='{"type":"attribute","name":"title","path":"title"}'></span>
+    <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:foo2_l10n/bar_l10n</span>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0."}'>b</span>
+      </div>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1."}'>xx1</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1."}'>b</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="ref2">
+    <span template='{"type":"textContent","path":"title"}'>xxx</span>
+    <span title="xxx" template='{"type":"attribute","name":"title","path":"title"}'></span>
+    <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:yyy/zzz</span>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0."}'>b</span>
+      </div>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1."}'>xx1</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1."}'>b</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="ref3">
+    <span template='{"type":"textContent","path":"title"}'>xxx</span>
+    <span title="xxx" template='{"type":"attribute","name":"title","path":"title"}'></span>
+    <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:yyy/zzz</span>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0."}'>b</span>
+      </div>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1."}'>xx1</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1."}'>b</span>
+      </div>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.2."}'>xx2</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.2."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.2."}'>b</span>
+      </div>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.3."}'>xx3</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.3."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.3."}'>b</span>
+      </div>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.4."}'>xx4</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.4."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.4."}'>b</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="ref4">
+    <span template='{"type":"textContent","path":"title"}'>xxx</span>
+    <span title="xxx" template='{"type":"attribute","name":"title","path":"title"}'></span>
+    <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:yyy/zzz</span>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0."}'>b</span>
+      </div>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1."}'>xx1</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1."}'>b</span>
+      </div>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.2."}'>xx2</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.2."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.2."}'>b</span>
+      </div>
+      <div>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.3."}'>xx3</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.3."}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.3."}'>b</span>
+      </div>
+    </div>
+  </div>
+
+
+
+  <template id="template">
+    <div>
+      <span template='{"type":"textContent","path":"idx"}'></span>
+      <span template='{"type":"textContent","path":"a"}'></span>
+      <span template='{"type":"textContent","path":"b"}'></span>
+    </div>
+  </template>
+
+  <script type="application/javascript;version=1.8" src="chrome://browser/content/devtools/app-manager/template.js"></script>
+  <script type="application/javascript;version=1.8">
+    SimpleTest.waitForExplicitFinish();
+
+    const Cu = Components.utils;
+    Cu.import("resource:///modules/devtools/gDevTools.jsm");
+    const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+    const {require} = devtools;
+    const ObservableObject = require("devtools/shared/observable-object");
+
+    let data = {
+      title: "ttt",
+      foo1: {
+        bar1: [
+          {idx: "xx0", a: "a", b: "b"},
+          {idx: "xx1", a: "a", b: "b"},
+        ],
+      },
+      foo2: {
+        foo_l10n: "foo_l10n",
+        bar_l10n: "bar_l10n"
+      },
+    };
+
+    let store = new ObservableObject(data);
+
+    let changes = [
+      {
+        exec: function() {},
+        reference: document.querySelector("#ref0")
+      },
+      {
+        exec: function() {
+          store.object.title = "xxx";
+          store.object.foo2.foo_l10n = "foo2_l10n";
+        },
+        reference: document.querySelector("#ref1")
+      },
+      {
+        exec: function() {
+          store.object.foo2 = {
+            foo_l10n: "yyy",
+            bar_l10n: "zzz",
+          }
+        },
+        reference: document.querySelector("#ref2")
+      },
+      {
+        exec: function() {
+          let items = [];
+          for (let i = 2; i < 5; i++) {
+            items.push({idx: "xx" + i, a: "a", b: "b"});
+          }
+
+          store.object.foo1.bar1 = store.object.foo1.bar1.concat(items);
+        },
+        reference: document.querySelector("#ref3")
+      },
+      {
+        exec: function() {
+          store.object.foo1.bar1.pop();
+        },
+        reference: document.querySelector("#ref4")
+      },
+    ];
+
+    function compare(node1, node2) {
+      let text1 = node1.innerHTML;
+      let text2 = node2.innerHTML;
+      text1 = text1.replace(/\n/g,"");
+      text2 = text2.replace(/\n/g,"");
+      text1 = text1.replace(/\s+/g,"");
+      text2 = text2.replace(/\s+/g,"");
+      return text1 == text2;
+    }
+
+
+    let root = document.querySelector("#root");
+
+    let t = new Template(root, store, (prop, args) => {
+      return prop + ":" + args.join("/");
+    });
+
+    t.start();
+
+    for (let i = 0; i < changes.length; i++) {
+      let change = changes[i];
+      change.exec();
+      ok(compare(change.reference, root), "Content " + i + " looks good.");
+    }
+  SimpleTest.finish();
+
+  </script>
+</html>

@@ -17,12 +17,21 @@
         <!-- Style for MenuItemDefault -->
         <attr name="menuItemDefaultStyle" format="reference"/>
 
-    </declare-styleable>
+        <!-- Default style for the BookmarksListView -->
+        <attr name="bookmarksListViewStyle" format="reference" />
 
-    <declare-styleable name="AboutHomeSection">
-        <attr name="title" format="string"/>
-        <attr name="subtitle" format="string"/>
-        <attr name="more_text" format="string"/>
+        <!-- Default style for the BookmarkThumbnailView -->
+        <attr name="bookmarkThumbnailViewStyle" format="reference" />
+
+        <!-- Default style for the TopBookmarkItemView -->
+        <attr name="topBookmarkItemViewStyle" format="reference" />
+
+        <!-- Default style for the TopBookmarksView -->
+        <attr name="topBookmarksViewStyle" format="reference" />
+
+        <!-- Default style for the HomeListView -->
+        <attr name="homeListViewStyle" format="reference" />
+
     </declare-styleable>
 
     <!-- DoorHangers -->
@@ -171,9 +180,45 @@
         <attr name="android:listSelector"/>
     </declare-styleable>
 
+    <declare-styleable name="HomeListView">
+        <!-- Draws a divider on top of the list, if true. Defaults to false. -->
+        <attr name="topDivider" format="boolean"/>
+    </declare-styleable>
+
+    <declare-styleable name="HomePagerTabStrip">
+        <attr name="tabIndicatorColor" format="color"/>
+    </declare-styleable>
+
+    <declare-styleable name="FadedTextView">
+        <attr name="fadeWidth" format="dimension"/>
+    </declare-styleable>
+
+    <declare-styleable name="BookmarkFolderView">
+        <attr name="state_open" format="boolean"/>
+    </declare-styleable>
+
     <declare-styleable name="GeckoView">
         <attr name="url" format="string"/>
         <attr name="doinit" format="boolean"/>
+    </declare-styleable>
+
+    <declare-styleable name="IconTabWidget">
+        <attr name="android:layout"/>
+
+        <!-- Sets the tab's content type. Defaults to icon. -->
+        <attr name="display">
+            <enum name="icon" value="0x00" />
+            <enum name="text" value="0x01" />
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="TopBookmarksView">
+        <attr name="android:horizontalSpacing"/>
+        <attr name="android:verticalSpacing"/>
+    </declare-styleable>
+
+    <declare-styleable name="TabMenuStrip">
+        <attr name="strip" format="reference"/>
     </declare-styleable>
 
 </resources>

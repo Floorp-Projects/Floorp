@@ -396,21 +396,6 @@ def generate_build_for_target(pkg_cfg, target, deps,
     if ('preferences' in target_cfg):
         build['preferences'] = target_cfg.preferences
 
-    if 'id' in target_cfg:
-        # NOTE: logic duplicated from buildJID()
-        jid = target_cfg['id']
-        if not ('@' in jid or jid.startswith('{')):
-            jid += '@jetpack'
-        build['preferencesBranch'] = jid
-
-    if 'preferences-branch' in target_cfg:
-        # check it's a non-empty, valid branch name
-        preferencesBranch = target_cfg['preferences-branch']
-        if re.match('^[\w{@}-]+$', preferencesBranch):
-            build['preferencesBranch'] = preferencesBranch
-        elif not is_running_tests:
-            print >>sys.stderr, "IGNORING preferences-branch (not a valid branch name)"
-
     return build
 
 def _get_files_in_dir(path):
