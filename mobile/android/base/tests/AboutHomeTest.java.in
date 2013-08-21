@@ -1,0 +1,375 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.net.Uri;
+import android.support.v4.view.ViewPager;
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.TabWidget;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+
+/**
+ * This class is an extension of BaseTest that helps with interaction with about:home
+ * This class contains methods that access the different tabs from about:home, methods that get information like history and bookmarks from the database, edit and remove bookmarks and history items
+ * The purpose of this class is to collect all the logically connected methods that deal with about:home
+ * To use any of these methods in your test make sure it extends AboutHomeTest instead of BaseTest
+ */
+abstract class AboutHomeTest extends BaseTest {
+    protected enum BrowserDataType {BOOKMARKS, HISTORY};
+    protected enum AboutHomeTabs {MOST_VISITED, MOST_RECENT, TABS_FROM_LAST_TIME, BOOKMARKS, READING_LIST};
+    protected ArrayList<String> aboutHomeTabs = new ArrayList<String>() {{
+                  add("HISTORY");
+                  add("BOOKMARKS");
+                  add("READING_LIST");
+              }};
+    
+    // Labels for the about:home tabs
+    protected static final String HISTORY_LABEL = "HISTORY";
+    protected static final String BOOKMARKS_LABEL = "BOOKMARKS";
+    protected static final String READING_LIST_LABEL = "READING LIST";
+    protected static final String MOST_RECENT_LABEL = "Most recent";
+    protected static final String TABS_FROM_LAST_TIME_LABEL = "Open all tabs from last time";
+
+    /**
+     * This method can be used to check if an URL is present in the bookmarks database
+     */
+    protected boolean isBookmark(String url) {
+        try {
+            ContentResolver resolver = getActivity().getContentResolver();
+            ClassLoader classLoader = getActivity().getClassLoader();
+            Class browserDB = classLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+            Method isBookmarked = browserDB.getMethod("isBookmark", ContentResolver.class, String.class);
+            return (Boolean)isBookmarked.invoke(null, resolver, url);
+        } catch (Exception e) {
+            mAsserter.ok(false, "Exception while checking if url is bookmarked: ", e.toString()); // Fail before returning
+            return false;
+        }
+    }
+
+    /**
+     * FIXME: Write new versions of these methods and update their consumers to use the new about:home pages.
+     */
+    protected ListView getHistoryList(String waitText, int expectedChildCount) {
+        return null;
+    }
+    protected ListView getHistoryList(String waitText) {
+        return null;
+    }
+
+    protected Uri buildUri(BrowserDataType dataType) {
+        Uri uri = null;
+        if (dataType == BrowserDataType.BOOKMARKS || dataType == BrowserDataType.HISTORY) {
+            uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/" + dataType.toString().toLowerCase());
+        } else {
+            mAsserter.ok(false, "The wrong data type has been provided = " + dataType.toString(), "Please provide a BrowserDataType value");
+        }
+        uri = uri.buildUpon().appendQueryParameter("profile", "default")
+                             .appendQueryParameter("sync", "true").build();
+        return uri;
+    }
+
+    /**
+     * Waits for the given ListView to have a non-empty adapter.
+     *
+     * This method will fail if the given ListView or its adapter are null.
+     */
+    protected boolean waitForListToLoad(final ListView listView) {
+        boolean result = waitForTest(new BooleanTest() {
+            @Override
+            public boolean test() {
+                if (listView == null) {
+                    return false;
+                }
+
+                final ListAdapter adapter = listView.getAdapter();
+                if (adapter == null) {
+                    return false;
+                }
+
+                return (adapter.getCount() > 0);
+            }
+        }, MAX_WAIT_MS);
+
+        return result;
+    }
+
+    /**
+     * Get an active ListView with the specified tag .
+     *
+     * This method uses the predefined tags in HomePager.
+     */
+    protected final ListView findListViewWithTag(String tag) {
+        for (ListView listView : mSolo.getCurrentListViews()) {
+            final String listTag = (String) listView.getTag();
+            if (TextUtils.isEmpty(listTag)) {
+                continue;
+            }
+
+            if (TextUtils.equals(listTag, tag)) {
+                return listView;
+            }
+        }
+
+        return null;
+    }
+
+    protected void addOrUpdateMobileBookmark(String title, String url) {
+        if (isBookmark(url)) {
+            updateBookmark(title, url, null);
+        } else {
+            addMobileBookmark(title, url);
+        }
+    }
+
+    protected void addMobileBookmark(String title, String url) {
+        try {
+            ContentResolver resolver = getActivity().getContentResolver();
+            ClassLoader classLoader = getActivity().getClassLoader();
+            Class browserDB = classLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+            Method addBookmark = browserDB.getMethod("addBookmark", ContentResolver.class, String.class, String.class);
+            addBookmark.invoke(null, resolver, title, url);
+            mAsserter.ok(true, "Inserting a new bookmark", "Inserter the bookmark with the title = " + title + " and the url = " + url);
+        } catch (Exception e) {
+            mAsserter.ok(false, "Exception adding bookmark: ", e.toString());
+        }
+    }
+
+    protected void updateBookmark(String title, String url, String keyword) {
+        try {
+            ContentResolver resolver = getActivity().getContentResolver();
+            ClassLoader classLoader = getActivity().getClassLoader();
+            Class browserDB = classLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+            Method updateBookmark = browserDB.getMethod("updateBookmark", ContentResolver.class, String.class, String.class);
+            updateBookmark.invoke(null, resolver, title, url, keyword);
+            mAsserter.ok(true, "Updating existing bookmark", "Setting the values to title = " + title + ", url = " + url + " and keyword = " + keyword);
+        } catch (Exception e) {
+            mAsserter.ok(false, "Exception updating bookmark: ", e.toString());
+        }
+    }
+
+    protected void deleteBookmark(String url) {
+        try {
+            ContentResolver resolver = getActivity().getContentResolver();
+            ClassLoader classLoader = getActivity().getClassLoader();
+            Class browserDB = classLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+            Method removeBookmark = browserDB.getMethod("removeBookmarksWithURL", ContentResolver.class, String.class);
+            removeBookmark.invoke(null, resolver, url);
+        } catch (Exception e) {
+            mAsserter.ok(false, "Exception deleting bookmark: ", e.toString());
+        }
+    }
+
+    protected void deleteHistoryItem(String url) {
+        try {
+            ContentResolver resolver = getActivity().getContentResolver();
+            ClassLoader classLoader = getActivity().getClassLoader();
+            Class browserDB = classLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+            Method removeHistory = browserDB.getMethod("removeHistoryEntry", ContentResolver.class, String.class);
+            removeHistory.invoke(null, resolver, url);
+        } catch (Exception e) {
+            mAsserter.ok(false, "Exception deleting history item: ", e.toString());
+        }
+    }
+
+    protected Long getFolderId(String guid) {
+        ContentResolver resolver = getActivity().getContentResolver();
+        Long folderId = Long.valueOf(-1);
+        Uri bookmarksUri = buildUri(BrowserDataType.BOOKMARKS);
+        Cursor c = null;
+        try {
+            c = resolver.query(bookmarksUri,
+                               new String[] { "_id" },
+                               "guid = ?",
+                               new String[] { guid },
+                               null);
+            if (c.moveToFirst()) {
+                folderId = c.getLong(c.getColumnIndexOrThrow("_id"));
+            }
+            if (folderId == -1) {
+                mAsserter.ok(false, "Making sure that we got the correct folder", "We didn't get the correct folder id");
+            }
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+        return folderId;
+    }
+
+    /**
+     * @param  a BrowserDataType value - either HISTORY or BOOKMARKS
+     * @return an ArrayList of the urls in the Firefox for Android Bookmarks or History databases
+     */
+    protected ArrayList<String> getBrowserDBUrls(BrowserDataType dataType) {
+        ArrayList<String> browserData = new ArrayList<String>();
+        ContentResolver resolver = getActivity().getContentResolver();
+        ClassLoader classLoader = getActivity().getClassLoader();
+        Cursor cursor = null;
+        Uri uri = buildUri(dataType);
+        if (dataType == BrowserDataType.HISTORY) {
+            try {
+                Class browserDBClass = classLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+                Method getAllVisitedHistory = browserDBClass.getMethod("getAllVisitedHistory", ContentResolver.class);
+                cursor = (Cursor)getAllVisitedHistory.invoke(null, resolver);
+            } catch (Exception e) {
+                mAsserter.ok(false, "Exception while getting history", e.toString());
+            }
+        } else if (dataType == BrowserDataType.BOOKMARKS) {
+            try {
+                Class browserDBClass = classLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+                Method getBookmarks = browserDBClass.getMethod("getBookmarksInFolder", ContentResolver.class, Long.TYPE);
+                cursor = (Cursor)getBookmarks.invoke(null, resolver, getFolderId("mobile"));
+            } catch (Exception e) {
+                mAsserter.ok(false, "Exception while getting bookmarks", e.toString());
+            }
+        }
+        if (cursor != null) {
+            cursor.moveToFirst();
+            for (int i = 0; i < cursor.getCount(); i++ ) {
+                 // The url field may be null for folders in the structure of the Bookmarks table for Firefox so we should eliminate those
+                if (cursor.getString(cursor.getColumnIndex("url")) != null) {
+                    browserData.add(cursor.getString(cursor.getColumnIndex("url")));
+                }
+                if(!cursor.isLast()) {
+                    cursor.moveToNext();
+                }
+            }
+        } else {
+             mAsserter.ok(false, "We could not retrieve any data from the database", "The cursor was null");
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+        return browserData;
+    }
+
+   /**
+    * FIXME: rewrite this to work with fig when rewriting the testBookmarksTab test
+    * This method will edit the bookmark with index = bookmarkIndex from the list of bookmarks
+    * For the field index:
+    *     fieldIndex = 1 - the Bookmark name
+    *     fieldIndex = 2 - the Bookmark url
+    *     fieldIndex = 3 - the Bookmark keyword
+    */
+    protected void editBookmark(int bookmarkIndex, int fieldIndex, String addedText, ListView list) {
+
+        // Open the Edit Bookmark context menu
+        View child;
+        mSolo.clickOnText("Bookmarks");
+        child = list.getChildAt(bookmarkIndex);
+        mAsserter.ok(child != null, "edit item can be retrieved", child != null ? child.toString() : "null!");
+        waitForText("Switch to tab");
+        mSolo.clickLongOnView(child);
+        waitForText("Share");
+        mSolo.clickOnText("Edit");
+        waitForText("Edit Bookmark");
+
+        // Clear the Field
+        mSolo.clearEditText(fieldIndex);
+
+        // Enter the new text
+        mSolo.clickOnEditText(fieldIndex);
+        mActions.sendKeys(addedText);
+        mSolo.clickOnText("OK");
+        waitForText("Bookmark updated");
+    }
+
+    // FIXME: rewrite this to work with fig when rewriting the testBookmarksTab test
+    protected boolean checkBookmarkEdit(int bookmarkIndex, String addedText, ListView list) {
+        // Open the Edit Bookmark context menu
+        View child;
+        mSolo.clickOnText("Bookmarks");
+        child = list.getChildAt(bookmarkIndex);
+        mAsserter.ok(child != null, "check item can be retrieved", child != null ? child.toString() : "null!");
+        waitForText("Switch to tab");
+        mSolo.clickLongOnView(child);
+        waitForText("Share");
+        mSolo.clickOnText("Edit");
+        waitForText("Edit Bookmark");
+
+        // Check if the new text was added
+        if (mSolo.searchText(addedText)) {
+            clickOnButton("Cancel");
+            waitForText("about:home");
+            return true;
+        } else {
+            clickOnButton("Cancel");
+            waitForText("about:home");
+            return false;
+        }
+    }
+
+   // A wait in order for the about:home tab to be rendered after drag/tab selection
+    private void waitForAboutHomeTab(final int tabIndex) {
+        boolean correctTab = waitForTest(new BooleanTest() {
+            @Override
+            public boolean test() {
+              ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
+              return (pager.getCurrentItem() == tabIndex);
+            }
+        }, MAX_WAIT_MS);
+        mAsserter.ok(correctTab, "Checking that the correct tab is displayed", "The " + aboutHomeTabs.get(tabIndex) + " tab is displayed");
+    }
+ 
+    /**
+     * This method can be used to open the different tabs of about:home
+     * @param AboutHomeTabs enum item {MOST_VISITED, MOST_RECENT, TABS_FROM_LAST_TIME, BOOKMARKS, READING_LIST}
+     */
+    protected void openAboutHomeTab(AboutHomeTabs tab) {
+        int halfWidth = mDriver.getGeckoWidth() / 2;
+        int halfHeight = mDriver.getGeckoHeight() / 2;
+        focusUrlBar();
+        ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
+        switch (tab) {
+            case BOOKMARKS : {
+                mSolo.clickOnText(BOOKMARKS_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
+                break;
+            }
+            case MOST_RECENT: {
+                mSolo.clickOnText(BOOKMARKS_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
+                mActions.drag(0, halfWidth, halfHeight, halfHeight);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(HISTORY_LABEL));
+                TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
+                mSolo.clickOnView(tabwidget.getChildAt(1));
+                mAsserter.ok(waitForText(MOST_RECENT_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
+                break;
+            }
+            case READING_LIST: {
+                mSolo.clickOnText(BOOKMARKS_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
+                mActions.drag(halfWidth, 0, halfHeight, halfHeight);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
+                break;
+            }
+            case MOST_VISITED: {
+                mSolo.clickOnText(BOOKMARKS_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
+                mActions.drag(0, halfWidth, halfHeight, halfHeight);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(HISTORY_LABEL));
+                TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
+                mSolo.clickOnView(tabwidget.getChildAt(0));
+                break;
+            }
+            case TABS_FROM_LAST_TIME: {
+                mSolo.clickOnText(BOOKMARKS_LABEL);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(BOOKMARKS_LABEL));
+                mActions.drag(0, halfWidth, halfHeight, halfHeight);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(HISTORY_LABEL));
+                TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
+                mSolo.clickOnView(tabwidget.getChildAt(2));
+                mAsserter.ok(waitForText(TABS_FROM_LAST_TIME_LABEL), "Checking that we are in the Tabs from last time tab of about:home", "We are in the Tabs from last time tab");
+                break;
+            }
+        }
+    }
+}

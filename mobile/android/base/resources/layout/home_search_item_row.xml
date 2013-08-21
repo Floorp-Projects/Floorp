@@ -3,9 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.SearchEngineRow xmlns:android="http://schemas.android.com/apk/res/android"
-                                   android:layout_width="fill_parent"
-                                   android:layout_height="wrap_content"
-                                   android:minHeight="@dimen/awesomebar_row_height"
-                                   android:duplicateParentState="true"
-                                   android:padding="7dp"/>
+<org.mozilla.gecko.home.SearchEngineRow xmlns:android="http://schemas.android.com/apk/res/android"
+                                        android:layout_width="fill_parent"
+                                        android:layout_height="wrap_content"
+                                        android:minHeight="@dimen/search_row_height"
+                                        android:duplicateParentState="true"
+                                        android:paddingTop="7dp"
+                                        android:paddingBottom="7dp"/>

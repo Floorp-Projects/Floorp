@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/home_empty_view"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical"
+              android:gravity="center">
+
+    <!-- Empty spacer view -->
+    <View android:layout_width="fill_parent"
+          android:layout_height="0dip"
+          android:layout_weight="1"/>
+
+    <TextView android:id="@+id/home_empty_text"
+              android:layout_width="fill_parent"
+              android:layout_height="0dip"
+              android:gravity="top|center"
+              android:text="@string/home_reading_list_empty"
+              android:textAppearance="@style/TextAppearance.EmptyMessage"
+              android:drawableTop="@drawable/icon_reading_list_empty"
+              android:drawablePadding="10dp"
+              android:paddingLeft="50dp"
+              android:paddingRight="50dp"
+              android:layout_weight="4"/>
+
+    <ImageView android:src="@drawable/divider_horizontal"
+               android:layout_width="fill_parent"
+               android:layout_height="1dip"
+               android:paddingLeft="25dp"
+               android:paddingRight="25dp"/>
+
+    <TextView android:id="@+id/home_empty_hint"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:gravity="bottom"
+              android:text="@string/home_reading_list_hint"
+              android:textAppearance="@style/TextAppearance.Small"
+              android:paddingTop="20dp"
+              android:paddingBottom="15dp"
+              android:paddingLeft="25dp"
+              android:paddingRight="40dp"/>
+
+</LinearLayout>

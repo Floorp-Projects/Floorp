@@ -1,8 +1,6 @@
-/* vim:set ts=2 sw=2 sts=2 expandtab */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 module.metadata = {
   "stability": "experimental"
@@ -15,6 +13,7 @@ const { exit, env, staticArgs } = require('../system');
 const { when: unload } = require('../system/unload');
 const { loadReason } = require('../self');
 const { rootURI } = require("@loader/options");
+const cfxArgs = require("@test/options");
 const globals = require('../system/globals');
 const xulApp = require('../system/xul-app');
 const appShellService = Cc['@mozilla.org/appshell/appShellService;1'].
@@ -103,7 +102,11 @@ function startup(reason, options) {
   // Run the addon even in case of error (best effort approach)
   require('../l10n/loader').
     load(rootURI).
-    then(null, function failure(error) {
+    then(function l10nSuccess() {
+      if (cfxArgs.parseable) {
+        console.info("localization information has loaded successfully.");
+      }
+    }, function l10nFailure(error) {
       console.info("Error while loading localization: " + error.message);
     }).
     then(function onLocalizationReady(data) {
@@ -112,6 +115,10 @@ function startup(reason, options) {
       definePseudo(options.loader, '@l10n/data', data ? data : null);
       return ready;
     }).then(function() {
+      if (cfxArgs.parseable) {
+        console.info("addon window has loaded successfully.");
+      }
+
       run(options);
     }).then(null, console.exception);
 }
@@ -130,6 +137,7 @@ function run(options) {
     catch(error) {
       console.exception(error);
     }
+
     // Initialize inline options localization, without preventing addon to be
     // run in case of error
     try {
@@ -159,7 +167,8 @@ function run(options) {
         quit: exit
       });
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.exception(error);
     throw error;
   }
