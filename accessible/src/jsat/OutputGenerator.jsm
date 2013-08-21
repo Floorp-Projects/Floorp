@@ -116,7 +116,6 @@ this.OutputGenerator = {
     let extState = {};
     aAccessible.getState(state, extState);
     let states = {base: state.value, ext: extState.value};
-
     return func.apply(this, [aAccessible, roleString, states, flags, aContext]);
   },
 
@@ -416,6 +415,15 @@ this.UtteranceGenerator = {
   //TODO: May become more verbose in the future.
   genForAction: function genForAction(aObject, aActionName) {
     return [gStringBundle.GetStringFromName(this.gActionMap[aActionName])];
+  },
+
+  genForLiveRegion: function genForLiveRegion(aContext, aIsHide, aModifiedText) {
+    let utterance = [];
+    if (aIsHide) {
+      utterance.push(gStringBundle.GetStringFromName('hidden'));
+    }
+    return utterance.concat(
+      aModifiedText || this.genForContext(aContext).output);
   },
 
   genForAnnouncement: function genForAnnouncement(aAnnouncement) {

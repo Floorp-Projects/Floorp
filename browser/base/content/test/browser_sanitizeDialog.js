@@ -21,18 +21,18 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+                                  "resource://gre/modules/Downloads.jsm");
 
 let tempScope = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
                                            .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
 let Sanitizer = tempScope.Sanitizer;
 
-const dm = Cc["@mozilla.org/download-manager;1"].
-           getService(Ci.nsIDownloadManager);
-
+const kMsecPerMin = 60 * 1000;
 const kUsecPerMin = 60 * 1000000;
 
-let formEntries;
+let formEntries, downloadIDs, olderDownloadIDs;
 
 // Add tests here.  Each is a function that's called by doNextTest().
 var gAllTests = [
@@ -92,6 +92,23 @@ var gAllTests = [
     });
   },
 
+  function () {
+    // Add downloads (within the past hour).
+    Task.spawn(function () {
+      downloadIDs = [];
+      for (let i = 0; i < 5; i++) {
+        yield addDownloadWithMinutesAgo(downloadIDs, i);
+      }
+      // Add downloads (over an hour ago).
+      olderDownloadIDs = [];
+      for (let i = 0; i < 5; i++) {
+        yield addDownloadWithMinutesAgo(olderDownloadIDs, 61 + i);
+      }
+
+      doNextTest();
+    }).then(null, Components.utils.reportError);
+  },
+
   /**
    * Ensures that the combined history-downloads checkbox clears both history
    * visits and downloads when checked; the dialog respects simple timespan.
@@ -115,16 +132,6 @@ var gAllTests = [
     }
 
     addVisits(places, function() {
-      // Add downloads (within the past hour).
-      let downloadIDs = [];
-      for (let i = 0; i < 5; i++) {
-        downloadIDs.push(addDownloadWithMinutesAgo(i));
-      }
-      // Add downloads (over an hour ago).
-      let olderDownloadIDs = [];
-      for (let i = 0; i < 5; i++) {
-        olderDownloadIDs.push(addDownloadWithMinutesAgo(61 + i));
-      }
       let totalHistoryVisits = uris.length + olderURIs.length;
 
       let wh = new WindowHelper();
@@ -146,16 +153,16 @@ var gAllTests = [
       wh.onunload = function () {
         // History visits and downloads within one hour should be cleared.
         yield promiseHistoryClearedState(uris, true);
-        ensureDownloadsClearedState(downloadIDs, true);
+        yield ensureDownloadsClearedState(downloadIDs, true);
 
         // Visits and downloads > 1 hour should still exist.
         yield promiseHistoryClearedState(olderURIs, false);
-        ensureDownloadsClearedState(olderDownloadIDs, false);
+        yield ensureDownloadsClearedState(olderDownloadIDs, false);
 
         // OK, done, cleanup after ourselves.
         yield blankSlate();
         yield promiseHistoryClearedState(olderURIs, true);
-        ensureDownloadsClearedState(olderDownloadIDs, true);
+        yield ensureDownloadsClearedState(olderDownloadIDs, true);
       };
       wh.open();
     });
@@ -178,6 +185,18 @@ var gAllTests = [
     iter.next();
   },
 
+  function () {
+    // Add downloads (within the past hour).
+    Task.spawn(function () {
+      downloadIDs = [];
+      for (let i = 0; i < 5; i++) {
+        yield addDownloadWithMinutesAgo(downloadIDs, i);
+      }
+
+      doNextTest();
+    }).then(null, Components.utils.reportError);
+  },
+
   /**
    * Ensures that the combined history-downloads checkbox removes neither
    * history visits nor downloads when not checked.
@@ -194,11 +213,6 @@ var gAllTests = [
     }
 
     addVisits(places, function() {
-      let downloadIDs = [];
-      for (let i = 0; i < 5; i++) {
-        downloadIDs.push(addDownloadWithMinutesAgo(i));
-      }
-
       let wh = new WindowHelper();
       wh.onload = function () {
         is(this.isWarningPanelVisible(), false,
@@ -224,7 +238,7 @@ var gAllTests = [
       wh.onunload = function () {
         // Of the three only form entries should be cleared.
         yield promiseHistoryClearedState(uris, false);
-        ensureDownloadsClearedState(downloadIDs, false);
+        yield ensureDownloadsClearedState(downloadIDs, false);
 
         formEntries.forEach(function (entry) {
           let exists = yield formNameExists(entry);
@@ -234,7 +248,7 @@ var gAllTests = [
         // OK, done, cleanup after ourselves.
         yield blankSlate();
         yield promiseHistoryClearedState(uris, true);
-        ensureDownloadsClearedState(downloadIDs, true);
+        yield ensureDownloadsClearedState(downloadIDs, true);
       };
       wh.open();
     });
@@ -639,15 +653,12 @@ var gAllTests = [
   }
 ];
 
-// Used as the download database ID for a new download.  Incremented for each
-// new download.  See addDownloadWithMinutesAgo().
-var gDownloadId = 5555551;
-
 // Index in gAllTests of the test currently being run.  Incremented for each
 // test run.  See doNextTest().
 var gCurrTest = 0;
 
-var now_uSec = Date.now() * 1000;
+let now_mSec = Date.now();
+let now_uSec = now_mSec * 1000;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -847,7 +858,7 @@ WindowHelper.prototype = {
             if (wh.onunload) {
               Task.spawn(wh.onunload).then(function() {
                 waitForAsyncUpdates(doNextTest);
-              });
+              }).then(null, Components.utils.reportError);
             } else {
               waitForAsyncUpdates(doNextTest);
             }
@@ -900,40 +911,23 @@ WindowHelper.prototype = {
  * @param aMinutesAgo
  *        The download will be downloaded this many minutes ago
  */
-function addDownloadWithMinutesAgo(aMinutesAgo) {
+function addDownloadWithMinutesAgo(aExpectedPathList, aMinutesAgo) {
+  let publicList = yield Downloads.getPublicDownloadList();
+
   let name = "fakefile-" + aMinutesAgo + "-minutes-ago";
-  let data = {
-    id:        gDownloadId,
-    name:      name,
-    source:   "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
-    target:    name,
-    startTime: now_uSec - (aMinutesAgo * kUsecPerMin),
-    endTime:   now_uSec - ((aMinutesAgo + 1) * kUsecPerMin),
-    state:     Ci.nsIDownloadManager.DOWNLOAD_FINISHED,
-    currBytes: 0, maxBytes: -1, preferredAction: 0, autoResume: 0
-  };
+  let download = yield Downloads.createDownload({
+    source: "https://bugzilla.mozilla.org/show_bug.cgi?id=480169",
+    target: name
+  });
+  download.startTime = new Date(now_mSec - (aMinutesAgo * kMsecPerMin));
+  download.canceled = true;
+  publicList.add(download);
 
-  let db = dm.DBConnection;
-  let stmt = db.createStatement(
-    "INSERT INTO moz_downloads (id, name, source, target, startTime, endTime, " +
-      "state, currBytes, maxBytes, preferredAction, autoResume) " +
-    "VALUES (:id, :name, :source, :target, :startTime, :endTime, :state, " +
-      ":currBytes, :maxBytes, :preferredAction, :autoResume)");
-  try {
-    for (let prop in data) {
-      stmt.params[prop] = data[prop];
-    }
-    stmt.execute();
-  }
-  finally {
-    stmt.reset();
-  }
-
-  is(downloadExists(gDownloadId), true,
-     "Sanity check: download " + gDownloadId +
+  ok((yield downloadExists(name)),
+     "Sanity check: download " + name +
      " should exist after creating it");
 
-  return gDownloadId++;
+  aExpectedPathList.push(name);
 }
 
 /**
@@ -984,15 +978,37 @@ function formNameExists(name)
  */
 function blankSlate() {
   PlacesUtils.bhistory.removeAllPages();
-  dm.cleanUp();
 
+  // The promise is resolved only when removing both downloads and form history are done.
   let deferred = Promise.defer();
+  let formHistoryDone = false, downloadsDone = false;
+
+  Task.spawn(function deleteAllDownloads() {
+    let publicList = yield Downloads.getPublicDownloadList();
+    let downloads = yield publicList.getAll();
+    for (let download of downloads) {
+      publicList.remove(download);
+      yield download.finalize(true);
+    }
+    downloadsDone = true;
+    if (formHistoryDone) {
+      deferred.resolve();
+    }
+  }).then(null, Components.utils.reportError);
+
   FormHistory.update({ op: "remove" },
                      { handleError: function (error) {
                          do_throw("Error occurred updating form history: " + error);
                          deferred.reject(error);
                        },
-                       handleCompletion: function (reason) { if (!reason) deferred.resolve(); }
+                       handleCompletion: function (reason) {
+                         if (!reason) {
+                           formHistoryDone = true;
+                           if (downloadsDone) {
+                             deferred.resolve();
+                           }
+                         }
+                       }
                      });
   return deferred.promise;
 }
@@ -1012,24 +1028,19 @@ function boolPrefIs(aPrefName, aExpectedVal, aMsg) {
 }
 
 /**
- * Checks to see if the download with the specified ID exists.
+ * Checks to see if the download with the specified path exists.
  *
- * @param  aID
- *         The ID of the download to check
+ * @param  aPath
+ *         The path of the download to check
  * @return True if the download exists, false otherwise
  */
-function downloadExists(aID)
+function downloadExists(aPath)
 {
-  let db = dm.DBConnection;
-  let stmt = db.createStatement(
-    "SELECT * " +
-    "FROM moz_downloads " +
-    "WHERE id = :id"
-  );
-  stmt.params.id = aID;
-  let rows = stmt.executeStep();
-  stmt.finalize();
-  return !!rows;
+  return Task.spawn(function() {
+    let publicList = yield Downloads.getPublicDownloadList();
+    let listArray = yield publicList.getAll();
+    throw new Task.Result(listArray.some(i => i.target.path == aPath));
+  });
 }
 
 /**
@@ -1059,7 +1070,7 @@ function doNextTest() {
 function ensureDownloadsClearedState(aDownloadIDs, aShouldBeCleared) {
   let niceStr = aShouldBeCleared ? "no longer" : "still";
   aDownloadIDs.forEach(function (id) {
-    is(downloadExists(id), !aShouldBeCleared,
+    is((yield downloadExists(id)), !aShouldBeCleared,
        "download " + id + " should " + niceStr + " exist");
   });
 }

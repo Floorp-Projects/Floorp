@@ -42,7 +42,7 @@ interface nsIURI;
 interface nsIDOMEventTarget;
 interface nsIRunnable;
 
-[scriptable, uuid(ff1cec22-b183-40d3-8b42-b81a2f0ba4e6)]
+[scriptable, uuid(d6e733ef-492b-4e67-b723-28571c2959f0)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1176,6 +1176,12 @@ interface nsIDOMWindowUtils : nsISupports {
    * element of the document is returned.
    */
   nsIDOMElement findElementWithViewId(in nsViewID aId);
+
+  /**
+   * Find the view ID for a given element. This is the reverse of
+   * findElementWithViewId().
+   */
+  nsViewID getViewId(in nsIDOMElement aElement);
 
   /**
    * Checks the layer tree for this window and returns true

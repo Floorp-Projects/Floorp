@@ -102,7 +102,19 @@ Presenter.prototype = {
   /**
    * Announce something. Typically an app state change.
    */
-  announce: function announce(aAnnouncement) {}
+  announce: function announce(aAnnouncement) {},
+
+
+
+  /**
+   * Announce a live region.
+   * @param  {PivotContext} aContext context object for an accessible.
+   * @param  {boolean} aIsPolite A politeness level for a live region.
+   * @param  {boolean} aIsHide An indicator of hide/remove event.
+   * @param  {string} aModifiedText Optional modified text.
+   */
+  liveRegion: function liveRegionShown(aContext, aIsPolite, aIsHide,
+    aModifiedText) {}
 };
 
 /**
@@ -409,6 +421,13 @@ AndroidPresenter.prototype = {
         fromIndex: 0
       }]
     };
+  },
+
+  liveRegion: function AndroidPresenter_liveRegion(aContext, aIsPolite,
+    aIsHide, aModifiedText) {
+    return this.announce(
+      UtteranceGenerator.genForLiveRegion(aContext, aIsHide,
+        aModifiedText).join(' '));
   }
 };
 
@@ -449,6 +468,21 @@ SpeechPresenter.prototype = {
            data: UtteranceGenerator.genForAction(aObject, aActionName).join(' '),
            options: {enqueue: false}}
         ]
+      }
+    };
+  },
+
+  liveRegion: function SpeechPresenter_liveRegion(aContext, aIsPolite, aIsHide,
+    aModifiedText) {
+    return {
+      type: this.type,
+      details: {
+        actions: [{
+          method: 'speak',
+          data: UtteranceGenerator.genForLiveRegion(aContext, aIsHide,
+            aModifiedText).join(' '),
+          options: {enqueue: aIsPolite}
+        }]
       }
     };
   }
@@ -570,5 +604,16 @@ this.Presentation = {
     // but there really isn't a point here.
     return [p.announce(UtteranceGenerator.genForAnnouncement(aAnnouncement)[0])
               for each (p in this.presenters)];
+  },
+
+  liveRegion: function Presentation_liveRegion(aAccessible, aIsPolite, aIsHide,
+    aModifiedText) {
+    let context;
+    if (!aModifiedText) {
+      context = new PivotContext(aAccessible, null, -1, -1, true,
+        aIsHide ? true : false);
+    }
+    return [p.liveRegion(context, aIsPolite, aIsHide, aModifiedText) for (
+      p of this.presenters)];
   }
 };

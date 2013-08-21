@@ -2787,6 +2787,7 @@ ASTSerializer::function(ParseNode *pn, ASTType type, MutableHandleValue dst)
 {
     RootedFunction func(cx, pn->pn_funbox->function());
 
+    // FIXME: Provide more information (legacy generator vs star generator).
     bool isGenerator = pn->pn_funbox->isGenerator();
 
     bool isExpression =

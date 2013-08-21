@@ -46,11 +46,13 @@ var APZCObserver = {
       case 'TabOpen': {
         let browser = aEvent.originalTarget.linkedBrowser;
         browser.addEventListener("pageshow", this, true);
+        browser.messageManager.addMessageListener("scroll", this);
         break;
       }
       case 'TabClose': {
         let browser = aEvent.originalTarget.linkedBrowser;
-        browser.removeEventListener("pageshow", this);
+        browser.removeEventListener("pageshow", this, true);
+        browser.messageManager.removeMessageListener("scroll", this);
         break;
       }
     }
@@ -112,6 +114,17 @@ var APZCObserver = {
 
     } else if (aTopic == "apzc-handle-pan-end") {
       Util.dumpLn("APZC pan-end");
+    }
+  },
+
+  receiveMessage: function(aMessage) {
+    let json = aMessage.json;
+    switch (aMessage.name) {
+      case "scroll": {
+        let data = json.viewId + " " + json.presShellId + " (" + json.scrollOffset.x + ", " + json.scrollOffset.y + ")";
+        Services.obs.notifyObservers(null, "scroll-offset-changed", data);
+        break;
+      }
     }
   }
 };
