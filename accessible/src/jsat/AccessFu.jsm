@@ -163,6 +163,9 @@ this.AccessFu = {
     Services.obs.removeObserver(this, 'Accessibility:LongPress');
     Services.obs.removeObserver(this, 'Accessibility:MoveByGranularity');
 
+    delete this._quicknavModesPref;
+    delete this._notifyOutputPref;
+
     if (this.doneCallback) {
       this.doneCallback();
       delete this.doneCallback;
@@ -171,6 +174,9 @@ this.AccessFu = {
 
   _enableOrDisable: function _enableOrDisable() {
     try {
+      if (!this._activatePref) {
+        return;
+      }
       let activatePref = this._activatePref.value;
       if (activatePref == ACCESSFU_ENABLE ||
           this._systemPref && activatePref == ACCESSFU_AUTO)

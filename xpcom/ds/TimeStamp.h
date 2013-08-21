@@ -8,6 +8,7 @@
 #define mozilla_TimeStamp_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 
 #include "prinrval.h"
 #include "nsDebug.h"
@@ -44,7 +45,7 @@ class TimeDuration
 {
 public:
   // The default duration is 0.
-  TimeDuration() : mValue(0) {}
+  MOZ_CONSTEXPR TimeDuration() : mValue(0) {}
   // Allow construction using '0' as the initial value, for readability,
   // but no other numbers (so we don't have any implicit unit conversions).
   struct _SomethingVeryRandomHere;
