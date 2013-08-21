@@ -362,7 +362,7 @@ public class BookmarksPage extends HomeFragment {
         @Override
         public Cursor loadCursor() {
             final int max = getContext().getResources().getInteger(R.integer.number_of_top_sites);
-            return BrowserDB.getTopSites(getContext().getContentResolver(), max);
+            return BrowserDB.getTopBookmarks(getContext().getContentResolver(), max);
         }
     }
 
