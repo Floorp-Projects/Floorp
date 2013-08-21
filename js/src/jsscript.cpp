@@ -2806,7 +2806,7 @@ JSScript::markChildren(JSTracer *trc)
     if (IS_GC_MARKING_TRACER(trc)) {
         compartment()->mark();
 
-        if (code || natoms)
+        if (code)
             MarkScriptData(trc->runtime, code);
     }
 
