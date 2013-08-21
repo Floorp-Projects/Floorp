@@ -111,6 +111,7 @@ class XPCShellTestThread(Thread):
         self.logfiles = kwargs.get('logfiles')
         self.xpcshell = kwargs.get('xpcshell')
         self.xpcsRunArgs = kwargs.get('xpcsRunArgs')
+        self.failureManifest = kwargs.get('failureManifest')
 
         self.tests_root_dir = tests_root_dir
         self.app_dir_key = app_dir_key
@@ -574,6 +575,13 @@ class XPCShellTestThread(Thread):
                   "message": message,
                   "text": stdout
                 }
+
+                if self.failureManifest:
+                    with open(self.failureManifest, 'a') as f:
+                        f.write('[%s]\n' % self.test_object['path'])
+                        for k, v in self.test_object.items():
+                            f.write('%s = %s\n' % (k, v))
+
             else:
                 now = time.time()
                 timeTaken = (now - startTime) * 1000
@@ -1062,7 +1070,8 @@ class XPCShellTests(object):
                  profileName=None, mozInfo=None, sequential=False, shuffle=False,
                  testsRootDir=None, xunitFilename=None, xunitName=None,
                  testingModulesDir=None, autolog=False, pluginsPath=None,
-                 testClass=XPCShellTestThread, **otherOptions):
+                 testClass=XPCShellTestThread, failureManifest=None,
+                 **otherOptions):
         """Run xpcshell tests.
 
         |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -1226,6 +1235,7 @@ class XPCShellTests(object):
             'logfiles': self.logfiles,
             'xpcshell': self.xpcshell,
             'xpcsRunArgs': self.xpcsRunArgs,
+            'failureManifest': failureManifest
         }
 
         if self.sequential:
@@ -1440,6 +1450,9 @@ class XPCShellOptions(OptionParser):
                         help="name to record for this xUnit test suite. Many "
                              "tools expect Java class notation, e.g. "
                              "dom.basic.foo")
+        self.add_option("--failure-manifest", dest="failureManifest",
+                        action="store",
+                        help="path to file where failure manifest will be written.")
 
 def main():
     parser = XPCShellOptions()
