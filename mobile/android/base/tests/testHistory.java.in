@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class testHistory extends PixelTest {
+public class testHistory extends AboutHomeTest {
     private View mFirstChild;
 
     @Override
@@ -23,15 +23,17 @@ public class testHistory extends PixelTest {
         String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
         String url3 = getAbsoluteUrl("/robocop/robocop_blank_03.html");
 
-        loadAndPaint(url);
+        inputAndLoadUrl(url);
         verifyPageTitle("Browser Blank Page 01");
-        loadAndPaint(url2);
+        inputAndLoadUrl(url2);
         verifyPageTitle("Browser Blank Page 02");
-        loadAndPaint(url3);
+        inputAndLoadUrl(url3);
         verifyPageTitle("Browser Blank Page 03");
 
-        final ListView hList = getHistoryList("Today|Yesterday");
-        mAsserter.ok(hList != null, "checking history exists", "history exists");
+        openAboutHomeTab(AboutHomeTabs.MOST_RECENT);
+
+        final ListView hList = findListViewWithTag("most_recent");
+        mAsserter.is(waitForListToLoad(hList), true, "list is properly loaded");
 
         // Click on the history item and wait for the page to load
         // wait for the history list to be populated
@@ -64,6 +66,7 @@ public class testHistory extends PixelTest {
 
         mAsserter.isnot(mFirstChild, null, "Got history item");
         mSolo.clickOnView(mFirstChild);
+
         // The first item here (since it was just visited) should be a "Switch to tab" item
         // i.e. don't expect a DOMCOntentLoaded event
         verifyPageTitle("Browser Blank Page 03");

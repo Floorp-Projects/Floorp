@@ -37,6 +37,6 @@ public class BrowserToolbarBackground extends GeckoLinearLayout {
 
     @Override
     public void onLightweightThemeReset() {
-        setBackgroundResource(R.drawable.address_bar_bg);
+        setBackgroundResource(R.drawable.url_bar_bg);
     }
 }
