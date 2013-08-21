@@ -177,5 +177,5 @@ function runTests(testAry, asyncCleanup) {
     // actual exception is likely much more valuable, hence concatentating it.
     ok(false, "Unexpected exception: " + ex + " With stack: " + ex.stack);
     finish();
-  });
+  }).then(null, ERROR);
 }
