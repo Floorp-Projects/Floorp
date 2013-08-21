@@ -7,6 +7,7 @@
 #include "jit/VMFunctions.h"
 
 #include "builtin/ParallelArray.h"
+#include "builtin/TypedObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/Ion.h"
@@ -871,6 +872,13 @@ InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame, uint32_t 
 {
     return frame->initForOsr(interpFrame, numStackValues);
 }
+
+JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
+                                HandleObject owner, int32_t offset)
+{
+    return BinaryBlock::createDerived(cx, type, owner, offset);
+}
+
 
 } // namespace jit
 } // namespace js

@@ -15,6 +15,7 @@
 #include "jit/BytecodeAnalysis.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
+#include "jit/TypeRepresentationSet.h"
 
 namespace js {
 namespace jit {
@@ -363,6 +364,17 @@ class IonBuilder : public MIRGenerator
                                 bool barrier, types::TemporaryTypeSet *types);
     bool getPropTryInlineAccess(bool *emitted, PropertyName *name, jsid id,
                                 bool barrier, types::TemporaryTypeSet *types);
+    bool getPropTryTypedObject(bool *emitted, jsid id,
+                               types::TemporaryTypeSet *resultTypes);
+    bool getPropTryScalarPropOfTypedObject(bool *emitted,
+                                           int32_t fieldOffset,
+                                           TypeRepresentationSet fieldTypeReprs,
+                                           types::TemporaryTypeSet *resultTypes);
+    bool getPropTryComplexPropOfTypedObject(bool *emitted,
+                                            int32_t fieldOffset,
+                                            TypeRepresentationSet fieldTypeReprs,
+                                            size_t fieldIndex,
+                                            types::TemporaryTypeSet *resultTypes);
     bool getPropTryCache(bool *emitted, PropertyName *name, jsid id,
                          bool barrier, types::TemporaryTypeSet *types);
     bool needsToMonitorMissingProperties(types::TemporaryTypeSet *types);
@@ -381,9 +393,27 @@ class IonBuilder : public MIRGenerator
                                 PropertyName *name, jsid id,
                                 MDefinition *value, bool barrier,
                                 types::TemporaryTypeSet *objTypes);
+    bool setPropTryTypedObject(bool *emitted, MDefinition *obj,
+                               jsid id, MDefinition *value);
     bool setPropTryCache(bool *emitted, MDefinition *obj,
                          PropertyName *name, MDefinition *value,
                          bool barrier, types::TemporaryTypeSet *objTypes);
+
+    // binary data lookup helpers.
+    bool lookupTypeRepresentationSet(MDefinition *typedObj,
+                                     TypeRepresentationSet *out);
+    bool lookupTypedObjectField(MDefinition *typedObj,
+                                jsid id,
+                                int32_t *fieldOffset,
+                                TypeRepresentationSet *fieldTypeReprs,
+                                size_t *fieldIndex);
+    MDefinition *loadTypedObjectType(MDefinition *value);
+    void loadTypedObjectData(MDefinition *inOwner,
+                             int32_t inOffset,
+                             MDefinition **outOwner,
+                             MDefinition **outOffset);
+    MDefinition *typeObjectForFieldFromStructType(MDefinition *type,
+                                                  size_t fieldIndex);
 
     // jsop_setelem() helpers.
     bool setElemTryTyped(bool *emitted, MDefinition *object,
@@ -641,12 +671,15 @@ class IonBuilder : public MIRGenerator
 
     AbortReason abortReason() { return abortReason_; }
 
+    TypeRepresentationSetHash *getOrCreateReprSetHash(); // fallible
+
   private:
     bool init();
 
     JSContext *cx;
     BaselineFrame *baselineFrame_;
     AbortReason abortReason_;
+    ScopedJSDeletePtr<TypeRepresentationSetHash> reprSetHash_;
 
     // Basic analysis information about the script.
     BytecodeAnalysis analysis_;
