@@ -252,8 +252,8 @@ class LinkedListElement
     }
 
   private:
-    LinkedListElement& operator=(const LinkedList<T>& other) MOZ_DELETE;
-    LinkedListElement(const LinkedList<T>& other) MOZ_DELETE;
+    LinkedListElement& operator=(const LinkedListElement<T>& other) MOZ_DELETE;
+    LinkedListElement(const LinkedListElement<T>& other) MOZ_DELETE;
 };
 
 template<typename T>
