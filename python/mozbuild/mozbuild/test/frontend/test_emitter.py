@@ -145,6 +145,7 @@ class TestEmitterBasic(unittest.TestCase):
             HOST_LIBRARY_NAME='host_fans',
             LIBRARY_NAME='lib_name',
             LIBS=['fans.lib', 'tans.lib'],
+            LIBXUL_LIBRARY=True,
             NO_DIST_INSTALL='1',
             MODULE='module_name',
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
