@@ -374,7 +374,7 @@ class Build(MachCommandBase):
         if high_finder:
             print(FINDER_SLOW_MESSAGE % finder_percent)
 
-        if monitor.elasped > 300:
+        if monitor.elapsed > 300:
             # Display a notification when the build completes.
             # This could probably be uplifted into the mach core or at least
             # into a helper API. It is here as an experimentation to see how it
