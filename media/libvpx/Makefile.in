@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DEFINES += -DHAVE_CONFIG_H=vpx_config.h
 
-MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB= 1
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
@@ -66,58 +65,6 @@ AS=$(VPX_AS)
 ASFLAGS=$(VPX_ASFLAGS) -I. -I$(topsrcdir)/media/libvpx/ -I$(topsrcdir)/media/libvpx/vpx_ports/
 AS_DASH_C_FLAG=$(VPX_DASH_C_FLAG)
 ASM_SUFFIX=$(VPX_ASM_SUFFIX)
-
-CSRCS += \
-  vpx_config_c.c \
-  vp8_dx_iface.c \
-  alloccommon.c \
-  blockd.c \
-  debugmodes.c \
-  dequantize.c \
-  entropy.c \
-  entropymode.c \
-  entropymv.c \
-  extend.c \
-  filter.c \
-  findnearmv.c \
-  idct_blk.c \
-  idctllm.c \
-  loopfilter.c \
-  loopfilter_filters.c \
-  mbpitch.c \
-  modecont.c \
-  modecontext.c \
-  postproc.c \
-  quant_common.c \
-  reconinter.c \
-  reconintra.c \
-  reconintra4x4.c \
-  sad_c.c \
-  setupintrarecon.c \
-  swapyv12buffer.c \
-  treecoder.c \
-  variance_c.c \
-  systemdependent.c \
-  dboolhuff.c \
-  decodemv.c \
-  decodframe.c \
-  detokenize.c \
-  reconintra_mt.c \
-  onyxd_if.c \
-  threading.c \
-  dsystemdependent.c \
-  vpx_codec.c \
-  vpx_decoder.c \
-  vpx_decoder_compat.c \
-  vpx_encoder.c \
-  vpx_image.c \
-  vpx_mem.c \
-  gen_scalers.c \
-  vpxscale.c \
-  scalesystemdependent.c \
-  yv12config.c \
-  yv12extend.c \
-  $(NULL)
 
 ifdef MOZ_VP8_ERROR_CONCEALMENT
 CSRCS += \

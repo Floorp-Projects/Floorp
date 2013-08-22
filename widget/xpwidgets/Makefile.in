@@ -11,9 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= xpwidgets_s
-MSVC_ENABLE_PGO := 1
-LIBXUL_LIBRARY  = 1
-
 SHARED_LIBRARY_LIBS = ../shared/$(LIB_PREFIX)widget_shared.$(LIB_SUFFIX)
 ifdef MOZ_X11
 SHARED_LIBRARY_LIBS += ../shared/x11/$(LIB_PREFIX)widget_shared_x11.$(LIB_SUFFIX)

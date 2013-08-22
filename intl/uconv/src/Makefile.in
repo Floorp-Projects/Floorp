@@ -10,10 +10,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY  = 1
-LIBXUL_LIBRARY = 1
-
 LOCAL_INCLUDES	= -I$(srcdir)/../util \
 		  -I$(srcdir)/../ucvlatin \
 		  -I$(srcdir)/../ucvibm \

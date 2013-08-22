@@ -29,3 +29,6 @@ CMMSRCS += [
     'mozHTMLAccessible.mm',
     'mozTextAccessible.mm',
 ]
+
+LIBXUL_LIBRARY = True
+

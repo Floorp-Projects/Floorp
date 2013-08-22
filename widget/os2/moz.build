@@ -29,3 +29,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'wdgtos2'
 
+LIBXUL_LIBRARY = True
+

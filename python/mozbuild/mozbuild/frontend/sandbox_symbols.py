@@ -134,6 +134,10 @@ VARIABLES = {
         exist. These generally have .cpp extensions.
         """),
 
+    'FAIL_ON_WARNINGS': (bool, bool, False,
+        """Whether to treat warnings as errors.
+        """),
+
     'GTEST_C_SOURCES': (StrictOrderingOnAppendList, list, [],
         """C code source files for GTest unit tests.
 
@@ -203,6 +207,16 @@ VARIABLES = {
         """Linker libraries and flags.
 
         A list of libraries and flags to include when linking.
+        """),
+
+    'LIBXUL_LIBRARY': (bool, bool, False,
+        """Whether the library in this directory is linked into libxul.
+
+        Implies MOZILLA_INTERNAL_API.
+        """),
+
+    'MSVC_ENABLE_PGO': (bool, bool, False,
+        """Whether profile-guided optimization is enabled in this directory.
         """),
 
     'SDK_LIBRARY': (StrictOrderingOnAppendList, list, [],

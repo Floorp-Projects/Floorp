@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSHEntryShared.h"
+
+#include "nsIDOMDocument.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
 #include "nsIDocument.h"

@@ -15,3 +15,5 @@ EXPORTS.opus += [
 
 LIBRARY_NAME = 'opus'
 
+MSVC_ENABLE_PGO = True
+

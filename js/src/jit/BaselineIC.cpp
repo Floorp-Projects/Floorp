@@ -3598,6 +3598,12 @@ TryAttachGetElemStub(JSContext *cx, HandleScript script, ICGetElem_Fallback *stu
     if (!obj->isNative() && !obj->is<TypedArrayObject>())
         stub->noteNonNativeAccess();
 
+    // GetElem operations which could access negative indexes generally can't
+    // be optimized without the potential for bailouts, as we can't statically
+    // determine that an object has no properties on such indexes.
+    if (rhs.isNumber() && rhs.toNumber() < 0)
+        stub->noteNegativeIndex();
+
     return true;
 }
 

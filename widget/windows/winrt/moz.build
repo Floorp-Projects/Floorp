@@ -27,3 +27,5 @@ EXTRA_COMPONENTS += [
     'MetroUIUtils.manifest',
 ]
 
+LIBXUL_LIBRARY = True
+

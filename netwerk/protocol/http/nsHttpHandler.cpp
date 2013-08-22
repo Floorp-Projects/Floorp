@@ -121,14 +121,19 @@ NewURI(const nsACString &aSpec,
        int32_t aDefaultPort,
        nsIURI **aURI)
 {
-    nsRefPtr<nsStandardURL> url = new nsStandardURL();
+    nsStandardURL *url = new nsStandardURL();
+    if (!url)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(url);
 
     nsresult rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY,
                             aDefaultPort, aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv)) {
+        NS_RELEASE(url);
         return rv;
     }
-    url.forget(aURI);
+
+    *aURI = url; // no QI needed
     return NS_OK;
 }
 
@@ -139,7 +144,8 @@ NewURI(const nsACString &aSpec,
 nsHttpHandler *gHttpHandler = nullptr;
 
 nsHttpHandler::nsHttpHandler()
-    : mHttpVersion(NS_HTTP_VERSION_1_1)
+    : mConnMgr(nullptr)
+    , mHttpVersion(NS_HTTP_VERSION_1_1)
     , mProxyHttpVersion(NS_HTTP_VERSION_1_1)
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mReferrerLevel(0xff) // by default we always send a referrer
@@ -218,7 +224,7 @@ nsHttpHandler::~nsHttpHandler()
     // make sure the connection manager is shutdown
     if (mConnMgr) {
         mConnMgr->Shutdown();
-        mConnMgr = nullptr;
+        NS_RELEASE(mConnMgr);
     }
 
     // Note: don't call NeckoChild::DestroyNeckoChild() here, as it's too late
@@ -374,8 +380,12 @@ nsHttpHandler::InitConnectionMgr()
 {
     nsresult rv;
 
-    if (!mConnMgr)
+    if (!mConnMgr) {
         mConnMgr = new nsHttpConnectionMgr();
+        if (!mConnMgr)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(mConnMgr);
+    }
 
     rv = mConnMgr->Init(mMaxConnections,
                         mMaxPersistentConnectionsPerServer,

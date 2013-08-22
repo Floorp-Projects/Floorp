@@ -11,3 +11,5 @@ CPP_SOURCES += [
     'sdnTextAccessible.cpp',
 ]
 
+LIBXUL_LIBRARY = True
+

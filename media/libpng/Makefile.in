@@ -10,24 +10,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB= 1
 ifeq ($(OS_ARCH),WINNT)
 VISIBILITY_FLAGS=
 endif
 
-
-DEFINES		+= -DMOZ_PNG_READ \
-		-DMOZ_PNG_WRITE
-
-LOCAL_INCLUDES	= -I$(srcdir)
+DEFINES += \
+  -DMOZ_PNG_READ \
+  -DMOZ_PNG_WRITE \
+  $(NULL)
 
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
-
-ifeq ($(OS_ARCH),WINNT)
-ifdef BUILD_DEBUG_GC
-DEFINES		+= -DDEBUG_GC
-endif
-endif

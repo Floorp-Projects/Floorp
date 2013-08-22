@@ -11983,7 +11983,7 @@ nsDocShell::GetControllerForCommand(const char * inCommand,
     return root->GetControllerForCommand(inCommand, outController);
 }
 
-nsresult
+NS_IMETHODIMP
 nsDocShell::IsCommandEnabled(const char * inCommand, bool* outEnabled)
 {
   NS_ENSURE_ARG_POINTER(outEnabled);
@@ -11999,7 +11999,7 @@ nsDocShell::IsCommandEnabled(const char * inCommand, bool* outEnabled)
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsDocShell::DoCommand(const char * inCommand)
 {
   nsresult rv = NS_ERROR_FAILURE;

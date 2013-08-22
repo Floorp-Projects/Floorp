@@ -24,11 +24,12 @@
 #include "nsCSSProperty.h"
 #include "CSSValue.h"
 #include "nsWrapperCache.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "nsString.h"
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSValue.h"
 #include "mozilla/ErrorResult.h"
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
 
 // dbeabbfa-6cb3-4f5c-aec2-dd558d9d681f
 #define NS_ICSSDECLARATION_IID \
@@ -75,7 +76,7 @@ public:
     nsRefPtr<mozilla::dom::CSSValue> val = GetPropertyCSSValue(aProp, error);
     if (error.Failed()) {
       return error.ErrorCode();
-  }
+    }
 
     nsCOMPtr<nsIDOMCSSValue> xpVal = do_QueryInterface(val);
     xpVal.forget(aVal);

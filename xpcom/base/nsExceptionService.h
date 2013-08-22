@@ -43,10 +43,7 @@ public:
   static void DropAllThreads();
   static nsExceptionManager *firstThread;
 
-  nsSupportsHashtable mProviders;
-
-  /* single lock protects both providers hashtable
-     and thread list */
+  /* Protects the thread list. */
   static mozilla::Mutex* sLock;
 
   static unsigned tlsIndex;

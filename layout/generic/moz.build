@@ -93,3 +93,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CMMSRCS += [
         'nsPluginUtilsOSX.mm',
     ]
+
+FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

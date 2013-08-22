@@ -7,8 +7,6 @@ topsrcdir  = @top_srcdir@
 srcdir     = @srcdir@
 VPATH      = @srcdir@
 
-CHROMEDIR = $(call core_abspath,$(FINAL_TARGET))/chrome
-
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_METRO

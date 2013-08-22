@@ -14,9 +14,10 @@
 
 // helpers
 #include "nsIClipboard.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsITransferable.h"
 #include "nsReadableUtils.h"
-#include "nsIDocument.h"
 
 NS_IMPL_ISUPPORTS1(nsClipboardHelper, nsIClipboardHelper)
 

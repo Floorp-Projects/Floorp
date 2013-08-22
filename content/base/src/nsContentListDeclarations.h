@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 #include "nsCOMPtr.h"
-#include "nsStringGlue.h"
+#include "nsStringFwd.h"
 
 class nsContentList;
 class nsIAtom;

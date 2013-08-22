@@ -9,9 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBXUL_LIBRARY = 1
-FAIL_ON_WARNINGS = 1
-
 # Decoders need RasterImage.h
 LOCAL_INCLUDES += -I$(topsrcdir)/image/src/
 LOCAL_INCLUDES += -I$(topsrcdir)/image/encoders/bmp/

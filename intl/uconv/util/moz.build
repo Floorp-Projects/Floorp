@@ -15,3 +15,13 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'ucvutil_s'
 
+LIBXUL_LIBRARY = True
+
+CSRCS += [
+    'ugen.c',
+    'umap.c',
+    'uscan.c',
+]
+
+MSVC_ENABLE_PGO = True
+

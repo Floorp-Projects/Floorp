@@ -6,3 +6,9 @@
 
 NO_DIST_INSTALL = True
 DIRS += ['inject']
+
+CSRCS += [
+    'test-array.c',
+    'test-ctors.c',
+]
+

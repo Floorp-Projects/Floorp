@@ -102,3 +102,8 @@ IPDL_SOURCES += [
     'PPluginSurface.ipdl',
     'PStreamNotify.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+

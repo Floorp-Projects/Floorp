@@ -299,7 +299,7 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   const PRUnichar *formatParams[] = { NS_ConvertUTF8toUTF16(newUriSpec).get() };
   if (NS_SUCCEEDED(rv)) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    "Redirect Error", nullptr,
+                                    NS_LITERAL_CSTRING("Redirect Error"), nullptr,
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "InvalidRedirectChannelWarning",
                                     formatParams, 1);

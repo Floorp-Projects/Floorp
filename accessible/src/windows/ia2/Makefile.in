@@ -11,7 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = accessibility_toolkit_ia2_s
 EXPORT_LIBRARY = 1
-LIBXUL_LIBRARY = 1
 
 # The midl generated code include Windows headers which defines min and max
 # macros which conflicts with std::min/max.  Suppress the macros:

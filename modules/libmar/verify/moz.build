@@ -8,3 +8,8 @@ MODULE = 'verifymar'
 
 LIBRARY_NAME = 'verifymar'
 
+CSRCS += [
+    'cryptox.c',
+    'mar_verify.c',
+]
+

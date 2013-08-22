@@ -6,3 +6,9 @@
 
 MODULE = 'widget'
 
+CSRCS += [
+    'keysym2ucs.c',
+]
+
+LIBXUL_LIBRARY = True
+

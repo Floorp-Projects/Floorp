@@ -18,16 +18,14 @@ include $(topsrcdir)/config/makefiles/makeutils.mk
 milestone_txt = $(topsrcdir)/config/milestone.txt
 
 LIBRARY_NAME = xulapp_s
-MSVC_ENABLE_PGO := 1
-LIBXUL_LIBRARY = 1
-
 ifeq ($(MOZ_GL_DEFAULT_PROVIDER),GLX)
 DEFINES += -DUSE_GLX_TEST
 endif
 
 DEFINES += \
   -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"' \
-  -DMOZ_APP_VERSION='"$(MOZ_APP_VERSION)"'
+  -DMOZ_APP_VERSION='"$(MOZ_APP_VERSION)"' \
+  $(NULL)
 
 ifdef MOZ_UPDATER
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
@@ -37,17 +35,6 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DEFINES += -DWIN32_LEAN_AND_MEAN -DUNICODE -D_UNICODE
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS = nsNativeAppSupportCocoa.mm
-endif
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS += MacLaunchHelper.mm
-CMMSRCS += MacApplicationDelegate.mm
-CMMSRCS += MacAutoreleasePool.mm
-ENABLE_CXX_EXCEPTIONS = 1
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)

@@ -63,3 +63,5 @@ if a11y_log:
 
 LIBRARY_NAME = 'accessibility_base_s'
 
+LIBXUL_LIBRARY = True
+

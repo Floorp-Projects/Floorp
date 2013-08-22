@@ -9,9 +9,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBXUL_LIBRARY   = 1
-
-
 ifndef MOZ_NATIVE_HUNSPELL
 # This variable is referenced in configure.in.  Make sure to change that file
 # too if you need to change this variable.

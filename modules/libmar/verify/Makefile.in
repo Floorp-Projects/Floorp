@@ -15,11 +15,6 @@ USE_STATIC_LIBS = 1
 endif
 
 # This makefile just builds support for reading archives.
-CSRCS	= \
-  mar_verify.c \
-  cryptox.c \
-  $(NULL)
-
 LOCAL_INCLUDES += -I$(srcdir)/../src
 
 ifneq ($(OS_ARCH),WINNT)

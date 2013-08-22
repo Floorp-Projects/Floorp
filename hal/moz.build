@@ -149,3 +149,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 IPDL_SOURCES = [
     'sandbox/PHal.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+

@@ -7,3 +7,8 @@
 MODULE = 'dom'
 
 CMMSRCS += ['CoreLocationLocationProvider.mm']
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+

@@ -6,13 +6,9 @@ DEPTH     = @DEPTH@
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
-FAIL_ON_WARNINGS = 1
-
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = nkdevice_s
-LIBXUL_LIBRARY = 1
-
 LOCAL_INCLUDES = -I$(srcdir)/../../base/src/ \
                  $(NULL)
 

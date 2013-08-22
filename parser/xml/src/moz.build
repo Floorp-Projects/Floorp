@@ -20,3 +20,7 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'saxp'
 
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

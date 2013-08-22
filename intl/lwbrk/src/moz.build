@@ -28,6 +28,14 @@ else:
     CPP_SOURCES += [
         'nsRuleBreaker.cpp',
     ]
+    CSRCS += [
+        'rulebrk.c',
+    ]
+
 
 LIBRARY_NAME = 'lwbrk_s'
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
 

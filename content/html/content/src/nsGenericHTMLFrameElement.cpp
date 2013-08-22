@@ -6,6 +6,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGenericHTMLFrameElement.h"
+
+#include "nsIDOMDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"

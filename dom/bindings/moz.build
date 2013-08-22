@@ -18,9 +18,17 @@ EXPORTS.mozilla.dom += [
     'CallbackObject.h',
     'DOMJSClass.h',
     'DOMJSProxyHandler.h',
+    'Date.h',
     'Errors.msg',
     'NonRefcountedDOMObject.h',
     'Nullable.h',
     'PrimitiveConversions.h',
     'TypedArray.h',
 ]
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+
