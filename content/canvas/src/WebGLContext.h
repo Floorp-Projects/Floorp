@@ -737,7 +737,10 @@ public:
     JS::Value GetQueryObject(JSContext* cx, WebGLQuery *query, WebGLenum pname);
 
 private:
-    bool ValidateTargetParameter(WebGLenum target, const char* infos);
+    WebGLRefPtr<WebGLQuery> mActiveOcclusionQuery;
+    WebGLRefPtr<WebGLQuery> mActiveTransformFeedbackQuery;
+
+    bool ValidateQueryTargetParameter(WebGLenum target, const char* infos);
     WebGLRefPtr<WebGLQuery>& GetActiveQueryByTarget(WebGLenum target);
 
 // -----------------------------------------------------------------------------
@@ -1137,7 +1140,6 @@ protected:
     WebGLRefPtr<WebGLFramebuffer> mBoundFramebuffer;
     WebGLRefPtr<WebGLRenderbuffer> mBoundRenderbuffer;
     WebGLRefPtr<WebGLVertexArray> mBoundVertexArray;
-    WebGLRefPtr<WebGLQuery> mActiveOcclusionQuery;
 
     LinkedList<WebGLTexture> mTextures;
     LinkedList<WebGLBuffer> mBuffers;
