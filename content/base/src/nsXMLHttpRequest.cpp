@@ -4,16 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsXMLHttpRequest.h"
+
+#include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
-
-#include "nsXMLHttpRequest.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIXPConnect.h"
+#include "nsDOMBlobBuilder.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIDOMProgressEvent.h"
+#include "nsIJARChannel.h"
 #include "nsLayoutCID.h"
-#include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsNetUtil.h"
@@ -23,31 +25,18 @@
 #include "nsIUploadChannel2.h"
 #include "nsIDOMSerializer.h"
 #include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
 #include "nsGUIEvent.h"
-#include "prprf.h"
 #include "nsIDOMEventListener.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsWeakPtr.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsDOMClassInfoID.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
-#include "nsIMIMEService.h"
-#include "nsCExternalHandlerService.h"
 #include "nsIVariant.h"
 #include "nsVariant.h"
 #include "nsIScriptError.h"
-#include "xpcpublic.h"
-#include "nsStringStream.h"
 #include "nsIStreamConverterService.h"
 #include "nsICachingChannel.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsEventDispatcher.h"
-#include "nsDOMJSUtils.h"
-#include "nsCOMArray.h"
-#include "nsIScriptableUConv.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
@@ -55,11 +44,9 @@
 #include "nsLayoutStatics.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsIHTMLDocument.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "nsIStorageStream.h"
 #include "nsIPromptFactory.h"
 #include "nsIWindowWatcher.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "nsIConsoleService.h"
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
@@ -73,8 +60,6 @@
 #include "GeckoProfiler.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
-#include "nsIDOMFormData.h"
-#include "DictionaryHelpers.h"
 #include "mozilla/Attributes.h"
 #include "nsIPermissionManager.h"
 #include "nsMimeTypes.h"
@@ -283,6 +268,12 @@ NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 
 NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
 NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
+
+/* virtual */ JSObject*
+nsXMLHttpRequestUpload::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return XMLHttpRequestUploadBinding::Wrap(aCx, aScope, this);
+}
 
 /////////////////////////////////////////////
 //
