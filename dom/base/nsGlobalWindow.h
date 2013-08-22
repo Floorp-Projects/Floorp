@@ -7,6 +7,8 @@
 #ifndef nsGlobalWindow_h___
 #define nsGlobalWindow_h___
 
+#include "nsPIDOMWindow.h"
+
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRefPtrHashtable.h"
@@ -28,7 +30,6 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsITimer.h"
-#include "nsPIDOMWindow.h"
 #include "nsIDOMModalContentWindow.h"
 #include "nsEventListenerManager.h"
 #include "nsIPrincipal.h"
