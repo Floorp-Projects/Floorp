@@ -5192,6 +5192,7 @@ def _splitMethodDefn(md, clsname):
     md.decl.virtual = 0
     md.decl.static = 0
     md.decl.warn_unused = 0
+    md.decl.never_inline = 0
     for param in md.decl.params:
         if isinstance(param, Param):
             param.default = None
