@@ -7,16 +7,14 @@
 #ifndef jsfriendapi_h
 #define jsfriendapi_h
 
-#ifdef JS_HAS_CTYPES
 #include "mozilla/MemoryReporting.h"
-#endif
 
-#include "jsapi.h"
 #include "jsbytecode.h"
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
 #include "js/CallNonGenericMethod.h"
+#include "js/Class.h"
 
 /*
  * This macro checks if the stack pointer has exceeded a given limit. If
@@ -34,7 +32,9 @@
 #define JS_CHECK_STACK_SIZE(limit, lval) JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, lval, 0)
 
 class JSAtom;
+struct JSErrorFormatString;
 class JSLinearString;
+struct JSJitInfo;
 
 namespace JS {
 template <class T>
@@ -183,7 +183,7 @@ JS_WrapAutoIdVector(JSContext *cx, JS::AutoIdVector &props);
 
 extern JS_FRIEND_API(bool)
 JS_EnumerateState(JSContext *cx, JS::HandleObject obj, JSIterateOp enum_op,
-                  js::MutableHandleValue statep, js::MutableHandleId idp);
+                  JS::MutableHandleValue statep, JS::MutableHandleId idp);
 
 struct JSFunctionSpecWithHelp {
     const char      *name;
@@ -242,8 +242,8 @@ extern JS_FRIEND_API(void)
 DumpHeapComplete(JSRuntime *rt, FILE *fp);
 
 #ifdef JS_OLD_GETTER_SETTER_METHODS
-JS_FRIEND_API(bool) obj_defineGetter(JSContext *cx, unsigned argc, js::Value *vp);
-JS_FRIEND_API(bool) obj_defineSetter(JSContext *cx, unsigned argc, js::Value *vp);
+JS_FRIEND_API(bool) obj_defineGetter(JSContext *cx, unsigned argc, JS::Value *vp);
+JS_FRIEND_API(bool) obj_defineSetter(JSContext *cx, unsigned argc, JS::Value *vp);
 #endif
 
 extern JS_FRIEND_API(bool)
@@ -263,7 +263,7 @@ IsAtomsCompartment(JSCompartment *comp);
  * particularly, always reports when it returns false).
  */
 extern JS_FRIEND_API(bool)
-ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname);
+ReportIfUndeclaredVarAssignment(JSContext *cx, JS::HandleString propname);
 
 struct WeakMapTracer;
 
@@ -350,15 +350,15 @@ public:
 struct Object {
     shadow::Shape      *shape;
     shadow::TypeObject *type;
-    js::Value          *slots;
-    js::Value          *_1;
+    JS::Value          *slots;
+    JS::Value          *_1;
 
     size_t numFixedSlots() const { return shape->slotInfo >> Shape::FIXED_SLOTS_SHIFT; }
-    Value *fixedSlots() const {
-        return (Value *)(uintptr_t(this) + sizeof(shadow::Object));
+    JS::Value *fixedSlots() const {
+        return (JS::Value *)(uintptr_t(this) + sizeof(shadow::Object));
     }
 
-    js::Value &slotRef(size_t slot) const {
+    JS::Value &slotRef(size_t slot) const {
         size_t nfixed = numFixedSlots();
         if (slot < nfixed)
             return fixedSlots()[slot];
@@ -481,11 +481,11 @@ InitClassWithReserved(JSContext *cx, JSObject *obj, JSObject *parent_proto,
                       const JSPropertySpec *ps, const JSFunctionSpec *fs,
                       const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs);
 
-JS_FRIEND_API(const Value &)
+JS_FRIEND_API(const JS::Value &)
 GetFunctionNativeReserved(JSObject *fun, size_t which);
 
 JS_FRIEND_API(void)
-SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val);
+SetFunctionNativeReserved(JSObject *fun, size_t which, const JS::Value &val);
 
 JS_FRIEND_API(bool)
 GetObjectProto(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> proto);
@@ -502,7 +502,7 @@ GetObjectPrivate(JSObject *obj)
  * Get a slot that is both reserved for object's clasp *and* is fixed (fits
  * within the maximum capacity for the object's fixed slots).
  */
-inline const Value &
+inline const JS::Value &
 GetReservedSlot(JSObject *obj, size_t slot)
 {
     JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
@@ -510,10 +510,10 @@ GetReservedSlot(JSObject *obj, size_t slot)
 }
 
 JS_FRIEND_API(void)
-SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const Value &value);
+SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const JS::Value &value);
 
 inline void
-SetReservedSlot(JSObject *obj, size_t slot, const Value &value)
+SetReservedSlot(JSObject *obj, size_t slot, const JS::Value &value)
 {
     JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     shadow::Object *sobj = reinterpret_cast<shadow::Object *>(obj);
@@ -532,7 +532,7 @@ SetReservedSlot(JSObject *obj, size_t slot, const Value &value)
 JS_FRIEND_API(uint32_t)
 GetObjectSlotSpan(JSObject *obj);
 
-inline const Value &
+inline const JS::Value &
 GetObjectSlot(JSObject *obj, size_t slot)
 {
     JS_ASSERT(slot < GetObjectSlotSpan(obj));
@@ -559,13 +559,13 @@ AtomToLinearString(JSAtom *atom)
 }
 
 JS_FRIEND_API(bool)
-GetPropertyNames(JSContext *cx, JSObject *obj, unsigned flags, js::AutoIdVector *props);
+GetPropertyNames(JSContext *cx, JSObject *obj, unsigned flags, JS::AutoIdVector *props);
 
 JS_FRIEND_API(bool)
-AppendUnique(JSContext *cx, AutoIdVector &base, AutoIdVector &others);
+AppendUnique(JSContext *cx, JS::AutoIdVector &base, JS::AutoIdVector &others);
 
 JS_FRIEND_API(bool)
-GetGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, Value *vp);
+GetGeneric(JSContext *cx, JSObject *obj, JSObject *receiver, jsid id, JS::Value *vp);
 
 JS_FRIEND_API(bool)
 StringIsArrayIndex(JSLinearString *str, uint32_t *indexp);
@@ -787,7 +787,7 @@ NukeCrossCompartmentWrappers(JSContext* cx,
 
 struct ExpandoAndGeneration {
   ExpandoAndGeneration()
-    : expando(UndefinedValue()),
+    : expando(JS::UndefinedValue()),
       generation(0)
   {}
 
@@ -1379,6 +1379,12 @@ JSID_FROM_BITS(size_t bits)
     return id;
 }
 
+namespace js {
+namespace detail {
+bool IdMatchesAtom(jsid id, JSAtom *atom);
+}
+}
+
 /*
  * Must not be used on atoms that are representable as integer jsids.
  * Prefer NameToId or AtomToId over this function:
@@ -1405,7 +1411,7 @@ NON_INTEGER_ATOM_TO_JSID(JSAtom *atom)
 {
     JS_ASSERT(((size_t)atom & 0x7) == 0);
     jsid id = JSID_FROM_BITS((size_t)atom);
-    JS_ASSERT(id == INTERNED_STRING_TO_JSID(NULL, (JSString*)atom));
+    JS_ASSERT(js::detail::IdMatchesAtom(id, atom));
     return id;
 }
 
@@ -1432,17 +1438,17 @@ JS_STATIC_ASSERT(sizeof(jsid) == JS_BYTES_PER_WORD);
 
 namespace js {
 
-static JS_ALWAYS_INLINE Value
+static JS_ALWAYS_INLINE JS::Value
 IdToValue(jsid id)
 {
     if (JSID_IS_STRING(id))
-        return StringValue(JSID_TO_STRING(id));
+        return JS::StringValue(JSID_TO_STRING(id));
     if (JS_LIKELY(JSID_IS_INT(id)))
-        return Int32Value(JSID_TO_INT(id));
+        return JS::Int32Value(JSID_TO_INT(id));
     if (JS_LIKELY(JSID_IS_OBJECT(id)))
-        return ObjectValue(*JSID_TO_OBJECT(id));
+        return JS::ObjectValue(*JSID_TO_OBJECT(id));
     JS_ASSERT(JSID_IS_VOID(id));
-    return UndefinedValue();
+    return JS::UndefinedValue();
 }
 
 static JS_ALWAYS_INLINE jsval
@@ -1525,7 +1531,7 @@ GetObjectMetadata(JSObject *obj);
 
 /* ES5 8.12.8. */
 extern JS_FRIEND_API(bool)
-DefaultValue(JSContext *cx, JS::HandleObject obj, JSType hint, MutableHandleValue vp);
+DefaultValue(JSContext *cx, JS::HandleObject obj, JSType hint, JS::MutableHandleValue vp);
 
 /*
  * Helper function. To approximate a call to the [[DefineOwnProperty]] internal
@@ -1541,7 +1547,7 @@ DefaultValue(JSContext *cx, JS::HandleObject obj, JSType hint, MutableHandleValu
  * js::ProxyHandler, or the JSAPI with precisely the right semantics for it.
  */
 extern JS_FRIEND_API(bool)
-CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
+CheckDefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
                     JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 
 class ScriptSource;
