@@ -184,6 +184,7 @@
 #endif
 #include "prlog.h"
 #include "prenv.h"
+#include "prprf.h"
 
 #include "mozilla/dom/indexedDB/IDBFactory.h"
 #include "mozilla/dom/quota/QuotaManager.h"

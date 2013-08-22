@@ -1,0 +1,33 @@
+<html>
+<head>
+<style>
+canvas {
+  position: absolute;
+  top: 100px;
+  left: 100px;
+  width: 300px;
+  height: 300px;
+}
+div.inner {
+  position: absolute;
+  top: 200px;
+  left: 200px;
+  width: 100px;
+  height: 100px;
+  opacity: 0.5;
+  background-color: #ffffff;
+}
+</style>
+</head>
+<body>
+<canvas id="c" height="300px" width="300px"></canvas>
+<script>
+var c = document.getElementById('c');
+var ctxt = c.getContext('2d');
+ctxt.fillStyle = 'rgb(0,255,0)';
+ctxt.fillRect(0, 0, 300, 300);
+</script>
+<div class="inner">
+</div>
+</body>
+</html>

@@ -10,6 +10,7 @@
 
 #include <ctype.h>
 #include "jsd.h"
+#include "jsprf.h"
 
 #ifdef DEBUG
 void JSD_ASSERT_VALID_SOURCE_TEXT(JSDSourceText* jsdsrc)
