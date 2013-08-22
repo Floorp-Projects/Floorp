@@ -13,18 +13,11 @@
 #include <stdarg.h>
 
 #include "nsTArray.h"
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
 #include "nsCycleCollectionNoteChild.h"
-
-#include "nsIDocShell.h"
 
 #include "nsIDOMWebGLRenderingContext.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "nsIDOMHTMLElement.h"
-#include "nsIMemoryReporter.h"
-#include "nsIJSNativeInitializer.h"
 #include "nsWrapperCache.h"
 #include "nsIObserver.h"
 
@@ -39,9 +32,9 @@
 #endif
 
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/dom/Nullable.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/dom/BindingUtils.h"
+
+class nsIDocShell;
 
 /* 
  * Minimum value constants defined in 6.2 State Tables of OpenGL ES - 2.0.25
@@ -82,6 +75,7 @@ class WebGLVertexArray;
 namespace dom {
 struct WebGLContextAttributes;
 struct WebGLContextAttributesInitializer;
+template<typename> class Nullable;
 }
 
 using WebGLTexelConversions::WebGLTexelFormat;
@@ -737,7 +731,10 @@ public:
     JS::Value GetQueryObject(JSContext* cx, WebGLQuery *query, WebGLenum pname);
 
 private:
-    bool ValidateTargetParameter(WebGLenum target, const char* infos);
+    WebGLRefPtr<WebGLQuery> mActiveOcclusionQuery;
+    WebGLRefPtr<WebGLQuery> mActiveTransformFeedbackQuery;
+
+    bool ValidateQueryTargetParameter(WebGLenum target, const char* infos);
     WebGLRefPtr<WebGLQuery>& GetActiveQueryByTarget(WebGLenum target);
 
 // -----------------------------------------------------------------------------
@@ -1137,7 +1134,6 @@ protected:
     WebGLRefPtr<WebGLFramebuffer> mBoundFramebuffer;
     WebGLRefPtr<WebGLRenderbuffer> mBoundRenderbuffer;
     WebGLRefPtr<WebGLVertexArray> mBoundVertexArray;
-    WebGLRefPtr<WebGLQuery> mActiveOcclusionQuery;
 
     LinkedList<WebGLTexture> mTextures;
     LinkedList<WebGLBuffer> mBuffers;

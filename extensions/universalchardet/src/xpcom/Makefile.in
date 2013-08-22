@@ -11,8 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY	= 1
-LIBXUL_LIBRARY = 1
-
 LOCAL_INCLUDES = -I$(srcdir)/../base
 
 SHARED_LIBRARY_LIBS = \

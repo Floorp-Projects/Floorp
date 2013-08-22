@@ -11,17 +11,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gkconbase_s
-MSVC_ENABLE_PGO := 1
-LIBXUL_LIBRARY	= 1
-FAIL_ON_WARNINGS = 1
-
 ifdef MOZ_WEBRTC
 LOCAL_INCLUDES += \
 		-I$(topsrcdir)/netwerk/sctp/datachannel \
 		$(NULL)
 endif
-
-GQI_SRCS = contentbase.gqi
 
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

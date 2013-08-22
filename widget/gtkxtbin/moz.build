@@ -12,3 +12,5 @@ EXPORTS += [
 
 LIBRARY_NAME = 'gtkxtbin'
 
+LIBXUL_LIBRARY = True
+

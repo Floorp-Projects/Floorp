@@ -26,3 +26,13 @@ HOST_LIBRARY_NAME = 'hostbz2'
 
 LIBRARY_NAME = 'bz2'
 
+CSRCS += [
+    'blocksort.c',
+    'bzlib.c',
+    'compress.c',
+    'crctable.c',
+    'decompress.c',
+    'huffman.c',
+    'randtable.c',
+]
+

@@ -11,9 +11,6 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE_NAME  = TestPlugin
-ifndef _MSC_VER
-FAIL_ON_WARNINGS = 1
-endif # !_MSC_VER
 
 RELATIVE_PATH=.
 COCOA_NAME=Test

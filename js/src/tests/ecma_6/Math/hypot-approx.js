@@ -1,3 +1,6 @@
+// |reftest| skip
+// Math.hypot is disabled pending the resolution of spec issues (bug 896264).
+
 for (var i = -20; i < 20; i++)
     assertEq(Math.hypot(+0, i), Math.abs(i));
 

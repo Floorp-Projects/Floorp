@@ -18,3 +18,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'directory_s'
 
+LIBXUL_LIBRARY = True
+

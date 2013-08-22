@@ -16,3 +16,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'peerconnection'
 
+LIBXUL_LIBRARY = True
+

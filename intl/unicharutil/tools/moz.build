@@ -8,3 +8,7 @@ MODULE = 'ucgendat'
 
 PROGRAM = 'ucgendat'
 
+CSRCS += [
+    'ucgendat.c',
+]
+

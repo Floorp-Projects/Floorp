@@ -37,3 +37,5 @@ if CONFIG['OS_ARCH'] == 'OS2':
 
 LIBRARY_NAME = 'ucvibm_s'
 
+LIBXUL_LIBRARY = True
+

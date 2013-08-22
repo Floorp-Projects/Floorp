@@ -10,24 +10,39 @@
 
 #include "nsIDOMWindow.h"
 
-#include "nsIDOMLocation.h"
-#include "nsIDOMXULCommandDispatcher.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
-#include "nsIURI.h"
 #include "mozilla/dom/EventTarget.h"
-#include "js/RootingAPI.h"
 
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
 #define DOM_WINDOW_THAWED_TOPIC "dom-window-thawed"
 
+class JSObject;
+class nsIArray;
+class nsIContent;
+class nsIDocShell;
+class nsIDocument;
 class nsIIdleObserver;
 class nsIPrincipal;
+class nsIScriptTimeoutHandler;
+class nsIURI;
 class nsPerformance;
+class nsPIWindowRoot;
+class nsXBLPrototypeHandler;
+struct nsTimeout;
+
+namespace JS {
+template<typename> class Handle;
+}
+
+namespace mozilla {
+namespace dom {
+class AudioContext;
+class Element;
+}
+}
 
 // Popup control state enum. The values in this enum must go from most
 // permissive to least permissive so that it's safe to push state in
@@ -40,22 +55,6 @@ enum PopupControlState {
   openAbused,       // it's a popup. disallow it, but allow domain override.
   openOverridden    // disallow window open
 };
-
-class nsIDocShell;
-class nsIContent;
-class nsIDocument;
-class nsIScriptTimeoutHandler;
-struct nsTimeout;
-class nsXBLPrototypeHandler;
-class nsIArray;
-class nsPIWindowRoot;
-
-namespace mozilla {
-namespace dom {
-class AudioContext;
-class Element;
-}
-}
 
 #define NS_PIDOMWINDOW_IID \
 { 0x4f4eadf9, 0xe795, 0x48e5, \

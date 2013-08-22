@@ -5,6 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
+    FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
+
+    LIBXUL_LIBRARY = True
+
     MODULE = 'profiler'
     LIBRARY_NAME = 'profiler'
     XPIDL_SOURCES += [

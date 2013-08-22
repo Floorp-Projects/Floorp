@@ -218,9 +218,9 @@ var PrintUtils = {
 
     // Set the original window as an active window so any mozPrintCallbacks can
     // run without delayed setTimeouts.
-    var docShell = originalWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebNavigation)
-                                 .QueryInterface(Ci.nsIDocShell);
+    var docShell = originalWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                 .getInterface(Components.interfaces.nsIWebNavigation)
+                                 .QueryInterface(Components.interfaces.nsIDocShell);
     docShell.isActive = true;
 
     // show the toolbar after we go into print preview mode so

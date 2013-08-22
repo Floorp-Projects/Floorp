@@ -2006,6 +2006,12 @@ MInArray::collectRangeInfo()
 }
 
 void
+MLoadElementHole::collectRangeInfo()
+{
+    needsNegativeIntCheck_ = !index()->range() || index()->range()->lower() < 0;
+}
+
+void
 MMod::collectRangeInfo()
 {
     canBeNegativeDividend_ = !lhs()->range() || lhs()->range()->lower() < 0;

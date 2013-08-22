@@ -85,3 +85,7 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'html5p_s'
 
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

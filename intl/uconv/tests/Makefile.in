@@ -11,24 +11,6 @@ relativesrcdir = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# Tests disabled because they dont work in libxul builds.
-#MOZILLA_INTERNAL_API = 1
-#
-#
-#CPPSRCS		= \
-#		TestUConv.cpp \
-#		nsconv.cpp \
-#		plattest.cpp \
-#		$(NULL)
-#
-#ifeq ($(OS_ARCH),WINNT)
-#CPPSRCS		+= convperf.cpp
-#endif
-#
-#SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
-
-relativesrcdir	= @relativesrcdir@
-
 MOCHITEST_FILES =	\
 		test_bug335816.html \
 		test_bug843434.html \

@@ -10,3 +10,7 @@ CPP_SOURCES += [
     '$(subst .webidl,Binding.cpp,$(test_webidl_files))',
 ]
 
+LIBXUL_LIBRARY = True
+# Do NOT export this library.  We don't actually want our test code
+# being added to libxul or anything.
+

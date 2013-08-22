@@ -36,3 +36,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'universalchardet_s'
 
+LIBXUL_LIBRARY = True
+

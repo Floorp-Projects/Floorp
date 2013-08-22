@@ -26,3 +26,41 @@ if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['GNU_CC']:
             'pixman-arm-simd-asm-scaled.S',
             'pixman-arm-simd-asm.S',
         ]
+
+LIBXUL_LIBRARY = True
+
+CSRCS += [
+    'pixman-access-accessors.c',
+    'pixman-access.c',
+    'pixman-arm.c',
+    'pixman-bits-image.c',
+    'pixman-combine-float.c',
+    'pixman-combine16.c',
+    'pixman-combine32.c',
+    'pixman-conical-gradient.c',
+    'pixman-edge-accessors.c',
+    'pixman-edge.c',
+    'pixman-fast-path.c',
+    'pixman-filter.c',
+    'pixman-general.c',
+    'pixman-glyph.c',
+    'pixman-gradient-walker.c',
+    'pixman-image.c',
+    'pixman-implementation.c',
+    'pixman-linear-gradient.c',
+    'pixman-matrix.c',
+    'pixman-mips.c',
+    'pixman-noop.c',
+    'pixman-ppc.c',
+    'pixman-radial-gradient.c',
+    'pixman-region16.c',
+    'pixman-region32.c',
+    'pixman-solid-fill.c',
+    'pixman-trap.c',
+    'pixman-utils.c',
+    'pixman-x86.c',
+    'pixman.c',
+]
+
+MSVC_ENABLE_PGO = True
+

@@ -10,16 +10,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBXUL_LIBRARY	= 1
-FAIL_ON_WARNINGS = 1
-
-
-# Internal header files, needed by other editor sublibs:
-INTERNAL_HDR_DIR = ../internal
-
-include $(topsrcdir)/config/rules.mk
-
-INCLUDES	+= \
+LOCAL_INCLUDES += \
 		-I$(topsrcdir)/editor/libeditor/text \
 		-I$(topsrcdir)/editor/txmgr/src \
 		-I$(topsrcdir)/content/base/src \
@@ -27,3 +18,5 @@ INCLUDES	+= \
 		-I$(topsrcdir)/layout/style \
 		-I$(topsrcdir)/extensions/spellcheck/src \
 		$(NULL)
+
+include $(topsrcdir)/config/rules.mk

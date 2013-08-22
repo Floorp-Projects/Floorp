@@ -130,7 +130,14 @@ CPP_SOURCES += [
     'WebVTTLoadListener.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
     CPP_SOURCES += [
         'AudioNodeEngineNEON.cpp',
     ]
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

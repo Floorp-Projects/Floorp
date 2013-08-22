@@ -11,10 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY  = 1
-LIBXUL_LIBRARY = 1
-
-# XXX Note dependencies on implementation headers for factory functions
-
 SHARED_LIBRARY_LIBS = \
 		../base/src/$(LIB_PREFIX)rdfbase_s.$(LIB_SUFFIX) \
 		../datasource/src/$(LIB_PREFIX)rdfdatasource_s.$(LIB_SUFFIX) \

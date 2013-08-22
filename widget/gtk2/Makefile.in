@@ -17,16 +17,9 @@ LIBRARY_NAME	= widget_gtk3
 endif
 
 EXPORT_LIBRARY	= 1
-LIBXUL_LIBRARY = 1
-FAIL_ON_WARNINGS = 1
-
 NATIVE_THEME_SUPPORT = 1
 
 
-
-CSRCS		= \
-		mozcontainer.c \
-		$(NULL)
 
 ifdef ACCESSIBILITY
 CSRCS += maiRedundantObjectFactory.c

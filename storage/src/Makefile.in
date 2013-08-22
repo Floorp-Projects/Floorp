@@ -10,8 +10,6 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBXUL_LIBRARY = 1
-
 # Don't use the jemalloc allocator on Android, because we can't guarantee
 # that Gecko will configure sqlite before it is first used (bug 730495).
 #

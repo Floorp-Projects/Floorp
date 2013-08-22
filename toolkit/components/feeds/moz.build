@@ -28,3 +28,5 @@ EXTRA_COMPONENTS += [
 
 LIBRARY_NAME = 'feed_s'
 
+LIBXUL_LIBRARY = True
+

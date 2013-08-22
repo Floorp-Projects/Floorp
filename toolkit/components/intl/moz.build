@@ -12,3 +12,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'intl_s'
 
+LIBXUL_LIBRARY = True
+

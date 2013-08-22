@@ -10,10 +10,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBXUL_LIBRARY	= 1
-FAIL_ON_WARNINGS = 1
-
 # For nsJSUtils
-LOCAL_INCLUDES += -I$(topsrcdir)/dom/base \
+LOCAL_INCLUDES += \
+  -I$(topsrcdir)/dom/base \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

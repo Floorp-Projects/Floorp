@@ -34,10 +34,6 @@ endif
 VPATH		:= $(srcdir) $(srcdir)/$(OSDIR)
 
 LIBRARY_NAME    = exthandler_s
-LIBXUL_LIBRARY  = 1
-FAIL_ON_WARNINGS = 1
-
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 
 CMMSRCS	= nsOSHelperAppService.mm \

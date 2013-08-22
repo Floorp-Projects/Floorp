@@ -45,6 +45,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsSandboxFlags.h"
+#include "nsContentTypeParser.h"
 
 #include "mozilla/CORSMode.h"
 #include "mozilla/Attributes.h"

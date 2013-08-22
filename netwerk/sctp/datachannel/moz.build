@@ -17,3 +17,7 @@ CPP_SOURCES += [
     'DataChannel.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+

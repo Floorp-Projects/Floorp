@@ -9,7 +9,7 @@
 using namespace mozilla;
 
 /*
- * We fake ANY_SAMPLES_PASSED and ANY_SAMPLES_PASSED_CONSERVATIVE with 
+ * We fake ANY_SAMPLES_PASSED and ANY_SAMPLES_PASSED_CONSERVATIVE with
  * SAMPLES_PASSED on desktop.
  *
  * OpenGL ES 3.0 spec 4.1.6
@@ -27,6 +27,8 @@ GetQueryTargetEnumString(WebGLenum target)
             return "ANY_SAMPLES_PASSED";
         case LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
             return "ANY_SAMPLES_PASSED_CONSERVATIVE";
+        case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+            return "TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN";
         default:
             break;
     }
@@ -111,7 +113,7 @@ WebGLContext::BeginQuery(WebGLenum target, WebGLQuery *query)
     if (!IsContextStable())
         return;
 
-    if (!ValidateTargetParameter(target, "beginQuery")) {
+    if (!ValidateQueryTargetParameter(target, "beginQuery")) {
         return;
     }
 
@@ -165,7 +167,11 @@ WebGLContext::BeginQuery(WebGLenum target, WebGLQuery *query)
 
     MakeContextCurrent();
 
-    gl->fBeginQuery(SimulateOcclusionQueryTarget(gl, target), query->mGLName);
+    if (target == LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN) {
+        gl->fBeginQuery(LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, query->mGLName);
+    } else {
+        gl->fBeginQuery(SimulateOcclusionQueryTarget(gl, target), query->mGLName);
+    }
 
     GetActiveQueryByTarget(target) = query;
 }
@@ -176,7 +182,7 @@ WebGLContext::EndQuery(WebGLenum target)
     if (!IsContextStable())
         return;
 
-    if (!ValidateTargetParameter(target, "endQuery")) {
+    if (!ValidateQueryTargetParameter(target, "endQuery")) {
         return;
     }
 
@@ -202,7 +208,11 @@ WebGLContext::EndQuery(WebGLenum target)
 
     MakeContextCurrent();
 
-    gl->fEndQuery(SimulateOcclusionQueryTarget(gl, target));
+    if (target == LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN) {
+        gl->fEndQuery(LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+    } else {
+        gl->fEndQuery(SimulateOcclusionQueryTarget(gl, target));
+    }
 
     GetActiveQueryByTarget(target) = nullptr;
 }
@@ -227,7 +237,7 @@ WebGLContext::GetQuery(WebGLenum target, WebGLenum pname)
     if (!IsContextStable())
         return nullptr;
 
-    if (!ValidateTargetParameter(target, "getQuery")) {
+    if (!ValidateQueryTargetParameter(target, "getQuery")) {
         return nullptr;
     }
 
@@ -299,6 +309,10 @@ WebGLContext::GetQueryObject(JSContext* cx, WebGLQuery *query, WebGLenum pname)
             MakeContextCurrent();
             gl->fGetQueryObjectuiv(query->mGLName, LOCAL_GL_QUERY_RESULT, &returned);
 
+            if (query->mType == LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN) {
+                return JS::NumberValue(uint32_t(returned));
+            }
+
             /*
              * test (returned != 0) is important because ARB_occlusion_query on desktop drivers
              * return the number of samples drawed when the OpenGL ES extension
@@ -316,23 +330,34 @@ WebGLContext::GetQueryObject(JSContext* cx, WebGLQuery *query, WebGLenum pname)
 }
 
 bool
-WebGLContext::ValidateTargetParameter(WebGLenum target, const char* infos)
+WebGLContext::ValidateQueryTargetParameter(WebGLenum target, const char* infos)
 {
-    if (target != LOCAL_GL_ANY_SAMPLES_PASSED &&
-        target != LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE)
-    {
-        ErrorInvalidEnum("%s: target must be ANY_SAMPLES_PASSED{_CONSERVATIVE}", infos);
-        return false;
+    switch (target) {
+        case LOCAL_GL_ANY_SAMPLES_PASSED:
+        case LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+        case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+            return true;
     }
 
-    return true;
+    ErrorInvalidEnum("%s: unknown query target", infos);
+    return false;
 }
 
 WebGLRefPtr<WebGLQuery>&
 WebGLContext::GetActiveQueryByTarget(WebGLenum target)
 {
-    MOZ_ASSERT(ValidateTargetParameter(target, "private WebGLContext::GetActiveQueryByTarget"));
+    MOZ_ASSERT(ValidateQueryTargetParameter(target, "private WebGLContext::GetActiveQueryByTarget"));
 
+    switch (target) {
+        case LOCAL_GL_ANY_SAMPLES_PASSED:
+        case LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+            return mActiveOcclusionQuery;
+        case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+            return mActiveTransformFeedbackQuery;
+    }
+
+    MOZ_ASSERT(false, "WebGLContext::GetActiveQueryByTarget is not compatible with "
+                      "WebGLContext::ValidateQueryTargetParameter");
     return mActiveOcclusionQuery;
 }
 

@@ -34,11 +34,13 @@ XPIDL_MODULE = 'content_base'
 MODULE = 'content'
 
 EXPORTS += [
+    'HTMLSplitOnSpacesTokenizer.h',
     'mozFlushType.h',
     'nsCaseTreatment.h',
     'nsContentCID.h',
     'nsContentCreatorFunctions.h',
     'nsContentPolicyUtils.h',
+    'nsContentTypeParser.h',
     'nsContentUtils.h',
     'nsCopySupport.h',
     'nsDOMFile.h',

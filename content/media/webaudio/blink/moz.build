@@ -25,3 +25,5 @@ CPP_SOURCES += [
     'ZeroPole.cpp',
 ]
 
+LIBXUL_LIBRARY = True
+
