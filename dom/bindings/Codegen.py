@@ -7518,7 +7518,9 @@ if (expando) {
   }
 
   if (hasProp) {
-    return JS_GetPropertyById(cx, expando, id, vp);
+    // Forward the get to the expando object, but our receiver is whatever our
+    // receiver is.
+    return JS_ForwardGetPropertyTo(cx, expando, id, receiver, vp);
   }
 }"""
 
