@@ -12,13 +12,13 @@ from automationutils import addCommonOptions, isURL
 from mozprofile import DEFAULT_PORTS
 import moznetwork
 
+here = os.path.abspath(os.path.dirname(sys.argv[0]))
+
 try:
     from mozbuild.base import MozbuildObject
-    build_obj = MozbuildObject.from_environment()
+    build_obj = MozbuildObject.from_environment(cwd=here)
 except ImportError:
     build_obj = None
-
-here = os.path.abspath(os.path.dirname(sys.argv[0]))
 
 __all__ = ["MochitestOptions", "B2GOptions"]
 
