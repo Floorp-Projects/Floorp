@@ -12,7 +12,7 @@
 #include "nsISupports.h"
 #include "xpt_struct.h"
 #include "xptinfo.h"
-#include "jsapi.h"
+#include "js/Value.h"
 
 struct nsXPTCMiniVariant
 {
@@ -38,7 +38,7 @@ struct nsXPTCMiniVariant
         // Types below here are unknown to the assembly implementations, and
         // therefore _must_ be passed with indirect semantics. We put them in
         // the union here for type safety, so that we can avoid void* tricks.
-        jsval j;
+        JS::Value j;
     } val;
 };
 
@@ -75,7 +75,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
         PTR_IS_DATA    = 0x1,
 
         // Indicates that the value we hold requires some sort of cleanup (memory
-        // deallocation, interface release, jsval unrooting, etc). The precise
+        // deallocation, interface release, JS::Value unrooting, etc). The precise
         // cleanup that is performed depends on the 'type' field above.
         // If the value is an array, this flag specifies whether the elements
         // within the array require cleanup (we always clean up the array itself,
