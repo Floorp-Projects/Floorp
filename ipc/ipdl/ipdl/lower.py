@@ -381,6 +381,14 @@ def _protocolErrorBreakpoint(msg):
     return StmtExpr(ExprCall(ExprVar('mozilla::ipc::ProtocolErrorBreakpoint'),
                              args=[ msg ]))
 
+def _ipcFatalError(name, msg, otherprocess, isparent):
+    if isinstance(name, str):
+        name = ExprLiteral.String(name)
+    if isinstance(msg, str):
+        msg = ExprLiteral.String(msg)
+    return StmtExpr(ExprCall(ExprVar('mozilla::ipc::FatalError'),
+                             args=[ name, msg, otherprocess, isparent ]))
+
 def _printWarningMessage(msg):
     if isinstance(msg, str):
         msg = ExprLiteral.String(msg)
@@ -3210,41 +3218,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             'FatalError',
             params=[ Decl(Type('char', const=1, ptrconst=1), msgparam.name) ],
             const=1, never_inline=1))
-        fatalerror.addstmts([
-            _protocolErrorBreakpoint(msgparam),
-            Whitespace.NL,
-            StmtDecl(Decl(Type('nsAutoCString'), msgvar.name),
-                     initargs=[ExprLiteral.String('IPDL error [' + actorname +
-                                                  ']: \\"')]),
-            StmtExpr(ExprCall(ExprSelect(msgvar, '.', 'AppendASCII'),
-                              args=[msgparam]))
-        ])
         if self.side is 'parent':
-            # if the error happens on the parent side, the parent
-            # kills off the child
-            fatalerror.addstmts([
-                StmtExpr(ExprCall(ExprSelect(msgvar, '.', 'AppendLiteral'),
-                                  args=[ExprLiteral.String('\\". Killing ' +
-                                                           'child side as a ' +
-                                                           'result.')])),
-                Whitespace.NL,
-                _printErrorMessage(ExprCall(ExprSelect(msgvar, '.', 'get'))),
-            ])
-
-            ifkill = StmtIf(ExprNot(_killProcess(p.callOtherProcess())))
-            ifkill.addifstmt(
-                _printErrorMessage("May have failed to kill child!"))
-            fatalerror.addstmts([Whitespace.NL, ifkill])
+            otherprocess = p.callOtherProcess()
+            isparent = ExprLiteral.TRUE
         else:
-            # and if it happens on the child side, the child commits
-            # seppuko
-            fatalerror.addstmts([
-                StmtExpr(ExprCall(ExprSelect(msgvar, '.', 'AppendLiteral'),
-                                  args=[ExprLiteral.String('\\". abort()ing ' +
-                                                           'as a result.')])),
-                Whitespace.NL,
-                _runtimeAbort(ExprCall(ExprSelect(msgvar, '.', 'get'))),
-            ])
+            otherprocess = ExprLiteral.NULL
+            isparent = ExprLiteral.FALSE
+        fatalerror.addstmts([
+            _ipcFatalError(actorname, msgparam, otherprocess, isparent)
+        ])
         self.cls.addstmts([ fatalerror, Whitespace.NL ])
 
         ## DestroySubtree(bool normal)
