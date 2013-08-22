@@ -125,3 +125,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     CPP_SOURCES += [
         'nsCrashOnException.cpp',
     ]
+
+LIBXUL_LIBRARY = True
+

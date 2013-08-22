@@ -10,3 +10,5 @@ CPP_SOURCES += [
     'nsModule.cpp',
 ]
 
+LIBXUL_LIBRARY = True
+

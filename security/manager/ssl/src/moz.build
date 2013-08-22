@@ -85,3 +85,5 @@ if CONFIG['MOZ_XUL']:
 
 LIBRARY_NAME = 'pipnss'
 
+LIBXUL_LIBRARY = True
+

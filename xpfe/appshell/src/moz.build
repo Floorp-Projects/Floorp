@@ -21,3 +21,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'nsappshell'
 
+LIBXUL_LIBRARY = True
+

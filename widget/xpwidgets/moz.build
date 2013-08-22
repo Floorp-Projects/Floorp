@@ -54,3 +54,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'windows', 'cocoa'):
     CPP_SOURCES += [
         'nsNativeTheme.cpp',
     ]
+
+LIBXUL_LIBRARY = True
+

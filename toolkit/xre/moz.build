@@ -93,3 +93,6 @@ if CONFIG['MOZ_UPDATER']:
         CPP_SOURCES += [
             'nsUpdateDriver.cpp',
         ]
+
+LIBXUL_LIBRARY = True
+

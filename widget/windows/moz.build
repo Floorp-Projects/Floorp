@@ -81,3 +81,6 @@ if CONFIG['NS_ENABLE_TSF']:
     CPP_SOURCES += [
         'nsTextStore.cpp',
     ]
+
+LIBXUL_LIBRARY = True
+
