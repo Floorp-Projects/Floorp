@@ -128,3 +128,5 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 LIBXUL_LIBRARY = True
 
+MSVC_ENABLE_PGO = True
+

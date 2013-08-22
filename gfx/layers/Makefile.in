@@ -21,7 +21,6 @@ VPATH       = \
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = layers
-MSVC_ENABLE_PGO := 1
 ifdef MOZ_DEBUG
 DEFINES += -DD3D_DEBUG_INFO
 endif

@@ -139,3 +139,5 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
 
 LIBXUL_LIBRARY = True
 
+MSVC_ENABLE_PGO = True
+

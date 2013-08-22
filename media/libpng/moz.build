@@ -46,3 +46,6 @@ if CONFIG['MOZ_PNG_ARM_NEON']:
     ]
 
 LIBRARY_NAME = 'mozpng'
+
+MSVC_ENABLE_PGO = True
+

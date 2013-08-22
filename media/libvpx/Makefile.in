@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 DEFINES += -DHAVE_CONFIG_H=vpx_config.h
 
-MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB= 1
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =

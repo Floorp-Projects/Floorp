@@ -551,3 +551,5 @@ LIBRARY_NAME = 'skia'
 
 LIBXUL_LIBRARY = True
 
+MSVC_ENABLE_PGO = True
+
