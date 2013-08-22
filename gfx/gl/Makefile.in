@@ -19,49 +19,8 @@ DEFINES += -DMOZ_D3DCOMPILER_DLL=$(MOZ_D3DCOMPILER_DLL)
 endif
 endif
 
-# NOTE: Please keep GL_PROVIDER in sync with moz.build until all variables
-# are moved over.
-GL_PROVIDER = Null
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-GL_PROVIDER = WGL
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-GL_PROVIDER = CGL
-endif
-
-ifdef MOZ_WIDGET_GTK
-ifdef MOZ_PLATFORM_MAEMO
-GL_PROVIDER = EGL
-else
-ifdef MOZ_EGL_XRENDER_COMPOSITE
-GL_PROVIDER = EGL
-else
-GL_PROVIDER = GLX
-endif
-endif
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-ifdef MOZ_PLATFORM_MAEMO
-GL_PROVIDER = EGL
-else
-GL_PROVIDER = GLX
-endif
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-GL_PROVIDER = EGL
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-GL_PROVIDER = EGL
 LOCAL_INCLUDES = -I$(topsrcdir)/widget/gonk
-endif
-
-ifdef MOZ_GL_PROVIDER
-GL_PROVIDER = $(MOZ_GL_PROVIDER)
 endif
 
 ifdef MOZ_ANDROID_OMTC

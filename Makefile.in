@@ -33,7 +33,7 @@ include $(topsrcdir)/config/config.mk
 GARBAGE_DIRS += dist _javagen _profile _tests staticlib
 DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    config/autoconf.mk \
-   unallmakefiles mozilla-config.h \
+   mozilla-config.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
 
@@ -107,8 +107,7 @@ include $(topsrcdir)/config/makefiles/tiers.mk
 $(foreach tier,$(TIERS),$(eval $(call CREATE_TIER_RULE,$(tier))))
 
 distclean::
-	cat unallmakefiles | $(XARGS) rm -f
-	$(RM) unallmakefiles $(DIST_GARBAGE)
+	$(RM) $(DIST_GARBAGE)
 
 ifeq ($(OS_ARCH),WINNT)
 # we want to copy PDB files on Windows

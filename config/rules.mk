@@ -399,7 +399,6 @@ ALL_TRASH_DIRS = \
 
 ifdef QTDIR
 GARBAGE                 += $(MOCSRCS)
-GARBAGE                 += $(RCCSRCS)
 endif
 
 ifdef SIMPLE_PROGRAMS

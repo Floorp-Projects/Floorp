@@ -158,10 +158,6 @@ endif
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
-ifndef BUILD_OPT
-MOCHAFILE	= 1
-endif
-
 # Define keyword generator before rules.mk, see bug 323979 comment 50
 
 HOST_CPPSRCS += jskwgen.cpp
@@ -343,10 +339,9 @@ endif
 
 DIST_GARBAGE = config.cache config.log config.status* \
    config/autoconf.mk \
-   unallmakefiles $(JS_CONFIG_NAME) js-config.h js-confdefs.h
+   $(JS_CONFIG_NAME) js-config.h js-confdefs.h
 
 distclean::
-	cat unallmakefiles | $(XARGS) rm -f
 	$(RM) $(DIST_GARBAGE)
 
 DEFINES		+= -DEXPORT_JS_API

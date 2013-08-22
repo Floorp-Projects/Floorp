@@ -19,8 +19,6 @@ LOCAL_INCLUDES += \
 		$(NULL)
 endif
 
-GQI_SRCS = contentbase.gqi
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

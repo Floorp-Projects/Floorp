@@ -19,8 +19,6 @@ include $(topsrcdir)/config/rules.mk
 ABS_SRCDIR := $(call core_abspath,$(srcdir))
 ifeq ($(OS_ARCH),WINNT)
 
-ABS_DEPTH := $(call core_abspath,$(DEPTH))
-
 check::
 	cd $(srcdir)/test; $(LIBXUL_DIST)/bin/xpcshell$(BIN_SUFFIX) shell.js 
 

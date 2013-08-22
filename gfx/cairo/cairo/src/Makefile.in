@@ -154,10 +154,6 @@ CSRCS   += $(PSPDF_BASE_CSRCS) $(PDF_CSRCS)
 OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif
 
-ifdef BUILD_CAIRO_SVG
-CSRCS	+= cairo-svg-surface.c
-endif
-
 ifdef MOZ_X11
 CSRCS   += cairo-xlib-surface.c \
 	   cairo-xlib-screen.c \
