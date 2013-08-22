@@ -69,8 +69,8 @@ class XPCShellRunner(MozbuildObject):
 
         xpcshell_dirs = []
         for base, dirs, files in os.walk(test_obj_dir):
-          if os.path.exists(mozpack.path.join(base, 'xpcshell.ini')):
-            xpcshell_dirs.append(base)
+            if os.path.exists(mozpack.path.join(base, 'xpcshell.ini')):
+                xpcshell_dirs.append(base)
 
         if not xpcshell_dirs:
             raise InvalidTestPathError('An xpcshell.ini could not be found '
