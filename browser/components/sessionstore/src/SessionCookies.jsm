@@ -10,17 +10,29 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm");
 
 // MAX_EXPIRY should be 2^63-1, but JavaScript can't handle that precision.
 const MAX_EXPIRY = Math.pow(2, 62);
 
+// Creates a new nsIURI object.
+function makeURI(uri) {
+  return Services.io.newURI(uri, null, null);
+}
 
 /**
  * The external API implemented by the SessionCookies module.
  */
 this.SessionCookies = Object.freeze({
-  getCookiesForHost: function (host) {
-    return SessionCookiesInternal.getCookiesForHost(host);
+  update: function (windows) {
+    SessionCookiesInternal.update(windows);
+  },
+
+  getHostsForWindow: function (window, checkPrivacy = false) {
+    return SessionCookiesInternal.getHostsForWindow(window, checkPrivacy);
   }
 });
 
@@ -34,11 +46,66 @@ let SessionCookiesInternal = {
   _initialized: false,
 
   /**
-   * Returns the list of active session cookies for a given host.
+   * Retrieve the list of all hosts contained in the given windows' session
+   * history entries (per window) and collect the associated cookies for those
+   * hosts, if any. The given state object is being modified.
+   *
+   * @param windows
+   *        Array of window state objects.
+   *        [{ tabs: [...], cookies: [...] }, ...]
    */
-  getCookiesForHost: function (host) {
+  update: function (windows) {
     this._ensureInitialized();
-    return CookieStore.getCookiesForHost(host);
+
+    for (let window of windows) {
+      let cookies = [];
+
+      // Collect all hosts for the current window.
+      let hosts = this.getHostsForWindow(window, true);
+
+      for (let [host, isPinned] in Iterator(hosts)) {
+        for (let cookie of CookieStore.getCookiesForHost(host)) {
+          // _getCookiesForHost() will only return hosts with the right privacy
+          // rules, so there is no need to do anything special with this call
+          // to checkPrivacyLevel().
+          if (SessionStore.checkPrivacyLevel(cookie.secure, isPinned)) {
+            cookies.push(cookie);
+          }
+        }
+      }
+
+      // Don't include/keep empty cookie sections.
+      if (cookies.length) {
+        window.cookies = cookies;
+      } else if ("cookies" in window) {
+        delete window.cookies;
+      }
+    }
+  },
+
+  /**
+   * Returns a map of all hosts for a given window that we might want to
+   * collect cookies for.
+   *
+   * @param window
+   *        A window state object containing tabs with history entries.
+   * @param checkPrivacy (bool)
+   *        Whether to check the privacy level for each host.
+   * @return {object} A map of hosts for a given window state object. The keys
+   *                  will be hosts, the values are boolean and determine
+   *                  whether we will use the deferred privacy level when
+   *                  checking how much data to save on quitting.
+   */
+  getHostsForWindow: function (window, checkPrivacy = false) {
+    let hosts = {};
+
+    for (let tab of window.tabs) {
+      for (let entry of tab.entries) {
+        this._extractHostsFromEntry(entry, hosts, checkPrivacy, tab.pinned);
+      }
+    }
+
+    return hosts;
   },
 
   /**
@@ -78,6 +145,76 @@ let SessionCookiesInternal = {
       this._reloadCookies();
       this._initialized = true;
       Services.obs.addObserver(this, "cookie-changed", false);
+    }
+  },
+
+  /**
+   * Fill a given map with hosts found in the given entry's session history and
+   * any child entries.
+   *
+   * @param entry
+   *        the history entry, serialized
+   * @param hosts
+   *        the hash that will be used to store hosts eg, { hostname: true }
+   * @param checkPrivacy
+   *        should we check the privacy level for https
+   * @param isPinned
+   *        is the entry we're evaluating for a pinned tab; used only if
+   *        checkPrivacy
+   */
+  _extractHostsFromEntry: function (entry, hosts, checkPrivacy, isPinned) {
+    let host = entry._host;
+    let scheme = entry._scheme;
+
+    // If host & scheme aren't defined, then we are likely here in the startup
+    // process via _splitCookiesFromWindow. In that case, we'll turn entry.url
+    // into an nsIURI and get host/scheme from that. This will throw for about:
+    // urls in which case we don't need to do anything.
+    if (!host && !scheme) {
+      try {
+        let uri = makeURI(entry.url);
+        host = uri.host;
+        scheme = uri.scheme;
+        this._extractHostsFromHostScheme(host, scheme, hosts, checkPrivacy, isPinned);
+      }
+      catch (ex) { }
+    }
+
+    if (entry.children) {
+      for (let child of entry.children) {
+        this._extractHostsFromEntry(child, hosts, checkPrivacy, isPinned);
+      }
+    }
+  },
+
+  /**
+   * Add a given host to a given map of hosts if the privacy level allows
+   * saving cookie data for it.
+   *
+   * @param host
+   *        the host of a uri (usually via nsIURI.host)
+   * @param scheme
+   *        the scheme of a uri (usually via nsIURI.scheme)
+   * @param hosts
+   *        the hash that will be used to store hosts eg, { hostname: true }
+   * @param checkPrivacy
+   *        should we check the privacy level for https
+   * @param isPinned
+   *        is the entry we're evaluating for a pinned tab; used only if
+   *        checkPrivacy
+   */
+  _extractHostsFromHostScheme:
+    function (host, scheme, hosts, checkPrivacy, isPinned) {
+    // host and scheme may not be set (for about: urls for example), in which
+    // case testing scheme will be sufficient.
+    if (/https?/.test(scheme) && !hosts[host] &&
+        (!checkPrivacy ||
+         SessionStore.checkPrivacyLevel(scheme == "https", isPinned))) {
+      // By setting this to true or false, we can determine when looking at
+      // the host in update() if we should check for privacy.
+      hosts[host] = isPinned;
+    } else if (scheme == "file") {
+      hosts[host] = true;
     }
   },
 
