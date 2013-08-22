@@ -6,6 +6,7 @@ import ctypes
 import os, os.path
 import subprocess
 import sys
+from mozbuild.makeutil import Makefile
 
 CL_INCLUDES_PREFIX = os.environ.get("CL_INCLUDES_PREFIX", "Note: including file:")
 
@@ -63,7 +64,9 @@ def InvokeClWithDependencyGeneration(cmdline):
     cmdline += ['-showIncludes']
     cl = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
 
-    deps = set([normcase(source).replace(os.sep, '/')])
+    mk = Makefile()
+    rule = mk.create_rule(target)
+    rule.add_dependencies([normcase(source)])
     for line in cl.stdout:
         # cl -showIncludes prefixes every header with "Note: including file:"
         # and an indentation corresponding to the depth (which we don't need)
@@ -73,7 +76,7 @@ def InvokeClWithDependencyGeneration(cmdline):
             # we can assume that anything in a path with spaces is a system
             # header and throw it away.
             if ' ' not in dep:
-                deps.add(normcase(dep).replace(os.sep, '/'))
+                rule.add_dependencies([normcase(dep)])
         else:
             sys.stdout.write(line) # Make sure we preserve the relevant output
                                    # from cl
@@ -93,12 +96,7 @@ def InvokeClWithDependencyGeneration(cmdline):
                  # die on the next line though, so it's not that much of a loss.
 
     with open(depstarget, "w") as f:
-        f.write("%s: %s" % (target, source))
-        for dep in sorted(deps):
-            f.write(" \\\n%s" % dep)
-        f.write('\n')
-        for dep in sorted(deps):
-            f.write("%s:\n" % dep)
+        mk.dump(f)
 
 if __name__ == "__main__":
     InvokeClWithDependencyGeneration(sys.argv[1:])
