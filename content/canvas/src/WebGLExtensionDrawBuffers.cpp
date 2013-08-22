@@ -55,7 +55,7 @@ bool WebGLExtensionDrawBuffers::IsSupported(const WebGLContext* context)
 {
     gl::GLContext * gl = context->GL();
 
-    if (!gl->IsExtensionSupported(GLContext::XXX_draw_buffers)) {
+    if (!gl->IsSupported(GLFeature::draw_buffers)) {
         return false;
     }
 

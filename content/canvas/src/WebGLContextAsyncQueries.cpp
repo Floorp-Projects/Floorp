@@ -44,9 +44,9 @@ SimulateOcclusionQueryTarget(const gl::GLContext* gl, GLenum target)
                target == LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE,
                "unknown occlusion query target");
 
-    if (gl->IsExtensionSupported(gl::GLContext::XXX_occlusion_query_boolean)) {
+    if (gl->IsSupported(gl::GLFeature::occlusion_query_boolean)) {
         return target;
-    } else if (gl->IsExtensionSupported(gl::GLContext::XXX_occlusion_query2)) {
+    } else if (gl->IsSupported(gl::GLFeature::occlusion_query2)) {
         return LOCAL_GL_ANY_SAMPLES_PASSED;
     }
 
