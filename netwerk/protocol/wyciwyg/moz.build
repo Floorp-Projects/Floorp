@@ -28,3 +28,6 @@ CPP_SOURCES += [
 IPDL_SOURCES += [
     'PWyciwygChannel.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

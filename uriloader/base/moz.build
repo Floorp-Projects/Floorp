@@ -30,3 +30,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'uriloaderbase_s'
 
+FAIL_ON_WARNINGS = True
+

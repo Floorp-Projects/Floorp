@@ -13,7 +13,6 @@ LIBRARY_NAME     = dombindings_s
 MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY   = 1
 EXPORT_LIBRARY   = 1
-FAIL_ON_WARNINGS := 1
 
 # Need this to find all our DOM source files.
 include $(topsrcdir)/dom/dom-config.mk

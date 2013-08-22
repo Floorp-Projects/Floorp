@@ -110,3 +110,6 @@ if CONFIG['MOZ_PLATFORM_MAEMO']:
 EXTRA_JS_MODULES += [
     'NetUtil.jsm',
 ]
+
+FAIL_ON_WARNINGS = True
+

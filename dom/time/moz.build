@@ -26,3 +26,5 @@ CPP_SOURCES += [
     'TimeService.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

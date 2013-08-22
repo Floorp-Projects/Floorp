@@ -11,3 +11,6 @@ LIBRARY_NAME = 'neckosystem_s'
 CMMSRCS += [
     'nsNetworkLinkService.mm',
 ]
+
+FAIL_ON_WARNINGS = True
+

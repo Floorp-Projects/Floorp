@@ -62,3 +62,5 @@ CPP_SOURCES += [
     'nsWebNavigationInfo.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

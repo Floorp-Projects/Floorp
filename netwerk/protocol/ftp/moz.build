@@ -33,3 +33,6 @@ CPP_SOURCES += [
 IPDL_SOURCES += [
     'PFTPChannel.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

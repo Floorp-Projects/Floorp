@@ -35,3 +35,6 @@ if not CONFIG['MOZ_SUITE']:
         'nsDownloadManagerUI.js',
         'nsDownloadManagerUI.manifest',
     ]
+
+FAIL_ON_WARNINGS = True
+

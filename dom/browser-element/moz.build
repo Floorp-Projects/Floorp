@@ -39,3 +39,6 @@ EXTRA_JS_MODULES += [
     'BrowserElementParent.jsm',
     'BrowserElementPromptService.jsm',
 ]
+
+FAIL_ON_WARNINGS = True
+

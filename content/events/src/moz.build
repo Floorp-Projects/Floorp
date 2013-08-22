@@ -66,3 +66,6 @@ CPP_SOURCES += [
 
 if CONFIG['MOZ_WEBSPEECH']:
     CPP_SOURCES += ['SpeechRecognitionError.cpp']
+
+FAIL_ON_WARNINGS = True
+

@@ -13,3 +13,6 @@ if CONFIG['MOZ_XUL']:
         'nsXULContextMenuBuilder.cpp',
     ]
     LIBRARY_NAME = 'gkconxulcon_s'
+
+FAIL_ON_WARNINGS = True
+

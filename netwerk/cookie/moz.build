@@ -39,3 +39,6 @@ if CONFIG['NECKO_COOKIES'] and CONFIG['OS_ARCH'] != 'Darwin':
 IPDL_SOURCES = [
     'PCookieService.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

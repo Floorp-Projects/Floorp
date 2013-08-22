@@ -30,3 +30,6 @@ CPP_SOURCES += [
 IPDL_SOURCES += [
     'PWebSocket.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

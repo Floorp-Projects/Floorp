@@ -169,3 +169,6 @@ EXTRA_PP_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'CSPUtils.jsm',
 ]
+
+FAIL_ON_WARNINGS = True
+

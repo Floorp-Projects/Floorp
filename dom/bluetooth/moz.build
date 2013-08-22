@@ -73,3 +73,6 @@ IPDL_SOURCES += [
     'ipc/PBluetooth.ipdl',
     'ipc/PBluetoothRequest.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

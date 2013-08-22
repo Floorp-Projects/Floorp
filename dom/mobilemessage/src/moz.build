@@ -78,3 +78,6 @@ IPDL_SOURCES += [
     'ipc/PSmsRequest.ipdl',
     'ipc/SmsTypes.ipdlh',
 ]
+
+FAIL_ON_WARNINGS = True
+

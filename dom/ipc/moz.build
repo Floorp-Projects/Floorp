@@ -70,3 +70,6 @@ IPDL_SOURCES += [
     'PMemoryReportRequest.ipdl',
     'PTabContext.ipdlh',
 ]
+
+FAIL_ON_WARNINGS = True
+

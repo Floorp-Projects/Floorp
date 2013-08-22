@@ -22,3 +22,6 @@ CPP_SOURCES += [
 IPDL_SOURCES += [
     'PStorage.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

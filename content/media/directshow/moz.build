@@ -33,3 +33,6 @@ if not CONFIG['MOZ_WEBRTC_IN_LIBXUL']:
         TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/windows/BasePin.cpp',
         TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/windows/MediaType.cpp',
     ]
+
+FAIL_ON_WARNINGS = True
+

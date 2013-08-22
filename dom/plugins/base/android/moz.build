@@ -25,3 +25,5 @@ CPP_SOURCES += [
     'ANPWindow.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

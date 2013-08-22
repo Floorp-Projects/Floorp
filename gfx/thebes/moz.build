@@ -268,3 +268,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CMMSRCS += [
         'gfxMacPlatformFontList.mm',
     ]
+
+FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']

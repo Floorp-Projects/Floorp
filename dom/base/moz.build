@@ -108,3 +108,6 @@ EXTRA_JS_MODULES += [
     'IndexedDBHelper.jsm',
     'ObjectWrapper.jsm',
 ]
+
+FAIL_ON_WARNINGS = True
+
