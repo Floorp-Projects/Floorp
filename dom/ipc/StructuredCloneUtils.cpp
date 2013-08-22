@@ -15,7 +15,6 @@
 #include "nsJSEnvironment.h"
 #include "nsThreadUtils.h"
 #include "StructuredCloneTags.h"
-#include "jsapi.h"
 
 using namespace mozilla::dom;
 
