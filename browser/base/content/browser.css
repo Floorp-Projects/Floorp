@@ -155,12 +155,9 @@ toolbar[overflowable] > .customization-target {
   overflow: hidden;
 }
 
-.overflow-button {
+toolbar:not([overflowing]) > .overflow-button,
+toolbar[customizing] > .overflow-button {
   display: none;
-}
-
-#main-window:not([chromehidden~="toolbar"]) toolbar[overflowable][overflowing]:not([customizing]) > .overflow-button {
-  display: -moz-box;
 }
 
 %ifdef CAN_DRAW_IN_TITLEBAR
