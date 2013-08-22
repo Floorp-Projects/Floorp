@@ -6,10 +6,6 @@
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-// When setting the max-height of the start tab contents, this is the buffer we subtract
-// for the nav bar plus white space above it.
-const kBottomContentMargin = 50;
-
 var StartUI = {
   get startUI() { return document.getElementById("start-container"); },
 
@@ -30,7 +26,6 @@ var StartUI = {
     document.getElementById("bcast_preciseInput").setAttribute("input",
       this.chromeWin.InputSourceHelper.isPrecise ? "precise" : "imprecise");
 
-    this._updateStartHeight();
     this._adjustDOMforViewState();
 
     TopSitesStartView.init();
@@ -38,12 +33,6 @@ var StartUI = {
     HistoryStartView.init();
     RemoteTabsStartView.init();
 
-    TopSitesStartView.show();
-    BookmarksStartView.show();
-    HistoryStartView.show();
-    RemoteTabsStartView.show();
-
-    this.chromeWin.document.getElementById("browsers").addEventListener("SizeChanged", this, true);
     this.chromeWin.addEventListener("MozPrecisePointer", this, true);
     this.chromeWin.addEventListener("MozImprecisePointer", this, true);
     Services.obs.addObserver(this, "metro_viewstate_changed", false);
@@ -60,7 +49,6 @@ var StartUI = {
       RemoteTabsStartView.uninit();
 
     if (this.chromeWin) {
-      this.chromeWin.document.getElementById("browsers").removeEventListener("SizeChanged", this, true);
       this.chromeWin.removeEventListener("MozPrecisePointer", this, true);
       this.chromeWin.removeEventListener("MozImprecisePointer", this, true);
     }
@@ -108,7 +96,8 @@ var StartUI = {
         this.onClick(aEvent);
         break;
       case "MozMousePixelScroll":
-        if (this.startUI.getAttribute("viewstate") == "snapped") {
+        let viewstate = this.startUI.getAttribute("viewstate");
+        if (viewstate === "snapped" || viewstate === "portrait") {
           window.scrollBy(0, aEvent.detail);
         } else {
           window.scrollBy(aEvent.detail, 0);
@@ -117,15 +106,7 @@ var StartUI = {
         aEvent.preventDefault();
         aEvent.stopPropagation();
         break;
-      case "SizeChanged":
-        this._updateStartHeight();
-        break;
     }
-  },
-
-  _updateStartHeight: function () {
-    document.getElementById("start-container").style.maxHeight =
-      (this.chromeWin.ContentAreaObserver.contentHeight - kBottomContentMargin) + "px";
   },
 
   _adjustDOMforViewState: function() {
