@@ -10,6 +10,5 @@ VPATH            := @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   := gkconwebaudio_s
-LIBXUL_LIBRARY := 1
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

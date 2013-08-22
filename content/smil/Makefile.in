@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gkconsmil_s
-LIBXUL_LIBRARY	= 1
 LOCAL_INCLUDES += 	\
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../../layout/style \

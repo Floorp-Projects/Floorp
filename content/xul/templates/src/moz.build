@@ -37,3 +37,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'gkconxultmpl_s'
 
+LIBXUL_LIBRARY = True
+
