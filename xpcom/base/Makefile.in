@@ -13,8 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= xpcombase_s
 MSVC_ENABLE_PGO := 1
 MOZILLA_INTERNAL_API =1
-LIBXUL_LIBRARY = 1
-
 CSRCS = \
 		nsErrorAssertsC.c \
 		$(NULL)

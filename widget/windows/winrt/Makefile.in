@@ -11,8 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME		= widget_winrt
 EXPORT_LIBRARY	= 1
-LIBXUL_LIBRARY	= 1
-
 DEFINES		+= -DMOZ_UNICODE
 
 ifdef MOZ_ENABLE_D3D9_LAYER

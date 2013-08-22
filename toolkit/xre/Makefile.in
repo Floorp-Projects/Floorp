@@ -19,8 +19,6 @@ milestone_txt = $(topsrcdir)/config/milestone.txt
 
 LIBRARY_NAME = xulapp_s
 MSVC_ENABLE_PGO := 1
-LIBXUL_LIBRARY = 1
-
 ifeq ($(MOZ_GL_DEFAULT_PROVIDER),GLX)
 DEFINES += -DUSE_GLX_TEST
 endif

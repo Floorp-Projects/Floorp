@@ -50,3 +50,6 @@ if CONFIG[' MOZ_ENABLE_QTMOBILITY']:
         'moc_mozqorientationsensorfilter.cpp',
         'mozqorientationsensorfilter.cpp',
     ]
+
+LIBXUL_LIBRARY = True
+

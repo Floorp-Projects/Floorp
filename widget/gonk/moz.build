@@ -60,3 +60,6 @@ if CONFIG['ANDROID_VERSION'] == '15':
     CPP_SOURCES += [
         'HwcComposer2D.cpp'
     ]
+
+LIBXUL_LIBRARY = True
+
