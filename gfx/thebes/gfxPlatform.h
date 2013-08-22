@@ -585,6 +585,12 @@ public:
     mozilla::layers::DiagnosticTypes GetLayerDiagnosticTypes();
 
     static bool DrawFrameCounter();
+    static nsIntRect FrameCounterBounds() {
+      int bits = 16;
+      int sizeOfBit = 3;
+      return nsIntRect(0, 0, bits * sizeOfBit, sizeOfBit);
+    }
+
     /**
      * Returns true if we should use raw memory to send data to the compositor
      * rather than using shmems.
