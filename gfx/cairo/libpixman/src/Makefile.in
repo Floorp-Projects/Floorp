@@ -83,39 +83,6 @@ endif
 endif
 
 
-CSRCS	= \
-	pixman-access.c \
-	pixman-access-accessors.c \
-	pixman-arm.c \
-	pixman-bits-image.c \
-	pixman.c \
-	pixman-combine16.c \
-	pixman-combine32.c \
-	pixman-combine-float.c \
-	pixman-conical-gradient.c \
-	pixman-edge.c \
-	pixman-edge-accessors.c \
-	pixman-fast-path.c \
-	pixman-filter.c \
-	pixman-general.c \
-	pixman-gradient-walker.c \
-	pixman-glyph.c \
-	pixman-image.c \
-	pixman-implementation.c \
-	pixman-linear-gradient.c \
-	pixman-matrix.c \
-	pixman-mips.c \
-	pixman-noop.c \
-	pixman-ppc.c \
-	pixman-radial-gradient.c \
-	pixman-region16.c \
-	pixman-region32.c \
-	pixman-solid-fill.c \
-	pixman-trap.c \
-	pixman-utils.c \
-	pixman-x86.c \
-	$(NULL)
-
 ifdef USE_MMX
 CSRCS += pixman-mmx.c
 DEFINES += -DUSE_MMX
