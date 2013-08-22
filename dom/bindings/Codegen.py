@@ -604,6 +604,12 @@ class CGHeaders(CGWrapper):
             if unrolled.isUnion():
                 # UnionConversions.h includes UnionTypes.h
                 bindingHeaders.add("mozilla/dom/UnionConversions.h")
+            elif unrolled.isDate():
+                if dictionary or jsImplementedDescriptors:
+                    headerSet = declareIncludes
+                else:
+                    headerSet = bindingHeaders
+                headerSet.add("mozilla/dom/Date.h")
             elif unrolled.isInterface():
                 if unrolled.isSpiderMonkeyInterface():
                     bindingHeaders.add("jsfriendapi.h")
