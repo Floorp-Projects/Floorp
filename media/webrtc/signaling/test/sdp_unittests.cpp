@@ -233,7 +233,7 @@ TEST_F(SdpTest, parseRtcpFbAckFooBarBaz) {
 TEST_F(SdpTest, parseRtcpFbNack) {
   ParseSdp(kVideoSdp + "a=rtcp-fb:120 nack\r\n");
   ASSERT_EQ(sdp_attr_get_rtcp_fb_nack(sdp_ptr_, 1, 120, 1),
-            SDP_RTCP_FB_NACK_UNSPECIFIED);
+            SDP_RTCP_FB_NACK_BASIC);
 }
 
 TEST_F(SdpTest, parseRtcpFbNackPli) {
@@ -381,7 +381,7 @@ TEST_F(SdpTest, parseRtcpFbKitchenSink) {
             SDP_RTCP_FB_ACK_NOT_FOUND);
 
   ASSERT_EQ(sdp_attr_get_rtcp_fb_nack(sdp_ptr_, 1, 120, 1),
-            SDP_RTCP_FB_NACK_UNSPECIFIED);
+            SDP_RTCP_FB_NACK_BASIC);
   ASSERT_EQ(sdp_attr_get_rtcp_fb_nack(sdp_ptr_, 1, 120, 2),
             SDP_RTCP_FB_NACK_PLI);
   ASSERT_EQ(sdp_attr_get_rtcp_fb_nack(sdp_ptr_, 1, 120, 3),
@@ -457,7 +457,7 @@ TEST_F(SdpTest, addRtcpFbAckAppAllPt) {
 TEST_F(SdpTest, addRtcpFbNack) {
   InitLocalSdp();
   int level = AddNewMedia(SDP_MEDIA_VIDEO);
-  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_UNSPECIFIED, 120);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_BASIC, 120);
   std::string body = SerializeSdp();
   ASSERT_NE(body.find("a=rtcp-fb:120 nack\r\n"), std::string::npos);
 }
@@ -465,7 +465,7 @@ TEST_F(SdpTest, addRtcpFbNack) {
 TEST_F(SdpTest, addRtcpFbNackAllPt) {
   InitLocalSdp();
   int level = AddNewMedia(SDP_MEDIA_VIDEO);
-  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_UNSPECIFIED);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_BASIC);
   std::string body = SerializeSdp();
   ASSERT_NE(body.find("a=rtcp-fb:* nack\r\n"), std::string::npos);
 }
