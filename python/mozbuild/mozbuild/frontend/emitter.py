@@ -132,6 +132,7 @@ class TreeMetadataEmitter(LoggingMixin):
             JS_MODULES_PATH='JS_MODULES_PATH',
             LIBRARY_NAME='LIBRARY_NAME',
             LIBS='LIBS',
+            LIBXUL_LIBRARY='LIBXUL_LIBRARY',
             MODULE='MODULE',
             SDK_LIBRARY='SDK_LIBRARY',
             SHARED_LIBRARY_LIBS='SHARED_LIBRARY_LIBS',
