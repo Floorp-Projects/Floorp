@@ -369,7 +369,7 @@ bool nsXBLService::gAllowDataURIs = false;
 
 nsHashtable* nsXBLService::gClassTable = nullptr;
 
-JSCList  nsXBLService::gClassLRUList = JS_INIT_STATIC_CLIST(&nsXBLService::gClassLRUList);
+LinkedList<nsXBLJSClass>* nsXBLService::gClassLRUList = nullptr;
 uint32_t nsXBLService::gClassLRUListLength = 0;
 uint32_t nsXBLService::gClassLRUListQuota = 64;
 
@@ -393,6 +393,7 @@ nsXBLService::Init()
 nsXBLService::nsXBLService(void)
 {
   gClassTable = new nsHashtable();
+  gClassLRUList = new LinkedList<nsXBLJSClass>();
 
   Preferences::AddBoolVarCache(&gAllowDataURIs, "layout.debug.enable_data_xbl");
 }
@@ -406,6 +407,8 @@ nsXBLService::~nsXBLService(void)
   // created for bindings will be deleted when those objects are finalized
   // (and not put on gClassLRUList, because length >= quota).
   gClassLRUListLength = gClassLRUListQuota = 0;
+  delete gClassLRUList;
+  gClassLRUList = nullptr;
 
   // At this point, the only hash table entries should be for referenced
   // XBL class structs held by unfinalized JS binding objects.
@@ -642,11 +645,8 @@ nsXBLService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar
 nsresult
 nsXBLService::FlushMemory()
 {
-  while (!JS_CLIST_IS_EMPTY(&gClassLRUList)) {
-    JSCList* lru = gClassLRUList.next;
-    nsXBLJSClass* c = static_cast<nsXBLJSClass*>(lru);
-
-    JS_REMOVE_AND_INIT_LINK(lru);
+  while (!gClassLRUList->isEmpty()) {
+    nsXBLJSClass* c = gClassLRUList->popFirst();
     delete c;
     gClassLRUListLength--;
   }
