@@ -5667,7 +5667,8 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 }
             }
         }
-        if (fun->hasDefaults()) {
+        bool hasDefaults = bce->sc->asFunctionBox()->hasDefaults();
+        if (hasDefaults) {
             ParseNode *rest = NULL;
             bool restIsDefn = false;
             if (fun->hasRest()) {
@@ -5716,7 +5717,7 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 continue;
             if (!BindNameToSlot(cx, bce, pn2))
                 return false;
-            if (pn2->pn_next == pnlast && fun->hasRest() && !fun->hasDefaults()) {
+            if (pn2->pn_next == pnlast && fun->hasRest() && !hasDefaults) {
                 // Fill rest parameter. We handled the case with defaults above.
                 JS_ASSERT(!bce->sc->asFunctionBox()->argumentsHasLocalBinding());
                 bce->switchToProlog();

@@ -419,7 +419,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     uint32_t length, lineno, nslots;
     uint32_t natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nconsts, i;
     uint32_t prologLength, version;
-    uint32_t ndefaults = 0;
+    uint32_t funLength = 0;
     uint32_t nTypeSets = 0;
     uint32_t scriptBits = 0;
 
@@ -471,7 +471,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             ntrynotes = script->trynotes()->length;
 
         nTypeSets = script->nTypeSets;
-        ndefaults = script->ndefaults;
+        funLength = script->funLength;
 
         if (script->noScriptRval)
             scriptBits |= (1 << NoScriptRval);
@@ -531,7 +531,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         return false;
     if (!xdr->codeUint32(&nTypeSets))
         return false;
-    if (!xdr->codeUint32(&ndefaults))
+    if (!xdr->codeUint32(&funLength))
         return false;
     if (!xdr->codeUint32(&scriptBits))
         return false;
@@ -577,7 +577,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         script->mainOffset = prologLength;
         script->length = length;
         script->nfixed = uint16_t(version >> 16);
-        script->ndefaults = ndefaults;
+        script->funLength = funLength;
 
         scriptp.set(script);
 
@@ -1978,7 +1978,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
             JS_ASSERT(!funbox->definitelyNeedsArgsObj());
         }
 
-        script->ndefaults = funbox->ndefaults;
+        script->funLength = funbox->length;
     }
 
     RootedFunction fun(cx, NULL);
@@ -2469,6 +2469,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     dst->lineno = src->lineno;
     dst->mainOffset = src->mainOffset;
     dst->natoms = src->natoms;
+    dst->funLength = src->funLength;
     dst->nfixed = src->nfixed;
     dst->nTypeSets = src->nTypeSets;
     dst->nslots = src->nslots;
