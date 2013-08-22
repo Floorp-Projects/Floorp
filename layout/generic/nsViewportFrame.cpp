@@ -8,13 +8,9 @@
  * the document's scrollbars and contains fixed-positioned elements
  */
 
-#include "nsCOMPtr.h"
 #include "nsViewportFrame.h"
-#include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
-#include "nsDisplayList.h"
-#include "FrameLayerBuilder.h"
 #include "nsSubDocumentFrame.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "GeckoProfiler.h"

@@ -19,7 +19,6 @@
 #include "nsRect.h"
 #include "nsRenderingContext.h"
 #include "nsTextFrame.h"
-#include "nsStyleStructInlines.h"
 #include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 

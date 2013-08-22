@@ -5,7 +5,6 @@
 
 /* struct containing the input to nsIFrame::Reflow */
 
-#include "nsCOMPtr.h"
 #include "nsStyleConsts.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsFrame.h"
@@ -20,11 +19,9 @@
 #include "nsImageFrame.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
-#include "nsIServiceManager.h"
 #include "nsIPercentHeightObserver.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/Preferences.h"
-#include "nsBidiUtils.h"
 #include "nsFontInflationData.h"
 #include <algorithm>
 

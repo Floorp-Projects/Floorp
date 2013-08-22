@@ -44,9 +44,7 @@ enum LineReflowStatus {
 class nsBlockReflowState;
 class nsBlockInFlowLineIterator;
 class nsBulletFrame;
-class nsLineBox;
 class nsFirstLineFrame;
-class nsIntervalSet;
 
 /**
  * Some invariants:

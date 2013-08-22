@@ -5,23 +5,18 @@
 
 #include "nsPageFrame.h"
 #include "nsPresContext.h"
-#include "nsStyleContext.h"
 #include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
-#include "nsCSSFrameConstructor.h"
-#include "nsReadableUtils.h"
 #include "nsPageContentFrame.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h" // for function BinarySearchForPosition
-#include "nsCSSRendering.h"
 #include "nsSimplePageSequence.h" // for nsSharedPageData
 #include "nsTextFormatter.h" // for page number localization formatting
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #endif
 #include "nsIPrintSettings.h"
-#include "nsRegion.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING 

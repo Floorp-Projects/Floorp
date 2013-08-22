@@ -7,7 +7,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
-#include "nsHTMLParts.h"
 #include "nsPresContext.h"
 #include "nsLineLayout.h"
 #include "nsStyleConsts.h"
@@ -17,7 +16,6 @@
 
 //FOR SELECTION
 #include "nsIContent.h"
-#include "nsFrameSelection.h"
 //END INCLUDES FOR SELECTION
 
 using namespace mozilla;

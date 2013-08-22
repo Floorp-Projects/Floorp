@@ -10,9 +10,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
-#include "nsString.h"
-#include "nsAString.h"
-#include "nsIIOService.h"
 #include "FrameLayerBuilder.h"
 
 namespace mozilla {
@@ -24,6 +21,7 @@ class LayerManager;
 
 class nsPresContext;
 class nsDisplayItem;
+class nsAString;
 
 nsIFrame* NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 

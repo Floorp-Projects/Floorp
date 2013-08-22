@@ -6,9 +6,7 @@
 #ifndef NSTEXTFRAMEUTILS_H_
 #define NSTEXTFRAMEUTILS_H_
 
-#include "gfxFont.h"
 #include "gfxSkipChars.h"
-#include "nsTextFragment.h"
 
 class nsIContent;
 struct nsStyleText;
