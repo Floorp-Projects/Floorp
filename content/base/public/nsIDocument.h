@@ -50,6 +50,7 @@ class nsIDOMDocument;
 class nsIDOMDocumentFragment;
 class nsIDOMDocumentType;
 class nsIDOMElement;
+class nsIDOMNodeFilter;
 class nsIDOMNodeList;
 class nsIDOMXPathExpression;
 class nsIDOMXPathNSResolver;
