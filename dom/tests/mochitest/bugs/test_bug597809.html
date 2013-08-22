@@ -23,6 +23,9 @@ SpecialPowers.addCategoryEntry("JavaScript-global-property", "testSNSM", "@mozil
 
 SimpleTest.executeSoon(function () {
   ok(window.testSNSM, "testSNSM should return an object");
+  // The category entry must be removed before finishing the test,
+  // otherwise it will affect all following tests in the test suite.
+  SpecialPowers.deleteCategoryEntry("JavaScript-global-property", "testSNSM", false);
   SimpleTest.finish();
 });
 
