@@ -10,10 +10,10 @@
 
 #include "nsFloatManager.h"
 #include "nsLineBox.h"
-#include "nsFrameList.h"
 #include "nsHTMLReflowState.h"
 
 class nsBlockFrame;
+class nsFrameList;
 class nsOverflowContinuationTracker;
 
   // block reflow state flags

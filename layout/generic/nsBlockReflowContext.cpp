@@ -7,17 +7,11 @@
 /* class that a parent frame uses to reflow a block frame */
 
 #include "nsBlockReflowContext.h"
-#include "nsLineLayout.h"
+#include "nsBlockReflowState.h"
 #include "nsFloatManager.h"
-#include "nsPresContext.h"
-#include "nsFrameManager.h"
-#include "nsIContent.h"
-#include "nsStyleContext.h"
 #include "nsContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
-#include "nsGkAtoms.h"
-#include "nsCOMPtr.h"
 #include "nsLayoutUtils.h"
 
 #ifdef DEBUG
