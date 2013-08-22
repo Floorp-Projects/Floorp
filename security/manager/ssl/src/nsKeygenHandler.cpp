@@ -724,7 +724,7 @@ nsKeygenFormProcessor::GetPublicKey(nsAString& aValue, nsAString& aChallenge,
     }
 
     CopyASCIItoUTF16(keystring, aOutPublicKey);
-    nsCRT::free(keystring);
+    free(keystring);
 
     rv = NS_OK;
 loser:

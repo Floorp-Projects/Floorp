@@ -9463,127 +9463,129 @@
 > quinoa
 40036a45854
 > recency
-40141a45960
+40140a45959
+> recurse/DGSV
+40141a45961
 > recuse/DGS
-40208a46028
+40208a46029
 > refactor/SMDG
-40244d46063
+40244d46064
 < reflexion/SM
-40829c46648
+40829c46649
 < reverie/M
 ---
 > reverie/MS
-41415a47235
+41415a47236
 > sabre/MS
-41914c47734
+41914c47735
 < schnaps's
 ---
 > schnaps/M
-41949c47769
+41949c47770
 < schrod's
 ---
 > schrod/SM
-41998a47819
+41998a47820
 > scot-free
-42883,42885c48704
+42883,42885c48705
 < shit's
 < shit/S!
 < shite/S!
 ---
 > shit/MS!
-42887,42888c48706,48707
+42887,42888c48707,48708
 < shithead/S!
 < shitload/!
 ---
 > shithead/MS!
 > shitload/MS!
-42891c48710
+42891c48711
 < shitty/RT!
 ---
 > shitty/TR!
-42976a48796
+42976a48797
 > should've
-43008c48828
+43008c48829
 < showtime
 ---
 > showtime/MS
-43724,43726c49544
+43724,43726c49545
 < smoulder's
 < smouldered
 < smoulders
 ---
 > smoulder/GSMD
-44062c49880
+44062c49881
 < sonofabitch
 ---
 > sonofabitch/!
-44346a50165
+44346a50166
 > spelled
-44348a50168
+44348a50169
 > spelt
-44371a50192
+44371a50193
 > spick/S!
-44383c50204
+44383c50205
 < spik/S
 ---
 > spik/S!
-46106a51928
+46106a51929
 > syllabi
-46160c51982
+46160c51983
 < synch/GMD
 ---
 > synch/GMDS
-46167d51988
+46167d51989
 < synchs
-46203,46204c52024,52025
+46203,46204c52025,52026
 < sysadmin/S
 < sysop/S
 ---
 > sysadmin/MS
 > sysop/MS
-46752a52574
+46752a52575
 > terabit/MS
-46753a52576,52577
+46753a52577,52578
 > terahertz/M
 > terapixel/MS
-46817a52642
+46817a52643
 > testcase/MS
-46831a52657
+46831a52658
 > testsuite/MS
-46925a52752
+46925a52753
 > theremin/MS
-47755a53583
+47755a53584
 > transfect/DSMG
-47774a53603,53604
+47774a53604,53605
 > transgenderism
 > transgene/MS
-47951c53781
+47951c53782
 < triage/M
 ---
 > triage/MG
-48869a54700
+48869a54701
 > unlikeable
-49211c55042
+49211c55043
 < vagina/M
 ---
 > vagina/MS
-49368,49369c55199
+49368,49369c55200
 < velour's
 < velours's
 ---
 > velour/MS
-49478a55309
+49478a55310
 > vertices
-50148a55980
+50148a55981
 > weaponize/DSG
-50260,50261d56091
+50260,50261d56092
 < werwolf/M
 < werwolves
-50728c56558
+50728c56559
 < women
 ---
 > women/M
-50794c56624
+50794c56625
 < wop/S!
 ---
 > wop/MS!

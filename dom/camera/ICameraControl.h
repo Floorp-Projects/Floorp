@@ -5,7 +5,6 @@
 #ifndef DOM_CAMERA_ICAMERACONTROL_H
 #define DOM_CAMERA_ICAMERACONTROL_H
 
-#include "jsapi.h"
 #include "nsIFile.h"
 #include "nsIDOMCameraManager.h"
 #include "DictionaryHelpers.h"

@@ -1459,7 +1459,7 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
 
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("Type is %s\n", typeName));
     // make a copy since |nsXPIDLCString| won't use |g_free|...
-    mimeFlavor.Adopt(nsCRT::strdup(typeName));
+    mimeFlavor.Adopt(strdup(typeName));
     g_free(typeName);
     // check to make sure that we have data items to return.
     if (!mSourceDataItems) {

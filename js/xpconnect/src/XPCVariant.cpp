@@ -11,6 +11,7 @@
 #include "nsCxPusher.h"
 
 #include "jsfriendapi.h"
+#include "jsprf.h"
 
 using namespace JS;
 using namespace mozilla;

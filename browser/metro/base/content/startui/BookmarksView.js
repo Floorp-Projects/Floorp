@@ -323,10 +323,6 @@ let BookmarksStartView = {
       this._view.destruct();
     }
   },
-
-  show: function show() {
-    this._grid.arrangeItems();
-  }
 };
 
 /**

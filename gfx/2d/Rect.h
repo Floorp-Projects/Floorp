@@ -10,7 +10,8 @@
 #include "BaseMargin.h"
 #include "Point.h"
 #include "Tools.h"
-#include "nsMathUtils.h"
+
+#include <cmath>
 
 namespace mozilla {
 namespace gfx {
@@ -108,10 +109,10 @@ typedef RectTyped<UnknownUnits> Rect;
 template<class units>
 IntRectTyped<units> RoundedToInt(const RectTyped<units>& aRect)
 {
-  return IntRectTyped<units>(NS_lround(aRect.x),
-                             NS_lround(aRect.y),
-                             NS_lround(aRect.width),
-                             NS_lround(aRect.height));
+  return IntRectTyped<units>(int32_t(floorf(aRect.x + 0.5f)),
+                             int32_t(floorf(aRect.y + 0.5f)),
+                             int32_t(floorf(aRect.width + 0.5f)),
+                             int32_t(floorf(aRect.height + 0.5f)));
 }
 
 template<class units>

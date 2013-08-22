@@ -8,11 +8,14 @@
 #define ProxyAutoConfig_h__
 
 #include "nsString.h"
-#include "jsapi.h"
 #include "prio.h"
 #include "nsITimer.h"
 #include "nsAutoPtr.h"
 #include "mozilla/net/DNS.h"
+
+namespace JS {
+class Value;
+}
 
 namespace mozilla { namespace net {
 

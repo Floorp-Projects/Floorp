@@ -24,6 +24,7 @@
 #include "XPCQuickStubs.h"
 #include "XrayWrapper.h"
 #include "nsPrintfCString.h"
+#include "prprf.h"
 
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"

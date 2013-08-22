@@ -9,7 +9,6 @@
 
 #include "mozilla/plugins/PPluginScriptableObjectParent.h"
 
-#include "jsapi.h"
 #include "npfunctions.h"
 #include "npruntime.h"
 

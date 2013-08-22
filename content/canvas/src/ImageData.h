@@ -16,8 +16,6 @@
 #include "nsTraceRefcnt.h"
 #include "xpcpublic.h"
 
-#include "jsapi.h"
-
 namespace mozilla {
 namespace dom {
 

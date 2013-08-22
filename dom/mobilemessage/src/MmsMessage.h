@@ -8,7 +8,6 @@
 
 #include "nsIDOMMozMmsMessage.h"
 #include "nsString.h"
-#include "jspubtd.h"
 #include "mozilla/dom/mobilemessage/Types.h"
 #include "mozilla/Attributes.h"
 #include "DictionaryHelpers.h"

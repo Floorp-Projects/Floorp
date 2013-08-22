@@ -433,10 +433,6 @@ namespace js {
 inline bool
 ExclusiveContext::typeInferenceEnabled() const
 {
-    // Type inference cannot be enabled in compartments which are accessed off
-    // the main thread by an ExclusiveContext. TI data is stored in per-zone
-    // allocators which could otherwise race with main thread operations.
-    JS_ASSERT_IF(!isJSContext(), !compartment_->zone()->types.inferenceEnabled);
     return compartment_->zone()->types.inferenceEnabled;
 }
 

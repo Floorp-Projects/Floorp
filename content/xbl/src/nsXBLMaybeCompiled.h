@@ -6,8 +6,6 @@
 #ifndef nsXBLMaybeCompiled_h__
 #define nsXBLMaybeCompiled_h__
 
-#include "js/RootingAPI.h"
-
 /*
  * A union containing either a pointer representing uncompiled source or a
  * JSObject* representing the compiled result.  The class is templated on the

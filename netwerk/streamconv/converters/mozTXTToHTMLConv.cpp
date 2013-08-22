@@ -1347,7 +1347,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar *text, uint32_t whattodo,
   // need to reallocate and re-copy the characters already in the out String.
   NS_ASSERTION(inLength, "ScanTXT passed 0 length string");
   if (inLength == 0) {
-    *_retval = nsCRT::strdup(text);
+    *_retval = NS_strdup(text);
     return NS_OK;
   }
 
