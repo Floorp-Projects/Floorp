@@ -20,6 +20,7 @@ MODULE = 'necko'
 
 if CONFIG['NECKO_COOKIES']:
     LIBXUL_LIBRARY = True
+    MSVC_ENABLE_PGO = True
 
     EXPORTS.mozilla.net = [
         'CookieServiceParent.h',

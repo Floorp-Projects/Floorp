@@ -9,10 +9,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_XUL
-MSVC_ENABLE_PGO := 1
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \

@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef NECKO_COOKIES
 LIBRARY_NAME     = neckocookie_s
-MSVC_ENABLE_PGO := 1
 
 LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/intl/uconv/src \
