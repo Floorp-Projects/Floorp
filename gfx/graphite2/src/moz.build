@@ -6,6 +6,12 @@
 
 MODULE = 'graphite2'
 
+if CONFIG['OS_TARGET'] != 'WINNT':
+    LIBXUL_LIBRARY = True
+else:
+    # FORCE_STATIC_LIB = True
+    pass
+
 # This should contain all of the _PUBLIC_HEADERS from files.mk
 EXPORTS.graphite2 += [
     '../include/graphite2/Font.h',

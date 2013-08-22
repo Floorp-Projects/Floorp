@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# export required interfaces, even if --disable-cookies has been given
 XPIDL_SOURCES += [
     'nsICookie.idl',
     'nsICookie2.idl',
@@ -18,6 +19,8 @@ XPIDL_MODULE = 'necko_cookie'
 MODULE = 'necko'
 
 if CONFIG['NECKO_COOKIES']:
+    LIBXUL_LIBRARY = True
+
     EXPORTS.mozilla.net = [
         'CookieServiceParent.h',
         'CookieServiceChild.h',

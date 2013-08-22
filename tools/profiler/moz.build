@@ -7,6 +7,7 @@
 if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
 
+    LIBXUL_LIBRARY = True
 
     MODULE = 'profiler'
     LIBRARY_NAME = 'profiler'
