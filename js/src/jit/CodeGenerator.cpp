@@ -3628,74 +3628,78 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
     masm.passABIArg(temp);
     masm.passABIArg(input);
 
+#   define MAYBE_CACHED(fcn) (mathCache ? (void*)fcn ## _impl : (void*)fcn ## _uncached)
+
     void *funptr = NULL;
     switch (ins->mir()->function()) {
       case MMathFunction::Log:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_log));
         break;
       case MMathFunction::Sin:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_sin_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_sin));
         break;
       case MMathFunction::Cos:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_cos_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_cos));
         break;
       case MMathFunction::Exp:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_exp_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_exp));
         break;
       case MMathFunction::Tan:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_tan_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_tan));
         break;
       case MMathFunction::ATan:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_atan_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_atan));
         break;
       case MMathFunction::ASin:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_asin_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_asin));
         break;
       case MMathFunction::ACos:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_acos_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_acos));
         break;
       case MMathFunction::Log10:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log10_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_log10));
         break;
       case MMathFunction::Log2:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log2_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_log2));
         break;
       case MMathFunction::Log1P:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log1p_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_log1p));
         break;
       case MMathFunction::ExpM1:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_expm1_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_expm1));
         break;
       case MMathFunction::CosH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_cosh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_cosh));
         break;
       case MMathFunction::SinH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_sinh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_sinh));
         break;
       case MMathFunction::TanH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_tanh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_tanh));
         break;
       case MMathFunction::ACosH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_acosh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_acosh));
         break;
       case MMathFunction::ASinH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_asinh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_asinh));
         break;
       case MMathFunction::ATanH:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_atanh_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_atanh));
         break;
       case MMathFunction::Sign:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_sign_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_sign));
         break;
       case MMathFunction::Trunc:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_trunc_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_trunc));
         break;
       case MMathFunction::Cbrt:
-        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_cbrt_impl);
+        funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_cbrt));
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unknown math function");
     }
+
+#   undef MAYBE_CACHED
 
     masm.callWithABI(funptr, MacroAssembler::DOUBLE);
     return true;

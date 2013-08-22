@@ -3402,6 +3402,8 @@ class MMathFunction
 
   public:
     INSTRUCTION_HEADER(MathFunction)
+
+    // A NULL cache means this function will neither access nor update the cache.
     static MMathFunction *New(MDefinition *input, Function function, MathCache *cache) {
         return new MMathFunction(input, function, cache);
     }

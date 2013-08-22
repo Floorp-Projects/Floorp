@@ -147,7 +147,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(Abs)
     SAFE_OP(Sqrt)
     UNSAFE_OP(Atan2)
-    SAFE_OP(MathFunction)
+    CUSTOM_OP(MathFunction)
     SPECIALIZED_OP(Add, PERMIT_NUMERIC)
     SPECIALIZED_OP(Sub, PERMIT_NUMERIC)
     SPECIALIZED_OP(Mul, PERMIT_NUMERIC)
@@ -547,6 +547,12 @@ bool
 ParallelSafetyVisitor::visitRest(MRest *ins)
 {
     return replace(ins, MRestPar::New(forkJoinSlice(), ins));
+}
+
+bool
+ParallelSafetyVisitor::visitMathFunction(MMathFunction *ins)
+{
+    return replace(ins, MMathFunction::New(ins->input(), ins->function(), NULL));
 }
 
 bool
