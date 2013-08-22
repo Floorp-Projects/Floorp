@@ -82,6 +82,41 @@ namespace mozilla {
 
 namespace mozilla {
 namespace gl {
+
+/** GLFeature::Enum
+ * We don't use typed enum to keep the implicit integer conversion.
+ * This enum should be sorted by name.
+ */
+namespace GLFeature {
+    enum Enum {
+        bind_buffer_offset,
+        depth_texture,
+        draw_buffers,
+        draw_instanced,
+        element_index_uint,
+        ES2_compatibility,
+        ES3_compatibility,
+        framebuffer_blit,
+        framebuffer_multisample,
+        framebuffer_object,
+        get_query_object_iv,
+        instanced_arrays,
+        occlusion_query,
+        occlusion_query_boolean,
+        occlusion_query2,
+        packed_depth_stencil,
+        query_objects,
+        robustness,
+        standard_derivatives,
+        texture_float,
+        texture_float_linear,
+        texture_non_power_of_two,
+        transform_feedback,
+        vertex_array_object,
+        EnumMax
+    };
+}
+
 typedef uintptr_t SharedTextureHandle;
 
 MOZ_BEGIN_ENUM_CLASS(ContextProfile, uint8_t)
@@ -465,7 +500,7 @@ protected:
 // -----------------------------------------------------------------------------
 // XXX_* Extension group queries
 /*
- * This mecahnism introduces a new way to check if an extension is supported,
+ * This mechanism introduces a new way to check if an extension is supported,
  * regardless if it is an ARB, EXT, OES, etc.
  */
 public:
@@ -501,9 +536,15 @@ public:
         ExtensionGroup_Max
     };
 
-    bool IsExtensionSupported(GLExtensionGroup extensionGroup) const;
+    inline bool IsExtensionSupported(GLExtensionGroup extensionGroup) const
+    {
+        return IsSupported(GLFeature::Enum(extensionGroup));
+    }
 
-    static const char* GetExtensionGroupName(GLExtensionGroup extensionGroup);
+    static inline const char* GetExtensionGroupName(GLExtensionGroup extensionGroup)
+    {
+        return GetFeatureName(GLFeature::Enum(extensionGroup));
+    }
 
 
 private:
@@ -514,8 +555,33 @@ private:
      * Returns false if marking this extension group as unsupported contradicts
      * the OpenGL version and profile. Returns true otherwise.
      */
-    bool MarkExtensionGroupUnsupported(GLExtensionGroup extensionGroup);
+    inline bool MarkExtensionGroupUnsupported(GLExtensionGroup extensionGroup)
+    {
+        return MarkUnsupported(GLFeature::Enum(extensionGroup));
+    }
 
+// -----------------------------------------------------------------------------
+// Feature queries
+/*
+ * This mecahnism introduces a new way to check if a OpenGL feature is
+ * supported, regardless of whether it is supported by an extension or natively
+ * by the context version/profile
+ */
+public:
+    bool IsSupported(GLFeature::Enum feature) const;
+
+    static const char* GetFeatureName(GLFeature::Enum feature);
+
+
+private:
+
+    /**
+     * Mark all extensions of this feature as unsupported.
+     *
+     * Returns false if marking this extension group as unsupported contradicts
+     * the OpenGL version and profile. Returns true otherwise.
+     */
+    bool MarkUnsupported(GLFeature::Enum feature);
 
 // -----------------------------------------------------------------------------
 // Robustness handling
