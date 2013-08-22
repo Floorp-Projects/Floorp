@@ -262,6 +262,11 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
             CancelOffThreadIonCompile(c, NULL);
         WaitForOffThreadParsingToFinish(rt);
 
+#ifdef JS_WORKER_THREADS
+        if (rt->workerThreadState)
+            rt->workerThreadState->cleanup(rt);
+#endif
+
         /* Unpin all common names before final GC. */
         FinishCommonNames(rt);
 
