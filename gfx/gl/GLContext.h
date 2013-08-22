@@ -2753,7 +2753,7 @@ public:
         if (mScreen)
             return mScreen->GetReadFB();
 
-        GLenum bindEnum = IsExtensionSupported(XXX_framebuffer_blit)
+        GLenum bindEnum = IsSupported(GLFeature::framebuffer_blit)
                             ? LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT
                             : LOCAL_GL_FRAMEBUFFER_BINDING;
 
