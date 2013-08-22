@@ -26,35 +26,34 @@ function test()
 
     try {
       proto.next();
-      throw "generatorProto.next() does not throw TypeError";
+      throw "generatorProto.next() does not throw StopIteration";
     } catch (e) {
-      if (!(e instanceof TypeError))
+      if (!(e instanceof StopIteration))
         throw "generatorProto.next() throws unexpected exception: "+uneval(e);
     }
 
     try {
       proto.send();
-      throw "generatorProto.send() does not throw TypeError";
+      throw "generatorProto.send() does not throw StopIteration";
     } catch (e) {
-      if (!(e instanceof TypeError))
+      if (!(e instanceof StopIteration))
         throw "generatorProto.send() throws unexpected exception: "+uneval(e);
     }
 
     var obj = {};
     try {
       proto.throw(obj);
-      throw "generatorProto.throw(obj) does not throw TypeError";
+      throw "generatorProto.throw(obj) does not throw obj";
     } catch (e) {
-      if (!(e instanceof TypeError))
+      if (e !== obj)
         throw "generatorProto.throw() throws unexpected exception: "+uneval(e);
     }
 
+    var obj = {};
     try {
       proto.close();
-      throw "generatorProto.close() does not throw TypeError";
     } catch (e) {
-      if (!(e instanceof TypeError))
-        throw "generatorProto.close() throws unexpected exception: "+uneval(e);
+      throw "generatorProto.throw() throws exception: "+uneval(e);
     }
 
   }
