@@ -10,6 +10,7 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# need to include etld_data.inc
 LOCAL_INCLUDES = \
   -I$(srcdir)/../base/src \
   -I. \
