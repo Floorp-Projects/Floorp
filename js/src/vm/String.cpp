@@ -165,20 +165,20 @@ AllocChars(ThreadSafeContext *maybecx, size_t length, jschar **chars, size_t *ca
 }
 
 bool
-JSRope::getCharsNonDestructive(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
+JSRope::copyNonPureChars(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
 {
-    return getCharsNonDestructiveInternal(cx, out, false);
+    return copyNonPureCharsInternal(cx, out, false);
 }
 
 bool
-JSRope::getCharsZNonDestructive(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
+JSRope::copyNonPureCharsZ(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
 {
-    return getCharsNonDestructiveInternal(cx, out, true);
+    return copyNonPureCharsInternal(cx, out, true);
 }
 
 bool
-JSRope::getCharsNonDestructiveInternal(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out,
-                                       bool nullTerminate) const
+JSRope::copyNonPureCharsInternal(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out,
+                                 bool nullTerminate) const
 {
     /*
      * Perform non-destructive post-order traversal of the rope, splatting
@@ -425,7 +425,7 @@ template JSString *
 js::ConcatStrings<NoGC>(ThreadSafeContext *cx, JSString *left, JSString *right);
 
 bool
-JSDependentString::getCharsZNonDestructive(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
+JSDependentString::copyNonPureCharsZ(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
 {
     JS_ASSERT(JSString::isDependent());
 
@@ -548,9 +548,10 @@ ScopedThreadSafeStringInspector::ensureChars(ThreadSafeContext *cx)
             return false;
         chars_ = linear->chars();
     } else {
-        chars_ = str_->maybeChars();
-        if (!chars_) {
-            if (!str_->getCharsNonDestructive(cx, scopedChars_))
+        if (str_->hasPureChars()) {
+            chars_ = str_->pureChars();
+        } else {
+            if (!str_->copyNonPureChars(cx, scopedChars_))
                 return false;
             chars_ = scopedChars_;
         }

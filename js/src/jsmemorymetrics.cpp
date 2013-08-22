@@ -45,12 +45,15 @@ MemoryReportingSundriesThreshold()
 }
 
 /* static */ HashNumber
-StringHashPolicy::hash(const Lookup &l)
+InefficientNonFlatteningStringHashPolicy::hash(const Lookup &l)
 {
-    const jschar *chars = l->maybeChars();
     ScopedJSFreePtr<jschar> ownedChars;
-    if (!chars) {
-        if (!l->getCharsNonDestructive(/* tcx */ NULL, ownedChars))
+    const jschar *chars;
+    if (l->hasPureChars()) {
+        chars = l->pureChars();
+    } else {
+        // Slowest hash function evar!
+        if (!l->copyNonPureChars(/* tcx */ NULL, ownedChars))
             MOZ_CRASH("oom");
         chars = ownedChars;
     }
@@ -59,24 +62,28 @@ StringHashPolicy::hash(const Lookup &l)
 }
 
 /* static */ bool
-StringHashPolicy::match(const JSString *const &k, const Lookup &l)
+InefficientNonFlatteningStringHashPolicy::match(const JSString *const &k, const Lookup &l)
 {
     // We can't use js::EqualStrings, because that flattens our strings.
     if (k->length() != l->length())
         return false;
 
-    const jschar *c1 = k->maybeChars();
+    const jschar *c1;
     ScopedJSFreePtr<jschar> ownedChars1;
-    if (!c1) {
-        if (!k->getCharsNonDestructive(/* tcx */ NULL, ownedChars1))
+    if (k->hasPureChars()) {
+        c1 = k->pureChars();
+    } else {
+        if (!k->copyNonPureChars(/* tcx */ NULL, ownedChars1))
             MOZ_CRASH("oom");
         c1 = ownedChars1;
     }
 
-    const jschar *c2 = l->maybeChars();
+    const jschar *c2;
     ScopedJSFreePtr<jschar> ownedChars2;
-    if (!c2) {
-        if (!l->getCharsNonDestructive(/* tcx */ NULL, ownedChars2))
+    if (l->hasPureChars()) {
+        c2 = l->pureChars();
+    } else {
+        if (!l->copyNonPureChars(/* tcx */ NULL, ownedChars2))
             MOZ_CRASH("oom");
         c2 = ownedChars2;
     }
@@ -103,10 +110,12 @@ NotableStringInfo::NotableStringInfo(JSString *str, const StringInfo &info)
         MOZ_CRASH("oom");
     }
 
-    const jschar* chars = str->maybeChars();
+    const jschar* chars;
     ScopedJSFreePtr<jschar> ownedChars;
-    if (!chars) {
-        if (!str->getCharsNonDestructive(/* tcx */ NULL, ownedChars))
+    if (str->hasPureChars()) {
+        chars = str->pureChars();
+    } else {
+        if (!str->copyNonPureChars(/* tcx */ NULL, ownedChars))
             MOZ_CRASH("oom");
         chars = ownedChars;
     }
