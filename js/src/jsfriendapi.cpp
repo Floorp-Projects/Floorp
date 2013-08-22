@@ -1050,6 +1050,12 @@ js::GetDOMProxyShadowsCheck()
     return gDOMProxyShadowsCheck;
 }
 
+bool
+js::detail::IdMatchesAtom(jsid id, JSAtom *atom)
+{
+    return id == INTERNED_STRING_TO_JSID(NULL, atom);
+}
+
 JS_FRIEND_API(void)
 js::SetCTypesActivityCallback(JSRuntime *rt, CTypesActivityCallback cb)
 {

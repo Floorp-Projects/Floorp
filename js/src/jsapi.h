@@ -2476,7 +2476,7 @@ struct JSConstDoubleSpec {
     uint8_t         spare[3];
 };
 
-typedef struct JSJitInfo JSJitInfo;
+struct JSJitInfo;
 
 /*
  * Wrappers to replace {Strict,}PropertyOp for JSPropertySpecs. This will allow
