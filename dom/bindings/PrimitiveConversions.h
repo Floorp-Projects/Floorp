@@ -13,10 +13,12 @@
 
 #include <limits>
 #include <math.h>
+#include <stdint.h>
+
+#include "jsapi.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/FloatingPoint.h"
-#include "xpcpublic.h"
 
 namespace mozilla {
 namespace dom {
