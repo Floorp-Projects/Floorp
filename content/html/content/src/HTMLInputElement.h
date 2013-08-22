@@ -54,10 +54,9 @@ public:
    * Store the last used directory for this location using the
    * content pref service, if it is available
    * @param aURI URI of the current page
-   * @param aDomFile file chosen by the user - the path to the parent of this
-   *        file will be stored
+   * @param aDir Parent directory of the file(s)/directory chosen by the user
    */
-  nsresult StoreLastUsedDirectory(nsIDocument* aDoc, nsIDOMFile* aDomFile);
+  nsresult StoreLastUsedDirectory(nsIDocument* aDoc, nsIFile* aDir);
 
   class ContentPrefCallback MOZ_FINAL : public nsIContentPrefCallback2
   {
@@ -392,6 +391,8 @@ public:
   // XPCOM GetForm() is OK
 
   nsDOMFileList* GetFiles();
+
+  void OpenDirectoryPicker(ErrorResult& aRv);
 
   // XPCOM GetFormAction() is OK
   void SetFormAction(const nsAString& aValue, ErrorResult& aRv)
@@ -1080,7 +1081,11 @@ protected:
    */
   nsresult MaybeInitPickers(nsEventChainPostVisitor& aVisitor);
 
-  nsresult InitFilePicker();
+  enum FilePickerType {
+    FILE_PICKER_FILE,
+    FILE_PICKER_DIRECTORY
+  };
+  nsresult InitFilePicker(FilePickerType aType);
   nsresult InitColorPicker();
 
   /**
