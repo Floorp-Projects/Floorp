@@ -9,8 +9,6 @@
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
-#include "jsapi.h"
-#include "jsdbgapi.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsInterfaceHashtable.h"
 #include "nsHashtable.h"
@@ -23,6 +21,10 @@
 
 #include <stdint.h>
 
+namespace JS {
+template <typename T> class Handle;
+template <typename T> class MutableHandle;
+}
 class nsIDocShell;
 class nsString;
 class nsIClassInfo;

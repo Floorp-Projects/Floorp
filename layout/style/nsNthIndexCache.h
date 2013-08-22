@@ -5,7 +5,6 @@
 #ifndef nsContentIndexCache_h__
 #define nsContentIndexCache_h__
 
-#include "js/HashTable.h"
 #include "mozilla/dom/Element.h"
 
 /*
