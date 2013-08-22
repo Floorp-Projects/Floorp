@@ -156,6 +156,8 @@ NodeIterator::~NodeIterator()
  * nsISupports and cycle collection stuff
  */
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(NodeIterator)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NodeIterator)
     if (tmp->mRoot)
         tmp->mRoot->RemoveMutationObserver(tmp);

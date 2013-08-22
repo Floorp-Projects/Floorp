@@ -25,14 +25,9 @@ interface nsIDOMNode;
  * |gBrowser.tabContainer| such as e.g. |gBrowser.selectedTab|.
  */
 
-[scriptable, uuid(092fa0cc-e99b-11e2-a2a3-a25b4f45d8e2)]
+[scriptable, uuid(700756cc-f5c7-11e2-b842-59d9dc830245)]
 interface nsISessionStore : nsISupports
 {
-  /**
-   * Initialize the service
-   */
-  jsval init(in nsIDOMWindow aWindow);
-
   /**
    * Is it possible to restore the previous session. Will always be false when
    * in Private Browsing mode.

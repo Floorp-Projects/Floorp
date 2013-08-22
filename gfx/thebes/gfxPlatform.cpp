@@ -77,6 +77,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Mutex.h"
 
 #include "nsIGfxInfo.h"
 
@@ -85,6 +86,8 @@ using namespace mozilla::layers;
 
 gfxPlatform *gPlatform = nullptr;
 static bool gEverInitialized = false;
+
+static Mutex* gGfxPlatformPrefsLock = nullptr;
 
 // These two may point to the same profile
 static qcms_profile *gCMSOutputProfile = nullptr;
@@ -101,7 +104,6 @@ static int gCMSIntent = -2;
 static void ShutdownCMS();
 static void MigratePrefs();
 
-static bool sDrawLayerBorders = false;
 static bool sDrawFrameCounter = false;
 
 #include "mozilla/gfx/2D.h"
@@ -245,7 +247,11 @@ static const char *gPrefLangNames[] = {
 };
 
 gfxPlatform::gfxPlatform()
-  : mAzureCanvasBackendCollector(this, &gfxPlatform::GetAzureBackendInfo)
+  : mAzureCanvasBackendCollector(MOZ_THIS_IN_INITIALIZER_LIST(),
+                                 &gfxPlatform::GetAzureBackendInfo)
+  , mDrawLayerBorders(false)
+  , mDrawTileBorders(false)
+  , mDrawBigImageBorders(false)
 {
     mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -254,6 +260,23 @@ gfxPlatform::gfxPlatform()
     mGraphiteShapingEnabled = UNINITIALIZED_VALUE;
     mOpenTypeSVGEnabled = UNINITIALIZED_VALUE;
     mBidiNumeralOption = UNINITIALIZED_VALUE;
+
+    mLayersPreferMemoryOverShmem =
+        XRE_GetProcessType() == GeckoProcessType_Default &&
+        Preferences::GetBool("layers.prefer-memory-over-shmem", true);
+
+    mLayersUseDeprecated =
+        Preferences::GetBool("layers.use-deprecated-textures", true);
+
+    Preferences::AddBoolVarCache(&mDrawLayerBorders,
+                                 "layers.draw-borders",
+                                 false);
+    Preferences::AddBoolVarCache(&mDrawTileBorders,
+                                 "layers.draw-tile-borders",
+                                 false);
+    Preferences::AddBoolVarCache(&mDrawBigImageBorders,
+                                 "layers.draw-bigimage-borders",
+                                 false);
 
     uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
     uint32_t contentMask = 0;
@@ -306,6 +329,8 @@ gfxPlatform::Init()
     sCmapDataLog = PR_NewLogModule("cmapdata");;
 #endif
 
+    gGfxPlatformPrefsLock = new Mutex("gfxPlatform::gGfxPlatformPrefsLock");
+
     /* Initialize the GfxInfo service.
      * Note: we can't call functions on GfxInfo that depend
      * on gPlatform until after it has been initialized
@@ -337,17 +362,18 @@ gfxPlatform::Init()
     mozilla::gl::GLContext::StaticInit();
 #endif
 
-    bool useOffMainThreadCompositing = GetPrefLayersOffMainThreadCompositionEnabled() ||
-        Preferences::GetBool("browser.tabs.remote", false);
-    useOffMainThreadCompositing &= GetPlatform()->SupportsOffMainThreadCompositing();
+    bool useOffMainThreadCompositing = OffMainThreadCompositionRequired() ||
+                                       GetPrefLayersOffMainThreadCompositionEnabled();
 
-    if (useOffMainThreadCompositing && (XRE_GetProcessType() ==
-                                        GeckoProcessType_Default)) {
+    if (!OffMainThreadCompositionRequired()) {
+      useOffMainThreadCompositing &= GetPlatform()->SupportsOffMainThreadCompositing();
+    }
+
+    if (useOffMainThreadCompositing && (XRE_GetProcessType() == GeckoProcessType_Default)) {
         CompositorParent::StartUp();
-        if (Preferences::GetBool("layers.async-video.enabled",false)) {
+        if (Preferences::GetBool("layers.async-video.enabled", false)) {
             ImageBridgeChild::StartUp();
         }
-
     }
 
     nsresult rv;
@@ -404,10 +430,6 @@ gfxPlatform::Init()
     Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording", nullptr);
 
     gPlatform->mOrientationSyncMillis = Preferences::GetUint("layers.orientation.sync.timeout", (uint32_t)0);
-
-    mozilla::Preferences::AddBoolVarCache(&sDrawLayerBorders,
-                                          "layers.draw-borders",
-                                          false);
 
     mozilla::Preferences::AddBoolVarCache(&sDrawFrameCounter,
                                           "layers.frame-counter",
@@ -468,6 +490,8 @@ gfxPlatform::Shutdown()
 
     CompositorParent::ShutDown();
 
+    delete gGfxPlatformPrefsLock;
+
     delete gPlatform;
     gPlatform = nullptr;
 }
@@ -501,6 +525,12 @@ gfxPlatform::~gfxPlatform()
     // leaked, and we hit them.
     FcFini();
 #endif
+}
+
+bool
+gfxPlatform::PreferMemoryOverShmem() const {
+  MOZ_ASSERT(!CompositorParent::IsInCompositorThread());
+  return mLayersPreferMemoryOverShmem;
 }
 
 already_AddRefed<gfxASurface>
@@ -543,7 +573,7 @@ RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aSize)
 {
   RefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface(), aSize);
-  aSurface->SetData(&kDrawTarget, drawTarget, NULL);
+  aSurface->SetData(&kDrawTarget, drawTarget, nullptr);
   return drawTarget;
 }
 
@@ -591,13 +621,13 @@ void SourceSnapshotDetached(cairo_surface_t *nullSurf)
   gfxImageSurface* origSurf =
     static_cast<gfxImageSurface*>(cairo_surface_get_user_data(nullSurf, &kSourceSurface));
 
-  origSurf->SetData(&kSourceSurface, NULL, NULL);
+  origSurf->SetData(&kSourceSurface, nullptr, nullptr);
 }
 #else
 void SourceSnapshotDetached(void *nullSurf)
 {
   gfxImageSurface* origSurf = static_cast<gfxImageSurface*>(nullSurf);
-  origSurf->SetData(&kSourceSurface, NULL, NULL);
+  origSurf->SetData(&kSourceSurface, nullptr, nullptr);
 }
 #endif
 
@@ -634,7 +664,8 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
   RefPtr<SourceSurface> srcBuffer;
 
 #ifdef XP_WIN
-  if (aSurface->GetType() == gfxASurface::SurfaceTypeD2D) {
+  if (aSurface->GetType() == gfxASurface::SurfaceTypeD2D &&
+      format != FORMAT_A8) {
     NativeSurface surf;
     surf.mFormat = format;
     surf.mType = NATIVE_SURFACE_D3D10_TEXTURE;
@@ -724,7 +755,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     cairo_surface_set_user_data(nullSurf,
                                 &kSourceSurface,
                                 imgSurface,
-                                NULL);
+                                nullptr);
     cairo_surface_attach_snapshot(imgSurface->CairoSurface(), nullSurf, SourceSnapshotDetached);
     cairo_surface_destroy(nullSurf);
 #else
@@ -773,7 +804,7 @@ gfxPlatform::SupportsAzureContentForDrawTarget(DrawTarget* aTarget)
     return false;
   }
 
-  return (1 << aTarget->GetType()) & mContentBackendBitmask;
+  return SupportsAzureContentForType(aTarget->GetType());
 }
 
 bool
@@ -835,7 +866,7 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
     nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(ThebesIntSize(aSize),
                                                         ContentForFormat(aFormat));
     if (!surf || surf->CairoStatus()) {
-      return NULL;
+      return nullptr;
     }
 
     return CreateDrawTargetForSurface(surf, aSize);
@@ -1160,10 +1191,20 @@ gfxPlatform::IsLangCJK(eFontPrefLang aLang)
     }
 }
 
-bool
-gfxPlatform::DrawLayerBorders()
+mozilla::layers::DiagnosticTypes
+gfxPlatform::GetLayerDiagnosticTypes()
 {
-    return sDrawLayerBorders;
+  mozilla::layers::DiagnosticTypes type = DIAGNOSTIC_NONE;
+  if (mDrawLayerBorders) {
+    type |= mozilla::layers::DIAGNOSTIC_LAYER_BORDERS;
+  }
+  if (mDrawTileBorders) {
+    type |= mozilla::layers::DIAGNOSTIC_TILE_BORDERS;
+  }
+  if (mDrawBigImageBorders) {
+    type |= mozilla::layers::DIAGNOSTIC_BIGIMAGE_BORDERS;
+  }
+  return type;
 }
 
 bool
@@ -1842,11 +1883,17 @@ static bool sPrefLayersAccelerationForceEnabled = false;
 static bool sPrefLayersAccelerationDisabled = false;
 static bool sPrefLayersPreferOpenGL = false;
 static bool sPrefLayersPreferD3D9 = false;
+static bool sLayersSupportsD3D9 = true;
 static int  sPrefLayoutFrameRate = -1;
+static bool sBufferRotationEnabled = false;
+static bool sComponentAlphaEnabled = true;
+static bool sPrefBrowserTabsRemote = false;
 
-void InitLayersAccelerationPrefs()
+static bool sLayersAccelerationPrefsInitialized = false;
+
+void
+InitLayersAccelerationPrefs()
 {
-  static bool sLayersAccelerationPrefsInitialized = false;
   if (!sLayersAccelerationPrefsInitialized)
   {
     sPrefLayersOffMainThreadCompositionEnabled = Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
@@ -1857,12 +1904,26 @@ void InitLayersAccelerationPrefs()
     sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
     sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
     sPrefLayoutFrameRate = Preferences::GetInt("layout.frame_rate", -1);
+    sBufferRotationEnabled = Preferences::GetBool("layers.bufferrotation.enabled", true);
+    sComponentAlphaEnabled = Preferences::GetBool("layers.componentalpha.enabled", true);
+    sPrefBrowserTabsRemote = Preferences::GetBool("browser.tabs.remote", false);
+
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (gfxInfo) {
+      int32_t status;
+      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &status))) {
+        if (status != nsIGfxInfo::FEATURE_NO_INFO && !sPrefLayersAccelerationForceEnabled) {
+          sLayersSupportsD3D9 = false;
+        }
+      }
+    }
 
     sLayersAccelerationPrefsInitialized = true;
   }
 }
 
-bool gfxPlatform::GetPrefLayersOffMainThreadCompositionEnabled()
+bool
+gfxPlatform::GetPrefLayersOffMainThreadCompositionEnabled()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersOffMainThreadCompositionEnabled ||
@@ -1870,16 +1931,24 @@ bool gfxPlatform::GetPrefLayersOffMainThreadCompositionEnabled()
          sPrefLayersOffMainThreadCompositionTestingEnabled;
 }
 
-bool gfxPlatform::GetPrefLayersOffMainThreadCompositionForceEnabled()
+bool
+gfxPlatform::GetPrefLayersOffMainThreadCompositionForceEnabled()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersOffMainThreadCompositionForceEnabled;
 }
 
-bool gfxPlatform::GetPrefLayersAccelerationForceEnabled()
+bool
+gfxPlatform::GetPrefLayersAccelerationForceEnabled()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersAccelerationForceEnabled;
+}
+
+bool gfxPlatform::OffMainThreadCompositionRequired()
+{
+  InitLayersAccelerationPrefs();
+  return sPrefBrowserTabsRemote;
 }
 
 bool
@@ -1889,20 +1958,60 @@ gfxPlatform::GetPrefLayersAccelerationDisabled()
   return sPrefLayersAccelerationDisabled;
 }
 
-bool gfxPlatform::GetPrefLayersPreferOpenGL()
+bool
+gfxPlatform::GetPrefLayersPreferOpenGL()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersPreferOpenGL;
 }
 
-bool gfxPlatform::GetPrefLayersPreferD3D9()
+bool
+gfxPlatform::GetPrefLayersPreferD3D9()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayersPreferD3D9;
 }
 
-int gfxPlatform::GetPrefLayoutFrameRate()
+bool
+gfxPlatform::CanUseDirect3D9()
+{
+  // this function is called from the compositor thread, so it is not
+  // safe to init the prefs etc. from here.
+  MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
+  return sLayersSupportsD3D9;
+}
+
+int
+gfxPlatform::GetPrefLayoutFrameRate()
 {
   InitLayersAccelerationPrefs();
   return sPrefLayoutFrameRate;
+}
+
+bool
+gfxPlatform::BufferRotationEnabled()
+{
+  MutexAutoLock autoLock(*gGfxPlatformPrefsLock);
+
+  InitLayersAccelerationPrefs();
+  return sBufferRotationEnabled;
+}
+
+void
+gfxPlatform::DisableBufferRotation()
+{
+  MutexAutoLock autoLock(*gGfxPlatformPrefsLock);
+
+  sBufferRotationEnabled = false;
+}
+
+bool
+gfxPlatform::ComponentAlphaEnabled()
+{
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  return false;
+#endif
+
+  InitLayersAccelerationPrefs();
+  return sComponentAlphaEnabled;
 }

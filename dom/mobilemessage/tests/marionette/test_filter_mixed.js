@@ -9,8 +9,9 @@ const NUM_THREADS = 10;
 SpecialPowers.addPermission("sms", true, document);
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 
-let sms = window.navigator.mozSms;
-ok(sms instanceof MozSmsManager);
+let manager = window.navigator.mozMobileMessage;
+ok(manager instanceof MozMobileMessageManager,
+   "manager is instance of " + manager.constructor);
 
 let pendingEmulatorCmdCount = 0;
 function sendSmsToEmulator(from, text) {
@@ -62,7 +63,7 @@ function getAllMessages(callback, filter, reverse) {
     filter = new MozSmsFilter;
   }
   let messages = [];
-  let request = sms.getMessages(filter, reverse || false);
+  let request = manager.getMessages(filter, reverse || false);
   request.onsuccess = function(event) {
     if (request.result) {
       messages.push(request.result);
@@ -83,7 +84,7 @@ function deleteAllMessages(next) {
       return;
     }
 
-    let request = sms.delete(message.id);
+    let request = manager.delete(message.id);
     request.onsuccess = deleteAll.bind(null, messages);
     request.onerror = function (event) {
       ok(false, "failed to delete all messages");
@@ -124,9 +125,9 @@ tasks.push(function populateMessages() {
   let count = 0;
 
   function sendMessage(iter) {
-    let request = sms.send("+1555531555" + iter, "Nice to meet you");
+    let request = manager.send("+1555531555" + iter, "Nice to meet you");
     request.onsuccess = function onRequestSuccess(event) {
-      sms.addEventListener("received", onReceived);
+      manager.addEventListener("received", onReceived);
 
       threadIds.push(request.result.threadId);
 
@@ -138,7 +139,7 @@ tasks.push(function populateMessages() {
   }
 
   function onReceived(event) {
-    sms.removeEventListener("received", onReceived);
+    manager.removeEventListener("received", onReceived);
 
     if (event.message.threadId != threadIds[threadIds.length - 1]) {
       ok(false, "Thread IDs of sent and received message mismatch.");
@@ -148,7 +149,7 @@ tasks.push(function populateMessages() {
 
     ++count;
     if (count % 2) {
-      let request = sms.markMessageRead(event.message.id, true);
+      let request = manager.markMessageRead(event.message.id, true);
       request.onsuccess = function onRequestSuccess(event) {
         if (count < NUM_THREADS) {
           sendMessage(count);

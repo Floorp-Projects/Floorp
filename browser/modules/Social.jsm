@@ -28,7 +28,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "unescapeService",
 function prefObserver(subject, topic, data) {
   let enable = Services.prefs.getBoolPref("social.enabled");
   if (enable && !Social.provider) {
-    Social.provider = Social.defaultProvider;
+    // this will result in setting Social.provider
+    SocialService.getOrderedProviderList(function(providers) {
+      Social._updateProviderCache(providers);
+      Social.enabled = true;
+      Services.obs.notifyObservers(null, "social:providers-changed", null);
+    });
   } else if (!enable && Social.provider) {
     Social.provider = null;
   }
@@ -83,7 +88,7 @@ function promiseGetAnnotation(aURI) {
 this.Social = {
   initialized: false,
   lastEventReceived: 0,
-  providers: null,
+  providers: [],
   _disabledForSafeMode: false,
 
   get _currentProviderPref() {
@@ -151,10 +156,12 @@ this.Social = {
     }
     this.initialized = true;
 
-    // Retrieve the current set of providers, and set the current provider.
-    SocialService.getOrderedProviderList(function (providers) {
-      this._updateProviderCache(providers);
-    }.bind(this));
+    if (SocialService.enabled) {
+      // Retrieve the current set of providers, and set the current provider.
+      SocialService.getOrderedProviderList(function (providers) {
+        this._updateProviderCache(providers);
+      }.bind(this));
+    }
 
     // Register an observer for changes to the provider list
     SocialService.registerProviderListener(function providerListener(topic, data) {
@@ -168,17 +175,13 @@ this.Social = {
         // a provider has self-updated its manifest, we need to update our
         // cache and possibly reload if it was the current provider.
         let provider = data;
-        SocialService.getOrderedProviderList(function(providers) {
-          Social._updateProviderCache(providers);
-          Services.obs.notifyObservers(null, "social:providers-changed", null);
-          // if we need a reload, do it now
-          if (provider.enabled) {
-            Social.enabled = false;
-            Services.tm.mainThread.dispatch(function() {
-              Social.enabled = true;
-            }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
-          }
-        });
+        // if we need a reload, do it now
+        if (provider.enabled) {
+          Social.enabled = false;
+          Services.tm.mainThread.dispatch(function() {
+            Social.enabled = true;
+          }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+        }
       }
     }.bind(this));
   },

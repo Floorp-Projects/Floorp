@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define HB_DONT_DEFINE_STDINT  1
-
 #include "nsUnicodeProperties.h"
 #include "nsUnicodePropertyData.cpp"
 

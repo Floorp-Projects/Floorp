@@ -57,6 +57,7 @@ using mozilla::DefaultXDisplay;
 #include "nsIScrollableFrame.h"
 #include "nsIDocShell.h"
 #include "ImageContainer.h"
+#include "nsIDOMHTMLCollection.h"
 
 #include "nsContentCID.h"
 #include "nsWidgetsCID.h"
@@ -172,7 +173,7 @@ nsPluginInstanceOwner::GetImageContainer()
   data.mShareType = mozilla::gl::GLContext::SameProcess;
   data.mInverted = mInstance->Inverted();
 
-  gfxRect r = GetPluginRect();
+  LayoutDeviceRect r = GetPluginRect();
   data.mSize = gfxIntSize(r.width, r.height);
 
   SharedTextureImage* pluginImage = static_cast<SharedTextureImage*>(img.get());
@@ -182,8 +183,8 @@ nsPluginInstanceOwner::GetImageContainer()
 
   float xResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetXResolution();
   float yResolution = mObjectFrame->PresContext()->GetRootPresContext()->PresShell()->GetYResolution();
-  r.Scale(xResolution, yResolution);
-  mInstance->NotifySize(nsIntSize(r.width, r.height));
+  ScreenSize screenSize = (r * LayoutDeviceToScreenScale(xResolution, yResolution)).Size();
+  mInstance->NotifySize(nsIntSize(screenSize.width, screenSize.height));
 
   return container.forget();
 #endif
@@ -1100,10 +1101,10 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
           }
           if (domapplet || domobject) {
             if (domapplet) {
-              parent = domapplet;
+              parent = do_QueryInterface(domapplet);
             }
             else {
-              parent = domobject;
+              parent = do_QueryInterface(domobject);
             }
             nsCOMPtr<nsIDOMNode> mydomNode = do_QueryInterface(mydomElement);
             if (parent == mydomNode) {
@@ -1620,16 +1621,15 @@ GetOffsetRootContent(nsIFrame* aFrame)
   return offset;
 }
 
-gfxRect nsPluginInstanceOwner::GetPluginRect()
+LayoutDeviceRect nsPluginInstanceOwner::GetPluginRect()
 {
   // Get the offset of the content relative to the page
   nsRect bounds = mObjectFrame->GetContentRectRelativeToSelf() + GetOffsetRootContent(mObjectFrame);
-  nsIntRect intBounds = bounds.ToNearestPixels(mObjectFrame->PresContext()->AppUnitsPerDevPixel());
-
-  return gfxRect(intBounds);
+  LayoutDeviceIntRect rect = LayoutDeviceIntRect::FromAppUnitsToNearest(bounds, mObjectFrame->PresContext()->AppUnitsPerDevPixel());
+  return LayoutDeviceRect(rect);
 }
 
-bool nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect /* = gfxRect(0, 0, 0, 0) */)
+bool nsPluginInstanceOwner::AddPluginView(const LayoutDeviceRect& aRect /* = LayoutDeviceRect(0, 0, 0, 0) */)
 {
   if (!mJavaView) {
     mJavaView = mInstance->GetJavaSurface();
@@ -2225,9 +2225,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         const nsMouseEvent& mouseEvent =
           static_cast<const nsMouseEvent&>(anEvent);
         // Get reference point relative to screen:
-        nsIntPoint rootPoint(-1,-1);
+        LayoutDeviceIntPoint rootPoint(-1, -1);
         if (widget)
-          rootPoint = anEvent.refPoint + widget->WidgetToScreenOffset();
+          rootPoint = anEvent.refPoint +
+            LayoutDeviceIntPoint::FromUntyped(widget->WidgetToScreenOffset());
 #ifdef MOZ_WIDGET_GTK
         Window root = GDK_ROOT_WINDOW();
 #elif defined(MOZ_WIDGET_QT)

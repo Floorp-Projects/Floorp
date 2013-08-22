@@ -20,7 +20,7 @@ using namespace mozilla;
 // XPCNativeMember
 
 // static
-JSBool
+bool
 XPCNativeMember::GetCallInfo(JSObject* funobj,
                              XPCNativeInterface** pInterface,
                              XPCNativeMember**    pMember)
@@ -35,18 +35,17 @@ XPCNativeMember::GetCallInfo(JSObject* funobj,
     return true;
 }
 
-JSBool
+bool
 XPCNativeMember::NewFunctionObject(XPCCallContext& ccx,
                                    XPCNativeInterface* iface, HandleObject parent,
                                    jsval* pval)
 {
-    NS_ASSERTION(!IsConstant(),
-                 "Only call this if you're sure this is not a constant!");
+    MOZ_ASSERT(!IsConstant(), "Only call this if you're sure this is not a constant!");
 
     return Resolve(ccx, iface, parent, pval);
 }
 
-JSBool
+bool
 XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
                          HandleObject parent, jsval *vp)
 {
@@ -233,7 +232,7 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
     XPCNativeMember* members = nullptr;
 
     int i;
-    JSBool failed = false;
+    bool failed = false;
     uint16_t constCount;
     uint16_t methodCount;
     uint16_t totalCount;
@@ -301,17 +300,17 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
         jsid name = INTERNED_STRING_TO_JSID(cx, str);
 
         if (info->IsSetter()) {
-            NS_ASSERTION(realTotalCount,"bad setter");
+            MOZ_ASSERT(realTotalCount,"bad setter");
             // Note: ASSUMES Getter/Setter pairs are next to each other
             // This is a rule of the typelib spec.
             cur = &members[realTotalCount-1];
-            NS_ASSERTION(cur->GetName() == name,"bad setter");
-            NS_ASSERTION(cur->IsReadOnlyAttribute(),"bad setter");
-            NS_ASSERTION(cur->GetIndex() == i-1,"bad setter");
+            MOZ_ASSERT(cur->GetName() == name,"bad setter");
+            MOZ_ASSERT(cur->IsReadOnlyAttribute(),"bad setter");
+            MOZ_ASSERT(cur->GetIndex() == i-1,"bad setter");
             cur->SetWritableAttribute();
         } else {
             // XXX need better way to find dups
-            // NS_ASSERTION(!LookupMemberByID(name),"duplicate method name");
+            // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method name");
             cur = &members[realTotalCount++];
             cur->SetName(name);
             if (info->IsGetter())
@@ -338,7 +337,7 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
             jsid name = INTERNED_STRING_TO_JSID(cx, str);
 
             // XXX need better way to find dups
-            //NS_ASSERTION(!LookupMemberByID(name),"duplicate method/constant name");
+            //MOZ_ASSERT(!LookupMemberByID(name),"duplicate method/constant name");
 
             cur = &members[realTotalCount++];
             cur->SetName(name);
@@ -494,7 +493,7 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
         iidCount = 0;
     }
 
-    NS_ASSERTION((iidCount && iidArray) || !(iidCount || iidArray), "GetInterfaces returned bad array");
+    MOZ_ASSERT((iidCount && iidArray) || !(iidCount || iidArray), "GetInterfaces returned bad array");
 
     // !!! from here on we only exit through the 'out' label !!!
 
@@ -566,8 +565,8 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
         XPCNativeSet* set2 =
 #endif
           map->Add(classInfo, set);
-        NS_ASSERTION(set2, "failed to add our set!");
-        NS_ASSERTION(set2 == set, "hashtables inconsistent!");
+        MOZ_ASSERT(set2, "failed to add our set!");
+        MOZ_ASSERT(set2 == set, "hashtables inconsistent!");
     }
 
 out:

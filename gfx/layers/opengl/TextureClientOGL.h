@@ -8,9 +8,40 @@
 
 #include "mozilla/layers/TextureClient.h"
 #include "ISurfaceAllocator.h" // For IsSurfaceDescriptorValid
+#include "GLContext.h" // For SharedTextureHandle
 
 namespace mozilla {
 namespace layers {
+
+/**
+ * A TextureClient implementation to share TextureMemory that is already
+ * on the GPU, for the OpenGL backend.
+ */
+class SharedTextureClientOGL : public TextureClient
+{
+public:
+  SharedTextureClientOGL();
+
+  ~SharedTextureClientOGL();
+
+  virtual bool IsAllocated() const MOZ_OVERRIDE;
+
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
+
+  void InitWith(gl::SharedTextureHandle aHandle,
+                gfx::IntSize aSize,
+                bool aIsCrossProcess = false,
+                bool aInverted = false);
+
+  virtual gfx::IntSize GetSize() const { return mSize; }
+
+protected:
+  gfx::IntSize mSize;
+  gl::SharedTextureHandle mHandle;
+  bool mIsCrossProcess;
+  bool mInverted;
+};
+
 
 class DeprecatedTextureClientSharedOGL : public DeprecatedTextureClient
 {
@@ -19,7 +50,7 @@ public:
   ~DeprecatedTextureClientSharedOGL() { ReleaseResources(); }
 
   virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_SHARED_GL; }
-  virtual void EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType);
+  virtual bool EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType);
   virtual void ReleaseResources();
   virtual gfxASurface::gfxContentType GetContentType() MOZ_OVERRIDE { return gfxASurface::CONTENT_COLOR_ALPHA; }
 
@@ -51,7 +82,7 @@ public:
   ~DeprecatedTextureClientStreamOGL() { ReleaseResources(); }
 
   virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_STREAM_GL; }
-  virtual void EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) { }
+  virtual bool EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) { return true; }
   virtual void ReleaseResources() { mDescriptor = SurfaceDescriptor(); }
   virtual gfxASurface::gfxContentType GetContentType() MOZ_OVERRIDE { return gfxASurface::CONTENT_COLOR_ALPHA; }
 };

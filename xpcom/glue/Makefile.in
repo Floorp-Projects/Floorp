@@ -19,52 +19,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../build \
 		$(NULL)
 
-DISABLED_SDK_HEADERS = \
-		nsArrayEnumerator.h \
-		nsArrayUtils.h \
-		nsBaseHashtable.h \
-		nsCOMArray.h \
-		nsCOMPtr.h \
-		nsCRTGlue.h \
-		nsCategoryCache.h \
-		nsClassHashtable.h \
-		nsComponentManagerUtils.h \
-		nsCycleCollectionParticipant.h \
-		nsCycleCollectorUtils.h \
-		nsDataHashtable.h \
-		nsDebug.h \
-		nsDeque.h \
-		nsEnumeratorUtils.h \
-		nsHashKeys.h \
-		nsIClassInfoImpl.h \
-		nsID.h \
-		nsIInterfaceRequestorUtils.h \
-		nsINIParser.h \
-		nsISupportsImpl.h \
-		nsISupportsUtils.h \
-		nsIWeakReferenceUtils.h \
-		nsInterfaceHashtable.h \
-		nsJSThingHashtable.h \
-		nsMemory.h \
-		nsQuickSort.h \
-		nsRefPtrHashtable.h \
-		nsServiceManagerUtils.h \
-		nsStringAPI.h \
-		nsStringGlue.h \
-		nsTArray.h \
-		nsTArray-inl.h \
-		nsTArrayForwardDeclare.h \
-		nsTHashtable.h \
-		nsTObserverArray.h \
-		nsTWeakRef.h \
-		nsTextFormatter.h \
-		nsTraceRefcnt.h \
-		nsVersionComparator.h \
-		nsVoidArray.h \
-		nsWeakReference.h \
-		pldhash.h \
-		$(NULL)
-
 SDK_LIBRARY     =                        \
 		$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(NULL)

@@ -143,7 +143,7 @@ AnalyserNode::SetSmoothingTimeConstant(double aValue, ErrorResult& aRv)
 }
 
 void
-AnalyserNode::GetFloatFrequencyData(Float32Array& aArray)
+AnalyserNode::GetFloatFrequencyData(const Float32Array& aArray)
 {
   if (!FFTAnalysis()) {
     // Might fail to allocate memory
@@ -159,7 +159,7 @@ AnalyserNode::GetFloatFrequencyData(Float32Array& aArray)
 }
 
 void
-AnalyserNode::GetByteFrequencyData(Uint8Array& aArray)
+AnalyserNode::GetByteFrequencyData(const Uint8Array& aArray)
 {
   if (!FFTAnalysis()) {
     // Might fail to allocate memory
@@ -181,7 +181,7 @@ AnalyserNode::GetByteFrequencyData(Uint8Array& aArray)
 }
 
 void
-AnalyserNode::GetByteTimeDomainData(Uint8Array& aArray)
+AnalyserNode::GetByteTimeDomainData(const Uint8Array& aArray)
 {
   unsigned char* buffer = aArray.Data();
   uint32_t length = std::min(aArray.Length(), mBuffer.Length());

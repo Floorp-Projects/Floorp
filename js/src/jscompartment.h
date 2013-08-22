@@ -8,16 +8,9 @@
 #define jscompartment_h
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
-
-#include "jscntxt.h"
-#include "jsgc.h"
-#include "jsobj.h"
 
 #include "gc/Zone.h"
 #include "vm/GlobalObject.h"
-#include "vm/RegExpObject.h"
-#include "vm/Shape.h"
 
 namespace js {
 
@@ -122,13 +115,20 @@ class WeakMapBase;
 
 struct JSCompartment
 {
-    JS::Zone                     *zone_;
     JS::CompartmentOptions       options_;
 
-    JSRuntime                    *rt;
+  private:
+    JS::Zone                     *zone_;
+    JSRuntime                    *runtime_;
+
+  public:
     JSPrincipals                 *principals;
     bool                         isSystem;
     bool                         marked;
+
+#ifdef DEBUG
+    bool                         firedOnNewGlobalObject;
+#endif
 
     void mark() { marked = true; }
 
@@ -149,6 +149,17 @@ struct JSCompartment
     const JS::Zone *zone() const { return zone_; }
     JS::CompartmentOptions &options() { return options_; }
     const JS::CompartmentOptions &options() const { return options_; }
+
+    JSRuntime *runtimeFromMainThread() {
+        JS_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+        return runtime_;
+    }
+
+    // Note: Unrestricted access to the zone's runtime from an arbitrary
+    // thread can easily lead to races. Use this method very carefully.
+    JSRuntime *runtimeFromAnyThread() const {
+        return runtime_;
+    }
 
     /*
      * Nb: global_ might be NULL, if (a) it's the atoms compartment, or (b) the
@@ -277,7 +288,7 @@ struct JSCompartment
     bool wrapId(JSContext *cx, jsid *idp);
     bool wrap(JSContext *cx, js::PropertyOp *op);
     bool wrap(JSContext *cx, js::StrictPropertyOp *op);
-    bool wrap(JSContext *cx, js::PropertyDescriptor *desc);
+    bool wrap(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
     bool putWrapper(const js::CrossCompartmentKey& wrapped, const js::Value& wrapper);
@@ -299,6 +310,7 @@ struct JSCompartment
     void sweep(js::FreeOp *fop, bool releaseTypes);
     void sweepCrossCompartmentWrappers();
     void purge();
+    void clearTables();
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 
@@ -382,6 +394,12 @@ struct JSCompartment
     }
 #endif
 };
+
+inline bool
+JSRuntime::isAtomsZone(JS::Zone *zone)
+{
+    return zone == atomsCompartment_->zone();
+}
 
 // For use when changing the debug mode flag on one or more compartments.
 // Do not run scripts in any compartment that is scheduled for GC using this

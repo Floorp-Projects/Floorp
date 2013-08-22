@@ -9,11 +9,11 @@
 
 #include "AudioNode.h"
 #include "AudioBuffer.h"
-#include "AudioParam.h"
-#include "mozilla/dom/BindingUtils.h"
 
 namespace mozilla {
 namespace dom {
+
+class AudioParam;
 
 class AudioBufferSourceNode : public AudioNode,
                               public MainThreadMediaStreamListener

@@ -51,6 +51,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIMemory.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/scache/StartupCache.h"
@@ -600,7 +601,7 @@ public:
             MoveEntry,
             PL_DHashClearEntryStub,
             PL_DHashFinalizeStub,
-            NULL
+            nullptr
         };
 
         if (!PL_DHashTableInit(&mMap, &mOps, nullptr,
@@ -659,12 +660,12 @@ public:
             if (!(end = strchr(beginning, ';'))) {
                 break;
             }
-            uint32_t timestamp = strtoul(beginning, NULL, 10);
+            uint32_t timestamp = strtoul(beginning, nullptr, 10);
             beginning = end + 1;
             if (!(end = strchr(beginning, ';'))) {
                 break;
             }
-            uint32_t filesize = strtoul(beginning, NULL, 10);
+            uint32_t filesize = strtoul(beginning, nullptr, 10);
 
             FNCMapEntry* mapEntry =
                 static_cast<FNCMapEntry*>
@@ -829,7 +830,7 @@ gfxFT2FontList::AppendFacesFromCachedFaceList(const nsCString& aFileName,
         if (!(end = strchr(beginning, ','))) {
             break;
         }
-        uint32_t index = strtoul(beginning, NULL, 10);
+        uint32_t index = strtoul(beginning, nullptr, 10);
         beginning = end + 1;
         if (!(end = strchr(beginning, ','))) {
             break;
@@ -839,12 +840,12 @@ gfxFT2FontList::AppendFacesFromCachedFaceList(const nsCString& aFileName,
         if (!(end = strchr(beginning, ','))) {
             break;
         }
-        uint32_t weight = strtoul(beginning, NULL, 10);
+        uint32_t weight = strtoul(beginning, nullptr, 10);
         beginning = end + 1;
         if (!(end = strchr(beginning, ','))) {
             break;
         }
-        int32_t stretch = strtol(beginning, NULL, 10);
+        int32_t stretch = strtol(beginning, nullptr, 10);
 
         FontListEntry fle(familyName, faceName, aFileName,
                           weight, stretch, italic, index);
@@ -1157,7 +1158,7 @@ gfxFT2FontList::FindFonts()
                                              FindExInfoStandard,
                                              &results,
                                              FindExSearchNameMatch,
-                                             NULL,
+                                             nullptr,
                                              0);
             bool moreFiles = handle != INVALID_HANDLE_VALUE;
             while (moreFiles) {
@@ -1276,8 +1277,8 @@ gfxFT2FontList::FindFontsInDir(const nsCString& aDir, FontNameCache *aFNC)
         return;
     }
 
-    struct dirent *ent = NULL;
-    while ((ent = readdir(d)) != NULL) {
+    struct dirent *ent = nullptr;
+    while ((ent = readdir(d)) != nullptr) {
         int namelen = strlen(ent->d_name);
         if (namelen <= 4) {
             // cannot be a usable font filename

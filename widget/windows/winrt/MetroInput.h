@@ -114,8 +114,6 @@ public:
   // by sending gecko events and forwarding these input events to its
   // GestureRecognizer to be processed into more complex input events
   // (tap, rightTap, rotate, etc)
-  HRESULT OnPointerWheelChanged(ICoreWindow* aSender,
-                                IPointerEventArgs* aArgs);
   HRESULT OnPointerPressed(ICoreWindow* aSender,
                            IPointerEventArgs* aArgs);
   HRESULT OnPointerReleased(ICoreWindow* aSender,
@@ -152,9 +150,9 @@ public:
                         IRightTappedEventArgs* aArgs);
 
   // Used by MetroWidget GeckoContentController callbacks
-  void HandleDoubleTap(const mozilla::CSSIntPoint& aPoint);
-  void HandleSingleTap(const mozilla::CSSIntPoint& aPoint);
-  void HandleLongTap(const mozilla::CSSIntPoint& aPoint);
+  void HandleDoubleTap(const mozilla::LayoutDeviceIntPoint& aPoint);
+  void HandleSingleTap(const mozilla::LayoutDeviceIntPoint& aPoint);
+  void HandleLongTap(const mozilla::LayoutDeviceIntPoint& aPoint);
 
 private:
   Microsoft::WRL::ComPtr<ICoreWindow> mWindow;
@@ -243,7 +241,6 @@ private:
   EventRegistrationToken mTokenPointerMoved;
   EventRegistrationToken mTokenPointerEntered;
   EventRegistrationToken mTokenPointerExited;
-  EventRegistrationToken mTokenPointerWheelChanged;
 
   // When we register ourselves to handle edge gestures, we receive a
   // token. To we unregister ourselves, we must use the token we received.

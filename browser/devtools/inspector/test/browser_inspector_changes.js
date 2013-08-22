@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -40,7 +40,7 @@ function test() {
       testDiv.style.fontSize = "10px";
 
       // Start up the style inspector panel...
-      Services.obs.addObserver(stylePanelTests, "StyleInspector-populated", false);
+      inspector.once("computed-view-refreshed", stylePanelTests);
 
       inspector.selection.setNode(testDiv);
     });
@@ -48,15 +48,13 @@ function test() {
 
   function stylePanelTests()
   {
-    Services.obs.removeObserver(stylePanelTests, "StyleInspector-populated");
-
     let computedview = inspector.sidebar.getWindowForTab("computedview").computedview;
     ok(computedview, "Style Panel has a cssHtmlTree");
 
     let propView = getInspectorProp("font-size");
     is(propView.value, "10px", "Style inspector should be showing the correct font size.");
 
-    Services.obs.addObserver(stylePanelAfterChange, "StyleInspector-populated", false);
+    inspector.once("computed-view-refreshed", stylePanelAfterChange);
 
     testDiv.style.fontSize = "15px";
     inspector.emit("layout-change");
@@ -64,8 +62,6 @@ function test() {
 
   function stylePanelAfterChange()
   {
-    Services.obs.removeObserver(stylePanelAfterChange, "StyleInspector-populated");
-
     let propView = getInspectorProp("font-size");
     is(propView.value, "15px", "Style inspector should be showing the new font size.");
 
@@ -78,7 +74,7 @@ function test() {
     inspector.sidebar.select("ruleview");
 
     executeSoon(function() {
-      Services.obs.addObserver(stylePanelAfterSwitch, "StyleInspector-populated", false);
+      inspector.once("computed-view-refreshed", stylePanelAfterSwitch);
       testDiv.style.fontSize = "20px";
       inspector.sidebar.select("computedview");
     });
@@ -86,8 +82,6 @@ function test() {
 
   function stylePanelAfterSwitch()
   {
-    Services.obs.removeObserver(stylePanelAfterSwitch, "StyleInspector-populated");
-
     let propView = getInspectorProp("font-size");
     is(propView.value, "20px", "Style inspector should be showing the newest font size.");
 

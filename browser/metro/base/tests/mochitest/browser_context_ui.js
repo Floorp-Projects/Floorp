@@ -15,10 +15,10 @@ gTests.push({
     yield addTab("about:start");
 
     yield waitForCondition(function () {
-      return StartUI.isStartPageVisible;
+      return BrowserUI.isStartTabVisible;
       });
 
-    is(StartUI.isVisible, true, "Start UI is displayed on about:start");
+    is(BrowserUI.isStartTabVisible, true, "Start UI is displayed on about:start");
     is(ContextUI.navbarVisible, true, "Navbar is displayed on about:start");
     is(ContextUI.tabbarVisible, false, "Tabbar is not displayed initially");
     is(ContextUI.contextAppbarVisible, false, "Appbar is not displayed initially");
@@ -41,7 +41,7 @@ gTests.push({
     is(ContextUI.tabbarVisible, true, "Tabbar is visible after third swipe");
     is(ContextUI.contextAppbarVisible, false, "Appbar is hidden after third swipe");
 
-    is(StartUI.isVisible, true, "Start UI is still visible");
+    is(BrowserUI.isStartTabVisible, true, "Start UI is still visible");
   }
 });
 
@@ -50,7 +50,7 @@ gTests.push({
   run: function testAbout() {
     yield addTab("about:");
     ContextUI.dismiss();
-    is(StartUI.isVisible, false, "Start UI is not visible on about:");
+    is(BrowserUI.isStartTabVisible, false, "Start UI is not visible on about:");
     is(ContextUI.navbarVisible, false, "Navbar is not initially visible on about:");
     is(ContextUI.tabbarVisible, false, "Tabbar is not initially visible on about:");
 
@@ -62,7 +62,7 @@ gTests.push({
     is(ContextUI.navbarVisible, false, "Navbar is not visible after second swipe");
     is(ContextUI.tabbarVisible, false, "Tabbar is not visible after second swipe");
 
-    is(StartUI.isVisible, false, "Start UI is still not visible");
+    is(BrowserUI.isStartTabVisible, false, "Start UI is still not visible");
   }
 });
 
@@ -83,6 +83,14 @@ gTests.push({
     ok(document.commandDispatcher.focusedElement, edit.inputField, "Location field is focused");
     is(edit.selectionStart, 0, "Location field is selected");
     is(edit.selectionEnd, edit.value.length, "Location field is selected");
+
+    edit.selectionEnd = 0;
+    is(edit.selectionStart, 0, "Location field is unselected");
+    is(edit.selectionEnd, 0, "Location field is unselected");
+
+    EventUtils.synthesizeKey('l', { accelKey: true });
+    is(edit.selectionStart, 0, "Location field is selected again");
+    is(edit.selectionEnd, edit.value.length, "Location field is selected again");
 
     Browser.closeTab(tab, { forceClose: true });
   }

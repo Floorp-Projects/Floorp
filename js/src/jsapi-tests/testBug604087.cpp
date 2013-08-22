@@ -67,9 +67,9 @@ BEGIN_TEST(testBug604087)
 {
     JS::RootedObject outerObj(cx, js::Wrapper::New(cx, global, global->getProto(), global,
                                                &OuterWrapper::singleton));
-    JS::RootedObject compartment2(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
-    JS::RootedObject compartment3(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
-    JS::RootedObject compartment4(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    JS::RootedObject compartment2(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
+    JS::RootedObject compartment3(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
+    JS::RootedObject compartment4(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
 
     JS::RootedObject c2wrapper(cx, wrap(cx, outerObj, compartment2));
     CHECK(c2wrapper);

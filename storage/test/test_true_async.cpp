@@ -31,7 +31,7 @@ sqlite3_mutex_methods orig_mutex_methods;
 sqlite3_mutex_methods wrapped_mutex_methods;
 
 bool mutex_used_on_watched_thread = false;
-PRThread *watched_thread = NULL;
+PRThread *watched_thread = nullptr;
 /**
  * Ugly hack to let us figure out what a connection's async thread is.  If we
  * were MOZILLA_INTERNAL_API and linked as such we could just include
@@ -41,7 +41,7 @@ PRThread *watched_thread = NULL;
  * When the thread a mutex is invoked on isn't watched_thread we save it to this
  * variable.
  */
-PRThread *last_non_watched_thread = NULL;
+PRThread *last_non_watched_thread = nullptr;
 
 /**
  * Set a flag if the mutex is used on the thread we are watching, but always

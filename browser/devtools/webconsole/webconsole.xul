@@ -22,7 +22,12 @@
         width="900" height="350"
         persist="screenX screenY width height sizemode">
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="text/javascript" src="webconsole.js"/>
+  <script type="text/javascript"><![CDATA[
+function goUpdateConsoleCommands() {
+  goUpdateCommand("consoleCmd_openURL");
+  goUpdateCommand("consoleCmd_copyURL");
+}
+  // ]]></script>
 
   <commandset id="editMenuCommands"/>
 
@@ -53,12 +58,12 @@
     <key key="&findCmd.key;" command="cmd_find" modifiers="accel"/>
     <key key="&clearOutputCmd.key;" command="consoleCmd_clearOutput" modifiers="accel"/>
     <key key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
+    <key id="key_clearOutput" key="&clearOutputCtrl.key;" command="consoleCmd_clearOutput" modifiers="accel"/>
   </keyset>
   <keyset id="editMenuKeys"/>
 
   <popupset id="mainPopupSet">
-    <menupopup id="output-contextmenu"
-               onpopupshowing="ConsoleContextMenu.build(event);">
+    <menupopup id="output-contextmenu">
       <menuitem id="saveBodiesContextMenu" type="checkbox" label="&saveBodies.label;"
                 accesskey="&saveBodies.accesskey;"/>
       <menuitem id="menu_openURL" label="&openURL.label;"
@@ -78,11 +83,8 @@
         <toolbarbutton label="&btnPageNet.label;" type="menu-button"
                        category="net" class="devtools-toolbarbutton webconsole-filter-button"
                        tooltiptext="&btnPageNet.tooltip;"
-#ifdef XP_MACOSX
-                       accesskey="&btnPageNet.accesskeyMacOSX;"
-#else
+                       accesskeyMacOSX="&btnPageNet.accesskeyMacOSX;"
                        accesskey="&btnPageNet.accesskey;"
-#endif
                        tabindex="3">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
@@ -137,7 +139,7 @@
         <toolbarbutton label="&btnPageLogging.label;" type="menu-button"
                        category="logging" class="devtools-toolbarbutton webconsole-filter-button"
                        tooltiptext="&btnPageLogging.tooltip;"
-                       accesskey="&btnPageLogging.accesskey;"
+                       accesskey="&btnPageLogging.accesskey2;"
                        tabindex="7">
           <menupopup>
             <menuitem label="&btnConsoleErrors;" type="checkbox"
@@ -153,7 +155,6 @@
 
         <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
                        label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"
-                       accesskey="&btnClear.accesskey;"
                        tabindex="8"/>
 
         <spacer flex="1"/>

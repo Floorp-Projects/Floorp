@@ -7,9 +7,6 @@
 #ifndef builtin_RegExp_h
 #define builtin_RegExp_h
 
-#include "jsprvtd.h"
-
-#include "vm/MatchPairs.h"
 #include "vm/RegExpObject.h"
 
 JSObject *
@@ -51,13 +48,13 @@ bool
 CreateRegExpMatchResult(JSContext *cx, HandleString input, const jschar *chars, size_t length,
                         MatchPairs &matches, MutableHandleValue rval);
 
-extern JSBool
+extern bool
 regexp_exec(JSContext *cx, unsigned argc, Value *vp);
 
 bool
-regexp_test_raw(JSContext *cx, HandleObject regexp, HandleString input, JSBool *result);
+regexp_test_raw(JSContext *cx, HandleObject regexp, HandleString input, bool *result);
 
-extern JSBool
+extern bool
 regexp_test(JSContext *cx, unsigned argc, Value *vp);
 
 /*
@@ -69,7 +66,7 @@ regexp_test(JSContext *cx, unsigned argc, Value *vp);
  *
  * Usage: match = regexp_exec_no_statics(regexp, string)
  */
-extern JSBool
+extern bool
 regexp_exec_no_statics(JSContext *cx, unsigned argc, Value *vp);
 
 /*
@@ -77,7 +74,7 @@ regexp_exec_no_statics(JSContext *cx, unsigned argc, Value *vp);
  *
  * Usage: does_match = regexp_test_no_statics(regexp, string)
  */
-extern JSBool
+extern bool
 regexp_test_no_statics(JSContext *cx, unsigned argc, Value *vp);
 
 } /* namespace js */

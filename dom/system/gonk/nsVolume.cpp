@@ -154,9 +154,9 @@ void
 nsVolume::LogState() const
 {
   if (mState == nsIVolume::STATE_MOUNTED) {
-    LOG("nsVolume: %s state %s @ '%s' gen %d locked %d",
+    LOG("nsVolume: %s state %s @ '%s' gen %d locked %d fake %d",
         NameStr().get(), StateStr(), MountPointStr().get(),
-        MountGeneration(), (int)IsMountLocked());
+        MountGeneration(), (int)IsMountLocked(), (int)IsFake());
     return;
   }
 

@@ -16,19 +16,14 @@
 nsresult
 NS_NewHashPropertyBag(nsIWritablePropertyBag* *_retval)
 {
-    nsHashPropertyBag *hpb = new nsHashPropertyBag();
-    if (!hpb)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(hpb);
+    nsRefPtr<nsHashPropertyBag> hpb = new nsHashPropertyBag();
 
     nsresult rv = hpb->Init();
     if (NS_FAILED(rv)) {
-        NS_RELEASE(hpb);
         return rv;
     }
 
-    *_retval = hpb;
+    hpb.forget(_retval);
     return NS_OK;
 }
 
@@ -182,8 +177,6 @@ NS_IMETHODIMP \
 nsHashPropertyBag::SetPropertyAs ## Name (const nsAString & prop, Type value) \
 { \
     nsCOMPtr<nsIWritableVariant> var = new nsVariant(); \
-    if (!var) \
-        return NS_ERROR_OUT_OF_MEMORY; \
     var->SetAs ## Name(value); \
     return SetProperty(prop, var); \
 }
@@ -247,8 +240,6 @@ NS_IMETHODIMP
 nsHashPropertyBag::SetPropertyAsAString(const nsAString & prop, const nsAString & value)
 {
     nsCOMPtr<nsIWritableVariant> var = new nsVariant();
-    if (!var)
-        return NS_ERROR_OUT_OF_MEMORY;
     var->SetAsAString(value);
     return SetProperty(prop, var);
 }
@@ -257,8 +248,6 @@ NS_IMETHODIMP
 nsHashPropertyBag::SetPropertyAsACString(const nsAString & prop, const nsACString & value)
 {
     nsCOMPtr<nsIWritableVariant> var = new nsVariant();
-    if (!var)
-        return NS_ERROR_OUT_OF_MEMORY;
     var->SetAsACString(value);
     return SetProperty(prop, var);
 }
@@ -267,8 +256,6 @@ NS_IMETHODIMP
 nsHashPropertyBag::SetPropertyAsAUTF8String(const nsAString & prop, const nsACString & value)
 {
     nsCOMPtr<nsIWritableVariant> var = new nsVariant();
-    if (!var)
-        return NS_ERROR_OUT_OF_MEMORY;
     var->SetAsAUTF8String(value);
     return SetProperty(prop, var);
 }
@@ -277,8 +264,6 @@ NS_IMETHODIMP
 nsHashPropertyBag::SetPropertyAsInterface(const nsAString & prop, nsISupports* value)
 {
     nsCOMPtr<nsIWritableVariant> var = new nsVariant();
-    if (!var)
-        return NS_ERROR_OUT_OF_MEMORY;
     var->SetAsISupports(value);
     return SetProperty(prop, var);
 }

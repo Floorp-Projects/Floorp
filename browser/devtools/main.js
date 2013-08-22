@@ -19,10 +19,12 @@ Object.defineProperty(exports, "TargetFactory", {
 
 loader.lazyGetter(this, "osString", () => Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS);
 
+let events = require("sdk/system/events");
+
 // Panels
 loader.lazyGetter(this, "OptionsPanel", function() require("devtools/framework/toolbox-options").OptionsPanel);
 loader.lazyGetter(this, "InspectorPanel", function() require("devtools/inspector/inspector-panel").InspectorPanel);
-loader.lazyImporter(this, "WebConsolePanel", "resource:///modules/WebConsolePanel.jsm");
+loader.lazyGetter(this, "WebConsolePanel", function() require("devtools/webconsole/panel").WebConsolePanel);
 loader.lazyImporter(this, "DebuggerPanel", "resource:///modules/devtools/DebuggerPanel.jsm");
 loader.lazyImporter(this, "StyleEditorPanel", "resource:///modules/devtools/StyleEditorPanel.jsm");
 loader.lazyGetter(this, "ProfilerPanel", function() require("devtools/profiler/panel"));
@@ -94,6 +96,13 @@ Tools.inspector = {
   url: "chrome://browser/content/devtools/inspector/inspector.xul",
   label: l10n("inspector.label", inspectorStrings),
   tooltip: l10n("inspector.tooltip", inspectorStrings),
+
+  preventClosingOnKey: true,
+  onkey: function(panel) {
+    if (panel.highlighter) {
+      panel.highlighter.toggleLockState();
+    }
+  },
 
   isTargetSupported: function(target) {
     return !target.isRemote;
@@ -220,6 +229,8 @@ var unloadObserver = {
   }
 };
 Services.obs.addObserver(unloadObserver, "sdk:loader:destroy", false);
+
+events.emit("devtools-loaded", {});
 
 /**
  * Lookup l10n string from a string bundle.

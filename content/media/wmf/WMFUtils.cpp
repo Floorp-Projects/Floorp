@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WMFUtils.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/RefPtr.h"
 #include "prlog.h"
 #include "nsThreadUtils.h"

@@ -80,6 +80,8 @@ EventSource::~EventSource()
 // EventSource::nsISupports
 //-----------------------------------------------------------------------------
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(EventSource)
+
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(EventSource)
   bool isBlack = tmp->IsBlack();
   if (isBlack || tmp->mWaitingForOnStopRequest) {

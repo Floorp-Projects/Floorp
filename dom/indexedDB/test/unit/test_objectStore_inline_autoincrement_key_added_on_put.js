@@ -7,7 +7,6 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const IDBObjectStore = Components.interfaces.nsIIDBObjectStore;
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   var request = indexedDB.open(name, 1);

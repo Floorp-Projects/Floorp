@@ -12,3 +12,8 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'simpletest'
 
+EXTRA_COMPONENTS += [
+    'SimpleTest.js',
+    'SimpleTest.manifest',
+]
+

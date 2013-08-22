@@ -79,6 +79,10 @@ function is_download_available(aGUID, aSrc, aDst, aName, aPrivate, present) {
 }
 
 function run_test() {
+  if (oldDownloadManagerDisabled()) {
+    return;
+  }
+
   let prefBranch = Cc["@mozilla.org/preferences-service;1"].
                    getService(Ci.nsIPrefBranch);
 

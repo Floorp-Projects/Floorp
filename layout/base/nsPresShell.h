@@ -30,7 +30,6 @@
 #include "nsAutoPtr.h"
 #include "nsIWidget.h"
 #include "nsStyleSet.h"
-#include "nsPresArena.h"
 #include "nsFrameSelection.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h" // For AddScriptBlocker().
@@ -690,7 +689,7 @@ protected:
   // document's root view for element, first ensuring the element is onscreen
   void GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
                                            nsIContent **aTargetToUse,
-                                           nsIntPoint& aTargetPt,
+                                           mozilla::LayoutDeviceIntPoint& aTargetPt,
                                            nsIWidget *aRootWidget);
 
   void FireResizeEvent();

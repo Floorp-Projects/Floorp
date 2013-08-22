@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+
+<style type="text/css" id="style1">
+@font-face {
+  font-family: foo;
+  src: local("Arial"),
+       local("DejaVu Sans"),
+       local("Free Sans"),
+       local("Open Sans"),
+       local("Droid Sans"),
+       local("Roboto");
+}
+</style>
+
+<style type="text/css">
+body {
+  font-family: serif;
+}
+.test {
+  font-family: foo;
+}
+</style>
+
+</head>
+
+<body>
+<div>
+foo <span class="test">bar</span> baz
+</div>
+</body>
+
+</html>

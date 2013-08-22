@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!-- fieldset with one invalid element and a barred for constraint
+validation element then you remove the second element -->
+<html class='reftest-wait'>
+  <head>
+    <style>
+      fieldset:invalid { display: none; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById("fieldset").removeChild(document.getElementById('j'));
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <fieldset id="fieldset">
+      <input required>
+      <input id='j' value='foo' readonly>
+    </fieldset>
+  </body>
+</html>

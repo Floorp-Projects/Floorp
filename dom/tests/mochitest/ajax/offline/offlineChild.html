@@ -12,7 +12,7 @@
 // (since we don't get those events)
 function doneLoading()
 {
-  window.top.childFinished();
+  window.parent.childFinished();
 }
 
 if (OfflineTest.setupChild()) {

@@ -23,9 +23,8 @@ namespace mozilla {
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(MediaRecorder, nsDOMEventTargetHelper,
-                                     mStream,
-                                     mReadThread)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(MediaRecorder, nsDOMEventTargetHelper,
+                                     mStream)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaRecorder)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
@@ -90,6 +89,7 @@ public:
     NS_IMETHODIMP Run()
     {
       MOZ_ASSERT(NS_IsMainThread());
+      mRecorder->mState = RecordingState::Inactive;
       mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
       mRecorder->mReadThread->Shutdown();
       mRecorder->mReadThread = nullptr;
@@ -115,6 +115,9 @@ private:
 
 MediaRecorder::~MediaRecorder()
 {
+  if (mStreamPort) {
+    mStreamPort->Destroy();
+  }
   if (mTrackUnionStream) {
     mTrackUnionStream->Destroy();
   }
@@ -164,6 +167,11 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
     return;
   }
 
+  if (mStream->GetStream()->IsFinished() || mStream->GetStream()->IsDestroyed()) {
+    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
   if (aTimeSlice.WasPassed()) {
     if (aTimeSlice.Value() < 0) {
       aResult.Throw(NS_ERROR_INVALID_ARG);
@@ -176,7 +184,7 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
 
   // Create a TrackUnionStream to support Pause/Resume by using ChangeExplicitBlockerCount
   MediaStreamGraph* gm = mStream->GetStream()->Graph();
-  mTrackUnionStream = gm->CreateTrackUnionStream(mStream);
+  mTrackUnionStream = gm->CreateTrackUnionStream(nullptr);
   MOZ_ASSERT(mTrackUnionStream, "CreateTrackUnionStream failed");
 
   if (!CheckPrincipal()) {
@@ -192,8 +200,7 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
   MOZ_ASSERT(mEncoder, "CreateEncoder failed");
 
   mTrackUnionStream->SetAutofinish(true);
-  nsRefPtr<MediaInputPort> port =
-    mTrackUnionStream->AllocateInputPort(mStream->GetStream(), MediaInputPort::FLAG_BLOCK_OUTPUT);
+  mStreamPort = mTrackUnionStream->AllocateInputPort(mStream->GetStream(), MediaInputPort::FLAG_BLOCK_OUTPUT);
 
   if (mEncoder) {
     mTrackUnionStream->AddListener(mEncoder);
@@ -221,8 +228,8 @@ MediaRecorder::Stop(ErrorResult& aResult)
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  mTrackUnionStream->RemoveListener(mEncoder);
   mState = RecordingState::Inactive;
+  mTrackUnionStream->RemoveListener(mEncoder);
 }
 
 void
@@ -255,12 +262,8 @@ MediaRecorder::RequestData(ErrorResult& aResult)
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-
-  nsresult rv = CreateAndDispatchBlobEvent();
-  if (NS_FAILED(rv)) {
-    aResult.Throw(rv);
-    return;
-  }
+  NS_DispatchToMainThread(NS_NewRunnableMethod(this, &MediaRecorder::CreateAndDispatchBlobEvent),
+                                               NS_DISPATCH_NORMAL);
 }
 
 JSObject*

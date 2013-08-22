@@ -11,6 +11,7 @@
 #include "nsAutoPtr.h"
 #include "d3d9.h"
 #include "nsTArray.h"
+#include "mozilla/layers/CompositorTypes.h"
 
 namespace mozilla {
 namespace layers {
@@ -26,7 +27,39 @@ const int CBmProjection = 4;
 const int CBvRenderTargetOffset = 8;
 const int CBvTextureCoords = 9;
 const int CBvLayerQuad = 10;
+// we don't use opacity with solid color shaders
 const int CBfLayerOpacity = 0;
+const int CBvColor = 0;
+
+/**
+ * This structure is used to pass rectangles to our shader constant. We can use
+ * this for passing rectangular areas to SetVertexShaderConstant. In the format
+ * of a 4 component float(x,y,width,height). Our vertex shader can then use
+ * this to construct rectangular positions from the 0,0-1,1 quad that we source
+ * it with.
+ */
+struct ShaderConstantRect
+{
+  float mX, mY, mWidth, mHeight;
+
+  // Provide all the commonly used argument types to prevent all the local
+  // casts in the code.
+  ShaderConstantRect(float aX, float aY, float aWidth, float aHeight)
+    : mX(aX), mY(aY), mWidth(aWidth), mHeight(aHeight)
+  { }
+
+  ShaderConstantRect(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight)
+    : mX((float)aX), mY((float)aY)
+    , mWidth((float)aWidth), mHeight((float)aHeight)
+  { }
+
+  ShaderConstantRect(int32_t aX, int32_t aY, float aWidth, float aHeight)
+    : mX((float)aX), mY((float)aY), mWidth(aWidth), mHeight(aHeight)
+  { }
+
+  // For easy passing to SetVertexShaderConstantF.
+  operator float* () { return &mX; }
+};
 
 /**
  * SwapChain class, this class manages the swap chain belonging to a
@@ -50,11 +83,14 @@ public:
    */
   bool PrepareForRendering();
 
+  already_AddRefed<IDirect3DSurface9> GetBackBuffer();
+
   /**
    * This function will present the selected rectangle of the swap chain to
    * its associated window.
    */
   void Present(const nsIntRect &aRect);
+  void Present();
 
 private:
   friend class DeviceManagerD3D9;
@@ -83,13 +119,8 @@ class DeviceManagerD3D9 MOZ_FINAL
 {
 public:
   DeviceManagerD3D9();
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-protected:
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceManagerD3D9)
 
-public:
   bool Init();
 
   /**
@@ -118,6 +149,8 @@ public:
   };
 
   void SetShaderMode(ShaderMode aMode, Layer* aMask, bool aIs2D);
+  // returns the register to be used for the mask texture, if appropriate
+  uint32_t SetShaderMode(ShaderMode aMode, MaskType aMaskType);
 
   /** 
    * Return pointer to the Nv3DVUtils instance 
@@ -138,6 +171,8 @@ public:
   nsTArray<LayerD3D9*> mLayersWithResources;
 
   int32_t GetMaxTextureSize() { return mMaxTextureSize; }
+
+  static uint32_t sMaskQuadRegister;
 
 private:
   friend class SwapChainD3D9;
@@ -221,6 +256,12 @@ private:
   uint32_t mDeviceResetCount;
 
   uint32_t mMaxTextureSize;
+
+  /**
+   * Wrap (repeat) or clamp textures. We prefer the former so we can do buffer
+   * rotation, but some older hardware doesn't support it.
+   */
+  D3DTEXTUREADDRESS mTextureAddressingMode;
 
   /* If this device supports dynamic textures */
   bool mHasDynamicTextures;

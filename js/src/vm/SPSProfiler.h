@@ -9,13 +9,10 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/HashFunctions.h"
 
 #include <stddef.h>
 
 #include "jsscript.h"
-
-#include "js/Utility.h"
 
 /*
  * SPS Profiler integration with the JS Engine

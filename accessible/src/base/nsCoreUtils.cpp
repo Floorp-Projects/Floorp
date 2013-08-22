@@ -41,6 +41,8 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
 
+using namespace mozilla;
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsCoreUtils
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,8 +75,7 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
   if (!document)
     return;
 
-  nsIPresShell *presShell = nullptr;
-  presShell = document->GetShell();
+  nsCOMPtr<nsIPresShell> presShell = document->GetShell();
   if (!presShell)
     return;
 
@@ -100,14 +101,14 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
   tcBoxObj->GetY(&tcY);
 
   // Dispatch mouse events.
-  nsIFrame* tcFrame = tcContent->GetPrimaryFrame();
+  nsWeakFrame tcFrame = tcContent->GetPrimaryFrame();
   nsIFrame* rootFrame = presShell->GetRootFrame();
 
   nsPoint offset;
   nsIWidget *rootWidget =
     rootFrame->GetViewExternal()->GetNearestWidget(&offset);
 
-  nsPresContext* presContext = presShell->GetPresContext();
+  nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
 
   int32_t cnvdX = presContext->CSSPixelsToDevPixels(tcX + x + 1) +
     presContext->AppUnitsToDevPixels(offset.x);
@@ -130,7 +131,7 @@ nsCoreUtils::DispatchMouseEvent(uint32_t aEventType, int32_t aX, int32_t aY,
   nsMouseEvent event(true, aEventType, aRootWidget,
                      nsMouseEvent::eReal, nsMouseEvent::eNormal);
 
-  event.refPoint = nsIntPoint(aX, aY);
+  event.refPoint = LayoutDeviceIntPoint(aX, aY);
 
   event.clickCount = 1;
   event.button = nsMouseEvent::eLeftButton;

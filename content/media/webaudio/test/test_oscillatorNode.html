@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the OscillatorNode interface</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+
+  var context = new AudioContext();
+  var osc = context.createOscillator();
+
+  is(osc.channelCount, 2, "Oscillator node has 2 input channels by default");
+  is(osc.channelCountMode, "max", "Correct channelCountMode for the Oscillator node");
+  is(osc.channelInterpretation, "speakers", "Correct channelCountInterpretation for the Oscillator node");
+  is(osc.type, "sine", "Correct default type");
+  expectException(function() {
+    osc.type = "custom";
+  }, DOMException.NOT_SUPPORTED_ERR);
+  expectException(function() {
+    osc.type = osc.CUSTOM;
+  }, DOMException.NOT_SUPPORTED_ERR);
+  is(osc.type, "sine", "Cannot set the type to custom");
+  is(osc.frequency.value, 440, "Correct default frequency value");
+  is(osc.detune.value, 0, "Correct default detine value");
+
+  // Make sure that we can set all of the valid type values
+  var types = [
+    "sine",
+    "square",
+    "sawtooth",
+    "triangle",
+  ];
+  for (var i = 0; i < types.length; ++i) {
+    osc.type = osc[types[i].toUpperCase()];
+    is(osc.type, types[i], "Correct alternname type enum value");
+    osc.type = types[i];
+  }
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

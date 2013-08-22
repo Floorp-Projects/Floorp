@@ -24,8 +24,8 @@
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
-#include "nsIDOMHTMLMeterElement.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLMeterElement.h"
 #include "nsLookAndFeel.h"
 
 #include "gfxContext.h"
@@ -34,6 +34,7 @@
 #include <algorithm>
 
 using namespace mozilla::gfx;
+using mozilla::dom::HTMLMeterElement;
 
 #define DRAW_IN_FRAME_DEBUG 0
 #define SCROLLBARS_VISUAL_DEBUG 0
@@ -1390,33 +1391,20 @@ nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRect,
 
   NS_PRECONDITION(aFrame, "aFrame should not be null here!");
 
-  nsCOMPtr<nsIDOMHTMLMeterElement> meterElement =
-    do_QueryInterface(aFrame->GetContent());
-
   // When using -moz-meterbar on an non meter element, we will not be able to
   // get all the needed information so we just draw an empty meter.
-  if (!meterElement) {
+  nsIContent* content = aFrame->GetContent();
+  if (!(content && content->IsHTML(nsGkAtoms::meter))) {
     DrawCellWithSnapping(mMeterBarCell, cgContext, inBoxRect,
                          meterSetting, VerticalAlignFactor(aFrame),
                          mCellDrawView, IsFrameRTL(aFrame));
     return;
   }
 
-  double value;
-  double min;
-  double max;
-  double low;
-  double high;
-  double optimum;
-
-  // NOTE: if we were allowed to static_cast to HTMLMeterElement we would be
-  // able to use nicer getters...
-  meterElement->GetValue(&value);
-  meterElement->GetMin(&min);
-  meterElement->GetMax(&max);
-  meterElement->GetLow(&low);
-  meterElement->GetHigh(&high);
-  meterElement->GetOptimum(&optimum);
+  HTMLMeterElement* meterElement = static_cast<HTMLMeterElement*>(content);
+  double value = meterElement->Value();
+  double min = meterElement->Min();
+  double max = meterElement->Max();
 
   NSLevelIndicatorCell* cell = mMeterBarCell;
 
@@ -2851,7 +2839,15 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
       *aIsOverridable = false;
 
       if (nsLookAndFeel::UseOverlayScrollbars()) {
-        aResult->SizeTo(16, 16);
+        nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
+        if (scrollbarFrame &&
+            scrollbarFrame->StyleDisplay()->mAppearance ==
+              NS_THEME_SCROLLBAR_SMALL) {
+          aResult->SizeTo(14, 14);
+        }
+        else {
+          aResult->SizeTo(16, 16);
+        }
         break;
       }
 

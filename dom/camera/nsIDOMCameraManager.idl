@@ -199,6 +199,12 @@ interface nsICameraRecorderStateChange : nsISupports
     void handleStateChange(in DOMString newState);
 };
 
+[scriptable, function, uuid(d1634592-43fd-4117-a2b2-419aec841cc4)]
+interface nsICameraPreviewStateChange : nsISupports
+{
+    void handleStateChange(in DOMString newState);
+};
+
 [scriptable, function, uuid(f84d607b-554c-413d-8810-cf848642765a)]
 interface nsICameraReleaseCallback : nsISupports
 {
@@ -215,7 +221,7 @@ interface nsICameraErrorCallback : nsISupports
     attributes here affect the preview, any pictures taken, and/or
     any video recorded by the camera.
 */
-[scriptable, uuid(c8e7418d-8913-4b66-bd9f-562fba627266)]
+[scriptable, uuid(74dc7f1f-c88f-4774-860b-44aef9de5dc8)]
 interface nsICameraControl : nsISupports
 {
     readonly attribute nsICameraCapabilities capabilities;
@@ -315,6 +321,12 @@ interface nsICameraControl : nsISupports
        the recording process encountered an error, or because one of the
        recording limits (see CameraStartRecordingOptions) was reached. */
     attribute nsICameraRecorderStateChange onRecorderStateChange;
+
+    /* the function to call when the preview stream is actually started and
+       stopped; this is usually used to enable and disable the camera UI,
+       since the low-level hardware often does not support taking pictures
+       unless the preview is running. */
+    attribute nsICameraPreviewStateChange onPreviewStateChange;
 
     /* tell the camera to attempt to focus the image */
     void autoFocus(in nsICameraAutoFocusCallback onSuccess, [optional] in nsICameraErrorCallback onError);

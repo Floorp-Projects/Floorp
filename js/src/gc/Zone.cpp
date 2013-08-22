@@ -9,20 +9,22 @@
 #include "jsgc.h"
 
 #ifdef JS_ION
-#include "ion/BaselineJIT.h"
-#include "ion/Ion.h"
-#include "ion/IonCompartment.h"
+#include "jit/BaselineJIT.h"
+#include "jit/Ion.h"
+#include "jit/IonCompartment.h"
 #endif
 #include "vm/Debugger.h"
 #include "vm/Runtime.h"
 
 #include "jsgcinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
+
 using namespace js;
 using namespace js::gc;
 
 JS::Zone::Zone(JSRuntime *rt)
-  : rt(rt),
+  : runtime_(rt),
     allocator(this),
     hold(false),
     ionUsingBarriers_(false),
@@ -50,8 +52,8 @@ JS::Zone::Zone(JSRuntime *rt)
 
 Zone::~Zone()
 {
-    if (this == rt->systemZone)
-        rt->systemZone = NULL;
+    if (this == runtimeFromMainThread()->systemZone)
+        runtimeFromMainThread()->systemZone = NULL;
 }
 
 bool
@@ -71,6 +73,10 @@ Zone::setNeedsBarrier(bool needs, ShouldUpdateIon updateIon)
     }
 #endif
 
+    if (needs && runtimeFromMainThread()->isAtomsZone(this))
+        JS_ASSERT(!runtimeFromMainThread()->exclusiveThreadsPresent());
+
+    JS_ASSERT_IF(needs, canCollect());
     needsBarrier_ = needs;
 }
 
@@ -93,7 +99,7 @@ Zone::markTypes(JSTracer *trc)
     for (size_t thingKind = FINALIZE_OBJECT0; thingKind < FINALIZE_OBJECT_LIMIT; thingKind++) {
         ArenaHeader *aheader = allocator.arenas.getFirstArena(static_cast<AllocKind>(thingKind));
         if (aheader)
-            rt->gcMarker.pushArenaList(aheader);
+            trc->runtime->gcMarker.pushArenaList(aheader);
     }
 
     for (CellIterUnderGC i(this, FINALIZE_TYPE_OBJECT); !i.done(); i.next()) {
@@ -137,11 +143,11 @@ Zone::sweep(FreeOp *fop, bool releaseTypes)
         releaseTypes = false;
 
     if (!isPreservingCode()) {
-        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
+        gcstats::AutoPhase ap(fop->runtime()->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
         types.sweep(fop, releaseTypes);
     }
 
-    if (!rt->debuggerList.isEmpty())
+    if (!fop->runtime()->debuggerList.isEmpty())
         sweepBreakpoints(fop);
 
     active = false;
@@ -155,8 +161,8 @@ Zone::sweepBreakpoints(FreeOp *fop)
      * to iterate over the scripts belonging to a single compartment in a zone.
      */
 
-    gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
-    gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
+    gcstats::AutoPhase ap1(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_TABLES);
+    gcstats::AutoPhase ap2(fop->runtime()->gcStats, gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
 
     for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();

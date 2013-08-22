@@ -53,6 +53,35 @@ CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
   return result.forget();
 }
 
+
+TemporaryRef<TextureHost>
+CreateTextureHostOGL(uint64_t aID,
+                     const SurfaceDescriptor& aDesc,
+                     ISurfaceAllocator* aDeallocator,
+                     TextureFlags aFlags)
+{
+  RefPtr<TextureHost> result;
+  switch (aDesc.type()) {
+    case SurfaceDescriptor::TSurfaceDescriptorShmem:
+    case SurfaceDescriptor::TSurfaceDescriptorMemory: {
+      result = CreateBackendIndependentTextureHost(aID, aDesc,
+                                                   aDeallocator, aFlags);
+      break;
+    }
+    case SurfaceDescriptor::TSharedTextureDescriptor: {
+      const SharedTextureDescriptor& desc = aDesc.get_SharedTextureDescriptor();
+      result = new SharedTextureHostOGL(aID, aFlags,
+                                        desc.shareType(),
+                                        desc.handle(),
+                                        gfx::ToIntSize(desc.size()),
+                                        desc.inverted());
+      break;
+    }
+    default: return nullptr;
+  }
+  return result.forget();
+}
+
 static void
 MakeTextureIfNeeded(gl::GLContext* gl, GLenum aTarget, GLuint& aTexture)
 {
@@ -81,12 +110,12 @@ FlagsToGLFlags(TextureFlags aFlags)
 {
   uint32_t result = TextureImage::NoFlags;
 
-  if (aFlags & UseNearestFilter)
+  if (aFlags & TEXTURE_USE_NEAREST_FILTER)
     result |= TextureImage::UseNearestFilter;
-  if (aFlags & NeedsYFlip)
+  if (aFlags & TEXTURE_NEEDS_Y_FLIP)
     result |= TextureImage::NeedsYFlip;
-  if (aFlags & ForceSingleTile)
-    result |= TextureImage::ForceSingleTile;
+  if (aFlags & TEXTURE_DISALLOW_BIGIMAGE)
+    result |= TextureImage::DisallowBigImage;
 
   return static_cast<gl::TextureImage::Flags>(result);
 }
@@ -102,6 +131,225 @@ WrapMode(gl::GLContext *aGl, bool aAllowRepeat)
   return LOCAL_GL_CLAMP_TO_EDGE;
 }
 
+bool
+TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
+                                     TextureFlags aFlags,
+                                     nsIntRegion* aDestRegion,
+                                     gfx::IntPoint* aSrcOffset)
+{
+  MOZ_ASSERT(mGL);
+  if (!mGL) {
+    NS_WARNING("trying to update TextureImageTextureSourceOGL without a GLContext");
+    return false;
+  }
+  MOZ_ASSERT(aSurface);
+
+  nsIntSize size = ThebesIntSize(aSurface->GetSize());
+  if (!mTexImage ||
+      mTexImage->GetSize() != size ||
+      mTexImage->GetContentType() != gfx::ContentForFormat(aSurface->GetFormat())) {
+    if (mAllowBigImage) {
+      // XXX - clarify which size we want to use. IncrementalContentHost will
+      // require the size of the destination surface to be different from
+      // the size of aSurface.
+      // See bug 893300 (tracks the implementation of ContentHost for new textures).
+      mTexImage = mGL->CreateTextureImage(size,
+                                          gfx::ContentForFormat(aSurface->GetFormat()),
+                                          WrapMode(mGL, aFlags & TEXTURE_ALLOW_REPEAT),
+                                          FlagsToGLFlags(aFlags));
+    } else {
+      mTexImage = CreateBasicTextureImage(mGL,
+                                          size,
+                                          gfx::ContentForFormat(aSurface->GetFormat()),
+                                          WrapMode(mGL, aFlags & TEXTURE_ALLOW_REPEAT),
+                                          FlagsToGLFlags(aFlags));
+    }
+  }
+
+  mTexImage->UpdateFromDataSource(aSurface, aDestRegion, aSrcOffset);
+
+  if (mTexImage->InUpdate()) {
+    mTexImage->EndUpdate();
+  }
+  return true;
+}
+
+gfx::IntSize
+TextureImageTextureSourceOGL::GetSize() const
+{
+  if (mTexImage) {
+    if (mIterating) {
+      return mTexImage->GetTileRect().Size();
+    }
+    return mTexImage->GetSize();
+  }
+  NS_WARNING("Trying to query the size of an empty TextureSource.");
+  return gfx::IntSize(0, 0);
+}
+
+gfx::SurfaceFormat
+TextureImageTextureSourceOGL::GetFormat() const
+{
+  MOZ_ASSERT(mTexImage);
+  return mTexImage->GetTextureFormat();
+}
+
+nsIntRect TextureImageTextureSourceOGL::GetTileRect()
+{
+  return ThebesIntRect(mTexImage->GetTileRect());
+}
+
+void
+TextureImageTextureSourceOGL::BindTexture(GLenum aTextureUnit)
+{
+  MOZ_ASSERT(mTexImage,
+    "Trying to bind a TextureSource that does not have an underlying GL texture.");
+  mTexImage->BindTexture(aTextureUnit);
+}
+
+SharedTextureSourceOGL::SharedTextureSourceOGL(CompositorOGL* aCompositor,
+                                               gl::SharedTextureHandle aHandle,
+                                               gfx::SurfaceFormat aFormat,
+                                               GLenum aTarget,
+                                               GLenum aWrapMode,
+                                               SharedTextureShareType aShareType,
+                                               gfx::IntSize aSize,
+                                               const gfx3DMatrix& aTexTransform)
+  : mTextureTransform(aTexTransform)
+  , mSize(aSize)
+  , mCompositor(aCompositor)
+  , mSharedHandle(aHandle)
+  , mFormat(aFormat)
+  , mShareType(aShareType)
+  , mTextureTarget(aTarget)
+  , mWrapMode(aWrapMode)
+{}
+
+void
+SharedTextureSourceOGL::BindTexture(GLenum aTextureUnit)
+{
+  if (!gl()) {
+    NS_WARNING("Trying to bind a texture without a GLContext");
+    return;
+  }
+  GLuint tex = mCompositor->GetTemporaryTexture(aTextureUnit);
+
+  gl()->fActiveTexture(aTextureUnit);
+  gl()->fBindTexture(mTextureTarget, tex);
+  if (!gl()->AttachSharedHandle(mShareType, mSharedHandle)) {
+    NS_ERROR("Failed to bind shared texture handle");
+    return;
+  }
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+}
+
+void
+SharedTextureSourceOGL::DetachSharedHandle()
+{
+  if (!gl()) {
+    return;
+  }
+  gl()->DetachSharedHandle(mShareType, mSharedHandle);
+}
+
+void
+SharedTextureSourceOGL::SetCompositor(CompositorOGL* aCompositor)
+{
+  mCompositor = aCompositor;
+}
+
+bool
+SharedTextureSourceOGL::IsValid() const
+{
+  return !!gl();
+}
+
+gl::GLContext*
+SharedTextureSourceOGL::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
+SharedTextureHostOGL::SharedTextureHostOGL(uint64_t aID,
+                                           TextureFlags aFlags,
+                                           gl::GLContext::SharedTextureShareType aShareType,
+                                           gl::SharedTextureHandle aSharedHandle,
+                                           gfx::IntSize aSize,
+                                           bool inverted)
+  : TextureHost(aID, aFlags)
+  , mSize(aSize)
+  , mCompositor(nullptr)
+  , mSharedHandle(aSharedHandle)
+  , mShareType(aShareType)
+{
+}
+
+SharedTextureHostOGL::~SharedTextureHostOGL()
+{
+  // If need to deallocate textures, call DeallocateSharedData() before
+  // the destructor
+}
+
+gl::GLContext*
+SharedTextureHostOGL::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
+bool
+SharedTextureHostOGL::Lock()
+{
+  if (!mCompositor) {
+    return false;
+  }
+
+  if (!mTextureSource) {
+    // XXX on android GetSharedHandleDetails can call into Java which we'd
+    // rather not do from the compositor
+    GLContext::SharedHandleDetails handleDetails;
+    if (!gl()->GetSharedHandleDetails(mShareType, mSharedHandle, handleDetails)) {
+      NS_WARNING("Could not get shared handle details");
+      return false;
+    }
+
+    GLenum wrapMode = LOCAL_GL_CLAMP_TO_EDGE;
+    mTextureSource = new SharedTextureSourceOGL(mCompositor,
+                                                mSharedHandle,
+                                                handleDetails.mTextureFormat,
+                                                handleDetails.mTarget,
+                                                wrapMode,
+                                                mShareType,
+                                                mSize,
+                                                handleDetails.mTextureTransform);
+  }
+  return true;
+}
+
+void
+SharedTextureHostOGL::Unlock()
+{
+  if (!mTextureSource) {
+    return;
+  }
+  mTextureSource->DetachSharedHandle();
+}
+
+void
+SharedTextureHostOGL::SetCompositor(Compositor* aCompositor)
+{
+  CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
+  if (mTextureSource) {
+    mTextureSource->SetCompositor(glCompositor);
+  }
+}
+
+gfx::SurfaceFormat
+SharedTextureHostOGL::GetFormat() const
+{
+  MOZ_ASSERT(mTextureSource);
+  return mTextureSource->GetFormat();
+}
+
 TextureImageDeprecatedTextureHostOGL::~TextureImageDeprecatedTextureHostOGL()
 {
   MOZ_COUNT_DTOR(TextureImageDeprecatedTextureHostOGL);
@@ -115,12 +363,16 @@ TextureImageDeprecatedTextureHostOGL::GetSize() const
 {
   if (mTexture) {
     if (mIterating) {
-      nsIntRect rect = mTexture->GetTileRect();
-      return gfx::IntSize(rect.width, rect.height);
+      return mTexture->GetTileRect().Size();
     }
-    return gfx::IntSize(mTexture->GetSize().width, mTexture->GetSize().height);
+    return mTexture->GetSize();
   }
   return gfx::IntSize(0, 0);
+}
+
+nsIntRect TextureImageDeprecatedTextureHostOGL::GetTileRect()
+{
+  return ThebesIntRect(mTexture->GetTileRect());
 }
 
 void
@@ -149,7 +401,7 @@ TextureImageDeprecatedTextureHostOGL::EnsureBuffer(const nsIntSize& aSize,
       mTexture->GetContentType() != aContentType) {
     mTexture = mGL->CreateTextureImage(aSize,
                                        aContentType,
-                                       WrapMode(mGL, mFlags & AllowRepeat),
+                                       WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                        FlagsToGLFlags(mFlags));
   }
   mTexture->Resize(aSize);
@@ -179,16 +431,22 @@ TextureImageDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage
     NS_WARNING("trying to update TextureImageDeprecatedTextureHostOGL without a compositor?");
     return;
   }
+
   AutoOpenSurface surf(OPEN_READ_ONLY, aImage);
   nsIntSize size = surf.Size();
+  TextureImage::ImageFormat format = surf.ImageFormat();
 
   if (!mTexture ||
       (mTexture->GetSize() != size && !aOffset) ||
-      mTexture->GetContentType() != surf.ContentType()) {
+      mTexture->GetContentType() != surf.ContentType() ||
+      (mTexture->GetImageFormat() != format &&
+       mTexture->GetImageFormat() != gfxASurface::ImageFormatUnknown)) {
+
     mTexture = mGL->CreateTextureImage(size,
                                        surf.ContentType(),
-                                       WrapMode(mGL, mFlags & AllowRepeat),
-                                       FlagsToGLFlags(mFlags));
+                                       WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
+                                       FlagsToGLFlags(mFlags),
+                                       format);
   }
 
   // XXX this is always just ridiculously slow
@@ -218,9 +476,6 @@ TextureImageDeprecatedTextureHostOGL::Lock()
     NS_WARNING("TextureImageDeprecatedTextureHost to be composited without texture");
     return false;
   }
-
-  NS_ASSERTION(mTexture->GetContentType() != gfxASurface::CONTENT_ALPHA,
-                "Image layer has alpha image");
 
   mFormat = mTexture->GetTextureFormat();
 
@@ -273,7 +528,7 @@ SharedDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage
   nsIntSize size = texture.size();
   mSize = gfx::IntSize(size.width, size.height);
   if (texture.inverted()) {
-    mFlags |= NeedsYFlip;
+    mFlags |= TEXTURE_NEEDS_Y_FLIP;
   }
 
   if (mSharedHandle && mSharedHandle != newHandle) {
@@ -349,27 +604,27 @@ SurfaceStreamHostOGL::DeleteTextures()
 }
 
 void
-SurfaceStreamHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
-                                       nsIntRegion* aRegion)
+SurfaceStreamHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
+                                 nsIntRegion* aRegion,
+                                 nsIntPoint* aOffset)
 {
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TSurfaceStreamDescriptor,
              "Invalid descriptor");
 
-  mStreamGL = nullptr;
+  // Bug 894405
+  //
+  // The SurfaceStream's GLContext was refed before being passed up to us, so
+  // we need to ensure it gets unrefed when we are finished.
+  const SurfaceStreamDescriptor& streamDesc =
+      aImage.get_SurfaceStreamDescriptor();
 
-  if (aImage.type() == SurfaceDescriptor::TSurfaceStreamDescriptor) {
-    // Bug 894405
-    //
-    // The SurfaceStream's GLContext was refed before being passed up to us, so
-    // we need to ensure it gets unrefed when we are finished.
-    const SurfaceStreamDescriptor& streamDesc =
-        aImage.get_SurfaceStreamDescriptor();
-
-    SurfaceStream* surfStream = SurfaceStream::FromHandle(streamDesc.handle());
-    if (surfStream) {
-      mStreamGL = dont_AddRef(surfStream->GLContext());
-    }
-  } 
+  SurfaceStream *stream = SurfaceStream::FromHandle(streamDesc.handle());
+  if (stream == mStream) {
+    return;
+  }
+  mStream = stream;
+  MOZ_ASSERT(mStream);
+  mStreamGL = dont_AddRef(mStream->GLContext());
 }
 
 void
@@ -383,15 +638,8 @@ bool
 SurfaceStreamHostOGL::Lock()
 {
   mGL->MakeCurrent();
-  SurfaceStream* surfStream = nullptr;
-  SharedSurface* sharedSurf = nullptr;
-  const SurfaceStreamDescriptor& streamDesc =
-    mBuffer->get_SurfaceStreamDescriptor();
 
-  surfStream = SurfaceStream::FromHandle(streamDesc.handle());
-  MOZ_ASSERT(surfStream);
-
-  sharedSurf = surfStream->SwapConsumer();
+  SharedSurface* sharedSurf = mStream->SwapConsumer();
   if (!sharedSurf) {
     // We don't have a valid surf to show yet.
     return false;
@@ -509,21 +757,21 @@ YCbCrDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
     mYTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                    gfxSize,
                                                    gfxASurface::CONTENT_ALPHA,
-                                                   WrapMode(mGL, mFlags & AllowRepeat),
+                                                   WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                                    FlagsToGLFlags(mFlags));
   }
   if (!mCbTexture->mTexImage || mCbTexture->mTexImage->GetSize() != gfxCbCrSize) {
     mCbTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                     gfxCbCrSize,
                                                     gfxASurface::CONTENT_ALPHA,
-                                                    WrapMode(mGL, mFlags & AllowRepeat),
+                                                    WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                                     FlagsToGLFlags(mFlags));
   }
   if (!mCrTexture->mTexImage || mCrTexture->mTexImage->GetSize() != gfxCbCrSize) {
     mCrTexture->mTexImage = CreateBasicTextureImage(mGL,
                                                     gfxCbCrSize,
                                                     gfxASurface::CONTENT_ALPHA,
-                                                    WrapMode(mGL, mFlags & AllowRepeat),
+                                                    WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
                                                     FlagsToGLFlags(mFlags));
   }
 
@@ -550,6 +798,7 @@ YCbCrDeprecatedTextureHostOGL::Lock()
 {
   return true;
 }
+
 
 TiledDeprecatedTextureHostOGL::~TiledDeprecatedTextureHostOGL()
 {
@@ -598,7 +847,7 @@ TiledDeprecatedTextureHostOGL::Update(gfxReusableSurfaceWrapper* aReusableSurfac
 {
   mSize = aSize;
   mGL->MakeCurrent();
-  if (aFlags & NewTile) {
+  if (aFlags & TEXTURE_NEW_TILE) {
     SetFlags(aFlags);
     mGL->fGenTextures(1, &mTextureHandle);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
@@ -730,6 +979,17 @@ void GrallocDeprecatedTextureHostOGL::SetCompositor(Compositor* aCompositor)
   mCompositor = glCompositor;
 }
 
+gfx::SurfaceFormat
+GrallocDeprecatedTextureHostOGL::GetFormat() const
+{
+  if (mTextureTarget == LOCAL_GL_TEXTURE_EXTERNAL) {
+    return gfx::FORMAT_R8G8B8A8;
+  }
+  MOZ_ASSERT(mTextureTarget == LOCAL_GL_TEXTURE_2D);
+  return mFormat;
+}
+
+
 void
 GrallocDeprecatedTextureHostOGL::DeleteTextures()
 {
@@ -849,12 +1109,6 @@ GrallocDeprecatedTextureHostOGL::Unlock()
   // Lock/Unlock is done internally when binding the gralloc buffer to a gl texture
 }
 
-gfx::SurfaceFormat
-GrallocDeprecatedTextureHostOGL::GetFormat() const
-{
-  return mFormat;
-}
-
 void
 GrallocDeprecatedTextureHostOGL::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator)
 {
@@ -872,7 +1126,7 @@ GrallocDeprecatedTextureHostOGL::GetRenderState()
 {
   if (mGraphicBuffer.get()) {
 
-    uint32_t flags = mFlags & NeedsYFlip ? LAYER_RENDER_STATE_Y_FLIPPED : 0;
+    uint32_t flags = mFlags & TEXTURE_NEEDS_Y_FLIP ? LAYER_RENDER_STATE_Y_FLIPPED : 0;
 
     /*
      * The 32 bit format of gralloc buffer is created as RGBA8888 or RGBX888 by default.
@@ -923,7 +1177,7 @@ SharedDeprecatedTextureHostOGL::GetAsSurface() {
   nsRefPtr<gfxImageSurface> surf = IsValid() ?
     mGL->GetTexImage(GetTextureHandle(),
                      false,
-                     GetTextureFormat())
+                     GetFormat())
     : nullptr;
   return surf.forget();
 }
@@ -933,7 +1187,7 @@ SurfaceStreamHostOGL::GetAsSurface() {
   nsRefPtr<gfxImageSurface> surf = IsValid() ?
     mGL->GetTexImage(mTextureHandle,
                      false,
-                     GetTextureFormat())
+                     GetFormat())
     : nullptr;
   return surf.forget();
 }
@@ -943,7 +1197,7 @@ TiledDeprecatedTextureHostOGL::GetAsSurface() {
   nsRefPtr<gfxImageSurface> surf = IsValid() ?
     mGL->GetTexImage(mTextureHandle,
                      false,
-                     GetTextureFormat())
+                     GetFormat())
     : nullptr;
   return surf.forget();
 }
@@ -964,11 +1218,11 @@ GrallocDeprecatedTextureHostOGL::GetAsSurface() {
   nsRefPtr<gfxImageSurface> surf = IsValid() ?
     gl()->GetTexImage(tex,
                       false,
-                      GetTextureFormat())
+                      GetFormat())
     : nullptr;
   return surf.forget();
 }
-#endif
+#endif // MOZ_WIDGET_GONK
 
 } // namespace
 } // namespace

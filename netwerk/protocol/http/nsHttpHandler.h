@@ -26,7 +26,7 @@
 #include "nsICacheSession.h"
 #include "nsICookieService.h"
 #include "nsITimer.h"
-#include "nsIStrictTransportSecurityService.h"
+#include "nsISiteSecurityService.h"
 #include "nsISpeculativeConnect.h"
 
 class nsHttpConnectionInfo;
@@ -196,7 +196,7 @@ public:
     nsresult GetStreamConverterService(nsIStreamConverterService **);
     nsresult GetIOService(nsIIOService** service);
     nsICookieService * GetCookieService(); // not addrefed
-    nsIStrictTransportSecurityService * GetSTSService();
+    nsISiteSecurityService * GetSSService();
 
     // callable from socket thread only
     uint32_t Get32BitsOfPseudoRandom();
@@ -304,18 +304,18 @@ private:
 private:
 
     // cached services
-    nsCOMPtr<nsIIOService>              mIOService;
-    nsCOMPtr<nsIStreamConverterService> mStreamConvSvc;
-    nsCOMPtr<nsIObserverService>        mObserverService;
-    nsCOMPtr<nsICookieService>          mCookieService;
-    nsCOMPtr<nsIStrictTransportSecurityService> mSTSService;
+    nsMainThreadPtrHandle<nsIIOService>              mIOService;
+    nsMainThreadPtrHandle<nsIStreamConverterService> mStreamConvSvc;
+    nsMainThreadPtrHandle<nsIObserverService>        mObserverService;
+    nsMainThreadPtrHandle<nsICookieService>          mCookieService;
+    nsMainThreadPtrHandle<nsISiteSecurityService>    mSSService;
 
     // the authentication credentials cache
     nsHttpAuthCache mAuthCache;
     nsHttpAuthCache mPrivateAuthCache;
 
     // the connection manager
-    nsHttpConnectionMgr *mConnMgr;
+    nsRefPtr<nsHttpConnectionMgr> mConnMgr;
 
     //
     // prefs

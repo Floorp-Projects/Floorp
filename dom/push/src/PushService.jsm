@@ -30,11 +30,6 @@ const prefs = new Preferences("services.push.");
 const kPUSHDB_DB_NAME = "push";
 const kPUSHDB_DB_VERSION = 1; // Change this if the IndexedDB format changes
 const kPUSHDB_STORE_NAME = "push";
-const kCONFLICT_RETRY_ATTEMPTS = 3; // If channelID registration says 409, how
-                                    // many times to retry with a new channelID
-
-const kERROR_CHID_CONFLICT = 409;   // Error code sent by push server if this
-                                    // channel already exists on the server.
 
 const kUDP_WAKEUP_WS_STATUS_CODE = 4774;  // WebSocket Close status code sent
                                           // by server to signal that it can
@@ -300,6 +295,8 @@ this.PushService = {
         // online, it is likely that these statements will be no-ops.
         if (this._udpServer) {
           this._udpServer.close();
+          // Set to null since this is checked in _listenForUDPWakeup()
+          this._udpServer = null;
         }
 
         this._shutdownWS();
@@ -509,6 +506,7 @@ this.PushService = {
 
     if (this._udpServer) {
       this._udpServer.close();
+      this._udpServer = null;
     }
 
     // All pending requests (ideally none) are dropped at this point. We
@@ -1146,22 +1144,10 @@ this.PushService = {
    */
   _onRegisterError: function(aPageRecord, aMessageManager, reply) {
     debug("_onRegisterError()");
-    switch (reply.status) {
-      case kERROR_CHID_CONFLICT:
-        if (typeof aPageRecord._attempts !== "number")
-          aPageRecord._attempts = 0;
 
-        if (aPageRecord._attempts < kCONFLICT_RETRY_ATTEMPTS) {
-          aPageRecord._attempts++;
-          // Since register is async, it's OK to launch it in a callback.
-          debug("CONFLICT: trying again");
-          this.register(aPageRecord, aMessageManager);
-          return;
-        }
-        throw { requestID: aPageRecord.requestID, error: "conflict" };
-      default:
-        debug("General failure " + reply.status);
-        throw { requestID: aPageRecord.requestID, error: reply.error };
+    if (reply.status) {
+      debug("General failure " + reply.status);
+      throw { requestID: aPageRecord.requestID, error: reply.error };    
     }
   },
 
@@ -1321,14 +1307,17 @@ this.PushService = {
   _wsOnStop: function(context, statusCode) {
     debug("wsOnStop()");
 
-    this._shutdownWS();
-
     if (statusCode != Cr.NS_OK &&
         !(statusCode == Cr.NS_BASE_STREAM_CLOSED && this._willBeWokenUpByUDP)) {
       debug("Socket error " + statusCode);
       this._reconnectAfterBackoff();
     }
 
+    // Bug 896919. We always shutdown the WebSocket, even if we need to
+    // reconnect. This works because _reconnectAfterBackoff() is "async"
+    // (there is a minimum delay of the pref retryBaseInterval, which by default
+    // is 5000ms), so that function will open the WebSocket again.
+    this._shutdownWS();
   },
 
   _wsOnMessageAvailable: function(context, message) {

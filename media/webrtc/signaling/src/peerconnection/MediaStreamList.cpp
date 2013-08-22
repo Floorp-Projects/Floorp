@@ -7,7 +7,6 @@
 #include "MediaStreamList.h"
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/dom/MediaStreamListBinding.h"
-#include "nsContentUtils.h"
 #endif
 #include "nsIScriptGlobalObject.h"
 #include "PeerConnectionImpl.h"
@@ -30,6 +29,7 @@ MediaStreamList::~MediaStreamList()
 #ifdef MOZILLA_INTERNAL_API
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(MediaStreamList)
 #else
+NS_IMPL_CYCLE_COLLECTION_CLASS(MediaStreamList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MediaStreamList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaStreamList)

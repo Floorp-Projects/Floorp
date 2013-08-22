@@ -29,8 +29,8 @@ this.AccessFu = {
     Utils.init(aWindow);
 
     try {
-      Cc['@mozilla.org/android/bridge;1'].
-        getService(Ci.nsIAndroidBridge).handleGeckoMessage(
+      let bridgeCc = Cc['@mozilla.org/android/bridge;1'];
+      bridgeCc.getService(Ci.nsIAndroidBridge).handleGeckoMessage(
           JSON.stringify({ type: 'Accessibility:Ready' }));
       Services.obs.addObserver(this, 'Accessibility:Settings', false);
     } catch (x) {
@@ -116,6 +116,7 @@ this.AccessFu = {
     Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
     Services.obs.addObserver(this, 'Accessibility:Focus', false);
     Services.obs.addObserver(this, 'Accessibility:ActivateObject', false);
+    Services.obs.addObserver(this, 'Accessibility:LongPress', false);
     Services.obs.addObserver(this, 'Accessibility:MoveByGranularity', false);
     Utils.win.addEventListener('TabOpen', this);
     Utils.win.addEventListener('TabClose', this);
@@ -159,6 +160,7 @@ this.AccessFu = {
     Services.obs.removeObserver(this, 'Accessibility:PreviousObject');
     Services.obs.removeObserver(this, 'Accessibility:Focus');
     Services.obs.removeObserver(this, 'Accessibility:ActivateObject');
+    Services.obs.removeObserver(this, 'Accessibility:LongPress');
     Services.obs.removeObserver(this, 'Accessibility:MoveByGranularity');
 
     if (this.doneCallback) {
@@ -201,6 +203,9 @@ this.AccessFu = {
       case 'AccessFu:ActivateContextMenu':
         this.Input.activateContextMenu(aMessage.json);
         break;
+      case 'AccessFu:DoScroll':
+        this.Input.doScroll(aMessage.json);
+        break;
     }
   },
 
@@ -240,6 +245,7 @@ this.AccessFu = {
     aMessageManager.addMessageListener('AccessFu:Input', this);
     aMessageManager.addMessageListener('AccessFu:Ready', this);
     aMessageManager.addMessageListener('AccessFu:ActivateContextMenu', this);
+    aMessageManager.addMessageListener('AccessFu:DoScroll', this);
   },
 
   _removeMessageListeners: function _removeMessageListeners(aMessageManager) {
@@ -247,6 +253,7 @@ this.AccessFu = {
     aMessageManager.removeMessageListener('AccessFu:Input', this);
     aMessageManager.removeMessageListener('AccessFu:Ready', this);
     aMessageManager.removeMessageListener('AccessFu:ActivateContextMenu', this);
+    aMessageManager.removeMessageListener('AccessFu:DoScroll', this);
   },
 
   _handleMessageManager: function _handleMessageManager(aMessageManager) {
@@ -270,6 +277,9 @@ this.AccessFu = {
         break;
       case 'Accessibility:ActivateObject':
         this.Input.activateCurrent(JSON.parse(aData));
+        break;
+      case 'Accessibility:LongPress':
+        this.Input.sendContextMenuMessage();
         break;
       case 'Accessibility:Focus':
         this._focused = JSON.parse(aData);
@@ -653,7 +663,7 @@ var Input = {
     switch (gestureName) {
       case 'dwell1':
       case 'explore1':
-        this.moveToPoint('SimpleTouch', aGesture.x, aGesture.y);
+        this.moveToPoint('Simple', aGesture.x, aGesture.y);
         break;
       case 'doubletap1':
         this.activateCurrent();
@@ -668,16 +678,16 @@ var Input = {
         this.moveCursor('movePrevious', 'Simple', 'gesture');
         break;
       case 'swiperight2':
-        this.scroll(-1, true);
+        this.sendScrollMessage(-1, true);
         break;
       case 'swipedown2':
-        this.scroll(-1);
+        this.sendScrollMessage(-1);
         break;
       case 'swipeleft2':
-        this.scroll(1, true);
+        this.sendScrollMessage(1, true);
         break;
       case 'swipeup2':
-        this.scroll(1);
+        this.sendScrollMessage(1);
         break;
       case 'explore2':
         Utils.CurrentBrowser.contentWindow.scrollBy(
@@ -820,9 +830,9 @@ var Input = {
     mm.sendAsyncMessage('AccessFu:ContextMenu', {});
   },
 
-  activateContextMenu: function activateContextMenu(aMessage) {
+  activateContextMenu: function activateContextMenu(aDetails) {
     if (Utils.MozBuildApp === 'mobile/android') {
-      let p = AccessFu.adjustContentBounds(aMessage.bounds, Utils.CurrentBrowser,
+      let p = AccessFu.adjustContentBounds(aDetails.bounds, Utils.CurrentBrowser,
                                            true, true).center();
       Services.obs.notifyObservers(null, 'Gesture:LongPress',
                                    JSON.stringify({x: p.x, y: p.y}));
@@ -833,9 +843,27 @@ var Input = {
     this.editState = aEditState;
   },
 
+  // XXX: This is here for backwards compatability with screen reader simulator
+  // it should be removed when the extension is updated on amo.
   scroll: function scroll(aPage, aHorizontal) {
+    this.sendScrollMessage(aPage, aHorizontal);
+  },
+
+  sendScrollMessage: function sendScrollMessage(aPage, aHorizontal) {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
     mm.sendAsyncMessage('AccessFu:Scroll', {page: aPage, horizontal: aHorizontal, origin: 'top'});
+  },
+
+  doScroll: function doScroll(aDetails) {
+    let horizontal = aDetails.horizontal;
+    let page = aDetails.page;
+    let p = AccessFu.adjustContentBounds(aDetails.bounds, Utils.CurrentBrowser,
+                                         true, true).center();
+    let wu = Utils.win.QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDOMWindowUtils);
+    wu.sendWheelEvent(p.x, p.y,
+                      horizontal ? page : 0, horizontal ? 0 : page, 0,
+                      Utils.win.WheelEvent.DOM_DELTA_PAGE, 0, 0, 0, 0);
   },
 
   get keyMap() {

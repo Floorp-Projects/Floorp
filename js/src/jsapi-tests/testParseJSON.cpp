@@ -114,16 +114,16 @@ BEGIN_TEST(testParseJSON_success)
     CHECK(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
     CHECK(JS_IsArrayObject(cx, obj));
-    CHECK(JS_GetProperty(cx, obj, "length", v2.address()));
+    CHECK(JS_GetProperty(cx, obj, "length", &v2));
     CHECK_SAME(v2, JSVAL_ZERO);
 
     CHECK(Parse(cx, "[1]", &v));
     CHECK(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
     CHECK(JS_IsArrayObject(cx, obj));
-    CHECK(JS_GetProperty(cx, obj, "0", v2.address()));
+    CHECK(JS_GetProperty(cx, obj, "0", &v2));
     CHECK_SAME(v2, JSVAL_ONE);
-    CHECK(JS_GetProperty(cx, obj, "length", v2.address()));
+    CHECK(JS_GetProperty(cx, obj, "length", &v2));
     CHECK_SAME(v2, JSVAL_ONE);
 
 
@@ -137,7 +137,7 @@ BEGIN_TEST(testParseJSON_success)
     CHECK(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
     CHECK(!JS_IsArrayObject(cx, obj));
-    CHECK(JS_GetProperty(cx, obj, "f", v2.address()));
+    CHECK(JS_GetProperty(cx, obj, "f", &v2));
     CHECK_SAME(v2, INT_TO_JSVAL(17));
 
     return true;
@@ -190,7 +190,7 @@ Error(JSContext *cx, const char (&input)[N])
     CHECK(!JS_GetContextPrivate(cx));
     JS_SetContextPrivate(cx, &p);
     JSErrorReporter old = JS_SetErrorReporter(cx, reportJSONEror);
-    JSBool ok = JS_ParseJSON(cx, str.chars(), str.length(), &dummy);
+    bool ok = JS_ParseJSON(cx, str.chars(), str.length(), &dummy);
     JS_SetErrorReporter(cx, old);
     JS_SetContextPrivate(cx, NULL);
 
@@ -221,7 +221,7 @@ reportJSONEror(JSContext *cx, const char *message, JSErrorReport *report)
 
 END_TEST(testParseJSON_error)
 
-static JSBool
+static bool
 Censor(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS_ASSERT(argc == 2);

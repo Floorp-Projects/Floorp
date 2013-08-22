@@ -25,6 +25,7 @@
 #include "FrameMetrics.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/TimeStamp.h"
+//#include "mozilla/CanonicalRegion.h"
 
 class gfxContext;
 class nsPaintEvent;

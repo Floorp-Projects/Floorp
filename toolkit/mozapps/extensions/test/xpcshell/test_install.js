@@ -49,7 +49,8 @@ function run_test() {
     let url = aRequest.host + ":" + aRequest.port + aRequest.queryString;
     aResponse.setHeader("Location", "http://" + url);
   });
-  testserver.start(4444);
+  testserver.start(-1);
+  gPort = testserver.identity.primaryPort;
 
   do_test_pending();
   run_test_1();
@@ -123,7 +124,7 @@ function check_test_1(installSyncGUID) {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(olda1) {
     do_check_eq(olda1, null);
 
-    AddonManager.getAddonsWithOperationsByTypes(null, function(pendingAddons) {
+    AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(function(pendingAddons) {
       do_check_eq(pendingAddons.length, 1);
       do_check_eq(pendingAddons[0].id, "addon1@tests.mozilla.org");
       let uri = NetUtil.newURI(pendingAddons[0].iconURL);
@@ -161,7 +162,7 @@ function check_test_1(installSyncGUID) {
       AddonManager.getAllInstalls(function(activeInstalls) {
         do_check_eq(activeInstalls, 0);
 
-        AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
+        AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
           do_check_neq(a1, null);
           do_check_neq(a1.syncGUID, null);
           do_check_true(a1.syncGUID.length >= 9);
@@ -197,16 +198,16 @@ function check_test_1(installSyncGUID) {
           restartManager();
           do_check_not_in_crash_annotation(a1.id, a1.version);
 
-          run_test_2();
-        });
+          do_execute_soon(run_test_2);
+        }));
       });
-    });
+    }));
   });
 }
 
 // Tests that an install from a url downloads.
 function run_test_2() {
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     do_check_neq(install, null);
     do_check_eq(install.linkedInstalls, null);
@@ -274,7 +275,7 @@ function check_test_3(aInstall) {
   setExtensionModifiedTime(ext, updateDate);
 
   ensure_test_completed();
-  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(olda2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(function(olda2) {
     do_check_eq(olda2, null);
     restartManager();
 
@@ -291,7 +292,7 @@ function check_test_3(aInstall) {
         do_check_true(do_get_addon("test_install2_1").exists());
         do_check_in_crash_annotation(a2.id, a2.version);
         do_check_eq(a2.sourceURI.spec,
-                    "http://localhost:4444/addons/test_install2_1.xpi");
+                    "http://localhost:" + gPort + "/addons/test_install2_1.xpi");
 
         let difference = a2.installDate.getTime() - updateDate;
         if (Math.abs(difference) > MAX_TIME_DIFFERENCE)
@@ -306,7 +307,7 @@ function check_test_3(aInstall) {
         run_test_4();
       });
     });
-  });
+  }));
 }
 
 // Tests that installing a new version of an existing add-on works
@@ -315,7 +316,7 @@ function run_test_4() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install2_2.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -375,7 +376,7 @@ function check_test_5(install) {
     do_check_neq(olda2, null);
     do_check_true(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
 
-    AddonManager.getInstallsByTypes(null, function(installs) {
+    AddonManager.getInstallsByTypes(null, callback_soon(function(installs) {
       do_check_eq(installs.length, 1);
       do_check_eq(installs[0].addon, olda2.pendingUpgrade);
       restartManager();
@@ -393,7 +394,7 @@ function check_test_5(install) {
           do_check_true(do_get_addon("test_install2_2").exists());
           do_check_in_crash_annotation(a2.id, a2.version);
           do_check_eq(a2.sourceURI.spec,
-                      "http://localhost:4444/addons/test_install2_2.xpi");
+                      "http://localhost:" + gPort + "/addons/test_install2_2.xpi");
           do_check_false(a2.foreignInstall);
 
           do_check_eq(a2.installDate.getTime(), gInstallDate);
@@ -401,22 +402,22 @@ function check_test_5(install) {
           do_check_true(a2.installDate <= a2.updateDate);
 
           a2.uninstall();
-          restartManager();
-
-          run_test_6();
+          do_execute_soon(run_test_6);
         });
       });
-    });
+    }));
   });
 }
 
 // Tests that an install that requires a compatibility update works
 function run_test_6() {
+  restartManager();
+
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -463,7 +464,7 @@ function run_test_7() {
 
 function check_test_7() {
   ensure_test_completed();
-  AddonManager.getAddonByID("addon3@tests.mozilla.org", function(olda3) {
+  AddonManager.getAddonByID("addon3@tests.mozilla.org", callback_soon(function(olda3) {
     do_check_eq(olda3, null);
     restartManager();
 
@@ -481,15 +482,15 @@ function check_test_7() {
         do_check_true(isExtensionInAddonsList(profileDir, a3.id));
         do_check_true(do_get_addon("test_install3").exists());
         a3.uninstall();
-        restartManager();
-
-        run_test_8();
+        do_execute_soon(run_test_8);
       });
     });
-  });
+  }));
 }
 
 function run_test_8() {
+  restartManager();
+
   AddonManager.addInstallListener(InstallListener);
   AddonManager.addAddonListener(AddonListener);
 
@@ -507,7 +508,7 @@ function run_test_8() {
     }, [
       "onInstallStarted",
       "onInstallEnded",
-    ], check_test_8);
+    ], callback_soon(check_test_8));
     install.install();
   });
 }
@@ -526,19 +527,19 @@ function check_test_8() {
     do_check_true(isExtensionInAddonsList(profileDir, a3.id));
     do_check_true(do_get_addon("test_install3").exists());
     a3.uninstall();
-    restartManager();
-
-    run_test_9();
+    do_execute_soon(run_test_9);
   });
 }
 
 // Test that after cancelling a download it is removed from the active installs
 function run_test_9() {
+  restartManager();
+
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -583,7 +584,7 @@ function run_test_10() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -624,7 +625,7 @@ function check_test_10(install) {
 
   ensure_test_completed();
 
-  AddonManager.getAllInstalls(function(activeInstalls) {
+  AddonManager.getAllInstalls(callback_soon(function(activeInstalls) {
     do_check_eq(activeInstalls.length, 0);
 
     restartManager();
@@ -633,9 +634,9 @@ function check_test_10(install) {
     AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
       do_check_eq(a3, null);
 
-      run_test_11();
+      do_execute_soon(run_test_11);
     });
-  });
+  }));
 }
 
 // Tests that a multi-package install shows up as multiple installs with the
@@ -737,7 +738,7 @@ function run_test_11() {
           "onInstallStarted",
           "onInstallEnded"
         ]
-      }, check_test_11);
+      }, callback_soon(check_test_11));
 
       installs[0].install();
       installs[1].install();
@@ -770,19 +771,19 @@ function check_test_11() {
     a6.uninstall();
     a7.uninstall();
 
-    restartManager();
-
-    run_test_12();
+    do_execute_soon(run_test_12);
   });
 }
 
 // Same as test 11 but for a remote XPI
 function run_test_12() {
+  restartManager();
+
   prepare_test({ }, [
     "onNewInstall",
   ]);
 
-  let url = "http://localhost:4444/addons/test_install4.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install4.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     gInstall = install;
 
@@ -828,7 +829,7 @@ function run_test_12() {
         "onInstallStarted",
         "onInstallEnded"
       ]
-    }, check_test_12);
+    }, callback_soon(check_test_12));
     install.install();
   }, "application/x-xpinstall", null, "Multi Test 4");
 }
@@ -895,9 +896,7 @@ function check_test_12() {
     a6.uninstall();
     a7.uninstall();
 
-    restartManager();
-
-    run_test_13();
+    do_execute_soon(run_test_13);
   });
 }
 
@@ -905,6 +904,8 @@ function check_test_12() {
 // Tests that cancelling an upgrade leaves the original add-on's pendingOperations
 // correct
 function run_test_13() {
+  restartManager();
+
   installAllFiles([do_get_addon("test_install2_1")], function() {
     restartManager();
 
@@ -912,7 +913,7 @@ function run_test_13() {
       "onNewInstall"
     ]);
 
-    let url = "http://localhost:4444/addons/test_install2_2.xpi";
+    let url = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
     AddonManager.getInstallForURL(url, function(install) {
       ensure_test_completed();
 
@@ -952,7 +953,7 @@ function check_test_13(install) {
   do_check_eq(install.existingAddon.id, "addon2@tests.mozilla.org");
   do_check_eq(install.addon.install, install);
 
-  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(olda2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", callback_soon(function(olda2) {
     do_check_neq(olda2, null);
     do_check_true(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
     do_check_eq(olda2.pendingUpgrade, install.addon);
@@ -983,20 +984,20 @@ function check_test_13(install) {
 
       a2.uninstall();
 
-      restartManager();
-
-      run_test_14();
+      do_execute_soon(run_test_14);
     });
-  });
+  }));
 }
 
 // Check that cancelling the install from onDownloadStarted actually cancels it
 function run_test_14() {
+  restartManager();
+
   prepare_test({ }, [
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -1043,7 +1044,7 @@ function run_test_15() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -1080,7 +1081,7 @@ function check_test_15(install) {
 function run_test_16() {
   restartManager();
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallStarted: function() {
@@ -1096,7 +1097,7 @@ function run_test_16() {
           do_check_true(a2.userDisabled);
           do_check_false(a2.isActive);
 
-          let url = "http://localhost:4444/addons/test_install2_2.xpi";
+          let url = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
           AddonManager.getInstallForURL(url, function(aInstall) {
             aInstall.addListener({
               onInstallEnded: function() {
@@ -1129,7 +1130,7 @@ function run_test_16() {
 function run_test_17() {
   restartManager();
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded: function() {
@@ -1142,7 +1143,7 @@ function run_test_17() {
           do_check_false(a2.userDisabled);
           do_check_true(a2.isActive);
 
-          let url = "http://localhost:4444/addons/test_install2_2.xpi";
+          let url = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
           AddonManager.getInstallForURL(url, function(aInstall) {
             aInstall.addListener({
               onInstallStarted: function() {
@@ -1178,7 +1179,7 @@ function run_test_17() {
 function run_test_18() {
   restartManager();
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallStarted: function() {
@@ -1194,7 +1195,7 @@ function run_test_18() {
           do_check_true(a2.userDisabled);
           do_check_false(a2.isActive);
 
-          let url = "http://localhost:4444/addons/test_install2_2.xpi";
+          let url = "http://localhost:" + gPort + "/addons/test_install2_2.xpi";
           AddonManager.getInstallForURL(url, function(aInstall) {
             aInstall.addListener({
               onInstallStarted: function() {
@@ -1233,11 +1234,11 @@ function run_test_18_1() {
 
   Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", true);
   Services.prefs.setCharPref("extensions.getAddons.get.url",
-                             "http://localhost:4444/data/test_install.xml");
+                             "http://localhost:" + gPort + "/data/test_install.xml");
 
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", false);
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded: function(aInstall, aAddon) {
@@ -1265,7 +1266,7 @@ function run_test_19() {
   restartManager();
   Services.prefs.setBoolPref("extensions.addon2@tests.mozilla.org.getAddons.cache.enabled", true);
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded: function(aInstall, aAddon) {
@@ -1291,7 +1292,7 @@ function run_test_19() {
 function run_test_20() {
   restartManager();
 
-  let url = "http://localhost:4444/addons/test_install2_1.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded: function(aInstall, aAddon) {
@@ -1337,7 +1338,7 @@ function run_test_21() {
         "onInstallEnded",
       ], check_test_21);
 
-      let url = "http://localhost:4444/addons/test_install2_1.xpi";
+      let url = "http://localhost:" + gPort + "/addons/test_install2_1.xpi";
       AddonManager.getInstallForURL(url, function(aInstall) {
         aInstall.install();
       }, "application/x-xpinstall");
@@ -1346,7 +1347,7 @@ function run_test_21() {
 }
 
 function check_test_21(aInstall) {
-  AddonManager.getAllInstalls(function(aInstalls) {
+  AddonManager.getAllInstalls(callback_soon(function(aInstalls) {
     do_check_eq(aInstalls.length, 1);
     do_check_eq(aInstalls[0], aInstall);
 
@@ -1369,7 +1370,7 @@ function check_test_21(aInstall) {
 
       run_test_22();
     });
-  });
+  }));
 }
 
 // Tests that an install can be restarted after being cancelled
@@ -1378,7 +1379,7 @@ function run_test_22() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     ensure_test_completed();
 
@@ -1439,7 +1440,7 @@ function run_test_23() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     ensure_test_completed();
 
@@ -1500,7 +1501,7 @@ function run_test_24() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     ensure_test_completed();
 
@@ -1564,7 +1565,7 @@ function run_test_26() {
                               aStringData) {
       aChannel.QueryInterface(AM_Ci.nsIChannel);
       // Wait for the final event for the redirected URL
-      if (aChannel.URI.spec != "http://localhost:4444/addons/test_install1.xpi" ||
+      if (aChannel.URI.spec != "http://localhost:" + gPort + "/addons/test_install1.xpi" ||
           aType != AM_Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
           aSubtype != AM_Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE)
         return;
@@ -1578,7 +1579,7 @@ function run_test_26() {
     }
   });
 
-  let url = "http://localhost:4444/redirect?/addons/test_install1.xpi";
+  let url = "http://localhost:" + gPort + "/redirect?/addons/test_install1.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onDownloadProgress: function(aInstall) {
@@ -1598,7 +1599,7 @@ function run_test_27() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install3.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install3.xpi";
   AddonManager.getInstallForURL(url, function(aInstall) {
     ensure_test_completed();
 
@@ -1658,7 +1659,7 @@ function run_test_28() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install5.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install5.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 
@@ -1713,7 +1714,7 @@ function run_test_29() {
     "onNewInstall"
   ]);
 
-  let url = "http://localhost:4444/addons/test_install6.xpi";
+  let url = "http://localhost:" + gPort + "/addons/test_install6.xpi";
   AddonManager.getInstallForURL(url, function(install) {
     ensure_test_completed();
 

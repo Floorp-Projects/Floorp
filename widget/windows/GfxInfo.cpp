@@ -491,16 +491,23 @@ GfxInfo::Init()
     gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName, dllVersion);
     gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName2, dllVersion2);
 
-    uint64_t dllNumericVersion = 0, dllNumericVersion2 = 0, driverNumericVersion = 0;
+    uint64_t dllNumericVersion = 0, dllNumericVersion2 = 0,
+             driverNumericVersion = 0, knownSafeMismatchVersion = 0;
     ParseDriverVersion(dllVersion, &dllNumericVersion);
     ParseDriverVersion(dllVersion2, &dllNumericVersion2);
     ParseDriverVersion(mDriverVersion, &driverNumericVersion);
+    ParseDriverVersion(NS_LITERAL_STRING("9.17.10.0"), &knownSafeMismatchVersion);
 
-    // if GetDLLVersion fails, it gives "0.0.0.0"
-    // so if GetDLLVersion failed, we get dllNumericVersion = 0
-    // so this test implicitly handles the case where GetDLLVersion failed
-    if (dllNumericVersion != driverNumericVersion && dllNumericVersion2 != driverNumericVersion)
+    // If there's a driver version mismatch, consider this harmful only when
+    // the driver version is less than knownSafeMismatchVersion.  See the
+    // above comment about crashes with old mismatches. If the GetDllVersion
+    // call fails, then they return 0, so that will be considered a mismatch.
+    if (dllNumericVersion != driverNumericVersion &&
+        dllNumericVersion2 != driverNumericVersion &&
+        (driverNumericVersion < knownSafeMismatchVersion ||
+         std::max(dllNumericVersion, dllNumericVersion2) < knownSafeMismatchVersion)) {
       mHasDriverVersionMismatch = true;
+    }
   }
 
   const char *spoofedDriverVersionString = PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
@@ -885,21 +892,21 @@ GfxInfo::GetGfxDriverInfo()
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, IntelGMA950,   V(6,14,10,4926));
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, IntelGMA3150,  V(6,14,10,5134));
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, IntelGMAX3000, V(6,14,10,5218));
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, IntelGMAX4500HD, V(6,14,10,5284));
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_XP, IntelGMAX4500HD, V(6,14,10,4969));
 
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMA500,   V(3,0,20,3200));
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMA900,   GfxDriverInfo::allDriverVersions);
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMA950,   V(7,14,10,1504));
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMA3150,  V(7,14,10,1910));
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMAX3000, V(7,15,10,1666));
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMAX4500HD, V(8,15,10,1855));
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_VISTA, IntelGMAX4500HD, V(7,15,10,1666));
 
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, IntelGMA500,   V(5,0,0,2026));
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, IntelGMA900,   GfxDriverInfo::allDriverVersions);
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, IntelGMA950,   V(8,15,10,1930));
     IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, IntelGMA3150,  V(8,14,10,1972));
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, IntelGMAX3000, V(8,15,10,1930));
-    IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, IntelGMAX4500HD, V(8,15,10,1855));
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, IntelGMAX3000, V(7,15,10,1666));
+    IMPLEMENT_INTEL_DRIVER_BLOCKLIST(DRIVER_OS_WINDOWS_7, IntelGMAX4500HD, V(7,15,10,1666));
 
     /* OpenGL on any Intel hardware is discouraged */
     APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_ALL,

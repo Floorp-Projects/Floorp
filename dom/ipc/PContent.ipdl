@@ -30,10 +30,12 @@ include URIParams;
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
+include "mozilla/dom/Element.h";
 include "mozilla/HalTypes.h";
 include "mozilla/layout/RenderFrameUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
 include "nsGeoPositionIPCSerialiser.h";
+include "gfxPoint.h";
 
 using GeoPosition;
 using PrefTuple;
@@ -344,22 +346,6 @@ parent:
 
     CloseAlert(nsString name);
 
-    /**
-     * Tests permission for a provided principal using the permission
-     * manager.
-     *
-     * @param principal
-     *   The principal to test for the permissions.
-     * @param type
-     *   The type of permission to for the principal.
-     *
-     * NOTE: The principal is untrusted in the parent process. Only
-     *       principals that can live in the content process should
-     *       be provided.
-     */
-    sync TestPermissionFromPrincipal(Principal principal, nsCString type)
-        returns (uint32_t permission);
-
     PExternalHelperApp(OptionalURIParams uri, nsCString aMimeContentType,
                        nsCString aContentDisposition, bool aForceSave,
                        int64_t aContentLength, OptionalURIParams aReferrer);
@@ -426,6 +412,9 @@ parent:
     // called by the child (test code only) to propagate volume changes to the parent
     async CreateFakeVolume(nsString fsName, nsString mountPoint);
     async SetFakeVolumeState(nsString fsName, int32_t fsState);
+
+    sync KeywordToURI(nsCString keyword)
+        returns (OptionalInputStreamParams postData, OptionalURIParams uri);
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows);

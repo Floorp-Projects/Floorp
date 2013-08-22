@@ -11,7 +11,7 @@ browser.jar:
 *  content/browser/preferences/in-content/tabs.xul
 *  content/browser/preferences/in-content/tabs.js
    content/browser/preferences/in-content/privacy.xul
-   content/browser/preferences/in-content/privacy.js
+*  content/browser/preferences/in-content/privacy.js
 *  content/browser/preferences/in-content/advanced.xul
 *  content/browser/preferences/in-content/advanced.js
    content/browser/preferences/in-content/applications.xul

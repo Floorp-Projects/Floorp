@@ -8,6 +8,45 @@
 </head>
 <body>
 Login Manager test: 444968
+<script>
+commonInit();
+SimpleTest.waitForExplicitFinish();
+
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
+pwmgr = Cc["@mozilla.org/login-manager;1"].
+        getService(Ci.nsILoginManager);
+
+login1A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+           createInstance(Ci.nsILoginInfo);
+login1B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+           createInstance(Ci.nsILoginInfo);
+login2A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+           createInstance(Ci.nsILoginInfo);
+login2B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+           createInstance(Ci.nsILoginInfo);
+login2C  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+           createInstance(Ci.nsILoginInfo);
+
+login1A.init("http://mochi.test:8888", "http://bug444968-1", null,
+            "testuser1A", "testpass1A", "", "");
+login1B.init("http://mochi.test:8888", "http://bug444968-1", null,
+            "", "testpass1B", "", "");
+
+login2A.init("http://mochi.test:8888", "http://bug444968-2", null,
+            "testuser2A", "testpass2A", "", "");
+login2B.init("http://mochi.test:8888", "http://bug444968-2", null,
+            "", "testpass2B", "", "");
+login2C.init("http://mochi.test:8888", "http://bug444968-2", null,
+            "testuser2C", "testpass2C", "", "");
+
+pwmgr.addLogin(login1A);
+pwmgr.addLogin(login1B);
+pwmgr.addLogin(login2A);
+pwmgr.addLogin(login2B);
+pwmgr.addLogin(login2C);
+</script>
+
 <p id="display"></p>
 <div id="content" style="display: none">
   <!-- first 3 forms have matching user+pass and pass-only logins -->
@@ -69,47 +108,7 @@ Login Manager test: 444968
 /* Test for Login Manager: 444968 (password-only forms should prefer a
  * password-only login when present )
  */
-commonInit();
-
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-pwmgr = Cc["@mozilla.org/login-manager;1"].
-        getService(Ci.nsILoginManager);
-
-login1A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-login1B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-login2A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-login2B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-login2C  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-
-login1A.init("http://mochi.test:8888", "http://bug444968-1", null,
-            "testuser1A", "testpass1A", "", "");
-login1B.init("http://mochi.test:8888", "http://bug444968-1", null,
-            "", "testpass1B", "", "");
-
-login2A.init("http://mochi.test:8888", "http://bug444968-2", null,
-            "testuser2A", "testpass2A", "", "");
-login2B.init("http://mochi.test:8888", "http://bug444968-2", null,
-            "", "testpass2B", "", "");
-login2C.init("http://mochi.test:8888", "http://bug444968-2", null,
-            "testuser2C", "testpass2C", "", "");
-
-pwmgr.addLogin(login1A);
-pwmgr.addLogin(login1B);
-pwmgr.addLogin(login2A);
-pwmgr.addLogin(login2B);
-pwmgr.addLogin(login2C);
-
 function startTest() {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   checkForm(1, "testuser1A", "testpass1A");
   checkForm(2, "testpass1B");
   checkForm(3, "testuser1A", "testpass1A");
@@ -124,14 +123,11 @@ function startTest() {
   pwmgr.removeLogin(login2A);
   pwmgr.removeLogin(login2B);
   pwmgr.removeLogin(login2C);
- 
+
   SimpleTest.finish();
 }
 
 window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
-
 </script>
 </pre>
 </body>

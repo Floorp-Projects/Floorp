@@ -41,15 +41,7 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/telephony \
   -I$(topsrcdir)/dom/system/gonk \
   $(NULL)
-
-EXTRA_COMPONENTS = \
-  gonk/MmsService.js \
-  gonk/MmsService.manifest \
-  gonk/MobileMessageDatabaseService.js \
-  gonk/MobileMessageDatabaseService.manifest \
-  $(NULL)
 endif
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

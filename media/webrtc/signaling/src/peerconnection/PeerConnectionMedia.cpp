@@ -443,6 +443,20 @@ PeerConnectionMedia::IceStreamReady(NrIceMediaStream *aStream)
   CSFLogDebug(logTag, "%s: %s", __FUNCTION__, aStream->name().c_str());
 }
 
+// This method exists for the unittests.
+// It allows visibility into the pipelines and flows.
+// It returns NULL if no pipeline exists for this track number.
+mozilla::RefPtr<mozilla::MediaPipeline>
+SourceStreamInfo::GetPipeline(int aTrack) {
+  std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> >::iterator it =
+    mPipelines.find(aTrack);
+
+  if (it == mPipelines.end()) {
+    return NULL;
+  }
+
+  return it->second;
+}
 
 void
 LocalSourceStreamInfo::StorePipeline(int aTrack,

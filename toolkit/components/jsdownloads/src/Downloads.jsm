@@ -90,9 +90,12 @@ this.Downloads = {
   /**
    * Downloads data from a remote network location to a local file.
    *
-   * This download method does not provide user interface or the ability to
-   * cancel the download programmatically.  For that, you should obtain a
-   * reference to a Download object using the createDownload function.
+   * This download method does not provide user interface, or the ability to
+   * cancel or restart the download programmatically.  For that, you should
+   * obtain a reference to a Download object using the createDownload function.
+   *
+   * Since the download cannot be restarted, any partially downloaded data will
+   * not be kept in case the download fails.
    *
    * @param aSource
    *        String containing the URI for the download source.  Alternatively,
@@ -144,7 +147,8 @@ this.Downloads = {
         function task_D_getPublicDownloadList() {
           let list = new DownloadList(true);
           try {
-            yield DownloadIntegration.loadPersistent(list);
+            yield DownloadIntegration.addListObservers(list, false);
+            yield DownloadIntegration.initializePublicDownloadList(list);
           } catch (ex) {
             Cu.reportError(ex);
           }
@@ -173,12 +177,27 @@ this.Downloads = {
    */
   getPrivateDownloadList: function D_getPrivateDownloadList()
   {
-    if (!this._privateDownloadList) {
-      this._privateDownloadList = new DownloadList(false);
+    if (!this._promisePrivateDownloadList) {
+      this._promisePrivateDownloadList = Task.spawn(
+        function task_D_getPublicDownloadList() {
+          let list = new DownloadList(false);
+          try {
+            yield DownloadIntegration.addListObservers(list, true);
+          } catch (ex) {
+            Cu.reportError(ex);
+          }
+          throw new Task.Result(list);
+        });
     }
-    return Promise.resolve(this._privateDownloadList);
+    return this._promisePrivateDownloadList;
   },
-  _privateDownloadList: null,
+
+  /**
+   * This promise is resolved with a reference to a DownloadList object that
+   * represents private downloads. This property is null before the list of
+   * downloads is requested for the first time.
+   */
+  _promisePrivateDownloadList: null,
 
   /**
    * Returns the system downloads directory asynchronously.

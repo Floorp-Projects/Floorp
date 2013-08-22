@@ -1,8 +1,9 @@
 function handleRequest(request, response)
 {
   var count = parseInt(getState('count'));
-  if (!count)
+  if (!count || request.queryString == 'countreset')
     count = 0;
+
   setState('count', count + 1 + '');
 
   response.setHeader('Content-Type', 'text/html', false);

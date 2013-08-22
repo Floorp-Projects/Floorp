@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462856
 <head>
   <title>Test offline app notification</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="offlineByDefault.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body onload="loaded()">
@@ -51,6 +52,8 @@ window.addEventListener("message", function(event) {
 
       pm.removeFromPrincipal(principal1, "offline-app");
       pm.removeFromPrincipal(principal2, "offline-app");
+
+      offlineByDefault.reset();
 
       SimpleTest.finish();
     }

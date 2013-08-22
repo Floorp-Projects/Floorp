@@ -8,6 +8,8 @@
 
 #include "ContentHost.h"
 #include "ClientTiledThebesLayer.h" // for BasicTiledLayerBuffer
+#include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/TextureHost.h"
 
 namespace mozilla {
 namespace layers {
@@ -136,8 +138,14 @@ public:
     : ContentHost(aTextureInfo)
     , mPendingUpload(false)
     , mPendingLowPrecisionUpload(false)
-  {}
-  ~TiledContentHost();
+  {
+    MOZ_COUNT_CTOR(TiledContentHost);
+  }
+
+  ~TiledContentHost()
+  {
+    MOZ_COUNT_DTOR(TiledContentHost);
+  }
 
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE
   {
@@ -158,7 +166,8 @@ public:
     return mLowPrecisionVideoMemoryTiledBuffer.GetValidRegion();
   }
 
-  void PaintedTiledLayerBuffer(const BasicTiledLayerBuffer* mTiledBuffer);
+  void PaintedTiledLayerBuffer(ISurfaceAllocator* aAllocator,
+                               const SurfaceDescriptorTiles& aTiledDescriptor);
 
   // Renders a single given tile.
   void RenderTile(const TiledTexture& aTile,
@@ -202,9 +211,11 @@ public:
 
   virtual void Attach(Layer* aLayer, Compositor* aCompositor) MOZ_OVERRIDE;
 
+#ifdef MOZ_DUMP_PAINTING
   virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
                     bool aDumpHtml=false) MOZ_OVERRIDE;
+#endif
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);

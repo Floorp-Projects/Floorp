@@ -39,14 +39,10 @@
 
 <!ENTITY certmgr.editcert.title               "Edit Security Certificate Settings">
 <!ENTITY certmgr.editcacert.title             "Edit CA certificate trust settings">
-<!ENTITY certmgr.editsslcert.title            "Edit website certificate trust settings">
 <!ENTITY certmgr.editcert.edittrust           "Edit trust settings:">
 <!ENTITY certmgr.editcert.trustssl            "This certificate can identify websites.">
 <!ENTITY certmgr.editcert.trustemail          "This certificate can identify mail users.">
 <!ENTITY certmgr.editcert.trustobjsign        "This certificate can identify software makers.">
-<!ENTITY certmgr.editsslcert.edittrust        "Edit certificate trust settings:">
-<!ENTITY certmgr.editsslcert.dotrust          "Trust the authenticity of this certificate.">
-<!ENTITY certmgr.editsslcert.donttrust        "Do not trust the authenticity of this certificate.">
 <!ENTITY certmgr.editemailcert.title          "Edit email certificate trust settings">
 <!ENTITY certmgr.editemailcert.edittrust      "Edit certificate trust settings:">
 <!ENTITY certmgr.editemailcert.dotrust        "Trust the authenticity of this certificate.">

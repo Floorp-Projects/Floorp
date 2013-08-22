@@ -8,7 +8,7 @@
     <authors>
       <author>
         <name>Test Creator 1</name>
-        <link>http://localhost:4444/creator1.html</link>
+        <link>http://localhost:%PORT%/creator1.html</link>
       </author>
     </authors>
     <compatible_applications>
@@ -18,6 +18,6 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test1.xpi</install>
+    <install>http://localhost:%PORT%/test1.xpi</install>
   </addon>
 </searchresults>

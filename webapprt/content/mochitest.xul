@@ -11,34 +11,6 @@
 
 <script type="application/javascript" src="chrome://webapprt/content/mochitest.js"/>
 
-<script type="application/javascript">
-  Cu.import("resource://webapprt/modules/WebappRT.jsm");
-
-  // In test mode, the runtime isn't configured until we tell it to become
-  // an app, which requires us to use DOMApplicationRegistry to install one.
-  // But DOMApplicationRegistry needs to know the location of its registry dir,
-  // so we need to configure the runtime with at least that information.
-  WebappRT.config = {
-    registryDir: Services.dirsvc.get("ProfD", Ci.nsIFile).path,
-  };
-
-  Cu.import("resource://gre/modules/Webapps.jsm");
-
-  DOMApplicationRegistry.allAppsLaunchable = true;
-
-  becomeWebapp("http://mochi.test:8888/tests/webapprt/test/content/test.webapp",
-               undefined, function onBecome() {
-    Services.ww.openWindow(
-      null,
-      "chrome://webapprt/content/webapp.xul",
-      "_blank",
-      "chrome,dialog=no,resizable,scrollbars,centerscreen",
-      window.arguments[0]
-    );
-    window.close();
-  });
-</script>
-
 <description value="WebappRT Test Shim"/>
 
 </window>

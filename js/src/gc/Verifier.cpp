@@ -10,7 +10,6 @@
 
 #include "jsapi.h"
 #include "jscntxt.h"
-#include "jscompartment.h"
 #include "jsgc.h"
 #include "jsprf.h"
 
@@ -69,7 +68,7 @@ CheckStackRoot(JSRuntime *rt, uintptr_t *w, Rooter *begin, Rooter *end)
         return;
 
     /* Don't check atoms as these will never be subject to generational collection. */
-    if (static_cast<Cell *>(thing)->tenuredZone() == rt->atomsCompartment->zone())
+    if (rt->isAtomsZone(static_cast<Cell *>(thing)->tenuredZone()))
         return;
 
     /*
@@ -444,16 +443,15 @@ NextNode(VerifyNode *node)
 void
 gc::StartVerifyPreBarriers(JSRuntime *rt)
 {
-    if (rt->gcVerifyPreData ||
-        rt->gcIncrementalState != NO_INCREMENTAL ||
-        !IsIncrementalGCSafe(rt))
-    {
+    if (rt->gcVerifyPreData || rt->gcIncrementalState != NO_INCREMENTAL)
         return;
-    }
 
     MinorGC(rt, JS::gcreason::API);
 
     AutoPrepareForTracing prep(rt);
+
+    if (!IsIncrementalGCSafe(rt))
+        return;
 
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         r.front()->bitmap.clear();
@@ -741,9 +739,6 @@ js::gc::EndVerifyPostBarriers(JSRuntime *rt)
     AutoPrepareForTracing prep(rt);
 
     VerifyPostTracer *trc = (VerifyPostTracer *)rt->gcVerifyPostData;
-
-    if (rt->gcStoreBuffer.hasOverflowed())
-        goto oom;
 
     /* Visit every entry in the store buffer and put the edges in a hash set. */
     JS_TracerInit(trc, rt, PostVerifierCollectStoreBufferEdges);

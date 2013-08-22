@@ -12,7 +12,7 @@ this.EXPORTED_SYMBOLS = ["TelURIParser"];
 this.TelURIParser = {
   parseURI: function(scheme, uri) {
     // https://www.ietf.org/rfc/rfc2806.txt
-    let subscriber = uri.slice((scheme + ':').length);
+    let subscriber = decodeURIComponent(uri.slice((scheme + ':').length));
 
     if (!subscriber.length) {
       return null;
@@ -23,7 +23,7 @@ this.TelURIParser = {
     let len = subscriber.length;
 
     // visual-separator
-    let visualSeparator = [ '-', '.', '(', ')' ];
+    let visualSeparator = [ ' ', '-', '.', '(', ')' ];
     let digits = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ];
     let dtmfDigits = [ '*', '#', 'A', 'B', 'C', 'D' ];
     let pauseCharacter = [ 'p', 'w' ];

@@ -12,6 +12,10 @@ CPP_SOURCES += [
     'nsIconChannel.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'gtkqticonsconverter.manifest',
+]
+
 EXTRA_PP_COMPONENTS += [
     'gtkqticonsconverter.js',
 ]

@@ -165,6 +165,8 @@ public:
                             EffectChain& aEffect,
                             bool aIs3D = false);
 
+  static void RemoveMaskEffect(Layer* aMaskLayer);
+
   /**
    * Creates a DrawTarget which is optimized for inter-operating with this
    * layermanager.

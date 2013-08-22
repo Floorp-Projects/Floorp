@@ -8,6 +8,8 @@
 
 #include "mozilla/RangedPtr.h"
 
+#include <ctype.h>
+
 #include "jsarray.h"
 #include "jscompartment.h"
 #include "jsnum.h"

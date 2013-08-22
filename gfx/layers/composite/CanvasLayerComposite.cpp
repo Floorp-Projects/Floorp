@@ -33,8 +33,9 @@ CanvasLayerComposite::~CanvasLayerComposite()
   CleanupResources();
 }
 
-void CanvasLayerComposite::SetCompositableHost(CompositableHost* aHost) {
-  mImageHost = static_cast<ImageHost*>(aHost);
+void
+CanvasLayerComposite::SetCompositableHost(CompositableHost* aHost) {
+  mImageHost = aHost;
 }
 
 Layer*
@@ -46,7 +47,7 @@ CanvasLayerComposite::GetLayer()
 LayerRenderState
 CanvasLayerComposite::GetRenderState()
 {
-  if (mDestroyed || !mImageHost) {
+  if (mDestroyed || !mImageHost || !mImageHost->IsAttached()) {
     return LayerRenderState();
   }
   return mImageHost->GetRenderState();
@@ -56,7 +57,7 @@ void
 CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                                   const nsIntRect& aClipRect)
 {
-  if (!mImageHost) {
+  if (!mImageHost || !mImageHost->IsAttached()) {
     return;
   }
 
@@ -93,11 +94,18 @@ CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                         gfx::Point(aOffset.x, aOffset.y),
                         gfx::ToFilter(filter),
                         clipRect);
+
+  LayerManagerComposite::RemoveMaskEffect(mMaskLayer);
 }
 
 CompositableHost*
-CanvasLayerComposite::GetCompositableHost() {
-  return mImageHost.get();
+CanvasLayerComposite::GetCompositableHost()
+{
+  if (mImageHost->IsAttached()) {
+    return mImageHost.get();
+  }
+
+  return nullptr;
 }
 
 void
@@ -115,7 +123,7 @@ CanvasLayerComposite::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   CanvasLayer::PrintInfo(aTo, aPrefix);
   aTo += "\n";
-  if (mImageHost) {
+  if (mImageHost && mImageHost->IsAttached()) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
     mImageHost->PrintInfo(aTo, pfx.get());

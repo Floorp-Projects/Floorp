@@ -46,9 +46,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=402788
   is(false, testRegisterHandler(true, "foo", "http://mochi.test:8888/", "Foo handler"), "a protocol handler uri should contain %s");
   is(false, testRegisterHandler(false, "application/rss+xml", "http://mochi.test:8888/", "Foo handler"), "a content handler uri should contain %s");
 
-  // the spec says we should not throw here, but it probably needs to be changed
-  is(false, testRegisterHandler(true, "foo", "foo/%s", "Foo handler"), "a protocol handler uri should be valid");
-  is(false, testRegisterHandler(false, "application/rss+xml", "foo/%s", "Foo handler"), "a content handler uri should be valid");
+  // the spec explicitly allows relative urls to be passed
+  is(true, testRegisterHandler(true, "foo", "foo/%s", "Foo handler"), "a protocol handler uri should be valid");
+  is(true, testRegisterHandler(false, "application/rss+xml", "foo/%s", "Foo handler"), "a content handler uri should be valid");
 
   // we should only accept to register when the handler has the same host as the current page (bug 402287)
   is(false, testRegisterHandler(true, "foo", "http://remotehost:8888/%s", "Foo handler"), "registering a foo protocol handler with a different host should not work");

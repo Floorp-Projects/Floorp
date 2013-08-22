@@ -9,22 +9,6 @@ VPATH      = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXTRA_COMPONENTS = \
-        AlertsService.js \
-        ContentPermissionPrompt.js \
-        XPIDialogService.js \
-        DownloadManagerUI.js \
-        PromptService.js \
-        ContentDispatchChooser.js \
-        AddonUpdateService.js \
-        LoginManagerPrompter.js \
-        BlocklistPrompt.js \
-        NSSDialogService.js \
-        SiteSpecificUserAgent.js \
-        PaymentsUI.js \
-        FilePicker.js \
-        $(NULL)
-
 DEFINES += \
   -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
   $(NULL)

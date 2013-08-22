@@ -655,7 +655,7 @@ struct nsCSSShadowItem {
     MOZ_COUNT_DTOR(nsCSSShadowItem);
   }
 
-  bool operator==(const nsCSSShadowItem& aOther) {
+  bool operator==(const nsCSSShadowItem& aOther) const {
     return (mXOffset == aOther.mXOffset &&
             mYOffset == aOther.mYOffset &&
             mRadius == aOther.mRadius &&
@@ -664,7 +664,7 @@ struct nsCSSShadowItem {
             mInset == aOther.mInset &&
             (!mHasColor || mColor == aOther.mColor));
   }
-  bool operator!=(const nsCSSShadowItem& aOther) {
+  bool operator!=(const nsCSSShadowItem& aOther) const {
     return !(*this == aOther);
   }
 };
@@ -714,6 +714,18 @@ class nsCSSShadowArray {
           return true;
       }
       return false;
+    }
+
+    bool operator==(const nsCSSShadowArray& aOther) const {
+      if (mLength != aOther.Length())
+        return false;
+
+      for (uint32_t i = 0; i < mLength; ++i) {
+        if (ShadowAt(i) != aOther.ShadowAt(i))
+          return false;
+      }
+
+      return true;
     }
 
     NS_INLINE_DECL_REFCOUNTING(nsCSSShadowArray)
@@ -1269,7 +1281,6 @@ struct nsStyleTextReset {
   nsStyleCoord  mVerticalAlign;         // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
   nsStyleTextOverflow mTextOverflow;    // [reset] enum, string
 
-  uint8_t mTextBlink;                   // [reset] see nsStyleConsts.h
   uint8_t mTextDecorationLine;          // [reset] see nsStyleConsts.h
   uint8_t mUnicodeBidi;                 // [reset] see nsStyleConsts.h
 protected:
@@ -1304,6 +1315,8 @@ struct nsStyleText {
   uint8_t mWordWrap;                    // [inherited] see nsStyleConsts.h
   uint8_t mHyphens;                     // [inherited] see nsStyleConsts.h
   uint8_t mTextSizeAdjust;              // [inherited] see nsStyleConsts.h
+  uint8_t mTextOrientation;             // [inherited] see nsStyleConsts.h
+  uint8_t mTextCombineHorizontal;       // [inherited] see nsStyleConsts.h
   int32_t mTabSize;                     // [inherited] see nsStyleConsts.h
 
   nscoord mWordSpacing;                 // [inherited]
@@ -1608,6 +1621,7 @@ struct nsStyleDisplay {
   uint8_t mResize;              // [reset] see nsStyleConsts.h
   uint8_t mClipFlags;           // [reset] see nsStyleConsts.h
   uint8_t mOrient;              // [reset] see nsStyleConsts.h
+  uint8_t mMixBlendMode;        // [reset] see nsStyleConsts.h
 
   // mSpecifiedTransform is the list of transform functions as
   // specified, or null to indicate there is no transform.  (inherit or
@@ -2273,26 +2287,49 @@ struct nsStyleFilter {
   nsStyleFilter(const nsStyleFilter& aSource);
   ~nsStyleFilter();
 
+  nsStyleFilter& operator=(const nsStyleFilter& aOther);
+
   bool operator==(const nsStyleFilter& aOther) const;
 
-  enum Type {
-    eNull,
-    eURL,
-    eBlur,
-    eBrightness,
-    eContrast,
-    eInvert,
-    eOpacity,
-    eGrayscale,
-    eSaturate,
-    eSepia,
-  };
+  int32_t GetType() const {
+    return mType;
+  }
 
-  Type mType;
-  nsIURI* mURL;
-  nsStyleCoord mCoord;
-  // FIXME: Add a nsCSSShadowItem when we implement drop shadow.
+  const nsStyleCoord& GetFilterParameter() const {
+    NS_ASSERTION(mType != NS_STYLE_FILTER_DROP_SHADOW &&
+                 mType != NS_STYLE_FILTER_URL &&
+                 mType != NS_STYLE_FILTER_NONE, "wrong filter type");
+    return mFilterParameter;
+  }
+  void SetFilterParameter(const nsStyleCoord& aFilterParameter,
+                          int32_t aType);
+
+  nsIURI* GetURL() const {
+    NS_ASSERTION(mType == NS_STYLE_FILTER_URL, "wrong filter type");
+    return mURL;
+  }
+  void SetURL(nsIURI* aURL);
+
+  nsCSSShadowArray* GetDropShadow() const {
+    NS_ASSERTION(mType == NS_STYLE_FILTER_DROP_SHADOW, "wrong filter type");
+    return mDropShadow;
+  }
+  void SetDropShadow(nsCSSShadowArray* aDropShadow);
+
+private:
+  void ReleaseRef();
+
+  int32_t mType; // see NS_STYLE_FILTER_* constants in nsStyleConsts.h
+  nsStyleCoord mFilterParameter; // coord, percent, factor, angle
+  union {
+    nsIURI* mURL;
+    nsCSSShadowArray* mDropShadow;
+  };
 };
+
+template<>
+struct nsTArray_CopyElements<nsStyleFilter>
+  : public nsTArray_CopyWithConstructors<nsStyleFilter> {};
 
 struct nsStyleSVGReset {
   nsStyleSVGReset();
@@ -2317,8 +2354,8 @@ struct nsStyleSVGReset {
   // filter functions.
   nsIURI* SingleFilter() const {
     return (mFilters.Length() == 1 &&
-            mFilters[0].mType == nsStyleFilter::Type::eURL) ?
-            mFilters[0].mURL : nullptr;
+            mFilters[0].GetType() == NS_STYLE_FILTER_URL) ?
+            mFilters[0].GetURL() : nullptr;
   }
 
   nsCOMPtr<nsIURI> mClipPath;         // [reset]

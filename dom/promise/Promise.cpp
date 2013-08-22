@@ -11,6 +11,8 @@
 #include "PromiseCallback.h"
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
+#include "WorkerPrivate.h"
+#include "nsJSPrincipals.h"
 
 namespace mozilla {
 namespace dom {
@@ -45,6 +47,8 @@ private:
 };
 
 // Promise
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(Promise)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Promise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
@@ -108,6 +112,26 @@ Promise::PrefEnabled()
   return Preferences::GetBool("dom.promise.enabled", false);
 }
 
+/* static */ bool
+Promise::EnabledForScope(JSContext* aCx, JSObject* /* unused */)
+{
+  // Enable if the pref is enabled or if we're chrome or if we're a
+  // certified app.
+  if (PrefEnabled()) {
+    return true;
+  }
+
+  // Note that we have no concept of a certified app in workers.
+  // XXXbz well, why not?
+  if (!NS_IsMainThread()) {
+    return workers::GetWorkerPrivateFromContext(aCx)->IsChromeWorker();
+  }
+
+  nsIPrincipal* prin = nsContentUtils::GetSubjectPrincipal();
+  return nsContentUtils::IsSystemPrincipal(prin) ||
+    prin->GetAppStatus() == nsIPrincipal::APP_STATUS_CERTIFIED;
+}
+
 static void
 EnterCompartment(Maybe<JSAutoCompartment>& aAc, JSContext* aCx,
                  const Optional<JS::Handle<JS::Value> >& aValue)
@@ -123,8 +147,6 @@ EnterCompartment(Maybe<JSAutoCompartment>& aAc, JSContext* aCx,
 Promise::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
                      PromiseInit& aInit, ErrorResult& aRv)
 {
-  MOZ_ASSERT(PrefEnabled());
-
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -153,8 +175,6 @@ Promise::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
 Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
                  JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
-  MOZ_ASSERT(PrefEnabled());
-
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -172,8 +192,6 @@ Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
 Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
                 JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
-  MOZ_ASSERT(PrefEnabled());
-
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);

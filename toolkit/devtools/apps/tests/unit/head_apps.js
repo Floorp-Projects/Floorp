@@ -15,6 +15,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
 let gClient, gActor;
+let originalPrefValue;
 
 function connect(onDone) {
   // Initialize a loopback remote protocol connection
@@ -88,6 +89,9 @@ function setup() {
   // as only launchable apps are returned
   Components.utils.import('resource://gre/modules/Webapps.jsm');
   DOMApplicationRegistry.allAppsLaunchable = true;
+
+  originalPrefValue = Services.prefs.getBoolPref("devtools.debugger.enable-content-actors");
+  Services.prefs.setBoolPref("devtools.debugger.enable-content-actors", true);
 }
 
 function do_get_webappsdir() {

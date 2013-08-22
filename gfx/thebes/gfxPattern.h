@@ -12,8 +12,8 @@
 #include "gfxMatrix.h"
 #include "nsISupportsImpl.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Alignment.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/Util.h"
 
 class gfxContext;
 class gfxASurface;
@@ -45,7 +45,7 @@ public:
 
     /* Get an Azure Pattern for the current Cairo pattern. aPattern transform
      * specifies the transform that was set on the DrawTarget when the pattern
-     * was set. When this is NULL it is assumed the transform is identical
+     * was set. When this is nullptr it is assumed the transform is identical
      * to the current transform.
      */
     mozilla::gfx::Pattern *GetPattern(mozilla::gfx::DrawTarget *aTarget,

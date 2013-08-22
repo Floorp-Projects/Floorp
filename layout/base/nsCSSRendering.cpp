@@ -11,20 +11,17 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Types.h"
 
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIFrame.h"
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsViewManager.h"
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsTransform2D.h"
 #include "nsIContent.h"
 #include "nsIDocumentInlines.h"
 #include "nsIScrollableFrame.h"
@@ -34,16 +31,10 @@
 #include "nsCSSRendering.h"
 #include "nsCSSColorUtils.h"
 #include "nsITheme.h"
-#include "nsThemeConstants.h"
-#include "nsIServiceManager.h"
 #include "nsLayoutUtils.h"
-#include "nsINameSpaceManager.h"
 #include "nsBlockFrame.h"
 #include "gfxContext.h"
 #include "nsRenderingContext.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "gfxPlatform.h"
-#include "gfxImageSurface.h"
 #include "nsStyleStructInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSProps.h"
@@ -3131,18 +3122,19 @@ nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
   // proper background positioning when background-position is defined with
   // percentages.
   CSSSizeOrRatio intrinsicSize = state.mImageRenderer.ComputeIntrinsicSize();
+  nsSize bgPositionSize = bgPositioningArea.Size();
   nsSize imageSize = ComputeDrawnSizeForBackground(intrinsicSize,
-                                                   bgPositioningArea.Size(),
+                                                   bgPositionSize,
                                                    aLayer.mSize);
   if (imageSize.width <= 0 || imageSize.height <= 0)
     return state;
 
   state.mImageRenderer.SetPreferredSize(intrinsicSize,
-                                        bgPositioningArea.Size());
+                                        imageSize);
 
   // Compute the position of the background now that the background's size is
   // determined.
-  ComputeBackgroundAnchorPoint(aLayer, bgPositioningArea.Size(), imageSize,
+  ComputeBackgroundAnchorPoint(aLayer, bgPositionSize, imageSize,
                                &imageTopLeft, &state.mAnchor);
   imageTopLeft += bgPositioningArea.TopLeft();
   state.mAnchor += bgPositioningArea.TopLeft();
@@ -3943,18 +3935,17 @@ nsCSSRendering::ExpandPaintingRectForDecorationLine(nsIFrame* aFrame,
   nsBlockFrame* block = nullptr;
   // Note that when we paint the decoration lines in relative positioned
   // box, we should paint them like all of the boxes are positioned as static.
-  nscoord relativeX = 0;
+  nscoord frameXInBlockAppUnits = 0;
   for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
     block = do_QueryFrame(f);
     if (block) {
       break;
     }
-    relativeX += f->GetRelativeOffset(f->StyleDisplay()).x;
+    frameXInBlockAppUnits += f->GetNormalPosition().x;
   }
 
   NS_ENSURE_TRUE(block, aClippedRect);
 
-  nscoord frameXInBlockAppUnits = aFrame->GetOffsetTo(block).x - relativeX;
   nsPresContext *pc = aFrame->PresContext();
   gfxFloat frameXInBlock = pc->AppUnitsToGfxUnits(frameXInBlockAppUnits);
   int32_t rectXInBlock = int32_t(NS_round(frameXInBlock + aXInFrame));
@@ -4706,13 +4697,27 @@ nsImageRenderer::SetPreferredSize(const CSSSizeOrRatio& aIntrinsicSize,
                   : aDefaultSize.height;
 }
 
+// Convert from nsImageRenderer flags to the flags we want to use for drawing in
+// the imgIContainer namespace.
+static uint32_t
+ConvertImageRendererToDrawFlags(uint32_t aImageRendererFlags)
+{
+  uint32_t drawFlags = imgIContainer::FLAG_NONE;
+  if (aImageRendererFlags & nsImageRenderer::FLAG_SYNC_DECODE_IMAGES) {
+    drawFlags |= imgIContainer::FLAG_SYNC_DECODE;
+  }
+  if (aImageRendererFlags & nsImageRenderer::FLAG_PAINTING_TO_WINDOW) {
+    drawFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
+  }
+  return drawFlags;
+}
+
 void
 nsImageRenderer::Draw(nsPresContext*       aPresContext,
                       nsRenderingContext&  aRenderingContext,
                       const nsRect&        aDirtyRect,
                       const nsRect&        aFill,
-                      const nsRect&        aDest,
-                      uint32_t             aFlags /* = imgIContainer::FLAG_NONE */)
+                      const nsRect&        aDest)
 {
   if (!mIsReady) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -4731,7 +4736,8 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     {
       nsLayoutUtils::DrawSingleImage(&aRenderingContext, mImageContainer,
                                      graphicsFilter, aFill, aDirtyRect,
-                                     nullptr, aFlags);
+                                     nullptr,
+                                     ConvertImageRendererToDrawFlags(mFlags));
       return;
     }
     case eStyleImageType_Gradient:
@@ -4745,7 +4751,9 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
       if (mPaintServerFrame) {
         nsSVGIntegrationUtils::DrawPaintServer(
             &aRenderingContext, mForFrame, mPaintServerFrame, graphicsFilter,
-            aDest, aFill, aDest.TopLeft(), aDirtyRect, mSize);
+            aDest, aFill, aDest.TopLeft(), aDirtyRect, mSize,
+            mFlags & FLAG_SYNC_DECODE_IMAGES ?
+              nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES : 0);
       } else {
         NS_ASSERTION(mImageElementSurface.mSurface, "Surface should be ready.");
         nsRefPtr<gfxDrawable> surfaceDrawable =
@@ -4784,19 +4792,11 @@ nsImageRenderer::DrawBackground(nsPresContext*       aPresContext,
     gfxPattern::GraphicsFilter graphicsFilter =
       nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
-    uint32_t drawFlags = imgIContainer::FLAG_NONE;
-    if (mFlags & FLAG_SYNC_DECODE_IMAGES) {
-      drawFlags |= imgIContainer::FLAG_SYNC_DECODE;
-    }
-    if (mFlags & FLAG_PAINTING_TO_WINDOW) {
-      drawFlags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
-    }
-
     nsLayoutUtils::DrawBackgroundImage(&aRenderingContext, mImageContainer,
         nsIntSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
                   nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
         graphicsFilter,
-        aDest, aFill, aAnchor, aDirty, drawFlags);
+        aDest, aFill, aAnchor, aDirty, ConvertImageRendererToDrawFlags(mFlags));
     return;
   }
 

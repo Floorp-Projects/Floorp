@@ -5,23 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIDOMCallEvent.idl',
-    'nsIDOMTelephony.idl',
-    'nsIDOMTelephonyCall.idl',
     'nsITelephonyProvider.idl',
 ]
 
 XPIDL_MODULE = 'dom_telephony'
 
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/base',
-    '-I$(topsrcdir)/dom/interfaces/base',
-    '-I$(topsrcdir)/dom/interfaces/events',
-]
-
 MODULE = 'dom'
 
 CPP_SOURCES += [
+    'CallEvent.cpp',
+    'CallsList.cpp',
     'Telephony.cpp',
     'TelephonyCall.cpp',
 ]

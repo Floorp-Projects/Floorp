@@ -14,7 +14,8 @@ namespace layers {
 
 
 ClientTiledThebesLayer::ClientTiledThebesLayer(ClientLayerManager* const aManager)
-  : ThebesLayer(aManager, static_cast<ClientLayer*>(this))
+  : ThebesLayer(aManager,
+                static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
   , mContentClient()
 {
   MOZ_COUNT_CTOR(ClientTiledThebesLayer);

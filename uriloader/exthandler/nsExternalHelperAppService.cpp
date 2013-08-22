@@ -961,11 +961,6 @@ nsExternalHelperAppService::DeleteTemporaryPrivateFileWhenPossible(nsIFile* aTem
   return DeleteTemporaryFileHelper(aTemporaryFile, mTemporaryPrivateFilesList);
 }
 
-void nsExternalHelperAppService::FixFilePermissions(nsIFile* aFile)
-{
-  // This space intentionally left blank
-}
-
 void nsExternalHelperAppService::ExpungeTemporaryFilesHelper(nsCOMArray<nsIFile> &fileList)
 {
   int32_t numEntries = fileList.Count();
@@ -2212,6 +2207,11 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
   if (mSaver) {
     mSaver->Finish(aReason);
     mSaver = nullptr;
+  } else if (mStopRequestIssued && mTempFile) {
+    // This branch can only happen when the user cancels the helper app dialog
+    // when the request has completed. The temp file has to be removed here,
+    // because mSaver has been released at that time with the temp file left.
+    (void)mTempFile->Remove(false);
   }
 
   // Break our reference cycle with the helper app dialog (set up in

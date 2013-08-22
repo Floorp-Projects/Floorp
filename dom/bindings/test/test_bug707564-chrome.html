@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=707564
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 707564</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=707564">Mozilla Bug 707564</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="t1" src="http://example.org/tests/dom/bindings/test/file_bug707564.html"></iframe>
+<iframe id="t2" src="http://example.org/tests/dom/bindings/test/file_bug707564.html"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 775543 **/
+function test()
+{
+  var nav = document.getElementById("t1").contentWindow.navigator;
+  ise(nav.foopy, undefined, "We should have an Xray now");
+  is(nav.wrappedJSObject.foopy, 5, "We should have the right navigator object");
+  var props = Object.getOwnPropertyNames(nav);
+  isnot(props.indexOf("mozApps"), -1,
+        "Should enumerate a mozApps property on navigator xray");
+
+  var nav = document.getElementById("t2").contentWindow.navigator;
+  ise(nav.foopy, undefined, "We should have an Xray now again");
+  is(nav.wrappedJSObject.foopy, 5, "We should have the right navigator object again");
+  var found = false;
+  for (var name in nav) {
+    if (name == "mozApps") {
+      found = true;
+    }
+  }
+  ok(found, "Should enumerate a mozApps property on navigator xray via for...in");
+
+  SimpleTest.finish();
+}
+
+addLoadEvent(test);
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

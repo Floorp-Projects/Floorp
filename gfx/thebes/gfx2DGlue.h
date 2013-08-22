@@ -32,6 +32,11 @@ inline Rect ToRect(const gfxRect &aRect)
               Float(aRect.width), Float(aRect.height));
 }
 
+inline IntRect ToIntRect(const nsIntRect &aRect)
+{
+  return IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
 inline Color ToColor(const gfxRGBA &aRGBA)
 {
   return Color(Float(aRGBA.r), Float(aRGBA.g),
@@ -54,11 +59,18 @@ inline Size ToSize(const gfxSize &aSize)
   return Size(Float(aSize.width), Float(aSize.height));
 }
 
+inline IntSize ToIntSize(const gfxIntSize &aSize)
+{
+  return IntSize(aSize.width, aSize.height);
+}
+
 inline Filter ToFilter(gfxPattern::GraphicsFilter aFilter)
 {
   switch (aFilter) {
   case gfxPattern::FILTER_NEAREST:
     return FILTER_POINT;
+  case gfxPattern::FILTER_GOOD:
+    return FILTER_GOOD;
   default:
     return FILTER_LINEAR;
   }
@@ -116,6 +128,11 @@ inline gfxIntSize ThebesIntSize(const IntSize &aSize)
 inline gfxRect ThebesRect(const Rect &aRect)
 {
   return gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
+inline nsIntRect ThebesIntRect(const IntRect &aRect)
+{
+  return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 inline gfxRGBA ThebesRGBA(const Color &aColor)

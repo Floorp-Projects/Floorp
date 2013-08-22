@@ -367,10 +367,10 @@ static const char* const kGeckoProcessTypeString[] = {
 
 // Oddly, NS_ARRAY_LENGTH causes an internal compiler error with MSVC10, so
 // compute the length manually.
-MOZ_STATIC_ASSERT(sizeof(kGeckoProcessTypeString) /
-                  sizeof(kGeckoProcessTypeString[0]) ==
-                  GeckoProcessType_End,
-                  "Array length mismatch");
+static_assert(sizeof(kGeckoProcessTypeString) /
+              sizeof(kGeckoProcessTypeString[0]) ==
+              GeckoProcessType_End,
+              "Array length mismatch");
 
 XRE_API(const char*,
         XRE_ChildProcessTypeToString, (GeckoProcessType aProcessType))

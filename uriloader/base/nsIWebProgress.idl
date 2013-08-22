@@ -26,14 +26,14 @@ interface nsIWebProgressListener;
  * notifications from any nsIWebProgress instances that are children of that
  * nsIWebProgress instance.
  */
-[scriptable, uuid(1c3437b0-9e2c-11e2-9e96-0800200c9a66)]
+[scriptable, uuid(bd0efb3b-1c81-4fb0-b16d-576a2be48a95)]
 interface nsIWebProgress : nsISupports
 {
   /**
    * The following flags may be combined to form the aNotifyMask parameter for
    * the addProgressListener method.  They limit the set of events that are
    * delivered to an nsIWebProgressListener instance.
-   */ 
+   */
 
   /**
    * These flags indicate the state transistions to observe, corresponding to
@@ -42,7 +42,7 @@ interface nsIWebProgress : nsISupports
    * NOTIFY_STATE_REQUEST
    *   Only receive the onStateChange event if the aStateFlags parameter
    *   includes nsIWebProgressListener::STATE_IS_REQUEST.
-   *   
+   *
    * NOTIFY_STATE_DOCUMENT
    *   Only receive the onStateChange event if the aStateFlags parameter
    *   includes nsIWebProgressListener::STATE_IS_DOCUMENT.
@@ -138,10 +138,16 @@ interface nsIWebProgress : nsISupports
    * Indicates whether DOMWindow.top == DOMWindow.
    */
   readonly attribute boolean isTopLevel;
-  
+
   /**
    * Indicates whether or not a document is currently being loaded
    * in the context of this nsIWebProgress instance.
    */
   readonly attribute boolean isLoadingDocument;
+
+  /**
+   * Contains a load type as specified by the load* constants in
+   * nsIDocShellLoadInfo.idl.
+   */
+  readonly attribute unsigned long loadType;
 };

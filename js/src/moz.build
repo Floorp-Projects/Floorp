@@ -34,19 +34,17 @@ EXPORTS += [
     'js.msg',
     'jsalloc.h',
     'jsapi.h',
+    'jsbytecode.h',
     'jsclass.h',
     'jsclist.h',
     'jscpucfg.h',
     'jsdbgapi.h',
     'jsfriendapi.h',
-    'jslock.h',
     'jsprf.h',
     'jsprototypes.h',
     'jsproxy.h',
-    'jsprvtd.h',
     'jspubtd.h',
     'jstypes.h',
-    'jsutil.h',
     'jsversion.h',
     'jswrapper.h',
     'perf/jsperf.h',
@@ -197,6 +195,7 @@ if CONFIG['ENABLE_ION']:
         'AliasAnalysis.cpp',
         'AsmJS.cpp',
         'AsmJSLink.cpp',
+        'AsmJSModule.cpp',
         'AsmJSSignalHandlers.cpp',
         'BacktrackingAllocator.cpp',
         'Bailouts.cpp',
@@ -325,6 +324,11 @@ if CONFIG['JS_HAS_CTYPES']:
     CPP_SOURCES += [
         'CTypes.cpp',
         'Library.cpp',
+    ]
+
+if CONFIG['MOZ_VTUNE']:
+    CSRCS += [
+        'vtune/jitprofiling.c'
     ]
 
 if CONFIG['HAVE_LINUX_PERF_EVENT_H']:

@@ -6,6 +6,7 @@
 #ifndef NS_ISMILTYPE_H_
 #define NS_ISMILTYPE_H_
 
+#include "mozilla/Attributes.h"
 #include "nscore.h"
 
 class nsSMILValue;
@@ -207,13 +208,6 @@ protected:
                                const nsSMILValue& aEndVal,
                                double aUnitDistance,
                                nsSMILValue& aResult) const = 0;
-
-  /**
-   * Protected destructor, to ensure that no one accidentally deletes an
-   * instance of this class.
-   * (The only instances in existence should be singletons - one per subclass.)
-   */
-  ~nsISMILType() {}
 };
 
 #endif // NS_ISMILTYPE_H_

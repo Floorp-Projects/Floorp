@@ -13,11 +13,13 @@
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 #include "cairo.h"
+#include "pratom.h"
 
 struct SharedImageInfo {
     int32_t width;
     int32_t height;
     int32_t format;
+    int32_t readCount;
 };
 
 inline SharedImageInfo*
@@ -33,6 +35,7 @@ template <typename Base, typename Sub>
 class gfxBaseSharedMemorySurface : public Base {
     typedef mozilla::ipc::SharedMemory SharedMemory;
     typedef mozilla::ipc::Shmem Shmem;
+    friend class gfxReusableSharedImageSurfaceWrapper;
 
 public:
     virtual ~gfxBaseSharedMemorySurface()
@@ -123,6 +126,28 @@ private:
         shmInfo->width = this->mSize.width;
         shmInfo->height = this->mSize.height;
         shmInfo->format = this->mFormat;
+        shmInfo->readCount = 0;
+    }
+
+    int32_t
+    ReadLock()
+    {
+        SharedImageInfo* shmInfo = GetShmInfoPtr(mShmem);
+        return PR_ATOMIC_INCREMENT(&shmInfo->readCount);
+    }
+
+    int32_t
+    ReadUnlock()
+    {
+        SharedImageInfo* shmInfo = GetShmInfoPtr(mShmem);
+        return PR_ATOMIC_DECREMENT(&shmInfo->readCount);
+    }
+
+    int32_t
+    GetReadCount()
+    {
+        SharedImageInfo* shmInfo = GetShmInfoPtr(mShmem);
+        return shmInfo->readCount;
     }
 
     static size_t GetAlignedSize(const gfxIntSize& aSize, long aStride)

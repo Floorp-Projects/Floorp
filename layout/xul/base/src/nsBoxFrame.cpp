@@ -61,6 +61,7 @@
 #include "nsIDOMEvent.h"
 #include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
+#include "nsThemeConstants.h"
 #include <algorithm>
 
 // Needed for Print Preview
@@ -2077,14 +2078,13 @@ nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsIntPoint &aPoint) {
       return false;
     }
 
-    nsIDOMTouch *touch = touchEvent->touches.SafeElementAt(0);
+    dom::Touch* touch = touchEvent->touches.SafeElementAt(0);
     if (!touch) {
       return false;
     }
-    Touch* domtouch = static_cast<Touch*>(touch);
-    aPoint = domtouch->mRefPoint;
+    aPoint = touch->mRefPoint;
   } else {
-    aPoint = aEvent->refPoint;
+    aPoint = LayoutDeviceIntPoint::ToUntyped(aEvent->refPoint);
   }
   return true;
 }

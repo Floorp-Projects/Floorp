@@ -111,11 +111,6 @@ public:
                                  BluetoothReplyRunnable* aRunnable)
                                  MOZ_OVERRIDE;
 
-  virtual bool
-  SetAuthorizationInternal(const nsAString& aDeviceAddress,
-                           bool aAllow,
-                           BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
-
   virtual void
   Connect(const nsAString& aDeviceAddress,
           const uint16_t aProfileId,
@@ -152,9 +147,34 @@ public:
   virtual void
   IsScoConnected(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
+  virtual void
+  SendMetaData(const nsAString& aTitle,
+               const nsAString& aArtist,
+               const nsAString& aAlbum,
+               int64_t aMediaNumber,
+               int64_t aTotalMediaCount,
+               int64_t aDuration,
+               BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  SendPlayStatus(int64_t aDuration,
+                 int64_t aPosition,
+                 const nsAString& aPlayStatus,
+                 BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual void
+  UpdatePlayStatus(uint32_t aDuration,
+                   uint32_t aPosition,
+                   ControlPlayStatus aPlayStatus) MOZ_OVERRIDE;
+
   virtual nsresult
   SendSinkMessage(const nsAString& aDeviceAddresses,
                   const nsAString& aMessage) MOZ_OVERRIDE;
+
+  virtual nsresult
+  SendInputMessage(const nsAString& aDeviceAddresses,
+                   const nsAString& aMessage,
+                   BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
 protected:
   BluetoothServiceChildProcess();

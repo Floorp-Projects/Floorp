@@ -9,16 +9,11 @@
 
 #include "mozilla/HashFunctions.h"
 
-#include <stddef.h>
-
-#include "jsalloc.h"
-#include "jsapi.h"
-#include "jsprvtd.h"
-#include "jspubtd.h"
-
 #include "gc/Barrier.h"
-#include "js/HashTable.h"
+#include "gc/Rooting.h"
 #include "vm/CommonPropertyNames.h"
+
+class JSAtom;
 
 struct JSIdArray {
     int length;
@@ -52,16 +47,6 @@ struct JsidHasher
  */
 extern const char *
 AtomToPrintableString(ExclusiveContext *cx, JSAtom *atom, JSAutoByteString *bytes);
-
-/* Compute a hash function from chars/length. */
-inline uint32_t
-HashChars(const jschar *chars, size_t length)
-{
-    uint32_t h = 0;
-    for (; length; chars++, length--)
-        h = JS_ROTATE_LEFT32(h, 4) ^ *chars;
-    return h;
-}
 
 class AtomStateEntry
 {
@@ -105,7 +90,7 @@ struct AtomHasher
         inline Lookup(const JSAtom *atom);
     };
 
-    static HashNumber hash(const Lookup &l) { return HashChars(l.chars, l.length); }
+    static HashNumber hash(const Lookup &l) { return mozilla::HashString(l.chars, l.length); }
     static inline bool match(const AtomStateEntry &entry, const Lookup &lookup);
 };
 
@@ -179,7 +164,7 @@ extern const char * const TypeStrings[];
  * memory. The caller must zero rt->atomState before calling this function and
  * only call it after js_InitGC successfully returns.
  */
-extern JSBool
+extern bool
 InitAtoms(JSRuntime *rt);
 
 /*
@@ -227,6 +212,14 @@ AtomizeString(ExclusiveContext *cx, JSString *str, js::InternBehavior ib = js::D
 template <AllowGC allowGC>
 extern JSAtom *
 ToAtom(ExclusiveContext *cx, typename MaybeRooted<Value, allowGC>::HandleType v);
+
+enum XDRMode {
+    XDR_ENCODE,
+    XDR_DECODE
+};
+
+template <XDRMode mode>
+class XDRState;
 
 template<XDRMode mode>
 bool

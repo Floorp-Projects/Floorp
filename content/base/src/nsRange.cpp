@@ -280,6 +280,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsRange)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMRange)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsRange)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsRange)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner);
@@ -641,16 +643,16 @@ nsRange::ContentRemoved(nsIDocument* aDocument,
   nsINode* container = NODE_FROM(aContainer, aDocument);
   bool gravitateStart = false;
   bool gravitateEnd = false;
+  bool didCheckStartParentDescendant = false;
 
   // Adjust position if a sibling was removed...
   if (container == mStartParent) {
     if (aIndexInContainer < mStartOffset) {
       --mStartOffset;
     }
-  }
-  // ...or gravitate if an ancestor was removed.
-  else if (nsContentUtils::ContentIsDescendantOf(mStartParent, aChild)) {
-    gravitateStart = true;
+  } else { // ...or gravitate if an ancestor was removed.
+    didCheckStartParentDescendant = true;
+    gravitateStart = nsContentUtils::ContentIsDescendantOf(mStartParent, aChild);
   }
 
   // Do same thing for end boundry.
@@ -658,9 +660,10 @@ nsRange::ContentRemoved(nsIDocument* aDocument,
     if (aIndexInContainer < mEndOffset) {
       --mEndOffset;
     }
-  }
-  else if (nsContentUtils::ContentIsDescendantOf(mEndParent, aChild)) {
-    gravitateEnd = true;
+  } else if (didCheckStartParentDescendant && mStartParent == mEndParent) {
+    gravitateEnd = gravitateStart;
+  } else {
+    gravitateEnd = nsContentUtils::ContentIsDescendantOf(mEndParent, aChild);
   }
 
   if (!mEnableGravitationOnElementRemoval) {
@@ -1089,19 +1092,10 @@ nsRange::IsValidBoundary(nsINode* aNode)
     return root;
   }
 
-  root = aNode;
-  while ((aNode = aNode->GetParentNode())) {
-    root = aNode;
-  }
+  root = aNode->SubtreeRoot();
 
   NS_ASSERTION(!root->IsNodeOfType(nsINode::eDOCUMENT),
                "GetCurrentDoc should have returned a doc");
-
-#ifdef DEBUG_smaug
-  NS_WARN_IF_FALSE(root->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
-                   root->IsNodeOfType(nsINode::eATTRIBUTE),
-                   "Creating a DOM Range using root which isn't in DOM!");
-#endif
 
   // We allow this because of backward compatibility.
   return root;

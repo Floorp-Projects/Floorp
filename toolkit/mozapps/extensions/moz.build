@@ -29,6 +29,7 @@ EXTRA_PP_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'AddonLogging.jsm',
     'AddonRepository.jsm',
+    'AddonRepository_SQLiteMigrator.jsm',
     'AddonUpdateChecker.jsm',
     'ChromeManifestParser.jsm',
     'DeferredSave.jsm',
@@ -36,5 +37,11 @@ EXTRA_JS_MODULES += [
     'LightweightThemeManager.jsm',
     'PluginProvider.jsm',
     'SpellCheckDictionaryBootstrap.js',
+]
+
+EXTRA_PP_JS_MODULES += [
+    'AddonManager.jsm',
+    'XPIProvider.jsm',
+    'XPIProviderUtils.js',
 ]
 

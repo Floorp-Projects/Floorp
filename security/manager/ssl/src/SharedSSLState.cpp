@@ -18,15 +18,17 @@
 #include "PublicSSL.h"
 #include "ssl.h"
 #include "nsNetCID.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/unused.h"
 
 using mozilla::psm::SyncRunnableBase;
+using mozilla::Atomic;
 using mozilla::unused;
 
 namespace {
 
-static int32_t sCertOverrideSvcExists = 0;
-static int32_t sCertDBExists = 0;
+static Atomic<int32_t> sCertOverrideSvcExists(0);
+static Atomic<int32_t> sCertDBExists(0);
 
 class MainThreadClearer : public SyncRunnableBase
 {
@@ -38,9 +40,9 @@ public:
     // is in progress. We want to avoid this, since they do not handle the situation well,
     // hence the flags to avoid instantiating the services if they don't already exist.
 
-    bool certOverrideSvcExists = (bool)PR_ATOMIC_SET(&sCertOverrideSvcExists, 0);
+    bool certOverrideSvcExists = (bool)sCertOverrideSvcExists.exchange(0);
     if (certOverrideSvcExists) {
-      unused << PR_ATOMIC_SET(&sCertOverrideSvcExists, 1);
+      sCertOverrideSvcExists = 1;
       nsCOMPtr<nsICertOverrideService> icos = do_GetService(NS_CERTOVERRIDE_CONTRACTID);
       if (icos) {
         icos->ClearValidityOverride(
@@ -49,9 +51,9 @@ public:
       }
     }
 
-    bool certDBExists = (bool)PR_ATOMIC_SET(&sCertDBExists, 0);
+    bool certDBExists = (bool)sCertDBExists.exchange(0);
     if (certDBExists) {
-      unused << PR_ATOMIC_SET(&sCertDBExists, 1);
+      sCertDBExists = 1;
       nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
       if (certdb) {
         nsCOMPtr<nsIRecentBadCerts> badCerts;
@@ -204,13 +206,13 @@ SharedSSLState::GlobalCleanup()
 /*static*/ void
 SharedSSLState::NoteCertOverrideServiceInstantiated()
 {
-  unused << PR_ATOMIC_SET(&sCertOverrideSvcExists, 1);
+  sCertOverrideSvcExists = 1;
 }
 
 /*static*/ void
 SharedSSLState::NoteCertDBServiceInstantiated()
 {
-  unused << PR_ATOMIC_SET(&sCertDBExists, 1);
+  sCertDBExists = 1;
 }
 
 void

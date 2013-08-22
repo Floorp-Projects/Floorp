@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsITCPSocketParent.idl"
+
+interface nsIDOMTCPServerSocket;
+
+/** 
+ * Interface required to allow the TCP server-socket object in the parent process
+ * to talk to the parent IPC actor.
+ * It is used in the server socket implementation on the parent side.
+ */
+[scriptable, uuid(161ffc9f-54d3-4f21-a536-4166003d0e1d)]
+interface nsITCPServerSocketParent : nsISupports
+{
+  /**
+   * Trigger a callback in the content process when the socket accepts any request.
+   *
+   * @param socket
+   *        The socket generated in accepting any open request on the parent side.
+   */
+  void sendCallbackAccept(in nsITCPSocketParent socket);
+
+  /**
+   * Trigger a callback in the content process when an error occurs.
+   *
+   * @param message
+   *        The error message.
+   * @param filename
+   *        The file name in which the error occured.
+   * @param lineNumber
+   *        The line number in which the error occured.
+   * @param columnNumber
+   *        The column number in which the error occured.
+   */
+  void sendCallbackError(in DOMString message,
+                         in DOMString filename,
+                         in uint32_t lineNumber,
+                         in uint32_t columnNumber);
+};

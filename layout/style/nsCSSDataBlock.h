@@ -160,17 +160,17 @@ private:
 
 // Make sure the values and properties are aligned appropriately.  (These
 // assertions are stronger than necessary to keep them simple.)
-MOZ_STATIC_ASSERT(sizeof(nsCSSCompressedDataBlock) == 8,
-                  "nsCSSCompressedDataBlock's size has changed");
-MOZ_STATIC_ASSERT(NS_ALIGNMENT_OF(nsCSSValue) == 4 || NS_ALIGNMENT_OF(nsCSSValue) == 8,
-                  "nsCSSValue doesn't align with nsCSSCompressedDataBlock"); 
-MOZ_STATIC_ASSERT(NS_ALIGNMENT_OF(nsCSSCompressedDataBlock::CompressedCSSProperty) == 2,
-                  "CompressedCSSProperty doesn't align with nsCSSValue"); 
+static_assert(sizeof(nsCSSCompressedDataBlock) == 8,
+              "nsCSSCompressedDataBlock's size has changed");
+static_assert(NS_ALIGNMENT_OF(nsCSSValue) == 4 || NS_ALIGNMENT_OF(nsCSSValue) == 8,
+              "nsCSSValue doesn't align with nsCSSCompressedDataBlock"); 
+static_assert(NS_ALIGNMENT_OF(nsCSSCompressedDataBlock::CompressedCSSProperty) == 2,
+              "CompressedCSSProperty doesn't align with nsCSSValue"); 
 
 // Make sure that sizeof(CompressedCSSProperty) is big enough.
-MOZ_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands <=
-                  nsCSSCompressedDataBlock::MaxCompressedCSSProperty,
-                  "nsCSSProperty doesn't fit in StoredSizeOfCSSProperty");
+static_assert(eCSSProperty_COUNT_no_shorthands <=
+              nsCSSCompressedDataBlock::MaxCompressedCSSProperty,
+              "nsCSSProperty doesn't fit in StoredSizeOfCSSProperty");
 
 class nsCSSExpandedDataBlock {
     friend class nsCSSCompressedDataBlock;

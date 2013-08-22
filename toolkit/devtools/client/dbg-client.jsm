@@ -15,7 +15,7 @@ this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "RootClient",
                          "debuggerSocketConnect",
                          "LongStringClient",
-                         "GripClient"];
+                         "ObjectClient"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -28,8 +28,16 @@ XPCOMUtils.defineLazyServiceGetter(this, "socketTransportService",
                                    "@mozilla.org/network/socket-transport-service;1",
                                    "nsISocketTransportService");
 
-XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleClient",
-                                  "resource://gre/modules/devtools/WebConsoleClient.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+                                  "resource://gre/modules/devtools/Loader.jsm");
+
+Object.defineProperty(this, "WebConsoleClient", {
+  get: function() {
+    return devtools.require("devtools/toolkit/webconsole/client").WebConsoleClient;
+  },
+  configurable: true,
+  enumerable: true
+});
 
 Components.utils.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 this.makeInfallible = DevToolsUtils.makeInfallible;
@@ -189,7 +197,9 @@ const UnsolicitedNotifications = {
   "tabNavigated": "tabNavigated",
   "pageError": "pageError",
   "webappsEvent": "webappsEvent",
-  "documentLoad": "documentLoad"
+  "documentLoad": "documentLoad",
+  "enteredFrame": "enteredFrame",
+  "exitedFrame": "exitedFrame"
 };
 
 /**
@@ -495,6 +505,28 @@ DebuggerClient.prototype = {
         this.activeThread = threadClient;
       }
       aOnResponse(aResponse, threadClient);
+    });
+  },
+
+  /**
+   * Attach to a trace actor.
+   *
+   * @param string aTraceActor
+   *        The actor ID for the tracer to attach.
+   * @param function aOnResponse
+   *        Called with the response packet and a TraceClient
+   *        (which will be undefined on error).
+   */
+  attachTracer: function DC_attachTracer(aTraceActor, aOnResponse) {
+    let packet = {
+      to: aTraceActor,
+      type: "attach"
+    };
+    this.request(packet, (aResponse) => {
+      if (!aResponse.error) {
+        let traceClient = new TraceClient(this, aTraceActor);
+        aOnResponse(aResponse, traceClient);
+      }
     });
   },
 
@@ -1486,7 +1518,7 @@ ThreadClient.prototype = {
   },
 
   /**
-   * Return a GripClient object for the given object grip.
+   * Return a ObjectClient object for the given object grip.
    *
    * @param aGrip object
    *        A pause-lifetime object grip returned by the protocol.
@@ -1496,7 +1528,7 @@ ThreadClient.prototype = {
       return this._pauseGrips[aGrip.actor];
     }
 
-    let client = new GripClient(this._client, aGrip);
+    let client = new ObjectClient(this._client, aGrip);
     this._pauseGrips[aGrip.actor] = client;
     return client;
   },
@@ -1549,7 +1581,7 @@ ThreadClient.prototype = {
    * @param aGripCacheName
    *        The property name of the grip cache we want to clear.
    */
-  _clearGripClients: function TC_clearGrips(aGripCacheName) {
+  _clearObjectClients: function TC_clearGrips(aGripCacheName) {
     for each (let grip in this[aGripCacheName]) {
       grip.valid = false;
     }
@@ -1557,19 +1589,19 @@ ThreadClient.prototype = {
   },
 
   /**
-   * Invalidate pause-lifetime grip clients and clear the list of
-   * current grip clients.
+   * Invalidate pause-lifetime grip clients and clear the list of current grip
+   * clients.
    */
   _clearPauseGrips: function TC_clearPauseGrips() {
-    this._clearGripClients("_pauseGrips");
+    this._clearObjectClients("_pauseGrips");
   },
 
   /**
-   * Invalidate pause-lifetime grip clients and clear the list of
-   * current grip clients.
+   * Invalidate thread-lifetime grip clients and clear the list of current grip
+   * clients.
    */
   _clearThreadGrips: function TC_clearPauseGrips() {
-    this._clearGripClients("_threadGrips");
+    this._clearObjectClients("_threadGrips");
   },
 
   /**
@@ -1588,12 +1620,149 @@ ThreadClient.prototype = {
    * Return an instance of SourceClient for the given source actor form.
    */
   source: function TC_source(aForm) {
-    return new SourceClient(this._client, aForm);
-  }
+    if (aForm.actor in this._threadGrips) {
+      return this._threadGrips[aForm.actor];
+    }
 
+    return this._threadGrips[aForm.actor] = new SourceClient(this._client,
+                                                             aForm);
+  },
+
+  /**
+   * Request the prototype and own properties of mutlipleObjects.
+   *
+   * @param aOnResponse function
+   *        Called with the request's response.
+   * @param actors [string]
+   *        List of actor ID of the queried objects.
+   */
+  getPrototypesAndProperties: DebuggerClient.requester({
+    type: "prototypesAndProperties",
+    actors: args(0)
+  }, {
+    telemetry: "PROTOTYPESANDPROPERTIES"
+  })
 };
 
 eventSource(ThreadClient.prototype);
+
+/**
+ * Creates a tracing profiler client for the remote debugging protocol
+ * server. This client is a front to the trace actor created on the
+ * server side, hiding the protocol details in a traditional
+ * JavaScript API.
+ *
+ * @param aClient DebuggerClient
+ *        The debugger client parent.
+ * @param aActor string
+ *        The actor ID for this thread.
+ */
+function TraceClient(aClient, aActor) {
+  this._client = aClient;
+  this._actor = aActor;
+  this._traces = Object.create(null);
+  this._activeTraces = 0;
+
+  this._client.addListener(UnsolicitedNotifications.enteredFrame,
+                           this.onEnteredFrame.bind(this));
+  this._client.addListener(UnsolicitedNotifications.exitedFrame,
+                           this.onExitedFrame.bind(this));
+
+  this.request = this._client.request;
+}
+
+TraceClient.prototype = {
+  get actor()   { return this._actor; },
+  get tracing() { return this._activeTraces > 0; },
+
+  get _transport() { return this._client._transport; },
+
+  /**
+   * Detach from the trace actor.
+   */
+  detach: DebuggerClient.requester({ type: "detach" },
+                                   { telemetry: "TRACERDETACH" }),
+
+  /**
+   * Start a new trace.
+   *
+   * @param aTrace [string]
+   *        An array of trace types to be recorded by the new trace.
+   *
+   * @param aName string
+   *        The name of the new trace.
+   *
+   * @param aOnResponse function
+   *        Called with the request's response.
+   */
+  startTrace: DebuggerClient.requester({
+    type: "startTrace",
+    name: args(1),
+    trace: args(0)
+  }, {
+    after: function(aResponse) {
+      if (aResponse.error) {
+        return aResponse;
+      }
+
+      let name = aResponse.name;
+
+      if (!this._traces[name] || !this._traces[name].active) {
+        this._activeTraces++;
+      }
+
+      this._traces[name] = {
+        active: true
+      };
+
+      return aResponse;
+    },
+    telemetry: "STARTTRACE"
+  }),
+
+  /**
+   * End a trace. If a name is provided, stop the named
+   * trace. Otherwise, stop the most recently started trace.
+   *
+   * @param aName string
+   *        The name of the trace to stop.
+   *
+   * @param aOnResponse function
+   *        Called with the request's response.
+   */
+  stopTrace: DebuggerClient.requester({
+    type: "stopTrace",
+    name: args(0)
+  }, {
+    after: function(aResponse) {
+      if (aResponse.error) {
+        return aResponse;
+      }
+
+      this._traces[aResponse.name].active = false;
+      this._activeTraces--;
+
+      return aResponse;
+    },
+    telemetry: "STOPTRACE"
+  }),
+
+  /**
+   * Called when the trace actor notifies that a frame has been entered.
+   */
+  onEnteredFrame: function JSTC_onEnteredFrame(aEvent, aResponse) {
+    this.notify("enteredFrame", aResponse);
+  },
+
+  /**
+   * Called when the trace actor notifies that a frame has been exited.
+   */
+  onExitedFrame: function JSTC_onExitedFrame(aEvent, aResponse) {
+    this.notify("exitedFrame", aResponse);
+  }
+};
+
+eventSource(TraceClient.prototype);
 
 /**
  * Grip clients are used to retrieve information about the relevant object.
@@ -1603,14 +1772,14 @@ eventSource(ThreadClient.prototype);
  * @param aGrip object
  *        A pause-lifetime object grip returned by the protocol.
  */
-function GripClient(aClient, aGrip)
+function ObjectClient(aClient, aGrip)
 {
   this._grip = aGrip;
   this._client = aClient;
   this.request = this._client.request;
 }
 
-GripClient.prototype = {
+ObjectClient.prototype = {
   get actor() { return this._grip.actor },
   get _transport() { return this._client._transport; },
 
@@ -1757,9 +1926,11 @@ function SourceClient(aClient, aForm) {
 
 SourceClient.prototype = {
   get _transport() this._client._transport,
+  get _activeThread() this._client.activeThread,
   get isBlackBoxed() this._isBlackBoxed,
   get actor() this._form.actor,
   get request() this._client.request,
+  get url() this._form.url,
 
   /**
    * Black box this SourceClient's source.
@@ -1774,6 +1945,9 @@ SourceClient.prototype = {
     after: function (aResponse) {
       if (!aResponse.error) {
         this._isBlackBoxed = true;
+        if (this._activeThread) {
+          this._activeThread.notify("blackboxchange", this);
+        }
       }
       return aResponse;
     }
@@ -1792,6 +1966,9 @@ SourceClient.prototype = {
     after: function (aResponse) {
       if (!aResponse.error) {
         this._isBlackBoxed = false;
+        if (this._activeThread) {
+          this._activeThread.notify("blackboxchange", this);
+        }
       }
       return aResponse;
     }

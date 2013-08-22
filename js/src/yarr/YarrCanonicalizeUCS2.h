@@ -28,7 +28,7 @@
 #ifndef yarr_YarrCanonicalizeUCS2_h
 #define yarr_YarrCanonicalizeUCS2_h
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 #include "yarr/wtfbridge.h"
 

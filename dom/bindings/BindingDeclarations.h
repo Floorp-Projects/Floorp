@@ -37,6 +37,13 @@ struct DictionaryBase
 {
 };
 
+// Struct that serves as a base class for all typed arrays and array buffers and
+// array buffer views.  Particularly useful so we can use IsBaseOf to detect
+// typed array/buffer/view template arguments.
+struct AllTypedArraysBase {
+};
+
+
 struct MainThreadDictionaryBase : public DictionaryBase
 {
 protected:
@@ -571,66 +578,6 @@ class Sequence : public FallibleTArray<T>
 public:
   Sequence() : FallibleTArray<T>()
   {}
-};
-
-class RootedJSValue
-{
-public:
-  RootedJSValue()
-    : mCx(nullptr)
-  {}
-
-  ~RootedJSValue()
-  {
-    if (mCx) {
-      JS_RemoveValueRoot(mCx, &mValue);
-    }
-  }
-
-  bool SetValue(JSContext* aCx, JS::Value aValue)
-  {
-    // We don't go ahead and root if v is null, because we want to allow
-    // null-initialization even when there is no cx.
-    MOZ_ASSERT_IF(!aValue.isNull(), aCx);
-
-    // Be careful to not clobber mCx if it's already set, just in case we're
-    // being null-initialized (with a null cx for some reason) after we have
-    // already been initialized properly with a non-null value.
-    if (!aValue.isNull() && !mCx) {
-      if (!JS_AddNamedValueRoot(aCx, &mValue, "RootedJSValue::mValue")) {
-        return false;
-      }
-      mCx = aCx;
-    }
-
-    mValue = aValue;
-    return true;
-  }
-
-  // Note: This operator can be const because we return by value, not
-  // by reference.
-  operator JS::Value() const
-  {
-    return mValue;
-  }
-
-  JS::Value* operator&()
-  {
-    return &mValue;
-  }
-
-  const JS::Value* operator&() const
-  {
-    return &mValue;
-  }
-
-private:
-  // Don't allow copy-construction of these objects, because it'll do the wrong
-  // thing with our flag mCx.
-  RootedJSValue(const RootedJSValue&) MOZ_DELETE;
-
-  JS::Value mValue;
-  JSContext* mCx;
 };
 
 inline nsWrapperCache*

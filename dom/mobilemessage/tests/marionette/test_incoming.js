@@ -9,7 +9,10 @@ SpecialPowers.addPermission("sms", true, document);
 const SENDER = "5555552368"; // the remote number
 const RECEIVER = "15555215554"; // the emulator's number
 
-let sms = window.navigator.mozSms;
+let manager = window.navigator.mozMobileMessage;
+ok(manager instanceof MozMobileMessageManager,
+   "manager is instance of " + manager.constructor);
+
 let body = "Hello SMS world!";
 
 let completed = false;
@@ -19,7 +22,7 @@ runEmulatorCmd("sms send " + SENDER + " " + body, function(result) {
   completed = true;
 });
 
-sms.onreceived = function onreceived(event) {
+manager.onreceived = function onreceived(event) {
   log("Received an SMS!");
 
   let message = event.message;

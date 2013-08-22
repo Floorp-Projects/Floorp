@@ -11,6 +11,9 @@ let computedView;
 const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/" +
   "test/browser_bug722196_identify_media_queries.html";
 
+let {PropertyView} = devtools.require("devtools/styleinspector/computed-view");
+let {CssLogic} = devtools.require("devtools/styleinspector/css-logic");
+
 function test()
 {
   waitForExplicitFinish();
@@ -23,26 +26,24 @@ function docLoaded()
   browser.removeEventListener("load", docLoaded, true);
   doc = content.document;
 
-  openInspector(selectNode);
+  openComputedView(selectNode);
 }
 
-function selectNode(aInspector)
+function selectNode(aInspector, aComputedView)
 {
+  computedView = aComputedView;
+
   var div = doc.querySelector("div");
   ok(div, "captain, we have the div");
 
   aInspector.selection.setNode(div);
-
-  aInspector.sidebar.once("computedview-ready", function() {
-    aInspector.sidebar.select("computedview");
-    computedView = getComputedView(aInspector);
-    checkSheets();
-  });
+  aInspector.once("inspector-updated", checkCssLogic);
 }
 
-function checkSheets()
+function checkCssLogic()
 {
-  let cssLogic = computedView.cssLogic;
+  let cssLogic = new CssLogic();
+  cssLogic.highlight(doc.querySelector("div"));
   cssLogic.processMatchedSelectors();
 
   let _strings = Services.strings
@@ -57,7 +58,26 @@ function checkSheets()
   is(cssLogic._matchedRules[1][0].source, source2,
     "rule.source gives correct output for rule 2");
 
-  finishUp();
+  checkPropertyView();
+}
+
+function checkPropertyView()
+{
+  let propertyView = new PropertyView(computedView, "width");
+  propertyView.buildMain();
+  propertyView.buildSelectorContainer();
+  propertyView.matchedExpanded = true;
+  return propertyView.refreshMatchedSelectors().then(() => {
+    let numMatchedSelectors = propertyView.matchedSelectors.length;
+
+    is(numMatchedSelectors, 2,
+        "Property view has the correct number of matched selectors for div");
+
+    is(propertyView.hasMatchedSelectors, true,
+        "hasMatchedSelectors returns true");
+
+    finishUp();
+  }).then(null, (err) => console.error(err));
 }
 
 function finishUp()

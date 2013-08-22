@@ -508,7 +508,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
         return nslots * sizeof(HeapSlot);
     }
 
-    JS_ASSERT(nslots > 2);
+    JS_ASSERT(nslots >= 2);
     size_t nbytes = nslots * sizeof(HeapValue);
     dstHeader = static_cast<ObjectElements *>(zone->malloc_(nbytes));
     if (!dstHeader)
@@ -537,87 +537,6 @@ js::Nursery::MinorGCCallback(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 }
 
 void
-js::Nursery::markFallback(Cell *cell)
-{
-    JS_ASSERT(uintptr_t(cell) >= start());
-    size_t offset = uintptr_t(cell) - start();
-    JS_ASSERT(offset < heapEnd() - start());
-    JS_ASSERT(offset % ThingAlignment == 0);
-    fallbackBitmap.set(offset / ThingAlignment);
-}
-
-void
-js::Nursery::moveFallbackToTenured(gc::MinorCollectionTracer *trc)
-{
-    for (size_t i = 0; i < FallbackBitmapBits; ++i) {
-        if (fallbackBitmap.get(i)) {
-            JSObject *src = reinterpret_cast<JSObject *>(start() + i * ThingAlignment);
-            moveToTenured(trc, src);
-        }
-    }
-    fallbackBitmap.clear(false);
-}
-
-/* static */ void
-js::Nursery::MinorFallbackMarkingCallback(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
-{
-    MinorCollectionTracer *trc = static_cast<MinorCollectionTracer *>(jstrc);
-    if (ShouldMoveToTenured(trc, thingp))
-        trc->nursery->markFallback(static_cast<JSObject *>(*thingp));
-}
-
-/* static */ void
-js::Nursery::MinorFallbackFixupCallback(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
-{
-    MinorCollectionTracer *trc = static_cast<MinorCollectionTracer *>(jstrc);
-    if (trc->nursery->isInside(*thingp))
-        trc->nursery->getForwardedPointer(thingp);
-}
-
-static void
-TraceHeapWithCallback(JSTracer *trc, JSTraceCallback callback)
-{
-    JSTraceCallback prior = trc->callback;
-
-    AutoCopyFreeListToArenas copy(trc->runtime);
-    trc->callback = callback;
-    for (ZonesIter zone(trc->runtime); !zone.done(); zone.next()) {
-        for (size_t i = 0; i < FINALIZE_LIMIT; ++i) {
-            AllocKind kind = AllocKind(i);
-            for (CellIterUnderGC cells(zone, kind); !cells.done(); cells.next())
-                JS_TraceChildren(trc, cells.getCell(), MapAllocToTraceKind(kind));
-        }
-    }
-
-    trc->callback = prior;
-}
-
-void
-js::Nursery::markStoreBuffer(MinorCollectionTracer *trc)
-{
-    JSRuntime *rt = trc->runtime;
-    if (!rt->gcStoreBuffer.hasOverflowed()) {
-        rt->gcStoreBuffer.mark(trc);
-        return;
-    }
-
-    /*
-     * If the store buffer has overflowed, we need to walk the full heap to
-     * discover cross-generation edges. Since we cannot easily walk the heap
-     * while simultaneously allocating, we use a three pass algorithm:
-     *   1) Walk the major heap and mark live things in the nursery in a
-     *      pre-allocated bitmap.
-     *   2) Use the bitmap to move all live nursery things to the tenured
-     *      heap.
-     *   3) Walk the heap a second time to find and update all of the moved
-     *      references in the tenured heap.
-     */
-    TraceHeapWithCallback(trc, MinorFallbackMarkingCallback);
-    moveFallbackToTenured(trc);
-    TraceHeapWithCallback(trc, MinorFallbackFixupCallback);
-}
-
-void
 js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
 {
     JS_AbortIfWrongThread(rt);
@@ -643,7 +562,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
         comp->markAllCrossCompartmentWrappers(&trc);
         comp->markAllInitialShapeTableEntries(&trc);
     }
-    markStoreBuffer(&trc);
+    rt->gcStoreBuffer.mark(&trc);
     rt->newObjectCache.clearNurseryObjects(rt);
 
     /*

@@ -37,8 +37,8 @@ template <size_t LEN>
 inline NS_COM_GLUE void
 NS_SetThreadName(nsIThread *thread, const char (&name)[LEN])
 {
-  MOZ_STATIC_ASSERT(LEN <= 16,
-                    "Thread name must be no more than 16 characters");
+  static_assert(LEN <= 16,
+                "Thread name must be no more than 16 characters");
   NS_SetThreadName(thread, nsDependentCString(name));
 }
 
@@ -99,7 +99,13 @@ bool NS_IsMainThread();
 // This is defined in nsThreadManager.cpp and initialized to `Main` for the
 // main thread by nsThreadManager::Init.
 extern NS_TLS mozilla::threads::ID gTLSThreadID;
-inline bool NS_IsMainThread()
+#ifdef MOZ_ASAN
+// Temporary workaround, see bug 895845
+MOZ_ASAN_BLACKLIST static
+#else
+inline
+#endif
+bool NS_IsMainThread()
 {
   return gTLSThreadID == mozilla::threads::Main;
 }

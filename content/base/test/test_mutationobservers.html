@@ -487,8 +487,12 @@ function testModalDialog() {
     });
   m.observe(div, { childList: true });
   div.innerHTML = "<span><span>foo</span></span>";
-  window.showModalDialog("mutationobserver_dialog.html");
-  ok(didHandleCallback, "Should have called the callback while showing modal dialog!");
+  try {
+    window.showModalDialog("mutationobserver_dialog.html");
+    ok(didHandleCallback, "Should have called the callback while showing modal dialog!");
+  } catch(e) {
+    todo(false, "showModalDialog not implemented on this platform");
+  }
   then(testTakeRecords);
 }
 

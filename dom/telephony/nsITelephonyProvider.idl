@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(37fde795-7ff4-40fd-925b-3ebc07ba0cd1)]
+[scriptable, uuid(3fb573c3-6fc4-41d3-80c1-f0e60662691e)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -62,6 +62,17 @@ interface nsITelephonyListener : nsISupports
                              in boolean isEmergency);
 
   /**
+   * Notify when RIL receives supplementary service notification.
+   *
+   * @param callIndex
+   *        Call identifier assigned by the RIL. -1 if not specified
+   * @param notification
+   *        One of the nsITelephonyProvider::NOTIFICATION_* values.
+   */
+  void supplementaryServiceNotification(in long callIndex,
+                                        in unsigned short notification);
+
+  /**
    * Called when RIL error occurs.
    *
    * @param callIndex
@@ -71,13 +82,21 @@ interface nsITelephonyListener : nsISupports
    */
   void notifyError(in long callIndex,
                    in AString error);
+
+  /**
+   * Called when a waiting call comes in CDMA networks.
+   *
+   * @param number
+   *        Number of the other party.
+   */
+  void notifyCdmaCallWaiting(in AString number);
 };
 
 /**
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(099e1d81-f247-4ebb-89d8-cd89dd5f6ed4)]
+[scriptable, uuid(eddb7ff6-29af-4973-83de-1159365c7d7d)]
 interface nsITelephonyProvider : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -91,6 +110,9 @@ interface nsITelephonyProvider : nsISupports
   const unsigned short CALL_STATE_DISCONNECTING = 8;
   const unsigned short CALL_STATE_DISCONNECTED = 9;
   const unsigned short CALL_STATE_INCOMING = 10;
+
+  const unsigned short NOTIFICATION_REMOTE_HELD = 0;
+  const unsigned short NOTIFICATION_REMOTE_RESUMED = 1;
 
   /**
    * Called when a content process registers receiving unsolicited messages from

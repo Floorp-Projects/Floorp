@@ -14,7 +14,7 @@
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 class nsStyleContext;
 struct nsRuleData;
@@ -627,7 +627,12 @@ protected:
               GetShadowData(const nsCSSValueList* aList,
                             nsStyleContext* aContext,
                             bool aIsBoxShadow,
-                            bool& inherited);
+                            bool& aCanStoreInRuleTree);
+  void SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
+                                const nsCSSValue& aValue,
+                                nsStyleContext* aStyleContext,
+                                nsPresContext* aPresContext,
+                                bool& aCanStoreInRuleTree);
 
 private:
   nsRuleNode(nsPresContext* aPresContext, nsRuleNode* aParent,

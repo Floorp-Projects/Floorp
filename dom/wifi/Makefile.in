@@ -14,13 +14,6 @@ LIBXUL_LIBRARY   = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
-EXTRA_COMPONENTS = \
-  WifiWorker.js \
-  WifiWorker.manifest \
-  DOMWifiManager.js \
-  DOMWifiManager.manifest \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 

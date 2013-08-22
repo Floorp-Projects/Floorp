@@ -24,6 +24,7 @@
 #include "jscompartmentinlines.h"
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 using namespace js;
 
@@ -43,7 +44,7 @@ js_InitFunctionClass(JSContext *cx, HandleObject obj)
     return obj->as<GlobalObject>().getOrCreateFunctionPrototype(cx);
 }
 
-static JSBool
+static bool
 ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
@@ -77,7 +78,7 @@ ProtoGetterImpl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+static bool
 ProtoGetter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -164,7 +165,7 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static JSBool
+static bool
 ProtoSetter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -176,7 +177,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 {
     Rooted<GlobalObject*> self(cx, this);
 
-    JS_THREADSAFE_ASSERT(cx->compartment() != cx->runtime()->atomsCompartment);
+    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     JS_ASSERT(isNative());
 
     cx->setDefaultCompartmentObjectIfUnset(self);
@@ -226,7 +227,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         jschar *source = InflateString(cx, rawSource, &sourceLen);
         if (!source)
             return NULL;
-        ScriptSource *ss = cx->new_<ScriptSource>();
+        ScriptSource *ss = cx->new_<ScriptSource>(/* originPrincipals = */ (JSPrincipals*) NULL);
         if (!ss) {
             js_free(source);
             return NULL;
@@ -239,6 +240,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         CompileOptions options(cx);
         options.setNoScriptRval(true)
                .setVersion(JSVERSION_DEFAULT);
+
         RootedScript script(cx, JSScript::Create(cx,
                                                  /* enclosingScope = */ NullPtr(),
                                                  /* savedCallerFun = */ false,
@@ -476,7 +478,7 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
            GlobalObject::initMapIteratorProto(cx, global) &&
            js_InitSetClass(cx, global) &&
            GlobalObject::initSetIteratorProto(cx, global) &&
-#if ENABLE_INTL_API
+#if EXPOSE_INTL_API
            js_InitIntlClass(cx, global) &&
 #endif
            true;

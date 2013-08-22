@@ -8,6 +8,7 @@
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
+#include "gfx2DGlue.h"
 
 namespace mozilla {
 namespace gl {
@@ -20,6 +21,44 @@ TextureImage::Create(GLContext* gl,
                      TextureImage::Flags flags)
 {
     return gl->CreateTextureImage(size, contentType, wrapMode, flags);
+}
+
+// Moz2D equivalent...
+already_AddRefed<TextureImage>
+TextureImage::Create(GLContext* gl,
+                     const gfx::IntSize& size,
+                     TextureImage::ContentType contentType,
+                     GLenum wrapMode,
+                     TextureImage::Flags flags)
+{
+    return Create(gl, ThebesIntSize(size), contentType, wrapMode, flags);
+}
+
+bool
+TextureImage::UpdateFromDataSource(gfx::DataSourceSurface *aSurface,
+                                   const nsIntRegion* aDestRegion,
+                                   const gfx::IntPoint* aSrcPoint)
+{
+    nsIntRegion destRegion = aDestRegion ? *aDestRegion
+                                         : nsIntRect(0, 0,
+                                                     aSurface->GetSize().width,
+                                                     aSurface->GetSize().height);
+    nsIntPoint thebesSrcPoint = aSrcPoint ? nsIntPoint(aSrcPoint->x, aSrcPoint->y)
+                                          : nsIntPoint(0, 0);
+    RefPtr<gfxASurface> thebesSurf
+        = new gfxImageSurface(aSurface->GetData(),
+                              ThebesIntSize(aSurface->GetSize()),
+                              aSurface->Stride(),
+                              SurfaceFormatToImageFormat(aSurface->GetFormat()));
+    return DirectUpdate(thebesSurf, destRegion, thebesSrcPoint);
+}
+
+gfx::IntRect TextureImage::GetTileRect() {
+    return gfx::IntRect(gfx::IntPoint(0,0), ToIntSize(mSize));
+}
+
+gfx::IntRect TextureImage::GetSrcTileRect() {
+    return GetTileRect();
 }
 
 BasicTextureImage::~BasicTextureImage()
@@ -188,10 +227,54 @@ BasicTextureImage::Resize(const nsIntSize& aSize)
     mSize = aSize;
 }
 
+// Moz2D equivalents...
+void TextureImage::Resize(const gfx::IntSize& aSize) {
+  Resize(ThebesIntSize(aSize));
+}
+
+gfx::IntSize TextureImage::GetSize() const {
+  return ToIntSize(mSize);
+}
+
+TextureImage::TextureImage(const gfx::IntSize& aSize,
+             GLenum aWrapMode, ContentType aContentType,
+             Flags aFlags)
+    : mSize(ThebesIntSize(aSize))
+    , mWrapMode(aWrapMode)
+    , mContentType(aContentType)
+    , mFilter(gfxPattern::FILTER_GOOD)
+    , mFlags(aFlags)
+{}
+
+BasicTextureImage::BasicTextureImage(GLuint aTexture,
+                  const gfx::IntSize& aSize,
+                  GLenum aWrapMode,
+                  ContentType aContentType,
+                  GLContext* aContext,
+                  TextureImage::Flags aFlags,
+                  TextureImage::ImageFormat aImageFormat)
+  : TextureImage(ThebesIntSize(aSize), aWrapMode, aContentType, aFlags, aImageFormat)
+  , mTexture(aTexture)
+  , mTextureState(Created)
+  , mGLContext(aContext)
+  , mUpdateOffset(0, 0)
+{}
+
+already_AddRefed<TextureImage>
+CreateBasicTextureImage(GLContext* aGL,
+                        const gfx::IntSize& aSize,
+                        TextureImage::ContentType aContentType,
+                        GLenum aWrapMode,
+                        TextureImage::Flags aFlags)
+{
+  return CreateBasicTextureImage(aGL, ThebesIntSize(aSize), aContentType, aWrapMode, aFlags);
+}
+
 TiledTextureImage::TiledTextureImage(GLContext* aGL,
                                      nsIntSize aSize,
                                      TextureImage::ContentType aContentType,
-                                     TextureImage::Flags aFlags)
+                                     TextureImage::Flags aFlags,
+                                     TextureImage::ImageFormat aImageFormat)
     : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aFlags)
     , mCurrentImage(0)
     , mIterationCallback(nullptr)
@@ -200,8 +283,9 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
     , mColumns(0)
     , mGL(aGL)
     , mTextureState(Created)
+    , mImageFormat(aImageFormat)
 {
-    if (!(aFlags & TextureImage::ForceSingleTile) && mGL->WantsSmallTiles()) {
+    if (!(aFlags & TextureImage::DisallowBigImage) && mGL->WantsSmallTiles()) {
       mTileSize = 256;
     } else {
       mGL->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*) &mTileSize);
@@ -235,7 +319,7 @@ TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
     int oldCurrentImage = mCurrentImage;
     BeginTileIteration();
     do {
-        nsIntRect tileRect = GetSrcTileRect();
+        nsIntRect tileRect = ThebesIntRect(GetSrcTileRect());
         int xPos = tileRect.x;
         int yPos = tileRect.y;
 
@@ -291,7 +375,8 @@ TiledTextureImage::GetUpdateRegion(nsIntRegion& aForRegion)
     for (unsigned i = 0; i < mImages.Length(); i++) {
         int xPos = (i % mColumns) * mTileSize;
         int yPos = (i / mColumns) * mTileSize;
-        nsIntRect imageRect = nsIntRect(nsIntRect(nsIntPoint(xPos,yPos), mImages[i]->GetSize()));
+        nsIntRect imageRect = nsIntRect(nsIntPoint(xPos,yPos),
+                                        ThebesIntSize(mImages[i]->GetSize()));
 
         if (aForRegion.Intersects(imageRect)) {
             // Make a copy of the region
@@ -333,7 +418,9 @@ TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
     for (unsigned i = 0; i < mImages.Length(); i++) {
         int xPos = (i % mColumns) * mTileSize;
         int yPos = (i / mColumns) * mTileSize;
-        nsIntRegion imageRegion = nsIntRegion(nsIntRect(nsIntPoint(xPos,yPos), mImages[i]->GetSize()));
+        nsIntRegion imageRegion =
+          nsIntRegion(nsIntRect(nsIntPoint(xPos,yPos),
+                                ThebesIntSize(mImages[i]->GetSize())));
 
         // a single Image can handle this update request
         if (imageRegion.Contains(aRegion)) {
@@ -388,7 +475,8 @@ TiledTextureImage::EndUpdate()
     for (unsigned i = 0; i < mImages.Length(); i++) {
         int xPos = (i % mColumns) * mTileSize;
         int yPos = (i / mColumns) * mTileSize;
-        nsIntRect imageRect = nsIntRect(nsIntPoint(xPos,yPos), mImages[i]->GetSize());
+        nsIntRect imageRect = nsIntRect(nsIntPoint(xPos,yPos),
+                                        ThebesIntSize(mImages[i]->GetSize()));
 
         nsIntRegion subregion;
         subregion.And(mUpdateRegion, imageRect);
@@ -438,25 +526,25 @@ void TiledTextureImage::SetIterationCallback(TileIterationCallback aCallback,
     mIterationCallbackData = aCallbackData;
 }
 
-nsIntRect TiledTextureImage::GetTileRect()
+gfx::IntRect TiledTextureImage::GetTileRect()
 {
     if (!GetTileCount()) {
-        return nsIntRect();
+        return gfx::IntRect();
     }
-    nsIntRect rect = mImages[mCurrentImage]->GetTileRect();
+    gfx::IntRect rect = mImages[mCurrentImage]->GetTileRect();
     unsigned int xPos = (mCurrentImage % mColumns) * mTileSize;
     unsigned int yPos = (mCurrentImage / mColumns) * mTileSize;
     rect.MoveBy(xPos, yPos);
     return rect;
 }
 
-nsIntRect TiledTextureImage::GetSrcTileRect()
+gfx::IntRect TiledTextureImage::GetSrcTileRect()
 {
-    nsIntRect rect = GetTileRect();
+    gfx::IntRect rect = GetTileRect();
     unsigned int srcY = mFlags & NeedsYFlip
                         ? mSize.height - rect.height - rect.y
                         : rect.y;
-    return nsIntRect(rect.x, srcY, rect.width, rect.height);
+    return gfx::IntRect(rect.x, srcY, rect.width, rect.height);
 }
 
 void
@@ -542,7 +630,7 @@ void TiledTextureImage::Resize(const nsIntSize& aSize)
 
             // Create a new tile.
             nsRefPtr<TextureImage> teximg =
-                    mGL->TileGenFunc(size, mContentType, mFlags);
+                    mGL->TileGenFunc(size, mContentType, mFlags, mImageFormat);
             if (replace)
                 mImages.ReplaceElementAt(i, teximg.forget());
             else
@@ -591,7 +679,8 @@ CreateBasicTextureImage(GLContext* aGL,
                         const nsIntSize& aSize,
                         TextureImage::ContentType aContentType,
                         GLenum aWrapMode,
-                        TextureImage::Flags aFlags)
+                        TextureImage::Flags aFlags,
+                        TextureImage::ImageFormat aImageFormat)
 {
     bool useNearestFilter = aFlags & TextureImage::UseNearestFilter;
     aGL->MakeCurrent();
@@ -608,7 +697,8 @@ CreateBasicTextureImage(GLContext* aGL,
     aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
 
     nsRefPtr<BasicTextureImage> texImage =
-        new BasicTextureImage(texture, aSize, aWrapMode, aContentType, aGL, aFlags);
+        new BasicTextureImage(texture, aSize, aWrapMode, aContentType,
+                              aGL, aFlags, aImageFormat);
     return texImage.forget();
 }
 

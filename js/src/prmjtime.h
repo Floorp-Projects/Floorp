@@ -7,7 +7,8 @@
 #ifndef prmjtime_h
 #define prmjtime_h
 
-#include <time.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /*
  * Broken down form of 64 bit time value.

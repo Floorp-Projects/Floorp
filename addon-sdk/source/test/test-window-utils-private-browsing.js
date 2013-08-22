@@ -3,6 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
+// Fennec support tracked in bug #809412
+module.metadata = {
+  'engines': {
+    'Firefox': '*'
+  }
+};
+
 const windowUtils = require('sdk/deprecated/window-utils');
 const { Cc, Ci } = require('chrome');
 const { isWindowPBSupported } = require('sdk/private-browsing/utils');
@@ -213,15 +220,5 @@ exports.testWindowIteratorIgnoresPrivateWindows = function(assert, done) {
     close(window).then(done);
   });
 };
-
-if (require("sdk/system/xul-app").is("Fennec")) {
-  module.exports = {
-    "test Unsupported Test": function UnsupportedTest (assert) {
-        assert.pass(
-          "Skipping this test until Fennec support is implemented." +
-          "See bug 809412");
-    }
-  }
-}
 
 require("test").run(exports);

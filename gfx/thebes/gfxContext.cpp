@@ -8,6 +8,7 @@
 #endif
 #include <math.h>
 
+#include "mozilla/Alignment.h"
 #include "mozilla/Constants.h"
 
 #include "cairo.h"
@@ -36,7 +37,7 @@ using namespace mozilla::gfx;
 class GeneralPattern
 {
 public:    
-  GeneralPattern(gfxContext *aContext) : mContext(aContext), mPattern(NULL) {}
+  GeneralPattern(gfxContext *aContext) : mContext(aContext), mPattern(nullptr) {}
   ~GeneralPattern() { if (mPattern) { mPattern->~Pattern(); } }
 
   operator mozilla::gfx::Pattern&()
@@ -76,7 +77,7 @@ private:
 };
 
 gfxContext::gfxContext(gfxASurface *surface)
-  : mRefCairo(NULL)
+  : mRefCairo(nullptr)
   , mSurface(surface)
 {
   MOZ_COUNT_CTOR(gfxContext);
@@ -97,9 +98,9 @@ gfxContext::gfxContext(gfxASurface *surface)
 gfxContext::gfxContext(DrawTarget *aTarget)
   : mPathIsRect(false)
   , mTransformChanged(false)
-  , mCairo(NULL)
-  , mRefCairo(NULL)
-  , mSurface(NULL)
+  , mCairo(nullptr)
+  , mRefCairo(nullptr)
+  , mSurface(nullptr)
   , mFlags(0)
   , mDT(aTarget)
   , mOriginalDT(aTarget)
@@ -224,8 +225,8 @@ gfxContext::NewPath()
   if (mCairo) {
     cairo_new_path(mCairo);
   } else {
-    mPath = NULL;
-    mPathBuilder = NULL;
+    mPath = nullptr;
+    mPathBuilder = nullptr;
     mPathIsRect = false;
     mTransformChanged = false;
   }
@@ -934,7 +935,8 @@ gfxContext::SetDash(gfxFloat *dashes, int ndash, gfxFloat offset)
     }
     state.strokeOptions.mDashLength = ndash;
     state.strokeOptions.mDashOffset = Float(offset);
-    state.strokeOptions.mDashPattern = ndash ? state.dashPattern.Elements() : NULL;
+    state.strokeOptions.mDashPattern = ndash ? state.dashPattern.Elements()
+                                             : nullptr;
   }
 }
 
@@ -974,7 +976,7 @@ gfxContext::CurrentDashOffset() const
         return 0.0;
     }
     gfxFloat offset;
-    cairo_get_dash(mCairo, NULL, &offset);
+    cairo_get_dash(mCairo, nullptr, &offset);
     return offset;
   } else {
     return CurrentState().strokeOptions.mDashOffset;
@@ -1122,7 +1124,7 @@ gfxContext::Clip(const gfxRect& rect)
     cairo_rectangle(mCairo, rect.X(), rect.Y(), rect.Width(), rect.Height());
     cairo_clip(mCairo);
   } else {
-    AzureState::PushedClip clip = { NULL, ToRect(rect), mTransform };
+    AzureState::PushedClip clip = { nullptr, ToRect(rect), mTransform };
     CurrentState().pushedClips.AppendElement(clip);
     mDT->PushClipRect(ToRect(rect));
     NewPath();
@@ -1138,7 +1140,7 @@ gfxContext::Clip()
     if (mPathIsRect) {
       MOZ_ASSERT(!mTransformChanged);
 
-      AzureState::PushedClip clip = { NULL, mRect, mTransform };
+      AzureState::PushedClip clip = { nullptr, mRect, mTransform };
       CurrentState().pushedClips.AppendElement(clip);
       mDT->PushClipRect(mRect);
     } else {
@@ -1232,6 +1234,7 @@ gfxContext::ClipContainsRect(const gfxRect& aRect)
     for (int i = mStateStack.Length() - 2; i > 0; i--) {
       if (mStateStack[i].clipWasReset) {
         lastReset = i;
+        break;
       }
     }
 
@@ -1279,9 +1282,9 @@ gfxContext::SetColor(const gfxRGBA& c)
     else
         cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
   } else {
-    CurrentState().pattern = NULL;
-    CurrentState().sourceSurfCairo = NULL;
-    CurrentState().sourceSurface = NULL;
+    CurrentState().pattern = nullptr;
+    CurrentState().sourceSurfCairo = nullptr;
+    CurrentState().sourceSurface = nullptr;
 
     if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
 
@@ -1305,9 +1308,9 @@ gfxContext::SetDeviceColor(const gfxRGBA& c)
   if (mCairo) {
     cairo_set_source_rgba(mCairo, c.r, c.g, c.b, c.a);
   } else {
-    CurrentState().pattern = NULL;
-    CurrentState().sourceSurfCairo = NULL;
-    CurrentState().sourceSurface = NULL;
+    CurrentState().pattern = nullptr;
+    CurrentState().sourceSurfCairo = nullptr;
+    CurrentState().sourceSurface = nullptr;
     CurrentState().color = ToColor(c);
   }
 }
@@ -1343,7 +1346,7 @@ gfxContext::SetSource(gfxASurface *surface, const gfxPoint& offset)
     cairo_set_source_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
   } else {
     CurrentState().surfTransform = Matrix(1.0f, 0, 0, 1.0f, Float(offset.x), Float(offset.y));
-    CurrentState().pattern = NULL;
+    CurrentState().pattern = nullptr;
     CurrentState().patternTransformChanged = false;
     // Keep the underlying cairo surface around while we keep the
     // sourceSurface.
@@ -1359,8 +1362,8 @@ gfxContext::SetPattern(gfxPattern *pattern)
   if (mCairo) {
     cairo_set_source(mCairo, pattern->CairoPattern());
   } else {
-    CurrentState().sourceSurfCairo = NULL;
-    CurrentState().sourceSurface = NULL;
+    CurrentState().sourceSurfCairo = nullptr;
+    CurrentState().sourceSurface = nullptr;
     CurrentState().patternTransformChanged = false;
     CurrentState().pattern = pattern;
   }
@@ -1427,10 +1430,10 @@ gfxContext::Mask(gfxPattern *pattern)
       if (pattern->IsAzure() || pattern->GetType() == gfxPattern::PATTERN_SURFACE) {
         RefPtr<SourceSurface> mask = pattern->GetAzureSurface();
         Matrix mat = ToMatrix(pattern->GetInverseMatrix());
-        Matrix old = GetDTTransform();
+        Matrix old = mTransform;
         // add in the inverse of the pattern transform so that when we
         // MaskSurface we are transformed to the place matching the pattern transform
-        mat = mat * GetDTTransform();
+        mat = mat * mTransform;
 
         ChangeTransform(mat);
         mDT->MaskSurface(GeneralPattern(this), mask, offset, DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
@@ -1621,9 +1624,9 @@ gfxContext::PopGroupToSource()
     RefPtr<SourceSurface> src = mDT->Snapshot();
     Point deviceOffset = CurrentState().deviceOffset;
     Restore();
-    CurrentState().sourceSurfCairo = NULL;
+    CurrentState().sourceSurfCairo = nullptr;
     CurrentState().sourceSurface = src;
-    CurrentState().pattern = NULL;
+    CurrentState().pattern = nullptr;
     CurrentState().patternTransformChanged = false;
 
     Matrix mat = mTransform;
@@ -1952,7 +1955,7 @@ gfxContext::EnsurePath()
 {
   if (mPathBuilder) {
     mPath = mPathBuilder->Finish();
-    mPathBuilder = NULL;
+    mPathBuilder = nullptr;
   }
 
   if (mPath) {
@@ -1962,7 +1965,7 @@ gfxContext::EnsurePath()
       mat = mPathTransform * mat;
       mPathBuilder = mPath->TransformedCopyToBuilder(mat, CurrentState().fillRule);
       mPath = mPathBuilder->Finish();
-      mPathBuilder = NULL;
+      mPathBuilder = nullptr;
 
       mTransformChanged = false;
     }
@@ -1974,13 +1977,13 @@ gfxContext::EnsurePath()
     mPathBuilder = mPath->CopyToBuilder(CurrentState().fillRule);
 
     mPath = mPathBuilder->Finish();
-    mPathBuilder = NULL;
+    mPathBuilder = nullptr;
     return;
   }
 
   EnsurePathBuilder();
   mPath = mPathBuilder->Finish();
-  mPathBuilder = NULL;
+  mPathBuilder = nullptr;
 }
 
 void
@@ -1993,7 +1996,7 @@ gfxContext::EnsurePathBuilder()
   if (mPath) {
     if (!mTransformChanged) {
       mPathBuilder = mPath->CopyToBuilder(CurrentState().fillRule);
-      mPath = NULL;
+      mPath = nullptr;
     } else {
       Matrix invTransform = mTransform;
       invTransform.Invert();
@@ -2019,8 +2022,8 @@ gfxContext::EnsurePathBuilder()
 
   if (mTransformChanged) {
     // This could be an else if since this should never happen when
-    // mPathBuilder is NULL and mPath is NULL. But this way we can assert
-    // if all the state is as expected.
+    // mPathBuilder is nullptr and mPath is nullptr. But this way we can
+    // assert if all the state is as expected.
     MOZ_ASSERT(oldPath);
     MOZ_ASSERT(!mPathIsRect);
 
@@ -2073,6 +2076,7 @@ gfxContext::PushClipsToDT(DrawTarget *aDT)
   for (int i = mStateStack.Length() - 2; i > 0; i--) {
     if (mStateStack[i].clipWasReset) {
       lastReset = i;
+      break;
     }
   }
 
@@ -2184,6 +2188,7 @@ gfxContext::GetAzureDeviceSpaceClipBounds()
   for (int i = mStateStack.Length() - 1; i > 0; i--) {
     if (mStateStack[i].clipWasReset) {
       lastReset = i;
+      break;
     }
   }
 

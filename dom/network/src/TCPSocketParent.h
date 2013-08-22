@@ -11,23 +11,44 @@
 struct JSContext;
 class JSObject;
 
+#define TCPSOCKETPARENT_CID \
+  { 0x4e7246c6, 0xa8b3, 0x426d, { 0x9c, 0x17, 0x76, 0xda, 0xb1, 0xe1, 0xe1, 0x4a } }
+
 namespace mozilla {
 namespace dom {
 
 class PBrowserParent;
 
-class TCPSocketParent : public mozilla::net::PTCPSocketParent
-                      , public nsITCPSocketParent
+class TCPSocketParentBase : public nsITCPSocketParent
 {
 public:
-  NS_DECL_CYCLE_COLLECTION_CLASS(TCPSocketParent)
+  NS_DECL_CYCLE_COLLECTION_CLASS(TCPSocketParentBase)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  void AddIPDLReference();
+  void ReleaseIPDLReference();
+
+protected:
+  TCPSocketParentBase();
+  virtual ~TCPSocketParentBase();
+
+  nsCOMPtr<nsITCPSocketIntermediary> mIntermediary;
+  nsCOMPtr<nsIDOMTCPSocket> mSocket;
+  bool mIPCOpen;
+};
+
+class TCPSocketParent : public mozilla::net::PTCPSocketParent
+                      , public TCPSocketParentBase
+{
+public:
   NS_DECL_NSITCPSOCKETPARENT
+  NS_IMETHOD_(nsrefcnt) Release() MOZ_OVERRIDE;
 
-  TCPSocketParent() : mIntermediaryObj(nullptr), mIPCOpen(true) {}
+  TCPSocketParent() : mIntermediaryObj(nullptr) {}
 
-  bool Init(const nsString& aHost, const uint16_t& aPort,
-            const bool& useSSL, const nsString& aBinaryType);
+  virtual bool RecvOpen(const nsString& aHost, const uint16_t& aPort,
+                        const bool& useSSL, const nsString& aBinaryType,
+                        PBrowserParent* aBrowser);
 
   virtual bool RecvSuspend() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;
@@ -38,10 +59,7 @@ public:
 private:
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
-  nsCOMPtr<nsITCPSocketIntermediary> mIntermediary;
-  nsCOMPtr<nsIDOMTCPSocket> mSocket;
   JSObject* mIntermediaryObj;
-  bool mIPCOpen;
 };
 
 } // namespace dom

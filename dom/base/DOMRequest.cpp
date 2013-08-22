@@ -6,10 +6,7 @@
 
 #include "DOMRequest.h"
 
-#include "mozilla/Util.h"
 #include "DOMError.h"
-#include "nsEventDispatcher.h"
-#include "nsDOMEvent.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsThreadUtils.h"
@@ -23,7 +20,6 @@ using mozilla::AutoPushJSContext;
 DOMRequest::DOMRequest(nsIDOMWindow* aWindow)
   : mResult(JSVAL_VOID)
   , mDone(false)
-  , mRooted(false)
 {
   SetIsDOMBinding();
   Init(aWindow);
@@ -34,7 +30,6 @@ DOMRequest::DOMRequest(nsIDOMWindow* aWindow)
 DOMRequest::DOMRequest()
   : mResult(JSVAL_VOID)
   , mDone(false)
-  , mRooted(false)
 {
   SetIsDOMBinding();
 }
@@ -47,6 +42,8 @@ DOMRequest::Init(nsIDOMWindow* aWindow)
                                         window->GetCurrentInnerWindow());
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(DOMRequest)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMRequest,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
@@ -54,10 +51,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMRequest,
                                                 nsDOMEventTargetHelper)
-  if (tmp->mRooted) {
-    tmp->UnrootResultVal();
-  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
+  tmp->mResult = JSVAL_VOID;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(DOMRequest,
@@ -194,21 +189,10 @@ DOMRequest::FireEvent(const nsAString& aType, bool aBubble, bool aCancelable)
 void
 DOMRequest::RootResultVal()
 {
-  NS_ASSERTION(!mRooted, "Don't call me if already rooted!");
   nsXPCOMCycleCollectionParticipant *participant;
   CallQueryInterface(this, &participant);
   nsContentUtils::HoldJSObjects(NS_CYCLE_COLLECTION_UPCAST(this, DOMRequest),
                                 participant);
-  mRooted = true;
-}
-
-void
-DOMRequest::UnrootResultVal()
-{
-  NS_ASSERTION(mRooted, "Don't call me if not rooted!");
-  mResult = JSVAL_VOID;
-  NS_DROP_JS_OBJECTS(this, DOMRequest);
-  mRooted = false;
 }
 
 NS_IMPL_ISUPPORTS1(DOMRequestService, nsIDOMRequestService)

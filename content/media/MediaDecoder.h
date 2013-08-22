@@ -277,16 +277,12 @@ public:
 
   // Start downloading the media. Decode the downloaded data up to the
   // point of the first frame of data.
-  // aResource is the media stream to use. Ownership of aResource passes to
-  // the decoder, even if Load returns an error.
   // This is called at most once per decoder, after Init().
-  virtual nsresult Load(MediaResource* aResource,
-                        nsIStreamListener** aListener,
+  virtual nsresult Load(nsIStreamListener** aListener,
                         MediaDecoder* aCloneDonor);
 
-  // Called in |Load| to open the media resource.
-  nsresult OpenResource(MediaResource* aResource,
-                        nsIStreamListener** aStreamListener);
+  // Called in |Load| to open mResource.
+  nsresult OpenResource(nsIStreamListener** aStreamListener);
 
   // Called when the video file has completed downloading.
   virtual void ResourceLoaded();
@@ -305,6 +301,11 @@ public:
   MediaResource* GetResource() const MOZ_FINAL MOZ_OVERRIDE
   {
     return mResource;
+  }
+  void SetResource(MediaResource* aResource)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Should only be called on main thread");
+    mResource = aResource;
   }
 
   // Return the principal of the current URI being played or downloaded.
@@ -505,6 +506,7 @@ public:
   virtual void SetDuration(double aDuration);
 
   void SetMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
+  void UpdateMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
 
   // Set a flag indicating whether seeking is supported
   virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
@@ -640,6 +642,10 @@ public:
   // The actual playback rate computation. The monitor must be held.
   virtual double ComputePlaybackRate(bool* aReliable);
 
+  // Return true when the media is same-origin with the element. The monitor
+  // must be held.
+  bool IsSameOriginMedia();
+
   // Returns true if we can play the entire media through without stopping
   // to buffer, given the current download and playback rates.
   bool CanPlayThrough();
@@ -735,6 +741,9 @@ public:
 
   // Notifies the element that decoding has failed.
   virtual void DecodeError();
+
+  // Indicate whether the media is same-origin with the element.
+  void UpdateSameOriginStatus(bool aSameOrigin);
 
   MediaDecoderOwner* GetOwner() MOZ_OVERRIDE;
 
@@ -957,6 +966,10 @@ public:
 
   // True if the media is seekable (i.e. supports random access).
   bool mMediaSeekable;
+
+  // True if the media is same-origin with the element. Data can only be
+  // passed to MediaStreams when this is true.
+  bool mSameOriginMedia;
 
   /******
    * The following member variables can be accessed from any thread.

@@ -76,7 +76,7 @@ fuzzy-if(/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,
 fuzzy-if(Android,4,87) skip-if(B2G) == dynamic-clipPath-01.svg pass.svg
 == dynamic-clipPath-02.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
-== dynamic-feImage-01.svg pass.svg
+asserts(0-1) == dynamic-feImage-01.svg pass.svg # intermittent assertions (bug 886080)
 == dynamic-fill-01.svg dynamic-fill-01-ref.svg
 skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
 skip-if(B2G) fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01-ref.svg
@@ -89,6 +89,7 @@ skip-if(B2G) == dynamic-marker-02.svg dynamic-marker-02-ref.svg
 skip-if(B2G) == dynamic-marker-03.svg pass.svg
 == dynamic-mask-01.svg pass.svg
 skip-if(B2G) == dynamic-mask-contents-01.svg pass.svg
+== dynamic-opacity-property-01.svg pass.svg
 skip-if(B2G) == dynamic-pattern-01.svg pass.svg
 skip-if(B2G) == dynamic-pattern-02.svg pass.svg
 skip-if(B2G) == dynamic-pattern-contents-01.svg pass.svg
@@ -166,7 +167,7 @@ skip-if(B2G) == foreignObject-start-hidden-01.svg pass.svg # followup from Bug 5
 skip-if(B2G) == foreignObject-start-hidden-02.svg pass.svg
 skip-if(B2G) == foreignObject-style-change-01.svg pass.svg
 == foreignObject-dynamic-abspos-01.html foreignObject-dynamic-abspos-01-ref.html
-fuzzy-if(Android,18,500) == foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
+fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == getElementById-a-element-01.svg pass.svg
 fuzzy-if(Android,9,980) == gradient-live-01a.svg gradient-live-01-ref.svg
@@ -365,3 +366,4 @@ skip-if(B2G) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-ref.svg # bug 773
 == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml
 == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml
 == href-attr-change-restyles.svg href-attr-change-restyles-ref.svg
+== mask-img.html mask-img-ref.html

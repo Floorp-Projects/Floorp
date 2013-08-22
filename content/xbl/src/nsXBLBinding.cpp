@@ -74,13 +74,13 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
 {
   nsXBLDocumentInfo* docInfo =
     static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(obj));
-  nsContentUtils::DeferredFinalize(static_cast<nsIScriptGlobalObjectOwner*>(docInfo));
+  nsContentUtils::DeferredFinalize(docInfo);
   
   nsXBLJSClass* c = static_cast<nsXBLJSClass*>(::JS_GetClass(obj));
   c->Drop();
 }
 
-static JSBool
+static bool
 XBLEnumerate(JSContext *cx, JS::Handle<JSObject*> obj)
 {
   nsXBLPrototypeBinding* protoBinding =
@@ -160,6 +160,8 @@ nsXBLBinding::~nsXBLBinding(void)
   NS_RELEASE(info);
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLBinding)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLBinding)
   // XXX Probably can't unlink mPrototypeBinding->XBLDocumentInfo(), because
   //     mPrototypeBinding is weak.
@@ -176,8 +178,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLBinding)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
                                      "mPrototypeBinding->XBLDocumentInfo()");
-  cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObjectOwner*>(
-                      tmp->mPrototypeBinding->XBLDocumentInfo()));
+  cb.NoteXPCOMChild(tmp->mPrototypeBinding->XBLDocumentInfo());
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNextBinding)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDefaultInsertionPoint)
@@ -765,7 +766,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
           JS::Rooted<JSObject*> base(cx, scriptObject);
           JS::Rooted<JSObject*> proto(cx);
           for ( ; true; base = proto) { // Will break out on null proto
-            if (!JS_GetPrototype(cx, base, proto.address())) {
+            if (!JS_GetPrototype(cx, base, &proto)) {
               return;
             }
             if (!proto) {
@@ -799,7 +800,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             // Alright!  This is the right prototype.  Pull it out of the
             // proto chain.
             JS::Rooted<JSObject*> grandProto(cx);
-            if (!JS_GetPrototype(cx, proto, grandProto.address())) {
+            if (!JS_GetPrototype(cx, proto, &grandProto)) {
               return;
             }
             ::JS_SetPrototype(cx, base, grandProto);
@@ -899,7 +900,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
   nsXBLJSClass* c = nullptr;
   if (obj) {
     // Retrieve the current prototype of obj.
-    if (!JS_GetPrototype(cx, obj, parent_proto.address())) {
+    if (!JS_GetPrototype(cx, obj, &parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     if (parent_proto) {
@@ -941,7 +942,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
   JS::Rooted<JSObject*> proto(cx);
   JS::Rooted<JS::Value> val(cx);
 
-  if (!::JS_LookupPropertyWithFlags(cx, global, className.get(), 0, val.address()))
+  if (!::JS_LookupPropertyWithFlags(cx, global, className.get(), 0, &val))
     return NS_ERROR_OUT_OF_MEMORY;
 
   if (val.isObject()) {
@@ -1104,10 +1105,10 @@ nsXBLBinding::ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const
 
 bool
 nsXBLBinding::LookupMember(JSContext* aCx, JS::HandleId aId,
-                           JSPropertyDescriptor* aDesc)
+                           JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
   // We should never enter this function with a pre-filled property descriptor.
-  MOZ_ASSERT(!aDesc->obj);
+  MOZ_ASSERT(!aDesc.object());
 
   // Get the string as an nsString before doing anything, so we can make
   // convenient comparisons during our search.
@@ -1147,7 +1148,7 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::HandleId aId,
 bool
 nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
                                    JS::HandleId aNameAsId,
-                                   JSPropertyDescriptor* aDesc,
+                                   JS::MutableHandle<JSPropertyDescriptor> aDesc,
                                    JS::Handle<JSObject*> aXBLScope)
 {
   // First, see if we have a JSClass. If we don't, it means that this binding
@@ -1163,7 +1164,7 @@ nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
   // Find our class object. It's in a protected scope and permanent just in case,
   // so should be there no matter what.
   JS::RootedValue classObject(aCx);
-  if (!JS_GetProperty(aCx, aXBLScope, mJSClass->name, classObject.address())) {
+  if (!JS_GetProperty(aCx, aXBLScope, mJSClass->name, &classObject)) {
     return false;
   }
 
@@ -1185,7 +1186,7 @@ nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
   {
     return false;
   }
-  if (aDesc->obj || !mNextBinding) {
+  if (aDesc.object() || !mNextBinding) {
     return true;
   }
 

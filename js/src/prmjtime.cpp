@@ -6,6 +6,8 @@
 
 /* PR time code. */
 
+#include "prmjtime.h"
+
 #include "mozilla/MathAlgorithms.h"
 
 #ifdef SOLARIS
@@ -14,11 +16,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "jsprf.h"
-#include "jslock.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "prmjtime.h"
 
 #define PRMJ_DO_MILLISECONDS 1
 
@@ -34,8 +33,8 @@
 #define NS_HAVE_INVALID_PARAMETER_HANDLER 1
 #endif
 #ifdef NS_HAVE_INVALID_PARAMETER_HANDLER
-#include <stdlib.h>   /* for _set_invalid_parameter_handler */
 #include <crtdbg.h>   /* for _CrtSetReportMode */
+#include <stdlib.h>   /* for _set_invalid_parameter_handler */
 #endif
 
 #ifdef JS_THREADSAFE

@@ -84,6 +84,8 @@ TestRunner._expectedMaxAsserts = 0;
 TestRunner.timeout = 5 * 60 * 1000; // 5 minutes.
 TestRunner.maxTimeouts = 4; // halt testing after too many timeouts
 TestRunner.runSlower = false;
+TestRunner.slowestTestTime = 0;
+TestRunner.slowestTestURL = "";
 
 TestRunner._expectingProcessCrash = false;
 
@@ -345,9 +347,10 @@ TestRunner.runNextTest = function() {
         SpecialPowers.unregisterProcessCrashObservers();
 
         TestRunner.log("TEST-START | Shutdown"); // used by automation.py
-        TestRunner.log("Passed: " + $("pass-count").innerHTML);
-        TestRunner.log("Failed: " + $("fail-count").innerHTML);
-        TestRunner.log("Todo:   " + $("todo-count").innerHTML);
+        TestRunner.log("Passed:  " + $("pass-count").innerHTML);
+        TestRunner.log("Failed:  " + $("fail-count").innerHTML);
+        TestRunner.log("Todo:    " + $("todo-count").innerHTML);
+        TestRunner.log("Slowest: " + TestRunner.slowestTestTime + 'ms - ' + TestRunner.slowestTestURL);
         // If we are looping, don't send this cause it closes the log file
         if (TestRunner.repeat == 0) {
           TestRunner.log("SimpleTest FINISHED");
@@ -436,6 +439,10 @@ TestRunner.testFinished = function(tests) {
         TestRunner.log("TEST-END | " +
                        TestRunner.currentTestURL +
                        " | finished in " + runtime + "ms");
+        if (TestRunner.slowestTestTime < runtime && TestRunner._timeoutFactor == 1) {
+          TestRunner.slowestTestTime = runtime;
+          TestRunner.slowestTestURL = TestRunner.currentTestURL;
+        }
 
         TestRunner.updateUI(tests);
 

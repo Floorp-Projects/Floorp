@@ -1,3 +1,5 @@
+enableOsiPointRegisterChecks();
+
 function DiagModule(stdlib, foreign) {
     "use asm";
 

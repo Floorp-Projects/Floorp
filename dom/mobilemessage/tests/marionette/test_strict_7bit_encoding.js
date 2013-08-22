@@ -127,8 +127,9 @@ const SELF = "5554";
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 SpecialPowers.addPermission("sms", true, document);
 
-let sms = window.navigator.mozSms;
-ok(sms instanceof MozSmsManager);
+let manager = window.navigator.mozMobileMessage;
+ok(manager instanceof MozMobileMessageManager,
+   "manager is instance of " + manager.constructor);
 
 let tasks = {
   // List of test fuctions. Each of them should call |tasks.next()| when
@@ -178,7 +179,7 @@ function testStrict7BitEncodingHelper(sent, received) {
     }
   }
 
-  sms.addEventListener("received", function onReceived(event) {
+  manager.addEventListener("received", function onReceived(event) {
     event.target.removeEventListener("received", onReceived);
 
     let message = event.message;
@@ -187,7 +188,7 @@ function testStrict7BitEncodingHelper(sent, received) {
     done(1);
   });
 
-  let request = sms.send(SELF, sent);
+  let request = manager.send(SELF, sent);
   request.addEventListener("success", function onRequestSuccess(event) {
     let message = event.target.result;
     is(message.body, sent, "sent message.body");

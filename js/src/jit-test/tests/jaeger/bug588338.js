@@ -1,4 +1,4 @@
-// |jit-test| error: [1, 2, 3] is not a function
+// |jit-test| error: is not a function
 function f() { (e)
 } (x = Proxy.createFunction((function(x) {
   return {

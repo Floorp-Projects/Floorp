@@ -8,7 +8,6 @@
 #include "nsROCSSPrimitiveValue.h"
 
 #include "mozilla/dom/CSSPrimitiveValueBinding.h"
-#include "nsContentUtils.h"
 #include "nsPresContext.h"
 #include "nsStyleUtil.h"
 #include "nsDOMCSSRGBColor.h"
@@ -17,6 +16,13 @@
 #include "nsError.h"
 
 using namespace mozilla;
+
+// There is no CSS_TURN constant on the CSSPrimitiveValue interface,
+// since that unit is newer than DOM Level 2 Style, and CSS OM will
+// probably expose CSS values in some other way in the future.  We
+// use this value in mType for "turn"-unit angles, but we define it
+// here to avoid exposing it to content.
+#define CSS_TURN 30U
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue()
   : CSSValue(), mType(CSS_PX)
@@ -43,6 +49,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsROCSSPrimitiveValue)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, CSSValue)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsROCSSPrimitiveValue)
+
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsROCSSPrimitiveValue)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsROCSSPrimitiveValue)
@@ -53,8 +61,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsROCSSPrimitiveValue)
   } else if (tmp->mType == CSS_RECT) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mValue.mRect)
   }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsROCSSPrimitiveValue)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -132,6 +140,30 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
     case CSS_NUMBER :
       {
         tmpStr.AppendFloat(mValue.mFloat);
+        break;
+      }
+    case CSS_DEG :
+      {
+        tmpStr.AppendFloat(mValue.mFloat);
+        tmpStr.AppendLiteral("deg");
+        break;
+      }
+    case CSS_GRAD :
+      {
+        tmpStr.AppendFloat(mValue.mFloat);
+        tmpStr.AppendLiteral("grad");
+        break;
+      }
+    case CSS_RAD :
+      {
+        tmpStr.AppendFloat(mValue.mFloat);
+        tmpStr.AppendLiteral("rad");
+        break;
+      }
+    case CSS_TURN :
+      {
+        tmpStr.AppendFloat(mValue.mFloat);
+        tmpStr.AppendLiteral("turn");
         break;
       }
     case CSS_RECT :
@@ -230,9 +262,6 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
     case CSS_UNKNOWN :
     case CSS_EMS :
     case CSS_EXS :
-    case CSS_DEG :
-    case CSS_RAD :
-    case CSS_GRAD :
     case CSS_MS :
     case CSS_HZ :
     case CSS_KHZ :
@@ -518,6 +547,38 @@ nsROCSSPrimitiveValue::SetPercent(float aValue)
   Reset();
   mValue.mFloat = aValue;
   mType = CSS_PERCENTAGE;
+}
+
+void
+nsROCSSPrimitiveValue::SetDegree(float aValue)
+{
+  Reset();
+  mValue.mFloat = aValue;
+  mType = CSS_DEG;
+}
+
+void
+nsROCSSPrimitiveValue::SetGrad(float aValue)
+{
+  Reset();
+  mValue.mFloat = aValue;
+  mType = CSS_GRAD;
+}
+
+void
+nsROCSSPrimitiveValue::SetRadian(float aValue)
+{
+  Reset();
+  mValue.mFloat = aValue;
+  mType = CSS_RAD;
+}
+
+void
+nsROCSSPrimitiveValue::SetTurn(float aValue)
+{
+  Reset();
+  mValue.mFloat = aValue;
+  mType = CSS_TURN;
 }
 
 void

@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
@@ -186,7 +187,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
   protected final HealthReportSQLiteOpenHelper helper;
 
   public static class HealthReportSQLiteOpenHelper extends SQLiteOpenHelper {
-    public static final int CURRENT_VERSION = 4;
+    public static final int CURRENT_VERSION = 5;
     public static final String LOG_TAG = "HealthReportSQL";
 
     /**
@@ -227,11 +228,16 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
     public static boolean CAN_USE_ABSOLUTE_DB_PATH = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO);
     public HealthReportSQLiteOpenHelper(Context context, File profileDirectory, String name) {
+      this(context, profileDirectory, name, CURRENT_VERSION);
+    }
+
+    // For testing DBs of different versions.
+    public HealthReportSQLiteOpenHelper(Context context, File profileDirectory, String name, int version) {
       super(
           (CAN_USE_ABSOLUTE_DB_PATH ? context : new AbsolutePathContext(context, profileDirectory)),
           (CAN_USE_ABSOLUTE_DB_PATH ? getAbsolutePath(profileDirectory, name) : name),
           null,
-          CURRENT_VERSION);
+          version);
 
       if (CAN_USE_ABSOLUTE_DB_PATH) {
         Logger.pii(LOG_TAG, "Opening: " + getAbsolutePath(profileDirectory, name));
@@ -347,6 +353,13 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       }
     }
 
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+      if (!db.isReadOnly()) {
+        db.execSQL("PRAGMA foreign_keys=ON;");
+      }
+    }
+
     private void createAddonsEnvironmentsView(SQLiteDatabase db) {
       db.execSQL("CREATE VIEW environments_with_addons AS " +
           "SELECT e.id AS id, " +
@@ -394,6 +407,22 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
                  " WHERE measurement IN (SELECT id FROM measurements WHERE name = 'org.mozilla.searches.counts')");
     }
 
+    private void upgradeDatabaseFrom4to5(SQLiteDatabase db) {
+      // Delete NULL in addons.body, which appeared as a result of Bug 886156. Note that the
+      // foreign key constraint, "ON DELETE RESTRICT", may be violated, but since onOpen() is
+      // called after this method, foreign keys are not yet enabled and constraints can be broken.
+      db.delete("addons", "body IS NULL", null);
+
+      // Purge any data inconsistent with foreign key references (which may have appeared before
+      // foreign keys were enabled in Bug 900289).
+      db.delete("fields", "measurement NOT IN (SELECT id FROM measurements)", null);
+      db.delete("environments", "addonsID NOT IN (SELECT id from addons)", null);
+      db.delete(EVENTS_INTEGER, "env NOT IN (SELECT id FROM environments)", null);
+      db.delete(EVENTS_TEXTUAL, "env NOT IN (SELECT id FROM environments)", null);
+      db.delete(EVENTS_INTEGER, "field NOT IN (SELECT id FROM fields)", null);
+      db.delete(EVENTS_TEXTUAL, "field NOT IN (SELECT id FROM fields)", null);
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
       if (oldVersion >= newVersion) {
@@ -408,6 +437,8 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
           upgradeDatabaseFrom2To3(db);
         case 3:
           upgradeDatabaseFrom3To4(db);
+        case 4:
+          upgradeDatabaseFrom4to5(db);
         }
         db.setTransactionSuccessful();
       } catch (Exception e) {
@@ -1031,7 +1062,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       v.put("env", env);
       v.put("field", field);
       v.put("date", day);
-      db.insert(table, null, v);
+      try {
+        db.insertOrThrow(table, null, v);
+      } catch (SQLiteConstraintException e) {
+        throw new IllegalStateException("Event did not reference existing an environment or field.", e);
+      }
     }
   }
 
@@ -1063,7 +1098,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
     final SQLiteDatabase db = this.helper.getWritableDatabase();
     putValue(v, value);
-    db.insert(table, null, v);
+    try {
+      db.insertOrThrow(table, null, v);
+    } catch (SQLiteConstraintException e) {
+      throw new IllegalStateException("Event did not reference existing an environment or field.", e);
+    }
   }
 
   @Override
@@ -1133,7 +1172,11 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       v.put("value", by);
       v.put("field", field);
       v.put("date", day);
-      db.insert(EVENTS_INTEGER, null, v);
+      try {
+        db.insertOrThrow(EVENTS_INTEGER, null, v);
+      } catch (SQLiteConstraintException e) {
+        throw new IllegalStateException("Event did not reference existing an environment or field.", e);
+      }
     }
   }
 

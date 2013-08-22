@@ -12,6 +12,10 @@ XPIDL_MODULE = 'xulapp_setup'
 
 MODULE = 'xulrunner'
 
+EXTRA_COMPONENTS += [
+    'nsXULAppInstall.manifest',
+]
+
 EXTRA_PP_COMPONENTS += [
     'nsXULAppInstall.js',
 ]

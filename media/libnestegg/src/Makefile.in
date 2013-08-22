@@ -15,9 +15,4 @@ ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif
 
-DISABLED_CSRCS		= \
-		nestegg.c \
-		halloc.c \
-		$(NULL)
-		
 include $(topsrcdir)/config/rules.mk

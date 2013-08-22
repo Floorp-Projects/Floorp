@@ -5,10 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMimeTypeArray.h"
+
 #include "mozilla/dom/MimeTypeArrayBinding.h"
 #include "mozilla/dom/MimeTypeBinding.h"
 #include "nsIDOMNavigator.h"
-#include "nsContentUtils.h"
 #include "nsPluginArray.h"
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
@@ -219,7 +219,7 @@ nsMimeTypeArray::EnsureMimeTypes()
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsMimeType, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsMimeType, Release)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(nsMimeType)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsMimeType, mPluginElement)
 
 nsMimeType::nsMimeType(nsWeakPtr aWindow, nsPluginElement* aPluginElement,
                        uint32_t aPluginTagMimeIndex, const nsAString& aType)

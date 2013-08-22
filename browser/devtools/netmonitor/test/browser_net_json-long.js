@@ -29,7 +29,7 @@ function test() {
           time: true
         });
 
-      aMonitor.panelWin.once("NetMonitor:ResponseBodyAvailable", () => {
+      aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RESPONSE_BODY_DISPLAYED, () => {
         testResponseTab();
         teardown(aMonitor).then(finish);
       });

@@ -15,14 +15,6 @@ include $(topsrcdir)/config/config.mk
 # Place webapprt resources in a separate app dir
 DIST_SUBDIR = webapprt
 
-EXTRA_COMPONENTS := \
-  components.manifest \
-  CommandLineHandler.js \
-  ContentPermission.js \
-  ContentPolicy.js \
-  DirectoryProvider.js \
-  $(NULL)
-
 PREF_JS_EXPORTS = $(srcdir)/prefs.js \
                   $(NULL)
 

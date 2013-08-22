@@ -44,6 +44,7 @@ using namespace mozilla::net;
 
 nsHttpConnection::nsHttpConnection()
     : mTransaction(nullptr)
+    , mHttpHandler(gHttpHandler)
     , mCallbacksLock("nsHttpConnection::mCallbacksLock")
     , mIdleTimeout(0)
     , mConsiderReusedAfterInterval(0)
@@ -75,19 +76,11 @@ nsHttpConnection::nsHttpConnection()
     , mTransactionCaps(0)
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
-
-    // grab a reference to the handler to ensure that it doesn't go away.
-    nsHttpHandler *handler = gHttpHandler;
-    NS_ADDREF(handler);
 }
 
 nsHttpConnection::~nsHttpConnection()
 {
     LOG(("Destroying nsHttpConnection @%x\n", this));
-
-    // release our reference to the handler
-    nsHttpHandler *handler = gHttpHandler;
-    NS_RELEASE(handler);
 
     if (!mEverUsedSpdy) {
         LOG(("nsHttpConnection %p performed %d HTTP/1.x transactions\n",

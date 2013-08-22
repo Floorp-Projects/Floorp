@@ -4,22 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jscntxt.h"
-
 #include "vm/ForkJoin.h"
 
+#include "jscntxt.h"
+
 #ifdef JS_THREADSAFE
-# include "prthread.h"
 # include "prprf.h"
-# include "ion/BaselineJIT.h"
+# include "prthread.h"
+# include "jit/BaselineJIT.h"
 # include "vm/Monitor.h"
 #endif
 
 #if defined(DEBUG) && defined(JS_THREADSAFE) && defined(JS_ION)
-# include "ion/Ion.h"
-# include "ion/IonCompartment.h"
-# include "ion/MIR.h"
-# include "ion/MIRGraph.h"
+# include "jit/Ion.h"
+# include "jit/IonCompartment.h"
+# include "jit/MIR.h"
+# include "jit/MIRGraph.h"
 #endif // DEBUG && THREADSAFE && ION
 
 #include "vm/Interpreter-inl.h"
@@ -117,9 +117,9 @@ ParallelBailoutRecord::addTrace(JSScript *script,
 }
 
 bool
-js::InSequentialOrExclusiveParallelSection()
+js::InExclusiveParallelSection()
 {
-    return true;
+    return false;
 }
 
 bool
@@ -1247,7 +1247,7 @@ class ParallelIonInvoke
   public:
     Value *args;
 
-    ParallelIonInvoke(JSCompartment *compartment,
+    ParallelIonInvoke(JSRuntime *rt,
                       HandleFunction callee,
                       uint32_t argc)
       : argc_(argc),
@@ -1263,7 +1263,7 @@ class ParallelIonInvoke
         IonScript *ion = callee->nonLazyScript()->parallelIonScript();
         IonCode *code = ion->method();
         jitcode_ = code->raw();
-        enter_ = compartment->ionCompartment()->enterJIT();
+        enter_ = rt->ionRuntime()->enterIon();
         calleeToken_ = CalleeToParallelToken(callee);
     }
 
@@ -1453,7 +1453,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread,
 
     // Make a new IonContext for the slice, which is needed if we need to
     // re-enter the VM.
-    IonContext icx(cx_->compartment(), NULL);
+    IonContext icx(cx_->runtime(), cx_->compartment(), NULL);
 
     JS_ASSERT(slice.bailoutRecord->topScript == NULL);
 
@@ -1470,7 +1470,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread,
                                       NULL, NULL, NULL);
         setAbortFlag(false);
     } else {
-        ParallelIonInvoke<3> fii(cx_->compartment(), callee, 3);
+        ParallelIonInvoke<3> fii(cx_->runtime(), callee, 3);
 
         fii.args[0] = Int32Value(slice.sliceId);
         fii.args[1] = Int32Value(slice.numSlices);
@@ -1609,7 +1609,9 @@ ForkJoinShared::setAbortFlag(bool fatal)
     abort_ = true;
     fatal_ = fatal_ || fatal;
 
-    cx_->runtime()->triggerOperationCallback();
+    // Note: DontStopIon here avoids the expensive memory protection needed to
+    // interrupt Ion code compiled for sequential execution.
+    cx_->runtime()->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThreadDontStopIon);
 }
 
 void
@@ -1712,9 +1714,9 @@ bool
 ForkJoinSlice::InitializeTLS()
 {
     if (!TLSInitialized) {
+        if (PR_NewThreadPrivateIndex(&ThreadPrivateIndex, NULL) != PR_SUCCESS)
+            return false;
         TLSInitialized = true;
-        PRStatus status = PR_NewThreadPrivateIndex(&ThreadPrivateIndex, NULL);
-        return status == PR_SUCCESS;
     }
     return true;
 }
@@ -2141,9 +2143,9 @@ parallel::SpewBailoutIR(uint32_t bblockId, uint32_t lirId,
 #endif // DEBUG
 
 bool
-js::InSequentialOrExclusiveParallelSection()
+js::InExclusiveParallelSection()
 {
-    return !InParallelSection() || ForkJoinSlice::Current()->hasAcquiredContext();
+    return InParallelSection() && ForkJoinSlice::Current()->hasAcquiredContext();
 }
 
 bool

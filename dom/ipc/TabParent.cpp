@@ -41,6 +41,9 @@
 #include "nsIURI.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIWebBrowserChrome.h"
+#include "nsIXULBrowserWindow.h"
+#include "nsIXULWindow.h"
 #include "nsViewManager.h"
 #include "nsIWidget.h"
 #include "nsIWindowWatcher.h"
@@ -596,6 +599,39 @@ TabParent::SendKeyEvent(const nsAString& aType,
   }
 }
 
+bool
+TabParent::MapEventCoordinatesForChildProcess(nsEvent* aEvent)
+{
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    return false;
+  }
+  LayoutDeviceIntPoint offset = nsEventStateManager::GetChildProcessOffset(frameLoader, *aEvent);
+  MapEventCoordinatesForChildProcess(offset, aEvent);
+  return true;
+}
+
+void
+TabParent::MapEventCoordinatesForChildProcess(
+  const LayoutDeviceIntPoint& aOffset, nsEvent* aEvent)
+{
+  if (aEvent->eventStructType != NS_TOUCH_EVENT) {
+    aEvent->refPoint = aOffset;
+  } else {
+    aEvent->refPoint = LayoutDeviceIntPoint();
+    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+    // Then offset all the touch points by that distance, to put them
+    // in the space where top-left is 0,0.
+    const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
+    for (uint32_t i = 0; i < touches.Length(); ++i) {
+      Touch* touch = touches[i];
+      if (touch) {
+        touch->mRefPoint += LayoutDeviceIntPoint::ToUntyped(aOffset);
+      }
+    }
+  }
+}
+
 bool TabParent::SendRealMouseEvent(nsMouseEvent& event)
 {
   if (mIsDestroyed) {
@@ -603,6 +639,9 @@ bool TabParent::SendRealMouseEvent(nsMouseEvent& event)
   }
   nsMouseEvent e(event);
   MaybeForwardEventToRenderFrame(event, &e);
+  if (!MapEventCoordinatesForChildProcess(&e)) {
+    return false;
+  }
   return PBrowserParent::SendRealMouseEvent(e);
 }
 
@@ -613,6 +652,9 @@ bool TabParent::SendMouseWheelEvent(WheelEvent& event)
   }
   WheelEvent e(event);
   MaybeForwardEventToRenderFrame(event, &e);
+  if (!MapEventCoordinatesForChildProcess(&e)) {
+    return false;
+  }
   return PBrowserParent::SendMouseWheelEvent(event);
 }
 
@@ -623,6 +665,9 @@ bool TabParent::SendRealKeyEvent(nsKeyEvent& event)
   }
   nsKeyEvent e(event);
   MaybeForwardEventToRenderFrame(event, &e);
+  if (!MapEventCoordinatesForChildProcess(&e)) {
+    return false;
+  }
   return PBrowserParent::SendRealKeyEvent(e);
 }
 
@@ -665,6 +710,9 @@ bool TabParent::SendRealTouchEvent(nsTouchEvent& event)
   }
 
   MaybeForwardEventToRenderFrame(event, &e);
+
+  MapEventCoordinatesForChildProcess(mChildProcessOffsetAtTouchStart, &e);
+
   return (e.message == NS_TOUCH_MOVE) ?
     PBrowserParent::SendRealTouchMoveEvent(e) :
     PBrowserParent::SendRealTouchEvent(e);
@@ -700,9 +748,6 @@ TabParent::TryCapture(const nsGUIEvent& aEvent)
     }
     return false;
   }
-
-  nsEventStateManager::MapEventCoordinatesForChildProcess(
-    mChildProcessOffsetAtTouchStart, &event);
 
   SendRealTouchEvent(event);
   return true;
@@ -744,6 +789,42 @@ TabParent::RecvSetBackgroundColor(const nscolor& aColor)
 {
   if (RenderFrameParent* frame = GetRenderFrame()) {
     frame->SetBackgroundColor(aColor);
+  }
+  return true;
+}
+
+bool
+TabParent::RecvSetStatus(const uint32_t& aType, const nsString& aStatus)
+{
+  nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
+  if (frame) {
+    nsCOMPtr<nsISupports> container = frame->OwnerDoc()->GetContainer();
+    if (!container)
+      return true;
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+    if (!docShell)
+      return true;
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+    if (!treeOwner)
+      return true;
+
+    nsCOMPtr<nsIXULWindow> window = do_GetInterface(treeOwner);
+    if (window) {
+      nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
+      window->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
+      if (xulBrowserWindow) {
+        switch (aType)
+        {
+        case nsIWebBrowserChrome::STATUS_SCRIPT:
+          xulBrowserWindow->SetJSStatus(aStatus);
+          break;
+        case nsIWebBrowserChrome::STATUS_LINK:
+          xulBrowserWindow->SetOverLink(aStatus, nullptr);
+          break;
+        }
+      }
+    }
   }
   return true;
 }
@@ -1476,6 +1557,17 @@ TabParent::RecvUpdateZoomConstraints(const bool& aAllowZoom,
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
     rfp->UpdateZoomConstraints(aAllowZoom, aMinZoom, aMaxZoom);
+  }
+  return true;
+}
+
+bool
+TabParent::RecvUpdateScrollOffset(const uint32_t& aPresShellId,
+                                  const ViewID& aViewId,
+                                  const CSSIntPoint& aScrollOffset)
+{
+  if (RenderFrameParent* rfp = GetRenderFrame()) {
+    rfp->UpdateScrollOffset(aPresShellId, aViewId, aScrollOffset);
   }
   return true;
 }

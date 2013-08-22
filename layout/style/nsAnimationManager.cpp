@@ -529,7 +529,6 @@ nsAnimationManager::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
-  // - mKeyframesRules
   // - mPendingEvents
 }
 
@@ -667,10 +666,10 @@ public:
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) {
-    MOZ_STATIC_ASSERT(sizeof(PLDHashNumber) == sizeof(uint32_t),
-                      "this hash function assumes PLDHashNumber is uint32_t");
-    MOZ_STATIC_ASSERT(PLDHashNumber(-1) > PLDHashNumber(0),
-                      "this hash function assumes PLDHashNumber is uint32_t");
+    static_assert(sizeof(PLDHashNumber) == sizeof(uint32_t),
+                  "this hash function assumes PLDHashNumber is uint32_t");
+    static_assert(PLDHashNumber(-1) > PLDHashNumber(0),
+                  "this hash function assumes PLDHashNumber is uint32_t");
     float key = *aKey;
     NS_ABORT_IF_FALSE(0.0f <= key && key <= 1.0f, "out of range");
     return PLDHashNumber(key * UINT32_MAX);
@@ -765,7 +764,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
     aDest.mIterationDuration = TimeDuration::FromMilliseconds(aSrc.GetDuration());
 
-    nsCSSKeyframesRule *rule = KeyframesRuleFor(aDest.mName);
+    nsCSSKeyframesRule* rule =
+      mPresContext->StyleSet()->KeyframesRuleForName(mPresContext, aDest.mName);
     if (!rule) {
       // no segments
       continue;
@@ -1088,24 +1088,3 @@ nsAnimationManager::DoDispatchEvents()
     }
   }
 }
-
-nsCSSKeyframesRule*
-nsAnimationManager::KeyframesRuleFor(const nsSubstring& aName)
-{
-  if (mKeyframesListIsDirty) {
-    mKeyframesListIsDirty = false;
-
-    nsTArray<nsCSSKeyframesRule*> rules;
-    mPresContext->StyleSet()->AppendKeyframesRules(mPresContext, rules);
-
-    // Per css3-animations, the last @keyframes rule specified wins.
-    mKeyframesRules.Clear();
-    for (uint32_t i = 0, i_end = rules.Length(); i != i_end; ++i) {
-      nsCSSKeyframesRule *rule = rules[i];
-      mKeyframesRules.Put(rule->GetName(), rule);
-    }
-  }
-
-  return mKeyframesRules.Get(aName);
-}
-

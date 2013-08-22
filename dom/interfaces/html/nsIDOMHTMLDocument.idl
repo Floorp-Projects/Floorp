@@ -13,7 +13,7 @@
  */
 interface nsISelection;
 
-[scriptable, uuid(60e0e311-b9c7-4952-8e9c-d4974005e887)]
+[scriptable, uuid(a3efb7eb-ae02-447b-99a5-bebca100afbd)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
            attribute DOMString            domain;
@@ -88,4 +88,13 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
 
   // DOM Range
   nsISelection                getSelection();
+
+
+  // Mozilla extensions
+  /**
+   * @deprecated These are old Netscape 4 methods. Do not use,
+   *             the implementation is no-op.
+   */
+  void                      captureEvents(in long eventFlags);
+  void                      releaseEvents(in long eventFlags);
 };

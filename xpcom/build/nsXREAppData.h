@@ -6,7 +6,7 @@
 #ifndef nsXREAppData_h
 #define nsXREAppData_h
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 class nsIFile;
 

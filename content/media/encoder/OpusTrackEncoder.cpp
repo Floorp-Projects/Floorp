@@ -183,7 +183,7 @@ OpusTrackEncoder::GetHeader(nsTArray<uint8_t>* aOutput)
     }
   }
 
-  if (mCanceled) {
+  if (mCanceled || mDoneEncoding) {
     return NS_ERROR_FAILURE;
   }
 
@@ -242,7 +242,7 @@ OpusTrackEncoder::GetEncodedTrack(nsTArray<uint8_t>* aOutput,
       mReentrantMonitor.Wait();
     }
 
-    if (mCanceled) {
+    if (mCanceled || mDoneEncoding) {
       return NS_ERROR_FAILURE;
     }
 
@@ -272,11 +272,10 @@ OpusTrackEncoder::GetEncodedTrack(nsTArray<uint8_t>* aOutput,
     if (!chunk.IsNull()) {
       // Append the interleaved data to the end of pcm buffer.
       InterleaveTrackData(chunk, frameToCopy, mChannels,
-                          pcm.Elements() + frameCopied);
+                          pcm.Elements() + frameCopied * mChannels);
     } else {
-      for (int i = 0; i < frameToCopy * mChannels; i++) {
-        pcm.AppendElement(0);
-      }
+      memset(pcm.Elements() + frameCopied * mChannels, 0,
+             frameToCopy * mChannels * sizeof(AudioDataValue));
     }
 
     frameCopied += frameToCopy;
@@ -301,9 +300,8 @@ OpusTrackEncoder::GetEncodedTrack(nsTArray<uint8_t>* aOutput,
   // Append null data to pcm buffer if the leftover data is not enough for
   // opus encoder.
   if (frameCopied < GetPacketDuration() && mEndOfStream) {
-    for (int i = frameCopied * mChannels; i < GetPacketDuration() * mChannels; i++) {
-      pcm.AppendElement(0);
-    }
+    memset(pcm.Elements() + frameCopied * mChannels, 0,
+           (GetPacketDuration()-frameCopied)*mChannels*sizeof(AudioDataValue));
   }
 
   // Encode the data with Opus Encoder.

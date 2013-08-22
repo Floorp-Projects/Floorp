@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=900724
+-->
+<head>
+  <title>Test for form-association in template contents.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=900724">Bug 900724</a>
+<form id="formone"><template id="templateone"><input></template></form>
+<form id="formthree"><template id="templatethree"></template></form>
+<form id="formfive"><template id="templatefive"></template></form>
+<script>
+is($("formone").elements.length, 0, "Forms should have no association with controls in template contents.");
+
+var templateOneInput = $("templateone").content.firstChild;
+is(templateOneInput.form, null, "Form controls inside template contents should not associate with forms.");
+
+// Try dynamically adding form/form controls using innerHTML.
+$("templatethree").innerHTML = '<input>';
+is($("formthree").elements.length, 0, "Form controls inside template contents should not associate with forms.");
+
+// Append a form control as a child of the template (not template contents) and make sure form is associated.
+var formFiveInput = document.createElement("input");
+$("templatefive").appendChild(formFiveInput);
+is($("formfive").elements.length, 1, "Form control should associate with form control not in template contents.");
+</script>
+</body>
+</html>

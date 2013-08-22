@@ -79,8 +79,10 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("hotkeys"),
                require("sdk/hotkeys"), "sdk/hotkeys -> hotkeys");
 
-  assert.equal(require("clipboard"),
-               require("sdk/clipboard"), "sdk/clipboard -> clipboard");
+  if (app.is("Firefox")) {
+    assert.equal(require("clipboard"),
+                 require("sdk/clipboard"), "sdk/clipboard -> clipboard");
+  }
 
   assert.equal(require("windows"),
                require("sdk/windows"), "sdk/windows -> windows");

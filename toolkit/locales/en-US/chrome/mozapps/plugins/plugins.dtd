@@ -39,7 +39,7 @@
 <!ENTITY checkForUpdates                                     "Check for updates…">
 <!ENTITY disabledPlugin                                      "This plugin is disabled.">
 <!ENTITY blockedPlugin.label                                 "This plugin has been blocked for your protection.">
-
+<!ENTITY hidePluginBtn.label                                 "Hide plugin">
 <!ENTITY installPlugin                                       "Install plugin…">
 <!ENTITY managePlugins                                       "Manage plugins…">
 

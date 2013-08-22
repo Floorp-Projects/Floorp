@@ -31,9 +31,20 @@
         ]]></getter>
       </property>
 
-      <property name="webNavigation"
-                onget="return this._remoteWebNavigation;"
-                readonly="true"/>
+      <field name="_remoteWebNavigation">null</field>
+
+      <property name="webNavigation" readonly="true">
+        <getter>
+          <![CDATA[
+            if (!this._remoteWebNavigation) {
+              let jsm = "resource://gre/modules/RemoteWebNavigation.jsm";
+              let RemoteWebNavigation = Components.utils.import(jsm, {}).RemoteWebNavigation;
+              this._remoteWebNavigation = new RemoteWebNavigation(this);
+            }
+            return this._remoteWebNavigation;
+          ]]>
+        </getter>
+      </property>
 
       <field name="_remoteWebProgress">null</field>
 
@@ -50,7 +61,13 @@
       	</getter>
       </property>
 
-      <field name="_contentTitle">null</field>
+      <field name="_documentURI">null</field>
+
+      <property name="documentURI"
+                onget="return this._documentURI;"
+                readonly="true"/>
+
+      <field name="_contentTitle">""</field>
 
       <property name="contentTitle"
                 onget="return this._contentTitle"
@@ -72,9 +89,16 @@
                 onget="return this.contentWindow ? this.contentWindow.document : null"
                 readonly="true"/>
 
+      <field name="_imageDocument">null</field>
+
+      <property name="imageDocument"
+                onget="return this._imageDocument"
+                readonly="true"/>
+
       <constructor>
         <![CDATA[
           this.messageManager.addMessageListener("DOMTitleChanged", this);
+          this.messageManager.addMessageListener("ImageDocumentLoaded", this);
           this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
           this.webProgress._init();
         ]]>
@@ -82,7 +106,6 @@
 
       <destructor>
         <![CDATA[
-          this.messageManager.removeMessageListener("DOMTitleChanged", this);
           this.webProgress._destroy();
         ]]>
       </destructor>
@@ -94,6 +117,12 @@
           switch (aMessage.name) {
             case "DOMTitleChanged":
               this._contentTitle = json.title;
+              break;
+            case "ImageDocumentLoaded":
+              this._imageDocument = {
+                width: json.width,
+                height: json.height
+              };
               break;
           }
         ]]></body>

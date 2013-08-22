@@ -10,7 +10,8 @@
 #define mozilla_EnumSet_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/StandardInteger.h"
+
+#include <stdint.h>
 
 namespace mozilla {
 

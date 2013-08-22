@@ -9,7 +9,6 @@
 #include "ArchiveEvent.h"
 #include "ArchiveZipEvent.h"
 
-#include "nsContentUtils.h"
 #include "nsLayoutStatics.h"
 
 #include "nsIURI.h"

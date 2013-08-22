@@ -185,24 +185,42 @@ this.PageThumbs = {
            "?url=" + encodeURIComponent(aUrl);
   },
 
+   /**
+    * Gets the path of the thumbnail file for a given web page's
+    * url. This file may or may not exist depending on whether the
+    * thumbnail has been captured or not.
+    *
+    * @param aUrl The web page's url.
+    * @return The path of the thumbnail file.
+    */
+   getThumbnailPath: function PageThumbs_getThumbnailPath(aUrl) {
+     return PageThumbsStorage.getFilePathForURL(aUrl);
+   },
+
   /**
    * Checks if an existing thumbnail for the specified URL is either missing
    * or stale, and if so, queues a background request to capture it.  That
    * capture process will send a notification via the observer service on
    * capture, so consumers should watch for such observations if they want to
    * be notified of an updated thumbnail.
+   *
+   * @return {Promise} that's resolved on completion.
    */
   captureIfStale: function PageThumbs_captureIfStale(aUrl) {
+    let deferredResult = Promise.defer();
     let filePath = PageThumbsStorage.getFilePathForURL(aUrl);
-    PageThumbsWorker.post("isFileRecent", [filePath, MAX_THUMBNAIL_AGE_SECS]
+    PageThumbsWorker.post(
+      "isFileRecent",
+      [filePath, MAX_THUMBNAIL_AGE_SECS]
     ).then(result => {
       if (!result.ok) {
         // Sadly there is currently a circular dependency between this module
         // and BackgroundPageThumbs, so do the import locally.
         let BPT = Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm", {}).BackgroundPageThumbs;
-        BPT.capture(aUrl);
+        BPT.capture(aUrl, {onDone: deferredResult.resolve});
       }
     });
+    return deferredResult.promise;
   },
 
   /**
@@ -303,12 +321,15 @@ this.PageThumbs = {
     let channel = aBrowser.docShell.currentDocumentChannel;
     let originalURL = channel.originalURI.spec;
 
+    // see if this was an error response.
+    let wasError = this._isChannelErrorResponse(channel);
+
     TaskUtils.spawn((function task() {
       let isSuccess = true;
       try {
         let blob = yield this.captureToBlob(aBrowser.contentWindow);
         let buffer = yield TaskUtils.readBlob(blob);
-        yield this._store(originalURL, url, buffer);
+        yield this._store(originalURL, url, buffer, wasError);
       } catch (_) {
         isSuccess = false;
       }
@@ -326,10 +347,27 @@ this.PageThumbs = {
    * @param aOriginalURL The URL with which the capture was initiated.
    * @param aFinalURL The URL to which aOriginalURL ultimately resolved.
    * @param aData An ArrayBuffer containing the image data.
+   * @param aWasErrorResponse A boolean indicating if the capture was for a
+   *                          response that returned an error code.
    * @return {Promise}
    */
-  _store: function PageThumbs__store(aOriginalURL, aFinalURL, aData) {
+  _store: function PageThumbs__store(aOriginalURL, aFinalURL, aData, aWasErrorResponse) {
     return TaskUtils.spawn(function () {
+      // If we got an error response, we only save it if we don't have an
+      // existing thumbnail.  If we *do* have an existing thumbnail we "touch"
+      // it so we consider the old version fresh.
+      if (aWasErrorResponse) {
+        let result = yield PageThumbsStorage.touchIfExists(aFinalURL);
+        let exists = result.ok;
+        if (exists) {
+          if (aFinalURL != aOriginalURL) {
+             yield PageThumbsStorage.touchIfExists(aOriginalURL);
+          }
+          return;
+        }
+        // was an error response, but no existing thumbnail - just store
+        // that error response as something is (arguably) better than nothing.
+      }
       let telemetryStoreTime = new Date();
       yield PageThumbsStorage.writeData(aFinalURL, aData);
       Services.telemetry.getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
@@ -444,16 +482,35 @@ this.PageThumbs = {
       let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
                             .getService(Ci.nsIScreenManager);
       let left = {}, top = {}, width = {}, height = {};
-      screenManager.primaryScreen.GetRect(left, top, width, height);
+      screenManager.primaryScreen.GetRectDisplayPix(left, top, width, height);
       this._thumbnailWidth = Math.round(width.value / 3);
       this._thumbnailHeight = Math.round(height.value / 3);
     }
     return [this._thumbnailWidth, this._thumbnailHeight];
   },
 
+  /**
+   * Given a channel, returns true if it should be considered an "error
+   * response", false otherwise.
+   */
+  _isChannelErrorResponse: function(channel) {
+    // No valid document channel sounds like an error to me!
+    if (!channel)
+      return true;
+    if (!(channel instanceof Ci.nsIHttpChannel))
+      // it might be FTP etc, so assume it's ok.
+      return false;
+    try {
+      return !channel.requestSucceeded;
+    } catch (_) {
+      // not being able to determine success is surely failure!
+      return true;
+    }
+  },
+
   _prefEnabled: function PageThumbs_prefEnabled() {
     try {
-      return Services.prefs.getBoolPref("browser.pageThumbs.enabled");
+      return !Services.prefs.getBoolPref("browser.pagethumbnails.capturing_disabled");
     }
     catch (e) {
       return true;
@@ -556,6 +613,17 @@ this.PageThumbsStorage = {
    */
   wipe: function Storage_wipe() {
     return PageThumbsWorker.post("wipe", [this.path]);
+  },
+
+  /**
+   * If the file holding the thumbnail for the given URL exists, update the
+   * modification time of the file to now and return true, otherwise return
+   * false.
+   *
+   * @return {Promise}
+   */
+  touchIfExists: function Storage_touchIfExists(aURL) {
+    return PageThumbsWorker.post("touchIfExists", [this.getFilePathForURL(aURL)]);
   },
 
   _calculateMD5Hash: function Storage_calculateMD5Hash(aValue) {

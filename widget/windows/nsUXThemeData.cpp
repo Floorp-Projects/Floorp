@@ -10,7 +10,6 @@
 #include "nsUXThemeData.h"
 #include "nsDebug.h"
 #include "nsToolkit.h"
-#include "WinUtils.h"
 #include "nsUXThemeConstants.h"
 
 using namespace mozilla;
@@ -18,16 +17,12 @@ using namespace mozilla::widget;
 
 const PRUnichar
 nsUXThemeData::kThemeLibraryName[] = L"uxtheme.dll";
-const PRUnichar
-nsUXThemeData::kDwmLibraryName[] = L"dwmapi.dll";
 
 HANDLE
 nsUXThemeData::sThemes[eUXNumClasses];
 
 HMODULE
 nsUXThemeData::sThemeDLL = NULL;
-HMODULE
-nsUXThemeData::sDwmDLL = NULL;
 
 bool
 nsUXThemeData::sFlatMenus = false;
@@ -36,22 +31,11 @@ bool nsUXThemeData::sTitlebarInfoPopulatedAero = false;
 bool nsUXThemeData::sTitlebarInfoPopulatedThemed = false;
 SIZE nsUXThemeData::sCommandButtons[4];
 
-nsUXThemeData::DwmExtendFrameIntoClientAreaProc nsUXThemeData::dwmExtendFrameIntoClientAreaPtr = NULL;
-nsUXThemeData::DwmIsCompositionEnabledProc nsUXThemeData::dwmIsCompositionEnabledPtr = NULL;
-nsUXThemeData::DwmSetIconicThumbnailProc nsUXThemeData::dwmSetIconicThumbnailPtr = NULL;
-nsUXThemeData::DwmSetIconicLivePreviewBitmapProc nsUXThemeData::dwmSetIconicLivePreviewBitmapPtr = NULL;
-nsUXThemeData::DwmGetWindowAttributeProc nsUXThemeData::dwmGetWindowAttributePtr = NULL;
-nsUXThemeData::DwmSetWindowAttributeProc nsUXThemeData::dwmSetWindowAttributePtr = NULL;
-nsUXThemeData::DwmInvalidateIconicBitmapsProc nsUXThemeData::dwmInvalidateIconicBitmapsPtr = NULL;
-nsUXThemeData::DwmDefWindowProcProc nsUXThemeData::dwmDwmDefWindowProcPtr = NULL;
-
 void
 nsUXThemeData::Teardown() {
   Invalidate();
   if(sThemeDLL)
     FreeLibrary(sThemeDLL);
-  if(sDwmDLL)
-    FreeLibrary(sDwmDLL);
 }
 
 void
@@ -60,18 +44,7 @@ nsUXThemeData::Initialize()
   ::ZeroMemory(sThemes, sizeof(sThemes));
   NS_ASSERTION(!sThemeDLL, "nsUXThemeData being initialized twice!");
 
-  if (GetDwmDLL()) {
-    dwmExtendFrameIntoClientAreaPtr = (DwmExtendFrameIntoClientAreaProc)::GetProcAddress(sDwmDLL, "DwmExtendFrameIntoClientArea");
-    dwmIsCompositionEnabledPtr = (DwmIsCompositionEnabledProc)::GetProcAddress(sDwmDLL, "DwmIsCompositionEnabled");
-    dwmSetIconicThumbnailPtr = (DwmSetIconicThumbnailProc)::GetProcAddress(sDwmDLL, "DwmSetIconicThumbnail");
-    dwmSetIconicLivePreviewBitmapPtr = (DwmSetIconicLivePreviewBitmapProc)::GetProcAddress(sDwmDLL, "DwmSetIconicLivePreviewBitmap");
-    dwmGetWindowAttributePtr = (DwmGetWindowAttributeProc)::GetProcAddress(sDwmDLL, "DwmGetWindowAttribute");
-    dwmSetWindowAttributePtr = (DwmSetWindowAttributeProc)::GetProcAddress(sDwmDLL, "DwmSetWindowAttribute");
-    dwmInvalidateIconicBitmapsPtr = (DwmInvalidateIconicBitmapsProc)::GetProcAddress(sDwmDLL, "DwmInvalidateIconicBitmaps");
-    dwmDwmDefWindowProcPtr = (DwmDefWindowProcProc)::GetProcAddress(sDwmDLL, "DwmDefWindowProc");
-    CheckForCompositor(true);
-  }
-
+  CheckForCompositor(true);
   Invalidate();
 }
 
@@ -103,13 +76,6 @@ nsUXThemeData::GetThemeDLL() {
   if (!sThemeDLL)
     sThemeDLL = ::LoadLibraryW(kThemeLibraryName);
   return sThemeDLL;
-}
-
-HMODULE
-nsUXThemeData::GetDwmDLL() {
-  if (!sDwmDLL && WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION)
-    sDwmDLL = ::LoadLibraryW(kDwmLibraryName);
-  return sDwmDLL;
 }
 
 const wchar_t *nsUXThemeData::GetClassName(nsUXThemeClass cls) {
@@ -190,10 +156,10 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
 
   if (!sTitlebarInfoPopulatedAero && nsUXThemeData::CheckForCompositor()) {
     RECT captionButtons;
-    if (SUCCEEDED(nsUXThemeData::dwmGetWindowAttributePtr(aWnd,
-                                                          DWMWA_CAPTION_BUTTON_BOUNDS,
-                                                          &captionButtons,
-                                                          sizeof(captionButtons)))) {
+    if (SUCCEEDED(WinUtils::dwmGetWindowAttributePtr(aWnd,
+                                                     DWMWA_CAPTION_BUTTON_BOUNDS,
+                                                     &captionButtons,
+                                                     sizeof(captionButtons)))) {
       sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cx = captionButtons.right - captionButtons.left - 3;
       sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy = (captionButtons.bottom - captionButtons.top) - 1;
       sTitlebarInfoPopulatedAero = true;
@@ -298,6 +264,16 @@ nsUXThemeData::GetNativeThemeId()
 bool nsUXThemeData::IsDefaultWindowTheme()
 {
   return sIsDefaultWindowsTheme;
+}
+
+// static
+bool nsUXThemeData::CheckForCompositor(bool aUpdateCache)
+{
+  static BOOL sCachedValue = FALSE;
+  if (aUpdateCache && WinUtils::dwmIsCompositionEnabledPtr) {
+    WinUtils::dwmIsCompositionEnabledPtr(&sCachedValue);
+  }
+  return sCachedValue;
 }
 
 // static

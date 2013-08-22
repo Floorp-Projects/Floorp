@@ -264,10 +264,10 @@ MapsReporter::ParseMapping(
 {
   // We need to use native types in order to get good warnings from fscanf, so
   // let's make sure that the native types have the sizes we expect.
-  MOZ_STATIC_ASSERT(sizeof(long long) == sizeof(int64_t),
-                    "size of (long long) is expected to match (int64_t)");
-  MOZ_STATIC_ASSERT(sizeof(int) == sizeof(int32_t),
-                    "size of (int) is expected to match (int32_t)");
+  static_assert(sizeof(long long) == sizeof(int64_t),
+                "size of (long long) is expected to match (int64_t)");
+  static_assert(sizeof(int) == sizeof(int32_t),
+                "size of (int) is expected to match (int32_t)");
 
   // Don't bail if FindLibxul fails.  We can still gather meaningful stats
   // here.
@@ -465,8 +465,8 @@ MapsReporter::ParseMapBody(
   nsISupports *aClosure,
   CategoriesSeen *aCategoriesSeen)
 {
-  MOZ_STATIC_ASSERT(sizeof(long long) == sizeof(int64_t),
-                    "size of (long long) is expected to match (int64_t)");
+  static_assert(sizeof(long long) == sizeof(int64_t),
+                "size of (long long) is expected to match (int64_t)");
 
   const int argCount = 2;
 

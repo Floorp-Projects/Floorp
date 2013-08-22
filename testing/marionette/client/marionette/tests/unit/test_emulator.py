@@ -17,14 +17,13 @@ class TestEmulatorContent(MarionetteTestCase):
         """);
         self.assertEqual(result, expected)
 
-# disabled due to bug 758329
-#     def test_emulator_order(self):
-#        self.marionette.set_script_timeout(10000)
-#        self.assertRaises(MarionetteException,
-#                          self.marionette.execute_async_script,
-#        """runEmulatorCmd("gsm status", function(result) {});
-#           marionetteScriptFinished(true);
-#        """);
+    def test_emulator_order(self):
+        self.marionette.set_script_timeout(10000)
+        self.assertRaises(MarionetteException,
+                          self.marionette.execute_async_script,
+        """runEmulatorCmd("gsm status", function(result) {});
+           marionetteScriptFinished(true);
+        """);
 
 
 class TestEmulatorChrome(TestEmulatorContent):

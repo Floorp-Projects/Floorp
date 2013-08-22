@@ -8,6 +8,7 @@
 
 #include "jsatom.h"
 #include "jscompartment.h"
+#include "jsfriendapi.h"
 
 #include "gc/Marking.h"
 
@@ -24,6 +25,8 @@ DefaultHasher<WatchKey>::hash(const Lookup &key)
 {
     return DefaultHasher<JSObject *>::hash(key.object.get()) ^ HashId(key.id.get());
 }
+
+namespace {
 
 class AutoEntryHolder {
     typedef WatchpointMap::Map Map;
@@ -47,6 +50,8 @@ class AutoEntryHolder {
             p->value.held = false;
     }
 };
+
+} /* anonymous namespace */
 
 bool
 WatchpointMap::init()

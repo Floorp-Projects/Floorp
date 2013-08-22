@@ -76,10 +76,14 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
   /* get the summation for all arenas, i == narenas */
   CTL_I_GET("stats.arenas.0.pdirty", pdirty, narenas);
 
-  stats->allocated = allocated;
   stats->mapped = mapped;
-  stats->dirty = pdirty * page;
-  stats->committed = active + stats->dirty;
+  stats->allocated = allocated;
+  stats->waste = active - allocated;
+  stats->page_cache = pdirty * page;
+
+  // We could get this value out of base.c::base_pages, but that really should
+  // be an upstream change, so don't worry about it for now.
+  stats->bookkeeping = 0;
 }
 
 MOZ_JEMALLOC_API void

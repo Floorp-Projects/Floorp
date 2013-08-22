@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=895305
+https://bugzilla.mozilla.org/show_bug.cgi?id=905320
+-->
+<head>
+  <meta charset='utf-8'>
+  <title>Regression test for bug 895305 and 905320 - TextTrack* leaks</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
+  function() {
+    var audio = document.createElement("audio");
+    // Check leaking on TextTrackList objects.
+    window.ttl = audio.textTracks;
+    ttl.addEventListener("click", function(){}, false);
+
+    // Check leaking on TextTrackCue objects.
+    window.ttc = new TextTrackCue(3, 4, "Test.");
+    ttc.addEventListener("click", function() {}, false);
+
+    // Check leaking on TextTrack objects.
+    audio.addTextTrack("subtitles", "label", "en-CA");
+    ttl[0].addEventListener("click", function() {}, false);
+
+    ok(true); // Need to have at least one assertion for Mochitest to be happy.
+    SimpleTest.finish();
+  }
+);
+</script>
+</pre>
+</body>
+</html>

@@ -6,10 +6,10 @@
 #ifndef MOZILLA_GFX_TYPES_H_
 #define MOZILLA_GFX_TYPES_H_
 
-#include "mozilla/StandardInteger.h"
 #include "mozilla/NullPtr.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
 namespace mozilla {
 namespace gfx {
@@ -104,7 +104,7 @@ enum ExtendMode { EXTEND_CLAMP, EXTEND_REPEAT, EXTEND_REFLECT };
 enum FillRule { FILL_WINDING, FILL_EVEN_ODD };
 enum AntialiasMode { AA_NONE, AA_GRAY, AA_SUBPIXEL, AA_DEFAULT };
 enum Snapping { SNAP_NONE, SNAP_ALIGNED };
-enum Filter { FILTER_LINEAR, FILTER_POINT };
+enum Filter { FILTER_GOOD, FILTER_LINEAR, FILTER_POINT };
 enum PatternType { PATTERN_COLOR, PATTERN_SURFACE, PATTERN_LINEAR_GRADIENT, PATTERN_RADIAL_GRADIENT };
 enum JoinStyle { JOIN_BEVEL, JOIN_ROUND, JOIN_MITER, JOIN_MITER_OR_BEVEL };
 enum CapStyle { CAP_BUTT, CAP_ROUND, CAP_SQUARE };

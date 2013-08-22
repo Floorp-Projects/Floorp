@@ -718,33 +718,19 @@ HyperTextAccessible::GetRelativeOffset(nsIPresShell* aPresShell,
                          0, kIsJumpLinesOk, kIsScrollViewAStop, kIsKeyboardSelect, kIsVisualBidi,
                          aWordMovementType);
   rv = aFromFrame->PeekOffset(&pos);
-  if (NS_FAILED(rv)) {
-    pos.mResultContent = aFromFrame->GetContent();
-    if (aDirection == eDirPrevious) {
-      // Use passed-in frame as starting point in failure case for now,
-      // this is a hack to deal with starting on a list bullet frame,
-      // which fails in PeekOffset() because the line iterator doesn't see it.
-      // XXX Need to look at our overall handling of list bullets, which are an odd case
-      int32_t endOffsetUnused;
-      aFromFrame->GetOffsets(pos.mContentOffset, endOffsetUnused);
-    }
-    else {
-      // XXX: PeekOffset fails on a last frame in the document for
-      // eSelectLine/eDirNext. DOM selection (up/down arrowing processing) has
-      // similar code to handle this case. One day it should be incorporated
-      // into PeekOffset.
-      int32_t startOffsetUnused;
-      aFromFrame->GetOffsets(startOffsetUnused, pos.mContentOffset);
-    }
-  }
 
-  // Turn the resulting node and offset into a hyperTextOffset
-  int32_t hyperTextOffset;
+  // PeekOffset fails on last/first lines of the text in certain cases.
+  if (NS_FAILED(rv) && aAmount == eSelectLine) {
+    pos.mAmount = (aDirection == eDirNext) ? eSelectEndLine : eSelectBeginLine;
+    aFromFrame->PeekOffset(&pos);
+  }
   if (!pos.mResultContent)
     return -1;
 
+  // Turn the resulting node and offset into a hyperTextOffset
   // If finalAccessible is nullptr, then DOMPointToHypertextOffset() searched
   // through the hypertext children without finding the node/offset position.
+  int32_t hyperTextOffset;
   Accessible* finalAccessible =
     DOMPointToHypertextOffset(pos.mResultContent, pos.mContentOffset,
                               &hyperTextOffset, aDirection == eDirNext);

@@ -59,13 +59,11 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMJSClass.h"
-#include "jsfriendapi.h"
 #include "jsprf.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
-#include "nsLayoutStatics.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;
@@ -260,8 +258,9 @@ private:
     if (delegateMightNeedMarking && kkind == JSTRACE_OBJECT) {
       JSObject* kdelegate = js::GetWeakmapKeyDelegate((JSObject*)k);
       if (kdelegate && !xpc_IsGrayGCThing(kdelegate)) {
-        JS::UnmarkGrayGCThingRecursively(k, JSTRACE_OBJECT);
-        tracer->mAnyMarked = true;
+        if (JS::UnmarkGrayGCThingRecursively(k, JSTRACE_OBJECT)) {
+          tracer->mAnyMarked = true;
+        }
       }
     }
 
@@ -269,8 +268,9 @@ private:
         (!k || !xpc_IsGrayGCThing(k)) &&
         (!m || !xpc_IsGrayGCThing(m)) &&
         vkind != JSTRACE_SHAPE) {
-      JS::UnmarkGrayGCThingRecursively(v, vkind);
-      tracer->mAnyMarked = true;
+      if (JS::UnmarkGrayGCThingRecursively(v, vkind)) {
+        tracer->mAnyMarked = true;
+      }
     }
   }
 
@@ -280,23 +280,22 @@ private:
 class JSContextParticipant : public nsCycleCollectionParticipant
 {
 public:
-  static NS_METHOD RootImpl(void *n)
+  NS_IMETHOD Root(void *n)
   {
     return NS_OK;
   }
-  static NS_METHOD UnlinkImpl(void *n)
+  NS_IMETHOD Unlink(void *n)
   {
     return NS_OK;
   }
-  static NS_METHOD UnrootImpl(void *n)
+  NS_IMETHOD Unroot(void *n)
   {
     return NS_OK;
   }
-  static NS_METHOD_(void) DeleteCycleCollectableImpl(void *n)
+  NS_IMETHOD_(void) DeleteCycleCollectable(void *n)
   {
   }
-  static NS_METHOD TraverseImpl(JSContextParticipant *that, void *n,
-                                nsCycleCollectionTraversalCallback &cb)
+  NS_IMETHOD Traverse(void *n, nsCycleCollectionTraversalCallback &cb)
   {
     JSContext *cx = static_cast<JSContext*>(n);
 
@@ -308,7 +307,7 @@ public:
     unsigned refCount = js::ContextHasOutstandingRequests(cx) ? 2 : 1;
 
     cb.DescribeRefCountedNode(refCount, "JSContext");
-    if (JSObject *global = js::GetDefaultGlobalForContext(cx)) {
+    if (JSObject *global = js::DefaultObjectForContextOrNull(cx)) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
       cb.NoteJSChild(global);
     }
@@ -317,11 +316,7 @@ public:
   }
 };
 
-static const CCParticipantVTable<JSContextParticipant>::Type
-JSContext_cycleCollectorGlobal =
-{
-  NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSContextParticipant)
-};
+static JSContextParticipant JSContext_cycleCollectorGlobal;
 
 struct Closure
 {
@@ -359,12 +354,11 @@ NoteJSHolder(void *holder, nsScriptObjectTracer *&tracer, void *arg)
   return PL_DHASH_NEXT;
 }
 
-NS_METHOD
-JSGCThingParticipant::TraverseImpl(JSGCThingParticipant* that, void* p,
-                                   nsCycleCollectionTraversalCallback& cb)
+NS_IMETHODIMP
+JSGCThingParticipant::Traverse(void* p, nsCycleCollectionTraversalCallback& cb)
 {
   CycleCollectedJSRuntime* runtime = reinterpret_cast<CycleCollectedJSRuntime*>
-    (reinterpret_cast<char*>(that) -
+    (reinterpret_cast<char*>(this) -
      offsetof(CycleCollectedJSRuntime, mGCThingCycleCollectorGlobal));
 
   runtime->TraverseGCThing(CycleCollectedJSRuntime::TRAVERSE_FULL,
@@ -374,18 +368,13 @@ JSGCThingParticipant::TraverseImpl(JSGCThingParticipant* that, void* p,
 
 // NB: This is only used to initialize the participant in
 // CycleCollectedJSRuntime. It should never be used directly.
-static const CCParticipantVTable<JSGCThingParticipant>::Type
-sGCThingCycleCollectorGlobal =
-{
-  NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSGCThingParticipant)
-};
+static JSGCThingParticipant sGCThingCycleCollectorGlobal;
 
-NS_METHOD
-JSZoneParticipant::TraverseImpl(JSZoneParticipant* that, void* p,
-                                nsCycleCollectionTraversalCallback& cb)
+NS_IMETHODIMP
+JSZoneParticipant::Traverse(void* p, nsCycleCollectionTraversalCallback& cb)
 {
   CycleCollectedJSRuntime* runtime = reinterpret_cast<CycleCollectedJSRuntime*>
-    (reinterpret_cast<char*>(that) -
+    (reinterpret_cast<char*>(this) -
      offsetof(CycleCollectedJSRuntime, mJSZoneCycleCollectorGlobal));
 
   MOZ_ASSERT(!cb.WantAllTraces());
@@ -482,20 +471,17 @@ NoteJSChildGrayWrapperShim(void* aData, void* aThing)
 
 // NB: This is only used to initialize the participant in
 // CycleCollectedJSRuntime. It should never be used directly.
-static const CCParticipantVTable<JSZoneParticipant>::Type
-sJSZoneCycleCollectorGlobal = {
-  NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSZoneParticipant)
-};
+static const JSZoneParticipant sJSZoneCycleCollectorGlobal;
 
 CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
                                                  JSUseHelperThreads aUseHelperThreads,
                                                  bool aExpectUnrootedGlobals)
   : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal),
     mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal),
-    mJSRuntime(nullptr)
+    mJSRuntime(nullptr),
+    mExpectUnrootedGlobals(aExpectUnrootedGlobals)
 #ifdef DEBUG
   , mObjectToUnlink(nullptr)
-  , mExpectUnrootedGlobals(aExpectUnrootedGlobals)
 #endif
 {
   mJSRuntime = JS_NewRuntime(aMaxbytes, aUseHelperThreads);
@@ -508,6 +494,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
   }
   JS_SetGrayGCRootsTracer(mJSRuntime, TraceGrayJS, this);
   JS_SetGCCallback(mJSRuntime, GCCallback, this);
+  JS_SetContextCallback(mJSRuntime, ContextCallback, this);
 
   mJSHolders.Init(512);
 
@@ -562,7 +549,7 @@ CycleCollectedJSRuntime::MaybeTraceGlobals(JSTracer* aTracer) const
       continue;
     }
 
-    if (JSObject* global = js::GetDefaultGlobalForContext(acx)) {
+    if (JSObject* global = js::DefaultObjectForContextOrNull(acx)) {
       JS::AssertGCThingMustBeTenured(global);
       JS_CallObjectTracer(aTracer, &global, "Global Object");
     }
@@ -760,7 +747,7 @@ CycleCollectedJSRuntime::MaybeTraverseGlobals(nsCycleCollectionNoteRootCallback&
   while ((acx = JS_ContextIterator(Runtime(), &iter))) {
     // Add the context to the CC graph only if traversing it would
     // end up doing something.
-    JSObject* global = js::GetDefaultGlobalForContext(acx);
+    JSObject* global = js::DefaultObjectForContextOrNull(acx);
     if (global && xpc_IsGrayGCThing(global)) {
       aCb.NoteNativeRoot(acx, JSContextParticipant());
     }
@@ -809,6 +796,18 @@ CycleCollectedJSRuntime::GCCallback(JSRuntime* aRuntime,
   self->OnGC(aStatus);
 }
 
+/* static */ bool
+CycleCollectedJSRuntime::ContextCallback(JSContext* aContext,
+                                         unsigned aOperation,
+                                         void* aData)
+{
+  CycleCollectedJSRuntime* self = static_cast<CycleCollectedJSRuntime*>(aData);
+
+  MOZ_ASSERT(JS_GetRuntime(aContext) == self->Runtime());
+
+  return self->OnContext(aContext, aOperation);
+}
+
 struct JsGcTracer : public TraceCallbacks
 {
   virtual void Trace(JS::Heap<JS::Value> *p, const char *name, void *closure) const MOZ_OVERRIDE {
@@ -851,36 +850,51 @@ CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer)
 void
 CycleCollectedJSRuntime::AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer)
 {
-  MOZ_ASSERT(aTracer->Trace, "AddJSHolder needs a non-null Trace function");
-  bool wasEmpty = mJSHolders.Count() == 0;
   mJSHolders.Put(aHolder, aTracer);
-  if (wasEmpty && mJSHolders.Count() == 1) {
-    nsLayoutStatics::AddRef();
-  }
 }
+
+struct ClearJSHolder : TraceCallbacks
+{
+  virtual void Trace(JS::Heap<JS::Value>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = JSVAL_VOID;
+  }
+
+  virtual void Trace(JS::Heap<jsid>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = JSID_VOID;
+  }
+
+  virtual void Trace(JS::Heap<JSObject*>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JS::Heap<JSString*>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = nullptr;
+  }
+
+  virtual void Trace(JS::Heap<JSScript*>* aPtr, const char*, void*) const MOZ_OVERRIDE
+  {
+    *aPtr = nullptr;
+  }
+};
 
 void
 CycleCollectedJSRuntime::RemoveJSHolder(void* aHolder)
 {
-#ifdef DEBUG
-  // Assert that the holder doesn't try to keep any GC things alive.
-  // In case of unlinking cycle collector calls AssertNoObjectsToTrace
-  // manually because we don't want to check the holder before we are
-  // finished unlinking it
-  if (aHolder != mObjectToUnlink) {
-    AssertNoObjectsToTrace(aHolder);
+  nsScriptObjectTracer* tracer = mJSHolders.Get(aHolder);
+  if (!tracer) {
+    return;
   }
-#endif
-  bool hadOne = mJSHolders.Count() == 1;
+  tracer->Trace(aHolder, ClearJSHolder(), nullptr);
   mJSHolders.Remove(aHolder);
-  if (hadOne && mJSHolders.Count() == 0) {
-    nsLayoutStatics::Release();
-  }
 }
 
 #ifdef DEBUG
 bool
-CycleCollectedJSRuntime::TestJSHolder(void* aHolder)
+CycleCollectedJSRuntime::IsJSHolder(void* aHolder)
 {
   return mJSHolders.Get(aHolder, nullptr);
 }
@@ -895,7 +909,7 @@ void
 CycleCollectedJSRuntime::AssertNoObjectsToTrace(void* aPossibleJSHolder)
 {
   nsScriptObjectTracer* tracer = mJSHolders.Get(aPossibleJSHolder);
-  if (tracer && tracer->Trace) {
+  if (tracer) {
     tracer->Trace(aPossibleJSHolder, TraceCallbackFunc(AssertNoGcThing), nullptr);
   }
 }
@@ -905,51 +919,19 @@ CycleCollectedJSRuntime::AssertNoObjectsToTrace(void* aPossibleJSHolder)
 nsCycleCollectionParticipant*
 CycleCollectedJSRuntime::JSContextParticipant()
 {
-  return JSContext_cycleCollectorGlobal.GetParticipant();
+  return &JSContext_cycleCollectorGlobal;
 }
 
 nsCycleCollectionParticipant*
-CycleCollectedJSRuntime::GCThingParticipant() const
+CycleCollectedJSRuntime::GCThingParticipant()
 {
-    return mGCThingCycleCollectorGlobal.GetParticipant();
+    return &mGCThingCycleCollectorGlobal;
 }
 
 nsCycleCollectionParticipant*
-CycleCollectedJSRuntime::ZoneParticipant() const
+CycleCollectedJSRuntime::ZoneParticipant()
 {
-    return mJSZoneCycleCollectorGlobal.GetParticipant();
-}
-
-bool
-CycleCollectedJSRuntime::NotifyLeaveMainThread() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (JS_IsInRequest(mJSRuntime)) {
-    return false;
-  }
-  JS_ClearRuntimeThread(mJSRuntime);
-  return true;
-}
-
-void
-CycleCollectedJSRuntime::NotifyEnterCycleCollectionThread() const
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  JS_SetRuntimeThread(mJSRuntime);
-}
-
-void
-CycleCollectedJSRuntime::NotifyLeaveCycleCollectionThread() const
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  JS_ClearRuntimeThread(mJSRuntime);
-}
-
-void
-CycleCollectedJSRuntime::NotifyEnterMainThread() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  JS_SetRuntimeThread(mJSRuntime);
+    return &mJSZoneCycleCollectorGlobal;
 }
 
 nsresult
@@ -981,6 +963,10 @@ CycleCollectedJSRuntime::BeginCycleCollection(nsCycleCollectionNoteRootCallback 
 bool
 CycleCollectedJSRuntime::UsefulToMergeZones() const
 {
+  if (!NS_IsMainThread()) {
+    return false;
+  }
+
   JSContext* iter = nullptr;
   JSContext* cx;
   JSAutoRequest ar(nsContentUtils::GetSafeJSContext());
@@ -1046,6 +1032,13 @@ CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
 {
   mDeferredSupports.AppendElement(aSupports);
 }
+
+void
+CycleCollectedJSRuntime::DumpJSHeap(FILE* file)
+{
+  js::DumpHeapComplete(Runtime(), file);
+}
+
 
 bool
 ReleaseSliceNow(uint32_t aSlice, void* aData)
@@ -1194,6 +1187,18 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
   switch (aStatus) {
     case JSGC_BEGIN:
     {
+      // XXXkhuey do we still need this?
+      // We seem to sometime lose the unrooted global flag. Restore it
+      // here. FIXME: bug 584495.
+      if (mExpectUnrootedGlobals){
+        JSContext* iter = nullptr;
+        while (JSContext* acx = JS_ContextIterator(Runtime(), &iter)) {
+          if (!js::HasUnrootedGlobal(acx)) {
+            JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
+          }
+        }
+      }
+
       break;
     }
     case JSGC_END:
@@ -1219,4 +1224,16 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
   }
 
   CustomGCCallback(aStatus);
+}
+
+bool
+CycleCollectedJSRuntime::OnContext(JSContext* aCx, unsigned aOperation)
+{
+  if (mExpectUnrootedGlobals && aOperation == JSCONTEXT_NEW) {
+    // XXXkhuey bholley is going to make this go away, but for now XPConnect
+    // needs it.
+    JS_ToggleOptions(aCx, JSOPTION_UNROOTED_GLOBAL);
+  }
+
+  return CustomContextCallback(aCx, aOperation);
 }

@@ -7,7 +7,6 @@
     <em:id>softblock2@tests.mozilla.org</em:id>
     <em:version>2.0</em:version>
     <em:name>Softblocked add-on</em:name>
-    <em:updateURL>http://localhost:4444/data/addon_update2.rdf</em:updateURL>
     <em:targetApplication>
       <Description>
         <em:id>xpcshell@tests.mozilla.org</em:id>

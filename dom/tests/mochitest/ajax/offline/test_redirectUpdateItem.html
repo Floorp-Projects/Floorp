@@ -108,8 +108,7 @@ function manifestError()
 
 function finish()
 {
-  OfflineTest.teardown();
-  OfflineTest.finish();
+  OfflineTest.teardownAndFinish();
 }
 
 SimpleTest.waitForExplicitFinish();

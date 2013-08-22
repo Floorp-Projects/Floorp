@@ -16,6 +16,176 @@ using namespace gfx;
 
 namespace layers {
 
+ImageHost::ImageHost(const TextureInfo& aTextureInfo)
+  : CompositableHost(aTextureInfo)
+  , mFrontBuffer(nullptr)
+  , mHasPictureRect(false)
+{}
+
+ImageHost::~ImageHost() {}
+
+void
+ImageHost::UseTextureHost(TextureHost* aTexture)
+{
+  mFrontBuffer = aTexture;
+}
+
+TextureHost*
+ImageHost::GetTextureHost()
+{
+  return mFrontBuffer;
+}
+
+void
+ImageHost::Composite(EffectChain& aEffectChain,
+                     float aOpacity,
+                     const gfx::Matrix4x4& aTransform,
+                     const gfx::Point& aOffset,
+                     const gfx::Filter& aFilter,
+                     const gfx::Rect& aClipRect,
+                     const nsIntRegion* aVisibleRegion,
+                     TiledLayerProperties* aLayerProperties)
+{
+  if (!GetCompositor()) {
+    // should only happen when a tab is dragged to another window and
+    // async-video is still sending frames but we haven't attached the
+    // set the new compositor yet.
+    return;
+  }
+  if (!mFrontBuffer) {
+    return;
+  }
+  if (!mFrontBuffer->Lock()) {
+    NS_WARNING("failed to lock front buffer");
+    return;
+  }
+  RefPtr<NewTextureSource> source = mFrontBuffer->GetTextureSources();
+  if (!source) {
+    return;
+  }
+  RefPtr<TexturedEffect> effect = CreateTexturedEffect(mFrontBuffer->GetFormat(),
+                                                       source,
+                                                       aFilter);
+  aEffectChain.mPrimaryEffect = effect;
+  IntSize textureSize = source->GetSize();
+  gfx::Rect gfxPictureRect
+    = mHasPictureRect ? gfx::Rect(0, 0, mPictureRect.width, mPictureRect.height)
+                      : gfx::Rect(0, 0, textureSize.width, textureSize.height);
+
+  gfx::Rect pictureRect(0, 0,
+                        mPictureRect.width,
+                        mPictureRect.height);
+  //XXX: We might have multiple texture sources here (e.g. 3 YCbCr textures), and we're
+  // only iterating over the tiles of the first one. Are we assuming that the tiling
+  // will be identical? Can we ensure that somehow?
+  TileIterator* it = source->AsTileIterator();
+  if (it) {
+    it->BeginTileIteration();
+    do {
+      nsIntRect tileRect = it->GetTileRect();
+      gfx::Rect rect(tileRect.x, tileRect.y, tileRect.width, tileRect.height);
+      if (mHasPictureRect) {
+        rect = rect.Intersect(pictureRect);
+        effect->mTextureCoords = Rect(Float(rect.x - tileRect.x)/ tileRect.width,
+                                      Float(rect.y - tileRect.y) / tileRect.height,
+                                      Float(rect.width) / tileRect.width,
+                                      Float(rect.height) / tileRect.height);
+      } else {
+        effect->mTextureCoords = Rect(0, 0, 1, 1);
+      }
+      GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
+                                aOpacity, aTransform, aOffset);
+      GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE|DIAGNOSTIC_BIGIMAGE,
+                                       rect, aClipRect, aTransform, aOffset);
+    } while (it->NextTile());
+    it->EndTileIteration();
+    // layer border
+    GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
+                                     gfxPictureRect, aClipRect,
+                                     aTransform, aOffset);    
+  } else {
+    IntSize textureSize = source->GetSize();
+    gfx::Rect rect;
+    if (mHasPictureRect) {
+      effect->mTextureCoords = Rect(Float(mPictureRect.x) / textureSize.width,
+                                    Float(mPictureRect.y) / textureSize.height,
+                                    Float(mPictureRect.width) / textureSize.width,
+                                    Float(mPictureRect.height) / textureSize.height);
+      rect = pictureRect;
+    } else {
+      effect->mTextureCoords = Rect(0, 0, 1, 1);
+      rect = gfx::Rect(0, 0, textureSize.width, textureSize.height);
+    }
+
+    if (mFrontBuffer->GetFlags() & TEXTURE_NEEDS_Y_FLIP) {
+      effect->mTextureCoords.y = effect->mTextureCoords.YMost();
+      effect->mTextureCoords.height = -effect->mTextureCoords.height;
+    }
+
+    GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
+                              aOpacity, aTransform, aOffset);
+    GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
+                                     rect, aClipRect,
+                                     aTransform, aOffset);
+  }
+  mFrontBuffer->Unlock();
+}
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+void
+ImageHost::PrintInfo(nsACString& aTo, const char* aPrefix)
+{
+  aTo += aPrefix;
+  aTo += nsPrintfCString("ImageHost (0x%p)", this);
+
+  AppendToString(aTo, mPictureRect, " [picture-rect=", "]");
+
+  if (mFrontBuffer) {
+    nsAutoCString pfx(aPrefix);
+    pfx += "  ";
+    aTo += "\n";
+    mFrontBuffer->PrintInfo(aTo, pfx.get());
+  }
+}
+#endif
+
+
+#ifdef MOZ_DUMP_PAINTING
+void
+ImageHost::Dump(FILE* aFile,
+                const char* aPrefix,
+                bool aDumpHtml)
+{
+  if (!aFile) {
+    aFile = stderr;
+  }
+  if (mFrontBuffer) {
+    fprintf(aFile, "%s", aPrefix);
+    fprintf(aFile, aDumpHtml ? "<ul><li>TextureHost: "
+                             : "TextureHost: ");
+    DumpTextureHost(aFile, mFrontBuffer);
+    fprintf(aFile, aDumpHtml ? " </li></ul> " : " ");
+  }
+}
+#endif
+
+LayerRenderState
+ImageHost::GetRenderState()
+{
+  if (mFrontBuffer) {
+    return mFrontBuffer->GetRenderState();
+  }
+  return LayerRenderState();
+}
+
+#ifdef MOZ_DUMP_PAINTING
+already_AddRefed<gfxImageSurface>
+ImageHost::GetAsSurface()
+{
+  return mFrontBuffer->GetAsSurface();
+}
+#endif
+
 void
 DeprecatedImageHostSingle::SetCompositor(Compositor* aCompositor) {
   CompositableHost::SetCompositor(aCompositor);
@@ -58,6 +228,15 @@ DeprecatedImageHostSingle::MakeDeprecatedTextureHost(TextureIdentifier aTextureI
   if (compositor && mDeprecatedTextureHost) {
     mDeprecatedTextureHost->SetCompositor(compositor);
   }
+}
+
+LayerRenderState
+DeprecatedImageHostSingle::GetRenderState()
+{
+  if (mDeprecatedTextureHost) {
+    return mDeprecatedTextureHost->GetRenderState();
+  }
+  return LayerRenderState();
 }
 
 void
@@ -103,7 +282,7 @@ DeprecatedImageHostSingle::Composite(EffectChain& aEffectChain,
       gfx::Rect rect(tileRect.x, tileRect.y, tileRect.width, tileRect.height);
       GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                                 aOpacity, aTransform, aOffset);
-      GetCompositor()->DrawDiagnostics(gfx::Color(0.5,0.0,0.0,1.0),
+      GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE|DIAGNOSTIC_BIGIMAGE,
                                        rect, aClipRect, aTransform, aOffset);
     } while (it->NextTile());
     it->EndTileIteration();
@@ -122,14 +301,14 @@ DeprecatedImageHostSingle::Composite(EffectChain& aEffectChain,
       rect = gfx::Rect(0, 0, textureSize.width, textureSize.height);
     }
 
-    if (mDeprecatedTextureHost->GetFlags() & NeedsYFlip) {
+    if (mDeprecatedTextureHost->GetFlags() & TEXTURE_NEEDS_Y_FLIP) {
       effect->mTextureCoords.y = effect->mTextureCoords.YMost();
       effect->mTextureCoords.height = -effect->mTextureCoords.height;
     }
 
     GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                               aOpacity, aTransform, aOffset);
-    GetCompositor()->DrawDiagnostics(gfx::Color(1.0,0.1,0.1,1.0),
+    GetCompositor()->DrawDiagnostics(DIAGNOSTIC_IMAGE,
                                      rect, aClipRect, aTransform, aOffset);
   }
 
@@ -180,6 +359,7 @@ DeprecatedImageHostBuffered::MakeDeprecatedTextureHost(TextureIdentifier aTextur
   }
 }
 
+#ifdef MOZ_DUMP_PAINTING
 void
 DeprecatedImageHostSingle::Dump(FILE* aFile,
                                 const char* aPrefix,
@@ -196,6 +376,14 @@ DeprecatedImageHostSingle::Dump(FILE* aFile,
     fprintf(aFile, aDumpHtml ? " </li></ul> " : " ");
   }
 }
+
+already_AddRefed<gfxImageSurface>
+DeprecatedImageHostSingle::GetAsSurface()
+{
+  return mDeprecatedTextureHost->GetAsSurface();
+}
+#endif
+
 
 }
 }

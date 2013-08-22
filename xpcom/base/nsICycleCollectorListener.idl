@@ -34,7 +34,7 @@ interface nsICycleCollectorHandler : nsISupports
  * a call to end().  If begin() returns an error none of the other
  * functions will be called.
  */
-[scriptable, builtinclass, uuid(4282249c-7f80-4093-b620-96c573ad683e)]
+[scriptable, builtinclass, uuid(32a3ab19-82a3-4096-a12a-de37274f51c3)]
 interface nsICycleCollectorListener : nsISupports
 {
     nsICycleCollectorListener allTraces();
@@ -58,6 +58,10 @@ interface nsICycleCollectorListener : nsISupports
 			 in string aObjectDescription);
     void noteEdge(in unsigned long long aToAddress,
                   in string aEdgeName);
+    void noteWeakMapEntry(in unsigned long long aMap,
+                          in unsigned long long aKey,
+                          in unsigned long long aKeyDelegate,
+                          in unsigned long long aValue);
     void beginResults();
     void describeRoot(in unsigned long long aAddress,
 		      in unsigned long aKnownEdges);

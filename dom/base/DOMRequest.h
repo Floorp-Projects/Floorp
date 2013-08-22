@@ -10,7 +10,6 @@
 #include "nsIDOMDOMRequest.h"
 #include "nsDOMEventTargetHelper.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/DOMRequestBinding.h"
 
 #include "nsCOMPtr.h"
@@ -25,7 +24,6 @@ protected:
   JS::Heap<JS::Value> mResult;
   nsCOMPtr<nsISupports> mError;
   bool mDone;
-  bool mRooted;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -79,16 +77,14 @@ public:
 
   virtual ~DOMRequest()
   {
-    if (mRooted) {
-      UnrootResultVal();
-    }
+    mResult = JSVAL_VOID;
+    NS_DROP_JS_OBJECTS(this, DOMRequest);
   }
 
 protected:
   void FireEvent(const nsAString& aType, bool aBubble, bool aCancelable);
 
   void RootResultVal();
-  void UnrootResultVal();
 
   void Init(nsIDOMWindow* aWindow);
 };

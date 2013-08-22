@@ -212,7 +212,7 @@ private:
                             bool aExact);
 private:
 
-  // Decodes a packet of Vorbis data, and inserts its samples into the 
+  // Decodes a packet of Vorbis data, and inserts its samples into the
   // audio queue.
   nsresult DecodeVorbis(ogg_packet* aPacket);
 
@@ -234,9 +234,9 @@ private:
   // not be enqueued.
   nsresult DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold);
 
-  // Read a page of data from the Ogg file. Returns the offset of the start
-  // of the page, or -1 if the page read failed.
-  int64_t ReadOggPage(ogg_page* aPage);
+  // Read a page of data from the Ogg file. Returns true if a page has been
+  // read, false if the page read failed or end of file reached.
+  bool ReadOggPage(ogg_page* aPage);
 
   // Reads and decodes header packets for aState, until either header decode
   // fails, or is complete. Initializes the codec state before returning.
@@ -294,10 +294,6 @@ private:
   vorbis_info mVorbisInfo;
   int mOpusPreSkip;
   th_info mTheoraInfo;
-
-  // The offset of the end of the last page we've read, or the start of
-  // the page we're about to read.
-  int64_t mPageOffset;
 
   // The picture region inside Theora frame to be displayed, if we have
   // a Theora video track.

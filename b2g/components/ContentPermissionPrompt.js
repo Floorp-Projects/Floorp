@@ -188,7 +188,9 @@ ContentPermissionPrompt.prototype = {
     this.sendToBrowserWindow("permission-prompt", request, requestId, function(type, remember) {
       if (type == "permission-allow") {
         rememberPermission(request.type, principal, !remember);
-        callback();
+        if (callback) {
+          callback();
+        }
         request.allow();
         return;
       }
@@ -202,7 +204,9 @@ ContentPermissionPrompt.prototype = {
                                         Ci.nsIPermissionManager.EXPIRE_SESSION, 0);
       }
 
-      callback();
+      if (callback) {
+        callback();
+      }
       request.cancel();
     });
   },

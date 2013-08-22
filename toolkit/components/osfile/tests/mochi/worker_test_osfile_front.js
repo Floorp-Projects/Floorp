@@ -700,11 +700,11 @@ function test_info() {
   startMs = start.getTime() - 1000;
   stopMs  = stop.getTime() + 1000;
 
-  birth = stat.creationDate;
+  let birth = stat.creationDate;
   ok(birth.getTime() <= stopMs,
       "test_info: file 2 was created between the start of the test and now - " + start +  ", " + stop + ", " + birth);
 
-  let access = stat.lastModificationDate;
+  let access = stat.lastAccessDate;
   ok(access.getTime() >= startMs
      && access.getTime() <= stopMs,
      "test_info: file 2 was accessed between the start of the test and now - " + start + ", " + stop + ", " + access);

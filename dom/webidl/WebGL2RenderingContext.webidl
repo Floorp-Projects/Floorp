@@ -3,9 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
- * This IDL depend on WebGLRenderingContext.webidl
+ * This IDL depends on WebGLRenderingContext.webidl
  */
 
+[Pref="webgl.enable-prototype-webgl2"]
+interface WebGLQuery {
+};
+
+[Pref="webgl.enable-prototype-webgl2"]
 interface WebGL2RenderingContext : WebGLRenderingContext {
 
     /* draw buffers */
@@ -52,13 +57,48 @@ interface WebGL2RenderingContext : WebGLRenderingContext {
     const GLenum MIN                         = 0x8007;
     const GLenum MAX                         = 0x8008;
 
+    /* query objects */
+    const GLenum ANY_SAMPLES_PASSED          = 0x8C2F;
+    const GLenum ANY_SAMPLES_PASSED_CONSERVATIVE = 0x8D6A;
+    const GLenum CURRENT_QUERY               = 0x8865;
+    const GLenum QUERY_RESULT                = 0x8866;
+    const GLenum QUERY_RESULT_AVAILABLE      = 0x8867;
 
+    /* instanced array */
+    const GLenum VERTEX_ATTRIB_ARRAY_DIVISOR = 0x88FE;
+
+    void vertexAttribDivisor(GLuint index, GLuint divisor);
+
+    /* transform feedback */
+    const GLenum RASTERIZER_DISCARD                      = 0x8C89;
+    const GLenum TRANSFORM_FEEDBACK_BUFFER               = 0x8C8E;
+    const GLenum TRANSFORM_FEEDBACK_BUFFER_BINDING       = 0x8C8F;
+    const GLenum TRANSFORM_FEEDBACK_BUFFER_START         = 0x8C84;
+    const GLenum TRANSFORM_FEEDBACK_BUFFER_SIZE          = 0x8C85;
+    const GLenum MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS = 0x8C8B;
+
+    /* buffer objects */
+    void bindBufferBase(GLenum target, GLuint index, WebGLBuffer? buffer);
+    void bindBufferRange(GLenum target, GLuint index, WebGLBuffer? buffer,
+                         GLintptr offset, GLsizeiptr size);
+
+    /* state requests */
+    any getParameterIndexed(GLenum pname, GLuint index);
+
+
+    void beginQuery(GLenum target, WebGLQuery? queryObject);
     void bindVertexArray(WebGLVertexArray? arrayObject);
+    WebGLQuery? createQuery();
     WebGLVertexArray? createVertexArray();
     void drawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
     void drawBuffers(sequence<GLenum> buffers);
     void drawElementsInstanced(GLenum mode, GLsizei count, GLenum type, GLintptr offset, GLsizei primcount);
+    void deleteQuery(WebGLQuery? queryObject);
     void deleteVertexArray(WebGLVertexArray? arrayObject);
+    void endQuery(GLenum target);
+    WebGLQuery? getQuery(GLenum target, GLenum pname);
+    any getQueryObject(WebGLQuery? queryObject, GLenum pname);
+    [WebGLHandlesContextLoss] GLboolean isQuery(WebGLQuery? queryObject);
     [WebGLHandlesContextLoss] GLboolean isVertexArray(WebGLVertexArray? arrayObject);
 
 };

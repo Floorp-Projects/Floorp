@@ -1,0 +1,18 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY % brandDTD
+     SYSTEM "chrome://branding/locale/brand.dtd">
+   %brandDTD;
+
+<!ENTITY aboutAddons.title              "&brandShortName; Add-ons are a Work In Progress">
+<!ENTITY aboutAddons.messageTitle       "Uh-Oh!">
+<!ENTITY aboutAddons.message            "Sorry, &brandShortName; is busy working on supporting add-ons for you.">
+<!-- LOCALIZATION NOTE (aboutAddons.goBackToStartStart, aboutAddons.goBacktoStartLink, aboutAddons.goBacktoStartEnd):
+     These three entities form a single sentence. aboutAddons.goBackToStartStart is the start of the sentence,
+     aboutAddons.goBacktoStartLink is a clickable link the middle and aboutAddons.goBacktoStartEnd is the end of the sentence.
+     -->
+<!ENTITY aboutAddons.goBackToStartStart "Go back to the ">
+<!ENTITY aboutAddons.goBacktoStartLink  "&brandShortName; Start Page">
+<!ENTITY aboutAddons.goBacktoStartEnd   ".">

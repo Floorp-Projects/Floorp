@@ -149,15 +149,15 @@ class Actions(object):
 
     def flick(self, element, x1, y1, x2, y2, duration=200):
         element = element.id
-        time = 0
+        elapsed = 0
         time_increment = 10
         if time_increment >= duration:
             time_increment = duration
         move_x = time_increment*1.0/duration * (x2 - x1)
         move_y = time_increment*1.0/duration * (y2 - y1)
         self.action_chain.append(['press', element, x1, y1])
-        while (time < duration):
-            time += time_increment
+        while elapsed < duration:
+            elapsed += time_increment
             self.action_chain.append(['moveByOffset', move_x, move_y])
             self.action_chain.append(['wait', time_increment/1000])
         self.action_chain.append(['release'])
@@ -198,14 +198,13 @@ class Marionette(object):
     TIMEOUT_SCRIPT = 'script'
     TIMEOUT_PAGE = 'page load'
 
-    def __init__(self, host='localhost', port=2828, app=None, bin=None,
+    def __init__(self, host='localhost', port=2828, app=None, app_args=None, bin=None,
                  profile=None, emulator=None, sdcard=None, emulatorBinary=None,
                  emulatorImg=None, emulator_res=None, gecko_path=None,
                  connectToRunningEmulator=False, homedir=None, baseurl=None,
                  noWindow=False, logcat_dir=None, busybox=None, symbols_path=None, timeout=None):
         self.host = host
         self.port = self.local_port = port
-        self.app = app
         self.bin = bin
         self.instance = None
         self.profile = profile
@@ -236,7 +235,7 @@ class Marionette(object):
             else:
                 instance_class = geckoinstance.GeckoInstance
             self.instance = instance_class(host=self.host, port=self.port,
-                                           bin=self.bin, profile=self.profile)
+                                           bin=self.bin, profile=self.profile, app_args=app_args)
             self.instance.start()
             assert(self.wait_for_port())
 
@@ -515,6 +514,12 @@ class Marionette(object):
         response = self._send_message('switchToWindow', 'ok', value=window_id)
         self.window = window_id
         return response
+
+    def get_active_frame(self):
+        response = self._send_message('getActiveFrame', 'value')
+        if response:
+            return HTMLElement(self, response)
+        return None
 
     def switch_to_frame(self, frame=None, focus=True):
         if isinstance(frame, HTMLElement):

@@ -4,16 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDocument.h"
-#include "HTMLUnknownElement.h"
+#include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
 
 namespace mozilla {
 namespace dom {
-
-NS_IMPL_ADDREF_INHERITED(HTMLUnknownElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLUnknownElement, Element)
 
 JSObject*
 HTMLUnknownElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
@@ -33,14 +30,6 @@ HTMLUnknownElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   }
   return obj;
 }
-
-// QueryInterface implementation for HTMLUnknownElement
-NS_INTERFACE_TABLE_HEAD(HTMLUnknownElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLUnknownElement,
-                                nsIDOMHTMLUnknownElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLUnknownElement)
 

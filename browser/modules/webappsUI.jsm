@@ -34,9 +34,10 @@ this.webappsUI = {
 
     switch(aTopic) {
       case "webapps-ask-install":
-        let [chromeWin, browser] = this._getBrowserForId(data.oid);
-        if (chromeWin)
-          this.doInstall(data, browser, chromeWin);
+        let win = this._getWindowForId(data.oid);
+        if (win && win.location.href == data.from) {
+          this.doInstall(data, win);
+        }
         break;
       case "webapps-launch":
         WebappOSUtils.launch(data);
@@ -45,6 +46,11 @@ this.webappsUI = {
         WebappOSUtils.uninstall(data);
         break;
     }
+  },
+
+  _getWindowForId: function(aId) {
+    let someWindow = Services.wm.getMostRecentWindow(null);
+    return someWindow && Services.wm.getOuterWindowWithId(aId);
   },
 
   openURL: function(aUrl, aOrigin) {
@@ -86,43 +92,42 @@ this.webappsUI = {
     }
   },
 
-  _getBrowserForId: function(aId) {
-    let content = Services.wm.getOuterWindowWithId(aId);
-    if (content) {
-      let browser = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShell).chromeEventHandler;
-      let win = browser.ownerDocument.defaultView;
-      return [win, browser];
-    }
-
-    return [null, null];
-  },
-
-  doInstall: function(aData, aBrowser, aWindow) {
-    let bundle = aWindow.gNavigatorBundle;
+  doInstall: function(aData, aWindow) {
+    let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShell)
+                         .chromeEventHandler;
+    let chromeWin = browser.ownerDocument.defaultView;
+    let bundle = chromeWin.gNavigatorBundle;
 
     let mainAction = {
       label: bundle.getString("webapps.install"),
       accessKey: bundle.getString("webapps.install.accesskey"),
       callback: function() {
-        let app = WebappsInstaller.install(aData);
+        let app = WebappsInstaller.init(aData);
+
         if (app) {
           let localDir = null;
           if (app.appProfile) {
             localDir = app.appProfile.localDir;
           }
 
-          DOMApplicationRegistry.confirmInstall(aData, false, localDir);
-          installationSuccessNotification(app, aWindow);
+          DOMApplicationRegistry.confirmInstall(aData, false, localDir, null,
+            function (aManifest) {
+              if (WebappsInstaller.install(aData, aManifest)) {
+                installationSuccessNotification(aData, app, chromeWin);
+              }
+            }
+          );
         } else {
           DOMApplicationRegistry.denyInstall(aData);
         }
       }
     };
 
-    let requestingURI = aWindow.makeURI(aData.from);
-    let manifest = new ManifestHelper(aData.app.manifest, aData.app.origin);
+    let requestingURI = chromeWin.makeURI(aData.from);
+    let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
+    let manifest = new ManifestHelper(jsonManifest, aData.app.origin);
 
     let host;
     try {
@@ -134,13 +139,21 @@ this.webappsUI = {
     let message = bundle.getFormattedString("webapps.requestInstall",
                                             [manifest.name, host], 2);
 
-    aWindow.PopupNotifications.show(aBrowser, "webapps-install", message,
+    chromeWin.PopupNotifications.show(browser, "webapps-install", message,
                                     "webapps-notification-icon", mainAction);
 
   }
 }
 
-function installationSuccessNotification(app, aWindow) {
+function installationSuccessNotification(aData, app, aWindow) {
+  let launcher = {
+    observe: function(aSubject, aTopic) {
+      if (aTopic == "alertclickcallback") {
+        WebappOSUtils.launch(aData.app);
+      }
+    }
+  };
+
   let bundle = aWindow.gNavigatorBundle;
 
   if (("@mozilla.org/alerts-service;1" in Cc)) {
@@ -152,7 +165,7 @@ function installationSuccessNotification(app, aWindow) {
       notifier.showAlertNotification(app.iconURI.spec,
                                     bundle.getString("webapps.install.success"),
                                     app.appNameAsFilename,
-                                    false, null, null);
+                                    true, null, launcher);
 
     } catch (ex) {}
   }

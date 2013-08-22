@@ -9,10 +9,10 @@
 #ifndef mozilla_SHA1_h
 #define mozilla_SHA1_h
 
-#include "mozilla/StandardInteger.h"
 #include "mozilla/Types.h"
 
 #include <stddef.h>
+#include <stdint.h>
 
 namespace mozilla {
 

@@ -29,6 +29,7 @@ __declspec(dllimport) unsigned long __stdcall TlsAlloc();
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/NullPtr.h"
 
 namespace mozilla {
 
@@ -99,15 +100,15 @@ template<typename T>
 inline bool
 ThreadLocal<T>::init()
 {
-  MOZ_STATIC_ASSERT(sizeof(T) <= sizeof(void*),
-                    "mozilla::ThreadLocal can't be used for types larger than "
-                    "a pointer");
+  static_assert(sizeof(T) <= sizeof(void*),
+                "mozilla::ThreadLocal can't be used for types larger than "
+                "a pointer");
   MOZ_ASSERT(!initialized());
 #ifdef XP_WIN
   key = TlsAlloc();
   inited = key != 0xFFFFFFFFUL; // TLS_OUT_OF_INDEXES
 #else
-  inited = !pthread_key_create(&key, NULL);
+  inited = !pthread_key_create(&key, nullptr);
 #endif
   return inited;
 }

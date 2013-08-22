@@ -32,12 +32,12 @@ const nsTArrayHeader* nsTArray_base<Alloc, Copy>::GetAutoArrayBufferUnsafe(size_
   // If we're on a 32-bit system and elemAlign is 8, we need to adjust our
   // pointer to take into account the extra alignment in the auto array.
 
-  MOZ_STATIC_ASSERT(sizeof(void*) != 4 ||
-                    (MOZ_ALIGNOF(mozilla::AlignedElem<8>) == 8 &&
-                     sizeof(nsAutoTArray<mozilla::AlignedElem<8>, 1>) ==
-                       sizeof(void*) + sizeof(nsTArrayHeader) +
-                       4 + sizeof(mozilla::AlignedElem<8>)),
-                    "auto array padding wasn't what we expected");
+  static_assert(sizeof(void*) != 4 ||
+                (MOZ_ALIGNOF(mozilla::AlignedElem<8>) == 8 &&
+                 sizeof(nsAutoTArray<mozilla::AlignedElem<8>, 1>) ==
+                   sizeof(void*) + sizeof(nsTArrayHeader) +
+                   4 + sizeof(mozilla::AlignedElem<8>)),
+                "auto array padding wasn't what we expected");
 
   // We don't support alignments greater than 8 bytes.
   NS_ABORT_IF_FALSE(elemAlign <= 4 || elemAlign == 8, "unsupported alignment.");
@@ -83,8 +83,8 @@ bool nsTArray_base<Alloc, Copy>::UsesAutoArrayBuffer() const {
   // owned by this nsAutoTArray.  We statically assert that elem_type's
   // alignment is 8 bytes or less in nsAutoArrayBase.
 
-  MOZ_STATIC_ASSERT(sizeof(nsTArrayHeader) > 4,
-                    "see comment above");
+  static_assert(sizeof(nsTArrayHeader) > 4,
+                "see comment above");
 
 #ifdef DEBUG
   ptrdiff_t diff = reinterpret_cast<const char*>(GetAutoArrayBuffer(8)) -

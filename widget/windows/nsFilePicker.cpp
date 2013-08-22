@@ -1202,12 +1202,10 @@ nsFilePicker::SetFilterIndex(int32_t aFilterIndex)
 
 void
 nsFilePicker::InitNative(nsIWidget *aParent,
-                         const nsAString& aTitle,
-                         int16_t aMode)
+                         const nsAString& aTitle)
 {
   mParentWidget = aParent;
   mTitle.Assign(aTitle);
-  mMode = aMode;
 }
 
 void 

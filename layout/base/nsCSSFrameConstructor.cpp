@@ -17,18 +17,12 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
 #include "nsAbsoluteContainingBlock.h"
-#include "nsCRT.h"
 #include "nsIAtom.h"
-#include "nsIURL.h"
-#include "nsIHTMLDocument.h"
-#include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsILinkHandler.h"
 #include "nsIDocument.h"
 #include "nsTableFrame.h"
-#include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsHTMLParts.h"
@@ -38,38 +32,26 @@
 #include "nsViewManager.h"
 #include "nsEventStates.h"
 #include "nsStyleConsts.h"
-#include "nsTableOuterFrame.h"
 #include "nsIDOMXULElement.h"
 #include "nsContainerFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsIDOMHTMLLegendElement.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
-#include "nsISelectControlFrame.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsPlaceholderFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsIFormControl.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsTextFragment.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsLegendFrame.h"
-#include "nsIContentIterator.h"
-#include "nsBoxLayoutState.h"
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"
-#include "nsITheme.h"
-#include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
-#include "nsIDocShell.h"
+#ifdef XP_MACOSX
 #include "nsIDocShellTreeItem.h"
-#include "nsObjectFrame.h"
-#include "nsRuleNode.h"
-#include "nsIDOMMutationEvent.h"
+#endif
 #include "ChildIterator.h"
-#include "nsCSSRendering.h"
 #include "nsError.h"
 #include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
@@ -78,31 +60,21 @@
 #include "nsFlexContainerFrame.h"
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
-#include "nsIPrincipal.h"
-#include "nsBox.h"
 #include "nsTArray.h"
 #include "nsGenericDOMDataNode.h"
 #include "mozilla/dom/Element.h"
-#include "FrameLayerBuilder.h"
 #include "nsAutoLayoutPhase.h"
-#include "nsCSSRenderingBorders.h"
-#include "nsRenderingContext.h"
 #include "nsStyleStructInlines.h"
-#include "nsViewportFrame.h"
 #include "nsPageContentFrame.h"
-#include <algorithm>
+#include "RestyleManager.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
-#include "nsIDOMXULCommandDispatcher.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIXULDocument.h"
 #endif
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
 
-#include "nsInlineFrame.h"
 #include "nsBlockFrame.h"
 
 #include "nsIScrollableFrame.h"
@@ -113,14 +85,10 @@
 
 #include "nsMathMLParts.h"
 #include "mozilla/dom/SVGTests.h"
-#include "nsSVGEffects.h"
-#include "nsSVGTextFrame2.h"
-#include "nsSVGTextPathFrame.h"
 #include "nsSVGUtils.h"
 
 #include "nsRefreshDriver.h"
 #include "nsRuleProcessorData.h"
-#include "GeckoProfiler.h"
 #include "nsTextNode.h"
 
 using namespace mozilla;
@@ -198,13 +166,10 @@ NS_NewSVGFEImageFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame*
 NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-#include "nsIScrollable.h"
 #include "nsINodeInfo.h"
 #include "prenv.h"
-#include "nsWidgetsCID.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsIServiceManager.h"
 
 #ifdef DEBUG
 // Set the environment variable GECKO_FRAMECTOR_DEBUG_FLAGS to one or
@@ -231,7 +196,6 @@ static FrameCtorDebugFlags gFlags[] = {
 
 #ifdef MOZ_XUL
 #include "nsMenuFrame.h"
-#include "nsMenuPopupFrame.h"
 #include "nsPopupSetFrame.h"
 #include "nsTreeColFrame.h"
 #include "nsIBoxObject.h"
@@ -2195,9 +2159,6 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
   nsStyleSet *styleSet = mPresShell->StyleSet();
   nsRefPtr<nsStyleContext> rootStyle;
   rootStyle = styleSet->ResolveStyleFor(docElement, nullptr);
-  if (!rootStyle) {
-    return nullptr;
-  }
   if (CheckOverflow(presContext, rootStyle->StyleDisplay())) {
     // tell caller we stole the overflow style from the root element
     return docElement;
@@ -2226,9 +2187,6 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
 
   nsRefPtr<nsStyleContext> bodyStyle;
   bodyStyle = styleSet->ResolveStyleFor(bodyElement->AsElement(), rootStyle);
-  if (!bodyStyle) {
-    return nullptr;
-  }
 
   if (CheckOverflow(presContext, bodyStyle->StyleDisplay())) {
     // tell caller we stole the overflow style from the body element
@@ -4579,9 +4537,9 @@ nsCSSFrameConstructor::FindMathMLData(Element* aElement,
     SIMPLE_MATHML_CREATE(mtext_, NS_NewMathMLTokenFrame),
     SIMPLE_MATHML_CREATE(mo_, NS_NewMathMLmoFrame),
     SIMPLE_MATHML_CREATE(mfrac_, NS_NewMathMLmfracFrame),
-    SIMPLE_MATHML_CREATE(msup_, NS_NewMathMLmsupFrame),
-    SIMPLE_MATHML_CREATE(msub_, NS_NewMathMLmsubFrame),
-    SIMPLE_MATHML_CREATE(msubsup_, NS_NewMathMLmsubsupFrame),
+    SIMPLE_MATHML_CREATE(msup_, NS_NewMathMLmmultiscriptsFrame),
+    SIMPLE_MATHML_CREATE(msub_, NS_NewMathMLmmultiscriptsFrame),
+    SIMPLE_MATHML_CREATE(msubsup_, NS_NewMathMLmmultiscriptsFrame),
     SIMPLE_MATHML_CREATE(munder_, NS_NewMathMLmunderoverFrame),
     SIMPLE_MATHML_CREATE(mover_, NS_NewMathMLmunderoverFrame),
     SIMPLE_MATHML_CREATE(munderover_, NS_NewMathMLmunderoverFrame),
@@ -5767,10 +5725,7 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
     }
 
     if (!aFrameList.IsEmpty()) {
-      const nsStyleDisplay* parentDisplay = aParentFrame->StyleDisplay();
-      bool positioned =
-        parentDisplay->mPosition == NS_STYLE_POSITION_RELATIVE &&
-        !aParentFrame->IsSVGText();
+      bool positioned = aParentFrame->IsRelativelyPositioned();
       nsFrameItems ibSiblings;
       CreateIBSiblings(aState, aParentFrame, positioned, aFrameList,
                        ibSiblings);
@@ -5836,7 +5791,6 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
       // XXXbz when this code is killed, the state argument to
       // ResolveStyleContext can be made non-optional.
       styleContext = ResolveStyleContext(styleParent, aContent, nullptr);
-      if (!styleContext) return false;
       const nsStyleDisplay* display = styleContext->StyleDisplay();
       aDisplay = display->mDisplay;
     }
@@ -5879,7 +5833,7 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
             nsGkAtoms::blockFrame == parentType)) {
     // Legends can be sibling of legends but not of other content in the fieldset
     nsIAtom* sibType = aSibling->GetContentInsertionFrame()->GetType();
-    nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(aContent));
+    bool legendContent = aContent->IsHTML(nsGkAtoms::legend);
 
     if ((legendContent  && (nsGkAtoms::legendFrame != sibType)) ||
         (!legendContent && (nsGkAtoms::legendFrame == sibType)))
@@ -5987,8 +5941,7 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
   if (nsGkAtoms::fieldSetFrame == aParentFrameType) {
     // If the parent is a fieldSet, use the fieldSet's area frame as the
     // parent unless the new content is a legend. 
-    nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(aChildContent));
-    if (!legendContent) {
+    if (!aChildContent->IsHTML(nsGkAtoms::legend)) {
       newParent = GetFieldSetBlockFrame(aParentFrame);
     }
   }
@@ -9031,7 +8984,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                   "Parent frame in ProcessChildren should be its own "
                   "content insertion frame");
   const uint32_t kMaxDepth = 2 * MAX_REFLOW_DEPTH;
-  MOZ_STATIC_ASSERT(kMaxDepth <= UINT16_MAX, "mCurrentDepth type is too narrow");
+  static_assert(kMaxDepth <= UINT16_MAX, "mCurrentDepth type is too narrow");
   AutoRestore<uint16_t> savedDepth(mCurrentDepth);
   if (mCurrentDepth != UINT16_MAX) {
     ++mCurrentDepth;
@@ -9608,9 +9561,7 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
     if (parentStyleContext) {
       nsRefPtr<nsStyleContext> newSC;
       newSC = styleSet->ResolveStyleForNonElement(parentStyleContext);
-      if (newSC) {
-        nextTextFrame->SetStyleContext(newSC);
-      }
+      nextTextFrame->SetStyleContext(newSC);
     }
   }
 
@@ -9806,6 +9757,18 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
   }
 }
 
+static nsIFrame*
+FindFirstLetterFrame(nsIFrame* aFrame, nsIFrame::ChildListID aListID)
+{
+  nsFrameList list = aFrame->GetChildList(aListID);
+  for (nsFrameList::Enumerator e(list); !e.AtEnd(); e.Next()) {
+    if (nsGkAtoms::letterFrame == e.get()->GetType()) {
+      return e.get();
+    }
+  }
+  return nullptr;
+}
+
 nsresult
 nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   nsPresContext* aPresContext,
@@ -9813,18 +9776,15 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   nsIFrame* aBlockFrame,
   bool* aStopLooking)
 {
-  // First look for the float frame that is a letter frame
-  nsIFrame* floatFrame = aBlockFrame->GetFirstChild(nsIFrame::kFloatList);
-  while (floatFrame) {
-    // See if we found a floating letter frame
-    if (nsGkAtoms::letterFrame == floatFrame->GetType()) {
-      break;
-    }
-    floatFrame = floatFrame->GetNextSibling();
-  }
+  // Look for the first letter frame on the kFloatList, then kPushedFloatsList.
+  nsIFrame* floatFrame =
+    ::FindFirstLetterFrame(aBlockFrame, nsIFrame::kFloatList);
   if (!floatFrame) {
-    // No such frame
-    return NS_OK;
+    floatFrame =
+      ::FindFirstLetterFrame(aBlockFrame, nsIFrame::kPushedFloatsList);
+    if (!floatFrame) {
+      return NS_OK;
+    }
   }
 
   // Take the text frame away from the letter frame (so it isn't
@@ -9858,9 +9818,6 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   }
   nsRefPtr<nsStyleContext> newSC;
   newSC = aPresShell->StyleSet()->ResolveStyleForNonElement(parentSC);
-  if (!newSC) {
-    return NS_OK;
-  }
   nsIFrame* newTextFrame = NS_NewTextFrame(aPresShell, newSC);
   newTextFrame->Init(textContent, parentFrame, nullptr);
 
@@ -9929,9 +9886,6 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       }
       nsRefPtr<nsStyleContext> newSC;
       newSC = aPresShell->StyleSet()->ResolveStyleForNonElement(parentSC);
-      if (!newSC) {
-        break;
-      }
       textFrame = NS_NewTextFrame(aPresShell, newSC);
       textFrame->Init(textContent, aFrame, nullptr);
 
@@ -10248,7 +10202,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 
   bool positioned =
     NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay &&
-    NS_STYLE_POSITION_RELATIVE == aDisplay->mPosition &&
+    aDisplay->IsRelativelyPositionedStyle() &&
     !aParentFrame->IsSVGText();
 
   nsIFrame* newFrame = NS_NewInlineFrame(mPresShell, styleContext);

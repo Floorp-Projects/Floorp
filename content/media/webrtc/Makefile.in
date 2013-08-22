@@ -21,6 +21,7 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 ifdef MOZ_WEBRTC
 LOCAL_INCLUDES += \
+  -I$(topsrcdir)/media/webrtc/trunk \
   -I$(topsrcdir)/media/webrtc/trunk/webrtc \
   -I$(topsrcdir)/media/webrtc/signaling/src/common \
   -I$(topsrcdir)/media/webrtc/signaling/src/common/browser_logging \

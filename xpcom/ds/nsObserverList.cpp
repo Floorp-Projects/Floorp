@@ -56,10 +56,7 @@ nsresult
 nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
 {
     nsRefPtr<nsObserverEnumerator> e(new nsObserverEnumerator(this));
-    if (!e)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*anEnumerator = e);
+    e.forget(anEnumerator);
     return NS_OK;
 }
 

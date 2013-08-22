@@ -51,6 +51,7 @@
                  android:layout_alignRight="@id/awesomebar_text"
                  android:nextFocusLeft="@id/awesomebar_text"
                  android:visibility="gone"
-                 android:src="@drawable/ic_awesomebar_go"/>
+                 android:src="@drawable/ic_awesomebar_go"
+                 android:contentDescription="@string/go"/>
 
 </RelativeLayout>

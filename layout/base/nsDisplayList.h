@@ -18,27 +18,23 @@
 #include "nsIFrame.h"
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsISelection.h"
 #include "nsCaret.h"
 #include "plarena.h"
 #include "nsRegion.h"
 #include "FrameLayerBuilder.h"
-#include "nsThemeConstants.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayListInvalidation.h"
 #include "DisplayListClipState.h"
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 #include <stdlib.h>
 #include <algorithm>
 
-class nsIPresShell;
 class nsIContent;
 class nsRenderingContext;
-class nsDeviceContext;
 class nsDisplayTableItem;
-class nsDisplayItem;
+class nsISelection;
 
 namespace mozilla {
 namespace layers {

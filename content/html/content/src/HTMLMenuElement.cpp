@@ -3,12 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "HTMLMenuElement.h"
+#include "mozilla/dom/HTMLMenuElement.h"
+
 #include "mozilla/dom/HTMLMenuElementBinding.h"
-#include "nsXULContextMenuBuilder.h"
-#include "nsEventDispatcher.h"
-#include "HTMLMenuItemElement.h"
+#include "mozilla/dom/HTMLMenuItemElement.h"
 #include "nsAttrValueInlines.h"
+#include "nsContentUtils.h"
+#include "nsEventDispatcher.h"
+#include "nsXULContextMenuBuilder.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Menu)
 
@@ -50,19 +52,8 @@ HTMLMenuElement::~HTMLMenuElement()
 {
 }
 
-
-NS_IMPL_ADDREF_INHERITED(HTMLMenuElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLMenuElement, Element)
-
-
-// QueryInterface implementation for HTMLMenuElement
-NS_INTERFACE_TABLE_HEAD(HTMLMenuElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED2(HTMLMenuElement,
-                                nsIDOMHTMLMenuElement,
-                                nsIHTMLMenu)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED2(HTMLMenuElement, nsGenericHTMLElement,
+                             nsIDOMHTMLMenuElement, nsIHTMLMenu)
 
 NS_IMPL_ELEMENT_CLONE(HTMLMenuElement)
 

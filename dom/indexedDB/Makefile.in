@@ -24,11 +24,7 @@ LOCAL_INCLUDES = \
   -I$(topsrcdir)/xpcom/build \
   $(NULL)
 
-DEFINES += -D_IMPL_NS_LAYOUT
 
-# Make sure to quickstub as much as possible here! See
-# js/xpconnect/src/dom_quickstubs.qsconf.
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

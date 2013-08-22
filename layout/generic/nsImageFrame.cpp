@@ -36,7 +36,6 @@
 #include "nsContainerFrame.h"
 #include "prprf.h"
 #include "nsCSSRendering.h"
-#include "nsILink.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsINameSpaceManager.h"
@@ -69,8 +68,12 @@
 #include "gfxRect.h"
 #include "ImageLayers.h"
 #include "ImageContainer.h"
+#include "nsStyleSet.h"
+#include "nsBlockFrame.h"
 
 #include "mozilla/Preferences.h"
+
+#include "mozilla/dom/Link.h"
 
 using namespace mozilla;
 
@@ -885,7 +888,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
     // We include the altFeedbackSize in our visual overflow, but not in our
     // scrollable overflow, since it doesn't really need to be scrolled to
     // outside the image.
-    MOZ_STATIC_ASSERT(eOverflowType_LENGTH == 2, "Unknown overflow types?");
+    static_assert(eOverflowType_LENGTH == 2, "Unknown overflow types?");
     nsRect& visualOverflow = aMetrics.VisualOverflow();
     visualOverflow.UnionRect(visualOverflow, altFeedbackSize);
   }
@@ -1562,7 +1565,7 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
   // Walk up the content tree, looking for an nsIDOMAnchorElement
   for (nsIContent* content = mContent->GetParent();
        content; content = content->GetParent()) {
-    nsCOMPtr<nsILink> link(do_QueryInterface(content));
+    nsCOMPtr<dom::Link> link(do_QueryInterface(content));
     if (link) {
       nsCOMPtr<nsIURI> href = content->GetHrefURI();
       if (href) {
@@ -1701,14 +1704,12 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
       nsRefPtr<nsStyleContext> areaStyle = 
         PresContext()->PresShell()->StyleSet()->
           ResolveStyleFor(area->AsElement(), StyleContext());
-      if (areaStyle) {
-        FillCursorInformationFromStyle(areaStyle->StyleUserInterface(),
-                                       aCursor);
-        if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
-          aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
-        }
-        return NS_OK;
+      FillCursorInformationFromStyle(areaStyle->StyleUserInterface(),
+                                     aCursor);
+      if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
+        aCursor.mCursor = NS_STYLE_CURSOR_DEFAULT;
       }
+      return NS_OK;
     }
   }
   return nsFrame::GetCursor(aPoint, aCursor);

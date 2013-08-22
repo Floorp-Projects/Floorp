@@ -42,6 +42,7 @@
 #include "CSSCalc.h"
 #include "nsMediaFeatures.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/Preferences.h"
 
 using namespace mozilla;
 
@@ -508,6 +509,7 @@ protected:
   bool ParseSize();
   bool ParseTextDecoration();
   bool ParseTextDecorationLine(nsCSSValue& aValue);
+  bool ParseTextCombineHorizontal(nsCSSValue& aValue);
   bool ParseTextOverflow(nsCSSValue& aValue);
 
   bool ParseShadowItem(nsCSSValue& aValue, bool aIsBoxShadow);
@@ -607,6 +609,7 @@ protected:
   /* Functions for filter parsing */
   bool ParseFilter();
   bool ParseSingleFilter(nsCSSValue* aValue);
+  bool ParseDropShadow(nsCSSValue* aValue);
 
   /* Find and return the namespace ID associated with aPrefix.
      If aPrefix has not been declared in an @namespace rule, returns
@@ -6606,6 +6609,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
         return ParseMarks(aValue);
       case eCSSProperty_text_decoration_line:
         return ParseTextDecorationLine(aValue);
+      case eCSSProperty_text_combine_horizontal:
+        return ParseTextCombineHorizontal(aValue);
       case eCSSProperty_text_overflow:
         return ParseTextOverflow(aValue);
       default:
@@ -6957,13 +6962,13 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
         MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
                      eCSSProperty_background_clip] ==
                    nsCSSProps::kBackgroundOriginKTable);
-        MOZ_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
-                          NS_STYLE_BG_ORIGIN_BORDER &&
-                          NS_STYLE_BG_CLIP_PADDING ==
-                          NS_STYLE_BG_ORIGIN_PADDING &&
-                          NS_STYLE_BG_CLIP_CONTENT ==
-                          NS_STYLE_BG_ORIGIN_CONTENT,
-                          "bg-clip and bg-origin style constants must agree");
+        static_assert(NS_STYLE_BG_CLIP_BORDER ==
+                      NS_STYLE_BG_ORIGIN_BORDER &&
+                      NS_STYLE_BG_CLIP_PADDING ==
+                      NS_STYLE_BG_ORIGIN_PADDING &&
+                      NS_STYLE_BG_CLIP_CONTENT ==
+                      NS_STYLE_BG_ORIGIN_CONTENT,
+                      "bg-clip and bg-origin style constants must agree");
 
         if (!ParseSingleValueProperty(aState.mClip->mValue,
                                       eCSSProperty_background_clip)) {
@@ -8513,6 +8518,9 @@ CSSParserImpl::ParseFont()
     eCSSProperty_font_weight
   };
 
+  // font-variant-alternates enabled ==> layout.css.font-features.enabled is true
+  bool featuresEnabled =
+    nsCSSProps::IsEnabled(eCSSProperty_font_variant_alternates);
   nsCSSValue  family;
   if (ParseVariant(family, VARIANT_HK, nsCSSProps::kFontKTable)) {
     if (ExpectEndProperty()) {
@@ -8529,14 +8537,16 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_font_size_adjust, family);
         AppendValue(eCSSProperty_font_feature_settings, family);
         AppendValue(eCSSProperty_font_language_override, family);
-        AppendValue(eCSSProperty_font_kerning, family);
-        AppendValue(eCSSProperty_font_synthesis, family);
-        AppendValue(eCSSProperty_font_variant_alternates, family);
-        AppendValue(eCSSProperty_font_variant_caps, family);
-        AppendValue(eCSSProperty_font_variant_east_asian, family);
-        AppendValue(eCSSProperty_font_variant_ligatures, family);
-        AppendValue(eCSSProperty_font_variant_numeric, family);
-        AppendValue(eCSSProperty_font_variant_position, family);
+        if (featuresEnabled) {
+          AppendValue(eCSSProperty_font_kerning, family);
+          AppendValue(eCSSProperty_font_synthesis, family);
+          AppendValue(eCSSProperty_font_variant_alternates, family);
+          AppendValue(eCSSProperty_font_variant_caps, family);
+          AppendValue(eCSSProperty_font_variant_east_asian, family);
+          AppendValue(eCSSProperty_font_variant_ligatures, family);
+          AppendValue(eCSSProperty_font_variant_numeric, family);
+          AppendValue(eCSSProperty_font_variant_position, family);
+        }
       }
       else {
         AppendValue(eCSSProperty__x_system_font, family);
@@ -8551,14 +8561,16 @@ CSSParserImpl::ParseFont()
         AppendValue(eCSSProperty_font_size_adjust, systemFont);
         AppendValue(eCSSProperty_font_feature_settings, systemFont);
         AppendValue(eCSSProperty_font_language_override, systemFont);
-        AppendValue(eCSSProperty_font_kerning, systemFont);
-        AppendValue(eCSSProperty_font_synthesis, systemFont);
-        AppendValue(eCSSProperty_font_variant_alternates, systemFont);
-        AppendValue(eCSSProperty_font_variant_caps, systemFont);
-        AppendValue(eCSSProperty_font_variant_east_asian, systemFont);
-        AppendValue(eCSSProperty_font_variant_ligatures, systemFont);
-        AppendValue(eCSSProperty_font_variant_numeric, systemFont);
-        AppendValue(eCSSProperty_font_variant_position, systemFont);
+        if (featuresEnabled) {
+          AppendValue(eCSSProperty_font_kerning, systemFont);
+          AppendValue(eCSSProperty_font_synthesis, systemFont);
+          AppendValue(eCSSProperty_font_variant_alternates, systemFont);
+          AppendValue(eCSSProperty_font_variant_caps, systemFont);
+          AppendValue(eCSSProperty_font_variant_east_asian, systemFont);
+          AppendValue(eCSSProperty_font_variant_ligatures, systemFont);
+          AppendValue(eCSSProperty_font_variant_numeric, systemFont);
+          AppendValue(eCSSProperty_font_variant_position, systemFont);
+        }
       }
       return true;
     }
@@ -8623,22 +8635,24 @@ CSSParserImpl::ParseFont()
       AppendValue(eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None));
       AppendValue(eCSSProperty_font_feature_settings, nsCSSValue(eCSSUnit_Normal));
       AppendValue(eCSSProperty_font_language_override, nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_kerning,
-                  nsCSSValue(NS_FONT_KERNING_AUTO, eCSSUnit_Enumerated));
-      AppendValue(eCSSProperty_font_synthesis,
-                  nsCSSValue(NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE,
-                             eCSSUnit_Enumerated));
-      AppendValue(eCSSProperty_font_variant_alternates,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_caps, nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_east_asian,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_ligatures,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_numeric,
-                  nsCSSValue(eCSSUnit_Normal));
-      AppendValue(eCSSProperty_font_variant_position,
-                  nsCSSValue(eCSSUnit_Normal));
+      if (featuresEnabled) {
+        AppendValue(eCSSProperty_font_kerning,
+                    nsCSSValue(NS_FONT_KERNING_AUTO, eCSSUnit_Enumerated));
+        AppendValue(eCSSProperty_font_synthesis,
+                    nsCSSValue(NS_FONT_SYNTHESIS_WEIGHT | NS_FONT_SYNTHESIS_STYLE,
+                               eCSSUnit_Enumerated));
+        AppendValue(eCSSProperty_font_variant_alternates,
+                    nsCSSValue(eCSSUnit_Normal));
+        AppendValue(eCSSProperty_font_variant_caps, nsCSSValue(eCSSUnit_Normal));
+        AppendValue(eCSSProperty_font_variant_east_asian,
+                    nsCSSValue(eCSSUnit_Normal));
+        AppendValue(eCSSProperty_font_variant_ligatures,
+                    nsCSSValue(eCSSUnit_Normal));
+        AppendValue(eCSSProperty_font_variant_numeric,
+                    nsCSSValue(eCSSUnit_Normal));
+        AppendValue(eCSSProperty_font_variant_position,
+                    nsCSSValue(eCSSUnit_Normal));
+      }
       return true;
     }
   }
@@ -9531,13 +9545,13 @@ CSSParserImpl::ParseTextDecoration()
     eDecorationBlink        = NS_STYLE_TEXT_DECORATION_LINE_BLINK,
     eDecorationPrefAnchors  = NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS
   };
-  MOZ_STATIC_ASSERT((eDecorationNone ^ eDecorationUnderline ^
-                     eDecorationOverline ^ eDecorationLineThrough ^
-                     eDecorationBlink ^ eDecorationPrefAnchors) ==
-                    (eDecorationNone | eDecorationUnderline |
-                     eDecorationOverline | eDecorationLineThrough |
-                     eDecorationBlink | eDecorationPrefAnchors),
-                    "text decoration constants need to be bitmasks");
+  static_assert((eDecorationNone ^ eDecorationUnderline ^
+                 eDecorationOverline ^ eDecorationLineThrough ^
+                 eDecorationBlink ^ eDecorationPrefAnchors) ==
+                (eDecorationNone | eDecorationUnderline |
+                 eDecorationOverline | eDecorationLineThrough |
+                 eDecorationBlink | eDecorationPrefAnchors),
+                "text decoration constants need to be bitmasks");
 
   static const int32_t kTextDecorationKTable[] = {
     eCSSKeyword_none,                   eDecorationNone,
@@ -9554,7 +9568,7 @@ CSSParserImpl::ParseTextDecoration()
     return false;
   }
 
-  nsCSSValue blink, line, style, color;
+  nsCSSValue line, style, color;
   switch (value.GetUnit()) {
     case eCSSUnit_Enumerated: {
       // We shouldn't accept decoration line style and color via
@@ -9566,7 +9580,6 @@ CSSParserImpl::ParseTextDecoration()
 
       int32_t intValue = value.GetIntValue();
       if (intValue == eDecorationNone) {
-        blink.SetIntValue(NS_STYLE_TEXT_BLINK_NONE, eCSSUnit_Enumerated);
         line.SetIntValue(NS_STYLE_TEXT_DECORATION_LINE_NONE,
                          eCSSUnit_Enumerated);
         break;
@@ -9588,18 +9601,14 @@ CSSParserImpl::ParseTextDecoration()
         intValue |= newValue;
       }
 
-      blink.SetIntValue((intValue & eDecorationBlink) != 0 ?
-                          NS_STYLE_TEXT_BLINK_BLINK : NS_STYLE_TEXT_BLINK_NONE,
-                        eCSSUnit_Enumerated);
-      line.SetIntValue((intValue & ~eDecorationBlink), eCSSUnit_Enumerated);
+      line.SetIntValue(intValue, eCSSUnit_Enumerated);
       break;
     }
     default:
-      blink = line = color = style = value;
+      line = color = style = value;
       break;
   }
 
-  AppendValue(eCSSProperty_text_blink, blink);
   AppendValue(eCSSProperty_text_decoration_line, line);
   AppendValue(eCSSProperty_text_decoration_color, color);
   AppendValue(eCSSProperty_text_decoration_style, style);
@@ -9617,7 +9626,7 @@ CSSParserImpl::ParseTextDecorationLine(nsCSSValue& aValue)
         // look for more keywords
         nsCSSValue  keyword;
         int32_t index;
-        for (index = 0; index < 2; index++) {
+        for (index = 0; index < 3; index++) {
           if (ParseEnum(keyword, nsCSSProps::kTextDecorationLineKTable)) {
             int32_t newValue = keyword.GetIntValue();
             if (newValue == NS_STYLE_TEXT_DECORATION_LINE_NONE ||
@@ -9663,11 +9672,49 @@ CSSParserImpl::ParseTextOverflow(nsCSSValue& aValue)
   return true;
 }
 
+bool
+CSSParserImpl::ParseTextCombineHorizontal(nsCSSValue& aValue)
+{
+  if (!ParseVariant(aValue, VARIANT_HK,
+                    nsCSSProps::kTextCombineHorizontalKTable)) {
+    return false;
+  }
+
+  // if 'digits', need to check for an explicit number [2, 3, 4]
+  if (eCSSUnit_Enumerated == aValue.GetUnit() &&
+      aValue.GetIntValue() == NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_2) {
+    if (!GetToken(true)) {
+      return true;
+    }
+    if (mToken.mType == eCSSToken_Number && mToken.mIntegerValid) {
+      switch (mToken.mInteger) {
+        case 2:  // already set, nothing to do
+          break;
+        case 3:
+          aValue.SetIntValue(NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_3,
+                             eCSSUnit_Enumerated);
+          break;
+        case 4:
+          aValue.SetIntValue(NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_4,
+                             eCSSUnit_Enumerated);
+          break;
+        default:
+          // invalid digits value
+          return false;
+      }
+    } else {
+      UngetToken();
+    }
+  }
+  return true;
+}
+
 ///////////////////////////////////////////////////////
 // transform Parsing Implementation
 
-/* Reads a function list of arguments.  Do not call this function
- * directly; it's mean to be caled from ParseFunction.
+/* Reads a function list of arguments and consumes the closing parenthesis.
+ * Do not call this function directly; it's meant to be called from
+ * ParseFunction.
  */
 bool
 CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
@@ -9684,21 +9731,28 @@ CSSParserImpl::ParseFunctionInternals(const int32_t aVariantMask[],
     nsCSSValue newValue;
     int32_t m = aVariantMaskAll ? aVariantMaskAll : aVariantMask[index];
     if (!ParseVariant(newValue, m, nullptr)) {
-      return false;
+      break;
     }
 
     aOutput.AppendElement(newValue);
 
-    // See whether to continue or whether to look for end of function.
-    if (!ExpectSymbol(',', true)) {
-      // We need to read the closing parenthesis, and also must take care
-      // that we haven't read too few symbols.
-      return ExpectSymbol(')', true) && (index + 1) >= aMinElems;
+    if (ExpectSymbol(',', true)) {
+      // Move on to the next argument if we see a comma.
+      continue;
     }
+
+    if (ExpectSymbol(')', true)) {
+      // Make sure we've read enough symbols if we see a closing parenthesis.
+      return (index + 1) >= aMinElems;
+    }
+
+    // Only a comma or a closing parenthesis is valid after an argument.
+    break;
   }
 
-  // If we're here, we finished looping without hitting the end, so we read too
-  // many elements.
+  // If we're here, we've hit an error without seeing a closing parenthesis or
+  // we've read too many elements without seeing a closing parenthesis.
+  SkipUntil(')');
   return false;
 }
 
@@ -10044,6 +10098,32 @@ bool CSSParserImpl::ParseTransformOrigin(bool aPerspective)
 }
 
 /**
+ * Reads a drop-shadow value. At the moment the Filter Effects specification
+ * just expects one shadow item. Should this ever change to a list of shadow
+ * items, use ParseShadowList instead.
+ */
+bool
+CSSParserImpl::ParseDropShadow(nsCSSValue* aValue)
+{
+  // Use nsCSSValueList to reuse the shadow resolving code in
+  // nsRuleNode and nsComputedDOMStyle.
+  nsCSSValue shadow;
+  nsCSSValueList* cur = shadow.SetListValue();
+  if (!ParseShadowItem(cur->mValue, false))
+    return false;
+
+  if (!ExpectSymbol(')', true))
+    return false;
+
+  nsCSSValue::Array* dropShadow = aValue->InitFunction(eCSSKeyword_drop_shadow, 1);
+
+  // Copy things over.
+  dropShadow->Item(1) = shadow;
+
+  return true;
+}
+
+/**
  * Reads a single url or filter function from the tokenizer stream, reporting an
  * error if something goes wrong.
  */
@@ -10070,16 +10150,33 @@ CSSParserImpl::ParseSingleFilter(nsCSSValue* aValue)
     return false;
   }
 
+  nsCSSKeyword functionName = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+  // Parse drop-shadow independently of the other filter functions
+  // because of its more complex characteristics.
+  if (functionName == eCSSKeyword_drop_shadow) {
+    if (ParseDropShadow(aValue)) {
+      return true;
+    } else {
+      // Unrecognized filter function.
+      REPORT_UNEXPECTED_TOKEN(PEExpectedNoneOrURLOrFilterFunction);
+      SkipUntil(')');
+      return false;
+    }
+  }
+
   // Set up the parsing rules based on the filter function.
   int32_t variantMask = VARIANT_PN;
   bool rejectNegativeArgument = true;
   bool clampArgumentToOne = false;
-  nsCSSKeyword functionName = nsCSSKeywords::LookupKeyword(mToken.mIdent);
   switch (functionName) {
     case eCSSKeyword_blur:
       variantMask = VARIANT_LCALC | VARIANT_NONNEGATIVE_DIMENSION;
       // VARIANT_NONNEGATIVE_DIMENSION will already reject negative lengths.
       rejectNegativeArgument = false;
+      break;
+    case eCSSKeyword_brightness:
+    case eCSSKeyword_contrast:
+    case eCSSKeyword_saturate:
       break;
     case eCSSKeyword_grayscale:
     case eCSSKeyword_invert:
@@ -10087,9 +10184,9 @@ CSSParserImpl::ParseSingleFilter(nsCSSValue* aValue)
     case eCSSKeyword_opacity:
       clampArgumentToOne = true;
       break;
-    case eCSSKeyword_brightness:
-    case eCSSKeyword_contrast:
-    case eCSSKeyword_saturate:
+    case eCSSKeyword_hue_rotate:
+      variantMask = VARIANT_ANGLE;
+      rejectNegativeArgument = false;
       break;
     default:
       // Unrecognized filter function.
@@ -10770,7 +10867,7 @@ CSSParserImpl::ParseMarker()
 bool
 CSSParserImpl::ParsePaintOrder()
 {
-  MOZ_STATIC_ASSERT
+  static_assert
     ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) > NS_STYLE_PAINT_ORDER_LAST_VALUE,
      "bitfield width insufficient for paint-order constants");
 
@@ -10782,9 +10879,9 @@ CSSParserImpl::ParsePaintOrder()
     eCSSKeyword_UNKNOWN,-1
   };
 
-  MOZ_STATIC_ASSERT(NS_ARRAY_LENGTH(kPaintOrderKTable) ==
-                      2 * (NS_STYLE_PAINT_ORDER_LAST_VALUE + 2),
-                    "missing paint-order values in kPaintOrderKTable");
+  static_assert(NS_ARRAY_LENGTH(kPaintOrderKTable) ==
+                  2 * (NS_STYLE_PAINT_ORDER_LAST_VALUE + 2),
+                "missing paint-order values in kPaintOrderKTable");
 
   nsCSSValue value;
   if (!ParseVariant(value, VARIANT_HK, kPaintOrderKTable)) {
@@ -10797,7 +10894,7 @@ CSSParserImpl::ParsePaintOrder()
 
   // Ensure that even cast to a signed int32_t when stored in CSSValue,
   // we have enough space for the entire paint-order value.
-  MOZ_STATIC_ASSERT
+  static_assert
     (NS_STYLE_PAINT_ORDER_BITWIDTH * NS_STYLE_PAINT_ORDER_LAST_VALUE < 32,
      "seen and order not big enough");
 
@@ -10841,8 +10938,8 @@ CSSParserImpl::ParsePaintOrder()
       }
     }
 
-    MOZ_STATIC_ASSERT(NS_STYLE_PAINT_ORDER_NORMAL == 0,
-                      "unexpected value for NS_STYLE_PAINT_ORDER_NORMAL");
+    static_assert(NS_STYLE_PAINT_ORDER_NORMAL == 0,
+                  "unexpected value for NS_STYLE_PAINT_ORDER_NORMAL");
     value.SetIntValue(static_cast<int32_t>(order), eCSSUnit_Enumerated);
   }
 

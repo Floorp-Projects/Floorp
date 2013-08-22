@@ -133,7 +133,7 @@ function run_test() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
 
   let file = gProfD.clone();
-  file.append("extensions.sqlite");
+  file.append("extensions.json");
   do_check_false(file.exists());
 
   file.leafName = "extensions.ini";
@@ -191,10 +191,8 @@ function run_test_1() {
   do_check_true(gCachePurged);
 
   let file = gProfD.clone();
-  file.append("extensions.sqlite");
-  do_check_true(file.exists());
-
-  file.leafName = "extensions.ini";
+  file.append = "extensions.ini";
+  do_print("Checking for " + file.path);
   do_check_true(file.exists());
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -830,7 +828,7 @@ function run_test_12() {
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org",
                                "addon5@tests.mozilla.org"],
-                               function([a1, a2, a3, a4, a5]) {
+                               callback_soon(function([a1, a2, a3, a4, a5]) {
     do_check_neq(a1, null);
     do_check_false(a1.userDisabled);
     do_check_true(a1.isActive);
@@ -919,8 +917,8 @@ function run_test_12() {
         do_check_true(a3.userDisabled);
         do_check_false(a3.isActive);
 
-        end_test();
+        do_execute_soon(end_test);
       });
     });
-  });
+  }));
 }

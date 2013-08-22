@@ -108,7 +108,7 @@ class MochitestRunner(MozbuildObject):
 
         runner = mochitest.Mochitest(automation)
 
-        opts = mochitest.MochitestOptions(automation, tests_dir)
+        opts = mochitest.MochitestOptions(automation)
         options, args = opts.parse_args([])
 
         # Need to set the suite options before verifyOptions below.
@@ -149,7 +149,6 @@ class MochitestRunner(MozbuildObject):
                 return 1
 
             options.testPath = test_path
-            env = {'TEST_PATH': test_path}
 
         if rerun_failures:
             options.testManifest = failure_file_path

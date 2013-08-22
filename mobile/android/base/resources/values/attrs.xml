@@ -173,6 +173,7 @@
 
     <declare-styleable name="GeckoView">
         <attr name="url" format="string"/>
+        <attr name="doinit" format="boolean"/>
     </declare-styleable>
 
 </resources>

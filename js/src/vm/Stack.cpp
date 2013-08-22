@@ -8,12 +8,13 @@
 
 #include "mozilla/PodOperations.h"
 
+#include "jsautooplen.h"
 #include "jscntxt.h"
 
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "ion/BaselineFrame.h"
-#include "ion/IonCompartment.h"
+#include "jit/BaselineFrame.h"
+#include "jit/IonCompartment.h"
 #endif
 #include "vm/Interpreter-inl.h"
 #include "vm/Probes-inl.h"
@@ -189,7 +190,11 @@ StackFrame::createRestParameter(JSContext *cx)
     unsigned nformal = fun()->nargs - 1, nactual = numActualArgs();
     unsigned nrest = (nactual > nformal) ? nactual - nformal : 0;
     Value *restvp = argv() + nformal;
-    return NewDenseCopiedArray(cx, nrest, restvp, NULL);
+    JSObject *obj = NewDenseCopiedArray(cx, nrest, restvp, NULL);
+    if (!obj)
+        return NULL;
+    types::FixRestArgumentsType(cx, obj);
+    return obj;
 }
 
 static inline void
@@ -442,6 +447,19 @@ js::MarkInterpreterActivations(JSRuntime *rt, JSTracer *trc)
             MarkInterpreterActivation(trc, act->asInterpreter());
     }
 
+}
+
+/*****************************************************************************/
+
+// Unlike the other methods of this calss, this method is defined here so that
+// we don't have to #include jsautooplen.h in vm/Stack.h.
+void
+FrameRegs::setToEndOfScript()
+{
+    JSScript *script = fp()->script();
+    sp = fp()->base();
+    pc = script->code + script->length - JSOP_STOP_LENGTH;
+    JS_ASSERT(*pc == JSOP_STOP);
 }
 
 /*****************************************************************************/

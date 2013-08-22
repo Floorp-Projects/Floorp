@@ -1,4 +1,7 @@
 toolkit/library
+  dom
+    ipc
+    security/sandbox
   ipc
   netwerk/build
     netwerk
@@ -55,6 +58,7 @@ browser/app
   browser/themes
   toolkit
   toolkit/components
+  toolkit/components/jsdownloads
   toolkit/content
   toolkit/crashreporter
   toolkit/devtools

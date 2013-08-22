@@ -35,6 +35,9 @@ function runTests() {
     assertEq(s.y, 255);
     assertEq(s.z, 12.342345);
 
+    assertThrows(function() new StructType(RegExp));
+    assertThrows(function() new StructType(RegExp()));
+
     var Color = new StructType({r: uint8, g: uint8, b: uint8});
     var white = new Color();
     white.r = white.g = white.b = 255;
@@ -50,6 +53,11 @@ function runTests() {
     assertEq(civic.color.r, 255);
     assertEq(civic.color.g, 255);
     assertEq(civic.color.b, 255);
+
+    var keys = Object.keys(civic).sort();
+    assertEq(keys.length, 2);
+    assertEq(keys.indexOf("color"), 0);
+    assertEq(keys.indexOf("weight"), 1);
 
     civic.color = {r: 255, g: 0, b: 0};
     assertEq(civic.color.r, 255);

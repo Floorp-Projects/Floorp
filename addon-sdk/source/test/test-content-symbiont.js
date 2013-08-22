@@ -7,6 +7,7 @@ const { Cc, Ci } = require('chrome');
 const { Symbiont } = require('sdk/content/symbiont');
 const self = require('sdk/self');
 const { close } = require('sdk/window/helpers');
+const app = require("sdk/system/xul-app");
 
 function makeWindow() {
   let content =
@@ -66,6 +67,11 @@ exports['test:constructing symbiont && validating API'] = function(assert) {
 };
 
 exports["test:communication with worker global scope"] = function(assert, done) {
+  if (app.is('Fennec')) {
+    assert.pass('Test skipped on Fennec');
+    done();
+  }
+
   let window = makeWindow();
   let contentSymbiont;
 
@@ -176,15 +182,5 @@ exports["test:`addon` is not available when a content script is set"] = function
     done();
   });
 };
-
-if (require("sdk/system/xul-app").is("Fennec")) {
-  module.exports = {
-    "test Unsupported Test": function UnsupportedTest (assert) {
-        assert.pass(
-          "Skipping this test until Fennec support is implemented." +
-          "See bug 806815");
-    }
-  }
-}
 
 require("test").run(exports);

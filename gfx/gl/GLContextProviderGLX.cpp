@@ -263,6 +263,7 @@ GLXLibrary::EnsureInitialized(LibType libType)
     }
 
     mIsATI = serverVendor && DoesStringMatch(serverVendor, "ATI");
+    mIsNVIDIA = serverVendor && DoesStringMatch(serverVendor, "NVIDIA Corporation");
     mClientIsMesa = clientVendor && DoesStringMatch(clientVendor, "Mesa");
 
     mInitialized = true;
@@ -367,7 +368,10 @@ GLXLibrary::CreatePixmap(gfxASurface* aSurface)
         // again).
         //
         // This checks that the depth matches in one of the two ways.
-        if (depth != format->depth && depth != format->depth - alphaSize) {
+        // NVIDIA now forces format->depth == depth so only the first way
+        // is checked for NVIDIA
+        if (depth != format->depth &&
+            (mIsNVIDIA || depth != format->depth - alphaSize) ) {
             continue;
         }
 
@@ -940,7 +944,8 @@ TRY_AGAIN_NO_SHARING:
     CreateTextureImage(const nsIntSize& aSize,
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
-                       TextureImage::Flags aFlags = TextureImage::NoFlags);
+                       TextureImage::Flags aFlags = TextureImage::NoFlags,
+                       TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown);
 
 private:
     friend class GLContextProviderGLX;
@@ -966,6 +971,8 @@ private:
           mPixmap(aPixmap)
     {
         MOZ_ASSERT(mGLX);
+        // See 899855
+        SetProfileVersion(ContextProfile::OpenGLCompatibility, 200);
     }
 
     GLXContext mContext;
@@ -986,7 +993,8 @@ class TextureImageGLX : public TextureImage
     GLContextGLX::CreateTextureImage(const nsIntSize&,
                                      ContentType,
                                      GLenum,
-                                     TextureImage::Flags);
+                                     TextureImage::Flags,
+                                     TextureImage::ImageFormat);
 
 public:
     virtual ~TextureImageGLX()
@@ -1085,13 +1093,15 @@ already_AddRefed<TextureImage>
 GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
                                  TextureImage::ContentType aContentType,
                                  GLenum aWrapMode,
-                                 TextureImage::Flags aFlags)
+                                 TextureImage::Flags aFlags,
+                                 TextureImage::ImageFormat aImageFormat)
 {
     if (!TextureImageSupportsGetBackingSurface()) {
         return GLContext::CreateTextureImage(aSize, 
                                              aContentType, 
                                              aWrapMode, 
-                                             aFlags);
+                                             aFlags,
+                                             aImageFormat);
     }
 
     Display *display = DefaultXDisplay();
@@ -1125,7 +1135,8 @@ GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
         return GLContext::CreateTextureImage(aSize,
                                              aContentType,
                                              aWrapMode,
-                                             aFlags);
+                                             aFlags,
+                                             aImageFormat);
     }
     NS_ASSERTION(pixmap, "Failed to create pixmap!");
 

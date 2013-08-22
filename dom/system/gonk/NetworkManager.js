@@ -434,6 +434,27 @@ NetworkManager.prototype = {
     });
   },
 
+  setWifiOperationMode: function setWifiOperationMode(interfaceName, mode, callback) {
+    debug("setWifiOperationMode on " + interfaceName + " to " + mode);
+
+    let params = {
+      cmd: "setWifiOperationMode",
+      ifname: interfaceName,
+      mode: mode
+    };
+
+    params.report = true;
+    params.isAsync = true;
+
+    this.controlMessage(params, function(result) {
+      if (isError(result.resultCode)) {
+        callback.wifiOperationModeResult("netd command error");
+      } else {
+        callback.wifiOperationModeResult(null);
+      }
+    });
+  },
+
   // Helpers
 
   controlMessage: function controlMessage(params, callback) {

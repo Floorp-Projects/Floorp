@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-The `request` module lets you make simple yet powerful network requests.
+The `request` module lets you make simple yet powerful network requests. For more advanced usage, check out the [net/xhr](modules/sdk/net/xhr.html) module, based on the browser's [XMLHttpRequest](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) object.
 
 <api name="Request">
 @class

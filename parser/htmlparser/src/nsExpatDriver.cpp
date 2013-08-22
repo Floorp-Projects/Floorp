@@ -1289,9 +1289,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
 }
 
 NS_IMETHODIMP
-nsExpatDriver::BuildModel(nsITokenizer* aTokenizer,
-                          bool,// aCountLines,
-                          const nsCString*)// aCharsetPtr)
+nsExpatDriver::BuildModel(nsITokenizer* aTokenizer, nsIContentSink* aSink)
 {
   return mInternalState;
 }
@@ -1306,16 +1304,9 @@ nsExpatDriver::DidBuildModel(nsresult anErrorCode)
 }
 
 NS_IMETHODIMP
-nsExpatDriver::WillTokenize(bool aIsFinalChunk,
-                            nsTokenAllocator* aTokenAllocator)
+nsExpatDriver::WillTokenize(bool aIsFinalChunk)
 {
   mIsFinalChunk = aIsFinalChunk;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsExpatDriver::DidTokenize(bool aIsFinalChunk)
-{
   return NS_OK;
 }
 
@@ -1342,65 +1333,6 @@ nsExpatDriver::GetMode() const
 }
 
 /*************************** Unused methods **********************************/
-
-NS_IMETHODIMP_(CToken*)
-nsExpatDriver::PushTokenFront(CToken* aToken)
-{
-  return 0;
-}
-
-NS_IMETHODIMP_(CToken*)
-nsExpatDriver::PushToken(CToken* aToken)
-{
-  return 0;
-}
-
-NS_IMETHODIMP_(CToken*)
-nsExpatDriver::PopToken(void)
-{
-  return 0;
-}
-
-NS_IMETHODIMP_(CToken*)
-nsExpatDriver::PeekToken(void)
-{
-  return 0;
-}
-
-NS_IMETHODIMP_(CToken*)
-nsExpatDriver::GetTokenAt(int32_t anIndex)
-{
-  return 0;
-}
-
-NS_IMETHODIMP_(int32_t)
-nsExpatDriver::GetCount(void)
-{
-  return 0;
-}
-
-NS_IMETHODIMP_(nsTokenAllocator*)
-nsExpatDriver::GetTokenAllocator(void)
-{
-  return 0;
-}
-
-NS_IMETHODIMP_(void)
-nsExpatDriver::PrependTokens(nsDeque& aDeque)
-{
-}
-
-NS_IMETHODIMP
-nsExpatDriver::CopyState(nsITokenizer* aTokenizer)
-{
-  return NS_OK;
-}
-
-nsresult
-nsExpatDriver::HandleToken(CToken* aToken)
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP_(bool)
 nsExpatDriver::IsContainer(int32_t aTag) const

@@ -5,3 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['tests']
+
+EXTRA_PP_JS_MODULES += [
+    'dataprovider.jsm',
+    'providermanager.jsm',
+    'storage.jsm',
+]
+

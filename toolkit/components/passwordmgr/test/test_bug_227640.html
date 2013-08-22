@@ -8,9 +8,17 @@
 </head>
 <body>
 Login Manager test: 227640
+<script>
+commonInit();
+SimpleTest.waitForExplicitFinish();
+
+var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
+                         .getService(SpecialPowers.Ci.nsILoginManager);
+</script>
+
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
   <!-- no autocomplete for password field -->
   <form id="form1" onsubmit="return checkSubmit(1)" method="get">
     <input  type="text"       name="uname" value="">
@@ -147,7 +155,6 @@ Login Manager test: 227640
 
 /** Test for Login Manager: 227640 (password is saved even when the
     password field has autocomplete="off") **/
-commonInit();
 
 // This test ensures that pwmgr does not save a username or password when
 // autocomplete=off is present.
@@ -230,24 +237,7 @@ function countLogins() {
 
   return logins.length;
 }
-
-// Get the pwmgr service
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-var Cc_pwmgr = Components.classes["@mozilla.org/login-manager;1"];
-ok(Cc_pwmgr != null, "Access Cc[@mozilla.org/login-manager;1]");
-
-var Ci_pwmgr = Components.interfaces.nsILoginManager;
-ok(Ci_pwmgr != null, "Access Ci.nsILoginManager");
-
-var pwmgr = Cc_pwmgr.getService(Ci_pwmgr);
-ok(pwmgr != null, "pwmgr getService()");
-
-
 window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
-
 </script>
 </pre>
 </body>

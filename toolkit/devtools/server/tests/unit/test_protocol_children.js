@@ -43,6 +43,9 @@ let ChildActor = protocol.ActorClass({
   },
 
   form: function(detail) {
+    if (detail === "actorid") {
+      return this.actorID;
+    }
     return {
       actor: this.actorID,
       childID: this.childID,
@@ -70,6 +73,14 @@ let ChildActor = protocol.ActorClass({
   }, {
     // This also exercises return-value-as-packet.
     response: RetVal("childActor#detail2"),
+  }),
+
+  getIDDetail: method(function() {
+    return this;
+  }, {
+    response: {
+      idDetail: RetVal("childActor#actorid")
+    }
   }),
 
   getSibling: method(function(id) {
@@ -127,7 +138,10 @@ let ChildFront = protocol.FrontClass(ChildActor, {
 
   toString: function() "[child front " + this.childID + "]",
 
-  form: function(form) {
+  form: function(form, detail) {
+    if (detail === "actorid") {
+      return;
+    }
     this.childID = form.childID;
     this.detail = form.detail;
   },
@@ -158,8 +172,6 @@ let RootActor = protocol.ActorClass({
     // Root actor owns itself.
     this.manage(this);
   },
-
-  toString: function() "root actor",
 
   sayHello: simpleHello,
 
@@ -232,7 +244,7 @@ let RootFront = protocol.FrontClass(RootActor, {
 
   clearTemporaryChildren: protocol.custom(function() {
     if (!this._temporaryHolder) {
-      return;
+      return resolve(undefined);
     }
     this._temporaryHolder.destroy();
     delete this._temporaryHolder;
@@ -304,6 +316,12 @@ function run_test()
       trace.expectReceive({"actor":"<actorid>","childID":"child1","detail":"detail2","from":"<actorid>"});
       do_check_true(ret === childFront);
       do_check_eq(childFront.detail, "detail2");
+    }).then(() => {
+      return childFront.getIDDetail();
+    }).then(ret => {
+      trace.expectSend({"type":"getIDDetail","to":"<actorid>"});
+      trace.expectReceive({"idDetail": childFront.actorID,"from":"<actorid>"});
+      do_check_true(ret === childFront);
     }).then(() => {
       return childFront.getSibling("siblingID");
     }).then(ret => {

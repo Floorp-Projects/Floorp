@@ -33,7 +33,7 @@
 #endif
 
 #include "WebGLTypes.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 #if defined _MSC_VER
 #define FORCE_INLINE __forceinline

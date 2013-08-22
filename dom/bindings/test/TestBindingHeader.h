@@ -384,21 +384,25 @@ public:
   void ReceiveSequenceOfSequences(nsTArray< nsTArray<int32_t> >&);
 
   // Typed array types
-  void PassArrayBuffer(ArrayBuffer&);
-  void PassNullableArrayBuffer(ArrayBuffer*);
+  void PassArrayBuffer(const ArrayBuffer&);
+  void PassNullableArrayBuffer(const Nullable<ArrayBuffer>&);
   void PassOptionalArrayBuffer(const Optional<ArrayBuffer>&);
-  void PassOptionalNullableArrayBuffer(const Optional<ArrayBuffer*>&);
-  void PassOptionalNullableArrayBufferWithDefaultValue(ArrayBuffer*);
-  void PassArrayBufferView(ArrayBufferView&);
-  void PassInt8Array(Int8Array&);
-  void PassInt16Array(Int16Array&);
-  void PassInt32Array(Int32Array&);
-  void PassUint8Array(Uint8Array&);
-  void PassUint16Array(Uint16Array&);
-  void PassUint32Array(Uint32Array&);
-  void PassUint8ClampedArray(Uint8ClampedArray&);
-  void PassFloat32Array(Float32Array&);
-  void PassFloat64Array(Float64Array&);
+  void PassOptionalNullableArrayBuffer(const Optional<Nullable<ArrayBuffer> >&);
+  void PassOptionalNullableArrayBufferWithDefaultValue(const Nullable<ArrayBuffer>&);
+  void PassArrayBufferView(const ArrayBufferView&);
+  void PassInt8Array(const Int8Array&);
+  void PassInt16Array(const Int16Array&);
+  void PassInt32Array(const Int32Array&);
+  void PassUint8Array(const Uint8Array&);
+  void PassUint16Array(const Uint16Array&);
+  void PassUint32Array(const Uint32Array&);
+  void PassUint8ClampedArray(const Uint8ClampedArray&);
+  void PassFloat32Array(const Float32Array&);
+  void PassFloat64Array(const Float64Array&);
+  void PassSequenceOfArrayBuffers(const Sequence<ArrayBuffer>&);
+  void PassSequenceOfNullableArrayBuffers(const Sequence<Nullable<ArrayBuffer> >&);
+  void PassVariadicTypedArray(const Sequence<Float32Array>&);
+  void PassVariadicNullableTypedArray(const Sequence<Nullable<Float32Array> >&);
   JSObject* ReceiveUint8Array(JSContext*);
 
   // DOMString types
@@ -507,6 +511,16 @@ public:
   //void PassUnionWithCallback(JSContext*, const TestCallbackOrLong&);
   void PassUnionWithObject(JSContext*, const ObjectOrLong&);
 
+  void ReceiveUnion(const CanvasPatternOrCanvasGradientReturnValue&);
+  void ReceiveUnionContainingNull(const CanvasPatternOrNullOrCanvasGradientReturnValue&);
+  void ReceiveNullableUnion(const Nullable<CanvasPatternOrCanvasGradientReturnValue>&);
+  void GetWritableUnion(const CanvasPatternOrCanvasGradientReturnValue&);
+  void SetWritableUnion(const CanvasPatternOrCanvasGradient&);
+  void GetWritableUnionContainingNull(const CanvasPatternOrNullOrCanvasGradientReturnValue&);
+  void SetWritableUnionContainingNull(const CanvasPatternOrNullOrCanvasGradient&);
+  void GetWritableNullableUnion(const Nullable<CanvasPatternOrCanvasGradientReturnValue>&);
+  void SetWritableNullableUnion(const Nullable<CanvasPatternOrCanvasGradient>&);
+
   // Date types
   void PassDate(Date);
   void PassNullableDate(const Nullable<Date>&);
@@ -554,14 +568,24 @@ public:
   TestInterface* Overload1(const nsAString&, TestInterface&);
   void Overload2(TestInterface&);
   void Overload2(JSContext*, const Dict&);
+  void Overload2(bool);
   void Overload2(const nsAString&);
   void Overload2(Date);
   void Overload3(TestInterface&);
   void Overload3(const TestCallback&);
-  void Overload3(const nsAString&);
+  void Overload3(bool);
   void Overload4(TestInterface&);
   void Overload4(TestCallbackInterface&);
   void Overload4(const nsAString&);
+  void Overload5(int32_t);
+  void Overload5(TestEnum);
+  void Overload6(int32_t);
+  void Overload6(bool);
+  void Overload7(int32_t);
+  void Overload7(bool);
+  void Overload7(const nsCString&);
+  void Overload8(int32_t);
+  void Overload8(TestInterface&);
 
   // Variadic handling
   void PassVariadicThirdArg(const nsAString&, int32_t,
@@ -598,6 +622,12 @@ public:
   TestInterface* PutForwardsAttr();
   TestInterface* PutForwardsAttr2();
   TestInterface* PutForwardsAttr3();
+  JS::Value JsonifierShouldSkipThis(JSContext*);
+  void SetJsonifierShouldSkipThis(JSContext*, JS::Rooted<JS::Value>&);
+  TestParentInterface* JsonifierShouldSkipThis2();
+  void SetJsonifierShouldSkipThis2(TestParentInterface&);
+  TestCallbackInterface* JsonifierShouldSkipThis3();
+  void SetJsonifierShouldSkipThis3(TestCallbackInterface&);
   void ThrowingMethod(ErrorResult& aRv);
   bool GetThrowingAttr(ErrorResult& aRv) const;
   void SetThrowingAttr(bool arg, ErrorResult& aRv);

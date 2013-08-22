@@ -10,6 +10,9 @@ relativesrcdir  = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Disabled for too many intermittent failures (bug 851349)
+#		browser_inspector_bug_831693_searchbox_panel_navigation.js \
+
 MOCHITEST_BROWSER_FILES := \
 		browser_inspector_iframeTest.js \
 		browser_inspector_initialization.js \
@@ -38,7 +41,6 @@ MOCHITEST_BROWSER_FILES := \
 		browser_inspector_bug_650804_search.js \
 		browser_inspector_bug_650804_search.html \
 		browser_inspector_bug_831693_input_suggestion.js \
-		browser_inspector_bug_831693_searchbox_panel_navigation.js \
 		browser_inspector_bug_831693_combinator_suggestions.js \
 		browser_inspector_bug_831693_search_suggestions.html \
 		browser_inspector_bug_835722_infobar_reappears.js \

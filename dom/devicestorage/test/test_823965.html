@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823965
 
 devicestorage_setup();
 
-var gFileName = "devicestorage/hi.png";
+var gFileName = "devicestorage/" + randomFilename(12) + "/hi.png";
 var gData = "My name is Doug Turner (?!?).  My IRC nick is DougT.  I like Maple cookies."
 var gDataBlob = new Blob([gData], {type: 'image/png'});
 
@@ -63,7 +63,7 @@ function addSuccess(e) {
 
   var filename = e.target.result;
   if (filename[0] == "/") {
-    // We got /storgaeName/prefix/filename
+    // We got /storageName/prefix/filename
     // Remove the storageName (this shows up on FirefoxOS)
     filename = filename.substring(1); // Remove leading slash
     var slashIndex = filename.indexOf("/");
@@ -93,7 +93,7 @@ ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
 var storage = navigator.getDeviceStorage("pictures");
 ok(storage, "Should have gotten a storage");
 
-request = storage.addNamed(gDataBlob, "devicestorage/hi.png");
+request = storage.addNamed(gDataBlob, gFileName);
 ok(request, "Should have a non-null request");
 
 request.onsuccess = addSuccess;

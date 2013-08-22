@@ -90,7 +90,10 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
     gfxImageFormat format =
       gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
     int32_t stride = gfxASurface::FormatStrideForWidth(format, aSize.width);
-    uint8_t *data = new uint8_t[stride * aSize.height];
+    uint8_t *data = new (std::nothrow) uint8_t[stride * aSize.height];
+    if (!data) {
+      return false;
+    }
 #ifdef XP_MACOSX
     // Workaround a bug in Quartz where drawing an a8 surface to another a8
     // surface with OPERATOR_SOURCE still requires the destination to be clear.
@@ -120,10 +123,6 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
   if (!aSurface) {
     return;
   }
-  if (!IsOnCompositorSide() && ReleaseOwnedSurfaceDescriptor(*aSurface)) {
-    *aSurface = SurfaceDescriptor();
-    return;
-  }
   if (PlatformDestroySharedSurface(aSurface)) {
     return;
   }
@@ -137,6 +136,7 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
     case SurfaceDescriptor::TRGBImage:
       DeallocShmem(aSurface->get_RGBImage().data());
       break;
+    case SurfaceDescriptor::TSurfaceDescriptorD3D9:
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
       break;
     case SurfaceDescriptor::TMemoryImage:
@@ -149,38 +149,6 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
       NS_RUNTIMEABORT("surface type not implemented!");
   }
   *aSurface = SurfaceDescriptor();
-}
-
-bool IsSurfaceDescriptorOwned(const SurfaceDescriptor& aDescriptor)
-{
-  switch (aDescriptor.type()) {
-    case SurfaceDescriptor::TYCbCrImage: {
-      const YCbCrImage& ycbcr = aDescriptor.get_YCbCrImage();
-      return ycbcr.owner() != 0;
-    }
-    case SurfaceDescriptor::TRGBImage: {
-      const RGBImage& rgb = aDescriptor.get_RGBImage();
-      return rgb.owner() != 0;
-    }
-    default:
-      return false;
-  }
-  return false;
-}
-bool ReleaseOwnedSurfaceDescriptor(const SurfaceDescriptor& aDescriptor)
-{
-  DeprecatedSharedPlanarYCbCrImage* sharedYCbCr =
-    DeprecatedSharedPlanarYCbCrImage::FromSurfaceDescriptor(aDescriptor);
-  if (sharedYCbCr) {
-    sharedYCbCr->Release();
-    return true;
-  }
-  DeprecatedSharedRGBImage* sharedRGB = DeprecatedSharedRGBImage::FromSurfaceDescriptor(aDescriptor);
-  if (sharedRGB) {
-    sharedRGB->Release();
-    return true;
-  }
-  return false;
 }
 
 #if !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)

@@ -4,7 +4,7 @@
 
 # Integrates the xpcshell test runner with mach.
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 import mozpack.path
 import os
@@ -44,8 +44,9 @@ class XPCShellRunner(MozbuildObject):
 
         return self._run_xpcshell_harness(manifest=manifest, **kwargs)
 
-    def run_test(self, test_file, debug=False, interactive=False,
-        keep_going=False, shuffle=False):
+    def run_test(self, test_file, interactive=False,
+                 keep_going=False, sequential=False, shuffle=False,
+                 debugger=None, debuggerArgs=None, debuggerInteractive=None):
         """Runs an individual xpcshell test."""
         # TODO Bug 794506 remove once mach integrates with virtualenv.
         build_path = os.path.join(self.topobjdir, 'build')
@@ -53,8 +54,10 @@ class XPCShellRunner(MozbuildObject):
             sys.path.append(build_path)
 
         if test_file == 'all':
-            self.run_suite(debug=debug, interactive=interactive,
-                keep_going=keep_going, shuffle=shuffle)
+            self.run_suite(interactive=interactive,
+                           keep_going=keep_going, shuffle=shuffle, sequential=sequential,
+                           debugger=debugger, debuggerArgs=debuggerArgs,
+                           debuggerInteractive=debuggerInteractive)
             return
 
         path_arg = self._wrap_path_argument(test_file)
@@ -77,11 +80,14 @@ class XPCShellRunner(MozbuildObject):
                 'not built or tests are not enabled.')
 
         args = {
-            'debug': debug,
             'interactive': interactive,
             'keep_going': keep_going,
             'shuffle': shuffle,
+            'sequential': sequential,
             'test_dirs': xpcshell_dirs,
+            'debugger': debugger,
+            'debuggerArgs': debuggerArgs,
+            'debuggerInteractive': debuggerInteractive,
         }
 
         if os.path.isfile(path_arg.srcdir_path()):
@@ -90,8 +96,9 @@ class XPCShellRunner(MozbuildObject):
         return self._run_xpcshell_harness(**args)
 
     def _run_xpcshell_harness(self, test_dirs=None, manifest=None,
-        test_path=None, debug=False, shuffle=False, interactive=False,
-        keep_going=False):
+                              test_path=None, shuffle=False, interactive=False,
+                              keep_going=False, sequential=False,
+                              debugger=None, debuggerArgs=None, debuggerInteractive=None):
 
         # Obtain a reference to the xpcshell test runner.
         import runxpcshelltests
@@ -110,6 +117,7 @@ class XPCShellRunner(MozbuildObject):
             'interactive': interactive,
             'keepGoing': keep_going,
             'logfiles': False,
+            'sequential': sequential,
             'shuffle': shuffle,
             'testsRootDir': tests_dir,
             'testingModulesDir': modules_dir,
@@ -118,6 +126,9 @@ class XPCShellRunner(MozbuildObject):
             'xunitFilename': os.path.join(self.statedir, 'xpchsell.xunit.xml'),
             'xunitName': 'xpcshell',
             'pluginsPath': os.path.join(self.distdir, 'plugins'),
+            'debugger': debugger,
+            'debuggerArgs': debuggerArgs,
+            'debuggerInteractive': debuggerInteractive,
         }
 
         if manifest is not None:
@@ -149,6 +160,9 @@ class XPCShellRunner(MozbuildObject):
 
         self.log_manager.disable_unstructured()
 
+        if not result and not sequential:
+            print("Tests were run in parallel. Try running with --sequential "
+                  "to make sure the failures were not caused by this.")
         return int(not result)
 
 
@@ -159,12 +173,22 @@ class MachCommands(MachCommandBase):
     @CommandArgument('test_file', default='all', nargs='?', metavar='TEST',
         help='Test to run. Can be specified as a single JS file, a directory, '
              'or omitted. If omitted, the entire test suite is executed.')
-    @CommandArgument('--debug', '-d', action='store_true',
-        help='Run test in a debugger.')
+    @CommandArgument("--debugger", default=None, metavar='DEBUGGER',
+                     help = "Run xpcshell under the given debugger.")
+    @CommandArgument("--debugger-args", default=None, metavar='ARGS', type=str,
+                     dest = "debuggerArgs",
+                     help = "pass the given args to the debugger _before_ "
+                            "the application on the command line")
+    @CommandArgument("--debugger-interactive", action = "store_true",
+                     dest = "debuggerInteractive",
+                     help = "prevents the test harness from redirecting "
+                            "stdout and stderr for interactive debuggers")
     @CommandArgument('--interactive', '-i', action='store_true',
         help='Open an xpcshell prompt before running tests.')
     @CommandArgument('--keep-going', '-k', action='store_true',
         help='Continue running tests after a SIGINT is received.')
+    @CommandArgument('--sequential', action='store_true',
+        help='Run the tests sequentially.')
     @CommandArgument('--shuffle', '-s', action='store_true',
         help='Randomize the execution order of tests.')
     def run_xpcshell_test(self, **params):

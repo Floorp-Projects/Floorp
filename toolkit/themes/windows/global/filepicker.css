@@ -20,11 +20,13 @@
 
 /* ::::: file/directory items ::::: */
 
+treechildren::-moz-tree-image(treecolAutoCompleteValue, directory),
 treechildren::-moz-tree-image(FilenameColumn, directory) {
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
+treechildren::-moz-tree-image(treecolAutoCompleteValue, file),
 treechildren::-moz-tree-image(FilenameColumn, file) {
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(16px, 16px, 32px, 0px);

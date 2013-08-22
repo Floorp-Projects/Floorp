@@ -1,0 +1,55 @@
+<html>
+<script>
+  window.onload = () => {
+    window.opener.postMessage('ready', '*')
+  }
+</script>
+<style>
+  .inheritable-rule {
+    font-size: 15px;
+  }
+  .uninheritable-rule {
+    background-color: #f06;
+  }
+  @media screen {
+    #mediaqueried {
+      background-color: #f06;
+    }
+  }
+</style>
+<link type="text/css" rel="stylesheet" href="inspector-styles-data.css"></link>
+<body>
+  <h1>Style Actor Tests</h1>
+  <!-- Inheritance checks -->
+  <div id="inheritable-rule-uninheritable-style" class="inheritable-rule" style="background-color: purple">
+    <div id="inheritable-rule-inheritable-style" class="inheritable-rule" style="color: blue">
+      <div id="uninheritable-rule-uninheritable-style" class="uninheritable-rule" style="background-color: green">
+        <div id="uninheritable-rule-inheritable-style" class="uninheritable-rule" style="color: red">
+          <div id="test-node">
+            Here is the test node.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Computed checks -->
+  <div id="computed-parent" class="external-rule inheritable-rule uninheritable-rule" style="color: red;">
+    <div id="computed-test-node" class="external-rule">
+      Here is the test node.
+    </div>
+  </div>
+
+  <!-- Matched checks -->
+  <div id="matched-parent" class="external-rule inheritable-rule uninheritable-rule" style="color: red;">
+    <div id="matched-test-node" style="font-size: 10px" class="external-rule">
+      Here is the test node.
+    </div>
+  </div>
+
+  <div id="mediaqueried">
+    Screen mediaqueried.
+  </div>
+
+</body>
+</html>

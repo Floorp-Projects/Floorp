@@ -30,11 +30,11 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOMStrings.h"
 #include "nsProxyRelease.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
-#include "pratom.h"
 #include "prlog.h"
 #include "prprf.h"
 #include "prnetdb.h"
@@ -84,7 +84,7 @@ nsIThread* nsUrlClassifierDBService::gDbBackgroundThread = nullptr;
 // thread.
 static bool gShuttingDownThread = false;
 
-static int32_t gFreshnessGuarantee = CONFIRM_AGE_DEFAULT_SEC;
+static mozilla::Atomic<int32_t> gFreshnessGuarantee(CONFIRM_AGE_DEFAULT_SEC);
 
 static void
 SplitTables(const nsACString& str, nsTArray<nsCString>& tables)
@@ -713,6 +713,7 @@ nsUrlClassifierDBServiceWorker::CacheCompletions(CacheResultArray *results)
     for (uint32_t table = 0; table < tables.Length(); table++) {
       if (tables[table].Equals(resultsPtr->ElementAt(i).table)) {
         activeTable = true;
+        break;
       }
     }
     if (activeTable) {
@@ -1142,7 +1143,7 @@ nsUrlClassifierDBService::Init()
     prefs->AddObserver(GETHASH_TABLES_PREF, this, false);
 
     rv = prefs->GetIntPref(CONFIRM_AGE_PREF, &tmpint);
-    PR_ATOMIC_SET(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
+    gFreshnessGuarantee = NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC;
 
     prefs->AddObserver(CONFIRM_AGE_PREF, this, false);
   }
@@ -1459,7 +1460,7 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
     } else if (NS_LITERAL_STRING(CONFIRM_AGE_PREF).Equals(aData)) {
       int32_t tmpint;
       rv = prefs->GetIntPref(CONFIRM_AGE_PREF, &tmpint);
-      PR_ATOMIC_SET(&gFreshnessGuarantee, NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC);
+      gFreshnessGuarantee = NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC;
     }
   } else if (!strcmp(aTopic, "profile-before-change") ||
              !strcmp(aTopic, "xpcom-shutdown-threads")) {

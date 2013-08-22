@@ -103,7 +103,7 @@ public:
   GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName);
 
 protected:
-  static JSBool
+  static bool
   ConstructInternal(JSContext* aCx, unsigned aArgc, jsval* aVp,
                     bool aIsChromeWorker, JSClass* aClass)
   {
@@ -142,13 +142,14 @@ protected:
       return false;
     }
 
+    // Ensure that the DOM_OBJECT_SLOT always has a PrivateValue set, as this
+    // will be accessed in the Trace() method if WorkerPrivate::Create()
+    // triggers a GC.
+    js::SetReservedSlot(obj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
+
     nsRefPtr<WorkerPrivate> worker =
       WorkerPrivate::Create(aCx, obj, parent, scriptURL, aIsChromeWorker);
     if (!worker) {
-      // It'd be better if we could avoid allocating the JSObject until after we
-      // make sure we have a WorkerPrivate, but failing that we should at least
-      // make sure that the DOM_OBJECT_SLOT always has a PrivateValue.
-      js::SetReservedSlot(obj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
       return false;
     }
 
@@ -174,7 +175,7 @@ private:
   Worker();
   ~Worker();
 
-  static JSBool
+  static bool
   GetEventListener(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
                    JS::MutableHandle<JS::Value> aVp)
   {
@@ -199,9 +200,9 @@ private:
     return true;
   }
 
-  static JSBool
+  static bool
   SetEventListener(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aIdval,
-                   JSBool aStrict, JS::MutableHandle<JS::Value> aVp)
+                   bool aStrict, JS::MutableHandle<JS::Value> aVp)
   {
     JS_ASSERT(JSID_IS_INT(aIdval));
     JS_ASSERT(JSID_TO_INT(aIdval) >= 0 && JSID_TO_INT(aIdval) < STRING_COUNT);
@@ -229,7 +230,7 @@ private:
     return true;
   }
 
-  static JSBool
+  static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     return ConstructInternal(aCx, aArgc, aVp, false, Class());
@@ -255,7 +256,7 @@ private:
     }
   }
 
-  static JSBool
+  static bool
   Terminate(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
@@ -272,7 +273,7 @@ private:
     return worker->Terminate(aCx);
   }
 
-  static JSBool
+  static bool
   PostMessage(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
@@ -434,7 +435,7 @@ private:
     return Worker::GetInstancePrivate(aCx, aObj, aFunctionName);
   }
 
-  static JSBool
+  static bool
   Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
     return ConstructInternal(aCx, aArgc, aVp, true, Class());

@@ -62,10 +62,9 @@ check-variable = $(if $(filter-out 0 1,$(words $($(x))z)),$(error Spaces are not
 
 $(foreach x,$(CHECK_VARS),$(check-variable))
 
-core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURDIR)/$(1)))
-core_realpath = $(if $(realpath $(1)),$(realpath $(1)),$(call core_abspath,$(1)))
-
-core_winabspath = $(firstword $(subst /, ,$(call core_abspath,$(1)))):$(subst $(space),,$(patsubst %,\\%,$(wordlist 2,$(words $(subst /, ,$(call core_abspath,$(1)))), $(strip $(subst /, ,$(call core_abspath,$(1)))))))
+ifndef INCLUDED_FUNCTIONS_MK
+include $(topsrcdir)/config/makefiles/functions.mk
+endif
 
 RM = rm -f
 
@@ -365,7 +364,6 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 # Default command macros; can be overridden in <arch>.mk.
 #
 CCC = $(CXX)
-XPIDL_LINK = $(PYTHON) $(LIBXUL_DIST)/sdk/bin/xpt.py link
 
 # Java macros
 JAVA_GEN_DIR  = _javagen
@@ -522,12 +520,8 @@ endif
 endif
 
 # Default location of include files
-IDL_DIR		= $(DIST)/idl
-
-XPIDL_FLAGS += -I$(srcdir) -I$(IDL_DIR)
-ifdef LIBXUL_SDK
-XPIDL_FLAGS += -I$(LIBXUL_SDK)/idl
-endif
+IDL_PARSER_DIR = $(topsrcdir)/xpcom/idl-parser
+IDL_PARSER_CACHE_DIR = $(DEPTH)/xpcom/idl-parser
 
 SDK_LIB_DIR = $(DIST)/sdk/lib
 SDK_BIN_DIR = $(DIST)/sdk/bin
@@ -748,13 +742,17 @@ EXPAND_MKSHLIB_ARGS += --symbol-order $(SYMBOL_ORDER)
 endif
 EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) $(EXPAND_MKSHLIB_ARGS) -- $(MKSHLIB)
 
-ifdef STDCXX_COMPAT
+ifneq (,$(MOZ_LIBSTDCXX_TARGET_VERSION)$(MOZ_LIBSTDCXX_HOST_VERSION))
 ifneq ($(OS_ARCH),Darwin)
 CHECK_STDCXX = objdump -p $(1) | grep -e 'GLIBCXX_3\.4\.\(9\|[1-9][0-9]\)' > /dev/null && echo "TEST-UNEXPECTED-FAIL | | We don't want these libstdc++ symbols to be used:" && objdump -T $(1) | grep -e 'GLIBCXX_3\.4\.\(9\|[1-9][0-9]\)' && exit 1 || exit 0
 endif
 
+ifdef MOZ_LIBSTDCXX_TARGET_VERSION
 EXTRA_LIBS += $(call EXPAND_LIBNAME_PATH,stdc++compat,$(DEPTH)/build/unix/stdc++compat)
+endif
+ifdef MOZ_LIBSTDCXX_HOST_VERSION
 HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME_PATH,host_stdc++compat,$(DEPTH)/build/unix/stdc++compat)
+endif
 endif
 
 # autoconf.mk sets OBJ_SUFFIX to an error to avoid use before including

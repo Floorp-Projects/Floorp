@@ -7,7 +7,6 @@
     <em:id>hardblock@tests.mozilla.org</em:id>
     <em:version>1.0</em:version>
     <em:name>Hardblocked add-on</em:name>
-    <em:updateURL>http://localhost:4444/data/addon_update1.rdf</em:updateURL>
     <em:targetApplication>
       <Description>
         <em:id>xpcshell@tests.mozilla.org</em:id>

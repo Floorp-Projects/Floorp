@@ -5,7 +5,6 @@
 <!-- NAVBAR AND AUTOCOMPLETE -->
 
 <!ENTITY urlbar.emptytext      "Enter Search or Address">
-<!ENTITY urlbar.accesskey      "d">
 
 <!ENTITY back.label            "Back">
 <!ENTITY forward.label         "Forward">
@@ -13,7 +12,6 @@
 <!ENTITY closetab.label        "Close Tab">
 
 <!ENTITY autocompleteResultsHeader.label  "Your Results">
-<!ENTITY autocompleteSearchesHeader.label "Internet Searches">
 
 <!ENTITY appbarErrorConsole.label   "Open error console">
 <!ENTITY appbarJSShell.label        "Open JavaScript shell">
@@ -25,17 +23,17 @@
 <!ENTITY recentHistoryHeader.label   "Recent History">
 <!ENTITY remoteTabsHeader.label      "Tabs from Other Devices">
 
-<!-- LOCALIZATION NOTE (snappedRemoteTabsHeader.label): shortened version of startRemoteTabsHeader.label.
-     Needs to be two words or shorter to fit in narrow vertical space.-->
-<!-- LOCALIZATION NOTE (snappedRemoteTabsHeader.label,
-                        snappedBookmarksHeader.label,
-                        snappedHistoryHeader.label,
-                        snappedTopSitesHeader.label )
-      The '>' character is not part of the name, but is an indicator of more content. Please do not localize the '>' -->
-<!ENTITY snappedRemoteTabsHeader.label    "Remote Tabs >">
-<!ENTITY snappedBookmarksHeader.label     "Bookmarks >">
-<!ENTITY snappedRecentHistoryHeader.label "Recent History >">
-<!ENTITY snappedTopSitesHeader.label      "Top Sites >">
+<!-- LOCALIZATION NOTE (narrowTopSitesHeader.label,
+                        narrowBookmarksHeader.label,
+                        narrowHistoryHeader.label,
+                        narrowRemoteTabsHeader.label )
+     are shortened versions of topSitesHeader.label, bookmarksHeader.label, recentHistoryHeader.label
+     and remoteTabsHeader.label. Need to be two words or shorter to fit in narrow vertical space.
+      -->
+<!ENTITY narrowTopSitesHeader.label      "Top Sites">
+<!ENTITY narrowBookmarksHeader.label     "Bookmarks">
+<!ENTITY narrowRecentHistoryHeader.label "Recent History">
+<!ENTITY narrowRemoteTabsHeader.label    "Remote Tabs">
 
 <!ENTITY downloadsHeader.label     "Downloads">
 <!ENTITY downloadShowPage.label    "Go to Page">
@@ -89,3 +87,23 @@
 <!ENTITY contextSaveVideoLib.label         "Save to video library">
 <!ENTITY contextCopyVideoLocation.label    "Copy video location">
 <!ENTITY contextOpenVideoTab.label         "Open video in new tab">
+
+<!-- KEYBOARD SHORTCUTS -->
+<!ENTITY reload.key "r">
+<!ENTITY focusURL.key "l">
+<!ENTITY urlbar.accesskey "d">
+<!ENTITY openFile.key "o">
+<!ENTITY savePage.key "s">
+<!ENTITY find.key "f">
+<!ENTITY findNext.key "g">
+<!ENTITY quit.key "q">
+<!ENTITY addBookmark.key "d">
+<!ENTITY newTab.key "t">
+<!ENTITY newTab2.key "n">
+<!ENTITY closeTab.key "w">
+
+<!-- DEVELOPER SHORTCUTS (control+shift+key) -->
+<!ENTITY jsConsole.key "j">
+<!ENTITY optionsFlyout.key "o">
+<!ENTITY syncFlyout.key "s">
+<!ENTITY aboutFlyout.key "a">

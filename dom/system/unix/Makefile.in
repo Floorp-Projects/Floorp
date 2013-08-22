@@ -15,8 +15,6 @@ LIBXUL_LIBRARY   = 1
 EXPORT_LIBRARY = 1
 FAIL_ON_WARNINGS := 1
 
-include $(topsrcdir)/config/config.mk
-
 ifdef MOZ_MAEMO_LIBLOCATION
         LOCAL_INCLUDES  += $(MOZ_PLATFORM_MAEMO_CFLAGS) \
                            -I$(topsrcdir)/dom/src/geolocation \

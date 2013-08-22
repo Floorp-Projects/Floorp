@@ -42,7 +42,7 @@ DisableFontActivation()
 {
     // get the main bundle identifier
     CFBundleRef mainBundle = ::CFBundleGetMainBundle();
-    CFStringRef mainBundleID = NULL;
+    CFStringRef mainBundleID = nullptr;
 
     if (mainBundle) {
         mainBundleID = ::CFBundleGetIdentifier(mainBundle);
@@ -342,8 +342,8 @@ gfxPlatformMac::OSXVersion()
         OSErr err = ::Gestalt(gestaltSystemVersion, reinterpret_cast<SInt32*>(&mOSXVersion));
         if (err != noErr) {
             //This should probably be changed when our minimum version changes
-            NS_ERROR("Couldn't determine OS X version, assuming 10.4");
-            mOSXVersion = MAC_OS_X_VERSION_10_4_HEX;
+            NS_ERROR("Couldn't determine OS X version, assuming 10.6");
+            mOSXVersion = MAC_OS_X_VERSION_10_6_HEX;
         }
     }
     return mOSXVersion;
@@ -470,7 +470,7 @@ gfxPlatformMac::GetPlatformCMSOutputProfile()
         return nullptr;
 
     // get the size of location
-    err = NCMGetProfileLocation(cmProfile, NULL, &locationSize);
+    err = NCMGetProfileLocation(cmProfile, nullptr, &locationSize);
     if (err != noErr)
         return nullptr;
 

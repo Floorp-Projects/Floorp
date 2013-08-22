@@ -15,6 +15,7 @@
 #include "mozilla/net/RemoteOpenFileParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/network/TCPSocketParent.h"
+#include "mozilla/dom/network/TCPServerSocketParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/LoadContext.h"
 #include "mozilla/AppProcessChecker.h"
@@ -27,6 +28,8 @@
 using mozilla::dom::TabParent;
 using mozilla::net::PTCPSocketParent;
 using mozilla::dom::TCPSocketParent;
+using mozilla::net::PTCPServerSocketParent;
+using mozilla::dom::TCPServerSocketParent;
 using IPC::SerializedLoadContext;
 
 namespace mozilla {
@@ -295,44 +298,46 @@ NeckoParent::DeallocPWebSocketParent(PWebSocketParent* actor)
 }
 
 PTCPSocketParent*
-NeckoParent::AllocPTCPSocketParent(const nsString& aHost,
-                                   const uint16_t& aPort,
-                                   const bool& useSSL,
-                                   const nsString& aBinaryType,
-                                   PBrowserParent* aBrowser)
+NeckoParent::AllocPTCPSocketParent()
 {
-  if (UsingNeckoIPCSecurity() && !aBrowser) {
-    printf_stderr("NeckoParent::AllocPTCPSocket: FATAL error: no browser present \
-                   KILLING CHILD PROCESS\n");
-    return nullptr;
-  }
-  if (aBrowser && !AssertAppProcessPermission(aBrowser, "tcp-socket")) {
-    printf_stderr("NeckoParent::AllocPTCPSocket: FATAL error: app doesn't permit tcp-socket connections \
-                   KILLING CHILD PROCESS\n");
-    return nullptr;
-  }
   TCPSocketParent* p = new TCPSocketParent();
-  p->AddRef();
+  p->AddIPDLReference();
   return p;
-}
-
-bool
-NeckoParent::RecvPTCPSocketConstructor(PTCPSocketParent* aActor,
-                                       const nsString& aHost,
-                                       const uint16_t& aPort,
-                                       const bool& useSSL,
-                                       const nsString& aBinaryType,
-                                       PBrowserParent* aBrowser)
-{
-  return static_cast<TCPSocketParent*>(aActor)->
-      Init(aHost, aPort, useSSL, aBinaryType);
 }
 
 bool
 NeckoParent::DeallocPTCPSocketParent(PTCPSocketParent* actor)
 {
   TCPSocketParent* p = static_cast<TCPSocketParent*>(actor);
-  p->Release();
+  p->ReleaseIPDLReference();
+  return true;
+}
+
+PTCPServerSocketParent*
+NeckoParent::AllocPTCPServerSocketParent(const uint16_t& aLocalPort,
+                                   const uint16_t& aBacklog,
+                                   const nsString& aBinaryType)
+{
+  TCPServerSocketParent* p = new TCPServerSocketParent();
+  p->AddIPDLReference();
+  return p;
+}
+
+bool
+NeckoParent::RecvPTCPServerSocketConstructor(PTCPServerSocketParent* aActor,
+                                             const uint16_t& aLocalPort,
+                                             const uint16_t& aBacklog,
+                                             const nsString& aBinaryType)
+{
+  return static_cast<TCPServerSocketParent*>(aActor)->
+      Init(this, aLocalPort, aBacklog, aBinaryType);
+}
+
+bool
+NeckoParent::DeallocPTCPServerSocketParent(PTCPServerSocketParent* actor)
+{
+  TCPServerSocketParent* p = static_cast<TCPServerSocketParent*>(actor);
+   p->ReleaseIPDLReference();
   return true;
 }
 
