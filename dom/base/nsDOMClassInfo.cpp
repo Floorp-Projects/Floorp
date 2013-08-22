@@ -1058,26 +1058,22 @@ nsDOMClassInfo::RegisterExternalClasses()
   }
 
 #ifdef MOZ_B2G
-#define DOM_CLASSINFO_WINDOW_MAP_ENTRIES(_support_indexed_db)                  \
+#define DOM_CLASSINFO_WINDOW_MAP_ENTRIES                                       \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)                                        \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowB2G)                                     \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)                                      \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                   \
   DOM_CLASSINFO_MAP_ENTRY(nsIInlineEventHandlers)                              \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)                             \
-  DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMStorageIndexedDB,                  \
-                                      _support_indexed_db)                     \
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,                   \
                                       nsDOMTouchEvent::PrefEnabled())
 #else // !MOZ_B2G
-#define DOM_CLASSINFO_WINDOW_MAP_ENTRIES(_support_indexed_db)                  \
+#define DOM_CLASSINFO_WINDOW_MAP_ENTRIES                                       \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)                                        \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)                                      \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                   \
   DOM_CLASSINFO_MAP_ENTRY(nsIInlineEventHandlers)                              \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)                             \
-  DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsIDOMStorageIndexedDB,                  \
-                                      _support_indexed_db)                     \
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,                   \
                                       nsDOMTouchEvent::PrefEnabled())
 #endif // MOZ_B2G
@@ -1112,7 +1108,7 @@ nsDOMClassInfo::Init()
   AutoSafeJSContext cx;
 
   DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
-    DOM_CLASSINFO_WINDOW_MAP_ENTRIES(true)
+    DOM_CLASSINFO_WINDOW_MAP_ENTRIES
 #ifdef MOZ_WEBSPEECH
     DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
 #endif
@@ -1223,7 +1219,7 @@ nsDOMClassInfo::Init()
 #endif
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeWindow, nsIDOMWindow)
-    DOM_CLASSINFO_WINDOW_MAP_ENTRIES(true)
+    DOM_CLASSINFO_WINDOW_MAP_ENTRIES
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
 #ifdef MOZ_WEBSPEECH
     DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
@@ -1307,7 +1303,7 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ModalContentWindow, nsIDOMWindow)
-    DOM_CLASSINFO_WINDOW_MAP_ENTRIES(true)
+    DOM_CLASSINFO_WINDOW_MAP_ENTRIES
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMModalContentWindow)
 #ifdef MOZ_WEBSPEECH
     DOM_CLASSINFO_MAP_ENTRY(nsISpeechSynthesisGetter)
