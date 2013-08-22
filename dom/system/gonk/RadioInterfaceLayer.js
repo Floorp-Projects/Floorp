@@ -675,6 +675,56 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
   };
 });
 
+XPCOMUtils.defineLazyGetter(this, "gDataConnectionManager", function () {
+  return {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+    _connectionHandlers: null,
+
+    debug: function(s) {
+      dump("-*- DataConnectionManager: " + s + "\n");
+    },
+
+    init: function(ril) {
+      if (!ril) {
+        return;
+      }
+
+      this._connectionHandlers = [];
+      for (let clientId = 0; clientId < ril.numRadioInterfaces; clientId++) {
+        let radioInterface = ril.getRadioInterface(clientId);
+        this._connectionHandlers.push(
+          new DataConnectionHandler(clientId, radioInterface));
+      }
+
+      Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+    },
+
+    getConnectionHandler: function(clientId) {
+      return this._connectionHandlers[clientId];
+    },
+
+    _shutdown: function() {
+      for (let handler of this._connectionHandlers) {
+        handler.shutdown();
+      }
+      this._connectionHandlers = null;
+      Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    },
+
+    /**
+     * nsIObserver interface methods.
+     */
+    observe: function(subject, topic, data) {
+      switch (topic) {
+        case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
+          this._shutdown();
+          break;
+      }
+    },
+  };
+});
+
 // Initialize shared preference "ril.numRadioInterfaces" according to system
 // property.
 try {
@@ -739,10 +789,26 @@ CdmaIccInfo.prototype = {
   mdn: null
 };
 
-function RadioInterfaceLayer() {
-  gMessageManager.init(this);
-  gRadioEnabledController.init(this);
+function DataConnectionHandler(clientId, radioInterface) {
+  // Initial owning attributes.
+  this.clientId = clientId;
+  this.radioInterface = radioInterface;
+}
+DataConnectionHandler.prototype = {
+  clientId: 0,
+  radioInterface: null,
 
+  debug: function(s) {
+    dump("-*- DataConnectionHandler[" + this.clientId + "]: " + s + "\n");
+  },
+
+  shutdown: function() {
+    this.clientId = null;
+    this.radioInterface = null;
+  },
+};
+
+function RadioInterfaceLayer() {
   let options = {
     debug: debugPref,
     cellBroadcastDisabled: false,
@@ -797,6 +863,10 @@ function RadioInterfaceLayer() {
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
   Services.obs.addObserver(this, kNetworkInterfaceStateChangedTopic, false);
+
+  gMessageManager.init(this);
+  gRadioEnabledController.init(this);
+  gDataConnectionManager.init(this);
 }
 RadioInterfaceLayer.prototype = {
 
