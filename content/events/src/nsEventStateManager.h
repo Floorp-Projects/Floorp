@@ -217,6 +217,34 @@ public:
 protected:
   friend class MouseEnterLeaveDispatcher;
 
+  /**
+   * Prefs class capsules preference management.
+   */
+  class Prefs
+  {
+  public:
+    static bool KeyCausesActivation() { return sKeyCausesActivation; }
+    static bool ClickHoldContextMenu() { return sClickHoldContextMenu; }
+    static int32_t ChromeAccessModifier() { return sChromeAccessModifier; }
+    static int32_t ContentAccessModifier() { return sContentAccessModifier; }
+
+    static void Init();
+    static int OnChange(const char* aPrefName, void*);
+    static void Shutdown();
+
+  private:
+    static bool sKeyCausesActivation;
+    static bool sClickHoldContextMenu;
+    static int32_t sChromeAccessModifier;
+    static int32_t sContentAccessModifier;
+  };
+
+  /**
+   * Get appropriate access modifier for the aDocShell.  Returns -1 if
+   * access key isn't available.
+   */
+  static int32_t GetAccessModifierFor(nsISupports* aDocShell);
+
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse event into a mouse event targeted at the specified
