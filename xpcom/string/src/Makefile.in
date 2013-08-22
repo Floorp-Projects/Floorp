@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
 MOZILLA_INTERNAL_API = 1
 
 # we don't want the shared lib, but we want to force the creation of a

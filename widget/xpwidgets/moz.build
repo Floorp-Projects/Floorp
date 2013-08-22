@@ -57,3 +57,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'windows', 'cocoa'):
 
 LIBXUL_LIBRARY = True
 
+MSVC_ENABLE_PGO = True
+

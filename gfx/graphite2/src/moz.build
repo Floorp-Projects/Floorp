@@ -65,3 +65,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'mozgraphite2'
 
+MSVC_ENABLE_PGO = True
+

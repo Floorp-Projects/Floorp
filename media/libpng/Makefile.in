@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB= 1
 ifeq ($(OS_ARCH),WINNT)
 VISIBILITY_FLAGS=

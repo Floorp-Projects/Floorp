@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
 ifeq ($(MOZ_WIDGET_TOOLKIT), qt)
 OS_INCLUDES	+= $(MOZ_QT_CFLAGS)
 endif

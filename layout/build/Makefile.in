@@ -16,7 +16,6 @@ SHELL := ksh
 endif
 
 LIBRARY_NAME	= gklayout
-MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
 SHARED_LIBRARY_LIBS = \
 	../base/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
