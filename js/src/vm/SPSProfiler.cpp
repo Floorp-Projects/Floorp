@@ -265,33 +265,14 @@ SPSEntryMarker::~SPSEntryMarker()
 }
 
 JS_FRIEND_API(jsbytecode*)
-ProfileEntry::pc() volatile
-{
+ProfileEntry::pc() volatile {
     JS_ASSERT_IF(idx != NullPCIndex, idx >= 0 && uint32_t(idx) < script()->length);
     return idx == NullPCIndex ? NULL : script()->code + idx;
 }
 
 JS_FRIEND_API(void)
-ProfileEntry::setPC(jsbytecode *pc) volatile
-{
-    JS_ASSERT_IF(pc != NULL, script()->code <= pc && pc < script()->code + script()->length);
+ProfileEntry::setPC(jsbytecode *pc) volatile {
+    JS_ASSERT_IF(pc != NULL, script()->code <= pc &&
+                             pc < script()->code + script()->length);
     idx = pc == NULL ? NullPCIndex : pc - script()->code;
-}
-
-JS_FRIEND_API(void)
-js::SetRuntimeProfilingStack(JSRuntime *rt, ProfileEntry *stack, uint32_t *size, uint32_t max)
-{
-    rt->spsProfiler.setProfilingStack(stack, size, max);
-}
-
-JS_FRIEND_API(void)
-js::EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled)
-{
-    rt->spsProfiler.enable(enabled);
-}
-
-JS_FRIEND_API(jsbytecode*)
-js::ProfilingGetPC(JSRuntime *rt, JSScript *script, void *ip)
-{
-    return rt->spsProfiler.ipToPC(script, size_t(ip));
 }
