@@ -246,7 +246,6 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
     JS_ASSERT(global);
 
     /* Unwrap incoming objects. */
-    if (vp.isObject()) {
         RootedObject obj(cx, &vp.toObject());
 
         if (obj->compartment() == this)
@@ -270,7 +269,6 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
 
         if (obj->compartment() == this)
             return WrapForSameCompartment(cx, obj, vp);
-        vp.setObject(*obj);
 
 #ifdef DEBUG
         {
@@ -278,23 +276,19 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
             JS_ASSERT(outer && outer == obj);
         }
 #endif
-    }
 
-    RootedValue key(cx, vp);
+    RootedValue key(cx, ObjectValue(*obj));
 
     /* If we already have a wrapper for this value, use it. */
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
         vp.set(p->value);
-        if (vp.isObject()) {
-            DebugOnly<JSObject *> obj = &vp.toObject();
-            JS_ASSERT(obj->is<CrossCompartmentWrapperObject>());
-            JS_ASSERT(obj->getParent() == global);
-        }
+        DebugOnly<JSObject *> cachedWrapper = &vp.toObject();
+        JS_ASSERT(cachedWrapper->is<CrossCompartmentWrapperObject>());
+        JS_ASSERT(cachedWrapper->getParent() == global);
         return true;
     }
 
     RootedObject proto(cx, Proxy::LazyProto);
-    RootedObject obj(cx, &vp.toObject());
     RootedObject existing(cx, existingArg);
     if (existing) {
         /* Is it possible to reuse |existing|? */
