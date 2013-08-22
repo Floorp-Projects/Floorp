@@ -204,6 +204,9 @@ class TestRecursiveMakeBackend(BackendTester):
             'LIBRARY_NAME': [
                 'LIBRARY_NAME := lib_name',
             ],
+            'LIBXUL_LIBRARY': [
+                'LIBXUL_LIBRARY := 1',
+            ],
             'SDK_LIBRARY': [
                 'SDK_LIBRARY += bar.sdk',
                 'SDK_LIBRARY += foo.sdk',

@@ -209,6 +209,12 @@ VARIABLES = {
         A list of libraries and flags to include when linking.
         """),
 
+    'LIBXUL_LIBRARY': (bool, bool, False,
+        """Whether the library in this directory is linked into libxul.
+
+        Implies MOZILLA_INTERNAL_API.
+        """),
+
     'SDK_LIBRARY': (StrictOrderingOnAppendList, list, [],
         """Elements of the distributed SDK.
 
