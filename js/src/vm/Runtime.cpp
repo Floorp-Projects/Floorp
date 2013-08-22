@@ -269,7 +269,9 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     parallelWarmup(0),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     useHelperThreads_(useHelperThreads),
-    requestedHelperThreadCount(-1)
+    requestedHelperThreadCount(-1),
+    useHelperThreadsForIonCompilation_(true),
+    useHelperThreadsForParsing_(true)
 #ifdef DEBUG
     , enteredPolicy(NULL)
 #endif

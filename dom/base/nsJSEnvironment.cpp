@@ -698,6 +698,7 @@ static const char js_baselinejit_eager_str[]  = JS_OPTIONS_DOT_STR "baselinejit.
 static const char js_ion_content_str[]        = JS_OPTIONS_DOT_STR "ion.content";
 static const char js_ion_chrome_str[]         = JS_OPTIONS_DOT_STR "ion.chrome";
 static const char js_ion_eager_str[]          = JS_OPTIONS_DOT_STR "ion.unsafe_eager_compilation";
+static const char js_parallel_parsing_str[]   = JS_OPTIONS_DOT_STR "parallel_parsing";
 static const char js_ion_parallel_compilation_str[] = JS_OPTIONS_DOT_STR "ion.parallel_compilation";
 
 int
@@ -739,6 +740,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
                                                js_ion_content_str);
   bool useIonEager = Preferences::GetBool(js_ion_eager_str);
   bool useAsmJS = Preferences::GetBool(js_asmjs_content_str);
+  bool parallelParsing = Preferences::GetBool(js_parallel_parsing_str);
   bool parallelIonCompilation = Preferences::GetBool(js_ion_parallel_compilation_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
@@ -793,7 +795,8 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
   ::JS_SetOptions(context->mContext, newDefaultJSOptions & JSOPTION_MASK);
 
-  ::JS_SetParallelCompilationEnabled(context->mContext, parallelIonCompilation);
+  ::JS_SetParallelParsingEnabled(context->mContext, parallelParsing);
+  ::JS_SetParallelIonCompilationEnabled(context->mContext, parallelIonCompilation);
 
   ::JS_SetGlobalCompilerOption(context->mContext, JSCOMPILER_BASELINE_USECOUNT_TRIGGER,
                                (useBaselineJITEager ? 0 : -1));
