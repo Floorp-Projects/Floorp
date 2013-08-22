@@ -149,7 +149,7 @@ static void
 ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
 {
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM Events", aDoc,
+                                  NS_LITERAL_CSTRING("DOM Events"), aDoc,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   aWarning);
 }
@@ -1866,7 +1866,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     if (mExternalScriptsBeingEvaluated) {
       // Instead of implying a call to document.open(), ignore the call.
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "DOM Events", this,
+                                      NS_LITERAL_CSTRING("DOM Events"), this,
                                       nsContentUtils::eDOM_PROPERTIES,
                                       "DocumentWriteIgnored",
                                       nullptr, 0,
@@ -1881,7 +1881,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     if (mExternalScriptsBeingEvaluated) {
       // Instead of implying a call to document.open(), ignore the call.
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "DOM Events", this,
+                                      NS_LITERAL_CSTRING("DOM Events"), this,
                                       nsContentUtils::eDOM_PROPERTIES,
                                       "DocumentWriteIgnored",
                                       nullptr, 0,

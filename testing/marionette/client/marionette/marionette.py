@@ -456,7 +456,7 @@ class Marionette(object):
             self.instance = instance_class(host=self.host, port=self.port,
                                            bin=self.bin, profile=self.profile, app_args=app_args)
             self.instance.start()
-            assert(self.wait_for_port())
+            assert(self.wait_for_port()), "Timed out waiting for port!"
 
         if emulator:
             self.emulator = Emulator(homedir=homedir,
@@ -469,14 +469,14 @@ class Marionette(object):
                                      res=emulator_res)
             self.emulator.start()
             self.port = self.emulator.setup_port_forwarding(self.port)
-            assert(self.emulator.wait_for_port())
+            assert(self.emulator.wait_for_port()), "Timed out waiting for port!"
 
         if connectToRunningEmulator:
             self.emulator = Emulator(homedir=homedir,
                                      logcat_dir=self.logcat_dir)
             self.emulator.connect()
             self.port = self.emulator.setup_port_forwarding(self.port)
-            assert(self.emulator.wait_for_port())
+            assert(self.emulator.wait_for_port()), "Timed out waiting for port!"
 
         self.client = MarionetteClient(self.host, self.port)
 

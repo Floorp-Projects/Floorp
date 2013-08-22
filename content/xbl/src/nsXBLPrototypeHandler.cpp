@@ -902,7 +902,7 @@ nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar*
 
   const PRUnichar* params[] = { aKey, aModifiers };
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "XBL Prototype Handler", doc,
+                                  NS_LITERAL_CSTRING("XBL Prototype Handler"), doc,
                                   nsContentUtils::eXBL_PROPERTIES,
                                   aMessageName,
                                   params, ArrayLength(params),

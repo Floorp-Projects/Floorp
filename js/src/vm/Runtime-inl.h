@@ -74,7 +74,7 @@ ThreadDataIter::ThreadDataIter(JSRuntime *rt)
 #ifdef JS_WORKER_THREADS
     // Only allow iteration over a runtime's threads when those threads are
     // paused, to avoid racing when reading data from the PerThreadData.
-    JS_ASSERT_IF(rt->workerThreadState, rt->workerThreadState->shouldPause);
+    JS_ASSERT(rt->exclusiveThreadsPaused);
 #endif
     iter = rt->threadList.getFirst();
 }

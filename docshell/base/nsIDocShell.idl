@@ -42,7 +42,7 @@ interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 
-[scriptable, builtinclass, uuid(b5bd6052-ec8c-45bf-b55c-409ad15cecfb)]
+[scriptable, builtinclass, uuid(365e7446-6c4b-45ae-ae08-b7b401900093)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -873,4 +873,12 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Returns false for mLSHE, true for mOSHE
    */
   boolean getCurrentSHEntry(out nsISHEntry aEntry);
+
+  /**
+    * Cherry picked parts of nsIController.
+    * They are here, because we want to call these functions
+    * from JS.
+    */
+  boolean isCommandEnabled(in string command);
+  void doCommand(in string command);
 };
