@@ -269,7 +269,8 @@ child:
                    nsCString reasons);
 
     FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState,
-                     int32_t mountGeneration);
+                     int32_t mountGeneration, bool isMediaPresent,
+                     bool isSharing);
 
     NotifyProcessPriorityChanged(ProcessPriority priority);
     MinimizeMemoryUsage();
