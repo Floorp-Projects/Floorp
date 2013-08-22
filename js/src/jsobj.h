@@ -377,7 +377,7 @@ class JSObject : public js::ObjectImpl
     inline void prepareSlotRangeForOverwrite(size_t start, size_t end);
     inline void prepareElementRangeForOverwrite(size_t start, size_t end);
 
-    void rollbackProperties(JSContext *cx, uint32_t slotSpan);
+    void rollbackProperties(js::ExclusiveContext *cx, uint32_t slotSpan);
 
     inline void nativeSetSlot(uint32_t slot, const js::Value &value);
     static inline void nativeSetSlotWithType(js::ExclusiveContext *cx,

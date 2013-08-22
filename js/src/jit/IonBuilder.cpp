@@ -820,7 +820,7 @@ IonBuilder::initParameters()
 
     types::StackTypeSet *thisTypes = types::TypeScript::ThisTypes(script());
     if (thisTypes->empty() && baselineFrame_)
-        thisTypes->addType(cx, types::GetValueType(cx, baselineFrame_->thisValue()));
+        thisTypes->addType(cx, types::GetValueType(baselineFrame_->thisValue()));
 
     MParameter *param = MParameter::New(MParameter::THIS_SLOT, cloneTypeSet(thisTypes));
     current->add(param);
@@ -831,7 +831,7 @@ IonBuilder::initParameters()
         if (argTypes->empty() && baselineFrame_ &&
             !script_->baselineScript()->modifiesArguments())
         {
-            argTypes->addType(cx, types::GetValueType(cx, baselineFrame_->argv()[i]));
+            argTypes->addType(cx, types::GetValueType(baselineFrame_->argv()[i]));
         }
 
         param = MParameter::New(i, cloneTypeSet(argTypes));
@@ -5773,7 +5773,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
                 MIRType type = existingValue.isDouble()
                              ? MIRType_Double
                              : MIRTypeFromValueType(existingValue.extractNonDoubleType());
-                types::Type ntype = types::GetValueType(cx, existingValue);
+                types::Type ntype = types::GetValueType(existingValue);
                 types::StackTypeSet *typeSet =
                     GetIonContext()->temp->lifoAlloc()->new_<types::StackTypeSet>(ntype);
                 phi->addBackedgeType(type, typeSet);
@@ -6363,7 +6363,7 @@ IonBuilder::jsop_intrinsic(HandlePropertyName name)
     if (!cx->global()->getIntrinsicValue(cx, name, &vp))
         return false;
 
-    JS_ASSERT(types->hasType(types::GetValueType(cx, vp)));
+    JS_ASSERT(types->hasType(types::GetValueType(vp)));
 
     MConstant *ins = MConstant::New(vp);
     current->add(ins);

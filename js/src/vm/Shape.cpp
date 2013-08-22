@@ -938,7 +938,7 @@ JSObject::clear(JSContext *cx, HandleObject obj)
 }
 
 void
-JSObject::rollbackProperties(JSContext *cx, uint32_t slotSpan)
+JSObject::rollbackProperties(ExclusiveContext *cx, uint32_t slotSpan)
 {
     /*
      * Remove properties from this object until it has a matching slot span.
