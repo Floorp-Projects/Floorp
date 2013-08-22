@@ -10,7 +10,6 @@ VPATH       = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME    = domsystem_s
-LIBXUL_LIBRARY  = 1
 DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
 # We fire the nsDOMDeviceAcceleration
