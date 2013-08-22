@@ -77,6 +77,7 @@ MOCHITEST_FILES := \
   test_ByteString.html \
   test_exception_messages.html \
   test_bug707564.html \
+  test_bug907548.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
