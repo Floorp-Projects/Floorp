@@ -36,3 +36,6 @@ EXTRA_JS_MODULES += [
     'TelemetryStopwatch.jsm',
     'ThirdPartyCookieProbe.jsm',
 ]
+
+FAIL_ON_WARNINGS = True
+

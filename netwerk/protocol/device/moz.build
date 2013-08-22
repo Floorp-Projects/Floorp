@@ -20,3 +20,5 @@ CPP_SOURCES += [
     'nsDeviceProtocolHandler.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

@@ -27,3 +27,6 @@ EXTRA_JS_MODULES += [
     'ActivitiesService.jsm',
     'ActivitiesServiceFilter.jsm',
 ]
+
+FAIL_ON_WARNINGS = True
+

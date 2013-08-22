@@ -73,3 +73,6 @@ else:
     CPP_SOURCES += [
         'WebGLContextNotSupported.cpp',
     ]
+
+FAIL_ON_WARNINGS = True
+

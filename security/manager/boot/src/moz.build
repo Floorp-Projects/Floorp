@@ -17,3 +17,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'pipboot'
 
+FAIL_ON_WARNINGS = True
+

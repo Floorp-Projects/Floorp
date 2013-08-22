@@ -53,3 +53,5 @@ CPP_SOURCES += [
     'nsSVGUtils.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

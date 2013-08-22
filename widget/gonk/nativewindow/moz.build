@@ -32,3 +32,5 @@ if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
         'GonkNativeWindowClientICS.cpp',
     ]
 
+FAIL_ON_WARNINGS = True
+

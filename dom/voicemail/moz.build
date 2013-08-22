@@ -23,3 +23,5 @@ CPP_SOURCES += [
     'Voicemail.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

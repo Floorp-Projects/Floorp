@@ -31,3 +31,6 @@ EXTRA_COMPONENTS += [
     'PeerConnection.js',
     'PeerConnection.manifest',
 ]
+
+FAIL_ON_WARNINGS = True
+

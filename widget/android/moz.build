@@ -38,3 +38,5 @@ CPP_SOURCES += [
     'nsWindow.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

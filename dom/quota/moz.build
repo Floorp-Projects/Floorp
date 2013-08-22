@@ -39,3 +39,5 @@ CPP_SOURCES += [
     'QuotaObject.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

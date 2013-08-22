@@ -123,3 +123,5 @@ CPP_SOURCES += [
     'nsTransitionManager.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

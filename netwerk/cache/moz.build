@@ -44,3 +44,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'nkcache_s'
 
+FAIL_ON_WARNINGS = True
+

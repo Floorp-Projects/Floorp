@@ -122,3 +122,6 @@ EXTRA_COMPONENTS += [
 IPDL_SOURCES += [
     'PExternalHelperApp.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

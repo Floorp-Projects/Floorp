@@ -99,3 +99,5 @@ CPP_SOURCES += [
     'nsStyleSheetService.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

@@ -61,3 +61,5 @@ CPP_SOURCES += [
     'nsSMILValue.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

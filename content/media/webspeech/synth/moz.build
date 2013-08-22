@@ -42,3 +42,6 @@ IPDL_SOURCES += [
     'ipc/PSpeechSynthesis.ipdl',
     'ipc/PSpeechSynthesisRequest.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

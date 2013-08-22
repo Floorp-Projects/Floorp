@@ -80,3 +80,5 @@ EXTRA_JS_MODULES += [
     'systemlibs.js',
 ]
 
+FAIL_ON_WARNINGS = True
+

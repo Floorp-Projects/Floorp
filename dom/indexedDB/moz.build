@@ -63,3 +63,5 @@ CPP_SOURCES += [
     'TransactionThreadPool.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+
