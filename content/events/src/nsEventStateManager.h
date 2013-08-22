@@ -784,7 +784,6 @@ public:
   static void ClearGlobalActiveContent(nsEventStateManager* aClearer);
 
   // Functions used for click hold context menus
-  bool mClickHoldContextMenu;
   nsCOMPtr<nsITimer> mClickHoldTimer;
   void CreateClickHoldTimer ( nsPresContext* aPresContext, nsIFrame* inDownFrame,
                               nsGUIEvent* inMouseDownEvent ) ;
