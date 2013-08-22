@@ -8,11 +8,14 @@
 #include "nsIException.idl"
 
 %{ C++
-#include "jsapi.h"
+struct JSContext;
+namespace JS {
+class Value;
+}
 %}
 
 [ptr] native xpcexJSContextPtr(JSContext);
-      native xpcexJSVal(jsval);
+      native xpcexJSVal(JS::Value);
 
 [scriptable, uuid(cac29630-7bf2-4e22-811b-46855a7d5af0)]
 interface nsIXPCException : nsIException

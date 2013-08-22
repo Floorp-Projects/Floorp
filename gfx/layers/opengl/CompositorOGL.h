@@ -10,7 +10,6 @@
 #include "GLContext.h"                  // for GLContext
 #include "GLContextTypes.h"             // for GLuint, GLenum, GLint
 #include "GLDefs.h"                     // for GLintptr, GLvoid, etc
-#include "GeckoProfilerFunc.h"          // for TimeStamp
 #include "LayerManagerOGLProgram.h"     // for ShaderProgramOGL, etc
 #include "Units.h"                      // for ScreenPoint
 #include "gfxContext.h"                 // for gfxContext
