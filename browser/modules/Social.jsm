@@ -117,8 +117,10 @@ this.Social = {
 
     // Disable the previous provider, if any, since we want only one provider to
     // be enabled at once.
-    if (this._provider)
+    if (this._provider) {
       this._provider.enabled = false;
+      this.closeChatWindows();
+    }
 
     this._provider = provider;
 
@@ -209,6 +211,15 @@ this.Social = {
   },
   get enabled() {
     return this.provider != null;
+  },
+
+  closeChatWindows: function() {
+    // close all windows of type Social:Chat
+    let windows = Services.wm.getEnumerator("Social:Chat");
+    while (windows.hasMoreElements()) {
+      let win = windows.getNext();
+      win.close();
+    }
   },
 
   toggle: function Social_toggle() {
