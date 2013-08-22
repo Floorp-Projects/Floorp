@@ -8,3 +8,5 @@ MODULE = 'xpcom'
 
 LIBRARY_NAME = 'xpt'
 
+LIBXUL_LIBRARY = True
+

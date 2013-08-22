@@ -51,3 +51,6 @@ CPP_SOURCES += [
     'nsXPCOMStrings.cpp',
     'nsXPComInit.cpp',
 ]
+
+LIBXUL_LIBRARY = True
+

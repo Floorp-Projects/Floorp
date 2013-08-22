@@ -6,3 +6,5 @@
 
 MODULE = 'widget'
 
+LIBXUL_LIBRARY = True
+

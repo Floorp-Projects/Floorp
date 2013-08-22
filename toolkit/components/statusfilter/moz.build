@@ -12,3 +12,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'mozbrwsr_s'
 
+LIBXUL_LIBRARY = True
+

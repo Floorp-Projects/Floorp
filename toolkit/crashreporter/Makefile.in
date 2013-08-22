@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBXUL_LIBRARY = 1
 LIBRARY_NAME = exception_handler_s
 MSVC_ENABLE_PGO := 1
 
