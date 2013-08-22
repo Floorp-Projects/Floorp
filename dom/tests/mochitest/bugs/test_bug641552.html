@@ -19,10 +19,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=641552
 
 SimpleTest.waitForExplicitFinish();
 
+var contractId = "@mozilla.org/xmlextras/xmlhttprequest;1";
 var categoryEntries = [
-  {category: "JavaScript-global-property", entry: "randomname", contractId: "@mozilla.org/embedcomp/prompt-service;1"},
-  {category: "JavaScript-navigator-property", entry: "randomname1", contractId: "@mozilla.org/embedcomp/prompt-service;1"},
-  {category: "JavaScript-navigator-property", entry: "randomname2", contractId: "@mozilla.org/embedcomp/prompt-service;1"},
+  {category: "JavaScript-global-property", entry: "randomname", contractId: contractId},
+  {category: "JavaScript-navigator-property", entry: "randomname1", contractId: contractId},
+  {category: "JavaScript-navigator-property", entry: "randomname2", contractId: contractId},
 ];
 
 function addCategoryEntries(func) {
