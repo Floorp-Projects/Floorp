@@ -9038,9 +9038,6 @@ IonBuilder::addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bail
 types::StackTypeSet *
 IonBuilder::cloneTypeSet(types::StackTypeSet *types)
 {
-    if (!js_IonOptions.parallelCompilation)
-        return types;
-
     // Clone a type set so that it can be stored into the MIR and accessed
     // during off thread compilation. This is necessary because main thread
     // updates to type sets can race with reads in the compiler backend, and
