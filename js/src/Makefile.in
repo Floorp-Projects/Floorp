@@ -337,8 +337,12 @@ endif
 endif
 
 DIST_GARBAGE = config.cache config.log config.status* \
-   config/autoconf.mk \
-   $(JS_CONFIG_NAME) js-config.h js-confdefs.h
+   config/autoconf.mk config/emptyvars.mk \
+   $(JS_CONFIG_NAME) js-config.h js-confdefs.h \
+   backend.mk config/backend.mk devtools/backend.mk editline/backend.mk \
+   gdb/backend.mk jsapi-tests/backend.mk shell/backend.mk tests/backend.mk \
+   backend.RecursiveMakeBackend.built backend.RecursiveMakeBackend.built.pp \
+   devtools/rootAnalysis/Makefile
 
 distclean::
 	$(RM) $(DIST_GARBAGE)
@@ -665,3 +669,30 @@ endif
 #
 # END kludges for the Nitro assembler
 ###############################################
+
+###############################################
+# Generating source package tarballs
+# (only possible when tar is found)
+ifneq (,$(TAR))
+
+source-package:
+	SRCDIR=$(srcdir) \
+	DIST=$(DIST) \
+	MAKE=$(MAKE) \
+	MKDIR=$(MKDIR) \
+	TAR=$(TAR) \
+	MOZJS_MAJOR_VERSION=$(MOZJS_MAJOR_VERSION) \
+	MOZJS_MINOR_VERSION=$(MOZJS_MINOR_VERSION) \
+	MOZJS_PATCH_VERSION=$(MOZJS_PATCH_VERSION) \
+	MOZJS_ALPHA=$(MOZJS_ALPHA) \
+	$(srcdir)/make-source-package.sh
+
+clean::
+	DIST=$(DIST) \
+	MOZJS_MAJOR_VERSION=$(MOZJS_MAJOR_VERSION) \
+	MOZJS_MINOR_VERSION=$(MOZJS_MINOR_VERSION) \
+	MOZJS_PATCH_VERSION=$(MOZJS_PATCH_VERSION) \
+	MOZJS_ALPHA=$(MOZJS_ALPHA) \
+	$(srcdir)/make-source-package.sh clean
+
+endif
