@@ -17,3 +17,5 @@ CPP_SOURCES += [
     'nsChromeRegistryContent.cpp',
 ]
 
+LIBXUL_LIBRARY = True
+
