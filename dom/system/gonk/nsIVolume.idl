@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsIVolumeStat.idl"
 
-[scriptable, uuid(4b5bd562-bd05-4658-ab0f-f668a9e25fb5)]
+[scriptable, uuid(e476e7ea-5cde-4d5a-b00d-d60daad76398)]
 interface nsIVolume : nsISupports
 {
   // These MUST match the states from android's system/vold/Volume.h header
@@ -47,6 +47,20 @@ interface nsIVolume : nsISupports
 
   // Determines if a mountlock is currently being held against this volume.
   readonly attribute boolean isMountLocked;
+
+  // Determines if media is actually present or not. Note, that when an sdcard
+  // is ejected, it may go through several tranistory states before finally
+  // arriving at STATE_NOMEDIA. So isMediaPresent may be false even when the
+  // current state isn't STATE_NOMEDIA.
+  readonly attribute boolean isMediaPresent;
+
+  // Determines if the volume is currently being shared. This covers off
+  // more than just state == STATE_SHARED. isSharing will return true from the
+  // time that the volume leaves the mounted state, until it gets back to
+  // mounted, nomedia, or formatting states. This attribute is to allow
+  // device storage to suppress unwanted 'unavailable' status when
+  // transitioning from mounted to sharing and back again.
+  readonly attribute boolean isSharing;
 
   nsIVolumeStat getStats();
 
