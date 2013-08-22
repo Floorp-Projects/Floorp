@@ -7,8 +7,6 @@
 
 #include "nsFontInflationData.h"
 #include "FramePropertyTable.h"
-#include "nsTextFragment.h"
-#include "nsIFormControlFrame.h"
 #include "nsTextControlFrame.h"
 #include "nsListControlFrame.h"
 #include "nsComboboxControlFrame.h"

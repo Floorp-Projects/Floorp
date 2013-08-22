@@ -11,11 +11,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
-#include "nsString.h"
-#include "nsAString.h"
-#include "nsIIOService.h"
-#include "nsITimer.h"
-#include "nsTArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "FrameLayerBuilder.h"
 
@@ -26,8 +21,10 @@ class LayerManager;
 }
 }
 
+class nsAString;
 class nsPresContext;
 class nsDisplayItem;
+template <class T> class nsTArray;
 
 nsIFrame* NS_NewVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 

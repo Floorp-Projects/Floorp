@@ -13,23 +13,17 @@
 #include "mozilla/Attributes.h"
 
 #include "nsCOMPtr.h"
-#include "nsWeakReference.h"
-#include "nsIFactory.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
 #include "nsFrameSelection.h"
 #include "nsISelectionListener.h"
-#include "nsIComponentManager.h"
 #include "nsContentCID.h"
 #include "nsIContent.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsRange.h"
 #include "nsCOMArray.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsITableCellLayout.h"
-#include "nsIDOMNodeList.h"
 #include "nsTArray.h"
 #include "nsTableOuterFrame.h"
 #include "nsTableCellFrame.h"
@@ -41,8 +35,6 @@
 #include <algorithm>
 
 // for IBMBIDI
-#include "nsFrameTraversal.h"
-#include "nsILineIterator.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameTraversal.h"
 #include "nsLayoutUtils.h"
@@ -65,7 +57,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
 
 #include "nsITimer.h"
-#include "nsIServiceManager.h"
 #include "nsFrameManager.h"
 // notifications
 #include "nsIDOMDocument.h"
@@ -88,10 +79,6 @@ using namespace mozilla;
 //#define DEBUG_TABLE 1
 
 static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
-
-//PROTOTYPES
-class nsFrameSelection;
-class nsAutoScrollTimer;
 
 static bool IsValidSelectionPoint(nsFrameSelection *aFrameSel, nsINode *aNode);
 

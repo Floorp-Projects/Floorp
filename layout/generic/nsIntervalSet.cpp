@@ -7,7 +7,6 @@
 /* a set of ranges on a number-line */
 
 #include "nsIntervalSet.h"
-#include "nsAlgorithm.h"
 #include <new>
 #include <algorithm>
 
