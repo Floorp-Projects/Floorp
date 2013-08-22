@@ -18,7 +18,7 @@ static const unsigned int kGLCoreVersionForES2Compat = 410;
 // ARB_ES3_compatibility is natively supported in OpenGL 4.3.
 static const unsigned int kGLCoreVersionForES3Compat = 430;
 
-struct ExtensionGroupInfo
+struct FeatureInfo
 {
     const char* mName;
     unsigned int mOpenGLVersion;
@@ -26,7 +26,7 @@ struct ExtensionGroupInfo
     GLContext::GLExtensions mExtensions[kMAX_EXTENSION_GROUP_SIZE];
 };
 
-static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
+static const FeatureInfo sFeatureInfoArr[] = {
     {
         "XXX_bind_buffer_offset",
         0,   // OpenGL version
@@ -286,66 +286,70 @@ static const ExtensionGroupInfo sExtensionGroupInfoArr[] = {
     }
 };
 
-static inline const ExtensionGroupInfo&
-GetExtensionGroupInfo(GLContext::GLExtensionGroup extensionGroup)
+static inline const FeatureInfo&
+GetFeatureInfo(GLFeature::Enum feature)
 {
-    static_assert(MOZ_ARRAY_LENGTH(sExtensionGroupInfoArr) == size_t(GLContext::ExtensionGroup_Max),
-                  "Mismatched lengths for sExtensionGroupInfos and ExtensionGroup enums");
+    static_assert(MOZ_ARRAY_LENGTH(sFeatureInfoArr) == size_t(GLFeature::EnumMax),
+                  "Mismatched lengths for sFeatureInfoInfos and GLFeature enums");
 
-    MOZ_ASSERT(extensionGroup < GLContext::ExtensionGroup_Max,
-               "GLContext::GetExtensionGroupInfo : unknown <extensionGroup>");
+    MOZ_ASSERT(feature < GLFeature::EnumMax,
+               "GLContext::GetFeatureInfoInfo : unknown <feature>");
 
-    return sExtensionGroupInfoArr[extensionGroup];
+    return sFeatureInfoArr[feature];
 }
 
 static inline uint32_t
-ProfileVersionForExtensionGroup(GLContext::GLExtensionGroup extensionGroup, ContextProfile profile)
+ProfileVersionForFeature(GLFeature::Enum feature, ContextProfile profile)
 {
     MOZ_ASSERT(profile != ContextProfile::Unknown,
-               "GLContext::ProfileVersionForExtensionGroup : unknown <profile>");
+               "GLContext::ProfileVersionForFeature : unknown <profile>");
 
-    const ExtensionGroupInfo& groupInfo = GetExtensionGroupInfo(extensionGroup);
+    const FeatureInfo& featureInfo = GetFeatureInfo(feature);
 
     if (profile == ContextProfile::OpenGLES) {
-        return groupInfo.mOpenGLESVersion;
+        return featureInfo.mOpenGLESVersion;
     }
 
-    return groupInfo.mOpenGLVersion;
+    return featureInfo.mOpenGLVersion;
 }
 
 static inline bool
-IsExtensionGroupIsPartOfProfileVersion(GLContext::GLExtensionGroup extensionGroup,
-                                       ContextProfile profile, unsigned int version)
+IsFeatureIsPartOfProfileVersion(GLFeature::Enum feature,
+                                ContextProfile profile, unsigned int version)
 {
-    unsigned int profileVersion = ProfileVersionForExtensionGroup(extensionGroup, profile);
+    unsigned int profileVersion = ProfileVersionForFeature(feature, profile);
 
+    /**
+     * if `profileVersion` is zero, it means that no version of the profile
+     * added support for the feature.
+     */
     return profileVersion && version >= profileVersion;
 }
 
 const char*
-GLContext::GetExtensionGroupName(GLExtensionGroup extensionGroup)
+GLContext::GetFeatureName(GLFeature::Enum feature)
 {
-    return GetExtensionGroupInfo(extensionGroup).mName;
+    return GetFeatureInfo(feature).mName;
 }
 
 bool
-GLContext::IsExtensionSupported(GLExtensionGroup extensionGroup) const
+GLContext::IsSupported(GLFeature::Enum feature) const
 {
-    if (IsExtensionGroupIsPartOfProfileVersion(extensionGroup, mProfile, mVersion)) {
+    if (IsFeatureIsPartOfProfileVersion(feature, mProfile, mVersion)) {
         return true;
     }
 
-    const ExtensionGroupInfo& groupInfo = GetExtensionGroupInfo(extensionGroup);
+    const FeatureInfo& featureInfo = GetFeatureInfo(feature);
 
     for (size_t i = 0; true; i++)
     {
         MOZ_ASSERT(i < kMAX_EXTENSION_GROUP_SIZE, "kMAX_EXTENSION_GROUP_SIZE too small");
 
-        if (groupInfo.mExtensions[i] == GLContext::Extensions_End) {
+        if (featureInfo.mExtensions[i] == GLContext::Extensions_End) {
             break;
         }
 
-        if (IsExtensionSupported(groupInfo.mExtensions[i])) {
+        if (IsExtensionSupported(featureInfo.mExtensions[i])) {
             return true;
         }
     }
@@ -354,34 +358,34 @@ GLContext::IsExtensionSupported(GLExtensionGroup extensionGroup) const
 }
 
 bool
-GLContext::MarkExtensionGroupUnsupported(GLExtensionGroup extensionGroup)
+GLContext::MarkUnsupported(GLFeature::Enum feature)
 {
-    MOZ_ASSERT(IsExtensionSupported(extensionGroup), "extension group is already unsupported!");
+    MOZ_ASSERT(IsSupported(feature), "extension group is already unsupported!");
 
-    if (IsExtensionGroupIsPartOfProfileVersion(extensionGroup, mProfile, mVersion)) {
+    if (IsFeatureIsPartOfProfileVersion(feature, mProfile, mVersion)) {
         NS_WARNING(nsPrintfCString("%s marked as unsupported, but it's supposed to be supported by %s %s",
-                                   GetExtensionGroupName(extensionGroup),
+                                   GetFeatureName(feature),
                                    ProfileString(),
                                    VersionString()).get());
         return false;
     }
 
-    const ExtensionGroupInfo& groupInfo = GetExtensionGroupInfo(extensionGroup);
+    const FeatureInfo& featureInfo = GetFeatureInfo(feature);
 
     for (size_t i = 0; true; i++)
     {
         MOZ_ASSERT(i < kMAX_EXTENSION_GROUP_SIZE, "kMAX_EXTENSION_GROUP_SIZE too small");
 
-        if (groupInfo.mExtensions[i] == GLContext::Extensions_End) {
+        if (featureInfo.mExtensions[i] == GLContext::Extensions_End) {
             break;
         }
 
-        MarkExtensionUnsupported(groupInfo.mExtensions[i]);
+        MarkExtensionUnsupported(featureInfo.mExtensions[i]);
     }
 
-    MOZ_ASSERT(!IsExtensionSupported(extensionGroup), "GLContext::MarkExtensionGroupUnsupported has failed!");
+    MOZ_ASSERT(!IsSupported(feature), "GLContext::MarkExtensionGroupUnsupported has failed!");
 
-    NS_WARNING(nsPrintfCString("%s marked as unsupported", GetExtensionGroupName(extensionGroup)).get());
+    NS_WARNING(nsPrintfCString("%s marked as unsupported", GetFeatureName(feature)).get());
 
     return true;
 }
