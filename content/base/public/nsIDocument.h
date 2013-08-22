@@ -655,6 +655,9 @@ public:
    */
   nsresult GetSrcdocData(nsAString& aSrcdocData);
 
+  bool DidDocumentOpen() {
+    return mDidDocumentOpen;
+  }
 
 protected:
   virtual Element *GetRootElementInternal() const = 0;
@@ -2337,6 +2340,11 @@ protected:
 
   // Whether the document was created by a srcdoc iframe.
   bool mIsSrcdocDocument;
+
+  // Records whether we've done a document.open. If this is true, it's possible
+  // for nodes from this document to have outdated wrappers in their wrapper
+  // caches.
+  bool mDidDocumentOpen;
 
   // The document's script global object, the object from which the
   // document can get its script context and scope. This is the
