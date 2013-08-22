@@ -5980,12 +5980,12 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isReturnValue=
     else:
         name = type.name
 
-    tryNextCode = """tryNext = true;
-return true;"""
+    tryNextCode = ("tryNext = true;\n"
+                   "return true;")
     if type.isGeckoInterface():
-         tryNextCode = ("""if (mUnion.mType != mUnion.eUninitialized) {
-  mUnion.Destroy%s();
-}""" % name) + tryNextCode
+         tryNextCode = ("if (mUnion.mType != mUnion.eUninitialized) {"
+                        "  mUnion.Destroy%s();"
+                        "}" % name) + tryNextCode
     conversionInfo = getJSToNativeConversionInfo(
         type, descriptorProvider, failureCode=tryNextCode,
         isDefinitelyObject=True, isInUnionReturnValue=isReturnValue,
@@ -5999,11 +5999,14 @@ return true;"""
     externalType = getUnionAccessorSignatureType(type, descriptorProvider).define()
 
     if type.isObject():
-        setter = CGGeneric("void SetToObject(JSContext* cx, JSObject* obj)\n"
-                           "{\n"
-                           "  mUnion.mValue.mObject.SetValue(cx, obj);\n"
-                           "  mUnion.mType = mUnion.eObject;\n"
-                           "}")
+        body = ("mUnion.mValue.mObject.SetValue(cx, obj);\n"
+                "mUnion.mType = mUnion.eObject;")
+        setter = ClassMethod("SetToObject", "void",
+                             [Argument("JSContext*", "cx"),
+                              Argument("JSObject*", "obj")],
+                             inline=True, bodyInHeader=True,
+                             body=body)
+
     else:
         jsConversion = string.Template(conversionInfo.template).substitute(
             {
@@ -6014,20 +6017,22 @@ return true;"""
                 }
             )
         jsConversion = CGWrapper(CGGeneric(jsConversion),
+                                 pre="tryNext = false;\n",
                                  post="\n"
                                       "return true;")
-        setter = CGWrapper(CGIndenter(jsConversion),
-                           pre="bool TrySetTo" + name + "(JSContext* cx, JS::Handle<JS::Value> value, JS::MutableHandle<JS::Value> pvalue, bool& tryNext)\n"
-                               "{\n"
-                               "  tryNext = false;\n",
-                           post="\n"
-                                "}")
+        setter = ClassMethod("TrySetTo" + name, "bool",
+                             [Argument("JSContext*", "cx"),
+                              Argument("JS::Handle<JS::Value>", "value"),
+                              Argument("JS::MutableHandle<JS::Value>", "pvalue"),
+                              Argument("bool&", "tryNext")],
+                             inline=True, bodyInHeader=True,
+                             body=jsConversion.define())
 
     return {
                 "name": name,
                 "structType": structType,
                 "externalType": externalType,
-                "setter": CGIndenter(setter).define(),
+                "setter": setter,
                 "holderType": conversionInfo.holderType.define() if conversionInfo.holderType else None
                 }
 
@@ -6164,51 +6169,45 @@ class CGUnionConversionStruct(CGThing):
         self.descriptorProvider = descriptorProvider
 
     def declare(self):
-        setters = []
+
+        structName = str(self.type)
+        members = [ClassMember("mUnion", structName + "&",
+                               body="const_cast<%s&>(aUnion)" % structName)]
+        # Argument needs to be a const ref because that's all Maybe<> allows
+        ctor = ClassConstructor([Argument("const %s&" % structName, "aUnion")],
+                                bodyInHeader=True,
+                                visibility="public",
+                                explicit=True)
+        methods = []
 
         if self.type.hasNullableType:
-            setters.append("""  bool SetNull()
-  {
-    mUnion.mType = mUnion.eNull;
-    return true;
-  }""")
+            methods.append(ClassMethod("SetNull", "bool", [],
+                                       body=("mUnion.mType = mUnion.eNull;\n"
+                                             "return true;"),
+                                       inline=True, bodyInHeader=True))
 
-        templateVars = map(lambda t: getUnionTypeTemplateVars(self.type, t, self.descriptorProvider),
-                           self.type.flatMemberTypes)
-        structName = self.type.__str__()
+        for t in self.type.flatMemberTypes:
+            vars = getUnionTypeTemplateVars(self.type,
+                                            t, self.descriptorProvider)
+            methods.append(vars["setter"])
+            if vars["name"] != "Object":
+                body=string.Template("mUnion.mType = mUnion.e${name};\n"
+                                     "return mUnion.mValue.m${name}.SetValue();").substitute(vars)
+                methods.append(ClassMethod("SetAs" + vars["name"],
+                                           vars["structType"] + "&",
+                                           [],
+                                           bodyInHeader=True,
+                                           body=body,
+                                           visibility="private"))
+            if vars["holderType"] is not None:
+                members.append(ClassMember("m%sHolder" % vars["name"],
+                                           vars["holderType"]))
 
-        setters.extend(mapTemplate("${setter}", templateVars))
-        # Don't generate a SetAsObject, since we don't use it
-        private = "\n".join(mapTemplate("""  ${structType}& SetAs${name}()
-  {
-    mUnion.mType = mUnion.e${name};
-    return mUnion.mValue.m${name}.SetValue();
-  }""",
-                                        filter(lambda v: v["name"] != "Object",
-                                               templateVars)))
-        private += "\n\n"
-        holders = filter(lambda v: v["holderType"] is not None, templateVars)
-        if len(holders) > 0:
-            private += "\n".join(mapTemplate("  ${holderType} m${name}Holder;", holders))
-            private += "\n\n"
-        private += "  " + structName + "& mUnion;"
-        return string.Template("""
-class ${structName}Argument {
-public:
-  // Argument needs to be a const ref because that's all Maybe<> allows
-  ${structName}Argument(const ${structName}& aUnion) : mUnion(const_cast<${structName}&>(aUnion))
-  {
-  }
-
-${setters}
-
-private:
-${private}
-};
-""").substitute({"structName": structName,
-       "setters": "\n\n".join(setters),
-       "private": private
-       })
+        return CGClass(structName + "Argument",
+                       members=members,
+                       constructors=[ctor],
+                       methods=methods,
+                       disallowCopyConstruction=True).declare()
 
     def define(self):
         return """
