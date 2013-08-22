@@ -167,7 +167,7 @@ class SdpTest : public ::testing::Test {
       return inst_num;
     }
 
-    u16 AddNewRtcpTrrInt(int level, u32 interval,
+    u16 AddNewRtcpFbTrrInt(int level, u32 interval,
                          u16 payload = SDP_ALL_PAYLOADS) {
       u16 inst_num = 0;
       EXPECT_EQ(sdp_add_new_attr(sdp_ptr_, level, 0, SDP_ATTR_RTCP_FB,
@@ -422,11 +422,37 @@ TEST_F(SdpTest, parseRtcpFbKitchenSink) {
             SDP_RTCP_FB_CCM_NOT_FOUND);
 }
 
+TEST_F(SdpTest, addRtcpFbAckRpsi) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbAck(level, SDP_RTCP_FB_ACK_RPSI, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 ack rpsi\r\n"), std::string::npos);
+}
 
-/* TODO (abr@mozilla.com) These attribute adding test cases definitely need
-   beefing up; for now, I'm testing the two use cases that we know
-   we need right now.  An exhaustive check of the various permutations
-   will look similar to the parsing tests, above */
+TEST_F(SdpTest, addRtcpFbAckRpsiAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbAck(level, SDP_RTCP_FB_ACK_RPSI);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* ack rpsi\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbAckApp) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbAck(level, SDP_RTCP_FB_ACK_APP, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 ack app\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbAckAppAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbAck(level, SDP_RTCP_FB_ACK_APP);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* ack app\r\n"), std::string::npos);
+}
 
 TEST_F(SdpTest, addRtcpFbNack) {
   InitLocalSdp();
@@ -444,6 +470,149 @@ TEST_F(SdpTest, addRtcpFbNackAllPt) {
   ASSERT_NE(body.find("a=rtcp-fb:* nack\r\n"), std::string::npos);
 }
 
+TEST_F(SdpTest, addRtcpFbNackSli) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_SLI, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 nack sli\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackSliAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_SLI);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* nack sli\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackPli) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_PLI, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 nack pli\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackPliAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_PLI);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* nack pli\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackRpsi) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_RPSI, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 nack rpsi\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackRpsiAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_RPSI);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* nack rpsi\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackApp) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_APP, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 nack app\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackAppAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_APP);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* nack app\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackRai) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_RAI, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 nack rai\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackRaiAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_RAI);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* nack rai\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackTllei) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_TLLEI, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 nack tllei\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackTlleiAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_TLLEI);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* nack tllei\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackPslei) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_PSLEI, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 nack pslei\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackPsleiAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_PSLEI);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* nack pslei\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackEcn) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_ECN, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 nack ecn\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackEcnAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbNack(level, SDP_RTCP_FB_NACK_ECN);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* nack ecn\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbTrrInt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbTrrInt(level, 12345, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 trr-int 12345\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbNackTrrIntAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbTrrInt(level, 0);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* trr-int 0\r\n"), std::string::npos);
+}
 
 TEST_F(SdpTest, addRtcpFbCcmFir) {
   InitLocalSdp();
@@ -461,7 +630,61 @@ TEST_F(SdpTest, addRtcpFbCcmFirAllPt) {
   ASSERT_NE(body.find("a=rtcp-fb:* ccm fir\r\n"), std::string::npos);
 }
 
-/* TODO We need to test the pt=* use cases. */
+TEST_F(SdpTest, addRtcpFbCcmTmmbr) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbCcm(level, SDP_RTCP_FB_CCM_TMMBR, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 ccm tmmbr\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbCcmTmmbrAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbCcm(level, SDP_RTCP_FB_CCM_TMMBR);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* ccm tmmbr\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbCcmTstr) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbCcm(level, SDP_RTCP_FB_CCM_TSTR, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 ccm tstr\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbCcmTstrAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbCcm(level, SDP_RTCP_FB_CCM_TSTR);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* ccm tstr\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbCcmVbcm) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbCcm(level, SDP_RTCP_FB_CCM_VBCM, 120);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:120 ccm vbcm\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addRtcpFbCcmVbcmAllPt) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewRtcpFbCcm(level, SDP_RTCP_FB_CCM_VBCM);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=rtcp-fb:* ccm vbcm\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, parseRtcpFbAllPayloads) {
+  ParseSdp(kVideoSdp + "a=rtcp-fb:* ack rpsi\r\n");
+  for (int i = 0; i < 128; i++) {
+    ASSERT_EQ(sdp_attr_get_rtcp_fb_ack(sdp_ptr_, 1, i, 1),
+              SDP_RTCP_FB_ACK_RPSI);
+  }
+}
 
 } // End namespace test.
 
