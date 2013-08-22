@@ -29,10 +29,16 @@ namespace JS {
  */
 class Value;
 
+class AutoIdVector;
+class CallArgs;
+
 template <typename T>
 class Rooted;
 
 class JS_PUBLIC_API(AutoGCRooter);
+
+class JS_PUBLIC_API(CompileOptions);
+class JS_PUBLIC_API(CompartmentOptions);
 
 struct Zone;
 

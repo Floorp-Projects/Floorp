@@ -4055,6 +4055,13 @@ AutoGCSession::AutoGCSession(JSRuntime *rt)
     runtime->gcInterFrameGC = true;
 
     runtime->gcNumber++;
+
+#ifdef DEBUG
+    // Threads with an exclusive context should never pause while they are in
+    // the middle of a suppressGC.
+    for (ThreadDataIter iter(rt); !iter.done(); iter.next())
+        JS_ASSERT(!iter->suppressGC);
+#endif
 }
 
 AutoGCSession::~AutoGCSession()
@@ -4816,6 +4823,9 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
     target->zone()->allocator.arenas.adoptArenas(rt, &source->zone()->allocator.arenas);
     target->zone()->gcBytes += source->zone()->gcBytes;
     source->zone()->gcBytes = 0;
+
+    // Merge other info in source's zone into target's zone.
+    target->zone()->types.typeLifoAlloc.transferFrom(&source->zone()->types.typeLifoAlloc);
 }
 
 void
@@ -5140,8 +5150,8 @@ AutoMaybeTouchDeadZones::~AutoMaybeTouchDeadZones()
     runtime->gcManipulatingDeadZones = manipulatingDeadZones;
 }
 
-AutoSuppressGC::AutoSuppressGC(JSContext *cx)
-  : suppressGC_(cx->runtime()->mainThread.suppressGC)
+AutoSuppressGC::AutoSuppressGC(ExclusiveContext *cx)
+  : suppressGC_(cx->perThreadData->suppressGC)
 {
     suppressGC_++;
 }
