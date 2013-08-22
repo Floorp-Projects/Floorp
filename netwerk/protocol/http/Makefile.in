@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = nkhttp_s
 MSVC_ENABLE_PGO := 1
-LIBXUL_LIBRARY = 1
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \
   -I$(topsrcdir)/xpcom/ds \

@@ -21,3 +21,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' and CONFIG['OS_TEST'] != 'x86_64':
 
 LIBRARY_NAME = 'nkconv_s'
 
+LIBXUL_LIBRARY = True
+

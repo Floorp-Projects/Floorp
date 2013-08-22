@@ -21,8 +21,6 @@ VPATH = \
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = nksrtp_s
-LIBXUL_LIBRARY = 1
-
 LOCAL_INCLUDES = \
   -I$(srcdir)/include \
   -I$(srcdir)/crypto/include \

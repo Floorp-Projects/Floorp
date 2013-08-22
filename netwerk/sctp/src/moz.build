@@ -44,3 +44,6 @@ if CONFIG['OS_TARGET'] == 'Android':
     CPP_SOURCES += [
         'ifaddrs_android.cpp',
     ]
+
+LIBXUL_LIBRARY = True
+
