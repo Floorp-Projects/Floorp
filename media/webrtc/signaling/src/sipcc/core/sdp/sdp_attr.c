@@ -4784,7 +4784,7 @@ sdp_result_e sdp_build_attr_rtcp_fb(sdp_t *sdp_p,
             }
             break;
         case SDP_RTCP_FB_NACK:
-            if (attr_p->attr.rtcp_fb.param.nack > SDP_RTCP_FB_NACK_BASIC
+            if (attr_p->attr.rtcp_fb.param.nack > SDP_RTCP_FB_NACK_UNSPECIFIED
                 && attr_p->attr.rtcp_fb.param.nack < SDP_MAX_RTCP_FB_NACK) {
                 flex_string_sprintf(fs, " %s",
                     sdp_rtcp_fb_nack_type_val[attr_p->attr.rtcp_fb.param.nack]
@@ -4935,7 +4935,7 @@ sdp_result_e sdp_parse_attr_rtcp_fb (sdp_t *sdp_p,
             }
             /* Check for empty string */
             if (*ptr == '\r') {
-                rtcp_fb_p->param.nack = SDP_RTCP_FB_NACK_BASIC;
+                rtcp_fb_p->param.nack = SDP_RTCP_FB_NACK_UNSPECIFIED;
                 break;
             }
             i = find_token_enum("rtcp-fb nack type", sdp_p, &ptr,
