@@ -20,7 +20,6 @@
 
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIObserver.h"
-#include "nsIExceptionService.h"
 #include "mozilla/Attributes.h"
 
 class nsDOMScriptObjectFactory MOZ_FINAL : public nsIDOMScriptObjectFactory,
@@ -47,9 +46,3 @@ public:
                                   const nsCID *aConstructorCID) MOZ_OVERRIDE;
 };
 
-class nsDOMExceptionProvider MOZ_FINAL : public nsIExceptionProvider
-{
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIEXCEPTIONPROVIDER
-};
