@@ -150,7 +150,6 @@ DOMCI_CLASS(LockedFile)
 DOMCI_CLASS(CSSFontFeatureValuesRule)
 
 DOMCI_CLASS(UserDataHandler)
-DOMCI_CLASS(GeoPositionError)
 DOMCI_CLASS(LoadStatus)
 DOMCI_CLASS(XPathNamespace)
 DOMCI_CLASS(XULControlElement)
