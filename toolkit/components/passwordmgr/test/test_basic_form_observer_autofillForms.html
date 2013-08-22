@@ -21,36 +21,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // Assume that the pref starts out true, so set to false
 SpecialPowers.setBoolPref("signon.autofillForms", false);
-
-var TestObserver = {
-  receivedNotificationFoundForm : false,
-  receivedNotificationFoundLogins : false,
-  dataFoundForm : "",
-  dataFoundLogins : null,
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
-  observe : function (subject, topic, data) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    var pwmgr = Cc["@mozilla.org/login-manager;1"].
-                getService(Ci.nsILoginManager);
-    if (topic == "passwordmgr-found-form") {
-      info("got passwordmgr-found-form");
-      this.receivedNotificationFoundForm = true;
-      this.dataFoundForm = data;
-      // Now fill the form
-      pwmgr.fillForm(subject);
-    } else if (topic == "passwordmgr-found-logins") {
-      info("got passwordmgr-found-logins");
-      this.receivedNotificationFoundLogins = true;
-      this.dataFoundLogins = subject.QueryInterface(Ci.nsIPropertyBag2);
-    }
-  }
-};
-
-// Add the observer
-var os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-os.addObserver(TestObserver, "passwordmgr-found-form", false);
-os.addObserver(TestObserver, "passwordmgr-found-logins", false);
 </script>
 
 <p id="display"></p>
@@ -72,6 +42,35 @@ os.addObserver(TestObserver, "passwordmgr-found-logins", false);
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: simple form with autofillForms disabled and notifying observers **/
+
+var TestObserver = {
+  receivedNotificationFoundForm : false,
+  receivedNotificationFoundLogins : false,
+  dataFoundForm : "",
+  dataFoundLogins : null,
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+  observe : function (subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var pwmgr = Cc["@mozilla.org/login-manager;1"].
+                getService(Ci.nsILoginManager);
+    if (topic == "passwordmgr-found-form") {
+      this.receivedNotificationFoundForm = true;
+      this.dataFoundForm = data;
+      // Now fill the form
+      pwmgr.fillForm(subject);
+    } else if (topic == "passwordmgr-found-logins") {
+      this.receivedNotificationFoundLogins = true;
+      this.dataFoundLogins = subject.QueryInterface(Ci.nsIPropertyBag2);
+    }
+  }
+};
+
+// Add the observer
+var os = Cc["@mozilla.org/observer-service;1"].
+         getService(Ci.nsIObserverService);
+os.addObserver(TestObserver, "passwordmgr-found-form", false);
+os.addObserver(TestObserver, "passwordmgr-found-logins", false);
+
 function startTest(){
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   // Test that found-form observer is notified & got correct data
