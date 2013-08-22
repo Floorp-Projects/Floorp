@@ -929,7 +929,7 @@ let SessionStoreInternal = {
         winData.title = aWindow.content.document.title || tabbrowser.selectedTab.label;
         winData.title = this._replaceLoadingTitle(winData.title, tabbrowser,
                                                   tabbrowser.selectedTab);
-        this._updateCookies([winData]);
+        SessionCookies.update([winData]);
       }
 
 #ifndef XP_MACOSX
@@ -2323,110 +2323,6 @@ let SessionStoreInternal = {
   },
 
   /**
-   * extract the base domain from a history entry and its children
-   * @param aEntry
-   *        the history entry, serialized
-   * @param aHosts
-   *        the hash that will be used to store hosts eg, { hostname: true }
-   * @param aCheckPrivacy
-   *        should we check the privacy level for https
-   * @param aIsPinned
-   *        is the entry we're evaluating for a pinned tab; used only if
-   *        aCheckPrivacy
-   */
-  _extractHostsForCookiesFromEntry:
-    function ssi_extractHostsForCookiesFromEntry(aEntry, aHosts, aCheckPrivacy, aIsPinned) {
-
-    let host = aEntry._host,
-        scheme = aEntry._scheme;
-
-    // If host & scheme aren't defined, then we are likely here in the startup
-    // process via _splitCookiesFromWindow. In that case, we'll turn aEntry.url
-    // into an nsIURI and get host/scheme from that. This will throw for about:
-    // urls in which case we don't need to do anything.
-    if (!host && !scheme) {
-      try {
-        let uri = this._getURIFromString(aEntry.url);
-        host = uri.host;
-        scheme = uri.scheme;
-        this._extractHostsForCookiesFromHostScheme(host, scheme, aHosts, aCheckPrivacy, aIsPinned);
-      }
-      catch(ex) { }
-    }
-
-    if (aEntry.children) {
-      aEntry.children.forEach(function(entry) {
-        this._extractHostsForCookiesFromEntry(entry, aHosts, aCheckPrivacy, aIsPinned);
-      }, this);
-    }
-  },
-
-  /**
-   * extract the base domain from a host & scheme
-   * @param aHost
-   *        the host of a uri (usually via nsIURI.host)
-   * @param aScheme
-   *        the scheme of a uri (usually via nsIURI.scheme)
-   * @param aHosts
-   *        the hash that will be used to store hosts eg, { hostname: true }
-   * @param aCheckPrivacy
-   *        should we check the privacy level for https
-   * @param aIsPinned
-   *        is the entry we're evaluating for a pinned tab; used only if
-   *        aCheckPrivacy
-   */
-  _extractHostsForCookiesFromHostScheme:
-    function ssi_extractHostsForCookiesFromHostScheme(aHost, aScheme, aHosts, aCheckPrivacy, aIsPinned) {
-    // host and scheme may not be set (for about: urls for example), in which
-    // case testing scheme will be sufficient.
-    if (/https?/.test(aScheme) && !aHosts[aHost] &&
-        (!aCheckPrivacy ||
-         this.checkPrivacyLevel(aScheme == "https", aIsPinned))) {
-      // By setting this to true or false, we can determine when looking at
-      // the host in _updateCookies if we should check for privacy.
-      aHosts[aHost] = aIsPinned;
-    }
-    else if (aScheme == "file") {
-      aHosts[aHost] = true;
-    }
-  },
-
-  /**
-   * Serialize cookie data
-   * @param aWindows
-   *        An array of window data objects
-   *        { tabs: [ ... ], etc. }
-   */
-  _updateCookies: function ssi_updateCookies(aWindows) {
-    for (let window of aWindows) {
-      window.cookies = [];
-
-      // Collect all hosts for the current window.
-      let hosts = {};
-      window.tabs.forEach(function(tab) {
-        tab.entries.forEach(function(entry) {
-          this._extractHostsForCookiesFromEntry(entry, hosts, true, tab.pinned);
-        }, this);
-      }, this);
-
-      for (var [host, isPinned] in Iterator(hosts)) {
-        for (let cookie of SessionCookies.getCookiesForHost(host)) {
-          // window._hosts will only have hosts with the right privacy rules,
-          // so there is no need to do anything special with this call to
-          // checkPrivacyLevel.
-          if (this.checkPrivacyLevel(cookie.secure, isPinned)) {
-            window.cookies.push(cookie);
-          }
-        }
-      }
-
-      // don't include empty cookie sections
-      if (!window.cookies.length)
-        delete window.cookies;
-    }
-  },
-
-  /**
    * Store window dimensions, visibility, sidebar
    * @param aWindow
    *        Window reference
@@ -2496,7 +2392,7 @@ let SessionStoreInternal = {
       if (!this._windows[ix].isPopup)
         nonPopupCount++;
     }
-    this._updateCookies(total);
+    SessionCookies.update(total);
 
     // collect the data for all windows yet to be restored
     for (ix in this._statesToRestore) {
@@ -2576,7 +2472,7 @@ let SessionStoreInternal = {
     }
 
     let windows = [this._windows[aWindow.__SSi]];
-    this._updateCookies(windows);
+    SessionCookies.update(windows);
 
     return { windows: windows };
   },
@@ -4093,12 +3989,7 @@ let SessionStoreInternal = {
       return;
 
     // Get the hosts for history entries in aTargetWinState
-    let cookieHosts = {};
-    aTargetWinState.tabs.forEach(function(tab) {
-      tab.entries.forEach(function(entry) {
-        this._extractHostsForCookiesFromEntry(entry, cookieHosts, false);
-      }, this);
-    }, this);
+    let cookieHosts = SessionCookies.getHostsForWindow(aTargetWinState);
 
     // By creating a regex we reduce overhead and there is only one loop pass
     // through either array (cookieHosts and aWinState.cookies).
