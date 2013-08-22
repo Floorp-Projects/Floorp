@@ -539,6 +539,7 @@
              iconsize="large"
              defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,social-share-button,social-toolbar-item"
              customizationtarget="nav-bar-customizationtarget"
+             overflowable="true"
              overflowbutton="nav-bar-overflow-button"
              overflowtarget="widget-overflow-list"
              flex="501"
