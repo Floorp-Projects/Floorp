@@ -207,6 +207,9 @@ class TestRecursiveMakeBackend(BackendTester):
             'LIBXUL_LIBRARY': [
                 'LIBXUL_LIBRARY := 1',
             ],
+            'MSVC_ENABLE_PGO': [
+                'MSVC_ENABLE_PGO := 1',
+            ],
             'SDK_LIBRARY': [
                 'SDK_LIBRARY += bar.sdk',
                 'SDK_LIBRARY += foo.sdk',
