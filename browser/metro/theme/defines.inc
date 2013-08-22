@@ -44,6 +44,7 @@
 
 %define tile_border_color #dbdcde
 %define tile_spacing 12px
+%define tile_side_margin 6px
 
 %define scroller_thickness 4px
 %define scroller_minimum 8px
