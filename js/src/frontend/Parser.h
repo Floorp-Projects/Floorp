@@ -407,7 +407,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
      * Create a new function object given parse context (pc) and a name (which
      * is optional if this is a function expression).
      */
-    JSFunction *newFunction(GenericParseContext *pc, HandleAtom atom, FunctionSyntaxKind kind);
+    JSFunction *newFunction(GenericParseContext *pc, HandleAtom atom, FunctionSyntaxKind kind,
+                            JSObject *proto = NULL);
 
     void trace(JSTracer *trc);
 
