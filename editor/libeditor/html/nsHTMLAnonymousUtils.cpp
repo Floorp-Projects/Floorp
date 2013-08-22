@@ -43,6 +43,7 @@
 #include "nsStringFwd.h"
 #include "nsUnicharUtils.h"
 #include "nscore.h"
+#include "nsContentUtils.h" // for nsAutoScriptBlocker
 
 class nsIDOMEventListener;
 class nsISelection;
