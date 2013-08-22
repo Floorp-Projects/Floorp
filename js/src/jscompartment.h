@@ -281,7 +281,33 @@ struct JSCompartment
     void markCrossCompartmentWrappers(JSTracer *trc);
     void markAllCrossCompartmentWrappers(JSTracer *trc);
 
-    bool wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject existing = js::NullPtr());
+    inline bool wrap(JSContext *cx, JS::MutableHandleValue vp,
+                     JS::HandleObject existing = js::NullPtr())
+    {
+        JS_ASSERT_IF(existing, vp.isObject());
+
+        /* Only GC things have to be wrapped or copied. */
+        if (!vp.isMarkable())
+            return true;
+
+        /* Handle strings. */
+        if (vp.isString()) {
+            JSString *str = vp.toString();
+            if (!wrap(cx, &str))
+                return false;
+            vp.setString(str);
+            return true;
+        }
+
+        /* All that's left are objects. */
+        MOZ_ASSERT(vp.isObject());
+        JS::RootedObject obj(cx, &vp.toObject());
+        if (!wrap(cx, &obj, existing))
+            return false;
+        vp.setObject(*obj);
+        return true;
+    }
+
     bool wrap(JSContext *cx, JSString **strp);
     bool wrap(JSContext *cx, js::HeapPtrString *strp);
     bool wrap(JSContext *cx, JS::MutableHandleObject obj,

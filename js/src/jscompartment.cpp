@@ -203,33 +203,6 @@ JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &w
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingArg)
-{
-    JS_ASSERT_IF(existingArg, vp.isObject());
-
-    /* Only GC things have to be wrapped or copied. */
-    if (!vp.isMarkable())
-        return true;
-
-    /* Handle strings. */
-    if (vp.isString()) {
-        JSString *str = vp.toString();
-        if (!wrap(cx, &str))
-            return false;
-        vp.setString(str);
-        return true;
-    }
-
-    /* All that's left are objects. */
-    MOZ_ASSERT(vp.isObject());
-    RootedObject obj(cx, &vp.toObject());
-    if (!wrap(cx, &obj, existingArg))
-        return false;
-    vp.setObject(*obj);
-    return true;
-}
-
-bool
 JSCompartment::wrap(JSContext *cx, JSString **strp)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(this));
