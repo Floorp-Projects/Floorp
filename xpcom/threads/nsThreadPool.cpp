@@ -43,7 +43,7 @@ public:
   NS_DECL_NSIRUNNABLE
 
   ShutdownHelper(nsCOMArray<nsIThread>& aThreads,
-                 already_AddRefed<nsIThreadPoolListener>& aListener)
+                 already_AddRefed<nsIThreadPoolListener> aListener)
   : mListener(aListener)
   {
     MOZ_ASSERT(!aThreads.IsEmpty());
