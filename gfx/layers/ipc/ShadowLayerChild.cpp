@@ -6,8 +6,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ShadowLayerChild.h"
-#include "Layers.h"
-#include "ShadowLayers.h"
+#include "Layers.h"                     // for Layer
+#include "ShadowLayers.h"               // for ShadowableLayer
+#include "nsDebug.h"                    // for NS_ABORT_IF_FALSE
 
 namespace mozilla {
 namespace layers {

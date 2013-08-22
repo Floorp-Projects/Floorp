@@ -36,6 +36,8 @@ MOCHITEST_CHROME_FILES	= \
 	test_styles-modify.html \
 	test_unsafeDereference.html \
 	nonchrome_unsafeDereference.html \
+	test_connection-manager.html \
+	test_device.html \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

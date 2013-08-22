@@ -6,7 +6,6 @@
 #ifndef nsJSON_h__
 #define nsJSON_h__
 
-#include "jsapi.h"
 #include "nsIJSON.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"

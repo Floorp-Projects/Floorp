@@ -125,3 +125,13 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     CPP_SOURCES += [
         'nsCrashOnException.cpp',
     ]
+
+CSRCS += [
+    'nsErrorAssertsC.c',
+]
+
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

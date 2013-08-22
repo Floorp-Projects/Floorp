@@ -305,7 +305,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 }
 
 JS_ALWAYS_INLINE bool
-IsRegExp(const Value &v)
+IsRegExp(HandleValue v)
 {
     return v.isObject() && v.toObject().is<RegExpObject>();
 }

@@ -16,3 +16,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'ucharucomp_s'
 
+LIBXUL_LIBRARY = True
+

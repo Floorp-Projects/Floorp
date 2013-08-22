@@ -230,11 +230,6 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="org.mozilla.gecko.AwesomeBar"
-                  android:theme="@style/Gecko.AwesomeBar"
-                  android:configChanges="orientation|screenSize"
-                  android:windowSoftInputMode="stateUnspecified|adjustResize"/>
-
         <activity android:name="org.mozilla.gecko.GeckoPreferences"
                   android:theme="@style/Gecko.Preferences"
                   android:label="@string/settings_title"

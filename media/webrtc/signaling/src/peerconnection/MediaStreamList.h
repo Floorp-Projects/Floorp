@@ -8,7 +8,6 @@
 #include "mozilla/ErrorResult.h"
 #include "nsISupportsImpl.h"
 #include "nsAutoPtr.h"
-#include "jspubtd.h"
 #include "nsWrapperCache.h"
 
 #ifdef USE_FAKE_MEDIA_STREAMS

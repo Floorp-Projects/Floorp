@@ -99,7 +99,7 @@ function Method(hint) {
                  // in the host object's prototype chain. This avoids memory
                  // leaks that otherwise could happen when saving JS objects
                  // on host object.
-                 host[value["!" + name]] ||
+                 host[value["!" + name] || void(0)] ||
                  // Otherwise attempt to lookup implementation for builtins by
                  // a type of the value. This basically makes sure that all
                  // non primitive values will delegate to an `Object`.

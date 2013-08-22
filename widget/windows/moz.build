@@ -81,3 +81,8 @@ if CONFIG['NS_ENABLE_TSF']:
     CPP_SOURCES += [
         'nsTextStore.cpp',
     ]
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

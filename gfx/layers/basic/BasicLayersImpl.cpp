@@ -3,10 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/DebugOnly.h"
-
 #include "BasicLayersImpl.h"
-#include "mozilla/layers/PLayerTransaction.h"
+#include <new>                          // for operator new
+#include "Layers.h"                     // for Layer, etc
+#include "basic/BasicImplData.h"        // for BasicImplData
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/DebugOnly.h"          // for DebugOnly
+#include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
 
 using namespace mozilla::gfx;
 

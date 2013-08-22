@@ -10,3 +10,5 @@ CPP_SOURCES += [
     'uiaRawElmProvider.cpp',
 ]
 
+LIBXUL_LIBRARY = True
+

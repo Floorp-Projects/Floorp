@@ -36,10 +36,17 @@
 #include <X11/Xatom.h>
 #endif
 
+#ifdef MOZ_ENABLE_DBUS
+#include <dbus/dbus.h>
+#endif
+
 #if (MOZ_PLATFORM_MAEMO == 5)
 struct DBusMessage;  /* libosso.h references internals of dbus */
 
+#ifndef MOZ_ENABLE_DBUS
 #include <dbus/dbus.h>
+#endif
+
 #include <dbus/dbus-protocol.h>
 #include <libosso.h>
 
@@ -398,6 +405,13 @@ NS_IMETHODIMP
 nsNativeAppSupportUnix::Start(bool *aRetVal)
 {
   NS_ASSERTION(gAppData, "gAppData must not be null.");
+
+// The dbus library is used by both nsWifiScannerDBus and BluetoothDBusService,
+// from diffrent threads. This could lead to race conditions if the dbus is not
+// initialized before making any other library calls.
+#ifdef MOZ_ENABLE_DBUS
+  dbus_threads_init_default();
+#endif
 
 #if (MOZ_WIDGET_GTK == 2)
   if (gtk_major_version < MIN_GTK_MAJOR_VERSION ||

@@ -123,3 +123,9 @@ CPP_SOURCES += [
     'nsTransitionManager.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

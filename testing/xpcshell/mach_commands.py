@@ -69,8 +69,8 @@ class XPCShellRunner(MozbuildObject):
 
         xpcshell_dirs = []
         for base, dirs, files in os.walk(test_obj_dir):
-          if os.path.exists(mozpack.path.join(base, 'xpcshell.ini')):
-            xpcshell_dirs.append(base)
+            if os.path.exists(mozpack.path.join(base, 'xpcshell.ini')):
+                xpcshell_dirs.append(base)
 
         if not xpcshell_dirs:
             raise InvalidTestPathError('An xpcshell.ini could not be found '
@@ -160,7 +160,7 @@ class XPCShellRunner(MozbuildObject):
 
         self.log_manager.disable_unstructured()
 
-        if not result and not sequential:
+        if not result and not xpcshell.sequential:
             print("Tests were run in parallel. Try running with --sequential "
                   "to make sure the failures were not caused by this.")
         return int(not result)

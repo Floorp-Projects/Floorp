@@ -6,10 +6,11 @@
 #ifndef GFX_LAYERS_ISURFACEDEALLOCATOR
 #define GFX_LAYERS_ISURFACEDEALLOCATOR
 
-#include "mozilla/ipc/SharedMemory.h"
-#include "mozilla/RefPtr.h"
-#include "gfxPoint.h"
-#include "gfxASurface.h"
+#include <stddef.h>                     // for size_t
+#include <stdint.h>                     // for uint32_t
+#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxPoint.h"                   // for gfxIntSize
+#include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 
 /*
  * FIXME [bjacob] *** PURE CRAZYNESS WARNING ***
@@ -22,17 +23,18 @@
 #define MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
 #endif
 
-class gfxSharedImageSurface;
 class gfxASurface;
+class gfxSharedImageSurface;
 
 namespace base {
 class Thread;
-} // namespace
+}
 
 namespace mozilla {
 namespace ipc {
 class Shmem;
-} // namespace
+}
+
 namespace layers {
 
 class PGrallocBufferChild;

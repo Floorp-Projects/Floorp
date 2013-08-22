@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:gecko="http://schemas.android.com/apk/res-auto"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent">
 
@@ -25,6 +26,14 @@
                         android:layout_above="@+id/find_in_page">
 
             <include layout="@layout/shared_ui_components"/>
+
+            <FrameLayout android:id="@+id/home_pager_container"
+                         android:layout_width="fill_parent"
+                         android:layout_height="fill_parent">
+
+                <include layout="@layout/home_pager"/>
+
+            </FrameLayout>
 
         </RelativeLayout>
 
@@ -48,6 +57,13 @@
                 android:layout_height="@dimen/browser_toolbar_height"
                 android:clickable="true"
                 android:focusable="true"/>
+
+        <FrameLayout android:id="@+id/search_container"
+                     android:layout_width="fill_parent"
+                     android:layout_height="fill_parent"
+                     android:layout_below="@id/browser_toolbar"
+                     android:background="@android:color/white"
+                     android:visibility="invisible"/>
 
     </view>
 

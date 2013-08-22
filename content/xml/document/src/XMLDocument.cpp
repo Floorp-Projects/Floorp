@@ -279,7 +279,7 @@ static void
 ReportUseOfDeprecatedMethod(nsIDocument *aDoc, const char* aWarning)
 {
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM3 Load", aDoc,
+                                  NS_LITERAL_CSTRING("DOM3 Load"), aDoc,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   aWarning);
 }

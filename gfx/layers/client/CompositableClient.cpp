@@ -4,11 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/CompositableClient.h"
-#include "mozilla/layers/TextureClient.h"
-#include "mozilla/layers/TextureClientOGL.h"
-#include "mozilla/layers/LayerTransactionChild.h"
+#include <stdint.h>                     // for uint64_t, uint32_t
+#include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/layers/CompositableForwarder.h"
-#include "gfxPlatform.h"
+#include "mozilla/layers/TextureClient.h"  // for DeprecatedTextureClient, etc
+#include "mozilla/layers/TextureClientOGL.h"
+#include "mozilla/mozalloc.h"           // for operator delete, etc
 #ifdef XP_WIN
 #include "mozilla/layers/TextureD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
@@ -137,7 +138,8 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
     break;
   case TEXTURE_FALLBACK:
 #ifdef XP_WIN
-    if (parentBackend == LAYERS_D3D9) {
+    if (parentBackend == LAYERS_D3D11 ||
+        parentBackend == LAYERS_D3D9) {
       result = new DeprecatedTextureClientShmem(GetForwarder(), GetTextureInfo());
     }
 #endif

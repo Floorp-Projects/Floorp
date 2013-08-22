@@ -13,10 +13,7 @@ const { StringBundle } = require('sdk/deprecated/app-strings');
 const tabs = require('sdk/tabs');
 const { browserWindows } = require('sdk/windows');
 
-const base64png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYA" +
-                  "AABzenr0AAAASUlEQVRYhe3O0QkAIAwD0eyqe3Q993AQ3cBSUKpygfsNTy" +
-                  "N5ugbQpK0BAADgP0BRDWXWlwEAAAAAgPsA3rzDaAAAAHgPcGrpgAnzQ2FG" +
-                  "bWRR9AAAAABJRU5ErkJggg%3D%3D";
+const base64png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAA";
 
 // Bug 682681 - tab.title should never be empty
 exports.testBug682681_aboutURI = function(assert, done) {
@@ -864,50 +861,45 @@ exports['test unique tab ids'] = function(assert, done) {
 
 // related to Bug 671305
 exports.testOnLoadEventWithDOM = function(assert, done) {
-  openBrowserWindow(function(window, browser) {
-    let count = 0;
-    tabs.on('load', function onLoad(tab) {
-      assert.equal(tab.title, 'tab', 'tab passed in as arg, load called');
-      if (!count++) {
-        tab.reload();
+  let count = 0;
+  let title = 'testOnLoadEventWithDOM';
+
+  // open a about: url
+  tabs.open({
+    url: 'data:text/html;charset=utf-8,<title>' + title + '</title>',
+    inBackground: true,
+    onLoad: function(tab) {
+      assert.equal(tab.title, title, 'tab passed in as arg, load called');
+
+      if (++count > 1) {
+        assert.pass('onLoad event called on reload');
+        tab.close(done);
       }
       else {
-        // end of test
-        tabs.removeListener('load', onLoad);
-        assert.pass('onLoad event called on reload');
-        close(window).then(done);
+        assert.pass('first onLoad event occured');
+        tab.reload();
       }
-    });
-
-    // open a about: url
-    tabs.open({
-      url: 'data:text/html;charset=utf-8,<title>tab</title>',
-      inBackground: true
-    });
+    }
   });
 };
 
 // related to Bug 671305
 exports.testOnLoadEventWithImage = function(assert, done) {
-  openBrowserWindow(function(window, browser) {
-    let count = 0;
-    tabs.on('load', function onLoad(tab) {
-      if (!count++) {
-        tab.reload();
+  let count = 0;
+
+  tabs.open({
+    url: base64png,
+    inBackground: true,
+    onLoad: function(tab) {
+      if (++count > 1) {
+        assert.pass('onLoad event called on reload with image');
+        tab.close(done);
       }
       else {
-        // end of test
-        tabs.removeListener('load', onLoad);
-        assert.pass('onLoad event called on reload with image');
-        close(window).then(done);
+        assert.pass('first onLoad event occured');
+        tab.reload();
       }
-    });
-
-    // open a image url
-    tabs.open({
-      url: base64png,
-      inBackground: true
-    });
+    }
   });
 };
 

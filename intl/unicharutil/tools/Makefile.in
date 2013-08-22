@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CSRCS		= ucgendat.c
-
 # XXX need configure test
 EX_LIBS		= $(shell $(GLIB_CONFIG) --libs)
 

@@ -887,7 +887,7 @@ nsHtml5TreeOpExecutor::MaybeComplainAboutCharset(const char* aMsgId,
   mAlreadyComplainedAboutCharset = true;
   nsContentUtils::ReportToConsole(aError ? nsIScriptError::errorFlag
                                          : nsIScriptError::warningFlag,
-                                  "HTML parser",
+                                  NS_LITERAL_CSTRING("HTML parser"),
                                   mDocument,
                                   nsContentUtils::eHTMLPARSER_PROPERTIES,
                                   aMsgId,
@@ -905,7 +905,7 @@ nsHtml5TreeOpExecutor::ComplainAboutBogusProtocolCharset(nsIDocument* aDoc)
                "How come we already managed to complain?");
   mAlreadyComplainedAboutCharset = true;
   nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                  "HTML parser",
+                                  NS_LITERAL_CSTRING("HTML parser"),
                                   aDoc,
                                   nsContentUtils::eHTMLPARSER_PROPERTIES,
                                   "EncProtocolUnsupported");

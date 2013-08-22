@@ -372,6 +372,9 @@ nsXBLProtoImplAnonymousMethod::Write(nsIObjectOutputStream* aStream,
     nsresult rv = aStream->Write8(aType);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    rv = aStream->WriteWStringZ(mName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Calling fromMarkedLocation() is safe because mMethod is traced by the
     // Trace() method above, and because its value is never changed after it has
     // been set to a compiled method.

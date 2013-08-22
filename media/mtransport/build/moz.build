@@ -30,3 +30,7 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'mtransport'
 
+FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
+
+LIBXUL_LIBRARY = True
+

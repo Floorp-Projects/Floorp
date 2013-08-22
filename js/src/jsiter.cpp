@@ -763,7 +763,7 @@ js::IteratorConstructor(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JS_ALWAYS_INLINE bool
-IsIterator(const Value &v)
+IsIterator(HandleValue v)
 {
     return v.isObject() && v.toObject().hasClass(&PropertyIteratorObject::class_);
 }
@@ -876,7 +876,7 @@ ElementIteratorObject::create(JSContext *cx, Handle<Value> target)
 }
 
 static bool
-IsElementIterator(const Value &v)
+IsElementIterator(HandleValue v)
 {
     return v.isObject() && v.toObject().is<ElementIteratorObject>();
 }
@@ -1475,6 +1475,13 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
     JS_ASSERT(stackRegs.stackDepth() == 0);
     StackFrame *stackfp = stackRegs.fp();
 
+    JS_ASSERT(stackfp->script()->isGenerator());
+
+    if (stackfp->script()->isStarGenerator()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_ES6_UNIMPLEMENTED);
+        return NULL;
+    }
+
     Rooted<GlobalObject*> global(cx, &stackfp->global());
     RootedObject obj(cx);
     {
@@ -1633,7 +1640,7 @@ CloseGenerator(JSContext *cx, HandleObject obj)
 }
 
 JS_ALWAYS_INLINE bool
-IsGenerator(const Value &v)
+IsGenerator(HandleValue v)
 {
     return v.isObject() && v.toObject().is<GeneratorObject>();
 }

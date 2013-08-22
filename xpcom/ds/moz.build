@@ -51,7 +51,6 @@ EXPORTS += [
     'nsCRT.h',
     'nsCharSeparatedTokenizer.h',
     'nsCheapSets.h',
-    'nsCppSharedAllocator.h',
     'nsExpirationTracker.h',
     'nsHashPropertyBag.h',
     'nsHashtable.h',
@@ -115,4 +114,8 @@ EXTRA_COMPONENTS += [
 ]
 
 LIBRARY_NAME = 'xpcomds_s'
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
 

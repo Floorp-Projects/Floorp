@@ -10,6 +10,7 @@
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "gfxImageSurface.h"
+#include "gfxContext.h"
 
 namespace mozilla {
 namespace layers {

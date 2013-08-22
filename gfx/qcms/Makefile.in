@@ -9,17 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
-LIBXUL_LIBRARY = 1
-
-CSRCS = \
-  chain.c \
-  iccread.c \
-  matrix.c \
-  transform.c \
-  transform_util.c \
-  $(NULL)
-
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CSRCS += transform-sse2.c
 ifdef _MSC_VER

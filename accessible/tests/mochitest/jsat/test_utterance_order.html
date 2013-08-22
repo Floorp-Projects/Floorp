@@ -129,6 +129,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           accOrElmOrID: 'hasPopupButton',
           expected: [["has pop up button menu", "I have a popup"],
             ["I have a popup", "has pop up button menu"]]
+        }, {
+          // Test selected tab
+          accOrElmOrID: 'tab1',
+          expected: [['tab list', 'selected tab 1 of 2', 'Account'],
+            ['Account', 'selected tab 1 of 2', 'tab list']]
+        }, {
+          // Test unselected tab
+          accOrElmOrID: 'tab2',
+          expected: [['tab list', 'tab 2 of 2', 'Advanced'],
+            ['Advanced', 'tab 2 of 2', 'tab list']]
         }];
 
         // Test all possible utterance order preference values.
@@ -204,6 +214,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
       <button id="collapsedButton" aria-expanded="false">I am collapsed</button>
       <input id="requiredInput" required placeholder="I am required" />
       <button id="hasPopupButton" aria-haspopup="true">I have a popup</button>
+      <div role="tablist">
+        <a id="tab1" href="#" role="tab" aria-selected="true">Account</a>
+        <a id="tab2" href="#" role="tab" aria-selected="false">Advanced</a>
+      </div>
     </div>
   </body>
 </html>

@@ -119,7 +119,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitTest(MTest *test);
     bool visitFunctionDispatch(MFunctionDispatch *ins);
     bool visitTypeObjectDispatch(MTypeObjectDispatch *ins);
-    bool visitPolyInlineDispatch(MPolyInlineDispatch *ins);
     bool visitCompare(MCompare *comp);
     bool visitTypeOf(MTypeOf *ins);
     bool visitToId(MToId *ins);

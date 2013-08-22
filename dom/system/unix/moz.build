@@ -21,3 +21,8 @@ if CONFIG['MOZ_ENABLE_QTMOBILITY']:
         'moc_QTMLocationProvider.cpp',
         'QTMLocationProvider.cpp',
     ]
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+

@@ -200,7 +200,9 @@ class RecursiveMakeBackend(CommonBackend):
                 if isinstance(v, list):
                     for item in v:
                         backend_file.write('%s += %s\n' % (k, item))
-
+                elif isinstance(v, bool):
+                    if v:
+                        backend_file.write('%s := 1\n' % k)
                 else:
                     backend_file.write('%s := %s\n' % (k, v))
         elif isinstance(obj, Exports):
@@ -332,11 +334,13 @@ class RecursiveMakeBackend(CommonBackend):
 
             if dirs:
                 fh.write('tier_%s_dirs += %s\n' % (tier, ' '.join(dirs)))
+                fh.write('DIRS += $(tier_%s_dirs)\n' % tier)
 
             # tier_static_dirs should have the same keys as tier_dirs.
             if obj.tier_static_dirs[tier]:
                 fh.write('tier_%s_staticdirs += %s\n' % (
                     tier, ' '.join(obj.tier_static_dirs[tier])))
+                fh.write('STATIC_DIRS += $(tier_%s_staticdirs)\n' % tier)
 
                 static = ' '.join(obj.tier_static_dirs[tier])
                 fh.write('EXTERNAL_DIRS += %s\n' % static)

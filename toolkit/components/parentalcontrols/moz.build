@@ -10,9 +10,9 @@ XPIDL_SOURCES += [
 
 MODULE = 'parentalcontrols'
 
-if not CONFIG['MOZ_DISABLE_PARENTAL_CONTROLS']:
-    if CONFIG['OS_ARCH'] == 'WINNT':
-        LIBRARY_NAME = 'parentalcontrols_s'
-        CPP_SOURCES += [
-            'nsParentalControlsServiceWin.cpp',
-        ]
+if not CONFIG['MOZ_DISABLE_PARENTAL_CONTROLS'] and CONFIG['OS_ARCH'] == 'WINNT':
+    LIBXUL_LIBRARY = True
+    LIBRARY_NAME = 'parentalcontrols_s'
+    CPP_SOURCES += [
+        'nsParentalControlsServiceWin.cpp',
+    ]

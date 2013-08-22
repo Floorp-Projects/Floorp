@@ -9,6 +9,7 @@
 
 #include "prthread.h"
 #include "prinrval.h"
+#include "nscore.h"
 #include "nsIThreadManager.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"

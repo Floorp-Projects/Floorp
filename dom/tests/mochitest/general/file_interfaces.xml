@@ -7,11 +7,12 @@
         var win = XPCNativeWrapper.unwrap(window);
         var SpecialPowers = win.SpecialPowers;
         var is = win.is;
+        var todo_is = win.todo_is;
         var ok = win.ok;
-        var interfaceNamesInGlobalScope = win.interfaceNamesInGlobalScope;
-        var interfaceNamesInXBLScope = win.interfaceNamesInXBLScope;
+        var excludedNames = win.excludedNames;
+        var createInterfaceMap = win.createInterfaceMap;
         eval(win.runTest.toString());
-        runTest(window, true);
+        runTest(true);
         win.SimpleTest.finish();
       </constructor>
     </implementation>

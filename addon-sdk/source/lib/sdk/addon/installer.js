@@ -3,11 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 module.metadata = {
-  "stability": "experimental",
-  "engines": {
-    // TODO Fennec Support in bug 894515
-    "Firefox": "*"
-  }
+  "stability": "experimental"
 };
 
 const { Cc, Ci, Cu } = require("chrome");

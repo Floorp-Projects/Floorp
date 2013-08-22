@@ -7,6 +7,8 @@
 #ifndef nsGlobalWindow_h___
 #define nsGlobalWindow_h___
 
+#include "nsPIDOMWindow.h"
+
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRefPtrHashtable.h"
@@ -28,7 +30,6 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsITimer.h"
-#include "nsPIDOMWindow.h"
 #include "nsIDOMModalContentWindow.h"
 #include "nsEventListenerManager.h"
 #include "nsIPrincipal.h"
@@ -37,7 +38,6 @@
 #include "mozFlushType.h"
 #include "prclist.h"
 #include "nsIDOMStorageEvent.h"
-#include "nsIDOMStorageIndexedDB.h"
 #include "nsFrameMessageManager.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
@@ -286,7 +286,6 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
                        public nsPIDOMWindow,
                        public nsIScriptGlobalObject,
                        public nsIDOMJSWindow,
-                       public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
                        public PRCListStr,
@@ -440,9 +439,6 @@ public:
   virtual NS_HIDDEN_(nsresult) SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
 
   virtual NS_HIDDEN_(void) SetHasGamepadEventListener(bool aHasGamepad = true);
-
-  // nsIDOMStorageIndexedDB
-  NS_DECL_NSIDOMSTORAGEINDEXEDDB
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR

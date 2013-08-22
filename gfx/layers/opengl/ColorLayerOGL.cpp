@@ -4,6 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ColorLayerOGL.h"
+#include "gfxColor.h"                   // for gfxRGBA
+#include "LayerManagerOGL.h"            // for LayerManagerOGL
+#include "LayerManagerOGLProgram.h"     // for ShaderProgramOGL, etc
+
+struct nsIntPoint;
 
 namespace mozilla {
 namespace layers {

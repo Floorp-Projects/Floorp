@@ -15,6 +15,7 @@
 # limitations under the License.
 
 if CONFIG['MOZ_B2G_BT']:
+    LIBXUL_LIBRARY = True
     MODULE = 'dom'
     XPIDL_MODULE = 'dom_bluetooth'
     XPIDL_SOURCES += [
@@ -73,3 +74,6 @@ IPDL_SOURCES += [
     'ipc/PBluetooth.ipdl',
     'ipc/PBluetoothRequest.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

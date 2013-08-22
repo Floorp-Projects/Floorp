@@ -51,5 +51,12 @@ CPP_SOURCES += [
     'nsCxPusher.cpp',
     'nsScriptError.cpp',
     'nsXPConnect.cpp',
+    'Sandbox.cpp',
 ]
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
 

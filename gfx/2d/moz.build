@@ -97,8 +97,12 @@ CPP_SOURCES += [
     'SourceSurfaceRawData.cpp',
 ]
 
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CMMSRCS += [
         'QuartzSupport.mm',
     ]
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical">
+
+    <LinearLayout android:layout_width="fill_parent"
+                  android:layout_height="@dimen/browser_toolbar_height"
+                  android:orientation="vertical"
+                  android:background="@color/background_normal"
+                  android:padding="4dip">
+
+        <EditText android:id="@+id/search"
+                  style="@style/UrlBar.Button"
+                  android:layout_width="fill_parent"
+                  android:layout_height="fill_parent"
+                  android:padding="6dip"
+                  android:hint="@string/pin_bookmark_dialog_hint"
+                  android:background="@drawable/url_bar_entry"
+                  android:textColor="@color/url_bar_title"
+                  android:textColorHint="@color/url_bar_title_hint"
+                  android:textColorHighlight="@color/url_bar_text_highlight"
+                  android:textSelectHandle="@drawable/handle_middle"
+                  android:textSelectHandleLeft="@drawable/handle_start"
+                  android:textSelectHandleRight="@drawable/handle_end"
+                  android:textCursorDrawable="@null"
+                  android:inputType="textUri|textNoSuggestions"
+                  android:imeOptions="actionSearch|flagNoExtractUi|flagNoFullscreen"
+                  android:singleLine="true"
+                  android:gravity="center_vertical|left"/>
+
+    </LinearLayout>
+
+    <org.mozilla.gecko.home.HomeListView android:id="@+id/list"
+                                         android:layout_width="fill_parent"
+                                         android:layout_height="0dip"
+                                         android:layout_weight="1.0"/>
+
+</LinearLayout>

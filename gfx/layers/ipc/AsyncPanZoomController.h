@@ -616,13 +616,35 @@ private:
    * instance.
    */
 public:
-  void SetLastChild(AsyncPanZoomController* child) { mLastChild = child; }
-  void SetPrevSibling(AsyncPanZoomController* sibling) { mPrevSibling = sibling; }
+  void SetLastChild(AsyncPanZoomController* child) {
+    mLastChild = child;
+    if (child) {
+      child->mParent = this;
+    }
+  }
+
+  void SetPrevSibling(AsyncPanZoomController* sibling) {
+    mPrevSibling = sibling;
+    if (sibling) {
+      sibling->mParent = mParent;
+    }
+  }
+
   AsyncPanZoomController* GetLastChild() const { return mLastChild; }
   AsyncPanZoomController* GetPrevSibling() const { return mPrevSibling; }
+  AsyncPanZoomController* GetParent() const { return mParent; }
+
+  /* Returns true if there is no APZC higher in the tree with the same
+   * layers id.
+   */
+  bool IsRootForLayersId() const {
+    return !mParent || (mParent->mLayersId != mLayersId);
+  }
+
 private:
   nsRefPtr<AsyncPanZoomController> mLastChild;
   nsRefPtr<AsyncPanZoomController> mPrevSibling;
+  nsRefPtr<AsyncPanZoomController> mParent;
 
   /* The functions and members in this section are used to maintain the
    * area that this APZC instance is responsible for. This is used when

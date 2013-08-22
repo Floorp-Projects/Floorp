@@ -8,10 +8,11 @@
 #ifndef GFX_LAYERS_BLOBSURFACE_H
 #define GFX_LAYERS_BLOBSURFACE_H
 
-#include "mozilla/gfx/Point.h"
-#include "mozilla/RefPtr.h"
-
-#include <stdint.h>
+#include <stdint.h>                     // for uint8_t, uint32_t
+#include "mozilla/Attributes.h"         // for MOZ_STACK_CLASS
+#include "mozilla/RefPtr.h"             // for TemporaryRef
+#include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/gfx/Types.h"          // for SurfaceFormat
 
 class gfxImageSurface;
 

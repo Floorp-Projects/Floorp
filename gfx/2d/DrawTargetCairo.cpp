@@ -70,6 +70,7 @@ private:
   cairo_t* mCtx;
 };
 
+
 } // end anonymous namespace
 
 static bool
@@ -147,7 +148,7 @@ ReleaseData(void* aData)
  * result when it is done with it.
  */
 cairo_surface_t*
-GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
+GetCairoSurfaceForSourceSurface(SourceSurface *aSurface, bool aExistingOnly = false)
 {
   if (aSurface->GetType() == SURFACE_CAIRO) {
     cairo_surface_t* surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
@@ -160,6 +161,10 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
       static_cast<const DataSourceSurfaceCairo*>(aSurface)->GetSurface();
     cairo_surface_reference(surf);
     return surf;
+  }
+
+  if (aExistingOnly) {
+    return nullptr;
   }
 
   RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
@@ -189,6 +194,56 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface)
   return surf;
 }
 
+// An RAII class to temporarily clear any device offset set
+// on a surface. Note that this does not take a reference to the
+// surface.
+class AutoClearDeviceOffset
+{
+public:
+  AutoClearDeviceOffset(SourceSurface* aSurface)
+    : mSurface(nullptr)
+  {
+    Init(aSurface);
+  }
+
+  AutoClearDeviceOffset(const Pattern& aPattern)
+    : mSurface(nullptr)
+  {
+    if (aPattern.GetType() == PATTERN_SURFACE) {
+      const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);
+      Init(pattern.mSurface);
+    }
+  }
+
+  ~AutoClearDeviceOffset()
+  {
+    if (mSurface) {
+      cairo_surface_set_device_offset(mSurface, mX, mY);
+    }
+  }
+
+private:
+  void Init(SourceSurface* aSurface)
+  {
+    cairo_surface_t* surface = GetCairoSurfaceForSourceSurface(aSurface, true);
+    if (surface) {
+      Init(surface);
+      cairo_surface_destroy(surface);
+    }
+  }
+
+  void Init(cairo_surface_t *aSurface)
+  {
+    mSurface = aSurface;
+    cairo_surface_get_device_offset(mSurface, &mX, &mY);
+    cairo_surface_set_device_offset(mSurface, 0, 0);
+  }
+
+  cairo_surface_t* mSurface;
+  double mX;
+  double mY;
+};
+
 // Never returns nullptr. As such, you must always pass in Cairo-compatible
 // patterns, most notably gradients with a GradientStopCairo.
 // The pattern returned must have cairo_pattern_destroy() called on it by the
@@ -200,6 +255,7 @@ static cairo_pattern_t*
 GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 {
   cairo_pattern_t* pat;
+  const Matrix* matrix = nullptr;
 
   switch (aPattern.GetType())
   {
@@ -217,14 +273,7 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 
       pat = cairo_pattern_create_for_surface(surf);
 
-      // The pattern matrix is a matrix that transforms the pattern into user
-      // space. Cairo takes a matrix that converts from user space to pattern
-      // space. Cairo therefore needs the inverse.
-
-      cairo_matrix_t mat;
-      GfxMatrixToCairoMatrix(pattern.mMatrix, mat);
-      cairo_matrix_invert(&mat);
-      cairo_pattern_set_matrix(pat, &mat);
+      matrix = &pattern.mMatrix;
 
       cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(pattern.mFilter));
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(pattern.mExtendMode));
@@ -243,6 +292,8 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
       MOZ_ASSERT(pattern.mStops->GetBackendType() == BACKEND_CAIRO);
       GradientStopsCairo* cairoStops = static_cast<GradientStopsCairo*>(pattern.mStops.get());
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(cairoStops->GetExtendMode()));
+
+      matrix = &pattern.mMatrix;
 
       const std::vector<GradientStop>& stops = cairoStops->GetStops();
       for (size_t i = 0; i < stops.size(); ++i) {
@@ -265,6 +316,8 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
       GradientStopsCairo* cairoStops = static_cast<GradientStopsCairo*>(pattern.mStops.get());
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(cairoStops->GetExtendMode()));
 
+      matrix = &pattern.mMatrix;
+
       const std::vector<GradientStop>& stops = cairoStops->GetStops();
       for (size_t i = 0; i < stops.size(); ++i) {
         const GradientStop& stop = stops[i];
@@ -280,6 +333,16 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
       // We should support all pattern types!
       MOZ_ASSERT(false);
     }
+  }
+
+  // The pattern matrix is a matrix that transforms the pattern into user
+  // space. Cairo takes a matrix that converts from user space to pattern
+  // space. Cairo therefore needs the inverse.
+  if (matrix) {
+    cairo_matrix_t mat;
+    GfxMatrixToCairoMatrix(*matrix, mat);
+    cairo_matrix_invert(&mat);
+    cairo_pattern_set_matrix(pat, &mat);
   }
 
   return pat;
@@ -361,6 +424,7 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
                              const DrawOptions &aOptions)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  AutoClearDeviceOffset clear(aSurface);
 
   float sx = aSource.Width() / aDest.Width();
   float sy = aSource.Height() / aDest.Height();
@@ -376,6 +440,8 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
   cairo_pattern_set_matrix(pat, &src_mat);
   cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(aSurfOptions.mFilter));
   cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
+
+  cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   cairo_translate(mContext, aDest.X(), aDest.Y());
 
@@ -411,6 +477,8 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
   if (aSurface->GetType() != SURFACE_CAIRO) {
     return;
   }
+  
+  AutoClearDeviceOffset clear(aSurface);
 
   Float width = Float(aSurface->GetSize().width);
   Float height = Float(aSurface->GetSize().height);
@@ -480,9 +548,13 @@ DrawTargetCairo::DrawPattern(const Pattern& aPattern,
   if (!PatternIsCompatible(aPattern)) {
     return;
   }
+  
+  AutoClearDeviceOffset clear(aPattern);
 
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
   cairo_set_source(mContext, pat);
+
+  cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   if (NeedIntermediateSurface(aPattern, aOptions) ||
       !IsOperatorBoundByMask(aOptions.mCompositionOp)) {
@@ -539,6 +611,7 @@ DrawTargetCairo::CopySurface(SourceSurface *aSurface,
                              const IntPoint &aDest)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  AutoClearDeviceOffset clear(aSurface);
 
   if (!aSurface || aSurface->GetType() != SURFACE_CAIRO) {
     gfxWarning() << "Unsupported surface type specified";
@@ -551,6 +624,7 @@ DrawTargetCairo::CopySurface(SourceSurface *aSurface,
 
   cairo_set_source_surface(mContext, surf, aDest.x - aSource.x, aDest.y - aSource.y);
   cairo_set_operator(mContext, CAIRO_OPERATOR_SOURCE);
+  cairo_set_antialias(mContext, CAIRO_ANTIALIAS_NONE);
 
   cairo_reset_clip(mContext);
   cairo_new_path(mContext);
@@ -563,6 +637,7 @@ DrawTargetCairo::ClearRect(const Rect& aRect)
 {
   AutoPrepareForDrawing prep(this, mContext);
 
+  cairo_set_antialias(mContext, CAIRO_ANTIALIAS_NONE);
   cairo_new_path(mContext);
   cairo_set_operator(mContext, CAIRO_OPERATOR_CLEAR);
   cairo_rectangle(mContext, aRect.X(), aRect.Y(),
@@ -641,6 +716,7 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
                             const GlyphRenderingOptions*)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  AutoClearDeviceOffset clear(aPattern);
 
   ScaledFontBase* scaledFont = static_cast<ScaledFontBase*>(aFont);
   cairo_set_scaled_font(mContext, scaledFont->GetCairoScaledFont());
@@ -648,6 +724,8 @@ DrawTargetCairo::FillGlyphs(ScaledFont *aFont,
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aPattern, aOptions.mAlpha);
   cairo_set_source(mContext, pat);
   cairo_pattern_destroy(pat);
+
+  cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   // Convert our GlyphBuffer into an array of Cairo glyphs.
   std::vector<cairo_glyph_t> glyphs(aBuffer.mNumGlyphs);
@@ -666,6 +744,10 @@ DrawTargetCairo::Mask(const Pattern &aSource,
                       const DrawOptions &aOptions /* = DrawOptions() */)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  AutoClearDeviceOffset clearSource(aSource);
+  AutoClearDeviceOffset clearMask(aMask);
+
+  cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   cairo_pattern_t* source = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
   cairo_set_source(mContext, source);
@@ -684,10 +766,14 @@ DrawTargetCairo::MaskSurface(const Pattern &aSource,
                              const DrawOptions &aOptions)
 {
   AutoPrepareForDrawing prep(this, mContext);
+  AutoClearDeviceOffset clearSource(aSource);
+  AutoClearDeviceOffset clearMask(aMask);
 
   if (!PatternIsCompatible(aSource)) {
     return;
   }
+
+  cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));
 
   cairo_pattern_t* pat = GfxPatternToCairoPattern(aSource, aOptions.mAlpha);
   cairo_set_source(mContext, pat);

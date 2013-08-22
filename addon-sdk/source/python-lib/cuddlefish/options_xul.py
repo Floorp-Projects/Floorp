@@ -45,7 +45,7 @@ def validate_prefs(options):
 
         # TODO: Check that pref["type"] matches default value type
 
-def parse_options(options, jetpack_id, preferencesBranch):
+def parse_options(options, jetpack_id):
     doc = Document()
     root = doc.createElement("vbox")
     root.setAttribute("xmlns", "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul")
@@ -58,7 +58,7 @@ def parse_options(options, jetpack_id, preferencesBranch):
         setting = doc.createElement("setting")
         setting.setAttribute("pref-name", pref["name"])
         setting.setAttribute("data-jetpack-id", jetpack_id)
-        setting.setAttribute("pref", "extensions." + preferencesBranch + "." + pref["name"])
+        setting.setAttribute("pref", "extensions." + jetpack_id + "." + pref["name"])
         setting.setAttribute("type", pref["type"])
         setting.setAttribute("title", pref["title"])
 

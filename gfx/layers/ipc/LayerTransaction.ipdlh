@@ -33,7 +33,7 @@ using mozilla::dom::ScreenOrientation;
 using mozilla::layers::TextureInfo;
 using mozilla::LayerMargin;
 using mozilla::LayerPoint;
-using mozilla::layers::ImageLayer::ScaleMode;
+using mozilla::layers::ScaleMode;
 using mozilla::layers::DiagnosticTypes;
 
 namespace mozilla {

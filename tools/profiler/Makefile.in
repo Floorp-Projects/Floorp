@@ -24,10 +24,6 @@ DEFINES += -DARCH_ARMV6
 endif
 
 EXPORT_LIBRARY  = 1
-LIBXUL_LIBRARY  = 1
-ifndef _MSC_VER
-FAIL_ON_WARNINGS = 1
-endif # !_MSC_VER
 
 # Uncomment for better debugging in opt builds
 #MOZ_OPTIMIZE_FLAGS += -O0 -g

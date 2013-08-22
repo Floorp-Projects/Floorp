@@ -19,7 +19,6 @@ namespace ion {
     _(Test)                                                                 \
     _(TypeObjectDispatch)                                                   \
     _(FunctionDispatch)                                                     \
-    _(PolyInlineDispatch)                                                   \
     _(Compare)                                                              \
     _(Phi)                                                                  \
     _(Beta)                                                                 \

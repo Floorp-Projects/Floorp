@@ -958,6 +958,18 @@ js::GetAnyCompartmentInZone(JS::Zone *zone)
     return comp.get();
 }
 
+bool
+JS::ObjectPtr::isAboutToBeFinalized()
+{
+    return JS_IsAboutToBeFinalized(&value);
+}
+
+void
+JS::ObjectPtr::trace(JSTracer *trc, const char *name)
+{
+    JS_CallHeapObjectTracer(trc, &value, name);
+}
+
 JS_FRIEND_API(JSObject *)
 js::GetTestingFunctions(JSContext *cx)
 {

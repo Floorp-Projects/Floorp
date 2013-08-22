@@ -549,3 +549,7 @@ if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['
 
 LIBRARY_NAME = 'skia'
 
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

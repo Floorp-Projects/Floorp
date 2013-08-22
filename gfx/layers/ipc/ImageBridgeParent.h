@@ -3,15 +3,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/PImageBridgeParent.h"
+#include <stddef.h>                     // for size_t
+#include <stdint.h>                     // for uint32_t, uint64_t
 #include "CompositableTransactionParent.h"
+#include "gfxPoint.h"                   // for gfxIntSize
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
+#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
+#include "mozilla/layers/PImageBridgeParent.h"
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsISupportsImpl.h"
+#include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
 
 class MessageLoop;
 
 namespace mozilla {
+namespace ipc {
+class Shmem;
+}
+
 namespace layers {
 
-class CompositorParent;
 /**
  * ImageBridgeParent is the manager Protocol of ImageContainerParent.
  * It's purpose is mainly to setup the IPDL connection. Most of the

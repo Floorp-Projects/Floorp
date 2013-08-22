@@ -8,3 +8,28 @@ MODULE = 'vorbis'
 
 LIBRARY_NAME = 'vorbis'
 
+CSRCS += [
+    'vorbis_analysis.c',
+    'vorbis_bitrate.c',
+    'vorbis_block.c',
+    'vorbis_codebook.c',
+    'vorbis_envelope.c',
+    'vorbis_floor0.c',
+    'vorbis_floor1.c',
+    'vorbis_info.c',
+    'vorbis_lookup.c',
+    'vorbis_lpc.c',
+    'vorbis_lsp.c',
+    'vorbis_mapping0.c',
+    'vorbis_mdct.c',
+    'vorbis_psy.c',
+    'vorbis_registry.c',
+    'vorbis_res0.c',
+    'vorbis_sharedbook.c',
+    'vorbis_smallft.c',
+    'vorbis_synthesis.c',
+    'vorbis_window.c',
+]
+
+MSVC_ENABLE_PGO = True
+

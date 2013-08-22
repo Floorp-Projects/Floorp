@@ -77,6 +77,23 @@ GfxOpToCairoOp(CompositionOp op)
   return CAIRO_OPERATOR_OVER;
 }
 
+static inline cairo_antialias_t
+GfxAntialiasToCairoAntialias(AntialiasMode antialias)
+{
+  switch (antialias)
+  {
+    case AA_NONE:
+      return CAIRO_ANTIALIAS_NONE;
+    case AA_GRAY:
+      return CAIRO_ANTIALIAS_GRAY;
+    case AA_SUBPIXEL:
+      return CAIRO_ANTIALIAS_SUBPIXEL;
+    case AA_DEFAULT:
+      return CAIRO_ANTIALIAS_DEFAULT;
+  }
+  return CAIRO_ANTIALIAS_DEFAULT;
+}
+
 static inline cairo_filter_t
 GfxFilterToCairoFilter(Filter filter)
 {
