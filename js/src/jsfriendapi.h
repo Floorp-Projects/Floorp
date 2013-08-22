@@ -11,8 +11,8 @@
 #include "mozilla/MemoryReporting.h"
 #endif
 
+#include "jsapi.h"
 #include "jsbytecode.h"
-#include "jsclass.h"
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
