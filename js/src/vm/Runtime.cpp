@@ -269,7 +269,9 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     parallelWarmup(0),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     useHelperThreads_(useHelperThreads),
-    requestedHelperThreadCount(-1)
+    requestedHelperThreadCount(-1),
+    useHelperThreadsForIonCompilation_(true),
+    useHelperThreadsForParsing_(true)
 #ifdef DEBUG
     , enteredPolicy(NULL)
 #endif
@@ -407,7 +409,9 @@ JSRuntime::~JSRuntime()
         PR_DestroyLock(exclusiveAccessLock);
 
     JS_ASSERT(!numExclusiveThreads);
-    exclusiveThreadsPaused = true; // Avoid bogus asserts during teardown.
+
+    // Avoid bogus asserts during teardown.
+    exclusiveThreadsPaused = true;
 #endif
 
     /*

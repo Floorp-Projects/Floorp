@@ -1772,5 +1772,6 @@ test-pref(layout.css.flexbox.enabled,true) == 849407-1.html 849407-1-ref.html
 == 883987-1f.html 883987-1-ref.html
 == 890495-1.html 890495-1-ref.html
 == 894931-1.html 894931-1-ref.html
+fuzzy(1,10000) == 902330-1.html 902330-1-ref.html
 == 897491-1.html 897491-1-ref.html
 == 897491-2.html 897491-2-ref.html

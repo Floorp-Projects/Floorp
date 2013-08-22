@@ -169,7 +169,7 @@ nsHttpAuthCache::SetAuthEntry(const char *scheme,
         if (NS_FAILED(rv))
             delete node;
         else
-            PL_HashTableAdd(mDB, nsCRT::strdup(key.get()), node);
+            PL_HashTableAdd(mDB, strdup(key.get()), node);
         return rv;
     }
 
@@ -254,7 +254,7 @@ nsHttpAuthCache::FreeEntry(void *self, PLHashEntry *he, unsigned flag)
     else if (flag == HT_FREE_ENTRY) {
         // three wonderful flavors of freeing memory ;-)
         delete (nsHttpAuthNode *) he->value;
-        nsCRT::free((char *) he->key);
+        free((char *) he->key);
         free(he);
     }
 }

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsdbgapi.h"
+#include "jsfriendapi.h"
 #include "jsd_xpc.h"
 
 #include "js/GCAPI.h"

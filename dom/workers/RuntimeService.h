@@ -11,7 +11,6 @@
 
 #include "nsIObserver.h"
 
-#include "jsapi.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"

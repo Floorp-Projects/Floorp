@@ -141,10 +141,6 @@ class ConfigEnvironment(object):
                 try:
                     v = v.decode('utf-8')
                 except UnicodeDecodeError:
-                    log(self._log, logging.INFO, 'lossy_encoding',
-                        {'variable': k},
-                        'Lossy Unicode encoding for {variable}. See bug 844509.')
-
                     v = v.decode('utf-8', 'replace')
 
             self.substs_unicode[k] = v

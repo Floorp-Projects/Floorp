@@ -12,7 +12,6 @@
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController, etc
 #include "CompositorParent.h"           // for CompositorParent
 #include "FrameMetrics.h"               // for FrameMetrics, etc
-#include "GeckoProfilerFunc.h"          // for TimeDuration, TimeStamp
 #include "GestureEventListener.h"       // for GestureEventListener
 #include "InputData.h"                  // for MultiTouchInput, etc
 #include "Units.h"                      // for CSSRect, CSSPoint, etc

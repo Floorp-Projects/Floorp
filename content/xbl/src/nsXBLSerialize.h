@@ -6,17 +6,20 @@
 #ifndef nsXBLSerialize_h__
 #define nsXBLSerialize_h__
 
-#include "jsapi.h"
-
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsINameSpaceManager.h"
+
+namespace JS {
+template <typename T> class Handle;
+template <typename T> class MutableHandle;
+}
 
 typedef uint8_t XBLBindingSerializeDetails;
 
 // A version number to ensure we don't load cached data in a different
 // file format.
-#define XBLBinding_Serialize_Version 0x00000001
+#define XBLBinding_Serialize_Version 0x00000002
 
 // Set for the first binding in a document
 #define XBLBinding_Serialize_IsFirstBinding 1

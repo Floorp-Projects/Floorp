@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<script>
+  var threw;
+  try {
+    document.domain = "example.org";
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  var sandboxed = (location.search == "?sandboxed");
+  parent.postMessage({ threw: threw, sandboxed: sandboxed }, "*");
+</script>

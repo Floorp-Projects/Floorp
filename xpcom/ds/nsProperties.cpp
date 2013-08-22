@@ -70,7 +70,7 @@ GetKeysEnumerate(const char *key, nsISupports* data,
                  void *arg)
 {
     GetKeysEnumData *gkedp = (GetKeysEnumData *)arg;
-    gkedp->keys[gkedp->next] = nsCRT::strdup(key);
+    gkedp->keys[gkedp->next] = strdup(key);
 
     if (!gkedp->keys[gkedp->next]) {
         gkedp->res = NS_ERROR_OUT_OF_MEMORY;

@@ -55,8 +55,12 @@ function ComputeNumChunks(length) {
  */
 function ComputeSliceBounds(numItems, sliceIndex, numSlices) {
   var sliceWidth = (numItems / numSlices) | 0;
-  var startIndex = sliceWidth * sliceIndex;
-  var endIndex = sliceIndex === numSlices - 1 ? numItems : sliceWidth * (sliceIndex + 1);
+  var extraChunks = (numItems % numSlices) | 0;
+
+  var startIndex = sliceWidth * sliceIndex + std_Math_min(extraChunks, sliceIndex);
+  var endIndex = startIndex + sliceWidth;
+  if (sliceIndex < extraChunks)
+    endIndex += 1;
   return [startIndex, endIndex];
 }
 
@@ -70,10 +74,18 @@ function ComputeSliceBounds(numItems, sliceIndex, numSlices) {
  */
 function ComputeAllSliceBounds(numItems, numSlices) {
   // FIXME(bug 844890): Use typed arrays here.
+  var sliceWidth = (numItems / numSlices) | 0;
+  var extraChunks = (numItems % numSlices) | 0;
+  var counter = 0;
   var info = [];
-  for (var i = 0; i < numSlices; i++) {
-    var [start, end] = ComputeSliceBounds(numItems, i, numSlices);
-    ARRAY_PUSH(info, SLICE_INFO(start, end));
+  var i = 0;
+  for (; i < extraChunks; i++) {
+    ARRAY_PUSH(info, SLICE_INFO(counter, counter + sliceWidth + 1));
+    counter += sliceWidth + 1;
+  }
+  for (; i < numSlices; i++) {
+    ARRAY_PUSH(info, SLICE_INFO(counter, counter + sliceWidth));
+    counter += sliceWidth;
   }
   return info;
 }

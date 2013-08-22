@@ -1576,6 +1576,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSUseHelperThreads useHelperThreads_;
     int32_t requestedHelperThreadCount;
 
+    // Settings for how helper threads can be used.
+    bool useHelperThreadsForIonCompilation_;
+    bool useHelperThreadsForParsing_;
+
   public:
 
     bool useHelperThreads() const {
@@ -1599,6 +1603,20 @@ struct JSRuntime : public JS::shadow::Runtime,
 #else
         return 0;
 #endif
+    }
+
+    void setCanUseHelperThreadsForIonCompilation(bool value) {
+        useHelperThreadsForIonCompilation_ = value;
+    }
+    bool useHelperThreadsForIonCompilation() const {
+        return useHelperThreadsForIonCompilation_;
+    }
+
+    void setCanUseHelperThreadsForParsing(bool value) {
+        useHelperThreadsForParsing_ = value;
+    }
+    bool useHelperThreadsForParsing() const {
+        return useHelperThreadsForParsing_;
     }
 
 #ifdef DEBUG

@@ -11,7 +11,6 @@
 #include "mozilla/ipc/PTestShellParent.h"
 #include "mozilla/ipc/PTestShellCommandParent.h"
 
-#include "jsapi.h"
 #include "nsAutoJSValHolder.h"
 #include "nsStringGlue.h"
 

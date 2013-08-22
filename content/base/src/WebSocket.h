@@ -22,7 +22,6 @@
 // Need this for BinaryType.
 #include "mozilla/dom/WebSocketBinding.h"
 
-#include "jsfriendapi.h"
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"

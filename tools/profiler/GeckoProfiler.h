@@ -49,7 +49,6 @@
 #ifndef SAMPLER_H
 #define SAMPLER_H
 
-#include "jsfriendapi.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/TimeStamp.h"
 

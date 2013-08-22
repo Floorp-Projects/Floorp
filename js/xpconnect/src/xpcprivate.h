@@ -92,14 +92,7 @@
 #include <string.h>
 
 #include "xpcpublic.h"
-#include "jsapi.h"
-#include "jsprf.h"
 #include "pldhash.h"
-#include "prprf.h"
-#include "jsdbgapi.h"
-#include "jsfriendapi.h"
-#include "js/HeapAPI.h"
-#include "jswrapper.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
@@ -134,8 +127,6 @@
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsAutoJSValHolder.h"
-
-#include "js/HashTable.h"
 
 #include "nsThreadUtils.h"
 #include "nsIJSEngineTelemetryStats.h"
@@ -3690,7 +3681,22 @@ xpc_GetSafeJSContext()
     return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContext();
 }
 
+bool
+NewFunctionForwarder(JSContext *cx, JS::HandleId id, JS::HandleObject callable,
+                     bool doclone, JS::MutableHandleValue vp);
+
+nsresult
+ThrowAndFail(nsresult errNum, JSContext* cx, bool* retval);
+
+// Infallible.
+already_AddRefed<nsIXPCComponents_utils_Sandbox>
+NewSandboxConstructor();
+
+bool
+IsSandbox(JSObject *obj);
+
 namespace xpc {
+
 struct SandboxOptions {
     SandboxOptions(JSContext *cx)
         : wantXrays(true)
