@@ -15,8 +15,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TypedArray.h"
 
-#include "js/StructuredClone.h"
-
 BEGIN_WORKERS_NAMESPACE
 
 class Proxy;

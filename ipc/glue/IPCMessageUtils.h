@@ -22,7 +22,7 @@
 #include "nsMemory.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "js/StructuredClone.h"
+#include "jsapi.h"
 #include "nsCSSProperty.h"
 
 #ifdef _MSC_VER
