@@ -416,11 +416,21 @@ namespace js {
 extern bool
 Function(JSContext *cx, unsigned argc, Value *vp);
 
+extern bool
+Generator(JSContext *cx, unsigned argc, Value *vp);
+
 extern JSFunction *
 NewFunction(ExclusiveContext *cx, HandleObject funobj, JSNative native, unsigned nargs,
             JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
             gc::AllocKind allocKind = JSFunction::FinalizeKind,
             NewObjectKind newKind = GenericObject);
+
+// If proto is NULL, Function.prototype is used instead.
+extern JSFunction *
+NewFunctionWithProto(ExclusiveContext *cx, HandleObject funobj, JSNative native, unsigned nargs,
+                     JSFunction::Flags flags, HandleObject parent, HandleAtom atom,
+                     JSObject *proto, gc::AllocKind allocKind = JSFunction::FinalizeKind,
+                     NewObjectKind newKind = GenericObject);
 
 extern JSFunction *
 DefineFunction(JSContext *cx, HandleObject obj, HandleId id, JSNative native,
