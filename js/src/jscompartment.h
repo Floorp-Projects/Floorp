@@ -301,7 +301,8 @@ struct JSCompartment
 
         JS_ASSERT(vp.isObject());
 
-        /* All that's left are objects.
+        /*
+         * All that's left are objects.
          *
          * Object wrapping isn't the fastest thing in the world, in part because
          * we have to unwrap and invoke the prewrap hook to find the identity
@@ -311,8 +312,11 @@ struct JSCompartment
          * wrapper's side.
          *
          * To optimize this, we note that the cache should only ever contain
-         * identity objects, and that unwrap and prewrap should never map one
-         * identity object to another object. This means that we can safely
+         * identity objects - that is to say, objects that serve as the
+         * canonical representation for a unique object identity observable by
+         * script. Unwrap and prewrap are both steps that we take to get to the
+         * identity of an incoming objects, and as such, they shuld never map
+         * one identity object to another object. This means that we can safely
          * check the cache immediately, and only risk false negatives. Do this
          * in opt builds, and do both in debug builds so that we can assert
          * that we get the same answer.
