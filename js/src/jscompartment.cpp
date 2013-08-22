@@ -223,19 +223,17 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
     if (!vp.isMarkable())
         return true;
 
+    /* Handle strings. */
     if (vp.isString()) {
         JSString *str = vp.toString();
-
-        /* If the string is already in this compartment, we are done. */
-        if (str->zone() == zone())
-            return true;
-
-        /* If the string is an atom, we don't have to copy. */
-        if (str->isAtom()) {
-            JS_ASSERT(cx->runtime()->isAtomsZone(str->zone()));
-            return true;
-        }
+        if (!wrap(cx, &str))
+            return false;
+        vp.setString(str);
+        return true;
     }
+
+    /* All that's left are objects. */
+    MOZ_ASSERT(vp.isObject());
 
     /*
      * Wrappers should really be parented to the wrapped parent of the wrapped
@@ -295,34 +293,6 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
         return true;
     }
 
-    if (vp.isString()) {
-        Rooted<JSLinearString *> str(cx, vp.toString()->ensureLinear(cx));
-        if (!str)
-            return false;
-
-        JSString *wrapped = js_NewStringCopyN<CanGC>(cx, str->chars(), str->length());
-        if (!wrapped)
-            return false;
-
-        vp.setString(wrapped);
-        if (!putWrapper(key, vp))
-            return false;
-
-        if (str->zone()->isGCMarking()) {
-            /*
-             * All string wrappers are dropped when collection starts, but we
-             * just created a new one.  Mark the wrapped string to stop it being
-             * finalized, because if it was then the pointer in this
-             * compartment's wrapper map would be left dangling.
-             */
-            JSString *tmp = str;
-            MarkStringUnbarriered(&rt->gcMarker, &tmp, "wrapped string");
-            JS_ASSERT(tmp == str);
-        }
-
-        return true;
-    }
-
     RootedObject proto(cx, Proxy::LazyProto);
     RootedObject obj(cx, &vp.toObject());
     RootedObject existing(cx, existingArg);
@@ -359,20 +329,58 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
 bool
 JSCompartment::wrap(JSContext *cx, JSString **strp)
 {
-    RootedValue value(cx, StringValue(*strp));
-    if (!wrap(cx, &value))
+    /* If the string is already in this compartment, we are done. */
+    JSString *str = *strp;
+    if (str->zone() == zone())
+        return true;
+
+    /* If the string is an atom, we don't have to copy. */
+    if (str->isAtom()) {
+        JS_ASSERT(cx->runtime()->isAtomsZone(str->zone()));
+        return true;
+    }
+
+    /* Check the cache. */
+    RootedValue key(cx, StringValue(str));
+    if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
+        *strp = p->value.get().toString();
+        return true;
+    }
+
+    /* No dice. Make a copy, and cache it. */
+    Rooted<JSLinearString *> linear(cx, str->ensureLinear(cx));
+    if (!linear)
         return false;
-    *strp = value.get().toString();
+    JSString *copy = js_NewStringCopyN<CanGC>(cx, linear->chars(),
+                                              linear->length());
+    if (!copy)
+        return false;
+    if (!putWrapper(key, StringValue(copy)))
+        return false;
+
+    if (linear->zone()->isGCMarking()) {
+        /*
+         * All string wrappers are dropped when collection starts, but we
+         * just created a new one.  Mark the wrapped string to stop it being
+         * finalized, because if it was then the pointer in this
+         * compartment's wrapper map would be left dangling.
+         */
+        JSString *tmp = linear;
+        MarkStringUnbarriered(&cx->runtime()->gcMarker, &tmp, "wrapped string");
+        JS_ASSERT(tmp == linear);
+    }
+
+    *strp = copy;
     return true;
 }
 
 bool
 JSCompartment::wrap(JSContext *cx, HeapPtrString *strp)
 {
-    RootedValue value(cx, StringValue(*strp));
-    if (!wrap(cx, &value))
+    RootedString str(cx, *strp);
+    if (!wrap(cx, str.address()))
         return false;
-    *strp = value.get().toString();
+    *strp = str;
     return true;
 }
 
