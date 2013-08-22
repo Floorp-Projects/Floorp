@@ -225,8 +225,8 @@ protected:
   public:
     static bool KeyCausesActivation() { return sKeyCausesActivation; }
     static bool ClickHoldContextMenu() { return sClickHoldContextMenu; }
-    static int32_t ChromeAccessModifier() { return sChromeAccessModifier; }
-    static int32_t ContentAccessModifier() { return sContentAccessModifier; }
+    static int32_t ChromeAccessModifierMask();
+    static int32_t ContentAccessModifierMask();
 
     static void Init();
     static int OnChange(const char* aPrefName, void*);
@@ -235,15 +235,18 @@ protected:
   private:
     static bool sKeyCausesActivation;
     static bool sClickHoldContextMenu;
-    static int32_t sChromeAccessModifier;
-    static int32_t sContentAccessModifier;
+    static int32_t sGenericAccessModifierKey;
+    static int32_t sChromeAccessModifierMask;
+    static int32_t sContentAccessModifierMask;
+
+    static int32_t GetAccessModifierMask(int32_t aItemType);
   };
 
   /**
-   * Get appropriate access modifier for the aDocShell.  Returns -1 if
+   * Get appropriate access modifier mask for the aDocShell.  Returns -1 if
    * access key isn't available.
    */
-  static int32_t GetAccessModifierFor(nsISupports* aDocShell);
+  static int32_t GetAccessModifierMaskFor(nsISupports* aDocShell);
 
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
