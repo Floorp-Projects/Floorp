@@ -6,7 +6,6 @@
 #ifndef nsEventListenerManager_h__
 #define nsEventListenerManager_h__
 
-#include "jsapi.h"
 #include "mozilla/dom/EventListenerBinding.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsAutoPtr.h"

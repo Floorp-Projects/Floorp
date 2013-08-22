@@ -122,7 +122,7 @@ nsSaveAsCharset::GetCharset(char * *aCharset)
     return NS_ERROR_FAILURE;
   }
 
-  *aCharset = nsCRT::strdup(charset);
+  *aCharset = strdup(charset);
   return (*aCharset) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

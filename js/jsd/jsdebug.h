@@ -12,7 +12,6 @@
 #define jsdebug_h___
 
 #include "jsapi.h"
-#include "jsdbgapi.h"
 
 extern "C" {
 
