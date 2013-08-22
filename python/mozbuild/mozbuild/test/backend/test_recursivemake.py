@@ -175,6 +175,9 @@ class TestRecursiveMakeBackend(BackendTester):
                 'EXTRA_PP_JS_MODULES += bar.pp.jsm',
                 'EXTRA_PP_JS_MODULES += foo.pp.jsm',
             ],
+            'FAIL_ON_WARNINGS': [
+                'FAIL_ON_WARNINGS := 1',
+            ],
             'GTEST_CMMSRCS': [
                 'GTEST_CMMSRCS += test1.mm',
                 'GTEST_CMMSRCS += test2.mm',
