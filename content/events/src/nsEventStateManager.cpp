@@ -115,6 +115,7 @@ static bool sLeftClickOnly = true;
 static bool sKeyCausesActivation = true;
 static uint32_t sESMInstanceCount = 0;
 static int32_t sChromeAccessModifier = 0, sContentAccessModifier = 0;
+static bool sClickHoldContextMenu = false;
 int32_t nsEventStateManager::sUserInputEventDepth = 0;
 bool nsEventStateManager::sNormalLMouseEventInProcess = false;
 nsEventStateManager* nsEventStateManager::sActiveESM = nullptr;
@@ -681,8 +682,7 @@ nsEventStateManager::nsEventStateManager()
     mLClickCount(0),
     mMClickCount(0),
     mRClickCount(0),
-    m_haveShutdown(false),
-    mClickHoldContextMenu(false)
+    m_haveShutdown(false)
 {
   if (sESMInstanceCount == 0) {
     gUserInteractionTimerCallback = new nsUITimerCallback();
@@ -742,11 +742,10 @@ nsEventStateManager::Init()
       GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeChrome);
     sContentAccessModifier =
       GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeContent);
+    sClickHoldContextMenu =
+      Preferences::GetBool("ui.click_hold_context_menus", false);
   }
   Preferences::AddWeakObservers(this, kObservedPrefs);
-
-  mClickHoldContextMenu =
-    Preferences::GetBool("ui.click_hold_context_menus", false);
 
   return NS_OK;
 }
@@ -756,7 +755,7 @@ nsEventStateManager::~nsEventStateManager()
   if (sActiveESM == this) {
     sActiveESM = nullptr;
   }
-  if (mClickHoldContextMenu)
+  if (sClickHoldContextMenu)
     KillClickHoldTimer();
 
   if (mDocument == sMouseOverDocument)
@@ -837,7 +836,7 @@ nsEventStateManager::Observe(nsISupports *aSubject,
       sContentAccessModifier =
         GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeContent);
     } else if (data.EqualsLiteral("ui.click_hold_context_menus")) {
-      mClickHoldContextMenu =
+      sClickHoldContextMenu =
         Preferences::GetBool("ui.click_hold_context_menus", false);
     } else if (data.EqualsLiteral("dom.popup_allowed_events")) {
       nsDOMEvent::PopupAllowedEventsChanged();
@@ -965,7 +964,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case NS_MOUSE_BUTTON_UP:
     switch (static_cast<nsMouseEvent*>(aEvent)->button) {
       case nsMouseEvent::eLeftButton:
-        if (mClickHoldContextMenu) {
+        if (sClickHoldContextMenu) {
           KillClickHoldTimer();
         }
 #ifndef XP_OS2
@@ -1018,7 +1017,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     FlushPendingEvents(aPresContext);
     break;
   case NS_DRAGDROP_GESTURE:
-    if (mClickHoldContextMenu) {
+    if (sClickHoldContextMenu) {
       // an external drag gesture event came in, not generated internally
       // by Gecko. Make sure we get rid of the click-hold timer.
       KillClickHoldTimer();
@@ -1900,7 +1899,7 @@ nsEventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
   mGestureModifiers = inDownEvent->modifiers;
   mGestureDownButtons = inDownEvent->buttons;
 
-  if (mClickHoldContextMenu) {
+  if (sClickHoldContextMenu) {
     // fire off a timer to track click-hold
     CreateClickHoldTimer(aPresContext, inDownFrame, inDownEvent);
   }
@@ -1990,7 +1989,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       LayoutDeviceIntPoint::FromUntyped(aEvent->widget->WidgetToScreenOffset());
     if (DeprecatedAbs(pt.x - mGestureDownPoint.x) > pixelThresholdX ||
         DeprecatedAbs(pt.y - mGestureDownPoint.y) > pixelThresholdY) {
-      if (mClickHoldContextMenu) {
+      if (sClickHoldContextMenu) {
         // stop the click-hold before we fire off the drag gesture, in case
         // it takes a long time
         KillClickHoldTimer();
