@@ -158,7 +158,7 @@ LogBlockingMixedContent(MixedContentTypes classification,
 
   const PRUnichar* strings[] = { locationSpecUTF16.get() };
   nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                  "Mixed Content Blocker",
+                                  NS_LITERAL_CSTRING("Mixed Content Blocker"),
                                   aRootDoc,
                                   nsContentUtils::eSECURITY_PROPERTIES,
                                   classification == eMixedDisplay ? "BlockMixedDisplayContent" : "BlockMixedActiveContent",

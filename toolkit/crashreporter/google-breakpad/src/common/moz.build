@@ -68,3 +68,5 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 LIBRARY_NAME = 'breakpad_common_s'
 
+MSVC_ENABLE_PGO = True
+

@@ -1,3 +1,4 @@
+// IWYU pragma: private, include "nsError.h"
 /* Helper file for nsError.h, via preprocessor magic */
   /* Standard "it worked" return value */
   ERROR(NS_OK,  0),

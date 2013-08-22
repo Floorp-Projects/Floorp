@@ -18,8 +18,6 @@ VPATH = \
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY = 1
-LIBXUL_LIBRARY = 1
-
 LOCAL_INCLUDES += \
   -I$(srcdir)/gtest \
   -I$(srcdir)/gtest/include \

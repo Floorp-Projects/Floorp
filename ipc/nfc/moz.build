@@ -11,3 +11,6 @@ if CONFIG['MOZ_B2G_NFC']:
     CPP_SOURCES += [
         'Nfc.cpp',
     ]
+
+LIBXUL_LIBRARY = True
+

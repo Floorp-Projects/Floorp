@@ -6,6 +6,12 @@
 
 MODULE = 'ots'
 
+if CONFIG['OS_TARGET'] != 'WINNT':
+    LIBXUL_LIBRARY = True
+else:
+    # FORCE_STATIC_LIB = True
+    pass
+
 EXPORTS += [
     '../include/opentype-sanitiser.h',
     '../include/ots-memory-stream.h',
@@ -46,4 +52,6 @@ CPP_SOURCES += [
 ]
 
 LIBRARY_NAME = 'mozots'
+
+MSVC_ENABLE_PGO = True
 

@@ -22,6 +22,7 @@ EXPORTS += [
     'nsDOMCID.h',
     'nsDOMClassInfoClasses.h',
     'nsDOMClassInfoID.h',
+    'nsDOMException.h',
     'nsDOMJSUtils.h',
     'nsDOMNavigationTiming.h',
     'nsDOMString.h',
@@ -108,3 +109,10 @@ EXTRA_JS_MODULES += [
     'IndexedDBHelper.jsm',
     'ObjectWrapper.jsm',
 ]
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

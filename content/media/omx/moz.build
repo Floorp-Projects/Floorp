@@ -19,3 +19,5 @@ CPP_SOURCES += [
     'OMXCodecProxy.cpp',
 ]
 
+LIBXUL_LIBRARY = True
+

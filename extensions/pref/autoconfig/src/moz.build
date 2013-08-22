@@ -13,3 +13,5 @@ CPP_SOURCES += [
     'nsReadConfig.cpp',
 ]
 
+LIBXUL_LIBRARY = True
+

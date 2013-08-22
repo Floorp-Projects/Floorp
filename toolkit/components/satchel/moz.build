@@ -40,3 +40,5 @@ EXTRA_PP_JS_MODULES += [
     'FormHistory.jsm',
 ]
 
+LIBXUL_LIBRARY = True
+

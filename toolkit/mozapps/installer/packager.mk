@@ -555,9 +555,7 @@ GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
 
 # The following target stages files into two directories: one directory for
 # core files, and one for optional extensions based on the information in
-# the MOZ_PKG_MANIFEST file and the following vars:
-# MOZ_NONLOCALIZED_PKG_LIST
-# MOZ_LOCALIZED_PKG_LIST
+# the MOZ_PKG_MANIFEST file.
 
 PKG_ARG = , "$(pkg)"
 

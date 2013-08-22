@@ -2329,7 +2329,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL);
         BOOL isRolledOver = CheckBooleanAttr(GetParentScrollbarFrame(aFrame),
                                              nsGkAtoms::hover);
-        if (!isRolledOver) {
+        if (!nsCocoaFeatures::OnMountainLionOrLater() || !isRolledOver) {
           if (isHorizontal) {
             macRect.origin.y += 4;
             macRect.size.height -= 4;
@@ -2375,6 +2375,20 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       if (nsLookAndFeel::UseOverlayScrollbars() &&
           CheckBooleanAttr(GetParentScrollbarFrame(aFrame), nsGkAtoms::hover)) {
         BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL);
+        if (!nsCocoaFeatures::OnMountainLionOrLater()) {
+          // On OSX 10.7, scrollbars don't grow when hovered. The adjustments
+          // below were obtained by trial and error.
+          if (isHorizontal) {
+            macRect.origin.y += 2.0;
+          } else {
+            if (aFrame->StyleVisibility()->mDirection !=
+                  NS_STYLE_DIRECTION_RTL) {
+              macRect.origin.x += 3.0;
+            } else {
+              macRect.origin.x -= 1.0;
+            }
+          }
+        }
         const BOOL isOnTopOfDarkBackground = IsDarkBackground(aFrame);
         CUIDraw([NSWindow coreUIRenderer], macRect, cgContext,
                 (CFDictionaryRef)[NSDictionary dictionaryWithObjectsAndKeys:

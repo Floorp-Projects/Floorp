@@ -200,7 +200,9 @@ class RecursiveMakeBackend(CommonBackend):
                 if isinstance(v, list):
                     for item in v:
                         backend_file.write('%s += %s\n' % (k, item))
-
+                elif isinstance(v, bool):
+                    if v:
+                        backend_file.write('%s := 1\n' % k)
                 else:
                     backend_file.write('%s := %s\n' % (k, v))
         elif isinstance(obj, Exports):

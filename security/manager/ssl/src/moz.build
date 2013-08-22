@@ -85,3 +85,9 @@ if CONFIG['MOZ_XUL']:
 
 LIBRARY_NAME = 'pipnss'
 
+CSRCS += [
+    'md4.c',
+]
+
+LIBXUL_LIBRARY = True
+

@@ -16,8 +16,6 @@ DEPTH            = @DEPTH@
 topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
 VPATH            = @srcdir@
-FAIL_ON_WARNINGS := 1
-
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/dom/dom-config.mk
 
@@ -26,7 +24,6 @@ VPATH += $(srcdir)/ipc
 ifneq (,$(MOZ_B2G_BT))
 
 LIBRARY_NAME     = dombluetooth_s
-LIBXUL_LIBRARY   = 1
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 VPATH += \

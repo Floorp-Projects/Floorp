@@ -39,3 +39,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'storage_s'
 
+LIBXUL_LIBRARY = True
+

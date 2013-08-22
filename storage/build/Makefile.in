@@ -11,9 +11,6 @@ VPATH=@srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY = 1
-LIBXUL_LIBRARY = 1
-
-
 LOCAL_INCLUDES = \
 	$(SQLITE_CFLAGS) \
 	-I$(srcdir)/../src

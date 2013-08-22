@@ -63,8 +63,6 @@ UnwrapArg(JSContext* cx, jsval v, Interface** ppArg,
 }
 
 bool
-ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...);
-bool
 ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                  const ErrNum aErrorNumber,
                  const char* aInterfaceName);

@@ -231,3 +231,6 @@ if ost.find('86') == -1 and ost.find('arm') == -1 and ost.find('mips') == -1:
     CPP_SOURCES += [
         'atomicops_internals_mutex.cc',
     ]
+
+LIBXUL_LIBRARY = True
+

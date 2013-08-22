@@ -148,3 +148,5 @@ else: # No SIMD support?
 
 LIBRARY_NAME = 'mozjpeg'
 
+MSVC_ENABLE_PGO = True
+

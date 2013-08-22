@@ -21,3 +21,7 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'nsappshell'
 
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

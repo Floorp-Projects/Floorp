@@ -6465,6 +6465,11 @@ IonBuilder::getElemTryDense(bool *emitted, MDefinition *obj, MDefinition *index)
     if (ElementAccessHasExtraIndexedProperty(cx, obj) && failedBoundsCheck_)
         return true;
 
+    // Don't generate a fast path if this pc has seen negative indexes accessed,
+    // which will not appear to be extra indexed properties.
+    if (inspector->hasSeenNegativeIndexGetElement(pc))
+        return true;
+
     // Emit dense getelem variant.
     if (!jsop_getelem_dense(obj, index))
         return false;

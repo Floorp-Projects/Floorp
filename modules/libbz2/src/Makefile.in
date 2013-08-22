@@ -22,17 +22,6 @@ endif
 # define it here anyways for consistency.
 DEFINES	+= -D_FILE_OFFSET_BITS=64
 
-CSRCS		= \
-		blocksort.c \
-		bzlib.c \
-		compress.c \
-		crctable.c \
-		decompress.c \
-		huffman.c \
-		randtable.c \
-		$(NULL)
-
-
 include $(topsrcdir)/config/rules.mk
 
 # The intermediate (.ii/.s) files for host and target can have the same name...

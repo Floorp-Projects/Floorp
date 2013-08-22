@@ -24,11 +24,6 @@ HOST_CPPSRCS = \
 
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
 
-CSRCS := \
-  test-ctors.c \
-  test-array.c \
-  $(NULL)
-
 ifndef CROSS_COMPILE
 CSRCS += dummy.c
 endif

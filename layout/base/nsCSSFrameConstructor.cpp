@@ -9169,7 +9169,8 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
         (display->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX)
           ? "NeededToWrapXULInlineBox" : "NeededToWrapXUL";
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "FrameConstructor", mDocument,
+                                      NS_LITERAL_CSTRING("FrameConstructor"),
+                                      mDocument,
                                       nsContentUtils::eXUL_PROPERTIES,
                                       message,
                                       params, ArrayLength(params));

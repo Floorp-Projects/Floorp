@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
 SHORT_LIBNAME = soundt
 VISIBILITY_FLAGS =
 EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)

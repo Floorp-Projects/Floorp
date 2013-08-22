@@ -11,22 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME    = widget_android
 EXPORT_LIBRARY  = 1
-LIBXUL_LIBRARY  = 1
-FAIL_ON_WARNINGS := 1
-
-ifdef MOZ_WEBSMS_BACKEND
-DEFINES += -DMOZ_WEBSMS_BACKEND
-endif
-
-NOT_THERE_YET_CPPSRCS = \
-	nsQtKeyUtils.cpp \
-	nsBidiKeyboard.cpp \
-	nsDragService.cpp \
-	nsNativeThemeQt.cpp \
-	mozqwidget.cpp \
-	nsSound.cpp \
-	$(NULL)
-
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 include $(topsrcdir)/config/rules.mk

@@ -11,10 +11,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME    = domsystemmac_s
 
-LIBXUL_LIBRARY   = 1
 EXPORT_LIBRARY = 1
-FAIL_ON_WARNINGS := 1
-
 LOCAL_INCLUDES  += -I$(topsrcdir)/dom/src/geolocation \
                    $(NULL)
 

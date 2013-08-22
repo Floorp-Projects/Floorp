@@ -19,3 +19,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'android'
 
+FAIL_ON_WARNINGS = True
+
