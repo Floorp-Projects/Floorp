@@ -226,12 +226,7 @@ js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
     if (!global)
         return false;
 
-    // For now, type inference is always disabled in exclusive zones, as type
-    // inference data is not merged between zones when finishing the off thread
-    // parse. This restriction would be fairly easy to lift.
-    JS_ASSERT(!cx->typeInferenceEnabled());
-    global->zone()->types.inferenceEnabled = false;
-
+    global->zone()->types.inferenceEnabled = cx->typeInferenceEnabled();
     JS_SetCompartmentPrincipals(global->compartment(), cx->compartment()->principals);
 
     RootedObject obj(cx);
