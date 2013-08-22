@@ -9,7 +9,6 @@
 
 #include "base/basictypes.h"
 
-#include "jsapi.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PContentDialogParent.h"
