@@ -15,8 +15,6 @@ ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif
 
-LIBXUL_LIBRARY=1
-
 include $(srcdir)/../objs.mk
 
 
