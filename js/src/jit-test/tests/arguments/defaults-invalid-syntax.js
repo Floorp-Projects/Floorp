@@ -4,9 +4,6 @@ assertThrowsInstanceOf(function () {
     eval("function f(...rest=23) {}");
 }, SyntaxError);
 assertThrowsInstanceOf(function () {
-    eval("function f(a=16, b) {}");
-}, SyntaxError);
-assertThrowsInstanceOf(function () {
     eval("function f([a]=4) {}");
 }, SyntaxError);
 assertThrowsInstanceOf(function () {

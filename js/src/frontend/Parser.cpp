@@ -471,7 +471,7 @@ FunctionBox::FunctionBox(ExclusiveContext *cx, ObjectBox* traceListHead, JSFunct
     bindings(),
     bufStart(0),
     bufEnd(0),
-    ndefaults(0),
+    length(0),
     generatorKindBits_(GeneratorKindAsBits(generatorKind)),
     inWith(false),                  // initialized below
     inGenexpLambda(false),
@@ -883,6 +883,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
                                          generatorKind);
     if (!funbox)
         return null();
+    funbox->length = fun->nargs - fun->hasRest();
     handler.setFunctionBox(fn, funbox);
 
     ParseContext<FullParseHandler> funpc(this, pc, fn, funbox, newDirectives,
@@ -1540,9 +1541,11 @@ Parser<ParseHandler>::bindDestructuringArg(BindData<ParseHandler> *data,
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, Node funcpn,
-                                        bool &hasRest)
+                                        bool *hasRest)
 {
     FunctionBox *funbox = pc->sc->asFunctionBox();
+
+    *hasRest = false;
 
     bool parenFreeArrow = false;
     if (kind == Arrow && tokenStream.peekToken() == TOK_NAME) {
@@ -1559,8 +1562,6 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
         funbox->setStart(tokenStream);
     }
 
-    hasRest = false;
-
     Node argsbody = handler.newList(PNK_ARGSBODY);
     if (!argsbody)
         return false;
@@ -1574,7 +1575,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
 #endif
 
         do {
-            if (hasRest) {
+            if (*hasRest) {
                 report(ParseError, false, null(), JSMSG_PARAMETER_AFTER_REST);
                 return false;
             }
@@ -1648,7 +1649,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
 
               case TOK_TRIPLEDOT:
               {
-                hasRest = true;
+                *hasRest = true;
                 tt = tokenStream.getToken();
                 if (tt != TOK_NAME) {
                     if (tt != TOK_ERROR)
@@ -1676,7 +1677,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                     // Therefore it's impossible to get here with parenFreeArrow.
                     JS_ASSERT(!parenFreeArrow);
 
-                    if (hasRest) {
+                    if (*hasRest) {
                         report(ParseError, false, null(), JSMSG_REST_WITH_DEFAULT);
                         return false;
                     }
@@ -1684,15 +1685,17 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
                         report(ParseError, false, duplicatedArg, JSMSG_BAD_DUP_ARGS);
                         return false;
                     }
-                    hasDefaults = true;
+                    if (!hasDefaults) {
+                        hasDefaults = true;
+
+                        // The Function.length property is the number of formals
+                        // before the first default argument.
+                        funbox->length = pc->numArgs() - 1;
+                    }
                     Node def_expr = assignExprWithoutYield(JSMSG_YIELD_IN_DEFAULT);
                     if (!def_expr)
                         return false;
                     handler.setLastFunctionArgumentDefault(funcpn, def_expr);
-                    funbox->ndefaults++;
-                } else if (!hasRest && hasDefaults) {
-                    report(ParseError, false, null(), JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT);
-                    return false;
                 }
 
                 break;
@@ -1710,6 +1713,9 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
             report(ParseError, false, null(), JSMSG_PAREN_AFTER_FORMAL);
             return false;
         }
+
+        if (!hasDefaults)
+            funbox->length = pc->numArgs() - *hasRest;
     }
 
     return true;
@@ -2249,6 +2255,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
                                          generatorKind);
     if (!funbox)
         return null();
+    funbox->length = fun->nargs - fun->hasRest();
 
     Directives newDirectives = directives;
     ParseContext<FullParseHandler> funpc(this, /* parent = */ NULL, pn, funbox,
@@ -2292,14 +2299,12 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
 
     Node prelude = null();
     bool hasRest;
-    if (!functionArguments(kind, &prelude, pn, hasRest))
+    if (!functionArguments(kind, &prelude, pn, &hasRest))
         return false;
 
     FunctionBox *funbox = pc->sc->asFunctionBox();
 
     fun->setArgCount(pc->numArgs());
-    if (funbox->ndefaults)
-        fun->setHasDefaults();
     if (hasRest)
         fun->setHasRest();
 

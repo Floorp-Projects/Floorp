@@ -258,7 +258,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     uint32_t        bufEnd;
     uint32_t        startLine;
     uint32_t        startColumn;
-    uint16_t        ndefaults;
+    uint16_t        length;
 
     uint8_t         generatorKindBits_;     /* The GeneratorKind of this function. */
     bool            inWith:1;               /* some enclosing scope is a with-statement */
@@ -306,6 +306,10 @@ class FunctionBox : public ObjectBox, public SharedContext
     void setArgumentsHasLocalBinding()     { funCxFlags.argumentsHasLocalBinding = true; }
     void setDefinitelyNeedsArgsObj()       { JS_ASSERT(funCxFlags.argumentsHasLocalBinding);
                                              funCxFlags.definitelyNeedsArgsObj   = true; }
+
+    bool hasDefaults() const {
+        return length != function()->nargs - function()->hasRest();
+    }
 
     // Return whether this function has either specified "use asm" or is
     // (transitively) nested inside a function that has.
