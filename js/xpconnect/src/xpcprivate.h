@@ -3681,7 +3681,22 @@ xpc_GetSafeJSContext()
     return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContext();
 }
 
+bool
+NewFunctionForwarder(JSContext *cx, JS::HandleId id, JS::HandleObject callable,
+                     bool doclone, JS::MutableHandleValue vp);
+
+nsresult
+ThrowAndFail(nsresult errNum, JSContext* cx, bool* retval);
+
+// Infallible.
+already_AddRefed<nsIXPCComponents_utils_Sandbox>
+NewSandboxConstructor();
+
+bool
+IsSandbox(JSObject *obj);
+
 namespace xpc {
+
 struct SandboxOptions {
     SandboxOptions(JSContext *cx)
         : wantXrays(true)
