@@ -33,8 +33,6 @@
 
 using mozilla::dom::GetNameSpaceManager;
 
-nsIExceptionProvider* gExceptionProvider = nullptr;
-
 nsDOMScriptObjectFactory::nsDOMScriptObjectFactory()
 {
   nsCOMPtr<nsIObserverService> observerService =
@@ -43,20 +41,6 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory()
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   }
 
-  nsCOMPtr<nsIExceptionProvider> provider = new nsDOMExceptionProvider();
-  nsCOMPtr<nsIExceptionService> xs =
-    do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
-
-  if (xs) {
-    xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM);
-    xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_SVG);
-    xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_XPATH);
-    xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_INDEXEDDB);
-    xs->RegisterExceptionProvider(provider, NS_ERROR_MODULE_DOM_FILEHANDLE);
-  }
-
-  NS_ASSERTION(!gExceptionProvider, "Registered twice?!");
-  provider.swap(gExceptionProvider);
 }
 
 NS_INTERFACE_MAP_BEGIN(nsDOMScriptObjectFactory)
@@ -121,26 +105,6 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
 
     nsGlobalWindow::ShutDown();
     nsDOMClassInfo::ShutDown();
-
-    if (gExceptionProvider) {
-      nsCOMPtr<nsIExceptionService> xs =
-        do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
-
-      if (xs) {
-        xs->UnregisterExceptionProvider(gExceptionProvider,
-                                        NS_ERROR_MODULE_DOM);
-        xs->UnregisterExceptionProvider(gExceptionProvider,
-                                        NS_ERROR_MODULE_SVG);
-        xs->UnregisterExceptionProvider(gExceptionProvider,
-                                        NS_ERROR_MODULE_DOM_XPATH);
-        xs->UnregisterExceptionProvider(gExceptionProvider,
-                                        NS_ERROR_MODULE_DOM_INDEXEDDB);
-        xs->UnregisterExceptionProvider(gExceptionProvider,
-                                        NS_ERROR_MODULE_DOM_FILEHANDLE);
-      }
-
-      NS_RELEASE(gExceptionProvider);
-    }
   }
 
   return NS_OK;
@@ -165,32 +129,4 @@ nsDOMScriptObjectFactory::RegisterDOMClassInfo(const char *aName,
                                              aScriptableFlags,
                                              aHasClassInterface,
                                              aConstructorCID);
-}
-
-NS_IMPL_ISUPPORTS1(nsDOMExceptionProvider, nsIExceptionProvider)
-
-NS_IMETHODIMP
-nsDOMExceptionProvider::GetException(nsresult result,
-                                     nsIException *aDefaultException,
-                                     nsIException **_retval)
-{
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  switch (NS_ERROR_GET_MODULE(result))
-  {
-    case NS_ERROR_MODULE_DOM:
-    case NS_ERROR_MODULE_SVG:
-    case NS_ERROR_MODULE_DOM_XPATH:
-    case NS_ERROR_MODULE_DOM_FILE:
-    case NS_ERROR_MODULE_DOM_INDEXEDDB:
-    case NS_ERROR_MODULE_DOM_FILEHANDLE:
-      return NS_NewDOMException(result, aDefaultException, _retval);
-    default:
-      NS_WARNING("Trying to create an exception for the wrong error module.");
-      return NS_ERROR_FAILURE;
-  }
-  NS_NOTREACHED("Not reached");
-  return NS_ERROR_UNEXPECTED;
 }
