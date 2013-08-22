@@ -9,8 +9,12 @@ interface nsIInputStream;
 interface nsIOutputStream;
 interface nsIScriptGlobalObject;
 
-[ptr] native JSValPtr(jsval);
+[ptr] native JSValPtr(JS::Value);
 [ptr] native JSContext(JSContext);
+
+%{C++
+namespace JS { class Value; }
+%}
 
 /**
  * Don't use this!  Use JSON.parse and JSON.stringify directly.

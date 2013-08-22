@@ -22,7 +22,7 @@ public:
     NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative **aResult) = 0;
     NS_IMETHOD GetJSContext(JSContext **aResult) = 0;
     NS_IMETHOD GetArgc(uint32_t *aResult) = 0;
-    NS_IMETHOD GetArgvPtr(jsval **aResult) = 0;
+    NS_IMETHOD GetArgvPtr(JS::Value **aResult) = 0;
 
     // Methods added since mozilla 0.6....
 

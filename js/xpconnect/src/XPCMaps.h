@@ -11,8 +11,6 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "js/HashTable.h"
-#include "jsfriendapi.h"
 
 // Maps...
 
