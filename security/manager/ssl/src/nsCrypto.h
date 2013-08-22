@@ -15,7 +15,6 @@
 #include "nsIDOMCryptoLegacy.h"
 #include "nsIRunnable.h"
 #include "nsString.h"
-#include "jsapi.h"
 #include "nsIPrincipal.h"
 
 #define NS_CRYPTO_CID \

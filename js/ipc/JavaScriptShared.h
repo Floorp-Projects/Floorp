@@ -8,9 +8,6 @@
 #ifndef mozilla_jsipc_JavaScriptShared_h__
 #define mozilla_jsipc_JavaScriptShared_h__
 
-#include "jsapi.h"
-#include "jspubtd.h"
-#include "js/HashTable.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/jsipc/PJavaScript.h"
 #include "nsJSUtils.h"

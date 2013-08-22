@@ -17,7 +17,6 @@
 #include "mozilla/Util.h"
 #include "nsAlgorithm.h"
 #include "nscore.h"
-#include "jsfriendapi.h"
 #include "GeckoProfilerFunc.h"
 #include "PseudoStack.h"
 #include "nsISupports.h"
