@@ -111,7 +111,6 @@ using namespace mozilla::dom;
 
 static const LayoutDeviceIntPoint kInvalidRefPoint = LayoutDeviceIntPoint(-1,-1);
 
-static bool sLeftClickOnly = true;
 static bool sKeyCausesActivation = true;
 static uint32_t sESMInstanceCount = 0;
 static int32_t sChromeAccessModifier = 0, sContentAccessModifier = 0;
@@ -712,7 +711,6 @@ nsEventStateManager::UpdateUserActivityTimer(void)
 
 static const char* kObservedPrefs[] = {
   "accessibility.accesskeycausesactivation",
-  "nglayout.events.dispatchLeftClickOnly",
   "ui.key.generalAccessKey",
   "ui.key.chromeAccess",
   "ui.key.contentAccess",
@@ -735,9 +733,6 @@ nsEventStateManager::Init()
     sKeyCausesActivation =
       Preferences::GetBool("accessibility.accesskeycausesactivation",
                            sKeyCausesActivation);
-    sLeftClickOnly =
-      Preferences::GetBool("nglayout.events.dispatchLeftClickOnly",
-                           sLeftClickOnly);
     sChromeAccessModifier =
       GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeChrome);
     sContentAccessModifier =
@@ -820,10 +815,6 @@ nsEventStateManager::Observe(nsISupports *aSubject,
       sKeyCausesActivation =
         Preferences::GetBool("accessibility.accesskeycausesactivation",
                              sKeyCausesActivation);
-    } else if (data.EqualsLiteral("nglayout.events.dispatchLeftClickOnly")) {
-      sLeftClickOnly =
-        Preferences::GetBool("nglayout.events.dispatchLeftClickOnly",
-                             sLeftClickOnly);
     } else if (data.EqualsLiteral("ui.key.generalAccessKey")) {
       sChromeAccessModifier =
         GetAccessModifierMaskFromPref(nsIDocShellTreeItem::typeChrome);
