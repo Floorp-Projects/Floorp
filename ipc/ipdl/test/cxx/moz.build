@@ -79,3 +79,6 @@ IPDL_SOURCES += [
     'PTestSysVShmem.ipdl',
     'PTestUrgency.ipdl',
 ]
+
+LIBXUL_LIBRARY = True
+

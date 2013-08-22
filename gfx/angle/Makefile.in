@@ -10,7 +10,6 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MSVC_ENABLE_PGO := 1
-LIBXUL_LIBRARY = 1
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif

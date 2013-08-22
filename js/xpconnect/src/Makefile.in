@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME    = xpconnect_s
 MSVC_ENABLE_PGO := 1
-LIBXUL_LIBRARY = 1
 LOCAL_INCLUDES = \
 		-I$(srcdir)/../wrappers \
 		-I$(srcdir)/../loader \
