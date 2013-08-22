@@ -110,3 +110,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'angle'
 
+LIBXUL_LIBRARY = True
+

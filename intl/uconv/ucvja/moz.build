@@ -21,3 +21,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'ucvja_s'
 
+LIBXUL_LIBRARY = True
+

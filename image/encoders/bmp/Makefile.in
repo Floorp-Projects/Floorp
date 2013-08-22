@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBXUL_LIBRARY = 1
 LOCAL_INCLUDES += -I$(topsrcdir)/image/src/
 
 include $(topsrcdir)/config/rules.mk

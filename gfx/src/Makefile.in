@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY = 1
-LIBXUL_LIBRARY = 1
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)

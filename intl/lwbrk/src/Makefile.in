@@ -11,9 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MSVC_ENABLE_PGO := 1
-LIBXUL_LIBRARY  = 1
-
-
 ifeq  ($(MOZ_WIDGET_TOOLKIT),gtk2)
 else
 ifeq  ($(MOZ_WIDGET_TOOLKIT),gtk3)
