@@ -28,3 +28,5 @@ if not CONFIG['MOZ_NATIVE_HUNSPELL']:
 
 LIBRARY_NAME = 'hunspell_s'
 
+LIBXUL_LIBRARY = True
+

@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY = 1
-LIBXUL_LIBRARY	= 1
 SHARED_LIBRARY_LIBS = \
 	../windowwatcher/src/$(LIB_PREFIX)windowwatcher_s.$(LIB_SUFFIX) \
 	../appstartup/src/$(LIB_PREFIX)appstartupnotifier_s.$(LIB_SUFFIX) \
