@@ -281,8 +281,8 @@ struct JSCompartment
     void markCrossCompartmentWrappers(JSTracer *trc);
     void markAllCrossCompartmentWrappers(JSTracer *trc);
 
-    inline bool wrap(JSContext *cx, JS::MutableHandleValue vp,
-                     JS::HandleObject existing = js::NullPtr())
+    bool wrap(JSContext *cx, JS::MutableHandleValue vp,
+              JS::HandleObject existing = js::NullPtr())
     {
         JS_ASSERT_IF(existing, vp.isObject());
 
@@ -299,7 +299,7 @@ struct JSCompartment
             return true;
         }
 
-        MOZ_ASSERT(vp.isObject());
+        JS_ASSERT(vp.isObject());
 
         /* All that's left are objects.
          *
