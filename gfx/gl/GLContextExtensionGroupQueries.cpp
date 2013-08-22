@@ -28,7 +28,7 @@ struct FeatureInfo
 
 static const FeatureInfo sFeatureInfoArr[] = {
     {
-        "XXX_bind_buffer_offset",
+        "bind_buffer_offset",
         0,   // OpenGL version
         0,   // OpenGL ES version
         {
@@ -38,7 +38,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_depth_texture",
+        "depth_texture",
         200, // OpenGL version
         300, // OpenGL ES version
         {
@@ -48,7 +48,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_draw_buffers",
+        "draw_buffers",
         200, // OpenGL version
         300, // OpenGL ES version
         {
@@ -58,7 +58,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_draw_instanced",
+        "draw_instanced",
         310, // OpenGL version
         300, // OpenGL ES version
         {
@@ -70,7 +70,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_element_index_uint",
+        "element_index_uint",
         200, // OpenGL version
         300, // OpenGL ES version
         {
@@ -79,7 +79,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_ES2_compatibility",
+        "ES2_compatibility",
         kGLCoreVersionForES2Compat,
         200, // OpenGL ES version
         {
@@ -88,7 +88,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_ES3_compatibility",
+        "ES3_compatibility",
         kGLCoreVersionForES3Compat,
         300, // OpenGL ES version
         {
@@ -97,7 +97,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_framebuffer_blit",
+        "framebuffer_blit",
         300, // OpenGL version
         300, // OpenGL ES version
         {
@@ -107,7 +107,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_framebuffer_multisample",
+        "framebuffer_multisample",
         300, // OpenGL version
         300, // OpenGL ES version
         {
@@ -117,7 +117,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_framebuffer_object",
+        "framebuffer_object",
         300, // OpenGL version
         200, // OpenGL ES version
         {
@@ -127,7 +127,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_get_query_object_iv",
+        "get_query_object_iv",
         200, // OpenGL version
         0,   // OpenGL ES version
         {
@@ -139,7 +139,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
-        "XXX_instanced_arrays",
+        "instanced_arrays",
         330, // OpenGL version
         300, // OpenGL ES version
         {
@@ -150,7 +150,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_occlusion_query",
+        "occlusion_query",
         200, // OpenGL version
         0,   // OpenGL ES version
         {
@@ -159,7 +159,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         // XXX_occlusion_query depend on ARB_occlusion_query (added in OpenGL 2.0)
     },
     {
-        "XXX_occlusion_query_boolean",
+        "occlusion_query_boolean",
         kGLCoreVersionForES3Compat,
         300, // OpenGL ES version
         {
@@ -175,7 +175,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
-        "XXX_occlusion_query2",
+        "occlusion_query2",
         330, // = min(330, kGLCoreVersionForES3Compat),
         300, // OpenGL ES version
         {
@@ -191,7 +191,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
-        "XXX_packed_depth_stencil",
+        "packed_depth_stencil",
         300, // OpenGL version
         300, // OpenGL ES version
         {
@@ -201,7 +201,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_query_objects",
+        "query_objects",
         200, // OpenGL version
         300, // OpenGL ES version
         {
@@ -215,7 +215,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
-        "XXX_robustness",
+        "robustness",
         0,   // OpenGL version
         0,   // OpenGL ES version
         {
@@ -225,7 +225,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_standard_derivatives",
+        "standard_derivatives",
         200, // OpenGL version
         300, // OpenGL ES version
         {
@@ -234,7 +234,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_texture_float",
+        "texture_float",
         310, // OpenGL version
         300, // OpenGL ES version
         {
@@ -244,7 +244,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_texture_float_linear",
+        "texture_float_linear",
         310, // OpenGL version
         300, // OpenGL ES version
         {
@@ -254,7 +254,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_texture_non_power_of_two",
+        "texture_non_power_of_two",
         200, // OpenGL version
         300, // OpenGL ES version
         {
@@ -264,7 +264,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_transform_feedback",
+        "transform_feedback",
         300, // OpenGL version
         300, // OpenGL ES version
         {
@@ -274,7 +274,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "XXX_vertex_array_object",
+        "vertex_array_object",
         300, // OpenGL version
         300, // OpenGL ES version
         {
