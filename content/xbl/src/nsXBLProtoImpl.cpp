@@ -397,7 +397,11 @@ nsXBLProtoImpl::Read(nsIObjectInputStream* aStream,
       }
       case XBLBinding_Serialize_Constructor:
       {
-        mConstructor = new nsXBLProtoImplAnonymousMethod();
+        nsAutoString name;
+        rv = aStream->ReadString(name);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        mConstructor = new nsXBLProtoImplAnonymousMethod(name.get());
         rv = mConstructor->Read(aStream);
         if (NS_FAILED(rv)) {
           delete mConstructor;
@@ -410,7 +414,11 @@ nsXBLProtoImpl::Read(nsIObjectInputStream* aStream,
       }
       case XBLBinding_Serialize_Destructor:
       {
-        mDestructor = new nsXBLProtoImplAnonymousMethod();
+        nsAutoString name;
+        rv = aStream->ReadString(name);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        mDestructor = new nsXBLProtoImplAnonymousMethod(name.get());
         rv = mDestructor->Read(aStream);
         if (NS_FAILED(rv)) {
           delete mDestructor;

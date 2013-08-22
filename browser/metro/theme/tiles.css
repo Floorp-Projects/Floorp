@@ -68,7 +68,7 @@ richgriditem {
   background-origin: padding-box;
   /* content positioning within the grid "cell"
      gives us the gutters/spacing between tiles */
-  top: 2px; right: 6px; bottom: 10px; left: 6px;
+  top: 2px; right: @tile_side_margin@; bottom: 10px; left: @tile_side_margin@;
   border: @metro_border_thin@ solid @tile_border_color@;
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
   transition: 150ms transform ease-out;

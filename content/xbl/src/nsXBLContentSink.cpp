@@ -54,7 +54,7 @@ nsXBLContentSink::nsXBLContentSink()
     mSecondaryState(eXBL_None),
     mDocInfo(nullptr),
     mIsChromeOrResource(false),
-    mFoundFirstBinding(false),    
+    mFoundFirstBinding(false),
     mBinding(nullptr),
     mHandler(nullptr),
     mImplementation(nullptr),
@@ -453,8 +453,15 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
     NS_ASSERTION(mBinding, "Must have binding here");
       
     mSecondaryState = eXBL_InConstructor;
+    nsAutoString name;
+    if (!mCurrentBindingID.IsEmpty()) {
+      name.Assign(mCurrentBindingID);
+      name.AppendLiteral("_XBL_Constructor");
+    } else {
+      name.AppendLiteral("XBL_Constructor");
+    }
     nsXBLProtoImplAnonymousMethod* newMethod =
-      new nsXBLProtoImplAnonymousMethod();
+      new nsXBLProtoImplAnonymousMethod(name.get());
     if (newMethod) {
       newMethod->SetLineNumber(aLineNumber);
       mBinding->SetConstructor(newMethod);
@@ -466,8 +473,15 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
                      mSecondaryState == eXBL_None);
     NS_ASSERTION(mBinding, "Must have binding here");
     mSecondaryState = eXBL_InDestructor;
+    nsAutoString name;
+    if (!mCurrentBindingID.IsEmpty()) {
+      name.Assign(mCurrentBindingID);
+      name.AppendLiteral("_XBL_Destructor");
+    } else {
+      name.AppendLiteral("XBL_Destructor");
+    }
     nsXBLProtoImplAnonymousMethod* newMethod =
-      new nsXBLProtoImplAnonymousMethod();
+      new nsXBLProtoImplAnonymousMethod(name.get());
     if (newMethod) {
       newMethod->SetLineNumber(aLineNumber);
       mBinding->SetDestructor(newMethod);
@@ -529,9 +543,8 @@ nsresult
 nsXBLContentSink::ConstructBinding(uint32_t aLineNumber)
 {
   nsCOMPtr<nsIContent> binding = GetCurrentContent();
-  nsAutoString id;
-  binding->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
-  NS_ConvertUTF16toUTF8 cid(id);
+  binding->GetAttr(kNameSpaceID_None, nsGkAtoms::id, mCurrentBindingID);
+  NS_ConvertUTF16toUTF8 cid(mCurrentBindingID);
 
   nsresult rv = NS_OK;
 
