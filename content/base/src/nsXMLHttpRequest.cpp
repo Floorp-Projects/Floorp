@@ -11,6 +11,7 @@
 #include "mozilla/Util.h"
 #include "nsDOMBlobBuilder.h"
 #include "nsICharsetConverterManager.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsIJARChannel.h"
 #include "nsLayoutCID.h"
