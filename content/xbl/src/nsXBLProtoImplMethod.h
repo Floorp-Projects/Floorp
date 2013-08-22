@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "nsIAtom.h"
 #include "nsString.h"
-#include "jsapi.h"
 #include "nsString.h"
 #include "nsXBLMaybeCompiled.h"
 #include "nsXBLProtoImplMember.h"

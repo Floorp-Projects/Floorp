@@ -181,11 +181,11 @@ nsBaseAppShell::FavorPerformanceHint(bool favorPerfOverStarvation,
                                      uint32_t starvationDelay)
 {
   mStarvationDelay = PR_MillisecondsToInterval(starvationDelay);
+  mSwitchTime = PR_IntervalNow();
   if (favorPerfOverStarvation) {
     ++mFavorPerf;
   } else {
     --mFavorPerf;
-    mSwitchTime = PR_IntervalNow();
   }
   return NS_OK;
 }
@@ -268,7 +268,8 @@ nsBaseAppShell::OnProcessNextEvent(nsIThreadInternal *thr, bool mayWait,
   // NativeEventCallback to process gecko events.
   mProcessedGeckoEvents = false;
 
-  if (mFavorPerf <= 0 && start > mSwitchTime + mStarvationDelay) {
+  if (mFavorPerf <= 0 ||
+      start > mSwitchTime + std::max(mStarvationDelay, limit)) {
     // Favor pending native events
     PRIntervalTime now = start;
     bool keepGoing;

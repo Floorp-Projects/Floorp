@@ -17,6 +17,7 @@
 #include "nsIDOMWindow.h"
 #include "XPCJSWeakReference.h"
 #include "XPCWrapper.h"
+#include "jsdbgapi.h"
 #include "jsproxy.h"
 #include "WrapperFactory.h"
 #include "XrayWrapper.h"

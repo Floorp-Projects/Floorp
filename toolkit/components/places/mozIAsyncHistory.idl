@@ -7,10 +7,6 @@
 interface nsIURI;
 interface nsIVariant;
 
-%{C++
-#include "jsapi.h"
-%}
-
 [scriptable, uuid(41e4ccc9-f0c8-4cd7-9753-7a38514b8488)]
 interface mozIVisitInfo : nsISupports
 {

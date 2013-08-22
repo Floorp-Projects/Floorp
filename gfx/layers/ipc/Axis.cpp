@@ -9,7 +9,6 @@
 #include <algorithm>                    // for max
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController
 #include "FrameMetrics.h"               // for FrameMetrics
-#include "GeckoProfilerFunc.h"          // for TimeDuration
 #include "mozilla/Attributes.h"         // for MOZ_FINAL
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/gfx/Rect.h"           // for RoundedIn

@@ -254,8 +254,8 @@ ReadLine(/*in/out*/ const char* & nextLineStart, /*out*/ nsCString & line,
 #define JAR_MF_SEARCH_STRING "(M|/M)ETA-INF/(M|m)(ANIFEST|anifest).(MF|mf)$"
 #define JAR_SF_SEARCH_STRING "(M|/M)ETA-INF/*.(SF|sf)$"
 #define JAR_RSA_SEARCH_STRING "(M|/M)ETA-INF/*.(RSA|rsa)$"
-#define JAR_MF_HEADER (const char*)"Manifest-Version: 1.0"
-#define JAR_SF_HEADER (const char*)"Signature-Version: 1.0"
+#define JAR_MF_HEADER "Manifest-Version: 1.0"
+#define JAR_SF_HEADER "Signature-Version: 1.0"
 
 nsresult
 ParseAttribute(const nsAutoCString & curLine,
@@ -339,7 +339,7 @@ ParseSF(const char* filebuf, /*out*/ SECItem & mfDigest)
   nsresult rv;
 
   const char* nextLineStart = filebuf;
-  rv = CheckManifestVersion(nextLineStart, nsLiteralCString(JAR_SF_HEADER));
+  rv = CheckManifestVersion(nextLineStart, NS_LITERAL_CSTRING(JAR_SF_HEADER));
   if (NS_FAILED(rv))
     return rv;
 
@@ -399,7 +399,7 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
 
   const char* nextLineStart = filebuf;
 
-  rv = CheckManifestVersion(nextLineStart, nsLiteralCString(JAR_MF_HEADER));
+  rv = CheckManifestVersion(nextLineStart, NS_LITERAL_CSTRING(JAR_MF_HEADER));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -642,7 +642,7 @@ OpenSignedJARFile(nsIFile * aJarFile,
 
   // Verify every entry in the file.
   nsCOMPtr<nsIUTF8StringEnumerator> entries;
-  rv = zip->FindEntries(NS_LITERAL_CSTRING(""), getter_AddRefs(entries));
+  rv = zip->FindEntries(EmptyCString(), getter_AddRefs(entries));
   if (NS_SUCCEEDED(rv) && !entries) {
     rv = NS_ERROR_UNEXPECTED;
   }
