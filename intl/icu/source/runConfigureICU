@@ -298,8 +298,6 @@ case $platform in
     *BSD)
         THE_OS="BSD"
         THE_COMP="the GNU C++"
-        CC=gcc; export CC
-        CXX=g++; export CXX
         DEBUG_CFLAGS='-g -O0'
         DEBUG_CXFLAGS='-g -O0'
         ;;

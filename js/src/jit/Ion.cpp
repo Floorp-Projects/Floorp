@@ -1592,7 +1592,7 @@ OffThreadCompilationAvailable(JSContext *cx)
     // Also skip off thread compilation if the SPS profiler is enabled, as it
     // stores strings in the spsProfiler data structure, which is not protected
     // by a lock.
-    return OffThreadCompilationEnabled(cx)
+    return OffThreadIonCompilationEnabled(cx->runtime())
         && cx->runtime()->gcIncrementalState == gc::NO_INCREMENTAL
         && !cx->runtime()->profilingScripts
         && !cx->runtime()->spsProfiler.enabled();
@@ -1773,7 +1773,7 @@ CheckScriptSize(JSContext *cx, JSScript* script)
     if (script->length > MAX_MAIN_THREAD_SCRIPT_SIZE ||
         numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
     {
-        if (OffThreadCompilationEnabled(cx)) {
+        if (OffThreadIonCompilationEnabled(cx->runtime())) {
             // Even if off thread compilation is enabled, there are cases where
             // compilation must still occur on the main thread. Don't compile
             // in these cases (except when profiling scripts, as compilations

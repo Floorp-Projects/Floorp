@@ -32,10 +32,7 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
-ifneq ($(OS_ARCH),WINNT)
-LIBXUL_LIBRARY = 1
-else
+ifeq ($(OS_ARCH),WINNT)
 FORCE_STATIC_LIB = 1
 endif
 

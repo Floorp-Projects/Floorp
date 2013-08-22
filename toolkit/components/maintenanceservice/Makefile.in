@@ -25,7 +25,6 @@ LIBS += \
   $(NULL)
 
 USE_STATIC_LIBS = 1
-HAVE_PROGRESSUI = 1
 RCINCLUDE = maintenanceservice.rc
 
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)

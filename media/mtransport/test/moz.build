@@ -21,3 +21,6 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         CPP_UNIT_TESTS += [
             'sctp_unittest.cpp',
         ]
+
+FAIL_ON_WARNINGS = True
+

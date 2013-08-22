@@ -11,11 +11,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= widget_windows
-MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY	= 1
 RESFILE		= widget.res
-LIBXUL_LIBRARY = 1
-
 DEFINES		+= -DMOZ_UNICODE 
 
 ifdef MOZ_ENABLE_D3D9_LAYER

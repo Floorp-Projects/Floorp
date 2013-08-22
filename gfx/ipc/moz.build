@@ -28,3 +28,5 @@ CPP_SOURCES += [
     'SharedDIB.cpp',
 ]
 
+LIBXUL_LIBRARY = True
+

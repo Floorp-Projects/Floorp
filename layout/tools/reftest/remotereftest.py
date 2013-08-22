@@ -332,55 +332,50 @@ class RemoteReftest(RefTest):
     def stopWebServer(self, options):
         self.server.stop()
 
-    def createReftestProfile(self, options, profileDir, reftestlist):
-        RefTest.createReftestProfile(self, options, profileDir, reftestlist, server=options.remoteWebServer)
+    def createReftestProfile(self, options, reftestlist):
+        profile = RefTest.createReftestProfile(self, options, reftestlist, server=options.remoteWebServer)
+        profileDir = profile.profile
 
-        # Turn off the locale picker screen
-        fhandle = open(os.path.join(profileDir, "user.js"), 'a')
-        fhandle.write("""
-user_pref("browser.firstrun.show.localepicker", false);
-user_pref("font.size.inflation.emPerLine", 0);
-user_pref("font.size.inflation.minTwips", 0);
-user_pref("reftest.remote", true);
-// Set a future policy version to avoid the telemetry prompt.
-user_pref("toolkit.telemetry.prompted", 999);
-user_pref("toolkit.telemetry.notifiedOptOut", 999);
-user_pref("reftest.uri", "%s");
-user_pref("datareporting.policy.dataSubmissionPolicyBypassAcceptance", true);
+        prefs = {}
+        prefs["browser.firstrun.show.localepicker"] = False
+        prefs["font.size.inflation.emPerLine"] = 0
+        prefs["font.size.inflation.minTwips"] = 0
+        prefs["reftest.remote"] = True
+        # Set a future policy version to avoid the telemetry prompt.
+        prefs["toolkit.telemetry.prompted"] = 999
+        prefs["toolkit.telemetry.notifiedOptOut"] = 999
+        prefs["reftest.uri"] = "%s" % reftestlist
+        prefs["datareporting.policy.dataSubmissionPolicyBypassAcceptance"] = True
 
-// Point the url-classifier to the local testing server for fast failures
-user_pref("browser.safebrowsing.gethashURL", "http://127.0.0.1:8888/safebrowsing-dummy/gethash");
-user_pref("browser.safebrowsing.keyURL", "http://127.0.0.1:8888/safebrowsing-dummy/newkey");
-user_pref("browser.safebrowsing.updateURL", "http://127.0.0.1:8888/safebrowsing-dummy/update");
-// Point update checks to the local testing server for fast failures
-user_pref("extensions.update.url", "http://127.0.0.1:8888/extensions-dummy/updateURL");
-user_pref("extensions.update.background.url", "http://127.0.0.1:8888/extensions-dummy/updateBackgroundURL");
-user_pref("extensions.blocklist.url", "http://127.0.0.1:8888/extensions-dummy/blocklistURL");
-user_pref("extensions.hotfix.url", "http://127.0.0.1:8888/extensions-dummy/hotfixURL");
-// Turn off extension updates so they don't bother tests
-user_pref("extensions.update.enabled", false);
-// Make sure opening about:addons won't hit the network
-user_pref("extensions.webservice.discoverURL", "http://127.0.0.1:8888/extensions-dummy/discoveryURL");
-// Make sure AddonRepository won't hit the network
-user_pref("extensions.getAddons.maxResults", 0);
-user_pref("extensions.getAddons.get.url", "http://127.0.0.1:8888/extensions-dummy/repositoryGetURL");
-user_pref("extensions.getAddons.getWithPerformance.url", "http://127.0.0.1:8888/extensions-dummy/repositoryGetWithPerformanceURL");
-user_pref("extensions.getAddons.search.browseURL", "http://127.0.0.1:8888/extensions-dummy/repositoryBrowseURL");
-user_pref("extensions.getAddons.search.url", "http://127.0.0.1:8888/extensions-dummy/repositorySearchURL");
-// Make sure that opening the plugins check page won't hit the network
-user_pref("plugins.update.url", "http://127.0.0.1:8888/plugins-dummy/updateCheckURL");
+        # Point the url-classifier to the local testing server for fast failures
+        prefs["browser.safebrowsing.gethashURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/gethash"
+        prefs["browser.safebrowsing.keyURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/newkey"
+        prefs["browser.safebrowsing.updateURL"] = "http://127.0.0.1:8888/safebrowsing-dummy/update"
+        # Point update checks to the local testing server for fast failures
+        prefs["extensions.update.url"] = "http://127.0.0.1:8888/extensions-dummy/updateURL"
+        prefs["extensions.update.background.url"] = "http://127.0.0.1:8888/extensions-dummy/updateBackgroundURL"
+        prefs["extensions.blocklist.url"] = "http://127.0.0.1:8888/extensions-dummy/blocklistURL"
+        prefs["extensions.hotfix.url"] = "http://127.0.0.1:8888/extensions-dummy/hotfixURL"
+        # Turn off extension updates so they don't bother tests
+        prefs["extensions.update.enabled"] = False
+        # Make sure opening about:addons won't hit the network
+        prefs["extensions.webservice.discoverURL"] = "http://127.0.0.1:8888/extensions-dummy/discoveryURL"
+        # Make sure AddonRepository won't hit the network
+        prefs["extensions.getAddons.maxResults"] = 0
+        prefs["extensions.getAddons.get.url"] = "http://127.0.0.1:8888/extensions-dummy/repositoryGetURL"
+        prefs["extensions.getAddons.getWithPerformance.url"] = "http://127.0.0.1:8888/extensions-dummy/repositoryGetWithPerformanceURL"
+        prefs["extensions.getAddons.search.browseURL"] = "http://127.0.0.1:8888/extensions-dummy/repositoryBrowseURL"
+        prefs["extensions.getAddons.search.url"] = "http://127.0.0.1:8888/extensions-dummy/repositorySearchURL"
+        # Make sure that opening the plugins check page won't hit the network
+        prefs["plugins.update.url"] = "http://127.0.0.1:8888/plugins-dummy/updateCheckURL"
 
-""" % reftestlist)
-
-        #workaround for jsreftests.
+        # Workaround for jsreftests.
         if options.enablePrivilege:
-            fhandle.write("""
-user_pref("capability.principal.codebase.p2.granted", "UniversalXPConnect");
-user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
-""" % (options.remoteWebServer, options.httpPort))
+            prefs["capability.principal.codebase.p2.granted"] = "UniversalXPConnect"
+            prefs["capability.principal.codebase.p2.id"] = "http://%s:%s" % (options.remoteWebServer, options.httpPort)
 
-        # Close the file
-        fhandle.close()
+        # Set the extra prefs.
+        profile.set_preferences(prefs)
 
         try:
             self._devicemanager.pushDir(profileDir, options.remoteProfile)
@@ -388,8 +383,11 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
             print "Automation Error: Failed to copy profiledir to device"
             raise
 
-    def copyExtraFilesToProfile(self, options, profileDir):
-        RefTest.copyExtraFilesToProfile(self, options, profileDir)
+        return profile
+
+    def copyExtraFilesToProfile(self, options, profile):
+        profileDir = profile.profile
+        RefTest.copyExtraFilesToProfile(self, options, profile)
         try:
             self._devicemanager.pushDir(profileDir, options.remoteProfile)
         except devicemanager.DMError:

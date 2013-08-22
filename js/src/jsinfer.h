@@ -204,7 +204,7 @@ class Type
 };
 
 /* Get the type of a jsval, or zero for an unknown special value. */
-inline Type GetValueType(JSContext *cx, const Value &val);
+inline Type GetValueType(const Value &val);
 
 /*
  * Type inference memory management overview.
@@ -489,10 +489,10 @@ class TypeSet
      * Add a type to this set, calling any constraint handlers if this is a new
      * possible type.
      */
-    inline void addType(JSContext *cx, Type type);
+    inline void addType(ExclusiveContext *cx, Type type);
 
     /* Mark this type set as representing an own property or configured property. */
-    inline void setOwnProperty(JSContext *cx, bool configured);
+    inline void setOwnProperty(ExclusiveContext *cx, bool configured);
 
     /*
      * Add an object to this set using the specified allocator, without
@@ -1040,10 +1040,10 @@ struct TypeObject : gc::Cell
      * assignment, and the own types of the property will be used instead of
      * aggregate types.
      */
-    inline HeapTypeSet *getProperty(JSContext *cx, jsid id, bool own);
+    inline HeapTypeSet *getProperty(ExclusiveContext *cx, jsid id, bool own);
 
     /* Get a property only if it already exists. */
-    inline HeapTypeSet *maybeGetProperty(jsid id, JSContext *cx);
+    inline HeapTypeSet *maybeGetProperty(ExclusiveContext *cx, jsid id);
 
     inline unsigned getPropertyCount();
     inline Property *getProperty(unsigned i);
@@ -1056,19 +1056,19 @@ struct TypeObject : gc::Cell
 
     /* Helpers */
 
-    bool addProperty(JSContext *cx, jsid id, Property **pprop);
-    bool addDefiniteProperties(JSContext *cx, JSObject *obj);
+    bool addProperty(ExclusiveContext *cx, jsid id, Property **pprop);
+    bool addDefiniteProperties(ExclusiveContext *cx, JSObject *obj);
     bool matchDefiniteProperties(HandleObject obj);
     void addPrototype(JSContext *cx, TypeObject *proto);
-    void addPropertyType(JSContext *cx, jsid id, Type type);
-    void addPropertyType(JSContext *cx, jsid id, const Value &value);
-    void addPropertyType(JSContext *cx, const char *name, Type type);
-    void addPropertyType(JSContext *cx, const char *name, const Value &value);
-    void markPropertyConfigured(JSContext *cx, jsid id);
-    void markStateChange(JSContext *cx);
-    void setFlags(JSContext *cx, TypeObjectFlags flags);
-    void markUnknown(JSContext *cx);
-    void clearNewScript(JSContext *cx);
+    void addPropertyType(ExclusiveContext *cx, jsid id, Type type);
+    void addPropertyType(ExclusiveContext *cx, jsid id, const Value &value);
+    void addPropertyType(ExclusiveContext *cx, const char *name, Type type);
+    void addPropertyType(ExclusiveContext *cx, const char *name, const Value &value);
+    void markPropertyConfigured(ExclusiveContext *cx, jsid id);
+    void markStateChange(ExclusiveContext *cx);
+    void setFlags(ExclusiveContext *cx, TypeObjectFlags flags);
+    void markUnknown(ExclusiveContext *cx);
+    void clearNewScript(ExclusiveContext *cx);
     void getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force = false);
 
     void print();
@@ -1368,12 +1368,12 @@ struct TypeCompartment
     ObjectTypeTable *objectTypeTable;
 
   private:
-    void setTypeToHomogenousArray(JSContext *cx, JSObject *obj, Type type);
+    void setTypeToHomogenousArray(ExclusiveContext *cx, JSObject *obj, Type type);
 
   public:
-    void fixArrayType(JSContext *cx, JSObject *obj);
-    void fixObjectType(JSContext *cx, JSObject *obj);
-    void fixRestArgumentsType(JSContext *cx, JSObject *obj);
+    void fixArrayType(ExclusiveContext *cx, JSObject *obj);
+    void fixObjectType(ExclusiveContext *cx, JSObject *obj);
+    void fixRestArgumentsType(ExclusiveContext *cx, JSObject *obj);
 
     JSObject *newTypedObject(JSContext *cx, IdValuePair *properties, size_t nproperties);
 
@@ -1414,7 +1414,7 @@ struct TypeCompartment
     void processPendingRecompiles(FreeOp *fop);
 
     /* Mark all types as needing destruction once inference has 'finished'. */
-    void setPendingNukeTypes(JSContext *cx);
+    void setPendingNukeTypes(ExclusiveContext *cx);
 
     /* Mark a script as needing recompilation once inference has finished. */
     void addPendingRecompile(JSContext *cx, const RecompileInfo &info);

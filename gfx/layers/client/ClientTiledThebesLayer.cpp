@@ -2,12 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/PLayerTransactionChild.h"
 #include "ClientTiledThebesLayer.h"
-#include "gfxImageSurface.h"
-#include "GeckoProfiler.h"
-#include "gfxPlatform.h"
-
+#include "FrameMetrics.h"               // for FrameMetrics
+#include "Units.h"                      // for ScreenIntRect, CSSPoint, etc
+#include "ClientLayerManager.h"         // for ClientLayerManager, etc
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxPoint.h"                   // for gfxSize
+#include "gfxRect.h"                    // for gfxRect
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/gfx/BaseSize.h"       // for BaseSize
+#include "mozilla/gfx/Rect.h"           // for Rect, RectTyped
+#include "mozilla/layers/LayerTransaction.h"
+#include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "nsRect.h"                     // for nsIntRect
+#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
 namespace layers {

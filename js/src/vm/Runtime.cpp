@@ -269,7 +269,9 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     parallelWarmup(0),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     useHelperThreads_(useHelperThreads),
-    requestedHelperThreadCount(-1)
+    requestedHelperThreadCount(-1),
+    useHelperThreadsForIonCompilation_(true),
+    useHelperThreadsForParsing_(true)
 #ifdef DEBUG
     , enteredPolicy(NULL)
 #endif
@@ -407,7 +409,9 @@ JSRuntime::~JSRuntime()
         PR_DestroyLock(exclusiveAccessLock);
 
     JS_ASSERT(!numExclusiveThreads);
-    exclusiveThreadsPaused = true; // Avoid bogus asserts during teardown.
+
+    // Avoid bogus asserts during teardown.
+    exclusiveThreadsPaused = true;
 #endif
 
     /*
@@ -744,7 +748,7 @@ JSRuntime::clearUsedByExclusiveThread(Zone *zone)
 bool
 js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
 {
-    PerThreadData *pt = js::TlsPerThreadData.get();
+    DebugOnly<PerThreadData *> pt = js::TlsPerThreadData.get();
     JS_ASSERT(pt && pt->associatedWith(rt));
     return rt->ownerThread_ == PR_GetCurrentThread() || InExclusiveParallelSection();
 }
@@ -752,7 +756,7 @@ js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
 bool
 js::CurrentThreadCanAccessZone(Zone *zone)
 {
-    PerThreadData *pt = js::TlsPerThreadData.get();
+    DebugOnly<PerThreadData *> pt = js::TlsPerThreadData.get();
     JS_ASSERT(pt && pt->associatedWith(zone->runtime_));
     return !InParallelSection() || InExclusiveParallelSection();
 }

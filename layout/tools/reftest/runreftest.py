@@ -15,6 +15,8 @@ from automationutils import *
 from optparse import OptionParser
 from tempfile import mkdtemp
 
+import mozprofile
+
 class RefTest(object):
 
   oldcwd = os.getcwd()
@@ -42,7 +44,8 @@ class RefTest(object):
   def makeJSString(self, s):
     return '"%s"' % re.sub(r'([\\"])', r'\\\1', s)
 
-  def createReftestProfile(self, options, profileDir, manifest, server='localhost'):
+  def createReftestProfile(self, options, manifest, server='localhost',
+                           special_powers=True):
     """
       Sets up a profile for reftest.
       'manifest' is the path to the reftest.list file we want to test with.  This is used in
@@ -50,47 +53,60 @@ class RefTest(object):
       bootstrap extension.
     """
 
-    self.automation.setupPermissionsDatabase(profileDir,
-      {'allowXULXBL': [(server, True), ('<file>', True)]})
+    locations = mozprofile.permissions.ServerLocations()
+    locations.add_host(server, port=0)
+    locations.add_host('<file>', port=0)
 
     # Set preferences for communication between our command line arguments
     # and the reftest harness.  Preferences that are required for reftest
     # to work should instead be set in reftest-cmdline.js .
-    prefsFile = open(os.path.join(profileDir, "user.js"), "a")
-    prefsFile.write('user_pref("reftest.timeout", %d);\n' % (options.timeout * 1000))
-
-    if options.totalChunks != None:
-      prefsFile.write('user_pref("reftest.totalChunks", %d);\n' % options.totalChunks)
-    if options.thisChunk != None:
-      prefsFile.write('user_pref("reftest.thisChunk", %d);\n' % options.thisChunk)
-    if options.logFile != None:
-      prefsFile.write('user_pref("reftest.logFile", "%s");\n' % options.logFile)
-    if options.ignoreWindowSize != False:
-      prefsFile.write('user_pref("reftest.ignoreWindowSize", true);\n')
-    if options.filter != None:
-      prefsFile.write('user_pref("reftest.filter", %s);\n' % self.makeJSString(options.filter))
-    prefsFile.write('user_pref("reftest.focusFilterMode", %s);\n' % self.makeJSString(options.focusFilterMode))
+    prefs = {}
+    prefs['reftest.timeout'] = options.timeout * 1000
+    if options.totalChunks:
+      prefs['reftest.totalChunks'] = options.totalChunks
+    if options.thisChunk:
+      prefs['reftest.thisChunk'] = options.thisChunk
+    if options.logFile:
+      prefs['reftest.logFile'] = options.logFile
+    if options.ignoreWindowSize:
+      prefs['reftest.ignoreWindowSize'] = True
+    if options.filter:
+      prefs['reftest.filter'] = options.filter
+    prefs['reftest.focusFilterMode'] = options.focusFilterMode
 
     for v in options.extraPrefs:
-      thispref = v.split("=")
+      thispref = v.split('=')
       if len(thispref) < 2:
         print "Error: syntax error in --setpref=" + v
         sys.exit(1)
-      part = 'user_pref("%s", %s);\n' % (thispref[0], thispref[1])
-      prefsFile.write(part)
-    prefsFile.close()
+        prefs[thispref[0]] = thispref[1]
 
     # install the reftest extension bits into the profile
-    self.automation.installExtension(os.path.join(SCRIPT_DIRECTORY, "reftest"),
-                                                  profileDir,
-                                                  "reftest@mozilla.org")
+    addons = []
+    addons.append(os.path.join(SCRIPT_DIRECTORY, "reftest"))
 
     # I would prefer to use "--install-extension reftest/specialpowers", but that requires tight coordination with
     # release engineering and landing on multiple branches at once.
-    if manifest.endswith('crashtests.list'):
-      self.automation.installExtension(os.path.join(SCRIPT_DIRECTORY, "specialpowers"),
-                                                    profileDir,
-                                                    "special-powers@mozilla.org")
+    if special_powers and manifest.endswith('crashtests.list'):
+      addons.append(os.path.join(SCRIPT_DIRECTORY, 'specialpowers'))
+
+    # Install distributed extensions, if application has any.
+    distExtDir = os.path.join(options.app[ : options.app.rfind(os.sep)], "distribution", "extensions")
+    if os.path.isdir(distExtDir):
+      for f in os.listdir(distExtDir):
+        addons.append(os.path.join(distExtDir, f))
+
+    # Install custom extensions.
+    for f in options.extensionsToInstall:
+      addons.append(self.getFullPath(f))
+
+    profile = mozprofile.profile.Profile(
+        addons=addons,
+        preferences=prefs,
+        locations=locations,
+    )
+    self.copyExtraFilesToProfile(options, profile)
+    return profile
 
   def buildBrowserEnv(self, options, profileDir):
     browserEnv = self.automation.environment(xrePath = options.xrePath)
@@ -121,10 +137,8 @@ class RefTest(object):
       reftestlist = self.getManifestPath(testPath)
       if cmdlineArgs == None:
         cmdlineArgs = ['-reftest', reftestlist]
-      profileDir = mkdtemp()
-      self.copyExtraFilesToProfile(options, profileDir)
-      self.createReftestProfile(options, profileDir, reftestlist)
-      self.installExtensionsToProfile(options, profileDir)
+      profile = self.createReftestProfile(options, reftestlist)
+      profileDir = profile.profile # name makes more sense
 
       # browser environment
       browserEnv = self.buildBrowserEnv(options, profileDir)
@@ -145,30 +159,23 @@ class RefTest(object):
       self.cleanup(profileDir)
     return status
 
-  def copyExtraFilesToProfile(self, options, profileDir):
+  def copyExtraFilesToProfile(self, options, profile):
     "Copy extra files or dirs specified on the command line to the testing profile."
+    profileDir = profile.profile
     for f in options.extraProfileFiles:
       abspath = self.getFullPath(f)
       if os.path.isfile(abspath):
-        shutil.copy2(abspath, profileDir)
+        if os.path.basename(abspath) == 'user.js':
+          extra_prefs = mozprofile.Preferences.read_prefs(abspath)
+          profile.set_preferences(extra_prefs)
+        else:
+          shutil.copy2(abspath, profileDir)
       elif os.path.isdir(abspath):
         dest = os.path.join(profileDir, os.path.basename(abspath))
         shutil.copytree(abspath, dest)
       else:
         self.automation.log.warning("WARNING | runreftest.py | Failed to copy %s to profile", abspath)
         continue
-
-  def installExtensionsToProfile(self, options, profileDir):
-    "Install application distributed extensions and specified on the command line ones to testing profile."
-    # Install distributed extensions, if application has any.
-    distExtDir = os.path.join(options.app[ : options.app.rfind(os.sep)], "distribution", "extensions")
-    if os.path.isdir(distExtDir):
-      for f in os.listdir(distExtDir):
-        self.automation.installExtension(os.path.join(distExtDir, f), profileDir)
-
-    # Install custom extensions.
-    for f in options.extensionsToInstall:
-      self.automation.installExtension(self.getFullPath(f), profileDir)
 
 
 class ReftestOptions(OptionParser):

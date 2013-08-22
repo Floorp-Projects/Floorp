@@ -13,3 +13,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'rdfdatasource_s'
 
+LIBXUL_LIBRARY = True
+

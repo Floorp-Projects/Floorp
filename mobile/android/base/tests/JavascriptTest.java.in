@@ -104,7 +104,7 @@ public class JavascriptTest extends BaseTest {
         final String url = getAbsoluteUrl("/robocop/robocop_javascript.html?path=" + javascriptUrl);
         mAsserter.dumpLog("Loading JavaScript test from " + url);
 
-        loadUrlInTab(url);
+        loadUrl(url);
 
         final JavascriptTestMessageParser testMessageParser =
             new JavascriptTestMessageParser(mAsserter);

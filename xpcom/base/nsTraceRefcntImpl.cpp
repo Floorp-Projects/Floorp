@@ -185,8 +185,7 @@ static void
 TypesToLogFreeEntry(void *pool, PLHashEntry *he, unsigned flag)
 {
     if (flag == HT_FREE_ENTRY) {
-        nsCRT::free(const_cast<char*>
-                              (reinterpret_cast<const char*>(he->key)));
+        free(const_cast<char*>(reinterpret_cast<const char*>(he->key)));
         PR_Free(he);
     }
 }
@@ -758,7 +757,7 @@ static void InitTraceLog(void)
         if (cm) {
           *cm = '\0';
         }
-        PL_HashTableAdd(gTypesToLog, nsCRT::strdup(cp), (void*)1);
+        PL_HashTableAdd(gTypesToLog, strdup(cp), (void*)1);
         fprintf(stdout, "%s ", cp);
         if (!cm) break;
         *cm = ',';

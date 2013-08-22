@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 895360 - [app manager] Device meta data actor
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Mozilla Bug</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/PermissionsTable.jsm");
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {getDeviceFront} = devtools.require("devtools/server/actors/device");
+
+  DebuggerServer.init(function () { return true; });
+  DebuggerServer.addBrowserActors();
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(function onConnect() {
+    client.listTabs(function onListTabs(aResponse) {
+      var d = getDeviceFront(client, aResponse);
+
+      var desc, permissions;
+      var appInfo = Services.appinfo;
+      var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+
+
+      var localDesc = {
+        appid: appInfo.ID,
+        vendor: appInfo.vendor,
+        name: appInfo.name,
+        version: appInfo.version,
+        appbuildid: appInfo.appBuildID,
+        platformbuildid: appInfo.platformBuildID,
+        platformversion: appInfo.platformVersion,
+        geckobuildid: appInfo.platformBuildID,
+        geckoversion: appInfo.platformVersion,
+        useragent: window.navigator.userAgent,
+        locale: Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global"),
+        os: appInfo.OS,
+        processor: appInfo.XPCOMABI.split("-")[0],
+        compiler: appInfo.XPCOMABI.split("-")[1],
+        dpi: utils.displayDPI,
+        width: window.screen.width,
+        height: window.screen.height
+      }
+
+      function checkValues() {
+        for (var key in localDesc) {
+          is(desc[key], localDesc[key], "valid field (" + key + ")");
+        }
+
+        var currProfD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+        var profileDir = currProfD.path;
+        ok(profileDir.indexOf(desc.profile.length > 0 && desc.profile) != -1, "valid profile name");
+
+        var a = JSON.stringify(PermissionsTable);
+        var b = JSON.stringify(permissions.rawPermissionsTable);
+
+        is(a, b, "Permissions Tables is valid");
+
+        client.close(() => {
+          DebuggerServer.destroy();
+          SimpleTest.finish()
+        });
+      }
+
+
+      d.getDescription().then((v) => desc = v)
+      .then(() => d.getRawPermissionsTable())
+      .then((json) => permissions = json)
+      .then(checkValues);
+
+    });
+  });
+
+}
+</script>
+</pre>
+</body>
+</html>

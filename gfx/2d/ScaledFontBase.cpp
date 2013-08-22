@@ -101,9 +101,23 @@ ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *a
 void
 ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder)
 {
-  // XXX - implement me
-  MOZ_ASSERT(false);
-  return;
+#ifdef USE_CAIRO
+  PathBuilderCairo* builder = static_cast<PathBuilderCairo*>(aBuilder);
+
+  RefPtr<CairoPathContext> context = builder->GetPathContext();
+
+  cairo_set_scaled_font(*context, mScaledFont);
+
+  // Convert our GlyphBuffer into an array of Cairo glyphs.
+  std::vector<cairo_glyph_t> glyphs(aBuffer.mNumGlyphs);
+  for (uint32_t i = 0; i < aBuffer.mNumGlyphs; ++i) {
+    glyphs[i].index = aBuffer.mGlyphs[i].mIndex;
+    glyphs[i].x = aBuffer.mGlyphs[i].mPosition.x;
+    glyphs[i].y = aBuffer.mGlyphs[i].mPosition.y;
+  }
+
+  cairo_glyph_path(*context, &glyphs[0], aBuffer.mNumGlyphs);
+#endif
 }
 
 #ifdef USE_CAIRO_SCALED_FONT

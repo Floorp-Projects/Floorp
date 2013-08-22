@@ -753,16 +753,6 @@ LIRGenerator::visitTypeObjectDispatch(MTypeObjectDispatch *ins)
     return add(lir, ins);
 }
 
-bool
-LIRGenerator::visitPolyInlineDispatch(MPolyInlineDispatch *ins)
-{
-    LDefinition tempDef = LDefinition::BogusTemp();
-    if (ins->propTable())
-        tempDef = temp();
-    LPolyInlineDispatch *lir = new LPolyInlineDispatch(useRegister(ins->input()), tempDef);
-    return add(lir, ins);
-}
-
 static inline bool
 CanEmitCompareAtUses(MInstruction *ins)
 {
@@ -2078,6 +2068,8 @@ LIRGenerator::visitLoadElementHole(MLoadElementHole *ins)
     LLoadElementHole *lir = new LLoadElementHole(useRegister(ins->elements()),
                                                  useRegisterOrConstant(ins->index()),
                                                  useRegister(ins->initLength()));
+    if (ins->needsNegativeIntCheck() && !assignSnapshot(lir))
+        return false;
     return defineBox(lir, ins);
 }
 

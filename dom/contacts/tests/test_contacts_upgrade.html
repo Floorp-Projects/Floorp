@@ -19,6 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=889239
 <script class="testbody" type="application/javascript;version=1.7">
 "use strict";
 
+var isAndroid = (navigator.userAgent.indexOf("Android") !== -1);
+
 function checkStr(str1, str2, msg) {
   if (str1 ^ str2) {
     ok(false, "Expected both strings to be either present or absent");
@@ -266,8 +268,14 @@ function next() {
   }
 }
 
-SimpleTest.waitForExplicitFinish();
-next();
+// Skip tests on Android
+if (!isAndroid) {
+  SimpleTest.waitForExplicitFinish();
+  next();
+} else {
+  ok(true, "Skip test on Android");
+}
+
 </script>
 </pre>
 </body>

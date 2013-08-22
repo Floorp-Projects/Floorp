@@ -6,14 +6,18 @@
 #ifndef GFX_READBACKPROCESSOR_H
 #define GFX_READBACKPROCESSOR_H
 
-#include "ThebesLayerBuffer.h"
-#include "nsTArray.h"
+#include <stdint.h>                     // for uint64_t
+#include "nsRect.h"                     // for nsIntRect
+#include "nsTArray.h"                   // for nsTArray
+ 
+class nsIntRegion;
 
 namespace mozilla {
 namespace layers {
 
 class ContainerLayer;
 class ReadbackLayer;
+class ThebesLayer;
 
 class ReadbackProcessor {
 public:

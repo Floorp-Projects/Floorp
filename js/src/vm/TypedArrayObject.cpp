@@ -124,7 +124,7 @@ ToClampedIndex(JSContext *cx, HandleValue v, uint32_t length, uint32_t *out)
  */
 
 JS_ALWAYS_INLINE bool
-IsArrayBuffer(const Value &v)
+IsArrayBuffer(HandleValue v)
 {
     return v.isObject() && v.toObject().hasClass(&ArrayBufferObject::class_);
 }
@@ -1357,6 +1357,14 @@ js::ToDoubleForTypedArray(JSContext *cx, JS::HandleValue vp, double *d)
         *d = js_NaN;
     }
 
+#ifdef JS_MORE_DETERMINISTIC
+    // It's possible to have a NaN value with the sign bit set. The spec allows
+    // this but it can confuse differential testing when this value is stored
+    // to a float array and then read back as integer. To work around this, we
+    // always canonicalize NaN values in more-deterministic builds.
+    *d = JS_CANONICALIZE_NAN(*d);
+#endif
+
     return true;
 }
 
@@ -1441,7 +1449,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return &TypedArrayObject::classes[ArrayTypeID()];
     }
 
-    static bool is(const Value &v) {
+    static bool is(HandleValue v) {
         return v.isObject() && v.toObject().hasClass(fastClass());
     }
 
@@ -1895,7 +1903,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return fromBuffer(cx, dataObj, byteOffset, length, proto);
     }
 
-    static bool IsThisClass(const Value &v) {
+    static bool IsThisClass(HandleValue v) {
         return v.isObject() && v.toObject().hasClass(fastClass());
     }
 
@@ -3984,7 +3992,7 @@ js_InitTypedArrayClasses(JSContext *cx, HandleObject obj)
 }
 
 bool
-js::IsTypedArrayConstructor(const Value &v, uint32_t type)
+js::IsTypedArrayConstructor(HandleValue v, uint32_t type)
 {
     switch (type) {
       case TypedArrayObject::TYPE_INT8:
@@ -4010,7 +4018,7 @@ js::IsTypedArrayConstructor(const Value &v, uint32_t type)
 }
 
 bool
-js::IsTypedArrayBuffer(const Value &v)
+js::IsTypedArrayBuffer(HandleValue v)
 {
     return v.isObject() && v.toObject().is<ArrayBufferObject>();
 }

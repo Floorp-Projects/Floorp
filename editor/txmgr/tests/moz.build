@@ -8,3 +8,5 @@ CPP_UNIT_TESTS += [
     'TestTXMgr.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

@@ -16,3 +16,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'storagecomps'
 
+LIBXUL_LIBRARY = True
+

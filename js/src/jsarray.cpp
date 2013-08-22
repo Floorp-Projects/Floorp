@@ -799,7 +799,7 @@ AddLengthProperty(ExclusiveContext *cx, HandleObject obj)
 
 #if JS_HAS_TOSOURCE
 JS_ALWAYS_INLINE bool
-IsArray(const Value &v)
+IsArray(HandleValue v)
 {
     return v.isObject() && v.toObject().is<ArrayObject>();
 }
@@ -1075,7 +1075,7 @@ InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned co
         for (unsigned i = 0; i < count; i++) {
             if (vector[i].isMagic(JS_ELEMENTS_HOLE))
                 continue;
-            Type valtype = GetValueType(cx, vector[i]);
+            Type valtype = GetValueType(vector[i]);
             types->addType(cx, valtype);
         }
     }

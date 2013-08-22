@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
+'use strict';
 
 // Opening new windows in Fennec causes issues
 module.metadata = {
@@ -31,91 +31,76 @@ const Loader = Trait.compose(
   }
 );
 
-exports['test compositions with missing required properties'] = function(test) {
-  test.assertRaises(
+exports['test compositions with missing required properties'] = function(assert) {
+  assert.throws(
     function() WindowLoader.compose({})(),
-    'Missing required property: _onLoad',
+    /Missing required property: _onLoad/,
     'should throw missing required property exception'
   );
-  test.assertRaises(
+  assert.throws(
     function() WindowLoader.compose({ _onLoad: null, _tabOptions: null })(),
-    'Missing required property: _onUnload',
+    /Missing required property: _onUnload/,
     'should throw missing required property `_onUnload`'
   );
-  test.assertRaises(
+  assert.throws(
     function() WindowLoader.compose({ _onUnload: null, _tabOptions: null })(),
-    'Missing required property: _onLoad',
+    /Missing required property: _onLoad/,
     'should throw missing required property `_onLoad`'
   );
-  test.assertRaises(
+  assert.throws(
     function() WindowLoader.compose({ _onUnload: null, _onLoad: null })(),
-    'Missing required property: _tabOptions',
+    /Missing required property: _tabOptions/,
     'should throw missing required property `_tabOptions`'
   );
 };
 
-exports['test `load` events'] = function(test) {
-  test.waitUntilDone();
+exports['test `load` events'] = function(assert, done) {
   let onLoadCalled = false;
   Loader({
     onLoad: function(window) {
       onLoadCalled = true;
-      test.assertEqual(
-        window, this._window, 'windows should match'
-      );
-      test.assertEqual(
+      assert.equal(window, this._window, 'windows should match');
+      assert.equal(
         window.document.readyState, 'complete', 'window must be fully loaded'
       );
       window.close();
     },
     onUnload: function(window) {
-      test.assertEqual(
-        window, this._window, 'windows should match'
-      );
-      test.assertEqual(
+      assert.equal(window, this._window, 'windows should match');
+      assert.equal(
         window.document.readyState, 'complete', 'window must be fully loaded'
       );
-      test.assert(onLoadCalled, 'load callback is supposed to be called');
-      test.done();
+      assert.ok(onLoadCalled, 'load callback is supposed to be called');
+      done();
     }
   });
 };
 
-exports['test removeing listeners'] = function(test) {
-  test.waitUntilDone();
+exports['test removeing listeners'] = function(assert, done) {
   Loader({
     onLoad: function(window) {
-      test.assertEqual(
-        window, this._window, 'windows should match'
-      );
+      assert.equal(window, this._window, 'windows should match');
       window.close();
     },
-    onUnload: function(window) {
-      test.done();
-    }
+    onUnload: done
   });
 };
 
-exports['test create loader from opened window'] = function(test) {
-  test.waitUntilDone();
+exports['test create loader from opened window'] = function(assert, done) {
   let onUnloadCalled = false;
   Loader({
     onLoad: function(window) {
-      test.assertEqual(
-        window, this._window, 'windows should match'
-      );
-      test.assertEqual(
-        window.document.readyState, 'complete', 'window must be fully loaded'
-      );
+      assert.equal(window, this._window, 'windows should match');
+      assert.equal(window.document.readyState, 'complete', 'window must be fully loaded');
       Loader({
         window: window,
         onLoad: function(win) {
-          test.assertEqual(win, window, 'windows should match');
+          assert.equal(win, window, 'windows should match');
           window.close();
         },
         onUnload: function(window) {
-          test.assert(onUnloadCalled, 'first handler should be called already');
-          test.done();
+          assert.ok(onUnloadCalled, 'first handler should be called already');
+          done();
         }
       });
     },
@@ -124,3 +109,5 @@ exports['test create loader from opened window'] = function(test) {
     }
   });
 };
+
+require('sdk/test').run(exports);

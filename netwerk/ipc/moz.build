@@ -36,3 +36,8 @@ IPDL_SOURCES = [
     'PNecko.ipdl',
     'PRemoteOpenFile.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+

@@ -4,13 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
-#include "ImageTypes.h"
-#include "yuv_convert.h"
-#include "mozilla/gfx/2D.h"
-#include "gfx2DGlue.h"
+#include <string.h>                     // for memcpy
+#include "gfx2DGlue.h"                  // for ToIntSize
+#include "mozilla/gfx/2D.h"             // for DataSourceSurface, Factory
+#include "mozilla/gfx/BaseSize.h"       // for BaseSize
+#include "mozilla/gfx/Types.h"
+#include "mozilla/mozalloc.h"           // for operator delete
+#include "yuv_convert.h"                // for ConvertYCbCrToRGB32, etc
 
 #define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
-using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace layers {

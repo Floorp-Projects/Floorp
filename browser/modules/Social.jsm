@@ -91,6 +91,11 @@ this.Social = {
   providers: [],
   _disabledForSafeMode: false,
 
+  get allowMultipleWorkers() {
+    return Services.prefs.prefHasUserValue("social.allowMultipleWorkers") &&
+           Services.prefs.getBoolPref("social.allowMultipleWorkers");
+  },
+
   get _currentProviderPref() {
     try {
       return Services.prefs.getComplexValue("social.provider.current",
@@ -114,15 +119,14 @@ this.Social = {
     this._setProvider(val);
   },
 
-  // Sets the current provider and enables it. Also disables the
-  // previously set provider, and notifies observers of the change.
+  // Sets the current provider and notifies observers of the change.
   _setProvider: function (provider) {
     if (this._provider == provider)
       return;
 
-    // Disable the previous provider, if any, since we want only one provider to
-    // be enabled at once.
-    if (this._provider)
+    // Disable the previous provider, if we are not allowing multiple workers,
+    // since we want only one provider to be enabled at once.
+    if (this._provider && !Social.allowMultipleWorkers)
       this._provider.enabled = false;
 
     this._provider = provider;
@@ -134,7 +138,6 @@ this.Social = {
     let enabled = !!provider;
     if (enabled != SocialService.enabled) {
       SocialService.enabled = enabled;
-      Services.prefs.setBoolPref("social.enabled", enabled);
     }
 
     let origin = this._provider && this._provider.origin;
@@ -159,31 +162,40 @@ this.Social = {
     if (SocialService.enabled) {
       // Retrieve the current set of providers, and set the current provider.
       SocialService.getOrderedProviderList(function (providers) {
-        this._updateProviderCache(providers);
-      }.bind(this));
+        Social._updateProviderCache(providers);
+        Social._updateWorkerState(true);
+      });
     }
 
     // Register an observer for changes to the provider list
     SocialService.registerProviderListener(function providerListener(topic, data) {
-      // An engine change caused by adding/removing a provider should notify
+      // An engine change caused by adding/removing a provider should notify.
+      // any providers we receive are enabled in the AddonsManager
       if (topic == "provider-added" || topic == "provider-removed") {
-        this._updateProviderCache(data);
+        Social._updateProviderCache(data);
+        Social._updateWorkerState(true);
         Services.obs.notifyObservers(null, "social:providers-changed", null);
         return;
       }
       if (topic == "provider-update") {
-        // a provider has self-updated its manifest, we need to update our
-        // cache and possibly reload if it was the current provider.
+        // a provider has self-updated its manifest, we need to update our cache
+        // and reload the provider.
         let provider = data;
-        // if we need a reload, do it now
-        if (provider.enabled) {
-          Social.enabled = false;
-          Services.tm.mainThread.dispatch(function() {
-            Social.enabled = true;
-          }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
-        }
+        SocialService.getOrderedProviderList(function(providers) {
+          Social._updateProviderCache(providers);
+          provider.reload();
+          Services.obs.notifyObservers(null, "social:providers-changed", null);
+        });
       }
-    }.bind(this));
+    });
+  },
+
+  _updateWorkerState: function(enable) {
+    // ensure that our providers are all disabled, and enabled if we allow
+    // multiple workers
+    if (enable && !Social.allowMultipleWorkers)
+      return;
+    [p.enabled = enable for (p of Social.providers) if (p.enabled != enable)];
   },
 
   // Called to update our cache of providers and set the current provider
@@ -203,6 +215,9 @@ this.Social = {
   set enabled(val) {
     // Setting .enabled is just a shortcut for setting the provider to either
     // the default provider or null...
+
+    this._updateWorkerState(val);
+
     if (val) {
       if (!this.provider)
         this.provider = this.defaultProvider;
@@ -210,6 +225,7 @@ this.Social = {
       this.provider = null;
     }
   },
+
   get enabled() {
     return this.provider != null;
   },
@@ -227,10 +243,6 @@ this.Social = {
   toggleNotifications: function SocialNotifications_toggle() {
     let prefValue = Services.prefs.getBoolPref("social.toast-notifications.enabled");
     Services.prefs.setBoolPref("social.toast-notifications.enabled", !prefValue);
-  },
-
-  haveLoggedInUser: function () {
-    return !!(this.provider && this.provider.profile && this.provider.profile.userName);
   },
 
   setProviderByOrigin: function (origin) {

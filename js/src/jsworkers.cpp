@@ -226,12 +226,7 @@ js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
     if (!global)
         return false;
 
-    // For now, type inference is always disabled in exclusive zones, as type
-    // inference data is not merged between zones when finishing the off thread
-    // parse. This restriction would be fairly easy to lift.
-    JS_ASSERT(!cx->typeInferenceEnabled());
-    global->zone()->types.inferenceEnabled = false;
-
+    global->zone()->types.inferenceEnabled = cx->typeInferenceEnabled();
     JS_SetCompartmentPrincipals(global->compartment(), cx->compartment()->principals);
 
     RootedObject obj(cx);
@@ -359,17 +354,32 @@ WorkerThreadState::init(JSRuntime *rt)
     return true;
 }
 
-WorkerThreadState::~WorkerThreadState()
+void
+WorkerThreadState::cleanup(JSRuntime *rt)
 {
-    /*
-     * Join created threads first, which needs locks and condition variables
-     * to be intact.
-     */
+    // Do preparatory work for shutdown before the final GC has destroyed most
+    // of the GC heap.
+
+    // Join created threads, to ensure there is no in progress work.
     if (threads) {
         for (size_t i = 0; i < numThreads; i++)
             threads[i].destroy();
         js_free(threads);
+        threads = NULL;
+        numThreads = 0;
     }
+
+    // Clean up any parse tasks which haven't been finished yet.
+    while (!parseFinishedList.empty()) {
+        JSScript *script = parseFinishedList[0]->script;
+        finishParseTaskForScript(rt, script);
+    }
+}
+
+WorkerThreadState::~WorkerThreadState()
+{
+    JS_ASSERT(!threads);
+    JS_ASSERT(parseFinishedList.empty());
 
     if (workerLock)
         PR_DestroyLock(workerLock);

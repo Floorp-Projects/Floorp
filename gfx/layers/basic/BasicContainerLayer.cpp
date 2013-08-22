@@ -3,15 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BasicLayersImpl.h"
 #include "BasicContainerLayer.h"
+#include <sys/types.h>                  // for int32_t
+#include "BasicLayersImpl.h"            // for ToData
+#include "basic/BasicImplData.h"        // for BasicImplData
+#include "basic/BasicLayers.h"          // for BasicLayerManager
+#include "mozilla/gfx/BaseRect.h"       // for BaseRect
+#include "mozilla/mozalloc.h"           // for operator new
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsCOMPtr.h"                   // for already_AddRefed
+#include "nsISupportsImpl.h"            // for Layer::AddRef, etc
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsRect.h"                     // for nsIntRect
 
 using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
-
-
 
 BasicContainerLayer::~BasicContainerLayer()
 {

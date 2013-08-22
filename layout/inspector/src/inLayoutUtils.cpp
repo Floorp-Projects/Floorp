@@ -6,6 +6,7 @@
 #include "inLayoutUtils.h"
 
 #include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 #include "nsIContent.h"
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"

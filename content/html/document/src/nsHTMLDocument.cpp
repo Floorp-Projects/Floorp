@@ -149,7 +149,7 @@ static void
 ReportUseOfDeprecatedMethod(nsHTMLDocument* aDoc, const char* aWarning)
 {
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM Events", aDoc,
+                                  NS_LITERAL_CSTRING("DOM Events"), aDoc,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   aWarning);
 }
@@ -1006,6 +1006,12 @@ nsHTMLDocument::SetDomain(const nsAString& aDomain)
 void
 nsHTMLDocument::SetDomain(const nsAString& aDomain, ErrorResult& rv)
 {
+  if (mSandboxFlags & SANDBOXED_DOMAIN) {
+    // We're sandboxed; disallow setting domain
+    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
   if (aDomain.IsEmpty()) {
     rv.Throw(NS_ERROR_DOM_BAD_DOCUMENT_DOMAIN);
     return;
@@ -1866,7 +1872,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     if (mExternalScriptsBeingEvaluated) {
       // Instead of implying a call to document.open(), ignore the call.
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "DOM Events", this,
+                                      NS_LITERAL_CSTRING("DOM Events"), this,
                                       nsContentUtils::eDOM_PROPERTIES,
                                       "DocumentWriteIgnored",
                                       nullptr, 0,
@@ -1881,7 +1887,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
     if (mExternalScriptsBeingEvaluated) {
       // Instead of implying a call to document.open(), ignore the call.
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "DOM Events", this,
+                                      NS_LITERAL_CSTRING("DOM Events"), this,
                                       nsContentUtils::eDOM_PROPERTIES,
                                       "DocumentWriteIgnored",
                                       nullptr, 0,

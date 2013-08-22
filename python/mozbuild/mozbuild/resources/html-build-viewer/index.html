@@ -1,0 +1,570 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Build System Resource Usage</title>
+
+    <meta charset='utf-8'>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <style>
+
+svg {
+  overflow: visible;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.area {
+  fill: steelblue;
+}
+
+.graphs {
+  text-anchor: end;
+}
+
+.timeline {
+  fill: steelblue;
+  stroke: gray;
+  stroke-width: 3;
+}
+
+.short {
+  fill: gray;
+  stroke: gray;
+  stroke-width: 3;
+}
+
+#tooltip {
+  z-index: 10;
+  position: fixed;
+  background: #efefef;
+}
+    </style>
+  </head>
+  <body>
+    <script>
+var currentResources;
+
+/**
+ * Interface for a build resources JSON file.
+ */
+function BuildResources(data) {
+  if (data.version != 1) {
+    throw new Error("Only version 1 of the JSON format is supported.");
+  }
+
+  this.resources = [];
+
+  var cpu_fields = data.cpu_times_fields;
+  var io_fields = data.io_fields;
+  var virt_fields = data.virt_fields;
+  var swap_fields = data.swap_fields;
+
+  function convert(dest, source, key, fields) {
+    var i = 0;
+    fields.forEach(function (field) {
+      dest[key][field] = source[key][i];
+      i++;
+    });
+  }
+
+  var offset = data.start;
+  var cpu_times_totals = {};
+
+  cpu_fields.forEach(function (field) {
+    cpu_times_totals[field] = 0;
+  });
+
+  this.ioTotal = {};
+  var i = 0;
+  io_fields.forEach(function (field) {
+    this.ioTotal[field] = data.io[i];
+    i++;
+  }.bind(this));
+
+  data.resources.forEach(function (sample) {
+    var entry = {
+      start: sample.start - offset,
+      end: sample.end - offset,
+      duration: sample.duration,
+      cpu_percent: sample.cpu_percent,
+      cpu_times: {},
+      cpu_times_percents: {},
+      io: {},
+      virt: {},
+      swap: {},
+    };
+
+    convert(entry, sample, "cpu_times", cpu_fields);
+    convert(entry, sample, "io", io_fields);
+    convert(entry, sample, "virt", virt_fields);
+    convert(entry, sample, "swap", swap_fields);
+
+    var total = 0;
+    for (var k in entry.cpu_times) {
+      cpu_times_totals[k] += entry.cpu_times[k];
+      total += entry.cpu_times[k];
+    }
+
+    for (var k in entry.cpu_times) {
+      if (total == 0) {
+        if (k == "idle") {
+          entry.cpu_times_percents[k] = 100;
+        } else {
+          entry.cpu_times_percents[k] = 0;
+        }
+      } else {
+        entry.cpu_times_percents[k] = entry.cpu_times[k] / total * 100;
+      }
+    }
+
+    this.resources.push(entry);
+  }.bind(this));
+
+  this.cpu_times_fields = [];
+
+  // Filter out CPU fields that have no values.
+  for (var k in cpu_times_totals) {
+    var v = cpu_times_totals[k];
+    if (v) {
+      this.cpu_times_fields.push(k);
+      continue;
+    }
+
+    this.resources.forEach(function (entry) {
+      delete entry.cpu_times[k];
+      delete entry.cpu_times_percents[k];
+    });
+  }
+
+  this.offset = offset;
+  this.data = data;
+}
+
+BuildResources.prototype = Object.freeze({
+  get start() {
+    return this.data.start;
+  },
+
+  get startDate() {
+    return new Date(this.start * 1000);
+  },
+
+  get end() {
+    return this.data.end;
+  },
+
+  get endDate() {
+    return new Date(this.end * 1000);
+  },
+
+  get duration() {
+    return this.data.duration;
+  },
+
+  get sample_times() {
+    var times = [];
+    this.resources.forEach(function (sample) {
+      times.push(sample.start);
+    });
+
+    return times;
+  },
+
+  get cpuPercent() {
+    return this.data.cpu_percent;
+  },
+
+  get tiers() {
+    var t = [];
+
+    this.data.tiers.forEach(function (e) {
+      t.push(e.name);
+    });
+
+    return t;
+  },
+
+  getTier: function (tier) {
+    for (var i = 0; i < this.data.tiers.length; i++) {
+      var t = this.data.tiers[i];
+
+      if (t.name == tier) {
+        return t;
+      }
+    }
+  },
+
+  getSubtier: function (tier, subtier) {
+    var t = this.getTier(tier);
+
+    if (!t) {
+      return;
+    }
+
+    for (var i = 0; i < t.subtiers.length; i++) {
+      var entry = t.subtiers[i];
+
+      if (entry.name == subtier) {
+        return entry;
+      }
+    }
+  },
+
+  getDirectory: function (tier, subtier, directory) {
+    var st = this.getSubtier(tier, subtier);
+
+    if (!st) {
+      return;
+    }
+
+    for (var i = 0; i < st.dirs.length; i++) {
+      var entry = st.dirs[i];
+
+      if (entry.name == directory) {
+        return entry;
+      }
+    }
+  },
+});
+
+function updateResourcesGraph() {
+  //var selected = document.getElementById("resourceType");
+  //var what = selected[selected.selectedIndex].value;
+  var what = "cpu";
+
+  renderResources("resource_graph", currentResources, what);
+  document.getElementById("wall_time").innerHTML = Math.round(currentResources.duration * 100) / 100;
+  document.getElementById("start_date").innerHTML = currentResources.startDate.toISOString();
+  document.getElementById("end_date").innerHTML = currentResources.endDate.toISOString();
+  document.getElementById("cpu_percent").innerHTML = Math.round(currentResources.cpuPercent * 100) / 100;
+  document.getElementById("write_bytes").innerHTML = currentResources.ioTotal["write_bytes"];
+  document.getElementById("read_bytes").innerHTML = currentResources.ioTotal["read_bytes"];
+  document.getElementById("write_time").innerHTML = currentResources.ioTotal["write_time"];
+  document.getElementById("read_time").innerHTML = currentResources.ioTotal["read_time"];
+}
+
+function renderKey(key) {
+  d3.json("/resources/" + key, function onResource(error, response) {
+    if (error) {
+      alert("Data not available. Is the server still running?");
+      return;
+    }
+
+    currentResources = new BuildResources(response);
+    updateResourcesGraph();
+  });
+}
+
+function renderResources(id, resources, what) {
+  document.getElementById(id).innerHTML = "";
+
+  var margin = {top: 20, right: 20, bottom: 20, left: 50};
+  var width = window.innerWidth - 50 - margin.left - margin.right;
+  var height = 400 - margin.top - margin.bottom;
+
+  var x = d3.scale.linear()
+    .range([0, width])
+    .domain(d3.extent(resources.resources, function (d) { return d.start; }))
+    ;
+  var y = d3.scale.linear()
+    .range([height, 0])
+    .domain([0, 1])
+    ;
+
+  var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom")
+    ;
+  var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left")
+    .tickFormat(d3.format(".0%"))
+    ;
+
+  var area = d3.svg.area()
+    .x(function (d) { return x(d.start); })
+    .y0(function(d) { return y(d.y0); })
+    .y1(function(d) { return y(d.y0 + d.y); })
+    ;
+
+  var stack = d3.layout.stack()
+    .values(function (d) { return d.values; })
+    ;
+
+  // Manually control the layer order because we want it consistent and want
+  // to inject some sanity.
+  var layers = [
+    ["nice", "#0d9fff"],
+    ["irq", "#ff0d9f"],
+    ["softirq", "#ff0d9f"],
+    ["steal", "#000000"],
+    ["guest", "#000000"],
+    ["guest_nice", "#000000"],
+    ["system", "#f69a5c"],
+    ["iowait", "#ff0d25"],
+    ["user", "#5cb9f6"],
+    ["idle", "#e1e1e1"],
+  ].filter(function (l) {
+    return resources.cpu_times_fields.indexOf(l[0]) != -1;
+  });
+
+  // Draw a legend.
+  var legend = d3.select("#" + id)
+    .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", 15)
+      .append("g")
+        .attr("class", "legend")
+    ;
+
+  legend.selectAll("g")
+    .data(layers)
+    .enter()
+      .append("g")
+        .each(function (d, i) {
+          var g = d3.select(this);
+          g.append("rect")
+            .attr("x", i * 100 + 20)
+            .attr("y", 0)
+            .attr("width", 10)
+            .attr("height", 10)
+            .style("fill", d[1])
+            ;
+          g.append("text")
+            .attr("x", i * 100 + 40)
+            .attr("y", 10)
+            .attr("height", 10)
+            .attr("width", 70)
+            .text(d[0])
+            ;
+          })
+    ;
+
+  var svg = d3.select("#" + id).append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    ;
+
+  var data = stack(layers.map(function (layer) {
+    return {
+      name: layer[0],
+      color: layer[1],
+      values: resources.resources.map(function (d) {
+        return {
+          start: d.start,
+          y: d.cpu_times_percents[layer[0]] / 100,
+        };
+      }),
+    };
+  }));
+
+  var graphs = svg.selectAll(".graphs")
+    .data(data)
+    .enter().append("g")
+      .attr("class", "graphs")
+    ;
+
+  graphs.append("path")
+    .attr("class", "area")
+    .attr("d", function (d) { return area(d.values); })
+    .style("fill", function (d) { return d.color; })
+    ;
+
+  svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis)
+    ;
+
+  svg.append("g")
+    .attr("class", "y axis")
+    .call(yAxis)
+    ;
+
+  // Now we render a timeline of sorts of the tiers, subtiers, and directories.
+  // There are 3 rows of rectangles that visualize divisions between the
+  // different items. We use the same x scale as the resource graph so times
+  // line up properly.
+  svg = d3.select("#" + id).append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", 100 + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    ;
+
+  var y = d3.scale.linear().range([10, 0]).domain([0, 1]);
+
+  resources.tiers.forEach(function (t, i) {
+    var tier = resources.getTier(t);
+
+    var x_start = x(tier.start - resources.offset);
+    var x_end = x(tier.end - resources.offset);
+
+    svg.append("rect")
+      .attr("x", x_start)
+      .attr("y", 20)
+      .attr("height", 30)
+      .attr("width", x_end - x_start)
+      .attr("class", "timeline tier")
+      .attr("tier", t)
+      ;
+
+    tier.subtiers.forEach(function (subtier) {
+      var x_start = x(subtier.start - resources.offset);
+      var x_end = x(subtier.end - resources.offset);
+      var draw_width = x_end - x_start;
+
+      var classes = "timeline subtier";
+      if (draw_width < 6) {
+        classes += " short";
+      }
+
+      svg.append("rect")
+        .attr("x", x_start)
+        .attr("y", 60)
+        .attr("height", 30)
+        .attr("width", draw_width)
+        .attr("class", classes)
+        .attr("tier", t)
+        .attr("subtier", subtier.name)
+        ;
+
+      subtier.dirs.forEach(function (dir) {
+        var x_start = x(dir.start - resources.offset);
+        var x_end = x(dir.end - resources.offset);
+        var draw_width = x_end - x_start;
+
+        var classes = "timeline directory";
+
+        if (draw_width < 6) {
+          classes += " short";
+        }
+
+        svg.append("rect")
+          .attr("x", x_start)
+          .attr("y", 100)
+          .attr("height", 30)
+          .attr("width", draw_width)
+          .attr("class", classes)
+          .attr("tier", t)
+          .attr("subtier", subtier.name)
+          .attr("directory", dir.name)
+          ;
+      });
+    });
+  });
+
+  function getEntry(element) {
+    var tier = element.getAttribute("tier");
+    var subtier = element.getAttribute("subtier");
+    var directory = element.getAttribute("directory");
+
+    var entry = resources.getTier(tier);
+    entry.tier = tier;
+
+    if (subtier) {
+      entry = resources.getSubtier(tier, subtier);
+      entry.tier = tier;
+      entry.subtier = subtier;
+    }
+
+    if (directory) {
+      entry = resources.getDirectory(tier, subtier, directory);
+      entry.tier = tier;
+      entry.subtier = subtier;
+      entry.directory = directory;
+    }
+
+    return entry;
+  }
+
+  d3.selectAll(".timeline")
+  .on("mouseenter", function () {
+      var entry = getEntry(this);
+
+      d3.select("#tt_tier").html(entry.tier);
+      d3.select("#tt_subtier").html(entry.subtier || "n/a");
+      d3.select("#tt_directory").html(entry.directory || "n/a");
+      d3.select("#tt_duration").html(entry.duration || "n/a");
+      d3.select("#tt_cpu_percent").html(entry.cpu_percent || "n/a");
+
+      d3.select("#tooltip").style("display", "");
+    })
+    .on("mouseleave", function () {
+      var tooltip = d3.select("#tooltip");
+      tooltip.style("display", "none");
+    })
+    .on("mousemove", function () {
+      var e = d3.event;
+      x_offset = 10;
+
+      if (e.pageX > window.innerWidth / 2) {
+        x_offset = -150;
+      }
+
+      d3.select("#tooltip")
+        .style("left", (e.pageX + x_offset) + "px")
+        .style("top", (e.pageY + 10) + "px")
+        ;
+    })
+    ;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  d3.json("list", function onList(error, response) {
+    if (!response || !("files" in response)) {
+      return;
+    }
+
+    renderKey(response.files[0]);
+  });
+}, false);
+
+    </script>
+    <h3>Build Resource Usage Report</h3>
+
+    <div id="tooltip" style="display: none;">
+      <table border="0">
+        <tr><td>Tier</td><td id="tt_tier"></td></tr>
+        <tr><td>Subtier</td><td id="tt_subtier"></td></tr>
+        <tr><td>Directory</td><td id="tt_directory"></td></tr>
+        <tr><td>Duration</td><td id="tt_duration"></td></tr>
+        <tr><td>CPU %</td><td id="tt_cpu_percent"></td></tr>
+      </table>
+    </div>
+
+    <!--
+    <select id="resourceType" onchange="updateResourcesGraph();">
+      <option value="cpu">CPU</option>
+      <option value="io_count">Disk I/O Count</option>
+      <option value="io_bytes">Disk I/O Bytes</option>
+      <option value="io_time">Disk I/O Time</option>
+      <option value="virt">Memory</option>
+    </select>
+    -->
+
+    <div id="resource_graph"></div>
+    <div id="summary" style="padding-top: 20px">
+      <table border="0">
+        <tr><td>Wall Time (s)</td><td id="wall_time"></td></tr>
+        <tr><td>Start Date</td><td id="start_date"></td></tr>
+        <tr><td>End Date</td><td id="end_date"></td></tr>
+        <tr><td>CPU %</td><td id="cpu_percent"></td></tr>
+        <tr><td>Write Bytes</td><td id="write_bytes"></td></tr>
+        <tr><td>Read Bytes</td><td id="read_bytes"></td></tr>
+        <tr><td>Write Time</td><td id="write_time"></td></tr>
+        <tr><td>Read Time</td><td id="read_time"></td></tr>
+      </table>
+    </div>
+  </body>
+</html>

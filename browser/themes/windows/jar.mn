@@ -35,6 +35,7 @@ browser.jar:
         skin/classic/browser/identity-icons-https.png
         skin/classic/browser/identity-icons-https-ev.png
         skin/classic/browser/identity-icons-https-mixed-active.png
+        skin/classic/browser/identity-icons-https-mixed-display.png
         skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/livemark-folder.png
@@ -293,6 +294,7 @@ browser.jar:
         skin/classic/aero/browser/identity-icons-https.png
         skin/classic/aero/browser/identity-icons-https-ev.png
         skin/classic/aero/browser/identity-icons-https-mixed-active.png
+        skin/classic/aero/browser/identity-icons-https-mixed-display.png
         skin/classic/aero/browser/keyhole-forward-mask.svg
         skin/classic/aero/browser/KUI-background.png
         skin/classic/aero/browser/livemark-folder.png                (livemark-folder-aero.png)

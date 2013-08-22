@@ -8,3 +8,6 @@ if CONFIG['MOZ_IPDL_TESTS']:
     DIRS += ['test']
 
 MODULE = 'ipdlgen'
+
+LIBXUL_LIBRARY = True
+

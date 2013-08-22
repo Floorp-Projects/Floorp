@@ -92,14 +92,7 @@
 #include <string.h>
 
 #include "xpcpublic.h"
-#include "jsapi.h"
-#include "jsprf.h"
 #include "pldhash.h"
-#include "prprf.h"
-#include "jsdbgapi.h"
-#include "jsfriendapi.h"
-#include "js/HeapAPI.h"
-#include "jswrapper.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"
@@ -134,8 +127,6 @@
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "nsAutoJSValHolder.h"
-
-#include "js/HashTable.h"
 
 #include "nsThreadUtils.h"
 #include "nsIJSEngineTelemetryStats.h"
@@ -2262,16 +2253,12 @@ public:
     class NS_CYCLE_COLLECTION_INNERCLASS
      : public nsXPCOMCycleCollectionParticipant
     {
-      NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(XPCWrappedNative,
-                                                    XPCWrappedNative)
+      NS_DECL_CYCLE_COLLECTION_CLASS_BODY(XPCWrappedNative, XPCWrappedNative)
       NS_IMETHOD Root(void *p) { return NS_OK; }
-      NS_IMETHOD Unlink(void *p);
       NS_IMETHOD Unroot(void *p) { return NS_OK; }
-      static nsXPCOMCycleCollectionParticipant* GetParticipant()
-      {
-        return &XPCWrappedNative::NS_CYCLE_COLLECTION_INNERNAME;
-      }
+      NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(XPCWrappedNative)
     };
+    NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(XPCWrappedNative);
     static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
     void DeleteCycleCollectable() {}
@@ -3694,7 +3681,22 @@ xpc_GetSafeJSContext()
     return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContext();
 }
 
+bool
+NewFunctionForwarder(JSContext *cx, JS::HandleId id, JS::HandleObject callable,
+                     bool doclone, JS::MutableHandleValue vp);
+
+nsresult
+ThrowAndFail(nsresult errNum, JSContext* cx, bool* retval);
+
+// Infallible.
+already_AddRefed<nsIXPCComponents_utils_Sandbox>
+NewSandboxConstructor();
+
+bool
+IsSandbox(JSObject *obj);
+
 namespace xpc {
+
 struct SandboxOptions {
     SandboxOptions(JSContext *cx)
         : wantXrays(true)

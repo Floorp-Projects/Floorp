@@ -8,16 +8,20 @@
 #ifndef mozilla_layers_ShadowLayerUtilsX11_h
 #define mozilla_layers_ShadowLayerUtilsX11_h
 
-#include <X11/extensions/Xrender.h>
-#include <X11/Xlib.h>
-
+#include <X11/X.h>                      // for Drawable
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/GfxMessageUtils.h"
+#include "gfxPoint.h"                   // for gfxIntSize
+#include "nsCOMPtr.h"                   // for already_AddRefed
 
 #define MOZ_HAVE_SURFACEDESCRIPTORX11
 #define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
 
 class gfxXlibSurface;
+
+namespace IPC {
+class Message;
+}
 
 namespace mozilla {
 namespace layers {

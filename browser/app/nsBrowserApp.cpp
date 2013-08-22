@@ -78,9 +78,9 @@ static void Output(const char *fmt, ... )
 #if MOZ_WINCONSOLE
   fwprintf_s(stderr, wide_msg);
 #else
-  MessageBoxW(NULL, wide_msg, L"Firefox", MB_OK
-                                        | MB_ICONERROR
-                                        | MB_SETFOREGROUND);
+  MessageBoxW(nullptr, wide_msg, L"Firefox", MB_OK
+                                           | MB_ICONERROR
+                                           | MB_SETFOREGROUND);
 #endif
 #endif
 
@@ -327,16 +327,16 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
     // Check for a metro test harness command line args file
     HANDLE hTestFile = CreateFileA(path.get(),
                                    GENERIC_READ,
-                                   0, NULL, OPEN_EXISTING,
+                                   0, nullptr, OPEN_EXISTING,
                                    FILE_ATTRIBUTE_NORMAL,
-                                   NULL);
+                                   nullptr);
     if (hTestFile != INVALID_HANDLE_VALUE) {
       // Typical test harness command line args string is around 100 bytes.
       char buffer[1024];
       memset(buffer, 0, sizeof(buffer));
       DWORD bytesRead = 0;
       if (!ReadFile(hTestFile, (VOID*)buffer, sizeof(buffer)-1,
-                    &bytesRead, NULL) || !bytesRead) {
+                    &bytesRead, nullptr) || !bytesRead) {
         CloseHandle(hTestFile);
         printf("failed to read test file '%s'", testFile);
         return -1;
@@ -351,7 +351,7 @@ static int do_main(int argc, char* argv[], nsIFile *xreDirectory)
 
       char* ptr = buffer;
       newArgv[0] = ptr;
-      while (*ptr != NULL &&
+      while (*ptr != '\0' &&
              (ptr - buffer) < sizeof(buffer) &&
              newArgc < ARRAYSIZE(newArgv)) {
         if (isspace(*ptr)) {
@@ -513,13 +513,13 @@ InitXPCOMGlue(const char *argv0, nsIFile **xreDirectory)
     }
     if (absfwurl) {
       CFURLRef xulurl =
-        CFURLCreateCopyAppendingPathComponent(NULL, absfwurl,
+        CFURLCreateCopyAppendingPathComponent(nullptr, absfwurl,
                                               CFSTR("XUL.framework"),
                                               true);
 
       if (xulurl) {
         CFURLRef xpcomurl =
-          CFURLCreateCopyAppendingPathComponent(NULL, xulurl,
+          CFURLCreateCopyAppendingPathComponent(nullptr, xulurl,
                                                 CFSTR("libxpcom.dylib"),
                                                 false);
 

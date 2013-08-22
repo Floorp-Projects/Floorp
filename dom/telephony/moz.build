@@ -17,5 +17,10 @@ CPP_SOURCES += [
     'CallsList.cpp',
     'Telephony.cpp',
     'TelephonyCall.cpp',
+    'TelephonyCallGroup.cpp',
 ]
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
 

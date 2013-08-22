@@ -4,7 +4,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ReadbackProcessor.h"
-#include "ReadbackLayer.h"
+#include <sys/types.h>                  // for int32_t
+#include "Layers.h"                     // for Layer, ThebesLayer, etc
+#include "ReadbackLayer.h"              // for ReadbackLayer, ReadbackSink
+#include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxColor.h"                   // for gfxRGBA
+#include "gfxContext.h"                 // for gfxContext
+#include "gfxMatrix.h"                  // for gfxMatrix
+#include "gfxRect.h"                    // for gfxRect
+#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/gfx/BaseRect.h"       // for BaseRect
+#include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoPtr
+#include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsISupportsImpl.h"            // for gfxContext::Release, etc
+#include "nsPoint.h"                    // for nsIntPoint
+#include "nsRegion.h"                   // for nsIntRegion
+#include "nsSize.h"                     // for nsIntSize
 
 namespace mozilla {
 namespace layers {

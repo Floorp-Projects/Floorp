@@ -116,7 +116,6 @@ this.OutputGenerator = {
     let extState = {};
     aAccessible.getState(state, extState);
     let states = {base: state.value, ext: extState.value};
-
     return func.apply(this, [aAccessible, roleString, states, flags, aContext]);
   },
 
@@ -331,6 +330,24 @@ this.OutputGenerator = {
       return output;
     },
 
+    pagetab: function pagetab(aAccessible, aRoleStr, aStates, aFlags) {
+      let localizedRole = this._getLocalizedRole(aRoleStr);
+      let itemno = {};
+      let itemof = {};
+      aAccessible.groupPosition({}, itemof, itemno);
+      let output = [];
+      let desc = this._getLocalizedStates(aStates);
+      desc.push(
+        gStringBundle.formatStringFromName(
+          'objItemOf', [localizedRole, itemno.value, itemof.value], 3));
+      output.push(desc.join(' '));
+
+      this._addName(output, aAccessible, aFlags);
+      this._addLandmark(output, aAccessible);
+
+      return output;
+    },
+
     table: function table(aAccessible, aRoleStr, aStates, aFlags) {
       let output = [];
       let table;
@@ -398,6 +415,15 @@ this.UtteranceGenerator = {
   //TODO: May become more verbose in the future.
   genForAction: function genForAction(aObject, aActionName) {
     return [gStringBundle.GetStringFromName(this.gActionMap[aActionName])];
+  },
+
+  genForLiveRegion: function genForLiveRegion(aContext, aIsHide, aModifiedText) {
+    let utterance = [];
+    if (aIsHide) {
+      utterance.push(gStringBundle.GetStringFromName('hidden'));
+    }
+    return utterance.concat(
+      aModifiedText || this.genForContext(aContext).output);
   },
 
   genForAnnouncement: function genForAnnouncement(aAnnouncement) {
@@ -581,6 +607,10 @@ this.UtteranceGenerator = {
 
     if (aStates.base & Ci.nsIAccessibleStates.STATE_HASPOPUP) {
       stateUtterances.push(gStringBundle.GetStringFromName('stateHasPopup'));
+    }
+
+    if (aStates.base & Ci.nsIAccessibleStates.STATE_SELECTED) {
+      stateUtterances.push(gStringBundle.GetStringFromName('stateSelected'));
     }
 
     return stateUtterances;

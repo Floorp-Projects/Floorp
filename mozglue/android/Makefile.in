@@ -11,8 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 FORCE_STATIC_LIB = 1
 STL_FLAGS=
-FAIL_ON_WARNINGS := 1
-
 DEFINES += \
   -DANDROID_PACKAGE_NAME='"$(ANDROID_PACKAGE_NAME)"' \
   $(NULL)

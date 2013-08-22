@@ -567,8 +567,6 @@ abstract public class GeckoApp
             } else if (event.equals("Reader:FaviconRequest")) {
                 final String url = message.getString("url");
                 handleFaviconRequest(url);
-            } else if (event.equals("Reader:GoToReadingList")) {
-                showReadingList();
             } else if (event.equals("Gecko:Ready")) {
                 mGeckoReadyStartupTimer.stop();
                 geckoConnected();
@@ -1479,7 +1477,6 @@ abstract public class GeckoApp
         registerEventListener("Reader:Removed");
         registerEventListener("Reader:Share");
         registerEventListener("Reader:FaviconRequest");
-        registerEventListener("Reader:GoToReadingList");
         registerEventListener("onCameraCapture");
         registerEventListener("Menu:Add");
         registerEventListener("Menu:Remove");
@@ -2028,7 +2025,6 @@ abstract public class GeckoApp
         unregisterEventListener("Reader:Removed");
         unregisterEventListener("Reader:Share");
         unregisterEventListener("Reader:FaviconRequest");
-        unregisterEventListener("Reader:GoToReadingList");
         unregisterEventListener("onCameraCapture");
         unregisterEventListener("Menu:Add");
         unregisterEventListener("Menu:Remove");
@@ -2261,18 +2257,13 @@ abstract public class GeckoApp
         return mPromptService;
     }
 
-    public void showReadingList() {
-        Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
-        intent.putExtra(AwesomeBar.TARGET_KEY, AwesomeBar.Target.CURRENT_TAB.toString());
-        intent.putExtra(AwesomeBar.READING_LIST_KEY, true);
-
-        int requestCode = GeckoAppShell.sActivityHelper.makeRequestCodeForAwesomebar();
-        startActivityForResult(intent, requestCode);
-    }
-
     @Override
     public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            super.onBackPressed();
+            return;
+        }
+
         if (autoHideTabs()) {
             return;
         }

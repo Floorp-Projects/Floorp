@@ -644,7 +644,7 @@ class JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
 };
 
 /* Returns true if |v| is considered an acceptable this-value. */
-typedef bool (*IsAcceptableThis)(const Value &v);
+typedef bool (*IsAcceptableThis)(JS::Handle<JS::Value> v);
 
 /*
  * Implements the guts of a method; guaranteed to be provided an acceptable
@@ -728,7 +728,7 @@ template<IsAcceptableThis Test, NativeImpl Impl>
 JS_ALWAYS_INLINE bool
 CallNonGenericMethod(JSContext *cx, CallArgs args)
 {
-    const Value &thisv = args.thisv();
+    HandleValue thisv = args.thisv();
     if (Test(thisv))
         return Impl(cx, args);
 
@@ -738,7 +738,7 @@ CallNonGenericMethod(JSContext *cx, CallArgs args)
 JS_ALWAYS_INLINE bool
 CallNonGenericMethod(JSContext *cx, IsAcceptableThis Test, NativeImpl Impl, CallArgs args)
 {
-    const Value &thisv = args.thisv();
+    HandleValue thisv = args.thisv();
     if (Test(thisv))
         return Impl(cx, args);
 
@@ -5196,12 +5196,14 @@ JS_ScheduleGC(JSContext *cx, uint32_t count);
 #endif
 
 extern JS_PUBLIC_API(void)
-JS_SetParallelCompilationEnabled(JSContext *cx, bool enabled);
+JS_SetParallelParsingEnabled(JSContext *cx, bool enabled);
+
+extern JS_PUBLIC_API(void)
+JS_SetParallelIonCompilationEnabled(JSContext *cx, bool enabled);
 
 typedef enum JSCompilerOption {
     JSCOMPILER_BASELINE_USECOUNT_TRIGGER,
-    JSCOMPILER_ION_USECOUNT_TRIGGER,
-    JSCOMPILER_PJS_ENABLE
+    JSCOMPILER_ION_USECOUNT_TRIGGER
 } JSCompilerOption;
 
 extern JS_PUBLIC_API(void)

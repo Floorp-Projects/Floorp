@@ -426,7 +426,7 @@ var POINTLESS_ERRORS = [
   'Invalid chrome URI:',
   'OpenGL LayerManager Initialized Succesfully.',
   '[JavaScript Error: "TelemetryStopwatch:',
-  '[JavaScript Warning: "ReferenceError: reference to undefined property',
+  'reference to undefined property',
   '[JavaScript Error: "The character encoding of the HTML document was ' +
     'not declared.',
   '[Javascript Warning: "Error: Failed to preserve wrapper of wrapped ' +

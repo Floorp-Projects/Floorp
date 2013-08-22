@@ -101,12 +101,18 @@
           this.messageManager.addMessageListener("ImageDocumentLoaded", this);
           this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
           this.webProgress._init();
+
+          let jsm = "resource://gre/modules/RemoteController.jsm";
+          let RemoteController = Components.utils.import(jsm, {}).RemoteController;
+          this._controller = new RemoteController(this);
+          this.controllers.appendController(this._controller);
         ]]>
       </constructor>
 
       <destructor>
         <![CDATA[
           this.webProgress._destroy();
+          this.controllers.removeController(this._controller);
         ]]>
       </destructor>
 

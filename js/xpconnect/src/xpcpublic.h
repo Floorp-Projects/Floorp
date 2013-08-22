@@ -8,10 +8,6 @@
 #ifndef xpcpublic_h
 #define xpcpublic_h
 
-#include "jsapi.h"
-#include "jsclass.h"
-#include "jsfriendapi.h"
-#include "jspubtd.h"
 #include "jsproxy.h"
 #include "js/HeapAPI.h"
 #include "js/GCAPI.h"
@@ -76,10 +72,14 @@ struct RuntimeStats;
 
 }
 
-#define XPCONNECT_GLOBAL_FLAGS                                                \
+#define XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(n)                            \
     JSCLASS_DOM_GLOBAL | JSCLASS_HAS_PRIVATE |                                \
     JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_IMPLEMENTS_BARRIERS |            \
-    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(2)
+    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS + n)
+
+#define XPCONNECT_GLOBAL_EXTRA_SLOT_OFFSET (JSCLASS_GLOBAL_SLOT_COUNT + DOM_GLOBAL_SLOTS)
+
+#define XPCONNECT_GLOBAL_FLAGS XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(0)
 
 void
 TraceXPCGlobal(JSTracer *trc, JSObject *obj);

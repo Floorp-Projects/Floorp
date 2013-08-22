@@ -146,7 +146,7 @@ public class PageActionLayout extends LinearLayout implements GeckoEventListener
     }
 
     private ImageButton createImageButton() {
-        ImageButton imageButton = new ImageButton(mContext, null, R.style.AddressBar_ImageButton_Icon);
+        ImageButton imageButton = new ImageButton(mContext, null, R.style.UrlBar_ImageButton_Icon);
         imageButton.setLayoutParams(new LayoutParams(mContext.getResources().getDimensionPixelSize(R.dimen.page_action_button_width), LayoutParams.MATCH_PARENT));
         imageButton.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         imageButton.setOnClickListener(this);

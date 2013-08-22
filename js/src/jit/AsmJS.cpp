@@ -4607,7 +4607,7 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     AsmJSParseContext *outerpc = m.parser().pc;
 
     Directives directives(outerpc);
-    FunctionBox *funbox = m.parser().newFunctionBox(fn, fun, outerpc, directives);
+    FunctionBox *funbox = m.parser().newFunctionBox(fn, fun, outerpc, directives, NotGenerator);
     if (!funbox)
         return false;
 
@@ -4819,7 +4819,7 @@ ParallelCompilationEnabled(ExclusiveContext *cx)
     if (!cx->isJSContext())
         return cx->workerThreadState()->numThreads > 1;
 
-    return OffThreadCompilationEnabled(cx->asJSContext());
+    return OffThreadIonCompilationEnabled(cx->asJSContext()->runtime());
 }
 
 // State of compilation as tracked and updated by the main thread.

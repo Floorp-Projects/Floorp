@@ -31,9 +31,10 @@ data_path = os.path.join(data_path, 'data')
 
 class TestEmitterBasic(unittest.TestCase):
     def reader(self, name):
-        config = MockConfig(os.path.join(data_path, name))
-        config.substs['ENABLE_TESTS'] = '1'
-        config.substs['BIN_SUFFIX'] = '.prog'
+        config = MockConfig(os.path.join(data_path, name), extra_substs=dict(
+            ENABLE_TESTS='1',
+            BIN_SUFFIX='.prog',
+        ))
 
         return BuildReader(config)
 
@@ -135,6 +136,7 @@ class TestEmitterBasic(unittest.TestCase):
             EXTRA_PP_COMPONENTS=['fans.pp.js', 'tans.pp.js'],
             EXTRA_JS_MODULES=['bar.jsm', 'foo.jsm'],
             EXTRA_PP_JS_MODULES=['bar.pp.jsm', 'foo.pp.jsm'],
+            FAIL_ON_WARNINGS=True,
             GTEST_CSRCS=['test1.c', 'test2.c'],
             GTEST_CMMSRCS=['test1.mm', 'test2.mm'],
             GTEST_CPPSRCS=['test1.cpp', 'test2.cpp'],
@@ -143,7 +145,9 @@ class TestEmitterBasic(unittest.TestCase):
             HOST_LIBRARY_NAME='host_fans',
             LIBRARY_NAME='lib_name',
             LIBS=['fans.lib', 'tans.lib'],
-            NO_DIST_INSTALL='1',
+            LIBXUL_LIBRARY=True,
+            MSVC_ENABLE_PGO=True,
+            NO_DIST_INSTALL=True,
             MODULE='module_name',
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
             SHARED_LIBRARY_LIBS=['fans.sll', 'tans.sll'],

@@ -72,7 +72,6 @@
     _(TestOAndBranch)               \
     _(FunctionDispatch)             \
     _(TypeObjectDispatch)           \
-    _(PolyInlineDispatch)           \
     _(Compare)                      \
     _(CompareAndBranch)             \
     _(CompareD)                     \
