@@ -21,10 +21,6 @@ NATIVE_THEME_SUPPORT = 1
 
 
 
-CSRCS		= \
-		mozcontainer.c \
-		$(NULL)
-
 ifdef ACCESSIBILITY
 CSRCS += maiRedundantObjectFactory.c
 endif

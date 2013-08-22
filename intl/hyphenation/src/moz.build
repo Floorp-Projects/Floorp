@@ -16,5 +16,9 @@ LIBRARY_NAME = 'hyphenation_s'
 
 LIBXUL_LIBRARY = True
 
+CSRCS += [
+    'hyphen.c',
+]
+
 MSVC_ENABLE_PGO = True
 
