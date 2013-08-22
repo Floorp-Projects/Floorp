@@ -9,8 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-FAIL_ON_WARNINGS := 1
-
 LIBRARY_NAME	= gkcondirectshow_s
 LIBXUL_LIBRARY 	= 1
 

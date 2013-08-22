@@ -53,3 +53,6 @@ if CONFIG['MOZ_XUL']:
         'nsXULLabelFrame.cpp',
         'nsXULPopupManager.cpp',
     ]
+
+FAIL_ON_WARNINGS = True
+

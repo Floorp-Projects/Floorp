@@ -84,3 +84,5 @@ CPP_SOURCES += [
     'WebAudioUtils.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

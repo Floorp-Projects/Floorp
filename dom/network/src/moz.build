@@ -47,3 +47,6 @@ IPDL_SOURCES += [
     'PTCPServerSocket.ipdl',
     'PTCPSocket.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

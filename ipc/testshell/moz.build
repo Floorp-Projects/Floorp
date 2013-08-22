@@ -26,3 +26,6 @@ IPDL_SOURCES = [
     'PTestShell.ipdl',
     'PTestShellCommand.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

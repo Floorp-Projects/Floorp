@@ -16,3 +16,5 @@ CPP_SOURCES += [
     'nsResProtocolHandler.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

@@ -13,3 +13,5 @@ CPP_SOURCES += [
     'StkCommandEvent.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

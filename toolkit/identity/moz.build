@@ -31,3 +31,6 @@ EXTRA_JS_MODULES += [
     'Sandbox.jsm',
     'jwcrypto.jsm',
 ]
+
+FAIL_ON_WARNINGS = True
+

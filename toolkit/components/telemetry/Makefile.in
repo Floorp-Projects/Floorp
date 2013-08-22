@@ -14,8 +14,6 @@ include $(topsrcdir)/config/makefiles/rcs.mk
 
 LIBXUL_LIBRARY = 1
 EXPORT_LIBRARY = 1
-FAIL_ON_WARNINGS = 1
-
 LIBRARY_NAME = telemetry
 MSVC_ENABLE_PGO := 1
 

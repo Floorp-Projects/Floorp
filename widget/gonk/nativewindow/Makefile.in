@@ -20,7 +20,6 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME     = nativewindow
 LIBXUL_LIBRARY   = 1
-FAIL_ON_WARNINGS := 1
 STL_FLAGS=
 
 include $(topsrcdir)/config/rules.mk

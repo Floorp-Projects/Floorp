@@ -32,3 +32,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'gkxulgrid_s'
 
+FAIL_ON_WARNINGS = True
+

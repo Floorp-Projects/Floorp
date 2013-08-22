@@ -16,3 +16,6 @@ IPDL_SOURCES += [
     'JavaScriptTypes.ipdlh',
     'PJavaScript.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

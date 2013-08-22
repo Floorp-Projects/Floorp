@@ -29,3 +29,6 @@ CPP_SOURCES += [
 IPDL_SOURCES += [
     'PDeviceStorageRequest.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

@@ -16,3 +16,5 @@ CPP_SOURCES += [
     'nsGeolocation.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

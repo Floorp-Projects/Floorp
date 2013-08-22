@@ -18,3 +18,6 @@ EXTRA_JS_MODULES += [
     'ISO8601DateUtils.jsm',
     'XPCOMUtils.jsm',
 ]
+
+FAIL_ON_WARNINGS = True
+

@@ -79,3 +79,6 @@ IPDL_SOURCES += [
 EXTRA_JS_MODULES += [
     'UserAgentOverrides.jsm',
 ]
+
+FAIL_ON_WARNINGS = True
+

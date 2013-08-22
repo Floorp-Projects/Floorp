@@ -15,3 +15,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'printingui_s'
 
+FAIL_ON_WARNINGS = True
+

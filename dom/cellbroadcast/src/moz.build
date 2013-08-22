@@ -14,3 +14,5 @@ CPP_SOURCES += [
     'CellBroadcast.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

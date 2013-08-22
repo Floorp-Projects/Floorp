@@ -18,3 +18,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'imgicon'
 
+FAIL_ON_WARNINGS = True
+

@@ -22,3 +22,5 @@ CPP_SOURCES += [
     'TextEncoder.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

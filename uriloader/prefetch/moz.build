@@ -32,3 +32,6 @@ CPP_SOURCES += [
 IPDL_SOURCES += [
     'POfflineCacheUpdate.ipdl',
 ]
+
+FAIL_ON_WARNINGS = True
+

@@ -31,3 +31,5 @@ CPP_SOURCES += [
     'nsMathMLsemanticsFrame.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+
