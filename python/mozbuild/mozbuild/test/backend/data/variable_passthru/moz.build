@@ -39,3 +39,5 @@ CSRCS += ['bar.c', 'foo.c']
 CMMSRCS = ['bar.mm', 'foo.mm']
 
 SSRCS = ['bar.S', 'foo.S']
+
+FAIL_ON_WARNINGS = True

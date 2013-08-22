@@ -134,6 +134,10 @@ VARIABLES = {
         exist. These generally have .cpp extensions.
         """),
 
+    'FAIL_ON_WARNINGS': (bool, bool, False,
+        """Whether to treat warnings as errors.
+        """),
+
     'GTEST_C_SOURCES': (StrictOrderingOnAppendList, list, [],
         """C code source files for GTest unit tests.
 

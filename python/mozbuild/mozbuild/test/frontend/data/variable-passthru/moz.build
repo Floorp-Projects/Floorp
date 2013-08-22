@@ -40,4 +40,6 @@ CMMSRCS = ['fans.mm', 'tans.mm']
 
 SSRCS = ['fans.S', 'tans.S']
 
+FAIL_ON_WARNINGS = True
+
 NO_DIST_INSTALL = True
