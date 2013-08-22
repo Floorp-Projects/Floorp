@@ -38,7 +38,6 @@
 #include "mozFlushType.h"
 #include "prclist.h"
 #include "nsIDOMStorageEvent.h"
-#include "nsIDOMStorageIndexedDB.h"
 #include "nsFrameMessageManager.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h"
@@ -287,7 +286,6 @@ class nsGlobalWindow : public mozilla::dom::EventTarget,
                        public nsPIDOMWindow,
                        public nsIScriptGlobalObject,
                        public nsIDOMJSWindow,
-                       public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
                        public nsIInterfaceRequestor,
                        public PRCListStr,
@@ -441,9 +439,6 @@ public:
   virtual NS_HIDDEN_(nsresult) SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
 
   virtual NS_HIDDEN_(void) SetHasGamepadEventListener(bool aHasGamepad = true);
-
-  // nsIDOMStorageIndexedDB
-  NS_DECL_NSIDOMSTORAGEINDEXEDDB
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
