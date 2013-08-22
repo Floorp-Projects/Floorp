@@ -284,7 +284,8 @@ struct JSCompartment
     bool wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject existing = js::NullPtr());
     bool wrap(JSContext *cx, JSString **strp);
     bool wrap(JSContext *cx, js::HeapPtrString *strp);
-    bool wrap(JSContext *cx, JSObject **objp, JSObject *existing = NULL);
+    bool wrap(JSContext *cx, JS::MutableHandleObject obj,
+              JS::HandleObject existingArg = js::NullPtr());
     bool wrapId(JSContext *cx, jsid *idp);
     bool wrap(JSContext *cx, js::PropertyOp *op);
     bool wrap(JSContext *cx, js::StrictPropertyOp *op);
