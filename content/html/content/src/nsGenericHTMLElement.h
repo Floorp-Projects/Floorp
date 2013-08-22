@@ -247,7 +247,7 @@ public:
   already_AddRefed<mozilla::dom::EventHandlerNonNull> GetOn##name_();         \
   void SetOn##name_(mozilla::dom::EventHandlerNonNull* handler,               \
                     mozilla::ErrorResult& error);
-#include "nsEventNameList.h"
+#include "nsEventNameList.h" // IWYU pragma: keep
 #undef ERROR_EVENT
 #undef FORWARDED_EVENT
 #undef EVENT
