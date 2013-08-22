@@ -251,21 +251,6 @@ function setDefaultRouteAndDNS(options) {
 }
 
 /**
- * Run DHCP and set default route and DNS servers for a given
- * network interface.
- */
-function runDHCPAndSetDefaultRouteAndDNS(options) {
-  let dhcp = libnetutils.dhcp_do_request(options.ifname);
-  dhcp.ifname = options.ifname;
-  dhcp.oldIfname = options.oldIfname;
-
-  //TODO this could be race-y... by the time we've finished the DHCP request
-  // and are now fudging with the routes, another network interface may have
-  // come online that's preferred...
-  setDefaultRouteAndDNS(dhcp);
-}
-
-/**
  * Remove default route for given network interface.
  */
 function removeDefaultRoute(options) {
