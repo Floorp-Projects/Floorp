@@ -68,7 +68,7 @@ IndexedDBHelper.prototype = {
       self.upgradeSchema(req.transaction, _db, aEvent.oldVersion, aEvent.newVersion);
     };
     req.onerror = function (aEvent) {
-      if (DEBUG) debug("Failed to open database:" + self.dbName);
+      if (DEBUG) debug("Failed to open database: " + self.dbName);
       aFailureCb(aEvent.target.error.name);
     };
     req.onblocked = function (aEvent) {
