@@ -3030,7 +3030,7 @@ var CachedCanvases = (function CachedCanvasesClosure() {
   return {
     getCanvas: function CachedCanvases_getCanvas(id, width, height) {
       var canvas;
-      if (id in cache) {
+      if (id in cache && !PDFJS.noCachedCanvases) {
         canvas = cache[id];
         canvas.width = width;
         canvas.height = height;
