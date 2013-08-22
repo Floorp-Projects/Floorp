@@ -265,7 +265,7 @@ private:
   mozilla::ScopedDeleteArray<unsigned char> chunkAvail;
 
   /* Number of chunks that have already been decompressed. */
-  size_t chunkAvailNum;
+  mozilla::Atomic<size_t> chunkAvailNum;
 
   /* Mutex protecting decompression */
   pthread_mutex_t mutex;

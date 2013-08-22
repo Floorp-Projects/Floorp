@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- input in nested fieldset becomes barred -->
+<html class='reftest-wait'>
+  <head>
+    <style>
+      fieldset:valid { background-color: green; }
+      fieldset:invalid { background-color: red; }
+    </style>
+  </head>
+  <script>
+    function onloadHandler()
+    {
+      document.getElementById('i').readOnly = true;
+      document.documentElement.className = '';
+    }
+  </script>
+  <body onload='onloadHandler();'>
+    <fieldset>
+      <fieldset>
+        <input id='i' required>
+      </fieldset>
+    </fieldset>
+  </body>
+</html>

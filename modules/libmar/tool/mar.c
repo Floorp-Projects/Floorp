@@ -28,6 +28,11 @@ int mar_repackage_and_sign(const char *NSSConfigDir,
                            const char *src, 
                            const char * dest);
 
+static void print_version() {
+  printf("Version: %s\n", MOZ_APP_VERSION);
+  printf("Default Channel ID: %s\n", MAR_CHANNEL_ID);
+}
+
 static void print_usage() {
   printf("usage:\n");
   printf("Create a MAR file:\n");
@@ -66,6 +71,8 @@ static void print_usage() {
   printf("Print information on a MAR file:\n");
   printf("  mar [-H MARChannelID] [-V ProductVersion] [-C workingDir] "
          "-i unsigned_archive_to_refresh.mar\n");
+  printf("Print executable version:\n");
+  printf("  mar --version\n");
   printf("This program does not handle unicode file paths properly\n");
 }
 
@@ -116,6 +123,11 @@ int main(int argc, char **argv) {
   memset(certBuffers, 0, sizeof(certBuffers));
   memset(DERFilePaths, 0, sizeof(DERFilePaths));
 #endif
+
+  if (argc > 1 && 0 == strcmp(argv[1], "--version")) {
+    print_version();
+    return 0;
+  }
 
   if (argc < 3) {
     print_usage();

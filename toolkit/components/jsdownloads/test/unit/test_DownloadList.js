@@ -160,6 +160,47 @@ add_task(function test_notifications_change()
 });
 
 /**
+ * Checks that the reference to "this" is correct in the view callbacks.
+ */
+add_task(function test_notifications_this()
+{
+  let list = yield promiseNewDownloadList();
+
+  // Check that we receive change notifications.
+  let receivedOnDownloadAdded = false;
+  let receivedOnDownloadChanged = false;
+  let receivedOnDownloadRemoved = false;
+  let view = {
+    onDownloadAdded: function () {
+      do_check_eq(this, view);
+      receivedOnDownloadAdded = true;
+    },
+    onDownloadChanged: function () {
+      // Only do this check once.
+      if (!receivedOnDownloadChanged) {
+        do_check_eq(this, view);
+        receivedOnDownloadChanged = true;
+      }
+    },
+    onDownloadRemoved: function () {
+      do_check_eq(this, view);
+      receivedOnDownloadRemoved = true;
+    },
+  };
+  list.addView(view);
+
+  let download = yield promiseNewDownload();
+  list.add(download);
+  yield download.start();
+  list.remove(download);
+
+  // Verify that we executed the checks.
+  do_check_true(receivedOnDownloadAdded);
+  do_check_true(receivedOnDownloadChanged);
+  do_check_true(receivedOnDownloadRemoved);
+});
+
+/**
  * Checks that download is removed on history expiration.
  */
 add_task(function test_history_expiration()
@@ -198,7 +239,7 @@ add_task(function test_history_expiration()
 
   // Start download two and then cancel it.
   downloadTwo.start();
-  let promiseCanceled = downloadTwo.cancel();
+  yield downloadTwo.cancel();
 
   // Force a history expiration.
   let expire = Cc["@mozilla.org/places/expiration;1"]
@@ -206,7 +247,6 @@ add_task(function test_history_expiration()
   expire.observe(null, "places-debug-start-expiration", -1);
 
   yield deferred.promise;
-  yield promiseCanceled;
 
   cleanup();
 });
@@ -243,4 +283,50 @@ add_task(function test_history_clear()
   PlacesUtils.history.removeAllPages();
 
   yield deferred.promise;
+});
+
+/**
+ * Tests the removeFinished method to ensure that it only removes
+ * finished downloads.
+ */
+add_task(function test_removeFinished()
+{
+  let list = yield promiseNewDownloadList();
+  let downloadOne = yield promiseNewDownload();
+  let downloadTwo = yield promiseNewDownload();
+  let downloadThree = yield promiseNewDownload();
+  let downloadFour = yield promiseNewDownload();
+  list.add(downloadOne);
+  list.add(downloadTwo);
+  list.add(downloadThree);
+  list.add(downloadFour);
+
+  let deferred = Promise.defer();
+  let removeNotifications = 0;
+  let downloadView = {
+    onDownloadRemoved: function (aDownload) {
+      do_check_true(aDownload == downloadOne ||
+                    aDownload == downloadTwo ||
+                    aDownload == downloadThree);
+      do_check_true(removeNotifications < 3);
+      if (++removeNotifications == 3) {
+        deferred.resolve();
+      }
+    },
+  };
+  list.addView(downloadView);
+
+  // Start three of the downloads, but don't start downloadTwo, then set
+  // downloadFour to have partial data. All downloads except downloadFour
+  // should be removed.
+  yield downloadOne.start();
+  yield downloadThree.start();
+  yield downloadFour.start();
+  downloadFour.hasPartialData = true;
+
+  list.removeFinished();
+  yield deferred.promise;
+
+  let downloads = yield list.getAll()
+  do_check_eq(downloads.length, 1);
 });

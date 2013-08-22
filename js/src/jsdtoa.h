@@ -6,6 +6,7 @@
 
 #ifndef jsdtoa_h
 #define jsdtoa_h
+
 /*
  * Public interface to portable double-precision floating point to string
  * and back conversion package.

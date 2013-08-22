@@ -5,7 +5,7 @@
 MOZ_APP_BASENAME=Fennec
 MOZ_APP_VENDOR=Mozilla
 
-MOZ_APP_VERSION=25.0a1
+MOZ_APP_VERSION=26.0a1
 MOZ_APP_UA_NAME=Firefox
 
 MOZ_BRANDING_DIRECTORY=mobile/android/branding/unofficial
@@ -18,9 +18,6 @@ MOZ_DISABLE_CRYPTOLEGACY=1
 
 # Enable getUserMedia
 MOZ_MEDIA_NAVIGATOR=1
-
-# Enable SET_WALLPAPER permission
-MOZ_ANDROID_WALLPAPER=1
 
 # Enable NFC permission
 MOZ_ANDROID_BEAM=1
@@ -43,9 +40,6 @@ MOZ_APP_COMPONENT_INCLUDE=nsBrowserComponents.h
 
 # use custom widget for html:select
 MOZ_USE_NATIVE_POPUP_WINDOWS=1
-
-# dispatch only touch events (no mouse events)
-MOZ_ONLY_TOUCH_EVENTS=1
 
 MOZ_APP_ID={aa3c5121-dab2-40e2-81ca-7ea25febc110}
 

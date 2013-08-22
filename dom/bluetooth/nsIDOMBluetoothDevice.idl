@@ -6,15 +6,9 @@
 
 #include "nsIDOMEventTarget.idl"
 
-[scriptable, builtinclass, uuid(7297ef65-db38-45f1-a5dc-b7347aaa223d)]
+// XPIDL interfaces might need this definition; so we keep it in place
+// until we completely switched to WebIDL. See bug 900904.
+[scriptable, builtinclass, uuid(291fdda9-4f96-4f2f-857f-900f89fb0412)]
 interface nsIDOMBluetoothDevice : nsIDOMEventTarget
 {
-  readonly attribute DOMString address;
-  readonly attribute DOMString name;
-  readonly attribute DOMString icon;
-  [binaryname(DeviceClass)] readonly attribute unsigned long class;
-  [implicit_jscontext] readonly attribute jsval uuids;
-  [implicit_jscontext] readonly attribute jsval services;
-  readonly attribute bool connected;
-  readonly attribute bool paired;
 };

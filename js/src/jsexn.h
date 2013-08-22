@@ -24,10 +24,10 @@ js_InitExceptionClasses(JSContext *cx, js::HandleObject obj);
  * the error number.  If there is, then create an appropriate exception object,
  * set it as the pending exception, and set the JSREPORT_EXCEPTION flag on the
  * error report.  Exception-aware host error reporters should probably ignore
- * error reports so flagged.  Returns JS_TRUE if an associated exception is
- * found and set, JS_FALSE otherwise.
+ * error reports so flagged.  Returns true if an associated exception is
+ * found and set, false otherwise.
  */
-extern JSBool
+extern bool
 js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
                     JSErrorCallback callback, void *userRef);
 
@@ -47,7 +47,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
  * other contexts may want to use an error reporter that ignores errors with
  * this flag.
  */
-extern JSBool
+extern bool
 js_ReportUncaughtException(JSContext *cx);
 
 extern JSErrorReport *

@@ -34,11 +34,11 @@ class JavaScriptParent
     // (The traps should be in the same order like js/src/jsproxy.h)
     bool preventExtensions(JSContext *cx, JS::HandleObject proxy);
     bool getPropertyDescriptor(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                               JSPropertyDescriptor *desc, unsigned flags);
+                               JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
     bool getOwnPropertyDescriptor(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                                  JSPropertyDescriptor *desc, unsigned flags);
+                                  JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
     bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                        JSPropertyDescriptor *desc);
+                        JS::MutableHandle<JSPropertyDescriptor> desc);
     bool getOwnPropertyNames(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool enumerate(JSContext *cx, JS::HandleObject proxy, js::AutoIdVector &props);
@@ -66,9 +66,16 @@ class JavaScriptParent
     void drop(JSObject *obj);
 
     static bool IsCPOW(JSObject *obj);
-    static nsresult InstanceOf(JSObject *obj, const nsID *id, bool *bp);
 
+    static nsresult InstanceOf(JSObject *obj, const nsID *id, bool *bp);
     nsresult instanceOf(JSObject *obj, const nsID *id, bool *bp);
+
+    /*
+     * Check that |obj| is a DOM wrapper whose prototype chain contains
+     * |prototypeID| at depth |depth|.
+     */
+    static bool DOMInstanceOf(JSObject *obj, int prototypeID, int depth, bool *bp);
+    bool domInstanceOf(JSObject *obj, int prototypeID, int depth, bool *bp);
 
   protected:
     JSObject *unwrap(JSContext *cx, ObjectId objId);

@@ -1,0 +1,35 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MODULE = 'content'
+
+EXPORTS += [
+    'AudioSinkFilter.h',
+    'AudioSinkInputPin.h',
+    'DirectShowDecoder.h',
+    'DirectShowReader.h',
+    'DirectShowUtils.h',
+]
+
+CPP_SOURCES += [
+    'AudioSinkFilter.cpp',
+    'AudioSinkInputPin.cpp',
+    'DirectShowDecoder.cpp',
+    'DirectShowReader.cpp',
+    'DirectShowUtils.cpp',
+    'SampleSink.cpp',
+    'SourceFilter.cpp',
+]
+
+# If WebRTC isn't being built, we need to compile the DirectShow base classes so that
+# they're available at link time.
+if not CONFIG['MOZ_WEBRTC_IN_LIBXUL']:
+    CPP_SOURCES += [
+        TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/windows/BaseFilter.cpp',
+        TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/windows/BaseInputPin.cpp',
+        TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/windows/BasePin.cpp',
+        TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/windows/MediaType.cpp',
+    ]

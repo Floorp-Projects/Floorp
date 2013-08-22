@@ -146,7 +146,7 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
         SetViewportOrgEx(mDC,
                          mOrigViewportOrigin.x + (int)mDeviceOffset.x,
                          mOrigViewportOrigin.y + (int)mDeviceOffset.y,
-                         NULL);
+                         nullptr);
 
         return mDC;
     } else if (mRenderState == RENDER_STATE_ALPHA_RECOVERY_BLACK ||
@@ -227,7 +227,7 @@ gfxWindowsNativeDrawing::EndNativeDrawing()
 {
     if (mRenderState == RENDER_STATE_NATIVE_DRAWING) {
         // we drew directly to the HDC in the context; undo our changes
-        SetViewportOrgEx(mDC, mOrigViewportOrigin.x, mOrigViewportOrigin.y, NULL);
+        SetViewportOrgEx(mDC, mOrigViewportOrigin.x, mOrigViewportOrigin.y, nullptr);
 
         if (mTransformType != TRANSLATION_ONLY)
             SetWorldTransform(mDC, &mOldWorldTransform);

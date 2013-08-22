@@ -18,6 +18,7 @@ Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
+Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 
 function testExceptionHook(ex) {
   try {
@@ -164,8 +165,19 @@ function attachTestTabAndResume(aClient, aTitle, aCallback) {
  */
 function initTestDebuggerServer()
 {
+  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/root.js");
   DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
   DebuggerServer.addActors("resource://test/testactors.js");
+  // Allow incoming connections.
+  DebuggerServer.init(function () { return true; });
+}
+
+function initTestTracerServer()
+{
+  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/root.js");
+  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
+  DebuggerServer.addActors("resource://test/testactors.js");
+  DebuggerServer.registerModule("devtools/server/actors/tracer");
   // Allow incoming connections.
   DebuggerServer.init(function () { return true; });
 }
@@ -335,3 +347,9 @@ function StubTransport() { }
 StubTransport.prototype.ready = function () {};
 StubTransport.prototype.send  = function () {};
 StubTransport.prototype.close = function () {};
+
+function executeSoon(aFunc) {
+  Services.tm.mainThread.dispatch({
+    run: DevToolsUtils.makeInfallible(aFunc)
+  }, Ci.nsIThread.DISPATCH_NORMAL);
+}

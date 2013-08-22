@@ -15,8 +15,6 @@ MSVC_ENABLE_PGO := 1
 LIBXUL_LIBRARY = 1
 FAIL_ON_WARNINGS := 1
 
-include $(topsrcdir)/config/config.mk
-
 LOCAL_INCLUDES = \
 		-I$(srcdir)/../wrappers \
 		-I$(srcdir)/../loader \
@@ -33,6 +31,12 @@ LOCAL_INCLUDES = \
 		-I$(topsrcdir)/xpcom/ds \
 		-I$(topsrcdir)/js/ipc \
 		$(NULL)
+
+ifdef MOZ_B2G_BT
+LOCAL_INCLUDES += \
+    -I$(topsrcdir)/dom/bluetooth \
+    $(NULL)
+endif
 
 SHARED_LIBRARY_LIBS = \
   ../loader/$(LIB_PREFIX)jsloader_s.$(LIB_SUFFIX) \
@@ -172,5 +176,3 @@ GARBAGE += \
 		$(MDDEPDIR)/event_impl_gen.pp \
 		$(wildcard $(topsrcdir)/other-licenses/ply/ply/*.pyc) \
 		$(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT

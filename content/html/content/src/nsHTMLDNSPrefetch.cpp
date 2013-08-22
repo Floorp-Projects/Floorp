@@ -50,15 +50,9 @@ nsHTMLDNSPrefetch::Initialize()
   }
   
   sPrefetches = new nsHTMLDNSPrefetch::nsDeferrals();
-  if (!sPrefetches)
-    return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(sPrefetches);
 
   sDNSListener = new nsHTMLDNSPrefetch::nsListener();
-  if (!sDNSListener) {
-    NS_IF_RELEASE(sPrefetches);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   NS_ADDREF(sDNSListener);
 
   sPrefetches->Activate();

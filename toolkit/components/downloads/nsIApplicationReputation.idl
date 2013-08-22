@@ -1,0 +1,94 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIApplicationReputationCallback;
+interface nsIApplicationReputationQuery;
+interface nsIURI;
+
+/*
+ * A service for asynchronously querying an application reputation service
+ * based on metadata of the downloaded file.
+ */
+[scriptable, uuid(9c12a510-eb1c-11e2-a98a-fa916188709b)]
+interface nsIApplicationReputationService : nsISupports {
+  /**
+   * Start querying the application reputation service.
+   *
+   * @param aQuery
+   *        The nsIApplicationReputationQuery containing metadata of the
+   *        downloaded file.
+   *
+   * @param aCallback
+   *        The callback for receiving the results of the query.
+   *
+   * @remarks aCallback may not be null.  onComplete is guaranteed to be called
+   *          on aCallback. This function may not be called more than once with
+   *          the same query object. If any of the attributes of aQuery have
+   *          not been set or have been set with empty data (with the exception
+   *          of sourceURI), then a valid request can still be constructed and
+   *          will solicit a valid response, but won't produce any useful
+   *          information.
+   */
+  void queryReputation(in nsIApplicationReputationQuery aQuery,
+                       in nsIApplicationReputationCallback aCallback);
+};
+
+/**
+ * A single-use, write-once interface for recording the metadata of the
+ * downloaded file. nsIApplicationReputationService.Start() may only be called
+ * once with a single query.
+ */
+[scriptable, uuid(857da2c0-cfe5-11e2-8b8b-0800200c9a66)]
+interface nsIApplicationReputationQuery : nsISupports {
+  /*
+   * The nsIURI from which the file was downloaded. This may not be null.
+   */
+  attribute nsIURI sourceURI;
+
+  /*
+   * The target filename for the downloaded file, as inferred from the source
+   * URI or provided by the Content-Disposition attachment file name. If this
+   * is not set by the caller, it will be passed as an empty string but the
+   * query won't produce any useful information.
+   */
+  attribute AString suggestedFileName;
+
+  /*
+   * The size of the downloaded file in bytes.
+   */
+  attribute unsigned long fileSize;
+
+  /*
+   * The SHA256 hash of the downloaded file in raw bytes. If this is not set by
+   * the caller, it will be passed as an empty string but the query won't
+   * produce any useful information.
+   */
+  attribute ACString sha256Hash;
+
+  /**
+   * The callback object listening to this query.
+   */
+  attribute nsIApplicationReputationCallback callback;
+};
+
+[scriptable, function, uuid(9a228470-cfe5-11e2-8b8b-0800200c9a66)]
+interface nsIApplicationReputationCallback : nsISupports {
+  /**
+   * Callback for the result of the application reputation query.
+   * @param aStatus
+   *        NS_OK if and only if the query succeeded. If it did, then
+   *        shouldBlock is meaningful (otherwise it defaults to false). This
+   *        may be NS_ERROR_FAILURE if the response cannot be parsed, or
+   *        NS_ERROR_NOT_AVAILABLE if the service has been disabled or is not
+   *        reachable.
+   * @param aShouldBlock
+   *        Whether or not the download should be blocked.
+   */
+  void onComplete(in bool aShouldBlock,
+                  in nsresult aStatus);
+};

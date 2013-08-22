@@ -28,5 +28,3 @@ libs::
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE_CONTENT) $(DESTDIR)$(mozappdir)/res/dtd
-
-DEFINES += -D_IMPL_NS_LAYOUT

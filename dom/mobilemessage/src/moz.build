@@ -42,7 +42,6 @@ EXPORTS.mozilla.dom += [
     'MmsMessage.h',
     'MobileMessageManager.h',
     'SmsFilter.h',
-    'SmsManager.h',
     'SmsMessage.h',
     'SmsSegmentInfo.h',
 ]
@@ -58,13 +57,20 @@ CPP_SOURCES += [
     'SmsChild.cpp',
     'SmsFilter.cpp',
     'SmsIPCService.cpp',
-    'SmsManager.cpp',
     'SmsMessage.cpp',
     'SmsParent.cpp',
     'SmsSegmentInfo.cpp',
     'SmsService.cpp',
     'SmsServicesFactory.cpp',
 ]
+
+if CONFIG['MOZ_B2G_RIL']:
+    EXTRA_COMPONENTS += [
+        'gonk/MmsService.js',
+        'gonk/MmsService.manifest',
+        'gonk/MobileMessageDatabaseService.js',
+        'gonk/MobileMessageDatabaseService.manifest',
+    ]
 
 IPDL_SOURCES += [
     'ipc/PMobileMessageCursor.ipdl',

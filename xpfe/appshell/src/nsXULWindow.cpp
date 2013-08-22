@@ -56,6 +56,7 @@
 #include "nsGlobalWindow.h"
 
 #include "prenv.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BarProps.h"
 #include "mozilla/dom/Element.h"

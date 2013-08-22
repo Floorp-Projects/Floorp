@@ -59,6 +59,10 @@
                 { url:"turns:localhost:3478?transport=udp", username:"p", credential:"p" }
                 ]}, true);
 
+    makePC({ iceServers: [{ url:"turns:localhost:3478", username:"p" }] }, false);
+
+    makePC({ iceServers: [{ url:"turns:localhost:3478", credential:"p" }] }, false);
+
     pcs = null;
     SimpleTest.finish();
   });

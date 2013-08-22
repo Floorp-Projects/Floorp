@@ -10,18 +10,14 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/WebappsInstaller.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 
 this.WebappsHandler = {
-  init: function() {
-    Services.obs.addObserver(this, "webapps-ask-install", false);
-    Services.obs.addObserver(this, "webapps-launch", false);
-    Services.obs.addObserver(this, "webapps-uninstall", false);
-  },
-
   observe: function(subject, topic, data) {
     data = JSON.parse(data);
     data.mm = subject;
@@ -42,7 +38,9 @@ this.WebappsHandler = {
   },
 
   doInstall: function(data, window) {
-    let {name} = data.app.manifest;
+    let jsonManifest = data.isPackage ? data.app.updateManifest : data.app.manifest;
+    let manifest = new ManifestHelper(jsonManifest, data.app.origin);
+    let name = manifest.name;
     let bundle = Services.strings.createBundle("chrome://webapprt/locale/webapp.properties");
 
     let choice = Services.prompt.confirmEx(
@@ -60,11 +58,32 @@ this.WebappsHandler = {
       {});
 
     // Perform the install if the user allows it
-    if (choice == 0 && WebappsInstaller.install(data)) {
-      DOMApplicationRegistry.confirmInstall(data);
-    }
-    else {
+    if (choice == 0) {
+      let shell = WebappsInstaller.init(data);
+
+      if (shell) {
+        let localDir = null;
+        if (shell.appProfile) {
+          localDir = shell.appProfile.localDir;
+        }
+
+        DOMApplicationRegistry.confirmInstall(data, false, localDir, null,
+          function (aManifest) {
+            WebappsInstaller.install(data, aManifest);
+          }
+        );
+      } else {
+        DOMApplicationRegistry.denyInstall(data);
+      }
+    } else {
       DOMApplicationRegistry.denyInstall(data);
     }
-  }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference])
 };
+
+Services.obs.addObserver(WebappsHandler, "webapps-ask-install", false);
+Services.obs.addObserver(WebappsHandler, "webapps-launch", false);
+Services.obs.addObserver(WebappsHandler, "webapps-uninstall", false);

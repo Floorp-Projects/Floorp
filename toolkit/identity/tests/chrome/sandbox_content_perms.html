@@ -18,16 +18,14 @@
         return false;
       }
 
-      function CcDenied() {
-        // Once Components goes away in content, the question of whether or not
-        // Components.classes throws is not well-formed.
+      function CcNotPresent() {
         if (typeof Components === 'undefined')
           return true;
+        // Components shim doesn't define Components.classes.
         try {
-          Components.classes;
-          return false;
+          return typeof Components.classes === 'undefined';
         } catch (e) {
-          return !!/denied/.exec(e);
+          return false;
         }
       }
 
@@ -41,7 +39,7 @@
                                .docCharsetIsForced;
         }),
 
-        ccAccess: !!CcDenied(),
+        ccAccess: !!CcNotPresent(),
       };
 
       let resultsJSON = JSON.stringify(results);

@@ -448,7 +448,8 @@ TransactionThreadPool::AbortTransactionsForDatabase(IDBDatabase* aDatabase)
     // This can fail, for example if the transaction is in the process of
     // being comitted. That is expected and fine, so we ignore any returned
     // errors.
-    transactions[index]->Abort();
+    ErrorResult rv;
+    transactions[index]->Abort(rv);
   }
 }
 

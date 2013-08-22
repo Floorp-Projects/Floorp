@@ -424,8 +424,10 @@ interface nsIApplicationUpdateService : nsISupports
 
   /**
    * Whether or not the Update Service can download and install updates.
-   * This is a function of whether or not the current user has access
-   * privileges to the install directory.
+   * On Windows, this is a function of whether or not the maintenance service
+   * is installed and enabled. On other systems, and as a fallback on Windows,
+   * this depends on whether the current user has write access to the install
+   * directory.
    */
   readonly attribute boolean canApplyUpdates;
 

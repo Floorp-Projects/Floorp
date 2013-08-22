@@ -5,6 +5,7 @@
 #ifndef nsIClassInfoImpl_h__
 #define nsIClassInfoImpl_h__
 
+#include "mozilla/Alignment.h"
 #include "nsIClassInfo.h"
 #include "nsISupportsImpl.h"
 
@@ -119,13 +120,13 @@ private:
     _flags | nsIClassInfo::SINGLETON_CLASSINFO,                         \
     _cid,                                                               \
   };                                                                    \
-  static char k##_class##ClassInfoDataPlace[sizeof(GenericClassInfo)];  \
+  mozilla::AlignedStorage2<GenericClassInfo> k##_class##ClassInfoDataPlace;   \
   nsIClassInfo* NS_CLASSINFO_NAME(_class) = NULL;
 
 #define NS_IMPL_QUERY_CLASSINFO(_class)                                       \
   if ( aIID.Equals(NS_GET_IID(nsIClassInfo)) ) {                              \
     if (!NS_CLASSINFO_NAME(_class))                                           \
-      NS_CLASSINFO_NAME(_class) = new (k##_class##ClassInfoDataPlace)         \
+      NS_CLASSINFO_NAME(_class) = new (k##_class##ClassInfoDataPlace.addr())  \
         GenericClassInfo(&k##_class##ClassInfoData);                          \
     foundInterface = NS_CLASSINFO_NAME(_class);                               \
   } else

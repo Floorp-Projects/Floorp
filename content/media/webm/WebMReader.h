@@ -6,7 +6,7 @@
 #if !defined(WebMReader_h_)
 #define WebMReader_h_
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 #include "nsDeque.h"
 #include "MediaDecoderReader.h"

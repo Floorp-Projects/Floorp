@@ -20,15 +20,8 @@ HTMLDivElement::~HTMLDivElement()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLDivElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLDivElement, Element)
-
-// QueryInterface implementation for HTMLDivElement
-NS_INTERFACE_TABLE_HEAD(HTMLDivElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLDivElement, nsIDOMHTMLDivElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLDivElement, nsGenericHTMLElement,
+                             nsIDOMHTMLDivElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLDivElement)
 

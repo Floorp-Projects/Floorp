@@ -295,7 +295,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     obj = JSVAL_TO_OBJECT(v);
-    NS_ASSERTION(IS_WN_REFLECTOR(obj), "bad object");
+    MOZ_ASSERT(IS_WN_REFLECTOR(obj), "bad object");
 
     // Because the underlying native didn't have a PreCreate hook, we had
     // to a new (or possibly pre-existing) XPCWN in our compartment.
@@ -576,7 +576,7 @@ WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *objArg)
     // XUL domain, in which we can't have SOWs. We should never be called in
     // that case.
     MOZ_ASSERT(xpc::AllowXBLScope(js::GetContextCompartment(cx)));
-    if (!JS_GetPrototype(cx, obj, proto.address()))
+    if (!JS_GetPrototype(cx, obj, &proto))
         return NULL;
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
@@ -596,7 +596,7 @@ JSObject *
 WrapperFactory::WrapComponentsObject(JSContext *cx, HandleObject obj)
 {
     RootedObject proto(cx);
-    if (!JS_GetPrototype(cx, obj, proto.address()))
+    if (!JS_GetPrototype(cx, obj, &proto))
         return NULL;
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),

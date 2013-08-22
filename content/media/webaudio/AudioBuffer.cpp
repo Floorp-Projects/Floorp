@@ -7,17 +7,17 @@
 #include "AudioBuffer.h"
 #include "mozilla/dom/AudioBufferBinding.h"
 #include "nsContentUtils.h"
-#include "AudioContext.h"
 #include "jsfriendapi.h"
 #include "mozilla/ErrorResult.h"
 #include "AudioSegment.h"
-#include "nsIScriptError.h"
-#include "nsPIDOMWindow.h"
 #include "AudioChannelFormat.h"
 #include "mozilla/PodOperations.h"
+#include "AudioNodeEngine.h"
 
 namespace mozilla {
 namespace dom {
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(AudioBuffer)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioBuffer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)

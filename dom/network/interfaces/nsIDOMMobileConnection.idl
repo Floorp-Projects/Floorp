@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(61e5729c-100f-436e-bc20-b7706ec40229)]
+[scriptable, builtinclass, uuid(8284af62-c39d-4a59-b258-107040040418)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -114,6 +114,65 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * 'IllegalSIMorME', or 'GenericFailure'
    */
   nsIDOMDOMRequest selectNetworkAutomatically();
+
+  /**
+   * Set roaming preference
+   *
+   * @param mode
+   *        DOMString indicates the desired roaming preference.
+   *        Possible values: 'home', 'affiliated', or 'any'.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', 'InvalidParameter', or 'GenericFailure'
+   *
+   * TODO: param "mode" should be a WebIDL enum when this interface is converted
+   *       to WebIDL
+   */
+  nsIDOMDOMRequest setRoamingPreference(in DOMString mode);
+
+  /**
+   * Query current roaming preference
+   *
+   * If successful, the request's onsuccess will be called. And the request's
+   * result will be a string indicating the current roaming preference.
+   * The value will be either 'home', 'affiliated', or 'any'.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', or 'GenericFailure'
+   */
+  nsIDOMDOMRequest getRoamingPreference();
+
+  /**
+   * Set voice privacy preference.
+   *
+   * @param enabled
+   *        Boolean indicates the preferred voice privacy mode used in voice
+   *        scrambling in CDMA networks. 'True' means the enhanced voice security
+   *        is required.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', 'InvalidParameter', or 'GenericFailure'
+   */
+  nsIDOMDOMRequest setVoicePrivacyMode(in bool enabled);
+
+  /**
+   * Query current voice privacy mode.
+   *
+   * If successful, the request's onsuccess will be called. And the request's
+   * result will be a boolean indicating the current voice privacy mode.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', or 'GenericFailure'
+   */
+  nsIDOMDOMRequest getVoicePrivacyMode();
 
   /**
    * Send a MMI message.
@@ -237,7 +296,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    *
    * @param clirMode
    *        Is one of the CLIR_* constants.
-   *        
+   *
    * If successful, the request's onsuccess will be called.
    *
    * Otherwise, the request's onerror will be called, and the request's error
@@ -257,6 +316,16 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * or 'GenericFailure'.
    */
   nsIDOMDOMRequest getCallingLineIdRestriction();
+
+  /**
+   * Exit emergency callback mode.
+   *
+   * If successful, the request's onsuccess will be called.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RequestNotSupported'  or 'GenericFailure'.
+   */
+  nsIDOMDOMRequest exitEmergencyCbMode();
 
   /**
    * The 'voicechange' event is notified whenever the voice connection object
@@ -287,6 +356,12 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * state changes.
    */
   [implicit_jscontext] attribute jsval oncfstatechange;
+
+  /**
+   * The 'emergencycbmodechange' event is notified whenever the emergency
+   * callback mode changes.
+   */
+  [implicit_jscontext] attribute jsval onemergencycbmodechange;
 };
 
 [scriptable, uuid(49706beb-a160-40b7-b745-50f62e389a2c)]

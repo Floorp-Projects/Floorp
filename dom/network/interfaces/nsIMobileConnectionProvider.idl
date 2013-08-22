@@ -10,7 +10,7 @@ interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMWindow;
 
-[scriptable, uuid(74361840-c913-11e2-8b8b-0800200c9a66)]
+[scriptable, uuid(7da2d9f6-eba1-4339-bde1-dc6732d42cdf)]
 interface nsIMobileConnectionListener : nsISupports
 {
   void notifyVoiceChanged();
@@ -24,13 +24,15 @@ interface nsIMobileConnectionListener : nsISupports
                            in DOMString number,
                            in unsigned short timeSeconds,
                            in unsigned short serviceClass);
+  void notifyEmergencyCbModeChanged(in boolean active,
+                                    in unsigned long timeoutMs);
 };
 
 /**
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(3fea6ca5-c535-4662-9f42-eb2fc2ae9975)]
+[scriptable, uuid(576c7c00-7319-4309-aa9e-1dab102e0874)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -48,6 +50,14 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest getNetworks(in nsIDOMWindow window);
   nsIDOMDOMRequest selectNetwork(in nsIDOMWindow window, in nsIDOMMozMobileNetworkInfo network);
   nsIDOMDOMRequest selectNetworkAutomatically(in nsIDOMWindow window);
+
+  nsIDOMDOMRequest setRoamingPreference(in nsIDOMWindow window,
+                                        in DOMString mode);
+  nsIDOMDOMRequest getRoamingPreference(in nsIDOMWindow window);
+
+  nsIDOMDOMRequest setVoicePrivacyMode(in nsIDOMWindow window,
+                                       in bool enabled);
+  nsIDOMDOMRequest getVoicePrivacyMode(in nsIDOMWindow window);
 
   nsIDOMDOMRequest sendMMI(in nsIDOMWindow window, in DOMString mmi);
   nsIDOMDOMRequest cancelMMI(in nsIDOMWindow window);
@@ -69,4 +79,6 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest setCallingLineIdRestriction(in nsIDOMWindow   window,
                                                in unsigned short clirMode);
   nsIDOMDOMRequest getCallingLineIdRestriction(in nsIDOMWindow   window);
+
+  nsIDOMDOMRequest exitEmergencyCbMode(in nsIDOMWindow window);
 };

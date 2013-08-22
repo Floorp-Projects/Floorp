@@ -84,9 +84,6 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
     return NS_ERROR_NULL_POINTER;
   }
   nsXMLContentSink* it = new nsXMLContentSink();
-  if (nullptr == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   
   nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
   nsresult rv = it->Init(aDoc, aURI, aContainer, aChannel);
@@ -139,6 +136,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsContentSink)
 
 NS_IMPL_ADDREF_INHERITED(nsXMLContentSink, nsContentSink)
 NS_IMPL_RELEASE_INHERITED(nsXMLContentSink, nsContentSink)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXMLContentSink)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLContentSink,
                                                   nsContentSink)

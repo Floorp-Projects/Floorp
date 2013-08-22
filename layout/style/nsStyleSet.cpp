@@ -122,6 +122,7 @@ nsDisableTextZoomStyleRule::List(FILE* out, int32_t aIndent) const
 #endif
 
 static const nsStyleSet::sheetType gCSSSheetTypes[] = {
+  // From lowest to highest in cascading order.
   nsStyleSet::eAgentSheet,
   nsStyleSet::eUserSheet,
   nsStyleSet::eDocSheet,
@@ -790,16 +791,11 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
   if (!result) {
     result = NS_NewStyleContext(aParentContext, aPseudoTag, aPseudoType,
                                 aRuleNode, aFlags & eSkipFlexItemStyleFixup);
-    if (!result)
-      return nullptr;
     if (aVisitedRuleNode) {
       nsRefPtr<nsStyleContext> resultIfVisited =
         NS_NewStyleContext(parentIfVisited, aPseudoTag, aPseudoType,
                            aVisitedRuleNode,
                            aFlags & eSkipFlexItemStyleFixup);
-      if (!resultIfVisited) {
-        return nullptr;
-      }
       if (!parentIfVisited) {
         mRoots.AppendElement(resultIfVisited);
       }
@@ -1556,21 +1552,25 @@ nsStyleSet::AppendFontFaceRules(nsPresContext* aPresContext,
   return true;
 }
 
-bool
-nsStyleSet::AppendKeyframesRules(nsPresContext* aPresContext,
-                                 nsTArray<nsCSSKeyframesRule*>& aArray)
+nsCSSKeyframesRule*
+nsStyleSet::KeyframesRuleForName(nsPresContext* aPresContext,
+                                 const nsString& aName)
 {
-  NS_ENSURE_FALSE(mInShutdown, false);
+  NS_ENSURE_FALSE(mInShutdown, nullptr);
 
-  for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
+  for (uint32_t i = ArrayLength(gCSSSheetTypes); i-- != 0; ) {
     if (gCSSSheetTypes[i] == eScopedDocSheet)
       continue;
     nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
                                     (mRuleProcessors[gCSSSheetTypes[i]].get());
-    if (ruleProc && !ruleProc->AppendKeyframesRules(aPresContext, aArray))
-      return false;
+    if (!ruleProc)
+      continue;
+    nsCSSKeyframesRule* result =
+      ruleProc->KeyframesRuleForName(aPresContext, aName);
+    if (result)
+      return result;
   }
-  return true;
+  return nullptr;
 }
 
 bool
@@ -1746,10 +1746,7 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
                                  nsStyleContext* aNewParentContext,
                                  Element* aElement)
 {
-  if (!aStyleContext) {
-    NS_NOTREACHED("must have style context");
-    return nullptr;
-  }
+  MOZ_ASSERT(aStyleContext, "aStyleContext must not be null");
 
   // This short-circuit is OK because we don't call TryStartingTransition
   // during style reresolution if the style context pointer hasn't changed.

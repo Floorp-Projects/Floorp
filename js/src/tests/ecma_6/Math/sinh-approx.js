@@ -289,7 +289,7 @@ var sinh_data = [
     [28.78280496108106,  1581915832319.9973]
 ];
 
-for (let [x, y] of sinh_data)
+for (var [x, y] of sinh_data)
     assertNear(Math.sinh(x), y);
 
 reportCompare(0, 0, "ok");

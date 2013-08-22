@@ -8,10 +8,8 @@
 #define vm_ForkJoin_h
 
 #include "jscntxt.h"
-#include "jsgc.h"
 
-#include "ion/Ion.h"
-#include "vm/ThreadPool.h"
+#include "jit/Ion.h"
 
 ///////////////////////////////////////////////////////////////////////////
 // Read Me First
@@ -410,7 +408,7 @@ InParallelSection()
 #endif
 }
 
-bool InSequentialOrExclusiveParallelSection();
+bool InExclusiveParallelSection();
 
 bool ParallelTestsShouldPass(JSContext *cx);
 

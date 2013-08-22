@@ -36,8 +36,8 @@ function testBlackBoxSource() {
     ok(checkbox, "Should get the checkbox for black boxing the source");
     ok(checkbox.checked, "Should not be black boxed by default");
 
-    once(gDebugger, "Debugger:BlackBoxChange", function (event) {
-      const sourceClient = event.detail;
+    const { activeThread } = gDebugger.DebuggerController;
+    activeThread.addOneTimeListener("blackboxchange", function (event, sourceClient) {
       ok(sourceClient.isBlackBoxed, "The source should be black boxed now");
       ok(!checkbox.checked, "The checkbox should no longer be checked.");
 

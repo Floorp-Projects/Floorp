@@ -264,10 +264,27 @@ Toolbox.prototype = {
         key.setAttribute("modifiers", toolDefinition.modifiers);
         key.setAttribute("oncommand", "void(0);"); // needed. See bug 371900
         key.addEventListener("command", function(toolId) {
-          this.selectTool(toolId);
+          this.selectTool(toolId).then(() => {
+              this.fireCustomKey(toolId);
+          });
         }.bind(this, id), true);
         doc.getElementById("toolbox-keyset").appendChild(key);
       }
+    }
+  },
+
+
+  /**
+   * Handle any custom key events.  Returns true if there was a custom key binding run
+   * @param {string} toolId
+   *        Which tool to run the command on (skip if not current)
+   */
+  fireCustomKey: function TBOX_fireCustomKey(toolId) {
+    let tools = gDevTools.getToolDefinitionMap();
+    let activeToolDefinition = tools.get(toolId);
+
+    if (activeToolDefinition.onkey && this.currentToolId === toolId) {
+        activeToolDefinition.onkey(this.getCurrentPanel());
     }
   },
 

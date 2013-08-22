@@ -28,6 +28,9 @@ if CONFIG['MOZ_GSTREAMER']:
 if CONFIG['MOZ_DASH']:
     PARALLEL_DIRS += ['dash']
 
+if CONFIG['MOZ_DIRECTSHOW']:
+    PARALLEL_DIRS += ['directshow']
+
 if CONFIG['MOZ_MEDIA_PLUGINS']:
     PARALLEL_DIRS += ['plugins']
 
@@ -40,8 +43,7 @@ if CONFIG['MOZ_OMX_DECODER']:
     PARALLEL_DIRS += ['omx']
     PARALLEL_DIRS += ['omx/mediaresourcemanager']
 
-if CONFIG['MOZ_WEBSPEECH']:
-    PARALLEL_DIRS += ['webspeech']
+PARALLEL_DIRS += ['webspeech']
 
 TEST_DIRS += ['test']
 
@@ -53,6 +55,7 @@ EXPORTS += [
     'AudioChannelFormat.h',
     'AudioEventTimeline.h',
     'AudioNodeEngine.h',
+    'AudioNodeExternalInputStream.h',
     'AudioNodeStream.h',
     'AudioSampleFormat.h',
     'AudioSegment.h',
@@ -97,6 +100,7 @@ CPP_SOURCES += [
     'AudioAvailableEventManager.cpp',
     'AudioChannelFormat.cpp',
     'AudioNodeEngine.cpp',
+    'AudioNodeExternalInputStream.cpp',
     'AudioNodeStream.cpp',
     'AudioSegment.cpp',
     'AudioStream.cpp',
@@ -125,3 +129,8 @@ CPP_SOURCES += [
     'VideoUtils.cpp',
     'WebVTTLoadListener.cpp',
 ]
+
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['BUILD_ARM_NEON']:
+    CPP_SOURCES += [
+        'AudioNodeEngineNEON.cpp',
+    ]

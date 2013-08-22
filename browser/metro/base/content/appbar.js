@@ -31,15 +31,24 @@ var Appbar = {
     switch (aEvent.type) {
       case 'URLChanged':
       case 'TabSelect':
+        this.update();
+        // Switching away from or loading a site into a startui tab that has actions
+        // pending, we consider this confirmation that the user wants to flush changes.
+        if (this.activeTileset && aEvent.lastTab && aEvent.lastTab.browser &&
+            aEvent.lastTab.browser.currentURI.spec == kStartURI) {
+          ContextUI.dismiss();
+        }
+        break;
+
       case 'MozAppbarShowing':
         this.update();
         break;
 
       case 'MozAppbarDismissing':
-        if (this.activeTileset) {
+        if (this.activeTileset && ('isBound' in this.activeTileset)) {
           this.activeTileset.clearSelection();
         }
-        this.clearContextualActions();
+        this._clearContextualActions();
         this.activeTileset = null;
         break;
 
@@ -70,8 +79,8 @@ var Appbar = {
   },
 
   onDownloadButton: function() {
-    // TODO: Bug 883962: Toggle the downloads infobar when the
-    // download button is clicked
+    let notificationBox = Browser.getNotificationBox();
+    notificationBox.notificationsHidden = !notificationBox.notificationsHidden;
     ContextUI.dismiss();
   },
 
@@ -100,15 +109,19 @@ var Appbar = {
   },
 
   onMenuButton: function(aEvent) {
-      var typesArray = ["find-in-page"];
+      let typesArray = [];
 
-      if (ConsolePanelView.enabled) typesArray.push("open-error-console");
-      if (!MetroUtils.immersive) typesArray.push("open-jsshell");
+      if (!BrowserUI.isStartTabVisible)
+        typesArray.push("find-in-page");
+      if (ConsolePanelView.enabled)
+        typesArray.push("open-error-console");
+      if (!MetroUtils.immersive)
+        typesArray.push("open-jsshell");
 
       try {
         // If we have a valid http or https URI then show the view on desktop
         // menu item.
-        var uri = Services.io.newURI(Browser.selectedBrowser.currentURI.spec,
+        let uri = Services.io.newURI(Browser.selectedBrowser.currentURI.spec,
                                      null, null);
         if (uri.schemeIs('http') || uri.schemeIs('https')) {
           typesArray.push("view-on-desktop");
@@ -144,9 +157,13 @@ var Appbar = {
     }
   },
 
+  onAutocompleteCloseButton: function () {
+    Elements.autocomplete.closePopup();
+  },
+
   dispatchContextualAction: function(aActionName){
     let activeTileset = this.activeTileset;
-    if (activeTileset) {
+    if (activeTileset && ('isBound' in this.activeTileset)) {
       // fire event on the richgrid, others can listen
       // but we keep coupling loose so grid doesn't need to know about appbar
       let event = document.createEvent("Events");
@@ -166,8 +183,6 @@ var Appbar = {
 
     if (aVerbs.length) {
       Elements.contextappbar.show();
-    } else {
-      Elements.contextappbar.hide();
     }
 
     // Look up all of the buttons for the verbs that should be visible.
@@ -219,7 +234,7 @@ var Appbar = {
     });
   },
 
-  clearContextualActions: function() {
+  _clearContextualActions: function() {
     this.showContextualActions([]);
   },
 
@@ -234,8 +249,11 @@ var Appbar = {
   _onTileSelectionChanged: function _onTileSelectionChanged(aEvent){
     let activeTileset = aEvent.target;
 
-    // deselect tiles in other tile groups
-    if (this.activeTileset && this.activeTileset !== activeTileset) {
+    // deselect tiles in other tile groups,
+    // ensure previousyl-activeTileset is bound before calling methods on it
+    if (this.activeTileset &&
+          ('isBound' in this.activeTileset) &&
+          this.activeTileset !== activeTileset) {
       this.activeTileset.clearSelection();
     }
     // keep track of which view is the target/scope for the contextual actions

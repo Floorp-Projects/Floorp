@@ -14,7 +14,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebNavigation.h"
@@ -86,14 +85,9 @@ nsDOMWindowList::GetLength(uint32_t* aLength)
 already_AddRefed<nsIDOMWindow>
 nsDOMWindowList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
-  EnsureFresh();
-
   aFound = false;
-  NS_ENSURE_TRUE(mDocShellNode, nullptr);
 
-  nsCOMPtr<nsIDocShellTreeItem> item;
-  mDocShellNode->GetChildAt(aIndex, getter_AddRefs(item));
-
+  nsCOMPtr<nsIDocShellTreeItem> item = GetDocShellTreeItemAt(aIndex);
   if (!item) {
     return nullptr;
   }

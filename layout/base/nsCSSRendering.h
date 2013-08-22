@@ -8,13 +8,10 @@
 #ifndef nsCSSRendering_h___
 #define nsCSSRendering_h___
 
-#include "nsStyleConsts.h"
 #include "gfxBlur.h"
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
 #include "nsLayoutUtils.h"
 
-struct nsPoint;
 class nsStyleContext;
 class nsPresContext;
 class nsRenderingContext;
@@ -168,8 +165,7 @@ public:
             nsRenderingContext&  aRenderingContext,
             const nsRect&        aDirtyRect,
             const nsRect&        aFill,
-            const nsRect&        aDest,
-            uint32_t             aFlags = imgIContainer::FLAG_NONE);
+            const nsRect&        aDest);
   /**
    * Draws the image to the target rendering context using background-specific
    * arguments.

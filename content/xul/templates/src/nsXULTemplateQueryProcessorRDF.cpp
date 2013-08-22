@@ -46,6 +46,8 @@ nsIRDFContainerUtils*     nsXULTemplateQueryProcessorRDF::gRDFContainerUtils;
 nsIRDFResource*           nsXULTemplateQueryProcessorRDF::kNC_BookmarkSeparator;
 nsIRDFResource*           nsXULTemplateQueryProcessorRDF::kRDF_type;
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTemplateQueryProcessorRDF)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULTemplateQueryProcessorRDF)
     tmp->Done();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END

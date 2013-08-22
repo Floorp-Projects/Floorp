@@ -1,15 +1,15 @@
 {
     "talos.zip": {
-        "url": "http://build.mozilla.org/talos/zips/talos.fcbb9d7d3c78.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.2a32cc64e7ff.zip",
         "path": ""
     },
     "global": {
         "talos_repo": "http://hg.mozilla.org/build/talos",
-        "talos_revision": "fcbb9d7d3c78"
+        "talos_revision": "2a32cc64e7ff"
     },
     "suites": {
         "chromez": {
-            "tests": ["tresize"],
+            "tests": ["tresize", "tcanvasmark"],
             "talos_options": [
                 "--mozAfterPaint",
                 "--filter",
@@ -24,8 +24,8 @@
                 "tspaint_places_generated_max"
             ],
             "talos_addons": [
-                "http://build.mozilla.org/talos/profiles/dirtyDBs.zip",
-                "http://build.mozilla.org/talos/profiles/dirtyMaxDBs.zip"
+                "http://talos-bundles.pvt.build.mozilla.org/profiles/dirtyDBs.zip",
+                "http://talos-bundles.pvt.build.mozilla.org/profiles/dirtyMaxDBs.zip"
             ],
             "talos_options": [
                 "--setPref",
@@ -41,7 +41,7 @@
             ]
         },
         "other": {
-            "tests": ["tscrollr", "a11yr", "ts_paint", "tpaint"],
+            "tests": ["tscrollx", "a11yr", "ts_paint", "tpaint"],
             "talos_options": [
                 "--mozAfterPaint",
                 "--filter",
@@ -51,7 +51,7 @@
             ]
         },
         "svgr": {
-            "tests": ["tsvgr", "tsvgr_opacity"],
+            "tests": ["tsvgx", "tsvgr_opacity"],
             "talos_options": [
                 "--filter",
                 "ignore_first:5",
@@ -60,7 +60,7 @@
             ]
         },
         "rafx": {
-            "tests": ["tscrollx", "tsvgx", "tcanvasmark"],
+            "tests": ["tscrollr", "tsvgr"],
             "talos_options": [
                 "--filter",
                 "ignore_first:5",
@@ -70,12 +70,12 @@
         },
         "tpn": {
             "tests": ["tp5n"],
-            "pagesets_url": "http://build.mozilla.org/talos/zips/tp5n.zip",
+            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5n.manifest",
             "plugins": {
-                "32": "http://build.mozilla.org/talos/zips/flash32_10_3_183_5.zip",
-                "64": "http://build.mozilla.org/talos/zips/flash64_11_0_d1_98.zip"
+                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
+                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
             },
             "talos_options": [
                 "--mozAfterPaint",
@@ -90,12 +90,12 @@
         },
         "tp5o": {
             "tests": ["tp5o"],
-            "pagesets_url": "http://build.mozilla.org/talos/zips/tp5n.zip",
+            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest",
             "plugins": {
-                "32": "http://build.mozilla.org/talos/zips/flash32_10_3_183_5.zip",
-                "64": "http://build.mozilla.org/talos/zips/flash64_11_0_d1_98.zip"
+                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
+                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
             },
             "talos_options": [
                 "--mozAfterPaint",
@@ -110,12 +110,12 @@
         },
         "xperf": {
             "tests": ["tp5n"],
-            "pagesets_url": "http://build.mozilla.org/talos/zips/tp5n.zip",
+            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5n.manifest",
             "plugins": {
-                "32": "http://build.mozilla.org/talos/zips/flash32_10_3_183_5.zip",
-                "64": "http://build.mozilla.org/talos/zips/flash64_11_0_d1_98.zip"
+                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
+                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
             },
             "talos_options": [
                 "--mozAfterPaint",

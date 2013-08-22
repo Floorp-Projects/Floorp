@@ -39,5 +39,14 @@ ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 # Treat warnings as errors in directories with FAIL_ON_WARNINGS.
 ac_add_options --enable-warnings-as-errors
 
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
 # Use ccache
 ac_add_options --with-ccache=/usr/bin/ccache
+
+HOST_CC="/tools/gcc-4.7.2-0moz1/bin/gcc"
+HOST_CXX="/tools/gcc-4.7.2-0moz1/bin/g++"
+
+# Avoid dependency on libstdc++ 4.7
+ac_add_options --enable-stdcxx-compat

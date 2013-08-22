@@ -7,15 +7,19 @@
 
 %{C++
 #include "nsTArray.h"
+#include "nsCOMArray.h"
+
 class nsCString;
 %}
 [ptr] native StringArray(nsTArray<nsCString>);
+[ref] native securityMessagesArray(nsCOMArray<nsISecurityConsoleMessage>);
 
 interface nsISocketTransport;
 interface nsIAsyncInputStream;
 interface nsIAsyncOutputStream;
 interface nsIURI;
 interface nsIProxyInfo;
+interface nsISecurityConsoleMessage;
 
 /**
  * The callback interface for nsIHttpChannelInternal::HTTPUpgrade()
@@ -34,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(2cd7f6a6-63f3-4bd6-a0f5-6e3d6dcff81b)]
+[scriptable, uuid(5b4b2632-cee4-11e2-8e84-c7506188709b)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -51,6 +55,12 @@ interface nsIHttpChannelInternal : nsISupports
      * Get the major/minor version numbers for the response
      */
     void getResponseVersion(out unsigned long major, out unsigned long minor);
+
+    /*
+     * Retrieves all security messages from the security message queue
+     * and empties the queue after retrieval
+     */
+    [noscript] void takeAllSecurityMessages(in securityMessagesArray aMessages);
 
     /**
      * Helper method to set a cookie with a consumer-provided

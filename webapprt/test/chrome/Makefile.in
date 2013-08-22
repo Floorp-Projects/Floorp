@@ -20,6 +20,14 @@ MOCHITEST_WEBAPPRT_CHROME_FILES = \
     window-title.webapp \
     window-title.webapp^headers^ \
     window-title.html \
+  browser_webperm.js \
+    webperm.webapp \
+    webperm.webapp^headers^ \
+    webperm.html \
+  browser_noperm.js \
+    noperm.webapp \
+    noperm.webapp^headers^ \
+    noperm.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

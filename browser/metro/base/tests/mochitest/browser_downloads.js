@@ -331,4 +331,14 @@ gTests.push({
   }
 });
 
-
+/**
+ * Make sure the cancelled/aborted downloads are handled correctly.
+ */
+gTests.push({
+  desc: "Cancel/Abort Downloads",
+  run: function(){
+    todo(false, "Ensure that a cancelled/aborted download is in the correct state \
+      including correct values for state variables (e.g. _downloadCount, _downloadsInProgress) \
+      and the existence of the downloaded file.");
+  }
+});

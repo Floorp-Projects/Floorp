@@ -333,12 +333,9 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       }
       break;
     }
-    case Edit::TOpSetColoredBorders: {
-      if (edit.get_OpSetColoredBorders().enabled()) {
-        mLayerManager->GetCompositor()->EnableColoredBorders();
-      } else {
-        mLayerManager->GetCompositor()->DisableColoredBorders();
-      }
+    case Edit::TOpSetDiagnosticTypes: {
+      mLayerManager->GetCompositor()->SetDiagnosticTypes(
+        edit.get_OpSetDiagnosticTypes().diagnostics());
       break;
     }
     // Tree ops
@@ -396,6 +393,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     case Edit::TOpAttachCompositable: {
       const OpAttachCompositable& op = edit.get_OpAttachCompositable();
       Attach(cast(op.layerParent()), cast(op.compositableParent()));
+      cast(op.compositableParent())->SetCompositorID(
+        mLayerManager->GetCompositor()->GetCompositorID());
       break;
     }
     case Edit::TOpAttachAsyncCompositable: {

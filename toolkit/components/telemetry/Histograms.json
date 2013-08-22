@@ -86,6 +86,12 @@
     "kind": "flag",
     "description": "Set if the cycle collector ran out of memory at some point"
   },
+  "CYCLE_COLLECTOR_ASYNC_SNOW_WHITE_FREEING": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent on one asynchronous SnowWhite freeing (ms)"
+  },
   "FORGET_SKIPPABLE_MAX": {
     "kind": "exponential",
     "high": "10000",
@@ -1567,6 +1573,11 @@
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock (ms) on the main thread in NSASYNCDOOMEVENT_RUN"
   },
+  "DNT_USAGE": {
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "I want to be tracked, I do NOT want to be tracked, DNT unset"
+  },
   "DNS_LOOKUP_METHOD2": {
     "kind": "enumerated",
     "n_values": 16,
@@ -2539,6 +2550,19 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time to make a backup copy of the session file (ms)"
   },
+  "FX_SESSION_RESTORE_RESTORE_WINDOW_MS": {
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Time spent blocking the main thread while restoring a window state (ms)"
+  },
+  "FX_SESSION_RESTORE_SESSION_LENGTH": {
+    "kind": "exponential",
+    "high": "365",
+    "n_buckets": 15,
+    "description": "Session restore: Days elapsed since the session was first started"
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "kind": "boolean",
     "description": "Deleted or to-be-reused innerwindow which has had mutation event listeners."
@@ -2989,18 +3013,6 @@
     "description": "The device supports touch input",
     "cpp_guard": "XP_WIN"
   },
-  "COMPONENTS_OBJECT_ACCESSED_BY_CONTENT": {
-    "kind": "flag",
-    "description": "Whether content ever accesed the Components object in this session"
-  },
-  "COMPONENTS_LOOKUPMETHOD_ACCESSED_BY_CONTENT": {
-    "kind": "flag",
-    "description": "Whether content ever accesed Components.lookupMethod in this session"
-  },
-  "COMPONENTS_INTERFACES_ACCESSED_BY_CONTENT": {
-    "kind": "flag",
-    "description": "Whether content ever accesed Components.interfaces in this session"
-  },
   "COMPONENTS_SHIM_ACCESSED_BY_CONTENT": {
     "kind": "flag",
     "description": "Whether content ever accesed the Components shim in this session"
@@ -3134,6 +3146,50 @@
     "high": "20000",
     "n_buckets": 15,
     "description": "Time (ms) for a WAL checkpoint after collecting all measurements."
+  },
+  "PDF_VIEWER_USED": {
+    "kind": "boolean",
+    "description": "How many times PDF Viewer was used"
+  },
+  "PDF_VIEWER_FALLBACK_SHOWN": {
+    "kind": "boolean",
+    "description": "How many times PDF Viewer fallback bar was shown"
+  },
+  "PDF_VIEWER_PRINT": {
+    "kind": "boolean",
+    "description": "How many times PDF Viewer print functionality was used"
+  },
+  "PDF_VIEWER_DOCUMENT_VERSION": {
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "The PDF document version (1.1, 1.2, etc.)"
+  },
+  "PDF_VIEWER_DOCUMENT_GENERATOR": {
+    "kind": "enumerated",
+    "n_values": 30,
+    "description": "The PDF document generator"
+  },
+  "PDF_VIEWER_DOCUMENT_SIZE_KB": {
+    "kind": "exponential",
+    "low": "2",
+    "high": "64 * 1024",
+    "n_buckets": 20,
+    "description": "The PDF document size (KB)"
+  },
+  "PDF_VIEWER_FORM": {
+    "kind": "boolean",
+    "description": "A PDF form expected: true for AcroForm and false for XFA"
+  },
+  "PDF_VIEWER_STREAM_TYPES": {
+    "kind": "enumerated",
+    "n_values": 9,
+    "description": "The PDF document compression stream types used"
+  },
+  "PDF_VIEWER_TIME_TO_VIEW_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Time spent to display first page in PDF Viewer (ms)"
   },
   "POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS": {
     "kind": "linear",
@@ -3310,6 +3366,18 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'prototypeAndProperties' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_PROTOTYPESANDPROPERTIES_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'prototypesAndProperties' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_PROTOTYPESANDPROPERTIES_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'prototypesAndProperties' request to go round trip."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_PROPERTY_MS": {
     "kind": "exponential",
     "high": "10000",
@@ -3417,6 +3485,42 @@
     "high": "10000",
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_TRACERDETACH_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_TRACERDETACH_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_STARTTRACE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'startTrace' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_STARTTRACE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'startTrace' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_STOPTRACE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'stopTrace' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_STOPTRACE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'stopTrace' request to go round trip."
   },
   "COOKIES_3RDPARTY_NUM_SITES_ACCEPTED": {
     "kind": "linear",
@@ -3736,6 +3840,11 @@
     "kind": "enumerated",
     "n_values": 4,
     "description": "Accumulates type of content (mixed, mixed passive, unmixed) per page load"
+  },
+  "NTLM_MODULE_USED": {
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "The module used for the NTLM protocol (Windows_API, Kerberos, Samba_auth or Generic) and whether or not the authentication was used to connect to a proxy server. This data is collected only once per session (at first NTLM authentification)."
   },
   "FX_THUMBNAILS_BG_QUEUE_SIZE_ON_CAPTURE": {
     "kind": "exponential",

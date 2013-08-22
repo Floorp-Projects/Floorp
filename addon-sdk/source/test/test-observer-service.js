@@ -22,13 +22,13 @@ exports.testUnloadAndErrorLogging = function(test) {
   test.assertEqual(timesCalled, 1);
   sbobsvc.add("narg", badCb);
   observers.notify("narg", "yo yo");
-  var lines = messages[0].split("\n");
-  test.assertEqual(lines[0], "error: " + require("sdk/self").name + ": An exception occurred.");
-  test.assertEqual(lines[0], "error: " + require("sdk/self").name + ": An exception occurred.");
-  test.assertEqual(lines[1], "Error: foo");
+
+  test.assertEqual(messages[0], "console.error: " + require("sdk/self").name + ": \n");
+  var lines = messages[1].split("\n");
+  test.assertEqual(lines[0], "  Message: Error: foo");
+  test.assertEqual(lines[1], "  Stack:");
   // Keep in mind to update "18" to the line of "throw new Error("foo")"
-  test.assertEqual(lines[2], module.uri + " 18");
-  test.assertEqual(lines[3], "Traceback (most recent call last):");
+  test.assert(lines[2].indexOf(module.uri + ":18") != -1);
 
   loader.unload();
   observers.notify("blarg", "yo yo");

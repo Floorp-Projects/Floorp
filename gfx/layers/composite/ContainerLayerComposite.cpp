@@ -75,13 +75,13 @@ ContainerRender(ContainerT* aContainer,
       // not safe.
       if (HasOpaqueAncestorLayer(aContainer) &&
           transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation()) {
-        mode = gfxPlatform::GetPlatform()->UsesSubpixelAATextRendering() ?
+        mode = gfxPlatform::ComponentAlphaEnabled() ?
                                             INIT_MODE_COPY : INIT_MODE_CLEAR;
         surfaceCopyNeeded = (mode == INIT_MODE_COPY);
         surfaceRect.x += transform.x0;
         surfaceRect.y += transform.y0;
         aContainer->mSupportsComponentAlphaChildren
-          = gfxPlatform::GetPlatform()->UsesSubpixelAATextRendering();
+          = gfxPlatform::ComponentAlphaEnabled();
       }
     }
 
@@ -159,10 +159,12 @@ ContainerRender(ContainerT* aContainer,
     LayerRect layerViewport = frame.mViewport * frame.LayersPixelsPerCSSPixel();
     gfx::Rect rect(layerViewport.x, layerViewport.y, layerViewport.width, layerViewport.height);
     gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
-    aManager->GetCompositor()->DrawDiagnostics(gfx::Color(1.0, 0.0, 0.0, 1.0),
+    aManager->GetCompositor()->DrawDiagnostics(DIAGNOSTIC_CONTAINER,
                                                rect, clipRect,
                                                transform, gfx::Point(aOffset.x, aOffset.y));
   }
+
+  LayerManagerComposite::RemoveMaskEffect(aContainer->GetMaskLayer());
 }
 
 ContainerLayerComposite::ContainerLayerComposite(LayerManagerComposite *aManager)

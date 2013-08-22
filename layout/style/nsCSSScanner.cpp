@@ -76,8 +76,8 @@ static const uint8_t gLexTable[] = {
  SUIJ, SUIJ, SUIJ,   SU,   SU,   SU,   SU,    S,
 };
 
-MOZ_STATIC_ASSERT(MOZ_ARRAY_LENGTH(gLexTable) == 128,
-                  "gLexTable expected to cover all 128 ASCII characters");
+static_assert(MOZ_ARRAY_LENGTH(gLexTable) == 128,
+              "gLexTable expected to cover all 128 ASCII characters");
 
 #undef I
 #undef J

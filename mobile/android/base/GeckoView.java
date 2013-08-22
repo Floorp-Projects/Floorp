@@ -28,20 +28,20 @@ import android.os.Handler;
 
 public class GeckoView extends LayerView
     implements GeckoEventListener, ContextGetter {
-    static GeckoThread sGeckoThread;
 
     public GeckoView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.GeckoView);
         String url = a.getString(R.styleable.GeckoView_url);
+        boolean doInit = a.getBoolean(R.styleable.GeckoView_doinit, true);
         a.recycle();
 
-        Intent intent;
-        if (url == null) {
-            intent = new Intent(Intent.ACTION_MAIN);
-        } else {
-            intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        if (!doInit)
+            return;
+
+        if (url != null) {
+            GeckoThread.setUri(url);
+            GeckoThread.setAction(Intent.ACTION_VIEW);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(url));
         }
         GeckoAppShell.setContextGetter(this);
@@ -49,31 +49,28 @@ public class GeckoView extends LayerView
             Tabs tabs = Tabs.getInstance();
             tabs.attachToContext(context);
         }
-        GeckoProfile profile = GeckoProfile.get(context);
-        BrowserDB.initialize(profile.getName());
         GeckoAppShell.registerEventListener("Gecko:Ready", this);
 
-        sGeckoThread = new GeckoThread(intent, url);
         ThreadUtils.setUiThread(Thread.currentThread(), new Handler());
         initializeView(GeckoAppShell.getEventDispatcher());
+
+
+        GeckoProfile profile = GeckoProfile.get(context);
+        BrowserDB.initialize(profile.getName());
+
         if (GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.Launched)) {
             GeckoAppShell.setLayerView(this);
-            sGeckoThread.start();
-        }
-    }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-
-        if (hasFocus) {
-            setBackgroundDrawable(null);
+            GeckoThread.createAndStart();
         }
     }
 
     public void loadUrl(String uri) {
         Tabs.getInstance().loadUrl(uri);
     }
+
+    public void loadUrlInNewTab(String uri) {
+        Tabs.getInstance().loadUrl(uri, Tabs.LOADURL_NEW_TAB);
+     }
 
     public void handleMessage(String event, JSONObject message) {
         if (event.equals("Gecko:Ready")) {

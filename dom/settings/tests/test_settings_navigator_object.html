@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=898512
+-->
+<head>
+  <title>Test for Bug 898512 Settings API</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=898512">Mozilla Bug 898512</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+
+function testPref() {
+  SpecialPowers.pushPrefEnv({
+    set: [["dom.mozSettings.enabled", false]]
+  }, function() {
+    ise(navigator.mozSettings, undefined, "navigator.mozSettings is undefined");
+    SimpleTest.finish();
+  });
+}
+
+SpecialPowers.pushPermissions([
+  {type: "settings-read", allow: 0, context: document},
+  {type: "settings-write", allow: 0, context: document}
+], function() {
+  ise(frames[0].navigator.mozSettings, null, "navigator.mozSettings is null when the page doesn't have permissions");
+  testPref();
+});
+</script>
+</pre>
+</body>
+</html>

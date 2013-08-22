@@ -18,11 +18,12 @@ function SiteSpecificUserAgent() {}
 
 SiteSpecificUserAgent.prototype = {
   getUserAgentForURIAndWindow: function ssua_getUserAgentForURIAndWindow(aURI, aWindow) {
-    let win = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator).getMostRecentWindow("navigator:browser");
-    if (win && win.UserAgent) {
-      return win.UserAgent.getUserAgentForWindow(aWindow, DEFAULT_UA);
+    let UA;
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (win && win.DesktopUserAgent) {
+      UA = win.DesktopUserAgent.getUserAgentForWindow(aWindow);
     }
-    return DEFAULT_UA;
+    return UA || UserAgentOverrides.getOverrideForURI(aURI) || DEFAULT_UA;
   },
 
   classID: Components.ID("{d5234c9d-0ee2-4b3c-9da3-18be9e5cf7e6}"),

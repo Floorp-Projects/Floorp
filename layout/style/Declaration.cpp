@@ -20,8 +20,8 @@ namespace css {
 
 // check that we can fit all the CSS properties into a uint16_t
 // for the mOrder array
-MOZ_STATIC_ASSERT(eCSSProperty_COUNT_no_shorthands - 1 <= UINT16_MAX,
-                  "CSS longhand property numbers no longer fit in a uint16_t");
+static_assert(eCSSProperty_COUNT_no_shorthands - 1 <= UINT16_MAX,
+              "CSS longhand property numbers no longer fit in a uint16_t");
 
 Declaration::Declaration()
   : mImmutable(false)
@@ -177,9 +177,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     if (*p == eCSSProperty__x_system_font ||
          nsCSSProps::PropHasFlags(*p, CSS_PROPERTY_DIRECTIONAL_SOURCE)) {
       // The system-font subproperty and the *-source properties don't count.
-      continue;
-    }
-    if (!nsCSSProps::IsEnabled(*p)) {
       continue;
     }
     ++totalCount;
@@ -481,13 +478,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
           MOZ_ASSERT(nsCSSProps::kKeywordTableTable[
                        eCSSProperty_background_clip] ==
                      nsCSSProps::kBackgroundOriginKTable);
-          MOZ_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER ==
-                            NS_STYLE_BG_ORIGIN_BORDER &&
-                            NS_STYLE_BG_CLIP_PADDING ==
-                            NS_STYLE_BG_ORIGIN_PADDING &&
-                            NS_STYLE_BG_CLIP_CONTENT ==
-                            NS_STYLE_BG_ORIGIN_CONTENT,
-                            "bg-clip and bg-origin style constants must agree");
+          static_assert(NS_STYLE_BG_CLIP_BORDER ==
+                        NS_STYLE_BG_ORIGIN_BORDER &&
+                        NS_STYLE_BG_CLIP_PADDING ==
+                        NS_STYLE_BG_ORIGIN_PADDING &&
+                        NS_STYLE_BG_CLIP_CONTENT ==
+                        NS_STYLE_BG_ORIGIN_CONTENT,
+                        "bg-clip and bg-origin style constants must agree");
           aValue.Append(PRUnichar(' '));
           origin->mValue.AppendToString(eCSSProperty_background_origin, aValue);
 
@@ -571,8 +568,9 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
 
       // if font features are not enabled, pointers for fontVariant
       // values above may be null since the shorthand check ignores them
+      // font-variant-alternates enabled ==> layout.css.font-features.enabled is true
       bool fontFeaturesEnabled =
-        mozilla::Preferences::GetBool("layout.css.font-features.enabled");
+        nsCSSProps::IsEnabled(eCSSProperty_font_variant_alternates);
 
       if (systemFont &&
           systemFont->GetUnit() != eCSSUnit_None &&
@@ -682,35 +680,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         return;
       }
 
-      const nsCSSValue *textBlink =
-        data->ValueFor(eCSSProperty_text_blink);
-      const nsCSSValue *decorationLine =
-        data->ValueFor(eCSSProperty_text_decoration_line);
-
-      NS_ABORT_IF_FALSE(textBlink->GetUnit() == eCSSUnit_Enumerated,
-                        nsPrintfCString("bad text-blink unit %d",
-                                        textBlink->GetUnit()).get());
-      NS_ABORT_IF_FALSE(decorationLine->GetUnit() == eCSSUnit_Enumerated,
-                        nsPrintfCString("bad text-decoration-line unit %d",
-                                        decorationLine->GetUnit()).get());
-
-      bool blinkNone = (textBlink->GetIntValue() == NS_STYLE_TEXT_BLINK_NONE);
-      bool lineNone =
-        (decorationLine->GetIntValue() == NS_STYLE_TEXT_DECORATION_LINE_NONE);
-
-      if (blinkNone && lineNone) {
-        AppendValueToString(eCSSProperty_text_decoration_line, aValue);
-      } else {
-        if (!blinkNone) {
-          AppendValueToString(eCSSProperty_text_blink, aValue);
-        }
-        if (!lineNone) {
-          if (!aValue.IsEmpty()) {
-            aValue.Append(PRUnichar(' '));
-          }
-          AppendValueToString(eCSSProperty_text_decoration_line, aValue);
-        }
-      }
+      AppendValueToString(eCSSProperty_text_decoration_line, aValue);
       break;
     }
     case eCSSProperty_transition: {

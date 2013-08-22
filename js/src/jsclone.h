@@ -10,7 +10,6 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 
-#include "js/HashTable.h"
 #include "js/Vector.h"
 
 namespace js {
@@ -131,7 +130,7 @@ struct JSStructuredCloneReader {
     // Any value passed to JS_ReadStructuredClone.
     void *closure;
 
-    friend JSBool JS_ReadTypedArray(JSStructuredCloneReader *r, jsval *vp);
+    friend bool JS_ReadTypedArray(JSStructuredCloneReader *r, jsval *vp);
 };
 
 struct JSStructuredCloneWriter {
@@ -201,7 +200,7 @@ struct JSStructuredCloneWriter {
     JS::RootedValue transferable;
     js::AutoObjectHashSet transferableObjects;
 
-    friend JSBool JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v);
+    friend bool JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v);
 };
 
 #endif /* jsclone_h */

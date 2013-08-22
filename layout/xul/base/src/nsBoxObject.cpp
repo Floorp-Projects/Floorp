@@ -56,6 +56,8 @@ PropertyTraverser(const nsAString& aKey, nsISupports* aProperty, void* userArg)
   return PL_DHASH_NEXT;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsBoxObject)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsBoxObject)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsBoxObject)
   if (tmp->mPropertyTable) {

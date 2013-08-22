@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -24,11 +25,12 @@
 #include "ClientLayerManager.h"
 #include "BasicLayers.h"
 #include "FrameMetrics.h"
-#include "nsIObserver.h"
 #include "Windows.Graphics.Display.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
+#include "UIABridgePrivate.h"
+#include "WinMouseScrollHandler.h"
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
@@ -54,7 +56,21 @@ extern PRLogModuleInfo* gWindowsLog;
 
 static uint32_t gInstanceCount = 0;
 const PRUnichar* kMetroSubclassThisProp = L"MetroSubclassThisProp";
-static const UINT sDefaultBrowserMsgID = RegisterWindowMessageW(L"DefaultBrowserClosing");
+HWND MetroWidget::sICoreHwnd = NULL;
+
+namespace mozilla {
+namespace widget {
+UINT sDefaultBrowserMsgId = RegisterWindowMessageW(L"DefaultBrowserClosing");
+} }
+
+// WM_GETOBJECT id pulled from uia headers
+#define UiaRootObjectId -25
+
+namespace mozilla {
+namespace widget {
+namespace winrt {
+extern ComPtr<IUIABridge> gProviderRoot;
+} } }
 
 namespace {
 
@@ -140,7 +156,7 @@ namespace {
 NS_IMPL_ISUPPORTS_INHERITED0(MetroWidget, nsBaseWidget)
 
 
-nsRefPtr<mozilla::layers::AsyncPanZoomController> MetroWidget::sAPZC;
+nsRefPtr<mozilla::layers::APZCTreeManager> MetroWidget::sAPZC;
 
 MetroWidget::MetroWidget() :
   mTransparencyMode(eTransparencyOpaque),
@@ -153,6 +169,7 @@ MetroWidget::MetroWidget() :
   if (!gInstanceCount) {
     UserActivity();
     nsTextStore::Initialize();
+    MouseScrollHandler::Initialize();
     KeyboardLayout::GetInstance()->OnLayoutChange(::GetKeyboardLayout(0));
   } // !gInstanceCount
   gInstanceCount++;
@@ -166,7 +183,6 @@ MetroWidget::~MetroWidget()
 
   // Global shutdown
   if (!gInstanceCount) {
-    MetroWidget::sAPZC->Destroy();
     MetroWidget::sAPZC = nullptr;
     nsTextStore::Terminate();
   } // !gInstanceCount
@@ -227,6 +243,7 @@ MetroWidget::Create(nsIWidget *aParent,
   // the main widget gets created first
   gTopLevelAssigned = true;
   MetroApp::SetBaseWidget(this);
+  WinUtils::SetNSWindowBasePtr(mWnd, this);
 
   if (mWidgetListener) {
     mWidgetListener->WindowActivated();
@@ -264,6 +281,7 @@ MetroWidget::Destroy()
   // Release references to children, device context, toolkit, and app shell.
   nsBaseWidget::Destroy();
   nsBaseWidget::OnDestroy();
+  WinUtils::SetNSWindowBasePtr(mWnd, nullptr);
 
   if (mLayerManager) {
     mLayerManager->Destroy();
@@ -510,49 +528,24 @@ MetroWidget::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
 
 nsresult
 MetroWidget::SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
-                                           uint32_t aNativeMessage,
-                                           double aDeltaX,
-                                           double aDeltaY,
-                                           double aDeltaZ,
-                                           uint32_t aModifierFlags,
-                                           uint32_t aAdditionalFlags)
+                                              uint32_t aNativeMessage,
+                                              double aDeltaX,
+                                              double aDeltaY,
+                                              double aDeltaZ,
+                                              uint32_t aModifierFlags,
+                                              uint32_t aAdditionalFlags)
 {
-  Log("ENTERED SynthesizeNativeMouseScrollEvent");
-
-  int32_t mouseData = 0;
-  if (aNativeMessage == MOUSEEVENTF_WHEEL) {
-    mouseData = static_cast<int32_t>(aDeltaY);
-    Log("  Vertical scroll, delta %d", mouseData);
-  } else if (aNativeMessage == MOUSEEVENTF_HWHEEL) {
-    mouseData = static_cast<int32_t>(aDeltaX);
-    Log("  Horizontal scroll, delta %d", mouseData);
-  } else {
-    Log("ERROR Unrecognized scroll event");
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  INPUT inputs[2];
-  memset(inputs, 0, 2*sizeof(INPUT));
-  inputs[0].type = inputs[1].type = INPUT_MOUSE;
-  inputs[0].mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
-  // Inexplicably, the x and y coordinates that we want to move the mouse to
-  // are specified as values in the range (0, 65535). (0,0) represents the
-  // top left of the primary monitor and (65535, 65535) represents the
-  // bottom right of the primary monitor.
-  inputs[0].mi.dx = (aPoint.x * 65535) / ::GetSystemMetrics(SM_CXSCREEN);
-  inputs[0].mi.dy = (aPoint.y * 65535) / ::GetSystemMetrics(SM_CYSCREEN);
-  inputs[1].mi.dwFlags = aNativeMessage;
-  inputs[1].mi.mouseData = mouseData;
-  SendInputs(aModifierFlags, inputs, 2);
-
-  Log("EXITING SynthesizeNativeMouseScrollEvent");
-  return NS_OK;
+  return MouseScrollHandler::SynthesizeNativeMouseScrollEvent(
+           this, aPoint, aNativeMessage,
+           (aNativeMessage == WM_MOUSEWHEEL || aNativeMessage == WM_VSCROLL) ?
+             static_cast<int32_t>(aDeltaY) : static_cast<int32_t>(aDeltaX),
+           aModifierFlags, aAdditionalFlags);
 }
 
 static void
 CloseGesture()
 {
-  Log("shuting down due to close gesture.\n");
+  LogFunction();
   nsCOMPtr<nsIAppStartup> appStartup =
     do_GetService(NS_APPSTARTUP_CONTRACTID);
   if (appStartup) {
@@ -576,15 +569,22 @@ MetroWidget::StaticWindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM 
 LRESULT
 MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLParam)
 {
-  if(sDefaultBrowserMsgID == aMsg) {
+  if(sDefaultBrowserMsgId == aMsg) {
     CloseGesture();
   }
 
   // Indicates if we should hand messages to the default windows
   // procedure for processing.
   bool processDefault = true;
+
   // The result returned if we do not do default processing.
   LRESULT processResult = 0;
+
+  MSGResult msgResult(&processResult);
+  MouseScrollHandler::ProcessMessage(this, aMsg, aWParam, aLParam, msgResult);
+  if (msgResult.mConsumed) {
+    return processResult;
+  }
 
   switch (aMsg) {
     case WM_PAINT:
@@ -676,6 +676,31 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
       break;
     }
 
+    case WM_GETOBJECT:
+    {
+      DWORD dwObjId = (LPARAM)(DWORD) aLParam;
+      // Passing this to CallWindowProc can result in a failure due to a timing issue
+      // in winrt core window server code, so we call it directly here. Also, it's not
+      // clear Windows::UI::Core::WindowServer::OnAutomationProviderRequestedEvent is
+      // compatible with metro enabled desktop browsers, it makes an initial call to
+      // UiaReturnRawElementProvider passing the return result from FrameworkView
+      // OnAutomationProviderRequested as the hwnd (me scratches head) which results in
+      // GetLastError always being set to invalid handle (6) after CallWindowProc returns.
+      if (dwObjId == UiaRootObjectId && gProviderRoot) {
+        ComPtr<IRawElementProviderSimple> simple;
+        gProviderRoot.As(&simple);
+        if (simple) {
+          LRESULT res = UiaReturnRawElementProvider(aWnd, aWParam, aLParam, simple.Get());
+          if (res) {
+            return res;
+          }
+          NS_ASSERTION(res, "UiaReturnRawElementProvider failed!");
+          Log("UiaReturnRawElementProvider failed! GetLastError=%X", GetLastError());
+        }
+      }
+      break;
+    }
+
     default:
     {
       if (aWParam == WM_USER_TSF_TEXTCHANGE) {
@@ -718,6 +743,7 @@ MetroWidget::FindMetroWindow()
 
   // subclass it
   SetSubclass();
+  sICoreHwnd = mWnd;
   return;
 }
 
@@ -796,77 +822,16 @@ MetroWidget::ShouldUseAPZC()
          Preferences::GetBool(kPrefName, false);
 }
 
-class MetroCompositorParent : public CompositorParent,
-                              public nsIObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-  MetroCompositorParent(MetroWidget* aMetroWidget, bool aRenderToEGLSurface,
-                        int aSurfaceWidth, int aSurfaceHeight) :
-    CompositorParent(aMetroWidget, aRenderToEGLSurface,
-                     aSurfaceHeight, aSurfaceHeight),
-    mMetroWidget(aMetroWidget)
-  {
-    nsresult rv;
-    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      observerService->AddObserver(this, "viewport-needs-updating", false);
-    }
-
-    if (MetroWidget::sAPZC) {
-        MetroWidget::sAPZC->SetCompositorParent(this);
-    }
-  }
-
-  virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree, const TargetConfig& aTargetConfig,
-                                   bool isFirstPaint) MOZ_OVERRIDE
-  {
-    CompositorParent::ShadowLayersUpdated(aLayerTree, aTargetConfig, isFirstPaint);
-    Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
-    if (targetLayer && targetLayer->AsContainerLayer() && MetroWidget::sAPZC &&
-        targetLayer->AsContainerLayer()->GetFrameMetrics().IsScrollable()) {
-      targetLayer->AsContainerLayer()->SetAsyncPanZoomController(MetroWidget::sAPZC);
-      MetroWidget::sAPZC->NotifyLayersUpdated(targetLayer->AsContainerLayer()->GetFrameMetrics(),
-                                              isFirstPaint);
-    }
-  }
-
-  NS_IMETHODIMP Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
-  {
-    LogFunction();
-
-    NS_ENSURE_ARG_POINTER(topic);
-    if (!strcmp(topic, "viewport-needs-updating")) {
-      Layer* targetLayer = GetLayerManager()->GetPrimaryScrollableLayer();
-      if (targetLayer && targetLayer->AsContainerLayer() && MetroWidget::sAPZC) {
-        FrameMetrics frameMetrics =
-          targetLayer->AsContainerLayer()->GetFrameMetrics();
-        frameMetrics.mDisplayPort =
-          AsyncPanZoomController::CalculatePendingDisplayPort(frameMetrics,
-                                                              mozilla::gfx::Point(0.0f, 0.0f),
-                                                              mozilla::gfx::Point(0.0f, 0.0f),
-                                                              0.0);
-        MetroWidget::sAPZC->NotifyLayersUpdated(frameMetrics, true);
-        mMetroWidget->RequestContentRepaint(frameMetrics);
-      }
-    }
-    return NS_OK;
-  }
-
-protected:
-  nsCOMPtr<MetroWidget> mMetroWidget;
-};
-
-NS_IMPL_ISUPPORTS1(MetroCompositorParent, nsIObserver)
-
-
 CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
 {
+  CompositorParent *compositor = nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+
   if (ShouldUseAPZC()) {
-    return new MetroCompositorParent(this, true, aSurfaceWidth, aSurfaceHeight);
-  } else {
-    return nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+    CompositorParent::SetControllerForLayerTree(compositor->RootLayerTreeId(), this);
+    MetroWidget::sAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
   }
+
+  return compositor;
 }
 
 LayerManager*
@@ -910,10 +875,6 @@ MetroWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
     if (ShouldUseOffMainThreadCompositing()) {
       NS_ASSERTION(aShadowManager == nullptr, "Async Compositor not supported with e10s");
       CreateCompositor();
-      if (ShouldUseAPZC()) {
-        sAPZC = new AsyncPanZoomController(this, AsyncPanZoomController::USE_GESTURE_DETECTOR);
-        sAPZC->SetCompositorParent(mCompositorParent);
-      }
     } else if (ShouldUseMainThreadD3D10Manager()) {
       nsRefPtr<mozilla::layers::LayerManagerD3D10> layerManager =
         new mozilla::layers::LayerManagerD3D10(this);
@@ -1037,16 +998,16 @@ void MetroWidget::UserActivity()
   }
 }
 
+// InitEvent assumes physical coordinates and is used by shared win32 code. Do
+// not hand winrt event coordinates to this routine.
 void
 MetroWidget::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 {
   if (!aPoint) {
     event.refPoint.x = event.refPoint.y = 0;
   } else {
-    // convert CSS pixels to device pixels for event.refPoint
-    double scale = GetDefaultScale(); 
-    event.refPoint.x = int32_t(NS_round(aPoint->x * scale));
-    event.refPoint.y = int32_t(NS_round(aPoint->y * scale));
+    event.refPoint.x = aPoint->x;
+    event.refPoint.y = aPoint->y;
   }
   event.time = ::GetMessageTime();
 }
@@ -1131,6 +1092,15 @@ double MetroWidget::GetDefaultScaleInternal()
     }
   }
   return 1.0;
+}
+
+LayoutDeviceIntPoint
+MetroWidget::CSSIntPointToLayoutDeviceIntPoint(const CSSIntPoint &aCSSPoint)
+{
+  double scale = GetDefaultScale();
+  LayoutDeviceIntPoint devPx(int32_t(NS_round(scale * aCSSPoint.x)),
+                             int32_t(NS_round(scale * aCSSPoint.y)));
+  return devPx;
 }
 
 float MetroWidget::GetDPI()
@@ -1361,14 +1331,6 @@ MetroWidget::HasPendingInputEvent()
 
 // GeckoContentController interface impl
 
-#include "nsIBrowserDOMWindow.h"
-#include "nsIWebNavigation.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMChromeWindow.h"
-#include "nsIWindowMediator.h"
-#include "nsIInterfaceRequestorUtils.h"
-
 class RequestContentRepaintEvent : public nsRunnable
 {
 public:
@@ -1385,11 +1347,13 @@ public:
 
         NS_ConvertASCIItoUTF16 data(nsPrintfCString("{ " \
                                                     "  \"resolution\": %.2f, " \
+                                                    "  \"scrollId\": %d, " \
                                                     "  \"compositedRect\": { \"width\": %d, \"height\": %d }, " \
                                                     "  \"displayPort\":    { \"x\": %d, \"y\": %d, \"width\": %d, \"height\": %d }, " \
                                                     "  \"scrollTo\":       { \"x\": %d, \"y\": %d }" \
                                                     "}",
                                                     (float)(resolution.scale / mFrameMetrics.mDevPixelsPerCSSPixel.scale),
+                                                    (int)mFrameMetrics.mScrollId,
                                                     (int)compositedRect.width,
                                                     (int)compositedRect.height,
                                                     (int)mFrameMetrics.mDisplayPort.x,
@@ -1429,7 +1393,7 @@ MetroWidget::HandleDoubleTap(const CSSIntPoint& aPoint)
     return;
   }
 
-  mMetroInput->HandleDoubleTap(aPoint);
+  mMetroInput->HandleDoubleTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
 }
 
 void
@@ -1441,7 +1405,7 @@ MetroWidget::HandleSingleTap(const CSSIntPoint& aPoint)
     return;
   }
 
-  mMetroInput->HandleSingleTap(aPoint);
+  mMetroInput->HandleSingleTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
 }
 
 void
@@ -1453,11 +1417,11 @@ MetroWidget::HandleLongTap(const CSSIntPoint& aPoint)
     return;
   }
 
-  mMetroInput->HandleLongTap(aPoint);
+  mMetroInput->HandleLongTap(CSSIntPointToLayoutDeviceIntPoint(aPoint));
 }
 
 void
-MetroWidget::SendAsyncScrollDOMEvent(const CSSRect &aContentRect, const CSSSize &aScrollableSize)
+MetroWidget::SendAsyncScrollDOMEvent(FrameMetrics::ViewID aScrollId, const CSSRect &aContentRect, const CSSSize &aScrollableSize)
 {
   LogFunction();
 }

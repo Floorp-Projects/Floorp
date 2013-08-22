@@ -175,13 +175,10 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
                                           Float(tileRegionRect.width) / texRect.width,
                                           Float(tileRegionRect.height) / texRect.height);
             GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain, aOpacity, aTransform, aOffset);
-            if (iterOnWhite) {
-                GetCompositor()->DrawDiagnostics(gfx::Color(0.0,0.0,1.0,1.0),
-                                                 rect, aClipRect, aTransform, aOffset);
-	    } else {
-                GetCompositor()->DrawDiagnostics(gfx::Color(0.0,1.0,0.0,1.0),
-                                                 rect, aClipRect, aTransform, aOffset);
-	    }
+            DiagnosticTypes diagnostics = DIAGNOSTIC_CONTENT;
+            diagnostics |= usingTiles ? DIAGNOSTIC_BIGIMAGE : 0;
+            diagnostics |= iterOnWhite ? DIAGNOSTIC_COMPONENT_ALPHA : 0;
+            GetCompositor()->DrawDiagnostics(diagnostics, rect, aClipRect, aTransform, aOffset);
         }
       }
     }
@@ -211,6 +208,8 @@ ContentHostBase::SetCompositor(Compositor* aCompositor)
   }
 }
 
+#ifdef MOZ_DUMP_PAINTING
+
 void
 ContentHostBase::Dump(FILE* aFile,
                       const char* aPrefix,
@@ -239,6 +238,8 @@ ContentHostBase::Dump(FILE* aFile,
   }
 
 }
+
+#endif
 
 ContentHostSingleBuffered::~ContentHostSingleBuffered()
 {
@@ -513,7 +514,7 @@ ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* 
     newHost->SetCompositor(compositor);
   }
   RefPtr<DeprecatedTextureHost> newHostOnWhite;
-  if (mTextureInfo.mTextureFlags & ComponentAlpha) {
+  if (mTextureInfo.mTextureFlags & TEXTURE_COMPONENT_ALPHA) {
     newHostOnWhite =
       DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptor::TShmem,
                                      mTextureInfo.mDeprecatedTextureHostFlags,
@@ -728,6 +729,7 @@ ContentHostDoubleBuffered::PrintInfo(nsACString& aTo, const char* aPrefix)
 }
 #endif
 
+#ifdef MOZ_DUMP_PAINTING
 void
 ContentHostDoubleBuffered::Dump(FILE* aFile,
                                 const char* aPrefix,
@@ -757,6 +759,28 @@ ContentHostDoubleBuffered::Dump(FILE* aFile,
   }
 
 }
+#endif
+
+LayerRenderState
+ContentHostBase::GetRenderState()
+{
+  LayerRenderState result = mDeprecatedTextureHost->GetRenderState();
+
+  if (mBufferRotation != nsIntPoint()) {
+    result.mFlags |= LAYER_RENDER_STATE_BUFFER_ROTATION;
+  }
+  result.SetOffset(GetOriginOffset());
+  return result;
+}
+
+#ifdef MOZ_DUMP_PAINTING
+already_AddRefed<gfxImageSurface>
+ContentHostBase::GetAsSurface()
+{
+  return mDeprecatedTextureHost->GetAsSurface();
+}
+#endif
+
 
 } // namespace
 } // namespace

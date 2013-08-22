@@ -89,106 +89,6 @@ WebGLProgram::UpdateInfo()
     return true;
 }
 
-/*
- * Verify that state is consistent for drawing, and compute max number of elements (maxAllowedCount)
- * that will be legal to be read from bound VBOs.
- */
-
-bool
-WebGLContext::ValidateBuffers(uint32_t *maxAllowedCount, const char *info)
-{
-#ifdef DEBUG
-    GLint currentProgram = 0;
-    MakeContextCurrent();
-    gl->fGetIntegerv(LOCAL_GL_CURRENT_PROGRAM, &currentProgram);
-    NS_ASSERTION(GLuint(currentProgram) == mCurrentProgram->GLName(),
-                 "WebGL: current program doesn't agree with GL state");
-    if (GLuint(currentProgram) != mCurrentProgram->GLName())
-        return false;
-#endif
-
-    if (mMinInUseAttribArrayLengthCached) {
-        *maxAllowedCount = mMinInUseAttribArrayLength;
-        return true;
-    }
-
-    uint32_t maxAllowed = UINT32_MAX;
-    uint32_t attribs = mBoundVertexArray->mAttribBuffers.Length();
-    for (uint32_t i = 0; i < attribs; ++i) {
-        const WebGLVertexAttribData& vd = mBoundVertexArray->mAttribBuffers[i];
-
-        // If the attrib array isn't enabled, there's nothing to check;
-        // it's a static value.
-        if (!vd.enabled)
-            continue;
-
-        if (vd.buf == nullptr) {
-            ErrorInvalidOperation("%s: no VBO bound to enabled vertex attrib index %d!", info, i);
-            return false;
-        }
-
-        // If the attrib is not in use, then we don't have to validate
-        // it, just need to make sure that the binding is non-null.
-        if (!mCurrentProgram->IsAttribInUse(i))
-            continue;
-
-        // the base offset
-        CheckedUint32 checked_byteLength
-            = CheckedUint32(vd.buf->ByteLength()) - vd.byteOffset;
-        CheckedUint32 checked_sizeOfLastElement
-            = CheckedUint32(vd.componentSize()) * vd.size;
-
-        if (!checked_byteLength.isValid() ||
-            !checked_sizeOfLastElement.isValid())
-        {
-            ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
-            return false;
-        }
-
-        if (checked_byteLength.value() < checked_sizeOfLastElement.value()) {
-            maxAllowed = 0;
-            break;
-        } else {
-            CheckedUint32 checked_maxAllowedCount
-                = ((checked_byteLength - checked_sizeOfLastElement) / vd.actualStride()) + 1;
-
-            if (!checked_maxAllowedCount.isValid()) {
-                ErrorInvalidOperation("%s: integer overflow occured while checking vertex attrib %d", info, i);
-                return false;
-            }
-
-            if (maxAllowed > checked_maxAllowedCount.value())
-                maxAllowed = checked_maxAllowedCount.value();
-        }
-    }
-
-    *maxAllowedCount = maxAllowed;
-
-    mMinInUseAttribArrayLengthCached = true;
-    mMinInUseAttribArrayLength = *maxAllowedCount;
-
-    return true;
-}
-
-bool WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char *info)
-{
-    switch (cap) {
-        case LOCAL_GL_BLEND:
-        case LOCAL_GL_CULL_FACE:
-        case LOCAL_GL_DEPTH_TEST:
-        case LOCAL_GL_DITHER:
-        case LOCAL_GL_POLYGON_OFFSET_FILL:
-        case LOCAL_GL_SAMPLE_ALPHA_TO_COVERAGE:
-        case LOCAL_GL_SAMPLE_COVERAGE:
-        case LOCAL_GL_SCISSOR_TEST:
-        case LOCAL_GL_STENCIL_TEST:
-            return true;
-        default:
-            ErrorInvalidEnumInfo(info, cap);
-            return false;
-    }
-}
-
 bool WebGLContext::ValidateBlendEquationEnum(WebGLenum mode, const char *info)
 {
     switch (mode) {
@@ -319,19 +219,6 @@ bool WebGLContext::ValidateFaceEnum(WebGLenum face, const char *info)
             return true;
         default:
             ErrorInvalidEnumInfo(info, face);
-            return false;
-    }
-}
-
-bool WebGLContext::ValidateBufferUsageEnum(WebGLenum target, const char *info)
-{
-    switch (target) {
-        case LOCAL_GL_STREAM_DRAW:
-        case LOCAL_GL_STATIC_DRAW:
-        case LOCAL_GL_DYNAMIC_DRAW:
-            return true;
-        default:
-            ErrorInvalidEnumInfo(info, target);
             return false;
     }
 }
@@ -881,6 +768,18 @@ bool WebGLContext::ValidateStencilParamsForDrawCall()
   return true;
 }
 
+static inline int32_t floorPOT(int32_t x)
+{
+    MOZ_ASSERT(x > 0);
+    int32_t pot = 1;
+    while (pot < 0x40000000) {
+        if (x < pot*2)
+            break;
+        pot *= 2;
+    }
+    return pot;
+}
+
 bool
 WebGLContext::InitAndValidateGL()
 {
@@ -908,6 +807,7 @@ WebGLContext::InitAndValidateGL()
     mBoundCubeMapTextures.Clear();
 
     mBoundArrayBuffer = nullptr;
+    mBoundTransformFeedbackBuffer = nullptr;
     mCurrentProgram = nullptr;
 
     mBoundFramebuffer = nullptr;
@@ -960,12 +860,15 @@ WebGLContext::InitAndValidateGL()
         gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mGLMaxVertexTextureImageUnits);
     }
 
+    mGLMaxTextureSize = floorPOT(mGLMaxTextureSize);
+    mGLMaxRenderbufferSize = floorPOT(mGLMaxRenderbufferSize);
+
     if (MinCapabilityMode()) {
         mGLMaxFragmentUniformVectors = MINVALUE_GL_MAX_FRAGMENT_UNIFORM_VECTORS;
         mGLMaxVertexUniformVectors = MINVALUE_GL_MAX_VERTEX_UNIFORM_VECTORS;
         mGLMaxVaryingVectors = MINVALUE_GL_MAX_VARYING_VECTORS;
     } else {
-        if (gl->HasES2Compatibility()) {
+        if (gl->IsExtensionSupported(gl::GLContext::XXX_ES2_compatibility)) {
             gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS, &mGLMaxFragmentUniformVectors);
             gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS, &mGLMaxVertexUniformVectors);
             gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, &mGLMaxVaryingVectors);
@@ -1004,8 +907,12 @@ WebGLContext::InitAndValidateGL()
                 default:
                     GenerateWarning("GL error 0x%x occurred during WebGL context initialization!", error);
                     return false;
-            }   
+            }
         }
+    }
+
+    if (IsWebGL2()) {
+        gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, &mGLMaxTransformFeedbackSeparateAttribs);
     }
 
     // Always 1 for GLES2
@@ -1061,11 +968,14 @@ WebGLContext::InitAndValidateGL()
     if (IsWebGL2() &&
         (!IsExtensionSupported(OES_vertex_array_object) ||
          !IsExtensionSupported(WEBGL_draw_buffers) ||
+         !IsExtensionSupported(ANGLE_instanced_arrays) ||
          !gl->IsExtensionSupported(gl::GLContext::EXT_gpu_shader4) ||
          !gl->IsExtensionSupported(gl::GLContext::EXT_blend_minmax) ||
-         !gl->IsExtensionSupported(gl::GLContext::XXX_draw_instanced)
+         (!gl->IsExtensionSupported(gl::GLContext::XXX_occlusion_query) &&
+          !gl->IsExtensionSupported(gl::GLContext::XXX_occlusion_query_boolean))
         ))
     {
+        // Todo: Bug 898404: Only allow WebGL2 on GL>=3.0 on desktop GL.
         return false;
     }
 
@@ -1086,9 +996,11 @@ WebGLContext::InitAndValidateGL()
     if (IsWebGL2()) {
         EnableExtension(OES_vertex_array_object);
         EnableExtension(WEBGL_draw_buffers);
+        EnableExtension(ANGLE_instanced_arrays);
 
         MOZ_ASSERT(IsExtensionEnabled(OES_vertex_array_object));
         MOZ_ASSERT(IsExtensionEnabled(WEBGL_draw_buffers));
+        MOZ_ASSERT(IsExtensionEnabled(ANGLE_instanced_arrays));
     }
 
     return true;

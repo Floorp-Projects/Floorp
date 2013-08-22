@@ -17,12 +17,13 @@ HTMLFieldSetElement::HTMLFieldSetElement(already_AddRefed<nsINodeInfo> aNodeInfo
   : nsGenericHTMLFormElement(aNodeInfo)
   , mElements(nullptr)
   , mFirstLegend(nullptr)
+  , mInvalidElementsCount(0)
 {
   // <fieldset> is always barred from constraint validation.
   SetBarredFromConstraintValidation(true);
 
-  // We start out enabled
-  AddStatesSilently(NS_EVENT_STATE_ENABLED);
+  // We start out enabled and valid.
+  AddStatesSilently(NS_EVENT_STATE_ENABLED | NS_EVENT_STATE_VALID);
 }
 
 HTMLFieldSetElement::~HTMLFieldSetElement()
@@ -43,12 +44,10 @@ NS_IMPL_RELEASE_INHERITED(HTMLFieldSetElement, Element)
 
 // QueryInterface implementation for HTMLFieldSetElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLFieldSetElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
   NS_INTERFACE_TABLE_INHERITED2(HTMLFieldSetElement,
                                 nsIDOMHTMLFieldSetElement,
                                 nsIConstraintValidation)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLFieldSetElement)
 
@@ -213,6 +212,32 @@ HTMLFieldSetElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 }
 
 void
+HTMLFieldSetElement::AddElement(nsGenericHTMLFormElement* aElement)
+{
+  mDependentElements.AppendElement(aElement);
+
+  // We need to update the validity of the fieldset.
+  nsCOMPtr<nsIConstraintValidation> cvElmt = do_QueryObject(aElement);
+  if (cvElmt &&
+      cvElmt->IsCandidateForConstraintValidation() && !cvElmt->IsValid()) {
+    UpdateValidity(false);
+  }
+}
+
+void
+HTMLFieldSetElement::RemoveElement(nsGenericHTMLFormElement* aElement)
+{
+  mDependentElements.RemoveElement(aElement);
+
+  // We need to update the validity of the fieldset.
+  nsCOMPtr<nsIConstraintValidation> cvElmt = do_QueryObject(aElement);
+  if (cvElmt &&
+      cvElmt->IsCandidateForConstraintValidation() && !cvElmt->IsValid()) {
+    UpdateValidity(true);
+  }
+}
+
+void
 HTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify)
 {
   /**
@@ -231,6 +256,46 @@ HTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify)
     static_cast<nsGenericHTMLFormElement*>(mElements->Item(i))
       ->FieldSetFirstLegendChanged(aNotify);
   }
+}
+
+void
+HTMLFieldSetElement::UpdateValidity(bool aElementValidity)
+{
+  if (aElementValidity) {
+    --mInvalidElementsCount;
+  } else {
+    ++mInvalidElementsCount;
+  }
+
+  MOZ_ASSERT(mInvalidElementsCount >= 0);
+
+  // The fieldset validity has just changed if:
+  // - there are no more invalid elements ;
+  // - or there is one invalid elmement and an element just became invalid.
+  if (!mInvalidElementsCount || (mInvalidElementsCount == 1 && !aElementValidity)) {
+    UpdateState(true);
+  }
+
+  // We should propagate the change to the fieldset parent chain.
+  if (mFieldSet) {
+    mFieldSet->UpdateValidity(aElementValidity);
+  }
+
+  return;
+}
+
+nsEventStates
+HTMLFieldSetElement::IntrinsicState() const
+{
+  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
+
+  if (mInvalidElementsCount) {
+    state |= NS_EVENT_STATE_INVALID;
+  } else {
+    state |= NS_EVENT_STATE_VALID;
+  }
+
+  return state;
 }
 
 JSObject*

@@ -38,7 +38,7 @@ ReturnKeyRange(JSContext* aCx,
   nsIXPConnect* xpc = nsContentUtils::XPConnect();
   NS_ASSERTION(xpc, "This should never be null!");
 
-  JSObject* global = JS_GetGlobalForScopeChain(aCx);
+  JSObject* global = JS::CurrentGlobalOrNull(aCx);
   if (!global) {
     NS_WARNING("Couldn't get global object!");
     return false;
@@ -106,7 +106,7 @@ GetKeyFromJSValOrThrow(JSContext* aCx,
   return true;
 }
 
-JSBool
+bool
 MakeOnlyKeyRange(JSContext* aCx,
                  unsigned aArgc,
                  jsval* aVp)
@@ -127,7 +127,7 @@ MakeOnlyKeyRange(JSContext* aCx,
   return ReturnKeyRange(aCx, aVp, keyRange);
 }
 
-JSBool
+bool
 MakeLowerBoundKeyRange(JSContext* aCx,
                        unsigned aArgc,
                        jsval* aVp)
@@ -135,7 +135,7 @@ MakeLowerBoundKeyRange(JSContext* aCx,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   JS::Rooted<JS::Value> val(aCx);
-  JSBool open = false;
+  bool open = false;
   if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/b", val.address(),
                            &open)) {
     return false;
@@ -150,7 +150,7 @@ MakeLowerBoundKeyRange(JSContext* aCx,
   return ReturnKeyRange(aCx, aVp, keyRange);
 }
 
-JSBool
+bool
 MakeUpperBoundKeyRange(JSContext* aCx,
                        unsigned aArgc,
                        jsval* aVp)
@@ -158,7 +158,7 @@ MakeUpperBoundKeyRange(JSContext* aCx,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   JS::Rooted<JS::Value> val(aCx);
-  JSBool open = false;
+  bool open = false;
   if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v/b", val.address(),
                            &open)) {
     return false;
@@ -173,7 +173,7 @@ MakeUpperBoundKeyRange(JSContext* aCx,
   return ReturnKeyRange(aCx, aVp, keyRange);
 }
 
-JSBool
+bool
 MakeBoundKeyRange(JSContext* aCx,
                   unsigned aArgc,
                   jsval* aVp)
@@ -181,7 +181,7 @@ MakeBoundKeyRange(JSContext* aCx,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   JS::Rooted<JS::Value> lowerVal(aCx), upperVal(aCx);
-  JSBool lowerOpen = false, upperOpen = false;
+  bool lowerOpen = false, upperOpen = false;
   if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "vv/bb",
                            lowerVal.address(), upperVal.address(),
                            &lowerOpen, &upperOpen)) {
@@ -219,7 +219,7 @@ const JSFunctionSpec gKeyRangeConstructors[] = {
 } // anonymous namespace
 
 // static
-JSBool
+bool
 IDBKeyRange::DefineConstructors(JSContext* aCx,
                                 JSObject* aObject)
 {
@@ -307,6 +307,8 @@ IDBKeyRange::ToSerializedKeyRange(T& aKeyRange)
     aKeyRange.upper() = Upper();
   }
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBKeyRange)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBKeyRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
@@ -416,17 +418,7 @@ IDBKeyRange::GetUpperOpen(bool* aUpperOpen)
 
 // Explicitly instantiate for all our key range types... Grumble.
 template already_AddRefed<IDBKeyRange>
-IDBKeyRange::FromSerializedKeyRange<FIXME_Bug_521898_objectstore::KeyRange>
-(const FIXME_Bug_521898_objectstore::KeyRange& aKeyRange);
-
-template already_AddRefed<IDBKeyRange>
-IDBKeyRange::FromSerializedKeyRange<FIXME_Bug_521898_index::KeyRange>
-(const FIXME_Bug_521898_index::KeyRange& aKeyRange);
+IDBKeyRange::FromSerializedKeyRange<KeyRange> (const KeyRange& aKeyRange);
 
 template void
-IDBKeyRange::ToSerializedKeyRange<FIXME_Bug_521898_objectstore::KeyRange>
-(FIXME_Bug_521898_objectstore::KeyRange& aKeyRange);
-
-template void
-IDBKeyRange::ToSerializedKeyRange<FIXME_Bug_521898_index::KeyRange>
-(FIXME_Bug_521898_index::KeyRange& aKeyRange);
+IDBKeyRange::ToSerializedKeyRange<KeyRange> (KeyRange& aKeyRange);

@@ -14,7 +14,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_dictionary_3.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_dictionary_3.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -34,7 +34,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_dictionary_4.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_dictionary_4.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>
@@ -54,7 +54,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>1</em:minVersion>
                 <em:maxVersion>1</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_dictionary_5.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_dictionary_5.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>

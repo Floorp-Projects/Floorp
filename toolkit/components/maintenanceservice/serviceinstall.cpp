@@ -10,9 +10,8 @@
 // Used for DNLEN and UNLEN
 #include <lm.h>
 
-#include <nsAutoPtr.h>
 #include <nsWindowsHelpers.h>
-#include <nsMemory.h>
+#include "mozilla/Scoped.h"
 
 #include "serviceinstall.h"
 #include "servicebase.h"
@@ -65,7 +64,7 @@ GetVersionNumberFromPath(LPWSTR path, DWORD &A, DWORD &B,
                          DWORD &C, DWORD &D) 
 {
   DWORD fileVersionInfoSize = GetFileVersionInfoSizeW(path, 0);
-  nsAutoArrayPtr<char> fileVersionInfo = new char[fileVersionInfoSize];
+  mozilla::ScopedDeleteArray<char> fileVersionInfo(new char[fileVersionInfoSize]);
   if (!GetFileVersionInfoW(path, 0, fileVersionInfoSize,
                            fileVersionInfo.get())) {
       LOG_WARN(("Could not obtain file info of old service.  (%d)", 
@@ -286,7 +285,7 @@ SvcInstall(SvcInstallAction action)
 
     // Get the service config information, in particular we want the binary 
     // path of the service.
-    nsAutoArrayPtr<char> serviceConfigBuffer = new char[bytesNeeded];
+    mozilla::ScopedDeleteArray<char> serviceConfigBuffer(new char[bytesNeeded]);
     if (!QueryServiceConfigW(schService, 
         reinterpret_cast<QUERY_SERVICE_CONFIGW*>(serviceConfigBuffer.get()), 
         bytesNeeded, &bytesNeeded)) {

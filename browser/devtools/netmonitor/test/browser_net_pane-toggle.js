@@ -26,7 +26,7 @@ function test() {
     is(RequestsMenu.selectedItem, null,
       "There should be no selected item in the requests menu.");
 
-    aMonitor.panelWin.once("NetMonitor:NetworkEvent", () => {
+    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.NETWORK_EVENT, () => {
       is(document.querySelector("#details-pane-toggle")
         .hasAttribute("disabled"), false,
         "The pane toggle button should be enabled after the first request.");

@@ -253,6 +253,10 @@ interface TestExampleInterface {
   void passUint8ClampedArray(Uint8ClampedArray arg);
   void passFloat32Array(Float32Array arg);
   void passFloat64Array(Float64Array arg);
+  void passSequenceOfArrayBuffers(sequence<ArrayBuffer> arg);
+  void passSequenceOfNullableArrayBuffers(sequence<ArrayBuffer?> arg);
+  void passVariadicTypedArray(Float32Array... arg);
+  void passVariadicNullableTypedArray(Float32Array?... arg);
   Uint8Array receiveUint8Array();
 
   // DOMString types
@@ -331,6 +335,15 @@ interface TestExampleInterface {
 
   // Union types
   void passUnion((object or long) arg);
+  // Commented out tests 2-9 to avoid creating all those unused union types
+  /* void passUnion2((long or boolean) arg);
+  void passUnion3((object or long or boolean) arg);
+  void passUnion4((Node or long or boolean) arg);
+  void passUnion5((object or boolean) arg);
+  void passUnion6((object or DOMString) arg);
+  void passUnion7((object or DOMString or long) arg);
+  void passUnion8((object or DOMString or boolean) arg);
+  void passUnion9((object or DOMString or long or boolean) arg); */
   void passUnionWithNullable((object? or long) arg);
   void passNullableUnion((object or long)? arg);
   void passOptionalUnion(optional (object or long) arg);
@@ -347,6 +360,14 @@ interface TestExampleInterface {
   //  void passUnionWithCallback((TestCallback or long) arg);
   void passUnionWithObject((object or long) arg);
   //void passUnionWithDict((Dict or long) arg);
+
+  //(CanvasPattern or CanvasGradient) receiveUnion();
+  //(CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
+  //(CanvasPattern or CanvasGradient)? receiveNullableUnion();
+
+  //attribute (CanvasPattern or CanvasGradient) writableUnion;
+  //attribute (CanvasPattern? or CanvasGradient) writableUnionContainingNull;
+  //attribute (CanvasPattern or CanvasGradient)? writableNullableUnion;
 
   // Date types
   void passDate(Date arg);
@@ -402,14 +423,24 @@ interface TestExampleInterface {
   TestInterface overload1(DOMString strs, TestInterface arg);
   void overload2(TestInterface arg);
   void overload2(optional Dict arg);
+  void overload2(boolean arg);
   void overload2(DOMString arg);
   void overload2(Date arg);
   void overload3(TestInterface arg);
   void overload3(TestCallback arg);
-  void overload3(DOMString arg);
+  void overload3(boolean arg);
   void overload4(TestInterface arg);
   void overload4(TestCallbackInterface arg);
   void overload4(DOMString arg);
+  void overload5(long arg);
+  void overload5(TestEnum arg);
+  void overload6(long arg);
+  void overload6(boolean arg);
+  void overload7(long arg);
+  void overload7(boolean arg);
+  void overload7(ByteString arg);
+  void overload8(long arg);
+  void overload8(TestInterface arg);
 
   // Variadic handling
   void passVariadicThirdArg(DOMString arg1, long arg2, TestInterface... arg3);
@@ -472,6 +503,10 @@ interface TestExampleInterface {
                             optional TestInterface? arg2 = null,
                             optional Dict arg3, optional double arg4 = 5.0,
                             optional float arg5);
+  attribute any jsonifierShouldSkipThis;
+  attribute TestParentInterface jsonifierShouldSkipThis2;
+  attribute TestCallbackInterface jsonifierShouldSkipThis3;
+  jsonifier;
 
   // If you add things here, add them to TestCodeGen and TestJSImplGen as well
 };

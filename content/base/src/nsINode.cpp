@@ -1254,9 +1254,9 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
 
 /* static */
 void
-nsINode::Unlink(nsINode *tmp)
+nsINode::Unlink(nsINode* tmp)
 {
-  nsContentUtils::ReleaseWrapper(tmp, tmp);
+  tmp->ReleaseWrapper(tmp);
 
   nsSlots *slots = tmp->GetExistingSlots();
   if (slots) {
@@ -1318,8 +1318,27 @@ AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
   NS_ASSERTION(aParent->OwnerDoc() == doc,
                "ownerDoc chainged while adopting");
   NS_ASSERTION(adoptedNode == node, "Uh, adopt node changed nodes?");
-  NS_ASSERTION(aParent->HasSameOwnerDoc(aNode),
+  NS_ASSERTION(aParent->OwnerDoc() == aNode->OwnerDoc(),
                "ownerDocument changed again after adopting!");
+
+  return NS_OK;
+}
+
+static nsresult
+CheckForOutdatedParent(nsINode* aParent, nsINode* aNode)
+{
+  if (JSObject* existingObj = aNode->GetWrapper()) {
+    nsIGlobalObject* global = aParent->OwnerDoc()->GetScopeObject();
+    MOZ_ASSERT(global);
+
+    if (js::GetGlobalForObjectCrossCompartment(existingObj) !=
+        global->GetGlobalJSObject()) {
+      AutoJSContext cx;
+      JS::Rooted<JSObject*> rooted(cx, existingObj);
+      nsresult rv = ReparentWrapper(cx, rooted);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
   return NS_OK;
 }
@@ -1340,8 +1359,11 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
   nsIDocument* doc = GetCurrentDoc();
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
-  if (!HasSameOwnerDoc(aKid)) {
+  if (OwnerDoc() != aKid->OwnerDoc()) {
     rv = AdoptNodeIntoOwnerDoc(this, aKid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (OwnerDoc()->DidDocumentOpen()) {
+    rv = CheckForOutdatedParent(this, aKid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1953,8 +1975,13 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
   // DocumentType nodes are the only nodes that can have a null
   // ownerDocument according to the DOM spec, and we need to allow
   // inserting them w/o calling AdoptNode().
-  if (!HasSameOwnerDoc(newContent)) {
+  if (doc != newContent->OwnerDoc()) {
     aError = AdoptNodeIntoOwnerDoc(this, aNewChild);
+    if (aError.Failed()) {
+      return nullptr;
+    }
+  } else if (doc->DidDocumentOpen()) {
+    aError = CheckForOutdatedParent(this, aNewChild);
     if (aError.Failed()) {
       return nullptr;
     }
@@ -2143,13 +2170,15 @@ nsINode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 #define EVENT(name_, id_, type_, struct_)                                    \
   EventHandlerNonNull* nsINode::GetOn##name_() {                             \
     nsEventListenerManager *elm = GetListenerManager(false);                 \
-    return elm ? elm->GetEventHandler(nsGkAtoms::on##name_) : nullptr;       \
+    return elm ? elm->GetEventHandler(nsGkAtoms::on##name_, EmptyString())   \
+               : nullptr;                                                    \
   }                                                                          \
   void nsINode::SetOn##name_(EventHandlerNonNull* handler,                   \
                              ErrorResult& error) {                           \
     nsEventListenerManager *elm = GetListenerManager(true);                  \
     if (elm) {                                                               \
-      error = elm->SetEventHandler(nsGkAtoms::on##name_, handler);           \
+      error = elm->SetEventHandler(nsGkAtoms::on##name_,                     \
+                                   EmptyString(), handler);                  \
     } else {                                                                 \
       error.Throw(NS_ERROR_OUT_OF_MEMORY);                                   \
     }                                                                        \

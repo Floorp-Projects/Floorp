@@ -8,7 +8,7 @@
 
 /* See testValueABI.cpp */
 
-JSBool
+bool
 C_ValueToObject(JSContext *cx, jsval v, JSObject **obj)
 {
     return JS_ValueToObject(cx, v, obj);

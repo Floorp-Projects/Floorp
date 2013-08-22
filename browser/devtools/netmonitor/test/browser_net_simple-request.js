@@ -25,7 +25,7 @@ function test() {
     is(NetMonitorView.detailsPaneHidden, true,
       "The details pane should be hidden when the frontend is opened.");
 
-    aMonitor.panelWin.once("NetMonitor:NetworkEvent", () => {
+    aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.NETWORK_EVENT, () => {
       is(document.querySelector("#details-pane-toggle")
         .hasAttribute("disabled"), false,
         "The pane toggle button should be enabled after the first request.");
@@ -37,7 +37,7 @@ function test() {
       is(NetMonitorView.detailsPaneHidden, true,
         "The details pane should still be hidden after the first request.");
 
-      aMonitor.panelWin.once("NetMonitor:NetworkEvent", () => {
+      aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.NETWORK_EVENT, () => {
         is(document.querySelector("#details-pane-toggle")
           .hasAttribute("disabled"), false,
           "The pane toggle button should be still be enabled after a reload.");

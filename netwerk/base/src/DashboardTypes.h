@@ -5,7 +5,7 @@
 #ifndef mozilla_net_DashboardTypes_h_
 #define mozilla_net_DashboardTypes_h_
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 
@@ -55,6 +55,11 @@ struct HttpRetParams
     uint16_t  port;
     bool      spdy;
     bool      ssl;
+};
+
+struct ConnStatus
+{
+    nsString creationSts;
 };
 
 } }

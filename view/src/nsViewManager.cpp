@@ -23,7 +23,7 @@
 #include "GeckoProfiler.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/Preferences.h"
-#include "nsContentUtils.h"
+#include "nsContentUtils.h" // for nsAutoScriptBlocker
 #include "nsLayoutUtils.h"
 #include "mozilla/layers/Compositor.h"
 
@@ -160,7 +160,7 @@ nsViewManager::SetRootView(nsView *aView)
       InvalidateHierarchy();
     }
 
-    mRootView->SetZIndex(false, 0, false);
+    mRootView->SetZIndex(false, 0);
   }
   // Else don't touch mRootViewManager
 }
@@ -862,7 +862,7 @@ nsViewManager::InsertChild(nsView *aParent, nsView *aChild, int32_t aZIndex)
 {
   // no-one really calls this with anything other than aZIndex == 0 on a fresh view
   // XXX this method should simply be eliminated and its callers redirected to the real method
-  SetViewZIndex(aChild, false, aZIndex, false);
+  SetViewZIndex(aChild, false, aZIndex);
   InsertChild(aParent, aChild, nullptr, true);
 }
 
@@ -941,7 +941,7 @@ bool nsViewManager::IsViewInserted(nsView *aView)
 }
 
 void
-nsViewManager::SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZIndex, bool aTopMost)
+nsViewManager::SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZIndex)
 {
   NS_ASSERTION((aView != nullptr), "no view");
 
@@ -955,7 +955,7 @@ nsViewManager::SetViewZIndex(nsView *aView, bool aAutoZIndex, int32_t aZIndex, b
     aZIndex = 0;
   }
 
-  aView->SetZIndex(aAutoZIndex, aZIndex, aTopMost);
+  aView->SetZIndex(aAutoZIndex, aZIndex);
 }
 
 nsViewManager*

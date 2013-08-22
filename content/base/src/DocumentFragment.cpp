@@ -15,7 +15,7 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsDOMString.h"
-#include "nsContentUtils.h"
+#include "nsContentUtils.h" // for NS_INTERFACE_MAP_ENTRY_TEAROFF
 #include "mozilla/dom/DocumentFragmentBinding.h"
 
 namespace mozilla {

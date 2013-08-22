@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+
+div { page-break-inside: avoid; }
+div:first-letter { float: right; }
+
+</style>
+<script>
+
+function boom()
+{
+  var d = document.getElementById('d');
+  d.removeChild(d.firstChild);
+}
+
+</script>
+</head>
+<body onload="boom();">
+<div id="d">&#x202B;</div>
+</body>
+</html>

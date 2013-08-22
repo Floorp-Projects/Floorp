@@ -7,6 +7,7 @@
 chrome.jar:
 % skin browser classic/1.0 %skin/
   skin/aboutPage.css                        (aboutPage.css)
+  skin/aboutAddons.css                      (aboutAddons.css)
   skin/about.css                            (about.css)
 * skin/flyoutpanel.css                      (flyoutpanel.css)
 * skin/cssthrobber.css                      (cssthrobber.css)
@@ -60,6 +61,8 @@ chrome.jar:
   skin/images/infobar-key.png               (images/infobar-key.png)
   skin/images/infobar-popup.png             (images/infobar-popup.png)
   skin/images/firefox-watermark.png         (images/firefox-watermark.png)
+  skin/images/aboutAddonsBackground.png     (images/aboutAddonsBackground.png)
+  skin/images/aboutAddonsBackgroundFillSlice.png     (images/aboutAddonsBackgroundFillSlice.png)
   skin/images/flyout-back-button.png        (images/flyout-back-button.png)
   skin/images/about-footer.png              (images/about-footer.png)
   skin/images/button-bg.png                 (images/button-bg.png)
@@ -94,11 +97,14 @@ chrome.jar:
   skin/images/exitfullscreen-hdpi.png       (images/exitfullscreen-hdpi.png)
   skin/images/scrubber-hdpi.png             (images/scrubber-hdpi.png)
   skin/images/selection-monocle.png         (images/selection-monocle.png)
+  skin/images/selection-monocle@1.4x.png    (images/selection-monocle@1.4x.png)
+  skin/images/selection-monocle@1.8x.png    (images/selection-monocle@1.8x.png)
   skin/images/appbar-icons.png              (images/appbar-icons.png)
   skin/images/pinned-hdpi.png               (images/pinned-hdpi.png)
   skin/images/tile-selected-check-hdpi.png  (images/tile-selected-check-hdpi.png)
   skin/images/plus-34.png                   (images/plus-34.png)
   skin/images/plus-24.png                   (images/plus-24.png)
+  skin/images/progresscircle.png            (images/progresscircle.png)
 
   skin/images/overlay-back.png              (images/overlay-back.png)
   skin/images/overlay-plus.png              (images/overlay-plus.png)

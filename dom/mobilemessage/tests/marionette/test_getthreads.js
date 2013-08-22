@@ -6,8 +6,9 @@ MARIONETTE_TIMEOUT = 40000;
 SpecialPowers.addPermission("sms", true, document);
 SpecialPowers.setBoolPref("dom.sms.enabled", true);
 
-let sms = window.navigator.mozSms;
-ok(sms instanceof MozSmsManager);
+let manager = window.navigator.mozMobileMessage;
+ok(manager instanceof MozMobileMessageManager,
+   "manager is instance of " + manager.constructor);
 
 let pendingEmulatorCmdCount = 0;
 function sendSmsToEmulator(from, text, callback) {
@@ -59,7 +60,7 @@ function getAllMessages(callback, filter, reverse) {
     filter = new MozSmsFilter;
   }
   let messages = [];
-  let request = sms.getMessages(filter, reverse || false);
+  let request = manager.getMessages(filter, reverse || false);
   request.onsuccess = function(event) {
     if (!request.done) {
       messages.push(request.result);
@@ -80,7 +81,7 @@ function deleteAllMessages() {
       return;
     }
 
-    let request = sms.delete(message.id);
+    let request = manager.delete(message.id);
     request.onsuccess = deleteAll.bind(null, messages);
     request.onerror = function (event) {
       ok(false, "failed to delete all messages");
@@ -90,17 +91,17 @@ function deleteAllMessages() {
 }
 
 function sendMessage(to, body) {
-  sms.onsent = function () {
-    sms.onsent = null;
+  manager.onsent = function () {
+    manager.onsent = null;
     tasks.next();
   };
-  let request = sms.send(to, body);
+  let request = manager.send(to, body);
   request.onerror = tasks.finish.bind(tasks);
 }
 
 function receiveMessage(from, body) {
-  sms.onreceived = function () {
-    sms.onreceived = null;
+  manager.onreceived = function () {
+    manager.onreceived = null;
     tasks.next();
   };
   sendSmsToEmulator(from, body, function (success) {
@@ -113,7 +114,7 @@ function receiveMessage(from, body) {
 function getAllThreads(callback) {
   let threads = [];
 
-  let cursor = sms.getThreads();
+  let cursor = manager.getThreads();
   ok(cursor instanceof DOMCursor,
      "cursor is instanceof " + cursor.constructor);
 

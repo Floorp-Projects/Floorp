@@ -17,6 +17,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageBroadcaster");
 
+XPCOMUtils.defineLazyServiceGetter(this, "NetUtil",
+                                   "@mozilla.org/network/util;1",
+                                   "nsINetUtil");
+
 this.EXPORTED_SYMBOLS = [];
 
 let idbGlobal = this;
@@ -158,6 +162,7 @@ let Activities = {
 
     "Activities:Register",
     "Activities:Unregister",
+    "Activities:GetContentTypes"
   ],
 
   init: function activities_init() {
@@ -311,9 +316,18 @@ let Activities = {
         break;
 
       case "Activities:Register":
+        let self = this;
         this.db.add(msg,
           function onSuccess(aEvent) {
             mm.sendAsyncMessage("Activities:Register:OK", null);
+            let res = [];
+            msg.forEach(function(aActivity) {
+              self.updateContentTypeList(aActivity, res);
+            });
+            if (res.length) {
+              ppmm.broadcastAsyncMessage("Activities:RegisterContentTypes",
+                                         { contentTypes: res });
+            }
           },
           function onError(aEvent) {
             msg.error = "REGISTER_ERROR";
@@ -322,8 +336,60 @@ let Activities = {
         break;
       case "Activities:Unregister":
         this.db.remove(msg);
+        let res = [];
+        msg.forEach(function(aActivity) {
+          this.updateContentTypeList(aActivity, res);
+        }, this);
+        if (res.length) {
+          ppmm.broadcastAsyncMessage("Activities:UnregisterContentTypes",
+                                     { contentTypes: res });
+        }
+        break;
+      case "Activities:GetContentTypes":
+        this.sendContentTypes(mm);
         break;
     }
+  },
+
+  updateContentTypeList: function updateContentTypeList(aActivity, aResult) {
+    // Bail out if this is not a "view" activity.
+    if (aActivity.name != "view") {
+      return;
+    }
+
+    let types = aActivity.description.filters.type;
+    if (typeof types == "string") {
+      types = [types];
+    }
+
+    // Check that this is a real content type and sanitize it.
+    types.forEach(function(aContentType) {
+      let hadCharset = { };
+      let charset = { };
+      let contentType =
+        NetUtil.parseContentType(aContentType, charset, hadCharset);
+      if (contentType) {
+        aResult.push(contentType);
+      }
+    });
+  },
+
+  sendContentTypes: function sendContentTypes(aMm) {
+    let res = [];
+    let self = this;
+    this.db.find({ options: { name: "view" } },
+      function() { // Success callback.
+        if (res.length) {
+          aMm.sendAsyncMessage("Activities:RegisterContentTypes",
+                               { contentTypes: res });
+        }
+      },
+      null, // Error callback.
+      function(aActivity) { // Matching callback.
+        self.updateContentTypeList(aActivity, res)
+        return false;
+      }
+    );
   }
 }
 

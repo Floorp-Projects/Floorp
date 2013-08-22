@@ -50,9 +50,9 @@ class nsCycleCollectionParticipant;
 // slot for the unforgeable holder is needed.
 #define DOM_INTERFACE_PROTO_SLOTS_BASE (DOM_XRAY_EXPANDO_SLOT + 1)
 
-MOZ_STATIC_ASSERT(DOM_PROTO_INSTANCE_CLASS_SLOT != DOM_XRAY_EXPANDO_SLOT,
-                  "Interface prototype object use both of these, so they must "
-                  "not be the same slot.");
+static_assert(DOM_PROTO_INSTANCE_CLASS_SLOT != DOM_XRAY_EXPANDO_SLOT,
+              "Interface prototype object use both of these, so they must "
+              "not be the same slot.");
 
 namespace mozilla {
 namespace dom {
@@ -60,7 +60,7 @@ namespace dom {
 typedef bool
 (* ResolveOwnProperty)(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                       JSPropertyDescriptor* desc, unsigned flags);
+                       JS::MutableHandle<JSPropertyDescriptor> desc, unsigned flags);
 
 typedef bool
 (* EnumerateOwnProperties)(JSContext* cx, JS::Handle<JSObject*> wrapper,

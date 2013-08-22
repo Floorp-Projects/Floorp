@@ -9,14 +9,15 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "jsautooplen.h"
+#include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsscript.h"
 
-#include "ion/IonFrameIterator.h"
+#include "jit/IonFrameIterator.h"
 
 struct JSContext;
 struct JSCompartment;
+struct JSGenerator;
 
 namespace js {
 
@@ -1016,11 +1017,14 @@ class FrameRegs
         fp_ = &fp;
     }
 
-    void setToEndOfScript() {
-        JSScript *script = fp()->script();
-        sp = fp()->base();
-        pc = script->code + script->length - JSOP_STOP_LENGTH;
-        JS_ASSERT(*pc == JSOP_STOP);
+    void setToEndOfScript();
+
+    MutableHandleValue stackHandleAt(int i) {
+        return MutableHandleValue::fromMarkedLocation(&sp[i]);
+    }
+
+    HandleValue stackHandleAt(int i) const {
+        return HandleValue::fromMarkedLocation(&sp[i]);
     }
 };
 
@@ -1036,6 +1040,7 @@ class InterpreterStack
 
     // Number of interpreter frames on the stack, for over-recursion checks.
     static const size_t MAX_FRAMES = 50 * 1000;
+    static const size_t MAX_FRAMES_TRUSTED = MAX_FRAMES + 1000;
     size_t frameCount_;
 
     inline uint8_t *allocateFrame(JSContext *cx, size_t size);
@@ -1216,15 +1221,16 @@ class InterpreterActivation : public Activation
     friend class js::InterpreterFrameIterator;
 
     StackFrame *const entry_; // Entry frame for this activation.
-    StackFrame *current_;     // The most recent frame.
     FrameRegs &regs_;
+    int *const switchMask_; // For debugger interrupts, see js::Interpret.
 
 #ifdef DEBUG
     size_t oldFrameCount_;
 #endif
 
   public:
-    inline InterpreterActivation(JSContext *cx, StackFrame *entry, FrameRegs &regs);
+    inline InterpreterActivation(JSContext *cx, StackFrame *entry, FrameRegs &regs,
+                                 int *const switchMask);
     inline ~InterpreterActivation();
 
     inline bool pushInlineFrame(const CallArgs &args, HandleScript script,
@@ -1232,11 +1238,19 @@ class InterpreterActivation : public Activation
     inline void popInlineFrame(StackFrame *frame);
 
     StackFrame *current() const {
-        JS_ASSERT(current_);
-        return current_;
+        return regs_.fp();
     }
     FrameRegs &regs() const {
         return regs_;
+    }
+
+    // If this js::Interpret frame is running |script|, enable interrupts.
+    void enableInterruptsIfRunning(JSScript *script) {
+        if (regs_.fp()->script() == script)
+            enableInterruptsUnconditionally();
+    }
+    void enableInterruptsUnconditionally() {
+        *switchMask_ = -1;
     }
 };
 
@@ -1278,6 +1292,14 @@ class JitActivation : public Activation
     bool firstFrameIsConstructing_;
     bool active_;
 
+#ifdef CHECK_OSIPOINT_REGISTERS
+  protected:
+    // Used to verify that live registers don't change between a VM call and
+    // the OsiPoint that follows it. Protected to silence Clang warning.
+    uint32_t checkRegs_;
+    RegisterDump regs_;
+#endif
+
   public:
     JitActivation(JSContext *cx, bool firstFrameIsConstructing, bool active = true);
     ~JitActivation();
@@ -1296,6 +1318,18 @@ class JitActivation : public Activation
     bool firstFrameIsConstructing() const {
         return firstFrameIsConstructing_;
     }
+
+#ifdef CHECK_OSIPOINT_REGISTERS
+    void setCheckRegs(bool check) {
+        checkRegs_ = check;
+    }
+    static size_t offsetOfCheckRegs() {
+        return offsetof(JitActivation, checkRegs_);
+    }
+    static size_t offsetOfRegs() {
+        return offsetof(JitActivation, regs_);
+    }
+#endif
 };
 
 // A filtering of the ActivationIterator to only stop at JitActivations.

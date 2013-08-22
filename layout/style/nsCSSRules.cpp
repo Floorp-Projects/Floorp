@@ -566,6 +566,8 @@ SetStyleSheetReference(Rule* aRule, void* aSheet)
   return true;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(GroupRule)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(GroupRule)
   tmp->mRules.EnumerateForwards(SetParentRuleReference, nullptr);
   // If tmp does not have a stylesheet, neither do its descendants.  In that
@@ -687,7 +689,7 @@ GroupRule::ReplaceStyleRule(Rule* aOld, Rule* aNew)
   return NS_OK;
 }
 
-nsresult
+void
 GroupRule::AppendRulesToCssText(nsAString& aCssText)
 {
   aCssText.AppendLiteral(" {\n");
@@ -706,8 +708,6 @@ GroupRule::AppendRulesToCssText(nsAString& aCssText)
   }
 
   aCssText.AppendLiteral("}");
-
-  return NS_OK;
 }
 
 // nsIDOMCSSMediaRule or nsIDOMCSSMozDocumentRule methods
@@ -871,7 +871,8 @@ MediaRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@media ");
   AppendConditionText(aCssText);
-  return GroupRule::AppendRulesToCssText(aCssText);
+  GroupRule::AppendRulesToCssText(aCssText);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1078,7 +1079,8 @@ DocumentRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@-moz-document ");
   AppendConditionText(aCssText);
-  return GroupRule::AppendRulesToCssText(aCssText);
+  GroupRule::AppendRulesToCssText(aCssText);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1749,6 +1751,8 @@ nsCSSFontFaceRule::Clone() const
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSFontFaceRule)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSFontFaceRule)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSFontFaceRule)
+
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsCSSFontFaceRule)
   // Trace the wrapper for our declaration.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER which we can't use
@@ -1760,7 +1764,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSFontFaceRule)
   // Unlink the wrapper for our declaraton.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER which we can't use
   // directly because the wrapper is on the declaration, not on us.
-  nsContentUtils::ReleaseWrapper(static_cast<nsISupports*>(p), &tmp->mDecl);
+  tmp->mDecl.ReleaseWrapper(static_cast<nsISupports*>(p));
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSFontFaceRule)
@@ -2244,6 +2248,7 @@ nsCSSKeyframeRule::Clone() const
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSKeyframeRule)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSKeyframeRule)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSKeyframeRule)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSKeyframeRule)
   if (tmp->mDOMDeclaration) {
@@ -2734,6 +2739,8 @@ nsCSSPageRule::Clone() const
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSPageRule)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSPageRule)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSPageRule)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSPageRule)
   if (tmp->mDOMDeclaration) {
     tmp->mDOMDeclaration->DropReference();
@@ -2937,7 +2944,8 @@ CSSSupportsRule::GetCssText(nsAString& aCssText)
 {
   aCssText.AssignLiteral("@supports ");
   aCssText.Append(mCondition);
-  return css::GroupRule::AppendRulesToCssText(aCssText);
+  css::GroupRule::AppendRulesToCssText(aCssText);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

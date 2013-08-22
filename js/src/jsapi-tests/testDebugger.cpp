@@ -13,8 +13,8 @@
 static int callCount[2] = {0, 0};
 
 static void *
-callCountHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, JSBool before,
-              JSBool *ok, void *closure)
+callCountHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, bool before,
+              bool *ok, void *closure)
 {
     callCount[before]++;
 
@@ -26,7 +26,7 @@ callCountHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, JSBo
 
 BEGIN_TEST(testDebugger_bug519719)
 {
-    CHECK(JS_SetDebugMode(cx, JS_TRUE));
+    CHECK(JS_SetDebugMode(cx, true));
     JS_SetCallHook(rt, callCountHook, NULL);
     EXEC("function call(fn) { fn(0); }\n"
          "function f(g) { for (var i = 0; i < 9; i++) call(g); }\n"
@@ -39,8 +39,8 @@ BEGIN_TEST(testDebugger_bug519719)
 END_TEST(testDebugger_bug519719)
 
 static void *
-nonStrictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, JSBool before,
-                  JSBool *ok, void *closure)
+nonStrictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, bool before,
+                  bool *ok, void *closure)
 {
     if (before) {
         bool *allWrapped = (bool *) closure;
@@ -54,7 +54,7 @@ nonStrictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, 
 BEGIN_TEST(testDebugger_getThisNonStrict)
 {
     bool allWrapped = true;
-    CHECK(JS_SetDebugMode(cx, JS_TRUE));
+    CHECK(JS_SetDebugMode(cx, true));
     JS_SetCallHook(rt, nonStrictThisHook, (void *) &allWrapped);
     EXEC("function nonstrict() { }\n"
          "Boolean.prototype.nonstrict = nonstrict;\n"
@@ -78,8 +78,8 @@ BEGIN_TEST(testDebugger_getThisNonStrict)
 END_TEST(testDebugger_getThisNonStrict)
 
 static void *
-strictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, JSBool before,
-               JSBool *ok, void *closure)
+strictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, bool before,
+               bool *ok, void *closure)
 {
     if (before) {
         bool *anyWrapped = (bool *) closure;
@@ -93,7 +93,7 @@ strictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, JSB
 BEGIN_TEST(testDebugger_getThisStrict)
 {
     bool anyWrapped = false;
-    CHECK(JS_SetDebugMode(cx, JS_TRUE));
+    CHECK(JS_SetDebugMode(cx, true));
     JS_SetCallHook(rt, strictThisHook, (void *) &anyWrapped);
     EXEC("function strict() { 'use strict'; }\n"
          "Boolean.prototype.strict = strict;\n"
@@ -120,7 +120,7 @@ ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
     JS_ASSERT(!closure);
     called = true;
 
-    JS::RootedObject global(cx, JS_GetGlobalForScopeChain(cx));
+    JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
 
     char text[] = "new Error()";
     jsval _;
@@ -149,7 +149,7 @@ END_TEST(testDebugger_throwHook)
 BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 {
     CHECK(JS_DefineDebuggerObject(cx, global));
-    JS::RootedObject debuggee(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    JS::RootedObject debuggee(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
     CHECK(debuggee);
 
     {
@@ -161,7 +161,7 @@ BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
     JS::RootedObject debuggeeWrapper(cx, debuggee);
     CHECK(JS_WrapObject(cx, debuggeeWrapper.address()));
     JS::RootedValue v(cx, JS::ObjectValue(*debuggeeWrapper));
-    CHECK(JS_SetProperty(cx, global, "debuggee", &v));
+    CHECK(JS_SetProperty(cx, global, "debuggee", v));
 
     EVAL("var dbg = new Debugger(debuggee);\n"
          "var hits = 0;\n"
@@ -189,7 +189,7 @@ BEGIN_TEST(testDebugger_newScriptHook)
 {
     // Test that top-level indirect eval fires the newScript hook.
     CHECK(JS_DefineDebuggerObject(cx, global));
-    JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL));
+    JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
     CHECK(g);
     {
         JSAutoCompartment ae(cx, g);
@@ -199,7 +199,7 @@ BEGIN_TEST(testDebugger_newScriptHook)
     JS::RootedObject gWrapper(cx, g);
     CHECK(JS_WrapObject(cx, gWrapper.address()));
     JS::RootedValue v(cx, JS::ObjectValue(*gWrapper));
-    CHECK(JS_SetProperty(cx, global, "g", &v));
+    CHECK(JS_SetProperty(cx, global, "g", v));
 
     EXEC("var dbg = Debugger(g);\n"
          "var hits = 0;\n"
@@ -251,7 +251,7 @@ BEGIN_TEST(testDebugger_singleStepThrow)
         return true;
     }
 
-    static JSBool
+    static bool
     setStepMode(JSContext *cx, unsigned argc, jsval *vp)
     {
         JSScript *script;

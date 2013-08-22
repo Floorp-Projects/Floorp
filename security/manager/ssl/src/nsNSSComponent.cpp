@@ -1058,11 +1058,11 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::InitializeNSS\n"));
 
-  MOZ_STATIC_ASSERT(nsINSSErrorsService::NSS_SEC_ERROR_BASE == SEC_ERROR_BASE &&
-                    nsINSSErrorsService::NSS_SEC_ERROR_LIMIT == SEC_ERROR_LIMIT &&
-                    nsINSSErrorsService::NSS_SSL_ERROR_BASE == SSL_ERROR_BASE &&
-                    nsINSSErrorsService::NSS_SSL_ERROR_LIMIT == SSL_ERROR_LIMIT,
-                    "You must update the values in nsINSSErrorsService.idl");
+  static_assert(nsINSSErrorsService::NSS_SEC_ERROR_BASE == SEC_ERROR_BASE &&
+                nsINSSErrorsService::NSS_SEC_ERROR_LIMIT == SEC_ERROR_LIMIT &&
+                nsINSSErrorsService::NSS_SSL_ERROR_BASE == SSL_ERROR_BASE &&
+                nsINSSErrorsService::NSS_SSL_ERROR_LIMIT == SSL_ERROR_LIMIT,
+                "You must update the values in nsINSSErrorsService.idl");
 
   // variables used for flow control within this function
 

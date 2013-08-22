@@ -230,12 +230,17 @@ class Shape;
 class UnownedBaseShape;
 struct StackBaseShape;
 
+namespace gc {
+void MergeCompartments(JSCompartment *source, JSCompartment *target);
+}
+
 class BaseShape : public js::gc::Cell
 {
   public:
     friend class Shape;
     friend struct StackBaseShape;
     friend struct StackShape;
+    friend void gc::MergeCompartments(JSCompartment *source, JSCompartment *target);
 
     enum Flag {
         /* Owned by the referring shape. */
@@ -995,7 +1000,7 @@ struct StackShape
         JS_ASSERT(slot <= SHAPE_INVALID_SLOT);
     }
 
-    StackShape(Shape *const &shape)
+    StackShape(Shape *shape)
       : base(shape->base()->unowned()),
         propid(shape->propidRef()),
         slot_(shape->slotInfo & Shape::SLOT_MASK),

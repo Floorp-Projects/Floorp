@@ -11,10 +11,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_fm'
 
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/interfaces/events',
-]
-
 MODULE = 'dom'
 
 CPP_SOURCES += [
@@ -24,5 +20,10 @@ CPP_SOURCES += [
 
 EXTRA_JS_MODULES += [
     'DOMFMRadioParent.jsm',
+]
+
+EXTRA_COMPONENTS += [
+    'DOMFMRadio.manifest',
+    'DOMFMRadioChild.js',
 ]
 

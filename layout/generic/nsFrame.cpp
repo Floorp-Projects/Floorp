@@ -394,8 +394,7 @@ nsFrame::~nsFrame()
   MOZ_COUNT_DTOR(nsFrame);
 
   NS_IF_RELEASE(mContent);
-  if (mStyleContext)
-    mStyleContext->Release();
+  mStyleContext->Release();
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFrame)
@@ -704,8 +703,7 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     nsIFrame* anonBlock = svgTextFrame->GetFirstPrincipalChild();
     // Just as in nsSVGTextFrame2::DidSetStyleContext, we need to ensure that
     // any non-display nsSVGTextFrame2s get reflowed when a child text frame
-    // gets new style.  We don't need to do this when the frame has not yet
-    // been reflowed, since that will happen soon anyway.
+    // gets new style.
     //
     // Note that we must check NS_FRAME_FIRST_REFLOW on our nsSVGTextFrame2's
     // anonymous block frame rather than our self, since NS_FRAME_FIRST_REFLOW
@@ -713,7 +711,8 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     // document's first reflow. (In which case this DidSetStyleContext call may
     // be happening under frame construction under a Reflow() call.)
     if (anonBlock && !(anonBlock->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
-        (svgTextFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+        (svgTextFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY) &&
+        !(svgTextFrame->GetStateBits() & NS_STATE_SVG_TEXT_IN_REFLOW)) {
       svgTextFrame->ScheduleReflowSVGNonDisplayText();
     }
   }
@@ -2554,15 +2553,14 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   // frame, or something else is already capturing the mouse, there's no
   // reason to capture.
   if (!nsIPresShell::GetCapturingContent()) {
-    nsIFrame* checkFrame = this;
-    nsIScrollableFrame *scrollFrame = nullptr;
-    while (checkFrame) {
-      scrollFrame = do_QueryFrame(checkFrame);
-      if (scrollFrame) {
-        nsIPresShell::SetCapturingContent(checkFrame->GetContent(), CAPTURE_IGNOREALLOWED);
-        break;
-      }
-      checkFrame = checkFrame->GetParent();
+    nsIScrollableFrame* scrollFrame =
+      nsLayoutUtils::GetNearestScrollableFrame(this,
+        nsLayoutUtils::SCROLLABLE_SAME_DOC |
+        nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+    if (scrollFrame) {
+      nsIFrame* capturingFrame = do_QueryFrame(scrollFrame);
+      nsIPresShell::SetCapturingContent(capturingFrame->GetContent(),
+                                        CAPTURE_IGNOREALLOWED);
     }
   }
 
@@ -2925,15 +2923,10 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   }
 
   // get the nearest scrollframe
-  nsIFrame* checkFrame = this;
-  nsIScrollableFrame *scrollFrame = nullptr;
-  while (checkFrame) {
-    scrollFrame = do_QueryFrame(checkFrame);
-    if (scrollFrame) {
-      break;
-    }
-    checkFrame = checkFrame->GetParent();
-  }
+  nsIScrollableFrame* scrollFrame =
+    nsLayoutUtils::GetNearestScrollableFrame(this,
+        nsLayoutUtils::SCROLLABLE_SAME_DOC |
+        nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
 
   if (scrollFrame) {
     nsIFrame* capturingFrame = scrollFrame->GetScrolledFrame();
@@ -3542,6 +3535,21 @@ nsIFrame::ContentOffsets nsIFrame::GetContentOffsetsFromPoint(nsPoint aPoint,
 nsIFrame::ContentOffsets nsFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoint)
 {
   return OffsetsForSingleFrame(this, aPoint);
+}
+
+void
+nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext)
+{
+  if (aImage.GetType() != eStyleImageType_Image) {
+    return;
+  }
+
+  imgIRequest *req = aImage.GetImageData();
+  mozilla::css::ImageLoader* loader =
+    aPresContext->Document()->StyleImageLoader();
+
+  // If this fails there's not much we can do ...
+  loader->AssociateRequestToFrame(req, this);
 }
 
 NS_IMETHODIMP
@@ -4491,9 +4499,14 @@ nsIFrame::IsLeaf() const
 
 class LayerActivity {
 public:
-  LayerActivity(nsIFrame* aFrame) : mFrame(aFrame), mChangeHint(nsChangeHint(0)) {}
+  LayerActivity(nsIFrame* aFrame)
+    : mFrame(aFrame)
+    , mChangeHint(nsChangeHint(0))
+    , mMutationCount(0)
+  {}
   ~LayerActivity();
   nsExpirationState* GetExpirationState() { return &mState; }
+  uint32_t GetMutationCount() { return mMutationCount; }
 
   nsIFrame* mFrame;
   nsExpirationState mState;
@@ -4502,6 +4515,7 @@ public:
   // The presence of those bits indicates whether opacity or transform
   // changes have been detected.
   nsChangeHint mChangeHint;
+  uint32_t mMutationCount;
 };
 
 class LayerActivityTracker MOZ_FINAL : public nsExpirationTracker<LayerActivity,4> {
@@ -4564,6 +4578,7 @@ nsIFrame::MarkLayersActive(nsChangeHint aChangeHint)
     static_cast<LayerActivity*>(properties.Get(LayerActivityProperty()));
   if (layerActivity) {
     gLayerActivityTracker->MarkUsed(layerActivity);
+    layerActivity->mMutationCount++;
   } else {
     if (!gLayerActivityTracker) {
       gLayerActivityTracker = new LayerActivityTracker();
@@ -4587,6 +4602,9 @@ nsIFrame::AreLayersMarkedActive(nsChangeHint aChangeHint)
   LayerActivity* layerActivity =
     static_cast<LayerActivity*>(Properties().Get(LayerActivityProperty()));
   if (layerActivity && (layerActivity->mChangeHint & aChangeHint)) {
+    if (aChangeHint & nsChangeHint_UpdateOpacityLayer) {
+      return layerActivity->GetMutationCount() > 1;
+    }
     return true;
   }
   if (aChangeHint & nsChangeHint_UpdateTransformLayer &&
@@ -5044,17 +5062,16 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame,
 }
 
 nsPoint
-nsIFrame::GetRelativeOffset(const nsStyleDisplay* aDisplay) const
+nsIFrame::GetNormalPosition() const
 {
-  if (!aDisplay ||
-      aDisplay->IsRelativelyPositioned(this)) {
-    nsPoint *offsets = static_cast<nsPoint*>
-      (Properties().Get(ComputedOffsetProperty()));
-    if (offsets) {
-      return *offsets;
-    }
+  // It might be faster to first check
+  // StyleDisplay()->IsRelativelyPositionedStyle().
+  nsPoint* normalPosition = static_cast<nsPoint*>
+    (Properties().Get(NormalPositionProperty()));
+  if (normalPosition) {
+    return *normalPosition;
   }
-  return nsPoint(0,0);
+  return GetPosition();
 }
 
 nsRect
@@ -7698,7 +7715,7 @@ nsFrame::DoLayout(nsBoxLayoutState& aState)
 
       // ensure our size is what we think is should be. Someone could have
       // reset the frame to be smaller or something dumb like that. 
-      SetSize(nsSize(ourRect.width, ourRect.height));
+      SetSize(ourRect.Size());
     }
   }
 

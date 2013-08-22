@@ -9,7 +9,7 @@
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -55,7 +55,6 @@ struct JSSettings
     JSSettings_JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX,
     JSSettings_JSGC_HIGH_FREQUENCY_LOW_LIMIT,
     JSSettings_JSGC_HIGH_FREQUENCY_HIGH_LIMIT,
-    JSSettings_JSGC_ANALYSIS_PURGE_TRIGGER,
     JSSettings_JSGC_ALLOCATION_THRESHOLD,
     JSSettings_JSGC_SLICE_TIME_BUDGET,
     JSSettings_JSGC_DYNAMIC_HEAP_GROWTH,
@@ -164,7 +163,7 @@ struct JSSettings
 };
 
 // All of these are implemented in RuntimeService.cpp
-JSBool
+bool
 ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
                      unsigned aFlags, JS::MutableHandle<JSObject*> aObjp);
 

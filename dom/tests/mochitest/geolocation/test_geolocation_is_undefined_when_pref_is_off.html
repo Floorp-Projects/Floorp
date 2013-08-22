@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=884921
+-->
+<head>
+  <title>Test for getCurrentPosition </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="geolocation_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+href="https://bugzilla.mozilla.org/show_bug.cgi?id=884921">Mozilla Bug 884921</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({set: [["geo.enabled", false]]}, function() {
+  is(navigator.geolocation, undefined);
+  is("geolocation" in navigator, false);
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -107,7 +107,7 @@ var FindHelperUI = {
   },
 
   show: function findHelperShow() {
-    if (StartUI.isVisible || this._open)
+    if (BrowserUI.isStartTabVisible || this._open)
       return;
 
     // Hide any menus
@@ -116,15 +116,16 @@ var FindHelperUI = {
     // Shutdown selection related ui
     SelectionHelperUI.closeEditSession();
 
-    this.search(this._textbox.value);
-    this._textbox.select();
-    this._textbox.focus();
-    this._open = true;
-
     let findbar = this._container;
     setTimeout(() => {
       Elements.browsers.setAttribute("findbar", true);
       findbar.show();
+
+      this.search(this._textbox.value);
+      this._textbox.select();
+      this._textbox.focus();
+
+      this._open = true;
     }, 0);
 
     // Prevent the view to scroll automatically while searching
@@ -152,10 +153,12 @@ var FindHelperUI = {
   },
 
   goToPrevious: function findHelperGoToPrevious() {
+    this._textbox.blur();
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Previous", { });
   },
 
   goToNext: function findHelperGoToNext() {
+    this._textbox.blur();
     Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Next", { });
   },
 

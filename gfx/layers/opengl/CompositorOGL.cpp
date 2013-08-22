@@ -945,7 +945,7 @@ CompositorOGL::GetProgramTypeForEffect(Effect *aEffect) const
     TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
 
     return ShaderProgramFromTargetAndFormat(source->GetTextureTarget(),
-                                            source->GetTextureFormat());
+                                            source->GetFormat());
   }
   case EFFECT_YCBCR:
     return YCbCrLayerProgramType;
@@ -964,7 +964,7 @@ struct MOZ_STACK_CLASS AutoBindTexture
   ~AutoBindTexture()
   {
     if (mTexture) {
-      mTexture->ReleaseTexture();
+      mTexture->UnbindTexture();
     }
   }
 
@@ -1038,7 +1038,6 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
   }
   program->SetLayerQuadRect(aRect);
   program->SetLayerTransform(aTransform);
-  program->SetTextureTransform(gfx3DMatrix());
   program->SetRenderOffset(aOffset.x, aOffset.y);
 
   switch (aEffectChain.mPrimaryEffect->mType) {
@@ -1136,6 +1135,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
 
       program->SetYCbCrTextureUnits(Y, Cb, Cr);
       program->SetLayerOpacity(aOpacity);
+      program->SetTextureTransform(gfx3DMatrix());
 
       AutoBindTexture bindMask;
       if (maskType != MaskNone) {
@@ -1159,6 +1159,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
       program->Activate();
       program->SetTextureUnit(0);
       program->SetLayerOpacity(aOpacity);
+      program->SetTextureTransform(gfx3DMatrix());
 
       AutoBindTexture bindMask;
       if (maskType != MaskNone) {
@@ -1179,6 +1180,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
     }
     break;
   case EFFECT_COMPONENT_ALPHA: {
+      MOZ_ASSERT(gfxPlatform::ComponentAlphaEnabled());
       EffectComponentAlpha* effectComponentAlpha =
         static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
       TextureSourceOGL* sourceOnWhite = effectComponentAlpha->mOnWhite->AsSourceOGL();
@@ -1411,6 +1413,14 @@ CompositorOGL::Resume()
   return true;
 }
 
+TemporaryRef<DataTextureSource>
+CompositorOGL::CreateDataTextureSource(TextureFlags aFlags)
+{
+  RefPtr<DataTextureSource> result =
+    new TextureImageTextureSourceOGL(mGLContext,
+                                     !(aFlags & TEXTURE_DISALLOW_BIGIMAGE));
+  return result;
+}
 
 } /* layers */
 } /* mozilla */

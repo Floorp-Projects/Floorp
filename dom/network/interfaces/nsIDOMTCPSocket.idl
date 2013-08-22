@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * MozTCPSocket exposes a TCP client socket (no server sockets yet)
+ * MozTCPSocket exposes a TCP client and server sockets
  * to highly privileged apps. It provides a buffered, non-blocking
  * interface for sending. For receiving, it uses an asynchronous,
  * event handler based interface.
@@ -11,6 +11,10 @@
 
 #include "domstubs.idl"
 #include "nsIDOMEvent.idl"
+#include "nsITCPSocketChild.idl"
+#include "nsIDOMTCPServerSocket.idl"
+
+interface nsISocketTransport;
 
 // Bug 731746 - Allow chrome JS object to implement nsIDOMEventTarget
 // nsITCPSocket should be an nsIEventTarget but js objects
@@ -25,7 +29,10 @@
 //  be possible to do (similarly to the WebSocket API):
 //    var s = new MozTCPSocket(host, port); 
 
-[scriptable, uuid(1f99bc6f-73d3-44db-9dbf-5fc441704a7c)]
+// Bug 797561 - Expose a server tcp socket API to web applications
+
+
+[scriptable, uuid(b7803a0b-4492-45ec-ac7a-3e29f6445fa4)]
 interface nsIDOMTCPSocket : nsISupports
 {
   /**
@@ -46,6 +53,26 @@ interface nsIDOMTCPSocket : nsISupports
    * @return The new TCPSocket instance.
    */
   nsIDOMTCPSocket open(in DOMString host, in unsigned short port, [optional] in jsval options);
+
+  /**
+   * Listen on a port
+   *
+   * @param localPort The port of the server socket. Pass -1 to indicate no preference,
+   *                  and a port will be selected automatically.
+   * @param options An object specifying one or more parameters which
+   *                determine the details of the socket.
+   *
+   *        binaryType: "arraybuffer" to use ArrayBuffer
+   *          instances in the ondata callback and as the argument
+   *          to send. Defaults to "string", to use JavaScript strings.
+   * @param backlog The maximum length the queue of pending connections may grow to.
+   *                This parameter may be silently limited by the operating system.
+   *                Pass -1 to use the default value.
+   *
+   * @return The new TCPServerSocket instance.
+   */
+  nsIDOMTCPServerSocket listen(in unsigned short localPort, [optional] in jsval options,
+                               [optional] in unsigned short backlog);
 
   /**
    * The host of this socket object.
@@ -183,7 +210,7 @@ interface nsIDOMTCPSocket : nsISupports
  * Needed to account for multiple possible types that can be provided to
  * the socket callbacks as arguments.
  */
-[scriptable, uuid(322193a3-da17-4ca5-ad26-3539c519ea4b)]
+[scriptable, uuid(0baa1be1-6a88-4f85-a6c8-29e95f35c122)]
 interface nsITCPSocketInternal : nsISupports {
   // Trigger the callback for |type| and provide a DOMError() object with the given data
   void callListenerError(in DOMString type, in DOMString name);
@@ -199,6 +226,31 @@ interface nsITCPSocketInternal : nsISupports {
 
   // Update the DOM object's readyState and bufferedAmount values with the provided data
   void updateReadyStateAndBuffered(in DOMString readyState, in uint32_t bufferedAmount);
+
+  // Create a socket object on the parent side.
+  // This is called in accepting any open request on the parent side.
+  // 
+  // @param transport
+  //        The accepted socket transport.
+  // @param binaryType
+  //        "arraybuffer" to use ArrayBuffer instances 
+  //        in the ondata callback and as the argument to send.
+  nsIDOMTCPSocket createAcceptedParent(in nsISocketTransport transport,
+                                       in DOMString binaryType);
+
+  // Create a DOM socket on the child side
+  // This is called when the socket is accepted on the parent side.
+  // 
+  // @param socketChild
+  //        The socket child object for the IPC implementation.
+  // @param binaryType
+  //        "arraybuffer" to use ArrayBuffer instances 
+  //        in the ondata callback and as the argument to send.
+  // @param window
+  //        An object to create ArrayBuffer for this window. See Bug 831107.
+  nsIDOMTCPSocket createAcceptedChild(in nsITCPSocketChild socketChild,
+                                      in DOMString binaryType, 
+                                      in nsIDOMWindow window);
 };
 
 /**

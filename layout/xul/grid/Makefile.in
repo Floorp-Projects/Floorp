@@ -22,5 +22,3 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-DEFINES += -D_IMPL_NS_LAYOUT

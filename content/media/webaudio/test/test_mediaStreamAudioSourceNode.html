@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Test MediaStreamAudioSourceNode processing is correct</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function createBuffer(context, delay) {
+  var buffer = context.createBuffer(2, 2048, context.sampleRate);
+  for (var i = 0; i < 2048 - delay; ++i) {
+    buffer.getChannelData(0)[i + delay] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
+    buffer.getChannelData(1)[i + delay] = buffer.getChannelData(0)[i + delay];
+  }
+  return buffer;
+}
+
+var gTest = {
+  length: 2048,
+  skipOfflineContextTests: true,
+  createGraph: function(context) {
+    var sourceGraph = new AudioContext();
+    var source = sourceGraph.createBufferSource();
+    source.buffer = createBuffer(context, 0);
+    var dest = sourceGraph.createMediaStreamDestination();
+    source.connect(dest);
+    source.start(0);
+
+    var mediaStreamSource = context.createMediaStreamSource(dest.stream);
+    return mediaStreamSource;
+  },
+  createExpectedBuffers: function(context) {
+    return createBuffer(context, 1);
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

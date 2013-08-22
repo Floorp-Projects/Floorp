@@ -19,6 +19,4 @@ EXTRA_DSO_LDOPTS = \
 	$(NSPR_LIBS) \
 	$(NULL)
 
-EXTRA_COMPONENTS = SimpleTest.js SimpleTest.manifest
-
 include $(topsrcdir)/config/rules.mk

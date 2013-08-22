@@ -61,6 +61,7 @@ MOCHITEST_FILES = \
   test_bug579767.html \
   test_bug597333.html \
   test_bug666225.html \
+  test_bug904810.html \
   test_image_selection.html \
   test_image_selection_2.html \
   test_invalidate_during_plugin_paint.html \

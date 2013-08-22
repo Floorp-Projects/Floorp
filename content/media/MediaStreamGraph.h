@@ -7,6 +7,7 @@
 #define MOZILLA_MEDIASTREAMGRAPH_H_
 
 #include "mozilla/Mutex.h"
+#include "mozilla/LinkedList.h"
 #include "AudioStream.h"
 #include "nsTArray.h"
 #include "nsIRunnable.h"
@@ -190,8 +191,9 @@ class MediaStreamGraphImpl;
 class SourceMediaStream;
 class ProcessedMediaStream;
 class MediaInputPort;
-class AudioNodeStream;
 class AudioNodeEngine;
+class AudioNodeExternalInputStream;
+class AudioNodeStream;
 struct AudioChunk;
 
 /**
@@ -257,28 +259,11 @@ struct AudioChunk;
  * for those objects in arbitrary order and the MediaStreamGraph has to be able
  * to handle this.
  */
-class MediaStream {
+class MediaStream : public mozilla::LinkedListElement<MediaStream> {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStream)
 
-  MediaStream(DOMMediaStream* aWrapper)
-    : mBufferStartTime(0)
-    , mExplicitBlockerCount(0)
-    , mBlocked(false)
-    , mGraphUpdateIndices(0)
-    , mFinished(false)
-    , mNotifiedFinished(false)
-    , mNotifiedBlocked(false)
-    , mHasCurrentData(false)
-    , mNotifiedHasCurrentData(false)
-    , mWrapper(aWrapper)
-    , mMainThreadCurrentTime(0)
-    , mMainThreadFinished(false)
-    , mMainThreadDestroyed(false)
-    , mGraph(nullptr)
-  {
-    MOZ_COUNT_CTOR(MediaStream);
-  }
+  MediaStream(DOMMediaStream* aWrapper);
   virtual ~MediaStream()
   {
     MOZ_COUNT_DTOR(MediaStream);
@@ -359,6 +344,7 @@ public:
 
   friend class MediaStreamGraphImpl;
   friend class MediaInputPort;
+  friend class AudioNodeExternalInputStream;
 
   virtual SourceMediaStream* AsSourceStream() { return nullptr; }
   virtual ProcessedMediaStream* AsProcessedStream() { return nullptr; }
@@ -399,6 +385,16 @@ public:
   void RemoveListenerImpl(MediaStreamListener* aListener);
   void RemoveAllListenersImpl();
   void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled);
+  /**
+   * Returns true when this stream requires the contents of its inputs even if
+   * its own outputs are not being consumed. This is used to signal inputs to
+   * this stream that they are being consumed; when they're not being consumed,
+   * we make some optimizations.
+   */
+  virtual bool IsIntrinsicallyConsumed() const
+  {
+    return !mAudioOutputs.IsEmpty() || !mVideoOutputs.IsEmpty();
+  }
 
   void AddConsumer(MediaInputPort* aPort)
   {
@@ -763,10 +759,10 @@ public:
    * each other.
    */
   enum {
-    // When set, blocking on the input stream forces blocking on the output
+    // When set, blocking on the output stream forces blocking on the input
     // stream.
     FLAG_BLOCK_INPUT = 0x01,
-    // When set, blocking on the output stream forces blocking on the input
+    // When set, blocking on the input stream forces blocking on the output
     // stream.
     FLAG_BLOCK_OUTPUT = 0x02
   };
@@ -957,6 +953,11 @@ public:
   AudioNodeStream* CreateAudioNodeStream(AudioNodeEngine* aEngine,
                                          AudioNodeStreamKind aKind,
                                          TrackRate aSampleRate = 0);
+
+  AudioNodeExternalInputStream*
+  CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine,
+                                     TrackRate aSampleRate = 0);
+
   /**
    * Returns the number of graph updates sent. This can be used to track
    * whether a given update has been processed by the graph thread and reflected

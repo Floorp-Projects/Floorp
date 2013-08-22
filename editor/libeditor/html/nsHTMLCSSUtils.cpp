@@ -16,7 +16,6 @@
 #include "nsCOMPtr.h"
 #include "nsColor.h"
 #include "nsComputedDOMStyle.h"
-#include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
 #include "nsEditProperty.h"

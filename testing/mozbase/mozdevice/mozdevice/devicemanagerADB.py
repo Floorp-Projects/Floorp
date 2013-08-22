@@ -191,7 +191,7 @@ class DeviceManagerADB(DeviceManager):
     def _disconnectRemoteADB(self):
         self._checkCmd(["disconnect", self.host + ":" + str(self.port)])
 
-    def pushFile(self, localname, destname, retryLimit=None):
+    def pushFile(self, localname, destname, retryLimit=None, createDir=True):
         # you might expect us to put the file *in* the directory in this case,
         # but that would be different behaviour from devicemanagerSUT. Throw
         # an exception so we have the same behaviour between the two
@@ -232,7 +232,7 @@ class DeviceManagerADB(DeviceManager):
                 remoteZip = remoteDir + "/adbdmtmp.zip"
                 subprocess.Popen(["zip", "-r", localZip, '.'], cwd=localDir,
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-                self.pushFile(localZip, remoteZip, retryLimit=retryLimit)
+                self.pushFile(localZip, remoteZip, retryLimit=retryLimit, createDir=False)
                 os.remove(localZip)
                 data = self._runCmdAs(["shell", "unzip", "-o", remoteZip,
                                        "-d", remoteDir]).stdout.read()

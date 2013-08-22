@@ -12,6 +12,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES = \
   test_gamepad.html \
+  test_gamepad_connect_events.html \
   test_gamepad_frame_state_sync.html \
   gamepad_frame_state.html \
   test_gamepad_hidden_frame.html \

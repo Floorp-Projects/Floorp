@@ -3,7 +3,7 @@
  */
 
 // Checks that blocklist entries using RegExp work as expected. This only covers
-// behavior specific to RegExp entries - general behavior is already tested 
+// behavior specific to RegExp entries - general behavior is already tested
 // in test_blocklistchange.js.
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -11,7 +11,12 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 Cu.import("resource://testing-common/httpd.js");
-var testserver;
+var testserver = new HttpServer();
+testserver.start(-1);
+gPort = testserver.identity.primaryPort;
+
+// register static files with server and interpolate port numbers in them
+mapFile("/data/test_blocklist_regexp_1.xml", testserver);
 
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
@@ -66,7 +71,8 @@ function load_blocklist(aFile, aCallback) {
     do_execute_soon(aCallback);
   }, "blocklist-updated", false);
 
-  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:4444/data/" + aFile);
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
+                             gPort + "/data/" + aFile);
   var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                   getService(Ci.nsITimerCallback);
   blocklist.notify(null);
@@ -79,10 +85,6 @@ function end_test() {
 
 
 function run_test() {
-  testserver = new HttpServer();
-  testserver.registerDirectory("/data/", do_get_file("data"));
-  testserver.start(4444);
-
   do_test_pending();
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");

@@ -8,8 +8,6 @@
 
 #include "mozilla/FloatingPoint.h"
 
-#include <string.h>
-
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -26,6 +24,7 @@
 
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -135,21 +134,21 @@ class StringifyContext
     uint32_t depth;
 };
 
-static JSBool Str(JSContext *cx, const Value &v, StringifyContext *scx);
+static bool Str(JSContext *cx, const Value &v, StringifyContext *scx);
 
-static JSBool
+static bool
 WriteIndent(JSContext *cx, StringifyContext *scx, uint32_t limit)
 {
     if (!scx->gap.empty()) {
         if (!scx->sb.append('\n'))
-            return JS_FALSE;
+            return false;
         for (uint32_t i = 0; i < limit; i++) {
             if (!scx->sb.append(scx->gap.begin(), scx->gap.end()))
-                return JS_FALSE;
+                return false;
         }
     }
 
-    return JS_TRUE;
+    return true;
 }
 
 template<typename KeyType>
@@ -265,7 +264,7 @@ IsFilteredValue(const Value &v)
 }
 
 /* ES5 15.12.3 JO. */
-static JSBool
+static bool
 JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
 {
     /*
@@ -288,7 +287,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
     }
 
     if (!scx->sb.append('{'))
-        return JS_FALSE;
+        return false;
 
     /* Steps 5-7. */
     Maybe<AutoIdVector> ids;
@@ -355,7 +354,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
 }
 
 /* ES5 15.12.3 JA. */
-static JSBool
+static bool
 JA(JSContext *cx, HandleObject obj, StringifyContext *scx)
 {
     /*
@@ -378,18 +377,18 @@ JA(JSContext *cx, HandleObject obj, StringifyContext *scx)
     }
 
     if (!scx->sb.append('['))
-        return JS_FALSE;
+        return false;
 
     /* Step 6. */
     uint32_t length;
     if (!GetLengthProperty(cx, obj, &length))
-        return JS_FALSE;
+        return false;
 
     /* Steps 7-10. */
     if (length != 0) {
         /* Steps 4, 10b(i). */
         if (!WriteIndent(cx, scx, scx->depth))
-            return JS_FALSE;
+            return false;
 
         /* Steps 7-10. */
         RootedValue outputValue(cx);
@@ -401,35 +400,35 @@ JA(JSContext *cx, HandleObject obj, StringifyContext *scx)
              * values as |null| in separate steps.
              */
             if (!JSObject::getElement(cx, obj, obj, i, &outputValue))
-                return JS_FALSE;
+                return false;
             if (!PreprocessValue(cx, obj, i, &outputValue, scx))
-                return JS_FALSE;
+                return false;
             if (IsFilteredValue(outputValue)) {
                 if (!scx->sb.append("null"))
-                    return JS_FALSE;
+                    return false;
             } else {
                 if (!Str(cx, outputValue, scx))
-                    return JS_FALSE;
+                    return false;
             }
 
             /* Steps 3, 4, 10b(i). */
             if (i < length - 1) {
                 if (!scx->sb.append(','))
-                    return JS_FALSE;
+                    return false;
                 if (!WriteIndent(cx, scx, scx->depth))
-                    return JS_FALSE;
+                    return false;
             }
         }
 
         /* Step 10(b)(iii). */
         if (!WriteIndent(cx, scx, scx->depth - 1))
-            return JS_FALSE;
+            return false;
     }
 
     return scx->sb.append(']');
 }
 
-static JSBool
+static bool
 Str(JSContext *cx, const Value &v, StringifyContext *scx)
 {
     /* Step 11 must be handled by the caller. */
@@ -481,7 +480,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
     RootedObject obj(cx, &v.toObject());
 
     scx->depth++;
-    JSBool ok;
+    bool ok;
     if (ObjectClassIs(obj, ESClass_Array, cx))
         ok = JA(cx, obj, scx);
     else
@@ -492,7 +491,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 }
 
 /* ES5 15.12.3. */
-JSBool
+bool
 js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value space_,
              StringBuffer &sb)
 {
@@ -691,7 +690,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
 
                 if (newElement.isUndefined()) {
                     /* Step 2a(iii)(2). */
-                    JSBool succeeded;
+                    bool succeeded;
                     if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &succeeded))
                         return false;
                 } else {
@@ -720,7 +719,7 @@ Walk(JSContext *cx, HandleObject holder, HandleId name, HandleValue reviver, Mut
 
                 if (newElement.isUndefined()) {
                     /* Step 2b(ii)(2). */
-                    JSBool succeeded;
+                    bool succeeded;
                     if (!JSObject::deleteByValue(cx, obj, IdToValue(id), &succeeded))
                         return false;
                 } else {
@@ -786,17 +785,17 @@ js::ParseJSONWithReviver(JSContext *cx, StableCharPtr chars, size_t length, Hand
 }
 
 #if JS_HAS_TOSOURCE
-static JSBool
+static bool
 json_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     vp->setString(cx->names().JSON);
-    return JS_TRUE;
+    return true;
 }
 #endif
 
 /* ES5 15.12.2. */
-JSBool
-js_json_parse(JSContext *cx, unsigned argc, Value *vp)
+static bool
+json_parse(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -820,8 +819,8 @@ js_json_parse(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* ES5 15.12.3. */
-JSBool
-js_json_stringify(JSContext *cx, unsigned argc, Value *vp)
+bool
+json_stringify(JSContext *cx, unsigned argc, Value *vp)
 {
     RootedObject replacer(cx, (argc >= 2 && vp[3].isObject())
                               ? &vp[3].toObject()
@@ -852,8 +851,8 @@ static const JSFunctionSpec json_static_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,  json_toSource,      0, 0),
 #endif
-    JS_FN("parse",          js_json_parse,      2, 0),
-    JS_FN("stringify",      js_json_stringify,  3, 0),
+    JS_FN("parse",          json_parse,         2, 0),
+    JS_FN("stringify",      json_stringify,     3, 0),
     JS_FS_END
 };
 

@@ -10,7 +10,7 @@
 #include "nsIDOMCanvasRenderingContext2D.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsTraceRefcnt.h"

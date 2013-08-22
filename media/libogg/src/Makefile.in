@@ -15,9 +15,4 @@ ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 endif
 
-DISABLED_CSRCS		= \
-		ogg_bitwise.c \
-		ogg_framing.c \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk

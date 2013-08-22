@@ -30,10 +30,12 @@ function run_test() {
 
   gTestserver = new HttpServer();
   gTestserver.registerPathHandler("/", pathHandler);
-  gTestserver.start(4444);
+  gTestserver.start(-1);
+  gPort = gTestserver.identity.primaryPort;
 
   Services.prefs.setCharPref("extensions.blocklist.url",
-                             "http://localhost:4444/?%PING_COUNT%&%TOTAL_PING_COUNT%&%DAYS_SINCE_LAST_PING%");
+                             "http://localhost:" + gPort +
+                             "/?%PING_COUNT%&%TOTAL_PING_COUNT%&%DAYS_SINCE_LAST_PING%");
 
   do_test_pending();
   test1();

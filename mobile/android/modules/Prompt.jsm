@@ -16,7 +16,12 @@ function log(msg) {
 
 function Prompt(aOptions) {
   this.window = "window" in aOptions ? aOptions.window : null;
-  this.msg = { type: "Prompt:Show", async: true };
+  this.msg = { async: true };
+
+  if (aOptions.priority === 1)
+    this.msg.type = "Prompt:ShowTop"
+  else
+    this.msg.type = "Prompt:Show"
 
   if ("title" in aOptions && aOptions.title != null)
     this.msg.title = aOptions.title;
@@ -115,7 +120,7 @@ Prompt.prototype = {
   },
 
   _innerShow: function() {
-    this.bridge.handleGeckoMessage(JSON.stringify(this.msg));
+    Services.androidBridge.handleGeckoMessage(JSON.stringify(this.msg));
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -172,10 +177,6 @@ Prompt.prototype = {
   setMultiChoiceItems: function(aItems) {
     this.msg.multiple = true;
     return this._setListItems(aItems);
-  },
-
-  get bridge() {
-    return Cc["@mozilla.org/android/bridge;1"].getService(Ci.nsIAndroidBridge);
   },
 
 }

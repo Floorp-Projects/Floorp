@@ -57,61 +57,61 @@ void JSD_ASSERT_VALID_PROPERTY(JSDProperty* jsdprop)
 #endif
 
 
-JSBool
+bool
 jsd_IsValueObject(JSDContext* jsdc, JSDValue* jsdval)
 {
     return !JSVAL_IS_PRIMITIVE(jsdval->val) || JSVAL_IS_NULL(jsdval->val);
 }
 
-JSBool
+bool
 jsd_IsValueNumber(JSDContext* jsdc, JSDValue* jsdval)
 {
     return JSVAL_IS_NUMBER(jsdval->val);
 }
 
-JSBool
+bool
 jsd_IsValueInt(JSDContext* jsdc, JSDValue* jsdval)
 {
     return JSVAL_IS_INT(jsdval->val);
 }
 
-JSBool
+bool
 jsd_IsValueDouble(JSDContext* jsdc, JSDValue* jsdval)
 {
     return JSVAL_IS_DOUBLE(jsdval->val);
 }
 
-JSBool
+bool
 jsd_IsValueString(JSDContext* jsdc, JSDValue* jsdval)
 {
     return JSVAL_IS_STRING(jsdval->val);
 }
 
-JSBool
+bool
 jsd_IsValueBoolean(JSDContext* jsdc, JSDValue* jsdval)
 {
     return JSVAL_IS_BOOLEAN(jsdval->val);
 }
 
-JSBool
+bool
 jsd_IsValueNull(JSDContext* jsdc, JSDValue* jsdval)
 {
     return JSVAL_IS_NULL(jsdval->val);
 }
 
-JSBool
+bool
 jsd_IsValueVoid(JSDContext* jsdc, JSDValue* jsdval)
 {
     return JSVAL_IS_VOID(jsdval->val);
 }
 
-JSBool
+bool
 jsd_IsValuePrimitive(JSDContext* jsdc, JSDValue* jsdval)
 {
     return JSVAL_IS_PRIMITIVE(jsdval->val);
 }
 
-JSBool
+bool
 jsd_IsValueFunction(JSDContext* jsdc, JSDValue* jsdval)
 {
     AutoSafeJSContext cx; // NB: Actually unused.
@@ -119,7 +119,7 @@ jsd_IsValueFunction(JSDContext* jsdc, JSDValue* jsdval)
            JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(jsdval->val));
 }
 
-JSBool
+bool
 jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
 {
     AutoSafeJSContext cx;
@@ -129,10 +129,10 @@ jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
     {
         JSAutoCompartment ac(cx, JSVAL_TO_OBJECT(jsdval->val));
         AutoSaveExceptionState as(cx);
-        JSBool ok = JS_FALSE;
+        bool ok = false;
         fun = JSD_GetValueFunction(jsdc, jsdval);
         if(fun)
-            ok = JS_GetFunctionScript(cx, fun) ? JS_FALSE : JS_TRUE;
+            ok = JS_GetFunctionScript(cx, fun) ? false : true;
         JS_ASSERT(fun);
         return ok;
     }
@@ -141,12 +141,12 @@ jsd_IsValueNative(JSDContext* jsdc, JSDValue* jsdval)
 
 /***************************************************************************/
 
-JSBool
+bool
 jsd_GetValueBoolean(JSDContext* jsdc, JSDValue* jsdval)
 {
     jsval val = jsdval->val;
     if(!JSVAL_IS_BOOLEAN(val))
-        return JS_FALSE;
+        return false;
     return JSVAL_TO_BOOLEAN(val);
 }
 
@@ -248,13 +248,13 @@ jsd_NewValue(JSDContext* jsdc, jsval value)
 
     if(JSVAL_IS_GCTHING(val))
     {
-        JSBool ok;
+        bool ok;
         JSAutoCompartment ac(cx, jsdc->glob);
 
         ok = JS_AddNamedValueRoot(cx, &jsdval->val, "JSDValue");
         if(ok && JSVAL_IS_STRING(val)) {
             if(!JS_WrapValue(cx, val.address())) {
-                ok = JS_FALSE;
+                ok = false;
             }
         }
 
@@ -351,7 +351,7 @@ static void _freeProps(JSDContext* jsdc, JSDValue* jsdval)
     CLEAR_BIT_FLAG(jsdval->flags, GOT_PROPS);
 }
 
-static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
+static bool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
 {
     AutoSafeJSContext cx;
     JS::RootedObject obj(cx);
@@ -363,7 +363,7 @@ static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(jsdval->val));
 
     if(JSVAL_IS_PRIMITIVE(jsdval->val))
-        return JS_FALSE;
+        return false;
 
     obj = JSVAL_TO_OBJECT(jsdval->val);
 
@@ -371,7 +371,7 @@ static JSBool _buildProps(JSDContext* jsdc, JSDValue* jsdval)
 
     if(!JS_GetPropertyDescArray(cx, obj, &pda))
     {
-        return JS_FALSE;
+        return false;
     }
 
     for(i = 0; i < pda.length; i++)
@@ -469,7 +469,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
     JS::RootedObject obj(cx);
     JS::RootedString name(cx, nameStr);
     unsigned  attrs = 0;
-    JSBool found;
+    bool found;
     JSPropertyDesc pd;
     const jschar * nameChars;
     size_t nameLen;
@@ -509,7 +509,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
 
         JS_ClearPendingException(cx);
 
-        if(!JS_GetUCProperty(cx, obj, nameChars, nameLen, val.address()))
+        if(!JS_GetUCProperty(cx, obj, nameChars, nameLen, &val))
         {
             if (JS_IsExceptionPending(cx))
             {
@@ -581,7 +581,7 @@ jsd_GetValuePrototype(JSDContext* jsdc, JSDValue* jsdval)
         if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return NULL;
         obj = JSVAL_TO_OBJECT(jsdval->val);
-        if(!JS_GetPrototype(cx, obj, proto.address()))
+        if(!JS_GetPrototype(cx, obj, &proto))
             return NULL;
         if(!proto)
             return NULL;
@@ -632,7 +632,7 @@ jsd_GetValueConstructor(JSDContext* jsdc, JSDValue* jsdval)
         if(JSVAL_IS_PRIMITIVE(jsdval->val))
             return NULL;
         obj = JSVAL_TO_OBJECT(jsdval->val);
-        if(!JS_GetPrototype(cx, obj, proto.address()))
+        if(!JS_GetPrototype(cx, obj, &proto))
             return NULL;
         if(!proto)
             return NULL;

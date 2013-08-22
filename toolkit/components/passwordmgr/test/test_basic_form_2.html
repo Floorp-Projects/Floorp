@@ -8,6 +8,16 @@
 </head>
 <body>
 Login Manager test: simple form fill with autofillForms disabled
+<script>
+commonInit();
+SimpleTest.waitForExplicitFinish();
+
+var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
+                         .getService(SpecialPowers.Ci.nsILoginManager);
+// Assume that the pref starts out true, so set to false
+SpecialPowers.setBoolPref("signon.autofillForms", false);
+</script>
+
 <p id="display"></p>
 
 <div id="content" style="display: block">
@@ -28,18 +38,6 @@ Login Manager test: simple form fill with autofillForms disabled
 
 /** Test for Login Manager: simple form fill with autofillForms disabled **/
 
-commonInit();
-
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-var pwmgr = Components.classes["@mozilla.org/login-manager;1"].
-            getService(Components.interfaces.nsILoginManager);
-var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-            getService(Components.interfaces.nsIPrefService);
-prefs = prefs.getBranch("signon.");
-// Assume that the pref starts out true, so set to false
-prefs.setBoolPref("autofillForms", false);
-
 function startTest(){
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   // Ensure the form is empty at start
@@ -55,14 +53,12 @@ function startTest(){
   is($_(1, "pword").value, "testpass", "Checking for filled password");
 
   // Reset pref (since we assumed it was true to start)
-  prefs.setBoolPref("autofillForms", true);
+  SpecialPowers.setBoolPref("signon.autofillForms", true);
 
   SimpleTest.finish();
 }
-
 window.onload = startTest;
 
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

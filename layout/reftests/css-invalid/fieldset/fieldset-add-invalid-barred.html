@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!-- fieldset with invalid barred for constraint validation element -->
+<html>
+  <head>
+    <style>
+      fieldset:valid { display: none ;}
+    </style>
+    <script>
+      function onloadHandler()
+      {
+        document.getElementById("fieldset").appendChild(document.getElementById('i'));
+        document.documentElement.className = '';
+      }
+    </script>
+  </head>
+  <body onload="onloadHandler();">
+    <input required readonly id="i">
+    <fieldset id="fieldset">
+    </fieldset>
+  </body>
+</html>
+

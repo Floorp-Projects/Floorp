@@ -5,7 +5,6 @@
 
 DOMCI_CLASS(Window)
 DOMCI_CLASS(Location)
-DOMCI_CLASS(History)
 DOMCI_CLASS(DOMPrototype)
 DOMCI_CLASS(DOMConstructor)
 
@@ -45,7 +44,6 @@ DOMCI_CLASS(TreeContentView)
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 DOMCI_CLASS(CRMFObject)
 #endif
-DOMCI_CLASS(Crypto)
 
 // DOM Chrome Window class, almost identical to Window
 DOMCI_CLASS(ChromeWindow)
@@ -95,7 +93,6 @@ DOMCI_CLASS(ModalContentWindow)
 DOMCI_CLASS(MozPowerManager)
 DOMCI_CLASS(MozWakeLock)
 
-DOMCI_CLASS(MozSmsManager)
 DOMCI_CLASS(MozMobileMessageManager)
 DOMCI_CLASS(MozSmsMessage)
 DOMCI_CLASS(MozMmsMessage)
@@ -120,16 +117,7 @@ DOMCI_CLASS(ContentFrameMessageManager)
 DOMCI_CLASS(ChromeMessageBroadcaster)
 DOMCI_CLASS(ChromeMessageSender)
 
-DOMCI_CLASS(IDBRequest)
-DOMCI_CLASS(IDBDatabase)
-DOMCI_CLASS(IDBObjectStore)
-DOMCI_CLASS(IDBTransaction)
-DOMCI_CLASS(IDBCursor)
-DOMCI_CLASS(IDBCursorWithValue)
 DOMCI_CLASS(IDBKeyRange)
-DOMCI_CLASS(IDBIndex)
-DOMCI_CLASS(IDBOpenDBRequest)
-
 
 DOMCI_CLASS(MozCSSKeyframeRule)
 DOMCI_CLASS(MozCSSKeyframesRule)
@@ -139,8 +127,6 @@ DOMCI_CLASS(CSSPageRule)
 DOMCI_CLASS(MediaQueryList)
 
 #ifdef MOZ_B2G_RIL
-DOMCI_CLASS(Telephony)
-DOMCI_CLASS(TelephonyCall)
 DOMCI_CLASS(MozVoicemail)
 DOMCI_CLASS(MozIccManager)
 #endif
@@ -150,8 +136,6 @@ DOMCI_CLASS(FMRadio)
 #endif
 
 #ifdef MOZ_B2G_BT
-DOMCI_CLASS(BluetoothManager)
-DOMCI_CLASS(BluetoothAdapter)
 DOMCI_CLASS(BluetoothDevice)
 #endif
 
@@ -164,3 +148,13 @@ DOMCI_CLASS(AsyncScrollEventDetail)
 DOMCI_CLASS(LockedFile)
 
 DOMCI_CLASS(CSSFontFeatureValuesRule)
+
+DOMCI_CLASS(UserDataHandler)
+DOMCI_CLASS(GeoPositionError)
+DOMCI_CLASS(LoadStatus)
+DOMCI_CLASS(XPathNamespace)
+DOMCI_CLASS(XULControlElement)
+DOMCI_CLASS(XULLabeledControlElement)
+DOMCI_CLASS(XULButtonElement)
+DOMCI_CLASS(XULCheckboxElement)
+DOMCI_CLASS(XULPopupElement)

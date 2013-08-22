@@ -169,7 +169,7 @@ DeflateStringToUTF8Buffer(JSContext *maybecx, const jschar *src, size_t srclen,
 *******************************************************************************/
 
 JS_ALWAYS_INLINE void
-ASSERT_OK(JSBool ok)
+ASSERT_OK(bool ok)
 {
   JS_ASSERT(ok);
 }
@@ -231,7 +231,7 @@ struct FieldHashPolicy
     return hash;
   }
 
-  static JSBool match(const Key &k, const Lookup &l) {
+  static bool match(const Key &k, const Lookup &l) {
     if (k == l)
       return true;
 
@@ -443,7 +443,7 @@ namespace ArrayType {
 }
 
 namespace StructType {
-  JSBool DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj);
+  bool DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj);
 
   const FieldInfoHash* GetFieldInfo(JSObject* obj);
   const FieldInfo* LookupField(JSContext* cx, JSObject* obj, JSFlatString *name);
@@ -478,9 +478,9 @@ namespace CData {
   bool IsCDataProto(JSObject* obj);
 
   // Attached by JSAPI as the function 'ctypes.cast'
-  JSBool Cast(JSContext* cx, unsigned argc, jsval* vp);
+  bool Cast(JSContext* cx, unsigned argc, jsval* vp);
   // Attached by JSAPI as the function 'ctypes.getRuntime'
-  JSBool GetRuntime(JSContext* cx, unsigned argc, jsval* vp);
+  bool GetRuntime(JSContext* cx, unsigned argc, jsval* vp);
 }
 
 namespace Int64 {

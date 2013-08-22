@@ -41,7 +41,7 @@ gTests.push({
     yield addTab(chromeRoot + "browser_selection_frame_inputs.html");
 
     yield waitForCondition(function () {
-      return !StartUI.isStartPageVisible;
+      return !BrowserUI.isStartTabVisible;
       }, 10000, 100);
 
     yield hideContextUI();
@@ -157,7 +157,5 @@ function test() {
     todo(false, "browser_selection_tests need landscape mode to run.");
     return;
   }
-
-  requestLongerTimeout(3);
   runTests();
 }

@@ -286,7 +286,7 @@ void gfxFT2FontGroup::GetCJKPrefFonts(nsTArray<nsRefPtr<gfxFontEntry> >& aFontEn
             case 950: GetPrefFonts(nsGkAtoms::zh_tw, aFontEntryList); break;
         }
 #else
-        const char *ctype = setlocale(LC_CTYPE, NULL);
+        const char *ctype = setlocale(LC_CTYPE, nullptr);
         if (ctype) {
             if (!PL_strncasecmp(ctype, "ja", 2)) {
                 GetPrefFonts(nsGkAtoms::Japanese, aFontEntryList);
@@ -591,10 +591,14 @@ gfxFT2Font::GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry, aStyle);
     if (!font) {
         cairo_scaled_font_t *scaledFont = aFontEntry->CreateScaledFont(aStyle);
+        if (!scaledFont) {
+            return nullptr;
+        }
         font = new gfxFT2Font(scaledFont, aFontEntry, aStyle, aNeedsBold);
         cairo_scaled_font_destroy(scaledFont);
-        if (!font)
+        if (!font) {
             return nullptr;
+        }
         gfxFontCache::GetCache()->AddNew(font);
     }
     return font.forget().downcast<gfxFT2Font>();

@@ -33,7 +33,7 @@ def tokens2re(tokens):
     return re.compile('(?:%s|%s)' % (nonescaped, r'(?P<escape>\\\\)'))
 
 _unquoted_tokens = tokens2re({
-  'whitespace': r'[\t\r\n ]',
+  'whitespace': r'[\t\r\n ]+',
   'quote': r'[\'"]',
   'comment': '#',
   'special': r'[<>&|`~(){}$;]',
@@ -59,7 +59,7 @@ class ClineSplitter(list):
     """
     def __init__(self, cline, cwd):
         self.cwd = cwd
-        self.arg = ''
+        self.arg = None
         self.cline = cline
         self.glob = False
         self._parse_unquoted()
@@ -68,6 +68,8 @@ class ClineSplitter(list):
         """
         Push the given string as part of the current argument
         """
+        if self.arg is None:
+            self.arg = ''
         self.arg += str
 
     def _next(self):
@@ -75,7 +77,7 @@ class ClineSplitter(list):
         Finalize current argument, effectively adding it to the list.
         Perform globbing if needed.
         """
-        if not self.arg:
+        if self.arg is None:
             return
         if self.glob:
             if os.path.isabs(self.arg):
@@ -92,7 +94,7 @@ class ClineSplitter(list):
             self.glob = False
         else:
             self.append(self.arg)
-        self.arg = ''
+        self.arg = None
 
     def _parse_unquoted(self):
         """
@@ -108,7 +110,8 @@ class ClineSplitter(list):
                 break
             # The beginning of the string, up to the found token, is part of
             # the current argument
-            self._push(self.cline[:m.start()])
+            if m.start():
+                self._push(self.cline[:m.start()])
             self.cline = self.cline[m.end():]
 
             match = dict([(name, value) for name, value in m.groupdict().items() if value])
@@ -142,7 +145,8 @@ class ClineSplitter(list):
                 self._push(m.group(0))
             else:
                 raise Exception, "Shouldn't reach here"
-        self._next()
+        if self.arg:
+            self._next()
 
     def _parse_quoted(self):
         # Single quoted strings are preserved, except for the final quote

@@ -15,7 +15,6 @@
 #include "nsIControllers.h"
 #include "nsIDOMElement.h"
 #include "nsXULControllers.h"
-#include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 
 //----------------------------------------------------------------------
@@ -61,6 +60,8 @@ NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   NS_RELEASE(controllers);
   return rv;
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULControllers)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXULControllers)
   tmp->DeleteControllers();

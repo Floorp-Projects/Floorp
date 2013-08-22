@@ -17,7 +17,8 @@ class ClientImageLayer : public ImageLayer,
                          public ClientLayer {
 public:
   ClientImageLayer(ClientLayerManager* aLayerManager)
-    : ImageLayer(aLayerManager, static_cast<ClientLayer*>(this))
+    : ImageLayer(aLayerManager,
+                 static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
     , mImageClientTypeContainer(BUFFER_UNKNOWN)
   {
     MOZ_COUNT_CTOR(ClientImageLayer);
@@ -64,7 +65,10 @@ public:
 
   void DestroyBackBuffer()
   {
-    mImageClient = nullptr;
+    if (mImageClient) {
+      mImageClient->OnDetach();
+      mImageClient = nullptr;
+    }
   }
 
   virtual CompositableClient* GetCompositableClient() MOZ_OVERRIDE
@@ -112,17 +116,23 @@ ClientImageLayer::RenderLayer()
      return;
   }
 
+  if (mImageClient) {
+    mImageClient->OnTransaction();
+  }
+
   if (!mImageClient ||
       !mImageClient->UpdateImage(mContainer, GetContentFlags())) {
     CompositableType type = GetImageClientType();
     if (type == BUFFER_UNKNOWN) {
       return;
     }
+    TextureFlags flags = TEXTURE_FLAGS_DEFAULT;
+    if (mDisallowBigImage) {
+      flags |= TEXTURE_DISALLOW_BIGIMAGE;
+    }
     mImageClient = ImageClient::CreateImageClient(type,
                                                   ClientManager(),
-                                                  mForceSingleTile
-                                                    ? ForceSingleTile
-                                                    : 0);
+                                                  flags);
     if (type == BUFFER_BRIDGE) {
       static_cast<ImageClientBridge*>(mImageClient.get())->SetLayer(this);
     }
@@ -137,6 +147,9 @@ ClientImageLayer::RenderLayer()
     if (!mImageClient->UpdateImage(mContainer, GetContentFlags())) {
       return;
     }
+  }
+  if (mImageClient) {
+    mImageClient->OnTransaction();
   }
   ClientManager()->Hold(this);
 }

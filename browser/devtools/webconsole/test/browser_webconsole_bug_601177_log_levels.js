@@ -10,44 +10,9 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-601177-log-levels.html";
 
-function performTest()
-{
-  let hudId = HUDService.getHudIdByWindow(content);
-  let HUD = HUDService.hudReferences[hudId];
-
-  findEntry(HUD, "hud-networkinfo", "test-bug-601177-log-levels.html",
-            "found test-bug-601177-log-levels.html");
-
-  findEntry(HUD, "hud-networkinfo", "test-bug-601177-log-levels.js",
-            "found test-bug-601177-log-levels.js");
-
-  findEntry(HUD, "hud-networkinfo", "test-image.png", "found test-image.png");
-
-  findEntry(HUD, "hud-network", "foobar-known-to-fail.png",
-            "found foobar-known-to-fail.png");
-
-  findEntry(HUD, "hud-exception", "foobarBug601177exception",
-            "found exception");
-
-  findEntry(HUD, "hud-jswarn", "undefinedPropertyBug601177",
-            "found strict warning");
-
-  findEntry(HUD, "hud-jswarn", "foobarBug601177strictError",
-            "found strict error");
-
-  executeSoon(finishTest);
-}
-
-function findEntry(aHUD, aClass, aString, aMessage)
-{
-  return testLogEntry(aHUD.outputNode, aString, aMessage, false, false,
-                      aClass);
-}
-
 function test()
 {
   Services.prefs.setBoolPref("javascript.options.strict", true);
-
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("javascript.options.strict");
   });
@@ -56,27 +21,55 @@ function test()
 
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
-
-    openConsole(null, function(hud) {
-      browser.addEventListener("load", function onLoad2() {
-        browser.removeEventListener("load", onLoad2, true);
-        waitForSuccess({
-          name: "all messages displayed",
-          validatorFn: function()
-          {
-            return hud.outputNode.itemCount >= 7;
-          },
-          successFn: performTest,
-          failureFn: function() {
-            info("itemCount: " + hud.outputNode.itemCount);
-            finishTest();
-          },
-        });
-      }, true);
-
-      expectUncaughtException();
-      content.location = TEST_URI;
-    });
+    openConsole(null, consoleOpened);
   }, true);
-}
 
+  function consoleOpened(hud)
+  {
+    expectUncaughtException();
+    content.location = TEST_URI;
+
+    info("waiting for messages");
+
+    waitForMessages({
+      webconsole: hud,
+      messages: [
+        {
+          text: "test-bug-601177-log-levels.html",
+          category: CATEGORY_NETWORK,
+          severity: SEVERITY_LOG,
+        },
+        {
+          text: "test-bug-601177-log-levels.js",
+          category: CATEGORY_NETWORK,
+          severity: SEVERITY_LOG,
+        },
+        {
+          text: "test-image.png",
+          category: CATEGORY_NETWORK,
+          severity: SEVERITY_LOG,
+        },
+        {
+          text: "foobar-known-to-fail.png",
+          category: CATEGORY_NETWORK,
+          severity: SEVERITY_ERROR,
+        },
+        {
+          text: "foobarBug601177exception",
+          category: CATEGORY_JS,
+          severity: SEVERITY_ERROR,
+        },
+        {
+          text: "undefinedPropertyBug601177",
+          category: CATEGORY_JS,
+          severity: SEVERITY_WARNING,
+        },
+        {
+          text: "foobarBug601177strictError",
+          category: CATEGORY_JS,
+          severity: SEVERITY_WARNING,
+        },
+      ],
+    }).then(finishTest);
+  }
+}

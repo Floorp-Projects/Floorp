@@ -75,7 +75,6 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     private static int mInputPaddingSize;
     private static int mMinRowSize;
 
-
     public Prompt(Context context, ConcurrentLinkedQueue<String> queue) {
         this(context);
         mCallback = null;
@@ -210,6 +209,14 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         mDialog = builder.create();
         mDialog.setOnCancelListener(Prompt.this);
         mDialog.show();
+    }
+
+    public void setButtons(String[] buttons) {
+        mButtons = buttons;
+    }
+
+    public void setInputs(PromptInput[] inputs) {
+        mInputs = inputs;
     }
 
     @Override

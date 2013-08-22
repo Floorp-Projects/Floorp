@@ -35,6 +35,18 @@ class BackendConsumeSummary(object):
         # The number of derived objects from the read moz.build files.
         self.object_count = 0
 
+        # The number of backend files managed.
+        self.managed_count = 0
+
+        # The number of backend files created.
+        self.created_count = 0
+
+        # The number of backend files updated.
+        self.updated_count = 0
+
+        # The number of unchanged backend files.
+        self.unchanged_count = 0
+
         # The total wall time this backend spent consuming objects. If
         # the iterable passed into consume() is a generator, this includes the
         # time spent to read moz.build files.
@@ -189,8 +201,10 @@ class BuildBackend(LoggingMixin):
         # Write out a file indicating when this backend was last generated.
         age_file = os.path.join(self.environment.topobjdir,
             'backend.%s.built' % self.__class__.__name__)
-        with open(age_file, 'a'):
-            os.utime(age_file, None)
+        if self.summary.updated_count or self.summary.created_count or \
+                not os.path.exists(age_file):
+            with open(age_file, 'a'):
+                os.utime(age_file, None)
 
         finished_start = time.time()
         self.consume_finished()

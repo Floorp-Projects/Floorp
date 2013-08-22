@@ -27,6 +27,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsINodeInfo.h"
 #include "nsIFile.h"
+#include "mozilla/dom/HTMLButtonElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
@@ -133,8 +134,8 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Make sure access key and tab order for the element actually redirect to the
   // file picking button.
-  nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
-  nsCOMPtr<nsIDOMHTMLButtonElement> browseControl = do_QueryInterface(mBrowse);
+  nsRefPtr<HTMLInputElement> fileContent = HTMLInputElement::FromContentOrNull(mContent);
+  nsRefPtr<HTMLButtonElement> browseControl = HTMLButtonElement::FromContentOrNull(mBrowse);
 
   nsAutoString accessKey;
   fileContent->GetAccessKey(accessKey);

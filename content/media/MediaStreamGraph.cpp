@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaStreamGraphImpl.h"
+#include "mozilla/LinkedList.h"
 
 #include "AudioSegment.h"
 #include "VideoSegment.h"
@@ -21,8 +22,10 @@
 #include "AudioChannelCommon.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
+#include "AudioNodeExternalInputStream.h"
 #include <algorithm>
 #include "DOMMediaStream.h"
+#include "GeckoProfiler.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::dom;
@@ -313,20 +316,30 @@ MediaStreamGraphImpl::GetAudioPosition(MediaStream* aStream)
 void
 MediaStreamGraphImpl::UpdateCurrentTime()
 {
-  GraphTime prevCurrentTime = mCurrentTime;
-  TimeStamp now = TimeStamp::Now();
-  GraphTime nextCurrentTime =
-    SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds()) + mCurrentTime;
+  GraphTime prevCurrentTime, nextCurrentTime;
+  if (mRealtime) {
+    TimeStamp now = TimeStamp::Now();
+    prevCurrentTime = mCurrentTime;
+    nextCurrentTime =
+      SecondsToMediaTime((now - mCurrentTimeStamp).ToSeconds()) + mCurrentTime;
+
+    mCurrentTimeStamp = now;
+    LOG(PR_LOG_DEBUG+1, ("Updating current time to %f (real %f, mStateComputedTime %f)",
+          MediaTimeToSeconds(nextCurrentTime),
+          (now - mInitialTimeStamp).ToSeconds(),
+          MediaTimeToSeconds(mStateComputedTime)));
+  } else {
+    prevCurrentTime = mCurrentTime;
+    nextCurrentTime = mCurrentTime + MEDIA_GRAPH_TARGET_PERIOD_MS;
+    LOG(PR_LOG_DEBUG+1, ("Updating offline current time to %f (mStateComputedTime %f)",
+          MediaTimeToSeconds(nextCurrentTime),
+          MediaTimeToSeconds(mStateComputedTime)));
+  }
+
   if (mStateComputedTime < nextCurrentTime) {
     LOG(PR_LOG_WARNING, ("Media graph global underrun detected"));
     nextCurrentTime = mStateComputedTime;
   }
-  mCurrentTimeStamp = now;
-
-  LOG(PR_LOG_DEBUG+1, ("Updating current time to %f (real %f, mStateComputedTime %f)",
-                       MediaTimeToSeconds(nextCurrentTime),
-                       (now - mInitialTimeStamp).ToSeconds(),
-                       MediaTimeToSeconds(mStateComputedTime)));
 
   if (prevCurrentTime >= nextCurrentTime) {
     NS_ASSERTION(prevCurrentTime == nextCurrentTime, "Time can't go backwards!");
@@ -454,22 +467,24 @@ MediaStreamGraphImpl::MarkConsumed(MediaStream* aStream)
 }
 
 void
-MediaStreamGraphImpl::UpdateStreamOrderForStream(nsTArray<MediaStream*>* aStack,
+MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream>* aStack,
                                                  already_AddRefed<MediaStream> aStream)
 {
   nsRefPtr<MediaStream> stream = aStream;
   NS_ASSERTION(!stream->mHasBeenOrdered, "stream should not have already been ordered");
   if (stream->mIsOnOrderingStack) {
-    for (int32_t i = aStack->Length() - 1; ; --i) {
-      aStack->ElementAt(i)->AsProcessedStream()->mInCycle = true;
-      if (aStack->ElementAt(i) == stream)
-        break;
+    MediaStream* iter = aStack->getLast();
+    if (iter) {
+      do {
+        iter->AsProcessedStream()->mInCycle = true;
+        iter = iter->getPrevious();
+      } while (iter && iter != stream);
     }
     return;
   }
   ProcessedMediaStream* ps = stream->AsProcessedStream();
   if (ps) {
-    aStack->AppendElement(stream);
+    aStack->insertBack(stream);
     stream->mIsOnOrderingStack = true;
     for (uint32_t i = 0; i < ps->mInputs.Length(); ++i) {
       MediaStream* source = ps->mInputs[i]->mSource;
@@ -478,7 +493,7 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(nsTArray<MediaStream*>* aStack,
         UpdateStreamOrderForStream(aStack, s.forget());
       }
     }
-    aStack->RemoveElementAt(aStack->Length() - 1);
+    aStack->popLast();
     stream->mIsOnOrderingStack = false;
   }
 
@@ -489,10 +504,10 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(nsTArray<MediaStream*>* aStack,
 void
 MediaStreamGraphImpl::UpdateStreamOrder()
 {
-  nsTArray<nsRefPtr<MediaStream> > oldStreams;
-  oldStreams.SwapElements(mStreams);
-  for (uint32_t i = 0; i < oldStreams.Length(); ++i) {
-    MediaStream* stream = oldStreams[i];
+  mOldStreams.SwapElements(mStreams);
+  mStreams.ClearAndRetainStorage();
+  for (uint32_t i = 0; i < mOldStreams.Length(); ++i) {
+    MediaStream* stream = mOldStreams[i];
     stream->mHasBeenOrdered = false;
     stream->mIsConsumed = false;
     stream->mIsOnOrderingStack = false;
@@ -503,10 +518,10 @@ MediaStreamGraphImpl::UpdateStreamOrder()
     }
   }
 
-  nsAutoTArray<MediaStream*,10> stack;
-  for (uint32_t i = 0; i < oldStreams.Length(); ++i) {
-    nsRefPtr<MediaStream>& s = oldStreams[i];
-    if (!s->mAudioOutputs.IsEmpty() || !s->mVideoOutputs.IsEmpty()) {
+  mozilla::LinkedList<MediaStream> stack;
+  for (uint32_t i = 0; i < mOldStreams.Length(); ++i) {
+    nsRefPtr<MediaStream>& s = mOldStreams[i];
+    if (s->IsIntrinsicallyConsumed()) {
       MarkConsumed(s);
     }
     if (!s->mHasBeenOrdered) {
@@ -888,28 +903,47 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   }
 }
 
+bool
+MediaStreamGraphImpl::ShouldUpdateMainThread()
+{
+  if (mRealtime) {
+    return true;
+  }
+
+  TimeStamp now = TimeStamp::Now();
+  if ((now - mLastMainThreadUpdate).ToMilliseconds() > MEDIA_GRAPH_TARGET_PERIOD_MS) {
+    mLastMainThreadUpdate = now;
+    return true;
+  }
+  return false;
+}
+
 void
 MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
 {
   mMonitor.AssertCurrentThreadOwns();
 
-  mStreamUpdates.SetCapacity(mStreamUpdates.Length() + mStreams.Length());
-  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
-    MediaStream* stream = mStreams[i];
-    if (!stream->MainThreadNeedsUpdates()) {
-      continue;
+  // We don't want to update the main thread about timing update when we are not
+  // running in realtime.
+  if (ShouldUpdateMainThread()) {
+    mStreamUpdates.SetCapacity(mStreamUpdates.Length() + mStreams.Length());
+    for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+      MediaStream* stream = mStreams[i];
+      if (!stream->MainThreadNeedsUpdates()) {
+        continue;
+      }
+      StreamUpdate* update = mStreamUpdates.AppendElement();
+      update->mGraphUpdateIndex = stream->mGraphUpdateIndices.GetAt(mCurrentTime);
+      update->mStream = stream;
+      update->mNextMainThreadCurrentTime =
+        GraphTimeToStreamTime(stream, mCurrentTime);
+      update->mNextMainThreadFinished =
+        stream->mFinished &&
+        StreamTimeToGraphTime(stream, stream->GetBufferEnd()) <= mCurrentTime;
     }
-    StreamUpdate* update = mStreamUpdates.AppendElement();
-    update->mGraphUpdateIndex = stream->mGraphUpdateIndices.GetAt(mCurrentTime);
-    update->mStream = stream;
-    update->mNextMainThreadCurrentTime =
-      GraphTimeToStreamTime(stream, mCurrentTime);
-    update->mNextMainThreadFinished =
-      stream->mFinished &&
-      StreamTimeToGraphTime(stream, stream->GetBufferEnd()) <= mCurrentTime;
-  }
-  if (!mPendingUpdateRunnables.IsEmpty()) {
-    mUpdateRunnables.MoveElementsFrom(mPendingUpdateRunnables);
+    if (!mPendingUpdateRunnables.IsEmpty()) {
+      mUpdateRunnables.MoveElementsFrom(mPendingUpdateRunnables);
+    }
   }
 
   // Don't send the message to the main thread if it's not going to have
@@ -950,18 +984,30 @@ MediaStreamGraphImpl::EnsureNextIterationLocked(MonitorAutoLock& aLock)
   }
 }
 
+/**
+ * Returns smallest value of t such that
+ * TimeToTicksRoundUp(aSampleRate, t) is a multiple of WEBAUDIO_BLOCK_SIZE
+ * and floor(TimeToTicksRoundUp(aSampleRate, t)/WEBAUDIO_BLOCK_SIZE) >
+ * floor(TimeToTicksRoundUp(aSampleRate, aTime)/WEBAUDIO_BLOCK_SIZE).
+ */
 static GraphTime
-RoundUpToAudioBlock(TrackRate aSampleRate, GraphTime aTime)
+RoundUpToNextAudioBlock(TrackRate aSampleRate, GraphTime aTime)
 {
-  int64_t ticksAtIdealaSampleRate = (aTime*aSampleRate) >> MEDIA_TIME_FRAC_BITS;
-  // Round up to nearest block boundary
-  int64_t blocksAtIdealaSampleRate =
-    (ticksAtIdealaSampleRate + (WEBAUDIO_BLOCK_SIZE - 1)) >>
-    WEBAUDIO_BLOCK_SIZE_BITS;
-  // Round up to nearest MediaTime unit
-  return
-    ((((blocksAtIdealaSampleRate + 1)*WEBAUDIO_BLOCK_SIZE) << MEDIA_TIME_FRAC_BITS)
-     + aSampleRate - 1)/aSampleRate;
+  TrackTicks ticks = TimeToTicksRoundUp(aSampleRate, aTime);
+  uint64_t block = ticks >> WEBAUDIO_BLOCK_SIZE_BITS;
+  uint64_t nextBlock = block + 1;
+  TrackTicks nextTicks = nextBlock << WEBAUDIO_BLOCK_SIZE_BITS;
+  // Find the smallest time t such that TimeToTicksRoundUp(aSampleRate,t) == nextTicks
+  // That's the smallest integer t such that
+  //   t*aSampleRate > ((nextTicks - 1) << MEDIA_TIME_FRAC_BITS)
+  // Both sides are integers, so this is equivalent to
+  //   t*aSampleRate >= ((nextTicks - 1) << MEDIA_TIME_FRAC_BITS) + 1
+  //   t >= (((nextTicks - 1) << MEDIA_TIME_FRAC_BITS) + 1)/aSampleRate
+  //   t = ceil((((nextTicks - 1) << MEDIA_TIME_FRAC_BITS) + 1)/aSampleRate)
+  // Using integer division, that's
+  //   t = (((nextTicks - 1) << MEDIA_TIME_FRAC_BITS) + 1 + aSampleRate - 1)/aSampleRate
+  //     = ((nextTicks - 1) << MEDIA_TIME_FRAC_BITS)/aSampleRate + 1
+  return ((nextTicks - 1) << MEDIA_TIME_FRAC_BITS)/aSampleRate + 1;
 }
 
 void
@@ -972,7 +1018,7 @@ MediaStreamGraphImpl::ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
 {
   GraphTime t = aFrom;
   while (t < aTo) {
-    GraphTime next = RoundUpToAudioBlock(aSampleRate, t + 1);
+    GraphTime next = RoundUpToNextAudioBlock(aSampleRate, t);
     for (uint32_t i = aStreamIndex; i < mStreams.Length(); ++i) {
       nsRefPtr<ProcessedMediaStream> ps = mStreams[i]->AsProcessedStream();
       if (ps) {
@@ -1036,7 +1082,7 @@ MediaStreamGraphImpl::RunThread()
     }
 
     GraphTime endBlockingDecisions =
-      RoundUpToAudioBlock(sampleRate, mCurrentTime + MillisecondsToMediaTime(AUDIO_TARGET_MS));
+      RoundUpToNextAudioBlock(sampleRate, mCurrentTime + MillisecondsToMediaTime(AUDIO_TARGET_MS));
     bool ensureNextIteration = false;
 
     // Grab pending stream input.
@@ -1172,6 +1218,7 @@ MediaStreamGraphImpl::RunThread()
   if (!mRealtime) {
     mNonRealtimeIsRunning = false;
   }
+  profiler_unregister_thread();
 }
 
 void
@@ -1185,6 +1232,9 @@ MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate)
   stream->mMainThreadCurrentTime = aUpdate->mNextMainThreadCurrentTime;
   stream->mMainThreadFinished = aUpdate->mNextMainThreadFinished;
 
+  if (stream->mWrapper) {
+    stream->mWrapper->NotifyStreamStateChanged();
+  }
   for (int32_t i = stream->mMainThreadListeners.Length() - 1; i >= 0; --i) {
     stream->mMainThreadListeners[i]->NotifyMainThreadStateChanged();
   }
@@ -1216,6 +1266,23 @@ MediaStreamGraphImpl::ForceShutDown()
 }
 
 namespace {
+
+class MediaStreamGraphInitThreadRunnable : public nsRunnable {
+public:
+  explicit MediaStreamGraphInitThreadRunnable(MediaStreamGraphImpl* aGraph)
+    : mGraph(aGraph)
+  {
+  }
+  NS_IMETHOD Run()
+  {
+    char aLocal;
+    profiler_register_thread("MediaStreamGraph", &aLocal);
+    mGraph->RunThread();
+    return NS_OK;
+  }
+private:
+  MediaStreamGraphImpl* mGraph;
+};
 
 class MediaStreamGraphThreadRunnable : public nsRunnable {
 public:
@@ -1356,7 +1423,7 @@ MediaStreamGraphImpl::RunInStableState()
       // Start the thread now. We couldn't start it earlier because
       // the graph might exit immediately on finding it has no streams. The
       // first message for a new graph must create a stream.
-      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable(this);
+      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
       NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread), event);
     }
 
@@ -1478,6 +1545,30 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
   if (mRealtime || mNonRealtimeProcessing) {
     EnsureRunInStableState();
   }
+}
+
+MediaStream::MediaStream(DOMMediaStream* aWrapper)
+  : mBufferStartTime(0)
+  , mExplicitBlockerCount(0)
+  , mBlocked(false)
+  , mGraphUpdateIndices(0)
+  , mFinished(false)
+  , mNotifiedFinished(false)
+  , mNotifiedBlocked(false)
+  , mHasCurrentData(false)
+  , mNotifiedHasCurrentData(false)
+  , mWrapper(aWrapper)
+  , mMainThreadCurrentTime(0)
+  , mMainThreadFinished(false)
+  , mMainThreadDestroyed(false)
+  , mGraph(nullptr)
+{
+  MOZ_COUNT_CTOR(MediaStream);
+  // aWrapper should not already be connected to a MediaStream! It needs
+  // to be hooked up to this stream, and since this stream is only just
+  // being created now, aWrapper must not be connected to anything.
+  NS_ASSERTION(!aWrapper || !aWrapper->GetStream(),
+               "Wrapper already has another media stream hooked up to it!");
 }
 
 void
@@ -2168,7 +2259,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   }
 #endif
 
-  mCurrentTimeStamp = mInitialTimeStamp = TimeStamp::Now();
+  mCurrentTimeStamp = mInitialTimeStamp = mLastMainThreadUpdate = TimeStamp::Now();
 }
 
 NS_IMPL_ISUPPORTS1(MediaStreamGraphShutdownObserver, nsIObserver)
@@ -2246,6 +2337,21 @@ ProcessedMediaStream*
 MediaStreamGraph::CreateTrackUnionStream(DOMMediaStream* aWrapper)
 {
   TrackUnionStream* stream = new TrackUnionStream(aWrapper);
+  NS_ADDREF(stream);
+  MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
+  stream->SetGraphImpl(graph);
+  graph->AppendMessage(new CreateMessage(stream));
+  return stream;
+}
+
+AudioNodeExternalInputStream*
+MediaStreamGraph::CreateAudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!aSampleRate) {
+    aSampleRate = aEngine->NodeMainThread()->Context()->SampleRate();
+  }
+  AudioNodeExternalInputStream* stream = new AudioNodeExternalInputStream(aEngine, aSampleRate);
   NS_ADDREF(stream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   stream->SetGraphImpl(graph);

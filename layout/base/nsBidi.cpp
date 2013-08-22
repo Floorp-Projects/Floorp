@@ -7,7 +7,7 @@
 
 #include "nsBidi.h"
 #include "nsUnicodeProperties.h"
-#include "nsCRT.h"
+#include "nsCRTGlue.h"
 
 using namespace mozilla::unicode;
 

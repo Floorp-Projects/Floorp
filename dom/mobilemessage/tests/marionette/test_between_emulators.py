@@ -17,17 +17,17 @@ class SMSTest(MarionetteTestCase):
         # Setup the event listsener on the receiver, which should store
         # a global variable when an SMS is received.
         message = 'hello world!'
-        self.assertTrue(receiver.execute_script("return window.navigator.mozSms != null;"))
+        self.assertTrue(receiver.execute_script("return window.navigator.mozMobileMessage != null;"))
         receiver.execute_script("""
 global.smsreceived = null;
-window.navigator.mozSms.addEventListener("received", function(e) {
+window.navigator.mozMobileMessage.addEventListener("received", function(e) {
     global.smsreceived = e.message.body;
 });
 """, new_sandbox=False)
 
         # Send the SMS from the sender.
         sender.execute_script("""
-window.navigator.mozSms.send("%d", "%s");
+window.navigator.mozMobileMessage.send("%d", "%s");
 """ % (receiver.emulator.port, message))
 
         # On the receiver, wait up to 10s for an SMS to be received, by 

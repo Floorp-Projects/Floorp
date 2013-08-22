@@ -13,11 +13,13 @@ function testDisplayText(command, expect) {
   is(command.typeOfCommand, icc.STK_CMD_DISPLAY_TEXT, expect.name);
   is(command.options.text, expect.text, expect.name);
   is(command.commandQualifier, expect.commandQualifier, expect.name);
-  if (expect.userClear) {
-    is(command.options.userClear, expect.userClear, expect.name);
-  }
-  if (expect.isHighPriority) {
-    is(command.options.isHighPriority, expect.isHighPriority, expect.name);
+  is(command.options.userClear, expect.userClear, expect.name);
+  is(command.options.isHighPriority, expect.isHighPriority, expect.name);
+
+  let duration = command.options.duration;
+  if (duration) {
+    is(duration.timeUnit, expect.duration.timeUnit, expect.name);
+    is(duration.timeInterval, expect.duration.timeInterval, expect.name);
   }
 
   runNextTest();
@@ -61,25 +63,40 @@ let tests = [
             text: "<GO-BACKWARDS>",
             userClear: true}},
    {command: "d0248103012180820281028d1908041704140420041004120421042204120423041904220415",
-   func: testDisplayText,
-   expect: {name: "display_text_cmd_7",
-            commandQualifier: 0x80,
-            text: "ЗДРАВСТВУЙТЕ",
-            userClear: true}},
+    func: testDisplayText,
+    expect: {name: "display_text_cmd_7",
+             commandQualifier: 0x80,
+             text: "ЗДРАВСТВУЙТЕ",
+             userClear: true}},
    {command: "d0108103012180820281028d05084f60597d",
-   func: testDisplayText,
-   expect: {name: "display_text_cmd_8",
-            commandQualifier: 0x80,
-            text: "你好",
-            userClear: true}},
+    func: testDisplayText,
+    expect: {name: "display_text_cmd_8",
+             commandQualifier: 0x80,
+             text: "你好",
+             userClear: true}},
    {command: "d0128103012180820281028d07080038003030eb",
+    func: testDisplayText,
+    expect: {name: "display_text_cmd_9",
+             commandQualifier: 0x80,
+             text: "80ル",
+             userClear: true}},
+   {command: "d0288103012180820281020d1d00d3309bfc06c95c301aa8e80259c3ec34b9ac07c9602f58ed159bb940",
+    func: testDisplayText,
+    expect: {name: "display_text_cmd_10",
+             commandQualifier: 0x80,
+             text: "Saldo 2.04 E. Validez 20/05/13. ",
+             userClear: true}},
+  {command: "d0198103012180820281028D0A043130205365636F6E648402010A",
    func: testDisplayText,
-   expect: {name: "display_text_cmd_9",
+   expect: {name: "display_text_cmd_11",
             commandQualifier: 0x80,
-            text: "80ル",
-            userClear: true}},
+            text: "10 Second",
+            userClear: true,
+            duration: {timeUnit: icc.STK_TIME_UNIT_SECOND,
+                       timeInterval: 0x0A}}},
 ];
 
+// TODO - Bug 843455: Import scripts for marionette tests.
 let pendingEmulatorCmdCount = 0;
 function sendStkPduToEmulator(command, func, expect) {
   ++pendingEmulatorCmdCount;

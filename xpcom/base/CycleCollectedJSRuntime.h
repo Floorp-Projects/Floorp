@@ -8,8 +8,8 @@
 #define mozilla_CycleCollectedJSRuntime_h__
 
 #include "mozilla/MemoryReporting.h"
-#include "jsprvtd.h"
 #include "jsapi.h"
+#include "jsfriendapi.h"
 
 #include "nsCycleCollector.h"
 #include "nsCycleCollectionParticipant.h"
@@ -25,54 +25,53 @@ namespace mozilla {
 class JSGCThingParticipant: public nsCycleCollectionParticipant
 {
 public:
-  static NS_METHOD RootImpl(void *n)
+  NS_IMETHOD Root(void *n)
   {
     return NS_OK;
   }
 
-  static NS_METHOD UnlinkImpl(void *n)
+  NS_IMETHOD Unlink(void *n)
   {
     return NS_OK;
   }
 
-  static NS_METHOD UnrootImpl(void *n)
+  NS_IMETHOD Unroot(void *n)
   {
     return NS_OK;
   }
 
-  static NS_METHOD_(void) DeleteCycleCollectableImpl(void *n)
+  NS_IMETHOD_(void) DeleteCycleCollectable(void *n)
   {
   }
 
-  static NS_METHOD TraverseImpl(JSGCThingParticipant *that, void *n,
-                                nsCycleCollectionTraversalCallback &cb);
+  NS_IMETHOD Traverse(void *n, nsCycleCollectionTraversalCallback &cb);
 };
 
 class JSZoneParticipant : public nsCycleCollectionParticipant
 {
 public:
+  MOZ_CONSTEXPR JSZoneParticipant(): nsCycleCollectionParticipant() {}
 
-  static NS_METHOD RootImpl(void *p)
+  NS_IMETHOD Root(void *p)
   {
     return NS_OK;
   }
 
-  static NS_METHOD UnlinkImpl(void *p)
+  NS_IMETHOD Unlink(void *p)
   {
     return NS_OK;
   }
 
-  static NS_METHOD UnrootImpl(void *p)
+  NS_IMETHOD Unroot(void *p)
   {
     return NS_OK;
   }
 
-  static NS_METHOD_(void) DeleteCycleCollectableImpl(void *n)
+  NS_IMETHOD_(void) DeleteCycleCollectable(void *n)
   {
   }
 
-  static NS_METHOD TraverseImpl(JSZoneParticipant *that, void *p,
-                                nsCycleCollectionTraversalCallback &cb);
+  NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
 };
 
 class IncrementalFinalizeRunnable;
@@ -85,7 +84,7 @@ class CycleCollectedJSRuntime
 protected:
   CycleCollectedJSRuntime(uint32_t aMaxbytes,
                           JSUseHelperThreads aUseHelperThreads,
-                          bool aExpectRootedGlobals);
+                          bool aExpectUnrootedGlobals);
   virtual ~CycleCollectedJSRuntime();
 
   JSRuntime* Runtime() const
@@ -97,10 +96,14 @@ protected:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
 
-  virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) = 0;
-  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) = 0;
+  virtual void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& aCb) {}
+  virtual void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) {}
 
   virtual void CustomGCCallback(JSGCStatus aStatus) {}
+  virtual bool CustomContextCallback(JSContext* aCx, unsigned aOperation)
+  {
+    return true; // Don't block context creation.
+  }
 
 private:
 
@@ -110,7 +113,10 @@ private:
 
   virtual bool
   DescribeCustomObjects(JSObject* aObject, js::Class* aClasp,
-                        char (&aName)[72]) const = 0;
+                        char (&aName)[72]) const
+  {
+    return false; // We did nothing.
+  }
 
   void
   NoteGCThingJSChildren(void* aThing, JSGCTraceKind aTraceKind,
@@ -122,8 +128,10 @@ private:
 
   virtual bool
   NoteCustomGCThingXPCOMChildren(js::Class* aClasp, JSObject* aObj,
-                                 nsCycleCollectionTraversalCallback& aCb) const = 0;
-
+                                 nsCycleCollectionTraversalCallback& aCb) const
+  {
+    return false; // We did nothing.
+  }
 
   enum TraverseSelect {
       TRAVERSE_CPP,
@@ -151,6 +159,8 @@ private:
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
   static void GCCallback(JSRuntime* aRuntime, JSGCStatus aStatus, void* aData);
+  static bool ContextCallback(JSContext* aCx, unsigned aOperation,
+                              void* aData);
 
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
   void TraceNativeGrayRoots(JSTracer* aTracer);
@@ -163,12 +173,13 @@ private:
   void FinalizeDeferredThings(DeferredFinalizeType aType);
 
   void OnGC(JSGCStatus aStatus);
+  bool OnContext(JSContext* aCx, unsigned aOperation);
 
 public:
   void AddJSHolder(void* aHolder, nsScriptObjectTracer* aTracer);
   void RemoveJSHolder(void* aHolder);
 #ifdef DEBUG
-  bool TestJSHolder(void* aHolder);
+  bool IsJSHolder(void* aHolder);
   void SetObjectToUnlink(void* aObject) { mObjectToUnlink = aObject; }
   void AssertNoObjectsToTrace(void* aPossibleJSHolder);
 #endif
@@ -176,13 +187,9 @@ public:
   // This returns the singleton nsCycleCollectionParticipant for JSContexts.
   static nsCycleCollectionParticipant* JSContextParticipant();
 
-  nsCycleCollectionParticipant* GCThingParticipant() const;
-  nsCycleCollectionParticipant* ZoneParticipant() const;
+  nsCycleCollectionParticipant* GCThingParticipant();
+  nsCycleCollectionParticipant* ZoneParticipant();
 
-  bool NotifyLeaveMainThread() const;
-  void NotifyEnterCycleCollectionThread() const;
-  void NotifyLeaveCycleCollectionThread() const;
-  void NotifyEnterMainThread() const;
   nsresult BeginCycleCollection(nsCycleCollectionNoteRootCallback &aCb);
   bool UsefulToMergeZones() const;
   void FixWeakMappingGrayBits() const;
@@ -197,12 +204,14 @@ public:
                         void* aThing);
   void DeferredFinalize(nsISupports* aSupports);
 
-private:
-  typedef const CCParticipantVTable<JSGCThingParticipant>::Type GCThingParticipantVTable;
-  const GCThingParticipantVTable mGCThingCycleCollectorGlobal;
+  void DumpJSHeap(FILE* aFile);
+  
+  virtual void DispatchDeferredDeletion(bool aContinuation) = 0;
 
-  typedef const CCParticipantVTable<JSZoneParticipant>::Type JSZoneParticipantVTable;
-  const JSZoneParticipantVTable mJSZoneCycleCollectorGlobal;
+private:
+  JSGCThingParticipant mGCThingCycleCollectorGlobal;
+
+  JSZoneParticipant mJSZoneCycleCollectorGlobal;
 
   JSRuntime* mJSRuntime;
 
@@ -215,9 +224,10 @@ private:
 
   nsRefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
 
+  bool mExpectUnrootedGlobals;
+
 #ifdef DEBUG
   void* mObjectToUnlink;
-  bool mExpectUnrootedGlobals;
 #endif
 };
 

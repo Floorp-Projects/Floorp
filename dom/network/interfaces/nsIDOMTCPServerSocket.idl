@@ -1,0 +1,92 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsITCPSocketChild.idl"
+
+// Bug 797561 - Expose a server tcp socket API to web applications
+/**
+ * nsIDOMTCPServerSocket
+ *
+ * An interface to a server socket that can accept incoming connections for gaia apps.
+ */
+[scriptable, uuid(821638a1-5327-416d-8031-668764f2ec04)]
+interface nsIDOMTCPServerSocket : nsISupports
+{
+  /**
+   * The port of this server socket object.
+   */
+  readonly attribute unsigned short localPort;
+
+  /**
+   * The onconnect event handler is called when a client connection is accepted.
+   * The data attribute of the event passed to the onconnect handler will be a TCPSocket
+   * instance, which is used for communication between client and server. 
+   */
+  attribute jsval onconnect;
+
+  /**
+   * The onerror handler will be called when the listen of a server socket is aborted.
+   * The data attribute of the event passed to the onerror handler will have a
+   * description of the kind of error.
+   */
+  attribute jsval onerror;
+
+  /**
+   * Close the server socket.
+   */
+  void close();
+};
+
+/**
+ * Internal interfaces for use in cross-process server-socket implementation.
+ * Needed to account for multiple possible types that can be provided to
+ * the socket callbacks as arguments.
+ *
+ * These interfaces are for calling each method from the server socket object
+ * on the parent and child side for an IPC protocol implementation.
+ */
+
+[scriptable, uuid(b64b1e68-4efa-497c-b0d8-69f067ad5ec8)]
+interface nsITCPServerSocketInternal : nsISupports 
+{
+  /**
+   * Initialization after creating a TCP server socket object.
+   *
+   * @param windowVal
+   *        An object to create ArrayBuffer for this window. See Bug 831107.
+   */
+  void init(in jsval windowVal);
+
+  /** 
+   * Listen on a port
+   *
+   * @param localPort 
+   *        The port of the server socket. Pass -1 to indicate no preference,
+   *        and a port will be selected automatically.
+   * @param options 
+   *        An object specifying one or more parameters which
+   *        determine the details of the socket.
+   *
+   *        binaryType: "arraybuffer" to use UInt8 array
+   *        instances in the ondata callback and as the argument
+   *        to send. Defaults to "string", to use JavaScript strings.
+   * @param backlog 
+   *        The maximum length the queue of pending connections may grow to.
+   *        This parameter may be silently limited by the operating system.
+   *        Pass -1 to use the default value.
+   */
+  void listen(in unsigned short localPort, in jsval options, in unsigned short backlog);
+
+  /**
+   * Listener for receiving an accepted socket.
+   */
+  void callListenerAccept(in nsITCPSocketChild socketChild);
+
+  /**
+   * Listener for handling an error caused in chrome process.
+   */
+  void callListenerError(in DOMString message, in DOMString filename,
+                         in uint32_t lineNumber, in uint32_t columnNumber);
+};

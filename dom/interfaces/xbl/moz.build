@@ -10,9 +10,5 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_xbl'
 
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/interfaces/base',
-]
-
 MODULE = 'dom'
 

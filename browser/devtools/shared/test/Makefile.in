@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \
 		browser_eventemitter_basic.js \
+		browser_observableobject.js \
 		browser_layoutHelpers.js \
 		browser_require_basic.js \
 		browser_telemetry_buttonsandsidebar.js \

@@ -15,7 +15,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test1.xpi</install>
+    <install>http://localhost:%PORT%/test1.xpi</install>
   </addon>
 </searchresults>
 

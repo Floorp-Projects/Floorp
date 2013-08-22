@@ -28,7 +28,7 @@ class CompositableClient;
 class CompositableTransaction;
 class ShadowableLayer;
 class Image;
-
+class TextureClient;
 
 /**
  * Returns true if the current thread is the ImageBrdigeChild's thread.
@@ -232,8 +232,34 @@ public:
 
   virtual void Connect(CompositableClient* aCompositable) MOZ_OVERRIDE;
 
+  /**
+   * See CompositableForwarder::AddTexture
+   */
+  virtual void AddTexture(CompositableClient* aCompositable,
+                          TextureClient* aClient) MOZ_OVERRIDE;
+
+  /**
+   * See CompositableForwarder::RemoveTexture
+   */
+  virtual void RemoveTexture(CompositableClient* aCompositable,
+                             uint64_t aTextureID,
+                             TextureFlags aFlags) MOZ_OVERRIDE;
+
+  /**
+   * See CompositableForwarder::UpdatedTexture
+   */
+  virtual void UpdatedTexture(CompositableClient* aCompositable,
+                              TextureClient* aTexture,
+                              nsIntRegion* aRegion) MOZ_OVERRIDE;
+
+  /**
+   * See CompositableForwarder::UseTexture
+   */
+  virtual void UseTexture(CompositableClient* aCompositable,
+                          TextureClient* aClient) MOZ_OVERRIDE;
+
   virtual void PaintedTiledLayerBuffer(CompositableClient* aCompositable,
-                                       BasicTiledLayerBuffer* aTiledLayerBuffer) MOZ_OVERRIDE
+                                       const SurfaceDescriptorTiles& aTileLayerDescriptor) MOZ_OVERRIDE
   {
     NS_RUNTIMEABORT("should not be called");
   }

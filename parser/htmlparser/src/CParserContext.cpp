@@ -12,6 +12,7 @@
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
 #include "nsMimeTypes.h"
+#include "nsHTMLTokenizer.h"
 
 CParserContext::CParserContext(CParserContext* aPrevContext,
                                nsScanner* aScanner, 
@@ -77,12 +78,6 @@ CParserContext::GetTokenizer(nsIDTD* aDTD,
                                        nsHTMLTokenizer::GetFlags(aSink));
       if (!mTokenizer) {
         return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      // Make sure the new tokenizer has all of the necessary information.
-      // XXX this might not be necessary.
-      if (mPrevContext) {
-        mTokenizer->CopyState(mPrevContext->mTokenizer);
       }
     }
     else if (type == NS_IPARSER_FLAG_XML) {

@@ -1,0 +1,52 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html, body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  display: flex;
+}
+
+#aboutAddonsTextTitle {
+  font-weight: bold;
+}
+
+#floatingTextBox {
+  flex: 1;
+  
+  position: relative;
+  top: 20%;
+  left: 60%;
+
+  width: 375px;
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 25px;
+  text-align: left;
+  word-wrap: normal;
+}
+
+#fox {
+  flex: 1;
+  background-image:url('chrome://browser/skin/images/aboutAddonsBackground.png'), url('chrome://browser/skin/images/aboutAddonsBackgroundFillSlice.png');
+  background-size: contain;
+  background-position: bottom center;
+  background-repeat: no-repeat, repeat-x;
+  background-color: rgb(230, 230, 230); /*color hand sampled from image*/
+
+}
+
+/* Snapped-view variation */
+@media (max-width: 330px) {
+  #floatingTextBox {
+    top: 20%;
+    left: 5%;
+    width: 90%;
+    padding: 0;
+  }
+}

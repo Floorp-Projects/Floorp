@@ -23,6 +23,7 @@ let tests = [
             commandQualifier: 0x00}}
 ];
 
+// TODO - Bug 843455: Import scripts for marionette tests.
 let pendingEmulatorCmdCount = 0;
 function sendStkPduToEmulator(command, func, expect) {
   ++pendingEmulatorCmdCount;

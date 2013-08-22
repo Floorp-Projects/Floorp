@@ -62,11 +62,13 @@ class CPOWProxyHandler : public BaseProxyHandler
 
     virtual bool preventExtensions(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
     virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                       PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
+                                       MutableHandle<JSPropertyDescriptor> desc,
+                                       unsigned flags) MOZ_OVERRIDE;
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
-                                          HandleId id, PropertyDescriptor *desc, unsigned flags) MOZ_OVERRIDE;
+                                          HandleId id, MutableHandle<JSPropertyDescriptor> desc,
+                                          unsigned flags) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                PropertyDescriptor *desc) MOZ_OVERRIDE;
+                                MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
     virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                      AutoIdVector &props) MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) MOZ_OVERRIDE;
@@ -111,14 +113,14 @@ JavaScriptParent::preventExtensions(JSContext *cx, HandleObject proxy)
 
 bool
 CPOWProxyHandler::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                        PropertyDescriptor *desc, unsigned flags)
+                                        MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
     return ParentOf(proxy)->getPropertyDescriptor(cx, proxy, id, desc, flags);
 }
 
 bool
 JavaScriptParent::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                        PropertyDescriptor *desc, unsigned flags)
+                                        MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
     ObjectId objId = idOf(proxy);
 
@@ -138,14 +140,15 @@ JavaScriptParent::getPropertyDescriptor(JSContext *cx, HandleObject proxy, Handl
 
 bool
 CPOWProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy,
-                                           HandleId id, PropertyDescriptor *desc, unsigned flags)
+                                           HandleId id, MutableHandle<JSPropertyDescriptor> desc,
+                                           unsigned flags)
 {
     return ParentOf(proxy)->getOwnPropertyDescriptor(cx, proxy, id, desc, flags);
 }
 
 bool
 JavaScriptParent::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
-                                           PropertyDescriptor *desc, unsigned flags)
+                                           MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
     ObjectId objId = idOf(proxy);
 
@@ -165,14 +168,14 @@ JavaScriptParent::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, Ha
 
 bool
 CPOWProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                 PropertyDescriptor *desc)
+                                 MutableHandle<JSPropertyDescriptor> desc)
 {
     return ParentOf(proxy)->defineProperty(cx, proxy, id, desc);
 }
 
 bool
 JavaScriptParent::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                 PropertyDescriptor *desc)
+                                 MutableHandle<JSPropertyDescriptor> desc)
 {
     ObjectId objId = idOf(proxy);
 
@@ -181,7 +184,7 @@ JavaScriptParent::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
         return false;
 
     PPropertyDescriptor descriptor;
-    if (!fromDescriptor(cx, *desc, &descriptor))
+    if (!fromDescriptor(cx, desc, &descriptor))
         return false;
 
     ReturnStatus status;
@@ -394,7 +397,7 @@ JavaScriptParent::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
             JSObject *obj = &v.toObject();
             if (xpc::IsOutObject(cx, obj)) {
                 // Make sure it is not an in-out object.
-                JSBool found;
+                bool found;
                 if (!JS_HasProperty(cx, obj, "value", &found))
                     return false;
                 if (found) {
@@ -436,7 +439,7 @@ JavaScriptParent::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
             return false;
 
         JSObject *obj = &outobjects[i].toObject();
-        if (!JS_SetProperty(cx, obj, "value", &v))
+        if (!JS_SetProperty(cx, obj, "value", v))
             return false;
     }
 
@@ -514,7 +517,8 @@ JavaScriptParent::init()
 bool
 JavaScriptParent::makeId(JSContext *cx, JSObject *obj, ObjectId *idp)
 {
-    if (!IsProxy(obj) || GetProxyHandler(obj) != &CPOWProxyHandler::singleton) {
+    obj = js::CheckedUnwrap(obj, false);
+    if (!obj || !IsProxy(obj) || GetProxyHandler(obj) != &CPOWProxyHandler::singleton) {
         JS_ReportError(cx, "cannot ipc non-cpow object");
         return false;
     }
@@ -562,12 +566,14 @@ JavaScriptParent::unwrap(JSContext *cx, ObjectId objId)
 
     bool callable = !!(objId & OBJECT_IS_CALLABLE);
 
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+
     RootedValue v(cx, UndefinedValue());
     JSObject *obj = NewProxyObject(cx,
                                    &CPOWProxyHandler::singleton,
                                    v,
                                    NULL,
-                                   NULL,
+                                   global,
                                    callable ? ProxyIsCallable : ProxyNotCallable);
     if (!obj)
         return NULL;
@@ -653,4 +659,25 @@ JavaScriptParent::instanceOf(JSObject *obj, const nsID *id, bool *bp)
         return NS_ERROR_UNEXPECTED;
 
     return NS_OK;
+}
+
+/* static */ bool
+JavaScriptParent::DOMInstanceOf(JSObject *obj, int prototypeID, int depth, bool *bp)
+{
+    return ParentOf(obj)->domInstanceOf(obj, prototypeID, depth, bp);
+}
+
+bool
+JavaScriptParent::domInstanceOf(JSObject *obj, int prototypeID, int depth, bool *bp)
+{
+    ObjectId objId = idOf(obj);
+
+    ReturnStatus status;
+    if (!CallDOMInstanceOf(objId, prototypeID, depth, &status, bp))
+        return false;
+
+    if (!status.ok())
+        return false;
+
+    return true;
 }

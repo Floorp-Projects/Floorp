@@ -23,6 +23,7 @@
 #include "nsILoadContext.h"
 #include "nsEscape.h"
 #include "nsStreamListenerWrapper.h"
+#include "nsISecurityConsoleMessage.h"
 
 #include "prnetdb.h"
 #include <algorithm>
@@ -58,11 +59,9 @@ HttpBaseChannel::HttpBaseChannel()
   , mSuspendCount(0)
   , mProxyResolveFlags(0)
   , mContentDispositionHint(UINT32_MAX)
+  , mHttpHandler(gHttpHandler)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
-
-  // grab a reference to the handler to ensure that it doesn't go away.
-  NS_ADDREF(gHttpHandler);
 
   // Subfields of unions cannot be targeted in an initializer list
   mSelfAddr.raw.family = PR_AF_UNSPEC;
@@ -75,8 +74,6 @@ HttpBaseChannel::~HttpBaseChannel()
 
   // Make sure we don't leak
   CleanRedirectCacheChainIfNecessary();
-
-  gHttpHandler->Release();
 }
 
 nsresult
@@ -1298,6 +1295,38 @@ HttpBaseChannel::GetLocalAddress(nsACString& addr)
   NetAddrToString(&mSelfAddr, addr.BeginWriting(), kIPv6CStrBufSize);
   addr.SetLength(strlen(addr.BeginReading()));
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::TakeAllSecurityMessages(
+    nsCOMArray<nsISecurityConsoleMessage> &aMessages)
+{
+  aMessages.Clear();
+  aMessages.SwapElements(mSecurityConsoleMessages);
+  return NS_OK;
+}
+
+/* Please use this method with care. This can cause the message
+ * queue to grow large and cause the channel to take up a lot
+ * of memory. Use only static string messages and do not add
+ * server side data to the queue, as that can be large.
+ * Add only a limited number of messages to the queue to keep
+ * the channel size down and do so only in rare erroneous situations.
+ * More information can be found here:
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=846918
+ */
+NS_IMETHODIMP
+HttpBaseChannel::AddSecurityMessage(const nsAString &aMessageTag,
+    const nsAString &aMessageCategory)
+{
+  nsresult rv;
+  nsCOMPtr<nsISecurityConsoleMessage> message =
+    do_CreateInstance(NS_SECURITY_CONSOLE_MESSAGE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  message->SetTag(aMessageTag);
+  message->SetCategory(aMessageCategory);
+  mSecurityConsoleMessages.AppendElement(message);
   return NS_OK;
 }
 

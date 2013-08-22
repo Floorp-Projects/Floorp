@@ -12,40 +12,6 @@ relativesrcdir = @relativesrcdir@
 FAIL_ON_WARNINGS := 1
 
 include $(DEPTH)/config/autoconf.mk
-
-cppsrcs = \
-  TestIncrementalDownload.cpp \
-  TestStreamLoader.cpp \
-  PropertiesTest.cpp \
-  urltest.cpp \
-  TestCallbacks.cpp \
-  TestPageLoad.cpp \
-  TestURLParser.cpp \
-  TestStandardURL.cpp \
-  TestUpload.cpp \
-  TestBlockingSocket.cpp \
-  TestDNS.cpp \
-  TestOpen.cpp \
-  TestCookie.cpp \
-  TestServ.cpp \
-  ReadNTLM.cpp \
-  TestProtocols.cpp \
-  $(NULL)
-
-DISABLED_SIMPLE_PROGRAMS := $(cppsrcs:.cpp=$(BIN_SUFFIX))
-
-# XXX Make this work in libxul builds.
-#SIMPLE_PROGRAMS += \
-#		TestPerf$(BIN_SUFFIX) \
-#		TestIDN$(BIN_SUFFIX) \
-#		TestSocketTransport$(BIN_SUFFIX) \
-#		TestStreamTransport$(BIN_SUFFIX) \
-#		TestStreamChannel$(BIN_SUFFIX) \
-#		TestStreamPump$(BIN_SUFFIX) \
-#		TestIOThreads$(BIN_SUFFIX) \
-#		TestUDPSocketProvider$(BIN_SUFFIX) \
-#		$(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 LIBS		= $(XPCOM_LIBS) \

@@ -7,9 +7,7 @@
 }
 
 .highlighter-controls {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
 }
 
 .highlighter-outline-container {

@@ -123,7 +123,7 @@ StyleEditorDebuggee.prototype = {
   _getBaseURI: function() {
     let message = { type: "getBaseURI" };
     this._sendRequest(message, (response) => {
-      this.baseURI = response.baseURI;
+      this.baseURI = Services.io.newURI(response.baseURI, null, null);
     });
   },
 

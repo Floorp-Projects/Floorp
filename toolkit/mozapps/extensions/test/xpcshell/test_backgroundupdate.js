@@ -8,18 +8,19 @@
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
 Components.utils.import("resource://testing-common/httpd.js");
-var testserver;
+var testserver = new HttpServer();
+testserver.start(-1);
+gPort = testserver.identity.primaryPort;
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
+
+// register static files with server and interpolate port numbers in them
+mapFile("/data/test_backgroundupdate.rdf", testserver);
 
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  // Create and configure the HTTP server.
-  testserver = new HttpServer();
-  testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerDirectory("/addons/", do_get_file("addons"));
-  testserver.start(4444);
 
   startupManager();
 
@@ -53,7 +54,7 @@ function run_test_2() {
   writeInstallRDFForExtension({
     id: "addon1@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_backgroundupdate.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_backgroundupdate.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -65,7 +66,7 @@ function run_test_2() {
   writeInstallRDFForExtension({
     id: "addon2@tests.mozilla.org",
     version: "1.0",
-    updateURL: "http://localhost:4444/data/test_backgroundupdate.rdf",
+    updateURL: "http://localhost:" + gPort + "/data/test_backgroundupdate.rdf",
     targetApplications: [{
       id: "xpcshell@tests.mozilla.org",
       minVersion: "1",
@@ -87,12 +88,12 @@ function run_test_2() {
 
   // Background update uses a different pref, if set
   Services.prefs.setCharPref("extensions.update.background.url",
-                             "http://localhost:4444/data/test_backgroundupdate.rdf");
+                             "http://localhost:" + gPort +"/data/test_backgroundupdate.rdf");
   restartManager();
 
   // Do hotfix checks
   Services.prefs.setCharPref("extensions.hotfix.id", "hotfix@tests.mozilla.org");
-  Services.prefs.setCharPref("extensions.hotfix.url", "http://localhost:4444/missing.rdf");
+  Services.prefs.setCharPref("extensions.hotfix.url", "http://localhost:" + gPort + "/missing.rdf");
 
   let installCount = 0;
   let completeCount = 0;

@@ -10,9 +10,8 @@
 #ifndef nsPresArena_h___
 #define nsPresArena_h___
 
-#include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "nscore.h"
 #include "nsQueryFrame.h"
 #include "nsTArray.h"

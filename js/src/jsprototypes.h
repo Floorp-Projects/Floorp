@@ -9,8 +9,6 @@
 #ifndef jsprototypes_h
 #define jsprototypes_h
 
-#include "jsversion.h"
-
 /*
  * Enumerator codes in the second column must not change -- they are part of
  * the JS XDR API.  Also note the symbols in the third column are extern "C";

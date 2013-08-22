@@ -10,15 +10,17 @@
 #include <cmath>
 #include <limits>
 #include "mozilla/TypeTraits.h"
-#include "mozilla/Assertions.h"
-#include "AudioParamTimeline.h"
+#include "mozilla/FloatingPoint.h"
 #include "MediaSegment.h"
 
 namespace mozilla {
 
 class AudioNodeStream;
+class MediaStream;
 
 namespace dom {
+
+class AudioParamTimeline;
 
 struct WebAudioUtils {
   // This is an arbitrary large number used to protect against OOMs.
@@ -184,10 +186,10 @@ struct WebAudioUtils {
   {
     using namespace std;
 
-    MOZ_STATIC_ASSERT((mozilla::IsIntegral<IntType>::value == true),
-                      "IntType must be an integral type");
-    MOZ_STATIC_ASSERT((mozilla::IsFloatingPoint<FloatType>::value == true),
-                      "FloatType must be a floating point type");
+    static_assert(mozilla::IsIntegral<IntType>::value == true,
+                  "IntType must be an integral type");
+    static_assert(mozilla::IsFloatingPoint<FloatType>::value == true,
+                  "FloatType must be a floating point type");
 
     if (f != f) {
       // It is the responsibility of the caller to deal with NaN values.
@@ -210,6 +212,8 @@ struct WebAudioUtils {
     // Otherwise, this conversion must be well defined.
     return IntType(f);
   }
+
+  static void Shutdown();
 };
 
 }

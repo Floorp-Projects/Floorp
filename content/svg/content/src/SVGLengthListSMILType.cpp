@@ -93,12 +93,6 @@ SVGLengthListSMILType::Add(nsSMILValue& aDest,
   // should be, not zeros, and those values are not explicit or otherwise
   // available.
 
-  if (dest.IsEmpty() && valueToAdd.IsEmpty()) {
-    // Adding two identity values, no-op.  This occurs when performing a
-    // discrete by-animation on an attribute with no specified base value.
-    return NS_OK;
-  }
-
   if (!valueToAdd.Element()) { // Adding identity value - no-op
     NS_ABORT_IF_FALSE(valueToAdd.IsEmpty(),
                       "Identity values should be empty");

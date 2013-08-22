@@ -35,7 +35,7 @@ function enumerateSuccess(e) {
   
   var filename = e.target.result.name;
   if (filename[0] == "/") {
-    // We got /storgaeName/prefix/filename
+    // We got /storageName/prefix/filename
     // Remove the storageName (this shows up on FirefoxOS)
     filename = filename.substring(1); // Remove leading slash
     var slashIndex = filename.indexOf("/");

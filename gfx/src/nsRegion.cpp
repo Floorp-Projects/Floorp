@@ -1275,6 +1275,18 @@ bool nsRegion::IsEqual (const nsRegion& aRegion) const
 }
 
 
+uint64_t nsRegion::Area () const
+{
+  uint64_t area = 0;
+  nsRegionRectIterator iter(*this);
+  const nsRect* r;
+  while ((r = iter.Next()) != nullptr) {
+    area += uint64_t(r->width)*r->height;
+  }
+  return area;
+}
+
+
 void nsRegion::MoveBy (nsPoint aPt)
 {
   if (aPt.x || aPt.y)

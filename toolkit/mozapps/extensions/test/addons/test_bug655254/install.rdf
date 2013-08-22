@@ -7,7 +7,6 @@
     <em:id>addon1@tests.mozilla.org</em:id>
     <em:version>1.0</em:version>
     <em:name>Test 1</em:name>
-    <em:updateURL>http://localhost:4444/data/test_bug655254.rdf</em:updateURL>
     <em:targetApplication>
       <Description>
         <em:id>xpcshell@tests.mozilla.org</em:id>

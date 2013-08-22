@@ -15,7 +15,6 @@
 #pragma comment(lib, "rpcrt4.lib")
 
 #include "nsWindowsHelpers.h"
-#include "nsAutoPtr.h"
 
 #include "workmonitor.h"
 #include "serviceinstall.h"

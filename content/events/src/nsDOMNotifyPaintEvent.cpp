@@ -5,6 +5,7 @@
 
 #include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/GfxMessageUtils.h"
 #include "nsDOMNotifyPaintEvent.h"
 #include "nsContentUtils.h"
 #include "nsClientRect.h"
@@ -162,9 +163,6 @@ nsresult NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aInstancePtrResult,
   nsDOMNotifyPaintEvent* it =
     new nsDOMNotifyPaintEvent(aOwner, aPresContext, aEvent, aEventType,
                               aInvalidateRequests);
-  if (nullptr == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   return CallQueryInterface(it, aInstancePtrResult);
 }

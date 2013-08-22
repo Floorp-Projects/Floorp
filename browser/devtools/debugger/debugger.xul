@@ -32,6 +32,8 @@
   <commandset id="sourceEditorCommands"/>
 
   <commandset id="debuggerCommands">
+    <command id="unBlackBoxButton"
+             oncommand="DebuggerView.Sources._onStopBlackBoxing()"/>
     <command id="nextSourceCommand"
              oncommand="DebuggerView.Sources.selectNextItem()"/>
     <command id="prevSourceCommand"
@@ -120,8 +122,8 @@
                 key="tokenSearchKey"
                 command="tokenSearchCommand"/>
       <menuitem id="se-dbg-cMenu-findLine"
-                label="&debuggerUI.searchLine;"
-                accesskey="&debuggerUI.searchLine.key;"
+                label="&debuggerUI.searchGoToLine;"
+                accesskey="&debuggerUI.searchGoToLine.key;"
                 key="lineSearchKey"
                 command="lineSearchCommand"/>
       <menuseparator/>
@@ -191,17 +193,33 @@
          modifiers="accel alt"
          command="prevSourceCommand"/>
     <key id="resumeKey"
-         keycode="&debuggerUI.stepping.resume;"
+         keycode="&debuggerUI.stepping.resume1;"
+         command="resumeCommand"/>
+    <key id="resumeKey2"
+         keycode="&debuggerUI.stepping.resume2;"
+         modifiers="accel"
          command="resumeCommand"/>
     <key id="stepOverKey"
-         keycode="&debuggerUI.stepping.stepOver;"
+         keycode="&debuggerUI.stepping.stepOver1;"
+         command="stepOverCommand"/>
+    <key id="stepOverKey2"
+         keycode="&debuggerUI.stepping.stepOver2;"
+         modifiers="accel"
          command="stepOverCommand"/>
     <key id="stepInKey"
-         keycode="&debuggerUI.stepping.stepIn;"
+         keycode="&debuggerUI.stepping.stepIn1;"
+         command="stepInCommand"/>
+    <key id="stepInKey2"
+         keycode="&debuggerUI.stepping.stepIn2;"
+         modifiers="accel"
          command="stepInCommand"/>
     <key id="stepOutKey"
-         keycode="&debuggerUI.stepping.stepOut;"
+         keycode="&debuggerUI.stepping.stepOut1;"
          modifiers="shift"
+         command="stepOutCommand"/>
+    <key id="stepOutKey2"
+         keycode="&debuggerUI.stepping.stepOut2;"
+         modifiers="accel shift"
          command="stepOutCommand"/>
     <key id="fileSearchKey"
          key="&debuggerUI.searchFile.key;"
@@ -224,7 +242,7 @@
          modifiers="accel"
          command="tokenSearchCommand"/>
     <key id="lineSearchKey"
-         key="&debuggerUI.searchLine.key;"
+         key="&debuggerUI.searchGoToLine.key;"
          modifiers="accel"
          command="lineSearchCommand"/>
     <key id="variableSearchKey"
@@ -293,7 +311,19 @@
           <vbox id="sources" flex="1"/>
         </vbox>
         <splitter class="devtools-side-splitter"/>
-        <vbox id="editor" flex="1"/>
+        <deck id="editor-deck" flex="1" selectedIndex="0">
+          <vbox id="editor" />
+          <vbox id="black-boxed-message" align="center">
+            <label id="black-boxed-message-label">
+              &debuggerUI.blackBoxMessage.label;
+            </label>
+            <button id="black-boxed-message-button"
+                    class="devtools-toolbarbutton"
+                    label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
+                    image="chrome://browser/skin/devtools/blackBoxMessageEye.png"
+                    command="unBlackBoxCommand"/>
+          </vbox>
+        </deck>
         <splitter class="devtools-side-splitter"/>
         <vbox id="instruments-pane" hidden="true">
           <vbox id="expressions"/>

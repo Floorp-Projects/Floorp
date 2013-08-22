@@ -18,7 +18,7 @@
 
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "ion/IonCompartment.h"
+#include "jit/IonCompartment.h"
 #endif
 #include "js/RootingAPI.h"
 #include "vm/StopIterationObject.h"
@@ -26,7 +26,8 @@
 
 #include "jsfuninlines.h"
 #include "jsgcinlines.h"
-#include "jsobjinlines.h"
+#include "jsinferinlines.h"
+#include "jsscriptinlines.h"
 
 #include "gc/Barrier-inl.h"
 
@@ -36,12 +37,15 @@ using namespace js::gc;
 using mozilla::DebugOnly;
 
 JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options = JS::CompartmentOptions())
-  : zone_(zone),
-    options_(options),
-    rt(zone->rt),
+  : options_(options),
+    zone_(zone),
+    runtime_(zone->runtimeFromMainThread()),
     principals(NULL),
     isSystem(false),
     marked(true),
+#ifdef DEBUG
+    firedOnNewGlobalObject(false),
+#endif
     global_(NULL),
     enterCompartmentDepth(0),
     lastCodeRelease(0),
@@ -49,12 +53,12 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     data(NULL),
     objectMetadataCallback(NULL),
     lastAnimationTime(0),
-    regExps(rt),
+    regExps(runtime_),
     propertyTree(thisForCtor()),
     gcIncomingGrayPointers(NULL),
     gcLiveArrayBuffers(NULL),
     gcWeakMapList(NULL),
-    debugModeBits(rt->debugMode ? DebugFromC : 0),
+    debugModeBits(runtime_->debugMode ? DebugFromC : 0),
     rngState(0),
     watchpointMap(NULL),
     scriptCountsMap(NULL),
@@ -66,7 +70,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     , ionCompartment_(NULL)
 #endif
 {
-    rt->numCompartments++;
+    runtime_->numCompartments++;
 }
 
 JSCompartment::~JSCompartment()
@@ -81,7 +85,7 @@ JSCompartment::~JSCompartment()
     js_delete(debugScopes);
     js_free(enumerators);
 
-    rt->numCompartments--;
+    runtime_->numCompartments--;
 }
 
 bool
@@ -115,6 +119,13 @@ JSCompartment::init(JSContext *cx)
 ion::IonRuntime *
 JSRuntime::createIonRuntime(JSContext *cx)
 {
+    // The runtime will only be created on its owning thread, but reads of a
+    // runtime's ionRuntime() can occur when another thread is triggering an
+    // operation callback.
+    AutoLockForOperationCallback lock(this);
+
+    JS_ASSERT(!ionRuntime_);
+
     ionRuntime_ = cx->new_<ion::IonRuntime>();
 
     if (!ionRuntime_)
@@ -124,9 +135,10 @@ JSRuntime::createIonRuntime(JSContext *cx)
         js_delete(ionRuntime_);
         ionRuntime_ = NULL;
 
-        if (cx->runtime()->atomsCompartment->ionCompartment_) {
-            js_delete(cx->runtime()->atomsCompartment->ionCompartment_);
-            cx->runtime()->atomsCompartment->ionCompartment_ = NULL;
+        JSCompartment *comp = cx->runtime()->atomsCompartment();
+        if (comp->ionCompartment_) {
+            js_delete(comp->ionCompartment_);
+            comp->ionCompartment_ = NULL;
         }
 
         return NULL;
@@ -193,8 +205,10 @@ JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &w
 bool
 JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingArg)
 {
+    JSRuntime *rt = runtimeFromMainThread();
+
     JS_ASSERT(cx->compartment() == this);
-    JS_ASSERT(this != rt->atomsCompartment);
+    JS_ASSERT(!rt->isAtomsCompartment(this));
     JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
     JS_ASSERT_IF(existingArg, vp.isObject());
     JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
@@ -218,7 +232,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
 
         /* If the string is an atom, we don't have to copy. */
         if (str->isAtom()) {
-            JS_ASSERT(str->zone() == cx->runtime()->atomsCompartment->zone());
+            JS_ASSERT(cx->runtime()->isAtomsZone(str->zone()));
             return true;
         }
     }
@@ -231,6 +245,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
      * This loses us some transparency, and is generally very cheesy.
      */
     HandleObject global = cx->global();
+    JS_ASSERT(global);
 
     /* Unwrap incoming objects. */
     if (vp.isObject()) {
@@ -412,25 +427,21 @@ JSCompartment::wrap(JSContext *cx, StrictPropertyOp *propp)
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, PropertyDescriptor *desc)
+JSCompartment::wrap(JSContext *cx, MutableHandle<PropertyDescriptor> desc)
 {
-    if (!wrap(cx, &desc->obj))
+    if (!wrap(cx, desc.object().address()))
         return false;
 
-    if (desc->attrs & JSPROP_GETTER) {
-        if (!wrap(cx, &desc->getter))
+    if (desc.hasGetterObject()) {
+        if (!wrap(cx, &desc.getter()))
             return false;
     }
-    if (desc->attrs & JSPROP_SETTER) {
-        if (!wrap(cx, &desc->setter))
+    if (desc.hasSetterObject()) {
+        if (!wrap(cx, &desc.setter()))
             return false;
     }
 
-    RootedValue value(cx, desc->value);
-    if (!wrap(cx, &value))
-        return false;
-    desc->value = value.get();
-    return true;
+    return wrap(cx, desc.value());
 }
 
 bool
@@ -517,6 +528,8 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
     /* This function includes itself in PHASE_SWEEP_TABLES. */
     sweepCrossCompartmentWrappers();
 
+    JSRuntime *rt = runtimeFromMainThread();
+
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
 
@@ -578,6 +591,8 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 void
 JSCompartment::sweepCrossCompartmentWrappers()
 {
+    JSRuntime *rt = runtimeFromMainThread();
+
     gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_SWEEP_TABLES);
     gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_WRAPPER);
 
@@ -602,10 +617,40 @@ JSCompartment::purge()
     dtoaCache.purge();
 }
 
+void
+JSCompartment::clearTables()
+{
+    global_ = NULL;
+
+    regExps.clearTables();
+
+    // No scripts should have run in this compartment. This is used when
+    // merging a compartment that has been used off thread into another
+    // compartment and zone.
+    JS_ASSERT(crossCompartmentWrappers.empty());
+    JS_ASSERT_IF(callsiteClones.initialized(), callsiteClones.empty());
+#ifdef JS_ION
+    JS_ASSERT(!ionCompartment_);
+#endif
+    JS_ASSERT(!debugScopes);
+    JS_ASSERT(!gcWeakMapList);
+    JS_ASSERT(!analysisLifoAlloc.used());
+    JS_ASSERT(enumerators->next() == enumerators);
+
+    if (baseShapes.initialized())
+        baseShapes.clear();
+    if (initialShapes.initialized())
+        initialShapes.clear();
+    if (newTypeObjects.initialized())
+        newTypeObjects.clear();
+    if (lazyTypeObjects.initialized())
+        lazyTypeObjects.clear();
+}
+
 bool
 JSCompartment::hasScriptsOnStack()
 {
-    for (ActivationIterator iter(rt); !iter.done(); ++iter) {
+    for (ActivationIterator iter(runtimeFromMainThread()); !iter.done(); ++iter) {
         if (iter.activation()->compartment() == this)
             return true;
     }
@@ -725,6 +770,8 @@ JSCompartment::setDebugModeFromC(JSContext *cx, bool b, AutoDebugModeGC &dmgc)
 void
 JSCompartment::updateForDebugMode(FreeOp *fop, AutoDebugModeGC &dmgc)
 {
+    JSRuntime *rt = runtimeFromMainThread();
+
     for (ContextIter acx(rt); !acx.done(); acx.next()) {
         if (acx->compartment() == this)
             acx->updateJITEnabled();
@@ -785,7 +832,7 @@ JSCompartment::removeDebuggee(FreeOp *fop,
                               js::GlobalObject *global,
                               js::GlobalObjectSet::Enum *debuggeesEnum)
 {
-    AutoDebugModeGC dmgc(rt);
+    AutoDebugModeGC dmgc(fop->runtime());
     return removeDebuggee(fop, global, dmgc, debuggeesEnum);
 }
 
@@ -824,7 +871,7 @@ JSCompartment::clearBreakpointsIn(FreeOp *fop, js::Debugger *dbg, JSObject *hand
 void
 JSCompartment::clearTraps(FreeOp *fop)
 {
-    MinorGC(rt, JS::gcreason::EVICT_NURSERY);
+    MinorGC(fop->runtime(), JS::gcreason::EVICT_NURSERY);
     for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->compartment() == this && script->hasAnyBreakpointsOrStepMode())
@@ -859,5 +906,5 @@ JSCompartment::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *c
 void
 JSCompartment::adoptWorkerAllocator(Allocator *workerAllocator)
 {
-    zone()->allocator.arenas.adoptArenas(rt, &workerAllocator->arenas);
+    zone()->allocator.arenas.adoptArenas(runtimeFromMainThread(), &workerAllocator->arenas);
 }

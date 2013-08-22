@@ -45,16 +45,21 @@ const ContentPanning = {
       this.watchedEventsType = 'mouse';
     }
 
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                .getService(Ci.nsIEventListenerService);
+    // If we are using an AsyncPanZoomController for the parent frame,
+    // it will handle subframe scrolling too. We don't need to listen for
+    // these events.
+    if (!this._asyncPanZoomForViewportFrame) {
+      let els = Cc["@mozilla.org/eventlistenerservice;1"]
+                  .getService(Ci.nsIEventListenerService);
 
-    events.forEach(function(type) {
-      // Using the system group for mouse/touch events to avoid
-      // missing events if .stopPropagation() has been called.
-      els.addSystemEventListener(global, type,
-                                 this.handleEvent.bind(this),
-                                 /* useCapture = */ false);
-    }.bind(this));
+      events.forEach(function(type) {
+        // Using the system group for mouse/touch events to avoid
+        // missing events if .stopPropagation() has been called.
+        els.addSystemEventListener(global, type,
+                                   this.handleEvent.bind(this),
+                                   /* useCapture = */ false);
+      }.bind(this));
+    }
 
     addMessageListener("Viewport:Change", this._recvViewportChange.bind(this));
     addMessageListener("Gesture:DoubleTap", this._recvDoubleTap.bind(this));
@@ -640,9 +645,6 @@ const KineticPanning = {
     let momentums = this.momentums;
     let flick = momentums[momentums.length - 1].time - momentums[0].time < 300;
 
-    // Calculate the panning based on the last moves.
-    momentums = momentums.slice(-kSamples);
-
     let distance = new Point(0, 0);
     momentums.forEach(function(momentum) {
       distance.add(momentum.dx, momentum.dy);
@@ -702,6 +704,12 @@ const KineticPanning = {
   record: function kp_record(delta, timestamp) {
     this.momentums.push({ 'time': this._getTime(timestamp),
                           'dx' : delta.x, 'dy' : delta.y });
+
+    // We only need to keep kSamples in this.momentums.
+    if (this.momentums.length > kSamples) {
+      this.momentums.shift();
+    }
+
     this.distance.add(delta.x, delta.y);
   },
 

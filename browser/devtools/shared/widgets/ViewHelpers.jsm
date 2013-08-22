@@ -1612,6 +1612,19 @@ this.WidgetMethods = {
     return +(aFirst._label.toLowerCase() > aSecond._label.toLowerCase());
   },
 
+  /**
+   * Call a method on this widget named `aMethodName`. Any further arguments are
+   * passed on to the method. Returns the result of the method call.
+   *
+   * @param String aMethodName
+   *        The name of the method you want to call.
+   * @param aArgs
+   *        Optional. Any arguments you want to pass through to the method.
+   */
+  callMethod: function(aMethodName, ...aArgs) {
+    return this._widget[aMethodName].apply(this._widget, aArgs);
+  },
+
   _widget: null,
   _preferredValue: null,
   _cachedCommandDispatcher: null

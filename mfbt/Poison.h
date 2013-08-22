@@ -13,8 +13,9 @@
 #define mozilla_Poison_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/StandardInteger.h"
 #include "mozilla/Types.h"
+
+#include <stdint.h>
 
 MOZ_BEGIN_EXTERN_C
 

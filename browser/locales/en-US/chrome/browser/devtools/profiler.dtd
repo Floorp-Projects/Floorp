@@ -10,18 +10,6 @@
   - A good criteria is the language in which you'd find the best
   - documentation on web development on the web. -->
 
-<!-- LOCALIZATION NOTE (profilerNew.label): This is the label for the
-  -  button that creates a new profile. -->
-<!ENTITY profilerNew.label "New">
-
-<!-- LOCALIZATION NOTE (profilerStart.label): This is the label for the
-  -  button that starts the profiler. -->
-<!ENTITY profilerStart.label "Start">
-
-<!-- LOCALIZATION NOTE (profilerStop.label): This is the label for the
-  -  button that stops the profiler. -->
-<!ENTITY profilerStop.label "Stop">
-
 <!-- LOCALIZATION NOTE (profiler.importProfile): This string is displayed
   -  on a button that opens a dialog to import a saved profile data file. -->
 <!ENTITY importProfile.label "Import…">

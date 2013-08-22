@@ -50,7 +50,6 @@
 #include "nsXPCOMCID.h"
 #include "nsIDocument.h"
 #include "mozilla/Preferences.h"
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
 
 using namespace mozilla;
@@ -161,7 +160,7 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
     AutoPushJSContext cx(context->GetNativeContext());
     NS_ENSURE_TRUE(cx, NS_OK);
 
-    JS::Rooted<JSObject*> global(cx, JS_GetGlobalForScopeChain(cx));
+    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
     NS_ENSURE_TRUE(global, NS_OK);
 
     JS::Value params[2];
@@ -236,7 +235,7 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
     AutoPushJSContext cx(context->GetNativeContext());
-    JS::Rooted<JSObject*> global(cx, JS_GetGlobalForScopeChain(cx));
+    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
 
     // Using XPConnect, wrap the HTTP index object...
     static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
@@ -261,7 +260,7 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
     JS::Rooted<JS::Value> jslistener(cx, OBJECT_TO_JSVAL(jsobj));
 
     // ...and stuff it into the global context
-    bool ok = JS_SetProperty(cx, global, "HTTPIndex", &jslistener);
+    bool ok = JS_SetProperty(cx, global, "HTTPIndex", jslistener);
     NS_ASSERTION(ok, "unable to set Listener property");
     if (!ok)
       return NS_ERROR_FAILURE;
@@ -1167,8 +1166,6 @@ nsHTTPIndex::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval)
 NS_IMETHODIMP
 nsHTTPIndex::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
 {
-	nsresult	rv = NS_ERROR_UNEXPECTED;
-
 	*_retval = nullptr;
 
 	nsCOMPtr<nsISimpleEnumerator> child, anonArcs;
@@ -1179,7 +1176,7 @@ nsHTTPIndex::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval
 
 	if (mInner)
 	{
-		rv = mInner->ArcLabelsOut(aSource, getter_AddRefs(anonArcs));
+		mInner->ArcLabelsOut(aSource, getter_AddRefs(anonArcs));
 	}
 
 	return NS_NewUnionEnumerator(_retval, child, anonArcs);

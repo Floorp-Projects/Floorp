@@ -19,8 +19,6 @@ typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 // through this interface.
 class CompositableParentManager : public ISurfaceAllocator
 {
-public:
-
 protected:
   /**
    * Handle the IPDL messages that affect PCompositable actors.

@@ -15,7 +15,7 @@
 #include "nsPluginLogging.h"
 #include "nsPluginStreamListenerPeer.h"
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include <algorithm>
 
 nsNPAPIStreamWrapper::nsNPAPIStreamWrapper(nsIOutputStream *outputStream,

@@ -1544,6 +1544,14 @@ nsMathMLContainerFrame::ReportChildCountError()
   return ReportErrorToConsole("ChildCountIncorrect", &arg, 1);
 }
 
+nsresult
+nsMathMLContainerFrame::ReportInvalidChildError(nsIAtom* aChildTag)
+{
+  const PRUnichar* argv[] =
+    { aChildTag->GetUTF16String(), mContent->Tag()->GetUTF16String() };
+  return ReportErrorToConsole("InvalidChild", argv, 2);
+}
+
 //==========================
 
 nsIFrame*
@@ -1551,9 +1559,7 @@ NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext,
                            uint32_t aFlags)
 {
   nsMathMLmathBlockFrame* it = new (aPresShell) nsMathMLmathBlockFrame(aContext);
-  if (it) {
-    it->SetFlags(aFlags);
-  }
+  it->SetFlags(aFlags);
   return it;
 }
 

@@ -25,15 +25,21 @@ class CanvasClientWebGL;
 class ClientCanvasLayer : public CopyableCanvasLayer,
                           public ClientLayer
 {
+  typedef CanvasClient::CanvasClientType CanvasClientType;
 public:
   ClientCanvasLayer(ClientLayerManager* aLayerManager) :
-    CopyableCanvasLayer(aLayerManager, static_cast<ClientLayer*>(this))
+    CopyableCanvasLayer(aLayerManager,
+                        static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
   {
     MOZ_COUNT_CTOR(ClientCanvasLayer);
   }
   virtual ~ClientCanvasLayer()
   {
     MOZ_COUNT_DTOR(ClientCanvasLayer);
+    if (mCanvasClient) {
+      mCanvasClient->OnDetach();
+      mCanvasClient = nullptr;
+    }
   }
 
   virtual void SetVisibleRegion(const nsIntRegion& aRegion)
@@ -71,18 +77,19 @@ protected:
     return static_cast<ClientLayerManager*>(mManager);
   }
   
-  CompositableType GetCompositableClientType()
+  CanvasClientType GetCanvasClientType()
   {
     if (mGLContext) {
-      return BUFFER_IMAGE_BUFFERED;
+      return CanvasClient::CanvasClientGLContext;
     }
-    return BUFFER_IMAGE_SINGLE;
+    return CanvasClient::CanvasClientSurface;
   }
 
   RefPtr<CanvasClient> mCanvasClient;
 
+  friend class DeprecatedCanvasClient2D;
   friend class CanvasClient2D;
-  friend class CanvasClientWebGL;
+  friend class DeprecatedCanvasClientSurfaceStream;
 };
 }
 }

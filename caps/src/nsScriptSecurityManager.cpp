@@ -57,7 +57,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "nsContentUtils.h"
@@ -423,7 +423,7 @@ NS_IMPL_ISUPPORTS4(nsScriptSecurityManager,
 
 ///////////////// Security Checks /////////////////
 
-JSBool
+bool
 nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
 {
     // Get the security manager
@@ -432,17 +432,17 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
 
     NS_ASSERTION(ssm, "Failed to get security manager service");
     if (!ssm)
-        return JS_FALSE;
+        return false;
 
     nsresult rv;
     nsIPrincipal* subjectPrincipal = ssm->GetSubjectPrincipal(cx, &rv);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "CSP: Failed to get nsIPrincipal from js context");
     if (NS_FAILED(rv))
-        return JS_FALSE; // Not just absence of principal, but failure.
+        return false; // Not just absence of principal, but failure.
 
     if (!subjectPrincipal)
-        return JS_TRUE;
+        return true;
 
     nsCOMPtr<nsIContentSecurityPolicy> csp;
     rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
@@ -450,7 +450,7 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
 
     // don't do anything unless there's a CSP
     if (!csp)
-        return JS_TRUE;
+        return true;
 
     bool evalOK = true;
     bool reportViolation = false;
@@ -459,7 +459,7 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
     if (NS_FAILED(rv))
     {
         NS_WARNING("CSP: failed to get allowsEval");
-        return JS_TRUE; // fail open to not break sites.
+        return true; // fail open to not break sites.
     }
 
     if (reportViolation) {
@@ -483,7 +483,7 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
 }
 
 
-JSBool
+bool
 nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JS::Handle<JSObject*> obj,
                                            JS::Handle<jsid> id, JSAccessMode mode,
                                            JS::MutableHandle<JS::Value> vp)
@@ -494,7 +494,7 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JS::Handle<JSObject*> 
 
     NS_WARN_IF_FALSE(ssm, "Failed to get security manager service");
     if (!ssm)
-        return JS_FALSE;
+        return false;
 
     // Get the object being accessed.  We protect these cases:
     // 1. The Function.prototype.caller property's value, which might lead
@@ -515,9 +515,9 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JS::Handle<JSObject*> 
                                  (int32_t)nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
     if (NS_FAILED(rv))
-        return JS_FALSE; // Security check failed (XXX was an error reported?)
+        return false; // Security check failed (XXX was an error reported?)
 
-    return JS_TRUE;
+    return true;
 }
 
 NS_IMETHODIMP
@@ -2322,9 +2322,9 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mIsJavaScriptEnabled(false),
       mPolicyPrefsChanged(true)
 {
-    MOZ_STATIC_ASSERT(sizeof(intptr_t) == sizeof(void*),
-                      "intptr_t and void* have different lengths on this platform. "
-                      "This may cause a security failure with the SecurityLevel union.");
+    static_assert(sizeof(intptr_t) == sizeof(void*),
+                  "intptr_t and void* have different lengths on this platform. "
+                  "This may cause a security failure with the SecurityLevel union.");
 }
 
 nsresult nsScriptSecurityManager::Init()

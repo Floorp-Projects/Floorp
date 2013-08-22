@@ -8,6 +8,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIServiceManager.h"
 #include "nsReadLine.h"
+#include "nsStreamUtils.h"
 #include <algorithm>
 
 #define CONVERTER_BUFFER_SIZE 8192
@@ -39,11 +40,10 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
     if (NS_FAILED(rv)) return rv;
  
     // set up our buffers
-    rv = NS_NewByteBuffer(getter_AddRefs(mByteData), nullptr, aBufferSize);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = NS_NewUnicharBuffer(getter_AddRefs(mUnicharData), nullptr, aBufferSize);
-    if (NS_FAILED(rv)) return rv;
+    if (!mByteData.SetCapacity(aBufferSize) ||
+        !mUnicharData.SetCapacity(aBufferSize)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     mInput = aStream;
     mReplacementChar = aReplacementChar;
@@ -62,8 +62,8 @@ nsConverterInputStream::Close()
     mLineBuffer = nullptr;
     mInput = nullptr;
     mConverter = nullptr;
-    mByteData = nullptr;
-    mUnicharData = nullptr;
+    mByteData.Clear();
+    mUnicharData.Clear();
     return rv;
 }
 
@@ -85,7 +85,7 @@ nsConverterInputStream::Read(PRUnichar* aBuf,
   if (readCount > aCount) {
     readCount = aCount;
   }
-  memcpy(aBuf, mUnicharData->GetBuffer() + mUnicharDataOffset,
+  memcpy(aBuf, mUnicharData.Elements() + mUnicharDataOffset,
          readCount * sizeof(PRUnichar));
   mUnicharDataOffset += readCount;
   *aReadCount = readCount;
@@ -117,7 +117,7 @@ nsConverterInputStream::ReadSegments(nsWriteUnicharSegmentFun aWriter,
 
   while (bytesToWrite) {
     rv = aWriter(this, aClosure,
-                 mUnicharData->GetBuffer() + mUnicharDataOffset,
+                 mUnicharData.Elements() + mUnicharDataOffset,
                  totalBytesWritten, bytesToWrite, &bytesWritten);
     if (NS_FAILED(rv)) {
       // don't propagate errors to the caller
@@ -152,8 +152,7 @@ nsConverterInputStream::ReadString(uint32_t aCount, nsAString& aString,
   if (readCount > aCount) {
     readCount = aCount;
   }
-  const PRUnichar* buf = reinterpret_cast<const PRUnichar*>(mUnicharData->GetBuffer() +
-                                             mUnicharDataOffset);
+  const PRUnichar* buf = mUnicharData.Elements() + mUnicharDataOffset;
   aString.Assign(buf, readCount);
   mUnicharDataOffset += readCount;
   *aReadCount = readCount;
@@ -182,32 +181,27 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
   // to n+1 unicode chars.  Thus we need to keep track of the leftover
   // bytes as we convert.
   
-  int32_t nb = mByteData->Fill(aErrorCode, mInput, mLeftOverBytes);
-#if defined(DEBUG_bzbarsky) && 0
-  for (unsigned int foo = 0; foo < mByteData->GetLength(); ++foo) {
-    fprintf(stderr, "%c", mByteData->GetBuffer()[foo]);
-  }
-  fprintf(stderr, "\n");
-#endif
-  if (nb <= 0 && mLeftOverBytes == 0) {
+  uint32_t nb;
+  *aErrorCode = NS_FillArray(mByteData, mInput, mLeftOverBytes, &nb);
+  if (nb == 0 && mLeftOverBytes == 0) {
     // No more data 
     *aErrorCode = NS_OK;
     return 0;
   }
 
-  NS_ASSERTION(uint32_t(nb) + mLeftOverBytes == mByteData->GetLength(),
+  NS_ASSERTION(uint32_t(nb) + mLeftOverBytes == mByteData.Length(),
                "mByteData is lying to us somewhere");
-  
+
   // Now convert as much of the byte buffer to unicode as possible
   mUnicharDataOffset = 0;
   mUnicharDataLength = 0;
   uint32_t srcConsumed = 0;
   do {
-    int32_t srcLen = mByteData->GetLength() - srcConsumed;
-    int32_t dstLen = mUnicharData->GetBufferSize() - mUnicharDataLength;
-    *aErrorCode = mConverter->Convert(mByteData->GetBuffer()+srcConsumed,
+    int32_t srcLen = mByteData.Length() - srcConsumed;
+    int32_t dstLen = mUnicharData.Capacity() - mUnicharDataLength;
+    *aErrorCode = mConverter->Convert(mByteData.Elements()+srcConsumed,
                                       &srcLen,
-                                      mUnicharData->GetBuffer()+mUnicharDataLength,
+                                      mUnicharData.Elements()+mUnicharDataLength,
                                       &dstLen);
     mUnicharDataLength += dstLen;
     // XXX if srcLen is negative, we want to drop the _first_ byte in
@@ -215,23 +209,23 @@ nsConverterInputStream::Fill(nsresult * aErrorCode)
     // possible right now -- see bug 160784
     srcConsumed += srcLen;
     if (NS_FAILED(*aErrorCode) && mReplacementChar) {
-      NS_ASSERTION(0 < mUnicharData->GetBufferSize() - mUnicharDataLength,
+      NS_ASSERTION(0 < mUnicharData.Capacity() - mUnicharDataLength,
                    "Decoder returned an error but filled the output buffer! "
                    "Should not happen.");
-      mUnicharData->GetBuffer()[mUnicharDataLength++] = mReplacementChar;
+      mUnicharData.Elements()[mUnicharDataLength++] = mReplacementChar;
       ++srcConsumed;
       // XXX this is needed to make sure we don't underrun our buffer;
       // bug 160784 again
       srcConsumed = std::max<uint32_t>(srcConsumed, 0);
       mConverter->Reset();
     }
-    NS_ASSERTION(srcConsumed <= mByteData->GetLength(),
+    NS_ASSERTION(srcConsumed <= mByteData.Length(),
                  "Whoa.  The converter should have returned NS_OK_UDEC_MOREINPUT before this point!");
   } while (mReplacementChar &&
            NS_FAILED(*aErrorCode) &&
-           uint32_t(mUnicharData->GetBufferSize()) > mUnicharDataLength);
+           mUnicharData.Capacity() > mUnicharDataLength);
 
-  mLeftOverBytes = mByteData->GetLength() - srcConsumed;
+  mLeftOverBytes = mByteData.Length() - srcConsumed;
 
   return mUnicharDataLength;
 }

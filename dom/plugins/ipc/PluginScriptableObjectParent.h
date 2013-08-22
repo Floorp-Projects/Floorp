@@ -137,10 +137,10 @@ public:
     return mType;
   }
 
-  JSBool GetPropertyHelper(NPIdentifier aName,
-                           bool* aHasProperty,
-                           bool* aHasMethod,
-                           NPVariant* aResult);
+  bool GetPropertyHelper(NPIdentifier aName,
+                         bool* aHasProperty,
+                         bool* aHasMethod,
+                         NPVariant* aResult);
 
 private:
   static NPObject*

@@ -26,6 +26,7 @@ struct SendSmsMessageRequest
 {
   nsString number;
   nsString message;
+  bool     silent;
 };
 
 union SendMessageRequest
@@ -100,6 +101,8 @@ child:
 
   NotifyDeliveryErrorMessage(MobileMessageData aMessageData);
 
+  NotifyReceivedSilentMessage(MobileMessageData aMessageData);
+
 parent:
   /**
    * Sent when the child no longer needs to use sms.
@@ -121,6 +124,9 @@ parent:
 
   sync GetSegmentInfoForText(nsString aText)
       returns (SmsSegmentInfoData aResult);
+
+  AddSilentNumber(nsString aNumber);
+  RemoveSilentNumber(nsString aNumber);
 };
 
 } // namespace mobilemessage

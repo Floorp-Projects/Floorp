@@ -71,6 +71,12 @@
             'android',
           ],
         }], # OS==android
+        ['moz_widget_toolkit_gonk==1', {
+          'include_dirs': [
+            '$(ANDROID_SOURCE)/frameworks/wilhelm/include',
+            '$(ANDROID_SOURCE)/system/media/wilhelm/include',
+          ],
+        }], # moz_widget_toolkit_gonk==1
         ['include_internal_audio_device==0', {
           'defines': [
             'WEBRTC_DUMMY_AUDIO_BUILD',
@@ -105,19 +111,28 @@
             'win/audio_mixer_manager_win.h',
             'android/audio_device_utility_android.cc',
             'android/audio_device_utility_android.h',
-            'android/audio_device_opensles_android.cc',
-            'android/audio_device_opensles_android.h',
+# opensles is shared with gonk, so isn't here
             'android/audio_device_jni_android.cc',
             'android/audio_device_jni_android.h',
           ],
           'conditions': [
             ['OS=="android"', {
+              'sources': [
+                'audio_device_opensles.cc',
+                'audio_device_opensles.h',
+              ],
               'link_settings': {
                 'libraries': [
                   '-llog',
                   '-lOpenSLES',
                 ],
               },
+            }],
+            ['moz_widget_toolkit_gonk==1', {
+              'sources': [
+                'audio_device_opensles.cc',
+                'audio_device_opensles.h',
+              ],
             }],
             ['OS=="linux"', {
               'link_settings': {

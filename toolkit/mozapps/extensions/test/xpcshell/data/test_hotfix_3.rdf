@@ -14,7 +14,7 @@
                 <em:id>xpcshell@tests.mozilla.org</em:id>
                 <em:minVersion>2</em:minVersion>
                 <em:maxVersion>2</em:maxVersion>
-                <em:updateLink>http://localhost:4444/addons/test_hotfix_3.xpi</em:updateLink>
+                <em:updateLink>http://localhost:%PORT%/addons/test_hotfix_3.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>

@@ -42,11 +42,42 @@ SmsService::GetSegmentInfoForText(const nsAString & aText,
 NS_IMETHODIMP
 SmsService::Send(const nsAString& aNumber,
                  const nsAString& aMessage,
+                 const bool       aSilent,
                  nsIMobileMessageCallback* aRequest)
 {
   NS_ENSURE_TRUE(mRadioInterface, NS_ERROR_FAILURE);
 
-  return mRadioInterface->SendSMS(aNumber, aMessage, aRequest);
+  return mRadioInterface->SendSMS(aNumber, aMessage, aSilent, aRequest);
+}
+
+NS_IMETHODIMP
+SmsService::IsSilentNumber(const nsAString& aNumber,
+                           bool*            aIsSilent)
+{
+  *aIsSilent = mSilentNumbers.Contains(aNumber);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsService::AddSilentNumber(const nsAString& aNumber)
+{
+  if (mSilentNumbers.Contains(aNumber)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  NS_ENSURE_TRUE(mSilentNumbers.AppendElement(aNumber), NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsService::RemoveSilentNumber(const nsAString& aNumber)
+{
+  if (!mSilentNumbers.Contains(aNumber)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  NS_ENSURE_TRUE(mSilentNumbers.RemoveElement(aNumber), NS_ERROR_FAILURE);
+  return NS_OK;
 }
 
 } // namespace mobilemessage

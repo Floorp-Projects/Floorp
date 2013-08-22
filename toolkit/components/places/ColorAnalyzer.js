@@ -11,7 +11,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
-const MAXIMUM_PIXELS = Math.pow(128, 2);
+const MAXIMUM_PIXELS = Math.pow(144, 2);
 
 function ColorAnalyzer() {
   // a queue of callbacks for each job we give to the worker

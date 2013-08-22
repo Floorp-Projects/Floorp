@@ -33,4 +33,6 @@ interface PerformanceTiming {
   readonly attribute unsigned long long domComplete;
   readonly attribute unsigned long long loadEventStart;
   readonly attribute unsigned long long loadEventEnd;
+
+  jsonifier;
 };

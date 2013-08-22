@@ -23,7 +23,7 @@ gTests.push({
     yield addTab(chromeRoot + "res/textblock01.html");
 
     yield waitForCondition(function () {
-      return !StartUI.isStartPageVisible;
+      return !BrowserUI.isStartTabVisible;
       });
 
     yield hideContextUI();
@@ -63,9 +63,6 @@ gTests.push({
     yield waitForMs(100);
 
     ok(SelectionHelperUI.isSelectionUIVisible, "selection ui active");
-
-    // taps on the urlbar-edit leak a ClientRect property on the window
-    delete window.r;
   },
 });
 
@@ -81,7 +78,7 @@ gTests.push({
     sendContextMenuClickToElement(window, edit);
     yield waitForEvent(document, "popupshown");
 
-    ok(ContextMenuUI._menuPopup._visible, "is visible");
+    ok(ContextMenuUI._menuPopup.visible, "is visible");
     let paste = document.getElementById("context-paste");
     ok(!paste.hidden, "paste item is visible");
 
@@ -89,7 +86,9 @@ gTests.push({
     ok(edit.popup.popupOpen, "bug: popup should be showing");
 
     clearSelection(edit);
-    delete window.r;
+    yield waitForCondition(function () {
+      return !SelectionHelperUI.isSelectionUIVisible;
+    });
   }
 });
 
@@ -105,7 +104,6 @@ gTests.push({
 
     let editCoords = logicalCoordsForElement(edit);
     SelectionHelperUI.attachEditSession(ChromeSelectionHandler, editCoords.x, editCoords.y);
-
     ok(SelectionHelperUI.isSelectionUIVisible, "selection enabled");
 
     let selection = edit.QueryInterface(Components.interfaces.nsIDOMXULTextBoxElement)
@@ -119,7 +117,9 @@ gTests.push({
     ok(SelectionHelperUI.isCaretUIVisible, "caret browsing enabled");
 
     clearSelection(edit);
-    delete window.r;
+    yield waitForCondition(function () {
+      return !SelectionHelperUI.isSelectionUIVisible;
+    });
   }
 });
 
@@ -136,9 +136,42 @@ gTests.push({
     edit.blur();
     ok(!SelectionHelperUI.isSelectionUIVisible, "selection no longer enabled");
     clearSelection(edit);
-    delete window.r;
+    yield waitForCondition(function () {
+      return !SelectionHelperUI.isSelectionUIVisible;
+    });
   }
 });
+
+function getClipboardCondition(aExpected) {
+  return () => aExpected == SpecialPowers.getClipboardData("text/unicode");
+}
+
+gTests.push({
+  desc: "bug 894715 - URLs selected by touch are copied with trimming",
+  run: function () {
+    gWindow = window;
+    yield showNavBar();
+
+    let edit = document.getElementById("urlbar-edit");
+    edit.value = "http://www.wikipedia.org/";
+
+    sendElementTap(window, edit);
+    edit.select();
+
+    let panel = ContextMenuUI._menuPopup._panel;
+    let promise = waitForEvent(panel, "popupshown")
+    sendContextMenuClickToElement(window, edit);
+    ok((yield promise), "show context menu");
+
+    let copy = document.getElementById("context-copy");
+    ok(!copy.hidden, "copy menu item is visible")
+
+    let condition = getClipboardCondition("http://www.wikipedia.org/");
+    let promise = waitForCondition(condition);
+    sendElementTap(window, copy);
+    ok((yield promise), "copy text onto clipboard")
+  }
+})
 
 function test() {
   if (!isLandscapeMode()) {

@@ -16,6 +16,8 @@ nsDOMDataContainerEvent::nsDOMDataContainerEvent(
   mData.Init();
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMDataContainerEvent)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMDataContainerEvent,
                                                 nsDOMEvent)
   if (tmp->mData.IsInitialized())
@@ -84,7 +86,6 @@ NS_NewDOMDataContainerEvent(nsIDOMEvent** aInstancePtrResult,
 {
   nsDOMDataContainerEvent* it =
     new nsDOMDataContainerEvent(aOwner, aPresContext, aEvent);
-  NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
 
   return CallQueryInterface(it, aInstancePtrResult);
 }

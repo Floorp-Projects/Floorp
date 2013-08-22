@@ -8,10 +8,8 @@
 
 #include "mozilla/MathAlgorithms.h"
 
-#include "nsCOMArray.h"
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsRegion.h"
 #include "nsEvent.h"
 #include "nsStringGlue.h"
 #include "nsCOMPtr.h"
@@ -20,17 +18,16 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMWheelEvent.h"
 #include "nsIDOMDataTransfer.h"
-#include "nsIDOMTouchEvent.h"
 #include "nsWeakPtr.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
 #include "nsTraceRefcnt.h"
 #include "nsITransferable.h"
-#include "nsIVariant.h"
 #include "nsStyleConsts.h"
 #include "nsAutoPtr.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/Touch.h"
+#include "Units.h"
 
 namespace mozilla {
 namespace dom {
@@ -594,7 +591,7 @@ private:
 
   inline void SetRawFlags(RawFlags aRawFlags)
   {
-    MOZ_STATIC_ASSERT(sizeof(BaseEventFlags) <= sizeof(RawFlags),
+    static_assert(sizeof(BaseEventFlags) <= sizeof(RawFlags),
       "mozilla::widget::EventFlags must not be bigger than the RawFlags");
     memcpy(this, &aRawFlags, sizeof(BaseEventFlags));
   }
@@ -677,9 +674,9 @@ public:
   uint32_t    message;
   // Relative to the widget of the event, or if there is no widget then it is
   // in screen coordinates. Not modified by layout code.
-  nsIntPoint  refPoint;
+  mozilla::LayoutDeviceIntPoint refPoint;
   // The previous refPoint, if known, used to calculate mouse movement deltas.
-  nsIntPoint  lastRefPoint;
+  mozilla::LayoutDeviceIntPoint lastRefPoint;
   // Elapsed time, in milliseconds, from a platform-specific zero time
   // to the time the message was created
   uint64_t    time;
@@ -688,6 +685,9 @@ public:
 
   // Additional type info for user defined events
   nsCOMPtr<nsIAtom>     userType;
+
+  nsString typeString; // always set on non-main-thread events
+
   // Event targets, needed by DOM Events
   nsCOMPtr<mozilla::dom::EventTarget> target;
   nsCOMPtr<mozilla::dom::EventTarget> currentTarget;
@@ -1509,7 +1509,7 @@ public:
     mInput.mLength = aLength;
   }
 
-  void InitForQueryDOMWidgetHittest(nsIntPoint& aPoint)
+  void InitForQueryDOMWidgetHittest(const mozilla::LayoutDeviceIntPoint& aPoint)
   {
     NS_ASSERTION(message == NS_QUERY_DOM_WIDGET_HITTEST,
                  "wrong initializer is called");

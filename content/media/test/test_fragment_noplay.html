@@ -101,6 +101,7 @@ function createTestArray() {
 function startTest(test, token) {
   var v = document.createElement('video');
   manager.started(token);
+  v.preload = "metadata";
   v.src = test.name;
   v.token = token;
   v.controls = true;

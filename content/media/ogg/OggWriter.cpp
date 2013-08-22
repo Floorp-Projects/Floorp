@@ -49,6 +49,11 @@ nsresult
 OggWriter::WriteEncodedTrack(const nsTArray<uint8_t>& aBuffer, int aDuration,
                              uint32_t aFlags)
 {
+  if (!mInitialized) {
+    LOG("[OggWriter] OggWriter has not initialized!");
+    return NS_ERROR_FAILURE;
+  }
+
   MOZ_ASSERT(!ogg_stream_eos(&mOggStreamState),
              "No data can be written after eos has marked.");
 

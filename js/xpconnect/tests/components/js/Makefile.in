@@ -21,8 +21,6 @@ JS_FILES = \
   xpctest_params.js \
   $(NULL)
 
-include $(topsrcdir)/config/config.mk
-
 MANIFEST_FILE = xpctest.manifest
 
 include $(topsrcdir)/config/rules.mk

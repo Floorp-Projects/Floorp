@@ -3,6 +3,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test runner
@@ -583,10 +584,10 @@ tests.push(
     return promise;
   }));
 
-// Test that the values of the promise return by Promise.every() are kept in the
+// Test that the values of the promise return by Promise.all() are kept in the
 // given order even if the given promises are resolved in arbitrary order
 tests.push(
-  make_promise_test(function every_resolve(test) {
+  make_promise_test(function all_resolve(test) {
     let d1 = Promise.defer();
     let d2 = Promise.defer();
     let d3 = Promise.defer();
@@ -597,7 +598,7 @@ tests.push(
 
     let promises = [d1.promise, d2.promise, 3, d3.promise];
 
-    return Promise.every(promises).then(
+    return Promise.all(promises).then(
       function onResolve([val1, val2, val3, val4]) {
         do_check_eq(val1, 1);
         do_check_eq(val2, 2);
@@ -607,10 +608,10 @@ tests.push(
     );
   }));
 
-// Test that rejecting one of the promises passed to Promise.every()
-// rejects the promise return by Promise.every()
+// Test that rejecting one of the promises passed to Promise.all()
+// rejects the promise return by Promise.all()
 tests.push(
-  make_promise_test(function every_reject(test) {
+  make_promise_test(function all_reject(test) {
     let error = new Error("Boom");
 
     let d1 = Promise.defer();
@@ -623,7 +624,7 @@ tests.push(
 
     let promises = [d1.promise, d2.promise, d3.promise];
 
-    return Promise.every(promises).then(
+    return Promise.all(promises).then(
       function onResolve() {
         do_throw("Incorrect call to onResolve listener");
       },
@@ -633,24 +634,24 @@ tests.push(
     );
   }));
 
-// Test that passing only values (not promises) to Promise.every()
+// Test that passing only values (not promises) to Promise.all()
 // forwards them all as resolution values.
 tests.push(
-  make_promise_test(function every_resolve_no_promises(test) {
+  make_promise_test(function all_resolve_no_promises(test) {
     try {
-      Promise.every(null);
-      do_check_true(false, "every() should only accept arrays.");
+      Promise.all(null);
+      do_check_true(false, "all() should only accept arrays.");
     } catch (e) {
-      do_check_true(true, "every() fails when first the arg is not an array.");
+      do_check_true(true, "all() fails when first the arg is not an array.");
     }
 
-    let p1 = Promise.every([]).then(
+    let p1 = Promise.all([]).then(
       function onResolve(val) {
-        do_check_eq(typeof(val), "undefined");
+        do_check_true(Array.isArray(val) && val.length == 0);
       }
     );
 
-    let p2 = Promise.every([1, 2, 3]).then(
+    let p2 = Promise.all([1, 2, 3]).then(
       function onResolve([val1, val2, val3]) {
         do_check_eq(val1, 1);
         do_check_eq(val2, 2);
@@ -658,8 +659,61 @@ tests.push(
       }
     );
 
-    return Promise.every([p1, p2]);
+    return Promise.all([p1, p2]);
   }));
+
+// Test deadlock in Promise.jsm with nested event loops
+// The scenario being tested is:
+// promise_1.then({
+//   do some work that will asynchronously signal done
+//   start an event loop waiting for the done signal
+// }
+// where the async work uses resolution of a second promise to 
+// trigger the "done" signal. While this would likely work in a
+// naive implementation, our constant-stack implementation needs
+// a special case to avoid deadlock. Note that this test is
+// sensitive to the implementation-dependent order in which then()
+// clauses for two different promises are executed, so it is
+// possible for other implementations to pass this test and still
+// have similar deadlocks.
+tests.push(
+  make_promise_test(function promise_nested_eventloop_deadlock(test) {
+    // Set up a (long enough to be noticeable) timeout to
+    // exit the nested event loop and throw if the test run is hung
+    let shouldExitNestedEventLoop = false;
+
+    function event_loop() {
+      let thr = Services.tm.mainThread;
+      while(!shouldExitNestedEventLoop) {
+        thr.processNextEvent(true);
+      }
+    }
+
+    // I wish there was a way to cancel xpcshell do_timeout()s
+    do_timeout(2000, () => {
+      if (!shouldExitNestedEventLoop) {
+        shouldExitNestedEventLoop = true;
+        do_throw("Test timed out");
+      }
+    });
+
+    let promise1 = Promise.resolve(1);
+    let promise2 = Promise.resolve(2);
+
+    do_print("Setting wait for first promise");
+    promise1.then(value => {
+      do_print("Starting event loop");
+      event_loop();
+    }, null);
+
+    do_print("Setting wait for second promise");
+    return promise2.then(null, error => {return 3;})
+    .then(
+      count => {
+        shouldExitNestedEventLoop = true;
+      });
+  }));
+
 
 function run_test()
 {

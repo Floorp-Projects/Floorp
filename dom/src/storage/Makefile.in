@@ -19,12 +19,9 @@ LOCAL_INCLUDES = \
                 -I$(topsrcdir)/dom/base \
 		-I$(topsrcdir)/content/events/src
 
-DEFINES += -D_IMPL_NS_LAYOUT
-
 ifdef ENABLE_TESTS
 DEFINES += -DDOM_STORAGE_TESTS
 endif
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

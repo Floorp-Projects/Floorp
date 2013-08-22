@@ -17,7 +17,12 @@ from mach.decorators import (
 
 from mach.mixin.logging import LoggingMixin
 
-from mozbuild.base import MachCommandBase
+from mozbuild.base import (
+    MachCommandBase,
+    MozbuildObject,
+    MozconfigFindException,
+    MozconfigLoadException,
+)
 
 
 BUILD_WHAT_HELP = '''
@@ -99,7 +104,7 @@ class BuildProgressFooter(object):
         self._monitor = monitor
 
     def _clear_lines(self, n):
-        self._fh.write(self._t.move(self._t.height - n, 0))
+        self._fh.write(self._t.move_x(0))
         self._fh.write(self._t.clear_eos())
 
     def clear(self):
@@ -108,7 +113,9 @@ class BuildProgressFooter(object):
 
     def draw(self):
         """Draws this footer in the terminal."""
-        if not self._monitor.tiers:
+        tiers = self._monitor.tiers
+
+        if not tiers.tiers:
             return
 
         # The drawn terminal looks something like:
@@ -119,36 +126,48 @@ class BuildProgressFooter(object):
         # big comment below.
         parts = [('bold', 'TIER'), ':', ' ']
 
-        current_encountered = False
-        for tier in self._monitor.tiers:
-            if tier == self._monitor.current_tier:
+        for tier, active, finished in tiers.tier_status():
+            if active:
                 parts.extend([('underline_yellow', tier), ' '])
-                current_encountered = True
-            elif not current_encountered:
+            elif finished:
                 parts.extend([('green', tier), ' '])
             else:
                 parts.extend([tier, ' '])
 
-        current_encountered = False
         parts.extend([('bold', 'SUBTIER'), ':', ' '])
-        for subtier in self._monitor.subtiers:
-            if subtier == self._monitor.current_subtier:
+        for subtier, active, finished in tiers.current_subtier_status():
+            if active:
                 parts.extend([('underline_yellow', subtier), ' '])
-                current_encountered = True
-            elif not current_encountered:
+            elif finished:
                 parts.extend([('green', subtier), ' '])
             else:
                 parts.extend([subtier, ' '])
 
-        if self._monitor.current_subtier_dirs and self._monitor.current_tier_dir:
-            parts.extend([
-                ('bold', 'DIRECTORIES'), ': ',
-                '%02d' % self._monitor.current_tier_dir_index,
-                '/',
-                '%02d' % len(self._monitor.current_subtier_dirs),
-                ' ',
-                '(', ('magenta', self._monitor.current_tier_dir), ')',
-            ])
+        if tiers.active_dirs:
+            parts.extend([('bold', 'DIRECTORIES'), ': '])
+            have_dirs = False
+
+            for subtier, all_dirs, active_dirs, complete in tiers.current_dirs_status():
+                if len(all_dirs) < 2:
+                    continue
+
+                have_dirs = True
+
+                parts.extend([
+                    '%02d' % (complete + 1),
+                    '/',
+                    '%02d' % len(all_dirs),
+                    ' ',
+                    '(',
+                ])
+                for d in active_dirs:
+                    parts.extend([
+                        ('magenta', d), ' ,'
+                    ])
+                parts[-1] = ')'
+
+            if not have_dirs:
+                parts = parts[0:-2]
 
         # We don't want to write more characters than the current width of the
         # terminal otherwise wrapping may result in weird behavior. We can't
@@ -180,8 +199,9 @@ class BuildProgressFooter(object):
 
                 write_pieces.append(part)
                 written += len(part)
-
-        self._fh.write(''.join(write_pieces))
+        with self._t.location():
+            self._t.move(self._t.height-1,0)
+            self._fh.write(''.join(write_pieces))
         self._fh.flush()
 
 
@@ -271,7 +291,8 @@ class Build(MachCommandBase):
         from mozbuild.util import resolve_target_to_make
 
         warnings_path = self._get_state_filename('warnings.json')
-        monitor = BuildMonitor(self.topobjdir, warnings_path)
+        monitor = self._spawn(BuildMonitor)
+        monitor.init(warnings_path)
 
         with BuildOutputManager(self.log_manager, monitor) as output:
             monitor.start()
@@ -649,7 +670,9 @@ class DebugProgram(MachCommandBase):
         help='Do not pass the -no-remote argument by default')
     @CommandArgument('+background', '+b', action='store_true',
         help='Do not pass the -foreground argument by default on Mac')
-    def debug(self, params, remote, background):
+    @CommandArgument('+gdbparams', default=None, metavar='params', type=str,
+        help='Command-line arguments to pass to GDB itself; split as the Bourne shell would.')
+    def debug(self, params, remote, background, gdbparams):
         import which
         try:
             debugger = which.which('gdb')
@@ -657,8 +680,17 @@ class DebugProgram(MachCommandBase):
             print("You don't have gdb in your PATH")
             print(e)
             return 1
+        args = [debugger]
+        if gdbparams:
+            import pymake.process
+            (argv, badchar) = pymake.process.clinetoargv(gdbparams, os.getcwd())
+            if badchar:
+                print("The +gdbparams you passed require a real shell to parse them.")
+                print("(We can't handle the %r character.)" % (badchar,))
+                return 1
+            args.extend(argv)
         try:
-            args = [debugger, '--args', self.get_binary_path('app')]
+            args.extend(['--args', self.get_binary_path('app')])
         except Exception as e:
             print("It looks like your program isn't built.",
                 "You can run |mach build| to build it.")
@@ -734,3 +766,83 @@ class Makefiles(MachCommandBase):
                 if f == 'Makefile.in':
                     yield os.path.join(root, f)
 
+@CommandProvider
+class MachDebug(object):
+    def __init__(self, context):
+        self.context = context
+
+    @Command('environment', category='build-dev',
+        description='Show info about the mach and build environment.')
+    @CommandArgument('--verbose', '-v', action='store_true',
+        help='Print verbose output.')
+    def environment(self, verbose=False):
+        import platform
+        print('platform:\n\t%s' % platform.platform())
+        print('python version:\n\t%s' % sys.version)
+        print('python prefix:\n\t%s' % sys.prefix)
+        print('mach cwd:\n\t%s' % self.context.cwd)
+        print('os cwd:\n\t%s' % os.getcwd())
+        print('mach directory:\n\t%s' % self.context.topdir)
+        print('state directory:\n\t%s' % self.context.state_dir)
+
+        mb = MozbuildObject(self.context.topdir, self.context.settings,
+            self.context.log_manager)
+
+        mozconfig = None
+
+        try:
+            mozconfig = mb.mozconfig
+            print('mozconfig path:\n\t%s' % mozconfig['path'])
+        except MozconfigFindException as e:
+            print('Unable to find mozconfig: %s' % e.message)
+            return 1
+
+        except MozconfigLoadException as e:
+            print('Error loading mozconfig: %s' % e.path)
+            print(e.message)
+
+            if e.output:
+                print('mozconfig evaluation output:')
+                for line in e.output:
+                    print(line)
+
+            return 1
+
+        print('object directory:\n\t%s' % mb.topobjdir)
+
+        if mozconfig:
+            print('mozconfig configure args:')
+            if mozconfig['configure_args']:
+                for arg in mozconfig['configure_args']:
+                    print('\t%s' % arg)
+
+            print('mozconfig extra make args:')
+            if mozconfig['make_extra']:
+                for arg in mozconfig['make_extra']:
+                    print('\t%s' % arg)
+
+            print('mozconfig make flags:')
+            if mozconfig['make_flags']:
+                for arg in mozconfig['make_flags']:
+                    print('\t%s' % arg)
+
+        config = None
+
+        try:
+            config = mb.config_environment
+
+        except Exception:
+            pass
+
+        if config:
+            print('config topsrcdir:\n\t%s' % config.topsrcdir)
+            print('config topobjdir:\n\t%s' % config.topobjdir)
+
+            if verbose:
+                print('config substitutions:')
+                for k in sorted(config.substs):
+                    print('\t%s: %s' % (k, config.substs[k]))
+
+                print('config defines:')
+                for k in sorted(config.defines):
+                    print('\t%s' % k)

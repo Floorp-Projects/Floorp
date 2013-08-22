@@ -102,9 +102,6 @@ nsresult NS_NewDOMMutationEvent(nsIDOMEvent** aInstancePtrResult,
                                 nsMutationEvent *aEvent) 
 {
   nsDOMMutationEvent* it = new nsDOMMutationEvent(aOwner, aPresContext, aEvent);
-  if (nullptr == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   return CallQueryInterface(it, aInstancePtrResult);
 }

@@ -58,14 +58,10 @@ struct PutResponse
 };
 
 struct DeleteResponse
-{
-  void_t FIXME_Bug_753159;
-};
+{ };
 
 struct ClearResponse
-{
-  void_t FIXME_Bug_753159;
-};
+{ };
 
 struct CountResponse
 {

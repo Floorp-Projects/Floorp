@@ -107,7 +107,6 @@ EXPORTS += [
     'nsIRollupListener.h',
     'nsIWidget.h',
     'nsIWidgetListener.h',
-    'nsNativeWidget.h',
     'nsWidgetInitData.h',
     'nsWidgetsCID.h',
 ]

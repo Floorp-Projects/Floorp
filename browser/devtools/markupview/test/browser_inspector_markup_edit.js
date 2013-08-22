@@ -230,15 +230,220 @@ function test() {
         inspector.once("markupmutation", after);
         let editor = getContainerForRawNode(markup, doc.querySelector("#node25")).editor;
         let attr = editor.newAttr;
-        editField(attr, 'src="somefile.html?param1=<a>&param2=&uuml;"bl\'ah"');
+        editField(attr, 'src="somefile.html?param1=<a>&param2=&uuml;&param3=\'&quot;\'"');
       },
       after: function() {
         assertAttributes(doc.querySelector("#node25"), {
           id: "node25",
-          src: "somefile.html?param1=&lt;a&gt;&param2=&uuml;&quot;bl&apos;ah"
+          src: "somefile.html?param1=<a>&param2=\xfc&param3='\"'"
         });
       }
     },
+
+    {
+      desc: "Modify inline style containing \"",
+      before: function() {
+        assertAttributes(doc.querySelector("#node26"), {
+          id: "node26",
+          style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F");'
+        });
+      },
+      execute: function(after) {
+        inspector.once("markupmutation", after);
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node26")).editor;
+        let attr = editor.attrs["style"].querySelector(".editable");
+
+
+        attr.focus();
+        EventUtils.sendKey("return", inspector.panelWin);
+
+        let input = inplaceEditor(attr).input;
+        let value = input.value;
+
+        is (value,
+          "style='background-image: url(\"moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F\");'",
+          "Value contains actual double quotes"
+        );
+
+        value = value.replace(/mozilla\.org/, "mozilla.com");
+        input.value = value;
+
+        EventUtils.sendKey("return", inspector.panelWin);
+      },
+      after: function() {
+        assertAttributes(doc.querySelector("#node26"), {
+          id: "node26",
+          style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.com%2F");'
+        });
+      }
+    },
+
+    {
+      desc: "Modify inline style containing \" and \'",
+      before: function() {
+        assertAttributes(doc.querySelector("#node27"), {
+          id: "node27",
+          class: 'Double " and single \''
+        });
+      },
+      execute: function(after) {
+        inspector.once("markupmutation", after);
+        let editor = getContainerForRawNode(markup, doc.querySelector("#node27")).editor;
+        let attr = editor.attrs["class"].querySelector(".editable");
+
+        attr.focus();
+        EventUtils.sendKey("return", inspector.panelWin);
+
+        let input = inplaceEditor(attr).input;
+        let value = input.value;
+
+        is (value, "class=\"Double &quot; and single '\"", "Value contains &quot;");
+
+        value = value.replace(/Double/, "&quot;").replace(/single/, "'");
+        input.value = value;
+
+        EventUtils.sendKey("return", inspector.panelWin);
+      },
+      after: function() {
+        assertAttributes(doc.querySelector("#node27"), {
+          id: "node27",
+          class: '" " and \' \''
+        });
+      }
+    },
+
+    {
+      desc: "Add an attribute value without closing \"",
+      enteredText: 'style="display: block;',
+      expectedAttributes: {
+        style: "display: block;"
+      }
+    },
+    {
+      desc: "Add an attribute value without closing '",
+      enteredText: "style='display: inline;",
+      expectedAttributes: {
+        style: "display: inline;"
+      }
+    },
+    {
+      desc: "Add an attribute wrapped with with double quotes double quote in it",
+      enteredText: 'style="display: "inline',
+      expectedAttributes: {
+        style: "display: ",
+        inline: ""
+      }
+    },
+    {
+      desc: "Add an attribute wrapped with single quotes with single quote in it",
+      enteredText: "style='display: 'inline",
+      expectedAttributes: {
+        style: "display: ",
+        inline: ""
+      }
+    },
+    {
+      desc: "Add an attribute with no value",
+      enteredText: "disabled",
+      expectedAttributes: {
+        disabled: ""
+      }
+    },
+    {
+      desc: "Add multiple attributes with no value",
+      enteredText: "disabled autofocus",
+      expectedAttributes: {
+        disabled: "",
+        autofocus: ""
+      }
+    },
+    {
+      desc: "Add multiple attributes with no value, and some with value",
+      enteredText: "disabled name='name' data-test='test' autofocus",
+      expectedAttributes: {
+        disabled: "",
+        autofocus: "",
+        name: "name",
+        'data-test': "test"
+      }
+    },
+    {
+      desc: "Add attribute with xmlns",
+      enteredText: "xmlns:edi='http://ecommerce.example.org/schema'",
+      expectedAttributes: {
+        'xmlns:edi': "http://ecommerce.example.org/schema"
+      }
+    },
+    {
+      desc: "Mixed single and double quotes",
+      enteredText: "name=\"hi\" maxlength='not a number'",
+      expectedAttributes: {
+        maxlength: "not a number",
+        name: "hi"
+      }
+    },
+    {
+      desc: "Invalid attribute name",
+      enteredText: "x='y' <why-would-you-do-this>=\"???\"",
+      expectedAttributes: {
+        x: "y"
+      }
+    },
+    {
+      desc: "Double quote wrapped in single quotes",
+      enteredText: "x='h\"i'",
+      expectedAttributes: {
+        x: "h\"i"
+      }
+    },
+    {
+      desc: "Single quote wrapped in double quotes",
+      enteredText: "x=\"h'i\"",
+      expectedAttributes: {
+        x: "h'i"
+      }
+    },
+    {
+      desc: "No quote wrapping",
+      enteredText: "a=b x=y data-test=Some spaced data",
+      expectedAttributes: {
+        a: "b",
+        x: "y",
+        "data-test": "Some",
+        spaced: "",
+        data: ""
+      }
+    },
+    {
+      desc: "Duplicate Attributes",
+      enteredText: "a=b a='c' a=\"d\"",
+      expectedAttributes: {
+        a: "b"
+      }
+    },
+    {
+      desc: "Inline styles",
+      enteredText: "style=\"font-family: 'Lucida Grande', sans-serif; font-size: 75%;\"",
+      expectedAttributes: {
+        style: "font-family: 'Lucida Grande', sans-serif; font-size: 75%;"
+      }
+    },
+    {
+      desc: "Object attribute names",
+      enteredText: "toString=\"true\" hasOwnProperty=\"false\"",
+      expectedAttributes: {
+        toString: "true",
+        hasOwnProperty: "false"
+      }
+    },
+    {
+      desc: "Add event handlers",
+      enteredText: "onclick=\"javascript: throw new Error('wont fire');\" onload=\"alert('here');\"",
+      expectedAttributes: {
+        onclick: "javascript: throw new Error('wont fire');",
+        onload: "alert('here');"
+      }
+    }
   ];
 
   // Create the helper tab for parsing...
@@ -260,6 +465,38 @@ function test() {
 
   function startTests() {
     markup = inspector.markup;
+
+    // expectedAttributes - Shortcut to provide a more decalarative test when you only
+    // want to check the outcome of setting an attribute to a string.
+    edits.forEach((edit, i) => {
+      if (edit.expectedAttributes) {
+        let id = "expectedAttributes" + i;
+
+        let div = doc.createElement("div");
+        div.id = id;
+        doc.body.appendChild(div);
+
+        // Attach the ID onto the object that will assert attributes
+        edit.expectedAttributes.id = id;
+
+        edit.before = () => {
+          assertAttributes(doc.querySelector("#" + id), {
+            id: id,
+          });
+        };
+
+        edit.execute = (after) =>{
+          inspector.once("markupmutation", after);
+          let editor = getContainerForRawNode(markup, doc.querySelector("#" + id)).editor;
+          editField(editor.newAttr, edit.enteredText);
+        };
+
+        edit.after = () => {
+          assertAttributes(doc.querySelector("#" + id), edit.expectedAttributes);
+        };
+      }
+    });
+
     markup.expandAll().then(() => {
 
       let cursor = 0;

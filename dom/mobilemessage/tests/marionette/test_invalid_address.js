@@ -41,14 +41,14 @@ let tasks = {
   }
 };
 
-let mozMobileMessage;
+let manager;
 
 function getAllMessages(callback, filter, reverse) {
   if (!filter) {
     filter = new MozSmsFilter;
   }
   let messages = [];
-  let request = mozMobileMessage.getMessages(filter, reverse || false);
+  let request = manager.getMessages(filter, reverse || false);
   request.onsuccess = function(event) {
     if (request.result) {
       messages.push(request.result);
@@ -69,7 +69,7 @@ function deleteAllMessages() {
       return;
     }
 
-    let request = mozMobileMessage.delete(message.id);
+    let request = manager.delete(message.id);
     request.onsuccess = deleteAll.bind(null, messages);
     request.onerror = function (event) {
       ok(false, "failed to delete all messages");
@@ -79,10 +79,10 @@ function deleteAllMessages() {
 }
 
 function testInvalidAddressForSMS(aInvalidAddr)  {
-  log("mozMobileMessage.send(...) should get 'InvalidAddressError' error " +
+  log("manager.send(...) should get 'InvalidAddressError' error " +
       "when attempting to send SMS to: " + aInvalidAddr);
 
-  let request = mozMobileMessage.send(aInvalidAddr, "Test");
+  let request = manager.send(aInvalidAddr, "Test");
 
   request.onerror = function(event) {
     log("Received 'onerror' DOMRequest event.");
@@ -94,10 +94,10 @@ function testInvalidAddressForSMS(aInvalidAddr)  {
 }
 
 function testInvalidAddressForMMS(aInvalidAddrs)  {
-  log("mozMobileMessage.sendMMS(...) should get 'InvalidAddressError' error " +
+  log("manager.sendMMS(...) should get 'InvalidAddressError' error " +
       "when attempting to send MMS to: " + aInvalidAddrs);
 
-  let request = mozMobileMessage.sendMMS({
+  let request = manager.sendMMS({
     subject: "Test",
     receivers: aInvalidAddrs,
     attachments: [],
@@ -115,8 +115,9 @@ function testInvalidAddressForMMS(aInvalidAddrs)  {
 tasks.push(function () {
   log("Verifying initial state.");
 
-  mozMobileMessage = window.navigator.mozMobileMessage;
-  ok(mozMobileMessage instanceof MozMobileMessageManager);
+  manager = window.navigator.mozMobileMessage;
+  ok(manager instanceof MozMobileMessageManager,
+     "manager is instance of " + manager.constructor);
 
   tasks.next();
 });

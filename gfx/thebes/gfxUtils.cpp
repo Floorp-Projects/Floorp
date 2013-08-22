@@ -153,8 +153,8 @@ gfxUtils::ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
     MOZ_ASSERT(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
                "Source surface stride isn't tightly packed");
 
-    MOZ_ASSERT(aSourceSurface->Format() == gfxASurface::ImageFormatARGB32,
-               "Surfaces must be ARGB32");
+    MOZ_ASSERT(aSourceSurface->Format() == gfxASurface::ImageFormatARGB32 || aSourceSurface->Format() == gfxASurface::ImageFormatRGB24,
+               "Surfaces must be ARGB32 or RGB24");
 
     uint8_t *src = aSourceSurface->Data();
     uint8_t *dst = aDestSurface->Data();
@@ -862,5 +862,5 @@ gfxUtils::CopyAsDataURL(DrawTarget* aDT)
 bool gfxUtils::sDumpPaintList = getenv("MOZ_DUMP_PAINT_LIST") != 0;
 bool gfxUtils::sDumpPainting = getenv("MOZ_DUMP_PAINT") != 0;
 bool gfxUtils::sDumpPaintingToFile = getenv("MOZ_DUMP_PAINT_TO_FILE") != 0;
-FILE *gfxUtils::sDumpPaintFile = NULL;
+FILE *gfxUtils::sDumpPaintFile = nullptr;
 #endif

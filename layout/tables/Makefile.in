@@ -16,7 +16,7 @@ FAIL_ON_WARNINGS = 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES         += -DDEBUG_TABLE_STRATEGY_off -D_IMPL_NS_LAYOUT
+DEFINES         += -DDEBUG_TABLE_STRATEGY_off
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base \

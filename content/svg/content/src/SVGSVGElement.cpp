@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 
@@ -127,6 +127,8 @@ nsSVGElement::EnumInfo SVGSVGElement::sEnumInfo[1] =
 
 //----------------------------------------------------------------------
 // nsISupports methods
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(SVGSVGElement)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGSVGElement,
                                                 SVGSVGElementBase)
@@ -742,7 +744,6 @@ SVGSVGElement::BindToTree(nsIDocument* aDocument,
         // We'll be the outermost <svg> element.  We'll need a time container.
         if (!mTimedDocumentRoot) {
           mTimedDocumentRoot = new nsSMILTimeContainer();
-          NS_ENSURE_TRUE(mTimedDocumentRoot, NS_ERROR_OUT_OF_MEMORY);
         }
       } else {
         // We're a child of some other <svg> element, so we don't need our own
@@ -979,7 +980,7 @@ SVGSVGElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
       return GetViewBoxTransform() * gfxMatrix().Translate(gfxPoint(x, y)) * fromUserSpace;
     }
     NS_ABORT_IF_FALSE(aWhich == eChildToUserSpace, "Unknown TransformTypes");
-    return GetViewBoxTransform() * fromUserSpace;
+    return GetViewBoxTransform() * gfxMatrix().Translate(gfxPoint(x, y));
   }
 
   if (IsRoot()) {

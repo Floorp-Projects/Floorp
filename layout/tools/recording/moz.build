@@ -5,3 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULE = 'recording'
+
+EXTRA_COMPONENTS += [
+    'recording-cmdline.js',
+    'recording-cmdline.manifest',
+]

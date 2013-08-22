@@ -58,7 +58,7 @@ const cases = [
   { expr: "(yield, 1 for (x in []))",        top: JSMSG_TOP_YIELD, fun: JSMSG_YIELD_PAREN,  gen: JSMSG_YIELD_PAREN,  desc: "simple yield in list in genexp" },
   { expr: "(yield 1, 2 for (x in []))",      top: JSMSG_TOP_YIELD, fun: JSMSG_YIELD_PAREN,  gen: JSMSG_YIELD_PAREN,  desc: "yield w/ arg in list in genexp" },
   { expr: "(1, yield for (x in []))",        top: JSMSG_TOP_YIELD, fun: JSMSG_GENERIC,      gen: JSMSG_GENERIC,      desc: "simple yield at end of list in genexp" },
-  { expr: "(1, yield 2 for (x in []))",      top: JSMSG_TOP_YIELD, fun: { simple: JSMSG_GENEXP_YIELD, call: JSMSG_BAD_GENERATOR_SYNTAX },
+  { expr: "(1, yield 2 for (x in []))",      top: JSMSG_TOP_YIELD, fun: { simple: JSMSG_GENEXP_YIELD, call: JSMSG_GENEXP_YIELD },
                                                                                             gen: JSMSG_GENEXP_YIELD, desc: "yield w/ arg at end of list in genexp" },
   { expr: "((yield) for (x in []))",         top: JSMSG_TOP_YIELD, fun: JSMSG_GENEXP_YIELD, gen: JSMSG_GENEXP_YIELD, desc: "simple yield, parenthesized in genexp" },
   { expr: "((yield 1) for (x in []))",       top: JSMSG_TOP_YIELD, fun: JSMSG_GENEXP_YIELD, gen: JSMSG_GENEXP_YIELD, desc: "yield w/ arg, parenthesized in genexp" },

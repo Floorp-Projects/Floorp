@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef DEBUG
-MOZ_STATIC_ASSERT(false, "This should not be compiled in !DEBUG");
+static_assert(false, "This should not be compiled in !DEBUG");
 #endif // DEBUG
 
 #include "nsAutoLayoutPhase.h"

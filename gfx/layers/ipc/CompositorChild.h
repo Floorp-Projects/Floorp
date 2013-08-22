@@ -39,9 +39,10 @@ public:
   static bool ChildProcessHasCompositor() { return sCompositor != nullptr; }
 protected:
   virtual PLayerTransactionChild*
-    AllocPLayerTransactionChild(const LayersBackend& aBackendHint,
+    AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints,
                                 const uint64_t& aId,
-                                TextureFactoryIdentifier* aTextureFactoryIdentifier) MOZ_OVERRIDE;
+                                TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                bool* aSuccess) MOZ_OVERRIDE;
 
   virtual bool DeallocPLayerTransactionChild(PLayerTransactionChild *aChild) MOZ_OVERRIDE;
 

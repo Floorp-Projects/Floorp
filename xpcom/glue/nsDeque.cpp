@@ -5,6 +5,7 @@
 
 #include "nsDeque.h"
 #include "nsCRT.h"
+#include "nsTraceRefcnt.h"
 #ifdef DEBUG_rickg
 #include <stdio.h>
 #endif

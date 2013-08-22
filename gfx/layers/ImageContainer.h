@@ -6,6 +6,7 @@
 #ifndef GFX_IMAGECONTAINER_H
 #define GFX_IMAGECONTAINER_H
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "gfxASurface.h" // for gfxImageFormat
@@ -13,7 +14,6 @@
 #include "mozilla/TimeStamp.h"
 #include "ImageTypes.h"
 #include "nsTArray.h"
-#include "pratom.h"
 
 #ifdef XP_WIN
 struct ID3D10Texture2D;
@@ -35,6 +35,8 @@ namespace layers {
 class ImageClient;
 class SharedPlanarYCbCrImage;
 class DeprecatedSharedPlanarYCbCrImage;
+class TextureClient;
+class SurfaceDescriptor;
 
 struct ImageBackendData
 {
@@ -42,6 +44,18 @@ struct ImageBackendData
 
 protected:
   ImageBackendData() {}
+};
+
+// sadly we'll need this until we get rid of Deprected image classes
+class ISharedImage {
+public:
+    virtual uint8_t* GetBuffer() = 0;
+
+    /**
+     * For use with the CompositableClient only (so that the later can
+     * synchronize the TextureClient with the TextureHost).
+     */
+    virtual TextureClient* GetTextureClient() = 0;
 };
 
 /**
@@ -64,12 +78,17 @@ class Image {
 public:
   virtual ~Image() {}
 
+  virtual ISharedImage* AsSharedImage() { return nullptr; }
 
   ImageFormat GetFormat() { return mFormat; }
   void* GetImplData() { return mImplData; }
 
   virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
   virtual gfxIntSize GetSize() = 0;
+  virtual nsIntRect GetPictureRect()
+  {
+    return nsIntRect(0, 0, GetSize().width, GetSize().height);
+  }
 
   ImageBackendData* GetBackendData(LayersBackend aBackend)
   { return mBackendData[aBackend]; }
@@ -84,7 +103,7 @@ public:
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
     mImplData(aImplData),
-    mSerial(PR_ATOMIC_INCREMENT(&sSerialCounter)),
+    mSerial(++sSerialCounter),
     mFormat(aFormat),
     mSent(false)
   {}
@@ -94,7 +113,7 @@ protected:
   void* mImplData;
   int32_t mSerial;
   ImageFormat mFormat;
-  static int32_t sSerialCounter;
+  static mozilla::Atomic<int32_t> sSerialCounter;
   bool mSent;
 };
 

@@ -14,14 +14,14 @@ struct LooseEqualityFixture : public JSAPITest
     virtual ~LooseEqualityFixture() {}
 
     bool leq(JS::HandleValue x, JS::HandleValue y) {
-        JSBool equal;
+        bool equal;
         CHECK(JS_LooselyEqual(cx, x, y, &equal) && equal);
         CHECK(JS_LooselyEqual(cx, y, x, &equal) && equal);
         return true;
     }
 
     bool nleq(JS::HandleValue x, JS::HandleValue y) {
-        JSBool equal;
+        bool equal;
         CHECK(JS_LooselyEqual(cx, x, y, &equal) && !equal);
         CHECK(JS_LooselyEqual(cx, y, x, &equal) && !equal);
         return true;
@@ -57,7 +57,7 @@ struct LooseEqualityData
         i42 = INT_TO_JSVAL(42);
         undef = JSVAL_VOID;
         null = JSVAL_NULL;
-        obj = OBJECT_TO_JSVAL(JS_GetGlobalForScopeChain(cx));
+        obj = OBJECT_TO_JSVAL(JS::CurrentGlobalOrNull(cx));
         poszero = DOUBLE_TO_JSVAL(0.0);
         negzero = DOUBLE_TO_JSVAL(-0.0);
 #ifdef XP_WIN

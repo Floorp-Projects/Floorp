@@ -10,18 +10,18 @@
     <authors>
       <author>
         <name>Test Creator 1</name>
-        <link>http://localhost:4444/creator1.html</link>
+        <link>http://localhost:%PORT%/creator1.html</link>
       </author>
       <author>
         <name>Test Developer 1</name>
-        <link>http://localhost:4444/developer1.html</link>
+        <link>http://localhost:%PORT%/developer1.html</link>
       </author>
     </authors>
     <summary>Test Summary 1</summary>
     <description>Test Description 1</description>
     <eula>Test EULA 1</eula>
     <developer_comments>Test Developer Comments 1</developer_comments>
-    <icon size="32">http://localhost:4444/icon1.png</icon>
+    <icon size="32">http://localhost:%PORT%/icon1.png</icon>
     <status id="8">Preliminarily Reviewed</status>
     <compatible_applications>
       <application>
@@ -33,33 +33,33 @@
     <previews>
       <preview primary="1">
         <full type="image/png" width="400" height="300">
-          http://localhost:4444/full1-1.png
+          http://localhost:%PORT%/full1-1.png
         </full>
         <thumbnail type="image/png" width="200" height="150">
-          http://localhost:4444/thumbnail1-1.png
+          http://localhost:%PORT%/thumbnail1-1.png
         </thumbnail>
         <caption>Caption 1 - 1</caption>
       </preview>
       <preview primary="0">
-        <full type="image/png">http://localhost:4444/full2-1.png</full>
-        <thumbnail type="image/png">http://localhost:4444/thumbnail2-1.png</thumbnail>
+        <full type="image/png">http://localhost:%PORT%/full2-1.png</full>
+        <thumbnail type="image/png">http://localhost:%PORT%/thumbnail2-1.png</thumbnail>
         <caption>Caption 2 - 1</caption>
       </preview>
     </previews>
     <rating>4</rating>
-    <learnmore>http://localhost:4444/learnmore1.html</learnmore>
-    <support>http://localhost:4444/support1.html</support>
+    <learnmore>http://localhost:%PORT%/learnmore1.html</learnmore>
+    <support>http://localhost:%PORT%/support1.html</support>
     <contribution_data>
-      <link>http://localhost:4444/contribution1.html</link>
+      <link>http://localhost:%PORT%/contribution1.html</link>
       <suggested_amount currency="USD">$11.11</suggested_amount>
-      <meet_developers>http://localhost:4444/meetDevelopers1.html</meet_developers>
+      <meet_developers>http://localhost:%PORT%/meetDevelopers1.html</meet_developers>
     </contribution_data>
-    <reviews num="1111">http://localhost:4444/review1.html</reviews>
+    <reviews num="1111">http://localhost:%PORT%/review1.html</reviews>
     <total_downloads>2222</total_downloads>
     <weekly_downloads>3333</weekly_downloads>
     <daily_users>4444</daily_users>
     <last_updated epoch="1265033045">2010-02-01T14:04:05Z</last_updated>
-    <install size="5555">http://localhost:4444/addons/test_AddonRepository_2.xpi</install>
+    <install size="5555">http://localhost:%PORT%/addons/test_AddonRepository_2.xpi</install>
   </addon>
 
   <addon_compatibility hosted="true" id="123">
@@ -141,7 +141,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test2.xpi</install>
+    <install>http://localhost:%PORT%/test2.xpi</install>
   </addon>
 
   <!-- Fails because guid was not requested -->
@@ -160,7 +160,7 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install>http://localhost:4444/test3.xpi</install>
+    <install>http://localhost:%PORT%/test3.xpi</install>
   </addon>
 
   <!-- Passes even though guid matches already installed add-on,
@@ -180,8 +180,8 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install os="UNKNOWN1">http://localhost:4444/test4.xpi</install>
-    <install os="UNKNOWN2">http://localhost:4444/test4.xpi</install>
+    <install os="UNKNOWN1">http://localhost:%PORT%/test4.xpi</install>
+    <install os="UNKNOWN2">http://localhost:%PORT%/test4.xpi</install>
   </addon>
 </searchresults>
 

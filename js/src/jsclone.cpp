@@ -28,12 +28,12 @@
  */
 
 #include "jsclone.h"
-#include "jswrapper.h"
 
 #include "mozilla/Endian.h"
 #include "mozilla/FloatingPoint.h"
 
 #include "jsdate.h"
+#include "jswrapper.h"
 
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
@@ -478,7 +478,7 @@ JSStructuredCloneWriter::parseTransferable()
     RootedValue v(context());
 
     for (uint32_t i = 0; i < length; ++i) {
-        if (!JS_GetElement(context(), array, i, v.address())) {
+        if (!JS_GetElement(context(), array, i, &v)) {
             return false;
         }
 
@@ -561,7 +561,7 @@ JSStructuredCloneWriter::checkStack()
 #endif
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v)
 {
     JS_ASSERT(v.isObject());
@@ -852,7 +852,7 @@ TagToV1ArrayType(uint32_t tag)
     return tag - SCTAG_TYPED_ARRAY_V1_MIN;
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(bool)
 JS_ReadTypedArray(JSStructuredCloneReader *r, jsval *vp)
 {
     uint32_t tag, nelems;

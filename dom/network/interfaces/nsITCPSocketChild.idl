@@ -8,18 +8,35 @@ interface nsITCPSocketInternal;
 interface nsIDOMWindow;
 
 // Interface to allow the content process socket to reach the IPC bridge.
-[scriptable, uuid(bdc91763-e9a1-4122-9c2f-8f17505c8c7a)]
+[scriptable, uuid(edf07a93-36a6-4574-8e23-40f64ab5f596)]
 interface nsITCPSocketChild : nsISupports
 {
   // Tell the chrome process to open a corresponding connection with the given parameters
   [implicit_jscontext]
   void open(in nsITCPSocketInternal socket, in DOMString host,
             in unsigned short port, in boolean ssl, in DOMString binaryType,
-            in nsIDOMWindow window, in jsval socketVal);
+            in nsIDOMWindow window, in jsval windowVal);
 
   // Tell the chrome process to perform equivalent operations to all following methods
-  [implicit_jscontext] void send(in jsval data, in unsigned long byteOffset, in unsigned long byteLength);
+  [implicit_jscontext] 
+  void send(in jsval data, in unsigned long byteOffset, in unsigned long byteLength);
   void resume();
   void suspend();
   void close();
+
+  /**
+   * Initialize the TCP socket on the child side for IPC. It is called from the child side,
+   * which is generated in receiving a notification of accepting any open request
+   * on the parent side. We use single implementation that works on a child process 
+   * as well as in the single process model.
+   *
+   * @param socket
+   *        The TCP socket on the child side.
+   *        This instance is connected with the child IPC side of the IPC bridge.
+   * @param windowVal
+   *        The window object on the child side to create data
+   *        as "jsval" for deserialization.
+   */
+  [implicit_jscontext]
+  void setSocketAndWindow(in nsITCPSocketInternal socket, in jsval windowVal);
 };

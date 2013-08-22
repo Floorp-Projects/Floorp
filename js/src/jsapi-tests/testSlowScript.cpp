@@ -4,7 +4,7 @@
 
 #include "jsapi-tests/tests.h"
 
-JSBool
+bool
 OperationCallback(JSContext *cx)
 {
     return false;
@@ -12,7 +12,7 @@ OperationCallback(JSContext *cx)
 
 static unsigned sRemain;
 
-JSBool
+bool
 TriggerOperationCallback(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!sRemain--)
