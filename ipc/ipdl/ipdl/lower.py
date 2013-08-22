@@ -3209,11 +3209,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         fatalerror = MethodDefn(MethodDecl(
             'FatalError',
             params=[ Decl(Type('char', const=1, ptrconst=1), msgparam.name) ],
-            const=1, virtual=1))
+            const=1, never_inline=1))
         fatalerror.addstmts([
-            Whitespace('// Virtual method to prevent inlining.\n', indent=1),
-            Whitespace('// This give us better error reporting.\n', indent=1),
-            Whitespace('// See bug 589371\n\n', indent=1),
             _protocolErrorBreakpoint(msgparam),
             Whitespace.NL,
             StmtDecl(Decl(Type('nsAutoCString'), msgvar.name),
