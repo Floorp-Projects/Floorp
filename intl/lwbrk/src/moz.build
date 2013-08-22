@@ -28,6 +28,10 @@ else:
     CPP_SOURCES += [
         'nsRuleBreaker.cpp',
     ]
+    CSRCS += [
+        'rulebrk.c',
+    ]
+
 
 LIBRARY_NAME = 'lwbrk_s'
 

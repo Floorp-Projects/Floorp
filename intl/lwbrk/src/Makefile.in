@@ -10,20 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq  ($(MOZ_WIDGET_TOOLKIT),gtk2)
-else
-ifeq  ($(MOZ_WIDGET_TOOLKIT),gtk3)
-else
-ifeq  ($(MOZ_WIDGET_TOOLKIT),windows)
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT), cocoa)
-else
-CSRCS		= rulebrk.c
-endif
-endif
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_WIDGET_GTK
