@@ -1291,6 +1291,12 @@ SpecialPowersAPI.prototype = {
       addCategoryEntry(category, entry, value, persists, replace);
   },
 
+  deleteCategoryEntry: function(category, entry, persists) {
+    Components.classes["@mozilla.org/categorymanager;1"].
+      getService(Components.interfaces.nsICategoryManager).
+      deleteCategoryEntry(category, entry, persists);
+  },
+
   copyString: function(str, doc) {
     Components.classes["@mozilla.org/widget/clipboardhelper;1"].
       getService(Components.interfaces.nsIClipboardHelper).
