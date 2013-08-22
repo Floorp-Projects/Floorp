@@ -637,7 +637,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         code = ssd->data;
         if (natoms != 0) {
             script->natoms = natoms;
-            script->atoms = ssd->atoms();
+            script->atoms = ssd->atoms(length, nsrcnotes);
         }
     }
 
@@ -1518,26 +1518,15 @@ js::SharedScriptData::new_(ExclusiveContext *cx, uint32_t codeLength,
     uint32_t baseLength = codeLength + srcnotesLength;
     uint32_t padding = sizeof(JSAtom *) - baseLength % sizeof(JSAtom *);
     uint32_t length = baseLength + padding + sizeof(JSAtom *) * natoms;
-    JS_ASSERT(length % sizeof(JSAtom *) == 0);
 
     SharedScriptData *entry = (SharedScriptData *)cx->malloc_(length +
                                                               offsetof(SharedScriptData, data));
 
     if (!entry)
         return NULL;
-    entry->length = length;
-    entry->natoms = natoms;
     entry->marked = false;
+    entry->length = length;
     memset(entry->data + baseLength, 0, padding);
-
-    /*
-     * Call constructors to initialize the storage that will be accessed as a
-     * HeapPtrAtom array via atoms().
-     */
-    HeapPtrAtom *atoms = entry->atoms();
-    for (unsigned i = 0; i < natoms; ++i)
-        new (&atoms[i]) HeapPtrAtom();
-
     return entry;
 }
 
@@ -1585,7 +1574,7 @@ SaveSharedScriptData(ExclusiveContext *cx, Handle<JSScript *> script, SharedScri
 #endif
 
     script->code = ssd->data;
-    script->atoms = ssd->atoms();
+    script->atoms = ssd->atoms(script->length, nsrcnotes);
     return true;
 }
 
@@ -1929,7 +1918,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
     PodCopy<jsbytecode>(code + prologLength, bce->code().begin(), mainLength);
     if (!FinishTakingSrcNotes(cx, bce, (jssrcnote *)(code + script->length)))
         return false;
-    InitAtomMap(bce->atomIndices.getMap(), ssd->atoms());
+    InitAtomMap(bce->atomIndices.getMap(), ssd->atoms(script->length, nsrcnotes));
 
     if (!SaveSharedScriptData(cx, script, ssd, nsrcnotes))
         return false;
