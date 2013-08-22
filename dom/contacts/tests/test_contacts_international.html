@@ -37,6 +37,7 @@ var androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
 
 function onFailure() {
   ok(false, "in on Failure!");
+  next();
 }
 
 var number1 = {
@@ -167,11 +168,15 @@ var steps = [
   },
   function() {
     ok(true, "Modifying number");
-    findResult1.tel[0].value = number2.local;
-    req = mozContacts.save(findResult1);
-    req.onsuccess = function () {
-      next();
-    };
+    if (!findResult1) {
+      SpecialPowers.executeSoon(next);
+    } else {
+      findResult1.tel[0].value = number2.local;
+      req = mozContacts.save(findResult1);
+      req.onsuccess = function () {
+        next();
+      };
+    }
   },
   function () {
     ok(true, "Searching for local number");
@@ -225,7 +230,7 @@ var steps = [
   },
   function () {
     ok(true, "Deleting database");
-    req = mozContacts.clear()
+    req = mozContacts.clear();
     req.onsuccess = function () {
       ok(true, "Deleted the database");
       next();
