@@ -1616,6 +1616,7 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   #go-button,
   #urlbar-go-button {
     -moz-image-region: rect(0, 84px, 28px, 56px);
+    height: 14px;
   }
 
   #go-button:hover:active,
