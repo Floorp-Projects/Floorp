@@ -407,7 +407,9 @@ JSRuntime::~JSRuntime()
         PR_DestroyLock(exclusiveAccessLock);
 
     JS_ASSERT(!numExclusiveThreads);
-    exclusiveThreadsPaused = true; // Avoid bogus asserts during teardown.
+
+    // Avoid bogus asserts during teardown.
+    exclusiveThreadsPaused = true;
 #endif
 
     /*

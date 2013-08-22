@@ -2546,7 +2546,7 @@ ion::PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, Prop
             if (HasDataProperty(cx, obj, id, &v)) {
                 if (v.isUndefined())
                     break;
-                observed->addType(cx, types::GetValueType(cx, v));
+                observed->addType(cx, types::GetValueType(v));
             }
 
             obj = obj->getProto();
