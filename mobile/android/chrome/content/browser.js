@@ -2670,6 +2670,7 @@ Tab.prototype = {
     this.browser.sessionHistory.addSHistoryListener(this);
 
     this.browser.addEventListener("DOMContentLoaded", this, true);
+    this.browser.addEventListener("DOMFormHasPassword", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
@@ -2818,6 +2819,7 @@ Tab.prototype = {
     this.browser.sessionHistory.removeSHistoryListener(this);
 
     this.browser.removeEventListener("DOMContentLoaded", this, true);
+    this.browser.removeEventListener("DOMFormHasPassword", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
@@ -3372,6 +3374,11 @@ Tab.prototype = {
         if (docURI.startsWith("about:reader"))
           new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
 
+        break;
+      }
+
+      case "DOMFormHasPassword": {
+        LoginManagerContent.onFormPassword(aEvent);
         break;
       }
 
