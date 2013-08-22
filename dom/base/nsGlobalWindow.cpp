@@ -1535,7 +1535,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
     if (!sWarnedAboutWindowInternal) {
       sWarnedAboutWindowInternal = true;
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "Extensions", mDoc,
+                                      NS_LITERAL_CSTRING("Extensions"), mDoc,
                                       nsContentUtils::eDOM_PROPERTIES,
                                       "nsIDOMWindowInternalWarning");
     }
@@ -6204,7 +6204,7 @@ ReportUseOfDeprecatedMethod(nsGlobalWindow* aWindow, const char* aWarning)
 {
   nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "DOM Events", doc,
+                                  NS_LITERAL_CSTRING("DOM Events"), doc,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   aWarning);
 }
@@ -7087,7 +7087,7 @@ nsGlobalWindow::Close()
       // report localized error msg in JS console
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag,
-          "DOM Window", mDoc,  // Better name for the category?
+          NS_LITERAL_CSTRING("DOM Window"), mDoc,  // Better name for the category?
           nsContentUtils::eDOM_PROPERTIES,
           "WindowCloseBlockedWarning");
 

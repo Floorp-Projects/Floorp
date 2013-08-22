@@ -90,7 +90,7 @@ IsAncestorBinding(nsIDocument* aDocument,
       NS_ConvertUTF8toUTF16 bindingURI(spec);
       const PRUnichar* params[] = { bindingURI.get() };
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "XBL", aDocument,
+                                      NS_LITERAL_CSTRING("XBL"), aDocument,
                                       nsContentUtils::eXBL_PROPERTIES,
                                       "TooDeepBindingRecursion",
                                       params, ArrayLength(params));
@@ -331,7 +331,7 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
         NS_WARNING("An XBL file is malformed. Did you forget the XBL namespace on the bindings tag?");
       }
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "XBL", nullptr,
+                                      NS_LITERAL_CSTRING("XBL"), nullptr,
                                       nsContentUtils::eXBL_PROPERTIES,
                                       "MalformedXBL",
                                       nullptr, 0, documentURI);
@@ -763,7 +763,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
           NS_ConvertUTF8toUTF16 baseSpecUTF16(basespec);
           const PRUnichar* params[] = { protoSpec.get(), baseSpecUTF16.get() };
           nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                          "XBL", nullptr,
+                                          NS_LITERAL_CSTRING("XBL"), nullptr,
                                           nsContentUtils::eXBL_PROPERTIES,
                                           "CircularExtendsBinding",
                                           params, ArrayLength(params),

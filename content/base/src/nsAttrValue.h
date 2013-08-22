@@ -63,7 +63,7 @@ public:
   nsCheapString(nsStringBuffer* aBuf)
   {
     if (aBuf)
-      aBuf->ToString(aBuf->StorageSize()/2 - 1, *this);
+      aBuf->ToString(aBuf->StorageSize()/sizeof(PRUnichar) - 1, *this);
   }
 };
 

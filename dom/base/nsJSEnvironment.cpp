@@ -174,6 +174,7 @@ static uint32_t sForgetSkippableBeforeCC = 0;
 static uint32_t sPreviousSuspectedCount = 0;
 static uint32_t sCleanupsSinceLastGC = UINT32_MAX;
 static bool sNeedsFullCC = false;
+static bool sNeedsGCAfterCC = false;
 static nsJSContext *sContextList = nullptr;
 
 static nsScriptNameSpaceManager *gNameSpaceManager;
@@ -685,7 +686,8 @@ static const char js_werror_option_str[] = JS_OPTIONS_DOT_STR "werror";
 static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
 static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
 #endif
-static const char js_typeinfer_str[]          = JS_OPTIONS_DOT_STR "typeinference";
+static const char js_typeinfer_content_str[]  = JS_OPTIONS_DOT_STR "typeinference.content";
+static const char js_typeinfer_chrome_str[]   = JS_OPTIONS_DOT_STR "typeinference.chrome";
 static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
 static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
 static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
@@ -694,6 +696,7 @@ static const char js_baselinejit_content_str[] = JS_OPTIONS_DOT_STR "baselinejit
 static const char js_baselinejit_chrome_str[]  = JS_OPTIONS_DOT_STR "baselinejit.chrome";
 static const char js_baselinejit_eager_str[]  = JS_OPTIONS_DOT_STR "baselinejit.unsafe_eager_compilation";
 static const char js_ion_content_str[]        = JS_OPTIONS_DOT_STR "ion.content";
+static const char js_ion_chrome_str[]         = JS_OPTIONS_DOT_STR "ion.chrome";
 static const char js_ion_eager_str[]          = JS_OPTIONS_DOT_STR "ion.unsafe_eager_compilation";
 static const char js_ion_parallel_compilation_str[] = JS_OPTIONS_DOT_STR "ion.parallel_compilation";
 
@@ -723,13 +726,17 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   nsCOMPtr<nsIDOMWindow> contentWindow(do_QueryInterface(global));
   nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(global));
 
-  bool useTypeInference = !chromeWindow && contentWindow && Preferences::GetBool(js_typeinfer_str);
+  bool useTypeInference = Preferences::GetBool((chromeWindow || !contentWindow) ?
+                                               js_typeinfer_chrome_str :
+                                               js_typeinfer_content_str);
   bool useHardening = Preferences::GetBool(js_jit_hardening_str);
-  bool useBaselineJIT = Preferences::GetBool(chromeWindow || !contentWindow ?
+  bool useBaselineJIT = Preferences::GetBool((chromeWindow || !contentWindow) ?
                                                js_baselinejit_chrome_str :
                                                js_baselinejit_content_str);
   bool useBaselineJITEager = Preferences::GetBool(js_baselinejit_eager_str);
-  bool useIon = Preferences::GetBool(js_ion_content_str);
+  bool useIon = Preferences::GetBool((chromeWindow || !contentWindow) ?
+                                               js_ion_chrome_str :
+                                               js_ion_content_str);
   bool useIonEager = Preferences::GetBool(js_ion_eager_str);
   bool useAsmJS = Preferences::GetBool(js_asmjs_content_str);
   bool parallelIonCompilation = Preferences::GetBool(js_ion_parallel_compilation_str);
@@ -2049,7 +2056,8 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   // If we collected a substantial amount of cycles, poke the GC since more objects
   // might be unreachable now.
   if (sCCollectedWaitingForGC > 250 ||
-      sLikelyShortLivingObjectsNeedingGC > 2500) {
+      sLikelyShortLivingObjectsNeedingGC > 2500 ||
+      sNeedsGCAfterCC) {
     PokeGC(JS::gcreason::CC_WAITING);
   }
 
@@ -2164,6 +2172,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   sRemovedPurples = 0;
   sForgetSkippableBeforeCC = 0;
   sNeedsFullCC = false;
+  sNeedsGCAfterCC = false;
 }
 
 // static
@@ -2311,6 +2320,14 @@ nsJSContext::PokeGC(JS::gcreason::Reason aReason, int aDelay)
 {
   if (sGCTimer || sShuttingDown) {
     // There's already a timer for GC'ing, just return
+    return;
+  }
+
+  if (sCCTimer) {
+    // Make sure CC is called...
+    sNeedsFullCC = true;
+    // and GC after it.
+    sNeedsGCAfterCC = true;
     return;
   }
 
@@ -2579,6 +2596,7 @@ mozilla::dom::StartupJSEnvironment()
   sLikelyShortLivingObjectsNeedingGC = 0;
   sPostGCEventsToConsole = false;
   sNeedsFullCC = false;
+  sNeedsGCAfterCC = false;
   gNameSpaceManager = nullptr;
   sRuntimeService = nullptr;
   sRuntime = nullptr;

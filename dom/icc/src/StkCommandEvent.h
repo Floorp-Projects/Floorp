@@ -22,7 +22,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_TO_NSDOMEVENT
   NS_DECL_NSIDOMMOZSTKCOMMANDEVENT
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StkCommandEvent, nsDOMEvent)
 
   static already_AddRefed<StkCommandEvent>
   Create(EventTarget* aOwner, const nsAString& aMessage);

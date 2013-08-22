@@ -78,8 +78,10 @@ public:
   NS_IMETHOD Setup(nsISpeechTaskCallback* aCallback,
                    uint32_t aChannels, uint32_t aRate, uint8_t argc) MOZ_OVERRIDE;
 
-  NS_IMETHOD SendAudio (const JS::Value& aData, const JS::Value& aLandmarks,
-                        JSContext* aCx) MOZ_OVERRIDE;
+  NS_IMETHOD SendAudio(const JS::Value& aData, const JS::Value& aLandmarks,
+                       JSContext* aCx) MOZ_OVERRIDE;
+
+  NS_IMETHOD SendAudioNative(int16_t* aData, uint32_t aDataLen) MOZ_OVERRIDE;
 
   virtual void Pause();
 
