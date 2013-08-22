@@ -7,6 +7,8 @@
 MODULE = 'xul'
 
 if CONFIG['MOZ_XUL']:
+    LIBXUL_LIBRARY = True
+
     CPP_SOURCES += [
         'nsXULElement.cpp',
         'nsXULPopupListener.cpp',
