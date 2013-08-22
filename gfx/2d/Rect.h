@@ -17,25 +17,37 @@ namespace mozilla {
 namespace gfx {
 
 template<class units>
+struct IntMarginTyped:
+    public BaseMargin<int32_t, IntMarginTyped<units> >,
+    public units {
+    typedef BaseMargin<int32_t, IntMarginTyped<units> > Super;
+
+    IntMarginTyped() : Super() {}
+    IntMarginTyped(int32_t aTop, int32_t aRight, int32_t aBottom, int32_t aLeft) :
+        Super(aTop, aRight, aBottom, aLeft) {}
+};
+typedef IntMarginTyped<UnknownUnits> IntMargin;
+
+template<class units>
 struct MarginTyped:
     public BaseMargin<Float, MarginTyped<units> >,
     public units {
     typedef BaseMargin<Float, MarginTyped<units> > Super;
 
-    MarginTyped() : Super(0, 0, 0, 0) {}
-    MarginTyped(const MarginTyped<units>& aMargin) :
-        Super(float(aMargin.top), float(aMargin.right),
-              float(aMargin.bottom), float(aMargin.left)) {}
+    MarginTyped() : Super() {}
     MarginTyped(Float aTop, Float aRight, Float aBottom, Float aLeft) :
         Super(aTop, aRight, aBottom, aLeft) {}
+    explicit MarginTyped(const IntMarginTyped<units>& aMargin) :
+        Super(float(aMargin.top), float(aMargin.right),
+              float(aMargin.bottom), float(aMargin.left)) {}
 };
 typedef MarginTyped<UnknownUnits> Margin;
 
 template<class units>
 struct IntRectTyped :
-    public BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, Margin>,
+    public BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, IntMarginTyped<units> >,
     public units {
-    typedef BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, Margin> Super;
+    typedef BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, IntMarginTyped<units> > Super;
 
     IntRectTyped() : Super() {}
     IntRectTyped(IntPointTyped<units> aPos, IntSizeTyped<units> aSize) :
@@ -63,9 +75,9 @@ typedef IntRectTyped<UnknownUnits> IntRect;
 
 template<class units>
 struct RectTyped :
-    public BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, Margin>,
+    public BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, MarginTyped<units> >,
     public units {
-    typedef BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, Margin> Super;
+    typedef BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, MarginTyped<units> > Super;
 
     RectTyped() : Super() {}
     RectTyped(PointTyped<units> aPos, SizeTyped<units> aSize) :
