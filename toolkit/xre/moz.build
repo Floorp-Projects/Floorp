@@ -31,6 +31,12 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CPP_SOURCES += [
         'nsCommandLineServiceMac.cpp',
     ]
+    CMMSRCS += [
+        'MacApplicationDelegate.mm',
+        'MacAutoreleasePool.mm',
+        'MacLaunchHelper.mm',
+        'nsNativeAppSupportCocoa.mm',
+    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS += ['nsQAppInstance.h']
     CPP_SOURCES += [

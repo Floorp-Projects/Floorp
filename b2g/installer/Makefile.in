@@ -17,14 +17,6 @@ MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 
 MOZ_PKG_MANIFEST_P = $(srcdir)/package-manifest.in
 
-MOZ_NONLOCALIZED_PKG_LIST = \
-	xpcom \
-	browser \
-	b2g \
-	$(NULL)
-
-MOZ_LOCALIZED_PKG_LIST = $(AB_CD) multilocale
-
 DEFINES += \
 	-DAB_CD=$(AB_CD) \
 	-DMOZ_APP_NAME=$(MOZ_APP_NAME) \
