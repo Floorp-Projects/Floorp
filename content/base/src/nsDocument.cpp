@@ -209,6 +209,7 @@
 #include "nsIEditor.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "mozilla/css/Rule.h"
+#include "nsIDOMLocation.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsISecurityConsoleMessage.h"
 
