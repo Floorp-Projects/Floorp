@@ -22,3 +22,5 @@ EXTRA_PP_COMPONENTS += [
 
 LIBRARY_NAME = 'imgiconqt_s'
 
+LIBXUL_LIBRARY = True
+

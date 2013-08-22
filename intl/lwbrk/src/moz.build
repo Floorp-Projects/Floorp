@@ -31,3 +31,5 @@ else:
 
 LIBRARY_NAME = 'lwbrk_s'
 
+LIBXUL_LIBRARY = True
+
