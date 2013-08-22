@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=728629
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 728629</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 728629 **/
+  SimpleTest.waitForExplicitFinish();
+  function test() {
+    var c = document.createElement('canvas');
+    document.body.appendChild(c);
+    try {
+      c.getContext("2d").strokeText("Hello",NaN,50);
+      ok(true, "strokeText should not throw with NaN.");
+    } catch (e) {
+      ok(false, "strokeText should not throw with NaN.");
+    }
+    try {
+      c.getContext("2d").strokeText("Hello",Infinity,50);
+      ok(true, "strokeText should not throw with Infinity.");
+    } catch (e) {
+      ok(false, "strokeText should not throw with Infinity.");
+    }
+    try {
+      c.getContext("2d").strokeText("Hello",undefined,50);
+      ok(true, "strokeText should not throw with undefined.");
+    } catch (e) {
+      ok(false, "strokeText should not throw with undefined.");
+    }
+    try {
+      c.getContext("2d").fillText("Hello",NaN,50);
+      ok(true, "fillText should not throw with NaN.");
+    } catch (e) {
+      ok(false, "fillText should not throw with NaN.");
+    }
+    try {
+      c.getContext("2d").fillText("Hello",Infinity,50);
+      ok(true, "fillText should not throw with Infinity.");
+    } catch (e) {
+      ok(false, "fillText should not throw with Infinity.");
+    }
+    try {
+      c.getContext("2d").fillText("Hello",undefined,50);
+      ok(true, "fillText should not throw with undefined.");
+    } catch (e) {
+      ok(false, "fillText should not throw with undefined.");
+    }
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="test();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=728629">Mozilla Bug 728629</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

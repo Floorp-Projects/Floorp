@@ -1175,7 +1175,7 @@ var Scratchpad = {
    */
   openErrorConsole: function SP_openErrorConsole()
   {
-    this.browserWindow.HUDConsoleUI.toggleBrowserConsole();
+    this.browserWindow.HUDService.toggleBrowserConsole();
   },
 
   /**

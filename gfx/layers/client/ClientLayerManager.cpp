@@ -5,7 +5,7 @@
 
 #include "ClientLayerManager.h"
 #include "CompositorChild.h"            // for CompositorChild
-#include "GeckoProfilerImpl.h"          // for PROFILER_LABEL
+#include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxASurface.h"                // for gfxASurface, etc
 #include "ipc/AutoOpenSurface.h"        // for AutoOpenSurface

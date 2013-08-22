@@ -16,11 +16,6 @@ interface nsIGlobalObject;
 interface nsIInputStream;
 interface nsIDOMBlob;
 
-%{C++
-// for jsval
-#include "jsapi.h"
-%}
-
 [scriptable, builtinclass, uuid(ac97e161-9f1d-4163-adc9-e9a59e18682c)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes

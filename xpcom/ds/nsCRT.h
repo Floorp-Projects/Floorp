@@ -10,7 +10,6 @@
 #include <ctype.h>
 #include "plstr.h"
 #include "nscore.h"
-#include "nsCppSharedAllocator.h"
 #include "nsCRTGlue.h"
 
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -102,18 +101,6 @@ public:
     return int32_t(PL_strncmp(s1,s2,unsigned(aMaxLen)));
   }
   
-  static char* strdup(const char* str) {
-    return PL_strdup(str);
-  }
-
-  static char* strndup(const char* str, uint32_t len) {
-    return PL_strndup(str, len);
-  }
-
-  static void free(char* str) {
-    PL_strfree(str);
-  }
-
   /**
 
     How to use this fancy (thread-safe) version of strtok: 
@@ -146,19 +133,6 @@ public:
   // where it's available.
   static const char* memmem(const char* haystack, uint32_t haystackLen,
                             const char* needle, uint32_t needleLen);
-
-  // You must use nsCRT::free(PRUnichar*) to free memory allocated
-  // by nsCRT::strdup(PRUnichar*).
-  static PRUnichar* strdup(const PRUnichar* str);
-
-  // You must use nsCRT::free(PRUnichar*) to free memory allocated
-  // by strndup(PRUnichar*, uint32_t).
-  static PRUnichar* strndup(const PRUnichar* str, uint32_t len);
-
-  static void free(PRUnichar* str) {
-  	nsCppSharedAllocator<PRUnichar> shared_allocator;
-  	shared_allocator.deallocate(str, 0 /*we never new or kept the size*/);
-  }
 
   // String to longlong
   static int64_t atoll(const char *str);

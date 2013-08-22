@@ -10,7 +10,6 @@
 
 #include "mozilla/Attributes.h"
 
-#include "jsapi.h"
 #include "jswrapper.h"
 
 namespace xpc {

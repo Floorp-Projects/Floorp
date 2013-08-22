@@ -1,7 +1,7 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@.tests;
 
-public class testTabHistory extends PixelTest {
+public class testTabHistory extends BaseTest {
 
     @Override
     protected int getTestType() {
@@ -21,11 +21,11 @@ public class testTabHistory extends PixelTest {
         String url3 = getAbsoluteUrl("/robocop/robocop_blank_03.html");
 
         // Create tab history
-        loadAndPaint(url);
+        inputAndLoadUrl(url);
         verifyPageTitle("Browser Blank Page 01");
-        loadAndPaint(url2);
+        inputAndLoadUrl(url2);
         verifyPageTitle("Browser Blank Page 02");
-        loadAndPaint(url3);
+        inputAndLoadUrl(url3);
         verifyPageTitle("Browser Blank Page 03");
 
         // Get the device information and create the navigation for it

@@ -14,7 +14,6 @@
 #include "FPSCounter.h"                 // for FPSState, FPSCounter
 #include "GLContext.h"                  // for GLContext, etc
 #include "GLContextProvider.h"          // for GLContextProvider
-#include "GeckoProfilerFunc.h"          // for TimeStamp
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "ImageLayerOGL.h"              // for ImageLayerOGL
 #include "ImageLayers.h"                // for ImageLayer

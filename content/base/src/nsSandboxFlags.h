@@ -60,4 +60,9 @@ const unsigned long SANDBOXED_AUTOMATIC_FEATURES = 0x40;
  * This flag blocks the document from acquiring pointerlock.
  */
 const unsigned long SANDBOXED_POINTER_LOCK = 0x80;
+
+/**
+ * This flag blocks the document from changing document.domain.
+ */
+const unsigned long SANDBOXED_DOMAIN = 0x100;
 #endif

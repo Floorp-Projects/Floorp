@@ -15,7 +15,6 @@
 #include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
-#include "jsapi.h"
 
 class nsXBLPrototypeBinding;
 class nsIContent;

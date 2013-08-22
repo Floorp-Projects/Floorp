@@ -11,6 +11,8 @@
 
 #include <limits.h>
 
+#include "jsworkers.h"
+
 #include "jit/IonAllocPolicy.h"
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
@@ -269,8 +271,8 @@ class Label : public LabelBase
 #ifdef DEBUG
         // Note: the condition is a hack to silence this assert when OOM testing,
         // see bug 756614.
-        if (!js_IonOptions.parallelCompilation)
-            JS_ASSERT_IF(MaybeGetIonContext() && !GetIonContext()->runtime->hadOutOfMemory, !used());
+        if (MaybeGetIonContext() && !OffThreadIonCompilationEnabled(GetIonContext()->runtime))
+            JS_ASSERT_IF(!GetIonContext()->runtime->hadOutOfMemory, !used());
 #endif
     }
 };

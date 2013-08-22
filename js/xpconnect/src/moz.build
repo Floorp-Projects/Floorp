@@ -51,6 +51,7 @@ CPP_SOURCES += [
     'nsCxPusher.cpp',
     'nsScriptError.cpp',
     'nsXPConnect.cpp',
+    'Sandbox.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

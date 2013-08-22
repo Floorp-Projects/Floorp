@@ -106,7 +106,9 @@ protected:
   virtual PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo) MOZ_OVERRIDE;
   virtual bool DeallocPCompositableParent(PCompositableParent* actor) MOZ_OVERRIDE;
 
-  void Attach(ShadowLayerParent* aLayerParent, CompositableParent* aCompositable);
+  void Attach(ShadowLayerParent* aLayerParent,
+              CompositableParent* aCompositable,
+              bool aIsAsyncVideo);
 
 private:
   nsRefPtr<LayerManagerComposite> mLayerManager;

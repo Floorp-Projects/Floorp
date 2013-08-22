@@ -19,22 +19,79 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=641552
 
 SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.addCategoryEntry("JavaScript-global-property", "randomname", "@mozilla.org/embedcomp/prompt-service;1",
-                    false, true);
+var categoryEntries = [
+  {category: "JavaScript-global-property", entry: "randomname", contractId: "@mozilla.org/embedcomp/prompt-service;1"},
+  {category: "JavaScript-navigator-property", entry: "randomname1", contractId: "@mozilla.org/embedcomp/prompt-service;1"},
+  {category: "JavaScript-navigator-property", entry: "randomname2", contractId: "@mozilla.org/embedcomp/prompt-service;1"},
+];
 
-SpecialPowers.addCategoryEntry("JavaScript-navigator-property", "randomname1", "@mozilla.org/embedcomp/prompt-service;1",
-                    false, true);
+function addCategoryEntries(func) {
+  for (var categoryEntry of categoryEntries) {
+    SpecialPowers.addCategoryEntry(categoryEntry.category, categoryEntry.entry, categoryEntry.contractId,
+                                   false, true);
+  }
+  SimpleTest.executeSoon(func);
+}
 
-SpecialPowers.addCategoryEntry("JavaScript-navigator-property", "randomname2", "@mozilla.org/embedcomp/prompt-service;1",
-                    false, true);
+function removeCategoryEntries(func) {
+  for (var categoryEntry of categoryEntries) {
+    SpecialPowers.deleteCategoryEntry(categoryEntry.category, categoryEntry.entry, false);
+  }
+  SimpleTest.executeSoon(func);
+}
 
-SimpleTest.executeSoon(function () {
+function checkNamesPresent() {
   ok(window.randomname, "window.randomname should return an object");
   is(typeof(window.navigator.randomname1), 'object', "navigator.randomname1 should return an object");
   is(typeof(window.navigator.randomname2), 'object', "navigator.randomname1 should return an object");
-  SimpleTest.finish();
+}
+
+function checkNamesAbsent() {
+  ok(!window.randomname, "window.randomname should return undefined");
+  is(typeof(window.navigator.randomname1), 'undefined', "navigator.randomname1 should return undefined");
+  is(typeof(window.navigator.randomname2), 'undefined', "navigator.randomname1 should return undefined");
+}
+
+// Ensure the initial state
+checkNamesAbsent();
+
+addCategoryEntries(function test1() {
+  ok(window.randomname, "window.randomname should return an object");
+  is(typeof(window.navigator.randomname1), 'object', "navigator.randomname1 should return an object");
+  is(typeof(window.navigator.randomname2), 'object', "navigator.randomname1 should return an object");
+
+  delete window.randomname;
+  delete window.navigator.randomname1;
+  delete window.navigator.randomname2;
+
+  // The delete opertor should have no effect as long as the category entry is registered.
+  checkNamesPresent();
+
+  removeCategoryEntries(test2);
 });
 
+function test2() {
+  // The object should be cached on the global/navigator object once accessed.
+  checkNamesPresent();
+
+  delete window.randomname;
+  delete window.navigator.randomname1;
+  delete window.navigator.randomname2;
+
+  // Now the delete opertor should have the effect.
+  checkNamesAbsent();
+
+  addCategoryEntries(function() {
+    removeCategoryEntries(test3);
+  });
+}
+
+function test3() {
+  // The object should not be cached until the first access.
+  checkNamesAbsent();
+
+  SimpleTest.finish();
+}
 
 </script>
 </pre>

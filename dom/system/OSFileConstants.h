@@ -5,7 +5,6 @@
 #ifndef mozilla_osfileconstants_h__
 #define mozilla_osfileconstants_h__
 
-#include "jspubtd.h"
 #include "nsIOSFileConstantsService.h"
 #include "mozilla/Attributes.h"
 

@@ -5,7 +5,6 @@
 
 #include "nsGBKConvUtil.h"
 #include "gbku.h"
-#include "nsCRT.h"
 #include "nsDebug.h"
 #define MAX_GBK_LENGTH 24066 /* (0xfe-0x80)*(0xfe-0x3f) */
 //--------------------------------------------------------------------

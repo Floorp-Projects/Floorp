@@ -8,8 +8,6 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
-#include "jsapi.h"
-#include "jsfriendapi.h"
 #include "nsIObserver.h"
 #include "prtime.h"
 #include "nsCycleCollectionParticipant.h"

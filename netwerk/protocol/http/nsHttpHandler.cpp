@@ -1421,7 +1421,7 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
     const char *comma;
     int32_t available;
 
-    o_Accept = nsCRT::strdup(i_AcceptLanguages);
+    o_Accept = strdup(i_AcceptLanguages);
     if (!o_Accept)
         return NS_ERROR_OUT_OF_MEMORY;
     for (p = o_Accept, n = size = 0; '\0' != *p; p++) {
@@ -1432,7 +1432,7 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
     available = size + ++n * 11 + 1;
     q_Accept = new char[available];
     if (!q_Accept) {
-        nsCRT::free(o_Accept);
+        free(o_Accept);
         return NS_ERROR_OUT_OF_MEMORY;
     }
     *q_Accept = '\0';
@@ -1479,7 +1479,7 @@ PrepareAcceptLanguages(const char *i_AcceptLanguages, nsACString &o_AcceptLangua
             MOZ_ASSERT(available > 0, "allocated string not long enough");
         }
     }
-    nsCRT::free(o_Accept);
+    free(o_Accept);
 
     o_AcceptLanguages.Assign((const char *) q_Accept);
     delete [] q_Accept;

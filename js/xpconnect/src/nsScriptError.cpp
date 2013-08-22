@@ -9,6 +9,7 @@
  */
 
 #include "xpcprivate.h"
+#include "jsprf.h"
 #include "nsGlobalWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsILoadContext.h"

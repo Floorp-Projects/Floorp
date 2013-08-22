@@ -12,7 +12,7 @@
 #include "CompositableHost.h"           // for CompositableHost
 #include "ContainerLayerComposite.h"    // for ContainerLayerComposite, etc
 #include "FrameMetrics.h"               // for FrameMetrics
-#include "GeckoProfilerImpl.h"          // for profiler_set_frame_number, etc
+#include "GeckoProfiler.h"              // for profiler_set_frame_number, etc
 #include "ImageLayerComposite.h"        // for ImageLayerComposite
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
 #include "ThebesLayerComposite.h"       // for ThebesLayerComposite

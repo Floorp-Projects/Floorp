@@ -8,7 +8,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 
-#include "jsapi.h"
 #include "jswrapper.h"
 
 // Xray wrappers re-resolve the original native properties on the native
@@ -80,10 +79,10 @@ class XrayWrapper : public Base {
     virtual bool defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                                 JS::MutableHandle<JSPropertyDescriptor> desc);
     virtual bool getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                     js::AutoIdVector &props);
+                                     JS::AutoIdVector &props);
     virtual bool delete_(JSContext *cx, JS::Handle<JSObject*> wrapper,
                          JS::Handle<jsid> id, bool *bp);
-    virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper, js::AutoIdVector &props);
+    virtual bool enumerate(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::AutoIdVector &props);
 
     /* Derived proxy traps. */
     virtual bool get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
@@ -95,7 +94,7 @@ class XrayWrapper : public Base {
     virtual bool hasOwn(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                         bool *bp);
     virtual bool keys(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                      js::AutoIdVector &props);
+                      JS::AutoIdVector &props);
     virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
                          JS::MutableHandle<JS::Value> vp);
 

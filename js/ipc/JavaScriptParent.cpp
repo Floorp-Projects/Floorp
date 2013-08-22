@@ -10,6 +10,7 @@
 #include "nsJSUtils.h"
 #include "jsfriendapi.h"
 #include "jsproxy.h"
+#include "jswrapper.h"
 #include "HeapAPI.h"
 #include "xpcprivate.h"
 #include "mozilla/Casting.h"

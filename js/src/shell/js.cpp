@@ -5151,19 +5151,23 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
         ion::js_IonOptions.compileTryCatch = true;
 
 #ifdef JS_THREADSAFE
+    bool parallelCompilation = false;
     if (const char *str = op->getStringOption("ion-parallel-compile")) {
         if (strcmp(str, "on") == 0) {
             if (cx->runtime()->helperThreadCount() == 0) {
                 fprintf(stderr, "Parallel compilation not available without helper threads");
                 return EXIT_FAILURE;
             }
-            ion::js_IonOptions.parallelCompilation = true;
-        } else if (strcmp(str, "off") == 0) {
-            ion::js_IonOptions.parallelCompilation = false;
-        } else {
+            parallelCompilation = true;
+        } else if (strcmp(str, "off") != 0) {
             return OptionFailure("ion-parallel-compile", str);
         }
     }
+    /*
+     * Note: In shell builds, parallel compilation is only enabled with an
+     * explicit option.
+     */
+    cx->runtime()->setCanUseHelperThreadsForIonCompilation(parallelCompilation);
 #endif /* JS_THREADSAFE */
 
 #endif /* JS_ION */

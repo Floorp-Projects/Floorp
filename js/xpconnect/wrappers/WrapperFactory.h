@@ -8,7 +8,6 @@
 #ifndef _xpc_WRAPPERFACTORY_H
 #define _xpc_WRAPPERFACTORY_H
 
-#include "jsapi.h"
 #include "jswrapper.h"
 
 namespace xpc {
