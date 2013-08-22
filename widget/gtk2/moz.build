@@ -56,5 +56,9 @@ if CONFIG['MOZ_X11']:
 
 FAIL_ON_WARNINGS = True
 
+CSRCS += [
+    'mozcontainer.c',
+]
+
 LIBXUL_LIBRARY = True
 

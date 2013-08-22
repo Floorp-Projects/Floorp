@@ -25,10 +25,6 @@ else
 DEFINES += -DFLOATING_POINT
 endif
 
-CSRCS = \
-    resample.c \
-    $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 # Only use SSE code when using floating point samples, and on x86

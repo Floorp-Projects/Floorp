@@ -8,5 +8,11 @@ MODULE = 'xpcom'
 
 LIBRARY_NAME = 'xpt'
 
+CSRCS += [
+    'xpt_arena.c',
+    'xpt_struct.c',
+    'xpt_xdr.c',
+]
+
 LIBXUL_LIBRARY = True
 

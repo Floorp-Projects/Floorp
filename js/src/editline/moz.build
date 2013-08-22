@@ -6,3 +6,8 @@
 
 LIBRARY_NAME = 'editline'
 
+CSRCS += [
+    'editline.c',
+    'sysunix.c',
+]
+

@@ -11,11 +11,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY = 1
-CSRCS		= \
-		ugen.c \
-		uscan.c \
-		umap.c \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
