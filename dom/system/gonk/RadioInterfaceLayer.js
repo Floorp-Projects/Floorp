@@ -1516,55 +1516,51 @@ RadioInterface.prototype = {
    *    the APN setting via APN types.
    */
   updateApnSettings: function updateApnSettings(allApnSettings) {
-    // TODO: Support multi-SIM, bug 799023.
-    let simNumber = 1;
-    for (let simId = 0; simId < simNumber; simId++) {
-      let thisSimApnSettings = allApnSettings[simId];
-      if (!thisSimApnSettings) {
-        return;
+    let thisSimApnSettings = allApnSettings[this.clientId];
+    if (!thisSimApnSettings) {
+      return;
+    }
+
+    // Clear old APN settings.
+    for each (let apnSetting in this.apnSettings.byAPN) {
+      // Clear all connections of this APN settings.
+      for each (let type in apnSetting.types) {
+        if (this.getDataCallStateByType(type) ==
+            RIL.GECKO_NETWORK_STATE_CONNECTED) {
+          this.deactivateDataCallByType(type);
+        }
+      }
+      if (apnSetting.iface.name in gNetworkManager.networkInterfaces) {
+        gNetworkManager.unregisterNetworkInterface(apnSetting.iface);
+      }
+      this.unregisterDataCallCallback(apnSetting.iface);
+      delete apnSetting.iface;
+    }
+    this.apnSettings.byAPN = {};
+    this.apnSettings.byType = {};
+
+    // Create new APN settings.
+    for (let apnIndex = 0; thisSimApnSettings[apnIndex]; apnIndex++) {
+      let inputApnSetting = thisSimApnSettings[apnIndex];
+      if (!this.validateApnSetting(inputApnSetting)) {
+        continue;
       }
 
-      // Clear old APN settings.
-      for each (let apnSetting in this.apnSettings.byAPN) {
-        // Clear all connections of this APN settings.
-        for each (let type in apnSetting.types) {
-          if (this.getDataCallStateByType(type) ==
-              RIL.GECKO_NETWORK_STATE_CONNECTED) {
-            this.deactivateDataCallByType(type);
-          }
-        }
-        if (apnSetting.iface.name in gNetworkManager.networkInterfaces) {
-          gNetworkManager.unregisterNetworkInterface(apnSetting.iface);
-        }
-        this.unregisterDataCallCallback(apnSetting.iface);
-        delete apnSetting.iface;
+      // Combine APN, user name, and password as the key of byAPN{} to get
+      // the corresponding APN setting.
+      let apnKey = inputApnSetting.apn + (inputApnSetting.user || '') +
+                   (inputApnSetting.password || '');
+      if (!this.apnSettings.byAPN[apnKey]) {
+        this.apnSettings.byAPN[apnKey] = {};
+        this.apnSettings.byAPN[apnKey] = inputApnSetting;
+        this.apnSettings.byAPN[apnKey].iface =
+          new RILNetworkInterface(this, this.apnSettings.byAPN[apnKey]);
+      } else {
+        this.apnSettings.byAPN[apnKey].types.push(inputApnSetting.types);
       }
-      this.apnSettings.byAPN = {};
-      this.apnSettings.byType = {};
-
-      // Create new APN settings.
-      for (let apnIndex = 0; thisSimApnSettings[apnIndex]; apnIndex++) {
-        let inputApnSetting = thisSimApnSettings[apnIndex];
-        if (!this.validateApnSetting(inputApnSetting)) {
-          continue;
-        }
-
-        // Combine APN, user name, and password as the key of byAPN{} to get
-        // the corresponding APN setting.
-        let apnKey = inputApnSetting.apn + (inputApnSetting.user || '') +
-                     (inputApnSetting.password || '');
-        if (!this.apnSettings.byAPN[apnKey]) {
-          this.apnSettings.byAPN[apnKey] = {};
-          this.apnSettings.byAPN[apnKey] = inputApnSetting;
-          this.apnSettings.byAPN[apnKey].iface =
-            new RILNetworkInterface(this, this.apnSettings.byAPN[apnKey]);
-        } else {
-          this.apnSettings.byAPN[apnKey].types.push(inputApnSetting.types);
-        }
-        for each (let type in inputApnSetting.types) {
-          this.apnSettings.byType[type] = {};
-          this.apnSettings.byType[type] = this.apnSettings.byAPN[apnKey];
-        }
+      for each (let type in inputApnSetting.types) {
+        this.apnSettings.byType[type] = {};
+        this.apnSettings.byType[type] = this.apnSettings.byAPN[apnKey];
       }
     }
   },
@@ -2322,8 +2318,15 @@ RadioInterface.prototype = {
         break;
       case "ril.data.enabled":
         if (DEBUG) this.debug("'ril.data.enabled' is now " + aResult);
+        let enabled;
+        if (Array.isArray(aResult)) {
+          enabled = aResult[this.clientId];
+        } else {
+          // Backward compability
+          enabled = aResult;
+        }
         this.dataCallSettings.oldEnabled = this.dataCallSettings.enabled;
-        this.dataCallSettings.enabled = aResult;
+        this.dataCallSettings.enabled = enabled;
         this.updateRILNetworkInterface();
         break;
       case "ril.data.roaming_enabled":

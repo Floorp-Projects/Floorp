@@ -36,7 +36,6 @@
 #include "nsIProperties.h"
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
-#include "jsdbgapi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

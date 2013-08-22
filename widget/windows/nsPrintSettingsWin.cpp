@@ -132,11 +132,11 @@ nsPrintSettingsWin& nsPrintSettingsWin::operator=(const nsPrintSettingsWin& rhs)
   ((nsPrintSettings&) *this) = rhs;
 
   if (mDeviceName) {
-    nsCRT::free(mDeviceName);
+    free(mDeviceName);
   }
 
   if (mDriverName) {
-    nsCRT::free(mDriverName);
+    free(mDriverName);
   }
 
   // Use free because we used the native malloc to create the memory

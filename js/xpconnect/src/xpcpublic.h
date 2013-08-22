@@ -8,10 +8,6 @@
 #ifndef xpcpublic_h
 #define xpcpublic_h
 
-#include "jsapi.h"
-#include "jsclass.h"
-#include "jsfriendapi.h"
-#include "jspubtd.h"
 #include "jsproxy.h"
 #include "js/HeapAPI.h"
 #include "js/GCAPI.h"

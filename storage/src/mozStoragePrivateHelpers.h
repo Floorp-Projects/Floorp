@@ -14,13 +14,16 @@
 #include "sqlite3.h"
 #include "nsIVariant.h"
 #include "nsError.h"
-#include "jsapi.h"
 #include "nsAutoPtr.h"
 
 class mozIStorageCompletionCallback;
 class mozIStorageBaseStatement;
 class mozIStorageBindingParams;
 class nsIRunnable;
+
+namespace JS {
+class Value;
+}
 
 namespace mozilla {
 namespace storage {
@@ -55,7 +58,7 @@ nsresult convertResultCode(int aSQLiteResultCode);
 void checkAndLogStatementPerformance(sqlite3_stmt *aStatement);
 
 /**
- * Convert the provided jsval into a variant representation if possible.
+ * Convert the provided JS::Value into a variant representation if possible.
  *
  * @param aCtx
  *        The JSContext the value is from.
@@ -66,7 +69,7 @@ void checkAndLogStatementPerformance(sqlite3_stmt *aStatement);
  * @return the variant if conversion was successful, nullptr if conversion
  *         failed.  The caller is responsible for addref'ing if non-null.
  */
-nsIVariant *convertJSValToVariant(JSContext *aCtx, jsval aValue);
+nsIVariant *convertJSValToVariant(JSContext *aCtx, JS::Value aValue);
 
 /**
  * Obtains an event that will notify a completion callback about completion.

@@ -9,8 +9,6 @@
 
 #include "Workers.h"
 
-#include "jspubtd.h"
-
 class nsIDOMFile;
 class nsIDOMBlob;
 
