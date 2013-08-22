@@ -246,35 +246,35 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
     JS_ASSERT(global);
 
     /* Unwrap incoming objects. */
-        RootedObject obj(cx, &vp.toObject());
+    RootedObject obj(cx, &vp.toObject());
 
-        if (obj->compartment() == this)
-            return WrapForSameCompartment(cx, obj, vp);
+    if (obj->compartment() == this)
+        return WrapForSameCompartment(cx, obj, vp);
 
-        /* Translate StopIteration singleton. */
-        if (obj->is<StopIterationObject>())
-            return js_FindClassObject(cx, JSProto_StopIteration, vp);
+    /* Translate StopIteration singleton. */
+    if (obj->is<StopIterationObject>())
+        return js_FindClassObject(cx, JSProto_StopIteration, vp);
 
-        /* Unwrap the object, but don't unwrap outer windows. */
-        obj = UncheckedUnwrap(obj, /* stopAtOuter = */ true, &flags);
+    /* Unwrap the object, but don't unwrap outer windows. */
+    obj = UncheckedUnwrap(obj, /* stopAtOuter = */ true, &flags);
 
-        if (obj->compartment() == this)
-            return WrapForSameCompartment(cx, obj, vp);
+    if (obj->compartment() == this)
+        return WrapForSameCompartment(cx, obj, vp);
 
-        if (cx->runtime()->preWrapObjectCallback) {
-            obj = cx->runtime()->preWrapObjectCallback(cx, global, obj, flags);
-            if (!obj)
-                return false;
-        }
+    if (cx->runtime()->preWrapObjectCallback) {
+        obj = cx->runtime()->preWrapObjectCallback(cx, global, obj, flags);
+        if (!obj)
+            return false;
+    }
 
-        if (obj->compartment() == this)
-            return WrapForSameCompartment(cx, obj, vp);
+    if (obj->compartment() == this)
+        return WrapForSameCompartment(cx, obj, vp);
 
 #ifdef DEBUG
-        {
-            JSObject *outer = GetOuterObject(cx, obj);
-            JS_ASSERT(outer && outer == obj);
-        }
+    {
+        JSObject *outer = GetOuterObject(cx, obj);
+        JS_ASSERT(outer && outer == obj);
+    }
 #endif
 
     RootedValue key(cx, ObjectValue(*obj));
