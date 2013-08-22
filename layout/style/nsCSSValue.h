@@ -514,8 +514,8 @@ public:
   // Checks if this is a function value with the specified function id.
   bool EqualsFunction(nsCSSKeyword aFunctionId) const;
 
-  // Returns an already addrefed buffer.  Can return null on allocation
-  // failure.
+  // Returns an already addrefed buffer.  Guaranteed to return non-null.
+  // (Will abort on allocation failure.)
   static already_AddRefed<nsStringBuffer>
     BufferFromString(const nsString& aValue);
 

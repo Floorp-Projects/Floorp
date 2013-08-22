@@ -95,6 +95,7 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 #include "mozilla/Preferences.h"
 
 #include "nsIPermissionManager.h"
+#include "nsContentTypeParser.h"
 
 using namespace mozilla::layers;
 using mozilla::net::nsMediaFragmentURIParser;
@@ -277,7 +278,7 @@ void HTMLMediaElement::ReportLoadError(const char* aMsg,
                                        uint32_t aParamCount)
 {
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  "Media",
+                                  NS_LITERAL_CSTRING("Media"),
                                   OwnerDoc(),
                                   nsContentUtils::eDOM_PROPERTIES,
                                   aMsg,

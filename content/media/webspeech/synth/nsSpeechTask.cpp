@@ -175,31 +175,54 @@ nsSpeechTask::SendAudio(const JS::Value& aData, const JS::Value& aLandmarks,
     return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
   }
 
-  uint32_t dataLength = JS_GetTypedArrayLength(tsrc);
+  SendAudioImpl(JS_GetInt16ArrayData(tsrc),
+                JS_GetTypedArrayLength(tsrc));
 
-  if (dataLength == 0) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSpeechTask::SendAudioNative(int16_t* aData, uint32_t aDataLen)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  NS_ENSURE_TRUE(mStream, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_FALSE(mStream->IsDestroyed(), NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(mChannels, NS_ERROR_FAILURE);
+
+  if (mIndirectAudio) {
+    NS_WARNING("Can't call SendAudio from an indirect audio speech service.");
+    return NS_ERROR_FAILURE;
+  }
+
+  SendAudioImpl(aData, aDataLen);
+
+  return NS_OK;
+}
+
+void
+nsSpeechTask::SendAudioImpl(int16_t* aData, uint32_t aDataLen)
+{
+  if (aDataLen == 0) {
     // XXX: We should end the track too, an undetermined bug does not allow that.
     mStream->Finish();
-    return NS_OK;
+    return;
   }
 
   nsRefPtr<mozilla::SharedBuffer> samples =
-    SharedBuffer::Create(dataLength * sizeof(int16_t));
+    SharedBuffer::Create(aDataLen * sizeof(int16_t));
   int16_t* frames = static_cast<int16_t*>(samples->Data());
-  int16_t* sframes = JS_GetInt16ArrayData(tsrc);
 
-  for (uint32_t i = 0; i < dataLength; i++) {
-    frames[i] = sframes[i];
+  for (uint32_t i = 0; i < aDataLen; i++) {
+    frames[i] = aData[i];
   }
 
   AudioSegment segment;
   nsAutoTArray<const int16_t*, 1> channelData;
   channelData.AppendElement(frames);
-  segment.AppendFrames(samples.forget(), channelData, dataLength);
+  segment.AppendFrames(samples.forget(), channelData, aDataLen);
   mStream->AppendToTrack(1, &segment);
   mStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -360,7 +383,7 @@ nsSpeechTask::DispatchBoundary(const nsAString& aName,
 
 nsresult
 nsSpeechTask::DispatchBoundaryImpl(const nsAString& aName,
-                               float aElapsedTime, uint32_t aCharIndex)
+                                   float aElapsedTime, uint32_t aCharIndex)
 {
   MOZ_ASSERT(mUtterance);
   NS_ENSURE_TRUE(mUtterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING,

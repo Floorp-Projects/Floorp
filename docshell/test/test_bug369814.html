@@ -26,13 +26,9 @@ SimpleTest.waitForExplicitFinish();
 // checking the results.
 const gLoadEventLoopCount = 100;
 
-var Ci = SpecialPowers.Ci;
-
 var gCurrentTest;
 var gTargetWindow;
 var gNumPokes;
-var gPrefValue;
-
 var gTestFrame;
 
 /**
@@ -186,49 +182,36 @@ var gNextTest = 0;
 
 function runNextTest()
 {
-  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
-                           .getService(SpecialPowers.Ci.nsIPrefBranch);
-
   if (gNextTest < gTests.length) {
     gCurrentTest = gTests[gNextTest++];
     gNumPokes = 0;
 
-    prefs.setBoolPref("network.jar.open-unsafe-types", gCurrentTest['pref']);
+    SpecialPowers.pushPrefEnv({"set": [["network.jar.open-unsafe-types", gCurrentTest['pref']]]}, function() {
 
-    // Create a new frame each time, so our restictions on loads in a
-    // jar:-loaded iframe don't interfere with the test.
-    if (gTestFrame) {
-      document.body.removeChild(gTestFrame);
-    }
-    gTestFrame = document.createElement("iframe");
-    document.body.insertBefore(gTestFrame, $("test"));
+      // Create a new frame each time, so our restictions on loads in a
+      // jar:-loaded iframe don't interfere with the test.
+      if (gTestFrame) {
+        document.body.removeChild(gTestFrame);
+      }
+      gTestFrame = document.createElement("iframe");
+      document.body.insertBefore(gTestFrame, $("test"));
 
-    gCurrentTest['func'](gCurrentTest);
+      gCurrentTest['func'](gCurrentTest);
+    });
   } else {
-    // Put back the pref value we had at test start
-    prefs.setBoolPref("network.jar.open-unsafe-types", gPrefValue);
     SimpleTest.finish();
   }
 }
 
 function finishTest()
 {
-    var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
-                             .getService(SpecialPowers.Ci.nsIPrefBranch);
-    prefs.setBoolPref("network.jar.open-unsafe-types", false);
+  SpecialPowers.pushPrefEnv({"set": [["network.jar.open-unsafe-types", false]]}, function() {
+    if (gNumPokes == 0) {
+      ok(true, gCurrentTest["name"] + ": no unexpected pokes");
+    }
 
-  if (gNumPokes == 0) {
-    ok(true, gCurrentTest["name"] + ": no unexpected pokes");
-  }
-
-  runNextTest();
-}
-
-function startTests()
-{
-  var prefs = SpecialPowers.Cc["@mozilla.org/preferences-service;1"]
-                           .getService(SpecialPowers.Ci.nsIPrefBranch);
-  gPrefValue = prefs.getBoolPref("network.jar.open-unsafe-types");
+    runNextTest();
+  });
 }
 
 addLoadEvent(runNextTest);
@@ -237,4 +220,3 @@ addLoadEvent(runNextTest);
 </pre>
 </body>
 </html>
-

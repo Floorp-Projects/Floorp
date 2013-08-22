@@ -3076,7 +3076,7 @@ XULDocument::ResumeWalk()
 
                     nsContentUtils::ReportToConsole(
                                         nsIScriptError::warningFlag,
-                                        "XUL Document", nullptr,
+                                        NS_LITERAL_CSTRING("XUL Document"), nullptr,
                                         nsContentUtils::eXUL_PROPERTIES,
                                         "PINotInProlog",
                                         params, ArrayLength(params),
@@ -3369,7 +3369,7 @@ XULDocument::ReportMissingOverlay(nsIURI* aURI)
     NS_ConvertUTF8toUTF16 utfSpec(spec);
     const PRUnichar* params[] = { utfSpec.get() };
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                    "XUL Document", this,
+                                    NS_LITERAL_CSTRING("XUL Document"), this,
                                     nsContentUtils::eXUL_PROPERTIES,
                                     "MissingOverlay",
                                     params, ArrayLength(params));

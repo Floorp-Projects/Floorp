@@ -1,15 +1,15 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=366770
+https://bugzilla.mozilla.org/show_bug.cgi?id=379959
 -->
 <head>
-  <title>Test for Bug 366770</title>
+  <title>Test for Bug 379959</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="gen.next();">
-  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=366770">Mozilla Bug 366770</a>
+<body onload="runTest();">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=379959">Mozilla Bug 379959</a>
   <p id="display">
     Note: In order to re-run this test correctly you need to shift-reload
     rather than simply reload. If you just reload we will restore the
@@ -23,63 +23,74 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366770
     <script class="testbody" type="application/javascript;version=1.7">
 SimpleTest.waitForExplicitFinish();
 
-gen = runTest();
 var messages = 0;
 
-function receiveMessage(e)
-{
+function receiveMessage(e) {
   is(e.origin, "http://mochi.test:8888", "wrong sender!");
   messages++;
-  gen.send(e.data);
+
+  switch (messages) {
+    case 1:
+      receiveMessage1(e.data);
+      break;
+    case 2:
+      receiveMessage2(e.data);
+      break;
+    case 3:
+      receiveMessage3(e.data);
+      break;
+    case 4:
+      receiveMessage4(e.data);
+      break;
+    default:
+      ok(false, "should not be reached");
+      Simpletest.finish();
+  }
 }
 
 window.addEventListener("message", receiveMessage, false);
 
-const prefName = "layout.debug.enable_data_xbl";
+var iframe = document.getElementById('f');
 
 function runTest() {
-  iframe = document.getElementById('f');
-
-  // Turn on loads of data-urls
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-    .getService(Components.interfaces.nsIPrefBranch);
-  var oldPrefVal = undefined;
-  if (prefs.prefHasUserValue(prefName)) {
-    oldPrefVal = prefs.getBoolPref(prefName);
-  }
-
   // Test with data-urls off
-  prefs.setBoolPref(prefName, false);
-  iframe.src = "file_bug379959_data.html";
-  is((yield), 0, "data-url load should have failed");
+  SpecialPowers.pushPrefEnv({"set": [["layout.debug.enable_data_xbl", false]]}, runTest1);
+}
 
+function runTest1() {
+  iframe.src = "file_bug379959_data.html";
+}
+
+function receiveMessage1(aData) {
+  is(aData, 0, "data-url load should have failed");
   // Test with data-urls on
-  prefs.setBoolPref(prefName, true);
-  iframe.src = "file_bug379959_data.html";
-  is((yield), 1, "data-url load should have been successful");
+  SpecialPowers.pushPrefEnv({"set": [["layout.debug.enable_data_xbl", true]]}, runTest2);
+}
 
+function runTest2() {
+  iframe.src = "file_bug379959_data.html";
+}
+
+function receiveMessage2(aData) {
+  is(aData, 1, "data-url load should have been successful");
   // Try a cross-site load
   iframe.src = "file_bug379959_cross.html";
-  is((yield), 1, "same site load should have succeeded");
-  is((yield), 0, "cross site load should have failed");
+}
+
+function receiveMessage3(aData) {
+  is(aData, 1, "same site load should have succeeded");
+}
+
+function receiveMessage4(aData) {
+  is(aData, 0, "cross site load should have failed");
 
   // Check that we got the right number of messages to make sure that
   // the right message has aligned with the right test
   is(messages, 4, "wrong number of messages");
 
-  // We're done
-  if (oldPrefVal === undefined) {
-    prefs.clearUserPref(prefName);
-  }
-  else {
-    prefs.setBoolPref(prefName, oldPrefVal);
-  }
-
   SimpleTest.finish();
-
-  yield undefined;
 }
+
     </script>
   </pre>
 </body>
