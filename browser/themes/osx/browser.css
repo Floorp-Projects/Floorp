@@ -1684,6 +1684,22 @@ window[tabsontop="false"] richlistitem[type~="action"][actiontype="switchtab"][s
   list-style-image: url("chrome://browser/skin/social/share-button-active.png");
 }
 
+#social-share-button > .toolbarbutton-icon {
+  width: 13px;
+  height: 14px;
+}
+
+@media (min-resolution: 2dppx) {
+  #social-share-button {
+    list-style-image: url("chrome://browser/skin/social/share-button@2x.png");
+  }
+
+  #social-share-button[open],
+  #social-share-button:hover:active {
+    list-style-image: url("chrome://browser/skin/social/share-button-active@2x.png");
+  }
+}
+
 .social-share-toolbar {
   border-right: 1px solid #dedede;
   background: linear-gradient(to bottom, rgba(247,247,247,.99), rgba(247,247,247,.95));
@@ -2239,6 +2255,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   border: none;
   text-align: center;
   -moz-box-align: stretch;
+}
+
+.tabbrowser-tab[remote] {
+  text-decoration: underline;
 }
 
 %define TABSONTOP_TAB #tabbrowser-tabs[tabsontop="true"] > .tabbrowser-tab
@@ -3134,12 +3154,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .webapps-notification-icon,
 #webapps-notification-icon {
-  list-style-image: url(chrome://browser/skin/webapps-16.png);
+  list-style-image: url(chrome://global/skin/icons/webapps-16.png);
 }
 @media (min-resolution: 2dppx) {
   .webapps-notification-icon,
   #webapps-notification-icon {
-    list-style-image: url(chrome://browser/skin/webapps-16@2x.png);
+    list-style-image: url(chrome://global/skin/icons/webapps-16@2x.png);
   }
 }
 
@@ -3231,12 +3251,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
   to {
     opacity: 1;
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  #plugins-notification-icon {
-    list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);
   }
 }
 
@@ -3387,7 +3401,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .popup-notification-icon[popupid="webapps-install"] {
-  list-style-image: url(chrome://browser/skin/webapps-64.png);
+  list-style-image: url(chrome://global/skin/icons/webapps-64.png);
 }
 
 .popup-notification-icon[popupid="mixed-content-blocked"] {
@@ -3610,9 +3624,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #full-screen-warning-message {
-  background-color: hsl(0,0%,15%);
+  background-image: url("chrome://browser/skin/fullscreen-darknoise.png");
   color: white;
-  border-radius: 8px;
+  border-radius: 4px;
   margin-top: 30px;
   padding: 30px 50px;
   box-shadow: 0 0 2px white;
@@ -3639,6 +3653,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 %include ../shared/devtools/highlighter.inc.css
 %include ../shared/devtools/commandline.inc.css
 %include ../shared/plugin-doorhanger.inc.css
+
+/* On mac, the popup notification contents are indented by default and so
+  the default closebutton margins from notification.css require adjustment */
+
+.click-to-play-plugins-notification-description-box > .popup-notification-closebutton {
+  -moz-margin-end: -6px;
+  margin-top: -7px;
+}
+
+
 
 .gclitoolbar-input-node > .textbox-input-box > html|*.textbox-input::-moz-selection {
   color: hsl(210,11%,16%);

@@ -8,17 +8,12 @@
 
 #include "nsISupports.h"
 #include "nsColor.h"
-#include "nsCoord.h"
 #include "nsRect.h"
-#include "nsPoint.h"
-#include "nsStringGlue.h"
 
-#include "prthread.h"
 #include "nsEvent.h"
 #include "nsCOMPtr.h"
-#include "nsITheme.h"
-#include "nsNativeWidget.h"
 #include "nsWidgetInitData.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -65,6 +60,11 @@ class DrawTarget;
  */
 typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 
+// Hide the native window system's real window type so as to avoid
+// including native window system types and APIs. This is necessary
+// to ensure cross-platform code.
+typedef void* nsNativeWidget;
+
 /**
  * Flags for the getNativeData function.
  * See getNativeData()
@@ -96,8 +96,8 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0xa2900e47, 0x0021, 0x441c, \
-  { 0x9e, 0x94, 0xd5, 0x61, 0x5a, 0x31, 0x5d, 0x7a } }
+{ 0x1ebdb596, 0x0f90, 0x4f02, \
+  { 0x97, 0x07, 0x4e, 0xc1, 0x16, 0xcd, 0x54, 0xf6 } }
 
 /*
  * Window shadow styles
@@ -109,6 +109,17 @@ typedef nsEventStatus (* EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_STYLE_WINDOW_SHADOW_MENU             2
 #define NS_STYLE_WINDOW_SHADOW_TOOLTIP          3
 #define NS_STYLE_WINDOW_SHADOW_SHEET            4
+
+/**
+ * Transparency modes
+ */
+
+enum nsTransparencyMode {
+  eTransparencyOpaque = 0,  // Fully opaque
+  eTransparencyTransparent, // Parts of the window may be transparent
+  eTransparencyGlass,       // Transparent parts of the window have Vista AeroGlass effect applied
+  eTransparencyBorderlessGlass // As above, but without a border around the opaque areas when there would otherwise be one with eTransparencyGlass
+};
 
 /**
  * Cursor types.
@@ -1745,6 +1756,13 @@ class nsIWidget : public nsISupports {
      */
     virtual Composer2D* GetComposer2D()
     { return nullptr; }
+
+    /**
+     * Some platforms (only cocoa right now) round widget coordinates to the
+     * nearest even pixels (see bug 892994), this function allows us to
+     * determine how widget coordinates will be rounded.
+     */
+    virtual int32_t RoundsWidgetCoordinatesTo() { return 1; }
 
 protected:
     /**

@@ -37,6 +37,7 @@ function goToNext(v) {
 
 function initTest(test, token) {
   var v = document.createElement('video');
+  v.preload = "metadata";
   v.token = token;
   manager.started(token);
   v._state = 0;

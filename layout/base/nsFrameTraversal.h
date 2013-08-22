@@ -6,8 +6,9 @@
 #define NSFRAMETRAVERSAL_H
 
 #include "mozilla/Attributes.h"
-#include "nsIFrame.h"
 #include "nsIFrameTraversal.h"
+
+class nsIFrame;
 
 nsresult NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
                               nsPresContext* aPresContext,

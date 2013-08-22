@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+  document.documentElement.appendChild(document.getElementById("f").contentDocument.getElementById("m"));
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="boom();">
+<iframe id="f" src="data:text/html;charset=UTF-8,<!DOCTYPE html><body><marquee id=m>"></iframe>
+</body>
+</html>

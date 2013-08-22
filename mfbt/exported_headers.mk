@@ -9,6 +9,7 @@
 EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla += \
+  Alignment.h \
   AllocPolicy.h \
   Array.h \
   Assertions.h \
@@ -32,7 +33,6 @@ EXPORTS_mozilla += \
   MathAlgorithms.h \
   MemoryChecking.h \
   MemoryReporting.h \
-  MSStdInt.h \
   Move.h \
   NullPtr.h \
   PodOperations.h \
@@ -44,7 +44,6 @@ EXPORTS_mozilla += \
   Scoped.h \
   SHA1.h \
   SplayTree.h \
-  StandardInteger.h \
   TemplateLib.h \
   ThreadLocal.h \
   TypedEnum.h \

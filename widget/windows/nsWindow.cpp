@@ -280,6 +280,12 @@ static const int32_t kResizableBorderMinSize = 3;
 // this, other hardware we expect to report correctly in D3D9.
 #define MAX_ACCELERATED_DIMENSION 8192
 
+// On window open (as well as after), Windows has an unfortunate habit of
+// sending rather a lot of WM_NCHITTEST messages. Because we have to do point
+// to DOM target conversions for these, we cache responses for a given
+// coordinate this many milliseconds:
+#define HITTEST_CACHE_LIFETIME_MS 50
+
 
 /**************************************************************
  **************************************************************
@@ -328,8 +334,6 @@ nsWindow::nsWindow() : nsWindowBase()
   mBorderStyle          = eBorderStyle_default;
   mOldSizeMode          = nsSizeMode_Normal;
   mLastSizeMode         = nsSizeMode_Normal;
-  mLastPoint.x          = 0;
-  mLastPoint.y          = 0;
   mLastSize.width       = 0;
   mLastSize.height      = 0;
   mOldStyle             = 0;
@@ -338,6 +342,10 @@ nsWindow::nsWindow() : nsWindowBase()
   mLastKeyboardLayout   = 0;
   mBlurSuppressLevel    = 0;
   mLastPaintEndTime     = TimeStamp::Now();
+  mCachedHitTestPoint.x = 0;
+  mCachedHitTestPoint.y = 0;
+  mCachedHitTestTime    = TimeStamp::Now();
+  mCachedHitTestResult  = 0;
 #ifdef MOZ_XUL
   mTransparentSurface   = nullptr;
   mMemoryDC             = nullptr;
@@ -528,9 +536,9 @@ nsWindow::Create(nsIWidget *aParent,
     return NS_ERROR_FAILURE;
   }
 
-  if (mIsRTL && nsUXThemeData::dwmSetWindowAttributePtr) {
+  if (mIsRTL && WinUtils::dwmSetWindowAttributePtr) {
     DWORD dwAttribute = TRUE;    
-    nsUXThemeData::dwmSetWindowAttributePtr(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
+    WinUtils::dwmSetWindowAttributePtr(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
   }
 
   if (mWindowType != eWindowType_plugin &&
@@ -878,7 +886,7 @@ void nsWindow::SubclassWindow(BOOL bState)
     }
     NS_ASSERTION(mPrevWndProc, "Null standard window procedure");
     // connect the this pointer to the nsWindow handle
-    WinUtils::SetNSWindowPtr(mWnd, this);
+    WinUtils::SetNSWindowBasePtr(mWnd, this);
   } else {
     if (IsWindow(mWnd)) {
       if (mUnicodeWidget) {
@@ -891,7 +899,7 @@ void nsWindow::SubclassWindow(BOOL bState)
                           reinterpret_cast<LONG_PTR>(mPrevWndProc));
       }
     }
-    WinUtils::SetNSWindowPtr(mWnd, NULL);
+    WinUtils::SetNSWindowBasePtr(mWnd, NULL);
     mPrevWndProc = NULL;
   }
 }
@@ -970,7 +978,14 @@ double nsWindow::GetDefaultScaleInternal()
   return gfxWindowsPlatform::GetPlatform()->GetDPIScale();
 }
 
-nsWindow* nsWindow::GetParentWindow(bool aIncludeOwner)
+nsWindow*
+nsWindow::GetParentWindow(bool aIncludeOwner)
+{
+  return static_cast<nsWindow*>(GetParentWindowBase(aIncludeOwner));
+}
+
+nsWindowBase*
+nsWindow::GetParentWindowBase(bool aIncludeOwner)
 {
   if (mIsTopWidgetWindow) {
     // Must use a flag instead of mWindowType to tell if the window is the
@@ -1009,7 +1024,7 @@ nsWindow* nsWindow::GetParentWindow(bool aIncludeOwner)
     }
   }
 
-  return widget;
+  return static_cast<nsWindowBase*>(widget);
 }
  
 BOOL CALLBACK
@@ -2348,6 +2363,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     }
 
     case eCursor_standard:
+    case eCursor_context_menu: // XXX See bug 258960.
       newCursor = ::LoadCursor(NULL, IDC_ARROW);
       break;
 
@@ -2405,10 +2421,6 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 
     case eCursor_spinning:
       newCursor = ::LoadCursor(NULL, IDC_APPSTARTING);
-      break;
-
-    case eCursor_context_menu:
-      // XXX this CSS3 cursor needs to be implemented
       break;
 
     case eCursor_zoom_in:
@@ -2633,9 +2645,9 @@ void nsWindow::UpdateGlass()
           margins.cxRightWidth, margins.cyBottomHeight));
 
   // Extends the window frame behind the client area
-  if(nsUXThemeData::CheckForCompositor()) {
-    nsUXThemeData::dwmExtendFrameIntoClientAreaPtr(mWnd, &margins);
-    nsUXThemeData::dwmSetWindowAttributePtr(mWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
+  if (nsUXThemeData::CheckForCompositor()) {
+    WinUtils::dwmExtendFrameIntoClientAreaPtr(mWnd, &margins);
+    WinUtils::dwmSetWindowAttributePtr(mWnd, DWMWA_NCRENDERING_POLICY, &policy, sizeof policy);
   }
 }
 #endif
@@ -3563,7 +3575,6 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
   }
 
   event.time = ::GetMessageTime();
-  mLastPoint = event.refPoint;
 }
 
 /**************************************************************
@@ -3959,7 +3970,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
       rect.x = 0;
       rect.y = 0;
 
-      if (rect.Contains(event.refPoint)) {
+      if (rect.Contains(LayoutDeviceIntPoint::ToUntyped(event.refPoint))) {
         if (sCurrentWindow == NULL || sCurrentWindow != this) {
           if ((nullptr != sCurrentWindow) && (!sCurrentWindow->mInDtor)) {
             LPARAM pos = sCurrentWindow->lParamToClient(lParamToScreen(lParam));
@@ -4476,7 +4487,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
   LRESULT dwmHitResult;
   if (mCustomNonClient &&
       nsUXThemeData::CheckForCompositor() &&
-      nsUXThemeData::dwmDwmDefWindowProcPtr(mWnd, msg, wParam, lParam, &dwmHitResult)) {
+      WinUtils::dwmDwmDefWindowProcPtr(mWnd, msg, wParam, lParam, &dwmHitResult)) {
     *aRetValue = dwmHitResult;
     return true;
   }
@@ -4882,7 +4893,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       if (lParam != -1 && !result && mCustomNonClient) {
         nsMouseEvent event(true, NS_MOUSE_MOZHITTEST, this, nsMouseEvent::eReal,
                            nsMouseEvent::eNormal);
-        event.refPoint = nsIntPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        event.refPoint = LayoutDeviceIntPoint(GET_X_LPARAM(pos), GET_Y_LPARAM(pos));
         event.inputSource = MOUSE_INPUT_SOURCE();
         event.mFlags.mOnlyChromeDispatch = true;
         if (DispatchWindowEvent(&event)) {
@@ -5285,7 +5296,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         touchPoint = gestureinfo->ptsLocation;
         touchPoint.ScreenToClient(mWnd);
         nsGestureNotifyEvent gestureNotifyEvent(true, NS_GESTURENOTIFY_EVENT_START, this);
-        gestureNotifyEvent.refPoint = touchPoint;
+        gestureNotifyEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(touchPoint);
         nsEventStatus status;
         DispatchEvent(&gestureNotifyEvent, status);
         mDisplayPanFeedback = gestureNotifyEvent.displayPanFeedback;
@@ -5559,22 +5570,30 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
   }
 
   if (!sIsInMouseCapture && allowContentOverride) {
-    nsMouseEvent event(true, NS_MOUSE_MOZHITTEST, this, nsMouseEvent::eReal,
-                       nsMouseEvent::eNormal);
     POINT pt = { mx, my };
     ::ScreenToClient(mWnd, &pt);
-    event.refPoint = nsIntPoint(pt.x, pt.y);
-    event.inputSource = MOUSE_INPUT_SOURCE();
-    event.mFlags.mOnlyChromeDispatch = true;
-    bool result = DispatchWindowEvent(&event);
-    if (result) {
-      // The mouse is over a blank area
-      testResult = testResult == HTCLIENT ? HTCAPTION : testResult;
-
+    if (pt.x == mCachedHitTestPoint.x && pt.y == mCachedHitTestPoint.y &&
+        TimeStamp::Now() - mCachedHitTestTime < TimeDuration::FromMilliseconds(HITTEST_CACHE_LIFETIME_MS)) {
+      testResult = mCachedHitTestResult;
     } else {
-      // There's content over the mouse pointer. Set HTCLIENT
-      // to possibly override a resizer border.
-      testResult = HTCLIENT;
+      nsMouseEvent event(true, NS_MOUSE_MOZHITTEST, this, nsMouseEvent::eReal,
+                         nsMouseEvent::eNormal);
+      event.refPoint = LayoutDeviceIntPoint(pt.x, pt.y);
+      event.inputSource = MOUSE_INPUT_SOURCE();
+      event.mFlags.mOnlyChromeDispatch = true;
+      bool result = DispatchWindowEvent(&event);
+      if (result) {
+        // The mouse is over a blank area
+        testResult = testResult == HTCLIENT ? HTCAPTION : testResult;
+
+      } else {
+        // There's content over the mouse pointer. Set HTCLIENT
+        // to possibly override a resizer border.
+        testResult = HTCLIENT;
+      }
+      mCachedHitTestPoint = pt;
+      mCachedHitTestTime = TimeStamp::Now();
+      mCachedHitTestResult = testResult;
     }
   }
 
@@ -6537,6 +6556,34 @@ nsWindow::StartAllowingD3D9(bool aReinitialize)
   } else {
     EnumAllWindows(AllowD3D9Callback);
   }
+}
+
+void
+nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
+{
+  LayerManagerPrefs prefs;
+  GetLayerManagerPrefs(&prefs);
+
+  if (!prefs.mDisableAcceleration) {
+    if (!prefs.mPreferD3D9) {
+      aHints.AppendElement(LAYERS_D3D11);
+    }
+    aHints.AppendElement(LAYERS_D3D9);
+  }
+  aHints.AppendElement(LAYERS_BASIC);
+}
+
+void
+nsWindow::WindowUsesOMTC()
+{
+  ULONG_PTR style = ::GetClassLongPtr(mWnd, GCL_STYLE);
+  if (!style) {
+    NS_WARNING("Could not get window class style");
+    return;
+  }
+  style |= CS_HREDRAW | CS_VREDRAW;
+  DebugOnly<ULONG_PTR> result = ::SetClassLongPtr(mWnd, GCL_STYLE, style);
+  NS_WARN_IF_FALSE(result, "Could not reset window class style");
 }
 
 bool

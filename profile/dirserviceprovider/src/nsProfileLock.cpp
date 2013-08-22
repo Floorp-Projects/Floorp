@@ -166,7 +166,7 @@ void nsProfileLock::FatalSignalHandler(int signo
         if (oldact->sa_handler == SIG_DFL) {
             // Make sure the default sig handler is executed
             // We need it to get Mozilla to dump core.
-            sigaction(signo,oldact,NULL);
+            sigaction(signo,oldact, nullptr);
 
             // Now that we've restored the default handler, unmask the
             // signal and invoke it.
@@ -175,7 +175,7 @@ void nsProfileLock::FatalSignalHandler(int signo
             sigemptyset(&unblock_sigs);
             sigaddset(&unblock_sigs, signo);
 
-            sigprocmask(SIG_UNBLOCK, &unblock_sigs, NULL);
+            sigprocmask(SIG_UNBLOCK, &unblock_sigs, nullptr);
 
             raise(signo);
         }
@@ -391,7 +391,7 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
 
 #define CATCH_SIGNAL(signame)                                           \
 PR_BEGIN_MACRO                                                          \
-  if (sigaction(signame, NULL, &oldact) == 0 &&                         \
+  if (sigaction(signame, nullptr, &oldact) == 0 &&                      \
       oldact.sa_handler != SIG_IGN)                                     \
   {                                                                     \
       sigaction(signame, &act, &signame##_oldact);                      \
@@ -505,11 +505,11 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
             if (ioBytes == sizeof(LockProcessInfo))
             {
 #ifdef __LP64__
-                processInfo.processAppRef = NULL;
+                processInfo.processAppRef = nullptr;
 #else
-                processInfo.processAppSpec = NULL;
+                processInfo.processAppSpec = nullptr;
 #endif
-                processInfo.processName = NULL;
+                processInfo.processName = nullptr;
                 processInfo.processInfoLength = sizeof(ProcessInfoRec);
                 if (::GetProcessInformation(&lockProcessInfo.psn, &processInfo) == noErr &&
                     processInfo.processLaunchDate == lockProcessInfo.launchDate)

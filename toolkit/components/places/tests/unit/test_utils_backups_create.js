@@ -66,23 +66,40 @@ function run_test() {
     for (var i = 0; i < dates.length; i++) {
       let backupFilename;
       let shouldExist;
+      let backupFile;
       if (i > Math.floor(dates.length/2)) {
-        backupFilename = PREFIX + dates[i] + SUFFIX;
+        let files = bookmarksBackupDir.directoryEntries;
+        let rx = new RegExp("^" + PREFIX + dates[i] + "(_[0-9]+){0,1}" + SUFFIX + "$");
+        while (files.hasMoreElements()) {
+          let entry = files.getNext().QueryInterface(Ci.nsIFile);
+          if (entry.leafName.match(rx)) {
+            backupFilename = entry.leafName;
+            backupFile = entry;
+            break;
+          }
+        }
         shouldExist = true;
       }
       else {
         backupFilename = LOCALIZED_PREFIX + dates[i] + SUFFIX;
+        backupFile = bookmarksBackupDir.clone();
+        backupFile.append(backupFilename);
         shouldExist = false;
       }
-      var backupFile = bookmarksBackupDir.clone();
-      backupFile.append(backupFilename);
       if (backupFile.exists() != shouldExist)
         do_throw("Backup should " + (shouldExist ? "" : "not") + " exist: " + backupFilename);
     }
 
     // Cleanup backups folder.
-    bookmarksBackupDir.remove(true);
-    do_check_false(bookmarksBackupDir.exists());
+    // XXX: Can't use bookmarksBackupDir.remove(true) because file lock happens
+    // on WIN XP.
+    let files = bookmarksBackupDir.directoryEntries;
+    while (files.hasMoreElements()) {
+      let entry = files.getNext().QueryInterface(Ci.nsIFile);
+      entry.remove(false);
+    }
+    do_check_false(bookmarksBackupDir.directoryEntries.hasMoreElements());
+
     // Recreate the folder.
     PlacesBackups.folder;
 

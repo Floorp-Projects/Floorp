@@ -18,13 +18,7 @@ endif
 
 DEFINES += -DMOZ_MEMORY_IMPL
 
-DISABLED_CSRCS = \
-  mozmemory_wrap.c \
-  jemalloc_config.c \
-  $(NULL)
-
 ifdef MOZ_JEMALLOC3
-DISABLED_CSRCS += mozjemalloc_compat.c
 LOCAL_INCLUDES += -I../jemalloc/src/include
 ifdef _MSC_VER
 LOCAL_INCLUDES += -I$(topsrcdir)/memory/jemalloc/src/include/msvc_compat
@@ -39,7 +33,6 @@ endif
 
 ifdef MOZ_REPLACE_MALLOC
 DEFINES += -DMOZ_REPLACE_MALLOC
-DISABLED_CSRCS += replace_malloc.c
 
 # The zone allocator for OSX needs some jemalloc internal functions
 ifeq (Darwin,$(OS_TARGET))

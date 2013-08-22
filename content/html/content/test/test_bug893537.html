@@ -15,6 +15,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=893537
 
 <pre id="test">
 <script>
+  <!-- Bug 895303 -->
+  SimpleTest.expectAssertions(0, 1);
+
   SimpleTest.waitForExplicitFinish();
   var pframe = $("pframe");
   

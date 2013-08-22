@@ -6,13 +6,13 @@
 #include "SaveProfileTask.h"
 #include "GeckoProfilerImpl.h"
 
-static JSBool
+static bool
 WriteCallback(const jschar *buf, uint32_t len, void *data)
 {
   std::ofstream& stream = *static_cast<std::ofstream*>(data);
   nsAutoCString profile = NS_ConvertUTF16toUTF8(buf, len);
   stream << profile.Data();
-  return JS_TRUE;
+  return true;
 }
 
 nsresult
@@ -63,7 +63,7 @@ SaveProfileTask::Run() {
       JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
       JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
     };
-    JSObject *obj = JS_NewGlobalObject(cx, &c, NULL);
+    JSObject *obj = JS_NewGlobalObject(cx, &c, NULL, JS::FireOnNewGlobalHook);
 
     std::ofstream stream;
     stream.open(tmpPath.get());

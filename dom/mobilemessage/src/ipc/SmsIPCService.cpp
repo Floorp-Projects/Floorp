@@ -13,7 +13,6 @@
 #include "SmsSegmentInfo.h"
 #include "DictionaryHelpers.h"
 #include "nsJSUtils.h"
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "mozilla/dom/MobileMessageManagerBinding.h"
 #include "mozilla/dom/MozMmsMessageBinding.h"
@@ -115,11 +114,41 @@ SmsIPCService::GetSegmentInfoForText(const nsAString & aText,
 NS_IMETHODIMP
 SmsIPCService::Send(const nsAString& aNumber,
                     const nsAString& aMessage,
+                    const bool aSilent,
                     nsIMobileMessageCallback* aRequest)
 {
   return SendRequest(SendMessageRequest(SendSmsMessageRequest(nsString(aNumber),
-                                                              nsString(aMessage))),
+                                                              nsString(aMessage),
+                                                              aSilent)),
                      aRequest);
+}
+
+NS_IMETHODIMP
+SmsIPCService::IsSilentNumber(const nsAString& aNumber,
+                              bool*            aIsSilent)
+{
+  NS_ERROR("We should not be here!");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+SmsIPCService::AddSilentNumber(const nsAString& aNumber)
+{
+  PSmsChild* smsChild = GetSmsChild();
+  NS_ENSURE_TRUE(smsChild, NS_ERROR_FAILURE);
+
+  smsChild->SendAddSilentNumber(nsString(aNumber));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsIPCService::RemoveSilentNumber(const nsAString& aNumber)
+{
+  PSmsChild* smsChild = GetSmsChild();
+  NS_ENSURE_TRUE(smsChild, NS_ERROR_FAILURE);
+
+  smsChild->SendRemoveSilentNumber(nsString(aNumber));
+  return NS_OK;
 }
 
 /*

@@ -6,7 +6,6 @@
 
 #include "PluginIdentifierParent.h"
 
-#include "nsContentUtils.h"
 #include "nsNPAPIPlugin.h"
 #include "nsServiceManagerUtils.h"
 #include "PluginScriptableObjectUtils.h"

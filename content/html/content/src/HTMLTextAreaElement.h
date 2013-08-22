@@ -30,7 +30,7 @@ class nsPresState;
 namespace mozilla {
 namespace dom {
 
-class HTMLTextAreaElement MOZ_FINAL : public nsGenericHTMLFormElement,
+class HTMLTextAreaElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
                                       public nsIDOMHTMLTextAreaElement,
                                       public nsITextControlElement,
                                       public nsIDOMNSEditableElement,
@@ -45,15 +45,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
 
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
 
@@ -147,9 +138,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTextAreaElement,
-                                           nsGenericHTMLFormElement)
-
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
+                                           nsGenericHTMLFormElementWithState)
 
   // nsIConstraintValidation
   bool     IsTooLong();
@@ -189,8 +178,8 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aDisabled, aError);
   }
-  // nsGenericHTMLFormElement::GetForm is fine
-  using nsGenericHTMLFormElement::GetForm;
+  // nsGenericHTMLFormElementWithState::GetForm is fine
+  using nsGenericHTMLFormElementWithState::GetForm;
   int32_t MaxLength()
   {
     return GetIntAttr(nsGkAtoms::maxlength, -1);
@@ -272,7 +261,8 @@ public:
   }
 
 protected:
-  using nsGenericHTMLFormElement::IsSingleLineTextControl; // get rid of the compiler warning
+  // get rid of the compiler warning
+  using nsGenericHTMLFormElementWithState::IsSingleLineTextControl;
 
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

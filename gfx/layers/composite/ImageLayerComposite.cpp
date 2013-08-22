@@ -42,7 +42,7 @@ ImageLayerComposite::~ImageLayerComposite()
 void
 ImageLayerComposite::SetCompositableHost(CompositableHost* aHost)
 {
-  mImageHost = static_cast<ImageHost*>(aHost);
+  mImageHost = aHost;
 }
 
 void
@@ -54,7 +54,7 @@ ImageLayerComposite::Disconnect()
 LayerRenderState
 ImageLayerComposite::GetRenderState()
 {
-  if (mImageHost) {
+  if (mImageHost && mImageHost->IsAttached()) {
     return mImageHost->GetRenderState();
   }
   return LayerRenderState();
@@ -70,7 +70,7 @@ void
 ImageLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                                  const nsIntRect& aClipRect)
 {
-  if (!mImageHost) {
+  if (!mImageHost || !mImageHost->IsAttached()) {
     return;
   }
 
@@ -96,6 +96,8 @@ ImageLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                         gfx::Point(aOffset.x, aOffset.y),
                         gfx::ToFilter(mFilter),
                         clipRect);
+
+  LayerManagerComposite::RemoveMaskEffect(mMaskLayer);
 }
 
 void 
@@ -105,8 +107,12 @@ ImageLayerComposite::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToS
 
   // Snap image edges to pixel boundaries
   gfxRect sourceRect(0, 0, 0, 0);
-  if (mImageHost && mImageHost->GetDeprecatedTextureHost()) {
-    IntSize size = mImageHost->GetDeprecatedTextureHost()->GetSize();
+  if (mImageHost &&
+      mImageHost->IsAttached() &&
+      (mImageHost->GetDeprecatedTextureHost() || mImageHost->GetTextureHost())) {
+    IntSize size =
+      mImageHost->GetTextureHost() ? mImageHost->GetTextureHost()->GetSize()
+                                   : mImageHost->GetDeprecatedTextureHost()->GetSize();
     sourceRect.SizeTo(size.width, size.height);
     if (mScaleMode != SCALE_NONE &&
         sourceRect.width != 0.0 && sourceRect.height != 0.0) {
@@ -127,8 +133,13 @@ ImageLayerComposite::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToS
 }
 
 CompositableHost*
-ImageLayerComposite::GetCompositableHost() {
-  return mImageHost.get();
+ImageLayerComposite::GetCompositableHost()
+{
+  if (mImageHost && mImageHost->IsAttached()) {
+    return mImageHost.get();
+  }
+
+  return nullptr;
 }
 
 void
@@ -146,7 +157,7 @@ ImageLayerComposite::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   ImageLayer::PrintInfo(aTo, aPrefix);
   aTo += "\n";
-  if (mImageHost) {
+  if (mImageHost && mImageHost->IsAttached()) {
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
     mImageHost->PrintInfo(aTo, pfx.get());

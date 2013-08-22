@@ -77,7 +77,7 @@ DeprecatedTextureClientD3D11::~DeprecatedTextureClientD3D11()
   ClearDT();
 }
 
-void
+bool
 DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
                                               gfxASurface::gfxContentType aType)
 {
@@ -87,7 +87,7 @@ DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
     mTexture->GetDesc(&desc);
 
     if (desc.Width == aSize.width && desc.Height == aSize.height) {
-      return;
+      return true;
     }
 
     mTexture = nullptr;
@@ -109,7 +109,7 @@ DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
 
   if (FAILED(hr)) {
     LOGD3D11("Error creating texture for client!");
-    return;
+    return false;
   }
 
   RefPtr<IDXGIResource> resource;
@@ -126,6 +126,7 @@ DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
                                        aType == gfxASurface::CONTENT_COLOR_ALPHA);
 
   mContentType = aType;
+  return true;
 }
 
 gfxASurface*
@@ -316,7 +317,7 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
   switch (surf->Format()) {
   case gfxImageSurface::ImageFormatRGB24:
     mFormat = FORMAT_B8G8R8X8;
-    dxgiFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+    dxgiFormat = DXGI_FORMAT_B8G8R8X8_UNORM;
     bpp = 4;
     break;
   case gfxImageSurface::ImageFormatARGB32:
@@ -329,6 +330,8 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
     dxgiFormat = DXGI_FORMAT_A8_UNORM;
     bpp = 1;
     break;
+  default:
+    NS_ERROR("Bad image format");
   }
 
   mSize = IntSize(size.width, size.height);
@@ -343,7 +346,10 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
     initData.pSysMem = surf->Data();
     initData.SysMemPitch = surf->Stride();
 
-    mDevice->CreateTexture2D(&desc, &initData, byRef(mTextures[0]));
+    HRESULT hr = mDevice->CreateTexture2D(&desc, &initData, byRef(mTextures[0]));
+    if (FAILED(hr)) {
+      printf("FAILED to create texture\n");
+    }
     mIsTiled = false;
   } else {
     mIsTiled = true;

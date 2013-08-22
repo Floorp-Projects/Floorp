@@ -45,14 +45,12 @@ function checkWidth(element, x, y, w, h)
 
 function run()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   // Set accept_languages to something we know
-  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                               .getService(Components.interfaces.nsIPrefService);
-  var branch = prefService.getBranch("intl.");
-  var oldAcceptLanguages = branch.getCharPref("accept_languages");
-  branch.setCharPref("accept_languages", "en-gb,en,it");
+  SpecialPowers.pushPrefEnv({"set": [["intl.accept_languages", "en-gb,en,it"]]}, run1);
+}
 
+function run1()
+{
   try {
     var doc = $("svg").contentDocument;
     var s = doc.getElementById("s");
@@ -93,7 +91,6 @@ function run()
     checkWidth(s, 75, 100, 50, 50);
 
   } finally {
-    branch.setCharPref("accept_languages", oldAcceptLanguages);
     SimpleTest.finish();
   }
 }

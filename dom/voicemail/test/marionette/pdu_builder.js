@@ -2,10 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-let Cu = SpecialPowers.wrap(Components).utils;
 let RIL = {};
-
-Cu.import("resource://gre/modules/ril_consts.js", RIL);
+SpecialPowers.Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
 // Only bring in what we need from ril_worker/RadioInterfaceLayer here. Reusing
 // that code turns out to be a nightmare, so there is some code duplication.

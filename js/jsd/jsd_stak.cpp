@@ -314,7 +314,7 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
     {
-        JSBool ok;
+        bool ok;
         JS::RootedValue thisval(jsdthreadstate->context);
         JS_BeginRequest(jsdthreadstate->context);
         ok = jsdframe->frame.getThisValue(jsdthreadstate->context, &thisval);
@@ -356,12 +356,12 @@ jsd_GetIdForStackFrame(JSDContext* jsdc,
     return rv;
 }
 
-JSBool
+bool
 jsd_IsStackFrameDebugger(JSDContext* jsdc, 
                          JSDThreadState* jsdthreadstate,
                          JSDStackFrameInfo* jsdframe)
 {
-    JSBool rv = JS_TRUE;
+    bool rv = true;
     JSD_LOCK_THREADSTATES(jsdc);
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
@@ -373,12 +373,12 @@ jsd_IsStackFrameDebugger(JSDContext* jsdc,
     return rv;
 }
 
-JSBool
+bool
 jsd_IsStackFrameConstructing(JSDContext* jsdc, 
                              JSDThreadState* jsdthreadstate,
                              JSDStackFrameInfo* jsdframe)
 {
-    JSBool rv = JS_TRUE;
+    bool rv = true;
     JSD_LOCK_THREADSTATES(jsdc);
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
@@ -390,16 +390,16 @@ jsd_IsStackFrameConstructing(JSDContext* jsdc,
     return rv;
 }
 
-JSBool
+bool
 jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc, 
                                  JSDThreadState* jsdthreadstate,
                                  JSDStackFrameInfo* jsdframe,
                                  const jschar *bytes, unsigned length,
                                  const char *filename, unsigned lineno,
-                                 JSBool eatExceptions, JS::MutableHandleValue rval)
+                                 bool eatExceptions, JS::MutableHandleValue rval)
 {
-    JSBool retval;
-    JSBool valid;
+    bool retval;
+    bool valid;
     JSExceptionState* exceptionState = NULL;
 
     JS_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
@@ -409,7 +409,7 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
     JSD_UNLOCK_THREADSTATES(jsdc);
 
     if( ! valid )
-        return JS_FALSE;
+        return false;
 
     AutoPushJSContext cx(jsdthreadstate->context);
     JS_ASSERT(cx);
@@ -427,16 +427,16 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
     return retval;
 }
 
-JSBool
+bool
 jsd_EvaluateScriptInStackFrame(JSDContext* jsdc, 
                                JSDThreadState* jsdthreadstate,
                                JSDStackFrameInfo* jsdframe,
                                const char *bytes, unsigned length,
                                const char *filename, unsigned lineno,
-                               JSBool eatExceptions, JS::MutableHandleValue rval)
+                               bool eatExceptions, JS::MutableHandleValue rval)
 {
-    JSBool retval;
-    JSBool valid;
+    bool retval;
+    bool valid;
     JSExceptionState* exceptionState = NULL;
 
     JS_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
@@ -446,7 +446,7 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
     JSD_UNLOCK_THREADSTATES(jsdc);
 
     if (!valid)
-        return JS_FALSE;
+        return false;
 
     AutoPushJSContext cx(jsdthreadstate->context);
     JS_ASSERT(cx);
@@ -470,7 +470,7 @@ jsd_ValToStringInStackFrame(JSDContext* jsdc,
                             JSDStackFrameInfo* jsdframe,
                             jsval val)
 {
-    JSBool valid;
+    bool valid;
     JSString* retval;
     JSExceptionState* exceptionState;
     JSContext* cx;
@@ -492,7 +492,7 @@ jsd_ValToStringInStackFrame(JSDContext* jsdc,
     return retval;
 }
 
-JSBool
+bool
 jsd_IsValidThreadState(JSDContext*        jsdc, 
                        JSDThreadState*    jsdthreadstate)
 {
@@ -505,12 +505,12 @@ jsd_IsValidThreadState(JSDContext*        jsdc,
          cur = (JSDThreadState*)cur->links.next ) 
     {
         if( cur == jsdthreadstate )
-            return JS_TRUE;
+            return true;
     }
-    return JS_FALSE;
+    return false;
 }    
 
-JSBool
+bool
 jsd_IsValidFrameInThreadState(JSDContext*        jsdc, 
                               JSDThreadState*    jsdthreadstate,
                               JSDStackFrameInfo* jsdframe)
@@ -518,20 +518,20 @@ jsd_IsValidFrameInThreadState(JSDContext*        jsdc,
     JS_ASSERT(JSD_THREADSTATES_LOCKED(jsdc));
 
     if( ! jsd_IsValidThreadState(jsdc, jsdthreadstate) )
-        return JS_FALSE;
+        return false;
     if( jsdframe->jsdthreadstate != jsdthreadstate )
-        return JS_FALSE;
+        return false;
 
     JSD_ASSERT_VALID_THREAD_STATE(jsdthreadstate);
     JSD_ASSERT_VALID_STACK_FRAME(jsdframe);
     
-    return JS_TRUE;
+    return true;
 }
 
 static JSContext*
 _getContextForThreadState(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
 {
-    JSBool valid;
+    bool valid;
     JSD_LOCK_THREADSTATES(jsdc);
     valid = jsd_IsValidThreadState(jsdc, jsdthreadstate);
     JSD_UNLOCK_THREADSTATES(jsdc);
@@ -554,19 +554,19 @@ jsd_GetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
     return NULL;
 }        
 
-JSBool
+bool
 jsd_SetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate, 
                  JSDValue* jsdval)
 {
     JSContext* cx;
 
     if(!(cx = _getContextForThreadState(jsdc, jsdthreadstate)))
-        return JS_FALSE;
+        return false;
 
     if(jsdval)
         JS_SetPendingException(cx, JSD_GetValueWrappedJSVal(jsdc, jsdval));
     else
         JS_ClearPendingException(cx);
-    return JS_TRUE;
+    return true;
 }
 

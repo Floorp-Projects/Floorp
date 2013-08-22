@@ -109,7 +109,7 @@
       substitute: function(source) {
         let map = this._map;
         return source.replace(this.regexp, function(url) {
-          return map.get(url);
+          return map.get(url) || url;
         }, "g");
       }
     };
@@ -168,9 +168,9 @@
       // Make module available immediately
       // (necessary in case of circular dependencies)
       if (modules.has(path)) {
-        return modules.get(path);
+        return modules.get(path).exports;
       }
-      modules.set(path, exports);
+      modules.set(path, module);
 
 
       // Load source of module, synchronously
@@ -216,6 +216,7 @@
       }
 
       Object.freeze(module.exports);
+      Object.freeze(module);
       return module.exports;
     };
   })();

@@ -32,6 +32,7 @@
 
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::gc;
@@ -42,7 +43,7 @@ using mozilla::PodArrayZero;
 using mozilla::PodZero;
 
 /* Forward declarations for ErrorObject::class_'s initializer. */
-static JSBool
+static bool
 Exception(JSContext *cx, unsigned argc, Value *vp);
 
 static void
@@ -51,7 +52,7 @@ exn_trace(JSTracer *trc, JSObject *obj);
 static void
 exn_finalize(FreeOp *fop, JSObject *obj);
 
-static JSBool
+static bool
 exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp);
 
@@ -382,7 +383,7 @@ exn_finalize(FreeOp *fop, JSObject *obj)
     }
 }
 
-static JSBool
+static bool
 exn_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp)
 {
@@ -524,7 +525,7 @@ FilenameToString(JSContext *cx, const char *filename)
     return JS_NewStringCopyZ(cx, filename);
 }
 
-static JSBool
+static bool
 Exception(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -602,7 +603,7 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* ES5 15.11.4.4 (NB: with subsequent errata). */
-static JSBool
+static bool
 exn_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -681,7 +682,7 @@ exn_toString(JSContext *cx, unsigned argc, Value *vp)
 /*
  * Return a string that may eval to something similar to the original object.
  */
-static JSBool
+static bool
 exn_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -896,7 +897,7 @@ static const struct exnname { char *name; char *exception; } errortoexnname[] = 
 };
 #endif /* DEBUG */
 
-JSBool
+bool
 js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
                     JSErrorCallback callback, void *userRef)
 {
@@ -985,7 +986,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
 static bool
 IsDuckTypedErrorObject(JSContext *cx, HandleObject exnObject, const char **filename_strp)
 {
-    JSBool found;
+    bool found;
     if (!JS_HasProperty(cx, exnObject, js_message_str, &found) || !found)
         return false;
 
@@ -1004,10 +1005,9 @@ IsDuckTypedErrorObject(JSContext *cx, HandleObject exnObject, const char **filen
     return true;
 }
 
-JSBool
+bool
 js_ReportUncaughtException(JSContext *cx)
 {
-    jsval roots[6];
     JSErrorReport *reportp, report;
 
     if (!JS_IsExceptionPending(cx))
@@ -1017,8 +1017,8 @@ js_ReportUncaughtException(JSContext *cx)
     if (!JS_GetPendingException(cx, exn.address()))
         return false;
 
-    PodArrayZero(roots);
-    AutoArrayRooter tvr(cx, ArrayLength(roots), roots);
+    AutoValueVector roots(cx);
+    roots.resize(6);
 
     /*
      * Because ToString below could error and an exception object could become
@@ -1048,18 +1048,12 @@ js_ReportUncaughtException(JSContext *cx)
         (exnObject->is<ErrorObject>() || IsDuckTypedErrorObject(cx, exnObject, &filename_str)))
     {
         RootedString name(cx);
-        if (JS_GetProperty(cx, exnObject, js_name_str, &roots[2]) &&
-            JSVAL_IS_STRING(roots[2]))
-        {
-            name = JSVAL_TO_STRING(roots[2]);
-        }
+        if (JS_GetProperty(cx, exnObject, js_name_str, roots.handleAt(2)) && roots[2].isString())
+            name = roots[2].toString();
 
         RootedString msg(cx);
-        if (JS_GetProperty(cx, exnObject, js_message_str, &roots[3]) &&
-            JSVAL_IS_STRING(roots[3]))
-        {
-            msg = JSVAL_TO_STRING(roots[3]);
-        }
+        if (JS_GetProperty(cx, exnObject, js_message_str, roots.handleAt(3)) && roots[3].isString())
+            msg = roots[3].toString();
 
         if (name && msg) {
             RootedString colon(cx, JS_NewStringCopyZ(cx, ": "));
@@ -1077,22 +1071,22 @@ js_ReportUncaughtException(JSContext *cx)
             str = msg;
         }
 
-        if (JS_GetProperty(cx, exnObject, filename_str, &roots[4])) {
-            JSString *tmp = ToString<CanGC>(cx, HandleValue::fromMarkedLocation(&roots[4]));
+        if (JS_GetProperty(cx, exnObject, filename_str, roots.handleAt(4))) {
+            JSString *tmp = ToString<CanGC>(cx, roots.handleAt(4));
             if (tmp)
                 filename.encodeLatin1(cx, tmp);
         }
 
         uint32_t lineno;
-        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[5]) ||
-            !ToUint32(cx, roots[5], &lineno))
+        if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, roots.handleAt(5)) ||
+            !ToUint32(cx, roots.handleAt(5), &lineno))
         {
             lineno = 0;
         }
 
         uint32_t column;
-        if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, &roots[5]) ||
-            !ToUint32(cx, roots[5], &column))
+        if (!JS_GetProperty(cx, exnObject, js_columnNumber_str, roots.handleAt(5)) ||
+            !ToUint32(cx, roots.handleAt(5), &column))
         {
             column = 0;
         }

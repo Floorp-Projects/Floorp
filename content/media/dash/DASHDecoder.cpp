@@ -195,15 +195,14 @@ DASHDecoder::ReleaseStateMachine()
 }
 
 nsresult
-DASHDecoder::Load(MediaResource* aResource,
-                  nsIStreamListener** aStreamListener,
+DASHDecoder::Load(nsIStreamListener** aStreamListener,
                   MediaDecoder* aCloneDonor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
   mDASHReader = new DASHReader(this);
 
-  nsresult rv = OpenResource(aResource, aStreamListener);
+  nsresult rv = OpenResource(aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDecoderStateMachine = CreateStateMachine();

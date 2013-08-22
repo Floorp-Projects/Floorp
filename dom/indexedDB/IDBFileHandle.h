@@ -12,9 +12,9 @@
 #include "mozilla/dom/file/FileHandle.h"
 #include "mozilla/dom/indexedDB/FileInfo.h"
 
-class nsIIDBDatabase;
-
 BEGIN_INDEXEDDB_NAMESPACE
+
+class IDBDatabase;
 
 class IDBFileHandle : public mozilla::dom::file::FileHandle
 {
@@ -45,7 +45,8 @@ public:
   CreateFileObject(mozilla::dom::file::LockedFile* aLockedFile,
                    uint32_t aFileSize);
 
-  nsIIDBDatabase* Database();
+  IDBDatabase*
+  Database();
 
 private:
   IDBFileHandle()

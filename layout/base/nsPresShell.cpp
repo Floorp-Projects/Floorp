@@ -19,7 +19,6 @@
 /* a presentation of a document, part 2 */
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Util.h"
@@ -34,12 +33,9 @@
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
-#include "nsIDOMXULDocument.h"
 #include "nsCSSStyleSheet.h"
-#include "nsIDOMCSSStyleSheet.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsAnimationManager.h"
 #include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
-#include "nsIServiceManager.h"
 #include "nsFrame.h"
 #include "FrameLayerBuilder.h"
 #include "nsViewManager.h"
@@ -52,11 +48,8 @@
 #include "nsCOMArray.h"
 #include "nsContainerFrame.h"
 #include "nsDOMEvent.h"
-#include "nsHTMLParts.h"
 #include "nsISelection.h"
-#include "nsISelectionPrivate.h"
 #include "mozilla/Selection.h"
-#include "nsLayoutCID.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
@@ -64,23 +57,18 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "nsRange.h"
-#include "nsCSSPseudoElements.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsReadableUtils.h"
-#include "nsUnicharUtils.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsCaret.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDOMXMLDocument.h"
 #include "nsFrameManager.h"
 #include "nsEventStateManager.h"
 #include "nsIMEStateManager.h"
 #include "nsXPCOM.h"
-#include "nsISupportsPrimitives.h"
 #include "nsILayoutHistoryState.h"
 #include "nsILineIterator.h" // for ScrollContentIntoView
-#include "nsWeakPtr.h"
 #include "pldhash.h"
 #include "mozilla/dom/Touch.h"
 #include "nsIObserverService.h"
@@ -92,9 +80,6 @@
 #include "nsCSSRendering.h"
   // for |#ifdef DEBUG| code
 #include "prenv.h"
-#include "nsAlgorithm.h"
-#include "nsIAttribute.h"
-#include "nsIGlobalHistory2.h"
 #include "nsDisplayList.h"
 #include "nsRegion.h"
 #include "nsRenderingContext.h"
@@ -108,7 +93,6 @@
 
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
-#include "nsNPAPIPluginInstance.h"
 #include "nsIObjectFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsNetUtil.h"
@@ -117,10 +101,8 @@
 #include "nsStyleSheetService.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
-#include "mozilla/dom/HTMLMediaElement.h"
 #include "nsSMILAnimationController.h"
 #include "SVGContentUtils.h"
-#include "nsSVGUtils.h"
 #include "nsSVGEffects.h"
 #include "SVGFragmentIdentifier.h"
 
@@ -129,18 +111,9 @@
 #include "nsDOMNavigationTiming.h"
 
 // Drag & Drop, Clipboard
-#include "nsWidgetsCID.h"
-#include "nsIClipboard.h"
-#include "nsIClipboardHelper.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIURI.h"
 #include "nsIScrollableFrame.h"
-#include "prtime.h"
-#include "nsIDragService.h"
-#include "nsCopySupport.h"
-#include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLAreaElement.h"
-#include "nsIDOMHTMLLinkElement.h"
 #include "nsITimer.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -165,25 +138,23 @@
 #include "nsIDOMXULMenuListElement.h"
 
 #endif
-#include "nsPlaceholderFrame.h"
-#include "nsCanvasFrame.h"
 
-// Content viewer interfaces
-#include "nsIContentViewer.h"
-#include "imgIEncoder.h"
+#include "GeckoProfiler.h"
 #include "gfxPlatform.h"
-
+#include "Layers.h"
+#include "LayerTreeInvalidation.h"
+#include "mozilla/css/ImageLoader.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
-#include "GeckoProfiler.h"
-#include "mozilla/css/ImageLoader.h"
-
-#include "Layers.h"
-#include "mozilla/layers/Compositor.h"
-#include "nsTransitionManager.h"
-#include "LayerTreeInvalidation.h"
-#include "nsAsyncDOMEvent.h"
+#include "nsCanvasFrame.h"
 #include "nsIImageLoadingContent.h"
+#include "nsIScreen.h"
+#include "nsIScreenManager.h"
+#include "nsPlaceholderFrame.h"
+#include "nsTransitionManager.h"
+#include "RestyleManager.h"
+#include "nsIDOMHTMLElement.h"
+#include "nsIDragSession.h"
 
 #define ANCHOR_SCROLL_FLAGS \
   (nsIPresShell::SCROLL_OVERFLOW_HIDDEN | nsIPresShell::SCROLL_NO_PARENT_FRAMES)
@@ -3701,8 +3672,9 @@ PresShell::HandlePostedReflowCallbacks(bool aInterruptible)
 
    mozFlushType flushType =
      aInterruptible ? Flush_InterruptibleLayout : Flush_Layout;
-   if (shouldFlush)
+   if (shouldFlush && !mIsDestroying) {
      FlushPendingNotifications(flushType);
+   }
 }
 
 bool
@@ -4216,7 +4188,6 @@ nsIPresShell::ReconstructStyleDataInternal()
 
   if (mPresContext) {
     mPresContext->RebuildUserFontSet();
-    mPresContext->AnimationManager()->KeyframesListIsDirty();
   }
 
   Element* root = mDocument->GetRootElement();
@@ -5275,7 +5246,7 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
   NS_ASSERTION(view->GetWidget(), "view should have a widget here");
   nsMouseEvent event(true, NS_MOUSE_MOVE, view->GetWidget(),
                      nsMouseEvent::eSynthesized);
-  event.refPoint = refpoint.ToNearestPixels(viewAPD);
+  event.refPoint = LayoutDeviceIntPoint::FromAppUnitsToNearest(refpoint, viewAPD);
   event.time = PR_IntervalNow();
   // XXX set event.modifiers ?
   // XXX mnakano I think that we should get the latest information from widget.
@@ -5489,6 +5460,47 @@ private:
   uint32_t mFlags;
 };
 
+class AutoUpdateHitRegion
+{
+public:
+  AutoUpdateHitRegion(PresShell* aShell, nsIFrame* aFrame)
+    : mShell(aShell), mFrame(aFrame)
+  {
+  }
+  ~AutoUpdateHitRegion()
+  {
+    if (XRE_GetProcessType() != GeckoProcessType_Content ||
+        !mFrame || !mShell) {
+      return;
+    }
+    TabChild* tabChild = GetTabChildFrom(mShell);
+    if (!tabChild || !tabChild->GetUpdateHitRegion()) {
+      return;
+    }
+    nsRegion region;
+    nsDisplayListBuilder builder(mFrame,
+                                 nsDisplayListBuilder::EVENT_DELIVERY,
+                                 /* aBuildCert= */ false);
+    nsDisplayList list;
+    nsAutoTArray<nsIFrame*, 100> outFrames;
+    nsDisplayItem::HitTestState hitTestState;
+    nsRect bounds = mShell->GetPresContext()->GetVisibleArea();
+    builder.EnterPresShell(mFrame, bounds);
+    mFrame->BuildDisplayListForStackingContext(&builder, bounds, &list);
+    builder.LeavePresShell(mFrame, bounds);
+    list.HitTest(&builder, bounds, &hitTestState, &outFrames);
+    list.DeleteAll();
+    for (int32_t i = outFrames.Length() - 1; i >= 0; --i) {
+      region.Or(region, nsLayoutUtils::TransformFrameRectToAncestor(
+                  outFrames[i], nsRect(nsPoint(0, 0), outFrames[i]->GetSize()), mFrame));
+    }
+    tabChild->UpdateHitRegion(region);
+  }
+private:
+  PresShell* mShell;
+  nsIFrame* mFrame;
+};
+
 void
 PresShell::Paint(nsView*        aViewToPaint,
                  const nsRegion& aDirtyRegion,
@@ -5520,6 +5532,7 @@ PresShell::Paint(nsView*        aViewToPaint,
     didPaintFlags |= PAINT_COMPOSITE;
   }
   nsAutoNotifyDidPaint notifyDidPaint(this, didPaintFlags);
+  AutoUpdateHitRegion updateHitRegion(this, frame);
 
   // Whether or not we should set first paint when painting is
   // suppressed is debatable. For now we'll do it because
@@ -5842,7 +5855,8 @@ PresShell::RecordMouseLocation(nsGUIEvent* aEvent)
     if (!rootFrame) {
       nsView* rootView = mViewManager->GetRootView();
       mMouseLocation = nsLayoutUtils::TranslateWidgetToView(mPresContext,
-        aEvent->widget, aEvent->refPoint, rootView);
+        aEvent->widget, LayoutDeviceIntPoint::ToUntyped(aEvent->refPoint),
+        rootView);
     } else {
       mMouseLocation =
         nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, rootFrame);
@@ -6138,7 +6152,9 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
     // mouse out events at the root EventStateManager.
     if (!captureRetarget && !isWindowLevelMouseExit) {
       nsPoint eventPoint;
+      uint32_t flags;
       if (aEvent->message == NS_TOUCH_START) {
+        flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
         nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
         // if this is a continuing session, ensure that all these events are
         // in the same document by taking the target of the events already in
@@ -6157,7 +6173,6 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
           int32_t id = touch->Identifier();
           if (!gCaptureTouchList.Get(id, nullptr)) {
             // find the target for this touch
-            uint32_t flags = 0;
             eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent,
                                                               touch->mRefPoint,
                                                               frame);
@@ -6219,7 +6234,6 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
       } else {
         eventPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
       }
-      uint32_t flags = 0;
       if (aEvent->eventStructType == NS_MOUSE_EVENT &&
           static_cast<nsMouseEvent*>(aEvent)->ignoreRootScrollFrame) {
         flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
@@ -6734,7 +6748,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
             touches.RemoveElementAt(i);
             continue;
           }
-          if (touch->Equals(oldTouch)) {
+          if (!touch->Equals(oldTouch)) {
             touch->mChanged = true;
             haveChanged = true;
           }
@@ -6886,12 +6900,12 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
 
   // loop over all touches and dispatch events on any that have changed
   for (uint32_t i = 0; i < touchEvent->touches.Length(); ++i) {
-    nsIDOMTouch *touch = touchEvent->touches[i];
+    dom::Touch* touch = touchEvent->touches[i];
     if (!touch || !touch->mChanged) {
       continue;
     }
 
-    nsCOMPtr<EventTarget> targetPtr = touch->GetTarget();
+    nsCOMPtr<EventTarget> targetPtr = touch->mTarget;
     nsCOMPtr<nsIContent> content = do_QueryInterface(targetPtr);
     if (!content) {
       continue;
@@ -7022,7 +7036,8 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
       nsCOMPtr<nsIWidget> widget = popupFrame->GetNearestWidget();
       aEvent->widget = widget;
       nsIntPoint widgetPoint = widget->WidgetToScreenOffset();
-      aEvent->refPoint = itemFrame->GetScreenRect().BottomLeft() - widgetPoint;
+      aEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(
+        itemFrame->GetScreenRect().BottomLeft() - widgetPoint);
 
       mCurrentEventContent = itemFrame->GetContent();
       mCurrentEventFrame = itemFrame;
@@ -7055,7 +7070,7 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
         nsView* view = rootFrame->GetClosestView(&offset);
         offset += view->GetOffsetToWidget(aEvent->widget);
         aEvent->refPoint =
-          offset.ToNearestPixels(mPresContext->AppUnitsPerDevPixel());
+          LayoutDeviceIntPoint::FromAppUnitsToNearest(offset, mPresContext->AppUnitsPerDevPixel());
       }
     }
   } else {
@@ -7068,7 +7083,7 @@ PresShell::AdjustContextMenuKeyEvent(nsMouseEvent* aEvent)
   // ScrollSelectionIntoView.
   if (PrepareToUseCaretPosition(aEvent->widget, caretPoint)) {
     // caret position is good
-    aEvent->refPoint = caretPoint;
+    aEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(caretPoint);
     return true;
   }
 
@@ -7220,7 +7235,7 @@ PresShell::PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTarge
 void
 PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
                                                nsIContent** aTargetToUse,
-                                               nsIntPoint& aTargetPt,
+                                               LayoutDeviceIntPoint& aTargetPt,
                                                nsIWidget *aRootWidget)
 {
   nsCOMPtr<nsIContent> focusedContent(do_QueryInterface(aCurrentEl));
@@ -8242,8 +8257,6 @@ nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
 // Start of DEBUG only code
 
 #ifdef DEBUG
-#include "nsIURL.h"
-#include "nsILinkHandler.h"
 
 static void
 LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)

@@ -964,6 +964,15 @@ nsChildView::BackingScaleFactorChanged()
   }
 }
 
+int32_t
+nsChildView::RoundsWidgetCoordinatesTo()
+{
+  if (BackingScaleFactor() == 2.0) {
+    return 2;
+  }
+  return 1;
+}
+
 NS_IMETHODIMP nsChildView::ConstrainPosition(bool aAllowSlop,
                                              int32_t *aX, int32_t *aY)
 {
@@ -1525,15 +1534,7 @@ nsChildView::ComputeShouldAccelerate(bool aDefault)
 bool
 nsChildView::ShouldUseOffMainThreadCompositing()
 {
-  // When acceleration is off, default to false, but allow force-enabling
-  // using the layers.offmainthreadcomposition.prefer-basic pref.
-  if (!ComputeShouldAccelerate(mUseLayersAcceleration) &&
-      !Preferences::GetBool("layers.offmainthreadcomposition.prefer-basic", false)) {
-    return false;
-  }
-
-  // Don't use OMTC (which requires OpenGL) for transparent windows or for
-  // popup windows.
+  // Don't use OMTC for transparent windows or for popup windows.
   if (!mView || ![[mView window] isOpaque] ||
       [[mView window] isKindOfClass:[PopupWindow class]])
     return false;
@@ -1832,16 +1833,16 @@ NS_IMETHODIMP_(void)
 nsChildView::SetInputContext(const InputContext& aContext,
                              const InputContextAction& aAction)
 {
-  // XXX Ideally, we should check if this instance has focus or not.
-  //     However, this is called only when this widget has focus, so,
-  //     it's not problem at least for now.
-  if (aContext.IsPasswordEditor()) {
-    TextInputHandler::EnableSecureEventInput();
-  } else {
-    TextInputHandler::EnsureSecureEventInputDisabled();
+  NS_ENSURE_TRUE_VOID(mTextInputHandler);
+
+  if (mTextInputHandler->IsFocused()) {
+    if (aContext.IsPasswordEditor()) {
+      TextInputHandler::EnableSecureEventInput();
+    } else {
+      TextInputHandler::EnsureSecureEventInputDisabled();
+    }
   }
 
-  NS_ENSURE_TRUE_VOID(mTextInputHandler);
   mInputContext = aContext;
   switch (aContext.mIMEState.mEnabled) {
     case IMEState::ENABLED:
@@ -4488,7 +4489,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   uint32_t msg = aEnter ? NS_MOUSE_ENTER : NS_MOUSE_EXIT;
   nsMouseEvent event(true, msg, mGeckoChild, nsMouseEvent::eReal);
-  event.refPoint = mGeckoChild->CocoaPointsToDevPixels(localEventLocation);
+  event.refPoint = LayoutDeviceIntPoint::FromUntyped(
+    mGeckoChild->CocoaPointsToDevPixels(localEventLocation));
 
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
@@ -4930,7 +4932,8 @@ static int32_t RoundUp(double aDouble)
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(aMouseEvent, [self window]);
   NSPoint localPoint = [self convertPoint:locationInWindow fromView:nil];
 
-  outGeckoEvent->refPoint = mGeckoChild->CocoaPointsToDevPixels(localPoint);
+  outGeckoEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(
+    mGeckoChild->CocoaPointsToDevPixels(localPoint));
 
   nsMouseEvent_base* mouseEvent =
     static_cast<nsMouseEvent_base*>(outGeckoEvent);
@@ -5214,8 +5217,9 @@ static int32_t RoundUp(double aDouble)
   if (mGeckoChild && mTextInputHandler && mTextInputHandler->IsFocused()) {
 #ifdef MOZ_CRASHREPORTER
     NSWindow* window = [self window];
-    NSString* info = [NSString stringWithFormat:@"view [%@], window [%@], key event [%@], window is key %i, app is active %i",
-                      self, window, theEvent, [window isKeyWindow], [NSApp isActive]];
+    NSString* info = [NSString stringWithFormat:@"\nview [%@], window [%@], key event [%@], window is key %i, is fullscreen %i, app is active %i",
+                      self, window, theEvent, [window isKeyWindow], ([window styleMask] & (1 << 14)) != 0,
+                      [NSApp isActive]];
     nsAutoCString additionalInfo([info UTF8String]);
 #endif
     if (mIsPluginView) {
@@ -5352,8 +5356,9 @@ static int32_t RoundUp(double aDouble)
   // hitTest needs coordinates in device pixels
   NSPoint eventLoc = nsCocoaUtils::ScreenLocationForEvent(currentEvent);
   eventLoc.y = nsCocoaUtils::FlippedScreenY(eventLoc.y);
-  nsIntPoint widgetLoc = mGeckoChild->CocoaPointsToDevPixels(eventLoc) -
-    mGeckoChild->WidgetToScreenOffset();
+  LayoutDeviceIntPoint widgetLoc = LayoutDeviceIntPoint::FromUntyped(
+    mGeckoChild->CocoaPointsToDevPixels(eventLoc) -
+    mGeckoChild->WidgetToScreenOffset());
 
   nsQueryContentEvent hitTest(true, NS_QUERY_DOM_WIDGET_HITTEST, mGeckoChild);
   hitTest.InitForQueryDOMWidgetHittest(widgetLoc);
@@ -5585,7 +5590,8 @@ static int32_t RoundUp(double aDouble)
   NSPoint draggingLoc = [aSender draggingLocation];
   NSPoint localPoint = [self convertPoint:draggingLoc fromView:nil];
 
-  geckoEvent.refPoint = mGeckoChild->CocoaPointsToDevPixels(localPoint);
+  geckoEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(
+    mGeckoChild->CocoaPointsToDevPixels(localPoint));
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);

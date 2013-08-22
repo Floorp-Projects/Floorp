@@ -19,7 +19,8 @@ public:
   typedef ThebesLayerBuffer::ContentType ContentType;
 
   BasicThebesLayer(BasicLayerManager* aLayerManager) :
-    ThebesLayer(aLayerManager, static_cast<BasicImplData*>(this)),
+    ThebesLayer(aLayerManager,
+                static_cast<BasicImplData*>(MOZ_THIS_IN_INITIALIZER_LIST())),
     mContentClient(nullptr)
   {
     MOZ_COUNT_CTOR(BasicThebesLayer);

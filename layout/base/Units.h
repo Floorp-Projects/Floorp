@@ -11,6 +11,7 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/ScaleFactor.h"
 #include "nsDeviceContext.h"
+#include "nsRect.h"
 
 namespace mozilla {
 
@@ -105,20 +106,20 @@ struct CSSPixel {
   // Conversions to app units
 
   static nsPoint ToAppUnits(const CSSPoint& aPoint) {
-    return nsPoint(NSFloatPixelsToAppUnits(aPoint.x, float(nsDeviceContext::AppUnitsPerCSSPixel())),
-                   NSFloatPixelsToAppUnits(aPoint.y, float(nsDeviceContext::AppUnitsPerCSSPixel())));
+    return nsPoint(NSToCoordRoundWithClamp(aPoint.x * float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                   NSToCoordRoundWithClamp(aPoint.y * float(nsDeviceContext::AppUnitsPerCSSPixel())));
   }
 
   static nsPoint ToAppUnits(const CSSIntPoint& aPoint) {
-    return nsPoint(NSIntPixelsToAppUnits(aPoint.x, nsDeviceContext::AppUnitsPerCSSPixel()),
-                   NSIntPixelsToAppUnits(aPoint.y, nsDeviceContext::AppUnitsPerCSSPixel()));
+    return nsPoint(NSToCoordRoundWithClamp(float(aPoint.x) * float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                   NSToCoordRoundWithClamp(float(aPoint.y) * float(nsDeviceContext::AppUnitsPerCSSPixel())));
   }
 
   static nsRect ToAppUnits(const CSSRect& aRect) {
-    return nsRect(NSFloatPixelsToAppUnits(aRect.x, float(nsDeviceContext::AppUnitsPerCSSPixel())),
-                  NSFloatPixelsToAppUnits(aRect.y, float(nsDeviceContext::AppUnitsPerCSSPixel())),
-                  NSFloatPixelsToAppUnits(aRect.width, float(nsDeviceContext::AppUnitsPerCSSPixel())),
-                  NSFloatPixelsToAppUnits(aRect.height, float(nsDeviceContext::AppUnitsPerCSSPixel())));
+    return nsRect(NSToCoordRoundWithClamp(aRect.x * float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                  NSToCoordRoundWithClamp(aRect.y * float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                  NSToCoordRoundWithClamp(aRect.width * float(nsDeviceContext::AppUnitsPerCSSPixel())),
+                  NSToCoordRoundWithClamp(aRect.height * float(nsDeviceContext::AppUnitsPerCSSPixel())));
   }
 };
 
@@ -131,9 +132,29 @@ struct CSSPixel {
  * 2) the "widget scale" (see nsIWidget::GetDefaultScale)
  */
 struct LayoutDevicePixel {
+  static LayoutDeviceIntPoint FromUntyped(const nsIntPoint& aPoint) {
+    return LayoutDeviceIntPoint(aPoint.x, aPoint.y);
+  }
+
+  static nsIntPoint ToUntyped(const LayoutDeviceIntPoint& aPoint) {
+    return nsIntPoint(aPoint.x, aPoint.y);
+  }
+
+  static LayoutDeviceIntRect FromUntyped(const nsIntRect& aRect) {
+    return LayoutDeviceIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
+  }
+
+  static LayoutDeviceIntPoint FromAppUnits(const nsPoint& aPoint, nscoord aAppUnitsPerDevPixel) {
+    return LayoutDeviceIntPoint(NSAppUnitsToIntPixels(aPoint.x, aAppUnitsPerDevPixel),
+                                NSAppUnitsToIntPixels(aPoint.y, aAppUnitsPerDevPixel));
+  }
+
   static LayoutDeviceIntPoint FromAppUnitsToNearest(const nsPoint& aPoint, nscoord appUnitsPerDevPixel) {
-    nsIntPoint result = aPoint.ToNearestPixels(appUnitsPerDevPixel);
-    return LayoutDeviceIntPoint(result.x, result.y);
+    return FromUntyped(aPoint.ToNearestPixels(appUnitsPerDevPixel));
+  }
+
+  static LayoutDeviceIntRect FromAppUnitsToNearest(const nsRect& aRect, nscoord appUnitsPerDevPixel) {
+    return FromUntyped(aRect.ToNearestPixels(appUnitsPerDevPixel));
   }
 };
 

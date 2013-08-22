@@ -62,9 +62,9 @@ VCMTimestampExtrapolator::Reset(const int64_t nowMs /* = -1 */)
     _firstTimestamp = 0;
     _w[0] = 90.0;
     _w[1] = 0;
-    _P[0][0] = 1;
-    _P[1][1] = _P11;
-    _P[0][1] = _P[1][0] = 0;
+    _pp[0][0] = 1;
+    _pp[1][1] = _P11;
+    _pp[0][1] = _pp[1][0] = 0;
     _firstAfterReset = true;
     _prevTs90khz = 0;
     _wrapArounds = 0;
@@ -124,14 +124,14 @@ VCMTimestampExtrapolator::Update(int64_t tMs, uint32_t ts90khz, bool trace)
         // A sudden change of average network delay has been detected.
         // Force the filter to adjust its offset parameter by changing
         // the offset uncertainty. Don't do this during startup.
-        _P[1][1] = _P11;
+        _pp[1][1] = _P11;
     }
     //T = [t(k) 1]';
     //that = T'*w;
     //K = P*T/(lambda + T'*P*T);
     double K[2];
-    K[0] = _P[0][0] * tMs + _P[0][1];
-    K[1] = _P[1][0] * tMs + _P[1][1];
+    K[0] = _pp[0][0] * tMs + _pp[0][1];
+    K[1] = _pp[1][0] * tMs + _pp[1][1];
     double TPT = _lambda + tMs * K[0] + K[1];
     K[0] /= TPT;
     K[1] /= TPT;
@@ -139,12 +139,12 @@ VCMTimestampExtrapolator::Update(int64_t tMs, uint32_t ts90khz, bool trace)
     _w[0] = _w[0] + K[0] * residual;
     _w[1] = _w[1] + K[1] * residual;
     //P = 1/lambda*(P - K*T'*P);
-    double p00 = 1 / _lambda * (_P[0][0] - (K[0] * tMs * _P[0][0] + K[0] * _P[1][0]));
-    double p01 = 1 / _lambda * (_P[0][1] - (K[0] * tMs * _P[0][1] + K[0] * _P[1][1]));
-    _P[1][0] = 1 / _lambda * (_P[1][0] - (K[1] * tMs * _P[0][0] + K[1] * _P[1][0]));
-    _P[1][1] = 1 / _lambda * (_P[1][1] - (K[1] * tMs * _P[0][1] + K[1] * _P[1][1]));
-    _P[0][0] = p00;
-    _P[0][1] = p01;
+    double p00 = 1 / _lambda * (_pp[0][0] - (K[0] * tMs * _pp[0][0] + K[0] * _pp[1][0]));
+    double p01 = 1 / _lambda * (_pp[0][1] - (K[0] * tMs * _pp[0][1] + K[0] * _pp[1][1]));
+    _pp[1][0] = 1 / _lambda * (_pp[1][0] - (K[1] * tMs * _pp[0][0] + K[1] * _pp[1][0]));
+    _pp[1][1] = 1 / _lambda * (_pp[1][1] - (K[1] * tMs * _pp[0][1] + K[1] * _pp[1][1]));
+    _pp[0][0] = p00;
+    _pp[0][1] = p01;
     if (_packetCount < _startUpFilterDelayInPackets)
     {
         _packetCount++;

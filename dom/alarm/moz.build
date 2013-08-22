@@ -13,10 +13,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_alarm'
 
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/interfaces/base',
-]
-
 MODULE = 'dom'
 
 EXPORTS.mozilla.dom.alarm += [

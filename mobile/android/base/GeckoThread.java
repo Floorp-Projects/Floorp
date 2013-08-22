@@ -38,14 +38,51 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     private static LaunchState sLaunchState = LaunchState.Launching;
 
-    private Intent mIntent;
+    private static GeckoThread sGeckoThread;
+
+    private final String mArgs;
+    private final String mAction;
     private final String mUri;
 
-    GeckoThread(Intent intent, String uri) {
-        mIntent = intent;
+    public static boolean ensureInit() {
+        ThreadUtils.assertOnUiThread();
+        if (isCreated())
+            return false;
+        sGeckoThread = new GeckoThread(sArgs, sAction, sUri);
+        return true;
+    }
+
+    public static String sArgs;
+    public static String sAction;
+    public static String sUri;
+
+    public static void setArgs(String args) {
+        sArgs = args;
+    }
+
+    public static void setAction(String action) {
+        sAction = action;
+    }
+
+    public static void setUri(String uri) {
+        sUri = uri;
+    }
+
+    GeckoThread(String args, String action, String uri) {
+        mArgs = args;
+        mAction = action;
         mUri = uri;
         setName("Gecko");
         GeckoAppShell.getEventDispatcher().registerEventListener("Gecko:Ready", this);
+    }
+
+    public static boolean isCreated() {
+        return sGeckoThread != null;
+    }
+
+    public static void createAndStart() {
+        if (ensureInit())
+            sGeckoThread.start();
     }
 
     private String initGeckoEnvironment() {
@@ -115,15 +152,16 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     @Override
     public void run() {
         Looper.prepare();
-        ThreadUtils.setGeckoThread(this, new Handler());
+        ThreadUtils.sGeckoThread = this;
+        ThreadUtils.sGeckoHandler = new Handler();
+        ThreadUtils.sGeckoQueue = Looper.myQueue();
 
         String path = initGeckoEnvironment();
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - runGecko");
 
-        String args = addCustomProfileArg(mIntent.getStringExtra("args"));
-        String type = getTypeFromAction(mIntent.getAction());
-        mIntent = null;
+        String args = addCustomProfileArg(mArgs);
+        String type = getTypeFromAction(mAction);
 
         // and then fire us up
         Log.i(LOGTAG, "RunGecko - args = " + args);

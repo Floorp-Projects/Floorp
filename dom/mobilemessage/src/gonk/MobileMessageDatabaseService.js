@@ -24,7 +24,7 @@ const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
 
 const DB_NAME = "sms";
-const DB_VERSION = 11;
+const DB_VERSION = 12;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
@@ -221,10 +221,14 @@ MobileMessageDatabaseService.prototype = {
             if (DEBUG) debug("Upgrade to version 11. Add last message type into threadRecord.");
             self.upgradeSchema10(event.target.transaction, next);
             break;
-	  case 11:
-	    // This will need to be moved for each new version
-	    if (DEBUG) debug("Upgrade finished.");
-	    break;
+          case 11:
+            if (DEBUG) debug("Upgrade to version 12. Add envelopeId index for outgoing MMS.");
+            self.upgradeSchema11(event.target.transaction, next);
+            break;
+          case 12:
+            // This will need to be moved for each new version
+            if (DEBUG) debug("Upgrade finished.");
+            break;
           default:
             event.target.transaction.abort();
             callback("Old database version: " + event.oldVersion, null);
@@ -765,6 +769,38 @@ MobileMessageDatabaseService.prototype = {
     };
   },
 
+  /**
+   * Add envelopeId index for MMS.
+   */
+  upgradeSchema11: function upgradeSchema11(transaction, next) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+
+    // Delete "envelopeId" index.
+    if (messageStore.indexNames.contains("envelopeId")) {
+      messageStore.deleteIndex("envelopeId");
+    }
+
+    // Create new "envelopeId" indexes.
+    messageStore.createIndex("envelopeId", "envelopeIdIndex", { unique: true });
+
+    // Populate new "envelopeIdIndex" attributes.
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        next();
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      if (messageRecord.type == "mms" &&
+          messageRecord.delivery == DELIVERY_SENT) {
+        messageRecord.envelopeIdIndex = messageRecord.headers["message-id"];
+        cursor.update(messageRecord);
+      }
+      cursor.continue();
+    };
+  },
+
   createDomMessageFromRecord: function createDomMessageFromRecord(aMessageRecord) {
     if (DEBUG) {
       debug("createDomMessageFromRecord: " + JSON.stringify(aMessageRecord));
@@ -1152,6 +1188,162 @@ MobileMessageDatabaseService.prototype = {
     return aMessageRecord.id;
   },
 
+  updateMessageDeliveryById: function updateMessageDeliveryById(
+      id, type, receiver, delivery, deliveryStatus, envelopeId, callback) {
+    if (DEBUG) {
+      debug("Setting message's delivery by " + type + " = "+ id
+            + " receiver: " + receiver
+            + " delivery: " + delivery
+            + " deliveryStatus: " + deliveryStatus
+            + " envelopeId: " + envelopeId);
+    }
+
+    let self = this;
+    let messageRecord;
+    function notifyResult(rv) {
+      if (!callback) {
+        return;
+      }
+      let domMessage = self.createDomMessageFromRecord(messageRecord);
+      callback.notify(rv, domMessage);
+    }
+
+    this.newTxn(READ_WRITE, function (error, txn, messageStore) {
+      if (error) {
+        // TODO bug 832140 check event.target.errorCode
+        notifyResult(Cr.NS_ERROR_FAILURE);
+        return;
+      }
+      txn.oncomplete = function oncomplete(event) {
+        notifyResult(Cr.NS_OK);
+      };
+      txn.onabort = function onabort(event) {
+        // TODO bug 832140 check event.target.errorCode
+        notifyResult(Cr.NS_ERROR_FAILURE);
+      };
+
+      let getRequest;
+      if (type === "messageId") {
+        getRequest = messageStore.get(id);
+      } else if (type === "envelopeId") {
+        getRequest = messageStore.index("envelopeId").get(id);
+      }
+
+      getRequest.onsuccess = function onsuccess(event) {
+        messageRecord = event.target.result;
+        if (!messageRecord) {
+          if (DEBUG) debug("type = " + id + " is not found");
+          return;
+        }
+
+        let isRecordUpdated = false;
+
+        // Update |messageRecord.delivery| if needed.
+        if (delivery && messageRecord.delivery != delivery) {
+          messageRecord.delivery = delivery;
+          messageRecord.deliveryIndex = [delivery, messageRecord.timestamp];
+          isRecordUpdated = true;
+        }
+
+        // Update |messageRecord.deliveryStatus| if needed.
+        if (deliveryStatus) {
+          if (messageRecord.type == "sms") {
+            if (messageRecord.deliveryStatus != deliveryStatus) {
+              messageRecord.deliveryStatus = deliveryStatus;
+              isRecordUpdated = true;
+            }
+          } else if (messageRecord.type == "mms") {
+            if (!receiver) {
+              for (let i = 0; i < messageRecord.deliveryStatus.length; i++) {
+                if (messageRecord.deliveryStatus[i] != deliveryStatus) {
+                  messageRecord.deliveryStatus[i] = deliveryStatus;
+                  isRecordUpdated = true;
+                }
+              }
+            } else {
+              let normReceiver = PhoneNumberUtils.normalize(receiver, false);
+              if (!normReceiver) {
+                if (DEBUG) {
+                  debug("Normalized receiver is not valid. Fail to update.");
+                }
+                return;
+              }
+
+              let parsedReveiver = PhoneNumberUtils.parseWithMCC(normReceiver, null);
+
+              let found = false;
+              for (let i = 0; i < messageRecord.receivers.length; i++) {
+                let storedReceiver = messageRecord.receivers[i];
+                let normStoreReceiver =
+                  PhoneNumberUtils.normalize(storedReceiver, false);
+                if (!normStoreReceiver) {
+                  if (DEBUG) {
+                    debug("Normalized stored receiver is not valid. Skipping.");
+                  }
+                  continue;
+                }
+
+                let match = (normReceiver === normStoreReceiver);
+                if (!match) {
+                  if (parsedReveiver) {
+                    if (normStoreReceiver.endsWith(parsedReveiver.nationalNumber)) {
+                      match = true;
+                    }
+                  } else {
+                    let parsedStoreReceiver =
+                      PhoneNumberUtils.parseWithMCC(normStoreReceiver, null);
+                    if (parsedStoreReceiver &&
+                        normReceiver.endsWith(parsedStoreReceiver.nationalNumber)) {
+                      match = true;
+                    }
+                  }
+                }
+                if (!match) {
+                  if (DEBUG) debug("Stored receiver is not matched. Skipping.");
+                  continue;
+                }
+
+                found = true;
+                if (messageRecord.deliveryStatus[i] != deliveryStatus) {
+                  messageRecord.deliveryStatus[i] = deliveryStatus;
+                  isRecordUpdated = true;
+                }
+              }
+
+              if (!found) {
+                if (DEBUG) {
+                  debug("Cannot find the receiver. Fail to set delivery status.");
+                }
+                return;
+              }
+            }
+          }
+        }
+
+        // Update |messageRecord.envelopeIdIndex| if needed.
+        if (envelopeId) {
+          if (messageRecord.envelopeIdIndex != envelopeId) {
+            messageRecord.envelopeIdIndex = envelopeId;
+            isRecordUpdated = true;
+          }
+        }
+
+        if (!isRecordUpdated) {
+          if (DEBUG) {
+            debug("The values of delivery, deliveryStatus and envelopeId " +
+                  "don't need to be updated.");
+          }
+          return;
+        }
+
+        if (DEBUG) {
+          debug("The delivery, deliveryStatus or envelopeId are updated.");
+        }
+        messageStore.put(messageRecord);
+      };
+    });
+  },
+
   /**
    * nsIRilMobileMessageDatabaseService API
    */
@@ -1283,107 +1475,20 @@ MobileMessageDatabaseService.prototype = {
     return this.saveRecord(aMessage, addresses, aCallback);
   },
 
-  setMessageDelivery: function setMessageDelivery(
-      messageId, receiver, delivery, deliveryStatus, callback) {
-    if (DEBUG) {
-      debug("Setting message " + messageId + " delivery to " + delivery
-            + ", and deliveryStatus to " + deliveryStatus);
-    }
+  setMessageDeliveryByMessageId: function setMessageDeliveryByMessageId(
+      messageId, receiver, delivery, deliveryStatus, envelopeId, callback) {
+    this.updateMessageDeliveryById(messageId, "messageId",
+                                   receiver, delivery, deliveryStatus,
+                                   envelopeId, callback);
 
-    let self = this;
-    let messageRecord;
-    function notifyResult(rv) {
-      if (!callback) {
-        return;
-      }
-      let domMessage = self.createDomMessageFromRecord(messageRecord);
-      callback.notify(rv, domMessage);
-    }
+  },
 
-    this.newTxn(READ_WRITE, function (error, txn, messageStore) {
-      if (error) {
-        // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE);
-        return;
-      }
-      txn.oncomplete = function oncomplete(event) {
-        notifyResult(Cr.NS_OK);
-      };
-      txn.onabort = function onabort(event) {
-        // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE);
-      };
+  setMessageDeliveryByEnvelopeId: function setMessageDeliveryByEnvelopeId(
+      envelopeId, receiver, delivery, deliveryStatus, callback) {
+    this.updateMessageDeliveryById(envelopeId, "envelopeId",
+                                   receiver, delivery, deliveryStatus,
+                                   null, callback);
 
-      let getRequest = messageStore.get(messageId);
-      getRequest.onsuccess = function onsuccess(event) {
-        messageRecord = event.target.result;
-        if (!messageRecord) {
-          if (DEBUG) debug("Message ID " + messageId + " not found");
-          return;
-        }
-        if (messageRecord.id != messageId) {
-          if (DEBUG) {
-            debug("Retrieve message ID (" + messageId + ") is " +
-                  "different from the one we got");
-          }
-          return;
-        }
-
-        let isRecordUpdated = false;
-
-        // Update |messageRecord.delivery| if needed.
-        if (delivery && messageRecord.delivery != delivery) {
-          messageRecord.delivery = delivery;
-          messageRecord.deliveryIndex = [delivery, messageRecord.timestamp];
-          isRecordUpdated = true;
-        }
-
-        // Update |messageRecord.deliveryStatus| if needed.
-        if (deliveryStatus) {
-          if (messageRecord.type == "sms") {
-            if (messageRecord.deliveryStatus != deliveryStatus) {
-              messageRecord.deliveryStatus = deliveryStatus;
-              isRecordUpdated = true;
-            }
-          } else if (messageRecord.type == "mms") {
-            if (!receiver) {
-              for (let i = 0; i < messageRecord.deliveryStatus.length; i++) {
-                if (messageRecord.deliveryStatus[i] != deliveryStatus) {
-                  messageRecord.deliveryStatus[i] = deliveryStatus;
-                  isRecordUpdated = true;
-                }
-              }
-            } else {
-              let index = messageRecord.receivers.indexOf(receiver);
-              if (index == -1) {
-                if (DEBUG) {
-                  debug("Cannot find the receiver. Fail to set delivery status.");
-                }
-                return;
-              }
-              if (messageRecord.deliveryStatus[index] != deliveryStatus) {
-                messageRecord.deliveryStatus[index] = deliveryStatus;
-                isRecordUpdated = true;
-              }
-            }
-          }
-        }
-
-        // Only updates messages that have different delivery or deliveryStatus.
-        if (!isRecordUpdated) {
-          if (DEBUG) {
-            debug("The values of attribute delivery and deliveryStatus are the"
-                  + " the same with given parameters.");
-          }
-          return;
-        }
-
-        if (DEBUG) {
-          debug("The record's delivery and/or deliveryStatus are updated.");
-        }
-        messageStore.put(messageRecord);
-      };
-    });
   },
 
   getMessageRecordByTransactionId: function getMessageRecordByTransactionId(aTransactionId, aCallback) {
@@ -1413,8 +1518,9 @@ MobileMessageDatabaseService.prototype = {
 
       txn.onerror = function onerror(event) {
         if (DEBUG) {
-          if (event.target)
+          if (event.target) {
             debug("Caught error on transaction", event.target.errorCode);
+          }
         }
         aCallback.notify(Ci.nsIMobileMessageCallback.INTERNAL_ERROR, null, null);
       };

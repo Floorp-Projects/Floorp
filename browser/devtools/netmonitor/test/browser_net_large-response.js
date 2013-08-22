@@ -25,7 +25,7 @@ function test() {
           statusText: "OK"
         });
 
-      aMonitor.panelWin.once("NetMonitor:ResponseBodyAvailable", () => {
+      aMonitor.panelWin.once(aMonitor.panelWin.EVENTS.RESPONSE_BODY_DISPLAYED, () => {
         NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
           ok(aEditor.getText().match(/^<p>/),
             "The text shown in the source editor is incorrect.");

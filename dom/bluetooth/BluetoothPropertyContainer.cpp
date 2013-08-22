@@ -8,57 +8,49 @@
 #include "BluetoothPropertyContainer.h"
 #include "BluetoothService.h"
 #include "DOMRequest.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 
 USING_BLUETOOTH_NAMESPACE
 
-nsresult
+already_AddRefed<mozilla::dom::DOMRequest>
 BluetoothPropertyContainer::FirePropertyAlreadySet(nsIDOMWindow* aOwner,
-                                                   nsIDOMDOMRequest** aRequest)
+                                                   ErrorResult& aRv)
 {
   nsCOMPtr<nsIDOMRequestService> rs =
     do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(rs, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMDOMRequest> req;
-  nsresult rv = rs->CreateRequest(aOwner, getter_AddRefs(req));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Can't create DOMRequest!");
-    return NS_ERROR_FAILURE;
+  if (!rs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
-  rs->FireSuccess(req, JSVAL_VOID);
-  req.forget(aRequest);
 
-  return NS_OK;
+  nsRefPtr<mozilla::dom::DOMRequest> request = new DOMRequest(aOwner);
+  rs->FireSuccess(request, JS::UndefinedValue());
+
+  return request.forget();
 }
 
-nsresult
+already_AddRefed<mozilla::dom::DOMRequest>
 BluetoothPropertyContainer::SetProperty(nsIDOMWindow* aOwner,
                                         const BluetoothNamedValue& aProperty,
-                                        nsIDOMDOMRequest** aRequest)
+                                        ErrorResult& aRv)
 {
+  nsRefPtr<mozilla::dom::DOMRequest> request = new DOMRequest(aOwner);
+  nsRefPtr<BluetoothReplyRunnable> task =
+    new BluetoothVoidReplyRunnable(request);
+
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
     NS_WARNING("Bluetooth service not available!");
-    return NS_ERROR_FAILURE;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  nsCOMPtr<nsIDOMRequestService> rs =
-    do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(rs, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMDOMRequest> req;
-  nsresult rv = rs->CreateRequest(aOwner, getter_AddRefs(req));
+  nsresult rv = bs->SetProperty(mObjectType, aProperty, task);
   if (NS_FAILED(rv)) {
-    NS_WARNING("Can't create DOMRequest!");
-    return NS_ERROR_FAILURE;
+    aRv.Throw(rv);
+    return nullptr;
   }
 
-  nsRefPtr<BluetoothReplyRunnable> task = new BluetoothVoidReplyRunnable(req);
-
-  rv = bs->SetProperty(mObjectType, aProperty, task);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  req.forget(aRequest);
-  return NS_OK;
+  return request.forget();
 }

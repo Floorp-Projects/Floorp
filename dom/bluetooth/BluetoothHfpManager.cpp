@@ -440,10 +440,7 @@ BluetoothHfpManager::Get()
   }
 
   // If we're in shutdown, don't create a new instance
-  if (sInShutdown) {
-    NS_WARNING("BluetoothHfpManager can't be created during shutdown");
-    return nullptr;
-  }
+  NS_ENSURE_FALSE(sInShutdown, nullptr);
 
   // Create a new instance, register, and return
   BluetoothHfpManager* manager = new BluetoothHfpManager();
@@ -454,20 +451,37 @@ BluetoothHfpManager::Get()
 }
 
 void
-BluetoothHfpManager::NotifyStatusChanged(const nsAString& aType)
+BluetoothHfpManager::DispatchConnectionStatusChanged(const nsAString& aType)
 {
-  nsString type, name;
+  MOZ_ASSERT(NS_IsMainThread());
+
+  bool status = false;
+  if (aType.EqualsLiteral(HFP_STATUS_CHANGED_ID)) {
+    status = IsConnected();
+  } else if (aType.EqualsLiteral(SCO_STATUS_CHANGED_ID)) {
+    status = IsScoConnected();
+  } else {
+    BT_WARNING("Wrong type for DispatchConnectionStatusChanged");
+    return;
+  }
+
+  DispatchStatusChangedEvent(aType, mDeviceAddress, status);
+}
+
+void
+BluetoothHfpManager::NotifyConnectionStatusChanged(const nsAString& aType)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
   BluetoothValue v;
   InfallibleTArray<BluetoothNamedValue> parameters;
-  type = aType;
-
-  name.AssignLiteral("connected");
-  if (type.EqualsLiteral("bluetooth-hfp-status-changed")) {
+  nsString name = NS_LITERAL_STRING("connected");
+  if (aType.EqualsLiteral(BLUETOOTH_HFP_STATUS_CHANGED_ID)) {
     v = IsConnected();
-  } else if (type.EqualsLiteral("bluetooth-sco-status-changed")) {
+  } else if (aType.EqualsLiteral(BLUETOOTH_SCO_STATUS_CHANGED_ID)) {
     v = IsScoConnected();
   } else {
-    NS_WARNING("Wrong type for NotifyStatusChanged");
+    BT_WARNING("Wrong type for NotifyConnectionStatusChanged");
     return;
   }
   parameters.AppendElement(BluetoothNamedValue(name, v));
@@ -476,9 +490,18 @@ BluetoothHfpManager::NotifyStatusChanged(const nsAString& aType)
   v = mDeviceAddress;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
-  if (!BroadcastSystemMessage(type, parameters)) {
+  if (!BroadcastSystemMessage(aType, parameters)) {
     NS_WARNING("Failed to broadcast system message to settings");
-    return;
+  }
+
+  // Notify Gecko observers
+  nsCOMPtr<nsIObserverService> obs =
+    do_GetService("@mozilla.org/observer-service;1");
+  NS_ENSURE_TRUE_VOID(obs);
+
+  if (NS_FAILED(obs->NotifyObservers(this, NS_ConvertUTF16toUTF8(aType).get(),
+                                     mDeviceAddress.get()))) {
+    NS_WARNING("Failed to notify observsers!");
   }
 }
 
@@ -496,26 +519,6 @@ BluetoothHfpManager::NotifyDialer(const nsAString& aCommand)
 
   if (!BroadcastSystemMessage(type, parameters)) {
     NS_WARNING("Failed to broadcast system message to dialer");
-    return;
-  }
-}
-
-void
-BluetoothHfpManager::NotifyAudioManager(bool aStatus)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIObserverService> obs =
-    do_GetService("@mozilla.org/observer-service;1");
-  NS_ENSURE_TRUE_VOID(obs);
-
-  nsAutoString data;
-  data.AppendInt(aStatus);
-
-  if (NS_FAILED(obs->NotifyObservers(this,
-                                     BLUETOOTH_SCO_STATUS_CHANGED_ID,
-                                     data.BeginReading()))) {
-    NS_WARNING("Failed to notify bluetooth-sco-status-changed observsers!");
   }
 }
 
@@ -537,18 +540,18 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
 
   JS::Rooted<JSObject*> obj(cx, &val.toObject());
   JS::Rooted<JS::Value> key(cx);
-  if (!JS_GetProperty(cx, obj, "key", key.address()) || !key.isString()) {
+  if (!JS_GetProperty(cx, obj, "key", &key) || !key.isString()) {
     return;
   }
 
-  JSBool match;
+  bool match;
   if (!JS_StringEqualsAscii(cx, key.toString(), AUDIO_VOLUME_BT_SCO_ID, &match) ||
-      (match != JS_TRUE)) {
+      !match) {
     return;
   }
 
   JS::Rooted<JS::Value> value(cx);
-  if (!JS_GetProperty(cx, obj, "value", value.address())||
+  if (!JS_GetProperty(cx, obj, "value", &value)||
       !value.isNumber()) {
     return;
   }
@@ -1362,6 +1365,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           // Incoming call, no break
           sStopSendingRingFlag = true;
           ConnectSco();
+        case nsITelephonyProvider::CALL_STATE_DIALING:
         case nsITelephonyProvider::CALL_STATE_ALERTING:
           // Outgoing call
           UpdateCIND(CINDType::CALL, CallState::IN_PROGRESS, aSend);
@@ -1493,7 +1497,8 @@ BluetoothHfpManager::OnConnectSuccess(BluetoothSocket* aSocket)
   // Cache device path for NotifySettings() since we can't get socket address
   // when a headset disconnect with us
   mSocket->GetAddress(mDeviceAddress);
-  NotifyStatusChanged(NS_LITERAL_STRING("bluetooth-hfp-status-changed"));
+  NotifyConnectionStatusChanged(NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
+  DispatchConnectionStatusChanged(NS_LITERAL_STRING(HFP_STATUS_CHANGED_ID));
 
   ListenSco();
 
@@ -1548,7 +1553,8 @@ BluetoothHfpManager::OnDisconnect(BluetoothSocket* aSocket)
   DisconnectSco();
 
   Listen();
-  NotifyStatusChanged(NS_LITERAL_STRING("bluetooth-hfp-status-changed"));
+  NotifyConnectionStatusChanged(NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
+  DispatchConnectionStatusChanged(NS_LITERAL_STRING(HFP_STATUS_CHANGED_ID));
   Reset();
 }
 
@@ -1628,8 +1634,8 @@ BluetoothHfpManager::OnScoConnectSuccess()
     mScoRunnable = nullptr;
   }
 
-  NotifyAudioManager(true);
-  NotifyStatusChanged(NS_LITERAL_STRING("bluetooth-sco-status-changed"));
+  NotifyConnectionStatusChanged(NS_LITERAL_STRING(BLUETOOTH_SCO_STATUS_CHANGED_ID));
+  DispatchConnectionStatusChanged(NS_LITERAL_STRING(SCO_STATUS_CHANGED_ID));
 
   mScoSocketStatus = mScoSocket->GetConnectionStatus();
 }
@@ -1652,8 +1658,8 @@ BluetoothHfpManager::OnScoDisconnect()
 {
   if (mScoSocketStatus == SocketConnectionStatus::SOCKET_CONNECTED) {
     ListenSco();
-    NotifyAudioManager(false);
-    NotifyStatusChanged(NS_LITERAL_STRING("bluetooth-sco-status-changed"));
+    NotifyConnectionStatusChanged(NS_LITERAL_STRING(BLUETOOTH_SCO_STATUS_CHANGED_ID));
+    DispatchConnectionStatusChanged(NS_LITERAL_STRING(SCO_STATUS_CHANGED_ID));
   }
 }
 

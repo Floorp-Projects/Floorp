@@ -4,8 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGFragmentIdentifier.h"
+
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/SVGViewElement.h"
+#include "nsContentUtils.h" // for nsCharSeparatedTokenizerTemplate
 #include "nsSVGAnimatedTransformList.h"
 
 using namespace mozilla;

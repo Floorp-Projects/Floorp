@@ -29,9 +29,9 @@
 #include "mozilla/Likely.h"
 #include <algorithm>
 
-MOZ_STATIC_ASSERT((((1 << nsStyleStructID_Length) - 1) &
-                   ~(NS_STYLE_INHERIT_MASK)) == 0,
-                  "Not enough bits in NS_STYLE_INHERIT_MASK");
+static_assert((((1 << nsStyleStructID_Length) - 1) &
+               ~(NS_STYLE_INHERIT_MASK)) == 0,
+              "Not enough bits in NS_STYLE_INHERIT_MASK");
 
 inline bool IsFixedUnit(const nsStyleCoord& aCoord, bool aEnumOK)
 {
@@ -215,6 +215,7 @@ nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont&
       (aFont1.variant == aFont2.variant) &&
       (aFont1.weight == aFont2.weight) &&
       (aFont1.stretch == aFont2.stretch) &&
+      (aFont1.smoothing == aFont2.smoothing) &&
       (aFont1.name == aFont2.name) &&
       (aFont1.kerning == aFont2.kerning) &&
       (aFont1.synthesis == aFont2.synthesis) &&
@@ -1004,27 +1005,48 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 // nsStyleFilter
 //
 nsStyleFilter::nsStyleFilter()
-  : mType(eNull)
+  : mType(NS_STYLE_FILTER_NONE)
+  , mDropShadow(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleFilter);
 }
 
 nsStyleFilter::nsStyleFilter(const nsStyleFilter& aSource)
-  : mType(aSource.mType)
+  : mType(NS_STYLE_FILTER_NONE)
+  , mDropShadow(nullptr)
 {
   MOZ_COUNT_CTOR(nsStyleFilter);
-
-  if (mType == eURL) {
-    mURL = aSource.mURL;
-  } else if (mType != eNull) {
-    mCoord = aSource.mCoord;
+  if (aSource.mType == NS_STYLE_FILTER_URL) {
+    SetURL(aSource.mURL);
+  } else if (aSource.mType == NS_STYLE_FILTER_DROP_SHADOW) {
+    SetDropShadow(aSource.mDropShadow);
+  } else if (aSource.mType != NS_STYLE_FILTER_NONE) {
+    SetFilterParameter(aSource.mFilterParameter, aSource.mType);
   }
 }
 
 nsStyleFilter::~nsStyleFilter()
 {
+  ReleaseRef();
   MOZ_COUNT_DTOR(nsStyleFilter);
 }
+
+nsStyleFilter&
+nsStyleFilter::operator=(const nsStyleFilter& aOther)
+{
+  if (this == &aOther)
+    return *this;
+
+  if (aOther.mType == NS_STYLE_FILTER_URL) {
+    SetURL(aOther.mURL);
+  } else if (aOther.mType == NS_STYLE_FILTER_DROP_SHADOW) {
+    SetDropShadow(aOther.mDropShadow);
+  } else if (aOther.mType != NS_STYLE_FILTER_NONE) {
+    SetFilterParameter(aOther.mFilterParameter, aOther.mType);
+  }
+  return *this;
+}
+
 
 bool
 nsStyleFilter::operator==(const nsStyleFilter& aOther) const
@@ -1033,13 +1055,56 @@ nsStyleFilter::operator==(const nsStyleFilter& aOther) const
       return false;
   }
 
-  if (mType == eURL) {
+  if (mType == NS_STYLE_FILTER_URL) {
     return EqualURIs(mURL, aOther.mURL);
-  } else if (mType != eNull) {
-    return mCoord == aOther.mCoord;
+  } else if (mType == NS_STYLE_FILTER_DROP_SHADOW) {
+    return *mDropShadow == *aOther.mDropShadow;
+  } else if (mType != NS_STYLE_FILTER_NONE) {
+    return mFilterParameter == aOther.mFilterParameter;
   }
 
   return true;
+}
+
+void
+nsStyleFilter::ReleaseRef()
+{
+  if (mType == NS_STYLE_FILTER_DROP_SHADOW) {
+    NS_ASSERTION(mDropShadow, "expected pointer");
+    mDropShadow->Release();
+  } else if (mType == NS_STYLE_FILTER_URL) {
+    NS_ASSERTION(mURL, "expected pointer");
+    mURL->Release();
+  }
+}
+
+void
+nsStyleFilter::SetFilterParameter(const nsStyleCoord& aFilterParameter,
+                                  int32_t aType)
+{
+  ReleaseRef();
+  mFilterParameter = aFilterParameter;
+  mType = aType;
+}
+
+void
+nsStyleFilter::SetURL(nsIURI* aURL)
+{
+  NS_ASSERTION(aURL, "expected pointer");
+  ReleaseRef();
+  mURL = aURL;
+  mURL->AddRef();
+  mType = NS_STYLE_FILTER_URL;
+}
+
+void
+nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow)
+{
+  NS_ASSERTION(aDropShadow, "expected pointer");
+  ReleaseRef();
+  mDropShadow = aDropShadow;
+  mDropShadow->AddRef();
+  mType = NS_STYLE_FILTER_DROP_SHADOW;
 }
 
 // --------------------
@@ -2100,12 +2165,12 @@ void nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
       break;
   }
 
-  MOZ_STATIC_ASSERT(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE == 0 &&
-                    NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR == 1 &&
-                    NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN == 2 &&
-                    NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT == 3 &&
-                    NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT == 4,
-                    "transition timing function constants not as expected");
+  static_assert(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE == 0 &&
+                NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR == 1 &&
+                NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN == 2 &&
+                NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT == 3 &&
+                NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT == 4,
+                "transition timing function constants not as expected");
 
   static const float timingFunctionValues[5][4] = {
     { 0.25f, 0.10f, 0.25f, 1.00f }, // ease
@@ -2204,6 +2269,7 @@ nsStyleDisplay::nsStyleDisplay()
   mBackfaceVisibility = NS_STYLE_BACKFACE_VISIBILITY_VISIBLE;
   mTransformStyle = NS_STYLE_TRANSFORM_STYLE_FLAT;
   mOrient = NS_STYLE_ORIENT_AUTO;
+  mMixBlendMode = NS_STYLE_BLEND_NORMAL;
 
   mTransitions.AppendElement();
   NS_ABORT_IF_FALSE(mTransitions.Length() == 1,
@@ -2247,6 +2313,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mResize(aSource.mResize)
   , mClipFlags(aSource.mClipFlags)
   , mOrient(aSource.mOrient)
+  , mMixBlendMode(aSource.mMixBlendMode)
   , mBackfaceVisibility(aSource.mBackfaceVisibility)
   , mTransformStyle(aSource.mTransformStyle)
   , mSpecifiedTransform(aSource.mSpecifiedTransform)
@@ -2759,7 +2826,6 @@ nsStyleTextReset::nsStyleTextReset(void)
 { 
   MOZ_COUNT_CTOR(nsStyleTextReset);
   mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
-  mTextBlink = NS_STYLE_TEXT_BLINK_NONE;
   mTextDecorationLine = NS_STYLE_TEXT_DECORATION_LINE_NONE;
   mTextDecorationColor = NS_RGB(0,0,0);
   mTextDecorationStyle =
@@ -2852,6 +2918,8 @@ nsStyleText::nsStyleText(void)
   mWordWrap = NS_STYLE_WORDWRAP_NORMAL;
   mHyphens = NS_STYLE_HYPHENS_MANUAL;
   mTextSizeAdjust = NS_STYLE_TEXT_SIZE_ADJUST_AUTO;
+  mTextOrientation = NS_STYLE_TEXT_ORIENTATION_AUTO;
+  mTextCombineHorizontal = NS_STYLE_TEXT_COMBINE_HORIZ_NONE;
 
   mLetterSpacing.SetNormalValue();
   mLineHeight.SetNormalValue();
@@ -2871,6 +2939,8 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
     mWordWrap(aSource.mWordWrap),
     mHyphens(aSource.mHyphens),
     mTextSizeAdjust(aSource.mTextSizeAdjust),
+    mTextOrientation(aSource.mTextOrientation),
+    mTextCombineHorizontal(aSource.mTextCombineHorizontal),
     mTabSize(aSource.mTabSize),
     mWordSpacing(aSource.mWordSpacing),
     mLetterSpacing(aSource.mLetterSpacing),
@@ -2894,6 +2964,10 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
     return NS_STYLE_HINT_FRAMECHANGE;
   }
 
+  if (mTextCombineHorizontal != aOther.mTextCombineHorizontal) {
+    return nsChangeHint_ReconstructFrame;
+  }
+
   if ((mTextAlign != aOther.mTextAlign) ||
       (mTextAlignLast != aOther.mTextAlignLast) ||
       (mTextTransform != aOther.mTextTransform) ||
@@ -2902,6 +2976,7 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aOther) const
       (mWordWrap != aOther.mWordWrap) ||
       (mHyphens != aOther.mHyphens) ||
       (mTextSizeAdjust != aOther.mTextSizeAdjust) ||
+      (mTextOrientation != aOther.mTextOrientation) ||
       (mLetterSpacing != aOther.mLetterSpacing) ||
       (mLineHeight != aOther.mLineHeight) ||
       (mTextIndent != aOther.mTextIndent) ||

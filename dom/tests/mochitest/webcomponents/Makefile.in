@@ -11,6 +11,7 @@ relativesrcdir	= @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_FILES	= \
+		test_bug900724.html \
 		test_document_register.html \
 		test_document_register_lifecycle.html \
 		test_template.html \

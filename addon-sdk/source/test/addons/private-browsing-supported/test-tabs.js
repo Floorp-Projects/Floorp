@@ -1,7 +1,6 @@
 'use strict';
 
 const tabs = require('sdk/tabs');
-const { is } = require('sdk/system/xul-app');
 const { isPrivate } = require('sdk/private-browsing');
 const pbUtils = require('sdk/private-browsing/utils');
 const { getOwnerWindow } = require('sdk/private-browsing/window/utils');
@@ -26,7 +25,9 @@ exports.testPrivateTabsAreListed = function (assert, done) {
         assert.equal(tabs.length, originalTabCount + 1,
                      'New non-private window\'s tab is visible in tabs list');
       }
+
       tab.close(done);
     }
   });
-}
+};
+

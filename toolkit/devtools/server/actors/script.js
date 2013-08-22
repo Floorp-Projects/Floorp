@@ -106,7 +106,7 @@ BreakpointStore.prototype = {
 
   /**
    * Get a breakpoint from the breakpoint store. Will throw an error if the
-   * breakpoint is not found unless you explicitly silence it.
+   * breakpoint is not found.
    *
    * @param Object aLocation
    *        The location of the breakpoint you are retrieving. It is an object
@@ -114,11 +114,34 @@ BreakpointStore.prototype = {
    *          - url
    *          - line
    *          - column (optional)
-   * @param bool aShouldThrow
-   *        Optional; defaults to true. Whether an error should be thrown when
-   *        there is no breakpoint at the specified locaiton.
    */
-  getBreakpoint: function BS_getBreakpoint(aLocation, aShouldThrow=true) {
+  getBreakpoint: function BS_getBreakpoint(aLocation) {
+    let { url, line, column } = aLocation;
+    dbg_assert(url != null);
+    dbg_assert(line != null);
+
+    var foundBreakpoint = this.hasBreakpoint(aLocation);
+    if (foundBreakpoint == null) {
+      throw new Error("No breakpoint at url = " + url
+          + ", line = " + line
+          + ", column = " + column);
+    }
+
+    return foundBreakpoint;
+  },
+
+  /**
+   * Checks if the breakpoint store has a requested breakpoint.
+   *
+   * @param Object aLocation
+   *        The location of the breakpoint you are retrieving. It is an object
+   *        with the following properties:
+   *          - url
+   *          - line
+   *          - column (optional)
+   * @returns The stored breakpoint if it exists, null otherwise.
+   */
+  hasBreakpoint: function BS_hasBreakpoint(aLocation) {
     let { url, line, column } = aLocation;
     dbg_assert(url != null);
     dbg_assert(line != null);
@@ -129,11 +152,7 @@ BreakpointStore.prototype = {
       // one.
       return bp;
     }
-    if (aShouldThrow) {
-      throw new Error("No breakpoint at url = " + url
-                      + ", line = " + line
-                      + ", column = " + column);
-    }
+
     return null;
   },
 
@@ -159,7 +178,7 @@ BreakpointStore.prototype = {
     for (let url of this._iterUrls(aSearchParams.url)) {
       for (let line of this._iterLines(url, aSearchParams.line)) {
         // Always yield whole line breakpoints first. See comment in
-        // |BreakpointStore.prototype.getBreakpoint|.
+        // |BreakpointStore.prototype.hasBreakpoint|.
         if (aSearchParams.column == null
             && this._wholeLineBreakpoints[url]
             && this._wholeLineBreakpoints[url][line]) {
@@ -236,6 +255,136 @@ BreakpointStore.prototype = {
 };
 
 /**
+ * Manages pushing event loops and automatically pops and exits them in the
+ * correct order as they are resolved.
+ *
+ * @param nsIJSInspector inspector
+ *        The underlying JS inspector we use to enter and exit nested event
+ *        loops.
+ * @param Object hooks
+ *        An object with the following properties:
+ *          - url: The URL string of the debuggee we are spinning an event loop
+ *                 for.
+ *          - preNest: function called before entering a nested event loop
+ *          - postNest: function called after exiting a nested event loop
+ * @param ThreadActor thread
+ *        The thread actor instance that owns this EventLoopStack.
+ */
+function EventLoopStack({ inspector, thread, hooks }) {
+  this._inspector = inspector;
+  this._hooks = hooks;
+  this._thread = thread;
+}
+
+EventLoopStack.prototype = {
+  /**
+   * The number of nested event loops on the stack.
+   */
+  get size() {
+    return this._inspector.eventLoopNestLevel;
+  },
+
+  /**
+   * The URL of the debuggee who pushed the event loop on top of the stack.
+   */
+  get lastPausedUrl() {
+    return this.size > 0
+      ? this._inspector.lastNestRequestor.url
+      : null;
+  },
+
+  /**
+   * Push a new nested event loop onto the stack.
+   *
+   * @returns EventLoop
+   */
+  push: function () {
+    return new EventLoop({
+      inspector: this._inspector,
+      thread: this._thread,
+      hooks: this._hooks
+    });
+  }
+};
+
+/**
+ * An object that represents a nested event loop. It is used as the nest
+ * requestor with nsIJSInspector instances.
+ *
+ * @param nsIJSInspector inspector
+ *        The JS Inspector that runs nested event loops.
+ * @param ThreadActor thread
+ *        The thread actor that is creating this nested event loop.
+ * @param Object hooks
+ *        The same hooks object passed into EventLoopStack during its
+ *        initialization.
+ */
+function EventLoop({ inspector, thread, hooks }) {
+  this._inspector = inspector;
+  this._thread = thread;
+  this._hooks = hooks;
+
+  this.enter = this.enter.bind(this);
+  this.resolve = this.resolve.bind(this);
+}
+
+EventLoop.prototype = {
+  entered: false,
+  resolved: false,
+  get url() { return this._hooks.url; },
+
+  /**
+   * Enter this nested event loop.
+   */
+  enter: function () {
+    let nestData = this._hooks.preNest
+      ? this._hooks.preNest()
+      : null;
+
+    this.entered = true;
+    this._inspector.enterNestedEventLoop(this);
+
+    // Keep exiting nested event loops while the last requestor is resolved.
+    if (this._inspector.eventLoopNestLevel > 0) {
+      const { resolved } = this._inspector.lastNestRequestor;
+      if (resolved) {
+        this._inspector.exitNestedEventLoop();
+      }
+    }
+
+    dbg_assert(this._thread.state === "running",
+               "Should be in the running state");
+
+    if (this._hooks.postNest) {
+      this._hooks.postNest(nestData);
+    }
+  },
+
+  /**
+   * Resolve this nested event loop.
+   *
+   * @returns boolean
+   *          True if we exited this nested event loop because it was on top of
+   *          the stack, false if there is another nested event loop above this
+   *          one that hasn't resolved yet.
+   */
+  resolve: function () {
+    if (!this.entered) {
+      throw new Error("Can't resolve an event loop before it has been entered!");
+    }
+    if (this.resolved) {
+      throw new Error("Already resolved this nested event loop!");
+    }
+    this.resolved = true;
+    if (this === this._inspector.lastNestRequestor) {
+      this._inspector.exitNestedEventLoop();
+      return true;
+    }
+    return false;
+  },
+};
+
+/**
  * JSD2 actors.
  */
 /**
@@ -260,6 +409,11 @@ function ThreadActor(aHooks, aGlobal)
   this._environmentActors = [];
   this._hooks = aHooks;
   this.global = aGlobal;
+  this._nestedEventLoops = new EventLoopStack({
+    inspector: DebuggerServer.xpcInspector,
+    hooks: aHooks,
+    thread: this
+  });
   // A map of actorID -> actor for breakpoints created and managed by the server.
   this._hiddenBreakpoints = new Map();
 
@@ -304,6 +458,27 @@ ThreadActor.prototype = {
                                         this._allowSource, this.onNewSource);
     }
     return this._sources;
+  },
+
+  /**
+   * Keep track of all of the nested event loops we use to pause the debuggee
+   * when we hit a breakpoint/debugger statement/etc in one place so we can
+   * resolve them when we get resume packets. We have more than one (and keep
+   * them in a stack) because we can pause within client evals.
+   */
+  _threadPauseEventLoops: null,
+  _pushThreadPause: function TA__pushThreadPause() {
+    if (!this._threadPauseEventLoops) {
+      this._threadPauseEventLoops = [];
+    }
+    const eventLoop = this._nestedEventLoops.push();
+    this._threadPauseEventLoops.push(eventLoop);
+    eventLoop.enter();
+  },
+  _popThreadPause: function TA__popThreadPause() {
+    const eventLoop = this._threadPauseEventLoops.pop();
+    dbg_assert(eventLoop, "Should have an event loop.");
+    eventLoop.resolve();
   },
 
   clearDebuggees: function TA_clearDebuggees() {
@@ -465,7 +640,7 @@ ThreadActor.prototype = {
       this.conn.send(packet);
 
       // Start a nested event loop.
-      this._nest();
+      this._pushThreadPause();
 
       // We already sent a response to this request, don't send one
       // now.
@@ -509,7 +684,7 @@ ThreadActor.prototype = {
    *        promise.
    */
   _pauseAndRespond: function TA__pauseAndRespond(aFrame, aReason,
-                                                 onPacket=function (k) k) {
+                                                 onPacket=function (k) { return k; }) {
     try {
       let packet = this._paused(aFrame);
       if (!packet) {
@@ -528,14 +703,17 @@ ThreadActor.prototype = {
               message: error.message + "\n" + error.stack
             };
           })
-          .then(packet => this.conn.send(packet));
+          .then(packet => {
+            this.conn.send(packet)
+          });
       });
 
-      return this._nest();
+      this._pushThreadPause();
     } catch(e) {
       reportError(e, "Got an exception during TA__pauseAndRespond: ");
-      return undefined;
     }
+
+    return undefined;
   },
 
   /**
@@ -553,13 +731,13 @@ ThreadActor.prototype = {
     // In case of multiple nested event loops (due to multiple debuggers open in
     // different tabs or multiple debugger clients connected to the same tab)
     // only allow resumption in a LIFO order.
-    if (DebuggerServer.xpcInspector.eventLoopNestLevel > 1) {
-      let lastNestRequestor = DebuggerServer.xpcInspector.lastNestRequestor;
-      if (lastNestRequestor.connection != this.conn) {
-        return { error: "wrongOrder",
-                 message: "trying to resume in the wrong order.",
-                 lastPausedUrl: lastNestRequestor.url };
-      }
+    if (this._nestedEventLoops.size
+        && this._nestedEventLoops.lastPausedUrl !== this._hooks.url) {
+      return {
+        error: "wrongOrder",
+        message: "trying to resume in the wrong order.",
+        lastPausedUrl: this._nestedEventLoops.lastPausedUrl
+      };
     }
 
     if (aRequest && aRequest.forceCompletion) {
@@ -572,7 +750,7 @@ ThreadActor.prototype = {
 
       this.dbg.getNewestFrame().pop(aRequest.completionValue);
       let packet = this._resumed();
-      DebuggerServer.xpcInspector.exitNestedEventLoop();
+      this._popThreadPause();
       return { type: "resumeLimit", frameFinished: aRequest.forceCompletion };
     }
 
@@ -594,17 +772,27 @@ ThreadActor.prototype = {
       // Define the JS hook functions for stepping.
 
       let onEnterFrame = aFrame => {
-        if (this.sources.isBlackBoxed(aFrame.script.url)) {
-          return undefined;
-        }
-        return pauseAndRespond(aFrame);
+        let { url } = this.synchronize(this.sources.getOriginalLocation(
+          aFrame.script.url,
+          aFrame.script.getOffsetLine(aFrame.offset),
+          getOffsetColumn(aFrame.offset, aFrame.script)));
+
+        return this.sources.isBlackBoxed(url)
+          ? undefined
+          : pauseAndRespond(aFrame);
       };
 
       let thread = this;
 
       let onPop = function TA_onPop(aCompletion) {
         // onPop is called with 'this' set to the current frame.
-        if (thread.sources.isBlackBoxed(this.script.url)) {
+
+        let { url } = thread.synchronize(thread.sources.getOriginalLocation(
+          this.script.url,
+          this.script.getOffsetLine(this.offset),
+          getOffsetColumn(this.offset, this.script)));
+
+        if (thread.sources.isBlackBoxed(url)) {
           return undefined;
         }
 
@@ -630,7 +818,12 @@ ThreadActor.prototype = {
       let onStep = function TA_onStep() {
         // onStep is called with 'this' set to the current frame.
 
-        if (thread.sources.isBlackBoxed(this.script.url)) {
+        let { url } = thread.synchronize(thread.sources.getOriginalLocation(
+          this.script.url,
+          this.script.getOffsetLine(this.offset),
+          getOffsetColumn(this.offset, this.script)));
+
+        if (thread.sources.isBlackBoxed(url)) {
           return undefined;
         }
 
@@ -692,8 +885,42 @@ ThreadActor.prototype = {
     }
 
     let packet = this._resumed();
-    DebuggerServer.xpcInspector.exitNestedEventLoop();
+    this._popThreadPause();
     return packet;
+  },
+
+  /**
+   * Spin up a nested event loop so we can synchronously resolve a promise.
+   *
+   * @param aPromise
+   *        The promise we want to resolve.
+   * @returns The promise's resolution.
+   */
+  synchronize: function(aPromise) {
+    let needNest = true;
+    let eventLoop;
+    let returnVal;
+
+    aPromise
+      .then((aResolvedVal) => {
+        needNest = false;
+        returnVal = aResolvedVal;
+      })
+      .then(null, (aError) => {
+        reportError(aError, "Error inside synchronize:");
+      })
+      .then(() => {
+        if (eventLoop) {
+          eventLoop.resolve();
+        }
+      });
+
+    if (needNest) {
+      eventLoop = this._nestedEventLoops.push();
+      eventLoop.enter();
+    }
+
+    return returnVal;
   },
 
   /**
@@ -866,8 +1093,12 @@ ThreadActor.prototype = {
 
       let { url, line, column } = form.where;
       let promise = this.sources.getOriginalLocation(url, line, column)
-        .then(function (aOrigLocation) {
+        .then((aOrigLocation) => {
           form.where = aOrigLocation;
+          let source = this.sources.source(form.where.url);
+          if (source) {
+            form.source = source.form();
+          }
         });
       promises.push(promise);
     }
@@ -1078,7 +1309,8 @@ ThreadActor.prototype = {
       }
     }
     if (found) {
-      let existingBp = this.breakpointStore.getBreakpoint(actualLocation, false);
+      let existingBp = this.breakpointStore.hasBreakpoint(actualLocation);
+
       if (existingBp && existingBp.actor) {
         /**
          * We already have a breakpoint actor for the actual location, so
@@ -1253,7 +1485,7 @@ ThreadActor.prototype = {
       this.conn.send(packet);
 
       // Start a nested event loop.
-      this._nest();
+      this._pushThreadPause();
 
       // We already sent a response to this request, don't send one
       // now.
@@ -1403,26 +1635,6 @@ ThreadActor.prototype = {
     return packet;
   },
 
-  _nest: function TA_nest() {
-    if (this._hooks.preNest) {
-      var nestData = this._hooks.preNest();
-    }
-
-    let requestor = Object.create(null);
-    requestor.url = this._hooks.url;
-    requestor.connection = this.conn;
-    DebuggerServer.xpcInspector.enterNestedEventLoop(requestor);
-
-    dbg_assert(this.state === "running", "Should be in the running state");
-
-    if (this._hooks.postNest) {
-      this._hooks.postNest(nestData)
-    }
-
-    // "continue" resumption value.
-    return undefined;
-  },
-
   _resumed: function TA_resumed() {
     this._state = "running";
 
@@ -1519,30 +1731,37 @@ ThreadActor.prototype = {
     if (!aPool) {
       aPool = this._pausePool;
     }
-    let type = typeof(aValue);
 
-    if (type === "string" && this._stringIsLong(aValue)) {
-      return this.longStringGrip(aValue, aPool);
+    switch (typeof aValue) {
+      case "boolean":
+        return aValue;
+      case "string":
+        if (this._stringIsLong(aValue)) {
+          return this.longStringGrip(aValue, aPool);
+        }
+        return aValue;
+      case "number":
+        if (aValue === Infinity) {
+          return { type: "Infinity" };
+        } else if (aValue === -Infinity) {
+          return { type: "-Infinity" };
+        } else if (Number.isNaN(aValue)) {
+          return { type: "NaN" };
+        } else if (!aValue && 1 / aValue === -Infinity) {
+          return { type: "-0" };
+        }
+        return aValue;
+      case "undefined":
+        return { type: "undefined" };
+      case "object":
+        if (aValue === null) {
+          return { type: "null" };
+        }
+        return this.objectGrip(aValue, aPool);
+      default:
+        dbg_assert(false, "Failed to provide a grip for: " + aValue);
+        return null;
     }
-
-    if (type === "boolean" || type === "string" || type === "number") {
-      return aValue;
-    }
-
-    if (aValue === null) {
-      return { type: "null" };
-    }
-
-    if (aValue === undefined) {
-      return { type: "undefined" }
-    }
-
-    if (typeof(aValue) === "object") {
-      return this.objectGrip(aValue, aPool);
-    }
-
-    dbg_assert(false, "Failed to provide a grip for: " + aValue);
-    return null;
   },
 
   /**
@@ -1721,10 +1940,14 @@ ThreadActor.prototype = {
   onDebuggerStatement: function TA_onDebuggerStatement(aFrame) {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
-    if (this.sources.isBlackBoxed(aFrame.script.url) || aFrame.onStep) {
-      return undefined;
-    }
-    return this._pauseAndRespond(aFrame, { type: "debuggerStatement" });
+    let { url } = this.synchronize(this.sources.getOriginalLocation(
+      aFrame.script.url,
+      aFrame.script.getOffsetLine(aFrame.offset),
+      getOffsetColumn(aFrame.offset, aFrame.script)));
+
+    return this.sources.isBlackBoxed(url) || aFrame.onStep
+      ? undefined
+      : this._pauseAndRespond(aFrame, { type: "debuggerStatement" });
   },
 
   /**
@@ -1737,9 +1960,15 @@ ThreadActor.prototype = {
    *        The exception that was thrown.
    */
   onExceptionUnwind: function TA_onExceptionUnwind(aFrame, aValue) {
-    if (this.sources.isBlackBoxed(aFrame.script.url)) {
+    let { url } = this.synchronize(this.sources.getOriginalLocation(
+      aFrame.script.url,
+      aFrame.script.getOffsetLine(aFrame.offset),
+      getOffsetColumn(aFrame.offset, aFrame.script)));
+
+    if (this.sources.isBlackBoxed(url)) {
       return undefined;
     }
+
     try {
       let packet = this._paused(aFrame);
       if (!packet) {
@@ -1749,11 +1978,13 @@ ThreadActor.prototype = {
       packet.why = { type: "exception",
                      exception: this.createValueGrip(aValue) };
       this.conn.send(packet);
-      return this._nest();
+
+      this._pushThreadPause();
     } catch(e) {
       reportError(e, "Got an exception during TA_onExceptionUnwind: ");
-      return undefined;
     }
+
+    return undefined;
   },
 
   /**
@@ -1839,6 +2070,34 @@ ThreadActor.prototype = {
     return true;
   },
 
+
+  /**
+   * Get prototypes and properties of multiple objects.
+   */
+  onPrototypesAndProperties: function TA_onPrototypesAndProperties(aRequest) {
+    let result = {};
+    for (let actorID of aRequest.actors) {
+      // This code assumes that there are no lazily loaded actors returned
+      // by this call.
+      let actor = this.conn.getActor(actorID);
+      if (!actor) {
+        return { from: this.actorID,
+                 error: "noSuchActor" };
+      }
+      let handler = actor.onPrototypeAndProperties;
+      if (!handler) {
+        return { from: this.actorID,
+                 error: "unrecognizedPacketType",
+                 message: ('Actor "' + actorID +
+                           '" does not recognize the packet type ' +
+                           '"prototypeAndProperties"') };
+      }
+      result[actorID] = handler.call(actor, {});
+    }
+    return { from: this.actorID,
+             actors: result };
+  }
+
 };
 
 ThreadActor.prototype.requestTypes = {
@@ -1853,7 +2112,8 @@ ThreadActor.prototype.requestTypes = {
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "setBreakpoint": ThreadActor.prototype.onSetBreakpoint,
   "sources": ThreadActor.prototype.onSources,
-  "threadGrips": ThreadActor.prototype.onThreadGrips
+  "threadGrips": ThreadActor.prototype.onThreadGrips,
+  "prototypesAndProperties": ThreadActor.prototype.onPrototypesAndProperties
 };
 
 
@@ -2301,7 +2561,8 @@ ObjectActor.prototype = {
           toString = desc.value;
           break;
         }
-      } while (obj = obj.proto)
+        obj = obj.proto;
+      } while ((obj));
     } catch (e) {
       dumpn(e);
     }
@@ -2648,7 +2909,6 @@ FrameActor.prototype = {
         line: this.frame.script.getOffsetLine(this.frame.offset),
         column: getOffsetColumn(this.frame.offset, this.frame.script)
       };
-      form.isBlackBoxed = this.threadActor.sources.isBlackBoxed(this.frame.script.url)
     }
 
     if (!this.frame.older) {
@@ -2749,8 +3009,13 @@ BreakpointActor.prototype = {
   hit: function BA_hit(aFrame) {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
-    if (this.threadActor.sources.isBlackBoxed(this.location.url) ||
-        aFrame.onStep) {
+    let { url } = this.threadActor.synchronize(
+      this.threadActor.sources.getOriginalLocation(
+        this.location.url,
+        this.location.line,
+        this.location.column));
+
+    if (this.threadActor.sources.isBlackBoxed(url) || aFrame.onStep) {
       return undefined;
     }
 
@@ -3189,7 +3454,7 @@ ThreadSources.prototype = {
     }
     dbg_assert(aScript.sourceMapURL, "Script should have a sourceMapURL");
     let sourceMapURL = this._normalize(aScript.sourceMapURL, aScript.url);
-    let map = this._fetchSourceMap(sourceMapURL)
+    let map = this._fetchSourceMap(sourceMapURL, aScript.url)
       .then((aSourceMap) => {
         for (let s of aSourceMap.sources) {
           this._generatedUrlsByOriginalUrl[s] = aScript.url;
@@ -3205,24 +3470,45 @@ ThreadSources.prototype = {
    * Return a promise of a SourceMapConsumer for the source map located at
    * |aAbsSourceMapURL|, which must be absolute. If there is already such a
    * promise extant, return it.
+   *
+   * @param string aAbsSourceMapURL
+   *        The source map URL, in absolute form, not relative.
+   * @param string aScriptURL
+   *        When the source map URL is a data URI, there is no sourceRoot on the
+   *        source map, and the source map's sources are relative, we resolve
+   *        them from aScriptURL.
    */
-  _fetchSourceMap: function TS__fetchSourceMap(aAbsSourceMapURL) {
+  _fetchSourceMap: function TS__fetchSourceMap(aAbsSourceMapURL, aScriptURL) {
     if (aAbsSourceMapURL in this._sourceMaps) {
       return this._sourceMaps[aAbsSourceMapURL];
-    } else {
-      let promise = fetch(aAbsSourceMapURL).then(rawSourceMap => {
-        let map = new SourceMapConsumer(rawSourceMap);
-        let base = aAbsSourceMapURL.replace(/\/[^\/]+$/, '/');
-        if (base.indexOf("data:") !== 0) {
-          map.sourceRoot = map.sourceRoot
-            ? this._normalize(map.sourceRoot, base)
-            : base;
-        }
-        return map;
-      });
-      this._sourceMaps[aAbsSourceMapURL] = promise;
-      return promise;
     }
+
+    let promise = fetch(aAbsSourceMapURL).then(rawSourceMap => {
+      let map = new SourceMapConsumer(rawSourceMap);
+      this._setSourceMapRoot(map, aAbsSourceMapURL, aScriptURL);
+      return map;
+    });
+    this._sourceMaps[aAbsSourceMapURL] = promise;
+    return promise;
+  },
+
+  /**
+   * Sets the source map's sourceRoot to be relative to the source map url.
+   */
+  _setSourceMapRoot: function TS__setSourceMapRoot(aSourceMap, aAbsSourceMapURL,
+                                                   aScriptURL) {
+    const base = this._dirname(
+      aAbsSourceMapURL.indexOf("data:") === 0
+        ? aScriptURL
+        : aAbsSourceMapURL);
+    aSourceMap.sourceRoot = aSourceMap.sourceRoot
+      ? this._normalize(aSourceMap.sourceRoot, base)
+      : base;
+  },
+
+  _dirname: function TS__dirname(aPath) {
+    return Services.io.newURI(
+      ".", null, Services.io.newURI(aPath, null, null)).spec;
   },
 
   /**

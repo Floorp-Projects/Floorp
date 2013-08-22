@@ -15,10 +15,12 @@ MOCHITEST_METRO_FILES = \
   browser_urlbar.js \
   browser_bookmarks.js \
   browser_canonizeURL.js \
+  browser_circular_progress_indicator.js \
   browser_context_menu_tests.js \
   browser_context_menu_tests_01.html \
   browser_context_menu_tests_02.html \
   browser_context_menu_tests_03.html \
+  browser_context_menu_tests_04.html \
   browser_context_ui.js \
   browser_downloads.js \
   browser_findbar.js \
@@ -27,6 +29,7 @@ MOCHITEST_METRO_FILES = \
   browser_onscreen_keyboard.js \
   browser_onscreen_keyboard.html \
   browser_prefs_ui.js \
+  browser_progress_indicator.xul \
   browser_remotetabs.js \
   browser_tabs.js \
   browser_test.js \
@@ -56,6 +59,8 @@ MOCHITEST_METRO_FILES += \
   browser_selection_urlbar.js \
   browser_selection_contenteditable.js \
   browser_selection_contenteditable.html \
+  browser_selection_caretfocus.js \
+  browser_selection_caretfocus.html \
   $(NULL)
 endif
 

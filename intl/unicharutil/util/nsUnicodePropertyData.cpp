@@ -54,7 +54,7 @@ for the Unicode Character Database (UCD) for Unicode 6.2.0.
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "harfbuzz/hb.h"
 
 static const uint32_t sScriptCodeToTag[] = {

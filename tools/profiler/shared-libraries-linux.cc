@@ -14,8 +14,8 @@
 #include "platform.h"
 #include "shared-libraries.h"
 
-#ifndef __GLIBC__
-/* a crapy version of getline, because it's not included in bionic */
+#if !defined(__GLIBC__) && ANDROID_VERSION < 18
+/* a crapy version of getline, because it's not included in old bionics */
 static ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 {
  char *ret;

@@ -184,6 +184,7 @@ AppendToString(nsACString& s, const Filter filter,
   s += pfx;
 
   switch (filter) {
+    case FILTER_GOOD: s += "FILTER_GOOD"; break;
     case FILTER_LINEAR: s += "FILTER_LINEAR"; break;
     case FILTER_POINT: s += "FILTER_POINT"; break;
   }
@@ -210,12 +211,12 @@ AppendToString(nsACString& s, TextureFlags flags,
   } \
 }
     bool previous = false;
-    AppendFlag(UseNearestFilter);
-    AppendFlag(NeedsYFlip);
-    AppendFlag(ForceSingleTile);
-    AppendFlag(AllowRepeat);
-    AppendFlag(NewTile);
-    AppendFlag(HostRelease);
+    AppendFlag(TEXTURE_USE_NEAREST_FILTER);
+    AppendFlag(TEXTURE_NEEDS_Y_FLIP);
+    AppendFlag(TEXTURE_DISALLOW_BIGIMAGE);
+    AppendFlag(TEXTURE_ALLOW_REPEAT);
+    AppendFlag(TEXTURE_NEW_TILE);
+    AppendFlag(TEXTURE_DEALLOCATE_HOST);
 
 #undef AppendFlag
   }

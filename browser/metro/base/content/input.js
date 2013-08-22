@@ -239,7 +239,6 @@ var TouchModule = {
     // Don't allow kinetic panning if APZC is enabled and the pan element is the deck
     let deck = document.getElementById("browsers");
     if (Services.prefs.getBoolPref(kAsyncPanZoomEnabled) &&
-        !StartUI.isStartPageVisible &&
         this._targetScrollbox == deck) {
       return;
     }
@@ -364,11 +363,10 @@ var TouchModule = {
       if (Date.now() - this._dragStartTime > kStopKineticPanOnDragTimeout)
         this._kinetic._velocity.set(0, 0);
 
-      // Start kinetic pan if we i) aren't using async pan zoom or ii) if we
-      // are on the start page, iii) If the scroll element is not browsers
+      // Start kinetic pan if we aren't using async pan zoom or the scroll
+      // element is not browsers.
       let deck = document.getElementById("browsers");
       if (!Services.prefs.getBoolPref(kAsyncPanZoomEnabled) ||
-          StartUI.isStartPageVisible ||
           this._targetScrollbox != deck) {
         this._kinetic.start();
       }
@@ -449,7 +447,8 @@ var ScrollUtils = {
   getScrollboxFromElement: function getScrollboxFromElement(elem) {
     let scrollbox = null;
     let qinterface = null;
-    // if element is content, get the browser scroll interface
+
+    // if element is content or the startui page, get the browser scroll interface
     if (elem.ownerDocument == Browser.selectedBrowser.contentDocument) {
       elem = Browser.selectedBrowser;
     }
@@ -989,11 +988,6 @@ var GestureModule = {
 
   init: function init() {
     window.addEventListener("MozSwipeGesture", this, true);
-    /*
-    window.addEventListener("MozMagnifyGestureStart", this, true);
-    window.addEventListener("MozMagnifyGestureUpdate", this, true);
-    window.addEventListener("MozMagnifyGesture", this, true);
-    */
     window.addEventListener("CancelTouchSequence", this, true);
   },
 
@@ -1027,21 +1021,6 @@ var GestureModule = {
             aEvent.target.dispatchEvent(event);
           }
           break;
-
-        // Magnify currently doesn't work for Win8 (bug 593168)
-        /*
-        case "MozMagnifyGestureStart":
-          this._pinchStart(aEvent);
-          break;
-
-        case "MozMagnifyGestureUpdate":
-          this._pinchUpdate(aEvent);
-          break;
-
-        case "MozMagnifyGesture":
-          this._pinchEnd(aEvent);
-          break;
-        */
 
         case "CancelTouchSequence":
           this.cancelPending();

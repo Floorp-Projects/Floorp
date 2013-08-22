@@ -115,6 +115,13 @@ let downloadListener = {
 };
 
 function init() {
+  var dmui = getDMUI();
+  if (!dmui) {
+    todo(false, "skip test for toolkit download manager UI");
+    SimpleTest.finish();
+    return;
+  }
+
   // Ensure that the download manager callbacks always use the window UI instead
   // of the panel in the browser's window.
   Services.prefs.setBoolPref("browser.download.useToolkitUI", true);

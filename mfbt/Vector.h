@@ -9,6 +9,7 @@
 #ifndef mozilla_Vector_h
 #define mozilla_Vector_h
 
+#include "mozilla/Alignment.h"
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -19,7 +20,9 @@
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/Util.h"
+#include "mozilla/Util.h" // for PointerRangeSize
+
+#include <new> // for placement new
 
 /* Silence dire "bugs in previous versions of MSVC have been fixed" warnings */
 #ifdef _MSC_VER
@@ -545,8 +548,8 @@ class VectorBase : private AllocPolicy
     void swap(ThisVector& other);
 
   private:
-    VectorBase(const ThisVector&) MOZ_DELETE;
-    void operator=(const ThisVector&) MOZ_DELETE;
+    VectorBase(const VectorBase&) MOZ_DELETE;
+    void operator=(const VectorBase&) MOZ_DELETE;
 };
 
 /* This does the re-entrancy check plus several other sanity checks. */
@@ -1050,7 +1053,7 @@ VectorBase<T, N, AP, TV>::extractRawBuffer()
   if (usingInlineStorage()) {
     ret = reinterpret_cast<T*>(this->malloc_(mLength * sizeof(T)));
     if (!ret)
-        return NULL;
+      return nullptr;
     Impl::copyConstruct(ret, beginNoCheck(), endNoCheck());
     Impl::destroy(beginNoCheck(), endNoCheck());
     /* mBegin, mCapacity are unchanged. */
@@ -1105,22 +1108,22 @@ template<typename T, size_t N, class AP, class TV>
 inline size_t
 VectorBase<T, N, AP, TV>::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return usingInlineStorage() ? 0 : mallocSizeOf(beginNoCheck());
+  return usingInlineStorage() ? 0 : mallocSizeOf(beginNoCheck());
 }
 
 template<typename T, size_t N, class AP, class TV>
 inline size_t
 VectorBase<T, N, AP, TV>::sizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 {
-    return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+  return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
 }
 
 template<typename T, size_t N, class AP, class TV>
 inline void
 VectorBase<T, N, AP, TV>::swap(TV& other)
 {
-  MOZ_STATIC_ASSERT(N == 0,
-                    "still need to implement this for N != 0");
+  static_assert(N == 0,
+                "still need to implement this for N != 0");
 
   // This only works when inline storage is always empty.
   if (!usingInlineStorage() && other.usingInlineStorage()) {

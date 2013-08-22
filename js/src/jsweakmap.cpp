@@ -156,7 +156,7 @@ WeakMap_has_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+static bool
 WeakMap_has(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -177,7 +177,7 @@ WeakMap_clear_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+static bool
 WeakMap_clear(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -213,7 +213,7 @@ WeakMap_get_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+static bool
 WeakMap_get(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -246,7 +246,7 @@ WeakMap_delete_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+static bool
 WeakMap_delete(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -320,14 +320,14 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-JSBool
+static bool
 WeakMap_set(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsWeakMap, WeakMap_set_impl>(cx, args);
 }
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(bool)
 JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *objArg, JSObject **ret)
 {
     RootedObject obj(cx, objArg);
@@ -341,6 +341,8 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *objArg, JSObject **re
         return false;
     ObjectValueMap *map = obj->as<WeakMapObject>().getMap();
     if (map) {
+        // Prevent GC from mutating the weakmap while iterating.
+        gc::AutoSuppressGC suppress(cx);
         for (ObjectValueMap::Base::Range r = map->all(); !r.empty(); r.popFront()) {
             RootedObject key(cx, r.front().key);
             if (!JS_WrapObject(cx, key.address()))
@@ -375,7 +377,7 @@ WeakMap_finalize(FreeOp *fop, JSObject *obj)
     }
 }
 
-static JSBool
+static bool
 WeakMap_construct(JSContext *cx, unsigned argc, Value *vp)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &WeakMapObject::class_);

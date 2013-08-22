@@ -169,10 +169,10 @@ struct SortComparatorIds
     bool operator()(jsid a, jsid b, bool *lessOrEqualp)
     {
         /* Pick an arbitrary total order on jsids that is stable across executions. */
-        JSString *astr = IdToString(cx, a);
+        RootedString astr(cx, IdToString(cx, a));
 	if (!astr)
 	    return false;
-        JSString *bstr = IdToString(cx, b);
+        RootedString bstr(cx, IdToString(cx, b));
         if (!bstr)
             return false;
 
@@ -730,7 +730,7 @@ js::GetIteratorObject(JSContext *cx, HandleObject obj, uint32_t flags)
     return &value.toObject();
 }
 
-JSBool
+bool
 js_ThrowStopIteration(JSContext *cx)
 {
     JS_ASSERT(!JS_IsExceptionPending(cx));
@@ -742,7 +742,7 @@ js_ThrowStopIteration(JSContext *cx)
 
 /*** Iterator objects ****************************************************************************/
 
-JSBool
+bool
 js::IteratorConstructor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -786,7 +786,7 @@ iterator_next_impl(JSContext *cx, CallArgs args)
     return js_IteratorNext(cx, thisObj, args.rval());
 }
 
-static JSBool
+static bool
 iterator_iterator(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -794,7 +794,7 @@ iterator_iterator(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSBool
+bool
 iterator_next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -808,7 +808,7 @@ static const JSFunctionSpec iterator_methods[] = {
 };
 
 static JSObject *
-iterator_iteratorObject(JSContext *cx, HandleObject obj, JSBool keysonly)
+iterator_iteratorObject(JSContext *cx, HandleObject obj, bool keysonly)
 {
     return obj;
 }
@@ -829,10 +829,8 @@ PropertyIteratorObject::trace(JSTracer *trc, JSObject *obj)
 void
 PropertyIteratorObject::finalize(FreeOp *fop, JSObject *obj)
 {
-    if (NativeIterator *ni = obj->as<PropertyIteratorObject>().getNativeIterator()) {
-        obj->as<PropertyIteratorObject>().setNativeIterator(NULL);
+    if (NativeIterator *ni = obj->as<PropertyIteratorObject>().getNativeIterator())
         fop->free_(ni);
-    }
 }
 
 Class PropertyIteratorObject::class_ = {
@@ -883,7 +881,7 @@ IsElementIterator(const Value &v)
     return v.isObject() && v.toObject().is<ElementIteratorObject>();
 }
 
-JSBool
+bool
 ElementIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -959,7 +957,7 @@ const JSFunctionSpec ElementIteratorObject::methods[] = {
     JS_FS_END
 };
 
-static JSBool
+static bool
 CloseGenerator(JSContext *cx, HandleObject genobj);
 
 bool
@@ -1023,6 +1021,7 @@ js::CloseIterator(JSContext *cx, HandleObject obj)
             ni->props_cursor = ni->props_array;
         }
     } else if (obj->is<GeneratorObject>()) {
+        // FIXME: Only close legacy generators.
         return CloseGenerator(cx, obj);
     }
     return true;
@@ -1288,8 +1287,8 @@ js_IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     return true;
 }
 
-static JSBool
-stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, JSBool *bp)
+static bool
+stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, bool *bp)
 {
     *bp = IsStopIteration(v);
     return true;
@@ -1540,9 +1539,9 @@ typedef enum JSGeneratorOp {
  * Start newborn or restart yielding generator and perform the requested
  * operation inside its frame.
  */
-static JSBool
+static bool
 SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
-                JSGenerator *gen, const Value &arg)
+                JSGenerator *gen, HandleValue arg)
 {
     if (gen->state == JSGEN_RUNNING || gen->state == JSGEN_CLOSING) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NESTING_GENERATOR);
@@ -1579,7 +1578,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
         break;
     }
 
-    JSBool ok;
+    bool ok;
     {
         GeneratorState state(cx, gen, futureState);
         ok = RunScript(cx, state);
@@ -1616,7 +1615,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
     return false;
 }
 
-static JSBool
+static bool
 CloseGenerator(JSContext *cx, HandleObject obj)
 {
     JSGenerator *gen = obj->as<GeneratorObject>().getGenerator();
@@ -1625,10 +1624,12 @@ CloseGenerator(JSContext *cx, HandleObject obj)
         return true;
     }
 
+    // FIXME: Assert that gen is a legacy generator.
+
     if (gen->state == JSGEN_CLOSED)
         return true;
 
-    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, UndefinedValue());
+    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, JS::UndefinedHandleValue);
 }
 
 JS_ALWAYS_INLINE bool
@@ -1640,6 +1641,7 @@ IsGenerator(const Value &v)
 JS_ALWAYS_INLINE bool
 generator_send_impl(JSContext *cx, CallArgs args)
 {
+    // FIXME: Change assertion to IsLegacyGenerator().
     JS_ASSERT(IsGenerator(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
@@ -1657,19 +1659,19 @@ generator_send_impl(JSContext *cx, CallArgs args)
         return false;
     }
 
-    if (!SendToGenerator(cx, JSGENOP_SEND, thisObj, gen,
-                         args.length() > 0 ? args[0] : UndefinedValue()))
-    {
+    // FIXME: next() takes the send value as an optional argument in ES6
+    // generator objects.
+    if (!SendToGenerator(cx, JSGENOP_SEND, thisObj, gen, args.get(0)))
         return false;
-    }
 
     args.rval().set(gen->fp->returnValue());
     return true;
 }
 
-JSBool
+bool
 generator_send(JSContext *cx, unsigned argc, Value *vp)
 {
+    // FIXME: send() is only a method on legacy generator objects.
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsGenerator, generator_send_impl>(cx, args);
 }
@@ -1687,14 +1689,14 @@ generator_next_impl(JSContext *cx, CallArgs args)
         return js_ThrowStopIteration(cx);
     }
 
-    if (!SendToGenerator(cx, JSGENOP_NEXT, thisObj, gen, UndefinedValue()))
+    if (!SendToGenerator(cx, JSGENOP_NEXT, thisObj, gen, JS::UndefinedHandleValue))
         return false;
 
     args.rval().set(gen->fp->returnValue());
     return true;
 }
 
-JSBool
+bool
 generator_next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1715,17 +1717,14 @@ generator_throw_impl(JSContext *cx, CallArgs args)
         return false;
     }
 
-    if (!SendToGenerator(cx, JSGENOP_THROW, thisObj, gen,
-                         args.length() > 0 ? args[0] : UndefinedValue()))
-    {
+    if (!SendToGenerator(cx, JSGENOP_THROW, thisObj, gen, args.get(0)))
         return false;
-    }
 
     args.rval().set(gen->fp->returnValue());
     return true;
 }
 
-JSBool
+bool
 generator_throw(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1735,6 +1734,7 @@ generator_throw(JSContext *cx, unsigned argc, Value *vp)
 JS_ALWAYS_INLINE bool
 generator_close_impl(JSContext *cx, CallArgs args)
 {
+    // FIXME: Change assertion to IsLegacyGenerator().
     JS_ASSERT(IsGenerator(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
@@ -1752,16 +1752,17 @@ generator_close_impl(JSContext *cx, CallArgs args)
         return true;
     }
 
-    if (!SendToGenerator(cx, JSGENOP_CLOSE, thisObj, gen, UndefinedValue()))
+    if (!SendToGenerator(cx, JSGENOP_CLOSE, thisObj, gen, JS::UndefinedHandleValue))
         return false;
 
     args.rval().set(gen->fp->returnValue());
     return true;
 }
 
-JSBool
+bool
 generator_close(JSContext *cx, unsigned argc, Value *vp)
 {
+    // FIXME: close() is only a method on legacy generator objects.
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsGenerator, generator_close_impl>(cx, args);
 }

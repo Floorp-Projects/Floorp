@@ -51,4 +51,6 @@ toolkit.jar:
 +  skin/classic/global/icons/resizer.png                       (icons/resizer.png)
 +  skin/classic/global/icons/sslWarning.png                    (icons/sslWarning.png)
 +  skin/classic/global/icons/wrap.png                          (icons/wrap.png)
++  skin/classic/global/icons/webapps-16.png                    (icons/webapps-16.png)
++  skin/classic/global/icons/webapps-64.png                    (icons/webapps-64.png)
 +  skin/classic/global/toolbar/spring.png                      (toolbar/spring.png)

@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/DebugOnly.h"
-
 #include "PluginScriptableObjectParent.h"
-#include "PluginScriptableObjectUtils.h"
 
-#include "nsNPAPIPlugin.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/plugins/PluginIdentifierParent.h"
 #include "mozilla/unused.h"
 #include "nsCxPusher.h"
+#include "nsNPAPIPlugin.h"
+#include "PluginScriptableObjectUtils.h"
 
 using namespace mozilla::plugins;
 using namespace mozilla::plugins::parent;
@@ -1212,7 +1212,7 @@ PluginScriptableObjectParent::AnswerNPN_Evaluate(const nsCString& aScript,
   return true;
 }
 
-JSBool
+bool
 PluginScriptableObjectParent::GetPropertyHelper(NPIdentifier aName,
                                                 bool* aHasProperty,
                                                 bool* aHasMethod,
@@ -1223,31 +1223,31 @@ PluginScriptableObjectParent::GetPropertyHelper(NPIdentifier aName,
   ParentNPObject* object = static_cast<ParentNPObject*>(mObject);
   if (object->invalidated) {
     NS_WARNING("Calling method on an invalidated object!");
-    return JS_FALSE;
+    return false;
   }
 
   StackIdentifier identifier(GetInstance(), aName);
   if (!identifier) {
-    return JS_FALSE;
+    return false;
   }
 
   bool hasProperty, hasMethod, success;
   Variant result;
   if (!CallGetChildProperty(identifier, &hasProperty, &hasMethod, &result,
                             &success)) {
-    return JS_FALSE;
+    return false;
   }
 
   if (!success) {
-    return JS_FALSE;
+    return false;
   }
 
   if (!ConvertToVariant(result, *aResult, GetInstance())) {
     NS_WARNING("Failed to convert result!");
-    return JS_FALSE;
+    return false;
   }
 
   *aHasProperty = hasProperty;
   *aHasMethod = hasMethod;
-  return JS_TRUE;
+  return true;
 }

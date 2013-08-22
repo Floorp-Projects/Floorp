@@ -74,9 +74,11 @@ public:
         return mActiveCount + mIdleCount < gMaxCount;
     }
 
-    // Called by the networking dashboard
+    // Called by the networking dashboard on the socket thread only
     // Fills the passed array with socket information
     void GetSocketConnections(nsTArray<mozilla::net::SocketInfo> *);
+    uint64_t GetSentBytes() { return mSentBytesCount; }
+    uint64_t GetReceivedBytes() { return mReceivedBytesCount; }
 protected:
 
     virtual ~nsSocketTransportService();
@@ -154,7 +156,10 @@ private:
     bool GrowActiveList();
     bool GrowIdleList();
     void   InitMaxCount();
-    
+
+    // Total bytes number transfered through all the sockets except active ones
+    uint64_t mSentBytesCount;
+    uint64_t mReceivedBytesCount;
     //-------------------------------------------------------------------------
     // poll list (socket thread only)
     //

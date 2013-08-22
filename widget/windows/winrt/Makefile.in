@@ -35,16 +35,10 @@ LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/xpcom/base \
 		$(NULL)
 
-include $(topsrcdir)/config/config.mk
-
 MIDL_GENERATED_FILES = \
 	UIABridge_i.c \
 	UIABridge_p.c \
 	dlldata.c \
-	$(NULL)
-
-EXTRA_COMPONENTS = MetroUIUtils.js \
-	MetroUIUtils.manifest \
 	$(NULL)
 
 GARBAGE += $(MIDL_GENERATED_FILES) done_gen

@@ -18,8 +18,8 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(bed8f222-c4dd-41ba-9ec6-dfae0ec8def8)]
-interface nsIDOMHTMLObjectElement : nsIDOMHTMLElement
+[scriptable, uuid(baf443d2-da5d-40c9-be3c-c65a69a25250)]
+interface nsIDOMHTMLObjectElement : nsISupports
 {
   readonly attribute nsIDOMHTMLFormElement form;
            attribute DOMString             code;

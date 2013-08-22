@@ -242,7 +242,7 @@ void CleanupOSFileConstants()
 /**
  * End marker for ConstantSpec
  */
-#define PROP_END { NULL, JSVAL_VOID }
+#define PROP_END { NULL, JS::UndefinedValue() }
 
 
 // Define missing constants for Android
@@ -269,7 +269,7 @@ void CleanupOSFileConstants()
  * keep properties organized by alphabetical order
  * and #ifdef-away properties that are not portable.
  */
-static dom::ConstantSpec gLibcProperties[] =
+static const dom::ConstantSpec gLibcProperties[] =
 {
   // Arguments for open
   INT_CONSTANT(O_APPEND),
@@ -522,7 +522,7 @@ static dom::ConstantSpec gLibcProperties[] =
  * keep properties organized by alphabetical order
  * and #ifdef-away properties that are not portable.
  */
-static dom::ConstantSpec gWinProperties[] =
+static const dom::ConstantSpec gWinProperties[] =
 {
   // FormatMessage flags
   INT_CONSTANT(FORMAT_MESSAGE_FROM_SYSTEM),
@@ -605,7 +605,7 @@ JSObject *GetOrCreateObjectProperty(JSContext *cx, JS::Handle<JSObject*> aObject
                                     const char *aProperty)
 {
   JS::Rooted<JS::Value> val(cx);
-  if (!JS_GetProperty(cx, aObject, aProperty, val.address())) {
+  if (!JS_GetProperty(cx, aObject, aProperty, &val)) {
     return NULL;
   }
   if (!val.isUndefined()) {
@@ -634,7 +634,7 @@ bool SetStringProperty(JSContext *cx, JS::Handle<JSObject*> aObject, const char 
   JSString* strValue = JS_NewUCStringCopyZ(cx, aValue.get());
   NS_ENSURE_TRUE(strValue, false);
   JS::Rooted<JS::Value> valValue(cx, STRING_TO_JSVAL(strValue));
-  return JS_SetProperty(cx, aObject, aProperty, &valValue);
+  return JS_SetProperty(cx, aObject, aProperty, valValue);
 }
 
 /**
@@ -707,14 +707,14 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
     }
 
     JS::Rooted<JS::Value> valVersion(cx, STRING_TO_JSVAL(strVersion));
-    if (!JS_SetProperty(cx, objSys, "Name", &valVersion)) {
+    if (!JS_SetProperty(cx, objSys, "Name", valVersion)) {
       return false;
     }
   }
 
 #if defined(DEBUG)
   JS::Rooted<JS::Value> valDebug(cx, JSVAL_TRUE);
-  if (!JS_SetProperty(cx, objSys, "DEBUG", &valDebug)) {
+  if (!JS_SetProperty(cx, objSys, "DEBUG", valDebug)) {
     return false;
   }
 #endif

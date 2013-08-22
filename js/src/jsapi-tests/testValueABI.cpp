@@ -16,7 +16,7 @@
 
 extern "C" {
 
-extern JSBool
+extern bool
 C_ValueToObject(JSContext *cx, jsval v, JSObject **obj);
 
 extern jsval
@@ -29,11 +29,11 @@ C_jsvalAlignmentTest();
 
 BEGIN_TEST(testValueABI_retparam)
 {
-    JS::RootedObject obj(cx, JS_GetGlobalForScopeChain(cx));
+    JS::RootedObject obj(cx, JS::CurrentGlobalOrNull(cx));
     jsval v = OBJECT_TO_JSVAL(obj);
     obj = NULL;
     CHECK(C_ValueToObject(cx, v, obj.address()));
-    JSBool equal;
+    bool equal;
     CHECK(JS_StrictlyEqual(cx, v, OBJECT_TO_JSVAL(obj), &equal));
     CHECK(equal);
 

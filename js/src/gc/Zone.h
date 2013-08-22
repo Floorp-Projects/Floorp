@@ -7,22 +7,14 @@
 #ifndef gc_Zone_h
 #define gc_Zone_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/GuardObjects.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 
 #include "jscntxt.h"
-#include "jsfun.h"
 #include "jsgc.h"
 #include "jsinfer.h"
-#include "jsobj.h"
 
 #include "gc/FindSCCs.h"
-#include "gc/StoreBuffer.h"
-#include "vm/GlobalObject.h"
-#include "vm/RegExpObject.h"
-#include "vm/Shape.h"
 
 namespace js {
 
@@ -104,7 +96,12 @@ struct Zone : private JS::shadow::Zone,
               public js::gc::GraphNodeBase<JS::Zone>,
               public js::MallocProvider<JS::Zone>
 {
-    JSRuntime                    *rt;
+  private:
+    JSRuntime                    *runtime_;
+
+    friend bool js::CurrentThreadCanAccessZone(Zone *zone);
+
+  public:
     js::Allocator                allocator;
 
     js::CompartmentVector        compartments;
@@ -117,12 +114,23 @@ struct Zone : private JS::shadow::Zone,
   public:
     bool                         active;  // GC flag, whether there are active frames
 
+    JSRuntime *runtimeFromMainThread() const {
+        JS_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+        return runtime_;
+    }
+
+    // Note: Unrestricted access to the zone's runtime from an arbitrary
+    // thread can easily lead to races. Use this method very carefully.
+    JSRuntime *runtimeFromAnyThread() const {
+        return runtime_;
+    }
+
     bool needsBarrier() const {
         return needsBarrier_;
     }
 
     bool compileBarriers(bool needsBarrier) const {
-        return needsBarrier || rt->gcZeal() == js::gc::ZealVerifierPreValue;
+        return needsBarrier || runtimeFromMainThread()->gcZeal() == js::gc::ZealVerifierPreValue;
     }
 
     bool compileBarriers() const {
@@ -142,7 +150,7 @@ struct Zone : private JS::shadow::Zone,
 
     js::GCMarker *barrierTracer() {
         JS_ASSERT(needsBarrier_);
-        return &rt->gcMarker;
+        return &runtimeFromMainThread()->gcMarker;
     }
 
   public:
@@ -161,7 +169,7 @@ struct Zone : private JS::shadow::Zone,
 
   public:
     bool isCollecting() const {
-        if (rt->isHeapCollecting())
+        if (runtimeFromMainThread()->isHeapCollecting())
             return gcState != NoGC;
         else
             return needsBarrier();
@@ -176,19 +184,20 @@ struct Zone : private JS::shadow::Zone,
      * tracer.
      */
     bool requireGCTracer() const {
-        return rt->isHeapMajorCollecting() && gcState != NoGC;
+        return runtimeFromMainThread()->isHeapMajorCollecting() && gcState != NoGC;
     }
 
     void setGCState(CompartmentGCState state) {
-        JS_ASSERT(rt->isHeapBusy());
+        JS_ASSERT(runtimeFromMainThread()->isHeapBusy());
+        JS_ASSERT_IF(state != NoGC, canCollect());
         gcState = state;
     }
 
     void scheduleGC() {
-        JS_ASSERT(!rt->isHeapBusy());
+        JS_ASSERT(!runtimeFromMainThread()->isHeapBusy());
 
-        /* Note: zones cannot be collected while in use by other threads. */
-        if (!usedByExclusiveThread)
+        // Ignore attempts to schedule GCs on zones which can't be collected.
+        if (canCollect())
             gcScheduled = true;
     }
 
@@ -204,12 +213,22 @@ struct Zone : private JS::shadow::Zone,
         gcPreserveCode = preserving;
     }
 
+    bool canCollect() {
+        // Zones cannot be collected while in use by other threads.
+        if (usedByExclusiveThread)
+            return false;
+        JSRuntime *rt = runtimeFromMainThread();
+        if (rt->isAtomsZone(this) && rt->exclusiveThreadsPresent())
+            return false;
+        return true;
+    }
+
     bool wasGCStarted() const {
         return gcState != NoGC;
     }
 
     bool isGCMarking() {
-        if (rt->isHeapCollecting())
+        if (runtimeFromMainThread()->isHeapCollecting())
             return gcState == Mark || gcState == MarkGray;
         else
             return needsBarrier();
@@ -292,7 +311,7 @@ struct Zone : private JS::shadow::Zone,
     void onTooMuchMalloc();
 
     void *onOutOfMemory(void *p, size_t nbytes) {
-        return rt->onOutOfMemory(p, nbytes);
+        return runtimeFromMainThread()->onOutOfMemory(p, nbytes);
     }
     void reportAllocationOverflow() {
         js_ReportAllocationOverflow(NULL);

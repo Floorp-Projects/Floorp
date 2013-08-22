@@ -8,66 +8,13 @@
 </head>
 <body>
 Login Manager test: notifying observers of passwordmgr-found-logins
-<p id="display"></p>
-
-<div id="content" style="display: block">
-
-  <form id="form1" action="formtest.js">
-    <p>This is form 1.</p>
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-
-    <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
-  </form>
-  
-  <form id="form2" action="formtest.js">
-    <p>This is form 2.</p>
-    <input  type="text"       name="uname" value="existing">
-    <input  type="password"   name="pword">
-
-    <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
-  </form>
-
-  <form id="form3" action="formtest.js">
-    <p>This is form 3.</p>
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword" value="existing">
-
-    <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
-  </form>
-
-  <form id="form4" action="formtest.js" autocomplete="off">
-    <p>This is form 4.</p>
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-
-    <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
-  </form>
-
-  <form id="form5" action="http://www.example.com">
-    <p>This is form 5.</p>
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-
-    <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
-  </form>
-
-</div>
-
-<pre id="test">
-<script class="testbody" type="text/javascript">
-
-/** Test for Login Manager: notifying observers of passwordmgr-found-logins **/
-
+<script>
 commonInit();
+SimpleTest.waitForExplicitFinish();
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-const Cc = Components.classes;
-const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -110,6 +57,63 @@ for (var formID of ["form1", "form2", "form3", "form4", "form5"])
 var os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
 os.addObserver(TestObserver, "passwordmgr-found-logins", false);
+</script>
+
+<p id="display"></p>
+
+<div id="content" style="display: block">
+
+  <form id="form1" action="formtest.js">
+    <p>This is form 1.</p>
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form2" action="formtest.js">
+    <p>This is form 2.</p>
+    <input  type="text"       name="uname" value="existing">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form3" action="formtest.js">
+    <p>This is form 3.</p>
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword" value="existing">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form4" action="formtest.js" autocomplete="off">
+    <p>This is form 4.</p>
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+  <form id="form5" action="http://www.example.com">
+    <p>This is form 5.</p>
+    <input  type="text"       name="uname">
+    <input  type="password"   name="pword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Login Manager: notifying observers of passwordmgr-found-logins **/
 
 function startTest(){
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
@@ -181,8 +185,6 @@ function startTest(){
 }
 
 window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

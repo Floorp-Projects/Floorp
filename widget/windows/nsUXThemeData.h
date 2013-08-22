@@ -11,6 +11,7 @@
 
 #include "nscore.h"
 #include "mozilla/LookAndFeel.h"
+#include "WinUtils.h"
 
 #include <dwmapi.h>
 
@@ -79,14 +80,12 @@ enum WindowsThemeColor {
 
 class nsUXThemeData {
   static HMODULE sThemeDLL;
-   static HMODULE sDwmDLL;
   static HANDLE sThemes[eUXNumClasses];
   
   static const wchar_t *GetClassName(nsUXThemeClass);
 
 public:
   static const PRUnichar kThemeLibraryName[];
-   static const PRUnichar kDwmLibraryName[];
   static bool sFlatMenus;
   static bool sTitlebarInfoPopulatedAero;
   static bool sTitlebarInfoPopulatedThemed;
@@ -99,7 +98,6 @@ public:
   static void Invalidate();
   static HANDLE GetTheme(nsUXThemeClass cls);
   static HMODULE GetThemeDLL();
-  static HMODULE GetDwmDLL();
 
   // nsWindow calls this to update desktop settings info
   static void InitTitlebarInfo();
@@ -109,37 +107,12 @@ public:
   static mozilla::LookAndFeel::WindowsTheme GetNativeThemeId();
   static bool IsDefaultWindowTheme();
 
-  // dwmapi.dll function typedefs and declarations
-  typedef HRESULT (WINAPI*DwmExtendFrameIntoClientAreaProc)(HWND hWnd, const MARGINS *pMarInset);
-  typedef HRESULT (WINAPI*DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
-  typedef HRESULT (WINAPI*DwmSetIconicThumbnailProc)(HWND hWnd, HBITMAP hBitmap, DWORD dwSITFlags);
-  typedef HRESULT (WINAPI*DwmSetIconicLivePreviewBitmapProc)(HWND hWnd, HBITMAP hBitmap, POINT *pptClient, DWORD dwSITFlags);
-  typedef HRESULT (WINAPI*DwmGetWindowAttributeProc)(HWND hWnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
-  typedef HRESULT (WINAPI*DwmSetWindowAttributeProc)(HWND hWnd, DWORD dwAttribute, LPCVOID pvAttribute, DWORD cbAttribute);
-  typedef HRESULT (WINAPI*DwmInvalidateIconicBitmapsProc)(HWND hWnd);
-  typedef HRESULT (WINAPI*DwmDefWindowProcProc)(HWND hWnd, UINT msg, LPARAM lParam, WPARAM wParam, LRESULT *aRetValue);
-
-  static DwmExtendFrameIntoClientAreaProc dwmExtendFrameIntoClientAreaPtr;
-  static DwmIsCompositionEnabledProc dwmIsCompositionEnabledPtr;
-  static DwmSetIconicThumbnailProc dwmSetIconicThumbnailPtr;
-  static DwmSetIconicLivePreviewBitmapProc dwmSetIconicLivePreviewBitmapPtr;
-  static DwmGetWindowAttributeProc dwmGetWindowAttributePtr;
-  static DwmSetWindowAttributeProc dwmSetWindowAttributePtr;
-  static DwmInvalidateIconicBitmapsProc dwmInvalidateIconicBitmapsPtr;
-  static DwmDefWindowProcProc dwmDwmDefWindowProcPtr;
-
   // This method returns the cached compositor state. Most
   // callers should call without the argument. The cache
   // should be modified only when the application receives
   // WM_DWMCOMPOSITIONCHANGED. This rule prevents inconsistent
   // results for two or more calls which check the state during
   // composition transition.
-  static bool CheckForCompositor(bool aUpdateCache = false) {
-    static BOOL sCachedValue = FALSE;
-    if(aUpdateCache && dwmIsCompositionEnabledPtr) {
-      dwmIsCompositionEnabledPtr(&sCachedValue);
-    }
-    return (sCachedValue != FALSE);
-  }
+  static bool CheckForCompositor(bool aUpdateCache = false);
 };
 #endif // __UXThemeData_h__

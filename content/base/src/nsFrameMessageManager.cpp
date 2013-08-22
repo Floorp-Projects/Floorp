@@ -33,6 +33,7 @@
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "JavaScriptChild.h"
 #include "JavaScriptParent.h"
+#include "nsDOMLists.h"
 #include <algorithm>
 
 #ifdef ANDROID
@@ -46,11 +47,13 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameMessageManager)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameMessageManager)
   uint32_t count = tmp->mListeners.Length();
   for (uint32_t i = 0; i < count; i++) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mListeners[i] mListener");
-    cb.NoteXPCOMChild(tmp->mListeners[i].mListener.get());
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mListeners[i] mStrongListener");
+    cb.NoteXPCOMChild(tmp->mListeners[i].mStrongListener.get());
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildManagers)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -244,14 +247,14 @@ nsFrameMessageManager::AddMessageListener(const nsAString& aMessage,
   uint32_t len = mListeners.Length();
   for (uint32_t i = 0; i < len; ++i) {
     if (mListeners[i].mMessage == message &&
-      mListeners[i].mListener == aListener) {
+      mListeners[i].mStrongListener == aListener) {
       return NS_OK;
     }
   }
   nsMessageListenerInfo* entry = mListeners.AppendElement();
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
   entry->mMessage = message;
-  entry->mListener = aListener;
+  entry->mStrongListener = aListener;
   return NS_OK;
 }
 
@@ -263,11 +266,71 @@ nsFrameMessageManager::RemoveMessageListener(const nsAString& aMessage,
   uint32_t len = mListeners.Length();
   for (uint32_t i = 0; i < len; ++i) {
     if (mListeners[i].mMessage == message &&
-      mListeners[i].mListener == aListener) {
+      mListeners[i].mStrongListener == aListener) {
       mListeners.RemoveElementAt(i);
       return NS_OK;
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameMessageManager::AddWeakMessageListener(const nsAString& aMessage,
+                                              nsIMessageListener* aListener)
+{
+  nsWeakPtr weak = do_GetWeakReference(aListener);
+  NS_ENSURE_TRUE(weak, NS_ERROR_NO_INTERFACE);
+
+#ifdef DEBUG
+  // It's technically possible that one object X could give two different
+  // nsIWeakReference*'s when you do_GetWeakReference(X).  We really don't want
+  // this to happen; it will break e.g. RemoveWeakMessageListener.  So let's
+  // check that we're not getting ourselves into that situation.
+  nsCOMPtr<nsISupports> canonical = do_QueryInterface(aListener);
+  for (uint32_t i = 0; i < mListeners.Length(); ++i) {
+    if (!mListeners[i].mWeakListener) {
+      continue;
+    }
+
+    nsCOMPtr<nsISupports> otherCanonical =
+      do_QueryReferent(mListeners[i].mWeakListener);
+    MOZ_ASSERT((canonical == otherCanonical) ==
+               (weak == mListeners[i].mWeakListener));
+  }
+#endif
+
+  nsCOMPtr<nsIAtom> message = do_GetAtom(aMessage);
+  uint32_t len = mListeners.Length();
+  for (uint32_t i = 0; i < len; ++i) {
+    if (mListeners[i].mMessage == message &&
+        mListeners[i].mWeakListener == weak) {
+      return NS_OK;
+    }
+  }
+
+  nsMessageListenerInfo* entry = mListeners.AppendElement();
+  entry->mMessage = message;
+  entry->mWeakListener = weak;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameMessageManager::RemoveWeakMessageListener(const nsAString& aMessage,
+                                                 nsIMessageListener* aListener)
+{
+  nsWeakPtr weak = do_GetWeakReference(aListener);
+  NS_ENSURE_TRUE(weak, NS_OK);
+
+  nsCOMPtr<nsIAtom> message = do_GetAtom(aMessage);
+  uint32_t len = mListeners.Length();
+  for (uint32_t i = 0; i < len; ++i) {
+    if (mListeners[i].mMessage == message &&
+        mListeners[i].mWeakListener == weak) {
+      mListeners.RemoveElementAt(i);
+      return NS_OK;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -314,7 +377,29 @@ nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
   return NS_OK;
 }
 
-static JSBool
+NS_IMETHODIMP
+nsFrameMessageManager::GetDelayedFrameScripts(nsIDOMDOMStringList** aList)
+{
+  // Frame message managers may return an incomplete list because scripts
+  // that were loaded after it was connected are not added to the list.
+  if (!IsGlobal() && !IsWindowLevel()) {
+    NS_WARNING("Cannot retrieve list of pending frame scripts for frame"
+               "message managers as it may be incomplete");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  nsRefPtr<nsDOMStringList> scripts = new nsDOMStringList();
+
+  for (uint32_t i = 0; i < mPendingScripts.Length(); ++i) {
+    scripts->Add(mPendingScripts[i]);
+  }
+
+  scripts.forget(aList);
+
+  return NS_OK;
+}
+
+static bool
 JSONCreator(const jschar* aBuf, uint32_t aLen, void* aData)
 {
   nsAString* result = static_cast<nsAString*>(aData);
@@ -399,7 +484,7 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
                         retval[i].Length(), &ret)) {
         return NS_ERROR_UNEXPECTED;
       }
-      NS_ENSURE_TRUE(JS_SetElement(aCx, dataArray, i, ret.address()),
+      NS_ENSURE_TRUE(JS_SetElement(aCx, dataArray, i, &ret),
                      NS_ERROR_OUT_OF_MEMORY);
     }
 
@@ -665,14 +750,30 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       InfallibleTArray<nsString>* aJSONRetVal)
 {
   AutoSafeJSContext ctx;
+
   if (mListeners.Length()) {
     nsCOMPtr<nsIAtom> name = do_GetAtom(aMessage);
     MMListenerRemover lr(this);
 
     for (uint32_t i = 0; i < mListeners.Length(); ++i) {
+      // Remove mListeners[i] if it's an expired weak listener.
+      nsCOMPtr<nsIMessageListener> weakListener;
+      if (mListeners[i].mWeakListener) {
+        weakListener = do_QueryReferent(mListeners[i].mWeakListener);
+        if (!weakListener) {
+          mListeners.RemoveElementAt(i--);
+          continue;
+        }
+      }
+
       if (mListeners[i].mMessage == name) {
-        nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS =
-          do_QueryInterface(mListeners[i].mListener);
+        nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS;
+        if (weakListener) {
+          wrappedJS = do_QueryInterface(weakListener);
+        } else {
+          wrappedJS = do_QueryInterface(mListeners[i].mStrongListener);
+        }
+
         if (!wrappedJS) {
           continue;
         }
@@ -748,8 +849,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                      thisValue.address(), nullptr, true);
         } else {
           // If the listener is a JS object which has receiveMessage function:
-          if (!JS_GetProperty(ctx, object, "receiveMessage",
-                              funval.address()) ||
+          if (!JS_GetProperty(ctx, object, "receiveMessage", &funval) ||
               !funval.isObject())
             return NS_ERROR_UNEXPECTED;
 
@@ -1404,7 +1504,9 @@ nsFrameMessageManager::MarkForCC()
 {
   uint32_t len = mListeners.Length();
   for (uint32_t i = 0; i < len; ++i) {
-    xpc_TryUnmarkWrappedGrayObject(mListeners[i].mListener);
+    if (mListeners[i].mStrongListener) {
+      xpc_TryUnmarkWrappedGrayObject(mListeners[i].mStrongListener);
+    }
   }
   if (mRefCnt.IsPurple()) {
     mRefCnt.RemovePurple();

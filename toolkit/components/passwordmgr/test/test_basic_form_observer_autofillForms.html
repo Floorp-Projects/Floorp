@@ -8,6 +8,21 @@
 </head>
 <body>
 Login Manager test: simple form with autofillForms disabled and notifying observers
+<script>
+commonInit();
+SimpleTest.waitForExplicitFinish();
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+// Assume that the pref starts out true, so set to false
+SpecialPowers.setBoolPref("signon.autofillForms", false);
+</script>
+
 <p id="display"></p>
 
 <div id="content" style="display: block">
@@ -27,20 +42,6 @@ Login Manager test: simple form with autofillForms disabled and notifying observ
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: simple form with autofillForms disabled and notifying observers **/
-
-commonInit();
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-var prefs = Cc["@mozilla.org/preferences-service;1"].
-            getService(Ci.nsIPrefService);
-prefs = prefs.getBranch("signon.");
-// Assume that the pref starts out true, so set to false
-prefs.setBoolPref("autofillForms", false);
 
 var TestObserver = {
   receivedNotificationFoundForm : false,
@@ -92,7 +93,7 @@ function startTest(){
      "Checking selectedLogin is found login");
 
   // Reset pref (since we assumed it was true to start)
-  prefs.setBoolPref("autofillForms", true);
+  SpecialPowers.setBoolPref("signon.autofillForms", true);
 
   // Remove the observer
   os.removeObserver(TestObserver, "passwordmgr-found-form");
@@ -102,8 +103,6 @@ function startTest(){
 }
 
 window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
 </body>

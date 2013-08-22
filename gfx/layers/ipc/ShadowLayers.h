@@ -46,17 +46,19 @@ class ColorLayerComposite;
 class CanvasLayerComposite;
 class RefLayerComposite;
 class SurfaceDescriptor;
+class SurfaceDescriptorTiles;
 class ThebesBuffer;
 class TiledLayerComposer;
 class Transaction;
-class SurfaceDescriptor;
 class CanvasSurface;
 class DeprecatedTextureClientShmem;
+class ShmemTextureClient;
 class ContentClientRemote;
 class CompositableChild;
 class ImageClient;
 class CanvasClient;
 class ContentClient;
+class TextureClient;
 
 
 /**
@@ -137,6 +139,8 @@ class ShadowLayerForwarder : public CompositableForwarder
   friend class AutoOpenSurface;
   friend class DeprecatedTextureClientShmem;
   friend class ContentClientIncremental;
+
+  typedef gfxASurface::gfxImageFormat gfxImageFormat;
 
 public:
   virtual ~ShadowLayerForwarder();
@@ -258,7 +262,7 @@ public:
    * copy on write, tiling).
    */
   virtual void PaintedTiledLayerBuffer(CompositableClient* aCompositable,
-                                       BasicTiledLayerBuffer* aTiledLayerBuffer) MOZ_OVERRIDE;
+                                       const SurfaceDescriptorTiles& aTileLayerDescriptor) MOZ_OVERRIDE;
 
   /**
    * Notify the compositor that a compositable will be updated asynchronously
@@ -302,6 +306,32 @@ public:
    */
   void UpdatePictureRect(CompositableClient* aCompositable,
                          const nsIntRect& aRect);
+
+  /**
+   * See CompositableForwarder::AddTexture
+   */
+  virtual void AddTexture(CompositableClient* aCompositable,
+                          TextureClient* aClient) MOZ_OVERRIDE;
+
+  /**
+   * See CompositableForwarder::RemoveTexture
+   */
+  virtual void RemoveTexture(CompositableClient* aCompositable,
+                             uint64_t aTextureID,
+                             TextureFlags aFlags) MOZ_OVERRIDE;
+
+  /**
+   * See CompositableForwarder::UpdatedTexture
+   */
+  virtual void UpdatedTexture(CompositableClient* aCompositable,
+                              TextureClient* aTexture,
+                              nsIntRegion* aRegion) MOZ_OVERRIDE;
+
+  /**
+   * See CompositableForwarder::UseTexture
+   */
+  virtual void UseTexture(CompositableClient* aCompositable,
+                          TextureClient* aClient) MOZ_OVERRIDE;
 
   /**
    * End the current transaction and forward it to LayerManagerComposite.
@@ -426,6 +456,18 @@ private:
                                    OpenMode aMode,
                                    gfxIntSize* aSize,
                                    gfxASurface** aSurface);
+  // And again, for the image format.
+  // This function will return ImageFormatUnknown only if |aDescriptor|
+  // describes a non-ImageSurface.
+  static gfxImageFormat
+  GetDescriptorSurfaceImageFormat(const SurfaceDescriptor& aDescriptor,
+                                  OpenMode aMode,
+                                  gfxASurface** aSurface);
+  static bool
+  PlatformGetDescriptorSurfaceImageFormat(const SurfaceDescriptor& aDescriptor,
+                                          OpenMode aMode,
+                                          gfxImageFormat* aContent,
+                                          gfxASurface** aSurface);
 
   static already_AddRefed<gfxASurface>
   PlatformOpenDescriptor(OpenMode aMode, const SurfaceDescriptor& aDescriptor);
@@ -443,9 +485,8 @@ private:
   bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
 
   Transaction* mTxn;
-
+  DiagnosticTypes mDiagnosticTypes;
   bool mIsFirstPaint;
-  bool mDrawColoredBorders;
   bool mWindowOverlayChanged;
 };
 

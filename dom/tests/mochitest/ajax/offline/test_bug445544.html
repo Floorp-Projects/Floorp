@@ -17,8 +17,7 @@ var gTimeoutId;
 function finish()
 {
   gTestWin.close();
-  OfflineTest.teardown();
-  OfflineTest.finish();
+  OfflineTest.teardownAndFinish();
 }
 
 function error()

@@ -123,6 +123,19 @@ CGBlendMode ToBlendMode(CompositionOp op)
   return mode;
 }
 
+static CGInterpolationQuality
+InterpolationQualityFromFilter(Filter aFilter)
+{
+  switch (aFilter) {
+    default:
+    case FILTER_LINEAR:
+      return kCGInterpolationLow;
+    case FILTER_POINT:
+      return kCGInterpolationNone;
+    case FILTER_GOOD:
+      return kCGInterpolationDefault;
+  }
+}
 
 
 DrawTargetCG::DrawTargetCG() : mCg(nullptr), mSnapshot(nullptr)
@@ -291,10 +304,7 @@ DrawTargetCG::DrawSurface(SourceSurface *aSurface,
   CGRect flippedRect = CGRectMake(aDest.x, -(aDest.y + aDest.height),
                                   aDest.width, aDest.height);
 
-  if (aSurfOptions.mFilter == FILTER_POINT)
-    CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
-  else
-    CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
+  CGContextSetInterpolationQuality(cg, InterpolationQualityFromFilter(aSurfOptions.mFilter));
 
   CGContextDrawImage(cg, flippedRect, image);
 
@@ -653,10 +663,7 @@ SetFillFromPattern(CGContextRef cg, CGColorSpaceRef aColorSpace, const Pattern &
 
     CGPatternRef pattern = CreateCGPattern(aPattern, CGContextGetCTM(cg));
     const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
-    if (pat.mFilter == FILTER_POINT)
-      CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
-    else
-      CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
+    CGContextSetInterpolationQuality(cg, InterpolationQualityFromFilter(pat.mFilter));
     CGFloat alpha = 1.;
     CGContextSetFillPattern(cg, pattern, &alpha);
     CGPatternRelease(pattern);
@@ -681,10 +688,7 @@ SetStrokeFromPattern(CGContextRef cg, CGColorSpaceRef aColorSpace, const Pattern
 
     CGPatternRef pattern = CreateCGPattern(aPattern, CGContextGetCTM(cg));
     const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
-    if (pat.mFilter == FILTER_POINT)
-      CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
-    else
-      CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
+    CGContextSetInterpolationQuality(cg, InterpolationQualityFromFilter(pat.mFilter));
     CGFloat alpha = 1.;
     CGContextSetStrokePattern(cg, pattern, &alpha);
     CGPatternRelease(pattern);
@@ -770,10 +774,7 @@ DrawTargetCG::FillRect(const Rect &aRect,
 
       CGRect imageRect = CGRectMake(0, 0, CGImageGetWidth(image), CGImageGetHeight(image));
 
-      if (pat.mFilter == FILTER_POINT)
-        CGContextSetInterpolationQuality(cg, kCGInterpolationNone);
-      else
-        CGContextSetInterpolationQuality(cg, kCGInterpolationLow);
+      CGContextSetInterpolationQuality(cg, InterpolationQualityFromFilter(pat.mFilter));
 
       CGContextDrawImage(cg, imageRect, image);
     } else {
@@ -1007,6 +1008,9 @@ DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pa
   CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp);
   CGContextSetAlpha(cg, aDrawOptions.mAlpha);
   CGContextSetShouldAntialias(cg, aDrawOptions.mAntialiasMode != AA_NONE);
+  if (aDrawOptions.mAntialiasMode != AA_DEFAULT) {
+    CGContextSetShouldSmoothFonts(cg, aDrawOptions.mAntialiasMode == AA_SUBPIXEL);
+  }
 
   CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(mTransform));
 
@@ -1196,12 +1200,27 @@ DrawTargetCG::Init(BackendType aType,
     mData = nullptr;
   }
 
+  mFormat = FORMAT_B8G8R8A8;
+
   if (!mCg || aType == BACKEND_COREGRAPHICS) {
     int bitsPerComponent = 8;
 
     CGBitmapInfo bitinfo;
-    bitinfo = kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst;
-
+    if (aFormat == FORMAT_A8) {
+      if (mColorSpace)
+        CGColorSpaceRelease(mColorSpace);
+      mColorSpace = nullptr;
+      bitinfo = kCGImageAlphaOnly;
+      mFormat = FORMAT_A8;
+    } else {
+      bitinfo = kCGBitmapByteOrder32Host;
+      if (aFormat == FORMAT_B8G8R8X8) {
+        bitinfo |= kCGImageAlphaNoneSkipFirst;
+        mFormat = aFormat;
+      } else {
+        bitinfo |= kCGImageAlphaPremultipliedFirst;
+      }
+    }
     // XXX: what should we do if this fails?
     mCg = CGBitmapContextCreate (aData,
                                  mSize.width,
@@ -1226,8 +1245,6 @@ DrawTargetCG::Init(BackendType aType,
   //      use the default for content.
   CGContextSetInterpolationQuality(mCg, kCGInterpolationLow);
 
-  // XXX: set correct format
-  mFormat = FORMAT_B8G8R8A8;
 
   if (aType == BACKEND_COREGRAPHICS_ACCELERATED) {
     // The bitmap backend uses callac to clear, we can't do that without
@@ -1282,9 +1299,12 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
   mFormat = FORMAT_B8G8R8A8;
   if (GetContextType(mCg) == CG_CONTEXT_TYPE_BITMAP) {
     CGColorSpaceRef colorspace;
+    CGBitmapInfo bitinfo = CGBitmapContextGetBitmapInfo(mCg);
     colorspace = CGBitmapContextGetColorSpace (mCg);
     if (CGColorSpaceGetNumberOfComponents(colorspace) == 1) {
-        mFormat = FORMAT_A8;
+      mFormat = FORMAT_A8;
+    } else if ((bitinfo & kCGBitmapAlphaInfoMask) == kCGImageAlphaNoneSkipFirst) {
+      mFormat = FORMAT_B8G8R8X8;
     }
   }
 

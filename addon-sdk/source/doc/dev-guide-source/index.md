@@ -79,6 +79,27 @@ Learn about common development techniques, such as
 </colgroup>
   <tr>
     <td>
+      <h4><a href="dev-guide/guides/index.html#contributors-guide">Contributor's Guide</a></h4>
+      Learn
+      <a href="dev-guide/guides/contributors-guide/getting-started.html">how to start contributing</a> to the SDK,
+      and about the most important idioms used in the SDK code, such as
+      <a href="dev-guide/guides/contributors-guide/modules.html">modules</a>,
+      <a href="dev-guide/guides/contributors-guide/classes-and-inheritance.html">classes and inheritance</a>,
+      <a href="dev-guide/guides/contributors-guide/private-properties.html">private properties</a>, and
+      <a href="dev-guide/guides/contributors-guide/content-processes.html">content processes</a>.
+    </td>
+
+    <td>
+      <h4><a href="dev-guide/guides/index.html#sdk-idioms">SDK idioms</a></h4>
+      The SDK's
+      <a href="dev-guide/guides/events.html">event framework</a> and the
+      <a href="dev-guide/guides/two-types-of-scripts.html">distinction between add-on scripts and content scripts</a>.
+    </td>
+
+  </tr>
+
+  <tr>
+    <td>
       <h4><a href="dev-guide/guides/index.html#sdk-infrastructure">SDK infrastructure</a></h4>
       Aspects of the SDK's underlying technology:
       <a href="dev-guide/guides/modules.html">Modules</a>, the
@@ -88,10 +109,11 @@ Learn about common development techniques, such as
     </td>
 
     <td>
-      <h4><a href="dev-guide/guides/index.html#sdk-idioms">SDK idioms</a></h4>
-      The SDK's
-      <a href="dev-guide/guides/events.html">event framework</a> and the
-      <a href="dev-guide/guides/two-types-of-scripts.html">distinction between add-on scripts and content scripts</a>.
+      <h4><a href="dev-guide/guides/index.html#xul-migration">XUL migration</a></h4>
+      A guide to <a href="dev-guide/guides/xul-migration.html">porting XUL add-ons to the SDK</a>.
+      This guide includes a
+      <a href="dev-guide/guides/sdk-vs-xul.html">comparison of the two toolsets</a> and a
+      <a href="dev-guide/guides/library-detector.html">worked example</a> of porting a XUL add-on.
     </td>
 
   </tr>
@@ -106,11 +128,6 @@ Learn about common development techniques, such as
     </td>
 
     <td>
-      <h4><a href="dev-guide/guides/index.html#xul-migration">XUL migration</a></h4>
-      A guide to <a href="dev-guide/guides/xul-migration.html">porting XUL add-ons to the SDK</a>.
-      This guide includes a
-      <a href="dev-guide/guides/sdk-vs-xul.html">comparison of the two toolsets</a> and a
-      <a href="dev-guide/guides/library-detector.html">worked example</a> of porting a XUL add-on.
     </td>
 
   </tr>

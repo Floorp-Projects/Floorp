@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsIObserverService.h"
-#include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsISettingsService.h"
 #include "nsJSUtils.h"
@@ -186,7 +185,7 @@ AutoMounterSetting::Observe(nsISupports* aSubject,
     return NS_OK;
   }
   JSObject& obj(val.toObject());
-  JS::Value key;
+  JS::Rooted<JS::Value> key(cx);
   if (!JS_GetProperty(cx, &obj, "key", &key) ||
       !key.isString()) {
     return NS_OK;
@@ -198,7 +197,7 @@ AutoMounterSetting::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-  JS::Value value;
+  JS::Rooted<JS::Value> value(cx);
   if (!JS_GetProperty(cx, &obj, "value", &value)) {
     return NS_OK;
   }

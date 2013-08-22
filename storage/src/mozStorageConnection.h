@@ -183,7 +183,7 @@ private:
    * Sets the database into a closed state so no further actions can be
    * performed.
    *
-   * @note mDBConn is set to NULL in this method.
+   * @note mDBConn is set to nullptr in this method.
    */
   nsresult setClosedState();
 

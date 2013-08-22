@@ -26,7 +26,7 @@ interface nsIXPCSecurityManager : nsISupports
     /**
     * For each of these hooks returning NS_OK means 'let the action continue'.
     * Returning an error code means 'veto the action'. XPConnect will return
-    * JS_FALSE to the js engine if the action is vetoed. The implementor of this
+    * false to the js engine if the action is vetoed. The implementor of this
     * interface is responsible for setting a JS exception into the JSContext
     * if that is appropriate.
     */

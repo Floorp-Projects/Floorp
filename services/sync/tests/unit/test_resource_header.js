@@ -11,8 +11,12 @@ function run_test() {
   run_next_test();
 }
 
-const TEST_URL = "http://localhost:4444/content";
-const HTTP_PORT = 4444;
+let httpServer = new HttpServer();
+httpServer.registerPathHandler("/content", contentHandler);
+httpServer.start(-1);
+
+const HTTP_PORT = httpServer.identity.primaryPort;
+const TEST_URL = "http://localhost:" + HTTP_PORT + "/content";
 const BODY = "response body";
 
 // Keep headers for later inspection.
@@ -29,18 +33,11 @@ function contentHandler(metadata, response) {
   response.bodyOutputStream.write(BODY, BODY.length);
 }
 
-function makeServer() {
-  let httpServer = new HttpServer();
-  httpServer.registerPathHandler("/content", contentHandler);
-  httpServer.start(4444);
-  return httpServer;
-}
-
 // Set a proxy function to cause an internal redirect.
 function triggerRedirect() {
   const PROXY_FUNCTION = "function FindProxyForURL(url, host) {"                +
                          "  return 'PROXY a_non_existent_domain_x7x6c572v:80; " +
-                                   "PROXY localhost:4444';"                     +
+                                   "PROXY localhost:" + HTTP_PORT + "';"        +
                          "}";
 
   let prefsService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
@@ -50,7 +47,6 @@ function triggerRedirect() {
 }
 
 add_test(function test_headers_copied() {
-  let server = makeServer();
   triggerRedirect();
 
   _("Issuing request.");
@@ -65,5 +61,5 @@ add_test(function test_headers_copied() {
   do_check_eq(auth, "Basic foobar");
   do_check_eq(foo, "foofoo");
 
-  server.stop(run_next_test);
+  httpServer.stop(run_next_test);
 });

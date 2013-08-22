@@ -124,7 +124,8 @@ MobileMessageManager::Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
   nsCOMPtr<nsIMobileMessageCallback> msgCallback =
     new MobileMessageCallback(request);
 
-  nsresult rv = smsService->Send(number, aMessage, msgCallback);
+  // By default, we don't send silent messages via MobileMessageManager.
+  nsresult rv = smsService->Send(number, aMessage, false, msgCallback);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JSObject*> global(aCx, aGlobal);
@@ -174,7 +175,7 @@ MobileMessageManager::Send(const JS::Value& aNumber_, const nsAString& aMessage,
 
   JS::Rooted<JS::Value> number(cx);
   for (uint32_t i=0; i<size; ++i) {
-    if (!JS_GetElement(cx, numbers, i, number.address())) {
+    if (!JS_GetElement(cx, numbers, i, &number)) {
       return NS_ERROR_INVALID_ARG;
     }
 
@@ -277,7 +278,7 @@ MobileMessageManager::Delete(const JS::Value& aParam, nsIDOMDOMRequest** aReques
 
     JS::Rooted<JS::Value> idJsValue(cx);
     for (uint32_t i = 0; i < size; i++) {
-      if (!JS_GetElement(cx, ids, i, idJsValue.address())) {
+      if (!JS_GetElement(cx, ids, i, &idJsValue)) {
         return NS_ERROR_INVALID_ARG;
       }
 

@@ -35,8 +35,7 @@ function manifestUpdated()
   OfflineTest.checkCacheEntries(
     entries,
     function() {
-       OfflineTest.teardown();
-       OfflineTest.finish();
+       OfflineTest.teardownAndFinish();
     });
 }
 

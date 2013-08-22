@@ -22,6 +22,7 @@ EXTRA_JS_MODULES += [
     'Promise.jsm',
     'PropertyListUtils.jsm',
     'RemoteSecurityUI.jsm',
+    'RemoteWebNavigation.jsm',
     'RemoteWebProgress.jsm',
     'Sqlite.jsm',
     'Task.jsm',
@@ -29,4 +30,18 @@ EXTRA_JS_MODULES += [
     'Timer.jsm',
     'debug.js',
 ]
+
+EXTRA_PP_JS_MODULES += [
+    'CertUtils.jsm',
+    'ResetProfile.jsm',
+    'Services.jsm',
+    'Troubleshoot.jsm',
+    'UpdateChannel.jsm',
+    'WindowDraggingUtils.jsm',
+]
+
+if 'Android' != CONFIG['OS_TARGET']:
+    EXTRA_PP_JS_MODULES += [
+        'LightweightThemeConsumer.jsm',
+    ]
 

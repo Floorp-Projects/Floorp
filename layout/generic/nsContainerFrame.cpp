@@ -37,6 +37,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsRenderingContext.h"
 #include "nsCSSFrameConstructor.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/dom/Element.h"
 #include <algorithm>
 
@@ -820,7 +821,7 @@ nsContainerFrame::SyncFrameViewProperties(nsPresContext*  aPresContext,
     }
   }
 
-  vm->SetViewZIndex(aView, autoZIndex, zIndex, isPositioned);
+  vm->SetViewZIndex(aView, autoZIndex, zIndex);
 }
 
 static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)

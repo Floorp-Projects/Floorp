@@ -34,6 +34,9 @@ public:
 
   virtual ~CompositorOGL();
 
+  virtual TemporaryRef<DataTextureSource>
+  CreateDataTextureSource(TextureFlags aFlags = 0) MOZ_OVERRIDE;
+
   virtual bool Initialize() MOZ_OVERRIDE;
 
   virtual void Destroy() MOZ_OVERRIDE;
@@ -41,6 +44,7 @@ public:
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() MOZ_OVERRIDE
   {
     return TextureFactoryIdentifier(LAYERS_OPENGL,
+                                    XRE_GetProcessType(),
                                     GetMaxTextureSize(),
                                     mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
                                     SupportsPartialTextureUpdate());

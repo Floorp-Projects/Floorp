@@ -11,11 +11,6 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-EXTRA_PP_JS_MODULES = \
-	AboutHomeUtils.jsm \
-	RecentWindow.jsm \
-	$(NULL)
-
 ifdef MOZILLA_OFFICIAL
 DEFINES += -DMOZILLA_OFFICIAL=1
 endif

@@ -61,6 +61,8 @@ nsDOMAttributeMap::DropReference()
   mContent = nullptr;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMAttributeMap)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttributeMap)
   tmp->DropReference();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -281,7 +283,7 @@ nsDOMAttributeMap::SetNamedItemInternal(Attr& aAttr,
   }
 
   nsresult rv;
-  if (!mContent->HasSameOwnerDoc(&aAttr)) {
+  if (mContent->OwnerDoc() != aAttr.OwnerDoc()) {
     nsCOMPtr<nsINode> adoptedNode =
       mContent->OwnerDoc()->AdoptNode(aAttr, aError);
     if (aError.Failed()) {

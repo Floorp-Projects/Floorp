@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_SIMPLE_PROGRAMS = TestInterfaceInfo$(BIN_SUFFIX)
-
 LIBS		= \
 		$(XPCOM_GLUE_LDOPTS) \
 		$(NSPR_LIBS) \

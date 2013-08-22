@@ -7,6 +7,7 @@
 #ifndef js_HashTable_h
 #define js_HashTable_h
 
+#include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
@@ -17,7 +18,6 @@
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/Util.h"
 
 #include "js/Utility.h"
 

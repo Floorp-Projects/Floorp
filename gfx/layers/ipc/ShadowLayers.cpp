@@ -161,12 +161,13 @@ void
 CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier)
 {
   mTextureFactoryIdentifier = aIdentifier;
+  mMultiProcess = aIdentifier.mParentProcessId != XRE_GetProcessType();
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder()
  : mShadowManager(nullptr)
+ , mDiagnosticTypes(DIAGNOSTIC_NONE)
  , mIsFirstPaint(false)
- , mDrawColoredBorders(false)
  , mWindowOverlayChanged(false)
 {
   mTxn = new Transaction();
@@ -294,12 +295,10 @@ ShadowLayerForwarder::RepositionChild(ShadowableLayer* aContainer,
 
 void
 ShadowLayerForwarder::PaintedTiledLayerBuffer(CompositableClient* aCompositable,
-                                              BasicTiledLayerBuffer* aTiledLayerBuffer)
+                                              const SurfaceDescriptorTiles& aTileLayerDescriptor)
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default)
-    NS_RUNTIMEABORT("PaintedTiledLayerBuffer must be made IPC safe (not share pointers)");
   mTxn->AddNoSwapPaint(OpPaintTiledLayerBuffer(nullptr, aCompositable->GetIPDLActor(),
-                                               uintptr_t(aTiledLayerBuffer)));
+                                               aTileLayerDescriptor));
 }
 
 void
@@ -374,6 +373,60 @@ ShadowLayerForwarder::UpdatePictureRect(CompositableClient* aCompositable,
   mTxn->AddNoSwapPaint(OpUpdatePictureRect(nullptr, aCompositable->GetIPDLActor(), aRect));
 }
 
+void
+ShadowLayerForwarder::AddTexture(CompositableClient* aCompositable,
+                                 TextureClient* aTexture)
+{
+  SurfaceDescriptor descriptor;
+  if (!aTexture->ToSurfaceDescriptor(descriptor)) {
+    NS_WARNING("Failed to serialize a TextureClient");
+    return;
+  }
+  MOZ_ASSERT(aTexture->GetFlags() != 0);
+  mTxn->AddEdit(OpAddTexture(nullptr, aCompositable->GetIPDLActor(),
+                             aTexture->GetID(),
+                             descriptor,
+                             aTexture->GetFlags()));
+}
+
+void
+ShadowLayerForwarder::RemoveTexture(CompositableClient* aCompositable,
+                                    uint64_t aTexture,
+                                    TextureFlags aFlags)
+{
+  mTxn->AddEdit(OpRemoveTexture(nullptr,
+                aCompositable->GetIPDLActor(),
+                aTexture,
+                aFlags));
+}
+
+void
+ShadowLayerForwarder::UpdatedTexture(CompositableClient* aCompositable,
+                                     TextureClient* aTexture,
+                                     nsIntRegion* aRegion)
+{
+  MaybeRegion region = aRegion ? MaybeRegion(*aRegion)
+                               : MaybeRegion(null_t());
+  if (aTexture->GetFlags() & TEXTURE_IMMEDIATE_UPLOAD) {
+    mTxn->AddPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
+                                   aTexture->GetID(),
+                                   region));
+  } else {
+    mTxn->AddNoSwapPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
+                                         aTexture->GetID(),
+                                         region));
+
+  }
+}
+
+void
+ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
+                                 TextureClient* aTexture)
+{
+  mTxn->AddEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
+                             aTexture->GetID()));
+}
+
 bool
 ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
 {
@@ -382,9 +435,10 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
   NS_ABORT_IF_FALSE(HasShadowManager(), "no manager to forward to");
   NS_ABORT_IF_FALSE(!mTxn->Finished(), "forgot BeginTransaction?");
 
-  if (mDrawColoredBorders != gfxPlatform::DrawLayerBorders()) {
-    mDrawColoredBorders = gfxPlatform::DrawLayerBorders();
-    mTxn->AddEdit(OpSetColoredBorders(mDrawColoredBorders));
+  DiagnosticTypes diagnostics = gfxPlatform::GetPlatform()->GetLayerDiagnosticTypes();
+  if (mDiagnosticTypes != diagnostics) {
+    mDiagnosticTypes = diagnostics;
+    mTxn->AddEdit(OpSetDiagnosticTypes(diagnostics));
   }
 
   AutoTxnEnd _(mTxn);
@@ -581,6 +635,30 @@ ShadowLayerForwarder::GetDescriptorSurfaceSize(
   return size;
 }
 
+/*static*/ gfxImageFormat
+ShadowLayerForwarder::GetDescriptorSurfaceImageFormat(
+  const SurfaceDescriptor& aDescriptor, OpenMode aMode,
+  gfxASurface** aSurface)
+{
+  gfxImageFormat format;
+  if (PlatformGetDescriptorSurfaceImageFormat(aDescriptor, aMode, &format, aSurface)) {
+    return format;
+  }
+
+  nsRefPtr<gfxASurface> surface = OpenDescriptor(aMode, aDescriptor);
+  NS_ENSURE_TRUE(surface, gfxASurface::ImageFormatUnknown);
+
+  nsRefPtr<gfxImageSurface> img = surface->GetAsImageSurface();
+  NS_ENSURE_TRUE(img, gfxASurface::ImageFormatUnknown);
+
+  format = img->Format();
+  NS_ASSERTION(format != gfxASurface::ImageFormatUnknown,
+               "ImageSurface RGB format should be known");
+
+  *aSurface = surface.forget().get();
+  return format;
+}
+
 /*static*/ void
 ShadowLayerForwarder::CloseDescriptor(const SurfaceDescriptor& aDescriptor)
 {
@@ -630,6 +708,16 @@ ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
   return false;
 }
 
+/*static*/ bool
+ShadowLayerForwarder::PlatformGetDescriptorSurfaceImageFormat(
+  const SurfaceDescriptor&,
+  OpenMode,
+  gfxImageFormat*,
+  gfxASurface**)
+{
+  return false;
+}
+
 bool
 ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor*)
 {
@@ -672,6 +760,24 @@ AutoOpenSurface::ContentType()
     return mSurface->GetContentType();
   }
   return ShadowLayerForwarder::GetDescriptorSurfaceContentType(
+    mDescriptor, mMode, getter_AddRefs(mSurface));
+}
+
+gfxImageFormat
+AutoOpenSurface::ImageFormat()
+{
+  if (mSurface) {
+    nsRefPtr<gfxImageSurface> img = mSurface->GetAsImageSurface();
+    if (img) {
+      gfxImageFormat format = img->Format();
+      NS_ASSERTION(format != gfxASurface::ImageFormatUnknown,
+                   "ImageSurface RGB format should be known");
+
+      return format;
+    }
+  }
+
+  return ShadowLayerForwarder::GetDescriptorSurfaceImageFormat(
     mDescriptor, mMode, getter_AddRefs(mSurface));
 }
 

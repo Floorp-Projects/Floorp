@@ -235,3 +235,16 @@ function createQueryOptions (type, options) {
 }
 exports.createQueryOptions = createQueryOptions;
 
+
+function mapBookmarkItemType (type) {
+  if (typeof type === 'number') {
+    if (bmsrv.TYPE_BOOKMARK === type) return 'bookmark';
+    if (bmsrv.TYPE_FOLDER === type) return 'group';
+    if (bmsrv.TYPE_SEPARATOR === type) return 'separator';
+  } else {
+    if ('bookmark' === type) return bmsrv.TYPE_BOOKMARK;
+    if ('group' === type) return bmsrv.TYPE_FOLDER;
+    if ('separator' === type) return bmsrv.TYPE_SEPARATOR;
+  }
+}
+exports.mapBookmarkItemType = mapBookmarkItemType;

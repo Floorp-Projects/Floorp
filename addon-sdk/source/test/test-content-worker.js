@@ -4,6 +4,13 @@
 
 "use strict";
 
+// Skipping due to window creation being unsupported in Fennec
+module.metadata = {
+  engines: {
+    'Firefox': '*'
+  }
+};
+
 const { Cc, Ci } = require("chrome");
 const { setTimeout } = require("sdk/timers");
 const { LoaderWithHookedConsole } = require("sdk/test/loader");
@@ -689,15 +696,5 @@ exports["test:global postMessage"] = WorkerTest(
     worker.postMessage("hi!");
   }
 );
-
-if (require("sdk/system/xul-app").is("Fennec")) {
-  module.exports = {
-    "test Unsupported Test": function UnsupportedTest (assert) {
-        assert.pass(
-          "Skipping this test until Fennec support is implemented." +
-          "See bug 806817");
-    }
-  }
-}
 
 require("test").run(exports);

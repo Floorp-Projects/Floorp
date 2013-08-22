@@ -17,12 +17,12 @@
  */
 function getBiggestIconURL(aIcons) {
   if (!aIcons) {
-    return "chrome://browser/skin/webapps-64.png";
+    return "chrome://global/skin/icons/webapps-64.png";
   }
 
   let iconSizes = Object.keys(aIcons);
   if (iconSizes.length == 0) {
-    return "chrome://browser/skin/webapps-64.png";
+    return "chrome://global/skin/icons/webapps-64.png";
   }
   iconSizes.sort(function(a, b) a - b);
   return aIcons[iconSizes.pop()];

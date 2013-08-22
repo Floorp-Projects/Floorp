@@ -530,17 +530,17 @@ GetAtomHashEntry(const PRUnichar* aString, uint32_t aLength)
 class CheckStaticAtomSizes
 {
   CheckStaticAtomSizes() {
-    MOZ_STATIC_ASSERT((sizeof(nsFakeStringBuffer<1>().mRefCnt) ==
-                       sizeof(nsStringBuffer().mRefCount)) &&
-                      (sizeof(nsFakeStringBuffer<1>().mSize) ==
-                       sizeof(nsStringBuffer().mStorageSize)) &&
-                      (offsetof(nsFakeStringBuffer<1>, mRefCnt) ==
-                       offsetof(nsStringBuffer, mRefCount)) &&
-                      (offsetof(nsFakeStringBuffer<1>, mSize) ==
-                       offsetof(nsStringBuffer, mStorageSize)) &&
-                      (offsetof(nsFakeStringBuffer<1>, mStringData) ==
-                       sizeof(nsStringBuffer)),
-                      "mocked-up strings' representations should be compatible");
+    static_assert((sizeof(nsFakeStringBuffer<1>().mRefCnt) ==
+                   sizeof(nsStringBuffer().mRefCount)) &&
+                  (sizeof(nsFakeStringBuffer<1>().mSize) ==
+                   sizeof(nsStringBuffer().mStorageSize)) &&
+                  (offsetof(nsFakeStringBuffer<1>, mRefCnt) ==
+                   offsetof(nsStringBuffer, mRefCount)) &&
+                  (offsetof(nsFakeStringBuffer<1>, mSize) ==
+                   offsetof(nsStringBuffer, mStorageSize)) &&
+                  (offsetof(nsFakeStringBuffer<1>, mStringData) ==
+                   sizeof(nsStringBuffer)),
+                  "mocked-up strings' representations should be compatible");
   }
 };
 
@@ -554,11 +554,6 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
   
   if (!gStaticAtomTable && !gStaticAtomTableSealed) {
     gStaticAtomTable = new nsDataHashtable<nsStringHashKey, nsIAtom*>();
-    if (!gStaticAtomTable) {
-      delete gStaticAtomTable;
-      gStaticAtomTable = nullptr;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
     gStaticAtomTable->Init();
   }
   

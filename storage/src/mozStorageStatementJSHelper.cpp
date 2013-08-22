@@ -26,7 +26,7 @@ namespace storage {
 //// Global Functions
 
 static
-JSBool
+bool
 stepFunc(JSContext *aCtx,
          uint32_t,
          jsval *_vp)
@@ -35,14 +35,14 @@ stepFunc(JSContext *aCtx,
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   JSObject *obj = JS_THIS_OBJECT(aCtx, _vp);
   if (!obj) {
-    return JS_FALSE;
+    return false;
   }
 
   nsresult rv =
     xpc->GetWrappedNativeOfJSObject(aCtx, obj, getter_AddRefs(wrapper));
   if (NS_FAILED(rv)) {
     ::JS_ReportError(aCtx, "mozIStorageStatement::step() could not obtain native statement");
-    return JS_FALSE;
+    return false;
   }
 
 #ifdef DEBUG
@@ -63,16 +63,16 @@ stepFunc(JSContext *aCtx,
   if (NS_SUCCEEDED(rv) && !hasMore) {
     *_vp = JSVAL_FALSE;
     (void)stmt->Reset();
-    return JS_TRUE;
+    return true;
   }
 
   if (NS_FAILED(rv)) {
     ::JS_ReportError(aCtx, "mozIStorageStatement::step() returned an error");
-    return JS_FALSE;
+    return false;
   }
 
   *_vp = BOOLEAN_TO_JSVAL(hasMore);
-  return JS_TRUE;
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

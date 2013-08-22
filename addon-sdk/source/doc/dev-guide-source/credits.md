@@ -70,6 +70,7 @@ We'd like to thank our many Jetpack project contributors!  They include:
 
 ### J ###
 
+* Tomislav Jovanovic
 * Eric H. Jung
 
 ### K ###
@@ -100,6 +101,7 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Joe R. Nassimian ([placidrage](https://github.com/placidrage))
 * Dương H. Nguyễn
 * Nick Nguyen
+* nodeless
 
 ### O ###
 
@@ -140,6 +142,7 @@ We'd like to thank our many Jetpack project contributors!  They include:
 * Tim Taubert
 * Shane Tomlinson
 * Dave Townsend
+* [Fraser Tweedale](https://github.com/frasertweedale)
 * [Matthias Tylkowski](https://github.com/tylkomat)
 
 ### V ###

@@ -10,9 +10,8 @@
 #include "mozilla/gfx/Matrix.h"
 #include "gfxMatrix.h"
 #include "Layers.h"
-#include "mozilla/layers/TextureHost.h"
 #include "mozilla/RefPtr.h"
-
+#include "mozilla/layers/CompositorTypes.h"
 
 /**
  * Different elements of a web pages are rendered into separate "layers" before
@@ -113,6 +112,9 @@ struct Effect;
 struct EffectChain;
 class Image;
 class ISurfaceAllocator;
+class NewTextureSource;
+class DataTextureSource;
+class CompositingRenderTarget;
 
 enum SurfaceInitMode
 {
@@ -170,7 +172,7 @@ class Compositor : public RefCounted<Compositor>
 public:
   Compositor()
     : mCompositorID(0)
-    , mDrawColoredBorders(false)
+    , mDiagnosticTypes(DIAGNOSTIC_NONE)
   {
     MOZ_COUNT_CTOR(Compositor);
   }
@@ -179,8 +181,18 @@ public:
     MOZ_COUNT_DTOR(Compositor);
   }
 
+  virtual TemporaryRef<DataTextureSource> CreateDataTextureSource(TextureFlags aFlags = 0) = 0;
   virtual bool Initialize() = 0;
   virtual void Destroy() = 0;
+
+  /**
+   * Return true if the effect type is supported.
+   *
+   * By default Compositor implementations should support all effects but in
+   * some rare cases it is not possible to support an effect efficiently.
+   * This is the case for BasicCompositor with EffectYCbCr.
+   */
+  virtual bool SupportsEffect(EffectTypes aEffect) { return true; }
 
   /**
    * Request a texture host identifier that may be used for creating textures
@@ -323,16 +335,12 @@ public:
    */
   virtual bool SupportsPartialTextureUpdate() = 0;
 
-  void EnableColoredBorders()
+  void SetDiagnosticTypes(DiagnosticTypes aDiagnostics)
   {
-    mDrawColoredBorders = true;
-  }
-  void DisableColoredBorders()
-  {
-    mDrawColoredBorders = false;
+    mDiagnosticTypes = aDiagnostics;
   }
 
-  void DrawDiagnostics(const gfx::Color& color,
+  void DrawDiagnostics(DiagnosticFlags aFlags,
                        const gfx::Rect& visibleRect,
                        const gfx::Rect& aClipRect,
                        const gfx::Matrix4x4& transform,
@@ -387,6 +395,12 @@ public:
   virtual const nsIntSize& GetWidgetSize() = 0;
 
   /**
+   * Debug-build assertion that can be called to ensure code is running on the
+   * compositor thread.
+   */
+  static void AssertOnCompositorThread();
+
+  /**
    * We enforce that there can only be one Compositor backend type off the main
    * thread at the same time. The backend type in use can be checked with this
    * static method. We need this for creating texture clients/hosts etc. when we
@@ -399,7 +413,7 @@ public:
 protected:
   uint32_t mCompositorID;
   static LayersBackend sBackend;
-  bool mDrawColoredBorders;
+  DiagnosticTypes mDiagnosticTypes;
 };
 
 } // namespace layers

@@ -7,6 +7,7 @@
 #define nsGUIEventIPC_h__
 
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/GfxMessageUtils.h"
 #include "mozilla/dom/Touch.h"
 #include "nsGUIEvent.h"
 
@@ -227,7 +228,7 @@ struct ParamTraits<nsTouchEvent>
     }
     for (uint32_t i = 0; i < numTouches; ++i) {
         int32_t identifier;
-        nsIntPoint refPoint;
+        mozilla::LayoutDeviceIntPoint refPoint;
         nsIntPoint radius;
         float rotationAngle;
         float force;
@@ -239,7 +240,9 @@ struct ParamTraits<nsTouchEvent>
           return false;
         }
         aResult->touches.AppendElement(
-          new mozilla::dom::Touch(identifier, refPoint, radius, rotationAngle, force));
+          new mozilla::dom::Touch(
+            identifier, mozilla::LayoutDeviceIntPoint::ToUntyped(refPoint),
+            radius, rotationAngle, force));
     }
     return true;
   }
@@ -270,9 +273,10 @@ struct ParamTraits<nsKeyEvent>
         ReadParam(aMsg, aIter, &aResult->keyCode) &&
         ReadParam(aMsg, aIter, &aResult->charCode) &&
         ReadParam(aMsg, aIter, &aResult->isChar) &&
-        ReadParam(aMsg, aIter, &aResult->location)) {
-      aResult->mKeyNameIndex =
-        static_cast<mozilla::widget::KeyNameIndex>(keyNameIndex);
+        ReadParam(aMsg, aIter, &aResult->location))
+    {
+      aResult->mKeyNameIndex = static_cast<mozilla::widget::KeyNameIndex>(keyNameIndex);
+      aResult->mNativeKeyEvent = NULL;
       return true;
     }
     return false;

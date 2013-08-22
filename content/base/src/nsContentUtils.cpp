@@ -27,6 +27,7 @@
 #include "MediaDecoder.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/Base64.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -242,6 +243,10 @@ nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
 
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+bool nsContentUtils::sDOMWindowDumpEnabled;
+#endif
+
 namespace {
 
 static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
@@ -433,6 +438,11 @@ nsContentUtils::Init()
   Preferences::AddUintVarCache(&sHandlingInputTimeout,
                                "dom.event.handling-user-input-time-limit",
                                1000);
+
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  Preferences::AddBoolVarCache(&sDOMWindowDumpEnabled,
+                               "browser.dom.window.dump.enabled");
+#endif
 
   Element::InitCCCallbacks();
 
@@ -1395,6 +1405,38 @@ nsContentUtils::OfflineAppAllowed(nsIPrincipal *aPrincipal)
   return NS_SUCCEEDED(rv) && allowed;
 }
 
+bool
+nsContentUtils::MaybeAllowOfflineAppByDefault(nsIPrincipal *aPrincipal)
+{
+  if (!Preferences::GetRootBranch())
+    return false;
+
+  nsresult rv;
+
+  bool allowedByDefault;
+  rv = Preferences::GetRootBranch()->GetBoolPref(
+    "offline-apps.allow_by_default", &allowedByDefault);
+  if (NS_FAILED(rv))
+    return false;
+
+  if (!allowedByDefault)
+    return false;
+
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (!permissionManager)
+    return false;
+
+  rv = permissionManager->AddFromPrincipal(
+    aPrincipal, "offline-app", nsIPermissionManager::ALLOW_ACTION,
+    nsIPermissionManager::EXPIRE_NEVER, 0);
+  if (NS_FAILED(rv))
+    return false;
+
+  // We have added the permission
+  return true;
+}
+
 // static
 void
 nsContentUtils::Shutdown()
@@ -1649,10 +1691,10 @@ nsContentUtils::TraceSafeJSContext(JSTracer* aTrc)
   if (!cx) {
     return;
   }
-  if (JSObject* global = js::GetDefaultGlobalForContext(cx)) {
+  if (JSObject* global = js::DefaultObjectForContextOrNull(cx)) {
     JS::AssertGCThingMustBeTenured(global);
     JS_CallObjectTracer(aTrc, &global, "safe context");
-    MOZ_ASSERT(global == js::GetDefaultGlobalForContext(cx));
+    MOZ_ASSERT(global == js::DefaultObjectForContextOrNull(cx));
   }
 }
 
@@ -1675,7 +1717,7 @@ nsContentUtils::GetDocumentFromCaller()
   AutoJSContext cx;
 
   nsCOMPtr<nsPIDOMWindow> win =
-    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(JS_GetGlobalForScopeChain(cx)));
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(JS::CurrentGlobalOrNull(cx)));
   if (!win) {
     return nullptr;
   }
@@ -1747,7 +1789,7 @@ nsContentUtils::IsImageSrcSetDisabled()
 // static
 bool
 nsContentUtils::LookupBindingMember(JSContext* aCx, nsIContent *aContent,
-                                    JS::HandleId aId, JSPropertyDescriptor* aDesc)
+                                    JS::HandleId aId, JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
   nsXBLBinding* binding = aContent->GetXBLBinding();
   if (!binding)
@@ -2958,7 +3000,7 @@ nsresult nsContentUtils::FormatLocalizedString(PropertiesFile aFile,
 
 /* static */ nsresult
 nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
-                                const char *aCategory,
+                                const nsACString& aCategory,
                                 nsIDocument* aDocument,
                                 PropertiesFile aFile,
                                 const char *aMessageName,
@@ -2993,7 +3035,7 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
 /* static */ nsresult
 nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
                                             uint32_t aErrorFlags,
-                                            const char *aCategory,
+                                            const nsACString& aCategory,
                                             nsIDocument* aDocument,
                                             nsIURI* aURI,
                                             const nsAFlatString& aSourceLine,
@@ -3181,9 +3223,12 @@ nsContentUtils::IsEventAttributeName(nsIAtom* aName, int32_t aType)
 uint32_t
 nsContentUtils::GetEventId(nsIAtom* aName)
 {
-  EventNameMapping mapping;
-  if (sAtomEventTable->Get(aName, &mapping))
-    return mapping.mId;
+  if (aName) {
+    EventNameMapping mapping;
+    if (sAtomEventTable->Get(aName, &mapping)) {
+      return mapping.mId;
+    }
+  }
 
   return NS_USER_DEFINED_EVENT;
 }
@@ -4279,7 +4324,7 @@ nsContentUtils::DropJSObjects(void* aScriptObjectHolder)
 bool
 nsContentUtils::AreJSObjectsHeld(void* aScriptObjectHolder)
 {
-  return cyclecollector::TestJSHolder(aScriptObjectHolder);
+  return cyclecollector::IsJSHolder(aScriptObjectHolder);
 }
 #endif
 
@@ -4370,7 +4415,8 @@ nsIPrincipal*
 nsContentUtils::GetSystemPrincipal()
 {
   nsCOMPtr<nsIPrincipal> sysPrin;
-  nsresult rv = sSecurityManager->GetSystemPrincipal(getter_AddRefs(sysPrin));
+  DebugOnly<nsresult> rv =
+    sSecurityManager->GetSystemPrincipal(getter_AddRefs(sysPrin));
   MOZ_ASSERT(NS_SUCCEEDED(rv) && sysPrin);
   return sysPrin;
 }
@@ -4950,7 +4996,7 @@ nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
     // means, for instance calling the drag service directly, or a drag
     // from another application. In either case, a new dataTransfer should
     // be created that reflects the data.
-    initialDataTransfer = new nsDOMDataTransfer(aDragEvent->message, true);
+    initialDataTransfer = new nsDOMDataTransfer(aDragEvent->message, true, -1);
 
     NS_ENSURE_TRUE(initialDataTransfer, NS_ERROR_OUT_OF_MEMORY);
 
@@ -5666,7 +5712,7 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
   } else {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  JS::Rooted<JSObject*> scope(aCx, JS_GetGlobalForScopeChain(aCx));
+  JS::Rooted<JSObject*> scope(aCx, JS::CurrentGlobalOrNull(aCx));
   return nsContentUtils::WrapNative(aCx, scope, blob, aBlob.address(), nullptr,
                                     true);
 }
@@ -6016,6 +6062,34 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
   return nullptr;
 }
 
+bool
+nsContentUtils::GetContentSecurityPolicy(JSContext* aCx,
+                                         nsIContentSecurityPolicy** aCSP)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  // Get the security manager
+  nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
+
+  if (!ssm) {
+    NS_ERROR("Failed to get security manager service");
+    return false;
+  }
+
+  nsCOMPtr<nsIPrincipal> subjectPrincipal = ssm->GetCxSubjectPrincipal(aCx);
+  NS_ASSERTION(subjectPrincipal, "Failed to get subjectPrincipal");
+
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsresult rv = subjectPrincipal->GetCsp(getter_AddRefs(csp));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("CSP: Failed to get CSP from principal.");
+    return false;
+  }
+
+  csp.forget(aCSP);
+  return true;
+}
+
 // static
 bool
 nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
@@ -6282,24 +6356,6 @@ nsContentUtils::IsInPointerLockContext(nsIDOMWindow* aWin)
 }
 
 // static
-void
-nsContentUtils::ReleaseWrapper(void* aScriptObjectHolder,
-                               nsWrapperCache* aCache)
-{
-  if (aCache->PreservingWrapper()) {
-    // PreserveWrapper puts new DOM bindings in the JS holders hash, but they
-    // can also be in the DOM expando hash, so we need to try to remove them
-    // from both here.
-    JSObject* obj = aCache->GetWrapperPreserveColor();
-    if (aCache->IsDOMBinding() && obj && js::IsProxy(obj)) {
-        DOMProxyHandler::GetAndClearExpandoObject(obj);
-    }
-    aCache->SetPreservingWrapper(false);
-    DropJSObjects(aScriptObjectHolder);
-  }
-}
-
-// static
 int32_t
 nsContentUtils::GetAdjustedOffsetInTextControl(nsIFrame* aOffsetFrame,
                                                int32_t aOffset)
@@ -6422,4 +6478,17 @@ nsContentUtils::InternalIsSupported(nsISupports* aObject,
 
   // Otherwise, we claim to support everything
   return true;
+}
+
+bool
+nsContentUtils::DOMWindowDumpEnabled()
+{
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+  // In optimized builds we check a pref that controls if we should
+  // enable output from dump() or not, in debug builds it's always
+  // enabled.
+  return nsContentUtils::sDOMWindowDumpEnabled;
+#else
+  return true;
+#endif
 }

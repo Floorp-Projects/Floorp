@@ -222,12 +222,12 @@ ContainerRender(Container* aContainer,
       // not safe.
       if (HasOpaqueAncestorLayer(aContainer) &&
           transform3D.Is2D(&transform) && !transform.HasNonIntegerTranslation()) {
-        mode = gfxPlatform::GetPlatform()->UsesSubpixelAATextRendering() ?
+        mode = gfxPlatform::ComponentAlphaEnabled() ?
           LayerManagerOGL::InitModeCopy :
           LayerManagerOGL::InitModeClear;
         framebufferRect.x += transform.x0;
         framebufferRect.y += transform.y0;
-        aContainer->mSupportsComponentAlphaChildren = gfxPlatform::GetPlatform()->UsesSubpixelAATextRendering();
+        aContainer->mSupportsComponentAlphaChildren = gfxPlatform::ComponentAlphaEnabled();
       }
     }
 

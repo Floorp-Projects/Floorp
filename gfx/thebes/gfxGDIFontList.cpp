@@ -243,7 +243,8 @@ GDIFontEntry::CopyFontTable(uint32_t aTableTag,
     if (font.IsValid()) {
         uint32_t tableSize =
             ::GetFontData(dc.GetDC(),
-                          NativeEndian::swapToBigEndian(aTableTag), 0, NULL, 0);
+                          NativeEndian::swapToBigEndian(aTableTag),
+                          0, nullptr, 0);
         if (tableSize != GDI_ERROR) {
             if (aBuffer.SetLength(tableSize)) {
                 ::GetFontData(dc.GetDC(),
@@ -343,14 +344,14 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
         } else {
             // ScriptGetCMap works better than GetGlyphIndicesW 
             // for things like bitmap/vector fonts
-            SCRIPT_CACHE sc = NULL;
+            SCRIPT_CACHE sc = nullptr;
             HRESULT rv = ScriptGetCMap(dc, &sc, str, 1, 0, glyph);
             if (rv == S_OK)
                 hasGlyph = true;
         }
 
         SelectObject(dc, oldFont);
-        ReleaseDC(NULL, dc);
+        ReleaseDC(nullptr, dc);
 
         if (hasGlyph) {
             mCharacterMap->set(aCh);
@@ -599,7 +600,7 @@ gfxGDIFontList::GetFontSubstitutes()
         lenAlias = ArrayLength(aliasName);
         actualName[0] = 0;
         lenActual = sizeof(actualName);
-        rv = RegEnumValueW(hKey, i, aliasName, &lenAlias, NULL, &valueType, 
+        rv = RegEnumValueW(hKey, i, aliasName, &lenAlias, nullptr, &valueType,
                 (LPBYTE)actualName, &lenActual);
 
         if (rv != ERROR_SUCCESS || valueType != REG_SZ || lenAlias == 0) {

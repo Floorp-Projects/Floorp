@@ -11,8 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448600
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448600">Mozilla Bug 448600</a>
 <p id="display"></p>
-<div id="content" style="display: none">
-</div>
+
 
 <pre id="test">
 <script type="application/javascript">
@@ -24,16 +23,6 @@ function filename(uri) {
 function e(id) {
   return document.getElementById(id);
 }
-
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-               .getService(Components.interfaces.nsIPrefService);
-var branch = prefService.getBranch("media.");
-var gOldOggPref = branch.getBoolPref("ogg.enabled");
-var gOldWavePref = branch.getBoolPref("wave.enabled");
-
-branch.setBoolPref("ogg.enabled", false);
-branch.setBoolPref("wave.enabled", false);
 
 var gLoadError = new Object();
 
@@ -59,11 +48,6 @@ function finishTest() {
   is(gLoadError['video1'], 2, "Expect one error per invalid source child on video1");
   is(gLoadError['video2'], 1, "Expect one error on video2");
   is(gLoadError['video3'], 1, "Expect one error on video3");
-  
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  branch.setBoolPref("ogg.enabled", gOldOggPref);
-  branch.setBoolPref("wave.enabled", gOldWavePref);
 
   SimpleTest.finish();
 }
@@ -78,13 +62,15 @@ function videoError(event, id) {
 
 </script>
 <!-- We make the resource URIs unique to ensure that they are (re)loaded with the new disable-decoder prefs. -->
-<video id="video1">
-  <source type="video/ogg" src="320x240.ogv?decoder_disabled=1" onerror="videoError(event, 'video1');"/>
-  <source type="audio/wave" src="r11025_u8_c1.wav?decoder_disabled=1" id='s2' onerror="videoError(event, 'video1');"/>
-</video>
+<div id="content">
+</div>
+<script>
+function makeVideos() {
+  document.getElementById('content').innerHTML = '<video id="video1" preload="metadata"><source type="video/ogg" src="320x240.ogv?decoder_disabled=1" onerror="videoError(event, \'video1\');"/><source type="audio/wave" src="r11025_u8_c1.wav?decoder_disabled=1" id=\'s2\' onerror="videoError(event, \'video1\');"/></video><video id="video2" preload="metadata" src="320x240.ogv?decoder_disabled=2" onerror="videoError(event, \'video2\');"></video><video id="video3" preload="metadata" src="r11025_u8_c1.wav?decoder_disabled=2" onerror="videoError(event, \'video3\');"></video>';
+}
 
-<video id="video2" src="320x240.ogv?decoder_disabled=2" onerror="videoError(event, 'video2');"></video>
-<video id="video3" src="r11025_u8_c1.wav?decoder_disabled=2" onerror="videoError(event, 'video3');"></video>
+SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false], ["media.wave.enabled", false]]}, makeVideos);
+</script>
 
 </pre>
 

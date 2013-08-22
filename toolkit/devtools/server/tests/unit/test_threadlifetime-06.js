@@ -67,6 +67,5 @@ function test_thread_lifetime()
       debugger;
     };
     stopMe({obj: 1}, {obj: 2}, {obj: 3});
-    ")"
   } + ")()");
 }

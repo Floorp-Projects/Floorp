@@ -57,8 +57,7 @@ DOMCI_CASTABLE_NODECL_INTERFACE(mozilla::dom::EventTarget,                    \
 DOMCI_CASTABLE_INTERFACE(nsDOMEvent, nsIDOMEvent, 3, _extra)                  \
 DOMCI_CASTABLE_INTERFACE(nsIDocument, nsIDocument, 4, _extra)                 \
 DOMCI_CASTABLE_INTERFACE(nsDocument, nsIDocument, 5, _extra)                  \
-DOMCI_CASTABLE_INTERFACE(nsGenericHTMLElement, nsGenericHTMLElement, 6,       \
-                         _extra)                                              \
+DOMCI_CASTABLE_INTERFACE(nsGenericHTMLElement, nsIContent, 6, _extra)         \
 DOMCI_CASTABLE_INTERFACE(nsHTMLDocument, nsIDocument, 7, _extra)              \
 DOMCI_CASTABLE_INTERFACE(nsStyledElement, nsStyledElement, 8, _extra)         \
 DOMCI_CASTABLE_INTERFACE(nsSVGElement, nsIContent, 9, _extra)                 \
@@ -82,7 +81,7 @@ class EventTarget;
 
 #define DOMCI_CASTABLE_NODECL_INTERFACE DOMCI_CASTABLE_INTERFACE
 
-#ifdef _IMPL_NS_LAYOUT
+#ifdef MOZILLA_INTERNAL_API
 
 #define DOMCI_CLASS(_dom_class)                                               \
   extern const uint32_t kDOMClassInfo_##_dom_class##_interfaces;
@@ -168,6 +167,6 @@ NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
 
 // See nsIDOMClassInfo.h
 
-#endif // _IMPL_NS_LAYOUT
+#endif // MOZILLA_INTERNAL_API
 
 #endif // nsDOMClassInfoID_h__

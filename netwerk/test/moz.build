@@ -14,28 +14,44 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 if CONFIG['OS_ARCH'] != 'Darwin':
     XPCSHELL_TESTS_MANIFESTS += ['unit_ipc/xpcshell.ini']
 
+sources = [
+    'PropertiesTest',
+    'ReadNTLM',
+    'TestBlockingSocket',
+    'TestCallbacks',
+    'TestCookie',
+    'TestDNS',
+    'TestIncrementalDownload',
+    'TestOpen',
+    'TestPageLoad',
+    'TestProtocols',
+    'TestServ',
+    'TestStandardURL',
+    'TestStreamLoader',
+    'TestURLParser',
+    'TestUpload',
+    'urltest',
+]
+
+# XXX Make this work in libxul builds.
+#sources += [
+#    TestIDN',
+#    TestIOThreads',
+#    TestPerf',
+#    TestSocketTransport',
+#    TestStreamChannel',
+#    TestStreamPump',
+#    TestStreamTransport',
+#    TestUDPSocketProvider',
+#]
+
 CPP_SOURCES += [
-    'PropertiesTest.cpp',
-    'ReadNTLM.cpp',
-    'TestBlockingSocket.cpp',
-    'TestCallbacks.cpp',
-    'TestCookie.cpp',
-    'TestDNS.cpp',
-    'TestIncrementalDownload.cpp',
-    'TestOpen.cpp',
-    'TestPageLoad.cpp',
-    'TestProtocols.cpp',
-    'TestServ.cpp',
-    'TestStandardURL.cpp',
-    'TestStreamLoader.cpp',
-    'TestURLParser.cpp',
-    'TestUpload.cpp',
-    'urltest.cpp',
+    '%s.cpp' % s for s in sources
 ]
 
 bin_suffix = CONFIG['BIN_SUFFIX']
 SIMPLE_PROGRAMS += [
-    "%s%s" % (x[0:-4], bin_suffix) for x in CPP_SOURCES
+    '%s%s' % (s, bin_suffix) for s in sources
 ]
 
 CPP_UNIT_TESTS += [

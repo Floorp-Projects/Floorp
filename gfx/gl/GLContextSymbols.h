@@ -173,6 +173,8 @@ struct GLContextSymbols
     PFNGLISENABLEDPROC fIsEnabled;
     typedef realGLboolean (GLAPIENTRY * PFNGLISPROGRAMPROC) (GLuint program);
     PFNGLISPROGRAMPROC fIsProgram;
+    typedef realGLboolean (GLAPIENTRY * PFNGLISQUERYPROC) (GLuint id);
+    PFNGLISQUERYPROC fIsQuery;
     typedef realGLboolean (GLAPIENTRY * PFNGLISSHADERPROC) (GLuint shader);
     PFNGLISSHADERPROC fIsShader;
     typedef realGLboolean (GLAPIENTRY * PFNGLISTEXTUREPROC) (GLuint texture);
@@ -413,6 +415,33 @@ struct GLContextSymbols
     PFNGLDRAWARRAYSINSTANCED fDrawArraysInstanced;
     typedef void (GLAPIENTRY * PFNGLDRAWELEMENTSINSTANCED) (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices, GLsizei primcount);
     PFNGLDRAWELEMENTSINSTANCED fDrawElementsInstanced;
+
+    // ARB_instanced_array
+    typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBDIVISOR) (GLuint index, GLuint divisor);
+    PFNGLVERTEXATTRIBDIVISOR fVertexAttribDivisor;
+
+    // EXT_transform_feedback / OpenGL (ES) 3.0
+    typedef void (GLAPIENTRY * PFNGLBINDBUFFERBASE) (GLenum target, GLuint index, GLuint buffer);
+    PFNGLBINDBUFFERBASE fBindBufferBase;
+    typedef void (GLAPIENTRY * PFNGLBINDBUFFERRANGE) (GLenum target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size);
+    PFNGLBINDBUFFERRANGE fBindBufferRange;
+
+    typedef void (GLAPIENTRY * PFNGLBEGINTRANSFORMFEEDBACK) (GLenum primitiveMode);
+    PFNGLBEGINTRANSFORMFEEDBACK fBeginTransformFeedback;
+    typedef void (GLAPIENTRY * PFNGLENDTRANSFORMFEEDBACK) (void);
+    PFNGLENDTRANSFORMFEEDBACK fEndTransformFeedback;
+
+    typedef void (GLAPIENTRY * PFNGLTRANSFORMFEEDBACKVARYINGS) (GLuint program, GLsizei count, const GLchar* const* varyings, GLenum bufferMode);
+    PFNGLTRANSFORMFEEDBACKVARYINGS fTransformFeedbackVaryings;
+    typedef void (GLAPIENTRY * PFNGLGETTRANSFORMFEEDBACKVARYING) (GLuint program, GLuint index, GLsizei bufSize, GLsizei* length, GLsizei* size, GLenum* type, GLchar* name);
+    PFNGLGETTRANSFORMFEEDBACKVARYING fGetTransformFeedbackVarying;
+
+    typedef void (GLAPIENTRY * PFNGLGETINTEGERI_V) (GLenum param, GLuint index, GLint* values);
+    PFNGLGETINTEGERI_V fGetIntegeri_v;
+
+    // EXT_transform_feedback only
+    typedef void (GLAPIENTRY * PFNGLBINDBUFFEROFFSET) (GLenum target, GLuint index, GLuint buffer, GLintptr offset);
+    PFNGLBINDBUFFEROFFSET fBindBufferOffset;
 };
 
 }

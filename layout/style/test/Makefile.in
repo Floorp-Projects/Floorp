@@ -87,6 +87,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_bug829816.html \
 		file_bug829816.css \
 		test_bug887741_at-rules_in_declaration_lists.html \
+		test_bug892929.html \
 		test_cascade.html \
 		test_ch_ex_no_infloops.html \
 		test_compute_data_with_start_struct.html \
@@ -97,6 +98,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_default_computed_style.html \
 		test_css_cross_domain.html \
 		test_css_eof_handling.html \
+		test_css_function_mismatched_parenthesis.html \
 		test_css_supports.html \
 		test_default_bidi_css.html \
 		test_descriptor_storage.html \
@@ -146,6 +148,8 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_property_database.html \
 		test_priority_preservation.html \
 		test_property_syntax_errors.html \
+		test_redundant_font_download.html \
+		redundant_font_download.sjs \
 		test_rem_unit.html \
 		test_rule_insertion.html \
 		test_rule_serialization.html \
@@ -236,7 +240,7 @@ MOCHITEST_BROWSER_FILES = \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DMOZILLA_INTERNAL_API -D_IMPL_NS_LAYOUT
+DEFINES += -DMOZILLA_INTERNAL_API
 
 # FIXME: We don't seem to do auto-generated dependencies here.
 host_ListCSSProperties.$(OBJ_SUFFIX): $(srcdir)/../nsCSSPropList.h

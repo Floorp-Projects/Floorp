@@ -4,12 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Implementation of moz-anno: URLs for accessing annotation values. This just
- * reads binary data from the annotation service.
- *
- * There is a special case for favicons. Annotation URLs with the name "favicon"
- * will be sent to the favicon service. If the favicon service doesn't have the
+ * Implementation of moz-anno: URLs for accessing favicons.  The urls are sent
+ * to the favicon service.  If the favicon service doesn't have the
  * data, a stream containing the default favicon will be returned.
+ *
+ * The reference to annotations ("moz-anno") is a leftover from previous
+ * iterations of this component. As of now the moz-anno protocol is independent
+ * of annotations.
  */
 
 #include "nsAnnoProtocolHandler.h"
@@ -256,62 +257,18 @@ NS_IMETHODIMP
 nsAnnoProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
   NS_ENSURE_ARG_POINTER(aURI);
-  nsresult rv;
-
-  nsAutoCString path;
-  rv = aURI->GetPath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIAnnotationService> annotationService = do_GetService(
-                              "@mozilla.org/browser/annotation-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // annotation info
   nsCOMPtr<nsIURI> annoURI;
   nsAutoCString annoName;
-  rv = ParseAnnoURI(aURI, getter_AddRefs(annoURI), annoName);
+  nsresult rv = ParseAnnoURI(aURI, getter_AddRefs(annoURI), annoName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If this is a favicon annotation, we create a different channel that will
-  // ask the favicon service for information about the favicon.
-  if (annoName.EqualsLiteral(FAVICON_ANNOTATION_NAME))
-    return NewFaviconChannel(aURI, annoURI, _retval);
+  // Only favicon annotation are supported.
+  if (!annoName.EqualsLiteral(FAVICON_ANNOTATION_NAME))
+    return NS_ERROR_INVALID_ARG;
 
-  // normal handling for annotations
-  uint8_t* data;
-  uint32_t dataLen;
-  nsAutoCString mimeType;
-
-  // get the data from the annotation service and hand it off to the stream
-  rv = annotationService->GetPageAnnotationBinary(annoURI, annoName, &data,
-                                                  &dataLen, mimeType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // disallow annotations with no MIME types
-  if (mimeType.IsEmpty()) {
-    NS_Free(data);
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<nsIStringInputStream> stream = do_CreateInstance(
-                                          NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    NS_Free(data);
-    return rv;
-  }
-  rv = stream->AdoptData((char*)data, dataLen);
-  if (NS_FAILED(rv)) {
-    NS_Free(data);
-    return rv;
-  }
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, stream, mimeType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *_retval = channel;
-  NS_ADDREF(*_retval);
-  return NS_OK;
+  return NewFaviconChannel(aURI, annoURI, _retval);
 }
 
 

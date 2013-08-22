@@ -4,7 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!-- Phone v11+ only: Sync is a top-level menu item.
-     See xml-v11/preference_headers.xml for tablet layout. -->
+     See xml-v11/preference_headers.xml for tablet layout.
+     Preference changes here should be mirrored to xml/preferences.xml.in. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
@@ -38,4 +39,11 @@
         <extra android:name="resource"
                android:value="preferences_vendor"/>
     </PreferenceScreen>
+
+    <PreferenceScreen android:title="@string/pref_category_devtools"
+                      android:fragment="org.mozilla.gecko.GeckoPreferenceFragment" >
+        <extra android:name="resource"
+               android:value="preferences_devtools"/>
+    </PreferenceScreen>
+
 </PreferenceScreen>

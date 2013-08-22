@@ -26,6 +26,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CallbackObject)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CallbackObject)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(CallbackObject)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CallbackObject)
   tmp->DropCallback();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -102,13 +104,6 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   xpc_UnmarkGrayObject(aCallback);
   mRootedCallable.construct(cx, aCallback);
 
-  // After this point we guarantee calling ScriptEvaluated() if we
-  // have an nsIScriptContext.
-  // XXXbz Why, if, say CheckFunctionAccess fails?  I know that's how
-  // nsJSContext::CallEventHandler used to work, but is it required?
-  // FIXME: Bug 807369.
-  mCtx = ctx;
-
   // Check that it's ok to run this callback at all.
   // FIXME: Bug 807371: we want a less silly check here.
   // Make sure to unwrap aCallback before passing it in, because
@@ -162,10 +157,8 @@ CallbackObject::CallSetup::~CallSetup()
     }
   }
 
-  // If we have an mCtx, we need to call ScriptEvaluated() on it.  But we have
-  // to do that after we pop the JSContext stack (see bug 295983).  And to get
-  // our nesting right we have to destroy our JSAutoCompartment first.  But be
-  // careful: it might not have been constructed at all!
+  // To get our nesting right we have to destroy our JSAutoCompartment first.
+  // But be careful: it might not have been constructed at all!
   mAc.destroyIfConstructed();
 
   // XXXbz For that matter why do we need to manually call ScriptEvaluated at
@@ -176,10 +169,6 @@ CallbackObject::CallSetup::~CallSetup()
 
   // Popping an nsCxPusher is safe even if it never got pushed.
   mCxPusher.Pop();
-
-  if (mCtx) {
-    mCtx->ScriptEvaluated(true);
-  }
 }
 
 already_AddRefed<nsISupports>

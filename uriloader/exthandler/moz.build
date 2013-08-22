@@ -112,6 +112,13 @@ if CONFIG['MOZ_ENABLE_CONTENTACTION']:
         'nsContentHandlerApp.cpp',
     ]
 
+EXTRA_COMPONENTS += [
+    'nsHandlerService.js',
+    'nsHandlerService.manifest',
+    'nsWebHandlerApp.js',
+    'nsWebHandlerApp.manifest',
+]
+
 IPDL_SOURCES += [
     'PExternalHelperApp.ipdl',
 ]

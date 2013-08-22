@@ -70,7 +70,7 @@ XPCJSContextStack::Push(JSContext *cx)
         // compartment that's same-origin with the current one, we can skip it.
         nsIScriptSecurityManager* ssm = XPCWrapper::GetSecurityManager();
         if ((e.cx == cx) && ssm) {
-            RootedObject defaultGlobal(cx, js::GetDefaultGlobalForContext(cx));
+            RootedObject defaultGlobal(cx, js::DefaultObjectForContextOrNull(cx));
             nsIPrincipal *currentPrincipal =
               GetCompartmentPrincipal(js::GetContextCompartment(cx));
             nsIPrincipal *defaultPrincipal = GetObjectPrincipal(defaultGlobal);
@@ -104,10 +104,10 @@ XPCJSContextStack::HasJSContext(JSContext *cx)
     return false;
 }
 
-static JSBool
+static bool
 SafeGlobalResolve(JSContext *cx, HandleObject obj, HandleId id)
 {
-    JSBool resolved;
+    bool resolved;
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
 }
 
@@ -163,7 +163,7 @@ XPCJSContextStack::GetSafeJSContext()
 
     // Make sure the context is associated with a proper compartment
     // and not the default compartment.
-    JS_SetGlobalObject(mSafeJSContext, glob);
+    js::SetDefaultObjectForContext(mSafeJSContext, glob);
 
     // Note: make sure to set the private before calling
     // InitClasses
@@ -176,6 +176,8 @@ XPCJSContextStack::GetSafeJSContext()
     // hook.
     if (NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
         MOZ_CRASH();
+
+    JS_FireOnNewGlobalObject(mSafeJSContext, glob);
 
     // Save it off so we can destroy it later.
     mOwnSafeJSContext = mSafeJSContext;

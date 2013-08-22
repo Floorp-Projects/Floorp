@@ -74,6 +74,7 @@ public:
     , mRawSegment(new AudioSegment())
     , mEndOfStream(false)
     , mCanceled(false)
+    , mSilentDuration(0)
   {}
 
   void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
@@ -129,12 +130,7 @@ protected:
    * Notifies the audio encoder that we have reached the end of source stream,
    * and wakes up mReentrantMonitor if encoder is waiting for more track data.
    */
-  void NotifyEndOfStream()
-  {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mEndOfStream = true;
-    mReentrantMonitor.NotifyAll();
-  }
+  void NotifyEndOfStream();
 
   /**
    * Interleaves the track data and stores the result into aOutput. Might need
@@ -176,6 +172,12 @@ protected:
    * mReentrantMonitor.
    */
   bool mCanceled;
+
+  /**
+   * The total duration of null chunks we have received from MediaStreamGraph
+   * before initializing the audio track encoder.
+   */
+  TrackTicks mSilentDuration;
 };
 
 class VideoTrackEncoder : public TrackEncoder

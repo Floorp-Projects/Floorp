@@ -10,16 +10,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DISABLED_CSRCS		= \
-		umaptable.c \
-		$(NULL)
-
-SIMPLE_PROGRAMS	= $(DISABLED_CSRCS:.c=$(BIN_SUFFIX))
-
 include $(topsrcdir)/config/rules.mk
-
-INCLUDES	+= \
-		$(NULL)
 
 # needed for mac linux
 ifeq ($(OS_ARCH),Linux)

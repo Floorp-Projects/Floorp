@@ -15,8 +15,9 @@ let currentStrict7BitEncoding = false;
 SpecialPowers.setBoolPref("dom.sms.strict7BitEncoding", currentStrict7BitEncoding);
 SpecialPowers.addPermission("sms", true, document);
 
-let sms = window.navigator.mozSms;
-ok(sms instanceof MozSmsManager);
+let manager = window.navigator.mozMobileMessage;
+ok(manager instanceof MozMobileMessageManager,
+   "manager is instance of " + manager.constructor);
 
 function times(str, n) {
   return (new Array(n + 1)).join(str);
@@ -28,7 +29,7 @@ function doTest(text, strict7BitEncoding, expected) {
     SpecialPowers.setBoolPref("dom.sms.strict7BitEncoding", currentStrict7BitEncoding);
   }
 
-  let result = sms.getSegmentInfoForText(text);
+  let result = manager.getSegmentInfoForText(text);
   ok(result, "result of GetSegmentInfoForText is valid");
   is(result.segments, expected[0], "segments");
   is(result.charsPerSegment, expected[1], "charsPerSegment");

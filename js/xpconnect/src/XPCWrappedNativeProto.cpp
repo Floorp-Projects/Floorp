@@ -41,7 +41,7 @@ XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
 
 XPCWrappedNativeProto::~XPCWrappedNativeProto()
 {
-    NS_ASSERTION(!mJSProtoObject, "JSProtoObject still alive");
+    MOZ_ASSERT(!mJSProtoObject, "JSProtoObject still alive");
 
     MOZ_COUNT_DTOR(XPCWrappedNativeProto);
 
@@ -56,7 +56,7 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
     delete mScriptableInfo;
 }
 
-JSBool
+bool
 XPCWrappedNativeProto::Init(const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
                             bool callPostCreatePrototype)
 {
@@ -133,7 +133,7 @@ XPCWrappedNativeProto::CallPostCreatePrototype()
 void
 XPCWrappedNativeProto::JSProtoObjectFinalized(js::FreeOp *fop, JSObject *obj)
 {
-    NS_ASSERTION(obj == mJSProtoObject, "huh?");
+    MOZ_ASSERT(obj == mJSProtoObject, "huh?");
 
     // Map locking is not necessary since we are running gc.
 
@@ -179,8 +179,8 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
                                     bool callPostCreatePrototype)
 {
     AutoJSContext cx;
-    NS_ASSERTION(scope, "bad param");
-    NS_ASSERTION(classInfo, "bad param");
+    MOZ_ASSERT(scope, "bad param");
+    MOZ_ASSERT(classInfo, "bad param");
 
     AutoMarkingWrappedNativeProtoPtr proto(cx);
     ClassInfo2WrappedNativeProtoMap* map = nullptr;
@@ -190,7 +190,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
     if (NS_FAILED(classInfo->GetFlags(&ciFlags)))
         ciFlags = 0;
 
-    JSBool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
+    bool mainThreadOnly = !!(ciFlags & nsIClassInfo::MAIN_THREAD_ONLY);
     map = scope->GetWrappedNativeProtoMap(mainThreadOnly);
     lock = mainThreadOnly ? nullptr : scope->GetRuntime()->GetMapLock();
     {   // scoped lock

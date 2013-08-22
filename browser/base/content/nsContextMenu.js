@@ -4,6 +4,8 @@
 
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+var gContextMenuContentData = null;
+
 function nsContextMenu(aXulMenu, aIsShift) {
   this.shouldDisplay = true;
   this.initMenu(aXulMenu, aIsShift);
@@ -39,6 +41,7 @@ nsContextMenu.prototype = {
   },
 
   hiding: function CM_hiding() {
+    gContextMenuContentData = null;
     InlineSpellCheckerUI.clearSuggestionsFromMenu();
     InlineSpellCheckerUI.clearDictionaryListFromMenu();
     InlineSpellCheckerUI.uninit();
@@ -347,7 +350,7 @@ nsContextMenu.prototype = {
   },
 
   initSpellingItems: function() {
-    var canSpell = InlineSpellCheckerUI.canSpellCheck;
+    var canSpell = InlineSpellCheckerUI.canSpellCheck && this.canSpellCheck;
     var onMisspelling = InlineSpellCheckerUI.overMisspelling;
     var showUndo = canSpell && InlineSpellCheckerUI.canUndo();
     this.showItem("spell-check-enabled", canSpell);
@@ -372,7 +375,7 @@ nsContextMenu.prototype = {
       this.showItem("spell-no-suggestions", false);
 
     // dictionary list
-    this.showItem("spell-dictionaries", InlineSpellCheckerUI.enabled);
+    this.showItem("spell-dictionaries", canSpell && InlineSpellCheckerUI.enabled);
     if (canSpell) {
       var dictMenu = document.getElementById("spell-dictionaries-menu");
       var dictSep = document.getElementById("spell-language-separator");
@@ -500,6 +503,15 @@ nsContextMenu.prototype = {
 
   // Set various context menu attributes based on the state of the world.
   setTarget: function (aNode, aRangeParent, aRangeOffset) {
+    // If gContextMenuContentData is not null, this event was forwarded from a
+    // child process, so use that information instead.
+    if (gContextMenuContentData) {
+      this.isRemote = true;
+      aNode = gContextMenuContentData.event.target;
+    } else {
+      this.isRemote = false;
+    }
+
     const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (aNode.namespaceURI == xulNS ||
         aNode.nodeType == Node.DOCUMENT_NODE ||
@@ -535,15 +547,22 @@ nsContextMenu.prototype = {
     this.onEditableArea    = false;
     this.isDesignMode      = false;
     this.onCTPPlugin       = false;
+    this.canSpellCheck     = false;
 
     // Remember the node that was clicked.
     this.target = aNode;
 
-    this.browser = this.target.ownerDocument.defaultView
-                                .QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
-                                .QueryInterface(Ci.nsIDocShell)
-                                .chromeEventHandler;
+    // If this is a remote context menu event, use the information from
+    // gContextMenuContentData instead.
+    if (this.isRemote) {
+      this.browser = gContextMenuContentData.browser;
+    } else {
+      this.browser = this.target.ownerDocument.defaultView
+                                  .QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIWebNavigation)
+                                  .QueryInterface(Ci.nsIDocShell)
+                                  .chromeEventHandler;
+    }
     this.onSocial = !!this.browser.getAttribute("origin");
 
     // Check if we are in a synthetic document (stand alone image, video, etc.).
@@ -630,6 +649,13 @@ nsContextMenu.prototype = {
                this.target.mozMatchesSelector(":-moz-handler-clicktoplay")) {
         this.onCTPPlugin = true;
       }
+
+      this.canSpellCheck = this._isSpellCheckEnabled(this.target);
+    }
+    else if (this.target.nodeType == Node.TEXT_NODE) {
+      // For text nodes, look at the parent node to determine the spellcheck attribute.
+      this.canSpellCheck = this.target.parentNode &&
+                           this._isSpellCheckEnabled(this.target);
     }
 
     // Second, bubble out, looking for items of interest that can have childen.
@@ -731,7 +757,7 @@ nsContextMenu.prototype = {
           this.isDesignMode      = true;
           this.onEditableArea = true;
           InlineSpellCheckerUI.init(editingSession.getEditorForWindow(win));
-          var canSpell = InlineSpellCheckerUI.canSpellCheck;
+          var canSpell = InlineSpellCheckerUI.canSpellCheck && this.canSpellCheck;
           InlineSpellCheckerUI.initFromEvent(aRangeParent, aRangeOffset);
           this.showItem("spell-check-enabled", canSpell);
           this.showItem("spell-separator", canSpell);
@@ -772,10 +798,39 @@ nsContextMenu.prototype = {
              this.linkProtocol == "snews"      );
   },
 
+  _unremotePrincipal: function(aRemotePrincipal) {
+    if (this.isRemote) {
+      return Cc["@mozilla.org/scriptsecuritymanager;1"]
+               .getService(Ci.nsIScriptSecurityManager)
+               .getAppCodebasePrincipal(aRemotePrincipal.URI,
+                                        aRemotePrincipal.appId,
+                                        aRemotePrincipal.isInBrowserElement);
+    }
+
+    return aRemotePrincipal;
+  },
+
+  _isSpellCheckEnabled: function(aNode) {
+    // We can always force-enable spellchecking on textboxes
+    if (this.isTargetATextBox(aNode)) {
+      return true;
+    }
+    // We can never spell check something which is not content editable
+    var editable = aNode.isContentEditable;
+    if (!editable && aNode.ownerDocument) {
+      editable = aNode.ownerDocument.designMode == "on";
+    }
+    if (!editable) {
+      return false;
+    }
+    // Otherwise make sure that nothing in the parent chain disables spellchecking
+    return aNode.spellcheck;
+  },
+
   // Open linked-to URL in a new window.
   openLink : function () {
     var doc = this.target.ownerDocument;
-    urlSecurityCheck(this.linkURL, doc.nodePrincipal);
+    urlSecurityCheck(this.linkURL, this._unremotePrincipal(doc.nodePrincipal));
     openLinkIn(this.linkURL, "window",
                { charset: doc.characterSet,
                  referrerURI: doc.documentURIObject });
@@ -784,7 +839,7 @@ nsContextMenu.prototype = {
   // Open linked-to URL in a new private window.
   openLinkInPrivateWindow : function () {
     var doc = this.target.ownerDocument;
-    urlSecurityCheck(this.linkURL, doc.nodePrincipal);
+    urlSecurityCheck(this.linkURL, this._unremotePrincipal(doc.nodePrincipal));
     openLinkIn(this.linkURL, "window",
                { charset: doc.characterSet,
                  referrerURI: doc.documentURIObject,
@@ -794,7 +849,7 @@ nsContextMenu.prototype = {
   // Open linked-to URL in a new tab.
   openLinkInTab: function() {
     var doc = this.target.ownerDocument;
-    urlSecurityCheck(this.linkURL, doc.nodePrincipal);
+    urlSecurityCheck(this.linkURL, this._unremotePrincipal(doc.nodePrincipal));
     openLinkIn(this.linkURL, "tab",
                { charset: doc.characterSet,
                  referrerURI: doc.documentURIObject });
@@ -803,7 +858,7 @@ nsContextMenu.prototype = {
   // open URL in current tab
   openLinkInCurrent: function() {
     var doc = this.target.ownerDocument;
-    urlSecurityCheck(this.linkURL, doc.nodePrincipal);
+    urlSecurityCheck(this.linkURL, this._unremotePrincipal(doc.nodePrincipal));
     openLinkIn(this.linkURL, "current",
                { charset: doc.characterSet,
                  referrerURI: doc.documentURIObject });
@@ -839,7 +894,8 @@ nsContextMenu.prototype = {
     var doc = this.target.ownerDocument;
     var frameURL = doc.location.href;
 
-    urlSecurityCheck(frameURL, this.browser.contentPrincipal,
+    urlSecurityCheck(frameURL,
+                     this._unremotePrincipal(this.browser.contentPrincipal),
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     var referrer = doc.referrer;
     openUILinkIn(frameURL, "current", { disallowInheritPrincipal: true,
@@ -902,7 +958,8 @@ nsContextMenu.prototype = {
 
   viewImageDesc: function(e) {
     var doc = this.target.ownerDocument;
-    urlSecurityCheck(this.imageDescURL, this.browser.contentPrincipal,
+    urlSecurityCheck(this.imageDescURL,
+                     this._unremotePrincipal(this.browser.contentPrincipal),
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     openUILink(this.imageDescURL, e, { disallowInheritPrincipal: true,
                              referrerURI: doc.documentURIObject });
@@ -914,7 +971,7 @@ nsContextMenu.prototype = {
 
   reloadImage: function(e) {
     urlSecurityCheck(this.mediaURL,
-                     this.browser.contentPrincipal,
+                     this._unremotePrincipal(this.browser.contentPrincipal),
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
 
     if (this.target instanceof Ci.nsIImageLoadingContent)
@@ -930,7 +987,7 @@ nsContextMenu.prototype = {
     else {
       viewURL = this.mediaURL;
       urlSecurityCheck(viewURL,
-                       this.browser.contentPrincipal,
+                       this._unremotePrincipal(this.browser.contentPrincipal),
                        Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     }
 
@@ -940,7 +997,8 @@ nsContextMenu.prototype = {
   },
 
   saveVideoFrameAsImage: function () {
-    urlSecurityCheck(this.mediaURL, this.browser.contentPrincipal,
+    urlSecurityCheck(this.mediaURL,
+                     this._unremotePrincipal(this.browser.contentPrincipal),
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     let name = "";
     try {
@@ -973,7 +1031,7 @@ nsContextMenu.prototype = {
   // Change current window to the URL of the background image.
   viewBGImage: function(e) {
     urlSecurityCheck(this.bgImageURL,
-                     this.browser.contentPrincipal,
+                     this._unremotePrincipal(this.browser.contentPrincipal),
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
     var doc = this.target.ownerDocument;
     openUILink(this.bgImageURL, e, { disallowInheritPrincipal: true,
@@ -1007,8 +1065,9 @@ nsContextMenu.prototype = {
     if (this.disableSetDesktopBackground())
       return;
 
+    var doc = this.target.ownerDocument;
     urlSecurityCheck(this.target.currentURI.spec,
-                     this.target.ownerDocument.nodePrincipal);
+                     this._unremotePrincipal(doc.nodePrincipal));
 
     // Confirm since it's annoying if you hit this accidentally.
     const kDesktopBackgroundURL = 
@@ -1185,7 +1244,7 @@ nsContextMenu.prototype = {
       linkText = document.commandDispatcher.focusedWindow.getSelection().toString().trim();
     else
       linkText = this.linkText();
-    urlSecurityCheck(this.linkURL, doc.nodePrincipal);
+    urlSecurityCheck(this.linkURL, this._unremotePrincipal(doc.nodePrincipal));
 
     this.saveHelper(this.linkURL, linkText, null, true, doc);
   },
@@ -1205,12 +1264,14 @@ nsContextMenu.prototype = {
                    true, false, doc.documentURIObject, doc);
     }
     else if (this.onImage) {
-      urlSecurityCheck(this.mediaURL, doc.nodePrincipal);
+      urlSecurityCheck(this.mediaURL,
+                       this._unremotePrincipal(doc.nodePrincipal));
       saveImageURL(this.mediaURL, null, "SaveImageTitle", false,
                    false, doc.documentURIObject, doc);
     }
     else if (this.onVideo || this.onAudio) {
-      urlSecurityCheck(this.mediaURL, doc.nodePrincipal);
+      urlSecurityCheck(this.mediaURL,
+                       this._unremotePrincipal(doc.nodePrincipal));
       var dialogTitle = this.onVideo ? "SaveVideoTitle" : "SaveAudioTitle";
       this.saveHelper(this.mediaURL, null, dialogTitle, false, doc);
     }

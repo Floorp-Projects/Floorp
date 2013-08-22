@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=707564
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 707564</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 707564 **/
+  SimpleTest.waitForExplicitFinish();
+
+  addLoadEvent(function() {
+    var props = Object.getOwnPropertyNames(frames[0].navigator);
+    isnot(props.indexOf("mozApps"), -1,
+          "Should enumerate a mozApps property on navigator");
+
+    // Now enumerate a different navigator object
+    var found = false;
+    for (var name in frames[1].navigator) {
+      if (name == "mozApps") {
+        found = true;
+      }
+    }
+    ok(found, "Should enumerate a mozApps property on navigator via for...in");
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=707564">Mozilla Bug 707564</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+<iframe></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

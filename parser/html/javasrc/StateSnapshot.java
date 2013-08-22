@@ -31,6 +31,8 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
 
     private final @Auto StackNode<T>[] listOfActiveFormattingElements;
 
+    private final @Auto int[] templateModeStack;
+
     private final T formPointer;
 
     private final T headPointer;
@@ -50,17 +52,23 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
     /**
      * @param stack
      * @param listOfActiveFormattingElements
+     * @param templateModeStack
      * @param formPointer
-     * @param quirks 
-     * @param needToDropLF 
-     * @param foreignFlag 
-     * @param originalMode 
-     * @param mode 
+     * @param headPointer
+     * @param deepTreeSurrogateParent
+     * @param mode
+     * @param originalMode
+     * @param framesetOk
+     * @param needToDropLF
+     * @param quirks
      */
     StateSnapshot(StackNode<T>[] stack,
-            StackNode<T>[] listOfActiveFormattingElements, T formPointer, T headPointer, T deepTreeSurrogateParent, int mode, int originalMode, boolean framesetOk, boolean needToDropLF, boolean quirks) {
+            StackNode<T>[] listOfActiveFormattingElements, int[] templateModeStack, T formPointer,
+            T headPointer, T deepTreeSurrogateParent, int mode, int originalMode,
+            boolean framesetOk, boolean needToDropLF, boolean quirks) {
         this.stack = stack;
         this.listOfActiveFormattingElements = listOfActiveFormattingElements;
+        this.templateModeStack = templateModeStack;
         this.formPointer = formPointer;
         this.headPointer = headPointer;
         this.deepTreeSurrogateParent = deepTreeSurrogateParent;
@@ -76,6 +84,13 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
      */
     public StackNode<T>[] getStack() {
         return stack;
+    }
+
+    /**
+     * @see nu.validator.htmlparser.impl.TreeBuilderState#getTemplateModeStack()
+     */
+    public int[] getTemplateModeStack() {
+        return templateModeStack;
     }
 
     /**
@@ -167,6 +182,13 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
      */
     public int getStackLength() {
         return stack.length;
+    }
+
+    /**
+     * @see nu.validator.htmlparser.impl.TreeBuilderState#getTemplateModeStackLength()
+     */
+    public int getTemplateModeStackLength() {
+        return templateModeStack.length;
     }
 
     @SuppressWarnings("unused") private void destructor() {

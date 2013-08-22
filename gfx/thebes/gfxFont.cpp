@@ -706,7 +706,7 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
 
     // Most families are "simple", having just Regular/Bold/Italic/BoldItalic,
     // or some subset of these. In this case, we have exactly 4 entries in mAvailableFonts,
-    // stored in the above order; note that some of the entries may be NULL.
+    // stored in the above order; note that some of the entries may be nullptr.
     // We can then pick the required entry based on whether the request is for
     // bold or non-bold, italic or non-italic, without running the more complex
     // matching algorithm used for larger families with many weights and/or widths.
@@ -885,7 +885,7 @@ gfxFontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
     uint32_t count = mAvailableFonts.Length();
     for (uint32_t i = 0; i < count; i++) {
         // this is not called for "simple" families, and therefore it does not
-        // need to check the mAvailableFonts entries for NULL
+        // need to check the mAvailableFonts entries for nullptr.
         gfxFontEntry *fe = mAvailableFonts[i];
         uint32_t distance = StyleDistance(fe, anItalic, aStretch);
         if (distance <= bestMatchDistance) {
@@ -2526,8 +2526,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
       Matrix mat, matInv;
       Matrix oldMat = dt->GetTransform();
 
-      // This is NULL when we have inverse-transformed glyphs and we need to
-      // transform the Brush inside flush.
+      // This is nullptr when we have inverse-transformed glyphs and we need
+      // to transform the Brush inside flush.
       Matrix *passedInvMatrix = nullptr;
 
       RefPtr<GlyphRenderingOptions> renderingOptions =
@@ -5012,7 +5012,7 @@ gfxFontStyle::gfxFontStyle() :
     size(DEFAULT_PIXEL_FONT_SIZE), sizeAdjust(0.0f),
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
     weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
-    systemFont(true), printerFont(false), 
+    systemFont(true), printerFont(false), useGrayscaleAntialiasing(false),
     style(NS_FONT_STYLE_NORMAL)
 {
 }
@@ -5027,7 +5027,7 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     languageOverride(ParseFontLanguageOverride(aLanguageOverride)),
     weight(aWeight), stretch(aStretch),
     systemFont(aSystemFont), printerFont(aPrinterFont),
-    style(aStyle)
+    useGrayscaleAntialiasing(false), style(aStyle)
 {
     MOZ_ASSERT(!mozilla::IsNaN(size));
     MOZ_ASSERT(!mozilla::IsNaN(sizeAdjust));
@@ -5058,6 +5058,7 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     languageOverride(aStyle.languageOverride),
     weight(aStyle.weight), stretch(aStyle.stretch),
     systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
+    useGrayscaleAntialiasing(aStyle.useGrayscaleAntialiasing),
     style(aStyle.style)
 {
     featureSettings.AppendElements(aStyle.featureSettings);

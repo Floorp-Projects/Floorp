@@ -16,7 +16,7 @@ gfxQuartzSurface::MakeInvalid()
 
 gfxQuartzSurface::gfxQuartzSurface(const gfxSize& desiredSize, gfxImageFormat format,
                                    bool aForPrinting)
-    : mCGContext(NULL), mSize(desiredSize), mForPrinting(aForPrinting)
+    : mCGContext(nullptr), mSize(desiredSize), mForPrinting(aForPrinting)
 {
     gfxIntSize size((unsigned int) floor(desiredSize.width),
                     (unsigned int) floor(desiredSize.height));

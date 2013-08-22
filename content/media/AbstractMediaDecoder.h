@@ -72,6 +72,11 @@ public:
   // Set the duration of the media in microseconds.
   virtual void SetMediaDuration(int64_t aDuration) = 0;
 
+  // Sets the duration of the media in microseconds. The MediaDecoder
+  // fires a durationchange event to its owner (e.g., an HTML audio
+  // tag).
+  virtual void UpdateMediaDuration(int64_t aDuration) = 0;
+
   // Set the media as being seekable or not.
   virtual void SetMediaSeekable(bool aMediaSeekable) = 0;
 

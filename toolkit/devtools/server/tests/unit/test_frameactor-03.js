@@ -43,6 +43,5 @@ function test_pause_frame()
      };
     stopMe();
     debugger;
-    ")"
   } + ")()");
 }

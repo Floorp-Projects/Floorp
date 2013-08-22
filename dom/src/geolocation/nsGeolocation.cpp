@@ -2,51 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsContentPermissionHelper.h"
 #include "nsXULAppAPI.h"
 
-#include "mozilla/dom/PBrowserChild.h"
-#include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/ContentChild.h"
-#include "nsNetUtil.h"
-
-#include "nsFrameManager.h"
-#include "nsFrameLoader.h"
-#include "nsIFrameLoader.h"
-
-#include "nsIDocShellTreeOwner.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIWebProgressListener2.h"
+#include "mozilla/dom/TabChild.h"
 
 #include "nsISettingsService.h"
 
-#include "nsDOMEventTargetHelper.h"
-#include "TabChild.h"
-
 #include "nsGeolocation.h"
-#include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
 #include "nsDOMClassInfoID.h"
 #include "nsComponentManagerUtils.h"
-#include "nsICategoryManager.h"
-#include "nsISupportsPrimitives.h"
 #include "nsServiceManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
-#include "nsIURI.h"
-#include "nsIPermissionManager.h"
+#include "nsIDocument.h"
 #include "nsIObserverService.h"
+#include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/ClearOnShutdown.h"
 
-#include <math.h>
-#include <algorithm>
-#include <limits>
+class nsIPrincipal;
 
 #ifdef MOZ_MAEMO_LIBLOCATION
 #include "MaemoLocationProvider.h"
@@ -67,8 +45,6 @@
 #ifdef MOZ_WIDGET_COCOA
 #include "CoreLocationLocationProvider.h"
 #endif
-
-#include "nsIDocument.h"
 
 // Some limit to the number of get or watch geolocation requests
 // that a window can make.
@@ -225,6 +201,7 @@ private:
 ////////////////////////////////////////////////////
 // PositionError
 ////////////////////////////////////////////////////
+DOMCI_DATA(GeoPositionError, PositionError)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PositionError)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -414,11 +391,6 @@ nsGeolocationRequest::Cancel()
 NS_IMETHODIMP
 nsGeolocationRequest::Allow()
 {
-  nsCOMPtr<nsIDOMWindow> window;
-  GetWindow(getter_AddRefs(window));
-  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(window);
-  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
-
   // Kick off the geo device, if it isn't already running
   nsRefPtr<nsGeolocationService> gs = nsGeolocationService::GetGeolocationService();
   nsresult rv = gs->StartDevice(GetPrincipal());
@@ -718,17 +690,17 @@ nsGeolocationService::HandleMozsettingChanged(const PRUnichar* aData)
 
     JS::Rooted<JSObject*> obj(cx, &val.toObject());
     JS::Rooted<JS::Value> key(cx);
-    if (!JS_GetProperty(cx, obj, "key", key.address()) || !key.isString()) {
+    if (!JS_GetProperty(cx, obj, "key", &key) || !key.isString()) {
       return;
     }
 
-    JSBool match;
-    if (!JS_StringEqualsAscii(cx, key.toString(), GEO_SETINGS_ENABLED, &match) || (match != JS_TRUE)) {
+    bool match;
+    if (!JS_StringEqualsAscii(cx, key.toString(), GEO_SETINGS_ENABLED, &match) || !match) {
       return;
     }
 
     JS::Rooted<JS::Value> value(cx);
-    if (!JS_GetProperty(cx, obj, "value", value.address()) || !value.isBoolean()) {
+    if (!JS_GetProperty(cx, obj, "value", &value) || !value.isBoolean()) {
       return;
     }
 
@@ -999,6 +971,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Geolocation)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Geolocation)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(Geolocation)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Geolocation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedPosition)

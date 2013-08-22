@@ -6,6 +6,8 @@
 
 #include "nsWrapperCacheInlines.h"
 
+#include "jsproxy.h"
+#include "mozilla/dom/DOMJSProxyHandler.h"
 #include "nsCycleCollectionTraversalCallback.h"
 #include "nsCycleCollector.h"
 
@@ -17,6 +19,22 @@ nsWrapperCache::HoldJSObjects(void* aScriptObjectHolder,
                               nsScriptObjectTracer* aTracer)
 {
   cyclecollector::AddJSHolder(aScriptObjectHolder, aTracer);
+}
+
+void
+nsWrapperCache::ReleaseWrapper(void* aScriptObjectHolder)
+{
+  if (PreservingWrapper()) {
+    // PreserveWrapper puts new DOM bindings in the JS holders hash, but they
+    // can also be in the DOM expando hash, so we need to try to remove them
+    // from both here.
+    JSObject* obj = GetWrapperPreserveColor();
+    if (IsDOMBinding() && obj && js::IsProxy(obj)) {
+      DOMProxyHandler::GetAndClearExpandoObject(obj);
+    }
+    SetPreservingWrapper(false);
+    cyclecollector::RemoveJSHolder(aScriptObjectHolder);
+  }
 }
 
 #ifdef DEBUG

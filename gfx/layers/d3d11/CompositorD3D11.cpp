@@ -48,6 +48,7 @@ struct DeviceAttachmentsD3D11
   RefPtr<ID3D11PixelShader> mRGBAShader[3];
   RefPtr<ID3D11PixelShader> mRGBShader[2];
   RefPtr<ID3D11PixelShader> mYCbCrShader[2];
+  RefPtr<ID3D11PixelShader> mComponentAlphaShader[2];
   RefPtr<ID3D11Buffer> mPSConstantBuffer;
   RefPtr<ID3D11Buffer> mVSConstantBuffer;
   RefPtr<ID3D11RasterizerState> mRasterizerState;
@@ -55,6 +56,7 @@ struct DeviceAttachmentsD3D11
   RefPtr<ID3D11SamplerState> mPointSamplerState;
   RefPtr<ID3D11BlendState> mPremulBlendState;
   RefPtr<ID3D11BlendState> mNonPremulBlendState;
+  RefPtr<ID3D11BlendState> mComponentBlendState;
 };
 
 CompositorD3D11::CompositorD3D11(nsIWidget* aWidget)
@@ -218,6 +220,22 @@ CompositorD3D11::Initialize()
     if (FAILED(hr)) {
       return false;
     }
+
+    D3D11_RENDER_TARGET_BLEND_DESC rtBlendComponent = {
+      TRUE,
+      D3D11_BLEND_ONE,
+      D3D11_BLEND_INV_SRC1_COLOR,
+      D3D11_BLEND_OP_ADD,
+      D3D11_BLEND_ONE,
+      D3D11_BLEND_INV_SRC_ALPHA,
+      D3D11_BLEND_OP_ADD,
+      D3D11_COLOR_WRITE_ENABLE_ALL
+    };
+    blendDesc.RenderTarget[0] = rtBlendComponent;
+    hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mComponentBlendState));
+    if (FAILED(hr)) {
+      return false;
+    }
   }
 
   nsRefPtr<IDXGIDevice> dxgiDevice;
@@ -319,6 +337,7 @@ CompositorD3D11::GetTextureFactoryIdentifier()
 {
   TextureFactoryIdentifier ident;
   ident.mMaxTextureSize = GetMaxTextureSize();
+  ident.mParentProcessId = XRE_GetProcessType();
   ident.mParentBackend = LAYERS_D3D11;
   return ident;
 }
@@ -433,6 +452,12 @@ CompositorD3D11::SetPSForEffect(Effect* aEffect, MaskType aMaskType)
   case EFFECT_YCBCR:
     mContext->PSSetShader(mAttachments->mYCbCrShader[aMaskType], nullptr, 0);
     return;
+  case EFFECT_COMPONENT_ALPHA:
+    mContext->PSSetShader(mAttachments->mComponentAlphaShader[aMaskType], nullptr, 0);
+    return;
+  default:
+    NS_WARNING("No shader to load");
+    return;
   }
 }
 
@@ -452,7 +477,7 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
 
   mPSConstants.layerOpacity[0] = aOpacity;
 
-  bool isPremultiplied = true;
+  bool restoreBlendMode = false;
 
   MaskType maskType = MaskNone;
 
@@ -520,7 +545,10 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
       ID3D11ShaderResourceView* srView = view;
       mContext->PSSetShaderResources(0, 1, &srView);
 
-      isPremultiplied = texturedEffect->mPremultiplied;
+      if (!texturedEffect->mPremultiplied) {
+        mContext->OMSetBlendState(mAttachments->mNonPremulBlendState, sBlendFactor, 0xFFFFFFFF);
+        restoreBlendMode = true;
+      }
 
       SetSamplerForFilter(texturedEffect->mFilter);
     }
@@ -545,16 +573,35 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
       mContext->PSSetShaderResources(0, 3, srViews);
     }
     break;
+  case EFFECT_COMPONENT_ALPHA:
+    {
+      MOZ_ASSERT(gfxPlatform::ComponentAlphaEnabled());
+      EffectComponentAlpha* effectComponentAlpha =
+        static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
+      TextureSourceD3D11* sourceOnWhite = effectComponentAlpha->mOnWhite->AsSourceD3D11();
+      TextureSourceD3D11* sourceOnBlack = effectComponentAlpha->mOnBlack->AsSourceD3D11();
+      SetSamplerForFilter(effectComponentAlpha->mFilter);
+
+      mVSConstants.textureCoords = effectComponentAlpha->mTextureCoords;
+      RefPtr<ID3D11ShaderResourceView> views[2];
+      mDevice->CreateShaderResourceView(sourceOnBlack->GetD3D11Texture(), nullptr, byRef(views[0]));
+      mDevice->CreateShaderResourceView(sourceOnWhite->GetD3D11Texture(), nullptr, byRef(views[1]));
+
+      ID3D11ShaderResourceView* srViews[2] = { views[0], views[1] };
+      mContext->PSSetShaderResources(0, 2, srViews);
+
+      mContext->OMSetBlendState(mAttachments->mComponentBlendState, sBlendFactor, 0xFFFFFFFF);
+      restoreBlendMode = true;
+    }
+    break;
   default:
+    NS_WARNING("Unknown shader type");
     return;
   }
   UpdateConstantBuffers();
 
-  if (!isPremultiplied) {
-    mContext->OMSetBlendState(mAttachments->mNonPremulBlendState, sBlendFactor, 0xFFFFFFFF);
-  }
   mContext->Draw(4, 0);
-  if (!isPremultiplied) {
+  if (restoreBlendMode) {
     mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
   }
 }
@@ -566,18 +613,14 @@ CompositorD3D11::BeginFrame(const Rect* aClipRectIn,
                             Rect* aClipRectOut,
                             Rect* aRenderBoundsOut)
 {
-  VerifyBufferSize();
   UpdateRenderTarget();
 
-  nsIntRect rect;
-  mWidget->GetClientBounds(rect);
-
-  if (rect.IsEmpty()) {
+  // Failed to create a render target.
+  if (!mDefaultRT ||
+      mSize.width == 0 || mSize.height == 0) {
     *aRenderBoundsOut = Rect();
     return;
   }
-
-  mDefaultRT->SetSize(IntSize(rect.width, rect.height));
 
   mContext->IASetInputLayout(mAttachments->mInputLayout);
 
@@ -585,31 +628,51 @@ CompositorD3D11::BeginFrame(const Rect* aClipRectIn,
   UINT size = sizeof(Vertex);
   UINT offset = 0;
   mContext->IASetVertexBuffers(0, 1, &buffer, &size, &offset);
-  SetRenderTarget(mDefaultRT);
 
   if (aClipRectOut) {
-    *aClipRectOut = Rect(0, 0, rect.width, rect.height);
+    *aClipRectOut = Rect(0, 0, mSize.width, mSize.height);
   }
   if (aRenderBoundsOut) {
-    *aRenderBoundsOut = Rect(0, 0, rect.width, rect.height);
+    *aRenderBoundsOut = Rect(0, 0, mSize.width, mSize.height);
   }
+
+  D3D11_RECT scissor;
+  if (aClipRectIn) {
+    scissor.left = aClipRectIn->x;
+    scissor.right = aClipRectIn->XMost();
+    scissor.top = aClipRectIn->y;
+    scissor.bottom = aClipRectIn->YMost();
+  } else {
+    scissor.left = scissor.top = 0;
+    scissor.right = mSize.width;
+    scissor.bottom = mSize.height;
+  }
+  mContext->RSSetScissorRects(1, &scissor);
 
   FLOAT black[] = { 0, 0, 0, 0 };
   mContext->ClearRenderTargetView(mDefaultRT->mRTView, black);
 
   mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
   mContext->RSSetState(mAttachments->mRasterizerState);
+
+  SetRenderTarget(mDefaultRT);
 }
 
 void
 CompositorD3D11::EndFrame()
 {
   mContext->Flush();
-  mSwapChain->Present(0, 0);
 
-  if (mTarget) {
-    PaintToTarget();
+  nsIntSize oldSize = mSize;
+  EnsureSize();
+  if (oldSize == mSize) {
+    mSwapChain->Present(0, 0);
+
+    if (mTarget) {
+      PaintToTarget();
+    }
   }
+
   mCurrentRT = nullptr;
 }
 
@@ -640,43 +703,41 @@ CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
   memcpy(&mVSConstants.projection, &projection, sizeof(mVSConstants.projection));
 }
 
-const nsIntSize&
-CompositorD3D11::GetWidgetSize()
+void
+CompositorD3D11::EnsureSize()
 {
   nsIntRect rect;
   mWidget->GetClientBounds(rect);
 
   mSize = rect.Size();
-
-  return mSize;
 }
 
 void
 CompositorD3D11::VerifyBufferSize()
 {
-  nsIntRect rect;
-  mWidget->GetClientBounds(rect);
-
   DXGI_SWAP_CHAIN_DESC swapDesc;
   mSwapChain->GetDesc(&swapDesc);
 
-  if ((swapDesc.BufferDesc.Width == rect.width &&
-      swapDesc.BufferDesc.Height == rect.height) || rect.IsEmpty()) {
+  if ((swapDesc.BufferDesc.Width == mSize.width &&
+       swapDesc.BufferDesc.Height == mSize.height) ||
+      mSize.width == 0 || mSize.height == 0) {
     return;
   }
 
   mDefaultRT = nullptr;
 
   if (gfxWindowsPlatform::IsOptimus()) {
-    mSwapChain->ResizeBuffers(1, rect.width, rect.height,
+    mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
                               DXGI_FORMAT_B8G8R8A8_UNORM,
                               0);
+#ifdef MOZ_METRO
   } else if (IsRunningInWindowsMetro()) {
-    mSwapChain->ResizeBuffers(2, rect.width, rect.height,
+    mSwapChain->ResizeBuffers(2, mSize.width, mSize.height,
                               DXGI_FORMAT_B8G8R8A8_UNORM,
                               0);
+#endif
   } else {
-    mSwapChain->ResizeBuffers(1, rect.width, rect.height,
+    mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
                               DXGI_FORMAT_B8G8R8A8_UNORM,
                               DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE);
   }
@@ -685,6 +746,9 @@ CompositorD3D11::VerifyBufferSize()
 void
 CompositorD3D11::UpdateRenderTarget()
 {
+  EnsureSize();
+  VerifyBufferSize();
+
   if (mDefaultRT) {
     return;
   }
@@ -699,13 +763,13 @@ CompositorD3D11::UpdateRenderTarget()
   }
 
   mDefaultRT = new CompositingRenderTargetD3D11(backBuf);
+  mDefaultRT->SetSize(mSize);
 }
 
 bool
 CompositorD3D11::CreateShaders()
 {
   HRESULT hr;
-
 
   hr = mDevice->CreateVertexShader(LayerQuadVS,
                                    sizeof(LayerQuadVS),
@@ -744,6 +808,7 @@ CompositorD3D11::CreateShaders()
   LOAD_PIXEL_SHADER(RGBShader);
   LOAD_PIXEL_SHADER(RGBAShader);
   LOAD_PIXEL_SHADER(YCbCrShader);
+  LOAD_PIXEL_SHADER(ComponentAlphaShader);
 
 #undef LOAD_PIXEL_SHADER
 
@@ -782,6 +847,7 @@ CompositorD3D11::SetSamplerForFilter(Filter aFilter)
 {
   ID3D11SamplerState *sampler;
   switch (aFilter) {
+  default:
   case FILTER_LINEAR:
     sampler = mAttachments->mLinearSamplerState;
     break;
@@ -824,7 +890,7 @@ CompositorD3D11::PaintToTarget()
                         gfxASurface::ImageFormatARGB32);
 
   mTarget->SetSource(tmpSurface);
-  mTarget->SetOperator(gfxContext::OPERATOR_OVER);
+  mTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
   mTarget->Paint();
 
   mContext->Unmap(readTexture, 0);

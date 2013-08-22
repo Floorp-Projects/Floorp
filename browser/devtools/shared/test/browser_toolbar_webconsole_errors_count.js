@@ -7,8 +7,6 @@ function test() {
   const TEST_URI = "http://example.com/browser/browser/devtools/shared/test/" +
                    "browser_toolbar_webconsole_errors_count.html";
 
-  let HUDService = Cu.import("resource:///modules/HUDService.jsm",
-                             {}).HUDService;
   let gDevTools = Cu.import("resource:///modules/devtools/gDevTools.jsm",
                              {}).gDevTools;
 

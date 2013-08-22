@@ -9,12 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-modules := \
-  dataprovider.jsm \
-  providermanager.jsm \
-  storage.jsm \
-  $(NULL)
-
 testing_modules := \
   mocks.jsm \
   $(NULL)
@@ -25,7 +19,6 @@ MAIN_JS_MODULE := Metrics.jsm
 MAIN_JS_MODULE_PATH = $(FINAL_TARGET)/modules
 PP_TARGETS += MAIN_JS_MODULE
 
-EXTRA_PP_JS_MODULES := $(modules)
 JS_MODULES_PATH = modules/services/metrics
 
 TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))

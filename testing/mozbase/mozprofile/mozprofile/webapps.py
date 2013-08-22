@@ -66,6 +66,7 @@ class WebappCollection(object):
     """A list-like object that collects webapps and updates the webapp manifests"""
 
     json_template = Template(""""$name": {
+  "name": "$name",
   "origin": "$origin",
   "installOrigin": "$origin",
   "receipt": null,

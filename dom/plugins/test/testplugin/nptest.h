@@ -39,7 +39,7 @@
 #include "npapi.h"
 #include "npfunctions.h"
 #include "npruntime.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include <string>
 #include <sstream>
 

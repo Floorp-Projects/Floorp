@@ -10,22 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-
-SIMPLECSRCS	+= \
-		leakstats.c \
-		tmstats.c \
-		$(NULL)
-
-SIMPLECPPSRCS	= \
-		leaksoup.cpp \
-		bloatblame.cpp \
-		$(NULL)
-
-SIMPLE_PROGRAMS	= \
-		$(SIMPLECSRCS:.c=$(BIN_SUFFIX)) \
-		$(SIMPLECPPSRCS:.cpp=$(BIN_SUFFIX)) \
-		$(NULL)
-
 EXTRACSRCS = tmreader.c
 EXTRACPPSRCS = adreader.cpp
 
@@ -40,7 +24,9 @@ PROGCSRCS = \
 PROGOBJS = $(PROGCSRCS:.c=.$(OBJ_SUFFIX))
 endif
 
-CSRCS = $(SIMPLECSRCS) $(EXTRACSRCS) $(PROGCSRCS)
+CSRCS += $(EXTRACSRCS) $(PROGCSRCS)
+CPPSRCS += $(EXTRACPPSRCS)
+
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES	+= -I$(topsrcdir)/config/os2
 endif

@@ -22,8 +22,7 @@ var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
 function finish() {
   obs.notifyObservers(updateService, "disk-space-watcher", "free");
 
-  OfflineTest.teardown();
-  OfflineTest.finish();
+  OfflineTest.teardownAndFinish();
 }
 
 function onError() {

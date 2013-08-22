@@ -7,7 +7,7 @@
 #ifndef _states_h_
 #define _states_h_
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 
 namespace mozilla {
 namespace a11y {

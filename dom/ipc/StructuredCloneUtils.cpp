@@ -54,7 +54,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
 #endif
 
     JS::Rooted<JS::Value> wrappedFile(aCx);
-    JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
+    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
     nsresult rv = nsContentUtils::WrapNative(aCx, global, file,
                                              &NS_GET_IID(nsIDOMFile),
                                              wrappedFile.address());
@@ -83,7 +83,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
 #endif
 
     JS::Rooted<JS::Value> wrappedBlob(aCx);
-    JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
+    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
     nsresult rv = nsContentUtils::WrapNative(aCx, global, blob,
                                              &NS_GET_IID(nsIDOMBlob),
                                              wrappedBlob.address());
@@ -98,7 +98,7 @@ Read(JSContext* aCx, JSStructuredCloneReader* aReader, uint32_t aTag,
   return NS_DOMReadStructuredClone(aCx, aReader, aTag, aData, nullptr);
 }
 
-JSBool
+bool
 Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
       JS::Handle<JSObject*> aObj, void* aClosure)
 {

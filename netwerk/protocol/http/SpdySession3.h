@@ -21,6 +21,7 @@ class nsISocketTransport;
 
 namespace mozilla { namespace net {
 
+class SpdyPushedStream3;
 class SpdyStream3;
 
 class SpdySession3 MOZ_FINAL : public ASpdySession

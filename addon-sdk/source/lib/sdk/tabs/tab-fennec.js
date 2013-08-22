@@ -33,6 +33,9 @@ const Tab = Class({
     // TabReady
     let onReady = tabInternals.onReady = onTabReady.bind(this);
     tab.browser.addEventListener(EVENTS.ready.dom, onReady, false);
+    
+    let onPageShow = tabInternals.onPageShow = onTabPageShow.bind(this);
+    tab.browser.addEventListener(EVENTS.pageshow.dom, onPageShow, false);
 
     // TabClose
     let onClose = tabInternals.onClose = onTabClose.bind(this);
@@ -54,7 +57,9 @@ const Tab = Class({
    * Changing this property will loads page under under the specified location.
    * @type {String}
    */
-  get url() getTabURL(tabNS(this).tab),
+  get url() {
+    return tabNS(this).closed ? undefined : getTabURL(tabNS(this).tab);
+  },
   set url(url) setTabURL(tabNS(this).tab, url),
 
   /**
@@ -95,6 +100,8 @@ const Tab = Class({
    * @type {Number}
    */
   get index() {
+    if (tabNS(this).closed) return undefined;
+
     let tabs = tabNS(this).window.BrowserApp.tabs;
     let tab = tabNS(this).tab;
     for (var i = tabs.length; i >= 0; i--) {
@@ -151,8 +158,11 @@ const Tab = Class({
    * Close the tab
    */
   close: function close(callback) {
-    if (callback)
-      this.once(EVENTS.close.name, callback);
+    let tab = this;
+    this.once(EVENTS.close.name, function () {
+      tabNS(tab).closed = true;
+      if (callback) callback();
+    });
 
     closeTab(tabNS(this).tab);
   },
@@ -173,8 +183,10 @@ function cleanupTab(tab) {
 
   if (tabInternals.tab.browser) {
     tabInternals.tab.browser.removeEventListener(EVENTS.ready.dom, tabInternals.onReady, false);
+    tabInternals.tab.browser.removeEventListener(EVENTS.pageshow.dom, tabInternals.onPageShow, false);
   }
   tabInternals.onReady = null;
+  tabInternals.onPageShow = null;
   tabInternals.window.BrowserApp.deck.removeEventListener(EVENTS.close.dom, tabInternals.onClose, false);
   tabInternals.onClose = null;
   rawTabNS(tabInternals.tab).tab = null;
@@ -189,6 +201,12 @@ function onTabReady(event) {
   if (win === win.top) {
     emit(this, 'ready', this);
   }
+}
+
+function onTabPageShow(event) {
+  let win = event.target.defaultView;
+  if (win === win.top)
+    emit(this, 'pageshow', this, event.persisted);
 }
 
 // TabClose

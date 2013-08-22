@@ -30,18 +30,8 @@ HTMLLabelElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 
 // nsISupports
 
-
-NS_IMPL_ADDREF_INHERITED(HTMLLabelElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLLabelElement, Element)
-
-// QueryInterface implementation for HTMLLabelElement
-NS_INTERFACE_TABLE_HEAD(HTMLLabelElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLLabelElement,
-                                nsIDOMHTMLLabelElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLLabelElement, nsGenericHTMLFormElement,
+                             nsIDOMHTMLLabelElement)
 
 // nsIDOMHTMLLabelElement
 
@@ -56,7 +46,7 @@ HTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 HTMLLabelElement::GetControl(nsIDOMHTMLElement** aElement)
 {
-  nsCOMPtr<nsIDOMHTMLElement> element = do_QueryInterface(GetLabeledElement());
+  nsCOMPtr<nsIDOMHTMLElement> element = do_QueryObject(GetLabeledElement());
   element.forget(aElement);
   return NS_OK;
 }
@@ -84,7 +74,7 @@ HTMLLabelElement::Focus(ErrorResult& aError)
   // retarget the focus method at the for content
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(GetLabeledElement());
+    nsCOMPtr<nsIDOMElement> elem = do_QueryObject(GetLabeledElement());
     if (elem)
       fm->SetFocus(elem, 0);
   }
@@ -115,7 +105,7 @@ DestroyMouseDownPoint(void *    /*aObject*/,
                       void *    aPropertyValue,
                       void *    /*aData*/)
 {
-  nsIntPoint* pt = static_cast<nsIntPoint*>(aPropertyValue);
+  LayoutDeviceIntPoint* pt = static_cast<LayoutDeviceIntPoint*>(aPropertyValue);
   delete pt;
 }
 
@@ -145,9 +135,10 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             nsMouseEvent::eLeftButton) {
           // We reset the mouse-down point on every event because there is
           // no guarantee we will reach the NS_MOUSE_CLICK code below.
-          nsIntPoint *curPoint = new nsIntPoint(aVisitor.mEvent->refPoint);
+          LayoutDeviceIntPoint* curPoint =
+            new LayoutDeviceIntPoint(aVisitor.mEvent->refPoint);
           SetProperty(nsGkAtoms::labelMouseDownPtProperty,
-                      static_cast<void *>(curPoint),
+                      static_cast<void*>(curPoint),
                       DestroyMouseDownPoint);
         }
         break;
@@ -156,12 +147,13 @@ HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
           const nsMouseEvent* event =
             static_cast<const nsMouseEvent*>(aVisitor.mEvent);
-          nsIntPoint *mouseDownPoint = static_cast<nsIntPoint *>
-            (GetProperty(nsGkAtoms::labelMouseDownPtProperty));
+          LayoutDeviceIntPoint* mouseDownPoint =
+            static_cast<LayoutDeviceIntPoint*>(
+              GetProperty(nsGkAtoms::labelMouseDownPtProperty));
 
           bool dragSelect = false;
           if (mouseDownPoint) {
-            nsIntPoint dragDistance = *mouseDownPoint;
+            LayoutDeviceIntPoint dragDistance = *mouseDownPoint;
             DeleteProperty(nsGkAtoms::labelMouseDownPtProperty);
 
             dragDistance -= aVisitor.mEvent->refPoint;

@@ -32,7 +32,7 @@
 #ifndef bspatch_h__
 #define bspatch_h__
 
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include <stdio.h>
 
 typedef struct MBSPatchHeader_ {

@@ -42,7 +42,8 @@ FirstNon8Bit(const PRUnichar *str, const PRUnichar *end)
 
   // Check one XMM register (16 bytes) at a time.
   const int32_t vectWalkEnd = ((len - i) / numUnicharsPerVector) * numUnicharsPerVector;
-  __m128i vectmask = _mm_set1_epi16(0xff00);
+  const uint16_t shortMask = 0xff00;
+  __m128i vectmask = _mm_set1_epi16(static_cast<int16_t>(shortMask));
   for(; i < vectWalkEnd; i += numUnicharsPerVector) {
     const __m128i vect = *reinterpret_cast<const __m128i*>(str + i);
     if (!is_zero(_mm_and_si128(vect, vectmask)))

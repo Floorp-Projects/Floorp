@@ -27,20 +27,20 @@ NS_DEFINE_NAMED_CID(MOZ_STORAGE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(VACUUMMANAGER_CID);
 
 static const mozilla::Module::CIDEntry kStorageCIDs[] = {
-    { &kMOZ_STORAGE_SERVICE_CID, false, NULL, mozilla::storage::ServiceConstructor },
-    { &kVACUUMMANAGER_CID, false, NULL, mozilla::storage::VacuumManagerConstructor },
-    { NULL }
+    { &kMOZ_STORAGE_SERVICE_CID, false, nullptr, mozilla::storage::ServiceConstructor },
+    { &kVACUUMMANAGER_CID, false, nullptr, mozilla::storage::VacuumManagerConstructor },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kStorageContracts[] = {
     { MOZ_STORAGE_SERVICE_CONTRACTID, &kMOZ_STORAGE_SERVICE_CID },
     { VACUUMMANAGER_CONTRACTID, &kVACUUMMANAGER_CID },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module::CategoryEntry kStorageCategories[] = {
     { "idle-daily", "MozStorage Vacuum Manager", VACUUMMANAGER_CONTRACTID },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module kStorageModule = {

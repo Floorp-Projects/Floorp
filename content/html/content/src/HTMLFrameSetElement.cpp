@@ -23,17 +23,8 @@ HTMLFrameSetElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
   return HTMLFrameSetElementBinding::Wrap(aCx, aScope, this);
 }
 
-NS_IMPL_ADDREF_INHERITED(HTMLFrameSetElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLFrameSetElement, Element)
-
-// QueryInterface implementation for HTMLFrameSetElement
-NS_INTERFACE_TABLE_HEAD(HTMLFrameSetElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED1(HTMLFrameSetElement,
-                                nsIDOMHTMLFrameSetElement)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLFrameSetElement, nsGenericHTMLElement,
+                             nsIDOMHTMLFrameSetElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLFrameSetElement)
 
@@ -130,10 +121,6 @@ HTMLFrameSetElement::GetRowSpec(int32_t *aNumValues,
 
     if (!mRowSpecs) {  // we may not have had an attr or had an empty attr
       mRowSpecs = new nsFramesetSpec[1];
-      if (!mRowSpecs) {
-        mNumRows = 0;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
       mNumRows = 1;
       mRowSpecs[0].mUnit  = eFramesetUnit_Relative;
       mRowSpecs[0].mValue = 1;
@@ -164,10 +151,6 @@ HTMLFrameSetElement::GetColSpec(int32_t *aNumValues,
 
     if (!mColSpecs) {  // we may not have had an attr or had an empty attr
       mColSpecs = new nsFramesetSpec[1];
-      if (!mColSpecs) {
-        mNumCols = 0;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
       mNumCols = 1;
       mColSpecs[0].mUnit  = eFramesetUnit_Relative;
       mColSpecs[0].mValue = 1;
@@ -248,7 +231,8 @@ HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
     commaX = spec.FindChar(sComma, commaX + 1);
   }
 
-  nsFramesetSpec* specs = new nsFramesetSpec[count];
+  static const fallible_t fallible = fallible_t();
+  nsFramesetSpec* specs = new (fallible) nsFramesetSpec[count];
   if (!specs) {
     *aSpecs = nullptr;
     aNumSpecs = 0;

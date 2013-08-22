@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ARIAMap.h"
+#include "nsAccUtils.h"
 #include "States.h"
 
 #include "mozilla/dom/Element.h"
@@ -327,6 +328,16 @@ aria::MapToState(EStateRule aRule, dom::Element* aElement, uint64_t* aState)
       return true;
     }
 
+    case eFocusableUntilDisabled:
+    {
+      if (!nsAccUtils::HasDefinedARIAToken(aElement, nsGkAtoms::aria_disabled) ||
+          aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_disabled,
+                                nsGkAtoms::_false, eCaseMatters))
+        *aState |= states::FOCUSABLE;
+
+      return true;
+    }
+
     default:
       return false;
   }
@@ -355,7 +366,7 @@ static void
 MapTokenType(dom::Element* aElement, uint64_t* aState,
              const TokenTypeData& aData)
 {
-  if (aElement->HasAttr(kNameSpaceID_None, aData.mAttrName)) {
+  if (nsAccUtils::HasDefinedARIAToken(aElement, aData.mAttrName)) {
     if ((aData.mType & eMixedType) &&
         aElement->AttrValueIs(kNameSpaceID_None, aData.mAttrName,
                               nsGkAtoms::mixed, eCaseMatters)) {
@@ -369,12 +380,7 @@ MapTokenType(dom::Element* aElement, uint64_t* aState,
       return;
     }
 
-    if (!aElement->AttrValueIs(kNameSpaceID_None, aData.mAttrName,
-                               nsGkAtoms::_undefined, eCaseMatters) &&
-        !aElement->AttrValueIs(kNameSpaceID_None, aData.mAttrName,
-                               nsGkAtoms::_empty, eCaseMatters)) {
-      *aState |= aData.mPermanentState | aData.mTrueState;
-    }
+    *aState |= aData.mPermanentState | aData.mTrueState;
     return;
   }
 

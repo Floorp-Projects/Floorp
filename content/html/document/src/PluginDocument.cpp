@@ -186,9 +186,6 @@ PluginDocument::StartDocumentLoad(const char*         aCommand,
   MediaDocument::UpdateTitleAndCharset(mMimeType);
 
   mStreamListener = new PluginStreamListener(this);
-  if (!mStreamListener) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   NS_ASSERTION(aDocListener, "null aDocListener");
   NS_ADDREF(*aDocListener = mStreamListener);
 
@@ -288,9 +285,6 @@ nsresult
 NS_NewPluginDocument(nsIDocument** aResult)
 {
   mozilla::dom::PluginDocument* doc = new mozilla::dom::PluginDocument();
-  if (!doc) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   NS_ADDREF(doc);
   nsresult rv = doc->Init();

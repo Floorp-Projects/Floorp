@@ -8,7 +8,7 @@ module.metadata = {
   "stability": "experimental"
 };
 
-const { Cc,Ci } = require("chrome");
+const { Cc, Ci, Cu } = require("chrome");
 const { Loader } = require('./loader');
 const { serializeStack, parseStack  } = require("toolkit/loader");
 const { setTimeout } = require('../timers');
@@ -147,9 +147,11 @@ function reportMemoryUsage() {
 
   var mgr = Cc["@mozilla.org/memory-reporter-manager;1"]
             .getService(Ci.nsIMemoryReporterManager);
+
   var reporters = mgr.enumerateReporters();
   if (reporters.hasMoreElements())
     print("\n");
+
   while (reporters.hasMoreElements()) {
     var reporter = reporters.getNext();
     reporter.QueryInterface(Ci.nsIMemoryReporter);
@@ -167,26 +169,24 @@ var gWeakrefInfo;
 
 function checkMemory() {
   memory.gc();
-  setTimeout(function () {
-    memory.gc();
-    setTimeout(function () {
-      let leaks = getPotentialLeaks();
-      let compartmentURLs = Object.keys(leaks.compartments).filter(function(url) {
-        return !(url in startLeaks.compartments);
-      });
+  Cu.schedulePreciseGC(function () {
+    let leaks = getPotentialLeaks();
 
-      let windowURLs = Object.keys(leaks.windows).filter(function(url) {
-        return !(url in startLeaks.windows);
-      });
-
-      for (let url of compartmentURLs)
-        console.warn("LEAKED", leaks.compartments[url]);
-
-      for (let url of windowURLs)
-        console.warn("LEAKED", leaks.windows[url]);
-
-      showResults();
+    let compartmentURLs = Object.keys(leaks.compartments).filter(function(url) {
+      return !(url in startLeaks.compartments);
     });
+
+    let windowURLs = Object.keys(leaks.windows).filter(function(url) {
+      return !(url in startLeaks.windows);
+    });
+
+    for (let url of compartmentURLs)
+      console.warn("LEAKED", leaks.compartments[url]);
+
+    for (let url of windowURLs)
+      console.warn("LEAKED", leaks.windows[url]);
+
+    showResults();
   });
 }
 
@@ -298,6 +298,7 @@ function getPotentialLeaks() {
   let pos = spec.indexOf("!/");
   WHITELIST_BASE_URLS.push(spec.substring(0, pos + 2));
 
+  let zoneRegExp = new RegExp("^explicit/js-non-window/zones/zone[^/]+/compartment\\((.+)\\)");
   let compartmentRegexp = new RegExp("^explicit/js-non-window/compartments/non-window-global/compartment\\((.+)\\)/");
   let compartmentDetails = new RegExp("^([^,]+)(?:, (.+?))?(?: \\(from: (.*)\\))?$");
   let windowRegexp = new RegExp("^explicit/window-objects/top\\((.*)\\)/active");
@@ -318,8 +319,9 @@ function getPotentialLeaks() {
   let compartments = {};
   let windows = {};
   function logReporter(process, path, kind, units, amount, description) {
-    let matches = compartmentRegexp.exec(path);
-    if (matches) {
+    let matches;
+
+    if ((matches = compartmentRegexp.exec(path)) || (matches = zoneRegExp.exec(path))) {
       if (matches[1] in compartments)
         return;
 
@@ -576,7 +578,7 @@ var runTests = exports.runTests = function runTests(options) {
     if (options.parseable)
       testConsole = new TestRunnerTinderboxConsole(options);
     else
-      testConsole = new TestRunnerConsole(new PlainTextConsole(print), options);
+      testConsole = new TestRunnerConsole(new PlainTextConsole(), options);
 
     loader = Loader(module, {
       console: testConsole,

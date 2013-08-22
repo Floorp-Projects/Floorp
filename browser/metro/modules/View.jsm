@@ -27,6 +27,17 @@ function View() {
 }
 
 View.prototype = {
+  _adjustDOMforViewState: function _adjustDOMforViewState(aState) {
+    if (this._set) {
+        if (undefined == aState)
+          aState = this._set.getAttribute("viewstate");
+      this._set.setAttribute("suppressonselect", (aState == "snapped"));
+    }
+  },
+
+  onViewStateChange: function (aState) {
+    this._adjustDOMforViewState(aState);
+  },
 
   _updateFavicon: function pv__updateFavicon(aItem, aUri) {
     if ("string" == typeof aUri) {
@@ -52,6 +63,13 @@ View.prototype = {
     let successAction = function(foreground, background) {
       aItem.style.color = foreground; //color text
       aItem.setAttribute("customColor", background);
+      let matteColor =  0xffffff; // white
+      let alpha = 0.04; // the tint weight
+      let [,r,g,b] = background.match(/rgb\((\d+),(\d+),(\d+)/);
+      // get the rgb value that represents this color at given opacity over a white matte
+      let tintColor = ColorUtils.addRgbColors(matteColor, ColorUtils.createDecimalColorWord(r,g,b,alpha));
+      aItem.setAttribute("tintColor", ColorUtils.convertDecimalToRgbColor(tintColor));
+
       if (aItem.refresh) {
         aItem.refresh();
       }

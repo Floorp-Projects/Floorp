@@ -13,119 +13,179 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 this.WebappsInstaller = {
+  shell: null,
+
+  /**
+   * Initializes the app object that takes care of the installation
+   * and creates the profile directory for an application
+   *
+   * @param aData the data provided to the install function
+   *
+   * @returns NativeApp on success, null on error
+   */
+  init: function(aData) {
+#ifdef XP_WIN
+    this.shell = new WinNativeApp(aData);
+#elifdef XP_MACOSX
+    this.shell = new MacNativeApp(aData);
+#elifdef XP_UNIX
+    this.shell = new LinuxNativeApp(aData);
+#else
+    return null;
+#endif
+
+    try {
+      if (Services.prefs.getBoolPref("browser.mozApps.installer.dry_run")) {
+        return this.shell;
+      }
+    } catch (ex) {}
+
+    try {
+      this.shell.createAppProfile();
+    } catch (ex) {
+      Cu.reportError("Error installing app: " + ex);
+      return null;
+    }
+
+    return this.shell;
+  },
+
   /**
    * Creates a native installation of the web app in the OS
    *
-   * @param aData the manifest data provided by the web app
+   * @param aData the data provided to the install function
+   * @param aManifest the manifest data provided by the web app
    *
-   * @returns bool true on success, false if an error was thrown
+   * @returns true on success, false if an error was thrown
    */
-  install: function(aData) {
-
+  install: function(aData, aManifest) {
     try {
       if (Services.prefs.getBoolPref("browser.mozApps.installer.dry_run")) {
         return true;
       }
     } catch (ex) {}
 
-#ifdef XP_WIN
-    let shell = new WinNativeApp(aData);
-#elifdef XP_MACOSX
-    let shell = new MacNativeApp(aData);
-#elifdef XP_UNIX
-    let shell = new LinuxNativeApp(aData);
-#else
-    return false;
-#endif
+    this.shell.init(aData, aManifest);
 
     try {
-      shell.install();
+      this.shell.install();
     } catch (ex) {
       Cu.reportError("Error installing app: " + ex);
-      return null;
+      return false;
     }
 
     let data = {
-      "installDir": shell.installDir.path,
-      "app": aData.app
+      "installDir": this.shell.installDir.path,
+      "app": {
+        "manifest": aManifest,
+        "origin": aData.app.origin
+      }
     };
     Services.obs.notifyObservers(null, "webapp-installed", JSON.stringify(data));
 
-    return shell;
+    return true;
   }
 }
 
 /**
  * This function implements the common constructor for
- * the Windows, Mac and Linux native app shells. It reads and parses
- * the data from the app manifest and stores it in the NativeApp
- * object. It's meant to be called as NativeApp.call(this, aData)
- * from the platform-specific constructor.
+ * the Windows, Mac and Linux native app shells. It sets
+ * the app unique name. It's meant to be called as
+ * NativeApp.call(this, aData) from the platform-specific
+ * constructor.
  *
- * @param aData the data object provided by the web app with
- *              all the app settings and specifications.
+ * @param aData the data object provided to the install function
  *
  */
 function NativeApp(aData) {
-  let app = this.app = aData.app;
+  this.uniqueName = WebappOSUtils.getUniqueName(aData.app);
 
-  let origin = Services.io.newURI(app.origin, null, null);
+  let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
+  let manifest = new ManifestHelper(jsonManifest, aData.app.origin);
 
-  if (app.manifest.launch_path) {
-    this.launchURI = Services.io.newURI(origin.resolve(app.manifest.launch_path),
-                                        null, null);
-  } else {
-    this.launchURI = origin.clone();
-  }
-
-  let biggestIcon = getBiggestIconURL(app.manifest.icons);
-  try {
-    let iconURI = Services.io.newURI(biggestIcon, null, null);
-    if (iconURI.scheme == "data") {
-      this.iconURI = iconURI;
-    }
-  } catch (ex) {}
-
-  if (!this.iconURI) {
-    try {
-      this.iconURI = Services.io.newURI(origin.resolve(biggestIcon), null, null);
-    }
-    catch (ex) {}
-  }
-
-  this.appName = sanitize(app.manifest.name);
+  this.appName = sanitize(manifest.name);
   this.appNameAsFilename = stripStringForFilename(this.appName);
-
-  if(app.manifest.developer && app.manifest.developer.name) {
-    let devName = app.manifest.developer.name.substr(0, 128);
-    devName = sanitize(devName);
-    if (devName) {
-      this.developerName = devName;
-    }
-  }
-
-  let shortDesc = this.appName;
-  if (app.manifest.description) {
-    let firstLine = app.manifest.description.split("\n")[0];
-    shortDesc = firstLine.length <= 256
-                ? firstLine
-                : firstLine.substr(0, 253) + "...";
-  }
-  this.shortDescription = sanitize(shortDesc);
-
-  // The app registry is the Firefox profile from which the app
-  // was installed.
-  this.registryFolder = Services.dirsvc.get("ProfD", Ci.nsIFile);
-
-  this.webappJson = {
-    "registryDir": this.registryFolder.path,
-    "app": app
-  };
-
-  this.runtimeFolder = Services.dirsvc.get("GreD", Ci.nsIFile);
 }
+
+NativeApp.prototype = {
+  uniqueName: null,
+  appName: null,
+  appNameAsFilename: null,
+  iconURI: null,
+  developerName: null,
+  shortDescription: null,
+  categories: null,
+  webappJson: null,
+  runtimeFolder: null,
+
+  /**
+   * This function reads and parses the data from the app
+   * manifest and stores it in the NativeApp object.
+   *
+   * @param aData the data object provided to the install function
+   * @param aManifest the manifest data provided by the web app
+   *
+   */
+  init: function(aData, aManifest) {
+    let manifest = new ManifestHelper(aManifest, aData.app.origin);
+
+    let origin = Services.io.newURI(aData.app.origin, null, null);
+
+    let biggestIcon = getBiggestIconURL(manifest.icons);
+    try {
+      let iconURI = Services.io.newURI(biggestIcon, null, null);
+      if (iconURI.scheme == "data") {
+        this.iconURI = iconURI;
+      }
+    } catch (ex) {}
+
+    if (!this.iconURI) {
+      try {
+        this.iconURI = Services.io.newURI(origin.resolve(biggestIcon), null, null);
+      }
+      catch (ex) {}
+    }
+
+    if (manifest.developer && manifest.developer.name) {
+      let devName = sanitize(manifest.developer.name.substr(0, 128));
+      if (devName) {
+        this.developerName = devName;
+      }
+    }
+
+    if (manifest.description) {
+      let firstLine = manifest.description.split("\n")[0];
+      let shortDesc = firstLine.length <= 256
+                      ? firstLine
+                      : firstLine.substr(0, 253) + "…";
+      this.shortDescription = sanitize(shortDesc);
+    } else {
+      this.shortDescription = this.appName;
+    }
+
+    this.categories = aData.app.categories.slice(0);
+
+    // The app registry is the Firefox profile from which the app
+    // was installed.
+    let registryFolder = Services.dirsvc.get("ProfD", Ci.nsIFile);
+
+    this.webappJson = {
+      "registryDir": registryFolder.path,
+      "app": {
+        "manifest": aManifest,
+        "origin": aData.app.origin,
+        "manifestURL": aData.app.manifestURL
+      }
+    };
+
+    this.runtimeFolder = Services.dirsvc.get("GreD", Ci.nsIFile);
+  }
+};
 
 #ifdef XP_WIN
 /*************************************
@@ -133,8 +193,7 @@ function NativeApp(aData) {
  *
  * The Windows installation process will generate the following files:
  *
- * ${FolderName} = protocol;app-origin[;port]
- *                 e.g.: subdomain.example.com;http;85
+ * ${FolderName} = sanitized app name + "-" + manifest url hash
  *
  * %APPDATA%/${FolderName}
  *   - webapp.ini
@@ -155,8 +214,7 @@ function NativeApp(aData) {
 /**
  * Constructor for the Windows native app shell
  *
- * @param aData the data object provided by the web app with
- *              all the app settings and specifications.
+ * @param aData the data object provided to the install function
  */
 function WinNativeApp(aData) {
   NativeApp.call(this, aData);
@@ -164,21 +222,18 @@ function WinNativeApp(aData) {
 }
 
 WinNativeApp.prototype = {
+  __proto__: NativeApp.prototype,
+
   /**
-   * Install the app in the system by creating the folder structure,
+   * Install the app in the system
    *
    */
   install: function() {
-    // Remove previously installed app (for update purposes)
-    this._removeInstallation(true);
-
     try {
-      this._createDirectoryStructure();
       this._copyPrebuiltFiles();
-      this._createConfigFiles();
       this._createShortcutFiles();
+      this._createConfigFiles();
       this._writeSystemKeys();
-      this._createAppProfile();
     } catch (ex) {
       this._removeInstallation(false);
       throw(ex);
@@ -199,18 +254,9 @@ WinNativeApp.prototype = {
       this.appNameAsFilename = "webapp";
     }
 
-    // The ${InstallDir} format is as follows:
-    //  protocol
-    //  + ";" + host of the app origin
-    //  + ";" + port (only if port is not default)
+    // The ${InstallDir} is: sanitized app name + "-" + manifest url hash
     this.installDir = Services.dirsvc.get("AppData", Ci.nsIFile);
-    let installDirLeaf = this.launchURI.scheme
-                       + ";"
-                       + this.launchURI.host;
-    if (this.launchURI.port != -1) {
-      installDirLeaf += ";" + this.launchURI.port;
-    }
-    this.installDir.append(installDirLeaf);
+    this.installDir.append(this.uniqueName);
 
     this.webapprt = this.installDir.clone();
     this.webapprt.append(this.appNameAsFilename + ".exe");
@@ -233,8 +279,35 @@ WinNativeApp.prototype = {
     this.iconFile.append("default");
     this.iconFile.append("default.ico");
 
-    this.uninstallSubkeyStr = this.launchURI.scheme + "://" +
-                              this.launchURI.hostPort;
+    this.uninstallSubkeyStr = this.uniqueName;
+
+    // ${UninstallDir}/shortcuts_log.ini
+    this.shortcutLogsINI = this.uninstallDir.clone();
+    this.shortcutLogsINI.append("shortcuts_log.ini");
+
+    if (this.shortcutLogsINI.exists()) {
+      // If it's a reinstallation (or an update) get the shortcut names
+      // from the shortcut_log.ini file
+      let factory = Cc["@mozilla.org/xpcom/ini-processor-factory;1"]
+                      .getService(Ci.nsIINIParserFactory);
+      let parser = factory.createINIParser(this.shortcutLogsINI);
+
+      this.shortcutName = parser.getString("STARTMENU", "Shortcut0");
+    } else {
+      let desktop = Services.dirsvc.get("Desk", Ci.nsIFile);
+      let startMenu = Services.dirsvc.get("Progs", Ci.nsIFile);
+
+      // Check in both directories to see if a shortcut with the same name
+      // already exists.
+      this.shortcutName = getAvailableFileName([ startMenu, desktop ],
+                                               this.appNameAsFilename,
+                                               ".lnk");
+    }
+
+    // Remove previously installed app (for update purposes)
+    this._removeInstallation(true);
+
+    this._createDirectoryStructure();
   },
 
   /**
@@ -258,11 +331,11 @@ WinNativeApp.prototype = {
         uninstallKey.close();
     }
 
-    let desktopShortcut = Services.dirsvc.get("Desk", Ci.nsILocalFile);
-    desktopShortcut.append(this.appNameAsFilename + ".lnk");
+    let desktopShortcut = Services.dirsvc.get("Desk", Ci.nsIFile);
+    desktopShortcut.append(this.shortcutName);
 
-    let startMenuShortcut = Services.dirsvc.get("Progs", Ci.nsILocalFile);
-    startMenuShortcut.append(this.appNameAsFilename + ".lnk");
+    let startMenuShortcut = Services.dirsvc.get("Progs", Ci.nsIFile);
+    startMenuShortcut.append(this.shortcutName);
 
     let filesToRemove = [desktopShortcut, startMenuShortcut];
 
@@ -283,15 +356,17 @@ WinNativeApp.prototype = {
    * Creates the main directory structure.
    */
   _createDirectoryStructure: function() {
-    if (!this.installDir.exists())
+    if (!this.installDir.exists()) {
       this.installDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    }
+
     this.uninstallDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
   },
 
   /**
    * Creates the profile to be used for this app.
    */
-  _createAppProfile: function() {
+  createAppProfile: function() {
     let profSvc = Cc["@mozilla.org/toolkit/profile-service;1"]
                     .getService(Ci.nsIToolkitProfileService);
 
@@ -332,13 +407,9 @@ WinNativeApp.prototype = {
     writer.setString("WebappRT", "InstallDir", this.runtimeFolder.path);
     writer.writeFile(null, Ci.nsIINIParserWriter.WRITE_UTF16);
 
-    // ${UninstallDir}/shortcuts_log.ini
-    let shortcutLogsINI = this.uninstallDir.clone().QueryInterface(Ci.nsILocalFile);
-    shortcutLogsINI.append("shortcuts_log.ini");
-
-    writer = factory.createINIParser(shortcutLogsINI).QueryInterface(Ci.nsIINIParserWriter);
-    writer.setString("STARTMENU", "Shortcut0", this.appNameAsFilename + ".lnk");
-    writer.setString("DESKTOP", "Shortcut0", this.appNameAsFilename + ".lnk");
+    writer = factory.createINIParser(this.shortcutLogsINI).QueryInterface(Ci.nsIINIParserWriter);
+    writer.setString("STARTMENU", "Shortcut0", this.shortcutName);
+    writer.setString("DESKTOP", "Shortcut0", this.shortcutName);
     writer.setString("TASKBAR", "Migrated", "true");
     writer.writeFile(null, Ci.nsIINIParserWriter.WRITE_UTF16);
 
@@ -373,8 +444,8 @@ WinNativeApp.prototype = {
 
       subKey.writeStringValue("DisplayName", this.appName);
 
-      subKey.writeStringValue("UninstallString", this.uninstallerFile.path);
-      subKey.writeStringValue("InstallLocation", this.installDir.path);
+      subKey.writeStringValue("UninstallString", '"' + this.uninstallerFile.path + '"');
+      subKey.writeStringValue("InstallLocation", '"' + this.installDir.path + '"');
       subKey.writeStringValue("AppFilename", this.appNameAsFilename);
 
       if(this.iconFile) {
@@ -398,7 +469,7 @@ WinNativeApp.prototype = {
    */
   _createShortcutFiles: function() {
     let shortcut = this.installDir.clone().QueryInterface(Ci.nsILocalFileWin);
-    shortcut.append(this.appNameAsFilename + ".lnk");
+    shortcut.append(this.shortcutName);
 
     let target = this.installDir.clone();
     target.append(this.webapprt.leafName);
@@ -412,8 +483,8 @@ WinNativeApp.prototype = {
     let desktop = Services.dirsvc.get("Desk", Ci.nsILocalFile);
     let startMenu = Services.dirsvc.get("Progs", Ci.nsILocalFile);
 
-    shortcut.copyTo(desktop, this.appNameAsFilename + ".lnk");
-    shortcut.copyTo(startMenu, this.appNameAsFilename + ".lnk");
+    shortcut.copyTo(desktop, this.shortcutName);
+    shortcut.copyTo(startMenu, this.shortcutName);
 
     shortcut.followLinks = false;
     shortcut.remove(false);
@@ -467,6 +538,8 @@ function MacNativeApp(aData) {
 }
 
 MacNativeApp.prototype = {
+  __proto__: NativeApp.prototype,
+
   _init: function() {
     this.appSupportDir = Services.dirsvc.get("ULibDir", Ci.nsILocalFile);
     this.appSupportDir.append("Application Support");
@@ -477,14 +550,9 @@ MacNativeApp.prototype = {
       this.appNameAsFilename = "Webapp";
     }
 
-    // The ${ProfileDir} format is as follows:
-    //  host of the app origin + ";" +
-    //  protocol + ";" +
-    //  port (-1 for default port)
+    // The ${ProfileDir} is: sanitized app name + "-" + manifest url hash
     this.appProfileDir = this.appSupportDir.clone();
-    this.appProfileDir.append(this.launchURI.host + ";" +
-                              this.launchURI.scheme + ";" +
-                              this.launchURI.port);
+    this.appProfileDir.append(this.uniqueName);
 
     this.installDir = Services.dirsvc.get("TmpD", Ci.nsILocalFile);
     this.installDir.append(this.appNameAsFilename + ".app");
@@ -501,15 +569,17 @@ MacNativeApp.prototype = {
 
     this.iconFile = this.resourcesDir.clone();
     this.iconFile.append("appicon.icns");
+
+    // Remove previously installed app (for update purposes)
+    this._removeInstallation(true);
+
+    this._createDirectoryStructure();
   },
 
   install: function() {
-    this._removeInstallation(true);
     try {
-      this._createDirectoryStructure();
       this._copyPrebuiltFiles();
       this._createConfigFiles();
-      this._createAppProfile();
     } catch (ex) {
       this._removeInstallation(false);
       throw(ex);
@@ -529,15 +599,16 @@ MacNativeApp.prototype = {
   },
 
   _createDirectoryStructure: function() {
-    if (!this.appProfileDir.exists())
+    if (!this.appProfileDir.exists()) {
       this.appProfileDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+    }
 
     this.contentsDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
     this.macOSDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
     this.resourcesDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
   },
 
-  _createAppProfile: function() {
+  createAppProfile: function() {
     let profSvc = Cc["@mozilla.org/toolkit/profile-service;1"]
                     .getService(Ci.nsIToolkitProfileService);
 
@@ -570,6 +641,7 @@ MacNativeApp.prototype = {
     writer.setString("Webapp", "Name", this.appName);
     writer.setString("Webapp", "Profile", this.appProfileDir.leafName);
     writer.writeFile();
+    applicationINI.permissions = FileUtils.PERMS_FILE;
 
     // ${InstallDir}/Contents/Info.plist
     let infoPListContent = '<?xml version="1.0" encoding="UTF-8"?>\n\
@@ -585,7 +657,7 @@ MacNativeApp.prototype = {
     <key>CFBundleIconFile</key>\n\
     <string>appicon</string>\n\
     <key>CFBundleIdentifier</key>\n\
-    <string>' + escapeXML(this.launchURI.prePath) + '</string>\n\
+    <string>' + escapeXML(this.uniqueName) + '</string>\n\
     <key>CFBundleInfoDictionaryVersion</key>\n\
     <string>6.0</string>\n\
     <key>CFBundleName</key>\n\
@@ -594,6 +666,10 @@ MacNativeApp.prototype = {
     <string>APPL</string>\n\
     <key>CFBundleVersion</key>\n\
     <string>0</string>\n\
+    <key>NSHighResolutionCapable</key>\n\
+    <true/>\n\
+    <key>NSPrincipalClass</key>\n\
+    <string>GeckoNSApplication</string>\n\
     <key>FirefoxBinary</key>\n\
 #expand     <string>__MOZ_MACBUNDLE_ID__</string>\n\
   </dict>\n\
@@ -606,13 +682,13 @@ MacNativeApp.prototype = {
 
   _moveToApplicationsFolder: function() {
     let appDir = Services.dirsvc.get("LocApp", Ci.nsILocalFile);
-    let destination = getAvailableFile(appDir,
-                                       this.appNameAsFilename,
-                                       ".app");
-    if (!destination) {
+    let destinationName = getAvailableFileName([appDir],
+                                               this.appNameAsFilename,
+                                              ".app");
+    if (!destinationName) {
       return false;
     }
-    this.installDir.moveTo(destination.parent, destination.leafName);
+    this.installDir.moveTo(appDir, destinationName);
   },
 
   /**
@@ -665,15 +741,11 @@ function LinuxNativeApp(aData) {
 }
 
 LinuxNativeApp.prototype = {
-  _init: function() {
-    // The ${InstallDir} and desktop entry filename format is as follows:
-    // host of the app origin + ";" +
-    // protocol
-    // + ";" + port (only if port is not default)
+  __proto__: NativeApp.prototype,
 
-    this.uniqueName = this.launchURI.scheme + ";" + this.launchURI.host;
-    if (this.launchURI.port != -1)
-      this.uniqueName += ";" + this.launchURI.port;
+  _init: function() {
+    // The ${InstallDir} and desktop entry filename are: sanitized app name +
+    // "-" + manifest url hash
 
     this.installDir = Services.dirsvc.get("Home", Ci.nsIFile);
     this.installDir.append("." + this.uniqueName);
@@ -706,16 +778,17 @@ LinuxNativeApp.prototype = {
 
     this.desktopINI.append("applications");
     this.desktopINI.append("owa-" + this.uniqueName + ".desktop");
+
+    // Remove previously installed app (for update purposes)
+    this._removeInstallation(true);
+
+    this._createDirectoryStructure();
   },
 
   install: function() {
-    this._removeInstallation(true);
-
     try {
-      this._createDirectoryStructure();
       this._copyPrebuiltFiles();
       this._createConfigFiles();
-      this._createAppProfile();
     } catch (ex) {
       this._removeInstallation(false);
       throw(ex);
@@ -750,12 +823,12 @@ LinuxNativeApp.prototype = {
     webapprtPre.copyTo(this.installDir, this.webapprt.leafName);
   },
 
-  _createAppProfile: function() {
+  createAppProfile: function() {
     let profSvc = Cc["@mozilla.org/toolkit/profile-service;1"]
                     .getService(Ci.nsIToolkitProfileService);
 
     try {
-      this.appProfile = profSvc.createDefaultProfileForApp(this.installDir.leafName,
+      this.appProfile = profSvc.createDefaultProfileForApp(this.uniqueName,
                                                            null, null);
     } catch (ex if ex.result == Cr.NS_ERROR_ALREADY_INITIALIZED) {}
   },
@@ -791,7 +864,7 @@ LinuxNativeApp.prototype = {
 
     // The trailing semicolon is needed as written in the freedesktop specification
     let categories = "";
-    for (let category of this.app.categories) {
+    for (let category of this.categories) {
       let catLower = category.toLowerCase();
       if (catLower in translations) {
         categories += translations[catLower] + ";";
@@ -886,9 +959,12 @@ LinuxNativeApp.prototype = {
  * @param aData     a string with the data to be written
  */
 function writeToFile(aFile, aData) {
-  let path = aFile.path;
-  let data = new TextEncoder().encode(aData);
-  return OS.File.writeAtomic(path, data, { tmpPath: path + ".tmp" });
+  return Task.spawn(function() {
+    let data = new TextEncoder().encode(aData);
+    let file = yield OS.File.open(aFile.path, { truncate: true }, { unixMode: FileUtils.PERMS_FILE });
+    yield file.write(data);
+    yield file.close();
+  });
 }
 
 /**
@@ -916,38 +992,61 @@ function stripStringForFilename(aPossiblyBadFilenameString) {
 /**
  * Finds a unique name available in a folder (i.e., non-existent file)
  *
- * @param aFolder nsIFile that represents the directory where we want to write
+ * @param aFolderSet a set of nsIFile objects that represents the set of
+ * directories where we want to write
  * @param aName   string with the filename (minus the extension) desired
  * @param aExtension string with the file extension, including the dot
 
- * @return nsILocalFile or null if folder is unwritable or unique name
+ * @return file name or null if folder is unwritable or unique name
  *         was not available
  */
-function getAvailableFile(aFolder, aName, aExtension) {
-  let folder = aFolder.QueryInterface(Ci.nsILocalFile);
-  folder.followLinks = false;
-  if (!folder.isDirectory() || !folder.isWritable()) {
-    return null;
-  }
+function getAvailableFileName(aFolderSet, aName, aExtension) {
+  let fileSet = [];
+  let name = aName + aExtension;
+  let isUnique = true;
 
-  let file = folder.clone();
-  file.append(aName + aExtension);
-
-  if (!file.exists()) {
-    return file;
-  }
-
-  for (let i = 2; i < 10; i++) {
-    file.leafName = aName + " (" + i + ")" + aExtension;
-    if (!file.exists()) {
-      return file;
+  // Check if the plain name is a unique name in all the directories.
+  for (let folder of aFolderSet) {
+    folder.followLinks = false;
+    if (!folder.isDirectory() || !folder.isWritable()) {
+      return null;
     }
+
+    let file = folder.clone();
+    file.append(name);
+    // Avoid exists() call if we already know this file name is not unique in
+    // one of the directories.
+    if (isUnique && file.exists()) {
+      isUnique = false;
+    }
+
+    fileSet.push(file);
   }
 
-  for (let i = 10; i < 100; i++) {
-    file.leafName = aName + "-" + i + aExtension;
-    if (!file.exists()) {
-      return file;
+  if (isUnique) {
+    return name;
+  }
+
+
+  function checkUnique(aName) {
+    for (let file of fileSet) {
+      file.leafName = aName;
+
+      if (file.exists()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // If we're here, the plain name wasn't enough. Let's try modifying the name
+  // by adding "(" + num + ")".
+  for (let i = 2; i < 100; i++) {
+    name = aName + " (" + i + ")" + aExtension;
+
+    if (checkUnique(name)) {
+      return name;
     }
   }
 

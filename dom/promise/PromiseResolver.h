@@ -18,8 +18,7 @@ struct JSContext;
 namespace mozilla {
 namespace dom {
 
-class PromiseResolver MOZ_FINAL : public nsISupports,
-                                  public nsWrapperCache
+class PromiseResolver MOZ_FINAL : public nsWrapperCache
 {
   friend class PromiseResolverTask;
   friend class WrapperPromiseCallback;
@@ -33,10 +32,11 @@ private:
   };
 
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PromiseResolver)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PromiseResolver)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PromiseResolver)
 
   PromiseResolver(Promise* aPromise);
+  virtual ~PromiseResolver();
 
   Promise* GetParentObject() const
   {

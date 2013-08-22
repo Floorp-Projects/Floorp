@@ -17,6 +17,7 @@
 #include "vm/Interpreter.h"
 
 #include "jsfuninlines.h"
+#include "jsscriptinlines.h"
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
@@ -117,7 +118,7 @@ static JSClass self_hosting_global_class = {
     JS_ConvertStub,   NULL
 };
 
-JSBool
+bool
 js::intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -129,7 +130,7 @@ js::intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
+static bool
 intrinsic_ToInteger(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -140,7 +141,7 @@ intrinsic_ToInteger(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSBool
+bool
 js::intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -150,7 +151,7 @@ js::intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSBool
+bool
 js::intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -185,7 +186,7 @@ js::intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
  * Handles an assertion failure in self-hosted code just like an assertion
  * failure in C++ code. Information about the failure can be provided in args[0].
  */
-static JSBool
+static bool
 intrinsic_AssertionFailed(JSContext *cx, unsigned argc, Value *vp)
 {
 #ifdef DEBUG
@@ -207,7 +208,7 @@ intrinsic_AssertionFailed(JSContext *cx, unsigned argc, Value *vp)
     return false;
 }
 
-static JSBool
+static bool
 intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -231,7 +232,7 @@ intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
+static bool
 intrinsic_MakeWrappable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -251,7 +252,7 @@ intrinsic_MakeWrappable(JSContext *cx, unsigned argc, Value *vp)
  * The user must supply the argument number of the value in question; it
  * _cannot_ be automatically determined.
  */
-static JSBool
+static bool
 intrinsic_DecompileArg(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -283,7 +284,7 @@ intrinsic_DecompileArg(JSContext *cx, unsigned argc, Value *vp)
  * - |inline: true| will hint that |fun| be inlined regardless of
  *   JIT heuristics.
  */
-static JSBool
+static bool
 intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -318,7 +319,7 @@ intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
 /*
  * Dump(val): Dumps a value for debugging, even in parallel mode.
  */
-JSBool
+bool
 intrinsic_Dump(ThreadSafeContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -334,7 +335,7 @@ intrinsic_Dump(ThreadSafeContext *cx, unsigned argc, Value *vp)
 const JSJitInfo intrinsic_Dump_jitInfo =
     JS_JITINFO_NATIVE_PARALLEL(JSParallelNativeThreadSafeWrapper<intrinsic_Dump>);
 
-JSBool
+bool
 intrinsic_ParallelSpew(ThreadSafeContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -361,7 +362,7 @@ const JSJitInfo intrinsic_ParallelSpew_jitInfo =
  *
  * See ForkJoin.cpp for details and ParallelArray.js for examples.
  */
-static JSBool
+static bool
 intrinsic_ForkJoin(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -372,7 +373,7 @@ intrinsic_ForkJoin(JSContext *cx, unsigned argc, Value *vp)
  * ForkJoinSlices(): Returns the number of parallel slices that will
  * be created by ForkJoin().
  */
-static JSBool
+static bool
 intrinsic_ForkJoinSlices(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -386,7 +387,7 @@ intrinsic_ForkJoinSlices(JSContext *cx, unsigned argc, Value *vp)
  * passed to |init|. The new instance will be passed as the |this|
  * argument.
  */
-JSBool
+bool
 js::intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -405,7 +406,7 @@ js::intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp)
  * NewDenseArray(length): Allocates and returns a new dense array with
  * the given length where all values are initialized to holes.
  */
-JSBool
+bool
 js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -456,7 +457,7 @@ js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
  * If |arr| is a typed array, the index must be an int32 less than the
  * length of |arr|.
  */
-JSBool
+bool
 js::intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -495,7 +496,7 @@ js::intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSBool
+bool
 js::intrinsic_UnsafeSetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -508,7 +509,7 @@ js::intrinsic_UnsafeSetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSBool
+bool
 js::intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -520,7 +521,7 @@ js::intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
+static bool
 intrinsic_NewClassPrototype(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -535,7 +536,7 @@ intrinsic_NewClassPrototype(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSBool
+bool
 js::intrinsic_NewObjectWithClassPrototype(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -551,7 +552,7 @@ js::intrinsic_NewObjectWithClassPrototype(JSContext *cx, unsigned argc, Value *v
     return true;
 }
 
-JSBool
+bool
 js::intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -576,7 +577,7 @@ js::intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp)
  * disable them entirely.  Instead, we simply disable the assertions
  * that state that no bailouts etc should occur.
  */
-static JSBool
+static bool
 intrinsic_ParallelTestsShouldPass(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -588,7 +589,7 @@ intrinsic_ParallelTestsShouldPass(JSContext *cx, unsigned argc, Value *vp)
  * ShouldForceSequential(): Returns true if parallel ops should take
  * the sequential fallback path.
  */
-JSBool
+bool
 js::intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -605,7 +606,7 @@ js::intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp)
  * Returns the default locale as a well-formed, but not necessarily canonicalized,
  * BCP-47 language tag.
  */
-static JSBool
+static bool
 intrinsic_RuntimeDefaultLocale(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -687,11 +688,12 @@ bool
 JSRuntime::initSelfHosting(JSContext *cx)
 {
     JS_ASSERT(!selfHostingGlobal_);
-    RootedObject savedGlobal(cx, js::GetDefaultGlobalForContext(cx));
-    if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class, NULL)))
+    RootedObject savedGlobal(cx, js::DefaultObjectForContextOrNull(cx));
+    if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class,
+                                                  NULL, JS::DontFireOnNewGlobalHook)))
         return false;
     JSAutoCompartment ac(cx, selfHostingGlobal_);
-    JS_SetGlobalObject(cx, selfHostingGlobal_);
+    js::SetDefaultObjectForContext(cx, selfHostingGlobal_);
     Rooted<GlobalObject*> shg(cx, &selfHostingGlobal_->as<GlobalObject>());
     /*
      * During initialization of standard classes for the self-hosting global,
@@ -703,6 +705,8 @@ JSRuntime::initSelfHosting(JSContext *cx)
 
     if (!JS_DefineFunctions(cx, shg, intrinsic_functions))
         return false;
+
+    JS_FireOnNewGlobalObject(cx, shg);
 
     /*
      * In self-hosting mode, scripts emit JSOP_CALLINTRINSIC instead of
@@ -758,7 +762,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
         ok = Evaluate(cx, shg, options, src, srcLen, &rv);
     }
     JS_SetErrorReporter(cx, oldReporter);
-    JS_SetGlobalObject(cx, savedGlobal);
+    js::SetDefaultObjectForContext(cx, savedGlobal);
     return ok;
 }
 
@@ -830,6 +834,21 @@ CloneProperties(JSContext *cx, HandleObject obj, HandleObject clone, CloneMemory
     return true;
 }
 
+static gc::AllocKind
+GetObjectAllocKindForClone(JSRuntime *rt, JSObject *obj)
+{
+    if (!gc::IsInsideNursery(rt, (void *)obj))
+        return obj->tenuredGetAllocKind();
+
+    if (obj->is<JSFunction>())
+        return obj->as<JSFunction>().getAllocKind();
+
+    gc::AllocKind kind = gc::GetGCObjectFixedSlotsKind(obj->numFixedSlots());
+    if (CanBeFinalizedInBackground(kind, obj->getClass()))
+        kind = GetBackgroundAllocKind(kind);
+    return kind;
+}
+
 static JSObject *
 CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
 {
@@ -869,7 +888,8 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
     } else {
         JS_ASSERT(srcObj->isNative());
         clone = NewObjectWithGivenProto(cx, srcObj->getClass(), NULL, cx->global(),
-                                        srcObj->tenuredGetAllocKind(), SingletonObject);
+                                        GetObjectAllocKindForClone(cx->runtime(), srcObj),
+                                        SingletonObject);
     }
     if (!clone || !clonedObjects.relookupOrAdd(p, srcObj.get(), clone.get()) ||
         !CloneProperties(cx, srcObj, clone, clonedObjects))

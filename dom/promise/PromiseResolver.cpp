@@ -59,19 +59,20 @@ private:
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(PromiseResolver, mPromise)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(PromiseResolver)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(PromiseResolver)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PromiseResolver)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PromiseResolver, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PromiseResolver, Release)
 
 PromiseResolver::PromiseResolver(Promise* aPromise)
   : mPromise(aPromise)
   , mResolvePending(false)
 {
+  MOZ_COUNT_CTOR(PromiseResolver);
   SetIsDOMBinding();
+}
+
+PromiseResolver::~PromiseResolver()
+{
+  MOZ_COUNT_DTOR(PromiseResolver);
 }
 
 JSObject*

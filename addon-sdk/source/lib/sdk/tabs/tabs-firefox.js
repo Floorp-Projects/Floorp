@@ -26,10 +26,9 @@ Object.defineProperties(tabs, {
         newTabWindow(options);
         return undefined;
     }
-    // Open in active window if new window was not required.
 
     let activeWindow = windows.activeWindow;
-    let privateState = !!options.isPrivate;
+    let privateState = (supportPrivateTabs && (options.isPrivate || isPrivate(activeWindow))) || false;
 
     // if the active window is in the state that we need then use it
     if (activeWindow && (!supportPrivateTabs || privateState === isPrivate(activeWindow))) {

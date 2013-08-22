@@ -81,7 +81,7 @@ let RootActor = protocol.ActorClass({
   }, {
     request: {
       a: Arg(0),
-      b: Arg(1, "number", { optional: true })
+      b: Arg(1, "nullable:number")
     },
     response: {
       value: RetVal("number")
@@ -188,6 +188,11 @@ function run_test()
       trace.expectReceive({"value":1,"from":"<actorid>"});
       do_check_eq(ret, 1);
     }).then(() => {
+      // Missing argument should throw an exception
+      check_except(() => {
+        rootClient.simpleArgs(5);
+      });
+
       return rootClient.simpleArgs(5, 10)
     }).then(ret => {
       trace.expectSend({"type":"simpleArgs","firstArg":5,"secondArg":10,"to":"<actorid>"});

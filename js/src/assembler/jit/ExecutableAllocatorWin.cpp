@@ -116,6 +116,19 @@ void ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
     VirtualFree(alloc.pages, 0, MEM_RELEASE);
 }
 
+void
+ExecutablePool::toggleAllCodeAsAccessible(bool accessible)
+{
+    char* begin = m_allocation.pages;
+    size_t size = m_freePtr - begin;
+
+    if (size) {
+        DWORD oldProtect;
+        if (!VirtualProtect(begin, size, accessible ? PAGE_EXECUTE_READWRITE : PAGE_NOACCESS, &oldProtect))
+            MOZ_CRASH();
+    }
+}
+
 #if ENABLE_ASSEMBLER_WX_EXCLUSIVE
 #error "ASSEMBLER_WX_EXCLUSIVE not yet suported on this platform."
 #endif

@@ -41,14 +41,14 @@ let tasks = {
   }
 };
 
-let mozMobileMessage;
+let manager;
 
 function getAllMessages(callback, filter, reverse) {
   if (!filter) {
     filter = new MozSmsFilter;
   }
   let messages = [];
-  let request = mozMobileMessage.getMessages(filter, reverse || false);
+  let request = manager.getMessages(filter, reverse || false);
   request.onsuccess = function(event) {
     if (request.result) {
       messages.push(request.result);
@@ -69,7 +69,7 @@ function deleteAllMessages() {
       return;
     }
 
-    let request = mozMobileMessage.delete(message.id);
+    let request = manager.delete(message.id);
     request.onsuccess = deleteAll.bind(null, messages);
     request.onerror = function (event) {
       ok(false, "failed to delete all messages");
@@ -81,8 +81,9 @@ function deleteAllMessages() {
 tasks.push(function () {
   log("Verifying initial state.");
 
-  mozMobileMessage = window.navigator.mozMobileMessage;
-  ok(mozMobileMessage instanceof MozMobileMessageManager);
+  manager = window.navigator.mozMobileMessage;
+  ok(manager instanceof MozMobileMessageManager,
+     "manager is instance of " + manager.constructor);
 
   tasks.next();
 });
@@ -90,8 +91,8 @@ tasks.push(function () {
 tasks.push(function () {
   log("MmsMessage.attachments should be an empty array.");
 
-  mozMobileMessage.onfailed = function (event) {
-    mozMobileMessage.onfailed = null;
+  manager.onfailed = function (event) {
+    manager.onfailed = null;
 
     let message = event.message;
     ok(Array.isArray(message.attachments) && message.attachments.length === 0,
@@ -102,7 +103,7 @@ tasks.push(function () {
 
   // Have a long long subject causes the send fails, so we don't need
   // networking here.
-  mozMobileMessage.sendMMS({
+  manager.sendMMS({
     subject: new Array(MMS_MAX_LENGTH_SUBJECT + 2).join("a"),
     receivers: ["1", "2"],
     attachments: [],

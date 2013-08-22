@@ -31,8 +31,8 @@
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "ion/Ion.h"
-#include "ion/IonFrameIterator.h"
+#include "jit/Ion.h"
+#include "jit/IonFrameIterator.h"
 #endif
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
@@ -53,7 +53,7 @@ using namespace js::frontend;
 using mozilla::ArrayLength;
 using mozilla::PodCopy;
 
-static JSBool
+static bool
 fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValue vp)
 {
     RootedObject obj(cx, obj_);
@@ -154,7 +154,7 @@ static const uint16_t poisonPillProps[] = {
     NAME_OFFSET(caller),
 };
 
-static JSBool
+static bool
 fun_enumerate(JSContext *cx, HandleObject obj)
 {
     JS_ASSERT(obj->is<JSFunction>());
@@ -234,7 +234,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     return proto;
 }
 
-JSBool
+bool
 js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                 MutableHandleObject objp)
 {
@@ -428,8 +428,8 @@ js::CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFun
  * property of its 'this' parameter, and walks the prototype chain of v (only
  * if v is an object) returning true if .prototype is found.
  */
-static JSBool
-fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, JSBool *bp)
+static bool
+fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, bool *bp)
 {
     RootedObject obj(cx, objArg);
 
@@ -507,7 +507,7 @@ Class JSFunction::class_ = {
     fun_trace
 };
 
-JS_FRIEND_DATA(Class*) js::FunctionClassPtr = &JSFunction::class_;
+Class* const js::FunctionClassPtr = &JSFunction::class_;
 
 /* Find the body of a function (not including braces). */
 static bool
@@ -519,7 +519,7 @@ FindBody(JSContext *cx, HandleFunction fun, StableCharPtr chars, size_t length,
     options.setFileAndLine("internal-findBody", 0)
            .setVersion(fun->nonLazyScript()->getVersion());
     AutoKeepAtoms keepAtoms(cx->perThreadData);
-    TokenStream ts(cx, options, chars.get(), length, NULL, keepAtoms);
+    TokenStream ts(cx, options, chars.get(), length, NULL);
     int nest = 0;
     bool onward = true;
     // Skip arguments list.
@@ -759,7 +759,7 @@ fun_toStringHelper(JSContext *cx, HandleObject obj, unsigned indent)
     return FunctionToString(cx, fun, false, indent != JS_DONT_PRETTY_PRINT);
 }
 
-static JSBool
+static bool
 fun_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -783,7 +783,7 @@ fun_toString(JSContext *cx, unsigned argc, Value *vp)
 }
 
 #if JS_HAS_TOSOURCE
-static JSBool
+static bool
 fun_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -802,7 +802,7 @@ fun_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-JSBool
+bool
 js_fun_call(JSContext *cx, unsigned argc, Value *vp)
 {
     RootedValue fval(cx, vp[1]);
@@ -824,7 +824,7 @@ js_fun_call(JSContext *cx, unsigned argc, Value *vp)
     /* Allocate stack space for fval, obj, and the args. */
     InvokeArgs args(cx);
     if (!args.init(argc))
-        return JS_FALSE;
+        return false;
 
     /* Push fval, thisv, and the args. */
     args.setCallee(fval);
@@ -858,7 +858,7 @@ PushBaselineFunApplyArguments(JSContext *cx, ion::IonFrameIterator &frame, Invok
 #endif
 
 /* ES5 15.3.4.3 */
-JSBool
+bool
 js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
 {
     /* Step 1. */
@@ -1108,9 +1108,6 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
                 return false;
             }
 
-            // The cloned script will have reused the origin principals and
-            // filename from the original script, which may differ.
-            clonedScript->originPrincipals = lazy->originPrincipals();
             clonedScript->setSourceObject(lazy->sourceObject());
 
             fun->initAtom(script->function()->displayAtom());
@@ -1169,7 +1166,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 }
 
 /* ES5 15.3.4.5.1 and 15.3.4.5.2. */
-JSBool
+bool
 js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1222,7 +1219,7 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
+static bool
 fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 {
     JSFunction *fun;
@@ -1243,7 +1240,7 @@ fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* ES5 15.3.4.5. */
-static JSBool
+static bool
 fun_bind(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1335,7 +1332,7 @@ const JSFunctionSpec js::function_methods[] = {
     JS_FS_END
 };
 
-JSBool
+bool
 js::Function(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1444,7 +1441,7 @@ js::Function(JSContext *cx, unsigned argc, Value *vp)
          * compile the function body.
          */
         TokenStream ts(cx, options, collected_args.get(), args_length,
-                       /* strictModeGetter = */ NULL, keepAtoms);
+                       /* strictModeGetter = */ NULL);
 
         /* The argument string may be empty or contain no tokens. */
         TokenKind tt = ts.getToken();

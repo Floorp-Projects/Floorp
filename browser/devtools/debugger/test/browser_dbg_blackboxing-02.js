@@ -37,8 +37,8 @@ function testBlackBoxSource() {
     const checkbox = getBlackBoxCheckbox(BLACKBOXME_URL);
     ok(checkbox, "Should get the checkbox for blackBoxing the source");
 
-    once(gDebugger, "Debugger:BlackBoxChange", function (event) {
-      const sourceClient = event.detail;
+    const { activeThread } = gDebugger.DebuggerController;
+    activeThread.addOneTimeListener("blackboxchange", function (event, sourceClient) {
       ok(sourceClient.isBlackBoxed, "The source should be black boxed now");
 
       testBlackBoxStack();

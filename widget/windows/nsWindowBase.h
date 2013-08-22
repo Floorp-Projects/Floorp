@@ -15,7 +15,6 @@
  * nsWindowBase - Base class of common methods other classes need to access
  * in both win32 and winrt window classes.
  */
-
 class nsWindowBase : public nsBaseWidget
 {
 public:
@@ -27,7 +26,19 @@ public:
   }
 
   /*
+   * Return the parent window, if it exists.
+   */
+  virtual nsWindowBase* GetParentWindowBase(bool aIncludeOwner) = 0;
+
+  /*
+   * Return true if this is a top level widget.
+   */
+  virtual bool IsTopLevelWidget() = 0;
+
+  /*
    * Init a standard gecko event for this widget.
+   * @param aEvent the event to initialize.
+   * @param aPoint message position in physical coordinates.
    */
   virtual void InitEvent(nsGUIEvent& aEvent, nsIntPoint* aPoint = nullptr) = 0;
 

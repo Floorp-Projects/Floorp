@@ -222,8 +222,8 @@ function checkSocialUI(win) {
   isbool(win.SocialSidebar.canShow, enabled, "social sidebar active?");
   if (enabled)
     isbool(win.SocialSidebar.opened, enabled, "social sidebar open?");
-  isbool(win.SocialChatBar.isAvailable, enabled && Social.haveLoggedInUser(), "chatbar available?");
-  isbool(!win.SocialChatBar.chatbar.hidden, enabled && Social.haveLoggedInUser(), "chatbar visible?");
+  isbool(win.SocialChatBar.isAvailable, enabled, "chatbar available?");
+  isbool(!win.SocialChatBar.chatbar.hidden, enabled, "chatbar visible?");
 
   let markVisible = enabled && provider.pageMarkInfo;
   let canMark = markVisible && win.SocialMark.canMarkPage(win.gBrowser.currentURI);
@@ -246,7 +246,7 @@ function checkSocialUI(win) {
   // and for good measure, check all the social commands.
   isbool(!doc.getElementById("Social:Toggle").hidden, active, "Social:Toggle visible?");
   isbool(!doc.getElementById("Social:ToggleNotifications").hidden, enabled, "Social:ToggleNotifications visible?");
-  isbool(!doc.getElementById("Social:FocusChat").hidden, enabled && Social.haveLoggedInUser(), "Social:FocusChat visible?");
+  isbool(!doc.getElementById("Social:FocusChat").hidden, enabled, "Social:FocusChat visible?");
   isbool(doc.getElementById("Social:FocusChat").getAttribute("disabled"), enabled ? "false" : "true", "Social:FocusChat disabled?");
   _is(doc.getElementById("Social:TogglePageMark").getAttribute("disabled"), canMark ? "false" : "true", "Social:TogglePageMark enabled?");
 

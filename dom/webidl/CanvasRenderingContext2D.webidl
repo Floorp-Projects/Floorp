@@ -46,10 +46,8 @@ interface CanvasRenderingContext2D {
            attribute DOMString globalCompositeOperation; // (default source-over)
 
   // colors and styles (see also the CanvasDrawingStyles interface)
-           [GetterThrows]
-           attribute any strokeStyle; // (default black)
-           [GetterThrows]
-           attribute any fillStyle; // (default black)
+           attribute (DOMString or CanvasGradient or CanvasPattern) strokeStyle; // (default black)
+           attribute (DOMString or CanvasGradient or CanvasPattern) fillStyle; // (default black)
   [Creator]
   CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
   [Creator, Throws]

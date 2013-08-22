@@ -21,6 +21,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/PhoneNumber.jsm");
+Components.utils.import("resource://gre/modules/PhoneNumberNormalizer.jsm");
 
 function IsPlain(dial, expected) {
   var result = PhoneNumber.IsPlain(dial);
@@ -32,7 +33,7 @@ function IsPlain(dial, expected) {
 }
 
 function Normalize(dial, expected) {
-  var result = PhoneNumber.Normalize(dial);
+  var result = PhoneNumberNormalizer.Normalize(dial);
   if (result !== expected) {
     ok(false, "normalized " + dial + " to " + result + ", expected " + expected + " instead.");
   } else {
@@ -41,7 +42,7 @@ function Normalize(dial, expected) {
 }
 
 function Normalize(dial, expected) {
-  var result = PhoneNumber.Normalize(dial);
+  var result = PhoneNumberNormalizer.Normalize(dial);
   if (result != expected) {
     ok(false, "Normalize error!\n");
     print("expected: " + expected);

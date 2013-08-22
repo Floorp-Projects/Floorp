@@ -22,7 +22,7 @@
 #define jstypes_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Util.h"
+#include "mozilla/Types.h"
 
 #include "js-config.h"
 
@@ -179,19 +179,6 @@
 #else
 # error "Implement me"
 #endif
-
-
-/************************************************************************
-** TYPES:       JSBool
-** DESCRIPTION:
-**  Use JSBool for variables and parameter types. Use JS_FALSE and JS_TRUE
-**      for clarity of target type in assignments and actual arguments. Use
-**      'if (bool)', 'while (!bool)', '(bool) ? x : y' etc., to test booleans
-**      just as you would C int-valued conditions.
-************************************************************************/
-typedef int JSBool;
-#define JS_TRUE (int)1
-#define JS_FALSE (int)0
 
 /***********************************************************************
 ** MACROS:      JS_LIKELY

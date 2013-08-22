@@ -66,6 +66,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsContentSink)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocumentObserver)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsContentSink)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsContentSink)
   if (tmp->mDocument) {
     tmp->mDocument->RemoveObserver(tmp);
@@ -1059,8 +1061,11 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
       action = CACHE_SELECTION_RESELECT_WITHOUT_MANIFEST;
     }
     else {
-      // Only continue if the document has permission to use offline APIs.
-      if (!nsContentUtils::OfflineAppAllowed(mDocument->NodePrincipal())) {
+      // Only continue if the document has permission to use offline APIs or
+      // when preferences indicate to permit it automatically.
+      if (!nsContentUtils::OfflineAppAllowed(mDocument->NodePrincipal()) &&
+          !nsContentUtils::MaybeAllowOfflineAppByDefault(mDocument->NodePrincipal()) &&
+          !nsContentUtils::OfflineAppAllowed(mDocument->NodePrincipal())) {
         return;
       }
 

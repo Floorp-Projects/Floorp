@@ -4,6 +4,8 @@
 
 #include "domstubs.idl"
 
+interface nsIDOMDOMRequest;
+
 [scriptable, uuid(3615a616-571d-4194-bf54-ccf546067b14)]
 interface nsIB2GCameraContent : nsISupports
 {

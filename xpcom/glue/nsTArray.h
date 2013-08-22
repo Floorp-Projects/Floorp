@@ -8,10 +8,10 @@
 #define nsTArray_h__
 
 #include "nsTArrayForwardDeclare.h"
+#include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/Util.h"
 
 #include <string.h>
 
@@ -691,8 +691,8 @@ struct nsTArray_TypedBase<JS::Heap<E>, Derived>
  : public nsTArray_SafeElementAtHelper<JS::Heap<E>, Derived>
 {
   operator const nsTArray<E>& () {
-    MOZ_STATIC_ASSERT(sizeof(E) == sizeof(JS::Heap<E>),
-                      "JS::Heap<E> must be binary compatible with E.");
+    static_assert(sizeof(E) == sizeof(JS::Heap<E>),
+                  "JS::Heap<E> must be binary compatible with E.");
     Derived* self = static_cast<Derived*>(this);
     return *reinterpret_cast<nsTArray<E> *>(self);
   }
@@ -1042,6 +1042,20 @@ public:
   //
   // Mutation methods
   //
+  // This method call the destructor on each element of the array, empties it,
+  // but does not shrink the array's capacity.
+  //
+  // Make sure to call Compact() if needed to avoid keeping a huge array
+  // around.
+  void ClearAndRetainStorage() {
+    if (base_type::mHdr == EmptyHdr()) {
+      return;
+    }
+
+    DestructRange(0, Length());
+    base_type::mHdr->mLength = 0;
+  }
+
 
   // This method replaces a range of elements in this array.
   // @param start     The starting index of the elements to replace.
@@ -1679,9 +1693,9 @@ private:
   friend class nsTArray_base;
 
   void Init() {
-    MOZ_STATIC_ASSERT(MOZ_ALIGNOF(elem_type) <= 8,
-                      "can't handle alignments greater than 8, "
-                      "see nsTArray_base::UsesAutoArrayBuffer()");
+    static_assert(MOZ_ALIGNOF(elem_type) <= 8,
+                  "can't handle alignments greater than 8, "
+                  "see nsTArray_base::UsesAutoArrayBuffer()");
     // Temporary work around for VS2012 RC compiler crash
     Header** phdr = base_type::PtrToHdr();
     *phdr = reinterpret_cast<Header*>(&mAutoBuf);
@@ -1769,10 +1783,10 @@ public:
 // 64-bit system, where the compiler inserts 4 bytes of padding at the end of
 // the auto array to make its size a multiple of alignof(void*) == 8 bytes.
 
-MOZ_STATIC_ASSERT(sizeof(nsAutoTArray<uint32_t, 2>) ==
-                  sizeof(void*) + sizeof(nsTArrayHeader) + sizeof(uint32_t) * 2,
-                  "nsAutoTArray shouldn't contain any extra padding, "
-                  "see the comment");
+static_assert(sizeof(nsAutoTArray<uint32_t, 2>) ==
+              sizeof(void*) + sizeof(nsTArrayHeader) + sizeof(uint32_t) * 2,
+              "nsAutoTArray shouldn't contain any extra padding, "
+              "see the comment");
 
 // Definitions of nsTArray_Impl methods
 #include "nsTArray-inl.h"

@@ -61,6 +61,7 @@ MOCHITEST_CHROME_FILES = \
 		test_doublewrappedcompartments.xul \
 		test_evalInSandbox.xul \
 		file_evalInSandbox.html \
+		test_evalInWindow.xul \
 		test_exnstack.xul \
 		test_expandosharing.xul \
 		file_expandosharing.jsm \

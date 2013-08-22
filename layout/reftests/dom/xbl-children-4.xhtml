@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xbl="http://www.mozilla.org/xbl"
+      class="reftest-wait">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    children { display:block; }
+  </style>
+</head>
+<body>
+    <xbl:children />
+    <script>
+        onload = function() {
+            /* First, schedule a pending restyle of the whole tree. */
+            var newSheet = document.createElementNS("http://www.w3.org/1999/xhtml", "style");
+            newSheet.appendChild(document.createTextNode("#nosuchelement { }"));
+            document.head.appendChild(newSheet);
+
+            /* Now, append a frame to our children element, causing the pending restyle to descend into it. */
+            var children = document.getElementsByTagName("xbl:children")[0];
+            var span = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+            span.appendChild(document.createTextNode("PASS"));
+            children.appendChild(span);
+            document.documentElement.removeAttribute("class");
+        }
+    </script>
+</body>
+</html>

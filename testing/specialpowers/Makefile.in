@@ -18,8 +18,6 @@ DIST_FILES = \
   chrome.manifest \
   $(NULL)
 
-EXTRA_COMPONENTS = components/SpecialPowersObserver.js
-
 XPI_NAME=specialpowers
 
 # Used in install.rdf

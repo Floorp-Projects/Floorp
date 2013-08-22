@@ -8,6 +8,39 @@
 </head>
 <body>
 Login Manager test: html5 input types (email, tel, url, etc.)
+<script>
+commonInit();
+SimpleTest.waitForExplicitFinish();
+
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
+pwmgr = Cc["@mozilla.org/login-manager;1"].
+        getService(Ci.nsILoginManager);
+
+login1  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+           createInstance(Ci.nsILoginInfo);
+login2  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+           createInstance(Ci.nsILoginInfo);
+login3  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+           createInstance(Ci.nsILoginInfo);
+login4  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+           createInstance(Ci.nsILoginInfo);
+
+login1.init("http://mochi.test:8888", "http://bug600551-1", null,
+            "testuser@example.com", "testpass1", "", "");
+login2.init("http://mochi.test:8888", "http://bug600551-2", null,
+            "555-555-5555", "testpass2", "", "");
+login3.init("http://mochi.test:8888", "http://bug600551-3", null,
+            "http://mozilla.org", "testpass3", "", "");
+login4.init("http://mochi.test:8888", "http://bug600551-4", null,
+            "123456789", "testpass4", "", "");
+
+pwmgr.addLogin(login1);
+pwmgr.addLogin(login2);
+pwmgr.addLogin(login3);
+pwmgr.addLogin(login4);
+</script>
+
 <p id="display"></p>
 <div id="content" style="display: none">
 
@@ -99,38 +132,6 @@ Login Manager test: html5 input types (email, tel, url, etc.)
 /* Test for Login Manager: 600551
   (Password manager not working with input type=email)
  */
-commonInit();
-
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-pwmgr = Cc["@mozilla.org/login-manager;1"].
-        getService(Ci.nsILoginManager);
-
-login1  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-login2  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-login3  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);        
-login4  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-           createInstance(Ci.nsILoginInfo);
-
-login1.init("http://mochi.test:8888", "http://bug600551-1", null,
-            "testuser@example.com", "testpass1", "", "");
-login2.init("http://mochi.test:8888", "http://bug600551-2", null,
-            "555-555-5555", "testpass2", "", "");
-login3.init("http://mochi.test:8888", "http://bug600551-3", null,
-            "http://mozilla.org", "testpass3", "", "");
-login4.init("http://mochi.test:8888", "http://bug600551-4", null,
-            "123456789", "testpass4", "", "");
-
-pwmgr.addLogin(login1);
-pwmgr.addLogin(login2);
-pwmgr.addLogin(login3);
-pwmgr.addLogin(login4);
-
 function startTest() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
@@ -166,9 +167,6 @@ function startTest() {
 }
 
 window.onload = startTest;
-
-SimpleTest.waitForExplicitFinish();
-
 </script>
 </pre>
 </body>

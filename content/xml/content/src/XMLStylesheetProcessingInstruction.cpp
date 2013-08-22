@@ -13,8 +13,8 @@ namespace dom {
 // nsISupports implementation
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XMLStylesheetProcessingInstruction)
-  NS_INTERFACE_TABLE_INHERITED4(XMLStylesheetProcessingInstruction, nsIDOMNode,
-                                nsIDOMProcessingInstruction, nsIDOMLinkStyle,
+  NS_INTERFACE_TABLE_INHERITED3(XMLStylesheetProcessingInstruction, nsIDOMNode,
+                                nsIDOMProcessingInstruction,
                                 nsIStyleSheetLinkingElement)
 NS_INTERFACE_TABLE_TAIL_INHERITING(ProcessingInstruction)
 
@@ -23,10 +23,13 @@ NS_IMPL_ADDREF_INHERITED(XMLStylesheetProcessingInstruction,
 NS_IMPL_RELEASE_INHERITED(XMLStylesheetProcessingInstruction,
                           ProcessingInstruction)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(XMLStylesheetProcessingInstruction)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XMLStylesheetProcessingInstruction,
                                                   ProcessingInstruction)
   tmp->nsStyleLinkElement::Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLStylesheetProcessingInstruction,
                                                 ProcessingInstruction)
   tmp->nsStyleLinkElement::Unlink();

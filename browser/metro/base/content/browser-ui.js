@@ -11,9 +11,6 @@ Cu.import("resource://gre/modules/devtools/dbg-server.jsm")
  * Constants
  */
 
-// Page for which the start UI is shown
-const kStartOverlayURI = "about:start";
-
 // Devtools Messages
 const debugServerStateChanged = "devtools.debugger.remote-enabled";
 const debugServerPortChanged = "devtools.debugger.remote-port";
@@ -33,6 +30,7 @@ let Elements = {};
 [
   ["contentShowing",     "bcast_contentShowing"],
   ["urlbarState",        "bcast_urlbarState"],
+  ["loadingState",       "bcast_loadingState"],
   ["windowState",        "bcast_windowState"],
   ["mainKeyset",         "mainKeyset"],
   ["stack",              "stack"],
@@ -40,11 +38,11 @@ let Elements = {};
   ["tabs",               "tabs-container"],
   ["controls",           "browser-controls"],
   ["panelUI",            "panel-container"],
-  ["startUI",            "start-container"],
   ["tray",               "tray"],
   ["toolbar",            "toolbar"],
   ["browsers",           "browsers"],
   ["navbar",             "navbar"],
+  ["autocomplete",       "urlbar-autocomplete"],
   ["contextappbar",      "contextappbar"],
   ["findbar",            "findbar"],
   ["contentViewport",    "content-viewport"],
@@ -108,7 +106,6 @@ var BrowserUI = {
 
     // Init core UI modules
     ContextUI.init();
-    StartUI.init();
     PanelUI.init();
     FlyoutPanelsUI.init();
     PageThumbs.init();
@@ -183,7 +180,6 @@ var BrowserUI = {
     messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
     PanelUI.uninit();
-    StartUI.uninit();
     Downloads.uninit();
     SettingsCharm.uninit();
     messageManager.removeMessageListener("Content:StateChange", this);
@@ -230,8 +226,7 @@ var BrowserUI = {
   },
 
   showContent: function showContent(aURI) {
-    DialogUI.closeAllDialogs();
-    StartUI.update(aURI);
+    this.updateStartURIAttributes(aURI);
     ContextUI.dismissTabs();
     ContextUI.dismissContextAppbar();
     FlyoutPanelsUI.hide();
@@ -258,23 +253,49 @@ var BrowserUI = {
       return;
     }
     let lastCrashID = this.lastCrashID;
+
     if (!lastCrashID || !lastCrashID.length) {
       return;
     }
+
     let shouldReport = Services.prefs.getBoolPref("app.crashreporter.autosubmit");
     let didPrompt = Services.prefs.getBoolPref("app.crashreporter.prompted");
 
     if (!shouldReport && !didPrompt) {
-      // We have a crash to submit, we haven't prompted for approval yet,
-      // and the auto-submit pref is false, prompt. The dialog will call
-      // startupCrashCheck again if the user approves.
+      let crashBundle = Services.strings.createBundle("chrome://browser/locale/crashprompt.properties");
+      let title = crashBundle.GetStringFromName("crashprompt.dialog.title");
+      let acceptbutton = crashBundle.GetStringFromName("crashprompt.dialog.acceptbutton");
+      let refusebutton = crashBundle.GetStringFromName("crashprompt.dialog.refusebutton");
+      let bodyText = crashBundle.GetStringFromName("crashprompt.dialog.statement1");
+
+      let buttonPressed =
+            Services.prompt.confirmEx(
+                null,
+                title,
+                bodyText,
+                Ci.nsIPrompt.BUTTON_POS_0 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING
+              + Ci.nsIPrompt.BUTTON_POS_1 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING
+              + Ci.nsIPrompt.BUTTON_POS_1_DEFAULT,
+                acceptbutton,
+                refusebutton,
+                null,
+                null,
+                { value: false });
+
       Services.prefs.setBoolPref("app.crashreporter.prompted", true);
-      DialogUI.importModal(document, "chrome://browser/content/prompt/crash.xul");
-      return;
+
+      if (buttonPressed == 0) {
+        Services.prefs.setBoolPref('app.crashreporter.autosubmit', true);
+        BrowserUI.crashReportingPrefChanged(true);
+        shouldReport = true;
+      } else {
+        Services.prefs.setBoolPref('app.crashreporter.autosubmit', false);
+        BrowserUI.crashReportingPrefChanged(false);
+      }
     }
 
     // We've already prompted, return if the user doesn't want to report.
-    if (!shouldReport && didPrompt) {
+    if (!shouldReport) {
       return;
     }
 
@@ -303,7 +324,7 @@ var BrowserUI = {
     let flags = aFlags || 0;
     if (!(flags & this.NO_STARTUI_VISIBILITY)) {
       let uri = this.getDisplayURI(Browser.selectedBrowser);
-      StartUI.update(uri);
+      this.updateStartURIAttributes(uri);
     }
     this._updateButtons();
     this._updateToolbar();
@@ -314,6 +335,25 @@ var BrowserUI = {
     let uri = this.getDisplayURI(Browser.selectedBrowser);
     let cleanURI = Util.isURLEmpty(uri) ? "" : uri;
     this._edit.value = cleanURI;
+  },
+
+  get isStartTabVisible() {
+    return this.isStartURI();
+  },
+
+  isStartURI: function isStartURI(aURI) {
+    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
+    return aURI == kStartURI;
+  },
+
+  updateStartURIAttributes: function (aURI) {
+    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
+    if (this.isStartURI(aURI)) {
+      ContextUI.displayNavbar();
+      Elements.windowState.setAttribute("startpage", "true");
+    } else if (aURI != "about:blank") { // about:blank is loaded briefly for new tabs; ignore it
+      Elements.windowState.removeAttribute("startpage");
+    }
   },
 
   getDisplayURI: function(browser) {
@@ -385,12 +425,21 @@ var BrowserUI = {
     });
   },
 
+  onAboutPolicyClick: function() {
+    FlyoutPanelsUI.hide();
+    let linkStr = Services.urlFormatter.formatURLPref("app.privacyURL");
+    BrowserUI.newTab(linkStr, Browser.selectedTab, true);
+  },
+
   /*********************************
    * Tab management
    */
 
-  newTab: function newTab(aURI, aOwner) {
-    aURI = aURI || kStartOverlayURI;
+  newTab: function newTab(aURI, aOwner, aPeekTabs) {
+    aURI = aURI || kStartURI;
+    if (aPeekTabs) {
+      ContextUI.peekTabs(kNewTabAnimationDelayMsec);
+    }
     let tab = Browser.addTab(aURI, true, aOwner);
     return tab;
   },
@@ -550,13 +599,12 @@ var BrowserUI = {
         break;
       case "metro_viewstate_changed":
         this._adjustDOMforViewState();
-        let autocomplete = document.getElementById("urlbar-autocomplete");
         if (aData == "snapped") {
           FlyoutPanelsUI.hide();
-          autocomplete.setAttribute("orient", "vertical");
+          Elements.autocomplete.setAttribute("orient", "vertical");
         }
         else {
-          autocomplete.setAttribute("orient", "horizontal");
+          Elements.autocomplete.setAttribute("orient", "horizontal");
         }
 
         break;
@@ -656,13 +704,11 @@ var BrowserUI = {
   },
 
   _updateToolbar: function _updateToolbar() {
-    let mode = Elements.urlbarState.getAttribute("mode");
-    let isLoading = Browser.selectedTab.isLoading();
-
-    if (isLoading && mode != "loading")
-      Elements.urlbarState.setAttribute("mode", "loading");
-    else if (!isLoading && mode != "edit")
-      Elements.urlbarState.setAttribute("mode", "view");
+    if (Browser.selectedTab.isLoading()) {
+      Elements.loadingState.setAttribute("loading", true);
+    } else {
+      Elements.loadingState.removeAttribute("loading");
+    }
   },
 
   _closeOrQuit: function _closeOrQuit() {
@@ -735,18 +781,6 @@ var BrowserUI = {
       return;
     }
 
-    // Check open dialogs
-    let dialog = DialogUI.activeDialog;
-    if (dialog) {
-      dialog.close();
-      return;
-    }
-
-    // Check open modal elements
-    if (DialogUI.modals.length > 0) {
-      return;
-    }
-
     // Check open panel
     if (PanelUI.isVisible) {
       PanelUI.hide();
@@ -756,12 +790,6 @@ var BrowserUI = {
     // Check content helper
     if (FindHelperUI.isActive) {
       FindHelperUI.hide();
-      return;
-    }
-
-    if (StartUI.hide()) {
-      // When escaping from the start screen, hide the toolbar too.
-      ContextUI.dismiss();
       return;
     }
 
@@ -841,7 +869,6 @@ var BrowserUI = {
         let referrerURI = null;
         if (json.referrer)
           referrerURI = Services.io.newURI(json.referrer, null, null);
-        //Browser.addTab(json.uri, json.bringFront, Browser.selectedTab, { referrerURI: referrerURI });
         this.goToURI(json.uri);
         break;
       case "Content:StateChange":
@@ -1022,6 +1049,7 @@ var BrowserUI = {
       case "cmd_openLocation":
         ContextUI.displayNavbar();
         this._edit.beginEditing(true);
+        this._edit.select();
         break;
       case "cmd_addBookmark":
         ContextUI.displayNavbar();
@@ -1036,7 +1064,7 @@ var BrowserUI = {
       case "cmd_remoteTabs":
 #ifdef MOZ_SERVICES_SYNC
         if (Weave.Status.checkSetup() == Weave.CLIENT_NOT_CONFIGURED) {
-          FlyoutPanelsUI.show('SyncFlyout');
+          FlyoutPanelsUI.show('SyncFlyoutPanel');
         } else {
           PanelUI.show("remotetabs-container");
         }
@@ -1050,9 +1078,8 @@ var BrowserUI = {
         this._closeOrQuit();
         break;
       case "cmd_newTab":
-        this.newTab();
+        this.newTab(null, null, true);
         this._edit.beginEditing(false);
-        ContextUI.peekTabs(kNewTabAnimationDelayMsec);
         break;
       case "cmd_closeTab":
         this.closeTab();
@@ -1088,140 +1115,6 @@ var BrowserUI = {
 
   crashReportingPrefChanged: function crashReportingPrefChanged(aState) {
     CrashReporter.submitReports = aState;
-  }
-};
-
-var StartUI = {
-  get isVisible() { return this.isStartPageVisible; },
-  get isStartPageVisible() { return Elements.windowState.hasAttribute("startpage"); },
-
-  get maxResultsPerSection() {
-    return Services.prefs.getIntPref("browser.display.startUI.maxresults");
-  },
-
-  sections: [
-    "TopSitesStartView",
-    "BookmarksStartView",
-    "HistoryStartView",
-    "RemoteTabsStartView"
-  ],
-
-  init: function init() {
-    Elements.startUI.addEventListener("contextmenu", this, false);
-    Elements.startUI.addEventListener("click", this, false);
-    Elements.startUI.addEventListener("MozMousePixelScroll", this, false);
-
-    this.sections.forEach(function (sectionName) {
-      let section = window[sectionName];
-      if (section.init)
-        section.init();
-    });
-
-  },
-
-  uninit: function() {
-    this.sections.forEach(function (sectionName) {
-      let section = window[sectionName];
-      if (section.uninit)
-        section.uninit();
-    });
-  },
-
-  /** Show the Firefox start page / "new tab" page */
-  show: function show() {
-    if (this.isStartPageVisible)
-      return false;
-
-    ContextUI.displayNavbar();
-
-    Elements.contentShowing.setAttribute("disabled", "true");
-    Elements.windowState.setAttribute("startpage", "true");
-
-    this.sections.forEach(function (sectionName) {
-      let section = window[sectionName];
-      if (section.show)
-        section.show();
-    });
-    return true;
-  },
-
-  /** Hide the Firefox start page */
-  hide: function hide(aURI) {
-    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
-    if (!this.isStartPageVisible || this.isStartURI(aURI))
-      return false;
-
-    Elements.contentShowing.removeAttribute("disabled");
-    Elements.windowState.removeAttribute("startpage");
-    return true;
-  },
-
-  /** Is the current tab supposed to show the Firefox start page? */
-  isStartURI: function isStartURI(aURI) {
-    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
-    return aURI == kStartOverlayURI || aURI == "about:home";
-  },
-
-  /** Call this to show or hide the start page when switching tabs or pages */
-  update: function update(aURI) {
-    aURI = aURI || Browser.selectedBrowser.currentURI.spec;
-    if (this.isStartURI(aURI)) {
-      this.show();
-    } else if (aURI != "about:blank") { // about:blank is loaded briefly for new tabs; ignore it
-      this.hide(aURI);
-    }
-  },
-
-  onClick: function onClick(aEvent) {
-    // If someone clicks / taps in empty grid space, take away
-    // focus from the nav bar edit so the soft keyboard will hide.
-    if (BrowserUI.blurNavBar()) {
-      // Advanced notice to CAO, so we can shuffle the nav bar in advance
-      // of the keyboard transition.
-      ContentAreaObserver.navBarWillBlur();
-    }
-
-    if (aEvent.button == 0)
-      ContextUI.dismissTabs();
-  },
-
-  onNarrowTitleClick: function onNarrowTitleClick(gridId) {
-    let grid = document.getElementById(gridId);
-
-    if (grid.hasAttribute("expanded"))
-      return;
-
-    for (let expandedGrid of Elements.startUI.querySelectorAll("[expanded]"))
-      expandedGrid.removeAttribute("expanded")
-
-    grid.setAttribute("expanded", "true");
-  },
-
-  handleEvent: function handleEvent(aEvent) {
-    switch (aEvent.type) {
-      case "contextmenu":
-        let event = document.createEvent("Events");
-        event.initEvent("MozEdgeUICompleted", true, false);
-        window.dispatchEvent(event);
-        break;
-      case "click":
-        this.onClick(aEvent);
-        break;
-
-      case "MozMousePixelScroll":
-        let startBox = document.getElementById("start-scrollbox");
-        let [, scrollInterface] = ScrollUtils.getScrollboxFromElement(startBox);
-
-        if (Elements.windowState.getAttribute("viewstate") == "snapped") {
-          scrollInterface.scrollBy(0, aEvent.detail);
-        } else {
-          scrollInterface.scrollBy(aEvent.detail, 0);
-        }
-
-        aEvent.preventDefault();
-        aEvent.stopPropagation();
-        break;
-    }
   }
 };
 
@@ -1316,104 +1209,10 @@ var PanelUI = {
 };
 
 var DialogUI = {
-  _dialogs: [],
   _popup: null,
 
   init: function() {
     window.addEventListener("mousedown", this, true);
-  },
-
-  /*******************************************
-   * Modal popups
-   */
-
-  get modals() {
-    return document.getElementsByClassName("modal-block");
-  },
-
-  importModal: function importModal(aParent, aSrc, aArguments) {
-  // load the dialog with a synchronous XHR
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
-    xhr.open("GET", aSrc, false);
-    xhr.overrideMimeType("text/xml");
-    xhr.send(null);
-    if (!xhr.responseXML)
-      return null;
-
-    let currentNode;
-    let nodeIterator = xhr.responseXML.createNodeIterator(xhr.responseXML, NodeFilter.SHOW_TEXT, null, false);
-    while (!!(currentNode = nodeIterator.nextNode())) {
-      let trimmed = currentNode.nodeValue.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
-      if (!trimmed.length)
-        currentNode.parentNode.removeChild(currentNode);
-    }
-
-    let doc = xhr.responseXML.documentElement;
-
-    let dialog  = null;
-
-    // we need to insert before context-container if we want allow pasting (using
-    //  the context menu) into dialogs
-    let contentMenuContainer = document.getElementById("context-container");
-    let parentNode = contentMenuContainer.parentNode;
-
-    // emit DOMWillOpenModalDialog event
-    let event = document.createEvent("Events");
-    event.initEvent("DOMWillOpenModalDialog", true, false);
-    let dispatcher = aParent || getBrowser();
-    dispatcher.dispatchEvent(event);
-
-    // create a full-screen semi-opaque box as a background or reuse
-    // the existing one.
-    let back = document.getElementById("dialog-modal-block");
-    if (!back) {
-      back = document.createElement("box");
-    } else {
-      while (back.hasChildNodes()) {
-        back.removeChild(back.firstChild);
-      }
-    }
-    back.setAttribute("class", "modal-block");
-    back.setAttribute("id", "dialog-modal-block");
-    dialog = back.appendChild(document.importNode(doc, true));
-    parentNode.insertBefore(back, contentMenuContainer);
-
-    dialog.arguments = aArguments;
-    dialog.parent = aParent;
-    return dialog;
-  },
-
-  /*******************************************
-   * Dialogs
-   */
-
-  get activeDialog() {
-    // Return the topmost dialog
-    if (this._dialogs.length)
-      return this._dialogs[this._dialogs.length - 1];
-    return null;
-  },
-
-  closeAllDialogs: function closeAllDialogs() {
-    while (this.activeDialog)
-      this.activeDialog.close();
-  },
-
-  pushDialog: function pushDialog(aDialog) {
-    // If we have a dialog push it on the stack and set the attr for CSS
-    if (aDialog) {
-      this._dialogs.push(aDialog);
-      Elements.contentShowing.setAttribute("disabled", "true");
-    }
-  },
-
-  popDialog: function popDialog() {
-    if (this._dialogs.length)
-      this._dialogs.pop();
-
-    // If no more dialogs are being displayed, remove the attr for CSS
-    if (!this._dialogs.length)
-      Elements.contentShowing.removeAttribute("disabled");
   },
 
   /*******************************************
@@ -1506,24 +1305,24 @@ var SettingsCharm = {
     // Options
     this.addEntry({
         label: Strings.browser.GetStringFromName("optionsCharm"),
-        onselected: function() FlyoutPanelsUI.show('PrefsFlyout')
+        onselected: function() FlyoutPanelsUI.show('PrefsFlyoutPanel')
     });
     // Sync
     this.addEntry({
         label: Strings.browser.GetStringFromName("syncCharm"),
-        onselected: function() FlyoutPanelsUI.show('SyncFlyout')
+        onselected: function() FlyoutPanelsUI.show('SyncFlyoutPanel')
     });
     // About
     this.addEntry({
         label: Strings.browser.GetStringFromName("aboutCharm1"),
-        onselected: function() FlyoutPanelsUI.show('AboutFlyout')
+        onselected: function() FlyoutPanelsUI.show('AboutFlyoutPanel')
     });
     // Help
     this.addEntry({
         label: Strings.browser.GetStringFromName("helpOnlineCharm"),
         onselected: function() {
           let url = Services.urlFormatter.formatURLPref("app.support.baseURL");
-          BrowserUI.newTab(url, Browser.selectedTab);
+          BrowserUI.newTab(url, Browser.selectedTab, true);
         }
     });
   },

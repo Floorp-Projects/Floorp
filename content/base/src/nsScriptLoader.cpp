@@ -19,7 +19,6 @@
 #include "nsNetUtil.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptRuntime.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
@@ -737,6 +736,12 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
                                          scriptElem,
                                          NS_LITERAL_STRING("beforescriptexecute"),
                                          true, true, &runScript);
+  }
+
+  // Inner window could have gone away after firing beforescriptexecute
+  pwin = mDocument->GetInnerWindow();
+  if (!pwin) {
+    runScript = false;
   }
 
   nsresult rv = NS_OK;

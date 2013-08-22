@@ -37,8 +37,32 @@ static const WCHAR* kFirefoxExe = L"firefox.exe";
 static const WCHAR* kMetroFirefoxExe = L"firefox.exe";
 static const WCHAR* kDefaultMetroBrowserIDPathKey = L"FirefoxURL";
 
-static bool GetDesktopBrowserPath(CStringW& aPathBuffer);
 static bool GetDefaultBrowserPath(CStringW& aPathBuffer);
+
+/*
+ * Retrieve our module dir path.
+ *
+ * @aPathBuffer Buffer to fill
+ */
+static bool GetModulePath(CStringW& aPathBuffer)
+{
+  WCHAR buffer[MAX_PATH];
+  memset(buffer, 0, sizeof(buffer));
+
+  if (!GetModuleFileName(NULL, buffer, MAX_PATH)) {
+    Log(L"GetModuleFileName failed.");
+    return false;
+  }
+
+  WCHAR* slash = wcsrchr(buffer, '\\');
+  if (!slash)
+    return false;
+  *slash = '\0';
+
+  aPathBuffer = buffer;
+  return true;
+}
+
 
 template <class T>void SafeRelease(T **ppT)
 {
@@ -68,6 +92,8 @@ public:
     mShellItemArray(NULL),
     mUnkSite(NULL),
     mTargetIsFileSystemLink(false),
+    mTargetIsDefaultBrowser(false),
+    mTargetIsBrowser(false),
     mIsDesktopRequest(true),
     mRequestMet(false)
   {
@@ -279,6 +305,37 @@ public:
     return S_OK;
   }
 
+  /*
+   * Retrieve the target path if it is the default browser
+   * or if not default, retreives the target path if it is a firefox browser
+   * or if the target is not firefox, relies on a hack to get the
+   * 'module dir path\firefox.exe'
+   * The reason why it's not good to rely on the CEH path is because there is
+   * no guarantee win8 will use the CEH at our expected path.  It has an in
+   * memory cache even if the registry is updated for the CEH path.
+   *
+   * @aPathBuffer Buffer to fill
+   */
+  bool GetDesktopBrowserPath(CStringW& aPathBuffer)
+  {
+    // If the target was the default browser itself then return early.  Otherwise
+    // rely on a hack to check CEH path and calculate it relative to it.
+
+    if (mTargetIsDefaultBrowser || mTargetIsBrowser) {
+      aPathBuffer = mTarget;
+      return true;
+    }
+
+    if (!GetModulePath(aPathBuffer))
+      return false;
+
+    // ceh.exe sits in dist/bin root with the desktop browser. Since this
+    // is a firefox only component, this hardcoded filename is ok.
+    aPathBuffer.Append(L"\\");
+    aPathBuffer.Append(kFirefoxExe);
+    return true;
+  }
+
   bool IsDefaultBrowser()
   {
     IApplicationAssociationRegistration* pAAR;
@@ -318,12 +375,10 @@ public:
     // activating the Metro browser will fail. So fallback to the desktop.
     CStringW selfPath;
     GetDesktopBrowserPath(selfPath);
-    selfPath.MakeLower();
     CStringW browserPath;
     GetDefaultBrowserPath(browserPath);
-    browserPath.MakeLower();
 
-    return selfPath == browserPath;
+    return !selfPath.CompareNoCase(browserPath);
   }
 private:
   ~CExecuteCommandVerb()
@@ -334,7 +389,6 @@ private:
 
   void LaunchDesktopBrowser();
   bool SetTargetPath(IShellItem* aItem);
-  bool IsTargetBrowser();
 
   long mRef;
   IShellItemArray *mShellItemArray;
@@ -343,51 +397,12 @@ private:
   CStringW mTarget;
   CStringW mParameters;
   bool mTargetIsFileSystemLink;
+  bool mTargetIsDefaultBrowser;
+  bool mTargetIsBrowser;
   DWORD mKeyState;
   bool mIsDesktopRequest;
   bool mRequestMet;
 };
-
-/*
- * Retrieve our module dir path.
- *
- * @aPathBuffer Buffer to fill
- */
-static bool GetModulePath(CStringW& aPathBuffer)
-{
-  WCHAR buffer[MAX_PATH];
-  memset(buffer, 0, sizeof(buffer));
-
-  if (!GetModuleFileName(NULL, buffer, MAX_PATH)) {
-    Log(L"GetModuleFileName failed.");
-    return false;
-  }
-
-  WCHAR* slash = wcsrchr(buffer, '\\');
-  if (!slash)
-    return false;
-  *slash = '\0';
-
-  aPathBuffer = buffer;
-  return true;
-}
-
-/*
- * Retrieve 'module dir path\firefox.exe'
- *
- * @aPathBuffer Buffer to fill
- */
-static bool GetDesktopBrowserPath(CStringW& aPathBuffer)
-{
-  if (!GetModulePath(aPathBuffer))
-    return false;
-
-  // ceh.exe sits in dist/bin root with the desktop browser. Since this
-  // is a firefox only component, this hardcoded filename is ok.
-  aPathBuffer.Append(L"\\");
-  aPathBuffer.Append(kFirefoxExe);
-  return true;
-}
 
 /*
  * Retrieve the current default browser's path.
@@ -443,36 +458,6 @@ static bool GetDefaultBrowserAppModelID(WCHAR* aIDBuffer,
   }
   RegCloseKey(key);
   return true;
-}
-
-/*
- * Determines if the current target points directly to a particular
- * browser or to a file or url.
- */
-bool CExecuteCommandVerb::IsTargetBrowser()
-{
-  if (!mTarget.GetLength() || !mTargetIsFileSystemLink)
-    return false;
-
-  CStringW modulePath;
-  if (!GetModulePath(modulePath))
-    return false;
-
-  modulePath.MakeLower();
-
-  CStringW tmpTarget = mTarget;
-  tmpTarget.Replace(L"\"", L"");
-  tmpTarget.MakeLower();
-  
-  CStringW checkPath;
-  
-  checkPath = modulePath;
-  checkPath.Append(L"\\");
-  checkPath.Append(kFirefoxExe);
-  if (tmpTarget == checkPath) {
-    return true;
-  }
-  return false;
 }
 
 namespace {
@@ -545,6 +530,7 @@ bool CExecuteCommandVerb::SetTargetPath(IShellItem* aItem)
 
     mTargetIsFileSystemLink = (components.nScheme == INTERNET_SCHEME_FILE);
     mTarget = cstrText;
+
     return true;
   }
 
@@ -562,6 +548,15 @@ bool CExecuteCommandVerb::SetTargetPath(IShellItem* aItem)
   }
   mTarget = str;
   CoTaskMemFree(str);
+
+  CStringW defaultPath;
+  GetDefaultBrowserPath(defaultPath);
+  mTargetIsDefaultBrowser = !mTarget.CompareNoCase(defaultPath);
+
+  size_t browserEXELen = wcslen(kFirefoxExe);
+  mTargetIsBrowser = mTarget.GetLength() >= browserEXELen &&
+                     !mTarget.Right(browserEXELen).CompareNoCase(kFirefoxExe);
+
   return true;
 }
 
@@ -577,9 +572,11 @@ void CExecuteCommandVerb::LaunchDesktopBrowser()
   }
 
   // If a taskbar shortcut, link or local file is clicked, the target will
-  // be the browser exe or file.
+  // be the browser exe or file.  Don't pass in -url for the target if the
+  // target is known to be a browser.  Otherwise, one instance of Firefox
+  // will try to open another instance.
   CStringW params;
-  if (!IsTargetBrowser() && !mTarget.IsEmpty()) {
+  if (!mTargetIsDefaultBrowser && !mTargetIsBrowser && !mTarget.IsEmpty()) {
     // Fallback to the module path if it failed to get the default browser.
     GetDefaultBrowserPath(browserPath);
     params += "-url ";
@@ -670,7 +667,7 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
   Log(L"Metro Launch: verb:%s appid:%s params:%s", mVerb, appModelID, mTarget); 
 
   // shortcuts to the application
-  if (IsTargetBrowser()) {
+  if (mTargetIsDefaultBrowser) {
     hr = activateMgr->ActivateApplication(appModelID, L"", AO_NONE, &processID);
     Log(L"ActivateApplication result %X", hr);
   // files

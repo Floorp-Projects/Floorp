@@ -27,6 +27,8 @@ const tests = [
   // 1445 bytes to detect with our method.
   { path: "data/id3tags.mp3", expected: "audio/mpeg" },
   { path: "data/notags.mp3", expected: "audio/mpeg" },
+  // MPEG-2 mp3 files.
+  { path: "data/detodos.mp3", expected: "audio/mpeg" },
   // Padding bit flipped in the first header: sniffing should fail.
   { path: "data/notags-bad.mp3", expected: "application/octet-stream" },
   // Garbage before header: sniffing should fail.

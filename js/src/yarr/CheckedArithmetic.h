@@ -31,7 +31,7 @@
 #include "assembler/wtf/Assertions.h"
 
 #include <limits>
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/TypeTraits.h"
 
 #ifdef _MSC_VER

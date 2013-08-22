@@ -19,9 +19,6 @@ userExtDir.append("extensions2");
 userExtDir.append(gAppInfo.ID);
 registerDirectory("XREUSysExt", userExtDir.parent);
 
-Components.utils.import("resource://testing-common/httpd.js");
-var testserver;
-
 function TestProvider(result) {
   this.result = result;
 }
@@ -73,11 +70,6 @@ function run_test() {
   do_test_pending();
 
   resetPrefs();
-
-  // Create and configure the HTTP server.
-  testserver = new HttpServer();
-  testserver.registerDirectory("/addons/", do_get_file("addons"));
-  testserver.start(4444);
 
   startupManager();
 
@@ -148,7 +140,7 @@ function run_test_2(uri) {
       do_check_true(newb1.userDisabled);
       check_mapping(uri, newb1.id);
 
-      run_test_3(uri);
+      do_execute_soon(() => run_test_3(uri));
     });
   });
 }
@@ -182,7 +174,7 @@ function run_test_4() {
       let uri = newb1.getResourceURI(".");
       check_mapping(uri, newb1.id);
 
-      run_test_5();
+      do_execute_soon(run_test_5);
     });
   });
 }
@@ -195,7 +187,7 @@ function run_test_5() {
     let uri = b1.getResourceURI(".");
     check_mapping(uri, b1.id);
 
-    run_test_invalidarg();
+    do_execute_soon(run_test_invalidarg);
   });
 }
 

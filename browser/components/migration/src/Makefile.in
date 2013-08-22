@@ -22,9 +22,5 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 DEFINES += -DHAS_SAFARI_MIGRATOR
 endif
 
-EXTRA_PP_JS_MODULES = \
-	MigrationUtils.jsm \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

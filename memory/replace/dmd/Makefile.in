@@ -17,8 +17,6 @@ DEFINES 	+= -DMOZ_NO_MOZALLOC
 
 VPATH 		+= $(topsrcdir)/xpcom/base
 VPATH 		+= $(topsrcdir)/nsprpub/lib/libc/src
-DISABLED_CSRCS 		+= strcpy.c
-
 VPATH 		+= $(topsrcdir)/mfbt
 
 # Disable mozglue.

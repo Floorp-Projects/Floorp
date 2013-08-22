@@ -98,6 +98,7 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 #define BROWSER_PREF_PREFIX     "browser.cache."
 #define DONOTTRACK_HEADER_ENABLED "privacy.donottrackheader.enabled"
 #define DONOTTRACK_HEADER_VALUE   "privacy.donottrackheader.value"
+#define DONOTTRACK_VALUE_UNSET    2
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
 #define TELEMETRY_ENABLED        "toolkit.telemetry.enabledPreRelease"
 #else
@@ -120,19 +121,14 @@ NewURI(const nsACString &aSpec,
        int32_t aDefaultPort,
        nsIURI **aURI)
 {
-    nsStandardURL *url = new nsStandardURL();
-    if (!url)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(url);
+    nsRefPtr<nsStandardURL> url = new nsStandardURL();
 
     nsresult rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY,
                             aDefaultPort, aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv)) {
-        NS_RELEASE(url);
         return rv;
     }
-
-    *aURI = url; // no QI needed
+    url.forget(aURI);
     return NS_OK;
 }
 
@@ -143,8 +139,7 @@ NewURI(const nsACString &aSpec,
 nsHttpHandler *gHttpHandler = nullptr;
 
 nsHttpHandler::nsHttpHandler()
-    : mConnMgr(nullptr)
-    , mHttpVersion(NS_HTTP_VERSION_1_1)
+    : mHttpVersion(NS_HTTP_VERSION_1_1)
     , mProxyHttpVersion(NS_HTTP_VERSION_1_1)
     , mCapabilities(NS_HTTP_ALLOW_KEEPALIVE)
     , mReferrerLevel(0xff) // by default we always send a referrer
@@ -223,7 +218,7 @@ nsHttpHandler::~nsHttpHandler()
     // make sure the connection manager is shutdown
     if (mConnMgr) {
         mConnMgr->Shutdown();
-        NS_RELEASE(mConnMgr);
+        mConnMgr = nullptr;
     }
 
     // Note: don't call NeckoChild::DestroyNeckoChild() here, as it's too late
@@ -233,6 +228,13 @@ nsHttpHandler::~nsHttpHandler()
     if (mPipelineTestTimer) {
         mPipelineTestTimer->Cancel();
         mPipelineTestTimer = nullptr;
+    }
+
+    if (!mDoNotTrackEnabled) {
+        Telemetry::Accumulate(Telemetry::DNT_USAGE, DONOTTRACK_VALUE_UNSET);
+    }
+    else {
+        Telemetry::Accumulate(Telemetry::DNT_USAGE, mDoNotTrackValue);
     }
 
     gHttpHandler = nullptr;
@@ -249,11 +251,12 @@ nsHttpHandler::Init()
     if (NS_FAILED(rv))
         return rv;
 
-    mIOService = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIIOService> service = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("unable to continue without io service");
         return rv;
     }
+    mIOService = new nsMainThreadPtrHolder<nsIIOService>(service);
 
     if (IsNeckoChild())
         NeckoChild::InitNeckoChild();
@@ -309,12 +312,8 @@ nsHttpHandler::Init()
 #ifdef ANDROID
     mProductSub.AssignLiteral(MOZILLA_UAVERSION);
 #else
-    mProductSub.AssignLiteral(MOZ_UA_BUILDID);
+    mProductSub.AssignLiteral("20100101");
 #endif
-    if (mProductSub.IsEmpty() && appInfo)
-        appInfo->GetPlatformBuildID(mProductSub);
-    if (mProductSub.Length() > 8)
-        mProductSub.SetLength(8);
 
 #if DEBUG
     // dump user agent prefs
@@ -337,7 +336,8 @@ nsHttpHandler::Init()
                                   static_cast<nsISupports*>(static_cast<void*>(this)),
                                   NS_HTTP_STARTUP_TOPIC);
 
-    mObserverService = services::GetObserverService();
+    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+    mObserverService = new nsMainThreadPtrHolder<nsIObserverService>(obsService);
     if (mObserverService) {
         mObserverService->AddObserver(this, "profile-change-net-teardown", true);
         mObserverService->AddObserver(this, "profile-change-net-restore", true);
@@ -374,12 +374,8 @@ nsHttpHandler::InitConnectionMgr()
 {
     nsresult rv;
 
-    if (!mConnMgr) {
+    if (!mConnMgr)
         mConnMgr = new nsHttpConnectionMgr();
-        if (!mConnMgr)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(mConnMgr);
-    }
 
     rv = mConnMgr->Init(mMaxConnections,
                         mMaxPersistentConnectionsPerServer,
@@ -471,27 +467,34 @@ nsHttpHandler::GetStreamConverterService(nsIStreamConverterService **result)
 {
     if (!mStreamConvSvc) {
         nsresult rv;
-        mStreamConvSvc = do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIStreamConverterService> service =
+            do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv))
+            return rv;
+        mStreamConvSvc = new nsMainThreadPtrHolder<nsIStreamConverterService>(service);
     }
     *result = mStreamConvSvc;
     NS_ADDREF(*result);
     return NS_OK;
 }
 
-nsIStrictTransportSecurityService*
-nsHttpHandler::GetSTSService()
+nsISiteSecurityService*
+nsHttpHandler::GetSSService()
 {
-    if (!mSTSService)
-      mSTSService = do_GetService(NS_STSSERVICE_CONTRACTID);
-    return mSTSService;
+    if (!mSSService) {
+        nsCOMPtr<nsISiteSecurityService> service = do_GetService(NS_SSSERVICE_CONTRACTID);
+        mSSService = new nsMainThreadPtrHolder<nsISiteSecurityService>(service);
+    }
+    return mSSService;
 }
 
 nsICookieService *
 nsHttpHandler::GetCookieService()
 {
-    if (!mCookieService)
-        mCookieService = do_GetService(NS_COOKIESERVICE_CONTRACTID);
+    if (!mCookieService) {
+        nsCOMPtr<nsICookieService> service = do_GetService(NS_COOKIESERVICE_CONTRACTID);
+        mCookieService = new nsMainThreadPtrHolder<nsICookieService>(service);
+    }
     return mCookieService;
 }
 
@@ -1834,9 +1837,9 @@ NS_IMETHODIMP
 nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
                                   nsIInterfaceRequestor *aCallbacks)
 {
-    nsIStrictTransportSecurityService* stss = gHttpHandler->GetSTSService();
+    nsISiteSecurityService* sss = gHttpHandler->GetSSService();
     bool isStsHost = false;
-    if (!stss)
+    if (!sss)
         return NS_OK;
 
     nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(aCallbacks);
@@ -1844,7 +1847,8 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
     if (loadContext && loadContext->UsePrivateBrowsing())
         flags |= nsISocketProvider::NO_PERMANENT_STORAGE;
     nsCOMPtr<nsIURI> clone;
-    if (NS_SUCCEEDED(stss->IsStsURI(aURI, flags, &isStsHost)) && isStsHost) {
+    if (NS_SUCCEEDED(sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS,
+                                      aURI, flags, &isStsHost)) && isStsHost) {
         if (NS_SUCCEEDED(aURI->Clone(getter_AddRefs(clone)))) {
             clone->SetScheme(NS_LITERAL_CSTRING("https"));
             aURI = clone.get();

@@ -117,7 +117,7 @@ protected:
   nsRefPtrHashtable<nsStringHashKey, PropertyNodeList> mNamedItemEntries;
 
   // The element this collection is rooted at
-  nsCOMPtr<nsGenericHTMLElement> mRoot;
+  nsRefPtr<nsGenericHTMLElement> mRoot;
 
   // The document mRoot is in, if any
   nsCOMPtr<nsIDocument> mDoc;

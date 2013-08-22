@@ -8,7 +8,6 @@
 #include "jsapi.h"           // For OBJECT_TO_JSVAL and JS_NewDateObjectMsec
 #include "jsfriendapi.h"     // For js_DateGetMsecSinceEpoch
 #include "nsJSUtils.h"       // For nsDependentJSString
-#include "nsContentUtils.h"  // For nsTArrayHelpers.h
 #include "nsTArrayHelpers.h" // For nsTArrayToJSArray
 #include "Constants.h"       // For MessageType
 
@@ -66,7 +65,7 @@ MobileMessageThread::Create(const uint64_t aId,
     for (uint32_t i = 0; i < length; ++i) {
       JS::Rooted<JS::Value> val(aCx);
 
-      if (!JS_GetElement(aCx, obj, i, val.address()) || !val.isString()) {
+      if (!JS_GetElement(aCx, obj, i, &val) || !val.isString()) {
         return NS_ERROR_INVALID_ARG;
       }
 

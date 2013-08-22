@@ -214,8 +214,12 @@ if test -n "$gonkdir" ; then
         AC_DEFINE(MOZ_OMX_DECODER)
         AC_SUBST(MOZ_OMX_DECODER)
         ;;
-    17)
+    18)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include"
+        if test -d "$gonkdir/external/bluetooth/bluez"; then
+            GONK_INCLUDES+=" -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib"
+            MOZ_B2G_BT=1
+        fi
         ;;
     *)
         AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
@@ -285,75 +289,7 @@ AR_FLAGS='cr $@'
 if test "$COMPILE_ENVIRONMENT"; then
 
 if test -n "$CROSS_COMPILE" -a "$target" != "$host"; then
-    echo "cross compiling from $host to $target"
-    cross_compiling=yes
-
-    _SAVE_CC="$CC"
-    _SAVE_CFLAGS="$CFLAGS"
-    _SAVE_LDFLAGS="$LDFLAGS"
-
-    AC_MSG_CHECKING([for host c compiler])
-    AC_CHECK_PROGS(HOST_CC, $HOST_CC cc gcc /usr/ucb/cc cl icc, "")
-    if test -z "$HOST_CC"; then
-        AC_MSG_ERROR([no acceptable c compiler found in \$PATH])
-    fi
-    AC_MSG_RESULT([$HOST_CC])
-    AC_MSG_CHECKING([for host c++ compiler])
-    AC_CHECK_PROGS(HOST_CXX, $HOST_CXX $CCC c++ g++ gcc CC cxx cc++ cl icc, "")
-    if test -z "$HOST_CXX"; then
-        AC_MSG_ERROR([no acceptable c++ compiler found in \$PATH])
-    fi
-    AC_MSG_RESULT([$HOST_CXX])
-
-    if test -z "$HOST_CFLAGS"; then
-        HOST_CFLAGS="$CFLAGS"
-    fi
-    if test -z "$HOST_CXXFLAGS"; then
-        HOST_CXXFLAGS="$CXXFLAGS"
-    fi
-    if test -z "$HOST_LDFLAGS"; then
-        HOST_LDFLAGS="$LDFLAGS"
-    fi
-    if test -z "$HOST_AR_FLAGS"; then
-        HOST_AR_FLAGS="$AR_FLAGS"
-    fi
-    AC_CHECK_PROGS(HOST_RANLIB, $HOST_RANLIB ranlib, ranlib, :)
-    AC_CHECK_PROGS(HOST_AR, $HOST_AR ar, ar, :)
-    CC="$HOST_CC"
-    CFLAGS="$HOST_CFLAGS"
-    LDFLAGS="$HOST_LDFLAGS"
-
-    AC_MSG_CHECKING([whether the host c compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works])
-    AC_TRY_COMPILE([], [return(0);],
-	[ac_cv_prog_hostcc_works=1 AC_MSG_RESULT([yes])],
-	AC_MSG_ERROR([installation or configuration problem: host compiler $HOST_CC cannot create executables.]) )
-
-    CC="$HOST_CXX"
-    CFLAGS="$HOST_CXXFLAGS"
-
-    AC_MSG_CHECKING([whether the host c++ compiler ($HOST_CXX $HOST_CXXFLAGS $HOST_LDFLAGS) works])
-    AC_TRY_COMPILE([], [return(0);],
-	[ac_cv_prog_hostcxx_works=1 AC_MSG_RESULT([yes])],
-	AC_MSG_ERROR([installation or configuration problem: host compiler $HOST_CXX cannot create executables.]) )
-
-    CC=$_SAVE_CC
-    CFLAGS=$_SAVE_CFLAGS
-    LDFLAGS=$_SAVE_LDFLAGS
-
-    AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", :)
-    unset ac_cv_prog_CC
-    AC_PROG_CC
-    AC_CHECK_PROGS(CXX, $CXX "${target_alias}-g++" "${target}-g++", :)
-    unset ac_cv_prog_CXX
-    AC_PROG_CXX
-
-    AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", :)
-    AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", :)
-    MOZ_PATH_PROGS(AS, $AS "${target_alias}-as" "${target}-as", :)
-    AC_CHECK_PROGS(LD, $LD "${target_alias}-ld" "${target}-ld", :)
-    AC_CHECK_PROGS(STRIP, $STRIP "${target_alias}-strip" "${target}-strip", :)
-    AC_CHECK_PROGS(WINDRES, $WINDRES "${target_alias}-windres" "${target}-windres", :)
-    AC_DEFINE(CROSS_COMPILE)
+    MOZ_CROSS_COMPILER
 else
     AC_PROG_CC
     case "$target" in
@@ -1323,11 +1259,6 @@ if test "$GNU_CC"; then
         fi
     fi
     WARNINGS_AS_ERRORS='-Werror'
-    # Don't treat -Wuninitialized as error b/c it has lots of false positives.
-    WARNINGS_AS_ERRORS="$WARNINGS_AS_ERRORS -Wno-error=uninitialized"
-    # Don't treat -Wdeprecated-declarations as error b/c we don't want our
-    # builds held hostage when a platform-specific API is suddenly deprecated.
-    WARNINGS_AS_ERRORS="$WARNINGS_AS_ERRORS -Wno-error=deprecated-declarations"
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     ASFLAGS="$ASFLAGS -fPIC"
@@ -1801,16 +1732,6 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
 esac
-
-dnl Check for using a custom <stdint.h> implementation
-dnl ========================================================
-AC_MSG_CHECKING(for custom <stdint.h> implementation)
-if test "$MOZ_CUSTOM_STDINT_H"; then
-  AC_DEFINE_UNQUOTED(MOZ_CUSTOM_STDINT_H, "$MOZ_CUSTOM_STDINT_H")
-  AC_MSG_RESULT(using $MOZ_CUSTOM_STDINT_H)
-else
-  AC_MSG_RESULT(none specified)
-fi
 
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
@@ -2739,33 +2660,9 @@ else
     AC_MSG_RESULT(no)
 fi
 
-dnl Check whether gcc's c++0x mode works
+MOZ_CXX11
+
 AC_LANG_CPLUSPLUS
-
-if test "$GNU_CXX"; then
-    CXXFLAGS="$CXXFLAGS -std=gnu++0x"
-
-    AC_CACHE_CHECK(for gcc c++0x headers bug without rtti,
-        ac_cv_cxx0x_headers_bug,
-        [AC_TRY_COMPILE([#include <memory>], [],
-                        ac_cv_cxx0x_headers_bug="no",
-                        ac_cv_cxx0x_headers_bug="yes")])
-
-    if test "$CLANG_CXX" -a "$ac_cv_cxx0x_headers_bug" = "yes"; then
-        CXXFLAGS="$CXXFLAGS -I$_topsrcdir/build/unix/headers"
-        AC_CACHE_CHECK(whether workaround for gcc c++0x headers conflict with clang works,
-            ac_cv_cxx0x_clang_workaround,
-            [AC_TRY_COMPILE([#include <memory>], [],
-                            ac_cv_cxx0x_clang_workaround="yes",
-                            ac_cv_cxx0x_clang_workaround="no")])
-
-        if test "ac_cv_cxx0x_clang_workaround" = "no"; then
-            AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
-        fi
-    elif test "$ac_cv_cxx0x_headers_bug" = "yes"; then
-        AC_MSG_ERROR([Your toolchain does not support C++0x/C++11 mode properly. Please upgrade your toolchain])
-    fi
-fi
 
 dnl Check for usable char16_t (2 bytes, unsigned)
 dnl (we might not need the unsignedness check anymore)
@@ -4253,6 +4150,7 @@ MOZ_SAMPLE_TYPE_S16=
 MOZ_OPUS=1
 MOZ_WEBM=1
 MOZ_DASH=
+MOZ_DIRECTSHOW=
 MOZ_WMF=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
@@ -4291,7 +4189,6 @@ MOZ_SAFE_BROWSING=
 MOZ_HELP_VIEWER=
 MOZ_SPELLCHECK=1
 MOZ_ANDROID_OMTC=
-MOZ_ONLY_TOUCH_EVENTS=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
@@ -4309,13 +4206,14 @@ BUILD_CTYPES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
-MOZ_ANDROID_WALLPAPER=
 MOZ_ANDROID_BEAM=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_PAY=
 MOZ_AUDIO_CHANNEL_MANAGER=
 NSS_NO_LIBPKIX=
+MOZ_CONTENT_SANDBOX=
+MOZ_CONTENT_SANDBOX_REPORTER=
 
 case "$target_os" in
     mingw*)
@@ -5269,13 +5167,6 @@ if test -n "$MOZ_WEBSMS_BACKEND"; then
 fi
 
 dnl ========================================================
-dnl = Enable SET_WALLPAPER permission on Android
-dnl ========================================================
-if test -n "$MOZ_ANDROID_WALLPAPER"; then
-    AC_DEFINE(MOZ_ANDROID_WALLPAPER)
-fi
-
-dnl ========================================================
 dnl = Enable NFC permission on Android
 dnl ========================================================
 if test -n "$MOZ_ANDROID_BEAM"; then
@@ -5378,7 +5269,7 @@ fi
 
 # target_arch is from {ia32|x64|arm|ppc}
 case "$CPU_ARCH" in
-x86_64 | ia64)
+x86_64)
     WEBRTC_TARGET_ARCH=x64
     ;;
 
@@ -5392,6 +5283,9 @@ x86)
 
 ppc*)
     WEBRTC_TARGET_ARCH=ppc
+    ;;
+ia64)
+    WEBRTC_TARGET_ARCH=ia64
     ;;
 *)
 # unsupported arch for webrtc
@@ -5536,6 +5430,24 @@ MOZ_ARG_DISABLE_BOOL(webm,
 if test -n "$MOZ_WEBM"; then
     AC_DEFINE(MOZ_WEBM)
     MOZ_VP8=1
+fi;
+
+dnl ========================================================
+dnl = DirectShow support
+dnl ========================================================
+if test "$OS_ARCH" = "WINNT"; then
+    dnl Enable DirectShow support by default.
+    MOZ_DIRECTSHOW=1
+fi
+
+MOZ_ARG_DISABLE_BOOL(directshow,
+[  --disable-directshow  Disable support for DirectShow],
+    MOZ_DIRECTSHOW=,
+    MOZ_DIRECTSHOW=1)
+
+if test -n "$MOZ_DIRECTSHOW"; then
+    AC_DEFINE(MOZ_DIRECTSHOW)
+    MOZ_CUBEB=1
 fi;
 
 dnl ========================================================
@@ -6007,6 +5919,10 @@ if test -n "$MOZ_WEBGL_DISABLED"; then
   MOZ_ANGLE_RENDERER=
 fi
 
+if test -n "$MOZ_WEBGL"; then
+  AC_DEFINE(MOZ_WEBGL)
+fi
+
 if test -n "$MOZ_WEBGL_CONFORMANT"; then
   AC_DEFINE(MOZ_WEBGL_CONFORMANT)
 fi
@@ -6137,7 +6053,7 @@ MOZ_ARG_DISABLE_BOOL(crashreporter,
     [MOZ_CRASHREPORTER=F # Force enable breakpad])
 
 if test "$OS_ARCH" != "$HOST_OS_ARCH" -a "$OS_ARCH" != "WINNT"; then
-  if "$MOZ_CRASHREPORTER" = F; then
+  if test "$MOZ_CRASHREPORTER" = F; then
     AC_MSG_ERROR([Cannot --enable-crashreporter, as breakpad tools do not support compiling on $HOST_OS_ARCH while targeting $OS_ARCH.])
   fi
   MOZ_CRASHREPORTER=
@@ -6160,7 +6076,6 @@ if test -n "$MOZ_CRASHREPORTER"; then
     fi
   fi
 fi
-AC_DEFINE_UNQUOTED(BREAKPAD_CUSTOM_STDINT_H, "mozilla/StandardInteger.h")
 
 MOZ_ARG_WITH_STRING(crashreporter-enable-percent,
 [  --with-crashreporter-enable-percent=NN
@@ -6582,6 +6497,32 @@ if test -n "$NSS_NO_LIBPKIX"; then
 fi
 AC_SUBST(NSS_NO_LIBPKIX)
 
+dnl ========================================================
+dnl = Content process sandboxing
+dnl ========================================================
+if test -n "$gonkdir"; then
+    MOZ_CONTENT_SANDBOX=1
+fi
+
+MOZ_ARG_ENABLE_BOOL(content-sandbox,
+[  --enable-content-sandbox        Enable sandboxing support for content-processes],
+    MOZ_CONTENT_SANDBOX=1)
+
+if test -n "$MOZ_CONTENT_SANDBOX"; then
+    AC_DEFINE(MOZ_CONTENT_SANDBOX)
+fi
+
+AC_SUBST(MOZ_CONTENT_SANDBOX)
+
+MOZ_ARG_ENABLE_BOOL(content-sandbox-reporter,
+[ --enable-content-sandbox-reporter        Enable syscall reporter to troubleshoot syscalls denied by the content-processes sandbox],
+    MOZ_CONTENT_SANDBOX_REPORTER=1)
+
+if test -n "$MOZ_CONTENT_SANDBOX_REPORTER"; then
+    AC_DEFINE(MOZ_CONTENT_SANDBOX_REPORTER)
+fi
+
+AC_SUBST(MOZ_CONTENT_SANDBOX_REPORTER)
 
 dnl ========================================================
 dnl =
@@ -7084,6 +7025,18 @@ MOZ_ARG_ENABLE_BOOL(warnings-as-errors,
     MOZ_ENABLE_WARNINGS_AS_ERRORS=)
 if test -z "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
    WARNINGS_AS_ERRORS=''
+elif test "$GNU_CC"; then
+    # Prevent the following GCC warnings from being treated as errors:
+    # -Wuninitialized - too many false positives
+    # -Wmaybe-uninitialized - too many false positives
+    # -Wdeprecated-declarations - we don't want our builds held hostage when a
+    #   platform-specific API becomes deprecated.
+    MOZ_C_SUPPORTS_WARNING(-W, no-error=uninitialized, ac_c_has_noerror_uninitialized)
+    MOZ_CXX_SUPPORTS_WARNING(-W, no-error=uninitialized, ac_cxx_has_noerror_uninitialized)
+    MOZ_C_SUPPORTS_WARNING(-W, no-error=maybe-uninitialized, ac_c_has_noerror_maybe_uninitialized)
+    MOZ_CXX_SUPPORTS_WARNING(-W, no-error=maybe-uninitialized, ac_cxx_has_noerror_maybe_uninitialized)
+    MOZ_C_SUPPORTS_WARNING(-W, no-error=deprecated-declarations, ac_c_has_noerror_deprecated_declarations)
+    MOZ_CXX_SUPPORTS_WARNING(-W, no-error=deprecated-declarations, ac_cxx_has_noerror_deprecated_declarations)
 fi
 
 dnl ========================================================
@@ -7637,10 +7590,8 @@ MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
 [  --enable-stdcxx-compat  Enable compatibility with older libstdc++],
     STDCXX_COMPAT=1)
 
-AC_SUBST(STDCXX_COMPAT)
-
 if test -n "$STDCXX_COMPAT"; then
-   eval $(CXX="$CXX" $PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
+   eval $(CXX="$CXX" HOST_CXX="$HOST_CXX" $PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
    AC_SUBST(MOZ_LIBSTDCXX_TARGET_VERSION)
    AC_SUBST(MOZ_LIBSTDCXX_HOST_VERSION)
 fi
@@ -7672,21 +7623,6 @@ MOZ_ARG_ENABLE_BOOL(reflow-perf,
     MOZ_REFLOW_PERF= )
 if test -n "$MOZ_REFLOW_PERF"; then
     AC_DEFINE(MOZ_REFLOW_PERF)
-fi
-
-dnl ========================================================
-dnl Enable code size metrics.
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(codesighs,
-[  --enable-codesighs      Enable code size analysis tools],
-    _ENABLE_CODESIGHS=1,
-    _ENABLE_CODESIGHS= )
-if test -n "$_ENABLE_CODESIGHS"; then
-    if test -d $srcdir/tools/codesighs; then
-        MOZ_MAPINFO=1
-    else
-        AC_MSG_ERROR([Codesighs directory $srcdir/tools/codesighs required.])
-    fi
 fi
 
 dnl ========================================================
@@ -8512,9 +8448,6 @@ case "$OS_TARGET" in
     NECKO_WIFI=1
     ;;
   Linux)
-    if test -z "$MOZ_ENABLE_DBUS"; then
-      AC_MSG_ERROR([Necko WiFi scanning needs DBus on your platform, remove --disable-dbus or use --disable-necko-wifi])
-    fi
     NECKO_WIFI=1
     NECKO_WIFI_DBUS=1
     ;;
@@ -8526,6 +8459,9 @@ MOZ_ARG_DISABLE_BOOL(necko-wifi,
     NECKO_WIFI=1)
 
 if test "$NECKO_WIFI"; then
+  if test -z "$MOZ_ENABLE_DBUS" -a -n "$NECKO_WIFI_DBUS"; then
+    AC_MSG_ERROR([Necko WiFi scanning needs DBus on your platform, remove --disable-dbus or use --disable-necko-wifi])
+  fi
   AC_DEFINE(NECKO_WIFI)
   _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_WIFI"
 fi
@@ -8694,7 +8630,6 @@ AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_ANDROID_OMTC)
 AC_SUBST(MOZ_ANDROID_ANR_REPORTER)
-AC_SUBST(MOZ_ONLY_TOUCH_EVENTS)
 AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_CRASHREPORTER_INJECTOR)
 AC_SUBST(MOZ_CRASHREPORTER_UPLOAD_FULL_SYMBOLS)
@@ -8713,7 +8648,6 @@ AC_SUBST(MOZ_METRO)
 
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
-AC_SUBST(MOZ_ANDROID_WALLPAPER)
 AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
@@ -8854,8 +8788,6 @@ AC_SUBST(MOZ_UA_OS_AGNOSTIC)
 if test -n "$MOZ_UA_OS_AGNOSTIC"; then
   AC_DEFINE(MOZ_UA_OS_AGNOSTIC)
 fi
-AC_DEFINE_UNQUOTED(MOZ_UA_BUILDID, "$MOZ_UA_BUILDID")
-AC_SUBST(MOZ_UA_BUILDID)
 
 AC_SUBST(MOZ_APP_STATIC_INI)
 
@@ -8885,7 +8817,6 @@ if test -n "$MOZ_TELEMETRY_REPORTING" || test -n "$MOZ_SERVICES_HEALTHREPORT" ||
 fi
 
 dnl win32 options
-AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
 AC_SUBST(WIN32_REDIST_DIR)
@@ -9015,6 +8946,7 @@ AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_DASH)
 AC_SUBST(MOZ_WMF)
+AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_MEDIA_PLUGINS)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
@@ -9165,7 +9097,9 @@ xpcom/xpcom-private.h
 
 AC_SUBST(STLPORT_LIBS)
 
+export WRITE_MOZINFO=1
 AC_OUTPUT([mozilla-config.h])
+unset WRITE_MOZINFO
 
 # Hack around an Apple bug that affects the egrep that comes with OS X 10.7.
 # "env ARCHPREFERENCE=i386,x86_64 arch egrep" first tries to use the 32-bit
@@ -9237,7 +9171,7 @@ if test -n "$MOZ_WEBRTC"; then
    AC_MSG_RESULT("generating WebRTC Makefiles...")
 
    if test "${MOZ_WIDGET_TOOLKIT}" = "gonk"; then
-      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D build_with_gonk=1 -D include_internal_audio_device=0"
+      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D build_with_gonk=1"
    fi
 
 dnl Any --include files must also appear in -D FORCED_INCLUDE_FILE= entries
@@ -9310,24 +9244,6 @@ dnl so that regeneration via dependencies works correctly
    if test "$?" != 0; then
       AC_MSG_ERROR([failed to generate nICEr Makefiles])
    fi
-fi
-
-# Generate a JSON config file for unittest harnesses etc to read
-# build configuration details from in a standardized way.
-OS_TARGET=${OS_TARGET} \
-TARGET_CPU=${TARGET_CPU} \
-MOZ_DEBUG=${MOZ_DEBUG} \
-MOZ_WIDGET_TOOLKIT=${MOZ_WIDGET_TOOLKIT} \
-UNIVERSAL_BINARY=${UNIVERSAL_BINARY} \
-MOZ_CRASHREPORTER=${MOZ_CRASHREPORTER} \
-MOZ_APP_NAME=${MOZ_APP_NAME} \
-TOPSRCDIR=${_topsrcdir} \
-MOZ_ASAN=${MOZ_ASAN} \
-  $PYTHON ${_topsrcdir}/config/writemozinfo.py ./mozinfo.json.tmp
-if cmp -s ./mozinfo.json.tmp ./mozinfo.json; then
-  rm ./mozinfo.json.tmp
-else
-  mv -f ./mozinfo.json.tmp ./mozinfo.json
 fi
 
 # Run jemalloc configure script
@@ -9527,10 +9443,18 @@ fi
 dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 ac_configure_args="$ac_configure_args --enable-threadsafe"
-if test "A" = "A"; then # "$MOZ_BUILDAPP" != "browser", when desktop builds this
-    # The Internationalization API is currently disabled in all non-standalone
-    # SpiderMonkey builds, but it should be turned on for desktop builds soon.
-    ac_configure_args="$ac_configure_args --disable-intl-api"
+if test "$NIGHTLY_BUILD" = "1" -a "$MOZ_BUILD_APP" = "browser"; then
+    # In desktop nightlies the Internationalization API is disabled, but all
+    # code for it is still built.  Bug 853301 will remove this so that it's
+    # built and the API is enabled.
+    ac_configure_args="$ac_configure_args --with-intl-api=build"
+else
+    # Internationalization isn't built or exposed by default in non-desktop and
+    # non-nightly builds.  Bugs to enable:
+    #
+    #   Android:  bug 864843
+    #   B2G:      bug 866301
+    ac_configure_args="$ac_configure_args --without-intl-api"
 fi
 if test "$BUILD_CTYPES"; then
     # Build js-ctypes on the platforms we can.

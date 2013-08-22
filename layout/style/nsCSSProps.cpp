@@ -356,8 +356,8 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
   // Check eCSSAliasCount against 0 to make it easy for the
   // compiler to optimize away the 0-aliases case.
   if (eCSSAliasCount != 0 && res >= eCSSProperty_COUNT) {
-    MOZ_STATIC_ASSERT(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
-                      "assuming eCSSProperty_UNKNOWN doesn't hit this code");
+    static_assert(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
+                  "assuming eCSSProperty_UNKNOWN doesn't hit this code");
     if (IsEnabled(res) || aEnabled == eAny) {
       res = gAliases[res - eCSSProperty_COUNT];
       NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
@@ -383,8 +383,8 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
   // Check eCSSAliasCount against 0 to make it easy for the
   // compiler to optimize away the 0-aliases case.
   if (eCSSAliasCount != 0 && res >= eCSSProperty_COUNT) {
-    MOZ_STATIC_ASSERT(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
-                      "assuming eCSSProperty_UNKNOWN doesn't hit this code");
+    static_assert(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
+                  "assuming eCSSProperty_UNKNOWN doesn't hit this code");
     if (IsEnabled(res) || aEnabled == eAny) {
       res = gAliases[res - eCSSProperty_COUNT];
       NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
@@ -412,9 +412,12 @@ nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
   NS_ABORT_IF_FALSE(gFontDescTable, "no lookup table, needs addref");
   nsCSSFontDesc which = nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
 
+  // font-variant-alternates enabled ==> layout.css.font-features.enabled is true
+  bool fontFeaturesEnabled =
+    nsCSSProps::IsEnabled(eCSSProperty_font_variant_alternates);
+
   // check for unprefixed font-feature-settings/font-language-override
-  if (which == eCSSFontDesc_UNKNOWN &&
-      mozilla::Preferences::GetBool("layout.css.font-features.enabled")) {
+  if (which == eCSSFontDesc_UNKNOWN && fontFeaturesEnabled) {
     nsAutoString prefixedProp;
     prefixedProp.AppendLiteral("-moz-");
     prefixedProp.Append(aFontDesc);
@@ -647,10 +650,10 @@ const int32_t nsCSSProps::kBackgroundInlinePolicyKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-MOZ_STATIC_ASSERT(NS_STYLE_BG_CLIP_BORDER == NS_STYLE_BG_ORIGIN_BORDER &&
-                  NS_STYLE_BG_CLIP_PADDING == NS_STYLE_BG_ORIGIN_PADDING &&
-                  NS_STYLE_BG_CLIP_CONTENT == NS_STYLE_BG_ORIGIN_CONTENT,
-                  "bg-clip and bg-origin style constants must agree");
+static_assert(NS_STYLE_BG_CLIP_BORDER == NS_STYLE_BG_ORIGIN_BORDER &&
+              NS_STYLE_BG_CLIP_PADDING == NS_STYLE_BG_ORIGIN_PADDING &&
+              NS_STYLE_BG_CLIP_CONTENT == NS_STYLE_BG_ORIGIN_CONTENT,
+              "bg-clip and bg-origin style constants must agree");
 const int32_t nsCSSProps::kBackgroundOriginKTable[] = {
   eCSSKeyword_border_box, NS_STYLE_BG_ORIGIN_BORDER,
   eCSSKeyword_padding_box, NS_STYLE_BG_ORIGIN_PADDING,
@@ -688,6 +691,26 @@ const int32_t nsCSSProps::kBackgroundSizeKTable[] = {
   eCSSKeyword_contain, NS_STYLE_BG_SIZE_CONTAIN,
   eCSSKeyword_cover,   NS_STYLE_BG_SIZE_COVER,
   eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kBlendModeKTable[] = {
+    eCSSKeyword_normal,      NS_STYLE_BLEND_NORMAL,
+    eCSSKeyword_multiply,    NS_STYLE_BLEND_MULTIPLY,
+    eCSSKeyword_screen,      NS_STYLE_BLEND_SCREEN,
+    eCSSKeyword_overlay,     NS_STYLE_BLEND_OVERLAY,
+    eCSSKeyword_darken,      NS_STYLE_BLEND_DARKEN,
+    eCSSKeyword_lighten,     NS_STYLE_BLEND_LIGHTEN,
+    eCSSKeyword_color_dodge, NS_STYLE_BLEND_COLOR_DODGE,
+    eCSSKeyword_color_burn,  NS_STYLE_BLEND_COLOR_BURN,
+    eCSSKeyword_hard_light,  NS_STYLE_BLEND_HARD_LIGHT,
+    eCSSKeyword_soft_light,  NS_STYLE_BLEND_SOFT_LIGHT,
+    eCSSKeyword_difference,  NS_STYLE_BLEND_DIFFERENCE,
+    eCSSKeyword_exclusion,   NS_STYLE_BLEND_EXCLUSION,
+    eCSSKeyword_hue,         NS_STYLE_BLEND_HUE,
+    eCSSKeyword_saturation,  NS_STYLE_BLEND_SATURATION,
+    eCSSKeyword_color,       NS_STYLE_BLEND_COLOR,
+    eCSSKeyword_luminosity,  NS_STYLE_BLEND_LUMINOSITY,
+    eCSSKeyword_UNKNOWN,-1
 };
 
 const int32_t nsCSSProps::kBorderCollapseKTable[] = {
@@ -1039,6 +1062,12 @@ const int32_t nsCSSProps::kFontSizeKTable[] = {
   eCSSKeyword_xx_large, NS_STYLE_FONT_SIZE_XXLARGE,
   eCSSKeyword_larger, NS_STYLE_FONT_SIZE_LARGER,
   eCSSKeyword_smaller, NS_STYLE_FONT_SIZE_SMALLER,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kFontSmoothingKTable[] = {
+  eCSSKeyword_auto, NS_FONT_SMOOTHING_AUTO,
+  eCSSKeyword_grayscale, NS_FONT_SMOOTHING_GRAYSCALE,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1409,9 +1438,10 @@ const int32_t nsCSSProps::kTextAlignLastKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const int32_t nsCSSProps::kTextBlinkKTable[] = {
-  eCSSKeyword_none, NS_STYLE_TEXT_BLINK_NONE,
-  eCSSKeyword_blink, NS_STYLE_TEXT_BLINK_BLINK,
+const int32_t nsCSSProps::kTextCombineHorizontalKTable[] = {
+  eCSSKeyword_none, NS_STYLE_TEXT_COMBINE_HORIZ_NONE,
+  eCSSKeyword_all, NS_STYLE_TEXT_COMBINE_HORIZ_ALL,
+  eCSSKeyword_digits, NS_STYLE_TEXT_COMBINE_HORIZ_DIGITS_2,  // w/o number ==> 2
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1420,6 +1450,7 @@ const int32_t nsCSSProps::kTextDecorationLineKTable[] = {
   eCSSKeyword_underline, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
   eCSSKeyword_overline, NS_STYLE_TEXT_DECORATION_LINE_OVERLINE,
   eCSSKeyword_line_through, NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
+  eCSSKeyword_blink, NS_STYLE_TEXT_DECORATION_LINE_BLINK,
   eCSSKeyword__moz_anchor_decoration, NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS,
   eCSSKeyword_UNKNOWN,-1
 };
@@ -1432,6 +1463,13 @@ const int32_t nsCSSProps::kTextDecorationStyleKTable[] = {
   eCSSKeyword_dashed, NS_STYLE_TEXT_DECORATION_STYLE_DASHED,
   eCSSKeyword_wavy, NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
   eCSSKeyword_UNKNOWN,-1
+};
+
+const int32_t nsCSSProps::kTextOrientationKTable[] = {
+  eCSSKeyword_auto, NS_STYLE_TEXT_ORIENTATION_AUTO,
+  eCSSKeyword_upright, NS_STYLE_TEXT_ORIENTATION_UPRIGHT,
+  eCSSKeyword_sideways, NS_STYLE_TEXT_ORIENTATION_SIDEWAYS,
+  eCSSKeyword_UNKNOWN, -1
 };
 
 const int32_t nsCSSProps::kTextOverflowKTable[] = {
@@ -1638,6 +1676,20 @@ const int32_t nsCSSProps::kDominantBaselineKTable[] = {
 const int32_t nsCSSProps::kFillRuleKTable[] = {
   eCSSKeyword_nonzero, NS_STYLE_FILL_RULE_NONZERO,
   eCSSKeyword_evenodd, NS_STYLE_FILL_RULE_EVENODD,
+  eCSSKeyword_UNKNOWN, -1
+};
+
+const int32_t nsCSSProps::kFilterFunctionKTable[] = {
+  eCSSKeyword_blur, NS_STYLE_FILTER_BLUR,
+  eCSSKeyword_brightness, NS_STYLE_FILTER_BRIGHTNESS,
+  eCSSKeyword_contrast, NS_STYLE_FILTER_CONTRAST,
+  eCSSKeyword_grayscale, NS_STYLE_FILTER_GRAYSCALE,
+  eCSSKeyword_invert, NS_STYLE_FILTER_INVERT,
+  eCSSKeyword_opacity, NS_STYLE_FILTER_OPACITY,
+  eCSSKeyword_saturate, NS_STYLE_FILTER_SATURATE,
+  eCSSKeyword_sepia, NS_STYLE_FILTER_SEPIA,
+  eCSSKeyword_hue_rotate, NS_STYLE_FILTER_HUE_ROTATE,
+  eCSSKeyword_drop_shadow, NS_STYLE_FILTER_DROP_SHADOW,
   eCSSKeyword_UNKNOWN, -1
 };
 
@@ -1948,9 +2000,9 @@ static const nsCSSProperty gBorderBottomSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-MOZ_STATIC_ASSERT(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
-                  NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3,
-                  "box side constants not top/right/bottom/left == 0/1/2/3");
+static_assert(NS_SIDE_TOP == 0 && NS_SIDE_RIGHT == 1 &&
+              NS_SIDE_BOTTOM == 2 && NS_SIDE_LEFT == 3,
+              "box side constants not top/right/bottom/left == 0/1/2/3");
 static const nsCSSProperty gBorderColorSubpropTable[] = {
   // Code relies on these being in top-right-bottom-left order.
   // Code relies on these matching the NS_SIDE_* constants.
@@ -2324,7 +2376,6 @@ static const nsCSSProperty gPaddingEndSubpropTable[] = {
 };
 
 static const nsCSSProperty gTextDecorationSubpropTable[] = {
-  eCSSProperty_text_blink,
   eCSSProperty_text_decoration_color,
   eCSSProperty_text_decoration_line,
   eCSSProperty_text_decoration_style,

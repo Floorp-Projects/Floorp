@@ -21,6 +21,8 @@
           src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
   <script type="application/javascript"
           src="chrome://mochikit/content/chrome-harness.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/manifestLibrary.js" />
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
   <script type="application/javascript;version=1.7"><![CDATA[
@@ -33,8 +35,10 @@ if (Cc === undefined) {
 function loadTests()
 {
   window.removeEventListener("load", loadTests, false);
-  links = getTestList();
+  getTestList({}, linkAndHookup);
+}
  
+function linkAndHookup(links) {
   // load server.js in so we can share template functions
   var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                        getService(Ci.mozIJSSubScriptLoader);

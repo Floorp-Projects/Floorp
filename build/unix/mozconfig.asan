@@ -20,3 +20,6 @@ ac_add_options --disable-install-strip
 ac_add_options --disable-jemalloc
 ac_add_options --disable-crashreporter
 ac_add_options --disable-elf-hack
+
+# Avoid dependency on libstdc++ 4.7
+ac_add_options --enable-stdcxx-compat

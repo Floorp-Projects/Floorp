@@ -12,13 +12,19 @@
  */
 
 interface HTMLTableColElement : HTMLElement {
+           [SetterThrows]
            attribute unsigned long span;
 };
 
 partial interface HTMLTableColElement {
+           [SetterThrows]
            attribute DOMString align;
+           [SetterThrows]
            attribute DOMString ch;
+           [SetterThrows]
            attribute DOMString chOff;
+           [SetterThrows]
            attribute DOMString vAlign;
+           [SetterThrows]
            attribute DOMString width;
 };

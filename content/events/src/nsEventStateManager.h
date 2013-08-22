@@ -197,12 +197,6 @@ public:
   static LayoutDeviceIntPoint GetChildProcessOffset(nsFrameLoader* aFrameLoader,
                                                     const nsEvent& aEvent);
 
-  static void MapEventCoordinatesForChildProcess(nsFrameLoader* aFrameLoader,
-                                                 nsEvent* aEvent);
-
-  static void MapEventCoordinatesForChildProcess(const LayoutDeviceIntPoint& aOffset,
-                                                 nsEvent* aEvent);
-
   // Holds the point in screen coords that a mouse event was dispatched to,
   // before we went into pointer lock mode. This is constantly updated while
   // the pointer is not locked, but we don't update it while the pointer is
@@ -713,14 +707,14 @@ private:
   // Last mouse event refPoint (the offset from the widget's origin in
   // device pixels) when mouse was locked, used to restore mouse position
   // after unlocking.
-  nsIntPoint  mPreLockPoint;
+  mozilla::LayoutDeviceIntPoint mPreLockPoint;
 
   // Stores the refPoint of the last synthetic mouse move we dispatched
   // to re-center the mouse when we were pointer locked. If this is (-1,-1) it
   // means we've not recently dispatched a centering event. We use this to
   // detect when we receive the synth event, so we can cancel and not send it
   // to content.
-  static nsIntPoint sSynthCenteringPoint;
+  static mozilla::LayoutDeviceIntPoint sSynthCenteringPoint;
 
   nsWeakFrame mCurrentTarget;
   nsCOMPtr<nsIContent> mCurrentTargetContent;
@@ -730,10 +724,10 @@ private:
 
   // Stores the refPoint (the offset from the widget's origin in device
   // pixels) of the last mouse event.
-  static nsIntPoint sLastRefPoint;
+  static mozilla::LayoutDeviceIntPoint sLastRefPoint;
 
   // member variables for the d&d gesture state machine
-  nsIntPoint mGestureDownPoint; // screen coordinates
+  mozilla::LayoutDeviceIntPoint mGestureDownPoint; // screen coordinates
   // The content to use as target if we start a d&d (what we drag).
   nsCOMPtr<nsIContent> mGestureDownContent;
   // The content of the frame where the mouse-down event occurred. It's the same

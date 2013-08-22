@@ -157,8 +157,8 @@ inline const void*
 AddAudioSampleOffset(const void* aBase, AudioSampleFormat aFormat,
                      int32_t aOffset)
 {
-  MOZ_STATIC_ASSERT(AUDIO_FORMAT_S16 == 0, "Bad constant");
-  MOZ_STATIC_ASSERT(AUDIO_FORMAT_FLOAT32 == 1, "Bad constant");
+  static_assert(AUDIO_FORMAT_S16 == 0, "Bad constant");
+  static_assert(AUDIO_FORMAT_FLOAT32 == 1, "Bad constant");
   NS_ASSERTION(aFormat == AUDIO_FORMAT_S16 || aFormat == AUDIO_FORMAT_FLOAT32,
                "Unknown format");
 

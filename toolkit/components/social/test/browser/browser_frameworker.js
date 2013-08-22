@@ -5,7 +5,7 @@
 function makeWorkerUrl(runner) {
   let prefix =  "http://example.com/browser/toolkit/components/social/test/browser/echo.sjs?";
   if (typeof runner == "function") {
-    runner = "let run=" + runner.toSource() + ";run();";
+    runner = "var run=" + runner.toSource() + ";run();";
   }
   return prefix + encodeURI(runner);
 }
@@ -694,4 +694,35 @@ let tests = {
     }
     worker.port.postMessage({topic: "test-indexeddb-create"})
   },
+
+  testSubworker: function(cbnext) {
+    // the main "frameworker"...
+    let mainworker = function() {
+      onconnect = function(e) {
+        let port = e.ports[0];
+        port.onmessage = function(e) {
+          if (e.data.topic == "go") {
+            let suburl = e.data.data;
+            let worker = new Worker(suburl);
+            worker.onmessage = function(sube) {
+              port.postMessage({topic: "sub-message", data: sube.data});
+            }
+          }
+        }
+      }
+    }
+
+    // The "subworker" that is actually a real, bona-fide worker.
+    let subworker = function() {
+      postMessage("hello");
+    }
+    let worker = getFrameWorkerHandle(makeWorkerUrl(mainworker), undefined, "testSubWorker");
+    worker.port.onmessage = function(e) {
+      if (e.data.topic == "sub-message" && e.data.data == "hello") {
+        worker.terminate();
+        cbnext();
+      }
+    }
+    worker.port.postMessage({topic: "go", data: makeWorkerUrl(subworker)});
+  }
 }

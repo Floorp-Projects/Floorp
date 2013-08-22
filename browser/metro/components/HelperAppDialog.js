@@ -57,6 +57,7 @@ HelperAppLauncherDialog.prototype = {
   },
 
   _showDownloadInfobar: function do_showDownloadInfobar(aLauncher) {
+    Services.obs.notifyObservers(null, "dl-request", "");
     let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
     let runButtonText =
@@ -101,6 +102,7 @@ HelperAppLauncherDialog.prototype = {
       .replace("#2", downloadSize)
       .replace("#3", aLauncher.source.host);
 
+    notificationBox.notificationsHidden = false;
     let newBar = notificationBox.appendNotification(msg,
                                                     "save-download",
                                                     URI_GENERIC_ICON_DOWNLOAD,

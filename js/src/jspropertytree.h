@@ -8,9 +8,9 @@
 #define jspropertytree_h
 
 #include "jsalloc.h"
+#include "jspubtd.h"
 
 #include "js/HashTable.h"
-#include "js/RootingAPI.h"
 
 namespace js {
 

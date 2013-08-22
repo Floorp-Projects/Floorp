@@ -143,13 +143,6 @@ protected:
   NS_HIDDEN_(bool) GetTypeFromExtras(const nsACString& aExtension,
                                        nsACString& aMIMEType);
 
-  /**
-   * Fixes the file permissions to be correct. Base class has a no-op
-   * implementation, subclasses can use this to correctly inherit ACLs from the
-   * parent directory, to make the permissions obey the umask, etc.
-   */
-  virtual void FixFilePermissions(nsIFile* aFile);
-
 #ifdef PR_LOGGING
   /**
    * NSPR Logging Module. Usage: set NSPR_LOG_MODULES=HelperAppService:level,
@@ -159,9 +152,8 @@ protected:
   static PRLogModuleInfo* mLog;
 
 #endif
-  // friend, so that it can access the nspr log module and FixFilePermissions
+  // friend, so that it can access the nspr log module.
   friend class nsExternalAppHandler;
-  friend class nsExternalLoadRequest;
 
   /**
    * Helper function for ExpungeTemporaryFiles and ExpungeTemporaryPrivateFiles

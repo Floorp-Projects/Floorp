@@ -10,7 +10,7 @@
 #endif
  
 #include "mozilla/DebugOnly.h"
-#include "mozilla/StandardInteger.h"
+#include <stdint.h>
 #include "mozilla/Util.h"
 
 #include "MediaDecoderStateMachine.h"
@@ -140,8 +140,8 @@ private:
   {
      MOZ_COUNT_CTOR(StateMachineTracker);
      NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  } 
- 
+  }
+
   ~StateMachineTracker()
   {
     NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -156,7 +156,7 @@ public:
   // access always occurs after this and uses the monitor to
   // safely access the decode thread counts.
   static StateMachineTracker& Instance();
- 
+
   // Instantiate the global state machine thread if required.
   // Call on main thread only.
   void EnsureGlobalStateMachine();
@@ -244,7 +244,7 @@ StateMachineTracker& StateMachineTracker::Instance()
   return *sInstance;
 }
 
-void StateMachineTracker::EnsureGlobalStateMachine() 
+void StateMachineTracker::EnsureGlobalStateMachine()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(mMonitor);
@@ -451,7 +451,7 @@ MediaDecoderStateMachine::~MediaDecoderStateMachine()
     mTimer->Cancel();
   mTimer = nullptr;
   mReader = nullptr;
- 
+
   StateMachineTracker::Instance().CleanupGlobalStateMachine();
 #ifdef XP_WIN
   timeEndPeriod(1);
@@ -490,7 +490,7 @@ void MediaDecoderStateMachine::DecodeThreadRun()
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
   mReader->OnDecodeThreadStart();
-  
+
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
@@ -531,7 +531,7 @@ void MediaDecoderStateMachine::DecodeThreadRun()
     mDecodeThreadIdle = true;
     LOG(PR_LOG_DEBUG, ("%p Decode thread finished", mDecoder.get()));
   }
-  
+
   mReader->OnDecodeThreadFinish();
 }
 
@@ -618,6 +618,10 @@ void MediaDecoderStateMachine::SendStreamData()
 
   if (mState == DECODER_STATE_DECODING_METADATA)
     return;
+
+  if (!mDecoder->IsSameOriginMedia()) {
+    return;
+  }
 
   // If there's still an audio thread alive, then we can't send any stream
   // data yet since both SendStreamData and the audio thread want to be in
@@ -1319,7 +1323,7 @@ void MediaDecoderStateMachine::StartPlayback()
 
   NS_ASSERTION(IsPlaying(), "Should report playing by end of StartPlayback()");
   if (NS_FAILED(StartAudioThread())) {
-    NS_WARNING("Failed to create audio thread"); 
+    NS_WARNING("Failed to create audio thread");
   }
   mDecoder->GetReentrantMonitor().NotifyAll();
 }
@@ -1439,6 +1443,16 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
   } else {
     mStartTime = 0;
     mEndTime = aDuration;
+  }
+}
+
+void MediaDecoderStateMachine::UpdateDuration(int64_t aDuration)
+{
+  if (aDuration != GetDuration()) {
+    SetDuration(aDuration);
+    nsCOMPtr<nsIRunnable> event =
+      NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);
+    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   }
 }
 
@@ -1696,7 +1710,7 @@ MediaDecoderStateMachine::ScheduleDecodeThread()
 {
   NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
- 
+
   mStopDecodeThread = false;
   if (mState >= DECODER_STATE_COMPLETED) {
     return NS_OK;
@@ -1827,7 +1841,7 @@ int64_t MediaDecoderStateMachine::GetUndecodedData() const
   NS_ASSERTION(mState > DECODER_STATE_DECODING_METADATA,
                "Must have loaded metadata for GetBuffered() to work");
   TimeRanges buffered;
-  
+
   nsresult res = mDecoder->GetBuffered(&buffered);
   NS_ENSURE_SUCCESS(res, 0);
   double currentTime = GetCurrentTime();
@@ -2197,7 +2211,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // Ensure we have a decode thread to decode metadata.
       return ScheduleDecodeThread();
     }
-  
+
     case DECODER_STATE_DECODING: {
       if (mDecoder->GetState() != MediaDecoder::PLAY_STATE_PLAYING &&
           IsPlaying())
@@ -2915,6 +2929,7 @@ void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime,
   metadata->mChannels = aChannels;
   metadata->mRate = aRate;
   metadata->mHasAudio = aHasAudio;
+  metadata->mHasVideo = aHasVideo;
   metadata->mTags = aTags;
   mMetadataManager.QueueMetadata(metadata);
 }

@@ -17,4 +17,5 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 878600 requires a clobber on Windows due to bug 890744
+
+touching resources in Android requires a clobber, and I did that in bug 880259

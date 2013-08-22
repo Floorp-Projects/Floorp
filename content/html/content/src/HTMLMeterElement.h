@@ -7,7 +7,6 @@
 #define mozilla_dom_HTMLMeterElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMHTMLMeterElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
@@ -18,27 +17,11 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLMeterElement MOZ_FINAL : public nsGenericHTMLElement,
-                                   public nsIDOMHTMLMeterElement
+class HTMLMeterElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
   HTMLMeterElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~HTMLMeterElement();
-
-  /* nsISupports */
-  NS_DECL_ISUPPORTS_INHERITED
-
-  /* nsIDOMNode */
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  /* nsIDOMElement */
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  /* nsIDOMHTMLElement */
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
-  /* nsIDOMHTMLMeterElement */
-  NS_DECL_NSIDOMHTMLMETERELEMENT
 
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
@@ -47,50 +30,48 @@ public:
   bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
                       const nsAString& aValue, nsAttrValue& aResult) MOZ_OVERRIDE;
 
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
-
   // WebIDL
 
   /* @return the value */
   double Value() const;
   void SetValue(double aValue, ErrorResult& aRv)
   {
-    aRv = SetValue(aValue);
+    aRv = SetDoubleAttr(nsGkAtoms::value, aValue);
   }
 
   /* @return the minimum value */
   double Min() const;
   void SetMin(double aValue, ErrorResult& aRv)
   {
-    aRv = SetMin(aValue);
+    aRv = SetDoubleAttr(nsGkAtoms::min, aValue);
   }
 
   /* @return the maximum value */
   double Max() const;
   void SetMax(double aValue, ErrorResult& aRv)
   {
-    aRv = SetMax(aValue);
+    aRv = SetDoubleAttr(nsGkAtoms::max, aValue);
   }
 
   /* @return the low value */
   double Low() const;
   void SetLow(double aValue, ErrorResult& aRv)
   {
-    aRv = SetLow(aValue);
+    aRv = SetDoubleAttr(nsGkAtoms::low, aValue);
   }
 
   /* @return the high value */
   double High() const;
   void SetHigh(double aValue, ErrorResult& aRv)
   {
-    aRv = SetHigh(aValue);
+    aRv = SetDoubleAttr(nsGkAtoms::high, aValue);
   }
 
   /* @return the optimum value */
   double Optimum() const;
   void SetOptimum(double aValue, ErrorResult& aRv)
   {
-    aRv = SetOptimum(aValue);
+    aRv = SetDoubleAttr(nsGkAtoms::optimum, aValue);
   }
 
 protected:

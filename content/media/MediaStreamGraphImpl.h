@@ -15,6 +15,9 @@
 
 namespace mozilla {
 
+template <typename T>
+class LinkedList;
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaStreamGraphLog;
 #define LOG(type, msg) PR_LOG(gMediaStreamGraphLog, type, msg)
@@ -190,6 +193,12 @@ public:
    * mMonitor must be held.
    */
   void PrepareUpdatesToMainThreadState(bool aFinalUpdate);
+  /**
+   * If we are rendering in non-realtime mode, we don't want to send messages to
+   * the main thread at each iteration for performance reasons. We instead
+   * notify the main thread at the same rate
+   */
+  bool ShouldUpdateMainThread();
   // The following methods are the various stages of RunThread processing.
   /**
    * Compute a new current time for the graph and advance all on-graph-thread
@@ -215,7 +224,7 @@ public:
    * If aStream hasn't already been ordered, push it onto aStack and order
    * its children.
    */
-  void UpdateStreamOrderForStream(nsTArray<MediaStream*>* aStack,
+  void UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream>* aStack,
                                   already_AddRefed<MediaStream> aStream);
   /**
    * Mark aStream and all its inputs (recursively) as consumed.
@@ -371,6 +380,11 @@ public:
 
   nsTArray<nsRefPtr<MediaStream> > mStreams;
   /**
+   * mOldStreams is used as temporary storage for streams when computing the
+   * order in which we compute them.
+   */
+  nsTArray<nsRefPtr<MediaStream> > mOldStreams;
+  /**
    * The current graph time for the current iteration of the RunThread control
    * loop.
    */
@@ -389,6 +403,10 @@ public:
    * The real timestamp of the latest run of UpdateCurrentTime.
    */
   TimeStamp mCurrentTimeStamp;
+  /**
+   * Date of the last time we updated the main thread with the graph state.
+   */
+  TimeStamp mLastMainThreadUpdate;
   /**
    * Which update batch we are currently processing.
    */

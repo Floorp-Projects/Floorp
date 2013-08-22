@@ -76,8 +76,26 @@ interface nsIScriptError : nsIConsoleMessage
                           in uint32_t lineNumber,
                           in uint32_t columnNumber,
                           in uint32_t flags,
-                          in string category,
+                          in ACString category,
                           in unsigned long long innerWindowID);
+%{C++
+    // This overload allows passing a literal string for category.
+    template<uint32_t N>
+    nsresult InitWithWindowID(const nsAString& message,
+                              const nsAString& sourceName,
+                              const nsAString& sourceLine,
+                              uint32_t lineNumber,
+                              uint32_t columnNumber,
+                              uint32_t flags,
+                              const char (&c)[N],
+                              uint64_t aInnerWindowID)
+    {
+        nsDependentCString category(c, N - 1);
+        return InitWithWindowID(message, sourceName, sourceLine, lineNumber,
+                                columnNumber, flags, category, aInnerWindowID);
+    }
+%}
+
 };
 
 %{ C++

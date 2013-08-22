@@ -7,49 +7,30 @@
 #ifndef jsstr_h
 #define jsstr_h
 
+#include "mozilla/HashFunctions.h"
 #include "mozilla/PodOperations.h"
 
-#include <ctype.h>
-
 #include "jsapi.h"
-#include "jsatom.h"
-#include "jslock.h"
 #include "jsutil.h"
 
-#include "js/HashTable.h"
+#include "js/RootingAPI.h"
 #include "vm/Unicode.h"
 
 class JSFlatString;
+class JSLinearString;
 class JSStableString;
 
 namespace js {
 
-/* Implemented in jsstrinlines.h */
 class StringBuffer;
 
-/*
- * When an algorithm does not need a string represented as a single linear
- * array of characters, this range utility may be used to traverse the string a
- * sequence of linear arrays of characters. This avoids flattening ropes.
- *
- * Implemented in jsstrinlines.h.
- */
-class StringSegmentRange;
 class MutatingRopeSegmentRange;
-
-/*
- * Utility for building a rope (lazy concatenation) of strings.
- */
-class RopeBuilder;
 
 template <AllowGC allowGC>
 extern JSString *
-ConcatStrings(JSContext *cx,
+ConcatStrings(ThreadSafeContext *cx,
               typename MaybeRooted<JSString*, allowGC>::HandleType left,
               typename MaybeRooted<JSString*, allowGC>::HandleType right);
-
-extern JSString *
-ConcatStringsPure(ThreadSafeContext *cx, JSString *left, JSString *right);
 
 // Return s advanced past any Unicode white space characters.
 static inline const jschar *
@@ -244,9 +225,6 @@ extern size_t
 js_strlen(const jschar *s);
 
 extern jschar *
-js_strchr(const jschar *s, jschar c);
-
-extern jschar *
 js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 
 static JS_ALWAYS_INLINE void
@@ -294,21 +272,21 @@ DeflateStringToBuffer(JSContext *cx, const jschar *chars,
  * The String.prototype.replace fast-native entry point is exported for joined
  * function optimization in js{interp,tracer}.cpp.
  */
-extern JSBool
+extern bool
 str_replace(JSContext *cx, unsigned argc, js::Value *vp);
 
-extern JSBool
+extern bool
 str_fromCharCode(JSContext *cx, unsigned argc, Value *vp);
 
 } /* namespace js */
 
-extern JSBool
+extern bool
 js_str_toString(JSContext *cx, unsigned argc, js::Value *vp);
 
-extern JSBool
+extern bool
 js_str_charAt(JSContext *cx, unsigned argc, js::Value *vp);
 
-extern JSBool
+extern bool
 js_str_charCodeAt(JSContext *cx, unsigned argc, js::Value *vp);
 
 /*
@@ -322,6 +300,10 @@ namespace js {
 
 extern size_t
 PutEscapedStringImpl(char *buffer, size_t size, FILE *fp, JSLinearString *str, uint32_t quote);
+
+extern size_t
+PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const jschar *chars,
+                     size_t length, uint32_t quote);
 
 /*
  * Write str into buffer escaping any non-printable or non-ASCII character
@@ -342,6 +324,16 @@ PutEscapedString(char *buffer, size_t size, JSLinearString *str, uint32_t quote)
     return n;
 }
 
+inline size_t
+PutEscapedString(char *buffer, size_t bufferSize, const jschar *chars, size_t length, uint32_t quote)
+{
+    size_t n = PutEscapedStringImpl(buffer, bufferSize, NULL, chars, length, quote);
+
+    /* PutEscapedStringImpl can only fail with a file. */
+    JS_ASSERT(n != size_t(-1));
+    return n;
+}
+
 /*
  * Write str into file escaping any non-printable or non-ASCII character.
  * If quote is not 0, it must be a single or double quote character that
@@ -353,18 +345,18 @@ FileEscapedString(FILE *fp, JSLinearString *str, uint32_t quote)
     return PutEscapedStringImpl(NULL, 0, fp, str, quote) != size_t(-1);
 }
 
-JSBool
+bool
 str_match(JSContext *cx, unsigned argc, Value *vp);
 
-JSBool
+bool
 str_search(JSContext *cx, unsigned argc, Value *vp);
 
-JSBool
+bool
 str_split(JSContext *cx, unsigned argc, Value *vp);
 
 } /* namespace js */
 
-extern JSBool
+extern bool
 js_String(JSContext *cx, unsigned argc, js::Value *vp);
 
 #endif /* jsstr_h */

@@ -9,7 +9,6 @@ XPIDL_SOURCES += [
     'nsIJSEngineTelemetryStats.idl',
     'nsIJSRuntimeService.idl',
     'nsIScriptError.idl',
-    'nsIXPCScriptNotify.idl',
     'nsIXPCScriptable.idl',
     'nsIXPCSecurityManager.idl',
     'nsIXPConnect.idl',

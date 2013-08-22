@@ -46,10 +46,6 @@ PP_TARGETS += MODULES
 TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
 TESTING_JS_MODULE_DIR := services/healthreport
 
-EXTRA_COMPONENTS := \
-  HealthReportComponents.manifest \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 # Add extra prerequisites until bug 837792 is addressed.

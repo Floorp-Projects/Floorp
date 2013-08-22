@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/dom/HTMLStyleElement.h"
 #include "mozilla/dom/HTMLStyleElementBinding.h"
-#include "nsIDOMLinkStyle.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIDOMStyleSheet.h"
@@ -31,10 +30,13 @@ HTMLStyleElement::~HTMLStyleElement()
 {
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLStyleElement)
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLStyleElement,
                                                   nsGenericHTMLElement)
   tmp->nsStyleLinkElement::Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLStyleElement,
                                                 nsGenericHTMLElement)
   tmp->nsStyleLinkElement::Unlink();
@@ -46,14 +48,11 @@ NS_IMPL_RELEASE_INHERITED(HTMLStyleElement, Element)
 
 // QueryInterface implementation for HTMLStyleElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLStyleElement)
-  NS_HTML_CONTENT_INTERFACES(nsGenericHTMLElement)
-  NS_INTERFACE_TABLE_INHERITED4(HTMLStyleElement,
+  NS_INTERFACE_TABLE_INHERITED3(HTMLStyleElement,
                                 nsIDOMHTMLStyleElement,
-                                nsIDOMLinkStyle,
                                 nsIStyleSheetLinkingElement,
                                 nsIMutationObserver)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_ELEMENT_INTERFACE_MAP_END
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLStyleElement)
 

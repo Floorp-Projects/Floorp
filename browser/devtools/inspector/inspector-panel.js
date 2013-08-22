@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: Javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -45,12 +45,8 @@ InspectorPanel.prototype = {
    */
   open: function InspectorPanel_open() {
     return this.target.makeRemote().then(() => {
-      return this.target.inspector.getWalker();
-    }).then(walker => {
-      if (this._destroyPromise) {
-        walker.release().then(null, console.error);
-      }
-      this.walker = walker;
+      return this._getWalker();
+    }).then(() => {
       return this._getDefaultNodeForSelection();
     }).then(defaultSelection => {
       return this._deferredOpen(defaultSelection);
@@ -137,10 +133,6 @@ InspectorPanel.prototype = {
       // All the components are initialized. Let's select a node.
       this._selection.setNodeFront(defaultSelection);
 
-      if (this.highlighter) {
-        this.highlighter.unlock();
-      }
-
       this.markup.expandNode(this.selection.nodeFront);
 
       this.emit("ready");
@@ -151,6 +143,16 @@ InspectorPanel.prototype = {
     this.setupSidebar();
 
     return deferred.promise;
+  },
+
+  _getWalker: function() {
+    let inspector = this.target.inspector;
+    return inspector.getWalker().then(walker => {
+      this.walker = walker;
+      return inspector.getPageStyle();
+    }).then(pageStyle => {
+      this.pageStyle = pageStyle;
+    });
   },
 
   /**
@@ -321,7 +323,7 @@ InspectorPanel.prototype = {
       try {
         selfUpdate(selection);
       } catch(ex) {
-        console.error(ex);
+        console.error(ex)
       }
     }, Ci.nsIThread.DISPATCH_NORMAL);
   },
@@ -407,6 +409,7 @@ InspectorPanel.prototype = {
     if (this.walker) {
       this._destroyPromise = this.walker.release().then(null, console.error);
       delete this.walker;
+      delete this.pageStyle;
     } else {
       this._destroyPromise = promise.resolve(null);
     }

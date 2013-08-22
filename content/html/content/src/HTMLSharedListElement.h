@@ -9,7 +9,6 @@
 #include "mozilla/Util.h"
 
 #include "nsIDOMHTMLOListElement.h"
-#include "nsIDOMHTMLDListElement.h"
 #include "nsIDOMHTMLUListElement.h"
 #include "nsGenericHTMLElement.h"
 
@@ -18,7 +17,6 @@ namespace dom {
 
 class HTMLSharedListElement MOZ_FINAL : public nsGenericHTMLElement,
                                         public nsIDOMHTMLOListElement,
-                                        public nsIDOMHTMLDListElement,
                                         public nsIDOMHTMLUListElement
 {
 public:
@@ -31,20 +29,8 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_TO_NSINODE
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT_TO_GENERIC
-
   // nsIDOMHTMLOListElement
   NS_DECL_NSIDOMHTMLOLISTELEMENT
-
-  // nsIDOMHTMLDListElement
-  // fully declared by NS_DECL_NSIDOMHTMLOLISTELEMENT
 
   // nsIDOMHTMLUListElement
   // fully declared by NS_DECL_NSIDOMHTMLOLISTELEMENT
@@ -56,11 +42,6 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
-
-  virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE
-  {
-    return static_cast<nsIDOMHTMLOListElement*>(this);
-  }
 
   bool Reversed() const
   {

@@ -35,7 +35,13 @@ var APZCObserver = {
     switch (aEvent.type) {
       case 'pageshow':
       case 'TabSelect':
-        Services.obs.notifyObservers(null, "viewport-needs-updating", null);
+        const ROOT_ID = 1;
+        let windowUtils = Browser.selectedBrowser.contentWindow.
+                          QueryInterface(Ci.nsIInterfaceRequestor).
+                          getInterface(Ci.nsIDOMWindowUtils);
+        windowUtils.setDisplayPortForElement(0, 0, ContentAreaObserver.width,
+                                             ContentAreaObserver.height,
+                                             windowUtils.findElementWithViewId(ROOT_ID));
         break;
       case 'TabOpen': {
         let browser = aEvent.originalTarget.linkedBrowser;
@@ -65,38 +71,29 @@ var APZCObserver = {
   observe: function ao_observe(aSubject, aTopic, aData) {
     if (aTopic == "apzc-request-content-repaint") {
       let frameMetrics = JSON.parse(aData);
+      let scrollId = frameMetrics.scrollId;
       let scrollTo = frameMetrics.scrollTo;
       let displayPort = frameMetrics.displayPort;
       let resolution = frameMetrics.resolution;
       let compositedRect = frameMetrics.compositedRect;
 
-      if (StartUI.isStartPageVisible) {
-        let windowUtils = Browser.windowUtils;
-        Browser.selectedBrowser.contentWindow.scrollTo(scrollTo.x, scrollTo.y);
-        windowUtils.setResolution(resolution, resolution);
-        windowUtils.setDisplayPortForElement(displayPort.x * resolution,
-                                             displayPort.y * resolution,
-                                             displayPort.width * resolution,
-                                             displayPort.height * resolution,
-                                             Elements.startUI);
-      } else {
-        let windowUtils = Browser.selectedBrowser.contentWindow.
-                                  QueryInterface(Ci.nsIInterfaceRequestor).
-                                  getInterface(Ci.nsIDOMWindowUtils);
-        windowUtils.setScrollPositionClampingScrollPortSize(compositedRect.width,
-                                                            compositedRect.height);
-        Browser.selectedBrowser.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
-          scrollX: scrollTo.x,
-          scrollY: scrollTo.y,
-          x: displayPort.x + scrollTo.x,
-          y: displayPort.y + scrollTo.y,
-          w: displayPort.width,
-          h: displayPort.height,
-          scale: resolution,
-          id: 1
-        });
-      }
+      let windowUtils = Browser.selectedBrowser.contentWindow.
+                                QueryInterface(Ci.nsIInterfaceRequestor).
+                                getInterface(Ci.nsIDOMWindowUtils);
+      windowUtils.setScrollPositionClampingScrollPortSize(compositedRect.width,
+                                                          compositedRect.height);
+      Browser.selectedBrowser.messageManager.sendAsyncMessage("Content:SetCacheViewport", {
+        scrollX: scrollTo.x,
+        scrollY: scrollTo.y,
+        x: displayPort.x + scrollTo.x,
+        y: displayPort.y + scrollTo.y,
+        w: displayPort.width,
+        h: displayPort.height,
+        scale: resolution,
+        id: scrollId
+      });
 
+      Util.dumpLn("APZC scrollId: " + scrollId);
       Util.dumpLn("APZC scrollTo.x: " + scrollTo.x + ", scrollTo.y: " + scrollTo.y);
       Util.dumpLn("APZC setResolution: " + resolution);
       Util.dumpLn("APZC setDisplayPortForElement: displayPort.x: " +

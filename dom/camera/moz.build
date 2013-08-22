@@ -10,13 +10,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_camera'
 
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/base',
-    '-I$(topsrcdir)/dom/interfaces/base',
-    '-I$(topsrcdir)/dom/interfaces/events',
-    '-I$(topsrcdir)/dom/media',
-]
-
 MODULE = 'dom'
 
 EXPORTS += [
@@ -24,8 +17,6 @@ EXPORTS += [
     'CameraPreviewMediaStream.h',
     'DOMCameraManager.h',
     'GonkCameraControl.h',
-    'GonkNativeWindow.h',
-    'GonkNativeWindowClient.h',
 ]
 
 CPP_SOURCES += [
@@ -43,19 +34,10 @@ if CONFIG['MOZ_B2G_CAMERA']:
         'GonkCameraManager.cpp',
         'GonkCameraControl.cpp',
         'GonkCameraHwMgr.cpp',
-        'GonkNativeWindow.cpp',
-        'GonkNativeWindowClient.cpp',
         'GonkRecorder.cpp',
         'GonkCameraSource.cpp',
         'AudioParameter.cpp',
         'GonkRecorderProfiles.cpp',
-    ]
-elif CONFIG['MOZ_OMX_DECODER']:
-    CPP_SOURCES += [
-        'FallbackCameraManager.cpp',
-        'FallbackCameraControl.cpp',
-        'GonkNativeWindow.cpp',
-        'GonkNativeWindowClient.cpp',
     ]
 else:
     CPP_SOURCES += [

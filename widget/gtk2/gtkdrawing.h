@@ -161,8 +161,6 @@ typedef enum {
   MOZ_GTK_TREE_HEADER_SORTARROW,
   /* Paints an expander for a GtkTreeView */
   MOZ_GTK_TREEVIEW_EXPANDER,
-  /* Paints a GtkExpander */
-  MOZ_GTK_EXPANDER,
   /* Paints the background of the menu bar. */
   MOZ_GTK_MENUBAR,
   /* Paints the background of menus, context menus. */

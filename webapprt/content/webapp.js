@@ -6,7 +6,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://webapprt/modules/Startup.jsm");
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -49,10 +48,6 @@ let progressListener = {
 function onLoad() {
   window.removeEventListener("load", onLoad, false);
 
-  let args = window.arguments && window.arguments[0] ?
-             window.arguments[0].QueryInterface(Ci.nsIPropertyBag2) :
-             null;
-
   gAppBrowser.addProgressListener(progressListener,
                                   Ci.nsIWebProgress.NOTIFY_LOCATION |
                                   Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
@@ -63,14 +58,6 @@ function onLoad() {
   // This doesn't capture clicks so content can capture them itself and do
   // something different if it doesn't want the default behavior.
   gAppBrowser.addEventListener("click", onContentClick, false, true);
-
-  // This is not the only way that a URL gets loaded in the app browser.
-  // When content calls openWindow(), there are no window.arguments,
-  // but something in the platform loads the URL specified by the content.
-  if (args && args.hasKey("url")) {
-    gAppBrowser.setAttribute("src", args.get("url"));
-  }
-
 }
 window.addEventListener("load", onLoad, false);
 
@@ -128,15 +115,22 @@ function updateMenuItems() {
 #endif
 }
 
+#ifndef XP_MACOSX
+let gEditUIVisible = true;
+#endif
+
 function updateEditUIVisibility() {
 #ifndef XP_MACOSX
   let editMenuPopupState = document.getElementById("menu_EditPopup").state;
+  let contextMenuPopupState = document.getElementById("contentAreaContextMenu").state;
 
   // The UI is visible if the Edit menu is opening or open, if the context menu
   // is open, or if the toolbar has been customized to include the Cut, Copy,
   // or Paste toolbar buttons.
   gEditUIVisible = editMenuPopupState == "showing" ||
-                   editMenuPopupState == "open";
+                   editMenuPopupState == "open" ||
+                   contextMenuPopupState == "showing" ||
+                   contextMenuPopupState == "open";
 
   // If UI is visible, update the edit commands' enabled state to reflect
   // whether or not they are actually enabled for the current focus/selection.
@@ -177,3 +171,60 @@ function updateCrashReportURL(aURI) {
   gCrashReporter.annotateCrashReport("URL", uri.spec);
 #endif
 }
+
+// Context menu handling code.
+// At the moment there isn't any built-in menu, we only support HTML5 custom
+// menus.
+
+let gContextMenu = null;
+
+XPCOMUtils.defineLazyGetter(this, "PageMenu", function() {
+  let tmp = {};
+  Cu.import("resource://gre/modules/PageMenu.jsm", tmp);
+  return new tmp.PageMenu();
+});
+
+function showContextMenu(aEvent, aXULMenu) {
+  if (aEvent.target != aXULMenu) {
+    return true;
+  }
+
+  gContextMenu = new nsContextMenu(aXULMenu);
+  if (gContextMenu.shouldDisplay) {
+    updateEditUIVisibility();
+  }
+
+  return gContextMenu.shouldDisplay;
+}
+
+function hideContextMenu(aEvent, aXULMenu) {
+  if (aEvent.target != aXULMenu) {
+    return;
+  }
+
+  gContextMenu = null;
+
+  updateEditUIVisibility();
+}
+
+function nsContextMenu(aXULMenu) {
+  this.initMenu(aXULMenu);
+}
+
+nsContextMenu.prototype = {
+  initMenu: function(aXULMenu) {
+    this.hasPageMenu = PageMenu.maybeBuildAndAttachMenu(document.popupNode,
+                                                        aXULMenu);
+    this.shouldDisplay = this.hasPageMenu;
+
+    this.showItem("page-menu-separator", this.hasPageMenu);
+  },
+
+  showItem: function(aItemOrID, aShow) {
+    let item = aItemOrID.constructor == String ?
+      document.getElementById(aItemOrID) : aItemOrID;
+    if (item) {
+      item.hidden = !aShow;
+    }
+  }
+};

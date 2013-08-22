@@ -19,8 +19,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/content/events/src \
   $(NULL)
 
-DEFINES += -D_IMPL_NS_LAYOUT
-
 MOCHITEST_FILES = test_ipc.html
 
 # bug: 866734 - move XPCSHEL_TESTS to moz.build
@@ -31,7 +29,6 @@ MOCHITEST_FILES = test_ipc.html
 # We're copying tests from another directory so this check is wrong for us.
 #NO_XPCSHELL_MANIFEST_CHECK = 1
 
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 

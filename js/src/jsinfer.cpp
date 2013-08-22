@@ -15,10 +15,11 @@
 #endif
 
 #include "jsapi.h"
+#include "jsautooplen.h"
 #include "jscntxt.h"
-#include "jsfriendapi.h"
 #include "jsgc.h"
 #include "jsobj.h"
+#include "jsprf.h"
 #include "jsscript.h"
 #include "jsstr.h"
 #include "jsworkers.h"
@@ -26,9 +27,9 @@
 
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "ion/BaselineJIT.h"
-#include "ion/Ion.h"
-#include "ion/IonCompartment.h"
+#include "jit/BaselineJIT.h"
+#include "jit/Ion.h"
+#include "jit/IonCompartment.h"
 #endif
 #include "js/MemoryMetrics.h"
 #include "vm/Shape.h"
@@ -346,64 +347,6 @@ TypeSet::isSubset(TypeSet *other)
             if (!obj)
                 continue;
             if (!other->hasType(Type::ObjectType(obj)))
-                return false;
-        }
-    }
-
-    return true;
-}
-
-bool
-TypeSet::isSubsetIgnorePrimitives(TypeSet *other)
-{
-    TypeFlags otherFlags = other->baseFlags() | TYPE_FLAG_PRIMITIVE;
-    if ((baseFlags() & otherFlags) != baseFlags())
-        return false;
-
-    if (unknownObject()) {
-        JS_ASSERT(other->unknownObject());
-    } else {
-        for (unsigned i = 0; i < getObjectCount(); i++) {
-            TypeObjectKey *obj = getObject(i);
-            if (!obj)
-                continue;
-            if (!other->hasType(Type::ObjectType(obj)))
-                return false;
-        }
-    }
-
-    return true;
-}
-
-bool
-TypeSet::intersectionEmpty(TypeSet *other)
-{
-    // For unknown/unknownObject there is no reason they couldn't intersect.
-    // I.e. we eagerly return their intersection isn't empty.
-    // That's ok, since we can't make predictions that can be checked to not hold.
-    if (unknown() || other->unknown())
-        return false;
-
-    if (unknownObject() && other->unknownObject())
-        return false;
-
-    if (unknownObject() && other->getObjectCount() > 0)
-        return false;
-
-    if (other->unknownObject() && getObjectCount() > 0)
-        return false;
-
-    // Test if there is an intersection in the baseFlags
-    if ((baseFlags() & other->baseFlags()) != 0)
-        return false;
-
-    // Test if there are object that are in both TypeSets
-    if (!unknownObject()) {
-        for (unsigned i = 0; i < getObjectCount(); i++) {
-            TypeObjectKey *obj = getObject(i);
-            if (!obj)
-                continue;
-            if (other->hasType(Type::ObjectType(obj)))
                 return false;
         }
     }
@@ -2004,22 +1947,6 @@ HeapTypeSet::knownNonEmpty(JSContext *cx)
 }
 
 bool
-StackTypeSet::knownNonStringPrimitive()
-{
-    TypeFlags flags = baseFlags();
-
-    if (baseObjectCount() > 0)
-        return false;
-
-    if (flags >= TYPE_FLAG_STRING)
-        return false;
-
-    if (baseFlags() == 0)
-        return false;
-    return true;
-}
-
-bool
 StackTypeSet::filtersType(const StackTypeSet *other, Type filteredType) const
 {
     if (other->unknown())
@@ -3131,10 +3058,8 @@ struct types::ArrayTableKey
 };
 
 void
-TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
+TypeCompartment::setTypeToHomogenousArray(JSContext *cx, JSObject *obj, Type elementType)
 {
-    AutoEnterAnalysis enter(cx);
-
     if (!arrayTypeTable) {
         arrayTypeTable = cx->new_<ArrayTypeTable>();
         if (!arrayTypeTable || !arrayTypeTable->init()) {
@@ -3143,6 +3068,38 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
             return;
         }
     }
+
+    ArrayTableKey key;
+    key.type = elementType;
+    key.proto = obj->getProto();
+    ArrayTypeTable::AddPtr p = arrayTypeTable->lookupForAdd(key);
+
+    if (p) {
+        obj->setType(p->value);
+    } else {
+        /* Make a new type to use for future arrays with the same elements. */
+        RootedObject objProto(cx, obj->getProto());
+        TypeObject *objType = newTypeObject(cx, &ArrayObject::class_, objProto);
+        if (!objType) {
+            cx->compartment()->types.setPendingNukeTypes(cx);
+            return;
+        }
+        obj->setType(objType);
+
+        if (!objType->unknownProperties())
+            objType->addPropertyType(cx, JSID_VOID, elementType);
+
+        if (!arrayTypeTable->relookupOrAdd(p, key, objType)) {
+            cx->compartment()->types.setPendingNukeTypes(cx);
+            return;
+        }
+    }
+}
+
+void
+TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
+{
+    AutoEnterAnalysis enter(cx);
 
     /*
      * If the array is of homogenous type, pick a type object which will be
@@ -3168,42 +3125,31 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
         }
     }
 
-    ArrayTableKey key;
-    key.type = type;
-    key.proto = obj->getProto();
-    ArrayTypeTable::AddPtr p = arrayTypeTable->lookupForAdd(key);
+    setTypeToHomogenousArray(cx, obj, type);
+}
 
-    if (p) {
-        obj->setType(p->value);
-    } else {
-        Rooted<Type> origType(cx, type);
-        /* Make a new type to use for future arrays with the same elements. */
-        RootedObject objProto(cx, obj->getProto());
-        Rooted<TypeObject*> objType(cx, newTypeObject(cx, &ArrayObject::class_, objProto));
-        if (!objType) {
-            cx->compartment()->types.setPendingNukeTypes(cx);
-            return;
-        }
-        obj->setType(objType);
-
-        if (!objType->unknownProperties())
-            objType->addPropertyType(cx, JSID_VOID, type);
-
-        // The key's fields may have been moved by moving GC and therefore the
-        // AddPtr is now invalid. ArrayTypeTable's equality and hashcodes
-        // operators use only the two fields (type and proto) directly, so we
-        // can just conditionally update them here.
-        if (type != origType || key.proto != obj->getProto()) {
-            key.type = origType;
-            key.proto = obj->getProto();
-            p = arrayTypeTable->lookupForAdd(key);
-        }
-
-        if (!arrayTypeTable->relookupOrAdd(p, key, objType)) {
-            cx->compartment()->types.setPendingNukeTypes(cx);
-            return;
-        }
+void
+types::FixRestArgumentsType(ExclusiveContext *cxArg, JSObject *obj)
+{
+    if (cxArg->isJSContext()) {
+        JSContext *cx = cxArg->asJSContext();
+        if (cx->typeInferenceEnabled())
+            cx->compartment()->types.fixRestArgumentsType(cx, obj);
     }
+}
+
+void
+TypeCompartment::fixRestArgumentsType(JSContext *cx, JSObject *obj)
+{
+    AutoEnterAnalysis enter(cx);
+
+    /*
+     * Tracking element types for rest argument arrays is not worth it, but we
+     * still want it to be known that it's a dense array.
+     */
+    JS_ASSERT(obj->is<ArrayObject>());
+
+    setTypeToHomogenousArray(cx, obj, Type::UnknownType());
 }
 
 /*
@@ -3461,8 +3407,13 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
     }
 
     types::TypeObject *protoType = proto->getType(cx);
-    if (!protoType || protoType->unknownProperties()) {
-        types->addType(cx, Type::UnknownType());
+    if (!protoType)
+        return;
+    if (protoType->unknownProperties()) {
+        // Type information only describes normal native properties, not those
+        // found or inherited from non-native classes.
+        if (protoType->clasp->isNative())
+            types->addType(cx, Type::UnknownType());
         return;
     }
 
@@ -4769,29 +4720,6 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
     TypeScript::AddFreezeConstraints(cx, script_);
 }
 
-bool
-ScriptAnalysis::integerOperation(jsbytecode *pc)
-{
-    JS_ASSERT(uint32_t(pc - script_->code) < script_->length);
-
-    switch (JSOp(*pc)) {
-      case JSOP_ADD:
-      case JSOP_SUB:
-      case JSOP_MUL:
-      case JSOP_DIV:
-        if (pushedTypes(pc, 0)->getKnownTypeTag() != JSVAL_TYPE_INT32)
-            return false;
-        if (poppedTypes(pc, 0)->getKnownTypeTag() != JSVAL_TYPE_INT32)
-            return false;
-        if (poppedTypes(pc, 1)->getKnownTypeTag() != JSVAL_TYPE_INT32)
-            return false;
-        return true;
-
-      default:
-        return true;
-    }
-}
-
 /*
  * Persistent constraint clearing out newScript and definite properties from
  * an object should a property on another object get a getter or setter.
@@ -5967,7 +5895,10 @@ JSObject::splicePrototype(JSContext *cx, Class *clasp, Handle<TaggedProto> proto
     AutoEnterAnalysis enter(cx);
 
     if (protoType && protoType->unknownProperties() && !type->unknownProperties()) {
-        type->markUnknown(cx);
+        // As in getFromPrototypes, property types do not need to be propagated
+        // from non-native prototypes.
+        if (protoType->clasp->isNative())
+            type->markUnknown(cx);
         return true;
     }
 
@@ -6382,11 +6313,11 @@ TypeCompartment::sweep(FreeOp *fop)
         for (ArrayTypeTable::Enum e(*arrayTypeTable); !e.empty(); e.popFront()) {
             const ArrayTableKey &key = e.front().key;
             JS_ASSERT(e.front().value->proto == key.proto);
-            JS_ASSERT(!key.type.isSingleObject());
+            JS_ASSERT(key.type.isUnknown() || !key.type.isSingleObject());
 
             bool remove = false;
             TypeObject *typeObject = NULL;
-            if (key.type.isTypeObject()) {
+            if (!key.type.isUnknown() && key.type.isTypeObject()) {
                 typeObject = key.type.typeObject();
                 if (IsTypeObjectAboutToBeFinalized(&typeObject))
                     remove = true;
@@ -6526,7 +6457,8 @@ TypeCompartment::sweepCompilerOutputs(FreeOp *fop, bool discardConstraints)
 void
 JSCompartment::sweepNewTypeObjectTable(TypeObjectSet &table)
 {
-    gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
+    gcstats::AutoPhase ap(runtimeFromMainThread()->gcStats,
+                          gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
 
     JS_ASSERT(zone()->isGCSweeping());
     if (table.initialized()) {
@@ -6640,102 +6572,6 @@ TypeScript::AddFreezeConstraints(JSContext *cx, JSScript *script)
     }
 }
 
-/* static */ void
-TypeScript::Purge(JSContext *cx, HandleScript script)
-{
-    if (!script->types)
-        return;
-
-    unsigned num = NumTypeSets(script);
-    TypeSet *typeArray = script->types->typeArray();
-    TypeSet *returnTypes = ReturnTypes(script);
-
-    bool ranInference = script->hasAnalysis() && script->analysis()->ranInference();
-
-    script->clearAnalysis();
-
-    if (!ranInference && !script->hasFreezeConstraints) {
-        /*
-         * Even if the script hasn't been analyzed by TI, TypeConstraintCall
-         * can still add constraints on 'this' for 'new' calls.
-         */
-        ThisTypes(script)->constraintList = NULL;
-#ifdef DEBUG
-        for (size_t i = 0; i < num; i++) {
-            TypeSet *types = &typeArray[i];
-            JS_ASSERT_IF(types != returnTypes, !types->constraintList);
-        }
-#endif
-        return;
-    }
-
-    for (size_t i = 0; i < num; i++) {
-        TypeSet *types = &typeArray[i];
-        if (types != returnTypes)
-            types->constraintList = NULL;
-    }
-
-    if (script->hasFreezeConstraints)
-        TypeScript::AddFreezeConstraints(cx, script);
-}
-
-void
-TypeCompartment::maybePurgeAnalysis(JSContext *cx, bool force)
-{
-    // FIXME bug 781657
-    return;
-
-    JS_ASSERT(this == &cx->compartment()->types);
-    JS_ASSERT(!cx->compartment()->activeAnalysis);
-
-    if (!cx->typeInferenceEnabled())
-        return;
-
-    size_t triggerBytes = cx->runtime()->analysisPurgeTriggerBytes;
-    size_t beforeUsed = cx->compartment()->analysisLifoAlloc.used();
-
-    if (!force) {
-        if (!triggerBytes || triggerBytes >= beforeUsed)
-            return;
-    }
-
-    AutoEnterAnalysis enter(cx);
-
-    /* Reset the analysis pool, making its memory available for reuse. */
-    cx->compartment()->analysisLifoAlloc.releaseAll();
-
-    uint64_t start = PRMJ_Now();
-
-    for (gc::CellIter i(cx->zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-        RootedScript script(cx, i.get<JSScript>());
-        if (script->compartment() == cx->compartment())
-            TypeScript::Purge(cx, script);
-    }
-
-    uint64_t done = PRMJ_Now();
-
-    if (cx->runtime()->analysisPurgeCallback) {
-        size_t afterUsed = cx->compartment()->analysisLifoAlloc.used();
-        size_t typeUsed = cx->typeLifoAlloc().used();
-
-        char buf[1000];
-        JS_snprintf(buf, sizeof(buf),
-                    "Total Time %.2f ms, %d bytes before, %d bytes after\n",
-                    (done - start) / double(PRMJ_USEC_PER_MSEC),
-                    (int) (beforeUsed + typeUsed),
-                    (int) (afterUsed + typeUsed));
-
-        JSString *desc = JS_NewStringCopyZ(cx, buf);
-        if (!desc) {
-            cx->clearPendingException();
-            return;
-        }
-
-        JS::Rooted<JSFlatString*> flat(cx, &desc->asFlat());
-        cx->runtime()->analysisPurgeCallback(cx->runtime(), flat);
-    }
-}
-
 static void
 SizeOfScriptTypeInferenceData(JSScript *script, JS::TypeInferenceSizes *sizes,
                               mozilla::MallocSizeOf mallocSizeOf)
@@ -6837,7 +6673,7 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes)
 {
     JS_ASSERT(zone()->isGCSweeping());
 
-    JSRuntime *rt = zone()->rt;
+    JSRuntime *rt = fop->runtime();
 
     /*
      * Clear the analysis pool, but don't release its data yet. While

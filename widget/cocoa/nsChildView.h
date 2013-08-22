@@ -449,6 +449,8 @@ public:
 
   virtual double          GetDefaultScaleInternal();
 
+  virtual int32_t         RoundsWidgetCoordinatesTo() MOZ_OVERRIDE;
+
   NS_IMETHOD              Invalidate(const nsIntRect &aRect);
 
   virtual void*           GetNativeData(uint32_t aDataType);

@@ -156,7 +156,7 @@ class ElementIteratorObject : public JSObject
         NumSlots
     };
 
-    static JSBool next(JSContext *cx, unsigned argc, Value *vp);
+    static bool next(JSContext *cx, unsigned argc, Value *vp);
     static bool next_impl(JSContext *cx, JS::CallArgs args);
 };
 
@@ -203,7 +203,7 @@ UnwindIteratorForException(JSContext *cx, js::HandleObject obj);
 void
 UnwindIteratorForUncatchableException(JSContext *cx, JSObject *obj);
 
-JSBool
+bool
 IteratorConstructor(JSContext *cx, unsigned argc, Value *vp);
 
 }
@@ -228,7 +228,7 @@ js_IteratorMore(JSContext *cx, js::HandleObject iterobj, js::MutableHandleValue 
 extern bool
 js_IteratorNext(JSContext *cx, js::HandleObject iterobj, js::MutableHandleValue rval);
 
-extern JSBool
+extern bool
 js_ThrowStopIteration(JSContext *cx);
 
 namespace js {
@@ -300,10 +300,10 @@ class ForOfIterator
         return ok && !currentValue.get().isMagic(JS_NO_ITER_VALUE);
     }
 
-    Value &value() {
+    MutableHandleValue value() {
         JS_ASSERT(ok);
         JS_ASSERT(!closed);
-        return currentValue.get();
+        return &currentValue;
     }
 
     bool close() {

@@ -184,7 +184,7 @@ GetFileHelper::GetSuccessResult(JSContext* aCx, JS::Value* aVal)
   nsCOMPtr<nsIDOMFile> domFile =
     mFileHandle->CreateFileObject(mLockedFile, mParams->Size());
 
-  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForScopeChain(aCx));
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   nsresult rv =
     nsContentUtils::WrapNative(aCx, global, domFile,
                                &NS_GET_IID(nsIDOMFile), aVal);

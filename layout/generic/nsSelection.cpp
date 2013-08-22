@@ -375,6 +375,8 @@ nsFrameSelection::nsFrameSelection()
 }
 
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameSelection)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
   int32_t i;
   for (i = 0; i < nsISelectionController::NUM_SELECTIONTYPES; ++i) {
@@ -785,7 +787,12 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
   }
 
   int32_t caretStyle = Preferences::GetInt("layout.selection.caret_style", 0);
-  if (caretStyle == 0) {
+  if (caretStyle == 0
+#ifdef XP_WIN
+      && aKeycode != nsIDOMKeyEvent::DOM_VK_UP
+      && aKeycode != nsIDOMKeyEvent::DOM_VK_DOWN
+#endif
+     ) {
     // Put caret at the selection edge in the |aKeycode| direction.
     caretStyle = 2;
   }
@@ -3017,6 +3024,8 @@ Selection::~Selection()
 }
 
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(Selection)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   // Unlink the selection listeners *before* we do RemoveAllRanges since
   // we don't want to notify the listeners during JS GC (they could be
@@ -4440,6 +4449,10 @@ Selection::CollapseToStart()
   if (!firstRange)
     return NS_ERROR_FAILURE;
 
+  if (mFrameSelection) {
+    int16_t reason = mFrameSelection->PopReason() | nsISelectionListener::COLLAPSETOSTART_REASON;
+    mFrameSelection->PostReason(reason);
+  }
   return Collapse(firstRange->GetStartParent(), firstRange->StartOffset());
 }
 
@@ -4460,6 +4473,10 @@ Selection::CollapseToEnd()
   if (!lastRange)
     return NS_ERROR_FAILURE;
 
+  if (mFrameSelection) {
+    int16_t reason = mFrameSelection->PopReason() | nsISelectionListener::COLLAPSETOEND_REASON;
+    mFrameSelection->PostReason(reason);
+  }
   return Collapse(lastRange->GetEndParent(), lastRange->EndOffset());
 }
 

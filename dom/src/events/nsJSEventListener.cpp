@@ -9,7 +9,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptRuntime.h"
 #include "nsIXPConnect.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
@@ -76,6 +75,8 @@ nsJSEventListener::UpdateScopeObject(JS::Handle<JSObject*> aScopeObject)
   }
   mScopeObject = aScopeObject;
 }
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
   if (tmp->mScopeObject) {

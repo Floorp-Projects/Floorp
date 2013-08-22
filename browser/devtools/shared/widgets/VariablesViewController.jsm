@@ -12,7 +12,17 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 Cu.import("resource:///modules/devtools/VariablesView.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
-Cu.import("resource://gre/modules/devtools/WebConsoleUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "devtools",
+  "resource://gre/modules/devtools/Loader.jsm");
+
+Object.defineProperty(this, "WebConsoleUtils", {
+  get: function() {
+    return devtools.require("devtools/toolkit/webconsole/utils").Utils;
+  },
+  configurable: true,
+  enumerable: true
+});
 
 XPCOMUtils.defineLazyGetter(this, "VARIABLES_SORTING_ENABLED", () =>
   Services.prefs.getBoolPref("devtools.debugger.ui.variables-sorting-enabled")
@@ -32,7 +42,7 @@ this.EXPORTED_SYMBOLS = ["VariablesViewController"];
  *        The view to attach to.
  * @param object aOptions
  *        Options for configuring the controller. Supported options:
- *        - getGripClient: callback for creating an object grip client
+ *        - getObjectClient: callback for creating an object grip client
  *        - getLongStringClient: callback for creating a long string grip client
  *        - releaseActor: callback for releasing an actor when it's no longer needed
  *        - overrideValueEvalMacro: callback for creating an overriding eval macro
@@ -42,7 +52,7 @@ this.EXPORTED_SYMBOLS = ["VariablesViewController"];
 function VariablesViewController(aView, aOptions) {
   this.addExpander = this.addExpander.bind(this);
 
-  this._getGripClient = aOptions.getGripClient;
+  this._getObjectClient = aOptions.getObjectClient;
   this._getLongStringClient = aOptions.getLongStringClient;
   this._releaseActor = aOptions.releaseActor;
 
@@ -122,7 +132,7 @@ VariablesViewController.prototype = {
   _populateFromObject: function(aTarget, aGrip) {
     let deferred = promise.defer();
 
-    this._getGripClient(aGrip).getPrototypeAndProperties(aResponse => {
+    this._getObjectClient(aGrip).getPrototypeAndProperties(aResponse => {
       let { ownProperties, prototype } = aResponse;
       // safeGetterValues is new and isn't necessary defined on old actors
       let safeGetterValues = aResponse.safeGetterValues || {};

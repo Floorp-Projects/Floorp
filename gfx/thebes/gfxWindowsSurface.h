@@ -31,7 +31,7 @@ public:
     gfxWindowsSurface(const gfxIntSize& size,
                       gfxImageFormat imageFormat = ImageFormatRGB24);
 
-    // Create a DDB surface; dc may be NULL to use the screen DC
+    // Create a DDB surface; dc may be nullptr to use the screen DC
     gfxWindowsSurface(HDC dc,
                       const gfxIntSize& size,
                       gfxImageFormat imageFormat = ImageFormatRGB24);

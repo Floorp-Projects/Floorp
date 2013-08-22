@@ -43,8 +43,7 @@ function startTest()
 {
   // Find the relevant elements in the Web Console of tab 2.
   let win2 = tabs[runCount*2 + 1].linkedBrowser.contentWindow;
-  let hudId2 = HUDService.getHudIdByWindow(win2);
-  huds[1] = HUDService.hudReferences[hudId2];
+  huds[1] = HUDService.getHudByWindow(win2);
   info("startTest: iframe2 root height " + huds[1].ui.rootElement.clientHeight);
 
   if (runCount == 0) {
@@ -101,8 +100,7 @@ function testpopup2b(aEvent) {
     waitForFocus(function() {
       // Find the relevant elements in the Web Console of tab 1.
       let win1 = tabs[runCount*2].linkedBrowser.contentWindow;
-      let hudId1 = HUDService.getHudIdByWindow(win1);
-      huds[0] = HUDService.hudReferences[hudId1];
+      huds[0] = HUDService.getHudByWindow(win1);
 
       info("iframe1 root height " + huds[0].ui.rootElement.clientHeight);
 

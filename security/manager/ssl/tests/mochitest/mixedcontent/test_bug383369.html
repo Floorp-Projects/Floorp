@@ -44,9 +44,33 @@
     prefs.setBoolPref("manager.closeWhenDone", true);
     prefs.setBoolPref("manager.showWhenStarting", false);
   
+    var theWindow = window;
+
+    var useJSTransfer = false;
+    try {
+      useJSTransfer = prefs.getBoolPref("useJSTransfer");
+    } catch (ex) { }
+
+    if (useJSTransfer) {
+      Components.utils.import("resource://gre/modules/Downloads.jsm");
+      Downloads.getPublicDownloadList().then(list => {
+        list.addView({
+          onDownloadAdded: function (aDownload) {
+            list.removeView(this);
+            aDownload.whenSucceeded().then(() => {
+              list.removeFinished();
+              theWindow.location = "bug383369step2.html";
+            });
+          },
+        });
+        window.location = "download.auto";
+      }).then(null, Components.utils.reportError);
+
+      return;
+    }
+
     var downloadManager = Components.classes["@mozilla.org/download-manager;1"]
       .getService(Components.interfaces.nsIDownloadManager);
-    var theWindow = window;
     var observer = {
       observe: function(subject, topic, data) {
         switch (topic) {

@@ -10,10 +10,9 @@
  * utility methods for subclasses, and so forth.
  */
 
-#include "mozilla/DebugOnly.h"
-
 #include "mozilla/dom/Element.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
@@ -127,10 +126,26 @@
 #include "nsXBLService.h"
 #include "nsContentCID.h"
 #include "nsITextControlElement.h"
+#include "nsISupportsImpl.h"
 #include "mozilla/dom/DocumentFragment.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+NS_IMETHODIMP
+Element::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  NS_ASSERTION(aInstancePtr,
+               "QueryInterface requires a non-NULL destination!");
+  nsresult rv = FragmentOrElement::QueryInterface(aIID, aInstancePtr);
+  if (NS_SUCCEEDED(rv)) {
+    return NS_OK;
+  }
+
+  // Give the binding manager a chance to get an interface for this element.
+  return OwnerDoc()->BindingManager()->GetBindingImplementation(this, aIID,
+                                                                aInstancePtr);
+}
 
 nsEventStates
 Element::IntrinsicState() const
@@ -900,7 +915,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                     bool aCompileEventHandlers)
 {
   NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
-  NS_PRECONDITION(HasSameOwnerDoc(NODE_FROM(aParent, aDocument)),
+  NS_PRECONDITION((NODE_FROM(aParent, aDocument)->OwnerDoc() == OwnerDoc()),
                   "Must have the same owner document");
   NS_PRECONDITION(!aParent || aDocument == aParent->GetCurrentDoc(),
                   "aDocument must be current doc of aParent");
@@ -1966,7 +1981,8 @@ Element::List(FILE* out, int32_t aIndent,
 
   ListAttributes(out);
 
-  fprintf(out, " state=[%llx]", State().GetInternalValue());
+  fprintf(out, " state=[%llx]",
+          static_cast<unsigned long long>(State().GetInternalValue()));
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   if (IsCommonAncestorForRangeInSelection()) {
     nsRange::RangeHashTable* ranges =
@@ -2476,7 +2492,7 @@ private:
     uint32_t mLength;
   };
 public:
-  StringBuilder() : mLast(this), mLength(0)
+  StringBuilder() : mLast(MOZ_THIS_IN_INITIALIZER_LIST()), mLength(0)
   {
     MOZ_COUNT_CTOR(StringBuilder);
   }
@@ -3400,6 +3416,18 @@ Element::SetBoolAttr(nsIAtom* aAttr, bool aValue)
   }
 
   return UnsetAttr(kNameSpaceID_None, aAttr, true);
+}
+
+Directionality
+Element::GetComputedDirectionality() const
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  if (frame) {
+    return frame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR
+             ? eDir_LTR : eDir_RTL;
+  }
+
+  return GetDirectionality();
 }
 
 float

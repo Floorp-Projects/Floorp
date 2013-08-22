@@ -37,6 +37,7 @@ MOCHITEST_BROWSER_FILES = \
 		browser_scratchpad_bug_661762_wrong_window_focus.js \
 		browser_scratchpad_bug_644413_modeline.js \
 		browser_scratchpad_bug807924_cannot_convert_to_string.js \
+		browser_scratchpad_long_string.js \
 		head.js \
 
 # Disable test due to bug 807234 becoming basically permanent

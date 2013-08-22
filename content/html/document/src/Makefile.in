@@ -25,5 +25,3 @@ LOCAL_INCLUDES += \
 		-I$(topsrcdir)/caps/include \
 		-I$(topsrcdir)/xpcom/ds \
 		$(NULL)
-
-DEFINES += -D_IMPL_NS_LAYOUT

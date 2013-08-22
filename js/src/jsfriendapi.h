@@ -7,10 +7,12 @@
 #ifndef jsfriendapi_h
 #define jsfriendapi_h
 
+#ifdef JS_HAS_CTYPES
 #include "mozilla/MemoryReporting.h"
+#endif
 
+#include "jsbytecode.h"
 #include "jsclass.h"
-#include "jsprvtd.h"
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
@@ -30,6 +32,9 @@
 
 #define JS_CHECK_STACK_SIZE(limit, lval) JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, lval, 0)
 
+class JSAtom;
+class JSLinearString;
+
 namespace JS {
 template <class T>
 class Heap;
@@ -47,7 +52,7 @@ JS_FindCompilationScope(JSContext *cx, JSObject *obj);
 extern JS_FRIEND_API(JSFunction *)
 JS_GetObjectFunction(JSObject *obj);
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto);
 
 extern JS_FRIEND_API(JSObject *)
@@ -62,7 +67,7 @@ JS_SetProtoCalled(JSContext *cx);
 extern JS_FRIEND_API(size_t)
 JS_GetCustomIteratorCount(JSContext *cx);
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret);
 
 /*
@@ -71,7 +76,7 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret);
  * Such objects hold no other objects (they have no outgoing reference edges)
  * and will throw if you touch them (e.g. by reading/writing a property).
  */
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsDeadWrapper(JSObject *obj);
 
 /*
@@ -126,8 +131,8 @@ JS_CloneObject(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent);
 extern JS_FRIEND_API(JSString *)
 JS_BasicObjectToString(JSContext *cx, JS::HandleObject obj);
 
-extern JS_FRIEND_API(JSBool)
-js_GetterOnlyPropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JSBool strict,
+extern JS_FRIEND_API(bool)
+js_GetterOnlyPropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool strict,
                           JS::MutableHandleValue vp);
 
 JS_FRIEND_API(void)
@@ -169,13 +174,13 @@ js_DumpChars(const jschar *s, size_t n);
 extern JS_FRIEND_API(bool)
 JS_CopyPropertiesFrom(JSContext *cx, JSObject *target, JSObject *obj);
 
-extern JS_FRIEND_API(JSBool)
-JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc);
+extern JS_FRIEND_API(bool)
+JS_WrapPropertyDescriptor(JSContext *cx, JS::MutableHandle<JSPropertyDescriptor> desc);
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_WrapAutoIdVector(JSContext *cx, JS::AutoIdVector &props);
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_EnumerateState(JSContext *cx, JS::HandleObject obj, JSIterateOp enum_op,
                   js::MutableHandleValue statep, js::MutableHandleId idp);
 
@@ -203,8 +208,6 @@ extern JS_FRIEND_API(void)
 JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook);
 
 namespace js {
-
-extern mozilla::ThreadLocal<PerThreadData *> TlsPerThreadData;
 
 inline JSRuntime *
 GetRuntime(const JSContext *cx)
@@ -238,8 +241,8 @@ extern JS_FRIEND_API(void)
 DumpHeapComplete(JSRuntime *rt, FILE *fp);
 
 #ifdef OLD_GETTER_SETTER_METHODS
-JS_FRIEND_API(JSBool) obj_defineGetter(JSContext *cx, unsigned argc, js::Value *vp);
-JS_FRIEND_API(JSBool) obj_defineSetter(JSContext *cx, unsigned argc, js::Value *vp);
+JS_FRIEND_API(bool) obj_defineGetter(JSContext *cx, unsigned argc, js::Value *vp);
+JS_FRIEND_API(bool) obj_defineSetter(JSContext *cx, unsigned argc, js::Value *vp);
 #endif
 
 extern JS_FRIEND_API(bool)
@@ -367,7 +370,7 @@ struct Function {
     uint16_t nargs;
     uint16_t flags;
     /* Used only for natives */
-    Native native;
+    JSNative native;
     const JSJitInfo *jitinfo;
     void *_1;
 };
@@ -382,13 +385,13 @@ struct Atom {
 
 // These are equal to |&{Function,Object,OuterWindow}ProxyObject::class_|.  Use
 // them in places where you don't want to #include vm/ProxyObject.h.
-extern JS_FRIEND_DATA(js::Class*) FunctionProxyClassPtr;
-extern JS_FRIEND_DATA(js::Class*) ObjectProxyClassPtr;
-extern JS_FRIEND_DATA(js::Class*) OuterWindowProxyClassPtr;
+extern JS_FRIEND_DATA(js::Class* const) FunctionProxyClassPtr;
+extern JS_FRIEND_DATA(js::Class* const) ObjectProxyClassPtr;
+extern JS_FRIEND_DATA(js::Class* const) OuterWindowProxyClassPtr;
 
 // This is equal to |&JSObject::class_|.  Use it in places where you don't want
 // to #include jsobj.h.
-extern JS_FRIEND_DATA(js::Class*) ObjectClassPtr;
+extern JS_FRIEND_DATA(js::Class* const) ObjectClassPtr;
 
 inline js::Class *
 GetObjectClass(JSObject *obj)
@@ -442,7 +445,10 @@ GetGlobalForObjectCrossCompartment(JSObject *obj);
 
 // For legacy consumers only. This whole concept is going away soon.
 JS_FRIEND_API(JSObject *)
-GetDefaultGlobalForContext(JSContext *cx);
+DefaultObjectForContextOrNull(JSContext *cx);
+
+JS_FRIEND_API(void)
+SetDefaultObjectForContext(JSContext *cx, JSObject *obj);
 
 JS_FRIEND_API(void)
 NotifyAnimationActivity(JSObject *obj);
@@ -494,7 +500,7 @@ GetObjectProto(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObj
         clasp == js::OuterWindowProxyClassPtr ||
         clasp == js::FunctionProxyClassPtr)
     {
-        return JS_GetPrototype(cx, obj, proto.address());
+        return JS_GetPrototype(cx, obj, proto);
     }
 
     proto.set(reinterpret_cast<const shadow::Object*>(obj.get())->type->proto);
@@ -567,18 +573,6 @@ inline JSLinearString *
 AtomToLinearString(JSAtom *atom)
 {
     return reinterpret_cast<JSLinearString *>(atom);
-}
-
-static inline js::PropertyOp
-CastAsJSPropertyOp(JSObject *object)
-{
-    return JS_DATA_TO_FUNC_PTR(js::PropertyOp, object);
-}
-
-static inline js::StrictPropertyOp
-CastAsJSStrictPropertyOp(JSObject *object)
-{
-    return JS_DATA_TO_FUNC_PTR(js::StrictPropertyOp, object);
 }
 
 JS_FRIEND_API(bool)
@@ -762,7 +756,7 @@ JS_FRIEND_API(bool)
 HasUnrootedGlobal(const JSContext *cx);
 
 typedef void
-(* ActivityCallback)(void *arg, JSBool active);
+(* ActivityCallback)(void *arg, bool active);
 
 /*
  * Sets a callback that is run whenever the runtime goes idle - the
@@ -776,21 +770,9 @@ extern JS_FRIEND_API(const JSStructuredCloneCallbacks *)
 GetContextStructuredCloneCallbacks(JSContext *cx);
 
 extern JS_FRIEND_API(bool)
-CanCallContextDebugHandler(JSContext *cx);
-
-extern JS_FRIEND_API(JSTrapStatus)
-CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *rval);
-
-extern JS_FRIEND_API(bool)
 IsContextRunningJS(JSContext *cx);
 
-typedef void
-(* AnalysisPurgeCallback)(JSRuntime *rt, JS::Handle<JSFlatString*> desc);
-
-extern JS_FRIEND_API(AnalysisPurgeCallback)
-SetAnalysisPurgeCallback(JSRuntime *rt, AnalysisPurgeCallback callback);
-
-typedef JSBool
+typedef bool
 (* DOMInstanceClassMatchesProto)(JS::HandleObject protoObject, uint32_t protoID,
                                  uint32_t depth);
 struct JSDOMCallbacks {
@@ -876,7 +858,7 @@ struct CompartmentsWithPrincipals : public CompartmentFilter {
     }
 };
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 NukeCrossCompartmentWrappers(JSContext* cx,
                              const CompartmentFilter& sourceFilter,
                              const CompartmentFilter& targetFilter,
@@ -938,7 +920,7 @@ DOMProxyShadowsCheck GetDOMProxyShadowsCheck();
  * Detect whether the internal date value is NaN.  (Because failure is
  * out-of-band for js_DateGet*)
  */
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 js_DateIsValid(JSObject* obj);
 
 extern JS_FRIEND_API(double)
@@ -1231,7 +1213,7 @@ JS_NewArrayBuffer(JSContext *cx, uint32_t nbytes);
  * this test or one of the JS_Is*Array tests succeeds, then it is safe to call
  * the various accessor JSAPI calls defined below.
  */
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsTypedArrayObject(JSObject *obj);
 
 /*
@@ -1241,30 +1223,30 @@ JS_IsTypedArrayObject(JSObject *obj);
  * is safe to call the various ArrayBufferView accessor JSAPI calls defined
  * below.
  */
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsArrayBufferViewObject(JSObject *obj);
 
 /*
  * Test for specific typed array types (ArrayBufferView subtypes)
  */
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsInt8Array(JSObject *obj);
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsUint8Array(JSObject *obj);
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsUint8ClampedArray(JSObject *obj);
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsInt16Array(JSObject *obj);
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsUint16Array(JSObject *obj);
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsInt32Array(JSObject *obj);
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsUint32Array(JSObject *obj);
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsFloat32Array(JSObject *obj);
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsFloat64Array(JSObject *obj);
 
 /*
@@ -1311,7 +1293,7 @@ JS_GetArrayBufferViewType(JSObject *obj);
  * unwrapping. If this test succeeds, then it is safe to call the various
  * accessor JSAPI calls defined below.
  */
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsArrayBufferObject(JSObject *obj);
 
 /*
@@ -1372,7 +1354,7 @@ JS_GetTypedArrayByteLength(JSObject *obj);
  * return false if a security wrapper is encountered that denies the
  * unwrapping.
  */
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 JS_IsArrayBufferViewObject(JSObject *obj);
 
 /*
@@ -1428,7 +1410,7 @@ JS_GetArrayBufferViewBuffer(JSObject *obj);
 /*
  * Check whether obj supports JS_GetDataView* APIs.
  */
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(bool)
 JS_IsDataViewObject(JSObject *obj);
 
 /*
@@ -1473,6 +1455,10 @@ class JSJitGetterCallArgs : protected JS::MutableHandleValue
   public:
     explicit JSJitGetterCallArgs(const JS::CallArgs& args)
       : JS::MutableHandleValue(args.rval())
+    {}
+
+    explicit JSJitGetterCallArgs(JS::Rooted<JS::Value>* rooted)
+      : JS::MutableHandleValue(rooted)
     {}
 
     JS::MutableHandleValue rval() {
@@ -1649,13 +1635,13 @@ NON_INTEGER_ATOM_TO_JSID(JSAtom *atom)
 }
 
 /* All strings stored in jsids are atomized, but are not necessarily property names. */
-static JS_ALWAYS_INLINE JSBool
+static JS_ALWAYS_INLINE bool
 JSID_IS_ATOM(jsid id)
 {
     return JSID_IS_STRING(id);
 }
 
-static JS_ALWAYS_INLINE JSBool
+static JS_ALWAYS_INLINE bool
 JSID_IS_ATOM(jsid id, JSAtom *atom)
 {
     return id == JSID_FROM_BITS((size_t)atom);
@@ -1763,7 +1749,7 @@ JS_FRIEND_API(JSObject *)
 GetObjectMetadata(JSObject *obj);
 
 /* ES5 8.12.8. */
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 DefaultValue(JSContext *cx, JS::HandleObject obj, JSType hint, MutableHandleValue vp);
 
 /*
@@ -1781,15 +1767,40 @@ DefaultValue(JSContext *cx, JS::HandleObject obj, JSType hint, MutableHandleValu
  */
 extern JS_FRIEND_API(bool)
 CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
-                    PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
+                    JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
+
+class ScriptSource;
+
+// An AsmJSModuleSourceDesc object holds a reference to the ScriptSource
+// containing an asm.js module as well as the [begin, end) range of the
+// module's chars within the ScriptSource.
+class AsmJSModuleSourceDesc
+{
+    ScriptSource *scriptSource_;
+    uint32_t bufStart_;
+    uint32_t bufEnd_;
+
+  public:
+    AsmJSModuleSourceDesc() : scriptSource_(NULL), bufStart_(UINT32_MAX), bufEnd_(UINT32_MAX) {}
+    void init(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd);
+    ~AsmJSModuleSourceDesc();
+
+    ScriptSource *scriptSource() const { JS_ASSERT(scriptSource_ != NULL); return scriptSource_; }
+    uint32_t bufStart() const { JS_ASSERT(bufStart_ != UINT32_MAX); return bufStart_; }
+    uint32_t bufEnd() const { JS_ASSERT(bufStart_ != UINT32_MAX); return bufEnd_; }
+
+  private:
+    AsmJSModuleSourceDesc(const AsmJSModuleSourceDesc &) MOZ_DELETE;
+    void operator=(const AsmJSModuleSourceDesc &) MOZ_DELETE;
+};
 
 } /* namespace js */
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
-                     const js::PropertyDescriptor& descriptor, JSBool *bp);
+                     JS::Handle<JSPropertyDescriptor> descriptor, bool *bp);
 
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(bool)
 js_ReportIsNotFunction(JSContext *cx, const JS::Value& v);
 
 #ifdef JSGC_GENERATIONAL

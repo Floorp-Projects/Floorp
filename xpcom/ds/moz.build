@@ -55,8 +55,6 @@ EXPORTS += [
     'nsExpirationTracker.h',
     'nsHashPropertyBag.h',
     'nsHashtable.h',
-    'nsIByteBuffer.h',
-    'nsIUnicharBuffer.h',
     'nsMathUtils.h',
     'nsObserverList.h',
     'nsObserverService.h',
@@ -79,7 +77,6 @@ CPP_SOURCES += [
     'nsArray.cpp',
     'nsAtomService.cpp',
     'nsAtomTable.cpp',
-    'nsByteBuffer.cpp',
     'nsCRT.cpp',
     'nsHashPropertyBag.cpp',
     'nsHashtable.cpp',
@@ -93,8 +90,8 @@ CPP_SOURCES += [
     'nsSupportsArray.cpp',
     'nsSupportsArrayEnumerator.cpp',
     'nsSupportsPrimitives.cpp',
-    'nsUnicharBuffer.cpp',
     'nsVariant.cpp',
+    'TimeStamp.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
@@ -111,6 +108,11 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
     ]
 else:
     error('No TimeStamp implementation on this platform.  Build will not succeed')
+
+EXTRA_COMPONENTS += [
+    'nsINIProcessor.js',
+    'nsINIProcessor.manifest',
+]
 
 LIBRARY_NAME = 'xpcomds_s'
 

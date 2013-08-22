@@ -12,7 +12,6 @@ relativesrcdir  = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_BROWSER_FILES = \
-  browser_styleinspector.js \
   browser_bug683672.js \
   browser_styleinspector_bug_672746_default_styles.js \
   browser_styleinspector_bug_672744_search_filter.js \
@@ -38,6 +37,10 @@ MOCHITEST_BROWSER_FILES = \
   browser_computedview_734259_style_editor_link.js \
   browser_computedview_copy.js\
   browser_styleinspector_bug_677930_urls_clickable.js \
+  browser_bug893965_css_property_completion_new_property.js \
+  browser_bug893965_css_property_completion_existing_property.js \
+  browser_bug894376_css_value_completion_new_property_value_pair.js \
+  browser_bug894376_css_value_completion_existing_property_value_pair.js \
   head.js \
   $(NULL)
 

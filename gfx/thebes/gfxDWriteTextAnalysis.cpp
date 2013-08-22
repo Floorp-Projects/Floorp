@@ -13,7 +13,7 @@ TextAnalysis::TextAnalysis(const wchar_t* text,
   , mTextLength(textLength)
   , mLocaleName(localeName)
   , mReadingDirection(readingDirection)
-  , mCurrentRun(NULL)
+  , mCurrentRun(nullptr)
 {
 }
 
@@ -42,7 +42,7 @@ TextAnalysis::GenerateResults(IDWriteTextAnalyzer* textAnalyzer,
     mRunHead.mTextLength = mTextLength;
     mRunHead.mBidiLevel = 
         (mReadingDirection == DWRITE_READING_DIRECTION_RIGHT_TO_LEFT);
-    mRunHead.nextRun = NULL;
+    mRunHead.nextRun = nullptr;
     mCurrentRun = &mRunHead;
 
     // Call each of the analyzers in sequence, recording their results.
@@ -67,7 +67,7 @@ TextAnalysis::GetTextAtPosition(UINT32 textPosition,
 {
     if (textPosition >= mTextLength) {
         // No text at this position, valid query though.
-        *textString = NULL;
+        *textString = nullptr;
         *textLength = 0;
     } else {
         *textString = mText + textPosition;
@@ -85,7 +85,7 @@ TextAnalysis::GetTextBeforePosition(UINT32 textPosition,
     if (textPosition == 0 || textPosition > mTextLength) {
         // Either there is no text before here (== 0), or this
         // is an invalid position. The query is considered valid thouh.
-        *textString = NULL;
+        *textString = nullptr;
         *textLength = 0;
     } else {
         *textString = mText;
@@ -122,7 +122,7 @@ TextAnalysis::GetNumberSubstitution(UINT32 textPosition,
                                     OUT IDWriteNumberSubstitution** numberSubstitution)
 {
     // We do not support number substitution.
-    *numberSubstitution = NULL;
+    *numberSubstitution = nullptr;
     *textLength = mTextLength - textPosition;
 
     return S_OK;

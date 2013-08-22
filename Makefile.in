@@ -94,6 +94,9 @@ ifdef ENABLE_TESTS
 include $(topsrcdir)/testing/testsuite-targets.mk
 endif
 
+# Hacky way for precompile tier to bypass default tier traversal mechanism.
+TIER_precompile_CUSTOM := 1
+
 include $(topsrcdir)/config/rules.mk
 
 distclean::
@@ -167,9 +170,6 @@ uploadsymbols:
 ifdef MOZ_CRASHREPORTER
 	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(SYMBOL_INDEX_NAME) "$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip"
 endif
-
-codesighs:
-	$(MAKE) -C $(MOZ_BUILD_APP)/installer codesighs
 
 # defined in package-name.mk
 export MOZ_SOURCE_STAMP

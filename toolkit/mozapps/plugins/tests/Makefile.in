@@ -21,17 +21,15 @@ MOCHITEST_BROWSER_FILES = \
   BadExtension.xpi \
   $(NULL)
 
-SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
-
-PROGRAMS = $(SIMPLE_PROGRAMS:%$(BIN_SUFFIX)=$(TESTROOT)/%)
+programs = $(SIMPLE_PROGRAMS:%$(BIN_SUFFIX)=$(TESTROOT)/%)
 
 include $(topsrcdir)/config/rules.mk
 
-$(PROGRAMS): $(TESTROOT)
+$(programs): $(TESTROOT)
 $(TESTROOT):
 	$(NSINSTALL) -D $@
 
-$(PROGRAMS): $(TESTROOT)/% : %$(BIN_SUFFIX)
+$(programs): $(TESTROOT)/% : %$(BIN_SUFFIX)
 	cp $< $@
 
-libs:: $(PROGRAMS)
+libs:: $(programs)

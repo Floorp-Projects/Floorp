@@ -4,6 +4,12 @@
 
 'use strict';
 
+module.metadata = {
+  engines: {
+    'Firefox': '*'
+  }
+};
+
 const { isTabOpen, activateTab, openTab,
         closeTab, getURI } = require('sdk/tabs/utils');
 const windows = require('sdk/deprecated/window-utils');

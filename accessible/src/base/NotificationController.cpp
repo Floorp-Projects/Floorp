@@ -48,6 +48,8 @@ NotificationController::~NotificationController()
 NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(NotificationController)
 NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(NotificationController)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(NotificationController)
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(NotificationController)
   if (tmp->mDocument)
     tmp->Shutdown();

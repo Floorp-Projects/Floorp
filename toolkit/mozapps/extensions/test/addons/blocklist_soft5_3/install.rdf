@@ -7,7 +7,6 @@
     <em:id>softblock5@tests.mozilla.org</em:id>
     <em:version>3.0</em:version>
     <em:name>Softblocked add-on</em:name>
-    <em:updateURL>http://localhost:4444/data/addon_update3.rdf</em:updateURL>
     <em:internalName>test/1.0</em:internalName>
     <em:targetApplication>
       <Description>

@@ -85,7 +85,7 @@ public:
       nsCOMPtr<nsIEventTarget> asyncThread =
         mStatementOwner->getOwner()->getAsyncExecutionTarget();
       // It's possible that we are shutting down the async thread, and this
-      // method would return NULL as a result.
+      // method would return nullptr as a result.
       if (asyncThread) {
         bool onAsyncThread;
         NS_ASSERTION(NS_SUCCEEDED(asyncThread->IsOnCurrentThread(&onAsyncThread)) && onAsyncThread,
@@ -99,7 +99,7 @@ public:
     if (mStatement) {
       (void)::sqlite3_reset(mStatement);
       (void)::sqlite3_clear_bindings(mStatement);
-      mStatement = NULL;
+      mStatement = nullptr;
     }
   }
 

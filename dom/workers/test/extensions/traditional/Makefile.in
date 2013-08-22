@@ -10,11 +10,6 @@ VPATH            = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 XPI_NAME = worker
-EXTRA_COMPONENTS = \
-  WorkerTest.js \
-  WorkerTest.manifest \
-  $(NULL)
-
 DIST_FILES = \
   install.rdf \
   worker.js \

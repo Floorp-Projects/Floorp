@@ -459,6 +459,9 @@ def main():
     jm.l10nbase = options.l10n_base
     jm.relativesrcdir = options.relativesrcdir
     jm.l10nmerge = options.locale_mergedir
+    if jm.l10nmerge and not os.path.isdir(jm.l10nmerge):
+      logging.warning("WARNING: --locale-mergedir passed, but '%s' does not "
+                      "exist. Ignore this message if the locale is complete.")
   elif options.locale_mergedir:
     p.error('l10n-base required when using locale-mergedir')
   jm.localedirs = options.l10n_src

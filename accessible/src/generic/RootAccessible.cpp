@@ -310,16 +310,13 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 
   if (eventType.EqualsLiteral("RadioStateChange")) {
     uint64_t state = accessible->State();
-
-    // radiogroup in prefWindow is exposed as a list,
-    // and panebutton is exposed as XULListitem in A11y.
-    // XULListitemAccessible::GetStateInternal uses STATE_SELECTED in this case,
-    // so we need to check states::SELECTED also.
     bool isEnabled = (state & (states::CHECKED | states::SELECTED)) != 0;
 
-    nsRefPtr<AccEvent> accEvent =
-      new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
-    nsEventShell::FireEvent(accEvent);
+    if (accessible->NeedsDOMUIEvent()) {
+      nsRefPtr<AccEvent> accEvent =
+        new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
+      nsEventShell::FireEvent(accEvent);
+    }
 
     if (isEnabled) {
       FocusMgr()->ActiveItemChanged(accessible);
@@ -333,14 +330,14 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   }
 
   if (eventType.EqualsLiteral("CheckboxStateChange")) {
-    uint64_t state = accessible->State();
+    if (accessible->NeedsDOMUIEvent()) {
+      uint64_t state = accessible->State();
+      bool isEnabled = !!(state & states::CHECKED);
 
-    bool isEnabled = !!(state & states::CHECKED);
-
-    nsRefPtr<AccEvent> accEvent =
-      new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
-
-    nsEventShell::FireEvent(accEvent);
+      nsRefPtr<AccEvent> accEvent =
+        new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
+      nsEventShell::FireEvent(accEvent);
+    }
     return;
   }
 
@@ -455,14 +452,10 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
       logging::ActiveItemChangeCausedBy("DOMMenuBarInactive", accessible);
 #endif
   }
-  else if (eventType.EqualsLiteral("ValueChange")) {
-
-    //We don't process 'ValueChange' events for progress meters since we listen
-    //@value attribute change for them.
-    if (!accessible->IsProgress()) {
-      targetDocument->FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
-                                       accessible);
-    }
+  else if (accessible->NeedsDOMUIEvent() &&
+           eventType.EqualsLiteral("ValueChange")) {
+     targetDocument->FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
+                                      accessible);
   }
 #ifdef DEBUG_DRAGDROPSTART
   else if (eventType.EqualsLiteral("mouseover")) {

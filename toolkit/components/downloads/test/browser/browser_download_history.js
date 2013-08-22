@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function test() {
+  try {
+    if (Services.prefs.getBoolPref("browser.download.useJSTransfer")) {
+      return;
+    }
+  } catch (ex) { }
+
   waitForExplicitFinish();
 
   let privateWin = null;

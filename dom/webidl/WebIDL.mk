@@ -9,6 +9,7 @@ generated_webidl_files = \
   $(NULL)
 
 preprocessed_webidl_files = \
+  Crypto.webidl \
   Navigator.webidl \
   $(NULL)
 
@@ -93,6 +94,7 @@ webidl_files = \
   Function.webidl \
   GainNode.webidl \
   Geolocation.webidl \
+  History.webidl \
   HTMLAnchorElement.webidl \
   HTMLAppletElement.webidl \
   HTMLAreaElement.webidl \
@@ -164,9 +166,15 @@ webidl_files = \
   HTMLTrackElement.webidl \
   HTMLUListElement.webidl \
   HTMLVideoElement.webidl \
+  IDBCursor.webidl \
   IDBDatabase.webidl \
   IDBFactory.webidl \
   IDBFileHandle.webidl \
+  IDBIndex.webidl \
+  IDBObjectStore.webidl \
+  IDBOpenDBRequest.webidl \
+  IDBRequest.webidl \
+  IDBTransaction.webidl \
   IDBVersionChangeEvent.webidl \
   ImageData.webidl \
   ImageDocument.webidl \
@@ -176,11 +184,13 @@ webidl_files = \
   LinkStyle.webidl \
   LocalMediaStream.webidl \
   Location.webidl \
+  MediaElementAudioSourceNode.webidl \
   MediaError.webidl \
   MediaRecorder.webidl \
   MediaSource.webidl \
   MediaStream.webidl \
   MediaStreamAudioDestinationNode.webidl \
+  MediaStreamAudioSourceNode.webidl \
   MediaStreamEvent.webidl \
   MediaStreamTrack.webidl \
   MessageEvent.webidl \
@@ -206,6 +216,7 @@ webidl_files = \
   OfflineAudioCompletionEvent.webidl \
   OfflineAudioContext.webidl \
   OfflineResourceList.webidl \
+  OscillatorNode.webidl \
   PaintRequest.webidl \
   PaintRequestList.webidl \
   PannerNode.webidl \
@@ -214,12 +225,14 @@ webidl_files = \
   PerformanceNavigation.webidl \
   PerformanceTiming.webidl \
   PeriodicWave.webidl \
+  PhoneNumberService.webidl \
   Plugin.webidl \
   PluginArray.webidl \
   Position.webidl \
   PositionError.webidl \
   ProcessingInstruction.webidl \
   Promise.webidl \
+  PushManager.webidl \
   Range.webidl \
   Rect.webidl \
   RGBColor.webidl \
@@ -393,12 +406,8 @@ endif
 ifdef MOZ_WEBGL
 webidl_files += \
   WebGLRenderingContext.webidl \
-  $(NULL)
-ifndef RELEASE_BUILD
-webidl_files += \
   WebGL2RenderingContext.webidl \
   $(NULL)
-endif
 endif
 
 ifdef MOZ_WEBRTC
@@ -431,7 +440,10 @@ endif
 
 ifdef MOZ_B2G_RIL
 webidl_files += \
+  CallsList.webidl \
   MozStkCommandEvent.webidl \
+  Telephony.webidl \
+  TelephonyCall.webidl \
   $(NULL)
 endif
 
@@ -466,7 +478,11 @@ webidl_files += \
 
 ifdef MOZ_B2G_BT
 webidl_files += \
+  BluetoothAdapter.webidl \
+  BluetoothDevice.webidl \
   BluetoothDeviceEvent.webidl \
+  BluetoothManager.webidl \
+  BluetoothStatusChangedEvent.webidl \
   $(NULL)
 endif
 
@@ -477,6 +493,7 @@ webidl_files += \
   DataErrorEvent.webidl \
   IccCardLockErrorEvent.webidl \
   MozCellBroadcastEvent.webidl \
+  MozEmergencyCbModeEvent.webidl \
   MozVoicemailEvent.webidl \
   MozWifiConnectionInfoEvent.webidl \
   MozWifiStatusChangeEvent.webidl \
@@ -512,3 +529,8 @@ else
 test_webidl_files := $(NULL)
 endif
 
+ifdef MOZ_B2G
+webidl_files += \
+  InputMethod.webidl \
+  $(NULL)
+endif

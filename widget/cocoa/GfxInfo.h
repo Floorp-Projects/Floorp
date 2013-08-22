@@ -68,9 +68,8 @@ private:
 
   void GetDeviceInfo();
   void AddCrashReportAnnotations();
-  nsString mRendererIDsString;
-  nsString mAdapterRAMString;
 
+  nsString mAdapterRAMString;
   nsString mDeviceID;
   nsString mDriverVersion;
   nsString mDriverDate;
@@ -78,8 +77,6 @@ private:
 
   nsString mAdapterVendorID;
   nsString mAdapterDeviceID;
-
-  uint32_t mRendererIDs[16];
 
   uint32_t mOSXVersion;
 };

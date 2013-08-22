@@ -73,20 +73,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIOfflineStorage, NS_OFFLINESTORAGE_IID)
   NS_IMETHOD_(void)                                                            \
   Invalidate() MOZ_OVERRIDE;
 
-#define NS_DECL_NSIOFFLINESTORAGE_NOCLOSE                                      \
-  NS_IMETHOD_(Client*)                                                         \
-  GetClient() MOZ_OVERRIDE;                                                    \
-                                                                               \
-  NS_IMETHOD_(bool)                                                            \
-  IsOwned(nsPIDOMWindow* aOwner) MOZ_OVERRIDE;                                 \
-                                                                               \
-  NS_IMETHOD_(const nsACString&)                                               \
-  Origin() MOZ_OVERRIDE;                                                       \
-                                                                               \
-  NS_IMETHOD_(bool)                                                            \
-  IsClosed() MOZ_OVERRIDE;                                                     \
-                                                                               \
-  NS_IMETHOD_(void)                                                            \
-  Invalidate() MOZ_OVERRIDE;
-
 #endif // nsIOfflineStorage_h__

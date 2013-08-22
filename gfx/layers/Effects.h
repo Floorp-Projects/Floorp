@@ -8,6 +8,7 @@
 
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/layers/Compositor.h"
+#include "mozilla/layers/TextureHost.h"
 #include "LayersLogging.h"
 #include "mozilla/RefPtr.h"
 
@@ -29,22 +30,6 @@ namespace layers {
  * effects may be added by the layer or compositable. The effect chain is passed
  * to the compositor by the compositable host as a parameter to DrawQuad.
  */
-
-
-enum EffectTypes
-{
-  EFFECT_MASK,
-  EFFECT_MAX_SECONDARY, // sentinel for the count of secondary effect types
-  EFFECT_BGRX,
-  EFFECT_RGBX,
-  EFFECT_BGRA,
-  EFFECT_RGBA,
-  EFFECT_YCBCR,
-  EFFECT_COMPONENT_ALPHA,
-  EFFECT_SOLID_COLOR,
-  EFFECT_RENDER_TARGET,
-  EFFECT_MAX  //sentinel for the count of all effect types
-};
 
 struct Effect : public RefCounted<Effect>
 {

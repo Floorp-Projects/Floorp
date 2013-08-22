@@ -204,7 +204,7 @@ public:
   /**
    * The value returned by this function depends on which attribute this object
    * is for. If appending a list of zeros to the attribute's list would have no
-   * affect on rendering (e.g. the attributes 'dx' and 'dy' on <text>), then
+   * effect on rendering (e.g. the attributes 'dx' and 'dy' on <text>), then
    * this method will return true. If appending a list of zeros to the
    * attribute's list could *change* rendering (e.g. the attributes 'x' and 'y'
    * on <text>), then this method will return false.

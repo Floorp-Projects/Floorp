@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=691610
+-->
+<head>
+<title>Test for Bug 691610</title>
+<script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+    SimpleTest.waitForExplicitFinish()
+
+    SpecialPowers.addChromeEventListener("ImageContentLoaded", function () {
+       ok(true, "chrome listener was invoked");
+       SimpleTest.finish();
+    }, true);
+
+    var iframe = document.createElement("iframe");
+    iframe.src = "damon.jpg"
+    document.body.appendChild(iframe);
+    iframe.contentDocument.defaultView.addEventListener("ImageContentLoaded", function () {
+        ok(false, "should not invoke event");
+    }, true);
+</script>
+</body>
+</html>

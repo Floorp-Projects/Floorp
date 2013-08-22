@@ -29,8 +29,7 @@ nsFilePickerProxy::Init(nsIDOMWindow* /*aParent*/, const nsAString& aTitle,
     return NS_OK;
 }
 
-void nsFilePickerProxy::InitNative(nsIWidget* aParent, const nsAString& aTitle,
-                              int16_t aMode)
+void nsFilePickerProxy::InitNative(nsIWidget* aParent, const nsAString& aTitle)
 {
 }
 
