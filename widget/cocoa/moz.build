@@ -21,3 +21,5 @@ EXPORTS += [
 
 LIBRARY_NAME = 'widget_mac'
 
+LIBXUL_LIBRARY = True
+

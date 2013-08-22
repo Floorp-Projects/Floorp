@@ -15,10 +15,6 @@ FORCE_SHARED_LIB = 1
 # ANGLE uses the STL, so we can't use our derpy STL wrappers.
 STL_FLAGS =
 
-# ANGLE uses exceptions internally, so we need to have exception handling
-# support
-ENABLE_CXX_EXCEPTIONS = 1
-
 ifndef GNU_CC
 # Enable unwind semantics for exception handlers in response to warning C4530.
 OS_CPPFLAGS += -EHsc

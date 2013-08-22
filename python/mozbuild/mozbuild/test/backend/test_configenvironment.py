@@ -9,15 +9,26 @@ from mozunit import main, MockedOpen
 
 import mozbuild.backend.configenvironment as ConfigStatus
 
+from mozbuild.util import ReadOnlyDict
+
+
 class ConfigEnvironment(ConfigStatus.ConfigEnvironment):
     def __init__(self, *args, **kwargs):
         ConfigStatus.ConfigEnvironment.__init__(self, *args, **kwargs)
         # Be helpful to unit tests
         if not 'top_srcdir' in self.substs:
             if os.path.isabs(self.topsrcdir):
-                self.substs['top_srcdir'] = self.topsrcdir.replace(os.sep, '/')
+                top_srcdir = self.topsrcdir.replace(os.sep, '/')
             else:
-                self.substs['top_srcdir'] = os.path.relpath(self.topsrcdir, self.topobjdir).replace(os.sep, '/')
+                top_srcdir = os.path.relpath(self.topsrcdir, self.topobjdir).replace(os.sep, '/')
+
+            d = dict(self.substs)
+            d['top_srcdir'] = top_srcdir
+            self.substs = ReadOnlyDict(d)
+
+            d = dict(self.substs_unicode)
+            d[u'top_srcdir'] = top_srcdir.decode('utf-8')
+            self.substs_unicode = ReadOnlyDict(d)
 
 
 class TestEnvironment(unittest.TestCase):

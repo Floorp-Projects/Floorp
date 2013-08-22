@@ -8,3 +8,18 @@ MODULE = 'tremor'
 
 LIBRARY_NAME = 'tremor'
 
+CSRCS += [
+    'tremor_block.c',
+    'tremor_codebook.c',
+    'tremor_floor0.c',
+    'tremor_floor1.c',
+    'tremor_info.c',
+    'tremor_mapping0.c',
+    'tremor_mdct.c',
+    'tremor_registry.c',
+    'tremor_res012.c',
+    'tremor_sharedbook.c',
+    'tremor_synthesis.c',
+    'tremor_window.c',
+]
+

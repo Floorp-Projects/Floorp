@@ -12,9 +12,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_LIBRARY = 1
-LIBXUL_LIBRARY	= 1
-
-
 SHARED_LIBRARY_LIBS= \
 		../base/$(LIB_PREFIX)basedocshell_s.$(LIB_SUFFIX) \
 		$(DEPTH)/uriloader/base/$(LIB_PREFIX)uriloaderbase_s.$(LIB_SUFFIX) \

@@ -1617,7 +1617,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     }
 #endif
 
-    imglayer->SetScaleToSize(size, ImageLayer::SCALE_STRETCH);
+    imglayer->SetScaleToSize(size, SCALE_STRETCH);
     imglayer->SetContainer(container);
     gfxPattern::GraphicsFilter filter =
       nsLayoutUtils::GetGraphicsFilterForFrame(this);

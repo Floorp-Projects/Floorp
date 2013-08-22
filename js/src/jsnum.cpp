@@ -483,7 +483,7 @@ Number(JSContext *cx, unsigned argc, Value *vp)
 }
 
 JS_ALWAYS_INLINE bool
-IsNumber(const Value &v)
+IsNumber(HandleValue v)
 {
     return v.isNumber() || (v.isObject() && v.toObject().is<NumberObject>());
 }

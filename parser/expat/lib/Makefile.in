@@ -9,14 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
-
-CSRCS		= \
-		xmlparse.c \
-		xmlrole.c \
-		xmltok.c \
-		$(NULL)
-
 # We want only the static lib, not the shared lib
 FORCE_STATIC_LIB = 1
 

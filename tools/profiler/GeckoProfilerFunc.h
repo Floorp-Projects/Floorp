@@ -9,10 +9,12 @@
 #include "mozilla/NullPtr.h"
 #include <stdint.h>
 #include "mozilla/TimeStamp.h"
-#include "jsfriendapi.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
+
+struct JSContext;
+class JSObject;
 
 // Returns a handle to pass on exit. This can check that we are popping the
 // correct callstack.

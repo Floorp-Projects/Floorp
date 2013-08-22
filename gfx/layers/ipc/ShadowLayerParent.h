@@ -8,7 +8,10 @@
 #ifndef mozilla_layers_ShadowLayerParent_h
 #define mozilla_layers_ShadowLayerParent_h
 
-#include "mozilla/layers/PLayerParent.h"
+#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/layers/PLayerParent.h"  // for PLayerParent
+#include "nsAutoPtr.h"                  // for nsRefPtr
 
 namespace mozilla {
 namespace layers {

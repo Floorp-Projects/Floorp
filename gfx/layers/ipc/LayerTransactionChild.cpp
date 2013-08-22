@@ -5,13 +5,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ShadowLayerChild.h"
 #include "LayerTransactionChild.h"
-#include "ShadowLayerUtils.h"
-#include "mozilla/layers/CompositableClient.h"
+#include "mozilla/layers/CompositableClient.h"  // for CompositableChild
+#include "mozilla/layers/LayersSurfaces.h"  // for PGrallocBufferChild
+#include "mozilla/layers/PCompositableChild.h"  // for PCompositableChild
+#include "mozilla/layers/PLayerChild.h"  // for PLayerChild
+#include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "nsDebug.h"                    // for NS_RUNTIMEABORT, etc
+#include "nsTArray.h"                   // for nsTArray
 
 namespace mozilla {
 namespace layers {
+
+class PGrallocBufferChild;
 
 void
 LayerTransactionChild::Destroy()

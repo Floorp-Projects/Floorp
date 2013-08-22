@@ -11,8 +11,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= imglib2_s
-LIBXUL_LIBRARY  = 1
-FAIL_ON_WARNINGS = 1
 
 # We need to instantiate the decoders
 LOCAL_INCLUDES += -I$(topsrcdir)/image/decoders

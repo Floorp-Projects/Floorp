@@ -6,15 +6,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ISurfaceAllocator.h"
-#include "mozilla/ipc/SharedMemory.h"
-#include "gfxSharedImageSurface.h"
-#include "gfxPlatform.h"
-#include "gfxASurface.h"
-#include "mozilla/layers/LayersSurfaces.h"
-#include "mozilla/layers/SharedPlanarYCbCrImage.h"
-#include "mozilla/layers/SharedRGBImage.h"
-#include "nsXULAppAPI.h"
-
+#include <sys/types.h>                  // for int32_t
+#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
+#include "gfxSharedImageSurface.h"      // for gfxSharedImageSurface
+#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
+#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
+#include "ShadowLayerUtils.h"
+#include "mozilla/mozalloc.h"           // for operator delete[], etc
+#include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
+#include "nsDebug.h"                    // for NS_RUNTIMEABORT
+#include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #ifdef DEBUG
 #include "prenv.h"
 #endif

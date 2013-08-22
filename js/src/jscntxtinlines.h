@@ -10,6 +10,7 @@
 #include "jscntxt.h"
 
 #include "jsiter.h"
+#include "jsworkers.h"
 
 #include "builtin/Object.h"
 #include "jit/IonFrames.h"
@@ -405,18 +406,18 @@ class AutoLockForExclusiveAccess
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+inline LifoAlloc &
+ExclusiveContext::typeLifoAlloc()
+{
+    return zone()->types.typeLifoAlloc;
+}
+
 }  /* namespace js */
 
 inline js::LifoAlloc &
 JSContext::analysisLifoAlloc()
 {
     return compartment()->analysisLifoAlloc;
-}
-
-inline js::LifoAlloc &
-JSContext::typeLifoAlloc()
-{
-    return zone()->types.typeLifoAlloc;
 }
 
 inline void

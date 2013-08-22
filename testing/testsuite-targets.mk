@@ -405,6 +405,7 @@ package-tests: \
   stage-modules \
   stage-marionette \
   stage-cppunittests \
+  stage-jittest \
   $(NULL)
 else
 # This staging area has been built for us by universal/flight.mk
@@ -502,6 +503,12 @@ else
 endif
 	$(NSINSTALL) $(topsrcdir)/testing/runcppunittests.py $(PKG_STAGE)/cppunittests
 	$(NSINSTALL) $(topsrcdir)/testing/remotecppunittests.py $(PKG_STAGE)/cppunittests
+
+stage-jittest:
+	$(NSINSTALL) -D $(PKG_STAGE)/jit-test/tests
+	cp -RL $(topsrcdir)/js/src/jsapi.h $(PKG_STAGE)/jit-test
+	cp -RL $(topsrcdir)/js/src/jit-test $(PKG_STAGE)/jit-test/jit-test
+	cp -RL $(topsrcdir)/js/src/tests/lib $(PKG_STAGE)/jit-test/tests/lib
 
 MARIONETTE_DIR=$(PKG_STAGE)/marionette
 stage-marionette: make-stage-dir

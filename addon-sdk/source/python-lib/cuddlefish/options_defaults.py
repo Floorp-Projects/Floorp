@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-def parse_options_defaults(options, preferencesBranch):
+def parse_options_defaults(options, jetpack_id):
     # this returns a unicode string
     pref_list = []
 
@@ -21,6 +21,6 @@ def parse_options_defaults(options, preferencesBranch):
             else:
                 value = str(pref["value"])
 
-            pref_list.append("pref(\"extensions." + preferencesBranch + "." + pref["name"] + "\", " + value + ");")
+            pref_list.append("pref(\"extensions." + jetpack_id + "." + pref["name"] + "\", " + value + ");")
 
     return "\n".join(pref_list) + "\n"

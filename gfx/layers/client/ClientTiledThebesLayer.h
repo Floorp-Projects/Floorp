@@ -5,14 +5,20 @@
 #ifndef GFX_CLIENTTILEDTHEBESLAYER_H
 #define GFX_CLIENTTILEDTHEBESLAYER_H
 
-#include "mozilla/layers/ShadowLayers.h"
-#include "ClientLayerManager.h"
-#include "mozilla/layers/TiledContentClient.h" // tiles and tile buffer
+#include "ClientLayerManager.h"         // for ClientLayer, etc
+#include "Layers.h"                     // for ThebesLayer, etc
+#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/layers/TiledContentClient.h"
+#include "nsDebug.h"                    // for NS_RUNTIMEABORT
+#include "nsRegion.h"                   // for nsIntRegion
+
+class gfxContext;
 
 namespace mozilla {
 namespace layers {
 
-class BasicTiledLayerBuffer;
+class ShadowableLayer;
+class SpecificLayerAttributes;
 
 /**
  * An implementation of ThebesLayer that ONLY supports remote

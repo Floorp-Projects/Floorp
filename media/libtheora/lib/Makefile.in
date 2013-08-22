@@ -8,7 +8,6 @@ srcdir    = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
 FORCE_STATIC_LIB = 1
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
@@ -29,22 +28,6 @@ endif
 endif
 
 VPATH := $(srcdir)
-
-CSRCS = \
-  apiwrapper.c \
-  bitpack.c \
-  decapiwrapper.c \
-  decinfo.c \
-  decode.c \
-  dequant.c \
-  fragment.c \
-  huffdec.c \
-  idct.c \
-  info.c \
-  internal.c \
-  quant.c \
-  state.c \
-  $(NULL)
 
 ifeq ($(findstring 86,$(OS_TEST)), 86)
 ifdef _MSC_VER

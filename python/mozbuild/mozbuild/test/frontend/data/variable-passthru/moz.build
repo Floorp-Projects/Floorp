@@ -40,4 +40,8 @@ CMMSRCS = ['fans.mm', 'tans.mm']
 
 SSRCS = ['fans.S', 'tans.S']
 
+FAIL_ON_WARNINGS = True
+LIBXUL_LIBRARY = True
+MSVC_ENABLE_PGO = True
+
 NO_DIST_INSTALL = True

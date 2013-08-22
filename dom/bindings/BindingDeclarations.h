@@ -14,7 +14,8 @@
 #define mozilla_dom_BindingDeclarations_h__
 
 #include "nsStringGlue.h"
-#include "jsapi.h"
+#include "js/Value.h"
+#include "js/RootingAPI.h"
 #include "mozilla/Util.h"
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
@@ -22,6 +23,8 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h" // for nsRefPtr member variables
 
+struct JSContext;
+class JSObject;
 class nsWrapperCache;
 
 // nsGlobalWindow implements nsWrapperCache, but doesn't always use it. Don't
@@ -72,7 +75,7 @@ public:
   }
 
 private:
-  JS::RootedObject mGlobalJSObject;
+  JS::Rooted<JSObject*> mGlobalJSObject;
   nsISupports* mGlobalObject;
   nsCOMPtr<nsISupports> mGlobalObjectRef;
 };
@@ -624,34 +627,6 @@ struct ParentObject {
 
   nsISupports* const mObject;
   nsWrapperCache* const mWrapperCache;
-};
-
-// Representation for dates
-class Date {
-public:
-  // Not inlining much here to avoid the extra includes we'd need
-  Date();
-  Date(double aMilliseconds) :
-    mMsecSinceEpoch(aMilliseconds)
-  {}
-
-  bool IsUndefined() const;
-  double TimeStamp() const
-  {
-    return mMsecSinceEpoch;
-  }
-  void SetTimeStamp(double aMilliseconds)
-  {
-    mMsecSinceEpoch = aMilliseconds;
-  }
-  // Can return false if CheckedUnwrap fails.  This will NOT throw;
-  // callers should do it as needed.
-  bool SetTimeStamp(JSContext* cx, JSObject* obj);
-
-  bool ToDateObject(JSContext* cx, JS::MutableHandle<JS::Value> rval) const;
-
-private:
-  double mMsecSinceEpoch;
 };
 
 } // namespace dom

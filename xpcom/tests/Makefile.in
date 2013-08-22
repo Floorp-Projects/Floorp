@@ -49,13 +49,8 @@ endif
 
 abs_srcdir = $(call core_abspath,$(srcdir))
 
-DIST_PATH = $(DIST)/bin/
-RM_DIST = rm -f
 regOrderDir="$(call getnativepath,$(abs_srcdir)/regorder)";
-DOCOPY=
 
 check::
 	XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
 	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) $(regOrderDir)
-
-GARBAGE += TestScriptable.h

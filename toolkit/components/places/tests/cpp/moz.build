@@ -10,3 +10,5 @@ CPP_UNIT_TESTS += [
     'test_IHistory.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

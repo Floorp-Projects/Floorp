@@ -23,6 +23,7 @@
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
+#include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
@@ -108,6 +109,8 @@ static const char CANCEL_DEFAULT_PAN_ZOOM[] = "cancel-default-pan-zoom";
 static const char BROWSER_ZOOM_TO_RECT[] = "browser-zoom-to-rect";
 static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 static const char DETECT_SCROLLABLE_SUBFRAME[] = "detect-scrollable-subframe";
+
+static bool sCpowsEnabled = false;
 
 NS_IMETHODIMP
 ContentListener::HandleEvent(nsIDOMEvent* aEvent)
@@ -2338,6 +2341,11 @@ TabChild::InitRenderingState()
                                      false);
     }
 
+    // This state can't really change during the lifetime of the child.
+    sCpowsEnabled = Preferences::GetBool("browser.tabs.remote", false);
+    if (Preferences::GetBool("dom.ipc.cpows.force-disabled", false))
+      sCpowsEnabled = false;
+
     return true;
 }
 
@@ -2468,8 +2476,10 @@ TabChild::DoSendSyncMessage(JSContext* aCx,
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
-  if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
-    return false;
+  if (sCpowsEnabled) {
+    if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+      return false;
+    }
   }
   return SendSyncMessage(nsString(aMessage), data, cpows, aJSONRetVal);
 }
@@ -2486,8 +2496,10 @@ TabChild::DoSendAsyncMessage(JSContext* aCx,
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
-  if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
-    return false;
+  if (sCpowsEnabled) {
+    if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+      return false;
+    }
   }
   return SendAsyncMessage(nsString(aMessage), data, cpows);
 }

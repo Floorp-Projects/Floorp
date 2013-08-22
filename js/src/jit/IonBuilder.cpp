@@ -820,7 +820,7 @@ IonBuilder::initParameters()
 
     types::StackTypeSet *thisTypes = types::TypeScript::ThisTypes(script());
     if (thisTypes->empty() && baselineFrame_)
-        thisTypes->addType(cx, types::GetValueType(cx, baselineFrame_->thisValue()));
+        thisTypes->addType(cx, types::GetValueType(baselineFrame_->thisValue()));
 
     MParameter *param = MParameter::New(MParameter::THIS_SLOT, cloneTypeSet(thisTypes));
     current->add(param);
@@ -831,7 +831,7 @@ IonBuilder::initParameters()
         if (argTypes->empty() && baselineFrame_ &&
             !script_->baselineScript()->modifiesArguments())
         {
-            argTypes->addType(cx, types::GetValueType(cx, baselineFrame_->argv()[i]));
+            argTypes->addType(cx, types::GetValueType(baselineFrame_->argv()[i]));
         }
 
         param = MParameter::New(i, cloneTypeSet(argTypes));
@@ -3984,121 +3984,6 @@ IonBuilder::getInlineableGetPropertyCache(CallInfo &callInfo)
     return NULL;
 }
 
-MPolyInlineDispatch *
-IonBuilder::makePolyInlineDispatch(JSContext *cx, CallInfo &callInfo,
-                                   MGetPropertyCache *getPropCache, MBasicBlock *bottom,
-                                   Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
-{
-    // If we're not optimizing away a GetPropertyCache, then this is pretty simple.
-    if (!getPropCache)
-        return MPolyInlineDispatch::New(callInfo.fun());
-
-    InlinePropertyTable *inlinePropTable = getPropCache->propTable();
-
-    // Take a resumepoint at this point so we can capture the state of the stack
-    // immediately prior to the call operation.
-    MResumePoint *preCallResumePoint =
-        MResumePoint::New(current, pc, callerResumePoint_, MResumePoint::ResumeAt);
-    if (!preCallResumePoint)
-        return NULL;
-    DebugOnly<size_t> preCallFuncDefnIdx = preCallResumePoint->numOperands() - (((size_t) callInfo.argc()) + 2);
-    JS_ASSERT(preCallResumePoint->getOperand(preCallFuncDefnIdx) == callInfo.fun());
-
-    MDefinition *targetObject = getPropCache->object();
-
-    // If we got here, then we know the following:
-    //      1. The input to the CALL is a GetPropertyCache, or a GetPropertyCache
-    //         followed by a TypeBarrier followed by an Unbox.
-    //      2. The GetPropertyCache has inlineable cases by guarding on the Object's type
-    //      3. The GetPropertyCache (and sequence of definitions) leading to the function
-    //         definition is not used by anyone else.
-    //      4. Notably, this means that no resume points as of yet capture the GetPropertyCache,
-    //         which implies that everything from the GetPropertyCache up to the call is
-    //         repeatable.
-
-    // If we are optimizing away a getPropCache, we replace the funcDefn
-    // with a constant undefined on the stack.
-    int funcDefnDepth = -((int) callInfo.argc() + 2);
-    MConstant *undef = MConstant::New(UndefinedValue());
-    current->add(undef);
-    current->rewriteAtDepth(funcDefnDepth, undef);
-
-    // Now construct a fallbackPrepBlock that prepares the stack state for fallback.
-    // Namely it pops off all the arguments and the callee.
-    MBasicBlock *fallbackPrepBlock = newBlock(current, pc);
-    if (!fallbackPrepBlock)
-        return NULL;
-
-    // Pop formals (|fun|, |this| and arguments).
-    callInfo.popFormals(fallbackPrepBlock);
-
-    // Generate a fallback block that'll do the call, but the PC for this fallback block
-    // is the PC for the GetPropCache.
-    JS_ASSERT(inlinePropTable->pc() != NULL);
-    JS_ASSERT(inlinePropTable->priorResumePoint() != NULL);
-    MBasicBlock *fallbackBlock = newBlock(fallbackPrepBlock, inlinePropTable->pc(),
-                                          inlinePropTable->priorResumePoint());
-    if (!fallbackBlock)
-        return NULL;
-
-    fallbackPrepBlock->end(MGoto::New(fallbackBlock));
-
-    // The fallbackBlock inherits the state of the stack right before the getprop, which
-    // means we have to pop off the target of the getprop before performing it.
-    DebugOnly<MDefinition *> checkTargetObject = fallbackBlock->pop();
-    JS_ASSERT(checkTargetObject == targetObject);
-
-    // Remove the instructions leading to the function definition from the current
-    // block and add them to the fallback block.  Also, discard the old instructions.
-    if (callInfo.fun()->isGetPropertyCache()) {
-        JS_ASSERT(callInfo.fun()->toGetPropertyCache() == getPropCache);
-        fallbackBlock->addFromElsewhere(getPropCache);
-        fallbackBlock->push(getPropCache);
-    } else {
-        JS_ASSERT(callInfo.fun()->isUnbox());
-        MUnbox *unbox = callInfo.fun()->toUnbox();
-        JS_ASSERT(unbox->input()->isTypeBarrier());
-        JS_ASSERT(unbox->type() == MIRType_Object);
-        JS_ASSERT(unbox->mode() == MUnbox::Infallible);
-
-        MTypeBarrier *typeBarrier = unbox->input()->toTypeBarrier();
-        JS_ASSERT(typeBarrier->input()->isGetPropertyCache());
-        JS_ASSERT(typeBarrier->input()->toGetPropertyCache() == getPropCache);
-
-        fallbackBlock->addFromElsewhere(getPropCache);
-        fallbackBlock->addFromElsewhere(typeBarrier);
-        fallbackBlock->addFromElsewhere(unbox);
-        fallbackBlock->push(unbox);
-    }
-
-    // Finally create a fallbackEnd block to do the actual call.  The fallbackEnd block will
-    // have the |pc| restored to the current PC.
-    MBasicBlock *fallbackEndBlock = newBlock(fallbackBlock, pc, preCallResumePoint);
-    if (!fallbackEndBlock)
-        return NULL;
-    fallbackBlock->end(MGoto::New(fallbackEndBlock));
-
-    MBasicBlock *top = current;
-    setCurrentAndSpecializePhis(fallbackEndBlock);
-
-    // Make the actual call.
-    CallInfo realCallInfo(cx, callInfo.constructing());
-    if (!realCallInfo.init(callInfo))
-        return NULL;
-    realCallInfo.popFormals(current);
-    realCallInfo.wrapArgs(current);
-
-    RootedFunction target(cx, NULL);
-    makeCall(target, realCallInfo, false);
-
-    setCurrentAndSpecializePhis(top);
-
-    // Create a new MPolyInlineDispatch containing the getprop and the fallback block
-    return MPolyInlineDispatch::New(targetObject, inlinePropTable,
-                                    fallbackPrepBlock, fallbackBlock,
-                                    fallbackEndBlock);
-}
-
 IonBuilder::InliningStatus
 IonBuilder::inlineSingleCall(CallInfo &callInfo, JSFunction *target)
 {
@@ -5888,7 +5773,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
                 MIRType type = existingValue.isDouble()
                              ? MIRType_Double
                              : MIRTypeFromValueType(existingValue.extractNonDoubleType());
-                types::Type ntype = types::GetValueType(cx, existingValue);
+                types::Type ntype = types::GetValueType(existingValue);
                 types::StackTypeSet *typeSet =
                     GetIonContext()->temp->lifoAlloc()->new_<types::StackTypeSet>(ntype);
                 phi->addBackedgeType(type, typeSet);
@@ -6478,7 +6363,7 @@ IonBuilder::jsop_intrinsic(HandlePropertyName name)
     if (!cx->global()->getIntrinsicValue(cx, name, &vp))
         return false;
 
-    JS_ASSERT(types->hasType(types::GetValueType(cx, vp)));
+    JS_ASSERT(types->hasType(types::GetValueType(vp)));
 
     MConstant *ins = MConstant::New(vp);
     current->add(ins);
@@ -6578,6 +6463,11 @@ IonBuilder::getElemTryDense(bool *emitted, MDefinition *obj, MDefinition *index)
     // Don't generate a fast path if there have been bounds check failures
     // and this access might be on a sparse property.
     if (ElementAccessHasExtraIndexedProperty(cx, obj) && failedBoundsCheck_)
+        return true;
+
+    // Don't generate a fast path if this pc has seen negative indexes accessed,
+    // which will not appear to be extra indexed properties.
+    if (inspector->hasSeenNegativeIndexGetElement(pc))
         return true;
 
     // Emit dense getelem variant.
@@ -9148,9 +9038,6 @@ IonBuilder::addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bail
 types::StackTypeSet *
 IonBuilder::cloneTypeSet(types::StackTypeSet *types)
 {
-    if (!js_IonOptions.parallelCompilation)
-        return types;
-
     // Clone a type set so that it can be stored into the MIR and accessed
     // during off thread compilation. This is necessary because main thread
     // updates to type sets can race with reads in the compiler backend, and

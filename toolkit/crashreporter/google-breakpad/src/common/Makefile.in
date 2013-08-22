@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MSVC_ENABLE_PGO := 1
 ifneq (WINNT,$(OS_TARGET))
 ifdef MOZ_CRASHREPORTER
 endif

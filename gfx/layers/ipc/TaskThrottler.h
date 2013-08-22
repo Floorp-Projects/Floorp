@@ -7,13 +7,15 @@
 #ifndef mozilla_dom_TaskThrottler_h
 #define mozilla_dom_TaskThrottler_h
 
-#include "nsAutoPtr.h"
-#include "nsTArray.h"
-#include "mozilla/TimeStamp.h"
+#include <stdint.h>                     // for uint32_t
+#include "base/task.h"                  // for CancelableTask
+#include "mozilla/TimeStamp.h"          // for TimeDuration, TimeStamp
+#include "mozilla/mozalloc.h"           // for operator delete
+#include "nsAutoPtr.h"                  // for nsAutoPtr
+#include "nsTArray.h"                   // for nsTArray
 
-class CancelableTask;
 namespace tracked_objects {
-  class Location;
+class Location;
 }
 
 namespace mozilla {

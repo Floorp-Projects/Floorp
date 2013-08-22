@@ -1,0 +1,25 @@
+Bug 899722 Part 4: Prevent runConfigureICU from overriding CC/CXX on BSDs.
+
+diff --git a/intl/icu/source/runConfigureICU b/intl/icu/source/runConfigureICU
+index 1a476ff..8873cc3 100755
+--- a/intl/icu/source/runConfigureICU
++++ b/intl/icu/source/runConfigureICU
+@@ -293,18 +293,16 @@ case $platform in
+         RELEASE_CXXFLAGS='-Gy -MD'
+         DEBUG_CFLAGS='-Zi -MDd'
+         DEBUG_CXXFLAGS='-Zi -MDd'
+         DEBUG_LDFLAGS='-DEBUG'
+         ;;
+     *BSD)
+         THE_OS="BSD"
+         THE_COMP="the GNU C++"
+-        CC=gcc; export CC
+-        CXX=g++; export CXX
+         DEBUG_CFLAGS='-g -O0'
+         DEBUG_CXFLAGS='-g -O0'
+         ;;
+     TRU64V5.1/CXX)
+         THE_OS="OSF1"
+         THE_COMP="Compaq cxx"
+         CC=cc; export CC
+         CXX=cxx; export CXX

@@ -7,14 +7,9 @@ DEPTH          = @DEPTH@
 topsrcdir      = @top_srcdir@
 srcdir         = @srcdir@
 VPATH          = @srcdir@
-FAIL_ON_WARNINGS := 1
-
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME   = jsdomstorage_s
-MSVC_ENABLE_PGO := 1
-LIBXUL_LIBRARY = 1
-
 LOCAL_INCLUDES = \
                 -I$(topsrcdir)/dom/base \
 		-I$(topsrcdir)/content/events/src

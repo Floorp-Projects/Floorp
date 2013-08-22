@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let provider;
+
 function test() {
   waitForExplicitFinish();
 
@@ -13,10 +15,22 @@ function test() {
 
   ensureSocialEnabled();
 
-  SocialService.addProvider(manifest, function (provider) {
-    // enable the provider
-    provider.enabled = true;
+  SocialService.addProvider(manifest, function (p) {
+    provider = p;
+    runTests(tests, undefined, undefined, function () {
+      SocialService.removeProvider(p.origin, function() {
+        ok(!provider.enabled, "removing an enabled provider should have disabled the provider");
+        let port = provider.getWorkerPort();
+        ok(!port, "should not be able to get a port after removing the provider");
+        provider = null;
+        finish();
+      });
+    });
+  });
+}
 
+let tests = {
+  testSingleProvider: function(next) {
     ok(provider.enabled, "provider is initially enabled");
     let port = provider.getWorkerPort();
     ok(port, "should be able to get a port from enabled provider");
@@ -37,12 +51,38 @@ function test() {
     ok(port, "should be able to get a port from re-enabled provider");
     port.close();
     ok(provider.workerAPI, "should be able to get a workerAPI from re-enabled provider");
-
-    SocialService.removeProvider(provider.origin, function() {
-      ok(!provider.enabled, "removing an enabled provider should have disabled the provider");
+    next();
+  },
+  testTwoProviders: function(next) {
+    // add another provider, test both workers
+    let manifest = {
+      origin: 'http://test2.example.com',
+      name: "Example Provider 2",
+      workerURL: "http://test2.example.com/browser/toolkit/components/social/test/browser/worker_social.js"
+    };
+    SocialService.addProvider(manifest, function (provider2) {
+      ok(provider.enabled, "provider is initially enabled");
+      ok(!provider2.enabled, "provider2 is not initially enabled");
+      provider2.enabled = true;
       let port = provider.getWorkerPort();
-      ok(!port, "should not be able to get a port after removing the provider");
-      finish();
+      let port2 = provider2.getWorkerPort();
+      ok(port, "have port for provider");
+      ok(port2, "have port for provider2");
+      port.onmessage = function(e) {
+        if (e.data.topic == "test-initialization-complete") {
+          ok(true, "first provider initialized");
+          port2.postMessage({topic: "test-initialization"});
+        }
+      }
+      port2.onmessage = function(e) {
+        if (e.data.topic == "test-initialization-complete") {
+          ok(true, "second provider initialized");
+          SocialService.removeProvider(provider2.origin, function() {
+            next();
+          });
+        }
+      }
+      port.postMessage({topic: "test-initialization"});
     });
-  });
+  }
 }

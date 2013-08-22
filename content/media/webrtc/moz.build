@@ -23,3 +23,5 @@ CPP_SOURCES += [
     'MediaEngineDefault.cpp',
 ]
 
+LIBXUL_LIBRARY = True
+

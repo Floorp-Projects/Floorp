@@ -18,6 +18,8 @@
 #include "nsStringGlue.h"
 #include "mozilla/Assertions.h"
 
+struct JSContext;
+
 namespace mozilla {
 
 namespace dom {
@@ -29,6 +31,9 @@ enum ErrNum {
 #undef MSG_DEF
   Err_Limit
 };
+
+bool
+ThrowErrorMessage(JSContext* aCx, const ErrNum aErrorNumber, ...);
 
 } // namespace dom
 

@@ -21,3 +21,10 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'xpcwrappers_s'
 
+# warning C4661 for FilteringWrapper
+FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+

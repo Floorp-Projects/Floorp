@@ -8,13 +8,20 @@
 #define mozilla_dom_telephony_telephony_h__
 
 #include "TelephonyCommon.h"
+
+#include "nsITelephonyProvider.h"
+
 // Need to include TelephonyCall.h because we have inline methods that
 // assume they see the definition of TelephonyCall.
 #include "TelephonyCall.h"
 
-#include "nsITelephonyProvider.h"
-
 class nsPIDOMWindow;
+
+namespace mozilla {
+namespace dom {
+class TelephonyCallOrTelephonyCallGroupReturnValue;
+}
+}
 
 BEGIN_TELEPHONY_NAMESPACE
 
@@ -38,6 +45,8 @@ class Telephony MOZ_FINAL : public nsDOMEventTargetHelper
   TelephonyCall* mActiveCall;
   nsTArray<nsRefPtr<TelephonyCall> > mCalls;
   nsRefPtr<CallsList> mCallsList;
+
+  nsRefPtr<TelephonyCallGroup> mGroup;
 
   bool mEnumerated;
 
@@ -77,11 +86,14 @@ public:
   void
   SetSpeakerEnabled(bool aEnabled, ErrorResult& aRv);
 
-  already_AddRefed<TelephonyCall>
-  GetActive() const;
+  void
+  GetActive(Nullable<TelephonyCallOrTelephonyCallGroupReturnValue>& aValue);
 
   already_AddRefed<CallsList>
   Calls() const;
+
+  already_AddRefed<TelephonyCallGroup>
+  ConferenceGroup() const;
 
   void
   StartTone(const nsAString& aDTMF, ErrorResult& aRv);
@@ -104,6 +116,7 @@ public:
   {
     NS_ASSERTION(!mCalls.Contains(aCall), "Already know about this one!");
     mCalls.AppendElement(aCall);
+    UpdateActiveCall(aCall, true);
     NotifyCallsChanged(aCall);
   }
 
@@ -112,6 +125,7 @@ public:
   {
     NS_ASSERTION(mCalls.Contains(aCall), "Didn't know about this one!");
     mCalls.RemoveElement(aCall);
+    UpdateActiveCall(aCall, false);
     NotifyCallsChanged(aCall);
   }
 
@@ -153,6 +167,18 @@ private:
 
   void
   EnqueueEnumerationAck();
+
+  void
+  UpdateActiveCall(TelephonyCall* aCall, bool aIsAdding);
+
+  already_AddRefed<TelephonyCall>
+  GetCall(uint32_t aCallIndex);
+
+  bool
+  MoveCall(uint32_t aCallIndex, bool aIsConference);
+
+  void
+  Shutdown();
 };
 
 END_TELEPHONY_NAMESPACE

@@ -92,6 +92,7 @@ public:                                                                     \
     return &_class::NS_CYCLE_COLLECTION_INNERNAME;                          \
   }                                                                         \
 };                                                                          \
+NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class);                                \
 static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
 // Put this in your class's constructor:

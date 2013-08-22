@@ -41,6 +41,7 @@
 #include "nsDOMCSSDeclaration.h"
 #include "nsStyleTransformMatrix.h"
 #include "mozilla/dom/Element.h"
+#include "prtime.h"
 #include "nsWrapperCacheInlines.h"
 #include <algorithm>
 

@@ -6,6 +6,8 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -22,6 +24,7 @@ import android.database.ContentObserver;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -57,6 +60,7 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_DESKTOP      = 1 << 5;
     public static final int LOADURL_BACKGROUND   = 1 << 6;
     public static final int LOADURL_EXTERNAL     = 1 << 7;
+    public static final int LOADURL_READING_LIST = 1 << 8;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 5;
 
@@ -582,6 +586,22 @@ public class Tabs implements GeckoEventListener {
     }
 
     /**
+     * Looks for an open tab with the given URL.
+     *
+     * @return id of an open tab with the given URL; -1 if the tab doesn't exist.
+     */
+    public int getTabIdForUrl(String url) {
+        for (Tab tab : mOrder) {
+            if (TextUtils.equals(tab.getURL(), url) ||
+                TextUtils.equals(ReaderModeUtils.getUrlFromAboutReader(tab.getURL()), url)) {
+                return tab.getId();
+            }
+        }
+
+        return -1;
+    }
+
+    /**
      * Loads a tab with the given URL in the currently selected tab.
      *
      * @param url URL of page to load, or search term used if searchEngine is given
@@ -637,6 +657,7 @@ public class Tabs implements GeckoEventListener {
             args.put("delayLoad", delayLoad);
             args.put("desktopMode", desktopMode);
             args.put("selected", !background);
+            args.put("aboutHomePage", (flags & LOADURL_READING_LIST) != 0 ? HomePager.Page.READING_LIST : "");
 
             if ((flags & LOADURL_NEW_TAB) != 0) {
                 int tabId = getNextTabId();

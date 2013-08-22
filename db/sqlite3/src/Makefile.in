@@ -60,10 +60,6 @@ ifeq ($(OS_ARCH),WINNT)
 MODULE_OPTIMIZE_FLAGS = -O2
 endif
 
-CSRCS = \
-  sqlite3.c \
-  $(NULL)
-
 # -DSQLITE_SECURE_DELETE=1 will cause SQLITE to 0-fill delete data so we
 # don't have to vacuum to make sure the data is not visible in the file.
 # -DSQLITE_ENABLE_FTS3=1 enables the full-text index module.

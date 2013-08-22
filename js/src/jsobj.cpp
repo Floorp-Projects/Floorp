@@ -1186,6 +1186,18 @@ JSObject::isSealedOrFrozen(JSContext *cx, HandleObject obj, ImmutabilityType it,
         return true;
     }
 
+    if (obj->is<TypedArrayObject>()) {
+        if (it == SEAL) {
+            // Typed arrays are always sealed.
+            *resultp = true;
+        } else {
+            // Typed arrays cannot be frozen, but an empty typed array is
+            // trivially frozen.
+            *resultp = (obj->as<TypedArrayObject>().length() == 0);
+        }
+        return true;
+    }
+
     AutoIdVector props(cx);
     if (!GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
         return false;

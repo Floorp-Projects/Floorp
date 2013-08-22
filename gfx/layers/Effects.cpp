@@ -4,8 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Effects.h"
-#include "LayersLogging.h"
-#include "nsPrintfCString.h"
+#include "LayersLogging.h"              // for AppendToString
+#include "nsAString.h"
+#include "nsPrintfCString.h"            // for nsPrintfCString
+#include "nsString.h"                   // for nsAutoCString
 
 using namespace mozilla::layers;
 

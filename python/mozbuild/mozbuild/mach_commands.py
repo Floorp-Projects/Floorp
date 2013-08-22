@@ -223,12 +223,12 @@ class BuildOutputManager(LoggingMixin):
         self.t = terminal
         self.footer = BuildProgressFooter(terminal, monitor)
 
-        self.handler = TerminalLoggingHandler()
-        self.handler.setFormatter(log_manager.terminal_formatter)
-        self.handler.footer = self.footer
+        self._handler = TerminalLoggingHandler()
+        self._handler.setFormatter(log_manager.terminal_formatter)
+        self._handler.footer = self.footer
 
-        old = log_manager.replace_terminal_handler(self.handler)
-        self.handler.level = old.level
+        old = log_manager.replace_terminal_handler(self._handler)
+        self._handler.level = old.level
 
     def __enter__(self):
         return self
@@ -236,6 +236,8 @@ class BuildOutputManager(LoggingMixin):
     def __exit__(self, exc_type, exc_value, traceback):
         if self.footer:
             self.footer.clear()
+            # Prevents the footer from being redrawn if logging occurs.
+            self._handler.footer = None
 
     def write_line(self, line):
         if self.footer:
@@ -289,6 +291,8 @@ class Build(MachCommandBase):
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0, verbose=False):
         from mozbuild.controller.building import BuildMonitor
         from mozbuild.util import resolve_target_to_make
+
+        self.log_manager.register_structured_logger(logging.getLogger('mozbuild'))
 
         warnings_path = self._get_state_filename('warnings.json')
         monitor = self._spawn(BuildMonitor)
@@ -353,6 +357,7 @@ class Build(MachCommandBase):
                     if status != 0:
                         break
             else:
+                monitor.start_resource_recording()
                 status = self._run_make(srcdir=True, filename='client.mk',
                     line_handler=output.on_line, log=False, print_directory=False,
                     allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
@@ -362,7 +367,7 @@ class Build(MachCommandBase):
                     {'count': len(monitor.warnings_database)},
                     '{count} compiler warnings present.')
 
-            monitor.finish()
+            monitor.finish(record_usage=status==0)
 
         high_finder, finder_percent = monitor.have_high_finder_usage()
         if high_finder:
@@ -377,6 +382,10 @@ class Build(MachCommandBase):
             print('We know it took a while, but your build finally finished successfully!')
         else:
             print('Your build was successful!')
+
+        if monitor.have_resource_usage:
+            print('To view resource usage of the build, run |mach '
+                'resource-usage|.')
 
         # Only for full builds because incremental builders likely don't
         # need to be burdened with this.
@@ -409,6 +418,34 @@ class Build(MachCommandBase):
 
         return status
 
+    @Command('resource-usage', category='post-build',
+        description='Show information about system resource usage for a build.')
+    @CommandArgument('--address', default='localhost',
+        help='Address the HTTP server should listen on.')
+    @CommandArgument('--port', type=int, default=0,
+        help='Port number the HTTP server should listen on.')
+    @CommandArgument('--browser', default='firefox',
+        help='Web browser to automatically open. See webbrowser Python module.')
+    def resource_usage(self, address=None, port=None, browser=None):
+        import webbrowser
+        from mozbuild.html_build_viewer import BuildViewerServer
+
+        last = self._get_state_filename('build_resources.json')
+        if not os.path.exists(last):
+            print('Build resources not available. If you have performed a '
+                'build and receive this message, the psutil Python package '
+                'likely failed to initialize properly.')
+            return 1
+
+        server = BuildViewerServer(address, port)
+        server.add_resource_json_file('last', last)
+        try:
+            webbrowser.get(browser).open_new_tab(server.url)
+        except Exception:
+            print('Please open %s in a browser.' % server.url)
+
+        print('Hit CTRL+c to stop server.')
+        server.run()
 
     @Command('clobber', category='build',
         description='Clobber the tree (delete the object directory).')

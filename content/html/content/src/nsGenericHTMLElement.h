@@ -247,7 +247,7 @@ public:
   already_AddRefed<mozilla::dom::EventHandlerNonNull> GetOn##name_();         \
   void SetOn##name_(mozilla::dom::EventHandlerNonNull* handler,               \
                     mozilla::ErrorResult& error);
-#include "nsEventNameList.h"
+#include "nsEventNameList.h" // IWYU pragma: keep
 #undef ERROR_EVENT
 #undef FORWARDED_EVENT
 #undef EVENT
@@ -1104,7 +1104,13 @@ protected:
    * @param aAttr    name of attribute.
    * @param aValue   Double value of attribute.
    */
-  NS_HIDDEN_(nsresult) SetDoubleAttr(nsIAtom* aAttr, double aValue);
+  void SetDoubleAttr(nsIAtom* aAttr, double aValue, mozilla::ErrorResult& aRv)
+  {
+    nsAutoString value;
+    value.AppendFloat(aValue);
+
+    SetHTMLAttr(aAttr, value, aRv);
+  }
 
   /**
    * This method works like GetURIAttr, except that it supports multiple

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/home_open_new_tab"
+          android:title="@string/contextmenu_open_new_tab"/>
+
+    <item android:id="@+id/home_open_private_tab"
+          android:title="@string/contextmenu_open_private_tab"/>
+
+    <item android:id="@+id/home_open_in_reader"
+          android:title="@string/contextmenu_open_in_reader"/>
+
+    <item android:id="@+id/home_share"
+          android:title="@string/contextmenu_share"/>
+
+    <item android:id="@+id/home_edit_bookmark"
+          android:title="@string/contextmenu_edit_bookmark"/>
+
+    <item android:id="@+id/home_remove"
+          android:title="@string/contextmenu_remove"/>
+
+    <item android:id="@+id/home_add_to_launcher"
+          android:title="@string/contextmenu_add_to_launcher"/>
+
+</menu>

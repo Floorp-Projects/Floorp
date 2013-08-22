@@ -1494,7 +1494,7 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       mTokenizer->setLineNumber(speculation->GetStartLineNumber());
 
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      "DOM Events",
+                                      NS_LITERAL_CSTRING("DOM Events"),
                                       mExecutor->GetDocument(),
                                       nsContentUtils::eDOM_PROPERTIES,
                                       "SpeculationFailed",

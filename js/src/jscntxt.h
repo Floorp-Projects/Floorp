@@ -259,10 +259,11 @@ struct ThreadSafeContext : ContextFriendFields,
         js_ReportAllocationOverflow(this);
     }
 
-    // Builtin atoms are immutable and may be accessed freely from any thread.
+    // Accessors for immutable runtime data.
     JSAtomState &names() { return runtime_->atomState; }
     StaticStrings &staticStrings() { return runtime_->staticStrings; }
     PropertyName *emptyString() { return runtime_->emptyString; }
+    FreeOp *defaultFreeOp() { return runtime_->defaultFreeOp(); }
 
     // GCs cannot happen while non-main threads are running.
     uint64_t gcNumber() { return runtime_->gcNumber; }
@@ -351,6 +352,7 @@ class ExclusiveContext : public ThreadSafeContext
     // Zone local methods that can be used freely from an ExclusiveContext.
     inline bool typeInferenceEnabled() const;
     types::TypeObject *getNewType(Class *clasp, TaggedProto proto, JSFunction *fun = NULL);
+    inline js::LifoAlloc &typeLifoAlloc();
 
     // Current global. This is only safe to use within the scope of the
     // AutoCompartment from which it's called.
@@ -483,7 +485,6 @@ struct JSContext : public js::ExclusiveContext,
 
     js::LifoAlloc &tempLifoAlloc() { return runtime()->tempLifoAlloc; }
     inline js::LifoAlloc &analysisLifoAlloc();
-    inline js::LifoAlloc &typeLifoAlloc();
 
 #ifdef JS_THREADSAFE
     unsigned            outstandingRequests;/* number of JS_BeginRequest calls

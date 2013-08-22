@@ -44,3 +44,8 @@ else:
         'FallbackCameraManager.cpp',
         'FallbackCameraControl.cpp',
     ]
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+

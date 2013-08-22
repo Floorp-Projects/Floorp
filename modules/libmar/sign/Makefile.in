@@ -15,11 +15,6 @@ USE_STATIC_LIBS = 1
 endif
 
 # This makefile just builds support for reading archives.
-CSRCS = \
-  mar_sign.c \
-  nss_secutil.c \
-  $(NULL)
-
 LOCAL_INCLUDES += -I$(srcdir)/../src \
   -I$(srcdir)/../verify \
   -I$(topsrcdir)/dist/include \

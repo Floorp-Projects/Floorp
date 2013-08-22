@@ -6,16 +6,6 @@
 #include "nsISupports.idl"
 #include "nsIException.idl"
 
-// An exception provider.  These can turn special nsresult codes
-// into nsIExceptions
-
-[scriptable, uuid(0577744c-c1d2-47f2-8bcc-ce7a9e5a88fc)]
-interface nsIExceptionProvider : nsISupports
-{
-    /** Gets an nsIException or returns NULL if not possible. **/
-    nsIException getException(in nsresult result, in nsIException defaultException);
-};
-
 // A ScriptErrorManager for a single thread.  These objects
 // are _not_ thread-safe.  Use the ScriptErrorService
 // to get a script error manager for your current thread.
@@ -36,22 +26,11 @@ interface nsIExceptionManager : nsISupports
 
 // The Exception Service.  Allows you to get an set exceptions in a thread
 // safe manner, or to get an ExceptionManager for your specific thread.
-[scriptable, uuid(35A88F54-F267-4414-92A7-191F6454AB52)]
+[scriptable, uuid(8f9ccabb-a68b-43e3-b570-dd8c3179d2fb)]
 interface nsIExceptionService : nsIExceptionManager
 {
     /** Obtains an exception manager for the current thread. */
     readonly attribute nsIExceptionManager currentExceptionManager;
-
-    /** Installs an "exception provider" which is capable of
-        translating an nsresult into an exception.  This enables
-        error providers to return simple nsresults and only provide
-        rich errors when specifically requested. It also has the
-        advantage of allowing code like the DOM to handle all errors
-        in a single function rather than at each XPCOM entry point.
-        NOTE: This interface must be thread-safe - it will be called
-        on whatever thread needs the error translation performed.*/
-    void registerExceptionProvider( in nsIExceptionProvider provider, in uint32_t moduleCode );
-    void unregisterExceptionProvider( in nsIExceptionProvider provider, in uint32_t moduleCode );
 };
 
 

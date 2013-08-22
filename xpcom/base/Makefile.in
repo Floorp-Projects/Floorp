@@ -11,14 +11,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= xpcombase_s
-MSVC_ENABLE_PGO := 1
 MOZILLA_INTERNAL_API =1
-LIBXUL_LIBRARY = 1
-
-CSRCS = \
-		nsErrorAssertsC.c \
-		$(NULL)
-
 ifeq ($(OS_ARCH),WINNT)
 
 ifdef MOZ_DEBUG
@@ -43,7 +36,8 @@ LOCAL_INCLUDES += \
 # suppresses printing the pattern space, and the p at the end prints it anyway,
 # so we don't print lines that don't match the pattern to start with.
 ErrorListCxxDefines.h: ErrorList.h Makefile
-		sed -n 's/.*ERROR(\([A-Z_0-9]*\).*/#define \1 nsresult::\1/p' < $< > $@
+	echo '// IWYU pragma: private, include "nsError.h"' > $@
+	sed -n 's/.*ERROR(\([A-Z_0-9]*\).*/#define \1 nsresult::\1/p' < $< >> $@
 
 ErrorListCDefines.h: ErrorList.h Makefile
 		sed 's/.*ERROR(\([A-Z_0-9]*\),\( *\)\(.*\))[^)]*/#define \1 \2((nsresult)(\3))/' < $< > $@

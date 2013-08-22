@@ -6,11 +6,11 @@
 #ifndef GFX_FRAMEMETRICS_H
 #define GFX_FRAMEMETRICS_H
 
-#include "gfxPoint.h"
-#include "gfxTypes.h"
-#include "nsRect.h"
-#include "mozilla/gfx/Rect.h"
-#include "Units.h"
+#include <stdint.h>                     // for uint32_t, uint64_t
+#include "Units.h"                      // for CSSRect, CSSPixel, etc
+#include "mozilla/gfx/BasePoint.h"      // for BasePoint
+#include "mozilla/gfx/Rect.h"           // for RoundedIn
+#include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 
 namespace mozilla {
 namespace layers {
@@ -206,9 +206,9 @@ public:
   ViewID mScrollId;
 
   // The scrollable bounds of a frame. This is determined by reflow.
-  // For the top-level |window|,
-  // { x = window.scrollX, y = window.scrollY, // could be 0, 0
-  //   width = window.innerWidth, height = window.innerHeight }
+  // Ordinarily the x and y will be 0 and the width and height will be the
+  // size of the element being scrolled. However for RTL pages or elements
+  // the x value may be negative.
   //
   // This is relative to the document. It is in the same coordinate space as
   // |mScrollOffset|, but a different coordinate space than |mViewport| and

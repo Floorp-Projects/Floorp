@@ -8,3 +8,5 @@ CPP_UNIT_TESTS += [
     'TestAudioEventTimeline.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+

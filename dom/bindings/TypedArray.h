@@ -8,7 +8,6 @@
 #define mozilla_dom_TypedArray_h
 
 #include "jsfriendapi.h"
-#include "js/RootingAPI.h"
 #include "jsapi.h"
 #include "mozilla/dom/BindingDeclarations.h"
 

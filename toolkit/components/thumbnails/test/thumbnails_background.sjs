@@ -8,7 +8,7 @@ var timer;
 
 function handleRequest(req, resp) {
   resp.processAsync();
-  resp.setHeader("Cache-Control", "no-cache", false);
+  resp.setHeader("Cache-Control", "no-cache, no-store", false);
   resp.setHeader("Content-Type", "text/html;charset=utf-8", false);
 
   let opts = {};

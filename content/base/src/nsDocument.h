@@ -10,10 +10,11 @@
 #ifndef nsDocument_h___
 #define nsDocument_h___
 
+#include "nsIDocument.h"
+
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCRT.h"
-#include "nsIDocument.h"
 #include "nsWeakReference.h"
 #include "nsWeakPtr.h"
 #include "nsVoidArray.h"

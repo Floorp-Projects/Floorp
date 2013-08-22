@@ -6,7 +6,6 @@
 #ifndef mozilla_dom_DOMJSClass_h
 #define mozilla_dom_DOMJSClass_h
 
-#include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/Assertions.h"
 
@@ -31,6 +30,9 @@ class nsCycleCollectionParticipant;
 
 // All DOM globals must have a slot at DOM_PROTOTYPE_SLOT.
 #define DOM_PROTOTYPE_SLOT JSCLASS_GLOBAL_SLOT_COUNT
+
+// Keep this count up to date with any extra global slots added above.
+#define DOM_GLOBAL_SLOTS 1
 
 // We use these flag bits for the new bindings.
 #define JSCLASS_DOM_GLOBAL JSCLASS_USERBIT1

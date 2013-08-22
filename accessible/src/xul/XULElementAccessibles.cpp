@@ -183,12 +183,12 @@ XULTooltipAccessible::NativeRole()
 
 XULLinkAccessible::
   XULLinkAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  HyperTextAccessibleWrap(aContent, aDoc)
+  XULLabelAccessible(aContent, aDoc)
 {
 }
 
 // Expose nsIAccessibleHyperLink unconditionally
-NS_IMPL_ISUPPORTS_INHERITED1(XULLinkAccessible, HyperTextAccessibleWrap,
+NS_IMPL_ISUPPORTS_INHERITED1(XULLinkAccessible, XULLabelAccessible,
                              nsIAccessibleHyperLink)
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -4,7 +4,7 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 /* Tests related to the about: page:
- *  - check that about: loads from the awesome bar
+ *  - check that about: loads from the URL bar
  *  - check that about: loads from Settings/About...
  */
 public class testAboutPage extends PixelTest {
@@ -20,13 +20,13 @@ public class testAboutPage extends PixelTest {
         String url = "about:";
         loadAndPaint(url);
 
-        Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar_title");
-        mAsserter.isnot(awesomebar, null, "Got the awesomebar");
-        assertMatches(awesomebar.getText(), "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)", "page title match");
+        Element urlBarTitle = mDriver.findElement(getActivity(), URL_BAR_TITLE_ID);
+        mAsserter.isnot(urlBarTitle, null, "Got the URL bar title");
+        assertMatches(urlBarTitle.getText(), "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)", "page title match");
 
         // Open a new page to remove the about: page from the current tab
         url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
-        loadUrl(url);
+        inputAndLoadUrl(url);
 
         // Set up listeners to catch the page load we're about to do
         Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
@@ -42,8 +42,8 @@ public class testAboutPage extends PixelTest {
         contentEventExpecter.unregisterListener();
 
         // Grab the title to make sure the about: page was loaded
-        awesomebar = mDriver.findElement(getActivity(), "awesome_bar_title");
-        mAsserter.isnot(awesomebar, null, "Got the awesomebar");
-        assertMatches(awesomebar.getText(), "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)", "page title match");
+        urlBarTitle = mDriver.findElement(getActivity(), URL_BAR_TITLE_ID);
+        mAsserter.isnot(urlBarTitle, null, "Got the URL bar title");
+        assertMatches(urlBarTitle.getText(), "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)", "page title match");
     }
 }

@@ -79,7 +79,7 @@ public:
   virtual uint64_t NativeState();
 };
 
-class XULLinkAccessible : public HyperTextAccessibleWrap
+class XULLinkAccessible : public XULLabelAccessible
 {
 
 public:

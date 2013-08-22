@@ -6,11 +6,15 @@
 #ifndef GFX_IMAGELAYER_H
 #define GFX_IMAGELAYER_H
 
-#include "Layers.h"
+#include "Layers.h"                     // for Layer, etc
+#include "gfxPattern.h"                 // for gfxPattern, etc
+#include "gfxPoint.h"                   // for gfxIntSize
+#include "mozilla/gfx/BaseSize.h"       // for BaseSize
+#include "mozilla/layers/LayersTypes.h"
+#include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nscore.h"                     // for nsACString
 
-#include "ImageTypes.h"
-#include "nsISupportsImpl.h"
-#include "gfxPattern.h"
+class gfx3DMatrix;
 
 namespace mozilla {
 namespace layers {
@@ -22,13 +26,6 @@ class ImageContainer;
  */
 class ImageLayer : public Layer {
 public:
-  enum ScaleMode {
-    SCALE_NONE,
-    SCALE_STRETCH,
-    SCALE_SENTINEL
-  // Unimplemented - SCALE_PRESERVE_ASPECT_RATIO_CONTAIN
-  };
-
   /**
    * CONSTRUCTION PHASE ONLY
    * Set the ImageContainer. aContainer must have the same layer manager

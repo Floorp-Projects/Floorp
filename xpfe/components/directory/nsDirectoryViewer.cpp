@@ -705,7 +705,7 @@ void nsHTTPIndex::GetDestination(nsIRDFResource* r, nsXPIDLCString& dest) {
   if (!url) {
      const char* temp;
      r->GetValueConst(&temp);
-     dest.Adopt(temp ? nsCRT::strdup(temp) : 0);
+     dest.Adopt(temp ? strdup(temp) : 0);
   } else {
     const PRUnichar* uri;
     url->GetValueConst(&uri);
@@ -756,7 +756,7 @@ nsHTTPIndex::GetURI(char * *uri)
 	if (! uri)
 		return(NS_ERROR_NULL_POINTER);
 
-	if ((*uri = nsCRT::strdup("rdf:httpindex")) == nullptr)
+	if ((*uri = strdup("rdf:httpindex")) == nullptr)
 		return(NS_ERROR_OUT_OF_MEMORY);
 
 	return(NS_OK);
