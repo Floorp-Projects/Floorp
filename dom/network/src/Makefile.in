@@ -10,7 +10,6 @@ VPATH            = $(srcdir)
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME     = dom_network_s
-LIBXUL_LIBRARY   = 1
 ifdef MOZ_B2G_RIL
 endif
 

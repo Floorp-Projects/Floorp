@@ -27,3 +27,5 @@ EXTRA_COMPONENTS += [
     'DOMFMRadioChild.js',
 ]
 
+LIBXUL_LIBRARY = True
+

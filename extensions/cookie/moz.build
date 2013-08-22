@@ -22,3 +22,5 @@ CPP_SOURCES += [
     'nsPopupWindowManager.cpp',
 ]
 
+LIBXUL_LIBRARY = True
+

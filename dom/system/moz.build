@@ -51,3 +51,5 @@ if CONFIG['OS_TARGET'] != 'Android' or CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
 
 FAIL_ON_WARNINGS = True
 
+LIBXUL_LIBRARY = True
+

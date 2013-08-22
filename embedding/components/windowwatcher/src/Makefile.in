@@ -10,8 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBXUL_LIBRARY	= 1
-
 # For nsJSUtils
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/base \
