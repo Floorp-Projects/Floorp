@@ -1427,27 +1427,22 @@ CallDestroyScriptHook(FreeOp *fop, JSScript *script);
 
 struct SharedScriptData
 {
-    uint32_t length;
-    uint32_t natoms;
     bool marked;
+    uint32_t length;
     jsbytecode data[1];
 
     static SharedScriptData *new_(ExclusiveContext *cx, uint32_t codeLength,
                                   uint32_t srcnotesLength, uint32_t natoms);
 
-    HeapPtrAtom *atoms() {
-        if (!natoms)
-            return NULL;
-        return reinterpret_cast<HeapPtrAtom *>(data + length - sizeof(JSAtom *) * natoms);
+    HeapPtrAtom *atoms(uint32_t codeLength, uint32_t srcnotesLength) {
+        uint32_t length = codeLength + srcnotesLength;
+        return reinterpret_cast<HeapPtrAtom *>(data + length + sizeof(JSAtom *) -
+                                               length % sizeof(JSAtom *));
     }
 
     static SharedScriptData *fromBytecode(const jsbytecode *bytecode) {
         return (SharedScriptData *)(bytecode - offsetof(SharedScriptData, data));
     }
-
-  private:
-    SharedScriptData() MOZ_DELETE;
-    SharedScriptData(const SharedScriptData&) MOZ_DELETE;
 };
 
 struct ScriptBytecodeHasher
