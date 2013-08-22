@@ -498,69 +498,6 @@ protected:
 
 
 // -----------------------------------------------------------------------------
-// XXX_* Extension group queries
-/*
- * This mechanism introduces a new way to check if an extension is supported,
- * regardless if it is an ARB, EXT, OES, etc.
- */
-public:
-
-    /**
-     * This enum should be sorted by name.
-     */
-    enum GLExtensionGroup {
-        XXX_bind_buffer_offset,
-        XXX_depth_texture,
-        XXX_draw_buffers,
-        XXX_draw_instanced,
-        XXX_element_index_uint,
-        XXX_ES2_compatibility,
-        XXX_ES3_compatibility,
-        XXX_framebuffer_blit,
-        XXX_framebuffer_multisample,
-        XXX_framebuffer_object,
-        XXX_get_query_object_iv,
-        XXX_instanced_arrays,
-        XXX_occlusion_query,
-        XXX_occlusion_query_boolean,
-        XXX_occlusion_query2,
-        XXX_packed_depth_stencil,
-        XXX_query_objects,
-        XXX_robustness,
-        XXX_standard_derivatives,
-        XXX_texture_float,
-        XXX_texture_float_linear,
-        XXX_texture_non_power_of_two,
-        XXX_transform_feedback,
-        XXX_vertex_array_object,
-        ExtensionGroup_Max
-    };
-
-    inline bool IsExtensionSupported(GLExtensionGroup extensionGroup) const
-    {
-        return IsSupported(GLFeature::Enum(extensionGroup));
-    }
-
-    static inline const char* GetExtensionGroupName(GLExtensionGroup extensionGroup)
-    {
-        return GetFeatureName(GLFeature::Enum(extensionGroup));
-    }
-
-
-private:
-
-    /**
-     * Mark all extensions of this group as unsupported.
-     *
-     * Returns false if marking this extension group as unsupported contradicts
-     * the OpenGL version and profile. Returns true otherwise.
-     */
-    inline bool MarkExtensionGroupUnsupported(GLExtensionGroup extensionGroup)
-    {
-        return MarkUnsupported(GLFeature::Enum(extensionGroup));
-    }
-
-// -----------------------------------------------------------------------------
 // Feature queries
 /*
  * This mecahnism introduces a new way to check if a OpenGL feature is
