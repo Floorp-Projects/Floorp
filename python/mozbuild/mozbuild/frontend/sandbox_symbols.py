@@ -215,6 +215,10 @@ VARIABLES = {
         Implies MOZILLA_INTERNAL_API.
         """),
 
+    'MSVC_ENABLE_PGO': (bool, bool, False,
+        """Whether profile-guided optimization is enabled in this directory.
+        """),
+
     'SDK_LIBRARY': (StrictOrderingOnAppendList, list, [],
         """Elements of the distributed SDK.
 

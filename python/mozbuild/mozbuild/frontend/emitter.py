@@ -134,6 +134,7 @@ class TreeMetadataEmitter(LoggingMixin):
             LIBS='LIBS',
             LIBXUL_LIBRARY='LIBXUL_LIBRARY',
             MODULE='MODULE',
+            MSVC_ENABLE_PGO='MSVC_ENABLE_PGO',
             SDK_LIBRARY='SDK_LIBRARY',
             SHARED_LIBRARY_LIBS='SHARED_LIBRARY_LIBS',
             SIMPLE_PROGRAMS='SIMPLE_PROGRAMS',
