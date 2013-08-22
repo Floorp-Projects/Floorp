@@ -1758,15 +1758,6 @@ nsGenericHTMLElement::GetUnsignedIntAttr(nsIAtom* aAttr,
   return attrVal->GetIntegerValue();
 }
 
-nsresult
-nsGenericHTMLElement::SetDoubleAttr(nsIAtom* aAttr, double aValue)
-{
-  nsAutoString value;
-  value.AppendFloat(aValue);
-
-  return SetAttr(kNameSpaceID_None, aAttr, value, true);
-}
-
 void
 nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr,
                                  nsAString& aResult) const
