@@ -147,7 +147,7 @@ class TestEmitterBasic(unittest.TestCase):
             LIBS=['fans.lib', 'tans.lib'],
             LIBXUL_LIBRARY=True,
             MSVC_ENABLE_PGO=True,
-            NO_DIST_INSTALL='1',
+            NO_DIST_INSTALL=True,
             MODULE='module_name',
             SDK_LIBRARY=['fans.sdk', 'tans.sdk'],
             SHARED_LIBRARY_LIBS=['fans.sll', 'tans.sll'],
