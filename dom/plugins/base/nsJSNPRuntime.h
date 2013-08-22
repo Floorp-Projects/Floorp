@@ -7,7 +7,6 @@
 #define nsJSNPRuntime_h_
 
 #include "nscore.h"
-#include "jsapi.h"
 #include "npapi.h"
 #include "npruntime.h"
 #include "pldhash.h"

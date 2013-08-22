@@ -51,7 +51,7 @@ uint32_t GetDataForFlavor (const nsTArray<DataStruct>& aArray,
 //-------------------------------------------------------------------------
 DataStruct::~DataStruct() 
 { 
-  if (mCacheFileName) nsCRT::free(mCacheFileName); 
+  if (mCacheFileName) free(mCacheFileName); 
 }
 
 //-------------------------------------------------------------------------
@@ -133,7 +133,7 @@ DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
     if (!mCacheFileName) {
       nsXPIDLCString fName;
       cacheFile->GetNativeLeafName(fName);
-      mCacheFileName = nsCRT::strdup(fName);
+      mCacheFileName = strdup(fName);
     }
 
     // write out the contents of the clipboard

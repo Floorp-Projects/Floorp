@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsapi.h"
-
 #define EXPORT_CDECL(type)   NS_EXPORT type
 
 NS_EXTERN_C
