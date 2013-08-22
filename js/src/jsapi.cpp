@@ -1106,9 +1106,13 @@ JS_WrapObject(JSContext *cx, JSObject **objp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    if (*objp)
-        JS::ExposeGCThingToActiveJS(*objp, JSTRACE_OBJECT);
-    return cx->compartment()->wrap(cx, objp);
+    RootedObject obj(cx, *objp);
+    if (obj)
+        JS::ExposeGCThingToActiveJS(obj, JSTRACE_OBJECT);
+    if (!cx->compartment()->wrap(cx, &obj))
+        return false;
+    *objp = obj;
+    return true;
 }
 
 JS_PUBLIC_API(bool)

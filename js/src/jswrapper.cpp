@@ -293,7 +293,7 @@ CrossCompartmentWrapper::get(JSContext *cx, HandleObject wrapper, HandleObject r
     RootedId idCopy(cx, id);
     {
         AutoCompartment call(cx, wrappedObject(wrapper));
-        if (!cx->compartment()->wrap(cx, receiverCopy.address()) ||
+        if (!cx->compartment()->wrap(cx, &receiverCopy) ||
             !cx->compartment()->wrapId(cx, idCopy.address()))
         {
             return false;
@@ -312,7 +312,7 @@ CrossCompartmentWrapper::set(JSContext *cx, HandleObject wrapper, HandleObject r
     RootedObject receiverCopy(cx, receiver);
     RootedId idCopy(cx, id);
     PIERCE(cx, wrapper,
-           cx->compartment()->wrap(cx, receiverCopy.address()) &&
+           cx->compartment()->wrap(cx, &receiverCopy) &&
            cx->compartment()->wrapId(cx, idCopy.address()) &&
            cx->compartment()->wrap(cx, vp),
            Wrapper::set(cx, wrapper, receiverCopy, idCopy, strict, vp),
@@ -364,7 +364,7 @@ Reify(JSContext *cx, JSCompartment *origin, MutableHandleValue vp)
 
     /* Wrap the iteratee. */
     RootedObject obj(cx, ni->obj);
-    if (!origin->wrap(cx, obj.address()))
+    if (!origin->wrap(cx, &obj))
         return false;
 
     /*
@@ -575,7 +575,7 @@ CrossCompartmentWrapper::getPrototypeOf(JSContext *cx, HandleObject wrapper,
             protop->setDelegate(cx);
     }
 
-    return cx->compartment()->wrap(cx, protop.address());
+    return cx->compartment()->wrap(cx, protop);
 }
 
 CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
@@ -933,7 +933,7 @@ js::RemapWrapper(JSContext *cx, JSObject *wobjArg, JSObject *newTargetArg)
     // the choice to reuse |wobj| or not.
     RootedObject tobj(cx, newTarget);
     AutoCompartment ac(cx, wobj);
-    if (!wcompartment->wrap(cx, tobj.address(), wobj))
+    if (!wcompartment->wrap(cx, &tobj, wobj))
         MOZ_CRASH();
 
     // If wrap() reused |wobj|, it will have overwritten it and returned with
