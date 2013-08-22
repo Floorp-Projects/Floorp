@@ -463,21 +463,26 @@
 
             // clear explicit width and columns before calculating from avail. height again
             let gridStyle = this._grid.style;
-            gridStyle.removeProperty('min-width');
-            gridStyle.removeProperty('-moz-column-count');
+            gridStyle.removeProperty("min-width");
+            gridStyle.removeProperty("-moz-column-count");
 
-            // We favor overflowing horizontally, not vertically (rows then colums)
-            // rows attribute = max rows
-            let maxRowCount = Math.min(this.getAttribute("rows") || Infinity, Math.floor(containerDims.height / itemDims.height));
-            this._rowCount = Math.min(this.itemCount, maxRowCount);
+            if (this.hasAttribute("vertical")) {
+              this._columnCount = Math.floor(containerDims.width / itemDims.width) || 1;
+              this._rowCount = Math.floor(this.itemCount / this._columnCount);
+            } else {
+              // We favor overflowing horizontally, not vertically (rows then colums)
+              // rows attribute = max rows
+              let maxRowCount = Math.min(this.getAttribute("rows") || Infinity, Math.floor(containerDims.height / itemDims.height));
+              this._rowCount = Math.min(this.itemCount, maxRowCount);
 
-            // columns attribute = min cols
-            this._columnCount = this.itemCount ?
-                  Math.max(
-                      // at least 1 column when there are items
-                      this.getAttribute("columns") || 1,
-                      Math.ceil(this.itemCount / this._rowCount)
-                  ) : this.getAttribute("columns") || 0;
+              // columns attribute = min cols
+              this._columnCount = this.itemCount ?
+                    Math.max(
+                        // at least 1 column when there are items
+                        this.getAttribute("columns") || 1,
+                        Math.ceil(this.itemCount / this._rowCount)
+                    ) : this.getAttribute("columns") || 0;
+            }
 
             // width is typically auto, cap max columns by truncating items collection
             // or, setting max-width style property with overflow hidden

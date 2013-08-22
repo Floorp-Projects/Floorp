@@ -135,6 +135,8 @@ protected:
   bool mIsChromeOrResource; // For bug #45989
   bool mFoundFirstBinding;
 
+  nsString mCurrentBindingID;
+
   nsXBLPrototypeBinding* mBinding;
   nsXBLPrototypeHandler* mHandler; // current handler, owned by its PrototypeBinding
   nsXBLProtoImpl* mImplementation;
