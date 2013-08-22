@@ -69,6 +69,7 @@ CPPSRCS = \
   CallbackInterface.cpp \
   CallbackObject.cpp \
   DOMJSProxyHandler.cpp \
+  Date.cpp \
   $(NULL)
 endif
 
