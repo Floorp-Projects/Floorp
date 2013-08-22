@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= thebes
-MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY	= 1
 
 # gfxSVGGlyphs needs nsDOMParser.h

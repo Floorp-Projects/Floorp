@@ -8,3 +8,5 @@ MODULE = 'theora'
 
 LIBRARY_NAME = 'theora'
 
+MSVC_ENABLE_PGO = True
+

@@ -21,9 +21,6 @@ endif
 # get the lists of source files and exported headers
 include $(srcdir)/files.mk
 
-MSVC_ENABLE_PGO := 1
-
-# on Windows, we're going to link graphite with gkmedias instead of libxul
 ifeq (WINNT,$(OS_TARGET))
 VISIBILITY_FLAGS =
 FORCE_STATIC_LIB = 1

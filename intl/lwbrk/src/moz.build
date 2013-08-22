@@ -33,3 +33,5 @@ LIBRARY_NAME = 'lwbrk_s'
 
 LIBXUL_LIBRARY = True
 
+MSVC_ENABLE_PGO = True
+

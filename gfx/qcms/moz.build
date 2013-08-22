@@ -15,3 +15,5 @@ LIBRARY_NAME = 'mozqcms'
 
 LIBXUL_LIBRARY = True
 
+MSVC_ENABLE_PGO = True
+

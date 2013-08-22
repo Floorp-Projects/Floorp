@@ -11,7 +11,6 @@ VPATH		=  $(srcdir) $(srcdir)/unittest
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= gfx2d
-MSVC_ENABLE_PGO := 1
 EXPORT_LIBRARY	= 1
 
 DEFINES += -DMOZ_GFX -DUSE_CAIRO -DGFX2D_INTERNAL
