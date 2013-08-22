@@ -314,6 +314,209 @@ UploadLastDir::ContentPrefCallback::HandleError(nsresult error)
   return NS_OK;
 }
 
+namespace {
+
+/**
+ * This enumerator returns nsDOMFileFile objects after wrapping a single
+ * nsIFile representing a directory. It enumerates the files under that
+ * directory and its subdirectories as a flat list of files, ignoring/skipping
+ * over symbolic links.
+ *
+ * The enumeration involves I/O, so this class must NOT be used on the main
+ * thread or else the main thread could be blocked for a very long time.
+ *
+ * This enumerator does not walk the directory tree breadth-first, but it also
+ * is not guaranteed to walk it depth-first either (since it uses
+ * nsIFile::GetDirectoryEntries, which is not guaranteed to group a directory's
+ * subdirectories at the beginning of the list that it returns).
+ */
+class DirPickerRecursiveFileEnumerator MOZ_FINAL
+  : public nsISimpleEnumerator
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  DirPickerRecursiveFileEnumerator(nsIFile* aTopDir)
+    : mTopDir(aTopDir)
+  {
+    MOZ_ASSERT(!NS_IsMainThread(), "This class blocks on I/O!");
+
+#ifdef DEBUG
+    {
+      bool isDir;
+      aTopDir->IsDirectory(&isDir);
+      MOZ_ASSERT(isDir);
+    }
+#endif
+
+    nsCOMPtr<nsISimpleEnumerator> entries;
+    if (NS_SUCCEEDED(mTopDir->GetDirectoryEntries(getter_AddRefs(entries))) &&
+        entries) {
+      mDirEnumeratorStack.AppendElement(entries);
+      LookupAndCacheNext();
+    }
+  }
+
+  NS_IMETHOD
+  GetNext(nsISupports** aResult)
+  {
+    MOZ_ASSERT(!NS_IsMainThread(),
+               "Walking the directory tree involves I/O, so using this "
+               "enumerator can block a thread for a long time!");
+
+    if (!mNextFile) {
+      return NS_ERROR_FAILURE;
+    }
+    nsRefPtr<nsDOMFileFile> domFile = new nsDOMFileFile(mNextFile);
+    *aResult = static_cast<nsIDOMFile*>(domFile.forget().get());
+    LookupAndCacheNext();
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  HasMoreElements(bool* aResult)
+  {
+    *aResult = !!mNextFile;
+    return NS_OK;
+  }
+
+private:
+
+  void
+  LookupAndCacheNext()
+  {
+    for (;;) {
+      if (mDirEnumeratorStack.IsEmpty()) {
+        mNextFile = nullptr;
+        break;
+      }
+
+      nsISimpleEnumerator* currentDirEntries =
+        mDirEnumeratorStack.LastElement();
+
+      bool hasMore;
+      DebugOnly<nsresult> rv = currentDirEntries->HasMoreElements(&hasMore);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+      if (!hasMore) {
+        mDirEnumeratorStack.RemoveElementAt(mDirEnumeratorStack.Length() - 1);
+        continue;
+      }
+
+      nsCOMPtr<nsISupports> entry;
+      rv = currentDirEntries->GetNext(getter_AddRefs(entry));
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+      nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
+      MOZ_ASSERT(file);
+
+      bool isLink, isSpecial;
+      file->IsSymlink(&isLink);
+      file->IsSpecial(&isSpecial);
+      if (isLink || isSpecial) {
+        continue;
+      }
+
+      bool isDir;
+      file->IsDirectory(&isDir);
+      if (isDir) {
+        nsCOMPtr<nsISimpleEnumerator> subDirEntries;
+        rv = file->GetDirectoryEntries(getter_AddRefs(subDirEntries));
+        MOZ_ASSERT(NS_SUCCEEDED(rv) && subDirEntries);
+        mDirEnumeratorStack.AppendElement(subDirEntries);
+        continue;
+      }
+
+#ifdef DEBUG
+      {
+        bool isFile;
+        file->IsFile(&isFile);
+        MOZ_ASSERT(isFile);
+      }
+#endif
+
+      mNextFile.swap(file);
+      return;
+    }
+  }
+
+private:
+  nsCOMPtr<nsIFile> mTopDir;
+  nsCOMPtr<nsIFile> mNextFile;
+  nsTArray<nsCOMPtr<nsISimpleEnumerator> > mDirEnumeratorStack;
+};
+
+NS_IMPL_ISUPPORTS1(DirPickerRecursiveFileEnumerator, nsISimpleEnumerator)
+
+class DirPickerBuildFileListTask MOZ_FINAL
+  : public nsRunnable
+{
+public:
+  DirPickerBuildFileListTask(HTMLInputElement* aInput, nsIFile* aTopDir)
+    : mInput(aInput)
+    , mTopDir(aTopDir)
+  {}
+
+  NS_IMETHOD Run() {
+    if (!NS_IsMainThread()) {
+      // Build up list of nsDOMFileFile objects on this dedicated thread:
+      nsCOMPtr<nsISimpleEnumerator> iter =
+        new DirPickerRecursiveFileEnumerator(mTopDir);
+      bool hasMore = true;
+      nsCOMPtr<nsISupports> tmp;
+      while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
+        iter->GetNext(getter_AddRefs(tmp));
+        nsCOMPtr<nsIDOMFile> domFile = do_QueryInterface(tmp);
+        MOZ_ASSERT(domFile);
+        mFileList.AppendElement(domFile);
+      }
+      return NS_DispatchToMainThread(this);
+    }
+
+    // Now back on the main thread, set the list on our HTMLInputElement:
+    if (mFileList.IsEmpty()) {
+      return NS_OK;
+    }
+    // The text control frame (if there is one) isn't going to send a change
+    // event because it will think this is done by a script.
+    // So, we can safely send one by ourself.
+    mInput->SetFiles(mFileList, true);
+    nsresult rv =
+      nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
+                                           static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
+                                           NS_LITERAL_STRING("change"), true,
+                                           false);
+    // Clear mInput to make sure that it can't lose its last strong ref off the
+    // main thread (which may happen if our dtor runs off the main thread)!
+    mInput = nullptr;
+    return rv;
+  }
+
+private:
+  nsRefPtr<HTMLInputElement> mInput;
+  nsCOMPtr<nsIFile> mTopDir;
+  nsTArray<nsCOMPtr<nsIDOMFile> > mFileList;
+};
+
+static already_AddRefed<nsIFile>
+DOMFileToLocalFile(nsIDOMFile* aDomFile)
+{
+  nsString path;
+  nsresult rv = aDomFile->GetMozFullPathInternal(path);
+  if (NS_FAILED(rv) || path.IsEmpty()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIFile> localFile;
+  rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(path), true,
+                             getter_AddRefs(localFile));
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return localFile.forget();
+}
+
+} // anonymous namespace
+
 NS_IMETHODIMP
 HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 {
@@ -323,11 +526,43 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 
   int16_t mode;
   mFilePicker->GetMode(&mode);
-  bool multi = mode == static_cast<int16_t>(nsIFilePicker::modeOpenMultiple);
+
+  if (mode == static_cast<int16_t>(nsIFilePicker::modeGetFolder)) {
+    // Directory picking is different, since we still need to do more I/O to
+    // build up the list of nsDOMFileFile objects. Since this may block for a
+    // long time, we need to build the list off on another dedicated thread to
+    // avoid blocking any other activities that the browser is carrying out.
+
+    // The user selected this directory, so we always save this dir, even if
+    // no files are found under it.
+    nsCOMPtr<nsIFile> pickedDir;
+    mFilePicker->GetFile(getter_AddRefs(pickedDir));
+
+#ifdef DEBUG
+    {
+      bool isDir;
+      pickedDir->IsDirectory(&isDir);
+      MOZ_ASSERT(isDir);
+    }
+#endif
+
+    HTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(
+      mInput->OwnerDoc(), pickedDir);
+
+    nsCOMPtr<nsIEventTarget> target
+      = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+    NS_ASSERTION(target, "Must have stream transport service");
+
+    // DirPickerBuildFileListTask takes care of calling SetFiles() and
+    // dispatching the "change" event.
+    nsRefPtr<DirPickerBuildFileListTask> event =
+      new DirPickerBuildFileListTask(mInput.get(), pickedDir.get());
+    return target->Dispatch(event, NS_DISPATCH_NORMAL);
+  }
 
   // Collect new selected filenames
   nsTArray<nsCOMPtr<nsIDOMFile> > newFiles;
-  if (multi) {
+  if (mode == static_cast<int16_t>(nsIFilePicker::modeOpenMultiple)) {
     nsCOMPtr<nsISimpleEnumerator> iter;
     nsresult rv = mFilePicker->GetDomfiles(getter_AddRefs(iter));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -337,40 +572,34 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     }
 
     nsCOMPtr<nsISupports> tmp;
-    bool prefSaved = false;
-    bool loop = true;
+    bool hasMore = true;
 
-    while (NS_SUCCEEDED(iter->HasMoreElements(&loop)) && loop) {
+    while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
       iter->GetNext(getter_AddRefs(tmp));
       nsCOMPtr<nsIDOMFile> domFile = do_QueryInterface(tmp);
       MOZ_ASSERT(domFile);
-
       newFiles.AppendElement(domFile);
-
-      if (!prefSaved) {
-        // Store the last used directory using the content pref service
-        HTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(
-          mInput->OwnerDoc(), domFile);
-        prefSaved = true;
-      }
     }
-  }
-  else {
+  } else {
+    MOZ_ASSERT(mode == static_cast<int16_t>(nsIFilePicker::modeOpen));
     nsCOMPtr<nsIDOMFile> domFile;
     nsresult rv = mFilePicker->GetDomfile(getter_AddRefs(domFile));
     NS_ENSURE_SUCCESS(rv, rv);
     if (domFile) {
       newFiles.AppendElement(domFile);
-
-      // Store the last used directory using the content pref service
-      HTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(
-        mInput->OwnerDoc(), domFile);
     }
   }
 
   if (newFiles.IsEmpty()) {
     return NS_OK;
   }
+
+  // Store the last used directory using the content pref service:
+  nsCOMPtr<nsIFile> file = DOMFileToLocalFile(newFiles[0]);
+  nsCOMPtr<nsIFile> lastUsedDir;
+  file->GetParent(getter_AddRefs(lastUsedDir));
+  HTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(
+    mInput->OwnerDoc(), lastUsedDir);
 
   // The text control frame (if there is one) isn't going to send a change
   // event because it will think this is done by a script.
@@ -543,7 +772,7 @@ HTMLInputElement::InitColorPicker()
 }
 
 nsresult
-HTMLInputElement::InitFilePicker()
+HTMLInputElement::InitFilePicker(FilePickerType aType)
 {
   // Get parent nsPIDOMWindow object.
   nsCOMPtr<nsIDocument> doc = OwnerDoc();
@@ -567,15 +796,23 @@ HTMLInputElement::InitFilePicker()
   if (!filePicker)
     return NS_ERROR_FAILURE;
 
-  bool multi = HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
+  int16_t mode;
 
-  nsresult rv = filePicker->Init(win, title,
-                                 multi
-                                  ? static_cast<int16_t>(nsIFilePicker::modeOpenMultiple)
-                                  : static_cast<int16_t>(nsIFilePicker::modeOpen));
+  if (aType == FILE_PICKER_DIRECTORY) {
+    mode = static_cast<int16_t>(nsIFilePicker::modeGetFolder);
+  } else if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+    mode = static_cast<int16_t>(nsIFilePicker::modeOpenMultiple);
+  } else {
+    mode = static_cast<int16_t>(nsIFilePicker::modeOpen);
+  }
+
+  nsresult rv = filePicker->Init(win, title, mode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::accept)) {
+  // Native directory pickers ignore file type filters, so we don't spend
+  // cycles adding them for FILE_PICKER_DIRECTORY.
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::accept) &&
+      aType != FILE_PICKER_DIRECTORY) {
     SetFilePickerFiltersFromAccept(filePicker);
   } else {
     filePicker->AppendFilters(nsIFilePicker::filterAll);
@@ -589,7 +826,8 @@ HTMLInputElement::InitFilePicker()
   nsCOMPtr<nsIFilePickerShownCallback> callback =
     new HTMLInputElement::nsFilePickerShownCallback(this, filePicker);
 
-  if (!oldFiles.IsEmpty()) {
+  if (!oldFiles.IsEmpty() &&
+      aType != FILE_PICKER_DIRECTORY) {
     nsString path;
 
     oldFiles[0]->GetMozFullPathInternal(path);
@@ -621,7 +859,6 @@ HTMLInputElement::InitFilePicker()
 
   HTMLInputElement::gUploadLastDir->FetchDirectoryAndDisplayPicker(doc, filePicker, callback);
   return NS_OK;
-
 }
 
 #define CPS_PREF_NAME NS_LITERAL_STRING("browser.upload.lastDir")
@@ -680,30 +917,15 @@ UploadLastDir::FetchDirectoryAndDisplayPicker(nsIDocument* aDoc,
 }
 
 nsresult
-UploadLastDir::StoreLastUsedDirectory(nsIDocument* aDoc, nsIDOMFile* aDomFile)
+UploadLastDir::StoreLastUsedDirectory(nsIDocument* aDoc, nsIFile* aDir)
 {
   NS_PRECONDITION(aDoc, "aDoc is null");
-  NS_PRECONDITION(aDomFile, "aDomFile is null");
-
-  nsString path;
-  nsresult rv = aDomFile->GetMozFullPathInternal(path);
-  if (NS_FAILED(rv) || path.IsEmpty()) {
+  if (!aDir) {
     return NS_OK;
   }
-
-  nsCOMPtr<nsIFile> localFile;
-  rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(path), true,
-                             getter_AddRefs(localFile));
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> docURI = aDoc->GetDocumentURI();
   NS_PRECONDITION(docURI, "docURI is null");
-
-  nsCOMPtr<nsIFile> parentFile;
-  localFile->GetParent(getter_AddRefs(parentFile));
-  if (!parentFile) {
-    return NS_OK;
-  }
 
   // Attempt to get the CPS, if it's not present we'll just return
   nsCOMPtr<nsIContentPrefService2> contentPrefService =
@@ -717,7 +939,7 @@ UploadLastDir::StoreLastUsedDirectory(nsIDocument* aDoc, nsIDOMFile* aDomFile)
 
   // Find the parent of aFile, and store it
   nsString unicodePath;
-  parentFile->GetPath(unicodePath);
+  aDir->GetPath(unicodePath);
   if (unicodePath.IsEmpty()) // nothing to do
     return NS_OK;
   nsCOMPtr<nsIWritableVariant> prefValue = do_CreateInstance(NS_VARIANT_CONTRACTID);
@@ -2179,6 +2401,15 @@ HTMLInputElement::GetFiles()
   return mFileList;
 }
 
+void
+HTMLInputElement::OpenDirectoryPicker(ErrorResult& aRv)
+{
+  if (mType != NS_FORM_INPUT_FILE) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+  InitFilePicker(FILE_PICKER_DIRECTORY);
+}
+
 nsresult
 HTMLInputElement::UpdateFileList()
 {
@@ -2890,7 +3121,7 @@ HTMLInputElement::MaybeInitPickers(nsEventChainPostVisitor& aVisitor)
   if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent) &&
       !aVisitor.mEvent->mFlags.mDefaultPrevented) {
     if (mType == NS_FORM_INPUT_FILE) {
-      return InitFilePicker();
+      return InitFilePicker(FILE_PICKER_FILE);
     }
     if (mType == NS_FORM_INPUT_COLOR) {
       return InitColorPicker();
