@@ -6,8 +6,6 @@
 
 MODULE = 'gl'
 
-# NOTE: Please keep gl_provider in sync with Makefile.in until all variables
-# are moved over.
 gl_provider = 'Null'
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -15,7 +13,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     gl_provider = 'CGL'
 elif CONFIG['MOZ_WIDGET_GTK']:
-    if CONFIG['fdef MOZ_PLATFORM_MAEMO']:
+    if CONFIG['MOZ_PLATFORM_MAEMO']:
         gl_provider = 'EGL'
     else:
         if CONFIG['MOZ_EGL_XRENDER_COMPOSITE']:
@@ -23,7 +21,7 @@ elif CONFIG['MOZ_WIDGET_GTK']:
         else:
             gl_provider = 'GLX'
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    if CONFIG['fdef MOZ_PLATFORM_MAEMO']:
+    if CONFIG['MOZ_PLATFORM_MAEMO']:
         gl_provider = 'EGL'
     else:
         gl_provider = 'GLX'
