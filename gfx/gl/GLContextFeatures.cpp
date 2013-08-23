@@ -332,43 +332,42 @@ GLContext::GetFeatureName(GLFeature::Enum feature)
     return GetFeatureInfo(feature).mName;
 }
 
-bool
-GLContext::IsSupported(GLFeature::Enum feature) const
+void
+GLContext::InitFeatures()
 {
-    if (IsFeatureIsPartOfProfileVersion(feature, mProfile, mVersion)) {
-        return true;
-    }
-
-    const FeatureInfo& featureInfo = GetFeatureInfo(feature);
-
-    for (size_t i = 0; true; i++)
+    for (size_t i = 0; i < GLFeature::EnumMax; i++)
     {
-        MOZ_ASSERT(i < kMAX_EXTENSION_GROUP_SIZE, "kMAX_EXTENSION_GROUP_SIZE too small");
+        GLFeature::Enum feature = GLFeature::Enum(i);
 
-        if (featureInfo.mExtensions[i] == GLContext::Extensions_End) {
-            break;
+        if (IsFeatureIsPartOfProfileVersion(feature, mProfile, mVersion)) {
+            mAvailableFeatures[feature] = true;
+            continue;
         }
 
-        if (IsExtensionSupported(featureInfo.mExtensions[i])) {
-            return true;
+        mAvailableFeatures[feature] = false;
+
+        const FeatureInfo& featureInfo = GetFeatureInfo(feature);
+
+        for (size_t j = 0; true; j++)
+        {
+            MOZ_ASSERT(j < kMAX_EXTENSION_GROUP_SIZE, "kMAX_EXTENSION_GROUP_SIZE too small");
+
+            if (featureInfo.mExtensions[j] == GLContext::Extensions_End) {
+                break;
+            }
+
+            if (IsExtensionSupported(featureInfo.mExtensions[j])) {
+                mAvailableFeatures[feature] = true;
+                break;
+            }
         }
     }
-
-    return false;
 }
 
 bool
 GLContext::MarkUnsupported(GLFeature::Enum feature)
 {
-    MOZ_ASSERT(IsSupported(feature), "extension group is already unsupported!");
-
-    if (IsFeatureIsPartOfProfileVersion(feature, mProfile, mVersion)) {
-        NS_WARNING(nsPrintfCString("%s marked as unsupported, but it's supposed to be supported by %s %s",
-                                   GetFeatureName(feature),
-                                   ProfileString(),
-                                   VersionString()).get());
-        return false;
-    }
+    mAvailableFeatures[feature] = false;
 
     const FeatureInfo& featureInfo = GetFeatureInfo(feature);
 
@@ -383,7 +382,7 @@ GLContext::MarkUnsupported(GLFeature::Enum feature)
         MarkExtensionUnsupported(featureInfo.mExtensions[i]);
     }
 
-    MOZ_ASSERT(!IsSupported(feature), "GLContext::MarkExtensionGroupUnsupported has failed!");
+    MOZ_ASSERT(!IsSupported(feature), "GLContext::MarkUnsupported has failed!");
 
     NS_WARNING(nsPrintfCString("%s marked as unsupported", GetFeatureName(feature)).get());
 
