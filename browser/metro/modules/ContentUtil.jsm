@@ -5,7 +5,52 @@
 
 this.EXPORTED_SYMBOLS = ["ContentUtil"];
 
+const XHTML_NS = "http://www.w3.org/1999/xhtml";
+
 this.ContentUtil = {
+  populateFragmentFromString: function populateFragmentFromString(fragment, str) {
+    let re = /^([^#]*)#(\d+)\b([^#]*)/,
+        document = fragment.ownerDocument,
+        // the remaining arguments are our {text, className} values
+        replacements = Array.slice(arguments, 2),
+        match;
+
+    // walk over the string, building textNode/spans as nec. with replacement content
+    // note that #1,#2 etc. may not appear in numerical order in the string
+    while ((match = re.exec(str))) {
+      let [mstring,pre,num,post] = match,
+          replaceText = "",
+          replaceClass,
+          idx = num-1; // markers are 1-based, replacement indices 0 based
+
+      str = str.substring(re.lastIndex+mstring.length);
+
+      if (pre)
+          fragment.appendChild(document.createTextNode(pre));
+
+      if (replacements[idx]) {
+        replaceText = replacements[idx].text;
+        let spanNode = document.createElementNS(XHTML_NS, "span");
+        spanNode.appendChild(document.createTextNode(replaceText));
+        // add class to the span when provided
+        if(replacements[idx].className)
+          spanNode.classList.add(replacements[idx].className);
+
+        fragment.appendChild(spanNode);
+      } else {
+        // put it back if no replacement was provided
+        fragment.appendChild(document.createTextNode("#"+num));
+      }
+
+      if(post)
+        fragment.appendChild(document.createTextNode(post));
+    }
+    if(str)
+      fragment.appendChild(document.createTextNode(str));
+
+    return fragment;
+  },
+
   // Pass several objects in and it will combine them all into the first object and return it.
   // NOTE: Deep copy is not supported
   extend: function extend() {
