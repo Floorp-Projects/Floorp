@@ -704,7 +704,7 @@ ThreadActor.prototype = {
             };
           })
           .then(packet => {
-            this.conn.send(packet)
+            this.conn.send(packet);
           });
       });
 
@@ -1029,7 +1029,7 @@ ThreadActor.prototype = {
     if (this.state !== "paused") {
       return { error: "wrongState",
                message: "Debuggee must be paused to evaluate code." };
-    };
+    }
 
     let frame = this._requestFrame(aRequest.frame);
     if (!frame) {
@@ -1040,7 +1040,7 @@ ThreadActor.prototype = {
     if (!frame.environment) {
       return { error: "notDebuggee",
                message: "cannot access the environment of this frame." };
-    };
+    }
 
     // We'll clobber the youngest frame if the eval causes a pause, so
     // save our frame now to be restored after eval returns.
@@ -1505,7 +1505,7 @@ ThreadActor.prototype = {
       return {
         error: "notImplemented",
         message: "eventListeners request is only supported in content debugging"
-      }
+      };
     }
 
     let els = Cc["@mozilla.org/eventlistenerservice;1"]
@@ -2248,21 +2248,21 @@ SourceActor.prototype = {
     // source because we can't guarantee that the cache has the most up to date
     // content for this source like we can if it isn't source mapped.
     return fetch(this._url, { loadFromCache: !this._sourceMap })
-      .then((aSource) => {
-        return this.threadActor.createValueGrip(
-          aSource, this.threadActor.threadLifetimePool);
-      })
-      .then((aSourceGrip) => {
+      .then(({ content, contentType }) => {
         return {
           from: this.actorID,
-          source: aSourceGrip
+          source: this.threadActor.createValueGrip(
+            content, this.threadActor.threadLifetimePool),
+          contentType: contentType
         };
-      }, (aError) => {
+      })
+      .then(null, (aError) => {
         reportError(aError, "Got an exception during SA_onSource: ");
         return {
           "from": this.actorID,
           "error": "loadSourceError",
-          "message": "Could not load the source for " + this._url + "."
+          "message": "Could not load the source for " + this._url + ".\n"
+            + safeErrorString(aError)
         };
       });
   },
@@ -3483,8 +3483,8 @@ ThreadSources.prototype = {
       return this._sourceMaps[aAbsSourceMapURL];
     }
 
-    let promise = fetch(aAbsSourceMapURL).then(rawSourceMap => {
-      let map = new SourceMapConsumer(rawSourceMap);
+    let promise = fetch(aAbsSourceMapURL).then(({ content }) => {
+      let map = new SourceMapConsumer(content);
       this._setSourceMapRoot(map, aAbsSourceMapURL, aScriptURL);
       return map;
     });
@@ -3698,6 +3698,7 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
   let scheme;
   let url = aURL.split(" -> ").pop();
   let charset;
+  let contentType;
 
   try {
     scheme = Services.io.extractScheme(url);
@@ -3714,13 +3715,14 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
     case "chrome":
     case "resource":
       try {
-        NetUtil.asyncFetch(url, function onFetch(aStream, aStatus) {
+        NetUtil.asyncFetch(url, function onFetch(aStream, aStatus, aRequest) {
           if (!Components.isSuccessCode(aStatus)) {
             deferred.reject(new Error("Request failed: " + url));
             return;
           }
 
           let source = NetUtil.readInputStreamToString(aStream, aStream.available());
+          contentType = aRequest.contentType;
           deferred.resolve(source);
           aStream.close();
         });
@@ -3756,6 +3758,7 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
           }
 
           charset = channel.contentCharset;
+          contentType = channel.contentType;
           deferred.resolve(chunks.join(""));
         }
       };
@@ -3767,8 +3770,11 @@ function fetch(aURL, aOptions={ loadFromCache: true }) {
       break;
   }
 
-  return deferred.promise.then(function (source) {
-    return convertToUnicode(source, charset);
+  return deferred.promise.then(source => {
+    return {
+      content: convertToUnicode(source, charset),
+      contentType: contentType
+    };
   });
 }
 
