@@ -13,6 +13,16 @@ Cu.import("resource://gre/modules/mms_consts.js");
 
 let DEBUG; // set to true to see debug messages
 
+this.MMS_VERSION = (function () {
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  try {
+    return Services.prefs.getIntPref("dom.mms.version");
+  } catch(ex) {}
+
+  return MMS_VERSION_1_3;
+})();
+
 this.translatePduErrorToStatus = function translatePduErrorToStatus(error) {
   if (error == MMS_PDU_ERROR_OK) {
     return MMS_PDU_STATUS_RETRIEVED;
@@ -1699,6 +1709,9 @@ if (DEBUG) {
 }
 
 this.EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS.concat([
+  // Constant values
+  "MMS_VERSION",
+
   // Utility functions
   "translatePduErrorToStatus",
 
