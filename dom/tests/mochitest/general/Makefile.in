@@ -25,7 +25,7 @@ MOCHITEST_FILES = \
 		file_bug628069.html \
 		test_bug631440.html \
 		test_bug653364.html \
-		test_bug629535.html \
+		test_donottrack.html \
 		test_bug861217.html \
 		test_clientRects.html \
 		test_consoleAPI.html \
