@@ -3729,7 +3729,7 @@ def instantiateJSToNativeConversion(info, replacements, checkForValue=False):
     # Add an empty CGGeneric to get an extra newline after the argument
     # conversion.
     result.append(CGGeneric(""))
-    return result;
+    return result
 
 def convertConstIDLValueToJSVal(value):
     if isinstance(value, IDLNullValue):
@@ -4341,11 +4341,11 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
     if returnType.isGeckoInterface():
         result = CGGeneric(descriptorProvider.getDescriptor(
             returnType.unroll().inner.identifier.name).nativeType)
-        if resultAlreadyAddRefed:
-            result = CGTemplatedType("nsRefPtr", result)
-        elif descriptorProvider.getDescriptor(
+        if descriptorProvider.getDescriptor(
             returnType.unroll().inner.identifier.name).nativeOwnership == 'owned':
             result = CGTemplatedType("nsAutoPtr", result)
+        elif resultAlreadyAddRefed:
+            result = CGTemplatedType("nsRefPtr", result)
         else:
             result = CGWrapper(result, post="*")
         return result, False, None, None
