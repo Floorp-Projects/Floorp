@@ -22,6 +22,7 @@
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/dom/AtomList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/DebugOnly.h"
@@ -746,6 +747,11 @@ CTypesActivityCallback(JSContext* aCx,
   }
 }
 
+struct WorkerThreadRuntimePrivate : public PerThreadAtomCache
+{
+  WorkerPrivate* mWorkerPrivate;
+};
+
 JSContext*
 CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
 {
@@ -794,7 +800,10 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     return nullptr;
   }
 
-  JS_SetRuntimePrivate(aRuntime, aWorkerPrivate);
+  auto rtPrivate = new WorkerThreadRuntimePrivate();
+  memset(rtPrivate, 0, sizeof(WorkerThreadRuntimePrivate));
+  rtPrivate->mWorkerPrivate = aWorkerPrivate;
+  JS_SetRuntimePrivate(aRuntime, rtPrivate);
 
   JS_SetErrorReporter(workerCx, ErrorReporter);
 
@@ -837,6 +846,10 @@ public:
 
   ~WorkerJSRuntime()
   {
+    auto rtPrivate = static_cast<WorkerThreadRuntimePrivate*>(JS_GetRuntimePrivate(Runtime()));
+    delete rtPrivate;
+    JS_SetRuntimePrivate(Runtime(), nullptr);
+
     // All JSContexts except mLastJSContext should be destroyed now.  The
     // worker global will be unrooted and the shutdown cycle collection
     // should break all remaining cycles.  Destroying mLastJSContext will run
@@ -1098,6 +1111,13 @@ WorkerCrossThreadDispatcher::PostTask(WorkerTask* aTask)
   nsRefPtr<WorkerTaskRunnable> runnable = new WorkerTaskRunnable(mPrivate, aTask);
   runnable->Dispatch(nullptr);
   return true;
+}
+
+WorkerPrivate*
+GetWorkerPrivateFromContext(JSContext* aCx)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  return static_cast<WorkerThreadRuntimePrivate*>(JS_GetRuntimePrivate(JS_GetRuntime(aCx)))->mWorkerPrivate;
 }
 
 END_WORKERS_NAMESPACE

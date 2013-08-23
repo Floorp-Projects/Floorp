@@ -874,7 +874,7 @@ CanvasRenderingContext2D::EnsureTarget()
 #endif
        mTarget = layerManager->CreateDrawTarget(size, format);
      } else {
-       mTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(size, format);
+       mTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(size, format);
      }
   }
 
@@ -3566,7 +3566,7 @@ CanvasRenderingContext2D::EnsureErrorTarget()
     return;
   }
 
-  RefPtr<DrawTarget> errorTarget = gfxPlatform::GetPlatform()->CreateOffscreenDrawTarget(IntSize(1, 1), FORMAT_B8G8R8A8);
+  RefPtr<DrawTarget> errorTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(IntSize(1, 1), FORMAT_B8G8R8A8);
   NS_ABORT_IF_FALSE(errorTarget, "Failed to allocate the error target!");
 
   sErrorTarget = errorTarget;

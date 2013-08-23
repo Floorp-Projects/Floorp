@@ -300,6 +300,7 @@ private:
   static mozilla::StaticRefPtr<VolumeNameCache> sVolumeNameCache;
 
 #ifdef MOZ_WIDGET_GONK
+  nsString mLastStatus;
   void DispatchMountChangeEvent(nsAString& aVolumeStatus);
 #endif
 

@@ -99,8 +99,6 @@ class Configuration:
                     item.setUserData("mainThread", True)
                 if item in worker:
                     item.setUserData("workers", True)
-        flagWorkerOrMainThread(self.dictionaries, mainDictionaries,
-                               workerDictionaries);
         flagWorkerOrMainThread(self.callbacks, mainCallbacks, workerCallbacks)
 
     def getInterface(self, ifname):

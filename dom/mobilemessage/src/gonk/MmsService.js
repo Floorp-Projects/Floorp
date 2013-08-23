@@ -1161,6 +1161,12 @@ AcknowledgeTransaction.prototype = {
  * MmsService
  */
 function MmsService() {
+  if (DEBUG) {
+    let macro = (MMS.MMS_VERSION >> 4) & 0x0f;
+    let minor = MMS.MMS_VERSION & 0x0f;
+    debug("Running protocol version: " + macro + "." + minor);
+  }
+
   // TODO: bug 810084 - support application identifier
 }
 MmsService.prototype = {

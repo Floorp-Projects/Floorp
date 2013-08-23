@@ -15,8 +15,7 @@ enum IDBCursorDirection {
 };
 
 interface IDBCursor {
-    // This should be: readonly    attribute (IDBObjectStore or IDBIndex) source;
-    readonly    attribute nsISupports source;
+    readonly    attribute (IDBObjectStore or IDBIndex) source;
 
     readonly    attribute IDBCursorDirection           direction;
 

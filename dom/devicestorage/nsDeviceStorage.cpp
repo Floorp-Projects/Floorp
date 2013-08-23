@@ -1261,14 +1261,27 @@ DeviceStorageFile::GetStatus(nsAString& aStatus)
   nsCOMPtr<nsIVolume> vol;
   nsresult rv = vs->GetVolumeByName(mStorageName, getter_AddRefs(vol));
   NS_ENSURE_SUCCESS_VOID(rv);
+  if (!vol) {
+    return;
+  }
+  bool isMediaPresent;
+  rv = vol->GetIsMediaPresent(&isMediaPresent);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  if (!isMediaPresent) {
+    return;
+  }
+  bool isSharing;
+  rv = vol->GetIsSharing(&isSharing);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  if (isSharing) {
+    aStatus.AssignLiteral("shared");
+    return;
+  }
   int32_t volState;
   rv = vol->GetState(&volState);
   NS_ENSURE_SUCCESS_VOID(rv);
   if (volState == nsIVolume::STATE_MOUNTED) {
     aStatus.AssignLiteral("available");
-  } else if (volState == nsIVolume::STATE_SHARED ||
-             volState == nsIVolume::STATE_SHAREDMNT) {
-    aStatus.AssignLiteral("shared");
   }
 #endif
 }
@@ -3159,6 +3172,12 @@ nsDOMDeviceStorage::EnumerateInternal(const nsAString& aPath,
 void
 nsDOMDeviceStorage::DispatchMountChangeEvent(nsAString& aVolumeStatus)
 {
+  if (aVolumeStatus == mLastStatus) {
+    // We've already sent this status, don't bother sending it again.
+    return;
+  }
+  mLastStatus = aVolumeStatus;
+
   nsCOMPtr<nsIDOMEvent> event;
   NS_NewDOMDeviceStorageChangeEvent(getter_AddRefs(event), this,
                                     nullptr, nullptr);
