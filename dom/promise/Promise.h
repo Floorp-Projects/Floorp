@@ -54,7 +54,7 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   static already_AddRefed<Promise>
-  Constructor(const GlobalObject& aGlobal, JSContext* aCx, PromiseInit& aInit,
+  Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,
               ErrorResult& aRv);
 
   static already_AddRefed<Promise>

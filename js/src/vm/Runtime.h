@@ -754,6 +754,13 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
 #ifdef JS_THREADSAFE
+
+    js::SourceCompressorThread sourceCompressorThread;
+
+# ifdef JS_ION
+    js::WorkerThreadState *workerThreadState;
+# define JS_WORKER_THREADS
+
   private:
     /*
      * Lock taken when using per-runtime or per-zone data that could otherwise
@@ -779,10 +786,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     void setUsedByExclusiveThread(JS::Zone *zone);
     void clearUsedByExclusiveThread(JS::Zone *zone);
 
+# endif // JS_ION
 #endif // JS_THREADSAFE
 
     bool currentThreadHasExclusiveAccess() {
-#if defined(JS_THREADSAFE) && defined(DEBUG)
+#if defined(JS_WORKER_THREADS) && defined(DEBUG)
         return (!numExclusiveThreads && mainThreadHasExclusiveAccess) ||
             exclusiveThreadsPaused ||
             exclusiveAccessOwner == PR_GetCurrentThread();
@@ -792,7 +800,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
     bool exclusiveThreadsPresent() const {
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
         return numExclusiveThreads > 0;
 #else
         return false;
@@ -1315,15 +1323,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool signalHandlersInstalled() const {
         return signalHandlersInstalled_;
     }
-
-#ifdef JS_THREADSAFE
-# ifdef JS_ION
-    js::WorkerThreadState *workerThreadState;
-# define JS_WORKER_THREADS
-# endif
-
-    js::SourceCompressorThread sourceCompressorThread;
-#endif
 
   private:
     js::FreeOp          defaultFreeOp_;

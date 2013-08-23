@@ -356,7 +356,7 @@ nsDOMEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                         const mozilla::dom::EventInit& aParam,
                         mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<nsDOMEvent> e = new nsDOMEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);

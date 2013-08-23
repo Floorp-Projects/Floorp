@@ -7,7 +7,6 @@
 #include "mozilla/AvailableMemoryTracker.h"
 
 #include "prinrval.h"
-#include "pratom.h"
 #include "prenv.h"
 
 #include "nsIMemoryReporter.h"
@@ -19,6 +18,7 @@
 #include "nsPrintfCString.h"
 #include "nsThread.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 
@@ -128,9 +128,9 @@ uint32_t sLowCommitSpaceThreshold = 0;
 uint32_t sLowPhysicalMemoryThreshold = 0;
 uint32_t sLowMemoryNotificationIntervalMS = 0;
 
-uint32_t sNumLowVirtualMemEvents = 0;
-uint32_t sNumLowCommitSpaceEvents = 0;
-uint32_t sNumLowPhysicalMemEvents = 0;
+Atomic<uint32_t> sNumLowVirtualMemEvents;
+Atomic<uint32_t> sNumLowCommitSpaceEvents;
+Atomic<uint32_t> sNumLowPhysicalMemEvents;
 
 WindowsDllInterceptor sKernel32Intercept;
 WindowsDllInterceptor sGdi32Intercept;
@@ -212,19 +212,19 @@ void CheckMemAvailable()
       // notification.  We'll probably crash if we run out of virtual memory,
       // so don't worry about firing this notification too often.
       LOG("Detected low virtual memory.");
-      PR_ATOMIC_INCREMENT(&sNumLowVirtualMemEvents);
+      ++sNumLowVirtualMemEvents;
       NS_DispatchEventualMemoryPressure(MemPressure_New);
     }
     else if (stat.ullAvailPageFile < sLowCommitSpaceThreshold * 1024 * 1024) {
       LOG("Detected low available page file space.");
       if (MaybeScheduleMemoryPressureEvent()) {
-        PR_ATOMIC_INCREMENT(&sNumLowCommitSpaceEvents);
+        ++sNumLowCommitSpaceEvents;
       }
     }
     else if (stat.ullAvailPhys < sLowPhysicalMemoryThreshold * 1024 * 1024) {
       LOG("Detected low physical memory.");
       if (MaybeScheduleMemoryPressureEvent()) {
-        PR_ATOMIC_INCREMENT(&sNumLowPhysicalMemEvents);
+        ++sNumLowPhysicalMemEvents;
       }
     }
   }
