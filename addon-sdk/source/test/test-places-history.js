@@ -87,6 +87,9 @@ exports.testSearchURL = function (assert, done) {
   });
 };
 
+// Disabling due to intermittent Bug 892619
+// TODO solve this
+/*
 exports.testSearchTimeRange = function (assert, done) {
   let firstTime, secondTime;
   addVisits([
@@ -120,7 +123,7 @@ exports.testSearchTimeRange = function (assert, done) {
     done();
   });
 };
-
+*/
 exports.testSearchQuery = function (assert, done) {
   addVisits([
     'http://mozilla.com', 'http://webaud.io', 'http://mozilla.com/webfwd'
