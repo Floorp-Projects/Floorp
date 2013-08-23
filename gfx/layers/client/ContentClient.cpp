@@ -215,6 +215,12 @@ ContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType aType,
 
   CreateFrontBufferAndNotify(aRect);
 }
+
+bool
+ContentClientBasic::SupportsAzureContent() const
+{
+  return gfxPlatform::GetPlatform()->SupportsAzureContent();
+}
  
 bool
 ContentClientRemoteBuffer::SupportsAzureContent() const
