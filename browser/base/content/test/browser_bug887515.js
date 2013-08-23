@@ -42,7 +42,9 @@ function verifyUndoMultipleClose() {
 function test() {
   waitForExplicitFinish();
 
+  Services.prefs.setBoolPref("browser.tabs.animate", false);
   registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("browser.tabs.animate");
     originalTab.linkedBrowser.loadURI("about:blank");
     originalTab = null;
   });
