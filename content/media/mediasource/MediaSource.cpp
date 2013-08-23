@@ -31,9 +31,10 @@ MediaSource::CreateInternalStream()
 }
 
 /* static */ already_AddRefed<MediaSource>
-MediaSource::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+MediaSource::Constructor(const GlobalObject& aGlobal,
+                         ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -151,7 +152,8 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
 }
 
 /* static */ bool
-MediaSource::IsTypeSupported(const GlobalObject& aGlobal, const nsAString& aType)
+MediaSource::IsTypeSupported(const GlobalObject& aGlobal,
+                             const nsAString& aType)
 {
   ErrorResult unused;
   return IsTypeSupportedInternal(aType, unused);

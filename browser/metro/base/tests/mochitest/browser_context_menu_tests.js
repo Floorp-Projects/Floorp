@@ -342,7 +342,7 @@ gTests.push({
     let notification = notificationBox.getNotificationWithValue("popup-blocked");
     let notificationHeight = notification.boxObject.height;
 
-    checkContextMenuPositionRange(ContextMenuUI._panel, 0, 15, 175, 190);
+    checkContextMenuPositionRange(ContextMenuUI._panel, 0, 15, 220, 230);
 
     promise = waitForEvent(document, "popuphidden");
     ContextMenuUI.hide();
@@ -712,5 +712,6 @@ gTests.push({
 });
 
 function test() {
+  setDevPixelEqualToPx();
   runTests();
 }

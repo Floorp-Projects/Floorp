@@ -238,8 +238,6 @@ struct JSCompartment
     js::types::TypeObjectSet     lazyTypeObjects;
     void sweepNewTypeObjectTable(js::types::TypeObjectSet &table);
 
-    js::types::TypeObject *getLazyType(JSContext *cx, js::Class *clasp, js::TaggedProto proto);
-
     /*
      * Hash table of all manually call site-cloned functions from within
      * self-hosted code. Cloning according to call site provides extra

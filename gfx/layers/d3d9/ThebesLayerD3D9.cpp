@@ -19,9 +19,12 @@
 #include "gfxUtils.h"
 #include "ReadbackProcessor.h"
 #include "ReadbackLayer.h"
+#include "mozilla/gfx/2D.h"
 
 namespace mozilla {
 namespace layers {
+
+using namespace gfx;
 
 ThebesLayerD3D9::ThebesLayerD3D9(LayerManagerD3D9 *aManager)
   : ThebesLayer(aManager, nullptr)
@@ -468,7 +471,18 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
   if (!destinationSurface)
     return;
 
-  nsRefPtr<gfxContext> context = new gfxContext(destinationSurface);
+  nsRefPtr<gfxContext> context;
+  if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BACKEND_CAIRO)) {
+     RefPtr<DrawTarget> dt =
+        gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(destinationSurface,
+                                                               IntSize(destinationSurface->GetSize().width,
+                                                                       destinationSurface->GetSize().height));
+
+    context = new gfxContext(dt);
+  } else {
+    context = new gfxContext(destinationSurface);
+  }
+
   context->Translate(gfxPoint(-bounds.x, -bounds.y));
   LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
   cbInfo.Callback(this, context, aRegion, nsIntRegion(), cbInfo.CallbackData);
