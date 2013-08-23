@@ -3540,6 +3540,9 @@ Tab.prototype = {
           this._linkifier.linkifyNumbers(this.browser.contentWindow.document);
         }
 
+        // Show page actions for helper apps.
+        HelperApps.updatePageAction(this.browser.currentURI);
+
         if (!Reader.isEnabledForParseOnLoad)
           return;
 
