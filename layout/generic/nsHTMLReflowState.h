@@ -44,13 +44,6 @@ NS_CSS_MINMAX(NumericType aValue, NumericType aMinValue, NumericType aMaxValue)
 }
 
 /**
- * Constant used to indicate an unconstrained size.
- *
- * @see #Reflow()
- */
-#define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
-
-/**
  * CSS Frame type. Included as part of the reflow state.
  */
 typedef uint32_t  nsCSSFrameType;
@@ -102,14 +95,6 @@ typedef uint32_t  nsCSSFrameType;
 #define NS_FRAME_GET_TYPE(_ft)                           \
   ((_ft) & ~(NS_CSS_FRAME_TYPE_REPLACED |                \
              NS_CSS_FRAME_TYPE_REPLACED_CONTAINS_BLOCK))
-
-#define NS_INTRINSICSIZE    NS_UNCONSTRAINEDSIZE
-#define NS_AUTOHEIGHT       NS_UNCONSTRAINEDSIZE
-#define NS_AUTOMARGIN       NS_UNCONSTRAINEDSIZE
-#define NS_AUTOOFFSET       NS_UNCONSTRAINEDSIZE
-// NOTE: there are assumptions all over that these have the same value, namely NS_UNCONSTRAINEDSIZE
-//       if any are changed to be a value other than NS_UNCONSTRAINEDSIZE
-//       at least update AdjustComputedHeight/Width and test ad nauseum
 
 // A base class of nsHTMLReflowState that computes only the padding,
 // border, and margin, since those values are needed more often.
