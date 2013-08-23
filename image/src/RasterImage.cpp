@@ -1052,14 +1052,14 @@ size_t
 RasterImage::NonHeapSizeOfDecoded() const
 {
   return SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MEMORY_IN_PROCESS_NONHEAP,
-                                                 NULL);
+                                                 nullptr);
 }
 
 size_t
 RasterImage::OutOfProcessSizeOfDecoded() const
 {
   return SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MEMORY_OUT_OF_PROCESS,
-                                                 NULL);
+                                                 nullptr);
 }
 
 void

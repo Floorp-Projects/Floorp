@@ -22,7 +22,7 @@ static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
 /* static */ int64_t DiscardTracker::sCurrentDecodedImageBytes = 0;
 /* static */ uint32_t DiscardTracker::sMinDiscardTimeoutMs = 10000;
 /* static */ uint32_t DiscardTracker::sMaxDecodedImageKB = 42 * 1024;
-/* static */ PRLock * DiscardTracker::sAllocationLock = NULL;
+/* static */ PRLock * DiscardTracker::sAllocationLock = nullptr;
 
 /*
  * When we notice we're using too much memory for decoded images, we enqueue a
@@ -100,7 +100,7 @@ DiscardTracker::Shutdown()
 
   if (sTimer) {
     sTimer->Cancel();
-    sTimer = NULL;
+    sTimer = nullptr;
   }
 
   // Clear the sDiscardableImages linked list so that its destructor
