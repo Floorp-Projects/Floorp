@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHtml5ReleasableAttributeName_h__
-#define nsHtml5ReleasableAttributeName_h__
+#ifndef nsHtml5ReleasableAttributeName_h
+#define nsHtml5ReleasableAttributeName_h
 
 #include "nsHtml5AttributeName.h"
 #include "mozilla/Attributes.h"
@@ -18,4 +18,4 @@ class nsHtml5ReleasableAttributeName MOZ_FINAL : public nsHtml5AttributeName
     virtual void release();
 };
 
-#endif // nsHtml5ReleasableAttributeName_h__
+#endif // nsHtml5ReleasableAttributeName_h

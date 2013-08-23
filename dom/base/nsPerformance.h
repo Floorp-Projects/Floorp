@@ -11,9 +11,9 @@
 #include "nsWrapperCache.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsContentUtils.h"
+#include "nsIDOMWindow.h"
 
 class nsITimedChannel;
-class nsIDOMWindow;
 class nsPerformance;
 class JSObject;
 struct JSContext;
