@@ -812,34 +812,17 @@ GetPropertiesInternal(const nsAString& aPath,
   return true;
 }
 
-class GetPropertiesReplyHandler : public DBusReplyHandler
-{
-public:
-  GetPropertiesReplyHandler(const nsCString& aIface)
-    : mIface(aIface)
-  {
-    MOZ_ASSERT(!mIface.IsEmpty());
-  }
-
-  const nsCString& GetInterface() const
-  {
-    return mIface;
-  }
-
-private:
-  nsCString mIface;
-};
-
-class AppendDeviceNameReplyHandler: public GetPropertiesReplyHandler
+class AppendDeviceNameReplyHandler: public DBusReplyHandler
 {
 public:
   AppendDeviceNameReplyHandler(const nsCString& aIface,
                                const nsString& aDevicePath,
                                const BluetoothSignal& aSignal)
-    : GetPropertiesReplyHandler(aIface)
+    : mIface(aIface)
     , mDevicePath(aDevicePath)
     , mSignal(aSignal)
   {
+    MOZ_ASSERT(!mIface.IsEmpty());
     MOZ_ASSERT(!mDevicePath.IsEmpty());
   }
 
@@ -859,7 +842,7 @@ public:
     BluetoothValue deviceProperties;
 
     bool success = UnpackPropertiesMessage(aReply, &err, deviceProperties,
-                                           GetInterface().get());
+                                           mIface.get());
     if (!success) {
       BT_WARNING("Failed to get device properties");
       return;
@@ -894,6 +877,7 @@ public:
   }
 
 private:
+  nsCString mIface;
   nsString mDevicePath;
   BluetoothSignal mSignal;
 };
