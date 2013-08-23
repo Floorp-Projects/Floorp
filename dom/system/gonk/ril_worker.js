@@ -3844,7 +3844,7 @@ let RIL = {
     };
     Buf.newParcel(REQUEST_STK_SEND_ENVELOPE_WITH_STATUS, options);
 
-    Buf.seekIncoming(-1 * (Buf.currentParcelSize - Buf.readAvailable
+    Buf.seekIncoming(-1 * (Buf.getCurrentParcelSize() - Buf.getReadAvailable()
                            - 2 * UINT32_SIZE)); // Skip response_type & request_type.
     let messageStringLength = Buf.readUint32(); // In semi-octets
     let smscLength = GsmPDUHelper.readHexOctet(); // In octets, inclusive of TOA
@@ -3953,7 +3953,7 @@ let RIL = {
     // Write EFsms Status
     Buf.writeUint32(EFSMS_STATUS_FREE);
 
-    Buf.seekIncoming(-1 * (Buf.currentParcelSize - Buf.readAvailable
+    Buf.seekIncoming(-1 * (Buf.getCurrentParcelSize() - Buf.getReadAvailable()
                            - 2 * UINT32_SIZE)); // Skip response_type & request_type.
     let messageStringLength = Buf.readUint32(); // In semi-octets
     let smscLength = GsmPDUHelper.readHexOctet(); // In octets, inclusive of TOA
@@ -3978,7 +3978,7 @@ let RIL = {
     GsmPDUHelper.writeHexOctet(smscLength);
     // Write TOA & SMSC Address
     if (smscLength) {
-      Buf.seekIncoming(-1 * (Buf.currentParcelSize - Buf.readAvailable
+      Buf.seekIncoming(-1 * (Buf.getCurrentParcelSize() - Buf.getReadAvailable()
                              - 2 * UINT32_SIZE // Skip response_type, request_type.
                              - 2 * PDU_HEX_OCTET_SIZE)); // Skip messageStringLength & smscLength.
       Buf.copyIncomingToOutgoing(PDU_HEX_OCTET_SIZE * smscLength);
@@ -7334,7 +7334,7 @@ let GsmPDUHelper = {
     // Because each PDU octet is converted to two UCS2 char2, we should always
     // get even messageStringLength in this#_processReceivedSms(). So, we'll
     // always need two delimitors at the end.
-    if (Buf.readAvailable <= 4) {
+    if (Buf.getReadAvailable() <= 4) {
       return;
     }
 
