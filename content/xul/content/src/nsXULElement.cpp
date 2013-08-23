@@ -549,9 +549,15 @@ nsXULElement::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
   bool shouldFocus = false;
 
 #ifdef XP_MACOSX
-  // on Mac, mouse interactions only focus the element if it's a list
-  if (aWithMouse && IsNonList(mNodeInfo))
+  // on Mac, mouse interactions only focus the element if it's a list,
+  // or if it's a remote target, since the remote target must handle
+  // the focus.
+  if (aWithMouse &&
+      IsNonList(mNodeInfo) && 
+      !nsEventStateManager::IsRemoteTarget(this))
+  {
     return false;
+  }
 #endif
 
   nsCOMPtr<nsIDOMXULControlElement> xulControl = do_QueryObject(this);
