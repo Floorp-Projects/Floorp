@@ -138,7 +138,19 @@ gfxContext::~gfxContext()
 gfxASurface *
 gfxContext::OriginalSurface()
 {
-    return mSurface;
+    if (mCairo || mSurface) {
+        return mSurface;
+    }
+
+    if (mOriginalDT && mOriginalDT->GetType() == BACKEND_CAIRO) {
+        cairo_surface_t *s =
+            (cairo_surface_t*)mOriginalDT->GetNativeSurface(NATIVE_SURFACE_CAIRO_SURFACE);
+        if (s) {
+            mSurface = gfxASurface::Wrap(s);
+            return mSurface;
+        }
+    }
+    return nullptr;
 }
 
 already_AddRefed<gfxASurface>
@@ -157,6 +169,16 @@ gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
         cairo_surface_get_device_offset(s, dx, dy);
     return gfxASurface::Wrap(s);
   } else {
+    if (mDT->GetType() == BACKEND_CAIRO) {
+        cairo_surface_t *s =
+            (cairo_surface_t*)mDT->GetNativeSurface(NATIVE_SURFACE_CAIRO_SURFACE);
+        if (s) {
+            if (dx && dy)
+                cairo_surface_get_device_offset(s, dx, dy);
+            return gfxASurface::Wrap(s);
+        }
+    }
+
     if (dx && dy) {
       *dx = *dy = 0;
     }
@@ -170,6 +192,14 @@ gfxContext::GetCairo()
 {
   if (mCairo) {
     return mCairo;
+  }
+
+  if (mDT->GetType() == BACKEND_CAIRO) {
+    cairo_t *ctx =
+      (cairo_t*)mOriginalDT->GetNativeSurface(NATIVE_SURFACE_CAIRO_CONTEXT);
+    if (ctx) {
+      return ctx;
+    }
   }
 
   if (mRefCairo) {
