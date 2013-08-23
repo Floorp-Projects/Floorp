@@ -143,7 +143,7 @@ let ContactService = {
               throw e;
             }
           }.bind(this),
-          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Find:Return:KO", { requestID: msg.cursorId, errorMsg: aErrorMsg }); },
+          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:GetAll:Return:KO", { requestID: msg.cursorId, errorMsg: aErrorMsg }); },
           msg.findOptions, msg.cursorId);
         break;
       case "Contacts:GetAll:SendNow":
@@ -192,7 +192,9 @@ let ContactService = {
             mm.sendAsyncMessage("Contacts:Clear:Return:OK", { requestID: msg.requestID });
             this.broadcastMessage("Contact:Changed", { reason: "remove" });
           }.bind(this),
-          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
+          function(aErrorMsg) {
+            mm.sendAsyncMessage("Contacts:Clear:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg });
+          }.bind(this)
         );
         break;
       case "Contacts:GetRevision":
@@ -206,7 +208,9 @@ let ContactService = {
               revision: revision
             });
           },
-          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:GetRevision:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
+          function(aErrorMsg) {
+            mm.sendAsyncMessage("Contacts:GetRevision:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg });
+          }.bind(this)
         );
         break;
       case "Contacts:GetCount":
@@ -220,7 +224,9 @@ let ContactService = {
               count: count
             });
           },
-          function(aErrorMsg) { mm.sendAsyncMessage("Contacts:Count:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg }); }.bind(this)
+          function(aErrorMsg) {
+            mm.sendAsyncMessage("Contacts:Count:Return:KO", { requestID: msg.requestID, errorMsg: aErrorMsg });
+          }.bind(this)
         );
         break;
       case "Contacts:RegisterForMessages":
