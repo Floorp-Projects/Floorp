@@ -956,6 +956,7 @@ let test_system_shutdown = maketest("system_shutdown", function system_shutdown(
  */
 let test_duration = maketest("duration", function duration(test) {
   return Task.spawn(function() {
+    Services.prefs.setBoolPref("toolkit.osfile.log", true);
     // Options structure passed to a OS.File copy method.
     let copyOptions = {
       // This field should be overridden with the actual duration
@@ -1031,12 +1032,12 @@ let test_duration = maketest("duration", function duration(test) {
     test.ok(copyOptions.outExecutionDuration >= backupDuration, "duration has increased 3");
     OS.File.remove(pathDest);
 
-    Services.prefs.setBoolPref("toolkit.osfile.log", true);
     OS.Shared.TEST = true;
 
     // Testing an operation that doesn't take arguments at all
     let file = yield OS.File.open(pathSource);
     yield file.stat();
     yield file.close();
+    Services.prefs.setBoolPref("toolkit.osfile.log", false);
   });
 });
