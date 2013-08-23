@@ -409,7 +409,8 @@ private:
 
     nsresult
     LookupPolicy(nsIPrincipal* principal,
-                 ClassInfoData& aClassData, jsid aProperty,
+                 ClassInfoData& aClassData,
+                 JS::Handle<jsid> aProperty,
                  uint32_t aAction,
                  ClassPolicy** aCachedClassPolicy,
                  SecurityLevel* result);
