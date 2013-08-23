@@ -523,7 +523,7 @@ private:
     /**
      * Mark the feature and associated extensions as unsupported
      */
-    bool MarkUnsupported(GLFeature::Enum feature);
+    void MarkUnsupported(GLFeature::Enum feature);
 
 // -----------------------------------------------------------------------------
 // Robustness handling
