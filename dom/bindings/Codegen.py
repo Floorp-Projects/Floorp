@@ -6097,9 +6097,11 @@ class CGUnionStruct(CGThing):
         if self.type.hasNullableType:
             enumValues.append("eNull")
             methods.append(ClassMethod("IsNull", "bool", [], const=True, inline=True,
-                                       body="return mType == eNull;"))
+                                       body="return mType == eNull;",
+                                       bodyInHeader=True))
             methods.append(ClassMethod("SetNull", "void", [], inline=True,
-                                       body="mType = eNull;"))
+                                       body="mType = eNull;",
+                                       bodyInHeader=True))
             destructorCases.append(CGCase("eNull", None))
             toJSValCases.append(CGCase("eNull", CGGeneric("rval.setNull();\n"
                                                           "return true;")))
