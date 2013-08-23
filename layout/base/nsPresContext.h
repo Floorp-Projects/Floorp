@@ -16,7 +16,6 @@
 #include "nsRect.h"
 #include "nsDeviceContext.h"
 #include "nsFont.h"
-#include "nsIAtom.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsCRT.h"
