@@ -299,7 +299,6 @@ TabChild::TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t 
   , mOrientation(eScreenOrientation_PortraitPrimary)
   , mUpdateHitRegion(false)
 {
-    printf("creating %d!\n", NS_IsMainThread());
 }
 
 // Get the DOMWindowUtils for the window corresponding to the given document.
@@ -1283,7 +1282,6 @@ TabChild::IsRootContentDocument()
 bool
 TabChild::RecvLoadURL(const nsCString& uri)
 {
-    printf("loading %s, %d\n", uri.get(), NS_IsMainThread());
     SetProcessNameToAppName();
 
     nsresult rv = mWebNav->LoadURI(NS_ConvertUTF8toUTF16(uri).get(),
@@ -1459,8 +1457,6 @@ TabChild::RecvShow(const nsIntSize& size)
     if (mDidFakeShow) {
         return true;
     }
-
-    printf("[TabChild] SHOW (w,h)= (%d, %d)\n", size.width, size.height);
 
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);
     if (!baseWindow) {

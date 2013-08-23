@@ -7,19 +7,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
-#include "nsIContent.h"
-#include "nsIFrame.h"
-#include "nsISupports.h"
-#include "nsIAtom.h"
-#include "nsPresContext.h"
-#include "nsHTMLParts.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
-#include "nsCOMPtr.h"
-#include "nsLayoutUtils.h"
-#include "nsDisplayList.h"
-#include "nsCSSRendering.h"
-#include <algorithm>
 
 class nsColumnSetFrame : public nsContainerFrame {
 public:

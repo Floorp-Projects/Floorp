@@ -971,16 +971,16 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
 
     switch (ext) {
         case OES_element_index_uint:
-            return gl->IsExtensionSupported(GLContext::XXX_element_index_uint);
+            return gl->IsSupported(GLFeature::element_index_uint);
         case OES_standard_derivatives:
-            return gl->IsExtensionSupported(GLContext::XXX_standard_derivatives);
+            return gl->IsSupported(GLFeature::standard_derivatives);
         case WEBGL_lose_context:
             // We always support this extension.
             return true;
         case OES_texture_float:
-            return gl->IsExtensionSupported(GLContext::XXX_texture_float);
+            return gl->IsSupported(GLFeature::texture_float);
         case OES_texture_float_linear:
-            return gl->IsExtensionSupported(GLContext::XXX_texture_float_linear);
+            return gl->IsSupported(GLFeature::texture_float_linear);
         case OES_vertex_array_object:
             return WebGLExtensionVertexArray::IsSupported(this);
         case EXT_texture_filter_anisotropic:
@@ -1001,8 +1001,8 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
         case WEBGL_compressed_texture_pvrtc:
             return gl->IsExtensionSupported(GLContext::IMG_texture_compression_pvrtc);
         case WEBGL_depth_texture:
-            return gl->IsExtensionSupported(GLContext::XXX_packed_depth_stencil) &&
-                   gl->IsExtensionSupported(GLContext::XXX_depth_texture);
+            return gl->IsSupported(GLFeature::packed_depth_stencil) &&
+                   gl->IsSupported(GLFeature::depth_texture);
         case ANGLE_instanced_arrays:
             return WebGLExtensionInstancedArrays::IsSupported(this);
         default:
