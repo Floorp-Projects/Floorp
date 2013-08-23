@@ -299,13 +299,11 @@ function variableUseFollowsGC(suppressed, variable, worklist)
             }
         }
 
-        if (!body.predecessors)
-            computePredecessors(body);
-
-        if (!(ppoint in body.predecessors))
+        var predecessors = getPredecessors(body);
+        if (!(ppoint in predecessors))
             continue;
 
-        for (var edge of body.predecessors[ppoint]) {
+        for (var edge of predecessors[ppoint]) {
             var source = edge.Index[0];
 
             if (edgeKillsVariable(edge, variable)) {

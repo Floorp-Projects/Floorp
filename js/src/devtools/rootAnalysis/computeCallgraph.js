@@ -107,14 +107,72 @@ function memo(name)
 var seenCallees = null;
 var seenSuppressedCallees = null;
 
+// Return a list of all callees that the given edge might be a call to. Each
+// one is represented by an object with a 'kind' field that is one of
+// ('direct', 'field', 'indirect', 'unknown').
+function getCallees(edge)
+{
+    if (edge.Kind != "Call")
+        return [];
+
+    var callee = edge.Exp[0];
+    var callees = [];
+    if (callee.Kind == "Var") {
+        assert(callee.Variable.Kind == "Func");
+        var origName = callee.Variable.Name[0];
+        var names = [ origName, otherDestructorName(origName) ];
+        for (var name of names) {
+            if (name)
+                callees.push({'kind': 'direct', 'name': name});
+        }
+    } else {
+        assert(callee.Kind == "Drf");
+        if (callee.Exp[0].Kind == "Fld") {
+            var field = callee.Exp[0].Field;
+            var fieldName = field.Name[0];
+            var csuName = field.FieldCSU.Type.Name;
+            var functions = null;
+            if ("FieldInstanceFunction" in field)
+                functions = findVirtualFunctions(csuName, fieldName);
+            if (functions) {
+                // Known set of virtual call targets.
+                for (var name of functions)
+                    callees.push({'kind': "direct", 'name': name});
+            } else {
+                // Unknown set of call targets. Non-virtual field call,
+                // or virtual call on an nsISupports object.
+                callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
+            }
+        } else if (callee.Exp[0].Kind == "Var") {
+            // indirect call through a variable.
+            callees.push({'kind': "indirect", 'variable': callee.Exp[0].Variable.Name[0]});
+        } else {
+            // unknown call target.
+            callees.push({'kind': "unknown"});
+        }
+    }
+
+    return callees;
+}
+
+var lastline;
+function printOnce(line)
+{
+    if (line != lastline) {
+        print(line);
+        lastline = line;
+    }
+}
+
 function processBody(caller, body)
 {
     if (!('PEdge' in body))
         return;
+
+    lastline = null;
     for (var edge of body.PEdge) {
         if (edge.Kind != "Call")
             continue;
-        var callee = edge.Exp[0];
         var suppressText = "";
         var seen = seenCallees;
         if (edge.Index[0] in body.suppressed) {
@@ -122,47 +180,22 @@ function processBody(caller, body)
             seen = seenSuppressedCallees;
         }
         var prologue = suppressText + memo(caller) + " ";
-        if (callee.Kind == "Var") {
-            assert(callee.Variable.Kind == "Func");
-            var name = callee.Variable.Name[0];
-            if (!(name in seen)) {
-                print("D " + prologue + memo(name));
-                seen[name] = true;
-            }
-            var otherName = otherDestructorName(name);
-            if (otherName && !(otherName in seen)) {
-                print("D " + prologue + memo(otherName));
-                seen[otherName] = true;
-            }
-        } else {
-            assert(callee.Kind == "Drf");
-            if (callee.Exp[0].Kind == "Fld") {
-                var field = callee.Exp[0].Field;
-                var fieldName = field.Name[0];
-                var csuName = field.FieldCSU.Type.Name;
-                var functions = null;
-                if ("FieldInstanceFunction" in field)
-                    functions = findVirtualFunctions(csuName, fieldName);
-                if (functions) {
-                    // Known set of virtual call targets.
-                    for (var name of functions) {
-                        if (!(name in seen)) {
-                            print("D " + prologue + memo(name));
-                            seen[name] = true;
-                        }
-                    }
-                } else {
-                    // Unknown set of call targets. Non-virtual field call,
-                    // or virtual call on an nsISupports object.
-                    print("F " + prologue + "CLASS " + csuName + " FIELD " + fieldName);
+        for (var callee of getCallees(edge)) {
+            if (callee.kind == 'direct') {
+                if (!(callee.name in seen)) {
+                    seen[name] = true;
+                    printOnce("D " + prologue + memo(callee.name));
                 }
-            } else if (callee.Exp[0].Kind == "Var") {
-                // indirect call through a variable.
-                print("I " + prologue +
-                      "VARIABLE " + callee.Exp[0].Variable.Name[0]);
+            } else if (callee.kind == 'field') {
+                var { csu, field } = callee;
+                printOnce("F " + prologue + "CLASS " + csu + " FIELD " + field);
+            } else if (callee.kind == 'indirect') {
+                printOnce("I " + prologue + "VARIABLE " + callee.variable);
+            } else if (callee.kind == 'unknown') {
+                printOnce("I " + prologue + "VARIABLE UNKNOWN");
             } else {
-                // unknown call target.
-                print("I " + prologue + "VARIABLE UNKNOWN");
+                printErr("invalid " + callee.kind + " callee");
+                debugger;
             }
         }
     }
