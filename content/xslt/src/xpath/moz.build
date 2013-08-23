@@ -6,8 +6,12 @@
 
 MODULE = 'transformiix'
 
+EXPORTS.mozilla.dom += [
+    'XPathEvaluator.h',
+]
+
 CPP_SOURCES += [
-    'nsXPathEvaluator.cpp',
+    'XPathEvaluator.cpp',
     'nsXPathExpression.cpp',
     'nsXPathNSResolver.cpp',
     'nsXPathResult.cpp',
