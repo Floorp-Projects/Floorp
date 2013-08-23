@@ -24,13 +24,6 @@ protected:
   ~TextEncoder()
   {}
 
-  virtual JSObject*
-  CreateUint8Array(JSContext* aCx, char* aBuf, uint32_t aLen) MOZ_OVERRIDE
-  {
-    return Uint8Array::Create(aCx, this, aLen,
-                              reinterpret_cast<uint8_t*>(aBuf));
-  }
-
 public:
   virtual void
   _trace(JSTracer* aTrc) MOZ_OVERRIDE;
@@ -45,10 +38,11 @@ public:
 
   JSObject*
   Encode(JSContext* aCx,
+         JS::Handle<JSObject*> aObj,
          const nsAString& aString,
          const TextEncodeOptionsWorkers& aOptions,
          ErrorResult& aRv) {
-    return TextEncoderBase::Encode(aCx, aString, aOptions.mStream, aRv);
+    return TextEncoderBase::Encode(aCx, aObj, aString, aOptions.mStream, aRv);
   }
 };
 

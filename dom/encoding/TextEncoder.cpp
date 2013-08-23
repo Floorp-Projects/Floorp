@@ -49,6 +49,7 @@ TextEncoderBase::Init(const nsAString& aEncoding, ErrorResult& aRv)
 
 JSObject*
 TextEncoderBase::Encode(JSContext* aCx,
+                        JS::Handle<JSObject*> aObj,
                         const nsAString& aString,
                         const bool aStream,
                         ErrorResult& aRv)
@@ -87,7 +88,7 @@ TextEncoderBase::Encode(JSContext* aCx,
   JSObject* outView = nullptr;
   if (NS_SUCCEEDED(rv)) {
     buf[dstLen] = '\0';
-    outView = CreateUint8Array(aCx, buf, dstLen);
+    outView = CreateUint8Array(aCx, aObj, buf, dstLen);
     if (!outView) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
