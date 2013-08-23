@@ -449,9 +449,9 @@ static nsresult NewImageChannel(nsIChannel **aResult,
     aLoadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
   }
 
-  // Pass in a NULL loadgroup because this is the underlying network request.
-  // This request may be referenced by several proxy image requests (psossibly
-  // in different documents).
+  // Pass in a nullptr loadgroup because this is the underlying network
+  // request. This request may be referenced by several proxy image requests
+  // (possibly in different documents).
   // If all of the proxy requests are canceled then this request should be
   // canceled too.
   //
@@ -1638,7 +1638,7 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
       entry->Touch();
 
 #ifdef DEBUG_joe
-      printf("CACHEGET: %d %s %d\n", time(NULL), spec.get(), entry->SizeOfData());
+      printf("CACHEGET: %d %s %d\n", time(nullptr), spec.get(), entry->SizeOfData());
 #endif
     }
     else {
@@ -1991,7 +1991,7 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, uint32_t aLeng
 
   /* or how about ART? */
   /* ART begins with JG (4A 47). Major version offset 2.
-   * Minor version offset 3. Offset 4 must be NULL.
+   * Minor version offset 3. Offset 4 must be nullptr.
    */
   else if (aLength >= 5 &&
    ((unsigned char) aContents[0])==0x4a &&
