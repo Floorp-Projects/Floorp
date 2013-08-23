@@ -876,7 +876,7 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
 }
 
 RefPtr<DrawTarget>
-gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
+gfxPlatform::CreateOffscreenCanvasDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
 {
   NS_ASSERTION(mPreferredCanvasBackend, "No backend.");
   RefPtr<DrawTarget> target = CreateDrawTargetForBackend(mPreferredCanvasBackend, aSize, aFormat);
@@ -888,6 +888,12 @@ gfxPlatform::CreateOffscreenDrawTarget(const IntSize& aSize, SurfaceFormat aForm
   return CreateDrawTargetForBackend(mFallbackCanvasBackend, aSize, aFormat);
 }
 
+RefPtr<DrawTarget>
+gfxPlatform::CreateOffscreenContentDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
+{
+  NS_ASSERTION(mContentBackend, "No backend.");
+  return CreateDrawTargetForBackend(mContentBackend, aSize, aFormat);
+}
 
 RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat)
