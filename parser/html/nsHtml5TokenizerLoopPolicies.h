@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHtml5TokenizerLoopPolicies_h_
-#define nsHtml5TokenizerLoopPolicies_h_
+#ifndef nsHtml5TokenizerLoopPolicies_h
+#define nsHtml5TokenizerLoopPolicies_h
 
 /**
  * This policy does not report tokenizer transitions anywhere. To be used
@@ -40,4 +40,4 @@ struct nsHtml5ViewSourcePolicy
   }
 };
 
-#endif // nsHtml5TokenizerLoopPolicies_h_
+#endif // nsHtml5TokenizerLoopPolicies_h

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHtml5Module_h__
-#define nsHtml5Module_h__
+#ifndef nsHtml5Module_h
+#define nsHtml5Module_h
 
 #include "nsIParser.h"
 #include "nsIThread.h"
@@ -25,4 +25,4 @@ class nsHtml5Module
     static nsIThread* sMainThread;
 };
 
-#endif // nsHtml5Module_h__
+#endif // nsHtml5Module_h
