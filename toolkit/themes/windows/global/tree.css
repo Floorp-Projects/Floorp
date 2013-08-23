@@ -61,6 +61,7 @@ tree[seltype="cell"] > treechildren::-moz-tree-row,
 tree[seltype="text"] > treechildren::-moz-tree-row {
   border: none;
   background-color: transparent;
+  background-image: none;
 }
 
 /* ::::: tree cells ::::: */
