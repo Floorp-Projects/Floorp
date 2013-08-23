@@ -1021,7 +1021,7 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   if (!FileReaderSyncBinding_workers::GetConstructorObject(aCx, global) ||
       !ImageDataBinding::GetConstructorObject(aCx, global) ||
       !TextDecoderBinding::GetConstructorObject(aCx, global) ||
-      !TextEncoderBinding_workers::GetConstructorObject(aCx, global) ||
+      !TextEncoderBinding::GetConstructorObject(aCx, global) ||
       !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, global) ||
       !XMLHttpRequestUploadBinding_workers::GetConstructorObject(aCx, global) ||
       !URLBinding_workers::GetConstructorObject(aCx, global) ||
