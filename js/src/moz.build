@@ -142,6 +142,7 @@ CPP_SOURCES += [
     'TestingFunctions.cpp',
     'ThreadPool.cpp',
     'TokenStream.cpp',
+    'TypeRepresentation.cpp',
     'TypedArrayObject.cpp',
     'Unicode.cpp',
     'Value.cpp',

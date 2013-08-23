@@ -410,3 +410,4 @@ MSG_DEF(JSMSG_BINARYDATA_SUBARRAY_INTEGER_ARG, 356, 1, JSEXN_ERR, "argument {0} 
 MSG_DEF(JSMSG_BINARYDATA_STRUCTTYPE_EMPTY_DESCRIPTOR, 357, 0, JSEXN_ERR, "field descriptor cannot be empty")
 MSG_DEF(JSMSG_BINARYDATA_STRUCTTYPE_BAD_FIELD, 358, 1, JSEXN_ERR, "field {0} is not a valid BinaryData Type descriptor")
 MSG_DEF(JSMSG_ES6_UNIMPLEMENTED,      359, 0, JSEXN_ERR, "ES6 functionality not yet implemented")
+MSG_DEF(JSMSG_BINARYDATA_TOO_BIG, 360, 0, JSEXN_ERR, "Type is too large to allocate")
