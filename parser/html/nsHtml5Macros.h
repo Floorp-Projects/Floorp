@@ -20,8 +20,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef nsHtml5Macros_h_
-#define nsHtml5Macros_h_
+#ifndef nsHtml5Macros_h
+#define nsHtml5Macros_h
 
 #define NS_HTML5_CONTINUE(target) \
   goto target
@@ -29,4 +29,4 @@
 #define NS_HTML5_BREAK(target) \
   goto target ## _end
 
-#endif /* nsHtml5Macros_h_ */
+#endif /* nsHtml5Macros_h */
