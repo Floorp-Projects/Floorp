@@ -26,8 +26,8 @@
  * Please edit StackNode.java instead and regenerate.
  */
 
-#ifndef nsHtml5StackNode_h__
-#define nsHtml5StackNode_h__
+#ifndef nsHtml5StackNode_h
+#define nsHtml5StackNode_h
 
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"

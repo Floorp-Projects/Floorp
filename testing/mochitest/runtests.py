@@ -76,8 +76,7 @@ class MochitestServer:
     args = ["-g", self._xrePath,
             "-v", "170",
             "-f", self._httpdPath + "/httpd.js",
-            "-e", """const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR = '%(server)s';
-                     const _TEST_PREFIX = %(testPrefix)s; const _DISPLAY_RESULTS = %(displayResults)s;""" %
+            "-e", """const _PROFILE_PATH = '%(profile)s'; const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR = '%(server)s'; const _TEST_PREFIX = %(testPrefix)s; const _DISPLAY_RESULTS = %(displayResults)s;""" %
                    {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer,
                     "testPrefix" : self.testPrefix, "displayResults" : str(not self._closeWhenDone).lower() },
             "-f", "./" + "server.js"]

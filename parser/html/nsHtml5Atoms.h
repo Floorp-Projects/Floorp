@@ -9,8 +9,8 @@
  * is loaded and they are destroyed when gklayout is unloaded.
  */
 
-#ifndef nsHtml5Atoms_h___
-#define nsHtml5Atoms_h___
+#ifndef nsHtml5Atoms_h
+#define nsHtml5Atoms_h
 
 #include "nsIAtom.h"
 
@@ -27,4 +27,4 @@ class nsHtml5Atoms {
 #undef HTML5_ATOM
 };
 
-#endif /* nsHtml5Atoms_h___ */
+#endif /* nsHtml5Atoms_h */
