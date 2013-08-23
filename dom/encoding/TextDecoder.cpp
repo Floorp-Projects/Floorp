@@ -107,10 +107,5 @@ TextDecoderBase::GetEncoding(nsAString& aEncoding)
   nsContentUtils::ASCIIToLower(aEncoding);
 }
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(TextDecoder, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(TextDecoder, Release)
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(TextDecoder, mGlobal)
-
 } // dom
 } // mozilla
