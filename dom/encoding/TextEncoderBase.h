@@ -47,6 +47,7 @@ public:
    * Encodes incoming utf-16 code units/ DOM string to the requested encoding.
    *
    * @param aCx        Javascript context.
+   * @param aObj       the wrapper of the TextEncoder
    * @param aString    utf-16 code units to be encoded.
    * @param aOptions   Streaming option. Initialised by default to false.
    *                   If the streaming option is false, then the encoding
@@ -54,12 +55,20 @@ public:
    *                   the previous encoding is reused/continued.
    * @return JSObject* The Uint8Array wrapped in a JS object.
    */
-  JSObject* Encode(JSContext* aCx, const nsAString& aString,
-                   const bool aStream, ErrorResult& aRv);
+  JSObject* Encode(JSContext* aCx,
+                   JS::Handle<JSObject*> aObj,
+                   const nsAString& aString,
+                   const bool aStream,
+                   ErrorResult& aRv);
 
 protected:
-  virtual JSObject*
-  CreateUint8Array(JSContext* aCx, char* aBuf, uint32_t aLen) = 0;
+  JSObject*
+  CreateUint8Array(JSContext* aCx, JS::Handle<JSObject*> aObj, 
+                   char* aBuf, uint32_t aLen) const
+  {
+    return Uint8Array::Create(aCx, aObj, aLen,
+                              reinterpret_cast<uint8_t*>(aBuf));
+  }
 
 private:
   nsCString mEncoding;
