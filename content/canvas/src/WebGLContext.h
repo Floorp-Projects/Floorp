@@ -780,7 +780,12 @@ public:
     bool IsEnabled(WebGLenum cap);
 
 private:
+    // State tracking slots
+    realGLboolean mDitherEnabled;
+    realGLboolean mScissorTestEnabled;
+
     bool ValidateCapabilityEnum(WebGLenum cap, const char* info);
+    realGLboolean* GetStateTrackingSlot(WebGLenum cap);
 
 // -----------------------------------------------------------------------------
 // Vertices Feature (WebGLContextVertices.cpp)
@@ -1166,8 +1171,6 @@ protected:
               mStencilWriteMaskFront, mStencilWriteMaskBack;
     realGLboolean mColorWriteMask[4];
     realGLboolean mDepthWriteMask;
-    realGLboolean mScissorTestEnabled;
-    realGLboolean mDitherEnabled;
     WebGLfloat mColorClearValue[4];
     WebGLint mStencilClearValue;
     WebGLfloat mDepthClearValue;
