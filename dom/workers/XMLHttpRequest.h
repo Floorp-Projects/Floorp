@@ -76,7 +76,7 @@ public:
 
   static XMLHttpRequest*
   Constructor(const GlobalObject& aGlobal,
-              const MozXMLHttpRequestParametersWorkers& aParams,
+              const MozXMLHttpRequestParameters& aParams,
               ErrorResult& aRv);
 
   static XMLHttpRequest*
@@ -84,7 +84,7 @@ public:
               ErrorResult& aRv)
   {
     // Pretend like someone passed null, so we can pick up the default values
-    MozXMLHttpRequestParametersWorkers params;
+    MozXMLHttpRequestParameters params;
     if (!params.Init(aGlobal.GetContext(), JS::NullHandleValue)) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;

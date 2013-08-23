@@ -39,6 +39,7 @@ binding_cpp_files := $(subst .webidl,Binding.cpp,$(all_webidl_files))
 binding_dependency_trackers := $(subst .webidl,Binding,$(all_webidl_files))
 
 globalgen_targets := \
+  GeneratedAtomList.h \
   PrototypeList.h \
   RegisterBindings.h \
   RegisterBindings.cpp \
