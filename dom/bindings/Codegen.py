@@ -4262,6 +4262,9 @@ def leafTypeNeedsCx(type, descriptorProvider, retVal):
             (retVal and type.isSpiderMonkeyInterface()) or
             (descriptorProvider.workers and type.isCallback()))
 
+def leafTypeNeedsScopeObject(type, descriptorProvider, retVal):
+    return (retVal and type.isSpiderMonkeyInterface())
+
 def leafTypeNeedsRooting(type, descriptorProvider):
     return (leafTypeNeedsCx(type, descriptorProvider, False) or
             type.isSpiderMonkeyInterface())
@@ -4273,6 +4276,10 @@ def typeNeedsRooting(type, descriptorProvider):
 def typeNeedsCx(type, descriptorProvider, retVal=False):
     return typeMatchesLambda(type,
                              lambda t: leafTypeNeedsCx(t, descriptorProvider, retVal))
+
+def typeNeedsScopeObject(type, descriptorProvider, retVal=False):
+    return typeMatchesLambda(type,
+                             lambda t: leafTypeNeedsScopeObject(t, descriptorProvider, retVal))
 
 def typeMatchesLambda(type, func):
     if type is None:
@@ -4410,6 +4417,12 @@ def needCx(returnType, arguments, extendedAttributes, descriptorProvider,
             (typeNeedsCx(returnType, descriptorProvider, True) or
              any(typeNeedsCx(a.type, descriptorProvider) for a in arguments)) or
             'implicitJSContext' in extendedAttributes)
+
+def needScopeObject(returnType, arguments, extendedAttributes,
+                    descriptorProvider, isWrapperCached, considerTypes):
+    return (considerTypes and not isWrapperCached and
+            (typeNeedsScopeObject(returnType, descriptorProvider, True) or
+             any(typeNeedsScopeObject(a.type, descriptorProvider) for a in arguments)))
 
 class CGCallGenerator(CGThing):
     """
@@ -4684,6 +4697,14 @@ if (global.Failed()) {
         if needsCx and not (static and descriptor.workers):
             argsPre.append("cx")
 
+        needsUnwrap = isConstructor
+        if needScopeObject(returnType, arguments, self.extendedAttributes,
+                           descriptor, descriptor.wrapperCache,
+                           not descriptor.interface.isJSImplemented()):
+            cgThings.append(CGGeneric("Maybe<JS::Rooted<JSObject*> > unwrappedObj;"))
+            argsPre.append("unwrappedObj.empty() ? obj : unwrappedObj.ref()")
+            needsUnwrap = True
+
         if idlNode.isMethod() and idlNode.isLegacycaller():
             # If we can have legacycaller with identifier, we can't
             # just use the idlNode to determine whether we're
@@ -4708,26 +4729,37 @@ if (global.Failed()) {
                                              lenientFloatCode=lenientFloatCode) for
                          i in range(argConversionStartsAt, self.argCount)])
 
-        if isConstructor:
-            # If we're called via an xray, we need to enter the underlying
-            # object's compartment and then wrap up all of our arguments into
-            # that compartment as needed.  This is all happening after we've
-            # already done the conversions from JS values to WebIDL (C++)
-            # values, so we only need to worry about cases where there are 'any'
-            # or 'object' types, or other things that we represent as actual
-            # JSAPI types, present.  Effectively, we're emulating a
-            # CrossCompartmentWrapper, but working with the C++ types, not the
-            # original list of JS::Values.
-            cgThings.append(CGGeneric("Maybe<JSAutoCompartment> ac;"))
-            xraySteps = [
+        if needsUnwrap:
+            # Something depends on having the unwrapped object, so unwrap it now.
+            xraySteps = []
+            if not isConstructor:
+                xraySteps.append(
+                    CGGeneric("unwrappedObj.construct(cx, obj);\n"
+                              "JS::Rooted<JSObject*>& obj = unwrappedObj.ref();"))
+
+            # XXXkhuey we should be able to MOZ_ASSERT that unwrappedObj is
+            # not null.
+            xraySteps.append(
                 CGGeneric("obj = js::CheckedUnwrap(obj);\n"
                           "if (!obj) {\n"
                           "  return false;\n"
-                          "}\n"
-                          "ac.construct(cx, obj);") ]
-            xraySteps.extend(
-                wrapArgIntoCurrentCompartment(arg, argname, isMember=False)
-                for (arg, argname) in self.getArguments())
+                          "}"))
+            if isConstructor:
+                # If we're called via an xray, we need to enter the underlying
+                # object's compartment and then wrap up all of our arguments into
+                # that compartment as needed.  This is all happening after we've
+                # already done the conversions from JS values to WebIDL (C++)
+                # values, so we only need to worry about cases where there are 'any'
+                # or 'object' types, or other things that we represent as actual
+                # JSAPI types, present.  Effectively, we're emulating a
+                # CrossCompartmentWrapper, but working with the C++ types, not the
+                # original list of JS::Values.
+                cgThings.append(CGGeneric("Maybe<JSAutoCompartment> ac;"))
+                xraySteps.append(CGGeneric("ac.construct(cx, obj);"))
+                xraySteps.extend(
+                    wrapArgIntoCurrentCompartment(arg, argname, isMember=False)
+                    for (arg, argname) in self.getArguments())
+
             cgThings.append(
                 CGIfWrapper(CGList(xraySteps, "\n"),
                             "xpc::WrapperFactory::IsXrayWrapper(obj)"))
@@ -8726,22 +8758,22 @@ class CGBindingRoot(CGThing):
 
 class CGNativeMember(ClassMethod):
     def __init__(self, descriptorProvider, member, name, signature, extendedAttrs,
-                 breakAfter=True, passCxAsNeeded=True, visibility="public",
+                 breakAfter=True, passJSBitsAsNeeded=True, visibility="public",
                  jsObjectsArePtr=False, variadicIsSequence=False):
         """
         If jsObjectsArePtr is true, typed arrays and "object" will be
         passed as JSObject*.
 
-        If passCxAsNeeded is false, we don't automatically pass in a
-        JSContext* based on the return and argument types.  We can
-        still pass it based on 'implicitJSContext' annotations.
+        If passJSBitsAsNeeded is false, we don't automatically pass in a
+        JSContext* or a JSObject* based on the return and argument types.  We
+        can still pass it based on 'implicitJSContext' annotations.
         """
         self.descriptorProvider = descriptorProvider
         self.member = member
         self.extendedAttrs = extendedAttrs
         self.resultAlreadyAddRefed = isResultAlreadyAddRefed(self.descriptorProvider,
                                                              self.extendedAttrs)
-        self.passCxAsNeeded = passCxAsNeeded
+        self.passJSBitsAsNeeded = passJSBitsAsNeeded
         self.jsObjectsArePtr = jsObjectsArePtr
         self.variadicIsSequence = variadicIsSequence
         breakAfterSelf = "\n" if breakAfter else ""
@@ -8902,8 +8934,12 @@ class CGNativeMember(ClassMethod):
             args.insert(0, Argument("JS::Value", "aThisVal"))
         # And jscontext bits.
         if needCx(returnType, argList, self.extendedAttrs,
-                  self.descriptorProvider, self.passCxAsNeeded):
+                  self.descriptorProvider, self.passJSBitsAsNeeded):
             args.insert(0, Argument("JSContext*", "cx"))
+        if needScopeObject(returnType, argList, self.extendedAttrs,
+                           self.descriptorProvider, self.descriptorProvider,
+                           self.passJSBitsAsNeeded):
+            args.insert(0, Argument("JS::Handle<JSObject*>", "obj"))
         # And if we're static, a global
         if self.member.isStatic():
             globalObjectType = "GlobalObject"
@@ -9354,7 +9390,7 @@ class CGJSImplMethod(CGNativeMember):
                                 descriptor.getExtendedAttributes(method),
                                 breakAfter=breakAfter,
                                 variadicIsSequence=True,
-                                passCxAsNeeded=False)
+                                passJSBitsAsNeeded=False)
         self.signature = signature
         self.descriptor = descriptor
         if isConstructor:
@@ -9432,7 +9468,7 @@ class CGJSImplGetter(CGNativeMember):
                                 (attr.type, []),
                                 descriptor.getExtendedAttributes(attr,
                                                                  getter=True),
-                                passCxAsNeeded=False)
+                                passJSBitsAsNeeded=False)
         self.body = self.getImpl()
 
     def getImpl(self):
@@ -9448,7 +9484,7 @@ class CGJSImplSetter(CGNativeMember):
                                  [FakeArgument(attr.type, attr)]),
                                 descriptor.getExtendedAttributes(attr,
                                                                  setter=True),
-                                passCxAsNeeded=False)
+                                passJSBitsAsNeeded=False)
         self.body = self.getImpl()
 
     def getImpl(self):
@@ -9793,7 +9829,7 @@ class CallbackMember(CGNativeMember):
         CGNativeMember.__init__(self, descriptorProvider, FakeMember(),
                                 name, (self.retvalType, args),
                                 extendedAttrs={},
-                                passCxAsNeeded=False,
+                                passJSBitsAsNeeded=False,
                                 visibility=visibility,
                                 jsObjectsArePtr=True)
         # We have to do all the generation of our body now, because
