@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
+# Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -16,7 +16,8 @@ import datetime
 import psutil
 
 from psutil._compat import PY3
-from test_psutil import *
+from test_psutil import (get_test_subprocess, reap_children, PYTHON, LINUX, OSX,
+                         BSD, skip_on_access_denied, sh, skipIf)
 
 
 def ps(cmd):
@@ -25,15 +26,12 @@ def ps(cmd):
     """
     if not LINUX:
         cmd = cmd.replace(" --no-headers ", " ")
-    if SUNOS:
-        cmd = cmd.replace("-o command", "-o comm")
-        cmd = cmd.replace("-o start", "-o stime")
     p = subprocess.Popen(cmd, shell=1, stdout=subprocess.PIPE)
     output = p.communicate()[0].strip()
     if PY3:
         output = str(output, sys.stdout.encoding)
     if not LINUX:
-        output = output.split('\n')[1].strip()
+        output = output.split('\n')[1]
     try:
         return int(output)
     except ValueError:
@@ -98,16 +96,13 @@ class PosixSpecificTestCase(unittest.TestCase):
         name_psutil = psutil.Process(self.pid).name.lower()
         self.assertEqual(name_ps, name_psutil)
 
-    @unittest.skipIf(OSX or BSD,
-                    'ps -o start not available')
+    @skipIf(OSX or BSD)
     def test_process_create_time(self):
         time_ps = ps("ps --no-headers -o start -p %s" %self.pid).split(' ')[0]
         time_psutil = psutil.Process(self.pid).create_time
-        if SUNOS:
-            time_psutil = round(time_psutil)
-        time_psutil_tstamp = datetime.datetime.fromtimestamp(
+        time_psutil = datetime.datetime.fromtimestamp(
                         time_psutil).strftime("%H:%M:%S")
-        self.assertEqual(time_ps, time_psutil_tstamp)
+        self.assertEqual(time_ps, time_psutil)
 
     def test_process_exe(self):
         ps_pathname = ps("ps --no-headers -o command -p %s" %self.pid).split(' ')[0]
@@ -127,28 +122,21 @@ class PosixSpecificTestCase(unittest.TestCase):
     def test_process_cmdline(self):
         ps_cmdline = ps("ps --no-headers -o command -p %s" %self.pid)
         psutil_cmdline = " ".join(psutil.Process(self.pid).cmdline)
-        if SUNOS:
-            # ps on Solaris only shows the first part of the cmdline
-            psutil_cmdline = psutil_cmdline.split(" ")[0]
         self.assertEqual(ps_cmdline, psutil_cmdline)
 
-    @retry_before_failing()
     def test_get_pids(self):
         # Note: this test might fail if the OS is starting/killing
         # other processes in the meantime
-        if SUNOS:
-            cmd = ["ps", "ax"]
-        else:
-            cmd = ["ps", "ax", "-o", "pid"]
-        p = get_test_subprocess(cmd, stdout=subprocess.PIPE)
+        p = get_test_subprocess(["ps", "ax", "-o", "pid"], stdout=subprocess.PIPE)
         output = p.communicate()[0].strip()
         if PY3:
             output = str(output, sys.stdout.encoding)
+        output = output.replace('PID', '')
+        p.wait()
         pids_ps = []
-        for line in output.split('\n')[1:]:
-            if line:
-                pid = int(line.split()[0].strip())
-                pids_ps.append(pid)
+        for pid in output.split('\n'):
+            if pid:
+                pids_ps.append(int(pid.strip()))
         # remove ps subprocess pid which is supposed to be dead in meantime
         pids_ps.remove(p.pid)
         pids_psutil = psutil.get_pid_list()
@@ -164,15 +152,12 @@ class PosixSpecificTestCase(unittest.TestCase):
                          [x for x in pids_ps if x not in pids_psutil]
             self.fail("difference: " + str(difference))
 
-    # for some reason ifconfig -a does not report differente interfaces
-    # psutil does
-    @unittest.skipIf(SUNOS, "test not reliable on SUNOS")
     def test_nic_names(self):
         p = subprocess.Popen("ifconfig -a", shell=1, stdout=subprocess.PIPE)
         output = p.communicate()[0].strip()
         if PY3:
             output = str(output, sys.stdout.encoding)
-        for nic in psutil.net_io_counters(pernic=True).keys():
+        for nic in psutil.network_io_counters(pernic=True).keys():
             for line in output.split():
                 if line.startswith(nic):
                     break
@@ -189,50 +174,8 @@ class PosixSpecificTestCase(unittest.TestCase):
             self.assertTrue(u.name in users, u.name)
             self.assertTrue(u.terminal in terminals, u.terminal)
 
-    def test_fds_open(self):
-        # Note: this fails from time to time; I'm keen on thinking
-        # it doesn't mean something is broken
-        def call(p, attr):
-            attr = getattr(p, name, None)
-            if attr is not None and callable(attr):
-                ret = attr()
-            else:
-                ret = attr
-
-        p = psutil.Process(os.getpid())
-        attrs = []
-        failures = []
-        for name in dir(psutil.Process):
-            if name.startswith('_') \
-            or name.startswith('set_') \
-            or name in ('terminate', 'kill', 'suspend', 'resume', 'nice',
-                        'send_signal', 'wait', 'get_children', 'as_dict'):
-                continue
-            else:
-                try:
-                    num1 = p.get_num_fds()
-                    for x in range(2):
-                        call(p, name)
-                    num2 = p.get_num_fds()
-                except psutil.AccessDenied:
-                    pass
-                else:
-                    if abs(num2 - num1) > 1:
-                        fail = "failure while processing Process.%s method " \
-                               "(before=%s, after=%s)" % (name, num1, num2)
-                        failures.append(fail)
-        if failures:
-            self.fail('\n' + '\n'.join(failures))
-
-
-
-
-def test_main():
-    test_suite = unittest.TestSuite()
-    test_suite.addTest(unittest.makeSuite(PosixSpecificTestCase))
-    result = unittest.TextTestRunner(verbosity=2).run(test_suite)
-    return result.wasSuccessful()
 
 if __name__ == '__main__':
-    if not test_main():
-        sys.exit(1)
+    test_suite = unittest.TestSuite()
+    test_suite.addTest(unittest.makeSuite(PosixSpecificTestCase))
+    unittest.TextTestRunner(verbosity=2).run(test_suite)
