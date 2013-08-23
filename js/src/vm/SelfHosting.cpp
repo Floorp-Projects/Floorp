@@ -38,9 +38,6 @@ namespace js {
  */
 struct SelfHostedClass
 {
-    /* The head of the linked list. */
-    static SelfHostedClass *head;
-
     /* Next class in the list. */
     SelfHostedClass *next;
 
@@ -53,14 +50,12 @@ struct SelfHostedClass
      */
     static JSObject *newPrototype(JSContext *cx, uint32_t numSlots);
 
-    static bool is(Class *clasp);
+    static bool is(JSContext *cx, Class *clasp);
 
     SelfHostedClass(const char *name, uint32_t numSlots);
 };
 
 } /* namespace js */
-
-SelfHostedClass *SelfHostedClass::head = NULL;
 
 JSObject *
 SelfHostedClass::newPrototype(JSContext *cx, uint32_t numSlots)
@@ -69,8 +64,7 @@ SelfHostedClass::newPrototype(JSContext *cx, uint32_t numSlots)
     SelfHostedClass *shClass = cx->new_<SelfHostedClass>("Self-hosted Class", numSlots);
     if (!shClass)
         return NULL;
-    shClass->next = head;
-    head = shClass;
+    cx->runtime()->addSelfHostedClass(shClass);
 
     Rooted<GlobalObject *> global(cx, cx->global());
     RootedObject proto(cx, global->createBlankPrototype(cx, &shClass->class_));
@@ -81,9 +75,9 @@ SelfHostedClass::newPrototype(JSContext *cx, uint32_t numSlots)
 }
 
 bool
-SelfHostedClass::is(Class *clasp)
+SelfHostedClass::is(JSContext *cx, Class *clasp)
 {
-    SelfHostedClass *shClass = head;
+    SelfHostedClass *shClass = cx->runtime()->selfHostedClasses();
     while (shClass) {
         if (clasp == &shClass->class_)
             return true;
@@ -713,13 +707,13 @@ JSRuntime::finishSelfHosting()
 {
     selfHostingGlobal_ = NULL;
 
-    SelfHostedClass *head = SelfHostedClass::head;
-    while (head) {
-        SelfHostedClass *tmp = head;
-        head = head->next;
+    SelfHostedClass *shClass = selfHostedClasses_;
+    while (shClass) {
+        SelfHostedClass *tmp = shClass;
+        shClass = shClass->next;
         js_delete(tmp);
     }
-    SelfHostedClass::head = NULL;
+    selfHostedClasses_ = NULL;
 }
 
 void
@@ -727,6 +721,13 @@ JSRuntime::markSelfHostingGlobal(JSTracer *trc)
 {
     if (selfHostingGlobal_)
         MarkObjectRoot(trc, &selfHostingGlobal_, "self-hosting global");
+}
+
+void
+JSRuntime::addSelfHostedClass(SelfHostedClass *shClass)
+{
+    shClass->next = selfHostedClasses_;
+    selfHostedClasses_ = shClass;
 }
 
 typedef AutoObjectObjectHashMap CloneMemory;
@@ -760,7 +761,7 @@ CloneProperties(JSContext *cx, HandleObject obj, HandleObject clone, CloneMemory
         }
     }
 
-    if (SelfHostedClass::is(obj->getClass())) {
+    if (SelfHostedClass::is(cx, obj->getClass())) {
         for (uint32_t i = 0; i < JSCLASS_RESERVED_SLOTS(obj->getClass()); i++) {
             val = obj->getReservedSlot(i);
             if (!CloneValue(cx, &val, clonedObjects))
