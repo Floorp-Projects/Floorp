@@ -26,7 +26,6 @@
 #include "nsStyleStruct.h"
 #include "nsHTMLReflowMetrics.h"
 #include "nsFrameList.h"
-#include "nsAlgorithm.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "FramePropertyTable.h"
 #include "mozilla/TypedEnum.h"
