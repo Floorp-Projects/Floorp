@@ -34,7 +34,6 @@ class imgIContainer;
 #include "nsIPrincipal.h"
 #include "gfxPattern.h"
 #include "nsCSSPseudoElements.h"
-#include "nsHTMLReflowState.h"
 #include "FrameMetrics.h"
 #include "gfx3DMatrix.h"
 #include "nsIWidget.h"
