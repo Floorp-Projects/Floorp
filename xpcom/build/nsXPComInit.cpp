@@ -334,51 +334,58 @@ NS_InitXPCOM(nsIServiceManager* *result,
     return NS_InitXPCOM2(result, binDirectory, nullptr);
 }
 
-// |sSizeOfICU| can be accessed by multiple JSRuntimes, so it must be
-// thread-safe.
-static Atomic<size_t> sSizeOfICU;
-
-static int64_t
-GetICUSize()
+class ICUReporter MOZ_FINAL : public MemoryReporterBase
 {
-    return sSizeOfICU;
-}
+public:
+    ICUReporter()
+      : MemoryReporterBase("explicit/icu", KIND_HEAP, UNITS_BYTES,
+"Memory used by ICU, a Unicode and globalization support library.")
+    {
+#ifdef DEBUG
+        // There must be only one instance of this class, due to |sAmount|
+        // being static.
+        static bool hasRun = false;
+        MOZ_ASSERT(!hasRun);
+        hasRun = true;
+#endif
+        sAmount = 0;
+    }
 
-NS_MEMORY_REPORTER_IMPLEMENT(ICU,
-    "explicit/icu",
-    KIND_HEAP,
-    UNITS_BYTES,
-    GetICUSize,
-    "Memory used by ICU, a Unicode and globalization support library."
-)
+    static void* Alloc(const void*, size_t size)
+    {
+        void* p = malloc(size);
+        sAmount += MallocSizeOfOnAlloc(p);
+        return p;
+    }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(ICUMallocSizeOfOnAlloc)
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(ICUMallocSizeOfOnFree)
+    static void* Realloc(const void*, void* p, size_t size)
+    {
+        sAmount -= MallocSizeOfOnFree(p);
+        void *pnew = realloc(p, size);
+        if (pnew) {
+            sAmount += MallocSizeOfOnAlloc(pnew);
+        } else {
+            // realloc failed;  undo the decrement from above
+            sAmount += MallocSizeOfOnAlloc(p);
+        }
+        return pnew;
+    }
 
-static void*
-ICUAlloc(const void*, size_t size)
-{
-    void* p = malloc(size);
-    sSizeOfICU += ICUMallocSizeOfOnAlloc(p);
-    return p;
-}
+    static void Free(const void*, void* p)
+    {
+        sAmount -= MallocSizeOfOnFree(p);
+        free(p);
+    }
 
-static void*
-ICURealloc(const void*, void* p, size_t size)
-{
-    size_t delta = 0 - ICUMallocSizeOfOnFree(p);
-    void* pnew = realloc(p, size);
-    delta += pnew ? ICUMallocSizeOfOnAlloc(pnew) : ICUMallocSizeOfOnAlloc(p);
-    sSizeOfICU += delta;
-    return pnew;
-}
+private:
+    // |sAmount| can be (implicitly) accessed by multiple JSRuntimes, so it
+    // must be thread-safe.
+    static Atomic<size_t> sAmount;
 
-static void
-ICUFree(const void*, void* p)
-{
-    sSizeOfICU -= ICUMallocSizeOfOnFree(p);
-    free(p);
-}
+    int64_t Amount() MOZ_OVERRIDE { return sAmount; }
+};
+
+/* static */ Atomic<size_t> ICUReporter::sAmount;
 
 EXPORT_XPCOM_API(nsresult)
 NS_InitXPCOM2(nsIServiceManager* *result,
@@ -524,7 +531,8 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     // can't define the alloc/free functions in the JS engine, because it can't
     // depend on the XPCOM-based memory reporting goop.  So for now, we have
     // this oddness.
-    if (!JS_SetICUMemoryFunctions(ICUAlloc, ICURealloc, ICUFree)) {
+    if (!JS_SetICUMemoryFunctions(ICUReporter::Alloc, ICUReporter::Realloc,
+                                  ICUReporter::Free)) {
         NS_RUNTIMEABORT("JS_SetICUMemoryFunctions failed.");
     }
 
@@ -572,7 +580,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 
     // The memory reporter manager is up and running -- register a reporter for
     // ICU's memory usage.
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(ICU));
+    NS_RegisterMemoryReporter(new ICUReporter());
 
     mozilla::Telemetry::Init();
 
