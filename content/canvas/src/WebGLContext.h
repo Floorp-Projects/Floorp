@@ -25,7 +25,6 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/dom/ImageData.h"
 
 #ifdef XP_MACOSX
 #include "ForceDiscreteGPUHelperCGL.h"
@@ -73,6 +72,8 @@ class WebGLTexture;
 class WebGLVertexArray;
 
 namespace dom {
+class ImageData;
+
 struct WebGLContextAttributes;
 struct WebGLContextAttributesInitializer;
 template<typename> class Nullable;
