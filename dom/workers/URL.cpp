@@ -117,7 +117,7 @@ private:
 
 public:
   CreateURLRunnable(WorkerPrivate* aWorkerPrivate, nsIDOMBlob* aBlob,
-                    const mozilla::dom::objectURLOptionsWorkers& aOptions,
+                    const mozilla::dom::objectURLOptions& aOptions,
                     nsString& aURL)
   : URLRunnable(aWorkerPrivate),
     mBlob(aBlob),
@@ -228,7 +228,7 @@ public:
 // static
 void
 URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject* aBlob,
-                     const mozilla::dom::objectURLOptionsWorkers& aOptions,
+                     const mozilla::dom::objectURLOptions& aOptions,
                      nsString& aResult, mozilla::ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.GetContext();
@@ -255,7 +255,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject* aBlob,
 // static
 void
 URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject& aBlob,
-                     const mozilla::dom::objectURLOptionsWorkers& aOptions,
+                     const mozilla::dom::objectURLOptions& aOptions,
                      nsString& aResult, mozilla::ErrorResult& aRv)
 {
   return CreateObjectURL(aGlobal, &aBlob, aOptions, aResult, aRv);

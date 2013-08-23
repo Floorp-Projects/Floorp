@@ -40,7 +40,7 @@ public:
   Encode(JSContext* aCx,
          JS::Handle<JSObject*> aObj,
          const nsAString& aString,
-         const TextEncodeOptionsWorkers& aOptions,
+         const TextEncodeOptions& aOptions,
          ErrorResult& aRv) {
     return TextEncoderBase::Encode(aCx, aObj, aString, aOptions.mStream, aRv);
   }

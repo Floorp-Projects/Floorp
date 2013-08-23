@@ -18,12 +18,12 @@ class URL : public EventTarget
 public: // Methods for WebIDL
   static void
   CreateObjectURL(const GlobalObject& aGlobal,
-                  JSObject* aArg, const objectURLOptionsWorkers& aOptions,
+                  JSObject* aArg, const objectURLOptions& aOptions,
                   nsString& aResult, ErrorResult& aRv);
 
   static void
   CreateObjectURL(const GlobalObject& aGlobal,
-                  JSObject& aArg, const objectURLOptionsWorkers& aOptions,
+                  JSObject& aArg, const objectURLOptions& aOptions,
                   nsString& aResult, ErrorResult& aRv);
 
   static void

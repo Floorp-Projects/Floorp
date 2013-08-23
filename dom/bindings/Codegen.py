@@ -3481,8 +3481,7 @@ for (uint32_t i = 0; i < length; ++i) {
         # should be able to assume not isOptional here.
         assert not isOptional
 
-        typeName = CGDictionary.makeDictionaryName(type.inner,
-                                                   descriptorProvider.workers)
+        typeName = CGDictionary.makeDictionaryName(type.inner)
         actualTypeName = typeName
 
         declType = CGGeneric(actualTypeName)
@@ -4380,8 +4379,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         return result, True, rooter, None
     if returnType.isDictionary():
         nullable = returnType.nullable()
-        dictName = (CGDictionary.makeDictionaryName(returnType.unroll().inner,
-                                                    descriptorProvider.workers) +
+        dictName = (CGDictionary.makeDictionaryName(returnType.unroll().inner) +
                     "Initializer")
         result = CGGeneric(dictName)
         if not isMember and typeNeedsRooting(returnType, descriptorProvider):
@@ -7966,9 +7964,7 @@ class CGDictionary(CGThing):
     def __init__(self, dictionary, descriptorProvider):
         self.dictionary = dictionary
         self.descriptorProvider = descriptorProvider
-        self.workers = descriptorProvider.workers
-        # NOTE: jsids are per-runtime, so don't use them in workers
-        self.needToInitIds = not self.workers and len(dictionary.members) > 0
+        self.needToInitIds = len(dictionary.members) > 0
         self.memberInfo = [
             (member,
              getJSToNativeConversionInfo(
@@ -7992,9 +7988,7 @@ class CGDictionary(CGThing):
     def base(self):
         if self.dictionary.parent:
             return self.makeClassName(self.dictionary.parent)
-        if not self.workers:
-            return "MainThreadDictionaryBase"
-        return "DictionaryBase"
+        return "MainThreadDictionaryBase"
 
     def initMethod(self):
         body = (
@@ -8003,10 +7997,17 @@ class CGDictionary(CGThing):
             "MOZ_ASSERT_IF(!cx, val.isNull());\n")
 
         if self.needToInitIds:
-            body += (
-                "if (cx && !initedIds && !InitIds(cx)) {\n"
-                "  return false;\n"
-                "}\n")
+            initIdText = """${dictName}Atoms* atomsCache = nullptr;
+if (cx) {
+  atomsCache = GetAtomCache<${dictName}Atoms>(cx);
+  if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
+    return false;
+  }
+}
+
+"""
+            body += string.Template(initIdText).substitute(
+              { "dictName": self.makeClassName(self.dictionary)})
 
         if self.dictionary.parent:
             body += (
@@ -8044,10 +8045,10 @@ class CGDictionary(CGThing):
         ], body=body)
 
     def initFromJSONMethod(self):
-        assert not self.workers
         return ClassMethod("Init", "bool", [
                 Argument('const nsAString&', 'aJSON'),
             ], body=(
+                "MOZ_ASSERT(NS_IsMainThread());\n"
                 "AutoSafeJSContext cx;\n"
                 "JS::Rooted<JS::Value> json(cx);\n"
                 "bool ok = ParseJSON(cx, aJSON, &json);\n"
@@ -8058,10 +8059,14 @@ class CGDictionary(CGThing):
     def toObjectMethod(self):
         body = ""
         if self.needToInitIds:
-            body += (
-                "if (!initedIds && !InitIds(cx)) {\n"
-                "  return false;\n"
-                "}\n")
+            initIdText = """${dictName}Atoms* atomsCache = GetAtomCache<${dictName}Atoms>(cx);
+if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
+  return false;
+}
+
+"""
+            body += string.Template(initIdText).substitute(
+              { "dictName": self.makeClassName(self.dictionary)})
 
         if self.dictionary.parent:
             body += (
@@ -8092,23 +8097,28 @@ class CGDictionary(CGThing):
 
     def initIdsMethod(self):
         assert self.needToInitIds
-        idinit = [CGGeneric('!InternJSString(cx, %s, "%s")' %
+        idinit = [CGGeneric('!InternJSString(cx, atomsCache->%s, "%s")' %
                             (m.identifier.name + "_id", m.identifier.name))
                   for m in self.dictionary.members]
+        idinit.reverse();
         idinit = CGList(idinit, " ||\n")
-        idinit = CGWrapper(idinit, pre="if (",
+        idinit = CGWrapper(idinit, pre="""
+// Initialize these in reverse order so that any failure leaves the first one
+// uninitialized.
+if (""",
                            post=(") {\n"
                                  "  return false;\n"
                                  "}"),
                            reindent=True)
         body = (
-           "MOZ_ASSERT(!initedIds);\n"
+           "MOZ_ASSERT(!*reinterpret_cast<jsid**>(atomsCache));\n"
            "%s\n"
-           "initedIds = true;\n"
            "return true;") % idinit.define()
 
         return ClassMethod("InitIds", "bool", [
             Argument("JSContext*", "cx"),
+            Argument("%sAtoms*" % self.makeClassName(self.dictionary),
+                     "atomsCache"),
         ], static=True, body=body, visibility="private")
 
     def traceDictionaryMethod(self):
@@ -8140,16 +8150,9 @@ class CGDictionary(CGThing):
 
         if self.needToInitIds:
             methods.append(self.initIdsMethod())
-            members.append(ClassMember("initedIds", "bool", static=True, body="false"))
-            members.extend(
-                ClassMember(self.makeIdName(m.identifier.name), "jsid", static=True, body="JSID_VOID")
-                for m in d.members)
 
         methods.append(self.initMethod())
-
-        if not self.workers:
-            methods.append(self.initFromJSONMethod())
-
+        methods.append(self.initFromJSONMethod())
         methods.append(self.toObjectMethod())
         methods.append(self.traceDictionaryMethod())
 
@@ -8179,12 +8182,11 @@ class CGDictionary(CGThing):
         return self.dictionary.getDeps()
 
     @staticmethod
-    def makeDictionaryName(dictionary, workers):
-        suffix = "Workers" if workers else ""
-        return dictionary.identifier.name + suffix
+    def makeDictionaryName(dictionary):
+        return dictionary.identifier.name
 
     def makeClassName(self, dictionary):
-        return self.makeDictionaryName(dictionary, self.workers)
+        return self.makeDictionaryName(dictionary)
 
     @staticmethod
     def makeMemberName(name):
@@ -8215,15 +8217,9 @@ class CGDictionary(CGThing):
         if member.defaultValue:
             replacements["haveValue"] = "!isNull && !temp.ref().isUndefined()"
 
-        # NOTE: jsids are per-runtime, so don't use them in workers
-        if self.workers:
-            propName = member.identifier.name
-            propGet = ('JS_GetProperty(cx, &val.toObject(), "%s", &temp.ref())' %
-                       propName)
-        else:
-            propId = self.makeIdName(member.identifier.name);
-            propGet = ("JS_GetPropertyById(cx, &val.toObject(), %s, &temp.ref())" %
-                       propId)
+        propId = self.makeIdName(member.identifier.name);
+        propGet = ("JS_GetPropertyById(cx, &val.toObject(), atomsCache->%s, &temp.ref())" %
+                   propId)
 
         conversionReplacements = {
             "prop": self.makeMemberName(member.identifier.name),
@@ -8259,14 +8255,9 @@ class CGDictionary(CGThing):
             # The data is inside the Optional<>
             memberData = "%s.InternalValue()" % memberLoc
 
-        if self.workers:
-            propDef = (
-                'JS_DefineProperty(cx, obj, "%s", temp, nullptr, nullptr, JSPROP_ENUMERATE)' %
-                member.identifier.name)
-        else:
-            propDef = (
-                'JS_DefinePropertyById(cx, obj, %s, temp, nullptr, nullptr, JSPROP_ENUMERATE)' %
-                self.makeIdName(member.identifier.name))
+        propDef = (
+            'JS_DefinePropertyById(cx, obj, atomsCache->%s, temp, nullptr, nullptr, JSPROP_ENUMERATE)' %
+            self.makeIdName(member.identifier.name))
 
         innerTemplate = wrapForType(
             member.type, self.descriptorProvider,
@@ -8529,7 +8520,7 @@ class CGForwardDeclarations(CGWrapper):
     Code generate the forward declarations for a header file.
     """
     def __init__(self, config, descriptors, mainCallbacks, workerCallbacks,
-                 mainDictionaries, workerDictionaries, callbackInterfaces):
+                 dictionaries, callbackInterfaces):
         builder = ForwardDeclarationBuilder()
 
         def forwardDeclareForType(t, workerness='both'):
@@ -8580,13 +8571,11 @@ class CGForwardDeclarations(CGWrapper):
             for t in getTypesFromDescriptor(d):
                 forwardDeclareForType(t)
 
-        for d in mainDictionaries:
+        for d in dictionaries:
+            if len(d.members) > 0:
+                builder.addInMozillaDom(d.identifier.name + "Atoms", isStruct=True)
             for t in getTypesFromDictionary(d):
-                forwardDeclareForType(t, workerness='mainthreadonly')
-
-        for d in workerDictionaries:
-            for t in getTypesFromDictionary(d):
-                forwardDeclareForType(t, workerness='workeronly')
+                forwardDeclareForType(t)
 
         CGWrapper.__init__(self, builder.build())
 
@@ -8618,10 +8607,8 @@ class CGBindingRoot(CGThing):
         isEventTarget = webIDLFile.endswith("EventTarget.webidl")
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
                                                    workers=True)) != 0
-        mainDictionaries = config.getDictionaries(webIDLFile=webIDLFile,
-                                                  workers=False)
-        workerDictionaries = config.getDictionaries(webIDLFile=webIDLFile,
-                                                    workers=True)
+        dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
+        requiresAtoms = any([len(dict.members) > 0 for dict in dictionaries])
         mainCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
                                             workers=False)
         workerCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
@@ -8657,14 +8644,9 @@ class CGBindingRoot(CGThing):
         # here, because we have to generate these in order from least derived
         # to most derived so that class inheritance works out.  We also have to
         # generate members before the dictionary that contains them.
-        cgthings.extend([CGDictionary(d, config.getDescriptorProvider(True))
-                         for d in
-                         dependencySortObjects(workerDictionaries,
-                                               CGDictionary.getDictionaryDependencies,
-                                               lambda d: d.identifier.name)])
         cgthings.extend([CGDictionary(d, config.getDescriptorProvider(False))
                          for d in
-                         dependencySortObjects(mainDictionaries,
+                         dependencySortObjects(dictionaries,
                                                CGDictionary.getDictionaryDependencies,
                                                lambda d: d.identifier.name)])
 
@@ -8701,7 +8683,7 @@ class CGBindingRoot(CGThing):
 
         curr = CGList([CGForwardDeclarations(config, descriptors,
                                              mainCallbacks, workerCallbacks,
-                                             mainDictionaries, workerDictionaries,
+                                             dictionaries,
                                              callbackDescriptors + jsImplemented),
                        CGWrapper(CGGeneric("using namespace mozilla::dom;"),
                                  defineOnly=True),
@@ -8710,7 +8692,7 @@ class CGBindingRoot(CGThing):
 
         # Add header includes.
         curr = CGHeaders(descriptors,
-                         mainDictionaries + workerDictionaries,
+                         dictionaries,
                          mainCallbacks + workerCallbacks,
                          callbackDescriptors,
                          ['mozilla/dom/BindingDeclarations.h',
@@ -8729,9 +8711,10 @@ class CGBindingRoot(CGThing):
                             + (['mozilla/Preferences.h'] if requiresPreferences else [])
                             + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else [])
                             + (['nsContentUtils.h'] if requiresContentUtils else [])
-                            + (['nsCxPusher.h'] if mainDictionaries else [])
+                            + (['nsCxPusher.h'] if dictionaries else [])
                             + (['AccessCheck.h'] if hasChromeOnly else [])
-                            + (['xpcprivate.h'] if isEventTarget else []),
+                            + (['xpcprivate.h'] if isEventTarget else [])
+                            + (['AtomList.h'] if requiresAtoms else []),
                          prefix,
                          curr,
                          config,
@@ -9045,8 +9028,7 @@ class CGNativeMember(ClassMethod):
             return declType, False, False
 
         if type.isDictionary():
-            typeName = CGDictionary.makeDictionaryName(
-                type.inner, self.descriptorProvider.workers)
+            typeName = CGDictionary.makeDictionaryName(type.inner)
             return typeName, True, True
 
         if type.isDate():
@@ -10172,6 +10154,54 @@ class GlobalGenRoots():
     To generate code, call the method associated with the target, and then
     call the appropriate define/declare method.
     """
+
+    @staticmethod
+    def GeneratedAtomList(config):
+        # Atom enum
+        dictionaries = config.dictionaries
+
+        structs = []
+
+        for dict in dictionaries:
+            dictMembers = dict.members
+            if len(dictMembers) == 0:
+                continue
+
+            classMembers = [ClassMember(m.identifier.name + "_id",
+                                        "jsid",
+                                        visibility="public",
+                                        body="JSID_VOID") for m in dictMembers]
+
+            structName = dict.identifier.name + "Atoms"
+            structs.append((structName,
+                            CGWrapper(CGClass(structName,
+                bases=None,
+                isStruct=True,
+                members=classMembers), post='\n')))
+
+        structs.sort()
+        generatedStructs = [struct for (structName, struct) in structs]
+        structNames = [structName for (structName, struct) in structs]
+
+        mainStruct = CGWrapper(CGClass("PerThreadAtomCache",
+            bases=[ClassBase(structName) for structName in structNames],
+            isStruct=True), post='\n')
+
+        structs = CGList(generatedStructs + [mainStruct])
+
+        # Wrap all of that in our namespaces.
+        curr = CGNamespace.build(['mozilla', 'dom'],
+                                  CGWrapper(structs, pre='\n'))
+        curr = CGWrapper(curr, post='\n')
+
+        # Add include guards.
+        curr = CGIncludeGuard('GeneratedAtomList', curr)
+
+        # Add the auto-generated comment.
+        curr = CGWrapper(curr, pre=AUTOGENERATED_WARNING_COMMENT)
+
+        # Done.
+        return curr
 
     @staticmethod
     def PrototypeList(config):
