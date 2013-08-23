@@ -56,7 +56,7 @@ nsDOMClipboardEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                                  const mozilla::dom::ClipboardEventInit& aParam,
                                  mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<nsDOMClipboardEvent> e =
     new nsDOMClipboardEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);

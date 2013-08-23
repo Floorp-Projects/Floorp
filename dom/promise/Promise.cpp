@@ -144,10 +144,11 @@ EnterCompartment(Maybe<JSAutoCompartment>& aAc, JSContext* aCx,
 }
 
 /* static */ already_AddRefed<Promise>
-Promise::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
+Promise::Constructor(const GlobalObject& aGlobal,
                      PromiseInit& aInit, ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+  JSContext* cx = aGlobal.GetContext();
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -160,12 +161,12 @@ Promise::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
   aRv.WouldReportJSException();
 
   if (aRv.IsJSException()) {
-    Optional<JS::Handle<JS::Value> > value(aCx);
-    aRv.StealJSException(aCx, &value.Value());
+    Optional<JS::Handle<JS::Value> > value(cx);
+    aRv.StealJSException(cx, &value.Value());
 
     Maybe<JSAutoCompartment> ac;
-    EnterCompartment(ac, aCx, value);
-    promise->mResolver->Reject(aCx, value);
+    EnterCompartment(ac, cx, value);
+    promise->mResolver->Reject(cx, value);
   }
 
   return promise.forget();
@@ -175,7 +176,7 @@ Promise::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
 Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
                  JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -192,7 +193,7 @@ Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
 Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
                 JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;

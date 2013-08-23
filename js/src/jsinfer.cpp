@@ -6128,14 +6128,13 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
 }
 
 TypeObject *
-JSCompartment::getLazyType(JSContext *cx, Class *clasp, TaggedProto proto)
+ExclusiveContext::getLazyType(Class *clasp, TaggedProto proto)
 {
-    JS_ASSERT(cx->compartment() == this);
-    JS_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
+    JS_ASSERT_IF(proto.isObject(), compartment() == proto.toObject()->compartment());
 
-    AutoEnterAnalysis enter(cx);
+    AutoEnterAnalysis enter(this);
 
-    TypeObjectSet &table = cx->compartment()->lazyTypeObjects;
+    TypeObjectSet &table = compartment()->lazyTypeObjects;
 
     if (!table.initialized() && !table.init())
         return NULL;
@@ -6148,8 +6147,8 @@ JSCompartment::getLazyType(JSContext *cx, Class *clasp, TaggedProto proto)
         return type;
     }
 
-    Rooted<TaggedProto> protoRoot(cx, proto);
-    TypeObject *type = cx->compartment()->types.newTypeObject(cx, clasp, protoRoot, false);
+    Rooted<TaggedProto> protoRoot(this, proto);
+    TypeObject *type = compartment()->types.newTypeObject(this, clasp, protoRoot, false);
     if (!type)
         return NULL;
 
