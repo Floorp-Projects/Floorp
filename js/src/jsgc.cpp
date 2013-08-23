@@ -4445,11 +4445,6 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
     /* If we attempt to invoke the GC while we are running in the GC, assert. */
     JS_ASSERT(!rt->isHeapBusy());
 
-#ifdef DEBUG
-    for (ZonesIter zone(rt); !zone.done(); zone.next())
-        JS_ASSERT_IF(rt->gcMode == JSGC_MODE_GLOBAL, zone->isGCScheduled());
-#endif
-
     AutoGCSession gcsession(rt);
 
     /*

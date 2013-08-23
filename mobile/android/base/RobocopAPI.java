@@ -35,6 +35,14 @@ public class RobocopAPI {
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(subject, data));
     }
 
+    public void preferencesGetEvent(int requestId, String[] prefNames) {
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createPreferencesGetEvent(requestId, prefNames));
+    }
+
+    public void preferencesObserveEvent(int requestId, String[] prefNames) {
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createPreferencesObserveEvent(requestId, prefNames));
+    }
+
     public void setDrawListener(GeckoLayerClient.DrawListener listener) {
         GeckoAppShell.getLayerView().getLayerClient().setDrawListener(listener);
     }

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHtml5OwningUTF16Buffer_h_
-#define nsHtml5OwningUTF16Buffer_h_
+#ifndef nsHtml5OwningUTF16Buffer_h
+#define nsHtml5OwningUTF16Buffer_h
 
 #include "nsHtml5UTF16Buffer.h"
 
@@ -53,4 +53,4 @@ class nsHtml5OwningUTF16Buffer : public nsHtml5UTF16Buffer
     nsAutoRefCnt mRefCnt;
 };
 
-#endif // nsHtml5OwningUTF16Buffer_h_
+#endif // nsHtml5OwningUTF16Buffer_h

@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHtml5RefPtr_h___
-#define nsHtml5RefPtr_h___
+#ifndef nsHtml5RefPtr_h
+#define nsHtml5RefPtr_h
 
 #include "nsIThread.h"
 
@@ -485,4 +485,4 @@ operator==( int lhs, const nsHtml5RefPtr<T>& rhs )
 
 #endif // !defined(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
 
-#endif // !defined(nsHtml5RefPtr_h___)
+#endif // !defined(nsHtml5RefPtr_h)

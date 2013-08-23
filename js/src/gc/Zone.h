@@ -195,18 +195,15 @@ struct Zone : private JS::shadow::Zone,
 
     void scheduleGC() {
         JS_ASSERT(!runtimeFromMainThread()->isHeapBusy());
-
-        // Ignore attempts to schedule GCs on zones which can't be collected.
-        if (canCollect())
-            gcScheduled = true;
+        gcScheduled = true;
     }
 
     void unscheduleGC() {
         gcScheduled = false;
     }
 
-    bool isGCScheduled() const {
-        return gcScheduled;
+    bool isGCScheduled() {
+        return gcScheduled && canCollect();
     }
 
     void setPreservingCode(bool preserving) {

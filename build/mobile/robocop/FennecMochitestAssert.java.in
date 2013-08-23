@@ -71,11 +71,13 @@ public class FennecMochitestAssert implements Assert {
         public String mName;
         public String mDiag;
         public boolean mTodo;
-        public testInfo(boolean r, String n, String d, boolean t) {
+        public boolean mInfo;
+        public testInfo(boolean r, String n, String d, boolean t, boolean i) {
             mResult = r;
             mName = n;
             mDiag = d;
             mTodo = t;
+            mInfo = i;
         }
 
     }
@@ -96,7 +98,9 @@ public class FennecMochitestAssert implements Assert {
         String message = Integer.toString(mLineNumber++) + " INFO " + resultString + " | " + mLogTestName + " | " + diag;
         dumpLog(message);
 
-        if (test.mTodo) {
+        if (test.mInfo) {
+            // do not count TEST-INFO messages
+        } else if (test.mTodo) {
             mTodo++;
         } else if (isError) {
             mFailed++;
@@ -132,7 +136,7 @@ public class FennecMochitestAssert implements Assert {
     }
 
     public void ok(boolean condition, String name, String diag) {
-        testInfo test = new testInfo(condition, name, diag, false);
+        testInfo test = new testInfo(condition, name, diag, false, false);
         _logMochitestResult(test, "TEST-PASS", "TEST-UNEXPECTED-FAIL");
         mTestList.add(test);
     }
@@ -189,7 +193,7 @@ public class FennecMochitestAssert implements Assert {
     }
 
     public void todo(boolean condition, String name, String diag) {
-        testInfo test = new testInfo(condition, name, diag, true);
+        testInfo test = new testInfo(condition, name, diag, true, false);
         _logMochitestResult(test, "TEST-UNEXPECTED-PASS", "TEST-KNOWN-FAIL");
         mTestList.add(test);
     }
@@ -242,7 +246,7 @@ public class FennecMochitestAssert implements Assert {
     }
 
     public void info(String name, String message) {
-        testInfo test = new testInfo(true, name, message, false);
+        testInfo test = new testInfo(true, name, message, false, true);
         _logMochitestResult(test, "TEST-INFO", "INFO FAILED?");
     }
 }

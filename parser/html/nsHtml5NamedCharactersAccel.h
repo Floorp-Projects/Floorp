@@ -6,8 +6,8 @@
  * this document.
  */
 
-#ifndef nsHtml5NamedCharactersAccel_h_
-#define nsHtml5NamedCharactersAccel_h_
+#ifndef nsHtml5NamedCharactersAccel_h
+#define nsHtml5NamedCharactersAccel_h
 
 #include "prtypes.h"
 #include "jArray.h"
@@ -22,4 +22,4 @@ class nsHtml5NamedCharactersAccel
     static const int32_t* const HILO_ACCEL[];
 };
 
-#endif // nsHtml5NamedCharactersAccel_h_
+#endif // nsHtml5NamedCharactersAccel_h

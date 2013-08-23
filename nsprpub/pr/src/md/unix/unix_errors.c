@@ -528,9 +528,6 @@ void _MD_unix_map_connect_error(int err)
     PRErrorCode prError;
 
     switch (err) {
-        case EACCES:
-            prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
-            break;
 #if defined(UNIXWARE)
         /*
          * On some platforms, if we connect to a port on the local host 
@@ -541,12 +538,6 @@ void _MD_unix_map_connect_error(int err)
             prError = PR_CONNECT_REFUSED_ERROR;
             break;
 #endif
-        case ELOOP:
-            prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
-            break;
-        case ENOENT:
-            prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
-            break;
         case ENXIO:
             prError = PR_IO_ERROR;
             break;
@@ -564,17 +555,6 @@ void _MD_unix_map_bind_error(int err)
     switch (err) {
         case EINVAL:
             prError = PR_SOCKET_ADDRESS_IS_BOUND_ERROR;
-            break;
-        /*
-         * UNIX domain sockets are not supported in NSPR
-         */
-        case EIO:
-        case EISDIR:
-        case ELOOP:
-        case ENOENT:
-        case ENOTDIR:
-        case EROFS:
-            prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
             break;
         default:
             _MD_unix_map_default_error(err);

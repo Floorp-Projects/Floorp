@@ -11,8 +11,7 @@
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-
-class nsPIDOMWindow;
+#include "nsPIDOMWindow.h"
 
 namespace mozilla {
 
