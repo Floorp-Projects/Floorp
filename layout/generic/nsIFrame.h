@@ -335,6 +335,21 @@ typedef uint64_t nsFrameState;
   (((_frame)->GetStateBits() &      \
     (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0)
 
+/**
+ * Constant used to indicate an unconstrained size.
+ *
+ * @see #Reflow()
+ */
+#define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
+
+#define NS_INTRINSICSIZE    NS_UNCONSTRAINEDSIZE
+#define NS_AUTOHEIGHT       NS_UNCONSTRAINEDSIZE
+#define NS_AUTOMARGIN       NS_UNCONSTRAINEDSIZE
+#define NS_AUTOOFFSET       NS_UNCONSTRAINEDSIZE
+// NOTE: there are assumptions all over that these have the same value, namely NS_UNCONSTRAINEDSIZE
+//       if any are changed to be a value other than NS_UNCONSTRAINEDSIZE
+//       at least update AdjustComputedHeight/Width and test ad nauseum
+
 //----------------------------------------------------------------------
 
 enum nsSelectionAmount {
