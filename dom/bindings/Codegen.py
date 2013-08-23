@@ -6097,9 +6097,11 @@ class CGUnionStruct(CGThing):
         if self.type.hasNullableType:
             enumValues.append("eNull")
             methods.append(ClassMethod("IsNull", "bool", [], const=True, inline=True,
-                                       body="return mType == eNull;"))
+                                       body="return mType == eNull;",
+                                       bodyInHeader=True))
             methods.append(ClassMethod("SetNull", "void", [], inline=True,
-                                       body="mType = eNull;"))
+                                       body="mType = eNull;",
+                                       bodyInHeader=True))
             destructorCases.append(CGCase("eNull", None))
             toJSValCases.append(CGCase("eNull", CGGeneric("rval.setNull();\n"
                                                           "return true;")))
@@ -8618,6 +8620,26 @@ class CGBindingRoot(CGThing):
         jsImplemented = config.getDescriptors(webIDLFile=webIDLFile,
                                               isJSImplemented=True)
 
+        # Python can't modify closed-over variables directly, so sneak
+        # our mutable value in as an entry in a dictionary.
+        needsDOMQS = { "value": any(d.hasXPConnectImpls for d in descriptors) }
+        # Only mainthread things can have hasXPConnectImpls
+        provider = config.getDescriptorProvider(False)
+        def checkForXPConnectImpls(type, descriptor=None, dictionary=None):
+            if needsDOMQS["value"]:
+                return
+            type = type.unroll()
+            if not type.isInterface() or not type.isGeckoInterface():
+                return
+            try:
+                typeDesc = provider.getDescriptor(type.inner.identifier.name)
+            except NoSuchDescriptorError:
+                return
+            needsDOMQS["value"] = typeDesc.hasXPConnectImpls
+
+        callForEachType(descriptors + callbackDescriptors, dictionaries,
+                        mainCallbacks, checkForXPConnectImpls)
+
         descriptorsWithPrototype = filter(lambda d: d.interface.hasInterfacePrototypeObject(),
                                           descriptors)
         traitsClasses = [CGPrototypeTraitsClass(d) for d in descriptorsWithPrototype]
@@ -8703,9 +8725,6 @@ class CGBindingRoot(CGThing):
                           'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
                           'WrapperFactory.h',
-                          # Have to include nsDOMQS.h to get fast arg unwrapping
-                          # for old-binding things with castability.
-                          'nsDOMQS.h'
                           ] + (['WorkerPrivate.h',
                                 'nsThreadUtils.h'] if hasWorkerStuff else [])
                             + (['mozilla/Preferences.h'] if requiresPreferences else [])
@@ -8714,6 +8733,8 @@ class CGBindingRoot(CGThing):
                             + (['nsCxPusher.h'] if dictionaries else [])
                             + (['AccessCheck.h'] if hasChromeOnly else [])
                             + (['xpcprivate.h'] if isEventTarget else [])
+                            + (['nsPIDOMWindow.h'] if len(jsImplemented) != 0 else [])
+                            + (['nsDOMQS.h'] if needsDOMQS["value"] else [])
                             + (['AtomList.h'] if requiresAtoms else []),
                          prefix,
                          curr,

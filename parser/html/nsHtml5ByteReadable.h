@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHtml5ByteReadable_h__
-#define nsHtml5ByteReadable_h__
+#ifndef nsHtml5ByteReadable_h
+#define nsHtml5ByteReadable_h
 
 /**
  * A weak reference wrapper around a byte array.

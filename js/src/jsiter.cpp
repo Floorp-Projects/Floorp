@@ -958,7 +958,7 @@ const JSFunctionSpec ElementIteratorObject::methods[] = {
 };
 
 static bool
-CloseGenerator(JSContext *cx, HandleObject genobj);
+CloseLegacyGenerator(JSContext *cx, HandleObject genobj);
 
 bool
 js::ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp)
@@ -1000,6 +1000,30 @@ js::ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp)
 }
 
 bool
+IsGenerator(HandleValue v)
+{
+    return v.isObject() && v.toObject().is<GeneratorObject>();
+}
+
+static bool
+IsLegacyGenerator(HandleObject obj)
+{
+    if (!obj->is<GeneratorObject>())
+        return false;
+    JSGenerator *gen = obj->as<GeneratorObject>().getGenerator();
+    return gen->regs.fp()->script()->isLegacyGenerator();
+}
+
+bool
+IsLegacyGenerator(HandleValue v)
+{
+    if (!IsGenerator(v))
+        return false;
+    JSGenerator *gen = v.toObject().as<GeneratorObject>().getGenerator();
+    return gen->regs.fp()->script()->isLegacyGenerator();
+}
+
+bool
 js::CloseIterator(JSContext *cx, HandleObject obj)
 {
     cx->iterValue.setMagic(JS_NO_ITER_VALUE);
@@ -1020,9 +1044,8 @@ js::CloseIterator(JSContext *cx, HandleObject obj)
              */
             ni->props_cursor = ni->props_array;
         }
-    } else if (obj->is<GeneratorObject>()) {
-        // FIXME: Only close legacy generators.
-        return CloseGenerator(cx, obj);
+    } else if (IsLegacyGenerator(obj)) {
+        return CloseLegacyGenerator(cx, obj);
     }
     return true;
 }
@@ -1477,15 +1500,25 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
 
     JS_ASSERT(stackfp->script()->isGenerator());
 
-    if (stackfp->script()->isStarGenerator()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_ES6_UNIMPLEMENTED);
-        return NULL;
-    }
-
     Rooted<GlobalObject*> global(cx, &stackfp->global());
     RootedObject obj(cx);
-    {
-        JSObject *proto = global->getOrCreateGeneratorPrototype(cx);
+    if (stackfp->script()->isStarGenerator()) {
+        RootedValue pval(cx);
+        RootedObject fun(cx, stackfp->fun());
+        // FIXME: This would be faster if we could avoid doing a lookup to get
+        // the prototype for the instance.  Bug 906600.
+        if (!JSObject::getProperty(cx, fun, fun, cx->names().classPrototype, &pval))
+            return NULL;
+        JSObject *proto = pval.isObject() ? &pval.toObject() : NULL;
+        if (!proto) {
+            proto = global->getOrCreateStarGeneratorObjectPrototype(cx);
+            if (!proto)
+                return NULL;
+        }
+        obj = NewObjectWithGivenProto(cx, &GeneratorObject::class_, proto, global);
+    } else {
+        JS_ASSERT(stackfp->script()->isLegacyGenerator());
+        JSObject *proto = global->getOrCreateLegacyGeneratorObjectPrototype(cx);
         if (!proto)
             return NULL;
         obj = NewObjectWithGivenProto(cx, &GeneratorObject::class_, proto, global);
@@ -1623,64 +1656,15 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
 }
 
 static bool
-CloseGenerator(JSContext *cx, HandleObject obj)
+CloseLegacyGenerator(JSContext *cx, HandleObject obj)
 {
+    JS_ASSERT(IsLegacyGenerator(obj));
+
     JSGenerator *gen = obj->as<GeneratorObject>().getGenerator();
-    if (!gen) {
-        /* Generator prototype object. */
-        return true;
-    }
-
-    // FIXME: Assert that gen is a legacy generator.
-
     if (gen->state == JSGEN_CLOSED)
         return true;
 
     return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, JS::UndefinedHandleValue);
-}
-
-JS_ALWAYS_INLINE bool
-IsGenerator(HandleValue v)
-{
-    return v.isObject() && v.toObject().is<GeneratorObject>();
-}
-
-JS_ALWAYS_INLINE bool
-generator_send_impl(JSContext *cx, CallArgs args)
-{
-    // FIXME: Change assertion to IsLegacyGenerator().
-    JS_ASSERT(IsGenerator(args.thisv()));
-
-    RootedObject thisObj(cx, &args.thisv().toObject());
-
-    JSGenerator *gen = thisObj->as<GeneratorObject>().getGenerator();
-    if (!gen || gen->state == JSGEN_CLOSED) {
-        /* This happens when obj is the generator prototype. See bug 352885. */
-        return js_ThrowStopIteration(cx);
-    }
-
-    if (gen->state == JSGEN_NEWBORN && args.hasDefined(0)) {
-        RootedValue val(cx, args[0]);
-        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
-                            JSDVG_SEARCH_STACK, val, NullPtr());
-        return false;
-    }
-
-    // FIXME: next() takes the send value as an optional argument in ES6
-    // generator objects.
-    if (!SendToGenerator(cx, JSGENOP_SEND, thisObj, gen, args.get(0)))
-        return false;
-
-    args.rval().set(gen->fp->returnValue());
-    return true;
-}
-
-bool
-generator_send(JSContext *cx, unsigned argc, Value *vp)
-{
-    // FIXME: send() is only a method on legacy generator objects.
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsGenerator, generator_send_impl>(cx, args);
 }
 
 JS_ALWAYS_INLINE bool
@@ -1691,12 +1675,17 @@ generator_next_impl(JSContext *cx, CallArgs args)
     RootedObject thisObj(cx, &args.thisv().toObject());
 
     JSGenerator *gen = thisObj->as<GeneratorObject>().getGenerator();
-    if (!gen || gen->state == JSGEN_CLOSED) {
-        /* This happens when obj is the generator prototype. See bug 352885. */
+    if (gen->state == JSGEN_CLOSED)
         return js_ThrowStopIteration(cx);
+
+    if (gen->state == JSGEN_NEWBORN && args.hasDefined(0)) {
+        RootedValue val(cx, args[0]);
+        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
+                            JSDVG_SEARCH_STACK, val, NullPtr());
+        return false;
     }
 
-    if (!SendToGenerator(cx, JSGENOP_NEXT, thisObj, gen, JS::UndefinedHandleValue))
+    if (!SendToGenerator(cx, JSGENOP_SEND, thisObj, gen, args.get(0)))
         return false;
 
     args.rval().set(gen->fp->returnValue());
@@ -1718,8 +1707,7 @@ generator_throw_impl(JSContext *cx, CallArgs args)
     RootedObject thisObj(cx, &args.thisv().toObject());
 
     JSGenerator *gen = thisObj->as<GeneratorObject>().getGenerator();
-    if (!gen || gen->state == JSGEN_CLOSED) {
-        /* This happens when obj is the generator prototype. See bug 352885. */
+    if (gen->state == JSGEN_CLOSED) {
         cx->setPendingException(args.length() >= 1 ? args[0] : UndefinedValue());
         return false;
     }
@@ -1741,14 +1729,12 @@ generator_throw(JSContext *cx, unsigned argc, Value *vp)
 JS_ALWAYS_INLINE bool
 generator_close_impl(JSContext *cx, CallArgs args)
 {
-    // FIXME: Change assertion to IsLegacyGenerator().
-    JS_ASSERT(IsGenerator(args.thisv()));
+    JS_ASSERT(IsLegacyGenerator(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
     JSGenerator *gen = thisObj->as<GeneratorObject>().getGenerator();
-    if (!gen || gen->state == JSGEN_CLOSED) {
-        /* This happens when obj is the generator prototype. See bug 352885. */
+    if (gen->state == JSGEN_CLOSED) {
         args.rval().setUndefined();
         return true;
     }
@@ -1769,21 +1755,46 @@ generator_close_impl(JSContext *cx, CallArgs args)
 bool
 generator_close(JSContext *cx, unsigned argc, Value *vp)
 {
-    // FIXME: close() is only a method on legacy generator objects.
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsGenerator, generator_close_impl>(cx, args);
+    return CallNonGenericMethod<IsLegacyGenerator, generator_close_impl>(cx, args);
 }
 
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)
 
-static const JSFunctionSpec generator_methods[] = {
+static const JSFunctionSpec legacy_generator_methods[] = {
     JS_FN("iterator",  iterator_iterator,  0, 0),
-    JS_FN("next",      generator_next,     0,JSPROP_ROPERM),
-    JS_FN("send",      generator_send,     1,JSPROP_ROPERM),
+    JS_FN("next",      generator_next,     1,JSPROP_ROPERM),
+    // Send is exactly the same as next.
+    JS_FN("send",      generator_next,     1,JSPROP_ROPERM),
     JS_FN("throw",     generator_throw,    1,JSPROP_ROPERM),
     JS_FN("close",     generator_close,    0,JSPROP_ROPERM),
     JS_FS_END
 };
+
+static const JSFunctionSpec star_generator_methods[] = {
+    JS_FN("iterator",  iterator_iterator,  0, 0),
+    JS_FN("next",      generator_next,     1,JSPROP_ROPERM),
+    JS_FN("throw",     generator_throw,    1,JSPROP_ROPERM),
+    JS_FS_END
+};
+
+static JSObject*
+NewObjectWithObjectPrototype(JSContext *cx, Handle<GlobalObject *> global)
+{
+    JSObject *proto = global->getOrCreateObjectPrototype(cx);
+    if (!proto)
+        return NULL;
+    return NewObjectWithGivenProto(cx, &JSObject::class_, proto, global);
+}
+
+static JSObject*
+NewObjectWithFunctionPrototype(JSContext *cx, Handle<GlobalObject *> global)
+{
+    JSObject *proto = global->getOrCreateFunctionPrototype(cx);
+    if (!proto)
+        return NULL;
+    return NewObjectWithGivenProto(cx, &JSObject::class_, proto, global);
+}
 
 /* static */ bool
 GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
@@ -1826,11 +1837,41 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         global->setReservedSlot(ELEMENT_ITERATOR_PROTO, ObjectValue(*proto));
     }
 
-    if (global->getSlot(GENERATOR_PROTO).isUndefined()) {
-        proto = global->createBlankPrototype(cx, &GeneratorObject::class_);
-        if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, generator_methods))
+    if (global->getSlot(LEGACY_GENERATOR_OBJECT_PROTO).isUndefined()) {
+        proto = NewObjectWithObjectPrototype(cx, global);
+        if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, legacy_generator_methods))
             return false;
-        global->setReservedSlot(GENERATOR_PROTO, ObjectValue(*proto));
+        global->setReservedSlot(LEGACY_GENERATOR_OBJECT_PROTO, ObjectValue(*proto));
+    }
+
+    if (global->getSlot(STAR_GENERATOR_OBJECT_PROTO).isUndefined()) {
+        RootedObject genObjectProto(cx, NewObjectWithObjectPrototype(cx, global));
+        if (!genObjectProto)
+            return false;
+        if (!DefinePropertiesAndBrand(cx, genObjectProto, NULL, star_generator_methods))
+            return false;
+
+        RootedObject genFunctionProto(cx, NewObjectWithFunctionPrototype(cx, global));
+        if (!genFunctionProto)
+            return false;
+        if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto))
+            return false;
+
+        RootedValue function(cx, global->getConstructor(JSProto_Function));
+        if (!function.toObjectOrNull())
+            return false;
+        RootedAtom name(cx, cx->names().GeneratorFunction);
+        RootedObject genFunction(cx, NewFunctionWithProto(cx, NullPtr(), Generator, 1,
+                                                          JSFunction::NATIVE_CTOR, global, name,
+                                                          &function.toObject()));
+        if (!genFunction)
+            return false;
+        if (!LinkConstructorAndPrototype(cx, genFunction, genFunctionProto))
+            return false;
+
+        global->setSlot(STAR_GENERATOR_OBJECT_PROTO, ObjectValue(*genObjectProto));
+        global->setSlot(JSProto_GeneratorFunction, ObjectValue(*genFunction));
+        global->setSlot(JSProto_GeneratorFunction + JSProto_LIMIT, ObjectValue(*genFunctionProto));
     }
 
     if (global->getPrototype(JSProto_StopIteration).isUndefined()) {
