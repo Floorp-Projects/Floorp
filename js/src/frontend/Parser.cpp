@@ -1244,7 +1244,7 @@ struct BindData
 template <typename ParseHandler>
 JSFunction *
 Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
-                                  FunctionSyntaxKind kind)
+                                  FunctionSyntaxKind kind, JSObject *proto)
 {
     JS_ASSERT_IF(kind == Statement, atom != NULL);
 
@@ -1267,8 +1267,8 @@ Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
                               : (kind == Arrow)
                                 ? JSFunction::INTERPRETED_LAMBDA_ARROW
                                 : JSFunction::INTERPRETED;
-    fun = NewFunction(context, NullPtr(), NULL, 0, flags, parent, atom,
-                      JSFunction::FinalizeKind, MaybeSingletonObject);
+    fun = NewFunctionWithProto(context, NullPtr(), NULL, 0, flags, parent, atom, proto,
+                               JSFunction::FinalizeKind, MaybeSingletonObject);
     if (!fun)
         return NULL;
     if (options().selfHostingMode)
@@ -1999,7 +1999,17 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName, const TokenStream:
     if (bodyProcessed)
         return pn;
 
-    RootedFunction fun(context, newFunction(pc, funName, kind));
+    RootedObject proto(context);
+    if (generatorKind == StarGenerator) {
+        // If we are off the main thread, the generator meta-objects have
+        // already been created by js::StartOffThreadParseScript, so cx will not
+        // be necessary.
+        JSContext *cx = context->maybeJSContext();
+        proto = context->global()->getOrCreateStarGeneratorFunctionPrototype(cx);
+        if (!proto)
+            return null();
+    }
+    RootedFunction fun(context, newFunction(pc, funName, kind, proto));
     if (!fun)
         return null();
 

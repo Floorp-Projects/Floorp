@@ -451,9 +451,10 @@ frontend::CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *cha
 
 // Compile a JS function body, which might appear as the value of an event
 // handler attribute in an HTML <INPUT> tag, or in a Function() constructor.
-bool
-frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
-                              const AutoNameVector &formals, const jschar *chars, size_t length)
+static bool
+CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+                    const AutoNameVector &formals, const jschar *chars, size_t length,
+                    GeneratorKind generatorKind)
 {
 #if JS_TRACE_LOGGING
         js::AutoTraceLog logger(js::TraceLogging::defaultLogger(),
@@ -520,7 +521,7 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
     ParseNode *fn;
     while (true) {
         Directives newDirectives = directives;
-        fn = parser.standaloneFunctionBody(fun, formals, NotGenerator, directives, &newDirectives);
+        fn = parser.standaloneFunctionBody(fun, formals, generatorKind, directives, &newDirectives);
         if (fn)
             break;
 
@@ -584,4 +585,19 @@ frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileO
         return false;
 
     return true;
+}
+
+bool
+frontend::CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions options,
+                              const AutoNameVector &formals, const jschar *chars, size_t length)
+{
+    return CompileFunctionBody(cx, fun, options, formals, chars, length, NotGenerator);
+}
+
+bool
+frontend::CompileStarGeneratorBody(JSContext *cx, MutableHandleFunction fun,
+                                   CompileOptions options, const AutoNameVector &formals,
+                                   const jschar *chars, size_t length)
+{
+    return CompileFunctionBody(cx, fun, options, formals, chars, length, StarGenerator);
 }
