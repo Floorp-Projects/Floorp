@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
+# Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -138,7 +138,7 @@ def get_system_users():
 get_pid_list = _psutil_bsd.get_pid_list
 pid_exists = _psposix.pid_exists
 get_disk_usage = _psposix.get_disk_usage
-network_io_counters = _psutil_bsd.get_network_io_counters
+net_io_counters = _psutil_bsd.get_net_io_counters
 disk_io_counters = _psutil_bsd.get_disk_io_counters
 
 
@@ -168,6 +168,20 @@ _status_map = {
     _psutil_bsd.SLOCK : STATUS_LOCKED,
     _psutil_bsd.SZOMB : STATUS_ZOMBIE,
 }
+
+_conn_status_map = {_psutil_bsd.TCPS_ESTABLISHED : CONN_ESTABLISHED,
+                    _psutil_bsd.TCPS_SYN_SENT : CONN_SYN_SENT,
+                    _psutil_bsd.TCPS_SYN_RECEIVED : CONN_SYN_RECV,
+                    _psutil_bsd.TCPS_FIN_WAIT_1 : CONN_FIN_WAIT1,
+                    _psutil_bsd.TCPS_FIN_WAIT_2 : CONN_FIN_WAIT2,
+                    _psutil_bsd.TCPS_TIME_WAIT : CONN_TIME_WAIT,
+                    _psutil_bsd.TCPS_CLOSED : CONN_CLOSE,
+                    _psutil_bsd.TCPS_CLOSE_WAIT : CONN_CLOSE_WAIT,
+                    _psutil_bsd.TCPS_LAST_ACK : CONN_LAST_ACK,
+                    _psutil_bsd.TCPS_LISTEN : CONN_LISTEN,
+                    _psutil_bsd.TCPS_CLOSING : CONN_CLOSING,
+                    _psutil_bsd.PSUTIL_CONN_NONE : CONN_NONE,
+                    }
 
 
 class Process(object):
@@ -298,8 +312,14 @@ class Process(object):
             raise ValueError("invalid %r kind argument; choose between %s"
                              % (kind, ', '.join([repr(x) for x in conn_tmap])))
         families, types = conn_tmap[kind]
-        ret = _psutil_bsd.get_process_connections(self.pid, families, types)
-        return [nt_connection(*conn) for conn in ret]
+        rawlist = _psutil_bsd.get_process_connections(self.pid, families, types)
+        ret = []
+        for item in rawlist:
+            fd, fam, type, laddr, raddr, status = item
+            status = _conn_status_map[status]
+            nt = nt_connection(fd, fam, type, laddr, raddr, status)
+            ret.append(nt)
+        return ret
 
     @wrap_exceptions
     def process_wait(self, timeout=None):

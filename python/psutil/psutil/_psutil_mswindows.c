@@ -610,10 +610,25 @@ get_process_memory_info(PyObject* self, PyObject* args)
 
     CloseHandle(hProcess);
 
-// py 2.4
-#if (PY_MAJOR_VERSION == 2) && (PY_MINOR_VERSION <= 4)
+// PROCESS_MEMORY_COUNTERS values are defined as SIZE_T which on 64bits
+// is an (unsigned long long) and on 32bits is an (unsigned int).
+// "_WIN64" is defined if we're running a 64bit Python interpreter not
+// exclusively if the *system* is 64bit.
+#if defined(_WIN64)
+    return Py_BuildValue("(kKKKKKKKKK)",
+                            cnt.PageFaultCount,  // unsigned long
+        (unsigned long long)cnt.PeakWorkingSetSize,
+        (unsigned long long)cnt.WorkingSetSize,
+        (unsigned long long)cnt.QuotaPeakPagedPoolUsage,
+        (unsigned long long)cnt.QuotaPagedPoolUsage,
+        (unsigned long long)cnt.QuotaPeakNonPagedPoolUsage,
+        (unsigned long long)cnt.QuotaNonPagedPoolUsage,
+        (unsigned long long)cnt.PagefileUsage,
+        (unsigned long long)cnt.PeakPagefileUsage,
+        (unsigned long long)private);
+#else
     return Py_BuildValue("(kIIIIIIIII)",
-        cnt.PageFaultCount,
+                      cnt.PageFaultCount,    // unsigned long
         (unsigned int)cnt.PeakWorkingSetSize,
         (unsigned int)cnt.WorkingSetSize,
         (unsigned int)cnt.QuotaPeakPagedPoolUsage,
@@ -623,19 +638,6 @@ get_process_memory_info(PyObject* self, PyObject* args)
         (unsigned int)cnt.PagefileUsage,
         (unsigned int)cnt.PeakPagefileUsage,
         (unsigned int)private);
-#else
-// py >= 2.5
-    return Py_BuildValue("(knnnnnnnnn)",
-        cnt.PageFaultCount,
-        cnt.PeakWorkingSetSize,
-        cnt.WorkingSetSize,
-        cnt.QuotaPeakPagedPoolUsage,
-        cnt.QuotaPagedPoolUsage,
-        cnt.QuotaPeakNonPagedPoolUsage,
-        cnt.QuotaNonPagedPoolUsage,
-        cnt.PagefileUsage,
-        cnt.PeakPagefileUsage,
-        private);
 #endif
 }
 
@@ -649,8 +651,7 @@ get_process_memory_info_2(PyObject* self, PyObject* args)
     DWORD pid;
     PSYSTEM_PROCESS_INFORMATION process;
     PVOID buffer;
-    ULONG m0;
-    SIZE_T m1, m2, m3, m4, m5, m6, m7, m8, m9;
+    SIZE_T private;
 
     if (! PyArg_ParseTuple(args, "l", &pid)) {
         return NULL;
@@ -658,31 +659,41 @@ get_process_memory_info_2(PyObject* self, PyObject* args)
     if (! get_process_info(pid, &process, &buffer)) {
         return NULL;
     }
-    m0 = process->PageFaultCount;
-    m1 = process->PeakWorkingSetSize;
-    m2 = process->WorkingSetSize;
-    m3 = process->QuotaPeakPagedPoolUsage;
-    m4 = process->QuotaPagedPoolUsage;
-    m5 = process->QuotaPeakNonPagedPoolUsage;
-    m6 = process->QuotaNonPagedPoolUsage;
-    m7 = process->PagefileUsage;
-    m8 = process->PeakPagefileUsage;
-#if (_WIN32_WINNT >= 0x0501)
-    m9 = process->PrivatePageCount;  // private me
-#else
-    m9 = 0;
-#endif
-    free(buffer);
 
-// py 2.4
-#if (PY_MAJOR_VERSION == 2) && (PY_MINOR_VERSION <= 4)
-    return Py_BuildValue("(kIIIIIIIII)",
-        (unsigned int)m0, (unsigned int)m1, (unsigned int)m2, (unsigned int)m3,
-        (unsigned int)m4, (unsigned int)m5, (unsigned int)m6, (unsigned int)m7,
-        (unsigned int)m8, (unsigned int)m9);
+#if (_WIN32_WINNT >= 0x0501)
+    private = process->PrivatePageCount;
 #else
-    return Py_BuildValue("(knnnnnnnnn)",
-        m0, m1, m2, m3, m4, m5, m6, m7, m8, m9);
+    private = 0;
+#endif
+
+// SYSTEM_PROCESS_INFORMATIONvalues are defined as SIZE_T which on 64
+// bits is an (unsigned long long) and on 32bits is an (unsigned int).
+// "_WIN64" is defined if we're running a 64bit Python interpreter not
+// exclusively if the *system* is 64bit.
+#if defined(_WIN64)
+    return Py_BuildValue("(kKKKKKKKKK)",
+                            process->PageFaultCount,  // unsigned long
+        (unsigned long long)process->PeakWorkingSetSize,
+        (unsigned long long)process->WorkingSetSize,
+        (unsigned long long)process->QuotaPeakPagedPoolUsage,
+        (unsigned long long)process->QuotaPagedPoolUsage,
+        (unsigned long long)process->QuotaPeakNonPagedPoolUsage,
+        (unsigned long long)process->QuotaNonPagedPoolUsage,
+        (unsigned long long)process->PagefileUsage,
+        (unsigned long long)process->PeakPagefileUsage,
+        (unsigned long long)private);
+#else
+    return Py_BuildValue("(kIIIIIIIII)",
+                      process->PageFaultCount,    // unsigned long
+        (unsigned int)process->PeakWorkingSetSize,
+        (unsigned int)process->WorkingSetSize,
+        (unsigned int)process->QuotaPeakPagedPoolUsage,
+        (unsigned int)process->QuotaPagedPoolUsage,
+        (unsigned int)process->QuotaPeakNonPagedPoolUsage,
+        (unsigned int)process->QuotaNonPagedPoolUsage,
+        (unsigned int)process->PagefileUsage,
+        (unsigned int)process->PeakPagefileUsage,
+        (unsigned int)private);
 #endif
 }
 
@@ -1376,39 +1387,6 @@ get_process_username(PyObject* self, PyObject* args)
 #define AF_INET6 23
 #endif
 
-static char *state_to_string(ULONG state)
-{
-    switch (state)
-    {
-    case MIB_TCP_STATE_CLOSED:
-        return "CLOSE";
-    case MIB_TCP_STATE_LISTEN:
-        return "LISTEN";
-    case MIB_TCP_STATE_SYN_SENT:
-        return "SYN_SENT";
-    case MIB_TCP_STATE_SYN_RCVD:
-        return "SYN_RECV";
-    case MIB_TCP_STATE_ESTAB:
-        return "ESTABLISHED";
-    case MIB_TCP_STATE_FIN_WAIT1:
-        return "FIN_WAIT1";
-    case MIB_TCP_STATE_FIN_WAIT2:
-        return "FIN_WAIT2";
-    case MIB_TCP_STATE_CLOSE_WAIT:
-        return "CLOSE_WAIT";
-    case MIB_TCP_STATE_CLOSING:
-        return "CLOSING";
-    case MIB_TCP_STATE_LAST_ACK:
-        return "LAST_ACK";
-    case MIB_TCP_STATE_TIME_WAIT:
-        return "TIME_WAIT";
-    case MIB_TCP_STATE_DELETE_TCB:
-        return "DELETE_TCB";
-    default:
-        return "";
-    }
-}
-
 /* mingw support */
 #ifndef _IPRTRMIB_H
 typedef struct _MIB_TCP6ROW_OWNER_PID
@@ -1478,6 +1456,10 @@ typedef struct _MIB_UDP6TABLE_OWNER_PID
                            Py_DECREF(_AF_INET6);\
                            Py_DECREF(_SOCK_STREAM);\
                            Py_DECREF(_SOCK_DGRAM);
+
+// a signaler for connections without an actual status
+static int PSUTIL_CONN_NONE = 128;
+
 
 /*
  * Return a list of network connections opened by a process
@@ -1641,13 +1623,13 @@ get_process_connections(PyObject* self, PyObject* args)
                 if (addressTupleRemote == NULL)
                     goto error;
 
-                connectionTuple = Py_BuildValue("(iiiNNs)",
+                connectionTuple = Py_BuildValue("(iiiNNi)",
                     -1,
                     AF_INET,
                     SOCK_STREAM,
                     addressTupleLocal,
                     addressTupleRemote,
-                    state_to_string(tcp4Table->table[i].dwState)
+                    tcp4Table->table[i].dwState
                     );
                 if (!connectionTuple)
                     goto error;
@@ -1729,13 +1711,13 @@ get_process_connections(PyObject* self, PyObject* args)
                 if (addressTupleRemote == NULL)
                     goto error;
 
-                connectionTuple = Py_BuildValue("(iiiNNs)",
+                connectionTuple = Py_BuildValue("(iiiNNi)",
                     -1,
                     AF_INET6,
                     SOCK_STREAM,
                     addressTupleLocal,
                     addressTupleRemote,
-                    state_to_string(tcp6Table->table[i].dwState)
+                    tcp6Table->table[i].dwState
                     );
                 if (!connectionTuple)
                     goto error;
@@ -1796,13 +1778,13 @@ get_process_connections(PyObject* self, PyObject* args)
                 if (addressTupleLocal == NULL)
                     goto error;
 
-                connectionTuple = Py_BuildValue("(iiiNNs)",
+                connectionTuple = Py_BuildValue("(iiiNNi)",
                     -1,
                     AF_INET,
                     SOCK_DGRAM,
                     addressTupleLocal,
                     PyTuple_New(0),
-                    ""
+                    PSUTIL_CONN_NONE
                     );
                 if (!connectionTuple)
                     goto error;
@@ -1863,13 +1845,13 @@ get_process_connections(PyObject* self, PyObject* args)
                 if (addressTupleLocal == NULL)
                     goto error;
 
-                connectionTuple = Py_BuildValue("(iiiNNs)",
+                connectionTuple = Py_BuildValue("(iiiNNi)",
                     -1,
                     AF_INET6,
                     SOCK_DGRAM,
                     addressTupleLocal,
                     PyTuple_New(0),
-                    ""
+                    PSUTIL_CONN_NONE
                     );
                 if (!connectionTuple)
                     goto error;
@@ -2215,10 +2197,11 @@ get_disk_usage(PyObject* self, PyObject* args)
  * Return a Python list of named tuples with overall network I/O information
  */
 static PyObject*
-get_network_io_counters(PyObject* self, PyObject* args)
+get_net_io_counters(PyObject* self, PyObject* args)
 {
     int attempts = 0;
     int outBufLen = 15000;
+    char ifname[2000];
     DWORD dwRetVal = 0;
     MIB_IFROW *pIfRow = NULL;
     ULONG flags = 0;
@@ -2228,7 +2211,6 @@ get_network_io_counters(PyObject* self, PyObject* args)
 
     PyObject* py_retdict = PyDict_New();
     PyObject* py_nic_info = NULL;
-    PyObject* py_pre_nic_name = NULL;
     PyObject* py_nic_name = NULL;
 
     if (py_retdict == NULL) {
@@ -2261,7 +2243,6 @@ get_network_io_counters(PyObject* self, PyObject* args)
 
     pCurrAddresses = pAddresses;
     while (pCurrAddresses) {
-        py_pre_nic_name = NULL;
         py_nic_name = NULL;
         py_nic_info = NULL;
         pIfRow = (MIB_IFROW *) malloc(sizeof(MIB_IFROW));
@@ -2290,17 +2271,12 @@ get_network_io_counters(PyObject* self, PyObject* args)
         if (!py_nic_info)
             goto error;
 
-        py_pre_nic_name = PyUnicode_FromWideChar(
-                                pCurrAddresses->FriendlyName,
-                                wcslen(pCurrAddresses->FriendlyName));
-        if (py_pre_nic_name == NULL)
-            goto error;
-        py_nic_name = PyUnicode_FromObject(py_pre_nic_name);
+        sprintf(ifname, "%wS", pCurrAddresses->FriendlyName);
+        py_nic_name = Py_BuildValue("s", ifname);
         if (py_nic_name == NULL)
             goto error;
         if (PyDict_SetItem(py_retdict, py_nic_name, py_nic_info))
             goto error;
-        Py_XDECREF(py_pre_nic_name);
         Py_XDECREF(py_nic_name);
         Py_XDECREF(py_nic_info);
 
@@ -2312,7 +2288,6 @@ get_network_io_counters(PyObject* self, PyObject* args)
     return py_retdict;
 
 error:
-    Py_XDECREF(py_pre_nic_name);
     Py_XDECREF(py_nic_name);
     Py_XDECREF(py_nic_info);
     Py_DECREF(py_retdict);
@@ -2978,7 +2953,7 @@ PsutilMethods[] =
         "Return system per-cpu times as a list of tuples"},
     {"get_disk_usage", get_disk_usage, METH_VARARGS,
         "Return path's disk total and free as a Python tuple."},
-    {"get_network_io_counters", get_network_io_counters, METH_VARARGS,
+    {"get_net_io_counters", get_net_io_counters, METH_VARARGS,
         "Return dict of tuples of networks I/O information."},
     {"get_disk_io_counters", get_disk_io_counters, METH_VARARGS,
          "Return dict of tuples of disks I/O information."},
@@ -3058,7 +3033,7 @@ struct module_state {
         INITERROR;
     }
 
-    // Public constants
+    // process status constants
     // http://msdn.microsoft.com/en-us/library/ms683211(v=vs.85).aspx
     PyModule_AddIntConstant(module, "ABOVE_NORMAL_PRIORITY_CLASS",
                                      ABOVE_NORMAL_PRIORITY_CLASS);
@@ -3072,7 +3047,37 @@ struct module_state {
                                      NORMAL_PRIORITY_CLASS);
     PyModule_AddIntConstant(module, "REALTIME_PRIORITY_CLASS",
                                      REALTIME_PRIORITY_CLASS);
-    // private constants
+    // connection status constants
+    // http://msdn.microsoft.com/en-us/library/cc669305.aspx
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_CLOSED",
+                                     MIB_TCP_STATE_CLOSED);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_CLOSING",
+                                     MIB_TCP_STATE_CLOSING);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_CLOSE_WAIT",
+                                     MIB_TCP_STATE_CLOSE_WAIT);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_LISTEN",
+                                     MIB_TCP_STATE_LISTEN);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_ESTAB",
+                                     MIB_TCP_STATE_ESTAB);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_SYN_SENT",
+                                     MIB_TCP_STATE_SYN_SENT);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_SYN_RCVD",
+                                     MIB_TCP_STATE_SYN_RCVD);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_FIN_WAIT1",
+                                     MIB_TCP_STATE_FIN_WAIT1);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_FIN_WAIT2",
+                                     MIB_TCP_STATE_FIN_WAIT2);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_LAST_ACK",
+                                     MIB_TCP_STATE_LAST_ACK);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_TIME_WAIT",
+                                     MIB_TCP_STATE_TIME_WAIT);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_TIME_WAIT",
+                                     MIB_TCP_STATE_TIME_WAIT);
+    PyModule_AddIntConstant(module, "MIB_TCP_STATE_DELETE_TCB",
+                                     MIB_TCP_STATE_DELETE_TCB);
+    PyModule_AddIntConstant(module, "PSUTIL_CONN_NONE",
+                                     PSUTIL_CONN_NONE);
+    // ...for internal use in _psutil_mswindows.py
     PyModule_AddIntConstant(module, "INFINITE", INFINITE);
     PyModule_AddIntConstant(module, "ERROR_ACCESS_DENIED", ERROR_ACCESS_DENIED);
     SetSeDebug();
