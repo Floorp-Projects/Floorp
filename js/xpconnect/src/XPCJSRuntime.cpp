@@ -3267,9 +3267,9 @@ XPCJSRuntime::GetJunkScope()
         SandboxOptions options(cx);
         options.sandboxName.AssignASCII("XPConnect Junk Compartment");
         RootedValue v(cx);
-        nsresult rv = xpc_CreateSandboxObject(cx, v.address(),
-                                              nsContentUtils::GetSystemPrincipal(),
-                                              options);
+        nsresult rv = CreateSandboxObject(cx, v.address(),
+                                          nsContentUtils::GetSystemPrincipal(),
+                                          options);
 
         NS_ENSURE_SUCCESS(rv, nullptr);
 

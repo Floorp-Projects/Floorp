@@ -68,7 +68,7 @@ private:
 };
 
 already_AddRefed<nsIXPCComponents_utils_Sandbox>
-NewSandboxConstructor()
+xpc::NewSandboxConstructor()
 {
     nsCOMPtr<nsIXPCComponents_utils_Sandbox> sbConstructor =
         new nsXPCComponents_utils_Sandbox();
@@ -319,13 +319,11 @@ GetFilenameAndLineNumber(JSContext *cx, nsACString &filename, unsigned &lineno)
     return false;
 }
 
-namespace xpc {
 bool
-IsReflector(JSObject *obj)
+xpc::IsReflector(JSObject *obj)
 {
     return IS_WN_REFLECTOR(obj) || dom::IsDOMObject(obj);
 }
-} /* namespace xpc */
 
 enum ForwarderCloneTags {
     SCTAG_BASE = JS_SCTAG_USER_MIN,
@@ -604,7 +602,7 @@ static const JSFunctionSpec SandboxFunctions[] = {
 };
 
 bool
-IsSandbox(JSObject *obj)
+xpc::IsSandbox(JSObject *obj)
 {
     return GetObjectJSClass(obj) == &SandboxClass;
 }
@@ -870,7 +868,7 @@ xpc::SandboxProxyHandler::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
 }
 
 nsresult
-xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, SandboxOptions& options)
+xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, SandboxOptions& options)
 {
     // Create the sandbox global object
     nsresult rv;
@@ -1344,7 +1342,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     if (NS_FAILED(AssembleSandboxMemoryReporterName(cx, options.sandboxName)))
         return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
 
-    rv = xpc_CreateSandboxObject(cx, args.rval().address(), prinOrSop, options);
+    rv = CreateSandboxObject(cx, args.rval().address(), prinOrSop, options);
 
     if (NS_FAILED(rv))
         return ThrowAndFail(rv, cx, _retval);
@@ -1404,9 +1402,9 @@ ContextHolder::~ContextHolder()
 }
 
 nsresult
-xpc_EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& source,
-                  const char *filename, int32_t lineNo,
-                  JSVersion jsVersion, bool returnStringOnly, MutableHandleValue rval)
+xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& source,
+                   const char *filename, int32_t lineNo,
+                   JSVersion jsVersion, bool returnStringOnly, MutableHandleValue rval)
 {
     JS_AbortIfWrongThread(JS_GetRuntime(cx));
     rval.set(UndefinedValue());
@@ -1557,8 +1555,8 @@ CloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
-NewFunctionForwarder(JSContext *cx, HandleId id, HandleObject callable, bool doclone,
-                     MutableHandleValue vp)
+xpc::NewFunctionForwarder(JSContext *cx, HandleId id, HandleObject callable, bool doclone,
+                          MutableHandleValue vp)
 {
     JSFunction *fun = js::NewFunctionByIdWithReserved(cx, doclone ? CloningFunctionForwarder :
                                                                     NonCloningFunctionForwarder,
