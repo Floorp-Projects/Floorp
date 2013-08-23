@@ -9,6 +9,7 @@
 #include "nsIScriptContext.h"
 
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsDOMJSUtils.h"
@@ -22,8 +23,11 @@
 #include "nsWrapperCacheInlines.h"
 
 #include "AsyncConnectionHelper.h"
+#include "IDBCursor.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
+#include "IDBIndex.h"
+#include "IDBObjectStore.h"
 #include "IDBTransaction.h"
 
 namespace {
@@ -35,6 +39,7 @@ uint64_t gNextSerialNumber = 1;
 } // anonymous namespace
 
 USING_INDEXEDDB_NAMESPACE
+using mozilla::dom::IDBObjectStoreOrIDBIndexOrIDBCursorReturnValue;
 
 IDBRequest::IDBRequest()
 : mResultVal(JSVAL_VOID),
@@ -59,20 +64,87 @@ IDBRequest::~IDBRequest()
 
 // static
 already_AddRefed<IDBRequest>
-IDBRequest::Create(nsISupports* aSource,
-                   IDBWrapperCache* aOwnerCache,
+IDBRequest::Create(IDBWrapperCache* aOwnerCache,
                    IDBTransaction* aTransaction)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   nsRefPtr<IDBRequest> request(new IDBRequest());
 
-  request->mSource = aSource;
   request->mTransaction = aTransaction;
   request->BindToOwner(aOwnerCache);
   request->SetScriptOwner(aOwnerCache->GetScriptOwner());
   request->CaptureCaller();
 
   return request.forget();
+}
+
+// static
+already_AddRefed<IDBRequest>
+IDBRequest::Create(IDBObjectStore* aSourceAsObjectStore,
+                   IDBWrapperCache* aOwnerCache,
+                   IDBTransaction* aTransaction)
+{
+  nsRefPtr<IDBRequest> request = Create(aOwnerCache, aTransaction);
+
+  request->mSourceAsObjectStore = aSourceAsObjectStore;
+
+  return request.forget();
+}
+
+// static
+already_AddRefed<IDBRequest>
+IDBRequest::Create(IDBIndex* aSourceAsIndex,
+                   IDBWrapperCache* aOwnerCache,
+                   IDBTransaction* aTransaction)
+{
+  nsRefPtr<IDBRequest> request = Create(aOwnerCache, aTransaction);
+
+  request->mSourceAsIndex = aSourceAsIndex;
+
+  return request.forget();
+}
+
+// static
+already_AddRefed<IDBRequest>
+IDBRequest::Create(IDBCursor* aSourceAsCursor,
+                   IDBWrapperCache* aOwnerCache,
+                   IDBTransaction* aTransaction)
+{
+  nsRefPtr<IDBRequest> request = Create(aOwnerCache, aTransaction);
+
+  request->mSourceAsCursor = aSourceAsCursor;
+
+  return request.forget();
+}
+
+#ifdef DEBUG
+void
+IDBRequest::AssertSourceIsCorrect() const
+{
+  // At most one of mSourceAs* is allowed to be non-null.  Check that by
+  // summing the double negation of each one and asserting the sum is at most
+  // 1.
+
+  MOZ_ASSERT(!!mSourceAsObjectStore + !!mSourceAsIndex + !!mSourceAsCursor <= 1);
+}
+#endif
+
+void
+IDBRequest::GetSource(Nullable<IDBObjectStoreOrIDBIndexOrIDBCursorReturnValue>& aSource) const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  AssertSourceIsCorrect();
+
+  if (mSourceAsObjectStore) {
+    aSource.SetValue().SetAsIDBObjectStore() = mSourceAsObjectStore;
+  } else if (mSourceAsIndex) {
+    aSource.SetValue().SetAsIDBIndex() = mSourceAsIndex;
+  } else if (mSourceAsCursor) {
+    aSource.SetValue().SetAsIDBCursor() = mSourceAsCursor;
+  } else {
+    aSource.SetNull();
+  }
 }
 
 void
@@ -281,14 +353,18 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(IDBRequest)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
   // Don't need NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS because
   // nsDOMEventTargetHelper does it for us.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSourceAsObjectStore)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSourceAsIndex)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSourceAsCursor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTransaction)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBRequest, IDBWrapperCache)
   tmp->mResultVal = JSVAL_VOID;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourceAsObjectStore)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourceAsIndex)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourceAsCursor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransaction)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END

@@ -21,7 +21,7 @@ interface nsITimezoneChangedCb : nsISupports
 #define ALARMHALSERVICE_CONTRACTID "@mozilla.org/alarmHalService;1"
 %}
 
-[scriptable, builtinclass, uuid(057b1ee4-f696-486d-bd55-205e21e88fab)]
+[scriptable, uuid(057b1ee4-f696-486d-bd55-205e21e88fab)]
 interface nsIAlarmHalService : nsISupports
 {
   bool setAlarm(in int32_t aSeconds, in int32_t aNanoseconds);

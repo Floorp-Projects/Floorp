@@ -8,6 +8,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
+#include "nsCxPusher.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -32,6 +33,14 @@ nsNSSDialogHelper::openDialog(
   if (!parent) {
     windowWatcher->GetActiveWindow(getter_AddRefs(parent));
   }
+
+  // We're loading XUL into this window, and it's happening on behalf of the
+  // system, not on behalf of content. Make sure the initial about:blank window
+  // gets a system principal, otherwise we'll bork when trying to wrap the
+  // nsIKeyGenThread |arguments| property into the unprivileged scoope.
+  MOZ_ASSERT(!strncmp("chrome://", url, strlen("chrome://")));
+  nsCxPusher pusher;
+  pusher.PushNull();
 
   nsCOMPtr<nsIDOMWindow> newWindow;
   rv = windowWatcher->OpenWindow(parent,

@@ -34,7 +34,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
-#include "mozilla/dom/TextDecoderBase.h"
+#include "mozilla/dom/TextDecoder.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Selection.h"
@@ -3422,15 +3422,15 @@ nsContentUtils::ConvertStringFromCharset(const nsACString& aCharset,
   }
 
   ErrorResult rv;
-  TextDecoderBase decoder;
-  decoder.Init(NS_ConvertUTF8toUTF16(aCharset), false, rv);
+  nsAutoPtr<TextDecoder> decoder(new TextDecoder());
+  decoder->Init(NS_ConvertUTF8toUTF16(aCharset), false, rv);
   if (rv.Failed()) {
     rv.ClearMessage();
     return rv.ErrorCode();
   }
 
-  decoder.Decode(aInput.BeginReading(), aInput.Length(), false,
-                 aOutput, rv);
+  decoder->Decode(aInput.BeginReading(), aInput.Length(), false,
+                  aOutput, rv);
   return rv.ErrorCode();
 }
 

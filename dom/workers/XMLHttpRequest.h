@@ -15,6 +15,8 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/TypedArray.h"
 
+#include "js/StructuredClone.h"
+
 BEGIN_WORKERS_NAMESPACE
 
 class Proxy;
@@ -73,16 +75,16 @@ public:
   _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   static XMLHttpRequest*
-  Constructor(const WorkerGlobalObject& aGlobal,
-              const MozXMLHttpRequestParametersWorkers& aParams,
+  Constructor(const GlobalObject& aGlobal,
+              const MozXMLHttpRequestParameters& aParams,
               ErrorResult& aRv);
 
   static XMLHttpRequest*
-  Constructor(const WorkerGlobalObject& aGlobal, const nsAString& ignored,
+  Constructor(const GlobalObject& aGlobal, const nsAString& ignored,
               ErrorResult& aRv)
   {
     // Pretend like someone passed null, so we can pick up the default values
-    MozXMLHttpRequestParametersWorkers params;
+    MozXMLHttpRequestParameters params;
     if (!params.Init(aGlobal.GetContext(), JS::NullHandleValue)) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
