@@ -221,20 +221,22 @@ CompositorD3D11::Initialize()
       return false;
     }
 
-    D3D11_RENDER_TARGET_BLEND_DESC rtBlendComponent = {
-      TRUE,
-      D3D11_BLEND_ONE,
-      D3D11_BLEND_INV_SRC1_COLOR,
-      D3D11_BLEND_OP_ADD,
-      D3D11_BLEND_ONE,
-      D3D11_BLEND_INV_SRC_ALPHA,
-      D3D11_BLEND_OP_ADD,
-      D3D11_COLOR_WRITE_ENABLE_ALL
-    };
-    blendDesc.RenderTarget[0] = rtBlendComponent;
-    hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mComponentBlendState));
-    if (FAILED(hr)) {
-      return false;
+    if (gfxPlatform::ComponentAlphaEnabled()) {
+      D3D11_RENDER_TARGET_BLEND_DESC rtBlendComponent = {
+        TRUE,
+        D3D11_BLEND_ONE,
+        D3D11_BLEND_INV_SRC1_COLOR,
+        D3D11_BLEND_OP_ADD,
+        D3D11_BLEND_ONE,
+        D3D11_BLEND_INV_SRC_ALPHA,
+        D3D11_BLEND_OP_ADD,
+        D3D11_COLOR_WRITE_ENABLE_ALL
+      };
+      blendDesc.RenderTarget[0] = rtBlendComponent;
+      hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mComponentBlendState));
+      if (FAILED(hr)) {
+        return false;
+      }
     }
   }
 
@@ -808,7 +810,9 @@ CompositorD3D11::CreateShaders()
   LOAD_PIXEL_SHADER(RGBShader);
   LOAD_PIXEL_SHADER(RGBAShader);
   LOAD_PIXEL_SHADER(YCbCrShader);
-  LOAD_PIXEL_SHADER(ComponentAlphaShader);
+  if (gfxPlatform::ComponentAlphaEnabled()) {
+    LOAD_PIXEL_SHADER(ComponentAlphaShader);
+  }
 
 #undef LOAD_PIXEL_SHADER
 
