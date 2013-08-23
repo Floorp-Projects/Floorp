@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHtml5AtomTable_h_
-#define nsHtml5AtomTable_h_
+#ifndef nsHtml5AtomTable_h
+#define nsHtml5AtomTable_h
 
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
@@ -108,4 +108,4 @@ class nsHtml5AtomTable
 #endif
 };
 
-#endif // nsHtml5AtomTable_h_
+#endif // nsHtml5AtomTable_h

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHtml5StringParser_h_
-#define nsHtml5StringParser_h_
+#ifndef nsHtml5StringParser_h
+#define nsHtml5StringParser_h
 
 #include "nsHtml5AtomTable.h"
 #include "nsParserBase.h"
@@ -84,4 +84,4 @@ class nsHtml5StringParser : public nsParserBase
 
 };
 
-#endif // nsHtml5StringParser_h_
+#endif // nsHtml5StringParser_h

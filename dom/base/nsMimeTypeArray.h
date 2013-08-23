@@ -12,8 +12,8 @@
 #include "nsWrapperCache.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsAutoPtr.h"
+#include "nsPIDOMWindow.h"
 
-class nsPIDOMWindow;
 class nsMimeType;
 class nsPluginElement;
 

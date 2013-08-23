@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
-#ifndef nsHtml5DocumentMode_h__
-#define nsHtml5DocumentMode_h__
+#ifndef nsHtml5DocumentMode_h
+#define nsHtml5DocumentMode_h
 
 enum nsHtml5DocumentMode {
     STANDARDS_MODE,
@@ -11,4 +11,4 @@ enum nsHtml5DocumentMode {
     QUIRKS_MODE
 };
 
-#endif // nsHtml5DocumentMode_h__
+#endif // nsHtml5DocumentMode_h
