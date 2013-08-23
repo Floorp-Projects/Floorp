@@ -24,3 +24,12 @@ function f3(a, b, c=4) {
     assertEq(c, 4);
 }
 f3(1);
+function f4(a, bIs, cIs, b=3, c) {
+    assertEq(a, 1);
+    assertEq(b, bIs);
+    assertEq(c, cIs);
+}
+assertEq(f4.length, 3);
+f4(1, 3, undefined);
+f4(1, 4, undefined, 4);
+f4(1, 4, 5, 4, 5);

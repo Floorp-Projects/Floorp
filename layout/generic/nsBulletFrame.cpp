@@ -8,27 +8,19 @@
 #include "nsCOMPtr.h"
 #include "nsBulletFrame.h"
 #include "nsGkAtoms.h"
-#include "nsHTMLParts.h"
-#include "nsContainerFrame.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsRenderingContext.h"
-#include "nsILoadGroup.h"
-#include "nsIURL.h"
-#include "nsNetUtil.h"
 #include "prprf.h"
 #include "nsDisplayList.h"
 #include "nsCounterManager.h"
 
-#include "imgILoader.h"
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
 
-#include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
 #include <algorithm>
 
 #ifdef ACCESSIBILITY

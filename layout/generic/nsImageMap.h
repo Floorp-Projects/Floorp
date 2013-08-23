@@ -8,17 +8,18 @@
 #ifndef nsImageMap_h
 #define nsImageMap_h
 
-#include "nsISupports.h"
+#include "nsCOMPtr.h"
 #include "nsCoord.h"
 #include "nsTArray.h"
 #include "nsStubMutationObserver.h"
 #include "nsIDOMEventListener.h"
-#include "nsIFrame.h"
+#include "nsRect.h"
 
 class Area;
-class nsIDOMEvent;
 class nsRenderingContext;
 class nsImageFrame;
+class nsIFrame;
+class nsIContent;
 
 class nsImageMap : public nsStubMutationObserver,
                    public nsIDOMEventListener

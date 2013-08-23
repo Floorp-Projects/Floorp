@@ -2519,7 +2519,7 @@ NewSandbox(JSContext *cx, bool lazy)
 
     JS_FireOnNewGlobalObject(cx, obj);
 
-    if (!cx->compartment()->wrap(cx, obj.address()))
+    if (!cx->compartment()->wrap(cx, &obj))
         return NULL;
     return obj;
 }

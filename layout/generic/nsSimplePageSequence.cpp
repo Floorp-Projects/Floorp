@@ -2,8 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsCOMPtr.h" 
-#include "nsReadableUtils.h"
+#include "nsCOMPtr.h"
 #include "nsSimplePageSequence.h"
 #include "nsPresContext.h"
 #include "gfxContext.h"
@@ -13,15 +12,15 @@
 #include "nsIPrintSettings.h"
 #include "nsPageFrame.h"
 #include "nsSubDocumentFrame.h"
-#include "nsStyleConsts.h"
 #include "nsRegion.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
-#include "mozilla/Preferences.h"
 #include "nsHTMLCanvasFrame.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsICanvasRenderingContextInternal.h"
+#include "nsIDateTimeFormat.h"
+#include "nsServiceManagerUtils.h"
 #include <algorithm>
 
 // DateTime Includes
@@ -31,8 +30,6 @@
 
 // Print Options
 #include "nsIPrintOptions.h"
-#include "nsGfxCIID.h"
-#include "nsIServiceManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

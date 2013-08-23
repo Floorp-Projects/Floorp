@@ -3,18 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsPageContentFrame.h"
-#include "nsPageFrame.h"
-#include "nsPlaceholderFrame.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsContainerFrame.h"
-#include "nsHTMLParts.h"
-#include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
-#include "nsReadableUtils.h"
 #include "nsSimplePageSequence.h"
-#include "nsDisplayList.h"
 
 nsIFrame*
 NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)

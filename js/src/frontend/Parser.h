@@ -519,7 +519,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     /*
      * Additional JS parsers.
      */
-    bool functionArguments(FunctionSyntaxKind kind, Node *list, Node funcpn, bool &hasRest);
+    bool functionArguments(FunctionSyntaxKind kind, Node *list, Node funcpn, bool *hasRest);
 
     Node functionDef(HandlePropertyName name, const TokenStream::Position &start,
                      FunctionType type, FunctionSyntaxKind kind, GeneratorKind generatorKind);
