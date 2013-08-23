@@ -208,19 +208,6 @@ public:
   ViewTransform GetCurrentAsyncTransform();
 
   /**
-   * Sets the DPI of the device for use within panning and zooming logic. It is
-   * a platform responsibility to set this on initialization of this class and
-   * whenever it changes.
-   */
-  void SetDPI(int aDPI);
-
-  /**
-   * Gets the DPI of the device for use outside the panning and zooming logic.
-   * It defaults to 72 if not set using SetDPI() at any point.
-   */
-  int GetDPI();
-
-  /**
    * Recalculates the displayport. Ideally, this should paint an area bigger
    * than the composite-to dimensions so that when you scroll down, you don't
    * checkerboard immediately. This includes a bunch of logic, including
@@ -589,8 +576,6 @@ private:
   // The delay task triggered by the throttling mozbrowserasyncscroll event
   // ensures the last mozbrowserasyncscroll event is always been fired.
   CancelableTask* mAsyncScrollTimeoutTask;
-
-  int mDPI;
 
   // Flag used to determine whether or not we should disable handling of the
   // next batch of touch events. This is used for sync scrolling of subframes.

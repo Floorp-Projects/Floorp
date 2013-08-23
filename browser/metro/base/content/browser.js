@@ -230,41 +230,11 @@ var Browser = {
     }.bind(this));
   },
 
-  quit: function quit() {
-    // NOTE: onclose seems to be called only when using OS chrome to close a window,
-    // so we need to handle the Browser.closing check ourselves.
-    if (this.closing()) {
-      window.QueryInterface(Ci.nsIDOMChromeWindow).minimize();
-      window.close();
-    }
-  },
-
-  closing: function closing() {
-    // Figure out if there's at least one other browser window around.
-    let lastBrowser = true;
-    let e = Services.wm.getEnumerator("navigator:browser");
-    while (e.hasMoreElements() && lastBrowser) {
-      let win = e.getNext();
-      if (win != window)
-        lastBrowser = false;
-    }
-    if (!lastBrowser)
-      return true;
-
-    // Let everyone know we are closing the last browser window
-    let closingCancelled = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-    Services.obs.notifyObservers(closingCancelled, "browser-lastwindow-close-requested", null);
-    if (closingCancelled.data)
-      return false;
-
-    Services.obs.notifyObservers(null, "browser-lastwindow-close-granted", null);
-    return true;
-  },
-
   shutdown: function shutdown() {
     APZCObserver.shutdown();
     BrowserUI.uninit();
     ContentAreaObserver.shutdown();
+    Appbar.shutdown();
 
     messageManager.removeMessageListener("MozScrolledAreaChanged", this);
     messageManager.removeMessageListener("Browser:ViewportMetadata", this);

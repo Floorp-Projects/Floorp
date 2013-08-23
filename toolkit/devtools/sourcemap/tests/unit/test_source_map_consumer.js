@@ -323,6 +323,76 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
     assert.equal(map.sourceContentFor(s), "foo");
   };
 
+  exports['test github issue #72, duplicate sources'] = function (assert, util) {
+    var map = new SourceMapConsumer({
+      "version": 3,
+      "file": "foo.js",
+      "sources": ["source1.js", "source1.js", "source3.js"],
+      "names": [],
+      "mappings": ";EAAC;;IAEE;;MEEE",
+      "sourceRoot": "http://example.com"
+    });
+
+    var pos = map.originalPositionFor({
+      line: 2,
+      column: 2
+    });
+    assert.equal(pos.source, 'http://example.com/source1.js');
+    assert.equal(pos.line, 1);
+    assert.equal(pos.column, 1);
+
+    var pos = map.originalPositionFor({
+      line: 4,
+      column: 4
+    });
+    assert.equal(pos.source, 'http://example.com/source1.js');
+    assert.equal(pos.line, 3);
+    assert.equal(pos.column, 3);
+
+    var pos = map.originalPositionFor({
+      line: 6,
+      column: 6
+    });
+    assert.equal(pos.source, 'http://example.com/source3.js');
+    assert.equal(pos.line, 5);
+    assert.equal(pos.column, 5);
+  };
+
+  exports['test github issue #72, duplicate names'] = function (assert, util) {
+    var map = new SourceMapConsumer({
+      "version": 3,
+      "file": "foo.js",
+      "sources": ["source.js"],
+      "names": ["name1", "name1", "name3"],
+      "mappings": ";EAACA;;IAEEA;;MAEEE",
+      "sourceRoot": "http://example.com"
+    });
+
+    var pos = map.originalPositionFor({
+      line: 2,
+      column: 2
+    });
+    assert.equal(pos.name, 'name1');
+    assert.equal(pos.line, 1);
+    assert.equal(pos.column, 1);
+
+    var pos = map.originalPositionFor({
+      line: 4,
+      column: 4
+    });
+    assert.equal(pos.name, 'name1');
+    assert.equal(pos.line, 3);
+    assert.equal(pos.column, 3);
+
+    var pos = map.originalPositionFor({
+      line: 6,
+      column: 6
+    });
+    assert.equal(pos.name, 'name3');
+    assert.equal(pos.line, 5);
+    assert.equal(pos.column, 5);
+  };
+
 });
 function run_test() {
   runSourceMapTests('test/source-map/test-source-map-consumer', do_throw);

@@ -2314,11 +2314,12 @@ function PageProxyClickHandler(aEvent)
 
 /**
  * Handle command events bubbling up from error page content
+ * or from about:newtab
  */
 let BrowserOnClick = {
   handleEvent: function BrowserOnClick_handleEvent(aEvent) {
     if (!aEvent.isTrusted || // Don't trust synthetic events
-        aEvent.button == 2 || aEvent.target.localName != "button") {
+        aEvent.button == 2) {
       return;
     }
 
@@ -2335,6 +2336,10 @@ let BrowserOnClick = {
     }
     else if (ownerDoc.documentURI.startsWith("about:neterror")) {
       this.onAboutNetError(originalTarget, ownerDoc);
+    }
+    else if (gMultiProcessBrowser &&
+             ownerDoc.documentURI.toLowerCase() == "about:newtab") {
+      this.onE10sAboutNewTab(aEvent, ownerDoc);
     }
   },
 
@@ -2444,6 +2449,27 @@ let BrowserOnClick = {
         secHistogram.add(nsISecTel[bucketName + "IGNORE_WARNING"]);
         this.ignoreWarningButton(isMalware);
         break;
+    }
+  },
+
+  /**
+   * This functions prevents navigation from happening directly through the <a>
+   * link in about:newtab (which is loaded in the parent and therefore would load
+   * the next page also in the parent) and instructs the browser to open the url
+   * in the current tab which will make it update the remoteness of the tab.
+   */
+  onE10sAboutNewTab: function(aEvent, aOwnerDoc) {
+    let isTopFrame = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
+    if (!isTopFrame) {
+      return;
+    }
+
+    let anchorTarget = aEvent.originalTarget.parentNode;
+
+    if (anchorTarget instanceof HTMLAnchorElement &&
+        anchorTarget.classList.contains("newtab-link")) {
+      aEvent.preventDefault();
+      openUILinkIn(anchorTarget.href, "current");
     }
   },
 
@@ -4179,14 +4205,17 @@ var TabsProgressListener = {
     }
 
     // Attach a listener to watch for "click" events bubbling up from error
-    // pages and other similar page. This lets us fix bugs like 401575 which
-    // require error page UI to do privileged things, without letting error
-    // pages have any privilege themselves.
+    // pages and other similar pages (like about:newtab). This lets us fix bugs
+    // like 401575 which require error page UI to do privileged things, without
+    // letting error pages have any privilege themselves.
     // We can't look for this during onLocationChange since at that point the
     // document URI is not yet the about:-uri of the error page.
 
-    let doc = gMultiProcessBrowser ? null : aWebProgress.DOMWindow.document;
-    if (!gMultiProcessBrowser &&
+    let isRemoteBrowser = aBrowser.isRemoteBrowser;
+    // We check isRemoteBrowser here to avoid requesting the doc CPOW
+    let doc = isRemoteBrowser ? null : aWebProgress.DOMWindow.document;
+
+    if (!isRemoteBrowser &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         Components.isSuccessCode(aStatus) &&
         doc.documentURI.startsWith("about:") &&

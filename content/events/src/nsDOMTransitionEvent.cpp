@@ -47,7 +47,7 @@ nsDOMTransitionEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                                   const mozilla::dom::TransitionEventInit& aParam,
                                   mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<nsDOMTransitionEvent> e = new nsDOMTransitionEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 

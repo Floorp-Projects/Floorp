@@ -1459,8 +1459,8 @@ XMLHttpRequest::_finalize(JSFreeOp* aFop)
 
 // static
 XMLHttpRequest*
-XMLHttpRequest::Constructor(const WorkerGlobalObject& aGlobal,
-                            const MozXMLHttpRequestParametersWorkers& aParams,
+XMLHttpRequest::Constructor(const GlobalObject& aGlobal,
+                            const MozXMLHttpRequestParameters& aParams,
                             ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.GetContext();

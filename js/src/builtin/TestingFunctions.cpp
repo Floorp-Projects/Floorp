@@ -933,14 +933,12 @@ static const char *ObjectMetadataPropertyName = "__objectMetadataFunction__";
 static bool
 ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
 {
-    Value thisv = UndefinedValue();
-
     RootedValue fun(cx);
     if (!JS_GetProperty(cx, cx->global(), ObjectMetadataPropertyName, &fun))
         return false;
 
     RootedValue rval(cx);
-    if (!Invoke(cx, thisv, fun, 0, NULL, &rval))
+    if (!Invoke(cx, UndefinedValue(), fun, 0, NULL, &rval))
         return false;
 
     if (rval.isObject())

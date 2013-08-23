@@ -127,6 +127,14 @@ define('test/source-map/util', ['require', 'exports', 'module' ,  'lib/source-ma
     sourceRoot: '/the/root',
     mappings: 'CAAC,IAAI,IAAM,SAAUA,GAClB,OAAOC,IAAID;CCDb,IAAI,IAAM,SAAUE,GAClB,OAAOA'
   };
+  exports.emptyMap = {
+    version: 3,
+    file: 'min.js',
+    names: [],
+    sources: [],
+    mappings: ''
+  };
+
 
   function assertMapping(generatedLine, generatedColumn, originalSource,
                          originalLine, originalColumn, name, map, assert,

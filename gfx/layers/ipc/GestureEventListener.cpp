@@ -108,7 +108,7 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
     ScreenIntPoint delta = event.mTouches[0].mScreenPoint - mTouchStartPosition;
     if (mTouches.Length() == 1 &&
         NS_hypot(delta.x, delta.y) >
-          mAsyncPanZoomController->GetDPI() * mAsyncPanZoomController->GetTouchStartTolerance())
+          APZCTreeManager::GetDPI() * mAsyncPanZoomController->GetTouchStartTolerance())
     {
       HandleTapCancel(event);
     }

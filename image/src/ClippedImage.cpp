@@ -232,8 +232,8 @@ ClippedImage::GetFrameInternal(const nsIntSize& aViewportSize,
     // Create a surface to draw into.
     mozilla::RefPtr<mozilla::gfx::DrawTarget> target;
     target = gfxPlatform::GetPlatform()->
-      CreateOffscreenDrawTarget(gfx::IntSize(mClip.width, mClip.height),
-                                gfx::FORMAT_B8G8R8A8);
+      CreateOffscreenCanvasDrawTarget(gfx::IntSize(mClip.width, mClip.height),
+                                      gfx::FORMAT_B8G8R8A8);
     nsRefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->
       GetThebesSurfaceForDrawTarget(target);
 

@@ -32,7 +32,6 @@
 <window id="main-window"
         onload="Browser.startup();"
         onunload="Browser.shutdown();"
-        onclose="return Browser.closing();"
         windowtype="navigator:browser"
         chromedir="&locale.dir;"
         title="&brandShortName;"
