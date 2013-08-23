@@ -118,9 +118,7 @@ function CommonAppendExtraActors(aObject) {
  * list of actors, and also notifies its clients of changes to the list. A
  * live list's interface is two properties:
  *
- * - iterator: a method that returns an iterator. A for-of loop will call
- *             this method to obtain an iterator for the loop, so if LL is
- *             a live list, one can simply write 'for (i of LL) ...'.
+ * - getList: a method that returns a promise to the contents of the list.
  *
  * - onListChanged: a handler called, with no arguments, when the set of
  *             values the iterator would produce has changed since the last
@@ -221,45 +219,47 @@ RootActor.prototype = {
     let newActorPool = new ActorPool(this.conn);
     let tabActorList = [];
     let selected;
-    for (let tabActor of tabList) {
-      if (tabActor.selected) {
-        selected = tabActorList.length;
+    return tabList.getList().then((tabActors) => {
+      for (let tabActor of tabActors) {
+        if (tabActor.selected) {
+          selected = tabActorList.length;
+        }
+        tabActor.parentID = this.actorID;
+        newActorPool.addActor(tabActor);
+        tabActorList.push(tabActor);
       }
-      tabActor.parentID = this.actorID;
-      newActorPool.addActor(tabActor);
-      tabActorList.push(tabActor);
-    }
 
-    /* DebuggerServer.addGlobalActor support: create actors. */
-    this._createExtraActors(this._parameters.globalActorFactories, newActorPool);
+      /* DebuggerServer.addGlobalActor support: create actors. */
+      this._createExtraActors(this._parameters.globalActorFactories, newActorPool);
 
-    /*
-     * Drop the old actorID -> actor map. Actors that still mattered were
-     * added to the new map; others will go away.
-     */
-    if (this._tabActorPool) {
-      this.conn.removeActorPool(this._tabActorPool);
-    }
-    this._tabActorPool = newActorPool;
-    this.conn.addActorPool(this._tabActorPool);
+      /*
+       * Drop the old actorID -> actor map. Actors that still mattered were
+       * added to the new map; others will go away.
+       */
+      if (this._tabActorPool) {
+        this.conn.removeActorPool(this._tabActorPool);
+      }
+      this._tabActorPool = newActorPool;
+      this.conn.addActorPool(this._tabActorPool);
 
-    let reply = {
-      "from": this.actorID,
-      "selected": selected || 0,
-      "tabs": [actor.grip() for (actor of tabActorList)],
-    };
+      let reply = {
+        "from": this.actorID,
+        "selected": selected || 0,
+        "tabs": [actor.grip() for (actor of tabActorList)],
+      };
 
-    /* DebuggerServer.addGlobalActor support: name actors in 'listTabs' reply. */
-    this._appendExtraActors(reply);
+      /* DebuggerServer.addGlobalActor support: name actors in 'listTabs' reply. */
+      this._appendExtraActors(reply);
 
-    /*
-     * Now that we're actually going to report the contents of tabList to
-     * the client, we're responsible for letting the client know if it
-     * changes.
-     */
-    tabList.onListChanged = this._onTabListChanged;
+      /*
+       * Now that we're actually going to report the contents of tabList to
+       * the client, we're responsible for letting the client know if it
+       * changes.
+       */
+      tabList.onListChanged = this._onTabListChanged;
 
-    return reply;
+      return reply;
+    });
   },
 
   onTabListChanged: function () {

@@ -201,6 +201,7 @@ class OSXBootstrapper(BaseBootstrapper):
             ('git', 'git'),
             ('yasm', 'yasm'),
             ('autoconf213', HOMEBREW_AUTOCONF213),
+            ('terminal-notifier', 'terminal-notifier'),
         ]
 
         printed = False

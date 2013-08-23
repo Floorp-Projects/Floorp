@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=782453
+-->
+<head>
+  <title>Test for User Agent Overrides</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=782453">Mozilla Bug 782453</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const PREF_OVERRIDES_ENABLED = "general.useragent.site_specific_overrides";
+const PREF_OVERRIDES_BRANCH = "general.useragent.override.";
+
+const DEFAULT_UA = navigator.userAgent;
+
+const UA_WHOLE_OVERRIDE = "DummyUserAgent";
+const UA_WHOLE_EXPECTED = UA_WHOLE_OVERRIDE;
+
+const UA_PARTIAL_FROM = "\\wozilla"; // /\wozilla
+const UA_PARTIAL_SEP = "#";
+const UA_PARTIAL_TO = UA_WHOLE_OVERRIDE;
+const UA_PARTIAL_OVERRIDE = UA_PARTIAL_FROM + UA_PARTIAL_SEP + UA_PARTIAL_TO;
+const UA_PARTIAL_EXPECTED = DEFAULT_UA.replace(new RegExp(UA_PARTIAL_FROM, 'g'), UA_PARTIAL_TO);
+
+function getUA(host) {
+  var url = location.pathname;
+  url = host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, false); // sync request
+  xhr.send();
+  is(xhr.status, 200, 'request failed');
+  is(typeof xhr.response, 'string', 'invalid response');
+  return xhr.response;
+}
+
+function testUA(options, callback) {
+
+  var [domain, override, test_hosts, skip, expected] =
+    [options.domain, options.override, options.test_hosts, options.skip, options.expected];
+
+  info('Overriding ' + domain + ' with ' + override);
+
+  if (skip) {
+    todo(false, 'Skipping');
+    callback();
+    return;
+  }
+
+  function is_subdomain(host) {
+    var [test_domain] = host.slice(host.lastIndexOf('/') + 1).split(':', 1);
+    return test_domain === domain || test_domain.endsWith('.' + domain);
+  }
+
+  var localhost = location.origin;
+  var overrideNavigator = is_subdomain(localhost);
+  var navigator_ua, test_ua = [];
+
+  // store UA before pref change, to be compared later
+  if (overrideNavigator) {
+    navigator_ua = navigator.userAgent;
+  }
+  test_hosts.forEach(function (test_host) {
+    test_ua.push(getUA(test_host));
+  });
+  // set the override pref to override the UA
+  SpecialPowers.pushPrefEnv({
+    set: [[PREF_OVERRIDES_BRANCH + domain, override]],
+  }, function () {
+    // check that the UA has changed after pref change
+    if (overrideNavigator) {
+      is(navigator.userAgent, expected,
+        'Navigator UA not overridden at step ' + (++step));
+    } else {
+      is(navigator.userAgent, DEFAULT_UA,
+        'Navigator UA should not be overridden at step ' + (++step));
+    }
+    test_hosts.forEach(function (test_host) {
+      is(getUA(test_host), expected,
+        'Header UA not overridden at step ' + (++step));
+    });
+    // clear the override pref to undo overriding the UA
+    SpecialPowers.pushPrefEnv({
+      clear: [[PREF_OVERRIDES_BRANCH + domain]],
+    }, function () {
+      // check that the UA has changed back
+      if (overrideNavigator) {
+        is(navigator.userAgent, navigator_ua,
+          'Navigator UA not restored at step ' + (++step));
+      }
+      test_hosts.forEach(function (test_host, i) {
+        is(getUA(test_host), test_ua[i],
+          'Header UA not restored at step ' + (++step));
+      });
+      callback();
+    });
+  });
+}
+
+// mochitests on Android appear to have trouble with https
+// but when it eventually works, we should re-enable the test
+var skipHttps = /android/i.test(DEFAULT_UA);
+if (skipHttps) {
+  SimpleTest.doesThrow(function () getUA('https://example.com'), 'Re-enable https test');
+}
+
+var step = 0; // for logging
+var tests = [
+  // should override both header and navigator.userAgent
+  {
+    domain: location.hostname,
+    override: UA_WHOLE_OVERRIDE,
+    test_hosts: [location.origin],
+    expected: UA_WHOLE_EXPECTED
+  },
+
+  // should support partial overrides
+  {
+    domain: location.hostname,
+    override: UA_PARTIAL_OVERRIDE,
+    test_hosts: [location.origin],
+    expected: UA_PARTIAL_EXPECTED
+  },
+
+  // should match domain and subdomains
+  {
+    domain: 'example.org',
+    override: UA_WHOLE_OVERRIDE,
+    test_hosts: ['http://example.org',
+                 'http://test1.example.org',
+                 'http://sub1.test1.example.org'],
+    expected: UA_WHOLE_EXPECTED
+  },
+
+  // should not match superdomains
+  {
+    domain: 'sub1.test1.example.org',
+    override: UA_WHOLE_OVERRIDE,
+    test_hosts: ['http://example.org',
+                 'http://test1.example.org'],
+    expected: DEFAULT_UA
+  },
+
+  // should work with https
+  {
+    skip: skipHttps,
+    domain: 'example.com',
+    override: UA_WHOLE_OVERRIDE,
+    test_hosts: ['https://example.com',
+                 'https://test1.example.com',
+                 'https://sub1.test1.example.com'],
+    expected: UA_WHOLE_EXPECTED
+  },
+];
+
+// test that UA is not overridden when the 'site_specific_overrides' pref is off
+function testInactive(callback) {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_OVERRIDES_ENABLED, false],
+      [PREF_OVERRIDES_BRANCH + location.hostname, UA_WHOLE_OVERRIDE]
+    ]
+  }, function () {
+    isnot(navigator.userAgent, UA_WHOLE_OVERRIDE,
+      'Failed to disable navigator UA override');
+    isnot(getUA(location.origin), UA_WHOLE_OVERRIDE,
+      'Failed to disable header UA override');
+    SpecialPowers.pushPrefEnv({
+      clear: [
+        [PREF_OVERRIDES_ENABLED],
+        [PREF_OVERRIDES_BRANCH + location.hostname]
+      ]
+    }, callback);
+  });
+}
+
+function testOverrides(callback) {
+  SpecialPowers.pushPrefEnv({
+    set: [[PREF_OVERRIDES_ENABLED, true]]
+  }, function nextTest() {
+    testUA(tests.shift(), function () tests.length ? nextTest() : callback());
+  });
+}
+
+SpecialPowers.Cu.import('resource://gre/modules/UserAgentOverrides.jsm', window);
+SpecialPowers.wrap(UserAgentOverrides).init();
+
+SimpleTest.waitForExplicitFinish();
+
+testOverrides(function ()
+  testInactive(SimpleTest.finish)
+);
+
+</script>
+</pre>
+</body>
+</html>
+

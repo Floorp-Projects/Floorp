@@ -18,19 +18,16 @@
 #include "imgIContainer.h"
 #include "mozilla/Attributes.h"
 
-class nsIFrame;
 class nsImageMap;
 class nsIURI;
 class nsILoadGroup;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
-struct nsSize;
 class nsDisplayImage;
 class nsPresContext;
 class nsImageFrame;
 class nsTransform2D;
 class nsImageLoadingContent;
-class imgRequestProxy;
 
 namespace mozilla {
 namespace layers {
