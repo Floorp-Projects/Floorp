@@ -19,6 +19,7 @@
 #include "AudioManager.h"
 
 #include "nsIObserverService.h"
+#include "nsISettingsService.h"
 #include "nsPrintfCString.h"
 
 #include "mozilla/Hal.h"
@@ -40,11 +41,12 @@ using namespace mozilla::dom::bluetooth;
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AudioManager" , ## args)
 
-#define HEADPHONES_STATUS_CHANGED "headphones-status-changed"
 #define HEADPHONES_STATUS_HEADSET   NS_LITERAL_STRING("headset").get()
 #define HEADPHONES_STATUS_HEADPHONE NS_LITERAL_STRING("headphone").get()
 #define HEADPHONES_STATUS_OFF       NS_LITERAL_STRING("off").get()
 #define HEADPHONES_STATUS_UNKNOWN   NS_LITERAL_STRING("unknown").get()
+#define HEADPHONES_STATUS_CHANGED   "headphones-status-changed"
+#define MOZ_SETTINGS_CHANGE_ID      "mozsettings-changed"
 
 static void BinderDeadCallback(status_t aErr);
 static void InternalSetAudioRoutes(SwitchState aState);
@@ -105,6 +107,49 @@ public:
     return NS_OK;
   }
 };
+
+class AudioChannelVolInitCallback MOZ_FINAL : public nsISettingsServiceCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  AudioChannelVolInitCallback() {}
+
+  NS_IMETHOD Handle(const nsAString& aName, const JS::Value& aResult)
+  {
+    nsCOMPtr<nsIAudioManager> audioManager =
+      do_GetService(NS_AUDIOMANAGER_CONTRACTID);
+    NS_ENSURE_TRUE(JSVAL_IS_INT(aResult), NS_OK);
+
+    int32_t volIndex = JSVAL_TO_INT(aResult);
+    if (aName.EqualsLiteral("audio.volume.content")) {
+      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_CONTENT, volIndex);
+    } else if (aName.EqualsLiteral("audio.volume.notification")) {
+      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_NOTIFICATION,
+                                          volIndex);
+    } else if (aName.EqualsLiteral("audio.volume.alarm")) {
+      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_ALARM, volIndex);
+    } else if (aName.EqualsLiteral("audio.volume.telephony")) {
+      audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_TELEPHONY, volIndex);
+    } else if (aName.EqualsLiteral("audio.volume.bt_sco")) {
+      static_cast<AudioManager *>(audioManager.get())->SetStreamVolumeIndex(
+        AUDIO_STREAM_BLUETOOTH_SCO, volIndex);
+    } else {
+      MOZ_ASSERT("unexpected audio channel for volume control");
+    }
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD HandleError(const nsAString& aName)
+  {
+    LOG("AudioChannelVolInitCallback::HandleError: %s\n",
+      NS_ConvertUTF16toUTF8(aName).get());
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(AudioChannelVolInitCallback, nsISettingsServiceCallback)
 } /* namespace gonk */
 } /* namespace dom */
 } /* namespace mozilla */
@@ -245,7 +290,7 @@ AudioManager::Observe(nsISupports* aSubject,
 
   // To process the volume control on each audio channel according to
   // change of settings
-  else if (!strcmp(aTopic, "mozsettings-changed")) {
+  else if (!strcmp(aTopic, MOZ_SETTINGS_CHANGE_ID)) {
     AutoSafeJSContext cx;
     nsDependentString dataStr(aData);
     JS::Rooted<JS::Value> val(cx);
@@ -327,21 +372,6 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
   InternalSetAudioRoutes(GetCurrentSwitchState(SWITCH_HEADPHONES));
   NotifyHeadphonesStatus(GetCurrentSwitchState(SWITCH_HEADPHONES));
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  NS_ENSURE_TRUE_VOID(obs);
-  if (NS_FAILED(obs->AddObserver(this, BLUETOOTH_SCO_STATUS_CHANGED_ID, false))) {
-    NS_WARNING("Failed to add bluetooth sco status changed observer!");
-  }
-  if (NS_FAILED(obs->AddObserver(this, BLUETOOTH_A2DP_STATUS_CHANGED_ID, false))) {
-    NS_WARNING("Failed to add bluetooth a2dp status changed observer!");
-  }
-  if (NS_FAILED(obs->AddObserver(this, "mozsettings-changed", false))) {
-    NS_WARNING("Failed to add mozsettings-changed oberver!");
-  }
-  if (NS_FAILED(obs->AddObserver(this, BLUETOOTH_HFP_STATUS_CHANGED_ID, false))) {
-    NS_WARNING("Failed to add bluetooth hfp status changed observer!");
-  }
-
   for (int loop = 0; loop < AUDIO_STREAM_CNT; loop++) {
     AudioSystem::initStreamVolume(static_cast<audio_stream_type_t>(loop), 0,
                                   sMaxStreamVolumeTbl[loop]);
@@ -350,11 +380,41 @@ AudioManager::AudioManager() : mPhoneState(PHONE_STATE_CURRENT),
   // Force publicnotification to output at maximal volume
   SetStreamVolumeIndex(AUDIO_STREAM_ENFORCED_AUDIBLE,
                        sMaxStreamVolumeTbl[AUDIO_STREAM_ENFORCED_AUDIBLE]);
+
+  // Get the initial volume index from settings DB during boot up.
+  nsCOMPtr<nsISettingsService> settingsService =
+    do_GetService("@mozilla.org/settingsService;1");
+  NS_ENSURE_TRUE_VOID(settingsService);
+  nsCOMPtr<nsISettingsServiceLock> lock;
+  nsresult rv = settingsService->CreateLock(getter_AddRefs(lock));
+  NS_ENSURE_SUCCESS_VOID(rv);
+  nsCOMPtr<nsISettingsServiceCallback> callback = new AudioChannelVolInitCallback();
+  NS_ENSURE_TRUE_VOID(callback);
+  lock->Get("audio.volume.content", callback);
+  lock->Get("audio.volume.notification", callback);
+  lock->Get("audio.volume.alarm", callback);
+  lock->Get("audio.volume.telephony", callback);
+  lock->Get("audio.volume.bt_sco", callback);
+
   // Gecko only control stream volume not master so set to default value
   // directly.
   AudioSystem::setMasterVolume(1.0);
-
   AudioSystem::setErrorCallback(BinderDeadCallback);
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE_VOID(obs);
+  if (NS_FAILED(obs->AddObserver(this, BLUETOOTH_SCO_STATUS_CHANGED_ID, false))) {
+    NS_WARNING("Failed to add bluetooth sco status changed observer!");
+  }
+  if (NS_FAILED(obs->AddObserver(this, BLUETOOTH_A2DP_STATUS_CHANGED_ID, false))) {
+    NS_WARNING("Failed to add bluetooth a2dp status changed observer!");
+  }
+  if (NS_FAILED(obs->AddObserver(this, BLUETOOTH_HFP_STATUS_CHANGED_ID, false))) {
+    NS_WARNING("Failed to add bluetooth hfp status changed observer!");
+  }
+  if (NS_FAILED(obs->AddObserver(this, MOZ_SETTINGS_CHANGE_ID, false))) {
+    NS_WARNING("Failed to add mozsettings-changed observer!");
+  }
 }
 
 AudioManager::~AudioManager() {
@@ -370,6 +430,9 @@ AudioManager::~AudioManager() {
   }
   if (NS_FAILED(obs->RemoveObserver(this, BLUETOOTH_HFP_STATUS_CHANGED_ID))) {
     NS_WARNING("Failed to remove bluetooth hfp status changed observer!");
+  }
+  if (NS_FAILED(obs->RemoveObserver(this, MOZ_SETTINGS_CHANGE_ID))) {
+    NS_WARNING("Failed to remove mozsettings-changed observer!");
   }
 }
 
