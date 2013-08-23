@@ -3450,6 +3450,18 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'listTabs' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_LISTADDONS_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'listAddons' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_LISTADDONS_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'listAddons' request to go round trip."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_DELETE_MS": {
     "kind": "exponential",
     "high": "10000",
