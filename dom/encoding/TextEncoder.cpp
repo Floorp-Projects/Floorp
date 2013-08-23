@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 
 void
-TextEncoderBase::Init(const nsAString& aEncoding, ErrorResult& aRv)
+TextEncoder::Init(const nsAString& aEncoding, ErrorResult& aRv)
 {
   nsAutoString label(aEncoding);
   EncodingUtils::TrimSpaceCharacters(label);
@@ -48,11 +48,11 @@ TextEncoderBase::Init(const nsAString& aEncoding, ErrorResult& aRv)
 }
 
 JSObject*
-TextEncoderBase::Encode(JSContext* aCx,
-                        JS::Handle<JSObject*> aObj,
-                        const nsAString& aString,
-                        const bool aStream,
-                        ErrorResult& aRv)
+TextEncoder::Encode(JSContext* aCx,
+                    JS::Handle<JSObject*> aObj,
+                    const nsAString& aString,
+                    const bool aStream,
+                    ErrorResult& aRv)
 {
   // Run the steps of the encoding algorithm.
   int32_t srcLen = aString.Length();
@@ -102,7 +102,7 @@ TextEncoderBase::Encode(JSContext* aCx,
 }
 
 void
-TextEncoderBase::GetEncoding(nsAString& aEncoding)
+TextEncoder::GetEncoding(nsAString& aEncoding)
 {
   CopyASCIItoUTF16(mEncoding, aEncoding);
   nsContentUtils::ASCIIToLower(aEncoding);
