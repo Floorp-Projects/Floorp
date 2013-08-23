@@ -120,10 +120,6 @@ already_AddRefed<gfxASurface>
 LayerManager::CreateOptimalSurface(const gfxIntSize &aSize,
                                    gfxASurface::gfxImageFormat aFormat)
 {
-  if (aFormat == gfxASurface::ImageFormatA8) {
-    nsRefPtr<gfxASurface> surf = new gfxImageSurface(aSize, aFormat);
-    return surf.forget();
-  }
   return gfxPlatform::GetPlatform()->
     CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFormat));
 }
