@@ -408,8 +408,8 @@ public:
     CreateOptimalMaskSurface(const gfxIntSize &aSize);
 
   /**
-   * Creates a DrawTarget which is optimized for inter-operating with this
-   * layermanager.
+   * Creates a DrawTarget for use with canvas which is optimized for
+   * inter-operating with this layermanager.
    */
   virtual TemporaryRef<mozilla::gfx::DrawTarget>
     CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
