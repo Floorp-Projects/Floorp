@@ -21,7 +21,6 @@
 #define nsIPresShell_h___
 
 #include "mozilla/MemoryReporting.h"
-#include "gfxPoint.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
@@ -36,6 +35,7 @@
 #include "nsWeakReference.h"
 #include <stdio.h> // for FILE definition
 #include "nsChangeHint.h"
+#include "nsGUIEvent.h"
 #include "nsRefPtrHashtable.h"
 #include "nsEventStates.h"
 #include "nsPresArena.h"
@@ -95,7 +95,6 @@ class Selection;
 
 namespace dom {
 class Element;
-class Touch;
 } // namespace dom
 
 namespace layers{
