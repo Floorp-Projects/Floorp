@@ -10,6 +10,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Run selftests
+PYTHON_UNIT_TESTS := \
+  selftest.py
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 # Harness files from the srcdir
@@ -53,11 +58,6 @@ libs::
 	$(INSTALL) $(srcdir)/xpcshell_b2g.ini $(DEPTH)/_tests/xpcshell
 	$(INSTALL) $(srcdir)/xpcshell_android.ini $(DEPTH)/_tests/xpcshell
 	cp $(DEPTH)/_tests/xpcshell/xpcshell.ini $(DEPTH)/_tests/xpcshell/all-test-dirs.list
-
-# Run selftests
-check::
-	OBJDIR=$(DEPTH) $(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(DEPTH)/build -I$(topsrcdir)/build -I$(topsrcdir)/testing/mozbase/mozinfo/mozinfo $(srcdir)/selftest.py
 
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/xpcshell/tests

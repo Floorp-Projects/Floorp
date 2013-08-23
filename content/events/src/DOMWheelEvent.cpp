@@ -150,7 +150,7 @@ DOMWheelEvent::Constructor(const GlobalObject& aGlobal,
                            const WheelEventInit& aParam,
                            mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<DOMWheelEvent> e = new DOMWheelEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   nsAutoString modifierList;

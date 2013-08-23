@@ -54,6 +54,9 @@
 
 #ifndef MOZ_ENABLE_PROFILER_SPS
 
+struct JSContext;
+class JSObject;
+
 // Insert a RAII in this scope to active a pseudo label. Any samples collected
 // in this scope will contain this annotation. For dynamic strings use
 // PROFILER_LABEL_PRINTF. Arguments must be string literals.

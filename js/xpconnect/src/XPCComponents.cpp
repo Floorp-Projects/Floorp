@@ -48,7 +48,7 @@ using namespace xpc;
 // stuff used by all
 
 nsresult
-ThrowAndFail(nsresult errNum, JSContext* cx, bool* retval)
+xpc::ThrowAndFail(nsresult errNum, JSContext *cx, bool *retval)
 {
     XPCThrower::Throw(errNum, cx);
     *retval = false;
@@ -77,20 +77,22 @@ JSValIsInterfaceOfType(JSContext *cx, HandleValue v, REFNSIID iid)
     return false;
 }
 
-char* xpc_CloneAllAccess()
+char *
+xpc::CloneAllAccess()
 {
     static const char allAccess[] = "AllAccess";
     return (char*)nsMemory::Clone(allAccess, sizeof(allAccess));
 }
 
-char * xpc_CheckAccessList(const PRUnichar* wideName, const char* const list[])
+char *
+xpc::CheckAccessList(const PRUnichar *wideName, const char *const list[])
 {
     nsAutoCString asciiName;
     CopyUTF16toUTF8(nsDependentString(wideName), asciiName);
 
     for (const char* const* p = list; *p; p++)
         if (!strcmp(*p, asciiName.get()))
-            return xpc_CloneAllAccess();
+            return CloneAllAccess();
 
     return nullptr;
 }
@@ -351,7 +353,7 @@ NS_IMETHODIMP
 nsXPCComponents_Interfaces::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
     // We let anyone do this...
-    *_retval = xpc_CloneAllAccess();
+    *_retval = CloneAllAccess();
     return NS_OK;
 }
 
@@ -644,7 +646,7 @@ NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
     // We let anyone do this...
-    *_retval = xpc_CloneAllAccess();
+    *_retval = CloneAllAccess();
     return NS_OK;
 }
 
@@ -2833,8 +2835,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
     }
 
     RootedValue rval(cx);
-    nsresult rv = xpc_EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
-                                    jsVersion, false, &rval);
+    nsresult rv = xpc::EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
+                                     jsVersion, false, &rval);
     NS_ENSURE_SUCCESS(rv, rv);
     *retval = rval;
     return NS_OK;
@@ -3242,7 +3244,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
     // We let anyone do this...
-    *_retval = xpc_CloneAllAccess();
+    *_retval = CloneAllAccess();
     return NS_OK;
 }
 
@@ -3251,7 +3253,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
     static const char* const allowed[] = { "lookupMethod", "evalInSandbox", nullptr };
-    *_retval = xpc_CheckAccessList(methodName, allowed);
+    *_retval = CheckAccessList(methodName, allowed);
     return NS_OK;
 }
 
@@ -3751,7 +3753,7 @@ NS_IMETHODIMP
 nsXPCComponents::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
     // We let anyone do this...
-    *_retval = xpc_CloneAllAccess();
+    *_retval = CloneAllAccess();
     return NS_OK;
 }
 
@@ -3760,7 +3762,7 @@ NS_IMETHODIMP
 nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
     static const char* const allowed[] = { "isSuccessCode", "lookupMethod", nullptr };
-    *_retval = xpc_CheckAccessList(methodName, allowed);
+    *_retval = CheckAccessList(methodName, allowed);
     return NS_OK;
 }
 
@@ -3769,7 +3771,7 @@ NS_IMETHODIMP
 nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
     static const char* const allowed[] = { "interfaces", "interfacesByID", "results", nullptr};
-    *_retval = xpc_CheckAccessList(propertyName, allowed);
+    *_retval = CheckAccessList(propertyName, allowed);
     return NS_OK;
 }
 
