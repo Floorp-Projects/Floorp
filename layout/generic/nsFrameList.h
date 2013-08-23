@@ -6,15 +6,13 @@
 #ifndef nsFrameList_h___
 #define nsFrameList_h___
 
-#include "nscore.h"
-#include "nsTraceRefcnt.h"
 #include <stdio.h> /* for FILE* */
 #include "nsDebug.h"
-#include "nsTArray.h"
 
 class nsIFrame;
 class nsIPresShell;
 class nsPresContext;
+template <class T> class nsTArray;
 
 namespace mozilla {
 namespace layout {

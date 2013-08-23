@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+
+let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+
 /**
  * Browser-specific actors.
  */
@@ -182,7 +185,7 @@ function BrowserTabList(aConnection)
 
 BrowserTabList.prototype.constructor = BrowserTabList;
 
-BrowserTabList.prototype.iterator = function() {
+BrowserTabList.prototype.getList = function() {
   let topXULWindow = windowMediator.getMostRecentWindow("navigator:browser");
 
   // As a sanity check, make sure all the actors presently in our map get
@@ -224,10 +227,7 @@ BrowserTabList.prototype.iterator = function() {
   this._mustNotify = true;
   this._checkListening();
 
-  /* Yield the values. */
-  for (let [browser, actor] of this._actorByBrowser) {
-    yield actor;
-  }
+  return promise.resolve([actor for ([_, actor] of this._actorByBrowser)]);
 };
 
 Object.defineProperty(BrowserTabList.prototype, 'onListChanged', {

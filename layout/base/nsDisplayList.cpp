@@ -678,6 +678,16 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
       mozilla::gfx::IntRect(bounds.x, bounds.y, bounds.width, bounds.height));
   }
 
+  // Adjust for the size of scroll bars.
+  if (scrollableFrame) {
+    nsMargin sizes = scrollableFrame->GetActualScrollbarSizes();
+    ScreenIntMargin boundMargins(nsPresContext::AppUnitsToIntCSSPixels(sizes.top),
+                                 nsPresContext::AppUnitsToIntCSSPixels(sizes.right),
+                                 nsPresContext::AppUnitsToIntCSSPixels(sizes.bottom),
+                                 nsPresContext::AppUnitsToIntCSSPixels(sizes.left));
+    metrics.mCompositionBounds.Deflate(boundMargins);
+  }
+
   metrics.mPresShellId = presShell->GetPresShellId();
 
   aRoot->SetFrameMetrics(metrics);

@@ -12,7 +12,6 @@
 #include "nsLineBox.h"
 #include "gfxFont.h"
 #include "gfxSkipChars.h"
-#include "gfxContext.h"
 #include "nsDisplayList.h"
 
 class nsTextPaintStyle;

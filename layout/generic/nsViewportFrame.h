@@ -13,7 +13,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
-#include "nsGkAtoms.h"
 
 class nsPresContext;
 

@@ -15,46 +15,25 @@
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsIDocShell.h"
-#include "nsIDocShellLoadInfo.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeNode.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIBaseWindow.h"
 #include "nsIContentViewer.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIComponentManager.h"
-#include "nsFrameManager.h"
-#include "nsIStreamListener.h"
-#include "nsIURL.h"
-#include "nsNetUtil.h"
 #include "nsIDocument.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsGkAtoms.h"
-#include "nsStyleCoord.h"
-#include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsFrameSetFrame.h"
 #include "nsIDOMHTMLFrameElement.h"
-#include "nsIDOMHTMLIFrameElement.h"
-#include "nsIDOMXULElement.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsXPIDLString.h"
 #include "nsIScrollable.h"
 #include "nsINameSpaceManager.h"
-#include "nsWeakReference.h"
-#include "nsIDOMWindow.h"
 #include "nsDisplayList.h"
-#include "nsUnicharUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsLayoutUtils.h"
 #include "FrameLayerBuilder.h"
 #include "nsObjectFrame.h"
-#include "nsIServiceManager.h"
 #include "nsContentUtils.h"
-#include "LayerTreeInvalidation.h"
 #include "nsIPermissionManager.h"
 
 using namespace mozilla;
@@ -69,8 +48,6 @@ GetDocumentFromView(nsView* aView)
   nsIPresShell* ps =  f ? f->PresContext()->PresShell() : nullptr;
   return ps ? ps->GetDocument() : nullptr;
 }
-
-class AsyncFrameInit;
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
   : nsLeafFrame(aContext)

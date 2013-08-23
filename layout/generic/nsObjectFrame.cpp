@@ -6,7 +6,10 @@
 
 /* rendering objects for replaced elements implemented by a plugin */
 
+#ifdef XP_WIN
+// This is needed for DoublePassRenderingEvent.
 #include "mozilla/plugins/PluginMessageUtils.h"
+#endif
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
@@ -15,89 +18,40 @@
 #include "nsWidgetsCID.h"
 #include "nsView.h"
 #include "nsViewManager.h"
-#include "nsIDOMEventListener.h"
-#include "nsIDOMDragEvent.h"
-#include "nsPluginHost.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
 #include "nsGkAtoms.h"
-#include "nsIAppShell.h"
-#include "nsIDocument.h"
-#include "nsINodeInfo.h"
-#include "nsIURL.h"
-#include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIPluginTagInfo.h"
-#include "plstr.h"
-#include "nsILinkHandler.h"
-#include "nsIScrollPositionListener.h"
-#include "nsITimer.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsDocShellCID.h"
-#include "nsIWebBrowserChrome.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMHTMLObjectElement.h"
-#include "nsIDOMHTMLEmbedElement.h"
-#include "nsIDOMHTMLAppletElement.h"
-#include "nsIDOMWindow.h"
-#include "nsIDocumentEncoder.h"
-#include "nsXPIDLString.h"
-#include "nsIDOMRange.h"
-#include "nsIPluginWidget.h"
 #include "nsGUIEvent.h"
 #include "nsRenderingContext.h"
 #include "npapi.h"
-#include "nsTransform2D.h"
-#include "nsIImageLoadingContent.h"
 #include "nsIObjectLoadingContent.h"
-#include "nsPIDOMWindow.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
-#include "nsAttrName.h"
-#include "nsDataHashtable.h"
-#include "nsDOMClassInfo.h"
 #include "nsFocusManager.h"
 #include "nsLayoutUtils.h"
 #include "nsFrameManager.h"
-#include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
-#include "nsIScrollableFrame.h"
-#include "mozilla/Preferences.h"
 #include "GeckoProfiler.h"
 #include <algorithm>
-
-// headers for plugin scriptability
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptContext.h"
-#include "nsIXPConnect.h"
-#include "nsIXPCScriptable.h"
-#include "nsIClassInfo.h"
-#include "nsIDOMClientRect.h"
 
 #include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
 #include "nsPluginNativeWindow.h"
-#include "nsIPluginDocument.h"
 #include "FrameLayerBuilder.h"
 
-#include "nsThreadUtils.h"
-
-#include "gfxContext.h"
-#include "gfxPlatform.h"
 #include "ImageLayers.h"
+#include "nsPluginInstanceOwner.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsNativeDrawing.h"
 #include "gfxWindowsSurface.h"
 #endif
 
-#include "gfxImageSurface.h"
-#include "gfxUtils.h"
 #include "Layers.h"
 #include "ReadbackLayer.h"
+#include "ImageContainer.h"
 
 // accessibility support
 #ifdef ACCESSIBILITY
@@ -109,22 +63,12 @@
 #endif /* MOZ_LOGGING */
 #include "prlog.h"
 
-#include <errno.h>
-
-#include "nsContentCID.h"
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 #ifdef XP_MACOSX
 #include "gfxQuartzNativeDrawing.h"
 #include "nsPluginUtilsOSX.h"
 #include "mozilla/gfx/QuartzSupport.h"
-#endif
-
-#if defined(MOZ_WIDGET_GTK)
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-#include <gtk/gtk.h>
-#include "gfxXlibNativeRenderer.h"
 #endif
 
 #ifdef MOZ_X11
