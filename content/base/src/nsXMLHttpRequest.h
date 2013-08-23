@@ -142,9 +142,9 @@ public:
               const mozilla::dom::MozXMLHttpRequestParameters& aParams,
               ErrorResult& aRv)
   {
-    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.Get());
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
     nsCOMPtr<nsIScriptObjectPrincipal> principal =
-      do_QueryInterface(aGlobal.Get());
+      do_QueryInterface(aGlobal.GetAsSupports());
     if (!global || ! principal) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
