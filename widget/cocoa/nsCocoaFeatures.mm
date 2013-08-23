@@ -7,6 +7,7 @@
 #define MAC_OS_X_VERSION_10_6_HEX 0x00001060
 #define MAC_OS_X_VERSION_10_7_HEX 0x00001070
 #define MAC_OS_X_VERSION_10_8_HEX 0x00001080
+#define MAC_OS_X_VERSION_10_9_HEX 0x00001090
 
 // This API will not work for OS X 10.10, see Gestalt.h.
 
@@ -85,4 +86,10 @@ nsCocoaFeatures::OnLionOrLater()
 nsCocoaFeatures::OnMountainLionOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_8_HEX);
+}
+
+/* static */ bool
+nsCocoaFeatures::OnMavericksOrLater()
+{
+    return (OSXVersion() >= MAC_OS_X_VERSION_10_9_HEX);
 }
