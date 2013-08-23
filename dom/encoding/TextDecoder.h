@@ -25,7 +25,7 @@ public:
               const TextDecoderOptions& aOptions,
               ErrorResult& aRv)
   {
-    nsRefPtr<TextDecoder> txtDecoder = new TextDecoder(aGlobal.Get());
+    nsRefPtr<TextDecoder> txtDecoder = new TextDecoder(aGlobalAsSupports.Get());
     txtDecoder->Init(aEncoding, aOptions.mFatal, aRv);
     if (aRv.Failed()) {
       return nullptr;

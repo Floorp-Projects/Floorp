@@ -521,7 +521,7 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
   }
 
   nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
-    do_QueryInterface(aGlobal.Get());
+    do_QueryInterface(aGlobal.GetAsSupports());
   if (!scriptPrincipal) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -533,13 +533,13 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aGlobal.GetAsSupports());
   if (!sgo) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
   if (!ownerWindow) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

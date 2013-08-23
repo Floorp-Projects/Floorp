@@ -19,7 +19,7 @@
 #include "nsIDOMFile.h"
 
 USING_WORKERS_NAMESPACE
-using mozilla::dom::WorkerGlobalObject;
+using mozilla::dom::GlobalObject;
 
 // Base class for the Revoke and Create runnable objects.
 class URLRunnable : public nsRunnable
@@ -227,7 +227,7 @@ public:
 
 // static
 void
-URL::CreateObjectURL(const WorkerGlobalObject& aGlobal, JSObject* aBlob,
+URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject* aBlob,
                      const mozilla::dom::objectURLOptionsWorkers& aOptions,
                      nsString& aResult, mozilla::ErrorResult& aRv)
 {
@@ -254,7 +254,7 @@ URL::CreateObjectURL(const WorkerGlobalObject& aGlobal, JSObject* aBlob,
 
 // static
 void
-URL::CreateObjectURL(const WorkerGlobalObject& aGlobal, JSObject& aBlob,
+URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject& aBlob,
                      const mozilla::dom::objectURLOptionsWorkers& aOptions,
                      nsString& aResult, mozilla::ErrorResult& aRv)
 {
@@ -263,7 +263,7 @@ URL::CreateObjectURL(const WorkerGlobalObject& aGlobal, JSObject& aBlob,
 
 // static
 void
-URL::RevokeObjectURL(const WorkerGlobalObject& aGlobal, const nsAString& aUrl)
+URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl)
 {
   JSContext* cx = aGlobal.GetContext();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);

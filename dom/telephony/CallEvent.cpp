@@ -53,7 +53,7 @@ already_AddRefed<CallEvent>
 CallEvent::Constructor(const GlobalObject& aGlobal, const nsAString& aType,
                        const CallEventInit& aOptions, ErrorResult& aRv)
 {
-  nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
 
   if (!target) {
     aRv.Throw(NS_ERROR_UNEXPECTED);

@@ -8,7 +8,7 @@
 
 USING_WORKERS_NAMESPACE
 using mozilla::ErrorResult;
-using mozilla::dom::WorkerGlobalObject;
+using mozilla::dom::GlobalObject;
 
 void
 TextEncoder::_trace(JSTracer* aTrc)
@@ -24,7 +24,7 @@ TextEncoder::_finalize(JSFreeOp* aFop)
 
 // static
 TextEncoder*
-TextEncoder::Constructor(const WorkerGlobalObject& aGlobal,
+TextEncoder::Constructor(const GlobalObject& aGlobal,
                          const nsAString& aEncoding,
                          ErrorResult& aRv)
 {

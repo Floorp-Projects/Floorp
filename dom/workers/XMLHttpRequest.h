@@ -75,12 +75,12 @@ public:
   _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   static XMLHttpRequest*
-  Constructor(const WorkerGlobalObject& aGlobal,
+  Constructor(const GlobalObject& aGlobal,
               const MozXMLHttpRequestParametersWorkers& aParams,
               ErrorResult& aRv);
 
   static XMLHttpRequest*
-  Constructor(const WorkerGlobalObject& aGlobal, const nsAString& ignored,
+  Constructor(const GlobalObject& aGlobal, const nsAString& ignored,
               ErrorResult& aRv)
   {
     // Pretend like someone passed null, so we can pick up the default values
