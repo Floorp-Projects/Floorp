@@ -699,8 +699,10 @@ xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> prox
 
 xpc::SandboxCallableProxyHandler xpc::sandboxCallableProxyHandler;
 
-// Wrap a callable such that if we're called with oldThisObj as the
-// "this" we will instead call it with newThisObj as the this.
+/*
+ * Wrap a callable such that if we're called with oldThisObj as the
+ * "this" we will instead call it with newThisObj as the this.
+ */
 static JSObject*
 WrapCallable(JSContext *cx, JSObject *callable, JSObject *sandboxProtoProxy)
 {
@@ -1001,12 +1003,12 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
 }
 
 /* bool call(in nsIXPConnectWrappedNative wrapper,
-               in JSContextPtr cx,
-               in JSObjectPtr obj,
-               in uint32_t argc,
-               in JSValPtr argv,
-               in JSValPtr vp);
-*/
+ *           in JSContextPtr cx,
+ *           in JSObjectPtr obj,
+ *           in uint32_t argc,
+ *           in JSValPtr argv,
+ *           in JSValPtr vp);
+ */
 NS_IMETHODIMP
 nsXPCComponents_utils_Sandbox::Call(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                     JSObject *objArg, const CallArgs &args, bool *_retval)
@@ -1016,12 +1018,12 @@ nsXPCComponents_utils_Sandbox::Call(nsIXPConnectWrappedNative *wrapper, JSContex
 }
 
 /* bool construct(in nsIXPConnectWrappedNative wrapper,
-                    in JSContextPtr cx,
-                    in JSObjectPtr obj,
-                    in uint32_t argc,
-                    in JSValPtr argv,
-                    in JSValPtr vp);
-*/
+ *                in JSContextPtr cx,
+ *                in JSObjectPtr obj,
+ *                in uint32_t argc,
+ *                in JSValPtr argv,
+ *                in JSValPtr vp);
+ */
 NS_IMETHODIMP
 nsXPCComponents_utils_Sandbox::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                          JSObject *objArg, const CallArgs &args, bool *_retval)
@@ -1030,8 +1032,10 @@ nsXPCComponents_utils_Sandbox::Construct(nsIXPConnectWrappedNative *wrapper, JSC
     return CallOrConstruct(wrapper, cx, obj, args, _retval);
 }
 
-// for sandbox constructor the first argument can be a URI string in which case
-// we use the related Codebase Principal for the sandbox
+/*
+ * For sandbox constructor the first argument can be a URI string in which case
+ * we use the related Codebase Principal for the sandbox.
+ */
 nsresult
 GetPrincipalFromString(JSContext *cx, HandleString codebase, nsIPrincipal **principal)
 {
@@ -1057,8 +1061,10 @@ GetPrincipalFromString(JSContext *cx, HandleString codebase, nsIPrincipal **prin
     return NS_OK;
 }
 
-// for sandbox constructor  the first argument can be a principal object or
-// a script object principal (Document, Window)
+/*
+ * For sandbox constructor  the first argument can be a principal object or
+ * a script object principal (Document, Window).
+ */
 nsresult
 GetPrincipalOrSOP(JSContext *cx, HandleObject from, nsISupports **out)
 {
@@ -1084,8 +1090,10 @@ GetPrincipalOrSOP(JSContext *cx, HandleObject from, nsISupports **out)
     return NS_OK;
 }
 
-// the first parameter of the sandbox constructor might be an array of principals, either in string
-// format or actual objects (see GetPrincipalOrSOP)
+/*
+ * The first parameter of the sandbox constructor might be an array of principals, either in string
+ * format or actual objects (see GetPrincipalOrSOP)
+ */
 nsresult
 GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal **out)
 {
@@ -1096,9 +1104,9 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
         !JS_GetArrayLength(cx, arrayObj, &length) ||
         !length)
     {
-        // we need a white list of principals or uri strings to create an
+        // We need a whitelist of principals or uri strings to create an
         // expanded principal, if we got an empty array or something else
-        // report error
+        // report error.
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -1115,12 +1123,12 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
         nsresult rv;
         nsCOMPtr<nsIPrincipal> principal;
         if (allowed.isString()) {
-            // in case of string let's try to fetch a codebase principal from it
+            // In case of string let's try to fetch a codebase principal from it.
             RootedString str(cx, allowed.toString());
             rv = GetPrincipalFromString(cx, str, getter_AddRefs(principal));
             NS_ENSURE_SUCCESS(rv, rv);
         } else if (allowed.isObject()) {
-            // in case of object let's see if it's a Principal or a ScriptObjectPrincipal
+            // In case of object let's see if it's a Principal or a ScriptObjectPrincipal.
             nsCOMPtr<nsISupports> prinOrSop;
             RootedObject obj(cx, &allowed.toObject());
             rv = GetPrincipalOrSOP(cx, obj, getter_AddRefs(prinOrSop));
@@ -1134,7 +1142,7 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
         }
         NS_ENSURE_TRUE(principal, NS_ERROR_INVALID_ARG);
 
-        // We do not allow ExpandedPrincipals to contain any system principals
+        // We do not allow ExpandedPrincipals to contain any system principals.
         bool isSystem;
         rv = ssm->IsSystemPrincipal(principal, &isSystem);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -1147,7 +1155,9 @@ GetExpandedPrincipal(JSContext *cx, HandleObject arrayObj, nsIExpandedPrincipal 
   return NS_OK;
 }
 
-// helper that tries to get a property form the options object
+/*
+ * Helper that tries to get a property form the options object.
+ */
 nsresult
 GetPropFromOptions(JSContext *cx, HandleObject from, const char *name, MutableHandleValue prop,
                    bool *found)
@@ -1161,7 +1171,9 @@ GetPropFromOptions(JSContext *cx, HandleObject from, const char *name, MutableHa
     return NS_OK;
 }
 
-// helper that tries to get a boolean property form the options object
+/*
+ * Helper that tries to get a boolean property form the options object.
+ */
 nsresult
 GetBoolPropFromOptions(JSContext *cx, HandleObject from, const char *name, bool *prop)
 {
@@ -1183,7 +1195,9 @@ GetBoolPropFromOptions(JSContext *cx, HandleObject from, const char *name, bool 
     return NS_OK;
 }
 
-// helper that tries to get an object property form the options object
+/*
+ * Helper that tries to get an object property form the options object.
+ */
 nsresult
 GetObjPropFromOptions(JSContext *cx, HandleObject from, const char *name, JSObject **prop)
 {
@@ -1206,7 +1220,9 @@ GetObjPropFromOptions(JSContext *cx, HandleObject from, const char *name, JSObje
     return NS_OK;
 }
 
-// helper that tries to get a string property form the options object
+/*
+ * Helper that tries to get a string property form the options object.
+ */
 nsresult
 GetStringPropFromOptions(JSContext *cx, HandleObject from, const char *name, nsCString &prop)
 {
@@ -1226,7 +1242,9 @@ GetStringPropFromOptions(JSContext *cx, HandleObject from, const char *name, nsC
     return NS_OK;
 }
 
-// helper that parsing the sandbox options object (from) and sets the fields of the incoming options struct (options)
+/*
+ * Helper that parsing the sandbox options object (from) and sets the fields of the incoming options struct (options).
+ */
 nsresult
 ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
 {
@@ -1308,7 +1326,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
     nsresult rv;
 
-    // Make sure to set up principals on the sandbox before initing classes
+    // Make sure to set up principals on the sandbox before initing classes.
     nsCOMPtr<nsIPrincipal> principal;
     nsCOMPtr<nsIExpandedPrincipal> expanded;
     nsCOMPtr<nsISupports> prinOrSop;
