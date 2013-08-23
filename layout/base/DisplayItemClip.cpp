@@ -9,6 +9,7 @@
 #include "nsPresContext.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
+#include "nsRegion.h"
 
 namespace mozilla {
 
