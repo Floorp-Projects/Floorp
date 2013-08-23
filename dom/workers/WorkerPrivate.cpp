@@ -4400,13 +4400,6 @@ BEGIN_WORKERS_NAMESPACE
 // Force instantiation.
 template class WorkerPrivateParent<WorkerPrivate>;
 
-WorkerPrivate*
-GetWorkerPrivateFromContext(JSContext* aCx)
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  return static_cast<WorkerPrivate*>(JS_GetRuntimePrivate(JS_GetRuntime(aCx)));
-}
-
 JSStructuredCloneCallbacks*
 WorkerStructuredCloneCallbacks(bool aMainRuntime)
 {
