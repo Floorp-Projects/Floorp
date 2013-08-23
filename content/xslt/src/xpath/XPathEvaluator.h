@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsXPathEvaluator_h__
-#define nsXPathEvaluator_h__
+#ifndef mozilla_dom_XPathEvaluator_h
+#define mozilla_dom_XPathEvaluator_h
 
 #include "nsIDOMXPathEvaluator.h"
 #include "nsIXPathEvaluatorInternal.h"
@@ -17,21 +17,21 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 
+class nsINode;
+
 namespace mozilla {
 namespace dom {
+
 class GlobalObject;
-}
-}
-class nsINode;
 
 /**
  * A class for evaluating an XPath expression string
  */
-class nsXPathEvaluator MOZ_FINAL : public nsIDOMXPathEvaluator,
-                                   public nsIXPathEvaluatorInternal
+class XPathEvaluator MOZ_FINAL : public nsIDOMXPathEvaluator,
+                                 public nsIXPathEvaluatorInternal
 {
 public:
-    nsXPathEvaluator(nsISupports *aOuter);
+    XPathEvaluator(nsISupports *aOuter);
 
     nsresult Init();
 
@@ -52,19 +52,18 @@ public:
 
     // WebIDL API
     JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
-    static already_AddRefed<nsXPathEvaluator>
-        Constructor(const mozilla::dom::GlobalObject& aGlobal,
-                    mozilla::ErrorResult& rv);
+    static already_AddRefed<XPathEvaluator>
+        Constructor(const GlobalObject& aGlobal, ErrorResult& rv);
     already_AddRefed<nsIDOMXPathExpression>
         CreateExpression(const nsAString& aExpression,
                          nsIDOMXPathNSResolver* aResolver,
-                         mozilla::ErrorResult& rv);
+                         ErrorResult& rv);
     already_AddRefed<nsIDOMXPathNSResolver>
-        CreateNSResolver(nsINode* aNodeResolver, mozilla::ErrorResult& rv);
+        CreateNSResolver(nsINode* aNodeResolver, ErrorResult& rv);
     already_AddRefed<nsISupports>
         Evaluate(const nsAString& aExpression, nsINode* aContextNode,
                  nsIDOMXPathNSResolver* aResolver, uint16_t aType,
-                 nsISupports* aResult, mozilla::ErrorResult& rv);
+                 nsISupports* aResult, ErrorResult& rv);
 private:
     nsresult CreateExpression(const nsAString & aExpression,
                               nsIDOMXPathNSResolver *aResolver,
@@ -78,7 +77,7 @@ private:
 };
 
 inline nsISupports*
-ToSupports(nsXPathEvaluator* e)
+ToSupports(XPathEvaluator* e)
 {
     return static_cast<nsIDOMXPathEvaluator*>(e);
 }
@@ -87,4 +86,7 @@ ToSupports(nsXPathEvaluator* e)
 #define TRANSFORMIIX_XPATH_EVALUATOR_CID   \
 { 0xd0a75e02, 0xb5e7, 0x11d5, { 0xa7, 0xf2, 0xdf, 0x10, 0x9f, 0xb8, 0xa1, 0xfc } }
 
-#endif
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_XPathEvaluator_h */

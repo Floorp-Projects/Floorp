@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsXPathEvaluator.h"
+#include "XPathEvaluator.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsXPathExpression.h"
@@ -21,18 +21,23 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/XPathEvaluatorBinding.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+extern nsresult
+TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, int32_t aNamespaceID,
+                            nsIAtom *aName, nsISupports *aState,
+                            FunctionCall **aFunction);
+
+namespace mozilla {
+namespace dom {
 
 // txIParseContext implementation
-class nsXPathEvaluatorParseContext : public txIParseContext
+class XPathEvaluatorParseContext : public txIParseContext
 {
 public:
-    nsXPathEvaluatorParseContext(nsIDOMXPathNSResolver* aResolver,
-                                 nsTArray<int32_t> *aNamespaceIDs,
-                                 nsTArray<nsCString> *aContractIDs,
-                                 nsCOMArray<nsISupports> *aState,
-                                 bool aIsCaseSensitive)
+    XPathEvaluatorParseContext(nsIDOMXPathNSResolver* aResolver,
+                               nsTArray<int32_t> *aNamespaceIDs,
+                               nsTArray<nsCString> *aContractIDs,
+                               nsCOMArray<nsISupports> *aState,
+                               bool aIsCaseSensitive)
         : mResolver(aResolver),
           mNamespaceIDs(aNamespaceIDs),
           mContractIDs(aContractIDs),
@@ -65,19 +70,19 @@ private:
     bool mIsCaseSensitive;
 };
 
-NS_IMPL_AGGREGATED(nsXPathEvaluator)
-NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsXPathEvaluator)
+NS_IMPL_AGGREGATED(XPathEvaluator)
+NS_INTERFACE_MAP_BEGIN_AGGREGATED(XPathEvaluator)
     NS_INTERFACE_MAP_ENTRY(nsIDOMXPathEvaluator)
     NS_INTERFACE_MAP_ENTRY(nsIXPathEvaluatorInternal)
 NS_INTERFACE_MAP_END
 
-nsXPathEvaluator::nsXPathEvaluator(nsISupports *aOuter)
+XPathEvaluator::XPathEvaluator(nsISupports *aOuter)
 {
     NS_INIT_AGGREGATED(aOuter);
 }
 
 nsresult
-nsXPathEvaluator::Init()
+XPathEvaluator::Init()
 {
     nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(fOuter);
 
@@ -85,17 +90,17 @@ nsXPathEvaluator::Init()
 }
 
 NS_IMETHODIMP
-nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
-                                   nsIDOMXPathNSResolver *aResolver,
-                                   nsIDOMXPathExpression **aResult)
+XPathEvaluator::CreateExpression(const nsAString & aExpression,
+                                 nsIDOMXPathNSResolver *aResolver,
+                                 nsIDOMXPathExpression **aResult)
 {
     return CreateExpression(aExpression, aResolver, (nsTArray<int32_t>*)nullptr,
                             nullptr, nullptr, aResult);
 }
 
 NS_IMETHODIMP
-nsXPathEvaluator::CreateNSResolver(nsIDOMNode *aNodeResolver,
-                                   nsIDOMXPathNSResolver **aResult)
+XPathEvaluator::CreateNSResolver(nsIDOMNode *aNodeResolver,
+                                 nsIDOMXPathNSResolver **aResult)
 {
     NS_ENSURE_ARG(aNodeResolver);
     if (!nsContentUtils::CanCallerAccess(aNodeResolver))
@@ -109,12 +114,12 @@ nsXPathEvaluator::CreateNSResolver(nsIDOMNode *aNodeResolver,
 }
 
 NS_IMETHODIMP
-nsXPathEvaluator::Evaluate(const nsAString & aExpression,
-                           nsIDOMNode *aContextNode,
-                           nsIDOMXPathNSResolver *aResolver,
-                           uint16_t aType,
-                           nsISupports *aInResult,
-                           nsISupports **aResult)
+XPathEvaluator::Evaluate(const nsAString & aExpression,
+                         nsIDOMNode *aContextNode,
+                         nsIDOMXPathNSResolver *aResolver,
+                         uint16_t aType,
+                         nsISupports *aInResult,
+                         nsISupports **aResult)
 {
     nsCOMPtr<nsIDOMXPathExpression> expression;
     nsresult rv = CreateExpression(aExpression, aResolver,
@@ -126,19 +131,19 @@ nsXPathEvaluator::Evaluate(const nsAString & aExpression,
 
 
 NS_IMETHODIMP
-nsXPathEvaluator::SetDocument(nsIDOMDocument* aDocument)
+XPathEvaluator::SetDocument(nsIDOMDocument* aDocument)
 {
     mDocument = do_GetWeakReference(aDocument);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
-                                   nsIDOMXPathNSResolver *aResolver,
-                                   nsTArray<nsString> *aNamespaceURIs,
-                                   nsTArray<nsCString> *aContractIDs,
-                                   nsCOMArray<nsISupports> *aState,
-                                   nsIDOMXPathExpression **aResult)
+XPathEvaluator::CreateExpression(const nsAString & aExpression,
+                                 nsIDOMXPathNSResolver *aResolver,
+                                 nsTArray<nsString> *aNamespaceURIs,
+                                 nsTArray<nsCString> *aContractIDs,
+                                 nsCOMArray<nsISupports> *aState,
+                                 nsIDOMXPathExpression **aResult)
 {
     nsTArray<int32_t> namespaceIDs;
     if (aNamespaceURIs) {
@@ -168,12 +173,12 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
 }
 
 nsresult
-nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
-                                   nsIDOMXPathNSResolver *aResolver,
-                                   nsTArray<int32_t> *aNamespaceIDs,
-                                   nsTArray<nsCString> *aContractIDs,
-                                   nsCOMArray<nsISupports> *aState,
-                                   nsIDOMXPathExpression **aResult)
+XPathEvaluator::CreateExpression(const nsAString & aExpression,
+                                 nsIDOMXPathNSResolver *aResolver,
+                                 nsTArray<int32_t> *aNamespaceIDs,
+                                 nsTArray<nsCString> *aContractIDs,
+                                 nsCOMArray<nsISupports> *aState,
+                                 nsIDOMXPathExpression **aResult)
 {
     nsresult rv;
     if (!mRecycler) {
@@ -187,9 +192,9 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
     }
 
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-    nsXPathEvaluatorParseContext pContext(aResolver, aNamespaceIDs,
-                                          aContractIDs, aState,
-                                          !(doc && doc->IsHTML()));
+    XPathEvaluatorParseContext pContext(aResolver, aNamespaceIDs,
+                                        aContractIDs, aState,
+                                        !(doc && doc->IsHTML()));
 
     nsAutoPtr<Expr> expression;
     rv = txExprParser::createExpr(PromiseFlatString(aExpression), &pContext,
@@ -214,25 +219,25 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
 }
 
 JSObject*
-nsXPathEvaluator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+XPathEvaluator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
     return dom::XPathEvaluatorBinding::Wrap(aCx, aScope, this);
 }
 
 /* static */
-already_AddRefed<nsXPathEvaluator>
-nsXPathEvaluator::Constructor(const GlobalObject& aGlobal,
-                              ErrorResult& rv)
+already_AddRefed<XPathEvaluator>
+XPathEvaluator::Constructor(const GlobalObject& aGlobal,
+                            ErrorResult& rv)
 {
-    nsRefPtr<nsXPathEvaluator> newObj = new nsXPathEvaluator(nullptr);
+    nsRefPtr<XPathEvaluator> newObj = new XPathEvaluator(nullptr);
     newObj->Init();
     return newObj.forget();
 }
 
 already_AddRefed<nsIDOMXPathExpression>
-nsXPathEvaluator::CreateExpression(const nsAString& aExpression,
-                                   nsIDOMXPathNSResolver* aResolver,
-                                   ErrorResult& rv)
+XPathEvaluator::CreateExpression(const nsAString& aExpression,
+                                 nsIDOMXPathNSResolver* aResolver,
+                                 ErrorResult& rv)
 {
   nsCOMPtr<nsIDOMXPathExpression> expr;
   rv = CreateExpression(aExpression, aResolver, getter_AddRefs(expr));
@@ -240,8 +245,8 @@ nsXPathEvaluator::CreateExpression(const nsAString& aExpression,
 }
 
 already_AddRefed<nsIDOMXPathNSResolver>
-nsXPathEvaluator::CreateNSResolver(nsINode* aNodeResolver,
-                                   ErrorResult& rv)
+XPathEvaluator::CreateNSResolver(nsINode* aNodeResolver,
+                                 ErrorResult& rv)
 {
   nsCOMPtr<nsIDOMNode> nodeResolver = do_QueryInterface(aNodeResolver);
   nsCOMPtr<nsIDOMXPathNSResolver> res;
@@ -250,9 +255,9 @@ nsXPathEvaluator::CreateNSResolver(nsINode* aNodeResolver,
 }
 
 already_AddRefed<nsISupports>
-nsXPathEvaluator::Evaluate(const nsAString& aExpression, nsINode* aContextNode,
-                           nsIDOMXPathNSResolver* aResolver, uint16_t aType,
-                           nsISupports* aResult, ErrorResult& rv)
+XPathEvaluator::Evaluate(const nsAString& aExpression, nsINode* aContextNode,
+                         nsIDOMXPathNSResolver* aResolver, uint16_t aType,
+                         nsISupports* aResult, ErrorResult& rv)
 {
   nsCOMPtr<nsIDOMNode> contextNode = do_QueryInterface(aContextNode);
   nsCOMPtr<nsISupports> res;
@@ -263,11 +268,11 @@ nsXPathEvaluator::Evaluate(const nsAString& aExpression, nsINode* aContextNode,
 
 
 /*
- * Implementation of txIParseContext private to nsXPathEvaluator, based on a
+ * Implementation of txIParseContext private to XPathEvaluator, based on a
  * nsIDOMXPathNSResolver
  */
 
-nsresult nsXPathEvaluatorParseContext::resolveNamespacePrefix
+nsresult XPathEvaluatorParseContext::resolveNamespacePrefix
     (nsIAtom* aPrefix, int32_t& aID)
 {
     aID = kNameSpaceID_Unknown;
@@ -299,15 +304,10 @@ nsresult nsXPathEvaluatorParseContext::resolveNamespacePrefix
     return nsContentUtils::NameSpaceManager()->RegisterNameSpace(ns, aID);
 }
 
-extern nsresult
-TX_ResolveFunctionCallXPCOM(const nsCString &aContractID, int32_t aNamespaceID,
-                            nsIAtom *aName, nsISupports *aState,
-                            FunctionCall **aFunction);
-
 nsresult
-nsXPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
-                                                  int32_t aID,
-                                                  FunctionCall** aFn)
+XPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
+                                                int32_t aID,
+                                                FunctionCall** aFn)
 {
     nsresult rv = NS_ERROR_XPATH_UNKNOWN_FUNCTION;
 
@@ -326,12 +326,15 @@ nsXPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
     return rv;
 }
 
-bool nsXPathEvaluatorParseContext::caseInsensitiveNameTests()
+bool XPathEvaluatorParseContext::caseInsensitiveNameTests()
 {
     return !mIsCaseSensitive;
 }
 
 void
-nsXPathEvaluatorParseContext::SetErrorOffset(uint32_t aOffset)
+XPathEvaluatorParseContext::SetErrorOffset(uint32_t aOffset)
 {
 }
+
+} // namespace dom
+} // namespace mozilla
