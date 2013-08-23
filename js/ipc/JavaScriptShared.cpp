@@ -168,7 +168,7 @@ JavaScriptShared::toVariant(JSContext *cx, jsval from, JSVariant *to)
       case JSTYPE_OBJECT:
       case JSTYPE_FUNCTION:
       {
-        JSObject *obj = from.toObjectOrNull();
+        RootedObject obj(cx, from.toObjectOrNull());
         if (!obj) {
             JS_ASSERT(from == JSVAL_NULL);
             *to = uint64_t(0);
