@@ -19,10 +19,12 @@ Cu.import("resource://gre/modules/devtools/dbg-client.jsm", tempScope);
 Cu.import("resource:///modules/source-editor.jsm", tempScope);
 Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
 Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
+Cu.import("resource://gre/modules/AddonManager.jsm", tempScope);
 let SourceEditor = tempScope.SourceEditor;
 let DebuggerServer = tempScope.DebuggerServer;
 let DebuggerTransport = tempScope.DebuggerTransport;
 let DebuggerClient = tempScope.DebuggerClient;
+let AddonManager = tempScope.AddonManager;
 let gDevTools = tempScope.gDevTools;
 let devtools = tempScope.devtools;
 let TargetFactory = devtools.TargetFactory;
@@ -34,6 +36,8 @@ Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/";
 const TAB1_URL = EXAMPLE_URL + "browser_dbg_tab1.html";
 const TAB2_URL = EXAMPLE_URL + "browser_dbg_tab2.html";
+const ADDON1_URL = EXAMPLE_URL + "browser_dbg_addon1.xpi";
+const ADDON2_URL = EXAMPLE_URL + "browser_dbg_addon2.xpi";
 const STACK_URL = EXAMPLE_URL + "browser_dbg_stack.html";
 
 // Enable remote debugging for the relevant tests.
@@ -104,6 +108,32 @@ function removeTab(aTab, aWindow) {
   let targetBrowser = targetWindow.gBrowser;
 
   targetBrowser.removeTab(aTab);
+}
+
+function addAddon(aURL, aOnInstallEnded) {
+  AddonManager.getInstallForURL(aURL, function(aInstall) {
+    aInstall.install();
+    var listener = {
+      onInstallEnded: function(aAddon, aAddonInstall) {
+        aInstall.removeListener(listener);
+        aOnInstallEnded(aAddonInstall);
+      }
+    };
+    aInstall.addListener(listener);
+  }, "application/x-xpinstall");
+}
+
+function removeAddon(aAddon, aOnUninstalled) {
+  var listener = {
+    onUninstalled: function(aUninstalledAddon) {
+      if (aUninstalledAddon != aAddon)
+        return;
+      AddonManager.removeAddonListener(listener);
+      aOnUninstalled();
+    }
+  };
+  AddonManager.addAddonListener(listener);
+  aAddon.uninstall();
 }
 
 function closeDebuggerAndFinish(aRemoteFlag, aCallback, aWindow) {
