@@ -1,16 +1,40 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
+# Copyright (c) 2009 Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 import sys
 import os
+import shutil
+import fnmatch
 try:
     from setuptools import setup, Extension
 except ImportError:
     from distutils.core import setup, Extension
 
+
+def clean():
+    """'python setup.py clean' custom command."""
+    def rglob(path, pattern):
+        return [os.path.join(dirpath, f)
+            for dirpath, dirnames, files in os.walk(path)
+            for f in fnmatch.filter(files, pattern)]
+
+    for dirname in ('build', 'dist'):
+        if os.path.isdir(dirname):
+            sys.stdout.write('removing directory: %s\n' % dirname)
+            shutil.rmtree(dirname)
+
+    for dirpath, dirnames, files in os.walk('.'):
+        if dirpath.endswith(('__pycache__', '.egg-info')):
+            sys.stdout.write('removing directory %s\n' % dirpath)
+            shutil.rmtree(dirpath)
+
+    for pattern in ['*.py[co]', '*.s[ol]', '*~', '*.orig', '*.rej', '*.swp']:
+        for x in rglob('.', pattern):
+           sys.stdout.write('removing file %s\n' % x)
+           os.remove(x)
 
 def get_version():
     INIT = os.path.abspath(os.path.join(os.path.dirname(__file__),
@@ -90,11 +114,22 @@ elif sys.platform.startswith("linux"):
                             sources=['psutil/_psutil_linux.c'],
                             ),
                   posix_extension]
+# Solaris
+elif sys.platform.lower().startswith('sunos'):
+    extensions = [Extension('_psutil_sunos',
+                            sources=['psutil/_psutil_sunos.c'],
+                            libraries=['kstat', 'nsl'],
+                            ),
+                  posix_extension]
 else:
     sys.exit('platform %s is not supported' % sys.platform)
 
 
 def main():
+    # "python setup.py clean" custom command
+    if len(sys.argv) > 1 and sys.argv[1] == 'clean':
+        return clean()
+
     setup_args = dict(
         name='psutil',
         version=VERSION,
@@ -106,7 +141,7 @@ def main():
                   'tty', 'ionice', 'uptime', 'taskmgr', 'process', 'df',
                   'iotop', 'iostat', 'ifconfig', 'taskset', 'who', 'pidof',
                   'pmap', 'smem', 'monitoring',],
-        author='Giampaolo Rodola, Jay Loden',
+        author='Giampaolo Rodola',
         author_email='psutil@googlegroups.com',
         maintainer='Giampaolo Rodola',
         maintainer_email='g.rodola <at> gmail <dot> com',
@@ -114,6 +149,8 @@ def main():
         platforms='Platform Independent',
         license='License :: OSI Approved :: BSD License',
         packages=['psutil'],
+        test_suite='test.test_psutil',
+        # see: python setup.py register --list-classifiers
         classifiers=[
               'Development Status :: 5 - Production/Stable',
               'Environment :: Console',
@@ -123,6 +160,7 @@ def main():
               'Operating System :: POSIX',
               'Operating System :: POSIX :: Linux',
               'Operating System :: POSIX :: BSD :: FreeBSD',
+              'Operating System :: POSIX :: SunOS/Solaris',
               'Operating System :: OS Independent',
               'Programming Language :: C',
               'Programming Language :: Python',
