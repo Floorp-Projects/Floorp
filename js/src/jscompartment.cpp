@@ -175,18 +175,17 @@ JSCompartment::ensureIonCompartmentExists(JSContext *cx)
 #endif
 
 static bool
-WrapForSameCompartment(JSContext *cx, HandleObject obj, MutableHandleValue vp)
+WrapForSameCompartment(JSContext *cx, MutableHandleObject obj)
 {
     JS_ASSERT(cx->compartment() == obj->compartment());
-    if (!cx->runtime()->sameCompartmentWrapObjectCallback) {
-        vp.setObject(*obj);
+    if (!cx->runtime()->sameCompartmentWrapObjectCallback)
         return true;
-    }
 
-    JSObject *wrapped = cx->runtime()->sameCompartmentWrapObjectCallback(cx, obj);
+    RootedObject wrapped(cx);
+    wrapped = cx->runtime()->sameCompartmentWrapObjectCallback(cx, obj);
     if (!wrapped)
         return false;
-    vp.setObject(*wrapped);
+    obj.set(wrapped);
     return true;
 }
 
@@ -203,39 +202,77 @@ JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &w
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingArg)
+JSCompartment::wrap(JSContext *cx, JSString **strp)
 {
-    JSRuntime *rt = runtimeFromMainThread();
-
+    JS_ASSERT(!cx->runtime()->isAtomsCompartment(this));
     JS_ASSERT(cx->compartment() == this);
-    JS_ASSERT(!rt->isAtomsCompartment(this));
-    JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
-    JS_ASSERT_IF(existingArg, vp.isObject());
-    JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
 
-    unsigned flags = 0;
-
-    JS_CHECK_CHROME_RECURSION(cx, return false);
-
-    AutoDisableProxyCheck adpc(rt);
-
-    /* Only GC things have to be wrapped or copied. */
-    if (!vp.isMarkable())
+    /* If the string is already in this compartment, we are done. */
+    JSString *str = *strp;
+    if (str->zone() == zone())
         return true;
 
-    if (vp.isString()) {
-        JSString *str = vp.toString();
-
-        /* If the string is already in this compartment, we are done. */
-        if (str->zone() == zone())
-            return true;
-
-        /* If the string is an atom, we don't have to copy. */
-        if (str->isAtom()) {
-            JS_ASSERT(cx->runtime()->isAtomsZone(str->zone()));
-            return true;
-        }
+    /* If the string is an atom, we don't have to copy. */
+    if (str->isAtom()) {
+        JS_ASSERT(cx->runtime()->isAtomsZone(str->zone()));
+        return true;
     }
+
+    /* Check the cache. */
+    RootedValue key(cx, StringValue(str));
+    if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
+        *strp = p->value.get().toString();
+        return true;
+    }
+
+    /* No dice. Make a copy, and cache it. */
+    Rooted<JSLinearString *> linear(cx, str->ensureLinear(cx));
+    if (!linear)
+        return false;
+    JSString *copy = js_NewStringCopyN<CanGC>(cx, linear->chars(),
+                                              linear->length());
+    if (!copy)
+        return false;
+    if (!putWrapper(key, StringValue(copy)))
+        return false;
+
+    if (linear->zone()->isGCMarking()) {
+        /*
+         * All string wrappers are dropped when collection starts, but we
+         * just created a new one.  Mark the wrapped string to stop it being
+         * finalized, because if it was then the pointer in this
+         * compartment's wrapper map would be left dangling.
+         */
+        JSString *tmp = linear;
+        MarkStringUnbarriered(&cx->runtime()->gcMarker, &tmp, "wrapped string");
+        JS_ASSERT(tmp == linear);
+    }
+
+    *strp = copy;
+    return true;
+}
+
+bool
+JSCompartment::wrap(JSContext *cx, HeapPtrString *strp)
+{
+    RootedString str(cx, *strp);
+    if (!wrap(cx, str.address()))
+        return false;
+    *strp = str;
+    return true;
+}
+
+bool
+JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existingArg)
+{
+    JS_ASSERT(!cx->runtime()->isAtomsCompartment(this));
+    JS_ASSERT(cx->compartment() == this);
+    JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
+    JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
+
+    if (!obj)
+        return true;
+    AutoDisableProxyCheck adpc(cx->runtime());
 
     /*
      * Wrappers should really be parented to the wrapped parent of the wrapped
@@ -247,84 +284,54 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
     HandleObject global = cx->global();
     JS_ASSERT(global);
 
-    /* Unwrap incoming objects. */
-    if (vp.isObject()) {
-        RootedObject obj(cx, &vp.toObject());
+    if (obj->compartment() == this)
+        return WrapForSameCompartment(cx, obj);
 
-        if (obj->compartment() == this)
-            return WrapForSameCompartment(cx, obj, vp);
-
-        /* Translate StopIteration singleton. */
-        if (obj->is<StopIterationObject>())
-            return js_FindClassObject(cx, JSProto_StopIteration, vp);
-
-        /* Unwrap the object, but don't unwrap outer windows. */
-        obj = UncheckedUnwrap(obj, /* stopAtOuter = */ true, &flags);
-
-        if (obj->compartment() == this)
-            return WrapForSameCompartment(cx, obj, vp);
-
-        if (cx->runtime()->preWrapObjectCallback) {
-            obj = cx->runtime()->preWrapObjectCallback(cx, global, obj, flags);
-            if (!obj)
-                return false;
-        }
-
-        if (obj->compartment() == this)
-            return WrapForSameCompartment(cx, obj, vp);
-        vp.setObject(*obj);
-
-#ifdef DEBUG
-        {
-            JSObject *outer = GetOuterObject(cx, obj);
-            JS_ASSERT(outer && outer == obj);
-        }
-#endif
-    }
-
-    RootedValue key(cx, vp);
-
-    /* If we already have a wrapper for this value, use it. */
-    if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
-        vp.set(p->value);
-        if (vp.isObject()) {
-            DebugOnly<JSObject *> obj = &vp.toObject();
-            JS_ASSERT(obj->is<CrossCompartmentWrapperObject>());
-            JS_ASSERT(obj->getParent() == global);
-        }
+    /* Translate StopIteration singleton. */
+    if (obj->is<StopIterationObject>()) {
+        RootedValue v(cx);
+        if (!js_FindClassObject(cx, JSProto_StopIteration, &v))
+            return false;
+        obj.set(&v.toObject());
         return true;
     }
 
-    if (vp.isString()) {
-        Rooted<JSLinearString *> str(cx, vp.toString()->ensureLinear(cx));
-        if (!str)
+    /* Unwrap the object, but don't unwrap outer windows. */
+    unsigned flags = 0;
+    obj.set(UncheckedUnwrap(obj, /* stopAtOuter = */ true, &flags));
+
+    if (obj->compartment() == this)
+        return WrapForSameCompartment(cx, obj);
+
+    /* Invoke the prewrap callback. We're a bit worried about infinite
+     * recursion here, so we do a check - see bug 809295. */
+    JS_CHECK_CHROME_RECURSION(cx, return false);
+    if (cx->runtime()->preWrapObjectCallback) {
+        obj.set(cx->runtime()->preWrapObjectCallback(cx, global, obj, flags));
+        if (!obj)
             return false;
+    }
 
-        JSString *wrapped = js_NewStringCopyN<CanGC>(cx, str->chars(), str->length());
-        if (!wrapped)
-            return false;
+    if (obj->compartment() == this)
+        return WrapForSameCompartment(cx, obj);
 
-        vp.setString(wrapped);
-        if (!putWrapper(key, vp))
-            return false;
+#ifdef DEBUG
+    {
+        JSObject *outer = GetOuterObject(cx, obj);
+        JS_ASSERT(outer && outer == obj);
+    }
+#endif
 
-        if (str->zone()->isGCMarking()) {
-            /*
-             * All string wrappers are dropped when collection starts, but we
-             * just created a new one.  Mark the wrapped string to stop it being
-             * finalized, because if it was then the pointer in this
-             * compartment's wrapper map would be left dangling.
-             */
-            JSString *tmp = str;
-            MarkStringUnbarriered(&rt->gcMarker, &tmp, "wrapped string");
-            JS_ASSERT(tmp == str);
-        }
-
+    /* If we already have a wrapper for this value, use it. */
+    RootedValue key(cx, ObjectValue(*obj));
+    if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
+        obj.set(&p->value.get().toObject());
+        JS_ASSERT(obj->is<CrossCompartmentWrapperObject>());
+        JS_ASSERT(obj->getParent() == global);
         return true;
     }
 
     RootedObject proto(cx, Proxy::LazyProto);
-    RootedObject obj(cx, &vp.toObject());
     RootedObject existing(cx, existingArg);
     if (existing) {
         /* Is it possible to reuse |existing|? */
@@ -343,50 +350,17 @@ JSCompartment::wrap(JSContext *cx, MutableHandleValue vp, HandleObject existingA
      * the wrap hook to reason over what wrappers are currently applied
      * to the object.
      */
-    RootedObject wrapper(cx);
-    wrapper = cx->runtime()->wrapObjectCallback(cx, existing, obj, proto, global, flags);
-    if (!wrapper)
+    obj.set(cx->runtime()->wrapObjectCallback(cx, existing, obj, proto, global, flags));
+    if (!obj)
         return false;
 
-    // We maintain the invariant that the key in the cross-compartment wrapper
-    // map is always directly wrapped by the value.
-    JS_ASSERT(Wrapper::wrappedObject(wrapper) == &key.get().toObject());
+    /*
+     * We maintain the invariant that the key in the cross-compartment wrapper
+     * map is always directly wrapped by the value.
+     */
+    JS_ASSERT(Wrapper::wrappedObject(obj) == &key.get().toObject());
 
-    vp.setObject(*wrapper);
-    return putWrapper(key, vp);
-}
-
-bool
-JSCompartment::wrap(JSContext *cx, JSString **strp)
-{
-    RootedValue value(cx, StringValue(*strp));
-    if (!wrap(cx, &value))
-        return false;
-    *strp = value.get().toString();
-    return true;
-}
-
-bool
-JSCompartment::wrap(JSContext *cx, HeapPtrString *strp)
-{
-    RootedValue value(cx, StringValue(*strp));
-    if (!wrap(cx, &value))
-        return false;
-    *strp = value.get().toString();
-    return true;
-}
-
-bool
-JSCompartment::wrap(JSContext *cx, JSObject **objp, JSObject *existingArg)
-{
-    if (!*objp)
-        return true;
-    RootedValue value(cx, ObjectValue(**objp));
-    RootedObject existing(cx, existingArg);
-    if (!wrap(cx, &value, existing))
-        return false;
-    *objp = &value.get().toObject();
-    return true;
+    return putWrapper(key, ObjectValue(*obj));
 }
 
 bool
@@ -429,7 +403,7 @@ JSCompartment::wrap(JSContext *cx, StrictPropertyOp *propp)
 bool
 JSCompartment::wrap(JSContext *cx, MutableHandle<PropertyDescriptor> desc)
 {
-    if (!wrap(cx, desc.object().address()))
+    if (!wrap(cx, desc.object()))
         return false;
 
     if (desc.hasGetterObject()) {

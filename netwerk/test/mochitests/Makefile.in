@@ -14,6 +14,8 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES = \
   partial_content.sjs \
   test_partially_cached_content.html \
+  user_agent.sjs \
+  test_user_agent_overrides.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
