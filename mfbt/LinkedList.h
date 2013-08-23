@@ -148,8 +148,8 @@ class LinkedListElement
      * linked list when you call setNext(); otherwise, this method will assert.
      */
     void setNext(T* elem) {
-        MOZ_ASSERT(isInList());
-        setNextUnsafe(elem);
+      MOZ_ASSERT(isInList());
+      setNextUnsafe(elem);
     }
 
     /*

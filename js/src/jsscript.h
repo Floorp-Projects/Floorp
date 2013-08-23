@@ -521,7 +521,7 @@ class JSScript : public js::gc::Cell
     uint16_t        version;    /* JS version under which script was compiled */
 
   public:
-    uint16_t        ndefaults;  /* number of defaults the function has */
+    uint16_t        funLength;  /* ES6 function length */
 
     uint16_t        nfixed;     /* number of slots besides stack operands in
                                    slot array */

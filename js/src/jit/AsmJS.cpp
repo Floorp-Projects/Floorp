@@ -2575,8 +2575,6 @@ CheckFunctionHead(ModuleCompiler &m, ParseNode *fn)
     JSFunction *fun = FunctionObject(fn);
     if (fun->hasRest())
         return m.fail(fn, "rest args not allowed");
-    if (fun->hasDefaults())
-        return m.fail(fn, "default args not allowed");
     if (fun->isExprClosure())
         return m.fail(fn, "expression closures not allowed");
     if (fn->pn_funbox->hasDestructuringArgs)
@@ -2590,7 +2588,7 @@ CheckArgument(ModuleCompiler &m, ParseNode *arg, PropertyName **name)
     if (!IsDefinition(arg))
         return m.fail(arg, "duplicate argument name not allowed");
 
-    if (MaybeDefinitionInitializer(arg))
+    if (arg->pn_dflags & PND_DEFAULT)
         return m.fail(arg, "default arguments not allowed");
 
     if (!CheckIdentifier(m, arg, arg->name()))

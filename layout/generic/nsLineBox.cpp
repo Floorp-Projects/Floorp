@@ -7,15 +7,12 @@
 /* representation of one line within a block frame, a CSS line box */
 
 #include "nsLineBox.h"
-#include "nsLineLayout.h"
 #include "prprf.h"
-#include "nsBlockFrame.h"
-#include "nsIFrame.h"
+#include "nsFrame.h"
 #include "nsPresArena.h"
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif
-#include "nsStyleStructInlines.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
 

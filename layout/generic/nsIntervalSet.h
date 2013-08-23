@@ -10,7 +10,6 @@
 #define nsIntervalSet_h___
 
 #include "nsCoord.h"
-#include "nsDebug.h"
 
 typedef void *
 (* IntervalSetAlloc)(size_t aBytes, void *aClosure);
