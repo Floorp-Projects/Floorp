@@ -121,37 +121,23 @@ abstract class AboutHomeTest extends BaseTest {
         return null;
     }
 
+    /**
+     * Adds a bookmark, or updates the bookmark title if the url already exists.
+     *
+     * The LocalBrowserDB.addBookmark implementation handles updating existing bookmarks.
+     * Since we don't modify bookmark keywords in tests, we don't need a separate
+     * implemention of updateBookmark.
+     */
     protected void addOrUpdateMobileBookmark(String title, String url) {
-        if (isBookmark(url)) {
-            updateBookmark(title, url, null);
-        } else {
-            addMobileBookmark(title, url);
-        }
-    }
-
-    protected void addMobileBookmark(String title, String url) {
         try {
             ContentResolver resolver = getActivity().getContentResolver();
             ClassLoader classLoader = getActivity().getClassLoader();
             Class browserDB = classLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
             Method addBookmark = browserDB.getMethod("addBookmark", ContentResolver.class, String.class, String.class);
             addBookmark.invoke(null, resolver, title, url);
-            mAsserter.ok(true, "Inserting a new bookmark", "Inserter the bookmark with the title = " + title + " and the url = " + url);
+            mAsserter.ok(true, "Inserting/updating a new bookmark", "Inserting/updating the bookmark with the title = " + title + " and the url = " + url);
         } catch (Exception e) {
             mAsserter.ok(false, "Exception adding bookmark: ", e.toString());
-        }
-    }
-
-    protected void updateBookmark(String title, String url, String keyword) {
-        try {
-            ContentResolver resolver = getActivity().getContentResolver();
-            ClassLoader classLoader = getActivity().getClassLoader();
-            Class browserDB = classLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
-            Method updateBookmark = browserDB.getMethod("updateBookmark", ContentResolver.class, String.class, String.class);
-            updateBookmark.invoke(null, resolver, title, url, keyword);
-            mAsserter.ok(true, "Updating existing bookmark", "Setting the values to title = " + title + ", url = " + url + " and keyword = " + keyword);
-        } catch (Exception e) {
-            mAsserter.ok(false, "Exception updating bookmark: ", e.toString());
         }
     }
 
