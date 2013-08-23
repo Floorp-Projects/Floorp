@@ -17,17 +17,17 @@ class URL : public EventTarget
 {
 public: // Methods for WebIDL
   static void
-  CreateObjectURL(const WorkerGlobalObject& aGlobal,
+  CreateObjectURL(const GlobalObject& aGlobal,
                   JSObject* aArg, const objectURLOptionsWorkers& aOptions,
                   nsString& aResult, ErrorResult& aRv);
 
   static void
-  CreateObjectURL(const WorkerGlobalObject& aGlobal,
+  CreateObjectURL(const GlobalObject& aGlobal,
                   JSObject& aArg, const objectURLOptionsWorkers& aOptions,
                   nsString& aResult, ErrorResult& aRv);
 
   static void
-  RevokeObjectURL(const WorkerGlobalObject& aGlobal, const nsAString& aUrl);
+  RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl);
 };
 
 END_WORKERS_NAMESPACE

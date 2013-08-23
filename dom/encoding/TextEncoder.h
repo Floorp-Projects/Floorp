@@ -24,7 +24,7 @@ public:
               const nsAString& aEncoding,
               ErrorResult& aRv)
   {
-    nsRefPtr<TextEncoder> txtEncoder = new TextEncoder(aGlobal.Get());
+    nsRefPtr<TextEncoder> txtEncoder = new TextEncoder(aGlobal.GetAsSupports());
     txtEncoder->Init(aEncoding, aRv);
     if (aRv.Failed()) {
       return nullptr;

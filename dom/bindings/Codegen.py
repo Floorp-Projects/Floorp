@@ -4679,14 +4679,11 @@ class CGPerSignatureCall(CGThing):
         if static:
             nativeMethodName = "%s::%s" % (descriptor.nativeType,
                                            nativeMethodName)
-            globalObjectType = "GlobalObject"
-            if descriptor.workers:
-                globalObjectType = "Worker" + globalObjectType
-            cgThings.append(CGGeneric("""%s global(cx, obj);
+            cgThings.append(CGGeneric("""GlobalObject global(cx, obj);
 if (global.Failed()) {
   return false;
 }
-""" % globalObjectType))
+"""))
             argsPre.append("global")
 
         # For JS-implemented interfaces we do not want to base the
@@ -4701,6 +4698,8 @@ if (global.Failed()) {
         if needScopeObject(returnType, arguments, self.extendedAttributes,
                            descriptor, descriptor.wrapperCache,
                            not descriptor.interface.isJSImplemented()):
+            # We cannot assign into obj because it's a Handle, not a
+            # MutableHandle, so we need a separate Rooted.
             cgThings.append(CGGeneric("Maybe<JS::Rooted<JSObject*> > unwrappedObj;"))
             argsPre.append("unwrappedObj.empty() ? obj : unwrappedObj.ref()")
             needsUnwrap = True
@@ -4734,16 +4733,15 @@ if (global.Failed()) {
             xraySteps = []
             if not isConstructor:
                 xraySteps.append(
-                    CGGeneric("unwrappedObj.construct(cx, obj);\n"
-                              "JS::Rooted<JSObject*>& obj = unwrappedObj.ref();"))
+                    CGGeneric("unwrappedObj.construct(cx, obj);"))
 
-            # XXXkhuey we should be able to MOZ_ASSERT that unwrappedObj is
+            # XXXkhuey we should be able to MOZ_ASSERT that ${obj} is
             # not null.
             xraySteps.append(
-                CGGeneric("obj = js::CheckedUnwrap(obj);\n"
-                          "if (!obj) {\n"
-                          "  return false;\n"
-                          "}"))
+                CGGeneric(string.Template("""${obj} = js::CheckedUnwrap(${obj});
+if (!${obj}) {
+  return false;
+}""").substitute({ 'obj' : 'obj' if isConstructor else 'unwrappedObj.ref()' })))
             if isConstructor:
                 # If we're called via an xray, we need to enter the underlying
                 # object's compartment and then wrap up all of our arguments into
@@ -8936,16 +8934,13 @@ class CGNativeMember(ClassMethod):
         if needCx(returnType, argList, self.extendedAttrs,
                   self.descriptorProvider, self.passJSBitsAsNeeded):
             args.insert(0, Argument("JSContext*", "cx"))
-        if needScopeObject(returnType, argList, self.extendedAttrs,
-                           self.descriptorProvider, self.descriptorProvider,
-                           self.passJSBitsAsNeeded):
-            args.insert(0, Argument("JS::Handle<JSObject*>", "obj"))
+            if needScopeObject(returnType, argList, self.extendedAttrs,
+                               self.descriptorProvider, self.descriptorProvider,
+                               self.passJSBitsAsNeeded):
+                args.insert(1, Argument("JS::Handle<JSObject*>", "obj"))
         # And if we're static, a global
         if self.member.isStatic():
-            globalObjectType = "GlobalObject"
-            if self.descriptorProvider.workers:
-                globalObjectType = "Worker" + globalObjectType
-            args.insert(0, Argument("const %s&" % globalObjectType, "global"))
+            args.insert(0, Argument("const GlobalObject&", "global"))
         return args
 
     def doGetArgType(self, type, optional, isMember):
@@ -9635,7 +9630,7 @@ class CGJSImplClass(CGBindingImplClass):
             "if (global.Failed()) {\n"
             "  return false;\n"
             "}\n"
-            "nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.Get());\n"
+            "nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global.GetAsSupports());\n"
             "if (!window) {\n"
             '  return ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "Argument 1 of ${ifaceName}._create", "Window");\n'
             "}\n"

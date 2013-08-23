@@ -73,8 +73,8 @@ public:
   void GetMimeType(nsString &aMimeType) { aMimeType = mMimeType; }
 
   static already_AddRefed<MediaRecorder>
-  Constructor(const GlobalObject& aGlobal, JSContext* aCx, DOMMediaStream& aStream,
-              ErrorResult& aRv);
+  Constructor(const GlobalObject& aGlobal,
+              DOMMediaStream& aStream, ErrorResult& aRv);
 
   // EventHandler
   IMPL_EVENT_HANDLER(dataavailable)
@@ -85,7 +85,7 @@ public:
   friend class ExtractEncodedData;
 
 protected:
-  void Init(JSContext* aCx, nsPIDOMWindow* aOwnerWindow);
+  void Init(nsPIDOMWindow* aOwnerWindow);
   // Copy encoded data from encoder to EncodedBufferCache. This function runs in the Media Encoder Thread.
   void ExtractEncodedData();
 
