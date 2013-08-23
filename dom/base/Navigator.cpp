@@ -81,6 +81,7 @@ namespace mozilla {
 namespace dom {
 
 static bool sDoNotTrackEnabled = false;
+static uint32_t sDoNotTrackValue   = 1;
 static bool sVibratorEnabled   = false;
 static uint32_t sMaxVibrateMS  = 0;
 static uint32_t sMaxVibrateListLen = 0;
@@ -92,6 +93,9 @@ Navigator::Init()
   Preferences::AddBoolVarCache(&sDoNotTrackEnabled,
                                "privacy.donottrackheader.enabled",
                                false);
+  Preferences::AddUintVarCache(&sDoNotTrackValue,
+                               "privacy.donottrackheader.value",
+                               1);
   Preferences::AddBoolVarCache(&sVibratorEnabled,
                                "dom.vibrator.enabled", true);
   Preferences::AddUintVarCache(&sMaxVibrateMS,
@@ -563,7 +567,11 @@ NS_IMETHODIMP
 Navigator::GetDoNotTrack(nsAString &aResult)
 {
   if (sDoNotTrackEnabled) {
-    aResult.AssignLiteral("yes");
+    if (sDoNotTrackValue == 0) {
+      aResult.AssignLiteral("0");
+    } else {
+      aResult.AssignLiteral("1");
+    }
   } else {
     aResult.AssignLiteral("unspecified");
   }
