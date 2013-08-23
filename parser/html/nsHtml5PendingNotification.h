@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsHtml5PendingNotification_h__
-#define nsHtml5PendingNotification_h__
+#ifndef nsHtml5PendingNotification_h
+#define nsHtml5PendingNotification_h
 
 #include "nsNodeUtils.h"
 
@@ -48,4 +48,4 @@ class nsHtml5PendingNotification {
     uint32_t    mChildCount;
 };
 
-#endif // nsHtml5PendingNotification_h__
+#endif // nsHtml5PendingNotification_h
