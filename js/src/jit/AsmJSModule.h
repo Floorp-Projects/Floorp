@@ -345,9 +345,10 @@ class AsmJSModule
     typedef Vector<ProfiledBlocksFunction, 0, SystemAllocPolicy> ProfiledBlocksFunctionVector;
 #endif
 
-    HeapPtrPropertyName                   globalArgumentName_;
-    HeapPtrPropertyName                   importArgumentName_;
-    HeapPtrPropertyName                   bufferArgumentName_;
+  private:
+    PropertyName *                        globalArgumentName_;
+    PropertyName *                        importArgumentName_;
+    PropertyName *                        bufferArgumentName_;
 
     GlobalVector                          globals_;
     ExitVector                            exits_;
@@ -380,11 +381,15 @@ class AsmJSModule
     FunctionCountsVector                  functionCounts_;
 
   public:
-    explicit AsmJSModule() {
-        code_ = NULL;
-        operationCallbackExit_ = NULL;
+    explicit AsmJSModule()
+      : globalArgumentName_(NULL),
+        importArgumentName_(NULL),
+        bufferArgumentName_(NULL),
+        code_(NULL),
+        operationCallbackExit_(NULL),
+        linked_(false)
+    {
         mozilla::PodZero(&pod);
-        linked_ = false;
     }
 
     ~AsmJSModule();
@@ -412,11 +417,11 @@ class AsmJSModule
             MarkObject(trc, &maybeHeap_, "asm.js heap");
 
         if (globalArgumentName_)
-            MarkString(trc, &globalArgumentName_, "asm.js global argument name");
+            MarkStringUnbarriered(trc, &globalArgumentName_, "asm.js global argument name");
         if (importArgumentName_)
-            MarkString(trc, &importArgumentName_, "asm.js import argument name");
+            MarkStringUnbarriered(trc, &importArgumentName_, "asm.js import argument name");
         if (bufferArgumentName_)
-            MarkString(trc, &bufferArgumentName_, "asm.js buffer argument name");
+            MarkStringUnbarriered(trc, &bufferArgumentName_, "asm.js buffer argument name");
     }
 
     bool addGlobalVarInitConstant(const Value &v, uint32_t *globalIndex) {
@@ -681,13 +686,28 @@ class AsmJSModule
         return maybeHeap_ ? maybeHeap_->byteLength() : 0;
     }
 
-    void initGlobalArgumentName(PropertyName *n) { globalArgumentName_ = n; }
-    void initImportArgumentName(PropertyName *n) { importArgumentName_ = n; }
-    void initBufferArgumentName(PropertyName *n) { bufferArgumentName_ = n; }
+    void initGlobalArgumentName(PropertyName *n) {
+        JS_ASSERT_IF(n, n->isTenured());
+        globalArgumentName_ = n;
+    }
+    void initImportArgumentName(PropertyName *n) {
+        JS_ASSERT_IF(n, n->isTenured());
+        importArgumentName_ = n;
+    }
+    void initBufferArgumentName(PropertyName *n) {
+        JS_ASSERT_IF(n, n->isTenured());
+        bufferArgumentName_ = n;
+    }
 
-    PropertyName *globalArgumentName() const { return globalArgumentName_; }
-    PropertyName *importArgumentName() const { return importArgumentName_; }
-    PropertyName *bufferArgumentName() const { return bufferArgumentName_; }
+    PropertyName *globalArgumentName() const {
+        return globalArgumentName_;
+    }
+    PropertyName *importArgumentName() const {
+        return importArgumentName_;
+    }
+    PropertyName *bufferArgumentName() const {
+        return bufferArgumentName_;
+    }
 
     void initSourceDesc(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd) {
         sourceDesc_.init(scriptSource, bufStart, bufEnd);
