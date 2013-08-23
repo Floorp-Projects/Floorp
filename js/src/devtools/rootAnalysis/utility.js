@@ -13,6 +13,10 @@ function assert(x, msg)
         throw "assertion failed: " + (Error().stack);
 }
 
+function defined(x) {
+    return x !== undefined;
+}
+
 function xprint(x, padding)
 {
     if (!padding)
@@ -52,6 +56,51 @@ function sameVariable(var0, var1)
     if ("Name" in var0)
         return "Name" in var1 && var0.Name[0] == var1.Name[0];
     return var0.Kind == var1.Kind;
+}
+
+function blockIdentifier(body)
+{
+    if (body.BlockId.Kind == "Loop")
+        return body.BlockId.Loop;
+    assert(body.BlockId.Kind == "Function", "body.Kind should be Function, not " + body.BlockId.Kind);
+    return body.BlockId.Variable.Name[0];
+}
+
+function collectBodyEdges(body)
+{
+    body.predecessors = [];
+    body.successors = [];
+    if (!("PEdge" in body))
+        return;
+
+    for (var edge of body.PEdge) {
+        var [ source, target ] = edge.Index;
+        if (!(target in body.predecessors))
+            body.predecessors[target] = [];
+        body.predecessors[target].push(edge);
+        if (!(source in body.successors))
+            body.successors[source] = [];
+        body.successors[source].push(edge);
+    }
+}
+
+function getPredecessors(body)
+{
+    try {
+        if (!('predecessors' in body))
+            collectBodyEdges(body);
+    } catch (e) {
+        debugger;
+        printErr("body is " + body);
+    }
+    return body.predecessors;
+}
+
+function getSuccessors(body)
+{
+    if (!('successors' in body))
+        collectBodyEdges(body);
+    return body.successors;
 }
 
 function otherDestructorName(name)
