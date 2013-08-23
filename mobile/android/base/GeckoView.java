@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -20,14 +22,16 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.os.Handler;
 
 public class GeckoView extends LayerView
     implements GeckoEventListener, ContextGetter {
+
+    private static final String LOGTAG = "GeckoView";
 
     public GeckoView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -42,6 +46,14 @@ public class GeckoView extends LayerView
         // If running outside of a GeckoActivity (eg, from a library project),
         // load the native code and disable content providers
         if (!(context instanceof GeckoActivity)) {
+            // Set the GeckoInterface if the context is an activity and the GeckoInterface
+            // has not already been set
+            if (context instanceof Activity && getGeckoInterface() == null) {
+                setGeckoInterface(new BaseGeckoInterface(context));
+            }
+
+            Clipboard.init(context);
+            GeckoLoader.loadMozGlue();
             BrowserDB.setEnableContentProviders(false);
         }
 
@@ -59,7 +71,6 @@ public class GeckoView extends LayerView
 
         ThreadUtils.setUiThread(Thread.currentThread(), new Handler());
         initializeView(GeckoAppShell.getEventDispatcher());
-
 
         GeckoProfile profile = GeckoProfile.get(context);
         BrowserDB.initialize(profile.getName());
@@ -92,7 +103,11 @@ public class GeckoView extends LayerView
         }
     }
 
-    public static void setGeckoInterface(GeckoAppShell.GeckoInterface aGeckoInterface) {
-        GeckoAppShell.setGeckoInterface(aGeckoInterface);
+    public static void setGeckoInterface(final BaseGeckoInterface geckoInterface) {
+        GeckoAppShell.setGeckoInterface(geckoInterface);
+    }
+
+    public static GeckoAppShell.GeckoInterface getGeckoInterface() {
+        return GeckoAppShell.getGeckoInterface();
     }
 }
