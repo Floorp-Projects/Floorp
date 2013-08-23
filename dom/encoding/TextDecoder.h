@@ -12,20 +12,17 @@ namespace mozilla {
 namespace dom {
 
 class TextDecoder MOZ_FINAL
-  : public nsWrapperCache, public TextDecoderBase
+  : public NonRefcountedDOMObject, public TextDecoderBase
 {
 public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TextDecoder)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(TextDecoder)
-
   // The WebIDL constructor.
-  static already_AddRefed<TextDecoder>
+  static TextDecoder*
   Constructor(const GlobalObject& aGlobal,
               const nsAString& aEncoding,
               const TextDecoderOptions& aOptions,
               ErrorResult& aRv)
   {
-    nsRefPtr<TextDecoder> txtDecoder = new TextDecoder(aGlobalAsSupports.Get());
+    nsAutoPtr<TextDecoder> txtDecoder(new TextDecoder());
     txtDecoder->Init(aEncoding, aOptions.mFatal, aRv);
     if (aRv.Failed()) {
       return nullptr;
@@ -33,27 +30,24 @@ public:
     return txtDecoder.forget();
   }
 
-  TextDecoder(nsISupports* aGlobal)
-    : mGlobal(aGlobal)
+  TextDecoder()
   {
-    MOZ_ASSERT(aGlobal);
-    SetIsDOMBinding();
   }
 
   virtual
   ~TextDecoder()
   {}
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope,
+                       bool* aTookOwnership)
   {
-    return TextDecoderBinding::Wrap(aCx, aScope, this);
+    return TextDecoderBinding::Wrap(aCx, aScope, this, aTookOwnership);
   }
 
   nsISupports*
   GetParentObject()
   {
-    return mGlobal;
+    return nullptr;
   }
 
   void Decode(nsAString& aOutDecodedString,
@@ -72,7 +66,6 @@ public:
   }
 
 private:
-  nsCOMPtr<nsISupports> mGlobal;
 };
 
 } // dom
