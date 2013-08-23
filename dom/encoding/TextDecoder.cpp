@@ -14,8 +14,8 @@ namespace dom {
 static const PRUnichar kReplacementChar = static_cast<PRUnichar>(0xFFFD);
 
 void
-TextDecoderBase::Init(const nsAString& aEncoding, const bool aFatal,
-                      ErrorResult& aRv)
+TextDecoder::Init(const nsAString& aEncoding, const bool aFatal,
+                  ErrorResult& aRv)
 {
   nsAutoString label(aEncoding);
   EncodingUtils::TrimSpaceCharacters(label);
@@ -52,9 +52,9 @@ TextDecoderBase::Init(const nsAString& aEncoding, const bool aFatal,
 }
 
 void
-TextDecoderBase::Decode(const char* aInput, const int32_t aLength,
-                        const bool aStream, nsAString& aOutDecodedString,
-                        ErrorResult& aRv)
+TextDecoder::Decode(const char* aInput, const int32_t aLength,
+                    const bool aStream, nsAString& aOutDecodedString,
+                    ErrorResult& aRv)
 {
   aOutDecodedString.Truncate();
 
@@ -101,7 +101,7 @@ TextDecoderBase::Decode(const char* aInput, const int32_t aLength,
 }
 
 void
-TextDecoderBase::GetEncoding(nsAString& aEncoding)
+TextDecoder::GetEncoding(nsAString& aEncoding)
 {
   CopyASCIItoUTF16(mEncoding, aEncoding);
   nsContentUtils::ASCIIToLower(aEncoding);
