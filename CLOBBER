@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 904831 - MSVC_ENABLE_PGO in js/src/Makefile.in
+Bug 908208 - ipdl dependencies are busted, so we must clobber.  See Bug 907394 for a solution.
