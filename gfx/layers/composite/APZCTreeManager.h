@@ -235,6 +235,17 @@ public:
    */
   void ClearTree();
 
+  /**
+   * Set the dpi value used by all AsyncPanZoomControllers.
+   * DPI defaults to 72 if not set using SetDPI() at any point.
+   */
+  static void SetDPI(float aDpiValue) { sDPI = aDpiValue; }
+
+  /**
+   * Returns the current dpi value in use.
+   */
+  static float GetDPI() { return sDPI; }
+
 protected:
   /**
    * Debug-build assertion that can be called to ensure code is running on the
@@ -292,6 +303,8 @@ private:
    * input delivery thread, and so does not require locking.
    */
   nsRefPtr<AsyncPanZoomController> mApzcForInputBlock;
+
+  static float sDPI;
 };
 
 }
