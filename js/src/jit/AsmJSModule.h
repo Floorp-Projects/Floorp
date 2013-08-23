@@ -158,24 +158,16 @@ class AsmJSModule
     {
         unsigned ffiIndex_;
         unsigned globalDataOffset_;
+        unsigned interpCodeOffset_;
+        unsigned ionCodeOffset_;
 
-        union {
-            unsigned codeOffset_;
-            uint8_t *code_;
-        } interp;
-
-        union {
-            unsigned codeOffset_;
-            uint8_t *code_;
-        } ion;
+        friend class AsmJSModule;
 
       public:
         Exit(unsigned ffiIndex, unsigned globalDataOffset)
-          : ffiIndex_(ffiIndex), globalDataOffset_(globalDataOffset)
-        {
-          interp.codeOffset_ = 0;
-          ion.codeOffset_ = 0;
-        }
+          : ffiIndex_(ffiIndex), globalDataOffset_(globalDataOffset),
+            interpCodeOffset_(0), ionCodeOffset_(0)
+        {}
         unsigned ffiIndex() const {
             return ffiIndex_;
         }
@@ -183,22 +175,12 @@ class AsmJSModule
             return globalDataOffset_;
         }
         void initInterpOffset(unsigned off) {
-            JS_ASSERT(!interp.codeOffset_);
-            interp.codeOffset_ = off;
+            JS_ASSERT(!interpCodeOffset_);
+            interpCodeOffset_ = off;
         }
         void initIonOffset(unsigned off) {
-            JS_ASSERT(!ion.codeOffset_);
-            ion.codeOffset_ = off;
-        }
-        void patch(uint8_t *baseAddress) {
-            interp.code_ = baseAddress + interp.codeOffset_;
-            ion.code_ = baseAddress + ion.codeOffset_;
-        }
-        uint8_t *interpCode() const {
-            return interp.code_;
-        }
-        uint8_t *ionCode() const {
-            return ion.code_;
+            JS_ASSERT(!ionCodeOffset_);
+            ionCodeOffset_ = off;
         }
     };
 #ifdef JS_CPU_ARM
@@ -218,11 +200,7 @@ class AsmJSModule
         ArgCoercionVector argCoercions_;
         struct Pod {
             ReturnType returnType_;
-            bool hasCodePtr_;
-            union {
-                unsigned codeOffset_;
-                CodePtr code_;
-            } u;
+            uint32_t codeOffset_;
         } pod;
 
         friend class AsmJSModule;
@@ -236,8 +214,7 @@ class AsmJSModule
             maybeFieldName_ = maybeFieldName;
             argCoercions_ = argCoercions;
             pod.returnType_ = returnType;
-            pod.hasCodePtr_ = false;
-            pod.u.codeOffset_ = 0;
+            pod.codeOffset_ = UINT32_MAX;
             JS_ASSERT_IF(maybeFieldName_, name_->isTenured());
         }
 
@@ -256,15 +233,8 @@ class AsmJSModule
         }
 
         void initCodeOffset(unsigned off) {
-            JS_ASSERT(!pod.hasCodePtr_);
-            JS_ASSERT(!pod.u.codeOffset_);
-            pod.u.codeOffset_ = off;
-        }
-        void patch(uint8_t *baseAddress) {
-            JS_ASSERT(!pod.hasCodePtr_);
-            JS_ASSERT(pod.u.codeOffset_);
-            pod.hasCodePtr_ = true;
-            pod.u.code_ = JS_DATA_TO_FUNC_PTR(CodePtr, baseAddress + pod.u.codeOffset_);
+            JS_ASSERT(pod.codeOffset_ == UINT32_MAX);
+            pod.codeOffset_ = off;
         }
 
         PropertyName *name() const {
@@ -281,10 +251,6 @@ class AsmJSModule
         }
         ReturnType returnType() const {
             return pod.returnType_;
-        }
-        CodePtr code() const {
-            JS_ASSERT(pod.hasCodePtr_);
-            return pod.u.code_;
         }
     };
 
@@ -502,6 +468,10 @@ class AsmJSModule
     ExportedFunction &exportedFunction(unsigned i) {
         return exports_[i];
     }
+    CodePtr entryTrampoline(const ExportedFunction &func) const {
+        JS_ASSERT(func.pod.codeOffset_ != UINT32_MAX);
+        return JS_DATA_TO_FUNC_PTR(CodePtr, code_ + func.pod.codeOffset_);
+    }
 #ifdef MOZ_VTUNE
     bool trackProfiledFunction(JSAtom *name, unsigned startCodeOffset, unsigned endCodeOffset) {
         ProfiledFunction func(name, startCodeOffset, endCodeOffset);
@@ -562,6 +532,14 @@ class AsmJSModule
     }
     const Exit &exit(unsigned i) const {
         return exits_[i];
+    }
+    uint8_t *interpExitTrampoline(const Exit &exit) const {
+        JS_ASSERT(exit.interpCodeOffset_);
+        return code_ + exit.interpCodeOffset_;
+    }
+    uint8_t *ionExitTrampoline(const Exit &exit) const {
+        JS_ASSERT(exit.ionCodeOffset_);
+        return code_ + exit.ionCodeOffset_;
     }
     unsigned numFunctionCounts() const {
         return functionCounts_.length();
@@ -717,7 +695,7 @@ class AsmJSModule
     }
 
     void detachIonCompilation(size_t exitIndex) const {
-        exitIndexToGlobalDatum(exitIndex).exit = exit(exitIndex).interpCode();
+        exitIndexToGlobalDatum(exitIndex).exit = interpExitTrampoline(exit(exitIndex));
     }
 
     // Part of about:memory reporting:
