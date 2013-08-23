@@ -12,25 +12,21 @@
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsBoxFrame.h"
-#include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
-#include "nsIScrollPositionListener.h"
 #include "nsIStatefulFrame.h"
 #include "nsThreadUtils.h"
 #include "nsIReflowCallback.h"
 #include "nsBoxLayoutState.h"
 #include "nsQueryFrame.h"
-#include "nsCOMArray.h"
-#include "nsSVGIntegrationUtils.h"
 #include "nsExpirationTracker.h"
 
 class nsPresContext;
 class nsIPresShell;
 class nsIContent;
 class nsIAtom;
-class nsIDocument;
 class nsIScrollFrameInternal;
 class nsPresState;
+class nsIScrollPositionListener;
 struct ScrollReflowState;
 
 namespace mozilla {

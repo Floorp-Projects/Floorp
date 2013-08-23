@@ -10,7 +10,6 @@
  */
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Likely.h"
 #include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
@@ -20,7 +19,6 @@
 #include "nsBlockReflowState.h"
 #include "nsBulletFrame.h"
 #include "nsLineBox.h"
-#include "nsInlineFrame.h"
 #include "nsLineLayout.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
@@ -28,23 +26,16 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"
-#include "nsView.h"
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMEvent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "prprf.h"
-#include "nsStyleChangeList.h"
-#include "nsFrameSelection.h"
 #include "nsFloatManager.h"
-#include "nsIntervalSet.h"
 #include "prenv.h"
 #include "plstr.h"
-#include "nsGUIEvent.h"
 #include "nsError.h"
 #include "nsAutoPtr.h"
-#include "nsIServiceManager.h"
 #include "nsIScrollableFrame.h"
 #include <algorithm>
 #ifdef ACCESSIBILITY
@@ -54,17 +45,12 @@
 #include "nsDisplayList.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsCSSRendering.h"
-#include "FrameLayerBuilder.h"
 #include "nsRenderingContext.h"
 #include "TextOverflow.h"
-#include "nsStyleStructInlines.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
-
-#include "nsIDOMHTMLHtmlElement.h"
 
 static const int MIN_LINES_NEEDING_CURSOR = 20;
 

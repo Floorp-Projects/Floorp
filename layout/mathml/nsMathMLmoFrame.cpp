@@ -10,6 +10,7 @@
 #include "nsStyleConsts.h"
 #include "nsRenderingContext.h"
 #include "nsContentUtils.h"
+#include "nsFrameSelection.h"
 
 #include "nsMathMLmoFrame.h"
 #include <algorithm>

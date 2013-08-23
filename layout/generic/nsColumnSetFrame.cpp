@@ -6,6 +6,8 @@
 /* rendering object for css3 multi-column layout */
 
 #include "nsColumnSetFrame.h"
+#include "nsCSSRendering.h"
+#include "nsDisplayList.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;

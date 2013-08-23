@@ -9,9 +9,6 @@
  */
 
 #include "nsSplittableFrame.h"
-#include "nsIContent.h"
-#include "nsPresContext.h"
-#include "nsStyleContext.h"
 #include "nsContainerFrame.h"
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSplittableFrame)

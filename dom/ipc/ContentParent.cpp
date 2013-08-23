@@ -2536,7 +2536,7 @@ bool
 ContentParent::RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
                                           const bool& aHighAccuracy)
 {
-#ifdef MOZ_PERMISSIONS
+#ifdef MOZ_CHILD_PERMISSIONS
   if (Preferences::GetBool("geo.testing.ignore_ipc_principal", false) == false) {
     nsIPrincipal* principal = aPrincipal;
     if (principal == nullptr) {

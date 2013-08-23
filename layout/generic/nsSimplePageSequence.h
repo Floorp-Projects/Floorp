@@ -10,8 +10,16 @@
 #include "nsContainerFrame.h"
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h"
-#include "nsIDateTimeFormat.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
+
+class nsIDateTimeFormat;
+
+namespace mozilla {
+namespace dom {
+
+class HTMLCanvasElement;
+
+}
+}
 
 //-----------------------------------------------
 // This class maintains all the data that 

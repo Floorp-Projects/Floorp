@@ -13,12 +13,9 @@
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
-#include "nsHTMLParts.h"
 #include "nsHTMLReflowState.h"
 #include "nsPresContext.h"
-#include "nsFrameManager.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsIDocumentInlines.h"
 
 #ifdef DEBUG
 #include "nsBlockFrame.h"

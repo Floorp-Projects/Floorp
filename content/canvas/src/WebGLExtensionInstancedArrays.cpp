@@ -46,8 +46,8 @@ WebGLExtensionInstancedArrays::IsSupported(const WebGLContext* context)
 {
     gl::GLContext* gl = context->GL();
 
-    return gl->IsExtensionSupported(gl::GLContext::XXX_draw_instanced) &&
-           gl->IsExtensionSupported(gl::GLContext::XXX_instanced_arrays);
+    return gl->IsSupported(gl::GLFeature::draw_instanced) &&
+           gl->IsSupported(gl::GLFeature::instanced_arrays);
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionInstancedArrays)
