@@ -100,15 +100,6 @@ public:
                    const bool aStream,
                    ErrorResult& aRv);
 
-protected:
-  JSObject*
-  CreateUint8Array(JSContext* aCx, JS::Handle<JSObject*> aObj, 
-                   char* aBuf, uint32_t aLen) const
-  {
-    return Uint8Array::Create(aCx, aObj, aLen,
-                              reinterpret_cast<uint8_t*>(aBuf));
-  }
-
 private:
   nsCString mEncoding;
   nsCOMPtr<nsIUnicodeEncoder> mEncoder;
