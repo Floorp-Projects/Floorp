@@ -22,17 +22,17 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconProtocolHandler)
 NS_DEFINE_NAMED_CID(NS_ICONPROTOCOL_CID);
 
 static const mozilla::Module::CIDEntry kIconCIDs[] = {
-  { &kNS_ICONPROTOCOL_CID, false, NULL, nsIconProtocolHandlerConstructor },
-  { NULL }
+  { &kNS_ICONPROTOCOL_CID, false, nullptr, nsIconProtocolHandlerConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kIconContracts[] = {
   { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-icon", &kNS_ICONPROTOCOL_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module::CategoryEntry kIconCategories[] = {
-  { NULL }
+  { nullptr }
 };
 
 static void
@@ -48,8 +48,8 @@ static const mozilla::Module kIconModule = {
   kIconCIDs,
   kIconContracts,
   kIconCategories,
-  NULL,
-  NULL,
+  nullptr,
+  nullptr,
   IconDecoderModuleDtor
 };
 
