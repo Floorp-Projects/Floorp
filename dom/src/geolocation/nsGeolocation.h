@@ -31,12 +31,12 @@
 
 #include "nsIGeolocationProvider.h"
 #include "nsIContentPermissionPrompt.h"
+#include "nsIDOMWindow.h"
 #include "DictionaryHelpers.h"
 #include "PCOMContentPermissionRequestChild.h"
 #include "mozilla/Attributes.h"
 
 class nsGeolocationService;
-class nsIDOMWindow;
 
 namespace mozilla {
 namespace dom {

@@ -11,8 +11,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
+#include "nsSVGElement.h"
 
-class nsSVGElement;
 class nsSVGViewBox;
 
 namespace mozilla {
