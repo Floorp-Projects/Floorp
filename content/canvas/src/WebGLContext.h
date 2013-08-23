@@ -782,6 +782,7 @@ public:
 private:
     // State tracking slots
     realGLboolean mDitherEnabled;
+    realGLboolean mRasterizerDiscardEnabled;
     realGLboolean mScissorTestEnabled;
 
     bool ValidateCapabilityEnum(WebGLenum cap, const char* info);
