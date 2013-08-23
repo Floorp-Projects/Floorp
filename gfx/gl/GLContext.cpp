@@ -658,7 +658,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (!LoadSymbols(instancedArraySymbols, trygl, prefix)) {
                 NS_ERROR("GL supports array instanced without supplying it function.");
 
-                mInitialized &= MarkUnsupported(GLFeature::instanced_arrays);
+                MarkUnsupported(GLFeature::instanced_arrays);
                 mSymbols.fVertexAttribDivisor = nullptr;
             }
         }
@@ -767,9 +767,9 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (!LoadSymbols(queryObjectsSymbols, trygl, prefix)) {
                 NS_ERROR("GL supports query objects without supplying its functions.");
 
-                mInitialized &= MarkUnsupported(GLFeature::query_objects);
-                mInitialized &= MarkUnsupported(GLFeature::get_query_object_iv);
-                mInitialized &= MarkUnsupported(GLFeature::occlusion_query);
+                MarkUnsupported(GLFeature::query_objects);
+                MarkUnsupported(GLFeature::get_query_object_iv);
+                MarkUnsupported(GLFeature::occlusion_query);
                 MarkUnsupported(GLFeature::occlusion_query_boolean);
                 MarkUnsupported(GLFeature::occlusion_query2);
                 mSymbols.fBeginQuery = nullptr;
@@ -791,7 +791,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (!LoadSymbols(queryObjectsSymbols, trygl, prefix)) {
                 NS_ERROR("GL supports query objects iv getter without supplying its function.");
 
-                mInitialized &= MarkUnsupported(GLFeature::get_query_object_iv);
+                MarkUnsupported(GLFeature::get_query_object_iv);
                 mSymbols.fGetQueryObjectiv = nullptr;
             }
         }
