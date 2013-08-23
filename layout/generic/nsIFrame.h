@@ -24,7 +24,6 @@
 #include "nsQueryFrame.h"
 #include "nsStyleContext.h"
 #include "nsStyleStruct.h"
-#include "nsStyleStructFwd.h"
 #include "nsHTMLReflowMetrics.h"
 #include "nsFrameList.h"
 #include "nsAlgorithm.h"
