@@ -5,6 +5,7 @@
 #ifndef mozilla_dom_textencoder_h_
 #define mozilla_dom_textencoder_h_
 
+#include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/TextEncoderBase.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 
@@ -12,19 +13,17 @@ namespace mozilla {
 namespace dom {
 
 class TextEncoder MOZ_FINAL
-  : public nsWrapperCache, public TextEncoderBase
+  : public NonRefcountedDOMObject, public TextEncoderBase
 {
 public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TextEncoder)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(TextEncoder)
-
   // The WebIDL constructor.
-  static already_AddRefed<TextEncoder>
+
+  static TextEncoder*
   Constructor(const GlobalObject& aGlobal,
               const nsAString& aEncoding,
               ErrorResult& aRv)
   {
-    nsRefPtr<TextEncoder> txtEncoder = new TextEncoder(aGlobal.GetAsSupports());
+    nsAutoPtr<TextEncoder> txtEncoder(new TextEncoder());
     txtEncoder->Init(aEncoding, aRv);
     if (aRv.Failed()) {
       return nullptr;
@@ -32,27 +31,24 @@ public:
     return txtEncoder.forget();
   }
 
-  TextEncoder(nsISupports* aGlobal)
-    : mGlobal(aGlobal)
+  TextEncoder()
   {
-    MOZ_ASSERT(aGlobal);
-    SetIsDOMBinding();
   }
 
   virtual
   ~TextEncoder()
   {}
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope,
+                       bool* aTookOwnership)
   {
-    return TextEncoderBinding::Wrap(aCx, aScope, this);
+    return TextEncoderBinding::Wrap(aCx, aScope, this, aTookOwnership);
   }
 
   nsISupports*
   GetParentObject()
   {
-    return mGlobal;
+    return nullptr;
   }
 
   JSObject* Encode(JSContext* aCx,
@@ -64,7 +60,6 @@ public:
   }
 
 private:
-  nsCOMPtr<nsISupports> mGlobal;
 };
 
 } // dom
