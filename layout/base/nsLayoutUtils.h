@@ -37,6 +37,7 @@ class imgIContainer;
 #include "nsHTMLReflowState.h"
 #include "FrameMetrics.h"
 #include "gfx3DMatrix.h"
+#include "nsIWidget.h"
 
 #include <limits>
 #include <algorithm>
