@@ -155,6 +155,7 @@ WebGLContext::WebGLContext()
 
     mScissorTestEnabled = 0;
     mDitherEnabled = 1;
+    mRasterizerDiscardEnabled = 0; // OpenGL ES 3.0 spec p244
 
     // initialize some GL values: we're going to get them from the GL and use them as the sizes of arrays,
     // so in case glGetIntegerv leaves them uninitialized because of a GL bug, we would have very weird crashes.
@@ -1327,12 +1328,20 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield mask, const bool
         gl->fClearStencil(0);
     }
 
+    if (mRasterizerDiscardEnabled) {
+        gl->fDisable(LOCAL_GL_RASTERIZER_DISCARD);
+    }
+
     // Do the clear!
     gl->fClear(mask);
 
     // And reset!
     if (mScissorTestEnabled)
         gl->fEnable(LOCAL_GL_SCISSOR_TEST);
+
+    if (mRasterizerDiscardEnabled) {
+        gl->fEnable(LOCAL_GL_RASTERIZER_DISCARD);
+    }
 
     // Restore GL state after clearing.
     if (initializeColorBuffer) {
