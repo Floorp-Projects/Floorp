@@ -25,13 +25,11 @@ WebGLContext::Disable(WebGLenum cap)
     if (!ValidateCapabilityEnum(cap, "disable"))
         return;
 
-    switch(cap) {
-        case LOCAL_GL_SCISSOR_TEST:
-            mScissorTestEnabled = 0;
-            break;
-        case LOCAL_GL_DITHER:
-            mDitherEnabled = 0;
-            break;
+    realGLboolean* trackingSlot = GetStateTrackingSlot(cap);
+
+    if (trackingSlot)
+    {
+        *trackingSlot = 0;
     }
 
     MakeContextCurrent();
@@ -47,13 +45,11 @@ WebGLContext::Enable(WebGLenum cap)
     if (!ValidateCapabilityEnum(cap, "enable"))
         return;
 
-    switch(cap) {
-        case LOCAL_GL_SCISSOR_TEST:
-            mScissorTestEnabled = 1;
-            break;
-        case LOCAL_GL_DITHER:
-            mDitherEnabled = 1;
-            break;
+    realGLboolean* trackingSlot = GetStateTrackingSlot(cap);
+
+    if (trackingSlot)
+    {
+        *trackingSlot = 1;
     }
 
     MakeContextCurrent();
@@ -546,4 +542,19 @@ WebGLContext::ValidateCapabilityEnum(WebGLenum cap, const char* info)
             ErrorInvalidEnumInfo(info, cap);
             return false;
     }
+}
+
+realGLboolean*
+WebGLContext::GetStateTrackingSlot(WebGLenum cap)
+{
+    switch (cap) {
+        case LOCAL_GL_SCISSOR_TEST:
+            return &mScissorTestEnabled;
+        case LOCAL_GL_DITHER:
+            return &mDitherEnabled;
+        case LOCAL_GL_RASTERIZER_DISCARD:
+            return &mRasterizerDiscardEnabled;
+    }
+
+    return nullptr;
 }

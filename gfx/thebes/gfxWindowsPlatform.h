@@ -60,7 +60,7 @@ struct DCFromContext {
     DCFromContext(gfxContext *aContext) {
         dc = nullptr;
         nsRefPtr<gfxASurface> aSurface = aContext->CurrentSurface();
-        NS_ASSERTION(aSurface, "DCFromContext: null surface");
+        NS_ASSERTION(aSurface || !aContext->IsCairo(), "DCFromContext: null surface");
         if (aSurface &&
             (aSurface->GetType() == gfxASurface::SurfaceTypeWin32 ||
              aSurface->GetType() == gfxASurface::SurfaceTypeWin32Printing))

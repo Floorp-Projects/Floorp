@@ -992,24 +992,6 @@ js::GetEnterCompartmentDepth(JSContext *cx)
 #endif
 
 JS_FRIEND_API(void)
-js::SetRuntimeProfilingStack(JSRuntime *rt, ProfileEntry *stack, uint32_t *size, uint32_t max)
-{
-    rt->spsProfiler.setProfilingStack(stack, size, max);
-}
-
-JS_FRIEND_API(void)
-js::EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled)
-{
-    rt->spsProfiler.enable(enabled);
-}
-
-JS_FRIEND_API(jsbytecode*)
-js::ProfilingGetPC(JSRuntime *rt, JSScript *script, void *ip)
-{
-    return rt->spsProfiler.ipToPC(script, size_t(ip));
-}
-
-JS_FRIEND_API(void)
 js::SetDOMCallbacks(JSRuntime *rt, const DOMCallbacks *callbacks)
 {
     rt->DOMcallbacks = callbacks;

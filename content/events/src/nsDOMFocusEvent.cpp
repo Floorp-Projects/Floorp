@@ -68,7 +68,7 @@ nsDOMFocusEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                              const mozilla::dom::FocusEventInit& aParam,
                              mozilla::ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<nsDOMFocusEvent> e = new nsDOMFocusEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitFocusEvent(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,

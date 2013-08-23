@@ -256,7 +256,7 @@ XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
 
     // Create the sandbox.
     JS::RootedValue v(cx, JS::UndefinedValue());
-    nsresult rv = xpc_CreateSandboxObject(cx, v.address(), ep, options);
+    nsresult rv = CreateSandboxObject(cx, v.address(), ep, options);
     NS_ENSURE_SUCCESS(rv, nullptr);
     mXBLScope = &v.toObject();
 

@@ -741,6 +741,7 @@ private:
     nsRefPtr<gfxPattern> pattern;
     nsRefPtr<gfxASurface> sourceSurfCairo;
     mozilla::RefPtr<SourceSurface> sourceSurface;
+    mozilla::gfx::Point sourceSurfaceDeviceOffset;
     Matrix surfTransform;
     Matrix transform;
     struct PushedClip {
