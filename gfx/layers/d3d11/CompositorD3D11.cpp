@@ -578,6 +578,7 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
   case EFFECT_COMPONENT_ALPHA:
     {
       MOZ_ASSERT(gfxPlatform::ComponentAlphaEnabled());
+      MOZ_ASSERT(mAttachments->mComponentBlendState);
       EffectComponentAlpha* effectComponentAlpha =
         static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
       TextureSourceD3D11* sourceOnWhite = effectComponentAlpha->mOnWhite->AsSourceD3D11();
