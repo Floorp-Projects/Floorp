@@ -1475,6 +1475,27 @@ gfxContext::Paint(gfxFloat alpha)
   } else {
     AzureState &state = CurrentState();
 
+    if (state.sourceSurface && !state.sourceSurfCairo &&
+        !state.patternTransformChanged && !state.opIsClear)
+    {
+      // This is the case where a PopGroupToSource has been done and this
+      // paint is executed without changing the transform or the source.
+      Matrix oldMat = mDT->GetTransform();
+
+      IntSize surfSize = state.sourceSurface->GetSize();
+
+      Matrix mat;
+      mat.Translate(-state.deviceOffset.x, -state.deviceOffset.y);
+      mDT->SetTransform(mat);
+
+      mDT->DrawSurface(state.sourceSurface,
+                       Rect(state.sourceSurfaceDeviceOffset, Size(surfSize.width, surfSize.height)),
+                       Rect(Point(), Size(surfSize.width, surfSize.height)),
+                       DrawSurfaceOptions(), DrawOptions(alpha, GetOp()));
+      mDT->SetTransform(oldMat);
+      return;
+    }
+
     Matrix mat = mDT->GetTransform();
     mat.Invert();
     Rect paintRect = mat.TransformBounds(Rect(Point(0, 0), Size(mDT->GetSize())));
@@ -1626,6 +1647,7 @@ gfxContext::PopGroupToSource()
     Restore();
     CurrentState().sourceSurfCairo = nullptr;
     CurrentState().sourceSurface = src;
+    CurrentState().sourceSurfaceDeviceOffset = deviceOffset;
     CurrentState().pattern = nullptr;
     CurrentState().patternTransformChanged = false;
 
