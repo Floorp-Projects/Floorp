@@ -428,11 +428,12 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 #endif
 
         InitExtensions();
+        InitFeatures();
 
         // Disable extensions with partial or incorrect support.
         if (WorkAroundDriverBugs()) {
             if (Renderer() == RendererAdrenoTM320) {
-                MarkExtensionUnsupported(OES_standard_derivatives);
+                MarkUnsupported(GLFeature::standard_derivatives);
             }
         }
 
@@ -441,6 +442,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                      "ARB_pixel_buffer_object supported without glMapBuffer/UnmapBuffer being available!");
 
         if (SupportsRobustness()) {
+            mHasRobustness = false;
+
             if (IsExtensionSupported(ARB_robustness)) {
                 SymLoadStruct robustnessSymbols[] = {
                     { (PRFuncPtr*) &mSymbols.fGetGraphicsResetStatus, { "GetGraphicsResetStatusARB", nullptr } },
@@ -450,7 +453,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
                     NS_ERROR("GL supports ARB_robustness without supplying GetGraphicsResetStatusARB.");
 
-                    MarkExtensionUnsupported(ARB_robustness);
                     mSymbols.fGetGraphicsResetStatus = nullptr;
                 } else {
                     mHasRobustness = true;
@@ -466,11 +468,14 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 if (!LoadSymbols(&robustnessSymbols[0], trygl, prefix)) {
                     NS_ERROR("GL supports EXT_robustness without supplying GetGraphicsResetStatusEXT.");
 
-                    MarkExtensionUnsupported(EXT_robustness);
                     mSymbols.fGetGraphicsResetStatus = nullptr;
                 } else {
                     mHasRobustness = true;
                 }
+            }
+
+            if (!mHasRobustness) {
+                MarkUnsupported(GLFeature::robustness);
             }
         }
 
