@@ -160,6 +160,7 @@ public:
                                                        const nsIntRect& aRect,
                                                        uint32_t aFlags,
                                                        RefPtr<gfx::DrawTarget>* aWhiteDT);
+  virtual bool SupportsAzureContent() const { return true; }
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
   {
