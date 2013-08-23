@@ -432,6 +432,9 @@
 #ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
+#ifdef XP_LINUX
+             autohide="true"
+#endif
 #endif
              context="toolbar-context-menu">
       <toolbaritem id="menubar-items" align="center"
