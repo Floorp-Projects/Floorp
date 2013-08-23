@@ -638,6 +638,14 @@ function simpleRequest(type, options) {
   sendParcel();
 }
 
+function getCurrentParcelSize() {
+  return mCurrentParcelSize;
+}
+
+function getReadAvailable() {
+  return mReadAvailable;
+}
+
 module.exports = {
   init: init,
   startCalOutgoingSize: startCalOutgoingSize,
@@ -662,5 +670,7 @@ module.exports = {
   newParcel: newParcel,
   sendParcel: sendParcel,
   simpleRequest: simpleRequest,
-  setOutputStream: setOutputStream
+  setOutputStream: setOutputStream,
+  getCurrentParcelSize: getCurrentParcelSize,
+  getReadAvailable: getReadAvailable,
 };
