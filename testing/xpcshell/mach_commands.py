@@ -7,6 +7,7 @@
 from __future__ import unicode_literals, print_function
 
 import mozpack.path
+import logging
 import os
 import shutil
 import sys
@@ -30,6 +31,10 @@ if sys.version_info[0] < 3:
 else:
     unicode_type = str
 
+# Simple filter to omit the message emitted as a test file begins.
+class TestStartFilter(logging.Filter):
+    def filter(self, record):
+        return not record.params['msg'].endswith("running test ...")
 
 # This should probably be consolidated with similar classes in other test
 # runners.
@@ -112,6 +117,9 @@ class XPCShellRunner(MozbuildObject):
         xpcshell = runxpcshelltests.XPCShellTests(log=dummy_log)
         self.log_manager.enable_unstructured()
 
+        xpcshell_filter = TestStartFilter()
+        self.log_manager.terminal_handler.addFilter(xpcshell_filter)
+
         tests_dir = os.path.join(self.topobjdir, '_tests', 'xpcshell')
         modules_dir = os.path.join(self.topobjdir, '_tests', 'modules')
 
@@ -179,6 +187,7 @@ class XPCShellRunner(MozbuildObject):
 
         result = xpcshell.runTests(**filtered_args)
 
+        self.log_manager.terminal_handler.removeFilter(xpcshell_filter)
         self.log_manager.disable_unstructured()
 
         if not result and not xpcshell.sequential:
