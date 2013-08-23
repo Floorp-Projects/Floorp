@@ -8605,7 +8605,6 @@ class CGBindingRoot(CGThing):
         hasChromeOnly = any(descriptorHasChromeOnly(d) for d in descriptors)
         # XXXkhuey ugly hack but this is going away soon.
         isEventTarget = webIDLFile.endswith("EventTarget.webidl")
-        needsDOMQS = any(d.hasXPConnectImpls for d in descriptors)
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
                                                    workers=True)) != 0
         dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
@@ -8704,6 +8703,9 @@ class CGBindingRoot(CGThing):
                           'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
                           'WrapperFactory.h',
+                          # Have to include nsDOMQS.h to get fast arg unwrapping
+                          # for old-binding things with castability.
+                          'nsDOMQS.h'
                           ] + (['WorkerPrivate.h',
                                 'nsThreadUtils.h'] if hasWorkerStuff else [])
                             + (['mozilla/Preferences.h'] if requiresPreferences else [])
@@ -8712,8 +8714,6 @@ class CGBindingRoot(CGThing):
                             + (['nsCxPusher.h'] if dictionaries else [])
                             + (['AccessCheck.h'] if hasChromeOnly else [])
                             + (['xpcprivate.h'] if isEventTarget else [])
-                            + (['nsPIDOMWindow.h'] if len(jsImplemented) != 0 else [])
-                            + (['nsDOMQS.h'] if needsDOMQS else [])
                             + (['AtomList.h'] if requiresAtoms else []),
                          prefix,
                          curr,
