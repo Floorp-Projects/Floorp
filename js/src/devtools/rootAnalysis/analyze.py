@@ -18,11 +18,10 @@ import re
 
 def env(config):
     e = dict(os.environ)
-    e['PATH'] = '%s:%s/bin' % (e['PATH'], config['sixgill'])
-    e['XDB'] = '%(sixgill)s/bin/xdb.so' % config
-    e['SOURCE_ROOT'] = config['source'] or e.get('TARGET', '<unset>')
-    e['TARGET_OBJ'] = config['objdir']
-    e['TARGET'] = config['source']
+    e['PATH'] = '%s:%s' % (e['PATH'], config['sixgill_bin'])
+    e['XDB'] = '%(sixgill_bin)s/xdb.so' % config
+    e['SOURCE'] = config['source']
+    e['ANALYZED_OBJDIR'] = config['objdir']
     return e
 
 def fill(command, config):
@@ -96,11 +95,12 @@ def generate_hazards(config, outfilename):
         subprocess.call(command, stdout=output)
 
 JOBS = { 'dbs':
-             (('%(CWD)s/run_complete',
+             (('%(ANALYSIS_SCRIPTDIR)s/run_complete',
                '--foreground',
                '--build-root=%(objdir)s',
-               '--work=dir=work',
-               '-b', '%(sixgill)s/bin',
+               '--wrap-dir=%(sixgill)s/scripts/wrap_gcc',
+               '--work-dir=work',
+               '-b', '%(sixgill_bin)s',
                '--buildcommand=%(buildcommand)s',
                '.'),
               ()),
@@ -119,7 +119,7 @@ JOBS = { 'dbs':
               'gcTypes.txt'),
 
          'allFunctions':
-             (('%(sixgill)s/bin/xdbkeys', 'src_body.xdb',),
+             (('%(sixgill_bin)s/xdbkeys', 'src_body.xdb',),
               'allFunctions.txt'),
 
          'hazards':
@@ -170,21 +170,23 @@ def run_job(name, config):
                 print("Error renaming %s -> %s" % (temp, final))
                 raise
 
-config = { 'CWD': os.path.dirname(__file__) }
+config = { 'ANALYSIS_SCRIPTDIR': os.path.dirname(__file__) }
 
-defaults = [ '%s/defaults.py' % config['CWD'] ]
+defaults = [ '%s/defaults.py' % config['ANALYSIS_SCRIPTDIR'],
+             '%s/defaults.py' % os.getcwd() ]
 
 for default in defaults:
     try:
         execfile(default, config)
+        print("Loaded %s" % default)
     except:
         pass
 
 data = config.copy()
 
 parser = argparse.ArgumentParser(description='Statically analyze build tree for rooting hazards.')
-parser.add_argument('target', metavar='TARGET', type=str, nargs='?',
-                    help='run starting from this target')
+parser.add_argument('step', metavar='STEP', type=str, nargs='?',
+                    help='run starting from this step')
 parser.add_argument('--source', metavar='SOURCE', type=str, nargs='?',
                     help='source code to analyze')
 parser.add_argument('--upto', metavar='UPTO', type=str, nargs='?',
@@ -192,14 +194,16 @@ parser.add_argument('--upto', metavar='UPTO', type=str, nargs='?',
 parser.add_argument('--jobs', '-j', default=4, metavar='JOBS', type=int,
                     help='number of simultaneous analyzeRoots.js jobs')
 parser.add_argument('--list', const=True, nargs='?', type=bool,
-                    help='display available targets')
+                    help='display available steps')
 parser.add_argument('--buildcommand', '--build', '-b', type=str, nargs='?',
                     help='command to build the tree being analyzed')
 parser.add_argument('--tag', '-t', type=str, nargs='?',
                     help='name of job, also sets build command to "build.<tag>"')
 
 args = parser.parse_args()
-data.update(vars(args))
+for k,v in vars(args).items():
+    if v is not None:
+        data[k] = v
 
 if args.tag and not args.buildcommand:
     args.buildcommand="build.%s" % args.tag
@@ -211,46 +215,44 @@ elif 'BUILD' in os.environ:
 else:
     data['buildcommand'] = 'make -j4 -s'
 
-if 'TARGET_OBJ' in os.environ:
-    data['objdir'] = os.environ['TARGET_OBJ']
+if 'ANALYZED_OBJDIR' in os.environ:
+    data['objdir'] = os.environ['ANALYZED_OBJDIR']
 
-if args.target:
-    data['source'] = args.target
-elif 'TARGET' in os.environ:
-    data['source'] = os.environ['TARGET']
+if 'SOURCE' in os.environ:
+    data['source'] = os.environ['SOURCE']
 
-targets = [ 'dbs',
-            'callgraph',
-            'gcTypes',
-            'gcFunctions',
-            'allFunctions',
-            'hazards' ]
+steps = [ 'dbs',
+          'callgraph',
+          'gcTypes',
+          'gcFunctions',
+          'allFunctions',
+          'hazards' ]
 
 if args.list:
-    for target in targets:
-        command, outfilename = JOBS[target]
+    for step in steps:
+        command, outfilename = JOBS[step]
         if outfilename:
-            print("%s -> %s" % (target, outfilename))
+            print("%s -> %s" % (step, outfilename))
         else:
-            print(target)
+            print(step)
     sys.exit(0)
 
-for target in targets:
-    command, outfiles = JOBS[target]
+for step in steps:
+    command, outfiles = JOBS[step]
     if isinstance(outfiles, basestring):
-        data[target] = outfiles
+        data[step] = outfiles
     else:
         outfile = 0
         for (i, name) in out_indexes(command):
             data[name] = outfiles[outfile]
             outfile += 1
-        assert len(outfiles) == outfile, 'target %s: mismatched number of output files and params' % target
+        assert len(outfiles) == outfile, 'step %s: mismatched number of output files and params' % step
 
-if args.target:
-    targets = targets[targets.index(args.target):]
+if args.step:
+    steps = steps[steps.index(args.step):]
 
 if args.upto:
-    targets = targets[:targets.index(args.upto)+1]
+    steps = steps[:steps.index(args.upto)+1]
 
-for target in targets:
-    run_job(target, data)
+for step in steps:
+    run_job(step, data)
