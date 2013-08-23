@@ -159,6 +159,11 @@ let Scheduler = {
         if (!("durationMs" in data)) {
           return data.ok;
         }
+        // Bug 874425 demonstrates that two successive calls to Date.now()
+        // can actually produce an interval with negative duration.
+        // We assume that this is due to an operation that is so short
+        // that Date.now() is not monotonic, so we round this up to 0.
+        let durationMs = Math.max(0, data.durationMs);
         // Accumulate (or initialize) outExecutionDuration
         if (typeof options.outExecutionDuration == "number") {
           options.outExecutionDuration += data.durationMs;
