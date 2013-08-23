@@ -11,6 +11,8 @@
 
 <!-- C-style format strings. -->
 <!ENTITY formatS "&#037;s">
+<!ENTITY formatS1 "&#037;1&#036;s">
+<!ENTITY formatS2 "&#037;2&#036;s">
 <!ENTITY formatD "&#037;d">
 ]>
 
@@ -323,6 +325,8 @@
 
   <!-- Search suggestions opt-in -->
   <string name="suggestions_prompt">&suggestions_prompt2;</string>
+
+  <string name="suggestion_for_engine">&suggestion_for_engine;</string>
 
   <!-- Set Image Notifications -->
   <string name="set_image_fail">&set_image_fail;</string>
