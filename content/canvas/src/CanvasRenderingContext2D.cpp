@@ -547,7 +547,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D()
   sNumLivingContexts++;
   SetIsDOMBinding();
 
-#if USE_SKIA_GPU
+#ifdef USE_SKIA_GPU
   mForceSoftware = false;
 #endif
 }
@@ -564,10 +564,8 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
     NS_IF_RELEASE(sErrorTarget);
   }
 
-#if USE_SKIA_GPU
-  std::vector<CanvasRenderingContext2D*>::iterator iter = std::find(DemotableContexts().begin(), DemotableContexts().end(), this);
-  if (iter != DemotableContexts().end())
-    DemotableContexts().erase(iter);
+#ifdef USE_SKIA_GPU
+  RemoveDemotableContext(this);
 #endif
 }
 
@@ -746,12 +744,13 @@ CanvasRenderingContext2D::RedrawUser(const gfxRect& r)
   Redraw(newr);
 }
 
-#if USE_SKIA_GPU
-
 void CanvasRenderingContext2D::Demote()
 {
+#ifdef  USE_SKIA_GPU
   if (!IsTargetValid() || mForceSoftware)
     return;
+
+  RemoveDemotableContext(this);
 
   RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
   RefPtr<DrawTarget> oldTarget = mTarget;
@@ -764,10 +763,20 @@ void CanvasRenderingContext2D::Demote()
   if (!IsTargetValid())
     return;
 
-  // Put back the content from the old DrawTarget
+  // Restore the content from the old DrawTarget
   mgfx::Rect r(0, 0, mWidth, mHeight);
   mTarget->DrawSurface(snapshot, r, r);
+
+  // Restore the clips and transform
+  for (uint32_t i = 0; i < CurrentState().clipsPushed.size(); i++) {
+    mTarget->PushClip(CurrentState().clipsPushed[i]);
+  }
+
+  mTarget->SetTransform(oldTarget->GetTransform());
+#endif
 }
+
+#ifdef USE_SKIA_GPU
 
 std::vector<CanvasRenderingContext2D*>&
 CanvasRenderingContext2D::DemotableContexts()
@@ -790,8 +799,6 @@ CanvasRenderingContext2D::DemoteOldestContextIfNecessary()
     return;
 
   CanvasRenderingContext2D* oldest = contexts.front();
-  contexts.erase(contexts.begin());
-
   oldest->Demote();
 }
 
@@ -803,6 +810,14 @@ CanvasRenderingContext2D::AddDemotableContext(CanvasRenderingContext2D* context)
     return;
 
   DemotableContexts().push_back(context);
+}
+
+void
+CanvasRenderingContext2D::RemoveDemotableContext(CanvasRenderingContext2D* context)
+{
+  std::vector<CanvasRenderingContext2D*>::iterator iter = std::find(DemotableContexts().begin(), DemotableContexts().end(), context);
+  if (iter != DemotableContexts().end())
+    DemotableContexts().erase(iter);
 }
 
 #define MIN_SKIA_GL_DIMENSION 16
