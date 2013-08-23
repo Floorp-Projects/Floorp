@@ -364,7 +364,7 @@ GLContext::InitFeatures()
     }
 }
 
-bool
+void
 GLContext::MarkUnsupported(GLFeature::Enum feature)
 {
     mAvailableFeatures[feature] = false;
@@ -385,8 +385,6 @@ GLContext::MarkUnsupported(GLFeature::Enum feature)
     MOZ_ASSERT(!IsSupported(feature), "GLContext::MarkUnsupported has failed!");
 
     NS_WARNING(nsPrintfCString("%s marked as unsupported", GetFeatureName(feature)).get());
-
-    return true;
 }
 
 } /* namespace gl */
