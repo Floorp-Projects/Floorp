@@ -14,9 +14,9 @@
 #include "mozilla/dom/PromiseBinding.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
-#include "nsPIDOMWindow.h"
 
 struct JSContext;
+class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {

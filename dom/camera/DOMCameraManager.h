@@ -20,7 +20,8 @@
 #include "nsIDOMCameraManager.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
-#include "nsPIDOMWindow.h"
+
+class nsPIDOMWindow;
 
 namespace mozilla {
   class ErrorResult;
