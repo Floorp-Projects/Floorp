@@ -32,23 +32,23 @@ static const char* kBrowserThreadNames[BrowserProcessSubThread::ID_COUNT] = {
 
 Lock BrowserProcessSubThread::sLock;
 BrowserProcessSubThread* BrowserProcessSubThread::sBrowserThreads[ID_COUNT] = {
-  NULL,  // IO
-//  NULL,  // FILE
-//  NULL,  // DB
-//  NULL,  // HISTORY
+  nullptr,  // IO
+//  nullptr,  // FILE
+//  nullptr,  // DB
+//  nullptr,  // HISTORY
 #if defined(OS_LINUX)
-  NULL,  // BACKGROUND_X11
+  nullptr,  // BACKGROUND_X11
 #endif
 };
 
 BrowserProcessSubThread::BrowserProcessSubThread(ID aId) :
   base::Thread(kBrowserThreadNames[aId]),
   mIdentifier(aId),
-  mNotificationService(NULL)
+  mNotificationService(nullptr)
 {
   AutoLock lock(sLock);
   DCHECK(aId >= 0 && aId < ID_COUNT);
-  DCHECK(sBrowserThreads[aId] == NULL);
+  DCHECK(sBrowserThreads[aId] == nullptr);
   sBrowserThreads[aId] = this;
 }
 
@@ -56,7 +56,7 @@ BrowserProcessSubThread::~BrowserProcessSubThread()
 {
   Stop();
   {AutoLock lock(sLock);
-    sBrowserThreads[mIdentifier] = NULL;
+    sBrowserThreads[mIdentifier] = nullptr;
   }
 
 }
@@ -66,7 +66,7 @@ BrowserProcessSubThread::Init()
 {
 #if defined(OS_WIN)
   // Initializes the COM library on the current thread.
-  CoInitialize(NULL);
+  CoInitialize(nullptr);
 #endif
   mNotificationService = new NotificationService();
 }
@@ -75,7 +75,7 @@ void
 BrowserProcessSubThread::CleanUp()
 {
   delete mNotificationService;
-  mNotificationService = NULL;
+  mNotificationService = nullptr;
 
 #if defined(OS_WIN)
   // Closes the COM library on the current thread. CoInitialize must
@@ -94,7 +94,7 @@ BrowserProcessSubThread::GetMessageLoop(ID aId)
   if (sBrowserThreads[aId])
     return sBrowserThreads[aId]->message_loop();
 
-  return NULL;
+  return nullptr;
 }
 
 } // namespace ipc
