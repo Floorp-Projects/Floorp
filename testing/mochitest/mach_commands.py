@@ -111,6 +111,14 @@ class MochitestRunner(MozbuildObject):
         opts = mochitest.MochitestOptions(automation)
         options, args = opts.parse_args([])
 
+        appname = ''
+        if sys.platform.startswith('darwin'):
+            appname = os.path.join(self.distdir, self.substs['MOZ_MACBUNDLE_NAME'],
+            'Contents', 'MacOS', 'webapprt-stub' + automation.BIN_SUFFIX)
+        else:
+            appname = os.path.join(self.distdir, 'bin', 'webapprt-stub' +
+            automation.BIN_SUFFIX)
+
         # Need to set the suite options before verifyOptions below.
         if suite == 'plain':
             # Don't need additional options for plain.
@@ -124,6 +132,13 @@ class MochitestRunner(MozbuildObject):
             options.browserChrome = True
         elif suite == 'a11y':
             options.a11y = True
+        elif suite == 'webapprt-content':
+            options.webapprtContent = True
+            options.app = appname
+        elif suite == 'webapprt-chrome':
+            options.webapprtChrome = True
+            options.app = appname
+            options.browserArgs.append("-test-mode")
         else:
             raise Exception('None or unrecognized mochitest suite type.')
 
@@ -227,7 +242,7 @@ def MochitestCommand(func):
     func = keep_open(func)
 
     rerun = CommandArgument('--rerun-failures', action='store_true',
-        help='Run only the tests that filed during the last test run.')
+        help='Run only the tests that failed during the last test run.')
     func = rerun(func)
 
     autorun = CommandArgument('--no-autorun', action='store_true',
@@ -289,6 +304,18 @@ class MachCommands(MachCommandBase):
     @MochitestCommand
     def run_mochitest_a11y(self, test_file, **kwargs):
         return self.run_mochitest(test_file, 'a11y', **kwargs)
+
+    @Command('webapprt-test-chrome', category='testing',
+        description='Run a webapprt chrome mochitest.')
+    @MochitestCommand
+    def run_mochitest_webapprt_chrome(self, test_file, **kwargs):
+        return self.run_mochitest(test_file, 'webapprt-chrome', **kwargs)
+
+    @Command('webapprt-test-content', category='testing',
+        description='Run a webapprt content mochitest.')
+    @MochitestCommand
+    def run_mochitest_webapprt_content(self, test_file, **kwargs):
+        return self.run_mochitest(test_file, 'webapprt-content', **kwargs)
 
     def run_mochitest(self, test_file, flavor, **kwargs):
         self._ensure_state_subdir_exists('.')

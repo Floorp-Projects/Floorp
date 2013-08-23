@@ -138,6 +138,11 @@ class SearchEngineRow extends AnimatedHeightLayout {
         });
     }
 
+    private void setDescriptionOnSuggestion(View v, String suggestion) {
+        v.setContentDescription(getResources().getString(R.string.suggestion_for_engine,
+                                                         mSearchEngine.name, suggestion));
+    }
+
     private String getSuggestionTextFromView(View v) {
         final TextView suggestionText = (TextView) v.findViewById(R.id.suggestion_text);
         return suggestionText.getText().toString();
@@ -146,10 +151,17 @@ class SearchEngineRow extends AnimatedHeightLayout {
     private void setSuggestionOnView(View v, String suggestion) {
         final TextView suggestionText = (TextView) v.findViewById(R.id.suggestion_text);
         suggestionText.setText(suggestion);
+        setDescriptionOnSuggestion(suggestionText, suggestion);
     }
 
     public void setSearchTerm(String searchTerm) {
         mUserEnteredTextView.setText(searchTerm);
+
+        // mSearchEngine is not set in the first call to this method; the content description
+        // is instead initially set in updateFromSearchEngine.
+        if (mSearchEngine != null) {
+            setDescriptionOnSuggestion(mUserEnteredTextView, searchTerm);
+        }
     }
 
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
@@ -170,6 +182,9 @@ class SearchEngineRow extends AnimatedHeightLayout {
 
         // Set the search engine icon (e.g., Google) for the row
         mIconView.updateImage(mSearchEngine.icon, mSearchEngine.name);
+
+        // Set the initial content description
+        setDescriptionOnSuggestion(mUserEnteredTextView, mUserEnteredTextView.getText().toString());
 
         // Add additional suggestions given by this engine
         final int recycledSuggestionCount = mSuggestionView.getChildCount();
