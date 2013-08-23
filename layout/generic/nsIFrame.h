@@ -22,7 +22,6 @@
 
 #include <stdio.h>
 #include "nsQueryFrame.h"
-#include "nsRegion.h"
 #include "nsStyleContext.h"
 #include "nsStyleStruct.h"
 #include "nsStyleStructFwd.h"
@@ -867,10 +866,7 @@ public:
       : GetPosition();
   }
 
-  static void DestroyRegion(void* aPropertyValue)
-  {
-    delete static_cast<nsRegion*>(aPropertyValue);
-  }
+  static void DestroyRegion(void* aPropertyValue);
 
   static void DestroyMargin(void* aPropertyValue)
   {

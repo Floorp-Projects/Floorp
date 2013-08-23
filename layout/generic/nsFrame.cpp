@@ -75,6 +75,7 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsFontInflationData.h"
 #include "gfxASurface.h"
+#include "nsRegion.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -8125,6 +8126,12 @@ void
 nsIFrame::DestroySurface(void* aPropertyValue)
 {
   static_cast<gfxASurface*>(aPropertyValue)->Release();
+}
+
+void
+nsIFrame::DestroyRegion(void* aPropertyValue)
+{
+  delete static_cast<nsRegion*>(aPropertyValue);
 }
 
 // Box layout debugging
