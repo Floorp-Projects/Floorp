@@ -36,7 +36,7 @@ namespace gfx {
  * Do not use this class directly. Subclass it, pass that subclass as the
  * Sub parameter, and only use that subclass.
  */
-template <class T, class Sub, class Point, class SizeT, class Margin>
+template <class T, class Sub, class Point, class SizeT, class MarginT>
 struct BaseRect {
   T x, y, width, height;
 
@@ -189,7 +189,7 @@ struct BaseRect {
     width += 2 * aDx;
     height += 2 * aDy;
   }
-  void Inflate(const Margin& aMargin)
+  void Inflate(const MarginT& aMargin)
   {
     x -= aMargin.left;
     y -= aMargin.top;
@@ -206,7 +206,7 @@ struct BaseRect {
     width = std::max(T(0), width - 2 * aDx);
     height = std::max(T(0), height - 2 * aDy);
   }
-  void Deflate(const Margin& aMargin)
+  void Deflate(const MarginT& aMargin)
   {
     x += aMargin.left;
     y += aMargin.top;
@@ -251,12 +251,12 @@ struct BaseRect {
   }
 
   // Find difference as a Margin
-  Margin operator-(const Sub& aRect) const
+  MarginT operator-(const Sub& aRect) const
   {
-    return Margin(aRect.y - y,
-                  XMost() - aRect.XMost(),
-                  YMost() - aRect.YMost(),
-                  aRect.x - x);
+    return MarginT(aRect.y - y,
+                   XMost() - aRect.XMost(),
+                   YMost() - aRect.YMost(),
+                   aRect.x - x);
   }
 
   // Helpers for accessing the vertices

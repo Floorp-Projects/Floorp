@@ -993,7 +993,6 @@ private:
 
 // Utility class for managing our position along the cross axis along
 // the whole flex container (at a higher level than a single line)
-class SingleLineCrossAxisPositionTracker;
 class MOZ_STACK_CLASS CrossAxisPositionTracker : public PositionTracker {
 public:
   CrossAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,

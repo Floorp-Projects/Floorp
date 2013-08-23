@@ -7,7 +7,6 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "nsHTMLParts.h"
 #include "nsCOMPtr.h"
 #include "nsImageFrame.h"
 #include "nsIImageLoadingContent.h"
@@ -18,7 +17,6 @@
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
-#include "nsINodeInfo.h"
 #include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsStyleContext.h"
@@ -26,22 +24,13 @@
 #include "nsStyleCoord.h"
 #include "nsTransform2D.h"
 #include "nsImageMap.h"
-#include "nsILinkHandler.h"
-#include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsISupportsPriority.h"
-#include "nsIServiceManager.h"
 #include "nsNetUtil.h"
-#include "nsContainerFrame.h"
-#include "prprf.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsINameSpaceManager.h"
-#include "nsTextFragment.h"
-#include "nsIDOMHTMLMapElement.h"
-#include "nsIScriptSecurityManager.h"
 #include <algorithm>
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -58,8 +47,6 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIDOMRange.h"
 
-#include "nsIContentPolicy.h"
-#include "nsContentPolicyUtils.h"
 #include "nsEventStates.h"
 #include "nsError.h"
 #include "nsBidiUtils.h"

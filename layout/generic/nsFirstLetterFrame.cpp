@@ -5,7 +5,6 @@
 
 /* rendering object for CSS :first-letter pseudo-element */
 
-#include "nsCOMPtr.h"
 #include "nsFirstLetterFrame.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"

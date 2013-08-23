@@ -82,6 +82,41 @@ namespace mozilla {
 
 namespace mozilla {
 namespace gl {
+
+/** GLFeature::Enum
+ * We don't use typed enum to keep the implicit integer conversion.
+ * This enum should be sorted by name.
+ */
+namespace GLFeature {
+    enum Enum {
+        bind_buffer_offset,
+        depth_texture,
+        draw_buffers,
+        draw_instanced,
+        element_index_uint,
+        ES2_compatibility,
+        ES3_compatibility,
+        framebuffer_blit,
+        framebuffer_multisample,
+        framebuffer_object,
+        get_query_object_iv,
+        instanced_arrays,
+        occlusion_query,
+        occlusion_query_boolean,
+        occlusion_query2,
+        packed_depth_stencil,
+        query_objects,
+        robustness,
+        standard_derivatives,
+        texture_float,
+        texture_float_linear,
+        texture_non_power_of_two,
+        transform_feedback,
+        vertex_array_object,
+        EnumMax
+    };
+}
+
 typedef uintptr_t SharedTextureHandle;
 
 MOZ_BEGIN_ENUM_CLASS(ContextProfile, uint8_t)
@@ -463,59 +498,27 @@ protected:
 
 
 // -----------------------------------------------------------------------------
-// XXX_* Extension group queries
+// Feature queries
 /*
- * This mecahnism introduces a new way to check if an extension is supported,
- * regardless if it is an ARB, EXT, OES, etc.
+ * This mecahnism introduces a new way to check if a OpenGL feature is
+ * supported, regardless of whether it is supported by an extension or natively
+ * by the context version/profile
  */
 public:
+    bool IsSupported(GLFeature::Enum feature) const;
 
-    /**
-     * This enum should be sorted by name.
-     */
-    enum GLExtensionGroup {
-        XXX_bind_buffer_offset,
-        XXX_depth_texture,
-        XXX_draw_buffers,
-        XXX_draw_instanced,
-        XXX_element_index_uint,
-        XXX_ES2_compatibility,
-        XXX_ES3_compatibility,
-        XXX_framebuffer_blit,
-        XXX_framebuffer_multisample,
-        XXX_framebuffer_object,
-        XXX_get_query_object_iv,
-        XXX_instanced_arrays,
-        XXX_occlusion_query,
-        XXX_occlusion_query_boolean,
-        XXX_occlusion_query2,
-        XXX_packed_depth_stencil,
-        XXX_query_objects,
-        XXX_robustness,
-        XXX_standard_derivatives,
-        XXX_texture_float,
-        XXX_texture_float_linear,
-        XXX_texture_non_power_of_two,
-        XXX_transform_feedback,
-        XXX_vertex_array_object,
-        ExtensionGroup_Max
-    };
-
-    bool IsExtensionSupported(GLExtensionGroup extensionGroup) const;
-
-    static const char* GetExtensionGroupName(GLExtensionGroup extensionGroup);
+    static const char* GetFeatureName(GLFeature::Enum feature);
 
 
 private:
 
     /**
-     * Mark all extensions of this group as unsupported.
+     * Mark all extensions of this feature as unsupported.
      *
      * Returns false if marking this extension group as unsupported contradicts
      * the OpenGL version and profile. Returns true otherwise.
      */
-    bool MarkExtensionGroupUnsupported(GLExtensionGroup extensionGroup);
-
+    bool MarkUnsupported(GLFeature::Enum feature);
 
 // -----------------------------------------------------------------------------
 // Robustness handling
@@ -2687,7 +2690,7 @@ public:
         if (mScreen)
             return mScreen->GetReadFB();
 
-        GLenum bindEnum = IsExtensionSupported(XXX_framebuffer_blit)
+        GLenum bindEnum = IsSupported(GLFeature::framebuffer_blit)
                             ? LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT
                             : LOCAL_GL_FRAMEBUFFER_BINDING;
 

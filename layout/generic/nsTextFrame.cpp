@@ -14,7 +14,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
-#include "nsHTMLParts.h"
 #include "nsCRT.h"
 #include "nsSplittableFrame.h"
 #include "nsLineLayout.h"
@@ -30,9 +29,7 @@
 #include "nsCoord.h"
 #include "nsRenderingContext.h"
 #include "nsIPresShell.h"
-#include "nsITimer.h"
 #include "nsTArray.h"
-#include "nsIDocument.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCompatibility.h"
@@ -43,17 +40,13 @@
 #include "nsPlaceholderFrame.h"
 #include "nsTextFrameUtils.h"
 #include "nsTextRunTransformations.h"
-#include "nsFrameManager.h"
 #include "nsTextFrameTextRunCache.h"
 #include "nsExpirationTracker.h"
 #include "nsUnicodeProperties.h"
-#include "nsUnicharUtilCIID.h"
 
 #include "nsTextFragment.h"
 #include "nsGkAtoms.h"
 #include "nsFrameSelection.h"
-#include "nsISelection.h"
-#include "nsIDOMRange.h"
 #include "nsRange.h"
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"
@@ -61,21 +54,16 @@
 #include "nsIWordBreaker.h"
 #include "nsGenericDOMDataNode.h"
 
-#include "nsILineIterator.h"
-
-#include "nsIServiceManager.h"
 #include <algorithm>
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
 #include "nsAutoPtr.h"
 
-#include "nsBidiUtils.h"
 #include "nsPrintfCString.h"
 
 #include "gfxFont.h"
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/LookAndFeel.h"

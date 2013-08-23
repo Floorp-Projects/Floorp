@@ -272,8 +272,9 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
         if (JSID_IS_ATOM(id, cx->names().length)) {
             if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
                 return false;
-            uint16_t ndefaults = fun->hasScript() ? fun->nonLazyScript()->ndefaults : 0;
-            v.setInt32(fun->nargs - ndefaults - fun->hasRest());
+            uint16_t length = fun->hasScript() ? fun->nonLazyScript()->funLength :
+                fun->nargs - fun->hasRest();
+            v.setInt32(length);
         } else {
             v.setString(fun->atom() == NULL ?  cx->runtime()->emptyString : fun->atom());
         }
