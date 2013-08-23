@@ -552,6 +552,8 @@ WebGLContext::GetStateTrackingSlot(WebGLenum cap)
             return &mScissorTestEnabled;
         case LOCAL_GL_DITHER:
             return &mDitherEnabled;
+        case LOCAL_GL_RASTERIZER_DISCARD:
+            return &mRasterizerDiscardEnabled;
     }
 
     return nullptr;
