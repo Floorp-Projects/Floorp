@@ -236,7 +236,8 @@ js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
     // pointers can be changed infallibly after parsing finishes.
     if (!js_GetClassObject(cx, cx->global(), JSProto_Function, &obj) ||
         !js_GetClassObject(cx, cx->global(), JSProto_Array, &obj) ||
-        !js_GetClassObject(cx, cx->global(), JSProto_RegExp, &obj))
+        !js_GetClassObject(cx, cx->global(), JSProto_RegExp, &obj) ||
+        !js_GetClassObject(cx, cx->global(), JSProto_GeneratorFunction, &obj))
     {
         return false;
     }
@@ -244,7 +245,8 @@ js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
         AutoCompartment ac(cx, global);
         if (!js_GetClassObject(cx, global, JSProto_Function, &obj) ||
             !js_GetClassObject(cx, global, JSProto_Array, &obj) ||
-            !js_GetClassObject(cx, global, JSProto_RegExp, &obj))
+            !js_GetClassObject(cx, global, JSProto_RegExp, &obj) ||
+            !js_GetClassObject(cx, global, JSProto_GeneratorFunction, &obj))
         {
             return false;
         }
