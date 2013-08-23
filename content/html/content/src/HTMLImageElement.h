@@ -25,8 +25,10 @@ public:
   virtual ~HTMLImageElement();
 
   static already_AddRefed<HTMLImageElement>
-    Image(const GlobalObject& aGlobal, const Optional<uint32_t>& aWidth,
-          const Optional<uint32_t>& aHeight, ErrorResult& aError);
+    Image(const GlobalObject& aGlobal,
+          const Optional<uint32_t>& aWidth,
+          const Optional<uint32_t>& aHeight,
+          ErrorResult& aError);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

@@ -945,7 +945,7 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
     RootedValue rval(cx, JSVAL_VOID);
 
     SandboxOptions options(cx);
-    nsresult rv = xpc_CreateSandboxObject(cx, rval.address(), principal, options);
+    nsresult rv = CreateSandboxObject(cx, rval.address(), principal, options);
     MOZ_ASSERT(NS_FAILED(rv) || !JSVAL_IS_PRIMITIVE(rval),
                "Bad return value from xpc_CreateSandboxObject()!");
 
@@ -969,9 +969,9 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, const char *filename,
 
     RootedObject sandbox(cx, sandboxArg);
     RootedValue rval(cx);
-    nsresult rv = xpc_EvalInSandbox(cx, sandbox, source, filename ? filename :
-                                    "x-bogus://XPConnect/Sandbox", 1, JSVERSION_DEFAULT,
-                                    returnStringOnly, &rval);
+    nsresult rv = EvalInSandbox(cx, sandbox, source, filename ? filename :
+                                "x-bogus://XPConnect/Sandbox", 1, JSVERSION_DEFAULT,
+                                returnStringOnly, &rval);
     NS_ENSURE_SUCCESS(rv, rv);
     *rvalArg = rval;
     return NS_OK;

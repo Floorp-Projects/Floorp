@@ -11233,15 +11233,16 @@ nsDocument::QuerySelectorAll(const nsAString& aSelector, nsIDOMNodeList **aRetur
 }
 
 already_AddRefed<nsIDocument>
-nsIDocument::Constructor(const GlobalObject& aGlobal, ErrorResult& rv)
+nsIDocument::Constructor(const GlobalObject& aGlobal,
+                         ErrorResult& rv)
 {
-  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
     rv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  nsCOMPtr<nsIScriptObjectPrincipal> prin = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsIScriptObjectPrincipal> prin = do_QueryInterface(aGlobal.GetAsSupports());
   if (!prin) {
     rv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;

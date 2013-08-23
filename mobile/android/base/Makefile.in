@@ -154,7 +154,6 @@ FENNEC_JAVA_FILES = \
   TabsPanel.java \
   TabsTray.java \
   TabsAccessor.java \
-  TailTouchDelegate.java \
   Telemetry.java \
   TextSelection.java \
   TextSelectionHandle.java \
@@ -685,7 +684,6 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/tab_thumbnail_shadow.png \
   res/drawable-mdpi/tabs_count.png \
   res/drawable-mdpi/tabs_count_foreground.png \
-  res/drawable-mdpi/url_bar_bg_shadow.png \
   res/drawable-mdpi/url_bar_entry_default.9.png \
   res/drawable-mdpi/url_bar_entry_default_pb.9.png \
   res/drawable-mdpi/url_bar_entry_pressed.9.png \
@@ -797,7 +795,6 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tab_thumbnail_shadow.png \
   res/drawable-hdpi/tabs_count.png \
   res/drawable-hdpi/tabs_count_foreground.png \
-  res/drawable-hdpi/url_bar_bg_shadow.png \
   res/drawable-hdpi/url_bar_entry_default.9.png \
   res/drawable-hdpi/url_bar_entry_default_pb.9.png \
   res/drawable-hdpi/url_bar_entry_pressed.9.png \
@@ -845,7 +842,6 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/favicon.png \
   res/drawable-xhdpi/folder.png \
   res/drawable-xhdpi/abouthome_thumbnail.png \
-  res/drawable-xhdpi/url_bar_bg_shadow.png \
   res/drawable-xhdpi/url_bar_entry_default.9.png \
   res/drawable-xhdpi/url_bar_entry_default_pb.9.png \
   res/drawable-xhdpi/url_bar_entry_pressed.9.png \
@@ -1104,7 +1100,6 @@ RES_DRAWABLE += \
   res/drawable/action_bar_button_inverse.xml          \
   res/drawable/bookmark_thumbnail_bg.xml              \
   res/drawable/url_bar_bg.xml                         \
-  res/drawable/url_bar_bg_shadow_repeat.xml           \
   res/drawable/url_bar_entry.xml                      \
   res/drawable/url_bar_nav_button.xml                 \
   res/drawable/url_bar_right_edge.xml                 \

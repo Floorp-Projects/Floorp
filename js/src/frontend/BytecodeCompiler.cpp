@@ -132,8 +132,7 @@ CanLazilyParse(ExclusiveContext *cx, const CompileOptions &options)
     return options.canLazilyParse &&
         options.compileAndGo &&
         options.sourcePolicy == CompileOptions::SAVE_SOURCE &&
-        cx->isJSContext() &&
-        !cx->asJSContext()->compartment()->debugMode();
+        !cx->compartment()->debugMode();
 }
 
 void

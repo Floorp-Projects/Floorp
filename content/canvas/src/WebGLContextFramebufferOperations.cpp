@@ -24,6 +24,8 @@ WebGLContext::Clear(WebGLbitfield mask)
 
     if (mask == 0) {
         GenerateWarning("Calling gl.clear(0) has no effect.");
+    } else if (mRasterizerDiscardEnabled) {
+        GenerateWarning("Calling gl.clear() with RASTERIZER_DISCARD enabled has no effects.");
     }
 
     if (mBoundFramebuffer) {

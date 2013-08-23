@@ -42,6 +42,7 @@
 #endif
 
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/ImageData.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

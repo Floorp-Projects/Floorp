@@ -52,7 +52,7 @@ CSS::Supports(const GlobalObject& aGlobal,
   nsCSSParser parser;
   SupportsParsingInfo info;
 
-  nsresult rv = GetParsingInfo(aGlobal.Get(), info);
+  nsresult rv = GetParsingInfo(aGlobal.GetAsSupports(), info);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
@@ -70,7 +70,7 @@ CSS::Supports(const GlobalObject& aGlobal,
   nsCSSParser parser;
   SupportsParsingInfo info;
 
-  nsresult rv = GetParsingInfo(aGlobal.Get(), info);
+  nsresult rv = GetParsingInfo(aGlobal.GetAsSupports(), info);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
