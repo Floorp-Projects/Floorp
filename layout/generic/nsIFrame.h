@@ -36,7 +36,6 @@
 #include <algorithm>
 #include "nsITheme.h"
 #include "gfx3DMatrix.h"
-#include "gfxASurface.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
@@ -893,10 +892,7 @@ public:
     delete static_cast<nsOverflowAreas*>(aPropertyValue);
   }
 
-  static void DestroySurface(void* aPropertyValue)
-  {
-    static_cast<gfxASurface*>(aPropertyValue)->Release();
-  }
+  static void DestroySurface(void* aPropertyValue);
 
 #ifdef _MSC_VER
 // XXX Workaround MSVC issue by making the static FramePropertyDescriptor
