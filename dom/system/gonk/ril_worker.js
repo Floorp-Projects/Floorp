@@ -2363,9 +2363,25 @@ let RIL = {
    *        String containing PDP type to request. ("IP", "IPV6", ...)
    */
   setupDataCall: function setupDataCall(options) {
+    // From ./hardware/ril/include/telephony/ril.h:
+    // ((const char **)data)[0] Radio technology to use: 0-CDMA, 1-GSM/UMTS, 2...
+    // for values above 2 this is RIL_RadioTechnology + 2.
+    //
+    // From frameworks/base/telephony/java/com/android/internal/telephony/DataConnection.java:
+    // if the mRilVersion < 6, radio technology must be GSM/UMTS or CDMA.
+    // Otherwise, it must be + 2
+    //
+    // See also bug 901232 and 867873
+    let radioTech;
+    if (RILQUIRKS_V5_LEGACY) {
+      radioTech = this._isCdma ? DATACALL_RADIOTECHNOLOGY_CDMA
+                               : DATACALL_RADIOTECHNOLOGY_GSM;
+    } else {
+      radioTech = options.radioTech + 2;
+    }
     let token = Buf.newParcel(REQUEST_SETUP_DATA_CALL, options);
     Buf.writeUint32(7);
-    Buf.writeString(options.radioTech.toString());
+    Buf.writeString(radioTech.toString());
     Buf.writeString(DATACALL_PROFILE_DEFAULT.toString());
     Buf.writeString(options.apn);
     Buf.writeString(options.user);
