@@ -368,6 +368,18 @@ public:
       return NS_ERROR_FAILURE;
     }
     nsRefPtr<nsDOMFileFile> domFile = new nsDOMFileFile(mNextFile);
+    nsCString relDescriptor;
+    nsresult rv = mNextFile->GetRelativeDescriptor(mTopDir, relDescriptor);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ConvertUTF8toUTF16 path(relDescriptor);
+    nsAutoString leafName;
+    mNextFile->GetLeafName(leafName);
+    MOZ_ASSERT(leafName.Length() <= path.Length());
+    int32_t length = path.Length() - leafName.Length() - 1; // -1 for "/"
+    MOZ_ASSERT(length >= -1);
+    if (length > 0) {
+      domFile->SetPath(Substring(path, 0, uint32_t(length)));
+    }
     *aResult = static_cast<nsIDOMFile*>(domFile.forget().get());
     LookupAndCacheNext();
     return NS_OK;
