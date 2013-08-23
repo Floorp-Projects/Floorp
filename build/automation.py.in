@@ -218,7 +218,7 @@ class Automation(object):
                  startupinfo=None,
                  creationflags=0):
       args = automationutils.wrapCommand(args)
-      print "args: %s" % args
+      _log.info("INFO | automation.py | Launching: %s", subprocess.list2cmdline(args))
       subprocess.Popen.__init__(self, args, bufsize, executable,
                                 stdin, stdout, stderr,
                                 preexec_fn, close_fds,
