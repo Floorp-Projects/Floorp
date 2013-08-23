@@ -79,14 +79,14 @@ bool nsScriptSecurityManager::sStrictFileOriginPolicy = true;
 
 // Lazily initialized. Use the getter below.
 static jsid sEnabledID = JSID_VOID;
-static jsid
+static JS::HandleId
 EnabledID()
 {
     if (sEnabledID != JSID_VOID)
-        return sEnabledID;
+        return JS::HandleId::fromMarkedLocation(&sEnabledID);
     AutoSafeJSContext cx;
     sEnabledID = INTERNED_STRING_TO_JSID(cx, JS_InternString(cx, "enabled"));
-    return sEnabledID;
+    return JS::HandleId::fromMarkedLocation(&sEnabledID);
 }
 
 bool
@@ -984,7 +984,7 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
 nsresult
 nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
                                       ClassInfoData& aClassData,
-                                      jsid aProperty,
+                                      JS::Handle<jsid> aProperty,
                                       uint32_t aAction,
                                       ClassPolicy** aCachedClassPolicy,
                                       SecurityLevel* result)
