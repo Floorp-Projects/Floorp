@@ -9,10 +9,8 @@
 #include "plarena.h"
 
 #include "mozilla/Util.h"
-#include "nsCOMPtr.h"
 #include "nsLineLayout.h"
 #include "nsBlockFrame.h"
-#include "nsInlineFrame.h"
 #include "nsStyleConsts.h"
 #include "nsContainerFrame.h"
 #include "nsFloatManager.h"
@@ -20,13 +18,9 @@
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
-#include "nsPlaceholderFrame.h"
 #include "nsIContent.h"
-#include "nsTextFragment.h"
-#include "nsBidiUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
-#include "nsCSSRendering.h"
 #include <algorithm>
 
 #ifdef DEBUG

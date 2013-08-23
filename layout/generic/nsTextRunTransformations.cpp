@@ -7,13 +7,9 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "nsTextFrameUtils.h"
-#include "gfxSkipChars.h"
 #include "nsGkAtoms.h"
-
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
-#include "gfxContext.h"
 #include "nsUnicodeProperties.h"
 #include "nsSpecialCasingData.h"
 

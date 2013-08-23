@@ -289,6 +289,7 @@ class Build(MachCommandBase):
     @CommandArgument('-v', '--verbose', action='store_true',
         help='Verbose output for what commands the build is running.')
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0, verbose=False):
+        import which
         from mozbuild.controller.building import BuildMonitor
         from mozbuild.util import resolve_target_to_make
 
@@ -373,10 +374,27 @@ class Build(MachCommandBase):
         if high_finder:
             print(FINDER_SLOW_MESSAGE % finder_percent)
 
-        long_build = monitor.elapsed > 600
+        if monitor.elapsed > 300:
+            # Display a notification when the build completes.
+            # This could probably be uplifted into the mach core or at least
+            # into a helper API. It is here as an experimentation to see how it
+            # is received.
+            try:
+                if sys.platform.startswith('darwin'):
+                    notifier = which.which('terminal-notifier')
+                    self.run_process([notifier, '-title',
+                        'Mozilla Build System', '-group', 'mozbuild',
+                        '-message', 'Build complete'], ensure_exit_code=False)
+            except which.WhichError:
+                pass
+            except Exception as e:
+                self.log(logging.WARNING, 'notifier-failed', {'error':
+                    e.message}, 'Notification center failed: {error}')
 
         if status:
             return status
+
+        long_build = monitor.elapsed > 600
 
         if long_build:
             print('We know it took a while, but your build finally finished successfully!')

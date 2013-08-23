@@ -1346,6 +1346,17 @@ Geolocation::ClearWatch(int32_t aWatchId)
     }
   }
 
+  // make sure we also search through the pending requests lists for
+  // watches to clear...
+  for (uint32_t i = 0, length = mPendingRequests.Length(); i < length; ++i) {
+    if ((mPendingRequests[i].type == PendingRequest::WatchPosition) &&
+        (mPendingRequests[i].request->WatchId() == aWatchId)) {
+      mPendingRequests[i].request->Shutdown();
+      mPendingRequests.RemoveElementAt(i);
+      break;
+    }
+  }
+
   return NS_OK;
 }
 
