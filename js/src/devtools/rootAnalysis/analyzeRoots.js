@@ -6,7 +6,7 @@ loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 loadRelativeToScript('suppressedPoints.js');
 
-var sourceRoot = (environment['SOURCE_ROOT'] || '') + '/'
+var sourceRoot = (environment['SOURCE'] || '') + '/'
 
 var functionBodies;
 
