@@ -1,3 +1,4 @@
+
 Intro
 =====
 
@@ -10,22 +11,23 @@ name (N), e-mail (E), web-address (W), country (C), description (D), (I) issues
 (issue tracker is at http://code.google.com/p/psutil/issues/list).
 Really thanks to all of you.
 
-Author
-======
+
+Maintainers
+===========
 
 N: Giampaolo Rodola'
 C: Italy
 E: g.rodola@gmail.com
 W: http://www.linkedin.com/in/grodola
 
-Contributors
-============
-
 N: Jay Loden
 C: NJ, USA
 E: jloden@gmail.com
-D: original co-author, initial design/bootstrap and continuing bug fixes
 W: http://www.jayloden.com
+
+
+Contributors
+============
 
 N: Jeremy Whitlock
 E: jcscoobyrs@gmail.com
@@ -40,11 +42,6 @@ N: Yan Raber
 C: Bologna, Italy
 E: yanraber@gmail.com
 D: help on Windows development
-
-N: Justin Venus
-E: justin.venus@gmail.com
-D: Solaris support
-I: 18
 
 N: Dave Daeschler
 C: USA
@@ -165,18 +162,3 @@ I: 370
 N: Jan Beich
 E: jbeich@tormail.org
 I: 325
-
-N: floppymaster
-E: floppymaster@gmail.com
-I: 380
-
-N: Arfrever.FTA
-E: Arfrever.FTA@gmail.com
-I: 369, 404
-
-N: danudey
-E: danudey@gmail.com
-I: 386
-
-N: Adrien Fallou
-I: 224

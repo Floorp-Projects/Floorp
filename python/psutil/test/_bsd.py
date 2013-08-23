@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
+# Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -16,10 +16,13 @@ import os
 import psutil
 
 from psutil._compat import PY3
-from test_psutil import *
+from test_psutil import DEVNULL
+from test_psutil import (reap_children, get_test_subprocess, sh, which,
+                         skipUnless)
 
 
 PAGESIZE = os.sysconf("SC_PAGE_SIZE")
+TOLERANCE = 200 * 1024  # 200 KB
 MUSE_AVAILABLE = which('muse')
 
 
@@ -52,6 +55,14 @@ class BSDSpecificTestCase(unittest.TestCase):
 
     def tearDown(self):
         reap_children()
+
+    def assert_eq_w_tol(self, first, second, tolerance):
+        difference = abs(first - second)
+        if difference <= tolerance:
+            return
+        msg = '%r != %r within %r delta (%r difference)' \
+              % (first, second, tolerance, difference)
+        raise AssertionError(msg)
 
     def test_BOOT_TIME(self):
         s = sysctl('sysctl kern.boottime')
@@ -119,98 +130,69 @@ class BSDSpecificTestCase(unittest.TestCase):
         syst = sysctl("sysctl vm.stats.vm.v_page_count") * PAGESIZE
         self.assertEqual(psutil.virtual_memory().total, syst)
 
-    @retry_before_failing()
     def test_vmem_active(self):
         syst = sysctl("vm.stats.vm.v_active_count") * PAGESIZE
-        self.assertAlmostEqual(psutil.virtual_memory().active, syst,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().active, syst, TOLERANCE)
 
-    @retry_before_failing()
     def test_vmem_inactive(self):
         syst = sysctl("vm.stats.vm.v_inactive_count") * PAGESIZE
-        self.assertAlmostEqual(psutil.virtual_memory().inactive, syst,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().inactive, syst, TOLERANCE)
 
-    @retry_before_failing()
     def test_vmem_wired(self):
         syst = sysctl("vm.stats.vm.v_wire_count") * PAGESIZE
-        self.assertAlmostEqual(psutil.virtual_memory().wired, syst,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().wired, syst, TOLERANCE)
 
-    @retry_before_failing()
     def test_vmem_cached(self):
         syst = sysctl("vm.stats.vm.v_cache_count") * PAGESIZE
-        self.assertAlmostEqual(psutil.virtual_memory().cached, syst,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().cached, syst, TOLERANCE)
 
-    @retry_before_failing()
     def test_vmem_free(self):
         syst = sysctl("vm.stats.vm.v_free_count") * PAGESIZE
-        self.assertAlmostEqual(psutil.virtual_memory().free, syst,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().free, syst, TOLERANCE)
 
-    @retry_before_failing()
     def test_vmem_buffers(self):
         syst = sysctl("vfs.bufspace")
-        self.assertAlmostEqual(psutil.virtual_memory().buffers, syst,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().buffers, syst, TOLERANCE)
 
     # --- virtual_memory(); tests against muse
 
-    @unittest.skipUnless(MUSE_AVAILABLE, "muse cmdline tool is not available")
+    @skipUnless(MUSE_AVAILABLE)
     def test_total(self):
         num = muse('Total')
         self.assertEqual(psutil.virtual_memory().total, num)
 
-    @unittest.skipUnless(MUSE_AVAILABLE, "muse cmdline tool is not available")
-    @retry_before_failing()
+    @skipUnless(MUSE_AVAILABLE)
     def test_active(self):
         num = muse('Active')
-        self.assertAlmostEqual(psutil.virtual_memory().active, num,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().active, num, TOLERANCE)
 
-    @unittest.skipUnless(MUSE_AVAILABLE, "muse cmdline tool is not available")
-    @retry_before_failing()
+    @skipUnless(MUSE_AVAILABLE)
     def test_inactive(self):
         num = muse('Inactive')
-        self.assertAlmostEqual(psutil.virtual_memory().inactive, num,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().inactive, num, TOLERANCE)
 
-    @unittest.skipUnless(MUSE_AVAILABLE, "muse cmdline tool is not available")
-    @retry_before_failing()
+    @skipUnless(MUSE_AVAILABLE)
     def test_wired(self):
         num = muse('Wired')
-        self.assertAlmostEqual(psutil.virtual_memory().wired, num,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().wired, num, TOLERANCE)
 
-    @unittest.skipUnless(MUSE_AVAILABLE, "muse cmdline tool is not available")
-    @retry_before_failing()
+    @skipUnless(MUSE_AVAILABLE)
     def test_cached(self):
         num = muse('Cache')
-        self.assertAlmostEqual(psutil.virtual_memory().cached, num,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().cached, num, TOLERANCE)
 
-    @unittest.skipUnless(MUSE_AVAILABLE, "muse cmdline tool is not available")
-    @retry_before_failing()
+    @skipUnless(MUSE_AVAILABLE)
     def test_free(self):
         num = muse('Free')
-        self.assertAlmostEqual(psutil.virtual_memory().free, num,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().free, num, TOLERANCE)
 
-    @unittest.skipUnless(MUSE_AVAILABLE, "muse cmdline tool is not available")
-    @retry_before_failing()
+    @skipUnless(MUSE_AVAILABLE)
     def test_buffers(self):
         num = muse('Buffer')
-        self.assertAlmostEqual(psutil.virtual_memory().buffers, num,
-                               delta=TOLERANCE)
+        self.assert_eq_w_tol(psutil.virtual_memory().buffers, num, TOLERANCE)
 
-
-def test_main():
-    test_suite = unittest.TestSuite()
-    test_suite.addTest(unittest.makeSuite(BSDSpecificTestCase))
-    result = unittest.TextTestRunner(verbosity=2).run(test_suite)
-    return result.wasSuccessful()
 
 if __name__ == '__main__':
-    if not test_main():
-        sys.exit(1)
+    test_suite = unittest.TestSuite()
+    test_suite.addTest(unittest.makeSuite(BSDSpecificTestCase))
+    unittest.TextTestRunner(verbosity=2).run(test_suite)

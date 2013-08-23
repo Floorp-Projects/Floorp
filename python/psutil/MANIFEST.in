@@ -3,7 +3,6 @@ include HISTORY
 include LICENSE
 include MANIFEST.in
 include README
-include TODO
 include setup.py
 recursive-include psutil *.py *.c *.h
 recursive-include test *.py
