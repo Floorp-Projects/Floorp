@@ -74,6 +74,7 @@
 #include "nsRenderingContext.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsFontInflationData.h"
+#include "gfxASurface.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -8118,6 +8119,12 @@ nsIFrame::IsSelected() const
 {
   return (GetContent() && GetContent()->IsSelectionDescendant()) ?
     IsFrameSelected() : false;
+}
+
+void
+nsIFrame::DestroySurface(void* aPropertyValue)
+{
+  static_cast<gfxASurface*>(aPropertyValue)->Release();
 }
 
 // Box layout debugging
