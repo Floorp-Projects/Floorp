@@ -30,27 +30,37 @@ if (app.is('Firefox')) {
       	url: 'about:addons',
       	onReady: function(tab) {
           tab.attach({
-          	contentScript: 'AddonManager.getAddonByID("' + self.id + '", function(aAddon) {\n' +
-          		             'unsafeWindow.gViewController.viewObjects.detail.node.addEventListener("ViewChanged", function whenViewChanges() {\n' +
-          		               'unsafeWindow.gViewController.viewObjects.detail.node.removeEventListener("ViewChanged", whenViewChanges, false);\n' +
-          		               'setTimeout(function() {\n' + // TODO: figure out why this is necessary..
-                                 'self.postMessage({\n' +
-                                   'somePreference: getAttributes(unsafeWindow.document.querySelector("setting[title=\'some-title\']")),\n' +
-                                   'myInteger: getAttributes(unsafeWindow.document.querySelector("setting[title=\'my-int\']")),\n' +
-                                   'myHiddenInt: getAttributes(unsafeWindow.document.querySelector("setting[title=\'hidden-int\']"))\n' +
-                                 '});\n' +
-          		               '}, 250);\n' +
-          		             '}, false);\n' +
-                             'unsafeWindow.gViewController.commands.cmd_showItemDetails.doCommand(aAddon, true);\n' +
-                           '});\n' + 
-                           'function getAttributes(ele) {\n' +
-                             'if (!ele) return {};\n' +
-                             'return {\n' +
-                               'pref: ele.getAttribute("pref"),\n' +
-                               'type: ele.getAttribute("type"),\n' +
-                               'title: ele.getAttribute("title"),\n' +
-                               'desc: ele.getAttribute("desc")\n' +
+            contentScriptWhen: 'end',
+          	contentScript: 'function onLoad() {\n' +
+                             'unsafeWindow.removeEventListener("load", onLoad, false);\n' +
+                             'AddonManager.getAddonByID("' + self.id + '", function(aAddon) {\n' +
+                               'unsafeWindow.gViewController.viewObjects.detail.node.addEventListener("ViewChanged", function whenViewChanges() {\n' +
+                                 'unsafeWindow.gViewController.viewObjects.detail.node.removeEventListener("ViewChanged", whenViewChanges, false);\n' +
+                                 'setTimeout(function() {\n' + // TODO: figure out why this is necessary..
+                                     'self.postMessage({\n' +
+                                       'somePreference: getAttributes(unsafeWindow.document.querySelector("setting[title=\'some-title\']")),\n' +
+                                       'myInteger: getAttributes(unsafeWindow.document.querySelector("setting[title=\'my-int\']")),\n' +
+                                       'myHiddenInt: getAttributes(unsafeWindow.document.querySelector("setting[title=\'hidden-int\']"))\n' +
+                                     '});\n' +
+                                 '}, 250);\n' +
+                               '}, false);\n' +
+                               'unsafeWindow.gViewController.commands.cmd_showItemDetails.doCommand(aAddon, true);\n' +
+                             '});\n' +
+                             'function getAttributes(ele) {\n' +
+                               'if (!ele) return {};\n' +
+                               'return {\n' +
+                                 'pref: ele.getAttribute("pref"),\n' +
+                                 'type: ele.getAttribute("type"),\n' +
+                                 'title: ele.getAttribute("title"),\n' +
+                                 'desc: ele.getAttribute("desc")\n' +
+                               '}\n' +
                              '}\n' +
+                           '}\n' +
+                           // Wait for the load event ?
+                           'if (document.readyState == "complete") {\n' +
+                             'onLoad()\n' +
+                           '} else {\n' +
+                             'unsafeWindow.addEventListener("load", onLoad, false);\n' +
                            '}\n',
             onMessage: function(msg) {
               // test somePreference
