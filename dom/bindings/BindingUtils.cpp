@@ -1679,7 +1679,7 @@ ReparentWrapper(JSContext* aCx, JS::HandleObject aObjArg)
   }
 
   nsObjectLoadingContent* htmlobject;
-  nsresult rv = UnwrapObject<HTMLObjectElement>(aCx, aObj, htmlobject);
+  nsresult rv = UNWRAP_OBJECT(HTMLObjectElement, aCx, aObj, htmlobject);
   if (NS_FAILED(rv)) {
     rv = UnwrapObject<prototypes::id::HTMLEmbedElement,
                       HTMLSharedObjectElement>(aCx, aObj, htmlobject);
