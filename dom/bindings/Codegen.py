@@ -2030,16 +2030,6 @@ class CGConstructorEnabledViaFunc(CGAbstractMethod):
         assert isinstance(func, list) and len(func) == 1
         return "  return %s(cx, obj);" % func[0]
 
-class CGIsMethod(CGAbstractMethod):
-    def __init__(self, descriptor):
-        args = [Argument('JSObject*', 'obj')]
-        CGAbstractMethod.__init__(self, descriptor, 'Is', 'bool', args)
-
-    def definition_body(self):
-        # Non-proxy implementation would check
-        #   js::GetObjectJSClass(obj) == &Class.mBase
-        return """  return IsProxy(obj);"""
-
 def CreateBindingJSObject(descriptor, properties, parent):
     # When we have unforgeable properties, we're going to define them
     # on our object, so we have to root it when we create it, so it
@@ -7895,7 +7885,6 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGProxyUnwrap(descriptor))
                 cgThings.append(CGDOMJSProxyHandlerDOMClass(descriptor))
                 cgThings.append(CGDOMJSProxyHandler(descriptor))
-                cgThings.append(CGIsMethod(descriptor))
             else:
                 cgThings.append(CGDOMJSClass(descriptor))
 
