@@ -166,7 +166,7 @@ class CGDOMJSClass(CGThing):
         # Our current reserved slot situation is unsafe for globals. Fix bug 760095!
         assert "Window" not in descriptor.interface.identifier.name
     def declare(self):
-        return "extern DOMJSClass Class;\n"
+        return ""
     def define(self):
         traceHook = TRACE_HOOK_NAME if self.descriptor.customTrace else 'nullptr'
         callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
@@ -179,7 +179,7 @@ class CGDOMJSClass(CGThing):
             newResolveHook = "JS_ResolveStub"
             enumerateHook = "JS_EnumerateStub"
         return """
-DOMJSClass Class = {
+static DOMJSClass Class = {
   { "%s",
     %s,
     %s, /* addProperty */
@@ -961,6 +961,14 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
     def generate_code(self):
         # Override me
         assert(False)
+
+class CGGetJSClassMethod(CGAbstractMethod):
+    def __init__(self, descriptor):
+        CGAbstractMethod.__init__(self, descriptor, 'GetJSClass', 'JSClass*',
+                                  [])
+
+    def definition_body(self):
+        return "  return Class.ToJSClass();"
 
 class CGAddPropertyHook(CGAbstractClassHook):
     """
@@ -7114,10 +7122,10 @@ class CGDOMJSProxyHandlerDOMClass(CGThing):
         CGThing.__init__(self)
         self.descriptor = descriptor
     def declare(self):
-        return "extern const DOMClass Class;\n"
+        return ""
     def define(self):
         return """
-const DOMClass Class = """ + DOMClass(self.descriptor) + """;
+static const DOMClass Class = """ + DOMClass(self.descriptor) + """;
 
 """
 
@@ -7839,12 +7847,6 @@ class CGDescriptor(CGThing):
         if descriptor.interface.hasInterfacePrototypeObject():
             cgThings.append(CGPrototypeJSClass(descriptor, properties))
 
-        cgThings.append(CGCreateInterfaceObjectsMethod(descriptor, properties))
-        if descriptor.interface.hasInterfacePrototypeObject():
-            cgThings.append(CGGetProtoObjectMethod(descriptor))
-        if descriptor.interface.hasInterfaceObject():
-            cgThings.append(CGGetConstructorObjectMethod(descriptor))
-
         if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
 
@@ -7887,6 +7889,7 @@ class CGDescriptor(CGThing):
                 cgThings.append(CGDOMJSProxyHandler(descriptor))
             else:
                 cgThings.append(CGDOMJSClass(descriptor))
+                cgThings.append(CGGetJSClassMethod(descriptor))
 
             if descriptor.wrapperCache:
                 cgThings.append(CGWrapWithCacheMethod(descriptor, properties))
@@ -7894,6 +7897,17 @@ class CGDescriptor(CGThing):
             else:
                 cgThings.append(CGWrapNonWrapperCacheMethod(descriptor,
                                                             properties))
+
+        # CGCreateInterfaceObjectsMethod needs to come after our
+        # CGDOMJSClass, if any.
+        cgThings.append(CGCreateInterfaceObjectsMethod(descriptor, properties))
+
+        # CGGetProtoObjectMethod and CGGetConstructorObjectMethod need
+        # to come after CGCreateInterfaceObjectsMethod.
+        if descriptor.interface.hasInterfacePrototypeObject():
+            cgThings.append(CGGetProtoObjectMethod(descriptor))
+        if descriptor.interface.hasInterfaceObject():
+            cgThings.append(CGGetConstructorObjectMethod(descriptor))
 
         cgThings = CGList((CGIndenter(t, declareOnly=True) for t in cgThings), "\n")
         cgThings = CGWrapper(cgThings, pre='\n', post='\n')
