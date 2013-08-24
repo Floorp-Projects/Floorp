@@ -12,6 +12,7 @@
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/dom/WorkerLocationBinding.h"
 #include "mozilla/dom/WorkerNavigatorBinding.h"
+#include "jsfriendapi.h"
 
 BEGIN_WORKERS_NAMESPACE
 
