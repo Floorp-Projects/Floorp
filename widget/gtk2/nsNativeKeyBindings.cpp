@@ -236,20 +236,20 @@ nsNativeKeyBindings::~nsNativeKeyBindings()
 NS_IMPL_ISUPPORTS1(nsNativeKeyBindings, nsINativeKeyBindings)
 
 bool
-nsNativeKeyBindings::KeyDown(const nsNativeKeyEvent& aEvent,
+nsNativeKeyBindings::KeyDown(const nsKeyEvent& aEvent,
                              DoCommandCallback aCallback, void *aCallbackData)
 {
   return false;
 }
 
 bool
-nsNativeKeyBindings::KeyPress(const nsNativeKeyEvent& aEvent,
+nsNativeKeyBindings::KeyPress(const nsKeyEvent& aEvent,
                               DoCommandCallback aCallback, void *aCallbackData)
 {
   // If the native key event is set, it must be synthesized for tests.
   // We just ignore such events because this behavior depends on system
   // settings.
-  if (!aEvent.mGeckoEvent->mNativeKeyEvent) {
+  if (!aEvent.mNativeKeyEvent) {
     // It must be synthesized event or dispatched DOM event from chrome.
     return false;
   }
@@ -260,24 +260,17 @@ nsNativeKeyBindings::KeyPress(const nsNativeKeyEvent& aEvent,
     keyval = gdk_unicode_to_keyval(aEvent.charCode);
   } else {
     keyval =
-      static_cast<GdkEventKey*>(aEvent.mGeckoEvent->mNativeKeyEvent)->keyval;
+      static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent)->keyval;
   }
 
   if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyval)) {
     return true;
   }
 
-  nsKeyEvent *nativeKeyEvent = aEvent.mGeckoEvent;
-  if (!nativeKeyEvent ||
-      (nativeKeyEvent->eventStructType != NS_KEY_EVENT &&
-       nativeKeyEvent->message != NS_KEY_PRESS)) {
-    return false;
-  }
-
-  for (uint32_t i = 0; i < nativeKeyEvent->alternativeCharCodes.Length(); ++i) {
-    uint32_t ch = nativeKeyEvent->IsShift() ?
-        nativeKeyEvent->alternativeCharCodes[i].mShiftedCharCode :
-        nativeKeyEvent->alternativeCharCodes[i].mUnshiftedCharCode;
+  for (uint32_t i = 0; i < aEvent.alternativeCharCodes.Length(); ++i) {
+    uint32_t ch = aEvent.IsShift() ?
+      aEvent.alternativeCharCodes[i].mShiftedCharCode :
+      aEvent.alternativeCharCodes[i].mUnshiftedCharCode;
     if (ch && ch != aEvent.charCode) {
       keyval = gdk_unicode_to_keyval(ch);
       if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyval)) {
@@ -286,30 +279,31 @@ nsNativeKeyBindings::KeyPress(const nsNativeKeyEvent& aEvent,
     }
   }
 
-/* gtk_bindings_activate_event is preferable, but it has unresolved bug: http://bugzilla.gnome.org/show_bug.cgi?id=162726
-Also gtk_bindings_activate may work with some non-shortcuts operations (todo: check it)
-See bugs 411005 406407
+/*
+gtk_bindings_activate_event is preferable, but it has unresolved bug:
+http://bugzilla.gnome.org/show_bug.cgi?id=162726
+The bug was already marked as FIXED.  However, somebody reports that the
+bug still exists.
+Also gtk_bindings_activate may work with some non-shortcuts operations
+(todo: check it). See bug 411005 and bug 406407.
 
-  Code, which should be used after fixing http://bugzilla.gnome.org/show_bug.cgi?id=162726:
-  const nsGUIEvent *guiEvent = aEvent.mGeckoEvent;
-  if (guiEvent &&
-     (guiEvent->message == NS_KEY_PRESS || guiEvent->message == NS_KEY_UP || guiEvent->message == NS_KEY_DOWN) &&
-      guiEvent->pluginEvent)
-        gtk_bindings_activate_event(GTK_OBJECT(mNativeTarget),
-                                    static_cast<GdkEventKey*>(guiEvent->pluginEvent));
+Code, which should be used after fixing GNOME bug 162726:
+
+  gtk_bindings_activate_event(GTK_OBJECT(mNativeTarget),
+    static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent));
 */
 
   return false;
 }
 
 bool
-nsNativeKeyBindings::KeyPressInternal(const nsNativeKeyEvent& aEvent,
+nsNativeKeyBindings::KeyPressInternal(const nsKeyEvent& aEvent,
                                       DoCommandCallback aCallback,
                                       void *aCallbackData,
                                       guint aKeyval)
 {
   guint modifiers =
-    static_cast<GdkEventKey*>(aEvent.mGeckoEvent->mNativeKeyEvent)->state;
+    static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent)->state;
 
   gCurrentCallback = aCallback;
   gCurrentCallbackData = aCallbackData;
@@ -330,7 +324,7 @@ nsNativeKeyBindings::KeyPressInternal(const nsNativeKeyEvent& aEvent,
 }
 
 bool
-nsNativeKeyBindings::KeyUp(const nsNativeKeyEvent& aEvent,
+nsNativeKeyBindings::KeyUp(const nsKeyEvent& aEvent,
                            DoCommandCallback aCallback, void *aCallbackData)
 {
   return false;
