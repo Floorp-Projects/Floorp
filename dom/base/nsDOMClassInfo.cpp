@@ -2190,12 +2190,13 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 NS_IMETHODIMP
 nsWindowSH::PostCreatePrototype(JSContext* aCx, JSObject* aProto)
 {
-  nsresult rv = nsDOMClassInfo::PostCreatePrototype(aCx, aProto);
+  JS::Rooted<JSObject*> proto(aCx, aProto);
+
+  nsresult rv = nsDOMClassInfo::PostCreatePrototype(aCx, proto);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We should probably move this into the CreateInterfaceObjects for Window
   // once it is on WebIDL bindings.
-  JS::Rooted<JSObject*> proto(aCx, aProto);
   WindowNamedPropertiesHandler::Install(aCx, proto);
   return NS_OK;
 }
