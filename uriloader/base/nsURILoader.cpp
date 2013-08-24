@@ -753,7 +753,7 @@ NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aCo
 }
 
 NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel, 
-                                   uint32_t aFlags,
+                                   bool aIsContentPreferred,
                                    nsIInterfaceRequestor *aWindowContext)
 {
   NS_ENSURE_ARG_POINTER(channel);
@@ -770,7 +770,7 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
 
   nsCOMPtr<nsIStreamListener> loader;
   nsresult rv = OpenChannel(channel,
-                            aFlags,
+                            aIsContentPreferred ? IS_CONTENT_PREFERRED : 0,
                             aWindowContext,
                             false,
                             getter_AddRefs(loader));
