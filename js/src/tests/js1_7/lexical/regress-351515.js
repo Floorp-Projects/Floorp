@@ -93,5 +93,17 @@ function test()
   }
   reportCompare(expect, actual, summary + ': function () { var let;}');
 
+  try
+  {
+    expect = 'No Error';
+    function yield() {}
+    actual = 'No Error';
+  }
+  catch(ex)
+  {
+    actual = ex + '';
+  }
+  reportCompare(expect, actual, summary + ': function yield()');
+
   exitFunc ('test');
 }

@@ -37,7 +37,7 @@ var strictFutureReservedWords =
    "yield", // enabled: this file doesn't execute as JS1.7
   ];
 
-function testWord(word, expectNormal, expectStrict)
+function testWord(word, wordKind, expectNormal, expectStrict)
 {
   var actual, status;
 
@@ -355,19 +355,22 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE AS FUNCTION NAME IN FUNCTION DECLARATION
 
-  actual = "";
-  status = summary + ": " + word + ": normal function name";
-  try
+  if (wordKind !== "reserved")
   {
-    eval("function " + word + "() { }");
-    actual = "no error";
+    actual = "";
+    status = summary + ": " + word + ": normal function name";
+    try
+    {
+      eval("function " + word + "() { }");
+      actual = "no error";
+    }
+    catch (e)
+    {
+      actual = e.name;
+      status +=  ", " + e.name + ": " + e.message + " ";
+    }
+    reportCompare(expectNormal, actual, status);
   }
-  catch (e)
-  {
-    actual = e.name;
-    status +=  ", " + e.name + ": " + e.message + " ";
-  }
-  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": strict function name";
@@ -399,19 +402,22 @@ function testWord(word, expectNormal, expectStrict)
 
   // USE AS FUNCTION NAME IN FUNCTION EXPRESSION
 
-  actual = "";
-  status = summary + ": " + word + ": normal function expression name";
-  try
+  if (wordKind !== "reserved")
   {
-    eval("var s = (function " + word + "() { });");
-    actual = "no error";
+    actual = "";
+    status = summary + ": " + word + ": normal function expression name";
+    try
+    {
+      eval("var s = (function " + word + "() { });");
+      actual = "no error";
+    }
+    catch (e)
+    {
+      actual = e.name;
+      status +=  ", " + e.name + ": " + e.message + " ";
+    }
+    reportCompare(expectNormal, actual, status);
   }
-  catch (e)
-  {
-    actual = e.name;
-    status +=  ", " + e.name + ": " + e.message + " ";
-  }
-  reportCompare(expectNormal, actual, status);
 
   actual = "";
   status = summary + ": " + word + ": strict function expression name";
@@ -444,12 +450,12 @@ function testWord(word, expectNormal, expectStrict)
 
 function testFutureReservedWord(word)
 {
-  testWord(word, "SyntaxError", "SyntaxError");
+  testWord(word, "reserved", "SyntaxError", "SyntaxError");
 }
 
 function testStrictFutureReservedWord(word)
 {
-  testWord(word, "no error", "SyntaxError");
+  testWord(word, "strict reserved", "no error", "SyntaxError");
 }
 
 futureReservedWords.forEach(testFutureReservedWord);
