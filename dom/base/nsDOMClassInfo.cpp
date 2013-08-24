@@ -4269,7 +4269,7 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx,
     // We already have a node list in our reserved slot, use it.
     JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(collection));
     nsIHTMLCollection* htmlCollection;
-    rv = mozilla::dom::UnwrapObject<nsIHTMLCollection>(cx, obj, htmlCollection);
+    rv = UNWRAP_OBJECT(HTMLCollection, cx, obj, htmlCollection);
     if (NS_SUCCEEDED(rv)) {
       NS_ADDREF(*nodeList = static_cast<nsContentList*>(htmlCollection));
     }
