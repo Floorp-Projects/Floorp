@@ -447,21 +447,6 @@ SimulateActivityCallback(bool aActive);
 namespace mozilla {
 namespace dom {
 
-extern int HandlerFamily;
-inline void* ProxyFamily() { return &HandlerFamily; }
-
-inline bool IsDOMProxy(JSObject *obj, const js::Class* clasp)
-{
-    MOZ_ASSERT(js::GetObjectClass(obj) == clasp);
-    return (js::IsObjectProxyClass(clasp) || js::IsFunctionProxyClass(clasp)) &&
-           js::GetProxyHandler(obj)->family() == ProxyFamily();
-}
-
-inline bool IsDOMProxy(JSObject *obj)
-{
-    return IsDOMProxy(obj, js::GetObjectClass(obj));
-}
-
 typedef JSObject*
 (*DefineInterface)(JSContext *cx, JS::Handle<JSObject*> global,
                    JS::Handle<jsid> id, bool defineOnGlobal);
