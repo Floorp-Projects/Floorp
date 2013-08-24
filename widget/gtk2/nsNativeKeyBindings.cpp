@@ -246,15 +246,26 @@ bool
 nsNativeKeyBindings::KeyPress(const nsNativeKeyEvent& aEvent,
                               DoCommandCallback aCallback, void *aCallbackData)
 {
-  uint32_t keyCode;
+  // If the native key event is set, it must be synthesized for tests.
+  // We just ignore such events because this behavior depends on system
+  // settings.
+  if (!aEvent.mGeckoEvent->mNativeKeyEvent) {
+    // It must be synthesized event or dispatched DOM event from chrome.
+    return false;
+  }
 
-  if (aEvent.charCode != 0)
-    keyCode = gdk_unicode_to_keyval(aEvent.charCode);
-  else
-    keyCode = KeymapWrapper::GuessGDKKeyval(aEvent.keyCode);
+  guint keyval;
 
-  if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyCode))
+  if (aEvent.charCode) {
+    keyval = gdk_unicode_to_keyval(aEvent.charCode);
+  } else {
+    keyval =
+      static_cast<GdkEventKey*>(aEvent.mGeckoEvent->mNativeKeyEvent)->keyval;
+  }
+
+  if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyval)) {
     return true;
+  }
 
   nsKeyEvent *nativeKeyEvent = aEvent.mGeckoEvent;
   if (!nativeKeyEvent ||
@@ -268,9 +279,10 @@ nsNativeKeyBindings::KeyPress(const nsNativeKeyEvent& aEvent,
         nativeKeyEvent->alternativeCharCodes[i].mShiftedCharCode :
         nativeKeyEvent->alternativeCharCodes[i].mUnshiftedCharCode;
     if (ch && ch != aEvent.charCode) {
-      keyCode = gdk_unicode_to_keyval(ch);
-      if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyCode))
+      keyval = gdk_unicode_to_keyval(ch);
+      if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyval)) {
         return true;
+      }
     }
   }
 
@@ -294,16 +306,10 @@ bool
 nsNativeKeyBindings::KeyPressInternal(const nsNativeKeyEvent& aEvent,
                                       DoCommandCallback aCallback,
                                       void *aCallbackData,
-                                      uint32_t aKeyCode)
+                                      guint aKeyval)
 {
-  int modifiers = 0;
-  if (aEvent.altKey)
-    modifiers |= GDK_MOD1_MASK;
-  if (aEvent.ctrlKey)
-    modifiers |= GDK_CONTROL_MASK;
-  if (aEvent.shiftKey)
-    modifiers |= GDK_SHIFT_MASK;
-  // we don't support meta
+  guint modifiers =
+    static_cast<GdkEventKey*>(aEvent.mGeckoEvent->mNativeKeyEvent)->state;
 
   gCurrentCallback = aCallback;
   gCurrentCallbackData = aCallbackData;
@@ -311,10 +317,10 @@ nsNativeKeyBindings::KeyPressInternal(const nsNativeKeyEvent& aEvent,
   gHandled = false;
 #if (MOZ_WIDGET_GTK == 2)
   gtk_bindings_activate(GTK_OBJECT(mNativeTarget),
-                        aKeyCode, GdkModifierType(modifiers));
+                        aKeyval, GdkModifierType(modifiers));
 #else
   gtk_bindings_activate(G_OBJECT(mNativeTarget),
-                        aKeyCode, GdkModifierType(modifiers));
+                        aKeyval, GdkModifierType(modifiers));
 #endif
 
   gCurrentCallback = nullptr;
