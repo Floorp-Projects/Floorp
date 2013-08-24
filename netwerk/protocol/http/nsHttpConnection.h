@@ -15,6 +15,7 @@
 #include "nsProxyRelease.h"
 #include "prinrval.h"
 #include "ASpdySession.h"
+#include "mozilla/TimeStamp.h"
 
 #include "nsIStreamListener.h"
 #include "nsISocketTransport.h"

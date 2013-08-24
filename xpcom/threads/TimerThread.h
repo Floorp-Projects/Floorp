@@ -18,10 +18,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Monitor.h"
-
-namespace mozilla {
-class TimeStamp;
-}
+#include "mozilla/TimeStamp.h"
 
 class TimerThread MOZ_FINAL : public nsIRunnable,
                               public nsIObserver
