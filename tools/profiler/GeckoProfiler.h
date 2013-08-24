@@ -50,7 +50,10 @@
 #define SAMPLER_H
 
 #include "mozilla/NullPtr.h"
-#include "mozilla/TimeStamp.h"
+
+namespace mozilla {
+class TimeStamp;
+}
 
 #ifndef MOZ_ENABLE_PROFILER_SPS
 
