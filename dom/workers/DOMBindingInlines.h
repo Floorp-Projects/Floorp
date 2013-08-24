@@ -36,7 +36,7 @@ struct WrapPrototypeTraits
     GetJSClass()                                                               \
     {                                                                          \
       using namespace mozilla::dom;                                            \
-      return _class##Binding_workers::Class.ToJSClass();                       \
+      return _class##Binding_workers::GetJSClass();                            \
     }                                                                          \
                                                                                \
     static inline JSObject*                                                    \
