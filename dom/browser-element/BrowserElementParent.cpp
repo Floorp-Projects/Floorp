@@ -72,7 +72,7 @@ CreateIframe(Element* aOpenerFrameElement, const nsAString& aName, bool aRemote)
 
 bool
 DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
-                       JSContext* cx, JS::Handle<JS::Value> aDetailValue)
+                       JSContext* aCx, JS::Handle<JS::Value> aDetailValue)
 {
   NS_ENSURE_TRUE(aFrameElement, false);
   nsIPresShell *shell = aFrameElement->OwnerDoc()->GetShell();
@@ -91,7 +91,7 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
   NS_ENSURE_TRUE(customEvent, false);
   ErrorResult res;
   CustomEvent* event = static_cast<CustomEvent*>(customEvent.get());
-  event->InitCustomEvent(cx,
+  event->InitCustomEvent(aCx,
                          aEventName,
                          /* bubbles = */ true,
                          /* cancelable = */ false,
