@@ -567,9 +567,19 @@ class CGHeaders(CGWrapper):
         interfaceDeps = [d.interface for d in descriptors]
         ancestors = []
         for iface in interfaceDeps:
-            while iface.parent:
+            if iface.parent:
+                # We're going to need our parent's prototype, to use as the
+                # prototype of our prototype object.
                 ancestors.append(iface.parent)
-                iface = iface.parent
+                # And if we have an interface object, we'll need the nearest
+                # ancestor with an interface object too, so we can use its
+                # interface object as the proto of our interface object.
+                if iface.hasInterfaceObject():
+                    parent = iface.parent
+                    while parent and not parent.hasInterfaceObject():
+                        parent = parent.parent
+                    if parent:
+                        ancestors.append(parent)
         interfaceDeps.extend(ancestors)
         bindingIncludes = set(self.getDeclarationFilename(d) for d in interfaceDeps)
 
@@ -641,7 +651,6 @@ class CGHeaders(CGWrapper):
                             declareIncludes.add(typeDesc.headerFile)
                         else:
                             implementationIncludes.add(typeDesc.headerFile)
-                        bindingHeaders.add(self.getDeclarationFilename(typeDesc.interface))
             elif unrolled.isDictionary():
                 bindingHeaders.add(self.getDeclarationFilename(unrolled.inner))
             elif unrolled.isCallback():
@@ -8620,7 +8629,6 @@ class CGBindingRoot(CGThing):
             return any(m.getExtendedAttribute("Pref") for m in iface.members + [iface]);
         requiresPreferences = any(descriptorRequiresPreferences(d) for d in descriptors)
         hasOwnedDescriptors = any(d.nativeOwnership == 'owned' for d in descriptors)
-        requiresContentUtils = any(d.interface.hasInterfaceObject() for d in descriptors)
         hasProxies = any(d.concrete and d.proxy for d in descriptors)
         def descriptorHasChromeOnly(desc):
             return (any(isChromeOnly(a) for a in desc.interface.members) or
@@ -8737,7 +8745,6 @@ class CGBindingRoot(CGThing):
                                 'nsThreadUtils.h'] if hasWorkerStuff else [])
                             + (['mozilla/Preferences.h'] if requiresPreferences else [])
                             + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else [])
-                            + (['nsContentUtils.h'] if requiresContentUtils else [])
                             + (['nsCxPusher.h'] if dictionaries else [])
                             + (['AccessCheck.h'] if hasChromeOnly else [])
                             + (['mozilla/dom/DOMJSProxyHandler.h'] if hasProxies else [])
