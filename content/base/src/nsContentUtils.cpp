@@ -116,7 +116,6 @@
 #include "nsILoadGroup.h"
 #include "nsIMEStateManager.h"
 #include "nsIMIMEService.h"
-#include "nsINativeKeyBindings.h"
 #include "nsINode.h"
 #include "nsINodeInfo.h"
 #include "nsIObjectLoadingContent.h"
@@ -4549,39 +4548,6 @@ nsEvent*
 nsContentUtils::GetNativeEvent(nsIDOMEvent* aDOMEvent)
 {
   return aDOMEvent ? aDOMEvent->GetInternalNSEvent() : nullptr;
-}
-
-//static
-bool
-nsContentUtils::DOMEventToNativeKeyEvent(nsIDOMKeyEvent* aKeyEvent,
-                                         nsNativeKeyEvent* aNativeEvent,
-                                         bool aGetCharCode)
-{
-  bool defaultPrevented;
-  aKeyEvent->GetDefaultPrevented(&defaultPrevented);
-  if (defaultPrevented)
-    return false;
-
-  bool trusted = false;
-  aKeyEvent->GetIsTrusted(&trusted);
-  if (!trusted)
-    return false;
-
-  if (aGetCharCode) {
-    aKeyEvent->GetCharCode(&aNativeEvent->charCode);
-  } else {
-    aNativeEvent->charCode = 0;
-  }
-  aKeyEvent->GetKeyCode(&aNativeEvent->keyCode);
-  aKeyEvent->GetAltKey(&aNativeEvent->altKey);
-  aKeyEvent->GetCtrlKey(&aNativeEvent->ctrlKey);
-  aKeyEvent->GetShiftKey(&aNativeEvent->shiftKey);
-  aKeyEvent->GetMetaKey(&aNativeEvent->metaKey);
-
-  aNativeEvent->mGeckoEvent =
-    static_cast<nsKeyEvent*>(GetNativeEvent(aKeyEvent));
-
-  return true;
 }
 
 static bool
