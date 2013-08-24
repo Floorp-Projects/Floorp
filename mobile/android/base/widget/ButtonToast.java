@@ -28,6 +28,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.R;
 
 public class ButtonToast {
@@ -84,11 +85,9 @@ public class ButtonToast {
         mView.setVisibility(View.VISIBLE);
         int duration = immediate ? 0 : mView.getResources().getInteger(android.R.integer.config_longAnimTime);
 
-        mView.clearAnimation();
-        AlphaAnimation alpha = new AlphaAnimation(0.0f, 1.0f);
-        alpha.setDuration(duration);
-        alpha.setFillAfter(true);
-        mView.startAnimation(alpha);
+        PropertyAnimator animator = new PropertyAnimator(duration);
+        animator.attach(mView, PropertyAnimator.Property.ALPHA, 1.0f);
+        animator.start();
     }
 
     public void hide(boolean immediate) {
@@ -101,19 +100,19 @@ public class ButtonToast {
             mMessage = null;
             mToken = null;
         } else {
-            AlphaAnimation alpha = new AlphaAnimation(1.0f, 0.0f);
-            alpha.setDuration(duration);
-            alpha.setFillAfter(true);
-            alpha.setAnimationListener(new Animation.AnimationListener () {
-                public void onAnimationEnd(Animation animation) {
+            // Using Android's animation frameworks will not correctly turn off clicking.
+            // See bug 885717.
+            PropertyAnimator animator = new PropertyAnimator(duration);
+            animator.attach(mView, PropertyAnimator.Property.ALPHA, 0.0f);
+            animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener () {
+                public void onPropertyAnimationEnd() {
                     mView.setVisibility(View.GONE);
                     mMessage = null;
                     mToken = null;
                 }
-                public void onAnimationRepeat(Animation animation) { }
-                public void onAnimationStart(Animation animation) { }
+                public void onPropertyAnimationStart() { }
             });
-            mView.startAnimation(alpha);
+            animator.start();
         }
     }
 
