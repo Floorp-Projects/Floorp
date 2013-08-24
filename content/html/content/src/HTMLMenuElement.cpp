@@ -12,6 +12,7 @@
 #include "nsEventDispatcher.h"
 #include "nsGUIEvent.h"
 #include "nsXULContextMenuBuilder.h"
+#include "nsIURI.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Menu)
 
