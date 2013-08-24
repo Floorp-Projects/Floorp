@@ -18,6 +18,7 @@ chrome-devtools-frontend.appspot.com: did not receive HSTS header
 chrome.google.com: did not receive HSTS header
 code.google.com: did not receive HSTS header
 codereview.chromium.org: did not receive HSTS header
+crypto.cat: could not connect to host
 crypto.is: did not receive HSTS header
 csawctf.poly.edu: did not receive HSTS header
 dl.google.com: did not receive HSTS header
@@ -81,6 +82,8 @@ surfeasy.com: did not receive HSTS header
 talk.google.com: did not receive HSTS header
 talkgadget.google.com: did not receive HSTS header
 torproject.org: did not receive HSTS header
+translate.google.com: did not receive HSTS header
+translate.googleapis.com: did not receive HSTS header
 uprotect.it: could not connect to host
 www.developer.mydigipass.com: could not connect to host
 www.dropcam.com: max-age too low: 2592000
