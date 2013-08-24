@@ -49,6 +49,18 @@ class Fake_MediaStreamListener
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStreamListener)
 };
 
+class Fake_MediaStreamDirectListener : public Fake_MediaStreamListener
+{
+ public:
+  virtual ~Fake_MediaStreamDirectListener() {}
+
+  virtual void NotifyRealtimeData(mozilla::MediaStreamGraph* graph, mozilla::TrackID tid,
+                                  mozilla::TrackRate rate,
+                                  mozilla::TrackTicks offset,
+                                  uint32_t events,
+                                  const mozilla::MediaSegment& media) = 0;
+};
+
 // Note: only one listener supported
 class Fake_MediaStream {
  public:
@@ -112,6 +124,11 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
                 mozilla::MediaSegment* aSegment) {}
   void EndTrack(mozilla::TrackID aID) {}
 
+  bool AppendToTrack(mozilla::TrackID aID, mozilla::MediaSegment* aSegment,
+                     mozilla::MediaSegment *aRawSegment) {
+    return AppendToTrack(aID, aSegment);
+  }
+
   bool AppendToTrack(mozilla::TrackID aID, mozilla::MediaSegment* aSegment) {
     bool nonZeroSample = false;
     MOZ_ASSERT(aSegment);
@@ -154,6 +171,9 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
   void SetPullEnabled(bool aEnabled) {
     mPullEnabled = aEnabled;
   }
+  void AddDirectListener(Fake_MediaStreamListener* aListener) {}
+  void RemoveDirectListener(Fake_MediaStreamListener* aListener) {}
+
   //Don't pull anymore data,if mStop is true.
   void StopStream() {
    mStop = true;
@@ -203,6 +223,11 @@ public:
 
     return ds.forget();
   }
+
+  virtual void Stop() {} // Really DOMLocalMediaStream
+
+  virtual bool AddDirectListener(Fake_MediaStreamListener *aListener) { return false; }
+  virtual void RemoveDirectListener(Fake_MediaStreamListener *aListener) {}
 
   Fake_MediaStream *GetStream() { return mMediaStream; }
 
@@ -275,7 +300,9 @@ namespace mozilla {
 typedef Fake_MediaStream MediaStream;
 typedef Fake_SourceMediaStream SourceMediaStream;
 typedef Fake_MediaStreamListener MediaStreamListener;
+typedef Fake_MediaStreamDirectListener MediaStreamDirectListener;
 typedef Fake_DOMMediaStream DOMMediaStream;
+typedef Fake_DOMMediaStream DOMLocalMediaStream;
 }
 
 #endif
