@@ -111,7 +111,7 @@ ServerBSO.prototype = {
     return obj;
   },
 
-  delete: function delete_() {
+  delete: function delete() {
     this.deleted = true;
 
     delete this.payload;
@@ -571,7 +571,7 @@ StorageServerCollection.prototype = {
     return {success: success, failed: failed};
   },
 
-  delete: function delete_(options) {
+  delete: function delete(options) {
     options = options || {};
 
     // Protocol 2.0 only allows the "ids" query string argument.
