@@ -42,7 +42,7 @@ interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 
-[scriptable, builtinclass, uuid(365e7446-6c4b-45ae-ae08-b7b401900093)]
+[scriptable, builtinclass, uuid(4bb2261b-4c13-44a4-ace3-fc2eec17cc34)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -257,6 +257,13 @@ interface nsIDocShell : nsIDocShellTreeItem
    * Attribute that determines whether window control (move/resize) is allowed.
    */
   attribute boolean allowWindowControl;
+
+  /**
+   * True if the docshell allows its content to be handled by a content listener
+   * other than the docshell itself, including the external helper app service,
+   * and false otherwise.  Defaults to true.
+   */
+  [infallible] attribute boolean allowContentRetargeting;
 
   /**
    * Get an enumerator over this docShell and its children.
