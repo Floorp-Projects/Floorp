@@ -33,7 +33,6 @@ webidl_files = \
   BeforeUnloadEvent.webidl \
   BiquadFilterNode.webidl \
   Blob.webidl \
-  BrowserElementDictionaries.webidl \
   CameraManager.webidl \
   CanvasRenderingContext2D.webidl \
   CaretPosition.webidl \
