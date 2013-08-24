@@ -17,7 +17,6 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE, MOZ_FINAL
 #include "mozilla/RefPtr.h"             // for TemporaryRef, RefPtr
-#include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
@@ -42,6 +41,8 @@ class nsIWidget;
 struct gfxMatrix;
 
 namespace mozilla {
+class TimeStamp;
+
 namespace gfx {
 class Matrix4x4;
 }
