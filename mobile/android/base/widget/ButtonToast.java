@@ -31,7 +31,6 @@ import android.widget.TextView;
 
 import java.util.LinkedList;
 
-import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.gfx.BitmapUtils;
 
@@ -124,9 +123,11 @@ public class ButtonToast {
         mView.setVisibility(View.VISIBLE);
         int duration = immediate ? 0 : mView.getResources().getInteger(android.R.integer.config_longAnimTime);
 
-        PropertyAnimator animator = new PropertyAnimator(duration);
-        animator.attach(mView, PropertyAnimator.Property.ALPHA, 1.0f);
-        animator.start();
+        mView.clearAnimation();
+        AlphaAnimation alpha = new AlphaAnimation(0.0f, 1.0f);
+        alpha.setDuration(duration);
+        alpha.setFillAfter(true);
+        mView.startAnimation(alpha);
     }
 
     public void hide(boolean immediate, ReasonHidden reason) {
@@ -148,20 +149,20 @@ public class ButtonToast {
             mView.setVisibility(View.GONE);
             showNextInQueue();
         } else {
-            // Using Android's animation frameworks will not correctly turn off clicking.
-            // See bug 885717.
-            PropertyAnimator animator = new PropertyAnimator(duration);
-            animator.attach(mView, PropertyAnimator.Property.ALPHA, 0.0f);
-            animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener () {
+            AlphaAnimation alpha = new AlphaAnimation(1.0f, 0.0f);
+            alpha.setDuration(duration);
+            alpha.setFillAfter(true);
+            alpha.setAnimationListener(new Animation.AnimationListener () {
                 // If we are showing a toast and go in the background
                 // onAnimationEnd will be called when the app is restored
-                public void onPropertyAnimationEnd() {
+                public void onAnimationEnd(Animation animation) {
                     mView.setVisibility(View.GONE);
                     showNextInQueue();
                 }
-                public void onPropertyAnimationStart() { }
+                public void onAnimationRepeat(Animation animation) { }
+                public void onAnimationStart(Animation animation) { }
             });
-            animator.start();
+            mView.startAnimation(alpha);
         }
     }
 
