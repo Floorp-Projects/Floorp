@@ -35,7 +35,7 @@ interface nsIInterfaceRequestor;
  * or helper app. Or it may hand the url off to an OS registered 
  * application. 
  */
-[scriptable, uuid(2f7e8051-f1c9-4bcc-8584-9cfd5849e343)]
+[scriptable, uuid(8762c4e7-be35-4958-9b81-a05685bb516d)]
 interface nsIURILoader : nsISupports
 {
   /**
@@ -78,9 +78,9 @@ interface nsIURILoader : nsISupports
    *        The channel that should be opened. This must not be asyncOpen'd yet!
    *        If a loadgroup is set on the channel, it will get replaced with a
    *        different one.
-   * @param aIsContentPreferred
-   *        Should the content be displayed in a container that prefers the
-   *        content-type, or will any container do.
+   * @param aFlags
+   *        Combination (bitwise OR) of the flags specified above. 0 indicates
+   *        default handling.
    * @param aWindowContext
    *        If you are running the url from a doc shell or a web shell, this is
    *        your window context. If you have a content listener you want to
@@ -90,7 +90,7 @@ interface nsIURILoader : nsISupports
    *        <b>Must not be null!</b>
    */ 
   void openURI(in nsIChannel aChannel,
-               in boolean aIsContentPreferred,
+               in unsigned long aFlags,
                in nsIInterfaceRequestor aWindowContext);
 
   /**
