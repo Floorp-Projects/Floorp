@@ -140,6 +140,7 @@ let Content = {
     addEventListener("MozApplicationManifest", this, false);
     addEventListener("DOMContentLoaded", this, false);
     addEventListener("DOMAutoComplete", this, false);
+    addEventListener("DOMFormHasPassword", this, false);
     addEventListener("blur", this, false);
     addEventListener("pagehide", this, false);
     // Attach a listener to watch for "click" events bubbling up from error
@@ -187,6 +188,10 @@ let Content = {
           this._onClickBubble(aEvent);
         else
           this._onClickCapture(aEvent);
+        break;
+
+      case "DOMFormHasPassword":
+        LoginManagerContent.onFormPassword(aEvent);
         break;
 
       case "DOMContentLoaded":
