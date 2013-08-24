@@ -293,15 +293,17 @@ class MediaPipelineTransmit : public MediaPipeline {
   MediaPipelineTransmit(const std::string& pc,
                         nsCOMPtr<nsIEventTarget> main_thread,
                         nsCOMPtr<nsIEventTarget> sts_thread,
-                        MediaStream *stream,
+                        DOMMediaStream *domstream,
                         TrackID track_id,
                         RefPtr<MediaSessionConduit> conduit,
                         RefPtr<TransportFlow> rtp_transport,
                         RefPtr<TransportFlow> rtcp_transport) :
       MediaPipeline(pc, TRANSMIT, main_thread, sts_thread,
-                    stream, track_id, conduit, rtp_transport,
+                    domstream->GetStream(), track_id, conduit, rtp_transport,
                     rtcp_transport),
-      listener_(new PipelineListener(conduit)) {}
+      listener_(new PipelineListener(conduit)),
+      domstream_(domstream)
+  {}
 
   // Initialize (stuff here may fail)
   virtual nsresult Init();
@@ -309,6 +311,8 @@ class MediaPipelineTransmit : public MediaPipeline {
   // Called on the main thread.
   virtual void DetachMediaStream() {
     ASSERT_ON_THREAD(main_thread_);
+    domstream_->RemoveDirectListener(listener_);
+    domstream_ = nullptr;
     stream_->RemoveListener(listener_);
     // Let the listener be destroyed with the pipeline (or later).
     stream_ = nullptr;
@@ -318,11 +322,13 @@ class MediaPipelineTransmit : public MediaPipeline {
   virtual nsresult TransportReady_s(TransportFlow *flow);
 
   // Separate class to allow ref counting
-  class PipelineListener : public MediaStreamListener {
+  class PipelineListener : public MediaStreamDirectListener {
+   friend class MediaPipelineTransmit;
    public:
     PipelineListener(const RefPtr<MediaSessionConduit>& conduit)
       : conduit_(conduit),
         active_(false),
+        direct_connect_(false),
         last_img_(-1),
         samples_10ms_buffer_(nullptr),
         buffer_current_(0),
@@ -353,7 +359,20 @@ class MediaPipelineTransmit : public MediaPipeline {
                                           const MediaSegment& queued_media) MOZ_OVERRIDE;
     virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) MOZ_OVERRIDE {}
 
+    // Implement MediaStreamDirectListener
+    virtual void NotifyRealtimeData(MediaStreamGraph* graph, TrackID tid,
+                                    TrackRate rate,
+                                    TrackTicks offset,
+                                    uint32_t events,
+                                    const MediaSegment& media) MOZ_OVERRIDE;
+
    private:
+    void NewData(MediaStreamGraph* graph, TrackID tid,
+                 TrackRate rate,
+                 TrackTicks offset,
+                 uint32_t events,
+                 const MediaSegment& media);
+
     virtual void ProcessAudioChunk(AudioSessionConduit *conduit,
 				   TrackRate rate, AudioChunk& chunk);
 #ifdef MOZILLA_INTERNAL_API
@@ -362,6 +381,7 @@ class MediaPipelineTransmit : public MediaPipeline {
 #endif
     RefPtr<MediaSessionConduit> conduit_;
     volatile bool active_;
+    bool direct_connect_;
 
     int32_t last_img_; // serial number of last Image
 
@@ -377,6 +397,7 @@ class MediaPipelineTransmit : public MediaPipeline {
 
  private:
   RefPtr<PipelineListener> listener_;
+  DOMMediaStream *domstream_;
 };
 
 

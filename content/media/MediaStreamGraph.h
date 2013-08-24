@@ -170,6 +170,30 @@ public:
 };
 
 /**
+ * This is a base class for media graph thread listener direct callbacks
+ * from within AppendToTrack().  Note that your regular listener will
+ * still get NotifyQueuedTrackChanges() callbacks from the MSG thread, so
+ * you must be careful to ignore them if AddDirectListener was successful.
+ */
+class MediaStreamDirectListener : public MediaStreamListener
+{
+public:
+  virtual ~MediaStreamDirectListener() {}
+
+  /*
+   * This will be called on any MediaStreamDirectListener added to a
+   * a SourceMediaStream when AppendToTrack() is called.  The MediaSegment
+   * will be the RawSegment (unresampled) if available in AppendToTrack().
+   * Note that NotifyQueuedTrackChanges() calls will also still occur.
+   */
+  virtual void NotifyRealtimeData(MediaStreamGraph* aGraph, TrackID aID,
+                                  TrackRate aTrackRate,
+                                  TrackTicks aTrackOffset,
+                                  uint32_t aTrackEvents,
+                                  const MediaSegment& aMedia) {}
+};
+
+/**
  * This is a base class for main-thread listener callbacks.
  * This callback is invoked on the main thread when the main-thread-visible
  * state of a stream has changed.
@@ -599,6 +623,10 @@ public:
    * it is still possible for a NotifyPull to occur.
    */
   void SetPullEnabled(bool aEnabled);
+
+  void AddDirectListener(MediaStreamDirectListener* aListener);
+  void RemoveDirectListener(MediaStreamDirectListener* aListener);
+
   /**
    * Add a new track to the stream starting at the given base time (which
    * must be greater than or equal to the last time passed to
@@ -613,7 +641,7 @@ public:
    * Returns false if the data was not appended because no such track exists
    * or the stream was already finished.
    */
-  bool AppendToTrack(TrackID aID, MediaSegment* aSegment);
+  bool AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegment *aRawSegment = nullptr);
   /**
    * Returns true if the buffer currently has enough data.
    * Returns false if there isn't enough data or if no such track exists.
@@ -704,6 +732,15 @@ protected:
     return nullptr;
   }
 
+  /**
+   * Notify direct consumers of new data to one of the stream tracks.
+   * The data doesn't have to be resampled (though it may be).  This is called
+   * from AppendToTrack on the thread providing the data, and will call
+   * the Listeners on this thread.
+   */
+  void NotifyDirectConsumers(TrackData *aTrack,
+                             MediaSegment *aSegment);
+
   // Media stream graph thread only
   MediaStreamListener::Consumption mLastConsumptionState;
 
@@ -713,6 +750,7 @@ protected:
   // protected by mMutex
   StreamTime mUpdateKnownTracksTime;
   nsTArray<TrackData> mUpdateTracks;
+  nsTArray<nsRefPtr<MediaStreamDirectListener> > mDirectListeners;
   bool mPullEnabled;
   bool mUpdateFinished;
   bool mDestroyed;
