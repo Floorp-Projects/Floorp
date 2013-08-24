@@ -7706,6 +7706,33 @@ class CGDOMJSProxyHandler(CGClass):
                          constructors=constructors,
                          methods=methods)
 
+class CGDOMJSProxyHandlerDeclarer(CGThing):
+    """
+    A class for declaring a DOMProxyHandler.
+    """
+    def __init__(self, handlerThing):
+        self.handlerThing = handlerThing
+
+    def declare(self):
+        # Our class declaration should happen when we're defining
+        return ""
+
+    def define(self):
+        return self.handlerThing.declare()
+
+class CGDOMJSProxyHandlerDefiner(CGThing):
+    """
+    A class for defining a DOMProxyHandler.
+    """
+    def __init__(self, handlerThing):
+        self.handlerThing = handlerThing
+
+    def declare(self):
+        return ""
+
+    def define(self):
+        return self.handlerThing.define()
+
 def stripTrailingWhitespace(text):
     tail = '\n' if text.endswith('\n') else ''
     lines = text.splitlines()
@@ -7873,10 +7900,12 @@ class CGDescriptor(CGThing):
                 if not descriptor.wrapperCache:
                     raise TypeError("We need a wrappercache to support expandos for proxy-based "
                                     "bindings (" + descriptor.name + ")")
+                handlerThing = CGDOMJSProxyHandler(descriptor)
+                cgThings.append(CGDOMJSProxyHandlerDeclarer(handlerThing))
                 cgThings.append(CGProxyIsProxy(descriptor))
                 cgThings.append(CGProxyUnwrap(descriptor))
                 cgThings.append(CGDOMJSProxyHandlerDOMClass(descriptor))
-                cgThings.append(CGDOMJSProxyHandler(descriptor))
+                cgThings.append(CGDOMJSProxyHandlerDefiner(handlerThing))
             else:
                 cgThings.append(CGDOMJSClass(descriptor))
                 cgThings.append(CGGetJSClassMethod(descriptor))
@@ -8161,7 +8190,6 @@ if (""",
 
 
         initializerCtor = ClassConstructor([],
-            bodyInHeader=True,
             visibility="public",
             body=(
                 "// Safe to pass a null context if we pass a null value\n"
@@ -8593,6 +8621,7 @@ class CGBindingRoot(CGThing):
         requiresPreferences = any(descriptorRequiresPreferences(d) for d in descriptors)
         hasOwnedDescriptors = any(d.nativeOwnership == 'owned' for d in descriptors)
         requiresContentUtils = any(d.interface.hasInterfaceObject() for d in descriptors)
+        hasProxies = any(d.concrete and d.proxy for d in descriptors)
         def descriptorHasChromeOnly(desc):
             return (any(isChromeOnly(a) for a in desc.interface.members) or
                     desc.interface.getExtendedAttribute("ChromeOnly") is not None or
@@ -8696,7 +8725,9 @@ class CGBindingRoot(CGThing):
                          callbackDescriptors,
                          ['mozilla/dom/BindingDeclarations.h',
                           'mozilla/ErrorResult.h',
-                          'mozilla/dom/DOMJSProxyHandler.h'],
+                          'jspubtd.h',
+                          'js/RootingAPI.h',
+                          ],
                          ['mozilla/dom/BindingUtils.h',
                           'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
@@ -8709,6 +8740,7 @@ class CGBindingRoot(CGThing):
                             + (['nsContentUtils.h'] if requiresContentUtils else [])
                             + (['nsCxPusher.h'] if dictionaries else [])
                             + (['AccessCheck.h'] if hasChromeOnly else [])
+                            + (['mozilla/dom/DOMJSProxyHandler.h'] if hasProxies else [])
                             + (['xpcprivate.h'] if isEventTarget else [])
                             + (['nsPIDOMWindow.h'] if len(jsImplemented) != 0 else [])
                             + (['nsDOMQS.h'] if needsDOMQS["value"] else [])
