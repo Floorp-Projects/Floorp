@@ -80,7 +80,7 @@ class CGNativePropertyHooks(CGThing):
     def declare(self):
         if self.descriptor.workers:
             return ""
-        return "extern const NativePropertyHooks sNativePropertyHooks;\n"
+        return "extern const NativePropertyHooks* sNativePropertyHooks;\n"
     def define(self):
         if self.descriptor.workers:
             return ""
@@ -112,7 +112,7 @@ class CGNativePropertyHooks(CGThing):
         else:
             prototypeID += "_ID_Count"
         parent = self.descriptor.interface.parent
-        parentHooks = ("&" + toBindingNamespace(parent.identifier.name) + "::sNativePropertyHooks"
+        parentHooks = (toBindingNamespace(parent.identifier.name) + "::sNativePropertyHooks"
                        if parent else 'nullptr')
 
         return CGWrapper(CGIndenter(CGList([CGGeneric(resolveOwnProperty),
@@ -125,11 +125,13 @@ class CGNativePropertyHooks(CGThing):
                                             CGGeneric(constructorID),
                                             CGGeneric(parentHooks)],
                                            ",\n")),
-                         pre="const NativePropertyHooks sNativePropertyHooks = {\n",
-                         post="\n};\n").define()
+                         pre="static const NativePropertyHooks sNativePropertyHooksStruct = {\n",
+                         post=("\n"
+                               "};\n"
+                               "const NativePropertyHooks* sNativePropertyHooks = &sNativePropertyHooksStruct;\n")).define()
 
 def NativePropertyHooks(descriptor):
-    return "&sWorkerNativePropertyHooks" if descriptor.workers else "&sNativePropertyHooks"
+    return "&sWorkerNativePropertyHooks" if descriptor.workers else "sNativePropertyHooks"
 
 def DOMClass(descriptor):
         protoList = ['prototypes::id::' + proto for proto in descriptor.prototypeChain]
@@ -8549,6 +8551,9 @@ class CGForwardDeclarations(CGWrapper):
         for d in descriptors:
             builder.add(d.nativeType)
 
+        # We just about always need NativePropertyHooks
+        builder.addInMozillaDom("NativePropertyHooks")
+
         for callback in mainCallbacks:
             forwardDeclareForType(callback)
             for t in getTypesFromCallback(callback):
@@ -8691,12 +8696,12 @@ class CGBindingRoot(CGThing):
                          callbackDescriptors,
                          ['mozilla/dom/BindingDeclarations.h',
                           'mozilla/ErrorResult.h',
-                          'mozilla/dom/DOMJSClass.h',
                           'mozilla/dom/DOMJSProxyHandler.h'],
                          ['mozilla/dom/BindingUtils.h',
                           'mozilla/dom/Nullable.h',
                           'PrimitiveConversions.h',
                           'WrapperFactory.h',
+                          'mozilla/dom/DOMJSClass.h',
                           ] + (['WorkerPrivate.h',
                                 'nsThreadUtils.h'] if hasWorkerStuff else [])
                             + (['mozilla/Preferences.h'] if requiresPreferences else [])
