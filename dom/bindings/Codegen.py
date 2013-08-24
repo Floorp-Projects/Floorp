@@ -1879,7 +1879,7 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal')] + extraArgs
         CGAbstractMethod.__init__(self, descriptor, name,
-                                  'JS::Handle<JSObject*>', args, inline=True)
+                                  'JS::Handle<JSObject*>', args)
         self.id = idPrefix + "id::" + self.descriptor.name
     def definition_body(self):
         return ("""
