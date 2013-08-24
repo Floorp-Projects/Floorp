@@ -28,6 +28,7 @@
 #include "jsdbgapi.h"
 #include "jsfriendapi.h"
 #include "nsJSPrincipals.h"
+#include "xpcpublic.h" // For xpc::SystemErrorReporter
 
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
