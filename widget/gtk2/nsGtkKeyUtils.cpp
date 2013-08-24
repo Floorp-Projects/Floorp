@@ -848,88 +848,6 @@ KeymapWrapper::ComputeDOMKeyNameIndex(const GdkEventKey* aGdkKeyEvent)
     return ch ? KEY_NAME_INDEX_PrintableKey : KEY_NAME_INDEX_Unidentified;
 }
 
-/* static */ guint
-KeymapWrapper::GuessGDKKeyval(uint32_t aDOMKeyCode)
-{
-    // First, try to handle alphanumeric input, not listed in nsKeycodes:
-    // most likely, more letters will be getting typed in than things in
-    // the key list, so we will look through these first.
-
-    if (aDOMKeyCode >= NS_VK_A && aDOMKeyCode <= NS_VK_Z) {
-        // gdk and DOM both use the ASCII codes for these keys.
-        return aDOMKeyCode;
-    }
-
-    // numbers
-    if (aDOMKeyCode >= NS_VK_0 && aDOMKeyCode <= NS_VK_9) {
-        // gdk and DOM both use the ASCII codes for these keys.
-        return aDOMKeyCode - NS_VK_0 + GDK_0;
-    }
-
-    switch (aDOMKeyCode) {
-        // keys in numpad
-        case NS_VK_MULTIPLY:  return GDK_KP_Multiply;
-        case NS_VK_ADD:       return GDK_KP_Add;
-        case NS_VK_SEPARATOR: return GDK_KP_Separator;
-        case NS_VK_SUBTRACT:  return GDK_KP_Subtract;
-        case NS_VK_DECIMAL:   return GDK_KP_Decimal;
-        case NS_VK_DIVIDE:    return GDK_KP_Divide;
-        case NS_VK_NUMPAD0:   return GDK_KP_0;
-        case NS_VK_NUMPAD1:   return GDK_KP_1;
-        case NS_VK_NUMPAD2:   return GDK_KP_2;
-        case NS_VK_NUMPAD3:   return GDK_KP_3;
-        case NS_VK_NUMPAD4:   return GDK_KP_4;
-        case NS_VK_NUMPAD5:   return GDK_KP_5;
-        case NS_VK_NUMPAD6:   return GDK_KP_6;
-        case NS_VK_NUMPAD7:   return GDK_KP_7;
-        case NS_VK_NUMPAD8:   return GDK_KP_8;
-        case NS_VK_NUMPAD9:   return GDK_KP_9;
-        // other prinable keys
-        case NS_VK_SPACE:               return GDK_space;
-        case NS_VK_COLON:               return GDK_colon;
-        case NS_VK_SEMICOLON:           return GDK_semicolon;
-        case NS_VK_LESS_THAN:           return GDK_less;
-        case NS_VK_EQUALS:              return GDK_equal;
-        case NS_VK_GREATER_THAN:        return GDK_greater;
-        case NS_VK_QUESTION_MARK:       return GDK_question;
-        case NS_VK_AT:                  return GDK_at;
-        case NS_VK_CIRCUMFLEX:          return GDK_asciicircum;
-        case NS_VK_EXCLAMATION:         return GDK_exclam;
-        case NS_VK_DOUBLE_QUOTE:        return GDK_quotedbl;
-        case NS_VK_HASH:                return GDK_numbersign;
-        case NS_VK_DOLLAR:              return GDK_dollar;
-        case NS_VK_PERCENT:             return GDK_percent;
-        case NS_VK_AMPERSAND:           return GDK_ampersand;
-        case NS_VK_UNDERSCORE:          return GDK_underscore;
-        case NS_VK_OPEN_PAREN:          return GDK_parenleft;
-        case NS_VK_CLOSE_PAREN:         return GDK_parenright;
-        case NS_VK_ASTERISK:            return GDK_asterisk;
-        case NS_VK_PLUS:                return GDK_plus;
-        case NS_VK_PIPE:                return GDK_bar;
-        case NS_VK_HYPHEN_MINUS:        return GDK_minus;
-        case NS_VK_OPEN_CURLY_BRACKET:  return GDK_braceleft;
-        case NS_VK_CLOSE_CURLY_BRACKET: return GDK_braceright;
-        case NS_VK_TILDE:               return GDK_asciitilde;
-        case NS_VK_COMMA:               return GDK_comma;
-        case NS_VK_PERIOD:              return GDK_period;
-        case NS_VK_SLASH:               return GDK_slash;
-        case NS_VK_BACK_QUOTE:          return GDK_grave;
-        case NS_VK_OPEN_BRACKET:        return GDK_bracketleft;
-        case NS_VK_BACK_SLASH:          return GDK_backslash;
-        case NS_VK_CLOSE_BRACKET:       return GDK_bracketright;
-        case NS_VK_QUOTE:               return GDK_apostrophe;
-    }
-
-    // misc other things
-    for (uint32_t i = 0; i < ArrayLength(kKeyPairs); ++i) {
-        if (kKeyPairs[i].DOMKeyCode == aDOMKeyCode) {
-            return kKeyPairs[i].GDKKeyval;
-        }
-    }
-
-    return 0;
-}
-
 /* static */ void
 KeymapWrapper::InitKeyEvent(nsKeyEvent& aKeyEvent,
                             GdkEventKey* aGdkKeyEvent)
@@ -1057,6 +975,7 @@ KeymapWrapper::InitKeyEvent(nsKeyEvent& aKeyEvent,
     // (An XEvent would be nice but the GdkEvent is good enough.)
     aKeyEvent.pluginEvent = (void *)aGdkKeyEvent;
     aKeyEvent.time = aGdkKeyEvent->time;
+    aKeyEvent.mNativeKeyEvent = static_cast<void*>(aGdkKeyEvent);
 }
 
 /* static */ uint32_t
