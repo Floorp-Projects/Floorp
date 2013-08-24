@@ -1976,7 +1976,7 @@ SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
 }
 
 bool
-SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment)
+SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegment *aRawSegment)
 {
   MutexAutoLock lock(mMutex);
   // ::EndAllTrackAndFinished() can end these before the sources notice
@@ -1984,7 +1984,15 @@ SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment)
   if (!mFinished) {
     TrackData *track = FindDataForTrack(aID);
     if (track) {
-      track->mData->AppendFrom(aSegment);
+      // Data goes into mData, and on the next iteration of the MSG moves
+      // into the track's segment after NotifyQueuedTrackChanges().  This adds
+      // 0-10ms of delay before data gets to direct listeners.
+      // Indirect listeners (via subsequent TrackUnion nodes) are synced to
+      // playout time, and so can be delayed by buffering.
+
+      // Must notify first, since AppendFrom() will empty out aSegment
+      NotifyDirectConsumers(track, aRawSegment ? aRawSegment : aSegment);
+      track->mData->AppendFrom(aSegment); // note: aSegment is now dead
       appended = true;
     } else {
       aSegment->Clear();
@@ -1994,6 +2002,35 @@ SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment)
     GraphImpl()->EnsureNextIteration();
   }
   return appended;
+}
+
+void
+SourceMediaStream::NotifyDirectConsumers(TrackData *aTrack,
+                                         MediaSegment *aSegment)
+{
+  // Call with mMutex locked
+  MOZ_ASSERT(aTrack);
+
+  for (uint32_t j = 0; j < mDirectListeners.Length(); ++j) {
+    MediaStreamDirectListener* l = mDirectListeners[j];
+    TrackTicks offset = 0; // FIX! need a separate TrackTicks.... or the end of the internal buffer
+    l->NotifyRealtimeData(static_cast<MediaStreamGraph*>(GraphImpl()), aTrack->mID, aTrack->mRate,
+                          offset, aTrack->mCommands, *aSegment);
+  }
+}
+
+void
+SourceMediaStream::AddDirectListener(MediaStreamDirectListener* aListener)
+{
+  MutexAutoLock lock(mMutex);
+  mDirectListeners.AppendElement(aListener);
+}
+
+void
+SourceMediaStream::RemoveDirectListener(MediaStreamDirectListener* aListener)
+{
+  MutexAutoLock lock(mMutex);
+  mDirectListeners.RemoveElement(aListener);
 }
 
 bool

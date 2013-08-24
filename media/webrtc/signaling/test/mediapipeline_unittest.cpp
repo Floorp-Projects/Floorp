@@ -157,7 +157,7 @@ class TestAgentSend : public TestAgent {
         test_pc,
         NULL,
         test_utils->sts_target(),
-        audio_->GetStream(), 1, audio_conduit_, audio_flow_, NULL);
+        audio_, 1, audio_conduit_, audio_flow_, NULL);
 
     audio_pipeline_->Init();
 
