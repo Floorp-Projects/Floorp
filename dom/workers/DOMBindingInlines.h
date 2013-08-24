@@ -7,6 +7,7 @@
 #define mozilla_dom_workers_dombindinginlines_h__
 
 #include "mozilla/dom/FileReaderSyncBinding.h"
+#include "mozilla/dom/JSSlots.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/dom/WorkerLocationBinding.h"
