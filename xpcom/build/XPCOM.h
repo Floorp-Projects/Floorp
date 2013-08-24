@@ -54,6 +54,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
+#include "mozilla/TimeStamp.h"
 
 // interfaces that inherit directly from nsISupports
 

@@ -2346,7 +2346,8 @@ struct nsStyleSVGReset {
 
   nsChangeHint CalcDifference(const nsStyleSVGReset& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_CombineHint(nsChangeHint_UpdateEffects, NS_STYLE_HINT_REFLOW);
+    return NS_CombineHint(nsChangeHint_UpdateEffects,
+            NS_CombineHint(nsChangeHint_UpdateOverflow, NS_STYLE_HINT_REFLOW));
   }
 
   // The backend only supports one SVG reference right now.

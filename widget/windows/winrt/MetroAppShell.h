@@ -7,6 +7,7 @@
 
 #include "nsBaseAppShell.h"
 #include <windows.h>
+#include "mozilla/TimeStamp.h"
 #include "nsWindowsHelpers.h"
 #include "nsIObserver.h"
 

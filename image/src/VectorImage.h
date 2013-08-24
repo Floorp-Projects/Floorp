@@ -10,6 +10,7 @@
 #include "nsIStreamListener.h"
 #include "nsIRequest.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/WeakPtr.h"
 
 class imgDecoderObserver;
