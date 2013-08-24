@@ -25,6 +25,7 @@ MOCHITEST_FILES =	\
 		582176_dummy.html \
 		582176_xml.xml \
 		582176_xslt.xsl \
+		allowContentRetargeting.sjs \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES =	\
@@ -100,6 +101,7 @@ MOCHITEST_CHROME_FILES =	\
     generic.html \
     test_bug846906.xul \
     bug846906.html \
+    test_allowContentRetargeting.html \
     $(NULL)
 
 ifneq ($(MOZ_WIDGET_TOOLKIT),gtk2)
