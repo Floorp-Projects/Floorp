@@ -36,7 +36,11 @@ function test()
 
 // Assertion failure: !pn->isPlaceholder(), at ../jsparse.cpp:4876
 // =====
-  (function(){ var x; eval("var x; x = null"); })();
+  (function(){ var x; eval("var x; x = null"); })()
+
+// Assertion failure: regs.sp == StackBase(fp), at ../jsinterp.cpp:2984
+// =====
+    function this ({x}) { function x(){} }
 
 // Assertion failure: !(pnu->pn_dflags & PND_BOUND), at ../jsemit.cpp:1818
 // =====
