@@ -639,6 +639,27 @@ of the attribute codes:
       </varlistentry>
 
       <varlistentry>
+        <term>--extNC</term>
+        <listitem><para>Add a Name Constraint extension to the certificate. X.509 certificate extensions are described in RFC 5280.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>--keyAttrFlags attrflags</term>
+        <listitem><para>
+PKCS #11 key Attributes. Comma separated list of key attribute flags, selected from the following list of choices: {token | session} {public | private} {sensitive | insensitive} {modifiable | unmodifiable} {extractable | unextractable}</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>--keyFlagsOn opflags</term>
+        <term>--keyFlagsOff opflags</term>
+        <listitem><para>
+PKCS #11 key Operation Flags.
+Comma separated list of one or more of the following:
+{token | session} {public | private} {sensitive | insensitive} {modifiable | unmodifiable} {extractable | unextractable}
+          </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>--source-dir certdir</term>
         <listitem><para>Identify the certificate database directory to upgrade.</para></listitem>
       </varlistentry>
@@ -800,7 +821,7 @@ XKYFwPMJjWCihVku6bw/ihZfuMHhxK22Nue6inNQ6eDu7WmrqL8z3iUrQwxs+WiF
 ob2rb8XRVVJkzXdXxlk4uo3UtNvw8sAz7sWD71qxKaIHU5q49zijfg==
 -----END CERTIFICATE-----
 </programlisting>
-<pa>For a humam-readable display</para>
+<para>For a human-readable display</para>
 <programlisting>$ certutil -L -d sql:$HOME/nssdb -n my-ca-cert
 Certificate:
     Data:

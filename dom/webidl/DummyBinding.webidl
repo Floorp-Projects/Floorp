@@ -22,6 +22,8 @@ interface DummyInterface {
   void CameraPictureOptions(optional CameraPictureOptions arg);
   void MmsParameters(optional MmsParameters arg);
   void MmsAttachment(optional MmsAttachment arg);
+  void AsyncScrollEventDetail(optional AsyncScrollEventDetail arg);
+  void OpenWindowEventDetail(optional OpenWindowEventDetail arg);
 };
 
 interface DummyInterfaceWorkers {

@@ -97,6 +97,11 @@ function CommonAppendExtraActors(aObject) {
  *       notifications when the live list's contents change. One actor in
  *       this list must have a true '.selected' property.
  *
+ *     - addonList: a live list (see below) of addon actors. If present, the
+ *       new root actor supports the 'listAddons' request, providing the live
+ *       list's elements as its addon actors, and sending 'addonListchanged'
+ *       notifications when the live list's contents change.
+ *
  *     - globalActorFactories: an object |A| describing further actors to
  *       attach to the 'listTabs' reply. This is the type accumulated by
  *       DebuggerServer.addGlobalActor. For each own property |P| of |A|,
@@ -150,6 +155,7 @@ function RootActor(aConnection, aParameters) {
   this.conn = aConnection;
   this._parameters = aParameters;
   this._onTabListChanged = this.onTabListChanged.bind(this);
+  this._onAddonListChanged = this.onAddonListChanged.bind(this);
   this._extraActors = {};
 }
 
@@ -189,6 +195,9 @@ RootActor.prototype = {
     /* Tell the live lists we aren't watching any more. */
     if (this._parameters.tabList) {
       this._parameters.tabList.onListChanged = null;
+    }
+    if (this._parameters.addonList) {
+      this._parameters.addonList.onListChanged = null;
     }
     if (typeof this._parameters.onShutdown === 'function') {
       this._parameters.onShutdown();
@@ -245,7 +254,7 @@ RootActor.prototype = {
       let reply = {
         "from": this.actorID,
         "selected": selected || 0,
-        "tabs": [actor.grip() for (actor of tabActorList)],
+        "tabs": [actor.form() for (actor of tabActorList)],
       };
 
       /* DebuggerServer.addGlobalActor support: name actors in 'listTabs' reply. */
@@ -266,6 +275,39 @@ RootActor.prototype = {
     this.conn.send({ from: this.actorID, type:"tabListChanged" });
     /* It's a one-shot notification; no need to watch any more. */
     this._parameters.tabList.onListChanged = null;
+  },
+
+  onListAddons: function () {
+    let addonList = this._parameters.addonList;
+    if (!addonList) {
+      return { from: this.actorID, error: "noAddons",
+               message: "This root actor has no browser addons." };
+    }
+
+    return addonList.getList().then((addonActors) => {
+      let addonActorPool = new ActorPool(this.conn);
+      for (let addonActor of addonActors) {
+          addonActorPool.addActor(addonActor);
+      }
+
+      if (this._addonActorPool) {
+        this.conn.removeActorPool(this._addonActorPool);
+      }
+      this._addonActorPool = addonActorPool;
+      this.conn.addActorPool(this._addonActorPool);
+
+      addonList.onListChanged = this._onAddonListChanged;
+
+      return {
+        "from": this.actorID,
+        "addons": [addonActor.form() for (addonActor of addonActors)]
+      };
+    });
+  },
+
+  onAddonListChanged: function () {
+    this.conn.send({ from: this.actorID, type: "addonListChanged" });
+    this._parameters.addonList.onListChanged = null;
   },
 
   /* This is not in the spec, but it's used by tests. */
@@ -340,5 +382,6 @@ RootActor.prototype = {
 
 RootActor.prototype.requestTypes = {
   "listTabs": RootActor.prototype.onListTabs,
+  "listAddons": RootActor.prototype.onListAddons,
   "echo": RootActor.prototype.onEcho
 };

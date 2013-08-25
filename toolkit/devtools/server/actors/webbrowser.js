@@ -60,6 +60,7 @@ function createRootActor(aConnection)
   return new RootActor(aConnection,
                        {
                          tabList: new BrowserTabList(aConnection),
+                         addonList: new BrowserAddonList(aConnection),
                          globalActorFactories: DebuggerServer.globalActorFactories,
                          onShutdown: sendShutdownEvent
                        });
@@ -545,7 +546,7 @@ BrowserTabActor.prototype = {
     }
   },
 
-  grip: function BTA_grip() {
+  form: function BTA_form() {
     dbg_assert(!this.exited,
                "grip() shouldn't be called on exited browser actor.");
     dbg_assert(this.actorID,
@@ -818,6 +819,94 @@ BrowserTabActor.prototype.requestTypes = {
   "detach": BrowserTabActor.prototype.onDetach,
   "reload": BrowserTabActor.prototype.onReload,
   "navigateTo": BrowserTabActor.prototype.onNavigateTo
+};
+
+Components.utils.import("resource://gre/modules/AddonManager.jsm");
+
+function BrowserAddonList(aConnection)
+{
+  this._connection = aConnection;
+  this._actorByAddonId = new Map();
+  this._onListChanged = null;
+}
+
+BrowserAddonList.prototype.getList = function() {
+  var deferred = promise.defer();
+  AddonManager.getAllAddons((addons) => {
+    for (let addon of addons) {
+      let actor = this._actorByAddonId.get(addon.id);
+      if (!actor) {
+        actor = new BrowserAddonActor(this._connection, addon);
+        this._actorByAddonId.set(addon.id, actor);
+      }
+    }
+    deferred.resolve([actor for ([_, actor] of this._actorByAddonId)]);
+  });
+  return deferred.promise;
+}
+
+Object.defineProperty(BrowserAddonList.prototype, "onListChanged", {
+  enumerable: true, configurable: true,
+  get: function() { return this._onListChanged; },
+  set: function(v) {
+    if (v !== null && typeof v != "function") {
+      throw Error("onListChanged property may only be set to 'null' or a function");
+    }
+    this._onListChanged = v;
+    if (this._onListChanged) {
+      AddonManager.addAddonListener(this);
+    } else {
+      AddonManager.removeAddonListener(this);
+    }
+  }
+});
+
+BrowserAddonList.prototype.onInstalled = function (aAddon) {
+  this._onListChanged();
+};
+
+BrowserAddonList.prototype.onUninstalled = function (aAddon) {
+  this._actorByAddonId.delete(aAddon.id);
+  this._onListChanged();
+};
+
+function BrowserAddonActor(aConnection, aAddon) {
+  this.conn = aConnection;
+  this._addon = aAddon;
+  AddonManager.addAddonListener(this);
+}
+
+BrowserAddonActor.prototype = {
+  actorPrefix: "addon",
+
+  get id() {
+    return this._addon.id;
+  },
+
+  get url() {
+    return this._addon.sourceURI ? this._addon.sourceURI.spec : undefined;
+  },
+
+  form: function BAA_form() {
+    dbg_assert(this.actorID, "addon should have an actorID.");
+
+    return {
+      actor: this.actorID,
+      id: this.id,
+      url: this.url
+    };
+  },
+
+  disconnect: function BAA_disconnect() {
+    AddonManager.removeAddonListener(this);
+  },
+
+  onUninstalled: function BAA_onUninstalled(aAddon) {
+    if (aAddon != this._addon)
+      return;
+    this._addon = null;
+    AddonManager.removeAddonListener(this);
+  },
 };
 
 /**

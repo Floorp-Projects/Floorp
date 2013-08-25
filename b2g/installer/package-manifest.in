@@ -196,7 +196,6 @@
 @BINPATH@/components/dom_offline.xpt
 @BINPATH@/components/dom_payment.xpt
 @BINPATH@/components/dom_json.xpt
-@BINPATH@/components/dom_browserelement.xpt
 @BINPATH@/components/dom_messages.xpt
 @BINPATH@/components/dom_power.xpt
 @BINPATH@/components/dom_quota.xpt

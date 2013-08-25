@@ -359,7 +359,7 @@ ReleaseResourceIfNeed()
 {
   if (sSwitchObserver->GetEnableCount() == 0) {
     UnregisterUeventListener(sSwitchObserver);
-    sSwitchObserver = NULL;
+    sSwitchObserver = nullptr;
   }
 }
 
