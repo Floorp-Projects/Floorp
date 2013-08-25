@@ -8221,8 +8221,8 @@ nsIPresShell::AddRefreshObserverInternal(nsARefreshObserver* aObserver,
                                          mozFlushType aFlushType)
 {
   nsPresContext* presContext = GetPresContext();
-  return presContext ? presContext->RefreshDriver()->
-    AddRefreshObserver(aObserver, aFlushType) : false;
+  return presContext &&
+      presContext->RefreshDriver()->AddRefreshObserver(aObserver, aFlushType);
 }
 
 /* virtual */ bool
@@ -8237,8 +8237,8 @@ nsIPresShell::RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
                                             mozFlushType aFlushType)
 {
   nsPresContext* presContext = GetPresContext();
-  return presContext ? presContext->RefreshDriver()->
-    RemoveRefreshObserver(aObserver, aFlushType) : false;
+  return presContext &&
+      presContext->RefreshDriver()->RemoveRefreshObserver(aObserver, aFlushType);
 }
 
 /* virtual */ bool
@@ -8246,6 +8246,28 @@ nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
                                             mozFlushType aFlushType)
 {
   return RemoveRefreshObserverInternal(aObserver, aFlushType);
+}
+
+/* virtual */ bool
+nsIPresShell::AddPostRefreshObserver(nsAPostRefreshObserver* aObserver)
+{
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return false;
+  }
+  presContext->RefreshDriver()->AddPostRefreshObserver(aObserver);
+  return true;
+}
+
+/* virtual */ bool
+nsIPresShell::RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver)
+{
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return false;
+  }
+  presContext->RefreshDriver()->RemovePostRefreshObserver(aObserver);
+  return true;
 }
 
 //------------------------------------------------------
