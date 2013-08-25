@@ -1664,12 +1664,11 @@ abstract public class GeckoApp
     protected int getSessionRestoreState(Bundle savedInstanceState) {
         final SharedPreferences prefs = GeckoApp.getAppSharedPreferences();
         int restoreMode = RESTORE_NONE;
-        boolean allowCrashRestore = true;
 
-        // If the version has changed, the user has done an upgrade, so restore
-        // previous tabs.
         final int versionCode = getVersionCode();
         if (prefs.getInt(PREFS_VERSION_CODE, 0) != versionCode) {
+            // If the version has changed, the user has done an upgrade, so restore
+            // previous tabs.
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
@@ -1680,19 +1679,12 @@ abstract public class GeckoApp
             });
 
             restoreMode = RESTORE_NORMAL;
-        } else if (savedInstanceState != null) {
+        } else if (savedInstanceState != null || PreferenceManager.getDefaultSharedPreferences(this)
+                                                                  .getString(GeckoPreferences.PREFS_RESTORE_SESSION, "quit")
+                                                                  .equals("always")) {
+            // We're coming back from a background kill by the OS or the user
+            // has chosen to always restore, so restore.
             restoreMode = RESTORE_NORMAL;
-        } else {
-            String restorePref = PreferenceManager.getDefaultSharedPreferences(this)
-                                                  .getString(GeckoPreferences.PREFS_RESTORE_SESSION, "crash");
-            if ("always".equals(restorePref)) {
-                restoreMode = RESTORE_NORMAL;
-            } else {
-                restoreMode = RESTORE_NONE;
-                if ("never".equals(restorePref)) {
-                    allowCrashRestore = false;
-                }
-            }
         }
 
         // We record crashes in the crash reporter. If sessionstore.js
@@ -1709,9 +1701,7 @@ abstract public class GeckoApp
                 }
             });
 
-            if (allowCrashRestore) {
-                restoreMode = RESTORE_CRASH;
-            }
+            restoreMode = RESTORE_CRASH;
         }
 
         return restoreMode;
