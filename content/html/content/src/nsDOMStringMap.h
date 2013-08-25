@@ -13,6 +13,7 @@
 #include "nsString.h"
 #include "nsWrapperCache.h"
 #include "nsGenericHTMLElement.h"
+#include "jsfriendapi.h" // For js::ExpandoAndGeneration
 
 namespace mozilla {
 class ErrorResult;

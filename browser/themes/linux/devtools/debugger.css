@@ -37,7 +37,11 @@
   transition: opacity .15s ease 0s;
 }
 
-.side-menu-widget-item-checkbox > .checkbox-check {
+.side-menu-widget-item-checkbox > .checkbox-spacer-box {
+  -moz-appearance: none;
+}
+
+.side-menu-widget-item-checkbox > .checkbox-spacer-box > .checkbox-check {
   -moz-appearance: none;
   background: none;
   background-image: url(itemToggle.png);
@@ -50,7 +54,7 @@
   border: 0;
 }
 
-.side-menu-widget-item-checkbox[checked] > .checkbox-check {
+.side-menu-widget-item-checkbox[checked] > .checkbox-spacer-box > .checkbox-check {
   background-position: 0 0;
 }
 

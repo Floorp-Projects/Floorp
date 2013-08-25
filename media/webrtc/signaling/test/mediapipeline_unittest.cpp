@@ -195,7 +195,7 @@ class TestAgentSend : public TestAgent {
         test_pc,
         NULL,
         test_utils->sts_target(),
-        audio_->GetStream(),
+        audio_,
         1,
         audio_conduit_,
         audio_rtp_transport_.flow_,

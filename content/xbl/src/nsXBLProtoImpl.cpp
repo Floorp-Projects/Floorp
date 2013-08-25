@@ -17,6 +17,8 @@
 #include "nsIDOMNode.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLProtoImplProperty.h"
+#include "nsIURI.h"
+#include "xpcpublic.h"
 
 using namespace mozilla;
 

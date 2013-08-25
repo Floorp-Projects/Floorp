@@ -71,7 +71,7 @@ TestTabActor.prototype = {
     return { wrappedJSObject: this._global };
   },
 
-  grip: function() {
+  form: function() {
     let response = { actor: this.actorID, title: this._global.__name };
 
     // Walk over tab actors added by extensions and add them to a new ActorPool.

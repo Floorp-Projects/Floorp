@@ -24,6 +24,7 @@
 #include "nsDOMFile.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
+#include "jsapi.h"
 
 #include "ContentChild.h"
 #include "ContentParent.h"

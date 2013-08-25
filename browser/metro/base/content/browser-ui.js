@@ -1096,14 +1096,6 @@ var BrowserUI = {
       case "cmd_panel":
         PanelUI.toggle();
         break;
-      case "cmd_volumeLeft":
-        // Zoom in (portrait) or out (landscape)
-        Browser.zoom(Util.isPortrait() ? -1 : 1);
-        break;
-      case "cmd_volumeRight":
-        // Zoom out (portrait) or in (landscape)
-        Browser.zoom(Util.isPortrait() ? 1 : -1);
-        break;
       case "cmd_openFile":
         this.openFile();
         break;

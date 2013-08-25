@@ -468,7 +468,7 @@ void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
   }
 
   gfxMatrix userSpaceToImageSpace = aUserSpaceToImageSpace;
-  gfxRect sourceRect = userSpaceToImageSpace.Transform(aFill);
+  gfxRect sourceRect = userSpaceToImageSpace.TransformBounds(aFill);
   gfxRect imageRect(0, 0, mSize.width + aPadding.LeftRight(),
                     mSize.height + aPadding.TopBottom());
   gfxRect subimage(aSubimage.x, aSubimage.y, aSubimage.width, aSubimage.height);
@@ -840,7 +840,7 @@ size_t
 imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation, mozilla::MallocSizeOf aMallocSizeOf) const
 {
   // aMallocSizeOf is only used if aLocation==MEMORY_IN_PROCESS_HEAP.  It
-  // should be NULL otherwise.
+  // should be nullptr otherwise.
   NS_ABORT_IF_FALSE(
     (aLocation == gfxASurface::MEMORY_IN_PROCESS_HEAP &&  aMallocSizeOf) ||
     (aLocation != gfxASurface::MEMORY_IN_PROCESS_HEAP && !aMallocSizeOf),
