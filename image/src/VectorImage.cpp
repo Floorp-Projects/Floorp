@@ -27,6 +27,7 @@
 #include "nsStubDocumentObserver.h"
 #include "nsSVGEffects.h" // for nsSVGRenderingObserver
 #include "nsSVGUtils.h"  // for nsSVGUtils::ConvertToSurfaceSize
+#include "Orientation.h"
 #include "SVGDocumentWrapper.h"
 
 namespace mozilla {
@@ -538,6 +539,12 @@ VectorImage::GetIntrinsicRatio(nsSize* aRatio)
 
   *aRatio = rootFrame->GetIntrinsicRatio();
   return NS_OK;
+}
+
+NS_IMETHODIMP_(Orientation)
+VectorImage::GetOrientation()
+{
+  return Orientation();
 }
 
 //******************************************************************************
