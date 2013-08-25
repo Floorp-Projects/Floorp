@@ -112,8 +112,7 @@
 <!ENTITY pref_reflow_on_zoom4 "Text reflow">
 <!ENTITY pref_restore "Tabs">
 <!ENTITY pref_restore_always "Always restore">
-<!ENTITY pref_restore_crash "Restore after a crash">
-<!ENTITY pref_restore_never "Never restore">
+<!ENTITY pref_restore_quit "Don\'t restore after quitting &brandShortName;">
 <!ENTITY pref_font_size_tiny "Tiny">
 <!ENTITY pref_font_size_small "Small">
 <!ENTITY pref_font_size_medium "Medium">
