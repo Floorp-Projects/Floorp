@@ -468,7 +468,7 @@ void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
   }
 
   gfxMatrix userSpaceToImageSpace = aUserSpaceToImageSpace;
-  gfxRect sourceRect = userSpaceToImageSpace.TransformBounds(aFill);
+  gfxRect sourceRect = userSpaceToImageSpace.Transform(aFill);
   gfxRect imageRect(0, 0, mSize.width + aPadding.LeftRight(),
                     mSize.height + aPadding.TopBottom());
   gfxRect subimage(aSubimage.x, aSubimage.y, aSubimage.width, aSubimage.height);

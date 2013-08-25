@@ -28,7 +28,6 @@
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
 #include "DiscardTracker.h"
-#include "Orientation.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
@@ -187,11 +186,13 @@ public:
   /* Callbacks for decoders */
   nsresult SetFrameAsNonPremult(uint32_t aFrameNum, bool aIsNonPremult);
 
-  /** Sets the size and inherent orientation of the container. This should only
-   * be called by the decoder. This function may be called multiple times, but
-   * will throw an error if subsequent calls do not match the first.
+  /**
+   * Sets the size of the container. This should only be called by the
+   * decoder. This function may be called multiple times, but will throw an
+   * error if subsequent calls do not match the first.
    */
-  nsresult SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation);
+  nsresult SetSize(int32_t aWidth, int32_t aHeight);
+
 
   /**
    * Ensures that a given frame number exists with the given parameters, and
@@ -582,7 +583,6 @@ private:
 
 private: // data
   nsIntSize                  mSize;
-  Orientation                mOrientation;
 
   // Whether our frames were decoded using any special flags.
   // Some flags (e.g. unpremultiplied data) may not be compatible

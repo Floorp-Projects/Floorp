@@ -8,7 +8,6 @@ MODULE = 'imglib2'
 
 EXPORTS += [
     'ImageOps.h',
-    'Orientation.h',
     'imgLoader.h',
     'imgRequest.h',
     'imgRequestProxy.h',
@@ -27,7 +26,6 @@ CPP_SOURCES += [
     'ImageMetadata.cpp',
     'ImageOps.cpp',
     'ImageWrapper.cpp',
-    'OrientedImage.cpp',
     'RasterImage.cpp',
     'SVGDocumentWrapper.cpp',
     'ScriptedNotificationObserver.cpp',
