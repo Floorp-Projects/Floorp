@@ -57,6 +57,8 @@ class TimeStamp;
 
 #ifndef MOZ_ENABLE_PROFILER_SPS
 
+#include <stdint.h>
+
 struct JSContext;
 class JSObject;
 
