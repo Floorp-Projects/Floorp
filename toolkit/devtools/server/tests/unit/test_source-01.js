@@ -22,15 +22,10 @@ function run_test()
   gClient.connect(function() {
     attachTestTabAndResume(gClient, "test-grips", function(aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
-      gThreadClient.addListener("unsolicitedPause", unsolicitedPauseListener);
       test_source();
     });
   });
   do_test_pending();
-}
-
-function unsolicitedPauseListener(aEvent, aPacket, aContinue) {
-  gContinue = aContinue;
 }
 
 function test_source()
@@ -43,7 +38,6 @@ function test_source()
       do_check_true(!!aResponse.sources);
       gClient.compat.supportsFeature("sources").then(function (supported) {
         do_check_true(supported);
-
       });
 
       let source = aResponse.sources.filter(function (s) {
@@ -57,6 +51,7 @@ function test_source()
         do_check_true(!!aResponse);
         do_check_true(!aResponse.error);
         do_check_true(!!aResponse.source);
+        do_check_true(aResponse.contentType.contains("javascript"));
 
         do_check_eq(readFile("test_source-01.js"),
                     aResponse.source);

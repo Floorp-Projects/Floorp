@@ -2663,6 +2663,7 @@ Tab.prototype = {
     this.browser.sessionHistory.addSHistoryListener(this);
 
     this.browser.addEventListener("DOMContentLoaded", this, true);
+    this.browser.addEventListener("DOMFormHasPassword", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMWindowClose", this, true);
@@ -2811,6 +2812,7 @@ Tab.prototype = {
     this.browser.sessionHistory.removeSHistoryListener(this);
 
     this.browser.removeEventListener("DOMContentLoaded", this, true);
+    this.browser.removeEventListener("DOMFormHasPassword", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMWindowClose", this, true);
@@ -3368,6 +3370,11 @@ Tab.prototype = {
         break;
       }
 
+      case "DOMFormHasPassword": {
+        LoginManagerContent.onFormPassword(aEvent);
+        break;
+      }
+
       case "DOMLinkAdded": {
         let target = aEvent.originalTarget;
         if (!target.href || target.disabled)
@@ -3539,6 +3546,9 @@ Tab.prototype = {
             this._linkifier = new Linkifier();
           this._linkifier.linkifyNumbers(this.browser.contentWindow.document);
         }
+
+        // Show page actions for helper apps.
+        HelperApps.updatePageAction(this.browser.currentURI);
 
         if (!Reader.isEnabledForParseOnLoad)
           return;
