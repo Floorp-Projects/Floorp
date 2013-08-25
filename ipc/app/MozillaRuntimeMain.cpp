@@ -63,7 +63,7 @@ main(int argc, char* argv[])
 #endif
 
 #if defined(XP_WIN) && defined(DEBUG_bent)
-    MessageBox(NULL, L"Hi", L"Hi", MB_OK);
+    MessageBox(nullptr, L"Hi", L"Hi", MB_OK);
 #endif
 
     // Check for the absolute minimum number of args we need to move

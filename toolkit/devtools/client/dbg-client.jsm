@@ -194,6 +194,7 @@ const UnsolicitedNotifications = {
   "newSource": "newSource",
   "tabDetached": "tabDetached",
   "tabListChanged": "tabListChanged",
+  "addonListChanged": "addonListChanged",
   "tabNavigated": "tabNavigated",
   "pageError": "pageError",
   "webappsEvent": "webappsEvent",
@@ -425,6 +426,12 @@ DebuggerClient.prototype = {
    * new code should say 'client.mainRoot.listTabs()'.
    */
   listTabs: function(aOnResponse) { return this.mainRoot.listTabs(aOnResponse); },
+
+  /*
+   * This function exists only to preserve DebuggerClient's interface;
+   * new code should say 'client.mainRoot.listAddons()'.
+   */
+  listAddons: function(aOnResponse) { return this.mainRoot.listAddons(aOnResponse); },
 
   /**
    * Attach to a tab actor.
@@ -1029,6 +1036,15 @@ RootClient.prototype = {
   listTabs: DebuggerClient.requester({ type: "listTabs" },
                                      { telemetry: "LISTTABS" }),
 
+  /**
+   * List the installed addons.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  listAddons: DebuggerClient.requester({ type: "listAddons" },
+                                       { telemetry: "LISTADDONS" }),
+
   /*
    * Methods constructed by DebuggerClient.requester require these forwards
    * on their 'this'.
@@ -1036,7 +1052,6 @@ RootClient.prototype = {
   get _transport() { return this._client._transport; },
   get request()    { return this._client.request;    }
 };
-
 
 /**
  * Creates a thread client for the remote debugging protocol server. This client

@@ -30,7 +30,7 @@ const int32_t SyncChannel::kNoTimeout = INT32_MIN;
 SyncChannel::SyncChannel(SyncListener* aListener)
   : AsyncChannel(aListener)
 #ifdef OS_WIN
-  , mTopFrame(NULL)
+  , mTopFrame(nullptr)
 #endif
   , mPendingReply(0)
   , mProcessingSyncMessage(false)
@@ -40,7 +40,7 @@ SyncChannel::SyncChannel(SyncListener* aListener)
 {
     MOZ_COUNT_CTOR(SyncChannel);
 #ifdef OS_WIN
-    mEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    mEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
     NS_ASSERTION(mEvent, "CreateEvent failed! Nothing is going to work!");
 #endif
 }

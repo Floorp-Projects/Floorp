@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "mozilla/Util.h"
 #include "nsSize.h"
+#include "Orientation.h"
 
 namespace mozilla {
 namespace image {
@@ -42,15 +43,18 @@ public:
     mIsNonPremultiplied = nonPremult;
   }
 
-  void SetSize(int32_t width, int32_t height)
+  void SetSize(int32_t width, int32_t height, Orientation orientation)
   {
     mSize.construct(nsIntSize(width, height));
+    mOrientation.construct(orientation);
   }
 
   bool HasSize() const { return !mSize.empty(); }
+  bool HasOrientation() const { return !mOrientation.empty(); }
 
   int32_t GetWidth() const { return mSize.ref().width; }
   int32_t GetHeight() const { return mSize.ref().height; }
+  Orientation GetOrientation() const { return mOrientation.ref(); }
 
 private:
   // The hotspot found on cursors, or -1 if none was found.
@@ -61,6 +65,7 @@ private:
   int32_t mLoopCount;
 
   Maybe<nsIntSize> mSize;
+  Maybe<Orientation>  mOrientation;
 
   bool mIsNonPremultiplied;
 };

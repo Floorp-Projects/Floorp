@@ -914,6 +914,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     case kVK_ANSI_KeypadDivide:
     case kVK_ANSI_KeypadEquals:
     case kVK_ANSI_KeypadEnter:
+    case kVK_JIS_KeypadComma:
     case kVK_Powerbook_KeypadEnter:
       aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
       break;
@@ -1222,6 +1223,8 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     case kVK_ANSI_KeypadMinus:    return NS_VK_SUBTRACT;
     case kVK_ANSI_KeypadDecimal:  return NS_VK_DECIMAL;
     case kVK_ANSI_KeypadDivide:   return NS_VK_DIVIDE;
+
+    case kVK_JIS_KeypadComma:   return NS_VK_SEPARATOR;
 
     // IME keys
     case kVK_JIS_Eisu:          return NS_VK_EISU;
