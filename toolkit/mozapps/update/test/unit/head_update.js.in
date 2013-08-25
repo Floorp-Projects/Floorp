@@ -109,7 +109,7 @@ var gSwitchApp = false;
 var gDisableReplaceFallback = false;
 
 // Time to wait for the test helper process before continuing the test
-const TEST_HELPER_TIMEOUT = 2000;
+const TEST_HELPER_TIMEOUT = 100;
 
 // Use a copy of the main application executable for the test to avoid main
 // executable in use errors.
@@ -1057,7 +1057,7 @@ function waitForHelperSleep() {
     return;
   }
   output.remove(false);
-  do_timeout(TEST_HELPER_TIMEOUT, doUpdate);
+  doUpdate();
 }
 
 function waitForHelperFinished() {
@@ -1070,7 +1070,7 @@ function waitForHelperFinished() {
   }
   // Give the lock file process time to unlock the file before deleting the
   // input and output files.
-  do_timeout(TEST_HELPER_TIMEOUT, waitForHelperFinishFileUnlock);
+  waitForHelperFinishFileUnlock();
 }
 
 function waitForHelperFinishFileUnlock() {
@@ -1090,13 +1090,13 @@ function waitForHelperFinishFileUnlock() {
     do_timeout(TEST_HELPER_TIMEOUT, waitForHelperFinishFileUnlock);
     return;
   }
-  do_timeout(TEST_HELPER_TIMEOUT, checkUpdate);
+  checkUpdate();
 }
 
 function setupHelperFinish() {
   let input = getApplyDirFile("a/b/input", true);
   writeFile(input, "finish\n");
-  do_timeout(TEST_HELPER_TIMEOUT, waitForHelperFinished);
+  waitForHelperFinished();
 }
 
 /**
@@ -1570,7 +1570,7 @@ function removeCallbackCopy() {
   }
   // Use a timeout to give any files that were in use additional 
   // time to close.  Same as updater.exe without service tests.
-  do_timeout(TEST_HELPER_TIMEOUT, do_test_finished);
+  do_test_finished();
 }
 
 // Waits until files that are in use that break tests are no longer in use and

@@ -48,6 +48,7 @@ if (Services.prefs.getBoolPref("browser.tabs.remote")) {
   });
   addEventListener("DOMFormHasPassword", function(event) {
     InsecurePasswordUtils.checkForInsecurePasswords(event.target);
+    LoginManagerContent.onFormPassword(event);
   });
   addEventListener("DOMAutoComplete", function(event) {
     LoginManagerContent.onUsernameInput(event);

@@ -156,10 +156,6 @@ output parameter, without confusing anything.
 The basic numeric type defined by the library is an mp_int.  Virtually
 all the functions in the library take a pointer to an mp_int as one of
 their parameters.  An explanation of how to create and use these
-<HR>
-<A NAME="p23">
-<H3>Problem 23:</H3>
-
 structures follows.  And so, without further ado...
 
 

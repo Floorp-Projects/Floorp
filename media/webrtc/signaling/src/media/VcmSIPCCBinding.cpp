@@ -2088,7 +2088,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
             pc.impl()->GetHandle(),
             pc.impl()->GetMainThread().get(),
             pc.impl()->GetSTSThread(),
-            stream->GetMediaStream()->GetStream(),
+            stream->GetMediaStream(),
             pc_track_id,
             conduit, rtp_flow, rtcp_flow);
 
@@ -2127,7 +2127,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
             pc.impl()->GetHandle(),
             pc.impl()->GetMainThread().get(),
             pc.impl()->GetSTSThread(),
-            stream->GetMediaStream()->GetStream(),
+            stream->GetMediaStream(),
             pc_track_id,
             conduit, rtp_flow, rtcp_flow);
 

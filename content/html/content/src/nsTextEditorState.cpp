@@ -809,29 +809,41 @@ DoCommandCallback(const char *aCommand, void *aData)
 NS_IMETHODIMP
 nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
-  NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
+  bool defaultPrevented = false;
+  nsresult rv = aEvent->GetDefaultPrevented(&defaultPrevented);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (defaultPrevented) {
+    return NS_OK;
+  }
 
-  nsAutoString eventType;
-  aEvent->GetType(eventType);
+  bool isTrusted = false;
+  rv = aEvent->GetIsTrusted(&isTrusted);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isTrusted) {
+    return NS_OK;
+  }
 
-  nsNativeKeyEvent nativeEvent;
+  nsKeyEvent* keyEvent =
+    static_cast<nsKeyEvent*>(aEvent->GetInternalNSEvent());
+  if (keyEvent->eventStructType != NS_KEY_EVENT) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsINativeKeyBindings *bindings = GetKeyBindings();
-  if (bindings &&
-      nsContentUtils::DOMEventToNativeKeyEvent(keyEvent, &nativeEvent, false)) {
-
+  if (bindings) {
     bool handled = false;
-    if (eventType.EqualsLiteral("keydown")) {
-      handled = bindings->KeyDown(nativeEvent, DoCommandCallback, mFrame);
-    }
-    else if (eventType.EqualsLiteral("keyup")) {
-      handled = bindings->KeyUp(nativeEvent, DoCommandCallback, mFrame);
-    }
-    else if (eventType.EqualsLiteral("keypress")) {
-      handled = bindings->KeyPress(nativeEvent, DoCommandCallback, mFrame);
-    }
-    else {
-      NS_ABORT();
+    switch (keyEvent->message) {
+      case NS_KEY_DOWN:
+        handled = bindings->KeyDown(*keyEvent, DoCommandCallback, mFrame);
+        break;
+      case NS_KEY_UP:
+        handled = bindings->KeyUp(*keyEvent, DoCommandCallback, mFrame);
+        break;
+      case NS_KEY_PRESS:
+        handled = bindings->KeyPress(*keyEvent, DoCommandCallback, mFrame);
+        break;
+      default:
+        MOZ_CRASH("Unknown key message");
     }
     if (handled) {
       aEvent->PreventDefault();

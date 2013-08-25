@@ -217,7 +217,7 @@ public:
   }
 
   void BroadcastInformation(const InfoType& aInfo) {
-    // It is possible for mObservers to be NULL here on some platforms,
+    // It is possible for mObservers to be nullptr here on some platforms,
     // because a call to BroadcastInformation gets queued up asynchronously
     // while RemoveObserver is running (and before the notifications are
     // disabled). The queued call can then get run after mObservers has
@@ -746,12 +746,12 @@ SwitchState GetCurrentSwitchState(SwitchDevice aDevice)
 
 typedef mozilla::ObserverList<SwitchEvent> SwitchObserverList;
 
-static SwitchObserverList *sSwitchObserverLists = NULL;
+static SwitchObserverList *sSwitchObserverLists = nullptr;
 
 static SwitchObserverList&
 GetSwitchObserverList(SwitchDevice aDevice) {
   MOZ_ASSERT(0 <= aDevice && aDevice < NUM_SWITCH_DEVICE); 
-  if (sSwitchObserverLists == NULL) {
+  if (sSwitchObserverLists == nullptr) {
     sSwitchObserverLists = new SwitchObserverList[NUM_SWITCH_DEVICE];
   }
   return sSwitchObserverLists[aDevice];
@@ -766,7 +766,7 @@ ReleaseObserversIfNeeded() {
 
   //The length of every list is 0, no observer in the list.
   delete [] sSwitchObserverLists;
-  sSwitchObserverLists = NULL;
+  sSwitchObserverLists = nullptr;
 }
 
 void

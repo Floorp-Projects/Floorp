@@ -52,7 +52,12 @@ function startTest() {
   SimpleTest.finish();
 }
 
-window.onload = startTest;
+if (SpecialPowers.getBoolPref("signon.useDOMFormHasPassword")) {
+  info("skipping test when signon.useDOMFormHasPassword is enabled");
+  SimpleTest.finish();
+} else {
+  window.onload = startTest;
+}
 </script>
 </pre>
 </body>

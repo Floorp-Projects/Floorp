@@ -37,25 +37,25 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsINativeKeyBindings
-  virtual NS_HIDDEN_(bool) KeyDown(const nsNativeKeyEvent& aEvent,
-                                     DoCommandCallback aCallback,
-                                     void *aCallbackData);
-
-  virtual NS_HIDDEN_(bool) KeyPress(const nsNativeKeyEvent& aEvent,
-                                      DoCommandCallback aCallback,
-                                      void *aCallbackData);
-
-  virtual NS_HIDDEN_(bool) KeyUp(const nsNativeKeyEvent& aEvent,
+  virtual NS_HIDDEN_(bool) KeyDown(const nsKeyEvent& aEvent,
                                    DoCommandCallback aCallback,
                                    void *aCallbackData);
+
+  virtual NS_HIDDEN_(bool) KeyPress(const nsKeyEvent& aEvent,
+                                    DoCommandCallback aCallback,
+                                    void *aCallbackData);
+
+  virtual NS_HIDDEN_(bool) KeyUp(const nsKeyEvent& aEvent,
+                                 DoCommandCallback aCallback,
+                                 void *aCallbackData);
 
 private:
   ~nsNativeKeyBindings() NS_HIDDEN;
 
-  bool KeyPressInternal(const nsNativeKeyEvent& aEvent,
-                          DoCommandCallback aCallback,
-                          void *aCallbackData,
-                          uint32_t aKeyCode);
+  bool KeyPressInternal(const nsKeyEvent& aEvent,
+                        DoCommandCallback aCallback,
+                        void *aCallbackData,
+                        guint aKeyval);
 
   GtkWidget *mNativeTarget;
 };

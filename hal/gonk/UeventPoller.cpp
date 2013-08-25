@@ -183,7 +183,7 @@ InitializeUevent()
 static void
 ShutdownUevent()
 {
-  sPoller = NULL;
+  sPoller = nullptr;
 }
 
 void

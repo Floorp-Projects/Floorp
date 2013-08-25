@@ -95,12 +95,6 @@
     <command id="cmd_sanitize" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_contextUI" oncommand="CommandUpdater.doCommand(this.id);"/>
 
-    <!-- screen/display -->
-    <command id="cmd_lockscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
-
-    <command id="cmd_volumeLeft" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
-    <command id="cmd_volumeRight" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
-
     <!-- scrolling -->
     <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_scrollPageDown" oncommand="CommandUpdater.doCommand(this.id);"/>

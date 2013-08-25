@@ -951,7 +951,7 @@ TestDataStructuresChild::Test17()
     attrs.specific() = BarAttrs(1.0f);
 
     InfallibleTArray<Op> ops;
-    ops.AppendElement(SetAttrs(NULL, mKids[0], attrs));
+    ops.AppendElement(SetAttrs(nullptr, mKids[0], attrs));
 
     if (!SendTest17(ops))
         fail("sending Test17");

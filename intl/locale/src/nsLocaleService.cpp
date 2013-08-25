@@ -176,7 +176,7 @@ nsLocaleService::nsLocaleService(void)
 
         nsRefPtr<nsLocale> resultLocale(new nsLocale());
 
-        LocaleObject locale_object = NULL;
+        LocaleObject locale_object = nullptr;
         int result = UniCreateLocaleObject(UNI_UCS_STRING_POINTER,
                                            (UniChar *)L"", &locale_object);
         if (result != ULS_SUCCESS) {
