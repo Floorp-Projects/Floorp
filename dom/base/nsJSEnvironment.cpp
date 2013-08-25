@@ -2731,7 +2731,7 @@ NS_DOMWriteStructuredClone(JSContext* cx,
                            void *closure)
 {
   ImageData* imageData;
-  nsresult rv = UnwrapObject<ImageData>(cx, obj, imageData);
+  nsresult rv = UNWRAP_OBJECT(ImageData, cx, obj, imageData);
   if (NS_FAILED(rv)) {
     // Don't know what this is. Bail.
     xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);

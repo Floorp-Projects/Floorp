@@ -71,7 +71,7 @@ nsresult nsCollationOS2::CompareString(int32_t strength,
     stringNormalized2 = string2;
   }
 
-  LocaleObject locObj = NULL;
+  LocaleObject locObj = nullptr;
   int ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
   if (ret != ULS_SUCCESS)
     UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"C", &locObj);
@@ -98,13 +98,16 @@ nsresult nsCollationOS2::AllocateRawSortKey(int32_t strength,
     stringNormalized = stringIn;
   }
 
-  LocaleObject locObj = NULL;
+  LocaleObject locObj = nullptr;
   int ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
   if (ret != ULS_SUCCESS)
     UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"C", &locObj);
 
   res = NS_ERROR_FAILURE;               // From here on out assume failure...
-  int length = UniStrxfrm(locObj, NULL, reinterpret_cast<const UniChar *>(stringNormalized.get()),0);
+  int length = UniStrxfrm(locObj,
+                          nullptr,
+                          reinterpret_cast<const UniChar *>(stringNormalized.get()),
+                          0);
   if (length >= 0) {
     length += 5;                        // Allow for the "extra" chars UniStrxfrm()
                                         //  will out put (overrunning the buffer if
