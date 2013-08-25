@@ -42,6 +42,7 @@
               android:gravity="bottom"
               android:text="@string/home_reading_list_hint"
               android:textAppearance="@style/TextAppearance.Small"
+              android:contentDescription="@string/home_reading_list_hint_accessible"
               android:paddingTop="20dp"
               android:paddingBottom="15dp"
               android:paddingLeft="25dp"
