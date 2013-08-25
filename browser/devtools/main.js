@@ -28,7 +28,7 @@ loader.lazyGetter(this, "WebConsolePanel", () => require("devtools/webconsole/pa
 loader.lazyGetter(this, "DebuggerPanel", () => require("devtools/debugger/debugger-panel").DebuggerPanel);
 loader.lazyImporter(this, "StyleEditorPanel", "resource:///modules/devtools/StyleEditorPanel.jsm");
 loader.lazyGetter(this, "ProfilerPanel", () => require("devtools/profiler/panel"));
-loader.lazyImporter(this, "NetMonitorPanel", "resource:///modules/devtools/NetMonitorPanel.jsm");
+loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/netmonitor/netmonitor-panel").NetMonitorPanel);
 
 // Strings
 const toolboxProps = "chrome://browser/locale/devtools/toolbox.properties";
