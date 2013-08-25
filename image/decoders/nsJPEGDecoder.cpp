@@ -6,8 +6,6 @@
 
 #include "ImageLogging.h"
 #include "nsJPEGDecoder.h"
-#include "Orientation.h"
-#include "EXIF.h"
 
 #include "nsIInputStream.h"
 
@@ -237,7 +235,7 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
     }
 
     // Post our size to the superclass
-    PostSize(mInfo.image_width, mInfo.image_height, ReadOrientationFromEXIF());
+    PostSize(mInfo.image_width, mInfo.image_height);
     if (HasError()) {
       // Setting the size led to an error.
       mState = JPEG_ERROR;
@@ -533,27 +531,6 @@ nsJPEGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount)
   PR_LOG(GetJPEGDecoderAccountingLog(), PR_LOG_DEBUG,
          ("} (end of function)"));
   return;
-}
-
-Orientation
-nsJPEGDecoder::ReadOrientationFromEXIF()
-{
-  jpeg_saved_marker_ptr marker;
-
-  // Locate the APP1 marker, where EXIF data is stored, in the marker list.
-  for (marker = mInfo.marker_list ; marker != nullptr ; marker = marker->next) {
-    if (marker->marker == JPEG_APP0 + 1) 
-      break;
-  }
-
-  // If we're at the end of the list, there's no EXIF data.
-  if (!marker)
-    return Orientation();
-
-  // Extract the orientation information.
-  EXIFData exif = EXIFParser::Parse(marker->data,
-                                    static_cast<uint32_t>(marker->data_length));
-  return exif.orientation;
 }
 
 void

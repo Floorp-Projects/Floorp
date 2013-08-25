@@ -7,7 +7,6 @@
 #include "imgIContainer.h"
 #include "ClippedImage.h"
 #include "FrozenImage.h"
-#include "OrientedImage.h"
 #include "Image.h"
 
 #include "ImageOps.h"
@@ -43,21 +42,6 @@ ImageOps::Clip(imgIContainer* aImage, nsIntRect aClip)
   nsCOMPtr<imgIContainer> clippedImage =
     new ClippedImage(static_cast<Image*>(aImage), aClip);
   return clippedImage.forget();
-}
-
-/* static */ already_AddRefed<Image>
-ImageOps::Orient(Image* aImage, Orientation aOrientation)
-{
-  nsRefPtr<Image> orientedImage = new OrientedImage(aImage, aOrientation);
-  return orientedImage.forget();
-}
-
-/* static */ already_AddRefed<imgIContainer>
-ImageOps::Orient(imgIContainer* aImage, Orientation aOrientation)
-{
-  nsCOMPtr<imgIContainer> orientedImage =
-    new OrientedImage(static_cast<Image*>(aImage), aOrientation);
-  return orientedImage.forget();
 }
 
 } // namespace image

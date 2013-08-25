@@ -50,7 +50,6 @@ public:
                   uint32_t aWhichFrame,
                   uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD RequestDiscard() MOZ_OVERRIDE;
-  NS_IMETHOD_(Orientation) GetOrientation() MOZ_OVERRIDE;
 
 protected:
   ClippedImage(Image* aImage, nsIntRect aClip);

@@ -266,12 +266,7 @@ Decoder::FlushInvalidations()
 void
 Decoder::SetSizeOnImage()
 {
-  MOZ_ASSERT(mImageMetadata.HasSize(), "Should have size");
-  MOZ_ASSERT(mImageMetadata.HasOrientation(), "Should have orientation");
-
-  mImage.SetSize(mImageMetadata.GetWidth(),
-                 mImageMetadata.GetHeight(),
-                 mImageMetadata.GetOrientation());
+  mImage.SetSize(mImageMetadata.GetWidth(), mImageMetadata.GetHeight());
 }
 
 /*
@@ -287,16 +282,14 @@ void Decoder::FinishInternal() { }
  */
 
 void
-Decoder::PostSize(int32_t aWidth,
-                  int32_t aHeight,
-                  Orientation aOrientation /* = Orientation()*/)
+Decoder::PostSize(int32_t aWidth, int32_t aHeight)
 {
   // Validate
   NS_ABORT_IF_FALSE(aWidth >= 0, "Width can't be negative!");
   NS_ABORT_IF_FALSE(aHeight >= 0, "Height can't be negative!");
 
   // Tell the image
-  mImageMetadata.SetSize(aWidth, aHeight, aOrientation);
+  mImageMetadata.SetSize(aWidth, aHeight);
 
   // Notify the observer
   if (mObserver)
