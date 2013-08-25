@@ -3262,18 +3262,6 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 #if defined(MOZ_WIDGET_QT)
   nsQAppInstance::AddRef(gArgc, gArgv, true);
 
-#if MOZ_PLATFORM_MAEMO > 5
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    // try to get the MInputContext if possible to support the MeeGo VKB
-    QInputContext* inputContext = qApp->inputContext();
-    if (inputContext && inputContext->identifierName() != "MInputContext") {
-        QInputContext* context = QInputContextFactory::create("MInputContext",
-                                                              qApp);
-        if (context)
-            qApp->setInputContext(context);
-    }
-  }
-#endif
   QStringList nonQtArguments = qApp->arguments();
   gQtOnlyArgc = 1;
   gQtOnlyArgv = (char**) malloc(sizeof(char*) 
