@@ -146,17 +146,19 @@ const BackgroundPageThumbs = {
     browser.setAttribute("remote", "true");
     browser.setAttribute("privatebrowsing", "true");
 
-    // Size the browser.  Setting the width and height attributes doesn't
-    // work -- the resulting thumbnails are blank and transparent -- but
-    // setting the style does.
-    let width = {};
-    let height = {};
+    // Size the browser.  Make its aspect ratio the same as the canvases' that
+    // the thumbnails are drawn into; the canvases' aspect ratio is the same as
+    // the screen's, so use that.  Aim for a size in the ballpark of 1024x768.
+    let [swidth, sheight] = [{}, {}];
     Cc["@mozilla.org/gfx/screenmanager;1"].
       getService(Ci.nsIScreenManager).
       primaryScreen.
-      GetRectDisplayPix({}, {}, width, height);
-    browser.style.width = width.value + "px";
-    browser.style.height = height.value + "px";
+      GetRectDisplayPix({}, {}, swidth, sheight);
+    let bwidth = Math.min(1024, swidth.value);
+    // Setting the width and height attributes doesn't work -- the resulting
+    // thumbnails are blank and transparent -- but setting the style does.
+    browser.style.width = bwidth + "px";
+    browser.style.height = (bwidth * sheight.value / swidth.value) + "px";
 
     this._parentWin.document.documentElement.appendChild(browser);
 

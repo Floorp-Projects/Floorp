@@ -26,6 +26,7 @@ elif toolkit == 'android':
 MODULE = 'imgdecoders'
 
 CPP_SOURCES += [
+    'EXIF.cpp',
     'nsBMPDecoder.cpp',
     'nsGIFDecoder2.cpp',
     'nsICODecoder.cpp',

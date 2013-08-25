@@ -96,7 +96,6 @@ struct JSContext;
 struct JSPropertyDescriptor;
 struct JSRuntime;
 struct nsIntMargin;
-struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will force strange compilation error!
 
 template<class E> class nsCOMArray;
 template<class E> class nsTArray;
@@ -1386,14 +1385,11 @@ public:
   static const nsDependentString GetLocalizedEllipsis();
 
   /**
-   * The routine GetNativeEvent is used to fill nsNativeKeyEvent.
-   * It's also used in DOMEventToNativeKeyEvent.
-   * See bug 406407 for details.
+   * The routine GetNativeEvent returns the result of
+   * aDOMEvent->GetInternalNSEvent().
+   * XXX Is this necessary?
    */
   static nsEvent* GetNativeEvent(nsIDOMEvent* aDOMEvent);
-  static bool DOMEventToNativeKeyEvent(nsIDOMKeyEvent* aKeyEvent,
-                                         nsNativeKeyEvent* aNativeEvent,
-                                         bool aGetCharCode);
 
   /**
    * Get the candidates for accelkeys for aDOMKeyEvent.

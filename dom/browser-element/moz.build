@@ -6,19 +6,9 @@
 
 TEST_DIRS += ['mochitest']
 
-XPIDL_SOURCES += [
-    'nsIAsyncScrollEventDetail.idl',
-    'nsIOpenWindowEventDetail.idl',
-]
-
 XPIDL_MODULE = 'dom_browserelement'
 
 MODULE = 'dom'
-
-EXPORTS += [
-    'nsAsyncScrollEventDetail.h',
-    'nsOpenWindowEventDetail.h',
-]
 
 EXPORTS.mozilla += [
     'BrowserElementParent.h',
@@ -26,8 +16,6 @@ EXPORTS.mozilla += [
 
 CPP_SOURCES += [
     'BrowserElementParent.cpp',
-    'nsAsyncScrollEventDetail.cpp',
-    'nsOpenWindowEventDetail.cpp',
 ]
 
 EXTRA_COMPONENTS += [

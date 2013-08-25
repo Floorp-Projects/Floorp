@@ -30,6 +30,7 @@ EXPORTS += [
     'DisplayListClipState.h',
     'FrameLayerBuilder.h',
     'FramePropertyTable.h',
+    'ScrollbarStyles.h',
     'StackArena.h',
     'Units.h',
     'nsArenaMemoryStats.h',

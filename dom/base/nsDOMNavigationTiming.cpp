@@ -8,8 +8,8 @@
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "prtime.h"
-#include "TimeStamp.h"
 #include "nsIURI.h"
+#include "mozilla/TimeStamp.h"
 
 nsDOMNavigationTiming::nsDOMNavigationTiming()
 {

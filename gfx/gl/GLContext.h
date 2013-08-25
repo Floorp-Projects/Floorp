@@ -505,20 +505,25 @@ protected:
  * by the context version/profile
  */
 public:
-    bool IsSupported(GLFeature::Enum feature) const;
+    bool IsSupported(GLFeature::Enum feature) const {
+        return mAvailableFeatures[feature];
+    }
 
     static const char* GetFeatureName(GLFeature::Enum feature);
 
 
 private:
+    ExtensionBitset<GLFeature::EnumMax> mAvailableFeatures;
 
     /**
-     * Mark all extensions of this feature as unsupported.
-     *
-     * Returns false if marking this extension group as unsupported contradicts
-     * the OpenGL version and profile. Returns true otherwise.
+     * Init features regarding OpenGL extension and context version and profile
      */
-    bool MarkUnsupported(GLFeature::Enum feature);
+    void InitFeatures();
+
+    /**
+     * Mark the feature and associated extensions as unsupported
+     */
+    void MarkUnsupported(GLFeature::Enum feature);
 
 // -----------------------------------------------------------------------------
 // Robustness handling

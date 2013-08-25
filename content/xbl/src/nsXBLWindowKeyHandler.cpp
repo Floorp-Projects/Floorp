@@ -345,7 +345,6 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
   WalkHandlersInternal(aKeyEvent, aEventType, mHandler);
 
   if (isEditor && GetEditorKeyBindings()) {
-    nsNativeKeyEvent nativeEvent;
     // get the DOM window we're attached to
     nsCOMPtr<nsIControllers> controllers;
     nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(mTarget);
@@ -353,20 +352,30 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
       root->GetControllers(getter_AddRefs(controllers));
     }
 
+    nsKeyEvent* keyEvent =
+      static_cast<nsKeyEvent*>(aKeyEvent->GetInternalNSEvent());
+    MOZ_ASSERT(keyEvent->eventStructType == NS_KEY_EVENT,
+               "DOM key event's internal event must be nsKeyEvent");
+
     bool handled = false;
-    if (aEventType == nsGkAtoms::keypress) {
-      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, true))
-        handled = sNativeEditorBindings->KeyPress(nativeEvent,
-                                                  DoCommandCallback, controllers);
-    } else if (aEventType == nsGkAtoms::keyup) {
-      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, false))
-        handled = sNativeEditorBindings->KeyUp(nativeEvent,
-                                               DoCommandCallback, controllers);
-    } else {
-      NS_ASSERTION(aEventType == nsGkAtoms::keydown, "unknown key event type");
-      if (nsContentUtils::DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent, false))
-        handled = sNativeEditorBindings->KeyDown(nativeEvent,
-                                                 DoCommandCallback, controllers);
+    switch (keyEvent->message) {
+      case NS_KEY_PRESS:
+        handled = sNativeEditorBindings->KeyPress(*keyEvent,
+                                                  DoCommandCallback,
+                                                  controllers);
+        break;
+      case NS_KEY_UP:
+        handled = sNativeEditorBindings->KeyUp(*keyEvent,
+                                               DoCommandCallback,
+                                               controllers);
+        break;
+      case NS_KEY_DOWN:
+        handled = sNativeEditorBindings->KeyDown(*keyEvent,
+                                                 DoCommandCallback,
+                                                 controllers);
+        break;
+      default:
+        MOZ_CRASH("Unknown key message");
     }
 
     if (handled)

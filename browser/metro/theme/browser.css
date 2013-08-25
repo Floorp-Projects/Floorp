@@ -696,7 +696,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 /* navbar edit button: one button out of three - when editing: go, when !editing,
-   loading: stop, when !editing, !loading: reload */ 
+   loading: stop, when !editing, !loading: reload */
 
 #go-button, #reload-button, #stop-button  {
   visibility: collapse;
@@ -1004,6 +1004,15 @@ documenttab[selected] .documenttab-selection {
 }
 #restore-selected-button:active {
   -moz-image-region: rect(80px, 560px, 120px, 520px) !important;
+}
+
+/* Download notifications ======================================================= */
+
+.download-filename-text {
+  font-weight: bold;
+}
+.download-host-text {
+  font-weight: bold;
 }
 
 /* Autoscroll popup ======================================================== */
