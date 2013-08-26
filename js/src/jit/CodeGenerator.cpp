@@ -7274,8 +7274,11 @@ CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
 }
 
 bool
-CodeGenerator::emitAssertRangeI(Range *r, Register input)
+CodeGenerator::visitRangeAssert(LRangeAssert *ins)
 {
+     Register input = ToRegister(ins->input());
+     Range *r = ins->range();
+
     // Check the lower bound.
     if (r->lower() != INT32_MIN) {
         Label success;
@@ -7300,8 +7303,12 @@ CodeGenerator::emitAssertRangeI(Range *r, Register input)
 }
 
 bool
-CodeGenerator::emitAssertRangeD(Range *r, FloatRegister input, FloatRegister temp)
+CodeGenerator::visitDoubleRangeAssert(LDoubleRangeAssert *ins)
 {
+     FloatRegister input = ToFloatRegister(ins->input());
+     FloatRegister temp = ToFloatRegister(ins->temp());
+     Range *r = ins->range();
+
     // Check the lower bound.
     if (!r->isLowerInfinite()) {
         Label success;
@@ -7343,59 +7350,6 @@ CodeGenerator::emitAssertRangeD(Range *r, FloatRegister input, FloatRegister tem
         masm.bind(&exponentHiOk);
     }
 
-    return true;
-}
-
-bool
-CodeGenerator::visitAssertRangeI(LAssertRangeI *ins)
-{
-    Register input = ToRegister(ins->input());
-    Range *r = ins->range();
-
-    return emitAssertRangeI(r, input);
-}
-
-bool
-CodeGenerator::visitAssertRangeD(LAssertRangeD *ins)
-{
-    FloatRegister input = ToFloatRegister(ins->input());
-    FloatRegister temp = ToFloatRegister(ins->temp());
-    Range *r = ins->range();
-
-    return emitAssertRangeD(r, input, temp);
-}
-
-bool
-CodeGenerator::visitAssertRangeV(LAssertRangeV *ins)
-{
-    Range *r = ins->range();
-    const ValueOperand value = ToValue(ins, LAssertRangeV::Input);
-    Register tag = masm.splitTagForTest(value);
-    Label done;
-
-    {
-        Label isNotInt32;
-        masm.branchTestInt32(Assembler::NotEqual, tag, &isNotInt32);
-        Register unboxInt32 = ToTempUnboxRegister(ins->temp());
-        Register input = masm.extractInt32(value, unboxInt32);
-        emitAssertRangeI(r, input);
-        masm.jump(&done);
-        masm.bind(&isNotInt32);
-    }
-
-    {
-        Label isNotDouble;
-        masm.branchTestDouble(Assembler::Equal, tag, &isNotDouble);
-        FloatRegister input = ToFloatRegister(ins->floatTemp1());
-        FloatRegister temp = ToFloatRegister(ins->floatTemp2());
-        masm.unboxDouble(value, input);
-        emitAssertRangeD(r, input, temp);
-        masm.jump(&done);
-        masm.bind(&isNotDouble);
-    }
-
-    masm.breakpoint();
-    masm.bind(&done);
     return true;
 }
 
