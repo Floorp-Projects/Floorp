@@ -942,6 +942,11 @@ public:
   virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo) = 0;
   void SetAutofinishImpl(bool aAutofinish) { mAutofinish = aAutofinish; }
 
+  /**
+   * Forward SetTrackEnabled() to the input MediaStream(s) and translate the ID
+   */
+  virtual void ForwardTrackEnabled(TrackID aOutputID, bool aEnabled) {};
+
 protected:
   // This state is all accessed only on the media graph thread.
 
