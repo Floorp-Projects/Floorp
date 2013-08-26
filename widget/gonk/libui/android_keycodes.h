@@ -263,6 +263,8 @@ enum {
     AKEYCODE_RO              = 217,
     AKEYCODE_KANA            = 218,
     AKEYCODE_ASSIST          = 219,
+    AKEYCODE_BRIGHTNESS_DOWN = 220,
+    AKEYCODE_BRIGHTNESS_UP   = 221,
 
     // NOTE: If you add a new keycode here you must also add it to several other files.
     //       Refer to frameworks/base/core/java/android/view/KeyEvent.java for the full list.

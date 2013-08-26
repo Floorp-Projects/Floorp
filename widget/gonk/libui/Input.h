@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _UI_INPUT_H
-#define _UI_INPUT_H
+#ifndef _ANDROIDFW_INPUT_H
+#define _ANDROIDFW_INPUT_H
 
 /**
  * Native input event structures.
@@ -24,10 +24,9 @@
 #include "android_input.h"
 #include <utils/Vector.h>
 #include <utils/KeyedVector.h>
-#include "Timers.h"
+#include <utils/Timers.h>
 #include <utils/RefBase.h>
-#include "String8.h"
-#include "BitSet.h"
+#include <utils/String8.h>
 
 #ifdef HAVE_ANDROID_OS
 class SkMatrix;
@@ -37,6 +36,9 @@ class SkMatrix;
  * Additional private constants not defined in ndk/ui/input.h.
  */
 enum {
+    /* Signifies that the key is being predispatched */
+    AKEY_EVENT_FLAG_PREDISPATCH = 0x20000000,
+
     /* Private control to determine when an app is tracking a key sequence. */
     AKEY_EVENT_FLAG_START_TRACKING = 0x40000000,
 
@@ -47,6 +49,15 @@ enum {
 enum {
     /* Motion event is inconsistent with previously sent motion events. */
     AMOTION_EVENT_FLAG_TAINTED = 0x80000000,
+};
+
+enum {
+    /* Used when a motion event is not associated with any display.
+     * Typically used for non-pointer events. */
+    ADISPLAY_ID_NONE = -1,
+
+    /* The default display id. */
+    ADISPLAY_ID_DEFAULT = 0,
 };
 
 enum {
@@ -157,37 +168,6 @@ enum {
 };
 
 /*
- * Describes the basic configuration of input devices that are present.
- */
-struct InputConfiguration {
-    enum {
-        TOUCHSCREEN_UNDEFINED = 0,
-        TOUCHSCREEN_NOTOUCH = 1,
-        TOUCHSCREEN_STYLUS = 2,
-        TOUCHSCREEN_FINGER = 3
-    };
-
-    enum {
-        KEYBOARD_UNDEFINED = 0,
-        KEYBOARD_NOKEYS = 1,
-        KEYBOARD_QWERTY = 2,
-        KEYBOARD_12KEY = 3
-    };
-
-    enum {
-        NAVIGATION_UNDEFINED = 0,
-        NAVIGATION_NONAV = 1,
-        NAVIGATION_DPAD = 2,
-        NAVIGATION_TRACKBALL = 3,
-        NAVIGATION_WHEEL = 4
-    };
-
-    int32_t touchScreen;
-    int32_t keyboard;
-    int32_t navigation;
-};
-
-/*
  * Pointer coordinate data.
  */
 struct PointerCoords {
@@ -291,6 +271,8 @@ public:
     inline int32_t getAction() const { return mAction; }
 
     inline int32_t getFlags() const { return mFlags; }
+
+    inline void setFlags(int32_t flags) { mFlags = flags; }
 
     inline int32_t getKeyCode() const { return mKeyCode; }
 
@@ -616,282 +598,25 @@ private:
 };
 
 /*
- * Calculates the velocity of pointer movements over time.
+ * An input event factory implementation that maintains a pool of input events.
  */
-class VelocityTracker {
+class PooledInputEventFactory : public InputEventFactoryInterface {
 public:
-    // Default polynomial degree.  (used by getVelocity)
-    static const uint32_t DEFAULT_DEGREE = 2;
+    PooledInputEventFactory(size_t maxPoolSize = 20);
+    virtual ~PooledInputEventFactory();
 
-    // Default sample horizon.  (used by getVelocity)
-    // We don't use too much history by default since we want to react to quick
-    // changes in direction.
-    static const nsecs_t DEFAULT_HORIZON = 100 * 1000000; // 100 ms
+    virtual KeyEvent* createKeyEvent();
+    virtual MotionEvent* createMotionEvent();
 
-    struct Position {
-        float x, y;
-    };
-
-    struct Estimator {
-        static const size_t MAX_DEGREE = 2;
-
-        // Polynomial coefficients describing motion in X and Y.
-        float xCoeff[MAX_DEGREE + 1], yCoeff[MAX_DEGREE + 1];
-
-        // Polynomial degree (number of coefficients), or zero if no information is
-        // available.
-        uint32_t degree;
-
-        // Confidence (coefficient of determination), between 0 (no fit) and 1 (perfect fit).
-        float confidence;
-
-        inline void clear() {
-            degree = 0;
-            confidence = 0;
-            for (size_t i = 0; i <= MAX_DEGREE; i++) {
-                xCoeff[i] = 0;
-                yCoeff[i] = 0;
-            }
-        }
-    };
-
-    VelocityTracker();
-
-    // Resets the velocity tracker state.
-    void clear();
-
-    // Resets the velocity tracker state for specific pointers.
-    // Call this method when some pointers have changed and may be reusing
-    // an id that was assigned to a different pointer earlier.
-    void clearPointers(BitSet32 idBits);
-
-    // Adds movement information for a set of pointers.
-    // The idBits bitfield specifies the pointer ids of the pointers whose positions
-    // are included in the movement.
-    // The positions array contains position information for each pointer in order by
-    // increasing id.  Its size should be equal to the number of one bits in idBits.
-    void addMovement(nsecs_t eventTime, BitSet32 idBits, const Position* positions);
-
-    // Adds movement information for all pointers in a MotionEvent, including historical samples.
-    void addMovement(const MotionEvent* event);
-
-    // Gets the velocity of the specified pointer id in position units per second.
-    // Returns false and sets the velocity components to zero if there is
-    // insufficient movement information for the pointer.
-    bool getVelocity(uint32_t id, float* outVx, float* outVy) const;
-
-    // Gets a quadratic estimator for the movements of the specified pointer id.
-    // Returns false and clears the estimator if there is no information available
-    // about the pointer.
-    bool getEstimator(uint32_t id, uint32_t degree, nsecs_t horizon,
-            Estimator* outEstimator) const;
-
-    // Gets the active pointer id, or -1 if none.
-    inline int32_t getActivePointerId() const { return mActivePointerId; }
-
-    // Gets a bitset containing all pointer ids from the most recent movement.
-    inline BitSet32 getCurrentPointerIdBits() const { return mMovements[mIndex].idBits; }
+    void recycle(InputEvent* event);
 
 private:
-    // Number of samples to keep.
-    static const uint32_t HISTORY_SIZE = 20;
+    const size_t mMaxPoolSize;
 
-    struct Movement {
-        nsecs_t eventTime;
-        BitSet32 idBits;
-        Position positions[MAX_POINTERS];
-
-        inline const Position& getPosition(uint32_t id) const {
-            return positions[idBits.getIndexOfBit(id)];
-        }
-    };
-
-    uint32_t mIndex;
-    Movement mMovements[HISTORY_SIZE];
-    int32_t mActivePointerId;
+    Vector<KeyEvent*> mKeyEventPool;
+    Vector<MotionEvent*> mMotionEventPool;
 };
-
-
-/*
- * Specifies parameters that govern pointer or wheel acceleration.
- */
-struct VelocityControlParameters {
-    // A scale factor that is multiplied with the raw velocity deltas
-    // prior to applying any other velocity control factors.  The scale
-    // factor should be used to adapt the input device resolution
-    // (eg. counts per inch) to the output device resolution (eg. pixels per inch).
-    //
-    // Must be a positive value.
-    // Default is 1.0 (no scaling).
-    float scale;
-
-    // The scaled speed at which acceleration begins to be applied.
-    // This value establishes the upper bound of a low speed regime for
-    // small precise motions that are performed without any acceleration.
-    //
-    // Must be a non-negative value.
-    // Default is 0.0 (no low threshold).
-    float lowThreshold;
-
-    // The scaled speed at which maximum acceleration is applied.
-    // The difference between highThreshold and lowThreshold controls
-    // the range of speeds over which the acceleration factor is interpolated.
-    // The wider the range, the smoother the acceleration.
-    //
-    // Must be a non-negative value greater than or equal to lowThreshold.
-    // Default is 0.0 (no high threshold).
-    float highThreshold;
-
-    // The acceleration factor.
-    // When the speed is above the low speed threshold, the velocity will scaled
-    // by an interpolated value between 1.0 and this amount.
-    //
-    // Must be a positive greater than or equal to 1.0.
-    // Default is 1.0 (no acceleration).
-    float acceleration;
-
-    VelocityControlParameters() :
-            scale(1.0f), lowThreshold(0.0f), highThreshold(0.0f), acceleration(1.0f) {
-    }
-
-    VelocityControlParameters(float scale, float lowThreshold,
-            float highThreshold, float acceleration) :
-            scale(scale), lowThreshold(lowThreshold),
-            highThreshold(highThreshold), acceleration(acceleration) {
-    }
-};
-
-/*
- * Implements mouse pointer and wheel speed control and acceleration.
- */
-class VelocityControl {
-public:
-    VelocityControl();
-
-    /* Sets the various parameters. */
-    void setParameters(const VelocityControlParameters& parameters);
-
-    /* Resets the current movement counters to zero.
-     * This has the effect of nullifying any acceleration. */
-    void reset();
-
-    /* Translates a raw movement delta into an appropriately
-     * scaled / accelerated delta based on the current velocity. */
-    void move(nsecs_t eventTime, float* deltaX, float* deltaY);
-
-private:
-    // If no movements are received within this amount of time,
-    // we assume the movement has stopped and reset the movement counters.
-    static const nsecs_t STOP_TIME = 500 * 1000000; // 500 ms
-
-    VelocityControlParameters mParameters;
-
-    nsecs_t mLastMovementTime;
-    VelocityTracker::Position mRawPosition;
-    VelocityTracker mVelocityTracker;
-};
-
-
-/*
- * Describes the characteristics and capabilities of an input device.
- */
-class InputDeviceInfo {
-public:
-    InputDeviceInfo();
-    InputDeviceInfo(const InputDeviceInfo& other);
-    ~InputDeviceInfo();
-
-    struct MotionRange {
-        int32_t axis;
-        uint32_t source;
-        float min;
-        float max;
-        float flat;
-        float fuzz;
-    };
-
-    void initialize(int32_t id, const String8& name);
-
-    inline int32_t getId() const { return mId; }
-    inline const String8 getName() const { return mName; }
-    inline uint32_t getSources() const { return mSources; }
-
-    const MotionRange* getMotionRange(int32_t axis, uint32_t source) const;
-
-    void addSource(uint32_t source);
-    void addMotionRange(int32_t axis, uint32_t source,
-            float min, float max, float flat, float fuzz);
-    void addMotionRange(const MotionRange& range);
-
-    inline void setKeyboardType(int32_t keyboardType) { mKeyboardType = keyboardType; }
-    inline int32_t getKeyboardType() const { return mKeyboardType; }
-
-    inline void setKeyCharacterMapFile(const String8& value) { mKeyCharacterMapFile = value; }
-    inline const String8& getKeyCharacterMapFile() const { return mKeyCharacterMapFile; }
-
-    inline const Vector<MotionRange>& getMotionRanges() const {
-        return mMotionRanges;
-    }
-
-private:
-    int32_t mId;
-    String8 mName;
-    uint32_t mSources;
-    int32_t mKeyboardType;
-    String8 mKeyCharacterMapFile;
-
-    Vector<MotionRange> mMotionRanges;
-};
-
-/*
- * Identifies a device.
- */
-struct InputDeviceIdentifier {
-    inline InputDeviceIdentifier() :
-            bus(0), vendor(0), product(0), version(0) {
-    }
-
-    String8 name;
-    String8 location;
-    String8 uniqueId;
-    uint16_t bus;
-    uint16_t vendor;
-    uint16_t product;
-    uint16_t version;
-};
-
-/* Types of input device configuration files. */
-enum InputDeviceConfigurationFileType {
-    INPUT_DEVICE_CONFIGURATION_FILE_TYPE_CONFIGURATION = 0,     /* .idc file */
-    INPUT_DEVICE_CONFIGURATION_FILE_TYPE_KEY_LAYOUT = 1,        /* .kl file */
-    INPUT_DEVICE_CONFIGURATION_FILE_TYPE_KEY_CHARACTER_MAP = 2, /* .kcm file */
-};
-
-/*
- * Gets the path of an input device configuration file, if one is available.
- * Considers both system provided and user installed configuration files.
- *
- * The device identifier is used to construct several default configuration file
- * names to try based on the device name, vendor, product, and version.
- *
- * Returns an empty string if not found.
- */
-extern String8 getInputDeviceConfigurationFilePathByDeviceIdentifier(
-        const InputDeviceIdentifier& deviceIdentifier,
-        InputDeviceConfigurationFileType type);
-
-/*
- * Gets the path of an input device configuration file, if one is available.
- * Considers both system provided and user installed configuration files.
- *
- * The name is case-sensitive and is used to construct the filename to resolve.
- * All characters except 'a'-'z', 'A'-'Z', '0'-'9', '-', and '_' are replaced by underscores.
- *
- * Returns an empty string if not found.
- */
-extern String8 getInputDeviceConfigurationFilePathByName(
-        const String8& name, InputDeviceConfigurationFileType type);
 
 } // namespace android
 
-#endif // _UI_INPUT_H
+#endif // _ANDROIDFW_INPUT_H

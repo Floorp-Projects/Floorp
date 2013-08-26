@@ -22,13 +22,12 @@ EXPORTS += [
 
 DIRS += ['libdisplay', 'nativewindow']
 
+# libui files
 CPP_SOURCES += [
     'EventHub.cpp',
-    'Framebuffer.cpp',
-    'GonkMemoryPressureMonitoring.cpp',
-    'HwcUtils.cpp',
     'Input.cpp',
     'InputApplication.cpp',
+    'InputDevice.cpp',
     'InputDispatcher.cpp',
     'InputListener.cpp',
     'InputReader.cpp',
@@ -37,25 +36,26 @@ CPP_SOURCES += [
     'KeyCharacterMap.cpp',
     'KeyLayoutMap.cpp',
     'Keyboard.cpp',
+    'PointerController.cpp',
+    'SpriteController.cpp',
+    'Tokenizer.cpp',
+    'VelocityControl.cpp',
+    'VelocityTracker.cpp',
+    'VirtualKeyMap.cpp',
+]
+
+CPP_SOURCES += [
+    'Framebuffer.cpp',
+    'GfxInfo.cpp',
+    'HwcUtils.cpp',
+    'GonkMemoryPressureMonitoring.cpp',
     'OrientationObserver.cpp',
     'ProcessOrientation.cpp',
-    'PixelFormat.cpp',
-    'PointerController.cpp',
-    'PropertyMap.cpp',
-    'SpriteController.cpp',
-    'Static.cpp',
-    'String16.cpp',
-    'String8.cpp',
-    'Timers.cpp',
-    'Tokenizer.cpp',
-    'Unicode.cpp',
-    'VirtualKeyMap.cpp',
     'nsAppShell.cpp',
     'nsIdleServiceGonk.cpp',
     'nsLookAndFeel.cpp',
     'nsWidgetFactory.cpp',
     'nsWindow.cpp',
-    'GfxInfo.cpp',
 ]
 
 if CONFIG['ANDROID_VERSION'] == '15':
