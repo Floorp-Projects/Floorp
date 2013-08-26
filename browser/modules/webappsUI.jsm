@@ -114,9 +114,15 @@ this.webappsUI = {
 
           DOMApplicationRegistry.confirmInstall(aData, false, localDir, null,
             function (aManifest) {
-              if (WebappsInstaller.install(aData, aManifest)) {
-                installationSuccessNotification(aData, app, chromeWin);
-              }
+              WebappsInstaller.install(aData, aManifest).then(
+                function() {
+                  installationSuccessNotification(aData, app, chromeWin);
+                },
+                function(error) {
+                  Cu.reportError("Error installing webapp: " + error);
+                  // TODO: Notify user that the installation has failed
+                }
+              );
             }
           );
         } else {
