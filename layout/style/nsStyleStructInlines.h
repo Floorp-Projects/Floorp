@@ -15,6 +15,7 @@
 #include "nsStyleStruct.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
+#include "nsIContent.h"
 
 inline void
 nsStyleBorder::SetBorderImage(imgRequestProxy* aImage)

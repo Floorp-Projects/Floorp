@@ -75,6 +75,7 @@ if ($old_dir ne "" && not -d $old_dir) {
 }
 
 $WORKDIR ||= "sixgill-work";
+mkdir($WORKDIR, 0755) if ! -d $WORKDIR;
 $poll_file ||= "$WORKDIR/poll.file";
 $build_dir ||= "$WORKDIR/js-inbound-xgill";
 
@@ -212,13 +213,17 @@ sub run_build
         my $address = get_manager_address($log_file);
 
         # write the configuration file for the wrapper script.
-        open(CONFIG, "> $wrap_dir/xgill.config");
+        my $config_file = "$WORKDIR/xgill.config";
+        open(CONFIG, ">", $config_file) or die "create $config_file: $!";
         print CONFIG "$prefix_dir\n";
-        print CONFIG "$result_dir/build_xgill.log\n";
+        print CONFIG Cwd::abs_path("$result_dir/build_xgill.log")."\n";
         print CONFIG "$address\n";
         print CONFIG "-fplugin-arg-xgill-annfile=$ann_file\n"
           if ($ann_file ne "" && -e $ann_file);
         close(CONFIG);
+
+	# Tell the wrapper where to find the config
+	$ENV{"XGILL_CONFIG"} = Cwd::abs_path($config_file);
 
         # update the PATH so that the build will see the wrappers.
         $ENV{"PATH"} = "$wrap_dir:" . $ENV{"PATH"};

@@ -281,7 +281,12 @@ class JSFunction : public JSObject
     js::GeneratorKind generatorKind() const {
         if (!isInterpreted())
             return js::NotGenerator;
-        return hasScript() ? nonLazyScript()->generatorKind() : lazyScript()->generatorKind();
+        if (hasScript())
+            return nonLazyScript()->generatorKind();
+        if (js::LazyScript *lazy = lazyScriptOrNull())
+            return lazy->generatorKind();
+        JS_ASSERT(isSelfHostedBuiltin());
+        return js::NotGenerator;
     }
 
     bool isGenerator() const { return generatorKind() != js::NotGenerator; }

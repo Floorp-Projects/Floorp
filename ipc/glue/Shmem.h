@@ -130,7 +130,7 @@ public:
   bool
   IsWritable() const
   {
-    return mSegment != NULL;
+    return mSegment != nullptr;
   }
 
   // Returns whether this Shmem is readable by you, and thus whether you can
@@ -138,7 +138,7 @@ public:
   bool
   IsReadable() const
   {
-    return mSegment != NULL;
+    return mSegment != nullptr;
   }
 
   // Return a pointer to the user-visible data segment.
@@ -203,7 +203,7 @@ public:
   // Prepare this to be shared with |aProcess|.  Return an IPC message
   // that contains enough information for the other process to map
   // this segment in OpenExisting() below.  Return a new message if
-  // successful (owned by the caller), NULL if not.
+  // successful (owned by the caller), nullptr if not.
   IPC::Message*
   ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
           base::ProcessHandle aProcess,
@@ -212,7 +212,7 @@ public:
   // Stop sharing this with |aProcess|.  Return an IPC message that
   // contains enough information for the other process to unmap this
   // segment.  Return a new message if successful (owned by the
-  // caller), NULL if not.
+  // caller), nullptr if not.
   IPC::Message*
   UnshareFrom(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
               base::ProcessHandle aProcess,

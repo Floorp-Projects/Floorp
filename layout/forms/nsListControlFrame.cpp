@@ -44,6 +44,7 @@
 #include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/Preferences.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -594,15 +595,14 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
   return nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 }
 
-nsGfxScrollFrameInner::ScrollbarStyles
+ScrollbarStyles
 nsListControlFrame::GetScrollbarStyles() const
 {
   // We can't express this in the style system yet; when we can, this can go away
   // and GetScrollbarStyles can be devirtualized
   int32_t verticalStyle = IsInDropDownMode() ? NS_STYLE_OVERFLOW_AUTO
     : NS_STYLE_OVERFLOW_SCROLL;
-  return nsGfxScrollFrameInner::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
-                                                verticalStyle);
+  return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, verticalStyle);
 }
 
 bool
@@ -1816,6 +1816,14 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   } else {
     // NOTE: the combo box is responsible for dropping it down
     if (mComboboxFrame) {
+      if (XRE_GetProcessType() == GeckoProcessType_Content &&
+          Preferences::GetBool("browser.tabs.remote", false)) {
+        nsContentUtils::DispatchChromeEvent(mContent->OwnerDoc(), mContent,
+                                            NS_LITERAL_STRING("mozshowdropdown"), true,
+                                            false);
+        return NS_OK;
+      }
+
       if (!IgnoreMouseEventForSelection(aMouseEvent)) {
         return NS_OK;
       }

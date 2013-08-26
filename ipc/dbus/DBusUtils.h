@@ -93,7 +93,7 @@ typedef void (*DBusCallback)(DBusMessage *, void *);
 
 void log_and_free_dbus_error(DBusError* err,
                              const char* function,
-                             DBusMessage* msg = NULL);
+                             DBusMessage* msg = nullptr);
 
 dbus_bool_t dbus_func_send(DBusConnection *aConnection,
                            dbus_uint32_t *aSerial,

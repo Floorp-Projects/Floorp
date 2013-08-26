@@ -183,7 +183,7 @@ VibratorRunnable::Run()
       mMonitor.Wait();
     }
   }
-  sVibratorRunnable = NULL;
+  sVibratorRunnable = nullptr;
   return NS_OK;
 }
 
@@ -345,7 +345,7 @@ UnregisterBatteryObserverIOThread()
   MOZ_ASSERT(sBatteryObserver);
 
   UnregisterUeventListener(sBatteryObserver);
-  sBatteryObserver = NULL;
+  sBatteryObserver = nullptr;
 }
 
 void
@@ -593,7 +593,7 @@ SetCpuSleepAllowed(bool aAllowed)
   UpdateCpuSleepState();
 }
 
-static light_device_t* sLights[hal::eHalLightID_Count];	// will be initialized to NULL
+static light_device_t* sLights[hal::eHalLightID_Count];	// will be initialized to nullptr
 
 light_device_t* GetDevice(hw_module_t* module, char const* name)
 {
@@ -603,14 +603,14 @@ light_device_t* GetDevice(hw_module_t* module, char const* name)
   if (err == 0) {
     return (light_device_t*)device;
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 
 void
 InitLights()
 {
-  // assume that if backlight is NULL, nothing has been set yet
+  // assume that if backlight is nullptr, nothing has been set yet
   // if this is not true, the initialization will occur everytime a light is read or set!
   if (!sLights[hal::eHalLightID_Backlight]) {
     int err;
@@ -651,7 +651,8 @@ SetLight(hal::LightType light, const hal::LightConfiguration& aConfig)
 
   InitLights();
 
-  if (light < 0 || light >= hal::eHalLightID_Count || sLights[light] == NULL) {
+  if (light < 0 || light >= hal::eHalLightID_Count ||
+      sLights[light] == nullptr) {
     return false;
   }
 
@@ -676,7 +677,8 @@ GetLight(hal::LightType light, hal::LightConfiguration* aConfig)
   InitLights();
 #endif
 
-  if (light < 0 || light >= hal::eHalLightID_Count || sLights[light] == NULL) {
+  if (light < 0 || light >= hal::eHalLightID_Count ||
+      sLights[light] == nullptr) {
     return false;
   }
 
@@ -848,7 +850,7 @@ public:
 
 int AlarmData::sNextGeneration = 0;
 
-AlarmData* sAlarmData = NULL;
+AlarmData* sAlarmData = nullptr;
 
 class AlarmFiredEvent : public nsRunnable {
 public:
@@ -920,7 +922,7 @@ WaitForAlarm(void* aData)
   }
 
   pthread_cleanup_pop(1);
-  return NULL;
+  return nullptr;
 }
 
 bool
@@ -941,7 +943,7 @@ EnableAlarm()
   sigemptyset(&actions.sa_mask);
   actions.sa_flags = 0;
   actions.sa_handler = ShutDownAlarm;
-  if (sigaction(SIGUSR1, &actions, NULL)) {
+  if (sigaction(SIGUSR1, &actions, nullptr)) {
     HAL_LOG(("Failed to set SIGUSR1 signal for alarm-watcher thread."));
     return false;
   }
@@ -956,7 +958,7 @@ EnableAlarm()
   int status = pthread_create(&sAlarmFireWatcherThread, &attr, WaitForAlarm,
                               alarmData.get());
   if (status) {
-    alarmData = NULL;
+    alarmData = nullptr;
     delete sInternalLockCpuMonitor;
     HAL_LOG(("Failed to create alarm-watcher thread. Status: %d.", status));
     return false;
@@ -975,7 +977,7 @@ DisableAlarm()
   MOZ_ASSERT(sAlarmData);
 
   // NB: this must happen-before the thread cancellation.
-  sAlarmData = NULL;
+  sAlarmData = nullptr;
 
   // The cancel will interrupt the thread and destroy it, freeing the
   // data pointed at by sAlarmData.

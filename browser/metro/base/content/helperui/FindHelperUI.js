@@ -140,13 +140,13 @@ var FindHelperUI = {
       this._container.removeEventListener("transitionend", onTransitionEnd, true);
       this._textbox.value = "";
       this.status = null;
-      this._textbox.blur();
       this._open = false;
 
       // Restore the scroll synchronisation
       Browser.selectedBrowser.scrollSync = true;
     };
 
+    this._textbox.blur();
     this._container.addEventListener("transitionend", onTransitionEnd, true);
     this._container.dismiss();
     Elements.browsers.removeAttribute("findbar");
