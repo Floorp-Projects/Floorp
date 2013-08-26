@@ -44,6 +44,11 @@ public:
   {
   }
 
+  virtual DelayNodeEngine* AsDelayNodeEngine()
+  {
+    return this;
+  }
+
   void SetSourceStream(AudioNodeStream* aSource)
   {
     mSource = aSource;
