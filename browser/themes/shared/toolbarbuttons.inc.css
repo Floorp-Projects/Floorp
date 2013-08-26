@@ -41,7 +41,6 @@
   -moz-image-region: rect(0, 180px, 18px, 162px);
 }
 
-#downloads-indicator[customizableui-areatype="toolbar"],
 #downloads-button[customizableui-areatype="toolbar"] {
   -moz-image-region: rect(0, 198px, 18px, 180px);
 }

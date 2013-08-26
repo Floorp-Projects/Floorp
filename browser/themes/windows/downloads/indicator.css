@@ -38,6 +38,11 @@
   background-size: 12px;
 }
 
+#downloads-indicator:not([counter]) > #downloads-indicator-anchor >
+#downloads-indicator-progress-area > #downloads-indicator-counter:-moz-lwtheme-brighttext {
+  background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
+}
+
 #downloads-indicator:not([counter])[attention] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
   background-image: url("chrome://browser/skin/downloads/download-glow.png");
 }
@@ -144,9 +149,4 @@
 
 #downloads-indicator[paused] > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-progress > .progress-remainder {
   background-image: linear-gradient(#4b5000, #515700);
-}
-
-toolbar[mode="full"] > #downloads-indicator > .toolbarbutton-text {
-  margin: 0;
-  text-align: center;
 }
