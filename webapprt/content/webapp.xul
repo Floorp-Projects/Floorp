@@ -158,7 +158,6 @@
   <browser type="content-primary" id="content" flex="1" context="contentAreaContextMenu" />
 
   <popupset>
-    <menuseparator id="page-menu-separator"/>
     <menupopup id="contentAreaContextMenu" pagemenu="start"
                onpopupshowing="return showContextMenu(event, this)"
                onpopuphiding="hideContextMenu(event, this)">
