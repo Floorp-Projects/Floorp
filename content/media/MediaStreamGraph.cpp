@@ -1912,29 +1912,15 @@ MediaStream::SetTrackEnabled(TrackID aTrackID, bool aEnabled)
 }
 
 void
-MediaStream::ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment)
+MediaStream::ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, MediaSegment* aRawSegment)
 {
+  // mMutex must be owned here if this is a SourceMediaStream
   if (!mDisabledTrackIDs.Contains(aTrackID)) {
     return;
   }
-
-  switch (aSegment->GetType()) {
-  case MediaSegment::AUDIO: {
-    TrackTicks duration = aSegment->GetDuration();
-    aSegment->Clear();
-    aSegment->AppendNullData(duration);
-    break;
-  }
-  case MediaSegment::VIDEO: {
-    for (VideoSegment::ChunkIterator i(*static_cast<VideoSegment*>(aSegment));
-         !i.IsEnded(); i.Next()) {
-      VideoChunk& chunk = *i;
-      chunk.SetForceBlack(true);
-    }
-    break;
-  }
-  default:
-    MOZ_CRASH("Unknown track type");
+  aSegment->ReplaceWithDisabled();
+  if (aRawSegment) {
+    aRawSegment->ReplaceWithDisabled();
   }
 }
 
@@ -1989,6 +1975,10 @@ SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegme
       // 0-10ms of delay before data gets to direct listeners.
       // Indirect listeners (via subsequent TrackUnion nodes) are synced to
       // playout time, and so can be delayed by buffering.
+
+      // Apply track disabling before notifying any consumers directly
+      // or inserting into the graph
+      ApplyTrackDisabling(aID, aSegment, aRawSegment);
 
       // Must notify first, since AppendFrom() will empty out aSegment
       NotifyDirectConsumers(track, aRawSegment ? aRawSegment : aSegment);
