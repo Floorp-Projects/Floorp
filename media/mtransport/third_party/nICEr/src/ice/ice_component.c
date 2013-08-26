@@ -415,6 +415,9 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)(%d): received request from %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,req->src_addr.as_string);
 
+    if (comp->state == NR_ICE_COMPONENT_DISABLED)
+      ABORT(R_REJECTED);
+
     /* Check for role conficts (7.2.1.1) */
     if(comp->stream->pctx->controlling){
       if(nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_ICE_CONTROLLING,&attr)){
