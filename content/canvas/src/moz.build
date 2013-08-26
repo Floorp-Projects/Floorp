@@ -38,6 +38,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLContextReporter.cpp',
         'WebGLContextState.cpp',
         'WebGLContextValidate.cpp',
+        'WebGLContextExtensions.cpp',
         'WebGLContextFramebufferOperations.cpp',
         'WebGLContextVertexArray.cpp',
         'WebGLContextVertices.cpp',
