@@ -17,8 +17,27 @@ const baseURI = "http://mochi.test:8888/browser/metro/";
 const chromeRoot = getRootDirectory(gTestPath);
 const kDefaultWait = 2000;
 const kDefaultInterval = 50;
-const snappedSize = 330;
-const portraitSize = 660;
+
+/*=============================================================================
+  Load Helpers
+=============================================================================*/
+
+let splitPath = chromeRoot.split('/');
+if (!splitPath[splitPath.length-1]) {
+  splitPath.pop();
+}
+// ../mochitest to make sure we're looking for the libs on the right path
+// even for mochiperf tests.
+splitPath.pop();
+splitPath.push('mochitest');
+
+const mochitestPath = splitPath.join('/') + '/';
+
+[
+  "ViewStateHelper.js"
+].forEach(function(lib) {
+  Services.scriptloader.loadSubScript(mochitestPath + lib, this);
+}, this);
 
 /*=============================================================================
   Metro ui helpers
@@ -211,50 +230,6 @@ function fireAppBarDisplayEvent()
   gWindow.dispatchEvent(event);
   purgeEventQueue();
   return promise;
-}
-
-function setSnappedViewstate() {
-  ok(isLandscapeMode(), "setSnappedViewstate expects landscape mode to work.");
-
-  // Communicate viewstate change
-  Services.obs.notifyObservers(null, 'metro_viewstate_changed', 'snapped');
-
-  let browser = Browser.selectedBrowser;
-
-  // Reduce browser width to simulate small screen size.
-  let fullWidth = browser.clientWidth;
-  let padding = fullWidth - snappedSize;
-
-  browser.style.borderRight = padding + "px solid gray";
-
-  // Make sure it renders the new mode properly
-  yield waitForMs(0);
-}
-
-function setPortraitViewstate() {
-  ok(isLandscapeMode(), "setPortraitViewstate expects landscape mode to work.");
-
-  Services.obs.notifyObservers(null, 'metro_viewstate_changed', 'portrait');
-
-  let browser = Browser.selectedBrowser;
-
-  let fullWidth = browser.clientWidth;
-  let padding = fullWidth - portraitSize;
-
-  browser.style.borderRight = padding + "px solid gray";
-
-  // Make sure it renders the new mode properly
-  yield waitForMs(0);
-}
-
-function restoreViewstate() {
-  ok(isLandscapeMode(), "restoreViewstate expects landscape mode to work.");
-
-  Services.obs.notifyObservers(null, 'metro_viewstate_changed', 'landscape');
-
-  Browser.selectedBrowser.style.removeProperty("border-right");
-
-  yield waitForMs(0);
 }
 
 /*=============================================================================
