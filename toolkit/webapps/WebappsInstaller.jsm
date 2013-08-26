@@ -122,6 +122,7 @@ NativeApp.prototype = {
   categories: null,
   webappJson: null,
   runtimeFolder: null,
+  manifest: null,
 
   /**
    * This function reads and parses the data from the app
@@ -132,7 +133,8 @@ NativeApp.prototype = {
    *
    */
   init: function(aData, aManifest) {
-    let manifest = new ManifestHelper(aManifest, aData.app.origin);
+    let manifest = this.manifest = new ManifestHelper(aManifest,
+                                                      aData.app.origin);
 
     let origin = Services.io.newURI(aData.app.origin, null, null);
 
@@ -151,10 +153,16 @@ NativeApp.prototype = {
       catch (ex) {}
     }
 
-    if (manifest.developer && manifest.developer.name) {
-      let devName = sanitize(manifest.developer.name.substr(0, 128));
-      if (devName) {
-        this.developerName = devName;
+    if (manifest.developer) {
+      if (manifest.developer.name) {
+        let devName = sanitize(manifest.developer.name.substr(0, 128));
+        if (devName) {
+          this.developerName = devName;
+        }
+      }
+
+      if (manifest.developer.url) {
+        this.developerUrl = manifest.developer.url;
       }
     }
 
@@ -218,11 +226,17 @@ NativeApp.prototype = {
  */
 function WinNativeApp(aData) {
   NativeApp.call(this, aData);
+
+  if (aData.isPackage) {
+    this.size = aData.app.updateManifest.size / 1024;
+  }
+
   this._init();
 }
 
 WinNativeApp.prototype = {
   __proto__: NativeApp.prototype,
+  size: null,
 
   /**
    * Install the app in the system
@@ -450,6 +464,28 @@ WinNativeApp.prototype = {
 
       if(this.iconFile) {
         subKey.writeStringValue("DisplayIcon", this.iconFile.path);
+      }
+
+      let date = new Date();
+      let year = date.getYear().toString();
+      let month = date.getMonth();
+      if (month < 10) {
+        month = "0" + month;
+      }
+      let day = date.getDate();
+      if (day < 10) {
+        day = "0" + day;
+      }
+      subKey.writeStringValue("InstallDate", year + month + day);
+      if (this.manifest.version) {
+        subKey.writeStringValue("DisplayVersion", this.manifest.version);
+      }
+      if (this.developerName) {
+        subKey.writeStringValue("Publisher", this.developerName);
+      }
+      subKey.writeStringValue("URLInfoAbout", this.developerUrl);
+      if (this.size) {
+        subKey.writeIntValue("EstimatedSize", this.size);
       }
 
       subKey.writeIntValue("NoModify", 1);
