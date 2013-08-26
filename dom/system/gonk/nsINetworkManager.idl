@@ -7,7 +7,7 @@
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
-[scriptable, uuid(d70b9d95-87d5-4ce9-aff7-4323dac79b07)]
+[scriptable, uuid(04fe5049-1ea8-4b4f-8c27-d23cd24611bb)]
 interface nsINetworkInterface : nsISupports
 {
   const long NETWORK_STATE_UNKNOWN = -1;
@@ -38,11 +38,6 @@ interface nsINetworkInterface : nsISupports
    * Name of the network interface. This identifier is unique.
    */
   readonly attribute DOMString name;
-
-  /**
-   * Indicates whether DHCP should be run when the interface connects.
-   */
-  readonly attribute boolean dhcp;
 
   /**
    * IP Address
