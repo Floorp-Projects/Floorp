@@ -24,7 +24,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-common/utils.js");
 
@@ -47,8 +47,8 @@ Object.freeze(BagheeraClientRequestResult.prototype);
 function BagheeraRequest(uri) {
   RESTRequest.call(this, uri);
 
-  this._log = Log4Moz.repository.getLogger("Services.BagheeraClient");
-  this._log.level = Log4Moz.Level.Debug;
+  this._log = Log.repository.getLogger("Services.BagheeraClient");
+  this._log.level = Log.Level.Debug;
 }
 
 BagheeraRequest.prototype = Object.freeze({
@@ -69,8 +69,8 @@ this.BagheeraClient = function BagheeraClient(baseURI) {
     throw new Error("baseURI argument must be defined.");
   }
 
-  this._log = Log4Moz.repository.getLogger("Services.BagheeraClient");
-  this._log.level = Log4Moz.Level.Debug;
+  this._log = Log.repository.getLogger("Services.BagheeraClient");
+  this._log.level = Log.Level.Debug;
 
   this.baseURI = baseURI;
 

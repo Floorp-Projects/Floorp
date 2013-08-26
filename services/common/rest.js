@@ -17,7 +17,7 @@ this.EXPORTED_SYMBOLS = [
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "CryptoUtils",
@@ -91,9 +91,9 @@ this.RESTRequest = function RESTRequest(uri) {
   this.uri = uri;
 
   this._headers = {};
-  this._log = Log4Moz.repository.getLogger(this._logName);
+  this._log = Log.repository.getLogger(this._logName);
   this._log.level =
-    Log4Moz.Level[Prefs.get("log.logger.rest.request")];
+    Log.Level[Prefs.get("log.logger.rest.request")];
 }
 RESTRequest.prototype = {
 
@@ -309,7 +309,7 @@ RESTRequest.prototype = {
       }
 
       this._log.debug(method + " Length: " + data.length);
-      if (this._log.level <= Log4Moz.Level.Trace) {
+      if (this._log.level <= Log.Level.Trace) {
         this._log.trace(method + " Body: " + data);
       }
 
@@ -444,7 +444,7 @@ RESTRequest.prototype = {
     this._log.debug(this.method + " " + uri + " " + this.response.status);
 
     // Additionally give the full response body when Trace logging.
-    if (this._log.level <= Log4Moz.Level.Trace) {
+    if (this._log.level <= Log.Level.Trace) {
       this._log.trace(this.method + " body: " + this.response.body);
     }
 
@@ -593,9 +593,9 @@ RESTRequest.prototype = {
  * the RESTRequest.
  */
 this.RESTResponse = function RESTResponse() {
-  this._log = Log4Moz.repository.getLogger(this._logName);
+  this._log = Log.repository.getLogger(this._logName);
   this._log.level =
-    Log4Moz.Level[Prefs.get("log.logger.rest.response")];
+    Log.Level[Prefs.get("log.logger.rest.response")];
 }
 RESTResponse.prototype = {
 

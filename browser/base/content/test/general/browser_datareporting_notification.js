@@ -58,10 +58,10 @@ function test() {
   waitForExplicitFinish();
 
   let ns = {};
-  Components.utils.import("resource://services-common/log4moz.js", ns);
-  rootLogger = ns.Log4Moz.repository.rootLogger;
-  dumpAppender = new ns.Log4Moz.DumpAppender();
-  dumpAppender.level = ns.Log4Moz.Level.All;
+  Components.utils.import("resource://gre/modules/Log.jsm", ns);
+  rootLogger = ns.Log.repository.rootLogger;
+  dumpAppender = new ns.Log.DumpAppender();
+  dumpAppender.level = ns.Log.Level.All;
   rootLogger.addAppender(dumpAppender);
 
   let notification = document.getElementById("global-notificationbox");

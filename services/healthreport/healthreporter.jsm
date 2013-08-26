@@ -18,7 +18,7 @@ Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/bagheeraclient.js");
 #endif
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
@@ -260,7 +260,7 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
     throw new Error("Must provide policy to HealthReporter constructor.");
   }
 
-  this._log = Log4Moz.repository.getLogger("Services.HealthReport.HealthReporter");
+  this._log = Log.repository.getLogger("Services.HealthReport.HealthReporter");
   this._log.info("Initializing health reporter instance against " + branch);
 
   this._branch = branch;
