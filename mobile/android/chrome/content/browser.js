@@ -2862,6 +2862,7 @@ Tab.prototype = {
       this.browser.focus();
       this.browser.docShellIsActive = true;
       Reader.updatePageAction(this);
+      HelperApps.updatePageAction(this.browser.currentURI);
     } else {
       this.browser.setAttribute("type", "content-targetable");
       this.browser.docShellIsActive = false;
