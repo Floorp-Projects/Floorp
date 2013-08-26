@@ -7,8 +7,8 @@
 const FRAME_SCRIPT = "chrome://marionette/content/marionette-listener.js";
 
 // import logger
-Cu.import("resource://gre/modules/services-common/log4moz.js");
-let logger = Log4Moz.repository.getLogger("Marionette");
+Cu.import("resource://gre/modules/Log.jsm");
+let logger = Log.repository.getLogger("Marionette");
 logger.info('marionette-server.js loaded');
 
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]

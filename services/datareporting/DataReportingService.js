@@ -223,7 +223,7 @@ DataReportingService.prototype = Object.freeze({
 
     Cu.import("resource://gre/modules/Task.jsm", ns);
     Cu.import("resource://gre/modules/HealthReport.jsm", ns);
-    Cu.import("resource://services-common/log4moz.js", ns);
+    Cu.import("resource://gre/modules/Log.jsm", ns);
 
     // How many times will we rewrite this code before rolling it up into a
     // generic module? See also bug 451283.
@@ -238,22 +238,22 @@ DataReportingService.prototype = Object.freeze({
     let loggingPrefs = new Preferences(HEALTHREPORT_LOGGING_BRANCH);
     if (loggingPrefs.get("consoleEnabled", true)) {
       let level = loggingPrefs.get("consoleLevel", "Warn");
-      let appender = new ns.Log4Moz.ConsoleAppender();
-      appender.level = ns.Log4Moz.Level[level] || ns.Log4Moz.Level.Warn;
+      let appender = new ns.Log.ConsoleAppender();
+      appender.level = ns.Log.Level[level] || ns.Log.Level.Warn;
 
       for (let name of LOGGERS) {
-        let logger = ns.Log4Moz.repository.getLogger(name);
+        let logger = ns.Log.repository.getLogger(name);
         logger.addAppender(appender);
       }
     }
 
     if (loggingPrefs.get("dumpEnabled", false)) {
       let level = loggingPrefs.get("dumpLevel", "Debug");
-      let appender = new ns.Log4Moz.DumpAppender();
-      appender.level = ns.Log4Moz.Level[level] || ns.Log4Moz.Level.Debug;
+      let appender = new ns.Log.DumpAppender();
+      appender.level = ns.Log.Level[level] || ns.Log.Level.Debug;
 
       for (let name of LOGGERS) {
-        let logger = ns.Log4Moz.repository.getLogger(name);
+        let logger = ns.Log.repository.getLogger(name);
         logger.addAppender(appender);
       }
     }

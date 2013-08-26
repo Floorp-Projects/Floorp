@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm")
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 
 this.CommonUtils = {
   exceptionStr: function exceptionStr(e) {
@@ -88,7 +88,7 @@ this.CommonUtils = {
     try {
       return Services.io.newURI(URIString, null, null);
     } catch (e) {
-      let log = Log4Moz.repository.getLogger("Common.Utils");
+      let log = Log.repository.getLogger("Common.Utils");
       log.debug("Could not create URI: " + CommonUtils.exceptionStr(e));
       return null;
     }
@@ -464,7 +464,7 @@ this.CommonUtils = {
    * @param def
    *        (Number) The default value to use if the preference is not defined.
    * @param log
-   *        (Log4Moz.Logger) Logger to write warnings to.
+   *        (Log.Logger) Logger to write warnings to.
    */
   getEpochPref: function getEpochPref(branch, pref, def=0, log=null) {
     if (!Number.isInteger(def)) {
@@ -507,7 +507,7 @@ this.CommonUtils = {
    *        (Number) The default value (in milliseconds) if the preference is
    *        not defined or invalid.
    * @param log
-   *        (Log4Moz.Logger) Logger to write warnings to.
+   *        (Log.Logger) Logger to write warnings to.
    * @param oldestYear
    *        (Number) Oldest year to accept in read values.
    */
