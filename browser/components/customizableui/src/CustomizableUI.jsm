@@ -1111,7 +1111,11 @@ let CustomizableUIInternal = {
     return [...widgets];
   },
 
-  getPlacementOfWidget: function(aWidgetId) {
+  getPlacementOfWidget: function(aWidgetId, aOnlyRegistered) {
+    if (aOnlyRegistered && !this.widgetExists(aWidgetId)) {
+      return null;
+    }
+
     for (let [area, placements] of gPlacements) {
       let index = placements.indexOf(aWidgetId);
       if (index != -1) {
@@ -1120,6 +1124,21 @@ let CustomizableUIInternal = {
     }
 
     return null;
+  },
+
+  widgetExists: function(aWidgetId) {
+    if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
+      return true;
+    }
+
+    // Destroyed API widgets are in gSeenWidgets, but not in gPalette:
+    if (gSeenWidgets.has(aWidgetId)) {
+      return false;
+    }
+
+    // We're assuming XUL widgets always exist, as it's much harder to check,
+    // and checking would be much more error prone.
+    return true;
   },
 
   addWidgetToArea: function(aWidgetId, aArea, aPosition, aInitialAdd) {
@@ -1963,7 +1982,7 @@ this.CustomizableUI = {
     CustomizableUIInternal.reset();
   },
   getPlacementOfWidget: function(aWidgetId) {
-    return CustomizableUIInternal.getPlacementOfWidget(aWidgetId);
+    return CustomizableUIInternal.getPlacementOfWidget(aWidgetId, true);
   },
   isWidgetRemovable: function(aWidgetId) {
     return CustomizableUIInternal.isWidgetRemovable(aWidgetId);
