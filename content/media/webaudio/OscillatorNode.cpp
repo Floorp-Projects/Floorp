@@ -43,7 +43,7 @@ public:
     : AudioNodeEngine(aNode)
     , mSource(nullptr)
     , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
-    , mStart(0)
+    , mStart(-1)
     , mStop(TRACK_TICKS_MAX)
     // Keep the default values in sync with OscillatorNode::OscillatorNode.
     , mFrequency(440.f)
@@ -245,6 +245,11 @@ public:
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
 
     TrackTicks ticks = aStream->GetCurrentPosition();
+    if (mStart == -1) {
+      ComputeSilence(aOutput);
+      return;
+    }
+
     if (ticks + WEBAUDIO_BLOCK_SIZE < mStart) {
       // We're not playing yet.
       ComputeSilence(aOutput);
