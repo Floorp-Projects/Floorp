@@ -286,6 +286,20 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
         a->IsAudioParamStream()) {
       continue;
     }
+
+    // It is possible for mLastChunks to be empty here, because `a` might be a
+    // AudioNodeStream that has not been scheduled yet, because it is further
+    // down the graph _but_ as a connection to this node. Because we enforce the
+    // presence of at least one DelayNode, with at least one block of delay, and
+    // because the output of a DelayNode when it has been fed less that
+    // `delayTime` amount of audio is silence, we can simply continue here,
+    // because this input would not influence the output of this node. Next
+    // iteration, a->mLastChunks.IsEmpty() will be false, and everthing will
+    // work as usual.
+    if (a->mLastChunks.IsEmpty()) {
+      continue;
+    }
+
     AudioChunk* chunk = &a->mLastChunks[mInputs[i]->OutputNumber()];
     MOZ_ASSERT(chunk);
     if (chunk->IsNull() || chunk->mChannelData.IsEmpty()) {
@@ -412,8 +426,7 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
   uint16_t outputCount = std::max(uint16_t(1), mEngine->OutputCount());
   mLastChunks.SetLength(outputCount);
 
-  if (mInCycle) {
-    // XXX DelayNode not supported yet so just produce silence
+  if (mMuted) {
     for (uint16_t i = 0; i < outputCount; ++i) {
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
     }
