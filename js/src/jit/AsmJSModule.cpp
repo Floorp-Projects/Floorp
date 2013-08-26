@@ -20,6 +20,7 @@
 #include "jsobjinlines.h"
 
 using namespace js;
+using namespace jit;
 
 void
 AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
@@ -85,15 +86,15 @@ DeallocateExecutableMemory(uint8_t *code, size_t totalBytes)
 #endif
 }
 
-uint8_t *
-AsmJSModule::allocateCodeAndGlobalSegment(ExclusiveContext *cx, size_t bytesNeeded)
+bool
+AsmJSModule::allocateAndCopyCode(ExclusiveContext *cx, MacroAssembler &masm)
 {
     JS_ASSERT(!code_);
 
     // The global data section sits immediately after the executable (and
     // other) data allocated by the MacroAssembler, so ensure it is
     // double-aligned.
-    pod.codeBytes_ = AlignBytes(bytesNeeded, sizeof(double));
+    pod.codeBytes_ = AlignBytes(masm.bytesNeeded(), sizeof(double));
 
     // The entire region is allocated via mmap/VirtualAlloc which requires
     // units of pages.
@@ -101,10 +102,31 @@ AsmJSModule::allocateCodeAndGlobalSegment(ExclusiveContext *cx, size_t bytesNeed
 
     code_ = AllocateExecutableMemory(cx, pod.totalBytes_);
     if (!code_)
-        return NULL;
+        return false;
 
     JS_ASSERT(uintptr_t(code_) % AsmJSPageSize == 0);
-    return code_;
+    masm.executableCopy(code_);
+    return true;
+}
+
+void
+AsmJSModule::staticallyLink(const AsmJSStaticLinkData &linkData)
+{
+    // Process AsmJSStaticLinkData:
+
+    operationCallbackExit_ = code_ + linkData.operationCallbackExitOffset;
+
+    for (size_t i = 0; i < linkData.relativeLinks.length(); i++) {
+        AsmJSStaticLinkData::RelativeLink link = linkData.relativeLinks[i];
+        *(void **)(code_ + link.patchAtOffset) = code_ + link.targetOffset;
+    }
+
+    // Initialize global data segment
+
+    for (size_t i = 0; i < exits_.length(); i++) {
+        exitIndexToGlobalDatum(i).exit = interpExitTrampoline(exits_[i]);
+        exitIndexToGlobalDatum(i).fun = NULL;
+    }
 }
 
 AsmJSModule::~AsmJSModule()
