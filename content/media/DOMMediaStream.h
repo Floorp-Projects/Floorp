@@ -84,12 +84,6 @@ public:
   virtual bool AddDirectListener(MediaStreamDirectListener *aListener) { return false; }
   virtual void RemoveDirectListener(MediaStreamDirectListener *aListener) {}
 
-  /**
-   * Overridden in DOMLocalMediaStreams to allow getUserMedia to disable
-   * media at the SourceMediaStream.
-   */
-  virtual void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
-
   bool IsFinished();
   /**
    * Returns a principal indicating who may access this stream. The stream contents
