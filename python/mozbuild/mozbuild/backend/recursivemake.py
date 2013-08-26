@@ -419,8 +419,19 @@ class RecursiveMakeBackend(CommonBackend):
 
         for module in xpt_modules:
             deps = sorted(modules[module])
+            idl_deps = ['$(dist_idl_dir)/%s.idl' % dep for dep in deps]
             rules.extend([
-                '$(idl_xpt_dir)/%s.xpt:' % module,
+                # It may seem strange to have the .idl files listed as
+                # prerequisites both here and in the auto-generated .pp files.
+                # It is necessary to list them here to handle the case where a
+                # new .idl is added to an xpt. If we add a new .idl and nothing
+                # else has changed, the new .idl won't be referenced anywhere
+                # except in the command invocation. Therefore, the .xpt won't
+                # be rebuilt because the dependencies say it is up to date. By
+                # listing the .idls here, we ensure the make file has a
+                # reference to the new .idl. Since the new .idl presumably has
+                # an mtime newer than the .xpt, it will trigger xpt generation.
+                '$(idl_xpt_dir)/%s.xpt: %s' % (module, ' '.join(idl_deps)),
                 '\t@echo "$(notdir $@)"',
                 '\t$(idlprocess) $(basename $(notdir $@)) %s' % ' '.join(deps),
                 '',
