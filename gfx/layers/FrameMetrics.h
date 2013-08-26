@@ -103,20 +103,9 @@ public:
     return CSSToScreenScale(float(mCompositionBounds.width) / float(mViewport.width));
   }
 
-  /**
-   * Return the resolution that content should be rendered at given
-   * the configuration in this metrics object: viewport dimensions,
-   * zoom factor, etc. (The mResolution member of this metrics is
-   * ignored.)
-   */
-  CSSToScreenScale CalculateResolution() const
-  {
-    return CalculateIntrinsicScale() * mZoom;
-  }
-
   CSSRect CalculateCompositedRectInCssPixels() const
   {
-    return CSSRect(gfx::RoundedIn(mCompositionBounds / CalculateResolution()));
+    return CSSRect(gfx::RoundedIn(mCompositionBounds / mZoom));
   }
 
   // ---------------------------------------------------------------------------
@@ -232,19 +221,11 @@ public:
   // resolution of parent layers is opaque to this metric.
   LayoutDeviceToLayerScale mResolution;
 
-  // The resolution-independent "user zoom".  For example, if a page
-  // configures the viewport to a zoom value of 2x, then this member
-  // will always be 2.0 no matter what the viewport or composition
-  // bounds.
-  //
-  // In the steady state (no animations), the following is usually true
-  //
-  //  intrinsicScale = (mCompositionBounds / mViewport)
-  //  mResolution = mZoom * intrinsicScale / mDevPixelsPerCSSPixel
-  //
-  // When this is not true, we're probably asynchronously sampling a
-  // zoom animation for content.
-  ScreenToScreenScale mZoom;
+  // The "user zoom". Content is painted by gecko at mResolution * mDevPixelsPerCSSPixel,
+  // but will be drawn to the screen at mZoom. In the steady state, the
+  // two will be the same, but during an async zoom action the two may
+  // diverge.
+  CSSToScreenScale mZoom;
 
   // The conversion factor between CSS pixels and device pixels for this frame.
   // This can vary based on a variety of things, such as reflowing-zoom. The
