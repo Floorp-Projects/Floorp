@@ -32,6 +32,11 @@ public:
     return mDelay;
   }
 
+  virtual const DelayNode* AsDelayNode() const MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   virtual void NotifyInputConnected() MOZ_OVERRIDE
   {
     mMediaStreamGraphUpdateIndexAtLastInputConnection =
