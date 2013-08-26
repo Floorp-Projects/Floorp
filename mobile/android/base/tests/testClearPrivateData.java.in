@@ -7,6 +7,7 @@ import java.util.ArrayList;
 public class testClearPrivateData extends AboutHomeTest {
     private final String BLANK1_TITLE = "Browser Blank Page 01";
     private final String BLANK2_TITLE = "Browser Blank Page 02";
+    private final int TEST_WAIT_MS = 10000;
 
     @Override
     protected int getTestType() {
@@ -29,16 +30,22 @@ public class testClearPrivateData extends AboutHomeTest {
         addOrUpdateMobileBookmark(BLANK2_TITLE, blank2);
 
         // Checking that the history list is not empty
-        ArrayList<String> browserHistory = getBrowserDBUrls(BrowserDataType.HISTORY);
-        mAsserter.ok(browserHistory.size() > 0,"Checking history exists","History exists");
-
+        verifyHistoryCount(1);
         clearPrivateData();
 
         // Checking that history list is empty
-        browserHistory = getBrowserDBUrls(BrowserDataType.HISTORY);
-        mAsserter.ok(browserHistory.size() == 0,"Checking history is cleared ","History is cleared");
+        verifyHistoryCount(0);
 
         // Checking that the user made bookmark is not removed
         mAsserter.ok(isBookmark(blank2), "Checking that bookmarks have not been removed", "User made bookmarks were not removed with private data");
+    }
+
+    private void verifyHistoryCount(final int expectedCount) {
+        boolean match = waitForTest( new BooleanTest() {
+            public boolean test() {
+                return (getBrowserDBUrls(BrowserDataType.HISTORY).size() == expectedCount);
+            }
+        }, TEST_WAIT_MS);
+        mAsserter.ok(match, "Checking that the number of history items is correct", String.valueOf(expectedCount) + " history items present in the database");
     }
 }
