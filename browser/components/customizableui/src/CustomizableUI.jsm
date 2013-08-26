@@ -1942,6 +1942,10 @@ this.CustomizableUI = {
   get areas() {
     return [area for ([area, props] of gAreas)];
   },
+  getAreaType: function(aArea) {
+    let area = gAreas.get(aArea);
+    return area ? area.get("type") : null;
+  },
   getCustomizeTargetForArea: function(aArea, aWindow) {
     return CustomizableUIInternal.getCustomizeTargetForArea(aArea, aWindow);
   },
@@ -1975,6 +1979,9 @@ this.CustomizableUI = {
   },
   removePanelCloseListeners: function(aPanel) {
     CustomizableUIInternal.removePanelCloseListeners(aPanel);
+  },
+  onWidgetDrag: function(aWidgetId, aArea) {
+    CustomizableUIInternal.notifyListeners("onWidgetDrag", aWidgetId, aArea);
   }
 };
 Object.freeze(this.CustomizableUI);

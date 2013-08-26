@@ -689,14 +689,8 @@ CustomizeMode.prototype = {
     let dt = aEvent.dataTransfer;
     let documentId = aEvent.target.ownerDocument.documentElement.id;
     let draggedItem = item.firstChild;
-    let draggedItemWidth = draggedItem.getBoundingClientRect().width + "px";
 
-    let data = {
-      id: draggedItem.id,
-      width: draggedItemWidth,
-    };
-
-    dt.mozSetDataAt(kDragDataTypePrefix + documentId, data, 0);
+    dt.mozSetDataAt(kDragDataTypePrefix + documentId, draggedItem.id, 0);
     dt.effectAllowed = "move";
 
     // Hack needed so that the dragimage will still show the
@@ -722,7 +716,7 @@ CustomizeMode.prototype = {
       return;
     }
 
-    let {id: draggedItemId, width: draggedItemWidth} =
+    let draggedItemId =
       aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
     let targetArea = this._getCustomizableParent(aEvent.currentTarget);
@@ -765,7 +759,7 @@ CustomizeMode.prototype = {
     }
 
     if (dragOverItem != this._dragOverItem) {
-      this._setDragActive(dragOverItem, true, draggedItemWidth, atEnd);
+      this._setDragActive(dragOverItem, true, draggedItemId, atEnd);
       this._dragOverItem = dragOverItem;
     }
 
@@ -779,10 +773,12 @@ CustomizeMode.prototype = {
     let targetArea = this._getCustomizableParent(aEvent.currentTarget);
     let document = aEvent.target.ownerDocument;
     let documentId = document.documentElement.id;
-    let {id: draggedItemId} =
+    let draggedItemId =
       aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
     let originArea = this._getCustomizableParent(draggedWrapper);
+    if (this._dragWidthMap)
+      this._dragWidthMap.clear()
     // Do nothing if the target area or origin area are not customizable.
     if (!targetArea || !originArea) {
       return;
@@ -910,7 +906,7 @@ CustomizeMode.prototype = {
       return;
     }
 
-    let {id: draggedItemId} =
+    let draggedItemId =
       aEvent.dataTransfer.mozGetDataAt(kDragDataTypePrefix + documentId, 0);
 
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
@@ -919,7 +915,7 @@ CustomizeMode.prototype = {
     this._showPanelCustomizationPlaceholders();
   },
 
-  _setDragActive: function(aItem, aValue, aWidth, aAtEnd) {
+  _setDragActive: function(aItem, aValue, aDraggedItemId, aAtEnd) {
     if (!aItem) {
       return;
     }
@@ -942,11 +938,14 @@ CustomizeMode.prototype = {
       if (!node.hasAttribute("dragover")) {
         node.setAttribute("dragover", value);
 
-        if (aWidth) {
+        // Calculate width of the item when it'd be dropped in this position
+        let draggedItem = window.document.getElementById(aDraggedItemId);
+        let width = this._getDragItemWidth(node, draggedItem);
+        if (width) {
           if (value == "left") {
-            node.style.borderLeftWidth = aWidth;
+            node.style.borderLeftWidth = width;
           } else {
-            node.style.borderRightWidth = aWidth;
+            node.style.borderRightWidth = width;
           }
         }
       }
@@ -957,6 +956,56 @@ CustomizeMode.prototype = {
       node.style.removeProperty("border-left-width");
       node.style.removeProperty("border-right-width");
     }
+  },
+
+  _getDragItemWidth: function(aDragOverNode, aDraggedItem) {
+    // Cache it good, cache it real good.
+    if (!this._dragWidthMap)
+      this._dragWidthMap = new WeakMap();
+    if (!this._dragWidthMap.has(aDraggedItem))
+      this._dragWidthMap.set(aDraggedItem, new WeakMap());
+    let itemMap = this._dragWidthMap.get(aDraggedItem);
+    let targetArea = this._getCustomizableParent(aDragOverNode);
+    if (!targetArea)
+      return;
+    // Return the width for this target from cache, if it exists.
+    let width = itemMap.get(targetArea);
+    if (width)
+      return width;
+
+    // Calculate width of the item when it'd be dropped in this position.
+    let window = aDragOverNode.ownerDocument.defaultView;
+    let currentParent = aDraggedItem.parentNode;
+    let currentSibling = aDraggedItem.nextSibling;
+
+    // Move the widget temporarily next to the placeholder.
+    aDragOverNode.parentNode.insertBefore(aDraggedItem, aDragOverNode);
+    // Update the node's areaType.
+    let areaType = CustomizableUI.getAreaType(targetArea.id);
+    const kAreaType = "customizableui-areatype";
+    let currentType = aDraggedItem.hasAttribute(kAreaType) &&
+                      aDraggedItem.getAttribute(kAreaType);
+    if (areaType)
+      aDraggedItem.setAttribute(kAreaType, areaType);
+    CustomizableUI.onWidgetDrag(aDraggedItem.id, targetArea.id);
+    // Fetch the new width.
+    width = Math.floor(aDraggedItem.getBoundingClientRect().width) + "px";
+    // Put the item back into its previous position.
+    if (currentSibling)
+      currentParent.insertBefore(aDraggedItem, currentSibling);
+    else
+      currentParent.appendChild(aDraggedItem);
+    // restore the areaType
+    if (areaType) {
+      if (currentType === false)
+        aDraggedItem.removeAttribute(kAreaType);
+      else
+        aDraggedItem.setAttribute(kAreaType, currentType);
+    }
+    CustomizableUI.onWidgetDrag(aDraggedItem.id);
+    // Cache the found value of width for this target.
+    itemMap.set(targetArea, width);
+    return width;
   },
 
   _getCustomizableParent: function(aElement) {
