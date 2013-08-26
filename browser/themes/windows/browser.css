@@ -77,12 +77,12 @@
     background-color: transparent !important;
   }
 
-  #main-window[tabsintitlebar][sizemode="maximized"] #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme) {
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
     background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px),
                 linear-gradient(rgba(50%,50%,50%,0), ActiveCaption 85%);
     color: CaptionText;
   }
-  #main-window[tabsintitlebar][sizemode="maximized"] #toolbar-menubar[inactive] ~ #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
     background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px),
                 linear-gradient(rgba(50%,50%,50%,0), InactiveCaption 85%);
     color: InactiveCaptionText;
