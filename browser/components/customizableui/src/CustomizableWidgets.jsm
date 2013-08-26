@@ -430,6 +430,13 @@ const CustomizableWidgets = [{
           Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomReset");
           let panel = aDoc.getElementById(kPanelId);
           panel.removeEventListener("popupshowing", updateZoomResetButton);
+        }.bind(this),
+
+        onWidgetDrag: function(aWidgetId, aArea) {
+          if (aWidgetId != this.id)
+            return;
+          aArea = aArea || this.currentArea;
+          updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
         }.bind(this)
       };
       CustomizableUI.addListener(listener);
@@ -544,6 +551,13 @@ const CustomizableWidgets = [{
           if (aWidgetId != this.id || aDoc != aDocument)
             return;
           CustomizableUI.removeListener(listener);
+        }.bind(this),
+
+        onWidgetDrag: function(aWidgetId, aArea) {
+          if (aWidgetId != this.id)
+            return;
+          aArea = aArea || this.currentArea;
+          updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
         }.bind(this)
       };
       CustomizableUI.addListener(listener);
