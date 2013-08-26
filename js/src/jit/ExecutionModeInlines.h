@@ -11,6 +11,8 @@
 
 #include "jit/CompileInfo.h"
 
+#include "jsscriptinlines.h"
+
 namespace js {
 namespace ion {
 
