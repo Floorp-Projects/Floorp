@@ -15,6 +15,7 @@ class MachRegistrar(object):
         self.commands_by_category = {}
         self.settings_providers = set()
         self.categories = {}
+        self.require_conditions = False
 
     def register_command_handler(self, handler):
         name = handler.name
