@@ -792,3 +792,8 @@ appbar toolbar[labelled] toolbarbutton > .toolbarbutton-text {
 .appbar-secondary {
   list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
 }
+
+.flyout-narrow description,
+.flyout-narrow label {
+  max-width: 266px; /* Accounts for a 40px padding on each side of the flyout */
+}
