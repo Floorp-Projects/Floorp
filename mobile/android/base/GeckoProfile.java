@@ -189,12 +189,8 @@ public final class GeckoProfile {
             profile.mInGuestMode = false;
 
             // If the guest dir exists, but it's unlocked, delete it
-            ThreadUtils.postToBackgroundThread(new Runnable() {
-                @Override
-                public void run() {
-                    removeGuestProfile(context);
-                }
-            });
+            removeGuestProfile(context);
+
             return true;
         }
         return false;
