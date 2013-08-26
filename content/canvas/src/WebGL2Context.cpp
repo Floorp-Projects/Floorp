@@ -63,7 +63,12 @@ WebGLContext::InitWebGL2()
 
     const WebGLExtensionID sExtensionNativelySupportedArr[] = {
         ANGLE_instanced_arrays,
+        OES_element_index_uint,
+        OES_standard_derivatives,
+        OES_texture_float,
+        OES_texture_float_linear,
         OES_vertex_array_object,
+        WEBGL_depth_texture,
         WEBGL_draw_buffers
     };
     const GLFeature::Enum sFeatureRequiredArr[] = {
