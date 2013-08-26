@@ -49,8 +49,8 @@ function setUp(server) {
 function run_test() {
   initTestLogging("Trace");
 
-  Log4Moz.repository.getLogger("Sync.Service").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.SyncScheduler").level = Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
 
   run_next_test();
 }

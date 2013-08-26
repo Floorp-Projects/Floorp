@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/rest.js");
 Cu.import("resource://services-sync/service.js");
@@ -9,7 +9,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 function run_test() {
-  Log4Moz.repository.getLogger("Sync.RESTRequest").level = Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.RESTRequest").level = Log.Level.Trace;
   initTestLogging();
 
   run_next_test();

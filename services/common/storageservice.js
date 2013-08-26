@@ -35,7 +35,7 @@ const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-common/utils.js");
 
@@ -470,8 +470,8 @@ this.StorageServiceRequestError = function StorageServiceRequestError() {
  * to implement it transparently.
  */
 function StorageServiceRequest() {
-  this._log = Log4Moz.repository.getLogger("Sync.StorageService.Request");
-  this._log.level = Log4Moz.Level[Prefs.get("log.level")];
+  this._log = Log.repository.getLogger("Sync.StorageService.Request");
+  this._log.level = Log.Level[Prefs.get("log.level")];
 
   this.notModified = false;
 
@@ -1521,8 +1521,8 @@ Object.freeze(StorageCollectionBatchedDelete.prototype);
  *        (string) Base URI for all requests.
  */
 this.StorageServiceClient = function StorageServiceClient(baseURI) {
-  this._log = Log4Moz.repository.getLogger("Services.Common.StorageServiceClient");
-  this._log.level = Log4Moz.Level[Prefs.get("log.level")];
+  this._log = Log.repository.getLogger("Services.Common.StorageServiceClient");
+  this._log.level = Log.Level[Prefs.get("log.level")];
 
   this._baseURI = baseURI;
 
