@@ -1826,10 +1826,6 @@ let WifiNetworkInterface = {
 
   name: null,
 
-  // For now we do our own DHCP. In the future this should be handed off
-  // to the Network Manager.
-  dhcp: false,
-
   ip: null,
 
   netmask: null,
