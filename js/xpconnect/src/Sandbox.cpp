@@ -1165,7 +1165,7 @@ GetPropFromOptions(JSContext *cx, HandleObject from, const char *name, MutableHa
     if (!JS_HasProperty(cx, from, name, found))
         return NS_ERROR_INVALID_ARG;
 
-    if (found && !JS_GetProperty(cx, from, name, prop))
+    if (*found && !JS_GetProperty(cx, from, name, prop))
         return NS_ERROR_INVALID_ARG;
 
     return NS_OK;
