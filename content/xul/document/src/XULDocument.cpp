@@ -3543,6 +3543,11 @@ XULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 NS_IMETHODIMP
 XULDocument::OnScriptCompileComplete(JSScript* aScript, nsresult aStatus)
 {
+    // When compiling off thread the script will not have been attached to the
+    // script proto yet.
+    if (aScript && !mCurrentScriptProto->GetScriptObject())
+        mCurrentScriptProto->Set(aScript);
+
     // Allow load events to be fired once off thread compilation finishes.
     if (mOffThreadCompiling) {
         mOffThreadCompiling = false;
@@ -3551,11 +3556,6 @@ XULDocument::OnScriptCompileComplete(JSScript* aScript, nsresult aStatus)
 
     // After compilation finishes the script's characters are no longer needed.
     mOffThreadCompileString.Truncate();
-
-    // When compiling off thread the script will not have been attached to the
-    // script proto yet.
-    if (aScript && !mCurrentScriptProto->GetScriptObject())
-        mCurrentScriptProto->Set(aScript);
 
     // Clear mCurrentScriptProto now, but save it first for use below in
     // the execute code, and in the while loop that resumes walks of other
@@ -3664,7 +3664,7 @@ XULDocument::ExecuteScript(nsIScriptContext * aContext,
     nsAutoMicroTask mt;
     JSContext *cx = aContext->GetNativeContext();
     AutoCxPusher pusher(cx);
-    JSObject* global = mScriptGlobalObject->GetGlobalJSObject();
+    JS::Rooted<JSObject*> global(cx, mScriptGlobalObject->GetGlobalJSObject());
     xpc_UnmarkGrayObject(global);
     xpc_UnmarkGrayScript(aScriptObject);
     JSAutoCompartment ac(cx, global);
