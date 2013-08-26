@@ -961,7 +961,8 @@ protected:
         ContextLostAwaitingRestore
     };
 
-    // extensions
+    // -------------------------------------------------------------------------
+    // WebGL extensions (implemented in WebGLContextExtensions.cpp)
     enum WebGLExtensionID {
         EXT_texture_filter_anisotropic,
         OES_element_index_uint,
