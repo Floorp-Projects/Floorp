@@ -365,7 +365,6 @@ box.requests-menu-status[code^="5"] {
 
 .tabpanel-summary-value {
   -moz-padding-start: 3px;
-  font-family: Menlo, Monaco, monospace;
 }
 
 .variable-or-property:not(:focus) > .title > .token-string {
