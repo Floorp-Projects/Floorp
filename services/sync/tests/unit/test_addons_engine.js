@@ -240,13 +240,13 @@ add_test(function cleanup() {
 
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Sync.Engine.Addons").level =
-    Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.Store.Addons").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.Tracker.Addons").level =
-    Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.AddonsRepository").level =
-    Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.Engine.Addons").level =
+    Log.Level.Trace;
+  Log.repository.getLogger("Sync.Store.Addons").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.Tracker.Addons").level =
+    Log.Level.Trace;
+  Log.repository.getLogger("Sync.AddonsRepository").level =
+    Log.Level.Trace;
 
   reconciler.startListening();
 
