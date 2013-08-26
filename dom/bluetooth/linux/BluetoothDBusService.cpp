@@ -2158,38 +2158,6 @@ private:
   BluetoothValue mValues;
 };
 
-class BluetoothArrayOfDevicePropertiesRunnable : public nsRunnable
-{
-public:
-  BluetoothArrayOfDevicePropertiesRunnable(
-                                     const nsTArray<nsString>& aDeviceAddresses,
-                                     BluetoothReplyRunnable* aRunnable,
-                                     FilterFunc aFilterFunc)
-    : mDeviceAddresses(aDeviceAddresses)
-    , mRunnable(dont_AddRef(aRunnable))
-    , mFilterFunc(aFilterFunc)
-  {
-  }
-
-  nsresult Run()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    nsRefPtr<BluetoothArrayOfDevicePropertiesReplyHandler> handler =
-      new BluetoothArrayOfDevicePropertiesReplyHandler(mDeviceAddresses,
-                                                       mFilterFunc,
-                                                       mRunnable);
-    handler->ProcessRemainingDeviceAddresses();
-
-    return NS_OK;
-  }
-
-private:
-  nsTArray<nsString> mDeviceAddresses;
-  nsRefPtr<BluetoothReplyRunnable> mRunnable;
-  FilterFunc mFilterFunc;
-};
-
 nsresult
 BluetoothDBusService::GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
                                               BluetoothReplyRunnable* aRunnable)
@@ -2226,13 +2194,12 @@ BluetoothDBusService::GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
   }
 
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
-  nsRefPtr<nsRunnable> func(
-    new BluetoothArrayOfDevicePropertiesRunnable(deviceAddresses,
-                                                 runnable,
-                                                 GetConnectedDevicesFilter));
-  mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL);
+  nsRefPtr<BluetoothArrayOfDevicePropertiesReplyHandler> handler =
+    new BluetoothArrayOfDevicePropertiesReplyHandler(deviceAddresses,
+                                                     GetConnectedDevicesFilter,
+                                                     runnable);
+  handler->ProcessRemainingDeviceAddresses();
 
-  runnable.forget();
   return NS_OK;
 }
 
@@ -2250,16 +2217,12 @@ BluetoothDBusService::GetPairedDevicePropertiesInternal(
   }
 
   nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
-  nsRefPtr<nsRunnable> func(
-    new BluetoothArrayOfDevicePropertiesRunnable(aDeviceAddresses,
-                                                 runnable,
-                                                 GetPairedDevicesFilter));
-  if (NS_FAILED(mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL))) {
-    NS_WARNING("Cannot dispatch task!");
-    return NS_ERROR_FAILURE;
-  }
+  nsRefPtr<BluetoothArrayOfDevicePropertiesReplyHandler> handler =
+    new BluetoothArrayOfDevicePropertiesReplyHandler(aDeviceAddresses,
+                                                     GetPairedDevicesFilter,
+                                                     runnable);
+  handler->ProcessRemainingDeviceAddresses();
 
-  runnable.forget();
   return NS_OK;
 }
 
