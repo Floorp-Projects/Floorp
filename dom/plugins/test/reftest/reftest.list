@@ -5,7 +5,7 @@ fails-if(!haveTestPlugin) == plugin-sanity.html div-sanity.html
 fails-if(!haveTestPlugin) == plugin-asyncbitmap-sanity.html div-sanity.html
 fails-if(!haveTestPlugin) == plugin-asyncdxgi-sanity.html div-sanity.html
 skip-if(!haveTestPlugin) == plugin-asyncbitmap-update.html plugin-async-update-ref.html
-skip-if(!haveTestPlugin) == plugin-asyncdxgi-update.html plugin-async-update-ref.html
+random-if(OSX==10.6||OSX==10.7) skip-if(!haveTestPlugin) == plugin-asyncdxgi-update.html plugin-async-update-ref.html
 fails-if(!haveTestPlugin) == plugin-alpha-zindex.html div-alpha-zindex.html
 fails-if(!haveTestPlugin) == plugin-alpha-opacity.html div-alpha-opacity.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == windowless-clipping-1.html windowless-clipping-1-ref.html # bug 631832
