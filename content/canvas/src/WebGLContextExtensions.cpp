@@ -8,10 +8,41 @@
 #include "WebGLExtensions.h"
 #include "GLContext.h"
 
+#include "nsString.h"
+
 #include "AccessCheck.h"
 
 using namespace mozilla;
 using namespace mozilla::gl;
+
+// must match WebGLContext::WebGLExtensionID
+static const char *sExtensionNames[] = {
+    "EXT_texture_filter_anisotropic",
+    "OES_element_index_uint",
+    "OES_standard_derivatives",
+    "OES_texture_float",
+    "OES_texture_float_linear",
+    "OES_vertex_array_object",
+    "WEBGL_compressed_texture_atc",
+    "WEBGL_compressed_texture_pvrtc",
+    "WEBGL_compressed_texture_s3tc",
+    "WEBGL_debug_renderer_info",
+    "WEBGL_depth_texture",
+    "WEBGL_lose_context",
+    "WEBGL_draw_buffers",
+    "ANGLE_instanced_arrays"
+};
+
+/* static */ const char*
+WebGLContext::GetExtensionString(WebGLExtensionID ext)
+{
+    static_assert(MOZ_ARRAY_LENGTH(sExtensionNames) == size_t(WebGLExtensionID_max),
+                  "Mismatched lengths for sFeatureInfoInfos and GLFeature enums");
+
+    MOZ_ASSERT(ext < WebGLExtensionID_max, "unknown extension!");
+
+    return sExtensionNames[ext];
+}
 
 bool
 WebGLContext::IsExtensionEnabled(WebGLExtensionID ext) const {
@@ -113,73 +144,38 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
     WebGLExtensionID ext = WebGLExtensionID_unknown_extension;
 
     // step 1: figure what extension is wanted
-    if (CompareWebGLExtensionName(name, "OES_element_index_uint"))
+    for (size_t i = 0; i < size_t(WebGLExtensionID_max); i++)
     {
-        ext = OES_element_index_uint;
+        WebGLExtensionID extension = WebGLExtensionID(i);
+        
+        if (CompareWebGLExtensionName(name, GetExtensionString(extension))) {
+            ext = extension;
+            break;
+        }
     }
-    else if (CompareWebGLExtensionName(name, "OES_texture_float"))
+
+    if (ext == WebGLExtensionID_unknown_extension)
     {
-        ext = OES_texture_float;
-    }
-    else if (CompareWebGLExtensionName(name, "OES_texture_float_linear"))
-    {
-        ext = OES_texture_float_linear;
-    }
-    else if (CompareWebGLExtensionName(name, "OES_vertex_array_object"))
-    {
-        ext = OES_vertex_array_object;
-    }
-    else if (CompareWebGLExtensionName(name, "OES_standard_derivatives"))
-    {
-        ext = OES_standard_derivatives;
-    }
-    else if (CompareWebGLExtensionName(name, "EXT_texture_filter_anisotropic"))
-    {
-        ext = EXT_texture_filter_anisotropic;
-    }
-    else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_lose_context"))
-    {
-        ext = WEBGL_lose_context;
-    }
-    else if (CompareWebGLExtensionName(name, "WEBGL_lose_context"))
-    {
-        ext = WEBGL_lose_context;
-    }
-    else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_s3tc"))
-    {
-        ext = WEBGL_compressed_texture_s3tc;
-    }
-    else if (CompareWebGLExtensionName(name, "WEBGL_compressed_texture_s3tc"))
-    {
-        ext = WEBGL_compressed_texture_s3tc;
-    }
-    else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_atc"))
-    {
-        ext = WEBGL_compressed_texture_atc;
-    }
-    else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_pvrtc"))
-    {
-        ext = WEBGL_compressed_texture_pvrtc;
-    }
-    else if (CompareWebGLExtensionName(name, "WEBGL_debug_renderer_info"))
-    {
-        ext = WEBGL_debug_renderer_info;
-    }
-    else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_depth_texture"))
-    {
-        ext = WEBGL_depth_texture;
-    }
-    else if (CompareWebGLExtensionName(name, "WEBGL_depth_texture"))
-    {
-        ext = WEBGL_depth_texture;
-    }
-    else if (CompareWebGLExtensionName(name, "WEBGL_draw_buffers"))
-    {
-        ext = WEBGL_draw_buffers;
-    }
-    else if (CompareWebGLExtensionName(name, "ANGLE_instanced_arrays"))
-    {
-        ext = ANGLE_instanced_arrays;
+        /**
+         * We keep backward compatibility for these deprecated vendor-prefixed
+         * alias. Do not add new ones anymore. Hide it behind the
+         * webgl.enable-draft-extensions flag instead.
+         */
+        if (CompareWebGLExtensionName(name, "MOZ_WEBGL_lose_context")) {
+            ext = WEBGL_lose_context;
+        }
+        else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_s3tc")) {
+            ext = WEBGL_compressed_texture_s3tc;
+        }
+        else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_atc")) {
+            ext = WEBGL_compressed_texture_atc;
+        }
+        else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_compressed_texture_pvrtc")) {
+            ext = WEBGL_compressed_texture_pvrtc;
+        }
+        else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_depth_texture")) {
+            ext = WEBGL_depth_texture;
+        }
     }
 
     if (ext == WebGLExtensionID_unknown_extension) {
@@ -266,39 +262,29 @@ WebGLContext::GetSupportedExtensions(JSContext *cx, Nullable< nsTArray<nsString>
 
     nsTArray<nsString>& arr = retval.SetValue();
 
-    if (IsExtensionSupported(cx, OES_element_index_uint))
-        arr.AppendElement(NS_LITERAL_STRING("OES_element_index_uint"));
-    if (IsExtensionSupported(cx, OES_texture_float))
-        arr.AppendElement(NS_LITERAL_STRING("OES_texture_float"));
-    if (IsExtensionSupported(cx, OES_texture_float_linear))
-        arr.AppendElement(NS_LITERAL_STRING("OES_texture_float_linear"));
-    if (IsExtensionSupported(cx, OES_standard_derivatives))
-        arr.AppendElement(NS_LITERAL_STRING("OES_standard_derivatives"));
-    if (IsExtensionSupported(cx, EXT_texture_filter_anisotropic))
-        arr.AppendElement(NS_LITERAL_STRING("EXT_texture_filter_anisotropic"));
+    for (size_t i = 0; i < size_t(WebGLExtensionID_max); i++)
+    {
+        WebGLExtensionID extension = WebGLExtensionID(i);
+
+        if (IsExtensionSupported(cx, extension)) {
+            arr.AppendElement(NS_ConvertUTF8toUTF16(GetExtensionString(extension)));
+        }
+    }
+
+    /**
+     * We keep backward compatibility for these deprecated vendor-prefixed
+     * alias. Do not add new ones anymore. Hide it behind the
+     * webgl.enable-draft-extensions flag instead.
+     */
     if (IsExtensionSupported(cx, WEBGL_lose_context))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_lose_context"));
-    if (IsExtensionSupported(cx, WEBGL_lose_context))
-        arr.AppendElement(NS_LITERAL_STRING("WEBGL_lose_context"));
     if (IsExtensionSupported(cx, WEBGL_compressed_texture_s3tc))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_s3tc"));
-    if (IsExtensionSupported(cx, WEBGL_compressed_texture_s3tc))
-        arr.AppendElement(NS_LITERAL_STRING("WEBGL_compressed_texture_s3tc"));
     if (IsExtensionSupported(cx, WEBGL_compressed_texture_atc))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_atc"));
     if (IsExtensionSupported(cx, WEBGL_compressed_texture_pvrtc))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_compressed_texture_pvrtc"));
-    if (IsExtensionSupported(cx, WEBGL_debug_renderer_info))
-        arr.AppendElement(NS_LITERAL_STRING("WEBGL_debug_renderer_info"));
     if (IsExtensionSupported(cx, WEBGL_depth_texture))
         arr.AppendElement(NS_LITERAL_STRING("MOZ_WEBGL_depth_texture"));
-    if (IsExtensionSupported(cx, WEBGL_depth_texture))
-        arr.AppendElement(NS_LITERAL_STRING("WEBGL_depth_texture"));
-    if (IsExtensionSupported(cx, WEBGL_draw_buffers))
-        arr.AppendElement(NS_LITERAL_STRING("WEBGL_draw_buffers"));
-    if (IsExtensionSupported(cx, OES_vertex_array_object))
-        arr.AppendElement(NS_LITERAL_STRING("OES_vertex_array_object"));
-    if (IsExtensionSupported(cx, ANGLE_instanced_arrays))
-        arr.AppendElement(NS_LITERAL_STRING("ANGLE_instanced_arrays"));
 }
 
