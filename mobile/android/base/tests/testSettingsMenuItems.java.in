@@ -36,7 +36,6 @@ public class testSettingsMenuItems extends PixelTest {
         { "Search settings", "", "Show search suggestions", "Installed search engines"},
         { "Import from Android", "", "Bookmarks", "History", "Import" },
         { "Tabs", "Don't restore after quitting " + BRAND_NAME, "Always restore", "Don't restore after quitting " + BRAND_NAME },
-        { "Automatic updates", "Only over Wi-Fi", "Enabled", "Only over Wi-Fi", "Disabled" },
     };
 
     // Display menu items.
@@ -151,6 +150,14 @@ public class testSettingsMenuItems extends PixelTest {
             if (textReflow) {
                 String[] textReflowUi = { "Text reflow" };
                 settingsMap.get("Display").add(textReflowUi);
+            }
+
+            // Automatic updates
+            Field autoUpdateField = appConstants.getField("MOZ_UPDATER");
+            boolean autoUpdate = autoUpdateField.getBoolean(appConstants);
+            if (autoUpdate) {
+                String[] autoUpdateUi = { "Automatic updates", "Only over Wi-Fi", "Enabled", "Only over Wi-Fi", "Disabled" };
+                settingsMap.get("Customize").add(autoUpdateUi);
             }
 
             // Crash reporter
