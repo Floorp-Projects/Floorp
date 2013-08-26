@@ -50,6 +50,13 @@
       </popupnotificationcontent>
     </popupnotification>
 
+    <popupnotification id="webapps-install-progress-notification" hidden="true">
+      <popupnotificationcontent orient="vertical" align="start">
+        <separator class="thin"/>
+        <progressmeter id="webapps-progressmeter" mode="undetermined"/>
+      </popupnotificationcontent>
+    </popupnotification>
+
     <popupnotification id="mixed-content-blocked-notification" hidden="true">
       <popupnotificationcontent orient="vertical" align="start">
         <separator/>
