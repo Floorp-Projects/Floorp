@@ -370,4 +370,11 @@ MOCHITEST_BROWSER_FILES += \
   $(NULL)
 endif
 
+# browser_CTP_context_menu.js fails intermittently on Linux (bug 909342)
+ifndef MOZ_WIDGET_GTK
+MOCHITEST_BROWSER_FILES += \
+  browser_CTP_context_menu.js \
+  $(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk
