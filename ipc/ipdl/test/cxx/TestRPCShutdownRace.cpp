@@ -25,7 +25,7 @@ namespace {
 void DeleteSubprocess()
 {
     delete gSubprocess;
-    gSubprocess = NULL;
+    gSubprocess = nullptr;
 }
 
 void Done()
@@ -80,7 +80,7 @@ TestRPCShutdownRaceParent::StartShuttingDown()
     Close();
 
     delete static_cast<TestRPCShutdownRaceParent*>(gParentActor);
-    gParentActor = NULL;
+    gParentActor = nullptr;
 
     XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                      NewRunnableFunction(DeleteSubprocess));

@@ -143,9 +143,6 @@ DOMCI_CLASS(BluetoothDevice)
 DOMCI_CLASS(CameraControl)
 DOMCI_CLASS(CameraCapabilities)
 
-DOMCI_CLASS(OpenWindowEventDetail)
-DOMCI_CLASS(AsyncScrollEventDetail)
-
 DOMCI_CLASS(LockedFile)
 
 DOMCI_CLASS(CSSFontFeatureValuesRule)

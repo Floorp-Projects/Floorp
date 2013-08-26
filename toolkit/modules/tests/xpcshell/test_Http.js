@@ -142,6 +142,18 @@ add_test(function test_GetData() {
   httpRequest(kGetUrl, options);
 });
 
+add_test(function test_OptionalParameters() {
+  let options = {
+    onLoad: null,
+    onError: null,
+    logger: null
+  };
+  // Just make sure that nothing throws when doing this (i.e. httpRequest
+  // doesn't try to access null options).
+  httpRequest(kGetUrl, options);
+  run_next_test();
+});
+
 function run_test() {
   // Set up a mock HTTP server to serve a success page.
   server = new HttpServer();
