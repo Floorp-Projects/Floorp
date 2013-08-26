@@ -44,6 +44,7 @@
 #include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/Preferences.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -1815,6 +1816,14 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   } else {
     // NOTE: the combo box is responsible for dropping it down
     if (mComboboxFrame) {
+      if (XRE_GetProcessType() == GeckoProcessType_Content &&
+          Preferences::GetBool("browser.tabs.remote", false)) {
+        nsContentUtils::DispatchChromeEvent(mContent->OwnerDoc(), mContent,
+                                            NS_LITERAL_STRING("mozshowdropdown"), true,
+                                            false);
+        return NS_OK;
+      }
+
       if (!IgnoreMouseEventForSelection(aMouseEvent)) {
         return NS_OK;
       }
