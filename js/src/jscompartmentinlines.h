@@ -43,4 +43,65 @@ js::AutoCompartment::~AutoCompartment()
     cx_->leaveCompartment(origin_);
 }
 
+inline bool
+JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject existing)
+{
+    JS_ASSERT_IF(existing, vp.isObject());
+
+    /* Only GC things have to be wrapped or copied. */
+    if (!vp.isMarkable())
+        return true;
+
+    /* Handle strings. */
+    if (vp.isString()) {
+        JSString *str = vp.toString();
+        if (!wrap(cx, &str))
+            return false;
+        vp.setString(str);
+        return true;
+    }
+
+    JS_ASSERT(vp.isObject());
+
+    /*
+     * All that's left are objects.
+     *
+     * Object wrapping isn't the fastest thing in the world, in part because
+     * we have to unwrap and invoke the prewrap hook to find the identity
+     * object before we even start checking the cache. Neither of these
+     * operations are needed in the common case, where we're just wrapping
+     * a plain JS object from the wrappee's side of the membrane to the
+     * wrapper's side.
+     *
+     * To optimize this, we note that the cache should only ever contain
+     * identity objects - that is to say, objects that serve as the
+     * canonical representation for a unique object identity observable by
+     * script. Unwrap and prewrap are both steps that we take to get to the
+     * identity of an incoming objects, and as such, they shuld never map
+     * one identity object to another object. This means that we can safely
+     * check the cache immediately, and only risk false negatives. Do this
+     * in opt builds, and do both in debug builds so that we can assert
+     * that we get the same answer.
+     */
+#ifdef DEBUG
+    JS::RootedObject cacheResult(cx);
+#endif
+    JS::RootedValue v(cx, vp);
+    if (js::WrapperMap::Ptr p = crossCompartmentWrappers.lookup(v)) {
+#ifdef DEBUG
+        cacheResult = &p->value.get().toObject();
+#else
+        vp.set(p->value);
+        return true;
+#endif
+    }
+
+    JS::RootedObject obj(cx, &vp.toObject());
+    if (!wrap(cx, &obj, existing))
+        return false;
+    vp.setObject(*obj);
+    JS_ASSERT_IF(cacheResult, obj == cacheResult);
+    return true;
+}
+
 #endif /* jscompartmentinlines_h */
