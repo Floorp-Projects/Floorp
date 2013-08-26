@@ -149,8 +149,6 @@ public:
     virtual JSObject* WrapObject(JSContext *cx,
                                  JS::Handle<JSObject*> scope) = 0;
 
-    virtual bool IsWebGL2() const = 0;
-
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
     // nsICanvasRenderingContextInternal
@@ -996,6 +994,15 @@ protected:
     static const char* GetExtensionString(WebGLExtensionID ext);
 
     nsTArray<WebGLenum> mCompressedTextureFormats;
+
+
+    // -------------------------------------------------------------------------
+    // WebGL 2 specifics (implemented in WebGL2Context.cpp)
+
+    virtual bool IsWebGL2() const = 0;
+
+    bool InitWebGL2();
+
 
     // -------------------------------------------------------------------------
     // Validation functions (implemented in WebGLContextValidate.cpp)
