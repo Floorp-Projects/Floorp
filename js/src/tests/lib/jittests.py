@@ -606,9 +606,9 @@ def run_tests_remote(tests, prefix, options):
 
     if options.device_transport == 'adb':
         if options.device_ip:
-            dm = devicemanagerADB.DeviceManagerADB(options.device_ip, options.devicePort, packageName=None, deviceRoot=options.remoteTestRoot)
+            dm = devicemanagerADB.DeviceManagerADB(options.device_ip, options.device_port, deviceSerial=options.device_serial, packageName=None, deviceRoot=options.remote_test_root)
         else:
-            dm = devicemanagerADB.DeviceManagerADB(packageName=None, deviceRoot=options.remote_test_root)
+            dm = devicemanagerADB.DeviceManagerADB(deviceSerial=options.device_serial, packageName=None, deviceRoot=options.remote_test_root)
     else:
         dm = devicemanagerSUT.DeviceManagerSUT(options.device_ip, options.device_port, deviceRoot=options.remote_test_root)
         if options.device_ip == None:
@@ -625,7 +625,7 @@ def run_tests_remote(tests, prefix, options):
     push_libs(options, dm)
     push_progs(options, dm, [prefix[0]])
     dm.chmodDir(options.remote_test_root)
-    dm.pushDir(os.path.dirname(TEST_DIR), options.remote_test_root)
+    dm.pushDir(os.path.dirname(TEST_DIR), options.remote_test_root, timeout=600)
     prefix[0] = os.path.join(options.remote_test_root, 'js')
 
     # Run all tests.
