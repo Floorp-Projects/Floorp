@@ -142,6 +142,7 @@ TCPSocketParent::RecvData(const SendableData& aData)
   switch (aData.type()) {
     case SendableData::TArrayOfuint8_t: {
       AutoSafeJSContext cx;
+      JSAutoRequest ar(cx);
       JS::Rooted<JS::Value> val(cx);
       JS::Rooted<JSObject*> obj(cx, mIntermediaryObj);
       IPC::DeserializeArrayBuffer(obj, aData.get_ArrayOfuint8_t(), &val);

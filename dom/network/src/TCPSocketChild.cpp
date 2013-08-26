@@ -137,6 +137,7 @@ TCPSocketChild::RecvCallback(const nsString& aType,
 
     if (data.type() == SendableData::TArrayOfuint8_t) {
       JSContext* cx = nsContentUtils::GetSafeJSContext();
+      JSAutoRequest ar(cx);
       JS::Rooted<JS::Value> val(cx);
       JS::Rooted<JSObject*> window(cx, mWindowObj);
       bool ok = IPC::DeserializeArrayBuffer(window, data.get_ArrayOfuint8_t(), &val);
