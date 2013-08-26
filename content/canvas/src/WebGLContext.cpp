@@ -615,6 +615,7 @@ WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f, uint32_t aFl
     } else if (srcPremultAlpha && !dstPremultAlpha) {
         gfxUtils::UnpremultiplyImageSurface(surf);
     }
+    surf->MarkDirty();
 
     nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
     pat->SetFilter(f);
