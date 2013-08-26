@@ -637,17 +637,19 @@ protected:
      * returns the first backend named in the pref gfx.content.azure.backend
      * which is a component of aBackendBitmask, a bitmask of backend types
      */
-    static mozilla::gfx::BackendType GetContentBackendPref(uint32_t aBackendBitmask);
+    static mozilla::gfx::BackendType GetContentBackendPref(uint32_t &aBackendBitmask);
 
     /**
      * If aEnabledPrefName is non-null, checks the aEnabledPrefName pref and
      * returns BACKEND_NONE if the pref is not enabled.
      * Otherwise it will return the first backend named in aBackendPrefName
      * allowed by aBackendBitmask, a bitmask of backend types.
+     * It also modifies aBackendBitmask to only include backends that are
+     * allowed given the prefs.
      */
     static mozilla::gfx::BackendType GetBackendPref(const char* aEnabledPrefName,
                                                     const char* aBackendPrefName,
-                                                    uint32_t aBackendBitmask);
+                                                    uint32_t &aBackendBitmask);
     /**
      * Decode the backend enumberation from a string.
      */
