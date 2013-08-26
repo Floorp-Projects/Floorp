@@ -312,17 +312,6 @@ public:
     }
   }
 
-  // let us intervene for direct listeners when someone does track.enabled = false
-  virtual void SetTrackEnabled(TrackID aID, bool aEnabled) MOZ_OVERRIDE
-  {
-    // We encapsulate the SourceMediaStream and TrackUnion into one entity, so
-    // we can handle the disabling at the SourceMediaStream
-
-    // We need to find the input track ID for output ID aID, so we let the TrackUnion
-    // forward the request to the source and translate the ID
-    GetStream()->AsProcessedStream()->ForwardTrackEnabled(aID, aEnabled);
-  }
-
   // The actual MediaStream is a TrackUnionStream. But these resources need to be
   // explicitly destroyed too.
   nsRefPtr<SourceMediaStream> mSourceStream;

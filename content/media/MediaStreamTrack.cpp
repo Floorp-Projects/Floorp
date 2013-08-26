@@ -52,7 +52,10 @@ void
 MediaStreamTrack::SetEnabled(bool aEnabled)
 {
   mEnabled = aEnabled;
-  mStream->SetTrackEnabled(mTrackID, aEnabled);
+  MediaStream* stream = mStream->GetStream();
+  if (stream) {
+    stream->SetTrackEnabled(mTrackID, aEnabled);
+  }
 }
 
 }

@@ -459,7 +459,7 @@ public:
 
   StreamBuffer::Track* EnsureTrack(TrackID aTrack, TrackRate aSampleRate);
 
-  void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, MediaSegment* aRawSegment = nullptr);
+  void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment);
 
   DOMMediaStream* GetWrapper()
   {
@@ -679,11 +679,6 @@ public:
       FinishWithLockHeld();
     }
 
-  // Overriding allows us to hold the mMutex lock while changing the track enable status
-  void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) {
-    MutexAutoLock lock(mMutex);
-    MediaStream::SetTrackEnabledImpl(aTrackID, aEnabled);
-  }
 
   /**
    * End all tracks and Finish() this stream.  Used to voluntarily revoke access
@@ -941,11 +936,6 @@ public:
    */
   virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo) = 0;
   void SetAutofinishImpl(bool aAutofinish) { mAutofinish = aAutofinish; }
-
-  /**
-   * Forward SetTrackEnabled() to the input MediaStream(s) and translate the ID
-   */
-  virtual void ForwardTrackEnabled(TrackID aOutputID, bool aEnabled) {};
 
 protected:
   // This state is all accessed only on the media graph thread.
