@@ -217,7 +217,7 @@ interface nsICameraErrorCallback : nsISupports
     void handleEvent(in DOMString error);
 };
 
-[scriptable, function, uuid(a267afbc-d91c-413a-8de5-0b94aecffa3e)]
+[scriptable, function, uuid(16de7703-dc43-4766-99c5-ff30a9ab92d7)]
 interface nsICameraGetCameraCallback : nsISupports
 {
     void handleEvent(in nsISupports camera);

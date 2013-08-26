@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 908208 - ipdl dependencies are busted, so we must clobber.  See Bug 907394 for a solution.
+Bug 899210 - xpidl header generation is somehow busted so we need to clobber on windows
