@@ -96,7 +96,10 @@ class BaseBootstrapper(object):
 
     def run_as_root(self, command):
         if os.geteuid() != 0:
-            command.insert(0, 'sudo')
+            if self.which('sudo'):
+                command.insert(0, 'sudo')
+            else:
+                command = ['su', 'root', '-c', ' '.join(command)]
 
         print('Executing as root:', subprocess.list2cmdline(command))
 
