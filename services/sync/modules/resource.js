@@ -14,7 +14,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
@@ -50,9 +50,9 @@ const DEFAULT_LOAD_FLAGS =
  * the status of the HTTP response.
  */
 this.AsyncResource = function AsyncResource(uri) {
-  this._log = Log4Moz.repository.getLogger(this._logName);
+  this._log = Log.repository.getLogger(this._logName);
   this._log.level =
-    Log4Moz.Level[Svc.Prefs.get("log.logger.network.resources")];
+    Log.Level[Svc.Prefs.get("log.logger.network.resources")];
   this.uri = uri;
   this._headers = {};
   this._onComplete = Utils.bind2(this, this._onComplete);
@@ -265,7 +265,7 @@ AsyncResource.prototype = {
       this._log.debug(mesg);
 
       // Additionally give the full response body when Trace logging.
-      if (this._log.level <= Log4Moz.Level.Trace)
+      if (this._log.level <= Log.Level.Trace)
         this._log.trace(action + " body: " + data);
 
     } catch(ex) {
@@ -588,8 +588,8 @@ ChannelListener.prototype = {
 function ChannelNotificationListener(headersToCopy) {
   this._headersToCopy = headersToCopy;
 
-  this._log = Log4Moz.repository.getLogger(this._logName);
-  this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.network.resources")];
+  this._log = Log.repository.getLogger(this._logName);
+  this._log.level = Log.Level[Svc.Prefs.get("log.logger.network.resources")];
 }
 ChannelNotificationListener.prototype = {
   _logName: "Sync.Resource",
@@ -609,7 +609,7 @@ ChannelNotificationListener.prototype = {
   },
 
   notifyCertProblem: function certProblem(socketInfo, sslStatus, targetHost) {
-    let log = Log4Moz.repository.getLogger("Sync.CertListener");
+    let log = Log.repository.getLogger("Sync.CertListener");
     log.warn("Invalid HTTPS certificate encountered!");
 
     // This suppresses the UI warning only. The request is still cancelled.
