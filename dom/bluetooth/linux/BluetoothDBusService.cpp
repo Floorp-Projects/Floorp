@@ -783,32 +783,6 @@ ParsePropertyChange(DBusMessage* aMsg, BluetoothValue& aValue,
   aValue = props;
 }
 
-static bool
-GetPropertiesInternal(const nsAString& aPath,
-                      const char* aIface,
-                      BluetoothValue& aValue)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  DBusError err;
-  dbus_error_init(&err);
-
-  DBusMessage* msg = dbus_func_args_timeout(gThreadConnection->GetConnection(),
-                                            1000,
-                                            &err,
-                                            NS_ConvertUTF16toUTF8(aPath).get(),
-                                            aIface,
-                                            "GetProperties",
-                                            DBUS_TYPE_INVALID);
-  NS_ENSURE_TRUE(msg, false);
-
-  bool success = UnpackPropertiesMessage(msg, &err, aValue, aIface);
-
-  dbus_message_unref(msg);
-
-  return success;
-}
-
 class AppendDeviceNameReplyHandler: public DBusReplyHandler
 {
 public:
@@ -2048,6 +2022,142 @@ BluetoothDBusService::StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable)
   return SendDiscoveryMessage("StartDiscovery", aRunnable);
 }
 
+class BluetoothArrayOfDevicePropertiesReplyHandler : public DBusReplyHandler
+{
+public:
+  BluetoothArrayOfDevicePropertiesReplyHandler(
+    const nsTArray<nsString>& aDeviceAddresses,
+    const FilterFunc aFilterFunc, BluetoothReplyRunnable* aRunnable)
+    : mDeviceAddresses(aDeviceAddresses)
+    , mProcessedDeviceAddresses(0)
+    , mFilterFunc(aFilterFunc)
+    , mRunnable(aRunnable)
+    , mValues(InfallibleTArray<BluetoothNamedValue>())
+  {
+    MOZ_ASSERT(mRunnable);
+  }
+
+  void Handle(DBusMessage* aReply) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(!mObjectPath.IsEmpty());
+    MOZ_ASSERT(mProcessedDeviceAddresses < mDeviceAddresses.Length());
+
+    const nsTArray<nsString>::index_type i = mProcessedDeviceAddresses++;
+
+    if (!aReply ||
+        (dbus_message_get_type(aReply) == DBUS_MESSAGE_TYPE_ERROR)) {
+      BT_WARNING("Invalid DBus message");
+      ProcessRemainingDeviceAddresses();
+      return;
+    }
+
+    // Get device properties from result of GetProperties
+
+    DBusError err;
+    dbus_error_init(&err);
+
+    BluetoothValue deviceProperties;
+
+    bool success = UnpackPropertiesMessage(aReply, &err, deviceProperties,
+                                           DBUS_DEVICE_IFACE);
+    if (!success) {
+      BT_WARNING("Failed to get device properties");
+      ProcessRemainingDeviceAddresses();
+      return;
+    }
+
+    InfallibleTArray<BluetoothNamedValue>& devicePropertiesArray =
+      deviceProperties.get_ArrayOfBluetoothNamedValue();
+
+    // We have to manually attach the path to the rest of the elements
+    devicePropertiesArray.AppendElement(
+      BluetoothNamedValue(NS_LITERAL_STRING("Path"), mObjectPath));
+
+    // It is possible that property Icon missed due to CoD of major
+    // class is TOY but service class is "Audio", we need to assign
+    // Icon as audio-card. This is for PTS test TC_AG_COD_BV_02_I.
+    // As HFP specification defined that
+    // service class is "Audio" can be considered as HFP AG.
+    if (!ContainsIcon(devicePropertiesArray)) {
+      InfallibleTArray<BluetoothNamedValue>::size_type j;
+      for (j = 0; j < devicePropertiesArray.Length(); ++j) {
+        BluetoothNamedValue& deviceProperty = devicePropertiesArray[j];
+        if (deviceProperty.name().EqualsLiteral("Class")) {
+          if (HasAudioService(deviceProperty.value().get_uint32_t())) {
+            devicePropertiesArray.AppendElement(
+              BluetoothNamedValue(NS_LITERAL_STRING("Icon"),
+                                  NS_LITERAL_STRING("audio-card")));
+          }
+          break;
+        }
+      }
+    }
+
+    if (mFilterFunc(deviceProperties)) {
+      mValues.get_ArrayOfBluetoothNamedValue().AppendElement(
+        BluetoothNamedValue(mDeviceAddresses[i], deviceProperties));
+    }
+
+    ProcessRemainingDeviceAddresses();
+  }
+
+  void ProcessRemainingDeviceAddresses()
+  {
+    if (mProcessedDeviceAddresses < mDeviceAddresses.Length()) {
+      if (!SendNextGetProperties()) {
+        DispatchBluetoothReply(mRunnable, BluetoothValue(),
+                               NS_LITERAL_STRING(
+                                 "SendNextGetProperties failed"));
+      }
+    } else {
+      // Send resulting device properties
+      DispatchBluetoothReply(mRunnable, mValues, EmptyString());
+    }
+  }
+
+protected:
+  bool SendNextGetProperties()
+  {
+    MOZ_ASSERT(mProcessedDeviceAddresses < mDeviceAddresses.Length());
+
+    // cache object path for reply
+    mObjectPath = GetObjectPathFromAddress(sAdapterPath,
+      mDeviceAddresses[mProcessedDeviceAddresses]);
+
+    nsRefPtr<RawDBusConnection> threadConnection = gThreadConnection;
+
+    if (!threadConnection.get()) {
+      BT_WARNING("%s: DBus connection has been closed.", __FUNCTION__);
+      return false;
+    }
+
+    nsRefPtr<BluetoothArrayOfDevicePropertiesReplyHandler> handler = this;
+
+    bool success =
+      dbus_func_args_async(threadConnection->GetConnection(), 1000,
+        BluetoothArrayOfDevicePropertiesReplyHandler::Callback,
+        handler.get(),
+        NS_ConvertUTF16toUTF8(mObjectPath).get(),
+        DBUS_DEVICE_IFACE, "GetProperties",
+        DBUS_TYPE_INVALID);
+
+    NS_ENSURE_TRUE(success, false);
+
+    handler.forget();
+
+    return true;
+  }
+
+private:
+  nsString mObjectPath;
+  const nsTArray<nsString> mDeviceAddresses;
+  nsTArray<nsString>::size_type mProcessedDeviceAddresses;
+  const FilterFunc mFilterFunc;
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
+  BluetoothValue mValues;
+};
+
 class BluetoothArrayOfDevicePropertiesRunnable : public nsRunnable
 {
 public:
@@ -2064,58 +2174,13 @@ public:
   nsresult Run()
   {
     MOZ_ASSERT(!NS_IsMainThread());
-    DBusError err;
-    dbus_error_init(&err);
 
-    BluetoothValue values = InfallibleTArray<BluetoothNamedValue>();
-    nsAutoString errorStr;
+    nsRefPtr<BluetoothArrayOfDevicePropertiesReplyHandler> handler =
+      new BluetoothArrayOfDevicePropertiesReplyHandler(mDeviceAddresses,
+                                                       mFilterFunc,
+                                                       mRunnable);
+    handler->ProcessRemainingDeviceAddresses();
 
-    for (uint32_t i = 0; i < mDeviceAddresses.Length(); i++) {
-      BluetoothValue v;
-      nsString objectPath =
-        GetObjectPathFromAddress(sAdapterPath, mDeviceAddresses[i]);
-
-      if (!GetPropertiesInternal(objectPath, DBUS_DEVICE_IFACE, v)) {
-        // The target device may have been removed, so continue checking the
-        // next device object.
-        continue;
-      }
-
-      // We have to manually attach the path to the rest of the elements
-      v.get_ArrayOfBluetoothNamedValue().AppendElement(
-        BluetoothNamedValue(NS_LITERAL_STRING("Path"), objectPath)
-      );
-      const InfallibleTArray<BluetoothNamedValue>& deviceProperties =
-        v.get_ArrayOfBluetoothNamedValue();
-      uint32_t length = deviceProperties.Length();
-      // It is possible that property Icon missed due to CoD of major
-      // class is TOY but service class is "Audio", we need to assign
-      // Icon as audio-card. This is for PTS test TC_AG_COD_BV_02_I.
-      // As HFP specification defined that
-      // service class is "Audio" can be considered as HFP AG.
-      if (!ContainsIcon(deviceProperties)) {
-        for (uint32_t p = 0; p < length; ++p) {
-          if (deviceProperties[p].name().EqualsLiteral("Class")) {
-            if (HasAudioService(deviceProperties[p].value().get_uint32_t())) {
-              v.get_ArrayOfBluetoothNamedValue()
-                 .AppendElement(
-                 BluetoothNamedValue(NS_LITERAL_STRING("Icon"),
-                 NS_LITERAL_STRING("audio-card")));
-            }
-            break;
-          }
-        }
-      }
-
-      if (mFilterFunc(v)) {
-        values.get_ArrayOfBluetoothNamedValue().AppendElement(
-          BluetoothNamedValue(mDeviceAddresses[i],
-                              v.get_ArrayOfBluetoothNamedValue())
-        );
-      }
-    }
-
-    DispatchBluetoothReply(mRunnable, values, errorStr);
     return NS_OK;
   }
 
