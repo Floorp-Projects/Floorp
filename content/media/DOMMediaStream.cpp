@@ -240,14 +240,6 @@ DOMMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHi
   return stream.forget();
 }
 
-void
-DOMMediaStream::SetTrackEnabled(TrackID aTrackID, bool aEnabled)
-{
-  if (mStream) {
-    mStream->SetTrackEnabled(aTrackID, aEnabled);
-  }
-}
-
 bool
 DOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
 {
