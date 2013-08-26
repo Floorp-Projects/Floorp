@@ -2631,6 +2631,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right.png");
 }
 
+.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr):-moz-lwtheme-brighttext,
+.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl):-moz-lwtheme-brighttext {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png");
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr):-moz-lwtheme-brighttext,
+.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl):-moz-lwtheme-brighttext {
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right-inverted.png");
+}
+
 .tabbrowser-arrowscrollbox > .scrollbutton-up:hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-down:hover {
   -moz-image-region: rect(0, 26px, 20px, 13px);
@@ -2661,6 +2671,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr),
   .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl) {
     list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right@2x.png");
+  }
+
+  .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(ltr):-moz-lwtheme-brighttext,
+  .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(rtl):-moz-lwtheme-brighttext {
+    list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left-inverted@2x.png");
+  }
+
+  .tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr):-moz-lwtheme-brighttext,
+  .tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl):-moz-lwtheme-brighttext {
+    list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-right-inverted@2x.png");
   }
 
   .tabbrowser-arrowscrollbox > .scrollbutton-up:hover,
@@ -2750,6 +2770,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-image-region: rect(0, 18px, 20px, 0);
 }
 
+.tabs-newtab-button:-moz-lwtheme-brighttext,
+#TabsToolbar > #new-tab-button:-moz-lwtheme-brighttext,
+#TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-lwtheme-brighttext {
+  list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.png);
+}
+
 .tabs-newtab-button:hover,
 #TabsToolbar > #new-tab-button:hover {
   -moz-image-region: rect(0, 36px, 20px, 18px);
@@ -2766,6 +2792,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   #TabsToolbar > toolbarpaletteitem > #new-tab-button {
     list-style-image: url(chrome://browser/skin/tabbrowser/newtab@2x.png);
     -moz-image-region: rect(0, 36px, 40px, 0);
+  }
+
+  .tabs-newtab-button:-moz-lwtheme-brighttext,
+  #TabsToolbar > #new-tab-button:-moz-lwtheme-brighttext,
+  #TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-lwtheme-brighttext {
+    list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted@2x.png);
   }
 
   .tabs-newtab-button:hover,
@@ -2793,6 +2825,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-image-region: rect(0, 17px, 20px, 0);
 }
 
+#TabsToolbar #alltabs-button:-moz-lwtheme-brighttext {
+  list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon-inverted.png);
+}
+
 #TabsToolbar > #alltabs-button:not([disabled="true"]):hover {
   -moz-image-region: rect(0, 34px, 20px, 17px);
 }
@@ -2806,6 +2842,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   #TabsToolbar #alltabs-button {
     list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon@2x.png);
     -moz-image-region: rect(0, 34px, 40px, 0);
+  }
+
+  #TabsToolbar #alltabs-button:-moz-lwtheme-brighttext {
+    list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png);
   }
 
   #TabsToolbar > #alltabs-button:not([disabled="true"]):hover {
