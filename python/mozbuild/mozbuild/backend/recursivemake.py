@@ -102,12 +102,14 @@ class BackendMakeFile(object):
         if self.xpt_name:
             self.fh.write('XPT_NAME := %s\n' % self.xpt_name)
 
+            # We just recompile all xpidls because it's easier and less error
+            # prone.
             self.fh.write('NONRECURSIVE_TARGETS += export\n')
             self.fh.write('NONRECURSIVE_TARGETS_export += xpidl\n')
             self.fh.write('NONRECURSIVE_TARGETS_export_xpidl_DIRECTORY = '
-                '$(DEPTH)/config/makefiles/xpidl\n')
+                '$(DEPTH)/config/makefiles/precompile\n')
             self.fh.write('NONRECURSIVE_TARGETS_export_xpidl_TARGETS += '
-                'xpt/%s' % self.xpt_name)
+                'xpidl\n')
 
         return self.fh.close()
 
