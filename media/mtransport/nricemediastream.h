@@ -104,6 +104,9 @@ class NrIceMediaStream {
   // Parse trickle ICE candidate
   nsresult ParseTrickleCandidate(const std::string& candidate);
 
+  // Disable a component
+  nsresult DisableComponent(int component);
+
   // Get the candidate pair currently active. It's the
   // caller's responsibility to free these.
   nsresult GetActivePair(int component,
