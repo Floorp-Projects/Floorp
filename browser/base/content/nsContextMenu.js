@@ -1252,7 +1252,7 @@ nsContextMenu.prototype = {
   },
 
   playPlugin: function() {
-    gPluginHandler.activateSinglePlugin(this.target.ownerDocument.defaultView.top, this.target);
+    gPluginHandler._showClickToPlayNotification(this.browser, this.target);
   },
 
   hidePlugin: function() {
