@@ -171,23 +171,24 @@ public final class GeckoProfile {
     private static GeckoProfile getGuestProfile(Context context) {
         if (mGuestProfile == null) {
             File guestDir = getGuestDir(context);
-            mGuestProfile = get(context, "guest", guestDir);
-            mGuestProfile.mInGuestMode = true;
+            if (guestDir.exists()) {
+                mGuestProfile = get(context, "guest", guestDir);
+                mGuestProfile.mInGuestMode = true;
+            }
         }
 
         return mGuestProfile;
     }
 
     public static boolean maybeCleanupGuestProfile(final Context context) {
-        // Don't use profile.getDir() here, so that we don't accidently create the dir
-        File guestDir = getGuestDir(context);
-        if (!guestDir.exists()) {
-            return false;
-        }
-
         final GeckoProfile profile = getGuestProfile(context);
-        if (!profile.locked()) {
-            // if the guest dir exists, but its unlocked, delete it
+
+        if (profile == null) {
+            return false;
+        } else if (!profile.locked()) {
+            profile.mInGuestMode = false;
+
+            // If the guest dir exists, but it's unlocked, delete it
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
