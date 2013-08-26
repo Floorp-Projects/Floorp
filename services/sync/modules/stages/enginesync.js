@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/policies.js");
@@ -22,8 +22,8 @@ Cu.import("resource://services-sync/util.js");
  * This was originally split out of service.js. The API needs lots of love.
  */
 this.EngineSynchronizer = function EngineSynchronizer(service) {
-  this._log = Log4Moz.repository.getLogger("Sync.Synchronizer");
-  this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.synchronizer")];
+  this._log = Log.repository.getLogger("Sync.Synchronizer");
+  this._log.level = Log.Level[Svc.Prefs.get("log.logger.synchronizer")];
 
   this.service = service;
 

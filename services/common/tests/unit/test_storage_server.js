@@ -105,8 +105,8 @@ function doDeleteRequest(request) {
 }
 
 function run_test() {
-  Log4Moz.repository.getLogger("Services.Common.Test.StorageServer").level =
-    Log4Moz.Level.Trace;
+  Log.repository.getLogger("Services.Common.Test.StorageServer").level =
+    Log.Level.Trace;
   initTestLogging();
 
   run_next_test();

@@ -72,8 +72,8 @@ let isTap = false;
 // whether to send mouse event
 let mouseEventsOnly = false;
 
-Cu.import("resource://gre/modules/services-common/log4moz.js");
-let logger = Log4Moz.repository.getLogger("Marionette");
+Cu.import("resource://gre/modules/Log.jsm");
+let logger = Log.repository.getLogger("Marionette");
 logger.info("loaded marionette-listener.js");
 let modalHandler = function() {
   sendSyncMessage("Marionette:switchedToFrame", { frameValue: null, storePrevious: true });

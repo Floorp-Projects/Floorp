@@ -10,7 +10,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://services-common/observers.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/util.js");
 
 this.Notifications = {
@@ -115,7 +115,7 @@ this.NotificationButton =
     try {
       callback.apply(this, arguments);
     } catch (e) {
-      let logger = Log4Moz.repository.getLogger("Sync.Notifications");
+      let logger = Log.repository.getLogger("Sync.Notifications");
       logger.error("An exception occurred: " + Utils.exceptionStr(e));
       logger.info(Utils.stackTrace(e));
       throw e;
