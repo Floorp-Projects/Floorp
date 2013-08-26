@@ -65,7 +65,7 @@ def InvokeClWithDependencyGeneration(cmdline):
     cl = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
 
     mk = Makefile()
-    rule = mk.create_rule(target)
+    rule = mk.create_rule([target])
     rule.add_dependencies([normcase(source)])
     for line in cl.stdout:
         # cl -showIncludes prefixes every header with "Note: including file:"
