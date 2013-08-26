@@ -3,6 +3,10 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.HashMap;
@@ -15,30 +19,36 @@ public class testSettingsMenuItems extends PixelTest {
     int midHeight;
     String BRAND_NAME = "(Fennec|Nightly|Aurora|Firefox|Firefox Beta)";
 
-    // The following String[][] (arrays) match the menu hierarchy for each section.
-    // Each String[] (array) represents the menu items/choices in the following order:
-    //
-    //     itemTitle { defaultValue [options] }
-    //
-    // where defaultValue is optional, and there can be multiple options.
-    //
-    // This test assumes menu items are in order (scrolling down for off-screen items).
-    String[][] OPTIONS_CUSTOMIZE = {
-         { "Search settings", "", "Show search suggestions", "Installed search engines" },
-         { "Import from Android", "", "Bookmarks", "History", "Import" },
-         { "Tabs", "Don't restore after quitting " + BRAND_NAME, "Always restore", "Don't restore after quitting " + BRAND_NAME },
-         { "Automatic updates", "Only over Wi-Fi", "Enabled", "Only over Wi-Fi", "Disabled" },
-     };
+    /**
+     * The following String[][] (arrays) match the menu hierarchy for each section.
+     * Each String[] (array) represents the menu items/choices in the following order:
+     *
+     * itemTitle { defaultValue [options] }
+     *
+     * where defaultValue is optional, and there can be multiple options.
+     *
+     * These menu items are the ones that are always present - to test menu items that differ
+     * based on build (e.g., release vs. nightly), add the items in <code>addConditionalSettings</code>. 
+     */
 
+    // Customize menu items.
+    String[][] OPTIONS_CUSTOMIZE = {
+        { "Search settings", "", "Show search suggestions", "Installed search engines"},
+        { "Import from Android", "", "Bookmarks", "History", "Import" },
+        { "Tabs", "Don't restore after quitting " + BRAND_NAME, "Always restore", "Don't restore after quitting " + BRAND_NAME },
+        { "Automatic updates", "Only over Wi-Fi", "Enabled", "Only over Wi-Fi", "Disabled" },
+    };
+
+    // Display menu items.
     String[][] OPTIONS_DISPLAY = {
         { "Text size" },
         { "Title bar", "Show page title", "Show page title", "Show page address" },
         { "Advanced" },
-        { "Text reflow" },
         { "Character encoding", "Don't show menu", "Show menu", "Don't show menu" },
         { "Plugins", "Tap to play", "Enabled", "Tap to play", "Disabled" },
     };
 
+    // Privacy menu items.
     String[][] OPTIONS_PRIVACY = {
         { "Tracking", "Do not tell sites anything about my tracking preferences", "Tell sites that I do not want to be tracked", "Tell sites that I want to be tracked", "Do not tell sites anything about my tracking preferences" },
         { "Cookies", "Enabled", "Enabled, excluding 3rd party", "Disabled" },
@@ -53,12 +63,28 @@ public class testSettingsMenuItems extends PixelTest {
         { "Give feedback" },
         { "Show product announcements" },
         { "Data choices" },
-        { "Telemetry", "Shares performance, usage, hardware and customization data about your browser with Mozilla to help us make " + BRAND_NAME + " better" },
-        { "Crash Reporter", BRAND_NAME + " submits crash reports to help Mozilla make your browser more stable and secure" },
         { "Mozilla location services", "Help improve geolocation services for the Open Web by letting " + BRAND_NAME + " collect and send anonymous cellular tower data" },
         { BRAND_NAME + " Health Report", "Shares data with Mozilla about your browser health and helps you understand your browser performance" },
         { "View my Health Report" },
     };
+
+    /*
+     * This sets up a hierarchy of settings to test.
+     *
+     * The keys are the top-level settings categories, and each value is a
+     * List of menu items contained within each category.
+     *
+     * Each menu item is itself an array as follows:
+     *  - item title
+     *  - default string value of item (optional)
+     *  - string values of options that are displayed once clicked (optional).
+     */
+    public void setupSettingsMap(Map<String, List<String[]>> settingsMap) {
+        settingsMap.put("Customize", new ArrayList<String[]>(Arrays.asList(OPTIONS_CUSTOMIZE)));
+        settingsMap.put("Display", new ArrayList<String[]>(Arrays.asList(OPTIONS_DISPLAY)));
+        settingsMap.put("Privacy", new ArrayList<String[]>(Arrays.asList(OPTIONS_PRIVACY)));
+        settingsMap.put("Mozilla", new ArrayList<String[]>(Arrays.asList(OPTIONS_MOZILLA)));
+    }
 
     @Override
     protected int getTestType() {
@@ -70,23 +96,11 @@ public class testSettingsMenuItems extends PixelTest {
         midWidth = mDriver.getGeckoWidth()/2;
         midHeight = mDriver.getGeckoHeight()/2;
 
-        /*
-         * This settingsMenuItems Map provides the Settings hierarchy to test.
-         *
-         * The keys are the top-level settings categories, and the values are the
-         * array of menu items contained within each category.
-         *
-         * Each menu item is itself an array as follows:
-         *  - item title
-         *  - default string value of item (optional)
-         *  - string values of options that are displayed once clicked (optional).
-         */
-        Map<String, String[][]> settingsMenuItems = new HashMap<String, String[][]>();
-        // Add items for each category.
-        settingsMenuItems.put("Customize", OPTIONS_CUSTOMIZE);
-        settingsMenuItems.put("Display", OPTIONS_DISPLAY);
-        settingsMenuItems.put("Privacy", OPTIONS_PRIVACY);
-        settingsMenuItems.put("Mozilla", OPTIONS_MOZILLA);
+        Map<String, List<String[]>> settingsMenuItems = new HashMap<String, List<String[]>>();
+        setupSettingsMap(settingsMenuItems);
+
+        // Set special handling for Settings items that are conditionally built.
+        addConditionalSettings(settingsMenuItems);
 
         selectMenuItem("Settings");
         waitForText("Settings");
@@ -106,7 +120,6 @@ public class testSettingsMenuItems extends PixelTest {
         checkMenuHierarchy(settingsMenuItems);
     }
 
-
     /**
      * Check for Sync in settings.
      *
@@ -123,11 +136,55 @@ public class testSettingsMenuItems extends PixelTest {
         mAsserter.ok(mSolo.waitForText("Sync"), "Waiting for Sync option", "The Sync option is present");
     }
 
-    public void checkMenuHierarchy(Map<String, String[][]> settingsMap) {
+    /**
+     * Check for conditions for building certain settings, and add them to be tested
+     * if they are present.
+     */
+    public void addConditionalSettings(Map<String, List<String[]>> settingsMap) {
+        try {
+            ClassLoader classLoader = getActivity().getClassLoader();
+            Class appConstants = classLoader.loadClass("org.mozilla.gecko.AppConstants");
+
+            // Text reflow
+            Field textReflowField = appConstants.getField("RELEASE_BUILD");
+            boolean textReflow = textReflowField.getBoolean(appConstants);
+            if (textReflow) {
+                String[] textReflowUi = { "Text reflow" };
+                settingsMap.get("Display").add(textReflowUi);
+            }
+
+            // Crash reporter
+            Field crashReportingField = appConstants.getField("MOZ_CRASHREPORTER");
+            boolean crashReporter = crashReportingField.getBoolean(appConstants);
+            if (crashReporter) {
+                String[] crashReporterUi = { "Crash Reporter", BRAND_NAME + " submits crash reports to help Mozilla make your browser more stable and secure" };
+                settingsMap.get("Mozilla").add(crashReporterUi);
+            }
+
+            // Telemetry
+            Field telemetryField = appConstants.getField("MOZ_TELEMETRY_REPORTING");
+            boolean telemetry = telemetryField.getBoolean(appConstants);
+            if (telemetry) {
+                String[] telemetryUi = { "Telemetry", "Shares performance, usage, hardware and customization data about your browser with Mozilla to help us make " + BRAND_NAME + " better" };
+                settingsMap.get("Mozilla").add(telemetryUi);
+            }
+        } catch (ClassNotFoundException e) {
+            mAsserter.ok(false, "Class not found in setting conditional settings", e.toString());
+
+        } catch (NoSuchFieldException e) {
+            mAsserter.ok(false, "Field not found in setting conditional settings", e.toString());
+
+        } catch (IllegalAccessException e) {
+            mAsserter.ok(false, "Field cannot be accessed in setting conditional settings", e.toString());
+
+        }
+    }
+
+    public void checkMenuHierarchy(Map<String, List<String[]>> settingsMap) {
         // Check the items within each category.
-        for (Entry<String, String[][]> e : settingsMap.entrySet()) {
+        for (Entry<String, List<String[]>> e : settingsMap.entrySet()) {
             String section = "^" + e.getKey() + "$";
-            String[][] sectionItems = e.getValue();
+            List<String[]> sectionItems = e.getValue();
 
             waitForEnabledText(section);
             mSolo.clickOnText(section);
