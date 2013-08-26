@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: CRLUTIL
 .\"    Author: [see the "Authors" section]
-.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 15 February 2013
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 19 July 2013
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CRLUTIL" "1" "15 February 2013" "nss-tools" "NSS Security Tools"
+.TH "CRLUTIL" "1" "19 July 2013" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -160,6 +160,16 @@ Specify type of CRL\&. possible types are: 0 \- SEC_KRL_TYPE, 1 \- SEC_CRL_TYPE\
 \-u url
 .RS 4
 Specify the url\&.
+.RE
+.PP
+\-w pwd\-string
+.RS 4
+Provide db password in command line\&.
+.RE
+.PP
+\-Z algorithm
+.RS 4
+Specify the hash algorithm to use for signing the CRL\&.
 .RE
 .SH "CRL GENERATION SCRIPT SYNTAX"
 .PP
@@ -374,12 +384,12 @@ Mailing lists: https://lists\&.mozilla\&.org/listinfo/dev\-tech\-crypto
 IRC: Freenode at #dogtag\-pki
 .SH "AUTHORS"
 .PP
-The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun\&.
+The NSS tools were written and maintained by developers with Netscape, Red Hat, Sun, Oracle, Mozilla, and Google\&.
 .PP
 Authors: Elio Maldonado <emaldona@redhat\&.com>, Deon Lackey <dlackey@redhat\&.com>\&.
 .SH "LICENSE"
 .PP
-Licensed under the Mozilla Public License, version 1\&.1, and/or the GNU General Public License, version 2 or later, and/or the GNU Lesser General Public License, version 2\&.1 or later\&.
+Licensed under the Mozilla Public License, v\&. 2\&.0\&. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla\&.org/MPL/2\&.0/\&.
 .SH "NOTES"
 .IP " 1." 4
 Mozilla NSS bug 836477

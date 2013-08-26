@@ -53,13 +53,6 @@ class Configuration:
                 entry.append({})
             self.descriptors.extend([Descriptor(self, iface, x) for x in entry])
 
-        # Mark the descriptors for which the nativeType corresponds to exactly
-        # one interface.
-        for descriptor in self.descriptors:
-            descriptor.unsharedImplementation = all(
-                d.nativeType != descriptor.nativeType or d == descriptor
-                for d in self.descriptors)
-
         # Keep the descriptor list sorted for determinism.
         self.descriptors.sort(lambda x,y: cmp(x.name, y.name))
 

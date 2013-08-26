@@ -281,11 +281,11 @@ DumpHeap(JSContext *cx,
          JS::Value *vp)
 {
     JSAutoByteString fileName;
-    void* startThing = NULL;
+    void* startThing = nullptr;
     JSGCTraceKind startTraceKind = JSTRACE_OBJECT;
-    void *thingToFind = NULL;
+    void *thingToFind = nullptr;
     size_t maxDepth = (size_t)-1;
-    void *thingToIgnore = NULL;
+    void *thingToIgnore = nullptr;
     FILE *dumpFile;
     bool ok;
 
@@ -486,7 +486,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
             ok = JS_ExecuteScript(cx, obj, script, result.address());
             if (ok && result != JSVAL_VOID) {
                 /* Suppress error reports from JS_ValueToString(). */
-                older = JS_SetErrorReporter(cx, NULL);
+                older = JS_SetErrorReporter(cx, nullptr);
                 str = JS_ValueToString(cx, result);
                 JSAutoByteString bytes;
                 if (str)
@@ -702,7 +702,7 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   JS::Rooted<JS::Value> result(cx);
   bool ok = JS_ExecuteScript(cx, global, script, result.address());
   if (ok && result != JSVAL_VOID) {
-      JSErrorReporter old = JS_SetErrorReporter(cx, NULL);
+      JSErrorReporter old = JS_SetErrorReporter(cx, nullptr);
       JSString* str = JS_ValueToString(cx, result);
       nsDependentJSString depStr;
       if (str)

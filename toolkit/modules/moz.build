@@ -25,6 +25,8 @@ EXTRA_JS_MODULES += [
     'RemoteSecurityUI.jsm',
     'RemoteWebNavigation.jsm',
     'RemoteWebProgress.jsm',
+    'SelectContentHelper.jsm',
+    'SelectParentHelper.jsm',
     'Sqlite.jsm',
     'Task.jsm',
     'TelemetryTimestamps.jsm',

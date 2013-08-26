@@ -5050,6 +5050,8 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
       case TOK_STRING:
         if (!canHaveDirectives && tokenStream.currentToken().atom() == context->names().useAsm) {
+            if (!abortIfSyntaxParser())
+                return null();
             if (!report(ParseWarning, false, null(), JSMSG_USE_ASM_DIRECTIVE_FAIL))
                 return null();
         }

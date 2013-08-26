@@ -24,6 +24,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_cmd_blackbox.js \
 	browser_dbg_cmd_break.js \
 	browser_dbg_debuggerstatement.js \
+	browser_dbg_listaddons.js \
 	browser_dbg_listtabs-01.js \
 	browser_dbg_listtabs-02.js \
 	browser_dbg_tabactor-01.js \
@@ -130,6 +131,8 @@ MOCHITEST_BROWSER_PAGES = \
 	testactors.js \
 	browser_dbg_tab1.html \
 	browser_dbg_tab2.html \
+	browser_dbg_addon1.xpi \
+	browser_dbg_addon2.xpi \
 	browser_dbg_debuggerstatement.html \
 	browser_dbg_stack.html \
 	browser_dbg_script-switching.html \
