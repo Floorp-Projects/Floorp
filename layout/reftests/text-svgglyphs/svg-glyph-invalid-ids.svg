@@ -9,17 +9,14 @@
       {
         font-family: Liberation;
         font-size: 200px;
-        stroke: black;
       }
     ]]>
   </style>
   <!--
-      Test that SVG glyphs are being drawn instead of TrueType glyphs
-      Also testing that this does not happen if the
-      gfx.font_rendering.opentype_svg.enabled preference is set to true.
+      Test that the right SVG glyph is picked from a document containing various
+      invalid glyph IDs.
   -->
-  <!-- glyphid -->
   <text x="0" y="200">
-  L
+  M
   </text>
 </svg>

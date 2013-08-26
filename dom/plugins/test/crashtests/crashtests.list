@@ -9,5 +9,7 @@ load 570884.html
 # Plugin arch is going to change anyway with OOP content so skipping
 # this test for now is OK.
 skip-if(browserIsRemote||!haveTestPlugin||http.platform!="X11"||!testPluginIsOOP()) load 598862.html
-load 626602-1.html
+
+# SkiaGL is causing a compositor hang here, disable temporarily while that gets resolved in bug 908363
+skip-if(Android) load 626602-1.html
 load 752340.html
