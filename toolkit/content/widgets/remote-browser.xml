@@ -100,6 +100,13 @@
           this.messageManager.addMessageListener("DOMTitleChanged", this);
           this.messageManager.addMessageListener("ImageDocumentLoaded", this);
           this.messageManager.loadFrameScript("chrome://global/content/browser-child.js", true);
+
+          if (this.hasAttribute("selectpopup")) {
+            this.messageManager.addMessageListener("Forms:ShowDropDown", this);
+            this.messageManager.addMessageListener("Forms:HideDropDown", this);
+            this.messageManager.loadFrameScript("chrome://global/content/select-child.js", true);
+          }
+
           this.webProgress._init();
 
           let jsm = "resource://gre/modules/RemoteController.jsm";
@@ -119,17 +126,31 @@
       <method name="receiveMessage">
         <parameter name="aMessage"/>
         <body><![CDATA[
-          let json = aMessage.json;
+          let data = aMessage.data;
           switch (aMessage.name) {
             case "DOMTitleChanged":
-              this._contentTitle = json.title;
+              this._contentTitle = data.title;
               break;
             case "ImageDocumentLoaded":
               this._imageDocument = {
-                width: json.width,
-                height: json.height
+                width: data.width,
+                height: data.height
               };
               break;
+
+            case "Forms:ShowDropDown": {
+              Cu.import("resource://gre/modules/SelectParentHelper.jsm");
+              let dropdown = document.getElementById(this.getAttribute("selectpopup"));
+              SelectParentHelper.populate(dropdown, data.options, data.selectedIndex);
+              SelectParentHelper.open(this, dropdown, data.rect);
+              break;
+            }
+
+            case "Forms:HideDropDown": {
+              Cu.import("resource://gre/modules/SelectParentHelper.jsm");
+              let dropdown = document.getElementById(this.getAttribute("selectpopup"));
+              SelectParentHelper.hide(dropdown);
+            }
           }
         ]]></body>
       </method>
