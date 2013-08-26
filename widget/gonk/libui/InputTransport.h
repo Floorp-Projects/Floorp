@@ -14,114 +14,50 @@
  * limitations under the License.
  */
 
-#ifndef _UI_INPUT_TRANSPORT_H
-#define _UI_INPUT_TRANSPORT_H
+#ifndef _ANDROIDFW_INPUT_TRANSPORT_H
+#define _ANDROIDFW_INPUT_TRANSPORT_H
 
 /**
  * Native input transport.
  *
- * Uses anonymous shared memory as a whiteboard for sending input events from an
- * InputPublisher to an InputConsumer and ensuring appropriate synchronization.
- * One interesting feature is that published events can be updated in place as long as they
- * have not yet been consumed.
+ * The InputChannel provides a mechanism for exchanging InputMessage structures across processes.
  *
- * The InputPublisher and InputConsumer only take care of transferring event data
- * over an InputChannel and sending synchronization signals.  The InputDispatcher and InputQueue
- * build on these abstractions to add multiplexing and queueing.
+ * The InputPublisher and InputConsumer each handle one end-point of an input channel.
+ * The InputPublisher is used by the input dispatcher to send events to the application.
+ * The InputConsumer is used by the application to receive events from the input dispatcher.
  */
 
-#include <semaphore.h>
 #include "Input.h"
 #include <utils/Errors.h>
-#include "Timers.h"
+#include <utils/Timers.h>
 #include <utils/RefBase.h>
-#include "String8.h"
+#include <utils/String8.h>
+#include <utils/Vector.h>
+#include <utils/BitSet.h>
 
 namespace android {
 
 /*
- * An input channel consists of a shared memory buffer and a pair of pipes
- * used to send input messages from an InputPublisher to an InputConsumer
- * across processes.  Each channel has a descriptive name for debugging purposes.
- *
- * Each endpoint has its own InputChannel object that specifies its own file descriptors.
- *
- * The input channel is closed when all references to it are released.
- */
-class InputChannel : public RefBase {
-protected:
-    virtual ~InputChannel();
-
-public:
-    InputChannel(const String8& name, int32_t ashmemFd, int32_t receivePipeFd,
-            int32_t sendPipeFd);
-
-    /* Creates a pair of input channels and their underlying shared memory buffers
-     * and pipes.
-     *
-     * Returns OK on success.
-     */
-    static status_t openInputChannelPair(const String8& name,
-            sp<InputChannel>& outServerChannel, sp<InputChannel>& outClientChannel);
-
-    inline String8 getName() const { return mName; }
-    inline int32_t getAshmemFd() const { return mAshmemFd; }
-    inline int32_t getReceivePipeFd() const { return mReceivePipeFd; }
-    inline int32_t getSendPipeFd() const { return mSendPipeFd; }
-
-    /* Sends a signal to the other endpoint.
-     *
-     * Returns OK on success.
-     * Returns DEAD_OBJECT if the channel's peer has been closed.
-     * Other errors probably indicate that the channel is broken.
-     */
-    status_t sendSignal(char signal);
-
-    /* Receives a signal send by the other endpoint.
-     * (Should only call this after poll() indicates that the receivePipeFd has available input.)
-     *
-     * Returns OK on success.
-     * Returns WOULD_BLOCK if there is no signal present.
-     * Returns DEAD_OBJECT if the channel's peer has been closed.
-     * Other errors probably indicate that the channel is broken.
-     */
-    status_t receiveSignal(char* outSignal);
-
-private:
-    String8 mName;
-    int32_t mAshmemFd;
-    int32_t mReceivePipeFd;
-    int32_t mSendPipeFd;
-};
-
-/*
- * Private intermediate representation of input events as messages written into an
- * ashmem buffer.
+ * Intermediate representation used to send input events and related signals.
  */
 struct InputMessage {
-    /* Semaphore count is set to 1 when the message is published.
-     * It becomes 0 transiently while the publisher updates the message.
-     * It becomes 0 permanently when the consumer consumes the message.
-     */
-    sem_t semaphore;
-
-    /* Initialized to false by the publisher.
-     * Set to true by the consumer when it consumes the message.
-     */
-    bool consumed;
-
-    int32_t type;
-
-    struct SampleData {
-        nsecs_t eventTime;
-        PointerCoords coords[0]; // variable length
+    enum {
+        TYPE_KEY = 1,
+        TYPE_MOTION = 2,
+        TYPE_FINISHED = 3,
     };
 
-    int32_t deviceId;
-    int32_t source;
+    struct Header {
+        uint32_t type;
+        uint32_t padding; // 8 byte alignment for the body that follows
+    } header;
 
-    union {
-        struct {
+    union Body {
+        struct Key {
+            uint32_t seq;
+            nsecs_t eventTime;
+            int32_t deviceId;
+            int32_t source;
             int32_t action;
             int32_t flags;
             int32_t keyCode;
@@ -129,10 +65,17 @@ struct InputMessage {
             int32_t metaState;
             int32_t repeatCount;
             nsecs_t downTime;
-            nsecs_t eventTime;
+
+            inline size_t size() const {
+                return sizeof(Key);
+            }
         } key;
 
-        struct {
+        struct Motion {
+            uint32_t seq;
+            nsecs_t eventTime;
+            int32_t deviceId;
+            int32_t source;
             int32_t action;
             int32_t flags;
             int32_t metaState;
@@ -144,28 +87,97 @@ struct InputMessage {
             float xPrecision;
             float yPrecision;
             size_t pointerCount;
-            PointerProperties pointerProperties[MAX_POINTERS];
-            size_t sampleCount;
-            SampleData sampleData[0]; // variable length
+            struct Pointer {
+                PointerProperties properties;
+                PointerCoords coords;
+            } pointers[MAX_POINTERS];
+
+            int32_t getActionId() const {
+                uint32_t index = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK)
+                        >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+                return pointers[index].properties.id;
+            }
+
+            inline size_t size() const {
+                return sizeof(Motion) - sizeof(Pointer) * MAX_POINTERS
+                        + sizeof(Pointer) * pointerCount;
+            }
         } motion;
-    };
 
-    /* Gets the number of bytes to add to step to the next SampleData object in a motion
-     * event message for a given number of pointers.
-     */
-    static inline size_t sampleDataStride(size_t pointerCount) {
-        return sizeof(InputMessage::SampleData) + pointerCount * sizeof(PointerCoords);
-    }
+        struct Finished {
+            uint32_t seq;
+            bool handled;
 
-    /* Adds the SampleData stride to the given pointer. */
-    static inline SampleData* sampleDataPtrIncrement(SampleData* ptr, size_t stride) {
-        return reinterpret_cast<InputMessage::SampleData*>(reinterpret_cast<char*>(ptr) + stride);
-    }
+            inline size_t size() const {
+                return sizeof(Finished);
+            }
+        } finished;
+    } body;
+
+    bool isValid(size_t actualSize) const;
+    size_t size() const;
 };
 
 /*
- * Publishes input events to an anonymous shared memory buffer.
- * Uses atomic operations to coordinate shared access with a single concurrent consumer.
+ * An input channel consists of a local unix domain socket used to send and receive
+ * input messages across processes.  Each channel has a descriptive name for debugging purposes.
+ *
+ * Each endpoint has its own InputChannel object that specifies its file descriptor.
+ *
+ * The input channel is closed when all references to it are released.
+ */
+class InputChannel : public RefBase {
+protected:
+    virtual ~InputChannel();
+
+public:
+    InputChannel(const String8& name, int fd);
+
+    /* Creates a pair of input channels.
+     *
+     * Returns OK on success.
+     */
+    static status_t openInputChannelPair(const String8& name,
+            sp<InputChannel>& outServerChannel, sp<InputChannel>& outClientChannel);
+
+    inline String8 getName() const { return mName; }
+    inline int getFd() const { return mFd; }
+
+    /* Sends a message to the other endpoint.
+     *
+     * If the channel is full then the message is guaranteed not to have been sent at all.
+     * Try again after the consumer has sent a finished signal indicating that it has
+     * consumed some of the pending messages from the channel.
+     *
+     * Returns OK on success.
+     * Returns WOULD_BLOCK if the channel is full.
+     * Returns DEAD_OBJECT if the channel's peer has been closed.
+     * Other errors probably indicate that the channel is broken.
+     */
+    status_t sendMessage(const InputMessage* msg);
+
+    /* Receives a message sent by the other endpoint.
+     *
+     * If there is no message present, try again after poll() indicates that the fd
+     * is readable.
+     *
+     * Returns OK on success.
+     * Returns WOULD_BLOCK if there is no message present.
+     * Returns DEAD_OBJECT if the channel's peer has been closed.
+     * Other errors probably indicate that the channel is broken.
+     */
+    status_t receiveMessage(InputMessage* msg);
+
+    /* Returns a new object that has a duplicate of this channel's fd. */
+    sp<InputChannel> dup() const;
+
+private:
+    String8 mName;
+    int mFd;
+};
+
+/*
+ * Publishes input events to an input channel.
  */
 class InputPublisher {
 public:
@@ -178,26 +190,16 @@ public:
     /* Gets the underlying input channel. */
     inline sp<InputChannel> getChannel() { return mChannel; }
 
-    /* Prepares the publisher for use.  Must be called before it is used.
-     * Returns OK on success.
-     *
-     * This method implicitly calls reset(). */
-    status_t initialize();
-
-    /* Resets the publisher to its initial state and unpins its ashmem buffer.
-     * Returns OK on success.
-     *
-     * Should be called after an event has been consumed to release resources used by the
-     * publisher until the next event is ready to be published.
-     */
-    status_t reset();
-
-    /* Publishes a key event to the ashmem buffer.
+    /* Publishes a key event to the input channel.
      *
      * Returns OK on success.
-     * Returns INVALID_OPERATION if the publisher has not been reset.
+     * Returns WOULD_BLOCK if the channel is full.
+     * Returns DEAD_OBJECT if the channel's peer has been closed.
+     * Returns BAD_VALUE if seq is 0.
+     * Other errors probably indicate that the channel is broken.
      */
     status_t publishKeyEvent(
+            uint32_t seq,
             int32_t deviceId,
             int32_t source,
             int32_t action,
@@ -209,13 +211,16 @@ public:
             nsecs_t downTime,
             nsecs_t eventTime);
 
-    /* Publishes a motion event to the ashmem buffer.
+    /* Publishes a motion event to the input channel.
      *
      * Returns OK on success.
-     * Returns INVALID_OPERATION if the publisher has not been reset.
-     * Returns BAD_VALUE if pointerCount is less than 1 or greater than MAX_POINTERS.
+     * Returns WOULD_BLOCK if the channel is full.
+     * Returns DEAD_OBJECT if the channel's peer has been closed.
+     * Returns BAD_VALUE if seq is 0 or if pointerCount is less than 1 or greater than MAX_POINTERS.
+     * Other errors probably indicate that the channel is broken.
      */
     status_t publishMotionEvent(
+            uint32_t seq,
             int32_t deviceId,
             int32_t source,
             int32_t action,
@@ -233,55 +238,25 @@ public:
             const PointerProperties* pointerProperties,
             const PointerCoords* pointerCoords);
 
-    /* Appends a motion sample to a motion event unless already consumed.
-     *
-     * Returns OK on success.
-     * Returns INVALID_OPERATION if the current event is not a AMOTION_EVENT_ACTION_MOVE event.
-     * Returns FAILED_TRANSACTION if the current event has already been consumed.
-     * Returns NO_MEMORY if the buffer is full and no additional samples can be added.
-     */
-    status_t appendMotionSample(
-            nsecs_t eventTime,
-            const PointerCoords* pointerCoords);
-
-    /* Sends a dispatch signal to the consumer to inform it that a new message is available.
-     *
-     * Returns OK on success.
-     * Errors probably indicate that the channel is broken.
-     */
-    status_t sendDispatchSignal();
-
     /* Receives the finished signal from the consumer in reply to the original dispatch signal.
-     * Returns whether the consumer handled the message.
+     * If a signal was received, returns the message sequence number,
+     * and whether the consumer handled the message.
+     *
+     * The returned sequence number is never 0 unless the operation failed.
      *
      * Returns OK on success.
      * Returns WOULD_BLOCK if there is no signal present.
+     * Returns DEAD_OBJECT if the channel's peer has been closed.
      * Other errors probably indicate that the channel is broken.
      */
-    status_t receiveFinishedSignal(bool* outHandled);
+    status_t receiveFinishedSignal(uint32_t* outSeq, bool* outHandled);
 
 private:
     sp<InputChannel> mChannel;
-
-    size_t mAshmemSize;
-    InputMessage* mSharedMessage;
-    bool mPinned;
-    bool mSemaphoreInitialized;
-    bool mWasDispatched;
-
-    size_t mMotionEventPointerCount;
-    InputMessage::SampleData* mMotionEventSampleDataTail;
-    size_t mMotionEventSampleDataStride;
-
-    status_t publishInputEvent(
-            int32_t type,
-            int32_t deviceId,
-            int32_t source);
 };
 
 /*
- * Consumes input events from an anonymous shared memory buffer.
- * Uses atomic operations to coordinate shared access with a single concurrent publisher.
+ * Consumes input events from an input channel.
  */
 class InputConsumer {
 public:
@@ -294,45 +269,175 @@ public:
     /* Gets the underlying input channel. */
     inline sp<InputChannel> getChannel() { return mChannel; }
 
-    /* Prepares the consumer for use.  Must be called before it is used. */
-    status_t initialize();
-
-    /* Consumes the input event in the buffer and copies its contents into
+    /* Consumes an input event from the input channel and copies its contents into
      * an InputEvent object created using the specified factory.
-     * This operation will block if the publisher is updating the event.
+     *
+     * Tries to combine a series of move events into larger batches whenever possible.
+     *
+     * If consumeBatches is false, then defers consuming pending batched events if it
+     * is possible for additional samples to be added to them later.  Call hasPendingBatch()
+     * to determine whether a pending batch is available to be consumed.
+     *
+     * If consumeBatches is true, then events are still batched but they are consumed
+     * immediately as soon as the input channel is exhausted.
+     *
+     * The frameTime parameter specifies the time when the current display frame started
+     * rendering in the CLOCK_MONOTONIC time base, or -1 if unknown.
+     *
+     * The returned sequence number is never 0 unless the operation failed.
      *
      * Returns OK on success.
-     * Returns INVALID_OPERATION if there is no currently published event.
+     * Returns WOULD_BLOCK if there is no event present.
+     * Returns DEAD_OBJECT if the channel's peer has been closed.
      * Returns NO_MEMORY if the event could not be created.
-     */
-    status_t consume(InputEventFactoryInterface* factory, InputEvent** outEvent);
-
-    /* Sends a finished signal to the publisher to inform it that the current message is
-     * finished processing and specifies whether the message was handled by the consumer.
-     *
-     * Returns OK on success.
-     * Errors probably indicate that the channel is broken.
-     */
-    status_t sendFinishedSignal(bool handled);
-
-    /* Receives the dispatched signal from the publisher.
-     *
-     * Returns OK on success.
-     * Returns WOULD_BLOCK if there is no signal present.
      * Other errors probably indicate that the channel is broken.
      */
-    status_t receiveDispatchSignal();
+    status_t consume(InputEventFactoryInterface* factory, bool consumeBatches,
+            nsecs_t frameTime, uint32_t* outSeq, InputEvent** outEvent);
+
+    /* Sends a finished signal to the publisher to inform it that the message
+     * with the specified sequence number has finished being process and whether
+     * the message was handled by the consumer.
+     *
+     * Returns OK on success.
+     * Returns BAD_VALUE if seq is 0.
+     * Other errors probably indicate that the channel is broken.
+     */
+    status_t sendFinishedSignal(uint32_t seq, bool handled);
+
+    /* Returns true if there is a deferred event waiting.
+     *
+     * Should be called after calling consume() to determine whether the consumer
+     * has a deferred event to be processed.  Deferred events are somewhat special in
+     * that they have already been removed from the input channel.  If the input channel
+     * becomes empty, the client may need to do extra work to ensure that it processes
+     * the deferred event despite the fact that the input channel's file descriptor
+     * is not readable.
+     *
+     * One option is simply to call consume() in a loop until it returns WOULD_BLOCK.
+     * This guarantees that all deferred events will be processed.
+     *
+     * Alternately, the caller can call hasDeferredEvent() to determine whether there is
+     * a deferred event waiting and then ensure that its event loop wakes up at least
+     * one more time to consume the deferred event.
+     */
+    bool hasDeferredEvent() const;
+
+    /* Returns true if there is a pending batch.
+     *
+     * Should be called after calling consume() with consumeBatches == false to determine
+     * whether consume() should be called again later on with consumeBatches == true.
+     */
+    bool hasPendingBatch() const;
 
 private:
+    // True if touch resampling is enabled.
+    const bool mResampleTouch;
+
+    // The input channel.
     sp<InputChannel> mChannel;
 
-    size_t mAshmemSize;
-    InputMessage* mSharedMessage;
+    // The current input message.
+    InputMessage mMsg;
 
-    void populateKeyEvent(KeyEvent* keyEvent) const;
-    void populateMotionEvent(MotionEvent* motionEvent) const;
+    // True if mMsg contains a valid input message that was deferred from the previous
+    // call to consume and that still needs to be handled.
+    bool mMsgDeferred;
+
+    // Batched motion events per device and source.
+    struct Batch {
+        Vector<InputMessage> samples;
+    };
+    Vector<Batch> mBatches;
+
+    // Touch state per device and source, only for sources of class pointer.
+    struct History {
+        nsecs_t eventTime;
+        BitSet32 idBits;
+        int32_t idToIndex[MAX_POINTER_ID + 1];
+        PointerCoords pointers[MAX_POINTERS];
+
+        void initializeFrom(const InputMessage* msg) {
+            eventTime = msg->body.motion.eventTime;
+            idBits.clear();
+            for (size_t i = 0; i < msg->body.motion.pointerCount; i++) {
+                uint32_t id = msg->body.motion.pointers[i].properties.id;
+                idBits.markBit(id);
+                idToIndex[id] = i;
+                pointers[i].copyFrom(msg->body.motion.pointers[i].coords);
+            }
+        }
+
+        const PointerCoords& getPointerById(uint32_t id) const {
+            return pointers[idToIndex[id]];
+        }
+    };
+    struct TouchState {
+        int32_t deviceId;
+        int32_t source;
+        size_t historyCurrent;
+        size_t historySize;
+        History history[2];
+        History lastResample;
+
+        void initialize(int32_t deviceId, int32_t source) {
+            this->deviceId = deviceId;
+            this->source = source;
+            historyCurrent = 0;
+            historySize = 0;
+            lastResample.eventTime = 0;
+            lastResample.idBits.clear();
+        }
+
+        void addHistory(const InputMessage* msg) {
+            historyCurrent ^= 1;
+            if (historySize < 2) {
+                historySize += 1;
+            }
+            history[historyCurrent].initializeFrom(msg);
+        }
+
+        const History* getHistory(size_t index) const {
+            return &history[(historyCurrent + index) & 1];
+        }
+    };
+    Vector<TouchState> mTouchStates;
+
+    // Chain of batched sequence numbers.  When multiple input messages are combined into
+    // a batch, we append a record here that associates the last sequence number in the
+    // batch with the previous one.  When the finished signal is sent, we traverse the
+    // chain to individually finish all input messages that were part of the batch.
+    struct SeqChain {
+        uint32_t seq;   // sequence number of batched input message
+        uint32_t chain; // sequence number of previous batched input message
+    };
+    Vector<SeqChain> mSeqChains;
+
+    status_t consumeBatch(InputEventFactoryInterface* factory,
+            nsecs_t frameTime, uint32_t* outSeq, InputEvent** outEvent);
+    status_t consumeSamples(InputEventFactoryInterface* factory,
+            Batch& batch, size_t count, uint32_t* outSeq, InputEvent** outEvent);
+
+    void updateTouchState(InputMessage* msg);
+    void rewriteMessage(const TouchState& state, InputMessage* msg);
+    void resampleTouchState(nsecs_t frameTime, MotionEvent* event,
+            const InputMessage *next);
+
+    ssize_t findBatch(int32_t deviceId, int32_t source) const;
+    ssize_t findTouchState(int32_t deviceId, int32_t source) const;
+
+    status_t sendUnchainedFinishedSignal(uint32_t seq, bool handled);
+
+    static void initializeKeyEvent(KeyEvent* event, const InputMessage* msg);
+    static void initializeMotionEvent(MotionEvent* event, const InputMessage* msg);
+    static void addSample(MotionEvent* event, const InputMessage* msg);
+    static bool canAddSample(const Batch& batch, const InputMessage* msg);
+    static ssize_t findSampleNoLaterThan(const Batch& batch, nsecs_t time);
+    static bool shouldResampleTool(int32_t toolType);
+
+    static bool isTouchResamplingEnabled();
 };
 
 } // namespace android
 
-#endif // _UI_INPUT_TRANSPORT_H
+#endif // _ANDROIDFW_INPUT_TRANSPORT_H

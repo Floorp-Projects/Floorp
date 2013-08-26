@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef _UI_POWER_MANAGER_H
-#define _UI_POWER_MANAGER_H
+#ifndef _ANDROIDFW_POWER_MANAGER_H
+#define _ANDROIDFW_POWER_MANAGER_H
 
 
 namespace android {
 
 enum {
-    POWER_MANAGER_OTHER_EVENT = 0,
-    POWER_MANAGER_BUTTON_EVENT = 1,
-    POWER_MANAGER_TOUCH_EVENT = 2,
+    USER_ACTIVITY_EVENT_OTHER = 0,
+    USER_ACTIVITY_EVENT_BUTTON = 1,
+    USER_ACTIVITY_EVENT_TOUCH = 2,
 
-    POWER_MANAGER_LAST_EVENT = POWER_MANAGER_TOUCH_EVENT, // Last valid event code.
+    USER_ACTIVITY_EVENT_LAST = USER_ACTIVITY_EVENT_TOUCH, // Last valid event code.
 };
 
 } // namespace android
 
-#endif // _UI_POWER_MANAGER_H
+#endif // _ANDROIDFW_POWER_MANAGER_H
