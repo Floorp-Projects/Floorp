@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the OscillatorNode interface</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+
+  var context = new AudioContext();
+  var osc = context.createOscillator();
+  var sp = context.createScriptProcessor();
+
+  osc.connect(sp);
+
+  sp.onaudioprocess = function (e) {
+    var input = e.inputBuffer.getChannelData(0);
+    var isSilent = true;
+    for (var i = 0; i < input.length; i++) {
+      if (input[i] != 0.0) {
+        isSilent = false;
+      }
+    }
+    sp.onaudioprocess = null;
+    ok(isSilent, "OscillatorNode should be silent before calling start.");
+    SimpleTest.finish();
+  }
+});
+
+</script>
+</pre>
+</body>
+</html>
