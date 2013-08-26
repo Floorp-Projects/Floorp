@@ -6,13 +6,10 @@
 "use strict";
 
 const snappedSize = 330;
-const portraitSize = 660;
+const portraitSize = 900;
 
 function setSnappedViewstate() {
   ok(isLandscapeMode(), "setSnappedViewstate expects landscape mode to work.");
-
-  // Communicate viewstate change
-  Services.obs.notifyObservers(null, 'metro_viewstate_changed', 'snapped');
 
   let browser = Browser.selectedBrowser;
 
@@ -22,6 +19,9 @@ function setSnappedViewstate() {
 
   browser.style.borderRight = padding + "px solid gray";
 
+  // Communicate viewstate change
+  Services.obs.notifyObservers(null, 'metro_viewstate_changed', 'snapped');
+
   // Make sure it renders the new mode properly
   yield waitForMs(0);
 }
@@ -29,14 +29,14 @@ function setSnappedViewstate() {
 function setPortraitViewstate() {
   ok(isLandscapeMode(), "setPortraitViewstate expects landscape mode to work.");
 
-  Services.obs.notifyObservers(null, 'metro_viewstate_changed', 'portrait');
-
   let browser = Browser.selectedBrowser;
 
   let fullWidth = browser.clientWidth;
   let padding = fullWidth - portraitSize;
 
   browser.style.borderRight = padding + "px solid gray";
+
+  Services.obs.notifyObservers(null, 'metro_viewstate_changed', 'portrait');
 
   // Make sure it renders the new mode properly
   yield waitForMs(0);
