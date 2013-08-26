@@ -464,7 +464,7 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
 static bool
 SendFunctionsToVTune(JSContext *cx, AsmJSModule &module)
 {
-    uint8_t *base = module.functionCode();
+    uint8_t *base = module.codeBase();
 
     for (unsigned i = 0; i < module.numProfiledFunctions(); i++) {
         const AsmJSModule::ProfiledFunction &func = module.profiledFunction(i);
@@ -507,7 +507,7 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
     if (!PerfFuncEnabled())
         return true;
 
-    uintptr_t base = (uintptr_t) module.functionCode();
+    uintptr_t base = (uintptr_t) module.codeBase();
     const char *filename = module.sourceDesc().scriptSource()->filename();
 
     for (unsigned i = 0; i < module.numPerfFunctions(); i++) {
@@ -534,7 +534,7 @@ SendBlocksToPerf(JSContext *cx, AsmJSModule &module)
     if (!PerfBlockEnabled())
         return true;
 
-    unsigned long funcBaseAddress = (unsigned long) module.functionCode();
+    unsigned long funcBaseAddress = (unsigned long) module.codeBase();
     const char *filename = module.sourceDesc().scriptSource()->filename();
 
     for (unsigned i = 0; i < module.numPerfBlocksFunctions(); i++) {
