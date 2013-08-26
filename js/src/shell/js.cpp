@@ -3909,11 +3909,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Read filename into returned string. Filename is relative to the directory\n"
 "  containing the current script."),
 
-    JS_FN_HELP("redirect", RedirectOutput, 2, 0,
-"redirect(stdoutFilename[, stderrFilename])",
-"  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"
-"   redirecting. Filenames are relative to the current working directory."),
-
     JS_FN_HELP("compile", Compile, 1, 0,
 "compile(code)",
 "  Compiles a string to bytecode, potentially throwing."),
@@ -4017,6 +4012,11 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
     JS_FN_HELP("pc2line", PCToLine, 0, 0,
 "pc2line(fun[, pc])",
 "  Map PC to line number."),
+
+    JS_FN_HELP("redirect", RedirectOutput, 2, 0,
+"redirect(stdoutFilename[, stderrFilename])",
+"  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"
+"   redirecting. Filenames are relative to the current working directory."),
 
     JS_FN_HELP("setThrowHook", SetThrowHook, 1, 0,
 "setThrowHook(f)",
