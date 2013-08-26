@@ -125,16 +125,22 @@ class GeckoInputConnection
             }
         }
 
+        public void runOnIcThread(final Handler uiHandler,
+                                  final GeckoEditableClient client,
+                                  final Runnable runnable) {
+            final Handler icHandler = client.getInputConnectionHandler();
+            if (icHandler.getLooper() == uiHandler.getLooper()) {
+                // IC thread is UI thread; safe to run directly
+                runnable.run();
+                return;
+            }
+            runOnIcThread(icHandler, runnable);
+        }
+
         public void sendEventFromUiThread(final Handler uiHandler,
                                           final GeckoEditableClient client,
                                           final GeckoEvent event) {
-            final Handler icHandler = client.getInputConnectionHandler();
-            if (icHandler.getLooper() == uiHandler.getLooper()) {
-                // IC thread is UI thread; safe to send event directly
-                client.sendEvent(event);
-                return;
-            }
-            runOnIcThread(icHandler, new Runnable() {
+            runOnIcThread(uiHandler, client, new Runnable() {
                 @Override public void run() {
                     client.sendEvent(event);
                 }
@@ -842,10 +848,22 @@ class GeckoInputConnection
     }
 
     @Override
-    public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
+    public boolean onKeyMultiple(int keyCode, int repeatCount, final KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
             // KEYCODE_UNKNOWN means the characters are in KeyEvent.getCharacters()
-            return commitText(event.getCharacters(), 1);
+            View view = getView();
+            if (view != null) {
+                InputThreadUtils.sInstance.runOnIcThread(
+                    view.getRootView().getHandler(), mEditableClient,
+                    new Runnable() {
+                        @Override public void run() {
+                            // Don't call GeckoInputConnection.commitText because it can
+                            // post a key event back to onKeyMultiple, causing a loop
+                            GeckoInputConnection.super.commitText(event.getCharacters(), 1);
+                        }
+                    });
+            }
+            return true;
         }
         while ((repeatCount--) != 0) {
             if (!processKey(keyCode, event, true) ||
