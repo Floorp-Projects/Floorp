@@ -115,6 +115,17 @@ public:
     mFilterCallback = aCallback;
   }
 
+  // Forward SetTrackEnabled(output_track_id, enabled) to the Source MediaStream,
+  // translating the output track ID into the correct ID in the source.
+  virtual void ForwardTrackEnabled(TrackID aOutputID, bool aEnabled) {
+    for (int32_t i = mTrackMap.Length() - 1; i >= 0; --i) {
+      if (mTrackMap[i].mOutputTrackID == aOutputID) {
+        mTrackMap[i].mInputPort->GetSource()->
+          SetTrackEnabled(mTrackMap[i].mInputTrackID, aEnabled);
+      }
+    }
+  }
+
 protected:
   TrackIDFilterCallback mFilterCallback;
 
