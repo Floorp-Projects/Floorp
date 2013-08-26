@@ -3498,6 +3498,10 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
   },
+  "WEBRTC_ICE_SUCCESS_RATE":{
+    "kind": "boolean",
+    "description": "The number of failed ICE Connections (0) vs. number of successful ICE connections (1)."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_TRACERDETACH_MS": {
     "kind": "exponential",
     "high": "10000",
