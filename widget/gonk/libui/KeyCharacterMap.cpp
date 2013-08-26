@@ -15,16 +15,21 @@
  */
 
 #define LOG_TAG "KeyCharacterMap"
+#include "cutils_log.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include "utils_Log.h"
 #include "android_keycodes.h"
 #include "Keyboard.h"
 #include "KeyCharacterMap.h"
+
+#if HAVE_ANDROID_OS
+#include <binder/Parcel.h>
+#endif
+
 #include <utils/Errors.h>
 #include "Tokenizer.h"
-#include "Timers.h"
+#include <utils/Timers.h>
 
 // Enables debug output for the parser.
 #define DEBUG_PARSER 0
@@ -78,8 +83,18 @@ static String8 toString(const char16_t* chars, size_t numChars) {
 
 // --- KeyCharacterMap ---
 
+sp<KeyCharacterMap> KeyCharacterMap::sEmpty = new KeyCharacterMap();
+
 KeyCharacterMap::KeyCharacterMap() :
     mType(KEYBOARD_TYPE_UNKNOWN) {
+}
+
+KeyCharacterMap::KeyCharacterMap(const KeyCharacterMap& other) :
+    RefBase(), mType(other.mType), mKeysByScanCode(other.mKeysByScanCode),
+    mKeysByUsageCode(other.mKeysByUsageCode) {
+    for (size_t i = 0; i < other.mKeys.size(); i++) {
+        mKeys.add(other.mKeys.keyAt(i), new Key(*other.mKeys.valueAt(i)));
+    }
 }
 
 KeyCharacterMap::~KeyCharacterMap() {
@@ -89,39 +104,98 @@ KeyCharacterMap::~KeyCharacterMap() {
     }
 }
 
-status_t KeyCharacterMap::load(const String8& filename, KeyCharacterMap** outMap) {
-    *outMap = NULL;
+status_t KeyCharacterMap::load(const String8& filename,
+        Format format, sp<KeyCharacterMap>* outMap) {
+    outMap->clear();
 
     Tokenizer* tokenizer;
     status_t status = Tokenizer::open(filename, &tokenizer);
     if (status) {
         ALOGE("Error %d opening key character map file %s.", status, filename.string());
     } else {
-        KeyCharacterMap* map = new KeyCharacterMap();
-        if (!map) {
-            ALOGE("Error allocating key character map.");
-            status = NO_MEMORY;
-        } else {
-#if DEBUG_PARSER_PERFORMANCE
-            nsecs_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
-#endif
-            Parser parser(map, tokenizer);
-            status = parser.parse();
-#if DEBUG_PARSER_PERFORMANCE
-            nsecs_t elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
-            ALOGD("Parsed key character map file '%s' %d lines in %0.3fms.",
-                    tokenizer->getFilename().string(), tokenizer->getLineNumber(),
-                    elapsedTime / 1000000.0);
-#endif
-            if (status) {
-                delete map;
-            } else {
-                *outMap = map;
-            }
-        }
+        status = load(tokenizer, format, outMap);
         delete tokenizer;
     }
     return status;
+}
+
+status_t KeyCharacterMap::loadContents(const String8& filename, const char* contents,
+        Format format, sp<KeyCharacterMap>* outMap) {
+    outMap->clear();
+
+    Tokenizer* tokenizer;
+    status_t status = Tokenizer::fromContents(filename, contents, &tokenizer);
+    if (status) {
+        ALOGE("Error %d opening key character map.", status);
+    } else {
+        status = load(tokenizer, format, outMap);
+        delete tokenizer;
+    }
+    return status;
+}
+
+status_t KeyCharacterMap::load(Tokenizer* tokenizer,
+        Format format, sp<KeyCharacterMap>* outMap) {
+    status_t status = OK;
+    sp<KeyCharacterMap> map = new KeyCharacterMap();
+    if (!map.get()) {
+        ALOGE("Error allocating key character map.");
+        status = NO_MEMORY;
+    } else {
+#if DEBUG_PARSER_PERFORMANCE
+        nsecs_t startTime = systemTime(SYSTEM_TIME_MONOTONIC);
+#endif
+        Parser parser(map.get(), tokenizer, format);
+        status = parser.parse();
+#if DEBUG_PARSER_PERFORMANCE
+        nsecs_t elapsedTime = systemTime(SYSTEM_TIME_MONOTONIC) - startTime;
+        ALOGD("Parsed key character map file '%s' %d lines in %0.3fms.",
+                tokenizer->getFilename().string(), tokenizer->getLineNumber(),
+                elapsedTime / 1000000.0);
+#endif
+        if (!status) {
+            *outMap = map;
+        }
+    }
+    return status;
+}
+
+sp<KeyCharacterMap> KeyCharacterMap::combine(const sp<KeyCharacterMap>& base,
+        const sp<KeyCharacterMap>& overlay) {
+    if (overlay == NULL) {
+        return base;
+    }
+    if (base == NULL) {
+        return overlay;
+    }
+
+    sp<KeyCharacterMap> map = new KeyCharacterMap(*base.get());
+    for (size_t i = 0; i < overlay->mKeys.size(); i++) {
+        int32_t keyCode = overlay->mKeys.keyAt(i);
+        Key* key = overlay->mKeys.valueAt(i);
+        ssize_t oldIndex = map->mKeys.indexOfKey(keyCode);
+        if (oldIndex >= 0) {
+            delete map->mKeys.valueAt(oldIndex);
+            map->mKeys.editValueAt(oldIndex) = new Key(*key);
+        } else {
+            map->mKeys.add(keyCode, new Key(*key));
+        }
+    }
+
+    for (size_t i = 0; i < overlay->mKeysByScanCode.size(); i++) {
+        map->mKeysByScanCode.replaceValueFor(overlay->mKeysByScanCode.keyAt(i),
+                overlay->mKeysByScanCode.valueAt(i));
+    }
+
+    for (size_t i = 0; i < overlay->mKeysByUsageCode.size(); i++) {
+        map->mKeysByUsageCode.replaceValueFor(overlay->mKeysByUsageCode.keyAt(i),
+                overlay->mKeysByUsageCode.valueAt(i));
+    }
+    return map;
+}
+
+sp<KeyCharacterMap> KeyCharacterMap::empty() {
+    return sEmpty;
 }
 
 int32_t KeyCharacterMap::getKeyboardType() const {
@@ -252,6 +326,37 @@ bool KeyCharacterMap::getEvents(int32_t deviceId, const char16_t* chars, size_t 
     return true;
 }
 
+status_t KeyCharacterMap::mapKey(int32_t scanCode, int32_t usageCode, int32_t* outKeyCode) const {
+    if (usageCode) {
+        ssize_t index = mKeysByUsageCode.indexOfKey(usageCode);
+        if (index >= 0) {
+#if DEBUG_MAPPING
+    ALOGD("mapKey: scanCode=%d, usageCode=0x%08x ~ Result keyCode=%d.",
+            scanCode, usageCode, *outKeyCode);
+#endif
+            *outKeyCode = mKeysByUsageCode.valueAt(index);
+            return OK;
+        }
+    }
+    if (scanCode) {
+        ssize_t index = mKeysByScanCode.indexOfKey(scanCode);
+        if (index >= 0) {
+#if DEBUG_MAPPING
+    ALOGD("mapKey: scanCode=%d, usageCode=0x%08x ~ Result keyCode=%d.",
+            scanCode, usageCode, *outKeyCode);
+#endif
+            *outKeyCode = mKeysByScanCode.valueAt(index);
+            return OK;
+        }
+    }
+
+#if DEBUG_MAPPING
+        ALOGD("mapKey: scanCode=%d, usageCode=0x%08x ~ Failed.", scanCode, usageCode);
+#endif
+    *outKeyCode = AKEYCODE_UNKNOWN;
+    return NAME_NOT_FOUND;
+}
+
 bool KeyCharacterMap::getKey(int32_t keyCode, const Key** outKey) const {
     ssize_t index = mKeys.indexOfKey(keyCode);
     if (index >= 0) {
@@ -267,13 +372,44 @@ bool KeyCharacterMap::getKeyBehavior(int32_t keyCode, int32_t metaState,
     if (getKey(keyCode, &key)) {
         const Behavior* behavior = key->firstBehavior;
         while (behavior) {
-            if ((behavior->metaState & metaState) == behavior->metaState) {
+            if (matchesMetaState(metaState, behavior->metaState)) {
                 *outKey = key;
                 *outBehavior = behavior;
                 return true;
             }
             behavior = behavior->next;
         }
+    }
+    return false;
+}
+
+bool KeyCharacterMap::matchesMetaState(int32_t eventMetaState, int32_t behaviorMetaState) {
+    // Behavior must have at least the set of meta states specified.
+    // And if the key event has CTRL, ALT or META then the behavior must exactly
+    // match those, taking into account that a behavior can specify that it handles
+    // one, both or either of a left/right modifier pair.
+    if ((eventMetaState & behaviorMetaState) == behaviorMetaState) {
+        const int32_t EXACT_META_STATES =
+                AMETA_CTRL_ON | AMETA_CTRL_LEFT_ON | AMETA_CTRL_RIGHT_ON
+                | AMETA_ALT_ON | AMETA_ALT_LEFT_ON | AMETA_ALT_RIGHT_ON
+                | AMETA_META_ON | AMETA_META_LEFT_ON | AMETA_META_RIGHT_ON;
+        int32_t unmatchedMetaState = eventMetaState & ~behaviorMetaState & EXACT_META_STATES;
+        if (behaviorMetaState & AMETA_CTRL_ON) {
+            unmatchedMetaState &= ~(AMETA_CTRL_LEFT_ON | AMETA_CTRL_RIGHT_ON);
+        } else if (behaviorMetaState & (AMETA_CTRL_LEFT_ON | AMETA_CTRL_RIGHT_ON)) {
+            unmatchedMetaState &= ~AMETA_CTRL_ON;
+        }
+        if (behaviorMetaState & AMETA_ALT_ON) {
+            unmatchedMetaState &= ~(AMETA_ALT_LEFT_ON | AMETA_ALT_RIGHT_ON);
+        } else if (behaviorMetaState & (AMETA_ALT_LEFT_ON | AMETA_ALT_RIGHT_ON)) {
+            unmatchedMetaState &= ~AMETA_ALT_ON;
+        }
+        if (behaviorMetaState & AMETA_META_ON) {
+            unmatchedMetaState &= ~(AMETA_META_LEFT_ON | AMETA_META_RIGHT_ON);
+        } else if (behaviorMetaState & (AMETA_META_LEFT_ON | AMETA_META_RIGHT_ON)) {
+            unmatchedMetaState &= ~AMETA_META_ON;
+        }
+        return !unmatchedMetaState;
     }
     return false;
 }
@@ -419,11 +555,89 @@ void KeyCharacterMap::addLockedMetaKey(Vector<KeyEvent>& outEvents,
     }
 }
 
+#if HAVE_ANDROID_OS
+sp<KeyCharacterMap> KeyCharacterMap::readFromParcel(Parcel* parcel) {
+    sp<KeyCharacterMap> map = new KeyCharacterMap();
+    map->mType = parcel->readInt32();
+    size_t numKeys = parcel->readInt32();
+    if (parcel->errorCheck()) {
+        return NULL;
+    }
+
+    for (size_t i = 0; i < numKeys; i++) {
+        int32_t keyCode = parcel->readInt32();
+        char16_t label = parcel->readInt32();
+        char16_t number = parcel->readInt32();
+        if (parcel->errorCheck()) {
+            return NULL;
+        }
+
+        Key* key = new Key();
+        key->label = label;
+        key->number = number;
+        map->mKeys.add(keyCode, key);
+
+        Behavior* lastBehavior = NULL;
+        while (parcel->readInt32()) {
+            int32_t metaState = parcel->readInt32();
+            char16_t character = parcel->readInt32();
+            int32_t fallbackKeyCode = parcel->readInt32();
+            if (parcel->errorCheck()) {
+                return NULL;
+            }
+
+            Behavior* behavior = new Behavior();
+            behavior->metaState = metaState;
+            behavior->character = character;
+            behavior->fallbackKeyCode = fallbackKeyCode;
+            if (lastBehavior) {
+                lastBehavior->next = behavior;
+            } else {
+                key->firstBehavior = behavior;
+            }
+            lastBehavior = behavior;
+        }
+
+        if (parcel->errorCheck()) {
+            return NULL;
+        }
+    }
+    return map;
+}
+
+void KeyCharacterMap::writeToParcel(Parcel* parcel) const {
+    parcel->writeInt32(mType);
+
+    size_t numKeys = mKeys.size();
+    parcel->writeInt32(numKeys);
+    for (size_t i = 0; i < numKeys; i++) {
+        int32_t keyCode = mKeys.keyAt(i);
+        const Key* key = mKeys.valueAt(i);
+        parcel->writeInt32(keyCode);
+        parcel->writeInt32(key->label);
+        parcel->writeInt32(key->number);
+        for (const Behavior* behavior = key->firstBehavior; behavior != NULL;
+                behavior = behavior->next) {
+            parcel->writeInt32(1);
+            parcel->writeInt32(behavior->metaState);
+            parcel->writeInt32(behavior->character);
+            parcel->writeInt32(behavior->fallbackKeyCode);
+        }
+        parcel->writeInt32(0);
+    }
+}
+#endif
+
 
 // --- KeyCharacterMap::Key ---
 
 KeyCharacterMap::Key::Key() :
         label(0), number(0), firstBehavior(NULL) {
+}
+
+KeyCharacterMap::Key::Key(const Key& other) :
+        label(other.label), number(other.number),
+        firstBehavior(other.firstBehavior ? new Behavior(*other.firstBehavior) : NULL) {
 }
 
 KeyCharacterMap::Key::~Key() {
@@ -442,11 +656,17 @@ KeyCharacterMap::Behavior::Behavior() :
         next(NULL), metaState(0), character(0), fallbackKeyCode(0) {
 }
 
+KeyCharacterMap::Behavior::Behavior(const Behavior& other) :
+        next(other.next ? new Behavior(*other.next) : NULL),
+        metaState(other.metaState), character(other.character),
+        fallbackKeyCode(other.fallbackKeyCode) {
+}
+
 
 // --- KeyCharacterMap::Parser ---
 
-KeyCharacterMap::Parser::Parser(KeyCharacterMap* map, Tokenizer* tokenizer) :
-        mMap(map), mTokenizer(tokenizer), mState(STATE_TOP) {
+KeyCharacterMap::Parser::Parser(KeyCharacterMap* map, Tokenizer* tokenizer, Format format) :
+        mMap(map), mTokenizer(tokenizer), mFormat(format), mState(STATE_TOP) {
 }
 
 KeyCharacterMap::Parser::~Parser() {
@@ -469,6 +689,10 @@ status_t KeyCharacterMap::Parser::parse() {
                     mTokenizer->skipDelimiters(WHITESPACE);
                     status_t status = parseType();
                     if (status) return status;
+                } else if (keywordToken == "map") {
+                    mTokenizer->skipDelimiters(WHITESPACE);
+                    status_t status = parseMap();
+                    if (status) return status;
                 } else if (keywordToken == "key") {
                     mTokenizer->skipDelimiters(WHITESPACE);
                     status_t status = parseKey();
@@ -489,8 +713,8 @@ status_t KeyCharacterMap::Parser::parse() {
             }
 
             mTokenizer->skipDelimiters(WHITESPACE);
-            if (!mTokenizer->isEol()) {
-                ALOGE("%s: Expected end of line, got '%s'.",
+            if (!mTokenizer->isEol() && mTokenizer->peekChar() != '#') {
+                ALOGE("%s: Expected end of line or trailing comment, got '%s'.",
                         mTokenizer->getLocation().string(),
                         mTokenizer->peekRemainderOfLine().string());
                 return BAD_VALUE;
@@ -507,9 +731,24 @@ status_t KeyCharacterMap::Parser::parse() {
     }
 
     if (mMap->mType == KEYBOARD_TYPE_UNKNOWN) {
-        ALOGE("%s: Missing required keyboard 'type' declaration.",
+        ALOGE("%s: Keyboard layout missing required keyboard 'type' declaration.",
                 mTokenizer->getLocation().string());
         return BAD_VALUE;
+    }
+
+    if (mFormat == FORMAT_BASE) {
+        if (mMap->mType == KEYBOARD_TYPE_OVERLAY) {
+            ALOGE("%s: Base keyboard layout must specify a keyboard 'type' other than 'OVERLAY'.",
+                    mTokenizer->getLocation().string());
+            return BAD_VALUE;
+        }
+    } else if (mFormat == FORMAT_OVERLAY) {
+        if (mMap->mType != KEYBOARD_TYPE_OVERLAY) {
+            ALOGE("%s: Overlay keyboard layout missing required keyboard "
+                    "'type OVERLAY' declaration.",
+                    mTokenizer->getLocation().string());
+            return BAD_VALUE;
+        }
     }
 
     return NO_ERROR;
@@ -534,6 +773,8 @@ status_t KeyCharacterMap::Parser::parseType() {
         type = KEYBOARD_TYPE_FULL;
     } else if (typeToken == "SPECIAL_FUNCTION") {
         type = KEYBOARD_TYPE_SPECIAL_FUNCTION;
+    } else if (typeToken == "OVERLAY") {
+        type = KEYBOARD_TYPE_OVERLAY;
     } else {
         ALOGE("%s: Expected keyboard type label, got '%s'.", mTokenizer->getLocation().string(),
                 typeToken.string());
@@ -544,6 +785,58 @@ status_t KeyCharacterMap::Parser::parseType() {
     ALOGD("Parsed type: type=%d.", type);
 #endif
     mMap->mType = type;
+    return NO_ERROR;
+}
+
+status_t KeyCharacterMap::Parser::parseMap() {
+    String8 keywordToken = mTokenizer->nextToken(WHITESPACE);
+    if (keywordToken == "key") {
+        mTokenizer->skipDelimiters(WHITESPACE);
+        return parseMapKey();
+    }
+    ALOGE("%s: Expected keyword after 'map', got '%s'.", mTokenizer->getLocation().string(),
+            keywordToken.string());
+    return BAD_VALUE;
+}
+
+status_t KeyCharacterMap::Parser::parseMapKey() {
+    String8 codeToken = mTokenizer->nextToken(WHITESPACE);
+    bool mapUsage = false;
+    if (codeToken == "usage") {
+        mapUsage = true;
+        mTokenizer->skipDelimiters(WHITESPACE);
+        codeToken = mTokenizer->nextToken(WHITESPACE);
+    }
+
+    char* end;
+    int32_t code = int32_t(strtol(codeToken.string(), &end, 0));
+    if (*end) {
+        ALOGE("%s: Expected key %s number, got '%s'.", mTokenizer->getLocation().string(),
+                mapUsage ? "usage" : "scan code", codeToken.string());
+        return BAD_VALUE;
+    }
+    KeyedVector<int32_t, int32_t>& map =
+            mapUsage ? mMap->mKeysByUsageCode : mMap->mKeysByScanCode;
+    if (map.indexOfKey(code) >= 0) {
+        ALOGE("%s: Duplicate entry for key %s '%s'.", mTokenizer->getLocation().string(),
+                mapUsage ? "usage" : "scan code", codeToken.string());
+        return BAD_VALUE;
+    }
+
+    mTokenizer->skipDelimiters(WHITESPACE);
+    String8 keyCodeToken = mTokenizer->nextToken(WHITESPACE);
+    int32_t keyCode = getKeyCodeByLabel(keyCodeToken.string());
+    if (!keyCode) {
+        ALOGE("%s: Expected key code label, got '%s'.", mTokenizer->getLocation().string(),
+                keyCodeToken.string());
+        return BAD_VALUE;
+    }
+
+#if DEBUG_PARSER
+    ALOGD("Parsed map key %s: code=%d, keyCode=%d.",
+            mapUsage ? "usage" : "scan code", code, keyCode);
+#endif
+    map.add(code, keyCode);
     return NO_ERROR;
 }
 
@@ -579,10 +872,11 @@ status_t KeyCharacterMap::Parser::parseKey() {
 }
 
 status_t KeyCharacterMap::Parser::parseKeyProperty() {
+    Key* key = mMap->mKeys.valueFor(mKeyCode);
     String8 token = mTokenizer->nextToken(WHITESPACE_OR_PROPERTY_DELIMITER);
     if (token == "}") {
         mState = STATE_TOP;
-        return NO_ERROR;
+        return finishKey(key);
     }
 
     Vector<Property> properties;
@@ -679,10 +973,9 @@ status_t KeyCharacterMap::Parser::parseKeyProperty() {
         }
 
         mTokenizer->skipDelimiters(WHITESPACE);
-    } while (!mTokenizer->isEol());
+    } while (!mTokenizer->isEol() && mTokenizer->peekChar() != '#');
 
     // Add the behavior.
-    Key* key = mMap->mKeys.valueFor(mKeyCode);
     for (size_t i = 0; i < properties.size(); i++) {
         const Property& property = properties.itemAt(i);
         switch (property.property) {
@@ -727,6 +1020,28 @@ status_t KeyCharacterMap::Parser::parseKeyProperty() {
             break;
         }
         }
+    }
+    return NO_ERROR;
+}
+
+status_t KeyCharacterMap::Parser::finishKey(Key* key) {
+    // Fill in default number property.
+    if (!key->number) {
+        char16_t digit = 0;
+        char16_t symbol = 0;
+        for (Behavior* b = key->firstBehavior; b; b = b->next) {
+            char16_t ch = b->character;
+            if (ch) {
+                if (ch >= '0' && ch <= '9') {
+                    digit = ch;
+                } else if (ch == '(' || ch == ')' || ch == '#' || ch == '*'
+                        || ch == '-' || ch == '+' || ch == ',' || ch == '.'
+                        || ch == '\'' || ch == ':' || ch == ';' || ch == '/') {
+                    symbol = ch;
+                }
+            }
+        }
+        key->number = digit ? digit : symbol;
     }
     return NO_ERROR;
 }
