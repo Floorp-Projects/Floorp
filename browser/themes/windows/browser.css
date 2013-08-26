@@ -1459,16 +1459,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   color: CaptionText;
 }
 
-/* The selected tab should keep dark text with lightweight themes */
-.tabbrowser-tab:-moz-lwtheme:not([selected=true]) {
-  color: inherit;
-}
-
-.tabbrowser-tab[selected=true]:-moz-lwtheme {
-  /* Copied from :root:-moz-lwtheme-darktext in global.css */
-  text-shadow: 0 -0.5px 1.5px white;
-}
-
 /* tabbrowser-tab focus ring */
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label {
   outline: 1px dotted;

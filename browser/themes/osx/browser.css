@@ -2505,12 +2505,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabs-newtab-button {
   font: message-box;
   font-weight: bold;
-  text-shadow: @loweredShadow@;
   border: none;
 }
 
-.tabbrowser-tab {
+.tabbrowser-tab:not(:-moz-lwtheme) {
   color: #333;
+  text-shadow: @loweredShadow@;
 }
 
 .tabbrowser-tabs[closebuttons="hidden"] > * > * > * > .tab-close-button:not([pinned]) {
@@ -2526,11 +2526,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label {
   box-shadow: @focusRingShadow@;
-}
-
-.tabbrowser-tab:-moz-lwtheme {
-  color: inherit;
-  text-shadow: inherit;
 }
 
 #main-window:not([privatebrowsingmode=temporary]):not([customizing]):not([customize-exiting]) #navigator-toolbox:not(:-moz-lwtheme)::before {
