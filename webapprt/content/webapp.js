@@ -216,15 +216,5 @@ nsContextMenu.prototype = {
     this.hasPageMenu = PageMenu.maybeBuildAndAttachMenu(document.popupNode,
                                                         aXULMenu);
     this.shouldDisplay = this.hasPageMenu;
-
-    this.showItem("page-menu-separator", this.hasPageMenu);
   },
-
-  showItem: function(aItemOrID, aShow) {
-    let item = aItemOrID.constructor == String ?
-      document.getElementById(aItemOrID) : aItemOrID;
-    if (item) {
-      item.hidden = !aShow;
-    }
-  }
 };
