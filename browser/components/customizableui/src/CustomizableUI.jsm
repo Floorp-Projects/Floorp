@@ -463,6 +463,10 @@ let CustomizableUIInternal = {
     if (gPalette.has(aWidgetId)) {
       return CustomizableUI.PROVIDER_API;
     }
+    // If this was an API widget that was destroyed, return null:
+    if (gSeenWidgets.has(aWidgetId)) {
+      return null;
+    }
 
     // We fall back to the XUL provider, but we don't know for sure (at this
     // point) whether it exists there either. So the API is technically lying.
@@ -1795,7 +1799,10 @@ let CustomizableUIInternal = {
       return widgetNode.getAttribute("removable") == "true";
     }
 
-    // Otherwise this is a special widget, which are always removable.
+    // Otherwise this is either a special widget, which is always removable, or
+    // an API widget which has already been removed from gPalette. Returning true
+    // here allows us to then remove its ID from any placements where it might
+    // still occur.
     return true;
   },
 
