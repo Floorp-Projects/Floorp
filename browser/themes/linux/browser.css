@@ -1525,10 +1525,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   color: -moz-menubartext;
 }
 
-.tabbrowser-tab:-moz-lwtheme {
-  color: inherit;
-}
-
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label {
   outline: 1px dotted;
 }
