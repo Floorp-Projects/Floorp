@@ -252,12 +252,12 @@ float Axis::DisplacementWillOverscrollAmount(float aDisplacement) {
   }
 }
 
-Axis::Overscroll Axis::ScaleWillOverscroll(float aScale, float aFocus) {
-  float originAfterScale = (GetOrigin() + aFocus) * aScale - aFocus;
+Axis::Overscroll Axis::ScaleWillOverscroll(ScreenToScreenScale aScale, float aFocus) {
+  float originAfterScale = (GetOrigin() + aFocus) * aScale.scale - aFocus;
 
   bool both = ScaleWillOverscrollBothSides(aScale);
-  bool minus = originAfterScale < GetPageStart() * aScale;
-  bool plus = (originAfterScale + GetCompositionLength()) > GetPageEnd() * aScale;
+  bool minus = originAfterScale < GetPageStart() * aScale.scale;
+  bool plus = (originAfterScale + GetCompositionLength()) > GetPageEnd() * aScale.scale;
 
   if ((minus && plus) || both) {
     return OVERSCROLL_BOTH;
@@ -271,12 +271,12 @@ Axis::Overscroll Axis::ScaleWillOverscroll(float aScale, float aFocus) {
   return OVERSCROLL_NONE;
 }
 
-float Axis::ScaleWillOverscrollAmount(float aScale, float aFocus) {
-  float originAfterScale = (GetOrigin() + aFocus) * aScale - aFocus;
+float Axis::ScaleWillOverscrollAmount(ScreenToScreenScale aScale, float aFocus) {
+  float originAfterScale = (GetOrigin() + aFocus) * aScale.scale - aFocus;
   switch (ScaleWillOverscroll(aScale, aFocus)) {
-  case OVERSCROLL_MINUS: return originAfterScale - GetPageStart() * aScale;
+  case OVERSCROLL_MINUS: return originAfterScale - GetPageStart() * aScale.scale;
   case OVERSCROLL_PLUS: return (originAfterScale + GetCompositionLength()) -
-                               NS_lround(GetPageEnd() * aScale);
+                               NS_lround(GetPageEnd() * aScale.scale);
   // Don't handle OVERSCROLL_BOTH. Client code is expected to deal with it.
   default: return 0;
   }
@@ -319,12 +319,12 @@ float Axis::GetPageLength() {
   return GetRectLength(pageRect);
 }
 
-bool Axis::ScaleWillOverscrollBothSides(float aScale) {
+bool Axis::ScaleWillOverscrollBothSides(ScreenToScreenScale aScale) {
   const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
 
   CSSRect cssContentRect = metrics.mScrollableRect;
 
-  CSSToScreenScale scale(metrics.CalculateResolution().scale * aScale);
+  CSSToScreenScale scale = metrics.mZoom * aScale;
   CSSIntRect cssCompositionBounds = RoundedIn(metrics.mCompositionBounds / scale);
 
   return GetRectLength(cssContentRect) < GetRectLength(CSSRect(cssCompositionBounds));
