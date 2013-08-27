@@ -366,6 +366,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
                         break;
                     memcpy(data, clipboardData, length);
                 }
+                gtk_selection_data_free(selectionData);
                 foundData = true;
                 foundFlavor = flavorStr;
                 break;
