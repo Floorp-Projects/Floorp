@@ -383,12 +383,6 @@ struct Atom {
 
 } /* namespace shadow */
 
-// These are equal to |&{Function,Object,OuterWindow}ProxyObject::class_|.  Use
-// them in places where you don't want to #include vm/ProxyObject.h.
-extern JS_FRIEND_DATA(js::Class* const) FunctionProxyClassPtr;
-extern JS_FRIEND_DATA(js::Class* const) ObjectProxyClassPtr;
-extern JS_FRIEND_DATA(js::Class* const) OuterWindowProxyClassPtr;
-
 // This is equal to |&JSObject::class_|.  Use it in places where you don't want
 // to #include jsobj.h.
 extern JS_FRIEND_DATA(js::Class* const) ObjectClassPtr;
@@ -492,20 +486,8 @@ GetFunctionNativeReserved(JSObject *fun, size_t which);
 JS_FRIEND_API(void)
 SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val);
 
-inline bool
-GetObjectProto(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> proto)
-{
-    js::Class *clasp = GetObjectClass(obj);
-    if (clasp == js::ObjectProxyClassPtr ||
-        clasp == js::OuterWindowProxyClassPtr ||
-        clasp == js::FunctionProxyClassPtr)
-    {
-        return JS_GetPrototype(cx, obj, proto);
-    }
-
-    proto.set(reinterpret_cast<const shadow::Object*>(obj.get())->type->proto);
-    return true;
-}
+JS_FRIEND_API(bool)
+GetObjectProto(JSContext *cx, JS::Handle<JSObject*> obj, JS::MutableHandle<JSObject*> proto);
 
 inline void *
 GetObjectPrivate(JSObject *obj)
