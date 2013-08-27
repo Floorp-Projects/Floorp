@@ -1100,6 +1100,9 @@ RadioInterface.prototype = {
       case "operatorchange":
         this.handleOperatorChange(message);
         break;
+      case "otastatuschange":
+        this.handleOtaStatus(message);
+        break;
       case "radiostatechange":
         this.handleRadioStateChange(message);
         break;
@@ -1455,6 +1458,18 @@ RadioInterface.prototype = {
                                                     this.clientId, data);
       }
     }
+  },
+
+  handleOtaStatus: function handleOtaStatus(message) {
+    if (message.status < 0 ||
+        RIL.CDMA_OTA_PROVISION_STATUS_TO_GECKO.length <= message.status) {
+      return;
+    }
+
+    let status = RIL.CDMA_OTA_PROVISION_STATUS_TO_GECKO[message.status];
+
+    gMessageManager.sendMobileConnectionMessage("RIL:OtaStatusChanged",
+                                                this.clientId, status);
   },
 
   handleRadioStateChange: function handleRadioStateChange(message) {
