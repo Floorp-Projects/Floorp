@@ -16,6 +16,9 @@ MOCHITEST_METRO_FILES = \
   textinput01.html \
   textarea01.html \
   testEngine.xml \
+  blankpage1.html \
+  blankpage2.html \
+  blankpage3.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
