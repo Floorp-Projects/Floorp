@@ -408,6 +408,23 @@ MobileConnection::SetCallBarringOption(const JS::Value& aOption,
 }
 
 NS_IMETHODIMP
+MobileConnection::ChangeCallBarringPassword(const JS::Value& aInfo,
+                                            nsIDOMDOMRequest** aRequest)
+{
+  *aRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->ChangeCallBarringPassword(GetOwner(), aInfo, aRequest);
+}
+
+NS_IMETHODIMP
 MobileConnection::GetCallWaitingOption(nsIDOMDOMRequest** aRequest)
 {
   *aRequest = nullptr;
