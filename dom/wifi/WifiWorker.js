@@ -586,16 +586,17 @@ var WifiManager = (function() {
     doBooleanCommand("DRIVER SETSUSPENDOPT " + (enabled ? 0 : 1), "OK", callback);
   }
 
-  function getProperty(key, defaultValue, callback) {
-    controlMessage({ cmd: "property_get", key: key, defaultValue: defaultValue }, function(data) {
-      callback(data.status < 0 ? null : data.value);
-    });
-  }
-
+  // Wrapper around libcutils.property_set that returns true if setting the
+  // value was successful.
+  // Note that the callback is not called asynchronously.
   function setProperty(key, value, callback) {
-    controlMessage({ cmd: "property_set", key: key, value: value }, function(data) {
-      callback(!data.status);
-    });
+    let ok = true;
+    try {
+      libcutils.property_set(key, value);
+    } catch(e) {
+      ok = false;
+    }
+    callback(ok);
   }
 
   function enableInterface(ifname, callback) {
