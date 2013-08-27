@@ -538,26 +538,6 @@ CycleCollectedJSRuntime::UnmarkSkippableJSHolders()
 }
 
 void
-CycleCollectedJSRuntime::MaybeTraceGlobals(JSTracer* aTracer) const
-{
-  JSContext* iter = nullptr;
-  while (JSContext* acx = JS_ContextIterator(Runtime(), &iter)) {
-    // DOM JSContexts are the only JSContexts that cycle-collect their default
-    // compartment object, so they're the only ones that we need to do the
-    // JSOPTION_UNROOTED_GLOBAL dance for. The other ones are just marked black.
-    MOZ_ASSERT(js::HasUnrootedGlobal(acx) == !!GetScriptContextFromJSContext(acx));
-    if (!js::HasUnrootedGlobal(acx)) {
-      continue;
-    }
-
-    if (JSObject* global = js::DefaultObjectForContextOrNull(acx)) {
-      JS::AssertGCThingMustBeTenured(global);
-      JS_CallObjectTracer(aTracer, &global, "Global Object");
-    }
-  }
-}
-
-void
 CycleCollectedJSRuntime::DescribeGCThing(bool aIsMarked, void* aThing,
                                          JSGCTraceKind aTraceKind,
                                          nsCycleCollectionTraversalCallback& aCb) const
@@ -839,8 +819,6 @@ TraceJSHolder(void* aHolder, nsScriptObjectTracer*& aTracer, void* aArg)
 void
 CycleCollectedJSRuntime::TraceNativeGrayRoots(JSTracer* aTracer)
 {
-  MaybeTraceGlobals(aTracer);
-
   // NB: This is here just to preserve the existing XPConnect order. I doubt it
   // would hurt to do this after the JS holders.
   TraceAdditionalNativeGrayRoots(aTracer);

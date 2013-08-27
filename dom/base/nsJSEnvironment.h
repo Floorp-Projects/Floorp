@@ -28,6 +28,14 @@ template <class> class Maybe;
 // a page) and doing the actual GC.
 #define NS_GC_DELAY                 4000 // ms
 
+namespace mozilla {
+namespace dom {
+
+void TraceOuterWindows(JSTracer *aTracer);
+
+} /* namespace dom */
+} /* namespace mozilla */
+
 class nsJSContext : public nsIScriptContext
 {
 public:
@@ -170,6 +178,9 @@ private:
 
   nsJSContext *mNext;
   nsJSContext **mPrev;
+
+  /* This function needs access to the linked list members above. */
+  friend void mozilla::dom::TraceOuterWindows(JSTracer *aTracer);
 
   // mGlobalObjectRef ensures that the outer window stays alive as long as the
   // context does. It is eventually collected by the cycle collector.
