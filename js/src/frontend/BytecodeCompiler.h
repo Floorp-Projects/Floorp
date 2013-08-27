@@ -16,7 +16,7 @@ namespace js {
 class AutoNameVector;
 class LazyScript;
 class LifoAlloc;
-struct SourceCompressionToken;
+struct SourceCompressionTask;
 
 namespace frontend {
 
@@ -25,7 +25,7 @@ CompileScript(ExclusiveContext *cx, LifoAlloc *alloc,
               HandleObject scopeChain, HandleScript evalCaller,
               const CompileOptions &options, const jschar *chars, size_t length,
               JSString *source_ = NULL, unsigned staticLevel = 0,
-              SourceCompressionToken *extraSct = NULL);
+              SourceCompressionTask *extraSct = NULL);
 
 bool
 CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *chars, size_t length);

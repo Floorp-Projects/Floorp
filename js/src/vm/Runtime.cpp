@@ -235,11 +235,8 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
     signalHandlersInstalled_(false),
-#ifdef JS_THREADSAFE
-#ifdef JS_ION
+#ifdef JS_WORKER_THREADS
     workerThreadState(NULL),
-#endif
-    sourceCompressorThread(),
 #endif
     defaultFreeOp_(thisFromCtor(), false),
     debuggerMutations(0),
@@ -376,11 +373,6 @@ JSRuntime::init(uint32_t maxbytes)
     if (!threadPool.init())
         return false;
 
-#ifdef JS_THREADSAFE
-    if (useHelperThreads() && !sourceCompressorThread.init())
-        return false;
-#endif
-
     if (!evalCache.init())
         return false;
 
@@ -413,8 +405,6 @@ JSRuntime::~JSRuntime()
 #endif
 
 #ifdef JS_THREADSAFE
-    sourceCompressorThread.finish();
-
     JS_ASSERT(!operationCallbackOwner);
     if (operationCallbackLock)
         PR_DestroyLock(operationCallbackLock);
