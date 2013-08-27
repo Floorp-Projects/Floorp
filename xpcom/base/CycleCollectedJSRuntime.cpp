@@ -277,47 +277,6 @@ private:
   bool mAnyMarked;
 };
 
-class JSContextParticipant : public nsCycleCollectionParticipant
-{
-public:
-  NS_IMETHOD Root(void *n)
-  {
-    return NS_OK;
-  }
-  NS_IMETHOD Unlink(void *n)
-  {
-    return NS_OK;
-  }
-  NS_IMETHOD Unroot(void *n)
-  {
-    return NS_OK;
-  }
-  NS_IMETHOD_(void) DeleteCycleCollectable(void *n)
-  {
-  }
-  NS_IMETHOD Traverse(void *n, nsCycleCollectionTraversalCallback &cb)
-  {
-    JSContext *cx = static_cast<JSContext*>(n);
-
-    // JSContexts do not have an internal refcount and always have a single
-    // owner (e.g., nsJSContext). Thus, the default refcount is 1. However,
-    // in the (abnormal) case of synchronous cycle-collection, the context
-    // may be actively executing code in which case we want to treat it as
-    // rooted by adding an extra refcount.
-    unsigned refCount = js::ContextHasOutstandingRequests(cx) ? 2 : 1;
-
-    cb.DescribeRefCountedNode(refCount, "JSContext");
-    if (JSObject *global = js::DefaultObjectForContextOrNull(cx)) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[global object]");
-      cb.NoteJSChild(global);
-    }
-
-    return NS_OK;
-  }
-};
-
-static JSContextParticipant JSContext_cycleCollectorGlobal;
-
 struct Closure
 {
   bool cycleCollectionEnabled;
@@ -870,13 +829,6 @@ CycleCollectedJSRuntime::AssertNoObjectsToTrace(void* aPossibleJSHolder)
   }
 }
 #endif
-
-// static
-nsCycleCollectionParticipant*
-CycleCollectedJSRuntime::JSContextParticipant()
-{
-  return &JSContext_cycleCollectorGlobal;
-}
 
 nsCycleCollectionParticipant*
 CycleCollectedJSRuntime::GCThingParticipant()

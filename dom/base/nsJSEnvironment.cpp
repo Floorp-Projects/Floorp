@@ -824,7 +824,8 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
 nsJSContext::nsJSContext(bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
-  : mGCOnDestruction(aGCOnDestruction)
+  : mWindowProxy(nullptr)
+  , mGCOnDestruction(aGCOnDestruction)
   , mGlobalObjectRef(aGlobalObject)
 {
   EnsureStatics();
@@ -839,7 +840,7 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
   ++sContextCount;
 
   mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS |
-                      JSOPTION_UNROOTED_GLOBAL;
+                      JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT;
 
   mContext = ::JS_NewContext(sRuntime, gStackSize);
   if (mContext) {
@@ -858,6 +859,7 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
   mIsInitialized = false;
   mScriptsEnabled = true;
   mProcessingScriptTag = false;
+  NS_HOLD_JS_OBJECTS(this, nsJSContext);
 }
 
 nsJSContext::~nsJSContext()
@@ -908,12 +910,14 @@ nsJSContext::DestroyJSContext()
 
   JS_DestroyContextNoGC(mContext);
   mContext = nullptr;
+  NS_DROP_JS_OBJECTS(this, nsJSContext);
 }
 
 // QueryInterface implementation for nsJSContext
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSContext)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mWindowProxy)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
@@ -921,18 +925,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
                "Trying to unlink a context with outstanding requests.");
   tmp->mIsInitialized = false;
   tmp->mGCOnDestruction = false;
-  if (tmp->mContext) {
-    JSAutoRequest ar(tmp->mContext);
-    js::SetDefaultObjectForContext(tmp->mContext, nullptr);
-  }
+  tmp->mWindowProxy = nullptr;
   tmp->DestroyJSContext();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobalObjectRef)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsJSContext, tmp->GetCCRefcnt())
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobalObjectRef)
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mContext");
-  nsContentUtils::XPConnect()->NoteJSContext(tmp->mContext, cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
@@ -2584,13 +2584,13 @@ nsJSContext::ReportPendingException()
 void
 nsJSContext::SetWindowProxy(JS::Handle<JSObject*> aWindowProxy)
 {
-  js::SetDefaultObjectForContext(mContext, aWindowProxy);
+  mWindowProxy = aWindowProxy;
 }
 
 JSObject*
 nsJSContext::GetWindowProxy()
 {
-  return xpc_UnmarkGrayObject(js::DefaultObjectForContextOrNull(mContext));
+  return xpc_UnmarkGrayObject(mWindowProxy);
 }
 
 void
@@ -2935,36 +2935,6 @@ mozilla::dom::ShutdownJSEnvironment()
 
   sShuttingDown = true;
   sDidShutdown = true;
-}
-
-void
-mozilla::dom::TraceOuterWindows(JSTracer* aTracer)
-{
-  MOZ_ASSERT_IF(JS_IsGCMarkingTracer(aTracer), JS_IsMarkingGray(aTracer));
-  for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
-    JSObject* outer;
-    if (cx->mContext &&
-        (outer = js::DefaultObjectForContextOrNull(cx->mContext)))
-    {
-      JS::AssertGCThingMustBeTenured(outer);
-      JS_CallObjectTracer(aTracer, &outer, "Outer Window");
-    }
-  }
-}
-
-void
-mozilla::dom::TraverseOuterWindows(nsCycleCollectionNoteRootCallback& aCb)
-{
-  nsCycleCollectionParticipant* participant = mozilla::CycleCollectedJSRuntime::JSContextParticipant();
-  for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
-    JSObject* outer;
-    if (cx->mContext &&
-        (outer = js::DefaultObjectForContextOrNull(cx->mContext)) &&
-        xpc_IsGrayGCThing(outer))
-    {
-      aCb.NoteNativeRoot(cx->mContext, participant);
-    }
-  }
 }
 
 // A fast-array class for JS.  This class supports both nsIJSScriptArray and
