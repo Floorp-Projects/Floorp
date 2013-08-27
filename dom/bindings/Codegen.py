@@ -80,7 +80,14 @@ class CGNativePropertyHooks(CGThing):
     def declare(self):
         if self.descriptor.workers:
             return ""
-        return "extern const NativePropertyHooks* sNativePropertyHooks;\n"
+        return """// We declare this as an array so that retrieving a pointer to this
+// binding's property hooks only requires compile/link-time resolvable
+// address arithmetic.  Declaring it as a pointer instead would require
+// doing a run-time load to fetch a pointer to this binding's property
+// hooks.  And then structures which embedded a pointer to this structure
+// would require a run-time load for proper initialization, which would
+// then induce static constructors.  Lots of static constructors.
+extern const NativePropertyHooks sNativePropertyHooks[];"""
     def define(self):
         if self.descriptor.workers:
             return ""
@@ -125,10 +132,9 @@ class CGNativePropertyHooks(CGThing):
                                             CGGeneric(constructorID),
                                             CGGeneric(parentHooks)],
                                            ",\n")),
-                         pre="static const NativePropertyHooks sNativePropertyHooksStruct = {\n",
+                         pre="const NativePropertyHooks sNativePropertyHooks[] = { {\n",
                          post=("\n"
-                               "};\n"
-                               "const NativePropertyHooks* sNativePropertyHooks = &sNativePropertyHooksStruct;\n")).define()
+                               "} };\n")).define()
 
 def NativePropertyHooks(descriptor):
     return "&sWorkerNativePropertyHooks" if descriptor.workers else "sNativePropertyHooks"

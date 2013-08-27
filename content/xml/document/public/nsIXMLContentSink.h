@@ -6,7 +6,6 @@
 #define nsIXMLContentSink_h___
 
 #include "nsIContentSink.h"
-#include "nsIParserNode.h"
 #include "nsISupports.h"
 
 class nsIDocument;

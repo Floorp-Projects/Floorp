@@ -17,7 +17,6 @@ CPP_SOURCES += [
     'nsParser.cpp',
     'nsParserModule.cpp',
     'nsParserMsgUtils.cpp',
-    'nsParserNode.cpp',
     'nsParserService.cpp',
     'nsScanner.cpp',
     'nsScannerString.cpp',

@@ -143,9 +143,10 @@ static const char* getKeyText(uint32_t aKey)
 }
 
 // nsDOMCameraControl implementation-specific constructor
-nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
-  : mDOMCapabilities(nullptr)
+nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, nsPIDOMWindow* aWindow)
+  : mDOMCapabilities(nullptr), mWindow(aWindow)
 {
+  MOZ_ASSERT(aWindow, "shouldn't be created with null window!");
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
 
   /**
@@ -160,8 +161,8 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThr
    * nsDOMCameraControl or memory will leak!
    */
   NS_ADDREF_THIS();
-  nsRefPtr<nsGonkCameraControl> control = new nsGonkCameraControl(aCameraId, aCameraThread, this, onSuccess, onError, aWindowId);
-  control->DispatchInit(this, onSuccess, onError, aWindowId);
+  nsRefPtr<nsGonkCameraControl> control = new nsGonkCameraControl(aCameraId, aCameraThread, this, onSuccess, onError, aWindow->WindowID());
+  control->DispatchInit(this, onSuccess, onError, aWindow->WindowID());
   mCameraControl = control;
 }
 

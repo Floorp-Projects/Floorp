@@ -111,6 +111,16 @@ public:
 
   virtual void Unlock() {}
 
+  /**
+   * Returns true if this texture has a lock/unlock mechanism.
+   * Textures that do not implement locking should be immutable or should
+   * use immediate uploads (see TextureFlags in CompositorTypes.h)
+   */
+  virtual bool ImplementsLocking() const
+  {
+    return false;
+  }
+
   void SetID(uint64_t aID)
   {
     MOZ_ASSERT(mID == 0 || aID == 0);

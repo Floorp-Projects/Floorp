@@ -1015,6 +1015,7 @@ PeerConnectionObserver.prototype = {
   },
 
   handleIceStateChanges: function(iceState) {
+    var histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_SUCCESS_RATE");
     switch (iceState) {
       case Ci.IPeerConnection.kIceWaiting:
         this._dompc.changeIceConnectionState("new");
@@ -1033,10 +1034,12 @@ PeerConnectionObserver.prototype = {
         break;
       case Ci.IPeerConnection.kIceConnected:
         // ICE gathering complete.
+        histogram.add(true);
         this._dompc.changeIceConnectionState("connected");
         this.callCB(this._onicechange, "connected");
         break;
       case Ci.IPeerConnection.kIceFailed:
+        histogram.add(false);
         this._dompc.changeIceConnectionState("failed");
         this.callCB(this._onicechange, "failed");
         break;
