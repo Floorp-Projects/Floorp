@@ -61,11 +61,11 @@ nsDomainEntry::FuncForStaticAsserts(void)
 
 static nsEffectiveTLDService *gService = nullptr;
 
-class EffectiveTLDServiceReporter MOZ_FINAL : public MemoryReporterBase
+class EffectiveTLDServiceReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
   EffectiveTLDServiceReporter()
-    : MemoryReporterBase("explicit/xpcom/effective-TLD-service",
+    : MemoryUniReporter("explicit/xpcom/effective-TLD-service",
                          KIND_HEAP, UNITS_BYTES,
                          "Memory used by the effective TLD service.")
   {}

@@ -1252,7 +1252,7 @@ gfxFontFamily::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
  * shaped-word caches to free up memory.
  */
 
-NS_IMPL_ISUPPORTS1(gfxFontCache::MemoryReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(gfxFontCache::MemoryReporter, nsIMemoryReporter)
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(FontCacheMallocSizeOf)
 
@@ -1265,7 +1265,7 @@ gfxFontCache::MemoryReporter::GetName(nsACString &aName)
 
 NS_IMETHODIMP
 gfxFontCache::MemoryReporter::CollectReports
-    (nsIMemoryMultiReporterCallback* aCb,
+    (nsIMemoryReporterCallback* aCb,
      nsISupports* aClosure)
 {
     FontCacheSizes sizes;
@@ -1324,7 +1324,7 @@ gfxFontCache::Init()
     if (!gGlobalCache) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    NS_RegisterMemoryMultiReporter(new MemoryReporter);
+    NS_RegisterMemoryReporter(new MemoryReporter);
     return NS_OK;
 }
 

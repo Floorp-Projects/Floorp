@@ -17,55 +17,22 @@ interface nsICancelableRunnable;
  * reporter.
  */
 
-/*
- * An nsIMemoryReporter reports a single memory measurement as an object.
- * Use this when it makes sense to gather this measurement without gathering
- * related measurements at the same time.
- *
- * Note that the |amount| field may be implemented as a function, and so
- * accessing it can trigger significant computation;  the other fields can
- * be accessed without triggering this computation.  (Compare and contrast
- * this with nsIMemoryMultiReporter.)  
- *
- * aboutMemory.js is the most important consumer of memory reports.  It
- * places the following constraints on reports.
- *
- * - There must be an "explicit" tree.  It represents non-overlapping
- *   regions of memory that have been explicitly allocated with an
- *   OS-level allocation (e.g. mmap/VirtualAlloc/vm_allocate) or a
- *   heap-level allocation (e.g. malloc/calloc/operator new).  Reporters
- *   in this tree must have kind HEAP or NONHEAP, units BYTES, and a
- *   description that is a sentence (i.e. starts with a capital letter and
- *   ends with a period, or similar).
- *
- * - The "size", "rss", "pss" and "swap" trees are optional.  They
- *   represent regions of virtual memory that the process has mapped.
- *   Reporters in this category must have kind NONHEAP, units BYTES, and a
- *   non-empty description.
- *
- * - The "compartments" and "ghost-windows" trees are optional.  They are
- *   used by about:compartments.  Reporters in these trees must have kind
- *   OTHER, units COUNT, an amount of 1, and a description that's an empty
- *   string.
- *
- * - All other reports are unconstrained except that they must have a
- *   description that is a sentence.
- */
-[scriptable, uuid(b2c39f65-1799-4b92-a806-ab3cf6af3cfa)]
-interface nsIMemoryReporter : nsISupports
+[scriptable, function, uuid(3a61be3b-b93b-461a-a4f8-388214f558b1)]
+interface nsIMemoryReporterCallback : nsISupports
 {
   /*
-   * The name of the process containing this reporter.  Each reporter initially
-   * has "" in this field, indicating that it applies to the current process.
-   * (This is true even for reporters in a child process.)  When a reporter
-   * from a child process is copied into the main process, the copy has its
-   * 'process' field set appropriately.
-   */
-  readonly attribute ACString process;
-
-  /*
-   * The path that this memory usage should be reported under.  Paths are
-   * '/'-delimited, eg. "a/b/c".  
+   * The arguments to the callback are as follows.
+   *
+   *
+   * |process|  The name of the process containing this reporter.  Each
+   * reporter initially has "" in this field, indicating that it applies to the
+   * current process.  (This is true even for reporters in a child process.)
+   * When a reporter from a child process is copied into the main process, the
+   * copy has its 'process' field set appropriately.
+   *
+   *
+   * |path|  The path that this memory usage should be reported under.  Paths
+   * are '/'-delimited, eg. "a/b/c".
    *
    * Each reporter can be viewed as representing a leaf node in a tree.
    * Internal nodes of the tree don't have reporters.  So, for example, the
@@ -98,11 +65,9 @@ interface nsIMemoryReporter : nsISupports
    *
    * The paths of all reporters form a set of trees.  Trees can be
    * "degenerate", i.e. contain a single entry with no '/'.
-   */
-  readonly attribute AUTF8String path;
-
-  /*
-   * There are three kinds of memory reporters.
+   *
+   *
+   * |kind|  There are three kinds of memory reporters.
    *
    *  - HEAP: reporters measuring memory allocated by the heap allocator,
    *    e.g. by calling malloc, calloc, realloc, memalign, operator new, or
@@ -120,19 +85,9 @@ interface nsIMemoryReporter : nsISupports
    *
    * The kind only matters for reporters in the "explicit" tree;
    * aboutMemory.js uses it to calculate "heap-unclassified".
-   */
-  const int32_t KIND_NONHEAP = 0;
-  const int32_t KIND_HEAP    = 1;
-  const int32_t KIND_OTHER   = 2;
-
-  /*
-   * The reporter kind.  See KIND_* above.
-   */
-  readonly attribute int32_t kind;
-
-  /*
-   * The amount reported by a memory reporter must have one of the following
-   * units, but you may of course add new units as necessary:
+   *
+   *
+   * |units|  The units on the reporter's amount.  One of the following.
    *
    *  - BYTES: The amount contains a number of bytes.
    *
@@ -156,79 +111,90 @@ interface nsIMemoryReporter : nsISupports
    *    be 1234.
    *
    *    Values greater than 100% are allowed.
+   *
+   *
+   * |amount|  The numeric value reported by this memory reporter.  Accesses
+   * can fail if something goes wrong when getting the amount.
+   *
+   *
+   * |description|  A human-readable description of this memory usage report.
    */
-  const int32_t UNITS_BYTES = 0;
-  const int32_t UNITS_COUNT = 1;
-  const int32_t UNITS_COUNT_CUMULATIVE = 2;
-  const int32_t UNITS_PERCENTAGE = 3;
-
-  /*
-   * The units on the reporter's amount.  See UNITS_* above.
-   */
-  readonly attribute int32_t units;
-
-  /*
-   * The numeric value reported by this memory reporter.  Accesses can fail if
-   * something goes wrong when getting the amount.
-   */
-  readonly attribute int64_t amount;
-
-  /*
-   * A human-readable description of this memory usage report.
-   */
-  readonly attribute AUTF8String description;
-};
-
-[scriptable, function, uuid(5b15f3fa-ba15-443c-8337-7770f5f0ce5d)]
-interface nsIMemoryMultiReporterCallback : nsISupports
-{
   void callback(in ACString process, in AUTF8String path, in int32_t kind,
                 in int32_t units, in int64_t amount,
                 in AUTF8String description, in nsISupports closure);
 };
 
 /*
- * An nsIMemoryMultiReporter reports multiple memory measurements via a
- * callback function which is called once for each measurement.  Use this
- * when you want to gather multiple measurements in a single operation (eg.
- * a single traversal of a large data structure).
+ * An nsIMemoryReporter reports one or more memory measurements via a
+ * callback function which is called once for each measurement.
  *
- * The arguments to the callback deliberately match the fields in
- * nsIMemoryReporter, but note that seeing any of these arguments requires
- * calling collectReports which will trigger all relevant computation.
- * (Compare and contrast this with nsIMemoryReporter, which allows all
- * fields except |amount| to be accessed without triggering computation.)
+ * An nsIMemoryReporter that reports a single measurement is sometimes called a
+ * "uni-reporter".  One that reports multiple measurements is sometimes called
+ * a "multi-reporter".
+ *
+ * aboutMemory.js is the most important consumer of memory reports.  It
+ * places the following constraints on reports.
+ *
+ * - There must be an "explicit" tree.  It represents non-overlapping
+ *   regions of memory that have been explicitly allocated with an
+ *   OS-level allocation (e.g. mmap/VirtualAlloc/vm_allocate) or a
+ *   heap-level allocation (e.g. malloc/calloc/operator new).  Reporters
+ *   in this tree must have kind HEAP or NONHEAP, units BYTES, and a
+ *   description that is a sentence (i.e. starts with a capital letter and
+ *   ends with a period, or similar).
+ *
+ * - The "size", "rss", "pss" and "swap" trees are optional.  They
+ *   represent regions of virtual memory that the process has mapped.
+ *   Reporters in this category must have kind NONHEAP, units BYTES, and a
+ *   non-empty description.
+ *
+ * - The "compartments" and "ghost-windows" trees are optional.  They are
+ *   used by about:compartments.  Reporters in these trees must have kind
+ *   OTHER, units COUNT, an amount of 1, and a description that's an empty
+ *   string.
+ *
+ * - All other reports are unconstrained except that they must have a
+ *   description that is a sentence.
  */
-[scriptable, uuid(24d61ead-237b-4969-a6bd-73fd8fed1d99)]
-interface nsIMemoryMultiReporter : nsISupports
+[scriptable, uuid(53248304-124b-43cd-99dc-6e5797b91618)]
+interface nsIMemoryReporter : nsISupports
 {
   /*
-   * The name of the multi-reporter.  Useful when only one multi-reporter
-   * needs to be run.  Must be unique;  if multi-reporters share names it's
-   * likely the wrong one will be called in certain circumstances.
+   * The name of the reporter.  Useful when only one reporter needs to be run.
+   * Must be unique;  if reporters share names it's likely the wrong one will
+   * be called in certain circumstances.
    */
   readonly attribute ACString name;
 
   /*
-   * Run the multi-reporter.
+   * Run the reporter.
    */
-  void collectReports(in nsIMemoryMultiReporterCallback callback,
+  void collectReports(in nsIMemoryReporterCallback callback,
                       in nsISupports closure);
+
+  /*
+   * Kinds.  See the |kind| comment in nsIMemoryReporterCallback.
+   */
+  const int32_t KIND_NONHEAP = 0;
+  const int32_t KIND_HEAP    = 1;
+  const int32_t KIND_OTHER   = 2;
+
+  /*
+   * Units.  See the |units| comment in nsIMemoryReporterCallback.
+   */
+  const int32_t UNITS_BYTES = 0;
+  const int32_t UNITS_COUNT = 1;
+  const int32_t UNITS_COUNT_CUMULATIVE = 2;
+  const int32_t UNITS_PERCENTAGE = 3;
 };
 
-[scriptable, builtinclass, uuid(70b0e608-8dbf-4dc7-b88f-f1c745c1b48c)]
+[scriptable, builtinclass, uuid(4db7040a-16f9-4249-879b-fe72729c7ef5)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
    * Return an enumerator of nsIMemoryReporters that are currently registered.
    */
   nsISimpleEnumerator enumerateReporters ();
-
-  /*
-   * Return an enumerator of nsIMemoryMultiReporters that are currently
-   * registered.
-   */
-  nsISimpleEnumerator enumerateMultiReporters ();
 
   /*
    * Register the given nsIMemoryReporter.  After a reporter is registered,
@@ -238,22 +204,9 @@ interface nsIMemoryReporterManager : nsISupports
   void registerReporter (in nsIMemoryReporter reporter);
 
   /*
-   * Register the given nsIMemoryMultiReporter.  After a multi-reporter is
-   * registered, it will be available via enumerateMultiReporters().  The
-   * Manager service will hold a strong reference to the given
-   * multi-reporter.
-   */
-  void registerMultiReporter (in nsIMemoryMultiReporter reporter);
-
-  /*
    * Unregister the given memory reporter.
    */
   void unregisterReporter (in nsIMemoryReporter reporter);
-
-  /*
-   * Unregister the given memory multi-reporter.
-   */
-  void unregisterMultiReporter (in nsIMemoryMultiReporter reporter);
 
   /**
    * These functions should only be used for testing purposes.
@@ -261,7 +214,6 @@ interface nsIMemoryReporterManager : nsISupports
   void blockRegistration();
   void unblockRegistration();
   void registerReporterEvenIfBlocked(in nsIMemoryReporter aReporter);
-  void registerMultiReporterEvenIfBlocked(in nsIMemoryMultiReporter aReporter);
 
   /*
    * Initialize.
@@ -280,8 +232,8 @@ interface nsIMemoryReporterManager : nsISupports
    * (eg. via mmap, VirtualAlloc) and at the heap level (eg. via malloc,
    * calloc, operator new).  (Nb: it covers all heap allocations, but will
    * miss any OS-level ones not covered by memory reporters.)  This reporter
-   * is special-cased because it's interesting, and is moderately difficult
-   * to compute in JS.  Accesses can fail.
+   * is special-cased because it's interesting, and is difficult to compute
+   * from JavaScript code.  Accesses can fail.
    */
   readonly attribute int64_t explicit;
 
@@ -307,10 +259,7 @@ interface nsIMemoryReporterManager : nsISupports
 // instead of nsCOMPtr<nsIMemoryReporter>.
 
 XPCOM_API(nsresult) NS_RegisterMemoryReporter(nsIMemoryReporter* aReporter);
-XPCOM_API(nsresult) NS_RegisterMemoryMultiReporter(nsIMemoryMultiReporter* aReporter);
-
 XPCOM_API(nsresult) NS_UnregisterMemoryReporter(nsIMemoryReporter* aReporter);
-XPCOM_API(nsresult) NS_UnregisterMemoryMultiReporter(nsIMemoryMultiReporter* aReporter);
 
 #if defined(MOZ_DMD)
 namespace mozilla {
@@ -375,10 +324,11 @@ void RunReporters();
 namespace mozilla {
 
 // The following base class reduces the amount of boilerplate code required for
-// memory reporters.  You just need to provide the following.
-// - The constant values: path, kind, units, and description.  They are passed
-//   to the MemoryReporterBase constructor.
-// - A (private) Amount() or (public) GetAmount() method.  It can use the 
+// memory uni-reporters.  You just need to provide the following.
+// - The constant values: nameAndPath (which serves as both the reporters name,
+//   and the path in its single report), kind, units, and description.  They
+//   are passed to the MemoryUniReporter constructor.
+// - A (private) Amount() or (public) GetAmount() method.  It can use the
 //   MallocSizeOf method if necessary.  (There is also
 //   MallocSizeOfOn{Alloc,Free}, which can be useful.)  Use Amount() if the
 //   reporter is infallible, and GetAmount() otherwise.  (If you fail to
@@ -390,58 +340,45 @@ namespace mozilla {
 // - "explicit/dom/xyzzy"     --> DOMXyzzyReporter
 // - "js-compartments/system" --> JSCompartmentsSystemReporter
 //
-class MemoryReporterBase : public nsIMemoryReporter
+class MemoryUniReporter : public nsIMemoryReporter
 {
 public:
-  MemoryReporterBase(const char* aPath, int32_t aKind, int32_t aUnits,
-                     const char* aDescription)
-    : mPath(aPath)
+  MemoryUniReporter(const char* aNameAndPath, int32_t aKind, int32_t aUnits,
+                    const char* aDescription)
+    : mNameAndPath(aNameAndPath)
     , mKind(aKind)
     , mUnits(aUnits)
     , mDescription(aDescription)
   {}
 
-  virtual ~MemoryReporterBase() {}
+  virtual ~MemoryUniReporter() {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD GetProcess(nsACString& aProcess)
+  NS_IMETHOD GetName(nsACString& aName)
   {
-    aProcess.Truncate();
+    aName.Assign(mNameAndPath);
     return NS_OK;
   }
 
-  NS_IMETHOD GetPath(nsACString& aPath)
+  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCallback,
+                            nsISupports* aClosure)
   {
-    aPath.Assign(mPath);
-    return NS_OK;
+    int64_t amount;
+    nsresult rv = GetAmount(&amount);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return aCallback->Callback(EmptyCString(), mNameAndPath, mKind, mUnits,
+                               amount, mDescription, aClosure);
   }
 
-  NS_IMETHOD GetKind(int32_t* aKind)
-  {
-    *aKind = mKind;
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetUnits(int32_t* aUnits)
-  {
-    *aUnits = mUnits;
-    return NS_OK;
-  }
-
+protected:
   NS_IMETHOD GetAmount(int64_t* aAmount)
   {
     *aAmount = Amount();
     return NS_OK;
   }
 
-  NS_IMETHOD GetDescription(nsACString& aDescription)
-  {
-    aDescription.Assign(mDescription);
-    return NS_OK;
-  }
-
-protected:
   virtual int64_t Amount()
   {
     // We only reach here if neither GetAmount() nor Amount() was overridden.
@@ -453,7 +390,7 @@ protected:
   NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(MallocSizeOfOnAlloc)
   NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(MallocSizeOfOnFree)
 
-  const nsCString mPath;
+  const nsCString mNameAndPath;
   const int32_t   mKind;
   const int32_t   mUnits;
   const nsCString mDescription;
