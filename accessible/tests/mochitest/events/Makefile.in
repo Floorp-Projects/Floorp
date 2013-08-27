@@ -30,7 +30,6 @@ MOCHITEST_A11Y_FILES =\
 		test_dragndrop.html \
 		test_flush.html \
 		test_focus_aria_activedescendant.html \
-		test_focus_autocomplete.xul \
 		test_focus_browserui.xul \
 		test_focus_canvas.html \
 		test_focus_contextmenu.xul \
@@ -61,5 +60,12 @@ MOCHITEST_A11Y_FILES =\
 		test_tree.xul \
 		test_valuechange.html \
 		$(NULL)
+
+# Disabled on Linux and Windows due to frequent failures - bug 695019, bug 890795
+ifneq (,$(filter Linux WINNT,$(OS_ARCH)))
+MOCHITEST_A11Y_FILES += \
+		test_focus_autocomplete.xul \
+		$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
