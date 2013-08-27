@@ -288,9 +288,12 @@ let CustomizableUIInternal = {
   },
 
   registerToolbar: function(aToolbar, aIsOverlayed) {
+    let area = aToolbar.id;
+    if (gBuildAreas.has(area) && gBuildAreas.get(area).has(aToolbar)) {
+      return;
+    }
     this.beginBatchUpdate();
     let document = aToolbar.ownerDocument;
-    let area = aToolbar.id;
     let areaProperties = gAreas.get(area);
 
     if (!areaProperties) {
