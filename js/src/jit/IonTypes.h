@@ -12,7 +12,7 @@
 #include "js/Value.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 typedef uint32_t SnapshotOffset;
 typedef uint32_t BailoutId;
@@ -215,7 +215,7 @@ IsNullOrUndefined(MIRType type)
 #  endif
 #endif
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_IonTypes_h */

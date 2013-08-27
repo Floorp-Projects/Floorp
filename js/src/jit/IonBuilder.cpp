@@ -28,7 +28,7 @@
 #include "jit/CompileInfo-inl.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::DebugOnly;
 
@@ -6205,7 +6205,7 @@ IonBuilder::getStaticName(HandleObject staticObject, HandlePropertyName name, bo
 
 // Whether 'types' includes all possible values represented by input/inputTypes.
 bool
-ion::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *inputTypes)
+jit::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *inputTypes)
 {
     switch (input) {
       case MIRType_Undefined:
@@ -6230,7 +6230,7 @@ ion::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *input
 
 // Whether a write of the given value may need a post-write barrier for GC purposes.
 bool
-ion::NeedsPostBarrier(CompileInfo &info, MDefinition *value)
+jit::NeedsPostBarrier(CompileInfo &info, MDefinition *value)
 {
     return info.executionMode() != ParallelExecution && value->mightBeType(MIRType_Object);
 }

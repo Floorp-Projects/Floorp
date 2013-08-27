@@ -664,7 +664,7 @@ JS_Init(void)
         return false;
 
 #if defined(JS_ION)
-    if (!ion::InitializeIon())
+    if (!jit::InitializeIon())
         return false;
 #endif
 
@@ -6436,19 +6436,19 @@ JS_PUBLIC_API(void)
 JS_SetGlobalCompilerOption(JSContext *cx, JSCompilerOption opt, uint32_t value)
 {
 #ifdef JS_ION
-    ion::IonOptions defaultValues;
+    jit::IonOptions defaultValues;
 
     switch (opt) {
       case JSCOMPILER_BASELINE_USECOUNT_TRIGGER:
         if (value == uint32_t(-1))
             value = defaultValues.baselineUsesBeforeCompile;
-        ion::js_IonOptions.baselineUsesBeforeCompile = value;
+        jit::js_IonOptions.baselineUsesBeforeCompile = value;
         break;
       case JSCOMPILER_ION_USECOUNT_TRIGGER:
         if (value == uint32_t(-1))
             value = defaultValues.usesBeforeCompile;
-        ion::js_IonOptions.usesBeforeCompile = value;
-        ion::js_IonOptions.eagerCompilation = (value == 0);
+        jit::js_IonOptions.usesBeforeCompile = value;
+        jit::js_IonOptions.eagerCompilation = (value == 0);
         break;
     }
 #endif

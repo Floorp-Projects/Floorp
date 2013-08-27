@@ -110,6 +110,9 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLProgram)
 
+    // public post-link data
+    std::map<GLint, nsCString> mActiveAttribMap;
+
 protected:
 
     WebGLuint mGLName;

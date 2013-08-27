@@ -20,7 +20,7 @@
 #include "jit/shared/CodeGenerator-shared-inl.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::DebugOnly;
 using mozilla::DoubleExponentBias;
@@ -394,7 +394,7 @@ CodeGeneratorX86::visitUInt32ToDouble(LUInt32ToDouble *lir)
 
 // Load a NaN or zero into a register for an out of bounds AsmJS or static
 // typed array load.
-class ion::OutOfLineLoadTypedArrayOutOfBounds : public OutOfLineCodeBase<CodeGeneratorX86>
+class jit::OutOfLineLoadTypedArrayOutOfBounds : public OutOfLineCodeBase<CodeGeneratorX86>
 {
     AnyRegister dest_;
   public:
@@ -683,7 +683,7 @@ GetElementParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addSt
 }
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class OutOfLineTruncate : public OutOfLineCodeBase<CodeGeneratorX86>
 {
@@ -702,7 +702,7 @@ class OutOfLineTruncate : public OutOfLineCodeBase<CodeGeneratorX86>
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 bool

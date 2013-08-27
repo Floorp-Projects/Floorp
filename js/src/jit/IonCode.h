@@ -25,7 +25,7 @@ namespace js {
 
 class AsmJSModule;
 
-namespace ion {
+namespace jit {
 
 // The maximum size of any buffer associated with an assembler or code object.
 // This is chosen to not overflow a signed integer, leaving room for an extra
@@ -747,12 +747,12 @@ struct AutoFlushInhibitor {
     AutoFlushInhibitor(IonCompartment *ic);
     ~AutoFlushInhibitor();
 };
-} // namespace ion
+} // namespace jit
 
 namespace gc {
 
 inline bool
-IsMarked(const ion::VMFunction *)
+IsMarked(const jit::VMFunction *)
 {
     // VMFunction are only static objects which are used by WeakMaps as keys.
     // It is considered as a root object which is always marked.

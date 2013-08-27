@@ -11,7 +11,7 @@
 #include "jit/ValueNumbering.h"
 
 using namespace js;
-using namespace ion;
+using namespace jit;
 
 bool
 UnreachableCodeElimination::analyze()
