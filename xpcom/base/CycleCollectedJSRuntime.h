@@ -148,8 +148,6 @@ private:
   static void
   TraverseObjectShim(void* aData, void* aThing);
 
-  void MaybeTraverseGlobals(nsCycleCollectionNoteRootCallback& aCb) const;
-
   void TraverseNativeRoots(nsCycleCollectionNoteRootCallback& aCb);
 
   static void TraceBlackJS(JSTracer* aTracer, void* aData);

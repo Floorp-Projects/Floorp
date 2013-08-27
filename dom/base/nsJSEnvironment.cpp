@@ -80,7 +80,9 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 
+#include "nsCycleCollectionNoteRootCallback.h"
 #include "GeckoProfiler.h"
 
 using namespace mozilla;
@@ -2934,6 +2936,21 @@ mozilla::dom::TraceOuterWindows(JSTracer* aTracer)
     {
       JS::AssertGCThingMustBeTenured(outer);
       JS_CallObjectTracer(aTracer, &outer, "Outer Window");
+    }
+  }
+}
+
+void
+mozilla::dom::TraverseOuterWindows(nsCycleCollectionNoteRootCallback& aCb)
+{
+  nsCycleCollectionParticipant* participant = mozilla::CycleCollectedJSRuntime::JSContextParticipant();
+  for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
+    JSObject* outer;
+    if (cx->mContext &&
+        (outer = js::DefaultObjectForContextOrNull(cx->mContext)) &&
+        xpc_IsGrayGCThing(outer))
+    {
+      aCb.NoteNativeRoot(cx->mContext, participant);
     }
   }
 }

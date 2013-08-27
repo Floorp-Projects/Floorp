@@ -561,6 +561,10 @@ XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback &c
 {
     XPCAutoLock lock(mMapLock);
 
+    // Traverse outer windows, which are the default compartment objects for DOM
+    // JSContexts.
+    dom::TraverseOuterWindows(cb);
+
     XPCWrappedNativeScope::SuspectAllWrappers(this, cb);
 
     for (XPCRootSetElem *e = mVariantRoots; e ; e = e->GetNextRoot()) {
