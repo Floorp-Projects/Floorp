@@ -138,7 +138,7 @@ ClientImageLayer::RenderLayer()
     if (type == BUFFER_UNKNOWN) {
       return;
     }
-    TextureFlags flags = TEXTURE_FLAGS_DEFAULT;
+    TextureFlags flags = TEXTURE_FRONT;
     if (mDisallowBigImage) {
       flags |= TEXTURE_DISALLOW_BIGIMAGE;
     }
