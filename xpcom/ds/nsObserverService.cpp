@@ -48,18 +48,18 @@ GetObserverServiceLog()
 
 namespace mozilla {
 
-class ObserverServiceReporter MOZ_FINAL : public nsIMemoryMultiReporter
+class ObserverServiceReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIMEMORYMULTIREPORTER
+    NS_DECL_NSIMEMORYREPORTER
 protected:
     static const size_t kSuspectReferentCount = 1000;
     static PLDHashOperator CountReferents(nsObserverList* aObserverList,
                                           void* aClosure);
 };
 
-NS_IMPL_ISUPPORTS1(ObserverServiceReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(ObserverServiceReporter, nsIMemoryReporter)
 
 NS_IMETHODIMP
 ObserverServiceReporter::GetName(nsACString& aName)
@@ -128,7 +128,7 @@ ObserverServiceReporter::CountReferents(nsObserverList* aObserverList,
 }
 
 NS_IMETHODIMP
-ObserverServiceReporter::CollectReports(nsIMemoryMultiReporterCallback* cb,
+ObserverServiceReporter::CollectReports(nsIMemoryReporterCallback* cb,
                                         nsISupports* aClosure)
 {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -219,14 +219,14 @@ void
 nsObserverService::RegisterReporter()
 {
     mReporter = new ObserverServiceReporter();
-    NS_RegisterMemoryMultiReporter(mReporter);
+    NS_RegisterMemoryReporter(mReporter);
 }
 
 void
 nsObserverService::Shutdown()
 {
     if (mReporter) {
-        NS_UnregisterMemoryMultiReporter(mReporter);
+        NS_UnregisterMemoryReporter(mReporter);
     }
 
     mShuttingDown = true;
