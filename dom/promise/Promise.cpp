@@ -13,6 +13,7 @@
 #include "nsPIDOMWindow.h"
 #include "WorkerPrivate.h"
 #include "nsJSPrincipals.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {

@@ -141,7 +141,6 @@
 #include "nsIWordBreaker.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
-#include "nsLayoutStatics.h"
 #include "nsLWBrkCIID.h"
 #include "nsMutationEvent.h"
 #include "nsNetCID.h"
@@ -5612,35 +5611,14 @@ nsContentUtils::WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
 
   NS_ENSURE_TRUE(sXPConnect, NS_ERROR_UNEXPECTED);
 
-  // Keep sXPConnect alive. If we're on the main
-  // thread then this can be done simply and cheaply by adding a reference to
-  // nsLayoutStatics. If we're not on the main thread then we need to add a
-  // more expensive reference sXPConnect directly. We have to use manual
-  // AddRef and Release calls so don't early-exit from this function after we've
-  // added the reference!
-  bool isMainThread = NS_IsMainThread();
-
-  if (isMainThread) {
-    nsLayoutStatics::AddRef();
-  }
-  else {
-    sXPConnect->AddRef();
+  if (!NS_IsMainThread()) {
+    MOZ_CRASH();
   }
 
   nsresult rv = NS_OK;
-  {
-    AutoPushJSContext context(cx);
-    rv = sXPConnect->WrapNativeToJSVal(context, scope, native, cache, aIID,
-                                       aAllowWrapping, vp, aHolder);
-  }
-
-  if (isMainThread) {
-    nsLayoutStatics::Release();
-  }
-  else {
-    sXPConnect->Release();
-  }
-
+  AutoPushJSContext context(cx);
+  rv = sXPConnect->WrapNativeToJSVal(context, scope, native, cache, aIID,
+                                     aAllowWrapping, vp, aHolder);
   return rv;
 }
 
