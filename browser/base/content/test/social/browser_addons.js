@@ -302,9 +302,10 @@ var tests = {
             Services.prefs.clearUserPref("social.whitelist");
             let provider = Social._getProviderFromOrigin(addonManifest.origin);
             is(provider.manifest.version, 2, "manifest version is 2");
-            Social.uninstallProvider(addonManifest.origin);
-            gBrowser.removeTab(tab);
-            next();
+            Social.uninstallProvider(addonManifest.origin, function() {
+              gBrowser.removeTab(tab);
+              next();
+            });
           });
 
           let port = provider.getWorkerPort();
