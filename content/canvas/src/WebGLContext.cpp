@@ -10,7 +10,7 @@
 #include "WebGLContextUtils.h"
 #include "WebGLBuffer.h"
 #include "WebGLVertexAttribData.h"
-#include "WebGLMemoryMultiReporterWrapper.h"
+#include "WebGLMemoryReporterWrapper.h"
 #include "WebGLFramebuffer.h"
 #include "WebGLVertexArray.h"
 #include "WebGLQuery.h"
@@ -179,7 +179,7 @@ WebGLContext::WebGLContext()
     mPixelStorePackAlignment = 4;
     mPixelStoreUnpackAlignment = 4;
 
-    WebGLMemoryMultiReporterWrapper::AddWebGLContext(this);
+    WebGLMemoryReporterWrapper::AddWebGLContext(this);
 
     mAllowRestore = true;
     mContextLossTimerRunning = false;
@@ -213,7 +213,7 @@ WebGLContext::WebGLContext()
 WebGLContext::~WebGLContext()
 {
     DestroyResourcesAndContext();
-    WebGLMemoryMultiReporterWrapper::RemoveWebGLContext(this);
+    WebGLMemoryReporterWrapper::RemoveWebGLContext(this);
     TerminateContextLossTimer();
     mContextRestorer = nullptr;
 }
@@ -653,8 +653,8 @@ void WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
     // when choosing which one to lose first.
     UpdateLastUseIndex();
 
-    WebGLMemoryMultiReporterWrapper::ContextsArrayType &contexts
-      = WebGLMemoryMultiReporterWrapper::Contexts();
+    WebGLMemoryReporterWrapper::ContextsArrayType &contexts
+      = WebGLMemoryReporterWrapper::Contexts();
 
     // quick exit path, should cover a majority of cases
     if (contexts.Length() <= kMaxWebGLContextsPerPrincipal) {
