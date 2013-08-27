@@ -80,6 +80,9 @@ public:
   virtual void WillInitializeContext() MOZ_OVERRIDE;
   virtual void DidInitializeContext() MOZ_OVERRIDE;
 
+  virtual void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) MOZ_OVERRIDE;
+  virtual JSObject* GetWindowProxy() MOZ_OVERRIDE;
+
   static void LoadStart();
   static void LoadEnd();
 
