@@ -165,7 +165,8 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
     } catch (err if err instanceof StopIteration) {
       // out of items:
       (cbFinish || defaultFinishChecks)();
-      info("runSocialTests: finish test run with " + Social.providers.length + " providers");
+      is(providersAtStart, Social.providers.length,
+         "runSocialTests: finish test run with " + Social.providers.length + " providers");
       return;
     }
     // We run on a timeout as the frameworker also makes use of timeouts, so
@@ -312,26 +313,6 @@ function resetBuiltinManifestPref(name) {
   Services.prefs.getDefaultBranch(null).deleteBranch(name);
   is(Services.prefs.getDefaultBranch(null).getPrefType(name),
      Services.prefs.PREF_INVALID, "default manifest removed");
-}
-
-function addWindowListener(aURL, aCallback) {
-  Services.wm.addListener({
-    onOpenWindow: function(aXULWindow) {
-      info("window opened, waiting for focus");
-      Services.wm.removeListener(this);
-
-      var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindow);
-      waitForFocus(function() {
-        is(domwindow.document.location.href, aURL, "window opened and focused");
-        executeSoon(function() {
-          aCallback(domwindow);
-        });
-      }, domwindow);
-    },
-    onCloseWindow: function(aXULWindow) { },
-    onWindowTitleChange: function(aXULWindow, aNewTitle) { }
-  });
 }
 
 function addTab(url, callback) {
