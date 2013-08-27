@@ -758,7 +758,6 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/webapprt/chrome/@AB_CD@.manifest
 @BINPATH@/webapprt/components/CommandLineHandler.js
 @BINPATH@/webapprt/components/ContentPermission.js
-@BINPATH@/webapprt/components/ContentPolicy.js
 @BINPATH@/webapprt/components/DirectoryProvider.js
 @BINPATH@/webapprt/components/components.manifest
 @BINPATH@/webapprt/defaults/preferences/prefs.js
