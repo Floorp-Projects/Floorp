@@ -1137,7 +1137,7 @@ nsJSContext::GetGlobalObject()
 JSObject*
 nsJSContext::GetNativeGlobal()
 {
-    return js::DefaultObjectForContextOrNull(mContext);
+    return GetWindowProxy();
 }
 
 JSContext*
@@ -2579,6 +2579,18 @@ nsJSContext::ReportPendingException()
   if (mIsInitialized) {
     nsJSUtils::ReportPendingException(mContext);
   }
+}
+
+void
+nsJSContext::SetWindowProxy(JS::Handle<JSObject*> aWindowProxy)
+{
+  js::SetDefaultObjectForContext(mContext, aWindowProxy);
+}
+
+JSObject*
+nsJSContext::GetWindowProxy()
+{
+  return xpc_UnmarkGrayObject(js::DefaultObjectForContextOrNull(mContext));
 }
 
 void
