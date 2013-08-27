@@ -9,6 +9,16 @@ function test() {
   runTests();
 }
 
+function doEdgeUIGesture() {
+  let event = document.createEvent("Events");
+  event.initEvent("MozEdgeUICompleted", true, false);
+  window.dispatchEvent(event);
+}
+
+function getpage(idx) {
+  return "http://mochi.test:8888/metro/browser/metro/base/tests/mochitest/" + "res/blankpage" + idx + ".html";
+}
+
 gTests.push({
   desc: "Context UI on about:start",
   run: function testAboutStart() {
@@ -100,10 +110,6 @@ gTests.push({
   }
 });
 
-function getpage(idx) {
-  return "http://mochi.test:8888/metro/browser/metro/base/tests/mochitest/" + "res/blankpage" + idx + ".html";
-}
-
 gTests.push({
   desc: "taps vs context ui dismissal",
   run: function () {
@@ -167,7 +173,9 @@ gTests.push({
     is(ContextUI.tabbarVisible, false, "Tabbar is hidden after content tap");
 
     yield navForward();
-    yield waitForCondition2(function () { return tab.browser.currentURI.spec == getpage(3); }, "getpage(3)");
+    yield waitForCondition2(function () {
+      return tab.browser.currentURI.spec == getpage(3) && ContextUI.navbarVisible;
+    }, "getpage(3)");
 
     is(tab.browser.currentURI.spec, getpage(3), getpage(3));
     ok(ContextUI.navbarVisible, "navbar visible after navigate");
@@ -193,8 +201,34 @@ gTests.push({
   }
 });
 
-function doEdgeUIGesture() {
-  let event = document.createEvent("Events");
-  event.initEvent("MozEdgeUICompleted", true, false);
-  window.dispatchEvent(event);
-}
+gTests.push({
+  desc: "Bug 907244 - Opening a new tab when the page has focus doesn't correctly focus the location bar",
+  run: function () {
+    let mozTab = yield addTab("about:mozilla");
+
+    // addTab will dismiss navbar, but lets check anyway.
+    ok(!ContextUI.navbarVisible, "navbar dismissed");
+
+    BrowserUI.doCommand("cmd_newTab");
+    let newTab = Browser.selectedTab;
+    yield newTab.pageShowPromise;
+
+    yield waitForCondition(() => ContextUI.navbarVisible);
+    ok(ContextUI.navbarVisible, "navbar visible");
+
+    let edit = document.getElementById("urlbar-edit");
+
+    ok(edit.focused, "Edit has focus");
+
+    // Lets traverse since node.contains() doesn't work for anonymous elements.
+    let parent = document.activeElement;
+    while(parent && parent != edit) {
+      parent = parent.parentNode;
+    }
+
+    ok(parent === edit, 'Active element is a descendant of urlbar');
+
+    Browser.closeTab(newTab, { forceClose: true });
+    Browser.closeTab(mozTab, { forceClose: true });
+  }
+});
