@@ -33,7 +33,7 @@ interface nsIMobileConnectionListener : nsISupports
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(576c7c00-7319-4309-aa9e-1dab102e0874)]
+[scriptable, uuid(c66652e0-0628-11e3-8ffd-0800200c9a66)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -72,6 +72,8 @@ interface nsIMobileConnectionProvider : nsISupports
                                         in jsval        option);
   nsIDOMDOMRequest setCallBarringOption(in nsIDOMWindow window,
                                         in jsval        option);
+  nsIDOMDOMRequest changeCallBarringPassword(in nsIDOMWindow window,
+                                             in jsval info);
 
   nsIDOMDOMRequest setCallWaitingOption(in nsIDOMWindow   window,
                                         in bool enabled);
