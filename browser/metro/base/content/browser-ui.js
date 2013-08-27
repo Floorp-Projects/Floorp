@@ -1080,6 +1080,8 @@ var BrowserUI = {
         break;
       case "cmd_newTab":
         this.newTab(null, null, true);
+        // Make sure navbar is displayed before setting focus on url bar. Bug 907244
+        ContextUI.displayNavbar();
         this._edit.beginEditing(false);
         break;
       case "cmd_closeTab":
