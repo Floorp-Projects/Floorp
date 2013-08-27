@@ -20,6 +20,7 @@ function starttest(){
   SpecialPowers.addPermission("pPROMPT", PROMPT_ACTION, document);
   SpecialPowers.addPermission("pALLOW", ALLOW_ACTION, document);
   SpecialPowers.addPermission("pDENY", DENY_ACTION, document);
+  SpecialPowers.addPermission("pREMOVE", ALLOW_ACTION, document);
 
   setTimeout(test1, 0);
 }
@@ -36,6 +37,9 @@ function test1() {
   } else if (!SpecialPowers.testPermission('pPROMPT', PROMPT_ACTION, document)) {
     dump('/**** prompt not set ****/\n');
     setTimeout(test1, 0);
+  } else if (!SpecialPowers.testPermission('pREMOVE', ALLOW_ACTION, document)) {
+    dump('/**** remove not set ****/\n');
+    setTimeout(test1, 0);
   } else {
     test2();
   }
@@ -43,20 +47,29 @@ function test1() {
 
 function test2() {
   ok(SpecialPowers.testPermission('pUNKNOWN', UNKNOWN_ACTION, document), 'pUNKNOWN value should have UNKOWN permission');
-  SpecialPowers.pushPermissions([{'type': 'pUNKNOWN', 'allow': true, 'context': document}, {'type': 'pALLOW', 'allow': false, 'context': document}, {'type': 'pDENY', 'allow': true, 'context': document}, {'type': 'pPROMPT', 'allow': true, 'context': document}], test3);
+  SpecialPowers.pushPermissions([{'type': 'pUNKNOWN', 'allow': true, 'context': document}, {'type': 'pALLOW', 'allow': false, 'context': document}, {'type': 'pDENY', 'allow': true, 'context': document}, {'type': 'pPROMPT', 'allow': true, 'context': document}, {'type': 'pREMOVE', 'remove': true, 'context': document}], test3);
 }
 
 function test3() {
   ok(SpecialPowers.testPermission('pUNKNOWN', ALLOW_ACTION, document), 'pUNKNOWN value should have ALLOW permission');
-  ok(SpecialPowers.testPermission('pPROMPT', ALLOW_ACTION, document), 'pUNKNOWN value should have ALLOW permission');
+  ok(SpecialPowers.testPermission('pPROMPT', ALLOW_ACTION, document), 'pPROMPT value should have ALLOW permission');
   ok(SpecialPowers.testPermission('pALLOW', DENY_ACTION, document), 'pALLOW should have DENY permission');
   ok(SpecialPowers.testPermission('pDENY', ALLOW_ACTION, document), 'pDENY should have ALLOW permission');
+  ok(SpecialPowers.testPermission('pREMOVE', UNKNOWN_ACTION, document), 'pREMOVE should have REMOVE permission');
   // only pPROMPT (last one) is different, the other stuff is just to see if it doesn't cause test failures
-  SpecialPowers.pushPermissions([{'type': 'pUNKNOWN', 'allow': true, 'context': document}, {'type': 'pALLOW', 'allow': false, 'context': document}, {'type': 'pDENY', 'allow': true, 'context': document}, {'type': 'pPROMPT', 'allow': false, 'context': document}], test4);
+  SpecialPowers.pushPermissions([{'type': 'pUNKNOWN', 'allow': true, 'context': document}, {'type': 'pALLOW', 'allow': false, 'context': document}, {'type': 'pDENY', 'allow': true, 'context': document}, {'type': 'pPROMPT', 'allow': false, 'context': document}], test3b);
+}
+
+function test3b() {
+  ok(SpecialPowers.testPermission('pPROMPT', DENY_ACTION, document), 'pPROMPT value should have DENY permission');
+  SpecialPowers.pushPermissions([{'type': 'pUNKNOWN', 'allow': DENY_ACTION, 'context': document}, {'type': 'pALLOW', 'allow': PROMPT_ACTION, 'context': document}, {'type': 'pDENY', 'allow': PROMPT_ACTION, 'context': document}, {'type': 'pPROMPT', 'allow': ALLOW_ACTION, 'context': document}], test4);
 }
 
 function test4() {
-  ok(SpecialPowers.testPermission('pPROMPT', DENY_ACTION, document), 'pPROMPT value should have DENY permission');
+  ok(SpecialPowers.testPermission('pUNKNOWN', DENY_ACTION, document), 'pUNKNOWN value should have DENY permission');
+  ok(SpecialPowers.testPermission('pPROMPT', ALLOW_ACTION, document), 'pPROMPT value should have ALLOW permission');
+  ok(SpecialPowers.testPermission('pALLOW', PROMPT_ACTION, document), 'pALLOW should have PROMPT permission');
+  ok(SpecialPowers.testPermission('pDENY', PROMPT_ACTION, document), 'pDENY should have PROMPT permission');
   //this should reset all the permissions to before all the pushPermissions calls
   SpecialPowers.flushPermissions(test5);
 }
@@ -67,10 +80,12 @@ function test5() {
   ok(SpecialPowers.testPermission('pALLOW', ALLOW_ACTION, document), 'pALLOW should have ALLOW permission');
   ok(SpecialPowers.testPermission('pDENY', DENY_ACTION, document), 'pDENY should have DENY permission');
   ok(SpecialPowers.testPermission('pPROMPT', PROMPT_ACTION, document), 'pPROMPT should have PROMPT permission');
+  ok(SpecialPowers.testPermission('pREMOVE', ALLOW_ACTION, document), 'pREMOVE should have ALLOW permission');
 
   SpecialPowers.removePermission("pPROMPT", document);
   SpecialPowers.removePermission("pALLOW", document);
   SpecialPowers.removePermission("pDENY", document);
+  SpecialPowers.removePermission("pREMOVE", document);
 
   setTimeout(test6, 0);
 }
@@ -84,6 +99,9 @@ function test6() {
     setTimeout(test6, 0);
   } else if (!SpecialPowers.testPermission('pPROMPT', UNKNOWN_ACTION, document)) {
     dump('/**** prompt still set ****/\n');
+    setTimeout(test6, 0);
+  } else if (!SpecialPowers.testPermission('pREMOVE', UNKNOWN_ACTION, document)) {
+    dump('/**** remove still set ****/\n');
     setTimeout(test6, 0);
   } else {
     SimpleTest.finish();

@@ -73,12 +73,7 @@ CParserContext::GetTokenizer(nsIDTD* aDTD,
 
   if (!mTokenizer) {
     if (type == NS_IPARSER_FLAG_HTML || mParserCommand == eViewSource) {
-      nsCOMPtr<nsIHTMLContentSink> theSink = do_QueryInterface(aSink);
-      mTokenizer = new nsHTMLTokenizer(mDTDMode, mDocType, mParserCommand,
-                                       nsHTMLTokenizer::GetFlags(aSink));
-      if (!mTokenizer) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      mTokenizer = new nsHTMLTokenizer;
     }
     else if (type == NS_IPARSER_FLAG_XML) {
       mTokenizer = do_QueryInterface(aDTD, &result);

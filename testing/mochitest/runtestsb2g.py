@@ -15,7 +15,7 @@ try:
 except ImportError:
     import simplejson as json
 
-here = os.path.abspath(os.path.dirname(sys.argv[0]))
+here = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, here)
 
 from b2gautomation import B2GDesktopAutomation

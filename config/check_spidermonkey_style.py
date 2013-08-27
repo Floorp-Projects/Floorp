@@ -200,7 +200,7 @@ class FileKind(object):
         if filename.endswith('.cpp'):
             return FileKind.CPP
 
-        if filename.endswith(('inlines.h', '-inl.h')):
+        if filename.endswith(('inlines.h', '-inl.h', 'Inlines.h')):
             return FileKind.INL_H
 
         if filename.endswith('.h'):

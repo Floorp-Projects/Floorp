@@ -83,6 +83,8 @@
   ALLOW_SYSCALL(sigprocmask), \
   /* Always last and always OK calls */ \
   SECCOMP_WHITELIST_ADD \
+  /* restart_syscall is called internally, generally when debugging */ \
+  ALLOW_SYSCALL(restart_syscall), \
   ALLOW_SYSCALL(exit_group), \
   ALLOW_SYSCALL(exit)
 
