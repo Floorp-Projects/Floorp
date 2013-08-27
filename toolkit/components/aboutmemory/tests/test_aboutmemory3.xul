@@ -22,8 +22,7 @@
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
-  // Remove all the real reporters and multi-reporters;  save them to
-  // restore at the end.
+  // Remove all the real reporters;  save them to restore at the end.
   mgr.blockRegistration();
   let e = mgr.enumerateReporters();
   let realReporters = [];
@@ -31,13 +30,6 @@
     let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
     mgr.unregisterReporter(r);
     realReporters.push(r);
-  }
-  e = mgr.enumerateMultiReporters();
-  let realMultiReporters = [];
-  while (e.hasMoreElements()) {
-    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
-    mgr.unregisterMultiReporter(r);
-    realMultiReporters.push(r);
   }
 
   // Setup a minimal number of fake reporters.
@@ -47,22 +39,18 @@
   const OTHER = Ci.nsIMemoryReporter.KIND_OTHER;
   const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
 
-  function f(aPath, aKind, aAmount, aDesc) {
-    return {
-      process:     "",
-      path:        aPath,
-      kind:        aKind,
-      units:       BYTES,
-      amount:      aAmount,
-      description: aDesc
-    };
-  }
-
   let fakeReporters = [
-    f("heap-allocated",     OTHER,   250 * MB, "Heap allocated."),
-    f("explicit/a/b",       HEAP,     50 * MB, "A b."),
-    f("other/a",            OTHER,   0.2 * MB, "Other a."),
-    f("other/b",            OTHER,   0.1 * MB, "Other b."),
+    { name: "fake1",
+      collectReports: function(aCbObj, aClosure) {
+        function f(aP, aK, aA, aD) {
+          aCbObj.callback("", aP, aK, BYTES, aA, aD, aClosure);
+        }
+        f("heap-allocated",     OTHER,   250 * MB, "Heap allocated.");
+        f("explicit/a/b",       HEAP,     50 * MB, "A b.");
+        f("other/a",            OTHER,   0.2 * MB, "Other a.");
+        f("other/b",            OTHER,   0.1 * MB, "Other b.");
+      }
+    }
   ];
 
   for (let i = 0; i < fakeReporters.length; i++) {
@@ -78,17 +66,13 @@
   <![CDATA[
   function finish()
   {
-    // Unregister fake reporters and multi-reporters, re-register the real
-    // reporters and multi-reporters, just in case subsequent tests rely on
-    // them.
+    // Unregister fake reporters and re-register the real reporters, just in
+    // case subsequent tests rely on them.
     for (let i = 0; i < fakeReporters.length; i++) {
       mgr.unregisterReporter(fakeReporters[i]);
     }
     for (let i = 0; i < realReporters.length; i++) {
       mgr.registerReporterEvenIfBlocked(realReporters[i]);
-    }
-    for (let i = 0; i < realMultiReporters.length; i++) {
-      mgr.registerMultiReporterEvenIfBlocked(realMultiReporters[i]);
     }
     mgr.unblockRegistration();
 

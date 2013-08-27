@@ -4,32 +4,32 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
-#include "WebGLMemoryMultiReporterWrapper.h"
+#include "WebGLMemoryReporterWrapper.h"
 #include "nsIMemoryReporter.h"
 
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS1(WebGLMemoryPressureObserver, nsIObserver)
 
-class WebGLMemoryMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter 
+class WebGLMemoryReporter MOZ_FINAL : public nsIMemoryReporter
 {
   public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIMEMORYMULTIREPORTER
+    NS_DECL_NSIMEMORYREPORTER
 };
 
-NS_IMPL_ISUPPORTS1(WebGLMemoryMultiReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(WebGLMemoryReporter, nsIMemoryReporter)
 
 NS_IMETHODIMP
-WebGLMemoryMultiReporter::GetName(nsACString &aName)
+WebGLMemoryReporter::GetName(nsACString &aName)
 {
   aName.AssignLiteral("webgl");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-WebGLMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb, 
-                                         nsISupports* aClosure)
+WebGLMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
+                                    nsISupports* aClosure)
 {
 #define REPORT(_path, _kind, _units, _amount, _desc)                          \
     do {                                                                      \
@@ -42,21 +42,21 @@ WebGLMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
 
     REPORT("webgl-texture-memory",
            nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_BYTES,
-           WebGLMemoryMultiReporterWrapper::GetTextureMemoryUsed(),
+           WebGLMemoryReporterWrapper::GetTextureMemoryUsed(),
            "Memory used by WebGL textures.The OpenGL"
            " implementation is free to store these textures in either video"
            " memory or main memory. This measurement is only a lower bound,"
-           " actual memory usage may be higher for example if the storage" 
+           " actual memory usage may be higher for example if the storage"
            " is strided.");
-   
+
     REPORT("webgl-texture-count",
            nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_COUNT,
-           WebGLMemoryMultiReporterWrapper::GetTextureCount(), 
+           WebGLMemoryReporterWrapper::GetTextureCount(),
            "Number of WebGL textures.");
 
     REPORT("webgl-buffer-memory",
            nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_BYTES,
-           WebGLMemoryMultiReporterWrapper::GetBufferMemoryUsed(), 
+           WebGLMemoryReporterWrapper::GetBufferMemoryUsed(),
            "Memory used by WebGL buffers. The OpenGL"
            " implementation is free to store these buffers in either video"
            " memory or main memory. This measurement is only a lower bound,"
@@ -65,7 +65,7 @@ WebGLMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
 
     REPORT("explicit/webgl/buffer-cache-memory",
            nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-           WebGLMemoryMultiReporterWrapper::GetBufferCacheMemoryUsed(),
+           WebGLMemoryReporterWrapper::GetBufferCacheMemoryUsed(),
            "Memory used by WebGL buffer caches. The WebGL"
            " implementation caches the contents of element array buffers"
            " only.This adds up with the webgl-buffer-memory value, but"
@@ -74,69 +74,69 @@ WebGLMemoryMultiReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
 
     REPORT("webgl-buffer-count",
            nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_COUNT,
-           WebGLMemoryMultiReporterWrapper::GetBufferCount(),
-           "Number of WebGL buffers."); 
-   
+           WebGLMemoryReporterWrapper::GetBufferCount(),
+           "Number of WebGL buffers.");
+
     REPORT("webgl-renderbuffer-memory",
            nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_BYTES,
-           WebGLMemoryMultiReporterWrapper::GetRenderbufferMemoryUsed(), 
+           WebGLMemoryReporterWrapper::GetRenderbufferMemoryUsed(),
            "Memory used by WebGL renderbuffers. The OpenGL"
            " implementation is free to store these renderbuffers in either"
            " video memory or main memory. This measurement is only a lower"
            " bound, actual memory usage may be higher for example if the"
            " storage is strided.");
-   
+
     REPORT("webgl-renderbuffer-count",
            nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_COUNT,
-           WebGLMemoryMultiReporterWrapper::GetRenderbufferCount(),
+           WebGLMemoryReporterWrapper::GetRenderbufferCount(),
            "Number of WebGL renderbuffers.");
-  
+
     REPORT("explicit/webgl/shader",
            nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-           WebGLMemoryMultiReporterWrapper::GetShaderSize(), 
+           WebGLMemoryReporterWrapper::GetShaderSize(),
            "Combined size of WebGL shader ASCII sources and translation"
-           " logs cached on the heap."); 
+           " logs cached on the heap.");
 
     REPORT("webgl-shader-count",
            nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_COUNT,
-           WebGLMemoryMultiReporterWrapper::GetShaderCount(), 
-           "Number of WebGL shaders."); 
+           WebGLMemoryReporterWrapper::GetShaderCount(),
+           "Number of WebGL shaders.");
 
     REPORT("webgl-context-count",
            nsIMemoryReporter::KIND_OTHER, nsIMemoryReporter::UNITS_COUNT,
-           WebGLMemoryMultiReporterWrapper::GetContextCount(), 
-           "Number of WebGL contexts."); 
+           WebGLMemoryReporterWrapper::GetContextCount(),
+           "Number of WebGL contexts.");
 
 #undef REPORT
 
     return NS_OK;
 }
 
-WebGLMemoryMultiReporterWrapper* WebGLMemoryMultiReporterWrapper::sUniqueInstance = nullptr;
+WebGLMemoryReporterWrapper* WebGLMemoryReporterWrapper::sUniqueInstance = nullptr;
 
-WebGLMemoryMultiReporterWrapper* WebGLMemoryMultiReporterWrapper::UniqueInstance()
+WebGLMemoryReporterWrapper* WebGLMemoryReporterWrapper::UniqueInstance()
 {
     if (!sUniqueInstance) {
-        sUniqueInstance = new WebGLMemoryMultiReporterWrapper;
+        sUniqueInstance = new WebGLMemoryReporterWrapper;
     }
-    return sUniqueInstance;     
+    return sUniqueInstance;
 }
 
-WebGLMemoryMultiReporterWrapper::WebGLMemoryMultiReporterWrapper()
-{ 
-    mReporter = new WebGLMemoryMultiReporter;   
-    NS_RegisterMemoryMultiReporter(mReporter);
-}
-
-WebGLMemoryMultiReporterWrapper::~WebGLMemoryMultiReporterWrapper()
+WebGLMemoryReporterWrapper::WebGLMemoryReporterWrapper()
 {
-    NS_UnregisterMemoryMultiReporter(mReporter);
+    mReporter = new WebGLMemoryReporter;
+    NS_RegisterMemoryReporter(mReporter);
+}
+
+WebGLMemoryReporterWrapper::~WebGLMemoryReporterWrapper()
+{
+    NS_UnregisterMemoryReporter(mReporter);
 }
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WebGLBufferMallocSizeOf)
 
-int64_t 
-WebGLMemoryMultiReporterWrapper::GetBufferCacheMemoryUsed() {
+int64_t
+WebGLMemoryReporterWrapper::GetBufferCacheMemoryUsed() {
     const ContextsArrayType & contexts = Contexts();
     int64_t result = 0;
     for(size_t i = 0; i < contexts.Length(); ++i) {
@@ -153,8 +153,8 @@ WebGLMemoryMultiReporterWrapper::GetBufferCacheMemoryUsed() {
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WebGLShaderMallocSizeOf)
 
-int64_t 
-WebGLMemoryMultiReporterWrapper::GetShaderSize() {
+int64_t
+WebGLMemoryReporterWrapper::GetShaderSize() {
     const ContextsArrayType & contexts = Contexts();
     int64_t result = 0;
     for(size_t i = 0; i < contexts.Length(); ++i) {
