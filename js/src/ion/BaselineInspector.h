@@ -107,6 +107,7 @@ class BaselineInspector
     MIRType expectedBinaryArithSpecialization(jsbytecode *pc);
 
     bool hasSeenNonNativeGetElement(jsbytecode *pc);
+    bool hasSeenNegativeIndexGetElement(jsbytecode *pc);
     bool hasSeenAccessedGetter(jsbytecode *pc);
     bool hasSeenDoubleResult(jsbytecode *pc);
 };
