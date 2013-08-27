@@ -30,10 +30,10 @@ public final class GeckoProfile {
 
     private static HashMap<String, GeckoProfile> sProfileCache = new HashMap<String, GeckoProfile>();
     private static String sDefaultProfileName = null;
+    private static File mMozDir;
 
     private final Context mContext;
     private final String mName;
-    private File mMozDir;
     private File mDir;
 
     // Constants to cache whether or not a profile is "locked".
@@ -52,12 +52,8 @@ public final class GeckoProfile {
     private boolean mInGuestMode = false;
     private static GeckoProfile mGuestProfile = null;
 
-    static private INIParser getProfilesINI(Context context) {
-      File filesDir = context.getFilesDir();
-      File mozillaDir = new File(filesDir, "mozilla");
-      File profilesIni = new File(mozillaDir, "profiles.ini");
-      return new INIParser(profilesIni);
-    }
+    private static native int createSymLink(String filePath, String linkPath);
+    private static native int removeSymLink(String linkPath);
 
     public static GeckoProfile get(Context context) {
         if (context instanceof GeckoApp) {
@@ -123,6 +119,10 @@ public final class GeckoProfile {
     }
 
     public static File ensureMozillaDirectory(Context context) throws IOException {
+        if (mMozDir != null) {
+            return mMozDir;
+        }
+
         synchronized (context) {
             File filesDir = context.getFilesDir();
             File mozDir = new File(filesDir, "mozilla");
@@ -131,6 +131,7 @@ public final class GeckoProfile {
                     throw new IOException("Unable to create mozilla directory at " + mozDir.getAbsolutePath());
                 }
             }
+            mMozDir = mozDir;
             return mozDir;
         }
     }
@@ -409,52 +410,14 @@ public final class GeckoProfile {
             mDir = findProfileDir(mozillaDir);
             if (mDir == null) {
                 return false;
+            } else {
+                delete(mDir);
+                return true;
             }
-
-            INIParser parser = getProfilesINI(mContext);
-
-            Hashtable<String, INISection> sections = parser.getSections();
-            for (Enumeration<INISection> e = sections.elements(); e.hasMoreElements();) {
-                INISection section = e.nextElement();
-                String name = section.getStringProperty("Name");
-
-                if (name == null || !name.equals(mName))
-                    continue;
-
-                if (section.getName().startsWith("Profile")) {
-                    // ok, we have stupid Profile#-named things.  Rename backwards.
-                    try {
-                        int sectionNumber = Integer.parseInt(section.getName().substring("Profile".length()));
-                        String curSection = "Profile" + sectionNumber;
-                        String nextSection = "Profile" + (sectionNumber+1);
-
-                        sections.remove(curSection);
-
-                        while (sections.containsKey(nextSection)) {
-                            parser.renameSection(nextSection, curSection);
-                            sectionNumber++;
-                            
-                            curSection = nextSection;
-                            nextSection = "Profile" + (sectionNumber+1);
-                        }
-                    } catch (NumberFormatException nex) {
-                        // uhm, malformed Profile thing; we can't do much.
-                        Log.e(LOGTAG, "Malformed section name in profiles.ini: " + section.getName());
-                        return false;
-                    }
-                } else {
-                    // this really shouldn't be the case, but handle it anyway
-                    parser.removeSection(mName);
-                    return true;
-                }
-            }
-
-            parser.write();
-            return true;
-        } catch (IOException ex) {
-            Log.w(LOGTAG, "Failed to remove profile " + mName + ":\n" + ex);
-            return false;
+        } catch (IOException ioe) {
+            Log.e(LOGTAG, "Error getting profile dir", ioe);
         }
+        return false;
     }
 
     public static String findDefaultProfile(Context context) {
@@ -465,90 +428,50 @@ public final class GeckoProfile {
             return sDefaultProfileName;
         }
 
-        // Open profiles.ini to find the correct path
-        INIParser parser = getProfilesINI(context);
-
-        for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements();) {
-            INISection section = e.nextElement();
-            if (section.getIntProperty("Default") == 1) {
-                sDefaultProfileName = section.getStringProperty("Name");
-                return sDefaultProfileName;
+        try {
+            File activeDir = new File(ensureMozillaDirectory(context), "active-profile");
+            if (activeDir.exists()) {
+                sDefaultProfileName = activeDir.getCanonicalFile().getName();
             }
+        } catch (IOException ioe) {
+            Log.e(LOGTAG, "Error getting currDir", ioe);
         }
+        return sDefaultProfileName;
+    }
 
-        return null;
+    public static void setAsDefault(Context context, File defaultFile) {
+        try {
+            String symlinkPath = ensureMozillaDirectory(context).getAbsolutePath() + "/active-profile";
+            File activeFile = new File(symlinkPath);
+            // Unlink from previous file
+            if (activeFile.exists()) {
+                removeSymLink(symlinkPath);
+            }
+
+            // Set as active profile
+            createSymLink(defaultFile.getAbsolutePath(), symlinkPath);
+        } catch (IOException ioe) {
+            Log.e(LOGTAG, "Error setting default profile", ioe);
+        }
     }
 
     private File findProfileDir(File mozillaDir) {
-        // Open profiles.ini to find the correct path
-        INIParser parser = getProfilesINI(mContext);
-
-        for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements();) {
-            INISection section = e.nextElement();
-            String name = section.getStringProperty("Name");
-            if (name != null && name.equals(mName)) {
-                if (section.getIntProperty("IsRelative") == 1) {
-                    return new File(mozillaDir, section.getStringProperty("Path"));
-                }
-                return new File(section.getStringProperty("Path"));
-            }
+        File nameDir = new File(mozillaDir, mName);
+        if (! nameDir.exists()) {
+            return null;
         }
 
-        return null;
-    }
-
-    private static String saltProfileName(String name) {
-        String allowedChars = "abcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder salt = new StringBuilder(16);
-        for (int i = 0; i < 8; i++) {
-            salt.append(allowedChars.charAt((int)(Math.random() * allowedChars.length())));
-        }
-        salt.append('.');
-        salt.append(name);
-        return salt.toString();
+        return nameDir;
     }
 
     private File createProfileDir(File mozillaDir) throws IOException {
-        INIParser parser = getProfilesINI(mContext);
+        File profileDir = new File(mozillaDir, mName);
 
-        // Salt the name of our requested profile
-        String saltedName = saltProfileName(mName);
-        File profileDir = new File(mozillaDir, saltedName);
-        while (profileDir.exists()) {
-            saltedName = saltProfileName(mName);
-            profileDir = new File(mozillaDir, saltedName);
-        }
-
-        // Attempt to create the salted profile dir
+        // Attempt to create the profile dir
         if (! profileDir.mkdirs()) {
             throw new IOException("Unable to create profile at " + profileDir.getAbsolutePath());
         }
         Log.d(LOGTAG, "Created new profile dir at " + profileDir.getAbsolutePath());
-
-        // Now update profiles.ini
-        // If this is the first time its created, we also add a General section
-        // look for the first profile number that isn't taken yet
-        int profileNum = 0;
-        while (parser.getSection("Profile" + profileNum) != null) {
-            profileNum++;
-        }
-
-        INISection profileSection = new INISection("Profile" + profileNum);
-        profileSection.setProperty("Name", mName);
-        profileSection.setProperty("IsRelative", 1);
-        profileSection.setProperty("Path", saltedName);
-
-        if (parser.getSection("General") == null) {
-            INISection generalSection = new INISection("General");
-            generalSection.setProperty("StartWithLastProfile", 1);
-            parser.addSection(generalSection);
-
-            // only set as default if this is the first profile we're creating
-            profileSection.setProperty("Default", 1);
-        }
-
-        parser.addSection(profileSection);
-        parser.write();
 
         // Write out profile creation time, mirroring the logic in nsToolkitProfileService.
         try {
