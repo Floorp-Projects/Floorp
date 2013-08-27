@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WifiUtils.h"
-#include <cutils/properties.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include "prinit.h"
@@ -12,7 +11,8 @@
 
 using namespace mozilla::dom;
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE        4096
+#define PROPERTY_VALUE_MAX 80
 
 // Intentionally not trying to dlclose() this handle. That's playing
 // Russian roulette with security bugs.
@@ -254,18 +254,7 @@ bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
   // Always correlate the opaque ids.
   aResult.mId = aOptions.mId;
 
-  if (aOptions.mCmd.EqualsLiteral("property_get")) {
-    char propValue[PROPERTY_VALUE_MAX];
-    NS_ConvertUTF16toUTF8 propName(aOptions.mKey);
-    NS_ConvertUTF16toUTF8 defaultValue(aOptions.mDefaultValue);
-    aResult.mStatus = property_get(propName.get(), propValue,
-                                   defaultValue.get());
-    aResult.mValue = NS_ConvertUTF8toUTF16(propValue);
-  } else if (aOptions.mCmd.EqualsLiteral("property_set")) {
-    NS_ConvertUTF16toUTF8 propName(aOptions.mKey);
-    NS_ConvertUTF16toUTF8 propValue(aOptions.mValue);
-    aResult.mStatus = property_set(propName.get(), propValue.get());
-  } else if (aOptions.mCmd.EqualsLiteral("command")) {
+  if (aOptions.mCmd.EqualsLiteral("command")) {
     size_t len = BUFFER_SIZE - 1;
     char buffer[BUFFER_SIZE];
     NS_ConvertUTF16toUTF8 request(aOptions.mRequest);
