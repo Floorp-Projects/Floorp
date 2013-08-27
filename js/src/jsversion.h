@@ -8,19 +8,6 @@
 #define jsversion_h
 
 /*
- * Deprecated JS_VERSION handler.
- */
-#ifdef JS_VERSION
-# if JS_VERSION == 185
-#  warning "JS_VERSION defined but unsupported (legacy)"
-# elif JS_VERSION < 185
-#  error "Unsupported JS_VERSION"
-# else
-#  error "Unknown JS_VERSION"
-# endif
-#endif
-
-/*
  * JS Capability Macros.
  */
 #define JS_HAS_STR_HTML_HELPERS 1       /* has str.anchor, str.bold, etc. */
