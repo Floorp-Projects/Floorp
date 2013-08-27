@@ -29,18 +29,24 @@ class ELMCreationDetector
 public:
   ELMCreationDetector() :
     // We can do this optimization only in the main thread.
-    mDefault(!NS_IsMainThread()),
-    mInitialCount(mDefault ? 0 : nsEventListenerManager::sMainThreadCreatedCount)
+    mNonMainThread(!NS_IsMainThread()),
+    mInitialCount(mNonMainThread ?
+                    0 : nsEventListenerManager::sMainThreadCreatedCount)
   {
   }
 
   bool MayHaveNewListenerManager()
   {
-    return mDefault ||
+    return mNonMainThread ||
            mInitialCount != nsEventListenerManager::sMainThreadCreatedCount;
   }
+
+  bool IsMainThread()
+  {
+    return !mNonMainThread;
+  }
 private:
-  bool mDefault;
+  bool mNonMainThread;
   uint32_t mInitialCount;
 };
 
@@ -343,6 +349,15 @@ nsEventTargetChainItem::HandleEventTargetChain(
   }
 }
 
+static nsTArray<nsEventTargetChainItem>* sCachedMainThreadChain = nullptr;
+
+void
+NS_ShutdownEventTargetChainRecycler()
+{
+  delete sCachedMainThreadChain;
+  sCachedMainThreadChain = nullptr;
+}
+
 nsEventTargetChainItem*
 EventTargetChainItemForChromeTarget(nsTArray<nsEventTargetChainItem>& aChain,
                                     nsINode* aNode,
@@ -456,7 +471,15 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   // event dispatching is finished.
   nsRefPtr<nsPresContext> kungFuDeathGrip(aPresContext);
 
-  nsTArray<nsEventTargetChainItem> chain(128);
+  ELMCreationDetector cd;
+  nsTArray<nsEventTargetChainItem> chain;
+  if (cd.IsMainThread()) {
+    if (!sCachedMainThreadChain) {
+      sCachedMainThreadChain = new nsTArray<nsEventTargetChainItem>();
+    }
+    chain.SwapElements(*sCachedMainThreadChain);
+    chain.SetCapacity(128);
+  }
 
   // Create the event target chain item for the event target.
   nsEventTargetChainItem* targetEtci =
@@ -575,7 +598,6 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
         // Event target chain is created. Handle the chain.
         nsEventChainPostVisitor postVisitor(preVisitor);
         nsCxPusher pusher;
-        ELMCreationDetector cd;
         nsEventTargetChainItem::HandleEventTargetChain(chain,
                                                        postVisitor,
                                                        aCallback,
@@ -610,6 +632,12 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   if (aEventStatus) {
     *aEventStatus = preVisitor.mEventStatus;
   }
+
+  if (cd.IsMainThread() && chain.Capacity() == 128 && sCachedMainThreadChain) {
+    chain.ClearAndRetainStorage();
+    chain.SwapElements(*sCachedMainThreadChain);
+  }
+
   return rv;
 }
 
