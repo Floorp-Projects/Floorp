@@ -147,6 +147,18 @@ public class BookmarksListView extends HomeListView
         }
     }
 
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        // Adjust the item position to account for the parent folder row that is inserted
+        // at the top of the list when viewing the contents of a folder.
+        final BookmarksListAdapter adapter = getBookmarksListAdapter();
+        if (adapter.isShowingChildFolder()) {
+            position--;
+        }
+
+        return super.onItemLongClick(parent, view, position, id);
+    }
+
     private BookmarksListAdapter getBookmarksListAdapter() {
         BookmarksListAdapter adapter;
         ListAdapter listAdapter = getAdapter();
