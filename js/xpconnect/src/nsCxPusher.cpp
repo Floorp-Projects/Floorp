@@ -128,7 +128,7 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
     mAutoRequest.construct(cx);
 
     // DOM JSContexts don't store their default compartment object on the cx.
-    JSObject *compartmentObject = mScx ? mScx->GetNativeGlobal()
+    JSObject *compartmentObject = mScx ? mScx->GetWindowProxy()
                                        : js::DefaultObjectForContextOrNull(cx);
     if (compartmentObject)
       mAutoCompartment.construct(cx, compartmentObject);

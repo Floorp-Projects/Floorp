@@ -54,7 +54,6 @@ public:
   inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; }
 
   virtual JSContext* GetNativeContext() MOZ_OVERRIDE;
-  virtual JSObject* GetNativeGlobal() MOZ_OVERRIDE;
   virtual nsresult InitContext() MOZ_OVERRIDE;
   virtual bool IsContextInitialized() MOZ_OVERRIDE;
 
@@ -129,7 +128,7 @@ public:
   {
     // Verify that we have a global so that this
     // does always return a null when GetGlobalObject() is null.
-    JSObject* global = GetNativeGlobal();
+    JSObject* global = GetWindowProxy();
     return global ? mGlobalObjectRef.get() : nullptr;
   }
 protected:
