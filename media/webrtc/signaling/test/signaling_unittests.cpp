@@ -37,7 +37,7 @@ MtransportTestUtils *test_utils;
 nsCOMPtr<nsIThread> gThread;
 
 static int kDefaultTimeout = 5000;
-static bool fRtcpMux = false;
+static bool fRtcpMux = true;
 
 static std::string callerName = "caller";
 static std::string calleeName = "callee";

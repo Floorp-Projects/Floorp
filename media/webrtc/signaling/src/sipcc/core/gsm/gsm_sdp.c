@@ -6834,6 +6834,17 @@ gsmsdp_install_peer_ice_attributes(fsm_fcb_t *fcb_p)
       if (!GSMSDP_MEDIA_ENABLED(media))
         continue;
 
+      /* If we are muxing, disable the second
+         component of the ICE stream */
+      if (media->rtcp_mux) {
+        vcm_res = vcmDisableRtcpComponent(dcb_p->peerconnection,
+          media->level);
+
+        if (vcm_res) {
+          return (CC_CAUSE_SETTING_ICE_SESSION_PARAMETERS_FAILED);
+        }
+      }
+
       sdp_res = sdp_attr_get_ice_attribute(sdp_p->dest_sdp, media->level, 0,
         SDP_ATTR_ICE_UFRAG, 1, &ufrag);
       if (sdp_res != SDP_SUCCESS)
