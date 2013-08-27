@@ -1035,6 +1035,14 @@ int vcmGetILBCMode();
  */
 int vcmOnSdpParseError(const char *peercconnection, const char *message);
 
+/**
+ * vcmDisableRtcpComponent
+ *
+ * If we are doing rtcp-mux we need to disable component number 2 in the ICE
+ * layer.  Otherwise we will wait for it to connect when it is unused
+ */
+int vcmDisableRtcpComponent(const char *peerconnection, int level);
+
 //Using C++ for gips. This is the end of extern "C" above.
 #ifdef __cplusplus
 }
