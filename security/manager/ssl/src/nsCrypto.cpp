@@ -843,7 +843,9 @@ cryptojs_generateOneKeyPair(JSContext *cx, nsKeyPairInfo *keyPairInfo,
             mustMoveKey = true;
           }
         
-          PK11_FreeSlot(used_slot);
+          if (used_slot) {
+            PK11_FreeSlot(used_slot);
+          }
         }
       }
     }
