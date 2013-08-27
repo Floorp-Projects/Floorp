@@ -714,32 +714,9 @@ CycleCollectedJSRuntime::TraverseObjectShim(void* aData, void* aThing)
                                  JSTRACE_OBJECT, closure->cb);
 }
 
-// For all JS objects that are held by native objects but aren't held
-// through rooting or locking, we need to add all the native objects that
-// hold them so that the JS objects are colored correctly in the cycle
-// collector. This includes JSContexts that don't have outstanding requests,
-// because their global object wasn't marked by the JS GC. All other JS
-// roots were marked by the JS GC and will be colored correctly in the cycle
-// collector.
-void
-CycleCollectedJSRuntime::MaybeTraverseGlobals(nsCycleCollectionNoteRootCallback& aCb) const
-{
-  JSContext *iter = nullptr, *acx;
-  while ((acx = JS_ContextIterator(Runtime(), &iter))) {
-    // Add the context to the CC graph only if traversing it would
-    // end up doing something.
-    JSObject* global = js::DefaultObjectForContextOrNull(acx);
-    if (global && xpc_IsGrayGCThing(global)) {
-      aCb.NoteNativeRoot(acx, JSContextParticipant());
-    }
-  }
-}
-
 void
 CycleCollectedJSRuntime::TraverseNativeRoots(nsCycleCollectionNoteRootCallback& aCb)
 {
-  MaybeTraverseGlobals(aCb);
-
   // NB: This is here just to preserve the existing XPConnect order. I doubt it
   // would hurt to do this after the JS holders.
   TraverseAdditionalNativeRoots(aCb);
