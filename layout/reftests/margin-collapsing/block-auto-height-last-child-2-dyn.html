@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#last-child, #separator {
+ height: 20px;
+ background-color: green;
+}
+#parent {
+ margin-bottom: 0;
+}
+#last-child {
+ margin-bottom: 20px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('parent').style.marginBottom = '-10px';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="parent">
+ <div id="last-child"></div>
+</div>
+<div id="separator"></div>
+</body>
+</html>
