@@ -120,6 +120,7 @@
 #include "nsINode.h"
 #include "nsINodeInfo.h"
 #include "nsIObjectLoadingContent.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOfflineCacheUpdate.h"
