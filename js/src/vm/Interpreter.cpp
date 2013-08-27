@@ -417,7 +417,7 @@ js::RunScript(JSContext *cx, RunState &state)
     SPSEntryMarker marker(cx->runtime());
 
 #ifdef JS_ION
-    if (jit::IsEnabled(cx)) {
+    if (jit::IsIonEnabled(cx)) {
         jit::MethodStatus status = jit::CanEnter(cx, state);
         if (status == jit::Method_Error)
             return false;
@@ -2501,7 +2501,7 @@ BEGIN_CASE(JSOP_FUNCALL)
     if (newType)
         state.setUseNewType();
 
-    if (!newType && jit::IsEnabled(cx)) {
+    if (!newType && jit::IsIonEnabled(cx)) {
         jit::MethodStatus status = jit::CanEnter(cx, state);
         if (status == jit::Method_Error)
             goto error;

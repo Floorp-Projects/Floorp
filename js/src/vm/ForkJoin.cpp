@@ -559,8 +559,8 @@ js::ParallelDo::apply()
     //       - Re-enqueue main script and any uncompiled scripts that were called
     // - Too many bailouts: Fallback to sequential
 
-    JS_ASSERT_IF(!jit::IsBaselineEnabled(cx_), !jit::IsEnabled(cx_));
-    if (!jit::IsBaselineEnabled(cx_) || !jit::IsEnabled(cx_))
+    JS_ASSERT_IF(!jit::IsBaselineEnabled(cx_), !jit::IsIonEnabled(cx_));
+    if (!jit::IsBaselineEnabled(cx_) || !jit::IsIonEnabled(cx_))
         return sequentialExecution(true);
 
     SpewBeginOp(cx_, "ParallelDo");
@@ -2151,7 +2151,7 @@ js::InExclusiveParallelSection()
 bool
 js::ParallelTestsShouldPass(JSContext *cx)
 {
-    return jit::IsEnabled(cx) &&
+    return jit::IsIonEnabled(cx) &&
            jit::IsBaselineEnabled(cx) &&
            !jit::js_IonOptions.eagerCompilation &&
            jit::js_IonOptions.baselineUsesBeforeCompile != 0 &&
