@@ -17,6 +17,7 @@ TEST_DIRS += ['test']
 EXTRA_COMPONENTS += [
     'CommandLineHandler.js',
     'ContentPermission.js',
+    'ContentPolicy.js',
     'DirectoryProvider.js',
     'components.manifest',
 ]
