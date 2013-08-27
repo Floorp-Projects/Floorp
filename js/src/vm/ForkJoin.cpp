@@ -1413,6 +1413,10 @@ ForkJoinShared::executeFromWorker(uint32_t workerId, uintptr_t stackLimit)
     JS_ASSERT(workerId < numSlices_ - 1);
 
     PerThreadData thisThread(cx_->runtime());
+    if (!thisThread.init()) {
+        setAbortFlag(true);
+        return;
+    }
     TlsPerThreadData.set(&thisThread);
 
     // Don't use setIonStackLimit() because that acquires the ionStackLimitLock, and the
