@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MobileConnection.h"
-
 #include "GeneratedEvents.h"
 #include "mozilla/Preferences.h"
 #include "nsDOMEvent.h"
@@ -12,6 +11,7 @@
 #include "nsIDOMDOMRequest.h"
 #include "nsIDOMDataErrorEvent.h"
 #include "nsIDOMMozEmergencyCbModeEvent.h"
+#include "nsIDOMMozOtaStatusEvent.h"
 #include "nsIDOMUSSDReceivedEvent.h"
 #include "nsIPermissionManager.h"
 
@@ -76,6 +76,7 @@ NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
 NS_IMPL_EVENT_HANDLER(MobileConnection, dataerror)
 NS_IMPL_EVENT_HANDLER(MobileConnection, cfstatechange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, emergencycbmodechange)
+NS_IMPL_EVENT_HANDLER(MobileConnection, otastatuschange)
 
 MobileConnection::MobileConnection()
 {
@@ -590,6 +591,25 @@ MobileConnection::NotifyEmergencyCbModeChanged(bool aActive,
   nsresult rv = ce->InitMozEmergencyCbModeEvent(
       NS_LITERAL_STRING("emergencycbmodechange"), false, false,
       aActive, aTimeoutMs);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return DispatchTrustedEvent(ce);
+}
+
+NS_IMETHODIMP
+MobileConnection::NotifyOtaStatusChanged(const nsAString& aStatus)
+{
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMEvent> event;
+  NS_NewDOMMozOtaStatusEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  MOZ_ASSERT(event);
+
+  nsCOMPtr<nsIDOMMozOtaStatusEvent> ce = do_QueryInterface(event);
+  nsresult rv = ce->InitMozOtaStatusEvent(NS_LITERAL_STRING("otastatuschange"),
+                                          false, false, aStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchTrustedEvent(ce);
