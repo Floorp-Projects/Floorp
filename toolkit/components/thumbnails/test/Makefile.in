@@ -27,6 +27,7 @@ MOCHITEST_BROWSER_FILES := \
 	background_red_redirect.sjs \
 	privacy_cache_control.sjs \
 	thumbnails_background.sjs \
+	thumbnails_update.sjs \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
