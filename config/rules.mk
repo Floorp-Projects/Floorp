@@ -427,7 +427,9 @@ UPDATE_TITLE = printf "\033]0;%s in %s\007" $(1) $(shell $(BUILD_TOOLS)/print-de
 endif
 
 ifdef MACH
+ifndef NO_BUILDSTATUS_MESSAGES
 BUILDSTATUS=@echo "BUILDSTATUS $1"
+endif
 endif
 
 # Static directories are largely independent of our build system. But, they
