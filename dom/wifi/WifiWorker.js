@@ -105,8 +105,25 @@ var WifiManager = (function() {
 
   let {sdkVersion, unloadDriverEnabled, schedScanRecovery, driverDelay, ifname} = getStartupPrefs();
 
-  var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
-  var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
+  let wifiListener = {
+    onWaitEvent: function(event) {
+      if (handleEvent(event)) {
+        waitForEvent();
+      }
+    },
+
+    onCommand: function(event) {
+      onmessageresult(event);
+    }
+  }
+
+  let wifiService = Cc["@mozilla.org/wifi/service;1"];
+  if (wifiService) {
+    wifiService = wifiService.getService(Ci.nsIWifiProxyService);
+    wifiService.start(wifiListener);
+  } else {
+    debug("No wifi service component available!");
+  }
 
   var manager = {};
   manager.ifname = ifname;
@@ -118,7 +135,7 @@ var WifiManager = (function() {
   manager.schedScanRecovery = schedScanRecovery;
   manager.driverDelay = driverDelay ? parseInt(driverDelay, 10) : DRIVER_READY_WAIT;
 
-  // Callbacks to invoke when a reply arrives from the controlWorker.
+  // Callbacks to invoke when a reply arrives from the wifi service.
   var controlCallbacks = Object.create(null);
   var idgen = 0;
 
@@ -127,49 +144,23 @@ var WifiManager = (function() {
     obj.id = id;
     if (callback)
       controlCallbacks[id] = callback;
-    controlWorker.postMessage(obj);
+    wifiService.sendCommand(obj);
   }
 
-  function onerror(e) {
-    // It is very important to call preventDefault on the event here.
-    // If an exception is thrown on the worker, it bubbles out to the
-    // component that created it. If that component doesn't have an
-    // onerror handler, the worker will try to call the error reporter
-    // on the context it was created on. However, That doesn't work
-    // for component contexts and can result in crashes. This onerror
-    // handler has to make sure that it calls preventDefault on the
-    // incoming event.
-    e.preventDefault();
-
-    var worker = (this === controlWorker) ? "control" : "event";
-
-    debug("Got an error from the " + worker + " worker: " + e.filename +
-          ":" + e.lineno + ": " + e.message + "\n");
-  }
-
-  controlWorker.onerror = onerror;
-  eventWorker.onerror = onerror;
-
-  controlWorker.onmessage = function(e) {
-    var data = e.data;
+  let onmessageresult = function(data) {
     var id = data.id;
     var callback = controlCallbacks[id];
     if (callback) {
       callback(data);
       delete controlCallbacks[id];
     }
-  };
+  }
 
   // Polling the status worker
   var recvErrors = 0;
-  eventWorker.onmessage = function(e) {
-    // Process the event and tell the event worker to listen for more events.
-    if (handleEvent(e.data.event))
-      waitForEvent();
-  };
 
   function waitForEvent() {
-    eventWorker.postMessage({ cmd: "wait_for_event" });
+    wifiService.waitForEvent();
   }
 
   // Commands to the control worker.
@@ -778,9 +769,10 @@ var WifiManager = (function() {
   }
 
   function configureInterface(ifname, ipaddr, mask, gateway, dns1, dns2, callback) {
-    controlMessage({ cmd: "ifc_configure", ifname: ifname,
+    let message = { cmd: "ifc_configure", ifname: ifname,
                      ipaddr: ipaddr, mask: mask, gateway: gateway,
-                     dns1: dns1, dns2: dns2}, function(data) {
+                     dns1: dns1, dns2: dns2};
+    controlMessage(message, function(data) {
       callback(!data.status);
     });
   }
