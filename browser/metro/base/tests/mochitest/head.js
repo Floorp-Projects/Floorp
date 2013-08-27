@@ -19,6 +19,27 @@ const kDefaultWait = 2000;
 const kDefaultInterval = 50;
 
 /*=============================================================================
+  Load Helpers
+=============================================================================*/
+
+let splitPath = chromeRoot.split('/');
+if (!splitPath[splitPath.length-1]) {
+  splitPath.pop();
+}
+// ../mochitest to make sure we're looking for the libs on the right path
+// even for mochiperf tests.
+splitPath.pop();
+splitPath.push('mochitest');
+
+const mochitestPath = splitPath.join('/') + '/';
+
+[
+  "ViewStateHelper.js"
+].forEach(function(lib) {
+  Services.scriptloader.loadSubScript(mochitestPath + lib, this);
+}, this);
+
+/*=============================================================================
   Metro ui helpers
 =============================================================================*/
 
@@ -147,7 +168,7 @@ function getSelection(aElement) {
 
   // browser
   return aElement.contentWindow.getSelection();
-};
+}
 
 function getTrimmedSelection(aElement) {
   let sel = getSelection(aElement);
@@ -841,7 +862,7 @@ function stubMethod(aObj, aMethod) {
   let func = function() {
     func.calledWith = Array.slice(arguments);
     func.callCount++;
-  }
+  };
   func.callCount = 0;
   func.restore = function() {
     return (aObj[aMethod] = origFunc);
