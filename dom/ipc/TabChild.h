@@ -300,7 +300,7 @@ public:
     void GetDPI(float* aDPI);
     void GetDefaultScale(double *aScale);
 
-    ScreenToScreenScale GetZoom() { return mLastMetrics.mZoom; }
+    CSSToScreenScale GetZoom() { return mLastMetrics.mZoom; }
 
     ScreenOrientation GetOrientation() { return mOrientation; }
 

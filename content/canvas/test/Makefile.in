@@ -88,6 +88,7 @@ MOCHITEST_FILES = \
 	file_drawImage_document_domain.html \
 	test_windingRuleUndefined.html \
 	test_strokeText_throw.html \
+	test_bug902651.html \
 	$(NULL)
 
 # SkiaGL on Android/Gonk does not implement these composite ops yet

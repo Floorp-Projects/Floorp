@@ -554,8 +554,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            EVENTTARGET_SCRIPTABLE_FLAGS)
 #endif
 
-  NS_DEFINE_CLASSINFO_DATA(CameraControl, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CameraCapabilities, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
@@ -1432,10 +1430,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_END
 #endif
 
-  DOM_CLASSINFO_MAP_BEGIN(CameraControl, nsICameraControl)
-    DOM_CLASSINFO_MAP_ENTRY(nsICameraControl)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(CameraCapabilities, nsICameraCapabilities)
     DOM_CLASSINFO_MAP_ENTRY(nsICameraCapabilities)
   DOM_CLASSINFO_MAP_END
@@ -2190,12 +2184,13 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 NS_IMETHODIMP
 nsWindowSH::PostCreatePrototype(JSContext* aCx, JSObject* aProto)
 {
-  nsresult rv = nsDOMClassInfo::PostCreatePrototype(aCx, aProto);
+  JS::Rooted<JSObject*> proto(aCx, aProto);
+
+  nsresult rv = nsDOMClassInfo::PostCreatePrototype(aCx, proto);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We should probably move this into the CreateInterfaceObjects for Window
   // once it is on WebIDL bindings.
-  JS::Rooted<JSObject*> proto(aCx, aProto);
   WindowNamedPropertiesHandler::Install(aCx, proto);
   return NS_OK;
 }

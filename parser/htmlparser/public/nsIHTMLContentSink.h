@@ -49,13 +49,11 @@
  * NOTE: I haven't figured out how sub-documents (non-frames)
  *       are going to be handled. Stay tuned.
  */
-#include "nsIParserNode.h"
 #include "nsIContentSink.h"
 #include "nsHTMLTags.h"
 
 #define NS_IHTML_CONTENT_SINK_IID \
-{ 0xb6d6ae00, 0x0884, 0x4a30, \
-  { 0xa8, 0xb4, 0xce, 0xca, 0x57, 0x27, 0x1a, 0x3e } }
+  {0xefc5af86, 0x5cfd, 0x4918, {0x9d, 0xd3, 0x5f, 0x7a, 0xb2, 0x88, 0xb2, 0x68}}
 
 /**
  * This interface is OBSOLETE and in the process of being REMOVED.
@@ -67,66 +65,14 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTML_CONTENT_SINK_IID)
 
-  /**
-   * This method is used to open the HEAD container. It is useful if a tag
-   * is forcing us to open the head (probably again), like if we find a <meta>
-   * tag in the body.
-   */
-  NS_IMETHOD OpenHead() = 0;
-
-  /**
-   * This gets called when handling illegal contents, especially
-   * in dealing with tables. This method creates a new context.
-   * 
-   * @update 04/04/99 harishd
-   * @param aPosition - The position from where the new context begins.
-   */
-  NS_IMETHOD BeginContext(int32_t aPosition) = 0;
-  
-  /**
-   * This method terminates any new context that got created by
-   * BeginContext and switches back to the main context.  
-   *
-   * @update 04/04/99 harishd
-   * @param aPosition - Validates the end of a context.
-   */
-  NS_IMETHOD EndContext(int32_t aPosition) = 0;
-  
-  /**
-   * @update 01/09/2003 harishd
-   * @param aTag - Check if this tag is enabled or not.
-   */
-  NS_IMETHOD IsEnabled(int32_t aTag, bool* aReturn) = 0;
-
-  /**
-   * This method is called when parser has
-   * completed processing a chunk of tokens. The processing of the
-   * tokens may be interrupted by returning NS_ERROR_HTMLPARSER_INTERRUPTED from
-   * DidProcessAToken.
-   */
-  NS_IMETHOD DidProcessTokens() = 0;
-
-  /**
-   * This method is called when parser is about to
-   * process a single token
-   */
-  NS_IMETHOD WillProcessAToken(void) = 0;
-
-  /**
-   * This method is called when parser has completed
-   * the processing for a single token.
-   * @return NS_OK if processing should not be interrupted
-   *         NS_ERROR_HTMLPARSER_INTERRUPTED if the parsing should be interrupted
-   */
-  NS_IMETHOD DidProcessAToken(void) = 0;
+  enum ElementType { eHTML, eBody };
 
     /**
    * This method is used to open a generic container in the sink.
    *
    * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
    */     
-  NS_IMETHOD OpenContainer(const nsIParserNode& aNode) = 0;
+  NS_IMETHOD OpenContainer(ElementType aNodeType) = 0;
 
   /**
    *  This method gets called by the parser when a close
@@ -134,29 +80,7 @@ public:
    *
    * @param  aTag - The tag to be closed.
    */     
-  NS_IMETHOD CloseContainer(const nsHTMLTag aTag) = 0;
-
-  /**
-   * This method is used when we're closing a tag that was malformed
-   * in some way. This way, the content sink can do special processing
-   * (e.g., not execute a malformed script tag).
-   *
-   * @param aTag The tag to be closed.
-   */
-  NS_IMETHOD CloseMalformedContainer(const nsHTMLTag aTag)
-  {
-    return CloseContainer(aTag);
-  }
-
-  /**
-   * This gets called by the parser when you want to add
-   * a leaf node to the current container in the content
-   * model.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD AddLeaf(const nsIParserNode& aNode) = 0;
+  NS_IMETHOD CloseContainer(ElementType aTag) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLContentSink, NS_IHTML_CONTENT_SINK_IID)
