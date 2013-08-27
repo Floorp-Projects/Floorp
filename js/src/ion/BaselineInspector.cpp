@@ -300,6 +300,20 @@ BaselineInspector::hasSeenNonNativeGetElement(jsbytecode *pc)
 }
 
 bool
+BaselineInspector::hasSeenNegativeIndexGetElement(jsbytecode *pc)
+{
+    if (!hasBaselineScript())
+        return false;
+
+    const ICEntry &entry = icEntryFromPC(pc);
+    ICStub *stub = entry.fallbackStub();
+
+    if (stub->isGetElem_Fallback())
+        return stub->toGetElem_Fallback()->hasNegativeIndex();
+    return false;
+}
+
+bool
 BaselineInspector::hasSeenAccessedGetter(jsbytecode *pc)
 {
     if (!hasBaselineScript())
