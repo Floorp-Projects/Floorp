@@ -24,6 +24,7 @@ MOCHITEST_BROWSER_FILES = \
 	browser_form_restore_events_sample.html \
 	browser_formdata_format.js \
 	browser_formdata_format_sample.html \
+	browser_global_store.js \
 	browser_input.js \
 	browser_input_sample.html \
 	browser_pageshow.js \
