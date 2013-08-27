@@ -16,7 +16,6 @@ import org.json.JSONObject;
  */
 public class testPrefsObserver extends BaseTest {
     private static final String PREF_TEST_PREF = "robocop.tests.dummy";
-    private static final int PREF_OBSERVE_REQUEST_ID = 0x7357;
     private static final String PREF_REQUEST_ID = "testPrefsObserver";
     private static final long PREF_TIMEOUT = 10000;
 
@@ -41,15 +40,15 @@ public class testPrefsObserver extends BaseTest {
         mAsserter.dumpLog("Waiting to check pref");
 
         JSONObject data = null;
-        int requestId = -1;
+        String requestId = "";
 
-        while (requestId != PREF_OBSERVE_REQUEST_ID) {
+        while (!requestId.equals(PREF_REQUEST_ID)) {
             data = new JSONObject(mExpecter.blockForEventData());
             if (!mExpecter.eventReceived()) {
                 mAsserter.ok(false, "Checking pref is correct value", "Didn't receive pref");
                 return;
             }
-            requestId = data.getInt("requestId");
+            requestId = data.getString("requestId");
         }
 
         JSONObject pref = data.getJSONArray("preferences").getJSONObject(0);
@@ -81,14 +80,19 @@ public class testPrefsObserver extends BaseTest {
         mAsserter.dumpLog("Setting up pref observer");
 
         // Setup the pref observer
+        JSONArray getPrefData = new JSONArray();
+        getPrefData.put(PREF_TEST_PREF);
+        JSONObject message = new JSONObject();
+        message.put("requestId", PREF_REQUEST_ID);
+        message.put("preferences", getPrefData);
         mExpecter = mActions.expectGeckoEvent("Preferences:Data");
-        mActions.sendPreferencesObserveEvent(PREF_OBSERVE_REQUEST_ID, new String[] { PREF_TEST_PREF });
+        mActions.sendGeckoEvent("Preferences:Observe", message.toString());
     }
 
     public void removePrefObserver() {
         mAsserter.dumpLog("Removing pref observer");
 
-        mActions.sendGeckoEvent("Preferences:RemoveObservers", Integer.toString(PREF_OBSERVE_REQUEST_ID));
+        mActions.sendGeckoEvent("Preferences:RemoveObservers", PREF_REQUEST_ID);
     }
 
     public void testPrefsObserver() {

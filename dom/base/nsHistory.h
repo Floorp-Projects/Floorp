@@ -56,7 +56,7 @@ protected:
     return win->GetDocShell();
   }
 
-  void PushOrReplaceState(JSContext* aCx, JS::Value aData,
+  void PushOrReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
                           const nsAString& aTitle, const nsAString& aUrl,
                           mozilla::ErrorResult& aRv, bool aReplace);
 

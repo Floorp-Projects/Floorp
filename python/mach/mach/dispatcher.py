@@ -54,7 +54,7 @@ class CommandAction(argparse.Action):
     For more, read the docs in __call__.
     """
     def __init__(self, option_strings, dest, required=True, default=None,
-        registrar=None):
+        registrar=None, context=None):
         # A proper API would have **kwargs here. However, since we are a little
         # hacky, we intentionally omit it as a way of detecting potentially
         # breaking changes with argparse's implementation.
@@ -65,6 +65,7 @@ class CommandAction(argparse.Action):
             help=argparse.SUPPRESS, nargs=argparse.REMAINDER)
 
         self._mach_registrar = registrar
+        self._context = context
 
     def __call__(self, parser, namespace, values, option_string=None):
         """This is called when the ArgumentParser has reached our arguments.
@@ -148,17 +149,33 @@ class CommandAction(argparse.Action):
         cats = [(k, v[2]) for k, v in r.categories.items()]
         sorted_cats = sorted(cats, key=itemgetter(1), reverse=True)
         for category, priority in sorted_cats:
-            if not r.commands_by_category[category]:
-                continue
-
-            title, description, _priority = r.categories[category]
-
-            group = parser.add_argument_group(title, description)
+            group = None
 
             for command in sorted(r.commands_by_category[category]):
                 handler = r.command_handlers[command]
-                description = handler.description
 
+                # Instantiate a handler class to see if it should be filtered
+                # out for the current context or not. Condition functions can be
+                # applied to the command's decorator.
+                if handler.conditions:
+                    if handler.pass_context:
+                        instance = handler.cls(self._context)
+                    else:
+                        instance = handler.cls()
+
+                    is_filtered = False
+                    for c in handler.conditions:
+                        if not c(instance):
+                            is_filtered = True
+                            break
+                    if is_filtered:
+                        continue
+
+                if group is None:
+                    title, description, _priority = r.categories[category]
+                    group = parser.add_argument_group(title, description)
+
+                description = handler.description
                 group.add_argument(command, help=description,
                     action='store_true')
 

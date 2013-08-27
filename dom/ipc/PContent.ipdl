@@ -30,7 +30,6 @@ include URIParams;
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/dom/PermissionMessageUtils.h";
 include "mozilla/dom/TabMessageUtils.h";
-include "mozilla/dom/Element.h";
 include "mozilla/HalTypes.h";
 include "mozilla/layout/RenderFrameUtils.h";
 include "mozilla/net/NeckoMessageUtils.h";
