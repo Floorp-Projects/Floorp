@@ -2325,6 +2325,12 @@ JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb);
 extern JS_PUBLIC_API(bool)
 JS_IsGCMarkingTracer(JSTracer *trc);
 
+/* For assertions only. */
+#ifdef DEBUG
+extern JS_PUBLIC_API(bool)
+JS_IsMarkingGray(JSTracer *trc);
+#endif
+
 /*
  * JS_IsAboutToBeFinalized checks if the given object is going to be finalized
  * at the end of the current GC. When called outside of the context of a GC,

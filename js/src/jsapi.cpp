@@ -2399,6 +2399,15 @@ JS_IsGCMarkingTracer(JSTracer *trc)
     return IS_GC_MARKING_TRACER(trc);
 }
 
+#ifdef DEBUG
+extern JS_PUBLIC_API(bool)
+JS_IsMarkingGray(JSTracer *trc)
+{
+    JS_ASSERT(JS_IsGCMarkingTracer(trc));
+    return trc->callback == GCMarker::GrayCallback;
+}
+#endif
+
 JS_PUBLIC_API(void)
 JS_GC(JSRuntime *rt)
 {
