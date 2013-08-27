@@ -59,6 +59,7 @@ body {
 }
 
 .domain-border {
+  margin-top: 15px;
   border-bottom: 1.5px solid #777777;
   width: 50%;
 }
