@@ -81,6 +81,7 @@ class RangeAnalysis
         graph_(graph) {}
     bool addBetaNobes();
     bool analyze();
+    bool addRangeAssertions();
     bool removeBetaNobes();
     bool truncate();
 
