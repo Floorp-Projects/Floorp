@@ -32,7 +32,7 @@
 #include "jshash.h"
 #include "jsclist.h"
 #include "jsdebug.h"
-#include "jsdbgapi.h"
+#include "js/OldDebugAPI.h"
 #include "jsd_lock.h"
 
 #include <stdio.h>

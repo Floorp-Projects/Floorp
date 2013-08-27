@@ -40,7 +40,7 @@
 #endif
 
 // JS
-#include "jsdbgapi.h"
+#include "js/OldDebugAPI.h"
 
 #if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_WIN))
  #define USE_NS_STACKWALK

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jsdbgapi_h
-#define jsdbgapi_h
+#ifndef js_OldDebugAPI_h
+#define js_OldDebugAPI_h
 
 /*
  * JS debugger API.
@@ -516,4 +516,4 @@ CanCallContextDebugHandler(JSContext *cx);
 extern JS_FRIEND_API(bool)
 js_CallContextDebugHandler(JSContext *cx);
 
-#endif /* jsdbgapi_h */
+#endif /* js_OldDebugAPI_h */

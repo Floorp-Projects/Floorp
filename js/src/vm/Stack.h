@@ -9,15 +9,14 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsscript.h"
 
 #include "jit/IonFrameIterator.h"
-
 #ifdef CHECK_OSIPOINT_REGISTERS
 #include "jit/Registers.h" // for RegisterDump
 #endif
+#include "js/OldDebugAPI.h"
 
 struct JSContext;
 struct JSCompartment;
