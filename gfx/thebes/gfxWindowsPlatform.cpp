@@ -73,11 +73,11 @@ static const int kSupportedFeatureLevels[] =
   { D3D10_FEATURE_LEVEL_10_1, D3D10_FEATURE_LEVEL_10_0,
     D3D10_FEATURE_LEVEL_9_3 };
 
-class GfxD2DSurfaceCacheReporter MOZ_FINAL : public MemoryReporterBase
+class GfxD2DSurfaceCacheReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
     GfxD2DSurfaceCacheReporter()
-      : MemoryReporterBase("gfx-d2d-surface-cache", KIND_OTHER, UNITS_BYTES,
+      : MemoryUniReporter("gfx-d2d-surface-cache", KIND_OTHER, UNITS_BYTES,
 "Memory used by the Direct2D internal surface cache.")
     {}
 private:
@@ -110,11 +110,11 @@ bool OncePreferenceDirect2DForceEnabled()
 
 } // anonymous namespace
 
-class GfxD2DSurfaceVramReporter MOZ_FINAL : public MemoryReporterBase
+class GfxD2DSurfaceVramReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
     GfxD2DSurfaceVramReporter()
-      : MemoryReporterBase("gfx-d2d-surface-vram", KIND_OTHER, UNITS_BYTES,
+      : MemoryUniReporter("gfx-d2d-surface-vram", KIND_OTHER, UNITS_BYTES,
                            "Video memory used by D2D surfaces.")
     {}
 private:
@@ -127,11 +127,11 @@ private:
 
 #endif
 
-class GfxD2DVramDrawTargetReporter MOZ_FINAL : public MemoryReporterBase
+class GfxD2DVramDrawTargetReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
     GfxD2DVramDrawTargetReporter()
-      : MemoryReporterBase("gfx-d2d-vram-draw-target", KIND_OTHER, UNITS_BYTES,
+      : MemoryUniReporter("gfx-d2d-vram-draw-target", KIND_OTHER, UNITS_BYTES,
                            "Video memory used by D2D DrawTargets.")
     {}
 private:
@@ -141,11 +141,11 @@ private:
     }
 };
 
-class GfxD2DVramSourceSurfaceReporter MOZ_FINAL : public MemoryReporterBase
+class GfxD2DVramSourceSurfaceReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
     GfxD2DVramSourceSurfaceReporter()
-      : MemoryReporterBase("gfx-d2d-vram-source-surface",
+      : MemoryUniReporter("gfx-d2d-vram-source-surface",
                            KIND_OTHER, UNITS_BYTES,
                            "Video memory used by D2D SourceSurfaces.")
     {}
@@ -206,7 +206,7 @@ typedef HRESULT (WINAPI*D3D11CreateDeviceFunc)(
   ID3D11DeviceContext *ppImmediateContext
 );
 
-class GPUAdapterMultiReporter : public nsIMemoryMultiReporter {
+class GPUAdapterReporter : public nsIMemoryReporter {
 
     // Callers must Release the DXGIAdapter after use or risk mem-leak
     static bool GetDXGIAdapter(IDXGIAdapter **DXGIAdapter)
@@ -228,7 +228,7 @@ class GPUAdapterMultiReporter : public nsIMemoryMultiReporter {
 public:
     NS_DECL_ISUPPORTS
 
-    // nsIMemoryMultiReporter abstract method implementation
+    // nsIMemoryReporter abstract method implementation
     NS_IMETHOD
     GetName(nsACString &aName)
     {
@@ -236,9 +236,9 @@ public:
         return NS_OK;
     }
     
-    // nsIMemoryMultiReporter abstract method implementation
+    // nsIMemoryReporter abstract method implementation
     NS_IMETHOD
-    CollectReports(nsIMemoryMultiReporterCallback* aCb,
+    CollectReports(nsIMemoryReporterCallback* aCb,
                    nsISupports* aClosure)
     {
         int32_t winVers, buildNum;
@@ -347,7 +347,7 @@ public:
         return NS_OK;
     }
 };
-NS_IMPL_ISUPPORTS1(GPUAdapterMultiReporter, nsIMemoryMultiReporter)
+NS_IMPL_ISUPPORTS1(GPUAdapterReporter, nsIMemoryReporter)
 
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
@@ -384,16 +384,16 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     UpdateRenderMode();
 
-    mGPUAdapterMultiReporter = new GPUAdapterMultiReporter();
-    NS_RegisterMemoryMultiReporter(mGPUAdapterMultiReporter);
+    mGPUAdapterReporter = new GPUAdapterReporter();
+    NS_RegisterMemoryReporter(mGPUAdapterReporter);
 }
 
 gfxWindowsPlatform::~gfxWindowsPlatform()
 {
-    NS_UnregisterMemoryMultiReporter(mGPUAdapterMultiReporter);
-    
-     mDeviceManager = nullptr;
-     
+    NS_UnregisterMemoryReporter(mGPUAdapterReporter);
+
+    mDeviceManager = nullptr;
+
     ::ReleaseDC(nullptr, mScreenDC);
     // not calling FT_Done_FreeType because cairo may still hold references to
     // these FT_Faces.  See bug 458169.

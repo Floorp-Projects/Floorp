@@ -257,11 +257,11 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static PLDHashTable sEventListenerManagersHash;
 
-class DOMEventListenerManagersHashReporter MOZ_FINAL : public MemoryReporterBase
+class DOMEventListenerManagersHashReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
   DOMEventListenerManagersHashReporter()
-    : MemoryReporterBase(
+    : MemoryUniReporter(
         "explicit/dom/event-listener-managers-hash",
         KIND_HEAP,
         UNITS_BYTES,

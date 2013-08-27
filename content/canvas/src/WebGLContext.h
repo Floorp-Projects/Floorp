@@ -118,7 +118,7 @@ class WebGLContext :
 {
     friend class WebGLContextUserData;
     friend class WebGLMemoryPressureObserver;
-    friend class WebGLMemoryMultiReporterWrapper;
+    friend class WebGLMemoryReporterWrapper;
     friend class WebGLExtensionLoseContext;
     friend class WebGLExtensionCompressedTextureS3TC;
     friend class WebGLExtensionCompressedTextureATC;
