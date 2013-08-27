@@ -800,11 +800,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   ::JS_SetParallelParsingEnabled(context->mContext, parallelParsing);
   ::JS_SetParallelIonCompilationEnabled(context->mContext, parallelIonCompilation);
 
-  ::JS_SetGlobalCompilerOption(context->mContext, JSCOMPILER_BASELINE_USECOUNT_TRIGGER,
-                               (useBaselineJITEager ? 0 : -1));
+  ::JS_SetGlobalJitCompilerOption(context->mContext, JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER,
+                                  (useBaselineJITEager ? 0 : -1));
 
-  ::JS_SetGlobalCompilerOption(context->mContext, JSCOMPILER_ION_USECOUNT_TRIGGER,
-                               (useIonEager ? 0 : -1));
+  ::JS_SetGlobalJitCompilerOption(context->mContext, JSJITCOMPILER_ION_USECOUNT_TRIGGER,
+                                  (useIonEager ? 0 : -1));
 
   // Save the new defaults for the next page load (InitContext).
   context->mDefaultJSOptions = newDefaultJSOptions;
