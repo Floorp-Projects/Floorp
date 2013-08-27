@@ -95,7 +95,7 @@ function getAreaWidgetIds(areaId) {
 function simulateItemDrag(toDrag, target) {
   let docId = toDrag.ownerDocument.documentElement.id;
   let dragData = [[{type: 'text/toolbarwrapper-id/' + docId,
-                    data: {id: toDrag.id, width: toDrag.getBoundingClientRect().width + 'px'}}]];
+                    data: toDrag.id}]];
   synthesizeDragStart(toDrag.parentNode, dragData);
   synthesizeDrop(target, target, dragData);
 }
