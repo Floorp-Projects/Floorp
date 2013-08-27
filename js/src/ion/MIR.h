@@ -4613,12 +4613,14 @@ class MLoadElementHole
     MDefinition *initLength() const {
         return getOperand(2);
     }
+    bool needsNegativeIntCheck() const;
     bool needsHoleCheck() const {
         return needsHoleCheck_;
     }
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::Element);
     }
+    void collectRangeInfo();
 };
 
 class MStoreElementCommon

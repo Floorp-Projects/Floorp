@@ -6065,6 +6065,8 @@ CodeGenerator::visitLoadElementHole(LLoadElementHole *lir)
     Register initLength = ToRegister(lir->initLength());
     const ValueOperand out = ToOutValue(lir);
 
+    const MLoadElementHole *mir = lir->mir();
+
     // If the index is out of bounds, load |undefined|. Otherwise, load the
     // value.
     Label undefined, done;
@@ -6084,6 +6086,19 @@ CodeGenerator::visitLoadElementHole(LLoadElementHole *lir)
         masm.jump(&done);
 
     masm.bind(&undefined);
+
+    if (mir->needsNegativeIntCheck()) {
+        if (lir->index()->isConstant()) {
+            if (ToInt32(lir->index()) < 0 && !bailout(lir->snapshot()))
+                return false;
+        } else {
+            Label negative;
+            masm.branch32(Assembler::LessThan, ToRegister(lir->index()), Imm32(0), &negative);
+            if (!bailoutFrom(&negative, lir->snapshot()))
+                return false;
+        }
+    }
+
     masm.moveValue(UndefinedValue(), out);
     masm.bind(&done);
     return true;
