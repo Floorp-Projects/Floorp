@@ -9,6 +9,7 @@ import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.Favicons;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.Tabs;
@@ -97,6 +98,8 @@ abstract class HomeFragment extends Fragment {
         if (info.bookmarkId < 0 && info.historyId < 0) {
             menu.findItem(R.id.home_remove).setVisible(false);
         }
+
+        menu.findItem(R.id.home_share).setVisible(!GeckoProfile.get(getActivity()).inGuestMode());
 
         final boolean canOpenInReader = (info.display == Combined.DISPLAY_READER);
         menu.findItem(R.id.home_open_in_reader).setVisible(canOpenInReader);
