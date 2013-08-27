@@ -1217,13 +1217,6 @@ abstract public class GeckoApp
             return;
         }
 
-        if (GeckoThread.isCreated()) {
-            // This happens when the GeckoApp activity is destroyed by Android
-            // without killing the entire application (see Bug 769269).
-            mIsRestoringActivity = true;
-            Telemetry.HistogramAdd("FENNEC_RESTORING_ACTIVITY", 1);
-        }
-
         // Fix for Bug 830557 on Tegra boards running Froyo.
         // This fix must be done before doing layout.
         // Assume the bug is fixed in Gingerbread and up.
@@ -1248,6 +1241,40 @@ abstract public class GeckoApp
         // Set up Gecko layout.
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
+
+        initializeChrome();
+
+        if (GeckoThread.isCreated()) {
+            // This happens when the GeckoApp activity is destroyed by Android
+            // without killing the entire application (see Bug 769269).
+            mIsRestoringActivity = true;
+            Telemetry.HistogramAdd("FENNEC_RESTORING_ACTIVITY", 1);
+        } else {
+            String passedUri = null;
+            String uri = getURIFromIntent(intent);
+            if (uri != null && uri.length() > 0) {
+                passedUri = uri;
+            }
+            String action = intent.getAction();
+
+            GeckoThread.setArgs(intent.getStringExtra("args"));
+            GeckoThread.setAction(intent.getAction());
+            GeckoThread.setUri(passedUri);
+
+            if (!ACTION_DEBUG.equals(action) &&
+                GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.Launched)) {
+                GeckoThread.createAndStart();
+            } else if (ACTION_DEBUG.equals(action) &&
+                GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.WaitForDebugger)) {
+                ThreadUtils.getUiHandler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        GeckoThread.setLaunchState(GeckoThread.LaunchState.Launching);
+                        GeckoThread.createAndStart();
+                    }
+                }, 1000 * 5 /* 5 seconds */);
+            }
+        }
 
         // Set up tabs panel.
         mTabsPanel = (TabsPanel) findViewById(R.id.tabs_panel);
@@ -1395,8 +1422,6 @@ abstract public class GeckoApp
 
         Tabs.registerOnTabsChangedListener(this);
 
-        initializeChrome();
-
         // If we are doing a restore, read the session data and send it to Gecko
         String restoreMessage = null;
         if (mRestoreMode != RESTORE_NONE && !mIsRestoringActivity) {
@@ -1439,25 +1464,6 @@ abstract public class GeckoApp
         }
 
         Telemetry.HistogramAdd("FENNEC_STARTUP_GECKOAPP_ACTION", startupAction.ordinal());
-
-        if (!mIsRestoringActivity) {
-            GeckoThread.setArgs(intent.getStringExtra("args"));
-            GeckoThread.setAction(intent.getAction());
-            GeckoThread.setUri(passedUri);
-        }
-        if (!ACTION_DEBUG.equals(action) &&
-            GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.Launched)) {
-            GeckoThread.createAndStart();
-        } else if (ACTION_DEBUG.equals(action) &&
-            GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.WaitForDebugger)) {
-            ThreadUtils.getUiHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    GeckoThread.setLaunchState(GeckoThread.LaunchState.Launching);
-                    GeckoThread.createAndStart();
-                }
-            }, 1000 * 5 /* 5 seconds */);
-        }
 
         // Check if launched from data reporting notification.
         if (ACTION_LAUNCH_SETTINGS.equals(action)) {
