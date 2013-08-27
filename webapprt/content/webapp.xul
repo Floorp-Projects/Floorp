@@ -17,6 +17,7 @@
         id="default"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="1024" height="768"
+        fullscreenbutton="true"
         persist="screenX screenY width height sizemode"
         >
 
@@ -157,7 +158,6 @@
   <browser type="content-primary" id="content" flex="1" context="contentAreaContextMenu" />
 
   <popupset>
-    <menuseparator id="page-menu-separator"/>
     <menupopup id="contentAreaContextMenu" pagemenu="start"
                onpopupshowing="return showContextMenu(event, this)"
                onpopuphiding="hideContextMenu(event, this)">
