@@ -496,10 +496,6 @@ void XPCJSRuntime::TraceAdditionalNativeGrayRoots(JSTracer *trc)
 {
     XPCAutoLock lock(mMapLock);
 
-    // Trace outer windows, which are the default compartment objects for DOM
-    // JSContexts.
-    dom::TraceOuterWindows(trc);
-
     XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(trc, this);
 
     for (XPCRootSetElem *e = mVariantRoots; e ; e = e->GetNextRoot())
@@ -560,10 +556,6 @@ void
 XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback &cb)
 {
     XPCAutoLock lock(mMapLock);
-
-    // Traverse outer windows, which are the default compartment objects for DOM
-    // JSContexts.
-    dom::TraverseOuterWindows(cb);
 
     XPCWrappedNativeScope::SuspectAllWrappers(this, cb);
 
