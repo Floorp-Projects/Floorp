@@ -18,6 +18,7 @@ public class testPan extends PixelTest {
         blockForGeckoReady();
 
         loadAndPaint(url);
+        verifyHomePagerHidden();
 
         mDriver.setupScrollHandling();
 
