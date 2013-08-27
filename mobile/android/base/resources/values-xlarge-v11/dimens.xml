@@ -11,7 +11,6 @@
     <dimen name="tabs_counter_size">26sp</dimen>
     <dimen name="tabs_panel_indicator_width">60dp</dimen>
     <dimen name="tabs_panel_list_padding">8dip</dimen>
-    <dimen name="url_bar_offset_left">84dip</dimen>
     <dimen name="history_tab_widget_width">270dp</dimen>
 
 </resources>
