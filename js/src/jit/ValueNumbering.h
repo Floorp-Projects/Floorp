@@ -12,7 +12,7 @@
 #include "jit/MIRGraph.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class ValueNumberer
 {
@@ -133,7 +133,7 @@ class ValueNumberData : public TempObject {
         rep->valueNumberData()->classNext = thisDef;
     }
 };
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_ValueNumbering_h */

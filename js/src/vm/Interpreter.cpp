@@ -417,22 +417,22 @@ js::RunScript(JSContext *cx, RunState &state)
     SPSEntryMarker marker(cx->runtime());
 
 #ifdef JS_ION
-    if (ion::IsEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnter(cx, state);
-        if (status == ion::Method_Error)
+    if (jit::IsEnabled(cx)) {
+        jit::MethodStatus status = jit::CanEnter(cx, state);
+        if (status == jit::Method_Error)
             return false;
-        if (status == ion::Method_Compiled) {
-            ion::IonExecStatus status = ion::Cannon(cx, state);
+        if (status == jit::Method_Compiled) {
+            jit::IonExecStatus status = jit::Cannon(cx, state);
             return !IsErrorStatus(status);
         }
     }
 
-    if (ion::IsBaselineEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnterBaselineMethod(cx, state);
-        if (status == ion::Method_Error)
+    if (jit::IsBaselineEnabled(cx)) {
+        jit::MethodStatus status = jit::CanEnterBaselineMethod(cx, state);
+        if (status == jit::Method_Error)
             return false;
-        if (status == ion::Method_Compiled) {
-            ion::IonExecStatus status = ion::EnterBaselineMethod(cx, state);
+        if (status == jit::Method_Compiled) {
+            jit::IonExecStatus status = jit::EnterBaselineMethod(cx, state);
             return !IsErrorStatus(status);
         }
     }
@@ -1580,18 +1580,18 @@ BEGIN_CASE(JSOP_LOOPENTRY)
 
 #ifdef JS_ION
     // Attempt on-stack replacement with Baseline code.
-    if (ion::IsBaselineEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnterBaselineAtBranch(cx, regs.fp(), false);
-        if (status == ion::Method_Error)
+    if (jit::IsBaselineEnabled(cx)) {
+        jit::MethodStatus status = jit::CanEnterBaselineAtBranch(cx, regs.fp(), false);
+        if (status == jit::Method_Error)
             goto error;
-        if (status == ion::Method_Compiled) {
-            ion::IonExecStatus maybeOsr = ion::EnterBaselineAtBranch(cx, regs.fp(), regs.pc);
+        if (status == jit::Method_Compiled) {
+            jit::IonExecStatus maybeOsr = jit::EnterBaselineAtBranch(cx, regs.fp(), regs.pc);
 
             // We failed to call into baseline at all, so treat as an error.
-            if (maybeOsr == ion::IonExec_Aborted)
+            if (maybeOsr == jit::IonExec_Aborted)
                 goto error;
 
-            interpReturnOK = (maybeOsr == ion::IonExec_Ok);
+            interpReturnOK = (maybeOsr == jit::IonExec_Ok);
 
             if (entryFrame != regs.fp())
                 goto jit_return_pop_frame;
@@ -2501,12 +2501,12 @@ BEGIN_CASE(JSOP_FUNCALL)
     if (newType)
         state.setUseNewType();
 
-    if (!newType && ion::IsEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnter(cx, state);
-        if (status == ion::Method_Error)
+    if (!newType && jit::IsEnabled(cx)) {
+        jit::MethodStatus status = jit::CanEnter(cx, state);
+        if (status == jit::Method_Error)
             goto error;
-        if (status == ion::Method_Compiled) {
-            ion::IonExecStatus exec = ion::Cannon(cx, state);
+        if (status == jit::Method_Compiled) {
+            jit::IonExecStatus exec = jit::Cannon(cx, state);
             CHECK_BRANCH();
             regs.sp = args.spAfterCall();
             interpReturnOK = !IsErrorStatus(exec);
@@ -2514,12 +2514,12 @@ BEGIN_CASE(JSOP_FUNCALL)
         }
     }
 
-    if (ion::IsBaselineEnabled(cx)) {
-        ion::MethodStatus status = ion::CanEnterBaselineMethod(cx, state);
-        if (status == ion::Method_Error)
+    if (jit::IsBaselineEnabled(cx)) {
+        jit::MethodStatus status = jit::CanEnterBaselineMethod(cx, state);
+        if (status == jit::Method_Error)
             goto error;
-        if (status == ion::Method_Compiled) {
-            ion::IonExecStatus exec = ion::EnterBaselineMethod(cx, state);
+        if (status == jit::Method_Compiled) {
+            jit::IonExecStatus exec = jit::EnterBaselineMethod(cx, state);
             CHECK_BRANCH();
             regs.sp = args.spAfterCall();
             interpReturnOK = !IsErrorStatus(exec);
@@ -3503,7 +3503,7 @@ js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
         } else {
 #ifdef JS_ION
             JS_ASSERT(cx->currentlyRunningInJit());
-            frame = ion::GetTopBaselineFrame(cx);
+            frame = jit::GetTopBaselineFrame(cx);
 #endif
         }
 

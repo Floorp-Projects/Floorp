@@ -10,14 +10,14 @@
 #include "jit/VMFunctions.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, HandleScript script)
   : cx(cx),
     script(cx, script),
     pc(script->code),
-    ionCompileable_(ion::IsEnabled(cx) && CanIonCompileScript(cx, script, false)),
-    ionOSRCompileable_(ion::IsEnabled(cx) && CanIonCompileScript(cx, script, true)),
+    ionCompileable_(jit::IsEnabled(cx) && CanIonCompileScript(cx, script, false)),
+    ionOSRCompileable_(jit::IsEnabled(cx) && CanIonCompileScript(cx, script, true)),
     debugMode_(cx->compartment()->debugMode()),
     analysis_(script),
     frame(cx, script, masm),

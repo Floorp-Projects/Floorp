@@ -447,8 +447,8 @@ void SpewBailout(uint32_t count, HandleScript script, jsbytecode *pc,
                  ParallelBailoutCause cause);
 ExecutionStatus SpewEndOp(ExecutionStatus status);
 void SpewBeginCompile(HandleScript script);
-ion::MethodStatus SpewEndCompile(ion::MethodStatus status);
-void SpewMIR(ion::MDefinition *mir, const char *fmt, ...);
+jit::MethodStatus SpewEndCompile(jit::MethodStatus status);
+void SpewMIR(jit::MDefinition *mir, const char *fmt, ...);
 void SpewBailoutIR(uint32_t bblockId, uint32_t lirId,
                    const char *lir, const char *mir, JSScript *script, jsbytecode *pc);
 
@@ -462,8 +462,8 @@ static inline void SpewBailout(uint32_t count, HandleScript script,
 static inline ExecutionStatus SpewEndOp(ExecutionStatus status) { return status; }
 static inline void SpewBeginCompile(HandleScript script) { }
 #ifdef JS_ION
-static inline ion::MethodStatus SpewEndCompile(ion::MethodStatus status) { return status; }
-static inline void SpewMIR(ion::MDefinition *mir, const char *fmt, ...) { }
+static inline jit::MethodStatus SpewEndCompile(jit::MethodStatus status) { return status; }
+static inline void SpewMIR(jit::MDefinition *mir, const char *fmt, ...) { }
 #endif
 static inline void SpewBailoutIR(uint32_t bblockId, uint32_t lirId,
                                  const char *lir, const char *mir,

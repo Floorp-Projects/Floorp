@@ -300,7 +300,7 @@ JitSupportsFloatingPoint()
         return false;
 
 #if defined(JS_ION) && WTF_ARM_ARCH_VERSION == 6
-    if (!js::ion::hasVFP())
+    if (!js::jit::hasVFP())
         return false;
 #endif
 
@@ -559,7 +559,7 @@ JSRuntime::triggerOperationCallback(OperationCallbackTrigger trigger)
      * handlers to halt running code.
      */
     TriggerOperationCallbackForAsmJSCode(this);
-    ion::TriggerOperationCallbackForIonCode(this, trigger);
+    jit::TriggerOperationCallbackForIonCode(this, trigger);
 #endif
 }
 

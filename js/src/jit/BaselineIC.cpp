@@ -24,7 +24,7 @@
 #include "vm/ScopeObject-inl.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 #ifdef DEBUG
 void
@@ -857,7 +857,7 @@ DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
     *infoPtr = NULL;
 
     // A TI OOM will disable TI and Ion.
-    if (!ion::IsEnabled(cx))
+    if (!jit::IsEnabled(cx))
         return true;
 
     RootedScript script(cx, frame->script());
@@ -8616,5 +8616,5 @@ ICGetProp_DOMProxyShadowed::ICGetProp_DOMProxyShadowed(IonCode *stubCode,
     pcOffset_(pcOffset)
 { }
 
-} // namespace ion
+} // namespace jit
 } // namespace js

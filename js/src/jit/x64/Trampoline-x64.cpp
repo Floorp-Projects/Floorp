@@ -15,7 +15,7 @@
 #include "jit/x64/BaselineHelpers-x64.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 // All registers to save and restore. This includes the stack pointer, since we
 // use the ability to reference register values on the stack by index.
@@ -194,7 +194,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.passABIArg(framePtr); // BaselineFrame
         masm.passABIArg(OsrFrameReg); // StackFrame
         masm.passABIArg(numStackValues);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::InitBaselineFrameForOsr));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, jit::InitBaselineFrameForOsr));
 
         masm.pop(reg_code);
         masm.pop(framePtr);
@@ -287,7 +287,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
     // Push registers such that we can access them from [base + code].
     masm.PushRegsInMask(AllRegs);
 
-    masm.movq(rsp, rax); // Argument to ion::InvalidationBailout.
+    masm.movq(rsp, rax); // Argument to jit::InvalidationBailout.
 
     // Make space for InvalidationBailout's frameSize outparam.
     masm.reserveStack(sizeof(size_t));
