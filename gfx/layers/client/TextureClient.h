@@ -285,6 +285,7 @@ protected:
   size_t mBufSize;
 };
 
+
 struct TextureClientAutoUnlock
 {
   TextureClient* mTexture;

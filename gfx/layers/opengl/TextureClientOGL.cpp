@@ -16,18 +16,16 @@ namespace layers {
 
 class CompositableForwarder;
 
-SharedTextureClientOGL::SharedTextureClientOGL(TextureFlags aFlags)
-  : TextureClient(aFlags)
-  , mHandle(0)
+SharedTextureClientOGL::SharedTextureClientOGL()
+  : mHandle(0)
+  , mIsCrossProcess(false)
   , mInverted(false)
 {
-  MOZ_ASSERT(!(aFlags & (TEXTURE_DEALLOCATE_CLIENT|TEXTURE_DEALLOCATE_HOST)),
-             "SharedTextureClientOGL doesn't know how to release textures!");
 }
 
 SharedTextureClientOGL::~SharedTextureClientOGL()
 {
-  // the data is owned externally.
+  // the data is released by the host
 }
 
 
@@ -38,20 +36,22 @@ SharedTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
     return false;
   }
   nsIntSize nsSize(mSize.width, mSize.height);
-  aOutDescriptor = SharedTextureDescriptor(mShareType, mHandle, nsSize, mInverted);
+  aOutDescriptor = SharedTextureDescriptor(mIsCrossProcess ? gl::GLContext::CrossProcess
+                                                           : gl::GLContext::SameProcess,
+                                           mHandle, nsSize, mInverted);
   return true;
 }
 
 void
 SharedTextureClientOGL::InitWith(gl::SharedTextureHandle aHandle,
                                  gfx::IntSize aSize,
-                                 gl::GLContext::SharedTextureShareType aShareType,
+                                 bool aIsCrossProcess,
                                  bool aInverted)
 {
   MOZ_ASSERT(!IsAllocated());
   mHandle = aHandle;
   mSize = aSize;
-  mShareType = aShareType;
+  mIsCrossProcess = aIsCrossProcess;
   mInverted = aInverted;
 }
 
