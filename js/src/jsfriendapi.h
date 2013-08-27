@@ -16,6 +16,7 @@
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
+#include "js/CallNonGenericMethod.h"
 
 /*
  * This macro checks if the stack pointer has exceeded a given limit. If
