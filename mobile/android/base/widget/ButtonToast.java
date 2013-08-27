@@ -152,9 +152,7 @@ public class ButtonToast {
             // See bug 885717.
             PropertyAnimator animator = new PropertyAnimator(duration);
             animator.attach(mView, PropertyAnimator.Property.ALPHA, 0.0f);
-            animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener () {
-                // If we are showing a toast and go in the background
-                // onAnimationEnd will be called when the app is restored
+            animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener () {
                 public void onPropertyAnimationEnd() {
                     mView.setVisibility(View.GONE);
                     showNextInQueue();
