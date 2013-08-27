@@ -109,6 +109,7 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:GetCallForwardingOption",
   "RIL:SetCallBarringOption",
   "RIL:GetCallBarringOption",
+  "RIL:ChangeCallBarringPassword",
   "RIL:SetCallWaitingOption",
   "RIL:GetCallWaitingOption",
   "RIL:SetCallingLineIdRestriction",
@@ -1016,6 +1017,9 @@ RadioInterface.prototype = {
         break;
       case "RIL:GetCallBarringOption":
         this.workerMessenger.sendWithIPCMessage(msg, "queryCallBarringStatus");
+        break;
+      case "RIL:ChangeCallBarringPassword":
+        this.workerMessenger.sendWithIPCMessage(msg, "changeCallBarringPassword");
         break;
       case "RIL:SetCallWaitingOption":
         this.workerMessenger.sendWithIPCMessage(msg, "setCallWaiting");

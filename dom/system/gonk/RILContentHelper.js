@@ -92,6 +92,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:GetCallForwardingOption",
   "RIL:SetCallBarringOption",
   "RIL:GetCallBarringOption",
+  "RIL:ChangeCallBarringPassword",
   "RIL:SetCallWaitingOption",
   "RIL:GetCallWaitingOption",
   "RIL:SetCallingLineIdRestriction",
@@ -1103,6 +1104,31 @@ RILContentHelper.prototype = {
     return request;
   },
 
+  changeCallBarringPassword: function changeCallBarringPassword(window, info) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+
+    // Checking valid PIN for supplementary services. See TS.22.004 clause 5.2.
+    if (info.pin == null || !info.pin.match(/^\d{4}$/) ||
+        info.newPin == null || !info.newPin.match(/^\d{4}$/)) {
+      this.dispatchFireRequestError(requestId, "InvalidPassword");
+      return request;
+    }
+
+    if (DEBUG) debug("changeCallBarringPassword: " + JSON.stringify(info));
+    info.requestId = requestId;
+    cpmm.sendAsyncMessage("RIL:ChangeCallBarringPassword", {
+      clientId: 0,
+      data: info
+    });
+
+    return request;
+  },
+
   getCallWaitingOption: function getCallWaitingOption(window) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
@@ -1662,6 +1688,9 @@ RILContentHelper.prototype = {
         this.handleGetCallBarringOption(msg.json);
         break;
       case "RIL:SetCallBarringOption":
+        this.handleSimpleRequest(msg.json.requestId, msg.json.errorMsg, null);
+        break;
+      case "RIL:ChangeCallBarringPassword":
         this.handleSimpleRequest(msg.json.requestId, msg.json.errorMsg, null);
         break;
       case "RIL:GetCallWaitingOption":
