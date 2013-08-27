@@ -109,7 +109,8 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:ExitEmergencyCbMode",
   "RIL:SetVoicePrivacyMode",
   "RIL:GetVoicePrivacyMode",
-  "RIL:ConferenceCallStateChanged"
+  "RIL:ConferenceCallStateChanged",
+  "RIL:OtaStatusChanged"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -1530,6 +1531,11 @@ RILContentHelper.prototype = {
         this._deliverEvent("_mobileConnectionListeners",
                            "notifyDataChanged",
                            null);
+        break;
+      case "RIL:OtaStatusChanged":
+        this._deliverEvent("_mobileConnectionListeners",
+                           "notifyOtaStatusChanged",
+                           [msg.json.data]);
         break;
       case "RIL:EnumerateCalls":
         this.handleEnumerateCalls(msg.json.calls);
