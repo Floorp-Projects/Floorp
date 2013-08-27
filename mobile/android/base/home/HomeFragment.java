@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -44,6 +45,9 @@ abstract class HomeFragment extends Fragment {
 
     // Share MIME type.
     private static final String SHARE_MIME_TYPE = "text/plain";
+
+    // URL to Title replacement regex.
+    private static final String REGEX_URL_TO_TITLE = "^([a-z]+://)?(www\\.)?";
 
     // Whether the fragment can load its content or not
     // This is used to defer data loading until the editing
@@ -83,7 +87,7 @@ abstract class HomeFragment extends Fragment {
         MenuInflater inflater = new MenuInflater(view.getContext());
         inflater.inflate(R.menu.home_contextmenu, menu);
 
-        menu.setHeaderTitle(info.getDisplayTitle());
+        menu.setHeaderTitle(info.title);
 
         // Hide the "Edit" menuitem if this item isn't a bookmark.
         if (info.bookmarkId < 0) {
@@ -122,7 +126,7 @@ abstract class HomeFragment extends Fragment {
                 Log.e(LOGTAG, "Can't share because URL is null");
             } else {
                 GeckoAppShell.openUriExternal(info.url, SHARE_MIME_TYPE, "", "",
-                                              Intent.ACTION_SEND, info.getDisplayTitle());
+                                              Intent.ACTION_SEND, info.title);
             }
         }
 
@@ -132,7 +136,8 @@ abstract class HomeFragment extends Fragment {
                 return false;
             }
 
-            new AddToLauncherTask(info.url, info.getDisplayTitle()).execute();
+            String shortcutTitle = TextUtils.isEmpty(info.title) ? info.url.replaceAll(REGEX_URL_TO_TITLE, "") : info.title;
+            new AddToLauncherTask(info.url, shortcutTitle).execute();
             return true;
         }
 
