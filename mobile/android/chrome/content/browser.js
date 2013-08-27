@@ -6515,12 +6515,14 @@ var SearchEngines = {
 
     let suggestTemplate = null;
     let suggestEngine = null;
-    let engine = this.getSuggestionEngine();
-    if (engine != null) {
+
+    // Check to see if the default engine supports search suggestions. We only need to check
+    // the default engine because we only show suggestions for the default engine in the UI.
+    let engine = Services.search.defaultEngine;
+    if (engine.supportsResponseType("application/x-suggestions+json")) {
       suggestEngine = engine.name;
       suggestTemplate = engine.getSubmission("__searchTerms__", "application/x-suggestions+json").uri.spec;
     }
-
 
     // By convention, the currently configured default engine is at position zero in searchEngines.
     sendMessageToJava({
@@ -6575,19 +6577,6 @@ var SearchEngines = {
         dump("Unexpected message type observed: " + aTopic);
         break;
     }
-  },
-
-  getSuggestionEngine: function () {
-    let engines = [ Services.search.currentEngine,
-                    Services.search.defaultEngine ];
-
-    for (let i = 0; i < engines.length; i++) {
-      let engine = engines[i];
-      if (engine && engine.supportsResponseType("application/x-suggestions+json"))
-        return engine;
-    }
-
-    return null;
   },
 
   addEngine: function addEngine(aElement) {
