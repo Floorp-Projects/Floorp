@@ -384,6 +384,7 @@ webidl_files = \
   WebComponents.webidl \
   WebSocket.webidl \
   WheelEvent.webidl \
+  WifiOptions.webidl \
   Window.webidl \
   WorkerLocation.webidl \
   WorkerNavigator.webidl \
