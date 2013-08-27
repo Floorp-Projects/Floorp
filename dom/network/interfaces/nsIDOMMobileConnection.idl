@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(8284af62-c39d-4a59-b258-107040040418)]
+[scriptable, builtinclass, uuid(abb4e288-f91e-45dc-b1ca-1949de9807ea)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -362,6 +362,12 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * callback mode changes.
    */
   [implicit_jscontext] attribute jsval onemergencycbmodechange;
+
+  /**
+   * The 'onotastatuschange' event is notified whenever the ota provision status
+   * changes.
+   */
+  [implicit_jscontext] attribute jsval onotastatuschange;
 };
 
 [scriptable, uuid(49706beb-a160-40b7-b745-50f62e389a2c)]
