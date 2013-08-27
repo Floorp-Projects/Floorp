@@ -165,7 +165,13 @@ public class ReadingListPage extends HomeFragment {
             if (imageSpanIndex != -1) {
                 final ImageSpan readingListIcon = new ImageSpan(getActivity(), R.drawable.reader_cropped, ImageSpan.ALIGN_BOTTOM);
                 final SpannableStringBuilder hintBuilder = new SpannableStringBuilder(readingListHint);
-                hintBuilder.setSpan(readingListIcon, imageSpanIndex, imageSpanIndex + 2, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
+
+                // Add additional spacing.
+                hintBuilder.insert(imageSpanIndex + 2, " ");
+                hintBuilder.insert(imageSpanIndex, " ");
+
+                // Add icon.
+                hintBuilder.setSpan(readingListIcon, imageSpanIndex + 1, imageSpanIndex + 3, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
 
                 emptyHint.setText(hintBuilder, TextView.BufferType.SPANNABLE);
             }

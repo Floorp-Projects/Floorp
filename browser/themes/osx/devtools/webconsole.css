@@ -4,15 +4,3 @@
 
 %include ../shared.inc
 %include ../../shared/devtools/webconsole.inc.css
-
-/* General output styles */
-
-.webconsole-timestamp,
-.webconsole-msg-body {
-  font-family: Menlo, Monaco, monospace;
-}
-
-.jsterm-input-node,
-.jsterm-complete-node {
-  font: 1em Menlo, Monaco, monospace;
-}

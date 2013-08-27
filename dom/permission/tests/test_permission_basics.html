@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id={770731}
+https://bugzilla.mozilla.org/show_bug.cgi?id=770731
 -->
 <head>
   <title>Test for Bug {770731} Permissions</title>
@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={770731}
 </head>
 <body>
 
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={770731}">Mozilla Bug {674720}</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=770731">Mozilla Bug 770731</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
@@ -21,6 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={770731}
 
 "use strict";
 
+SimpleTest.waitForExplicitFinish();
+
 var testPrivApp = {
   'manifestURL' : 'https://aprivileged.com/manifest.webapp'
 };
@@ -29,90 +31,76 @@ var testCertApp = {
   'manifestURL' : 'https://acertified.com/manifest.webapp'
 };
 
-SpecialPowers.addPermission("permissions", true, document);
-SpecialPowers.pushPrefEnv({ "set": [["dom.mozPermissionSettings.enabled", true]] },
-                          function() {
-                            SpecialPowers.removePermission("permissions", document);
-                          });
+// Any permission explicit for privileged and implicit for certified serves
+var testPerm = "contacts-read";
+// Any permission explicit for privileged and certified apps
+var explicitPerm = "geolocation";
 
-SpecialPowers.Cu.import("resource://gre/modules/PermissionSettings.jsm");
-var mozPermissions = window.navigator.mozPermissionSettings;
+// Simulate that the app requested the permissions
+SpecialPowers.pushPermissions([{'type': 'permissions', 'allow': true, 'context': document}, {'type': testPerm, 'allow': true, 'context': testPrivApp}, {'type': testPerm, 'allow': true, 'context': testCertApp}, {'type': explicitPerm, 'allow': true, 'context': testPrivApp}, {'type': explicitPerm, 'allow': true, 'context': testCertApp}], function() {
+  SpecialPowers.pushPrefEnv({ "set": [["dom.mozPermissionSettings.enabled", true]] }, permissionTest);
+});
 
 function permissionTest() {
-  // Any permission explicit for privileged and implicit for certified serves
-  var testPerm = "contacts-read";
-  // Any permission explicit for privileged and certified apps
-  var explicitPerm = "geolocation";
+  if (SpecialPowers.isMainProcess()) {
+    SpecialPowers.Cu.import("resource://gre/modules/PermissionSettings.jsm");
+  }
 
-  // Simulate that the app requested the permissions
-  SpecialPowers.addPermission(testPerm, true, testPrivApp);
-  SpecialPowers.addPermission(testPerm, true, testCertApp);
-  SpecialPowers.addPermission(explicitPerm, true, testPrivApp);
-  SpecialPowers.addPermission(explicitPerm, true, testCertApp);
+  var mozPermissions = window.navigator.mozPermissionSettings;
+  isnot(mozPermissions, null, "mozPermissionSettings is null when not enabled.");
 
-  if (gPermissionsEnabled) {
-    var certAppManifest = testCertApp.manifestURL;
-    var privAppManifest = testPrivApp.manifestURL;
-    var originPriv = "https://aprivileged.com";
-    var originCert = "https://acertified.com";
-    var originOther = "http://test";
+  var certAppManifest = testCertApp.manifestURL;
+  var privAppManifest = testPrivApp.manifestURL;
+  var originPriv = "https://aprivileged.com";
+  var originCert = "https://acertified.com";
+  var originOther = "http://test";
 
-    // Trying to make any change to implicit permissions should fail
+  // Trying to make any change to implicit permissions should fail
+  try {
+    mozPermissions.set(testPerm, "allow", certAppManifest, originCert, false);
+    ok(false, "Change implicit permission");
+  } catch (e) {
+    ok(true, "Change implicit permission");
+  }
+
+  var result=mozPermissions.get(testPerm, certAppManifest, originCert, false);
+  is(result, "allow", "same result");
+
+  // Removing a permission from the same origin, even an explicit one, should fail
+  try {
+    mozPermissions.set(testPerm, "unknown", privAppManifest, originPriv);
+    ok(false, "Setting a permission to unknown");
+  } catch (e) {
+    ok(true, "Setting a permission to unknown");
+  }
+
+  // Removing an explicit permission from a different origin should work
+  var testRemove = function(aPerm, aManifest, aOrigin, aTestMsg) {
     try {
-      mozPermissions.set(testPerm, "allow", certAppManifest, originCert, false);
-      ok(false, "Change implicit permission");
+      mozPermissions.remove(aPerm, aManifest, aOrigin);
+      var status = mozPermissions.get(aPerm, aManifest, aOrigin, false);
+      is(status, "unknown", aTestMsg);
     } catch (e) {
-      ok(true, "Change implicit permission");
+      ok(false, aTestMsg);
     }
+  }
 
-    var result=mozPermissions.get(testPerm, certAppManifest, originCert, false);
-    is(result, "allow", "same result");
-
-    // Removing a permission from the same origin, even an explicit one, should fail
-    try {
-      mozPermissions.set(testPerm, "unknown", privAppManifest, originPriv);
-      ok(false, "Setting a permission to unknown");
-    } catch (e) {
-      ok(true, "Setting a permission to unknown");
-    }
-
-    // Removing an explicit permission from a different origin should work
-    var testRemove = function(aPerm, aManifest, aOrigin, aTestMsg) {
-      try {
-        mozPermissions.remove(aPerm, aManifest, aOrigin);
-        var status = mozPermissions.get(aPerm, aManifest, aOrigin, false);
-        is(status, "unknown", aTestMsg);
-      } catch (e) {
-        ok(false, aTestMsg);
-      }
-    }
-
-    testRemove(explicitPerm, privAppManifest, originOther,
+  testRemove(explicitPerm, privAppManifest, originOther,
                "Remove explicit permission of privileged app");
-    testRemove(explicitPerm, certAppManifest, originOther,
+  testRemove(explicitPerm, certAppManifest, originOther,
                "Remove explicit permission of certified app");
 
-    mozPermissions.set(testPerm, "allow", privAppManifest, originPriv, false);
-    result = mozPermissions.get(testPerm, privAppManifest, originPriv, false);
-    is(result, "allow", "Set to allow");
-    mozPermissions.set(testPerm, "deny", privAppManifest, originPriv, false);
-    result = mozPermissions.get(testPerm, privAppManifest, originPriv, false);
-    is(result, "deny", "Set to deny");
-    mozPermissions.set(testPerm, "prompt", privAppManifest, originPriv, false);
-    result = mozPermissions.get(testPerm, privAppManifest, originPriv, false);
-    is(result, "prompt", "Set to prompt");
-    SimpleTest.finish();
-  } else {
-    is(mozPermissions, null, "mozPermissionSettings is null when not enabled.");
-    SimpleTest.finish();
-  }
-  SpecialPowers.removePermission(testPerm, testPrivApp);
-  SpecialPowers.removePermission(testPerm, testCertApp);
+  mozPermissions.set(testPerm, "allow", privAppManifest, originPriv, false);
+  result = mozPermissions.get(testPerm, privAppManifest, originPriv, false);
+  is(result, "allow", "Set to allow");
+  mozPermissions.set(testPerm, "deny", privAppManifest, originPriv, false);
+  result = mozPermissions.get(testPerm, privAppManifest, originPriv, false);
+  is(result, "deny", "Set to deny");
+  mozPermissions.set(testPerm, "prompt", privAppManifest, originPriv, false);
+  result = mozPermissions.get(testPerm, privAppManifest, originPriv, false);
+  is(result, "prompt", "Set to prompt");
+  SimpleTest.finish();
 }
-
-var gPermissionsEnabled = SpecialPowers.getBoolPref("dom.mozPermissionSettings.enabled");
-SimpleTest.waitForExplicitFinish();
-addLoadEvent(permissionTest);
 
 ok(true, "test passed");
 </script>
