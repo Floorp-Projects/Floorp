@@ -143,8 +143,9 @@ public:
     bool IsAlive();
     bool IsForApp();
 
-    void SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report);
-    void ClearChildMemoryReporters();
+    void SetChildMemoryReports(const InfallibleTArray<MemoryReport>&
+                               childReports);
+    void UnregisterChildMemoryReporter();
 
     GeckoChildProcessHost* Process() {
         return mSubprocess;
@@ -449,11 +450,13 @@ private:
     uint64_t mChildID;
     int32_t mGeolocationWatchID;
 
-    // This is a cache of all of the memory reporters
-    // registered in the child process.  To update this, one
-    // can broadcast the topic "child-memory-reporter-request" using
-    // the nsIObserverService.
-    nsCOMArray<nsIMemoryReporter> mMemoryReporters;
+    // This is a reporter holding the reports from the child's last
+    // "child-memory-reporter-update" notification.  To update this, one can
+    // broadcast the topic "child-memory-reporter-request" using the
+    // nsIObserverService.
+    //
+    // Note that this assumes there is at most one child process at a time!
+    nsCOMPtr<nsIMemoryReporter> mChildReporter;
 
     nsString mAppManifestURL;
 

@@ -138,11 +138,6 @@
   let e = mgr.enumerateReporters();
   while (e.hasMoreElements()) {
     let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    handleReport(r.process, r.path, r.kind, r.units, r.amount, r.description);
-  }
-  e = mgr.enumerateMultiReporters();
-  while (e.hasMoreElements()) {
-    let r = e.getNext().QueryInterface(Ci.nsIMemoryMultiReporter);
     r.collectReports(handleReport, null);
 
     // Access |name| to make sure it doesn't crash or assert.

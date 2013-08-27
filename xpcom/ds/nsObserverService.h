@@ -15,7 +15,7 @@
 #define NS_OBSERVERSERVICE_CID \
     { 0xd07f5195, 0xe3d1, 0x11d2, { 0x8a, 0xcd, 0x0, 0x10, 0x5a, 0x1b, 0x88, 0x60 } }
 
-class nsIMemoryMultiReporter;
+class nsIMemoryReporter;
 
 namespace mozilla {
 class ObserverServiceReporter;
@@ -47,7 +47,7 @@ private:
 
   bool mShuttingDown;
   nsTHashtable<nsObserverList> mObserverTopicTable;
-  nsCOMPtr<nsIMemoryMultiReporter> mReporter;
+  nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsObserverService, NS_OBSERVERSERVICE_CID)
