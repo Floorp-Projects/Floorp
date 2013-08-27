@@ -474,12 +474,10 @@ NoteJSChildGrayWrapperShim(void* aData, void* aThing)
 static const JSZoneParticipant sJSZoneCycleCollectorGlobal;
 
 CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
-                                                 JSUseHelperThreads aUseHelperThreads,
-                                                 bool aExpectUnrootedGlobals)
+                                                 JSUseHelperThreads aUseHelperThreads)
   : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal),
     mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal),
-    mJSRuntime(nullptr),
-    mExpectUnrootedGlobals(aExpectUnrootedGlobals)
+    mJSRuntime(nullptr)
 #ifdef DEBUG
   , mObjectToUnlink(nullptr)
 #endif
@@ -544,7 +542,10 @@ CycleCollectedJSRuntime::MaybeTraceGlobals(JSTracer* aTracer) const
 {
   JSContext* iter = nullptr;
   while (JSContext* acx = JS_ContextIterator(Runtime(), &iter)) {
-    MOZ_ASSERT(js::HasUnrootedGlobal(acx) == mExpectUnrootedGlobals);
+    // DOM JSContexts are the only JSContexts that cycle-collect their default
+    // compartment object, so they're the only ones that we need to do the
+    // JSOPTION_UNROOTED_GLOBAL dance for. The other ones are just marked black.
+    MOZ_ASSERT(js::HasUnrootedGlobal(acx) == !!GetScriptContextFromJSContext(acx));
     if (!js::HasUnrootedGlobal(acx)) {
       continue;
     }
@@ -1186,21 +1187,7 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
 {
   switch (aStatus) {
     case JSGC_BEGIN:
-    {
-      // XXXkhuey do we still need this?
-      // We seem to sometime lose the unrooted global flag. Restore it
-      // here. FIXME: bug 584495.
-      if (mExpectUnrootedGlobals){
-        JSContext* iter = nullptr;
-        while (JSContext* acx = JS_ContextIterator(Runtime(), &iter)) {
-          if (!js::HasUnrootedGlobal(acx)) {
-            JS_ToggleOptions(acx, JSOPTION_UNROOTED_GLOBAL);
-          }
-        }
-      }
-
       break;
-    }
     case JSGC_END:
     {
       /*
@@ -1229,11 +1216,5 @@ CycleCollectedJSRuntime::OnGC(JSGCStatus aStatus)
 bool
 CycleCollectedJSRuntime::OnContext(JSContext* aCx, unsigned aOperation)
 {
-  if (mExpectUnrootedGlobals && aOperation == JSCONTEXT_NEW) {
-    // XXXkhuey bholley is going to make this go away, but for now XPConnect
-    // needs it.
-    JS_ToggleOptions(aCx, JSOPTION_UNROOTED_GLOBAL);
-  }
-
   return CustomContextCallback(aCx, aOperation);
 }

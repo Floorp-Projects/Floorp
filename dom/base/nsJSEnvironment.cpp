@@ -836,7 +836,8 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
 
   ++sContextCount;
 
-  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS;
+  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS |
+                      JSOPTION_UNROOTED_GLOBAL;
 
   mContext = ::JS_NewContext(sRuntime, gStackSize);
   if (mContext) {
