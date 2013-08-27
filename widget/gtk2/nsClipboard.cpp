@@ -20,6 +20,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
 
 #include "imgIContainer.h"
 
@@ -929,7 +930,7 @@ RetrievalContext::Wait()
     FD_ZERO(&select_set);
     FD_SET(cnumber, &select_set);
     ++cnumber;
-    struct timeval tv;
+    TimeStamp start = TimeStamp::Now();
 
     do {
         XEvent xevent;
@@ -949,11 +950,14 @@ RetrievalContext::Wait()
             }
         }
 
+        TimeStamp now = TimeStamp::Now();
+        struct timeval tv;
         tv.tv_sec = 0;
-        tv.tv_usec = kClipboardTimeout;
+        tv.tv_usec = std::max<int32_t>(0,
+            kClipboardTimeout - (now - start).ToMicroseconds());
         select_result = select(cnumber, &select_set, NULL, NULL, &tv);
-
-    } while (select_result == 1);
+    } while (select_result == 1 ||
+             (select_result == -1 && errno == EINTR));
 
 #ifdef DEBUG_CLIPBOARD
     printf("exceeded clipboard timeout\n");
