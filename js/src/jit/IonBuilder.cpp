@@ -8993,6 +8993,8 @@ IonBuilder::jsop_instanceof()
         if (!protoObject)
             break;
 
+        rhs->setFoldedUnchecked();
+
         MInstanceOf *ins = new MInstanceOf(obj, protoObject);
 
         current->add(ins);
