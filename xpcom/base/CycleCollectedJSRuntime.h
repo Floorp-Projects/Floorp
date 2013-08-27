@@ -152,9 +152,6 @@ private:
 
   void TraverseNativeRoots(nsCycleCollectionNoteRootCallback& aCb);
 
-  void MaybeTraceGlobals(JSTracer* aTracer) const;
-
-
   static void TraceBlackJS(JSTracer* aTracer, void* aData);
   static void TraceGrayJS(JSTracer* aTracer, void* aData);
   static void GCCallback(JSRuntime* aRuntime, JSGCStatus aStatus, void* aData);
