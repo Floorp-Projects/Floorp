@@ -329,7 +329,10 @@ static int Launch()
     return RETRY;
   }
 
-  Log(L"Activation succeeded. processid=%d", processID);
+  Log(L"Activation succeeded.");
+
+  // automation.py picks up on this, don't mess with it.
+  Log(L"METRO_BROWSER_PROCESS=%d", processID);
 
   HANDLE child = OpenProcess(SYNCHRONIZE, FALSE, processID);
   if (!child) {
