@@ -953,10 +953,15 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
     // This signal is not for any asm.js code we expect, so we need to forward
     // the signal to the next handler. If there is no next handler (SIG_IGN or
     // SIG_DFL), then it's time to crash. To do this, we set the signal back to
-    // it's previous disposition and return. This will cause the faulting op to
-    // be re-executed which will crash in the normal way. The advantage to
-    // doing this is that we remove ourselves from the crash stack which
-    // simplifies crash reports. Note: the order of these tests matter.
+    // its original disposition and return. This will cause the faulting op to
+    // be re-executed which will crash in the normal way. The advantage of
+    // doing this to calling _exit() is that we remove ourselves from the crash
+    // stack which improves crash reports. If there is a next handler, call it.
+    // It will either crash synchronously, fix up the instruction so that
+    // execution can continue and return, or trigger a crash by returning the
+    // signal to it's original disposition and returning.
+    //
+    // Note: the order of these tests matter.
     struct sigaction* prevHandler = NULL;
     if (signum == SIGSEGV)
         prevHandler = &sPrevSegvHandler;
@@ -965,15 +970,12 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
         prevHandler = &sPrevBusHandler;
     }
 
-    if (prevHandler->sa_flags & SA_SIGINFO) {
+    if (prevHandler->sa_flags & SA_SIGINFO)
         prevHandler->sa_sigaction(signum, info, context);
-        exit(signum);  // backstop
-    } else if (prevHandler->sa_handler == SIG_DFL || prevHandler->sa_handler == SIG_IGN) {
+    else if (prevHandler->sa_handler == SIG_DFL || prevHandler->sa_handler == SIG_IGN)
         sigaction(signum, prevHandler, NULL);
-    } else {
+    else
         prevHandler->sa_handler(signum);
-        exit(signum);  // backstop
-    }
 }
 # endif
 
