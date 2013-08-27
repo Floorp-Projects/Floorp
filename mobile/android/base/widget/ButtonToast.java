@@ -104,7 +104,7 @@ public class ButtonToast {
             // See bug 885717.
             PropertyAnimator animator = new PropertyAnimator(duration);
             animator.attach(mView, PropertyAnimator.Property.ALPHA, 0.0f);
-            animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener () {
+            animator.setPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener () {
                 public void onPropertyAnimationEnd() {
                     mView.setVisibility(View.GONE);
                     mMessage = null;
