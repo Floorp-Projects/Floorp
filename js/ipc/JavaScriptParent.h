@@ -10,7 +10,7 @@
 
 #include "JavaScriptShared.h"
 #include "mozilla/jsipc/PJavaScriptParent.h"
-#include "jsclass.h"
+#include "js/Class.h"
 
 #ifdef XP_WIN
 #undef GetClassName

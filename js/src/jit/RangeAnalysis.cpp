@@ -1612,6 +1612,35 @@ RangeAnalysis::analyze()
     return true;
 }
 
+bool
+RangeAnalysis::addRangeAssertions()
+{
+    if (!js_IonOptions.checkRangeAnalysis)
+        return true;
+
+    // Check the computed range for this instruction, if the option is set. Note
+    // that this code is quite invasive; it adds numerous additional
+    // instructions for each MInstruction with a computed range, and it uses
+    // registers, so it also affects register allocation.
+    for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
+        MBasicBlock *block = *iter;
+
+        for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++) {
+            MInstruction *ins = *iter;
+
+            Range *r = ins->range();
+            if (!r || ins->isAssertRange() || ins->isBeta())
+                continue;
+
+            MAssertRange *guard = MAssertRange::New(ins);
+            guard->setRange(new Range(*r));
+            block->insertAfter(ins, guard);
+        }
+    }
+
+    return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Range based Truncation
 ///////////////////////////////////////////////////////////////////////////////

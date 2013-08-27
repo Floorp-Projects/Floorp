@@ -123,11 +123,6 @@ JS::detail::CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl
 #define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
 #endif
 
-#ifdef JS_USE_JSID_STRUCT_TYPES
-const jsid JSID_VOID  = { size_t(JSID_TYPE_VOID) };
-const jsid JSID_EMPTY = { size_t(JSID_TYPE_OBJECT) };
-#endif
-
 const jsid voidIdValue = JSID_VOID;
 const jsid emptyIdValue = JSID_EMPTY;
 const HandleId JS::JSID_VOIDHANDLE = HandleId::fromMarkedLocation(&voidIdValue);
@@ -1480,7 +1475,7 @@ static const JSStdName object_prototype_names[] = {
     {js_InitObjectClass,        EAGER_ATOM(hasOwnProperty), &JSObject::class_},
     {js_InitObjectClass,        EAGER_ATOM(isPrototypeOf), &JSObject::class_},
     {js_InitObjectClass,        EAGER_ATOM(propertyIsEnumerable), &JSObject::class_},
-#if OLD_GETTER_SETTER_METHODS
+#if JS_OLD_GETTER_SETTER_METHODS
     {js_InitObjectClass,        EAGER_ATOM(defineGetter), &JSObject::class_},
     {js_InitObjectClass,        EAGER_ATOM(defineSetter), &JSObject::class_},
     {js_InitObjectClass,        EAGER_ATOM(lookupGetter), &JSObject::class_},

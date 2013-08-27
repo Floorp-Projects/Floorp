@@ -1331,7 +1331,7 @@ OptimizeMIR(MIRGenerator *mir)
         if (mir->shouldCancel("RA Beta"))
             return false;
 
-        if (!r.analyze())
+        if (!r.analyze() || !r.addRangeAssertions())
             return false;
         IonSpewPass("Range Analysis");
         AssertExtendedGraphCoherency(graph);

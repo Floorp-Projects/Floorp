@@ -469,9 +469,25 @@ documenttab[selected] .documenttab-selection {
 }
 
 .circularprogressindicator-progressRing {
-  margin: -2px 18px;
+  visibility: visible;
+  margin: 0 @toolbar_horizontal_spacing@;
   pointer-events:none;
   position: absolute;
+}
+.circularprogressindicator-progressTrack {
+  visibility: visible;
+  margin: 0 @toolbar_horizontal_spacing@;
+  pointer-events: none;
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-repeat: no-repeat;
+  background-size: 40px 40px;
+  background-image: url(chrome://browser/skin/images/progresscircle-bg.png);
+}
+.circularprogressindicator-progressRing:not([progress]),
+.circularprogressindicator-progressTrack:not([progress]) {
+  visibility: hidden;
 }
 
 /* Progress meter ---------------------------------------------------------- */

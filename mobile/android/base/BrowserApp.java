@@ -99,6 +99,7 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_DUPLICATE = 2;
 
     private static final String ADD_SHORTCUT_TOAST = "add_shortcut_toast";
+    public static final String GUEST_BROWSING_ARG = "--guest";
 
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
@@ -403,7 +404,7 @@ abstract public class BrowserApp extends GeckoApp
         mAboutHomeStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
         String args = getIntent().getStringExtra("args");
-        if (args != null && args.contains("--guest-mode")) {
+        if (args != null && args.contains(GUEST_BROWSING_ARG)) {
             mProfile = GeckoProfile.createGuestProfile(this);
         } else if (GeckoProfile.maybeCleanupGuestProfile(this)) {
             mSessionRestore = RESTORE_NORMAL;
@@ -1814,6 +1815,7 @@ abstract public class BrowserApp extends GeckoApp
 
         // Disable share menuitem for about:, chrome:, file:, and resource: URIs
         String scheme = Uri.parse(url).getScheme();
+        share.setVisible(!GeckoProfile.get(this).inGuestMode());
         share.setEnabled(!(scheme.equals("about") || scheme.equals("chrome") ||
                            scheme.equals("file") || scheme.equals("resource")));
 
@@ -1988,7 +1990,7 @@ abstract public class BrowserApp extends GeckoApp
                     if (itemId == 0) {
                         String args = "";
                         if (type == GuestModeDialog.ENTERING) {
-                            args = "--guest-mode";
+                            args = GUEST_BROWSING_ARG;
                         } else {
                             GeckoProfile.leaveGuestSession(BrowserApp.this);
                         }

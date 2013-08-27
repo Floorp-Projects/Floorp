@@ -11,8 +11,8 @@
 #include "mozilla/MemoryReporting.h"
 #endif
 
+#include "jsapi.h"
 #include "jsbytecode.h"
-#include "jsclass.h"
 #include "jspubtd.h"
 
 #include "js/CallArgs.h"
@@ -240,7 +240,7 @@ typedef bool
 extern JS_FRIEND_API(void)
 DumpHeapComplete(JSRuntime *rt, FILE *fp);
 
-#ifdef OLD_GETTER_SETTER_METHODS
+#ifdef JS_OLD_GETTER_SETTER_METHODS
 JS_FRIEND_API(bool) obj_defineGetter(JSContext *cx, unsigned argc, js::Value *vp);
 JS_FRIEND_API(bool) obj_defineSetter(JSContext *cx, unsigned argc, js::Value *vp);
 #endif

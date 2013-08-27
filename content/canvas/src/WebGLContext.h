@@ -730,11 +730,13 @@ public:
     JS::Value GetQueryObject(JSContext* cx, WebGLQuery *query, WebGLenum pname);
 
 private:
+    // ANY_SAMPLES_PASSED(_CONSERVATIVE) slot
     WebGLRefPtr<WebGLQuery> mActiveOcclusionQuery;
+
+    // LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN slot
     WebGLRefPtr<WebGLQuery> mActiveTransformFeedbackQuery;
 
-    bool ValidateQueryTargetParameter(WebGLenum target, const char* infos);
-    WebGLRefPtr<WebGLQuery>& GetActiveQueryByTarget(WebGLenum target);
+    WebGLRefPtr<WebGLQuery>* GetQueryTargetSlot(WebGLenum target, const char* infos);
 
 // -----------------------------------------------------------------------------
 // Buffer Objects (WebGLContextBuffers.cpp)

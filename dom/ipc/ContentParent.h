@@ -180,6 +180,8 @@ protected:
     void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
     virtual void ActorDestroy(ActorDestroyReason why);
 
+    bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
+
 private:
     static nsDataHashtable<nsStringHashKey, ContentParent*> *sAppContentParents;
     static nsTArray<ContentParent*>* sNonAppContentParents;
