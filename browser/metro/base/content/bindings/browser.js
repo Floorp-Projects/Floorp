@@ -554,7 +554,9 @@ let ContentScroll =  {
     addMessageListener("Content:SetCacheViewport", this);
     addMessageListener("Content:SetWindowSize", this);
 
-    addEventListener("scroll", this, false);
+    if (Services.prefs.getBoolPref("layers.async-pan-zoom.enabled")) {
+      addEventListener("scroll", this, false);
+    }
     addEventListener("pagehide", this, false);
     addEventListener("MozScrolledAreaChanged", this, false);
   },
