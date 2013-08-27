@@ -757,9 +757,9 @@ gfxContext::UserToDevice(const gfxSize& size) const
   } else {
     const Matrix &matrix = mTransform;
 
-    gfxSize newSize = size;
-    newSize.width = newSize.width * matrix._11 + newSize.height * matrix._12;
-    newSize.height = newSize.width * matrix._21 + newSize.height * matrix._22;
+    gfxSize newSize;
+    newSize.width = size.width * matrix._11 + size.height * matrix._12;
+    newSize.height = size.width * matrix._21 + size.height * matrix._22;
     return newSize;
   }
 }
