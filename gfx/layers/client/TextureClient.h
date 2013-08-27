@@ -123,8 +123,14 @@ public:
 
   void SetID(uint64_t aID)
   {
-    MOZ_ASSERT(mID == 0 || aID == 0);
+    MOZ_ASSERT(mID == 0 && aID != 0);
     mID = aID;
+    mShared = true;
+  }
+  void ClearID()
+  {
+    MOZ_ASSERT(mID != 0);
+    mID = 0;
   }
 
   uint64_t GetID() const
@@ -149,7 +155,7 @@ public:
 
   void MarkImmutable() { AddFlags(TEXTURE_IMMUTABLE); }
 
-  bool IsSharedWithCompositor() const { return GetID() != 0; }
+  bool IsSharedWithCompositor() const { return mShared; }
 
   bool ShouldDeallocateInDestructor() const;
 protected:
@@ -168,6 +174,7 @@ protected:
 
   uint64_t mID;
   TextureFlags mFlags;
+  bool mShared;
 };
 
 /**

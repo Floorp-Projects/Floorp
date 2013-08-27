@@ -136,7 +136,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
 
     bool bufferCreated = false;
     if (!mFrontBuffer) {
-      mFrontBuffer = CreateBufferTextureClient(gfx::FORMAT_YUV);
+      mFrontBuffer = CreateBufferTextureClient(gfx::FORMAT_YUV, TEXTURE_DEALLOCATE_HOST);
       gfx::IntSize ySize(data->mYSize.width, data->mYSize.height);
       gfx::IntSize cbCrSize(data->mCbCrSize.width, data->mCbCrSize.height);
       if (!mFrontBuffer->AsTextureClientYCbCr()->AllocateForYCbCr(ySize, cbCrSize, data->mStereoMode)) {
@@ -180,7 +180,8 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     if (!mFrontBuffer) {
       gfxASurface::gfxImageFormat format
         = gfxPlatform::GetPlatform()->OptimalFormatForContent(surface->GetContentType());
-      mFrontBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format));
+      mFrontBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format),
+                                               TEXTURE_DEALLOCATE_HOST);
       MOZ_ASSERT(mFrontBuffer->AsTextureClientSurface());
       mFrontBuffer->AsTextureClientSurface()->AllocateForSurface(size);
 
@@ -227,6 +228,12 @@ ImageClientSingle::AddTextureClient(TextureClient* aTexture)
 {
   MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
   CompositableClient::AddTextureClient(aTexture);
+}
+
+TemporaryRef<BufferTextureClient>
+ImageClientSingle::CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags)
+{
+  return CompositableClient::CreateBufferTextureClient(aFormat, mTextureFlags | aFlags);
 }
 
 TemporaryRef<BufferTextureClient>
