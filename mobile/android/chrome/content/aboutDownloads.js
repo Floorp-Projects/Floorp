@@ -10,6 +10,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+
 let gStrings = Services.strings.createBundle("chrome://browser/locale/aboutDownloads.properties");
 
 let downloadTemplate =
@@ -460,20 +462,15 @@ let Downloads = {
 
   removeDownload: function dl_removeDownload(aItem) {
     this._getDownloadForElement(aItem, function(aDownload) {
-      let f = null;
-      try {
-        f = aDownload.targetFile;
-      } catch (ex) {
-        // even if there is no file, pretend that there is so that we can remove
-        // it from the list
-        f = { leafName: "" };
+      if (aDownload.targetFile) {
+        OS.File.remove(aDownload.targetFile.path).then(null, function onError(reason) {
+          if (!(reason instanceof OS.File.Error && reason.becauseNoSuchFile)) {
+            this.logError("removeDownload() " + reason, aDownload);
+          }
+        }.bind(this));
       }
+
       aDownload.remove();
-      try {
-        if (f) f.remove(false);
-      } catch (ex) {
-        this.logError("removeDownload() " + ex, aDownload);
-      }
     }.bind(this));
   },
 
@@ -531,17 +528,15 @@ let Downloads = {
 
   cancelDownload: function dl_cancelDownload(aItem) {
     this._getDownloadForElement(aItem, function(aDownload) {
-      try {
-        aDownload.cancel();
-        let f = aDownload.targetFile;
+      OS.File.remove(aDownload.targetFile.path).then(null, function onError(reason) {
+        if (!(reason instanceof OS.File.Error && reason.becauseNoSuchFile)) {
+          this.logError("cancelDownload() " + reason, aDownload);
+        }
+      }.bind(this));
 
-        if (f.exists())
-          f.remove(false);
+      aDownload.cancel();
 
-        this._updateDownloadRow(aItem, aDownload);
-      } catch (ex) {
-        this.logError("cancelDownload() " + ex, aDownload);
-      }
+      this._updateDownloadRow(aItem, aDownload);
     }.bind(this));
   },
 

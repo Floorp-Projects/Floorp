@@ -20,6 +20,10 @@
   <popupset id="networkPopupSet">
     <menupopup id="network-request-popup"
                onpopupshowing="NetMonitorView.RequestsMenu._onContextShowing(event);">
+      <menuitem id="request-menu-context-newtab"
+                label="&netmonitorUI.context.newTab;"
+                accesskey="&netmonitorUI.context.newTab.accesskey;"
+                oncommand="NetMonitorView.RequestsMenu.openRequestInTab();"/>
       <menuitem id="request-menu-context-copy-url"
                 label="&netmonitorUI.context.copyUrl;"
                 accesskey="&netmonitorUI.context.copyUrl.accesskey;"
