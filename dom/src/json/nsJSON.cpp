@@ -21,6 +21,7 @@
 #include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
 #include "nsIScriptSecurityManager.h"
+#include "mozilla/Maybe.h"
 #include <algorithm>
 
 static const char kXPConnectServiceCID[] = "@mozilla.org/js/xpc/XPConnect;1";
