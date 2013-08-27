@@ -14,7 +14,7 @@
 #include "js/RootingAPI.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class MDefinition;
 class MInstruction;
@@ -47,7 +47,7 @@ class C1Spewer
     void spewIntervals(FILE *fp, MBasicBlock *block, LinearScanAllocator *regalloc, size_t &nextId);
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* DEBUG */

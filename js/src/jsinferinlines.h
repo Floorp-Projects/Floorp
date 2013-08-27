@@ -95,7 +95,7 @@ CompilerOutput::CompilerOutput()
 {
 }
 
-inline ion::IonScript *
+inline jit::IonScript *
 CompilerOutput::ion() const
 {
 #ifdef JS_ION

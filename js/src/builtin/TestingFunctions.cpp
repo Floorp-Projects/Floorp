@@ -896,7 +896,7 @@ static bool
 EnableOsiPointRegisterChecks(JSContext *, unsigned, jsval *vp)
 {
 #ifdef CHECK_OSIPOINT_REGISTERS
-    ion::js_IonOptions.checkOsiPointRegisters = true;
+    jit::js_IonOptions.checkOsiPointRegisters = true;
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
