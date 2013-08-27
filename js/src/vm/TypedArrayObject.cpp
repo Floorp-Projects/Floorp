@@ -23,7 +23,6 @@
 #include "jsobj.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jsversion.h"
 #ifdef XP_WIN
 # include "jswin.h"
 #endif

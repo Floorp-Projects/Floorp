@@ -24,7 +24,14 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 
+// jstypes.h is (or should be!) included by every file in SpiderMonkey.
+// js-config.h and jsversion.h also should be included by every file.
+// So include them here.
+// XXX: including them in js/RequiredDefines.h should be a better option, since
+// that is by definition the header file that should be included in all
+// SpiderMonkey code.  However, Gecko doesn't do this!  See bug 909576.
 #include "js-config.h"
+#include "jsversion.h"
 
 /***********************************************************************
 ** MACROS:      JS_EXTERN_API

@@ -27,7 +27,6 @@
 #include "jsopcode.h"
 #include "jsscript.h"
 #include "jstypes.h"
-#include "jsversion.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FoldConstants.h"

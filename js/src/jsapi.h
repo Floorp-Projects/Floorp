@@ -18,7 +18,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "js-config.h"
 #include "jsalloc.h"
 #include "jspubtd.h"
 
