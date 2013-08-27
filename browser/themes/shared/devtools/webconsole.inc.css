@@ -8,7 +8,6 @@
   color: GrayText;
   margin-top: 0;
   margin-bottom: 0;
-  font-family: monospace;
 }
 
 .hud-msg-node {
@@ -33,7 +32,6 @@
   -moz-margin-start: 3px;
   -moz-margin-end: 6px;
   white-space: pre-wrap;
-  font-family: monospace;
 }
 
 .webconsole-msg-body-piece {
@@ -91,11 +89,6 @@
 
 .jsterm-input-container {
   background: white;
-}
-
-.jsterm-input-node,
-.jsterm-complete-node {
-  font-family: monospace;
 }
 
 .hud-output-node {

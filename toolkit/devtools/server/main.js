@@ -902,7 +902,8 @@ DebuggerServerConnection.prototype = {
     let actor = this.getActor(aPacket.to);
     if (!actor) {
       this.transport.send({ from: aPacket.to ? aPacket.to : "root",
-                            error: "noSuchActor" });
+                            error: "noSuchActor",
+                            message: "No such actor for ID: " + aPacket.to });
       return;
     }
 
