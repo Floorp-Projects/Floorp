@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CellBroadcast.h"
+#include "mozilla/dom/MozCellBroadcastBinding.h"
 #include "nsIDOMMozCellBroadcastEvent.h"
 #include "nsIDOMMozCellBroadcastMessage.h"
-#include "mozilla/Services.h"
-#include "nsDOMClassInfo.h"
+#include "nsServiceManagerUtils.h"
 #include "GeneratedEvents.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
@@ -46,22 +46,29 @@ NS_IMPL_ISUPPORTS1(CellBroadcast::Listener, nsICellBroadcastListener)
  * CellBroadcast Implementation.
  */
 
-DOMCI_DATA(MozCellBroadcast, CellBroadcast)
+// static
+already_AddRefed<CellBroadcast>
+CellBroadcast::Create(nsPIDOMWindow* aWindow, ErrorResult& aRv)
+{
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aWindow->IsInnerWindow());
 
-NS_INTERFACE_MAP_BEGIN(CellBroadcast)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozCellBroadcast)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozCellBroadcast)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+  nsCOMPtr<nsICellBroadcastProvider> provider =
+    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
+  if (!provider) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
 
-NS_IMPL_ADDREF_INHERITED(CellBroadcast, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(CellBroadcast, nsDOMEventTargetHelper)
+  nsRefPtr<CellBroadcast> cb = new CellBroadcast(aWindow, provider);
+  return cb.forget();
+}
 
 CellBroadcast::CellBroadcast(nsPIDOMWindow *aWindow,
                              nsICellBroadcastProvider *aProvider)
-  : mProvider(aProvider)
+  : nsDOMEventTargetHelper(aWindow)
+  , mProvider(aProvider)
 {
-  BindToOwner(aWindow);
-
   mListener = new Listener(this);
   DebugOnly<nsresult> rv = mProvider->RegisterCellBroadcastMsg(mListener);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
@@ -76,7 +83,12 @@ CellBroadcast::~CellBroadcast()
   mProvider->UnregisterCellBroadcastMsg(mListener);
 }
 
-NS_IMPL_EVENT_HANDLER(CellBroadcast, received)
+JSObject*
+CellBroadcast::WrapObject(JSContext* aCx,
+                          JS::Handle<JSObject*> aScope)
+{
+  return MozCellBroadcastBinding::Wrap(aCx, aScope, this);
+}
 
 // Forwarded nsICellBroadcastListener methods
 
@@ -92,23 +104,4 @@ CellBroadcast::NotifyMessageReceived(nsIDOMMozCellBroadcastMessage* aMessage)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchTrustedEvent(ce);
-}
-
-nsresult
-NS_NewCellBroadcast(nsPIDOMWindow* aWindow,
-                    nsIDOMMozCellBroadcast** aCellBroadcast)
-{
-  nsPIDOMWindow* innerWindow = aWindow->IsInnerWindow() ?
-    aWindow :
-    aWindow->GetCurrentInnerWindow();
-
-  nsCOMPtr<nsICellBroadcastProvider> provider =
-    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
-  NS_ENSURE_STATE(provider);
-
-  nsRefPtr<mozilla::dom::CellBroadcast> cb =
-    new mozilla::dom::CellBroadcast(innerWindow, provider);
-  cb.forget(aCellBroadcast);
-
-  return NS_OK;
 }
