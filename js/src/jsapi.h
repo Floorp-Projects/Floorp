@@ -1651,10 +1651,8 @@ JS_StringToVersion(const char *string);
                                                    that a null rval out-param
                                                    will be passed to each call
                                                    to JS_ExecuteScript. */
-#define JSOPTION_UNROOTED_GLOBAL JS_BIT(13)     /* The GC will not root the
-                                                   contexts' default compartment
-                                                   object, leaving that up to the
-                                                   embedding. */
+
+/* JS_BIT(13) is currently unused. */
 
 #define JSOPTION_BASELINE       JS_BIT(14)      /* Baseline compiler. */
 
