@@ -7,15 +7,6 @@ category command-line-handler x-default @mozilla.org/webapprt/clh;1
 component {07ef5b2e-88fb-47bd-8cec-d3b0bef11ac4} ContentPermission.js
 contract @mozilla.org/content-permission/prompt;1 {07ef5b2e-88fb-47bd-8cec-d3b0bef11ac4}
 
-# ContentPolicy.js
-# We used to use this component to heuristically determine which links to
-# direct to the user's default browser, but we no longer use that heuristic.
-# It will come in handy when we implement support for trusted apps, however,
-# so we left it in (although it is disabled here).
-# component {75acd178-3d5a-48a7-bd92-fba383520ae6} ContentPolicy.js
-# contract @mozilla.org/webapprt/content-policy;1 {75acd178-3d5a-48a7-bd92-fba383520ae6}
-# category content-policy webapprt-content-policy @mozilla.org/webapprt/content-policy;1
-
 # DirectoryProvider.js
 component {e1799fda-4b2f-4457-b671-e0641d95698d} DirectoryProvider.js
 contract @mozilla.org/webapprt/directory-provider;1 {e1799fda-4b2f-4457-b671-e0641d95698d}
