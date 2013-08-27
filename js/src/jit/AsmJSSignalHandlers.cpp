@@ -941,8 +941,7 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
 #  endif
 }
 
-static struct sigaction sPrevSegvHandler;
-static struct sigaction sPrevBusHandler;
+static struct sigaction sPrevHandler;
 
 static void
 AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
@@ -962,20 +961,12 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
     // signal to it's original disposition and returning.
     //
     // Note: the order of these tests matter.
-    struct sigaction* prevHandler = NULL;
-    if (signum == SIGSEGV)
-        prevHandler = &sPrevSegvHandler;
-    else {
-	JS_ASSERT(signum == SIGBUS);
-        prevHandler = &sPrevBusHandler;
-    }
-
-    if (prevHandler->sa_flags & SA_SIGINFO)
-        prevHandler->sa_sigaction(signum, info, context);
-    else if (prevHandler->sa_handler == SIG_DFL || prevHandler->sa_handler == SIG_IGN)
-        sigaction(signum, prevHandler, NULL);
+    if (sPrevHandler.sa_flags & SA_SIGINFO)
+        sPrevHandler.sa_sigaction(signum, info, context);
+    else if (sPrevHandler.sa_handler == SIG_DFL || sPrevHandler.sa_handler == SIG_IGN)
+        sigaction(signum, &sPrevHandler, NULL);
     else
-        prevHandler->sa_handler(signum);
+        sPrevHandler.sa_handler(signum);
 }
 # endif
 
@@ -995,19 +986,15 @@ js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
 # if defined(XP_WIN)
     if (!AddVectoredExceptionHandler(/* FirstHandler = */true, AsmJSExceptionHandler))
         return false;
-# else  // assume Unix
+# else
+    // Assume Unix. SA_NODEFER allows us to reenter the signal handler if we
+    // crash while handling the signal, and fall through to the Breakpad
+    // handler by testing handlingSignal.
     struct sigaction sigAction;
+    sigAction.sa_flags = SA_SIGINFO | SA_NODEFER;
     sigAction.sa_sigaction = &AsmJSFaultHandler;
     sigemptyset(&sigAction.sa_mask);
-
-    // Note: SA_NODEFER allows us to reenter the signal handler if we crash
-    // while handling the signal, and fall through to the Breakpad handler
-    // by testing handlingSignal.
-    sigAction.sa_flags = SA_SIGINFO | SA_NODEFER;
-
-    if (sigaction(SIGSEGV, &sigAction, &sPrevSegvHandler))
-        return false;
-    if (sigaction(SIGBUS, &sigAction, &sPrevBusHandler))
+    if (sigaction(SIGSEGV, &sigAction, &sPrevHandler))
         return false;
 # endif
 
