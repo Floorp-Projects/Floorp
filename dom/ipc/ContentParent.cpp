@@ -939,6 +939,10 @@ ContentParent::OnChannelConnected(int32_t pid)
         }
 #endif
     }
+
+    // Set a reply timeout. The only time the parent process will actually
+    // timeout is through urgent messages (which are used by CPOWs).
+    SetReplyTimeoutMs(Preferences::GetInt("dom.ipc.cpow.timeout", 3000));
 }
 
 void
@@ -2795,6 +2799,15 @@ ContentParent::RecvKeywordToURI(const nsCString& aKeyword, OptionalInputStreamPa
   SerializeInputStream(postData, *aPostData);
   SerializeURI(uri, *aURI);
   return true;
+}
+
+bool
+ContentParent::ShouldContinueFromReplyTimeout()
+{
+  // The only time ContentParent sends blocking messages is for CPOWs, so
+  // timeouts should only ever occur in electrolysis-enabled sessions.
+  MOZ_ASSERT(Preferences::GetBool("browser.tabs.remote", false));
+  return false;
 }
 
 } // namespace dom

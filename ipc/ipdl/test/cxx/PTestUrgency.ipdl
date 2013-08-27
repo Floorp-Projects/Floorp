@@ -9,12 +9,14 @@ parent:
     sync Test3() returns (uint32_t result);
     sync Test4_Begin();
     sync Test4_NestedSync();
+    sync FinalTest_Begin();
 
 child:
     async Start();
     urgent Reply1() returns (uint32_t result);
     urgent Reply2() returns (uint32_t result);
     urgent Test4_Reenter();
+    urgent FinalTest_Hang();
 };
 
 } // namespace _ipdltest

@@ -322,6 +322,15 @@ SyncChannel::ShouldContinueFromTimeout()
         cont = static_cast<SyncListener*>(mListener.get())->OnReplyTimeout();
     }
 
+    static enum { UNKNOWN, NOT_DEBUGGING, DEBUGGING } sDebuggingChildren = UNKNOWN;
+
+    if (sDebuggingChildren == UNKNOWN) {
+        sDebuggingChildren = getenv("MOZ_DEBUG_CHILD_PROCESS") ? DEBUGGING : NOT_DEBUGGING;
+    }
+    if (sDebuggingChildren == DEBUGGING) {
+        return true;
+    }
+
     if (!cont) {
         // NB: there's a sublety here.  If parents were allowed to
         // send sync messages to children, then it would be possible
