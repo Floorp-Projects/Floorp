@@ -363,6 +363,17 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Opens selected item in a new tab.
+   */
+  openRequestInTab: function() {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+
+    let selected = this.selectedItem.attachment;
+
+    win.openUILinkIn(selected.url, "tab", { relatedToCurrent: true });
+  },
+
+  /**
    * Copy the request url from the currently selected item.
    */
   copyUrl: function() {
