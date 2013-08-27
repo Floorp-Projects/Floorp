@@ -13,7 +13,6 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_BROWSER_FILES = \
                  head.js \
 		 blocklist.xml \
-		 blocklistEmpty.xml \
 		 browser_blocklist.js \
 		 browser_defaults.js \
 		 browser_addons.js \
