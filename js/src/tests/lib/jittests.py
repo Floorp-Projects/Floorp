@@ -463,7 +463,7 @@ def process_test_results_parallel(async_test_result_queue, return_queue, notify_
     ok = process_test_results(gen, num_tests, options)
     return_queue.put(ok)
 
-def print_test_summary(failures, complete, doing, options):
+def print_test_summary(num_tests, failures, complete, doing, options):
     if failures:
         if options.write_failures:
             try:
@@ -500,11 +500,16 @@ def print_test_summary(failures, complete, doing, options):
         for res in failures:
             if res.timed_out:
                 show_test(res)
-
-        return False
     else:
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)' % doing))
-        return True
+
+    if options.tinderbox:
+        num_failures = len(failures) if failures else 0
+        print('Result summary:')
+        print('Passed: %d' % (num_tests - num_failures))
+        print('Failed: %d' % num_failures)
+
+    return not failures
 
 def process_test_results(results, num_tests, options):
     pb = NullProgressBar()
@@ -565,7 +570,7 @@ def process_test_results(results, num_tests, options):
         print_tinderbox("TEST-UNEXPECTED-FAIL", None, "Test execution interrupted by user");
 
     pb.finish(True)
-    return print_test_summary(failures, complete, doing, options)
+    return print_test_summary(num_tests, failures, complete, doing, options)
 
 def get_serial_results(tests, prefix, options):
     for test in tests:
