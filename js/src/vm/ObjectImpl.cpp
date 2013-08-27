@@ -561,7 +561,7 @@ bool
 js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsigned resolveFlags,
                    PropDesc *desc)
 {
-    NEW_OBJECT_REPRESENTATION_ONLY();
+    JS_NEW_OBJECT_REPRESENTATION_ONLY();
 
     JS_CHECK_RECURSION(cx, return false);
 
@@ -651,7 +651,7 @@ bool
 js::GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> receiver,
                 Handle<PropertyId> pid, unsigned resolveFlags, MutableHandle<Value> vp)
 {
-    NEW_OBJECT_REPRESENTATION_ONLY();
+    JS_NEW_OBJECT_REPRESENTATION_ONLY();
 
     MOZ_ASSERT(receiver);
 
@@ -714,7 +714,7 @@ bool
 js::GetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> receiver, uint32_t index,
                unsigned resolveFlags, Value *vp)
 {
-    NEW_OBJECT_REPRESENTATION_ONLY();
+    JS_NEW_OBJECT_REPRESENTATION_ONLY();
 
     Rooted<ObjectImpl*> current(cx, obj);
 
@@ -777,7 +777,7 @@ bool
 js::HasElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsigned resolveFlags,
                bool *found)
 {
-    NEW_OBJECT_REPRESENTATION_ONLY();
+    JS_NEW_OBJECT_REPRESENTATION_ONLY();
 
     Rooted<ObjectImpl*> current(cx, obj);
 
@@ -811,7 +811,7 @@ bool
 js::DefineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, const PropDesc &desc,
                   bool shouldThrow, unsigned resolveFlags, bool *succeeded)
 {
-    NEW_OBJECT_REPRESENTATION_ONLY();
+    JS_NEW_OBJECT_REPRESENTATION_ONLY();
 
     ElementsHeader &header = obj->elementsHeader();
 
@@ -937,7 +937,7 @@ bool
 js::SetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> receiver,
                uint32_t index, const Value &v, unsigned resolveFlags, bool *succeeded)
 {
-    NEW_OBJECT_REPRESENTATION_ONLY();
+    JS_NEW_OBJECT_REPRESENTATION_ONLY();
 
     Rooted<ObjectImpl*> current(cx, obj);
     RootedValue setter(cx);

@@ -4923,16 +4923,12 @@ class LAsmJSCheckOverRecursed : public LInstructionHelper<0, 0, 0>
     }
 };
 
-class LRangeAssert : public LInstructionHelper<0, 1, 0>
+class LAssertRangeI : public LInstructionHelper<0, 1, 0>
 {
-    Range range_;
-
   public:
-    LIR_HEADER(RangeAssert)
+    LIR_HEADER(AssertRangeI)
 
-    LRangeAssert(const LAllocation &input, Range r)
-      : range_(r)
-    {
+    LAssertRangeI(const LAllocation &input) {
         setOperand(0, input);
     }
 
@@ -4940,21 +4936,20 @@ class LRangeAssert : public LInstructionHelper<0, 1, 0>
         return getOperand(0);
     }
 
+    MAssertRange *mir() {
+        return mir_->toAssertRange();
+    }
     Range *range() {
-        return &range_;
+        return mir()->range();
     }
 };
 
-class LDoubleRangeAssert : public LInstructionHelper<0, 1, 1>
+class LAssertRangeD : public LInstructionHelper<0, 1, 1>
 {
-    Range range_;
-
   public:
-    LIR_HEADER(DoubleRangeAssert)
+    LIR_HEADER(AssertRangeD)
 
-    LDoubleRangeAssert(const LAllocation &input, const LDefinition &temp, Range r)
-      : range_(r)
-    {
+    LAssertRangeD(const LAllocation &input, const LDefinition &temp) {
         setOperand(0, input);
         setTemp(0, temp);
     }
@@ -4967,8 +4962,44 @@ class LDoubleRangeAssert : public LInstructionHelper<0, 1, 1>
         return getTemp(0);
     }
 
+    MAssertRange *mir() {
+        return mir_->toAssertRange();
+    }
     Range *range() {
-        return &range_;
+        return mir()->range();
+    }
+};
+
+class LAssertRangeV : public LInstructionHelper<0, BOX_PIECES, 3>
+{
+  public:
+    LIR_HEADER(AssertRangeV)
+
+    LAssertRangeV(const LDefinition &temp, const LDefinition &floatTemp1,
+                  const LDefinition &floatTemp2)
+    {
+        setTemp(0, temp);
+        setTemp(1, floatTemp1);
+        setTemp(2, floatTemp2);
+    }
+
+    static const size_t Input = 0;
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    const LDefinition *floatTemp1() {
+        return getTemp(1);
+    }
+    const LDefinition *floatTemp2() {
+        return getTemp(2);
+    }
+
+    MAssertRange *mir() {
+        return mir_->toAssertRange();
+    }
+    Range *range() {
+        return mir()->range();
     }
 };
 

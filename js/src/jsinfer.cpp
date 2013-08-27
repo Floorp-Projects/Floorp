@@ -3042,7 +3042,7 @@ GetValueTypeForTable(const Value &v)
     return type;
 }
 
-struct types::ArrayTableKey
+struct types::ArrayTableKey : public DefaultHasher<types::ArrayTableKey>
 {
     Type type;
     JSObject *proto;
@@ -3050,8 +3050,6 @@ struct types::ArrayTableKey
     ArrayTableKey()
         : type(Type::UndefinedType()), proto(NULL)
     {}
-
-    typedef ArrayTableKey Lookup;
 
     static inline uint32_t hash(const ArrayTableKey &v) {
         return (uint32_t) (v.type.raw() ^ ((uint32_t)(size_t)v.proto >> 2));

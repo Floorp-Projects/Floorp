@@ -23,7 +23,6 @@
 #include "jsobj.h"
 #include "jstypes.h"
 #include "jsutil.h"
-#include "jsversion.h"
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
@@ -43,7 +42,7 @@
 
 #include "vm/GlobalObject-inl.h"
 
-#if USE_NEW_OBJECT_REPRESENTATION
+#if JS_USE_NEW_OBJECT_REPRESENTATION
 // See the comment above OldObjectRepresentationHack.
 #  error "TypedArray support for new object representation unimplemented."
 #endif
@@ -294,7 +293,7 @@ PostBarrierTypedArrayObject(JSObject *obj)
 // the slots are already being used for the element storage and the private
 // field is used for a delegate object. The ObjectElements header has space
 // for it, but I don't want to mess around with adding unions to it with
-// USE_NEW_OBJECT_REPRESENTATION pending, since it will solve this much
+// JS_USE_NEW_OBJECT_REPRESENTATION pending, since it will solve this much
 // more cleanly.
 struct OldObjectRepresentationHack {
     uint32_t capacity;

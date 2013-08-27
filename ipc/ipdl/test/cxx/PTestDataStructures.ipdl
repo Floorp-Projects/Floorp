@@ -1,6 +1,8 @@
 include protocol PTestDataStructuresSub;
 include PTestDataStructuresCommon;
 
+include "mozilla/GfxMessageUtils.h";
+
 namespace mozilla {
 namespace _ipdltest {
 

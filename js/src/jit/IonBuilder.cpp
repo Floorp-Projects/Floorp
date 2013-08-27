@@ -6695,6 +6695,10 @@ IonBuilder::getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index)
     if (index->mightBeType(MIRType_String))
         barrier = true;
 
+    // See note about always needing a barrier in jsop_getprop.
+    if (needsToMonitorMissingProperties(types))
+        barrier = true;
+
     MInstruction *ins = MGetElementCache::New(obj, index, barrier);
 
     current->add(ins);
@@ -8237,15 +8241,8 @@ IonBuilder::getPropTryCache(bool *emitted, HandlePropertyName name, HandleId id,
     if (accessGetter)
         barrier = true;
 
-    // GetPropertyParIC cannot safely call TypeScript::Monitor to ensure that
-    // the observed type set contains undefined. To account for possible
-    // missing properties, which property types do not track, we must always
-    // insert a type barrier.
-    if (info().executionMode() == ParallelExecution &&
-        !types->hasType(types::Type::UndefinedType()))
-    {
+    if (needsToMonitorMissingProperties(types))
         barrier = true;
-    }
 
     MIRType rvalType = MIRTypeFromValueType(types->getKnownTypeTag());
     if (barrier || IsNullOrUndefined(rvalType))
@@ -8257,6 +8254,17 @@ IonBuilder::getPropTryCache(bool *emitted, HandlePropertyName name, HandleId id,
 
     *emitted = true;
     return true;
+}
+
+bool
+IonBuilder::needsToMonitorMissingProperties(types::StackTypeSet *types)
+{
+    // GetPropertyParIC and GetElementParIC cannot safely call
+    // TypeScript::Monitor to ensure that the observed type set contains
+    // undefined. To account for possible missing properties, which property
+    // types do not track, we must always insert a type barrier.
+    return (info().executionMode() == ParallelExecution &&
+            !types->hasType(types::Type::UndefinedType()));
 }
 
 bool
