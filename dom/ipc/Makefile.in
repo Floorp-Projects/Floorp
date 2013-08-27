@@ -35,6 +35,7 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/dom/devicestorage \
 	-I$(topsrcdir)/widget/xpwidgets \
 	-I$(topsrcdir)/dom/bluetooth \
+	-I$(topsrcdir)/layout/base \
 	-I$(topsrcdir)/dom/bluetooth/ipc \
 	-I$(topsrcdir)/content/media/webspeech/synth/ipc \
 	-I$(topsrcdir)/js/ipc \
