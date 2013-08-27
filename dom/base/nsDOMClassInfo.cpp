@@ -172,7 +172,6 @@
 #ifdef MOZ_B2G_RIL
 #include "nsIDOMMozVoicemail.h"
 #include "nsIDOMIccManager.h"
-#include "nsIDOMMozCellBroadcast.h"
 #include "nsIDOMMobileConnection.h"
 #endif // MOZ_B2G_RIL
 
@@ -499,9 +498,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
 #ifdef MOZ_B2G_RIL
   NS_DEFINE_CLASSINFO_DATA(MozMobileConnection, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(MozCellBroadcast, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
@@ -1341,11 +1337,6 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_B2G_RIL
   DOM_CLASSINFO_MAP_BEGIN(MozMobileConnection, nsIDOMMozMobileConnection)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozMobileConnection)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(MozCellBroadcast, nsIDOMMozCellBroadcast)
-     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCellBroadcast)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 #endif // MOZ_B2G_RIL
