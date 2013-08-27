@@ -208,6 +208,11 @@ typedef struct fsmdef_media_t_ {
     boolean        rtcp_mux;
 
     /*
+     * The value of the a=setup line
+     */
+    sdp_setup_type_e setup;
+
+    /*
      * port number used in m= data channel line
      */
     uint16_t       local_datachannel_port;
