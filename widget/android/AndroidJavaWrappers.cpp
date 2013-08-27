@@ -60,7 +60,6 @@ jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
 jfieldID AndroidGeckoEvent::jByteBufferField = 0;
 jfieldID AndroidGeckoEvent::jWidthField = 0;
 jfieldID AndroidGeckoEvent::jHeightField = 0;
-jfieldID AndroidGeckoEvent::jPrefNamesField = 0;
 
 jclass AndroidGeckoEvent::jDomKeyLocationClass = 0;
 jfieldID AndroidGeckoEvent::jDomKeyLocationValueField = 0;
@@ -267,7 +266,6 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jByteBufferField = getField("mBuffer", "Ljava/nio/ByteBuffer;");
     jWidthField = getField("mWidth", "I");
     jHeightField = getField("mHeight", "I");
-    jPrefNamesField = getField("mPrefNames", "[Ljava/lang/String;");
 
     // Init GeckoEvent.DomKeyLocation enum
     jDomKeyLocationClass = getClassGlobalRef("org/mozilla/gecko/GeckoEvent$DomKeyLocation");
@@ -478,21 +476,6 @@ AndroidGeckoEvent::ReadFloatArray(nsTArray<float> &aVals,
 }
 
 void
-AndroidGeckoEvent::ReadStringArray(nsTArray<nsString> &array,
-                                   JNIEnv *jenv,
-                                   jfieldID field)
-{
-    jarray jArray = (jarray)jenv->GetObjectField(wrapped_obj, field);
-    jsize length = jenv->GetArrayLength(jArray);
-    jobjectArray jStringArray = (jobjectArray)jArray;
-    nsString *strings = array.AppendElements(length);
-    for (jsize i = 0; i < length; ++i) {
-        jstring javastring = (jstring) jenv->GetObjectArrayElement(jStringArray, i);
-        ReadStringFromJString(strings[i], jenv, javastring);
-    }
-}
-
-void
 AndroidGeckoEvent::ReadRectField(JNIEnv *jenv)
 {
     AndroidRect r(jenv, jenv->GetObjectField(wrappedObject(), jRectField));
@@ -507,38 +490,45 @@ AndroidGeckoEvent::ReadRectField(JNIEnv *jenv)
 }
 
 void
-AndroidGeckoEvent::ReadStringFromJString(nsString &aString, JNIEnv *jenv,
-                                         jstring s)
+AndroidGeckoEvent::ReadCharactersField(JNIEnv *jenv)
 {
+    jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jCharactersField);
     if (!s) {
-        aString.SetIsVoid(true);
+        mCharacters.SetIsVoid(true);
         return;
     }
 
     int len = jenv->GetStringLength(s);
-    aString.SetLength(len);
-    jenv->GetStringRegion(s, 0, len, aString.BeginWriting());
-}
-
-void
-AndroidGeckoEvent::ReadCharactersField(JNIEnv *jenv)
-{
-    jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jCharactersField);
-    ReadStringFromJString(mCharacters, jenv, s);
+    mCharacters.SetLength(len);
+    jenv->GetStringRegion(s, 0, len, mCharacters.BeginWriting());
 }
 
 void
 AndroidGeckoEvent::ReadCharactersExtraField(JNIEnv *jenv)
 {
     jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jCharactersExtraField);
-    ReadStringFromJString(mCharactersExtra, jenv, s);
+    if (!s) {
+        mCharactersExtra.SetIsVoid(true);
+        return;
+    }
+
+    int len = jenv->GetStringLength(s);
+    mCharactersExtra.SetLength(len);
+    jenv->GetStringRegion(s, 0, len, mCharactersExtra.BeginWriting());
 }
 
 void
 AndroidGeckoEvent::ReadDataField(JNIEnv *jenv)
 {
     jstring s = (jstring) jenv->GetObjectField(wrapped_obj, jDataField);
-    ReadStringFromJString(mData, jenv, s);
+    if (!s) {
+        mData.SetIsVoid(true);
+        return;
+    }
+
+    int len = jenv->GetStringLength(s);
+    mData.SetLength(len);
+    jenv->GetStringRegion(s, 0, len, mData.BeginWriting());
 }
 
 void
@@ -723,13 +713,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case TELEMETRY_HISTOGRAM_ADD: {
             ReadCharactersField(jenv);
-            mCount = jenv->GetIntField(jobj, jCountField);
-            break;
-        }
-
-        case PREFERENCES_OBSERVE:
-        case PREFERENCES_GET: {
-            ReadStringArray(mPrefNames, jenv, jPrefNamesField);
             mCount = jenv->GetIntField(jobj, jCountField);
             break;
         }

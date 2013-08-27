@@ -31,6 +31,11 @@
 
 using namespace mozilla;
 
+enum nsMixedContentBlockerMessageType {
+  eBlocked = 0x00,
+  eUserOverride = 0x01
+};
+
 // Is mixed script blocking (fonts, plugin content, scripts, stylesheets,
 // iframes, websockets, XHR) enabled?
 bool nsMixedContentBlocker::sBlockMixedScript = false;
@@ -147,22 +152,42 @@ nsMixedContentBlocker::~nsMixedContentBlocker()
 
 NS_IMPL_ISUPPORTS1(nsMixedContentBlocker, nsIContentPolicy)
 
-void
-LogBlockingMixedContent(MixedContentTypes classification,
-                        nsIURI* aContentLocation,
-                        nsIDocument* aRootDoc)
+static void
+LogMixedContentMessage(MixedContentTypes aClassification,
+                       nsIURI* aContentLocation,
+                       nsIDocument* aRootDoc,
+                       nsMixedContentBlockerMessageType aMessageType)
 {
+  nsAutoCString messageCategory;
+  uint32_t severityFlag;
+  nsAutoCString messageLookupKey;
+
+  if (aMessageType == eBlocked) {
+    severityFlag = nsIScriptError::errorFlag;
+    messageCategory.AssignLiteral("Mixed Content Blocker");
+    if (aClassification == eMixedDisplay) {
+      messageLookupKey.AssignLiteral("BlockMixedDisplayContent");
+    } else {
+      messageLookupKey.AssignLiteral("BlockMixedActiveContent");
+    }
+  } else {
+    severityFlag = nsIScriptError::warningFlag;
+    messageCategory.AssignLiteral("Mixed Content Message");
+    if (aClassification == eMixedDisplay) {
+      messageLookupKey.AssignLiteral("LoadingMixedDisplayContent");
+    } else {
+      messageLookupKey.AssignLiteral("LoadingMixedActiveContent");
+    }
+  }
+
   nsAutoCString locationSpec;
   aContentLocation->GetSpec(locationSpec);
   NS_ConvertUTF8toUTF16 locationSpecUTF16(locationSpec);
 
   const PRUnichar* strings[] = { locationSpecUTF16.get() };
-  nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                  NS_LITERAL_CSTRING("Mixed Content Blocker"),
-                                  aRootDoc,
+  nsContentUtils::ReportToConsole(severityFlag, messageCategory, aRootDoc,
                                   nsContentUtils::eSECURITY_PROPERTIES,
-                                  classification == eMixedDisplay ? "BlockMixedDisplayContent" : "BlockMixedActiveContent",
-                                  strings, ArrayLength(strings));
+                                  messageLookupKey.get(), strings, ArrayLength(strings));
 }
 
 NS_IMETHODIMP
@@ -453,6 +478,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
   // If the content is display content, and the pref says display content should be blocked, block it.
   if (sBlockMixedDisplay && classification == eMixedDisplay) {
     if (allowMixedContent) {
+      LogMixedContentMessage(classification, aContentLocation, rootDoc, eUserOverride);
       *aDecision = nsIContentPolicy::ACCEPT;
       rootDoc->SetHasMixedActiveContentLoaded(true);
       if (!rootDoc->GetHasMixedDisplayContentLoaded() && NS_SUCCEEDED(stateRV)) {
@@ -460,7 +486,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
       }
     } else {
       *aDecision = nsIContentPolicy::REJECT_REQUEST;
-      LogBlockingMixedContent(classification, aContentLocation, rootDoc);
+      LogMixedContentMessage(classification, aContentLocation, rootDoc, eBlocked);
       if (!rootDoc->GetHasMixedDisplayContentBlocked() && NS_SUCCEEDED(stateRV)) {
         eventSink->OnSecurityChange(aRequestingContext, (State | nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT));
       }
@@ -471,6 +497,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     // If the content is active content, and the pref says active content should be blocked, block it
     // unless the user has choosen to override the pref
     if (allowMixedContent) {
+       LogMixedContentMessage(classification, aContentLocation, rootDoc, eUserOverride);
        *aDecision = nsIContentPolicy::ACCEPT;
        // See if the pref will change here. If it will, only then do we need to call OnSecurityChange() to update the UI.
        if (rootDoc->GetHasMixedActiveContentLoaded()) {
@@ -501,7 +528,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     } else {
        //User has not overriden the pref by Disabling protection. Reject the request and update the security state.
        *aDecision = nsIContentPolicy::REJECT_REQUEST;
-       LogBlockingMixedContent(classification, aContentLocation, rootDoc);
+       LogMixedContentMessage(classification, aContentLocation, rootDoc, eBlocked);
        // See if the pref will change here. If it will, only then do we need to call OnSecurityChange() to update the UI.
        if (rootDoc->GetHasMixedActiveContentBlocked()) {
          return NS_OK;
@@ -518,6 +545,9 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
 
   } else {
     // The content is not blocked by the mixed content prefs.
+
+    // Log a message that we are loading mixed content.
+    LogMixedContentMessage(classification, aContentLocation, rootDoc, eUserOverride);
 
     // Fire the event from a script runner as it is unsafe to run script
     // from within ShouldLoad
