@@ -17,7 +17,6 @@
 #include "mozIStorageService.h"
 
 class nsIMemoryReporter;
-class nsIMemoryMultiReporter;
 class nsIXPConnect;
 struct sqlite3_vfs;
 
@@ -173,8 +172,8 @@ private:
 
   nsCOMPtr<nsIFile> mProfileStorageFile;
 
-  nsCOMPtr<nsIMemoryReporter> mStorageSQLiteReporter;
-  nsCOMPtr<nsIMemoryMultiReporter> mStorageSQLiteMultiReporter;
+  nsCOMPtr<nsIMemoryReporter> mStorageSQLiteUniReporter;
+  nsCOMPtr<nsIMemoryReporter> mStorageSQLiteMultiReporter;
 
   static Service *gService;
 

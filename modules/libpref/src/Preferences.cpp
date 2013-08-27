@@ -203,11 +203,11 @@ Preferences::SizeOfIncludingThisAndOtherStuff(mozilla::MallocSizeOf aMallocSizeO
   return n;
 }
 
-class PreferencesReporter MOZ_FINAL : public MemoryReporterBase
+class PreferencesReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
   PreferencesReporter()
-    : MemoryReporterBase("explicit/preferences", KIND_HEAP, UNITS_BYTES,
+    : MemoryUniReporter("explicit/preferences", KIND_HEAP, UNITS_BYTES,
                          "Memory used by the preferences system.")
   {}
 private:

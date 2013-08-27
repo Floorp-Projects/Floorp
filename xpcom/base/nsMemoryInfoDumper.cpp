@@ -672,32 +672,35 @@ DumpReport(nsIGZFileWriter *aWriter, bool aIsFirst,
   return NS_OK;
 }
 
-class DumpMultiReporterCallback MOZ_FINAL : public nsIMemoryMultiReporterCallback
+class DumpReporterCallback MOZ_FINAL : public nsIMemoryReporterCallback
 {
-  public:
-    NS_DECL_ISUPPORTS
+public:
+  NS_DECL_ISUPPORTS
 
-      NS_IMETHOD Callback(const nsACString &aProcess, const nsACString &aPath,
-          int32_t aKind, int32_t aUnits, int64_t aAmount,
-          const nsACString &aDescription,
-          nsISupports *aData)
-      {
-        nsCOMPtr<nsIGZFileWriter> writer = do_QueryInterface(aData);
-        NS_ENSURE_TRUE(writer, NS_ERROR_FAILURE);
+  DumpReporterCallback(bool* aIsFirstPtr) : mIsFirstPtr(aIsFirstPtr) {}
 
-        // The |isFirst = false| assumes that at least one single reporter is
-        // present and so will have been processed in
-        // DumpProcessMemoryReportsToGZFileWriter() below.
-        return DumpReport(writer, /* isFirst = */ false, aProcess, aPath,
-            aKind, aUnits, aAmount, aDescription);
-        return NS_OK;
-      }
+  NS_IMETHOD Callback(const nsACString &aProcess, const nsACString &aPath,
+      int32_t aKind, int32_t aUnits, int64_t aAmount,
+      const nsACString &aDescription,
+      nsISupports *aData)
+  {
+    nsCOMPtr<nsIGZFileWriter> writer = do_QueryInterface(aData);
+    NS_ENSURE_TRUE(writer, NS_ERROR_FAILURE);
+
+    // The |isFirst = false| assumes that at least one single reporter is
+    // present and so will have been processed in
+    // DumpProcessMemoryReportsToGZFileWriter() below.
+    bool isFirst = *mIsFirstPtr;
+    *mIsFirstPtr = false;
+    return DumpReport(writer, isFirst, aProcess, aPath, aKind, aUnits, aAmount,
+                      aDescription);
+  }
+
+private:
+  bool* mIsFirstPtr;
 };
 
-NS_IMPL_ISUPPORTS1(
-    DumpMultiReporterCallback
-    , nsIMemoryMultiReporterCallback
-    )
+NS_IMPL_ISUPPORTS1(DumpReporterCallback, nsIMemoryReporterCallback)
 
 } // namespace mozilla
 
@@ -795,8 +798,6 @@ DMDWrite(void* aState, const char* aFmt, va_list ap)
 static nsresult
 DumpProcessMemoryReportsToGZFileWriter(nsIGZFileWriter *aWriter)
 {
-  nsresult rv;
-
   // Increment this number if the format changes.
   //
   // This is the first write to the file, and it causes |aWriter| to allocate
@@ -814,53 +815,15 @@ DumpProcessMemoryReportsToGZFileWriter(nsIGZFileWriter *aWriter)
   DUMP(aWriter, ",\n");
   DUMP(aWriter, "  \"reports\": ");
 
-  // Process single reporters.
+  // Process reporters.
   bool isFirst = true;
   bool more;
   nsCOMPtr<nsISimpleEnumerator> e;
   mgr->EnumerateReporters(getter_AddRefs(e));
+  nsRefPtr<DumpReporterCallback> cb = new DumpReporterCallback(&isFirst);
   while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
     nsCOMPtr<nsIMemoryReporter> r;
     e->GetNext(getter_AddRefs(r));
-
-    nsCString process;
-    rv = r->GetProcess(process);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCString path;
-    rv = r->GetPath(path);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    int32_t kind;
-    rv = r->GetKind(&kind);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    int32_t units;
-    rv = r->GetUnits(&units);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    int64_t amount;
-    rv = r->GetAmount(&amount);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCString description;
-    rv = r->GetDescription(description);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = DumpReport(aWriter, isFirst, process, path, kind, units, amount,
-                    description);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    isFirst = false;
-  }
-
-  // Process multi-reporters.
-  nsCOMPtr<nsISimpleEnumerator> e2;
-  mgr->EnumerateMultiReporters(getter_AddRefs(e2));
-  nsRefPtr<DumpMultiReporterCallback> cb = new DumpMultiReporterCallback();
-  while (NS_SUCCEEDED(e2->HasMoreElements(&more)) && more) {
-    nsCOMPtr<nsIMemoryMultiReporter> r;
-    e2->GetNext(getter_AddRefs(r));
     r->CollectReports(cb, aWriter);
   }
 
