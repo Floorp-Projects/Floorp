@@ -9,8 +9,6 @@
 #include "ArchiveEvent.h"
 #include "ArchiveZipEvent.h"
 
-#include "nsLayoutStatics.h"
-
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
@@ -52,13 +50,11 @@ ArchiveReader::ArchiveReader(nsIDOMBlob* aBlob, nsPIDOMWindow* aWindow,
   MOZ_ASSERT(aBlob);
   MOZ_ASSERT(aWindow);
 
-  nsLayoutStatics::AddRef();
   SetIsDOMBinding();
 }
 
 ArchiveReader::~ArchiveReader()
 {
-  nsLayoutStatics::Release();
 }
 
 /* virtual */ JSObject*
