@@ -879,19 +879,18 @@ CycleCollectedJSRuntime::UsefulToMergeZones() const
   JSContext* cx;
   JSAutoRequest ar(nsContentUtils::GetSafeJSContext());
   while ((cx = JS_ContextIterator(mJSRuntime, &iter))) {
-    // Skip anything without an nsIScriptContext, as well as any scx whose
-    // NativeGlobal() is not an outer window (this happens with XUL Prototype
-    // compilation scopes, for example, which we're not interested in).
+    // Skip anything without an nsIScriptContext.
     nsIScriptContext* scx = GetScriptContextFromJSContext(cx);
-    JS::RootedObject global(cx, scx ? scx->GetNativeGlobal() : nullptr);
-    if (!global || !js::GetObjectParent(global)) {
+    JS::RootedObject obj(cx, scx ? scx->GetWindowProxy() : nullptr);
+    if (!obj) {
       continue;
     }
+    MOZ_ASSERT(js::IsOuterObject(obj));
     // Grab the inner from the outer.
-    global = JS_ObjectToInnerObject(cx, global);
-    MOZ_ASSERT(!js::GetObjectParent(global));
-    if (JS::GCThingIsMarkedGray(global) &&
-        !js::IsSystemCompartment(js::GetObjectCompartment(global))) {
+    obj = JS_ObjectToInnerObject(cx, obj);
+    MOZ_ASSERT(!js::GetObjectParent(obj));
+    if (JS::GCThingIsMarkedGray(obj) &&
+        !js::IsSystemCompartment(js::GetObjectCompartment(obj))) {
       return true;
     }
   }
