@@ -3263,7 +3263,7 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
     CompileOptions options(cx);
     options.setFileAndLine("<string>", 1)
            .setCompileAndGo(true)
-           .setSourcePolicy(CompileOptions::NO_SOURCE);
+           .setSourcePolicy(CompileOptions::SAVE_SOURCE);
 
     const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
     if (!chars)
