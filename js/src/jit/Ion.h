@@ -359,7 +359,7 @@ void AttachFinishedCompilations(JSContext *cx);
 void FinishOffThreadBuilder(IonBuilder *builder);
 
 static inline bool
-IsEnabled(JSContext *cx)
+IsIonEnabled(JSContext *cx)
 {
     return cx->hasOption(JSOPTION_ION) &&
         cx->hasOption(JSOPTION_BASELINE) &&

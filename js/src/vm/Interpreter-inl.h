@@ -681,7 +681,7 @@ class FastInvokeGuard
       , fun_(cx)
       , script_(cx)
 #ifdef JS_ION
-      , useIon_(jit::IsEnabled(cx))
+      , useIon_(jit::IsIonEnabled(cx))
 #endif
     {
         JS_ASSERT(!InParallelSection());

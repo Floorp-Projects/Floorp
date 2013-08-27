@@ -1808,7 +1808,7 @@ static MethodStatus
 Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode *osrPc,
         bool constructing, ExecutionMode executionMode)
 {
-    JS_ASSERT(jit::IsEnabled(cx));
+    JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT(jit::IsBaselineEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
 
@@ -1862,7 +1862,7 @@ MethodStatus
 jit::CanEnterAtBranch(JSContext *cx, JSScript *script, BaselineFrame *osrFrame,
                       jsbytecode *pc, bool isConstructing)
 {
-    JS_ASSERT(jit::IsEnabled(cx));
+    JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT((JSOp)*pc == JSOP_LOOPENTRY);
 
     // Skip if the script has been disabled.
@@ -1916,7 +1916,7 @@ jit::CanEnterAtBranch(JSContext *cx, JSScript *script, BaselineFrame *osrFrame,
 MethodStatus
 jit::CanEnter(JSContext *cx, RunState &state)
 {
-    JS_ASSERT(jit::IsEnabled(cx));
+    JS_ASSERT(jit::IsIonEnabled(cx));
 
     JSScript *script = state.script();
 
@@ -1948,7 +1948,7 @@ jit::CanEnter(JSContext *cx, RunState &state)
             RootedScript scriptRoot(cx, script);
             RootedObject callee(cx, &invoke.args().callee());
             RootedObject obj(cx, CreateThisForFunction(cx, callee, invoke.useNewType()));
-            if (!obj || !jit::IsEnabled(cx)) // Note: OOM under CreateThis can disable TI.
+            if (!obj || !jit::IsIonEnabled(cx)) // Note: OOM under CreateThis can disable TI.
                 return Method_Skipped;
             invoke.args().setThis(ObjectValue(*obj));
             script = scriptRoot;
@@ -1984,7 +1984,7 @@ MethodStatus
 jit::CompileFunctionForBaseline(JSContext *cx, HandleScript script, BaselineFrame *frame,
                                 bool isConstructing)
 {
-    JS_ASSERT(jit::IsEnabled(cx));
+    JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT(frame->fun()->nonLazyScript()->canIonCompile());
     JS_ASSERT(!frame->fun()->nonLazyScript()->isIonCompilingOffThread());
     JS_ASSERT(!frame->fun()->nonLazyScript()->hasIonScript());
@@ -2053,7 +2053,7 @@ jit::CanEnterInParallel(JSContext *cx, HandleScript script)
 MethodStatus
 jit::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numActualArgs)
 {
-    JS_ASSERT(jit::IsEnabled(cx));
+    JS_ASSERT(jit::IsIonEnabled(cx));
 
     // Skip if the code is expected to result in a bailout.
     if (!script->hasIonScript() || script->ionScript()->bailoutExpected())
@@ -2081,7 +2081,7 @@ static IonExecStatus
 EnterIon(JSContext *cx, EnterJitData &data)
 {
     JS_CHECK_RECURSION(cx, return IonExec_Aborted);
-    JS_ASSERT(jit::IsEnabled(cx));
+    JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT(!data.osrFrame);
 
     EnterIonCode enter = cx->runtime()->ionRuntime()->enterIon();
@@ -2196,7 +2196,7 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
     IonCode *code = ion->method();
     void *jitcode = code->raw();
 
-    JS_ASSERT(jit::IsEnabled(cx));
+    JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT(!ion->bailoutExpected());
 
     JitActivation activation(cx, /* firstFrameIsConstructing = */false);
