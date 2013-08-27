@@ -5,7 +5,7 @@
 
 #include "mozilla/dom/EventTarget.h"
 #include "nsEventListenerManager.h"
-#include "nsThreadUtils.h"
+
 
 namespace mozilla {
 namespace dom {

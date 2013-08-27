@@ -116,6 +116,7 @@
 #include "nsCycleCollector.h"
 #include "xpcpublic.h"
 #include "nsIScriptError.h"
+#include "nsLayoutStatics.h"
 #include "mozilla/Telemetry.h"
 
 #include "mozilla/CORSMode.h"
@@ -1040,19 +1041,21 @@ class ContentUnbinder : public nsRunnable
 public:
   ContentUnbinder()
   {
+    nsLayoutStatics::AddRef();
     mLast = this;
   }
 
   ~ContentUnbinder()
   {
     Run();
+    nsLayoutStatics::Release();
   }
 
   void UnbindSubtree(nsIContent* aNode)
   {
     if (aNode->NodeType() != nsIDOMNode::ELEMENT_NODE &&
         aNode->NodeType() != nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
-      return;
+      return;  
     }
     FragmentOrElement* container = static_cast<FragmentOrElement*>(aNode);
     uint32_t childCount = container->mAttrsAndChildren.ChildCount();

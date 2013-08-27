@@ -25,6 +25,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Services.h"
 
+#include "nsLayoutStatics.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsCCUncollectableMarker.h"
