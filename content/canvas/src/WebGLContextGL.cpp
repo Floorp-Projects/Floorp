@@ -1966,6 +1966,36 @@ WebGLContext::IsTexture(WebGLTexture *tex)
         tex->HasEverBeenBound();
 }
 
+// Try to bind an attribute that is an array to location 0:
+bool WebGLContext::BindArrayAttribToLocation0(WebGLProgram *program)
+{
+    if (mBoundVertexArray->mAttribBuffers[0].enabled) {
+        return false;
+    }
+
+    GLint leastArrayLocation = -1;
+
+    std::map<GLint, nsCString>::iterator itr;
+    for (itr = program->mActiveAttribMap.begin();
+         itr != program->mActiveAttribMap.end();
+         itr++) {
+        int32_t index = itr->first;
+        if (mBoundVertexArray->mAttribBuffers[index].enabled &&
+            index < leastArrayLocation)
+        {
+            leastArrayLocation = index;
+        }
+    }
+
+    if (leastArrayLocation > 0) {
+        nsCString& attrName = program->mActiveAttribMap.find(leastArrayLocation)->second;
+        const char* attrNameCStr = attrName.get();
+        gl->fBindAttribLocation(program->GLName(), 0, attrNameCStr);
+        return true;
+    }
+    return false;
+}
+
 void
 WebGLContext::LinkProgram(WebGLProgram *program)
 {
@@ -2003,7 +2033,8 @@ WebGLContext::LinkProgram(WebGLProgram *program)
         return;
     }
 
-    GLint ok;
+    bool updateInfoSucceeded = false;
+    GLint ok = 0;
     if (gl->WorkAroundDriverBugs() &&
         program->HasBadShaderAttached())
     {
@@ -2015,12 +2046,25 @@ WebGLContext::LinkProgram(WebGLProgram *program)
         MakeContextCurrent();
         gl->fLinkProgram(progname);
         gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
+
+        if (ok) {
+            updateInfoSucceeded = program->UpdateInfo();
+            program->SetLinkStatus(updateInfoSucceeded);
+
+            if (BindArrayAttribToLocation0(program)) {
+                GenerateWarning("linkProgram: relinking program to make attrib0 an "
+                                "array.");
+                gl->fLinkProgram(progname);
+                gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
+                if (ok) {
+                    updateInfoSucceeded = program->UpdateInfo();
+                    program->SetLinkStatus(updateInfoSucceeded);
+                }
+            }
+        }
     }
 
     if (ok) {
-        bool updateInfoSucceeded = program->UpdateInfo();
-        program->SetLinkStatus(updateInfoSucceeded);
-
         // Bug 750527
         if (gl->WorkAroundDriverBugs() &&
             updateInfoSucceeded &&
