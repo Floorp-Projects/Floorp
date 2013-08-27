@@ -140,7 +140,6 @@ DOMCI_CLASS(FMRadio)
 DOMCI_CLASS(BluetoothDevice)
 #endif
 
-DOMCI_CLASS(CameraControl)
 DOMCI_CLASS(CameraCapabilities)
 
 DOMCI_CLASS(LockedFile)

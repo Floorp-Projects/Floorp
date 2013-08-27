@@ -29,7 +29,7 @@ import org.json.JSONObject;
  */
 public class testDistribution extends ContentProviderTest {
     private static final String MOCK_PACKAGE = "mock-package.zip";
-    private static final int PREF_REQUEST_ID = 0x7357;
+    private static final String PREF_REQUEST_ID = "testDistribution";
 
     private Activity mActivity;
 
@@ -86,23 +86,28 @@ public class testDistribution extends ContentProviderTest {
         String prefTestInt = "distribution.test.int";
 
         try {
-            final String[] prefNames = { prefID,
-                                         prefAbout,
-                                         prefVersion,
-                                         prefTestBoolean,
-                                         prefTestString,
-                                         prefTestInt };
+            JSONArray getPrefData = new JSONArray();
+            getPrefData.put(prefID);
+            getPrefData.put(prefAbout);
+            getPrefData.put(prefVersion);
+            getPrefData.put(prefTestBoolean);
+            getPrefData.put(prefTestString);
+            getPrefData.put(prefTestInt);
+
+            JSONObject message = new JSONObject();
+            message.put("requestId", PREF_REQUEST_ID);
+            message.put("preferences", getPrefData);
 
             Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
-            mActions.sendPreferencesGetEvent(PREF_REQUEST_ID, prefNames);
+            mActions.sendGeckoEvent("Preferences:Get", message.toString());
 
             JSONObject data = null;
-            int requestId = -1;
+            String requestId = "";
 
             // Wait until we get the correct "Preferences:Data" event
-            while (requestId != PREF_REQUEST_ID) {
+            while (!requestId.equals(PREF_REQUEST_ID)) {
                 data = new JSONObject(eventExpecter.blockForEventData());
-                requestId = data.getInt("requestId");
+                requestId = data.getString("requestId");
             }
             eventExpecter.unregisterListener();
 
@@ -167,18 +172,23 @@ public class testDistribution extends ContentProviderTest {
             mActions.sendGeckoEvent("Preferences:Set", jsonPref.toString());
 
             // Wait for confirmation of the pref change.
-            final String[] prefNames = { prefUseragentLocale };
+            JSONArray getPrefData = new JSONArray();
+            getPrefData.put(prefUseragentLocale);
+
+            JSONObject message = new JSONObject();
+            message.put("requestId", PREF_REQUEST_ID);
+            message.put("preferences", getPrefData);
 
             Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
-            mActions.sendPreferencesGetEvent(PREF_REQUEST_ID, prefNames);
+            mActions.sendGeckoEvent("Preferences:Get", message.toString());
 
             JSONObject data = null;
-            int requestId = -1;
+            String requestId = "";
 
             // Wait until we get the correct "Preferences:Data" event
-            while (requestId != PREF_REQUEST_ID) {
+            while (!requestId.equals(PREF_REQUEST_ID)) {
                 data = new JSONObject(eventExpecter.blockForEventData());
-                requestId = data.getInt("requestId");
+                requestId = data.getString("requestId");
             }
             eventExpecter.unregisterListener();
 
@@ -194,18 +204,25 @@ public class testDistribution extends ContentProviderTest {
         String prefLocalizeableOverride = "distribution.test.localizeable-override";
 
         try {
-            final String[] prefNames = { prefAbout, prefLocalizeable, prefLocalizeableOverride };
+            JSONArray getPrefData = new JSONArray();
+            getPrefData.put(prefAbout);
+            getPrefData.put(prefLocalizeable);
+            getPrefData.put(prefLocalizeableOverride);
+
+            JSONObject message = new JSONObject();
+            message.put("requestId", PREF_REQUEST_ID);
+            message.put("preferences", getPrefData);
 
             Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
-            mActions.sendPreferencesGetEvent(PREF_REQUEST_ID, prefNames);
+            mActions.sendGeckoEvent("Preferences:Get", message.toString());
 
             JSONObject data = null;
-            int requestId = -1;
+            String requestId = "";
 
             // Wait until we get the correct "Preferences:Data" event
-            while (requestId != PREF_REQUEST_ID) {
+            while (!requestId.equals(PREF_REQUEST_ID)) {
                 data = new JSONObject(eventExpecter.blockForEventData());
-                requestId = data.getInt("requestId");
+                requestId = data.getString("requestId");
             }
             eventExpecter.unregisterListener();
 

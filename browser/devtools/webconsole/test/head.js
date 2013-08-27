@@ -1087,7 +1087,7 @@ function waitForMessages(aOptions)
     let partialMatch = !!(aRule.consoleTrace || aRule.consoleTime ||
                           aRule.consoleTimeEnd || aRule.type);
 
-    if (aRule.category && aElement.category != aRule.category) {
+    if ("category" in aRule && aElement.category != aRule.category) {
       if (partialMatch) {
         is(aElement.category, aRule.category,
            "message category for rule: " + displayRule(aRule));

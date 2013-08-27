@@ -59,7 +59,8 @@ function AutocompletePopup(aDocument, aOptions = {})
   if (!this._panel) {
     this._panel = this._document.createElementNS(XUL_NS, "panel");
     this._panel.setAttribute("id", id);
-    this._panel.className = "devtools-autocomplete-popup " + theme + "-theme";
+    this._panel.className = "devtools-autocomplete-popup devtools-monospace "
+                            + theme + "-theme";
 
     this._panel.setAttribute("noautofocus", "true");
     this._panel.setAttribute("level", "top");

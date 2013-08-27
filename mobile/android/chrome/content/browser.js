@@ -278,7 +278,9 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Session:Stop", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Browser:Quit", false);
+    Services.obs.addObserver(this, "Preferences:Get", false);
     Services.obs.addObserver(this, "Preferences:Set", false);
+    Services.obs.addObserver(this, "Preferences:Observe", false);
     Services.obs.addObserver(this, "Preferences:RemoveObservers", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearData", false);
@@ -986,17 +988,16 @@ var BrowserApp = {
 
   notifyPrefObservers: function(aPref) {
     this._prefObservers[aPref].forEach(function(aRequestId) {
-      this.getPreferences(aRequestId, [aPref], 1);
+      let request = { requestId : aRequestId,
+                      preferences : [aPref] };
+      this.getPreferences(request);
     }, this);
   },
 
-  handlePreferencesRequest: function handlePreferencesRequest(aRequestId,
-                                                              aPrefNames,
-                                                              aListen) {
-
+  getPreferences: function getPreferences(aPrefsRequest, aListen) {
     let prefs = [];
 
-    for (let prefName of aPrefNames) {
+    for (let prefName of aPrefsRequest.preferences) {
       let pref = {
         name: prefName,
         type: "",
@@ -1005,9 +1006,9 @@ var BrowserApp = {
 
       if (aListen) {
         if (this._prefObservers[prefName])
-          this._prefObservers[prefName].push(aRequestId);
+          this._prefObservers[prefName].push(aPrefsRequest.requestId);
         else
-          this._prefObservers[prefName] = [ aRequestId ];
+          this._prefObservers[prefName] = [ aPrefsRequest.requestId ];
         Services.prefs.addObserver(prefName, this, false);
       }
 
@@ -1114,7 +1115,7 @@ var BrowserApp = {
 
     sendMessageToJava({
       type: "Preferences:Data",
-      requestId: aRequestId,    // opaque request identifier, can be any string/int/whatever
+      requestId: aPrefsRequest.requestId,    // opaque request identifier, can be any string/int/whatever
       preferences: prefs
     });
   },
@@ -1437,8 +1438,16 @@ var BrowserApp = {
         this.saveAsPDF(browser);
         break;
 
+      case "Preferences:Get":
+        this.getPreferences(JSON.parse(aData));
+        break;
+
       case "Preferences:Set":
         this.setPreferences(aData);
+        break;
+
+      case "Preferences:Observe":
+        this.getPreferences(JSON.parse(aData), true);
         break;
 
       case "Preferences:RemoveObservers":
@@ -1516,14 +1525,6 @@ var BrowserApp = {
   // nsIAndroidBrowserApp
   getBrowserTab: function(tabId) {
     return this.getTabForId(tabId);
-  },
-
-  getPreferences: function getPreferences(requestId, prefNames, count) {
-    this.handlePreferencesRequest(requestId, prefNames, false);
-  },
-
-  observePreferences: function observePreferences(requestId, prefNames, count) {
-    this.handlePreferencesRequest(requestId, prefNames, true);
   },
 
   // This method will print a list from fromIndex to toIndex, optionally

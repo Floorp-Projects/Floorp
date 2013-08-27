@@ -130,7 +130,6 @@
 /* Sources and breakpoints view */
 
 .dbg-breakpoint {
-  font-family: monospace;
   -moz-margin-start: -14px;
 }
 
@@ -162,7 +161,6 @@
 
 .dbg-expression-input {
   -moz-padding-start: 2px !important;
-  font-family: Menlo, Monaco, monospace;
 }
 
 /* Searchbox and the search operations help panel */
@@ -189,7 +187,6 @@
   -moz-margin-start: 2px;
   -moz-margin-end: 6px;
   text-align: center;
-  font-family: Menlo, Monaco, monospace;
 }
 
 .searchbox-panel-operator-label {
@@ -287,7 +284,6 @@
   -moz-padding-end: 4px;
   padding-top: 2px;
   text-align: end;
-  font-family: monospace;
   color: #8c8c8c;
 }
 
@@ -295,7 +291,6 @@
   -moz-padding-start: 4px;
   padding-top: 1px;
   padding-bottom: 1px;
-  font-family: monospace;
 }
 
 .dbg-results-line-contents-string {

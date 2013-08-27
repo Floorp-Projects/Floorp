@@ -228,6 +228,7 @@ Messages.BaseMessage.prototype = {
     let body = doc.createElementNS(XUL_NS, "description");
     body.flex = 1;
     body.classList.add("webconsole-msg-body");
+    body.classList.add("devtools-monospace");
     container.appendChild(body);
 
     return container;

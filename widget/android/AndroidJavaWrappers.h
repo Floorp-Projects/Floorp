@@ -539,7 +539,6 @@ public:
     const nsTArray<float>& Pressures() { return mPressures; }
     const nsTArray<float>& Orientations() { return mOrientations; }
     const nsTArray<nsIntPoint>& PointRadii() { return mPointRadii; }
-    const nsTArray<nsString>& PrefNames() { return mPrefNames; }
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }
@@ -578,7 +577,6 @@ public:
     RefCountedJavaObject* ByteBuffer() { return mByteBuffer; }
     int Width() { return mWidth; }
     int Height() { return mHeight; }
-    int RequestId() { return mCount; } // for convenience
     nsTouchEvent MakeTouchEvent(nsIWidget* widget);
     MultiTouchInput MakeMultiTouchInput(nsIWidget* widget);
     void UnionRect(nsIntRect const& aRect);
@@ -614,7 +612,6 @@ protected:
     short mScreenOrientation;
     nsRefPtr<RefCountedJavaObject> mByteBuffer;
     int mWidth, mHeight;
-    nsTArray<nsString> mPrefNames;
 
     void ReadIntArray(nsTArray<int> &aVals,
                       JNIEnv *jenv,
@@ -628,14 +625,10 @@ protected:
                         JNIEnv *jenv,
                         jfieldID field,
                         int32_t count);
-    void ReadStringArray(nsTArray<nsString> &aStrings,
-                         JNIEnv *jenv,
-                         jfieldID field);
     void ReadRectField(JNIEnv *jenv);
     void ReadCharactersField(JNIEnv *jenv);
     void ReadCharactersExtraField(JNIEnv *jenv);
     void ReadDataField(JNIEnv *jenv);
-    void ReadStringFromJString(nsString &aString, JNIEnv *jenv, jstring s);
 
     uint32_t ReadDomKeyLocation(JNIEnv* jenv, jobject jGeckoEventObj);
 
@@ -678,7 +671,6 @@ protected:
     static jfieldID jRangeBackColorField;
     static jfieldID jRangeLineColorField;
     static jfieldID jLocationField;
-    static jfieldID jPrefNamesField;
 
     static jfieldID jBandwidthField;
     static jfieldID jCanBeMeteredField;
@@ -725,8 +717,6 @@ public:
         LOW_MEMORY = 35,
         NETWORK_LINK_CHANGE = 36,
         TELEMETRY_HISTOGRAM_ADD = 37,
-        PREFERENCES_OBSERVE = 38,
-        PREFERENCES_GET = 39,
         dummy_java_enum_list_end
     };
 

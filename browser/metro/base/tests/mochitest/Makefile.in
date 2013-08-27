@@ -12,10 +12,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_METRO_FILES = \
   head.js \
-  browser_urlbar.js \
+  helpers/ViewStateHelper.js \
   browser_bookmarks.js \
   browser_canonizeURL.js \
   browser_circular_progress_indicator.js \
+  browser_crashprompt.js \
   browser_context_menu_tests.js \
   browser_context_menu_tests_01.html \
   browser_context_menu_tests_02.html \
@@ -25,21 +26,22 @@ MOCHITEST_METRO_FILES = \
   browser_downloads.js \
   browser_findbar.js \
   browser_findbar.html \
+  browser_form_auto_complete.js \
+  browser_form_auto_complete.html \
   browser_history.js \
+  browser_inputsource.js \
   browser_onscreen_keyboard.js \
   browser_onscreen_keyboard.html \
   browser_prefs_ui.js \
   browser_progress_indicator.xul \
   browser_remotetabs.js \
+  browser_snappedState.js \
   browser_tabs.js \
   browser_test.js \
   browser_tiles.js \
   browser_tilegrid.xul \
   browser_topsites.js \
-  browser_form_auto_complete.js \
-  browser_form_auto_complete.html \
-  browser_crashprompt.js \
-  browser_inputsource.js \
+  browser_urlbar.js \
   $(NULL)
 
 ifndef MOZ_DEBUG

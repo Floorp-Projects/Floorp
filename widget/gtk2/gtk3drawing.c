@@ -1588,12 +1588,14 @@ moz_gtk_treeview_expander_paint(cairo_t *cr, GdkRectangle* rect,
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_EXPANDER);
 
-    state_flags = GetStateFlagsFromGtkWidgetState(state);
+    /* Because the frame we get is of the entire treeview, we can't get the precise
+     * event state of one expander, thus rendering hover and active feedback useless. */
+    state_flags = state->disabled ? GTK_STATE_INSENSITIVE : GTK_STATE_NORMAL;
 
     /* GTK_STATE_FLAG_ACTIVE controls expanded/colapsed state rendering
      * in gtk_render_expander()
      */
-    if (expander_state == GTK_EXPANDER_EXPANDED) 
+    if (expander_state == GTK_EXPANDER_EXPANDED)
         state_flags |= GTK_STATE_FLAG_ACTIVE;
     else
         state_flags &= ~(GTK_STATE_FLAG_ACTIVE);

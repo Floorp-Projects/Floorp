@@ -255,7 +255,7 @@ nsHistory::ReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
 }
 
 void
-nsHistory::PushOrReplaceState(JSContext* aCx, JS::Value aData,
+nsHistory::PushOrReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
                               const nsAString& aTitle, const nsAString& aUrl,
                               ErrorResult& aRv, bool aReplace)
 {

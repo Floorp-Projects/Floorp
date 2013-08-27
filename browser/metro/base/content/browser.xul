@@ -415,8 +415,7 @@
 
 #if MOZ_UPDATE_CHANNEL != release
 #ifdef MOZ_UPDATER
-      <description class="text-blurb" id="currentChannelText">&channel.description.start;<label id="currentChannel"/></description>
-      <description class="text-blurb" id="currentChannelText2">&channel.description.end;</description>
+      <description class="text-blurb" id="currentChannelText">&channel.description.start;<label id="currentChannel"/>&channel.description.end;</description>
 #endif
 #endif
       <label id="about-policy-label"
