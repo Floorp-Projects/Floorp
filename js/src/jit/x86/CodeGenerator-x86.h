@@ -11,7 +11,7 @@
 #include "jit/x86/Assembler-x86.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class OutOfLineLoadTypedArrayOutOfBounds;
 class OutOfLineTruncate;
@@ -73,7 +73,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_x86_CodeGenerator_x86_h */

@@ -18,7 +18,7 @@
 #include "jit/IonCode.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class TempAllocator;
 
@@ -385,7 +385,7 @@ void TraceIonScripts(JSTracer* trc, JSScript *script);
 
 void TriggerOperationCallbackForIonCode(JSRuntime *rt, JSRuntime::OperationCallbackTrigger trigger);
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

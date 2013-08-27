@@ -17,7 +17,7 @@
 #include "jit/MIRGraph.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 bool
 C1Spewer::init(const char *path)

@@ -26,7 +26,7 @@
 
 using namespace js;
 using namespace js::parallel;
-using namespace js::ion;
+using namespace js::jit;
 
 ///////////////////////////////////////////////////////////////////////////
 // Degenerate configurations
@@ -559,8 +559,8 @@ js::ParallelDo::apply()
     //       - Re-enqueue main script and any uncompiled scripts that were called
     // - Too many bailouts: Fallback to sequential
 
-    JS_ASSERT_IF(!ion::IsBaselineEnabled(cx_), !ion::IsEnabled(cx_));
-    if (!ion::IsBaselineEnabled(cx_) || !ion::IsEnabled(cx_))
+    JS_ASSERT_IF(!jit::IsBaselineEnabled(cx_), !jit::IsEnabled(cx_));
+    if (!jit::IsBaselineEnabled(cx_) || !jit::IsEnabled(cx_))
         return sequentialExecution(true);
 
     SpewBeginOp(cx_, "ParallelDo");
@@ -728,7 +728,7 @@ js::ParallelDo::compileForParallelExecution(ExecutionStatus *status)
             if (!script->hasParallelIonScript()) {
                 // Script has not yet been compiled. Attempt to compile it.
                 SpewBeginCompile(script);
-                MethodStatus mstatus = ion::CanEnterInParallel(cx_, script);
+                MethodStatus mstatus = jit::CanEnterInParallel(cx_, script);
                 SpewEndCompile(mstatus);
 
                 switch (mstatus) {
@@ -2151,10 +2151,10 @@ js::InExclusiveParallelSection()
 bool
 js::ParallelTestsShouldPass(JSContext *cx)
 {
-    return ion::IsEnabled(cx) &&
-           ion::IsBaselineEnabled(cx) &&
-           !ion::js_IonOptions.eagerCompilation &&
-           ion::js_IonOptions.baselineUsesBeforeCompile != 0 &&
+    return jit::IsEnabled(cx) &&
+           jit::IsBaselineEnabled(cx) &&
+           !jit::js_IonOptions.eagerCompilation &&
+           jit::js_IonOptions.baselineUsesBeforeCompile != 0 &&
            cx->runtime()->gcZeal() == 0;
 }
 
