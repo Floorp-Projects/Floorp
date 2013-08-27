@@ -6442,22 +6442,26 @@ JS_SetParallelIonCompilationEnabled(JSContext *cx, bool enabled)
 }
 
 JS_PUBLIC_API(void)
-JS_SetGlobalCompilerOption(JSContext *cx, JSCompilerOption opt, uint32_t value)
+JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t value)
 {
 #ifdef JS_ION
     jit::IonOptions defaultValues;
 
     switch (opt) {
-      case JSCOMPILER_BASELINE_USECOUNT_TRIGGER:
+      case JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER:
         if (value == uint32_t(-1))
             value = defaultValues.baselineUsesBeforeCompile;
         jit::js_IonOptions.baselineUsesBeforeCompile = value;
         break;
-      case JSCOMPILER_ION_USECOUNT_TRIGGER:
+      case JSJITCOMPILER_ION_USECOUNT_TRIGGER:
         if (value == uint32_t(-1))
             value = defaultValues.usesBeforeCompile;
         jit::js_IonOptions.usesBeforeCompile = value;
-        jit::js_IonOptions.eagerCompilation = (value == 0);
+        if (value == 0)
+            jit::js_IonOptions.setEagerCompilation();
+        break;
+
+      default:
         break;
     }
 #endif

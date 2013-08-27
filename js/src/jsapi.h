@@ -4619,13 +4619,22 @@ JS_SetParallelParsingEnabled(JSContext *cx, bool enabled);
 extern JS_PUBLIC_API(void)
 JS_SetParallelIonCompilationEnabled(JSContext *cx, bool enabled);
 
-typedef enum JSCompilerOption {
-    JSCOMPILER_BASELINE_USECOUNT_TRIGGER,
-    JSCOMPILER_ION_USECOUNT_TRIGGER
-} JSCompilerOption;
+#define JIT_COMPILER_OPTIONS(Register)                             \
+  Register(BASELINE_USECOUNT_TRIGGER, "baseline.usecount.trigger") \
+  Register(ION_USECOUNT_TRIGGER, "ion.usecount.trigger")
+
+typedef enum JSJitCompilerOption {
+#define JIT_COMPILER_DECLARE(key, str) \
+    JSJITCOMPILER_ ## key,
+
+    JIT_COMPILER_OPTIONS(JIT_COMPILER_DECLARE)
+#undef JIT_COMPILER_DECLARE
+
+    JSJITCOMPILER_NOT_AN_OPTION
+} JSJitCompilerOption;
 
 extern JS_PUBLIC_API(void)
-JS_SetGlobalCompilerOption(JSContext *cx, JSCompilerOption opt, uint32_t value);
+JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t value);
 
 /*
  * Convert a uint32_t index into a jsid.
