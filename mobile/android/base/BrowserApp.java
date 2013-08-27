@@ -413,6 +413,10 @@ abstract public class BrowserApp extends GeckoApp
         super.onCreate(savedInstanceState);
 
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
+        mBrowserToolbar.updateBackButton(false);
+        mBrowserToolbar.updateForwardButton(false);
+
+        mDoorHangerPopup.setAnchor(mBrowserToolbar.mFavicon);
 
         ((GeckoApp.MainLayout) mMainLayout).setTouchEventInterceptor(new HideTabsTouchListener());
         ((GeckoApp.MainLayout) mMainLayout).setMotionEventInterceptor(new MotionEventInterceptor() {
@@ -793,11 +797,6 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     protected void initializeChrome() {
         super.initializeChrome();
-
-        mBrowserToolbar.updateBackButton(false);
-        mBrowserToolbar.updateForwardButton(false);
-
-        mDoorHangerPopup.setAnchor(mBrowserToolbar.mFavicon);
 
         // Listen to margin changes to position the toolbar correctly
         if (isDynamicToolbarEnabled()) {
