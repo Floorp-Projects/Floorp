@@ -30,6 +30,7 @@ MOZBASE_PACKAGES = \
   mozdevice \
   moznetwork \
   mozsystemmonitor \
+  moztest \
   $(NULL)
 
 MOZBASE_EXTRAS = \
