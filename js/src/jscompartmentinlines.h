@@ -54,8 +54,8 @@ JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject e
 
     /* Handle strings. */
     if (vp.isString()) {
-        JSString *str = vp.toString();
-        if (!wrap(cx, &str))
+        JS::RootedString str(cx, vp.toString());
+        if (!wrap(cx, str.address()))
             return false;
         vp.setString(str);
         return true;
