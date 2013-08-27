@@ -824,13 +824,6 @@ typedef enum JSFinalizeStatus {
 typedef void
 (* JSFinalizeCallback)(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartment);
 
-/*
- * Generic trace operation that calls JS_CallTracer on each traceable thing
- * stored in data.
- */
-typedef void
-(* JSTraceDataOp)(JSTracer *trc, void *data);
-
 typedef bool
 (* JSOperationCallback)(JSContext *cx);
 
