@@ -12,8 +12,8 @@
 #include "nsIObserver.h"
 #include "nsWrapperCache.h"
 #include "nsPluginTags.h"
+#include "nsPIDOMWindow.h"
 
-class nsPIDOMWindow;
 class nsPluginElement;
 class nsMimeType;
 
