@@ -674,6 +674,11 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
 
     mGotData = true;
 
+    // Store and reset this for the invariant that it's always false after
+    // calls to OnDataAvailable (see bug 907575)
+    bool resniffMimeType = mResniffMimeType;
+    mResniffMimeType = false;
+
     mimetype_closure closure;
     nsAutoCString newType;
     closure.newType = &newType;
@@ -718,14 +723,12 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
       // If we've resniffed our MIME type and it changed, we need to create a
       // new status tracker to give to the image, because we don't have one of
       // our own any more.
-      if (mResniffMimeType) {
+      if (resniffMimeType) {
         NS_ABORT_IF_FALSE(mIsMultiPartChannel, "Resniffing a non-multipart image");
 
         imgStatusTracker* freshTracker = new imgStatusTracker(nullptr);
         freshTracker->AdoptConsumers(&GetStatusTracker());
         mStatusTracker = freshTracker;
-
-        mResniffMimeType = false;
       }
 
       /* set our mimetype as a property */
