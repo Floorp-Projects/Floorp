@@ -23,7 +23,6 @@
 #include "nsStringBuffer.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "nsDOMJSUtils.h"
 
 class nsIPrincipal;
 class nsIXPConnectWrappedJS;
@@ -161,25 +160,6 @@ xpc_UnmarkGrayScript(JSScript *script)
         JS::ExposeGCThingToActiveJS(script, JSTRACE_SCRIPT);
 
     return script;
-}
-
-inline JSContext *
-xpc_UnmarkGrayContext(JSContext *cx)
-{
-    // There's no default compartment object for DOM JSContexts, so we have
-    // nothing to do in that case. In fact, this whole function is obsolete,
-    // because nothing else is ever gray. But for now let's be deliberate.
-    // We'll remove this thing in the next patch.
-    if (cx && !GetScriptContextFromJSContext(cx)) {
-        JSObject *global = js::DefaultObjectForContextOrNull(cx);
-        xpc_UnmarkGrayObject(global);
-        if (global && JS_IsInRequest(JS_GetRuntime(cx))) {
-            JSObject *scope = JS::CurrentGlobalOrNull(cx);
-            if (scope != global)
-                xpc_UnmarkGrayObject(scope);
-        }
-    }
-    return cx;
 }
 
 // If aVariant is an XPCVariant, this marks the object to be in aGeneration.
