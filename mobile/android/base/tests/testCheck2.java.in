@@ -12,6 +12,8 @@ public class testCheck2 extends PixelTest {
 
         blockForGeckoReady();
         loadAndPaint(url);
+        verifyHomePagerHidden();
+
         mDriver.setupScrollHandling();
 
         /*
