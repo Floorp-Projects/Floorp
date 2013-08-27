@@ -1659,6 +1659,7 @@ abstract public class GeckoApp
     protected int getSessionRestoreState(Bundle savedInstanceState) {
         final SharedPreferences prefs = GeckoApp.getAppSharedPreferences();
         int restoreMode = RESTORE_NONE;
+        boolean allowCrashRestore = true;
 
         // If the version has changed, the user has done an upgrade, so restore
         // previous tabs.
@@ -1676,6 +1677,17 @@ abstract public class GeckoApp
             restoreMode = RESTORE_NORMAL;
         } else if (savedInstanceState != null) {
             restoreMode = RESTORE_NORMAL;
+        } else {
+            String restorePref = PreferenceManager.getDefaultSharedPreferences(this)
+                                                  .getString(GeckoPreferences.PREFS_RESTORE_SESSION, "crash");
+            if ("always".equals(restorePref)) {
+                restoreMode = RESTORE_NORMAL;
+            } else {
+                restoreMode = RESTORE_NONE;
+                if ("never".equals(restorePref)) {
+                    allowCrashRestore = false;
+                }
+            }
         }
 
         // We record crashes in the crash reporter. If sessionstore.js
@@ -1692,7 +1704,9 @@ abstract public class GeckoApp
                 }
             });
 
-            restoreMode = RESTORE_CRASH;
+            if (allowCrashRestore) {
+                restoreMode = RESTORE_CRASH;
+            }
         }
 
         return restoreMode;
