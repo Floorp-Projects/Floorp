@@ -70,10 +70,14 @@ XPCJSContextStack::Push(JSContext *cx)
         // compartment that's same-origin with the current one, we can skip it.
         nsIScriptSecurityManager* ssm = XPCWrapper::GetSecurityManager();
         if ((e.cx == cx) && ssm) {
-            RootedObject defaultGlobal(cx, js::DefaultObjectForContextOrNull(cx));
+            // DOM JSContexts don't store their default compartment object on
+            // the cx, so in those cases we need to fetch it via the scx
+            // instead.
+            RootedObject defaultScope(cx, GetDefaultScopeFromJSContext(cx));
+
             nsIPrincipal *currentPrincipal =
               GetCompartmentPrincipal(js::GetContextCompartment(cx));
-            nsIPrincipal *defaultPrincipal = GetObjectPrincipal(defaultGlobal);
+            nsIPrincipal *defaultPrincipal = GetObjectPrincipal(defaultScope);
             bool equal = false;
             currentPrincipal->Equals(defaultPrincipal, &equal);
             if (equal) {
