@@ -19,11 +19,11 @@ MOCHITEST_FILES = \
 	test_ev_validation_child.html \
         $(NULL)
 
-# test_bug882865.html tests crypto.generateCRMFRequest, which isn't
+# test_generateCRMFRequest.html tests crypto.generateCRMFRequest, which isn't
 # available if legacy crypto has been disabled.
 ifndef MOZ_DISABLE_CRYPTOLEGACY
 MOCHITEST_FILES += \
-        test_bug882865.html \
+        test_generateCRMFRequest.html \
         $(NULL)
 endif
 
