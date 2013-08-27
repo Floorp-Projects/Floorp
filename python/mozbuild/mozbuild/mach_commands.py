@@ -351,9 +351,14 @@ class Build(MachCommandBase):
 
                 # Build target pairs.
                 for make_dir, make_target in target_pairs:
+                    # We don't display build status messages during partial
+                    # tree builds because they aren't reliable there. This
+                    # could potentially be fixed if the build monitor were more
+                    # intelligent about encountering undefined state.
                     status = self._run_make(directory=make_dir, target=make_target,
                         line_handler=output.on_line, log=False, print_directory=False,
-                        ensure_exit_code=False, num_jobs=jobs, silent=not verbose)
+                        ensure_exit_code=False, num_jobs=jobs, silent=not verbose,
+                        append_env={b'NO_BUILDSTATUS_MESSAGES': b'1'})
 
                     if status != 0:
                         break
