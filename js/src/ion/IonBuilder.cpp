@@ -6351,8 +6351,11 @@ IonBuilder::jsop_getelem()
     if (ElementAccessIsDenseNative(obj, index)) {
         // Don't generate a fast path if there have been bounds check failures
         // and this access might be on a sparse property.
-        if (!ElementAccessHasExtraIndexedProperty(cx, obj) || !failedBoundsCheck_)
+        if ((!ElementAccessHasExtraIndexedProperty(cx, obj) || !failedBoundsCheck_) &&
+            !inspector->hasSeenNegativeIndexGetElement(pc))
+        {
             return jsop_getelem_dense();
+        }
     }
 
     int arrayType = TypedArrayObject::TYPE_MAX;

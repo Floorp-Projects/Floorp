@@ -4851,10 +4851,12 @@ class MLoadElementHole
   : public MTernaryInstruction,
     public SingleObjectPolicy
 {
+    bool needsNegativeIntCheck_;
     bool needsHoleCheck_;
 
     MLoadElementHole(MDefinition *elements, MDefinition *index, MDefinition *initLength, bool needsHoleCheck)
       : MTernaryInstruction(elements, index, initLength),
+        needsNegativeIntCheck_(true),
         needsHoleCheck_(needsHoleCheck)
     {
         setResultType(MIRType_Value);
@@ -4884,12 +4886,16 @@ class MLoadElementHole
     MDefinition *initLength() const {
         return getOperand(2);
     }
+    bool needsNegativeIntCheck() const {
+        return needsNegativeIntCheck_;
+    }
     bool needsHoleCheck() const {
         return needsHoleCheck_;
     }
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::Element);
     }
+    void collectRangeInfo();
 };
 
 class MStoreElementCommon

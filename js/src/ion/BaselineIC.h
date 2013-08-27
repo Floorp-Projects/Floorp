@@ -2789,6 +2789,9 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
       : ICMonitoredFallbackStub(ICStub::GetElem_Fallback, stubCode)
     { }
 
+    static const uint16_t EXTRA_NON_NATIVE = 0x1;
+    static const uint16_t EXTRA_NEGATIVE_INDEX = 0x2;
+
   public:
     static const uint32_t MAX_OPTIMIZED_STUBS = 16;
 
@@ -2799,10 +2802,17 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
     }
 
     void noteNonNativeAccess() {
-        extra_ = 1;
+        extra_ |= EXTRA_NON_NATIVE;
     }
     bool hasNonNativeAccess() const {
-        return extra_;
+        return extra_ & EXTRA_NON_NATIVE;
+    }
+
+    void noteNegativeIndex() {
+        extra_ |= EXTRA_NEGATIVE_INDEX;
+    }
+    bool hasNegativeIndex() const {
+        return extra_ & EXTRA_NEGATIVE_INDEX;
     }
 
     // Compiler for this stub kind.
