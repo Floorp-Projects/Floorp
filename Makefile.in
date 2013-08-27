@@ -87,8 +87,6 @@ config.status: $(topsrcdir)/configure
 # Build pseudo-external modules first when export is explicitly called
 export::
 	$(RM) -r $(DIST)/sdk
-	$(MAKE) -C config export
-	$(MAKE) tier_nspr
 
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites
