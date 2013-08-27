@@ -361,7 +361,6 @@ webidl_files = \
   TextDecoder.webidl \
   TextEncoder.webidl \
   TextTrack.webidl \
-  TextTrackCue.webidl \
   TextTrackCueList.webidl \
   TextTrackList.webidl \
   TimeEvent.webidl \
@@ -377,6 +376,7 @@ webidl_files = \
   URL.webidl \
   URLUtils.webidl \
   URLUtilsReadOnly.webidl \
+  VTTCue.webidl \
   ValidityState.webidl \
   VideoPlaybackQuality.webidl \
   VideoStreamTrack.webidl \
