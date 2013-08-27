@@ -70,6 +70,7 @@
 #include "nsFocusManager.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
+#include "nsHostObjectProtocolHandler.h"
 #include "nsHtml5Module.h"
 #include "nsHtml5StringParser.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -2715,9 +2716,11 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup = aLoadingDocument->GetDocumentLoadGroup();
-  NS_ASSERTION(loadGroup, "Could not get loadgroup; onload may fire too early");
 
   nsIURI *documentURI = aLoadingDocument->GetDocumentURI();
+
+  NS_ASSERTION(loadGroup || IsFontTableURI(documentURI),
+               "Could not get loadgroup; onload may fire too early");
 
   // check for a Content Security Policy to pass down to the channel that
   // will get created to load the image

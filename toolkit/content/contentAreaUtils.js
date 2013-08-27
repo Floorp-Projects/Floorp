@@ -1137,6 +1137,8 @@ function openURL(aURL)
     var channel = Services.io.newChannelFromURI(uri);
     var uriLoader = Components.classes["@mozilla.org/uriloader;1"]
                               .getService(Components.interfaces.nsIURILoader);
-    uriLoader.openURI(channel, true, uriListener);
+    uriLoader.openURI(channel,
+                      Components.interfaces.nsIURILoader.IS_CONTENT_PREFERRED,
+                      uriListener);
   }
 }

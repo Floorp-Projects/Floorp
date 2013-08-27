@@ -250,7 +250,7 @@ void StateMachineTracker::EnsureGlobalStateMachine()
   ReentrantMonitorAutoEnter mon(mMonitor);
   if (mStateMachineCount == 0) {
     NS_ASSERTION(!mStateMachineThread, "Should have null state machine thread!");
-    DebugOnly<nsresult> rv = NS_NewNamedThread("Media State", &mStateMachineThread, nullptr);
+    DebugOnly<nsresult> rv = NS_NewNamedThread("Media State", &mStateMachineThread);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Can't create media state machine thread");
   }
   mStateMachineCount++;

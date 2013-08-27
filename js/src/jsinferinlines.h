@@ -764,7 +764,7 @@ TypeScript::StandardType(JSContext *cx, JSProtoKey key)
     return cx->getNewType(GetClassForProtoKey(key), proto.get());
 }
 
-struct AllocationSiteKey {
+struct AllocationSiteKey : public DefaultHasher<AllocationSiteKey> {
     JSScript *script;
 
     uint32_t offset : 24;
@@ -773,8 +773,6 @@ struct AllocationSiteKey {
     static const uint32_t OFFSET_LIMIT = (1 << 23);
 
     AllocationSiteKey() { mozilla::PodZero(this); }
-
-    typedef AllocationSiteKey Lookup;
 
     static inline uint32_t hash(AllocationSiteKey key) {
         return uint32_t(size_t(key.script->code + key.offset)) ^ key.kind;

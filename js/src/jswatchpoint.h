@@ -37,12 +37,18 @@ struct Watchpoint {
 };
 
 template <>
-struct DefaultHasher<WatchKey> {
+struct DefaultHasher<WatchKey>
+{
     typedef WatchKey Lookup;
     static inline js::HashNumber hash(const Lookup &key);
 
     static bool match(const WatchKey &k, const Lookup &l) {
         return k.object == l.object && k.id.get() == l.id.get();
+    }
+
+    static void rekey(WatchKey &k, const WatchKey& newKey) {
+        k.object.unsafeSet(newKey.object);
+        k.id.unsafeSet(newKey.id);
     }
 };
 

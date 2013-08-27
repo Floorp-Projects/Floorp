@@ -74,6 +74,7 @@ namespace ion {
     _(Unbox)                                                                \
     _(GuardObject)                                                          \
     _(GuardString)                                                          \
+    _(AssertRange)                                                          \
     _(ToDouble)                                                             \
     _(ToInt32)                                                              \
     _(TruncateToInt32)                                                      \
