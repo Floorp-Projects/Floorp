@@ -35,8 +35,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
                                   "resource://gre/modules/LoginManagerContent.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 #ifdef MOZ_SAFE_BROWSING
 XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
@@ -6907,18 +6907,9 @@ var WebappsUI = {
 
   _writeData: function(aFile, aPrefs) {
     if (aPrefs.length > 0) {
-      let data = JSON.stringify(aPrefs);
-
-      let ostream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-      ostream.init(aFile, -1, -1, 0);
-
-      let istream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
-      istream.setData(data, data.length);
-
-      NetUtil.asyncCopy(istream, ostream, function(aResult) {
-        if (!Components.isSuccessCode(aResult)) {
-          console.log("Error writing default prefs: " + aResult);
-        }
+      let array = new TextEncoder().encode(JSON.stringify(aPrefs));
+      OS.File.writeAtomic(aFile.path, array, { tmpPath: aFile.path + ".tmp" }).then(null, function onError(reason) {
+        console.log("Error writing default prefs: " + reason);
       });
     }
   },
@@ -7738,16 +7729,9 @@ var Distribution = {
           return;
         }
 
-        // Save the data for the later sessions
-        let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-        ostream.init(this._file, 0x02 | 0x08 | 0x20, parseInt("600", 8), ostream.DEFER_OPEN);
-
-        let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
-        converter.charset = "UTF-8";
-
         // Asynchronously copy the data to the file.
-        let istream = converter.convertToInputStream(aData);
-        NetUtil.asyncCopy(istream, ostream, function(rc) { });
+        let array = new TextEncoder().encode(aData);
+        OS.File.writeAtomic(this._file.path, array, { tmpPath: this._file.path + ".tmp" });
         break;
       }
     }
@@ -7837,24 +7821,18 @@ var Distribution = {
   // aFile is an nsIFile
   // aCallback takes the parsed JSON object as a parameter
   readJSON: function dc_readJSON(aFile, aCallback) {
-    if (!aFile.exists())
-      return;
-
-    let channel = NetUtil.newChannel(aFile);
-    channel.contentType = "application/json";
-    NetUtil.asyncFetch(channel, function(aStream, aResult) {
-      if (!Components.isSuccessCode(aResult)) {
-        Cu.reportError("Distribution: Could not read from " + aFile.leafName + " file");
-        return;
-      }
-
-      let raw = NetUtil.readInputStreamToString(aStream, aStream.available(), { charset : "UTF-8" }) || "";
-      aStream.close();
+    Task.spawn(function() {
+      let bytes = yield OS.File.read(aFile.path);
+      let raw = new TextDecoder().decode(bytes) || "";
 
       try {
         aCallback(JSON.parse(raw));
       } catch (e) {
         Cu.reportError("Distribution: Could not parse JSON: " + e);
+      }
+    }).then(null, function onError(reason) {
+      if (!(reason instanceof OS.File.Error && reason.becauseNoSuchFile)) {
+        Cu.reportError("Distribution: Could not read from " + aFile.leafName + " file");
       }
     });
   }
