@@ -9,6 +9,7 @@
 #include "mozilla/dom/ArchiveRequestBinding.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
+#include "nsLayoutStatics.h"
 #include "nsEventDispatcher.h"
 
 USING_FILE_NAMESPACE
@@ -54,6 +55,7 @@ ArchiveRequest::ArchiveRequest(nsIDOMWindow* aWindow,
   MOZ_ASSERT(aReader);
 
   MOZ_COUNT_CTOR(ArchiveRequest);
+  nsLayoutStatics::AddRef();
 
   /* An event to make this request asynchronous: */
   nsRefPtr<ArchiveRequestEvent> event = new ArchiveRequestEvent(this);
@@ -63,6 +65,7 @@ ArchiveRequest::ArchiveRequest(nsIDOMWindow* aWindow,
 ArchiveRequest::~ArchiveRequest()
 {
   MOZ_COUNT_DTOR(ArchiveRequest);
+  nsLayoutStatics::Release();
 }
 
 nsresult

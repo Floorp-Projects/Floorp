@@ -29,6 +29,7 @@
 #include "nsIPrompt.h"
 #include "nsIStringBundle.h"
 #include "nsIConsoleService.h"
+#include "nsLayoutStatics.h"
 #include "nsIDOMCloseEvent.h"
 #include "nsICryptoHash.h"
 #include "jsdbgapi.h"
@@ -458,6 +459,7 @@ WebSocket::WebSocket()
   mInnerWindowID(0)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
+  nsLayoutStatics::AddRef();
 
   SetIsDOMBinding();
 }
@@ -470,6 +472,7 @@ WebSocket::~WebSocket()
   if (!mDisconnected) {
     Disconnect();
   }
+  nsLayoutStatics::Release();
 }
 
 JSObject*

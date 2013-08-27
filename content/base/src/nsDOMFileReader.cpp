@@ -33,6 +33,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIStreamConverterService.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsLayoutStatics.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "mozilla/Base64.h"
@@ -104,6 +105,7 @@ nsDOMFileReader::nsDOMFileReader()
     mDataLen(0), mDataFormat(FILE_AS_BINARY),
     mResultArrayBuffer(nullptr)
 {
+  nsLayoutStatics::AddRef();
   SetDOMStringToNull(mResult);
   SetIsDOMBinding();
 }
@@ -113,6 +115,7 @@ nsDOMFileReader::~nsDOMFileReader()
   FreeFileData();
   mResultArrayBuffer = nullptr;
   NS_DROP_JS_OBJECTS(this, nsDOMFileReader);
+  nsLayoutStatics::Release();
 }
 
 

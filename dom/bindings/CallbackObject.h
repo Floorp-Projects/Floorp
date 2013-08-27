@@ -29,6 +29,7 @@
 #include "nsWrapperCache.h"
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
+#include "nsLayoutStatics.h"
 
 namespace mozilla {
 namespace dom {
