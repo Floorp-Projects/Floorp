@@ -1908,11 +1908,11 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
   (void)NS_DispatchToMainThread(event);
 }
 
-class HistoryLinksHashtableReporter MOZ_FINAL : public MemoryReporterBase
+class HistoryLinksHashtableReporter MOZ_FINAL : public MemoryUniReporter
 {
 public:
   HistoryLinksHashtableReporter()
-    : MemoryReporterBase("explicit/history-links-hashtable",
+    : MemoryUniReporter("explicit/history-links-hashtable",
                          KIND_HEAP, UNITS_BYTES,
 "Memory used by the hashtable that records changes to the visited state of "
 "links.")
