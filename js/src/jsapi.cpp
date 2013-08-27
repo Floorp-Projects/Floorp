@@ -1480,7 +1480,7 @@ static const JSStdName object_prototype_names[] = {
     {js_InitObjectClass,        EAGER_ATOM(hasOwnProperty), &JSObject::class_},
     {js_InitObjectClass,        EAGER_ATOM(isPrototypeOf), &JSObject::class_},
     {js_InitObjectClass,        EAGER_ATOM(propertyIsEnumerable), &JSObject::class_},
-#if OLD_GETTER_SETTER_METHODS
+#if JS_OLD_GETTER_SETTER_METHODS
     {js_InitObjectClass,        EAGER_ATOM(defineGetter), &JSObject::class_},
     {js_InitObjectClass,        EAGER_ATOM(defineSetter), &JSObject::class_},
     {js_InitObjectClass,        EAGER_ATOM(lookupGetter), &JSObject::class_},
