@@ -1315,8 +1315,7 @@ xpc_ActivateDebugMode()
 JSContext*
 nsXPConnect::GetCurrentJSContext()
 {
-    JSContext *cx = GetRuntime()->GetJSContextStack()->Peek();
-    return xpc_UnmarkGrayContext(cx);
+    return GetRuntime()->GetJSContextStack()->Peek();
 }
 
 /* virtual */

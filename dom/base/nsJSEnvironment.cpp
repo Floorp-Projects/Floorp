@@ -1143,7 +1143,7 @@ nsJSContext::GetNativeGlobal()
 JSContext*
 nsJSContext::GetNativeContext()
 {
-  return xpc_UnmarkGrayContext(mContext);
+  return mContext;
 }
 
 nsresult
