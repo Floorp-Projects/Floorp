@@ -255,6 +255,9 @@ struct Zone : public JS::shadow::Zone,
     /* This compartment's gray roots. */
     js::Vector<js::GrayRoot, 0, js::SystemAllocPolicy> gcGrayRoots;
 
+    /* Per-zone data for use by an embedder. */
+    void *data;
+
     Zone(JSRuntime *rt);
     ~Zone();
     bool init(JSContext *cx);
