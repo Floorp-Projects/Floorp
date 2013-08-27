@@ -542,31 +542,39 @@ class Automation(object):
     GetLastError = ctypes.windll.kernel32.GetLastError
 
     def readWithTimeout(self, f, timeout):
-      """Try to read a line of output from the file object |f|.
-      |f| must be a  pipe, like the |stdout| member of a subprocess.Popen
-      object created with stdout=PIPE. If no output
-      is received within |timeout| seconds, return a blank line.
-      Returns a tuple (line, did_timeout), where |did_timeout| is True
-      if the read timed out, and False otherwise."""
+      """
+      Try to read a line of output from the file object |f|. |f| must be a
+      pipe, like the |stdout| member of a subprocess.Popen object created
+      with stdout=PIPE. Returns a tuple (line, did_timeout), where |did_timeout|
+      is True if the read timed out, and False otherwise. If no output is
+      received within |timeout| seconds, returns a blank line.
+      """
+
       if timeout is None:
-        # shortcut to allow callers to pass in "None" for no timeout.
-        return (f.readline(), False)
+        timeout = 0
+
       x = msvcrt.get_osfhandle(f.fileno())
       l = ctypes.c_long()
       done = time.time() + timeout
-      while time.time() < done:
+
+      buffer = ""
+      while timeout == 0 or time.time() < done:
         if self.PeekNamedPipe(x, None, 0, None, ctypes.byref(l), None) == 0:
           err = self.GetLastError()
           if err == 38 or err == 109: # ERROR_HANDLE_EOF || ERROR_BROKEN_PIPE
             return ('', False)
           else:
             self.log.error("readWithTimeout got error: %d", err)
-        if l.value > 0:
-          # we're assuming that the output is line-buffered,
-          # which is not unreasonable
-          return (f.readline(), False)
+        # read a character at a time, checking for eol. Return once we get there.
+        index = 0
+        while index < l.value:
+          char = f.read(1)
+          buffer += char
+          if char == '\n':
+            return (buffer, False)
+          index = index + 1
         time.sleep(0.01)
-      return ('', True)
+      return (buffer, True)
 
     def isPidAlive(self, pid):
       STILL_ACTIVE = 259
@@ -725,6 +733,11 @@ class Automation(object):
                                          stdout=subprocess.PIPE)
         logsource = stackFixerProcess.stdout
 
+      # With metro browser runs this script launches the metro test harness which launches the browser.
+      # The metro test harness hands back the real browser process id via log output which we need to
+      # pick up on and parse out. This variable tracks the real browser process id if we find it.
+      browserProcessId = -1
+
       (line, didTimeout) = self.readWithTimeout(logsource, timeout)
       while line != "" and not didTimeout:
         if stackFixerFunction:
@@ -736,14 +749,25 @@ class Automation(object):
           self.dumpScreen(utilityPath)
 
         (line, didTimeout) = self.readWithTimeout(logsource, timeout)
+
+        if "METRO_BROWSER_PROCESS" in line:
+          index = line.find("=")
+          if index:
+            browserProcessId = line[index+1:].rstrip()
+            self.log.info("INFO | automation.py | metro browser sub process id detected: %s", browserProcessId)
+
         if not hitMaxTime and maxTime and datetime.now() - startTime > timedelta(seconds = maxTime):
           # Kill the application, but continue reading from stack fixer so as not to deadlock on stackFixerProcess.wait().
           hitMaxTime = True
           self.log.info("TEST-UNEXPECTED-FAIL | %s | application ran for longer than allowed maximum time of %d seconds", self.lastTestSeen, int(maxTime))
           self.killAndGetStack(proc.pid, utilityPath, debuggerInfo)
       if didTimeout:
+        if line:
+          self.log.info(line.rstrip().decode("UTF-8", "ignore"))
         self.log.info("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output", self.lastTestSeen, int(timeout))
-        self.killAndGetStack(proc.pid, utilityPath, debuggerInfo)
+        if browserProcessId == -1:
+          browserProcessId = proc.pid
+        self.killAndGetStack(browserProcessId, utilityPath, debuggerInfo)
 
     status = proc.wait()
     if status == 0:
