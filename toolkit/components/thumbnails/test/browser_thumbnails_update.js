@@ -5,22 +5,22 @@
  * These tests check the auto-update facility of the thumbnail service.
  */
 
-let numNotifications = 0;
-const URL = "data:text/html;charset=utf-8,<body%20bgcolor=ff0000></body>";
-
-function observe(subject, topic, data) {
-  is(topic, "page-thumbnail:create", "got expected topic");
-  is(data, URL, "data is our test URL");
-  if (++numNotifications == 2) {
-    // This is the final notification and signals test success...
-    Services.obs.removeObserver(observe, "page-thumbnail:create");
-    next();
-  }
-}
-
 function runTests() {
+  let numNotifications = 0;
+  const URL = "http://mochi.test:8888/browser/toolkit/components/thumbnails/test/thumbnails_update.sjs?simple";
+
+  function observe(subject, topic, data) {
+    is(topic, "page-thumbnail:create", "got expected topic");
+    is(data, URL, "data is our test URL");
+    if (++numNotifications == 2) {
+      // This is the final notification and signals test success...
+      Services.obs.removeObserver(observe, "page-thumbnail:create");
+      next();
+    }
+  }
+
   Services.obs.addObserver(observe, "page-thumbnail:create", false);
-  // Create a tab with a red background.
+  // Create a tab - we don't care what the content is.
   yield addTab(URL);
   let browser = gBrowser.selectedBrowser;
 
