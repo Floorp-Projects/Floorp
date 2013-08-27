@@ -1,0 +1,21 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEvent.idl"
+
+[scriptable, builtinclass, uuid(d3592cdc-c5cf-4c24-a27c-6f789ac94959)]
+interface nsIDOMMozOtaStatusEvent : nsIDOMEvent
+{
+  readonly attribute DOMString status;
+
+  [noscript] void initMozOtaStatusEvent(in DOMString aType,
+                                        in boolean aCanBubble,
+                                        in boolean aCancelable,
+                                        in DOMString aStatus);
+};
+
+dictionary MozOtaStatusEventInit : EventInit
+{
+  DOMString status;
+};
