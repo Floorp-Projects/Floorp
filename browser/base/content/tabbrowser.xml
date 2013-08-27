@@ -1705,9 +1705,7 @@
               for (let i = numberOfTabsToClose - 1; i >= 0; --i) {
                 this.removeTab(tabs[i], {animate: true});
               }
-              let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-                       getService(Ci.nsISessionStore);
-              ss.setNumberOfTabsClosedLast(window, numberOfTabsToClose);
+              SessionStore.setNumberOfTabsClosedLast(window, numberOfTabsToClose);
             }
           ]]>
         </body>
@@ -1731,9 +1729,7 @@
                   closedTabs++;
                 }
               }
-              let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-                       getService(Ci.nsISessionStore);
-              ss.setNumberOfTabsClosedLast(window, closedTabs);
+              SessionStore.setNumberOfTabsClosedLast(window, closedTabs);
             }
           ]]>
         </body>
@@ -1762,9 +1758,7 @@
               var byMouse = aParams.byMouse;
             }
 
-            let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-                     getService(Ci.nsISessionStore);
-            ss.setNumberOfTabsClosedLast(window, 1);
+            SessionStore.setNumberOfTabsClosedLast(window, 1);
 
             // Handle requests for synchronously removing an already
             // asynchronously closing tab.
@@ -2148,9 +2142,7 @@
             // then do not switch docShells but retrieve the other tab's state
             // and apply it to our tab.
             if (isPending) {
-              let ss = Cc["@mozilla.org/browser/sessionstore;1"]
-                         .getService(Ci.nsISessionStore)
-              ss.setTabState(aOurTab, ss.getTabState(aOtherTab));
+              SessionStore.setTabState(aOurTab, SessionStore.getTabState(aOtherTab));
 
               // Make sure to unregister any open URIs.
               this._swapRegisteredOpenURIs(ourBrowser, otherBrowser);
@@ -2575,9 +2567,7 @@
         <parameter name="aTab"/><!-- can be from a different window as well -->
         <body>
           <![CDATA[
-            return Cc["@mozilla.org/browser/sessionstore;1"]
-                     .getService(Ci.nsISessionStore)
-                     .duplicateTab(window, aTab);
+            return SessionStore.duplicateTab(window, aTab);
           ]]>
         </body>
       </method>
