@@ -9,10 +9,8 @@
 #include "nsISupports.h"
 #include "nsStringGlue.h"
 #include "nsHTMLTags.h"
-#include "nsIElementObserver.h"
 
 class nsIParser;
-class nsIParserNode;
 
 #define NS_PARSERSERVICE_CONTRACTID "@mozilla.org/parser/parser-service;1"
 

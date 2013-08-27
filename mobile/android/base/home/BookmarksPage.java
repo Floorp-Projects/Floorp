@@ -118,6 +118,7 @@ public class BookmarksPage extends HomeFragment {
         mList = (BookmarksListView) view.findViewById(R.id.bookmarks_list);
         mList.setTag(HomePager.LIST_TAG_BOOKMARKS);
         mList.setOnUrlOpenListener(listener);
+        mList.setHeaderDividersEnabled(false);
 
         mTopBookmarks.setOnUrlOpenListener(listener);
         mTopBookmarks.setOnPinBookmarkListener(mPinBookmarkListener);
@@ -406,6 +407,7 @@ public class BookmarksPage extends HomeFragment {
                 case LOADER_ID_BOOKMARKS_LIST: {
                     mListAdapter.swapCursor(c);
                     loadFavicons(c);
+                    mList.setHeaderDividersEnabled(c != null && c.getCount() > 0);
                     break;
                 }
 

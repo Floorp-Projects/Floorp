@@ -288,7 +288,7 @@
                 <label class="plain tabpanel-summary-label"
                        value="&netmonitorUI.summary.url;"/>
                 <label id="headers-summary-url-value"
-                       class="plain tabpanel-summary-value"
+                       class="plain tabpanel-summary-value devtools-monospace"
                        crop="end"
                        flex="1"/>
               </hbox>
@@ -298,7 +298,7 @@
                 <label class="plain tabpanel-summary-label"
                        value="&netmonitorUI.summary.method;"/>
                 <label id="headers-summary-method-value"
-                       class="plain tabpanel-summary-value"
+                       class="plain tabpanel-summary-value devtools-monospace"
                        crop="end"
                        flex="1"/>
               </hbox>
@@ -310,7 +310,7 @@
                 <box id="headers-summary-status-circle"
                      class="requests-menu-status"/>
                 <label id="headers-summary-status-value"
-                       class="plain tabpanel-summary-value"
+                       class="plain tabpanel-summary-value devtools-monospace"
                        crop="end"
                        flex="1"/>
                 <button id="headers-summary-resend"
@@ -324,7 +324,7 @@
                 <label class="plain tabpanel-summary-label"
                        value="&netmonitorUI.summary.version;"/>
                 <label id="headers-summary-version-value"
-                       class="plain tabpanel-summary-value"
+                       class="plain tabpanel-summary-value devtools-monospace"
                        crop="end"
                        flex="1"/>
               </hbox>
@@ -364,7 +364,7 @@
                   <label class="plain tabpanel-summary-label"
                          value="&netmonitorUI.response.name;"/>
                   <label id="response-content-image-name-value"
-                         class="plain tabpanel-summary-value"
+                         class="plain tabpanel-summary-value devtools-monospace"
                          crop="end"
                          flex="1"/>
                 </hbox>
@@ -372,7 +372,7 @@
                   <label class="plain tabpanel-summary-label"
                          value="&netmonitorUI.response.dimensions;"/>
                   <label id="response-content-image-dimensions-value"
-                         class="plain tabpanel-summary-value"
+                         class="plain tabpanel-summary-value devtools-monospace"
                          crop="end"
                          flex="1"/>
                 </hbox>
@@ -380,7 +380,7 @@
                   <label class="plain tabpanel-summary-label"
                          value="&netmonitorUI.response.mime;"/>
                   <label id="response-content-image-mime-value"
-                         class="plain tabpanel-summary-value"
+                         class="plain tabpanel-summary-value devtools-monospace"
                          crop="end"
                          flex="1"/>
                 </hbox>
@@ -388,7 +388,7 @@
                   <label class="plain tabpanel-summary-label"
                          value="&netmonitorUI.response.encoding;"/>
                   <label id="response-content-image-encoding-value"
-                         class="plain tabpanel-summary-value"
+                         class="plain tabpanel-summary-value devtools-monospace"
                          crop="end"
                          flex="1"/>
                 </hbox>

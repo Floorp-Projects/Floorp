@@ -455,10 +455,10 @@ SocialErrorListener.prototype = {
   },
 
   onLocationChange: function SPL_onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
-    let failure = aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE;
-    if (failure && Social.provider.errorState != "frameworker-error") {
+    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
       aRequest.cancel(Components.results.NS_BINDING_ABORTED);
-      Social.provider.errorState = "content-error";
+      if (!Social.provider.errorState)
+        Social.provider.errorState = "content-error";
       schedule(function() {
         this.setErrorMessage(aWebProgress.QueryInterface(Ci.nsIDocShell)
                               .chromeEventHandler);

@@ -38,6 +38,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "blend_minmax",
+        200, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::EXT_blend_minmax,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "depth_texture",
         200, // OpenGL version
         300, // OpenGL ES version

@@ -911,10 +911,6 @@ WebGLContext::InitAndValidateGL()
         }
     }
 
-    if (IsWebGL2()) {
-        gl->GetUIntegerv(LOCAL_GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, &mGLMaxTransformFeedbackSeparateAttribs);
-    }
-
     // Always 1 for GLES2
     mMaxFramebufferColorAttachments = 1;
 
@@ -966,14 +962,7 @@ WebGLContext::InitAndValidateGL()
     }
 
     if (IsWebGL2() &&
-        (!IsExtensionSupported(OES_vertex_array_object) ||
-         !IsExtensionSupported(WEBGL_draw_buffers) ||
-         !IsExtensionSupported(ANGLE_instanced_arrays) ||
-         !gl->IsExtensionSupported(gl::GLContext::EXT_gpu_shader4) ||
-         !gl->IsExtensionSupported(gl::GLContext::EXT_blend_minmax) ||
-         (!gl->IsSupported(gl::GLFeature::occlusion_query) &&
-          !gl->IsSupported(gl::GLFeature::occlusion_query_boolean))
-        ))
+        !InitWebGL2())
     {
         // Todo: Bug 898404: Only allow WebGL2 on GL>=3.0 on desktop GL.
         return false;
@@ -992,16 +981,6 @@ WebGLContext::InitAndValidateGL()
     mDefaultVertexArray = new WebGLVertexArray(this);
     mDefaultVertexArray->mAttribBuffers.SetLength(mGLMaxVertexAttribs);
     mBoundVertexArray = mDefaultVertexArray;
-
-    if (IsWebGL2()) {
-        EnableExtension(OES_vertex_array_object);
-        EnableExtension(WEBGL_draw_buffers);
-        EnableExtension(ANGLE_instanced_arrays);
-
-        MOZ_ASSERT(IsExtensionEnabled(OES_vertex_array_object));
-        MOZ_ASSERT(IsExtensionEnabled(WEBGL_draw_buffers));
-        MOZ_ASSERT(IsExtensionEnabled(ANGLE_instanced_arrays));
-    }
 
     return true;
 }
