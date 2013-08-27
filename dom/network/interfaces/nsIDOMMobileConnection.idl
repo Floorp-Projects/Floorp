@@ -11,7 +11,7 @@ interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
 
-[scriptable, builtinclass, uuid(abb4e288-f91e-45dc-b1ca-1949de9807ea)]
+[scriptable, builtinclass, uuid(095b3720-058c-11e3-8ffd-0800200c9a66)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -262,6 +262,21 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * 'InvalidCallBarringOption' or 'GenericFailure'.
    */
   nsIDOMDOMRequest getCallBarringOption(in jsval option);
+
+  /**
+   * Change call barring facility password.
+   *
+   * @param info
+   *        An object containing information about pin and newPin, and,
+   *        this object must have both "pin" and "newPin" attributes
+   *        to change the call barring facility password.
+   *
+   * Example:
+   *
+   *   changeCallBarringPassword({pin: "...",
+   *                              newPin: "..."});
+   */
+  nsIDOMDOMRequest changeCallBarringPassword(in jsval info);
 
   /**
    * Configures call waiting options.
