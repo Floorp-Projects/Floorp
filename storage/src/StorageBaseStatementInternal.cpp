@@ -117,21 +117,20 @@ void
 StorageBaseStatementInternal::asyncFinalize()
 {
   nsIEventTarget *target = mDBConnection->getAsyncExecutionTarget();
-  if (!target) {
-    // If we cannot get the background thread, we have to assume it has been
-    // shutdown (or is in the process of doing so).  As a result, we should
-    // just finalize it here and now.
-    destructorAsyncFinalize();
-  }
-  else {
+  if (target) {
+    // Attempt to finalize asynchronously
     nsCOMPtr<nsIRunnable> event =
       new AsyncStatementFinalizer(this, mDBConnection);
 
-    // If the dispatching did not go as planned, finalize now.
-    if (NS_FAILED(target->Dispatch(event, NS_DISPATCH_NORMAL))) {
-      destructorAsyncFinalize();
-    }
+    // Dispatch. Note that dispatching can fail, typically if
+    // we have a race condition with asyncClose(). It's ok,
+    // let asyncClose() win.
+    (void)target->Dispatch(event, NS_DISPATCH_NORMAL);
   }
+  // If we cannot get the background thread,
+  // mozStorageConnection::AsyncClose() has already been called and
+  // the statement either has been or will be cleaned up by
+  // internalClose().
 }
 
 void
@@ -140,17 +139,28 @@ StorageBaseStatementInternal::destructorAsyncFinalize()
   if (!mAsyncStatement)
     return;
 
+  // If we reach this point, our owner has not finalized this
+  // statement, yet we are being destructed. If possible, we want to
+  // auto-finalize it early, to release the resources early.
   nsIEventTarget *target = mDBConnection->getAsyncExecutionTarget();
   if (target) {
+    // If we can get the async execution target, we can indeed finalize
+    // the statement, as the connection is still open.
+    bool isAsyncThread = false;
+    (void)target->IsOnCurrentThread(&isAsyncThread);
+
     nsCOMPtr<nsIRunnable> event =
       new LastDitchSqliteStatementFinalizer(mDBConnection, mAsyncStatement);
-    if (NS_SUCCEEDED(target->Dispatch(event, NS_DISPATCH_NORMAL))) {
-      mAsyncStatement = nullptr;
-      return;
+    if (isAsyncThread) {
+      (void)event->Run();
+    } else {
+      (void)target->Dispatch(event, NS_DISPATCH_NORMAL);
     }
   }
-  // (no async thread remains or we could not dispatch to it)
-  (void)::sqlite3_finalize(mAsyncStatement);
+
+  // We might not be able to dispatch to the background thread,
+  // presumably because it is being shutdown. Since said shutdown will
+  // finalize the statement, we just need to clean-up around here.
   mAsyncStatement = nullptr;
 }
 
