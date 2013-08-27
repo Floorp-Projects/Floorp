@@ -335,7 +335,6 @@ NS_IMPL_ISUPPORTS1(PeerConnectionImpl, IPeerConnection)
 PeerConnectionImpl::PeerConnectionImpl()
 : mTimeCard(PR_LOG_TEST(signalingLogInfo(),PR_LOG_ERROR) ?
             create_timecard() : nullptr)
-  , mRole(kRoleUnknown)
   , mCall(NULL)
   , mReadyState(kNew)
   , mSignalingState(kSignalingStable)
@@ -1022,8 +1021,6 @@ PeerConnectionImpl::CreateOffer(MediaConstraints& constraints)
   mTimeCard = nullptr;
   STAMP_TIMECARD(tc, "Create Offer");
 
-  mRole = kRoleOfferer;  // TODO(ekr@rtfm.com): Interrogate SIPCC here?
-
   cc_media_constraints_t* cc_constraints = nullptr;
   constraints.buildArray(&cc_constraints);
 
@@ -1053,8 +1050,6 @@ PeerConnectionImpl::CreateAnswer(MediaConstraints& constraints)
   Timecard *tc = mTimeCard;
   mTimeCard = nullptr;
   STAMP_TIMECARD(tc, "Create Answer");
-
-  mRole = kRoleAnswerer;  // TODO(ekr@rtfm.com): Interrogate SIPCC here?
 
   cc_media_constraints_t* cc_constraints = nullptr;
   constraints.buildArray(&cc_constraints);
