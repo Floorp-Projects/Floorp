@@ -493,12 +493,10 @@ RES_LAYOUT = \
   res/layout/pin_bookmark_dialog.xml \
   res/layout/preference_rightalign_icon.xml \
   res/layout/preference_search_tip.xml \
-  res/layout/search_engine_row.xml \
   res/layout/site_setting_item.xml \
   res/layout/site_setting_title.xml \
   res/layout/shared_ui_components.xml \
   res/layout/site_identity.xml \
-  res/layout/suggestion_item.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/search_engine_row.xml \

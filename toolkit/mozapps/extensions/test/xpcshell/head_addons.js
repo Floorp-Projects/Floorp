@@ -998,19 +998,19 @@ function prepare_test(aExpectedEvents, aExpectedInstalls, aNext) {
 // Checks if all expected events have been seen and if so calls the callback
 function check_test_completed(aArgs) {
   if (!gNext)
-    return;
+    return undefined;
 
   if (gExpectedInstalls instanceof Array &&
       gExpectedInstalls.length > 0)
-    return;
+    return undefined;
   else for each (let installList in gExpectedInstalls) {
     if (installList.length > 0)
-      return;
+      return undefined;
   }
 
   for (let id in gExpectedEvents) {
     if (gExpectedEvents[id].length > 0)
-      return;
+      return undefined;
   }
 
   return gNext.apply(null, aArgs);
@@ -1186,6 +1186,7 @@ if ("nsIWindowsRegKey" in AM_Ci) {
         if (value.name == aName)
           return value.value;
       }
+      return null;
     }
   };
 
@@ -1290,7 +1291,7 @@ do_register_cleanup(function addon_cleanup() {
   var dirEntries = gTmpD.directoryEntries
                         .QueryInterface(AM_Ci.nsIDirectoryEnumerator);
   var entry;
-  while (entry = dirEntries.nextFile) {
+  while ((entry = dirEntries.nextFile)) {
     do_throw("Found unexpected file in temporary directory: " + entry.leafName);
   }
   dirEntries.close();
