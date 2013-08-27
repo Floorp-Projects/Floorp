@@ -242,9 +242,22 @@ typedef enum {
     SDP_ATTR_DTLS_FINGERPRINT,
     SDP_ATTR_MAXPTIME,
     SDP_ATTR_RTCP_FB,  /* RFC 4585 */
+    SDP_ATTR_SETUP,
+    SDP_ATTR_CONNECTION,
     SDP_MAX_ATTR_TYPES,
     SDP_ATTR_INVALID
 } sdp_attr_e;
+
+/* This is here so that it can be used in the VcmSIPCCBinding interface */
+typedef enum {
+    SDP_SETUP_NOT_FOUND = -1,
+    SDP_SETUP_ACTIVE = 0,
+    SDP_SETUP_PASSIVE,
+    SDP_SETUP_ACTPASS,
+    SDP_SETUP_HOLDCONN,
+    SDP_MAX_SETUP,
+    SDP_SETUP_UNKNOWN
+} sdp_setup_type_e;
 
 /**
  * Gets the value of the fmtp attribute- parameter-sets parameter for H.264 codec
