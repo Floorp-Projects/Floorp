@@ -27,8 +27,8 @@ class nsIDOMWindow;
 class nsIURI;
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x1d931a17, 0x453a, 0x47fb, \
-  { 0x94, 0x66, 0x2d, 0x3e, 0xd1, 0xef, 0x7a, 0xc5 } }
+{ 0x03c0874e, 0xcb49, 0x41c8, \
+  { 0xa3, 0x0b, 0xef, 0x3e, 0xc1, 0x88, 0xb1, 0x1f } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -165,6 +165,12 @@ public:
    * Tell the context we're done reinitializing it.
    */
   virtual void DidInitializeContext() = 0;
+
+  /**
+   * Access the Window Proxy. The setter should only be called by nsGlobalWindow.
+   */
+  virtual void SetWindowProxy(JS::Handle<JSObject*> aWindowProxy) = 0;
+  virtual JSObject* GetWindowProxy() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContext, NS_ISCRIPTCONTEXT_IID)
