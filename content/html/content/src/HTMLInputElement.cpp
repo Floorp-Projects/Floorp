@@ -375,9 +375,10 @@ public:
     nsAutoString leafName;
     mNextFile->GetLeafName(leafName);
     MOZ_ASSERT(leafName.Length() <= path.Length());
-    int32_t length = path.Length() - leafName.Length() - 1; // -1 for "/"
-    MOZ_ASSERT(length >= -1);
+    int32_t length = path.Length() - leafName.Length();
+    MOZ_ASSERT(length >= 0);
     if (length > 0) {
+      // Note that we leave the trailing "/" on the path.
       domFile->SetPath(Substring(path, 0, uint32_t(length)));
     }
     *aResult = static_cast<nsIDOMFile*>(domFile.forget().get());
