@@ -41,6 +41,10 @@ ifneq (,$(filter http%,$(source_repo)))
   DEFINES += -DSOURCE_REPO="$(source_repo)"
 endif
 
+ifneq (,$(findstring stlport,$(STLPORT_LIBS)))
+DEFINES += -DUSE_STLPORT
+endif
+
 BUILD_HOSTNAME = $(shell hostname -s || hostname)
 DEFINES += -DBUILD_HOSTNAME="$(BUILD_HOSTNAME)"
 
