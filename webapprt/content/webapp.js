@@ -58,6 +58,10 @@ function onLoad() {
   // This doesn't capture clicks so content can capture them itself and do
   // something different if it doesn't want the default behavior.
   gAppBrowser.addEventListener("click", onContentClick, false, true);
+
+  if (WebappRT.config.app.manifest.fullscreen) {
+    enterFullScreen();
+  }
 }
 window.addEventListener("load", onLoad, false);
 
@@ -65,6 +69,33 @@ function onUnload() {
   gAppBrowser.removeProgressListener(progressListener);
 }
 window.addEventListener("unload", onUnload, false);
+
+// Fullscreen handling.
+
+function enterFullScreen() {
+  // We call mozRequestFullScreen here so that the app window goes in
+  // fullscreen mode as soon as it's loaded and not after the <browser>
+  // content is loaded.
+  gAppBrowser.mozRequestFullScreen();
+
+  // We need to call mozRequestFullScreen on the document element too,
+  // otherwise the app isn't aware of the fullscreen status.
+  gAppBrowser.addEventListener("load", function onLoad() {
+    gAppBrowser.removeEventListener("load", onLoad, true);
+    gAppBrowser.contentDocument.
+      documentElement.wrappedJSObject.mozRequestFullScreen();
+  }, true);
+}
+
+#ifndef XP_MACOSX
+document.addEventListener('mozfullscreenchange', function() {
+  if (document.mozFullScreenElement) {
+    document.getElementById("main-menubar").style.display = "none";
+  } else {
+    document.getElementById("main-menubar").style.display = "";
+  }
+}, false);
+#endif
 
 /**
  * Direct a click on <a target="_blank"> to the user's default browser.
@@ -216,15 +247,5 @@ nsContextMenu.prototype = {
     this.hasPageMenu = PageMenu.maybeBuildAndAttachMenu(document.popupNode,
                                                         aXULMenu);
     this.shouldDisplay = this.hasPageMenu;
-
-    this.showItem("page-menu-separator", this.hasPageMenu);
   },
-
-  showItem: function(aItemOrID, aShow) {
-    let item = aItemOrID.constructor == String ?
-      document.getElementById(aItemOrID) : aItemOrID;
-    if (item) {
-      item.hidden = !aShow;
-    }
-  }
 };

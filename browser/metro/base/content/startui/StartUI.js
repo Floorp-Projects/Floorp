@@ -109,9 +109,9 @@ var StartUI = {
     }
   },
 
-  _adjustDOMforViewState: function() {
-    if (this.chromeWin.MetroUtils.immersive) {
-      let currViewState = "";
+  _adjustDOMforViewState: function(aState) {
+    let currViewState = aState;
+    if (!currViewState && this.chromeWin.MetroUtils.immersive) {
       switch (this.chromeWin.MetroUtils.snappedState) {
         case Ci.nsIWinMetroUtils.fullScreenLandscape:
           currViewState = "landscape";
@@ -126,19 +126,20 @@ var StartUI = {
           currViewState = "snapped";
           break;
       }
-      document.getElementById("bcast_windowState").setAttribute("viewstate", currViewState);
-      if (currViewState == "snapped") {
-        document.getElementById("start-topsites-grid").removeAttribute("tiletype");
-      } else {
-        document.getElementById("start-topsites-grid").setAttribute("tiletype", "thumbnail");
-      }
+    }
+
+    document.getElementById("bcast_windowState").setAttribute("viewstate", currViewState);
+    if (currViewState == "snapped") {
+      document.getElementById("start-topsites-grid").removeAttribute("tiletype");
+    } else {
+      document.getElementById("start-topsites-grid").setAttribute("tiletype", "thumbnail");
     }
   },
 
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
       case "metro_viewstate_changed":
-        this._adjustDOMforViewState();
+        this._adjustDOMforViewState(aData);
         break;
     }
   }

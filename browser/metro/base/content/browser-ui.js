@@ -598,7 +598,7 @@ var BrowserUI = {
         }
         break;
       case "metro_viewstate_changed":
-        this._adjustDOMforViewState();
+        this._adjustDOMforViewState(aData);
         if (aData == "snapped") {
           FlyoutPanelsUI.hide();
           Elements.autocomplete.setAttribute("orient", "vertical");
@@ -646,9 +646,9 @@ var BrowserUI = {
     pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_STRING, "setCharPref");
   },
 
-  _adjustDOMforViewState: function() {
-    if (MetroUtils.immersive) {
-      let currViewState = "";
+  _adjustDOMforViewState: function(aState) {
+    let currViewState = aState;
+    if (!currViewState && MetroUtils.immersive) {
       switch (MetroUtils.snappedState) {
         case Ci.nsIWinMetroUtils.fullScreenLandscape:
           currViewState = "landscape";
@@ -663,8 +663,9 @@ var BrowserUI = {
           currViewState = "snapped";
           break;
       }
-      Elements.windowState.setAttribute("viewstate", currViewState);
     }
+
+    Elements.windowState.setAttribute("viewstate", currViewState);
   },
 
   _titleChanged: function(aBrowser) {

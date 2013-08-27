@@ -22,6 +22,10 @@ function test() {
     getInplaceEditorForSpan: inplaceEditor
   } = devtools.require("devtools/shared/inplace-editor");
 
+  // Prevent intermittent "test exceeded the timeout threshold" since this is
+  // a slow test: https://bugzilla.mozilla.org/show_bug.cgi?id=904953.
+  requestLongerTimeout(2);
+
   waitForExplicitFinish();
 
   // Will hold the doc we're viewing

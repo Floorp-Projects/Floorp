@@ -64,12 +64,13 @@ abstract class Axis {
     }
 
     static void initPrefs() {
-        final String[] prefs = { PREF_SCROLLING_FRICTION_FAST,
-                                 PREF_SCROLLING_FRICTION_SLOW,
-                                 PREF_SCROLLING_MAX_EVENT_ACCELERATION,
-                                 PREF_SCROLLING_OVERSCROLL_DECEL_RATE,
-                                 PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT,
-                                 PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE };
+        JSONArray prefs = new JSONArray();
+        prefs.put(PREF_SCROLLING_FRICTION_FAST);
+        prefs.put(PREF_SCROLLING_FRICTION_SLOW);
+        prefs.put(PREF_SCROLLING_MAX_EVENT_ACCELERATION);
+        prefs.put(PREF_SCROLLING_OVERSCROLL_DECEL_RATE);
+        prefs.put(PREF_SCROLLING_OVERSCROLL_SNAP_LIMIT);
+        prefs.put(PREF_SCROLLING_MIN_SCROLLABLE_DISTANCE);
 
         PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
             Map<String, Integer> mPrefs = new HashMap<String, Integer>();

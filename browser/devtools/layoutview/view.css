@@ -15,7 +15,6 @@ body {
 
 #header {
   -moz-box-sizing: border-box;
-  font: 12px/16px monospace;
   width: 100%;
   padding: 6px 9px;
   display: -moz-box;
@@ -44,7 +43,6 @@ body {
   width: calc(100% - 2 * 10px);
   position: absolute;
   border-width: 1px;
-  font: 10px/12px monospace;
 }
 
 @media (min-width: 320px) {

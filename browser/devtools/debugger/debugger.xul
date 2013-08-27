@@ -347,35 +347,35 @@
              value="&debuggerUI.searchPanelOperators;"/>
       <hbox align="center">
         <button id="global-operator-button"
-                class="searchbox-panel-operator-button"
+                class="searchbox-panel-operator-button devtools-monospace"
                 command="globalSearchCommand"/>
         <label id="global-operator-label"
                class="plain searchbox-panel-operator-label"/>
       </hbox>
       <hbox align="center">
         <button id="function-operator-button"
-                class="searchbox-panel-operator-button"
+                class="searchbox-panel-operator-button devtools-monospace"
                 command="functionSearchCommand"/>
         <label id="function-operator-label"
                class="plain searchbox-panel-operator-label"/>
       </hbox>
       <hbox align="center">
         <button id="token-operator-button"
-                class="searchbox-panel-operator-button"
+                class="searchbox-panel-operator-button devtools-monospace"
                 command="tokenSearchCommand"/>
         <label id="token-operator-label"
                class="plain searchbox-panel-operator-label"/>
       </hbox>
       <hbox align="center">
         <button id="line-operator-button"
-                class="searchbox-panel-operator-button"
+                class="searchbox-panel-operator-button devtools-monospace"
                 command="lineSearchCommand"/>
         <label id="line-operator-label"
                class="plain searchbox-panel-operator-label"/>
       </hbox>
       <hbox align="center">
         <button id="variable-operator-button"
-                class="searchbox-panel-operator-button"
+                class="searchbox-panel-operator-button devtools-monospace"
                 command="variableSearchCommand"/>
         <label id="variable-operator-label"
                class="plain searchbox-panel-operator-label"/>
