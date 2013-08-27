@@ -14,7 +14,7 @@
 #include "jsscriptinlines.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 static inline bool
 HasIonScript(JSScript *script, ExecutionMode cmode)
@@ -103,7 +103,7 @@ CompilerOutputKind(ExecutionMode cmode)
     MOZ_ASSUME_UNREACHABLE("No such execution mode");
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif  // JS_ION

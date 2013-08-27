@@ -16,7 +16,7 @@
 #include "jsinferinlines.h"
 
 using namespace js;
-using namespace ion;
+using namespace jit;
 
 using parallel::Spew;
 using parallel::SpewMIR;
@@ -769,7 +769,7 @@ static bool
 AddCallTarget(HandleScript script, CallTargetVector &targets);
 
 bool
-ion::AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets)
+jit::AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets)
 {
     JSContext *cx = GetIonContext()->cx;
 

@@ -18,7 +18,7 @@
 #include "jit/BaselineRegisters.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 //
 // Baseline Inline Caches are polymorphic caches that aggressively
@@ -5618,7 +5618,7 @@ class ICRetSub_Resume : public ICStub
     };
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

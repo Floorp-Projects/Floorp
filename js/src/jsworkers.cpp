@@ -75,7 +75,7 @@ js::StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData)
 }
 
 bool
-js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
+js::StartOffThreadIonCompile(JSContext *cx, jit::IonBuilder *builder)
 {
     if (!EnsureWorkerThreadsInitialized(cx))
         return false;
@@ -98,7 +98,7 @@ js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
  * All off thread compilations which are started must eventually be finished.
  */
 static void
-FinishOffThreadIonCompile(ion::IonBuilder *builder)
+FinishOffThreadIonCompile(jit::IonBuilder *builder)
 {
     JSCompartment *compartment = builder->script()->compartment();
     JS_ASSERT(compartment->runtimeFromAnyThread()->workerThreadState);
@@ -125,7 +125,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 
     WorkerThreadState &state = *rt->workerThreadState;
 
-    ion::IonCompartment *ion = compartment->ionCompartment();
+    jit::IonCompartment *ion = compartment->ionCompartment();
     if (!ion)
         return;
 
@@ -133,7 +133,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 
     /* Cancel any pending entries for which processing hasn't started. */
     for (size_t i = 0; i < state.ionWorklist.length(); i++) {
-        ion::IonBuilder *builder = state.ionWorklist[i];
+        jit::IonBuilder *builder = state.ionWorklist[i];
         if (CompiledScriptMatches(compartment, script, builder->script())) {
             FinishOffThreadIonCompile(builder);
             state.ionWorklist[i--] = state.ionWorklist.back();
@@ -152,13 +152,13 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
         }
     }
 
-    ion::OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
+    jit::OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
 
     /* Cancel code generation for any completed entries. */
     for (size_t i = 0; i < compilations.length(); i++) {
-        ion::IonBuilder *builder = compilations[i];
+        jit::IonBuilder *builder = compilations[i];
         if (CompiledScriptMatches(compartment, script, builder->script())) {
-            ion::FinishOffThreadBuilder(builder);
+            jit::FinishOffThreadBuilder(builder);
             compilations[i--] = compilations.back();
             compilations.popBack();
         }
@@ -593,7 +593,7 @@ WorkerThread::handleAsmJSWorkload(WorkerThreadState &state)
 
     state.unlock();
     do {
-        ion::IonContext icx(runtime, asmData->mir->compartment, &asmData->mir->temp());
+        jit::IonContext icx(runtime, asmData->mir->compartment, &asmData->mir->temp());
 
         int64_t before = PRMJ_Now();
 
@@ -636,13 +636,13 @@ WorkerThread::handleIonWorkload(WorkerThreadState &state)
 
     ionBuilder = state.ionWorklist.popCopy();
 
-    DebugOnly<ion::ExecutionMode> executionMode = ionBuilder->info().executionMode();
+    DebugOnly<jit::ExecutionMode> executionMode = ionBuilder->info().executionMode();
     JS_ASSERT(GetIonScript(ionBuilder->script(), executionMode) == ION_COMPILING_SCRIPT);
 
     state.unlock();
     {
-        ion::IonContext ictx(runtime, ionBuilder->script()->compartment(), &ionBuilder->temp());
-        ionBuilder->setBackgroundCodegen(ion::CompileBackEnd(ionBuilder));
+        jit::IonContext ictx(runtime, ionBuilder->script()->compartment(), &ionBuilder->temp());
+        ionBuilder->setBackgroundCodegen(jit::CompileBackEnd(ionBuilder));
     }
     state.lock();
 
@@ -811,7 +811,7 @@ js::StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData)
 }
 
 bool
-js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
+js::StartOffThreadIonCompile(JSContext *cx, jit::IonBuilder *builder)
 {
     MOZ_ASSUME_UNREACHABLE("Off thread compilation not available in non-THREADSAFE builds");
 }

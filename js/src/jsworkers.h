@@ -26,7 +26,7 @@ namespace js {
 struct WorkerThread;
 struct AsmJSParallelTask;
 struct ParseTask;
-namespace ion {
+namespace jit {
   class IonBuilder;
 }
 
@@ -55,7 +55,7 @@ class WorkerThreadState
     };
 
     /* Shared worklist for Ion worker threads. */
-    Vector<ion::IonBuilder*, 0, SystemAllocPolicy> ionWorklist;
+    Vector<jit::IonBuilder*, 0, SystemAllocPolicy> ionWorklist;
 
     /* Worklist for AsmJS worker threads. */
     Vector<AsmJSParallelTask*, 0, SystemAllocPolicy> asmJSWorklist;
@@ -160,7 +160,7 @@ struct WorkerThread
     bool terminate;
 
     /* Any builder currently being compiled by Ion on this thread. */
-    ion::IonBuilder *ionBuilder;
+    jit::IonBuilder *ionBuilder;
 
     /* Any AsmJS data currently being optimized by Ion on this thread. */
     AsmJSParallelTask *asmData;
@@ -212,7 +212,7 @@ StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData);
  * generated and read everything needed from the VM state.
  */
 bool
-StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder);
+StartOffThreadIonCompile(JSContext *cx, jit::IonBuilder *builder);
 
 /*
  * Cancel a scheduled or in progress Ion compilation for script. If script is
@@ -319,15 +319,15 @@ struct AsmJSParallelTask
 {
     LifoAlloc lifo;         // Provider of all heap memory used for compilation.
     void *func;             // Really, a ModuleCompiler::Func*
-    ion::MIRGenerator *mir; // Passed from main thread to worker.
-    ion::LIRGraph *lir;     // Passed from worker to main thread.
+    jit::MIRGenerator *mir; // Passed from main thread to worker.
+    jit::LIRGraph *lir;     // Passed from worker to main thread.
     unsigned compileTime;
 
     AsmJSParallelTask(size_t defaultChunkSize)
       : lifo(defaultChunkSize), func(NULL), mir(NULL), lir(NULL), compileTime(0)
     { }
 
-    void init(void *func, ion::MIRGenerator *mir) {
+    void init(void *func, jit::MIRGenerator *mir) {
         this->func = func;
         this->mir = mir;
         this->lir = NULL;
