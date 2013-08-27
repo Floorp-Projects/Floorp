@@ -769,12 +769,6 @@ js::ContextHasOutstandingRequests(const JSContext *cx)
 }
 #endif
 
-JS_FRIEND_API(bool)
-js::HasUnrootedGlobal(const JSContext *cx)
-{
-    return cx->hasOption(JSOPTION_UNROOTED_GLOBAL);
-}
-
 JS_FRIEND_API(void)
 js::SetActivityCallback(JSRuntime *rt, ActivityCallback cb, void *arg)
 {
