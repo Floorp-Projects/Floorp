@@ -498,6 +498,7 @@ webidl_files += \
   MozCellBroadcast.webidl \
   MozCellBroadcastEvent.webidl \
   MozEmergencyCbModeEvent.webidl \
+  MozOtaStatusEvent.webidl \
   MozVoicemailEvent.webidl \
   MozWifiConnectionInfoEvent.webidl \
   MozWifiStatusChangeEvent.webidl \
