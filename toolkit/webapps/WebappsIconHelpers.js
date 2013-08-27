@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const DEFAULT_ICON_URL = "chrome://global/skin/icons/webapps-64.png";
+
 /**
  * This function receives a list of icon sizes
  * and URLs and returns the url string for the biggest icon.
@@ -17,95 +19,83 @@
  */
 function getBiggestIconURL(aIcons) {
   if (!aIcons) {
-    return "chrome://global/skin/icons/webapps-64.png";
+    return DEFAULT_ICON_URL;
   }
 
   let iconSizes = Object.keys(aIcons);
   if (iconSizes.length == 0) {
-    return "chrome://global/skin/icons/webapps-64.png";
+    return DEFAULT_ICON_URL;
   }
   iconSizes.sort(function(a, b) a - b);
   return aIcons[iconSizes.pop()];
 }
 
-/**
- * This function retrieves the icon for an app as specified
- * in the iconURI on the shell object.
- * Upon completion it will call aShell.processIcon()
- *
- * @param aShell The shell that specifies the properties
- *               of the native app. Three properties from this
- *               shell will be used in this function:
- *                 - iconURI
- *                 - useTmpForIcon
- *                 - processIcon()
- */
-function getIconForApp(aShell, callback) {
-  let iconURI = aShell.iconURI;
-  let mimeService = Cc["@mozilla.org/mime;1"]
-                      .getService(Ci.nsIMIMEService);
+// Download an icon using either a temp file or a pipe.
+function downloadIcon(aIconURI) {
+  let deferred = Promise.defer();
 
+  let mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
   let mimeType;
   try {
-    let tIndex = iconURI.path.indexOf(";");
-    if("data" == iconURI.scheme && tIndex != -1) {
-      mimeType = iconURI.path.substring(0, tIndex);
+    let tIndex = aIconURI.path.indexOf(";");
+    if("data" == aIconURI.scheme && tIndex != -1) {
+      mimeType = aIconURI.path.substring(0, tIndex);
     } else {
-      mimeType = mimeService.getTypeFromURI(iconURI);
-    }
+      mimeType = mimeService.getTypeFromURI(aIconURI);
+     }
   } catch(e) {
-    throw("getIconFromURI - Failed to determine MIME type");
+    deferred.reject("Failed to determine icon MIME type: " + e);
+    return deferred.promise;
+  }
+
+  function onIconDownloaded(aStatusCode, aIcon) {
+    if (Components.isSuccessCode(aStatusCode)) {
+      deferred.resolve([ mimeType, aIcon ]);
+    } else {
+      deferred.reject("Failure downloading icon: " + aStatusCode);
+    }
   }
 
   try {
-    let listener;
-    if(aShell.useTmpForIcon) {
-      let downloadObserver = {
-        onDownloadComplete: function(downloader, request, cx, aStatus, file) {
-          // pass downloader just to keep reference around
-          onIconDownloaded(aShell, mimeType, aStatus, file, callback, downloader);
-        }
-      };
+#ifdef XP_MACOSX
+    let downloadObserver = {
+      onDownloadComplete: function(downloader, request, cx, aStatus, file) {
+        onIconDownloaded(aStatus, file);
+      }
+    };
 
-      let tmpIcon = Services.dirsvc.get("TmpD", Ci.nsIFile);
-      tmpIcon.append("tmpicon." + mimeService.getPrimaryExtension(mimeType, ""));
-      tmpIcon.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+    let tmpIcon = Services.dirsvc.get("TmpD", Ci.nsIFile);
+    tmpIcon.append("tmpicon." + mimeService.getPrimaryExtension(mimeType, ""));
+    tmpIcon.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
 
-      listener = Cc["@mozilla.org/network/downloader;1"]
-                   .createInstance(Ci.nsIDownloader);
-      listener.init(downloadObserver, tmpIcon);
-    } else {
-      let pipe = Cc["@mozilla.org/pipe;1"]
-                   .createInstance(Ci.nsIPipe);
-      pipe.init(true, true, 0, 0xffffffff, null);
+    let listener = Cc["@mozilla.org/network/downloader;1"]
+                     .createInstance(Ci.nsIDownloader);
+    listener.init(downloadObserver, tmpIcon);
+#else
+    let pipe = Cc["@mozilla.org/pipe;1"]
+                 .createInstance(Ci.nsIPipe);
+    pipe.init(true, true, 0, 0xffffffff, null);
 
-      listener = Cc["@mozilla.org/network/simple-stream-listener;1"]
-                   .createInstance(Ci.nsISimpleStreamListener);
-      listener.init(pipe.outputStream, {
-          onStartRequest: function() {},
-          onStopRequest: function(aRequest, aContext, aStatusCode) {
-            pipe.outputStream.close();
-            onIconDownloaded(aShell, mimeType, aStatusCode, pipe.inputStream, callback);
-         }
-      });
-    }
+    let listener = Cc["@mozilla.org/network/simple-stream-listener;1"]
+                     .createInstance(Ci.nsISimpleStreamListener);
+    listener.init(pipe.outputStream, {
+        onStartRequest: function() {},
+        onStopRequest: function(aRequest, aContext, aStatusCode) {
+          pipe.outputStream.close();
+          onIconDownloaded(aStatusCode, pipe.inputStream);
+       }
+    });
+#endif
 
-    let channel = NetUtil.newChannel(iconURI);
-    let CertUtils = { };
-    Cu.import("resource://gre/modules/CertUtils.jsm", CertUtils);
+    let channel = NetUtil.newChannel(aIconURI);
+    let { BadCertHandler } = Cu.import("resource://gre/modules/CertUtils.jsm", {});
     // Pass true to avoid optional redirect-cert-checking behavior.
-    channel.notificationCallbacks = new CertUtils.BadCertHandler(true);
+    channel.notificationCallbacks = new BadCertHandler(true);
 
     channel.asyncOpen(listener, null);
   } catch(e) {
-    throw("getIconFromURI - Failure getting icon (" + e + ")");
+    deferred.reject("Failure initiating download of icon: " + e);
   }
-}
 
-function onIconDownloaded(aShell, aMimeType, aStatusCode, aIcon, aCallback) {
-  if (Components.isSuccessCode(aStatusCode)) {
-    aShell.processIcon(aMimeType, aIcon, aCallback);
-  } else {
-    aCallback.call(aShell);
-  }
+  return deferred.promise;
 }

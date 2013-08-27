@@ -145,7 +145,9 @@ public:
    * We try to obey everything it asks us elsewhere, but here we only handle
    * minimum-scale, maximum-scale, and user-scalable.
    */
-  void UpdateZoomConstraints(bool aAllowZoom, float aMinScale, float aMaxScale);
+  void UpdateZoomConstraints(bool aAllowZoom,
+                             const mozilla::CSSToScreenScale& aMinScale,
+                             const mozilla::CSSToScreenScale& aMaxScale);
 
   /**
    * Schedules a runnable to run on the controller/UI thread at some time
@@ -348,7 +350,8 @@ protected:
    *
    * XXX: Fix focus point calculations.
    */
-  void ScaleWithFocus(float aScale, const ScreenPoint& aFocus);
+  void ScaleWithFocus(const mozilla::CSSToScreenScale& aScale,
+                      const ScreenPoint& aFocus);
 
   /**
    * Schedules a composite on the compositor thread. Wrapper for
@@ -453,7 +456,7 @@ protected:
    *
    * *** The monitor must be held while calling this.
    */
-  void SetZoomAndResolution(const ScreenToScreenScale& aZoom);
+  void SetZoomAndResolution(const mozilla::CSSToScreenScale& aZoom);
 
   /**
    * Timeout function for mozbrowserasyncscroll event. Because we throttle
@@ -543,8 +546,8 @@ private:
   // values; for example, allowing a min zoom of 0.0 can cause very bad things
   // to happen.
   bool mAllowZoom;
-  float mMinZoom;
-  float mMaxZoom;
+  mozilla::CSSToScreenScale mMinZoom;
+  mozilla::CSSToScreenScale mMaxZoom;
 
   // The last time the compositor has sampled the content transform for this
   // frame.

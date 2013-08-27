@@ -50,6 +50,22 @@ struct ScaleFactor {
     return !(*this == aOther);
   }
 
+  bool operator<(const ScaleFactor<src, dst>& aOther) const {
+    return scale < aOther.scale;
+  }
+
+  bool operator<=(const ScaleFactor<src, dst>& aOther) const {
+    return scale <= aOther.scale;
+  }
+
+  bool operator>(const ScaleFactor<src, dst>& aOther) const {
+    return scale > aOther.scale;
+  }
+
+  bool operator>=(const ScaleFactor<src, dst>& aOther) const {
+    return scale >= aOther.scale;
+  }
+
   template<class other>
   ScaleFactor<other, dst> operator/(const ScaleFactor<src, other>& aOther) const {
     return ScaleFactor<other, dst>(scale / aOther.scale);

@@ -208,8 +208,8 @@ public:
    */
   void UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
                              bool aAllowZoom,
-                             float aMinScale,
-                             float aMaxScale);
+                             const CSSToScreenScale& aMinScale,
+                             const CSSToScreenScale& aMaxScale);
 
   /**
    * Update mFrameMetrics.mScrollOffset to the given offset.
