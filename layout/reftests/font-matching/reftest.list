@@ -85,3 +85,5 @@ random-if(!Android) skip-if(gtk2Widget) != bold-system-fallback-2.html bold-syst
 # Bug 769475 - applying 'italic' to Arabic text in Arial should NOT change family or metrics.
 # Expected to pass on MacOSX and Windows; other platforms unknown, depending on font availability.
 random-if(!(cocoaWidget||winWidget)) == arial-arabic.html arial-arabic-ref.html
+
+!= syntheticbold-rotated.html syntheticbold-rotated-ref.html
