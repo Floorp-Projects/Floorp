@@ -12,9 +12,9 @@
 #include "mozilla/Util.h"
 
 #include "jsapi.h"
-#include "jsdbgapi.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
+#include "js/OldDebugAPI.h"
 #include "nsXULAppAPI.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"

@@ -52,7 +52,7 @@
 #include "nsIFormSigningDialog.h"
 #include "nsIContentSecurityPolicy.h"
 #include "jsapi.h"
-#include "jsdbgapi.h"
+#include "js/OldDebugAPI.h"
 #include <ctype.h>
 #include "pk11func.h"
 #include "keyhi.h"
