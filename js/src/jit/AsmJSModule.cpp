@@ -33,11 +33,11 @@ AsmJSModule::patchHeapAccesses(ArrayBufferObject *heap, JSContext *cx)
         JSC::X86Assembler::setPointer(heapAccesses_[i].patchOffsetAt(code_), heapOffset);
     }
 #elif defined(JS_CPU_ARM)
-    ion::IonContext ic(cx, NULL);
-    ion::AutoFlushCache afc("patchBoundsCheck");
+    jit::IonContext ic(cx, NULL);
+    jit::AutoFlushCache afc("patchBoundsCheck");
     uint32_t bits = mozilla::CeilingLog2(heap->byteLength());
     for (unsigned i = 0; i < heapAccesses_.length(); i++)
-        ion::Assembler::updateBoundsCheck(bits, (ion::Instruction*)(heapAccesses_[i].offset() + code_));
+        jit::Assembler::updateBoundsCheck(bits, (jit::Instruction*)(heapAccesses_[i].offset() + code_));
 #endif
 }
 
@@ -110,7 +110,7 @@ AsmJSModule::~AsmJSModule()
             if (!script->hasIonScript())
                 continue;
 
-            ion::DependentAsmJSModuleExit exit(this, i);
+            jit::DependentAsmJSModuleExit exit(this, i);
             script->ionScript()->removeDependentAsmJSModule(exit);
         }
 

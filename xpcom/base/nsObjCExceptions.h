@@ -84,8 +84,11 @@ static void nsObjCExceptionLog(NSException* aException)
 
       unsigned int stackCount = [stackTrace count];
       unsigned int stackIndex = 0;
-      for (; stackIndex < stackCount; stackIndex++)
-        [args addObject:[[stackTrace objectAtIndex:stackIndex] stringValue]];
+      for (; stackIndex < stackCount; stackIndex++) {
+        NSUInteger address =
+          [[stackTrace objectAtIndex:stackIndex] unsignedIntegerValue];
+        [args addObject:[NSString stringWithFormat:@"0x%lx", address]];
+      }
 
       NSPipe *outPipe = [NSPipe pipe];
 

@@ -16,7 +16,7 @@
 #include "vm/Stack.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // The stack looks like this, fp is the frame pointer:
 //
@@ -348,16 +348,16 @@ class BaselineFrame
 
     // Methods below are used by the compiler.
     static size_t offsetOfCalleeToken() {
-        return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfCalleeToken();
+        return FramePointerOffset + js::jit::IonJSFrameLayout::offsetOfCalleeToken();
     }
     static size_t offsetOfThis() {
-        return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfThis();
+        return FramePointerOffset + js::jit::IonJSFrameLayout::offsetOfThis();
     }
     static size_t offsetOfArg(size_t index) {
-        return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfActualArg(index);
+        return FramePointerOffset + js::jit::IonJSFrameLayout::offsetOfActualArg(index);
     }
     static size_t offsetOfNumActualArgs() {
-        return FramePointerOffset + js::ion::IonJSFrameLayout::offsetOfNumActualArgs();
+        return FramePointerOffset + js::jit::IonJSFrameLayout::offsetOfNumActualArgs();
     }
     static size_t Size() {
         return sizeof(BaselineFrame);
@@ -398,7 +398,7 @@ class BaselineFrame
 // Ensure the frame is 8-byte aligned (required on ARM).
 JS_STATIC_ASSERT(((sizeof(BaselineFrame) + BaselineFrame::FramePointerOffset) % 8) == 0);
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION
