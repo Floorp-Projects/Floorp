@@ -2301,6 +2301,12 @@ MInArray::needsNegativeIntCheck() const
     return !index()->range() || index()->range()->lower() < 0;
 }
 
+bool
+MLoadElementHole::needsNegativeIntCheck() const
+{
+    return !index()->range() || index()->range()->lower() < 0;
+}
+
 void *
 MLoadTypedArrayElementStatic::base() const
 {
