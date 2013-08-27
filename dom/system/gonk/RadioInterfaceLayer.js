@@ -109,6 +109,7 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:GetCallForwardingOption",
   "RIL:SetCallBarringOption",
   "RIL:GetCallBarringOption",
+  "RIL:ChangeCallBarringPassword",
   "RIL:SetCallWaitingOption",
   "RIL:GetCallWaitingOption",
   "RIL:SetCallingLineIdRestriction",
@@ -1017,6 +1018,9 @@ RadioInterface.prototype = {
       case "RIL:GetCallBarringOption":
         this.workerMessenger.sendWithIPCMessage(msg, "queryCallBarringStatus");
         break;
+      case "RIL:ChangeCallBarringPassword":
+        this.workerMessenger.sendWithIPCMessage(msg, "changeCallBarringPassword");
+        break;
       case "RIL:SetCallWaitingOption":
         this.workerMessenger.sendWithIPCMessage(msg, "setCallWaiting");
         break;
@@ -1099,6 +1103,9 @@ RadioInterface.prototype = {
         break;
       case "operatorchange":
         this.handleOperatorChange(message);
+        break;
+      case "otastatuschange":
+        this.handleOtaStatus(message);
         break;
       case "radiostatechange":
         this.handleRadioStateChange(message);
@@ -1455,6 +1462,18 @@ RadioInterface.prototype = {
                                                     this.clientId, data);
       }
     }
+  },
+
+  handleOtaStatus: function handleOtaStatus(message) {
+    if (message.status < 0 ||
+        RIL.CDMA_OTA_PROVISION_STATUS_TO_GECKO.length <= message.status) {
+      return;
+    }
+
+    let status = RIL.CDMA_OTA_PROVISION_STATUS_TO_GECKO[message.status];
+
+    gMessageManager.sendMobileConnectionMessage("RIL:OtaStatusChanged",
+                                                this.clientId, status);
   },
 
   handleRadioStateChange: function handleRadioStateChange(message) {

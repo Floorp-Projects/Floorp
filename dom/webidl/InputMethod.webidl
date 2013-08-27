@@ -58,31 +58,26 @@ interface MozInputMethodManager {
 [JSImplementation="@mozilla.org/b2g-inputcontext;1"]
 interface MozInputContext: EventTarget {
    // The tag name of input field, which is enum of "input", "textarea", or "contenteditable"
-   readonly attribute DOMString type;
-
+   readonly attribute DOMString? type;
    // The type of the input field, which is enum of text, number, password, url, search, email, and so on.
    // See http://www.whatwg.org/specs/web-apps/current-work/multipage/states-of-the-type-attribute.html#states-of-the-type-attribute
-   readonly attribute DOMString inputType;
-
+   readonly attribute DOMString? inputType;
    /*
     * The inputmode string, representing the input mode.
     * See http://www.whatwg.org/specs/web-apps/current-work/multipage/association-of-controls-and-forms.html#input-modalities:-the-inputmode-attribute
     */
-   readonly attribute DOMString inputMode;
-
+   readonly attribute DOMString? inputMode;
    /*
     * The primary language for the input field.
     * It is the value of HTMLElement.lang.
     * See http://www.whatwg.org/specs/web-apps/current-work/multipage/elements.html#htmlelement
     */
-   readonly attribute DOMString lang;
-
+   readonly attribute DOMString? lang;
    /*
     * Get the whole text content of the input field.
     * @return DOMString
     */
    Promise getText(optional long offset, optional long length);
-
    // The start and stop position of the selection.
    readonly attribute long selectionStart;
    readonly attribute long selectionEnd;
