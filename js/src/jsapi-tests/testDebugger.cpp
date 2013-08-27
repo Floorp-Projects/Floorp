@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jscntxt.h"
-#include "jsdbgapi.h"
 
+#include "js/OldDebugAPI.h"
 #include "jsapi-tests/tests.h"
 
 static int callCount[2] = {0, 0};

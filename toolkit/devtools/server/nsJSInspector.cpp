@@ -9,7 +9,7 @@
 #include "nsCxPusher.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "jsdbgapi.h"
+#include "js/OldDebugAPI.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemory.h"

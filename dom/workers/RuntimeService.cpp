@@ -19,7 +19,7 @@
 
 #include <algorithm>
 #include "GeckoProfiler.h"
-#include "jsdbgapi.h"
+#include "js/OldDebugAPI.h"
 #include "jsfriendapi.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/dom/AtomList.h"

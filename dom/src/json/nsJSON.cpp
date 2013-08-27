@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsapi.h"
-#include "jsdbgapi.h"
+#include "js/OldDebugAPI.h"
 #include "nsIServiceManager.h"
 #include "nsJSON.h"
 #include "nsIXPConnect.h"

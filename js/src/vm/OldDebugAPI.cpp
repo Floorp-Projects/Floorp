@@ -8,7 +8,7 @@
  * JS debugging API.
  */
 
-#include "jsdbgapi.h"
+#include "js/OldDebugAPI.h"
 
 #include <string.h>
 
