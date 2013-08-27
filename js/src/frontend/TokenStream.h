@@ -18,7 +18,6 @@
 
 #include "jscntxt.h"
 #include "jspubtd.h"
-#include "jsversion.h"
 
 #include "js/Vector.h"
 #include "vm/RegExpObject.h"
