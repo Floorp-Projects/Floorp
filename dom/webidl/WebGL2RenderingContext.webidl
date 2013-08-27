@@ -13,6 +13,10 @@ interface WebGLQuery {
 [Pref="webgl.enable-prototype-webgl2"]
 interface WebGL2RenderingContext : WebGLRenderingContext {
 
+    /* depth textures */
+    const GLenum UNSIGNED_INT_24_8                           = 0x84FA;
+
+
     /* draw buffers */
     const GLenum COLOR_ATTACHMENT1                           = 0x8CE1;
     const GLenum COLOR_ATTACHMENT2                           = 0x8CE2;
@@ -105,6 +109,10 @@ interface WebGL2RenderingContext : WebGLRenderingContext {
     void bindBufferBase(GLenum target, GLuint index, WebGLBuffer? buffer);
     void bindBufferRange(GLenum target, GLuint index, WebGLBuffer? buffer,
                          GLintptr offset, GLsizeiptr size);
+
+
+    /* standart derivatives */
+    const GLenum FRAGMENT_SHADER_DERIVATIVE_HINT             = 0x8B8B;
 
 
     /* state requests */
