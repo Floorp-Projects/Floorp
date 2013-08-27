@@ -26,7 +26,7 @@ class CompositableForwarder;
 class SharedTextureClientOGL : public TextureClient
 {
 public:
-  SharedTextureClientOGL();
+  SharedTextureClientOGL(TextureFlags aFlags);
 
   ~SharedTextureClientOGL();
 
@@ -36,15 +36,15 @@ public:
 
   void InitWith(gl::SharedTextureHandle aHandle,
                 gfx::IntSize aSize,
-                bool aIsCrossProcess = false,
+                gl::GLContext::SharedTextureShareType aShareType,
                 bool aInverted = false);
 
   virtual gfx::IntSize GetSize() const { return mSize; }
 
 protected:
-  gfx::IntSize mSize;
   gl::SharedTextureHandle mHandle;
-  bool mIsCrossProcess;
+  gfx::IntSize mSize;
+  gl::GLContext::SharedTextureShareType mShareType;
   bool mInverted;
 };
 
