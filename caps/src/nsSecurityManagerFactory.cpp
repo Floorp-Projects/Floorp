@@ -66,7 +66,7 @@ NS_IMETHODIMP
 nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
 {
     AutoJSContext cx;
-    JS::Rooted<JSObject*> global(cx, aScriptContext->GetNativeGlobal());
+    JS::Rooted<JSObject*> global(cx, aScriptContext->GetWindowProxy());
     JSAutoCompartment ac(cx, global);
 
     /*

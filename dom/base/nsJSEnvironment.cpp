@@ -1085,7 +1085,7 @@ nsIScriptGlobalObject *
 nsJSContext::GetGlobalObject()
 {
   AutoJSContext cx;
-  JS::Rooted<JSObject*> global(mContext, GetNativeGlobal());
+  JS::Rooted<JSObject*> global(mContext, GetWindowProxy());
   if (!global) {
     return nullptr;
   }
@@ -1134,12 +1134,6 @@ nsJSContext::GetGlobalObject()
   return sgo;
 }
 
-JSObject*
-nsJSContext::GetNativeGlobal()
-{
-    return GetWindowProxy();
-}
-
 JSContext*
 nsJSContext::GetNativeContext()
 {
@@ -1183,7 +1177,7 @@ nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, n
 
   Maybe<nsRootedJSValueArray> tempStorage;
 
-  JS::Rooted<JSObject*> global(mContext, GetNativeGlobal());
+  JS::Rooted<JSObject*> global(mContext, GetWindowProxy());
   nsresult rv =
     ConvertSupportsTojsvals(aArgs, global, &argc, &argv, tempStorage);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1479,7 +1473,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
       AutoFree iidGuard(iid); // Free iid upon destruction.
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-      JS::Rooted<JSObject*> global(cx, xpc_UnmarkGrayObject(GetNativeGlobal()));
+      JS::Rooted<JSObject*> global(cx, GetWindowProxy());
       JS::Rooted<JS::Value> v(cx);
       nsresult rv = nsContentUtils::WrapNative(cx, global,
                                                data, iid, v.address(),
