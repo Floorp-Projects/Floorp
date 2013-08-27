@@ -857,7 +857,7 @@ DoUseCountFallback(JSContext *cx, ICUseCount_Fallback *stub, BaselineFrame *fram
     *infoPtr = NULL;
 
     // A TI OOM will disable TI and Ion.
-    if (!jit::IsEnabled(cx))
+    if (!jit::IsIonEnabled(cx))
         return true;
 
     RootedScript script(cx, frame->script());
