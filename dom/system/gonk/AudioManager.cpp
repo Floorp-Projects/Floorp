@@ -32,7 +32,6 @@
 
 #include "nsJSUtils.h"
 #include "nsCxPusher.h"
-#include "nsThreadUtils.h"
 
 using namespace mozilla::dom::gonk;
 using namespace android;

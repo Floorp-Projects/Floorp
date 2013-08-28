@@ -25,7 +25,6 @@
 #include "Hal.h"
 #include "HalSensor.h"
 #include "hardware/sensors.h"
-#include "nsThreadUtils.h"
 
 #undef LOG
 
