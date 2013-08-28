@@ -1,0 +1,107 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIDOMEventTarget.idl"
+
+[scriptable, uuid(c142387a-5488-454b-8b5a-91f0dbee833b)]
+interface nsIFMRadioSettings : nsISupports
+{
+    /* Upper limit in KHz */
+    attribute long upperLimit;
+    /* Lower limit in KHz */
+    attribute long lowerLimit;
+    /* Channel width in KHz */
+    attribute long channelWidth;
+};
+
+/**
+ * This is an interface to expose the FM radio hardware related functions;
+ * it's kind of the FM radio hardware wrapper interface.
+ *
+ * Because the WebFM API (navigator.mozFMRadio) is implemented as a JS component,
+ * it can't access our C++ hardware interface directly; instead it must go
+ * through this interface.
+ * Do not confuse this interface with the WebFM DOM interface (nsIDOMFMRadio).
+ *
+ * If the WebFM API is re-written in c++ some day, this interface will be useless.
+ */
+[scriptable, builtinclass, uuid(2ee7c122-b7aa-4948-9bc5-e4593ed4ac32)]
+interface nsIFMRadio : nsIDOMEventTarget {
+    const long SEEK_DIRECTION_UP   = 0;
+    const long SEEK_DIRECTION_DOWN = 1;
+
+    /**
+     * Indicates if the FM radio hardware is enabled.
+     */
+    readonly attribute boolean enabled;
+
+    /**
+     * Current frequency in KHz
+     */
+    readonly attribute long frequency;
+
+    /**
+     * Indicates if the antenna is plugged in and available.
+     */
+    readonly attribute boolean isAntennaAvailable;
+
+    /**
+     * Enable the FM radio hardware with the given settings.
+     */
+    void enable(in nsIFMRadioSettings settings);
+
+    /**
+     * Disable the FM radio hardware.
+     */
+    void disable();
+
+    /**
+     * Seek the next available channel (up or down).
+     *
+     * @param direction
+     *   The value should be one of SEEK_DIRECTION_DOWN and SEEK_DIRECTION_UP
+     */
+    void seek(in long direction);
+
+    /**
+     * Cancel the seek action.
+     */
+    void cancelSeek();
+
+    /**
+     * Get the current settings.
+     */
+    nsIFMRadioSettings getSettings();
+
+    /**
+     * Set the frequency in KHz
+     */
+    void setFrequency(in long frequency);
+
+    /**
+     * Update the visibility state of our client.
+     */
+    void updateVisible(in boolean visible);
+
+    /**
+     * Fired when the antenna state is changed.
+     */
+    [implicit_jscontext] attribute jsval onantennastatechange;
+
+    /**
+     * Fired when a seek action completes.
+     */
+    [implicit_jscontext] attribute jsval onseekcomplete;
+
+    /**
+     * Fired when the FM radio hardware is enabled.
+     */
+    [implicit_jscontext] attribute jsval onenabled;
+
+    /**
+     * Fired when the FM radio hardware is disabled.
+     */
+    [implicit_jscontext] attribute jsval ondisabled;
+};
+

@@ -48,7 +48,7 @@ endif
 
 ifdef MOZ_B2G_FM
 DOM_SRCDIRS += \
-  dom/fmradio \
+  dom/fm \
   $(NULL)
 endif
 
