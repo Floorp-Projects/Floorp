@@ -1201,7 +1201,7 @@ this.DOMApplicationRegistry = {
     }
 
     // We need to get the old manifest to unregister web activities.
-    this.getManifestFor(app.origin, (function(aOldManifest) {
+    this.getManifestFor(aManifestURL, (function(aOldManifest) {
       debug("Old manifest: " + JSON.stringify(aOldManifest));
       // Move the application.zip and manifest.webapp files out of TmpD
       let tmpDir = FileUtils.getDir("TmpD", ["webapps", id], true, true);
@@ -1240,7 +1240,7 @@ this.DOMApplicationRegistry = {
       Services.obs.notifyObservers(zipFile, "flush-cache-entry", null);
 
       // Get the manifest, and set properties.
-      this.getManifestFor(app.origin, (function(aData) {
+      this.getManifestFor(aManifestURL, (function(aData) {
         debug("New manifest: " + JSON.stringify(aData));
         app.downloading = false;
         app.downloadAvailable = false;
@@ -1993,16 +1993,8 @@ this.DOMApplicationRegistry = {
     let app = aData.app;
     app.removable = true;
 
-    let origin = Services.io.newURI(app.origin, null, null);
-    let manifestURL = origin.resolve(app.manifestURL);
-
-    let id = this._appId(app.origin);
-    let localId = this.getAppLocalIdByManifestURL(manifestURL);
-
-    // For packaged apps, we need to get the id from the manifestURL.
-    if (localId && !id) {
-      id = this._appIdForManifestURL(manifestURL);
-    }
+    let id = this._appIdForManifestURL(app.manifestURL);
+    let localId = this.getAppLocalIdByManifestURL(app.manifestURL);
 
     // Installing an application again is considered as an update.
     if (id) {
@@ -2135,14 +2127,6 @@ this.DOMApplicationRegistry = {
     Services.prefs.setIntPref("dom.mozApps.maxLocalId", id);
     Services.prefs.savePrefFile(null);
     return id;
-  },
-
-  _appId: function(aURI) {
-    for (let id in this.webapps) {
-      if (this.webapps[id].origin == aURI)
-        return id;
-    }
-    return null;
   },
 
   _appIdForManifestURL: function(aURI) {
@@ -2936,11 +2920,11 @@ this.DOMApplicationRegistry = {
     }).bind(this));
   },
 
-  getManifestFor: function(aOrigin, aCallback) {
+  getManifestFor: function(aManifestURL, aCallback) {
     if (!aCallback)
       return;
 
-    let id = this._appId(aOrigin);
+    let id = this._appIdForManifestURL(aManifestURL);
     let app = this.webapps[id];
     if (!id || (app.installState == "pending" && !app.retryingDownload)) {
       aCallback(null);
