@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Removal of XPIDL for bug 893117 requires a clobber to make sure interfaces aren't generated.
+Bug 902908 renamed js/src/ion to js/src/jit and required a clobber

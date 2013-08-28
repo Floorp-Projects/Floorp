@@ -31,8 +31,8 @@
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "ion/Ion.h"
-#include "ion/IonFrameIterator.h"
+#include "jit/Ion.h"
+#include "jit/IonFrameIterator.h"
 #endif
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"

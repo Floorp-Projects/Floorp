@@ -26,9 +26,9 @@
 
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "ion/BaselineJIT.h"
-#include "ion/Ion.h"
-#include "ion/IonCompartment.h"
+#include "jit/BaselineJIT.h"
+#include "jit/Ion.h"
+#include "jit/IonCompartment.h"
 #endif
 #include "js/MemoryMetrics.h"
 #include "vm/Shape.h"

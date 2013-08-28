@@ -14,8 +14,8 @@
 #include "jsprf.h"
 #include "jswrapper.h"
 
-#include "ion/AsmJS.h"
-#include "ion/AsmJSLink.h"
+#include "jit/AsmJS.h"
+#include "jit/AsmJSLink.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 

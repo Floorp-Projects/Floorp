@@ -42,7 +42,7 @@
 
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "ion/Ion.h"
+#include "jit/Ion.h"
 #endif
 #include "js/CharacterEncoding.h"
 #include "js/MemoryMetrics.h"
