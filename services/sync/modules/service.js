@@ -38,7 +38,6 @@ Cu.import("resource://services-sync/util.js");
 
 const ENGINE_MODULES = {
   Addons: "addons.js",
-  Apps: "apps.js",
   Bookmarks: "bookmarks.js",
   Form: "forms.js",
   History: "history.js",
