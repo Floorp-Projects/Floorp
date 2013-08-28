@@ -5248,11 +5248,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     masm.movePtr(StackPointer, Operand(activation, AsmJSActivation::offsetOfErrorRejoinSP()));
 
 #if defined(JS_CPU_X64)
-    // Install the heap pointer into the globally-pinned HeapReg. The heap
-    // pointer is stored in the global data section and is patched at dynamic
-    // link time.
-    CodeOffsetLabel label = masm.loadRipRelativeInt64(HeapReg);
-    m.addGlobalAccess(AsmJSGlobalAccess(label.offset(), m.module().heapOffset()));
+    masm.movq(Operand(IntArgReg1, m.module().heapOffset()), HeapReg);
 #endif
 
     Register argv = ABIArgGenerator::NonArgReturnVolatileReg0;
@@ -5261,8 +5257,8 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     masm.movl(Operand(StackPointer, NativeFrameSize + masm.framePushed()), argv);
 #elif defined(JS_CPU_X64)
     masm.movq(IntArgReg0, argv);
-    masm.Push(argv);
 #endif
+    masm.Push(argv);
 
     // Bump the stack for the call.
     const ModuleCompiler::Func &func = *m.lookupFunction(exportedFunc.name());
@@ -5295,12 +5291,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     masm.call(func.code());
 
     masm.freeStack(stackDec);
-
-#if defined(JS_CPU_X86)
-    masm.movl(Operand(StackPointer, NativeFrameSize + masm.framePushed()), argv);
-#elif defined(JS_CPU_X64)
     masm.Pop(argv);
-#endif
 
     // Store return value in argv[0]
     switch (func.sig().retType().which()) {
