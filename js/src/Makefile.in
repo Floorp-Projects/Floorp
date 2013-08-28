@@ -225,12 +225,17 @@ endif
 # ICU headers need to be available whether we build with the complete
 # Internationalization API or not - ICU stubs rely on them.
 
+ifdef MOZ_NATIVE_ICU
+LOCAL_INCLUDES += $(MOZ_ICU_CFLAGS)
+else
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/../../intl/icu/source/common \
   -I$(topsrcdir)/../../intl/icu/source/i18n \
   $(NULL)
+endif
 
 ifdef ENABLE_INTL_API
+ifndef MOZ_NATIVE_ICU
 
 ifeq ($(OS_ARCH),WINNT)
   # Parallel gmake is buggy on Windows
@@ -258,6 +263,7 @@ export::
 distclean clean::
 	$(call SUBMAKE,$@,intl/icu)
 
+endif
 endif
 
 #
@@ -385,7 +391,11 @@ ifneq (,$(MOZ_ZLIB_LIBS)$(MOZ_GLUE_LDFLAGS))
 DEFINES += -DUSE_ZLIB
 endif
 
-SHARED_LIBRARY_LIBS += $(ICU_LIBS)
+ifdef MOZ_NATIVE_ICU
+EXTRA_DSO_LDOPTS += $(MOZ_ICU_LIBS)
+else
+SHARED_LIBRARY_LIBS += $(MOZ_ICU_LIBS)
+endif
 
 # Prevent floating point errors caused by VC++ optimizations
 ifdef _MSC_VER
