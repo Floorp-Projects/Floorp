@@ -90,7 +90,7 @@ public:
 
   JSObject* getArrayBuffer(JSContext* aCx);
 
-protected:  // njn?
+protected:
   static bool areOverlappingRegions(const uint8_t* aStart1, uint32_t aLength1,
                                     const uint8_t* aStart2, uint32_t aLength2);
 };
