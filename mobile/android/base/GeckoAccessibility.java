@@ -301,7 +301,7 @@ public class GeckoAccessibility {
                             default:
                                 info.setParent(host);
                                 info.setSource(host, virtualDescendantId);
-                                info.setVisibleToUser(true);
+                                info.setVisibleToUser(host.isFocused());
                                 info.setPackageName(GeckoAppShell.getContext().getPackageName());
                                 info.setClassName(host.getClass().getName());
                                 info.addAction(AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS);
