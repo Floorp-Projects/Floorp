@@ -151,7 +151,7 @@ void edge(unsigned src_index, unsigned dest_index)
 
 void run()
 {
-    finder = new ComponentFinder<TestNode>(rt->mainThread.nativeStackLimit);
+    finder = new ComponentFinder<TestNode>(rt->mainThread.nativeStackLimit[js::StackForSystemCode]);
     for (unsigned i = 0; i < vertex_count; ++i)
         finder->addNode(&Vertex[i]);
     resultsList = finder->getResultsList();
@@ -242,7 +242,7 @@ BEGIN_TEST(testFindSCCsStackLimit)
     for (unsigned i = initial; i < (max - 10); ++i)
         vertices[i].edge = &vertices[i + 1];
 
-    ComponentFinder<TestNode2> finder(rt->mainThread.nativeStackLimit);
+    ComponentFinder<TestNode2> finder(rt->mainThread.nativeStackLimit[js::StackForSystemCode]);
     for (unsigned i = 0; i < max; ++i)
         finder.addNode(&vertices[i]);
 
