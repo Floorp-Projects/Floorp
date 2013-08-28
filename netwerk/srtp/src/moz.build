@@ -37,3 +37,5 @@ CSRCS += [
 
 LIBXUL_LIBRARY = True
 
+LIBRARY_NAME = 'nksrtp_s'
+

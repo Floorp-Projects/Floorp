@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= neckobase_s
 LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/base
 
 ifdef MOZ_PLATFORM_MAEMO

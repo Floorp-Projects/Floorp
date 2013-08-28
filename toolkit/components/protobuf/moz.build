@@ -45,3 +45,5 @@ CPP_SOURCES += [
     'zero_copy_stream_impl_lite.cc',
 ]
 
+LIBRARY_NAME = 'protobuf_s'
+

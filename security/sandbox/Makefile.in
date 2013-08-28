@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = sandbox_s
 EXPORT_LIBRARY = 1
 FAIL_ON_WARNINGS = 1
 

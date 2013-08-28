@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = breakpadinjector
 FORCE_SHARED_LIB = 1
 USE_STATIC_LIBS = 1
 STL_FLAGS =

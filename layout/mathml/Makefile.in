@@ -11,7 +11,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = gkmathml_s
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../style \
 	-I$(srcdir)/../base \
