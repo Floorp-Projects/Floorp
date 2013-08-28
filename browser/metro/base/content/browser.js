@@ -68,10 +68,12 @@ var Browser = {
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/SelectionHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ContextMenuHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/FindHandler.js", true);
+      messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ConsoleAPIObserver.js", true);
+      if (!Services.prefs.getBoolPref(kAsyncPanZoomEnabled)) {
+        messageManager.loadFrameScript("chrome://global/content/BrowserElementPanning.js", true);
+      }
       // XXX Viewport resizing disabled because of bug 766142
       //messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ViewportHandler.js", true);
-      messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ConsoleAPIObserver.js", true);
-      //messageManager.loadFrameScript("chrome://browser/content/contenthandlers/PluginCTPHandler.js", true);
     } catch (e) {
       // XXX whatever is calling startup needs to dump errors!
       dump("###########" + e + "\n");

@@ -150,6 +150,8 @@ let Content = {
     addEventListener("click", this, false);
 
     docShell.useGlobalHistory = true;
+
+    this._apzEnabled = Services.prefs.getBoolPref("layers.async-pan-zoom.enabled");
   },
 
   /*******************************************
@@ -408,11 +410,18 @@ let Content = {
   _highlightElement: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
+    // Handled by BrowserElementPanning when apz is disabled
+    if (this._apzEnabled) {
+      return;
+    }
     gDOMUtils.setContentState(aElement, kStateActive);
     this._highlightElement = aElement;
   },
 
   _cancelTapHighlight: function _cancelTapHighlight(aElement) {
+    if (this._apzEnabled) {
+      return;
+    }
     gDOMUtils.setContentState(content.document.documentElement, kStateActive);
     this._highlightElement = null;
   },
