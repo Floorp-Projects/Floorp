@@ -342,6 +342,14 @@ xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS)
     }
 }
 
+NS_IMETHODIMP_(void)
+nsXPConnect::NoteJSContext(JSContext *aJSContext,
+                           nsCycleCollectionTraversalCallback &aCb)
+{
+    aCb.NoteNativeChild(aJSContext, mozilla::CycleCollectedJSRuntime::JSContextParticipant());
+}
+
+
 /***************************************************************************/
 /***************************************************************************/
 // nsIXPConnect interface methods...
@@ -1315,7 +1323,8 @@ xpc_ActivateDebugMode()
 JSContext*
 nsXPConnect::GetCurrentJSContext()
 {
-    return GetRuntime()->GetJSContextStack()->Peek();
+    JSContext *cx = GetRuntime()->GetJSContextStack()->Peek();
+    return xpc_UnmarkGrayContext(cx);
 }
 
 /* virtual */

@@ -68,7 +68,7 @@ public:
 
     AutoPushJSContext cx(sc->GetNativeContext());
 
-    JS::Rooted<JSObject*> global(cx, sc->GetWindowProxy());
+    JS::Rooted<JSObject*> global(cx, sc->GetNativeGlobal());
     rv = nsContentUtils::WrapNative(cx, global, adapter, aValue);
     if (NS_FAILED(rv)) {
       NS_WARNING("Cannot create native object!");

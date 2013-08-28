@@ -47,6 +47,8 @@ class nsWrapperCache;
       native JSEqualityOp(JSEqualityOp);
 [ptr] native JSScriptPtr(JSScript);
 [ptr] native voidPtrPtr(void*);
+[ptr] native nsScriptObjectTracerPtr(nsScriptObjectTracer);
+[ref] native nsCCTraversalCallbackRef(nsCycleCollectionTraversalCallback);
 [ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
 [ref] native JSCompartmentOptions(JS::CompartmentOptions);
@@ -62,6 +64,11 @@ interface nsIXPConnectWrappedNative;
 interface nsIInterfaceInfo;
 interface nsIXPCSecurityManager;
 interface nsIPrincipal;
+
+%{C++
+class nsCycleCollectionTraversalCallback;
+class nsScriptObjectTracer;
+%}
 
 /***************************************************************************/
 [uuid(909e8641-7c54-4dff-9b94-ba631f057b33)]
@@ -291,7 +298,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(c4d0187c-6a78-4bdf-9cd9-d218644b715a)]
+[uuid(0ebc00f0-f3ad-11e2-b778-0800200c9a66)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -558,6 +565,14 @@ interface nsIXPConnect : nsISupports
                                          in JSContextPtr cx,
                                          in JSObjectPtr sandbox,
                                          in boolean returnStringOnly);
+
+    /**
+     * Note aJSContext as a child to the cycle collector.
+     * @param aJSContext The JSContext to note.
+     * @param aCb The cycle collection traversal callback.
+     */
+    [noscript,notxpcom] void noteJSContext(in JSContextPtr aJSContext,
+                                           in nsCCTraversalCallbackRef aCb);
 
     /**
      * Whether or not XPConnect should report all JS exceptions when returning
