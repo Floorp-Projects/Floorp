@@ -93,7 +93,7 @@ public:
  * In order to send several different buffers to the compositor side, use
  * several TextureClients.
  */
-class TextureClient : public RefCounted<TextureClient>
+class TextureClient : public AtomicRefCounted<TextureClient>
 {
 public:
   TextureClient(TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);

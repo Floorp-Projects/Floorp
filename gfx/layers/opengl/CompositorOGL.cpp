@@ -120,24 +120,22 @@ FPSState::DrawFPS(TimeStamp aNow,
     context->fTexParameteri(LOCAL_GL_TEXTURE_2D,LOCAL_GL_TEXTURE_MIN_FILTER,LOCAL_GL_NEAREST);
     context->fTexParameteri(LOCAL_GL_TEXTURE_2D,LOCAL_GL_TEXTURE_MAG_FILTER,LOCAL_GL_NEAREST);
 
-    uint32_t text[] = {
-      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-      0, 255, 255, 255,   0, 255, 255,   0,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255,   0, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0,
-      0, 255,   0, 255,   0,   0, 255,   0,   0,   0,   0, 255,   0,   0,   0, 255,   0, 255,   0, 255,   0, 255,   0,   0,   0, 255,   0,   0,   0,   0,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0,
-      0, 255,   0, 255,   0,   0, 255,   0,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0,   0,   0, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0,
-      0, 255,   0, 255,   0,   0, 255,   0,   0, 255,   0,   0,   0,   0,   0, 255,   0,   0,   0, 255,   0,   0,   0, 255,   0, 255,   0, 255,   0,   0,   0, 255,   0, 255,   0, 255,   0,   0,   0, 255,   0,
-      0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0,   0,   0, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0,   0,   0, 255,   0, 255, 255, 255,   0,   0,   0, 255,   0,
-      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-    };
+    const char *text =
+      "                                         "
+      " XXX XX  XXX XXX X X XXX XXX XXX XXX XXX "
+      " X X  X    X   X X X X   X     X X X X X "
+      " X X  X  XXX XXX XXX XXX XXX   X XXX XXX "
+      " X X  X  X     X   X   X X X   X X X   X "
+      " XXX XXX XXX XXX   X XXX XXX   X XXX   X "
+      "                                         ";
 
-    // convert from 8 bit to 32 bit so that don't have to write the text above out in 32 bit format
-    // we rely on int being 32 bits
-    unsigned int* buf = (unsigned int*)malloc(64 * 8 * 4);
+    // Convert the text encoding above to RGBA.
+    uint32_t* buf = (uint32_t *) malloc(64 * 8 * sizeof(uint32_t));
     for (int i = 0; i < 7; i++) {
       for (int j = 0; j < 41; j++) {
-        unsigned int purple = 0xfff000ff;
-        unsigned int white  = 0xffffffff;
-        buf[i * 64 + j] = (text[i * 41 + j] == 0) ? purple : white;
+        uint32_t purple = 0xfff000ff;
+        uint32_t white  = 0xffffffff;
+        buf[i * 64 + j] = (text[i * 41 + j] == ' ') ? purple : white;
       }
     }
     context->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 64, 8, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf);

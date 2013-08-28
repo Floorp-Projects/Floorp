@@ -21,13 +21,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850442
 
 SimpleTest.waitForExplicitFinish();
 
-resume_geolocationProvider();
-force_prompt(true);
+resume_geolocationProvider(function() {
+  force_prompt(true, test1);
+});
 
 function done() {
-  reset_prompt();
-  resume_geolocationProvider();
-  SimpleTest.finish();
+  resume_geolocationProvider(function() {
+    SimpleTest.finish();
+  });
 }
 
 function errorCallback(err) {
@@ -45,13 +46,13 @@ function testCachedPosition() {
       // force use of cached position, make sure
       // it's equal to what we have
       is(pos, cached, "position should be equal to cached position");
-      resume_geolocationProvider();
-
-      navigator.geolocation.getCurrentPosition(function(pos) {
-        // force new position, can't be the one we have
-        isnot(pos, cached, "new position should be different from the cached");
-        done();
-      }, errorCallback, {maximumAge: 0});
+      resume_geolocationProvider(function() {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+          // force new position, can't be the one we have
+          isnot(pos, cached, "new position should be different from the cached");
+          done();
+        }, errorCallback, {maximumAge: 0});
+      });
     }, errorCallback, {maximumAge: 21600000});
   }, errorCallback, {maximumAge: 21600000});
 }
@@ -60,20 +61,21 @@ function testCachedPosition() {
 // and stop receiving new positions once we do so the
 // cache doesn't change
 var watchID;
-watchID = navigator.geolocation.watchPosition(
-  function(pos) {
-    info("Stopping geolocation provider");
-    stop_geolocationProvider();
-  }, function(err) {
-    is(err.code, err.TIMEOUT, "got TIMEOUT for watchPosition");
+function test1() {
+  watchID = navigator.geolocation.watchPosition(
+    function(pos) {
+      info("Stopping geolocation provider");
+      stop_geolocationProvider(function() {});
+    }, function(err) {
+      is(err.code, err.TIMEOUT, "got TIMEOUT for watchPosition");
 
-    // no new positions in a while,
-    // the cache should be stable now.
-    navigator.geolocation.clearWatch(watchID);
-    testCachedPosition();
-  }, {maximumAge: 0, timeout: 1000}
-);
-
+      // no new positions in a while,
+      // the cache should be stable now.
+      navigator.geolocation.clearWatch(watchID);
+      testCachedPosition();
+    }, {maximumAge: 0, timeout: 1000}
+  );
+}
 </script>
 </pre>
 </body>

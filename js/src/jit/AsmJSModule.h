@@ -314,9 +314,9 @@ class AsmJSModule
 #if defined(JS_ION_PERF)
     struct ProfiledBlocksFunction : public ProfiledFunction
     {
-        ion::PerfSpewer::BasicBlocksVector blocks;
+        jit::PerfSpewer::BasicBlocksVector blocks;
 
-        ProfiledBlocksFunction(JSAtom *name, unsigned start, unsigned end, ion::PerfSpewer::BasicBlocksVector &blocksVector)
+        ProfiledBlocksFunction(JSAtom *name, unsigned start, unsigned end, jit::PerfSpewer::BasicBlocksVector &blocksVector)
           : ProfiledFunction(name, start, end), blocks(mozilla::Move(blocksVector))
         { }
 
@@ -330,8 +330,8 @@ class AsmJSModule
     typedef Vector<ExportedFunction, 0, SystemAllocPolicy> ExportedFunctionVector;
     typedef Vector<Global, 0, SystemAllocPolicy> GlobalVector;
     typedef Vector<Exit, 0, SystemAllocPolicy> ExitVector;
-    typedef Vector<ion::AsmJSHeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
-    typedef Vector<ion::IonScriptCounts *, 0, SystemAllocPolicy> FunctionCountsVector;
+    typedef Vector<jit::AsmJSHeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
+    typedef Vector<jit::IonScriptCounts *, 0, SystemAllocPolicy> FunctionCountsVector;
 #if defined(MOZ_VTUNE) or defined(JS_ION_PERF)
     typedef Vector<ProfiledFunction, 0, SystemAllocPolicy> ProfiledFunctionVector;
 #endif
@@ -476,7 +476,7 @@ class AsmJSModule
         *exitIndex = unsigned(exits_.length());
         return exits_.append(Exit(ffiIndex, globalDataOffset));
     }
-    bool addFunctionCounts(ion::IonScriptCounts *counts) {
+    bool addFunctionCounts(jit::IonScriptCounts *counts) {
         return functionCounts_.append(counts);
     }
 
@@ -522,7 +522,7 @@ class AsmJSModule
         return perfProfiledFunctions_[i];
     }
 
-    bool trackPerfProfiledBlocks(JSAtom *name, unsigned startCodeOffset, unsigned endCodeOffset, ion::PerfSpewer::BasicBlocksVector &basicBlocks) {
+    bool trackPerfProfiledBlocks(JSAtom *name, unsigned startCodeOffset, unsigned endCodeOffset, jit::PerfSpewer::BasicBlocksVector &basicBlocks) {
         ProfiledBlocksFunction func(name, startCodeOffset, endCodeOffset, basicBlocks);
         return perfProfiledBlocksFunctions_.append(func);
     }
@@ -560,7 +560,7 @@ class AsmJSModule
     unsigned numFunctionCounts() const {
         return functionCounts_.length();
     }
-    ion::IonScriptCounts *functionCounts(unsigned i) {
+    jit::IonScriptCounts *functionCounts(unsigned i) {
         return functionCounts_[i];
     }
 
@@ -633,16 +633,16 @@ class AsmJSModule
         return pc >= code && pc < (code + functionBytes());
     }
 
-    bool addHeapAccesses(const ion::AsmJSHeapAccessVector &accesses) {
+    bool addHeapAccesses(const jit::AsmJSHeapAccessVector &accesses) {
         return heapAccesses_.appendAll(accesses);
     }
     unsigned numHeapAccesses() const {
         return heapAccesses_.length();
     }
-    ion::AsmJSHeapAccess &heapAccess(unsigned i) {
+    jit::AsmJSHeapAccess &heapAccess(unsigned i) {
         return heapAccesses_[i];
     }
-    const ion::AsmJSHeapAccess &heapAccess(unsigned i) const {
+    const jit::AsmJSHeapAccess &heapAccess(unsigned i) const {
         return heapAccesses_[i];
     }
     void patchHeapAccesses(ArrayBufferObject *heap, JSContext *cx);

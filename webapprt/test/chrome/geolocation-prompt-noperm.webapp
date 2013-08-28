@@ -1,0 +1,5 @@
+{
+  "name": "Geolocation Permission Test Webapp",
+  "description": "A webapp for testing geolocation prompt.",
+  "launch_path": "/webapprtChrome/webapprt/test/chrome/geolocation-prompt-noperm.html"
+}

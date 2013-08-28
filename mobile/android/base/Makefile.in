@@ -61,6 +61,7 @@ FENNEC_JAVA_FILES = \
   animation/Rotate3DAnimation.java \
   animation/ViewHelper.java \
   BackButton.java \
+  BaseGeckoInterface.java \
   BrowserApp.java \
   BrowserToolbar.java \
   BrowserToolbarBackground.java \
