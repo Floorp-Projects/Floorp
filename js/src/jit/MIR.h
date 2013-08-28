@@ -4251,24 +4251,26 @@ class MLambdaPar
 {
     CompilerRootFunction fun_;
 
-    MLambdaPar(MDefinition *slice, MDefinition *scopeChain, JSFunction *fun)
+    MLambdaPar(MDefinition *slice, MDefinition *scopeChain, JSFunction *fun,
+               types::StackTypeSet *resultTypes)
       : MBinaryInstruction(slice, scopeChain), fun_(fun)
     {
         JS_ASSERT(!fun->hasSingletonType());
         JS_ASSERT(!types::UseNewTypeForClone(fun));
         setResultType(MIRType_Object);
-        setResultTypeSet(MakeSingletonTypeSet(fun));
+        setResultTypeSet(resultTypes);
     }
 
   public:
     INSTRUCTION_HEADER(LambdaPar);
 
     static MLambdaPar *New(MDefinition *slice, MDefinition *scopeChain, JSFunction *fun) {
-        return new MLambdaPar(slice, scopeChain, fun);
+        return new MLambdaPar(slice, scopeChain, fun, MakeSingletonTypeSet(fun));
     }
 
     static MLambdaPar *New(MDefinition *slice, MLambda *lambda) {
-        return New(slice, lambda->scopeChain(), lambda->fun());
+        return new MLambdaPar(slice, lambda->scopeChain(), lambda->fun(),
+                              lambda->resultTypeSet());
     }
 
     MDefinition *forkJoinSlice() const {
@@ -7393,12 +7395,12 @@ class MRestPar
     public IntPolicy<1>
 {
     MRestPar(MDefinition *slice, MDefinition *numActuals, unsigned numFormals,
-             JSObject *templateObject)
+             JSObject *templateObject, types::StackTypeSet *resultTypes)
       : MBinaryInstruction(slice, numActuals),
         MRestCommon(numFormals, templateObject)
     {
         setResultType(MIRType_Object);
-        setResultTypeSet(MakeSingletonTypeSet(templateObject));
+        setResultTypeSet(resultTypes);
     }
 
   public:
@@ -7406,11 +7408,12 @@ class MRestPar
 
     static MRestPar *New(MDefinition *slice, MDefinition *numActuals, unsigned numFormals,
                          JSObject *templateObject) {
-        return new MRestPar(slice, numActuals, numFormals, templateObject);
+        return new MRestPar(slice, numActuals, numFormals, templateObject,
+                            MakeSingletonTypeSet(templateObject));
     }
     static MRestPar *New(MDefinition *slice, MRest *rest) {
         return new MRestPar(slice, rest->numActuals(), rest->numFormals(),
-                            rest->templateObject());
+                            rest->templateObject(), rest->resultTypeSet());
     }
 
     MDefinition *forkJoinSlice() const {

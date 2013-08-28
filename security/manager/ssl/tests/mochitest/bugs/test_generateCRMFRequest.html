@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test bug 882865</title>
+  <title>crypto.generateCRMFRequest bugs</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -12,6 +12,7 @@
 
   function onWindowLoad()
   {
+    // Does it work at all?
     try {
       var crmfObject = crypto.generateCRMFRequest("CN=undefined", "regToken",
                                                   "authenticator", null, "",
@@ -22,6 +23,29 @@
       ok(false, "unexpected exception: " + e);
     }
 
+    // bug 849553
+    // This should fail because 8 is too small of a key size.
+    try {
+      var crmfObject = crypto.generateCRMFRequest("CN=undefined", "regToken",
+                                                  "authenticator", null, "",
+                                                  8, null, "rsa-ex",
+                                                  1024, null, "rsa-sign");
+      ok(false, "execution should not reach this line");
+    } catch (e) {
+      is(e.toString(), "Error: error:could not generate the key for algorithm rsa-ex", "expected exception");
+    }
+    // This should fail because 65536 is too large of a key size.
+    try {
+      var crmfObject = crypto.generateCRMFRequest("CN=undefined", "regToken",
+                                                  "authenticator", null, "",
+                                                  65536, null, "rsa-ex",
+                                                  1024, null, "rsa-sign");
+      ok(false, "execution should not reach this line");
+    } catch (e) {
+      is(e.toString(), "Error: error:could not generate the key for algorithm rsa-ex", "expected exception");
+    }
+
+    // bug 882865
     var o200 = document.documentElement;
     var o1 = crypto;
     try {

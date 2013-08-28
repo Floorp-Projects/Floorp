@@ -1132,3 +1132,16 @@ kvm.h
 spawn.h
 err.h
 xlocale.h
+#if MOZ_NATIVE_ICU==1
+unicode/locid.h
+unicode/numsys.h
+unicode/ucal.h
+unicode/uclean.h
+unicode/ucol.h
+unicode/udat.h
+unicode/udatpg.h
+unicode/uenum.h
+unicode/unum.h
+unicode/ustring.h
+unicode/utypes.h
+#endif

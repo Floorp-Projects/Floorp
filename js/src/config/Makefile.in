@@ -59,6 +59,7 @@ export:: \
   $(call mkdir_deps,system_wrappers_js) \
   $(NULL)
 	$(PYTHON) $(srcdir)/Preprocessor.py $(DEFINES) $(ACDEFINES) \
+		-DMOZ_NATIVE_ICU=$(MOZ_NATIVE_ICU) \
 		$(srcdir)/system-headers | $(PERL) $(srcdir)/make-system-wrappers.pl system_wrappers_js
 	$(INSTALL) system_wrappers_js $(DIST)
 

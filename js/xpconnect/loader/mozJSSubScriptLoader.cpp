@@ -25,8 +25,8 @@
 #include "nsScriptLoader.h"
 
 #include "jsapi.h"
-#include "jsdbgapi.h"
 #include "jsfriendapi.h"
+#include "js/OldDebugAPI.h"
 #include "nsJSPrincipals.h"
 #include "xpcpublic.h" // For xpc::SystemErrorReporter
 

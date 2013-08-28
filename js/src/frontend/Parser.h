@@ -458,6 +458,11 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool functionArgsAndBodyGeneric(Node pn, HandleFunction fun, FunctionType type,
                                     FunctionSyntaxKind kind, Directives *newDirectives);
 
+    // Determine whether |yield| is a valid name in the current context, or
+    // whether it's prohibited due to strictness, JS version, or occurrence
+    // inside a star generator.
+    bool checkYieldNameValidity();
+
     virtual bool strictMode() { return pc->sc->strict; }
 
     const CompileOptions &options() const {
@@ -546,7 +551,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node identifierName();
 
     bool matchLabel(MutableHandle<PropertyName*> label);
-    bool checkYieldNameValidity(unsigned errorNumber = JSMSG_SYNTAX_ERROR);
 
     bool allowsForEachIn() {
 #if !JS_HAS_FOR_EACH_IN
@@ -568,7 +572,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     bool checkFunctionArguments();
     bool makeDefIntoUse(Definition *dn, Node pn, JSAtom *atom);
-    bool checkFunctionName(HandlePropertyName funName);
     bool checkFunctionDefinition(HandlePropertyName funName, Node *pn, FunctionSyntaxKind kind,
                                  bool *pbodyProcessed);
     bool finishFunctionDefinition(Node pn, FunctionBox *funbox, Node prelude, Node body);
