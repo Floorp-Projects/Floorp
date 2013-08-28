@@ -205,6 +205,33 @@ class CodeGeneratorShared : public LInstructionVisitor
     void verifyOsiPointRegs(LSafepoint *safepoint);
 #endif
 
+  public:
+
+    // When appending to runtimeData_, the vector might realloc, leaving pointers
+    // int the origianl vector stale and unusable. DataPtr acts like a pointer,
+    // but allows safety in the face of potentially realloc'ing vector appends.
+    friend class DataPtr;
+    template <typename T>
+    class DataPtr
+    {
+        CodeGeneratorShared *cg_;
+        size_t index_;
+
+        T *lookup() {
+            return reinterpret_cast<T *>(&cg_->runtimeData_[index_]);
+        }
+      public:
+        DataPtr(CodeGeneratorShared *cg, size_t index)
+          : cg_(cg), index_(index) { }
+
+        T * operator ->() {
+            return lookup();
+        }
+        T * operator *() {
+            return lookup();
+        }
+    };
+
   protected:
 
     size_t allocateData(size_t size) {
