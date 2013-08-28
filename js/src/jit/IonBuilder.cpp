@@ -7601,6 +7601,13 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
             if (typeObj->unknownProperties())
                 return true;
 
+            // If the class of the object has a hook, we can't
+            // inline, as we would need to call the hook.
+            if (isGetter && typeObj->clasp->ops.getGeneric)
+                return true;
+            if (!isGetter && typeObj->clasp->ops.setGeneric)
+                return true;
+
             // If the type has an own property, we can't be sure we don't shadow
             // the chain.
             types::HeapTypeSet *propSet = typeObj->getProperty(cx, types::IdToTypeId(id), false);
@@ -7662,34 +7669,44 @@ IonBuilder::TestCommonPropFunc(JSContext *cx, types::StackTypeSet *types, Handle
         else if (foundProto != proto)
             return true;
 
-        // Check here to make sure that everyone has Type Objects with known
-        // properties between them and the proto we found the accessor on. We
-        // need those to add freezes safely. NOTE: We do not do this above, as
-        // we may be able to freeze all the types up to where we found the
-        // property, even if there are unknown types higher in the prototype
-        // chain.
-        while (curObj != foundProto) {
-            types::TypeObject *typeObj = curObj->getType(cx);
-            if (!typeObj)
-                return false;
-
-            if (typeObj->unknownProperties())
+        JSObject *stopAt = foundProto->getProto();
+        while (curObj != stopAt) {
+            // Don't optimize if we have a hook that would have to be called.
+            if (isGetter && curObj->getClass()->ops.getGeneric)
+                return true;
+            if (!isGetter && curObj->getClass()->ops.setGeneric)
                 return true;
 
-            // Check here to make sure that nobody on the prototype chain is
-            // marked as having the property as an "own property". This can
-            // happen in cases of |delete| having been used, or cases with
-            // watched objects. If TI ever decides to be more accurate about
-            // |delete| handling, this should go back to curObj->watched().
+            // Check here to make sure that everyone has Type Objects with known
+            // properties between them and the proto we found the accessor on. We
+            // need those to add freezes safely. NOTE: We do not do this above, as
+            // we may be able to freeze all the types up to where we found the
+            // property, even if there are unknown types higher in the prototype
+            // chain.
+            if (curObj != foundProto) {
+                types::TypeObject *typeObj = curObj->getType(cx);
+                if (!typeObj)
+                    return false;
 
-            // Even though we are not directly accessing the properties on the whole
-            // prototype chain, we need to fault in the sets anyway, as we need
-            // to freeze on them.
-            types::HeapTypeSet *propSet = typeObj->getProperty(cx, types::IdToTypeId(id), false);
-            if (!propSet)
-                return false;
-            if (propSet->ownProperty(false))
-                return true;
+                if (typeObj->unknownProperties())
+                    return true;
+
+                // Check here to make sure that nobody on the prototype chain is
+                // marked as having the property as an "own property". This can
+                // happen in cases of |delete| having been used, or cases with
+                // watched objects. If TI ever decides to be more accurate about
+                // |delete| handling, this should go back to curObj->watched().
+
+                // Even though we are not directly accessing the properties on the whole
+                // prototype chain, we need to fault in the sets anyway, as we need
+                // to freeze on them.
+                types::HeapTypeSet *propSet =
+                    typeObj->getProperty(cx, types::IdToTypeId(id), false);
+                if (!propSet)
+                    return false;
+                if (propSet->ownProperty(false))
+                    return true;
+            }
 
             curObj = curObj->getProto();
         }
