@@ -985,7 +985,7 @@ IonScript::copyCacheEntries(const uint32_t *caches, MacroAssembler &masm)
     // code, not the absolute positions of the jumps. Update according to the
     // final code address now.
     for (size_t i = 0; i < numCaches(); i++)
-        getCache(i).updateBaseAddress(method_, masm);
+        getCacheFromIndex(i).updateBaseAddress(method_, masm);
 }
 
 const SafepointIndex *
@@ -1099,14 +1099,14 @@ IonScript::purgeCaches(Zone *zone)
     IonContext ictx(rt);
     AutoFlushCache afc("purgeCaches", rt->ionRuntime());
     for (size_t i = 0; i < numCaches(); i++)
-        getCache(i).reset();
+        getCacheFromIndex(i).reset();
 }
 
 void
 IonScript::destroyCaches()
 {
     for (size_t i = 0; i < numCaches(); i++)
-        getCache(i).destroy();
+        getCacheFromIndex(i).destroy();
 }
 
 bool
