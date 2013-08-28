@@ -760,8 +760,6 @@ IonScript::IonScript()
     snapshotsSize_(0),
     constantTable_(0),
     constantEntries_(0),
-    scriptList_(0),
-    scriptEntries_(0),
     callTargetList_(0),
     callTargetEntries_(0),
     backedgeList_(0),
@@ -779,8 +777,7 @@ IonScript *
 IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
                size_t osiIndices, size_t cacheEntries, size_t runtimeSize,
-               size_t safepointsSize, size_t scriptEntries,
-               size_t callTargetEntries, size_t backedgeEntries)
+               size_t safepointsSize, size_t callTargetEntries, size_t backedgeEntries)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32_t)))
@@ -800,7 +797,6 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
     size_t paddedCacheEntriesSize = AlignBytes(cacheEntries * sizeof(uint32_t), DataAlignment);
     size_t paddedRuntimeSize = AlignBytes(runtimeSize, DataAlignment);
     size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
-    size_t paddedScriptSize = AlignBytes(scriptEntries * sizeof(JSScript *), DataAlignment);
     size_t paddedCallTargetSize = AlignBytes(callTargetEntries * sizeof(JSScript *), DataAlignment);
     size_t paddedBackedgeSize = AlignBytes(backedgeEntries * sizeof(PatchableBackedge), DataAlignment);
     size_t bytes = paddedSnapshotsSize +
@@ -811,7 +807,6 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
                    paddedCacheEntriesSize +
                    paddedRuntimeSize +
                    paddedSafepointSize +
-                   paddedScriptSize +
                    paddedCallTargetSize +
                    paddedBackedgeSize;
     uint8_t *buffer = (uint8_t *)cx->malloc_(sizeof(IonScript) + bytes);
@@ -854,10 +849,6 @@ IonScript::New(JSContext *cx, uint32_t frameSlots, uint32_t frameSize, size_t sn
     script->constantTable_ = offsetCursor;
     script->constantEntries_ = constants;
     offsetCursor += paddedConstantsSize;
-
-    script->scriptList_ = offsetCursor;
-    script->scriptEntries_ = scriptEntries;
-    offsetCursor += paddedScriptSize;
 
     script->callTargetList_ = offsetCursor;
     script->callTargetEntries_ = callTargetEntries;
@@ -927,13 +918,6 @@ IonScript::copyConstants(const Value *vp)
 {
     for (size_t i = 0; i < constantEntries_; i++)
         constants()[i].init(vp[i]);
-}
-
-void
-IonScript::copyScriptEntries(JSScript **scripts)
-{
-    for (size_t i = 0; i < scriptEntries_; i++)
-        scriptList()[i] = scripts[i];
 }
 
 void

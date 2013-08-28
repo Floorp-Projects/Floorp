@@ -5451,7 +5451,6 @@ CodeGenerator::generateAsmJS()
     JS_ASSERT(osiIndices_.empty());
     JS_ASSERT(cacheList_.empty());
     JS_ASSERT(safepoints_.size() == 0);
-    JS_ASSERT(graph.mir().numScripts() == 0);
     return true;
 }
 
@@ -5537,8 +5536,8 @@ CodeGenerator::link()
                      bailouts_.length(), graph.numConstants(),
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), runtimeData_.length(),
-                     safepoints_.size(), graph.mir().numScripts(),
-                     callTargets.length(), patchableBackedges_.length());
+                     safepoints_.size(), callTargets.length(),
+                     patchableBackedges_.length());
     if (!ionScript)
         return false;
 
@@ -5620,8 +5619,6 @@ CodeGenerator::link()
         ionScript->copySnapshots(&snapshots_);
     if (graph.numConstants())
         ionScript->copyConstants(graph.constantPool());
-    JS_ASSERT(graph.mir().numScripts() > 0);
-    ionScript->copyScriptEntries(graph.mir().scripts());
     if (callTargets.length() > 0)
         ionScript->copyCallTargetEntries(callTargets.begin());
     if (patchableBackedges_.length() > 0)
