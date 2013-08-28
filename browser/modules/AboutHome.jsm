@@ -25,21 +25,6 @@ const STARTPAGE_VERSION = 4;
 this.AboutHomeUtils = {
   get snippetsVersion() STARTPAGE_VERSION,
 
-  /**
-   * Returns an object containing the name and searchURL of the original default
-   * search engine.
-   */
-  get defaultSearchEngine() {
-    let defaultEngine = Services.search.defaultEngine;
-    let submission = defaultEngine.getSubmission("_searchTerms_", null, "homepage");
-
-    return Object.freeze({
-      name: defaultEngine.name,
-      searchURL: submission.uri.spec,
-      postDataString: submission.postDataString
-    });
-  },
-
   /*
    * showKnowYourRights - Determines if the user should be shown the
    * about:rights notification. The notification should *not* be shown if
@@ -173,9 +158,19 @@ let AboutHome = {
         break;
 
       case "AboutHome:Search":
+        let data;
+        try {
+          data = JSON.parse(aMessage.data.searchData);
+        } catch(ex) {
+          Cu.reportError(ex);
+          break;
+        }
 #ifdef MOZ_SERVICES_HEALTHREPORT
-        window.BrowserSearch.recordSearchInHealthReport(aMessage.data.engineName, "abouthome");
+        window.BrowserSearch.recordSearchInHealthReport(data.engineName, "abouthome");
 #endif
+        // Trigger a search through nsISearchEngine.getSubmission()
+        let submission = Services.search.currentEngine.getSubmission(data.searchTerms);
+        window.loadURI(submission.uri.spec, null, submission.postData);
         break;
     }
   },
@@ -189,8 +184,7 @@ let AboutHome = {
       showRestoreLastSession: ss.canRestoreLastSession,
       snippetsURL: AboutHomeUtils.snippetsURL,
       showKnowYourRights: AboutHomeUtils.showKnowYourRights,
-      snippetsVersion: AboutHomeUtils.snippetsVersion,
-      defaultSearchEngine: AboutHomeUtils.defaultSearchEngine
+      snippetsVersion: AboutHomeUtils.snippetsVersion
     };
 
     if (AboutHomeUtils.showKnowYourRights) {
