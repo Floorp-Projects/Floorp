@@ -556,6 +556,18 @@ imgStatusTracker::Difference(imgStatusTracker* aOther) const
   return diff;
 }
 
+ImageStatusDiff
+imgStatusTracker::DecodeStateAsDifference() const
+{
+  ImageStatusDiff diff;
+  diff.diffState = mState & ~stateRequestStarted;
+
+  // All other ImageStatusDiff fields are intentionally left at their default
+  // values; we only want to notify decode state changes.
+
+  return diff;
+}
+
 void
 imgStatusTracker::ApplyDifference(const ImageStatusDiff& aDiff)
 {
@@ -640,16 +652,6 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
   nsTObserverArray<imgRequestProxy*> array;
   array.AppendElement(proxy);
   SyncNotifyState(array, !!mImage, mState, r, mHadLastPart);
-}
-
-void
-imgStatusTracker::SyncNotifyDecodeState()
-{
-  LOG_SCOPE(GetImgLog(), "imgStatusTracker::SyncNotifyDecodeState");
-
-  SyncNotifyState(mConsumers, !!mImage, mState & ~stateRequestStarted, mInvalidRect, mHadLastPart);
-
-  mInvalidRect.SetEmpty();
 }
 
 void
