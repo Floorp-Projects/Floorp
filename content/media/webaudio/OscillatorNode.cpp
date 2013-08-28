@@ -9,6 +9,7 @@
 #include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"
 #include "WebAudioUtils.h"
+#include "blink/PeriodicWave.h"
 
 namespace mozilla {
 namespace dom {
@@ -93,6 +94,7 @@ public:
     , mSaw(0.0)
     , mPhaseWrap(0.0)
     , mRecomputeFrequency(true)
+    , mCustomLength(0)
   {
   }
 
@@ -142,36 +144,68 @@ public:
 
   virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam)
   {
-    mType = static_cast<OscillatorType>(aParam);
-    // Set the new type, and update integrators with the new initial conditions.
-    switch (mType) {
-      case OscillatorType::Sine:
-        mPhase = 0.0;
+    switch (aIndex) {
+      case TYPE:
+        // Set the new type.
+        mType = static_cast<OscillatorType>(aParam);
+        if (mType != OscillatorType::Custom) {
+          // Forget any previous custom data.
+          mCustomLength = 0;
+          mCustom = nullptr;
+          mPeriodicWave = nullptr;
+        }
+        // Update BLIT integrators with the new initial conditions.
+        switch (mType) {
+          case OscillatorType::Sine:
+            mPhase = 0.0;
+            break;
+          case OscillatorType::Square:
+            mPhase = 0.0;
+            // Initial integration condition is -0.5, because our
+            // square has 50% duty cycle.
+            mSquare = -0.5;
+            break;
+          case OscillatorType::Triangle:
+            // Initial mPhase and related integration condition so the
+            // triangle is in the middle of the first upward slope.
+            // XXX actually do the maths and put the right number here.
+            mPhase = (float)(M_PI / 2);
+            mSquare = 0.5;
+            mTriangle = 0.0;
+            break;
+          case OscillatorType::Sawtooth:
+            // Initial mPhase so the oscillator starts at the
+            // middle of the ramp, per spec.
+            mPhase = (float)(M_PI / 2);
+            // mSaw = 0 when mPhase = pi/2.
+            mSaw = 0.0;
+            break;
+          case OscillatorType::Custom:
+            // Custom waveforms don't use BLIT.
+            break;
+          default:
+            NS_ERROR("Bad OscillatorNodeEngine type parameter.");
+        }
+        // End type switch.
         break;
-      case OscillatorType::Square:
-        mPhase = 0.0;
-        // Initial integration condition is -0.5, because our square has 50%
-        // duty cycle.
-        mSquare = -0.5;
-        break;
-      case OscillatorType::Triangle:
-        // Initial mPhase and related integration condition so the triangle is
-        // in the middle of the first upward slope.
-        // XXX actually do the maths and put the right number here.
-        mPhase = (float)(M_PI / 2);
-        mSquare = 0.5;
-        mTriangle = 0.0;
-        break;
-      case OscillatorType::Sawtooth:
-        /* initial mPhase so the oscillator start at the middle
-         * of the ramp, per spec */
-        mPhase = (float)(M_PI / 2);
-        /* mSaw = 0 when mPhase = pi/2 */
-        mSaw = 0.0;
+      case PERIODICWAVE:
+        MOZ_ASSERT(aParam >= 0, "negative custom array length");
+        mCustomLength = static_cast<uint32_t>(aParam);
         break;
       default:
         NS_ERROR("Bad OscillatorNodeEngine Int32Parameter.");
-    };
+    }
+    // End index switch.
+  }
+
+  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
+  {
+    MOZ_ASSERT(mCustomLength, "Custom buffer sent before length");
+    mCustom = aBuffer;
+    MOZ_ASSERT(mCustom->GetChannels() == 2,
+               "PeriodicWave should have sent two channels");
+    mPeriodicWave = WebCore::PeriodicWave::create(mSource->SampleRate(),
+    mCustom->GetData(0), mCustom->GetData(1), mCustomLength);
   }
 
   void IncrementPhase()
@@ -346,6 +380,46 @@ public:
     }
   }
 
+  void ComputeCustom(float* aOutput,
+                     TrackTicks ticks,
+                     uint32_t aStart,
+                     uint32_t aEnd)
+  {
+    MOZ_ASSERT(mPeriodicWave, "No custom waveform data");
+
+    uint32_t periodicWaveSize = mPeriodicWave->periodicWaveSize();
+    float* higherWaveData = nullptr;
+    float* lowerWaveData = nullptr;
+    float tableInterpolationFactor;
+    float rate = 1.0 / mSource->SampleRate();
+
+    for (uint32_t i = aStart; i < aEnd; ++i) {
+      UpdateFrequencyIfNeeded(ticks, i);
+      mPeriodicWave->waveDataForFundamentalFrequency(mFinalFrequency,
+                                                     lowerWaveData,
+                                                     higherWaveData,
+                                                     tableInterpolationFactor);
+      // mPhase runs 0..periodicWaveSize here instead of 0..2*M_PI.
+      mPhase += periodicWaveSize * mFinalFrequency * rate;
+      if (mPhase >= periodicWaveSize) {
+        mPhase -= periodicWaveSize;
+      }
+      // Bilinear interpolation between adjacent samples in each table.
+      uint32_t j1 = floor(mPhase);
+      uint32_t j2 = j1 + 1;
+      if (j2 >= periodicWaveSize) {
+        j2 -= periodicWaveSize;
+      }
+      float sampleInterpolationFactor = mPhase - j1;
+      float lower = sampleInterpolationFactor * lowerWaveData[j1] +
+                    (1 - sampleInterpolationFactor) * lowerWaveData[j2];
+      float higher = sampleInterpolationFactor * higherWaveData[j1] +
+                    (1 - sampleInterpolationFactor) * higherWaveData[j2];
+      aOutput[i] = tableInterpolationFactor * lower +
+                   (1 - tableInterpolationFactor) * higher;
+    }
+  }
+
   void ComputeSilence(AudioChunk *aOutput)
   {
     aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -397,6 +471,9 @@ public:
       case OscillatorType::Sawtooth:
         ComputeSawtooth(output, ticks, start, end);
         break;
+      case OscillatorType::Custom:
+        ComputeCustom(output, ticks, start, end);
+        break;
       default:
         ComputeSilence(aOutput);
     };
@@ -422,6 +499,9 @@ public:
   float mSaw;
   float mPhaseWrap;
   bool mRecomputeFrequency;
+  nsRefPtr<ThreadSharedFloatArrayBufferList> mCustom;
+  uint32_t mCustomLength;
+  nsAutoPtr<WebCore::PeriodicWave> mPeriodicWave;
 };
 
 OscillatorNode::OscillatorNode(AudioContext* aContext)
@@ -472,10 +552,25 @@ OscillatorNode::SendDetuneToStream(AudioNode* aNode)
 void
 OscillatorNode::SendTypeToStream()
 {
-  SendInt32ParameterToStream(OscillatorNodeEngine::TYPE, static_cast<int32_t>(mType));
   if (mType == OscillatorType::Custom) {
-    // TODO: Send the custom wave table somehow
+    // The engine assumes we'll send the custom data before updating the type.
+    SendPeriodicWaveToStream();
   }
+  SendInt32ParameterToStream(OscillatorNodeEngine::TYPE, static_cast<int32_t>(mType));
+}
+
+void OscillatorNode::SendPeriodicWaveToStream()
+{
+  NS_ASSERTION(mType == OscillatorType::Custom,
+               "Sending custom waveform to engine thread with non-custom type");
+  AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
+  MOZ_ASSERT(ns, "Missing node stream.");
+  MOZ_ASSERT(mPeriodicWave, "Send called without PeriodicWave object.");
+  SendInt32ParameterToStream(OscillatorNodeEngine::PERIODICWAVE,
+                             mPeriodicWave->DataLength());
+  nsRefPtr<ThreadSharedFloatArrayBufferList> data =
+    mPeriodicWave->GetThreadSharedBuffer();
+  ns->SetBuffer(data.forget());
 }
 
 void
