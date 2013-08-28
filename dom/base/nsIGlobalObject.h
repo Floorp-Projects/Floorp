@@ -8,8 +8,7 @@
 
 #include "nsISupports.h"
 #include "nsIScriptObjectPrincipal.h"
-
-class JSObject;
+#include "js/TypeDecls.h"
 
 #define NS_IGLOBALOBJECT_IID \
 { 0x8503e9a9, 0x530, 0x4b26,  \

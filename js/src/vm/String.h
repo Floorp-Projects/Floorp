@@ -25,7 +25,6 @@ class JSExtensibleString;
 class JSExternalString;
 class JSInlineString;
 class JSStableString;
-class JSString;
 class JSRope;
 
 namespace js {

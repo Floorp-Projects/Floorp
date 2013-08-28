@@ -11,9 +11,6 @@
 
 #include "js/RootingAPI.h"
 
-struct JSContext;
-class JSObject;
-
 /*
  * The Intl module specified by standard ECMA-402,
  * ECMAScript Internationalization API Specification.
@@ -25,7 +22,6 @@ class JSObject;
  */
 extern JSObject *
 js_InitIntlClass(JSContext *cx, js::HandleObject obj);
-
 
 namespace js {
 

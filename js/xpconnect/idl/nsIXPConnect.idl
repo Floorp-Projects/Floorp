@@ -20,15 +20,11 @@
 
 %{ C++
 #include "jspubtd.h"
+#include "js/TypeDecls.h"
 #include "xptinfo.h"
 #include "nsAXPCNativeCallContext.h"
 
 struct JSFreeOp;
-
-namespace JS {
-template <typename T> class Handle;
-template <typename T> class MutableHandle;
-}
 
 class nsWrapperCache;
 %}
