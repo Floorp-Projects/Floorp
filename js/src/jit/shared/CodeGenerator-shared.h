@@ -382,6 +382,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     }
 
     bool addCache(LInstruction *lir, size_t cacheIndex);
+    size_t addCacheLocations(const CacheLocationList &locs, size_t *numLocs);
 
   protected:
     bool addOutOfLineCode(OutOfLineCode *code);
