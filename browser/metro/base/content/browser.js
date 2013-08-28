@@ -1558,12 +1558,18 @@ Tab.prototype = {
   },
 
   startLoading: function startLoading() {
-    if (this._loading) throw "Already Loading!";
+    if (this._loading) {
+      let stack = new Error().stack;
+      throw "Already Loading!\n" + stack;
+    }
     this._loading = true;
   },
 
   endLoading: function endLoading() {
-    if (!this._loading) throw "Not Loading!";
+    if (!this._loading) {
+      let stack = new Error().stack;
+      throw "Not Loading!\n" + stack;
+    }
     this._loading = false;
     this.updateFavicon();
   },

@@ -209,7 +209,7 @@ this.libnetutils = (function () {
     let c_dhcp_do_request_renew;
 
     // also changed for 16 and 18
-    if (sdkVersion >= 18) {
+    if (sdkVersion >= 18) { // 18 == JB 4.3
       dnslistbuf[0] = dns1buf;
       dnslistbuf[1] = dns2buf;
       c_dhcp_do_request =
@@ -236,7 +236,7 @@ this.libnetutils = (function () {
                         ctypes.int.ptr,   // lease
                         ctypes.char.ptr,  // vendorinfo
                         ctypes.char.ptr); // domain
-    } else if (sdkVersion >= 16) {
+    } else if (sdkVersion >= 16) { // 16 == JB 4.1
       c_dhcp_do_request =
         library.declare("dhcp_do_request", ctypes.default_abi,
                         ctypes.int,       // return value
@@ -249,7 +249,7 @@ this.libnetutils = (function () {
                         ctypes.char.ptr,  // server
                         ctypes.int.ptr,   // lease
                         ctypes.char.ptr); // vendorinfo
-    } else {
+    } else { // ICS
       c_dhcp_do_request =
         library.declare("dhcp_do_request", ctypes.default_abi,
                         ctypes.int,      // return value
@@ -337,7 +337,7 @@ this.libnetutils = (function () {
     iface.ifc_reset_connections = function(ifname, reset_mask) {
       return c_ifc_reset_connections(ifname, reset_mask) | 0;
     }
-  } else {
+  } else { // version < 15 - we don't care anymore.
     let ints = ctypes.int.array(8)();
     let c_dhcp_do_request =
       library.declare("dhcp_do_request", ctypes.default_abi,

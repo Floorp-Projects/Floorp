@@ -48,6 +48,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final int VERIFY_URL_TIMEOUT = 2000;
     private static final int MAX_LIST_ATTEMPTS = 3;
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
+    private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 10000;
     public static final int MAX_WAIT_MS = 3000;
 
     // Note: DEFAULT_BOOKMARKS_TITLES.length == DEFAULT_BOOKMARKS_URLS.length
@@ -480,6 +481,22 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             }
             waitForText(itemName);
             mSolo.clickOnText(itemName);
+        }
+    }
+
+    public final void verifyHomePagerHidden() {
+        final Element homePagerElement = mDriver.findElement(mActivity, "home_pager");
+        final View homePagerView = mActivity.findViewById(homePagerElement.getId());
+
+        boolean rc = waitForTest(new BooleanTest() {
+            @Override
+            public boolean test() {
+                return homePagerView.getVisibility() != View.VISIBLE;
+            }
+        }, MAX_WAIT_HOME_PAGER_HIDDEN_MS);
+
+        if (!rc) {
+            mAsserter.ok(rc, "Verify HomePager is hidden", "HomePager is hidden");
         }
     }
 

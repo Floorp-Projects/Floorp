@@ -262,6 +262,7 @@
   <string name="home_most_visited_empty">&home_most_visited_empty;</string>
   <string name="home_reading_list_empty">&home_reading_list_empty;</string>
   <string name="home_reading_list_hint">&home_reading_list_hint;</string>
+  <string name="home_reading_list_hint_accessible">&home_reading_list_hint_accessible;</string>
   <string name="pin_bookmark_dialog_hint">&pin_bookmark_dialog_hint;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
