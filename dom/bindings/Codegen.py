@@ -538,18 +538,25 @@ def getRelevantProviders(descriptor, dictionary, config):
     # Do non-workers only for callbacks
     return [ config.getDescriptorProvider(False) ]
 
-def callForEachType(descriptors, dictionaries, callbacks, func):
+
+def getAllTypes(descriptors, dictionaries, callbacks):
+    """
+    Generate all the types we're dealing with.  For each type, a tuple
+    containing type, descriptor, dictionary is yielded.  The
+    descriptor and dictionary can be None if the type does not come
+    from a descriptor or dictionary; they will never both be non-None.
+    """
     for d in descriptors:
         if d.interface.isExternal():
             continue
         for t in getTypesFromDescriptor(d):
-            func(t, descriptor=d)
+            yield (t, d, None)
     for dictionary in dictionaries:
         for t in getTypesFromDictionary(dictionary):
-            func(t, dictionary=dictionary)
+            yield (t, None, dictionary)
     for callback in callbacks:
         for t in getTypesFromCallback(callback):
-            func(t)
+            yield (t, None, None)
 
 class CGHeaders(CGWrapper):
     """
@@ -609,15 +616,19 @@ class CGHeaders(CGWrapper):
         # need to wrap or unwrap them.
         bindingHeaders = set()
         declareIncludes = set(declareIncludes)
-        def addHeadersForType(t, descriptor=None, dictionary=None):
+        def addHeadersForType((t, descriptor, dictionary)):
             """
             Add the relevant headers for this type.  We use descriptor and
             dictionary, if passed, to decide what to do with interface types.
             """
             assert not descriptor or not dictionary
-            if t.nullable() and dictionary:
-                # Need to make sure that Nullable as a dictionary member works
-                declareIncludes.add("mozilla/dom/Nullable.h")
+            if t.nullable():
+                if dictionary:
+                    # Need to make sure that Nullable as a dictionary
+                    # member works.
+                    declareIncludes.add("mozilla/dom/Nullable.h")
+                else:
+                    bindingHeaders.add("mozilla/dom/Nullable.h")
             unrolled = t.unroll()
             if unrolled.isUnion():
                 # UnionConversions.h includes UnionTypes.h
@@ -665,15 +676,19 @@ class CGHeaders(CGWrapper):
             elif unrolled.isFloat() and not unrolled.isUnrestricted():
                 # Restricted floats are tested for finiteness
                 bindingHeaders.add("mozilla/FloatingPoint.h")
+                bindingHeaders.add("mozilla/dom/PrimitiveConversions.h")
             elif unrolled.isEnum():
                 filename = self.getDeclarationFilename(unrolled.inner)
                 # Do nothing if the enum is defined in the same webidl file
                 # (the binding header doesn't need to include itself).
                 if filename != prefix + ".h":
                     declareIncludes.add(filename)
+            elif unrolled.isPrimitive():
+                bindingHeaders.add("mozilla/dom/PrimitiveConversions.h")
 
-        callForEachType(descriptors + callbackDescriptors, dictionaries,
-                        callbacks, addHeadersForType)
+        map(addHeadersForType,
+            getAllTypes(descriptors + callbackDescriptors, dictionaries,
+                        callbacks))
 
         # Now for non-callback descriptors make sure we include any
         # headers needed by Func declarations.
@@ -776,7 +791,7 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
     unionStructs = dict()
     unionReturnValues = dict()
 
-    def addInfoForType(t, descriptor=None, dictionary=None):
+    def addInfoForType((t, descriptor, dictionary)):
         """
         Add info for the given type.  descriptor and dictionary, if passed, are
         used to figure out what to do with interface types.
@@ -799,6 +814,8 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
 
             for f in t.flatMemberTypes:
                 f = f.unroll()
+                if f.nullable():
+                    headers.add("mozilla/dom/Nullable.h")
                 if f.isInterface():
                     if f.isSpiderMonkeyInterface():
                         headers.add("jsfriendapi.h")
@@ -814,8 +831,10 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                 elif f.isDictionary():
                     declarations.add((f.inner.identifier.name, True))
                     implheaders.add(CGHeaders.getDeclarationFilename(f.inner))
+                elif t.isPrimitive():
+                    implheaders.add("mozilla/dom/PrimitiveConversions.h")
 
-    callForEachType(descriptors, dictionaries, callbacks, addInfoForType)
+    map(addInfoForType, getAllTypes(descriptors, dictionaries, callbacks))
 
     return (headers, implheaders, declarations,
             CGList(itertools.chain(SortedDictValues(unionStructs),
@@ -830,7 +849,7 @@ def UnionConversions(descriptors, dictionaries, callbacks, config):
     headers = set()
     unionConversions = dict()
 
-    def addInfoForType(t, descriptor=None, dictionary=None):
+    def addInfoForType((t, descriptor, dictionary)):
         """
         Add info for the given type.  descriptor and dictionary, if passed, are
         used to figure out what to do with interface types.
@@ -852,10 +871,19 @@ def UnionConversions(descriptors, dictionaries, callbacks, config):
                         headers.add("mozilla/dom/TypedArray.h")
                     elif not f.inner.isExternal():
                         headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                    # Check for whether we have a possibly-XPConnect-implemented
+                    # interface.  If we do, the right descriptor will come from
+                    # providers[0], because that would be the non-worker
+                    # descriptor provider, if we have one at all.
+                    if (f.isGeckoInterface() and
+                        providers[0].getDescriptor(f.inner.identifier.name).hasXPConnectImpls):
+                        headers.add("nsDOMQS.h")
                 elif f.isDictionary():
                     headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                elif f.isPrimitive():
+                    headers.add("mozilla/dom/PrimitiveConversions.h")
 
-    callForEachType(descriptors, dictionaries, callbacks, addInfoForType)
+    map(addInfoForType, getAllTypes(descriptors, dictionaries, callbacks))
 
     return (headers,
             CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
@@ -1574,7 +1602,8 @@ class AttrDefiner(PropertyDefiner):
                 accessor = ("genericLenientGetter" if attr.hasLenientThis()
                             else "genericGetter")
                 jitinfo = "&%s_getterinfo" % attr.identifier.name
-            return "{ (JSPropertyOp)%s, %s }" % (accessor, jitinfo)
+            return "{ JS_CAST_NATIVE_TO(%s, JSPropertyOp), %s }" % \
+                   (accessor, jitinfo)
 
         def setter(attr):
             if attr.readonly and attr.getExtendedAttribute("PutForwards") is None:
@@ -1586,7 +1615,8 @@ class AttrDefiner(PropertyDefiner):
                 accessor = ("genericLenientSetter" if attr.hasLenientThis()
                             else "genericSetter")
                 jitinfo = "&%s_setterinfo" % attr.identifier.name
-            return "{ (JSStrictPropertyOp)%s, %s }" % (accessor, jitinfo)
+            return "{ JS_CAST_NATIVE_TO(%s, JSStrictPropertyOp), %s }" % \
+                   (accessor, jitinfo)
 
         def specData(attr):
             return (attr.identifier.name, flags(attr), getter(attr),
@@ -1595,7 +1625,7 @@ class AttrDefiner(PropertyDefiner):
         return self.generatePrefableArray(
             array, name,
             '  { "%s", 0, %s, %s, %s}',
-            '  { 0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER }',
+            '  JS_PS_END',
             'JSPropertySpec',
             PropertyDefiner.getControllingCondition, specData, doIdArrays)
 
@@ -8627,15 +8657,19 @@ class CGBindingRoot(CGThing):
     declare or define to generate header or cpp code (respectively).
     """
     def __init__(self, config, prefix, webIDLFile):
+        bindingHeaders = {}
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
                                             hasInterfaceOrInterfacePrototypeObject=True,
                                             skipGen=False)
         def descriptorRequiresPreferences(desc):
             iface = desc.interface
             return any(m.getExtendedAttribute("Pref") for m in iface.members + [iface]);
-        requiresPreferences = any(descriptorRequiresPreferences(d) for d in descriptors)
-        hasOwnedDescriptors = any(d.nativeOwnership == 'owned' for d in descriptors)
-        hasProxies = any(d.concrete and d.proxy for d in descriptors)
+        bindingHeaders["mozilla/Preferences.h"] = any(
+            descriptorRequiresPreferences(d) for d in descriptors)
+        bindingHeaders["mozilla/dom/NonRefcountedDOMObject.h"] = any(
+            d.nativeOwnership == 'owned' for d in descriptors)
+        bindingHeaders["mozilla/dom/DOMJSProxyHandler.h"] = any(
+            d.concrete and d.proxy for d in descriptors)
         def descriptorHasChromeOnly(desc):
             return (any(isChromeOnly(a) for a in desc.interface.members) or
                     desc.interface.getExtendedAttribute("ChromeOnly") is not None or
@@ -8643,13 +8677,19 @@ class CGBindingRoot(CGThing):
                     # chromeonly _create method.
                     (desc.interface.isJSImplemented() and
                      desc.interface.hasInterfaceObject()))
-        hasChromeOnly = any(descriptorHasChromeOnly(d) for d in descriptors)
+        bindingHeaders["AccessCheck.h"] = any(
+            descriptorHasChromeOnly(d) for d in descriptors)
         # XXXkhuey ugly hack but this is going away soon.
-        isEventTarget = webIDLFile.endswith("EventTarget.webidl")
+        bindingHeaders['xpcprivate.h'] = webIDLFile.endswith("EventTarget.webidl")
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
                                                    workers=True)) != 0
+        bindingHeaders["WorkerPrivate.h"] = hasWorkerStuff
+        bindingHeaders["nsThreadUtils.h"] = hasWorkerStuff
+
         dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
-        requiresAtoms = any([len(dict.members) > 0 for dict in dictionaries])
+        bindingHeaders["nsCxPusher.h"] = dictionaries
+        bindingHeaders["AtomList.h"] = any(
+            len(dict.members) > 0 for dict in dictionaries)
         mainCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
                                             workers=False)
         workerCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
@@ -8658,29 +8698,43 @@ class CGBindingRoot(CGThing):
                                                     isCallback=True)
         jsImplemented = config.getDescriptors(webIDLFile=webIDLFile,
                                               isJSImplemented=True)
+        bindingHeaders["nsPIDOMWindow.h"] = jsImplemented
 
-        # Python can't modify closed-over variables directly, so sneak
-        # our mutable value in as an entry in a dictionary.
-        needsDOMQS = { "value": any(d.hasXPConnectImpls for d in descriptors) }
+        def addHeaderBasedOnTypes(header, typeChecker):
+            bindingHeaders[header] = (
+                bindingHeaders.get(header, False) or
+                any(map(typeChecker,
+                        getAllTypes(descriptors + callbackDescriptors,
+                                    dictionaries,
+                                    mainCallbacks + workerCallbacks))))
+
+        bindingHeaders["nsDOMQS.h"] = any(d.hasXPConnectImpls for d in descriptors)
         # Only mainthread things can have hasXPConnectImpls
         provider = config.getDescriptorProvider(False)
-        def checkForXPConnectImpls(type, descriptor=None, dictionary=None):
-            if needsDOMQS["value"]:
-                return
+        def checkForXPConnectImpls(typeInfo):
+            (type, _, _) = typeInfo
             type = type.unroll()
             if not type.isInterface() or not type.isGeckoInterface():
-                return
+                return False
             try:
                 typeDesc = provider.getDescriptor(type.inner.identifier.name)
             except NoSuchDescriptorError:
-                return
-            needsDOMQS["value"] = typeDesc.hasXPConnectImpls
-
-        callForEachType(descriptors + callbackDescriptors, dictionaries,
-                        mainCallbacks, checkForXPConnectImpls)
+                return False
+            return typeDesc.hasXPConnectImpls
+        addHeaderBasedOnTypes("nsDOMQS.h", checkForXPConnectImpls)
 
         # Do codegen for all the enums
-        cgthings = [ CGEnum(e) for e in config.getEnums(webIDLFile) ]
+        enums = config.getEnums(webIDLFile)
+        cgthings = [ CGEnum(e) for e in enums ]
+
+        bindingHeaders["mozilla/dom/BindingUtils.h"] = (
+            descriptors or callbackDescriptors or dictionaries or
+            mainCallbacks or workerCallbacks)
+        bindingHeaders["mozilla/dom/BindingDeclarations.h"] = (
+            not bindingHeaders["mozilla/dom/BindingUtils.h"] and enums)
+
+        bindingHeaders["WrapperFactory.h"] = descriptors
+        bindingHeaders["mozilla/dom/DOMJSClass.h"] = descriptors
 
         # Do codegen for all the dictionaries.  We have to be a bit careful
         # here, because we have to generate these in order from least derived
@@ -8727,12 +8781,12 @@ class CGBindingRoot(CGThing):
                                              mainCallbacks, workerCallbacks,
                                              dictionaries,
                                              callbackDescriptors + jsImplemented),
-                       CGWrapper(CGGeneric("using namespace mozilla::dom;"),
-                                 defineOnly=True),
                        curr],
                       "\n")
 
         # Add header includes.
+        bindingHeaders = [header for (header, include) in
+                          bindingHeaders.iteritems() if include]
         curr = CGHeaders(descriptors,
                          dictionaries,
                          mainCallbacks + workerCallbacks,
@@ -8742,22 +8796,7 @@ class CGBindingRoot(CGThing):
                           'jspubtd.h',
                           'js/RootingAPI.h',
                           ],
-                         ['mozilla/dom/BindingUtils.h',
-                          'mozilla/dom/Nullable.h',
-                          'PrimitiveConversions.h',
-                          'WrapperFactory.h',
-                          'mozilla/dom/DOMJSClass.h',
-                          ] + (['WorkerPrivate.h',
-                                'nsThreadUtils.h'] if hasWorkerStuff else [])
-                            + (['mozilla/Preferences.h'] if requiresPreferences else [])
-                            + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else [])
-                            + (['nsCxPusher.h'] if dictionaries else [])
-                            + (['AccessCheck.h'] if hasChromeOnly else [])
-                            + (['mozilla/dom/DOMJSProxyHandler.h'] if hasProxies else [])
-                            + (['xpcprivate.h'] if isEventTarget else [])
-                            + (['nsPIDOMWindow.h'] if len(jsImplemented) != 0 else [])
-                            + (['nsDOMQS.h'] if needsDOMQS["value"] else [])
-                            + (['AtomList.h'] if requiresAtoms else []),
+                         bindingHeaders,
                          prefix,
                          curr,
                          config,
@@ -10410,7 +10449,7 @@ struct PrototypeTraits;
 
         curr = CGWrapper(curr, post='\n')
 
-        headers.update(["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"])
+        headers.update(["nsDebug.h", "mozilla/dom/UnionTypes.h", "XPCWrapper.h"])
         curr = CGHeaders([], [], [], [], headers, [], 'UnionConversions', curr)
 
         # Add include guards.

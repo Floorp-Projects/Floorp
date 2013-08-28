@@ -1005,6 +1005,53 @@ js::testingFunc_bailout(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() != 2) {
+        ReportUsageError(cx, callee, "Wrong number of arguments.");
+        return false;
+    }
+
+    if (!args[0].isString()) {
+        ReportUsageError(cx, callee, "First argument must be a String.");
+        return false;
+    }
+
+    if (!args[1].isInt32()) {
+        ReportUsageError(cx, callee, "Second argument must be an Int32.");
+        return false;
+    }
+
+    JSFlatString *strArg = JS_FlattenString(cx, args[0].toString());
+
+#define JIT_COMPILER_MATCH(key, string)                 \
+    else if (JS_FlatStringEqualsAscii(strArg, string))  \
+        opt = JSJITCOMPILER_ ## key;
+
+    JSJitCompilerOption opt = JSJITCOMPILER_NOT_AN_OPTION;
+    if (false) {}
+    JIT_COMPILER_OPTIONS(JIT_COMPILER_MATCH);
+#undef JIT_COMPILER_MATCH
+
+    if (opt == JSJITCOMPILER_NOT_AN_OPTION) {
+        ReportUsageError(cx, callee, "First argument does not name a valid option (see jsapi.h).");
+        return false;
+    }
+
+    int32_t number = args[1].toInt32();
+    if (number < 0)
+        number = -1;
+
+    JS_SetGlobalJitCompilerOption(cx, opt, uint32_t(number));
+
+    args.rval().setBoolean(true);
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1191,6 +1238,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("bailout", testingFunc_bailout, 0, 0,
 "bailout()",
 "  Force a bailout out of ionmonkey (if running in ionmonkey)."),
+
+    JS_FN_HELP("setJitCompilerOption", SetJitCompilerOption, 2, 0,
+"setCompilerOption(<option>, <number>)",
+"  Set a compiler option indexed in JSCompileOption enum to a number.\n"),
 
     JS_FS_HELP_END
 };

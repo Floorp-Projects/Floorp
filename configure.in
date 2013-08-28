@@ -4115,6 +4115,22 @@ if test -n "$MOZ_NATIVE_FFI"; then
 fi
 
 dnl ========================================================
+dnl System ICU Support
+dnl ========================================================
+MOZ_NATIVE_ICU=
+MOZ_ARG_WITH_BOOL(system-icu,
+[  --with-system-icu
+                          Use system ICU (located with pkgconfig)],
+    MOZ_NATIVE_ICU=1)
+
+if test -n "$MOZ_NATIVE_ICU"; then
+    PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
+    MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_ICU_LIBS"
+fi
+
+AC_SUBST(MOZ_NATIVE_ICU)
+
+dnl ========================================================
 dnl Java SDK support
 dnl ========================================================
 
@@ -5260,7 +5276,7 @@ dnl --enable-webrtc to override.  Can disable for everything in
 dnl the master list above.
 if test -n "$MOZ_WEBRTC"; then
     case "$target" in
-    *-linux*|*-mingw*|*-darwin*|*-android*|*-linuxandroid*)
+    *-linux*|*-mingw*|*-darwin*|*-android*|*-linuxandroid*|*-dragonfly*|*-freebsd*|*-netbsd*|*-openbsd*)
         dnl Leave enabled
         ;;
     *)

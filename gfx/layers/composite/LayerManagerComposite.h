@@ -192,6 +192,22 @@ public:
   static void RemoveMaskEffect(Layer* aMaskLayer);
 
   /**
+   * RAII helper class to add a mask effect with the compositable from aMaskLayer
+   * to the EffectChain aEffect and notify the compositable when we are done.
+   */
+  class AutoAddMaskEffect
+  {
+  public:
+    AutoAddMaskEffect(Layer* aMaskLayer,
+                      EffectChain& aEffect,
+                      bool aIs3D = false);
+    ~AutoAddMaskEffect();
+
+  private:
+    CompositableHost* mCompositable;
+  };
+
+  /**
    * Creates a DrawTarget which is optimized for inter-operating with this
    * layermanager.
    */
