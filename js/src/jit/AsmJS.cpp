@@ -5932,16 +5932,9 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     LoadAsmJSActivationIntoRegister(masm, eax);
     LoadJSContextFromActivation(masm, eax, eax);
     masm.storePtr(eax, Address(StackPointer, 0));
-#elif defined(JS_CPU_X64)
-    LoadAsmJSActivationIntoRegister(masm, IntArgReg0);
-    LoadJSContextFromActivation(masm, IntArgReg0, IntArgReg0);
 #else
-
-    // on ARM, we should always be aligned, just do the context manipulation
-    // and make the call.
     LoadAsmJSActivationIntoRegister(masm, IntArgReg0);
     LoadJSContextFromActivation(masm, IntArgReg0, IntArgReg0);
-
 #endif
     void (*pf)(JSContext*) = js_ReportOverRecursed;
     masm.call(ImmWord(JS_FUNC_TO_DATA_PTR(void*, pf)));
