@@ -44,7 +44,7 @@ class IonCacheVisitor
 {
   public:
 #define VISIT_INS(op)                                               \
-    virtual bool visit##op##IC(CodeGenerator *codegen, op##IC *) {  \
+    virtual bool visit##op##IC(CodeGenerator *codegen) {            \
         MOZ_ASSUME_UNREACHABLE("NYI: " #op "IC");                   \
     }
 
@@ -491,7 +491,7 @@ class DispatchIonCache : public IonCache
     }                                                               \
                                                                     \
     bool accept(CodeGenerator *codegen, IonCacheVisitor *visitor) { \
-        return visitor->visit##ickind##IC(codegen, this);           \
+        return visitor->visit##ickind##IC(codegen);                 \
     }                                                               \
                                                                     \
     static const VMFunction UpdateInfo;
