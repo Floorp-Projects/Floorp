@@ -90,13 +90,19 @@ let AboutHomeListener = {
 
     // Inject search engine and snippets URL.
     let docElt = doc.documentElement;
-    // set the following attributes BEFORE searchEngineName, which triggers to
+    // set the following attributes BEFORE searchEngineURL, which triggers to
     // show the snippets when it's set.
     docElt.setAttribute("snippetsURL", aData.snippetsURL);
     if (aData.showKnowYourRights)
       docElt.setAttribute("showKnowYourRights", "true");
     docElt.setAttribute("snippetsVersion", aData.snippetsVersion);
-    docElt.setAttribute("searchEngineName", Services.search.defaultEngine.name);
+
+    let engine = aData.defaultSearchEngine;
+    docElt.setAttribute("searchEngineName", engine.name);
+    docElt.setAttribute("searchEnginePostData", engine.postDataString || "");
+    // Again, keep the searchEngineURL as the last attribute, because the
+    // mutation observer in aboutHome.js is counting on that.
+    docElt.setAttribute("searchEngineURL", engine.searchURL);
   },
 
   onPageLoad: function() {
@@ -129,7 +135,7 @@ let AboutHomeListener = {
     sendAsyncMessage("AboutHome:RequestUpdate");
 
     doc.addEventListener("AboutHomeSearchEvent", function onSearch(e) {
-      sendAsyncMessage("AboutHome:Search", { searchData: e.detail });
+      sendAsyncMessage("AboutHome:Search", { engineName: e.detail });
     }, true, true);
   },
 
