@@ -8651,9 +8651,12 @@ class CGBindingRoot(CGThing):
         def descriptorRequiresPreferences(desc):
             iface = desc.interface
             return any(m.getExtendedAttribute("Pref") for m in iface.members + [iface]);
-        requiresPreferences = any(descriptorRequiresPreferences(d) for d in descriptors)
-        hasOwnedDescriptors = any(d.nativeOwnership == 'owned' for d in descriptors)
-        hasProxies = any(d.concrete and d.proxy for d in descriptors)
+        bindingHeaders["mozilla/Preferences.h"] = any(
+            descriptorRequiresPreferences(d) for d in descriptors)
+        bindingHeaders["mozilla/dom/NonRefcountedDOMObject.h"] = any(
+            d.nativeOwnership == 'owned' for d in descriptors)
+        bindingHeaders["mozilla/dom/DOMJSProxyHandler.h"] = any(
+            d.concrete and d.proxy for d in descriptors)
         def descriptorHasChromeOnly(desc):
             return (any(isChromeOnly(a) for a in desc.interface.members) or
                     desc.interface.getExtendedAttribute("ChromeOnly") is not None or
@@ -8661,13 +8664,19 @@ class CGBindingRoot(CGThing):
                     # chromeonly _create method.
                     (desc.interface.isJSImplemented() and
                      desc.interface.hasInterfaceObject()))
-        hasChromeOnly = any(descriptorHasChromeOnly(d) for d in descriptors)
+        bindingHeaders["AccessCheck.h"] = any(
+            descriptorHasChromeOnly(d) for d in descriptors)
         # XXXkhuey ugly hack but this is going away soon.
-        isEventTarget = webIDLFile.endswith("EventTarget.webidl")
+        bindingHeaders['xpcprivate.h'] = webIDLFile.endswith("EventTarget.webidl")
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
                                                    workers=True)) != 0
+        bindingHeaders["WorkerPrivate.h"] = hasWorkerStuff
+        bindingHeaders["nsThreadUtils.h"] = hasWorkerStuff
+
         dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
-        requiresAtoms = any([len(dict.members) > 0 for dict in dictionaries])
+        bindingHeaders["nsCxPusher.h"] = dictionaries
+        bindingHeaders["AtomList.h"] = any(
+            len(dict.members) > 0 for dict in dictionaries)
         mainCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
                                             workers=False)
         workerCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
@@ -8676,6 +8685,7 @@ class CGBindingRoot(CGThing):
                                                     isCallback=True)
         jsImplemented = config.getDescriptors(webIDLFile=webIDLFile,
                                               isJSImplemented=True)
+        bindingHeaders["nsPIDOMWindow.h"] = jsImplemented
 
         def addHeaderBasedOnTypes(header, typeChecker):
             bindingHeaders[header] = (
@@ -8770,17 +8780,7 @@ class CGBindingRoot(CGThing):
                           'PrimitiveConversions.h',
                           'WrapperFactory.h',
                           'mozilla/dom/DOMJSClass.h',
-                          ] + (['WorkerPrivate.h',
-                                'nsThreadUtils.h'] if hasWorkerStuff else [])
-                            + (['mozilla/Preferences.h'] if requiresPreferences else [])
-                            + (['mozilla/dom/NonRefcountedDOMObject.h'] if hasOwnedDescriptors else [])
-                            + (['nsCxPusher.h'] if dictionaries else [])
-                            + (['AccessCheck.h'] if hasChromeOnly else [])
-                            + (['mozilla/dom/DOMJSProxyHandler.h'] if hasProxies else [])
-                            + (['xpcprivate.h'] if isEventTarget else [])
-                            + (['nsPIDOMWindow.h'] if len(jsImplemented) != 0 else [])
-                            + (['AtomList.h'] if requiresAtoms else [])
-                            + bindingHeaders,
+                          ] + bindingHeaders,
                          prefix,
                          curr,
                          config,
