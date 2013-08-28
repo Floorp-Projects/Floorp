@@ -750,3 +750,6 @@ pref("dom.promise.enabled", false);
 // (only applies when marionette is disabled)
 // 0 disables the timer.
 pref("b2g.adb.timeout-hours", 12);
+
+// InputMethod so we can do soft keyboards
+pref("dom.mozInputMethod.enabled", true);
