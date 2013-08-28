@@ -590,6 +590,11 @@ class GetPropertyIC : public RepatchIonCache
         locationsIndex_ = locationsIndex;
         numLocations_ = numLocations;
     }
+    void getLocationInfo(uint32_t *index, uint32_t *num) const {
+        JS_ASSERT(idempotent());
+        *index = locationsIndex_;
+        *num = numLocations_;
+    }
 
     enum NativeGetPropCacheability {
         CanAttachError,
@@ -609,6 +614,7 @@ class GetPropertyIC : public RepatchIonCache
         return idempotent();
     }
     bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const;
+    bool allowArrayLength(Context cx, HandleObject obj) const;
 
     // Attach the proper stub, if possible
     bool tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,
@@ -745,6 +751,7 @@ class GetElementIC : public RepatchIonCache
         return JSObject::lookupProperty(cx, obj, name, holder, shape);
     }
     bool allowGetters() const { return false; }
+    bool allowArrayLength(Context, HandleObject) const { return false; }
     bool lookupNeedsIdempotentChain() const { return false; }
     bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const {
         return monitoredResult();
@@ -1030,6 +1037,7 @@ class GetPropertyParIC : public ParallelIonCache
     bool lookupNeedsIdempotentChain() const { return true; }
     bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
     bool allowGetters() const { return false; }
+    bool allowArrayLength(Context, HandleObject) const { return true; }
 
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, JSObject *holder,
                         Shape *shape);
@@ -1089,6 +1097,7 @@ class GetElementParIC : public ParallelIonCache
     bool lookupNeedsIdempotentChain() const { return true; }
     bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
     bool allowGetters() const { return false; }
+    bool allowArrayLength(Context, HandleObject) const { return false; }
 
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval,
                         PropertyName *name, JSObject *holder, Shape *shape);
