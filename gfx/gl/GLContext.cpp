@@ -435,6 +435,17 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             if (Renderer() == RendererAdrenoTM320) {
                 MarkUnsupported(GLFeature::standard_derivatives);
             }
+            
+#ifdef XP_MACOSX
+            // The Mac Nvidia driver, for versions up to and including 10.8, don't seem
+            // to properly support this.  See 814839
+            // this has been fixed in Mac OS X 10.9. See 907946
+            if (Vendor() == gl::GLContext::VendorNVIDIA &&
+                !nsCocoaFeatures::OnMavericksOrLater())
+            {
+                MarkUnsupported(GLFeature::depth_texture);
+            }
+#endif
         }
 
         NS_ASSERTION(!IsExtensionSupported(GLContext::ARB_pixel_buffer_object) ||
@@ -916,18 +927,6 @@ GLContext::InitExtensions()
         // Some Adreno drivers do not report GL_OES_EGL_sync, but they really do support it.
         MarkExtensionSupported(OES_EGL_sync);
     }
-
-#ifdef XP_MACOSX
-    // The Mac Nvidia driver, for versions up to and including 10.8, don't seem
-    // to properly support this.  See 814839
-    // this has been fixed in Mac OS X 10.9. See 907946
-    if (WorkAroundDriverBugs() &&
-        Vendor() == gl::GLContext::VendorNVIDIA &&
-        !nsCocoaFeatures::OnMavericksOrLater())
-    {
-        MarkExtensionUnsupported(gl::GLContext::EXT_packed_depth_stencil);
-    }
-#endif
 
 #ifdef DEBUG
     firstRun = false;

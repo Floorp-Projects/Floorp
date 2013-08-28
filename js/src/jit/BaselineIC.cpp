@@ -621,6 +621,7 @@ ICStubCompiler::guardProfilingEnabled(MacroAssembler &masm, Register scratch, La
     JS_ASSERT(kind == ICStub::Call_Scripted      || kind == ICStub::Call_AnyScripted     ||
               kind == ICStub::Call_Native        || kind == ICStub::GetProp_CallScripted ||
               kind == ICStub::GetProp_CallNative || kind == ICStub::GetProp_CallDOMProxyNative ||
+              kind == ICStub::Call_ScriptedApplyArray ||
               kind == ICStub::Call_ScriptedApplyArguments ||
               kind == ICStub::GetProp_CallDOMProxyWithGenerationNative ||
               kind == ICStub::GetProp_DOMProxyShadowed ||
@@ -3295,11 +3296,7 @@ IsCacheableGetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isSc
         return true;
     }
 
-    if (!func->hasScript())
-        return false;
-
-    JSScript *script = func->nonLazyScript();
-    if (!script->hasIonScript() && !script->hasBaselineScript())
+    if (!func->hasJITCode())
         return false;
 
     *isScripted = true;
@@ -3410,11 +3407,7 @@ IsCacheableSetPropCall(JSObject *obj, JSObject *holder, Shape *shape, bool *isSc
         return true;
     }
 
-    if (!func->hasScript())
-        return false;
-
-    JSScript *script = func->nonLazyScript();
-    if (!script->hasIonScript() && !script->hasBaselineScript())
+    if (!func->hasJITCode())
         return false;
 
     *isScripted = true;
@@ -3832,6 +3825,7 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branch32(Assembler::BelowOrEqual, initLength, key, &failure);
 
     // Hole check and load value.
+    JS_STATIC_ASSERT(sizeof(Value) == 8);
     BaseIndex element(scratchReg, key, TimesEight);
     masm.branchTestMagic(Assembler::Equal, element, &failure);
     masm.loadValue(element, R0);
@@ -3919,7 +3913,7 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
         masm.branch32(Assembler::AboveOrEqual, idx, scratch, &failure);
 
         // Load argval
-        JS_ASSERT(sizeof(Value) == 8);
+        JS_STATIC_ASSERT(sizeof(Value) == 8);
         masm.movePtr(BaselineFrameReg, scratch);
         masm.addPtr(Imm32(BaselineFrame::offsetOfArg(0)), scratch);
         BaseIndex element(scratch, idx, TimesEight);
@@ -6850,13 +6844,11 @@ TryAttachFunApplyStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script,
         return true;
     RootedFunction target(cx, &thisv.toObject().as<JSFunction>());
 
+    bool isScripted = target->hasJITCode();
+
     // right now, only handle situation where second argument is |arguments|
     if (argv[1].isMagic(JS_OPTIMIZED_ARGUMENTS) && !script->needsArgsObj()) {
-        if (target->hasScript() &&
-            (target->nonLazyScript()->hasBaselineScript() ||
-             target->nonLazyScript()->hasIonScript()) &&
-            !stub->hasStub(ICStub::Call_ScriptedApplyArguments))
-        {
+        if (isScripted && !stub->hasStub(ICStub::Call_ScriptedApplyArguments)) {
             IonSpew(IonSpew_BaselineIC, "  Generating Call_ScriptedApplyArguments stub");
 
             ICCall_ScriptedApplyArguments::Compiler compiler(
@@ -6870,6 +6862,21 @@ TryAttachFunApplyStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script,
         }
 
         // TODO: handle FUNAPPLY for native targets.
+    }
+
+    if (argv[1].isObject() && argv[1].toObject().is<ArrayObject>()) {
+        if (isScripted && !stub->hasStub(ICStub::Call_ScriptedApplyArray)) {
+            IonSpew(IonSpew_BaselineIC, "  Generating Call_ScriptedApplyArray stub");
+
+            ICCall_ScriptedApplyArray::Compiler compiler(
+                cx, stub->fallbackMonitorStub()->firstMonitorStub(), pc - script->code);
+            ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+            if (!newStub)
+                return false;
+
+            stub->addNewStub(newStub);
+            return true;
+        }
     }
     return true;
 }
@@ -7114,7 +7121,7 @@ ICCallStubCompiler::pushCallArguments(MacroAssembler &masm, GeneralRegisterSet r
 
 Register
 ICCallStubCompiler::guardFunApply(MacroAssembler &masm, GeneralRegisterSet regs, Register argcReg,
-                                  bool checkNative, Label *failure)
+                                  bool checkNative, FunApplyThing applyThing, Label *failure)
 {
     // Ensure argc == 2
     masm.branch32(Assembler::NotEqual, argcReg, Imm32(2), failure);
@@ -7122,15 +7129,67 @@ ICCallStubCompiler::guardFunApply(MacroAssembler &masm, GeneralRegisterSet regs,
     // Stack looks like:
     //      [..., CalleeV, ThisV, Arg0V, Arg1V <MaybeReturnReg>]
 
-    // Ensure that the second arg is magic arguments.
     Address secondArgSlot(BaselineStackReg, ICStackValueOffset);
-    masm.branchTestMagic(Assembler::NotEqual, secondArgSlot, failure);
+    if (applyThing == FunApply_MagicArgs) {
+        // Ensure that the second arg is magic arguments.
+        masm.branchTestMagic(Assembler::NotEqual, secondArgSlot, failure);
 
-    // Ensure that this frame doesn't have an arguments object.
-    masm.branchTest32(Assembler::NonZero,
-                      Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
-                      Imm32(BaselineFrame::HAS_ARGS_OBJ),
+        // Ensure that this frame doesn't have an arguments object.
+        masm.branchTest32(Assembler::NonZero,
+                          Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags()),
+                          Imm32(BaselineFrame::HAS_ARGS_OBJ),
+                          failure);
+    } else {
+        JS_ASSERT(applyThing == FunApply_Array);
+
+        GeneralRegisterSet regsx = regs;
+
+        // Ensure that the second arg is an array.
+        ValueOperand secondArgVal = regsx.takeAnyValue();
+        masm.loadValue(secondArgSlot, secondArgVal);
+
+        masm.branchTestObject(Assembler::NotEqual, secondArgVal, failure);
+        Register secondArgObj = masm.extractObject(secondArgVal, ExtractTemp1);
+
+        regsx.add(secondArgVal);
+        regsx.takeUnchecked(secondArgObj);
+
+        masm.branchTestObjClass(Assembler::NotEqual, secondArgObj, regsx.getAny(),
+                                &ArrayObject::class_, failure);
+
+        // Get the array elements and ensure that initializedLength == length
+        masm.loadPtr(Address(secondArgObj, JSObject::offsetOfElements()), secondArgObj);
+
+        Register lenReg = regsx.takeAny();
+        masm.load32(Address(secondArgObj, ObjectElements::offsetOfLength()), lenReg);
+
+        masm.branch32(Assembler::NotEqual,
+                      Address(secondArgObj, ObjectElements::offsetOfInitializedLength()),
+                      lenReg, failure);
+
+        // Limit the length to something reasonable (huge number of arguments can
+        // blow the stack limit).
+        masm.branch32(Assembler::Above, lenReg,
+                      Imm32(ICCall_ScriptedApplyArray::MAX_ARGS_ARRAY_LENGTH),
                       failure);
+
+        // Ensure no holes.  Loop through values in array and make sure none are magic.
+        // Start address is secondArgObj, end address is secondArgObj + (lenReg * sizeof(Value))
+        JS_STATIC_ASSERT(sizeof(Value) == 8);
+        masm.lshiftPtr(Imm32(3), lenReg);
+        masm.addPtr(secondArgObj, lenReg);
+
+        Register start = secondArgObj;
+        Register end = lenReg;
+        Label loop;
+        Label endLoop;
+        masm.bind(&loop);
+        masm.branchPtr(Assembler::AboveOrEqual, start, end, &endLoop);
+        masm.branchTestMagic(Assembler::Equal, Address(start, 0), failure);
+        masm.addPtr(Imm32(sizeof(Value)), start);
+        masm.jump(&loop);
+        masm.bind(&endLoop);
+    }
 
     // Stack now confirmed to be like:
     //      [..., CalleeV, ThisV, Arg0V, MagicValue(Arguments), <MaybeReturnAddr>]
@@ -7184,7 +7243,34 @@ ICCallStubCompiler::pushCallerArguments(MacroAssembler &masm, GeneralRegisterSet
     masm.loadPtr(Address(BaselineFrameReg, 0), startReg);
     masm.loadPtr(Address(startReg, BaselineFrame::offsetOfNumActualArgs()), endReg);
     masm.addPtr(Imm32(BaselineFrame::offsetOfArg(0)), startReg);
-    JS_ASSERT(sizeof(Value) == 8);
+    JS_STATIC_ASSERT(sizeof(Value) == 8);
+    masm.lshiftPtr(Imm32(3), endReg);
+    masm.addPtr(startReg, endReg);
+
+    // Copying pre-decrements endReg by 8 until startReg is reached
+    Label copyDone;
+    Label copyStart;
+    masm.bind(&copyStart);
+    masm.branchPtr(Assembler::Equal, endReg, startReg, &copyDone);
+    masm.subPtr(Imm32(sizeof(Value)), endReg);
+    masm.pushValue(Address(endReg, 0));
+    masm.jump(&copyStart);
+    masm.bind(&copyDone);
+}
+
+void
+ICCallStubCompiler::pushArrayArguments(MacroAssembler &masm, Address arrayVal,
+                                       GeneralRegisterSet regs)
+{
+    // Load start and end address of values to copy.
+    // guardFunApply has already gauranteed that the array is packed and contains
+    // no holes.
+    Register startReg = regs.takeAny();
+    Register endReg = regs.takeAny();
+    masm.extractObject(arrayVal, startReg);
+    masm.loadPtr(Address(startReg, JSObject::offsetOfElements()), startReg);
+    masm.load32(Address(startReg, ObjectElements::offsetOfInitializedLength()), endReg);
+    JS_STATIC_ASSERT(sizeof(Value) == 8);
     masm.lshiftPtr(Imm32(3), endReg);
     masm.addPtr(startReg, endReg);
 
@@ -7631,6 +7717,123 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
+ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    GeneralRegisterSet regs(availableGeneralRegs(0));
+
+    Register argcReg = R0.scratchReg();
+    regs.take(argcReg);
+    regs.takeUnchecked(BaselineTailCallReg);
+    regs.takeUnchecked(ArgumentsRectifierReg);
+
+    //
+    // Validate inputs
+    //
+
+    Register target = guardFunApply(masm, regs, argcReg, /*checkNative=*/false,
+                                    FunApply_Array, &failure);
+    if (regs.has(target)) {
+        regs.take(target);
+    } else {
+        // If target is already a reserved reg, take another register for it, because it's
+        // probably currently an ExtractTemp, which might get clobbered later.
+        Register targetTemp = regs.takeAny();
+        masm.movePtr(target, targetTemp);
+        target = targetTemp;
+    }
+
+    // Push a stub frame so that we can perform a non-tail call.
+    enterStubFrame(masm, regs.getAny());
+
+    //
+    // Push arguments
+    //
+
+    // Stack now looks like:
+    //                                      BaselineFrameReg -------------------.
+    //                                                                          v
+    //      [..., js_fun_apply, TargetV, TargetThisV, ArgsArrayV, StubFrameHeader]
+
+    // Push all array elements onto the stack:
+    Address arrayVal(BaselineFrameReg, STUB_FRAME_SIZE);
+    pushArrayArguments(masm, arrayVal, regs);
+
+    // Stack now looks like:
+    //                                      BaselineFrameReg -------------------.
+    //                                                                          v
+    //      [..., js_fun_apply, TargetV, TargetThisV, ArgsArrayV, StubFrameHeader,
+    //       PushedArgN, ..., PushedArg0]
+    // Can't fail after this, so it's ok to clobber argcReg.
+
+    // Push actual argument 0 as |thisv| for call.
+    masm.pushValue(Address(BaselineFrameReg, STUB_FRAME_SIZE + sizeof(Value)));
+
+    // All pushes after this use Push instead of push to make sure ARM can align
+    // stack properly for call.
+    Register scratch = regs.takeAny();
+    EmitCreateStubFrameDescriptor(masm, scratch);
+
+    // Reload argc from length of array.
+    masm.extractObject(arrayVal, argcReg);
+    masm.loadPtr(Address(argcReg, JSObject::offsetOfElements()), argcReg);
+    masm.load32(Address(argcReg, ObjectElements::offsetOfInitializedLength()), argcReg);
+
+    masm.Push(argcReg);
+    masm.Push(target);
+    masm.Push(scratch);
+
+    // Load nargs into scratch for underflow check, and then load jitcode pointer into target.
+    masm.load16ZeroExtend(Address(target, offsetof(JSFunction, nargs)), scratch);
+    masm.loadPtr(Address(target, JSFunction::offsetOfNativeOrScript()), target);
+    masm.loadBaselineOrIonRaw(target, target, SequentialExecution, NULL);
+
+    // Handle arguments underflow.
+    Label noUnderflow;
+    masm.branch32(Assembler::AboveOrEqual, argcReg, scratch, &noUnderflow);
+    {
+        // Call the arguments rectifier.
+        JS_ASSERT(ArgumentsRectifierReg != target);
+        JS_ASSERT(ArgumentsRectifierReg != argcReg);
+
+        IonCode *argumentsRectifier =
+            cx->runtime()->ionRuntime()->getArgumentsRectifier(SequentialExecution);
+
+        masm.movePtr(ImmGCPtr(argumentsRectifier), target);
+        masm.loadPtr(Address(target, IonCode::offsetOfCode()), target);
+        masm.mov(argcReg, ArgumentsRectifierReg);
+    }
+    masm.bind(&noUnderflow);
+    regs.add(argcReg);
+
+    // If needed, update SPS Profiler frame entry.  At this point, BaselineTailCallReg
+    // and scratch can be clobbered.
+    {
+        Label skipProfilerUpdate;
+        Register pcIdx = regs.getAny();
+        JS_ASSERT(pcIdx != ArgumentsRectifierReg);
+        JS_ASSERT(pcIdx != target);
+        guardProfilingEnabled(masm, scratch, &skipProfilerUpdate);
+
+        masm.load32(Address(BaselineStubReg, ICCall_ScriptedApplyArguments::offsetOfPCOffset()),
+                    pcIdx);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
+
+        masm.bind(&skipProfilerUpdate);
+    }
+    // Do call
+    masm.callIon(target);
+    leaveStubFrame(masm, true);
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
 ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
@@ -7645,7 +7848,8 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
     // Validate inputs
     //
 
-    Register target = guardFunApply(masm, regs, argcReg, /*checkNative=*/false, &failure);
+    Register target = guardFunApply(masm, regs, argcReg, /*checkNative=*/false,
+                                    FunApply_MagicArgs, &failure);
     if (regs.has(target)) {
         regs.take(target);
     } else {
@@ -7674,7 +7878,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
     //                                                                          v
     //      [..., js_fun_apply, TargetV, TargetThisV, MagicArgsV, StubFrameHeader,
     //       PushedArgN, ..., PushedArg0]
-    // Can't fail after this, so it's ok to release argcReg back.
+    // Can't fail after this, so it's ok to clobber argcReg.
 
     // Push actual argument 0 as |thisv| for call.
     masm.pushValue(Address(BaselineFrameReg, STUB_FRAME_SIZE + sizeof(Value)));

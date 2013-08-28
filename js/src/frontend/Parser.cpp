@@ -1642,7 +1642,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
 #endif /* JS_HAS_DESTRUCTURING */
 
               case TOK_YIELD:
-                if (!checkYieldNameValidity(JSMSG_MISSING_FORMAL))
+                if (!checkYieldNameValidity())
                     return false;
                 goto TOK_NAME;
 
@@ -1720,20 +1720,6 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
     return true;
 }
 
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::checkFunctionName(HandlePropertyName funName)
-{
-    if (pc->isStarGenerator() && funName == context->names().yield) {
-        // The name of a named function expression is specified to be bound in
-        // the outer context as if via "let".  In an ES6 generator, "yield" is
-        // not a valid name for a let-bound variable.
-        report(ParseError, false, null(), JSMSG_RESERVED_ID, "yield");
-        return false;
-    }
-    return true;
-}
-
 template <>
 bool
 Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
@@ -1745,9 +1731,6 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
 
     /* Function statements add a binding to the enclosing scope. */
     bool bodyLevel = pc->atBodyLevel();
-
-    if (!checkFunctionName(funName))
-        return false;
 
     if (kind == Statement) {
         /*
@@ -1939,9 +1922,6 @@ Parser<SyntaxParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
 
     /* Function statements add a binding to the enclosing scope. */
     bool bodyLevel = pc->atBodyLevel();
-
-    if (!checkFunctionName(funName))
-        return false;
 
     if (kind == Statement) {
         /*
@@ -2419,15 +2399,11 @@ Parser<SyntaxParseHandler>::moduleDecl()
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::checkYieldNameValidity(unsigned errorNumber)
+Parser<ParseHandler>::checkYieldNameValidity()
 {
-    // In star generators and in JS >= 1.7, yield is a keyword.
-    if (pc->isStarGenerator() || versionNumber() >= JSVERSION_1_7) {
-        report(ParseError, false, null(), errorNumber);
-        return false;
-    }
-    // Otherwise in strict mode, yield is a future reserved word.
-    if (pc->sc->strict) {
+    // In star generators and in JS >= 1.7, yield is a keyword.  Otherwise in
+    // strict mode, yield is a future reserved word.
+    if (pc->isStarGenerator() || versionNumber() >= JSVERSION_1_7 || pc->sc->strict) {
         report(ParseError, false, null(), JSMSG_RESERVED_ID, "yield");
         return false;
     }
@@ -2445,15 +2421,19 @@ Parser<ParseHandler>::functionStmt()
 
     RootedPropertyName name(context);
     GeneratorKind generatorKind = NotGenerator;
-    TokenKind tt = tokenStream.getToken(TokenStream::KeywordIsName);
+    TokenKind tt = tokenStream.getToken();
 
     if (tt == TOK_MUL) {
         tokenStream.tell(&start);
-        tt = tokenStream.getToken(TokenStream::KeywordIsName);
+        tt = tokenStream.getToken();
         generatorKind = StarGenerator;
     }
 
     if (tt == TOK_NAME) {
+        name = tokenStream.currentName();
+    } else if (tt == TOK_YIELD) {
+        if (!checkYieldNameValidity())
+            return null();
         name = tokenStream.currentName();
     } else {
         /* Unnamed function expressions are forbidden in statement context. */
@@ -2478,20 +2458,25 @@ Parser<ParseHandler>::functionExpr()
     TokenStream::Position start(keepAtoms);
     tokenStream.tell(&start);
 
-    RootedPropertyName name(context);
     GeneratorKind generatorKind = NotGenerator;
-    TokenKind tt = tokenStream.getToken(TokenStream::KeywordIsName);
+    TokenKind tt = tokenStream.getToken();
 
     if (tt == TOK_MUL) {
         tokenStream.tell(&start);
-        tt = tokenStream.getToken(TokenStream::KeywordIsName);
+        tt = tokenStream.getToken();
         generatorKind = StarGenerator;
     }
 
-    if (tt == TOK_NAME)
+    RootedPropertyName name(context);
+    if (tt == TOK_NAME) {
         name = tokenStream.currentName();
-    else
+    } else if (tt == TOK_YIELD) {
+        if (!checkYieldNameValidity())
+            return null();
+        name = tokenStream.currentName();
+    } else {
         tokenStream.ungetToken();
+    }
 
     return functionDef(name, start, Normal, Expression, generatorKind);
 }
@@ -3570,7 +3555,7 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool *psimple,
 
         if (tt != TOK_NAME) {
             if (tt == TOK_YIELD) {
-                if (!checkYieldNameValidity(JSMSG_NO_VARIABLE_NAME))
+                if (!checkYieldNameValidity())
                     return null();
             } else {
                 if (tt != TOK_ERROR)
@@ -4882,7 +4867,7 @@ Parser<ParseHandler>::tryStatement()
 #endif
 
               case TOK_YIELD:
-                if (!checkYieldNameValidity(JSMSG_CATCH_IDENTIFIER))
+                if (!checkYieldNameValidity())
                     return null();
                 // Fall through.
               case TOK_NAME:

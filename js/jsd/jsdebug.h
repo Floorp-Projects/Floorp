@@ -1355,7 +1355,7 @@ JSD_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval);
 
 /* possible or'd together bitflags returned by JSD_GetPropertyFlags
  *
- * XXX these must stay the same as the JSPD_ flags in jsdbgapi.h
+ * XXX these must stay the same as the JSPD_ flags in js/OldDebugAPI.h
  */
 #define JSDPD_ENUMERATE  JSPD_ENUMERATE    /* visible to for/in loop */
 #define JSDPD_READONLY   JSPD_READONLY     /* assignment is error */
@@ -1365,7 +1365,7 @@ JSD_GetScriptForValue(JSDContext* jsdc, JSDValue* jsdval);
                                            /* proprety, value is exception  */
 #define JSDPD_ERROR      JSPD_ERROR        /* native getter returned false */
                                            /* without throwing an exception */
-/* this is not one of the JSPD_ flags in jsdbgapi.h  - careful not to overlap*/
+/* this is not one of the JSPD_ flags in js/OldDebugAPI.h  - don't overlap! */
 #define JSDPD_HINTED     0x800             /* found via explicit lookup */
 
 /*
