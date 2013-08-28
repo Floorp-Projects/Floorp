@@ -81,13 +81,13 @@ AsmJSModule::allocateCodeAndGlobalSegment(ExclusiveContext *cx, size_t bytesNeed
     // The global data section sits immediately after the executable (and
     // other) data allocated by the MacroAssembler, so ensure it is
     // double-aligned.
-    pod.codeBytes_ = AlignBytes(bytesNeeded, sizeof(double));
+    codeBytes_ = AlignBytes(bytesNeeded, sizeof(double));
 
     // The entire region is allocated via mmap/VirtualAlloc which requires
     // units of pages.
-    pod.totalBytes_ = AlignBytes(pod.codeBytes_ + globalDataBytes(), AsmJSPageSize);
+    totalBytes_ = AlignBytes(codeBytes_ + globalDataBytes(), AsmJSPageSize);
 
-    code_ = AllocateExecutableMemory(cx, pod.totalBytes_);
+    code_ = AllocateExecutableMemory(cx, totalBytes_);
     if (!code_)
         return NULL;
 
@@ -114,7 +114,7 @@ AsmJSModule::~AsmJSModule()
             script->ionScript()->removeDependentAsmJSModule(exit);
         }
 
-        DeallocateExecutableMemory(code_, pod.totalBytes_);
+        DeallocateExecutableMemory(code_, totalBytes_);
     }
 
     for (size_t i = 0; i < numFunctionCounts(); i++)
@@ -125,7 +125,7 @@ void
 AsmJSModule::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
                         size_t *asmJSModuleData)
 {
-    *asmJSModuleCode = pod.totalBytes_;
+    *asmJSModuleCode = totalBytes_;
     *asmJSModuleData = mallocSizeOf(this) +
                        globals_.sizeOfExcludingThis(mallocSizeOf) +
                        exits_.sizeOfExcludingThis(mallocSizeOf) +
@@ -135,7 +135,7 @@ AsmJSModule::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleC
                        profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
 #if defined(JS_ION_PERF)
-                       profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+                       perfProfiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
                        perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
                        functionCounts_.sizeOfExcludingThis(mallocSizeOf);
