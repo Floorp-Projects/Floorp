@@ -4537,7 +4537,7 @@ gsmsdp_negotiate_rtcp_fb (cc_sdp_t *cc_sdp_p,
                 fb_types |= SDP_RTCP_FB_ACK_TO_BITMAP(ack_type);
             }
             i++;
-        } while (ack_type != SDP_RTCP_FB_CCM_NOT_FOUND);
+        } while (ack_type != SDP_RTCP_FB_ACK_NOT_FOUND);
 
         /* a=rtcp-fb:ccm */
         i = 1;

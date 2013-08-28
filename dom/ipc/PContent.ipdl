@@ -275,6 +275,12 @@ child:
     MinimizeMemoryUsage();
     CancelMinimizeMemoryUsage();
 
+    /**
+     * Used to manage nsIStyleSheetService across processes.
+     */
+    async LoadAndRegisterSheet(URIParams uri, uint32_t type);
+    async UnregisterSheet(URIParams uri, uint32_t type);
+
 parent:
     /**
      * Tell the content process some attributes of itself.  This is

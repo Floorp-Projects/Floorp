@@ -76,7 +76,6 @@
 #include "nsViewManager.h"
 #include "nsIWebNavigation.h"
 #include "nsIWidget.h"
-#include "nsLayoutStatics.h"
 #include "nsLayoutUtils.h"
 #include "nsMutationEvent.h"
 #include "nsNetUtil.h"

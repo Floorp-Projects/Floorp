@@ -64,6 +64,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollector.h"
 #include "nsDOMJSUtils.h"
+#include "nsThreadUtils.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;

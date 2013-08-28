@@ -4588,10 +4588,18 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
     DebugOnly<TokenKind> tk = tokenStream.getToken();
     JS_ASSERT(tk == TOK_FUNCTION);
 
-    if (tokenStream.getToken(TokenStream::KeywordIsName) != TOK_NAME)
-        return false;  // This will throw a SyntaxError, no need to m.fail.
+    RootedPropertyName name(m.cx());
 
-    RootedPropertyName name(m.cx(), tokenStream.currentToken().name());
+    TokenKind tt = tokenStream.getToken();
+    if (tt == TOK_NAME) {
+        name = tokenStream.currentName();
+    } else if (tt == TOK_YIELD) {
+        if (!m.parser().checkYieldNameValidity())
+            return false;
+        name = m.cx()->names().yield;
+    } else {
+        return false;  // The regular parser will throw a SyntaxError, no need to m.fail.
+    }
 
     ParseNode *fn = m.parser().handler.newFunctionDefinition();
     if (!fn)
