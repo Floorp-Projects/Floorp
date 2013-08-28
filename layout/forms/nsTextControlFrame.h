@@ -8,19 +8,13 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
-#include "nsBlockFrame.h"
-#include "nsIFormControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsITextControlFrame.h"
-#include "nsDisplayList.h"
-#include "nsIScrollableFrame.h"
-#include "nsStubMutationObserver.h"
 #include "nsITextControlElement.h"
 #include "nsIStatefulFrame.h"
 #include "nsIEditor.h"
 
 class nsISelectionController;
-class nsIDOMCharacterData;
 class EditorInitializerEntryTracker;
 class nsTextEditorState;
 namespace mozilla {
