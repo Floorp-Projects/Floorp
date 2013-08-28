@@ -28,17 +28,14 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsISelectControlFrame.h"
 #include "nsIRollupListener.h"
-#include "nsPresState.h"
-#include "nsCSSFrameConstructor.h"
 #include "nsIStatefulFrame.h"
-#include "nsIScrollableFrame.h"
-#include "nsIDOMEventListener.h"
 #include "nsThreadUtils.h"
 
-class nsView;
 class nsStyleContext;
 class nsIListControlFrame;
 class nsComboboxDisplayFrame;
+class nsIDOMEventListener;
+class nsIScrollableFrame;
 
 class nsComboboxControlFrame : public nsBlockFrame,
                                public nsIFormControlFrame,
