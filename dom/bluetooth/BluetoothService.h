@@ -47,7 +47,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  /** 
+  /**
    * Add a message handler object from message distribution observer.
    * Must be called from the main thread.
    *
@@ -58,7 +58,7 @@ public:
   RegisterBluetoothSignalHandler(const nsAString& aNodeName,
                                  BluetoothSignalObserver* aMsgHandler);
 
-  /** 
+  /**
    * Remove a message handler object from message distribution observer.
    * Must be called from the main thread.
    *
@@ -69,7 +69,7 @@ public:
   UnregisterBluetoothSignalHandler(const nsAString& aNodeName,
                                    BluetoothSignalObserver* aMsgHandler);
 
-  /** 
+  /**
    * Remove a message handlers for the given observer.
    * Must be called from the main thread.
    *
@@ -78,7 +78,7 @@ public:
   void
   UnregisterAllSignalHandlers(BluetoothSignalObserver* aMsgHandler);
 
-  /** 
+  /**
    * Distribute a signal to the observer list
    *
    * @param aSignal Signal object to distribute
@@ -150,7 +150,7 @@ public:
   virtual nsresult
   StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable) = 0;
 
-  /** 
+  /**
    * Start device discovery (platform specific implementation)
    *
    * @return NS_OK if discovery stopped correctly, false otherwise
@@ -328,7 +328,7 @@ protected:
   nsresult
   StartStopBluetooth(bool aStart, bool aIsStartup);
 
-  /** 
+  /**
    * Platform specific startup functions go here. Usually deals with member
    * variables, so not static. Guaranteed to be called outside of main thread.
    *
