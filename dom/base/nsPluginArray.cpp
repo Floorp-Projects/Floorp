@@ -21,7 +21,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsPluginArray::nsPluginArray(nsWeakPtr aWindow)
+nsPluginArray::nsPluginArray(nsPIDOMWindow* aWindow)
   : mWindow(aWindow)
 {
   SetIsDOMBinding();
@@ -44,9 +44,8 @@ nsPluginArray::~nsPluginArray()
 nsPIDOMWindow*
 nsPluginArray::GetParentObject() const
 {
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
-  MOZ_ASSERT(win);
-  return win;
+  MOZ_ASSERT(mWindow);
+  return mWindow;
 }
 
 JSObject*
@@ -64,7 +63,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPluginArray)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsPluginArray,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(nsPluginArray,
+                                        mWindow,
                                         mPlugins)
 
 void
@@ -127,10 +127,8 @@ nsPluginArray::Refresh(bool aReloadDocuments)
 
   mPlugins.Clear();
 
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
-
   nsCOMPtr<nsIDOMNavigator> navigator;
-  win->GetNavigator(getter_AddRefs(navigator));
+  mWindow->GetNavigator(getter_AddRefs(navigator));
 
   if (!navigator) {
     return;
@@ -138,7 +136,7 @@ nsPluginArray::Refresh(bool aReloadDocuments)
 
   static_cast<mozilla::dom::Navigator*>(navigator.get())->RefreshMIMEArray();
 
-  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(win);
+  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mWindow);
   if (aReloadDocuments && webNav) {
     webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
   }
@@ -244,8 +242,7 @@ nsPluginArray::Observe(nsISupports *aSubject, const char *aTopic,
 bool
 nsPluginArray::AllowPlugins() const
 {
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(win);
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWindow);
 
   return docShell && docShell->PluginsAllowedInCurrentDoc();
 }
@@ -280,9 +277,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPluginElement)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsPluginElement, mMimeTypes)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(nsPluginElement, mWindow, mMimeTypes)
 
-nsPluginElement::nsPluginElement(nsWeakPtr aWindow,
+nsPluginElement::nsPluginElement(nsPIDOMWindow* aWindow,
                                  nsPluginTag* aPluginTag)
   : mWindow(aWindow),
     mPluginTag(aPluginTag)
@@ -293,9 +290,8 @@ nsPluginElement::nsPluginElement(nsWeakPtr aWindow,
 nsPIDOMWindow*
 nsPluginElement::GetParentObject() const
 {
-  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
-  MOZ_ASSERT(win);
-  return win;
+  MOZ_ASSERT(mWindow);
+  return mWindow;
 }
 
 JSObject*
