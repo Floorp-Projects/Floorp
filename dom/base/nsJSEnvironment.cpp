@@ -80,9 +80,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
 
-#include "nsCycleCollectionNoteRootCallback.h"
 #include "GeckoProfiler.h"
 
 using namespace mozilla;
@@ -824,8 +822,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
 nsJSContext::nsJSContext(bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
-  : mWindowProxy(nullptr)
-  , mGCOnDestruction(aGCOnDestruction)
+  : mGCOnDestruction(aGCOnDestruction)
   , mGlobalObjectRef(aGlobalObject)
 {
   EnsureStatics();
@@ -839,8 +836,7 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
 
   ++sContextCount;
 
-  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS |
-                      JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT;
+  mDefaultJSOptions = JSOPTION_PRIVATE_IS_NSISUPPORTS;
 
   mContext = ::JS_NewContext(sRuntime, gStackSize);
   if (mContext) {
@@ -859,7 +855,6 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
   mIsInitialized = false;
   mScriptsEnabled = true;
   mProcessingScriptTag = false;
-  NS_HOLD_JS_OBJECTS(this, nsJSContext);
 }
 
 nsJSContext::~nsJSContext()
@@ -910,14 +905,12 @@ nsJSContext::DestroyJSContext()
 
   JS_DestroyContextNoGC(mContext);
   mContext = nullptr;
-  NS_DROP_JS_OBJECTS(this, nsJSContext);
 }
 
 // QueryInterface implementation for nsJSContext
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSContext)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mWindowProxy)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
@@ -925,14 +918,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
                "Trying to unlink a context with outstanding requests.");
   tmp->mIsInitialized = false;
   tmp->mGCOnDestruction = false;
-  tmp->mWindowProxy = nullptr;
+  if (tmp->mContext) {
+    JSAutoRequest ar(tmp->mContext);
+    js::SetDefaultObjectForContext(tmp->mContext, nullptr);
+  }
   tmp->DestroyJSContext();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobalObjectRef)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsJSContext, tmp->GetCCRefcnt())
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobalObjectRef)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mContext");
+  nsContentUtils::XPConnect()->NoteJSContext(tmp->mContext, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
@@ -1085,7 +1082,7 @@ nsIScriptGlobalObject *
 nsJSContext::GetGlobalObject()
 {
   AutoJSContext cx;
-  JS::Rooted<JSObject*> global(mContext, GetWindowProxy());
+  JS::Rooted<JSObject*> global(mContext, GetNativeGlobal());
   if (!global) {
     return nullptr;
   }
@@ -1134,10 +1131,16 @@ nsJSContext::GetGlobalObject()
   return sgo;
 }
 
+JSObject*
+nsJSContext::GetNativeGlobal()
+{
+    return js::DefaultObjectForContextOrNull(mContext);
+}
+
 JSContext*
 nsJSContext::GetNativeContext()
 {
-  return mContext;
+  return xpc_UnmarkGrayContext(mContext);
 }
 
 nsresult
@@ -1177,7 +1180,7 @@ nsJSContext::SetProperty(JS::Handle<JSObject*> aTarget, const char* aPropName, n
 
   Maybe<nsRootedJSValueArray> tempStorage;
 
-  JS::Rooted<JSObject*> global(mContext, GetWindowProxy());
+  JS::Rooted<JSObject*> global(mContext, GetNativeGlobal());
   nsresult rv =
     ConvertSupportsTojsvals(aArgs, global, &argc, &argv, tempStorage);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1473,7 +1476,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
       AutoFree iidGuard(iid); // Free iid upon destruction.
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-      JS::Rooted<JSObject*> global(cx, GetWindowProxy());
+      JS::Rooted<JSObject*> global(cx, xpc_UnmarkGrayObject(GetNativeGlobal()));
       JS::Rooted<JS::Value> v(cx);
       nsresult rv = nsContentUtils::WrapNative(cx, global,
                                                data, iid, v.address(),
@@ -2573,18 +2576,6 @@ nsJSContext::ReportPendingException()
   if (mIsInitialized) {
     nsJSUtils::ReportPendingException(mContext);
   }
-}
-
-void
-nsJSContext::SetWindowProxy(JS::Handle<JSObject*> aWindowProxy)
-{
-  mWindowProxy = aWindowProxy;
-}
-
-JSObject*
-nsJSContext::GetWindowProxy()
-{
-  return xpc_UnmarkGrayObject(mWindowProxy);
 }
 
 void

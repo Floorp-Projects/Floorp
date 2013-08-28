@@ -908,7 +908,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
                                      aListenerStruct->mTypeAtom,
                                      &argCount, &argNames);
 
-    JSAutoCompartment ac(cx, context->GetWindowProxy());
+    JSAutoCompartment ac(cx, context->GetNativeGlobal());
     JS::CompileOptions options(cx);
     options.setFileAndLine(url.get(), lineNo)
            .setVersion(SCRIPTVERSION_DEFAULT);
