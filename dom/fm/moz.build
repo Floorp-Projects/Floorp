@@ -4,21 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS.mozilla.dom += [
-    'FMRadioChild.h',
-    'FMRadioParent.h',
-    'FMRadioRequestChild.h',
-    'FMRadioRequestParent.h',
+XPIDL_SOURCES += [
+    'nsIDOMFMRadio.idl',
+    'nsIFMRadio.idl',
 ]
+
+XPIDL_MODULE = 'dom_fm'
+
+MODULE = 'dom'
 
 CPP_SOURCES += [
-    'FMRadioChild.cpp',
-    'FMRadioParent.cpp',
-    'FMRadioRequestChild.cpp',
-    'FMRadioRequestParent.cpp',
+    'FMRadio.cpp',
+    'nsFMRadioSettings.cpp',
 ]
 
-FAIL_ON_WARNINGS = True
+EXTRA_JS_MODULES += [
+    'DOMFMRadioParent.jsm',
+]
+
+EXTRA_COMPONENTS += [
+    'DOMFMRadio.manifest',
+    'DOMFMRadioChild.js',
+]
 
 LIBXUL_LIBRARY = True
 
