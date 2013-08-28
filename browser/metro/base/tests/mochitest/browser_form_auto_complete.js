@@ -6,7 +6,8 @@
 "use strict";
 
 function clearFormHistory() {
-  FormHistory.update({ op : "remove" });
+  var formHistory = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
+  formHistory.removeAllEntries();
 }
 
 function test() {
