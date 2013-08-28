@@ -95,7 +95,7 @@ class OutOfLineUpdateCache :
 bool
 CodeGeneratorShared::addCache(LInstruction *lir, size_t cacheIndex)
 {
-    IonCache *cache = reinterpret_cast<IonCache *>(&runtimeData_[cacheIndex]);
+    DataPtr<IonCache> cache(this, cacheIndex);
     MInstruction *mir = lir->mirRaw()->toInstruction();
     if (mir->resumePoint())
         cache->setScriptedLocation(mir->block()->info().script(),
@@ -119,7 +119,7 @@ CodeGeneratorShared::addCache(LInstruction *lir, size_t cacheIndex)
 bool
 CodeGenerator::visitOutOfLineCache(OutOfLineUpdateCache *ool)
 {
-    IonCache *cache = reinterpret_cast<IonCache *>(&runtimeData_[ool->getCacheIndex()]);
+    DataPtr<IonCache> cache(this, ool->getCacheIndex());
 
     // Register the location of the OOL path in the IC.
     cache->setFallbackLabel(masm.labelForPatch());
