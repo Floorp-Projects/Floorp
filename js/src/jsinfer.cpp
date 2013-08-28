@@ -6043,7 +6043,7 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
 
     TypeObjectSet::AddPtr p = newTypeObjects.lookupForAdd(TypeObjectSet::Lookup(clasp, proto_));
     SkipRoot skipHash(this, &p); /* Prevent the hash from being poisoned. */
-
+    uint64_t originalGcNumber = gcNumber();
     if (p) {
         TypeObject *type = *p;
 
@@ -6079,7 +6079,15 @@ ExclusiveContext::getNewType(Class *clasp, TaggedProto proto_, JSFunction *fun_)
     if (!type)
         return NULL;
 
-    if (!newTypeObjects.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, proto), type.get()))
+    /*
+     * If a GC has occured, then the hash we calculated may be invalid, as it
+     * is based on proto, which may have been moved.
+     */
+    bool gcHappened = gcNumber() != originalGcNumber;
+    bool added =
+        gcHappened ? newTypeObjects.putNew(TypeObjectSet::Lookup(clasp, proto), type.get())
+                   : newTypeObjects.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, proto), type.get());
+    if (!added)
         return NULL;
 
     if (!typeInferenceEnabled())

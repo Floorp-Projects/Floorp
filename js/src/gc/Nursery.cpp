@@ -547,12 +547,12 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
     if (!isEnabled())
         return;
 
+    AutoStopVerifyingBarriers av(rt, false);
+
     if (position() == start())
         return;
 
     rt->gcHelperThread.waitBackgroundSweepEnd();
-
-    AutoStopVerifyingBarriers av(rt, false);
 
     /* Move objects pointed to by roots from the nursery to the major heap. */
     MinorCollectionTracer trc(rt, this);

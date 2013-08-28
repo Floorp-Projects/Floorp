@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -232,19 +233,27 @@ private:
   }
 };
 
-// This is used by telemetry.
-NS_MEMORY_REPORTER_IMPLEMENT(
-  ImagesContentUsedUncompressed,
-  "images-content-used-uncompressed",
-  KIND_OTHER,
-  UNITS_BYTES,
-  imgMemoryReporter::GetImagesContentUsedUncompressed,
-  "This is the sum of the 'explicit/images/content/used/uncompressed-heap' "
-  "and 'explicit/images/content/used/uncompressed-nonheap' numbers.  However, "
-  "it is measured at a different time and so may give slightly different "
-  "results.")
-
 NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryMultiReporter)
+
+// This is used by telemetry.
+class ImagesContentUsedUncompressedReporter MOZ_FINAL
+  : public MemoryReporterBase
+{
+public:
+  ImagesContentUsedUncompressedReporter()
+    : MemoryReporterBase("images-content-used-uncompressed",
+                         KIND_OTHER, UNITS_BYTES,
+"This is the sum of the 'explicit/images/content/used/uncompressed-heap' "
+"and 'explicit/images/content/used/uncompressed-nonheap' numbers.  However, "
+"it is measured at a different time and so may give slightly different "
+"results.")
+  {}
+private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    return imgMemoryReporter::GetImagesContentUsedUncompressed();
+  }
+};
 
 NS_IMPL_ISUPPORTS3(nsProgressNotificationProxy,
                      nsIProgressEventSink,
@@ -842,7 +851,7 @@ void imgLoader::GlobalInit()
 
   sMemReporter = new imgMemoryReporter();
   NS_RegisterMemoryMultiReporter(sMemReporter);
-  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(ImagesContentUsedUncompressed));
+  NS_RegisterMemoryReporter(new ImagesContentUsedUncompressedReporter());
 }
 
 nsresult imgLoader::InitCache()
