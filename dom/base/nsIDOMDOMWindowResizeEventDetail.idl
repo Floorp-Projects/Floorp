@@ -1,0 +1,12 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(166fa8f4-ff40-4150-ab31-272e8246e362)]
+interface nsIDOMDOMWindowResizeEventDetail : nsISupports
+{
+  readonly attribute long width;
+  readonly attribute long height;
+};
