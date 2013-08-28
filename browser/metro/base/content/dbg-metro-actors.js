@@ -27,40 +27,11 @@ function MetroTabList(aConnection) {
 
 MetroTabList.prototype = Object.create(BrowserTabList.prototype);
 MetroTabList.prototype.constructor = MetroTabList;
-/**
- * We want to avoid mysterious behavior if tabs are closed or opened mid-iteration.
- * We want at the end, a list of the actors that were live when we began the iteration.
- * So, we update the map first, iterate over it again to yield the actors.
- */
-MetroTabList.prototype.iterator = function() {
 
-  let initialMapSize = this._actorByBrowser.size;
-  let foundCount = 0;
-  for (let win of allAppShellDOMWindows("navigator:browser")) {
-    let selectedTab = win.Browser.selectedBrowser;
+MetroTabList.prototype._getSelectedBrowser = function(aWindow) {
+  return aWindow.Browser.selectedBrowser;
+};
 
-    for (let browser of win.Browser.browsers) {
-      let actor = this._actorByBrowser.get(browser);
-      if (actor) {
-        foundCount++;
-      } else {
-        actor = new BrowserTabActor(this._connection, browser);
-        this._actorByBrowser.set(browser, actor);
-      }
-
-      // Set the 'selected' properties on all actors correctly.
-      actor.selected = (browser === selectedTab);
-    }
-  }
-
-  if (this._testing && initialMapSize !== foundCount) {
-    throw error("_actorByBrowser map contained actors for dead tabs");
-  }
-
-  this._mustNotify = true;
-  this._checkListening();
-
-  for (let [browser, actor] of this._actorByBrowser) {
-    yield actor;
-  }
+MetroTabList.prototype._getChildren = function(aWindow) {
+  return aWindow.Browser.browsers;
 };
