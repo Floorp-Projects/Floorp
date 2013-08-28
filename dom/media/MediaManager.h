@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaEngine.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "nsIMediaManager.h"
@@ -212,44 +211,7 @@ class GetUserMediaNotificationEvent: public nsRunnable
 
     }
 
-    NS_IMETHOD
-    Run() MOZ_OVERRIDE
-    {
-      NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-      // Make sure mStream is cleared and our reference to the DOMMediaStream
-      // is dropped on the main thread, no matter what happens in this method.
-      // Otherwise this object might be destroyed off the main thread,
-      // releasing DOMMediaStream off the main thread, which is not allowed.
-      nsRefPtr<DOMMediaStream> stream = mStream.forget();
-
-      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-      if (!obs) {
-        NS_WARNING("Could not get the Observer service for GetUserMedia recording notification.");
-        return NS_ERROR_FAILURE;
-      }
-      nsString msg;
-      switch (mStatus) {
-        case STARTING:
-          msg = NS_LITERAL_STRING("starting");
-          stream->OnTracksAvailable(mOnTracksAvailableCallback.forget());
-          break;
-        case STOPPING:
-          msg = NS_LITERAL_STRING("shutdown");
-          if (mListener) {
-            mListener->SetStopped();
-          }
-          break;
-      }
-      obs->NotifyObservers(nullptr,
-                           "recording-device-events",
-                           msg.get());
-      // Forward recording events to parent process.
-      // The events are gathered in chrome process and used for recording indicator
-      if (XRE_GetProcessType() != GeckoProcessType_Default) {
-        unused << mozilla::dom::ContentChild::GetSingleton()->SendRecordingDeviceEvents(msg);
-      }
-      return NS_OK;
-    }
+    NS_IMETHOD Run() MOZ_OVERRIDE;
 
   protected:
     nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener; // threadsafe
