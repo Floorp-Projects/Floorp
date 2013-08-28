@@ -264,3 +264,6 @@ if CONFIG['OS_ARCH'] == 'Linux':
             'xptcinvoke_linux_s390x.cpp',
             'xptcstubs_linux_s390x.cpp',
         ]
+
+LIBRARY_NAME = 'xptcmd'
+

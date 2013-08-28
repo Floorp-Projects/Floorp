@@ -148,7 +148,7 @@ COMPONENT_LIBS += \
   uconv \
   i18n \
   chardet \
-  jar$(VERSION_NUMBER) \
+  jar \
   startupcache \
   pref \
   htmlpars \
