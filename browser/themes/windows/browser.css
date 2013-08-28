@@ -1181,11 +1181,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   height: 150px;
 }
 
-#social-share-button {
-  list-style-image: url(chrome://browser/skin/social/share-button.png);
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
 .social-share-toolbar {
   border-right: 1px solid #e2e5e8;
   background: linear-gradient(to bottom, #ffffff, #f5f7fa);
