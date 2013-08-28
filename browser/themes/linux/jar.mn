@@ -19,8 +19,14 @@ browser.jar:
   skin/classic/browser/aboutSyncTabs.css
 #endif
   skin/classic/browser/actionicon-tab.png
+  skin/classic/browser/appmenu.png
 * skin/classic/browser/browser.css
+* skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
+  skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
+  skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
+  skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
+  skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
 * skin/classic/browser/engineManager.css
   skin/classic/browser/fullscreen-darknoise.png
   skin/classic/browser/Geolocation-16.png
@@ -33,6 +39,8 @@ browser.jar:
   skin/classic/browser/identity-icons-https-mixed-active.png
   skin/classic/browser/identity-icons-https-mixed-display.png
   skin/classic/browser/Info.png
+  skin/classic/browser/menuPanel.png
+  skin/classic/browser/menuPanel-small.png
   skin/classic/browser/mixed-content-blocked-16.png
   skin/classic/browser/mixed-content-blocked-64.png
   skin/classic/browser/monitor.png
@@ -60,6 +68,7 @@ browser.jar:
   skin/classic/browser/webRTC-shareDevice-16.png
   skin/classic/browser/webRTC-shareDevice-64.png
   skin/classic/browser/webRTC-sharingDevice-16.png
+* skin/classic/browser/customizableui/panelUIOverlay.css (customizableui/panelUIOverlay.css)
   skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/downloads/buttons.png          (downloads/buttons.png)
   skin/classic/browser/downloads/contentAreaDownloadsView.css  (downloads/contentAreaDownloadsView.css)
@@ -86,7 +95,6 @@ browser.jar:
   skin/classic/browser/places/calendar.png            (places/calendar.png)
 * skin/classic/browser/places/editBookmarkOverlay.css (places/editBookmarkOverlay.css)
   skin/classic/browser/places/livemark-item.png       (places/livemark-item.png)
-  skin/classic/browser/places/pageStarred.png         (places/pageStarred.png)
   skin/classic/browser/places/star-icons.png          (places/star-icons.png)
   skin/classic/browser/places/starred48.png           (places/starred48.png)
   skin/classic/browser/places/unstarred48.png         (places/unstarred48.png)
@@ -94,7 +102,6 @@ browser.jar:
   skin/classic/browser/places/organizer.css           (places/organizer.css)
   skin/classic/browser/places/organizer.xml           (places/organizer.xml)
   skin/classic/browser/places/query.png               (places/query.png)
-  skin/classic/browser/places/starPage.png            (places/starPage.png)
   skin/classic/browser/places/tag.png                 (places/tag.png)
   skin/classic/browser/places/toolbarDropMarker.png   (places/toolbarDropMarker.png)
   skin/classic/browser/places/unsortedBookmarks.png   (places/unsortedBookmarks.png)
@@ -117,8 +124,15 @@ browser.jar:
   skin/classic/browser/tabbrowser/connecting.png      (tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/loading.png         (tabbrowser/loading.png)
   skin/classic/browser/tabbrowser/tab.png             (tabbrowser/tab.png)
-  skin/classic/browser/tabbrowser/tab-overflow-border.png (tabbrowser/tab-overflow-border.png)
-  skin/classic/browser/tabbrowser/tabDragIndicator.png (tabbrowser/tabDragIndicator.png)
+  skin/classic/browser/tabbrowser/tab-active-middle.png     (tabbrowser/tab-active-middle.png)
+  skin/classic/browser/tabbrowser/tab-background-end.png    (tabbrowser/tab-background-end.png)
+  skin/classic/browser/tabbrowser/tab-background-middle.png (tabbrowser/tab-background-middle.png)
+  skin/classic/browser/tabbrowser/tab-background-start.png  (tabbrowser/tab-background-start.png)
+  skin/classic/browser/tabbrowser/tab-overflow-border.png   (tabbrowser/tab-overflow-border.png)
+  skin/classic/browser/tabbrowser/tab-stroke-end.png        (tabbrowser/tab-stroke-end.png)
+  skin/classic/browser/tabbrowser/tab-stroke-start.png      (tabbrowser/tab-stroke-start.png)
+  skin/classic/browser/tabbrowser/tabDragIndicator.png      (tabbrowser/tabDragIndicator.png)
+  skin/classic/browser/tabbrowser/tab-separator.png         (tabbrowser/tab-separator.png)
   skin/classic/browser/tabview/edit-light.png         (tabview/edit-light.png)
   skin/classic/browser/tabview/search.png             (tabview/search.png)
   skin/classic/browser/tabview/stack-expander.png     (tabview/stack-expander.png)
