@@ -196,11 +196,7 @@ public:
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
 
-  virtual bool Allocate(uint32_t aSize) = 0;
-
   virtual uint8_t* GetBuffer() const = 0;
-
-  virtual size_t GetBufferSize() const = 0;
 
   virtual gfx::IntSize GetSize() const { return mSize; }
 
@@ -225,6 +221,14 @@ public:
                                 StereoMode aStereoMode) MOZ_OVERRIDE;
 
   gfx::SurfaceFormat GetFormat() const { return mFormat; }
+
+  // XXX - Bug 908196 - Make Allocate(uint32_t) and GetBufferSize() protected.
+  // these two methods should only be called by methods of BufferTextureClient
+  // that are overridden in GrallocTextureClient (which does not implement the
+  // two methods below)
+  virtual bool Allocate(uint32_t aSize) = 0;
+
+  virtual size_t GetBufferSize() const = 0;
 
 protected:
   CompositableClient* mCompositable;
