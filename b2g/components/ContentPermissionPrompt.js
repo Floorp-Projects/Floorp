@@ -251,7 +251,7 @@ ContentPermissionPrompt.prototype = {
 
     // When it's an app, get the manifest to add the l10n application name.
     let app = DOMApplicationRegistry.getAppByLocalId(principal.appId);
-    DOMApplicationRegistry.getManifestFor(app.origin, function getManifest(aManifest) {
+    DOMApplicationRegistry.getManifestFor(app.manifestURL, function getManifest(aManifest) {
       let helper = new ManifestHelper(aManifest, app.origin);
       details.appName = helper.name;
       browser.shell.sendChromeEvent(details);
