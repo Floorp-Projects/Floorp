@@ -17,7 +17,7 @@
 
 #include "builtin/Object.h" // For js::obj_construct
 #include "frontend/ParseMaps.h"
-#include "ion/IonFrames.h" // For GetPcScript
+#include "jit/IonFrames.h" // For GetPcScript
 #include "vm/Interpreter.h"
 #include "vm/Probes.h"
 #include "vm/RegExpObject.h"

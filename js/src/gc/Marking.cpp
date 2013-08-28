@@ -8,7 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
-#include "ion/IonCode.h"
+#include "jit/IonCode.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 

@@ -25,7 +25,7 @@
 #include "jswatchpoint.h"
 
 #include "frontend/SourceNotes.h"
-#include "ion/AsmJSModule.h"
+#include "jit/AsmJSModule.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"

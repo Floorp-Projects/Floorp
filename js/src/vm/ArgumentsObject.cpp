@@ -9,7 +9,7 @@
 #include "jsinfer.h"
 
 #ifdef JS_ION
-#include "ion/IonFrames.h"
+#include "jit/IonFrames.h"
 #endif
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"

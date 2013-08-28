@@ -31,7 +31,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
-#include "ion/AsmJS.h"
+#include "jit/AsmJS.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
