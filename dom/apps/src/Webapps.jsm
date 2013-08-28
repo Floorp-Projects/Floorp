@@ -1987,8 +1987,7 @@ this.DOMApplicationRegistry = {
     }
   },
 
-  confirmInstall: function(aData, aFromSync, aProfileDir,
-                           aOfflineCacheObserver,
+  confirmInstall: function(aData, aProfileDir, aOfflineCacheObserver,
                            aInstallSuccessCallback) {
     let isReinstall = false;
     let app = aData.app;
@@ -1997,7 +1996,7 @@ this.DOMApplicationRegistry = {
     let origin = Services.io.newURI(app.origin, null, null);
     let manifestURL = origin.resolve(app.manifestURL);
 
-    let id = app.syncId || this._appId(app.origin);
+    let id = this._appId(app.origin);
     let localId = this.getAppLocalIdByManifestURL(manifestURL);
 
     // For packaged apps, we need to get the id from the manifestURL.
@@ -2105,13 +2104,11 @@ this.DOMApplicationRegistry = {
     // We notify about the successful installation via mgmt.oninstall and the
     // corresponging DOMRequest.onsuccess event as soon as the app is properly
     // saved in the registry.
-    if (!aFromSync) {
-      this._saveApps((function() {
-        this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
-        this.broadcastMessage("Webapps:Install:Return:OK", aData);
-        Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
-      }).bind(this));
-    }
+    this._saveApps((function() {
+      this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
+      this.broadcastMessage("Webapps:Install:Return:OK", aData);
+      Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
+    }).bind(this));
 
     if (!aData.isPackage) {
       this.updateAppHandlers(null, app.manifest, app);
@@ -2955,19 +2952,6 @@ this.DOMApplicationRegistry = {
     });
   },
 
-  /** Added to support AITC and classic sync */
-  itemExists: function(aId) {
-    return !!this.webapps[aId];
-  },
-
-  getAppById: function(aId) {
-    if (!this.webapps[aId])
-      return null;
-
-    let app = AppsUtils.cloneAppObject(this.webapps[aId]);
-    return app;
-  },
-
   getAppByManifestURL: function(aManifestURL) {
     return AppsUtils.getAppByManifestURL(this.webapps, aManifestURL);
   },
@@ -3000,82 +2984,6 @@ this.DOMApplicationRegistry = {
 
   getWebAppsBasePath: function getWebAppsBasePath() {
     return FileUtils.getDir(DIRECTORY_NAME, ["webapps"], false).path;
-  },
-
-  getAllWithoutManifests: function(aCallback) {
-    let result = {};
-    for (let id in this.webapps) {
-      let app = AppsUtils.cloneAppObject(this.webapps[id]);
-      result[id] = app;
-    }
-    aCallback(result);
-  },
-
-  updateApps: function(aRecords, aCallback) {
-    for (let i = 0; i < aRecords.length; i++) {
-      let record = aRecords[i];
-      if (record.hidden) {
-        if (!this.webapps[record.id] || !this.webapps[record.id].removable)
-          continue;
-
-        // Clean up the deprecated manifest cache if needed.
-        if (record.id in this._manifestCache) {
-          delete this._manifestCache[record.id];
-        }
-
-        let origin = this.webapps[record.id].origin;
-        let manifestURL = this.webapps[record.id].manifestURL;
-        delete this.webapps[record.id];
-        let dir = this._getAppDir(record.id);
-        try {
-          dir.remove(true);
-        } catch (e) {
-        }
-        this.broadcastMessage("Webapps:Uninstall:Broadcast:Return:OK",
-                              { origin: origin, manifestURL: manifestURL });
-      } else {
-        if (this.webapps[record.id]) {
-          this.webapps[record.id] = record.value;
-          delete this.webapps[record.id].manifest;
-        } else {
-          let data = { app: record.value };
-          this.confirmInstall(data, true);
-          this.broadcastMessage("Webapps:Install:Return:OK", data);
-        }
-      }
-    }
-    this._saveApps(aCallback);
-  },
-
-  getAllIDs: function() {
-    let apps = {};
-    for (let id in this.webapps) {
-      // only sync http and https apps
-      if (this.webapps[id].origin.indexOf("http") == 0)
-        apps[id] = true;
-    }
-    return apps;
-  },
-
-  wipe: function(aCallback) {
-    let ids = this.getAllIDs();
-    for (let id in ids) {
-      if (!this.webapps[id].removable) {
-        continue;
-      }
-
-      delete this.webapps[id];
-      let dir = this._getAppDir(id);
-      try {
-        dir.remove(true);
-      } catch (e) {
-      }
-    }
-
-    // Clear the manifest cache.
-    this._manifestCache = { };
-
-    this._saveApps(aCallback);
   },
 
   _isLaunchable: function(aApp) {
