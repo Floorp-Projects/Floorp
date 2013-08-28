@@ -299,13 +299,6 @@ partial interface Navigator {
 };
 #endif // MOZ_B2G_BT
 
-#ifdef MOZ_B2G_FM
-partial interface Navigator {
-  [Throws, Func="Navigator::HasFMRadioSupport"]
-  readonly attribute FMRadio mozFMRadio;
-};
-#endif // MOZ_B2G_FM
-
 #ifdef MOZ_TIME_MANAGER
 // nsIDOMMozNavigatorTime
 partial interface Navigator {
