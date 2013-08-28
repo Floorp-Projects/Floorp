@@ -12,7 +12,7 @@ chrome.jar:
 * content/dbg-browser-actors.js         (content/dbg-browser-actors.js)
   content/forms.js                      (content/forms.js)
 * content/settings.js                   (content/settings.js)
-* content/shell.xul                     (content/shell.xul)
+* content/shell.html                    (content/shell.html)
 * content/shell.js                      (content/shell.js)
 #ifndef ANDROID
   content/screen.js                     (content/screen.js)
