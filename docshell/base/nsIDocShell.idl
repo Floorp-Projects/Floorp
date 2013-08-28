@@ -9,9 +9,9 @@
 #include "nsIAtom.idl"
 
 %{ C++
+#include "js/TypeDecls.h"
 class nsPresContext;
 class nsIPresShell;
-struct JSContext;
 %}
 
 /**

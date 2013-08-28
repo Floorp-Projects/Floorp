@@ -17,6 +17,7 @@
 #include "nsIPromptFactory.h"
 #include "nsPIWindowWatcher.h"
 #include "nsTArray.h"
+#include "js/TypeDecls.h"
 
 class  nsIURI;
 class  nsIDocShellTreeItem;
@@ -26,8 +27,6 @@ class  nsString;
 class  nsWatcherWindowEnumerator;
 class  nsIScriptContext;
 class  nsPromptService;
-struct JSContext;
-class JSObject;
 struct nsWatcherWindowEntry;
 struct SizeSpec;
 
