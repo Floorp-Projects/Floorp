@@ -500,9 +500,6 @@ IonBuilder::build()
     IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) (usecount=%d)",
             script()->filename(), script()->lineno, (void *)script(), (int)script()->getUseCount());
 
-    if (!graph().addScript(script()))
-        return false;
-
     if (!initParameters())
         return false;
 
@@ -640,9 +637,6 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     IonSpew(IonSpew_Scripts, "Inlining script %s:%d (%p)",
             script()->filename(), script()->lineno, (void *)script());
-
-    if (!graph().addScript(script()))
-        return false;
 
     callerBuilder_ = callerBuilder;
     callerResumePoint_ = callerResumePoint;
