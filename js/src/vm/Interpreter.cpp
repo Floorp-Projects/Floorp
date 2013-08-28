@@ -31,8 +31,8 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "builtin/Eval.h"
-#include "ion/BaselineJIT.h"
-#include "ion/Ion.h"
+#include "jit/BaselineJIT.h"
+#include "jit/Ion.h"
 #include "vm/Debugger.h"
 #include "vm/Shape.h"
 
@@ -43,7 +43,7 @@
 #include "jsscriptinlines.h"
 
 #include "builtin/Iterator-inl.h"
-#include "ion/IonFrames-inl.h"
+#include "jit/IonFrames-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Probes-inl.h"
 #include "vm/Stack-inl.h"

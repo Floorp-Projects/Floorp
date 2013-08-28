@@ -53,7 +53,7 @@
 
 #include "jsinferinlines.h"
 #include "jsscriptinlines.h"
-#include "ion/Ion.h"
+#include "jit/Ion.h"
 
 #include "vm/Interpreter-inl.h"
 

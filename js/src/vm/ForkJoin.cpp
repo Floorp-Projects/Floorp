@@ -14,15 +14,15 @@
 #include "vm/ForkJoin.h"
 
 #if defined(JS_THREADSAFE)
-#include "ion/BaselineJIT.h"
+#include "jit/BaselineJIT.h"
 #include "vm/Monitor.h"
 #endif
 
 #if defined(DEBUG) && defined(JS_THREADSAFE) && defined(JS_ION)
-#  include "ion/Ion.h"
-#  include "ion/MIR.h"
-#  include "ion/MIRGraph.h"
-#  include "ion/IonCompartment.h"
+#  include "jit/Ion.h"
+#  include "jit/MIR.h"
+#  include "jit/MIRGraph.h"
+#  include "jit/IonCompartment.h"
 #endif // DEBUG && THREADSAFE && ION
 
 #include "vm/Interpreter-inl.h"

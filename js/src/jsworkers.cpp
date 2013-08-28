@@ -11,9 +11,9 @@
 #include "prmjtime.h"
 
 #ifdef JS_PARALLEL_COMPILATION
-# include "ion/AsmJS.h"
-# include "ion/IonBuilder.h"
-# include "ion/ExecutionModeInlines.h"
+# include "jit/AsmJS.h"
+# include "jit/IonBuilder.h"
+# include "jit/ExecutionModeInlines.h"
 #endif
 
 using namespace js;

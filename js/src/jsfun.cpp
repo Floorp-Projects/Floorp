@@ -41,9 +41,9 @@
 #include "vm/Stack-inl.h"
 
 #ifdef JS_ION
-#include "ion/Ion.h"
-#include "ion/IonFrameIterator.h"
-#include "ion/IonFrameIterator-inl.h"
+#include "jit/Ion.h"
+#include "jit/IonFrameIterator.h"
+#include "jit/IonFrameIterator-inl.h"
 #endif
 
 using namespace js;
