@@ -5,6 +5,7 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "prprf.h"
+#include "prnetdb.h"
 #include "nsCRTGlue.h"
 #include "nsIPermissionManager.h"
 #include "nsISSLStatus.h"
@@ -214,6 +215,13 @@ nsStrictTransportSecurityService::RemoveStsState(nsIURI* aURI, uint32_t aFlags)
   return NS_OK;
 }
 
+static bool
+HostIsIPAddress(const char *hostname)
+{
+  PRNetAddr hostAddr;
+  return (PR_StringToNetAddr(hostname, &hostAddr) == PR_SUCCESS);
+}
+
 NS_IMETHODIMP
 nsStrictTransportSecurityService::ProcessStsHeader(nsIURI* aSourceURI,
                                                    const char* aHeader,
@@ -233,10 +241,18 @@ nsStrictTransportSecurityService::ProcessStsHeader(nsIURI* aSourceURI,
     *aIncludeSubdomains = false;
   }
 
+  nsAutoCString host;
+  nsresult rv = GetHost(aSourceURI, host);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (HostIsIPAddress(host.get())) {
+    /* Don't process headers if a site is accessed by IP address. */
+    return NS_OK;
+  }
+
   char * header = NS_strdup(aHeader);
   if (!header) return NS_ERROR_OUT_OF_MEMORY;
-  nsresult rv = ProcessStsHeaderMutating(aSourceURI, header, aFlags,
-                                         aMaxAge, aIncludeSubdomains);
+  rv = ProcessStsHeaderMutating(aSourceURI, header, aFlags,
+                                aMaxAge, aIncludeSubdomains);
   NS_Free(header);
   return rv;
 }
@@ -364,6 +380,12 @@ nsStrictTransportSecurityService::IsStsHost(const char* aHost, uint32_t aFlags, 
   // manager is used and it's not threadsafe.
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_UNEXPECTED);
 
+  /* An IP address never qualifies as a secure URI. */
+  if (HostIsIPAddress(aHost)) {
+    *aResult = false;
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIURI> uri;
   nsDependentCString hostString(aHost);
   nsresult rv = NS_NewURI(getter_AddRefs(uri),
@@ -417,6 +439,11 @@ nsStrictTransportSecurityService::IsStsURI(nsIURI* aURI, uint32_t aFlags, bool* 
   nsAutoCString host;
   nsresult rv = GetHost(aURI, host);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  /* An IP address never qualifies as a secure URI. */
+  if (HostIsIPAddress(host.BeginReading())) {
+    return NS_OK;
+  }
 
   const nsSTSPreload *preload = nullptr;
   nsSTSHostEntry *pbEntry = nullptr;
