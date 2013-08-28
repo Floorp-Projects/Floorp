@@ -21,14 +21,11 @@
 #include "nsIFormControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
-#include "nsIDOMEventListener.h"
 #include "nsAutoPtr.h"
 #include "nsSelectsAreaFrame.h"
 
-class nsIContent;
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLOptionsCollection;
-class nsIDOMHTMLOptionElement;
 class nsIComboboxControlFrame;
 class nsPresContext;
 class nsListEventListener;

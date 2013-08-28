@@ -2,23 +2,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsCOMPtr.h"
 #include "nsImageFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsIFormControl.h"
-#include "nsHTMLParts.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
-#include "nsStyleContext.h"
-#include "nsLeafFrame.h"
-#include "nsCSSRendering.h"
-#include "nsISupports.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsFormControlFrame.h"
 #include "nsGUIEvent.h"
-#include "nsIServiceManager.h"
-#include "nsContainerFrame.h"
 #include "nsLayoutUtils.h"
 
 using namespace mozilla;

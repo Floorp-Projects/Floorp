@@ -7,7 +7,6 @@
 #define nsGfxButtonControlFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "nsFormControlFrame.h"
 #include "nsHTMLButtonControlFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIAnonymousContentCreator.h"

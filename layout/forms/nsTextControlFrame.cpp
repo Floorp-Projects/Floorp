@@ -7,64 +7,33 @@
 
 #include "nsCOMPtr.h"
 #include "nsTextControlFrame.h"
-#include "nsIDocument.h"
-#include "nsIFormControl.h"
-#include "nsIServiceManager.h"
-#include "nsFrameSelection.h"
 #include "nsIPlaintextEditor.h"
-#include "nsEditorCID.h"
-#include "nsLayoutCID.h"
-#include "nsIDocumentEncoder.h"
 #include "nsCaret.h"
-#include "nsISelectionListener.h"
-#include "nsIController.h"
-#include "nsIControllers.h"
-#include "nsIControllerContext.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
 #include "nsTextFragment.h"
-#include "nsIEditorObserver.h"
-#include "nsEditProperty.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsFormControlFrame.h" //for registering accesskeys
 
 #include "nsIContent.h"
-#include "nsIAtom.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
-#include "nsIComponentManager.h"
-#include "nsView.h"
-#include "nsViewManager.h"
-#include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
 
-#include "nsBoxLayoutState.h"
 #include <algorithm>
-//for keylistener for "return" check
-#include "nsIDocument.h" //observe documents to send onchangenotifications
-#include "nsIStyleSheet.h"//observe documents to send onchangenotifications
-#include "nsIStyleRule.h"//observe documents to send onchangenotifications
-#include "nsIDOMEventListener.h"//observe documents to send onchangenotifications
-#include "nsGUIEvent.h"
-
-#include "nsIDOMCharacterData.h" //for selection setting helper func
 #include "nsIDOMNodeList.h" //for selection setting helper func
 #include "nsIDOMRange.h" //for selection setting helper func
 #include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.
 #include "nsIDOMNode.h"
 
-#include "nsITransactionManager.h"
 #include "nsIDOMText.h" //for multiline getselection
-#include "nsNodeInfoManager.h"
-#include "nsContentCreatorFunctions.h"
-#include "nsINativeKeyBindings.h"
 #include "nsFocusManager.h"
 #include "nsTextEditRules.h"
 #include "nsPresState.h"
@@ -74,6 +43,7 @@
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsTextNode.h"
+#include "nsStyleSet.h"
 
 #define DEFAULT_COLUMN_WIDTH 20
 
