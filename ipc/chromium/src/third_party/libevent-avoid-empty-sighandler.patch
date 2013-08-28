@@ -1,0 +1,65 @@
+diff --git a/ipc/chromium/src/third_party/libevent/kqueue.c b/ipc/chromium/src/third_party/libevent/kqueue.c
+--- a/ipc/chromium/src/third_party/libevent/kqueue.c
++++ b/ipc/chromium/src/third_party/libevent/kqueue.c
+@@ -158,26 +158,20 @@ kq_init(struct event_base *base)
+ 	base->evsigsel = &kqsigops;
+ 
+ 	return (kqueueop);
+ err:
+ 	if (kqueueop)
+ 		kqop_free(kqueueop);
+ 
+ 	return (NULL);
+ }
+ 
+-static void
+-kq_sighandler(int sig)
+-{
+-	/* Do nothing here */
+-}
+-
+ #define ADD_UDATA 0x30303
+ 
+ static void
+ kq_setup_kevent(struct kevent *out, evutil_socket_t fd, int filter, short change)
+ {
+ 	memset(out, 0, sizeof(struct kevent));
+ 	out->ident = fd;
+ 	out->filter = filter;
+ 
+ 	if (change & EV_CHANGE_ADD) {
+@@ -431,24 +425,31 @@ kq_sig_add(struct event_base *base, int 
+ 	kev.ident = nsignal;
+ 	kev.filter = EVFILT_SIGNAL;
+ 	kev.flags = EV_ADD;
+ 
+ 	/* Be ready for the signal if it is sent any
+ 	 * time between now and the next call to
+ 	 * kq_dispatch. */
+ 	if (kevent(kqop->kq, &kev, 1, NULL, 0, &timeout) == -1)
+ 		return (-1);
+ 
+-	/* XXXX The manpage suggest we could use SIG_IGN instead of a
+-	 * do-nothing handler */
+-	if (_evsig_set_handler(base, nsignal, kq_sighandler) == -1)
++	/* Backported from
++	 * https://github.com/nmathewson/Libevent/commit/148458e0a1fd25e167aa2ef229d1c9a70b27c3e9 */
++	/* We can set the handler for most signals to SIG_IGN and
++	 * still have them reported to us in the queue.  However,
++	 * if the handler for SIGCHLD is SIG_IGN, the system reaps
++	 * zombie processes for us, and we don't get any notification.
++	 * This appears to be the only signal with this quirk. */
++	if (_evsig_set_handler(base, nsignal,
++	                       nsignal == SIGCHLD ? SIG_DFL : SIG_IGN) == -1) {
+ 		return (-1);
++	}
+ 
+ 	return (0);
+ }
+ 
+ static int
+ kq_sig_del(struct event_base *base, int nsignal, short old, short events, void *p)
+ {
+ 	struct kqop *kqop = base->evbase;
+ 	struct kevent kev;
+ 

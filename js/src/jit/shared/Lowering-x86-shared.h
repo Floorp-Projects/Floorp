@@ -10,7 +10,7 @@
 #include "jit/shared/Lowering-shared.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class LIRGeneratorX86Shared : public LIRGeneratorShared
 {
@@ -49,7 +49,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     bool lowerTruncateDToInt32(MTruncateToInt32 *ins);
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_shared_Lowering_x86_shared_h */

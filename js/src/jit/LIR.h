@@ -24,7 +24,7 @@
 #include "jit/VMFunctions.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class LUse;
 class LGeneralReg;
@@ -1457,7 +1457,7 @@ LAllocation::toRegister() const
     return AnyRegister(toGeneralReg()->reg());
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #define LIR_HEADER(opcode)                                                  \
@@ -1499,7 +1499,7 @@ LAllocation::toRegister() const
 #undef LIR_HEADER
 
 namespace js {
-namespace ion {
+namespace jit {
 
 #define LIROP(name)                                                         \
     L##name *LInstruction::to##name()                                       \
@@ -1568,7 +1568,7 @@ BaseOfNunboxSlot(LDefinition::Type type, unsigned slot)
 }
 #endif
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_LIR_h */

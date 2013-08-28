@@ -24,21 +24,21 @@
 
 namespace js {
 
-namespace ion {
+namespace jit {
     struct IonScript;
     struct BaselineScript;
     struct IonScriptCounts;
 }
 
-# define ION_DISABLED_SCRIPT ((js::ion::IonScript *)0x1)
-# define ION_COMPILING_SCRIPT ((js::ion::IonScript *)0x2)
+# define ION_DISABLED_SCRIPT ((js::jit::IonScript *)0x1)
+# define ION_COMPILING_SCRIPT ((js::jit::IonScript *)0x2)
 
-# define BASELINE_DISABLED_SCRIPT ((js::ion::BaselineScript *)0x1)
+# define BASELINE_DISABLED_SCRIPT ((js::jit::BaselineScript *)0x1)
 
 class BreakpointSite;
 class BindingIter;
 class RegExpObject;
-struct SourceCompressionToken;
+struct SourceCompressionTask;
 class Shape;
 class WatchpointMap;
 
@@ -237,7 +237,7 @@ class ScriptCounts
     PCCounts *pcCountsVector;
 
     /* Information about any Ion compilations for the script. */
-    ion::IonScriptCounts *ionCounts;
+    jit::IonScriptCounts *ionCounts;
 
  public:
     ScriptCounts() : pcCountsVector(NULL), ionCounts(NULL) { }
@@ -285,7 +285,8 @@ typedef HashMap<JSScript *,
 
 class ScriptSource
 {
-    friend class SourceCompressorThread;
+    friend class SourceCompressionTask;
+
     union {
         // Before setSourceCopy or setSource are successfully called, this union
         // has a NULL pointer. When the script source is ready,
@@ -334,11 +335,11 @@ class ScriptSource
         if (--refs == 0)
             destroy();
     }
-    bool setSourceCopy(JSContext *cx,
+    bool setSourceCopy(ExclusiveContext *cx,
                        const jschar *src,
                        uint32_t length,
                        bool argumentsNotIncluded,
-                       SourceCompressionToken *tok);
+                       SourceCompressionTask *tok);
     void setSource(const jschar *src, uint32_t length);
     bool ready() const { return ready_; }
     void setSourceRetrievable() { sourceRetrievable_ = true; }
@@ -379,6 +380,7 @@ class ScriptSource
         return compressed() ? compressedLength_ : sizeof(jschar) * length_;
     }
     bool adjustDataSize(size_t nbytes);
+    const jschar *getOffThreadCompressionChars(ExclusiveContext *cx);
 };
 
 class ScriptSourceHolder
@@ -469,11 +471,11 @@ class JSScript : public js::gc::Cell
     js::HeapPtrObject   enclosingScopeOrOriginalFunction_;
 
     /* Information attached by Baseline/Ion for sequential mode execution. */
-    js::ion::IonScript *ion;
-    js::ion::BaselineScript *baseline;
+    js::jit::IonScript *ion;
+    js::jit::BaselineScript *baseline;
 
     /* Information attached by Ion for parallel mode execution */
-    js::ion::IonScript *parallelIon;
+    js::jit::IonScript *parallelIon;
 
     /*
      * Pointer to either baseline->method()->raw() or ion->method()->raw(), or NULL
@@ -712,17 +714,17 @@ class JSScript : public js::gc::Cell
         return ion == ION_COMPILING_SCRIPT;
     }
 
-    js::ion::IonScript *ionScript() const {
+    js::jit::IonScript *ionScript() const {
         JS_ASSERT(hasIonScript());
         return ion;
     }
-    js::ion::IonScript *maybeIonScript() const {
+    js::jit::IonScript *maybeIonScript() const {
         return ion;
     }
-    js::ion::IonScript *const *addressOfIonScript() const {
+    js::jit::IonScript *const *addressOfIonScript() const {
         return &ion;
     }
-    inline void setIonScript(js::ion::IonScript *ionScript);
+    inline void setIonScript(js::jit::IonScript *ionScript);
 
     bool hasBaselineScript() const {
         return baseline && baseline != BASELINE_DISABLED_SCRIPT;
@@ -730,11 +732,11 @@ class JSScript : public js::gc::Cell
     bool canBaselineCompile() const {
         return baseline != BASELINE_DISABLED_SCRIPT;
     }
-    js::ion::BaselineScript *baselineScript() const {
+    js::jit::BaselineScript *baselineScript() const {
         JS_ASSERT(hasBaselineScript());
         return baseline;
     }
-    inline void setBaselineScript(js::ion::BaselineScript *baselineScript);
+    inline void setBaselineScript(js::jit::BaselineScript *baselineScript);
 
     void updateBaselineOrIonRaw();
 
@@ -750,14 +752,14 @@ class JSScript : public js::gc::Cell
         return parallelIon == ION_COMPILING_SCRIPT;
     }
 
-    js::ion::IonScript *parallelIonScript() const {
+    js::jit::IonScript *parallelIonScript() const {
         JS_ASSERT(hasParallelIonScript());
         return parallelIon;
     }
-    js::ion::IonScript *maybeParallelIonScript() const {
+    js::jit::IonScript *maybeParallelIonScript() const {
         return parallelIon;
     }
-    inline void setParallelIonScript(js::ion::IonScript *ionScript);
+    inline void setParallelIonScript(js::jit::IonScript *ionScript);
 
     static size_t offsetOfBaselineScript() {
         return offsetof(JSScript, baseline);
@@ -864,8 +866,8 @@ class JSScript : public js::gc::Cell
   public:
     bool initScriptCounts(JSContext *cx);
     js::PCCounts getPCCounts(jsbytecode *pc);
-    void addIonCounts(js::ion::IonScriptCounts *ionCounts);
-    js::ion::IonScriptCounts *getIonCounts();
+    void addIonCounts(js::jit::IonScriptCounts *ionCounts);
+    js::jit::IonScriptCounts *getIonCounts();
     js::ScriptCounts releaseScriptCounts();
     void destroyScriptCounts(js::FreeOp *fop);
 
@@ -1137,8 +1139,6 @@ class AliasedFormalIter
     unsigned scopeSlot() const { JS_ASSERT(!done()); return slot_; }
 };
 
-struct SourceCompressionToken;
-
 // Information about a script which may be (or has been) lazily compiled to
 // bytecode from its source.
 class LazyScript : public js::gc::Cell
@@ -1331,87 +1331,6 @@ class LazyScript : public js::gc::Cell
 /* If this fails, add/remove padding within LazyScript. */
 JS_STATIC_ASSERT(sizeof(LazyScript) % js::gc::CellSize == 0);
 
-#ifdef JS_THREADSAFE
-/*
- * Background thread to compress JS source code. This happens only while parsing
- * and bytecode generation is happening in the main thread. If needed, the
- * compiler waits for compression to complete before returning.
- *
- * To use it, you have to have a SourceCompressionToken, tok, with tok.ss and
- * tok.chars set to the proper values. When the SourceCompressionToken is
- * destroyed, it makes sure the compression is complete. If you are about to
- * successfully exit the scope of tok, you should call and check the return
- * value of SourceCompressionToken::complete(). It returns false if allocation
- * errors occurred in the thread.
- */
-class SourceCompressorThread
-{
-  private:
-    enum {
-        // The compression thread is in the process of compression some source.
-        COMPRESSING,
-        // The compression thread is not doing anything and available to
-        // compress source.
-        IDLE,
-        // Set by finish() to tell the compression thread to exit.
-        SHUTDOWN
-    } state;
-    SourceCompressionToken *tok;
-    PRThread *thread;
-    // Protects |state| and |tok| when it's non-NULL.
-    PRLock *lock;
-    // When it's idling, the compression thread blocks on this. The main thread
-    // uses it to notify the compression thread when it has source to be
-    // compressed.
-    PRCondVar *wakeup;
-    // The main thread can block on this to wait for compression to finish.
-    PRCondVar *done;
-    // Flag which can be set by the main thread to ask compression to abort.
-    volatile bool stop;
-
-    bool internalCompress();
-    void threadLoop();
-    static void compressorThread(void *arg);
-
-  public:
-    explicit SourceCompressorThread()
-    : state(IDLE),
-      tok(NULL),
-      thread(NULL),
-      lock(NULL),
-      wakeup(NULL),
-      done(NULL) {}
-    void finish();
-    bool init();
-    void compress(SourceCompressionToken *tok);
-    void waitOnCompression(SourceCompressionToken *userTok);
-    void abort(SourceCompressionToken *userTok);
-    const jschar *currentChars() const;
-};
-#endif
-
-struct SourceCompressionToken
-{
-    friend class ScriptSource;
-    friend class SourceCompressorThread;
-  private:
-    JSContext *cx;
-    ScriptSource *ss;
-    const jschar *chars;
-    bool oom;
-  public:
-    explicit SourceCompressionToken(JSContext *cx)
-       : cx(cx), ss(NULL), chars(NULL), oom(false) {}
-    ~SourceCompressionToken()
-    {
-        complete();
-    }
-
-    bool complete();
-    void abort();
-    bool active() const { return !!ss; }
-};
-
 /*
  * New-script-hook calling is factored from JSScript::fullyInitFromEmitter() so
  * that it and callers of XDRScript() can share this code.  In the case of
@@ -1488,7 +1407,7 @@ struct ScriptAndCounts
         return scriptCounts.pcCountsVector[pc - script->code];
     }
 
-    ion::IonScriptCounts *getIonCounts() const {
+    jit::IonScriptCounts *getIonCounts() const {
         return scriptCounts.ionCounts;
     }
 };

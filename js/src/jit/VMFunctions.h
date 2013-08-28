@@ -18,7 +18,7 @@ namespace js {
 class DeclEnvObject;
 class ForkJoinSlice;
 
-namespace ion {
+namespace jit {
 
 enum DataType {
     Type_Void,
@@ -663,7 +663,7 @@ bool LeaveBlock(JSContext *cx, BaselineFrame *frame);
 bool InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame,
                              uint32_t numStackValues);
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_VMFunctions_h */
