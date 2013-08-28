@@ -12,6 +12,8 @@
 #include "SpeechRecognitionAlternative.h"
 #include "SpeechRecognitionResult.h"
 #include "SpeechRecognitionResultList.h"
+#include "nsIObserverService.h"
+#include "mozilla/Services.h"
 
 namespace mozilla {
 
