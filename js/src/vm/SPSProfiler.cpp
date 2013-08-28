@@ -12,7 +12,7 @@
 #include "vm/SPSProfiler.h"
 #include "vm/StringBuffer.h"
 
-#include "ion/BaselineJIT.h"
+#include "jit/BaselineJIT.h"
 
 using namespace js;
 

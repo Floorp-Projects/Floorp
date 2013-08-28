@@ -13,7 +13,7 @@
 #include "jsopcode.h"
 #include "jsscript.h"
 
-#include "ion/AsmJS.h"
+#include "jit/AsmJS.h"
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"

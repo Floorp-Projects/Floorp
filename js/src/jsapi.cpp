@@ -61,8 +61,8 @@
 #include "frontend/Parser.h" // for JS_BufferIsCompileableUnit
 #include "gc/Marking.h"
 #include "gc/Memory.h"
-#include "ion/AsmJS.h"
-#include "ion/PcScriptCache.h"
+#include "jit/AsmJS.h"
+#include "jit/PcScriptCache.h"
 #include "js/CharacterEncoding.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
@@ -90,7 +90,7 @@
 #endif
 
 #ifdef JS_ION
-#include "ion/Ion.h"
+#include "jit/Ion.h"
 #endif
 
 using namespace js;

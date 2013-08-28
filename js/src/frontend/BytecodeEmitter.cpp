@@ -28,7 +28,7 @@
 
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
-#include "ion/AsmJS.h"
+#include "jit/AsmJS.h"
 #include "vm/Debugger.h"
 
 #include "jsatominlines.h"

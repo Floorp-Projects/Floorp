@@ -43,7 +43,7 @@
 #include "jsfriendapi.h"
 #include "jsopcode.h"
 
-#include "ion/IonSpewer.h"
+#include "jit/IonSpewer.h"
 #include "js/RootingAPI.h"
 
 #define PRETTY_PRINT_OFFSET(os) (((os)<0)?"-":""), (((os)<0)?-(os):(os))

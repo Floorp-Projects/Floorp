@@ -26,8 +26,8 @@
 
 #include "gc/Marking.h"
 #include "frontend/BytecodeEmitter.h"
-#include "ion/IonCode.h"
-#include "ion/BaselineJIT.h"
+#include "jit/IonCode.h"
+#include "jit/BaselineJIT.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
