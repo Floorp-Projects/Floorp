@@ -32,6 +32,18 @@ static const char *sExtensionNames[] = {
 
 static PRLibrary* LoadApitraceLibrary()
 {
+    static bool sUseApitraceInitialized = false;
+    static bool sUseApitrace = false;
+
+    if (!sUseApitraceInitialized) {
+        sUseApitrace = Preferences::GetBool("gfx.apitrace.enabled", false);
+        sUseApitraceInitialized = true;
+    }
+
+    if (!sUseApitrace) {
+        return nullptr;
+    }
+
     static PRLibrary* sApitraceLibrary = nullptr;
 
     if (sApitraceLibrary)

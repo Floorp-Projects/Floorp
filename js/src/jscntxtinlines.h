@@ -343,10 +343,8 @@ inline void
 ExclusiveContext::maybePause() const
 {
 #ifdef JS_WORKER_THREADS
-    if (workerThread && runtime_->workerThreadState->shouldPause) {
-        AutoLockWorkerThreadState lock(*runtime_->workerThreadState);
-        workerThread->pause();
-    }
+    if (workerThread)
+        workerThread->maybePause();
 #endif
 }
 
@@ -520,7 +518,7 @@ JSContext::currentScript(jsbytecode **ppc,
 #ifdef JS_ION
     if (act->isJit()) {
         JSScript *script = NULL;
-        js::ion::GetPcScript(const_cast<JSContext *>(this), &script, ppc);
+        js::jit::GetPcScript(const_cast<JSContext *>(this), &script, ppc);
         if (!allowCrossCompartment && script->compartment() != compartment())
             return NULL;
         return script;

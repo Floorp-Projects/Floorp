@@ -86,6 +86,25 @@ WebGLProgram::UpdateInfo()
         }
     }
 
+    mActiveAttribMap.clear();
+
+    GLint numActiveAttrs = 0;
+    mContext->gl->fGetProgramiv(mGLName, LOCAL_GL_ACTIVE_ATTRIBUTES, &numActiveAttrs);
+
+    // Spec says the maximum attrib name length is 256 chars, so this is
+    // sufficient to hold any attrib name.
+    char attrName[257];
+
+    GLint dummySize;
+    GLenum dummyType;
+    for (GLint i = 0; i < numActiveAttrs; i++) {
+        mContext->gl->fGetActiveAttrib(mGLName, i, 257, nullptr, &dummySize,
+                                       &dummyType, attrName);
+        GLint attrLoc = mContext->gl->fGetAttribLocation(mGLName, attrName);
+        MOZ_ASSERT(attrLoc >= 0);
+        mActiveAttribMap.insert(std::make_pair(attrLoc, nsCString(attrName)));
+    }
+
     return true;
 }
 

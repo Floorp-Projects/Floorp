@@ -16,7 +16,7 @@
 #include "jsinferinlines.h"
 
 using namespace js;
-using namespace ion;
+using namespace jit;
 
 using parallel::Spew;
 using parallel::SpewMIR;
@@ -147,7 +147,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(Abs)
     SAFE_OP(Sqrt)
     UNSAFE_OP(Atan2)
-    SAFE_OP(MathFunction)
+    CUSTOM_OP(MathFunction)
     SPECIALIZED_OP(Add, PERMIT_NUMERIC)
     SPECIALIZED_OP(Sub, PERMIT_NUMERIC)
     SPECIALIZED_OP(Mul, PERMIT_NUMERIC)
@@ -550,6 +550,12 @@ ParallelSafetyVisitor::visitRest(MRest *ins)
 }
 
 bool
+ParallelSafetyVisitor::visitMathFunction(MMathFunction *ins)
+{
+    return replace(ins, MMathFunction::New(ins->input(), ins->function(), NULL));
+}
+
+bool
 ParallelSafetyVisitor::visitConcat(MConcat *ins)
 {
     return replace(ins, MConcatPar::New(forkJoinSlice(), ins));
@@ -769,7 +775,7 @@ static bool
 AddCallTarget(HandleScript script, CallTargetVector &targets);
 
 bool
-ion::AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets)
+jit::AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets)
 {
     JSContext *cx = GetIonContext()->cx;
 

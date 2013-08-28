@@ -20,17 +20,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478911
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-resume_geolocationProvider();
-force_prompt(true);
+
+resume_geolocationProvider(function() {
+  force_prompt(true, test1);
+});
+
 
 function successCallback(position) {
   check_geolocation(position);
-  reset_prompt();
   SimpleTest.finish();
 }
 
-navigator.geolocation.getCurrentPosition(successCallback);
-
+function test1() {
+  navigator.geolocation.getCurrentPosition(successCallback);
+}
 </script>
 </pre>
 </body>
