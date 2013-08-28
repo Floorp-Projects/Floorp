@@ -3,10 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
-
 function Sanitizer() {}
 
 Sanitizer.prototype = {
@@ -17,9 +13,15 @@ Sanitizer.prototype = {
       this.items[aItemName].clear();
   },
 
-  canClearItem: function (aItemName)
+  canClearItem: function (aItemName, aCallback, aArg)
   {
-    return this.items[aItemName].canClear;
+    let canClear = this.items[aItemName].canClear;
+    if (typeof canClear == "function"){
+      canClear(aCallback, aArg);
+      return false;
+    }
+    aCallback(aItemName, canClear, aArg);
+    return canClear;
   },
   
   _prefDomain: "privacy.item.",
@@ -39,22 +41,28 @@ Sanitizer.prototype = {
     var branch = Services.prefs.getBranch(this._prefDomain);
     var errors = null;
     for (var itemName in this.items) {
-      var item = this.items[itemName];
-      if ("clear" in item && item.canClear && branch.getBoolPref(itemName)) {
-        // Some of these clear() may raise exceptions (see bug #265028)
-        // to sanitize as much as possible, we catch and store them, 
-        // rather than fail fast.
-        // Callers should check returned errors and give user feedback
-        // about items that could not be sanitized
-        try {
-          item.clear();
-        } catch(er) {
-          if (!errors) 
-            errors = {};
-          errors[itemName] = er;
-          dump("Error sanitizing " + itemName + ": " + er + "\n");
-        }
-      }
+        if ("clear" in item && item.canClear && branch.getBoolPref(itemName)) {
+            // Some of these clear() may raise exceptions (see bug #265028)
+            // to sanitize as much as possible, we catch and store them, 
+            // rather than fail fast.
+            // Callers should check returned errors and give user feedback
+            // about items that could not be sanitized
+            let clearCallback = (itemName, aCanClear) => {
+              let item = this.items[itemName];
+              try{
+                if (aCanClear){
+                    item.clear();
+                }
+              } catch(er){
+                if (!errors){
+                    errors = {};
+                }
+                errors[itemName] = er;
+                dump("Error sanitizing " + itemName + ":" + er + "\n");
+              }
+            }
+          }
+      this.canClearItem(itemName, clearCallback);
     }
     return errors;
   },
@@ -185,15 +193,18 @@ Sanitizer.prototype = {
             searchBar.textbox.editor.transactionManager.clear();
           }
         }
-
-        var formHistory = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
-        formHistory.removeAllEntries();
+        FormHistory.update({op : "remove"});
       },
       
-      get canClear()
+      canClear : function(aCallback, aArg)
       {
-        var formHistory = Cc["@mozilla.org/satchel/form-history;1"].getService(Ci.nsIFormHistory2);
-        return formHistory.hasEntries;
+        let count = 0;
+        let countDone = {
+          handleResult : function(aResult) { count = aResult; },
+          handleError : function(aError) { Components.utils.reportError(aError); },
+          handleCompletion : function(aReason) { aCallback("formdata", aReason == 0 && count > 0, aArg); }
+        };
+        FormHistory.count({}, countDone);
       }
     },
     
