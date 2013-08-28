@@ -170,30 +170,23 @@ int nr_ice_component_destroy(nr_ice_component **componentp)
     return(0);
   }
 
-#define MAXADDRS 100 // Ridiculously high
 /* Make all the candidates we can make at the beginning */
 int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *component)
   {
     int r,_status;
-    nr_local_addr addrs[MAXADDRS];
+    nr_local_addr *addrs=ctx->local_addrs;
     nr_socket *sock;
     nr_ice_socket *isock=0;
     nr_ice_candidate *cand=0;
     char *lufrag;
     char *lpwd;
     Data pwd;
-    int addr_ct;
+    int addr_ct=ctx->local_addr_ct;
     int i;
     int j;
     char label[256];
 
     r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): initializing component with id %d",ctx->label,component->component_id);
-
-    /* First, gather all the local addresses we have */
-    if(r=nr_stun_find_local_addresses(addrs,MAXADDRS,&addr_ct)) {
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s): unable to find local addresses",ctx->label);
-      ABORT(r);
-    }
 
     if(addr_ct==0){
       r_log(LOG_ICE,LOG_ERR,"ICE(%s): no local addresses available",ctx->label);

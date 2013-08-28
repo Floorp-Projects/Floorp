@@ -78,6 +78,8 @@
                 "./src/net/transport_addr_reg.h",
                 "./src/net/local_addr.c",
                 "./src/net/local_addr.h",
+                "./src/net/nr_interface_prioritizer.c",
+                "./src/net/nr_interface_prioritizer.h",
 
                 # STUN
                 "./src/stun/addrs.c",

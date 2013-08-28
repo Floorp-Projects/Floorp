@@ -358,23 +358,37 @@ int nr_ice_candidate_compute_priority(nr_ice_candidate *cand)
     if(type_preference > 126)
       r_log(LOG_ICE,LOG_ERR,"Illegal type preference %d",type_preference);
 
-
-    if(r=NR_reg_get2_uchar(NR_ICE_REG_PREF_INTERFACE_PRFX,cand->base.ifname,
-      &interface_preference)) {
-      if (r==R_NOT_FOUND) {
-        if (next_automatic_preference == 1) {
-          r_log(LOG_ICE,LOG_DEBUG,"Out of preference values. Can't assign one for interface %s",cand->base.ifname);
-          ABORT(R_NOT_FOUND);
+    if(!cand->ctx->interface_prioritizer) {
+      /* Prioritizer is not set, read from registry */
+      if(r=NR_reg_get2_uchar(NR_ICE_REG_PREF_INTERFACE_PRFX,cand->base.ifname,
+        &interface_preference)) {
+        if (r==R_NOT_FOUND) {
+          if (next_automatic_preference == 1) {
+            r_log(LOG_ICE,LOG_DEBUG,"Out of preference values. Can't assign one for interface %s",cand->base.ifname);
+            ABORT(R_NOT_FOUND);
+          }
+          r_log(LOG_ICE,LOG_DEBUG,"Automatically assigning preference for interface %s->%d",cand->base.ifname,
+            next_automatic_preference);
+          if (r=NR_reg_set2_uchar(NR_ICE_REG_PREF_INTERFACE_PRFX,cand->base.ifname,next_automatic_preference)){
+            ABORT(r);
+          }
+          interface_preference=next_automatic_preference;
+          next_automatic_preference--;
         }
-        r_log(LOG_ICE,LOG_DEBUG,"Automatically assigning preference for interface %s->%d",cand->base.ifname,
-          next_automatic_preference);
-        if (r=NR_reg_set2_uchar(NR_ICE_REG_PREF_INTERFACE_PRFX,cand->base.ifname,next_automatic_preference)){
+        else {
           ABORT(r);
         }
-        interface_preference=next_automatic_preference;
-        next_automatic_preference--;
       }
-      else {
+    }
+    else {
+      char key_of_interface[MAXIFNAME + 41];
+
+      if(r=nr_transport_addr_fmt_ifname_addr_string(&cand->base,key_of_interface,
+         sizeof(key_of_interface))) {
+        ABORT(r);
+      }
+      if(r=nr_interface_prioritizer_get_priority(cand->ctx->interface_prioritizer,
+         key_of_interface,&interface_preference)) {
         ABORT(r);
       }
     }
