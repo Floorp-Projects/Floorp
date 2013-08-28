@@ -255,6 +255,19 @@ enum ThingRootKind
     THING_ROOT_LIMIT
 };
 
+/*
+ * This list enumerates the different types of conceptual stacks we have in
+ * SpiderMonkey. In reality, they all share the C stack, but we allow different
+ * stack limits depending on the type of code running.
+ */
+enum StackKind
+{
+    StackForSystemCode,      // C++, such as the GC, running on behalf of the VM.
+    StackForTrustedScript,   // Script running with trusted principals.
+    StackForUntrustedScript, // Script running with untrusted principals.
+    StackKindCount
+};
+
 template <typename T>
 struct RootKind;
 
@@ -380,7 +393,7 @@ struct PerThreadDataFriendFields
 #endif
 
     /* Limit pointer for checking native stack consumption. */
-    uintptr_t nativeStackLimit;
+    uintptr_t nativeStackLimit[StackKindCount];
 
     static const size_t RuntimeMainThreadOffset = offsetof(RuntimeDummy, mainThread);
 
