@@ -11,8 +11,53 @@
 #include "mozilla/Preferences.h"
 #include "nsGlobalWindow.h"
 #include "nsIAppsService.h"
+#include "PCOMContentPermissionRequestChild.h"
+
 namespace mozilla {
 namespace dom {
+
+/*
+ * Simple Request
+ */
+class DesktopNotificationRequest : public nsIContentPermissionRequest,
+                                   public nsRunnable,
+                                   public PCOMContentPermissionRequestChild
+
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICONTENTPERMISSIONREQUEST
+
+  DesktopNotificationRequest(DesktopNotification* notification)
+    : mDesktopNotification(notification) {}
+
+  NS_IMETHOD Run() MOZ_OVERRIDE
+  {
+    nsCOMPtr<nsIContentPermissionPrompt> prompt =
+      do_CreateInstance(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
+    if (prompt) {
+      prompt->Prompt(this);
+    }
+    return NS_OK;
+  }
+
+  ~DesktopNotificationRequest()
+  {
+  }
+
+  virtual bool Recv__delete__(const bool& aAllow) MOZ_OVERRIDE
+  {
+    if (aAllow) {
+      (void) Allow();
+    } else {
+     (void) Cancel();
+    }
+   return true;
+  }
+  virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
+
+  nsRefPtr<DesktopNotification> mDesktopNotification;
+};
 
 /* ------------------------------------------------------------------------ */
 /* AlertServiceObserver                                                     */
