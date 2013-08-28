@@ -1,8 +1,8 @@
 component {3b16fe17-5583-483a-b486-b64a3243221c} NetworkStatsManager.js
 contract @mozilla.org/networkStatsdata;1 {3b16fe17-5583-483a-b486-b64a3243221c}
 
-component {037435a6-f563-48f3-99b3-a0106d8ba5bd} NetworkStatsManager.js
-contract @mozilla.org/networkStats;1 {037435a6-f563-48f3-99b3-a0106d8ba5bd}
+component {6613ea55-b99c-44f9-91bf-d07da10b9b74} NetworkStatsManager.js
+contract @mozilla.org/networkStats;1 {6613ea55-b99c-44f9-91bf-d07da10b9b74}
 
 component {87529a6c-aef6-11e1-a595-4f034275cfa6} NetworkStatsManager.js
 contract @mozilla.org/networkStatsManager;1 {87529a6c-aef6-11e1-a595-4f034275cfa6}
