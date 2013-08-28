@@ -21,7 +21,6 @@ VPATH           = \
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME    = display
 FORCE_STATIC_LIB= 1
 STL_FLAGS=
 

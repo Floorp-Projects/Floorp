@@ -20,7 +20,6 @@ else
 VPATH += $(srcdir)/fallback
 endif
 
-LIBRARY_NAME     = dom_mobilemessage_s
 include $(topsrcdir)/dom/dom-config.mk
 
 LOCAL_INCLUDES = \

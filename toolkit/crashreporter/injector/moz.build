@@ -8,3 +8,5 @@ CPP_SOURCES += [
     'injector.cpp',
 ]
 
+LIBRARY_NAME = 'breakpadinjector'
+

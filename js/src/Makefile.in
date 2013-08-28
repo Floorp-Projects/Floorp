@@ -13,12 +13,6 @@ TOPLEVEL_BUILD := 1
 run_for_side_effects := $(shell echo "MAKE: $(MAKE)")
 include $(DEPTH)/config/autoconf.mk
 
-ifdef JS_STANDALONE
-LIBRARY_NAME	= mozjs-@MOZJS_MAJOR_VERSION@.@MOZJS_MINOR_VERSION@@MOZJS_ALPHA@
-else
-LIBRARY_NAME	= mozjs
-endif
-
 STATIC_LIBRARY_NAME = js_static
 LIBS		= $(NSPR_LIBS)
 
