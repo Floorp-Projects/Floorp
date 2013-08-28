@@ -95,9 +95,35 @@ gTests.push({
 
 gTests.push({
   desc: "Test Snapped scrolls vertically",
+  setUp: function() {
+
+    // Populate with mock data and expand bookmarks
+    BookmarksTestHelper.setup();
+    sendElementTap(Browser.selectedBrowser.contentWindow, getNarrowTitle("start-bookmarks"));
+
+    yield waitForCondition(() => gStartDoc.getElementById("start-bookmarks").hasAttribute("expanded"));
+
+    yield setUpSnapped();
+  },
+  run: function() {
+    ok(Browser.selectedBrowser.contentWindow.scrollMaxY !== 0, "Snapped scrolls vertically");
+    ok(Browser.selectedBrowser.contentWindow.scrollMaxX === 0, "Snapped does not scroll horizontally");
+  },
+  tearDown: function() {
+    BookmarksTestHelper.restore();
+    restoreViewstate();
+  }
+});
+
+gTests.push({
+  desc: "Navbar contextual buttons are not shown in snapped",
   setUp: setUpSnapped,
   run: function() {
-    todo(false, "We need to populate startUI to verify that it's scrollable");
+    let toolbarContextual = document.getElementById("toolbar-contextual");
+
+    let visibility = getComputedStyle(toolbarContextual).getPropertyValue("visibility");
+
+    ok(visibility === "collapse" || visibility === "hidden", "Contextual buttons not shown in navbar");
   },
   tearDown: restoreViewstate
 });
@@ -116,4 +142,24 @@ gTests.push({
     ok(wideTitleVisible("start-history"), "history wide title is visible");
   },
   tearDown: restoreViewstate
+});
+
+gTests.push({
+  desc: "Test portrait scrolls vertically",
+  setUp: function() {
+    // Populate with mock data
+    BookmarksTestHelper.setup();
+    HistoryTestHelper.setup();
+
+    yield setUpPortrait();
+  },
+  run: function() {
+    ok(Browser.selectedBrowser.contentWindow.scrollMaxY !== 0, "Portrait scrolls vertically");
+    ok(Browser.selectedBrowser.contentWindow.scrollMaxX === 0, "Portrait does not scroll horizontally");
+  },
+  tearDown: function() {
+    BookmarksTestHelper.restore();
+    HistoryTestHelper.restore();
+    restoreViewstate();
+  }
 });
