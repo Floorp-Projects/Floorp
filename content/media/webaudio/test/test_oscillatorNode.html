@@ -22,10 +22,10 @@ addLoadEvent(function() {
   is(osc.type, "sine", "Correct default type");
   expectException(function() {
     osc.type = "custom";
-  }, DOMException.NOT_SUPPORTED_ERR);
+  }, DOMException.INVALID_STATE_ERR);
   expectException(function() {
     osc.type = osc.CUSTOM;
-  }, DOMException.NOT_SUPPORTED_ERR);
+  }, DOMException.INVALID_STATE_ERR);
   is(osc.type, "sine", "Cannot set the type to custom");
   is(osc.frequency.value, 440, "Correct default frequency value");
   is(osc.detune.value, 0, "Correct default detine value");
@@ -42,6 +42,12 @@ addLoadEvent(function() {
     is(osc.type, types[i], "Correct alternname type enum value");
     osc.type = types[i];
   }
+
+  // Verify setPeriodicWave()
+  var real = new Float32Array([1.0, 0.5, 0.25, 0.125]);
+  var imag = new Float32Array([1.0, 0.7, -1.0, 0.5]);
+  osc.setPeriodicWave(context.createPeriodicWave(real, imag));
+  is(osc.type, "custom", "Failed to set custom waveform");
 
   SimpleTest.finish();
 });
