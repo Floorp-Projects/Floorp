@@ -42,7 +42,6 @@
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsError.h"
-#include "nsLayoutStatics.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStorageStream.h"
@@ -302,8 +301,6 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mResultArrayBuffer(nullptr),
     mXPCOMifier(nullptr)
 {
-  nsLayoutStatics::AddRef();
-
   mAlreadySetHeaders.Init();
 
   SetIsDOMBinding();
@@ -327,8 +324,6 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
   mResultJSON = JSVAL_VOID;
   mResultArrayBuffer = nullptr;
   NS_DROP_JS_OBJECTS(this, nsXMLHttpRequest);
-
-  nsLayoutStatics::Release();
 }
 
 void

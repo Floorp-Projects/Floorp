@@ -122,6 +122,13 @@ class JSFunction : public JSObject
         return flags & SH_WRAPPABLE;
     }
 
+    bool hasJITCode() const {
+        if (!hasScript())
+            return false;
+
+        return nonLazyScript()->hasBaselineScript() || nonLazyScript()->hasIonScript();
+    }
+
     // Arrow functions are a little weird.
     //
     // Like all functions, (1) when the compiler parses an arrow function, it

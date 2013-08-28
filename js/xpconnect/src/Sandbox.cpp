@@ -9,9 +9,9 @@
  */
 
 #include "AccessCheck.h"
-#include "jsdbgapi.h"
 #include "jsfriendapi.h"
 #include "jsproxy.h"
+#include "js/OldDebugAPI.h"
 #include "js/StructuredClone.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"

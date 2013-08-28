@@ -24,6 +24,7 @@
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 #include "prio.h"
+#include "mozilla/Maybe.h"
 
 using namespace JS;
 
