@@ -5928,6 +5928,14 @@ bool
 CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyIC> &ic)
 {
     LInstruction *lir = ool->lir();
+
+    if (ic->idempotent()) {
+        size_t numLocs;
+        CacheLocationList &cacheLocs = lir->mirRaw()->toGetPropertyCache()->location();
+        size_t locationBase = addCacheLocations(cacheLocs, &numLocs);
+        ic->setLocationInfo(locationBase, numLocs);
+    }
+
     saveLive(lir);
 
     pushArg(ic->object());
