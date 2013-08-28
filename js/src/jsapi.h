@@ -2362,9 +2362,22 @@ JS_GetExternalStringFinalizer(JSString *str);
 /*
  * Set the size of the native stack that should not be exceed. To disable
  * stack size checking pass 0.
+ *
+ * SpiderMonkey allows for a distinction between system code (such as GCs, which
+ * may incidentally be triggered by script but are not strictly performed on
+ * behalf of such script), trusted script (as determined by JS_SetTrustedPrincipals),
+ * and untrusted script. Each kind of code may have a different stack quota,
+ * allowing embedders to keep higher-priority machinery running in the face of
+ * scripted stack exhaustion by something else.
+ *
+ * The stack quotas for each kind of code should be monotonically descending,
+ * and may be specified with this function. If 0 is passed for a given kind
+ * of code, it defaults to the value of the next-highest-priority kind.
  */
 extern JS_PUBLIC_API(void)
-JS_SetNativeStackQuota(JSRuntime *cx, size_t stackSize);
+JS_SetNativeStackQuota(JSRuntime *cx, size_t systemCodeStackSize,
+                       size_t trustedScriptStackSize = 0,
+                       size_t untrustedScriptStackSize = 0);
 
 /************************************************************************/
 

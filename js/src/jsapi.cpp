@@ -2561,38 +2561,67 @@ JS_GetExternalStringFinalizer(JSString *str)
     return str->asExternal().externalFinalizer();
 }
 
-JS_PUBLIC_API(void)
-JS_SetNativeStackQuota(JSRuntime *rt, size_t stackSize)
+static void
+SetNativeStackQuota(JSRuntime *rt, StackKind kind, size_t stackSize)
 {
-    rt->nativeStackQuota = stackSize;
-    if (!rt->nativeStackBase)
-        return;
+    rt->nativeStackQuota[kind] = stackSize;
+    if (rt->nativeStackBase)
+        RecomputeStackLimit(rt, kind);
+}
 
+void
+js::RecomputeStackLimit(JSRuntime *rt, StackKind kind)
+{
+    size_t stackSize = rt->nativeStackQuota[kind];
 #if JS_STACK_GROWTH_DIRECTION > 0
     if (stackSize == 0) {
-        rt->mainThread.nativeStackLimit = UINTPTR_MAX;
+        rt->mainThread.nativeStackLimit[kind] = UINTPTR_MAX;
     } else {
         JS_ASSERT(rt->nativeStackBase <= size_t(-1) - stackSize);
-        rt->mainThread.nativeStackLimit = rt->nativeStackBase + stackSize - 1;
+        rt->mainThread.nativeStackLimit[kind] =
+          rt->nativeStackBase + stackSize - 1;
     }
 #else
     if (stackSize == 0) {
-        rt->mainThread.nativeStackLimit = 0;
+        rt->mainThread.nativeStackLimit[kind] = 0;
     } else {
         JS_ASSERT(rt->nativeStackBase >= stackSize);
-        rt->mainThread.nativeStackLimit = rt->nativeStackBase - (stackSize - 1);
+        rt->mainThread.nativeStackLimit[kind] =
+          rt->nativeStackBase - (stackSize - 1);
     }
 #endif
 
     // If there's no pending interrupt request set on the runtime's main thread's
     // ionStackLimit, then update it so that it reflects the new nativeStacklimit.
+    //
+    // Note that, for now, we use the untrusted limit for ion. This is fine,
+    // because it's the most conservative limit, and if we hit it, we'll bail
+    // out of ion into the interpeter, which will do a proper recursion check.
 #ifdef JS_ION
-    {
+    if (kind == StackForUntrustedScript) {
         JSRuntime::AutoLockForOperationCallback lock(rt);
         if (rt->mainThread.ionStackLimit != uintptr_t(-1))
-            rt->mainThread.ionStackLimit = rt->mainThread.nativeStackLimit;
+            rt->mainThread.ionStackLimit = rt->mainThread.nativeStackLimit[kind];
     }
 #endif
+}
+
+JS_PUBLIC_API(void)
+JS_SetNativeStackQuota(JSRuntime *rt, size_t systemCodeStackSize,
+                       size_t trustedScriptStackSize,
+                       size_t untrustedScriptStackSize)
+{
+    JS_ASSERT_IF(trustedScriptStackSize,
+                 trustedScriptStackSize < systemCodeStackSize);
+    if (!trustedScriptStackSize)
+        trustedScriptStackSize = systemCodeStackSize;
+    JS_ASSERT_IF(untrustedScriptStackSize,
+                 untrustedScriptStackSize < trustedScriptStackSize);
+    if (!untrustedScriptStackSize)
+        untrustedScriptStackSize = trustedScriptStackSize;
+    SetNativeStackQuota(rt, StackForSystemCode, systemCodeStackSize);
+    SetNativeStackQuota(rt, StackForTrustedScript, trustedScriptStackSize);
+    SetNativeStackQuota(rt, StackForUntrustedScript, untrustedScriptStackSize);
 }
 
 /************************************************************************/

@@ -37,8 +37,8 @@ JS_STATIC_ASSERT(offsetof(JSRuntime, mainThread) ==
                  PerThreadDataFriendFields::RuntimeMainThreadOffset);
 
 PerThreadDataFriendFields::PerThreadDataFriendFields()
-  : nativeStackLimit(0)
 {
+    PodArrayZero(nativeStackLimit);
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
     PodArrayZero(thingGCRooters);
 #endif
@@ -400,6 +400,12 @@ JS_FRIEND_API(bool)
 js::IsObjectInContextCompartment(JSObject *obj, const JSContext *cx)
 {
     return obj->compartment() == cx->compartment();
+}
+
+JS_FRIEND_API(bool)
+js::RunningWithTrustedPrincipals(JSContext *cx)
+{
+    return cx->runningWithTrustedPrincipals();
 }
 
 JS_FRIEND_API(bool)
