@@ -146,11 +146,6 @@ public:
   // OnStartRequest).
   void SyncNotify(imgRequestProxy* proxy);
 
-  // "Replays" all of the decode notifications (i.e., not
-  // OnStartRequest/OnStopRequest) that have happened to us to all of our
-  // non-deferred proxies.
-  void SyncNotifyDecodeState();
-
   // Send some notifications that would be necessary to make |proxy| believe
   // the request is finished downloading and decoding.  We only send
   // OnStopRequest and UnblockOnload, and only if necessary.
@@ -253,6 +248,10 @@ public:
 
   // Compute the difference between this status tracker and aOther.
   mozilla::image::ImageStatusDiff Difference(imgStatusTracker* aOther) const;
+
+  // Captures all of the decode notifications (i.e., not OnStartRequest /
+  // OnStopRequest) so far as an ImageStatusDiff.
+  mozilla::image::ImageStatusDiff DecodeStateAsDifference() const;
 
   // Update our state to incorporate the changes in aDiff.
   void ApplyDifference(const mozilla::image::ImageStatusDiff& aDiff);

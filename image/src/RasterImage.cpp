@@ -2958,20 +2958,16 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
   if (request) {
     diff = image->mStatusTracker->Difference(request->mStatusTracker);
     image->mStatusTracker->ApplyDifference(diff);
+  } else {
+    diff = image->mStatusTracker->DecodeStateAsDifference();
   }
 
   {
     // Notifications can't go out with the decoding lock held.
     MutexAutoUnlock unlock(mDecodingMutex);
 
-    // Then, tell the observers what happened in the decoder.
-    // If we have no request, we have not yet created a decoder, but we still
-    // need to send out notifications.
-    if (request) {
-      image->mStatusTracker->SyncNotifyDifference(diff);
-    } else {
-      image->mStatusTracker->SyncNotifyDecodeState();
-    }
+    // Then, tell the observers what has happened.
+    image->mStatusTracker->SyncNotifyDifference(diff);
 
     // If we were a size decode and a full decode was requested, now's the time.
     if (NS_SUCCEEDED(rv) && aIntent != eShutdownIntent_Error && done &&
