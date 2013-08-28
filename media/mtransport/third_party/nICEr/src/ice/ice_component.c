@@ -175,7 +175,7 @@ int nr_ice_component_destroy(nr_ice_component **componentp)
 int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *component)
   {
     int r,_status;
-    nr_transport_addr addrs[MAXADDRS];
+    nr_local_addr addrs[MAXADDRS];
     nr_socket *sock;
     nr_ice_socket *isock=0;
     nr_ice_candidate *cand=0;
@@ -204,7 +204,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     for(i=0;i<addr_ct;i++){
       char suppress;
 
-      if(r=NR_reg_get2_char(NR_ICE_REG_SUPPRESS_INTERFACE_PRFX,addrs[i].ifname,&suppress)){
+      if(r=NR_reg_get2_char(NR_ICE_REG_SUPPRESS_INTERFACE_PRFX,addrs[i].addr.ifname,&suppress)){
         if(r!=R_NOT_FOUND)
           ABORT(r);
       }
@@ -214,9 +214,9 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
       }
 
 
-      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): host address %s",ctx->label,addrs[i].as_string);
-      if(r=nr_socket_local_create(&addrs[i],&sock)){
-        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create socket for address %s",ctx->label,addrs[i].as_string);
+      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): host address %s",ctx->label,addrs[i].addr.as_string);
+      if(r=nr_socket_local_create(&addrs[i].addr,&sock)){
+        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create socket for address %s",ctx->label,addrs[i].addr.as_string);
         continue;
       }
 
@@ -279,7 +279,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
 #endif /* USE_TURN */
 
       /* Create a STUN server context for this socket */
-      snprintf(label, sizeof(label), "server(%s)", addrs[i].as_string);
+      snprintf(label, sizeof(label), "server(%s)", addrs[i].addr.as_string);
       if(r=nr_stun_server_ctx_create(label,sock,&isock->stun_server))
         ABORT(r);
       if(r=nr_ice_socket_register_stun_server(isock,isock->stun_server,&isock->stun_server_handle))
