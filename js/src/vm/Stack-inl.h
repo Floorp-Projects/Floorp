@@ -13,9 +13,9 @@
 #include "jscompartment.h"
 
 #include "vm/Stack.h"
-#include "ion/BaselineFrame.h"
-#include "ion/BaselineFrame-inl.h"
-#include "ion/IonFrameIterator-inl.h"
+#include "jit/BaselineFrame.h"
+#include "jit/BaselineFrame-inl.h"
+#include "jit/IonFrameIterator-inl.h"
 
 #include "jsfuninlines.h"
 #include "jsscriptinlines.h"

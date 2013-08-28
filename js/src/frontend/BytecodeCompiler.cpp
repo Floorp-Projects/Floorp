@@ -10,7 +10,7 @@
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/NameFunctions.h"
-#include "ion/AsmJS.h"
+#include "jit/AsmJS.h"
 #include "vm/GlobalObject.h"
 
 #include "jsobjinlines.h"

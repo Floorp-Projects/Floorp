@@ -10,7 +10,7 @@
 #include "jsautooplen.h"
 #include "jsfun.h"
 #include "jsscript.h"
-#include "ion/IonFrameIterator.h"
+#include "jit/IonFrameIterator.h"
 
 struct JSContext;
 struct JSCompartment;

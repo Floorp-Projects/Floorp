@@ -10,7 +10,7 @@
 #include "jscntxt.h"
 #include "vm/ThreadPool.h"
 #include "jsgc.h"
-#include "ion/Ion.h"
+#include "jit/Ion.h"
 
 ///////////////////////////////////////////////////////////////////////////
 // Read Me First

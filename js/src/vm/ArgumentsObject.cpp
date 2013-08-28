@@ -17,7 +17,7 @@
 #include "vm/Stack-inl.h"
 
 #if defined(JS_ION)
-#include "ion/IonFrames.h"
+#include "jit/IonFrames.h"
 #endif
 
 using namespace js;

@@ -14,8 +14,8 @@
 #include "jslibmath.h"
 #include "jsnum.h"
 #include "jsstr.h"
-#include "ion/Ion.h"
-#include "ion/IonCompartment.h"
+#include "jit/Ion.h"
+#include "jit/IonCompartment.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 

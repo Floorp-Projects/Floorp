@@ -41,7 +41,7 @@
 #include "jsstr.h"
 #include "jsworkers.h"
 #ifdef JS_ION
-#include "ion/Ion.h"
+#include "jit/Ion.h"
 #endif
 
 #include "gc/Marking.h"

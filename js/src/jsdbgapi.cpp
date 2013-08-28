@@ -25,13 +25,13 @@
 #include "jswatchpoint.h"
 
 #include "frontend/SourceNotes.h"
-#include "ion/AsmJS.h"
+#include "jit/AsmJS.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"
 #include "vm/Shape.h"
 
 #ifdef JS_ION
-#include "ion/AsmJSModule.h"
+#include "jit/AsmJSModule.h"
 #endif
 
 #include "jsatominlines.h"

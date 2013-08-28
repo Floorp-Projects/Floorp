@@ -64,9 +64,9 @@
 #include "vm/Shape.h"
 #include "vm/String.h"
 #include "vm/ForkJoin.h"
-#include "ion/IonCode.h"
+#include "jit/IonCode.h"
 #ifdef JS_ION
-# include "ion/BaselineJIT.h"
+# include "jit/BaselineJIT.h"
 #endif
 
 #include "jsgcinlines.h"
