@@ -538,18 +538,25 @@ def getRelevantProviders(descriptor, dictionary, config):
     # Do non-workers only for callbacks
     return [ config.getDescriptorProvider(False) ]
 
-def callForEachType(descriptors, dictionaries, callbacks, func):
+
+def getAllTypes(descriptors, dictionaries, callbacks):
+    """
+    Generate all the types we're dealing with.  For each type, a tuple
+    containing type, descriptor, dictionary is yielded.  The
+    descriptor and dictionary can be None if the type does not come
+    from a descriptor or dictionary; they will never both be non-None.
+    """
     for d in descriptors:
         if d.interface.isExternal():
             continue
         for t in getTypesFromDescriptor(d):
-            func(t, descriptor=d)
+            yield (t, d, None)
     for dictionary in dictionaries:
         for t in getTypesFromDictionary(dictionary):
-            func(t, dictionary=dictionary)
+            yield (t, None, dictionary)
     for callback in callbacks:
         for t in getTypesFromCallback(callback):
-            func(t)
+            yield (t, None, None)
 
 class CGHeaders(CGWrapper):
     """
@@ -609,7 +616,7 @@ class CGHeaders(CGWrapper):
         # need to wrap or unwrap them.
         bindingHeaders = set()
         declareIncludes = set(declareIncludes)
-        def addHeadersForType(t, descriptor=None, dictionary=None):
+        def addHeadersForType((t, descriptor, dictionary)):
             """
             Add the relevant headers for this type.  We use descriptor and
             dictionary, if passed, to decide what to do with interface types.
@@ -672,8 +679,9 @@ class CGHeaders(CGWrapper):
                 if filename != prefix + ".h":
                     declareIncludes.add(filename)
 
-        callForEachType(descriptors + callbackDescriptors, dictionaries,
-                        callbacks, addHeadersForType)
+        map(addHeadersForType,
+            getAllTypes(descriptors + callbackDescriptors, dictionaries,
+                        callbacks))
 
         # Now for non-callback descriptors make sure we include any
         # headers needed by Func declarations.
@@ -776,7 +784,7 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
     unionStructs = dict()
     unionReturnValues = dict()
 
-    def addInfoForType(t, descriptor=None, dictionary=None):
+    def addInfoForType((t, descriptor, dictionary)):
         """
         Add info for the given type.  descriptor and dictionary, if passed, are
         used to figure out what to do with interface types.
@@ -815,7 +823,7 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                     declarations.add((f.inner.identifier.name, True))
                     implheaders.add(CGHeaders.getDeclarationFilename(f.inner))
 
-    callForEachType(descriptors, dictionaries, callbacks, addInfoForType)
+    map(addInfoForType, getAllTypes(descriptors, dictionaries, callbacks))
 
     return (headers, implheaders, declarations,
             CGList(itertools.chain(SortedDictValues(unionStructs),
@@ -830,7 +838,7 @@ def UnionConversions(descriptors, dictionaries, callbacks, config):
     headers = set()
     unionConversions = dict()
 
-    def addInfoForType(t, descriptor=None, dictionary=None):
+    def addInfoForType((t, descriptor, dictionary)):
         """
         Add info for the given type.  descriptor and dictionary, if passed, are
         used to figure out what to do with interface types.
@@ -855,7 +863,7 @@ def UnionConversions(descriptors, dictionaries, callbacks, config):
                 elif f.isDictionary():
                     headers.add(CGHeaders.getDeclarationFilename(f.inner))
 
-    callForEachType(descriptors, dictionaries, callbacks, addInfoForType)
+    map(addInfoForType, getAllTypes(descriptors, dictionaries, callbacks))
 
     return (headers,
             CGWrapper(CGList(SortedDictValues(unionConversions), "\n"),
@@ -8666,9 +8674,10 @@ class CGBindingRoot(CGThing):
         needsDOMQS = { "value": any(d.hasXPConnectImpls for d in descriptors) }
         # Only mainthread things can have hasXPConnectImpls
         provider = config.getDescriptorProvider(False)
-        def checkForXPConnectImpls(type, descriptor=None, dictionary=None):
+        def checkForXPConnectImpls(typeInfo):
             if needsDOMQS["value"]:
                 return
+            (type, _, _) = typeInfo
             type = type.unroll()
             if not type.isInterface() or not type.isGeckoInterface():
                 return
@@ -8678,8 +8687,9 @@ class CGBindingRoot(CGThing):
                 return
             needsDOMQS["value"] = typeDesc.hasXPConnectImpls
 
-        callForEachType(descriptors + callbackDescriptors, dictionaries,
-                        mainCallbacks, checkForXPConnectImpls)
+        map(checkForXPConnectImpls,
+            getAllTypes(descriptors + callbackDescriptors, dictionaries,
+                        mainCallbacks))
 
         # Do codegen for all the enums
         cgthings = [ CGEnum(e) for e in config.getEnums(webIDLFile) ]
