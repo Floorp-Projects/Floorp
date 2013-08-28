@@ -11,7 +11,6 @@
 #include "nsIDOMWakeLockListener.h"
 #include "nsIDOMWindow.h"
 #include "nsWeakReference.h"
-#include "nsCycleCollectionParticipant.h"
 
 class nsPIDOMWindow;
 

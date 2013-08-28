@@ -16,6 +16,7 @@
 #include "mozilla/dom/battery/Types.h"
 #include "mozilla/dom/network/Types.h"
 #include "mozilla/dom/power/Types.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/hal_sandbox/PHal.h"
 #include "mozilla/dom/ScreenOrientation.h"
 
