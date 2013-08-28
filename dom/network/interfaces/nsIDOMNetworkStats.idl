@@ -12,9 +12,15 @@ interface nsIDOMMozNetworkStatsData : nsISupports
   readonly attribute jsval           date;      // Date.
 };
 
-[scriptable, builtinclass, uuid(037435a6-f563-48f3-99b3-a0106d8ba5bd)]
+[scriptable, builtinclass, uuid(6613ea55-b99c-44f9-91bf-d07da10b9b74)]
 interface nsIDOMMozNetworkStats : nsISupports
 {
+  /**
+   * Manifest URL of an application for specifying the per-app
+   * stats of the specified app. If null, system stats are returned.
+   */
+  readonly attribute DOMString    manifestURL;
+
   /**
    * Can be 'mobile', 'wifi' or null.
    * If null, stats for both mobile and wifi are returned.
