@@ -79,9 +79,10 @@ class OutOfLineUpdateCache :
     }
 
     // ICs' visit functions delegating the work to the CodeGen visit funtions.
-#define VISIT_CACHE_FUNCTION(op)                                \
-    bool visit##op##IC(CodeGenerator *codegen, op##IC *ic) {    \
-        return codegen->visit##op##IC(this, ic);                \
+#define VISIT_CACHE_FUNCTION(op)                                        \
+    bool visit##op##IC(CodeGenerator *codegen) {                        \
+        CodeGenerator::DataPtr<op##IC> ic(codegen, getCacheIndex());    \
+        return codegen->visit##op##IC(this, ic);                        \
     }
 
     IONCACHE_KIND_LIST(VISIT_CACHE_FUNCTION)
@@ -5828,7 +5829,7 @@ const VMFunction CallsiteCloneIC::UpdateInfo =
     FunctionInfo<CallsiteCloneICFn>(CallsiteCloneIC::update);
 
 bool
-CodeGenerator::visitCallsiteCloneIC(OutOfLineUpdateCache *ool, CallsiteCloneIC *ic)
+CodeGenerator::visitCallsiteCloneIC(OutOfLineUpdateCache *ool, DataPtr<CallsiteCloneIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -5860,7 +5861,7 @@ typedef bool (*NameICFn)(JSContext *, size_t, HandleObject, MutableHandleValue);
 const VMFunction NameIC::UpdateInfo = FunctionInfo<NameICFn>(NameIC::update);
 
 bool
-CodeGenerator::visitNameIC(OutOfLineUpdateCache *ool, NameIC *ic)
+CodeGenerator::visitNameIC(OutOfLineUpdateCache *ool, DataPtr<NameIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -5924,7 +5925,7 @@ const VMFunction GetPropertyIC::UpdateInfo =
     FunctionInfo<GetPropertyICFn>(GetPropertyIC::update);
 
 bool
-CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache *ool, GetPropertyIC *ic)
+CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -5946,7 +5947,7 @@ const VMFunction GetPropertyParIC::UpdateInfo =
     FunctionInfo<GetPropertyParICFn>(GetPropertyParIC::update);
 
 bool
-CodeGenerator::visitGetPropertyParIC(OutOfLineUpdateCache *ool, GetPropertyParIC *ic)
+CodeGenerator::visitGetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyParIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6005,7 +6006,7 @@ const VMFunction GetElementIC::UpdateInfo =
     FunctionInfo<GetElementICFn>(GetElementIC::update);
 
 bool
-CodeGenerator::visitGetElementIC(OutOfLineUpdateCache *ool, GetElementIC *ic)
+CodeGenerator::visitGetElementIC(OutOfLineUpdateCache *ool, DataPtr<GetElementIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6060,7 +6061,7 @@ const VMFunction SetElementIC::UpdateInfo =
     FunctionInfo<SetElementICFn>(SetElementIC::update);
 
 bool
-CodeGenerator::visitSetElementIC(OutOfLineUpdateCache *ool, SetElementIC *ic)
+CodeGenerator::visitSetElementIC(OutOfLineUpdateCache *ool, DataPtr<SetElementIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6083,7 +6084,7 @@ const VMFunction GetElementParIC::UpdateInfo =
     FunctionInfo<GetElementParICFn>(GetElementParIC::update);
 
 bool
-CodeGenerator::visitGetElementParIC(OutOfLineUpdateCache *ool, GetElementParIC *ic)
+CodeGenerator::visitGetElementParIC(OutOfLineUpdateCache *ool, DataPtr<GetElementParIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6115,7 +6116,7 @@ const VMFunction BindNameIC::UpdateInfo =
     FunctionInfo<BindNameICFn>(BindNameIC::update);
 
 bool
-CodeGenerator::visitBindNameIC(OutOfLineUpdateCache *ool, BindNameIC *ic)
+CodeGenerator::visitBindNameIC(OutOfLineUpdateCache *ool, DataPtr<BindNameIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
@@ -6203,7 +6204,7 @@ const VMFunction SetPropertyIC::UpdateInfo =
     FunctionInfo<SetPropertyICFn>(SetPropertyIC::update);
 
 bool
-CodeGenerator::visitSetPropertyIC(OutOfLineUpdateCache *ool, SetPropertyIC *ic)
+CodeGenerator::visitSetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<SetPropertyIC> &ic)
 {
     LInstruction *lir = ool->lir();
     saveLive(lir);
