@@ -192,25 +192,18 @@ class CodeGeneratorShared : public LInstructionVisitor
 
   protected:
     // Ensure the cache is an IonCache while expecting the size of the derived
-    // class.
+    // class. We only need the cache list at GC time. Everyone else can just take
+    // runtimeData offsets.
     size_t allocateCache(const IonCache &, size_t size) {
         size_t dataOffset = allocateData(size);
-        size_t index = cacheList_.length();
         masm.propagateOOM(cacheList_.append(dataOffset));
-        return index;
+        return dataOffset;
     }
 
 #ifdef CHECK_OSIPOINT_REGISTERS
     bool shouldVerifyOsiPointRegs(LSafepoint *safepoint);
     void verifyOsiPointRegs(LSafepoint *safepoint);
 #endif
-
-  public:
-    // This is needed by addCache to update the cache with the jump
-    // informations provided by the out-of-line path.
-    IonCache *getCache(size_t index) {
-        return reinterpret_cast<IonCache *>(&runtimeData_[cacheList_[index]]);
-    }
 
   protected:
 
@@ -225,7 +218,8 @@ class CodeGeneratorShared : public LInstructionVisitor
     inline size_t allocateCache(const T &cache) {
         size_t index = allocateCache(cache, sizeof(mozilla::AlignedStorage2<T>));
         // Use the copy constructor on the allocated space.
-        new (&runtimeData_[cacheList_.back()]) T(cache);
+        JS_ASSERT(index == cacheList_.back());
+        new (&runtimeData_[index]) T(cache);
         return index;
     }
 
