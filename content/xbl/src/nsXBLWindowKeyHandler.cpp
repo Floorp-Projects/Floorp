@@ -344,6 +344,14 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
 
   WalkHandlersInternal(aKeyEvent, aEventType, mHandler);
 
+  aKeyEvent->GetDefaultPrevented(&prevent);
+  if (prevent) {
+    return NS_OK;
+  }
+
+  // XXX Shouldn't we prefer the native key binding rather than our key
+  //     bindings?  I.e., should we call WalkHandlersInternal() after this
+  //     block?
   if (isEditor && GetEditorKeyBindings()) {
     // get the DOM window we're attached to
     nsCOMPtr<nsIControllers> controllers;
