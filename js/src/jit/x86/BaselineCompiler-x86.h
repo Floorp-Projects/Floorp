@@ -10,7 +10,7 @@
 #include "jit/shared/BaselineCompiler-x86-shared.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class BaselineCompilerX86 : public BaselineCompilerX86Shared
 {
@@ -20,7 +20,7 @@ class BaselineCompilerX86 : public BaselineCompilerX86Shared
 
 typedef BaselineCompilerX86 BaselineCompilerSpecific;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_x86_BaselineCompiler_x86_h */

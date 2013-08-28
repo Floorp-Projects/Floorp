@@ -11,7 +11,7 @@
 #include "jit/MIRGraph.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class EffectiveAddressAnalysis
 {
@@ -25,7 +25,7 @@ class EffectiveAddressAnalysis
     bool analyze();
 };
 
-} /* namespace ion */
+} /* namespace jit */
 } /* namespace js */
 
 #endif /* jit_EffectiveAddressAnalysis_h */

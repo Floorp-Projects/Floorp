@@ -17,7 +17,7 @@
 #include "vm/StringObject-inl.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 IonBuilder::InliningStatus
 IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
@@ -1516,5 +1516,5 @@ IonBuilder::inlineBailout(CallInfo &callInfo)
     return InliningStatus_Inlined;
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js

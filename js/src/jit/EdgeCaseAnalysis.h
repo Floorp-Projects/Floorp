@@ -10,7 +10,7 @@
 #include "jit/MIRGenerator.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class MIRGraph;
 
@@ -25,7 +25,7 @@ class EdgeCaseAnalysis
 };
 
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_EdgeCaseAnalysis_h */

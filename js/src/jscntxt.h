@@ -34,7 +34,7 @@ js_ReportOverRecursed(js::ThreadSafeContext *cx);
 
 namespace js {
 
-namespace ion { class IonContext; }
+namespace jit { class IonContext; }
 
 struct CallsiteCloneKey {
     /* The original function that we are cloning. */
@@ -264,6 +264,8 @@ struct ThreadSafeContext : ContextFriendFields,
     StaticStrings &staticStrings() { return runtime_->staticStrings; }
     PropertyName *emptyString() { return runtime_->emptyString; }
     FreeOp *defaultFreeOp() { return runtime_->defaultFreeOp(); }
+    bool useHelperThreads() { return runtime_->useHelperThreads(); }
+    size_t helperThreadCount() { return runtime_->helperThreadCount(); }
 
     // GCs cannot happen while non-main threads are running.
     uint64_t gcNumber() { return runtime_->gcNumber; }
@@ -287,7 +289,7 @@ class ExclusiveContext : public ThreadSafeContext
     friend class AutoLockForExclusiveAccess;
     friend struct StackBaseShape;
     friend void JSScript::initCompartment(ExclusiveContext *cx);
-    friend class ion::IonContext;
+    friend class jit::IonContext;
 
     // The worker on which this context is running, if this is not a JSContext.
     WorkerThread *workerThread;

@@ -591,11 +591,11 @@ protected:
 
     static
     nsresult
-    InsertElement(nsIContent* aParent, nsIContent* aChild, bool aNotify);
+    InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify);
 
     static 
     nsresult
-    RemoveElement(nsIContent* aParent, nsIContent* aChild);
+    RemoveElement(nsINode* aParent, nsINode* aChild);
 
     /**
      * The current prototype that we are walking to construct the

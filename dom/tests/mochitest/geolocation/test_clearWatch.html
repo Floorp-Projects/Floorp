@@ -20,8 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478911
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-resume_geolocationProvider();
-force_prompt(true)
+
+resume_geolocationProvider(function() {
+  force_prompt(true, test1);
+});
 
 var hasBeenCleared = false;
 var successWasCalledAfterClear = false;
@@ -56,15 +58,14 @@ function testAccepted() {
   ok(true, "testAccepted was called, hasBeenCleared=" + hasBeenCleared +
            ", successWasCalledAfterClear=" + successWasCalledAfterClear);
   ok(!successWasCalledAfterClear, "The successCallback should not be called after clear");
-  reset_prompt();
   SimpleTest.finish();
 }
 
-
-ok(true, "Getting the watchPosition");
-watchID = navigator.geolocation.watchPosition(successCallback, failureCallback, null);
-ok(true, "Waiting");
-
+function test1() {
+  ok(true, "Getting the watchPosition");
+  watchID = navigator.geolocation.watchPosition(successCallback, failureCallback, null);
+  ok(true, "Waiting");
+}
 </script>
 </pre>
 </body>

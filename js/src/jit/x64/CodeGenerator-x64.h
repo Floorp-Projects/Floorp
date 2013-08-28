@@ -11,7 +11,7 @@
 #include "jit/x64/Assembler-x64.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class CodeGeneratorX64 : public CodeGeneratorX86Shared
 {
@@ -66,7 +66,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
 
 typedef CodeGeneratorX64 CodeGeneratorSpecific;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_x64_CodeGenerator_x64_h */
