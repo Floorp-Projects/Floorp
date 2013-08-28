@@ -186,6 +186,15 @@ function BrowserTabList(aConnection)
 
 BrowserTabList.prototype.constructor = BrowserTabList;
 
+
+BrowserTabList.prototype._getSelectedBrowser = function(aWindow) {
+  return aWindow.gBrowser.selectedBrowser;
+};
+
+BrowserTabList.prototype._getChildren = function(aWindow) {
+  return aWindow.gBrowser.browsers;
+};
+
 BrowserTabList.prototype.getList = function() {
   let topXULWindow = windowMediator.getMostRecentWindow("navigator:browser");
 
@@ -201,13 +210,13 @@ BrowserTabList.prototype.getList = function() {
 
   // Iterate over all navigator:browser XUL windows.
   for (let win of allAppShellDOMWindows("navigator:browser")) {
-    let selectedTab = win.gBrowser.selectedBrowser;
+    let selectedBrowser = this._getSelectedBrowser(win);
 
     // For each tab in this XUL window, ensure that we have an actor for
     // it, reusing existing actors where possible. We actually iterate
     // over 'browser' XUL elements, and BrowserTabActor uses
     // browser.contentWindow.wrappedJSObject as the debuggee global.
-    for (let browser of win.gBrowser.browsers) {
+    for (let browser of this._getChildren(win)) {
       // Do we have an existing actor for this browser? If not, create one.
       let actor = this._actorByBrowser.get(browser);
       if (actor) {
@@ -218,7 +227,7 @@ BrowserTabList.prototype.getList = function() {
       }
 
       // Set the 'selected' properties on all actors correctly.
-      actor.selected = (win === topXULWindow && browser === selectedTab);
+      actor.selected = (win === topXULWindow && browser === selectedBrowser);
     }
   }
 

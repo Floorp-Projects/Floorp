@@ -54,49 +54,10 @@ MobileTabList.prototype = Object.create(BrowserTabList.prototype);
 
 MobileTabList.prototype.constructor = MobileTabList;
 
-MobileTabList.prototype.iterator = function() {
-  // As a sanity check, make sure all the actors presently in our map get
-  // picked up when we iterate over all windows' tabs.
-  let initialMapSize = this._actorByBrowser.size;
-  let foundCount = 0;
+MobileTabList.prototype._getSelectedBrowser = function(aWindow) {
+  return aWindow.BrowserApp.selectedBrowser;
+};
 
-  // To avoid mysterious behavior if tabs are closed or opened mid-iteration,
-  // we update the map first, and then make a second pass over it to yield
-  // the actors. Thus, the sequence yielded is always a snapshot of the
-  // actors that were live when we began the iteration.
-
-  // Iterate over all navigator:browser XUL windows.
-  for (let win of allAppShellDOMWindows("navigator:browser")) {
-    let selectedTab = win.BrowserApp.selectedBrowser;
-
-    // For each tab in this XUL window, ensure that we have an actor for
-    // it, reusing existing actors where possible. We actually iterate
-    // over 'browser' XUL elements, and BrowserTabActor uses
-    // browser.contentWindow.wrappedJSObject as the debuggee global.
-    for (let tab of win.BrowserApp.tabs) {
-      let browser = tab.browser;
-      // Do we have an existing actor for this browser? If not, create one.
-      let actor = this._actorByBrowser.get(browser);
-      if (actor) {
-        foundCount++;
-      } else {
-        actor = new BrowserTabActor(this._connection, browser);
-        this._actorByBrowser.set(browser, actor);
-      }
-
-      // Set the 'selected' properties on all actors correctly.
-      actor.selected = (browser === selectedTab);
-    }
-  }
-
-  if (this._testing && initialMapSize !== foundCount)
-    throw Error("_actorByBrowser map contained actors for dead tabs");
-
-  this._mustNotify = true;
-  this._checkListening();
-
-  /* Yield the values. */
-  for (let [browser, actor] of this._actorByBrowser) {
-    yield actor;
-  }
+MobileTabList.prototype._getChildren = function(aWindow) {
+  return aWindow.BrowserApp.tabs.map(tab => tab.browser);
 };
