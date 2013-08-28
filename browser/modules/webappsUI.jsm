@@ -135,7 +135,7 @@ this.webappsUI = {
             localDir = app.appProfile.localDir;
           }
 
-          DOMApplicationRegistry.confirmInstall(aData, false, localDir, null,
+          DOMApplicationRegistry.confirmInstall(aData, localDir, null,
             (aManifest) => {
               Task.spawn(function() {
                 try {
