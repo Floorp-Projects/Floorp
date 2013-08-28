@@ -27,7 +27,6 @@ pref("services.sync.engine.history", true);
 pref("services.sync.engine.passwords", true);
 pref("services.sync.engine.prefs", true);
 pref("services.sync.engine.tabs", true);
-pref("services.sync.engine.apps", false);
 pref("services.sync.engine.tabs.filteredUrls", "^(about:.*|chrome://weave/.*|wyciwyg:.*|file:.*)$");
 
 pref("services.sync.jpake.serverURL", "https://setup.services.mozilla.com/");
