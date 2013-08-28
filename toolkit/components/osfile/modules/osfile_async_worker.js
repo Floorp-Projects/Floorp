@@ -52,6 +52,9 @@ if (this.Components) {
          LOG("Method", method, "succeeded");
        } catch (ex) {
          exn = ex;
+         if (!exn.stack) {
+           exn.stack = "No stack trace available!";
+         }
          LOG("Error while calling agent method", exn, exn.stack);
        }
 
