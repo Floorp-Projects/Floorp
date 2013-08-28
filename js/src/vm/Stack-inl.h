@@ -14,12 +14,12 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 
-#include "ion/BaselineFrame.h"
+#include "jit/BaselineFrame.h"
 
 #include "jsscriptinlines.h"
 
-#include "ion/BaselineFrame-inl.h"
-#include "ion/IonFrameIterator-inl.h"
+#include "jit/BaselineFrame-inl.h"
+#include "jit/IonFrameIterator-inl.h"
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ScopeObject-inl.h"
 

@@ -73,9 +73,9 @@ using mozilla::Swap;
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #ifdef JS_ION
-# include "ion/BaselineJIT.h"
+# include "jit/BaselineJIT.h"
 #endif
-#include "ion/IonCode.h"
+#include "jit/IonCode.h"
 #include "vm/Debugger.h"
 #include "vm/ForkJoin.h"
 #include "vm/ProxyObject.h"

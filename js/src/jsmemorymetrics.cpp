@@ -14,8 +14,8 @@
 #include "jsobj.h"
 #include "jsscript.h"
 
-#include "ion/BaselineJIT.h"
-#include "ion/Ion.h"
+#include "jit/BaselineJIT.h"
+#include "jit/Ion.h"
 #include "vm/Runtime.h"
 #include "vm/Shape.h"
 #include "vm/WrapperObject.h"

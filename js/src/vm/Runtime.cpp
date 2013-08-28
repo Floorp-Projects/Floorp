@@ -25,9 +25,9 @@
 #include "jswrapper.h"
 
 #include "js/MemoryMetrics.h"
-#include "ion/AsmJSSignalHandlers.h"
-#include "ion/IonCompartment.h"
-#include "ion/PcScriptCache.h"
+#include "jit/AsmJSSignalHandlers.h"
+#include "jit/IonCompartment.h"
+#include "jit/PcScriptCache.h"
 #include "yarr/BumpPointerAllocator.h"
 
 #include "jscntxtinlines.h"

@@ -15,7 +15,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
-#include "ion/BaselineJIT.h"
+#include "jit/BaselineJIT.h"
 #include "js/Vector.h"
 #include "vm/WrapperObject.h"
 
