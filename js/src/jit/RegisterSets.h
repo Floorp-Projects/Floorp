@@ -14,7 +14,7 @@
 #include "jit/Registers.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 struct AnyRegister {
     typedef uint32_t Code;
@@ -788,10 +788,10 @@ class AsmJSHeapAccess
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     uint8_t opLength_;  // the length of the load/store instruction
     uint8_t isFloat32Load_;
-    ion::AnyRegister::Code loadedReg_ : 8;
+    jit::AnyRegister::Code loadedReg_ : 8;
 #endif
 
-    JS_STATIC_ASSERT(ion::AnyRegister::Total < UINT8_MAX);
+    JS_STATIC_ASSERT(jit::AnyRegister::Total < UINT8_MAX);
 
   public:
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
@@ -830,13 +830,13 @@ class AsmJSHeapAccess
     unsigned opLength() const { return opLength_; }
     bool isLoad() const { return loadedReg_ != UINT8_MAX; }
     bool isFloat32Load() const { return isFloat32Load_; }
-    ion::AnyRegister loadedReg() const { return ion::AnyRegister::FromCode(loadedReg_); }
+    jit::AnyRegister loadedReg() const { return jit::AnyRegister::FromCode(loadedReg_); }
 #endif
 };
 
 typedef Vector<AsmJSHeapAccess, 0, IonAllocPolicy> AsmJSHeapAccessVector;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_RegisterSets_h */
