@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <sys/reboot.h>
 #include "nsIObserverService.h"
-#include "mozilla/Services.h"
 
 namespace mozilla {
 namespace hal_impl {
