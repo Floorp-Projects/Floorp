@@ -255,7 +255,7 @@ this.OnRefTestLoad = function OnRefTestLoad(win)
 
 #if BOOTSTRAP
 #if REFTEST_B2G
-    var doc = gContainingWindow.document.getElementsByTagName("window")[0];
+    var doc = gContainingWindow.document.getElementsByTagName("html")[0];
 #else
     var doc = gContainingWindow.document.getElementById('main-window');
 #endif
