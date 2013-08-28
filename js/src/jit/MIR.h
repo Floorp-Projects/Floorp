@@ -304,10 +304,6 @@ class MDefinition : public MNode
         Total
     };
 
-    void setBlock(MBasicBlock *block) {
-        block_ = block;
-    }
-
     bool hasFlags(uint32_t flags) const {
         return (flags_ & flags) == flags;
     }
@@ -317,6 +313,12 @@ class MDefinition : public MNode
     void setFlags(uint32_t flags) {
         flags_ |= flags;
     }
+
+  protected:
+    virtual void setBlock(MBasicBlock *block) {
+        block_ = block;
+    }
+
   public:
     MDefinition()
       : id_(0),
@@ -5683,6 +5685,18 @@ class InlinePropertyTable : public TempObject
     void trimToTargets(AutoObjectVector &targets);
 };
 
+class CacheLocationList : public InlineConcatList<CacheLocationList>
+{
+  public:
+    CacheLocationList()
+      : pc(NULL),
+        script(NULL)
+    { }
+
+    jsbytecode *pc;
+    JSScript *script;
+};
+
 class MGetPropertyCache
   : public MUnaryInstruction,
     public SingleObjectPolicy
@@ -5691,6 +5705,8 @@ class MGetPropertyCache
     bool idempotent_;
     bool allowGetters_;
 
+    CacheLocationList location_;
+
     InlinePropertyTable *inlinePropertyTable_;
 
     MGetPropertyCache(MDefinition *obj, HandlePropertyName name)
@@ -5698,6 +5714,7 @@ class MGetPropertyCache
         name_(name),
         idempotent_(false),
         allowGetters_(false),
+        location_(),
         inlinePropertyTable_(NULL)
     {
         setResultType(MIRType_Value);
@@ -5748,6 +5765,9 @@ class MGetPropertyCache
     void setAllowGetters() {
         allowGetters_ = true;
     }
+    CacheLocationList &location() {
+        return location_;
+    }
     TypePolicy *typePolicy() { return this; }
 
     bool congruentTo(MDefinition *ins) const {
@@ -5769,6 +5789,8 @@ class MGetPropertyCache
         return AliasSet::Store(AliasSet::Any);
     }
 
+    void setBlock(MBasicBlock *block);
+    bool updateForReplacement(MDefinition *ins);
 };
 
 // Emit code to load a value from an object's slots if its shape matches

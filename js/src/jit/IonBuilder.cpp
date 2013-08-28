@@ -1118,9 +1118,7 @@ IonBuilder::traverseBytecode()
             return false;
 
         pc += js_CodeSpec[op].length;
-#ifdef TRACK_SNAPSHOTS
         current->updateTrackedPc(pc);
-#endif
     }
 
     return maybeAddOsrTypeBarriers();
