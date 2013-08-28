@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -8,13 +9,15 @@
 #ifndef nsStyleSheetService_h_
 #define nsStyleSheetService_h_
 
-#include "nsIStyleSheetService.h"
 #include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsIStyleSheetService.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
-class nsISimpleEnumerator;
 class nsICategoryManager;
+class nsIMemoryReporter;
+class nsISimpleEnumerator;
 class nsIStyleSheet;
 
 #define NS_STYLESHEETSERVICE_CID \
@@ -22,8 +25,6 @@ class nsIStyleSheet;
 
 #define NS_STYLESHEETSERVICE_CONTRACTID \
   "@mozilla.org/content/style-sheet-service;1"
-
-class nsIMemoryReporter;
 
 class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
 {
@@ -40,7 +41,7 @@ class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
   nsCOMArray<nsIStyleSheet>* UserStyleSheets() { return &mSheets[USER_SHEET]; }
   nsCOMArray<nsIStyleSheet>* AuthorStyleSheets() { return &mSheets[AUTHOR_SHEET]; }
 
-  static size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   static nsStyleSheetService *GetInstance();
   static nsStyleSheetService *gInstance;
@@ -60,11 +61,9 @@ class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
   NS_HIDDEN_(nsresult) LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
                                                     uint32_t aSheetType);
 
-  size_t SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMallocSizeOf) const;
-
   nsCOMArray<nsIStyleSheet> mSheets[3];
 
-  nsIMemoryReporter* mReporter;
+  nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 #endif

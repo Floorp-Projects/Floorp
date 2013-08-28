@@ -8,6 +8,8 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jsproxy.h"
+
 #include "jit/CodeGenerator.h"
 #include "jit/Ion.h"
 #include "jit/IonLinker.h"

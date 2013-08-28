@@ -483,10 +483,9 @@ class ScopeIter
     /* ScopeIter does not have value semantics. */
     ScopeIter(const ScopeIter &si) MOZ_DELETE;
 
+    ScopeIter(JSContext *cx) MOZ_DELETE;
+
   public:
-    /* The default constructor leaves ScopeIter totally invalid */
-    explicit ScopeIter(JSContext *cx
-                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /* Constructing from a copy of an existing ScopeIter. */
     explicit ScopeIter(const ScopeIter &si, JSContext *cx

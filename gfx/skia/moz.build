@@ -171,7 +171,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SkThreadUtils_win.cpp',
         'SkTime_win.cpp',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+elif CONFIG['MOZ_WIDGET_GTK']:
     EXPORTS.skia += [
         'include/ports/SkTypeface_cairo.h',
     ]

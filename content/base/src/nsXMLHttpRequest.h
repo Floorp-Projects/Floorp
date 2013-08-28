@@ -50,6 +50,53 @@ class nsIJARChannel;
 class nsILoadGroup;
 class nsIUnicodeDecoder;
 
+namespace mozilla {
+
+// A helper for building up an ArrayBuffer object's data
+// before creating the ArrayBuffer itself.  Will do doubling
+// based reallocation, up to an optional maximum growth given.
+//
+// When all the data has been appended, call getArrayBuffer,
+// passing in the JSContext* for which the ArrayBuffer object
+// is to be created.  This also implicitly resets the builder,
+// or it can be reset explicitly at any point by calling reset().
+class ArrayBufferBuilder
+{
+  void* mRawContents;
+  uint8_t* mDataPtr;
+  uint32_t mCapacity;
+  uint32_t mLength;
+public:
+  ArrayBufferBuilder();
+  ~ArrayBufferBuilder();
+
+  void reset();
+
+  // Will truncate if aNewCap is < length().
+  bool setCapacity(uint32_t aNewCap);
+
+  // Append aDataLen bytes from data to the current buffer.  If we
+  // need to grow the buffer, grow by doubling the size up to a
+  // maximum of aMaxGrowth (if given).  If aDataLen is greater than
+  // what the new capacity would end up as, then grow by aDataLen.
+  //
+  // The data parameter must not overlap with anything beyond the
+  // builder's current valid contents [0..length)
+  bool append(const uint8_t* aNewData, uint32_t aDataLen,
+              uint32_t aMaxGrowth = 0);
+
+  uint32_t length()   { return mLength; }
+  uint32_t capacity() { return mCapacity; }
+
+  JSObject* getArrayBuffer(JSContext* aCx);
+
+protected:  // njn?
+  static bool areOverlappingRegions(const uint8_t* aStart1, uint32_t aLength1,
+                                    const uint8_t* aStart2, uint32_t aLength2);
+};
+
+} // namespace mozilla
+
 class nsXHREventTarget : public nsDOMEventTargetHelper,
                          public nsIXMLHttpRequestEventTarget
 {
@@ -657,7 +704,7 @@ protected:
 
   JS::Heap<JS::Value> mResultJSON;
 
-  js::ArrayBufferBuilder mArrayBufferBuilder;
+  mozilla::ArrayBufferBuilder mArrayBufferBuilder;
   JS::Heap<JSObject*> mResultArrayBuffer;
 
   void ResetResponse();
