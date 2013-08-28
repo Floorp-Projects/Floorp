@@ -210,7 +210,7 @@
       </hbox>
     </vbox>
 
-    <splitter class="devtools-side-splitter"/>
+    <splitter id="splitter" class="devtools-side-splitter"/>
 
     <deck id="details-pane"
           hidden="true">
