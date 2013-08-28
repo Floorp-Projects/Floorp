@@ -76,7 +76,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         This is a generator of mozbuild.frontend.data.SandboxDerived instances.
         """
-
         # We always emit a directory traversal descriptor. This is needed by
         # the recursive make backend.
         for o in self._emit_directory_traversal_from_sandbox(sandbox): yield o
