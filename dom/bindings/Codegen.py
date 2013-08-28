@@ -860,6 +860,13 @@ def UnionConversions(descriptors, dictionaries, callbacks, config):
                         headers.add("mozilla/dom/TypedArray.h")
                     elif not f.inner.isExternal():
                         headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                    # Check for whether we have a possibly-XPConnect-implemented
+                    # interface.  If we do, the right descriptor will come from
+                    # providers[0], because that would be the non-worker
+                    # descriptor provider, if we have one at all.
+                    if (f.isGeckoInterface() and
+                        providers[0].getDescriptor(f.inner.identifier.name).hasXPConnectImpls):
+                        headers.add("nsDOMQS.h")
                 elif f.isDictionary():
                     headers.add(CGHeaders.getDeclarationFilename(f.inner))
 
@@ -8637,6 +8644,7 @@ class CGBindingRoot(CGThing):
     declare or define to generate header or cpp code (respectively).
     """
     def __init__(self, config, prefix, webIDLFile):
+        bindingHeaders = {}
         descriptors = config.getDescriptors(webIDLFile=webIDLFile,
                                             hasInterfaceOrInterfacePrototypeObject=True,
                                             skipGen=False)
@@ -8669,27 +8677,28 @@ class CGBindingRoot(CGThing):
         jsImplemented = config.getDescriptors(webIDLFile=webIDLFile,
                                               isJSImplemented=True)
 
-        # Python can't modify closed-over variables directly, so sneak
-        # our mutable value in as an entry in a dictionary.
-        needsDOMQS = { "value": any(d.hasXPConnectImpls for d in descriptors) }
+        def addHeaderBasedOnTypes(header, typeChecker):
+            bindingHeaders[header] = (
+                bindingHeaders.get(header, False) or
+                any(map(typeChecker,
+                        getAllTypes(descriptors + callbackDescriptors,
+                                    dictionaries,
+                                    mainCallbacks + workerCallbacks))))
+
+        bindingHeaders["nsDOMQS.h"] = any(d.hasXPConnectImpls for d in descriptors)
         # Only mainthread things can have hasXPConnectImpls
         provider = config.getDescriptorProvider(False)
         def checkForXPConnectImpls(typeInfo):
-            if needsDOMQS["value"]:
-                return
             (type, _, _) = typeInfo
             type = type.unroll()
             if not type.isInterface() or not type.isGeckoInterface():
-                return
+                return False
             try:
                 typeDesc = provider.getDescriptor(type.inner.identifier.name)
             except NoSuchDescriptorError:
-                return
-            needsDOMQS["value"] = typeDesc.hasXPConnectImpls
-
-        map(checkForXPConnectImpls,
-            getAllTypes(descriptors + callbackDescriptors, dictionaries,
-                        mainCallbacks))
+                return False
+            return typeDesc.hasXPConnectImpls
+        addHeaderBasedOnTypes("nsDOMQS.h", checkForXPConnectImpls)
 
         # Do codegen for all the enums
         cgthings = [ CGEnum(e) for e in config.getEnums(webIDLFile) ]
@@ -8745,6 +8754,8 @@ class CGBindingRoot(CGThing):
                       "\n")
 
         # Add header includes.
+        bindingHeaders = [header for (header, include) in
+                          bindingHeaders.iteritems() if include]
         curr = CGHeaders(descriptors,
                          dictionaries,
                          mainCallbacks + workerCallbacks,
@@ -8768,8 +8779,8 @@ class CGBindingRoot(CGThing):
                             + (['mozilla/dom/DOMJSProxyHandler.h'] if hasProxies else [])
                             + (['xpcprivate.h'] if isEventTarget else [])
                             + (['nsPIDOMWindow.h'] if len(jsImplemented) != 0 else [])
-                            + (['nsDOMQS.h'] if needsDOMQS["value"] else [])
-                            + (['AtomList.h'] if requiresAtoms else []),
+                            + (['AtomList.h'] if requiresAtoms else [])
+                            + bindingHeaders,
                          prefix,
                          curr,
                          config,
@@ -10422,7 +10433,7 @@ struct PrototypeTraits;
 
         curr = CGWrapper(curr, post='\n')
 
-        headers.update(["nsDebug.h", "mozilla/dom/UnionTypes.h", "nsDOMQS.h", "XPCWrapper.h"])
+        headers.update(["nsDebug.h", "mozilla/dom/UnionTypes.h", "XPCWrapper.h"])
         curr = CGHeaders([], [], [], [], headers, [], 'UnionConversions', curr)
 
         # Add include guards.
