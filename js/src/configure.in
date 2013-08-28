@@ -4263,6 +4263,16 @@ fi
 dnl ========================================================
 dnl ECMAScript Internationalization API Support (uses ICU)
 dnl ========================================================
+ICU_LIB_NAMES=
+MOZ_NATIVE_ICU=
+MOZ_ARG_WITH_BOOL(system-icu,
+[  --with-system-icu
+                          Use system ICU (located with pkgconfig)],
+    MOZ_NATIVE_ICU=1)
+
+if test -n "$MOZ_NATIVE_ICU"; then
+    PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
+fi
 
 MOZ_ARG_WITH_STRING(intl-api,
 [  --with-intl-api, --with-intl-api=build, --without-intl-api
@@ -4297,37 +4307,36 @@ fi
 dnl Settings for the implementation of the ECMAScript Internationalization API
 if test -n "$ENABLE_INTL_API"; then
     AC_DEFINE(ENABLE_INTL_API)
-    # We build ICU as a static library.
-    AC_DEFINE(U_STATIC_IMPLEMENTATION)
 
-    case "$OS_TARGET" in
-        WINNT)
-            ICU_LIB_NAMES="icuin icuuc icudt"
-            ;;
-        Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-            ICU_LIB_NAMES="icui18n icuuc icudata"
-            ;;
-        *)
-            AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
-    esac
-
-    ICU_LIBS='$(call EXPAND_LIBNAME_PATH,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/lib)'
-else
-    ICU_LIB_NAMES=
-    ICU_LIBS=
+    if test -z "$MOZ_NATIVE_ICU"; then
+        case "$OS_TARGET" in
+            WINNT)
+                ICU_LIB_NAMES="icuin icuuc icudt"
+                ;;
+            Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+                ICU_LIB_NAMES="icui18n icuuc icudata"
+                ;;
+            *)
+                AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
+        esac
+        MOZ_ICU_LIBS='$(call EXPAND_LIBNAME_PATH,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/lib)'
+    fi
 fi
 
 AC_SUBST(ENABLE_INTL_API)
 AC_SUBST(ICU_LIB_NAMES)
-AC_SUBST(ICU_LIBS)
-
-dnl Source files that use ICU should have control over which parts of the ICU
-dnl namespace they want to use.
-AC_DEFINE(U_USING_ICU_NAMESPACE,0)
-
+AC_SUBST(MOZ_ICU_LIBS)
+AC_SUBST(MOZ_NATIVE_ICU)
 
 dnl Settings for ICU
-if test -n "$ENABLE_INTL_API" ; then
+if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
+    dnl We build ICU as a static library.
+    AC_DEFINE(U_STATIC_IMPLEMENTATION)
+
+    dnl Source files that use ICU should have control over which parts of the ICU
+    dnl namespace they want to use.
+    AC_DEFINE(U_USING_ICU_NAMESPACE,0)
+
     # Set ICU compile options
     ICU_CPPFLAGS=""
     # don't use icu namespace automatically in client code
