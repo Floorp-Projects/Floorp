@@ -162,6 +162,21 @@ xpc_UnmarkGrayScript(JSScript *script)
     return script;
 }
 
+inline JSContext *
+xpc_UnmarkGrayContext(JSContext *cx)
+{
+    if (cx) {
+        JSObject *global = js::DefaultObjectForContextOrNull(cx);
+        xpc_UnmarkGrayObject(global);
+        if (global && JS_IsInRequest(JS_GetRuntime(cx))) {
+            JSObject *scope = JS::CurrentGlobalOrNull(cx);
+            if (scope != global)
+                xpc_UnmarkGrayObject(scope);
+        }
+    }
+    return cx;
+}
+
 // If aVariant is an XPCVariant, this marks the object to be in aGeneration.
 // This also unmarks the gray JSObject.
 extern void

@@ -1641,18 +1641,16 @@ JS_StringToVersion(const char *string);
 
 /* JS_BIT(10) is currently unused. */
 
-#define JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT JS_BIT(11)     /* This JSContext does not use a
-                                                                 default compartment object. Such
-                                                                 an object will not be set implicitly,
-                                                                 and attempts to get or set it will
-                                                                 assert. */
+/* JS_BIT(11) is currently unused. */
 
 #define JSOPTION_NO_SCRIPT_RVAL JS_BIT(12)      /* A promise to the compiler
                                                    that a null rval out-param
                                                    will be passed to each call
                                                    to JS_ExecuteScript. */
-
-/* JS_BIT(13) is currently unused. */
+#define JSOPTION_UNROOTED_GLOBAL JS_BIT(13)     /* The GC will not root the
+                                                   contexts' default compartment
+                                                   object, leaving that up to the
+                                                   embedding. */
 
 #define JSOPTION_BASELINE       JS_BIT(14)      /* Baseline compiler. */
 
@@ -2326,12 +2324,6 @@ JS_SetFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb);
 
 extern JS_PUBLIC_API(bool)
 JS_IsGCMarkingTracer(JSTracer *trc);
-
-/* For assertions only. */
-#ifdef DEBUG
-extern JS_PUBLIC_API(bool)
-JS_IsMarkingGray(JSTracer *trc);
-#endif
 
 /*
  * JS_IsAboutToBeFinalized checks if the given object is going to be finalized

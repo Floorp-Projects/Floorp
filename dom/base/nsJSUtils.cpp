@@ -14,7 +14,6 @@
 #include "nsJSUtils.h"
 #include "jsapi.h"
 #include "jsdbgapi.h"
-#include "jsfriendapi.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIXPConnect.h"
@@ -141,11 +140,7 @@ nsJSUtils::ReportPendingException(JSContext *aContext)
   if (JS_IsExceptionPending(aContext)) {
     bool saved = JS_SaveFrameChain(aContext);
     {
-      nsIScriptContext* scx = GetScriptContextFromJSContext(aContext);
-      JS::Rooted<JSObject*> scope(aContext);
-      scope = scx ? scx->GetWindowProxy()
-                  : js::DefaultObjectForContextOrNull(aContext);
-      JSAutoCompartment ac(aContext, scope);
+      JSAutoCompartment ac(aContext, js::DefaultObjectForContextOrNull(aContext));
       JS_ReportPendingException(aContext);
     }
     if (saved) {
@@ -291,20 +286,4 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   if (aRetValue && !JS_WrapValue(aCx, aRetValue))
     return NS_ERROR_OUT_OF_MEMORY;
   return rv;
-}
-
-//
-// nsDOMJSUtils.h
-//
-
-JSObject* GetDefaultScopeFromJSContext(JSContext *cx)
-{
-  // DOM JSContexts don't store their default compartment object on
-  // the cx, so in those cases we need to fetch it via the scx
-  // instead.
-  nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
-  if (scx) {
-    return scx->GetWindowProxy();
-  }
-  return js::DefaultObjectForContextOrNull(cx);
 }

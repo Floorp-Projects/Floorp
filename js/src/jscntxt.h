@@ -444,10 +444,7 @@ struct JSContext : public js::ExclusiveContext,
   public:
     inline void setDefaultCompartmentObject(JSObject *obj);
     inline void setDefaultCompartmentObjectIfUnset(JSObject *obj);
-    JSObject *maybeDefaultCompartmentObject() const {
-        JS_ASSERT(!hasOption(JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT));
-        return defaultCompartmentObject_;
-    }
+    JSObject *maybeDefaultCompartmentObject() const { return defaultCompartmentObject_; }
 
     /* Wrap cx->exception for the current compartment. */
     void wrapPendingException();
