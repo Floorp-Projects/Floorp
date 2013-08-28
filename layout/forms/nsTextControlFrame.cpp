@@ -10,6 +10,7 @@
 #include "nsIPlaintextEditor.h"
 #include "nsCaret.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
 #include "nsTextFragment.h"
