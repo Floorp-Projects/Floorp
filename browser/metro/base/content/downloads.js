@@ -84,7 +84,7 @@ var Downloads = {
 
     let file = this._getLocalFile(fileURI);
     try {
-      file && MetroUtils.launchInDesktop(aDownload.target.spec, "");
+      file && Services.metro.launchInDesktop(aDownload.target.spec, "");
     } catch (ex) {
       Util.dumpLn("Failed to open download, with id: "+id+", download target URI spec: " + fileURI.spec);
       Util.dumpLn("Failed download source:"+(aDownload.source && aDownload.source.spec));

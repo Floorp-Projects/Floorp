@@ -125,7 +125,7 @@ var Appbar = {
         typesArray.push("find-in-page");
       if (ConsolePanelView.enabled)
         typesArray.push("open-error-console");
-      if (!MetroUtils.immersive)
+      if (!Services.metro.immersive)
         typesArray.push("open-jsshell");
 
       try {
@@ -161,7 +161,7 @@ var Appbar = {
       var uri = Services.io.newURI(Browser.selectedBrowser.currentURI.spec,
                                    null, null);
       if (uri.schemeIs('http') || uri.schemeIs('https')) {
-        MetroUtils.launchInDesktop(Browser.selectedBrowser.currentURI.spec, "");
+        Services.metro.launchInDesktop(Browser.selectedBrowser.currentURI.spec, "");
       }
     } catch(ex) {
     }
