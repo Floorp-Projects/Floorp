@@ -31,6 +31,7 @@
 #include <gdk/gdkx.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <errno.h>
 #include <unistd.h>
 
 using namespace mozilla;
