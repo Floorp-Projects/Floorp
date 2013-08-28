@@ -16,7 +16,6 @@ DIRS += [
     'themes/core',
     'app',
     'fonts',
-    'geckoview_library',
 ]
 
 if not CONFIG['LIBXUL_SDK']:
