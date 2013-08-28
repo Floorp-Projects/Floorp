@@ -6829,7 +6829,7 @@ var WebappsUI = {
         file.initWithPath(profilePath);
 
         let self = this;
-        DOMApplicationRegistry.confirmInstall(aData, false, file, null,
+        DOMApplicationRegistry.confirmInstall(aData, file, null,
           function (aManifest) {
             let localeManifest = new ManifestHelper(aManifest, aData.app.origin);
 
