@@ -2921,20 +2921,42 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // to cause period, and we hope hygienic, last-ditch GCs from within
     // the GC's allocator.
     JS_SetGCParameter(runtime, JSGC_MAX_BYTES, 0xffffffff);
-#if defined(MOZ_ASAN) || (defined(DEBUG) && !defined(XP_WIN))
-    // Bug 803182: account for the 4x difference in the size of js::Interpret
-    // between optimized and debug builds. Also, ASan requires more stack space
-    // due to redzones
-    JS_SetNativeStackQuota(runtime, 2 * 128 * sizeof(size_t) * 1024);
+
+    // Our "default" stack is what we use in configurations where we don't have
+    // a compelling reason to do things differently. This is effectively 1MB on
+    // 32-bit platforms and 2MB on 64-bit platforms.
+    const size_t kDefaultStackQuota = 128 * sizeof(size_t) * 1024;
+
+    // Set stack sizes for different configurations. It's probably not great for
+    // the web to base this decision primarily on the default stack size that the
+    // underlying platform makes available, but that seems to be what we do. :-(
+
+#if defined(XP_MACOSX) || defined(DARWIN)
+    // MacOS has a gargantuan default stack size of 8MB. Go wild with 7MB.
+    const size_t kStackQuota = 7 * 1024 * 1024;
+#elif defined(MOZ_ASAN)
+    // ASan requires more stack space due to red-zones, so give it double the
+    // default (2MB on 32-bit, 4MB on 64-bit).
+    const size_t kStackQuota =  2 * kDefaultStackQuota;
 #elif defined(XP_WIN)
-    // 1MB is the default stack size on Windows
-    JS_SetNativeStackQuota(runtime, 900 * 1024);
-#elif defined(XP_MACOSX) || defined(DARWIN)
-    // 8MB is the default stack size on MacOS
-    JS_SetNativeStackQuota(runtime, 7 * 1024 * 1024);
+    // 1MB is the default stack size on Windows, so the default 1MB stack quota
+    // we'd get on win32 is slightly too large. Use 900k instead.
+    const size_t kStackQuota = 900 * 1024;
+#elif defined(DEBUG)
+    // Bug 803182: account for the 4x difference in the size of js::Interpret
+    // between optimized and debug builds.
+    // XXXbholley - Then why do we only account for 2x of difference?
+    const size_t kStackQuota = 2 * kDefaultStackQuota;
 #else
-    JS_SetNativeStackQuota(runtime, 128 * sizeof(size_t) * 1024);
+    const size_t kStackQuota = kDefaultStackQuota;
 #endif
+
+    // Avoid an unused variable warning on platforms where we don't use the
+    // default.
+    (void) kDefaultStackQuota;
+
+    JS_SetNativeStackQuota(runtime, kStackQuota);
+
     JS_SetDestroyCompartmentCallback(runtime, CompartmentDestroyedCallback);
     JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
