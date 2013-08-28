@@ -43,6 +43,7 @@ function getInstalledReturnsNothing(next) {
 
 function install(next) {
   var beforehand = Date.now();
+  const fuzzySpan = 250;
 
   confirmNextInstall();
   navigator.mozApps.install(url, null).onsuccess = function onInstall() {
@@ -50,9 +51,8 @@ function install(next) {
 
     is(app.origin, "http://test", "origin");
     is(app.installOrigin, "chrome://mochitests", "install origin");
-    ok(app.installTime >= beforehand, "install time (" + app.installTime + ") is after install() call (" + beforehand + ")");
-    let installSuccess = Date.now();
-    ok(app.installTime <= installSuccess, "install time (" + app.installTime + ") is before install success (" + installSuccess + ")");
+    ok(app.installTime + fuzzySpan >= beforehand, "install time is after install() call");
+    ok(app.installTime <= Date.now() + fuzzySpan, "install time is before install success");
     is(app.manifestURL, url, "manifest URL");
     is(app.manifest.name, "Basic App", "manifest.name");
     is(app.manifest.installs_allowed_from, "*",

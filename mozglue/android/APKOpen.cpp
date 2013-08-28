@@ -300,6 +300,36 @@ loadNSSLibs(const char *apkName)
 }
 
 extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoProfile_createSymLink(JNIEnv* jenv, jclass clazz, jstring inputFilePath, jstring inputSymLinkPath)
+{
+  const char* inputFilePathC    = jenv->GetStringUTFChars(inputFilePath, NULL);
+  const char* inputSymLinkPathC = jenv->GetStringUTFChars(inputSymLinkPath, NULL);
+
+  int result = symlink(inputFilePathC, inputSymLinkPathC);
+
+  //release resources when done
+  jenv->ReleaseStringUTFChars(inputFilePath, inputFilePathC);
+  jenv->ReleaseStringUTFChars(inputSymLinkPath, inputSymLinkPathC);
+
+  if (result == -1)
+    JNI_Throw(jenv, "java/io/IOException", strerror(errno));
+}
+
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoProfile_removeSymLink(JNIEnv* jenv, jclass clazz, jstring inputSymLinkPath)
+{
+  const char *inputSymLinkPathC = jenv->GetStringUTFChars(inputSymLinkPath, NULL);
+
+  int result = unlink(inputSymLinkPathC);
+
+  //release resources when done
+  jenv->ReleaseStringUTFChars(inputSymLinkPath, inputSymLinkPathC);
+
+  if (result == -1)
+    JNI_Throw(jenv, "java/io/IOException", strerror(errno));
+}
+
+extern "C" NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName)
 {
   const char* str;

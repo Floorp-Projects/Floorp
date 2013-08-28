@@ -22,6 +22,7 @@ if CONFIG['MOZ_B2G_RIL']:
         'nsIDOMCFStateChangeEvent.idl',
         'nsIDOMMobileConnection.idl',
         'nsIDOMMozEmergencyCbModeEvent.idl',
+        'nsIDOMMozOtaStatusEvent.idl',
         'nsIDOMNetworkStats.idl',
         'nsIDOMNetworkStatsManager.idl',
         'nsIMobileConnectionProvider.idl',

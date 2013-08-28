@@ -1449,8 +1449,9 @@ RuleEditor.prototype = {
  */
 function TextPropertyEditor(aRuleEditor, aProperty)
 {
-  this.doc = aRuleEditor.doc;
-  this.popup = aRuleEditor.ruleView.popup;
+  this.ruleEditor = aRuleEditor;
+  this.doc = this.ruleEditor.doc;
+  this.popup = this.ruleEditor.ruleView.popup;
   this.prop = aProperty;
   this.prop.editor = this;
   this.browserWindow = this.doc.defaultView.top;
@@ -1849,6 +1850,7 @@ TextPropertyEditor.prototype = {
     let name = this.prop.name;
     let value = typeof aValue == "undefined" ? this.prop.value : aValue;
     let val = this._parseValue(value);
+
     let style = this.doc.createElementNS(HTML_NS, "div").style;
     let prefs = Services.prefs;
 
@@ -1858,6 +1860,8 @@ TextPropertyEditor.prototype = {
 
     try {
       style.setProperty(name, val.value, val.priority);
+      // Live previewing the change without committing yet just yet, that'll be done in _onValueDone
+      this.ruleEditor.rule.setPropertyValue(this.prop, val.value, val.priority);
     } finally {
       prefs.setBoolPref("layout.css.report_errors", prefVal);
     }

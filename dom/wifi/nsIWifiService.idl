@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(e3d54c8d-b1c7-4ed5-b760-e26d3075e3e5)]
+interface nsIWifiEventListener : nsISupports {
+  void onWaitEvent(in AString event);
+  void onCommand(in jsval result);
+};
+
+[scriptable, uuid(ac5ebae6-ec72-4212-89cb-cd25ed5a1b46)]
+interface nsIWifiProxyService : nsISupports {
+  void start(in nsIWifiEventListener listener);
+  void shutdown();
+  [implicit_jscontext]
+  void sendCommand(in jsval parameters);
+  void waitForEvent();
+};
