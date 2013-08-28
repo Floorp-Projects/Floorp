@@ -471,7 +471,7 @@ toolbarbutton.bookmark-item > menupopup {
     -moz-image-region: rect(18px, 288px, 36px, 270px);
   }
 
-  #share-button@toolbarButtonPressed@ {
+  #social-share-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 306px, 36px, 288px);
   }
 
@@ -698,6 +698,14 @@ toolbarbutton.bookmark-item > menupopup {
 
   #feed-button[customizableui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 576px, 72px, 540px);
+  }
+
+  #social-share-button[customizableui-areatype="toolbar"] {
+    -moz-image-region: rect(0, 612px, 36px, 576px);
+  }
+
+  #social-share-button[customizableui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
+    -moz-image-region: rect(36px, 612px, 72px, 576px);
   }
 
   #characterencoding-button[customizableui-areatype="toolbar"] {
@@ -1939,31 +1947,6 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
   height: 150px;
   /* we resize our panels dynamically, make it look nice */
   transition: height 100ms ease-out, width 100ms ease-out;
-}
-
-#social-share-button {
-  list-style-image: url("chrome://browser/skin/social/share-button.png");
-}
-
-#social-share-button[open],
-#social-share-button:hover:active {
-  list-style-image: url("chrome://browser/skin/social/share-button-active.png");
-}
-
-#social-share-button > .toolbarbutton-icon {
-  width: 13px;
-  height: 14px;
-}
-
-@media (min-resolution: 2dppx) {
-  #social-share-button {
-    list-style-image: url("chrome://browser/skin/social/share-button@2x.png");
-  }
-
-  #social-share-button[open],
-  #social-share-button:hover:active {
-    list-style-image: url("chrome://browser/skin/social/share-button-active@2x.png");
-  }
 }
 
 .social-share-toolbar {
