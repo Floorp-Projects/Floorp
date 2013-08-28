@@ -7,6 +7,9 @@
 
 "use strict";
 
+// the singleton frameworker, available for (ab)use by tests.
+let frameworker;
+
 (function () { // bug 673569 workaround :(
 
 /*
@@ -270,9 +273,6 @@ FrameWorker.prototype = {
     });
   },
 };
-
-// the singleton frameworker.
-let frameworker;
 
 const FrameWorkerManager = {
   init: function() {
