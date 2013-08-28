@@ -394,8 +394,11 @@ AudioContext::CreatePeriodicWave(const Float32Array& aRealData,
   }
 
   nsRefPtr<PeriodicWave> periodicWave =
-    new PeriodicWave(this, aRealData.Data(), aRealData.Length(),
-                     aImagData.Data(), aImagData.Length());
+    new PeriodicWave(this, aRealData.Data(), aImagData.Data(),
+                     aImagData.Length(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
   return periodicWave.forget();
 }
 
