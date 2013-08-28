@@ -37,9 +37,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this , "FormHistory",
-                                  "resource://gre/modules/FormHistory.jsm");
-
 /*
  * Services
  */
