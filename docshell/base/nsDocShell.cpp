@@ -219,8 +219,11 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 using namespace mozilla;
 using namespace mozilla::dom;
 
-// Number of documents currently loading
-static int32_t gNumberOfDocumentsLoading = 0;
+// Number of active documents currently loading.
+// More properly "the number of documents that are loading that were active when
+// they started loading" because we don't change this number if a document
+// becomes inactive while loading.
+static int32_t gNumberOfActiveDocumentsLoading = 0;
 
 // Global count of existing docshells.
 static int32_t gDocShellCount = 0;
@@ -783,6 +786,7 @@ nsDocShell::nsDocShell():
     mInEnsureScriptEnv(false),
 #endif
     mAffectPrivateSessionLifetime(true),
+    mTurnOffFavorPerfMode(false),
     mFrameType(eFrameTypeRegular),
     mOwnOrContainingAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID),
     mParentCharsetSource(0)
@@ -6716,8 +6720,9 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
         // If all documents have completed their loading
         // favor native event dispatch priorities
         // over performance
-        if (--gNumberOfDocumentsLoading == 0) {
+        if (mTurnOffFavorPerfMode && --gNumberOfActiveDocumentsLoading == 0) {
           // Hint to use normal native event dispatch priorities 
+          mTurnOffFavorPerfMode = false;
           FavorPerformanceHint(false);
         }
     }
@@ -7722,8 +7727,12 @@ nsDocShell::RestoreFromHistory()
 
     // Tell the event loop to favor plevents over user events, see comments
     // in CreateContentViewer.
-    if (++gNumberOfDocumentsLoading == 1)
-        FavorPerformanceHint(true);
+    if (mIsActive) {
+        mTurnOffFavorPerfMode = true;
+        if (++gNumberOfActiveDocumentsLoading == 1) {
+          FavorPerformanceHint(true);
+        }
+    }
 
 
     if (oldMUDV && newMUDV) {
@@ -8124,11 +8133,14 @@ nsDocShell::CreateContentViewer(const char *aContentType,
     // Give hint to native plevent dispatch mechanism. If a document
     // is loading the native plevent dispatch mechanism should favor
     // performance over normal native event dispatch priorities.
-    if (++gNumberOfDocumentsLoading == 1) {
+    if (mIsActive) {
       // Hint to favor performance for the plevent notification mechanism.
       // We want the pages to load as fast as possible even if its means 
       // native messages might be starved.
-      FavorPerformanceHint(true);
+      mTurnOffFavorPerfMode = true;
+      if (++gNumberOfActiveDocumentsLoading == 1) {
+        FavorPerformanceHint(true);
+      }
     }
 
     if (onLocationChangeNeeded) {
