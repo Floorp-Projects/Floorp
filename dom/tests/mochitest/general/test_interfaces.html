@@ -569,16 +569,6 @@ var interfaceNamesInGlobalScope =
   ]
 // IMPORTANT: Do not change this list without review from a DOM peer!
 
-  var excludedNames = [
-    "TraceMallocDisable", // debug builds only
-    "TraceMallocEnable", // debug builds only
-    "TraceMallocOpenLogFile", // debug builds only
-    "TraceMallocChangeLogFD", // debug builds only
-    "TraceMallocCloseLogFD", // debug builds only
-    "TraceMallocLogTimestamp", // debug builds only
-    "TraceMallocDumpAllocations", // debug builds only
-  ];
-
 function createInterfaceMap(isXBLScope) {
   var version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
   var isNightly = version.endsWith("a1");
@@ -613,8 +603,7 @@ function runTest(isXBLScope) {
   var interfaceMap = createInterfaceMap(isXBLScope);
   for (var name of Object.getOwnPropertyNames(window)) {
     // An interfae name should start with an upper case character.
-    if (!/^(moz)?[A-Z]/.test(name) ||
-        excludedNames.indexOf(name) >= 0) {
+    if (!/^(moz)?[A-Z]/.test(name)) {
       continue;
     }
     ok(interfaceMap[name],
