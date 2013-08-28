@@ -56,8 +56,8 @@ WorkerAPI.prototype = {
     "social.manifest-set": function(data) {
       // the provider will get reloaded as a result of this call
       let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
-      let document = this._port._window.document;
-      SocialService.updateProvider(document, data);
+      let origin = this._provider.origin;
+      SocialService.updateProvider(origin, data);
     },
     "social.reload-worker": function(data) {
       getFrameWorkerHandle(this._provider.workerURL, null)._worker.reload();
