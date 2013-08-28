@@ -600,6 +600,12 @@ WMFReader::ReadMetadata(VideoInfo* aInfo,
     if (FAILED(hr)) {
       LOG("Failed to set DXVA2 D3D Device manager on decoder");
       mUseHwAccel = false;
+      // Re-run the configuration process, so that the output video format
+      // is set correctly to reflect that hardware acceleration is disabled.
+      // Without this, we'd be running with !mUseHwAccel and the output format
+      // set to NV12, which is the format we expect when using hardware
+      // acceleration. This would cause us to misinterpret the frame contents.
+      hr = ConfigureVideoDecoder();      
     }
   }
   if (mInfo.mHasVideo) {
