@@ -31,7 +31,7 @@ function testVideoPlayPause() {
   content.appendChild(video);
 
   var startDate;
-  video.addEventListener('progress', function() {
+  video.addEventListener('playing', function() {
     startDate = new Date();
 
     // The next step is to unlock the resource.
