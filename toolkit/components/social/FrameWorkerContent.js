@@ -287,6 +287,7 @@ const FrameWorkerManager = {
     addMessageListener("frameworker:connect", this._onConnect);
     addMessageListener("frameworker:reload", this._onReload);
     addMessageListener("frameworker:port-message", this._onPortMessage);
+    addMessageListener("frameworker:cookie-get", this._onCookieGet);
   },
 
   // This new frameworker is being created.  This should only be called once.
@@ -313,6 +314,10 @@ const FrameWorkerManager = {
     // the worker.
     let port = frameworker.ports.get(msg.data.portId);
     port._dopost(msg.data);
+  },
+
+  _onCookieGet: function(msg) {
+    sendAsyncMessage("frameworker:cookie-get-response", content.document.cookie);
   },
 
 };
