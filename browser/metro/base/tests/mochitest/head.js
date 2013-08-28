@@ -34,6 +34,8 @@ splitPath.push('mochitest');
 const mochitestPath = splitPath.join('/') + '/';
 
 [
+  "BookmarksHelper.js",
+  "HistoryHelper.js",
   "ViewStateHelper.js"
 ].forEach(function(lib) {
   Services.scriptloader.loadSubScript(mochitestPath + lib, this);
@@ -112,37 +114,37 @@ function checkMonoclePositionRange(aMonocle, aMinX, aMaxX, aMinY, aMaxY)
 function showNotification()
 {
   return Task.spawn(function() {
-    try {
-      let strings = Strings.browser;
-      var buttons = [
-        {
-          isDefault: false,
-          label: strings.GetStringFromName("popupButtonAllowOnce2"),
-          accessKey: "",
-          callback: function() { }
-        },
-        {
-          label: strings.GetStringFromName("popupButtonAlwaysAllow3"),
-          accessKey: "",
-          callback: function() { }
-        },
-        {
-          label: strings.GetStringFromName("popupButtonNeverWarn3"),
-          accessKey: "",
-          callback: function() { }
-        }
-      ];
-      let notificationBox = Browser.getNotificationBox();
-      const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-      notificationBox.appendNotification("test notification", "popup-blocked",
-                                          "chrome://browser/skin/images/infobar-popup.png",
-                                          priority, buttons);
-      yield waitForEvent(notificationBox, "transitionend");
-      return;
-    } catch (ex) {
-      throw new Task.Result(ex);
-    }
+    let strings = Strings.browser;
+    var buttons = [
+      {
+        isDefault: false,
+        label: strings.GetStringFromName("popupButtonAllowOnce2"),
+        accessKey: "",
+        callback: function() { }
+      },
+      {
+        label: strings.GetStringFromName("popupButtonAlwaysAllow3"),
+        accessKey: "",
+        callback: function() { }
+      },
+      {
+        label: strings.GetStringFromName("popupButtonNeverWarn3"),
+        accessKey: "",
+        callback: function() { }
+      }
+    ];
+    let notificationBox = Browser.getNotificationBox();
+    const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+    let note = notificationBox.appendNotification("test notification", "popup-blocked",
+                                                  "chrome://browser/skin/images/infobar-popup.png",
+                                                  priority, buttons);
+    yield waitForEvent(notificationBox, "transitionend");
+    throw new Task.Result(note);
   });
+}
+
+function removeNotifications() {
+  Browser.getNotificationBox().removeAllNotifications(true);
 }
 
 function getSelection(aElement) {
@@ -188,10 +190,6 @@ function clearSelection(aTarget) {
   purgeEventQueue();
 }
 
-/*=============================================================================
-  Asynchronous Metro ui helpers
-=============================================================================*/
-
 // Hides the tab and context app bar if they are visible
 function hideContextUI()
 {
@@ -233,9 +231,38 @@ function fireAppBarDisplayEvent()
 }
 
 /*=============================================================================
-  Asynchronous test helpers
+  General test helpers
 =============================================================================*/
 let gOpenedTabs = [];
+
+function loadUriInActiveTab(aUri)
+{
+  return Task.spawn(function() {
+    let promise = waitForEvent(getBrowser(), "pageshow");
+    BrowserUI.goToURI(aUri);
+    yield waitForCondition(function () {
+      return getBrowser().currentURI.spec == aUri
+    }, "getBrowser().currentURI.spec == " + aUri);
+    yield promise;
+  });
+}
+
+function navForward() {
+  return Task.spawn(function() {
+    let promise = waitForEvent(getBrowser(), "pageshow");
+    EventUtils.synthesizeKey("VK_RIGHT", { altKey: true }, window);
+    yield promise;
+  });
+}
+
+function navBackViaNavButton() {
+  return Task.spawn(function() {
+    let promise = waitForEvent(getBrowser(), "pageshow");
+    let backButton = document.getElementById("overlay-back");
+    sendElementTap(window, backButton);
+    yield promise;
+  });
+}
 
 /**
  *  Loads a URL in a new tab asynchronously.
@@ -301,11 +328,11 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
   let timeoutMs = aTimeoutMs || kDefaultWait;
   let stack = new Error().stack;
   let timerID = setTimeout(function wfe_canceller() {
-    aSubject.removeEventListener(aEventName, onEvent);
+    aSubject.removeEventListener(aEventName, listener);
     eventDeferred.reject( new Error(aEventName+" event timeout at " + stack) );
   }, timeoutMs);
 
-  function onEvent(aEvent) {
+  var listener = function (aEvent) {
     if (aTarget && aTarget !== aEvent.target)
         return;
 
@@ -316,11 +343,11 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
 
   function cleanup() {
     // unhook listener in case of success or failure
-    aSubject.removeEventListener(aEventName, onEvent);
+    aSubject.removeEventListener(aEventName, listener);
   }
   eventDeferred.promise.then(cleanup, cleanup);
 
-  aSubject.addEventListener(aEventName, onEvent, false);
+  aSubject.addEventListener(aEventName, listener, false);
   return eventDeferred.promise;
 }
 
@@ -387,6 +414,50 @@ function waitForCondition(aCondition, aTimeoutMs, aIntervalMs) {
     }
 
     if (condition) {
+      deferred.resolve(true);
+    } else {
+      setTimeout(testCondition, intervalMs);
+    }
+  }
+
+  setTimeout(testCondition, 0);
+  return deferred.promise;
+}
+
+/**
+ * same as waitForCondition but with better test output. 
+ *
+ * @param aCondition the callback that must return a truthy value
+ * @param aTestMsg test condition message printed when the test succeeds or
+ * fails. Defaults to the stringified version of aCondition.
+ * @param aTimeoutMs the number of miliseconds to wait before giving up
+ * @param aIntervalMs the number of miliseconds between calls to aCondition
+ * @returns a Promise that resolves to true, or to an Error
+ */
+function waitForCondition2(aCondition, aTestMsg, aTimeoutMs, aIntervalMs) {
+  let deferred = Promise.defer();
+  let msg = aTestMsg || aCondition;
+  let timeoutMs = aTimeoutMs || kDefaultWait;
+  let intervalMs = aIntervalMs || kDefaultInterval;
+  let startTime = Date.now();
+
+  function testCondition() {
+    let now = Date.now();
+    if((now - startTime) > timeoutMs) {
+      deferred.reject( new Error("Timed out waiting for " + msg) );
+      return;
+    }
+
+    let condition;
+    try {
+      condition = aCondition();
+    } catch (e) {
+      deferred.reject( new Error("Got exception while attempting to test '" + msg + "': " + e) );
+      return;
+    }
+
+    if (condition) {
+      ok(true, msg);
       deferred.resolve(true);
     } else {
       setTimeout(testCondition, intervalMs);
