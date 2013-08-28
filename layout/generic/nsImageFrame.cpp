@@ -545,8 +545,8 @@ nsImageFrame::OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage)
   bool intrinsicSizeChanged = false;
   if (SizeIsAvailable(aRequest)) {
     // This is valid and for the current request, so update our stored image
-    // container.
-    mImage = aImage;
+    // container, orienting according to our style.
+    mImage = nsLayoutUtils::OrientImage(aImage, StyleVisibility()->mImageOrientation);
     
     intrinsicSizeChanged = UpdateIntrinsicSize(mImage);
     intrinsicSizeChanged = UpdateIntrinsicRatio(mImage) || intrinsicSizeChanged;
@@ -649,11 +649,12 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
   // May have to switch sizes here!
   bool intrinsicSizeChanged = true;
   if (NS_SUCCEEDED(aStatus) && image && SizeIsAvailable(aRequest)) {
-    mImage = image;
+    // Update our stored image container, orienting according to our style.
+    mImage = nsLayoutUtils::OrientImage(image, StyleVisibility()->mImageOrientation);
+
     intrinsicSizeChanged = UpdateIntrinsicSize(mImage);
     intrinsicSizeChanged = UpdateIntrinsicRatio(mImage) || intrinsicSizeChanged;
-  }
-  else {
+  } else {
     // We no longer have a valid image, so release our stored image container.
     mImage = nullptr;
 
