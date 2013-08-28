@@ -104,6 +104,8 @@ public:
                                          GrGLInterface* aGrGLInterface,
                                          const IntSize &aSize,
                                          SurfaceFormat aFormat) MOZ_OVERRIDE;
+
+  void SetCacheLimits(int number, int sizeInBytes);
 #endif
 
   operator std::string() const {
