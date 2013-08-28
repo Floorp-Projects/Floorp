@@ -481,9 +481,12 @@ struct IonScript
     }
     const OsiIndex *getOsiIndex(uint32_t disp) const;
     const OsiIndex *getOsiIndex(uint8_t *retAddr) const;
-    inline IonCache &getCache(uint32_t index) {
+    inline IonCache &getCacheFromIndex(uint32_t index) {
         JS_ASSERT(index < cacheEntries_);
         uint32_t offset = cacheIndex()[index];
+        return getCache(offset);
+    }
+    inline IonCache &getCache(uint32_t offset) {
         JS_ASSERT(offset < runtimeSize_);
         return *(IonCache *) &runtimeData()[offset];
     }
