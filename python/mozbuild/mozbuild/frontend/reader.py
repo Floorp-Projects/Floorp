@@ -30,6 +30,7 @@ import time
 import traceback
 import types
 
+from collections import OrderedDict
 from io import StringIO
 
 from mozbuild.util import (
@@ -109,7 +110,7 @@ class MozbuildSandbox(Sandbox):
     We expose a few useful functions and expose the set of variables defining
     Mozilla's build system.
     """
-    def __init__(self, config, path):
+    def __init__(self, config, path, metadata={}):
         """Create an empty mozbuild Sandbox.
 
         config is a ConfigStatus instance (the output of configure). path is
@@ -121,6 +122,7 @@ class MozbuildSandbox(Sandbox):
         self._log = logging.getLogger(__name__)
 
         self.config = config
+        self.metadata = dict(metadata)
 
         topobjdir = os.path.abspath(config.topobjdir)
         topsrcdir = config.topsrcdir
@@ -556,10 +558,10 @@ class BuildReader(object):
         """
         path = os.path.join(self.topsrcdir, 'moz.build')
         return self.read_mozbuild(path, read_tiers=True,
-            filesystem_absolute=True)
+            filesystem_absolute=True, metadata={'tier': None})
 
     def read_mozbuild(self, path, read_tiers=False, filesystem_absolute=False,
-            descend=True):
+            descend=True, metadata={}):
         """Read and process a mozbuild file, descending into children.
 
         This starts with a single mozbuild file, executes it, and descends into
@@ -577,12 +579,19 @@ class BuildReader(object):
         If descend is True (the default), we will descend into child
         directories and files per variable values.
 
+        Arbitrary metadata in the form of a dict can be passed into this
+        function. This metadata will be attached to the emitted output. This
+        feature is intended to facilitate the build reader injecting state and
+        annotations into moz.build files that is independent of the sandbox's
+        execution context.
+
         Traversal is performed depth first (for no particular reason).
         """
         self._execution_stack.append(path)
         try:
             for s in self._read_mozbuild(path, read_tiers=read_tiers,
-                filesystem_absolute=filesystem_absolute, descend=descend):
+                filesystem_absolute=filesystem_absolute, descend=descend,
+                metadata=metadata):
                 yield s
 
         except BuildReaderError as bre:
@@ -608,7 +617,8 @@ class BuildReader(object):
             raise BuildReaderError(list(self._execution_stack),
                 sys.exc_info()[2], other_error=e)
 
-    def _read_mozbuild(self, path, read_tiers, filesystem_absolute, descend):
+    def _read_mozbuild(self, path, read_tiers, filesystem_absolute, descend,
+            metadata):
         path = os.path.normpath(path)
         log(self._log, logging.DEBUG, 'read_mozbuild', {'path': path},
             'Reading file: {path}')
@@ -621,7 +631,7 @@ class BuildReader(object):
         self._read_files.add(path)
 
         time_start = time.time()
-        sandbox = MozbuildSandbox(self.config, path)
+        sandbox = MozbuildSandbox(self.config, path, metadata=metadata)
         sandbox.exec_file(path, filesystem_absolute=filesystem_absolute)
         sandbox.execution_time = time.time() - time_start
         yield sandbox
@@ -637,18 +647,18 @@ class BuildReader(object):
         # It's very tempting to use a set here. Unfortunately, the recursive
         # make backend needs order preserved. Once we autogenerate all backend
         # files, we should be able to convert this to a set.
-        dirs = []
+        recurse_info = OrderedDict()
         for var in dir_vars:
             if not var in sandbox:
                 continue
 
             for d in sandbox[var]:
-                if d in dirs:
+                if d in recurse_info:
                     raise SandboxValidationError(
                         'Directory (%s) registered multiple times in %s' % (
                             d, var))
 
-                dirs.append(d)
+                recurse_info[d] = {'tier': metadata.get('tier', None)}
 
         # We also have tiers whose members are directories.
         if 'TIERS' in sandbox:
@@ -660,14 +670,14 @@ class BuildReader(object):
                 # We don't descend into static directories because static by
                 # definition is external to the build system.
                 for d in values['regular']:
-                    if d in dirs:
+                    if d in recurse_info:
                         raise SandboxValidationError(
                             'Tier directory (%s) registered multiple '
                             'times in %s' % (d, tier))
-                    dirs.append(d)
+                    recurse_info[d] = {'tier': tier}
 
         curdir = os.path.dirname(path)
-        for relpath in dirs:
+        for relpath, child_metadata in recurse_info.items():
             child_path = os.path.join(curdir, relpath, 'moz.build')
 
             # Ensure we don't break out of the topsrcdir. We don't do realpath
@@ -684,8 +694,7 @@ class BuildReader(object):
                 continue
 
             for res in self.read_mozbuild(child_path, read_tiers=False,
-                filesystem_absolute=True):
+                filesystem_absolute=True, metadata=child_metadata):
                 yield res
 
         self._execution_stack.pop()
-
