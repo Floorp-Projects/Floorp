@@ -76,6 +76,8 @@
                 "./src/net/transport_addr.h",
                 "./src/net/transport_addr_reg.c",
                 "./src/net/transport_addr_reg.h",
+                "./src/net/local_addr.c",
+                "./src/net/local_addr.h",
 
                 # STUN
                 "./src/stun/addrs.c",
