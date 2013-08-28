@@ -622,9 +622,13 @@ class CGHeaders(CGWrapper):
             dictionary, if passed, to decide what to do with interface types.
             """
             assert not descriptor or not dictionary
-            if t.nullable() and dictionary:
-                # Need to make sure that Nullable as a dictionary member works
-                declareIncludes.add("mozilla/dom/Nullable.h")
+            if t.nullable():
+                if dictionary:
+                    # Need to make sure that Nullable as a dictionary
+                    # member works.
+                    declareIncludes.add("mozilla/dom/Nullable.h")
+                else:
+                    bindingHeaders.add("mozilla/dom/Nullable.h")
             unrolled = t.unroll()
             if unrolled.isUnion():
                 # UnionConversions.h includes UnionTypes.h
@@ -672,12 +676,15 @@ class CGHeaders(CGWrapper):
             elif unrolled.isFloat() and not unrolled.isUnrestricted():
                 # Restricted floats are tested for finiteness
                 bindingHeaders.add("mozilla/FloatingPoint.h")
+                bindingHeaders.add("mozilla/dom/PrimitiveConversions.h")
             elif unrolled.isEnum():
                 filename = self.getDeclarationFilename(unrolled.inner)
                 # Do nothing if the enum is defined in the same webidl file
                 # (the binding header doesn't need to include itself).
                 if filename != prefix + ".h":
                     declareIncludes.add(filename)
+            elif unrolled.isPrimitive():
+                bindingHeaders.add("mozilla/dom/PrimitiveConversions.h")
 
         map(addHeadersForType,
             getAllTypes(descriptors + callbackDescriptors, dictionaries,
@@ -807,6 +814,8 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
 
             for f in t.flatMemberTypes:
                 f = f.unroll()
+                if f.nullable():
+                    headers.add("mozilla/dom/Nullable.h")
                 if f.isInterface():
                     if f.isSpiderMonkeyInterface():
                         headers.add("jsfriendapi.h")
@@ -822,6 +831,8 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                 elif f.isDictionary():
                     declarations.add((f.inner.identifier.name, True))
                     implheaders.add(CGHeaders.getDeclarationFilename(f.inner))
+                elif t.isPrimitive():
+                    implheaders.add("mozilla/dom/PrimitiveConversions.h")
 
     map(addInfoForType, getAllTypes(descriptors, dictionaries, callbacks))
 
@@ -869,6 +880,8 @@ def UnionConversions(descriptors, dictionaries, callbacks, config):
                         headers.add("nsDOMQS.h")
                 elif f.isDictionary():
                     headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                elif f.isPrimitive():
+                    headers.add("mozilla/dom/PrimitiveConversions.h")
 
     map(addInfoForType, getAllTypes(descriptors, dictionaries, callbacks))
 
@@ -8711,7 +8724,17 @@ class CGBindingRoot(CGThing):
         addHeaderBasedOnTypes("nsDOMQS.h", checkForXPConnectImpls)
 
         # Do codegen for all the enums
-        cgthings = [ CGEnum(e) for e in config.getEnums(webIDLFile) ]
+        enums = config.getEnums(webIDLFile)
+        cgthings = [ CGEnum(e) for e in enums ]
+
+        bindingHeaders["mozilla/dom/BindingUtils.h"] = (
+            descriptors or callbackDescriptors or dictionaries or
+            mainCallbacks or workerCallbacks)
+        bindingHeaders["mozilla/dom/BindingDeclarations.h"] = (
+            not bindingHeaders["mozilla/dom/BindingUtils.h"] and enums)
+
+        bindingHeaders["WrapperFactory.h"] = descriptors
+        bindingHeaders["mozilla/dom/DOMJSClass.h"] = descriptors
 
         # Do codegen for all the dictionaries.  We have to be a bit careful
         # here, because we have to generate these in order from least derived
@@ -8758,8 +8781,6 @@ class CGBindingRoot(CGThing):
                                              mainCallbacks, workerCallbacks,
                                              dictionaries,
                                              callbackDescriptors + jsImplemented),
-                       CGWrapper(CGGeneric("using namespace mozilla::dom;"),
-                                 defineOnly=True),
                        curr],
                       "\n")
 
@@ -8775,12 +8796,7 @@ class CGBindingRoot(CGThing):
                           'jspubtd.h',
                           'js/RootingAPI.h',
                           ],
-                         ['mozilla/dom/BindingUtils.h',
-                          'mozilla/dom/Nullable.h',
-                          'PrimitiveConversions.h',
-                          'WrapperFactory.h',
-                          'mozilla/dom/DOMJSClass.h',
-                          ] + bindingHeaders,
+                         bindingHeaders,
                          prefix,
                          curr,
                          config,
