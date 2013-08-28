@@ -1,0 +1,94 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/HalTypes.h";
+
+include protocol PContent;
+include protocol PFMRadioRequest;
+
+using mozilla::hal::FMRadioSeekDirection;
+
+namespace mozilla {
+namespace dom {
+
+struct EnableRequestArgs
+{
+  double frequency;
+};
+
+struct DisableRequestArgs
+{
+};
+
+struct SetFrequencyRequestArgs
+{
+  double frequency;
+};
+
+struct SeekRequestArgs
+{
+  FMRadioSeekDirection direction;
+};
+
+struct CancelSeekRequestArgs
+{
+};
+
+union FMRadioRequestArgs
+{
+  EnableRequestArgs;
+  DisableRequestArgs;
+  SetFrequencyRequestArgs;
+  SeekRequestArgs;
+  CancelSeekRequestArgs;
+};
+
+struct StatusInfo
+{
+  bool enabled;
+  double frequency;
+  double upperBound;
+  double lowerBound;
+  double channelWidth;
+};
+
+sync protocol PFMRadio
+{
+  manager PContent;
+  manages PFMRadioRequest;
+
+child:
+  /**
+   * Sent when the frequency is changed.
+   */
+  NotifyFrequencyChanged(double frequency);
+  /**
+   * Sent when the power state of FM radio HW is changed.
+   */
+  NotifyEnabledChanged(bool enabled, double frequency);
+
+  __delete__();
+
+parent:
+  /**
+   * Get the current status infomation of FM radio HW synchronously.
+   * Sent when the singleton object of FMRadioChild is initialized.
+   */
+  sync GetStatusInfo() returns (StatusInfo info);
+
+  /**
+   * Send request to parent process to operate the FM radio HW.
+   *
+   * We don't have separate Enable/SetFrequency/etc. methods instead here,
+   * because we can leverage the IPC messaging mechanism to manage the mapping
+   * of the asynchronous request and the DOMRequest we returned to the caller
+   * on web content, otherwise, we have to do the mapping stuff manually which
+   * is more error prone.
+   */
+  PFMRadioRequest(FMRadioRequestArgs requestType);
+};
+
+} // namespace dom
+} // namespace mozilla
+
