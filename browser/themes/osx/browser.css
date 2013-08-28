@@ -3641,7 +3641,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   position: relative;
 }
 .toolbarbutton-badge-container > .toolbarbutton-icon {
-  margin: 2px;
+  margin: 7px 2px;
 }
 
 .toolbarbutton-badge[badge]:not([badge=""]) {
