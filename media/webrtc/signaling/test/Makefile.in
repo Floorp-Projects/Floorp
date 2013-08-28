@@ -75,6 +75,13 @@ LIBS += \
   $(NULL)
 endif
 
+ifeq (gtk3,$(MOZ_WIDGET_TOOLKIT))
+LIBS += \
+  $(MOZ_GTK3_LIBS) \
+  $(FT2_LIBS) \
+  $(NULL)
+endif
+
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 LIBS += \
   $(XLIBS) \
