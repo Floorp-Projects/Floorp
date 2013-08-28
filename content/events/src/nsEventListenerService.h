@@ -13,6 +13,10 @@
 #include "jsapi.h"
 #include "mozilla/Attributes.h"
 
+namespace mozilla {
+template<typename T>
+class Maybe;
+} // namespace mozilla
 
 class nsEventListenerInfo : public nsIEventListenerInfo
 {

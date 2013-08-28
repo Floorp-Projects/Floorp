@@ -216,6 +216,9 @@ public:
     virtual bool RecvMinimizeMemoryUsage();
     virtual bool RecvCancelMinimizeMemoryUsage();
 
+    virtual bool RecvLoadAndRegisterSheet(const URIParams& aURI, const uint32_t& aType);
+    virtual bool RecvUnregisterSheet(const URIParams& aURI, const uint32_t& aType);
+
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif

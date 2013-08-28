@@ -435,8 +435,6 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, unsigne
                    HandleValue value, bool setterIsStrict)
 {
     MOZ_ASSERT(id == NameToId(cx->names().length));
-    MOZ_ASSERT(attrs & JSPROP_PERMANENT);
-    MOZ_ASSERT(!(attrs & JSPROP_ENUMERATE));
 
     /* Steps 1-2 are irrelevant in our implementation. */
 
@@ -444,6 +442,21 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, unsigne
     uint32_t newLen;
     if (!CanonicalizeArrayLengthValue(cx, value, &newLen))
         return false;
+
+    // Abort if we're being asked to change enumerability or configurability.
+    // (The length property of arrays is non-configurable, so such attempts
+    // must fail.)  This behavior is spread throughout the ArraySetLength spec
+    // algorithm, but we only need check it once as our array implementation
+    // is internally so different from the spec algorithm.  (ES5 and ES6 define
+    // behavior by delegating to the default define-own-property algorithm --
+    // OrdinaryDefineOwnProperty in ES6, the default [[DefineOwnProperty]] in
+    // ES5 -- but we reimplement all the conflict-detection bits ourselves here
+    // so that we can use a customized length representation.)
+    if (!(attrs & JSPROP_PERMANENT) || (attrs & JSPROP_ENUMERATE)) {
+        if (!setterIsStrict)
+            return true;
+        return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
+    }
 
     /* Steps 6-7. */
     bool lengthIsWritable = arr->lengthIsWritable();

@@ -7,6 +7,8 @@
 #ifndef jsproxy_h
 #define jsproxy_h
 
+#include "mozilla/Maybe.h"
+
 #include "jsapi.h"
 #include "jsfriendapi.h"
 

@@ -87,6 +87,9 @@ public:
   virtual void AddTextureClient(TextureClient* aTexture) MOZ_OVERRIDE;
 
   virtual TemporaryRef<BufferTextureClient>
+  CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags) MOZ_OVERRIDE;
+
+  virtual TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat) MOZ_OVERRIDE;
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE;

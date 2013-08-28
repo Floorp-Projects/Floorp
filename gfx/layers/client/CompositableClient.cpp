@@ -197,7 +197,7 @@ CompositableClient::RemoveTextureClient(TextureClient* aClient)
 {
   MOZ_ASSERT(aClient);
   mTexturesToRemove.AppendElement(aClient->GetID());
-  aClient->SetID(0);
+  aClient->ClearID();
 }
 
 void
