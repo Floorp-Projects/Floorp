@@ -281,7 +281,7 @@ let FormAssistant = {
             return n === element;
           });
         });
-        if (del && element === this.focusedElement) {
+        if (del && element === self.focusedElement) {
           // item was deleted, fake a blur so all state gets set correctly
           self.handleEvent({ target: element, type: "blur" });
         }
