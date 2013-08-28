@@ -138,6 +138,8 @@ struct IonOptions
     uint32_t exceptionBailoutThreshold;
 
     // Whether Ion should compile try-catch statements.
+    //
+    // Default: true
     bool compileTryCatch;
 
     // How many actual arguments are accepted on the C stack.
@@ -223,7 +225,7 @@ struct IonOptions
         osrPcMismatchesBeforeRecompile(6000),
         frequentBailoutThreshold(10),
         exceptionBailoutThreshold(10),
-        compileTryCatch(false),
+        compileTryCatch(true),
         maxStackArgs(4096),
         maxInlineDepth(3),
         smallFunctionMaxInlineDepth(10),

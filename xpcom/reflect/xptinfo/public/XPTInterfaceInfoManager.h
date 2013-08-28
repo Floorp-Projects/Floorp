@@ -15,6 +15,7 @@
 #include "nsDataHashtable.h"
 
 template<typename T> class nsCOMArray;
+class nsIMemoryReporter;
 class XPTHeader;
 class XPTInterfaceDirectoryEntry;
 class xptiInterfaceEntry;
@@ -108,6 +109,8 @@ private:
 
     xptiWorkingSet               mWorkingSet;
     Mutex                        mResolveLock;
+
+    nsCOMPtr<nsIMemoryReporter>  mReporter;
 };
 
 }

@@ -38,8 +38,8 @@
 #include "mozilla/Attributes.h"
 
 struct nsFactoryEntry;
-class nsIServiceManager;
 class nsIMemoryReporter;
+class nsIServiceManager;
 struct PRThread;
 
 #define NS_COMPONENTMANAGER_CID                      \
@@ -317,7 +317,7 @@ public:
 private:
     ~nsComponentManagerImpl();
 
-    nsIMemoryReporter* mReporter;
+    nsCOMPtr<nsIMemoryReporter> mReporter;
 };
 
 

@@ -1,6 +1,6 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 et lcs=trail\:.,tab\:>~ :
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -1909,22 +1909,22 @@ StoreAndNotifyEmbedVisit(VisitData& aPlace,
   (void)NS_DispatchToMainThread(event);
 }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(HistoryLinksHashtableMallocSizeOf)
-
-int64_t GetHistoryObserversSize()
+class HistoryLinksHashtableReporter MOZ_FINAL : public MemoryReporterBase
 {
-  History* history = History::GetService();
-  return history ?
-         history->SizeOfIncludingThis(HistoryLinksHashtableMallocSizeOf) : 0;
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(HistoryService,
-  "explicit/history-links-hashtable",
-  KIND_HEAP,
-  UNITS_BYTES,
-  GetHistoryObserversSize,
-  "Memory used by the hashtable of observers Places uses to notify objects of "
-  "changes to links' visited state.")
+public:
+  HistoryLinksHashtableReporter()
+    : MemoryReporterBase("explicit/history-links-hashtable",
+                         KIND_HEAP, UNITS_BYTES,
+"Memory used by the hashtable that records changes to the visited state of "
+"links.")
+    {}
+private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    History* history = History::GetService();
+    return history ? history->SizeOfIncludingThis(MallocSizeOf) : 0;
+  }
+};
 
 } // anonymous namespace
 
@@ -1947,12 +1947,15 @@ History::History()
     (void)os->AddObserver(this, TOPIC_PLACES_SHUTDOWN, false);
   }
 
-  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(HistoryService));
+  mReporter = new HistoryLinksHashtableReporter();
+  NS_RegisterMemoryReporter(mReporter);
 }
 
 History::~History()
 {
-  gService = NULL;
+  NS_UnregisterMemoryReporter(mReporter);
+
+  gService = nullptr;
 
 #ifdef DEBUG
   if (mObservers.IsInitialized()) {

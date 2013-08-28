@@ -12,6 +12,8 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
+#include "js/CallNonGenericMethod.h"
+
 namespace js {
 
 class RegExpGuard;
@@ -264,6 +266,12 @@ class Proxy
 
     static JSObject * const LazyProto;
 };
+
+// These are equal to |&{Function,Object,OuterWindow}ProxyObject::class_|.  Use
+// them in places where you don't want to #include vm/ProxyObject.h.
+extern JS_FRIEND_DATA(js::Class* const) FunctionProxyClassPtr;
+extern JS_FRIEND_DATA(js::Class* const) ObjectProxyClassPtr;
+extern JS_FRIEND_DATA(js::Class* const) OuterWindowProxyClassPtr;
 
 inline bool IsObjectProxyClass(const Class *clasp)
 {
