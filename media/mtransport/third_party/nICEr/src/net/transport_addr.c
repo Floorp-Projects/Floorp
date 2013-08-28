@@ -78,6 +78,27 @@ int nr_transport_addr_fmt_addr_string(nr_transport_addr *addr)
     return(_status);
   }
 
+int nr_transport_addr_fmt_ifname_addr_string(const nr_transport_addr *addr, char *buf, int len)
+  {
+    int _status;
+    char buffer[40];
+
+    switch(addr->ip_version){
+      case NR_IPV4:
+        if (!inet_ntop(AF_INET, &addr->u.addr4.sin_addr,buffer,sizeof(buffer))) {
+           strncpy(buffer, "[error]", len);
+        }
+        snprintf(buf,len,"%s:%s",addr->ifname,buffer);
+        break;
+      default:
+        ABORT(R_INTERNAL);
+    }
+
+    _status=0;
+  abort:
+    return(_status);
+  }
+
 int nr_sockaddr_to_transport_addr(struct sockaddr *saddr, int saddr_len, int protocol, int keep, nr_transport_addr *addr)
   {
     int r,_status;
