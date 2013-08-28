@@ -3,10 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DiskSpaceWatcher.h"
+#include "nsIObserverService.h"
+#include "nsXULAppAPI.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Services.h"
 
 #define NS_DISKSPACEWATCHER_CID \
   { 0xab218518, 0xf197, 0x4fb4, { 0x8b, 0x0f, 0x8b, 0xb3, 0x4d, 0xf2, 0x4b, 0xf4 } }

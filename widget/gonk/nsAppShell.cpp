@@ -44,6 +44,7 @@
 #include "nsIObserverService.h"
 #include "nsIScreen.h"
 #include "nsScreenManagerGonk.h"
+#include "nsThreadUtils.h"
 #include "nsWindow.h"
 #include "OrientationObserver.h"
 #include "GonkMemoryPressureMonitoring.h"
