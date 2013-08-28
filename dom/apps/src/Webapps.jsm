@@ -21,6 +21,7 @@ Cu.import("resource://gre/modules/OfflineCacheInstaller.jsm");
 Cu.import("resource://gre/modules/SystemMessagePermissionsChecker.jsm");
 Cu.import("resource://gre/modules/AppDownloadManager.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 
 #ifdef MOZ_WIDGET_GONK
 XPCOMUtils.defineLazyGetter(this, "libcutils", function() {
@@ -1327,7 +1328,6 @@ this.DOMApplicationRegistry = {
 
   // Returns the MD5 hash of a file, doing async IO off the main thread.
   computeFileHash: function computeFileHash(aFile, aCallback) {
-    Cu.import("resource://gre/modules/osfile.jsm");
     const CHUNK_SIZE = 16384;
 
     // Return the two-digit hexadecimal code for a byte.
