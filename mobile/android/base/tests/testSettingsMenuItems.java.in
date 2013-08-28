@@ -26,7 +26,9 @@ public class testSettingsMenuItems extends PixelTest {
     String[][] OPTIONS_CUSTOMIZE = {
          { "Import from Android", "", "Bookmarks", "History", "Import" },
          { "Show search suggestions" },
+#ifdef MOZ_UPDATER
          { "Automatic updates", "Only over Wi-Fi", "Enabled", "Only over Wi-Fi", "Disabled" },
+#endif
      };
 
     String[][] OPTIONS_DISPLAY = {
