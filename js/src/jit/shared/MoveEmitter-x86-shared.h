@@ -11,7 +11,7 @@
 #include "jit/MoveResolver.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class CodeGenerator;
 

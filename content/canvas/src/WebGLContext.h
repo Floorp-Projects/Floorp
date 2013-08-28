@@ -872,6 +872,7 @@ private:
     void VertexAttrib4fv_base(WebGLuint idx, uint32_t arrayLength, const WebGLfloat* ptr);
 
     bool ValidateBufferFetching(const char *info);
+    bool BindArrayAttribToLocation0(WebGLProgram *program);
 
 // -----------------------------------------------------------------------------
 // PROTECTED

@@ -1025,7 +1025,7 @@ js_InvokeOperationCallback(JSContext *cx)
      * A worker thread may have set the callback after finishing an Ion
      * compilation.
      */
-    ion::AttachFinishedCompilations(cx);
+    jit::AttachFinishedCompilations(cx);
 #endif
 
     /*
