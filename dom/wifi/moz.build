@@ -8,6 +8,7 @@ XPIDL_SOURCES += [
     'nsIDOMMozWifiConnectionInfoEvent.idl',
     'nsIDOMMozWifiStatusChangeEvent.idl',
     'nsIWifi.idl',
+    'nsIWifiService.idl',
 ]
 
 XPIDL_MODULE = 'dom_wifi'
@@ -21,10 +22,12 @@ EXTRA_COMPONENTS += [
     'WifiWorker.manifest',
 ]
 
-EXTRA_JS_MODULES += [
-    'libhardware_legacy.js',
-    'wifi_worker.js',
-]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    CPP_SOURCES = [
+        'NetUtils.cpp',
+        'WifiProxyService.cpp',
+        'WifiUtils.cpp',
+    ]
 
 LIBXUL_LIBRARY = True
 

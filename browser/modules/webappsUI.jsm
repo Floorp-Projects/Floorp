@@ -14,18 +14,36 @@ Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/WebappsInstaller.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
+                                   "@mozilla.org/childprocessmessagemanager;1",
+                                   "nsIMessageSender");
 
 this.webappsUI = {
+  downloads: {},
+
   init: function webappsUI_init() {
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-uninstall", false);
+    cpmm.addMessageListener("Webapps:OfflineCache", this);
   },
 
   uninit: function webappsUI_uninit() {
     Services.obs.removeObserver(this, "webapps-ask-install");
     Services.obs.removeObserver(this, "webapps-launch");
     Services.obs.removeObserver(this, "webapps-uninstall");
+    cpmm.removeMessageListener("Webapps:OfflineCache", this);
+  },
+
+  receiveMessage: function(aMessage) {
+    let data = aMessage.data;
+
+    if (aMessage.name == "Webapps:OfflineCache" && data.installState == "installed") {
+      this.downloads[data.manifest].resolve();
+    }
   },
 
   observe: function webappsUI_observe(aSubject, aTopic, aData) {
@@ -103,7 +121,12 @@ this.webappsUI = {
     let mainAction = {
       label: bundle.getString("webapps.install"),
       accessKey: bundle.getString("webapps.install.accesskey"),
-      callback: function() {
+      callback: () => {
+        let manifestURL = aData.app.manifestURL;
+        if (aData.app.manifest && aData.app.manifest.appcache_path) {
+          this.downloads[manifestURL] = Promise.defer();
+        }
+
         let app = WebappsInstaller.init(aData);
 
         if (app) {
@@ -113,18 +136,22 @@ this.webappsUI = {
           }
 
           DOMApplicationRegistry.confirmInstall(aData, false, localDir, null,
-            function (aManifest) {
-              WebappsInstaller.install(aData, aManifest).then(
-                function() {
-                  installationSuccessNotification(aData, app, chromeWin);
-                },
-                function(error) {
-                  Cu.reportError("Error installing webapp: " + error);
+            (aManifest) => {
+              Task.spawn(function() {
+                try {
+                  yield WebappsInstaller.install(aData, aManifest);
+                  if (this.downloads[manifestURL]) {
+                    yield this.downloads[manifestURL].promise;
+                  }
+                  installationSuccessNotification(aData, app, bundle);
+                } catch (ex) {
+                  Cu.reportError("Error installing webapp: " + ex);
                   // TODO: Notify user that the installation has failed
+                } finally {
+                  delete this.downloads[manifestURL];
                 }
-              );
-            }
-          );
+              }.bind(this));
+            });
         } else {
           DOMApplicationRegistry.denyInstall(aData);
         }
@@ -151,7 +178,7 @@ this.webappsUI = {
   }
 }
 
-function installationSuccessNotification(aData, app, aWindow) {
+function installationSuccessNotification(aData, app, aBundle) {
   let launcher = {
     observe: function(aSubject, aTopic) {
       if (aTopic == "alertclickcallback") {
@@ -160,19 +187,13 @@ function installationSuccessNotification(aData, app, aWindow) {
     }
   };
 
-  let bundle = aWindow.gNavigatorBundle;
+  try {
+    let notifier = Cc["@mozilla.org/alerts-service;1"].
+                   getService(Ci.nsIAlertsService);
 
-  if (("@mozilla.org/alerts-service;1" in Cc)) {
-    let notifier;
-    try {
-      notifier = Cc["@mozilla.org/alerts-service;1"].
-                 getService(Ci.nsIAlertsService);
-
-      notifier.showAlertNotification(app.iconURI.spec,
-                                    bundle.getString("webapps.install.success"),
-                                    app.appNameAsFilename,
-                                    true, null, launcher);
-
-    } catch (ex) {}
-  }
+    notifier.showAlertNotification(app.iconURI.spec,
+                                   aBundle.getString("webapps.install.success"),
+                                   app.appNameAsFilename,
+                                   true, null, launcher);
+  } catch (ex) {}
 }

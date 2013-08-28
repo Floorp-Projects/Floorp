@@ -10,7 +10,7 @@ interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMWindow;
 
-[scriptable, uuid(7da2d9f6-eba1-4339-bde1-dc6732d42cdf)]
+[scriptable, uuid(f1878629-4151-4e02-a22a-8cec3d7eddee)]
 interface nsIMobileConnectionListener : nsISupports
 {
   void notifyVoiceChanged();
@@ -26,13 +26,14 @@ interface nsIMobileConnectionListener : nsISupports
                            in unsigned short serviceClass);
   void notifyEmergencyCbModeChanged(in boolean active,
                                     in unsigned long timeoutMs);
+  void notifyOtaStatusChanged(in DOMString status);
 };
 
 /**
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(576c7c00-7319-4309-aa9e-1dab102e0874)]
+[scriptable, uuid(c66652e0-0628-11e3-8ffd-0800200c9a66)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -71,6 +72,8 @@ interface nsIMobileConnectionProvider : nsISupports
                                         in jsval        option);
   nsIDOMDOMRequest setCallBarringOption(in nsIDOMWindow window,
                                         in jsval        option);
+  nsIDOMDOMRequest changeCallBarringPassword(in nsIDOMWindow window,
+                                             in jsval info);
 
   nsIDOMDOMRequest setCallWaitingOption(in nsIDOMWindow   window,
                                         in bool enabled);

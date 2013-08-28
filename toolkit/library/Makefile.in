@@ -178,6 +178,12 @@ COMPONENT_LIBS += \
   diskspacewatcher \
   $(NULL)
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+COMPONENT_LIBS += \
+  domwifi_s \
+  $(NULL)
+endif
+
 ifdef BUILD_CTYPES
 COMPONENT_LIBS += \
   jsctypes \

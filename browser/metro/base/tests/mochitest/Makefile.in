@@ -12,6 +12,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MOCHITEST_METRO_FILES = \
   head.js \
+  helpers/BookmarksHelper.js \
+  helpers/HistoryHelper.js \
   helpers/ViewStateHelper.js \
   browser_bookmarks.js \
   browser_canonizeURL.js \

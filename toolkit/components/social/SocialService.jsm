@@ -676,10 +676,10 @@ this.SocialService = {
 
   },
 
-  uninstallProvider: function(origin) {
+  uninstallProvider: function(origin, aCallback) {
     let manifest = SocialServiceInternal.getManifestByOrigin(origin);
     let addon = new AddonWrapper(manifest);
-    addon.uninstall();
+    addon.uninstall(aCallback);
   }
 };
 
@@ -1071,12 +1071,14 @@ var SocialAddonProvider = {
     aCallback([new AddonWrapper(a) for each (a in SocialServiceInternal.manifests)]);
   },
 
-  removeAddon: function(aAddon) {
+  removeAddon: function(aAddon, aCallback) {
     AddonManagerPrivate.callAddonListeners("onUninstalling", aAddon, false);
     aAddon.pendingOperations |= AddonManager.PENDING_UNINSTALL;
     Services.prefs.clearUserPref(getPrefnameFromOrigin(aAddon.manifest.origin));
     aAddon.pendingOperations -= AddonManager.PENDING_UNINSTALL;
     AddonManagerPrivate.callAddonListeners("onUninstalled", aAddon);
+    if (aCallback)
+      schedule(aCallback);
   }
 }
 
@@ -1245,16 +1247,18 @@ AddonWrapper.prototype = {
     return val;
   },
 
-  uninstall: function() {
+  uninstall: function(aCallback) {
     let prefName = getPrefnameFromOrigin(this.manifest.origin);
     if (Services.prefs.prefHasUserValue(prefName)) {
       if (ActiveProviders.has(this.manifest.origin)) {
         SocialService.removeProvider(this.manifest.origin, function() {
-          SocialAddonProvider.removeAddon(this);
+          SocialAddonProvider.removeAddon(this, aCallback);
         }.bind(this));
       } else {
-        SocialAddonProvider.removeAddon(this);
+        SocialAddonProvider.removeAddon(this, aCallback);
       }
+    } else {
+      schedule(aCallback);
     }
   },
 
