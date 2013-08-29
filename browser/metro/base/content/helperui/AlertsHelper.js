@@ -11,7 +11,7 @@ var AlertsHelper = {
     this._listener = aListener;
     this._cookie = aCookie;
 
-    MetroUtils.showNativeToast(aTitle, aText, aImageURL);
+    Services.metro.showNativeToast(aTitle, aText, aImageURL);
   },
 
   observe: function(aSubject, aTopic, aData) {

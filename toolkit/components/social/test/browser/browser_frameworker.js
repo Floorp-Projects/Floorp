@@ -35,7 +35,6 @@ let tests = {
     }
 
     let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testSimple");
-    isnot(worker._worker.frame.contentWindow.toString(), "[object ChromeWindow]", "worker window isn't a chrome window");
 
     worker.port.onmessage = function(e) {
       if (e.data.topic == "pong") {

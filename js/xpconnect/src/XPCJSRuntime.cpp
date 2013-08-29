@@ -2921,20 +2921,83 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // to cause period, and we hope hygienic, last-ditch GCs from within
     // the GC's allocator.
     JS_SetGCParameter(runtime, JSGC_MAX_BYTES, 0xffffffff);
-#if defined(MOZ_ASAN) || (defined(DEBUG) && !defined(XP_WIN))
-    // Bug 803182: account for the 4x difference in the size of js::Interpret
-    // between optimized and debug builds. Also, ASan requires more stack space
-    // due to redzones
-    JS_SetNativeStackQuota(runtime, 2 * 128 * sizeof(size_t) * 1024);
+
+    // The JS engine permits us to set different stack limits for system code,
+    // trusted script, and untrusted script. We have tests that ensure that
+    // we can always execute 10 "heavy" (eval+with) stack frames deeper in
+    // privileged code. Our stack sizes vary greatly in different configurations,
+    // so satisfying those tests requires some care. Manual measurements of the
+    // number of heavy stack frames achievable gives us the following rough data,
+    // ordered by the effective categories in which they are grouped in the
+    // JS_SetNativeStackQuota call (which predates this analysis).
+    //
+    // OSX 64-bit Debug: 7MB stack, 636 stack frames => ~11.3k per stack frame
+    // OSX64 Opt: 7MB stack, 2440 stack frames => ~3k per stack frame
+    //
+    // Linux 32-bit Debug: 2MB stack, 447 stack frames => ~4.6k per stack frame
+    // Linux 64-bit Debug: 4MB stack, 501 stack frames => ~8.2k per stack frame
+    //
+    // Windows (Opt+Debug): 900K stack, 235 stack frames => ~3.4k per stack frame
+    //
+    // Linux 32-bit Opt: 1MB stack, 272 stack frames => ~3.8k per stack frame
+    // Linux 64-bit Opt: 2MB stack, 316 stack frames => ~6.5k per stack frame
+    //
+    // We tune the trusted/untrusted quotas for each configuration to achieve our
+    // invariants while attempting to minimize overhead. In contrast, our buffer
+    // between system code and trusted script is a very unscientific 10k.
+    const size_t kSystemCodeBuffer = 10 * 1024;
+
+    // Our "default" stack is what we use in configurations where we don't have
+    // a compelling reason to do things differently. This is effectively 1MB on
+    // 32-bit platforms and 2MB on 64-bit platforms.
+    const size_t kDefaultStackQuota = 128 * sizeof(size_t) * 1024;
+
+    // Set stack sizes for different configurations. It's probably not great for
+    // the web to base this decision primarily on the default stack size that the
+    // underlying platform makes available, but that seems to be what we do. :-(
+
+#if defined(XP_MACOSX) || defined(DARWIN)
+    // MacOS has a gargantuan default stack size of 8MB. Go wild with 7MB,
+    // and give trusted script 120k extra. The stack is huge on mac anyway.
+    const size_t kStackQuota = 7 * 1024 * 1024;
+    const size_t kTrustedScriptBuffer = 120 * 1024;
+#elif defined(MOZ_ASAN)
+    // ASan requires more stack space due to red-zones, so give it double the
+    // default (2MB on 32-bit, 4MB on 64-bit). ASAN stack frame measurements
+    // were not taken at the time of this writing, so we hazard a guess that
+    // ASAN builds have roughly twice the stack overhead as normal builds.
+    // On normal builds, the largest stack frame size we might encounter is
+    // 8.2k, so let's use a buffer of 8.2 * 2 * 10 = 164k.
+    const size_t kStackQuota =  2 * kDefaultStackQuota;
+    const size_t kTrustedScriptBuffer = 164 * 1024;
 #elif defined(XP_WIN)
-    // 1MB is the default stack size on Windows
-    JS_SetNativeStackQuota(runtime, 900 * 1024);
-#elif defined(XP_MACOSX) || defined(DARWIN)
-    // 8MB is the default stack size on MacOS
-    JS_SetNativeStackQuota(runtime, 7 * 1024 * 1024);
+    // 1MB is the default stack size on Windows, so the default 1MB stack quota
+    // we'd get on win32 is slightly too large. Use 900k instead. And since
+    // windows stack frames are 3.4k each, let's use a buffer of 40k.
+    const size_t kStackQuota = 900 * 1024;
+    const size_t kTrustedScriptBuffer = 40 * 1024;
+    // The following two configurations are linux-only. Given the numbers above,
+    // we use 50k and 100k trusted buffers on 32-bit and 64-bit respectively.
+#elif defined(DEBUG)
+    // Bug 803182: account for the 4x difference in the size of js::Interpret
+    // between optimized and debug builds.
+    // XXXbholley - Then why do we only account for 2x of difference?
+    const size_t kStackQuota = 2 * kDefaultStackQuota;
+    const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
 #else
-    JS_SetNativeStackQuota(runtime, 128 * sizeof(size_t) * 1024);
+    const size_t kStackQuota = kDefaultStackQuota;
+    const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
 #endif
+
+    // Avoid an unused variable warning on platforms where we don't use the
+    // default.
+    (void) kDefaultStackQuota;
+
+    JS_SetNativeStackQuota(runtime,
+                           kStackQuota,
+                           kStackQuota - kSystemCodeBuffer,
+                           kStackQuota - kSystemCodeBuffer - kTrustedScriptBuffer);
+
     JS_SetDestroyCompartmentCallback(runtime, CompartmentDestroyedCallback);
     JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);

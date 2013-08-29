@@ -121,9 +121,11 @@ class TestResolveTargetToMake(unittest.TestCase):
             target = target.replace(os.sep, '/')
         self.assertEqual((reldir, target), expected)
 
-    def test_absolute_path(self):
-        abspath = os.path.abspath(os.path.join(self.topobjdir, 'test-dir'))
-        self.assertResolve(abspath, (None, None))
+    def test_root_path(self):
+        self.assertResolve('/test-dir', ('test-dir', None))
+        self.assertResolve('/test-dir/with', ('test-dir/with', None))
+        self.assertResolve('/test-dir/without', ('test-dir', None))
+        self.assertResolve('/test-dir/without/with', ('test-dir/without/with', None))
 
     def test_dir(self):
         self.assertResolve('test-dir', ('test-dir', None))

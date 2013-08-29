@@ -1128,9 +1128,17 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
     if (type->singleton && !type->lazy())
         PushMarkStack(gcmarker, type->singleton);
 
-    if (type->newScript) {
-        PushMarkStack(gcmarker, type->newScript->fun);
-        PushMarkStack(gcmarker, type->newScript->shape.get());
+    if (type->addendum) {
+        switch (type->addendum->kind) {
+          case types::TypeObjectAddendum::NewScript:
+            PushMarkStack(gcmarker, type->newScript()->fun);
+            PushMarkStack(gcmarker, type->newScript()->shape.get());
+            break;
+
+          case types::TypeObjectAddendum::BinaryData:
+            PushMarkStack(gcmarker, type->binaryData()->typeRepr->ownerObject());
+            break;
+        }
     }
 
     if (type->interpretedFunction)
@@ -1153,9 +1161,17 @@ gc::MarkChildren(JSTracer *trc, types::TypeObject *type)
     if (type->singleton && !type->lazy())
         MarkObject(trc, &type->singleton, "type_singleton");
 
-    if (type->newScript) {
-        MarkObject(trc, &type->newScript->fun, "type_new_function");
-        MarkShape(trc, &type->newScript->shape, "type_new_shape");
+    if (type->addendum) {
+        switch (type->addendum->kind) {
+          case types::TypeObjectAddendum::NewScript:
+            MarkObject(trc, &type->newScript()->fun, "type_new_function");
+            MarkShape(trc, &type->newScript()->shape, "type_new_shape");
+            break;
+
+          case types::TypeObjectAddendum::BinaryData:
+            type->binaryData()->typeRepr->mark(trc);
+            break;
+        }
     }
 
     if (type->interpretedFunction)
@@ -1641,7 +1657,7 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
     void *thing = *thingp;
     int stackDummy;
-    if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(trc->runtime), &stackDummy)) {
+    if (!JS_CHECK_STACK_SIZE(trc->runtime->mainThread.nativeStackLimit[StackForSystemCode], &stackDummy)) {
         /*
          * If we run out of stack, we take a more drastic measure: require that
          * we GC again before the next CC.

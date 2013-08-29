@@ -39,6 +39,7 @@ using namespace js::gc;
 using mozilla::Atomic;
 using mozilla::DebugOnly;
 using mozilla::PodZero;
+using mozilla::PodArrayZero;
 using mozilla::ThreadLocal;
 
 /* static */ ThreadLocal<PerThreadData*> js::TlsPerThreadData;
@@ -130,7 +131,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     selfHostingGlobal_(NULL),
     selfHostedClasses_(NULL),
     nativeStackBase(0),
-    nativeStackQuota(0),
     cxCallback(NULL),
     destroyCompartmentCallback(NULL),
     compartmentNameCallback(NULL),
@@ -283,6 +283,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 
     PodZero(&debugHooks);
     PodZero(&atomState);
+    PodArrayZero(nativeStackQuota);
 
 #if JS_STACK_GROWTH_DIRECTION > 0
     nativeStackLimit = UINTPTR_MAX;

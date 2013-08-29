@@ -31,7 +31,11 @@
                          android:layout_width="fill_parent"
                          android:layout_height="fill_parent">
 
-                <include layout="@layout/home_pager"/>
+                <ViewStub android:id="@+id/home_pager"
+                          android:layout="@layout/home_pager"
+                          android:layout_width="fill_parent"
+                          android:layout_height="fill_parent"/>
+
 
             </FrameLayout>
 

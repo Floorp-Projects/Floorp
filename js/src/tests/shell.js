@@ -835,6 +835,28 @@ function jit(on)
 {
 }
 
+function assertEqArray(a1, a2) {
+  assertEq(a1.length, a2.length);
+  for (var i = 0; i < a1.length; i++) {
+    try {
+      assertEq(a1[i], a2[i]);
+    } catch (e) {
+      throw new Error("At index " + i + ": " + e);
+    }
+  }
+}
+
+function assertThrows(f) {
+    var ok = false;
+    try {
+        f();
+    } catch (exc) {
+        ok = true;
+    }
+    if (!ok)
+        throw new Error("Assertion failed: " + f + " did not throw as expected");
+}
+
 /*
  * Some tests need to know if we are in Rhino as opposed to SpiderMonkey
  */
