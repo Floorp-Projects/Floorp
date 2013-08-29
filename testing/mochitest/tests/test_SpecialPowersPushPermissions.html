@@ -57,7 +57,7 @@ function test3() {
   ok(SpecialPowers.testPermission('pDENY', ALLOW_ACTION, document), 'pDENY should have ALLOW permission');
   ok(SpecialPowers.testPermission('pREMOVE', UNKNOWN_ACTION, document), 'pREMOVE should have REMOVE permission');
   // only pPROMPT (last one) is different, the other stuff is just to see if it doesn't cause test failures
-  SpecialPowers.pushPermissions([{'type': 'pUNKNOWN', 'allow': true, 'context': document}, {'type': 'pALLOW', 'allow': false, 'context': document}, {'type': 'pDENY', 'allow': true, 'context': document}, {'type': 'pPROMPT', 'allow': false, 'context': document}], test3b);
+  SpecialPowers.pushPermissions([{'type': 'pUNKNOWN', 'allow': true, 'context': document}, {'type': 'pALLOW', 'allow': false, 'context': document}, {'type': 'pDENY', 'allow': true, 'context': document}, {'type': 'pPROMPT', 'allow': false, 'context': document}, {'type': 'pREMOVE', 'remove': true, 'context': document}], test3b);
 }
 
 function test3b() {
