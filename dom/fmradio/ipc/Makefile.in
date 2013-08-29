@@ -9,8 +9,6 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME     = domfmradio_s
-
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/fmradio \
   $(NULL)
