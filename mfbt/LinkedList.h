@@ -58,6 +58,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Move.h"
 #include "mozilla/NullPtr.h"
 
 #ifdef __cplusplus
@@ -115,6 +116,36 @@ class LinkedListElement
         prev(MOZ_THIS_IN_INITIALIZER_LIST()),
         isSentinel(false)
     { }
+
+    LinkedListElement(LinkedListElement<T>&& other)
+      : isSentinel(other.isSentinel)
+    {
+      if (!other.isInList()) {
+        next = this;
+        prev = this;
+        return;
+      }
+
+      MOZ_ASSERT(other.next->prev == &other);
+      MOZ_ASSERT(other.prev->next == &other);
+
+      /*
+       * Initialize |this| with |other|'s prev/next pointers, and adjust those
+       * element to point to this one.
+       */
+      next = other.next;
+      prev = other.prev;
+
+      next->prev = this;
+      prev->next = this;
+
+      /*
+       * Adjust |other| so it doesn't think it's in a list.  This makes it
+       * safely destructable.
+       */
+      other.next = &other;
+      other.prev = &other;
+    }
 
     ~LinkedListElement() {
       if (!isSentinel && isInList())
@@ -264,6 +295,10 @@ class LinkedList
 
   public:
     LinkedList() : sentinel(LinkedListElement<T>::NODE_KIND_SENTINEL) { }
+
+    LinkedList(LinkedList<T>&& other)
+      : sentinel(mozilla::Move(other.sentinel))
+    { }
 
     ~LinkedList() {
       MOZ_ASSERT(isEmpty());
