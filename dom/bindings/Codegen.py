@@ -5801,7 +5801,8 @@ class CGMemberJITInfo(CGThing):
             # while we have the right type.
             getter = ("(JSJitGetterOp)get_%s" % self.member.identifier.name)
             getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.member, getter=True)
-            getterconst = self.member.getExtendedAttribute("Constant")
+            getterconst = (self.member.getExtendedAttribute("SameObject") or
+                           self.member.getExtendedAttribute("Constant"))
             getterpure = getterconst or self.member.getExtendedAttribute("Pure")
             assert (getterinfal or (not getterconst and not getterpure))
 

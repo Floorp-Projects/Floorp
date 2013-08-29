@@ -313,3 +313,29 @@ def WebIDLTest(parser, harness):
     except Exception, x:
         threw = True
     harness.ok(threw, "Should spell [Throws] correctly")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          interface A {
+            [SameObject] readonly attribute boolean foo;
+          };
+        """)
+        results = parser.finish()
+    except Exception, x:
+        threw = True
+    harness.ok(threw, "Should not allow [SameObject] on attributes not of interface type")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          interface A {
+            [SameObject] readonly attribute A foo;
+          };
+        """)
+        results = parser.finish()
+    except Exception, x:
+        threw = True
+    harness.ok(not threw, "Should allow [SameObject] on attributes of interface type")
