@@ -73,45 +73,6 @@ this.webappsUI = {
     return someWindow && Services.wm.getOuterWindowWithId(aId);
   },
 
-  openURL: function(aUrl, aOrigin) {
-    let browserEnumerator = Services.wm.getEnumerator("navigator:browser");
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-
-    // Check each browser instance for our URL
-    let found = false;
-    while (!found && browserEnumerator.hasMoreElements()) {
-      let browserWin = browserEnumerator.getNext();
-      let tabbrowser = browserWin.gBrowser;
-
-      // Check each tab of this browser instance
-      let numTabs = tabbrowser.tabs.length;
-      for (let index = 0; index < numTabs; index++) {
-        let tab = tabbrowser.tabs[index];
-        let appURL = ss.getTabValue(tab, "appOrigin");
-        if (appURL == aOrigin) {
-          // The URL is already opened. Select this tab.
-          tabbrowser.selectedTab = tab;
-          browserWin.focus();
-          found = true;
-          break;
-        }
-      }
-    }
-
-    // Our URL isn't open. Open it now.
-    if (!found) {
-      let recentWindow = Services.wm.getMostRecentWindow("navigator:browser");
-      if (recentWindow) {
-        // Use an existing browser window
-        let browser = recentWindow.gBrowser;
-        let tab = browser.addTab(aUrl);
-        browser.pinTab(tab);
-        browser.selectedTab = tab;
-        ss.setTabValue(tab, "appOrigin", aOrigin);
-      }
-    }
-  },
-
   doInstall: function(aData, aWindow) {
     let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)
