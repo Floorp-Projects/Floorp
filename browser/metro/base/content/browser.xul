@@ -472,21 +472,21 @@
                      flex="1"
                      onclick="FlyoutPanelsUI.SyncFlyoutPanel.abortEasySetup();
                               FlyoutPanelsUI.SyncFlyoutPanel.showManualSetup()">
-          &sync.flyout.setup.manual.label;
+          &sync.flyout.setup.manual.label_2;
         </description>
         <separator />
         <description>&sync.flyout.setup.description3;</description>
-        <description>&sync.flyout.setup.description4;</description>
+        <description>&sync.flyout.setup.description4_2;</description>
         <description class="syncInstructionText">
-          &sync.flyout.setup.description5;
+          &sync.flyout.setup.description5_2;
         </description>
         <description class="syncInstructionText">
-          &sync.flyout.setup.description6;
+          &sync.flyout.setup.description6_2;
         </description>
       </vbox>
 
       <vbox id="sync-manualsetup-container" collapsed="true">
-        <description>&sync.flyout.manualsetup.description1;</description>
+        <description>&sync.flyout.manualsetup.description1_2;</description>
         <separator/>
         <textbox id="sync-manualsetup-account"
                  placeholder="&sync.flyout.manualsetup.account.placeholder;"
@@ -609,9 +609,9 @@
           <spacer flex="1" />
         </hbox>
         <description>&sync.flyout.pairNewDevice.note1;</description>
-        <description>&sync.flyout.pairNewDevice.note2;</description>
+        <description>&sync.flyout.pairNewDevice.note2_2;</description>
         <description class="syncInstructionText">
-          &sync.flyout.pairNewDevice.note3;
+          &sync.flyout.pairNewDevice.note3_2;
         </description>
         <description class="syncInstructionText">
           &sync.flyout.pairNewDevice.note4;

@@ -396,6 +396,8 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mDecoder(nullptr),
   mBytesDecoded(0),
   mInDecoder(false),
+  mStatusDiff(ImageStatusDiff::NoChange()),
+  mNotifying(false),
   mHasSize(false),
   mDecodeOnDraw(false),
   mMultipart(false),
@@ -2896,6 +2898,33 @@ RasterImage::GetFramesNotified(uint32_t *aFramesNotified)
 #endif
 
 nsresult
+RasterImage::RequestDecodeIfNeeded(nsresult aStatus,
+                                   eShutdownIntent aIntent,
+                                   bool aDone,
+                                   bool aWasSize)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // If we were a size decode and a full decode was requested, now's the time.
+  if (NS_SUCCEEDED(aStatus) &&
+      aIntent != eShutdownIntent_Error &&
+      aDone &&
+      aWasSize &&
+      mWantFullDecode) {
+    mWantFullDecode = false;
+
+    // If we're not meant to be storing source data and we just got the size,
+    // we need to synchronously flush all the data we got to a full decoder.
+    // When that decoder is shut down, we'll also clear our source data.
+    return StoringSourceData() ? RequestDecode()
+                               : SyncDecode();
+  }
+
+  // We don't need a full decode right now, so just return the existing status.
+  return aStatus;
+}
+
+nsresult
 RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_Done */,
                                   DecodeRequest* aRequest /* = nullptr */)
 {
@@ -2963,42 +2992,39 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
     }
   }
 
-  imgStatusTracker::StatusDiff diff;
-  if (request) {
-    diff = image->mStatusTracker->CalculateAndApplyDifference(request->mStatusTracker);
-  }
+  ImageStatusDiff diff =
+    request ? image->mStatusTracker->Difference(request->mStatusTracker)
+            : image->mStatusTracker->DecodeStateAsDifference();
+  image->mStatusTracker->ApplyDifference(diff);
 
-  {
-    // Notifications can't go out with the decoding lock held.
-    MutexAutoUnlock unlock(mDecodingMutex);
+  // Notifications can't go out with the decoding lock held, nor can we call
+  // RequestDecodeIfNeeded, so unlock for the rest of the function.
+  MutexAutoUnlock unlock(mDecodingMutex);
 
-    // Then, tell the observers what happened in the decoder.
-    // If we have no request, we have not yet created a decoder, but we still
-    // need to send out notifications.
-    if (request) {
+  if (mNotifying) {
+    // Accumulate the status changes. We don't permit recursive notifications
+    // because they cause subtle concurrency bugs, so we'll delay sending out
+    // the notifications until we pop back to the lowest invocation of
+    // FinishedSomeDecoding on the stack.
+    mStatusDiff.Combine(diff);
+  } else {
+    MOZ_ASSERT(mStatusDiff.IsNoChange(), "Shouldn't have an accumulated change at this point");
+
+    while (!diff.IsNoChange()) {
+      // Tell the observers what happened.
+      mNotifying = true;
       image->mStatusTracker->SyncNotifyDifference(diff);
-    } else {
-      image->mStatusTracker->SyncNotifyDecodeState();
+      mNotifying = false;
+
+      // Gather any status changes that may have occurred as a result of sending
+      // out the previous notifications. If there were any, we'll send out
+      // notifications for them next.
+      diff = mStatusDiff;
+      mStatusDiff = ImageStatusDiff::NoChange();
     }
-
-    // If we were a size decode and a full decode was requested, now's the time.
-    if (NS_SUCCEEDED(rv) && aIntent != eShutdownIntent_Error && done &&
-        wasSize && image->mWantFullDecode) {
-      image->mWantFullDecode = false;
-
-      // If we're not meant to be storing source data and we just got the size,
-      // we need to synchronously flush all the data we got to a full decoder.
-      // When that decoder is shut down, we'll also clear our source data.
-      if (!image->StoringSourceData()) {
-        rv = image->SyncDecode();
-      } else {
-        rv = image->RequestDecode();
-      }
-    }
-
   }
 
-  return rv;
+  return RequestDecodeIfNeeded(rv, aIntent, done, wasSize);
 }
 
 NS_IMPL_ISUPPORTS1(RasterImage::DecodePool,

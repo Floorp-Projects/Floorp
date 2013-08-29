@@ -6,9 +6,10 @@
  */
 
 /*
- * This is an implementation of a "Shared Worker" using an iframe in the
- * hidden DOM window.  A subset of new APIs are introduced to the window
- * by cloning methods from the worker's JS origin.
+ * This is an implementation of a "Shared Worker" using a remote browser
+ * in the hidden DOM window.  This is the implementation that lives in the
+ * "chrome process".  See FrameWorkerContent for code that lives in the
+ * "content" process and which sets up a sandbox for the worker.
  */
 
 "use strict";
@@ -18,9 +19,13 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/MessagePortBase.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
   "resource://gre/modules/SocialService.jsm");
+
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 this.EXPORTED_SYMBOLS = ["getFrameWorkerHandle"];
 
@@ -34,421 +39,115 @@ this.getFrameWorkerHandle =
   // prevent data/about urls - see bug 891516
   if (['http', 'https'].indexOf(Services.io.newURI(url, null, null).scheme) < 0)
     throw new Error("getFrameWorkerHandle requires http/https urls");
-  // first create the client port we are going to use.  Later we will
-  // message the worker to create the worker port.
-  let portid = _nextPortId++;
-  let clientPort = new ClientPort(portid, clientWindow);
 
+  // See if we already have a worker with this URL.
   let existingWorker = workerCache[url];
   if (!existingWorker) {
-    // setup the worker and add this connection to the pending queue
-    let worker = new FrameWorker(url, name, origin, exposeLocalStorage);
-    worker.pendingPorts.push(clientPort);
-    existingWorker = workerCache[url] = worker;
-  } else {
-    // already have a worker - either queue or make the connection.
-    if (existingWorker.loaded) {
-      try {
-        clientPort._createWorkerAndEntangle(existingWorker);
-      }
-      catch (ex) {
-        Cu.reportError("FrameWorker: Failed to connect a port: " + e + "\n" + e.stack);
-      }
-    } else {
-      existingWorker.pendingPorts.push(clientPort);
-    }
+    // create a remote browser and _Worker object - this will message the
+    // remote browser to do the content side of things.
+    let browserPromise = makeRemoteBrowser();
+    let options = { url: url, name: name, origin: origin,
+                    exposeLocalStorage: exposeLocalStorage };
+
+    existingWorker = workerCache[url] = new _Worker(browserPromise, options);
   }
 
+  // message the content so it can establish a new connection with the worker.
+  let portid = _nextPortId++;
+  existingWorker.browserPromise.then(browser => {
+    browser.messageManager.sendAsyncMessage("frameworker:connect",
+                                            { portId: portid });
+  });
   // return the pseudo worker object.
-  return new WorkerHandle(clientPort, existingWorker);
+  let port = new ParentPort(portid, existingWorker.browserPromise, clientWindow);
+  existingWorker.ports.set(portid, port);
+  return new WorkerHandle(port, existingWorker);
 };
 
-/**
- * FrameWorker
- *
- * A FrameWorker is an iframe that is attached to the hiddenWindow,
- * which contains a pair of MessagePorts.  It is constructed with the
- * URL of some JavaScript that will be run in the context of the window;
- * the script does not have a full DOM but is instead run in a sandbox
- * that has a select set of methods cloned from the URL's domain.
- */
-function FrameWorker(url, name, origin, exposeLocalStorage) {
-  this.url = url;
-  this.name = name || url;
+// A "_Worker" is an internal representation of a worker.  It's never returned
+// directly to consumers.
+function _Worker(browserPromise, options) {
+  this.browserPromise = browserPromise;
+  this.options = options;
   this.ports = new Map();
-  this.pendingPorts = [];
-  this.loaded = false;
-  this.reloading = false;
-  this.origin = origin;
-  this._injectController = null;
-  this.exposeLocalStorage = exposeLocalStorage;
-
-  this.frame = makeHiddenFrame();
-  this.load();
+  browserPromise.then(browser => {
+    let mm = browser.messageManager;
+    // execute the content script and send the message to bootstrap the content
+    // side of the world.
+    mm.loadFrameScript("resource://gre/modules/FrameWorkerContent.js", true);
+    mm.sendAsyncMessage("frameworker:init", this.options);
+    mm.addMessageListener("frameworker:port-message", this);
+    mm.addMessageListener("frameworker:notify-worker-error", this);
+  });
 }
 
-FrameWorker.prototype = {
-  load: function FrameWorker_loadWorker() {
-    this._injectController = function(doc, topic, data) {
-      if (!doc.defaultView || doc.defaultView != this.frame.contentWindow) {
-        return;
-      }
-      this._maybeRemoveInjectController();
-      try {
-        this.createSandbox();
-      } catch (e) {
-        Cu.reportError("FrameWorker: failed to create sandbox for " + url + ". " + e);
-      }
-    }.bind(this);
-
-    Services.obs.addObserver(this._injectController, "document-element-inserted", false);
-    this.frame.setAttribute("src", this.url);
-  },
-
-  _maybeRemoveInjectController: function() {
-    if (this._injectController) {
-      Services.obs.removeObserver(this._injectController, "document-element-inserted");
-      this._injectController = null;
-    }
-  },
-
-  reload: function FrameWorker_reloadWorker() {
-    // push all the ports into pending ports, they will be re-entangled
-    // during the call to createSandbox after the document is reloaded
-    for (let [, port] of this.ports) {
-      port._window = null;
-      this.pendingPorts.push(port);
-    }
-    this.ports.clear();
-    // Mark the provider as unloaded now, so that any new ports created after
-    // this point but before the unload has fired are properly queued up.
-    this.loaded = false;
-    // reset the iframe to about:blank - this will fire the unload event
-    // but not remove the iframe from the DOM.  Our unload handler will
-    // see this.reloading is true and reload for us.
-    this.reloading = true;
-    this.frame.setAttribute("src", "about:blank");
-  },
-
-  createSandbox: function createSandbox() {
-    let workerWindow = this.frame.contentWindow;
-    let sandbox = new Cu.Sandbox(workerWindow);
-
-    // copy the window apis onto the sandbox namespace only functions or
-    // objects that are naturally a part of an iframe, I'm assuming they are
-    // safe to import this way
-    let workerAPI = ['WebSocket', 'atob', 'btoa',
-                     'clearInterval', 'clearTimeout', 'dump',
-                     'setInterval', 'setTimeout', 'XMLHttpRequest',
-                     'FileReader', 'Blob', 'EventSource', 'indexedDB',
-                     'location', 'Worker'];
-
-    // Only expose localStorage if the caller opted-in
-    if (this.exposeLocalStorage) {
-      workerAPI.push('localStorage');
-    }
-
-    // Bug 798660 - XHR, WebSocket and Worker have issues in a sandbox and need
-    // to be unwrapped to work
-    let needsWaive = ['XMLHttpRequest', 'WebSocket', 'Worker'];
-    // Methods need to be bound with the proper |this|.
-    let needsBind = ['atob', 'btoa', 'dump', 'setInterval', 'clearInterval',
-                     'setTimeout', 'clearTimeout'];
-    workerAPI.forEach(function(fn) {
-      try {
-        if (needsWaive.indexOf(fn) != -1)
-          sandbox[fn] = XPCNativeWrapper.unwrap(workerWindow)[fn];
-        else if (needsBind.indexOf(fn) != -1)
-          sandbox[fn] = workerWindow[fn].bind(workerWindow);
-        else
-          sandbox[fn] = workerWindow[fn];
-      }
-      catch(e) {
-        Cu.reportError("FrameWorker: failed to import API "+fn+"\n"+e+"\n");
-      }
-    });
-    // the "navigator" object in a worker is a subset of the full navigator;
-    // specifically, just the interfaces 'NavigatorID' and 'NavigatorOnLine'
-    let navigator = {
-      __exposedProps__: {
-        "appName": "r",
-        "appVersion": "r",
-        "platform": "r",
-        "userAgent": "r",
-        "onLine": "r"
-      },
-      // interface NavigatorID
-      appName: workerWindow.navigator.appName,
-      appVersion: workerWindow.navigator.appVersion,
-      platform: workerWindow.navigator.platform,
-      userAgent: workerWindow.navigator.userAgent,
-      // interface NavigatorOnLine
-      get onLine() workerWindow.navigator.onLine
-    };
-    sandbox.navigator = navigator;
-
-    // Our importScripts function needs to 'eval' the script code from inside
-    // a function, but using eval() directly means functions in the script
-    // don't end up in the global scope.
-    sandbox._evalInSandbox = function(s) {
-      Cu.evalInSandbox(s, sandbox);
-    };
-
-    // and we delegate ononline and onoffline events to the worker.
-    // See http://www.whatwg.org/specs/web-apps/current-work/multipage/workers.html#workerglobalscope
-    workerWindow.addEventListener('offline', function fw_onoffline(event) {
-      Cu.evalInSandbox("onoffline();", sandbox);
-    }, false);
-    workerWindow.addEventListener('online', function fw_ononline(event) {
-      Cu.evalInSandbox("ononline();", sandbox);
-    }, false);
-
-    sandbox._postMessage = function fw_postMessage(d, o) {
-      workerWindow.postMessage(d, o)
-    };
-    sandbox._addEventListener = function fw_addEventListener(t, l, c) {
-      workerWindow.addEventListener(t, l, c)
-    };
-
-    // Note we don't need to stash |sandbox| in |this| as the unload handler
-    // has a reference in its closure, so it can't die until that handler is
-    // removed - at which time we've explicitly killed it anyway.
-    let worker = this;
-
-    workerWindow.addEventListener("DOMContentLoaded", function loadListener() {
-      workerWindow.removeEventListener("DOMContentLoaded", loadListener);
-
-      // no script, error out now rather than creating ports, etc
-      let scriptText = workerWindow.document.body.textContent.trim();
-      if (!scriptText) {
-        Cu.reportError("FrameWorker: Empty worker script received");
-        notifyWorkerError(worker);
-        return;
-      }
-
-      // now that we've got the script text, remove it from the DOM;
-      // no need for it to keep occupying memory there
-      workerWindow.document.body.textContent = "";
-
-      // the iframe has loaded the js file as text - first inject the magic
-      // port-handling code into the sandbox.
-      try {
-        Services.scriptloader.loadSubScript("resource://gre/modules/MessagePortBase.jsm", sandbox);
-        Services.scriptloader.loadSubScript("resource://gre/modules/MessagePortWorker.js", sandbox);
-      }
-      catch (e) {
-        Cu.reportError("FrameWorker: Error injecting port code into content side of the worker: " + e + "\n" + e.stack);
-        notifyWorkerError(worker);
-        return;
-      }
-
-      // and wire up the client message handling.
-      try {
-        initClientMessageHandler(worker, workerWindow);
-      }
-      catch (e) {
-        Cu.reportError("FrameWorker: Error setting up event listener for chrome side of the worker: " + e + "\n" + e.stack);
-        notifyWorkerError(worker);
-        return;
-      }
-
-      // Now get the worker js code and eval it into the sandbox
-      try {
-        Cu.evalInSandbox(scriptText, sandbox, "1.8", workerWindow.location.href, 1);
-      } catch (e) {
-        Cu.reportError("FrameWorker: Error evaluating worker script for " + worker.name + ": " + e + "; " +
-            (e.lineNumber ? ("Line #" + e.lineNumber) : "") +
-            (e.stack ? ("\n" + e.stack) : ""));
-        notifyWorkerError(worker);
-        return;
-      }
-
-      // so finally we are ready to roll - dequeue all the pending connects
-      worker.loaded = true;
-      for (let port of worker.pendingPorts) {
-        try {
-          port._createWorkerAndEntangle(worker);
-        }
-        catch(e) {
-          Cu.reportError("FrameWorker: Failed to create worker port: " + e + "\n" + e.stack);
-        }
-      }
-      worker.pendingPorts = [];
-    });
-
-    // the 'unload' listener cleans up the worker and the sandbox.  This
-    // will be triggered via either our 'terminate' function or by the
-    // window unloading as part of shutdown.
-    workerWindow.addEventListener("unload", function unloadListener() {
-      workerWindow.removeEventListener("unload", unloadListener);
-      for (let [, port] of worker.ports) {
-        try {
-          port.close();
-        } catch (ex) {
-          Cu.reportError("FrameWorker: failed to close port. " + ex);
-        }
-      }
-      // Closing the ports also removed it from this.ports via port-close,
-      // but be safe incase one failed to close.  This must remain an array
-      // incase we are being reloaded.
-      worker.ports.clear();
-      // The worker window may not have fired a load event yet, so pendingPorts
-      // might still have items in it - close them too.
-      worker.loaded = false;
-      // If the worker is reloading, when we don't actually close the pending
-      // ports as they are the ports which need to be re-entangled.
-      if (!worker.reloading) {
-        for (let port of worker.pendingPorts) {
-          try {
-            port.close();
-          } catch (ex) {
-            Cu.reportError("FrameWorker: failed to close pending port. " + ex);
-          }
-        }
-        worker.pendingPorts = [];
-      }
-
-      if (sandbox) {
-        Cu.nukeSandbox(sandbox);
-        sandbox = null;
-      }
-      if (worker.reloading) {
-        Services.tm.mainThread.dispatch(function doReload() {
-          worker.reloading = false;
-          worker.load();
-        }, Ci.nsIThread.DISPATCH_NORMAL);
-      }
+_Worker.prototype = {
+  reload: function() {
+    // In the future, it would be nice to just throw away the browser element
+    // and re-create from scratch.  The complication there would be the need
+    // to reconnect existing ports - but even that might be managable.
+    // However, bug 899908 calls for 'reload' to be dropped, so let's do that
+    // instead!
+    this.browserPromise.then(browser => {
+      browser.messageManager.sendAsyncMessage("frameworker:reload");
     });
   },
 
-  terminate: function terminate() {
-    if (!(this.url in workerCache)) {
-      // terminating an already terminated worker - ignore it
-      return;
+  // Message handler.
+  receiveMessage: function(msg) {
+    switch (msg.name) {
+      case "frameworker:port-message":
+        let port = this.ports.get(msg.data.portId);
+        port._onmessage(msg.data.data);
+        break;
+      case "frameworker:notify-worker-error":
+        notifyWorkerError(msg.data.origin);
+        break;
     }
-    this._maybeRemoveInjectController();
-    // we want to "forget" about this worker now even though the termination
-    // may not be complete for a little while...
-    delete workerCache[this.url];
-    // let pending events get delivered before actually removing the frame,
-    // then we perform the actual cleanup in the unload handler.
-    Services.tm.mainThread.dispatch(function deleteWorkerFrame() {
-      // now nuke the iframe itself and forget everything about this worker.
-      this.frame.parentNode.removeChild(this.frame);
-    }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
   }
-};
-
-function makeHiddenFrame() {
-  let hiddenDoc = Services.appShell.hiddenDOMWindow.document;
-  let iframe = hiddenDoc.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
-  iframe.setAttribute("mozframetype", "content");
-  // allow-same-origin is necessary for localStorage to work in the sandbox.
-  iframe.setAttribute("sandbox", "allow-same-origin");
-  // don't create text frames and runs for the JS source!
-  iframe.style.display = "none";
-
-  hiddenDoc.documentElement.appendChild(iframe);
-
-  // Disable some types of content
-  let docShell = iframe.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDocShell);
-  docShell.allowAuth = false;
-  docShell.allowPlugins = false;
-  docShell.allowImages = false;
-  docShell.allowMedia = false;
-  docShell.allowWindowControl = false;
-  return iframe;
 }
 
-// public methods on WorkerHandle should conform to the SharedWorker api
+// This WorkerHandle is exposed to consumers - it has the new port instance
+// the consumer uses to communicate with the worker.
+// public methods/properties on WorkerHandle should conform to the SharedWorker
+// api - currently that's just .port and .terminate()
 function WorkerHandle(port, worker) {
   this.port = port;
   this._worker = worker;
 }
+
 WorkerHandle.prototype = {
-  // XXX - workers have no .close() method, but *do* have a .terminate()
-  // method which we should implement. However, the worker spec doesn't define
-  // a callback to be made in the worker when this happens - it all just dies.
-  // TODO: work out a sane impl for 'terminate'.
+  // A method to terminate the worker.  The worker spec doesn't define a
+  // callback to be made in the worker when this happens, so we just kill the
+  // browser element.
   terminate: function terminate() {
-    this._worker.terminate();
+    let url = this._worker.options.url;
+    if (!(url in workerCache)) {
+      // terminating an already terminated worker - ignore it
+      return;
+    }
+    delete workerCache[url];
+    this._worker.browserPromise.then(browser => {
+      browser.parentNode.removeChild(browser);
+    });
+    // wipe things out just incase other reference have snuck out somehow...
+    this._worker.ports.clear();
+    this._worker.ports = null;
+    this._worker.browserPromise = null;
+    this._worker = null;
   }
 };
 
-// This is the message listener for the *client* (ie, chrome) side of the world.
-function initClientMessageHandler(worker, workerWindow) {
-  function _messageHandler(event) {
-    // We will ignore all messages destined for otherType.
-    let data = event.data;
-    let portid = data.portId;
-    let port;
-    if (!data.portFromType || data.portFromType === "client") {
-      // this is a message posted by ourself so ignore it.
-      return;
-    }
-    switch (data.portTopic) {
-      // No "port-create" here - client ports are created explicitly.
-      case "port-connection-error":
-        // onconnect failed, we cannot connect the port, the worker has
-        // become invalid
-        notifyWorkerError(worker);
-        break;
-      case "port-close":
-        // the worker side of the port was closed, so close this side too.
-        port = worker.ports.get(portid);
-        if (!port) {
-          // port already closed (which will happen when we call port.close()
-          // below - the worker side will send us this message but we've
-          // already closed it.)
-          return;
-        }
-        worker.ports.delete(portid);
-        port.close();
-        break;
-
-      case "port-message":
-        // the client posted a message to this worker port.
-        port = worker.ports.get(portid);
-        if (!port) {
-          return;
-        }
-        port._onmessage(data.data);
-        break;
-
-      default:
-        break;
-    }
-  }
-  // this can probably go once debugged and working correctly!
-  function messageHandler(event) {
-    try {
-      _messageHandler(event);
-    } catch (ex) {
-      Cu.reportError("FrameWorker: Error handling client port control message: " + ex + "\n" + ex.stack);
-    }
-  }
-  workerWindow.addEventListener('message', messageHandler);
-}
-
-/**
- * ClientPort
- *
- * Client side of the entangled ports. The ClientPort is used by both XUL
- * windows and Content windows to communicate with the worker
- *
- * constructor:
- * @param {integer} portid
- * @param {nsiDOMWindow} clientWindow, optional
- */
-function ClientPort(portid, clientWindow) {
+// The port that lives in the parent chrome process.  The other end of this
+// port is the "client" port in the content process, which itself is just a
+// shim which shuttles messages to/from the worker itself.
+function ParentPort(portid, browserPromise, clientWindow) {
   this._clientWindow = clientWindow;
-  this._window = null;
-  // messages posted to the worker before the worker has loaded.
-  this._pendingMessagesOutgoing = [];
+  this._browserPromise = browserPromise;
   AbstractPort.call(this, portid);
 }
 
-ClientPort.prototype = {
+ParentPort.prototype = {
   __exposedProps__: {
     onmessage: "rw",
     postMessage: "r",
@@ -456,44 +155,26 @@ ClientPort.prototype = {
     toString: "r"
   },
   __proto__: AbstractPort.prototype,
-  _portType: "client",
+  _portType: "parent",
 
-  _JSONParse: function fw_ClientPort_JSONParse(data) {
+  _dopost: function(data) {
+    this._browserPromise.then(browser => {
+      browser.messageManager.sendAsyncMessage("frameworker:port-message", data);
+    });
+  },
+
+  _onerror: function(err) {
+    Cu.reportError("FrameWorker: Port " + this + " handler failed: " + err + "\n" + err.stack);
+  },
+
+  _JSONParse: function(data) {
     if (this._clientWindow) {
       return XPCNativeWrapper.unwrap(this._clientWindow).JSON.parse(data);
     }
     return JSON.parse(data);
   },
 
-  _createWorkerAndEntangle: function fw_ClientPort_createWorkerAndEntangle(worker) {
-    this._window = worker.frame.contentWindow;
-    worker.ports.set(this._portid, this);
-    this._postControlMessage("port-create");
-    for (let message of this._pendingMessagesOutgoing) {
-      this._dopost(message);
-    }
-    this._pendingMessagesOutgoing = [];
-    // The client side of the port might have been closed before it was
-    // "entangled" with the worker, in which case we need to disentangle it
-    if (this._closed) {
-      this._window = null;
-      worker.ports.delete(this._portid);
-    }
-  },
-
-  _dopost: function fw_ClientPort_dopost(data) {
-    if (!this._window) {
-      this._pendingMessagesOutgoing.push(data);
-    } else {
-      this._window.postMessage(data, "*");
-    }
-  },
-
-  _onerror: function fw_ClientPort_onerror(err) {
-    Cu.reportError("FrameWorker: Port " + this + " handler failed: " + err + "\n" + err.stack);
-  },
-
-  close: function fw_ClientPort_close() {
+  close: function() {
     if (this._closed) {
       return; // already closed.
     }
@@ -501,19 +182,46 @@ ClientPort.prototype = {
     // other end of a port knows it is closing.
     this.postMessage({topic: "social.port-closing"});
     AbstractPort.prototype.close.call(this);
-    this._window = null;
     this._clientWindow = null;
     // this._pendingMessagesOutgoing should still be drained, as a closed
     // port will still get "entangled" quickly enough to deliver the messages.
   }
 }
 
-function notifyWorkerError(worker) {
+// Make the <browser remote="true"> element that hosts the worker.
+function makeRemoteBrowser() {
+  let deferred = Promise.defer();
+  let hiddenDoc = Services.appShell.hiddenDOMWindow.document;
+  // Create a HTML iframe with a chrome URL, then this can host the browser.
+  let iframe = hiddenDoc.createElementNS(HTML_NS, "iframe");
+  iframe.setAttribute("src", "chrome://global/content/mozilla.xhtml");
+  iframe.addEventListener("load", function onLoad() {
+    iframe.removeEventListener("load", onLoad, true);
+    let browser = iframe.contentDocument.createElementNS(XUL_NS, "browser");
+    browser.setAttribute("type", "content");
+    browser.setAttribute("disableglobalhistory", "true");
+    let remote;
+    // for now we use the same preference that enabled multiple workers - the
+    // idea is that there is no point in having people help test multiple
+    // "old" frameworkers - so anyone who wants multiple workers is forced to
+    // help us test remote frameworkers too.
+    if (Services.prefs.prefHasUserValue("social.allowMultipleWorkers") &&
+        Services.prefs.getBoolPref("social.allowMultipleWorkers")) {
+      browser.setAttribute("remote", "true");
+    }
+    iframe.contentDocument.documentElement.appendChild(browser);
+    deferred.resolve(browser);
+  }, true);
+  hiddenDoc.documentElement.appendChild(iframe);
+  return deferred.promise;
+}
+
+function notifyWorkerError(origin) {
   // Try to retrieve the worker's associated provider, if it has one, to set its
   // error state.
-  SocialService.getProvider(worker.origin, function (provider) {
+  SocialService.getProvider(origin, function (provider) {
     if (provider)
       provider.errorState = "frameworker-error";
-    Services.obs.notifyObservers(null, "social:frameworker-error", worker.origin);
+    Services.obs.notifyObservers(null, "social:frameworker-error", origin);
   });
 }

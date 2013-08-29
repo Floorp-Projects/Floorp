@@ -70,7 +70,7 @@ var ContentAreaObserver = {
   },
 
   get isKeyboardOpened() {
-    return MetroUtils.keyboardVisible;
+    return Services.metro.keyboardVisible;
   },
 
   get isKeyboardTransitioning() {
@@ -182,7 +182,7 @@ var ContentAreaObserver = {
 
   updateAppBarPosition: function updateAppBarPosition(aForceDown) {
     // Adjust the app and find bar position above the soft keyboard
-    let keyboardHeight = aForceDown ? 0 : MetroUtils.keyboardHeight;
+    let keyboardHeight = aForceDown ? 0 : Services.metro.keyboardHeight;
     Elements.navbar.style.bottom = keyboardHeight + "px";
     Elements.contextappbar.style.bottom = keyboardHeight + "px";
     Elements.findbar.style.bottom = keyboardHeight + "px";
@@ -335,7 +335,7 @@ var ContentAreaObserver = {
   },
 
   _getViewableHeightForContent: function (contentHeight) {
-    let keyboardHeight = MetroUtils.keyboardHeight;
+    let keyboardHeight = Services.metro.keyboardHeight;
     return contentHeight - keyboardHeight;
   },
 

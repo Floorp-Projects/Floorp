@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= gkconbase_s
 ifdef MOZ_WEBRTC
 LOCAL_INCLUDES += \
 		-I$(topsrcdir)/netwerk/sctp/datachannel \

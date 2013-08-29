@@ -9,10 +9,12 @@ const MAX_ORDINAL = 99;
 let promise = require("sdk/core/promise");
 let EventEmitter = require("devtools/shared/event-emitter");
 let Telemetry = require("devtools/shared/telemetry");
+let HUDService = require("devtools/webconsole/hudservice");
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
+Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
 
 loader.lazyGetter(this, "Hosts", () => require("devtools/framework/toolbox-hosts").Hosts);
 
@@ -270,6 +272,34 @@ Toolbox.prototype = {
         }.bind(this, id), true);
         doc.getElementById("toolbox-keyset").appendChild(key);
       }
+    }
+
+    // Add key for opening Scratchpad from the detached window
+    if(doc.getElementById("key_scratchpad") == null) {
+      let key = doc.createElement("key");
+      key.id = "key_scratchpad";
+
+      key.setAttribute("keycode", toolboxStrings("scratchpad.keycode"));
+      key.setAttribute("modifiers", "shift");
+      key.setAttribute("oncommand", "void(0)"); // needed. See bug 371900
+      key.addEventListener("command", function() {
+        ScratchpadManager.openScratchpad();
+      }, true);
+      doc.getElementById("toolbox-keyset").appendChild(key);
+    }
+    
+    // Add key for toggling the browser console from the detached window
+    if(doc.getElementById("key_browserconsole") == null) {
+      let key = doc.createElement("key");
+      key.id = "key_browserconsole";
+
+      key.setAttribute("key", toolboxStrings("browserConsoleCmd.commandkey"));
+      key.setAttribute("modifiers", "accel,shift");
+      key.setAttribute("oncommand", "void(0)"); // needed. See bug 371900
+      key.addEventListener("command", function() {
+        HUDService.toggleBrowserConsole();
+      }, true);
+      doc.getElementById("toolbox-keyset").appendChild(key);
     }
   },
 

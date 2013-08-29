@@ -590,8 +590,17 @@ function getUpdatedDir() {
  */
 function logTestInfo(aText, aCaller) {
   let caller = (aCaller ? aCaller : Components.stack.caller);
-  dump("TEST-INFO | " + caller.filename + " | [" + caller.name + " : " +
-       caller.lineNumber + "] " + aText + "\n");
+  let now = new Date;
+  let hh = now.getHours();
+  let mm = now.getMinutes();
+  let ss = now.getSeconds();
+  let ms = now.getMilliseconds();
+  let time = (hh < 10 ? "0" + hh : hh) + ":" +
+             (mm < 10 ? "0" + mm : mm) + ":" +
+             (ss < 10 ? "0" + ss : ss) + ":" +
+             (ms < 10 ? "00" + ms : ms < 100 ? "0" + ms : ms);
+  dump(time + " | TEST-INFO | " + caller.filename + " | [" + caller.name +
+       " : " + caller.lineNumber + "] " + aText + "\n");
 }
 
 /**

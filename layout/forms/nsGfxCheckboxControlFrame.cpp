@@ -6,12 +6,9 @@
 #include "nsGfxCheckboxControlFrame.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
-#include "nsCSSRendering.h"
 #include "nsRenderingContext.h"
-#include "nsIServiceManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsDisplayList.h"
-#include "nsCSSAnonBoxes.h"
 #include <algorithm>
 
 using namespace mozilla;

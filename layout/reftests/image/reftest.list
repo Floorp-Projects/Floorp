@@ -10,3 +10,84 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1a.htm
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1b.html sync-image-switch-1-ref.html # bug 855050 for WinXP
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1c.html sync-image-switch-1-ref.html # bug 855050 for WinXP
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1d.html sync-image-switch-1-ref.html # bug 855050 for WinXP
+
+# Tests for image-orientation used with 'from-image' (note that all
+# image-orientation tests are fuzzy because the JPEG images do not perfectly
+# reproduce blocks of solid color, even at maximum quality):
+fuzzy(2,5) == image-orientation-from-image.html?none     image-orientation-ref.html?0
+fuzzy(1,1) == image-orientation-from-image.html?0        image-orientation-ref.html?0
+fuzzy(1,1) == image-orientation-from-image.html?90       image-orientation-ref.html?90
+fuzzy(1,1) == image-orientation-from-image.html?180      image-orientation-ref.html?180
+fuzzy(1,1) == image-orientation-from-image.html?270      image-orientation-ref.html?270
+fuzzy(1,1) == image-orientation-from-image.html?0&flip   image-orientation-ref.html?0&flip
+fuzzy(1,1) == image-orientation-from-image.html?90&flip  image-orientation-ref.html?90&flip
+fuzzy(1,1) == image-orientation-from-image.html?180&flip image-orientation-ref.html?180&flip
+fuzzy(1,1) == image-orientation-from-image.html?270&flip image-orientation-ref.html?270&flip
+
+# Tests for image-orientation used with an explicit orientation:
+fuzzy(1,1) == image-orientation-explicit.html?0        image-orientation-ref.html?0
+fuzzy(1,1) == image-orientation-explicit.html?90       image-orientation-ref.html?90
+fuzzy(1,1) == image-orientation-explicit.html?180      image-orientation-ref.html?180
+fuzzy(1,1) == image-orientation-explicit.html?270      image-orientation-ref.html?270
+fuzzy(1,1) == image-orientation-explicit.html?0&flip   image-orientation-ref.html?0&flip
+fuzzy(1,1) == image-orientation-explicit.html?90&flip  image-orientation-ref.html?90&flip
+fuzzy(1,1) == image-orientation-explicit.html?180&flip image-orientation-ref.html?180&flip
+fuzzy(1,1) == image-orientation-explicit.html?270&flip image-orientation-ref.html?270&flip
+
+# Tests for image-orientation used with non-axis-aligned angles:
+fuzzy(1,1) == image-orientation-explicit.html?-45      image-orientation-ref.html?0
+fuzzy(1,1) == image-orientation-explicit.html?-15      image-orientation-ref.html?0
+fuzzy(1,1) == image-orientation-explicit.html?15       image-orientation-ref.html?0
+fuzzy(1,1) == image-orientation-explicit.html?45       image-orientation-ref.html?90
+fuzzy(1,1) == image-orientation-explicit.html?75       image-orientation-ref.html?90
+fuzzy(1,1) == image-orientation-explicit.html?105      image-orientation-ref.html?90
+fuzzy(1,1) == image-orientation-explicit.html?135      image-orientation-ref.html?180
+fuzzy(1,1) == image-orientation-explicit.html?165      image-orientation-ref.html?180
+fuzzy(1,1) == image-orientation-explicit.html?195      image-orientation-ref.html?180
+fuzzy(1,1) == image-orientation-explicit.html?225      image-orientation-ref.html?270
+fuzzy(1,1) == image-orientation-explicit.html?255      image-orientation-ref.html?270
+fuzzy(1,1) == image-orientation-explicit.html?285      image-orientation-ref.html?270
+fuzzy(1,1) == image-orientation-explicit.html?315      image-orientation-ref.html?0
+fuzzy(1,1) == image-orientation-explicit.html?345      image-orientation-ref.html?0
+
+# Tests for image-orientation used on generated content:
+fuzzy(1,1) == image-orientation-generated-content.html?from-image image-orientation-generated-content-ref.html?270&flip
+fuzzy(1,1) == image-orientation-generated-content.html?0          image-orientation-generated-content-ref.html?0
+fuzzy(1,1) == image-orientation-generated-content.html?90         image-orientation-generated-content-ref.html?90
+fuzzy(1,1) == image-orientation-generated-content.html?180        image-orientation-generated-content-ref.html?180
+fuzzy(1,1) == image-orientation-generated-content.html?270        image-orientation-generated-content-ref.html?270
+fuzzy(1,1) == image-orientation-generated-content.html?0&flip     image-orientation-generated-content-ref.html?0&flip
+fuzzy(1,1) == image-orientation-generated-content.html?90&flip    image-orientation-generated-content-ref.html?90&flip
+fuzzy(1,1) == image-orientation-generated-content.html?180&flip   image-orientation-generated-content-ref.html?180&flip
+fuzzy(1,1) == image-orientation-generated-content.html?270&flip   image-orientation-generated-content-ref.html?270&flip
+
+# Tests that image-orientation does not apply to decorative images:
+fuzzy(1,1) == image-orientation-background.html?from-image   image-orientation-ref.html?0
+fuzzy(1,1) == image-orientation-background.html?90&flip      image-orientation-ref.html?0
+== image-orientation-border-image.html?from-image            image-orientation-border-image.html?0
+== image-orientation-border-image.html?90&flip               image-orientation-border-image.html?0
+== image-orientation-list-style-image.html?from-image        image-orientation-list-style-image.html?0
+== image-orientation-list-style-image.html?90&flip           image-orientation-list-style-image.html?0
+
+# Sanity checks for the image-orientation tests. Ensures that the various
+# combinations of rotations and flips actually look different from each other.
+!= image-orientation-ref.html?0    image-orientation-ref.html?90
+!= image-orientation-ref.html?0    image-orientation-ref.html?180
+!= image-orientation-ref.html?0    image-orientation-ref.html?270
+!= image-orientation-ref.html?90   image-orientation-ref.html?180
+!= image-orientation-ref.html?90   image-orientation-ref.html?270
+!= image-orientation-ref.html?180  image-orientation-ref.html?270
+!= image-orientation-ref.html?0    image-orientation-ref.html?0&flip
+!= image-orientation-ref.html?90   image-orientation-ref.html?90&flip
+!= image-orientation-ref.html?180  image-orientation-ref.html?180&flip
+!= image-orientation-ref.html?270  image-orientation-ref.html?270&flip
+!= image-orientation-generated-content-ref.html?0    image-orientation-generated-content-ref.html?90
+!= image-orientation-generated-content-ref.html?0    image-orientation-generated-content-ref.html?180
+!= image-orientation-generated-content-ref.html?0    image-orientation-generated-content-ref.html?270
+!= image-orientation-generated-content-ref.html?90   image-orientation-generated-content-ref.html?180
+!= image-orientation-generated-content-ref.html?90   image-orientation-generated-content-ref.html?270
+!= image-orientation-generated-content-ref.html?180  image-orientation-generated-content-ref.html?270
+!= image-orientation-generated-content-ref.html?0    image-orientation-generated-content-ref.html?0&flip
+!= image-orientation-generated-content-ref.html?90   image-orientation-generated-content-ref.html?90&flip
+!= image-orientation-generated-content-ref.html?180  image-orientation-generated-content-ref.html?180&flip
+!= image-orientation-generated-content-ref.html?270  image-orientation-generated-content-ref.html?270&flip

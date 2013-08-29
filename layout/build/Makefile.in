@@ -15,7 +15,6 @@ ifeq ($(OS_ARCH),SunOS)
 SHELL := ksh
 endif
 
-LIBRARY_NAME	= gklayout
 EXPORT_LIBRARY = 1
 SHARED_LIBRARY_LIBS = \
 	../base/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
