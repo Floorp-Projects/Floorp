@@ -212,9 +212,7 @@ DeprecatedImageHostSingle::EnsureDeprecatedTextureHost(TextureIdentifier aTextur
                                                        ISurfaceAllocator* aAllocator,
                                                        const TextureInfo& aTextureInfo)
 {
-  if (mDeprecatedTextureHost &&
-      mDeprecatedTextureHost->GetBuffer() &&
-      mDeprecatedTextureHost->GetBuffer()->type() == aSurface.type()) {
+  if (mDeprecatedTextureHost) {
     return;
   }
 
@@ -344,6 +342,24 @@ DeprecatedImageHostSingle::PrintInfo(nsACString& aTo, const char* aPrefix)
   }
 }
 #endif
+
+void
+DeprecatedImageHostBuffered::EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
+                                                         const SurfaceDescriptor& aSurface,
+                                                         ISurfaceAllocator* aAllocator,
+                                                         const TextureInfo& aTextureInfo)
+{
+  if (mDeprecatedTextureHost &&
+      mDeprecatedTextureHost->GetBuffer() &&
+      mDeprecatedTextureHost->GetBuffer()->type() == aSurface.type()) {
+    return;
+  }
+
+  MakeDeprecatedTextureHost(aTextureId,
+                  aSurface,
+                  aAllocator,
+                  aTextureInfo);
+}
 
 bool
 DeprecatedImageHostBuffered::Update(const SurfaceDescriptor& aImage,
