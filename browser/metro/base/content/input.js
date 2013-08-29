@@ -94,6 +94,7 @@ var TouchModule = {
     // capture phase events
     window.addEventListener("CancelTouchSequence", this, true);
     window.addEventListener("dblclick", this, true);
+    window.addEventListener("keydown", this, true);
 
     // bubble phase
     window.addEventListener("contextmenu", this, false);
@@ -156,8 +157,38 @@ var TouchModule = {
               }, 50);
             }
             break;
+          case "keydown":
+            this._handleKeyDown(aEvent);
+            break;
         }
       }
+    }
+  },
+
+  _handleKeyDown: function _handleKeyDown(aEvent) {
+    const TABKEY = 9;
+    if (aEvent.keyCode == TABKEY && !InputSourceHelper.isPrecise) {
+      if (Util.isEditable(aEvent.target) &&
+          aEvent.target.selectionStart != aEvent.target.selectionEnd) {
+        SelectionHelperUI.closeEditSession(false);
+      }
+      setTimeout(function() {
+        let element = Browser.selectedBrowser.contentDocument.activeElement;
+        // We only want to attach monocles if we have an input, text area,
+        // there is selection, and the target element changed.
+        // Sometimes the target element won't change even though selection is
+        // cleared because of focus outside the browser.
+        if (Util.isEditable(element) &&
+            !SelectionHelperUI.isActive &&
+            element.selectionStart != element.selectionEnd &&
+            // not e10s friendly
+            aEvent.target != element) {
+              let rect = element.getBoundingClientRect();
+              SelectionHelperUI.attachEditSession(Browser.selectedBrowser,
+                                                  rect.left + rect.width / 2,
+                                                  rect.top + rect.height / 2);
+        }
+      }, 50);
     }
   },
 
