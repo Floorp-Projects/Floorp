@@ -449,25 +449,17 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 }
 
 already_AddRefed<Image>
-ImageClient::CreateImage(const uint32_t *aFormats,
-                         uint32_t aNumFormats)
+ImageClientSingle::CreateImage(const uint32_t *aFormats,
+                               uint32_t aNumFormats)
 {
   nsRefPtr<Image> img;
   for (uint32_t i = 0; i < aNumFormats; i++) {
     switch (aFormats[i]) {
       case PLANAR_YCBCR:
-        if (gfxPlatform::GetPlatform()->UseDeprecatedTextures()) {
-            img = new DeprecatedSharedPlanarYCbCrImage(GetForwarder());
-        } else {
-            img = new SharedPlanarYCbCrImage(this);
-        }
+        img = new SharedPlanarYCbCrImage(this);
         return img.forget();
       case SHARED_RGB:
-        if (gfxPlatform::GetPlatform()->UseDeprecatedTextures()) {
-            img = new DeprecatedSharedRGBImage(GetForwarder());
-        } else {
-            img = new SharedRGBImage(this);
-        }
+        img = new SharedRGBImage(this);
         return img.forget();
 #ifdef MOZ_WIDGET_GONK
       case GRALLOC_PLANAR_YCBCR:
@@ -478,6 +470,30 @@ ImageClient::CreateImage(const uint32_t *aFormats,
   }
   return nullptr;
 }
+
+already_AddRefed<Image>
+DeprecatedImageClientSingle::CreateImage(const uint32_t *aFormats,
+                                         uint32_t aNumFormats)
+{
+  nsRefPtr<Image> img;
+  for (uint32_t i = 0; i < aNumFormats; i++) {
+    switch (aFormats[i]) {
+      case PLANAR_YCBCR:
+        img = new DeprecatedSharedPlanarYCbCrImage(GetForwarder());
+        return img.forget();
+      case SHARED_RGB:
+        img = new DeprecatedSharedRGBImage(GetForwarder());
+        return img.forget();
+#ifdef MOZ_WIDGET_GONK
+      case GRALLOC_PLANAR_YCBCR:
+        img = new GrallocImage();
+        return img.forget();
+#endif
+    }
+  }
+  return nullptr;
+}
+
 
 }
 }

@@ -4087,14 +4087,19 @@ pref("layers.frame-counter", false);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
 
+// Whether to use the deprecated texture architecture rather than the new one.
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
-// Whether to use the deprecated texture architecture rather than the new one.
 pref("layers.use-deprecated-textures", false);
+#else
+#ifdef MOZ_WIDGET_GONK
+pref("layers.use-deprecated-textures", true);
 #else
 pref("layers.offmainthreadcomposition.enabled", false);
 pref("layers.use-deprecated-textures", true);
 #endif
+#endif
+
 // same effect as layers.offmainthreadcomposition.enabled, but specifically for
 // use with tests.
 pref("layers.offmainthreadcomposition.testing.enabled", false);
