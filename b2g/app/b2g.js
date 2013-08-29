@@ -4,7 +4,7 @@
 
 #filter substitution
 
-pref("toolkit.defaultChromeURI", "chrome://browser/content/shell.xul");
+pref("toolkit.defaultChromeURI", "chrome://browser/content/shell.html");
 pref("browser.chromeURL", "chrome://browser/content/");
 
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
