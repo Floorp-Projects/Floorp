@@ -3237,7 +3237,7 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
 #ifdef JS_THREADSAFE
 
 static void
-OffThreadCompileScriptCallback(JSScript *script, void *callbackData)
+OffThreadCompileScriptCallback(void *token, void *callbackData)
 {
     // This callback is invoked off the main thread and there isn't a good way
     // to pass the script on to the main thread. Just let the script leak.
