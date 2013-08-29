@@ -432,6 +432,7 @@ interface TestInterface {
   void passOptionalNullableObjectWithDefaultValue(optional object? arg = null);
   void passSequenceOfObject(sequence<object> arg);
   void passSequenceOfNullableObject(sequence<object?> arg);
+  void passNullableSequenceOfObject(sequence<object>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfObject(optional sequence<sequence<object>?>? arg);
   void passOptionalNullableSequenceOfNullableSequenceOfNullableObject(optional sequence<sequence<object?>?>? arg);
   object receiveObject();
