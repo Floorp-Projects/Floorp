@@ -44,7 +44,7 @@ class IonCacheVisitor
 {
   public:
 #define VISIT_INS(op)                                               \
-    virtual bool visit##op##IC(CodeGenerator *codegen) {            \
+    virtual bool visit##op##IC(CodeGenerator *codegen, op##IC *) {  \
         MOZ_ASSUME_UNREACHABLE("NYI: " #op "IC");                   \
     }
 
@@ -491,31 +491,13 @@ class DispatchIonCache : public IonCache
     }                                                               \
                                                                     \
     bool accept(CodeGenerator *codegen, IonCacheVisitor *visitor) { \
-        return visitor->visit##ickind##IC(codegen);                 \
+        return visitor->visit##ickind##IC(codegen, this);           \
     }                                                               \
                                                                     \
     static const VMFunction UpdateInfo;
 
 // Subclasses of IonCache for the various kinds of caches. These do not define
 // new data members; all caches must be of the same size.
-
-// Helper for idempotent GetPropertyIC location tracking. Declared externally
-// to be forward declarable.
-//
-// Since all the scripts stored in CacheLocations are guaranteed to have been
-// Ion compiled, and are kept alive by function objects in jitcode, and since
-// the CacheLocations only have the lifespan of the jitcode, there is no need
-// to trace or mark any of the scripts. Since JSScripts are always allocated
-// tenured, and never moved, we can keep raw pointers, and there is no need
-// for HeapPtrScripts here.
-struct CacheLocation {
-    jsbytecode *pc;
-    JSScript *script;
-
-    CacheLocation(jsbytecode *pcin, JSScript *scriptin)
-        : pc(pcin), script(scriptin)
-    { }
-};
 
 class GetPropertyIC : public RepatchIonCache
 {
@@ -527,11 +509,6 @@ class GetPropertyIC : public RepatchIonCache
     Register object_;
     PropertyName *name_;
     TypedOrValueRegister output_;
-
-    // Only valid if idempotent
-    size_t locationsIndex_;
-    size_t numLocations_;
-
     bool allowGetters_ : 1;
     bool hasTypedArrayLengthStub_ : 1;
     bool hasStrictArgumentsLengthStub_ : 1;
@@ -547,8 +524,6 @@ class GetPropertyIC : public RepatchIonCache
         object_(object),
         name_(name),
         output_(output),
-        locationsIndex_(0),
-        numLocations_(0),
         allowGetters_(allowGetters),
         hasTypedArrayLengthStub_(false),
         hasStrictArgumentsLengthStub_(false),
@@ -583,19 +558,6 @@ class GetPropertyIC : public RepatchIonCache
         return hasGenericProxyStub_;
     }
 
-    void setLocationInfo(size_t locationsIndex, size_t numLocations) {
-        JS_ASSERT(idempotent());
-        JS_ASSERT(!numLocations_);
-        JS_ASSERT(numLocations);
-        locationsIndex_ = locationsIndex;
-        numLocations_ = numLocations;
-    }
-    void getLocationInfo(uint32_t *index, uint32_t *num) const {
-        JS_ASSERT(idempotent());
-        *index = locationsIndex_;
-        *num = numLocations_;
-    }
-
     enum NativeGetPropCacheability {
         CanAttachError,
         CanAttachNone,
@@ -614,7 +576,6 @@ class GetPropertyIC : public RepatchIonCache
         return idempotent();
     }
     bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const;
-    bool allowArrayLength(Context cx, HandleObject obj) const;
 
     // Attach the proper stub, if possible
     bool tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,
@@ -751,7 +712,6 @@ class GetElementIC : public RepatchIonCache
         return JSObject::lookupProperty(cx, obj, name, holder, shape);
     }
     bool allowGetters() const { return false; }
-    bool allowArrayLength(Context, HandleObject) const { return false; }
     bool lookupNeedsIdempotentChain() const { return false; }
     bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const {
         return monitoredResult();
@@ -1037,7 +997,6 @@ class GetPropertyParIC : public ParallelIonCache
     bool lookupNeedsIdempotentChain() const { return true; }
     bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
     bool allowGetters() const { return false; }
-    bool allowArrayLength(Context, HandleObject) const { return true; }
 
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, JSObject *holder,
                         Shape *shape);
@@ -1097,7 +1056,6 @@ class GetElementParIC : public ParallelIonCache
     bool lookupNeedsIdempotentChain() const { return true; }
     bool canMonitorSingletonUndefinedSlot(HandleObject, HandleShape) const { return true; }
     bool allowGetters() const { return false; }
-    bool allowArrayLength(Context, HandleObject) const { return false; }
 
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval,
                         PropertyName *name, JSObject *holder, Shape *shape);

@@ -148,7 +148,6 @@ class SafepointIndex;
 class OsiIndex;
 class IonCache;
 struct PatchableBackedgeInfo;
-struct CacheLocation;
 
 // Describes a single AsmJSModule which jumps (via an FFI exit with the given
 // index) directly into an IonScript.
@@ -482,12 +481,9 @@ struct IonScript
     }
     const OsiIndex *getOsiIndex(uint32_t disp) const;
     const OsiIndex *getOsiIndex(uint8_t *retAddr) const;
-    inline IonCache &getCacheFromIndex(uint32_t index) {
+    inline IonCache &getCache(uint32_t index) {
         JS_ASSERT(index < cacheEntries_);
         uint32_t offset = cacheIndex()[index];
-        return getCache(offset);
-    }
-    inline IonCache &getCache(uint32_t offset) {
         JS_ASSERT(offset < runtimeSize_);
         return *(IonCache *) &runtimeData()[offset];
     }
@@ -496,10 +492,6 @@ struct IonScript
     }
     size_t runtimeSize() const {
         return runtimeSize_;
-    }
-    CacheLocation *getCacheLocs(uint32_t locIndex) {
-        JS_ASSERT(locIndex < runtimeSize_);
-        return (CacheLocation *) &runtimeData()[locIndex];
     }
     void toggleBarriers(bool enabled);
     void purgeCaches(JS::Zone *zone);
