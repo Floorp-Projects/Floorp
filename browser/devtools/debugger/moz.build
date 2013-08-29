@@ -5,3 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['test']
+
+JS_MODULES_PATH = 'modules/devtools/debugger'
+
+EXTRA_JS_MODULES += [
+    'debugger-panel.js'
+]
