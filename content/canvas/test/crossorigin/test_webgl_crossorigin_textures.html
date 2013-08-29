@@ -66,8 +66,9 @@
 
   MochiKit.DOM.addLoadEvent(function () {
     var canvas = document.getElementById("canvas");
-    gl = canvas.getContext("experimental-webgl");
-    if (!gl) {
+    try {
+      gl = canvas.getContext("experimental-webgl");
+    } catch (e) {
       todo(false, "Canvas WebGL not supported");
       SimpleTest.finish();
       return;
