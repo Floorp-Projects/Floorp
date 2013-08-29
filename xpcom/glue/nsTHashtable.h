@@ -9,10 +9,12 @@
 #include "nscore.h"
 #include "pldhash.h"
 #include "nsDebug.h"
-#include <new>
+#include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/fallible.h"
+
+#include <new>
 
 // helper function for nsTHashtable::Clear()
 NS_COM_GLUE PLDHashOperator
@@ -46,10 +48,10 @@ PL_DHashStubEnumRemove(PLDHashTable    *table,
  *
  *     EntryType(KeyTypePointer aKey);
  *
- *     // A copy or move constructor must be defined, even if AllowMemMove() ==
- *     // true, otherwise you will cause link errors.
- *     EntryType(const EntryType& aEnt);   // Either this...
- *     EntryType(MoveRef<EntryType> aEnt); // ...or this
+ *     // A copy or C++11 Move constructor must be defined, even if
+ *     // AllowMemMove() == true, otherwise you will cause link errors.
+ *     EntryType(const EntryType& aEnt);  // Either this...
+ *     EntryType(EntryType&& aEnt);       // ...or this
  *
  *     // the destructor must be defined... or you will cause link errors!
  *     ~EntryType();
@@ -90,7 +92,7 @@ public:
    */
   ~nsTHashtable();
 
-  nsTHashtable(mozilla::MoveRef<nsTHashtable<EntryType> > aOther);
+  nsTHashtable(nsTHashtable<EntryType>&& aOther);
 
   /**
    * Initialize the table.  This function must be called before any other
@@ -378,17 +380,23 @@ private:
 template<class EntryType>
 nsTHashtable<EntryType>::nsTHashtable()
 {
-  // entrySize is our "I'm initialized" indicator
+  // mTable.entrySize == 0 means we're not yet initialized.  In Init(), we set
+  // mTable.entrySize == sizeof(EntryType).
   mTable.entrySize = 0;
 }
 
 template<class EntryType>
 nsTHashtable<EntryType>::nsTHashtable(
-  mozilla::MoveRef<nsTHashtable<EntryType> > aOther)
-  : mTable(aOther->mTable)
+  nsTHashtable<EntryType>&& aOther)
+  : mTable(mozilla::Move(aOther.mTable))
 {
-  aOther->mTable = PLDHashTable();
-  aOther->mTable.entrySize = 0;
+  // aOther shouldn't touch mTable after this, because we've stolen the table's
+  // pointers but not overwitten them.
+  MOZ_MAKE_MEM_UNDEFINED(aOther.mTable, sizeof(aOther.mTable));
+
+  // Indicate that aOther is not initialized.  This will make its destructor a
+  // nop, which is what we want.
+  aOther.mTable.entrySize = 0;
 }
 
 template<class EntryType>
@@ -461,12 +469,10 @@ nsTHashtable<EntryType>::s_CopyEntry(PLDHashTable          *table,
                                      const PLDHashEntryHdr *from,
                                      PLDHashEntryHdr       *to)
 {
-  using mozilla::Move;
-
   EntryType* fromEntry =
     const_cast<EntryType*>(reinterpret_cast<const EntryType*>(from));
 
-  new(to) EntryType(Move(*fromEntry));
+  new(to) EntryType(mozilla::Move(*fromEntry));
 
   fromEntry->~EntryType();
 }
