@@ -120,7 +120,7 @@ class ControlRunnable : public nsRunnable
 {
 public:
   ControlRunnable(CommandOptions aOptions) : mOptions(aOptions) {
-    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(NS_IsMainThread());
   }
 
   NS_IMETHOD Run()
