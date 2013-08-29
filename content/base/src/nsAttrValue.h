@@ -57,6 +57,13 @@ struct ImageValue;
 /**
  * A class used to construct a nsString from a nsStringBuffer (we might
  * want to move this to nsString at some point).
+ *
+ * WARNING: Note that nsCheapString doesn't take an explicit length -- it
+ * assumes the string is maximally large, given the nsStringBuffer's storage
+ * size.  This means the given string buffer *must* be sized exactly correctly
+ * for the string it contains (including one byte for a null terminator).  If
+ * it has any unused storage space, then that will result in bogus characters
+ * at the end of our nsCheapString.
  */
 class nsCheapString : public nsString {
 public:

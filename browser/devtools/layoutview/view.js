@@ -10,8 +10,9 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
+Cu.import("resource://gre/modules/devtools/Console.jsm");
 
-let {CssLogic} = devtools.require("devtools/styleinspector/css-logic");
+const promise = devtools.require("sdk/core/promise");
 
 function LayoutView(aInspector, aWindow)
 {
@@ -31,12 +32,11 @@ function LayoutView(aInspector, aWindow)
 
 LayoutView.prototype = {
   init: function LV_init() {
-    this.cssLogic = new CssLogic();
-
     this.update = this.update.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
+    this.onNewSelection = this.onNewSelection.bind(this);
     this.onHighlighterLocked = this.onHighlighterLocked.bind(this);
-    this.inspector.selection.on("new-node", this.onNewNode);
+    this.inspector.selection.on("new-node-front", this.onNewSelection);
     this.inspector.sidebar.on("layoutview-selected", this.onNewNode);
     if (this.inspector.highlighter) {
       this.inspector.highlighter.on("locked", this.onHighlighterLocked);
@@ -100,7 +100,7 @@ LayoutView.prototype = {
    */
   destroy: function LV_destroy() {
     this.inspector.sidebar.off("layoutview-selected", this.onNewNode);
-    this.inspector.selection.off("new-node", this.onNewNode);
+    this.inspector.selection.off("new-node-front", this.onNewSelection);
     if (this.browser) {
       this.browser.removeEventListener("MozAfterPaint", this.update, true);
     }
@@ -114,26 +114,29 @@ LayoutView.prototype = {
   },
 
   /**
-   * Selection 'new-node' event handler.
+   * Selection 'new-node-front' event handler.
    */
+  onNewSelection: function() {
+    let done = this.inspector.updating("layoutview");
+    this.onNewNode().then(done, (err) => { console.error(err); done() });
+  },
+
   onNewNode: function LV_onNewNode() {
     if (this.isActive() &&
         this.inspector.selection.isConnected() &&
         this.inspector.selection.isElementNode() &&
         this.inspector.selection.reason != "highlighter") {
-      this.cssLogic.highlight(this.inspector.selection.node);
       this.undim();
     } else {
       this.dim();
     }
-    this.update();
+    return this.update();
   },
 
   /**
    * Highlighter 'locked' event handler
    */
   onHighlighterLocked: function LV_onHighlighterLocked() {
-    this.cssLogic.highlight(this.inspector.selection.node);
     this.undim();
     this.update();
   },
@@ -172,76 +175,66 @@ LayoutView.prototype = {
     if (!this.isActive() ||
         !this.inspector.selection.isConnected() ||
         !this.inspector.selection.isElementNode()) {
-      return;
+      return promise.resolve(undefined);
     }
 
-    let node = this.inspector.selection.node;
-
-    // First, we update the first part of the layout view, with
-    // the size of the element.
-
-    let clientRect = node.getBoundingClientRect();
-    let width = Math.round(clientRect.width);
-    let height = Math.round(clientRect.height);
-
-    let newLabel = width + "x" + height;
-    if (this.sizeHeadingLabel.textContent != newLabel) {
-      this.sizeHeadingLabel.textContent = newLabel;
-    }
-
-    // If the view is dimmed, no need to do anything more.
-    if (this.dimmed) return;
-
-    // We compute and update the values of margins & co.
-    let style = node.ownerDocument.defaultView.getComputedStyle(node);
-
-    for (let i in this.map) {
-      let property = this.map[i].property;
-      this.map[i].value = parseInt(style.getPropertyValue(property));
-    }
-
-    let margins = this.processMargins(node);
-    if ("top" in margins) this.map.marginTop.value = "auto";
-    if ("right" in margins) this.map.marginRight.value = "auto";
-    if ("bottom" in margins) this.map.marginBottom.value = "auto";
-    if ("left" in margins) this.map.marginLeft.value = "auto";
-
-    for (let i in this.map) {
-      let selector = this.map[i].selector;
-      let span = this.doc.querySelector(selector);
-      if (span.textContent.length > 0 &&
-          span.textContent == this.map[i].value) {
-        continue;
+    let node = this.inspector.selection.nodeFront;
+    let lastRequest = this.inspector.pageStyle.getLayout(node, {
+      autoMargins: !this.dimmed
+    }).then(layout => {
+      // If a subsequent request has been made, wait for that one instead.
+      if (this._lastRequest != lastRequest) {
+        return this._lastRequest;
       }
-      span.textContent = this.map[i].value;
-    }
-
-    width -= this.map.borderLeft.value + this.map.borderRight.value +
-             this.map.paddingLeft.value + this.map.paddingRight.value;
-
-    height -= this.map.borderTop.value + this.map.borderBottom.value +
-              this.map.paddingTop.value + this.map.paddingBottom.value;
-
-    let newValue = width + "x" + height;
-    if (this.sizeLabel.textContent != newValue) {
-      this.sizeLabel.textContent = newValue;
-    }
-  },
-
-  /**
-   * Find margins declared 'auto'
-   */
-  processMargins: function LV_processMargins(node) {
-    let margins = {};
-
-    for each (let prop in ["top", "bottom", "left", "right"]) {
-      let info = this.cssLogic.getPropertyInfo("margin-" + prop);
-      let selectors = info.matchedSelectors;
-      if (selectors && selectors.length > 0 && selectors[0].value == "auto") {
-        margins[prop] = "auto";
+      this._lastRequest = null;
+      let width = layout.width;
+      let height = layout.height;
+      let newLabel = width + "x" + height;
+      if (this.sizeHeadingLabel.textContent != newLabel) {
+        this.sizeHeadingLabel.textContent = newLabel;
       }
-    }
 
-    return margins;
-  },
+      // If the view is dimmed, no need to do anything more.
+      if (this.dimmed) {
+        this.inspector.emit("layoutview-updated");
+        return;
+      }
+
+      for (let i in this.map) {
+        let property = this.map[i].property;
+        this.map[i].value = parseInt(layout[property]);
+      }
+
+      let margins = layout.autoMargins;
+      if ("top" in margins) this.map.marginTop.value = "auto";
+      if ("right" in margins) this.map.marginRight.value = "auto";
+      if ("bottom" in margins) this.map.marginBottom.value = "auto";
+      if ("left" in margins) this.map.marginLeft.value = "auto";
+
+      for (let i in this.map) {
+        let selector = this.map[i].selector;
+        let span = this.doc.querySelector(selector);
+        if (span.textContent.length > 0 &&
+            span.textContent == this.map[i].value) {
+          continue;
+        }
+        span.textContent = this.map[i].value;
+      }
+
+      width -= this.map.borderLeft.value + this.map.borderRight.value +
+               this.map.paddingLeft.value + this.map.paddingRight.value;
+
+      height -= this.map.borderTop.value + this.map.borderBottom.value +
+                this.map.paddingTop.value + this.map.paddingBottom.value;
+
+      let newValue = width + "x" + height;
+      if (this.sizeLabel.textContent != newValue) {
+        this.sizeLabel.textContent = newValue;
+      }
+
+      this.inspector.emit("layoutview-updated");
+    });
+    this._lastRequest = lastRequest;
+    return this._lastRequest;
+  }
 }

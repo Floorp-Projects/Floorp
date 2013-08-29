@@ -623,6 +623,16 @@ js::PrintError(JSContext *cx, FILE *file, const char *message, JSErrorReport *re
     return true;
 }
 
+char *
+js_strdup(ExclusiveContext *cx, const char *s)
+{
+    size_t n = strlen(s) + 1;
+    void *p = cx->malloc_(n);
+    if (!p)
+        return NULL;
+    return (char *)js_memcpy(p, s, n);
+}
+
 /*
  * The arguments from ap need to be packaged up into an array and stored
  * into the report struct.
@@ -635,7 +645,7 @@ js::PrintError(JSContext *cx, FILE *file, const char *message, JSErrorReport *re
  * Returns true if the expansion succeeds (can fail if out of memory).
  */
 bool
-js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
+js_ExpandErrorArguments(ExclusiveContext *cx, JSErrorCallback callback,
                         void *userRef, const unsigned errorNumber,
                         char **messagep, JSErrorReport *reportp,
                         ErrorArgumentsType argumentsType, va_list ap)
@@ -752,7 +762,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
              */
             if (efs->format) {
                 size_t len;
-                *messagep = JS_strdup(cx, efs->format);
+                *messagep = js_strdup(cx, efs->format);
                 if (!*messagep)
                     goto error;
                 len = strlen(*messagep);
