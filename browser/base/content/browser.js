@@ -6856,12 +6856,17 @@ var gIdentityHandler = {
     this._permissionsContainer.hidden = !this._permissionList.hasChildNodes();
   },
 
+  setPermission: function (aPermission, aState) {
+    if (aState == SitePermissions.getDefault(aPermission))
+      SitePermissions.remove(gBrowser.currentURI, aPermission);
+    else
+      SitePermissions.set(gBrowser.currentURI, aPermission, aState);
+  },
+
   _createPermissionItem: function (aPermission, aState) {
     let menulist = document.createElement("menulist");
     let menupopup = document.createElement("menupopup");
     for (let state of SitePermissions.getAvailableStates(aPermission)) {
-      if (state == SitePermissions.UNKNOWN)
-        continue;
       let menuitem = document.createElement("menuitem");
       menuitem.setAttribute("value", state);
       menuitem.setAttribute("label", SitePermissions.getStateLabel(aPermission, state));
@@ -6869,7 +6874,7 @@ var gIdentityHandler = {
     }
     menulist.appendChild(menupopup);
     menulist.setAttribute("value", aState);
-    menulist.setAttribute("oncommand", "SitePermissions.set(gBrowser.currentURI, '" +
+    menulist.setAttribute("oncommand", "gIdentityHandler.setPermission('" +
                                        aPermission + "', this.value)");
     menulist.setAttribute("id", "identity-popup-permission:" + aPermission);
 
