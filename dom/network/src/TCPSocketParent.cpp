@@ -12,6 +12,8 @@
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/PNeckoParent.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/TabParent.h"
 
 namespace IPC {
 
@@ -91,6 +93,15 @@ TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bo
     return true;
   }
 
+  // Obtain App ID
+  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
+  const PContentParent *content = Manager()->Manager();
+  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
+  if (browsers.Length() > 0) {
+    TabParent *tab = static_cast<TabParent*>(browsers[0]);
+    appId = tab->OwnAppId();
+  }
+
   nsresult rv;
   mIntermediary = do_CreateInstance("@mozilla.org/tcp-socket-intermediary;1", &rv);
   if (NS_FAILED(rv)) {
@@ -98,7 +109,8 @@ TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bo
     return true;
   }
 
-  rv = mIntermediary->Open(this, aHost, aPort, aUseSSL, aBinaryType, getter_AddRefs(mSocket));
+  rv = mIntermediary->Open(this, aHost, aPort, aUseSSL, aBinaryType, appId,
+                           getter_AddRefs(mSocket));
   if (NS_FAILED(rv) || !mSocket) {
     FireInteralError(this, __LINE__);
     return true;
