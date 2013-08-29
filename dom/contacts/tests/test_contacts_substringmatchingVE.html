@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=877302
+-->
+<head>
+  <title>Test for Bug 877302 substring matching for WebContacts</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=877302">Mozilla Bug 877302</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+"use strict";
+
+if (SpecialPowers.isMainProcess()) {
+  SpecialPowers.Cu.import("resource://gre/modules/ContactService.jsm");
+}
+
+var substringLength = 7;
+SpecialPowers.setIntPref("dom.phonenumber.substringmatching.VE", substringLength);
+SpecialPowers.setCharPref("ril.lastKnownSimMcc", "734");
+
+SpecialPowers.addPermission("contacts-write", true, document);
+SpecialPowers.addPermission("contacts-read", true, document);
+SpecialPowers.addPermission("contacts-create", true, document);
+
+var isAndroid = (navigator.userAgent.indexOf("Android") !== -1);
+var androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
+                                  .getService(SpecialPowers.Ci.nsIPropertyBag2)
+                                  .getProperty('version');
+
+var sample_id1;
+var createResult1;
+var findResult1;
+
+function onFailure() {
+  ok(false, "in on Failure!");
+  next();
+}
+
+var prop = {
+  tel: [{value: "7932012345" }, {value: "7704143727591"}]
+};
+
+var prop2 = {
+  tel: [{value: "7932012345" }, {value: "+58 212 5551212"}]
+};
+
+var req;
+var index = 0;
+
+var mozContacts = window.navigator.mozContacts;
+ok(mozContacts, "mozContacts exists");
+ok("mozContact" in window, "mozContact exists");
+var steps = [
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact");
+    createResult1 = new mozContact();
+    createResult1.init(prop);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving all contacts");
+    req = mozContacts.find({});
+    req.onsuccess = function () {
+      is(req.result.length, 1, "One contact.");
+      findResult1 = req.result[0];
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 1");
+    var length = prop.tel[0].value.length;
+    var num = "04143727591"
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: num};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      is(findResult1.tel[1].value, "7704143727591", "Same Value");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact");
+    createResult1 = new mozContact();
+    createResult1.init(prop2);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 2");
+    var num = "5551212";
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: num};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
+      is(findResult1.tel[1].value, "+58 212 5551212", "Same Value");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "all done!\n");
+    SpecialPowers.setIntPref("dom.phonenumber.substringmatching.VE", -1);
+    SimpleTest.finish();
+  }
+];
+
+function next() {
+  ok(true, "Begin!");
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    steps[index]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+  index += 1;
+}
+
+// Skip tests on Android < 4.0 due to test failures on tbpl (see bugs 897924 & 888891)
+if (!isAndroid || androidVersion >= 14) {
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(next);
+} else {
+  ok(true, "Skip tests on Android < 4.0 (bugs 897924 & 888891");
+}
+
+</script>
+</pre>
+</body>
+</html>

@@ -221,6 +221,12 @@ this.PhoneNumber = (function (dataBase) {
                                            : null;
       Object.defineProperty(this, "internationalNumber", { value: value, enumerable: true });
       return value;
+    },
+    // country name 'US'
+    get countryName() {
+      var value = this.region ? this.region : null;
+      Object.defineProperty(this, "countryName", { value: value, enumerable: true });
+      return value;
     }
   };
 
