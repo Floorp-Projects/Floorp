@@ -38,13 +38,16 @@ function test() {
 // var assert = require('test/assert');
 // var helpers = require('gclitest/helpers');
 // var mockCommands = require('gclitest/mockCommands');
+var nodetype = require('gcli/types/node');
 
 exports.setup = function(options) {
   mockCommands.setup();
+  nodetype.setDocument(options.window.document);
 };
 
 exports.shutdown = function(options) {
   mockCommands.shutdown();
+  nodetype.unsetDocument();
 };
 
 exports.testNode = function(options) {

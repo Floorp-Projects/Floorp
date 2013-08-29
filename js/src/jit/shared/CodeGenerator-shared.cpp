@@ -486,7 +486,7 @@ StoreAllLiveRegs(MacroAssembler &masm, RegisterSet liveRegs)
     masm.loadJitActivation(scratch);
 
     Address checkRegs(scratch, JitActivation::offsetOfCheckRegs());
-    masm.store32(Imm32(1), checkRegs);
+    masm.add32(Imm32(1), checkRegs);
 
     StoreOp op(masm);
     HandleRegisterDump<StoreOp>(op, masm, liveRegs, scratch, allRegs.getAny());
@@ -538,6 +538,13 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
     Label failure, done;
     Address checkRegs(scratch, JitActivation::offsetOfCheckRegs());
     masm.branch32(Assembler::Equal, checkRegs, Imm32(0), &done);
+
+    // Having more than one VM function call made in one visit function at
+    // runtime is a sec-ciritcal error, because if we conservatively assume that
+    // one of the function call can re-enter Ion, then the invalidation process
+    // will potentially add a call at a random location, by patching the code
+    // before the return address.
+    masm.branch32(Assembler::NotEqual, checkRegs, Imm32(1), &failure);
 
     // Ignore temp registers. Some instructions (like LValueToInt32) modify
     // temps after calling into the VM. This is fine because no other

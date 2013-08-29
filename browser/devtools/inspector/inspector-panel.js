@@ -268,7 +268,7 @@ InspectorPanel.prototype = {
                         "chrome://browser/content/devtools/computedview.xhtml",
                         "computedview" == defaultTab);
 
-    if (Services.prefs.getBoolPref("devtools.fontinspector.enabled")) {
+    if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") && !this.target.isRemote) {
       this.sidebar.addTab("fontinspector",
                           "chrome://browser/content/devtools/fontinspector/font-inspector.xhtml",
                           "fontinspector" == defaultTab);
