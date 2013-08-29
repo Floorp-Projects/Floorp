@@ -9,6 +9,8 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+LIBRARY_NAME     = domfmradio_s
+
 include $(topsrcdir)/dom/dom-config.mk
 
 include $(topsrcdir)/config/rules.mk
