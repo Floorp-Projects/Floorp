@@ -168,10 +168,6 @@ public:
                       SurfaceDescriptor* aResult = nullptr) MOZ_OVERRIDE;
 
 protected:
-  virtual void EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
-                                 const SurfaceDescriptor& aSurface,
-                                 ISurfaceAllocator* aAllocator,
-                                 const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
   virtual void MakeDeprecatedTextureHost(TextureIdentifier aTextureId,
                                const SurfaceDescriptor& aSurface,
                                ISurfaceAllocator* aAllocator,
