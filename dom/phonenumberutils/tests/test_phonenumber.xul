@@ -115,6 +115,21 @@ function TestProperties(dial, currentRegion) {
   }
 }
 
+function TestPropertiesWithExpectedCountry(dial, currentRegion, expectedRegion) {
+  var result = PhoneNumber.Parse(dial, currentRegion);
+  if (result) {
+    ok(true, "found it");
+    ok(true, "InternationalFormat: " + result.internationalFormat);
+    ok(true, "InternationalNumber: " + result.internationalNumber);
+    ok(true, "NationalNumber: " + result.nationalNumber);
+    ok(true, "NationalFormat: " + result.nationalFormat);
+    ok(true, "CountryName: " + result.countryName);
+    is(result.countryName, expectedRegion, "Same region");
+  } else {
+    ok(true, "not found");
+  }
+}
+
 function AllEqual(list, currentRegion) {
   var first = PhoneNumber.Parse(list.shift(), currentRegion);
   ok(!!first, "first parses");
@@ -133,6 +148,9 @@ TestProperties("+34556657");
 TestProperties("+66554433");
 TestProperties("+43442075");
 TestProperties("+13442074");
+
+TestPropertiesWithExpectedCountry("+4333822222", "DE", "AT");
+TestPropertiesWithExpectedCountry("+19491234567", "DE", "US");
 
 // Test whether could a string be a phone number.
 IsPlain(null, false);
