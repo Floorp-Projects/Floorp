@@ -339,6 +339,7 @@ class MarionetteJSTestCase(CommonTestCase):
 
     context_re = re.compile(r"MARIONETTE_CONTEXT(\s*)=(\s*)['|\"](.*?)['|\"];")
     timeout_re = re.compile(r"MARIONETTE_TIMEOUT(\s*)=(\s*)(\d+);")
+    inactivity_timeout_re = re.compile(r"MARIONETTE_INACTIVITY_TIMEOUT(\s*)=(\s*)(\d+);")
     match_re = re.compile(r"test_(.*)\.js$")
 
     def __init__(self, marionette_weakref, methodName='runTest', jsFile=None):
@@ -388,10 +389,15 @@ class MarionetteJSTestCase(CommonTestCase):
             timeout = timeout.group(3)
             self.marionette.set_script_timeout(timeout)
 
+        inactivity_timeout = self.inactivity_timeout_re.search(js)
+        if inactivity_timeout:
+            inactivity_timeout = inactivity_timeout.group(3)
+
         try:
             results = self.marionette.execute_js_script(js,
                                                         args,
                                                         special_powers=True,
+                                                        inactivity_timeout=inactivity_timeout,
                                                         filename=os.path.basename(self.jsFile))
 
             self.assertTrue(not 'timeout' in self.jsFile,

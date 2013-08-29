@@ -26,6 +26,7 @@ CPP_SOURCES += [
     'EventHub.cpp',
     'Framebuffer.cpp',
     'GonkMemoryPressureMonitoring.cpp',
+    'HwcUtils.cpp',
     'Input.cpp',
     'InputApplication.cpp',
     'InputDispatcher.cpp',
