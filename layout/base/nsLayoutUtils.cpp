@@ -1975,30 +1975,27 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 #endif
 
-  if (ignoreViewportScrolling && !aFrame->GetParent()) {
-    nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
-    if (rootScrollFrame) {
-      nsIScrollableFrame* rootScrollableFrame =
-        presShell->GetRootScrollFrameAsScrollable();
-      if (aFlags & PAINT_DOCUMENT_RELATIVE) {
-        // Make visibleRegion and aRenderingContext relative to the
-        // scrolled frame instead of the root frame.
-        nsPoint pos = rootScrollableFrame->GetScrollPosition();
-        visibleRegion.MoveBy(-pos);
-        if (aRenderingContext) {
-          aRenderingContext->Translate(pos);
-        }
+  if (ignoreViewportScrolling && rootScrollFrame && !aFrame->GetParent()) {
+    nsIScrollableFrame* rootScrollableFrame =
+      presShell->GetRootScrollFrameAsScrollable();
+    if (aFlags & PAINT_DOCUMENT_RELATIVE) {
+      // Make visibleRegion and aRenderingContext relative to the
+      // scrolled frame instead of the root frame.
+      nsPoint pos = rootScrollableFrame->GetScrollPosition();
+      visibleRegion.MoveBy(-pos);
+      if (aRenderingContext) {
+        aRenderingContext->Translate(pos);
       }
-      builder.SetIgnoreScrollFrame(rootScrollFrame);
+    }
+    builder.SetIgnoreScrollFrame(rootScrollFrame);
 
-      nsCanvasFrame* canvasFrame =
-        do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
-      if (canvasFrame) {
-        // Use UnionRect here to ensure that areas where the scrollbars
-        // were are still filled with the background color.
-        canvasArea.UnionRect(canvasArea,
-          canvasFrame->CanvasArea() + builder.ToReferenceFrame(canvasFrame));
-      }
+    nsCanvasFrame* canvasFrame =
+      do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
+    if (canvasFrame) {
+      // Use UnionRect here to ensure that areas where the scrollbars
+      // were are still filled with the background color.
+      canvasArea.UnionRect(canvasArea,
+        canvasFrame->CanvasArea() + builder.ToReferenceFrame(canvasFrame));
     }
   }
 
