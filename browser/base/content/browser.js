@@ -4166,6 +4166,7 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
       menuItem.setAttribute("type", "checkbox");
       menuItem.setAttribute("label", toolbarName);
       menuItem.setAttribute("checked", toolbar.getAttribute(hidingAttribute) != "true");
+      menuItem.setAttribute("accesskey", toolbar.getAttribute("accesskey"));
       if (popup.id != "toolbar-context-menu")
         menuItem.setAttribute("key", toolbar.getAttribute("key"));
 
