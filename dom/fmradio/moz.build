@@ -24,8 +24,6 @@ if CONFIG['MOZ_B2G_FM']:
 
     LIBXUL_LIBRARY = True
 
-    LIBRARY_NAME = 'domfmradio_s'
-
 IPDL_SOURCES += [
     'ipc/PFMRadio.ipdl',
     'ipc/PFMRadioRequest.ipdl',
