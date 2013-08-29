@@ -1195,7 +1195,6 @@ abstract public class GeckoApp
             }
         }
 
-        GeckoProfile.setAsDefault(this, getProfile().getDir());
         BrowserDB.initialize(getProfile().getName());
         ((GeckoApplication)getApplication()).initialize();
 

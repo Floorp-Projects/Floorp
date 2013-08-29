@@ -588,16 +588,17 @@ IsObjectInContextCompartment(JSObject *obj, const JSContext *cx);
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 #define JSITER_FOR_OF     0x20  /* harmony for-of loop */
 
-inline uintptr_t
-GetNativeStackLimit(const JSRuntime *rt)
-{
-    return PerThreadDataFriendFields::getMainThread(rt)->nativeStackLimit;
-}
+JS_FRIEND_API(bool)
+RunningWithTrustedPrincipals(JSContext *cx);
 
 inline uintptr_t
 GetNativeStackLimit(JSContext *cx)
 {
-    return GetNativeStackLimit(GetRuntime(cx));
+    StackKind kind = RunningWithTrustedPrincipals(cx) ? StackForTrustedScript
+                                                      : StackForUntrustedScript;
+    PerThreadDataFriendFields *mainThread =
+      PerThreadDataFriendFields::getMainThread(GetRuntime(cx));
+    return mainThread->nativeStackLimit[kind];
 }
 
 /*

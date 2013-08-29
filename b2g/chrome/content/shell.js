@@ -756,7 +756,7 @@ var AlertsHelper = {
     this._listeners[uid] = listener;
 
     let app = DOMApplicationRegistry.getAppByManifestURL(listener.manifestURL);
-    DOMApplicationRegistry.getManifestFor(app.origin, function(manifest) {
+    DOMApplicationRegistry.getManifestFor(app.manifestURL, function(manifest) {
       let helper = new ManifestHelper(manifest, app.origin);
       let getNotificationURLFor = function(messages) {
         if (!messages)
@@ -813,7 +813,7 @@ var AlertsHelper = {
     // If we have a manifest URL, get the icon and title from the manifest
     // to prevent spoofing.
     let app = DOMApplicationRegistry.getAppByManifestURL(manifestUrl);
-    DOMApplicationRegistry.getManifestFor(app.origin, function(aManifest) {
+    DOMApplicationRegistry.getManifestFor(manifestUrl, function(aManifest) {
       let helper = new ManifestHelper(aManifest, app.origin);
       send(helper.name, helper.iconURLForSize(128));
     });
@@ -906,7 +906,7 @@ var WebappsHelper = {
 
     switch(topic) {
       case "webapps-launch":
-        DOMApplicationRegistry.getManifestFor(json.origin, function(aManifest) {
+        DOMApplicationRegistry.getManifestFor(json.manifestURL, function(aManifest) {
           if (!aManifest)
             return;
 

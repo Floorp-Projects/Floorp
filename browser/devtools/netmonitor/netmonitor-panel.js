@@ -5,17 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+const { Cc, Ci, Cu, Cr } = require("chrome");
+const promise = require("sdk/core/promise");
+const EventEmitter = require("devtools/shared/event-emitter");
 
-this.EXPORTED_SYMBOLS = ["NetMonitorPanel"];
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/shared/event-emitter.js");
-
-XPCOMUtils.defineLazyModuleGetter(this, "promise",
-  "resource://gre/modules/commonjs/sdk/core/promise.js", "Promise");
-
-this.NetMonitorPanel = function NetMonitorPanel(iframeWindow, toolbox) {
+function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
   this._destroyer = null;
@@ -26,6 +20,8 @@ this.NetMonitorPanel = function NetMonitorPanel(iframeWindow, toolbox) {
 
   EventEmitter.decorate(this);
 };
+
+exports.NetMonitorPanel = NetMonitorPanel;
 
 NetMonitorPanel.prototype = {
   /**

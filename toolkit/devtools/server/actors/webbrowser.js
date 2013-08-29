@@ -555,6 +555,17 @@ BrowserTabActor.prototype = {
     }
   },
 
+  /**
+   * Getter for the best nsIWebProgress for to watching this window.
+   */
+  get webProgress() {
+    return this.window
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDocShell)
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+  },
+
   form: function BTA_form() {
     dbg_assert(!this.exited,
                "grip() shouldn't be called on exited browser actor.");

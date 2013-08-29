@@ -16,6 +16,7 @@ var SelectionHandler = {
   // stored here are relative to the _contentWindow window.
   _cache: null,
   _activeType: 0, // TYPE_NONE
+  _ignoreSelectionChanges: false, // True while user drags text selection handles
 
   // The window that holds the selection (can be a sub-frame)
   get _contentWindow() {
@@ -102,9 +103,11 @@ var SelectionHandler = {
       }
       case "TextSelection:Move": {
         let data = JSON.parse(aData);
-        if (this._activeType == this.TYPE_SELECTION)
+        if (this._activeType == this.TYPE_SELECTION) {
+          // Ignore selectionChange notifications when handle movement starts
+          this._ignoreSelectionChanges = true;
           this._moveSelection(data.handleType == this.HANDLE_TYPE_START, data.x, data.y);
-        else if (this._activeType == this.TYPE_CURSOR) {
+        } else if (this._activeType == this.TYPE_CURSOR) {
           // Send a click event to the text box, which positions the caret
           this._sendMouseEvents(data.x, data.y);
 
@@ -115,6 +118,8 @@ var SelectionHandler = {
       }
       case "TextSelection:Position": {
         if (this._activeType == this.TYPE_SELECTION) {
+          // Ignore selectionChange notifications when handle movement starts
+          this._ignoreSelectionChanges = true;
           // Check to see if the handles should be reversed.
           let isStartHandle = JSON.parse(aData).handleType == this.HANDLE_TYPE_START;
           let selectionReversed = this._updateCacheForSelection(isStartHandle);
@@ -126,6 +131,8 @@ var SelectionHandler = {
             selection.collapse(selection.focusNode, selection.focusOffset);
             selection.extend(anchorNode, anchorOffset);
           }
+          // Act on selectionChange notifications after handle movement ends
+          this._ignoreSelectionChanges = false;
         }
         this._positionHandles();
         break;
@@ -179,6 +186,11 @@ var SelectionHandler = {
   },
 
   notifySelectionChanged: function sh_notifySelectionChanged(aDocument, aSelection, aReason) {
+    // Ignore selectionChange notifications during handle movements
+    if (this._ignoreSelectionChanges) {
+      return;
+    }
+
     // If the selection was collapsed to Start or to End, always close it
     if ((aReason & Ci.nsISelectionListener.COLLAPSETOSTART_REASON) ||
         (aReason & Ci.nsISelectionListener.COLLAPSETOEND_REASON)) {
@@ -508,6 +520,7 @@ var SelectionHandler = {
     this._targetElement = null;
     this._isRTL = false;
     this._cache = null;
+    this._ignoreSelectionChanges = false;
   },
 
   _getViewOffset: function sh_getViewOffset() {

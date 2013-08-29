@@ -666,6 +666,8 @@ class AutoPauseWorkersForGC;
 struct SelfHostedClass;
 class ThreadDataIter;
 
+void RecomputeStackLimit(JSRuntime *rt, StackKind kind);
+
 } // namespace js
 
 struct JSRuntime : public JS::shadow::Runtime,
@@ -933,7 +935,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     uintptr_t           nativeStackBase;
 
     /* The native stack size limit that runtime should not exceed. */
-    size_t              nativeStackQuota;
+    size_t              nativeStackQuota[js::StackKindCount];
 
     /* Context create/destroy callback. */
     JSContextCallback   cxCallback;
@@ -1462,7 +1464,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     // has been noticed by Ion/Baseline.
     void resetIonStackLimit() {
         AutoLockForOperationCallback lock(this);
-        mainThread.setIonStackLimit(mainThread.nativeStackLimit);
+        mainThread.setIonStackLimit(mainThread.nativeStackLimit[js::StackForUntrustedScript]);
     }
 
     // Cache for jit::GetPcScript().

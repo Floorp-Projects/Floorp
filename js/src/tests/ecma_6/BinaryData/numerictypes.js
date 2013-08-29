@@ -67,8 +67,8 @@ function runTests()
         check(function() thrown, todo);
     }
 
-    var types = [uint8, uint16, uint32, uint64, int8, int16, int32, int64];
-    var strings = ["uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64"];
+    var types = [uint8, uint16, uint32, int8, int16, int32];
+    var strings = ["uint8", "uint16", "uint32", "int8", "int16", "int32"];
     for (var i = 0; i < types.length; i++) {
         var type = types[i];
 
@@ -117,11 +117,6 @@ function runTests()
     check(function() uint8(129) == 129);
     check(function() uint8(255) == 255);
 
-    if (typeof ctypes != "undefined") {
-        check(function() uint8(ctypes.Uint64(99)) == 99);
-        check(function() uint8(ctypes.Int64(99)) == 99);
-    }
-
     // overflow is allowed for explicit conversions
     check(function() uint8(-1) == 255);
     check(function() uint8(-255) == 1);
@@ -131,10 +126,16 @@ function runTests()
     check(function() uint8(342.56) == 86);
     check(function() uint8(-342.56) == 170);
 
-    if (typeof ctypes != "undefined") {
-        checkThrows(function() uint8(ctypes.Uint64("18446744073709551615")) == 255);
-        checkThrows(function() uint8(ctypes.Int64("0xcafebabe")) == 190);
-    }
+    /// uint8clamped
+    // valid
+    check(function() uint8Clamped(0) == 0);
+    check(function() uint8Clamped(-0) == 0);
+    check(function() uint8Clamped(129) == 129);
+    check(function() uint8Clamped(-30) == 0);
+    check(function() uint8Clamped(254.5) == 254);
+    check(function() uint8Clamped(257) == 255);
+    check(function() uint8Clamped(513) == 255);
+    check(function() uint8Clamped(60000) == 255);
 
     // strings
     check(function() uint8("0") == 0);
@@ -152,21 +153,11 @@ function runTests()
     // valid
     check(function() uint16(65535) == 65535);
 
-    if (typeof ctypes != "undefined") {
-        check(function() uint16(ctypes.Uint64("0xb00")) == 2816);
-        check(function() uint16(ctypes.Int64("0xb00")) == 2816);
-    }
-
     // overflow is allowed for explicit conversions
     check(function() uint16(-1) == 65535);
     check(function() uint16(-65535) == 1);
     check(function() uint16(-65536) == 0);
     check(function() uint16(65536) == 0);
-
-    if (typeof ctypes != "undefined") {
-        check(function() uint16(ctypes.Uint64("18446744073709551615")) == 65535);
-        check(function() uint16(ctypes.Int64("0xcafebabe")) == 47806);
-    }
 
     // strings
     check(function() uint16("0x1234") == 0x1234);

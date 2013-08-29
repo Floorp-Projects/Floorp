@@ -9,7 +9,6 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME     = dom_browserelement_s
 include $(topsrcdir)/dom/dom-config.mk
 
 
