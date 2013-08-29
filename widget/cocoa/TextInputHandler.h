@@ -1211,14 +1211,14 @@ protected:
    * GetModifierKeyForNativeKeyCode() returns the stored ModifierKey for
    * the key.
    */
-  ModifierKey*
+  const ModifierKey*
     GetModifierKeyForNativeKeyCode(unsigned short aKeyCode) const;
 
   /**
    * GetModifierKeyForDeviceDependentFlags() returns the stored ModifierKey for
    * the device dependent flags.
    */
-  ModifierKey*
+  const ModifierKey*
     GetModifierKeyForDeviceDependentFlags(NSUInteger aFlags) const;
 
   /**

@@ -395,9 +395,6 @@ pref("app.geo.reportdata", 0);
 //pref("content.sink.perf_deflect_count", 1000000);
 //pref("content.sink.perf_parse_time", 50000000);
 
-// Disable methodjit in chrome to save memory
-pref("javascript.options.methodjit.chrome",  false);
-
 // Disable the JS engine's gc on memory pressure, since we do one in the mobile
 // browser (bug 669346).
 pref("javascript.options.gc_on_memory_pressure", false);
