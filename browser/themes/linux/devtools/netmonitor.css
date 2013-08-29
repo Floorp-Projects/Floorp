@@ -316,10 +316,6 @@ box.requests-menu-status[code^="5"] {
   background: rgba(255,255,255,0.05);
 }
 
-.side-menu-widget-item-contents {
-  padding: 0;
-}
-
 /* Network request details */
 
 #details-pane {
