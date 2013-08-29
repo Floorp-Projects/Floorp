@@ -1,0 +1,43 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PFMRadio;
+
+namespace mozilla {
+namespace dom {
+
+struct ErrorResponse
+{
+  nsString error;
+};
+
+struct SuccessResponse
+{
+};
+
+union FMRadioResponseType
+{
+  ErrorResponse;
+  SuccessResponse;
+};
+
+/**
+ * The protocol is used for sending asynchronous operation requests of
+ * FM radio HW from child to parent, and the type of the request is defined in
+ * FMRadioRequestArgs.
+ *
+ * When the request completed, the result, i.e. FMRadioResponseType, will be
+ * sent back to child from parent in the `__delete__` message.
+ */
+async protocol PFMRadioRequest
+{
+  manager PFMRadio;
+
+child:
+  __delete__(FMRadioResponseType response);
+};
+
+} // namespace dom
+} // namespace mozilla
+

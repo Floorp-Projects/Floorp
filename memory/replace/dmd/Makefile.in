@@ -10,7 +10,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= dmd
 FORCE_SHARED_LIB= 1
 
 DEFINES 	+= -DMOZ_NO_MOZALLOC

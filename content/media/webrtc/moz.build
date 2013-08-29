@@ -25,3 +25,5 @@ CPP_SOURCES += [
 
 LIBXUL_LIBRARY = True
 
+LIBRARY_NAME = 'gkconwebrtc_s'
+

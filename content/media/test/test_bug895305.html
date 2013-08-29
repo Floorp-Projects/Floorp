@@ -25,8 +25,8 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
     window.ttl = audio.textTracks;
     ttl.addEventListener("click", function(){}, false);
 
-    // Check leaking on TextTrackCue objects.
-    window.ttc = new TextTrackCue(3, 4, "Test.");
+    // Check leaking on VTTCue objects.
+    window.ttc = new VTTCue(3, 4, "Test.");
     ttc.addEventListener("click", function() {}, false);
 
     // Check leaking on TextTrack objects.

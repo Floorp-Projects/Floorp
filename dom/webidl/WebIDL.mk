@@ -361,7 +361,6 @@ webidl_files = \
   TextDecoder.webidl \
   TextEncoder.webidl \
   TextTrack.webidl \
-  TextTrackCue.webidl \
   TextTrackCueList.webidl \
   TextTrackList.webidl \
   TimeEvent.webidl \
@@ -377,6 +376,7 @@ webidl_files = \
   URL.webidl \
   URLUtils.webidl \
   URLUtilsReadOnly.webidl \
+  VTTCue.webidl \
   ValidityState.webidl \
   VideoPlaybackQuality.webidl \
   VideoStreamTrack.webidl \
@@ -520,6 +520,10 @@ webidl_files += \
   SpeechRecognitionError.webidl \
   SpeechRecognitionEvent.webidl \
   $(NULL)
+endif
+
+ifdef MOZ_B2G_FM
+webidl_files += FMRadio.webidl
 endif
 
 ifdef ENABLE_TESTS

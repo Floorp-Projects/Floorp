@@ -2466,6 +2466,7 @@ nsStyleVisibility::nsStyleVisibility(nsPresContext* aPresContext)
 nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
 {
   MOZ_COUNT_CTOR(nsStyleVisibility);
+  mImageOrientation = aSource.mImageOrientation;
   mDirection = aSource.mDirection;
   mVisible = aSource.mVisible;
   mPointerEvents = aSource.mPointerEvents;
@@ -2479,6 +2480,9 @@ nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) 
   if (mDirection != aOther.mDirection || mWritingMode != aOther.mWritingMode) {
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
   } else {
+    if ((mImageOrientation != aOther.mImageOrientation)) {
+      NS_UpdateHint(hint, nsChangeHint_AllReflowHints);
+    }
     if (mVisible != aOther.mVisible) {
       if ((NS_STYLE_VISIBILITY_COLLAPSE == mVisible) ||
           (NS_STYLE_VISIBILITY_COLLAPSE == aOther.mVisible)) {

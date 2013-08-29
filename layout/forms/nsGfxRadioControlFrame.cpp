@@ -4,14 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsGfxRadioControlFrame.h"
-#include "nsIContent.h"
-#include "nsCOMPtr.h"
-#include "nsCSSRendering.h"
 #include "nsRenderingContext.h"
-#include "nsIServiceManager.h"
-#include "nsITheme.h"
 #include "nsDisplayList.h"
-#include "nsCSSAnonBoxes.h"
 
 using namespace mozilla;
 

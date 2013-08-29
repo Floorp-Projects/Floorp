@@ -304,10 +304,6 @@ class MDefinition : public MNode
         Total
     };
 
-    void setBlock(MBasicBlock *block) {
-        block_ = block;
-    }
-
     bool hasFlags(uint32_t flags) const {
         return (flags_ & flags) == flags;
     }
@@ -317,6 +313,12 @@ class MDefinition : public MNode
     void setFlags(uint32_t flags) {
         flags_ |= flags;
     }
+
+  protected:
+    virtual void setBlock(MBasicBlock *block) {
+        block_ = block;
+    }
+
   public:
     MDefinition()
       : id_(0),
@@ -1018,6 +1020,7 @@ class MTableSwitch MOZ_FINAL
     // - First successor = the default case
     // - Successor 2 and higher = the cases sorted on case index.
     Vector<MBasicBlock*, 0, IonAllocPolicy> successors_;
+    Vector<size_t, 0, IonAllocPolicy> cases_;
 
     // Contains the blocks/cases that still need to get build
     Vector<MBasicBlock*, 0, IonAllocPolicy> blocks_;
@@ -1029,6 +1032,7 @@ class MTableSwitch MOZ_FINAL
     MTableSwitch(MDefinition *ins,
                  int32_t low, int32_t high)
       : successors_(),
+        cases_(),
         blocks_(),
         low_(low),
         high_(high)
@@ -1054,6 +1058,13 @@ class MTableSwitch MOZ_FINAL
 
     size_t numSuccessors() const {
         return successors_.length();
+    }
+
+    size_t addSuccessor(MBasicBlock *successor) {
+        JS_ASSERT(successors_.length() < (size_t)(high_ - low_ + 2));
+        JS_ASSERT(successors_.length() != 0);
+        successors_.append(successor);
+        return successors_.length() - 1;
     }
 
     MBasicBlock *getSuccessor(size_t i) const {
@@ -1087,22 +1098,21 @@ class MTableSwitch MOZ_FINAL
     }
 
     MBasicBlock *getCase(size_t i) const {
-        return getSuccessor(i+1);
+        return getSuccessor(cases_[i]);
     }
 
     size_t numCases() const {
         return high() - low() + 1;
     }
 
-    void addDefault(MBasicBlock *block) {
+    size_t addDefault(MBasicBlock *block) {
         JS_ASSERT(successors_.length() == 0);
         successors_.append(block);
+        return 0;
     }
 
-    void addCase(MBasicBlock *block) {
-        JS_ASSERT(successors_.length() < (size_t)(high_ - low_ + 2));
-        JS_ASSERT(successors_.length() != 0);
-        successors_.append(block);
+    void addCase(size_t successorIndex) {
+        cases_.append(successorIndex);
     }
 
     MBasicBlock *getBlock(size_t i) const {
@@ -5146,31 +5156,32 @@ class MArrayConcat
 class MLoadTypedArrayElement
   : public MBinaryInstruction
 {
-    int arrayType_;
+    ScalarTypeRepresentation::Type arrayType_;
 
-    MLoadTypedArrayElement(MDefinition *elements, MDefinition *index, int arrayType)
+    MLoadTypedArrayElement(MDefinition *elements, MDefinition *index,
+                           ScalarTypeRepresentation::Type arrayType)
       : MBinaryInstruction(elements, index), arrayType_(arrayType)
     {
         setResultType(MIRType_Value);
         setMovable();
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < TypedArrayObject::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < ScalarTypeRepresentation::TYPE_MAX);
     }
 
   public:
     INSTRUCTION_HEADER(LoadTypedArrayElement)
 
-    static MLoadTypedArrayElement *New(MDefinition *elements, MDefinition *index, int arrayType) {
+    static MLoadTypedArrayElement *New(MDefinition *elements, MDefinition *index, ScalarTypeRepresentation::Type arrayType) {
         return new MLoadTypedArrayElement(elements, index, arrayType);
     }
 
-    int arrayType() const {
+    ScalarTypeRepresentation::Type arrayType() const {
         return arrayType_;
     }
     bool fallible() const {
         // Bailout if the result does not fit in an int32.
-        return arrayType_ == TypedArrayObject::TYPE_UINT32 && type() == MIRType_Int32;
+        return arrayType_ == ScalarTypeRepresentation::TYPE_UINT32 && type() == MIRType_Int32;
     }
     MDefinition *elements() const {
         return getOperand(0);
@@ -5200,7 +5211,7 @@ class MLoadTypedArrayElementHole
         setResultType(MIRType_Value);
         setMovable();
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < TypedArrayObject::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < ScalarTypeRepresentation::TYPE_MAX);
     }
 
   public:
@@ -5217,7 +5228,7 @@ class MLoadTypedArrayElementHole
         return allowDouble_;
     }
     bool fallible() const {
-        return arrayType_ == TypedArrayObject::TYPE_UINT32 && !allowDouble_;
+        return arrayType_ == ScalarTypeRepresentation::TYPE_UINT32 && !allowDouble_;
     }
     TypePolicy *typePolicy() {
         return this;
@@ -5242,7 +5253,7 @@ class MLoadTypedArrayElementStatic
       : MUnaryInstruction(ptr), typedArray_(typedArray), fallible_(true)
     {
         int type = typedArray_->type();
-        if (type == TypedArrayObject::TYPE_FLOAT32 || type == TypedArrayObject::TYPE_FLOAT64)
+        if (type == ScalarTypeRepresentation::TYPE_FLOAT32 || type == ScalarTypeRepresentation::TYPE_FLOAT64)
             setResultType(MIRType_Double);
         else
             setResultType(MIRType_Int32);
@@ -5299,7 +5310,7 @@ class MStoreTypedArrayElement
         setMovable();
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < TypedArrayObject::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < ScalarTypeRepresentation::TYPE_MAX);
     }
 
   public:
@@ -5314,13 +5325,13 @@ class MStoreTypedArrayElement
         return arrayType_;
     }
     bool isByteArray() const {
-        return (arrayType_ == TypedArrayObject::TYPE_INT8 ||
-                arrayType_ == TypedArrayObject::TYPE_UINT8 ||
-                arrayType_ == TypedArrayObject::TYPE_UINT8_CLAMPED);
+        return (arrayType_ == ScalarTypeRepresentation::TYPE_INT8 ||
+                arrayType_ == ScalarTypeRepresentation::TYPE_UINT8 ||
+                arrayType_ == ScalarTypeRepresentation::TYPE_UINT8_CLAMPED);
     }
     bool isFloatArray() const {
-        return (arrayType_ == TypedArrayObject::TYPE_FLOAT32 ||
-                arrayType_ == TypedArrayObject::TYPE_FLOAT64);
+        return (arrayType_ == ScalarTypeRepresentation::TYPE_FLOAT32 ||
+                arrayType_ == ScalarTypeRepresentation::TYPE_FLOAT64);
     }
     TypePolicy *typePolicy() {
         return this;
@@ -5364,7 +5375,7 @@ class MStoreTypedArrayElementHole
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(length->type() == MIRType_Int32);
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < TypedArrayObject::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < ScalarTypeRepresentation::TYPE_MAX);
     }
 
   public:
@@ -5380,13 +5391,13 @@ class MStoreTypedArrayElementHole
         return arrayType_;
     }
     bool isByteArray() const {
-        return (arrayType_ == TypedArrayObject::TYPE_INT8 ||
-                arrayType_ == TypedArrayObject::TYPE_UINT8 ||
-                arrayType_ == TypedArrayObject::TYPE_UINT8_CLAMPED);
+        return (arrayType_ == ScalarTypeRepresentation::TYPE_INT8 ||
+                arrayType_ == ScalarTypeRepresentation::TYPE_UINT8 ||
+                arrayType_ == ScalarTypeRepresentation::TYPE_UINT8_CLAMPED);
     }
     bool isFloatArray() const {
-        return (arrayType_ == TypedArrayObject::TYPE_FLOAT32 ||
-                arrayType_ == TypedArrayObject::TYPE_FLOAT64);
+        return (arrayType_ == ScalarTypeRepresentation::TYPE_FLOAT32 ||
+                arrayType_ == ScalarTypeRepresentation::TYPE_FLOAT64);
     }
     TypePolicy *typePolicy() {
         return this;
@@ -5674,6 +5685,18 @@ class InlinePropertyTable : public TempObject
     void trimToTargets(AutoObjectVector &targets);
 };
 
+class CacheLocationList : public InlineConcatList<CacheLocationList>
+{
+  public:
+    CacheLocationList()
+      : pc(NULL),
+        script(NULL)
+    { }
+
+    jsbytecode *pc;
+    JSScript *script;
+};
+
 class MGetPropertyCache
   : public MUnaryInstruction,
     public SingleObjectPolicy
@@ -5682,6 +5705,8 @@ class MGetPropertyCache
     bool idempotent_;
     bool allowGetters_;
 
+    CacheLocationList location_;
+
     InlinePropertyTable *inlinePropertyTable_;
 
     MGetPropertyCache(MDefinition *obj, HandlePropertyName name)
@@ -5689,6 +5714,7 @@ class MGetPropertyCache
         name_(name),
         idempotent_(false),
         allowGetters_(false),
+        location_(),
         inlinePropertyTable_(NULL)
     {
         setResultType(MIRType_Value);
@@ -5739,6 +5765,9 @@ class MGetPropertyCache
     void setAllowGetters() {
         allowGetters_ = true;
     }
+    CacheLocationList &location() {
+        return location_;
+    }
     TypePolicy *typePolicy() { return this; }
 
     bool congruentTo(MDefinition *ins) const {
@@ -5760,6 +5789,8 @@ class MGetPropertyCache
         return AliasSet::Store(AliasSet::Any);
     }
 
+    void setBlock(MBasicBlock *block);
+    bool updateForReplacement(MDefinition *ins);
 };
 
 // Emit code to load a value from an object's slots if its shape matches
@@ -8423,7 +8454,8 @@ typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
 // Helper functions used to decide how to build MIR.
 
 bool ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id);
-bool ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType);
+bool ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
+                               ScalarTypeRepresentation::Type *arrayType);
 bool ElementAccessIsPacked(JSContext *cx, MDefinition *obj);
 bool ElementAccessHasExtraIndexedProperty(JSContext *cx, MDefinition *obj);
 MIRType DenseNativeElementType(JSContext *cx, MDefinition *obj);

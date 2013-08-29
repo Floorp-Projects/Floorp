@@ -508,23 +508,23 @@ StoreTypedArrayPolicy::adjustValueInput(MInstruction *ins, int arrayType,
               value->type() == MIRType_Value);
 
     switch (arrayType) {
-      case TypedArrayObject::TYPE_INT8:
-      case TypedArrayObject::TYPE_UINT8:
-      case TypedArrayObject::TYPE_INT16:
-      case TypedArrayObject::TYPE_UINT16:
-      case TypedArrayObject::TYPE_INT32:
-      case TypedArrayObject::TYPE_UINT32:
+      case ScalarTypeRepresentation::TYPE_INT8:
+      case ScalarTypeRepresentation::TYPE_UINT8:
+      case ScalarTypeRepresentation::TYPE_INT16:
+      case ScalarTypeRepresentation::TYPE_UINT16:
+      case ScalarTypeRepresentation::TYPE_INT32:
+      case ScalarTypeRepresentation::TYPE_UINT32:
         if (value->type() != MIRType_Int32) {
             value = MTruncateToInt32::New(value);
             ins->block()->insertBefore(ins, value->toInstruction());
         }
         break;
-      case TypedArrayObject::TYPE_UINT8_CLAMPED:
+      case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
         // IonBuilder should have inserted ClampToUint8.
         JS_ASSERT(value->type() == MIRType_Int32);
         break;
-      case TypedArrayObject::TYPE_FLOAT32:
-      case TypedArrayObject::TYPE_FLOAT64:
+      case ScalarTypeRepresentation::TYPE_FLOAT32:
+      case ScalarTypeRepresentation::TYPE_FLOAT64:
         if (value->type() != MIRType_Double) {
             value = MToDouble::New(value);
             ins->block()->insertBefore(ins, value->toInstruction());

@@ -11,6 +11,9 @@ var bodyParts = [
   ["lime100x100.svg", "image/svg+xml"],
   ["animated-gif2.gif", "image/gif"],
   ["red.png", "image/png"],
+  // Mime type intentionally wrong (test for bug 907575)
+  ["shaver.png", "image/gif"],
+  ["red.png", "image/png"],
   ["damon.jpg", "image/jpeg"],
   ["damon.jpg", "application/octet-stream"],
   ["damon.jpg", "image/jpeg"],

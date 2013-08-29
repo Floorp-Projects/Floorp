@@ -21,7 +21,6 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME     = domsystemgonk_s
 include $(topsrcdir)/dom/dom-config.mk
 
 LOCAL_INCLUDES = \
