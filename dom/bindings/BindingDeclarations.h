@@ -16,7 +16,6 @@
 #include "nsStringGlue.h"
 #include "js/Value.h"
 #include "js/RootingAPI.h"
-#include "jsapi.h"
 #include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"

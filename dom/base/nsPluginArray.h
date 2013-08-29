@@ -29,7 +29,7 @@ public:
   // nsIObserver
   NS_DECL_NSIOBSERVER
 
-  nsPluginArray(nsWeakPtr aWindow);
+  nsPluginArray(nsPIDOMWindow* aWindow);
   virtual ~nsPluginArray();
 
   nsPIDOMWindow* GetParentObject() const;
@@ -59,7 +59,7 @@ private:
   bool AllowPlugins() const;
   void EnsurePlugins();
 
-  nsWeakPtr mWindow;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
   nsTArray<nsRefPtr<nsPluginElement> > mPlugins;
 };
 
@@ -70,7 +70,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPluginElement)
 
-  nsPluginElement(nsWeakPtr aWindow, nsPluginTag* aPluginTag);
+  nsPluginElement(nsPIDOMWindow* aWindow, nsPluginTag* aPluginTag);
 
   nsPIDOMWindow* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -99,7 +99,7 @@ public:
 protected:
   void EnsureMimeTypes();
 
-  nsWeakPtr mWindow;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
   nsRefPtr<nsPluginTag> mPluginTag;
   nsTArray<nsRefPtr<nsMimeType> > mMimeTypes;
 };

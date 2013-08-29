@@ -35,7 +35,7 @@ interface Element : Node {
   [Constant]
   readonly attribute DOMTokenList? classList;
 
-  [Constant]
+  [SameObject]
   readonly attribute MozNamedAttrMap attributes;
   DOMString? getAttribute(DOMString name);
   DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
