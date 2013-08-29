@@ -57,6 +57,13 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGGradientFrame)
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
+/* virtual */ void
+nsSVGGradientFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  nsSVGEffects::InvalidateDirectRenderingObservers(this);
+  nsSVGGradientFrameBase::DidSetStyleContext(aOldStyleContext);
+}
+
 NS_IMETHODIMP
 nsSVGGradientFrame::AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
