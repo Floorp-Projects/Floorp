@@ -86,7 +86,7 @@ exports.testBasic = function(options) {
           num: { type: 'BlankArgument' }
         }
       }
-    },
+    }
   ]);
 };
 
@@ -236,7 +236,7 @@ exports.testCase = function(options) {
           num: { value: undefined, status: 'VALID' }
         }
       }
-    },
+    }
   ]);
 };
 
@@ -276,7 +276,60 @@ exports.testIncomplete = function(options) {
                   true,
                   'unassigned.isIncompleteName: tsg -');
       }
-    },
+    }
+  ]);
+};
+
+exports.testRepeated = function(options) {
+  return helpers.audit(options, [
+    {
+      setup:    'tscook key value --path jjj --path kkk',
+      check: {
+        input:  'tscook key value --path jjj --path kkk',
+        hints:                                        ' [options]',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVEEEEEEVEEE',
+        cursor: 38,
+        current: '__unassigned',
+        status: 'ERROR',
+        options: [ ],
+        message: '',
+        predictions: [ ],
+        unassigned: [ ' --path', ' kkk' ],
+        args: {
+          command: { name: 'tscook' },
+          key: {
+            value: 'key',
+            arg: ' key',
+            status: 'VALID',
+            message: ''
+          },
+          value: {
+            value: 'value',
+            arg: ' value',
+            status: 'VALID',
+            message: ''
+          },
+          path: {
+            value: 'jjj',
+            arg: ' --path jjj',
+            status: 'VALID',
+            message: ''
+          },
+          domain: {
+            value: undefined,
+            arg: '',
+            status: 'VALID',
+            message: ''
+          },
+          secure: {
+            value: false,
+            arg: '',
+            status: 'VALID',
+            message: ''
+          },
+        }
+      }
+    }
   ]);
 };
 
@@ -401,7 +454,7 @@ exports.testHidden = function(options) {
           invisibleboolean: { value: false, status: 'VALID' }
         }
       }
-    },
+    }
   ]);
 };
 
