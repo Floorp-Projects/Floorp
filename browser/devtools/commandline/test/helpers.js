@@ -109,6 +109,77 @@ helpers.addTab = function(url, callback, options) {
   return deferred.promise;
 };
 
+helpers.openTab = function(url, options) {
+  var deferred = promise.defer();
+
+  waitForExplicitFinish();
+
+  options = options || {};
+  options.chromeWindow = options.chromeWindow || window;
+  options.isFirefox = true;
+
+  var tabbrowser = options.chromeWindow.gBrowser;
+  options.tab = tabbrowser.addTab();
+  tabbrowser.selectedTab = options.tab;
+  options.browser = tabbrowser.getBrowserForTab(options.tab);
+  options.target = TargetFactory.forTab(options.tab);
+
+  options.browser.contentWindow.location = url;
+
+  var onPageLoad = function() {
+    options.browser.removeEventListener("load", onPageLoad, true);
+    options.document = options.browser.contentDocument;
+    options.window = options.document.defaultView;
+
+    deferred.resolve(options);
+  };
+
+  options.browser.addEventListener("load", onPageLoad, true);
+
+  return deferred.promise;
+};
+
+helpers.closeTab = function(options) {
+  options.chromeWindow.gBrowser.removeTab(options.tab);
+
+  delete options.window;
+  delete options.document;
+
+  delete options.target;
+  delete options.browser;
+  delete options.tab;
+
+  delete options.chromeWindow;
+  delete options.isFirefox;
+
+  return promise.resolve(undefined);
+};
+
+helpers.openToolbar = function(options) {
+  var deferred = promise.defer();
+
+  options.chromeWindow.DeveloperToolbar.show(true, function() {
+    options.display = options.chromeWindow.DeveloperToolbar.display;
+
+    deferred.resolve(options);
+  });
+
+  return deferred.promise;
+};
+
+helpers.closeToolbar = function(options) {
+  options.chromeWindow.DeveloperToolbar.hide();
+  delete options.display;
+
+  return promise.resolve(undefined);
+};
+
+helpers.handleError = function(ex) {
+  console.error(ex);
+  ok(false, ex);
+  finish();
+};
+
 /**
  * Warning: For use with Firefox Mochitests only.
  *
@@ -133,6 +204,7 @@ helpers.addTabWithToolbar = function(url, callback, options) {
       var reply = callback(innerOptions);
       promise.resolve(reply).then(cleanUp, function(error) {
         ok(false, error);
+        console.error(error);
         cleanUp();
       });
     });
@@ -742,6 +814,13 @@ helpers._exec = function(options, name, expected) {
     assert.is(output.completed,
               expected.completed,
               'output.completed false for: ' + name);
+  }
+
+  if (!options.window) {
+    assert.ok(false, 'Missing options.window in \'' + name + '\'. ' +
+                     'Are you assming that helpers.audit is synchronous? ' +
+                     'It returns a promise');
+    return { output: output };
   }
 
   if (!options.window.document.createElement) {
