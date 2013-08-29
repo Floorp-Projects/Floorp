@@ -431,6 +431,30 @@
                                  this._observer);
           prefsvc.removeObserver("accessibility.typeaheadfind.casesensitive",
                                  this._observer);
+
+          // Clear all timers that might still be running.
+          this._cancelTimers();
+        ]]></body>
+      </method>
+
+      <method name="_cancelTimers">
+        <body><![CDATA[
+          if (this._flashFindBarTimeout) {
+            clearInterval(this._flashFindBarTimeout);
+            this._flashFindBarTimeout = null;
+          }
+          if (this._quickFindTimeout) {
+            clearTimeout(this._quickFindTimeout);
+            this._quickFindTimeout = null;
+          }
+          if (this._highlightTimeout) {
+            clearTimeout(this._highlightTimeout);
+            this._highlightTimeout = null;
+          }
+          if (this._findResetTimeout) {
+            clearTimeout(this._findResetTimeout);
+            this._findResetTimeout = null;
+          }
         ]]></body>
       </method>
 
@@ -1217,12 +1241,9 @@
           fastFind.setSelectionModeAndRepaint
             (this.nsISelectionController.SELECTION_ON);
           this._setFoundLink(null);
+          this._cancelTimers();
           this._foundEditable = null;
           this._currentWindow = null;
-          if (this._quickFindTimeout) {
-            clearTimeout(this._quickFindTimeout);
-            this._quickFindTimeout = null;
-          }
 
           this._findFailedString = null;
         ]]></body>
