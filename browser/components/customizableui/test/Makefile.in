@@ -8,6 +8,7 @@ MOCHITEST_BROWSER_FILES = \
   browser_877178_unregisterArea.js \
   browser_877447_skip_missing_ids.js \
   browser_878452_drag_to_panel.js \
+  browser_876926_customize_mode_wrapping.js \
   browser_880382_drag_wide_widgets_in_panel.js \
   browser_885530_showInPrivateBrowsing.js \
   browser_887438_currentset_shim.js \
