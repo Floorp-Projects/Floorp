@@ -20,6 +20,7 @@ import java.util.Arrays;
   */
 
 public class testImportFromAndroid extends AboutHomeTest {
+    private static final int MAX_WAIT_TIMEOUT = 15000;
     ArrayList<String> androidData = new ArrayList<String>();
     ArrayList<String> firefoxHistory = new ArrayList<String>();
 
@@ -34,7 +35,7 @@ public class testImportFromAndroid extends AboutHomeTest {
         ArrayList<String> oldFirefoxBookmarks = new ArrayList<String>();
         blockForGeckoReady();
 
-        // Get the Android hostory
+        // Get the Android history
         androidData = getAndroidUrls("history");
 
         // Add some overlapping data from the Android Stock Browser to Firefox before import
@@ -136,11 +137,18 @@ public class testImportFromAndroid extends AboutHomeTest {
         waitForText("Enter Search or Address");
         selectSettingsItem("Customize", "Import from Android");
 
-        // Wait for the Import form Android popup to be opened. It has the same title as the option so waiting for the "Cancel" button
+        // Wait for the Import form Android pop-up to be opened. It has the same title as the option so waiting for the "Cancel" button
         waitForText("Cancel");
-
-        // The Import button is the first on Gingerbread and the second in Honeycomb and newer
         mSolo.clickOnButton("Import");
+
+        // Wait until the import pop-up is dismissed. This depending on the number of items in the android history can take up to a few seconds
+        boolean importComplete = waitForTest(new BooleanTest() {
+            public boolean test() {
+                return !mSolo.searchText("Please wait...");
+            }
+        }, MAX_WAIT_TIMEOUT);
+
+        mAsserter.ok(importComplete, "Waiting for import to finish and the pop-up to be dismissed", "Import was completed and the pop-up was dismissed");
 
         // Import has finished. Waiting to get back to the Settings Menu and looking for the Import&Export subsection
         if ("phone".equals(mDevice.type)) {
@@ -148,7 +156,7 @@ public class testImportFromAndroid extends AboutHomeTest {
             waitForText("Import from Android");
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         }
-        waitForText("Settings");
+        waitForText("Privacy"); // Settings is a header for the settings menu page. Waiting for Privacy ensures we are back in the top Settings view
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Exit Settings
         // Make sure the settings menu has been closed.
         mAsserter.ok(mSolo.waitForText("Enter Search or Address"), "Waiting for search bar", "Search bar found");

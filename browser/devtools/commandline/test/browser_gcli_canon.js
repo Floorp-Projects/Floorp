@@ -40,8 +40,8 @@ var canon = require('gcli/canon');
 // var assert = require('test/assert');
 var Canon = canon.Canon;
 
-var startCount = undefined;
-var events = undefined;
+var startCount;
+var events;
 
 var canonChange = function(ev) {
   events++;

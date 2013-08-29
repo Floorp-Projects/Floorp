@@ -40,7 +40,7 @@ function test() {
 var javascript = require('gcli/types/javascript');
 var canon = require('gcli/canon');
 
-var tempWindow = undefined;
+var tempWindow;
 
 exports.setup = function(options) {
   tempWindow = javascript.getGlobalObject();

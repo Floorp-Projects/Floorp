@@ -24,11 +24,10 @@ struct WebGLMappedIdentifier {
 };
 
 class WebGLShader MOZ_FINAL
-    : public nsISupports
+    : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLShader>
     , public LinkedListElement<WebGLShader>
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
     friend class WebGLContext;
     friend class WebGLProgram;
@@ -80,8 +79,8 @@ public:
     virtual JSObject* WrapObject(JSContext *cx,
                                  JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLShader)
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLShader)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLShader)
 
 protected:
 

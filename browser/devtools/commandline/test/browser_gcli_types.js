@@ -37,6 +37,15 @@ function test() {
 
 // var assert = require('test/assert');
 var types = require('gcli/types');
+var nodetype = require('gcli/types/node');
+
+exports.setup = function(options) {
+  nodetype.setDocument(options.window.document);
+};
+
+exports.shutdown = function(options) {
+  nodetype.unsetDocument();
+};
 
 function forEachType(options, typeSpec, callback) {
   types.getTypeNames().forEach(function(name) {
