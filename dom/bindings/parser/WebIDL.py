@@ -243,7 +243,7 @@ class IDLScope(IDLObject):
                 return
 
             # ensureUnique twice with the same object is not allowed
-            assert object != self._dict[identifier.name]
+            assert id(object) != id(self._dict[identifier.name])
 
             replacement = self.resolveIdentifierConflict(self, identifier,
                                                          self._dict[identifier.name],
