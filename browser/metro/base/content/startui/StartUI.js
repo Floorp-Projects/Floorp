@@ -111,8 +111,8 @@ var StartUI = {
 
   _adjustDOMforViewState: function(aState) {
     let currViewState = aState;
-    if (!currViewState && this.chromeWin.MetroUtils.immersive) {
-      switch (this.chromeWin.MetroUtils.snappedState) {
+    if (!currViewState && Services.metro.immersive) {
+      switch (Services.metro.snappedState) {
         case Ci.nsIWinMetroUtils.fullScreenLandscape:
           currViewState = "landscape";
           break;

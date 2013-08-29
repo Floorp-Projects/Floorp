@@ -41,28 +41,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
  * Services
  */
 
-#ifdef XP_WIN
-XPCOMUtils.defineLazyServiceGetter(this, "MetroUtils",
-                                   "@mozilla.org/windows-metroutils;1",
-                                   "nsIWinMetroUtils");
-#else
-// Stub nsIWinMetroUtils implementation for testing on non-Windows platforms:
-var MetroUtils = {
-  snappedState: Ci.nsIWinMetroUtils.fullScreenLandscape,
-  immersive: false,
-  handPreference: Ci.nsIWinMetroUtils.handPreferenceLeft,
-  unsnap: function() {},
-  launchInDesktop: function() {},
-  pinTileAsync: function() {},
-  unpinTileAsync: function() {},
-  isTilePinned: function() { return false; },
-  keyboardVisible: false,
-  keyboardX: 0,
-  keyboardY: 0,
-  keyboardWidth: 0,
-  keyboardHeight: 0
-};
-#endif
 XPCOMUtils.defineLazyServiceGetter(this, "StyleSheetSvc",
                                    "@mozilla.org/content/style-sheet-service;1",
                                    "nsIStyleSheetService");
