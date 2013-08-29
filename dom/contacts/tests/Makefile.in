@@ -14,6 +14,7 @@ include $(DEPTH)/config/autoconf.mk
 MOCHITEST_FILES = \
   test_contacts_basics.html \
   test_contacts_substringmatching.html \
+  test_contacts_substringmatchingVE.html \
   test_contacts_events.html \
   test_contacts_blobs.html \
   test_contacts_international.html \
@@ -25,4 +26,3 @@ MOCHITEST_CHROME_FILES = \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-

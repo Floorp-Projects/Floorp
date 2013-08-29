@@ -55,6 +55,15 @@ var prop2 = {
   tel: [{value: "01187654321" }]
 };
 
+var prop3 = {
+  tel: [{ value: "+43332112346" }]
+};
+
+var prop4 = {
+  tel: [{ value: "(0414) 233-9888" }]
+};
+
+
 var req;
 var index = 0;
 
@@ -62,6 +71,15 @@ var mozContacts = window.navigator.mozContacts;
 ok(mozContacts, "mozContacts exists");
 ok("mozContact" in window, "mozContact exists");
 var steps = [
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
   function () {
     ok(true, "Adding contact");
     createResult1 = new mozContact();
@@ -223,6 +241,70 @@ var steps = [
     var options = {filterBy: ["tel"],
                    filterOp: "match",
                    filterValue: "+551187654321"};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      is(req.result.length, 1, "Found exactly 1 contacts.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear()
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding contact");
+    createResult1 = new mozContact();
+    createResult1.init(prop3);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    if (!isAndroid) { // Bug 905927
+      ok(true, "Retrieving by substring 1");
+      var length = prop3.tel[0].value.length;
+      var num = prop3.tel[0].value.substring(length - substringLength, length);
+      var options = {filterBy: ["tel"],
+                     filterOp: "match",
+                     filterValue: num};
+      req = mozContacts.find(options);
+      req.onsuccess = function () {
+        is(req.result.length, 0, "Found exactly 0 contacts.");
+        next();
+      };
+      req.onerror = onFailure;
+    } else {
+      SpecialPowers.executeSoon(next);
+    }
+  },
+  function () {
+    ok(true, "Adding contact");
+    createResult1 = new mozContact();
+    createResult1.init(prop4);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Retrieving by substring 1");
+    var num = "(0424) 233-9888"
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: num};
     req = mozContacts.find(options);
     req.onsuccess = function () {
       is(req.result.length, 1, "Found exactly 1 contacts.");
