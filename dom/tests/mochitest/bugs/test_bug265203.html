@@ -89,19 +89,8 @@ function test3() {
     synthesizeKey("VK_RIGHT", { });
     synthesizeKey("VK_RIGHT", { });
     expectedResult = [ $("a3").firstChild, 7, $("a3") ]
-    nextTest = endTest;
+    nextTest = SimpleTest.finish;
     testFocus();
-}
-
-function endTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                getService(Components.interfaces.nsIPrefBranch);
-  try {
-    prefs.setBoolPref("accessibility.browsewithcaret", false);
-  } finally {
-    SimpleTest.finish();
-  }
 }
 
 function startTest() {
@@ -109,21 +98,11 @@ function startTest() {
     return;
   gTestStarted = true;
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-                getService(Components.interfaces.nsIPrefBranch);
-  try {
-    prefs.setBoolPref("accessibility.browsewithcaret", true);
-    test0();
-  } catch(e) {
-    endTest();
-  }
+  SpecialPowers.pushPrefEnv({"set": [["accessibility.browsewithcaret", true]]}, test0);
 }
-
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(startTest);
-
 
 </script>
 </pre>
