@@ -24,11 +24,8 @@ from marionette import Marionette
 
 class B2GOptions(ReftestOptions):
 
-    def __init__(self, automation=None, **kwargs):
+    def __init__(self, automation, **kwargs):
         defaults = {}
-        if not automation:
-            automation = B2GRemoteAutomation(None, "fennec", context_chrome=True)
-
         ReftestOptions.__init__(self, automation)
 
         self.add_option("--b2gpath", action="store",
@@ -473,8 +470,11 @@ class B2GReftest(RefTest):
     def getManifestPath(self, path):
         return path
 
-def run_remote_reftests(parser, options, args):
+
+def main(args=sys.argv[1:]):
     auto = B2GRemoteAutomation(None, "fennec", context_chrome=True)
+    parser = B2GOptions(auto)
+    options, args = parser.parse_args(args)
 
     # create our Marionette instance
     kwargs = {}
@@ -508,7 +508,6 @@ def run_remote_reftests(parser, options, args):
     if options.deviceIP:
         kwargs.update({'host': options.deviceIP,
                        'port': options.devicePort})
-
     dm = DeviceManagerADB(**kwargs)
     auto.setDeviceManager(dm)
 
@@ -581,12 +580,6 @@ def run_remote_reftests(parser, options, args):
 
     reftest.stopWebServer(options)
     return retVal
-
-def main(args=sys.argv[1:]):
-    parser = B2GOptions()
-    options, args = parser.parse_args(args)
-    return run_remote_reftests(auto, parser, options, args)
-
 
 if __name__ == "__main__":
     sys.exit(main())
