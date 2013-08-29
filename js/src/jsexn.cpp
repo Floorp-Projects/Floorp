@@ -872,7 +872,7 @@ js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
 }
 
 JS_FRIEND_API(const jschar*)
-js::GetErrorTypeName(JSContext* cx, int16_t exnType)
+js::GetErrorTypeName(JSRuntime* rt, int16_t exnType)
 {
     /*
      * JSEXN_INTERNALERR returns null to prevent that "InternalError: "
@@ -884,7 +884,7 @@ js::GetErrorTypeName(JSContext* cx, int16_t exnType)
         return NULL;
     }
     JSProtoKey key = GetExceptionProtoKey(exnType);
-    return ClassName(key, cx)->chars();
+    return ClassName(key, rt)->chars();
 }
 
 #if defined ( DEBUG_mccabe ) && defined ( PRINTNAMES )

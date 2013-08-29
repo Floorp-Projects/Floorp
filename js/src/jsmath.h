@@ -100,6 +100,9 @@ extern bool
 math_imul(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
+math_fround(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern bool
 math_log(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern double

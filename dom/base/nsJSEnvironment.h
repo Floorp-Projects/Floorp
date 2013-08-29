@@ -14,6 +14,7 @@
 #include "nsIXPConnect.h"
 #include "nsIArray.h"
 #include "mozilla/Attributes.h"
+#include "nsThreadUtils.h"
 
 class nsICycleCollectorListener;
 class nsIXPConnectJSObjectHolder;
@@ -181,6 +182,8 @@ private:
 };
 
 class nsIJSRuntimeService;
+class nsIPrincipal;
+class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -190,6 +193,37 @@ void ShutdownJSEnvironment();
 
 // Get the NameSpaceManager, creating if necessary
 nsScriptNameSpaceManager* GetNameSpaceManager();
+
+// Runnable that's used to do async error reporting
+class AsyncErrorReporter : public nsRunnable
+{
+public:
+  // aWindow may be null if this error report is not associated with a window
+  AsyncErrorReporter(JSRuntime* aRuntime,
+                     JSErrorReport* aErrorReport,
+                     const char* aFallbackMessage,
+                     nsIPrincipal* aGlobalPrincipal, // To determine category
+                     nsPIDOMWindow* aWindow);
+
+  NS_IMETHOD Run()
+  {
+    ReportError();
+    return NS_OK;
+  }
+
+protected:
+  // Do the actual error reporting
+  void ReportError();
+
+  nsString mErrorMsg;
+  nsString mFileName;
+  nsString mSourceLine;
+  nsCString mCategory;
+  uint32_t mLineNumber;
+  uint32_t mColumn;
+  uint32_t mFlags;
+  uint64_t mInnerWindowID;
+};
 
 } // namespace dom
 } // namespace mozilla
