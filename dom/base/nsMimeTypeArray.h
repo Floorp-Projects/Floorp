@@ -10,7 +10,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
-#include "nsIWeakReferenceUtils.h"
 #include "nsAutoPtr.h"
 #include "nsPIDOMWindow.h"
 
@@ -21,7 +20,7 @@ class nsMimeTypeArray MOZ_FINAL : public nsISupports,
                                   public nsWrapperCache
 {
 public:
-  nsMimeTypeArray(nsWeakPtr aWindow);
+  nsMimeTypeArray(nsPIDOMWindow* aWindow);
   virtual ~nsMimeTypeArray();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -45,7 +44,7 @@ protected:
   void EnsureMimeTypes();
   void Clear();
 
-  nsWeakPtr mWindow;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
 
   // mMimeTypes contains all mime types handled by plugins followed by
   // any other mime types that we handle internally and have been
@@ -64,9 +63,9 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsMimeType)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsMimeType)
 
-  nsMimeType(nsWeakPtr aWindow, nsPluginElement* aPluginElement,
+  nsMimeType(nsPIDOMWindow* aWindow, nsPluginElement* aPluginElement,
              uint32_t aPluginTagMimeIndex, const nsAString& aMimeType);
-  nsMimeType(nsWeakPtr aWindow, const nsAString& aMimeType);
+  nsMimeType(nsPIDOMWindow* aWindow, const nsAString& aMimeType);
   virtual ~nsMimeType();
 
   nsPIDOMWindow* GetParentObject() const;
@@ -85,7 +84,7 @@ public:
   void GetType(nsString& retval) const;
 
 protected:
-  nsWeakPtr mWindow;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
 
   // Strong reference to the active plugin, if any. Note that this
   // creates an explicit reference cycle through the plugin element's

@@ -1906,14 +1906,15 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   bool usingDisplayPort = false;
   nsRect displayport;
-  if (rootScrollFrame) {
+  if (rootScrollFrame && !aFrame->GetParent()) {
     nsIContent* content = rootScrollFrame->GetContent();
     if (content) {
       usingDisplayPort = nsLayoutUtils::GetDisplayPort(content, &displayport);
     }
   }
 
-  bool ignoreViewportScrolling = presShell->IgnoringViewportScrolling();
+  bool ignoreViewportScrolling =
+    aFrame->GetParent() ? false : presShell->IgnoringViewportScrolling();
   nsRegion visibleRegion;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     // This layer tree will be reused, so we'll need to calculate it
@@ -1975,30 +1976,27 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 #endif
 
-  if (ignoreViewportScrolling && !aFrame->GetParent()) {
-    nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
-    if (rootScrollFrame) {
-      nsIScrollableFrame* rootScrollableFrame =
-        presShell->GetRootScrollFrameAsScrollable();
-      if (aFlags & PAINT_DOCUMENT_RELATIVE) {
-        // Make visibleRegion and aRenderingContext relative to the
-        // scrolled frame instead of the root frame.
-        nsPoint pos = rootScrollableFrame->GetScrollPosition();
-        visibleRegion.MoveBy(-pos);
-        if (aRenderingContext) {
-          aRenderingContext->Translate(pos);
-        }
+  if (ignoreViewportScrolling && rootScrollFrame) {
+    nsIScrollableFrame* rootScrollableFrame =
+      presShell->GetRootScrollFrameAsScrollable();
+    if (aFlags & PAINT_DOCUMENT_RELATIVE) {
+      // Make visibleRegion and aRenderingContext relative to the
+      // scrolled frame instead of the root frame.
+      nsPoint pos = rootScrollableFrame->GetScrollPosition();
+      visibleRegion.MoveBy(-pos);
+      if (aRenderingContext) {
+        aRenderingContext->Translate(pos);
       }
-      builder.SetIgnoreScrollFrame(rootScrollFrame);
+    }
+    builder.SetIgnoreScrollFrame(rootScrollFrame);
 
-      nsCanvasFrame* canvasFrame =
-        do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
-      if (canvasFrame) {
-        // Use UnionRect here to ensure that areas where the scrollbars
-        // were are still filled with the background color.
-        canvasArea.UnionRect(canvasArea,
-          canvasFrame->CanvasArea() + builder.ToReferenceFrame(canvasFrame));
-      }
+    nsCanvasFrame* canvasFrame =
+      do_QueryFrame(rootScrollableFrame->GetScrolledFrame());
+    if (canvasFrame) {
+      // Use UnionRect here to ensure that areas where the scrollbars
+      // were are still filled with the background color.
+      canvasArea.UnionRect(canvasArea,
+        canvasFrame->CanvasArea() + builder.ToReferenceFrame(canvasFrame));
     }
   }
 
