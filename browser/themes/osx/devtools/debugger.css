@@ -20,12 +20,9 @@
 }
 
 .side-menu-widget-item-checkbox {
- -moz-appearance: none;
+  -moz-appearance: none;
+  -moz-margin-end: -6px;
   padding: 0;
-  margin-top: 4px;
-  margin-bottom: -4px;
-  -moz-margin-start: 4px;
-  -moz-margin-end: -4px;
   opacity: 0;
   transition: opacity .15s ease-out 0s;
 }
