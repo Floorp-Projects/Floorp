@@ -854,7 +854,6 @@ protected:
     bool                       mInEnsureScriptEnv;
 #endif
     bool                       mAffectPrivateSessionLifetime;
-    bool                       mTurnOffFavorPerfMode;
     uint64_t                   mHistoryID;
 
     static nsIURIFixup *sURIFixup;
