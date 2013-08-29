@@ -382,8 +382,7 @@ void* MediaDecoderReader::VideoQueueMemoryFunctor::operator()(void* anObject) {
 }
 
 MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
-  : mDecoder(aDecoder),
-    mIgnoreAudioBackendFormat(false)
+  : mDecoder(aDecoder)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
 }
