@@ -880,7 +880,7 @@ struct Coverage
       switch (format) {
       case 1: return u.format1.more ();
       case 2: return u.format2.more ();
-      default:return true;
+      default:return false;
       }
     }
     inline void next (void) {
