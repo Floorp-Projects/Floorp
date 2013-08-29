@@ -22,6 +22,8 @@ class JSScript;
 
 namespace js {
 
+class TypeRepresentation;
+
 class TaggedProto
 {
   public:
@@ -355,8 +357,8 @@ enum {
     /* Objects with this type are functions. */
     OBJECT_FLAG_FUNCTION              = 0x1,
 
-    /* If set, newScript information should not be installed on this object. */
-    OBJECT_FLAG_NEW_SCRIPT_CLEARED    = 0x2,
+    /* If set, addendum information should not be installed on this object. */
+    OBJECT_FLAG_ADDENDUM_CLEARED      = 0x2,
 
     /*
      * If set, type constraints covering the correctness of the newScript
@@ -866,6 +868,42 @@ struct Property
     static jsid getKey(Property *p) { return p->id; }
 };
 
+struct TypeNewScript;
+struct TypeBinaryData;
+
+struct TypeObjectAddendum
+{
+    enum Kind {
+        NewScript,
+        BinaryData
+    };
+
+    TypeObjectAddendum(Kind kind);
+
+    const Kind kind;
+
+    bool isNewScript() {
+        return kind == NewScript;
+    }
+
+    TypeNewScript *asNewScript() {
+        JS_ASSERT(isNewScript());
+        return (TypeNewScript*) this;
+    }
+
+    bool isBinaryData() {
+        return kind == BinaryData;
+    }
+
+    TypeBinaryData *asBinaryData() {
+        JS_ASSERT(isBinaryData());
+        return (TypeBinaryData*) this;
+    }
+
+    static inline void writeBarrierPre(TypeObjectAddendum *newScript);
+    static void writeBarrierPost(TypeObjectAddendum *newScript, void *addr) {}
+};
+
 /*
  * Information attached to a TypeObject if it is always constructed using 'new'
  * on a particular script. This is used to manage state related to the definite
@@ -876,8 +914,10 @@ struct Property
  * remove the definite property information and repair the JS stack if the
  * constraints are violated.
  */
-struct TypeNewScript
+struct TypeNewScript : public TypeObjectAddendum
 {
+    TypeNewScript();
+
     HeapPtrFunction fun;
 
     /* Allocation kind to use for newly constructed objects. */
@@ -912,7 +952,13 @@ struct TypeNewScript
     Initializer *initializerList;
 
     static inline void writeBarrierPre(TypeNewScript *newScript);
-    static void writeBarrierPost(TypeNewScript *newScript, void *addr) {}
+};
+
+struct TypeBinaryData : public TypeObjectAddendum
+{
+    TypeBinaryData(TypeRepresentation *repr);
+
+    TypeRepresentation *const typeRepr;
 };
 
 /*
@@ -970,11 +1016,41 @@ struct TypeObject : gc::Cell
     static inline size_t offsetOfFlags() { return offsetof(TypeObject, flags); }
 
     /*
-     * If non-NULL, objects of this type have always been constructed using
-     * 'new' on the specified script, which adds some number of properties to
-     * the object in a definite order before the object escapes.
+     * This field allows various special classes of objects to attach
+     * additional information to a type object:
+     *
+     * - `TypeNewScript`: If addendum is a `TypeNewScript`, it
+     *   indicates that objects of this type have always been
+     *   constructed using 'new' on the specified script, which adds
+     *   some number of properties to the object in a definite order
+     *   before the object escapes.
      */
-    HeapPtr<TypeNewScript> newScript;
+    HeapPtr<TypeObjectAddendum> addendum;
+
+    bool hasNewScript() {
+        return addendum && addendum->isNewScript();
+    }
+
+    TypeNewScript *newScript() {
+        return addendum->asNewScript();
+    }
+
+    bool hasBinaryData() {
+        return addendum && addendum->isBinaryData();
+    }
+
+    TypeBinaryData *binaryData() {
+        return addendum->asBinaryData();
+    }
+
+    /*
+     * Tag the type object for a binary data type descriptor, instance,
+     * or handle with the type representation of the data it points at.
+     * If this type object is already tagged with a binary data addendum,
+     * this addendum must already be associated with the same TypeRepresentation,
+     * and the method has no effect.
+     */
+    bool addBinaryDataAddendum(JSContext *cx, TypeRepresentation *repr);
 
     /*
      * Properties of this object. This may contain JSID_VOID, representing the
@@ -1068,7 +1144,9 @@ struct TypeObject : gc::Cell
     void markStateChange(ExclusiveContext *cx);
     void setFlags(ExclusiveContext *cx, TypeObjectFlags flags);
     void markUnknown(ExclusiveContext *cx);
-    void clearNewScript(ExclusiveContext *cx);
+    void clearAddendum(ExclusiveContext *cx);
+    void clearNewScriptAddendum(ExclusiveContext *cx);
+    void clearBinaryDataAddendum(ExclusiveContext *cx);
     void getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force = false);
 
     void print();

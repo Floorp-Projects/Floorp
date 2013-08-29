@@ -9,7 +9,6 @@ relativesrcdir = @relativesrcdir@
 VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = dom_indexeddb_ipc_s
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/indexedDB \
   -I$(topsrcdir)/content/events/src \

@@ -19,3 +19,6 @@ CPP_SOURCES += [
 CSRCS += [
     'strcpy.c',
 ]
+
+LIBRARY_NAME = 'dmd'
+

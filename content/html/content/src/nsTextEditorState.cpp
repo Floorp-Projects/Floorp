@@ -50,6 +50,33 @@ static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 static nsINativeKeyBindings *sNativeInputBindings = nullptr;
 static nsINativeKeyBindings *sNativeTextAreaBindings = nullptr;
 
+class MOZ_STACK_CLASS ValueSetter
+{
+public:
+  ValueSetter(nsIEditor* aEditor)
+    : mEditor(aEditor)
+  {
+    MOZ_ASSERT(aEditor);
+  
+    // To protect against a reentrant call to SetValue, we check whether
+    // another SetValue is already happening for this editor.  If it is,
+    // we must wait until we unwind to re-enable oninput events.
+    mEditor->GetSuppressDispatchingInputEvent(&mOuterTransaction);
+  }
+  ~ValueSetter()
+  {
+    mEditor->SetSuppressDispatchingInputEvent(mOuterTransaction);
+  }
+  void Init()
+  {
+    mEditor->SetSuppressDispatchingInputEvent(true);
+  }
+
+private:
+  nsCOMPtr<nsIEditor> mEditor;
+  bool mOuterTransaction;
+};
+
 class RestoreSelectionState : public nsRunnable {
 public:
   RestoreSelectionState(nsTextEditorState *aState, nsTextControlFrame *aFrame)
@@ -1808,7 +1835,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput,
     // this is necessary to avoid infinite recursion
     if (!currentValue.Equals(aValue))
     {
-      nsTextControlFrame::ValueSetter valueSetter(mEditor);
+      ValueSetter valueSetter(mEditor);
 
       // \r is an illegal character in the dom, but people use them,
       // so convert windows and mac platform linebreaks to \n:
@@ -1902,7 +1929,6 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput,
           if (!mBoundFrame) {
             SetValue(newValue, false, aSetValueChanged);
           }
-          valueSetter.Cancel();
           return;
         }
 

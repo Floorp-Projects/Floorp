@@ -44,3 +44,5 @@ if CONFIG['MOZ_XUL']:
 
 LIBXUL_LIBRARY = True
 
+LIBRARY_NAME = 'accessibility_toolkit_msaa_s'
+

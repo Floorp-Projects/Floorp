@@ -8,21 +8,15 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
-#include "nsBlockFrame.h"
-#include "nsIFormControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsITextControlFrame.h"
-#include "nsDisplayList.h"
-#include "nsIScrollableFrame.h"
-#include "nsStubMutationObserver.h"
 #include "nsITextControlElement.h"
 #include "nsIStatefulFrame.h"
-#include "nsIEditor.h"
 
 class nsISelectionController;
-class nsIDOMCharacterData;
 class EditorInitializerEntryTracker;
 class nsTextEditorState;
+class nsIEditor;
 namespace mozilla {
 namespace dom {
 class Element;
@@ -174,40 +168,6 @@ public: //for methods who access nsTextControlFrame directly
   // called by the focus listener
   nsresult MaybeBeginSecureKeyboardInput();
   void MaybeEndSecureKeyboardInput();
-
-  class MOZ_STACK_CLASS ValueSetter {
-  public:
-    ValueSetter(nsIEditor* aEditor)
-      : mEditor(aEditor)
-      , mCanceled(false)
-    {
-      MOZ_ASSERT(aEditor);
-
-      // To protect against a reentrant call to SetValue, we check whether
-      // another SetValue is already happening for this frame.  If it is,
-      // we must wait until we unwind to re-enable oninput events.
-      mEditor->GetSuppressDispatchingInputEvent(&mOuterTransaction);
-    }
-    void Cancel() {
-      mCanceled = true;
-    }
-    void Init() {
-      mEditor->SetSuppressDispatchingInputEvent(true);
-    }
-    ~ValueSetter() {
-      mEditor->SetSuppressDispatchingInputEvent(mOuterTransaction);
-
-      if (mCanceled) {
-        return;
-      }
-    }
-
-  private:
-    nsCOMPtr<nsIEditor> mEditor;
-    bool mOuterTransaction;
-    bool mCanceled;
-  };
-  friend class ValueSetter;
 
 #define DEFINE_TEXTCTRL_FORWARDER(type, name)                                  \
   type name() {                                                                \

@@ -13,7 +13,8 @@
 #include "nsWrapperCache.h"
 #include "nsTArray.h"
 
-#include "MediaManager.h"
+#include "nsIDOMNavigatorUserMedia.h"
+#include "nsITimer.h"
 #include "MediaEngine.h"
 #include "MediaStreamGraph.h"
 #include "AudioSegment.h"

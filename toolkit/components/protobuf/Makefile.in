@@ -17,7 +17,6 @@ VPATH = \
   @srcdir@/google/protobuf/stubs \
   $(NULL)
 
-LIBRARY_NAME = protobuf_s
 FORCE_STATIC_LIB = 1
 
 LOCAL_INCLUDES = \

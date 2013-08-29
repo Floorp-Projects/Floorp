@@ -42,15 +42,15 @@
  #if defined(LINUX_ALSA)
     #include "audio_device_alsa_linux.h"
  #endif
- #if defined(LINUX_PULSE)
-    #include "audio_device_pulse_linux.h"
- #endif
 #elif defined(WEBRTC_IOS)
     #include "audio_device_utility_ios.h"
     #include "audio_device_ios.h"
 #elif defined(WEBRTC_MAC)
     #include "audio_device_utility_mac.h"
     #include "audio_device_mac.h"
+#endif
+#if defined(LINUX_PULSE)
+    #include "audio_device_pulse_linux.h"
 #endif
 #include "audio_device_dummy.h"
 #include "audio_device_utility_dummy.h"

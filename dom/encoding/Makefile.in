@@ -8,7 +8,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= domencoding_s
 LOCAL_INCLUDES = \
 	-I$(topsrcdir)/intl/locale/src \
 	$(NULL)

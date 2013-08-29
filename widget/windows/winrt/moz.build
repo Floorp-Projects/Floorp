@@ -29,3 +29,5 @@ EXTRA_COMPONENTS += [
 
 LIBXUL_LIBRARY = True
 
+LIBRARY_NAME = 'widget_winrt'
+

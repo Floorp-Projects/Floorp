@@ -5,3 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULE = 'nss'
+
+if CONFIG['MOZ_FOLD_LIBS']:
+    # TODO: The library name can be changed when bug 845217 is fixed.
+    LIBRARY_NAME = 'nss3'

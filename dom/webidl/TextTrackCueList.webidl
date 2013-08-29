@@ -10,6 +10,6 @@
 [Pref="media.webvtt.enabled"]
 interface TextTrackCueList {
   readonly attribute unsigned long length;
-  getter TextTrackCue (unsigned long index);
-  TextTrackCue? getCueById(DOMString id);
+  getter VTTCue (unsigned long index);
+  VTTCue? getCueById(DOMString id);
 };
