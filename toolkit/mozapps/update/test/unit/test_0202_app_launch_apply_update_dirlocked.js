@@ -105,6 +105,8 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(end_test);
 
+  logTestInfo("setting up environment for the update test...");
+
   removeUpdateDirsAndFiles();
 
   symlinkUpdateFilesIntoBundleDirectory();
@@ -186,10 +188,12 @@ function run_test() {
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
 
   // Initiate a background update.
+  logTestInfo("update preparation completed - calling processUpdate");
   AUS_Cc["@mozilla.org/updates/update-processor;1"].
     createInstance(AUS_Ci.nsIUpdateProcessor).
     processUpdate(gActiveUpdate);
 
+  logTestInfo("processUpdate completed - calling checkUpdateApplied");
   checkUpdateApplied();
 }
 
@@ -260,6 +264,8 @@ function checkUpdateApplied() {
     do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateApplied);
     return;
   }
+
+  logTestInfo("update state equals " + gUpdateManager.activeUpdate.state);
 
   // Don't proceed until the update status is pending.
   let status = readStatusFile();

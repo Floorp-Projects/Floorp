@@ -1,3 +1,4 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -417,21 +418,6 @@ var gSyncSetup = {
     }
   },
 
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-  _securelyStoreForMetroSync: function(weaveEmail, weavePassword, weaveKey) {
-    try {
-      let metroUtils = Cc["@mozilla.org/windows-metroutils;1"].
-                       createInstance(Ci.nsIWinMetroUtils);
-      if (!metroUtils)
-          return;
-      metroUtils.storeSyncInfo(weaveEmail, weavePassword, weaveKey);
-    } catch (ex) {
-    }
-  },
-#endif
-#endif
-
   onWizardAdvance: function () {
     // Check pageIndex so we don't prompt before the Sync setup wizard appears.
     // This is a fallback in case the Master Password gets locked mid-wizard.
@@ -489,7 +475,7 @@ var gSyncSetup = {
 #ifdef XP_WIN
 #ifdef MOZ_METRO
           if (document.getElementById("metroSetupCheckbox").checked) {
-            this._securelyStoreForMetroSync(email, password, Weave.Service.identity.syncKey);
+            Services.metro.storeSyncInfo(email, password, Weave.Service.identity.syncKey);
           }
 #endif
 #endif
