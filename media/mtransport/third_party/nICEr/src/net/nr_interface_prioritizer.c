@@ -1,5 +1,7 @@
 /*
 Copyright (c) 2007, Adobe Systems, Incorporated
+Copyright (c) 2013, Mozilla
+
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -13,9 +15,10 @@ met:
   notice, this list of conditions and the following disclaimer in the
   documentation and/or other materials provided with the distribution.
 
-* Neither the name of Adobe Systems, Network Resonance nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
+* Neither the name of Adobe Systems, Network Resonance, Mozilla nor
+  the names of its contributors may be used to endorse or promote
+  products derived from this software without specific prior written
+  permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -30,77 +33,56 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "nr_api.h"
+#include "nr_interface_prioritizer.h"
+#include "transport_addr.h"
 
-
-static char *RCSSTRING __UNUSED__="$Id: nr_socket.c,v 1.2 2008/04/28 17:59:02 ekr Exp $";
-
-#include <assert.h>
-#include <nr_api.h>
-#include "nr_socket.h"
-#include "local_addr.h"
-
-int nr_socket_create_int(void *obj, nr_socket_vtbl *vtbl, nr_socket **sockp)
+int nr_interface_prioritizer_create_int(void *obj,
+  nr_interface_prioritizer_vtbl *vtbl,nr_interface_prioritizer **ifpp)
   {
     int _status;
-    nr_socket *sock=0;
+    nr_interface_prioritizer *ifp=0;
 
-    if(!(sock=RCALLOC(sizeof(nr_socket))))
+    if(!(ifp=RCALLOC(sizeof(nr_interface_prioritizer))))
       ABORT(R_NO_MEMORY);
 
-    sock->obj=obj;
-    sock->vtbl=vtbl;
+    ifp->obj = obj;
+    ifp->vtbl = vtbl;
 
-    *sockp=sock;
+    *ifpp = ifp;
 
     _status=0;
   abort:
     return(_status);
   }
 
-int nr_socket_destroy(nr_socket **sockp)
+int nr_interface_prioritizer_destroy(nr_interface_prioritizer **ifpp)
   {
-    nr_socket *sock;
+    nr_interface_prioritizer *ifp;
 
-    if(!sockp || !*sockp)
+    if (!ifpp || !*ifpp)
       return(0);
 
-    sock=*sockp;
-    *sockp=0;
-
-    assert(sock->vtbl);
-    if (sock->vtbl)
-      sock->vtbl->destroy(&sock->obj);
-
-    RFREE(sock);
-
+    ifp = *ifpp;
+    *ifpp = 0;
+    ifp->vtbl->destroy(&ifp->obj);
+    RFREE(ifp);
     return(0);
   }
 
-int nr_socket_sendto(nr_socket *sock,const void *msg, size_t len, int flags,
-  nr_transport_addr *addr)
+int nr_interface_prioritizer_add_interface(nr_interface_prioritizer *ifp,
+  nr_local_addr *addr)
   {
-    return sock->vtbl->ssendto(sock->obj,msg,len,flags,addr);
+    return ifp->vtbl->add_interface(ifp->obj, addr);
   }
 
-
-int nr_socket_recvfrom(nr_socket *sock,void * restrict buf, size_t maxlen,
-  size_t *len, int flags, nr_transport_addr *addr)
+int nr_interface_prioritizer_get_priority(nr_interface_prioritizer *ifp,
+  const char *key, UCHAR *interface_preference)
   {
-    return sock->vtbl->srecvfrom(sock->obj, buf, maxlen, len, flags, addr);
+    return ifp->vtbl->get_priority(ifp->obj,key,interface_preference);
   }
 
-int nr_socket_getfd(nr_socket *sock, NR_SOCKET *fd)
+int nr_interface_prioritizer_sort_preference(nr_interface_prioritizer *ifp)
   {
-    return sock->vtbl->getfd(sock->obj, fd);
+    return ifp->vtbl->sort_preference(ifp->obj);
   }
-
-int nr_socket_getaddr(nr_socket *sock, nr_transport_addr *addrp)
-  {
-    return sock->vtbl->getaddr(sock->obj, addrp);
-  }
-
-int nr_socket_close(nr_socket *sock)
-  {
-    return sock->vtbl->close(sock->obj);
-  }
-

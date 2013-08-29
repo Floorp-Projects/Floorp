@@ -8,6 +8,7 @@
 #ifndef __AccessCheck_h__
 #define __AccessCheck_h__
 
+#include "jsapi.h"
 #include "jswrapper.h"
 
 class nsIPrincipal;
