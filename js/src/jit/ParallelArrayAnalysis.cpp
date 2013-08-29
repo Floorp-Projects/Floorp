@@ -17,7 +17,7 @@
 #include "vm/Stack.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 using parallel::Spew;
 using parallel::SpewMIR;

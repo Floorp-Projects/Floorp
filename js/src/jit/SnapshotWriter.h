@@ -14,7 +14,7 @@
 #include "Bailouts.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // Collects snapshots in a contiguous buffer, which is copied into IonScript
 // memory after code generation.

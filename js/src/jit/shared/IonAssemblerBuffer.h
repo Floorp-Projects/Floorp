@@ -10,7 +10,7 @@
 #include "jit/shared/Assembler-shared.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // This should theoretically reside inside of AssemblerBuffer, but that won't be nice
 // AssemblerBuffer is templated, BufferOffset would be indirectly.

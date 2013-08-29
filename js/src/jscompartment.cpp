@@ -109,10 +109,10 @@ JSCompartment::init(JSContext *cx)
 }
 
 #ifdef JS_ION
-ion::IonRuntime *
+jit::IonRuntime *
 JSRuntime::createIonRuntime(JSContext *cx)
 {
-    ionRuntime_ = cx->new_<ion::IonRuntime>();
+    ionRuntime_ = cx->new_<jit::IonRuntime>();
 
     if (!ionRuntime_)
         return NULL;
@@ -135,7 +135,7 @@ JSRuntime::createIonRuntime(JSContext *cx)
 bool
 JSCompartment::ensureIonCompartmentExists(JSContext *cx)
 {
-    using namespace js::ion;
+    using namespace js::jit;
     if (ionCompartment_)
         return true;
 

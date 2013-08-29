@@ -25,7 +25,7 @@
 
 using namespace js;
 using namespace js::frontend;
-using namespace js::ion;
+using namespace js::jit;
 using namespace mozilla;
 
 /*****************************************************************************/
@@ -4702,7 +4702,7 @@ GenerateAsmJSCode(ModuleCompiler &m, ModuleCompiler::Func &func,
     if (!m.collectAccesses(mirGen))
         return false;
 
-    ion::IonScriptCounts *counts = codegen->extractUnassociatedScriptCounts();
+    jit::IonScriptCounts *counts = codegen->extractUnassociatedScriptCounts();
     if (counts && !m.addFunctionCounts(counts)) {
         js_delete(counts);
         return false;
@@ -5184,7 +5184,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     masm.reserveStack(stackDec);
     //JS_ASSERT(masm.framePushed() % 8 == 0);
     if(getenv("GDB_BREAK")) {
-        masm.breakpoint(js::ion::Assembler::Always);
+        masm.breakpoint(js::jit::Assembler::Always);
     }
     // Copy parameters out of argv into the registers/stack-slots specified by
     // the system ABI.

@@ -19,7 +19,7 @@
 #include "jsscriptinlines.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 enum EnterJitEbpArgumentOffset {
     ARG_JITCODE         = 2 * sizeof(void *),
@@ -174,7 +174,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.passABIArg(framePtr); // BaselineFrame
         masm.passABIArg(OsrFrameReg); // StackFrame
         masm.passABIArg(numStackValues);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::InitBaselineFrameForOsr));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, jit::InitBaselineFrameForOsr));
 
         masm.pop(jitcode);
         masm.pop(framePtr);
@@ -273,7 +273,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
     for (uint32_t i = 0; i < FloatRegisters::Total; i++)
         masm.movsd(FloatRegister::FromCode(i), Operand(esp, i * sizeof(double)));
 
-    masm.movl(esp, eax); // Argument to ion::InvalidationBailout.
+    masm.movl(esp, eax); // Argument to jit::InvalidationBailout.
 
     // Make space for InvalidationBailout's frameSize outparam.
     masm.reserveStack(sizeof(size_t));
@@ -423,7 +423,7 @@ GenerateBailoutThunk(JSContext *cx, MacroAssembler &masm, uint32_t frameClass)
     // Push the bailout table number.
     masm.push(Imm32(frameClass));
 
-    // The current stack pointer is the first argument to ion::Bailout.
+    // The current stack pointer is the first argument to jit::Bailout.
     masm.movl(esp, eax);
 
     // Make space for Bailout's baioutInfo outparam.

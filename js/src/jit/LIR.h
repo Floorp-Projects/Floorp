@@ -24,7 +24,7 @@
 #include "VMFunctions.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class LUse;
 class LGeneralReg;
@@ -1403,7 +1403,7 @@ LAllocation::toRegister() const
     return AnyRegister(toGeneralReg()->reg());
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #define LIR_HEADER(opcode)                                                  \

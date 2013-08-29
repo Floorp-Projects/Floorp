@@ -14,7 +14,7 @@
 #include "shared/Assembler-shared.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 struct SafepointNunboxEntry;
 class LAllocation;
@@ -104,7 +104,7 @@ class SafepointReader
     bool getNunboxSlot(LAllocation *type, LAllocation *payload);
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_Safepoints_h */

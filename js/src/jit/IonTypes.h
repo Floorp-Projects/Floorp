@@ -11,7 +11,7 @@
 #include <jstypes.h>
 
 namespace js {
-namespace ion {
+namespace jit {
 
 typedef uint32_t SnapshotOffset;
 typedef uint32_t BailoutId;
@@ -208,7 +208,7 @@ IsNullOrUndefined(MIRType type)
 #define TRACK_SNAPSHOTS 1
 #endif
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_IonTypes_h */

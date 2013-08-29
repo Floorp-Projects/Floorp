@@ -331,11 +331,11 @@ class AsmJSModule
     typedef Vector<ExportedFunction, 0, SystemAllocPolicy> ExportedFunctionVector;
     typedef Vector<Global, 0, SystemAllocPolicy> GlobalVector;
     typedef Vector<Exit, 0, SystemAllocPolicy> ExitVector;
-    typedef Vector<ion::AsmJSHeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
+    typedef Vector<jit::AsmJSHeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
 #if defined(JS_CPU_ARM)
-    typedef Vector<ion::AsmJSBoundsCheck, 0, SystemAllocPolicy> BoundsCheckVector;
+    typedef Vector<jit::AsmJSBoundsCheck, 0, SystemAllocPolicy> BoundsCheckVector;
 #endif
-    typedef Vector<ion::IonScriptCounts *, 0, SystemAllocPolicy> FunctionCountsVector;
+    typedef Vector<jit::IonScriptCounts *, 0, SystemAllocPolicy> FunctionCountsVector;
 #if defined(MOZ_VTUNE)
     typedef Vector<ProfiledFunction, 0, SystemAllocPolicy> ProfiledFunctionVector;
 #endif
@@ -467,7 +467,7 @@ class AsmJSModule
         *exitIndex = unsigned(exits_.length());
         return exits_.append(Exit(ffiIndex));
     }
-    bool addFunctionCounts(ion::IonScriptCounts *counts) {
+    bool addFunctionCounts(jit::IonScriptCounts *counts) {
         return functionCounts_.append(counts);
     }
 
@@ -528,7 +528,7 @@ class AsmJSModule
     unsigned numFunctionCounts() const {
         return functionCounts_.length();
     }
-    ion::IonScriptCounts *functionCounts(unsigned i) {
+    jit::IonScriptCounts *functionCounts(unsigned i) {
         return functionCounts_[i];
     }
 
@@ -611,29 +611,29 @@ class AsmJSModule
         return pc >= code && pc < (code + functionBytes());
     }
 
-    bool addHeapAccesses(const ion::AsmJSHeapAccessVector &accesses) {
+    bool addHeapAccesses(const jit::AsmJSHeapAccessVector &accesses) {
         return heapAccesses_.append(accesses);
     }
     unsigned numHeapAccesses() const {
         return heapAccesses_.length();
     }
-    ion::AsmJSHeapAccess &heapAccess(unsigned i) {
+    jit::AsmJSHeapAccess &heapAccess(unsigned i) {
         return heapAccesses_[i];
     }
-    const ion::AsmJSHeapAccess &heapAccess(unsigned i) const {
+    const jit::AsmJSHeapAccess &heapAccess(unsigned i) const {
         return heapAccesses_[i];
     }
 #if defined(JS_CPU_ARM)
-    bool addBoundsChecks(const ion::AsmJSBoundsCheckVector &checks) {
+    bool addBoundsChecks(const jit::AsmJSBoundsCheckVector &checks) {
         return boundsChecks_.append(checks);
     }
-    void convertBoundsChecksToActualOffset(ion::MacroAssembler &masm) {
+    void convertBoundsChecksToActualOffset(jit::MacroAssembler &masm) {
         for (unsigned i = 0; i < boundsChecks_.length(); i++)
             boundsChecks_[i].setOffset(masm.actualOffset(boundsChecks_[i].offset()));
     }
 
     void patchBoundsChecks(unsigned heapSize) {
-        ion::AutoFlushCache afc("patchBoundsCheck");
+        jit::AutoFlushCache afc("patchBoundsCheck");
         int bits = -1;
         JS_CEILING_LOG2(bits, heapSize);
         if (bits == -1) {
@@ -642,13 +642,13 @@ class AsmJSModule
         }
 
         for (unsigned i = 0; i < boundsChecks_.length(); i++)
-            ion::Assembler::updateBoundsCheck(bits, (ion::Instruction*)(boundsChecks_[i].offset() + code_));
+            jit::Assembler::updateBoundsCheck(bits, (jit::Instruction*)(boundsChecks_[i].offset() + code_));
 
     }
     unsigned numBoundsChecks() const {
         return boundsChecks_.length();
     }
-    const ion::AsmJSBoundsCheck &boundsCheck(unsigned i) const {
+    const jit::AsmJSBoundsCheck &boundsCheck(unsigned i) const {
         return boundsChecks_[i];
     }
 #endif

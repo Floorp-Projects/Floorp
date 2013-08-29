@@ -12,7 +12,7 @@
 #include "jit/IonMacroAssembler.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // r15 = program-counter
 // r14 = link-register
@@ -52,7 +52,7 @@ static const Register BaselineSecondScratchReg = r6;
 static const FloatRegister FloatReg0      = d0;
 static const FloatRegister FloatReg1      = d2;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

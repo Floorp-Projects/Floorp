@@ -9,7 +9,7 @@
 #include "jsscriptinlines.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 MoveResolver::MoveResolver()
   : hasCycles_(false)

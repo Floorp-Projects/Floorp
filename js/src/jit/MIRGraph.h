@@ -15,7 +15,7 @@
 #include "FixedList.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class MBasicBlock;
 class MIRGraph;
@@ -727,7 +727,7 @@ class MDefinitionIterator
 
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_MIRGraph_h */

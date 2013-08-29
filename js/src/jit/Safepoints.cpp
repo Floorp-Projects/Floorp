@@ -9,7 +9,7 @@
 #include "LIR.h"
 
 using namespace js;
-using namespace ion;
+using namespace jit;
 
 bool
 SafepointWriter::init(uint32_t slotCount)

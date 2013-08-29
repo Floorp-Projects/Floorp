@@ -28,13 +28,13 @@
 #include "vm/StringObject-inl.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // This out-of-line cache is used to do a double dispatch including it-self and
 // the wrapped IonCache.
@@ -3144,7 +3144,7 @@ CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto *lir)
 
 typedef JSObject *(*NewGCThingFn)(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
 static const VMFunction NewGCThingInfo =
-    FunctionInfo<NewGCThingFn>(js::ion::NewGCThing);
+    FunctionInfo<NewGCThingFn>(js::jit::NewGCThing);
 
 bool
 CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
@@ -3501,15 +3501,15 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 
 typedef bool (*StringCompareFn)(JSContext *, HandleString, HandleString, JSBool *);
 static const VMFunction stringsEqualInfo =
-    FunctionInfo<StringCompareFn>(ion::StringsEqual<true>);
+    FunctionInfo<StringCompareFn>(jit::StringsEqual<true>);
 static const VMFunction stringsNotEqualInfo =
-    FunctionInfo<StringCompareFn>(ion::StringsEqual<false>);
+    FunctionInfo<StringCompareFn>(jit::StringsEqual<false>);
 
 typedef ParallelResult (*ParStringCompareFn)(ForkJoinSlice *, HandleString, HandleString, JSBool *);
 static const VMFunction parStringsEqualInfo =
-    FunctionInfo<ParStringCompareFn>(ion::ParStringsEqual);
+    FunctionInfo<ParStringCompareFn>(jit::ParStringsEqual);
 static const VMFunction parStringsNotEqualInfo =
-    FunctionInfo<ParStringCompareFn>(ion::ParStringsUnequal);
+    FunctionInfo<ParStringCompareFn>(jit::ParStringsUnequal);
 
 bool
 CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register right,
@@ -3589,24 +3589,24 @@ CodeGenerator::visitCompareS(LCompareS *lir)
 }
 
 typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, JSBool *);
-static const VMFunction EqInfo = FunctionInfo<CompareFn>(ion::LooselyEqual<true>);
-static const VMFunction NeInfo = FunctionInfo<CompareFn>(ion::LooselyEqual<false>);
-static const VMFunction StrictEqInfo = FunctionInfo<CompareFn>(ion::StrictlyEqual<true>);
-static const VMFunction StrictNeInfo = FunctionInfo<CompareFn>(ion::StrictlyEqual<false>);
-static const VMFunction LtInfo = FunctionInfo<CompareFn>(ion::LessThan);
-static const VMFunction LeInfo = FunctionInfo<CompareFn>(ion::LessThanOrEqual);
-static const VMFunction GtInfo = FunctionInfo<CompareFn>(ion::GreaterThan);
-static const VMFunction GeInfo = FunctionInfo<CompareFn>(ion::GreaterThanOrEqual);
+static const VMFunction EqInfo = FunctionInfo<CompareFn>(jit::LooselyEqual<true>);
+static const VMFunction NeInfo = FunctionInfo<CompareFn>(jit::LooselyEqual<false>);
+static const VMFunction StrictEqInfo = FunctionInfo<CompareFn>(jit::StrictlyEqual<true>);
+static const VMFunction StrictNeInfo = FunctionInfo<CompareFn>(jit::StrictlyEqual<false>);
+static const VMFunction LtInfo = FunctionInfo<CompareFn>(jit::LessThan);
+static const VMFunction LeInfo = FunctionInfo<CompareFn>(jit::LessThanOrEqual);
+static const VMFunction GtInfo = FunctionInfo<CompareFn>(jit::GreaterThan);
+static const VMFunction GeInfo = FunctionInfo<CompareFn>(jit::GreaterThanOrEqual);
 
 typedef ParallelResult (*ParCompareFn)(ForkJoinSlice *, MutableHandleValue, MutableHandleValue, JSBool *);
-static const VMFunction ParLooselyEqInfo = FunctionInfo<ParCompareFn>(ion::ParLooselyEqual);
-static const VMFunction ParStrictlyEqInfo = FunctionInfo<ParCompareFn>(ion::ParStrictlyEqual);
-static const VMFunction ParLooselyNeInfo = FunctionInfo<ParCompareFn>(ion::ParLooselyUnequal);
-static const VMFunction ParStrictlyNeInfo = FunctionInfo<ParCompareFn>(ion::ParStrictlyUnequal);
-static const VMFunction ParLtInfo = FunctionInfo<ParCompareFn>(ion::ParLessThan);
-static const VMFunction ParLeInfo = FunctionInfo<ParCompareFn>(ion::ParLessThanOrEqual);
-static const VMFunction ParGtInfo = FunctionInfo<ParCompareFn>(ion::ParGreaterThan);
-static const VMFunction ParGeInfo = FunctionInfo<ParCompareFn>(ion::ParGreaterThanOrEqual);
+static const VMFunction ParLooselyEqInfo = FunctionInfo<ParCompareFn>(jit::ParLooselyEqual);
+static const VMFunction ParStrictlyEqInfo = FunctionInfo<ParCompareFn>(jit::ParStrictlyEqual);
+static const VMFunction ParLooselyNeInfo = FunctionInfo<ParCompareFn>(jit::ParLooselyUnequal);
+static const VMFunction ParStrictlyNeInfo = FunctionInfo<ParCompareFn>(jit::ParStrictlyUnequal);
+static const VMFunction ParLtInfo = FunctionInfo<ParCompareFn>(jit::ParLessThan);
+static const VMFunction ParLeInfo = FunctionInfo<ParCompareFn>(jit::ParLessThanOrEqual);
+static const VMFunction ParGtInfo = FunctionInfo<ParCompareFn>(jit::ParGreaterThan);
+static const VMFunction ParGeInfo = FunctionInfo<ParCompareFn>(jit::ParGreaterThanOrEqual);
 
 bool
 CodeGenerator::visitCompareVM(LCompareVM *lir)
@@ -4059,7 +4059,7 @@ IonCompartment::generateStringConcatStub(JSContext *cx)
 }
 
 typedef bool (*CharCodeAtFn)(JSContext *, HandleString, int32_t, uint32_t *);
-static const VMFunction CharCodeAtInfo = FunctionInfo<CharCodeAtFn>(ion::CharCodeAt);
+static const VMFunction CharCodeAtInfo = FunctionInfo<CharCodeAtFn>(jit::CharCodeAt);
 
 bool
 CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
@@ -4087,7 +4087,7 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
 }
 
 typedef JSFlatString *(*StringFromCharCodeFn)(JSContext *, int32_t);
-static const VMFunction StringFromCharCodeInfo = FunctionInfo<StringFromCharCodeFn>(ion::StringFromCharCode);
+static const VMFunction StringFromCharCodeInfo = FunctionInfo<StringFromCharCodeFn>(jit::StringFromCharCode);
 
 bool
 CodeGenerator::visitFromCharCode(LFromCharCode *lir)
@@ -4574,8 +4574,8 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
 }
 
 typedef bool (*ArrayPopShiftFn)(JSContext *, HandleObject, MutableHandleValue);
-static const VMFunction ArrayPopDenseInfo = FunctionInfo<ArrayPopShiftFn>(ion::ArrayPopDense);
-static const VMFunction ArrayShiftDenseInfo = FunctionInfo<ArrayPopShiftFn>(ion::ArrayShiftDense);
+static const VMFunction ArrayPopDenseInfo = FunctionInfo<ArrayPopShiftFn>(jit::ArrayPopDense);
+static const VMFunction ArrayShiftDenseInfo = FunctionInfo<ArrayPopShiftFn>(jit::ArrayShiftDense);
 
 bool
 CodeGenerator::emitArrayPopShift(LInstruction *lir, const MArrayPopShift *mir, Register obj,
@@ -4683,7 +4683,7 @@ CodeGenerator::visitArrayPopShiftT(LArrayPopShiftT *lir)
 
 typedef bool (*ArrayPushDenseFn)(JSContext *, HandleObject, HandleValue, uint32_t *);
 static const VMFunction ArrayPushDenseInfo =
-    FunctionInfo<ArrayPushDenseFn>(ion::ArrayPushDense);
+    FunctionInfo<ArrayPushDenseFn>(jit::ArrayPushDense);
 
 bool
 CodeGenerator::emitArrayPush(LInstruction *lir, const MArrayPush *mir, Register obj,
@@ -4938,7 +4938,7 @@ CodeGenerator::visitIteratorNext(LIteratorNext *lir)
 }
 
 typedef bool (*IteratorMoreFn)(JSContext *, HandleObject, JSBool *);
-static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(ion::IteratorMore);
+static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(jit::IteratorMore);
 
 bool
 CodeGenerator::visitIteratorMore(LIteratorMore *lir)
@@ -5228,7 +5228,7 @@ CodeGenerator::link()
                            : FrameSizeClass::FromDepth(frameDepth_).frameSize();
 
     // Check to make sure we didn't have a mid-build invalidation. If so, we
-    // will trickle to ion::Compile() and return Method_Skipped.
+    // will trickle to jit::Compile() and return Method_Skipped.
     if (cx->compartment()->types.compiledInfo.compilerOutput(cx)->isInvalidated())
         return true;
 
@@ -6971,5 +6971,5 @@ CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
     return true;
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js

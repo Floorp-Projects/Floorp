@@ -17,10 +17,10 @@
 #include "jit/ParallelFunctions.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 namespace js {
-namespace ion {
+namespace jit {
 
 CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
   : CodeGeneratorShared(gen, graph, masm),
@@ -1436,5 +1436,5 @@ CodeGeneratorX86Shared::visitNegD(LNegD *ins)
 }
 
 
-} // namespace ion
+} // namespace jit
 } // namespace js

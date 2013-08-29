@@ -12,7 +12,7 @@
 #include "jsscriptinlines.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 MIRGenerator::MIRGenerator(JSCompartment *compartment,
                            TempAllocator *temp, MIRGraph *graph, CompileInfo *info)

@@ -11,7 +11,7 @@
 //#include "jit/arm/Assembler-arm.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class IonFramePrefix;
 // Layout of the frame prefix. This assumes the stack architecture grows down.
@@ -537,7 +537,7 @@ class InvalidationBailoutStack
     void checkInvariants() const;
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_arm_IonFrames_arm_h */

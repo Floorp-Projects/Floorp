@@ -15,7 +15,7 @@
 #include "jit/Ion.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 template <class Op>
 inline void
@@ -235,7 +235,7 @@ IonFrameIterator::baselineFrame() const
     return (BaselineFrame *)(fp() - BaselineFrame::FramePointerOffset - BaselineFrame::Size());
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

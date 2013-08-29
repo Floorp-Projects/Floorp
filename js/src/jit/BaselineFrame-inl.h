@@ -16,7 +16,7 @@
 #include "vm/ScopeObject-inl.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 inline void
 BaselineFrame::pushOnScopeChain(ScopeObject &scope)
@@ -77,7 +77,7 @@ BaselineFrame::callObj() const
     return obj->as<CallObject>();
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

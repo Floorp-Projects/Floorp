@@ -25,7 +25,7 @@
 #endif
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class LIRGenerator : public LIRGeneratorSpecific
 {
@@ -246,7 +246,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitGetDOMProperty(MGetDOMProperty *ins);
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_Lowering_h */

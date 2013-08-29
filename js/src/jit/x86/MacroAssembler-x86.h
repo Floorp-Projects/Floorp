@@ -14,7 +14,7 @@
 #include "jscompartment.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class MacroAssemblerX86 : public MacroAssemblerX86Shared
 {
@@ -978,7 +978,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
 typedef MacroAssemblerX86 MacroAssemblerSpecific;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_x86_MacroAssembler_x86_h */

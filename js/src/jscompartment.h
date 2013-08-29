@@ -20,7 +20,7 @@
 
 namespace js {
 
-namespace ion {
+namespace jit {
 class IonCompartment;
 }
 
@@ -372,11 +372,11 @@ struct JSCompartment
 
 #ifdef JS_ION
   private:
-    js::ion::IonCompartment *ionCompartment_;
+    js::jit::IonCompartment *ionCompartment_;
 
   public:
     bool ensureIonCompartmentExists(JSContext *cx);
-    js::ion::IonCompartment *ionCompartment() {
+    js::jit::IonCompartment *ionCompartment() {
         return ionCompartment_;
     }
 #endif

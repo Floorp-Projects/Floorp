@@ -10,7 +10,7 @@
 #ifdef JS_ION
 
 namespace js {
-namespace ion {
+namespace jit {
 
 static inline bool
 HasIonScript(JSScript *script, ExecutionMode cmode)
@@ -104,7 +104,7 @@ CompilerOutputKind(ExecutionMode cmode)
     return types::CompilerOutput::Ion;
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif  // JS_ION
