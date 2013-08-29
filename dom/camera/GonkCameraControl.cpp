@@ -148,6 +148,7 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThr
 {
   MOZ_ASSERT(aWindow, "shouldn't be created with null window!");
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+  SetIsDOMBinding();
 
   /**
    * nsDOMCameraControl is a cycle-collection participant, which means it is

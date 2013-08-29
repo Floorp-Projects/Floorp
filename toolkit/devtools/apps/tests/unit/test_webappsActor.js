@@ -158,24 +158,14 @@ add_test(function testUninstall() {
     manifestURL: manifestURL
   };
 
-  let gotFirstUninstallEvent = false;
-  Services.obs.addObserver(function observer(subject, topic, data) {
-    Services.obs.removeObserver(observer, topic);
-    let json = JSON.parse(data);
-    do_check_eq(json.manifestURL, manifestURL);
-    do_check_eq(json.origin, origin);
-    gotFirstUninstallEvent = true;
-  }, "webapps-uninstall", false);
-
   Services.obs.addObserver(function observer(subject, topic, data) {
     Services.obs.removeObserver(observer, topic);
     let json = JSON.parse(data);
     do_check_eq(json.manifestURL, manifestURL);
     do_check_eq(json.origin, origin);
     do_check_eq(json.id, gAppId);
-    do_check_true(gotFirstUninstallEvent);
     run_next_test();
-  }, "webapps-sync-uninstall", false);
+  }, "webapps-uninstall", false);
 
   webappActorRequest(request, function (aResponse) {
     do_check_false("error" in aResponse);
