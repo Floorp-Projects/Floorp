@@ -1458,6 +1458,11 @@ this.PushService = {
   _getNetworkState: function() {
     debug("getNetworkState()");
     try {
+      if (!prefs.get("udp.wakeupEnabled")) {
+        debug("UDP support disabled, we do not send any carrier info");
+        throw "UDP disabled";
+      }
+
       var nm = Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
       if (nm.active && nm.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
         var mcp = Cc["@mozilla.org/ril/content-helper;1"].getService(Ci.nsIMobileConnectionProvider);
