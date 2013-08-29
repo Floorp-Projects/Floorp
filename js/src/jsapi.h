@@ -3569,12 +3569,12 @@ CanCompileOffThread(JSContext *cx, const CompileOptions &options);
  * Off thread compilation control flow.
  *
  * After successfully triggering an off thread compile of a script, the
- * callback will eventually be invoked with the specified data and the result
- * script or NULL. The callback will be invoked while off the main thread, so
- * must ensure that its operations are thread safe. Afterwards,
- * FinishOffThreadScript must be invoked on the main thread to make the script
- * usable (correct compartment/zone); this method must be invoked even if the
- * off thread compilation produced a NULL script.
+ * callback will eventually be invoked with the specified data and a token
+ * for the compilation. The callback will be invoked while off the main thread,
+ * so must ensure that its operations are thread safe. Afterwards,
+ * FinishOffThreadScript must be invoked on the main thread to get the result
+ * script or NULL. If maybecx is specified, this method will also report any
+ * error or warnings generated during the parse.
  *
  * The characters passed in to CompileOffThread must remain live until the
  * callback is invoked, and the resulting script will be rooted until the call
@@ -3586,8 +3586,8 @@ CompileOffThread(JSContext *cx, Handle<JSObject*> obj, CompileOptions options,
                  const jschar *chars, size_t length,
                  OffThreadCompileCallback callback, void *callbackData);
 
-extern JS_PUBLIC_API(void)
-FinishOffThreadScript(JSRuntime *rt, JSScript *script);
+extern JS_PUBLIC_API(JSScript *)
+FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token);
 
 extern JS_PUBLIC_API(JSFunction *)
 CompileFunction(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options,

@@ -1881,31 +1881,67 @@ ContentParent::DeallocPBlobParent(PBlobParent* aActor)
 BlobParent*
 ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(aBlob, "Null pointer!");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aBlob);
+
+  // If the blob represents a remote blob for this ContentParent then we can
+  // simply pass its actor back here.
+  if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob)) {
+    BlobParent* actor =
+      static_cast<BlobParent*>(
+        static_cast<PBlobParent*>(remoteBlob->GetPBlob()));
+    MOZ_ASSERT(actor);
+
+    if (static_cast<ContentParent*>(actor->Manager()) == this) {
+      return actor;
+    }
+  }
 
   // XXX This is only safe so long as all blob implementations in our tree
   //     inherit nsDOMFileBase. If that ever changes then this will need to grow
   //     a real interface or something.
   const nsDOMFileBase* blob = static_cast<nsDOMFileBase*>(aBlob);
 
+  // We often pass blobs that are multipart but that only contain one sub-blob
+  // (WebActivities does this a bunch). Unwrap to reduce the number of actors
+  // that we have to maintain.
+  const nsTArray<nsCOMPtr<nsIDOMBlob> >* subBlobs = blob->GetSubBlobs();
+  if (subBlobs && subBlobs->Length() == 1) {
+    const nsCOMPtr<nsIDOMBlob>& subBlob = subBlobs->ElementAt(0);
+    MOZ_ASSERT(subBlob);
+
+    // We can only take this shortcut if the multipart and the sub-blob are both
+    // Blob objects or both File objects.
+    nsCOMPtr<nsIDOMFile> multipartBlobAsFile = do_QueryInterface(aBlob);
+    nsCOMPtr<nsIDOMFile> subBlobAsFile = do_QueryInterface(subBlob);
+    if (!multipartBlobAsFile == !subBlobAsFile) {
+      // The wrapping might have been unnecessary, see if we can simply pass an
+      // existing remote blob for this ContentParent.
+      if (nsCOMPtr<nsIRemoteBlob> remoteSubBlob = do_QueryInterface(subBlob)) {
+        BlobParent* actor =
+          static_cast<BlobParent*>(
+            static_cast<PBlobParent*>(remoteSubBlob->GetPBlob()));
+        MOZ_ASSERT(actor);
+
+        if (static_cast<ContentParent*>(actor->Manager()) == this) {
+          return actor;
+        }
+      }
+
+      // No need to add a reference here since the original blob must have a
+      // strong reference in the caller and it must also have a strong reference
+      // to this sub-blob.
+      aBlob = subBlob;
+      blob = static_cast<nsDOMFileBase*>(aBlob);
+      subBlobs = blob->GetSubBlobs();
+    }
+  }
+
   // All blobs shared between processes must be immutable.
   nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(aBlob);
   if (!mutableBlob || NS_FAILED(mutableBlob->SetMutable(false))) {
     NS_WARNING("Failed to make blob immutable!");
     return nullptr;
-  }
-
-  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob);
-  if (remoteBlob) {
-    BlobParent* actor =
-      static_cast<BlobParent*>(
-        static_cast<PBlobParent*>(remoteBlob->GetPBlob()));
-    NS_ASSERTION(actor, "Null actor?!");
-
-    if (static_cast<ContentParent*>(actor->Manager()) == this) {
-      return actor;
-    }
   }
 
   ChildBlobConstructorParams params;
@@ -1946,16 +1982,12 @@ ContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
       blobParams.length() = length;
       params = blobParams;
     }
-      }
+  }
 
   BlobParent* actor = BlobParent::Create(this, aBlob);
   NS_ENSURE_TRUE(actor, nullptr);
 
-  if (!SendPBlobConstructor(actor, params)) {
-    return nullptr;
-  }
-
-  return actor;
+  return SendPBlobConstructor(actor, params) ? actor : nullptr;
 }
 
 void

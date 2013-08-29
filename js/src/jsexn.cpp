@@ -857,15 +857,22 @@ js_InitExceptionClasses(JSContext *cx, HandleObject obj)
 }
 
 const JSErrorFormatString*
-js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
+js_GetLocalizedErrorMessage(ExclusiveContext *cx, void *userRef, const char *locale,
                             const unsigned errorNumber)
 {
     const JSErrorFormatString *errorString = NULL;
 
-    if (cx->runtime()->localeCallbacks && cx->runtime()->localeCallbacks->localeGetErrorMessage) {
-        errorString = cx->runtime()->localeCallbacks
-                                   ->localeGetErrorMessage(userRef, locale, errorNumber);
+    // The locale callbacks might not be thread safe, so don't call them if
+    // we're not on the main thread. When used with XPConnect,
+    // |localeGetErrorMessage| will be NULL anyways.
+    if (cx->isJSContext() &&
+        cx->asJSContext()->runtime()->localeCallbacks &&
+        cx->asJSContext()->runtime()->localeCallbacks->localeGetErrorMessage)
+    {
+        JSLocaleCallbacks *callbacks = cx->asJSContext()->runtime()->localeCallbacks;
+        errorString = callbacks->localeGetErrorMessage(userRef, locale, errorNumber);
     }
+
     if (!errorString)
         errorString = js_GetErrorMessage(userRef, locale, errorNumber);
     return errorString;

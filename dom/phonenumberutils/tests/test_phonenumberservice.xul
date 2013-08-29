@@ -23,7 +23,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Services.prefs.setIntPref("dom.phonenumber.substringmatching.BR", 8);
-Services.prefs.setCharPref("ril.lastKnownSimMcc", "310");
+Services.prefs.setCharPref("ril.lastKnownSimMcc", "724");
 
 var pm = SpecialPowers.Cc["@mozilla.org/permissionmanager;1"]
                       .getService(SpecialPowers.Ci.nsIPermissionManager);

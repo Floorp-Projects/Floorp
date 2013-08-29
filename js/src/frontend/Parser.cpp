@@ -70,13 +70,10 @@ typedef Handle<StaticBlockObject*> HandleStaticBlockObject;
 
 template <typename ParseHandler>
 bool
-GenerateBlockId(ParseContext<ParseHandler> *pc, uint32_t &blockid)
+GenerateBlockId(TokenStream &ts, ParseContext<ParseHandler> *pc, uint32_t &blockid)
 {
     if (pc->blockidGen == JS_BIT(20)) {
-        if (!pc->sc->context->isJSContext())
-            return false;
-        JS_ReportErrorNumber(pc->sc->context->asJSContext(),
-                             js_GetErrorMessage, NULL, JSMSG_NEED_DIET, "program");
+        ts.reportError(JSMSG_NEED_DIET, "program");
         return false;
     }
     JS_ASSERT(pc->blockidGen < JS_BIT(20));
@@ -85,10 +82,10 @@ GenerateBlockId(ParseContext<ParseHandler> *pc, uint32_t &blockid)
 }
 
 template bool
-GenerateBlockId(ParseContext<SyntaxParseHandler> *pc, uint32_t &blockid);
+GenerateBlockId(TokenStream &ts, ParseContext<SyntaxParseHandler> *pc, uint32_t &blockid);
 
 template bool
-GenerateBlockId(ParseContext<FullParseHandler> *pc, uint32_t &blockid);
+GenerateBlockId(TokenStream &ts, ParseContext<FullParseHandler> *pc, uint32_t &blockid);
 
 template <typename ParseHandler>
 static void
@@ -625,7 +622,7 @@ Parser<ParseHandler>::parse(JSObject *chain)
     ParseContext<ParseHandler> globalpc(this, /* parent = */ NULL, ParseHandler::null(),
                                         &globalsc, /* newDirectives = */ NULL,
                                         /* staticLevel = */ 0, /* bodyid = */ 0);
-    if (!globalpc.init())
+    if (!globalpc.init(tokenStream))
         return null();
 
     Node pn = statements();
@@ -887,7 +884,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
 
     ParseContext<FullParseHandler> funpc(this, pc, fn, funbox, newDirectives,
                                          /* staticLevel = */ 0, /* bodyid = */ 0);
-    if (!funpc.init())
+    if (!funpc.init(tokenStream))
         return null();
 
     for (unsigned i = 0; i < formals.length(); i++) {
@@ -2143,7 +2140,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
             ParseContext<SyntaxParseHandler> funpc(parser, outerpc, SyntaxParseHandler::null(), funbox,
                                                    newDirectives, outerpc->staticLevel + 1,
                                                    outerpc->blockidGen);
-            if (!funpc.init())
+            if (!funpc.init(tokenStream))
                 return false;
 
             if (!parser->functionArgsAndBodyGeneric(SyntaxParseHandler::NodeGeneric,
@@ -2175,7 +2172,7 @@ Parser<FullParseHandler>::functionArgsAndBody(ParseNode *pn, HandleFunction fun,
     // Continue doing a full parse for this inner function.
     ParseContext<FullParseHandler> funpc(this, pc, pn, funbox, newDirectives,
                                          outerpc->staticLevel + 1, outerpc->blockidGen);
-    if (!funpc.init())
+    if (!funpc.init(tokenStream))
         return false;
 
     if (!functionArgsAndBodyGeneric(pn, fun, type, kind, newDirectives))
@@ -2214,7 +2211,7 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(Node pn, HandleFunction fun,
     // Initialize early for possible flags mutation via destructuringExpr.
     ParseContext<SyntaxParseHandler> funpc(this, pc, handler.null(), funbox, newDirectives,
                                            outerpc->staticLevel + 1, outerpc->blockidGen);
-    if (!funpc.init())
+    if (!funpc.init(tokenStream))
         return false;
 
     if (!functionArgsAndBodyGeneric(pn, fun, type, kind, newDirectives))
@@ -2249,7 +2246,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
     Directives newDirectives = directives;
     ParseContext<FullParseHandler> funpc(this, /* parent = */ NULL, pn, funbox,
                                          &newDirectives, staticLevel, /* bodyid = */ 0);
-    if (!funpc.init())
+    if (!funpc.init(tokenStream))
         return null();
 
     if (!functionArgsAndBodyGeneric(pn, fun, Normal, Statement, &newDirectives)) {
@@ -2378,7 +2375,7 @@ Parser<FullParseHandler>::moduleDecl()
     ParseContext<FullParseHandler> modulepc(this, pc, /* function = */ NULL, modulebox,
                                             /* newDirectives = */ NULL, pc->staticLevel + 1,
                                             pc->blockidGen);
-    if (!modulepc.init())
+    if (!modulepc.init(tokenStream))
         return NULL;
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_MODULE);
     pn->pn_body = statements();
@@ -3263,7 +3260,7 @@ Parser<ParseHandler>::pushLexicalScope(HandleStaticBlockObject blockObj, StmtInf
     if (!pn)
         return null();
 
-    if (!GenerateBlockId(pc, stmt->blockid))
+    if (!GenerateBlockId(tokenStream, pc, stmt->blockid))
         return null();
     handler.setBlockId(pn, stmt->blockid);
     return pn;
@@ -3414,10 +3411,11 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
 
 template <typename ParseHandler>
 static bool
-PushBlocklikeStatement(StmtInfoPC *stmt, StmtType type, ParseContext<ParseHandler> *pc)
+PushBlocklikeStatement(TokenStream &ts, StmtInfoPC *stmt, StmtType type,
+                       ParseContext<ParseHandler> *pc)
 {
     PushStatementPC(pc, stmt, type);
-    return GenerateBlockId(pc, stmt->blockid);
+    return GenerateBlockId(ts, pc, stmt->blockid);
 }
 
 template <typename ParseHandler>
@@ -3427,7 +3425,7 @@ Parser<ParseHandler>::blockStatement()
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_LC));
 
     StmtInfoPC stmtInfo(context);
-    if (!PushBlocklikeStatement(&stmtInfo, STMT_BLOCK, pc))
+    if (!PushBlocklikeStatement(tokenStream, &stmtInfo, STMT_BLOCK, pc))
         return null();
 
     Node list = statements();
@@ -4343,7 +4341,7 @@ Parser<ParseHandler>::switchStatement()
     StmtInfoPC stmtInfo(context);
     PushStatementPC(pc, &stmtInfo, STMT_SWITCH);
 
-    if (!GenerateBlockId(pc, pc->topStmt->blockid))
+    if (!GenerateBlockId(tokenStream, pc, pc->topStmt->blockid))
         return null();
 
     Node caseList = handler.newStatementList(pc->blockid(), pos());
@@ -4802,7 +4800,7 @@ Parser<ParseHandler>::tryStatement()
 
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_TRY);
     StmtInfoPC stmtInfo(context);
-    if (!PushBlocklikeStatement(&stmtInfo, STMT_TRY, pc))
+    if (!PushBlocklikeStatement(tokenStream, &stmtInfo, STMT_TRY, pc))
         return null();
     Node innerBlock = statements();
     if (!innerBlock)
@@ -4925,7 +4923,7 @@ Parser<ParseHandler>::tryStatement()
 
     if (tt == TOK_FINALLY) {
         MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_FINALLY);
-        if (!PushBlocklikeStatement(&stmtInfo, STMT_FINALLY, pc))
+        if (!PushBlocklikeStatement(tokenStream, &stmtInfo, STMT_FINALLY, pc))
             return null();
         finallyBlock = statements();
         if (!finallyBlock)
@@ -6126,7 +6124,7 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         ParseContext<FullParseHandler> genpc(this, outerpc, genfn, genFunbox,
                                              /* newDirectives = */ NULL, outerpc->staticLevel + 1,
                                              outerpc->blockidGen);
-        if (!genpc.init())
+        if (!genpc.init(tokenStream))
             return null();
 
         /*

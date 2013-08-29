@@ -26,7 +26,7 @@ StringBuffer::extractWellSized()
     JS_ASSERT(capacity >= length);
     if (length > CharBuffer::sMaxInlineStorage && capacity - length > length / 4) {
         size_t bytes = sizeof(jschar) * (length + 1);
-        JSContext *cx = context();
+        ExclusiveContext *cx = context();
         jschar *tmp = (jschar *)cx->realloc_(buf, bytes);
         if (!tmp) {
             js_free(buf);
@@ -41,7 +41,7 @@ StringBuffer::extractWellSized()
 JSFlatString *
 StringBuffer::finishString()
 {
-    JSContext *cx = context();
+    ExclusiveContext *cx = context();
     if (cb.empty())
         return cx->names().empty;
 
@@ -69,7 +69,7 @@ StringBuffer::finishString()
 JSAtom *
 StringBuffer::finishAtom()
 {
-    JSContext *cx = context();
+    ExclusiveContext *cx = context();
 
     size_t length = cb.length();
     if (length == 0)
