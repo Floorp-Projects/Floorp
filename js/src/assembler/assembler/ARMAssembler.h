@@ -44,7 +44,7 @@
 // TODO: We don't print the condition code in our spew lines. Doing this
 // is awkward whilst maintaining a consistent field width.
 namespace js {
-    namespace ion {
+    namespace jit {
         class Assembler;
     }
 }
@@ -260,7 +260,7 @@ namespace JSC {
 
         class JmpSrc {
             friend class ARMAssembler;
-            friend class js::ion::Assembler;
+            friend class js::jit::Assembler;
         public:
             JmpSrc()
                 : m_offset(-1)
@@ -283,7 +283,7 @@ namespace JSC {
 
         class JmpDst {
             friend class ARMAssembler;
-            friend class js::ion::Assembler;
+            friend class js::jit::Assembler;
         public:
             JmpDst()
                 : m_offset(-1)

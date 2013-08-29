@@ -12,7 +12,7 @@
 #include "IonAllocPolicy.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class MoveResolver
 {
@@ -210,7 +210,7 @@ class MoveResolver
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_MoveResolver_h */

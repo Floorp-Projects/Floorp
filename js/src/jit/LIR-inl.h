@@ -8,7 +8,7 @@
 #define jit_LIR_inl_h
 
 namespace js {
-namespace ion {
+namespace jit {
 
 #define LIROP(name)                                                         \
     L##name *LInstruction::to##name()                                       \
@@ -77,7 +77,7 @@ BaseOfNunboxSlot(LDefinition::Type type, unsigned slot)
 }
 #endif
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_LIR_inl_h */

@@ -11,7 +11,7 @@
 #include "jit/IonAllocPolicy.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 struct AnyRegister {
     typedef uint32_t Code;
@@ -757,9 +757,9 @@ class AsmJSHeapAccess
     uint8_t cmpDelta_;
 #endif
     uint8_t isFloat32Load_;
-    ion::AnyRegister::Code loadedReg_ : 8;
+    jit::AnyRegister::Code loadedReg_ : 8;
 
-    JS_STATIC_ASSERT(ion::AnyRegister::Total < UINT8_MAX);
+    JS_STATIC_ASSERT(jit::AnyRegister::Total < UINT8_MAX);
 
   public:
 #if defined(JS_CPU_X86)
@@ -798,7 +798,7 @@ class AsmJSHeapAccess
     unsigned opLength() const { return opLength_; }
     bool isLoad() const { return loadedReg_ != UINT8_MAX; }
     bool isFloat32Load() const { return isFloat32Load_; }
-    ion::AnyRegister loadedReg() const { return ion::AnyRegister::FromCode(loadedReg_); }
+    jit::AnyRegister loadedReg() const { return jit::AnyRegister::FromCode(loadedReg_); }
 
 #if defined(JS_CPU_X86)
     void *patchLengthAt(uint8_t *code) const { return code + (offset_ - cmpDelta_); }
@@ -823,7 +823,7 @@ struct AsmJSBoundsCheck
 typedef Vector<AsmJSBoundsCheck, 0, IonAllocPolicy> AsmJSBoundsCheckVector;
 #endif
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_RegisterSets_h */

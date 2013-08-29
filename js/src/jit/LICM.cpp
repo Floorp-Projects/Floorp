@@ -14,7 +14,7 @@
 #include "MIRGraph.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 LICM::LICM(MIRGenerator *mir, MIRGraph &graph)
   : mir(mir), graph(graph)

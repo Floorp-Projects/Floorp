@@ -13,7 +13,7 @@
 #include "jsnum.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 struct ImmShiftedTag : public ImmWord
 {
@@ -1112,7 +1112,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
 typedef MacroAssemblerX64 MacroAssemblerSpecific;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_x64_MacroAssembler_x64_h */

@@ -19,7 +19,7 @@
 #include "ds/LifoAlloc.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class StackValue;
 struct ICEntry;
@@ -332,7 +332,7 @@ BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIterato
 void
 MarkActiveBaselineScripts(Zone *zone);
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

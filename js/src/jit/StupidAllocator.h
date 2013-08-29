@@ -12,7 +12,7 @@
 // Simple register allocator that only carries registers within basic blocks.
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class StupidAllocator : public RegisterAllocator
 {
@@ -77,7 +77,7 @@ class StupidAllocator : public RegisterAllocator
     RegisterIndex findExistingRegister(uint32_t vreg);
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_StupidAllocator_h */

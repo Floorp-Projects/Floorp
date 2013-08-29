@@ -11,7 +11,7 @@
 #include "Lowering-shared-inl.h"
 
 using namespace js;
-using namespace ion;
+using namespace jit;
 
 bool
 LIRGeneratorShared::visitConstant(MConstant *ins)

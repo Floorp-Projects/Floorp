@@ -10,7 +10,7 @@
 #include "PcScriptCache.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // Get a value from the cache. May perform lazy allocation.
 bool
@@ -33,7 +33,7 @@ PcScriptCache::get(JSRuntime *rt, uint32_t hash, uint8_t *addr,
     return true;
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_PcScriptCache_inl_h */

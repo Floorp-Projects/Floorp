@@ -14,7 +14,7 @@
 #include "IonSpewer.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 // Iterates over the flags in an AliasSet.
 class AliasSetIterator

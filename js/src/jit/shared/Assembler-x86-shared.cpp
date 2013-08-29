@@ -10,7 +10,7 @@
 #include "jsscriptinlines.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 void
 AssemblerX86Shared::copyJumpRelocationTable(uint8_t *dest)

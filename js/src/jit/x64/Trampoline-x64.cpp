@@ -18,7 +18,7 @@
 #include "jsscriptinlines.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 /* This method generates a trampoline on x64 for a c++ function with
  * the following signature:
@@ -191,7 +191,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.passABIArg(framePtr); // BaselineFrame
         masm.passABIArg(OsrFrameReg); // StackFrame
         masm.passABIArg(numStackValues);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::InitBaselineFrameForOsr));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, jit::InitBaselineFrameForOsr));
 
         masm.pop(reg_code);
         masm.pop(framePtr);
@@ -292,7 +292,7 @@ IonRuntime::generateInvalidator(JSContext *cx)
     for (uint32_t i = 0; i < FloatRegisters::Total; i++)
         masm.movsd(FloatRegister::FromCode(i), Operand(rsp, i * sizeof(double)));
 
-    masm.movq(rsp, rax); // Argument to ion::InvalidationBailout.
+    masm.movq(rsp, rax); // Argument to jit::InvalidationBailout.
 
     // Make space for InvalidationBailout's frameSize outparam.
     masm.reserveStack(sizeof(size_t));

@@ -22,7 +22,7 @@ class JSFunction;
 class JSScript;
 
 namespace js {
-namespace ion {
+namespace jit {
 
 typedef void * CalleeToken;
 
@@ -102,7 +102,7 @@ ScriptFromCalleeToken(CalleeToken token)
 // dependent.
 //
 // Two special frame types exist. Entry frames begin an ion activation, and
-// therefore there is exactly one per activation of ion::Cannon. Exit frames
+// therefore there is exactly one per activation of jit::Cannon. Exit frames
 // are necessary to leave JIT code and enter C++, and thus, C++ code will
 // always begin iterating from the topmost exit frame.
 
@@ -285,7 +285,7 @@ MakeFrameDescriptor(uint32_t frameSize, FrameType type)
     return (frameSize << FRAMESIZE_SHIFT) | type;
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #if defined(JS_CPU_X86) || defined (JS_CPU_X64)
@@ -297,7 +297,7 @@ MakeFrameDescriptor(uint32_t frameSize, FrameType type)
 #endif
 
 namespace js {
-namespace ion {
+namespace jit {
 
 JSScript *
 GetTopIonJSScript(JSContext *cx,
@@ -333,7 +333,7 @@ ReadFrameDoubleSlot(IonJSFrameLayout *fp, int32_t slot)
 CalleeToken
 MarkCalleeToken(JSTracer *trc, CalleeToken token);
 
-} /* namespace ion */
+} /* namespace jit */
 } /* namespace js */
 
 #endif // JS_ION

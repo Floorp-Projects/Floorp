@@ -13,7 +13,7 @@
 #include "assembler/assembler/MacroAssembler.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 using namespace mozilla;
 
 #if defined(XP_WIN)

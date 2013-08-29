@@ -19,7 +19,7 @@
 // Generic structures and functions for use by register allocators.
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // Structure for running a liveness analysis on a finished register allocation.
 // This analysis can be used for two purposes:
@@ -356,7 +356,7 @@ class RegisterAllocator
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_RegisterAllocator_h */

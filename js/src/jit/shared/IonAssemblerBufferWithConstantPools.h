@@ -10,7 +10,7 @@
 #include "assembler/wtf/SegmentedVector.h"
 #include "jit/IonSpewer.h"
 namespace js {
-namespace ion {
+namespace jit {
 typedef Vector<BufferOffset, 512, IonAllocPolicy> LoadOffsets;
 
 struct Pool
