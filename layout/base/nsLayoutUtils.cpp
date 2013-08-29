@@ -1906,14 +1906,15 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   bool usingDisplayPort = false;
   nsRect displayport;
-  if (rootScrollFrame) {
+  if (rootScrollFrame && !aFrame->GetParent()) {
     nsIContent* content = rootScrollFrame->GetContent();
     if (content) {
       usingDisplayPort = nsLayoutUtils::GetDisplayPort(content, &displayport);
     }
   }
 
-  bool ignoreViewportScrolling = presShell->IgnoringViewportScrolling();
+  bool ignoreViewportScrolling =
+    aFrame->GetParent() ? false : presShell->IgnoringViewportScrolling();
   nsRegion visibleRegion;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     // This layer tree will be reused, so we'll need to calculate it
@@ -1975,7 +1976,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 #endif
 
-  if (ignoreViewportScrolling && rootScrollFrame && !aFrame->GetParent()) {
+  if (ignoreViewportScrolling && rootScrollFrame) {
     nsIScrollableFrame* rootScrollableFrame =
       presShell->GetRootScrollFrameAsScrollable();
     if (aFlags & PAINT_DOCUMENT_RELATIVE) {
