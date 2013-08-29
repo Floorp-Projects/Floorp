@@ -253,7 +253,7 @@ class HashMap
     void rekey(const Lookup &old_key, const Key &new_key) {
         if (old_key != new_key) {
             if (Ptr p = lookup(old_key))
-                impl.rekey(p, new_key, new_key);
+                impl.rekeyAndMaybeRehash(p, new_key, new_key);
         }
     }
 
@@ -452,7 +452,7 @@ class HashSet
     void rekey(const Lookup &old_key, const T &new_key) {
         if (old_key != new_key) {
             if (Ptr p = lookup(old_key))
-                impl.rekey(p, new_key, new_key);
+                impl.rekeyAndMaybeRehash(p, new_key, new_key);
         }
     }
 
@@ -814,7 +814,7 @@ class HashTable : private AllocPolicy
         // a new key at the new Lookup position.  |front()| is invalid after
         // this operation until the next call to |popFront()|.
         void rekeyFront(const Lookup &l, const Key &k) {
-            table.rekey(*this->cur, l, k);
+            table.rekeyWithoutRehash(*this->cur, l, k);
             rekeyed = true;
             this->validEntry = false;
         }
@@ -1462,7 +1462,7 @@ class HashTable : private AllocPolicy
         checkUnderloaded();
     }
 
-    void rekey(Ptr p, const Lookup &l, const Key &k)
+    void rekeyWithoutRehash(Ptr p, const Lookup &l, const Key &k)
     {
         JS_ASSERT(table);
         mozilla::ReentrancyGuard g(*this);
@@ -1471,6 +1471,12 @@ class HashTable : private AllocPolicy
         HashPolicy::setKey(t, const_cast<Key &>(k));
         remove(*p.entry_);
         putNewInfallible(l, mozilla::Move(t));
+    }
+
+    void rekeyAndMaybeRehash(Ptr p, const Lookup &l, const Key &k)
+    {
+        rekeyWithoutRehash(p, l, k);
+        checkOverRemoved();
     }
 
 #undef METER
