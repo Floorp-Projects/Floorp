@@ -116,7 +116,6 @@
     "dom/tests/mochitest/ajax/offline/test_missingFile.html":"",
     "dom/tests/mochitest/ajax/offline/test_missingManifest.html":"",
     "dom/tests/mochitest/ajax/offline/test_noManifest.html":"",
-    "dom/tests/mochitest/general/test_bug629535.html":"bug 908439",
     "dom/tests/mochitest/ajax/offline/test_obsolete.html":"",
     "dom/tests/mochitest/ajax/offline/test_offlineIFrame.html":"",
     "dom/tests/mochitest/ajax/offline/test_overlap.html":"",
@@ -314,14 +313,11 @@
     "dom/media/tests/mochitest/test_peerConnection_setRemoteOfferInHaveLocalOffer.html":"",
     "dom/media/tests/mochitest/test_peerConnection_throwInCallbacks.html":"",
 
-    "dom/mobilemessage/tests/test_sms_basics.html":"Bug 909036",
-    "dom/network/tests/test_networkstats_basics.html":"Bug 908935",
-    "dom/permission/tests/test_permission_basics.html":"Bug 908912 and bug 907770",
-
-    "dom/tests/mochitest/bugs/test_bug265203.html":"",
+    "dom/network/tests/test_networkstats_basics.html":"Will be fixed in bug 858005",
+    "dom/permission/tests/test_permission_basics.html":"Bug 907770",
 
     "dom/tests/mochitest/bugs/test_bug335976.xhtml":"",
-    "dom/tests/mochitest/bugs/test_bug369306.html":"",
+    "dom/tests/mochitest/bugs/test_bug369306.html":"test timed out, can't focus back from popup window to opener?",
     "dom/tests/mochitest/bugs/test_bug396843.html":"",
     "dom/tests/mochitest/bugs/test_bug406375.html":"",
 
@@ -335,11 +331,11 @@
     "content/base/test/test_copypaste.html":"clipboard undefined",
     "content/base/test/test_bug166235.html":"clipboard undefined",
 
-    "dom/tests/mochitest/general/test_windowedhistoryframes.html":"",
     "dom/tests/mochitest/general/test_idleapi_permissions.html":"",
     "dom/tests/mochitest/general/test_interfaces.html":"",
-    "dom/tests/mochitest/general/test_paste_selection.html":"",
-    "dom/tests/mochitest/geolocation/test_allowCurrent.html":"",
+    "dom/tests/mochitest/general/test_paste_selection.html":"No clipboard",
+
+    "dom/tests/mochitest/geolocation/test_allowCurrent.html":"Bug 910235 - Error: no message manager set when calling method: [nsIObserver::observe]",
     "dom/tests/mochitest/geolocation/test_allowWatch.html":"",
     "dom/tests/mochitest/geolocation/test_cachedPosition.html":"",
     "dom/tests/mochitest/geolocation/test_cancelCurrent.html":"",

@@ -588,6 +588,9 @@ SpecialPowersAPI.prototype = {
                              : Ci.nsIPermissionManager.DENY_ACTION;
         }
 
+        if (permission.remove == true)
+          perm = Ci.nsIPermissionManager.UNKNOWN_ACTION;
+
         if (originalValue == perm) {
           continue;
         }
