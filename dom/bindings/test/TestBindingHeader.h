@@ -480,6 +480,7 @@ public:
   void PassOptionalNullableObjectWithDefaultValue(JSContext*, JS::Handle<JSObject*>);
   void PassSequenceOfObject(JSContext*, const Sequence<JSObject*>&);
   void PassSequenceOfNullableObject(JSContext*, const Sequence<JSObject*>&);
+  void PassNullableSequenceOfObject(JSContext*, const Nullable<Sequence<JSObject*> >&);
   void PassOptionalNullableSequenceOfNullableSequenceOfObject(JSContext*, const Optional<Nullable<Sequence<Nullable<Sequence<JSObject*> > > > >&);
   void PassOptionalNullableSequenceOfNullableSequenceOfNullableObject(JSContext*, const Optional<Nullable<Sequence<Nullable<Sequence<JSObject*> > > > >&);
   JSObject* ReceiveObject(JSContext*);
