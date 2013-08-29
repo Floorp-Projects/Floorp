@@ -2002,7 +2002,7 @@ WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus)
     return true;
   }
 
-  NS_ASSERTION(aStatus <= Terminating || mQueuedRunnables.IsEmpty(),
+  NS_ASSERTION(aStatus != Terminating || mQueuedRunnables.IsEmpty(),
                "Shouldn't have anything queued!");
 
   // Anything queued will be discarded.
