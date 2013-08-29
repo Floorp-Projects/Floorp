@@ -82,7 +82,7 @@ AudioTrackEncoder::NotifyEndOfStream()
   // If source audio chunks are completely silent till the end of encoding,
   // initialize the encoder with default channel counts and sampling rate, and
   // append this many null data to the segment of track encoder.
-  if (!mCanceled && !mInitialized && mSilentDuration > 0) {
+  if (!mCanceled && !mInitialized) {
     Init(DEFAULT_CHANNELS, DEFAULT_SAMPLING_RATE);
     mRawSegment->AppendNullData(mSilentDuration);
     mSilentDuration = 0;
