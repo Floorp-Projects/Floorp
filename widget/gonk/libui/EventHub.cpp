@@ -1078,21 +1078,14 @@ status_t EventHub::openDeviceLocked(const char *devicePath) {
         return -1;
     }
 
-    // Enable wake-lock behavior on kernels that support it.
-    // TODO: Only need this for devices that can really wake the system.
-    bool usingSuspendBlock = !ioctl(fd, EVIOCSSUSPENDBLOCK, 1);
-
-
     ALOGI("New device: id=%d, fd=%d, path='%s', name='%s', classes=0x%x, "
-            "configuration='%s', keyLayout='%s', keyCharacterMap='%s', builtinKeyboard=%s, "
-            "usingSuspendBlock=%s",
+            "configuration='%s', keyLayout='%s', keyCharacterMap='%s', builtinKeyboard=%s",
          deviceId, fd, devicePath, device->identifier.name.string(),
          device->classes,
          device->configurationFile.string(),
          device->keyMap.keyLayoutFile.string(),
          device->keyMap.keyCharacterMapFile.string(),
-         toString(mBuiltInKeyboardId == deviceId),
-         toString(usingSuspendBlock));
+         toString(mBuiltInKeyboardId == deviceId));
 
     mDevices.add(deviceId, device);
 
