@@ -399,7 +399,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   mKeyboardLayout = keyboardLayout->GetLayout();
   mScanCode = WinUtils::GetScanCode(mMsg.lParam);
   mIsExtended = WinUtils::IsExtendedScanCode(mMsg.lParam);
-  memset(&mCharMsg, 0, sizeof(MSG));
+  memset(&mFakeCharMsg, 0, sizeof(MSG));
   // On WinXP and WinServer2003, we cannot compute the virtual keycode for
   // extended keys due to the API limitation.
   bool canComputeVirtualKeyCodeFromScanCode =
@@ -407,18 +407,10 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   switch (mMsg.message) {
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
-      // Store following WM_*CHAR message into mCharMsg.
+      // Store following fake WM_*CHAR message into mFakeCharMsg.
       if (aFakeCharMsg) {
-        mCharMsg = aFakeCharMsg->GetCharMsg(mMsg.hwnd);
+        mFakeCharMsg = aFakeCharMsg->GetCharMsg(mMsg.hwnd);
         mIsFakeCharMsg = true;
-      } else {
-        MSG msg;
-        if (WinUtils::PeekMessage(&msg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST,
-                                  PM_NOREMOVE | PM_NOYIELD) &&
-            (msg.message == WM_CHAR || msg.message == WM_SYSCHAR ||
-             msg.message == WM_DEADCHAR)) {
-          mCharMsg = msg;
-        }
       }
     case WM_KEYUP:
     case WM_SYSKEYUP: {
@@ -567,9 +559,41 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   keyboardLayout->InitNativeKey(*this, mModKeyState);
 
   mIsDeadKey =
-    (mCharMsg.message == WM_DEADCHAR ||
+    (IsFollowedByDeadCharMessage() ||
      keyboardLayout->IsDeadKey(mOriginalVirtualKeyCode, mModKeyState));
   mIsPrintableKey = KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode);
+}
+
+bool
+NativeKey::IsFollowedByCharMessage() const
+{
+  MSG nextMsg;
+  if (mIsFakeCharMsg) {
+    nextMsg = mFakeCharMsg;
+  } else {
+    if (!WinUtils::PeekMessage(&nextMsg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST,
+                               PM_NOREMOVE | PM_NOYIELD)) {
+      return false;
+    }
+  }
+  return (nextMsg.message == WM_CHAR ||
+          nextMsg.message == WM_SYSCHAR ||
+          nextMsg.message == WM_DEADCHAR);
+}
+
+bool
+NativeKey::IsFollowedByDeadCharMessage() const
+{
+  MSG nextMsg;
+  if (mIsFakeCharMsg) {
+    nextMsg = mFakeCharMsg;
+  } else {
+    if (!WinUtils::PeekMessage(&nextMsg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST,
+                               PM_NOREMOVE | PM_NOYIELD)) {
+      return false;
+    }
+  }
+  return (nextMsg.message == WM_DEADCHAR);
 }
 
 bool
@@ -1061,27 +1085,24 @@ NativeKey::NeedsToHandleWithoutFollowingCharMessages() const
   return mIsPrintableKey;
 }
 
-const MSG&
+MSG
 NativeKey::RemoveFollowingCharMessage() const
 {
   MOZ_ASSERT(IsFollowedByCharMessage());
 
   if (mIsFakeCharMsg) {
-    return mCharMsg;
+    return mFakeCharMsg;
   }
 
   MSG msg;
-  if (!WinUtils::GetMessage(&msg, mMsg.hwnd,
-                            mCharMsg.message, mCharMsg.message)) {
+  if (!WinUtils::GetMessage(&msg, mMsg.hwnd, WM_KEYFIRST, WM_KEYLAST) ||
+      !(msg.message == WM_CHAR || msg.message == WM_SYSCHAR ||
+        msg.message == WM_DEADCHAR)) {
     MOZ_NOT_REACHED("We lost the following char message");
-    return mCharMsg;
+    return msg;
   }
 
-  MOZ_ASSERT(mCharMsg.message == msg.message &&
-             mCharMsg.wParam == msg.wParam &&
-             mCharMsg.lParam == msg.lParam);
-
-  return mCharMsg;
+  return msg;
 }
 
 bool
@@ -1093,7 +1114,7 @@ NativeKey::RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg,
     if (aFirstMsg > WM_CHAR || aLastMsg < WM_CHAR) {
       return false;
     }
-    msg = mCharMsg;
+    msg = mFakeCharMsg;
   } else {
     WinUtils::GetMessage(&msg, mMsg.hwnd, aFirstMsg, aLastMsg);
   }
@@ -1320,7 +1341,7 @@ NativeKey::DispatchKeyPressEventForFollowingCharMessage(
 {
   MOZ_ASSERT(mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
 
-  const MSG& msg = RemoveFollowingCharMessage();
+  MSG msg = RemoveFollowingCharMessage();
   if (mIsFakeCharMsg) {
     if (msg.message == WM_DEADCHAR) {
       return aExtraFlags.mDefaultPrevented;
