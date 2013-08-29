@@ -5,6 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/Promise.h"
+
+#include "jsfriendapi.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/PromiseResolver.h"
 #include "mozilla/Preferences.h"
@@ -13,7 +15,9 @@
 #include "nsPIDOMWindow.h"
 #include "WorkerPrivate.h"
 #include "nsJSPrincipals.h"
-#include "nsThreadUtils.h"
+#include "nsJSUtils.h"
+#include "nsPIDOMWindow.h"
+#include "nsJSEnvironment.h"
 
 namespace mozilla {
 namespace dom {
@@ -52,11 +56,12 @@ private:
 NS_IMPL_CYCLE_COLLECTION_CLASS(Promise)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Promise)
+  tmp->MaybeReportRejected();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResolver)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResolveCallbacks);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRejectCallbacks);
-  tmp->mResult = JSVAL_VOID;
+  tmp->mResult = JS::UndefinedValue();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -86,6 +91,7 @@ Promise::Promise(nsPIDOMWindow* aWindow)
   , mResult(JS::UndefinedValue())
   , mState(Pending)
   , mTaskPending(false)
+  , mHadRejectCallback(false)
 {
   MOZ_COUNT_CTOR(Promise);
   NS_HOLD_JS_OBJECTS(this, Promise);
@@ -96,7 +102,8 @@ Promise::Promise(nsPIDOMWindow* aWindow)
 
 Promise::~Promise()
 {
-  mResult = JSVAL_VOID;
+  MaybeReportRejected();
+  mResult = JS::UndefinedValue();
   NS_DROP_JS_OBJECTS(this, Promise);
   MOZ_COUNT_DTOR(Promise);
 }
@@ -248,6 +255,7 @@ Promise::AppendCallbacks(PromiseCallback* aResolveCallback,
   }
 
   if (aRejectCallback) {
+    mHadRejectCallback = true;
     mRejectCallbacks.AppendElement(aRejectCallback);
   }
 
@@ -278,6 +286,32 @@ Promise::RunTask()
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
     callbacks[i]->Call(value);
   }
+}
+
+void
+Promise::MaybeReportRejected()
+{
+  if (mState != Rejected || mHadRejectCallback || mResult.isUndefined()) {
+    return;
+  }
+
+  JSErrorReport* report = js::ErrorFromException(mResult);
+  if (!report) {
+    return;
+  }
+
+  MOZ_ASSERT(mResult.isObject(), "How did we get a JSErrorReport?");
+
+  nsCOMPtr<nsPIDOMWindow> win =
+    do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(&mResult.toObject()));
+
+  // Now post an event to do the real reporting async
+  NS_DispatchToCurrentThread(
+    new AsyncErrorReporter(JS_GetObjectRuntime(&mResult.toObject()),
+                           report,
+                           nullptr,
+                           nsContentUtils::GetObjectPrincipal(&mResult.toObject()),
+                           win));
 }
 
 } // namespace dom
