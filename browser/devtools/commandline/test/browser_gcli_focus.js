@@ -63,7 +63,7 @@ exports.testBasic = function(options) {
       setup:    'tsn deep',
       check: {
         input:  'tsn deep',
-        hints:          '',
+        hints:          ' down nested cmd',
         markup: 'IIIVIIII',
         cursor: 8,
         status: 'ERROR',
@@ -72,15 +72,15 @@ exports.testBasic = function(options) {
       }
     },
     {
-      setup:    'tsn deep<TAB><RETURN>',
+      setup:    'tsn deep<TAB>',
       check: {
-        input:  'tsn deep ',
-        hints:           '',
-        markup: 'IIIIIIIIV',
-        cursor: 9,
-        status: 'ERROR',
+        input:  'tsn deep down nested cmd ',
+        hints:                           '',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVV',
+        cursor: 25,
+        status: 'VALID',
         outputState: 'false:default',
-        tooltipState: 'true:isError'
+        tooltipState: 'false:default'
       }
     }
   ]);

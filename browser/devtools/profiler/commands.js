@@ -94,6 +94,7 @@ gcli.addCommand({
         throw gcli.lookup("profilerNotStarted3");
 
       panel.toggleRecording();
+      return gcli.lookup("profilerStopped");
     }
 
     return gDevTools.showToolbox(context.environment.target, "jsprofiler")
