@@ -1624,6 +1624,12 @@ public:
       new (storage.addr()) T();
       return *storage.addr();
     }
+    template <typename T1>
+    T& SetValue(const T1 &t1)
+    {
+      new (storage.addr()) T(t1);
+      return *storage.addr();
+    }
     template <typename T1, typename T2>
     T& SetValue(const T1 &t1, const T2 &t2)
     {

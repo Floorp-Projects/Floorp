@@ -21,6 +21,8 @@ EXTRA_JS_MODULES += [
     'PrivateBrowsingUtils.jsm',
     'Promise.jsm',
     'PropertyListUtils.jsm',
+    'RemoteAddonsChild.jsm',
+    'RemoteAddonsParent.jsm',
     'RemoteController.jsm',
     'RemoteSecurityUI.jsm',
     'RemoteWebNavigation.jsm',
