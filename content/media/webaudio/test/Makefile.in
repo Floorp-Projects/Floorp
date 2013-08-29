@@ -67,6 +67,7 @@ MOCHITEST_FILES := \
   test_gainNodeInLoop.html \
   test_maxChannelCount.html \
   test_mediaDecoding.html \
+  test_decodeMultichannel.html \
   test_mediaElementAudioSourceNode.html \
   test_mediaStreamAudioDestinationNode.html \
   test_mediaStreamAudioSourceNode.html \
@@ -106,6 +107,7 @@ MOCHITEST_FILES := \
   audio-expected.wav \
   audio-mono-expected.wav \
   audio-mono-expected-2.wav \
+  audio-quad.wav \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
