@@ -11,10 +11,10 @@ const DBG_XUL = "chrome://browser/content/devtools/debugger.xul";
 const CHROME_DEBUGGER_PROFILE_NAME = "-chrome-debugger";
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
-let require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
+Cu.import("resource://gre/modules/devtools/Loader.jsm");
+let require = devtools.require;
 let Telemetry = require("devtools/shared/telemetry");
 
 this.EXPORTED_SYMBOLS = ["BrowserDebuggerProcess"];
@@ -50,11 +50,21 @@ BrowserDebuggerProcess.prototype = {
    * Initializes the debugger server.
    */
   _initServer: function() {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
+    if (!this.loader) {
+      // Create a separate loader instance, so that we can be sure to receive a
+      // separate instance of the DebuggingServer from the rest of the devtools.
+      // This allows us to safely use the tools against even the actors and
+      // DebuggingServer itself.
+      this.loader = new DevToolsLoader();
+      this.loader.main("devtools/server/main");
+      this.debuggerServer = this.loader.DebuggerServer;
     }
-    DebuggerServer.openListener(Prefs.chromeDebuggingPort);
+
+    if (!this.debuggerServer.initialized) {
+      this.debuggerServer.init();
+      this.debuggerServer.addBrowserActors();
+    }
+    this.debuggerServer.openListener(Prefs.chromeDebuggingPort);
   },
 
   /**
@@ -135,6 +145,8 @@ BrowserDebuggerProcess.prototype = {
     }
 
     this._telemetry.toolClosed("jsbrowserdebugger");
+
+    this.debuggerServer.destroy();
 
     dumpn("Chrome debugger is now closed...");
     if (typeof this._closeCallback == "function") {
