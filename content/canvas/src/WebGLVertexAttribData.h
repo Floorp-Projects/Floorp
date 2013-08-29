@@ -75,8 +75,7 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
-  CycleCollectionNoteEdgeName(aCallback, aName, aFlags);
-  aCallback.NoteXPCOMChild(aField.buf);
+  CycleCollectionNoteChild(aCallback, aField.buf.get(), aName, aFlags);
 }
 
 #endif

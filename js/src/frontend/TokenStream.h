@@ -307,17 +307,16 @@ struct Token {
 };
 
 struct CompileError {
-    JSContext *cx;
     JSErrorReport report;
     char *message;
     ErrorArgumentsType argumentsType;
-    CompileError(JSContext *cx)
-      : cx(cx), message(NULL), argumentsType(ArgumentsAreUnicode)
+    CompileError()
+      : message(NULL), argumentsType(ArgumentsAreUnicode)
     {
         mozilla::PodZero(&report);
     }
     ~CompileError();
-    void throwError();
+    void throwError(JSContext *cx);
 };
 
 // Ideally, tokenizing would be entirely independent of context.  But the
