@@ -2392,16 +2392,6 @@ class FunctionCompiler
             return false;
         if (!*defaultBlock)
             return true;
-        for (unsigned i = 0; i < cases->length(); i++) {
-            if (!(*cases)[i]) {
-                MBasicBlock *bb;
-                if (!newBlock(switchBlock, &bb, NULL))
-                    return false;
-                bb->end(MGoto::New(*defaultBlock));
-                (*defaultBlock)->addPredecessor(bb);
-                (*cases)[i] = bb;
-            }
-        }
         mirGraph().moveBlockToEnd(*defaultBlock);
         return true;
     }
@@ -2412,9 +2402,13 @@ class FunctionCompiler
         if (!switchBlock)
             return true;
         MTableSwitch *mir = switchBlock->lastIns()->toTableSwitch();
-        mir->addDefault(defaultBlock);
-        for (unsigned i = 0; i < cases.length(); i++)
-            mir->addCase(cases[i]);
+        size_t defaultIndex = mir->addDefault(defaultBlock);
+        for (unsigned i = 0; i < cases.length(); i++) {
+            if (!cases[i])
+                mir->addCase(defaultIndex);
+            else
+                mir->addCase(mir->addSuccessor(cases[i]));
+        }
         if (curBlock_) {
             MBasicBlock *next;
             if (!newBlock(curBlock_, &next, pn))
