@@ -82,6 +82,7 @@ extern "C" {
 #include "nricectx.h"
 #include "nricemediastream.h"
 #include "nr_socket_prsock.h"
+#include "nrinterfaceprioritizer.h"
 
 namespace mozilla {
 
@@ -367,6 +368,20 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     MOZ_MTLOG(ML_ERROR, "Couldn't create ICE ctx for '" << name << "'");
     return nullptr;
   }
+
+#ifdef USE_INTERFACE_PRIORITIZER
+  nr_interface_prioritizer *prioritizer = CreateInterfacePrioritizer();
+  if (!prioritizer) {
+    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't create interface prioritizer.");
+    return nullptr;
+  }
+
+  r = nr_ice_ctx_set_interface_prioritizer(ctx->ctx_, prioritizer);
+  if (r) {
+    MOZ_MTLOG(PR_LOG_ERROR, "Couldn't set interface prioritizer.");
+    return nullptr;
+  }
+#endif  // USE_INTERFACE_PRIORITIZER
 
   // Create the handler objects
   ctx->ice_handler_vtbl_ = new nr_ice_handler_vtbl();
