@@ -19,7 +19,7 @@
 // http://blog.llvm.org/2011/09/greedy-register-allocation-in-llvm-30.html
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // Information about a group of registers. Registers may be grouped together
 // when (a) all of their lifetimes are disjoint, (b) they are of the same type
@@ -232,7 +232,7 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
     bool splitAcrossCalls(LiveInterval *interval);
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_BacktrackingAllocator_h */

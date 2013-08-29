@@ -24,7 +24,7 @@
 #include "jit/RegisterSets.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class MBasicBlock;
 class MIRGraph;
@@ -156,7 +156,7 @@ class MIRGenerator
 #endif
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_MIRGenerator_h */

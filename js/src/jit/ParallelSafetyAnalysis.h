@@ -14,7 +14,7 @@ namespace js {
 
 class StackFrame;
 
-namespace ion {
+namespace jit {
 
 class MIRGraph;
 class AutoDestroyAllocator;
@@ -49,7 +49,7 @@ class ParallelSafetyAnalysis
 typedef Vector<JSScript *, 4, IonAllocPolicy> CallTargetVector;
 bool AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets);
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_ParallelSafetyAnalysis_h */

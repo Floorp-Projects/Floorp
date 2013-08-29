@@ -69,7 +69,7 @@ typedef Rooted<JSLinearString*> RootedLinearString;
 
 class MathCache;
 
-namespace ion {
+namespace jit {
 class IonRuntime;
 struct PcScriptCache;
 }
@@ -507,7 +507,7 @@ class PerThreadData : public PerThreadDataFriendFields,
   private:
     friend class js::Activation;
     friend class js::ActivationIterator;
-    friend class js::ion::JitActivation;
+    friend class js::jit::JitActivation;
     friend class js::AsmJSActivation;
 
     /*
@@ -833,7 +833,7 @@ struct JSRuntime : public JS::shadow::Runtime,
      */
     JSC::ExecutableAllocator *execAlloc_;
     WTF::BumpPointerAllocator *bumpAlloc_;
-    js::ion::IonRuntime *ionRuntime_;
+    js::jit::IonRuntime *ionRuntime_;
 
     JSObject *selfHostingGlobal_;
     js::SelfHostedClass *selfHostedClasses_;
@@ -843,7 +843,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     JSC::ExecutableAllocator *createExecutableAllocator(JSContext *cx);
     WTF::BumpPointerAllocator *createBumpPointerAllocator(JSContext *cx);
-    js::ion::IonRuntime *createIonRuntime(JSContext *cx);
+    js::jit::IonRuntime *createIonRuntime(JSContext *cx);
 
   public:
     JSC::ExecutableAllocator *getExecAlloc(JSContext *cx) {
@@ -859,10 +859,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     WTF::BumpPointerAllocator *getBumpPointerAllocator(JSContext *cx) {
         return bumpAlloc_ ? bumpAlloc_ : createBumpPointerAllocator(cx);
     }
-    js::ion::IonRuntime *getIonRuntime(JSContext *cx) {
+    js::jit::IonRuntime *getIonRuntime(JSContext *cx) {
         return ionRuntime_ ? ionRuntime_ : createIonRuntime(cx);
     }
-    js::ion::IonRuntime *ionRuntime() {
+    js::jit::IonRuntime *ionRuntime() {
         return ionRuntime_;
     }
     bool hasIonRuntime() const {
@@ -1421,8 +1421,8 @@ struct JSRuntime : public JS::shadow::Runtime,
         mainThread.setIonStackLimit(mainThread.nativeStackLimit);
     }
 
-    // Cache for ion::GetPcScript().
-    js::ion::PcScriptCache *ionPcScriptCache;
+    // Cache for jit::GetPcScript().
+    js::jit::PcScriptCache *ionPcScriptCache;
 
     js::ThreadPool threadPool;
 

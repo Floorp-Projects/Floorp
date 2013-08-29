@@ -12,7 +12,7 @@
 #include "jit/IonAllocPolicy.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // Provides constant time set insertion and removal, and fast linear
 // set operations such as intersection, difference, and union.

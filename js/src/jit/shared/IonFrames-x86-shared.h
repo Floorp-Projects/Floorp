@@ -12,7 +12,7 @@
 #include "jit/shared/IonFrames-shared.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class IonCommonFrameLayout
 {

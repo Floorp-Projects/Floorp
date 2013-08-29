@@ -54,7 +54,7 @@ enum HeapState {
     MinorCollecting   // doing a GC of the minor heap (nursery)
 };
 
-namespace ion {
+namespace jit {
     class IonCode;
 }
 
@@ -149,7 +149,7 @@ template <> struct MapTypeToTraceKind<JSString>         { const static JSGCTrace
 template <> struct MapTypeToTraceKind<JSFlatString>     { const static JSGCTraceKind kind = JSTRACE_STRING; };
 template <> struct MapTypeToTraceKind<JSLinearString>   { const static JSGCTraceKind kind = JSTRACE_STRING; };
 template <> struct MapTypeToTraceKind<PropertyName>     { const static JSGCTraceKind kind = JSTRACE_STRING; };
-template <> struct MapTypeToTraceKind<ion::IonCode>     { const static JSGCTraceKind kind = JSTRACE_IONCODE; };
+template <> struct MapTypeToTraceKind<jit::IonCode>     { const static JSGCTraceKind kind = JSTRACE_IONCODE; };
 
 #if defined(JSGC_GENERATIONAL) || defined(DEBUG)
 static inline bool
@@ -1142,7 +1142,7 @@ struct GCMarker : public JSTracer {
         pushTaggedPtr(TypeTag, type);
     }
 
-    void pushIonCode(ion::IonCode *code) {
+    void pushIonCode(jit::IonCode *code) {
         pushTaggedPtr(IonCodeTag, code);
     }
 

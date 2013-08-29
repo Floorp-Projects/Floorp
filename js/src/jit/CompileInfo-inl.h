@@ -12,7 +12,7 @@
 #include "jsscriptinlines.h"
 
 using namespace js;
-using namespace ion;
+using namespace jit;
 
 inline RegExpObject *
 CompileInfo::getRegExp(jsbytecode *pc) const

@@ -11,7 +11,7 @@
 #include "jit/MIRGraph.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class MIRGraph;
 
@@ -51,7 +51,7 @@ class UnreachableCodeElimination
     bool removeUnmarkedBlocks(size_t marked);
 };
 
-} /* namespace ion */
+} /* namespace jit */
 } /* namespace js */
 
 #endif /* jit_UnreachableCodeElimination_h */

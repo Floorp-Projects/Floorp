@@ -21,7 +21,7 @@
 #include "vm/Stack-inl.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 // These constructor are exactly the same except for the type of the iterator
 // which is given to the SnapshotIterator constructor. Doing so avoid the
@@ -65,7 +65,7 @@ IonBailoutIterator::dump() const
 }
 
 uint32_t
-ion::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
+jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
 {
     JS_ASSERT(bailoutInfo);
     JSContext *cx = GetIonContext()->cx;
@@ -93,7 +93,7 @@ ion::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
 }
 
 uint32_t
-ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
+jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
                          BaselineBailoutInfo **bailoutInfo)
 {
     sp->checkInvariants();
@@ -142,7 +142,7 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
 
 // Initialize the decl env Object, call object, and any arguments obj of the current frame.
 bool
-ion::EnsureHasScopeObjects(JSContext *cx, AbstractFramePtr fp)
+jit::EnsureHasScopeObjects(JSContext *cx, AbstractFramePtr fp)
 {
     if (fp.isFunctionFrame() &&
         fp.fun()->isHeavyweight() &&
@@ -154,7 +154,7 @@ ion::EnsureHasScopeObjects(JSContext *cx, AbstractFramePtr fp)
 }
 
 bool
-ion::CheckFrequentBailouts(JSContext *cx, JSScript *script)
+jit::CheckFrequentBailouts(JSContext *cx, JSScript *script)
 {
     // Invalidate if this script keeps bailing out without invalidation. Next time
     // we compile this script LICM will be disabled.

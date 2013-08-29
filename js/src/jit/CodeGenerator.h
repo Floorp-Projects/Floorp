@@ -20,7 +20,7 @@
 #endif
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class OutOfLineNewParallelArray;
 class OutOfLineTestObject;
@@ -352,7 +352,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     PerfSpewer perfSpewer_;
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_CodeGenerator_h */

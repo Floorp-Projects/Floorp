@@ -3385,7 +3385,7 @@ Debugger::observesScript(JSScript *script) const
 }
 
 /* static */ bool
-Debugger::handleBaselineOsr(JSContext *cx, StackFrame *from, ion::BaselineFrame *to)
+Debugger::handleBaselineOsr(JSContext *cx, StackFrame *from, jit::BaselineFrame *to)
 {
     ScriptFrameIter iter(cx);
     JS_ASSERT(iter.abstractFramePtr() == to);

@@ -16,7 +16,7 @@
 #include "jit/Ion.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class TempAllocator
 {
@@ -158,7 +158,7 @@ class TempObjectPool
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_IonAllocPolicy_h */

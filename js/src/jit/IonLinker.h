@@ -17,7 +17,7 @@
 #include "jit/IonMacroAssembler.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class Linker
 {
@@ -78,7 +78,7 @@ class Linker
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_IonLinker_h */

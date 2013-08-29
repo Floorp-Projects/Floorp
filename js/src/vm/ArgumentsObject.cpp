@@ -50,10 +50,10 @@ ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, JSObject *obj,
 
 #if defined(JS_ION)
 /* static */ void
-ArgumentsObject::MaybeForwardToCallObject(ion::IonJSFrameLayout *frame, HandleObject callObj,
+ArgumentsObject::MaybeForwardToCallObject(jit::IonJSFrameLayout *frame, HandleObject callObj,
                                           JSObject *obj, ArgumentsData *data)
 {
-    JSFunction *callee = ion::CalleeTokenToFunction(frame->calleeToken());
+    JSFunction *callee = jit::CalleeTokenToFunction(frame->calleeToken());
     JSScript *script = callee->nonLazyScript();
     if (callee->isHeavyweight() && script->argsObjAliasesFormals()) {
         JS_ASSERT(callObj && callObj->is<CallObject>());
@@ -88,16 +88,16 @@ struct CopyFrameArgs
 #if defined(JS_ION)
 struct CopyIonJSFrameArgs
 {
-    ion::IonJSFrameLayout *frame_;
+    jit::IonJSFrameLayout *frame_;
     HandleObject callObj_;
 
-    CopyIonJSFrameArgs(ion::IonJSFrameLayout *frame, HandleObject callObj)
+    CopyIonJSFrameArgs(jit::IonJSFrameLayout *frame, HandleObject callObj)
       : frame_(frame), callObj_(callObj)
     { }
 
     void copyArgs(JSContext *, HeapValue *dstBase, unsigned totalArgs) const {
         unsigned numActuals = frame_->numActualArgs();
-        unsigned numFormals = ion::CalleeTokenToFunction(frame_->calleeToken())->nargs;
+        unsigned numFormals = jit::CalleeTokenToFunction(frame_->calleeToken())->nargs;
         JS_ASSERT(numActuals <= totalArgs);
         JS_ASSERT(numFormals <= totalArgs);
         JS_ASSERT(Max(numActuals, numFormals) == totalArgs);
@@ -268,12 +268,12 @@ ArgumentsObject::createUnexpected(JSContext *cx, AbstractFramePtr frame)
 
 #if defined(JS_ION)
 ArgumentsObject *
-ArgumentsObject::createForIon(JSContext *cx, ion::IonJSFrameLayout *frame, HandleObject scopeChain)
+ArgumentsObject::createForIon(JSContext *cx, jit::IonJSFrameLayout *frame, HandleObject scopeChain)
 {
-    ion::CalleeToken token = frame->calleeToken();
-    JS_ASSERT(ion::CalleeTokenIsFunction(token));
-    RootedScript script(cx, ion::ScriptFromCalleeToken(token));
-    RootedFunction callee(cx, ion::CalleeTokenToFunction(token));
+    jit::CalleeToken token = frame->calleeToken();
+    JS_ASSERT(jit::CalleeTokenIsFunction(token));
+    RootedScript script(cx, jit::ScriptFromCalleeToken(token));
+    RootedFunction callee(cx, jit::CalleeTokenToFunction(token));
     RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain.get() : NULL);
     CopyIonJSFrameArgs copy(frame, callObj);
     return create(cx, script, callee, frame->numActualArgs(), copy);
