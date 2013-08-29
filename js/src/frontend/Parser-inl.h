@@ -16,9 +16,9 @@ namespace frontend {
 
 template <typename ParseHandler>
 bool
-ParseContext<ParseHandler>::init()
+ParseContext<ParseHandler>::init(TokenStream &ts)
 {
-    if (!frontend::GenerateBlockId(this, this->bodyid))
+    if (!frontend::GenerateBlockId(ts, this, this->bodyid))
         return false;
 
     return decls_.init() && lexdeps.ensureMap(sc->context);

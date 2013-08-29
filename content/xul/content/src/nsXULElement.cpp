@@ -2557,15 +2557,12 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
 class NotifyOffThreadScriptCompletedRunnable : public nsRunnable
 {
     nsRefPtr<nsIOffThreadScriptReceiver> mReceiver;
-
-    // Note: there is no need to root the script, it is protected against GC
-    // until FinishOffThreadScript is called on it.
-    JSScript *mScript;
+    void *mToken;
 
 public:
     NotifyOffThreadScriptCompletedRunnable(already_AddRefed<nsIOffThreadScriptReceiver> aReceiver,
-                                           JSScript *aScript)
-      : mReceiver(aReceiver), mScript(aScript)
+                                           void *aToken)
+      : mReceiver(aReceiver), mToken(aToken)
     {}
 
     NS_DECL_NSIRUNNABLE
@@ -2581,23 +2578,24 @@ NotifyOffThreadScriptCompletedRunnable::Run()
     // could GC.
     nsCOMPtr<nsIJSRuntimeService> svc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
     NS_ENSURE_TRUE(svc, NS_ERROR_FAILURE);
+
     JSRuntime *rt;
     svc->GetRuntime(&rt);
     NS_ENSURE_TRUE(svc, NS_ERROR_FAILURE);
-    JS::FinishOffThreadScript(rt, mScript);
+    JSScript *script = JS::FinishOffThreadScript(NULL, rt, mToken);
 
-    return mReceiver->OnScriptCompileComplete(mScript, mScript ? NS_OK : NS_ERROR_FAILURE);
+    return mReceiver->OnScriptCompileComplete(script, script ? NS_OK : NS_ERROR_FAILURE);
 }
 
 static void
-OffThreadScriptReceiverCallback(JSScript *script, void *ptr)
+OffThreadScriptReceiverCallback(void *aToken, void *aCallbackData)
 {
     // Be careful not to adjust the refcount on the receiver, as this callback
     // may be invoked off the main thread.
-    nsIOffThreadScriptReceiver* aReceiver = static_cast<nsIOffThreadScriptReceiver*>(ptr);
+    nsIOffThreadScriptReceiver* aReceiver = static_cast<nsIOffThreadScriptReceiver*>(aCallbackData);
     nsRefPtr<NotifyOffThreadScriptCompletedRunnable> notify =
         new NotifyOffThreadScriptCompletedRunnable(
-            already_AddRefed<nsIOffThreadScriptReceiver>(aReceiver), script);
+            already_AddRefed<nsIOffThreadScriptReceiver>(aReceiver), aToken);
     NS_DispatchToMainThread(notify);
 }
 
