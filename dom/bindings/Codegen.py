@@ -2514,7 +2514,7 @@ class JSToNativeConversionInfo():
 
         holderType: A CGThing representing the type of a "holder" which will
                     hold a possible reference to the C++ thing whose type we
-                    returned in #1, or  None if no such holder is needed.
+                    returned in declType, or  None if no such holder is needed.
 
         dealWithOptional: A boolean indicating whether the caller has to do
                           optional-argument handling.  This should only be set
@@ -2868,6 +2868,9 @@ for (uint32_t i = 0; i < length; ++i) {
         # to get traced
         if not isMember and typeNeedsRooting(elementType, descriptorProvider):
             holderType = CGTemplatedType("SequenceRooter", elementInfo.declType)
+            # If our sequence is nullable, this will set the Nullable to be
+            # not-null, but that's ok because we make an explicit SetNull() call
+            # on it as needed if our JS value is actually null.
             holderArgs = "cx, &%s" % arrayRef
         else:
             holderType = None
@@ -3266,7 +3269,8 @@ for (uint32_t i = 0; i < length; ++i) {
     if type.isSpiderMonkeyInterface():
         assert not isEnforceRange and not isClamp
         name = type.name
-        declType = CGGeneric(name)
+        arrayType = CGGeneric(name)
+        declType = arrayType
         if type.nullable():
             declType = CGTemplatedType("Nullable", declType)
             objRef = "${declName}.SetValue()"
@@ -3281,9 +3285,37 @@ for (uint32_t i = 0; i < length; ++i) {
              CGIndenter(onFailureBadType(failureCode, type.name)).define()))
         template = wrapObjectTemplate(template, type, "${declName}.SetNull()",
                                       failureCode)
+        if not isMember:
+            # This is a bit annoying.  In a union we don't want to have a
+            # holder, since unions don't support that.  But if we're optional we
+            # want to have a holder, so that the callee doesn't see
+            # Optional<RootedTypedArray<ArrayType> >.  So do a holder if we're
+            # optional and use a RootedTypedArray otherwise.
+            if isOptional:
+                holderType = CGTemplatedType("TypedArrayRooter", arrayType)
+                # If our typed array is nullable, this will set the Nullable to
+                # be not-null, but that's ok because we make an explicit
+                # SetNull() call on it as needed if our JS value is actually
+                # null.  XXXbz Because "Maybe" takes const refs for constructor
+                # arguments, we can't pass a reference here; have to pass a
+                # pointer.
+                holderArgs = "cx, &%s" % objRef
+                declArgs = None
+            else:
+                holderType = None
+                holderArgs = None
+                declType = CGTemplatedType("RootedTypedArray", declType)
+                declArgs = "cx"
+        else:
+            holderType = None
+            holderArgs = None
+            declArgs = None
         return JSToNativeConversionInfo(template,
                                         declType=declType,
-                                        dealWithOptional=isOptional)
+                                        holderType=holderType,
+                                        dealWithOptional=isOptional,
+                                        declArgs=declArgs,
+                                        holderArgs=holderArgs)
 
     if type.isDOMString():
         assert not isEnforceRange and not isClamp
@@ -5769,7 +5801,8 @@ class CGMemberJITInfo(CGThing):
             # while we have the right type.
             getter = ("(JSJitGetterOp)get_%s" % self.member.identifier.name)
             getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.member, getter=True)
-            getterconst = self.member.getExtendedAttribute("Constant")
+            getterconst = (self.member.getExtendedAttribute("SameObject") or
+                           self.member.getExtendedAttribute("Constant"))
             getterpure = getterconst or self.member.getExtendedAttribute("Pure")
             assert (getterinfal or (not getterconst and not getterpure))
 
@@ -6053,6 +6086,8 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isReturnValue=
     else:
         name = type.name
 
+    ctorArgs = "cx" if type.isSpiderMonkeyInterface() else ""
+
     tryNextCode = ("tryNext = true;\n"
                    "return true;")
     if type.isGeckoInterface():
@@ -6085,7 +6120,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isReturnValue=
             {
                 "val": "value",
                 "mutableVal": "pvalue",
-                "declName": "SetAs" + name + "()",
+                "declName": "SetAs" + name + "(%s)" % ctorArgs,
                 "holderName": "m" + name + "Holder",
                 }
             )
@@ -6106,7 +6141,9 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider, isReturnValue=
                 "structType": structType,
                 "externalType": externalType,
                 "setter": setter,
-                "holderType": conversionInfo.holderType.define() if conversionInfo.holderType else None
+                "holderType": conversionInfo.holderType.define() if conversionInfo.holderType else None,
+                "ctorArgs": ctorArgs,
+                "ctorArgList": [Argument("JSContext*", "cx")] if type.isSpiderMonkeyInterface() else []
                 }
 
 def mapTemplate(template, templateVarArray):
@@ -6157,13 +6194,13 @@ class CGUnionStruct(CGThing):
                                             isReturnValue=self.isReturnValue)
             if vars["name"] != "Object":
                 body=string.Template("mType = e${name};\n"
-                                     "return mValue.m${name}.SetValue();").substitute(vars)
+                                     "return mValue.m${name}.SetValue(${ctorArgs});").substitute(vars)
                 # bodyInHeader must be false for return values because they own
                 # their union members and we don't want include headers in
                 # UnionTypes.h just to call Addref/Release
                 methods.append(ClassMethod("SetAs" + vars["name"],
                                            vars["structType"] + "&",
-                                           [],
+                                           vars["ctorArgList"],
                                            bodyInHeader=not self.isReturnValue,
                                            body=body))
             body = string.Template('MOZ_ASSERT(Is${name}(), "Wrong type!");\n'
@@ -6267,10 +6304,10 @@ class CGUnionConversionStruct(CGThing):
             methods.append(vars["setter"])
             if vars["name"] != "Object":
                 body=string.Template("mUnion.mType = mUnion.e${name};\n"
-                                     "return mUnion.mValue.m${name}.SetValue();").substitute(vars)
+                                     "return mUnion.mValue.m${name}.SetValue(${ctorArgs});").substitute(vars)
                 methods.append(ClassMethod("SetAs" + vars["name"],
                                            vars["structType"] + "&",
-                                           [],
+                                           vars["ctorArgList"],
                                            bodyInHeader=True,
                                            body=body,
                                            visibility="private"))

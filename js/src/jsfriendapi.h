@@ -35,6 +35,7 @@ class JSAtom;
 struct JSErrorFormatString;
 class JSLinearString;
 struct JSJitInfo;
+class JSErrorReport;
 
 namespace JS {
 template <class T>
@@ -577,6 +578,14 @@ JS_FRIEND_API(bool)
 IsObjectInContextCompartment(JSObject *obj, const JSContext *cx);
 
 /*
+ * ErrorFromException takes a raw Value so that it's possible to call it during
+ * GC/CC/whatever, when it may not be possible to get a JSContext to create a
+ * Rooted.  It promises to never ever GC.
+ */
+JS_FRIEND_API(JSErrorReport*)
+ErrorFromException(JS::Value val);
+
+/*
  * NB: these flag bits are encoded into the bytecode stream in the immediate
  * operand of JSOP_ITER, so don't change them without advancing vm/Xdr.h's
  * XDR_BYTECODE_VERSION.
@@ -713,7 +722,7 @@ CastToJSFreeOp(FreeOp *fop)
  * Returns NULL for invalid arguments and JSEXN_INTERNALERR
  */
 extern JS_FRIEND_API(const jschar*)
-GetErrorTypeName(JSContext* cx, int16_t exnType);
+GetErrorTypeName(JSRuntime* rt, int16_t exnType);
 
 #ifdef DEBUG
 extern JS_FRIEND_API(unsigned)

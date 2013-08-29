@@ -243,7 +243,7 @@ class IDLScope(IDLObject):
                 return
 
             # ensureUnique twice with the same object is not allowed
-            assert object != self._dict[identifier.name]
+            assert id(object) != id(self._dict[identifier.name])
 
             replacement = self.resolveIdentifierConflict(self, identifier,
                                                          self._dict[identifier.name],
@@ -2601,6 +2601,10 @@ class IDLAttribute(IDLInterfaceMember):
             raise WebIDLError("An attribute with [PutForwards] must have an "
                               "interface type as its type", [self.location])
 
+        if not self.type.isInterface() and self.getExtendedAttribute("SameObject"):
+            raise WebIDLError("An attribute with [SameObject] must have an "
+                              "interface type as its type", [self.location])
+
     def validate(self):
         pass
 
@@ -2615,12 +2619,14 @@ class IDLAttribute(IDLInterfaceMember):
                               [self.location])
         elif (((identifier == "Throws" or identifier == "GetterThrows") and
                (self.getExtendedAttribute("Pure") or
+                self.getExtendedAttribute("SameObject") or
                 self.getExtendedAttribute("Constant"))) or
-              ((identifier == "Pure" or identifier == "Constant") and
+              ((identifier == "Pure" or identifier == "SameObject" or
+                identifier == "Constant") and
                (self.getExtendedAttribute("Throws") or
                 self.getExtendedAttribute("GetterThrows")))):
-            raise WebIDLError("Throwing things can't be [Pure] or [Constant]",
-                              [attr.location])
+            raise WebIDLError("Throwing things can't be [Pure] or [Constant] "
+                              "or [SameObject]", [attr.location])
         elif identifier == "LenientThis":
             if not attr.noArguments():
                 raise WebIDLError("[LenientThis] must take no arguments",
@@ -2637,6 +2643,9 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[Unforgeable] is only allowed on non-static "
                                   "attributes", [attr.location, self.location])
             self._unforgeable = True
+        elif identifier == "SameObject" and not self.readonly:
+            raise WebIDLError("[SameObject] only allowed on readonly attributes",
+                              [attr.location, self.location])
         elif identifier == "Constant" and not self.readonly:
             raise WebIDLError("[Constant] only allowed on readonly attributes",
                               [attr.location, self.location])
@@ -2673,6 +2682,7 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "Throws" or
               identifier == "GetterThrows" or
               identifier == "ChromeOnly" or
+              identifier == "SameObject" or
               identifier == "Constant" or
               identifier == "Func" or
               identifier == "Creator"):
@@ -3196,6 +3206,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             raise WebIDLError("Methods must not be flagged as "
                               "[Unforgeable]",
                               [attr.location, self.location])
+        elif identifier == "SameObject":
+            raise WebIDLError("Methods must not be flagged as [SameObject]",
+                              [attr.location, self.location]);
         elif identifier == "Constant":
             raise WebIDLError("Methods must not be flagged as [Constant]",
                               [attr.location, self.location]);
