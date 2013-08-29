@@ -141,6 +141,8 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.searchTimeout = null;
   this.pageTimeout = null;
   this.timer = null;
+  this.inactivityTimer = null;
+  this.heartbeatCallback = function () {}; // called by simpletest methods
   this.marionetteLog = new MarionetteLogObj();
   this.command_id = null;
   this.mainFrame = null; //topmost chrome frame
@@ -766,6 +768,7 @@ MarionetteServerConnection.prototype = {
    *        function body
    */
   execute: function MDA_execute(aRequest, directInject) {
+    let inactivityTimeout = aRequest.inactivityTimeout;
     let timeout = aRequest.scriptTimeout ? aRequest.scriptTimeout : this.scriptTimeout;
     let command_id = this.command_id = this.getCommandId();
     let script;
@@ -790,10 +793,33 @@ MarionetteServerConnection.prototype = {
       return;
     }
 
+    // handle the inactivity timeout
+    let that = this;
+    if (inactivityTimeout) {
+     let inactivityTimeoutHandler = function(message, status) {
+      let error_msg = {message: value, status: status};
+      that.sendToClient({from: that.actorID, error: error_msg},
+                        marionette.command_id);
+     };
+     let setTimer = function() {
+      that.inactivityTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      if (that.inactivityTimer != null) {
+       that.inactivityTimer.initWithCallback(function() {
+        inactivityTimeoutHandler("timed out due to inactivity", 28);
+       }, inactivityTimeout, Ci.nsITimer.TYPE_ONESHOT);
+      }
+     }
+     setTimer();
+     this.heartbeatCallback = function resetInactivityTimer() {
+      that.inactivityTimer.cancel();
+      setTimer();
+     }
+    }
+
     let curWindow = this.getCurrentWindow();
     let marionette = new Marionette(this, curWindow, "chrome",
                                     this.marionetteLog,
-                                    timeout, this.testName);
+                                    timeout, this.heartbeatCallback, this.testName);
     let _chromeSandbox = this.createExecuteSandbox(curWindow,
                                                    marionette,
                                                    aRequest.args,
@@ -804,6 +830,9 @@ MarionetteServerConnection.prototype = {
 
     try {
       _chromeSandbox.finish = function chromeSandbox_finish() {
+        if (that.inactivityTimer != null) {
+          that.inactivityTimer.cancel();
+        }
         return marionette.generate_results();
       };
 
@@ -858,6 +887,7 @@ MarionetteServerConnection.prototype = {
   executeJSScript: function MDA_executeJSScript(aRequest) {
     let timeout = aRequest.scriptTimeout ? aRequest.scriptTimeout : this.scriptTimeout;
     let command_id = this.command_id = this.getCommandId();
+
     //all pure JS scripts will need to call Marionette.finish() to complete the test.
     if (aRequest.newSandbox == undefined) {
       //if client does not send a value in newSandbox, 
@@ -880,6 +910,7 @@ MarionetteServerConnection.prototype = {
                        newSandbox: aRequest.newSandbox,
                        async: aRequest.async,
                        timeout: timeout,
+                       inactivityTimeout: aRequest.inactivityTimeout,
                        specialPowers: aRequest.specialPowers,
                        filename: aRequest.filename,
                        line: aRequest.line,
@@ -904,6 +935,7 @@ MarionetteServerConnection.prototype = {
    *        function body
    */
   executeWithCallback: function MDA_executeWithCallback(aRequest, directInject) {
+    let inactivityTimeout = aRequest.inactivityTimeout;
     let timeout = aRequest.scriptTimeout ? aRequest.scriptTimeout : this.scriptTimeout;
     let command_id = this.command_id = this.getCommandId();
     let script;
@@ -922,6 +954,7 @@ MarionetteServerConnection.prototype = {
                        id: this.command_id,
                        newSandbox: aRequest.newSandbox,
                        timeout: timeout,
+                       inactivityTimeout: inactivityTimeout,
                        specialPowers: aRequest.specialPowers,
                        filename: aRequest.filename,
                        line: aRequest.line
@@ -930,13 +963,33 @@ MarionetteServerConnection.prototype = {
       return;
     }
 
+    // handle the inactivity timeout
+    let that = this;
+    if (inactivityTimeout) {
+     this.inactivityTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+     if (this.inactivityTimer != null) {
+      this.inactivityTimer.initWithCallback(function() {
+       chromeAsyncReturnFunc("timed out due to inactivity", 28);
+      }, inactivityTimeout, Ci.nsITimer.TYPE_ONESHOT);
+     }
+     this.heartbeatCallback = function resetInactivityTimer() {
+      that.inactivityTimer.cancel();
+      that.inactivityTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      if (that.inactivityTimer != null) {
+       that.inactivityTimer.initWithCallback(function() {
+        chromeAsyncReturnFunc("timed out due to inactivity", 28);
+       }, inactivityTimeout, Ci.nsITimer.TYPE_ONESHOT);
+      }
+     }
+    }
+
     let curWindow = this.getCurrentWindow();
     let original_onerror = curWindow.onerror;
     let that = this;
     that.timeout = timeout;
     let marionette = new Marionette(this, curWindow, "chrome",
                                     this.marionetteLog,
-                                    timeout, this.testName);
+                                    timeout, this.heartbeatCallback, this.testName);
     marionette.command_id = this.command_id;
 
     function chromeAsyncReturnFunc(value, status, stacktrace) {
@@ -965,6 +1018,9 @@ MarionetteServerConnection.prototype = {
           that.sendToClient({from: that.actorID, error: error_msg},
                             marionette.command_id);
         }
+      }
+      if (that.inactivityTimer != null) {
+        that.inactivityTimer.cancel();
       }
     }
 
