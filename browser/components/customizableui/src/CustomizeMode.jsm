@@ -513,47 +513,37 @@ CustomizeMode.prototype = {
     }.bind(this)).then(null, ERROR);
   },
 
-  // TODO(bug 885575): Remove once CustomizeUI can handle moving wrapped widgets.
-  _wrapToolbarItemsSync: function() {
-    let window = this.window;
-    // Add drag-and-drop event handlers to all of the customizable areas.
-    this.areas = [];
-    for (let area of CustomizableUI.areas) {
-      let target = CustomizableUI.getCustomizeTargetForArea(area, window);
-      target.addEventListener("dragstart", this, true);
-      target.addEventListener("dragover", this, true);
-      target.addEventListener("dragexit", this, true);
-      target.addEventListener("drop", this, true);
-      target.addEventListener("dragend", this, true);
-      for (let child of target.children) {
-        if (this.isCustomizableItem(child)) {
-          this.wrapToolbarItem(child, getPlaceForItem(child));
-        }
+  _wrapItemsInArea: function(target) {
+    for (let child of target.children) {
+      if (this.isCustomizableItem(child)) {
+        this.wrapToolbarItem(child, getPlaceForItem(child));
       }
-      this.areas.push(target);
+    }
+  },
+
+  _unwrapItemsInArea: function(target) {
+    for (let toolbarItem of target.children) {
+      if (this.isWrappedToolbarItem(toolbarItem)) {
+        this.unwrapToolbarItem(toolbarItem);
+      }
     }
   },
 
   _unwrapToolbarItems: function() {
     return Task.spawn(function() {
-      this._unwrapToolbarItemsSync();
-    }.bind(this)).then(null, ERROR);
-  },
-
-  // TODO(bug 885575): Merge into _unwrapToolbarItems.
-  _unwrapToolbarItemsSync: function() {
-    for (let target of this.areas) {
-      for (let toolbarItem of target.children) {
-        if (this.isWrappedToolbarItem(toolbarItem)) {
-          this.unwrapToolbarItem(toolbarItem);
+      for (let target of this.areas) {
+        for (let toolbarItem of target.children) {
+          if (this.isWrappedToolbarItem(toolbarItem)) {
+            yield this.deferredUnwrapToolbarItem(toolbarItem);
+          }
         }
+        target.removeEventListener("dragstart", this, true);
+        target.removeEventListener("dragover", this, true);
+        target.removeEventListener("dragexit", this, true);
+        target.removeEventListener("drop", this, true);
+        target.removeEventListener("dragend", this, true);
       }
-      target.removeEventListener("dragstart", this, true);
-      target.removeEventListener("dragover", this, true);
-      target.removeEventListener("dragexit", this, true);
-      target.removeEventListener("drop", this, true);
-      target.removeEventListener("dragend", this, true);
-    }
+    }.bind(this)).then(null, ERROR);
   },
 
   persistCurrentSets: function()  {
@@ -612,10 +602,46 @@ CustomizeMode.prototype = {
     this._onUIChange();
   },
 
-  onWidgetCreated: function(aWidgetId) {
+  onWidgetBeforeDOMChange: function(aNodeToChange, aSecondaryNode, aContainer) {
+    if (aContainer.ownerDocument.defaultView != this.window) {
+      return;
+    }
+    if (aContainer.id == CustomizableUI.AREA_PANEL) {
+      this._removePanelCustomizationPlaceholders();
+    }
+    this.unwrapToolbarItem(aNodeToChange.parentNode);
+    if (aSecondaryNode) {
+      this.unwrapToolbarItem(aSecondaryNode.parentNode);
+    }
   },
 
-  onWidgetDestroyed: function(aWidgetId) {
+  onWidgetAfterDOMChange: function(aNodeToChange, aSecondaryNode, aContainer) {
+    if (aContainer.ownerDocument.defaultView != this.window) {
+      return;
+    }
+    // If the node is still attached to the container, wrap it again:
+    if (aNodeToChange.parentNode) {
+      this.wrapToolbarItem(aNodeToChange);
+      if (aSecondaryNode) {
+        this.wrapToolbarItem(aSecondaryNode);
+      }
+    } else {
+      // If not, it got removed.
+
+      // If an API-based widget is removed while customizing, append it to the palette.
+      // The _applyDrop code itself will take care of positioning it correctly, if
+      // applicable. We need the code to be here so removing widgets using CustomizableUI's
+      // API also does the right thing (and adds it to the palette)
+      let widgetId = aNodeToChange.id;
+      let widget = CustomizableUI.getWidget(widgetId);
+      if (widget.provider == CustomizableUI.PROVIDER_API) {
+        let paletteItem = this.makePaletteItem(widget, "palette");
+        this.visiblePalette.appendChild(paletteItem);
+      }
+    }
+    if (aContainer.id == CustomizableUI.AREA_PANEL) {
+      this._showPanelCustomizationPlaceholders();
+    }
   },
 
   _onUIChange: function() {
@@ -819,32 +845,12 @@ CustomizeMode.prototype = {
     this._setDragActive(this._dragOverItem, false);
     this._removePanelCustomizationPlaceholders();
 
-    // TODO(bug 885575): Remove once CustomizeUI can handle moving wrapped widgets.
-    this._unwrapToolbarItemsSync();
-    let paletteChild = this.visiblePalette.firstChild;
-    let nextChild;
-    while (paletteChild) {
-      nextChild = paletteChild.nextElementSibling;
-      this.unwrapToolbarItem(paletteChild);
-      paletteChild = nextChild;
-    }
-
     try {
       this._applyDrop(aEvent, targetArea, originArea, draggedItemId, targetNode);
     } catch (ex) {
       ERROR(ex, ex.stack);
     }
 
-    // TODO(bug 885575): Remove once CustomizeUI can handle moving wrapped widgets.
-    this._wrapToolbarItemsSync();
-    // Re-wrap palette items.
-    let paletteChild = this.visiblePalette.firstChild;
-    let nextChild;
-    while (paletteChild) {
-      nextChild = paletteChild.nextElementSibling;
-      this.wrapToolbarItem(paletteChild, "palette");
-      paletteChild = nextChild;
-    }
     this._showPanelCustomizationPlaceholders();
   },
 
@@ -860,9 +866,9 @@ CustomizeMode.prototype = {
       return;
     }
 
-    // Is the target area the customization palette? If so, we have two cases -
-    // either the origin area was the palette, or a customizable area.
+    // Is the target area the customization palette?
     if (aTargetArea.id == kPaletteId) {
+      // Did we drag from outside the palette?
       if (aOriginArea.id !== kPaletteId) {
         if (!CustomizableUI.isWidgetRemovable(aDraggedItemId)) {
           return;
@@ -870,12 +876,14 @@ CustomizeMode.prototype = {
 
         CustomizableUI.removeWidgetFromArea(aDraggedItemId);
       }
+      draggedItem = draggedItem.parentNode;
 
       // If the target node is the palette itself, just append
       if (aTargetNode == this.visiblePalette) {
         this.visiblePalette.appendChild(draggedItem);
       } else {
-        this.visiblePalette.insertBefore(draggedItem, aTargetNode);
+        // The items in the palette are wrapped, so we need the target node's parent here:
+        this.visiblePalette.insertBefore(draggedItem, aTargetNode.parentNode);
       }
       return;
     }

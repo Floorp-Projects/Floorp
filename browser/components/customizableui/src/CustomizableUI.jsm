@@ -568,6 +568,7 @@ let CustomizableUIInternal = {
       let container = areaNode.customizationTarget;
       let [provider, widgetNode] = this.getWidgetNode(aWidgetId, window);
 
+
       this.ensureButtonContextMenu(widgetNode, aArea == CustomizableUI.AREA_PANEL);
       if (widgetNode.localName == "toolbarbutton" && aArea == CustomizableUI.AREA_PANEL) {
         widgetNode.setAttribute("tabindex", "0");
@@ -578,11 +579,16 @@ let CustomizableUIInternal = {
 
       let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
                                 : null;
+
+      this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, nextNode, container);
       this.insertWidgetBefore(widgetNode, nextNode, container, aArea);
       this._addParentFlex(widgetNode);
+      this.notifyListeners("onWidgetAfterDOMChange", widgetNode, nextNode, container);
+
       if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
         areaNode.setAttribute("currentset", areaNode.currentSet);
       }
+
     }
   },
 
@@ -611,6 +617,7 @@ let CustomizableUIInternal = {
         continue;
       }
 
+      this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, null, container);
       this._removeParentFlex(widgetNode);
 
       if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
@@ -621,8 +628,11 @@ let CustomizableUIInternal = {
         if (widgetNode.getAttribute("type") == "wrap") {
           widgetNode.removeAttribute("type");
         }
+        //XXXgijs: this won't work when removing widgets from the panel (fix in bug 902100)
         areaNode.toolbox.palette.appendChild(widgetNode);
       }
+      this.notifyListeners("onWidgetAfterDOMChange", widgetNode, null, container);
+
       if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
         areaNode.setAttribute("currentset", areaNode.currentSet);
       }
@@ -670,10 +680,15 @@ let CustomizableUIInternal = {
 
       let nextNode = nextNodeId ? container.querySelector(idToSelector(nextNodeId))
                                 : null;
+
+      this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, nextNode, container);
       this.insertWidgetBefore(widgetNode, nextNode, container, aArea);
+      this.notifyListeners("onWidgetAfterDOMChange", widgetNode, nextNode, container);
+
       if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
         areaNode.setAttribute("currentset", areaNode.currentSet);
       }
+
     }
   },
 
