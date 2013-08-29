@@ -13,7 +13,7 @@
 #include "CompactBuffer.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 #ifdef TRACK_SNAPSHOTS
 class LInstruction;

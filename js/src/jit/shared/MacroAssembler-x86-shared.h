@@ -20,7 +20,7 @@
 #include "jit/IonCaches.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class MacroAssemblerX86Shared : public Assembler
 {
@@ -500,7 +500,7 @@ class MacroAssemblerX86Shared : public Assembler
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_shared_MacroAssembler_x86_shared_h */

@@ -7,7 +7,7 @@
 #include "MoveEmitter-arm.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 MoveEmitterARM::MoveEmitterARM(MacroAssemblerARMCompat &masm)
   : inCycle_(false),

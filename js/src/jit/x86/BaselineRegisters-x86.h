@@ -12,7 +12,7 @@
 #include "jit/IonMacroAssembler.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 static const Register BaselineFrameReg = ebp;
 static const Register BaselineStackReg = esp;
@@ -34,7 +34,7 @@ static const Register ExtractTemp1        = InvalidReg;
 static const FloatRegister FloatReg0      = xmm0;
 static const FloatRegister FloatReg1      = xmm1;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

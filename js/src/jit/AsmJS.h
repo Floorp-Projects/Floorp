@@ -18,7 +18,7 @@ class ScriptSource;
 class SPSProfiler;
 class AsmJSModule;
 namespace frontend { struct TokenStream; struct ParseNode; }
-namespace ion { class MIRGenerator; class LIRGraph; }
+namespace jit { class MIRGenerator; class LIRGraph; }
 
 // Called after parsing a function 'fn' which contains the "use asm" directive.
 // This function performs type-checking and code-generation. If type-checking
@@ -140,8 +140,8 @@ struct AsmJSParallelTask
     LifoAlloc lifo;         // Provider of all heap memory used for compilation.
 
     uint32_t funcNum;       // Index |i| of function in |Module.function(i)|.
-    ion::MIRGenerator *mir; // Passed from main thread to worker.
-    ion::LIRGraph *lir;     // Passed from worker to main thread.
+    jit::MIRGenerator *mir; // Passed from main thread to worker.
+    jit::LIRGraph *lir;     // Passed from worker to main thread.
     unsigned compileTime;
 
     AsmJSParallelTask(size_t defaultChunkSize)
@@ -149,7 +149,7 @@ struct AsmJSParallelTask
         funcNum(0), mir(NULL), lir(NULL), compileTime(0)
     { }
 
-    void init(uint32_t newFuncNum, ion::MIRGenerator *newMir) {
+    void init(uint32_t newFuncNum, jit::MIRGenerator *newMir) {
         funcNum = newFuncNum;
         mir = newMir;
         lir = NULL;

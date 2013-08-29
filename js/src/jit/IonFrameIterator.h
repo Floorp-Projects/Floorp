@@ -21,7 +21,7 @@ namespace js {
 };
 
 namespace js {
-namespace ion {
+namespace jit {
 
 enum FrameType
 {
@@ -330,7 +330,7 @@ class InlineFrameIteratorMaybeGC
 typedef InlineFrameIteratorMaybeGC<CanGC> InlineFrameIterator;
 typedef InlineFrameIteratorMaybeGC<NoGC> InlineFrameIteratorNoGC;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

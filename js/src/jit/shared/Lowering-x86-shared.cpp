@@ -9,7 +9,7 @@
 #include "jit/shared/Lowering-x86-shared.h"
 #include "jit/shared/Lowering-shared-inl.h"
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 LTableSwitch *
 LIRGeneratorX86Shared::newLTableSwitch(const LAllocation &in, const LDefinition &inputCopy,

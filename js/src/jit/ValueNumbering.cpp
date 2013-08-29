@@ -11,7 +11,7 @@
 #include "ValueNumbering.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 ValueNumberer::ValueNumberer(MIRGenerator *mir, MIRGraph &graph, bool optimistic)
   : mir(mir),

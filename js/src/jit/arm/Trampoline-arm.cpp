@@ -16,7 +16,7 @@
 #include "jit/ExecutionModeInlines.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 static void
 GenerateReturn(MacroAssembler &masm, int returnCode)
@@ -232,7 +232,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.passABIArg(r11); // BaselineFrame
         masm.passABIArg(OsrFrameReg); // StackFrame
         masm.passABIArg(numStackValues);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ion::InitBaselineFrameForOsr));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, jit::InitBaselineFrameForOsr));
 
         Register jitcode = regs.takeAny();
         masm.pop(jitcode);

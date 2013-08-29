@@ -9,7 +9,7 @@
 #include "jsopcodeinlines.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 BytecodeAnalysis::BytecodeAnalysis(JSScript *script)
   : script_(script),

@@ -15,7 +15,7 @@
 #include "jit/IonMacroAssembler.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class BaselineCompilerShared
 {
@@ -137,7 +137,7 @@ class BaselineCompilerShared
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_shared_BaselineCompiler_shared_h */

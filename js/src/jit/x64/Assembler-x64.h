@@ -13,7 +13,7 @@
 #include "mozilla/Util.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 static const MOZ_CONSTEXPR Register rax = { JSC::X86Registers::eax };
 static const MOZ_CONSTEXPR Register rbx = { JSC::X86Registers::ebx };
@@ -256,13 +256,13 @@ class Operand
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #include "jit/shared/Assembler-x86-shared.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // Return operand from a JS -> JS call.
 static const MOZ_CONSTEXPR ValueOperand JSReturnOperand = ValueOperand(JSReturnReg);
@@ -755,7 +755,7 @@ GetFloatArgReg(uint32_t intArg, uint32_t floatArg, FloatRegister *out)
     return true;
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_x64_Assembler_x64_h */

@@ -21,7 +21,7 @@
 #include "jstypedarrayinlines.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::BitwiseCast;
 
@@ -352,7 +352,7 @@ MConstant::New(const Value &v)
 }
 
 types::StackTypeSet *
-ion::MakeSingletonTypeSet(JSObject *obj)
+jit::MakeSingletonTypeSet(JSObject *obj)
 {
     LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
     types::StackTypeSet *types = alloc->new_<types::StackTypeSet>();
@@ -661,7 +661,7 @@ MakeMIRTypeSet(MIRType type)
 }
 
 void
-ion::MergeTypes(MIRType *ptype, types::StackTypeSet **ptypeSet,
+jit::MergeTypes(MIRType *ptype, types::StackTypeSet **ptypeSet,
                 MIRType newType, types::StackTypeSet *newTypeSet)
 {
     if (newTypeSet && newTypeSet->empty())
@@ -2404,7 +2404,7 @@ MAsmJSCall::New(Callee callee, const Args &args, MIRType resultType, size_t spIn
 }
 
 bool
-ion::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
+jit::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
 {
     if (obj->mightBeType(MIRType_String))
         return false;
@@ -2421,7 +2421,7 @@ ion::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
 }
 
 bool
-ion::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType)
+jit::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType)
 {
     if (obj->mightBeType(MIRType_String))
         return false;
@@ -2438,14 +2438,14 @@ ion::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType
 }
 
 bool
-ion::ElementAccessIsPacked(JSContext *cx, MDefinition *obj)
+jit::ElementAccessIsPacked(JSContext *cx, MDefinition *obj)
 {
     types::StackTypeSet *types = obj->resultTypeSet();
     return types && !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED);
 }
 
 bool
-ion::ElementAccessHasExtraIndexedProperty(JSContext *cx, MDefinition *obj)
+jit::ElementAccessHasExtraIndexedProperty(JSContext *cx, MDefinition *obj)
 {
     types::StackTypeSet *types = obj->resultTypeSet();
 
@@ -2456,7 +2456,7 @@ ion::ElementAccessHasExtraIndexedProperty(JSContext *cx, MDefinition *obj)
 }
 
 MIRType
-ion::DenseNativeElementType(JSContext *cx, MDefinition *obj)
+jit::DenseNativeElementType(JSContext *cx, MDefinition *obj)
 {
     types::StackTypeSet *types = obj->resultTypeSet();
     MIRType elementType = MIRType_None;
@@ -2486,7 +2486,7 @@ ion::DenseNativeElementType(JSContext *cx, MDefinition *obj)
 }
 
 bool
-ion::PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, PropertyName *name,
+jit::PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, PropertyName *name,
                                   types::StackTypeSet *observed, bool updateObserved)
 {
     // If the object being read from has types for the property which haven't
@@ -2553,7 +2553,7 @@ ion::PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, Prop
 }
 
 bool
-ion::PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
+jit::PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
                                   types::StackTypeSet *observed)
 {
     if (observed->unknown())
@@ -2574,7 +2574,7 @@ ion::PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName 
 }
 
 bool
-ion::PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *name)
+jit::PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *name)
 {
     // Determine if reading a property from obj is likely to be idempotent.
 
@@ -2600,7 +2600,7 @@ ion::PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *nam
 }
 
 void
-ion::AddObjectsForPropertyRead(JSContext *cx, MDefinition *obj, PropertyName *name,
+jit::AddObjectsForPropertyRead(JSContext *cx, MDefinition *obj, PropertyName *name,
                                types::StackTypeSet *observed)
 {
     // Add objects to observed which *could* be observed by reading name from obj,
@@ -2732,7 +2732,7 @@ AddTypeGuard(MBasicBlock *current, MDefinition *obj, types::TypeObject *typeObje
 }
 
 bool
-ion::PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinition **pobj,
+jit::PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinition **pobj,
                                    PropertyName *name, MDefinition **pvalue, bool canModify)
 {
     // If any value being written is not reflected in the type information for

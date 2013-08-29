@@ -8,7 +8,7 @@
 #define jit_shared_CodeGenerator_shared_inl_h
 
 namespace js {
-namespace ion {
+namespace jit {
 
 static inline int32_t
 ToInt32(const LAllocation *a)

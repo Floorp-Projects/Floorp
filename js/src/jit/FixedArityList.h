@@ -8,7 +8,7 @@
 #define jit_FixedArityList_h
 
 namespace js {
-namespace ion {
+namespace jit {
 
 template <typename T, size_t Arity>
 class FixedArityList
@@ -46,7 +46,7 @@ class FixedArityList<T, 0>
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_FixedArityList_h */

@@ -65,7 +65,7 @@ StoreBuffer::WholeCellEdges::mark(JSTracer *trc)
         return;
     }
     JS_ASSERT(kind == JSTRACE_IONCODE);
-    static_cast<ion::IonCode *>(tenured)->trace(trc);
+    static_cast<jit::IonCode *>(tenured)->trace(trc);
 }
 
 /*** MonoTypeBuffer ***/

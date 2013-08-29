@@ -9,7 +9,7 @@
 #include "MIRGraph.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 MDefinition *
 BoxInputsPolicy::boxAt(MInstruction *at, MDefinition *operand)

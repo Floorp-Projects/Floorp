@@ -19,7 +19,7 @@
 #include "jit/SnapshotWriter.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class OutOfLineCode;
 class CodeGenerator;
@@ -656,7 +656,7 @@ class OutOfLinePropagateParallelAbort : public OutOfLineCode
     bool generate(CodeGeneratorShared *codegen);
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_shared_CodeGenerator_shared_h */

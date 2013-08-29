@@ -26,7 +26,7 @@
 #include "CompilerRoot.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class BaselineInspector;
 class ValueNumberData;
@@ -8295,7 +8295,7 @@ bool PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinit
                                    PropertyName *name, MDefinition **pvalue,
                                    bool canModify = true);
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_MIR_h */

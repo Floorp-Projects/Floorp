@@ -14,7 +14,7 @@
 #include "js/RootingAPI.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // Roots a read-only GCThing for the lifetime of a single compilation.
 // Each root is maintained in a linked list that is walked over during tracing.
@@ -60,7 +60,7 @@ typedef CompilerRoot<PropertyName*> CompilerRootPropertyName;
 typedef CompilerRoot<Shape*> CompilerRootShape;
 typedef CompilerRoot<Value> CompilerRootValue;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

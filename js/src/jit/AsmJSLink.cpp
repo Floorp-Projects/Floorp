@@ -20,7 +20,7 @@
 #endif
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 using namespace mozilla;
 
 static bool
@@ -206,7 +206,7 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
 #elif defined(JS_CPU_ARM)
         // Now the length of the array is know, patch all of the bounds check sites
         // with the new length.
-        ion::IonContext ic(cx, NULL);
+        jit::IonContext ic(cx, NULL);
         module.patchBoundsChecks(heap->byteLength());
 
 #endif
@@ -330,7 +330,7 @@ js::CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
 
     {
         AsmJSActivation activation(cx, module);
-        ion::IonContext ictx(cx, NULL);
+        jit::IonContext ictx(cx, NULL);
         JitActivation jitActivation(cx, /* firstFrameIsConstructing = */ false, /* active */ false);
 
         // Call into generated code.

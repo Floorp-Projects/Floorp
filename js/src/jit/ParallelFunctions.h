@@ -12,7 +12,7 @@
 #include "gc/Heap.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 ForkJoinSlice *ParForkJoinSlice();
 JSObject *ParNewGCThing(gc::AllocKind allocKind);
@@ -73,7 +73,7 @@ void TraceLIR(uint32_t bblock, uint32_t lir, uint32_t execModeInt,
 
 void ParCallToUncompiledScript(JSFunction *func);
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_ParallelFunctions_h */
