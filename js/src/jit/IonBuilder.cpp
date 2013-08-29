@@ -2789,7 +2789,7 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
             defaultcase->addPredecessor(caseblock);
         }
 
-        tableswitch->addCase(caseblock);
+        tableswitch->addCase(tableswitch->addSuccessor(caseblock));
 
         // If this is an actual case (not filled gap),
         // add this block to the list that still needs to get processed
