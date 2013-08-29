@@ -17,6 +17,7 @@
 if CONFIG['MOZ_B2G_BT']:
     LIBXUL_LIBRARY = True
     MODULE = 'dom'
+    LIBRARY_NAME = 'dombluetooth_s'
     XPIDL_MODULE = 'dom_bluetooth'
     XPIDL_SOURCES += [
         'nsIDOMBluetoothDevice.idl',

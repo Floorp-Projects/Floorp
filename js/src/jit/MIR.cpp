@@ -2397,6 +2397,24 @@ MGetPropertyPolymorphic::mightAlias(MDefinition *store)
     return false;
 }
 
+void
+MGetPropertyCache::setBlock(MBasicBlock *block)
+{
+    MDefinition::setBlock(block);
+    // Track where we started.
+    if (!location_.pc) {
+        location_.pc = block->trackedPc();
+        location_.script = block->info().script();
+    }
+}
+
+bool
+MGetPropertyCache::updateForReplacement(MDefinition *ins) {
+    MGetPropertyCache *other = ins->toGetPropertyCache();
+    location_.append(&other->location_);
+    return true;
+}
+
 MDefinition *
 MAsmJSUnsignedToDouble::foldsTo(bool useValueNumbers)
 {
@@ -2454,7 +2472,8 @@ jit::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
 }
 
 bool
-jit::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType)
+jit::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
+                               ScalarTypeRepresentation::Type *arrayType)
 {
     if (obj->mightBeType(MIRType_String))
         return false;
@@ -2466,8 +2485,8 @@ jit::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id, int *arrayType
     if (!types)
         return false;
 
-    *arrayType = types->getTypedArrayType();
-    return *arrayType != TypedArrayObject::TYPE_MAX;
+    *arrayType = (ScalarTypeRepresentation::Type) types->getTypedArrayType();
+    return *arrayType != ScalarTypeRepresentation::TYPE_MAX;
 }
 
 bool

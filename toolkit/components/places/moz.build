@@ -14,6 +14,7 @@ XPIDL_SOURCES += [
 if CONFIG['MOZ_PLACES']:
     LIBXUL_LIBRARY = True
     MSVC_ENABLE_PGO = True
+    LIBRARY_NAME = 'places'
 
     XPIDL_SOURCES += [
         'mozIAsyncFavicons.idl',

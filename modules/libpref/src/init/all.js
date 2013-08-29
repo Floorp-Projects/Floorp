@@ -1795,6 +1795,9 @@ pref("layout.css.filters.enabled", false);
 // Is support for CSS Flexbox enabled?
 pref("layout.css.flexbox.enabled", true);
 
+// Is support for the CSS4 image-orientation property enabled?
+pref("layout.css.image-orientation.enabled", true);
+
 // Is support for CSS3 Fonts features enabled?
 // (includes font-variant-*, font-kerning, font-synthesis
 // and the @font-feature-values rule)
@@ -4087,14 +4090,19 @@ pref("layers.frame-counter", false);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
 
+// Whether to use the deprecated texture architecture rather than the new one.
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
-// Whether to use the deprecated texture architecture rather than the new one.
 pref("layers.use-deprecated-textures", false);
+#else
+#ifdef MOZ_WIDGET_GONK
+pref("layers.use-deprecated-textures", true);
 #else
 pref("layers.offmainthreadcomposition.enabled", false);
 pref("layers.use-deprecated-textures", true);
 #endif
+#endif
+
 // same effect as layers.offmainthreadcomposition.enabled, but specifically for
 // use with tests.
 pref("layers.offmainthreadcomposition.testing.enabled", false);

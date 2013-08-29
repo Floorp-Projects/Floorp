@@ -22,6 +22,8 @@ if CONFIG['NECKO_COOKIES']:
     LIBXUL_LIBRARY = True
     MSVC_ENABLE_PGO = True
 
+    LIBRARY_NAME = 'neckocookie_s'
+
     EXPORTS.mozilla.net = [
         'CookieServiceParent.h',
         'CookieServiceChild.h',

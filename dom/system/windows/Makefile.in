@@ -9,8 +9,6 @@ VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME    = domsystemwindows_s
-
 EXPORT_LIBRARY = 1
 
 # We fire the nsDOMDeviceAcceleration

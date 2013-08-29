@@ -10,7 +10,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME   = nkdatachan_s
 NO_PROFILE_GUIDED_OPTIMIZE = 1 # Don't PGO
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/xpcom/ds \

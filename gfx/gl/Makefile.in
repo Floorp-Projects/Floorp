@@ -9,7 +9,6 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME     = gl
 EXPORT_LIBRARY   = 1
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifdef MOZ_WEBGL

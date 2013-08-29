@@ -14,3 +14,5 @@ LIBXUL_LIBRARY = True
 # Do NOT export this library.  We don't actually want our test code
 # being added to libxul or anything.
 
+LIBRARY_NAME = 'dombindings_test_s'
+

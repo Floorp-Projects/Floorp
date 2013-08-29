@@ -75,6 +75,59 @@ public:
   ExtendMode mExtendMode;
 };
 
+#ifdef USE_SKIA_GPU
+
+static std::vector<DrawTargetSkia*>&
+GLDrawTargets()
+{
+  static std::vector<DrawTargetSkia*> targets;
+  return targets;
+}
+
+#define SKIA_MAX_CACHE_ITEMS 256
+
+// 64MB was chosen because it seems we can pass all of our tests
+// on the current hardware (Tegra2) without running out of memory
+#define SKIA_TOTAL_CACHE_SIZE 64*1024*1024
+
+static void
+SetCacheLimits()
+{
+  std::vector<DrawTargetSkia*>& targets = GLDrawTargets();
+  uint32_t size = targets.size();
+  if (size == 0)
+    return;
+
+  int individualCacheSize = SKIA_TOTAL_CACHE_SIZE / size;
+  for (int i = 0; i < size; i++) {
+    targets[i]->SetCacheLimits(SKIA_MAX_CACHE_ITEMS, individualCacheSize);
+  }
+
+}
+
+#undef SKIA_MAX_CACHE_ITEMS
+#undef SKIA_TOTAL_CACHE_SIZE
+
+static void
+AddGLDrawTarget(DrawTargetSkia* target)
+{
+  GLDrawTargets().push_back(target);
+  SetCacheLimits();
+}
+
+static void
+RemoveGLDrawTarget(DrawTargetSkia* target)
+{
+  std::vector<DrawTargetSkia*>& targets = GLDrawTargets();
+  std::vector<DrawTargetSkia*>::iterator it = std::find(targets.begin(), targets.end(), target);
+  if (it != targets.end()) {
+    targets.erase(it);
+    SetCacheLimits();
+  }
+}
+
+#endif
+
 DrawTargetSkia::DrawTargetSkia()
   : mSnapshot(nullptr)
 {
@@ -87,6 +140,9 @@ DrawTargetSkia::DrawTargetSkia()
 
 DrawTargetSkia::~DrawTargetSkia()
 {
+#ifdef USE_SKIA_GPU
+  RemoveGLDrawTarget(this);
+#endif
 }
 
 TemporaryRef<SourceSurface>
@@ -661,8 +717,6 @@ DrawTargetSkia::InitWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLCont
   SkAutoTUnref<GrContext> gr(GrContext::Create(kOpenGL_GrBackend, backendContext));
   mGrContext = gr.get();
 
-  mGrContext->setTextureCacheLimits(128, 1024*1024*16);
-
   GrBackendRenderTargetDesc targetDescriptor;
 
   targetDescriptor.fWidth = mSize.width;
@@ -676,7 +730,17 @@ DrawTargetSkia::InitWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLCont
   SkAutoTUnref<SkDevice> device(new SkGpuDevice(mGrContext.get(), target.get()));
   SkAutoTUnref<SkCanvas> canvas(new SkCanvas(device.get()));
   mCanvas = canvas.get();
+
+  AddGLDrawTarget(this);
 }
+
+void
+DrawTargetSkia::SetCacheLimits(int aCount, int aSizeInBytes)
+{
+  MOZ_ASSERT(mGrContext, "No GrContext!");
+  mGrContext->setTextureCacheLimits(aCount, aSizeInBytes);
+}
+
 #endif
 
 void

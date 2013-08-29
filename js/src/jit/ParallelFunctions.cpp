@@ -134,7 +134,7 @@ jit::CheckOverRecursedPar(ForkJoinSlice *slice)
 
     uintptr_t realStackLimit;
     if (slice->isMainThread())
-        realStackLimit = js::GetNativeStackLimit(slice->runtime());
+        realStackLimit = GetNativeStackLimit(slice);
     else
         realStackLimit = slice->perThreadData->ionStackLimit;
 

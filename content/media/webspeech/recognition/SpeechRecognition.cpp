@@ -10,12 +10,16 @@
 #include "nsCycleCollectionParticipant.h"
 
 #include "mozilla/dom/SpeechRecognitionBinding.h"
+#include "mozilla/MediaManager.h"
+#include "mozilla/Services.h"
 
 #include "AudioSegment.h"
 #include "endpointer.h"
 
 #include "GeneratedEvents.h"
 #include "nsIDOMSpeechRecognitionEvent.h"
+#include "nsIObserverService.h"
+#include "nsServiceManagerUtils.h"
 
 #include <algorithm>
 
@@ -624,8 +628,7 @@ SpeechRecognition::GetGrammars(ErrorResult& aRv) const
 }
 
 void
-SpeechRecognition::SetGrammars(mozilla::dom::SpeechGrammarList& aArg,
-                               ErrorResult& aRv)
+SpeechRecognition::SetGrammars(SpeechGrammarList& aArg, ErrorResult& aRv)
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return;

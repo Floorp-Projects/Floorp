@@ -31,6 +31,7 @@
 #include "nsDOMWindowList.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptTimeoutHandler.h"
 #include "nsDOMWindowResizeEventDetail.h"

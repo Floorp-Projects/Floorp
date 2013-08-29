@@ -33,6 +33,7 @@ function runTests() {
     aaa[0] = [[0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4], [0,1,2,3,4]];
 
     aaa = null;
+
     gc();
     spin();
     for (var i = 0; i < a0.length; i++)
@@ -44,14 +45,12 @@ function runTests() {
     var theOneISawWasJustBlack = Rainbow.repeat({'r': 0, 'g': 0, 'b': 0});
 
     var middleBand = theOneISawWasJustBlack[3];
-
     theOneISawWasJustBlack = null;
     gc();
     spin();
     assertEq(middleBand['r'] == 0 && middleBand['g'] == 0 && middleBand['b'] == 0, true);
     middleBand.update({'r': 255, 'g': 207, 'b': 142});
     assertEq(middleBand['r'] == 255 && middleBand['g'] == 207 && middleBand['b'] == 142, true);
-
 
     var scopedType = function() {
         var Point = new StructType({'x': int32, 'y': int32});
@@ -65,8 +64,8 @@ function runTests() {
     gc();
     spin();
     gc();
-    assertEq(point.constructor.fields.x, int32);
-    assertEq(point.constructor.fields.y, int32);
+    assertEq(point.constructor.fieldTypes.x, int32);
+    assertEq(point.constructor.fieldTypes.y, int32);
 
     if (typeof reportCompare === "function")
         reportCompare(true, true);

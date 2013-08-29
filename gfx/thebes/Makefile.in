@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= thebes
 EXPORT_LIBRARY	= 1
 
 # gfxSVGGlyphs needs nsDOMParser.h
