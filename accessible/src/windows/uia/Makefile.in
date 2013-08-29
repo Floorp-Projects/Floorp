@@ -9,7 +9,6 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = accessibility_toolkit_uia_s
 EXPORT_LIBRARY = ..
 
 # The midl generated code include Windows headers which defines min and max

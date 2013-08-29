@@ -32,7 +32,9 @@ load 603146-1.html
 load 603858-1.html
 load 608963.html
 load 616930-1.html
-load 639737-1.html
+# This test has jit-related infinite recursion, which is slow enough to cause
+# timeouts on mac. See bug 908895.
+skip-if(cocoaWidget&&isDebugBuild) load 639737-1.html
 load 648206-1.html
 load 705875.html
 load 720305-1.html

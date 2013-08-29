@@ -5304,6 +5304,43 @@ nsRuleNode::ComputeVisibilityData(void* aStartStruct,
               parentVisibility->mWritingMode,
               NS_STYLE_WRITING_MODE_HORIZONTAL_TB, 0, 0, 0, 0);
 
+  // image-orientation: enum, inherit, initial
+  const nsCSSValue* orientation = aRuleData->ValueForImageOrientation();
+  if (orientation->GetUnit() == eCSSUnit_Inherit) {
+    canStoreInRuleTree = false;
+    visibility->mImageOrientation = parentVisibility->mImageOrientation;
+  } else if (orientation->GetUnit() == eCSSUnit_Initial) {
+    visibility->mImageOrientation = nsStyleImageOrientation();
+  } else if (orientation->IsAngularUnit()) {
+    double angle = orientation->GetAngleValueInRadians();
+    visibility->mImageOrientation =
+      nsStyleImageOrientation::CreateAsAngleAndFlip(angle, false);
+  } else if (orientation->GetUnit() == eCSSUnit_Array) {
+    const nsCSSValue::Array* array = orientation->GetArrayValue();
+    MOZ_ASSERT(array->Item(0).IsAngularUnit(),
+               "First image-orientation value is not an angle");
+    MOZ_ASSERT(array->Item(1).GetUnit() == eCSSUnit_Enumerated &&
+               array->Item(1).GetIntValue() == NS_STYLE_IMAGE_ORIENTATION_FLIP,
+               "Second image-orientation value is not 'flip'");
+    double angle = array->Item(0).GetAngleValueInRadians();
+    visibility->mImageOrientation =
+      nsStyleImageOrientation::CreateAsAngleAndFlip(angle, true);
+    
+  } else if (orientation->GetUnit() == eCSSUnit_Enumerated) {
+    switch (orientation->GetIntValue()) {
+      case NS_STYLE_IMAGE_ORIENTATION_FLIP:
+        visibility->mImageOrientation = nsStyleImageOrientation::CreateAsFlip();
+        break;
+      case NS_STYLE_IMAGE_ORIENTATION_FROM_IMAGE:
+        visibility->mImageOrientation = nsStyleImageOrientation::CreateAsFromImage();
+        break;
+      default:
+        NS_NOTREACHED("Invalid image-orientation enumerated value");
+    }
+  } else {
+    MOZ_ASSERT(orientation->GetUnit() == eCSSUnit_Null, "Should be null unit");
+  }
+
   COMPUTE_END_INHERITED(Visibility, visibility)
 }
 

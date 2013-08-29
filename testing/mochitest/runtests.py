@@ -390,7 +390,7 @@ toolbar#nav-bar {
       else:
         # Register chrome directory.
         chrometestDir = os.path.abspath(".") + "/"
-        if self.automation.IS_WIN32:
+        if mozinfo.isWin:
           chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
         manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
 
