@@ -34,7 +34,6 @@
 #include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptTimeoutHandler.h"
-#include "nsDOMWindowResizeEventDetail.h"
 
 #ifdef XP_WIN
 // Thanks so much, Microsoft! :(
@@ -179,6 +178,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
 #include "GeneratedEvents.h"
+#include "GeneratedEventClasses.h"
 #include "mozIThirdPartyUtil.h"
 
 #ifdef MOZ_LOGGING
@@ -209,6 +209,7 @@
 #include "nsSandboxFlags.h"
 #include "TimeChangeObserver.h"
 #include "mozilla/dom/AudioContext.h"
+#include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 
@@ -4956,31 +4957,40 @@ nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
 bool
 nsGlobalWindow::DispatchResizeEvent(const nsIntSize& aSize)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDoc);
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = domDoc->CreateEvent(NS_LITERAL_STRING("CustomEvent"),
-                                    getter_AddRefs(event));
-  NS_ENSURE_SUCCESS(rv, false);
+  ErrorResult res;
+  nsRefPtr<nsDOMEvent> domEvent =
+    mDoc->CreateEvent(NS_LITERAL_STRING("CustomEvent"), res);
+  if (res.Failed()) {
+    return false;
+  }
 
-  nsCOMPtr<nsIWritableVariant> detailVariant = new nsVariant();
-  nsCOMPtr<nsIDOMDOMWindowResizeEventDetail> detail =
-    new nsDOMWindowResizeEventDetail(aSize);
-  rv = detailVariant->SetAsISupports(detail);
-  NS_ENSURE_SUCCESS(rv, false);
+  AutoSafeJSContext cx;
+  JSAutoCompartment ac(cx, mJSObject);
+  DOMWindowResizeEventDetailInitializer detail;
+  detail.mWidth = aSize.width;
+  detail.mHeight = aSize.height;
+  JS::Rooted<JS::Value> detailValue(cx);
+  detail.ToObject(cx, JS::NullPtr(), &detailValue);
 
-  nsCOMPtr<nsIDOMCustomEvent> customEvent = do_QueryInterface(event);
-  customEvent->InitCustomEvent(NS_LITERAL_STRING("DOMWindowResize"),
+  CustomEvent* customEvent = static_cast<CustomEvent*>(domEvent.get());
+  customEvent->InitCustomEvent(cx,
+                               NS_LITERAL_STRING("DOMWindowResize"),
                                /* bubbles = */ true,
                                /* cancelable = */ true,
-                               detailVariant);
-  customEvent->SetTrusted(true);
-  customEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+                               detailValue,
+                               res);
+  if (res.Failed()) {
+    return false;
+  }
+
+  domEvent->SetTrusted(true);
+  domEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
 
   nsCOMPtr<EventTarget> target = do_QueryInterface(GetOuterWindow());
-  customEvent->SetTarget(target);
+  domEvent->SetTarget(target);
 
   bool defaultActionEnabled = true;
-  target->DispatchEvent(event, &defaultActionEnabled);
+  target->DispatchEvent(domEvent, &defaultActionEnabled);
 
   return defaultActionEnabled;
 }
