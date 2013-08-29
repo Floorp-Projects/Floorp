@@ -6,11 +6,23 @@ const URL = "data:text/html;charset=utf8,<p>JavaScript Profiler test</p>";
 let gcli = Cu.import("resource://gre/modules/devtools/gcli.jsm", {}).gcli;
 let gTarget, gPanel, gOptions;
 
-function cmd(typed, expected="") {
-  helpers.audit(gOptions, [{
+function cmd(typed, expected="", waitforEvent=null) {
+  let eventPromise;
+  if (waitforEvent == null) {
+    eventPromise = promise.resolve();
+  }
+  else {
+    let deferred = promise.defer();
+    gPanel.once(waitforEvent, () => { deferred.resolve(); });
+    eventPromise = deferred.promise;
+  }
+
+  let commandPromise = helpers.audit(gOptions, [{
     setup: typed,
     exec: { output: expected }
   }]);
+
+  return promise.all([ commandPromise, eventPromise ]);
 }
 
 function test() {
@@ -25,9 +37,12 @@ function test() {
       .then(testProfilerStart)
       .then(testProfilerList)
       .then(testProfilerStop)
+      // We need to call this test twice to make sure there are no
+      // errors when executing 'profiler close' on a closed
+      // toolbox. See bug 863636 for more info.
       .then(testProfilerClose)
-      .then(testProfilerCloseWhenClosed)
-  }).then(finishUp);
+      .then(testProfilerClose);
+  }).then(finishUp, helpers.handleError);
 }
 
 function setupGlobals() {
@@ -38,49 +53,32 @@ function setupGlobals() {
 }
 
 function testProfilerStart() {
-  let deferred = promise.defer();
-
-  gPanel.once("started", function () {
+  let expected = gcli.lookup("profilerStarted2");
+  return cmd("profiler start", expected, "started").then(() => {
     is(gPanel.profiles.size, 1, "There is a new profile");
     is(gPanel.getProfileByName("Profile 1"), gPanel.recordingProfile, "Recording profile is OK");
     ok(!gPanel.activeProfile, "There's no active profile yet");
-    cmd("profiler start", gcli.lookup("profilerAlreadyStarted2"));
-    deferred.resolve();
+    return cmd("profiler start", gcli.lookup("profilerAlreadyStarted2"));
   });
-
-  cmd("profiler start", gcli.lookup("profilerStarted2"));
-  return deferred.promise;
 }
 
 function testProfilerList() {
-  cmd("profiler list", /^.*Profile\s1\s\*.*$/);
+  return cmd("profiler list", /^.*Profile\s1\s\*.*$/);
 }
 
 function testProfilerStop() {
-  let deferred = promise.defer();
-
-  gPanel.once("stopped", function () {
+  return cmd("profiler stop", gcli.lookup("profilerStopped"), "stopped").then(() => {
     is(gPanel.activeProfile, gPanel.getProfileByName("Profile 1"), "Active profile is OK");
     ok(!gPanel.recordingProfile, "There's no recording profile");
-    cmd("profiler stop", gcli.lookup("profilerNotStarted3"));
-    deferred.resolve();
+    return cmd("profiler stop", gcli.lookup("profilerNotStarted3"));
   });
-
-  cmd("profiler stop");
-  return deferred.promise;
 }
 
 function testProfilerShow() {
-  let deferred = promise.defer();
-
-  gPanel.once("profileSwitched", function () {
+  return cmd('profile show "Profile 1"', "", "profileSwitched").then(() => {
     is(gPanel.getProfileByName("Profile 1"), gPanel.activeProfile, "Profile 1 is active");
-    cmd('profile show "invalid"', gcli.lookup("profilerNotFound"));
-    deferred.resolve();
+    return cmd('profile show "invalid"', gcli.lookup("profilerNotFound"));
   });
-
-  cmd('profile show "Profile 1"');
-  return deferred.promise;
 }
 
 function testProfilerClose() {
@@ -90,48 +88,21 @@ function testProfilerClose() {
     setup: "profiler close",
     completed: false,
     exec: { output: "" }
-  }]);
-
-  let toolbox = gDevTools.getToolbox(gOptions.target);
-  if (!toolbox) {
-    ok(true, "Profiler was closed.");
-    deferred.resolve();
-  } else {
-    toolbox.on("destroyed", function () {
+  }]).then(function() {
+    let toolbox = gDevTools.getToolbox(gOptions.target);
+    if (!toolbox) {
       ok(true, "Profiler was closed.");
       deferred.resolve();
-    });
-  }
+    } else {
+      toolbox.on("destroyed", () => {
+        ok(true, "Profiler was closed.");
+        deferred.resolve();
+      });
+    }
+  });
 
   return deferred.promise;
-}
-
-function testProfilerCloseWhenClosed() {
-  // We need to call this test to make sure there are no
-  // errors when executing 'profiler close' on a closed
-  // toolbox. See bug 863636 for more info.
-
-  let deferred = promise.defer();
-
-  helpers.audit(gOptions, [{
-    setup: "profiler close",
-    completed: false,
-    exec: { output: "" }
-  }]);
-
-  let toolbox = gDevTools.getToolbox(gOptions.target);
-  if (!toolbox) {
-    ok(true, "Profiler was closed.");
-    deferred.resolve();
-  } else {
-    toolbox.on("destroyed", function () {
-      ok(true, "Profiler was closed.");
-      deferred.resolve();
-    });
-  }
-
-  return deferred.promise;
-}
+};
 
 function finishUp() {
   gTarget = null;
