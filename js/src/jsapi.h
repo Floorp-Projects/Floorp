@@ -125,8 +125,8 @@ class JS_PUBLIC_API(AutoGCRooter) {
         SCRIPTVECTOR =-16, /* js::AutoScriptVector */
         NAMEVECTOR =  -17, /* js::AutoNameVector */
         HASHABLEVALUE=-18, /* js::HashableValue */
-        IONMASM =     -19, /* js::ion::MacroAssembler */
-        IONALLOC =    -20, /* js::ion::AutoTempAllocatorRooter */
+        IONMASM =     -19, /* js::jit::MacroAssembler */
+        IONALLOC =    -20, /* js::jit::AutoTempAllocatorRooter */
         WRAPVECTOR =  -21, /* js::AutoWrapperVector */
         WRAPPER =     -22, /* js::AutoWrapperRooter */
         OBJOBJHASHMAP=-23, /* js::AutoObjectObjectHashMap */

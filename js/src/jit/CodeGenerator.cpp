@@ -32,13 +32,13 @@
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 
 namespace js {
-namespace ion {
+namespace jit {
 
 // This out-of-line cache is used to do a double dispatch including it-self and
 // the wrapped IonCache.
@@ -3320,7 +3320,7 @@ CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto *lir)
 
 typedef JSObject *(*NewGCThingFn)(JSContext *cx, gc::AllocKind allocKind, size_t thingSize);
 static const VMFunction NewGCThingInfo =
-    FunctionInfo<NewGCThingFn>(js::ion::NewGCThing);
+    FunctionInfo<NewGCThingFn>(js::jit::NewGCThing);
 
 bool
 CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
@@ -3716,11 +3716,11 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 typedef bool (*StringCompareFn)(JSContext *, HandleString, HandleString, bool *);
 typedef ParallelResult (*StringCompareParFn)(ForkJoinSlice *, HandleString, HandleString, bool *);
 static const VMFunctionsModal StringsEqualInfo = VMFunctionsModal(
-    FunctionInfo<StringCompareFn>(ion::StringsEqual<true>),
-    FunctionInfo<StringCompareParFn>(ion::StringsEqualPar));
+    FunctionInfo<StringCompareFn>(jit::StringsEqual<true>),
+    FunctionInfo<StringCompareParFn>(jit::StringsEqualPar));
 static const VMFunctionsModal StringsNotEqualInfo = VMFunctionsModal(
-    FunctionInfo<StringCompareFn>(ion::StringsEqual<false>),
-    FunctionInfo<StringCompareParFn>(ion::StringsUnequalPar));
+    FunctionInfo<StringCompareFn>(jit::StringsEqual<false>),
+    FunctionInfo<StringCompareParFn>(jit::StringsUnequalPar));
 
 bool
 CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register right,
@@ -3789,29 +3789,29 @@ typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, b
 typedef ParallelResult (*CompareParFn)(ForkJoinSlice *, MutableHandleValue, MutableHandleValue,
                                        bool *);
 static const VMFunctionsModal EqInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::LooselyEqual<true>),
-    FunctionInfo<CompareParFn>(ion::LooselyEqualPar));
+    FunctionInfo<CompareFn>(jit::LooselyEqual<true>),
+    FunctionInfo<CompareParFn>(jit::LooselyEqualPar));
 static const VMFunctionsModal NeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::LooselyEqual<false>),
-    FunctionInfo<CompareParFn>(ion::LooselyUnequalPar));
+    FunctionInfo<CompareFn>(jit::LooselyEqual<false>),
+    FunctionInfo<CompareParFn>(jit::LooselyUnequalPar));
 static const VMFunctionsModal StrictEqInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::StrictlyEqual<true>),
-    FunctionInfo<CompareParFn>(ion::StrictlyEqualPar));
+    FunctionInfo<CompareFn>(jit::StrictlyEqual<true>),
+    FunctionInfo<CompareParFn>(jit::StrictlyEqualPar));
 static const VMFunctionsModal StrictNeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::StrictlyEqual<false>),
-    FunctionInfo<CompareParFn>(ion::StrictlyUnequalPar));
+    FunctionInfo<CompareFn>(jit::StrictlyEqual<false>),
+    FunctionInfo<CompareParFn>(jit::StrictlyUnequalPar));
 static const VMFunctionsModal LtInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::LessThan),
-    FunctionInfo<CompareParFn>(ion::LessThanPar));
+    FunctionInfo<CompareFn>(jit::LessThan),
+    FunctionInfo<CompareParFn>(jit::LessThanPar));
 static const VMFunctionsModal LeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::LessThanOrEqual),
-    FunctionInfo<CompareParFn>(ion::LessThanOrEqualPar));
+    FunctionInfo<CompareFn>(jit::LessThanOrEqual),
+    FunctionInfo<CompareParFn>(jit::LessThanOrEqualPar));
 static const VMFunctionsModal GtInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::GreaterThan),
-    FunctionInfo<CompareParFn>(ion::GreaterThanPar));
+    FunctionInfo<CompareFn>(jit::GreaterThan),
+    FunctionInfo<CompareParFn>(jit::GreaterThanPar));
 static const VMFunctionsModal GeInfo = VMFunctionsModal(
-    FunctionInfo<CompareFn>(ion::GreaterThanOrEqual),
-    FunctionInfo<CompareParFn>(ion::GreaterThanOrEqualPar));
+    FunctionInfo<CompareFn>(jit::GreaterThanOrEqual),
+    FunctionInfo<CompareParFn>(jit::GreaterThanOrEqualPar));
 
 bool
 CodeGenerator::visitCompareVM(LCompareVM *lir)
@@ -4292,7 +4292,7 @@ IonCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
 }
 
 typedef bool (*CharCodeAtFn)(JSContext *, HandleString, int32_t, uint32_t *);
-static const VMFunction CharCodeAtInfo = FunctionInfo<CharCodeAtFn>(ion::CharCodeAt);
+static const VMFunction CharCodeAtInfo = FunctionInfo<CharCodeAtFn>(jit::CharCodeAt);
 
 bool
 CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
@@ -4320,7 +4320,7 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
 }
 
 typedef JSFlatString *(*StringFromCharCodeFn)(JSContext *, int32_t);
-static const VMFunction StringFromCharCodeInfo = FunctionInfo<StringFromCharCodeFn>(ion::StringFromCharCode);
+static const VMFunction StringFromCharCodeInfo = FunctionInfo<StringFromCharCodeFn>(jit::StringFromCharCode);
 
 bool
 CodeGenerator::visitFromCharCode(LFromCharCode *lir)
@@ -4804,8 +4804,8 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
 }
 
 typedef bool (*ArrayPopShiftFn)(JSContext *, HandleObject, MutableHandleValue);
-static const VMFunction ArrayPopDenseInfo = FunctionInfo<ArrayPopShiftFn>(ion::ArrayPopDense);
-static const VMFunction ArrayShiftDenseInfo = FunctionInfo<ArrayPopShiftFn>(ion::ArrayShiftDense);
+static const VMFunction ArrayPopDenseInfo = FunctionInfo<ArrayPopShiftFn>(jit::ArrayPopDense);
+static const VMFunction ArrayShiftDenseInfo = FunctionInfo<ArrayPopShiftFn>(jit::ArrayShiftDense);
 
 bool
 CodeGenerator::emitArrayPopShift(LInstruction *lir, const MArrayPopShift *mir, Register obj,
@@ -4913,7 +4913,7 @@ CodeGenerator::visitArrayPopShiftT(LArrayPopShiftT *lir)
 
 typedef bool (*ArrayPushDenseFn)(JSContext *, HandleObject, HandleValue, uint32_t *);
 static const VMFunction ArrayPushDenseInfo =
-    FunctionInfo<ArrayPushDenseFn>(ion::ArrayPushDense);
+    FunctionInfo<ArrayPushDenseFn>(jit::ArrayPushDense);
 
 bool
 CodeGenerator::emitArrayPush(LInstruction *lir, const MArrayPush *mir, Register obj,
@@ -5168,7 +5168,7 @@ CodeGenerator::visitIteratorNext(LIteratorNext *lir)
 }
 
 typedef bool (*IteratorMoreFn)(JSContext *, HandleObject, bool *);
-static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(ion::IteratorMore);
+static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(jit::IteratorMore);
 
 bool
 CodeGenerator::visitIteratorMore(LIteratorMore *lir)
@@ -5471,7 +5471,7 @@ CodeGenerator::link()
                            : FrameSizeClass::FromDepth(frameDepth_).frameSize();
 
     // Check to make sure we didn't have a mid-build invalidation. If so, we
-    // will trickle to ion::Compile() and return Method_Skipped.
+    // will trickle to jit::Compile() and return Method_Skipped.
     if (cx->compartment()->types.compiledInfo.compilerOutput(cx)->isInvalidated())
         return true;
 
@@ -7224,5 +7224,5 @@ CodeGenerator::visitAsmJSCheckOverRecursed(LAsmJSCheckOverRecursed *lir)
     return true;
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js

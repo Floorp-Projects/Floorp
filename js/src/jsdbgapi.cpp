@@ -918,7 +918,7 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
                 fprintf(stdout, "--- Asm.js Module ---\n");
 
                 for (size_t i = 0; i < module.numFunctionCounts(); i++) {
-                    ion::IonScriptCounts *counts = module.functionCounts(i);
+                    jit::IonScriptCounts *counts = module.functionCounts(i);
                     DumpIonScriptCounts(&sprinter, counts);
                 }
 

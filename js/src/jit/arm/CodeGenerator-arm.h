@@ -11,7 +11,7 @@
 #include "jit/shared/CodeGenerator-shared.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class OutOfLineBailout;
 class OutOfLineTableSwitch;
@@ -199,7 +199,7 @@ class OutOfLineBailout : public OutOfLineCodeBase<CodeGeneratorARM>
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_arm_CodeGenerator_arm_h */

@@ -100,7 +100,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, MutableHandleValu
         // fully recovered, so we try to mitigate observing this behavior by
         // detecting its use early.
         JSScript *script = iter.script();
-        ion::ForbidCompilation(cx, script);
+        jit::ForbidCompilation(cx, script);
 #endif
 
         vp.setObject(*argsobj);
@@ -838,7 +838,7 @@ js_fun_call(JSContext *cx, unsigned argc, Value *vp)
 
 #ifdef JS_ION
 static bool
-PushBaselineFunApplyArguments(JSContext *cx, ion::IonFrameIterator &frame, InvokeArgs &args,
+PushBaselineFunApplyArguments(JSContext *cx, jit::IonFrameIterator &frame, InvokeArgs &args,
                               Value *vp)
 {
     unsigned length = frame.numActualArgs();
@@ -891,13 +891,13 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
         // is supposed to be a fast path as opposed to ScriptFrameIter which is
         // doing complex logic to settle on the next frame twice.
         if (cx->currentlyRunningInJit()) {
-            ion::JitActivationIterator activations(cx->runtime());
-            ion::IonFrameIterator frame(activations);
+            jit::JitActivationIterator activations(cx->runtime());
+            jit::IonFrameIterator frame(activations);
             if (frame.isNative()) {
                 // Stop on the next Ion JS Frame.
                 ++frame;
                 if (frame.isOptimizedJS()) {
-                    ion::InlineFrameIterator iter(cx, &frame);
+                    jit::InlineFrameIterator iter(cx, &frame);
 
                     unsigned length = iter.numActualArgs();
                     JS_ASSERT(length <= ARGS_LENGTH_MAX);
@@ -921,7 +921,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
                         return false;
                 }
             } else {
-                JS_ASSERT(frame.type() == ion::IonFrame_Exit);
+                JS_ASSERT(frame.type() == jit::IonFrame_Exit);
 
                 ++frame;
                 JS_ASSERT(frame.isBaselineStub());

@@ -798,9 +798,9 @@ js_DumpPCCounts(JSContext *cx, JS::Handle<JSScript*> script, js::Sprinter *sp);
 
 #ifdef JS_ION
 namespace js {
-namespace ion { struct IonScriptCounts; }
+namespace jit { struct IonScriptCounts; }
 void
-DumpIonScriptCounts(js::Sprinter *sp, ion::IonScriptCounts *ionCounts);
+DumpIonScriptCounts(js::Sprinter *sp, jit::IonScriptCounts *ionCounts);
 }
 #endif
 

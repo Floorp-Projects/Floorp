@@ -16,7 +16,7 @@
 #include "jit/MIRGraph.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class CodeGenerator;
 class CallInfo;
@@ -821,7 +821,7 @@ bool TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *input
 
 bool NeedsPostBarrier(CompileInfo &info, MDefinition *value);
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

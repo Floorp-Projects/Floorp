@@ -29,7 +29,7 @@
 #include "vm/Interpreter.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 #define OPCODE_LIST(_)         \
     _(JSOP_NOP)                \
@@ -265,7 +265,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     Address getScopeCoordinateAddress(Register reg);
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

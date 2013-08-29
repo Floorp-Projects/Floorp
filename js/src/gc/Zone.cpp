@@ -66,7 +66,7 @@ Zone::setNeedsBarrier(bool needs, ShouldUpdateIon updateIon)
 {
 #ifdef JS_ION
     if (updateIon == UpdateIon && needs != ionUsingBarriers_) {
-        ion::ToggleBarriers(this, needs);
+        jit::ToggleBarriers(this, needs);
         ionUsingBarriers_ = needs;
     }
 #endif
@@ -195,20 +195,20 @@ Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
 # endif
 
         /* Mark baseline scripts on the stack as active. */
-        ion::MarkActiveBaselineScripts(this);
+        jit::MarkActiveBaselineScripts(this);
 
         /* Only mark OSI points if code is being discarded. */
-        ion::InvalidateAll(fop, this);
+        jit::InvalidateAll(fop, this);
 
         for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
-            ion::FinishInvalidation(fop, script);
+            jit::FinishInvalidation(fop, script);
 
             /*
              * Discard baseline script if it's not marked as active. Note that
              * this also resets the active flag.
              */
-            ion::FinishDiscardBaselineScript(fop, script);
+            jit::FinishDiscardBaselineScript(fop, script);
 
             /*
              * Use counts for scripts are reset on GC. After discarding code we

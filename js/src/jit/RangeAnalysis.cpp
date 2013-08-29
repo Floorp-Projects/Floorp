@@ -21,7 +21,7 @@
 #include "vm/NumericConversions.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::Abs;
 using mozilla::CountLeadingZeroes32;

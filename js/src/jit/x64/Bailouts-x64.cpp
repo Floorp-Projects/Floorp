@@ -11,14 +11,14 @@
 #include "jit/IonCompartment.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 #if defined(_WIN32)
 # pragma pack(push, 1)
 #endif
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class BailoutStack
 {
@@ -42,7 +42,7 @@ class BailoutStack
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #if defined(_WIN32)
