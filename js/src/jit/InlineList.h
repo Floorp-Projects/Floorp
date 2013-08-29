@@ -390,6 +390,92 @@ class InlineListReverseIterator
     Node *iter;
 };
 
+/* This list type is more or less exactly an InlineForwardList without a sentinel
+ * node. It is useful in cases where you are doing algorithms that deal with many
+ * merging singleton lists, rather than often empty ones.
+ */
+template <typename T> class InlineConcatListIterator;
+template <typename T>
+class InlineConcatList
+{
+  private:
+    typedef InlineConcatList<T> Node;
+
+    InlineConcatList<T> *thisFromConstructor() {
+        return this;
+    }
+
+  public:
+    InlineConcatList() : next(NULL), tail(thisFromConstructor())
+    { }
+
+    typedef InlineConcatListIterator<T> iterator;
+
+    iterator begin() const {
+        return iterator(this);
+    }
+
+    iterator end() const {
+        return iterator(NULL);
+    }
+
+    void append(InlineConcatList<T> *adding)
+    {
+        JS_ASSERT(tail);
+        JS_ASSERT(!tail->next);
+        JS_ASSERT(adding->tail);
+        JS_ASSERT(!adding->tail->next);
+
+        tail->next = adding;
+        tail = adding->tail;
+        adding->tail = NULL;
+    }
+
+  protected:
+    friend class InlineConcatListIterator<T>;
+    Node *next;
+    Node *tail;
+};
+
+template <typename T>
+class InlineConcatListIterator
+{
+  private:
+    friend class InlineConcatList<T>;
+
+    typedef InlineConcatList<T> Node;
+
+    InlineConcatListIterator(const Node *iter)
+      : iter(const_cast<Node *>(iter))
+    { }
+
+  public:
+    InlineConcatListIterator<T> & operator ++() {
+        iter = iter->next;
+        return *iter;
+    }
+    InlineConcatListIterator<T> operator ++(int) {
+        InlineConcatListIterator<T> old(*this);
+        iter = static_cast<Node *>(iter->next);
+        return old;
+    }
+    T * operator *() const {
+        return static_cast<T *>(iter);
+    }
+    T * operator ->() const {
+        return static_cast<T *>(iter);
+    }
+    bool operator !=(const InlineConcatListIterator<T> &where) const {
+        return iter != where.iter;
+    }
+    bool operator ==(const InlineConcatListIterator<T> &where) const {
+        return iter == where.iter;
+    }
+
+  private:
+    Node *iter;
+};
+
 } // namespace js
 
 #endif /* jit_InlineList_h */

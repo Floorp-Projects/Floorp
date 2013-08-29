@@ -6,30 +6,19 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsContainerFrame.h"
 #include "nsLegendFrame.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMHTMLFieldSetElement.h"
 #include "nsCSSRendering.h"
 #include <algorithm>
-#include "nsIContent.h"
 #include "nsIFrame.h"
-#include "nsISupports.h"
-#include "nsIAtom.h"
 #include "nsPresContext.h"
 #include "RestyleManager.h"
-#include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsFont.h"
-#include "nsCOMPtr.h"
-#include "nsIServiceManager.h"
 #include "nsDisplayList.h"
 #include "nsRenderingContext.h"
 #include "mozilla/Likely.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;
-
-class nsLegendFrame;
 
 class nsFieldSetFrame MOZ_FINAL : public nsContainerFrame {
 public:

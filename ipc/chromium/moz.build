@@ -234,3 +234,5 @@ if ost.find('86') == -1 and ost.find('arm') == -1 and ost.find('mips') == -1:
 
 LIBXUL_LIBRARY = True
 
+LIBRARY_NAME = 'chromium_s'
+

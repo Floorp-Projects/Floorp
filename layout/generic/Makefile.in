@@ -9,7 +9,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= gkgeneric_s
 RESOURCES_HTML = \
 		$(srcdir)/folder.png \
 		$(NULL)

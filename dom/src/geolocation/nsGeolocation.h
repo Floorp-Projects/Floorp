@@ -33,10 +33,10 @@
 #include "nsIContentPermissionPrompt.h"
 #include "nsIDOMWindow.h"
 #include "DictionaryHelpers.h"
-#include "PCOMContentPermissionRequestChild.h"
 #include "mozilla/Attributes.h"
 
 class nsGeolocationService;
+class nsGeolocationRequest;
 
 namespace mozilla {
 namespace dom {
@@ -45,54 +45,6 @@ typedef CallbackObjectHolder<PositionCallback, nsIDOMGeoPositionCallback> GeoPos
 typedef CallbackObjectHolder<PositionErrorCallback, nsIDOMGeoPositionErrorCallback> GeoPositionErrorCallback;
 }
 }
-
-class nsGeolocationRequest
- : public nsIContentPermissionRequest
- , public nsITimerCallback
- , public nsIGeolocationUpdate
- , public PCOMContentPermissionRequestChild
-{
- public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSICONTENTPERMISSIONREQUEST
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSIGEOLOCATIONUPDATE
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGeolocationRequest, nsIContentPermissionRequest)
-
-  nsGeolocationRequest(mozilla::dom::Geolocation* locator,
-                       const mozilla::dom::GeoPositionCallback& callback,
-                       const mozilla::dom::GeoPositionErrorCallback& errorCallback,
-                       mozilla::idl::GeoPositionOptions* aOptions,
-                       bool watchPositionRequest = false,
-                       int32_t watchId = 0);
-  void Shutdown();
-
-  void SendLocation(nsIDOMGeoPosition* location);
-  bool WantsHighAccuracy() {return mOptions && mOptions->enableHighAccuracy;}
-  void SetTimeoutTimer();
-  nsIPrincipal* GetPrincipal();
-
-  ~nsGeolocationRequest();
-
-  virtual bool Recv__delete__(const bool& allow) MOZ_OVERRIDE;
-  virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
-
-  bool IsWatch() { return mIsWatchPositionRequest; }
-  int32_t WatchId() { return mWatchId; }
- private:
-  bool mIsWatchPositionRequest;
-
-  nsCOMPtr<nsITimer> mTimeoutTimer;
-  mozilla::dom::GeoPositionCallback mCallback;
-  mozilla::dom::GeoPositionErrorCallback mErrorCallback;
-  nsAutoPtr<mozilla::idl::GeoPositionOptions> mOptions;
-
-  nsRefPtr<mozilla::dom::Geolocation> mLocator;
-
-  int32_t mWatchId;
-  bool mShutdown;
-};
 
 /**
  * Singleton that manages the geolocation provider

@@ -23,7 +23,6 @@ VPATH += $(srcdir)/ipc
 
 ifneq (,$(MOZ_B2G_BT))
 
-LIBRARY_NAME     = dombluetooth_s
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
 VPATH += \
