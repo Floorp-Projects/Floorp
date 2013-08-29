@@ -52,6 +52,10 @@ let onunload;
 let asyncTestRunning = false;
 let asyncTestCommandId;
 let asyncTestTimeoutId;
+
+let inactivityTimeoutId = null;
+let heartbeatCallback = function () {}; // Called by the simpletest methods.
+
 let originalOnError;
 //timer for doc changes
 let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -297,8 +301,9 @@ function createExecuteContentSandbox(aWindow, timeout) {
   sandbox.asyncTestCommandId = asyncTestCommandId;
 
   let marionette = new Marionette(this, aWindow, "content",
-                                  marionetteLogObj,
-                                  timeout, marionetteTestName);
+                                  marionetteLogObj, timeout,
+                                  heartbeatCallback,
+                                  marionetteTestName);
   sandbox.marionette = marionette;
   marionette.exports.forEach(function(fn) {
     try {
@@ -317,6 +322,11 @@ function createExecuteContentSandbox(aWindow, timeout) {
     if (commandId == asyncTestCommandId) {
       curWindow.removeEventListener("unload", onunload, false);
       curWindow.clearTimeout(asyncTestTimeoutId);
+
+      if (inactivityTimeoutId != null) {
+        curWindow.clearTimeout(inactivityTimeoutId);
+      }
+
 
       sendSyncMessage("Marionette:shareData",
                       {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
@@ -340,6 +350,7 @@ function createExecuteContentSandbox(aWindow, timeout) {
       asyncTestRunning = false;
       asyncTestTimeoutId = undefined;
       asyncTestCommandId = undefined;
+      inactivityTimeoutId = null;
     }
   };
   sandbox.finish = function sandbox_finish() {
@@ -361,6 +372,21 @@ function createExecuteContentSandbox(aWindow, timeout) {
  * or directly (for 'mochitest' like JS Marionette tests)
  */
 function executeScript(msg, directInject) {
+  // Set up inactivity timeout.
+  if (msg.json.inactivityTimeout) {
+    let setTimer = function() {
+        inactivityTimeoutId = curWindow.setTimeout(function() {
+        sendError('timed out due to inactivity', 28, null, asyncTestCommandId);
+      }, msg.json.inactivityTimeout);
+   };
+
+    setTimer();
+    heartbeatCallback = function resetInactivityTimeout() {
+      curWindow.clearTimeout(inactivityTimeoutId);
+      setTimer();
+    };
+  }
+
   asyncTestCommandId = msg.json.command_id;
   let script = msg.json.value;
 
@@ -470,6 +496,21 @@ function executeJSScript(msg) {
  * method is called, or if it times out.
  */
 function executeWithCallback(msg, useFinish) {
+  // Set up inactivity timeout.
+  if (msg.json.inactivityTimeout) {
+    let setTimer = function() {
+      inactivityTimeoutId = curWindow.setTimeout(function() {
+        sandbox.asyncComplete('timed out due to inactivity', 28, null, asyncTestCommandId);
+      }, msg.json.inactivityTimeout);
+    };
+
+    setTimer();
+    heartbeatCallback = function resetInactivityTimeout() {
+      curWindow.clearTimeout(inactivityTimeoutId);
+      setTimer();
+    };
+  }
+
   let script = msg.json.value;
   asyncTestCommandId = msg.json.command_id;
 
