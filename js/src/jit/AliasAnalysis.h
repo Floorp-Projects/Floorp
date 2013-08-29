@@ -11,7 +11,7 @@
 #include "jit/MIRGraph.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class MIRGraph;
 
@@ -57,6 +57,6 @@ class AliasAnalysis
 };
 
 } // namespace js
-} // namespace ion
+} // namespace jit
 
 #endif /* jit_AliasAnalysis_h */

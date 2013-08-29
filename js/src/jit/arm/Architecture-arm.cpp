@@ -29,7 +29,7 @@
 #endif
 
 namespace js {
-namespace ion {
+namespace jit {
 
 uint32_t getFlags()
 {
@@ -103,20 +103,20 @@ uint32_t getFlags()
 
 bool hasMOVWT()
 {
-    return js::ion::getFlags() & HWCAP_ARMv7;
+    return js::jit::getFlags() & HWCAP_ARMv7;
 }
 bool hasVFPv3()
 {
-    return js::ion::getFlags() & HWCAP_VFPv3;
+    return js::jit::getFlags() & HWCAP_VFPv3;
 }
 bool hasVFP()
 {
-    return js::ion::getFlags() & HWCAP_VFP;
+    return js::jit::getFlags() & HWCAP_VFP;
 }
 
 bool has32DP()
 {
-    return !(js::ion::getFlags() & HWCAP_VFPv3D16 && !(js::ion::getFlags() & HWCAP_NEON));
+    return !(js::jit::getFlags() & HWCAP_VFPv3D16 && !(js::jit::getFlags() & HWCAP_NEON));
 }
 bool useConvReg()
 {
@@ -126,12 +126,12 @@ bool useConvReg()
 bool hasIDIV()
 {
 #if defined HWCAP_IDIVA
-    return js::ion::getFlags() & HWCAP_IDIVA;
+    return js::jit::getFlags() & HWCAP_IDIVA;
 #else
     return false;
 #endif
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 

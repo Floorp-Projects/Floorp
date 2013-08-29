@@ -19,7 +19,7 @@
 using mozilla::DebugOnly;
 
 namespace js {
-namespace ion {
+namespace jit {
 
 static Register CallReg = ip;
 static const int defaultShift = 3;
@@ -1376,7 +1376,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
 typedef MacroAssemblerARMCompat MacroAssemblerSpecific;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_arm_MacroAssembler_arm_h */

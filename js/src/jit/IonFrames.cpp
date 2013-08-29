@@ -29,7 +29,7 @@
 #include "vm/Probes-inl.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 IonFrameIterator::IonFrameIterator(const ActivationIterator &activations)
     : current_(activations.jitTop()),
@@ -406,7 +406,7 @@ HandleException(JSContext *cx, const IonFrameIterator &frame, ResumeFromExceptio
 
           case JSTRAP_RETURN:
             JS_ASSERT(baselineFrame->hasReturnValue());
-            if (ion::DebugEpilogue(cx, baselineFrame, true)) {
+            if (jit::DebugEpilogue(cx, baselineFrame, true)) {
                 rfe->kind = ResumeFromException::RESUME_FORCED_RETURN;
                 rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
                 rfe->stackPointer = reinterpret_cast<uint8_t *>(baselineFrame);
@@ -552,7 +552,7 @@ HandleException(ResumeFromException *rfe)
                 // If DebugEpilogue returns |true|, we have to perform a forced
                 // return, e.g. return frame->returnValue() to the caller.
                 BaselineFrame *frame = iter.baselineFrame();
-                if (ion::DebugEpilogue(cx, frame, false)) {
+                if (jit::DebugEpilogue(cx, frame, false)) {
                     JS_ASSERT(frame->hasReturnValue());
                     rfe->kind = ResumeFromException::RESUME_FORCED_RETURN;
                     rfe->framePointer = iter.fp() - BaselineFrame::FramePointerOffset;
@@ -1626,5 +1626,5 @@ IonFrameIterator::dump() const
     fputc('\n', stderr);
 }
 
-} // namespace ion
+} // namespace jit
 } // namespace js

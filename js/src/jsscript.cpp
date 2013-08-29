@@ -886,7 +886,7 @@ JSScript::getPCCounts(jsbytecode *pc) {
 }
 
 void
-JSScript::addIonCounts(ion::IonScriptCounts *ionCounts)
+JSScript::addIonCounts(jit::IonScriptCounts *ionCounts)
 {
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
     if (p->value.ionCounts)
@@ -894,7 +894,7 @@ JSScript::addIonCounts(ion::IonScriptCounts *ionCounts)
     p->value.ionCounts = ionCounts;
 }
 
-ion::IonScriptCounts *
+jit::IonScriptCounts *
 JSScript::getIonCounts()
 {
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
@@ -2093,7 +2093,7 @@ JSScript::finalize(FreeOp *fop)
         types->destroy();
 
 #ifdef JS_ION
-    ion::DestroyIonScripts(fop, this);
+    jit::DestroyIonScripts(fop, this);
 #endif
 
     destroyScriptCounts(fop);
@@ -2825,7 +2825,7 @@ JSScript::markChildren(JSTracer *trc)
     }
 
 #ifdef JS_ION
-    ion::TraceIonScripts(trc, this);
+    jit::TraceIonScripts(trc, this);
 #endif
 }
 
@@ -2957,7 +2957,7 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
          * this script.  To maintain the invariant that "script->needsArgsObj
          * implies fp->hasArgsObj", the Ion bail mechanism will create an
          * arguments object right after restoring the StackFrame and before
-         * entering the interpreter (in ion::ThunkToInterpreter).  This delay is
+         * entering the interpreter (in jit::ThunkToInterpreter).  This delay is
          * safe since the engine avoids any observation of a StackFrame when it's
          * runningInJit (see ScriptFrameIter::interpFrame comment).
          */

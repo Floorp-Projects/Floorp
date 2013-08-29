@@ -10,7 +10,7 @@
 #include "assembler/assembler/MacroAssembler.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 static const ptrdiff_t STACK_SLOT_SIZE       = 4;
 static const uint32_t DOUBLE_STACK_ALIGNMENT   = 2;
 
@@ -130,7 +130,7 @@ class FloatRegisters {
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_x86_Architecture_x86_h */

@@ -20,7 +20,7 @@
 #include "vm/Interpreter.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class TempAllocator;
 
@@ -339,7 +339,7 @@ void AttachFinishedCompilations(JSContext *cx);
 void FinishOffThreadBuilder(IonBuilder *builder);
 
 static inline bool
-IsEnabled(JSContext *cx)
+IsIonEnabled(JSContext *cx)
 {
     return cx->hasOption(JSOPTION_ION) &&
         cx->hasOption(JSOPTION_BASELINE) &&
@@ -363,7 +363,7 @@ size_t SizeOfIonData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf);
 void DestroyIonScripts(FreeOp *fop, JSScript *script);
 void TraceIonScripts(JSTracer* trc, JSScript *script);
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

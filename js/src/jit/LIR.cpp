@@ -14,7 +14,7 @@
 #include "jit/shared/CodeGenerator-shared.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 LIRGraph::LIRGraph(MIRGraph *mir)
   : numVirtualRegisters_(0),

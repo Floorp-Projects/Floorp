@@ -8,7 +8,7 @@
 #include "jit/IonFrames.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 IonJSFrameLayout *
 InvalidationBailoutStack::fp() const

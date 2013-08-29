@@ -12,7 +12,7 @@
 // This file declares LIR instructions that are common to every platform.
 
 namespace js {
-namespace ion {
+namespace jit {
 
 template <size_t Temps, size_t ExtraUses = 0>
 class LBinaryMath : public LInstructionHelper<1, 2 + ExtraUses, Temps>
@@ -4936,7 +4936,7 @@ class LAsmJSCheckOverRecursed : public LInstructionHelper<0, 0, 0>
     }
 };
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_LIR_Common_h */

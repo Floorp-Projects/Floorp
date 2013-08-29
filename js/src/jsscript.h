@@ -23,16 +23,16 @@
 
 namespace js {
 
-namespace ion {
+namespace jit {
     struct IonScript;
     struct BaselineScript;
     struct IonScriptCounts;
 }
 
-# define ION_DISABLED_SCRIPT ((js::ion::IonScript *)0x1)
-# define ION_COMPILING_SCRIPT ((js::ion::IonScript *)0x2)
+# define ION_DISABLED_SCRIPT ((js::jit::IonScript *)0x1)
+# define ION_COMPILING_SCRIPT ((js::jit::IonScript *)0x2)
 
-# define BASELINE_DISABLED_SCRIPT ((js::ion::BaselineScript *)0x1)
+# define BASELINE_DISABLED_SCRIPT ((js::jit::BaselineScript *)0x1)
 
 class Shape;
 
@@ -229,7 +229,7 @@ class ScriptCounts
     PCCounts *pcCountsVector;
 
     /* Information about any Ion compilations for the script. */
-    ion::IonScriptCounts *ionCounts;
+    jit::IonScriptCounts *ionCounts;
 
  public:
     ScriptCounts() : pcCountsVector(NULL), ionCounts(NULL) { }
@@ -448,11 +448,11 @@ class JSScript : public js::gc::Cell
     js::HeapPtrObject   enclosingScopeOrOriginalFunction_;
 
     /* Information attached by Baseline/Ion for sequential mode execution. */
-    js::ion::IonScript *ion;
-    js::ion::BaselineScript *baseline;
+    js::jit::IonScript *ion;
+    js::jit::BaselineScript *baseline;
 
     /* Information attached by Ion for parallel mode execution */
-    js::ion::IonScript *parallelIon;
+    js::jit::IonScript *parallelIon;
 
     /*
      * Pointer to either baseline->method()->raw() or ion->method()->raw(), or NULL
@@ -682,17 +682,17 @@ class JSScript : public js::gc::Cell
         return ion == ION_COMPILING_SCRIPT;
     }
 
-    js::ion::IonScript *ionScript() const {
+    js::jit::IonScript *ionScript() const {
         JS_ASSERT(hasIonScript());
         return ion;
     }
-    js::ion::IonScript *maybeIonScript() const {
+    js::jit::IonScript *maybeIonScript() const {
         return ion;
     }
-    js::ion::IonScript *const *addressOfIonScript() const {
+    js::jit::IonScript *const *addressOfIonScript() const {
         return &ion;
     }
-    void setIonScript(js::ion::IonScript *ionScript) {
+    void setIonScript(js::jit::IonScript *ionScript) {
         ion = ionScript;
         updateBaselineOrIonRaw();
     }
@@ -703,11 +703,11 @@ class JSScript : public js::gc::Cell
     bool canBaselineCompile() const {
         return baseline != BASELINE_DISABLED_SCRIPT;
     }
-    js::ion::BaselineScript *baselineScript() const {
+    js::jit::BaselineScript *baselineScript() const {
         JS_ASSERT(hasBaselineScript());
         return baseline;
     }
-    void setBaselineScript(js::ion::BaselineScript *baselineScript) {
+    void setBaselineScript(js::jit::BaselineScript *baselineScript) {
         baseline = baselineScript;
         updateBaselineOrIonRaw();
     }
@@ -726,14 +726,14 @@ class JSScript : public js::gc::Cell
         return parallelIon == ION_COMPILING_SCRIPT;
     }
 
-    js::ion::IonScript *parallelIonScript() const {
+    js::jit::IonScript *parallelIonScript() const {
         JS_ASSERT(hasParallelIonScript());
         return parallelIon;
     }
-    js::ion::IonScript *maybeParallelIonScript() const {
+    js::jit::IonScript *maybeParallelIonScript() const {
         return parallelIon;
     }
-    void setParallelIonScript(js::ion::IonScript *ionScript) {
+    void setParallelIonScript(js::jit::IonScript *ionScript) {
         parallelIon = ionScript;
     }
 
@@ -844,8 +844,8 @@ class JSScript : public js::gc::Cell
   public:
     bool initScriptCounts(JSContext *cx);
     js::PCCounts getPCCounts(jsbytecode *pc);
-    void addIonCounts(js::ion::IonScriptCounts *ionCounts);
-    js::ion::IonScriptCounts *getIonCounts();
+    void addIonCounts(js::jit::IonScriptCounts *ionCounts);
+    js::jit::IonScriptCounts *getIonCounts();
     js::ScriptCounts releaseScriptCounts();
     void destroyScriptCounts(js::FreeOp *fop);
 
@@ -1448,7 +1448,7 @@ struct ScriptAndCounts
         return scriptCounts.pcCountsVector[pc - script->code];
     }
 
-    ion::IonScriptCounts *getIonCounts() const {
+    jit::IonScriptCounts *getIonCounts() const {
         return scriptCounts.ionCounts;
     }
 };

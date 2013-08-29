@@ -10,7 +10,7 @@
 #include "jit/shared/Lowering-shared.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 class LIRGeneratorARM : public LIRGeneratorShared
 {
@@ -86,7 +86,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
 
 typedef LIRGeneratorARM LIRGeneratorSpecific;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif /* jit_arm_Lowering_arm_h */

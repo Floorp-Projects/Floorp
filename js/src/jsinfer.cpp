@@ -2678,7 +2678,7 @@ TypeCompartment::processPendingRecompiles(FreeOp *fop)
     JS_ASSERT(!pending->empty());
 
 #ifdef JS_ION
-    ion::Invalidate(*this, fop, *pending);
+    jit::Invalidate(*this, fop, *pending);
 #endif
 
     fop->delete_(pending);
@@ -2727,13 +2727,13 @@ TypeZone::nukeTypes(FreeOp *fop)
     inferenceEnabled = false;
 
 #ifdef JS_ION
-    ion::InvalidateAll(fop, zone());
+    jit::InvalidateAll(fop, zone());
 
     /* Throw away all JIT code in the compartment, but leave everything else alone. */
 
     for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        ion::FinishInvalidation(fop, script);
+        jit::FinishInvalidation(fop, script);
     }
 #endif /* JS_ION */
 
@@ -2809,7 +2809,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
     CancelOffThreadIonCompile(cx->compartment(), script);
 
     // Let the script warm up again before attempting another compile.
-    if (ion::IsBaselineEnabled(cx))
+    if (jit::IsBaselineEnabled(cx))
         script->resetUseCount();
 
     if (script->hasIonScript())

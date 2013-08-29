@@ -60,7 +60,7 @@ MarkExactStackRoot(JSTracer *trc, Rooted<void*> *rooter, ThingRootKind kind)
       case THING_ROOT_BASE_SHAPE:  MarkBaseShapeRoot(trc, (BaseShape **)addr, "exact-baseshape"); break;
       case THING_ROOT_TYPE:        MarkTypeRoot(trc, (types::Type *)addr, "exact-type"); break;
       case THING_ROOT_TYPE_OBJECT: MarkTypeObjectRoot(trc, (types::TypeObject **)addr, "exact-typeobject"); break;
-      case THING_ROOT_ION_CODE:    MarkIonCodeRoot(trc, (ion::IonCode **)addr, "exact-ioncode"); break;
+      case THING_ROOT_ION_CODE:    MarkIonCodeRoot(trc, (jit::IonCode **)addr, "exact-ioncode"); break;
       case THING_ROOT_VALUE:       MarkValueRoot(trc, (Value *)addr, "exact-value"); break;
       case THING_ROOT_ID:          MarkIdRoot(trc, (jsid *)addr, "exact-id"); break;
       case THING_ROOT_PROPERTY_ID: MarkIdRoot(trc, &((js::PropertyId *)addr)->asId(), "exact-propertyid"); break;
@@ -276,7 +276,7 @@ MarkRangeConservativelyAndSkipIon(JSTracer *trc, JSRuntime *rt, const uintptr_t 
     // Walk only regions in between JIT activations. Note that non-volatile
     // registers are spilled to the stack before the entry frame, ensuring
     // that the conservative scanner will still see them.
-    for (ion::JitActivationIterator iter(rt); !iter.done(); ++iter) {
+    for (jit::JitActivationIterator iter(rt); !iter.done(); ++iter) {
         uintptr_t *jitMin, *jitEnd;
         iter.jitStackRange(jitMin, jitEnd);
 
@@ -522,14 +522,14 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case IONMASM: {
 #ifdef JS_ION
-        static_cast<js::ion::MacroAssembler::AutoRooter *>(this)->masm()->trace(trc);
+        static_cast<js::jit::MacroAssembler::AutoRooter *>(this)->masm()->trace(trc);
 #endif
         return;
       }
 
       case IONALLOC: {
 #ifdef JS_ION
-        static_cast<js::ion::AutoTempAllocatorRooter *>(this)->trace(trc);
+        static_cast<js::jit::AutoTempAllocatorRooter *>(this)->trace(trc);
 #endif
         return;
       }
@@ -700,7 +700,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
 #ifdef JS_ION
         /* Any Ion wrappers survive until the runtime is being torn down. */
         if (rt->hasContexts())
-            ion::IonRuntime::Mark(trc);
+            jit::IonRuntime::Mark(trc);
 #endif
     }
 
@@ -752,7 +752,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
     MarkInterpreterActivations(rt, trc);
 
 #ifdef JS_ION
-    ion::MarkJitActivations(rt, trc);
+    jit::MarkJitActivations(rt, trc);
 #endif
 
     if (!rt->isHeapMinorCollecting()) {

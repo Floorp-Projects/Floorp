@@ -11,7 +11,7 @@
 #include "jit/IonLinker.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 bool
 ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)

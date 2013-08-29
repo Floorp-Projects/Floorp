@@ -10,7 +10,7 @@
 #include "jit/LIR.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 ABIArgGenerator::ABIArgGenerator()
   :

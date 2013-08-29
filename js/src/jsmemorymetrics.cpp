@@ -256,11 +256,11 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         cStats->scriptData += script->sizeOfData(rtStats->mallocSizeOf_);
 #ifdef JS_ION
         size_t baselineData = 0, baselineStubsFallback = 0;
-        ion::SizeOfBaselineData(script, rtStats->mallocSizeOf_, &baselineData,
+        jit::SizeOfBaselineData(script, rtStats->mallocSizeOf_, &baselineData,
                                 &baselineStubsFallback);
         cStats->baselineData += baselineData;
         cStats->baselineStubsFallback += baselineStubsFallback;
-        cStats->ionData += ion::SizeOfIonData(script, rtStats->mallocSizeOf_);
+        cStats->ionData += jit::SizeOfIonData(script, rtStats->mallocSizeOf_);
 #endif
 
         ScriptSource *ss = script->scriptSource();
