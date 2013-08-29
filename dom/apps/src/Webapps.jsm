@@ -2025,8 +2025,6 @@ this.DOMApplicationRegistry = {
 
     appObject.installTime = app.installTime = Date.now();
     appObject.lastUpdateCheck = app.lastUpdateCheck = Date.now();
-    let appNote = JSON.stringify(appObject);
-    appNote.id = id;
 
     appObject.id = id;
     appObject.localId = localId;
@@ -2099,7 +2097,6 @@ this.DOMApplicationRegistry = {
     this._saveApps((function() {
       this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
       this.broadcastMessage("Webapps:Install:Return:OK", aData);
-      Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
     }).bind(this));
 
     if (!aData.isPackage) {
@@ -2795,7 +2792,6 @@ this.DOMApplicationRegistry = {
         Cu.reportError("DOMApplicationRegistry: Exception on app uninstall: " +
                        ex + "\n" + ex.stack);
       }
-      Services.obs.notifyObservers(this, "webapps-sync-uninstall", JSON.stringify(appClone));
       this.broadcastMessage("Webapps:RemoveApp", { id: id });
     }).bind(this));
   },
