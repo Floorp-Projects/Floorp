@@ -166,6 +166,16 @@ TemporaryRef<BufferTextureClient>
 CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
                                               uint32_t aTextureFlags)
 {
+// XXX - Once bug 908196 is fixed, we can use gralloc textures here which will
+// improve performances of videos using SharedPlanarYCbCrImage on b2g.
+//#ifdef MOZ_WIDGET_GONK
+//  {
+//    RefPtr<BufferTextureClient> result = new GrallocTextureClientOGL(this,
+//                                                                     aFormat,
+//                                                                     aTextureFlags);
+//    return result.forget();
+//  }
+//#endif
   if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
     RefPtr<BufferTextureClient> result = new MemoryTextureClient(this, aFormat, aTextureFlags);
     return result.forget();

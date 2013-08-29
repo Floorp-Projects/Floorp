@@ -29,7 +29,7 @@
 
 namespace webrtc_adm_linux_pulse {
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(WEBRTC_GONK)
 LATE_BINDING_SYMBOL_TABLE_DEFINE_BEGIN(PulseAudioSymbolTable, "libpulse.so")
 #else
 LATE_BINDING_SYMBOL_TABLE_DEFINE_BEGIN(PulseAudioSymbolTable, "libpulse.so.0")
