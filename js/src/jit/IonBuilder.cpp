@@ -1112,10 +1112,68 @@ IonBuilder::traverseBytecode()
                 return maybeAddOsrTypeBarriers();
         }
 
+#ifdef DEBUG
+        // In debug builds, after compiling this op, check that all values
+        // popped by this opcode either:
+        //
+        //   (1) Have the Folded flag set on them.
+        //   (2) Have more uses than before compiling this op (the value is
+        //       used as operand of a new MIR instruction).
+        //
+        // This is used to catch problems where IonBuilder pops a value without
+        // adding any SSA uses and doesn't call setFoldedUnchecked on it.
+        Vector<MDefinition *> popped(cx);
+        Vector<size_t> poppedUses(cx);
+        unsigned nuses = GetUseCount(script_, pc - script_->code);
+
+        for (unsigned i = 0; i < nuses; i++) {
+            MDefinition *def = current->peek(-int32_t(i + 1));
+            if (!popped.append(def) || !poppedUses.append(def->defUseCount()))
+                return false;
+        }
+#endif
+
         // Nothing in inspectOpcode() is allowed to advance the pc.
         JSOp op = JSOp(*pc);
         if (!inspectOpcode(op))
             return false;
+
+#ifdef DEBUG
+        for (size_t i = 0; i < popped.length(); i++) {
+            // Call instructions can discard PassArg instructions. Ignore them.
+            if (popped[i]->isPassArg() && popped[i]->useCount() == 0)
+                continue;
+
+            switch (op) {
+              case JSOP_POP:
+              case JSOP_POPN:
+              case JSOP_DUP:
+              case JSOP_DUP2:
+              case JSOP_PICK:
+              case JSOP_SWAP:
+              case JSOP_SETARG:
+              case JSOP_SETLOCAL:
+              case JSOP_VOID:
+                // Don't require SSA uses for values popped by these ops.
+                break;
+
+              case JSOP_POS:
+              case JSOP_TOID:
+                // These ops may leave their input on the stack without setting
+                // the Folded flag. If this value will be popped immediately,
+                // we may replace it with |undefined|, but the difference is
+                // not observable.
+                JS_ASSERT(i == 0);
+                if (current->peek(-1) == popped[0])
+                    break;
+                // FALL THROUGH
+
+              default:
+                JS_ASSERT(popped[i]->isFolded() || popped[i]->defUseCount() > poppedUses[i]);
+                break;
+            }
+        }
+#endif
 
         pc += js_CodeSpec[op].length;
         current->updateTrackedPc(pc);
