@@ -27,7 +27,7 @@ interface nsISocketTransport;
 //  Once bug 723206 will be fixed, this method could be replaced by
 //  arguments when instantiating a TCPSocket object. For example it will
 //  be possible to do (similarly to the WebSocket API):
-//    var s = new MozTCPSocket(host, port); 
+//    var s = new MozTCPSocket(host, port);
 
 // Bug 797561 - Expose a server tcp socket API to web applications
 
@@ -215,7 +215,7 @@ interface nsIDOMTCPSocket : nsISupports
  * Needed to account for multiple possible types that can be provided to
  * the socket callbacks as arguments.
  */
-[scriptable, uuid(0baa1be1-6a88-4f85-a6c8-29e95f35c122)]
+[scriptable, uuid(234c664c-3d6c-4859-b45c-4e9a98cb5bdc)]
 interface nsITCPSocketInternal : nsISupports {
   // Trigger the callback for |type| and provide a DOMError() object with the given data
   void callListenerError(in DOMString type, in DOMString name);
@@ -245,17 +245,20 @@ interface nsITCPSocketInternal : nsISupports {
 
   // Create a DOM socket on the child side
   // This is called when the socket is accepted on the parent side.
-  // 
+  //
   // @param socketChild
   //        The socket child object for the IPC implementation.
   // @param binaryType
-  //        "arraybuffer" to use ArrayBuffer instances 
+  //        "arraybuffer" to use ArrayBuffer instances
   //        in the ondata callback and as the argument to send.
   // @param window
   //        An object to create ArrayBuffer for this window. See Bug 831107.
   nsIDOMTCPSocket createAcceptedChild(in nsITCPSocketChild socketChild,
-                                      in DOMString binaryType, 
+                                      in DOMString binaryType,
                                       in nsIDOMWindow window);
+
+  // Set App ID.
+  void setAppId(in unsigned long appId);
 };
 
 /**
