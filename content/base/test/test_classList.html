@@ -36,6 +36,10 @@ function onAttrModified(event) {
 }
 
 function checkModification(e, funcName, args, expectedRes, before, after, expectedException) {
+  if (!Array.isArray(args)) {
+    args = [args];
+  }
+
   var shouldThrow = typeof(expectedException) === "string";
   if (shouldThrow) {
     // If an exception is thrown, the class attribute shouldn't change.
@@ -259,12 +263,14 @@ function testClassList(e) {
   // add() method
 
   function checkAdd(before, argument, after, expectedException) {
-    checkModification(e, "add", [argument], null, before, after, expectedException);
+    checkModification(e, "add", argument, null, before, after, expectedException);
   }
 
   checkAdd(null, "", null, "SyntaxError");
+  checkAdd(null, ["a", ""], null, "SyntaxError");
   checkAdd(null, " ", null, "InvalidCharacterError");
-  checkAdd(null, "aa ", null, "InvalidCharacterError");
+  checkAdd(null, ["a", " "], null, "InvalidCharacterError");
+  checkAdd(null, ["a", "aa "], null, "InvalidCharacterError");
 
   checkAdd("a", "a", "a");
   checkAdd("aa", "AA", "aa AA");
@@ -278,6 +284,14 @@ function testClassList(e) {
   checkAdd("a b c", "d", "a b c d");
   checkAdd("a b c ", "d", "a b c d");
 
+  // multiple add
+  checkAdd("a b c ", ["d", "e"], "a b c d e");
+  checkAdd("a b c ", ["a", "a"], "a b c ");
+  checkAdd("a b c ", ["d", "d"], "a b c d");
+  checkAdd("a b c ", [], "a b c ");
+  checkAdd(null, ["a", "b"], "a b");
+  checkAdd("", ["a", "b"], "a b");
+
   // Test for bug 530171
   checkAdd(null, null, "null");
   checkAdd(null, undefined, "undefined");
@@ -285,7 +299,7 @@ function testClassList(e) {
   // remove() method
 
   function checkRemove(before, argument, after, expectedException) {
-    checkModification(e, "remove", [argument], null, before, after, expectedException);
+    checkModification(e, "remove", argument, null, before, after, expectedException);
   }
 
   checkRemove(null, "", null, "SyntaxError");
@@ -317,6 +331,16 @@ function testClassList(e) {
 
   checkRemove("\ra\na\ta\f", "a", "");
 
+  // multiple remove
+  checkRemove("a b c ", ["d", "e"], "a b c ");
+  checkRemove("a b c ", ["a", "b"], "c ");
+  checkRemove("a b c ", ["a", "c"], "b");
+  checkRemove("a b c ", ["a", "a"], "b c ");
+  checkRemove("a b c ", ["d", "d"], "a b c ");
+  checkRemove("a b c ", [], "a b c ");
+  checkRemove(null, ["a", "b"], null);
+  checkRemove("", ["a", "b"], "");
+
   // Test for bug 530171
   checkRemove("null", null, "");
   checkRemove("undefined", undefined, "");
@@ -324,7 +348,7 @@ function testClassList(e) {
   // toggle() method
 
   function checkToggle(before, argument, expectedRes, after, expectedException) {
-    checkModification(e, "toggle", [argument], expectedRes, before, after, expectedException);
+    checkModification(e, "toggle", argument, expectedRes, before, after, expectedException);
   }
 
   checkToggle(null, "", null, null, "SyntaxError");

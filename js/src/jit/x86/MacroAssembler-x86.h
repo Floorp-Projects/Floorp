@@ -175,10 +175,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         loadValue(Operand(src), val);
     }
     void tagValue(JSValueType type, Register payload, ValueOperand dest) {
-        JS_ASSERT(payload != dest.typeReg());
-        movl(ImmType(type), dest.typeReg());
+        JS_ASSERT(dest.typeReg() != dest.payloadReg());
         if (payload != dest.payloadReg())
             movl(payload, dest.payloadReg());
+        movl(ImmType(type), dest.typeReg());
     }
     void pushValue(ValueOperand val) {
         push(val.typeReg());

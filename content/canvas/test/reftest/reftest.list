@@ -17,21 +17,21 @@ pref(webgl.disabled,true)  == webgl-disable-test.html       wrapper.html?green.p
 # Test: {aa, alpha, preserve, readback} = 16
                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&_____&________  wrapper.html?green.png
                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&_____&________  wrapper.html?green.png
-fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&alpha&________  wrapper.html?green.png
-fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&alpha&________  wrapper.html?green.png
+fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&alpha&________  wrapper.html?green.png
+fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&alpha&________  wrapper.html?green.png
                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&_____&preserve  wrapper.html?green.png
                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&_____&preserve  wrapper.html?green.png
-fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&alpha&preserve  wrapper.html?green.png
-fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&alpha&preserve  wrapper.html?green.png
+fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&alpha&preserve  wrapper.html?green.png
+fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&alpha&preserve  wrapper.html?green.png
 
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&_____&________  wrapper.html?green.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&_____&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&alpha&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&alpha&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&alpha&________  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&alpha&________  wrapper.html?green.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&_____&preserve  wrapper.html?green.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&_____&preserve  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&alpha&preserve  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&alpha&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&alpha&preserve  wrapper.html?green.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&alpha&preserve  wrapper.html?green.png
 
 # Check that resize works:
 random-if(Android&&AndroidVersion<15)  == webgl-resize-test.html  wrapper.html?green.png
@@ -39,21 +39,21 @@ random-if(Android&&AndroidVersion<15)  == webgl-resize-test.html  wrapper.html?g
 # Check orientation:
                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&_____&________  wrapper.html?white-top-left.png
                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&_____&________  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&alpha&________  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&alpha&________  wrapper.html?white-top-left.png
+fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&alpha&________  wrapper.html?white-top-left.png
+fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&alpha&________  wrapper.html?white-top-left.png
                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&_____&preserve  wrapper.html?white-top-left.png
                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&_____&preserve  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&alpha&preserve  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&alpha&preserve  wrapper.html?white-top-left.png
+fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&alpha&preserve  wrapper.html?white-top-left.png
+fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&alpha&preserve  wrapper.html?white-top-left.png
 
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&_____&________  wrapper.html?white-top-left.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&_____&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&alpha&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&alpha&________  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&alpha&________  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&alpha&________  wrapper.html?white-top-left.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&_____&preserve  wrapper.html?white-top-left.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&_____&preserve  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&alpha&preserve  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,83) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&alpha&preserve  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&alpha&preserve  wrapper.html?white-top-left.png
+pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&alpha&preserve  wrapper.html?white-top-left.png
 
 # Does we draw the correct color in the correct places with all context creation options?
 # (Note that our context creation option matrix is 2^6 = 64)

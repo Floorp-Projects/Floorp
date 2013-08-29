@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset=utf-8>
+<head>
+  <title>Test that we can decode 4 channel wave file in webaudio, but not in &lt;audio&gt;</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var filename = "audio-quad.wav";
+
+SimpleTest.waitForExplicitFinish();
+
+function finishTest(a) {
+  if (a) {
+    a = null;
+    SimpleTest.finish();
+  }
+}
+
+function decodeUsingAudioElement() {
+  var a = new Audio();
+  a.addEventListener("error", function() {
+    ok(true, "We should not be able to decode this file using an HTMLAudioElement");
+    finishTest(a);
+  });
+  a.addEventListener("loadedmetadata", function() {
+    ok(false, "We should not be able to decode this file using an HTMLMediaElement.");
+    finishTest(a);
+  });
+
+  a.src = filename;
+  a.load();
+}
+
+addLoadEvent(function() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", filename);
+  xhr.responseType = "arraybuffer";
+  xhr.onload = function() {
+    var context = new AudioContext();
+    context.decodeAudioData(xhr.response, function(b) {
+      ok(true, "Decoding of a wave file with four channels succeded.");
+      is(b.numberOfChannels, 4, "The AudioBuffer should have 4 channels.");
+      decodeUsingAudioElement();
+    }, function() {
+      ok(false, "Decoding of a wave file with four channels failed.");
+      decodeUsingAudioElement();
+    });
+  };
+  xhr.send(null);
+});
+</script>
+</pre>
+</body>
+</html>

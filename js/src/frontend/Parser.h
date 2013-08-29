@@ -76,7 +76,7 @@ struct GenericParseContext
 
 template <typename ParseHandler>
 bool
-GenerateBlockId(ParseContext<ParseHandler> *pc, uint32_t &blockid);
+GenerateBlockId(TokenStream &ts, ParseContext<ParseHandler> *pc, uint32_t &blockid);
 
 /*
  * The struct ParseContext stores information about the current parsing context,
@@ -269,7 +269,7 @@ struct ParseContext : public GenericParseContext
 
     ~ParseContext();
 
-    bool init();
+    bool init(TokenStream &ts);
 
     unsigned blockid() { return topStmt ? topStmt->blockid : bodyid; }
 
