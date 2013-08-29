@@ -35,6 +35,7 @@ class JSAtom;
 struct JSErrorFormatString;
 class JSLinearString;
 struct JSJitInfo;
+class JSErrorReport;
 
 namespace JS {
 template <class T>
@@ -575,6 +576,14 @@ SetPreserveWrapperCallback(JSRuntime *rt, PreserveWrapperCallback callback);
 
 JS_FRIEND_API(bool)
 IsObjectInContextCompartment(JSObject *obj, const JSContext *cx);
+
+/*
+ * ErrorFromException takes a raw Value so that it's possible to call it during
+ * GC/CC/whatever, when it may not be possible to get a JSContext to create a
+ * Rooted.  It promises to never ever GC.
+ */
+JS_FRIEND_API(JSErrorReport*)
+ErrorFromException(JS::Value val);
 
 /*
  * NB: these flag bits are encoded into the bytecode stream in the immediate
