@@ -418,6 +418,16 @@ struct IsConvertible
   : IntegralConstant<bool, detail::ConvertibleTester<From, To>::value>
 {};
 
+/**
+ * Is IsLvalueReference<T> is true if its template param is T& and is false if
+ * its type is T or T&&.
+ */
+template<typename T>
+struct IsLvalueReference : FalseType {};
+
+template<typename T>
+struct IsLvalueReference<T&> : TrueType {};
+
 /* 20.9.7 Transformations between types [meta.trans] */
 
 /* 20.9.7.1 Const-volatile modifications [meta.trans.cv] */
@@ -477,6 +487,32 @@ struct RemoveCV
 };
 
 /* 20.9.7.2 Reference modifications [meta.trans.ref] */
+
+/**
+ * Converts reference types to the underlying types.
+ *
+ * mozilla::RemoveReference<T>::Type is T;
+ * mozilla::RemoveReference<T&>::Type is T;
+ * mozilla::RemoveReference<T&&>::Type is T;
+ */
+
+template<typename T>
+struct RemoveReference
+{
+    typedef T Type;
+};
+
+template<typename T>
+struct RemoveReference<T&>
+{
+    typedef T Type;
+};
+
+template<typename T>
+struct RemoveReference<T&&>
+{
+    typedef T Type;
+};
 
 /* 20.9.7.3 Sign modifications [meta.trans.sign] */
 

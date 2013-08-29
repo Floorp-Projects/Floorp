@@ -44,7 +44,7 @@ using mozilla::HashGeneric;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::Maybe;
-using mozilla::Move;
+using mozilla::OldMove;
 using mozilla::MoveRef;
 
 static const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
@@ -664,7 +664,7 @@ class Signature
     Signature(MoveRef<VarTypeVector> argTypes, RetType retType)
       : argTypes_(argTypes), retType_(retType) {}
     Signature(MoveRef<Signature> rhs)
-      : argTypes_(Move(rhs->argTypes_)), retType_(rhs->retType_) {}
+      : argTypes_(OldMove(rhs->argTypes_)), retType_(rhs->retType_) {}
 
     bool copy(const Signature &rhs) {
         if (!argTypes_.resize(rhs.argTypes_.length()))
@@ -678,7 +678,7 @@ class Signature
     bool appendArg(VarType type) { return argTypes_.append(type); }
     VarType arg(unsigned i) const { return argTypes_[i]; }
     const VarTypeVector &args() const { return argTypes_; }
-    MoveRef<VarTypeVector> extractArgs() { return Move(argTypes_); }
+    MoveRef<VarTypeVector> extractArgs() { return OldMove(argTypes_); }
 
     RetType retType() const { return retType_; }
 };
@@ -1077,8 +1077,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         {}
 
         FuncPtrTable(MoveRef<FuncPtrTable> rhs)
-          : sig_(Move(rhs->sig_)), mask_(rhs->mask_), globalDataOffset_(rhs->globalDataOffset_),
-            elems_(Move(rhs->elems_))
+          : sig_(OldMove(rhs->sig_)), mask_(rhs->mask_), globalDataOffset_(rhs->globalDataOffset_),
+            elems_(OldMove(rhs->elems_))
         {}
 
         Signature &sig() { return sig_; }
@@ -1102,7 +1102,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         ExitDescriptor(PropertyName *name, MoveRef<Signature> sig)
           : name_(name), sig_(sig) {}
         ExitDescriptor(MoveRef<ExitDescriptor> rhs)
-          : name_(rhs->name_), sig_(Move(rhs->sig_))
+          : name_(rhs->name_), sig_(OldMove(rhs->sig_))
         {}
         const Signature &sig() const {
             return sig_;
@@ -1401,7 +1401,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (!module_->addFuncPtrTable(/* numElems = */ mask + 1, &globalDataOffset))
             return false;
         FuncPtrTable tmpTable(cx_, sig, mask, globalDataOffset);
-        if (!funcPtrTables_.append(Move(tmpTable)))
+        if (!funcPtrTables_.append(OldMove(tmpTable)))
             return false;
         *table = &funcPtrTables_.back();
         return true;
@@ -1452,7 +1452,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             argCoercions[i] = args[i].toCoercion();
         AsmJSModule::ReturnType retType = func->sig().retType().toModuleReturnType();
         return module_->addExportedFunction(func->name(), maybeFieldName,
-                                            Move(argCoercions), retType);
+                                            OldMove(argCoercions), retType);
     }
     bool addExit(unsigned ffiIndex, PropertyName *name, MoveRef<Signature> sig, unsigned *exitIndex) {
         ExitDescriptor exitDescriptor(name, sig);
@@ -1463,7 +1463,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
         if (!module_->addExit(ffiIndex, exitIndex))
             return false;
-        return exits_.add(p, Move(exitDescriptor), *exitIndex);
+        return exits_.add(p, OldMove(exitDescriptor), *exitIndex);
     }
     bool addGlobalAccess(AsmJSGlobalAccess access) {
         return globalAccesses_.append(access);
@@ -2508,7 +2508,7 @@ class FunctionCompiler
         typename Map::AddPtr p = map->lookupForAdd(key);
         if (!p) {
             BlockVector empty(m().cx());
-            if (!map->add(p, key, Move(empty)))
+            if (!map->add(p, key, OldMove(empty)))
                 return false;
         }
         if (!p->value.append(curBlock_))
@@ -3385,7 +3385,7 @@ CheckInternalCall(FunctionCompiler &f, ParseNode *callNode, PropertyName *callee
         return false;
 
     ModuleCompiler::Func *callee;
-    if (!CheckFunctionSignature(f.m(), callNode, Move(call.sig()), calleeName, &callee))
+    if (!CheckFunctionSignature(f.m(), callNode, OldMove(call.sig()), calleeName, &callee))
         return false;
 
     if (!f.internalCall(*callee, call, def))
@@ -3461,7 +3461,7 @@ CheckFuncPtrCall(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDef
         return false;
 
     ModuleCompiler::FuncPtrTable *table;
-    if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, Move(call.sig()), mask, &table))
+    if (!CheckFuncPtrTableAgainstExisting(f.m(), tableNode, name, OldMove(call.sig()), mask, &table))
         return false;
 
     if (!f.funcPtrCall(*table, indexDef, call, def))
@@ -3490,7 +3490,7 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, RetTyp
         return false;
 
     unsigned exitIndex;
-    if (!f.m().addExit(ffiIndex, calleeName, Move(call.sig()), &exitIndex))
+    if (!f.m().addExit(ffiIndex, calleeName, OldMove(call.sig()), &exitIndex))
         return false;
 
     if (!f.ffiCall(exitIndex, call, retType.toMIRType(), def))
@@ -4674,9 +4674,9 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
     if (!CheckReturnType(f, lastNonEmptyStmt, retType))
         return false;
 
-    Signature sig(Move(argTypes), retType);
+    Signature sig(OldMove(argTypes), retType);
     ModuleCompiler::Func *func;
-    if (!CheckFunctionSignature(m, fn, Move(sig), FunctionName(fn), &func))
+    if (!CheckFunctionSignature(m, fn, OldMove(sig), FunctionName(fn), &func))
         return false;
 
     if (func->defined())
@@ -5057,10 +5057,10 @@ CheckFuncPtrTable(ModuleCompiler &m, ParseNode *var)
         return false;
 
     ModuleCompiler::FuncPtrTable *table;
-    if (!CheckFuncPtrTableAgainstExisting(m, var, var->name(), Move(sig), mask, &table))
+    if (!CheckFuncPtrTableAgainstExisting(m, var, var->name(), OldMove(sig), mask, &table))
         return false;
 
-    table->initElems(Move(elems));
+    table->initElems(OldMove(elems));
     return true;
 }
 
