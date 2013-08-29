@@ -10,7 +10,6 @@ relativesrcdir   = @relativesrcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME     = dom_media_s
 include $(topsrcdir)/dom/dom-config.mk
 
 

@@ -10,6 +10,7 @@
 
 #include "jsproxy.h"
 
+#include "builtin/TypeRepresentation.h"
 #include "jit/CodeGenerator.h"
 #include "jit/Ion.h"
 #include "jit/IonLinker.h"
@@ -1067,7 +1068,7 @@ GenerateTypedArrayLength(JSContext *cx, MacroAssembler &masm, IonCache::StubAtta
     // Implement the negated version of JSObject::isTypedArray predicate.
     masm.loadObjClass(object, tmpReg);
     masm.branchPtr(Assembler::Below, tmpReg, ImmWord(&TypedArrayObject::classes[0]), &failures);
-    masm.branchPtr(Assembler::AboveOrEqual, tmpReg, ImmWord(&TypedArrayObject::classes[TypedArrayObject::TYPE_MAX]), &failures);
+    masm.branchPtr(Assembler::AboveOrEqual, tmpReg, ImmWord(&TypedArrayObject::classes[ScalarTypeRepresentation::TYPE_MAX]), &failures);
 
     // Load length.
     masm.loadTypedOrValue(Address(object, TypedArrayObject::lengthOffset()), output);
@@ -1129,7 +1130,7 @@ CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &ca
         return GetPropertyIC::CanAttachReadSlot;
     }
 
-    if (cx->names().length == name &&
+    if (cx->names().length == name && cache.allowArrayLength(cx, obj) &&
         IsCacheableArrayLength(cx, obj, name, cache.output()))
     {
         // The array length property is non-configurable, which means both that
@@ -1149,6 +1150,29 @@ CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &ca
     }
 
     return GetPropertyIC::CanAttachNone;
+}
+
+bool
+GetPropertyIC::allowArrayLength(Context cx, HandleObject obj) const
+{
+    if (!idempotent())
+        return true;
+
+    uint32_t locationIndex, numLocations;
+    getLocationInfo(&locationIndex, &numLocations);
+
+    IonScript *ion = GetTopIonJSScript(cx)->ionScript();
+    CacheLocation *locs = ion->getCacheLocs(locationIndex);
+    for (size_t i = 0; i < numLocations; i++) {
+        CacheLocation &curLoc = locs[i];
+        types::StackTypeSet *bcTypes =
+            types::TypeScript::BytecodeTypes(curLoc.script, curLoc.pc);
+
+        if (!bcTypes->hasType(types::Type::Int32Type()))
+            return false;
+    }
+
+    return true;
 }
 
 bool
@@ -2461,8 +2485,8 @@ GetElementIC::canAttachTypedArrayElement(JSObject *obj, const Value &idval,
     // The output register is not yet specialized as a float register, the only
     // way to accept float typed arrays for now is to return a Value type.
     int arrayType = obj->as<TypedArrayObject>().type();
-    bool floatOutput = arrayType == TypedArrayObject::TYPE_FLOAT32 ||
-                       arrayType == TypedArrayObject::TYPE_FLOAT64;
+    bool floatOutput = arrayType == ScalarTypeRepresentation::TYPE_FLOAT32 ||
+                       arrayType == ScalarTypeRepresentation::TYPE_FLOAT64;
     return !floatOutput || output.hasValue();
 }
 

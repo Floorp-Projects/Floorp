@@ -291,15 +291,15 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitGetNameCache(LGetNameCache *ins);
     bool visitCallsiteCloneCache(LCallsiteCloneCache *ins);
 
-    bool visitGetPropertyIC(OutOfLineUpdateCache *ool, GetPropertyIC *ic);
-    bool visitGetPropertyParIC(OutOfLineUpdateCache *ool, GetPropertyParIC *ic);
-    bool visitSetPropertyIC(OutOfLineUpdateCache *ool, SetPropertyIC *ic);
-    bool visitGetElementIC(OutOfLineUpdateCache *ool, GetElementIC *ic);
-    bool visitGetElementParIC(OutOfLineUpdateCache *ool, GetElementParIC *ic);
-    bool visitSetElementIC(OutOfLineUpdateCache *ool, SetElementIC *ic);
-    bool visitBindNameIC(OutOfLineUpdateCache *ool, BindNameIC *ic);
-    bool visitNameIC(OutOfLineUpdateCache *ool, NameIC *ic);
-    bool visitCallsiteCloneIC(OutOfLineUpdateCache *ool, CallsiteCloneIC *ic);
+    bool visitGetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyIC> &ic);
+    bool visitGetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyParIC> &ic);
+    bool visitSetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<SetPropertyIC> &ic);
+    bool visitGetElementIC(OutOfLineUpdateCache *ool, DataPtr<GetElementIC> &ic);
+    bool visitGetElementParIC(OutOfLineUpdateCache *ool, DataPtr<GetElementParIC> &ic);
+    bool visitSetElementIC(OutOfLineUpdateCache *ool, DataPtr<SetElementIC> &ic);
+    bool visitBindNameIC(OutOfLineUpdateCache *ool, DataPtr<BindNameIC> &ic);
+    bool visitNameIC(OutOfLineUpdateCache *ool, DataPtr<NameIC> &ic);
+    bool visitCallsiteCloneIC(OutOfLineUpdateCache *ool, DataPtr<CallsiteCloneIC> &ic);
 
     bool visitAssertRangeI(LAssertRangeI *ins);
     bool visitAssertRangeD(LAssertRangeD *ins);

@@ -94,10 +94,6 @@ def print_header_file(fd, conf):
              "#include \"nsString.h\"\n"
              "#include \"nsCOMPtr.h\"\n\n")
 
-    # win32 namespace issues
-    fd.write("#undef near\n"
-             "\n\n")
-
     forwards = []
     attrnames = []
     for d in conf.dictionaries:
