@@ -282,13 +282,15 @@ const CustomizableWidgets = [{
       const kPanelId = "PanelUI-popup";
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
       let noautoclose = inPanel ? "true" : null;
-      let flex = inPanel ? "1" : null;
       let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
+
+      if (!this.currentArea)
+        cls = null;
+
       let buttons = [{
         id: "zoom-out-button",
         noautoclose: noautoclose,
         command: "cmd_fullZoomReduce",
-        flex: flex,
         class: cls,
         label: true,
         tooltiptext: true
@@ -296,14 +298,12 @@ const CustomizableWidgets = [{
         id: "zoom-reset-button",
         noautoclose: noautoclose,
         command: "cmd_fullZoomReset",
-        flex: flex,
         class: cls,
         tooltiptext: true
       }, {
         id: "zoom-in-button",
         noautoclose: noautoclose,
         command: "cmd_fullZoomEnlarge",
-        flex: flex,
         class: cls,
         label: true,
         tooltiptext: true
@@ -314,8 +314,6 @@ const CustomizableWidgets = [{
       node.setAttribute("title", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
       // Set this as an attribute in addition to the property to make sure we can style correctly.
       node.setAttribute("removable", "true");
-      if (inPanel)
-        node.setAttribute("flex", "1");
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add(kWidePanelItemClass);
 
@@ -346,27 +344,25 @@ const CustomizableWidgets = [{
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomChange", false);
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomReset", false);
 
-      if (inPanel) {
+      if (inPanel && this.currentArea) {
         let panel = aDocument.getElementById(kPanelId);
         panel.addEventListener("popupshowing", updateZoomResetButton);
-      } else {
-        zoomResetButton.setAttribute("hidden", "true");
+      } else if (!this.currentArea) {
+        updateZoomResetButton();
       }
 
-      function updateWidgetStyle(aInPanel) {
+      function updateWidgetStyle(aArea) {
+        let inPanel = (aArea == CustomizableUI.AREA_PANEL);
         let attrs = {
-          noautoclose: aInPanel ? "true" : null,
-          flex: aInPanel ? "1" : null,
-          class: aInPanel ? "panel-combined-button" : "toolbarbutton-1"
+          noautoclose: inPanel ? "true" : null,
+          class: inPanel ? "panel-combined-button" : aArea ? "toolbarbutton-1" : null
         };
         for (let i = 0, l = node.childNodes.length; i < l; ++i) {
           setAttributes(node.childNodes[i], attrs);
         }
-        zoomResetButton.setAttribute("hidden", aInPanel ? "false" : "true");
-        if (aInPanel)
-          node.setAttribute("flex", "1");
-        else if (node.hasAttribute("flex"))
-          node.removeAttribute("flex");
+
+        if (inPanel || !aArea)
+          updateZoomResetButton();
       }
 
       let listener = {
@@ -378,9 +374,8 @@ const CustomizableWidgets = [{
           if (aWidgetId != this.id)
             return;
 
-          updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
+          updateWidgetStyle(aArea);
           if (aArea == CustomizableUI.AREA_PANEL) {
-            zoomResetButton.removeAttribute("hidden");
             let panel = aDocument.getElementById(kPanelId);
             panel.addEventListener("popupshowing", updateZoomResetButton);
           }
@@ -401,14 +396,13 @@ const CustomizableWidgets = [{
 
           // When a widget is demoted to the palette ('removed'), it's visual
           // style should change.
-          updateWidgetStyle(false);
-          zoomResetButton.setAttribute("hidden", "true");
+          updateWidgetStyle();
         }.bind(this),
 
         onWidgetReset: function(aWidgetId) {
           if (aWidgetId != this.id)
             return;
-          updateWidgetStyle(this.currentArea == CustomizableUI.AREA_PANEL);
+          updateWidgetStyle(this.currentArea);
         }.bind(this),
 
         onWidgetMoved: function(aWidgetId, aArea) {
@@ -418,7 +412,7 @@ const CustomizableWidgets = [{
 
           if (aWidgetId != this.id)
             return;
-          updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
+          updateWidgetStyle(aArea);
         }.bind(this),
 
         onWidgetInstanceRemoved: function(aWidgetId, aDoc) {
@@ -436,7 +430,7 @@ const CustomizableWidgets = [{
           if (aWidgetId != this.id)
             return;
           aArea = aArea || this.currentArea;
-          updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
+          updateWidgetStyle(aArea);
         }.bind(this)
       };
       CustomizableUI.addListener(listener);
@@ -451,26 +445,26 @@ const CustomizableWidgets = [{
     allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     onBuild: function(aDocument) {
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
-      let flex = inPanel ? "1" : null;
       let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
+
+      if (!this.currentArea)
+        cls = null;
+
       let buttons = [{
         id: "cut-button",
         command: "cmd_cut",
-        flex: flex,
         class: cls,
         label: true,
         tooltiptext: true
       }, {
         id: "copy-button",
         command: "cmd_copy",
-        flex: flex,
         class: cls,
         label: true,
         tooltiptext: true
       }, {
         id: "paste-button",
         command: "cmd_paste",
-        flex: flex,
         class: cls,
         label: true,
         tooltiptext: true
@@ -481,8 +475,6 @@ const CustomizableWidgets = [{
       node.setAttribute("title", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
       // Set this as an attribute in addition to the property to make sure we can style correctly.
       node.setAttribute("removable", "true");
-      if (inPanel)
-        node.setAttribute("flex", "1");
       node.classList.add("chromeclass-toolbar-additional");
       node.classList.add(kWidePanelItemClass);
 
@@ -494,18 +486,15 @@ const CustomizableWidgets = [{
         node.appendChild(btnNode);
       });
 
-      function updateWidgetStyle(aInPanel) {
-        let attrs = {
-          flex: aInPanel ? "1" : null,
-          class: aInPanel ? "panel-combined-button" : "toolbarbutton-1"
-        };
+      function updateWidgetStyle(aArea) {
+        let inPanel = (aArea == CustomizableUI.AREA_PANEL);
+        let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
+        if (!aArea)
+          cls = null;
+        let attrs = {class: cls};
         for (let i = 0, l = node.childNodes.length; i < l; ++i) {
           setAttributes(node.childNodes[i], attrs);
         }
-        if (aInPanel)
-          node.setAttribute("flex", "1");
-        else if (node.hasAttribute("flex"))
-          node.removeAttribute("flex");
       }
 
       let listener = {
@@ -516,7 +505,7 @@ const CustomizableWidgets = [{
 
           if (aWidgetId != this.id)
             return;
-          updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
+          updateWidgetStyle(aArea);
         }.bind(this),
 
         onWidgetRemoved: function(aWidgetId, aPrevArea) {
@@ -528,13 +517,13 @@ const CustomizableWidgets = [{
             return;
           // When a widget is demoted to the palette ('removed'), it's visual
           // style should change.
-          updateWidgetStyle(false);
+          updateWidgetStyle();
         }.bind(this),
 
         onWidgetReset: function(aWidgetId) {
           if (aWidgetId != this.id)
             return;
-          updateWidgetStyle(this.currentArea == CustomizableUI.AREA_PANEL);
+          updateWidgetStyle(this.currentArea);
         }.bind(this),
 
         onWidgetMoved: function(aWidgetId, aArea) {
@@ -544,7 +533,7 @@ const CustomizableWidgets = [{
 
           if (aWidgetId != this.id)
             return;
-          updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
+          updateWidgetStyle(aArea);
         }.bind(this),
 
         onWidgetInstanceRemoved: function(aWidgetId, aDoc) {
@@ -557,7 +546,7 @@ const CustomizableWidgets = [{
           if (aWidgetId != this.id)
             return;
           aArea = aArea || this.currentArea;
-          updateWidgetStyle(aArea == CustomizableUI.AREA_PANEL);
+          updateWidgetStyle(aArea);
         }.bind(this)
       };
       CustomizableUI.addListener(listener);
