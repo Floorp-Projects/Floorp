@@ -23,6 +23,7 @@ interface DummyInterface {
   void MmsAttachment(optional MmsAttachment arg);
   void AsyncScrollEventDetail(optional AsyncScrollEventDetail arg);
   void OpenWindowEventDetail(optional OpenWindowEventDetail arg);
+  void DOMWindowResizeEventDetail(optional DOMWindowResizeEventDetail arg);
   void WifiOptions(optional WifiCommandOptions arg1,
                    optional WifiResultOptions arg2);
 };
