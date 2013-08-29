@@ -77,6 +77,7 @@ function test() {
   oe.object.foo[1] = oe.object.bar;
 
   is(index, expected.length, "Event count is right");
+  is(oe.object.bar, oe.object.bar, "Object attributes are wrapped only once");
 
   finish();
 }

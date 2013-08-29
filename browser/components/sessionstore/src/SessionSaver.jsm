@@ -29,14 +29,47 @@ XPCOMUtils.defineLazyGetter(this, "gInterval", function () {
   Services.prefs.addObserver(PREF, () => {
     this.gInterval = Services.prefs.getIntPref(PREF);
 
-    // Cancel any pending runs and call runDelayed() with
-    // zero to apply the newly configured interval.
-    SessionSaverInternal.cancel();
-    SessionSaverInternal.runDelayed(0);
+    if (isBatteryCharging()) {
+      // Cancel any pending runs and call runDelayed()
+      // to apply the newly configured interval.
+      SessionSaverInternal.cancel();
+      SessionSaverInternal.runDelayed(0);
+    }
   }, false);
 
   return Services.prefs.getIntPref(PREF);
 });
+
+XPCOMUtils.defineLazyGetter(this, "gIntervalBattery", function () {
+  const PREF = "browser.sessionstore.interval_battery";
+
+  // Observer that updates the cached value when the preference changes.
+  Services.prefs.addObserver(PREF, () => {
+    this.gIntervalBattery = Services.prefs.getIntPref(PREF);
+
+    if (!isBatteryCharging()) {
+      // Cancel any pending runs and call runDelayed()
+      // to apply the newly configured interval.
+      SessionSaverInternal.cancel();
+      SessionSaverInternal.runDelayed(0);
+    }
+  }, false);
+
+  return Services.prefs.getIntPref(PREF);
+});
+
+// Check if battery is charging
+function isBatteryCharging() {
+   return Services.appShell.hiddenDOMWindow.navigator.battery.charging;
+}
+
+// Get the current session store interval based on battery status
+function getInterval() {
+  if (isBatteryCharging()) {
+    return gInterval;
+  }
+  return gIntervalBattery;
+}
 
 // Wrap a string as a nsISupports.
 function createSupportsString(data) {
@@ -148,7 +181,7 @@ let SessionSaverInternal = {
     }
 
     // Interval until the next disk operation is allowed.
-    delay = Math.max(this._lastSaveTime + gInterval - Date.now(), delay, 0);
+    delay = Math.max(this._lastSaveTime + getInterval() - Date.now(), delay, 0);
 
     // Schedule a state save.
     this._timeoutID = setTimeout(() => this._saveState(), delay);
