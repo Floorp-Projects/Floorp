@@ -532,9 +532,11 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
-    CycleCollectionNoteEdgeName(aCallback, aName, aFlags);
-    aCallback.NoteXPCOMChild(aField.mTexturePtr);
-    aCallback.NoteXPCOMChild(aField.mRenderbufferPtr);
+    CycleCollectionNoteChild(aCallback, aField.mTexturePtr.get(),
+                             aName, aFlags);
+
+    CycleCollectionNoteChild(aCallback, aField.mRenderbufferPtr.get(),
+                             aName, aFlags);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_7(WebGLFramebuffer,
@@ -546,10 +548,5 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_7(WebGLFramebuffer,
   mDepthStencilAttachment.mTexturePtr,
   mDepthStencilAttachment.mRenderbufferPtr)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(WebGLFramebuffer)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(WebGLFramebuffer)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WebGLFramebuffer)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLFramebuffer, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLFramebuffer, Release)

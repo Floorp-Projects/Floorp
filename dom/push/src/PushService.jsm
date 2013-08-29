@@ -625,9 +625,20 @@ this.PushService = {
 
   /** |delay| should be in milliseconds. */
   _setAlarm: function(delay) {
+    // Bug 909270: Since calls to AlarmService.add() are async, calls must be
+    // 'queued' to ensure only one alarm is ever active.
+    if (this._settingAlarm) {
+        // onSuccess will handle the set. Overwriting the variable enforces the
+        // last-writer-wins semantics.
+        this._queuedAlarmDelay = delay;
+        this._waitingForAlarmSet = true;
+        return;
+    }
+
     // Stop any existing alarm.
     this._stopAlarm();
 
+    this._settingAlarm = true;
     AlarmService.add(
       {
         date: new Date(Date.now() + delay),
@@ -637,6 +648,12 @@ this.PushService = {
       function onSuccess(alarmID) {
         this._alarmID = alarmID;
         debug("Set alarm " + delay + " in the future " + this._alarmID);
+        this._settingAlarm = false;
+
+        if (this._waitingForAlarmSet) {
+          this._waitingForAlarmSet = false;
+          this._setAlarm(this._queuedAlarmDelay);
+        }
       }.bind(this)
     )
   },
@@ -1441,6 +1458,11 @@ this.PushService = {
   _getNetworkState: function() {
     debug("getNetworkState()");
     try {
+      if (!prefs.get("udp.wakeupEnabled")) {
+        debug("UDP support disabled, we do not send any carrier info");
+        throw "UDP disabled";
+      }
+
       var nm = Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
       if (nm.active && nm.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
         var mcp = Cc["@mozilla.org/ril/content-helper;1"].getService(Ci.nsIMobileConnectionProvider);

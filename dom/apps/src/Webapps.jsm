@@ -1130,7 +1130,7 @@ this.DOMApplicationRegistry = {
 
         if (manifest.appcache_path) {
           debug("appcache found");
-          this.startOfflineCacheDownload(manifest, app, null, null, isUpdate);
+          this.startOfflineCacheDownload(manifest, app, null, isUpdate);
         } else {
           // hosted app with no appcache, nothing to do, but we fire a
           // downloaded event
@@ -1280,10 +1280,7 @@ this.DOMApplicationRegistry = {
     }).bind(this));
   },
 
-  startOfflineCacheDownload: function startOfflineCacheDownload(aManifest, aApp,
-                                                                aProfileDir,
-                                                                aOfflineCacheObserver,
-                                                                aIsUpdate) {
+  startOfflineCacheDownload: function(aManifest, aApp, aProfileDir, aIsUpdate) {
     if (!aManifest.appcache_path) {
       return;
     }
@@ -1320,9 +1317,6 @@ this.DOMApplicationRegistry = {
       AppDownloadManager.add(aApp.manifestURL, download);
 
       cacheUpdate.addObserver(new AppcacheObserver(aApp), false);
-      if (aOfflineCacheObserver) {
-        cacheUpdate.addObserver(aOfflineCacheObserver, false);
-      }
     }).bind(this));
   },
 
@@ -1928,8 +1922,7 @@ this.DOMApplicationRegistry = {
     if (cacheDownload) {
       this.startOfflineCacheDownload(cacheDownload.manifest,
                                      cacheDownload.app,
-                                     cacheDownload.profileDir,
-                                     cacheDownload.offlineCacheObserver);
+                                     cacheDownload.profileDir);
       delete this.queuedDownload[aManifestURL];
 
       return;
@@ -1987,8 +1980,7 @@ this.DOMApplicationRegistry = {
     }
   },
 
-  confirmInstall: function(aData, aProfileDir, aOfflineCacheObserver,
-                           aInstallSuccessCallback) {
+  confirmInstall: function(aData, aProfileDir, aInstallSuccessCallback) {
     let isReinstall = false;
     let app = aData.app;
     app.removable = true;
@@ -2025,8 +2017,6 @@ this.DOMApplicationRegistry = {
 
     appObject.installTime = app.installTime = Date.now();
     appObject.lastUpdateCheck = app.lastUpdateCheck = Date.now();
-    let appNote = JSON.stringify(appObject);
-    appNote.id = id;
 
     appObject.id = id;
     appObject.localId = localId;
@@ -2088,8 +2078,7 @@ this.DOMApplicationRegistry = {
       this.queuedDownload[app.manifestURL] = {
         manifest: manifest,
         app: appObject,
-        profileDir: aProfileDir,
-        offlineCacheObserver: aOfflineCacheObserver
+        profileDir: aProfileDir
       }
     }
 
@@ -2099,7 +2088,6 @@ this.DOMApplicationRegistry = {
     this._saveApps((function() {
       this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
       this.broadcastMessage("Webapps:Install:Return:OK", aData);
-      Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
     }).bind(this));
 
     if (!aData.isPackage) {
@@ -2795,7 +2783,6 @@ this.DOMApplicationRegistry = {
         Cu.reportError("DOMApplicationRegistry: Exception on app uninstall: " +
                        ex + "\n" + ex.stack);
       }
-      Services.obs.notifyObservers(this, "webapps-sync-uninstall", JSON.stringify(appClone));
       this.broadcastMessage("Webapps:RemoveApp", { id: id });
     }).bind(this));
   },

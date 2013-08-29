@@ -70,7 +70,7 @@ private:
 
 // nsSpeechTask
 
-NS_IMPL_CYCLE_COLLECTION_1(nsSpeechTask, mSpeechSynthesis);
+NS_IMPL_CYCLE_COLLECTION_2(nsSpeechTask, mSpeechSynthesis, mUtterance);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSpeechTask)
   NS_INTERFACE_MAP_ENTRY(nsISpeechTask)
