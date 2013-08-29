@@ -41,11 +41,22 @@ var gChatWindow = {
   // different what what we need to leave enabled
   onLoad: function() {
     // Disable inappropriate commands / submenus
-    var disabledItems = ['Browser:SavePage',
-                         'Browser:SendLink', 'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain',
+    var disabledItems = ['Browser:SavePage', 'Browser:OpenFile',
+                         'Browser:SendLink', 'cmd_pageSetup', 'cmd_print',
+                         'cmd_find', 'cmd_findAgain', 'cmd_findPrevious',
+                         'cmd_fullZoomReduce', 'cmd_fullZoomEnlarge', 'cmd_fullZoomReset',
+#ifdef XP_MACOSX
                          'viewToolbarsMenu', 'viewSidebarMenuMenu',
                          'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu',
-                         'viewHistorySidebar', 'Browser:AddBookmarkAs', 'Browser:BookmarkAllTabs',
+#else
+                         'Browser:OpenLocation', 'Tools:Search',
+#endif
+                         'Tools:Sanitize', 'Tools:DevToolbox',
+                         'key_selectTab1', 'key_selectTab2', 'key_selectTab3',
+                         'key_selectTab4', 'key_selectTab5', 'key_selectTab6',
+                         'key_selectTab7', 'key_selectTab8', 'key_selectLastTab',
+                         'viewHistorySidebar', 'viewBookmarksSidebar',
+                         'Browser:AddBookmarkAs', 'Browser:BookmarkAllTabs',
                          'Browser:ToggleTabView', 'Browser:ToggleAddonBar'];
 
     for (let disabledItem of disabledItems) {
@@ -60,6 +71,9 @@ var gChatWindow = {
     BrowserOffline.uninit();
   }
 }
+
+__defineGetter__("content", function()
+  document.getElementById("chatter").contentWindow);
 
 // define a popupnotifications handler for this window.  we don't use
 // an iconbox here, and only support the browser frame for chat.
