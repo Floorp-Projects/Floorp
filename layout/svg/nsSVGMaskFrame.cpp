@@ -131,6 +131,13 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
   return retval.forget();
 }
 
+/* virtual */ void
+nsSVGMaskFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+{
+  nsSVGEffects::InvalidateDirectRenderingObservers(this);
+  nsSVGMaskFrameBase::DidSetStyleContext(aOldStyleContext);
+}
+
 NS_IMETHODIMP
 nsSVGMaskFrame::AttributeChanged(int32_t  aNameSpaceID,
                                  nsIAtom* aAttribute,
