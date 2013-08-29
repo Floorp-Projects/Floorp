@@ -468,6 +468,14 @@ public:
   // decode thread could start up and run in future.
   virtual void OnDecodeThreadFinish() {}
 
+  // Tell the reader that the data decoded are not for direct playback, so it
+  // can accept more files, in particular those which have more channels than
+  // available in the audio output.
+  void SetIgnoreAudioOutputFormat()
+  {
+    mIgnoreAudioOutputFormat = true;
+  }
+
 protected:
   // Queue of audio frames. This queue is threadsafe, and is accessed from
   // the audio, decoder, state machine, and main threads.
@@ -544,6 +552,11 @@ protected:
 
   // Stores presentation info required for playback.
   VideoInfo mInfo;
+
+  // Whether we should accept media that we know we can't play
+  // directly, because they have a number of channel higher than
+  // what we support.
+  bool mIgnoreAudioOutputFormat;
 };
 
 } // namespace mozilla
