@@ -23,11 +23,18 @@ struct TypedArrayObjectStorage : AllTypedArraysBase {
 protected:
   JSObject* mObj;
 
+  TypedArrayObjectStorage()
+  {
+  }
+
 public:
   inline void TraceSelf(JSTracer* trc)
   {
     JS_CallObjectTracer(trc, &mObj, "TypedArray.mObj");
   }
+
+private:
+  TypedArrayObjectStorage(const TypedArrayObjectStorage&) MOZ_DELETE;
 };
 
 /*
@@ -90,6 +97,9 @@ protected:
   {
     mObj = UnboxArray(obj, &mLength, &mData);
   }
+
+private:
+  TypedArray_base(const TypedArray_base&) MOZ_DELETE;
 };
 
 
@@ -143,6 +153,8 @@ private:
     }
     return obj;
   }
+
+  TypedArray(const TypedArray&) MOZ_DELETE;
 };
 
 typedef TypedArray<int8_t, JS_GetInt8ArrayData, JS_GetObjectAsInt8Array,
