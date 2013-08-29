@@ -9,7 +9,7 @@ const CHILD_SCRIPT = "chrome://specialpowers/content/specialpowers.js";
 const CHILD_SCRIPT_API = "chrome://specialpowers/content/specialpowersAPI.js";
 const CHILD_LOGGER_SCRIPT = "chrome://specialpowers/content/MozillaLogger.js";
 
-let homescreen = document.getElementById('homescreen');
+let homescreen = document.getElementById('systemapp');
 let container = homescreen.contentWindow.document.getElementById('test-container');
 
 function openWindow(aEvent) {
