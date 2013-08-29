@@ -4,6 +4,7 @@
  *  to the web console */
 const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/test/test-bug-846918-hsts-invalid-headers.html";
 const HSTS_INVALID_HEADER_MSG = "The site specified an invalid Strict-Transport-Security header.";
+const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/HTTP_Strict_Transport_Security";
 
 function test()
 {
@@ -21,7 +22,29 @@ function test()
           severity: SEVERITY_WARNING
         },
         ],
-      }).then(finishTest);
+      }).then(() => testClickOpenNewTab(hud));
     });
   }, true);
+}
+
+function testClickOpenNewTab(hud) {
+  let warningNode = hud.outputNode.querySelector(
+    ".webconsole-learn-more-link");
+
+  // Invoke the click event and check if a new tab would
+  // open to the correct page.
+  let linkOpened = false;
+  let oldOpenUILinkIn = window.openUILinkIn;
+  window.openUILinkIn = function(aLink) {
+    if (aLink == LEARN_MORE_URI) {
+      linkOpened = true;
+    }
+  }
+
+  EventUtils.synthesizeMouse(warningNode, 2, 2, {},
+                             warningNode.ownerDocument.defaultView);
+  ok(linkOpened, "Clicking the Learn More Warning node opens the desired page");
+  window.openUILinkIn = oldOpenUILinkIn;
+
+  finishTest();
 }

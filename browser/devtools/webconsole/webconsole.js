@@ -37,9 +37,11 @@ let l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 // The XUL namespace.
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/en/Security/MixedContent";
+const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/Security/MixedContent";
 
-const INSECURE_PASSWORDS_LEARN_MORE = "https://developer.mozilla.org/en-US/docs/Security/InsecurePasswords";
+const INSECURE_PASSWORDS_LEARN_MORE = "https://developer.mozilla.org/docs/Security/InsecurePasswords";
+
+const STRICT_TRANSPORT_SECURITY_LEARN_MORE = "https://developer.mozilla.org/docs/Security/HTTP_Strict_Transport_Security";
 
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
@@ -1447,14 +1449,18 @@ WebConsoleFrame.prototype = {
   addMoreInfoLink: function WCF_addMoreInfoLink(aNode, aScriptError)
   {
     let url;
-    if (aScriptError.category == "Insecure Password Field") {
-      url = INSECURE_PASSWORDS_LEARN_MORE;
-    }
-    else if (aScriptError.category == "Mixed Content Message" ||
-               aScriptError.category == "Mixed Content Blocker") {
+    switch (aScriptError.category) {
+     case "Insecure Password Field":
+       url = INSECURE_PASSWORDS_LEARN_MORE;
+     break;
+     case "Mixed Content Message":
+     case "Mixed Content Blocker":
       url = MIXED_CONTENT_LEARN_MORE;
-    }
-    else {
+     break;
+     case "Invalid HSTS Headers":
+      url = STRICT_TRANSPORT_SECURITY_LEARN_MORE;
+     break;
+     default:
       // Unknown category. Return without adding more info node.
       return;
     }
