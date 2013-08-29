@@ -264,10 +264,20 @@ function get_expected_results(aSortBy, aLocalExpected) {
  *         Boolean representing if local results are being shown
  */
 function check_results(aQuery, aSortBy, aReverseOrder, aShowLocal) {
-  var localFilterSelected = gManagerWindow.document.getElementById("search-filter-local").selected;
-  var remoteFilterSelected = gManagerWindow.document.getElementById("search-filter-remote").selected;
-  is(localFilterSelected, aShowLocal, "Local filter should be selected if showing local items");
-  is(remoteFilterSelected, !aShowLocal, "Remote filter should be selected if showing remote items");
+
+  var xpinstall_enabled = true;
+  try {
+    xpinstall_enabled = Services.prefs.getBoolPref(PREF_XPI_ENABLED);
+  }
+  catch (e) {};
+
+  // When XPI Instalation is disabled, those buttons are hidden and unused  
+  if (xpinstall_enabled) {
+    var localFilterSelected = gManagerWindow.document.getElementById("search-filter-local").selected;
+    var remoteFilterSelected = gManagerWindow.document.getElementById("search-filter-remote").selected;
+    is(localFilterSelected, aShowLocal, "Local filter should be selected if showing local items");
+    is(remoteFilterSelected, !aShowLocal, "Remote filter should be selected if showing remote items");
+  }
 
   // Get expected order assuming default order
   var expectedOrder = [], unknownOrder = [];
@@ -335,8 +345,10 @@ function check_results(aQuery, aSortBy, aReverseOrder, aShowLocal) {
  *         How the results are sorted (e.g. "name")
  * @param  aReverseOrder
  *         Boolean representing if the results are in reverse default order
+ * @param  aLocalOnly
+ *         Boolean representing if the results are local only, can be undefined
  */
-function check_filtered_results(aQuery, aSortBy, aReverseOrder) {
+function check_filtered_results(aQuery, aSortBy, aReverseOrder, aLocalOnly) {
   var localFilter = gManagerWindow.document.getElementById("search-filter-local");
   var remoteFilter = gManagerWindow.document.getElementById("search-filter-remote");
 
@@ -348,8 +360,9 @@ function check_filtered_results(aQuery, aSortBy, aReverseOrder) {
   check_results(aQuery, aSortBy, aReverseOrder, true);
 
   // Check with showing remote add-ons
+  aLocalOnly = aLocalOnly || false;
   EventUtils.synthesizeMouseAtCenter(remoteFilter, { }, gManagerWindow);
-  check_results(aQuery, aSortBy, aReverseOrder, false);
+  check_results(aQuery, aSortBy, aReverseOrder, aLocalOnly);
 }
 
 /*
@@ -645,5 +658,38 @@ add_test(function() {
       run_next_test();
     });
   });
+});
+
+function bug_815120_test_search(aLocalOnly) {
+  restart_manager(gManagerWindow, "addons://list/extension", function(aWindow) {
+    gManagerWindow = aWindow;
+    gCategoryUtilities = new CategoryUtilities(gManagerWindow);
+
+    // Installed add-on is considered local on new search
+    gAddonInstalled = true;
+
+    // The search buttons should be hidden in the LocalOnly setup
+    var localFilterButton = aWindow.document.getElementById("search-filter-local");
+    is(aLocalOnly, is_hidden(localFilterButton), "Local filter button visibility does not match, aLocalOnly = " + aLocalOnly);
+
+    var remoteFilterButton = aWindow.document.getElementById("search-filter-remote");
+    is(aLocalOnly, is_hidden(remoteFilterButton), "Remote filter button visibility does not match, aLocalOnly = " + aLocalOnly);
+
+    search(QUERY, false, function() {
+      check_filtered_results(QUERY, "relevancescore", false, aLocalOnly);
+      run_next_test();
+    });
+  });
+}
+
+// Tests for Bug 815120
+add_test(function() {
+  Services.prefs.setBoolPref(PREF_XPI_ENABLED, false);
+  bug_815120_test_search(true);
+});
+
+add_test(function() {
+  Services.prefs.setBoolPref(PREF_XPI_ENABLED, true);
+  bug_815120_test_search(false);
 });
 
