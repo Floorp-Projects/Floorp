@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const ss = Cc["@mozilla.org/browser/sessionstore;1"]
-             .getService(Ci.nsISessionStore);
 
 const URL = "http://mochi.test:8888/browser/";
 const PREF = "browser.sessionstore.restore_on_demand";
@@ -36,12 +34,12 @@ function preparePendingTab(aCallback) {
   let tab = gBrowser.addTab(URL);
 
   whenLoaded(tab.linkedBrowser, function () {
-    let state = ss.getTabState(tab);
+    let state = SessionStore.getTabState(tab);
     gBrowser.removeTab(tab);
 
     tab = gBrowser.addTab("about:blank");
     whenLoaded(tab.linkedBrowser, function () {
-      ss.setTabState(tab, state);
+      SessionStore.setTabState(tab, state);
       ok(tab.hasAttribute("pending"), "tab should be pending");
       aCallback(tab);
     });
