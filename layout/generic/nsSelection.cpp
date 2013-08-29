@@ -4397,8 +4397,12 @@ Selection::Collapse(nsINode* aParentNode, int32_t aOffset)
   if (!IsValidSelectionPoint(mFrameSelection, aParentNode))
     return NS_ERROR_FAILURE;
   nsresult result;
+
+  nsRefPtr<nsPresContext> presContext = GetPresContext();
+  if (presContext->Document() != aParentNode->OwnerDoc())
+    return NS_ERROR_FAILURE;
+
   // Delete all of the current ranges
-  nsRefPtr<nsPresContext>  presContext = GetPresContext();
   Clear(presContext);
 
   // Turn off signal for table selection
@@ -4625,6 +4629,10 @@ Selection::Extend(nsINode* aParentNode, int32_t aOffset)
   if (!IsValidSelectionPoint(mFrameSelection, aParentNode))
     return NS_ERROR_FAILURE;
 
+  nsRefPtr<nsPresContext> presContext = GetPresContext();
+  if (presContext->Document() != aParentNode->OwnerDoc())
+    return NS_ERROR_FAILURE;
+
   //mFrameSelection->InvalidateDesiredX();
 
   nsINode* anchorNode = GetAnchorNode();
@@ -4659,7 +4667,6 @@ Selection::Extend(nsINode* aParentNode, int32_t aOffset)
                                                   aParentNode, aOffset,
                                                   &disconnected);
 
-  nsRefPtr<nsPresContext>  presContext = GetPresContext();
   nsRefPtr<nsRange> difRange = new nsRange(aParentNode);
   if ((result1 == 0 && result3 < 0) || (result1 <= 0 && result2 < 0)){//a1,2  a,1,2
     //select from 1 to 2 unless they are collapsed
