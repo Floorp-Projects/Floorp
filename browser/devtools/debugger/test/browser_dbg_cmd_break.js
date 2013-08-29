@@ -16,7 +16,7 @@ function test() {
         setup: 'break',
         check: {
           input:  'break',
-          hints:       '',
+          hints:       ' add line',
           markup: 'IIIII',
           status: 'ERROR',
         },
@@ -25,7 +25,7 @@ function test() {
         setup: 'break add',
         check: {
           input:  'break add',
-          hints:           '',
+          hints:           ' line',
           markup: 'IIIIIVIII',
           status: 'ERROR'
         },
