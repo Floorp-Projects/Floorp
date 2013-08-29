@@ -20,8 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=775852
 
 /** Test for Bug 775852 **/
 function doTest() {
-  var gl = $("c").getContext("experimental-webgl");
-  if (!gl) {
+  try {
+    var gl = $("c").getContext("experimental-webgl");
+  } catch (e) {
     // No WebGL support on MacOS 10.5.  Just skip this test
     todo(false, "WebGL not supported");
     return;
