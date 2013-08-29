@@ -4970,7 +4970,9 @@ nsGlobalWindow::DispatchResizeEvent(const nsIntSize& aSize)
   detail.mWidth = aSize.width;
   detail.mHeight = aSize.height;
   JS::Rooted<JS::Value> detailValue(cx);
-  detail.ToObject(cx, JS::NullPtr(), &detailValue);
+  if (!detail.ToObject(cx, JS::NullPtr(), &detailValue)) {
+    return false;
+  }
 
   CustomEvent* customEvent = static_cast<CustomEvent*>(domEvent.get());
   customEvent->InitCustomEvent(cx,
