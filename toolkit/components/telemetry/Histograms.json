@@ -2563,6 +2563,16 @@
     "n_buckets": 15,
     "description": "Session restore: Days elapsed since the session was first started"
   },
+  "FX_SESSION_RESTORE_TABSTATECACHE_HIT_RATE": {
+     "kind": "enumerated",
+     "n_values": 101,
+     "description": "Session restore: Percentage of tab state cache hits in all tab state cache accesses"
+  },
+  "FX_SESSION_RESTORE_TABSTATECACHE_CLEAR_RATIO": {
+     "kind": "enumerated",
+     "n_values": 101,
+     "description": "Session restore: Number of times the tab state cache has been cleared during a session divided by number of total accesses during the session (percentage)"
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "kind": "boolean",
     "description": "Deleted or to-be-reused innerwindow which has had mutation event listeners."
