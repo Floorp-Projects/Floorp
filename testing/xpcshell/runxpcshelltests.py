@@ -578,7 +578,8 @@ class XPCShellTestThread(Thread):
             if testTimer:
                 testTimer.cancel()
 
-            self.parse_output(stdout)
+            if stdout:
+                self.parse_output(stdout)
             result = not (self.has_failure_output or
                           (self.getReturnCode(proc) != 0))
 
