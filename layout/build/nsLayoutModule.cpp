@@ -58,7 +58,7 @@
 #include "txMozillaXSLTProcessor.h"
 #include "txNodeSetAdaptor.h"
 
-#include "nsDOMParser.h"
+#include "mozilla/dom/DOMParser.h"
 #include "nsDOMSerializer.h"
 #include "nsXMLHttpRequest.h"
 #include "nsChannelPolicy.h"
@@ -275,7 +275,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMediaStreamProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMediaSourceProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontTableProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHostObjectURI)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
+NS_GENERIC_FACTORY_CONSTRUCTOR(DOMParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMSessionStorageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMLocalStorageManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChannelPolicy)
@@ -1032,7 +1032,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_XMLHTTPREQUEST_CID, false, NULL, nsXMLHttpRequestConstructor },
   { &kNS_EVENTSOURCE_CID, false, NULL, EventSourceConstructor },
   { &kNS_DOMACTIVITY_CID, false, NULL, ActivityConstructor },
-  { &kNS_DOMPARSER_CID, false, NULL, nsDOMParserConstructor },
+  { &kNS_DOMPARSER_CID, false, NULL, DOMParserConstructor },
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, NULL, DOMSessionStorageManagerConstructor },
   { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, NULL, DOMLocalStorageManagerConstructor },
   { &kNS_DOMJSON_CID, false, NULL, NS_NewJSON },
