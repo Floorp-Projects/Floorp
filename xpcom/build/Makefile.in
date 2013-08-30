@@ -4,9 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include $(srcdir)/../glue/objs.mk
-
-EXTRA_DEPS += $(srcdir)/../glue/objs.mk
 
 EXPORT_LIBRARY = 1
 
@@ -50,8 +47,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../docshell/base \
 		$(NULL)
 
-GARBAGE         += $(XPCOM_GLUE_SRC_LCPPSRCS) $(XPCOM_GLUENS_SRC_LCPPSRCS)
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
@@ -67,6 +62,3 @@ endif
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CXXFLAGS	+= $(TK_CFLAGS)
 endif
-
-export:: $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS)
-	$(INSTALL) $^ .

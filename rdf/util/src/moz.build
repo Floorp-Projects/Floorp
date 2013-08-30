@@ -8,9 +8,9 @@ DIRS += ['internal']
 
 MODULE = 'rdfutil'
 
-CPP_SOURCES += [
-    '$(RDF_UTIL_SRC_LCPPSRCS)',
-]
+include('objs.mozbuild')
+
+CPP_SOURCES += rdf_util_src_cppsrcs
 
 LIBRARY_NAME = 'rdfutil_external_s'
 

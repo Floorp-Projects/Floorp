@@ -9,6 +9,7 @@ MOZ_GLUE_PROGRAM_LDFLAGS =
 
 LOCAL_INCLUDES += \
   -I$(srcdir)/../common \
+  -I$(topsrcdir)/xpcom/glue \
   $(NULL)
 
 LIBS += \
