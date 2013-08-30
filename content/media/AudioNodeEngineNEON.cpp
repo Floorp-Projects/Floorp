@@ -174,76 +174,52 @@ AudioBlockPanStereoToStereo_NEON(const float aInputL[WEBAUDIO_BLOCK_SIZE],
   ASSERT_ALIGNED(aOutputL);
   ASSERT_ALIGNED(aOutputR);
 
-  float32x4_t vinL0, vinL1, vinL2, vinL3;
-  float32x4_t vinR0, vinR1, vinR2, vinR3;
-  float32x4_t voutL0, voutL1, voutL2, voutL3;
-  float32x4_t voutR0, voutR1, voutR2, voutR3;
+  float32x4_t vinL0, vinL1;
+  float32x4_t vinR0, vinR1;
+  float32x4_t voutL0, voutL1;
+  float32x4_t voutR0, voutR1;
   float32x4_t vscaleL = vmovq_n_f32(aGainL);
   float32x4_t vscaleR = vmovq_n_f32(aGainR);
 
   if (aIsOnTheLeft) {
-    for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; i+=16) {
+    for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; i+=8) {
       vinL0 = vld1q_f32(ADDRESS_OF(aInputL, i));
       vinL1 = vld1q_f32(ADDRESS_OF(aInputL, i+4));
-      vinL2 = vld1q_f32(ADDRESS_OF(aInputL, i+8));
-      vinL3 = vld1q_f32(ADDRESS_OF(aInputL, i+12));
 
       vinR0 = vld1q_f32(ADDRESS_OF(aInputR, i));
       vinR1 = vld1q_f32(ADDRESS_OF(aInputR, i+4));
-      vinR2 = vld1q_f32(ADDRESS_OF(aInputR, i+8));
-      vinR3 = vld1q_f32(ADDRESS_OF(aInputR, i+12));
 
       voutL0 = vmlaq_f32(vinL0, vinR0, vscaleL);
       voutL1 = vmlaq_f32(vinL1, vinR1, vscaleL);
-      voutL2 = vmlaq_f32(vinL2, vinR2, vscaleL);
-      voutL3 = vmlaq_f32(vinL3, vinR3, vscaleL);
 
       vst1q_f32(ADDRESS_OF(aOutputL, i), voutL0);
       vst1q_f32(ADDRESS_OF(aOutputL, i+4), voutL1);
-      vst1q_f32(ADDRESS_OF(aOutputL, i+8), voutL2);
-      vst1q_f32(ADDRESS_OF(aOutputL, i+12), voutL3);
 
       voutR0 = vmulq_f32(vinR0, vscaleR);
       voutR1 = vmulq_f32(vinR1, vscaleR);
-      voutR2 = vmulq_f32(vinR2, vscaleR);
-      voutR3 = vmulq_f32(vinR3, vscaleR);
 
       vst1q_f32(ADDRESS_OF(aOutputR, i), voutR0);
       vst1q_f32(ADDRESS_OF(aOutputR, i+4), voutR1);
-      vst1q_f32(ADDRESS_OF(aOutputR, i+8), voutR2);
-      vst1q_f32(ADDRESS_OF(aOutputR, i+12), voutR3);
     }
   } else {
-    for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; i+=16) {
+    for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; i+=8) {
       vinL0 = vld1q_f32(ADDRESS_OF(aInputL, i));
       vinL1 = vld1q_f32(ADDRESS_OF(aInputL, i+4));
-      vinL2 = vld1q_f32(ADDRESS_OF(aInputL, i+8));
-      vinL3 = vld1q_f32(ADDRESS_OF(aInputL, i+12));
 
       vinR0 = vld1q_f32(ADDRESS_OF(aInputR, i));
       vinR1 = vld1q_f32(ADDRESS_OF(aInputR, i+4));
-      vinR2 = vld1q_f32(ADDRESS_OF(aInputR, i+8));
-      vinR3 = vld1q_f32(ADDRESS_OF(aInputR, i+12));
 
       voutL0 = vmulq_f32(vinL0, vscaleL);
       voutL1 = vmulq_f32(vinL1, vscaleL);
-      voutL2 = vmulq_f32(vinL2, vscaleL);
-      voutL3 = vmulq_f32(vinL3, vscaleL);
 
       vst1q_f32(ADDRESS_OF(aOutputL, i), voutL0);
       vst1q_f32(ADDRESS_OF(aOutputL, i+4), voutL1);
-      vst1q_f32(ADDRESS_OF(aOutputL, i+8), voutL2);
-      vst1q_f32(ADDRESS_OF(aOutputL, i+12), voutL3);
 
       voutR0 = vmlaq_f32(vinR0, vinL0, vscaleR);
       voutR1 = vmlaq_f32(vinR1, vinL1, vscaleR);
-      voutR2 = vmlaq_f32(vinR2, vinL2, vscaleR);
-      voutR3 = vmlaq_f32(vinR3, vinL3, vscaleR);
 
       vst1q_f32(ADDRESS_OF(aOutputR, i), voutR0);
       vst1q_f32(ADDRESS_OF(aOutputR, i+4), voutR1);
-      vst1q_f32(ADDRESS_OF(aOutputR, i+8), voutR2);
-      vst1q_f32(ADDRESS_OF(aOutputR, i+12), voutR3);
     }
   }
 }
