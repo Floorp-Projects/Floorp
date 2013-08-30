@@ -925,10 +925,6 @@ nsXULAppInfo::SetEnabled(bool aEnabled)
       if (!xreDirectory)
         return NS_ERROR_FAILURE;
     }
-    AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonBase"),
-                        nsPrintfCString("%.16llx", uint64_t(gMozillaPoisonBase)));
-    AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonSize"),
-                        nsPrintfCString("%lu", uint32_t(gMozillaPoisonSize)));
     return CrashReporter::SetExceptionHandler(xreDirectory, true);
   }
   else {
@@ -3669,6 +3665,11 @@ XREMain::XRE_mainRun()
       }
     }
   }
+  // Needs to be set after xpcom initialization.
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonBase"),
+                                     nsPrintfCString("%.16llx", uint64_t(gMozillaPoisonBase)));
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("FramePoisonSize"),
+                                     nsPrintfCString("%lu", uint32_t(gMozillaPoisonSize)));
 #endif
 
   if (mStartOffline) {
