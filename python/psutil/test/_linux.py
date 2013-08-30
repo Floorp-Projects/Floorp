@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
+# Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -14,24 +14,16 @@ import time
 import os
 import re
 
-from test_psutil import sh, get_test_subprocess
+from test_psutil import *
 from psutil._compat import PY3
 import psutil
 
 
-TOLERANCE = 200 * 1024  # 200 KB
-
-
 class LinuxSpecificTestCase(unittest.TestCase):
 
-    def assert_eq_w_tol(self, first, second, tolerance):
-        difference = abs(first - second)
-        if difference <= tolerance:
-            return
-        msg = '%r != %r within %r delta (%r difference)' \
-              % (first, second, tolerance, difference)
-        raise AssertionError(msg)
-
+    @unittest.skipIf(POSIX and not hasattr(os, 'statvfs'),
+            reason="os.statvfs() function not available on this platform")
+    @skip_on_not_implemented()
     def test_disks(self):
         # test psutil.disk_usage() and psutil.disk_partitions()
         # against "df -a"
@@ -79,40 +71,52 @@ class LinuxSpecificTestCase(unittest.TestCase):
         total = int(lines[0].split()[1]) * 1024
         self.assertEqual(total, psutil.virtual_memory().total)
 
+    @retry_before_failing()
     def test_vmem_used(self):
         lines = sh('free').split('\n')[1:]
         used = int(lines[0].split()[2]) * 1024
-        self.assert_eq_w_tol(used, psutil.virtual_memory().used, TOLERANCE)
+        self.assertAlmostEqual(used, psutil.virtual_memory().used,
+                               delta=TOLERANCE)
 
+    @retry_before_failing()
     def test_vmem_free(self):
         lines = sh('free').split('\n')[1:]
         free = int(lines[0].split()[3]) * 1024
-        self.assert_eq_w_tol(free, psutil.virtual_memory().free, TOLERANCE)
+        self.assertAlmostEqual(free, psutil.virtual_memory().free,
+                               delta=TOLERANCE)
 
+    @retry_before_failing()
     def test_vmem_buffers(self):
         lines = sh('free').split('\n')[1:]
         buffers = int(lines[0].split()[5]) * 1024
-        self.assert_eq_w_tol(buffers, psutil.virtual_memory().buffers, TOLERANCE)
+        self.assertAlmostEqual(buffers, psutil.virtual_memory().buffers,
+                               delta=TOLERANCE)
 
+    @retry_before_failing()
     def test_vmem_cached(self):
         lines = sh('free').split('\n')[1:]
         cached = int(lines[0].split()[6]) * 1024
-        self.assert_eq_w_tol(cached, psutil.virtual_memory().cached, TOLERANCE)
+        self.assertAlmostEqual(cached, psutil.virtual_memory().cached,
+                               delta=TOLERANCE)
 
     def test_swapmem_total(self):
         lines = sh('free').split('\n')[1:]
         total = int(lines[2].split()[1]) * 1024
         self.assertEqual(total, psutil.swap_memory().total)
 
+    @retry_before_failing()
     def test_swapmem_used(self):
         lines = sh('free').split('\n')[1:]
         used = int(lines[2].split()[2]) * 1024
-        self.assert_eq_w_tol(used, psutil.swap_memory().used, TOLERANCE)
+        self.assertAlmostEqual(used, psutil.swap_memory().used,
+                               delta=TOLERANCE)
 
+    @retry_before_failing()
     def test_swapmem_free(self):
         lines = sh('free').split('\n')[1:]
         free = int(lines[2].split()[3]) * 1024
-        self.assert_eq_w_tol(free, psutil.swap_memory().free, TOLERANCE)
+        self.assertAlmostEqual(free, psutil.swap_memory().free,
+                               delta=TOLERANCE)
 
     def test_cpu_times(self):
         fields = psutil.cpu_times()._fields
@@ -122,20 +126,25 @@ class LinuxSpecificTestCase(unittest.TestCase):
         # guest >= 2.6.24
         # guest_nice >= 3.2.0
         if kernel_ver_info >= (2, 6, 11):
-            assert 'steal' in fields, fields
+            self.assertIn('steal', fields)
         else:
-            assert 'steal' not in fields, fields
+            self.assertNotIn('steal', fields)
         if kernel_ver_info >= (2, 6, 24):
-            assert 'guest' in fields, fields
+            self.assertIn('guest', fields)
         else:
-            assert 'guest' not in fields, fields
+            self.assertNotIn('guest', fields)
         if kernel_ver_info >= (3, 2, 0):
-            assert 'guest_nice' in fields, fields
+            self.assertIn('guest_nice', fields)
         else:
-            assert 'guest_nice' not in fields, fields
+            self.assertNotIn('guest_nice', fields)
 
 
-if __name__ == '__main__':
+def test_main():
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(LinuxSpecificTestCase))
-    unittest.TextTestRunner(verbosity=2).run(test_suite)
+    result = unittest.TextTestRunner(verbosity=2).run(test_suite)
+    return result.wasSuccessful()
+
+if __name__ == '__main__':
+    if not test_main():
+        sys.exit(1)

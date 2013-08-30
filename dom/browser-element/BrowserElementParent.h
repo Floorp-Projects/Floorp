@@ -46,7 +46,7 @@ public:
    *
    * 1) We fire a mozbrowseropenwindow CustomEvent on the opener
    *    iframe element.  This event's detail is an instance of
-   *    nsIOpenWindowEventDetail.
+   *    OpenWindowEventDetail.
    *
    * 2) The embedder (the document which contains the opener iframe) can accept
    *    the window.open request by inserting event.detail.frameElement (an iframe

@@ -56,8 +56,8 @@ WorkerAPI.prototype = {
     "social.manifest-set": function(data) {
       // the provider will get reloaded as a result of this call
       let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
-      let document = this._port._window.document;
-      SocialService.updateProvider(document, data);
+      let origin = this._provider.origin;
+      SocialService.updateProvider(origin, data);
     },
     "social.reload-worker": function(data) {
       getFrameWorkerHandle(this._provider.workerURL, null)._worker.reload();
@@ -76,18 +76,31 @@ WorkerAPI.prototype = {
       this._provider.pageMarkInfo = data;
     },
     "social.cookies-get": function(data) {
-      let document = this._port._window.document;
-      let cookies = document.cookie.split(";");
-      let results = [];
-      cookies.forEach(function(aCookie) {
-        let [name, value] = aCookie.split("=");
-        if (name || value) {
-          results.push({name: unescape(name.trim()),
-                        value: value ? unescape(value.trim()) : ""});
-        }
+      // We don't want to trust provider.origin etc, just incase the provider
+      // redirected away or something else bad is going on.  So we want to
+      // reach into the Worker's document and fetch the actual cookies it has.
+      // We need to do this via our own message dance.
+      let port = this._port;
+      let whandle = getFrameWorkerHandle(this._provider.workerURL, null);
+      whandle.port.close();
+      whandle._worker.browserPromise.then(browser => {
+        let mm = browser.messageManager;
+        mm.addMessageListener("frameworker:cookie-get-response", function _onCookieResponse(msg) {
+          mm.removeMessageListener("frameworker:cookie-get-response", _onCookieResponse);
+          let cookies = msg.json.split(";");
+          let results = [];
+          cookies.forEach(function(aCookie) {
+            let [name, value] = aCookie.split("=");
+            if (name || value) {
+              results.push({name: unescape(name.trim()),
+                            value: value ? unescape(value.trim()) : ""});
+            }
+          });
+          port.postMessage({topic: "social.cookies-get-response",
+                            data: results});
+        });
+        mm.sendAsyncMessage("frameworker:cookie-get");
       });
-      this._port.postMessage({topic: "social.cookies-get-response",
-                              data: results});
     },
     'social.request-chat': function(data) {
       openChatWindow(null, this._provider, data);

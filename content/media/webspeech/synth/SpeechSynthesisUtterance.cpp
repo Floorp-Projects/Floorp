@@ -18,7 +18,10 @@
 namespace mozilla {
 namespace dom {
 
-NS_INTERFACE_MAP_BEGIN(SpeechSynthesisUtterance)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(SpeechSynthesisUtterance,
+                                     nsDOMEventTargetHelper, mVoice);
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SpeechSynthesisUtterance)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
@@ -63,7 +66,7 @@ SpeechSynthesisUtterance::Constructor(GlobalObject& aGlobal,
                                       const nsAString& aText,
                                       ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
 
   if (!win) {
     aRv.Throw(NS_ERROR_FAILURE);

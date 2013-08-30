@@ -18,80 +18,83 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452566
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+SimpleTest.waitForExplicitFinish();
+
 // ensure we are using the right testing provider
-resume_geolocationProvider();
-force_prompt(true)
+resume_geolocationProvider(function() {
+  force_prompt(true, test1);
+});
 
 /** Test for Bug 452566 **/
+function test1() {
+  ok(navigator.geolocation, "Should have geolocation");
 
-ok(navigator.geolocation, "Should have geolocation");
+  var exception = null;
+  try {
+    navigator.geolocation.getCurrentPosition();
+  } catch(ex if ex instanceof TypeError) {
+    exception = ex;
+  }
+  ok(exception, "Should have got an exception");
 
-var exception = null;
-try {
-  navigator.geolocation.getCurrentPosition();
-} catch(ex if ex instanceof TypeError) {
-  exception = ex;
+  exception = null;
+  try {
+    navigator.geolocation.getCurrentPosition(function() {});
+  } catch(ex if ex instanceof TypeError) {
+    exception = ex;
+  }
+  ok(!exception, exception);
+
+  exception = null;
+  try {
+    navigator.geolocation.getCurrentPosition(function() {}, function() {});
+  } catch(ex if ex instanceof TypeError) {
+    exception = ex;
+  }
+  ok(!exception, exception);
+
+  exception = null;
+  try {
+    navigator.geolocation.getCurrentPosition(function() {}, function() {}, {});
+  } catch(ex if ex instanceof TypeError) {
+    exception = ex;
+  }
+  ok(!exception, exception);
+
+  exception = null;
+  try {
+    navigator.geolocation.watchPosition();
+  } catch(ex if ex instanceof TypeError) {
+    exception = ex;
+  }
+  ok(exception, "Should have got an exception");
+
+  exception = null;
+  try {
+    navigator.geolocation.watchPosition(function() {});
+  } catch(ex if ex instanceof TypeError) {
+    exception = ex;
+  }
+  ok(!exception, exception);
+
+  exception = null;
+  try {
+    navigator.geolocation.watchPosition(function() {}, function() {});
+  } catch(ex if ex instanceof TypeError) {
+    exception = ex;
+  }
+  ok(!exception, exception);
+
+  exception = null;
+  try {
+    navigator.geolocation.watchPosition(function() {}, function() {}, {});
+  } catch(ex if ex instanceof TypeError) {
+    exception = ex;
+  }
+  ok(!exception, exception);
+
+  SimpleTest.finish();
 }
-ok(exception, "Should have got an exception");
-
-exception = null;
-try {
-  navigator.geolocation.getCurrentPosition(function() {});
-} catch(ex if ex instanceof TypeError) {
-  exception = ex;
-}
-ok(!exception, exception);
-
-exception = null;
-try {
-  navigator.geolocation.getCurrentPosition(function() {}, function() {});
-} catch(ex if ex instanceof TypeError) {
-  exception = ex;
-}
-ok(!exception, exception);
-
-exception = null;
-try {
-  navigator.geolocation.getCurrentPosition(function() {}, function() {}, {});
-} catch(ex if ex instanceof TypeError) {
-  exception = ex;
-}
-ok(!exception, exception);
-
-exception = null;
-try {
-  navigator.geolocation.watchPosition();
-} catch(ex if ex instanceof TypeError) {
-  exception = ex;
-}
-ok(exception, "Should have got an exception");
-
-exception = null;
-try {
-  navigator.geolocation.watchPosition(function() {});
-} catch(ex if ex instanceof TypeError) {
-  exception = ex;
-}
-ok(!exception, exception);
-
-exception = null;
-try {
-  navigator.geolocation.watchPosition(function() {}, function() {});
-} catch(ex if ex instanceof TypeError) {
-  exception = ex;
-}
-ok(!exception, exception);
-
-exception = null;
-try {
-  navigator.geolocation.watchPosition(function() {}, function() {}, {});
-} catch(ex if ex instanceof TypeError) {
-  exception = ex;
-}
-ok(!exception, exception);
-
-// so clean up ready for the next test.
-reset_prompt();
 
 </script>
 </pre>

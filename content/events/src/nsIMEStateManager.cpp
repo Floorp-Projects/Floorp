@@ -6,15 +6,11 @@
 
 #include "nsIMEStateManager.h"
 #include "nsCOMPtr.h"
-#include "nsViewManager.h"
 #include "nsIPresShell.h"
 #include "nsISupports.h"
-#include "nsPIDOMWindow.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-#include "nsIDOMWindow.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsContentUtils.h"
 #include "nsINode.h"
@@ -33,10 +29,10 @@
 #include "nsIForm.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/Attributes.h"
-#include "nsEventDispatcher.h"
 #include "TextComposition.h"
 #include "mozilla/Preferences.h"
 #include "nsAsyncDOMEvent.h"
+#include "nsGUIEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

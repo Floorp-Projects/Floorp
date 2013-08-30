@@ -488,7 +488,7 @@ typedef enum {
 
 typedef enum {
     SDP_RTCP_FB_NACK_NOT_FOUND = -1,
-    SDP_RTCP_FB_NACK_UNSPECIFIED = 0,
+    SDP_RTCP_FB_NACK_BASIC = 0,
     SDP_RTCP_FB_NACK_SLI,
     SDP_RTCP_FB_NACK_PLI,
     SDP_RTCP_FB_NACK_RPSI,
@@ -518,6 +518,11 @@ typedef enum {
     SDP_MAX_RTCP_FB_CCM,
     SDP_RTCP_FB_CCM_UNKNOWN
 } sdp_rtcp_fb_ccm_type_e;
+
+#define SDP_RTCP_FB_NACK_TO_BITMAP(type) (1 << (type))
+#define SDP_RTCP_FB_ACK_TO_BITMAP(type)  (1 << (SDP_MAX_RTCP_FB_NACK + (type)))
+#define SDP_RTCP_FB_CCM_TO_BITMAP(type)  (1 << (SDP_MAX_RTCP_FB_NACK + \
+                                                SDP_MAX_RTCP_FB_ACK + (type)))
 
 /*
  * sdp_srtp_fec_order_t

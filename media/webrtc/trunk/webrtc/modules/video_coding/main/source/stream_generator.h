@@ -20,11 +20,11 @@
 namespace webrtc {
 
 const unsigned int kDefaultBitrateKbps = 1000;
-enum { kDefaultFrameRate = 25u };
+const unsigned int kDefaultFrameRate = 25;
 const unsigned int kMaxPacketSize = 1500;
 const unsigned int kFrameSize = (kDefaultBitrateKbps + kDefaultFrameRate * 4) /
     (kDefaultFrameRate * 8);
-enum { kDefaultFramePeriodMs = 1000u / kDefaultFrameRate };
+const int kDefaultFramePeriodMs = 1000 / kDefaultFrameRate;
 
 
 
@@ -46,6 +46,7 @@ class StreamGenerator {
                            FrameType type);
 
   bool PopPacket(VCMPacket* packet, int index);
+  void DropLastPacket();
 
   bool GetPacket(VCMPacket* packet, int index);
 

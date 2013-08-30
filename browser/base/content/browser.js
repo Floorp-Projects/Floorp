@@ -2314,11 +2314,12 @@ function PageProxyClickHandler(aEvent)
 
 /**
  * Handle command events bubbling up from error page content
+ * or from about:newtab
  */
 let BrowserOnClick = {
   handleEvent: function BrowserOnClick_handleEvent(aEvent) {
     if (!aEvent.isTrusted || // Don't trust synthetic events
-        aEvent.button == 2 || aEvent.target.localName != "button") {
+        aEvent.button == 2) {
       return;
     }
 
@@ -2335,6 +2336,10 @@ let BrowserOnClick = {
     }
     else if (ownerDoc.documentURI.startsWith("about:neterror")) {
       this.onAboutNetError(originalTarget, ownerDoc);
+    }
+    else if (gMultiProcessBrowser &&
+             ownerDoc.documentURI.toLowerCase() == "about:newtab") {
+      this.onE10sAboutNewTab(aEvent, ownerDoc);
     }
   },
 
@@ -2444,6 +2449,27 @@ let BrowserOnClick = {
         secHistogram.add(nsISecTel[bucketName + "IGNORE_WARNING"]);
         this.ignoreWarningButton(isMalware);
         break;
+    }
+  },
+
+  /**
+   * This functions prevents navigation from happening directly through the <a>
+   * link in about:newtab (which is loaded in the parent and therefore would load
+   * the next page also in the parent) and instructs the browser to open the url
+   * in the current tab which will make it update the remoteness of the tab.
+   */
+  onE10sAboutNewTab: function(aEvent, aOwnerDoc) {
+    let isTopFrame = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
+    if (!isTopFrame) {
+      return;
+    }
+
+    let anchorTarget = aEvent.originalTarget.parentNode;
+
+    if (anchorTarget instanceof HTMLAnchorElement &&
+        anchorTarget.classList.contains("newtab-link")) {
+      aEvent.preventDefault();
+      openUILinkIn(anchorTarget.href, "current");
     }
   },
 
@@ -3860,8 +3886,7 @@ var XULBrowserWindow = {
       if (this.hideChromeForLocation(location)) {
         document.documentElement.setAttribute("disablechrome", "true");
       } else {
-        let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-        if (ss.getTabValue(gBrowser.selectedTab, "appOrigin"))
+        if (SessionStore.getTabValue(gBrowser.selectedTab, "appOrigin"))
           document.documentElement.setAttribute("disablechrome", "true");
         else
           document.documentElement.removeAttribute("disablechrome");
@@ -4179,14 +4204,17 @@ var TabsProgressListener = {
     }
 
     // Attach a listener to watch for "click" events bubbling up from error
-    // pages and other similar page. This lets us fix bugs like 401575 which
-    // require error page UI to do privileged things, without letting error
-    // pages have any privilege themselves.
+    // pages and other similar pages (like about:newtab). This lets us fix bugs
+    // like 401575 which require error page UI to do privileged things, without
+    // letting error pages have any privilege themselves.
     // We can't look for this during onLocationChange since at that point the
     // document URI is not yet the about:-uri of the error page.
 
-    let doc = gMultiProcessBrowser ? null : aWebProgress.DOMWindow.document;
-    if (!gMultiProcessBrowser &&
+    let isRemoteBrowser = aBrowser.isRemoteBrowser;
+    // We check isRemoteBrowser here to avoid requesting the doc CPOW
+    let doc = isRemoteBrowser ? null : aWebProgress.DOMWindow.document;
+
+    if (!isRemoteBrowser &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         Components.isSuccessCode(aStatus) &&
         doc.documentURI.startsWith("about:") &&
@@ -6202,7 +6230,7 @@ function convertFromUnicode(charset, str)
 /**
  * Re-open a closed tab.
  * @param aIndex
- *        The index of the tab (via nsSessionStore.getClosedTabData)
+ *        The index of the tab (via SessionStore.getClosedTabData)
  * @returns a reference to the reopened tab.
  */
 function undoCloseTab(aIndex) {
@@ -6211,17 +6239,15 @@ function undoCloseTab(aIndex) {
   if (gBrowser.tabs.length == 1 && isTabEmpty(gBrowser.selectedTab))
     blankTabToRemove = gBrowser.selectedTab;
 
-  var ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
   let numberOfTabsToUndoClose = 0;
   let index = Number(aIndex);
 
 
   if (isNaN(index)) {
     index = 0;
-    numberOfTabsToUndoClose = ss.getNumberOfTabsClosedLast(window);
+    numberOfTabsToUndoClose = SessionStore.getNumberOfTabsClosedLast(window);
   } else {
-    if (0 > index || index >= ss.getClosedTabCount(window))
+    if (0 > index || index >= SessionStore.getClosedTabCount(window))
       return null;
     numberOfTabsToUndoClose = 1;
   }
@@ -6230,7 +6256,7 @@ function undoCloseTab(aIndex) {
   while (numberOfTabsToUndoClose > 0 &&
          numberOfTabsToUndoClose--) {
     TabView.prepareUndoCloseTab(blankTabToRemove);
-    tab = ss.undoCloseTab(window, index);
+    tab = SessionStore.undoCloseTab(window, index);
     TabView.afterUndoCloseTab();
     if (blankTabToRemove) {
       gBrowser.removeTab(blankTabToRemove);
@@ -6239,22 +6265,20 @@ function undoCloseTab(aIndex) {
   }
 
   // Reset the number of tabs closed last time to the default.
-  ss.setNumberOfTabsClosedLast(window, 1);
+  SessionStore.setNumberOfTabsClosedLast(window, 1);
   return tab;
 }
 
 /**
  * Re-open a closed window.
  * @param aIndex
- *        The index of the window (via nsSessionStore.getClosedWindowData)
+ *        The index of the window (via SessionStore.getClosedWindowData)
  * @returns a reference to the reopened window.
  */
 function undoCloseWindow(aIndex) {
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
   let window = null;
-  if (ss.getClosedWindowCount() > (aIndex || 0))
-    window = ss.undoCloseWindow(aIndex || 0);
+  if (SessionStore.getClosedWindowCount() > (aIndex || 0))
+    window = SessionStore.undoCloseWindow(aIndex || 0);
 
   return window;
 }
@@ -6832,12 +6856,17 @@ var gIdentityHandler = {
     this._permissionsContainer.hidden = !this._permissionList.hasChildNodes();
   },
 
+  setPermission: function (aPermission, aState) {
+    if (aState == SitePermissions.getDefault(aPermission))
+      SitePermissions.remove(gBrowser.currentURI, aPermission);
+    else
+      SitePermissions.set(gBrowser.currentURI, aPermission, aState);
+  },
+
   _createPermissionItem: function (aPermission, aState) {
     let menulist = document.createElement("menulist");
     let menupopup = document.createElement("menupopup");
     for (let state of SitePermissions.getAvailableStates(aPermission)) {
-      if (state == SitePermissions.UNKNOWN)
-        continue;
       let menuitem = document.createElement("menuitem");
       menuitem.setAttribute("value", state);
       menuitem.setAttribute("label", SitePermissions.getStateLabel(aPermission, state));
@@ -6845,7 +6874,7 @@ var gIdentityHandler = {
     }
     menulist.appendChild(menupopup);
     menulist.setAttribute("value", aState);
-    menulist.setAttribute("oncommand", "SitePermissions.set(gBrowser.currentURI, '" +
+    menulist.setAttribute("oncommand", "gIdentityHandler.setPermission('" +
                                        aPermission + "', this.value)");
     menulist.setAttribute("id", "identity-popup-permission:" + aPermission);
 
@@ -7007,9 +7036,7 @@ function switchToTabHavingURI(aURI, aOpenNew) {
 }
 
 function restoreLastSession() {
-  let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-           getService(Ci.nsISessionStore);
-  ss.restoreLastSession();
+  SessionStore.restoreLastSession();
 }
 
 var TabContextMenu = {
@@ -7033,10 +7060,8 @@ var TabContextMenu = {
       menuItem.disabled = disabled;
 
     // Session store
-    let ss = Cc["@mozilla.org/browser/sessionstore;1"].
-               getService(Ci.nsISessionStore);
     let undoCloseTabElement = document.getElementById("context_undoCloseTab");
-    let closedTabCount = ss.getNumberOfTabsClosedLast(window);
+    let closedTabCount = SessionStore.getNumberOfTabsClosedLast(window);
     undoCloseTabElement.disabled = closedTabCount == 0;
     // Change the label of "Undo Close Tab" to specify if it will undo a batch-close
     // or a single close.
@@ -7120,9 +7145,7 @@ function safeModeRestart()
  * delta is the offset to the history entry that you want to load.
  */
 function duplicateTabIn(aTab, where, delta) {
-  let newTab = Cc['@mozilla.org/browser/sessionstore;1']
-                 .getService(Ci.nsISessionStore)
-                 .duplicateTab(window, aTab, delta);
+  let newTab = SessionStore.duplicateTab(window, aTab, delta);
 
   switch (where) {
     case "window":

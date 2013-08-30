@@ -6,19 +6,19 @@
 <!-- -moz-objectfill, no stroke -->
   <!-- N -->
   <rect x="100" y="-900" width="800" height="800" stroke-width="50"
-    stroke="none" fill="-moz-objectFill" glyphchar="N"/>
+    stroke="none" fill="-moz-objectFill" id="glyph48"/>
 
   <!-- O -->
   <rect x="50" y="-950" width="900" height="900" stroke-width="100"
-    fill="-moz-objectFill" stroke="none" glyphchar="O"/>
+    fill="-moz-objectFill" stroke="none" id="glyph49"/>
 
 <!-- -moz-objectstroke -->
   <!-- P -->
   <rect x="100" y="-900" width="800" height="800" stroke-width="50"
-    stroke="-moz-objectStroke" fill="burlywood" glyphchar="P"/>
+    stroke="-moz-objectStroke" fill="burlywood" id="glyph50"/>
 
 <!-- both -moz-objectstroke and -moz-objectfill -->
   <!-- Q -->
   <rect x="50" y="-950" width="900" height="900" stroke-width="100"
-    fill="-moz-objectStroke" stroke="-moz-objectFill" glyphchar="Q"/>
+    fill="-moz-objectStroke" stroke="-moz-objectFill" id="glyph51"/>
 </svg>

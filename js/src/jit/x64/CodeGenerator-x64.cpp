@@ -14,7 +14,7 @@
 #include "jit/shared/CodeGenerator-shared-inl.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 CodeGeneratorX64::CodeGeneratorX64(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
   : CodeGeneratorX86Shared(gen, graph, masm)

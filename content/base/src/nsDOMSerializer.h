@@ -32,7 +32,7 @@ public:
   Constructor(const mozilla::dom::GlobalObject& aOwner,
               mozilla::ErrorResult& rv)
   {
-    nsRefPtr<nsDOMSerializer> domSerializer = new nsDOMSerializer(aOwner.Get());
+    nsRefPtr<nsDOMSerializer> domSerializer = new nsDOMSerializer(aOwner.GetAsSupports());
     return domSerializer.forget();
   }
 

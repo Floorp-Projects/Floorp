@@ -9,7 +9,6 @@ VPATH            := @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME   := gkconwebaudio_blink_s
 LOCAL_INCLUDES += -I$(topsrcdir)/content/media/webaudio
 
 include $(topsrcdir)/config/rules.mk

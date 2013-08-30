@@ -612,7 +612,7 @@ MediaEngineWebRTCVideoSource::AllocImpl() {
                                              mCameraThread,
                                              this,
                                              this,
-                                             mWindowId);
+                                             nsGlobalWindow::GetInnerWindowWithId(mWindowId));
   mCameraManager->Register(mDOMCameraControl);
 }
 
@@ -662,7 +662,7 @@ MediaEngineWebRTCVideoSource::SnapshotImpl() {
 
 // nsICameraGetCameraCallback
 nsresult
-MediaEngineWebRTCVideoSource::HandleEvent(nsICameraControl* camera) {
+MediaEngineWebRTCVideoSource::HandleEvent(nsISupports* /* unused */) {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
   mNativeCameraControl = static_cast<nsGonkCameraControl*>(mDOMCameraControl->GetNativeCameraControl().get());

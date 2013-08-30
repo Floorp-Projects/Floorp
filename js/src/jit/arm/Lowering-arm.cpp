@@ -13,7 +13,7 @@
 #include "jit/shared/Lowering-shared-inl.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::FloorLog2;
 

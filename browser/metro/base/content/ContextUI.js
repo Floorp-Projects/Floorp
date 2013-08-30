@@ -19,19 +19,19 @@ var ContextUI = {
    */
 
   init: function init() {
-    Elements.browsers.addEventListener("mousedown", this, true);
-    Elements.browsers.addEventListener("touchstart", this, true);
-
     Elements.browsers.addEventListener('URLChanged', this, true);
     Elements.tabList.addEventListener('TabSelect', this, true);
     Elements.panelUI.addEventListener('ToolPanelShown', this, false);
     Elements.panelUI.addEventListener('ToolPanelHidden', this, false);
 
+    window.addEventListener("touchstart", this, true);
+    window.addEventListener("mousedown", this, true);
     window.addEventListener("MozEdgeUIStarted", this, true);
     window.addEventListener("MozEdgeUICanceled", this, true);
     window.addEventListener("MozEdgeUICompleted", this, true);
     window.addEventListener("keypress", this, true);
     window.addEventListener("KeyboardChanged", this, false);
+    window.addEventListener("MozFlyoutPanelShowing", this, false);
 
     Elements.tray.addEventListener("transitionend", this, true);
 
@@ -248,8 +248,48 @@ var ContextUI = {
     this.toggleNavUI();
   },
 
+  onDownInput: function onDownInput(aEvent) {
+    if (!this.isVisible) {
+      return;
+    }
+
+    // Various ui element containers we do not update context ui for.
+    let whitelist = [
+      // Clicks on tab bar elements should not close the tab bar. the tabbar
+      // handles this.
+      Elements.tabs,
+      // Don't let a click on an infobar button dismiss the appbar or navbar.
+      // Note the notification box should always hover above these other two
+      // bars.
+      Browser.getNotificationBox()
+    ];
+
+    if (whitelist.some(elem => elem.contains(aEvent.target))) {
+      return;
+    }
+
+    // If a start tab is visible only dismiss the tab bar.
+    if (BrowserUI.isStartTabVisible) {
+      ContextUI.dismissTabs();
+      return;
+    }
+
+    // content, dismiss anything visible
+    if (aEvent.target.ownerDocument.defaultView.top == getBrowser().contentWindow) {
+      this.dismiss();
+      return;
+    }
+
+    // dismiss tabs and context app bar if visible
+    this.dismissTabs();
+    this.dismissContextAppbar();
+  },
+
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "URLChanged":
+        this.displayNavbar();
+        break;
       case "MozEdgeUIStarted":
         this._onEdgeUIStarted(aEvent);
         break;
@@ -273,13 +313,13 @@ var ContextUI = {
         this.dismissTabs();
         break;
       case "mousedown":
-        if (BrowserUI.isStartTabVisible)
+        if (aEvent.button != 0) {
           break;
-        let box = Browser.getNotificationBox();
-        if (!box.contains(aEvent.target) &&
-            aEvent.button == 0 && this.isVisible) {
-          this.dismiss();
         }
+        this.onDownInput(aEvent);
+        break;
+      case "touchstart":
+        this.onDownInput(aEvent);
         break;
       case "ToolPanelShown":
       case "ToolPanelHidden":
@@ -287,6 +327,14 @@ var ContextUI = {
         break;
       case "touchstart":
         if (!BrowserUI.isStartTabVisible) {
+          this.dismiss();
+        }
+        break;
+      case "MozFlyoutPanelShowing":
+        if (BrowserUI.isStartTabVisible) {
+          this.dismissTabs();
+          this.dismissContextAppbar();
+        } else {
           this.dismiss();
         }
         break;

@@ -13,7 +13,6 @@
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
-#include "nsIHistoryEntry.h"
 #include "nsIURI.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsReadableUtils.h"
@@ -255,7 +254,7 @@ nsHistory::ReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
 }
 
 void
-nsHistory::PushOrReplaceState(JSContext* aCx, JS::Value aData,
+nsHistory::PushOrReplaceState(JSContext* aCx, JS::Handle<JS::Value> aData,
                               const nsAString& aTitle, const nsAString& aUrl,
                               ErrorResult& aRv, bool aReplace)
 {

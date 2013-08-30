@@ -571,6 +571,14 @@ dnl ========================================================
 AC_PROG_INSTALL
 AC_PROG_LN_S
 
+AC_MSG_CHECKING([for tar archiver])
+AC_CHECK_PROGS(TAR, gnutar gtar tar, "")
+if test -z "$TAR"; then
+    AC_MSG_WARN([no tar archiver found in \$PATH])
+fi
+AC_MSG_RESULT([$TAR])
+AC_SUBST(TAR)
+
 if test -z "$TINDERBOX_SKIP_PERL_VERSION_CHECK"; then
 AC_MSG_CHECKING([for minimum required perl version >= $PERL_VERSION])
 _perl_version=`PERL_VERSION=$PERL_VERSION $PERL -e 'print "$]"; if ($] >= $ENV{PERL_VERSION}) { exit(0); } else { exit(1); }' 2>&5`
@@ -2048,88 +2056,6 @@ AC_SUBST(ENABLE_YARR_JIT)
 
 if test "$ENABLE_YARR_JIT"; then
     AC_DEFINE(ENABLE_YARR_JIT)
-fi
-
-dnl ========================================================
-dnl =
-dnl = Debugging Options
-dnl =
-dnl = These must come before MOZ_COMPILER_OPTS so that MOZ_COMPILER_OPTS
-dnl = sees any debug flags set by the user.
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Debugging)
-
-dnl ========================================================
-dnl = Debug info is ON by default.
-dnl ========================================================
-if test -z "$MOZ_DEBUG_FLAGS"; then
-  MOZ_DEBUG_FLAGS="-g"
-fi
-
-MOZ_ARG_ENABLE_STRING(debug,
-[  --enable-debug[=DBG]    Enable building with developer debug info
-                           (using compiler flags DBG)],
-[ if test "$enableval" != "no"; then
-    MOZ_DEBUG=1
-    if test -n "$enableval" -a "$enableval" != "yes"; then
-        MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-        _MOZ_DEBUG_FLAGS_SET=1
-    fi
-  else
-    MOZ_DEBUG=
-  fi ],
-  MOZ_DEBUG=)
-
-MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
-MOZ_ARG_WITH_STRING(debug-label,
-[  --with-debug-label=LABELS
-                          Define DEBUG_<value> for each comma-separated
-                          value given.],
-[ for option in `echo $withval | sed 's/,/ /g'`; do
-    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
-done])
-
-MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
-
-if test -n "$MOZ_DEBUG"; then
-    AC_MSG_CHECKING([for valid debug flags])
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
-    AC_TRY_COMPILE([#include <stdio.h>],
-        [printf("Hello World\n");],
-        _results=yes,
-        _results=no)
-    AC_MSG_RESULT([$_results])
-    if test "$_results" = "no"; then
-        AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
-    fi
-    CFLAGS=$_SAVE_CFLAGS
-fi
-
-dnl ========================================================
-dnl = Enable generation of debug symbols
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(debug-symbols,
-[  --enable-debug-symbols[=DBG]
-                          Enable debugging symbols (using compiler flags DBG)],
-[ if test "$enableval" != "no"; then
-      MOZ_DEBUG_SYMBOLS=1
-      if test -n "$enableval" -a "$enableval" != "yes"; then
-          if test -z "$_MOZ_DEBUG_FLAGS_SET"; then
-              MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-          else
-              AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
-          fi
-      fi
-  else
-      MOZ_DEBUG_SYMBOLS=
-  fi ],
-  MOZ_DEBUG_SYMBOLS=1)
-
-if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
-    AC_DEFINE(MOZ_DEBUG_SYMBOLS)
-    export MOZ_DEBUG_SYMBOLS
 fi
 
 MOZ_COMPILER_OPTS
@@ -4255,6 +4181,16 @@ fi
 dnl ========================================================
 dnl ECMAScript Internationalization API Support (uses ICU)
 dnl ========================================================
+ICU_LIB_NAMES=
+MOZ_NATIVE_ICU=
+MOZ_ARG_WITH_BOOL(system-icu,
+[  --with-system-icu
+                          Use system ICU (located with pkgconfig)],
+    MOZ_NATIVE_ICU=1)
+
+if test -n "$MOZ_NATIVE_ICU"; then
+    PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
+fi
 
 MOZ_ARG_WITH_STRING(intl-api,
 [  --with-intl-api, --with-intl-api=build, --without-intl-api
@@ -4289,37 +4225,36 @@ fi
 dnl Settings for the implementation of the ECMAScript Internationalization API
 if test -n "$ENABLE_INTL_API"; then
     AC_DEFINE(ENABLE_INTL_API)
-    # We build ICU as a static library.
-    AC_DEFINE(U_STATIC_IMPLEMENTATION)
 
-    case "$OS_TARGET" in
-        WINNT)
-            ICU_LIB_NAMES="icuin icuuc icudt"
-            ;;
-        Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-            ICU_LIB_NAMES="icui18n icuuc icudata"
-            ;;
-        *)
-            AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
-    esac
-
-    ICU_LIBS='$(call EXPAND_LIBNAME_PATH,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/lib)'
-else
-    ICU_LIB_NAMES=
-    ICU_LIBS=
+    if test -z "$MOZ_NATIVE_ICU"; then
+        case "$OS_TARGET" in
+            WINNT)
+                ICU_LIB_NAMES="icuin icuuc icudt"
+                ;;
+            Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
+                ICU_LIB_NAMES="icui18n icuuc icudata"
+                ;;
+            *)
+                AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
+        esac
+        MOZ_ICU_LIBS='$(call EXPAND_LIBNAME_PATH,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/lib)'
+    fi
 fi
 
 AC_SUBST(ENABLE_INTL_API)
 AC_SUBST(ICU_LIB_NAMES)
-AC_SUBST(ICU_LIBS)
-
-dnl Source files that use ICU should have control over which parts of the ICU
-dnl namespace they want to use.
-AC_DEFINE(U_USING_ICU_NAMESPACE,0)
-
+AC_SUBST(MOZ_ICU_LIBS)
+AC_SUBST(MOZ_NATIVE_ICU)
 
 dnl Settings for ICU
-if test -n "$ENABLE_INTL_API" ; then
+if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
+    dnl We build ICU as a static library.
+    AC_DEFINE(U_STATIC_IMPLEMENTATION)
+
+    dnl Source files that use ICU should have control over which parts of the ICU
+    dnl namespace they want to use.
+    AC_DEFINE(U_USING_ICU_NAMESPACE,0)
+
     # Set ICU compile options
     ICU_CPPFLAGS=""
     # don't use icu namespace automatically in client code

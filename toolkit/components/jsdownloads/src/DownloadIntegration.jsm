@@ -110,7 +110,9 @@ const kPrefImportedFromSqlite = "browser.download.importedFromSqlite";
 this.DownloadIntegration = {
   // For testing only
   _testMode: false,
-  dontLoad: false,
+  testPromptDownloads: 0,
+  dontLoadList: false,
+  dontLoadObservers: false,
   dontCheckParentalControls: false,
   shouldBlockInTest: false,
   dontOpenFileAndFolder: false,
@@ -149,7 +151,7 @@ this.DownloadIntegration = {
    */
   initializePublicDownloadList: function(aList) {
     return Task.spawn(function task_DI_initializePublicDownloadList() {
-      if (this.dontLoad) {
+      if (this.dontLoadList) {
         return;
       }
 
@@ -257,14 +259,7 @@ this.DownloadIntegration = {
         directory = this._getDirectory("DfltDwnld");
       }
 #elifdef XP_UNIX
-#ifdef MOZ_PLATFORM_MAEMO
-      // As maemo does not follow the XDG "standard" (as usually desktop
-      // Linux distros do) neither has a working $HOME/Desktop folder
-      // for us to fallback into, "$HOME/MyDocs/.documents/" is the folder
-      // we found most appropriate to be the default target folder for
-      // downloads on the platform.
-      directory = this._getDirectory("XDGDocs");
-#elifdef ANDROID
+#ifdef ANDROID
       // Android doesn't have a $HOME directory, and by default we only have
       // write access to /data/data/org.mozilla.{$APP} and /sdcard
       let directoryPath = gEnvironment.get("DOWNLOADS_DIRECTORY");
@@ -616,7 +611,7 @@ this.DownloadIntegration = {
    * @resolves When the views and observers are added.
    */
   addListObservers: function DI_addListObservers(aList, aIsPrivate) {
-    if (this.dontLoad) {
+    if (this.dontLoadObservers) {
       return Promise.resolve();
     }
 
@@ -722,6 +717,11 @@ this.DownloadObserver = {
     aCancel, aDownloadsCount, aIdTitle, aIdMessageSingle, aIdMessageMultiple, aIdButton) {
     // If user has already dismissed the request, then do nothing.
     if ((aCancel instanceof Ci.nsISupportsPRBool) && aCancel.data) {
+      return;
+    }
+    // Handle test mode
+    if (DownloadIntegration.testMode) {
+      DownloadIntegration.testPromptDownloads = aDownloadsCount;
       return;
     }
     // If there are no active downloads, then do nothing.

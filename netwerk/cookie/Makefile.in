@@ -12,7 +12,6 @@ relativesrcdir = @relativesrcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef NECKO_COOKIES
-LIBRARY_NAME     = neckocookie_s
 
 LOCAL_INCLUDES	= \
 		-I$(topsrcdir)/intl/uconv/src \

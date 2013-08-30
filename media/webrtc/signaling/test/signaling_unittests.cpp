@@ -1885,6 +1885,8 @@ TEST_F(SignalingTest, ChromeOfferAnswer)
     "a=rtpmap:100 VP8/90000\r\n"
     "a=rtpmap:101 red/90000\r\n"
     "a=rtpmap:102 ulpfec/90000\r\n"
+    "a=rtcp-fb:100 nack\r\n"
+    "a=rtcp-fb:100 ccm fir\r\n"
     "a=ssrc:3012607008 cname:KIXaNxUlU5DP3fVS\r\n"
     "a=ssrc:3012607008 msid:A5UL339RyGxT7zwgyF12BFqesxkmbUsaycp5 v0\r\n"
     "a=ssrc:3012607008 mslabel:A5UL339RyGxT7zwgyF12BFqesxkmbUsaycp5\r\n"

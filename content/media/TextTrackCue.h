@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/TextTrack.h"
-#include "mozilla/dom/TextTrackCueBinding.h"
+#include "mozilla/dom/VTTCueBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIDocument.h"
@@ -37,7 +37,7 @@ public:
               const nsAString& aText,
               ErrorResult& aRv)
   {
-    nsRefPtr<TextTrackCue> ttcue = new TextTrackCue(aGlobal.Get(), aStartTime,
+    nsRefPtr<TextTrackCue> ttcue = new TextTrackCue(aGlobal.GetAsSupports(), aStartTime,
                                                     aEndTime, aText, aRv);
     return ttcue.forget();
   }

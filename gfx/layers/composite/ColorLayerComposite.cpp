@@ -33,7 +33,8 @@ ColorLayerComposite::RenderLayer(const nsIntPoint& aOffset,
                                                            color.a));
   nsIntRect boundRect = GetBounds();
 
-  LayerManagerComposite::AddMaskEffect(GetMaskLayer(), effects);
+  LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(GetMaskLayer(),
+                                                          effects);
 
   gfx::Rect rect(boundRect.x, boundRect.y,
                  boundRect.width, boundRect.height);
@@ -50,8 +51,6 @@ ColorLayerComposite::RenderLayer(const nsIntPoint& aOffset,
   mCompositor->DrawDiagnostics(DIAGNOSTIC_COLOR,
                                rect, clipRect,
                                transform, gfx::Point(aOffset.x, aOffset.y));
-
-  LayerManagerComposite::RemoveMaskEffect(GetMaskLayer());
 }
 
 } /* layers */

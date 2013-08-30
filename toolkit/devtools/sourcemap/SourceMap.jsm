@@ -73,14 +73,18 @@ define('source-map/source-map-consumer', ['require', 'exports', 'module' ,  'sou
     var sourceRoot = util.getArg(sourceMap, 'sourceRoot', null);
     var sourcesContent = util.getArg(sourceMap, 'sourcesContent', null);
     var mappings = util.getArg(sourceMap, 'mappings');
-    var file = util.getArg(sourceMap, 'file');
+    var file = util.getArg(sourceMap, 'file', null);
 
     if (version !== this._version) {
       throw new Error('Unsupported version: ' + version);
     }
 
-    this._names = ArraySet.fromArray(names);
-    this._sources = ArraySet.fromArray(sources);
+    // Pass `true` below to allow duplicate names and sources. While source maps
+    // are intended to be compressed and deduplicated, the TypeScript compiler
+    // sometimes generates source maps with duplicates in them. See Github issue
+    // #72 and bugzil.la/889492.
+    this._names = ArraySet.fromArray(names, true);
+    this._sources = ArraySet.fromArray(sources, true);
     this.sourceRoot = sourceRoot;
     this.sourcesContent = sourcesContent;
     this.file = file;
@@ -672,10 +676,10 @@ define('source-map/array-set', ['require', 'exports', 'module' ,  'source-map/ut
   /**
    * Static method for creating ArraySet instances from an existing array.
    */
-  ArraySet.fromArray = function ArraySet_fromArray(aArray) {
+  ArraySet.fromArray = function ArraySet_fromArray(aArray, aAllowDuplicates) {
     var set = new ArraySet();
     for (var i = 0, len = aArray.length; i < len; i++) {
-      set.add(aArray[i]);
+      set.add(aArray[i], aAllowDuplicates);
     }
     return set;
   };
@@ -685,14 +689,15 @@ define('source-map/array-set', ['require', 'exports', 'module' ,  'source-map/ut
    *
    * @param String aStr
    */
-  ArraySet.prototype.add = function ArraySet_add(aStr) {
-    if (this.has(aStr)) {
-      // Already a member; nothing to do.
-      return;
-    }
+  ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
+    var isDuplicate = this.has(aStr);
     var idx = this._array.length;
-    this._array.push(aStr);
-    this._set[util.toSetString(aStr)] = idx;
+    if (!isDuplicate || aAllowDuplicates) {
+      this._array.push(aStr);
+    }
+    if (!isDuplicate) {
+      this._set[util.toSetString(aStr)] = idx;
+    }
   };
 
   /**
@@ -1423,7 +1428,7 @@ define('source-map/source-node', ['require', 'exports', 'module' ,  'source-map/
       return node;
 
       function addMappingWithCode(mapping, code) {
-        if (mapping.source === undefined) {
+        if (mapping === null || mapping.source === undefined) {
           node.add(code);
         } else {
           node.add(new SourceNode(mapping.originalLine,
@@ -1603,23 +1608,36 @@ define('source-map/source-node', ['require', 'exports', 'module' ,  'source-map/
     };
     var map = new SourceMapGenerator(aArgs);
     var sourceMappingActive = false;
+    var lastOriginalSource = null;
+    var lastOriginalLine = null;
+    var lastOriginalColumn = null;
+    var lastOriginalName = null;
     this.walk(function (chunk, original) {
       generated.code += chunk;
       if (original.source !== null
           && original.line !== null
           && original.column !== null) {
-        map.addMapping({
-          source: original.source,
-          original: {
-            line: original.line,
-            column: original.column
-          },
-          generated: {
-            line: generated.line,
-            column: generated.column
-          },
-          name: original.name
-        });
+        if(lastOriginalSource !== original.source
+           || lastOriginalLine !== original.line
+           || lastOriginalColumn !== original.column
+           || lastOriginalName !== original.name) {
+          map.addMapping({
+            source: original.source,
+            original: {
+              line: original.line,
+              column: original.column
+            },
+            generated: {
+              line: generated.line,
+              column: generated.column
+            },
+            name: original.name
+          });
+        }
+        lastOriginalSource = original.source;
+        lastOriginalLine = original.line;
+        lastOriginalColumn = original.column;
+        lastOriginalName = original.name;
         sourceMappingActive = true;
       } else if (sourceMappingActive) {
         map.addMapping({
@@ -1628,6 +1646,7 @@ define('source-map/source-node', ['require', 'exports', 'module' ,  'source-map/
             column: generated.column
           }
         });
+        lastOriginalSource = null;
         sourceMappingActive = false;
       }
       chunk.split('').forEach(function (ch) {

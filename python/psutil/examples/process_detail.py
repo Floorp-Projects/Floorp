@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2009, Jay Loden, Giampaolo Rodola'. All rights reserved.
+# Copyright (c) 2009, Giampaolo Rodola'. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -55,7 +55,7 @@ def run(pid):
         parent = ''
     started = datetime.datetime.fromtimestamp(pinfo['create_time']
                                                 ).strftime('%Y-%M-%d %H:%M')
-    io = pinfo.get('io_counters', None)
+    io = pinfo.get('io_counters', ACCESS_DENIED)
     mem = '%s%% (resident=%s, virtual=%s) ' % (
                                       round(pinfo['memory_percent'], 1),
                                       convert_bytes(pinfo['memory_info'].rss),
@@ -69,16 +69,18 @@ def run(pid):
     print_('cmdline', ' '.join(pinfo['cmdline']))
     print_('started', started)
     print_('user', pinfo['username'])
-    if os.name == 'posix':
+    if os.name == 'posix' and pinfo['uids'] and pinfo['gids']:
         print_('uids', 'real=%s, effective=%s, saved=%s' % pinfo['uids'])
+    if os.name == 'posix' and pinfo['gids']:
         print_('gids', 'real=%s, effective=%s, saved=%s' % pinfo['gids'])
+    if os.name == 'posix':
         print_('terminal', pinfo['terminal'] or '')
     if hasattr(p, 'getcwd'):
         print_('cwd', pinfo['cwd'])
     print_('memory', mem)
     print_('cpu', '%s%% (user=%s, system=%s)' % (pinfo['cpu_percent'],
-                                                 pinfo['cpu_times'].user,
-                                                 pinfo['cpu_times'].system))
+                                    getattr(pinfo['cpu_times'], 'user', '?'),
+                                    getattr(pinfo['cpu_times'], 'system', '?')))
     print_('status', pinfo['status'])
     print_('niceness', pinfo['nice'])
     print_('num threads', pinfo['num_threads'])
@@ -110,11 +112,11 @@ def run(pid):
                 type = 'UDP'
             else:
                 type = 'UNIX'
-            lip, lport = conn.local_address
-            if not conn.remote_address:
+            lip, lport = conn.laddr
+            if not conn.raddr:
                 rip, rport = '*', '*'
             else:
-                rip, rport = conn.remote_address
+                rip, rport = conn.raddr
             print_('',  '%s:%s -> %s:%s type=%s status=%s' \
                          % (lip, lport, rip, rport, type, conn.status))
 

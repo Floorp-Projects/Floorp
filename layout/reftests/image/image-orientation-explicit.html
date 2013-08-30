@@ -1,0 +1,37 @@
+<!DOCTYPE>
+<head>
+  <style>
+    body {
+      border:  0px;
+      margin:  0px;
+      padding: 0px;
+    }
+    img {
+      border:  50px solid black;
+      margin:  50px;
+      padding: 50px;
+    }
+  </style>
+</head>
+<body>
+  <!-- This is deliberately an image with a non-neutral inherent orientation to
+       ensure that the inherent orientation is irrelevant. -->
+  <img src="image-exif-90-deg-flip.jpg">
+
+  <script>
+    var orientation = location.search.substring(1).split("&");
+    var angle = orientation[0];
+    var flip = orientation[1] == "flip" ? true : false;
+
+    // Construct a style.
+    var style = "img { image-orientation: "
+              + angle + "deg"
+              + (flip ? " flip" : "")
+              + "; }\n";
+
+    // Apply the style to the document.
+    var sheet = document.createElement('style');
+    sheet.innerHTML = style;
+    document.body.appendChild(sheet);
+  </script>
+</body>

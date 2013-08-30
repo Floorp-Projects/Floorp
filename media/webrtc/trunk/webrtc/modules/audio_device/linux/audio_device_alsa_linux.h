@@ -12,13 +12,15 @@
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_ALSA_LINUX_H
 
 #include "audio_device_generic.h"
-#include "critical_section_wrapper.h"
 #include "audio_mixer_manager_alsa_linux.h"
+#include "critical_section_wrapper.h"
 
-#include <sys/soundcard.h>
-#include <sys/ioctl.h>
 
 #include <alsa/asoundlib.h>
+#include <sys/soundcard.h>
+#include <sys/ioctl.h>
+#include <X11/Xlib.h>
+
 
 namespace webrtc
 {
@@ -164,10 +166,13 @@ private:
                            const bool playback,
                            const int32_t enumDeviceNo = 0,
                            char* enumDeviceName = NULL,
-                           const WebRtc_Word32 ednLen = 0,
+                           const int32_t ednLen = 0,
                            char* enumDeviceID = NULL,
-                           const WebRtc_Word32 ediLen = 0) const;
+                           const int32_t ediLen = 0) const;
     int32_t ErrorRecovery(int32_t error, snd_pcm_t* deviceHandle);
+
+private:
+    bool KeyPressed() const;
 
 private:
     void Lock() { _critSect.Enter(); };
@@ -244,6 +249,9 @@ private:
 
     uint16_t _playBufDelay;                 // playback delay
     uint16_t _playBufDelayFixed;            // fixed playback delay
+
+    char _oldKeyState[32];
+    Display* _XDisplay;
 };
 
 }

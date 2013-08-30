@@ -28,8 +28,8 @@ function runTests() {
     assertEq(A.__proto__, ArrayType.prototype);
     assertEq(A.length, 10);
     assertEq(A.elementType, uint8);
-    assertEq(A.bytes, 10);
-    assertEq(A.toString(), "ArrayType(uint8, 10)");
+    assertEq(A.byteLength, 10);
+    assertEq(A.toSource(), "ArrayType(uint8, 10)");
 
     assertEq(A.prototype.__proto__, ArrayType.prototype.prototype);
     assertEq(typeof A.prototype.fill, "function");
@@ -64,10 +64,10 @@ function runTests() {
     for (var i = 0; i < a.length; i++)
         assertEq(b[i], i*2);
 
+
     var b = new A([0, 1, 0, 1, 0, 1, 0, 1, 0, 1]);
     for (var i = 0; i < b.length; i++)
         assertEq(b[i], i%2);
-
 
     assertThrows(function() new A(5));
     assertThrows(function() new A(/fail/));
@@ -94,7 +94,6 @@ function runTests() {
     assertThrows(function() mario[1] = 5);
     mario[1][1] = [];
     assertEq(Number.isNaN(mario[1][1]), true);
-
 
     // ok this is just for kicks
     var AllSprites = new ArrayType(Sprite, 65536);

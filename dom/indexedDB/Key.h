@@ -11,6 +11,8 @@
 
 #include "mozIStorageStatement.h"
 
+#include "js/Value.h"
+
 namespace IPC {
 template <typename T> struct ParamTraits;
 } // namespace IPC
@@ -159,7 +161,7 @@ public:
   }
 
   nsresult SetFromJSVal(JSContext* aCx,
-                        const jsval aVal)
+                        const JS::Value aVal)
   {
     mBuffer.Truncate();
 
@@ -209,7 +211,7 @@ public:
 
   nsresult AppendItem(JSContext* aCx,
                       bool aFirstOfArray,
-                      const jsval aVal)
+                      const JS::Value aVal)
   {
     nsresult rv = EncodeJSVal(aCx, aVal, aFirstOfArray ? eMaxType : 0);
     if (NS_FAILED(rv)) {
@@ -303,7 +305,7 @@ private:
   }
 
   // Encoding functions. These append the encoded value to the end of mBuffer
-  inline nsresult EncodeJSVal(JSContext* aCx, const jsval aVal,
+  inline nsresult EncodeJSVal(JSContext* aCx, const JS::Value aVal,
                               uint8_t aTypeOffset)
   {
     return EncodeJSValInternal(aCx, aVal, aTypeOffset, 0);
@@ -329,7 +331,7 @@ private:
   nsCString mBuffer;
 
 private:
-  nsresult EncodeJSValInternal(JSContext* aCx, const jsval aVal,
+  nsresult EncodeJSValInternal(JSContext* aCx, const JS::Value aVal,
                                uint8_t aTypeOffset, uint16_t aRecursionDepth);
 
   static nsresult DecodeJSValInternal(const unsigned char*& aPos,

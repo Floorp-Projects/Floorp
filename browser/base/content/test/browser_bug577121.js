@@ -3,6 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function test() {
+  Services.prefs.setBoolPref("browser.tabs.animate", false);
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("browser.tabs.animate");
+  });
+
   // Open 2 other tabs, and pin the second one. Like that, the initial tab
   // should get closed.
   let testTab1 = gBrowser.addTab();

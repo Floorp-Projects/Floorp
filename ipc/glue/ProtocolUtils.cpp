@@ -133,5 +133,28 @@ ProtocolErrorBreakpoint(const char* aMsg)
     printf_stderr("IPDL protocol error: %s\n", aMsg);
 }
 
+void
+FatalError(const char* aProtocolName, const char* aMsg,
+           ProcessHandle aHandle, bool aIsParent)
+{
+  ProtocolErrorBreakpoint(aMsg);
+
+  nsAutoCString formattedMessage("IPDL error [");
+  formattedMessage.AppendASCII(aProtocolName);
+  formattedMessage.AppendLiteral("]: \"");
+  formattedMessage.AppendASCII(aMsg);
+  if (aIsParent) {
+    formattedMessage.AppendLiteral("\". Killing child side as a result.");
+    NS_ERROR(formattedMessage.get());
+
+    if (!base::KillProcess(aHandle, base::PROCESS_END_KILLED_BY_USER, false)) {
+      NS_ERROR("May have failed to kill child!");
+    }
+  } else {
+    formattedMessage.AppendLiteral("\". abort()ing as a result.");
+    NS_RUNTIMEABORT(formattedMessage.get());
+  }
+}
+
 } // namespace ipc
 } // namespace mozilla

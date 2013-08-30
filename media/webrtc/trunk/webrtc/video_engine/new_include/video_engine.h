@@ -15,10 +15,8 @@
 #include <vector>
 
 #include "webrtc/common_types.h"
-#include "webrtc/video_engine/new_include/common.h"
 #include "webrtc/video_engine/new_include/video_receive_stream.h"
 #include "webrtc/video_engine/new_include/video_send_stream.h"
-
 
 namespace webrtc {
 namespace newapi {
@@ -51,22 +49,22 @@ struct VideoEngineConfig {
 // estimates etc.
 class VideoCall {
  public:
-  virtual void GetVideoCodecs(std::vector<VideoCodec>* codecs) = 0;
+  virtual std::vector<VideoCodec> GetVideoCodecs() = 0;
 
-  virtual void GetDefaultSendConfig(VideoSendStreamConfig* config) = 0;
+  virtual VideoSendStream::Config GetDefaultSendConfig() = 0;
 
   virtual VideoSendStream* CreateSendStream(
-      const VideoSendStreamConfig& config) = 0;
+      const VideoSendStream::Config& config) = 0;
 
   // Returns the internal state of the send stream, for resume sending with a
   // new stream with different settings.
   // Note: Only the last returned send-stream state is valid.
   virtual SendStreamState* DestroySendStream(VideoSendStream* send_stream) = 0;
 
-  virtual void GetDefaultReceiveConfig(VideoReceiveStreamConfig* config) = 0;
+  virtual VideoReceiveStream::Config GetDefaultReceiveConfig() = 0;
 
   virtual VideoReceiveStream* CreateReceiveStream(
-      const VideoReceiveStreamConfig& config) = 0;
+      const VideoReceiveStream::Config& config) = 0;
   virtual void DestroyReceiveStream(VideoReceiveStream* receive_stream) = 0;
 
   // All received RTP and RTCP packets for the call should be inserted to this
@@ -82,7 +80,6 @@ class VideoCall {
   // differ from the actual receive bitrate.
   virtual uint32_t ReceiveBitrateEstimate() = 0;
 
- protected:
   virtual ~VideoCall() {}
 };
 
@@ -91,11 +88,9 @@ class VideoCall {
 class VideoEngine {
  public:
   static VideoEngine* Create(const VideoEngineConfig& engine_config);
+  virtual ~VideoEngine() {}
 
   virtual VideoCall* CreateCall(Transport* send_transport) = 0;
-
- protected:
-  virtual ~VideoEngine() {}
 };
 
 }  // namespace newapi

@@ -711,6 +711,12 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
+        case TELEMETRY_HISTOGRAM_ADD: {
+            ReadCharactersField(jenv);
+            mCount = jenv->GetIntField(jobj, jCountField);
+            break;
+        }
+
         default:
             break;
     }

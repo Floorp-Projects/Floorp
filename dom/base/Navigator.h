@@ -35,7 +35,6 @@ class systemMessageCallback;
 
 #ifdef MOZ_B2G_RIL
 class nsIDOMMozMobileConnection;
-class nsIDOMMozCellBroadcast;
 class nsIDOMMozVoicemail;
 class nsIDOMMozIccManager;
 #endif // MOZ_B2G_RIL
@@ -82,6 +81,7 @@ class MobileConnection;
 namespace telephony {
 class Telephony;
 } // namespace Telephony;
+class CellBroadcast;
 #endif
 
 #ifdef MOZ_B2G_BT
@@ -220,7 +220,7 @@ public:
 #ifdef MOZ_B2G_RIL
   telephony::Telephony* GetMozTelephony(ErrorResult& aRv);
   nsIDOMMozMobileConnection* GetMozMobileConnection(ErrorResult& aRv);
-  nsIDOMMozCellBroadcast* GetMozCellBroadcast(ErrorResult& aRv);
+  CellBroadcast* GetMozCellBroadcast(ErrorResult& aRv);
   nsIDOMMozVoicemail* GetMozVoicemail(ErrorResult& aRv);
   nsIDOMMozIccManager* GetMozIccManager(ErrorResult& aRv);
 #endif // MOZ_B2G_RIL
@@ -320,7 +320,7 @@ private:
   nsRefPtr<network::Connection> mConnection;
 #ifdef MOZ_B2G_RIL
   nsRefPtr<network::MobileConnection> mMobileConnection;
-  nsCOMPtr<nsIDOMMozCellBroadcast> mCellBroadcast;
+  nsRefPtr<CellBroadcast> mCellBroadcast;
   nsRefPtr<icc::IccManager> mIccManager;
 #endif
 #ifdef MOZ_B2G_BT

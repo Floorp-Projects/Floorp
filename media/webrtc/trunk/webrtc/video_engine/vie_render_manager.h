@@ -11,12 +11,12 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_RENDER_MANAGER_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_RENDER_MANAGER_H_
 
-#include "system_wrappers/interface/list_wrapper.h"
-#include "system_wrappers/interface/map_wrapper.h"
-#include "system_wrappers/interface/scoped_ptr.h"
-#include "typedefs.h"  // NOLINT
+#include "webrtc/system_wrappers/interface/list_wrapper.h"
+#include "webrtc/system_wrappers/interface/map_wrapper.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/typedefs.h"
 
-#include "video_engine/vie_manager_base.h"
+#include "webrtc/video_engine/vie_manager_base.h"
 
 namespace webrtc {
 

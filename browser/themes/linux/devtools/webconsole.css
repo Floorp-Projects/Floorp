@@ -4,20 +4,6 @@
 
 %include ../../shared/devtools/webconsole.inc.css
 
-.webconsole-timestamp,
-.webconsole-msg-body {
-  font-family: "DejaVu Sans Mono", monospace;
-}
-
-.jsterm-input-node,
-.jsterm-complete-node {
-  font: 0.9em "DejaVu Sans Mono", monospace;
-}
-
-.hud-output-node {
-  font-size: 0.9em;
-}
-
 .jsterm-input-node {
   width: 98%;
 }

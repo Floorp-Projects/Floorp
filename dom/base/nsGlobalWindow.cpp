@@ -31,6 +31,7 @@
 #include "nsDOMWindowList.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptTimeoutHandler.h"
 
@@ -47,7 +48,7 @@
 // Helper Classes
 #include "nsJSUtils.h"
 #include "jsapi.h"              // for JSAutoRequest
-#include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
+#include "js/OldDebugAPI.h"     // for JS_ClearWatchPointsForObject
 #include "jsfriendapi.h"        // for JS_GetGlobalForFrame
 #include "jswrapper.h"
 #include "nsReadableUtils.h"
@@ -145,6 +146,7 @@
 #include "nsIDOMXULControlElement.h"
 #include "nsMenuPopupFrame.h"
 #endif
+#include "nsIDOMCustomEvent.h"
 
 #include "xpcprivate.h"
 
@@ -176,6 +178,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
 #include "GeneratedEvents.h"
+#include "GeneratedEventClasses.h"
 #include "mozIThirdPartyUtil.h"
 
 #ifdef MOZ_LOGGING
@@ -206,6 +209,7 @@
 #include "nsSandboxFlags.h"
 #include "TimeChangeObserver.h"
 #include "mozilla/dom/AudioContext.h"
+#include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 
@@ -4949,6 +4953,50 @@ nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
   return defaultActionEnabled;
 }
 
+// NOTE: Arguments to this function should be CSS pixels, not device pixels.
+bool
+nsGlobalWindow::DispatchResizeEvent(const nsIntSize& aSize)
+{
+  ErrorResult res;
+  nsRefPtr<nsDOMEvent> domEvent =
+    mDoc->CreateEvent(NS_LITERAL_STRING("CustomEvent"), res);
+  if (res.Failed()) {
+    return false;
+  }
+
+  AutoSafeJSContext cx;
+  JSAutoCompartment ac(cx, mJSObject);
+  DOMWindowResizeEventDetailInitializer detail;
+  detail.mWidth = aSize.width;
+  detail.mHeight = aSize.height;
+  JS::Rooted<JS::Value> detailValue(cx);
+  if (!detail.ToObject(cx, JS::NullPtr(), &detailValue)) {
+    return false;
+  }
+
+  CustomEvent* customEvent = static_cast<CustomEvent*>(domEvent.get());
+  customEvent->InitCustomEvent(cx,
+                               NS_LITERAL_STRING("DOMWindowResize"),
+                               /* bubbles = */ true,
+                               /* cancelable = */ true,
+                               detailValue,
+                               res);
+  if (res.Failed()) {
+    return false;
+  }
+
+  domEvent->SetTrusted(true);
+  domEvent->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+
+  nsCOMPtr<EventTarget> target = do_QueryInterface(GetOuterWindow());
+  domEvent->SetTarget(target);
+
+  bool defaultActionEnabled = true;
+  target->DispatchEvent(domEvent, &defaultActionEnabled);
+
+  return defaultActionEnabled;
+}
+
 void
 nsGlobalWindow::RefreshCompartmentPrincipal()
 {
@@ -5943,6 +5991,19 @@ nsGlobalWindow::ResizeTo(int32_t aWidth, int32_t aHeight)
   FORWARD_TO_OUTER(ResizeTo, (aWidth, aHeight), NS_ERROR_NOT_INITIALIZED);
 
   /*
+   * If caller is a browser-element then dispatch a resize event to
+   * the embedder.
+   */
+  if (mDocShell->GetIsBrowserOrApp()) {
+    nsIntSize size(aWidth, aHeight);
+    if (!DispatchResizeEvent(size)) {
+      // The embedder chose to prevent the default action for this
+      // event, so let's not resize this window after all...
+      return NS_OK;
+    }
+  }
+
+  /*
    * If caller is not chrome and the user has not explicitly exempted the site,
    * prevent window.resizeTo() by exiting early
    */
@@ -5968,6 +6029,25 @@ NS_IMETHODIMP
 nsGlobalWindow::ResizeBy(int32_t aWidthDif, int32_t aHeightDif)
 {
   FORWARD_TO_OUTER(ResizeBy, (aWidthDif, aHeightDif), NS_ERROR_NOT_INITIALIZED);
+
+  /*
+   * If caller is a browser-element then dispatch a resize event to
+   * parent.
+   */
+  if (mDocShell->GetIsBrowserOrApp()) {
+    CSSIntSize size;
+    nsresult rv = GetInnerSize(size);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+
+    size.width += aWidthDif;
+    size.height += aHeightDif;
+
+    if (!DispatchResizeEvent(nsIntSize(size.width, size.height))) {
+      // The embedder chose to prevent the default action for this
+      // event, so let's not resize this window after all...
+      return NS_OK;
+    }
+  }
 
   /*
    * If caller is not chrome and the user has not explicitly exempted the site,

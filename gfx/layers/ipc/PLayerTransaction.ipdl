@@ -14,7 +14,6 @@ include protocol PLayer;
 include protocol PRenderFrame;
 
 include "mozilla/WidgetUtils.h";
-include "mozilla/TimeStamp.h";
 include "mozilla/dom/ScreenOrientation.h";
 include "nsCSSProperty.h";
 include "gfxipc/ShadowLayerUtils.h";

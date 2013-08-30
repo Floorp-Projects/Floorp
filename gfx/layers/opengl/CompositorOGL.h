@@ -17,7 +17,6 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE, MOZ_FINAL
 #include "mozilla/RefPtr.h"             // for TemporaryRef, RefPtr
-#include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
@@ -35,11 +34,15 @@
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType
 #include "nscore.h"                     // for NS_IMETHOD
+#include "VBOArena.h"                   // for gl::VBOArena
+
 class gfx3DMatrix;
 class nsIWidget;
 struct gfxMatrix;
 
 namespace mozilla {
+class TimeStamp;
+
 namespace gfx {
 class Matrix4x4;
 }
@@ -233,6 +236,11 @@ private:
    *  including vertex coords and texcoords for both
    *  flipped and unflipped textures */
   GLuint mQuadVBO;
+
+  /**
+   * When we can't use mQuadVBO, we allocate VBOs from this arena instead.
+   */
+  gl::VBOArena mVBOs;
 
   bool mHasBGRA;
 

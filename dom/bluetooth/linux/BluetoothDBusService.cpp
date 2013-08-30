@@ -722,13 +722,16 @@ static bool
 UnpackPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
                         BluetoothValue& aValue, const char* aIface)
 {
+  MOZ_ASSERT(aMsg);
+
   Properties* propertyTypes;
   int propertyTypesLength;
 
   nsAutoString errorStr;
   if (IsDBusMessageError(aMsg, aErr, errorStr) ||
       dbus_message_get_type(aMsg) != DBUS_MESSAGE_TYPE_METHOD_RETURN) {
-    return true;
+    BT_WARNING("dbus message has an error.");
+    return false;
   }
 
   DBusMessageIter iter;
@@ -797,49 +800,26 @@ GetPropertiesInternal(const nsAString& aPath,
                                             aIface,
                                             "GetProperties",
                                             DBUS_TYPE_INVALID);
+  NS_ENSURE_TRUE(msg, false);
 
   bool success = UnpackPropertiesMessage(msg, &err, aValue, aIface);
 
-  if (msg) {
-    dbus_message_unref(msg);
-  }
+  dbus_message_unref(msg);
 
-  if (!success) {
-    BT_WARNING("Failed to get device properties");
-    return false;
-  }
-
-  return true;
+  return success;
 }
 
-class GetPropertiesReplyHandler : public DBusReplyHandler
-{
-public:
-  GetPropertiesReplyHandler(const nsCString& aIface)
-    : mIface(aIface)
-  {
-    MOZ_ASSERT(!mIface.IsEmpty());
-  }
-
-  const nsCString& GetInterface() const
-  {
-    return mIface;
-  }
-
-private:
-  nsCString mIface;
-};
-
-class AppendDeviceNameReplyHandler: public GetPropertiesReplyHandler
+class AppendDeviceNameReplyHandler: public DBusReplyHandler
 {
 public:
   AppendDeviceNameReplyHandler(const nsCString& aIface,
                                const nsString& aDevicePath,
                                const BluetoothSignal& aSignal)
-    : GetPropertiesReplyHandler(aIface)
+    : mIface(aIface)
     , mDevicePath(aDevicePath)
     , mSignal(aSignal)
   {
+    MOZ_ASSERT(!mIface.IsEmpty());
     MOZ_ASSERT(!mDevicePath.IsEmpty());
   }
 
@@ -859,7 +839,7 @@ public:
     BluetoothValue deviceProperties;
 
     bool success = UnpackPropertiesMessage(aReply, &err, deviceProperties,
-                                           GetInterface().get());
+                                           mIface.get());
     if (!success) {
       BT_WARNING("Failed to get device properties");
       return;
@@ -894,6 +874,7 @@ public:
   }
 
 private:
+  nsCString mIface;
   nsString mDevicePath;
   BluetoothSignal mSignal;
 };
@@ -1636,18 +1617,13 @@ GetDefaultAdapterPath(BluetoothValue& aValue, nsString& aError)
                                             DBUS_MANAGER_IFACE,
                                             "DefaultAdapter",
                                             DBUS_TYPE_INVALID);
+  NS_ENSURE_TRUE(msg, false);
 
   UnpackObjectPathMessage(msg, &err, aValue, aError);
 
-  if (msg) {
-    dbus_message_unref(msg);
-  }
+  dbus_message_unref(msg);
 
-  if (!aError.IsEmpty()) {
-    return false;
-  }
-
-  return true;
+  return aError.IsEmpty();
 }
 
 bool
@@ -1805,46 +1781,119 @@ BluetoothDBusService::IsEnabledInternal()
   return mEnabled;
 }
 
-class DefaultAdapterPropertiesRunnable : public nsRunnable
+class DefaultAdapterPathReplyHandler : public DBusReplyHandler
 {
 public:
-  DefaultAdapterPropertiesRunnable(BluetoothReplyRunnable* aRunnable)
-    : mRunnable(dont_AddRef(aRunnable))
+  DefaultAdapterPathReplyHandler(BluetoothReplyRunnable* aRunnable)
+    : mRunnable(aRunnable)
   {
+    MOZ_ASSERT(mRunnable);
   }
 
-  nsresult Run()
+  void Handle(DBusMessage* aReply) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
 
-    BluetoothValue v;
-    nsAutoString replyError;
-    if (!GetDefaultAdapterPath(v, replyError)) {
-      DispatchBluetoothReply(mRunnable, v, replyError);
-      return NS_ERROR_FAILURE;
+    if (!aReply || (dbus_message_get_type(aReply) == DBUS_MESSAGE_TYPE_ERROR)) {
+      const char* errStr = "Timeout in DefaultAdapterPathReplyHandler";
+      if (aReply) {
+        errStr = dbus_message_get_error_name(aReply);
+        if (!errStr) {
+          errStr = "Bluetooth DBus Error";
+        }
+      }
+      DispatchBluetoothReply(mRunnable, BluetoothValue(),
+                             NS_ConvertUTF8toUTF16(errStr));
+      return;
     }
 
-    DBusError err;
-    dbus_error_init(&err);
+    bool success;
+    nsAutoString replyError;
 
-    nsString objectPath = v.get_nsString();
-    v = InfallibleTArray<BluetoothNamedValue>();
-    if (!GetPropertiesInternal(objectPath, DBUS_ADAPTER_IFACE, v)) {
-      NS_WARNING("Getting properties failed!");
-      return NS_ERROR_FAILURE;
+    if (mAdapterPath.IsEmpty()) {
+      success = HandleDefaultAdapterPathReply(aReply, replyError);
+    } else {
+      success = HandleGetPropertiesReply(aReply, replyError);
+    }
+
+    if (!success) {
+      DispatchBluetoothReply(mRunnable, BluetoothValue(), replyError);
+    }
+  }
+
+protected:
+  bool HandleDefaultAdapterPathReply(DBusMessage* aReply,
+                                     nsAString& aReplyError)
+  {
+    BluetoothValue value;
+    DBusError error;
+    dbus_error_init(&error);
+
+    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+
+    UnpackObjectPathMessage(aReply, &error, value, aReplyError);
+
+    if (!aReplyError.IsEmpty()) {
+      return false;
+    }
+
+    mAdapterPath = value.get_nsString();
+
+    // Acquire another reference to this reply handler
+    nsRefPtr<DefaultAdapterPathReplyHandler> handler = this;
+
+    nsRefPtr<RawDBusConnection> threadConnection = gThreadConnection;
+
+    if (!threadConnection.get()) {
+      aReplyError = NS_LITERAL_STRING("DBus connection has been closed.");
+      return false;
+    }
+
+    bool success = dbus_func_args_async(threadConnection->GetConnection(), 1000,
+                                        DefaultAdapterPathReplyHandler::Callback,
+                                        handler.get(),
+                                        NS_ConvertUTF16toUTF8(mAdapterPath).get(),
+                                        DBUS_ADAPTER_IFACE, "GetProperties",
+                                        DBUS_TYPE_INVALID);
+    if (!success) {
+      aReplyError = NS_LITERAL_STRING("dbus_func_args_async failed");
+      return false;
+    }
+
+    handler.forget();
+
+    return true;
+  }
+
+  bool HandleGetPropertiesReply(DBusMessage* aReply,
+                                nsAutoString& aReplyError)
+  {
+    BluetoothValue value;
+    DBusError error;
+    dbus_error_init(&error);
+
+    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+
+    bool success = UnpackPropertiesMessage(aReply, &error, value,
+                                           DBUS_ADAPTER_IFACE);
+    if (!success) {
+      aReplyError = NS_ConvertUTF8toUTF16(error.message);
+      return false;
     }
 
     // We have to manually attach the path to the rest of the elements
-    v.get_ArrayOfBluetoothNamedValue().AppendElement(
-      BluetoothNamedValue(NS_LITERAL_STRING("Path"), objectPath));
+    value.get_ArrayOfBluetoothNamedValue().AppendElement(
+      BluetoothNamedValue(NS_LITERAL_STRING("Path"), mAdapterPath));
 
-    DispatchBluetoothReply(mRunnable, v, replyError);
+    // Dispatch result
+    DispatchBluetoothReply(mRunnable, value, aReplyError);
 
-    return NS_OK;
+    return true;
   }
 
 private:
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
+  nsString mAdapterPath;
 };
 
 nsresult
@@ -1859,14 +1908,18 @@ BluetoothDBusService::GetDefaultAdapterPathInternal(
     return NS_OK;
   }
 
-  nsRefPtr<BluetoothReplyRunnable> runnable = aRunnable;
-  nsRefPtr<nsRunnable> func(new DefaultAdapterPropertiesRunnable(runnable));
-  if (NS_FAILED(mBluetoothCommandThread->Dispatch(func, NS_DISPATCH_NORMAL))) {
-    NS_WARNING("Cannot dispatch firmware loading task!");
-    return NS_ERROR_FAILURE;
-  }
+  nsRefPtr<DefaultAdapterPathReplyHandler> handler =
+    new DefaultAdapterPathReplyHandler(aRunnable);
+  bool success = dbus_func_args_async(mConnection, 1000,
+                                      DefaultAdapterPathReplyHandler::Callback,
+                                      handler.get(),
+                                      "/",
+                                      DBUS_MANAGER_IFACE, "DefaultAdapter",
+                                      DBUS_TYPE_INVALID);
+  NS_ENSURE_TRUE(success, NS_ERROR_FAILURE);
 
-  runnable.forget();
+  handler.forget();
+
   return NS_OK;
 }
 
@@ -2023,9 +2076,9 @@ public:
         GetObjectPathFromAddress(sAdapterPath, mDeviceAddresses[i]);
 
       if (!GetPropertiesInternal(objectPath, DBUS_DEVICE_IFACE, v)) {
-        errorStr.AssignLiteral("Getting properties failed!");
-        DispatchBluetoothReply(mRunnable, values, errorStr);
-        return NS_OK;
+        // The target device may have been removed, so continue checking the
+        // next device object.
+        continue;
       }
 
       // We have to manually attach the path to the rest of the elements

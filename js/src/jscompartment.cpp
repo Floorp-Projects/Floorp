@@ -54,6 +54,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     objectMetadataCallback(NULL),
     lastAnimationTime(0),
     regExps(runtime_),
+    typeReprs(runtime_),
     propertyTree(thisForCtor()),
     gcIncomingGrayPointers(NULL),
     gcLiveArrayBuffers(NULL),
@@ -108,6 +109,9 @@ JSCompartment::init(JSContext *cx)
     if (!regExps.init(cx))
         return false;
 
+    if (!typeReprs.init())
+        return false;
+
     enumerators = NativeIterator::allocateSentinel(cx);
     if (!enumerators)
         return false;
@@ -116,7 +120,7 @@ JSCompartment::init(JSContext *cx)
 }
 
 #ifdef JS_ION
-ion::IonRuntime *
+jit::IonRuntime *
 JSRuntime::createIonRuntime(JSContext *cx)
 {
     // The runtime will only be created on its owning thread, but reads of a
@@ -126,7 +130,7 @@ JSRuntime::createIonRuntime(JSContext *cx)
 
     JS_ASSERT(!ionRuntime_);
 
-    ionRuntime_ = cx->new_<ion::IonRuntime>();
+    ionRuntime_ = cx->new_<jit::IonRuntime>();
 
     if (!ionRuntime_)
         return NULL;
@@ -150,7 +154,7 @@ JSRuntime::createIonRuntime(JSContext *cx)
 bool
 JSCompartment::ensureIonCompartmentExists(JSContext *cx)
 {
-    using namespace js::ion;
+    using namespace js::jit;
     if (ionCompartment_)
         return true;
 

@@ -21,6 +21,7 @@ class nsDOMParser MOZ_FINAL : public nsIDOMParser,
                               public nsSupportsWeakReference,
                               public nsWrapperCache
 {
+  typedef mozilla::dom::GlobalObject GlobalObject;
 public: 
   nsDOMParser();
   virtual ~nsDOMParser();
@@ -34,11 +35,11 @@ public:
 
   // WebIDL API
   static already_AddRefed<nsDOMParser>
-  Constructor(const mozilla::dom::GlobalObject& aOwner,
+  Constructor(const GlobalObject& aOwner,
               mozilla::ErrorResult& rv);
 
   static already_AddRefed<nsDOMParser>
-  Constructor(const mozilla::dom::GlobalObject& aOwner,
+  Constructor(const GlobalObject& aOwner,
               nsIPrincipal* aPrincipal, nsIURI* aDocumentURI, nsIURI* aBaseURI,
               mozilla::ErrorResult& rv);
 

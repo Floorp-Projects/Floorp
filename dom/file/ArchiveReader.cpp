@@ -9,8 +9,6 @@
 #include "ArchiveEvent.h"
 #include "ArchiveZipEvent.h"
 
-#include "nsLayoutStatics.h"
-
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
@@ -23,14 +21,15 @@ using namespace mozilla::dom;
 USING_FILE_NAMESPACE
 
 /* static */ already_AddRefed<ArchiveReader>
-ArchiveReader::Constructor(const GlobalObject& aGlobal, nsIDOMBlob* aBlob,
+ArchiveReader::Constructor(const GlobalObject& aGlobal,
+                           nsIDOMBlob* aBlob,
                            const ArchiveReaderOptions& aOptions,
                            ErrorResult& aError)
 {
   MOZ_ASSERT(aBlob);
   MOZ_ASSERT(PrefEnabled());
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {
     aError.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -51,13 +50,11 @@ ArchiveReader::ArchiveReader(nsIDOMBlob* aBlob, nsPIDOMWindow* aWindow,
   MOZ_ASSERT(aBlob);
   MOZ_ASSERT(aWindow);
 
-  nsLayoutStatics::AddRef();
   SetIsDOMBinding();
 }
 
 ArchiveReader::~ArchiveReader()
 {
-  nsLayoutStatics::Release();
 }
 
 /* virtual */ JSObject*

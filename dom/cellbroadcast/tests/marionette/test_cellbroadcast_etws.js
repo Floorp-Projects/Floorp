@@ -24,7 +24,7 @@ SpecialPowers.addPermission("cellbroadcast", true, document);
 SpecialPowers.addPermission("mobileconnection", true, document);
 
 let cbs = window.navigator.mozCellBroadcast;
-ok(cbs instanceof MozCellBroadcast,
+ok(cbs instanceof window.MozCellBroadcast,
    "mozCellBroadcast is instanceof " + cbs.constructor);
 
 let pendingEmulatorCmdCount = 0;

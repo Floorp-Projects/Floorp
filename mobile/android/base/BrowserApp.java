@@ -65,6 +65,7 @@ import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.view.animation.Interpolator;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -99,6 +100,7 @@ abstract public class BrowserApp extends GeckoApp
     private static final int READER_ADD_DUPLICATE = 2;
 
     private static final String ADD_SHORTCUT_TOAST = "add_shortcut_toast";
+    public static final String GUEST_BROWSING_ARG = "--guest";
 
     private static final String STATE_ABOUT_HOME_TOP_PADDING = "abouthome_top_padding";
     private static final String STATE_DYNAMIC_TOOLBAR_ENABLED = "dynamic_toolbar";
@@ -265,7 +267,7 @@ abstract public class BrowserApp extends GeckoApp
                 case KeyEvent.KEYCODE_BUTTON_Y:
                     // Toggle/focus the address bar on gamepad-y button.
                     if (mBrowserToolbar.isVisible()) {
-                        if (isDynamicToolbarEnabled() && !mHomePager.isVisible()) {
+                        if (isDynamicToolbarEnabled() && !isHomePagerVisible()) {
                             if (mLayerView != null) {
                                 mLayerView.getLayerMarginsAnimator().hideMargins(false);
                                 mLayerView.requestFocus();
@@ -403,7 +405,7 @@ abstract public class BrowserApp extends GeckoApp
         mAboutHomeStartupTimer = new Telemetry.Timer("FENNEC_STARTUP_TIME_ABOUTHOME");
 
         String args = getIntent().getStringExtra("args");
-        if (args != null && args.contains("--guest-mode")) {
+        if (args != null && args.contains(GUEST_BROWSING_ARG)) {
             mProfile = GeckoProfile.createGuestProfile(this);
         } else if (GeckoProfile.maybeCleanupGuestProfile(this)) {
             mSessionRestore = RESTORE_NORMAL;
@@ -420,7 +422,11 @@ abstract public class BrowserApp extends GeckoApp
                 // If we get a gamepad panning MotionEvent while the focus is not on the layerview,
                 // put the focus on the layerview and carry on
                 if (mLayerView != null && !mLayerView.hasFocus() && GamepadUtils.isPanningControl(event)) {
-                    if (mHomePager.isVisible()) {
+                    if (mHomePager == null) {
+                        return false;
+                    }
+
+                    if (isHomePagerVisible()) {
                         mLayerView.requestFocus();
                     } else {
                         mHomePager.requestFocus();
@@ -430,7 +436,6 @@ abstract public class BrowserApp extends GeckoApp
             }
         });
 
-        mHomePager = (HomePager) findViewById(R.id.home_pager);
         mHomePagerContainer = findViewById(R.id.home_pager_container);
 
         mBrowserSearchContainer = findViewById(R.id.search_container);
@@ -842,7 +847,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onMetricsChanged(ImmutableViewportMetrics aMetrics) {
-        if (mHomePager.isVisible() || mBrowserToolbar == null) {
+        if (isHomePagerVisible() || mBrowserToolbar == null) {
             return;
         }
 
@@ -877,7 +882,7 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void onPanZoomStopped() {
-        if (!isDynamicToolbarEnabled() || mHomePager.isVisible()) {
+        if (!isDynamicToolbarEnabled() || isHomePagerVisible()) {
             return;
         }
 
@@ -899,7 +904,7 @@ abstract public class BrowserApp extends GeckoApp
             height = mBrowserToolbar.getHeight();
         }
 
-        if (!isDynamicToolbarEnabled() || mHomePager.isVisible()) {
+        if (!isDynamicToolbarEnabled() || isHomePagerVisible()) {
             // Use aVisibleHeight here so that when the dynamic toolbar is
             // enabled, the padding will animate with the toolbar becoming
             // visible.
@@ -1324,6 +1329,10 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar.cancelEdit();
     }
 
+    private boolean isHomePagerVisible() {
+        return (mHomePager != null && mHomePager.isVisible());
+    }
+
     private void openReadingList() {
         Tabs.getInstance().loadUrl(ABOUT_HOME, Tabs.LOADURL_READING_LIST);
     }
@@ -1432,9 +1441,11 @@ abstract public class BrowserApp extends GeckoApp
 
     void filterEditingMode(String searchTerm, AutocompleteHandler handler) {
         if (TextUtils.isEmpty(searchTerm)) {
+            mHomePager.setVisibility(View.VISIBLE);
             hideBrowserSearch();
         } else {
             showBrowserSearch();
+            mHomePager.setVisibility(View.INVISIBLE);
             mBrowserSearch.filter(searchTerm, handler);
         }
     }
@@ -1444,7 +1455,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void showHomePagerWithAnimator(HomePager.Page page, PropertyAnimator animator) {
-        if (mHomePager.isVisible()) {
+        if (isHomePagerVisible()) {
             return;
         }
 
@@ -1457,6 +1468,10 @@ abstract public class BrowserApp extends GeckoApp
             mLayerView.getLayerMarginsAnimator().showMargins(true);
         }
 
+        if (mHomePager == null) {
+            final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager);
+            mHomePager = (HomePager) homePagerStub.inflate();
+        }
         mHomePager.show(getSupportFragmentManager(), page, animator);
     }
 
@@ -1469,7 +1484,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void hideHomePagerWithAnimation(boolean animate) {
-        if (!mHomePager.isVisible()) {
+        if (!isHomePagerVisible()) {
             return;
         }
 
@@ -1479,9 +1494,10 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         // FIXME: do animation if animate is true
-        mHomePager.hide();
+        if (mHomePager != null) {
+            mHomePager.hide();
+        }
 
-        mBrowserToolbar.setShadowVisibility(true);
         mBrowserToolbar.setNextFocusDownId(R.id.layer_view);
 
         // Refresh toolbar height to possibly restore the toolbar padding
@@ -1815,6 +1831,7 @@ abstract public class BrowserApp extends GeckoApp
 
         // Disable share menuitem for about:, chrome:, file:, and resource: URIs
         String scheme = Uri.parse(url).getScheme();
+        share.setVisible(!GeckoProfile.get(this).inGuestMode());
         share.setEnabled(!(scheme.equals("about") || scheme.equals("chrome") ||
                            scheme.equals("file") || scheme.equals("resource")));
 
@@ -1989,7 +2006,7 @@ abstract public class BrowserApp extends GeckoApp
                     if (itemId == 0) {
                         String args = "";
                         if (type == GuestModeDialog.ENTERING) {
-                            args = "--guest-mode";
+                            args = GUEST_BROWSING_ARG;
                         } else {
                             GeckoProfile.leaveGuestSession(BrowserApp.this);
                         }

@@ -60,7 +60,7 @@ class HashMap
     {
         typedef Key KeyType;
         static const Key &getKey(TableEntry &e) { return e.key; }
-        static void setKey(TableEntry &e, Key &k) { const_cast<Key &>(e.key) = k; }
+        static void setKey(TableEntry &e, Key &k) { HashPolicy::rekey(const_cast<Key &>(e.key), k); }
     };
 
     typedef detail::HashTable<TableEntry, MapHashPolicy, AllocPolicy> Impl;
@@ -138,18 +138,18 @@ class HashMap
     template<typename KeyInput, typename ValueInput>
     bool add(AddPtr &p, const KeyInput &k, const ValueInput &v) {
         Entry e(k, v);
-        return impl.add(p, mozilla::Move(e));
+        return impl.add(p, mozilla::OldMove(e));
     }
 
     bool add(AddPtr &p, const Key &k) {
         Entry e(k, Value());
-        return impl.add(p, mozilla::Move(e));
+        return impl.add(p, mozilla::OldMove(e));
     }
 
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
         Entry e(k, v);
-        return impl.relookupOrAdd(p, k, mozilla::Move(e));
+        return impl.relookupOrAdd(p, k, mozilla::OldMove(e));
     }
 
     // |all()| returns a Range containing |count()| elements. E.g.:
@@ -231,7 +231,7 @@ class HashMap
     template<typename KeyInput, typename ValueInput>
     bool putNew(const KeyInput &k, const ValueInput &v) {
         Entry e(k, v);
-        return impl.putNew(k, mozilla::Move(e));
+        return impl.putNew(k, mozilla::OldMove(e));
     }
 
     // Add (k,defaultValue) if |k| is not found. Return a false-y Ptr on oom.
@@ -253,13 +253,13 @@ class HashMap
     void rekey(const Lookup &old_key, const Key &new_key) {
         if (old_key != new_key) {
             if (Ptr p = lookup(old_key))
-                impl.rekey(p, new_key, new_key);
+                impl.rekeyAndMaybeRehash(p, new_key, new_key);
         }
     }
 
     // HashMap is movable
-    HashMap(mozilla::MoveRef<HashMap> rhs) : impl(mozilla::Move(rhs->impl)) {}
-    void operator=(mozilla::MoveRef<HashMap> rhs) { impl = mozilla::Move(rhs->impl); }
+    HashMap(mozilla::MoveRef<HashMap> rhs) : impl(mozilla::OldMove(rhs->impl)) {}
+    void operator=(mozilla::MoveRef<HashMap> rhs) { impl = mozilla::OldMove(rhs->impl); }
 
   private:
     // HashMap is not copyable or assignable
@@ -295,7 +295,7 @@ class HashSet
     {
         typedef T KeyType;
         static const KeyType &getKey(const T &t) { return t; }
-        static void setKey(T &t, KeyType &k) { t = k; }
+        static void setKey(T &t, KeyType &k) { HashPolicy::rekey(t, k); }
     };
 
     typedef detail::HashTable<const T, SetOps, AllocPolicy> Impl;
@@ -452,13 +452,13 @@ class HashSet
     void rekey(const Lookup &old_key, const T &new_key) {
         if (old_key != new_key) {
             if (Ptr p = lookup(old_key))
-                impl.rekey(p, new_key, new_key);
+                impl.rekeyAndMaybeRehash(p, new_key, new_key);
         }
     }
 
     // HashSet is movable
-    HashSet(mozilla::MoveRef<HashSet> rhs) : impl(mozilla::Move(rhs->impl)) {}
-    void operator=(mozilla::MoveRef<HashSet> rhs) { impl = mozilla::Move(rhs->impl); }
+    HashSet(mozilla::MoveRef<HashSet> rhs) : impl(mozilla::OldMove(rhs->impl)) {}
+    void operator=(mozilla::MoveRef<HashSet> rhs) { impl = mozilla::OldMove(rhs->impl); }
 
   private:
     // HashSet is not copyable or assignable
@@ -517,6 +517,9 @@ struct PointerHasher
         JS_ASSERT(!JS::IsPoisonedPtr(l));
         return k == l;
     }
+    static void rekey(Key &k, const Key& newKey) {
+        k = newKey;
+    }
 };
 
 // Default hash policy: just use the 'lookup' value. This of course only
@@ -534,6 +537,9 @@ struct DefaultHasher
     static bool match(const Key &k, const Lookup &l) {
         // Use builtin or overloaded operator==.
         return k == l;
+    }
+    static void rekey(Key &k, const Key& newKey) {
+        k = newKey;
     }
 };
 
@@ -579,7 +585,7 @@ class HashMapEntry
     HashMapEntry(const KeyInput &k, const ValueInput &v) : key(k), value(v) {}
 
     HashMapEntry(mozilla::MoveRef<HashMapEntry> rhs)
-      : key(mozilla::Move(rhs->key)), value(mozilla::Move(rhs->value)) { }
+      : key(mozilla::OldMove(rhs->key)), value(mozilla::OldMove(rhs->value)) { }
 
     typedef Key KeyType;
     typedef Value ValueType;
@@ -808,7 +814,7 @@ class HashTable : private AllocPolicy
         // a new key at the new Lookup position.  |front()| is invalid after
         // this operation until the next call to |popFront()|.
         void rekeyFront(const Lookup &l, const Key &k) {
-            table.rekey(*this->cur, l, k);
+            table.rekeyWithoutRehash(*this->cur, l, k);
             rekeyed = true;
             this->validEntry = false;
         }
@@ -1163,7 +1169,7 @@ class HashTable : private AllocPolicy
         for (Entry *src = oldTable, *end = src + oldCap; src < end; ++src) {
             if (src->isLive()) {
                 HashNumber hn = src->getKeyHash();
-                findFreeEntry(hn).setLive(hn, mozilla::Move(src->get()));
+                findFreeEntry(hn).setLive(hn, mozilla::OldMove(src->get()));
                 src->destroy();
             }
         }
@@ -1456,15 +1462,21 @@ class HashTable : private AllocPolicy
         checkUnderloaded();
     }
 
-    void rekey(Ptr p, const Lookup &l, const Key &k)
+    void rekeyWithoutRehash(Ptr p, const Lookup &l, const Key &k)
     {
         JS_ASSERT(table);
         mozilla::ReentrancyGuard g(*this);
         JS_ASSERT(p.found());
-        typename HashTableEntry<T>::NonConstT t(mozilla::Move(*p));
+        typename HashTableEntry<T>::NonConstT t(mozilla::OldMove(*p));
         HashPolicy::setKey(t, const_cast<Key &>(k));
         remove(*p.entry_);
-        putNewInfallible(l, mozilla::Move(t));
+        putNewInfallible(l, mozilla::OldMove(t));
+    }
+
+    void rekeyAndMaybeRehash(Ptr p, const Lookup &l, const Key &k)
+    {
+        rekeyWithoutRehash(p, l, k);
+        checkOverRemoved();
     }
 
 #undef METER

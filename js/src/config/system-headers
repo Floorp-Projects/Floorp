@@ -1059,20 +1059,8 @@ hunspell.hxx
 #if MOZ_NATIVE_BZ2==1
 bzlib.h
 #endif
-#if MOZ_PLATFORM_MAEMO==5
-hildon-uri.h
-hildon-mime.h
-hildon-file-chooser-dialog.h
-libosso.h
-osso-mem.h
-#endif
 #ifdef MOZ_ENABLE_GIO
 gio/gio.h
-#endif
-#ifdef MOZ_ENABLE_LIBCONIC
-conic/conicconnection.h
-conic/conicconnectionevent.h
-conic/conicstatisticsevent.h
 #endif
 #if MOZ_NATIVE_LIBEVENT==1
 event.h
@@ -1081,9 +1069,6 @@ sys/event.h
 #endif
 #ifdef MOZ_ENABLE_LIBPROXY
 proxy.h
-#endif
-#if MOZ_PLATFORM_MAEMO==6
-contentaction/contentaction.h
 #endif
 #ifdef MOZ_ENABLE_CONTENTMANAGER
 SelectSingleContentItemPage.h
@@ -1132,3 +1117,16 @@ kvm.h
 spawn.h
 err.h
 xlocale.h
+#if MOZ_NATIVE_ICU==1
+unicode/locid.h
+unicode/numsys.h
+unicode/ucal.h
+unicode/uclean.h
+unicode/ucol.h
+unicode/udat.h
+unicode/udatpg.h
+unicode/uenum.h
+unicode/unum.h
+unicode/ustring.h
+unicode/utypes.h
+#endif

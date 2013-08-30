@@ -9,12 +9,13 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "builtin/TypeRepresentation.h"
 #include "gc/Zone.h"
 #include "vm/GlobalObject.h"
 
 namespace js {
 
-namespace ion {
+namespace jit {
 class IonCompartment;
 }
 
@@ -83,10 +84,8 @@ struct CrossCompartmentKey
       : kind(kind), debugger(dbg), wrapped(wrapped) {}
 };
 
-struct WrapperHasher
+struct WrapperHasher : public DefaultHasher<CrossCompartmentKey>
 {
-    typedef CrossCompartmentKey Lookup;
-
     static HashNumber hash(const CrossCompartmentKey &key) {
         JS_ASSERT(!IsPoisonedPtr(key.wrapped));
         return uint32_t(uintptr_t(key.wrapped)) | uint32_t(key.kind);
@@ -209,6 +208,9 @@ struct JSCompartment
 
     js::RegExpCompartment        regExps;
 
+    /* Set of all currently living type representations. */
+    js::TypeRepresentationSet    typeReprs;
+
   private:
     void sizeOfTypeInferenceData(JS::TypeInferenceSizes *stats, mozilla::MallocSizeOf mallocSizeOf);
 
@@ -237,8 +239,6 @@ struct JSCompartment
     js::types::TypeObjectSet     newTypeObjects;
     js::types::TypeObjectSet     lazyTypeObjects;
     void sweepNewTypeObjectTable(js::types::TypeObjectSet &table);
-
-    js::types::TypeObject *getLazyType(JSContext *cx, js::Class *clasp, js::TaggedProto proto);
 
     /*
      * Hash table of all manually call site-cloned functions from within
@@ -281,66 +281,8 @@ struct JSCompartment
     void markCrossCompartmentWrappers(JSTracer *trc);
     void markAllCrossCompartmentWrappers(JSTracer *trc);
 
-    bool wrap(JSContext *cx, JS::MutableHandleValue vp,
-              JS::HandleObject existing = js::NullPtr())
-    {
-        JS_ASSERT_IF(existing, vp.isObject());
-
-        /* Only GC things have to be wrapped or copied. */
-        if (!vp.isMarkable())
-            return true;
-
-        /* Handle strings. */
-        if (vp.isString()) {
-            JSString *str = vp.toString();
-            if (!wrap(cx, &str))
-                return false;
-            vp.setString(str);
-            return true;
-        }
-
-        JS_ASSERT(vp.isObject());
-
-        /*
-         * All that's left are objects.
-         *
-         * Object wrapping isn't the fastest thing in the world, in part because
-         * we have to unwrap and invoke the prewrap hook to find the identity
-         * object before we even start checking the cache. Neither of these
-         * operations are needed in the common case, where we're just wrapping
-         * a plain JS object from the wrappee's side of the membrane to the
-         * wrapper's side.
-         *
-         * To optimize this, we note that the cache should only ever contain
-         * identity objects - that is to say, objects that serve as the
-         * canonical representation for a unique object identity observable by
-         * script. Unwrap and prewrap are both steps that we take to get to the
-         * identity of an incoming objects, and as such, they shuld never map
-         * one identity object to another object. This means that we can safely
-         * check the cache immediately, and only risk false negatives. Do this
-         * in opt builds, and do both in debug builds so that we can assert
-         * that we get the same answer.
-         */
-#ifdef DEBUG
-        JS::RootedObject cacheResult(cx);
-#endif
-        JS::RootedValue v(cx, vp);
-        if (js::WrapperMap::Ptr p = crossCompartmentWrappers.lookup(v)) {
-#ifdef DEBUG
-            cacheResult = &p->value.get().toObject();
-#else
-            vp.set(p->value);
-            return true;
-#endif
-        }
-
-        JS::RootedObject obj(cx, &vp.toObject());
-        if (!wrap(cx, &obj, existing))
-            return false;
-        vp.setObject(*obj);
-        JS_ASSERT_IF(cacheResult, obj == cacheResult);
-        return true;
-    }
+    inline bool wrap(JSContext *cx, JS::MutableHandleValue vp,
+                     JS::HandleObject existing = js::NullPtr());
 
     bool wrap(JSContext *cx, JSString **strp);
     bool wrap(JSContext *cx, js::HeapPtrString *strp);
@@ -446,11 +388,11 @@ struct JSCompartment
 
 #ifdef JS_ION
   private:
-    js::ion::IonCompartment *ionCompartment_;
+    js::jit::IonCompartment *ionCompartment_;
 
   public:
     bool ensureIonCompartmentExists(JSContext *cx);
-    js::ion::IonCompartment *ionCompartment() {
+    js::jit::IonCompartment *ionCompartment() {
         return ionCompartment_;
     }
 #endif

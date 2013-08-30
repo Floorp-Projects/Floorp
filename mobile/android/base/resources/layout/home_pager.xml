@@ -6,22 +6,20 @@
 <!-- This file is used to include the home pager in gecko app
      layout based on screen size -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-       xmlns:gecko="http://schemas.android.com/apk/res-auto">
+<org.mozilla.gecko.home.HomePager xmlns:android="http://schemas.android.com/apk/res/android"
+                                  xmlns:gecko="http://schemas.android.com/apk/res-auto"
+                                  android:id="@+id/home_pager"
+                                  android:layout_width="fill_parent"
+                                  android:layout_height="fill_parent"
+                                  android:background="@android:color/white"
+                                  android:visibility="gone">
 
-    <org.mozilla.gecko.home.HomePager android:id="@+id/home_pager"
-                                      android:layout_width="fill_parent"
-                                      android:layout_height="fill_parent"
-                                      android:background="@android:color/white"
-                                      android:visibility="gone">
+    <org.mozilla.gecko.home.HomePagerTabStrip android:layout_width="fill_parent"
+                                              android:layout_height="32dip"
+                                              android:layout_gravity="top"
+                                              android:gravity="bottom"
+                                              android:background="@color/background_light"
+                                              gecko:tabIndicatorColor="@color/text_color_highlight"
+                                              android:textAppearance="@style/TextAppearance.Widget.HomePagerTabStrip"/>
 
-        <org.mozilla.gecko.home.HomePagerTabStrip android:layout_width="fill_parent"
-                                                  android:layout_height="32dip"
-                                                  android:layout_gravity="top"
-                                                  android:gravity="bottom"
-                                                  android:background="@color/background_light"
-                                                  gecko:tabIndicatorColor="@color/text_color_highlight"
-                                                  android:textAppearance="@style/TextAppearance.Widget.HomePagerTabStrip"/>
-
-    </org.mozilla.gecko.home.HomePager>
-</merge>
+</org.mozilla.gecko.home.HomePager>

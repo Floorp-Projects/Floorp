@@ -11,8 +11,8 @@
 #include "nsStyleSet.h"
 #include "nsDisplayList.h"
 #include "nsITheme.h"
-#include "nsThemeConstants.h"
 #include "nsEventStates.h"
+#include "nsFrame.h"
 #include "mozilla/dom/Element.h"
 
 #define ACTIVE   "active"

@@ -117,7 +117,7 @@
 #include "nsISHistoryInternal.h"
 #include "nsIPrincipal.h"
 #include "nsIFileURL.h"
-#include "nsIHistoryEntry.h"
+#include "nsISHEntry.h"
 #include "nsISHistoryListener.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPromptFactory.h"
@@ -761,6 +761,7 @@ nsDocShell::nsDocShell():
     mAllowMedia(true),
     mAllowDNSPrefetch(true),
     mAllowWindowControl(true),
+    mAllowContentRetargeting(true),
     mCreatingDocument(false),
     mUseErrorPages(false),
     mObserveErrorPages(true),
@@ -2347,6 +2348,20 @@ NS_IMETHODIMP nsDocShell::SetAllowWindowControl(bool aAllowWindowControl)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetAllowContentRetargeting(bool* aAllowContentRetargeting)
+{
+    *aAllowContentRetargeting = mAllowContentRetargeting;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetAllowContentRetargeting(bool aAllowContentRetargeting)
+{
+    mAllowContentRetargeting = aAllowContentRetargeting;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
 {
     NS_ENSURE_ARG_POINTER(aFullscreenAllowed);
@@ -2869,6 +2884,8 @@ nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
         {
             SetAllowWindowControl(value);
         }
+        SetAllowContentRetargeting(
+            parentAsDocShell->GetAllowContentRetargeting());
         if (NS_SUCCEEDED(parentAsDocShell->GetIsActive(&value)))
         {
             SetIsActive(value);
@@ -3766,7 +3783,7 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
          * a new entry.
          */
         int32_t index = -1;
-        nsCOMPtr<nsIHistoryEntry> currentHE;
+        nsCOMPtr<nsISHEntry> currentHE;
         mSessionHistory->GetIndex(&index);
         if (index < 0)
             return NS_ERROR_FAILURE;
@@ -7783,6 +7800,8 @@ nsDocShell::RestoreFromHistory()
         bool allowDNSPrefetch;
         childShell->GetAllowDNSPrefetch(&allowDNSPrefetch);
 
+        bool allowContentRetargeting = childShell->GetAllowContentRetargeting();
+
         // this.AddChild(child) calls child.SetDocLoaderParent(this), meaning
         // that the child inherits our state. Among other things, this means
         // that the child inherits our mIsActive and mInPrivateBrowsing, which
@@ -7796,6 +7815,7 @@ nsDocShell::RestoreFromHistory()
         childShell->SetAllowImages(allowImages);
         childShell->SetAllowMedia(allowMedia);
         childShell->SetAllowDNSPrefetch(allowDNSPrefetch);
+        childShell->SetAllowContentRetargeting(allowContentRetargeting);
 
         rv = childShell->BeginRestore(nullptr, false);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -8029,11 +8049,8 @@ nsDocShell::CreateContentViewer(const char *aContentType,
             mSessionHistory->GetRequestedIndex(&idx);
             if (idx == -1)
                 mSessionHistory->GetIndex(&idx);
-
-            nsCOMPtr<nsIHistoryEntry> entry;
             mSessionHistory->GetEntryAtIndex(idx, false,
-                                             getter_AddRefs(entry));
-            mLSHE = do_QueryInterface(entry);
+                                             getter_AddRefs(mLSHE));
         }
 
         mLoadType = LOAD_ERROR_PAGE;
@@ -9135,13 +9152,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             if (mSessionHistory) {
                 int32_t index = -1;
                 mSessionHistory->GetIndex(&index);
-                nsCOMPtr<nsIHistoryEntry> hEntry;
+                nsCOMPtr<nsISHEntry> shEntry;
                 mSessionHistory->GetEntryAtIndex(index, false,
-                                                 getter_AddRefs(hEntry));
-                NS_ENSURE_TRUE(hEntry, NS_ERROR_FAILURE);
-                nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(hEntry));
-                if (shEntry)
-                    shEntry->SetTitle(mTitle);
+                                                 getter_AddRefs(shEntry));
+                NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
+                shEntry->SetTitle(mTitle);
             }
 
             /* Set the title for the Global History entry for this anchor url.
@@ -9863,9 +9878,14 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
 
     (void) aChannel->SetLoadFlags(loadFlags);
 
-    rv = aURILoader->OpenURI(aChannel,
-                             (mLoadType == LOAD_LINK),
-                             this);
+    uint32_t openFlags = 0;
+    if (mLoadType == LOAD_LINK) {
+        openFlags |= nsIURILoader::IS_CONTENT_PREFERRED;
+    }
+    if (!mAllowContentRetargeting) {
+        openFlags |= nsIURILoader::DONT_RETARGET;
+    }
+    rv = aURILoader->OpenURI(aChannel, openFlags, this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

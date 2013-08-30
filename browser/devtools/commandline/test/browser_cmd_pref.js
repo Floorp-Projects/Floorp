@@ -46,7 +46,7 @@ let tests = {
         setup: 'pref',
         check: {
           input:  'pref',
-          hints:      '',
+          hints:      ' reset',
           markup: 'IIII',
           status: 'ERROR'
         },

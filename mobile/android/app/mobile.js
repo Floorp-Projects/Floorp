@@ -223,7 +223,6 @@ pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.flashBar", 1);
 pref("accessibility.typeaheadfind.linksonly", false);
 pref("accessibility.typeaheadfind.casesensitive", 0);
-// zoom key(F7) conflicts with caret browsing on maemo
 pref("accessibility.browsewithcaret_shortcut.enabled", false);
 
 // Whether the character encoding menu is under the main Firefox button. This
@@ -394,9 +393,6 @@ pref("app.geo.reportdata", 0);
 //pref("content.sink.pending_event_mode", 0);
 //pref("content.sink.perf_deflect_count", 1000000);
 //pref("content.sink.perf_parse_time", 50000000);
-
-// Disable methodjit in chrome to save memory
-pref("javascript.options.methodjit.chrome",  false);
 
 // Disable the JS engine's gc on memory pressure, since we do one in the mobile
 // browser (bug 669346).
@@ -655,6 +651,8 @@ pref("ui.scrolling.overscroll_snap_limit", -1);
 pref("ui.scrolling.min_scrollable_distance", -1);
 // The axis lock mode for panning behaviour - set between standard, free and sticky
 pref("ui.scrolling.axis_lock_mode", "standard");
+// Negate scrollY, true will make the mouse scroll wheel move the screen the same direction as with most desktops or laptops.
+pref("ui.scrolling.negate_wheel_scrollY", true);
 
 
 // Enable accessibility mode if platform accessibility is enabled.

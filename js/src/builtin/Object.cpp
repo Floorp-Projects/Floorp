@@ -87,8 +87,8 @@ obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
 }
 
 #if JS_HAS_TOSOURCE
-static bool
-obj_toSource(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::obj_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_CHECK_RECURSION(cx, return false);
@@ -341,7 +341,7 @@ obj_valueOf(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-#if OLD_GETTER_SETTER_METHODS
+#if JS_OLD_GETTER_SETTER_METHODS
 
 enum DefineType { Getter, Setter };
 
@@ -479,7 +479,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
     }
     return true;
 }
-#endif /* OLD_GETTER_SETTER_METHODS */
+#endif /* JS_OLD_GETTER_SETTER_METHODS */
 
 /* ES5 15.2.3.2. */
 bool
@@ -977,7 +977,7 @@ const JSFunctionSpec js::object_methods[] = {
     JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0),
     JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
     JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0),
-#if OLD_GETTER_SETTER_METHODS
+#if JS_OLD_GETTER_SETTER_METHODS
     JS_FN(js_defineGetter_str,         js::obj_defineGetter,        2,0),
     JS_FN(js_defineSetter_str,         js::obj_defineSetter,        2,0),
     JS_FN(js_lookupGetter_str,         obj_lookupGetter,            1,0),

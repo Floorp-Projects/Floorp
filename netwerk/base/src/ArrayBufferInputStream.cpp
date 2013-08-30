@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "ArrayBufferInputStream.h"
 #include "nsStreamUtils.h"
+#include "jsapi.h"
 #include "jsfriendapi.h"
 
 NS_IMPL_ISUPPORTS2(ArrayBufferInputStream, nsIArrayBufferInputStream, nsIInputStream);

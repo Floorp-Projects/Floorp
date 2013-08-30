@@ -347,9 +347,6 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
   else {
     return NS_ERROR_FAILURE;
   }
-#elif defined(MOZ_PLATFORM_MAEMO)
-  nsresult rv = NS_GetSpecialDirectory(NS_UNIX_XDG_DOCUMENTS_DIR, getter_AddRefs(dir));
-  NS_ENSURE_SUCCESS(rv, rv);
 #elif defined(XP_WIN)
   // On metro we want to be able to search opened files and the temp directory
   // is exlcuded in searches.
@@ -397,6 +394,7 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { TEXT_CSS, "css" },
   { IMAGE_JPEG, "jpeg" },
   { IMAGE_JPEG, "jpg" },
+  { IMAGE_SVG_XML, "svg" },
   { TEXT_HTML, "html" },
   { TEXT_HTML, "htm" },
   { APPLICATION_XPINSTALL, "xpi" },
@@ -480,7 +478,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { IMAGE_PNG, "png", "PNG Image" },
   { IMAGE_TIFF, "tiff,tif", "TIFF Image" },
   { IMAGE_XBM, "xbm", "XBM Image" },
-  { "image/svg+xml", "svg", "Scalable Vector Graphics" },
+  { IMAGE_SVG_XML, "svg", "Scalable Vector Graphics" },
   { MESSAGE_RFC822, "eml", "RFC-822 data" },
   { TEXT_PLAIN, "txt,text", "Text File" },
   { TEXT_HTML, "html,htm,shtml,ehtml", "HyperText Markup Language" },

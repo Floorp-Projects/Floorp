@@ -33,9 +33,13 @@ VCMProcessTimer::Period() const
 uint32_t
 VCMProcessTimer::TimeUntilProcess() const
 {
-    return static_cast<uint32_t>(
-        VCM_MAX(static_cast<int64_t>(_periodMs) -
-                (_clock->TimeInMilliseconds() - _latestMs), 0));
+    const int64_t time_since_process = _clock->TimeInMilliseconds() -
+        static_cast<int64_t>(_latestMs);
+    const int64_t time_until_process = static_cast<int64_t>(_periodMs) -
+        time_since_process;
+    if (time_until_process < 0)
+      return 0;
+    return time_until_process;
 }
 
 void
@@ -321,26 +325,22 @@ VideoCodingModuleImpl::RegisterSendCodec(const VideoCodec* sendCodec,
                                          uint32_t maxPayloadSize)
 {
     CriticalSectionScoped cs(_sendCritSect);
-    if (sendCodec == NULL)
-    {
+    if (sendCodec == NULL) {
         return VCM_PARAMETER_ERROR;
     }
-    bool ret = _codecDataBase.RegisterSendCodec(sendCodec, numberOfCores,
-                                                maxPayloadSize);
-    if (!ret)
-    {
-        return -1;
-    }
 
-    _encoder = _codecDataBase.GetEncoder(sendCodec, &_encodedFrameCallback);
-    if (_encoder == NULL)
-    {
+    bool ret = _codecDataBase.SetSendCodec(sendCodec, numberOfCores,
+                                           maxPayloadSize,
+                                           &_encodedFrameCallback);
+    if (!ret) {
         WEBRTC_TRACE(webrtc::kTraceError,
                      webrtc::kTraceVideoCoding,
                      VCMId(_id),
                      "Failed to initialize encoder");
         return VCM_CODEC_ERROR;
     }
+
+    _encoder = _codecDataBase.GetEncoder();
     _sendCodecType = sendCodec->codecType;
     int numLayers = (_sendCodecType != kVideoCodecVP8) ? 1 :
                         sendCodec->codecSpecific.VP8.numberOfTemporalLayers;
@@ -1244,9 +1244,14 @@ VideoCodingModuleImpl::IncomingPacket(const uint8_t* incomingPayload,
                                     uint32_t payloadLength,
                                     const WebRtcRTPHeader& rtpInfo)
 {
-    TRACE_EVENT2("webrtc", "VCM::Packet",
-                 "seqnum", rtpInfo.header.sequenceNumber,
-                 "type", rtpInfo.frameType);
+    if (rtpInfo.frameType == kVideoFrameKey) {
+      TRACE_EVENT1("webrtc", "VCM::PacketKeyFrame",
+                   "seqnum", rtpInfo.header.sequenceNumber);
+    } else {
+      TRACE_EVENT2("webrtc", "VCM::Packet",
+                   "seqnum", rtpInfo.header.sequenceNumber,
+                   "type", rtpInfo.frameType);
+    }
     if (incomingPayload == NULL) {
       // The jitter buffer doesn't handle non-zero payload lengths for packets
       // without payload.
@@ -1287,7 +1292,7 @@ VideoCodingModuleImpl::IncomingPacket(const uint8_t* incomingPayload,
 int32_t
 VideoCodingModuleImpl::SetMinimumPlayoutDelay(uint32_t minPlayoutDelayMs)
 {
-    _timing.SetMinimumTotalDelay(minPlayoutDelayMs);
+    _timing.set_min_playout_delay(minPlayoutDelayMs);
     return VCM_OK;
 }
 
@@ -1296,7 +1301,7 @@ VideoCodingModuleImpl::SetMinimumPlayoutDelay(uint32_t minPlayoutDelayMs)
 int32_t
 VideoCodingModuleImpl::SetRenderDelay(uint32_t timeMS)
 {
-    _timing.SetRenderDelay(timeMS);
+    _timing.set_render_delay(timeMS);
     return VCM_OK;
 }
 
@@ -1452,15 +1457,17 @@ int VideoCodingModuleImpl::SetReceiverRobustnessMode(
   return VCM_OK;
 }
 
-void VideoCodingModuleImpl::SetNackSettings(
-    size_t max_nack_list_size, int max_packet_age_to_nack) {
+void VideoCodingModuleImpl::SetNackSettings(size_t max_nack_list_size,
+                                            int max_packet_age_to_nack,
+                                            int max_incomplete_time_ms) {
   if (max_nack_list_size != 0) {
     CriticalSectionScoped cs(_receiveCritSect);
     max_nack_list_size_ = max_nack_list_size;
   }
-  _receiver.SetNackSettings(max_nack_list_size, max_packet_age_to_nack);
-  _dualReceiver.SetNackSettings(max_nack_list_size,
-                                max_packet_age_to_nack);
+  _receiver.SetNackSettings(max_nack_list_size, max_packet_age_to_nack,
+                            max_incomplete_time_ms);
+  _dualReceiver.SetNackSettings(max_nack_list_size, max_packet_age_to_nack,
+                                max_incomplete_time_ms);
 }
 
 int VideoCodingModuleImpl::SetMinReceiverDelay(int desired_delay_ms) {

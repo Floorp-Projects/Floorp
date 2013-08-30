@@ -109,6 +109,77 @@ helpers.addTab = function(url, callback, options) {
   return deferred.promise;
 };
 
+helpers.openTab = function(url, options) {
+  var deferred = promise.defer();
+
+  waitForExplicitFinish();
+
+  options = options || {};
+  options.chromeWindow = options.chromeWindow || window;
+  options.isFirefox = true;
+
+  var tabbrowser = options.chromeWindow.gBrowser;
+  options.tab = tabbrowser.addTab();
+  tabbrowser.selectedTab = options.tab;
+  options.browser = tabbrowser.getBrowserForTab(options.tab);
+  options.target = TargetFactory.forTab(options.tab);
+
+  options.browser.contentWindow.location = url;
+
+  var onPageLoad = function() {
+    options.browser.removeEventListener("load", onPageLoad, true);
+    options.document = options.browser.contentDocument;
+    options.window = options.document.defaultView;
+
+    deferred.resolve(options);
+  };
+
+  options.browser.addEventListener("load", onPageLoad, true);
+
+  return deferred.promise;
+};
+
+helpers.closeTab = function(options) {
+  options.chromeWindow.gBrowser.removeTab(options.tab);
+
+  delete options.window;
+  delete options.document;
+
+  delete options.target;
+  delete options.browser;
+  delete options.tab;
+
+  delete options.chromeWindow;
+  delete options.isFirefox;
+
+  return promise.resolve(undefined);
+};
+
+helpers.openToolbar = function(options) {
+  var deferred = promise.defer();
+
+  options.chromeWindow.DeveloperToolbar.show(true, function() {
+    options.display = options.chromeWindow.DeveloperToolbar.display;
+
+    deferred.resolve(options);
+  });
+
+  return deferred.promise;
+};
+
+helpers.closeToolbar = function(options) {
+  options.chromeWindow.DeveloperToolbar.hide();
+  delete options.display;
+
+  return promise.resolve(undefined);
+};
+
+helpers.handleError = function(ex) {
+  console.error(ex);
+  ok(false, ex);
+  finish();
+};
+
 /**
  * Warning: For use with Firefox Mochitests only.
  *
@@ -133,6 +204,7 @@ helpers.addTabWithToolbar = function(url, callback, options) {
       var reply = callback(innerOptions);
       promise.resolve(reply).then(cleanUp, function(error) {
         ok(false, error);
+        console.error(error);
         cleanUp();
       });
     });
@@ -237,7 +309,7 @@ helpers._actual = {
     var cursor = options.display.inputter.element.selectionStart;
     var statusMarkup = options.display.requisition.getInputStatusMarkup(cursor);
     return statusMarkup.map(function(s) {
-      return Array(s.string.length + 1).join(s.status.toString()[0]);
+      return new Array(s.string.length + 1).join(s.status.toString()[0]);
     }).join('');
   },
 
@@ -250,7 +322,7 @@ helpers._actual = {
   },
 
   status: function(options) {
-    return options.display.requisition.getStatus().toString();
+    return options.display.requisition.status.toString();
   },
 
   predictions: function(options) {
@@ -310,7 +382,7 @@ helpers._createDebugCheck = function(options) {
   var command = requisition.commandAssignment.value;
   var cursor = helpers._actual.cursor(options);
   var input = helpers._actual.input(options);
-  var padding = Array(input.length + 1).join(' ');
+  var padding = new Array(input.length + 1).join(' ');
 
   var hintsPromise = helpers._actual.hints(options);
   var predictionsPromise = helpers._actual.predictions(options);
@@ -368,7 +440,7 @@ helpers._createDebugCheck = function(options) {
 
         output += 'arg: \'' + assignment.arg + '\', ';
         output += 'status: \'' + assignment.getStatus().toString() + '\', ';
-        output += 'message: \'' + assignment.getMessage() + '\'';
+        output += 'message: \'' + assignment.message + '\'';
         output += ' },\n';
       });
 
@@ -447,8 +519,8 @@ var ACTIONS = {
 };
 
 /**
- * Used in helpers.setInput to cut an input string like "blah<TAB>foo<UP>" into
- * an array like [ "blah", "<TAB>", "foo", "<UP>" ].
+ * Used in helpers.setInput to cut an input string like 'blah<TAB>foo<UP>' into
+ * an array like [ 'blah', '<TAB>', 'foo', '<UP>' ].
  * When using this RegExp, you also need to filter out the blank strings.
  */
 var CHUNKER = /([^<]*)(<[A-Z]+>)/;
@@ -460,7 +532,7 @@ var CHUNKER = /([^<]*)(<[A-Z]+>)/;
  */
 helpers.setInput = function(options, typed, cursor) {
   checkOptions(options);
-  var inputPromise = undefined;
+  var inputPromise;
   var inputter = options.display.inputter;
   // We try to measure average keypress time, but setInput can simulate
   // several, so we try to keep track of how many
@@ -474,7 +546,7 @@ helpers.setInput = function(options, typed, cursor) {
     // Cut the input up into input strings separated by '<KEY>' tokens. The
     // CHUNKS RegExp leaves blanks so we filter them out.
     var chunks = typed.split(CHUNKER).filter(function(s) {
-      return s != '';
+      return s !== '';
     });
     chunkLen = chunks.length + 1;
 
@@ -689,11 +761,11 @@ helpers._check = function(options, name, checks) {
 
       if ('message' in check) {
         if (typeof check.message.test === 'function') {
-          assert.ok(check.message.test(assignment.getMessage()),
+          assert.ok(check.message.test(assignment.message),
                     'arg.' + paramName + '.message' + suffix);
         }
         else {
-          assert.is(assignment.getMessage(),
+          assert.is(assignment.message,
                     check.message,
                     'arg.' + paramName + '.message' + suffix);
         }
@@ -715,6 +787,7 @@ helpers._check = function(options, name, checks) {
  * @return A promise which resolves to undefined when the checks are complete
  */
 helpers._exec = function(options, name, expected) {
+  var requisition = options.display.requisition;
   if (expected == null) {
     return promise.resolve({});
   }
@@ -724,9 +797,86 @@ helpers._exec = function(options, name, expected) {
     cli.logErrors = false;
   }
 
-  var output;
+  var completed = true;
+
   try {
-    output = options.display.requisition.exec({ hidden: true });
+    return requisition.exec({ hidden: true }).then(function(output) {
+      if ('completed' in expected) {
+        assert.is(completed,
+                  expected.completed,
+                  'output.completed for: ' + name);
+      }
+
+      if ('type' in expected) {
+        assert.is(output.type,
+                  expected.type,
+                  'output.type for: ' + name);
+      }
+
+      if ('error' in expected) {
+        assert.is(output.error,
+                  expected.error,
+                  'output.error for: ' + name);
+      }
+
+      if (!options.window) {
+        assert.ok(false, 'Missing options.window in \'' + name + '\'. ' +
+                         'Are you assming that helpers.audit is synchronous? ' +
+                         'It returns a promise');
+        return { output: output };
+      }
+
+      if (!options.window.document.createElement) {
+        assert.log('skipping output tests (missing doc.createElement) for ' + name);
+        return { output: output };
+      }
+
+      if (!('output' in expected)) {
+        return { output: output };
+      }
+
+      var context = requisition.conversionContext;
+      return output.convert('dom', context).then(function(node) {
+        var actualOutput = node.textContent.trim();
+
+        var doTest = function(match, against) {
+          // Only log the real textContent if the test fails
+          if (against.match(match) != null) {
+            assert.ok(true, 'html output for \'' + name + '\' ' +
+                            'should match /' + match.source || match + '/');
+          } else {
+            assert.ok(false, 'html output for \'' + name + '\' ' +
+                             'should match /' + match.source || match + '/. ' +
+                             'Actual textContent: "' + against + '"');
+          }
+        };
+
+        if (typeof expected.output === 'string') {
+          assert.is(actualOutput,
+                    expected.output,
+                    'html output for ' + name);
+        }
+        else if (Array.isArray(expected.output)) {
+          expected.output.forEach(function(match) {
+            doTest(match, actualOutput);
+          });
+        }
+        else {
+          doTest(expected.output, actualOutput);
+        }
+
+        if (expected.error) {
+          cli.logErrors = origLogErrors;
+        }
+        return { output: output, text: actualOutput };
+      });
+    }.bind(this)).then(function(data) {
+      if (expected.error) {
+        cli.logErrors = origLogErrors;
+      }
+
+      return data;
+    });
   }
   catch (ex) {
     assert.ok(false, 'Failure executing \'' + name + '\': ' + ex);
@@ -737,81 +887,9 @@ helpers._exec = function(options, name, expected) {
     }
     return promise.resolve({});
   }
-
-  if ('completed' in expected) {
-    assert.is(output.completed,
-              expected.completed,
-              'output.completed false for: ' + name);
+  finally {
+    completed = false;
   }
-
-  if (!options.window.document.createElement) {
-    assert.log('skipping output tests (missing doc.createElement) for ' + name);
-
-    if (expected.error) {
-      cli.logErrors = origLogErrors;
-    }
-    return promise.resolve({ output: output });
-  }
-
-  if (!('output' in expected)) {
-    if (expected.error) {
-      cli.logErrors = origLogErrors;
-    }
-    return promise.resolve({ output: output });
-  }
-
-  var checkOutput = function() {
-    if ('type' in expected) {
-      assert.is(output.type,
-                expected.type,
-                'output.type for: ' + name);
-    }
-
-    if ('error' in expected) {
-      assert.is(output.error,
-                expected.error,
-                'output.error for: ' + name);
-    }
-
-    var conversionContext = options.display.requisition.conversionContext;
-    var convertPromise = converters.convert(output.data, output.type, 'dom',
-                                            conversionContext);
-    return convertPromise.then(function(node) {
-      var actualOutput = node.textContent.trim();
-
-      var doTest = function(match, against) {
-        if (match.test(against)) {
-          assert.ok(true, 'html output for ' + name + ' should match /' +
-                          match.source + '/');
-        } else {
-          assert.ok(false, 'html output for ' + name + ' should match /' +
-                           match.source +
-                           '/. Actual textContent: "' + against + '"');
-        }
-      };
-
-      if (typeof expected.output === 'string') {
-        assert.is(actualOutput,
-                  expected.output,
-                  'html output for ' + name);
-      }
-      else if (Array.isArray(expected.output)) {
-        expected.output.forEach(function(match) {
-          doTest(match, actualOutput);
-        });
-      }
-      else {
-        doTest(expected.output, actualOutput);
-      }
-
-      if (expected.error) {
-        cli.logErrors = origLogErrors;
-      }
-      return { output: output, text: actualOutput };
-    });
-  };
-
-  return output.promise.then(checkOutput, checkOutput);
 };
 
 /**
@@ -845,8 +923,8 @@ helpers._post = function(name, action, data) {
 var totalResponseTime = 0;
 var averageOver = 0;
 var maxResponseTime = 0;
-var maxResponseCulprit = undefined;
-var start = undefined;
+var maxResponseCulprit;
+var start;
 
 /**
  * Restart the stats collection process
@@ -921,12 +999,12 @@ Object.defineProperty(helpers, 'timingSummary', {
  * - check: Check data. Available checks:
  *   - input: The text displayed in the input field
  *   - cursor: The position of the start of the cursor
- *   - status: One of "VALID", "ERROR", "INCOMPLETE"
+ *   - status: One of 'VALID', 'ERROR', 'INCOMPLETE'
  *   - hints: The hint text, i.e. a concatenation of the directTabText, the
  *       emptyParameters and the arrowTabText. The text as inserted into the UI
  *       will include NBSP and Unicode RARR characters, these should be
  *       represented using normal space and '->' for the arrow
- *   - markup: What state should the error markup be in. e.g. "VVVIIIEEE"
+ *   - markup: What state should the error markup be in. e.g. 'VVVIIIEEE'
  *   - args: Maps of checks to make against the arguments:
  *     - value: i.e. assignment.value (which ignores defaultValue)
  *     - type: Argument/BlankArgument/MergedArgument/etc i.e. what's assigned
@@ -934,7 +1012,7 @@ Object.defineProperty(helpers, 'timingSummary', {
  *             implementation detail
  *     - arg: The toString value of the argument
  *     - status: i.e. assignment.getStatus
- *     - message: i.e. assignment.getMessage
+ *     - message: i.e. assignment.message
  *     - name: For commands - checks assignment.value.name
  * - exec: Object to indicate we should execute the command and check the
  *     results. Available checks:

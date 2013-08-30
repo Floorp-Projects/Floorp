@@ -5,7 +5,10 @@ content.document.title = "Hello, Kitty";
 (function start() {
     sync_test();
     async_test();
-    sendAsyncMessage("cpows:done", {});
+    // The sync-ness of this call is important, because otherwise
+    // we tear down the child's document while we are
+    // still in the async test in the parent.
+    sendSyncMessage("cpows:done", {});
   }
 )();
 

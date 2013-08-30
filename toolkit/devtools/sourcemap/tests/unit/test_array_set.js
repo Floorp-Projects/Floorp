@@ -73,6 +73,39 @@ define("test/source-map/test-array-set", ["require", "exports", "module"], funct
     assert.strictEqual(set.indexOf('__proto__'), 0);
   };
 
+  exports['test .fromArray() with duplicates'] = function (assert, util) {
+    var set = ArraySet.fromArray(['foo', 'foo']);
+    assert.ok(set.has('foo'));
+    assert.strictEqual(set.at(0), 'foo');
+    assert.strictEqual(set.indexOf('foo'), 0);
+    assert.strictEqual(set.toArray().length, 1);
+
+    set = ArraySet.fromArray(['foo', 'foo'], true);
+    assert.ok(set.has('foo'));
+    assert.strictEqual(set.at(0), 'foo');
+    assert.strictEqual(set.at(1), 'foo');
+    assert.strictEqual(set.indexOf('foo'), 0);
+    assert.strictEqual(set.toArray().length, 2);
+  };
+
+  exports['test .add() with duplicates'] = function (assert, util) {
+    var set = new ArraySet();
+    set.add('foo');
+
+    set.add('foo');
+    assert.ok(set.has('foo'));
+    assert.strictEqual(set.at(0), 'foo');
+    assert.strictEqual(set.indexOf('foo'), 0);
+    assert.strictEqual(set.toArray().length, 1);
+
+    set.add('foo', true);
+    assert.ok(set.has('foo'));
+    assert.strictEqual(set.at(0), 'foo');
+    assert.strictEqual(set.at(1), 'foo');
+    assert.strictEqual(set.indexOf('foo'), 0);
+    assert.strictEqual(set.toArray().length, 2);
+  };
+
 });
 function run_test() {
   runSourceMapTests('test/source-map/test-array-set', do_throw);

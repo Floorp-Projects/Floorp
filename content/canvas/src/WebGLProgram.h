@@ -22,11 +22,10 @@ typedef nsDataHashtable<nsCStringHashKey, nsCString> CStringMap;
 typedef nsDataHashtable<nsCStringHashKey, WebGLUniformInfo> CStringToUniformInfoMap;
 
 class WebGLProgram MOZ_FINAL
-    : public nsISupports
+    : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLProgram>
     , public LinkedListElement<WebGLProgram>
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
 public:
     WebGLProgram(WebGLContext *context);
@@ -107,8 +106,11 @@ public:
     virtual JSObject* WrapObject(JSContext *cx,
                                  JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLProgram)
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLProgram)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLProgram)
+
+    // public post-link data
+    std::map<GLint, nsCString> mActiveAttribMap;
 
 protected:
 

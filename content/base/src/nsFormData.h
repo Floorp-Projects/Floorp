@@ -42,7 +42,7 @@ public:
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx,
-			       JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   // WebIDL
   nsISupports*

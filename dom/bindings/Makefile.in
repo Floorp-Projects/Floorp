@@ -9,7 +9,6 @@ VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME     = dombindings_s
 EXPORT_LIBRARY   = 1
 
 # Need this to find all our DOM source files.
@@ -39,6 +38,7 @@ binding_cpp_files := $(subst .webidl,Binding.cpp,$(all_webidl_files))
 binding_dependency_trackers := $(subst .webidl,Binding,$(all_webidl_files))
 
 globalgen_targets := \
+  GeneratedAtomList.h \
   PrototypeList.h \
   RegisterBindings.h \
   RegisterBindings.cpp \

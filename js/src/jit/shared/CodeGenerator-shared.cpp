@@ -17,12 +17,12 @@
 #include "jit/IonFrames-inl.h"
 
 using namespace js;
-using namespace js::ion;
+using namespace js::jit;
 
 using mozilla::DebugOnly;
 
 namespace js {
-namespace ion {
+namespace jit {
 
 MacroAssembler &
 CodeGeneratorShared::ensureMasm(MacroAssembler *masmArg)
@@ -486,7 +486,7 @@ StoreAllLiveRegs(MacroAssembler &masm, RegisterSet liveRegs)
     masm.loadJitActivation(scratch);
 
     Address checkRegs(scratch, JitActivation::offsetOfCheckRegs());
-    masm.store32(Imm32(1), checkRegs);
+    masm.add32(Imm32(1), checkRegs);
 
     StoreOp op(masm);
     HandleRegisterDump<StoreOp>(op, masm, liveRegs, scratch, allRegs.getAny());
@@ -538,6 +538,13 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
     Label failure, done;
     Address checkRegs(scratch, JitActivation::offsetOfCheckRegs());
     masm.branch32(Assembler::Equal, checkRegs, Imm32(0), &done);
+
+    // Having more than one VM function call made in one visit function at
+    // runtime is a sec-ciritcal error, because if we conservatively assume that
+    // one of the function call can re-enter Ion, then the invalidation process
+    // will potentially add a call at a random location, by patching the code
+    // before the return address.
+    masm.branch32(Assembler::NotEqual, checkRegs, Imm32(1), &failure);
 
     // Ignore temp registers. Some instructions (like LValueToInt32) modify
     // temps after calling into the VM. This is fine because no other
@@ -903,5 +910,22 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock *mir, Assembler::Condition cond)
     }
 }
 
-} // namespace ion
+size_t
+CodeGeneratorShared::addCacheLocations(const CacheLocationList &locs, size_t *numLocs)
+{
+    size_t firstIndex = runtimeData_.length();
+    size_t numLocations = 0;
+    for (CacheLocationList::iterator iter = locs.begin(); iter != locs.end(); iter++) {
+        // allocateData() ensures that sizeof(CacheLocation) is word-aligned.
+        // If this changes, we will need to pad to ensure alignment.
+        size_t curIndex = allocateData(sizeof(CacheLocation));
+        new (&runtimeData_[curIndex]) CacheLocation(iter->pc, iter->script);
+        numLocations++;
+    }
+    JS_ASSERT(numLocations != 0);
+    *numLocs = numLocations;
+    return firstIndex;
+}
+
+} // namespace jit
 } // namespace js

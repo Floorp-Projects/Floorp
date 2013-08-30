@@ -6,7 +6,7 @@
 
 #include "mozilla/Util.h"
 
-#include "DOMJSProxyHandler.h"
+#include "mozilla/dom/DOMJSProxyHandler.h"
 #include "xpcpublic.h"
 #include "xpcprivate.h"
 #include "XPCQuickStubs.h"

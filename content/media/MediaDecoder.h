@@ -190,6 +190,7 @@ destroying the MediaDecoder object.
 #include "gfxRect.h"
 #include "MediaResource.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/TimeStamp.h"
 #include "MediaStreamGraph.h"
 #include "MediaDecoderOwner.h"
 #include "AudioChannelCommon.h"
@@ -1033,6 +1034,10 @@ public:
   // True if this decoder is in dormant state.
   // Should be true only when PlayState is PLAY_STATE_LOADING.
   bool mIsDormant;
+
+  // True if this decoder is exiting from dormant state.
+  // Should be true only when PlayState is PLAY_STATE_LOADING.
+  bool mIsExitingDormant;
 
   // Set to one of the valid play states.
   // This can only be changed on the main thread while holding the decoder

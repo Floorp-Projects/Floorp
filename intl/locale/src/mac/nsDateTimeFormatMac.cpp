@@ -113,8 +113,10 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   if (!locale) {
     formatterLocale = CFLocaleCopyCurrent();
   } else {
-    CFStringRef localeStr = CFStringCreateWithCharacters(NULL, mLocale.get(), mLocale.Length());
-    formatterLocale = CFLocaleCreate(NULL, localeStr);
+    CFStringRef localeStr = CFStringCreateWithCharacters(nullptr,
+                                                         mLocale.get(),
+                                                         mLocale.Length());
+    formatterLocale = CFLocaleCreate(nullptr, localeStr);
     CFRelease(localeStr);
   }
 
@@ -162,7 +164,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   
   // Create the formatter and fix up its formatting as necessary:
   CFDateFormatterRef formatter =
-    CFDateFormatterCreate(NULL, formatterLocale, dateStyle, timeStyle);
+    CFDateFormatterCreate(nullptr, formatterLocale, dateStyle, timeStyle);
   
   CFRelease(formatterLocale);
   
@@ -172,7 +174,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
       dateFormatSelector == kDateFormatYearMonth ? CFSTR("yyyy/MM ") : CFSTR("EEE ");
     
     CFStringRef oldFormat = CFDateFormatterGetFormat(formatter);
-    CFMutableStringRef newFormat = CFStringCreateMutableCopy(NULL, 0, oldFormat);
+    CFMutableStringRef newFormat = CFStringCreateMutableCopy(nullptr, 0, oldFormat);
     CFStringInsert(newFormat, 0, dateFormat);
     CFDateFormatterSetFormat(formatter, newFormat);
     CFRelease(newFormat); // note we don't own oldFormat
@@ -182,7 +184,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
       timeFormatSelector == kTimeFormatNoSecondsForce24Hour) {
     // Replace "h" with "H", and remove "a":
     CFStringRef oldFormat = CFDateFormatterGetFormat(formatter);
-    CFMutableStringRef newFormat = CFStringCreateMutableCopy(NULL, 0, oldFormat);
+    CFMutableStringRef newFormat = CFStringCreateMutableCopy(nullptr, 0, oldFormat);
     CFIndex replaceCount = CFStringFindAndReplace(newFormat,
                                                   CFSTR("h"), CFSTR("H"),
                                                   CFRangeMake(0, CFStringGetLength(newFormat)),	
@@ -210,7 +212,9 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   CFAbsoluteTime absTime = CFGregorianDateGetAbsoluteTime(date, timeZone);
   CFRelease(timeZone);
 
-  CFStringRef formattedDate = CFDateFormatterCreateStringWithAbsoluteTime(NULL, formatter, absTime);
+  CFStringRef formattedDate = CFDateFormatterCreateStringWithAbsoluteTime(nullptr,
+                                                                          formatter,
+                                                                          absTime);
   
   CFIndex stringLen = CFStringGetLength(formattedDate);
   

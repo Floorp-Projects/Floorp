@@ -52,7 +52,6 @@ exports.shutdown = function(options) {
   mockCommands.shutdown();
 };
 
-
 exports.testParse = function(options) {
   var date = types.createType('date');
   return date.parse(new Argument('now')).then(function(conversion) {
@@ -92,8 +91,6 @@ exports.testIncrement = function(options) {
 exports.testInput = function(options) {
   return helpers.audit(options, [
     {
-      // See bug 892901
-      skipRemainingIf: options.isFirefox,
       setup:    'tsdate 2001-01-01 1980-01-03',
       check: {
         input:  'tsdate 2001-01-01 1980-01-03',
@@ -119,13 +116,13 @@ exports.testInput = function(options) {
           },
           d2: {
             value: function(d2) {
-              assert.is(d2.getFullYear(), 1980, 'd1 year');
-              assert.is(d2.getMonth(), 0, 'd1 month');
-              assert.is(d2.getDate(), 3, 'd1 date');
-              assert.is(d2.getHours(), 0, 'd1 hours');
-              assert.is(d2.getMinutes(), 0, 'd1 minutes');
-              assert.is(d2.getSeconds(), 0, 'd1 seconds');
-              assert.is(d2.getMilliseconds(), 0, 'd1 millis');
+              assert.is(d2.getFullYear(), 1980, 'd2 year');
+              assert.is(d2.getMonth(), 0, 'd2 month');
+              assert.is(d2.getDate(), 3, 'd2 date');
+              assert.is(d2.getHours(), 0, 'd2 hours');
+              assert.is(d2.getMinutes(), 0, 'd2 minutes');
+              assert.is(d2.getSeconds(), 0, 'd2 seconds');
+              assert.is(d2.getMilliseconds(), 0, 'd2 millis');
             },
             arg: ' 1980-01-03',
             status: 'VALID',
@@ -139,6 +136,136 @@ exports.testInput = function(options) {
         type: 'string',
         error: false
       }
+    },
+    {
+      setup:    'tsdate 2001/01/01 1980/01/03',
+      check: {
+        input:  'tsdate 2001/01/01 1980/01/03',
+        hints:                              '',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+        status: 'VALID',
+        message: '',
+        args: {
+          command: { name: 'tsdate' },
+          d1: {
+            value: function(d1) {
+              assert.is(d1.getFullYear(), 2001, 'd1 year');
+              assert.is(d1.getMonth(), 0, 'd1 month');
+              assert.is(d1.getDate(), 1, 'd1 date');
+              assert.is(d1.getHours(), 0, 'd1 hours');
+              assert.is(d1.getMinutes(), 0, 'd1 minutes');
+              assert.is(d1.getSeconds(), 0, 'd1 seconds');
+              assert.is(d1.getMilliseconds(), 0, 'd1 millis');
+            },
+            arg: ' 2001/01/01',
+            status: 'VALID',
+            message: ''
+          },
+          d2: {
+            value: function(d2) {
+              assert.is(d2.getFullYear(), 1980, 'd2 year');
+              assert.is(d2.getMonth(), 0, 'd2 month');
+              assert.is(d2.getDate(), 3, 'd2 date');
+              assert.is(d2.getHours(), 0, 'd2 hours');
+              assert.is(d2.getMinutes(), 0, 'd2 minutes');
+              assert.is(d2.getSeconds(), 0, 'd2 seconds');
+              assert.is(d2.getMilliseconds(), 0, 'd2 millis');
+            },
+            arg: ' 1980/01/03',
+            status: 'VALID',
+            message: ''
+          },
+        }
+      },
+      exec: {
+        output: [ /^Exec: tsdate/, /2001/, /1980/ ],
+        completed: true,
+        type: 'string',
+        error: false
+      }
+    },
+    {
+      setup:    'tsdate now today',
+      check: {
+        input:  'tsdate now today',
+        hints:                  '',
+        markup: 'VVVVVVVVVVVVVVVV',
+        status: 'VALID',
+        message: '',
+        args: {
+          command: { name: 'tsdate' },
+          d1: {
+            value: function(d1) {
+              // How long should we allow between d1 and now? Mochitest will
+              // time out after 30 secs, so that seems like a decent upper
+              // limit, although 30 ms should probably do it. I don't think
+              // reducing the limit from 30 secs will find any extra bugs
+              assert.ok(d1.getTime() - new Date().getTime() < 30 * 1000,
+                        'd1 time');
+            },
+            arg: ' now',
+            status: 'VALID',
+            message: ''
+          },
+          d2: {
+            value: function(d2) {
+              // See comment for d1 above
+              assert.ok(d2.getTime() - new Date().getTime() < 30 * 1000,
+                        'd2 time');
+            },
+            arg: ' today',
+            status: 'VALID',
+            message: ''
+          },
+        }
+      },
+      exec: {
+        output: [ /^Exec: tsdate/, new Date().getFullYear() ],
+        completed: true,
+        type: 'string',
+        error: false
+      }
+    },
+    {
+      setup:    'tsdate yesterday tomorrow',
+      check: {
+        input:  'tsdate yesterday tomorrow',
+        hints:                           '',
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVV',
+        status: 'VALID',
+        message: '',
+        args: {
+          command: { name: 'tsdate' },
+          d1: {
+            value: function(d1) {
+              var compare = new Date().getTime() - (24 * 60 * 60 * 1000);
+              // See comment for d1 in the test for 'tsdate now today'
+              assert.ok(d1.getTime() - compare < 30 * 1000,
+                        'd1 time');
+            },
+            arg: ' yesterday',
+            status: 'VALID',
+            message: ''
+          },
+          d2: {
+            value: function(d2) {
+              var compare = new Date().getTime() + (24 * 60 * 60 * 1000);
+              // See comment for d1 in the test for 'tsdate now today'
+              assert.ok(d2.getTime() - compare < 30 * 1000,
+                        'd2 time');
+            },
+            arg: ' tomorrow',
+            status: 'VALID',
+            message: ''
+          },
+        }
+      },
+      exec: {
+        output: [ /^Exec: tsdate/, new Date().getFullYear() ],
+        completed: true,
+        type: 'string',
+        error: false
+      }
     }
   ]);
 };
@@ -146,8 +273,6 @@ exports.testInput = function(options) {
 exports.testIncrDecr = function(options) {
   return helpers.audit(options, [
     {
-      // See bug 892901
-      skipRemainingIf: options.isFirefox,
       setup:    'tsdate 2001-01-01<UP>',
       check: {
         input:  'tsdate 2001-01-02',

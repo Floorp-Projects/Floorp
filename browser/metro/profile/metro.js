@@ -36,6 +36,7 @@ pref("prompts.tab_modal.enabled", true);
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-pan-zoom.enabled", false);
 pref("layers.componentalpha.enabled", false);
+pref("gfx.azpc.touch_start_tolerance", "0.1"); // dpi * tolerance = pixel threshold
 pref("gfx.axis.fling_friction", "0.002");
 
 // Enable Microsoft TSF support by default for imes.

@@ -180,19 +180,20 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
         bool markedAny = false;
         for (Enum e(*this); !e.empty(); e.popFront()) {
             /* If the entry is live, ensure its key and value are marked. */
-            Key prior(e.front().key);
-            if (gc::IsMarked(const_cast<Key *>(&e.front().key))) {
+            Key key(e.front().key);
+            if (gc::IsMarked(const_cast<Key *>(&key))) {
                 if (markValue(trc, &e.front().value))
                     markedAny = true;
-                if (prior != e.front().key)
-                    e.rekeyFront(e.front().key);
-            } else if (keyNeedsMark(e.front().key)) {
-                gc::Mark(trc, const_cast<Key *>(&e.front().key), "proxy-preserved WeakMap entry key");
-                if (prior != e.front().key)
-                    e.rekeyFront(e.front().key);
+                if (e.front().key != key)
+                    e.rekeyFront(key);
+            } else if (keyNeedsMark(key)) {
+                gc::Mark(trc, const_cast<Key *>(&key), "proxy-preserved WeakMap entry key");
+                if (e.front().key != key)
+                    e.rekeyFront(key);
                 gc::Mark(trc, &e.front().value, "WeakMap entry value");
                 markedAny = true;
             }
+            key.unsafeSet(NULL);
         }
         return markedAny;
     }

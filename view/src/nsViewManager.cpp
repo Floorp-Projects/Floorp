@@ -26,6 +26,7 @@
 #include "nsContentUtils.h" // for nsAutoScriptBlocker
 #include "nsLayoutUtils.h"
 #include "Layers.h"
+#include "gfxPlatform.h"
 
 /**
    XXX TODO XXX
@@ -435,6 +436,14 @@ void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)
   }
   nsRegion r =
     ConvertRegionBetweenViews(*dirtyRegion, aView, nearestViewWithWidget);
+
+  // If we draw the frame counter we need to make sure we invalidate the area
+  // for it to make it on screen
+  if (gfxPlatform::DrawFrameCounter()) {
+    nsRect counterBounds = gfxPlatform::FrameCounterBounds().ToAppUnits(AppUnitsPerDevPixel());
+    r = r.Or(r, counterBounds);
+  }
+
   nsViewManager* widgetVM = nearestViewWithWidget->GetViewManager();
   widgetVM->InvalidateWidgetArea(nearestViewWithWidget, r);
   dirtyRegion->SetEmpty();

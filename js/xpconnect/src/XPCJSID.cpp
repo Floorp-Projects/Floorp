@@ -7,7 +7,6 @@
 /* An xpcom implementation of the JavaScript nsIID and nsCID objects. */
 
 #include "xpcprivate.h"
-#include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
 #include "XPCWrapper.h"
@@ -568,7 +567,7 @@ NS_IMETHODIMP
 nsJSIID::CanCreateWrapper(const nsIID * iid, char **_retval)
 {
     // We let anyone do this...
-    *_retval = xpc_CloneAllAccess();
+    *_retval = xpc::CloneAllAccess();
     return NS_OK;
 }
 
@@ -578,7 +577,7 @@ nsJSIID::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_r
 {
     static const char* const allowed[] = {"equals", "toString", nullptr};
 
-    *_retval = xpc_CheckAccessList(methodName, allowed);
+    *_retval = xpc::CheckAccessList(methodName, allowed);
     return NS_OK;
 }
 
@@ -587,7 +586,7 @@ NS_IMETHODIMP
 nsJSIID::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
     static const char* const allowed[] = {"name", "number", "valid", nullptr};
-    *_retval = xpc_CheckAccessList(propertyName, allowed);
+    *_retval = xpc::CheckAccessList(propertyName, allowed);
     return NS_OK;
 }
 

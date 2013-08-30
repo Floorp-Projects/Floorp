@@ -54,6 +54,7 @@ using RemoteDOMEvent;
 using mozilla::dom::ScreenOrientation;
 using mozilla::layers::TextureFactoryIdentifier;
 using mozilla::CSSIntPoint;
+using mozilla::CSSToScreenScale;
 namespace mozilla {
 namespace dom {
 
@@ -287,7 +288,7 @@ parent:
      * Updates any zoom constraints on the parent and anything tied to it. This
      * is useful for control logic that resides outside of the remote browser.
      */
-    UpdateZoomConstraints(bool aAllowZoom, float aMinZoom, float aMaxZoom);
+    UpdateZoomConstraints(bool aAllowZoom, CSSToScreenScale aMinZoom, CSSToScreenScale aMaxZoom);
 
     /**
      * Notifies the parent about a scroll event. The pres shell ID and

@@ -18,11 +18,10 @@ class WebGLTexture;
 class WebGLRenderbuffer;
 
 class WebGLFramebuffer MOZ_FINAL
-    : public nsISupports
+    : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLFramebuffer>
     , public LinkedListElement<WebGLFramebuffer>
     , public WebGLContextBoundObject
-    , public nsWrapperCache
 {
 public:
     WebGLFramebuffer(WebGLContext *context);
@@ -149,8 +148,8 @@ public:
     virtual JSObject* WrapObject(JSContext *cx,
                                  JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WebGLFramebuffer)
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebuffer)
+    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLFramebuffer)
 
     bool CheckAndInitializeRenderbuffers();
 

@@ -99,9 +99,9 @@ class Element;
 struct ElementRegistrationOptions;
 class EventTarget;
 class FrameRequestCallback;
-class GlobalObject;
 class HTMLBodyElement;
 class Link;
+class GlobalObject;
 class NodeFilter;
 class NodeIterator;
 class ProcessingInstruction;
@@ -150,6 +150,7 @@ NS_GetContentList(nsINode* aRootNode,
 // Gecko.
 class nsIDocument : public nsINode
 {
+  typedef mozilla::dom::GlobalObject GlobalObject;
 public:
   typedef mozilla::dom::Element Element;
 
@@ -268,12 +269,7 @@ public:
     }
     return mDocumentBaseURI ? mDocumentBaseURI : mDocumentURI;
   }
-  virtual already_AddRefed<nsIURI> GetBaseURI() const MOZ_OVERRIDE
-  {
-    nsCOMPtr<nsIURI> uri = GetDocBaseURI();
-
-    return uri.forget();
-  }
+  virtual already_AddRefed<nsIURI> GetBaseURI() const MOZ_OVERRIDE;
 
   virtual nsresult SetBaseURI(nsIURI* aURI) = 0;
 
@@ -1924,7 +1920,7 @@ public:
     return GetScopeObject();
   }
   static already_AddRefed<nsIDocument>
-    Constructor(const mozilla::dom::GlobalObject& aGlobal,
+    Constructor(const GlobalObject& aGlobal,
                 mozilla::ErrorResult& rv);
   virtual mozilla::dom::DOMImplementation*
     GetImplementation(mozilla::ErrorResult& rv) = 0;

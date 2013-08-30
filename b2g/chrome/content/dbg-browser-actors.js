@@ -5,6 +5,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 'use strict';
+
+let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+
 /**
  * B2G-specific actors.
  */
@@ -23,11 +26,11 @@
 function createRootActor(connection)
 {
   let parameters = {
-#ifndef MOZ_WIDGET_GONK
-    tabList: new ContentTabList(connection),
-#else
-    tabList: [],
-#endif
+    tabList: {
+      getList: function() {
+        return promise.resolve([]);
+      }
+    },
     globalActorFactories: DebuggerServer.globalActorFactories,
     onShutdown: sendShutdownEvent
   };
@@ -56,7 +59,7 @@ ContentTabList.prototype = Object.create(BrowserTabList.prototype);
 
 ContentTabList.prototype.constructor = ContentTabList;
 
-ContentTabList.prototype.iterator = function() {
+ContentTabList.prototype.getList = function() {
   let browser = Services.wm.getMostRecentWindow('navigator:browser');
   // Do we have an existing actor for this browser? If not, create one.
   let actor = this._actorByBrowser.get(browser);
@@ -66,7 +69,7 @@ ContentTabList.prototype.iterator = function() {
     actor.selected = true;
   }
 
-  yield actor;
+  return promise.resolve([actor]);
 };
 
 ContentTabList.prototype.onCloseWindow = makeInfallible(function(aWindow) {

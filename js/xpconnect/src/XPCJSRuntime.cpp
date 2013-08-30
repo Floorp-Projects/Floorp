@@ -25,17 +25,16 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Services.h"
 
-#include "nsLayoutStatics.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsScriptLoader.h"
-#include "jsdbgapi.h"
 #include "jsfriendapi.h"
 #include "jsprf.h"
 #include "js/MemoryMetrics.h"
-#include "mozilla/dom/DOMJSClass.h"
+#include "js/OldDebugAPI.h"
+#include "mozilla/dom/AtomList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"
@@ -53,6 +52,7 @@
 using namespace mozilla;
 using namespace xpc;
 using namespace JS;
+using mozilla::dom::PerThreadAtomCache;
 
 /***************************************************************************/
 
@@ -1517,6 +1517,10 @@ XPCJSRuntime::~XPCJSRuntime()
         MOZ_ASSERT(!mScratchStrings[i].mInUse, "Uh, string wrapper still in use!");
     }
 #endif
+
+    auto rtPrivate = static_cast<PerThreadAtomCache*>(JS_GetRuntimePrivate(Runtime()));
+    delete rtPrivate;
+    JS_SetRuntimePrivate(Runtime(), nullptr);
 }
 
 static void
@@ -1550,77 +1554,85 @@ GetCompartmentName(JSCompartment *c, nsCString &name, bool replaceSlashes)
     }
 }
 
-static int64_t
-GetGCChunkTotalBytes()
+// Telemetry relies on this being a single reporter (rather than part of the
+// "js" multi-reporter).
+class JSGCHeapReporter MOZ_FINAL : public MemoryReporterBase
 {
-    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
-    return int64_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * js::gc::ChunkSize;
-}
+public:
+    JSGCHeapReporter()
+      : MemoryReporterBase("js-gc-heap", KIND_OTHER, UNITS_BYTES,
+"Memory used by the garbage-collected JavaScript heap.")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+        return int64_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) *
+               js::gc::ChunkSize;
+    }
+};
 
-// Telemetry relies on this memory reporter being a single-reporter (rather
-// than part of the "js" multi-reporter, which is too slow to run during a
-// telemetry ping).
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
-                             "js-gc-heap",
-                             KIND_OTHER,
-                             nsIMemoryReporter::UNITS_BYTES,
-                             GetGCChunkTotalBytes,
-                             "Memory used by the garbage-collected JavaScript heap.")
-
-static int64_t
-GetJSSystemCompartmentCount()
-{
-    return JS::SystemCompartmentCount(nsXPConnect::GetRuntimeInstance()->Runtime());
-}
-
-static int64_t
-GetJSUserCompartmentCount()
-{
-    return JS::UserCompartmentCount(nsXPConnect::GetRuntimeInstance()->Runtime());
-}
-
-// Nb: js-system-compartment-count + js-user-compartment-count could be
+// Nb: js-compartments/system + js-compartments/user could be
 // different to the number of compartments reported by
 // JSMemoryMultiReporter if a garbage collection occurred
 // between them being consulted.  We could move these reporters into
 // XPConnectJSCompartmentCount to avoid that problem, but then we couldn't
 // easily report them via telemetry, so we live with the small risk of
 // inconsistencies.
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSSystemCompartmentCount,
-    "js-compartments/system",
-    KIND_OTHER,
-    nsIMemoryReporter::UNITS_COUNT,
-    GetJSSystemCompartmentCount,
-    "The number of JavaScript compartments for system code.  The sum of this "
-    "and 'js-compartments-user' might not match the number of compartments "
-    "listed under 'js' if a garbage collection occurs at an inopportune time, "
-    "but such cases should be rare.")
 
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
-    "js-compartments/user",
-    KIND_OTHER,
-    nsIMemoryReporter::UNITS_COUNT,
-    GetJSUserCompartmentCount,
-    "The number of JavaScript compartments for user code.  The sum of this "
-    "and 'js-compartments-system' might not match the number of compartments "
-    "listed under 'js' if a garbage collection occurs at an inopportune time, "
-    "but such cases should be rare.")
-
-static int64_t
-GetJSMainRuntimeTemporaryPeakSize()
+class JSCompartmentsSystemReporter MOZ_FINAL : public MemoryReporterBase
 {
-    return JS::PeakSizeOfTemporary(nsXPConnect::GetRuntimeInstance()->Runtime());
-}
+public:
+    JSCompartmentsSystemReporter()
+      : MemoryReporterBase("js-compartments/system", KIND_OTHER, UNITS_COUNT,
+"The number of JavaScript compartments for system code.  The sum of this and "
+"'js-compartments/user' might not match the number of compartments listed "
+"in the 'explicit' tree if a garbage collection occurs at an inopportune "
+"time, but such cases should be rare.")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+        return JS::SystemCompartmentCount(rt);
+    }
+};
+
+class JSCompartmentsUserReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    JSCompartmentsUserReporter()
+      : MemoryReporterBase("js-compartments/user", KIND_OTHER, UNITS_COUNT,
+"The number of JavaScript compartments for user code.  The sum of this and "
+"'js-compartments/system' might not match the number of compartments listed "
+"under 'js' if a garbage collection occurs at an inopportune time, but such "
+"cases should be rare.")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+        return JS::UserCompartmentCount(rt);
+    }
+};
 
 // This is also a single reporter so it can be used by telemetry.
-NS_MEMORY_REPORTER_IMPLEMENT(JSMainRuntimeTemporaryPeak,
-    "js-main-runtime-temporary-peak",
-    KIND_OTHER,
-    nsIMemoryReporter::UNITS_BYTES,
-    GetJSMainRuntimeTemporaryPeakSize,
-    "The peak size of the transient storage in the main JSRuntime (the "
-    "current size of which is reported as "
-    "'explicit/js-non-window/runtime/temporary').");
+class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+    JSMainRuntimeTemporaryPeakReporter()
+      : MemoryReporterBase("js-main-runtime-temporary-peak",
+                           KIND_OTHER, UNITS_BYTES,
+"The peak size of the transient storage in the main JSRuntime (the current "
+"size of which is reported as 'explicit/js-non-window/runtime/temporary').")
+    {}
+private:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->Runtime();
+        return JS::PeakSizeOfTemporary(rt);
+    }
+};
 
 // The REPORT* macros do an unconditional report.  The ZCREPORT* macros are for
 // compartments and zones; they aggregate any entries smaller than
@@ -2898,6 +2910,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     MOZ_ASSERT(Runtime());
     JSRuntime* runtime = Runtime();
 
+    auto rtPrivate = new PerThreadAtomCache();
+    memset(rtPrivate, 0, sizeof(PerThreadAtomCache));
+    JS_SetRuntimePrivate(runtime, rtPrivate);
+
     // Unconstrain the runtime's threshold on nominal heap size, to avoid
     // triggering GC too often if operating continuously near an arbitrary
     // finite threshold (0xffffffff is infinity for uint32_t parameters).
@@ -2905,20 +2921,83 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // to cause period, and we hope hygienic, last-ditch GCs from within
     // the GC's allocator.
     JS_SetGCParameter(runtime, JSGC_MAX_BYTES, 0xffffffff);
-#if defined(MOZ_ASAN) || (defined(DEBUG) && !defined(XP_WIN))
-    // Bug 803182: account for the 4x difference in the size of js::Interpret
-    // between optimized and debug builds. Also, ASan requires more stack space
-    // due to redzones
-    JS_SetNativeStackQuota(runtime, 2 * 128 * sizeof(size_t) * 1024);
+
+    // The JS engine permits us to set different stack limits for system code,
+    // trusted script, and untrusted script. We have tests that ensure that
+    // we can always execute 10 "heavy" (eval+with) stack frames deeper in
+    // privileged code. Our stack sizes vary greatly in different configurations,
+    // so satisfying those tests requires some care. Manual measurements of the
+    // number of heavy stack frames achievable gives us the following rough data,
+    // ordered by the effective categories in which they are grouped in the
+    // JS_SetNativeStackQuota call (which predates this analysis).
+    //
+    // OSX 64-bit Debug: 7MB stack, 636 stack frames => ~11.3k per stack frame
+    // OSX64 Opt: 7MB stack, 2440 stack frames => ~3k per stack frame
+    //
+    // Linux 32-bit Debug: 2MB stack, 447 stack frames => ~4.6k per stack frame
+    // Linux 64-bit Debug: 4MB stack, 501 stack frames => ~8.2k per stack frame
+    //
+    // Windows (Opt+Debug): 900K stack, 235 stack frames => ~3.4k per stack frame
+    //
+    // Linux 32-bit Opt: 1MB stack, 272 stack frames => ~3.8k per stack frame
+    // Linux 64-bit Opt: 2MB stack, 316 stack frames => ~6.5k per stack frame
+    //
+    // We tune the trusted/untrusted quotas for each configuration to achieve our
+    // invariants while attempting to minimize overhead. In contrast, our buffer
+    // between system code and trusted script is a very unscientific 10k.
+    const size_t kSystemCodeBuffer = 10 * 1024;
+
+    // Our "default" stack is what we use in configurations where we don't have
+    // a compelling reason to do things differently. This is effectively 1MB on
+    // 32-bit platforms and 2MB on 64-bit platforms.
+    const size_t kDefaultStackQuota = 128 * sizeof(size_t) * 1024;
+
+    // Set stack sizes for different configurations. It's probably not great for
+    // the web to base this decision primarily on the default stack size that the
+    // underlying platform makes available, but that seems to be what we do. :-(
+
+#if defined(XP_MACOSX) || defined(DARWIN)
+    // MacOS has a gargantuan default stack size of 8MB. Go wild with 7MB,
+    // and give trusted script 120k extra. The stack is huge on mac anyway.
+    const size_t kStackQuota = 7 * 1024 * 1024;
+    const size_t kTrustedScriptBuffer = 120 * 1024;
+#elif defined(MOZ_ASAN)
+    // ASan requires more stack space due to red-zones, so give it double the
+    // default (2MB on 32-bit, 4MB on 64-bit). ASAN stack frame measurements
+    // were not taken at the time of this writing, so we hazard a guess that
+    // ASAN builds have roughly twice the stack overhead as normal builds.
+    // On normal builds, the largest stack frame size we might encounter is
+    // 8.2k, so let's use a buffer of 8.2 * 2 * 10 = 164k.
+    const size_t kStackQuota =  2 * kDefaultStackQuota;
+    const size_t kTrustedScriptBuffer = 164 * 1024;
 #elif defined(XP_WIN)
-    // 1MB is the default stack size on Windows
-    JS_SetNativeStackQuota(runtime, 900 * 1024);
-#elif defined(XP_MACOSX) || defined(DARWIN)
-    // 8MB is the default stack size on MacOS
-    JS_SetNativeStackQuota(runtime, 7 * 1024 * 1024);
+    // 1MB is the default stack size on Windows, so the default 1MB stack quota
+    // we'd get on win32 is slightly too large. Use 900k instead. And since
+    // windows stack frames are 3.4k each, let's use a buffer of 40k.
+    const size_t kStackQuota = 900 * 1024;
+    const size_t kTrustedScriptBuffer = 40 * 1024;
+    // The following two configurations are linux-only. Given the numbers above,
+    // we use 50k and 100k trusted buffers on 32-bit and 64-bit respectively.
+#elif defined(DEBUG)
+    // Bug 803182: account for the 4x difference in the size of js::Interpret
+    // between optimized and debug builds.
+    // XXXbholley - Then why do we only account for 2x of difference?
+    const size_t kStackQuota = 2 * kDefaultStackQuota;
+    const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
 #else
-    JS_SetNativeStackQuota(runtime, 128 * sizeof(size_t) * 1024);
+    const size_t kStackQuota = kDefaultStackQuota;
+    const size_t kTrustedScriptBuffer = sizeof(size_t) * 12800;
 #endif
+
+    // Avoid an unused variable warning on platforms where we don't use the
+    // default.
+    (void) kDefaultStackQuota;
+
+    JS_SetNativeStackQuota(runtime,
+                           kStackQuota,
+                           kStackQuota - kSystemCodeBuffer,
+                           kStackQuota - kSystemCodeBuffer - kTrustedScriptBuffer);
+
     JS_SetDestroyCompartmentCallback(runtime, CompartmentDestroyedCallback);
     JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
@@ -2964,10 +3043,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     if (!xpc_LocalizeRuntime(runtime))
         NS_RUNTIMEABORT("xpc_LocalizeRuntime failed.");
 
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSSystemCompartmentCount));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSUserCompartmentCount));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(JSMainRuntimeTemporaryPeak));
+    NS_RegisterMemoryReporter(new JSGCHeapReporter());
+    NS_RegisterMemoryReporter(new JSCompartmentsSystemReporter());
+    NS_RegisterMemoryReporter(new JSCompartmentsUserReporter());
+    NS_RegisterMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
     NS_RegisterMemoryMultiReporter(new JSCompartmentsMultiReporter);
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
@@ -3257,9 +3336,9 @@ XPCJSRuntime::GetJunkScope()
         SandboxOptions options(cx);
         options.sandboxName.AssignASCII("XPConnect Junk Compartment");
         RootedValue v(cx);
-        nsresult rv = xpc_CreateSandboxObject(cx, v.address(),
-                                              nsContentUtils::GetSystemPrincipal(),
-                                              options);
+        nsresult rv = CreateSandboxObject(cx, v.address(),
+                                          nsContentUtils::GetSystemPrincipal(),
+                                          options);
 
         NS_ENSURE_SUCCESS(rv, nullptr);
 

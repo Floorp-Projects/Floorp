@@ -7,11 +7,6 @@ const { contract } = require('../../util/contract');
 const { isValidURI, URL, isLocalURL } = require('../../url');
 const { isNil, isObject, isString } = require('../../lang/type');
 
-function isIconSet(icons) {
-  return Object.keys(icons).
-    every(size => String(size >>> 0) === size && isLocalURL(icons[size]))
-}
-
 exports.contract = contract({
   id: {
   	is: [ 'string' ],
@@ -22,12 +17,6 @@ exports.contract = contract({
   title: {
   	is: [ 'string' ],
   	ok: v => v.length
-  },
-  icon: {
-    is: ['string', 'object'],
-    ok: v => (isString(v) && isLocalURL(v)) || (isObject(v) && isIconSet(v)),
-    msg: 'The option "icon" must be a local URL or an object with ' +
-      'numeric keys / local URL values pair.'
   },
   url: {
     is: [ 'string' ],

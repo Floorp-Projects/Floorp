@@ -150,7 +150,7 @@ function runChildTestSet(set)
   sendCommand('\
   let uri = ioservice.newURI("http://localhost:4444' + set[0] + '", null, null);\
   let channel = ioservice.newChannelFromURI(uri);                              \
-  uriloader.openURI(channel, true, new WindowContext());                       \
+  uriloader.openURI(channel, Ci.nsIURILoader.IS_CONTENT_PREFERRED, new WindowContext()); \
   ');
 }
 

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "common_video/plane.h"
+#include "webrtc/common_video/plane.h"
 
 #include <algorithm>  // swap
 #include <cstring>  // memcpy

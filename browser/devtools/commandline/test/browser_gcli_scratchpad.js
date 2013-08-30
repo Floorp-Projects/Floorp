@@ -37,7 +37,7 @@ function test() {
 
 // var assert = require('test/assert');
 
-var origScratchpad = undefined;
+var origScratchpad;
 
 exports.setup = function(options) {
   origScratchpad = options.display.inputter.scratchpad;

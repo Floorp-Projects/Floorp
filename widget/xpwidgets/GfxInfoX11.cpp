@@ -295,12 +295,6 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
     return NS_OK;
   }
 
-#ifdef MOZ_PLATFORM_MAEMO
-  *aStatus = nsIGfxInfo::FEATURE_NO_INFO;
-  // on Maemo, the glxtest probe doesn't build, and we don't really need GfxInfo anyway
-  return NS_OK;
-#endif
-
   // Don't evaluate any special cases if we're checking the downloaded blocklist.
   if (!aDriverInfo.Length()) {
     // Only check features relevant to Linux.

@@ -75,7 +75,7 @@ js::StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData)
 }
 
 bool
-js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
+js::StartOffThreadIonCompile(JSContext *cx, jit::IonBuilder *builder)
 {
     if (!EnsureWorkerThreadsInitialized(cx))
         return false;
@@ -98,7 +98,7 @@ js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
  * All off thread compilations which are started must eventually be finished.
  */
 static void
-FinishOffThreadIonCompile(ion::IonBuilder *builder)
+FinishOffThreadIonCompile(jit::IonBuilder *builder)
 {
     JSCompartment *compartment = builder->script()->compartment();
     JS_ASSERT(compartment->runtimeFromAnyThread()->workerThreadState);
@@ -125,7 +125,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 
     WorkerThreadState &state = *rt->workerThreadState;
 
-    ion::IonCompartment *ion = compartment->ionCompartment();
+    jit::IonCompartment *ion = compartment->ionCompartment();
     if (!ion)
         return;
 
@@ -133,7 +133,7 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 
     /* Cancel any pending entries for which processing hasn't started. */
     for (size_t i = 0; i < state.ionWorklist.length(); i++) {
-        ion::IonBuilder *builder = state.ionWorklist[i];
+        jit::IonBuilder *builder = state.ionWorklist[i];
         if (CompiledScriptMatches(compartment, script, builder->script())) {
             FinishOffThreadIonCompile(builder);
             state.ionWorklist[i--] = state.ionWorklist.back();
@@ -152,13 +152,13 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
         }
     }
 
-    ion::OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
+    jit::OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
 
     /* Cancel code generation for any completed entries. */
     for (size_t i = 0; i < compilations.length(); i++) {
-        ion::IonBuilder *builder = compilations[i];
+        jit::IonBuilder *builder = compilations[i];
         if (CompiledScriptMatches(compartment, script, builder->script())) {
-            ion::FinishOffThreadBuilder(builder);
+            jit::FinishOffThreadBuilder(builder);
             compilations[i--] = compilations.back();
             compilations.popBack();
         }
@@ -173,14 +173,14 @@ static JSClass workerGlobalClass = {
     JS_ConvertStub,   NULL
 };
 
-ParseTask::ParseTask(Zone *zone, ExclusiveContext *cx, const CompileOptions &options,
+ParseTask::ParseTask(ExclusiveContext *cx, const CompileOptions &options,
                      const jschar *chars, size_t length, JSObject *scopeChain,
                      JS::OffThreadCompileCallback callback, void *callbackData)
-  : zone(zone), cx(cx), options(options), chars(chars), length(length),
+  : cx(cx), options(options), chars(chars), length(length),
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE), scopeChain(scopeChain),
-    callback(callback), callbackData(callbackData), script(NULL)
+    callback(callback), callbackData(callbackData), script(NULL), errors(cx)
 {
-    JSRuntime *rt = zone->runtimeFromMainThread();
+    JSRuntime *rt = scopeChain->runtimeFromMainThread();
 
     if (options.principals())
         JS_HoldPrincipals(options.principals());
@@ -192,7 +192,7 @@ ParseTask::ParseTask(Zone *zone, ExclusiveContext *cx, const CompileOptions &opt
 
 ParseTask::~ParseTask()
 {
-    JSRuntime *rt = zone->runtimeFromMainThread();
+    JSRuntime *rt = scopeChain->runtimeFromMainThread();
 
     if (options.principals())
         JS_DropPrincipals(rt, options.principals());
@@ -236,7 +236,8 @@ js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
     // pointers can be changed infallibly after parsing finishes.
     if (!js_GetClassObject(cx, cx->global(), JSProto_Function, &obj) ||
         !js_GetClassObject(cx, cx->global(), JSProto_Array, &obj) ||
-        !js_GetClassObject(cx, cx->global(), JSProto_RegExp, &obj))
+        !js_GetClassObject(cx, cx->global(), JSProto_RegExp, &obj) ||
+        !js_GetClassObject(cx, cx->global(), JSProto_GeneratorFunction, &obj))
     {
         return false;
     }
@@ -244,7 +245,8 @@ js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
         AutoCompartment ac(cx, global);
         if (!js_GetClassObject(cx, global, JSProto_Function, &obj) ||
             !js_GetClassObject(cx, global, JSProto_Array, &obj) ||
-            !js_GetClassObject(cx, global, JSProto_RegExp, &obj))
+            !js_GetClassObject(cx, global, JSProto_RegExp, &obj) ||
+            !js_GetClassObject(cx, global, JSProto_GeneratorFunction, &obj))
         {
             return false;
         }
@@ -261,7 +263,7 @@ js::StartOffThreadParseScript(JSContext *cx, const CompileOptions &options,
     workercx->enterCompartment(global->compartment());
 
     ScopedJSDeletePtr<ParseTask> task(
-        cx->new_<ParseTask>(global->zone(), workercx.get(), options, chars, length,
+        cx->new_<ParseTask>(workercx.get(), options, chars, length,
                             scopeChain, callback, callbackData));
     if (!task)
         return false;
@@ -370,10 +372,8 @@ WorkerThreadState::cleanup(JSRuntime *rt)
     }
 
     // Clean up any parse tasks which haven't been finished yet.
-    while (!parseFinishedList.empty()) {
-        JSScript *script = parseFinishedList[0]->script;
-        finishParseTaskForScript(rt, script);
-    }
+    while (!parseFinishedList.empty())
+        finishParseTask(/* maybecx = */ NULL, rt, parseFinishedList[0]);
 }
 
 WorkerThreadState::~WorkerThreadState()
@@ -490,15 +490,22 @@ WorkerThreadState::canStartParseTask()
     return true;
 }
 
-void
-WorkerThreadState::finishParseTaskForScript(JSRuntime *rt, JSScript *script)
+bool
+WorkerThreadState::canStartCompressionTask()
+{
+    return !compressionWorklist.empty();
+}
+
+JSScript *
+WorkerThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void *token)
 {
     ParseTask *parseTask = NULL;
 
+    // The token is a ParseTask* which should be in the finished list.
     {
         AutoLockWorkerThreadState lock(*rt->workerThreadState);
         for (size_t i = 0; i < parseFinishedList.length(); i++) {
-            if (parseFinishedList[i]->script == script) {
+            if (parseFinishedList[i] == token) {
                 parseTask = parseFinishedList[i];
                 parseFinishedList[i] = parseFinishedList.back();
                 parseFinishedList.popBack();
@@ -510,23 +517,16 @@ WorkerThreadState::finishParseTaskForScript(JSRuntime *rt, JSScript *script)
 
     // Mark the zone as no longer in use by an ExclusiveContext, and available
     // to be collected by the GC.
-    rt->clearUsedByExclusiveThread(parseTask->zone);
-
-    if (!script) {
-        // Parsing failed and there is nothing to finish, but there still may
-        // be lingering ParseTask instances holding roots which need to be
-        // cleaned up. The ParseTask which we picked might not be the right
-        // one but this is ok as finish calls will be 1:1 with calls that
-        // create a ParseTask.
-        js_delete(parseTask);
-        return;
-    }
+    rt->clearUsedByExclusiveThread(parseTask->cx->zone());
 
     // Point the prototypes of any objects in the script's compartment to refer
     // to the corresponding prototype in the new compartment. This will briefly
     // create cross compartment pointers, which will be fixed by the
     // MergeCompartments call below.
-    for (gc::CellIter iter(parseTask->zone, gc::FINALIZE_TYPE_OBJECT); !iter.done(); iter.next()) {
+    for (gc::CellIter iter(parseTask->cx->zone(), gc::FINALIZE_TYPE_OBJECT);
+         !iter.done();
+         iter.next())
+    {
         types::TypeObject *object = iter.get<types::TypeObject>();
         JSObject *proto = object->proto;
         if (!proto)
@@ -543,9 +543,19 @@ WorkerThreadState::finishParseTaskForScript(JSRuntime *rt, JSScript *script)
     }
 
     // Move the parsed script and all its contents into the desired compartment.
-    gc::MergeCompartments(parseTask->script->compartment(), parseTask->scopeChain->compartment());
+    gc::MergeCompartments(parseTask->cx->compartment(), parseTask->scopeChain->compartment());
 
+    // If we have a context, report any error or warnings generated during the
+    // parse.
+    if (maybecx) {
+        AutoCompartment ac(maybecx, parseTask->scopeChain);
+        for (size_t i = 0; i < parseTask->errors.length(); i++)
+            parseTask->errors[i].throwError(maybecx);
+    }
+
+    JSScript *script = parseTask->script;
     js_delete(parseTask);
+    return script;
 }
 
 void
@@ -591,7 +601,7 @@ WorkerThread::handleAsmJSWorkload(WorkerThreadState &state)
 
     state.unlock();
     do {
-        ion::IonContext icx(runtime, asmData->mir->compartment, &asmData->mir->temp());
+        jit::IonContext icx(runtime, asmData->mir->compartment, &asmData->mir->temp());
 
         int64_t before = PRMJ_Now();
 
@@ -634,13 +644,13 @@ WorkerThread::handleIonWorkload(WorkerThreadState &state)
 
     ionBuilder = state.ionWorklist.popCopy();
 
-    DebugOnly<ion::ExecutionMode> executionMode = ionBuilder->info().executionMode();
+    DebugOnly<jit::ExecutionMode> executionMode = ionBuilder->info().executionMode();
     JS_ASSERT(GetIonScript(ionBuilder->script(), executionMode) == ION_COMPILING_SCRIPT);
 
     state.unlock();
     {
-        ion::IonContext ictx(runtime, ionBuilder->script()->compartment(), &ionBuilder->temp());
-        ionBuilder->setBackgroundCodegen(ion::CompileBackEnd(ionBuilder));
+        jit::IonContext ictx(runtime, ionBuilder->script()->compartment(), &ionBuilder->temp());
+        ionBuilder->setBackgroundCodegen(jit::CompileBackEnd(ionBuilder));
     }
     state.lock();
 
@@ -664,6 +674,14 @@ ExclusiveContext::setWorkerThread(WorkerThread *workerThread)
     this->perThreadData = workerThread->threadData.addr();
 }
 
+frontend::CompileError &
+ExclusiveContext::addPendingCompileError()
+{
+    if (!workerThread->parseTask->errors.append(frontend::CompileError()))
+        MOZ_CRASH();
+    return workerThread->parseTask->errors.back();
+}
+
 void
 WorkerThread::handleParseWorkload(WorkerThreadState &state)
 {
@@ -683,7 +701,7 @@ WorkerThread::handleParseWorkload(WorkerThreadState &state)
     }
 
     // The callback is invoked while we are still off the main thread.
-    parseTask->callback(parseTask->script, parseTask->callbackData);
+    parseTask->callback(parseTask, parseTask->callbackData);
 
     // FinishOffThreadScript will need to be called on the script to
     // migrate it into the correct compartment.
@@ -693,6 +711,129 @@ WorkerThread::handleParseWorkload(WorkerThreadState &state)
 
     // Notify the main thread in case it is waiting for the parse/emit to finish.
     state.notify(WorkerThreadState::MAIN);
+}
+
+void
+WorkerThread::handleCompressionWorkload(WorkerThreadState &state)
+{
+    JS_ASSERT(state.isLocked());
+    JS_ASSERT(state.canStartCompressionTask());
+    JS_ASSERT(idle());
+
+    compressionTask = state.compressionWorklist.popCopy();
+    compressionTask->workerThread = this;
+
+    {
+        AutoUnlockWorkerThreadState unlock(runtime);
+        if (!compressionTask->compress())
+            compressionTask->setOOM();
+    }
+
+    compressionTask->workerThread = NULL;
+    compressionTask = NULL;
+
+    // Notify the main thread in case it is waiting for the compression to finish.
+    state.notify(WorkerThreadState::MAIN);
+}
+
+bool
+js::StartOffThreadCompression(ExclusiveContext *cx, SourceCompressionTask *task)
+{
+    if (!EnsureWorkerThreadsInitialized(cx))
+        return false;
+
+    WorkerThreadState &state = *cx->workerThreadState();
+    AutoLockWorkerThreadState lock(state);
+
+    if (!state.compressionWorklist.append(task))
+        return false;
+
+    state.notify(WorkerThreadState::WORKER);
+    return true;
+}
+
+bool
+WorkerThreadState::compressionInProgress(SourceCompressionTask *task)
+{
+    JS_ASSERT(isLocked());
+    for (size_t i = 0; i < compressionWorklist.length(); i++) {
+        if (compressionWorklist[i] == task)
+            return true;
+    }
+    for (size_t i = 0; i < numThreads; i++) {
+        if (threads[i].compressionTask == task)
+            return true;
+    }
+    return false;
+}
+
+bool
+SourceCompressionTask::complete()
+{
+    JS_ASSERT_IF(!ss, !chars);
+    if (active()) {
+        WorkerThreadState &state = *cx->workerThreadState();
+        AutoLockWorkerThreadState lock(state);
+
+        while (state.compressionInProgress(this))
+            state.wait(WorkerThreadState::MAIN);
+
+        ss->ready_ = true;
+
+        // Update memory accounting.
+        if (!oom)
+            cx->updateMallocCounter(ss->computedSizeOfData());
+
+        ss = NULL;
+        chars = NULL;
+    }
+    if (oom) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
+    return true;
+}
+
+SourceCompressionTask *
+WorkerThreadState::compressionTaskForSource(ScriptSource *ss)
+{
+    JS_ASSERT(isLocked());
+    for (size_t i = 0; i < compressionWorklist.length(); i++) {
+        SourceCompressionTask *task = compressionWorklist[i];
+        if (task->source() == ss)
+            return task;
+    }
+    for (size_t i = 0; i < numThreads; i++) {
+        SourceCompressionTask *task = threads[i].compressionTask;
+        if (task && task->source() == ss)
+            return task;
+    }
+    return NULL;
+}
+
+const jschar *
+ScriptSource::getOffThreadCompressionChars(ExclusiveContext *cx)
+{
+    // If this is being compressed off thread, return its uncompressed chars.
+
+    if (ready()) {
+        // Compression has already finished on the source.
+        return NULL;
+    }
+
+    WorkerThreadState &state = *cx->workerThreadState();
+    AutoLockWorkerThreadState lock(state);
+
+    // Look for a token that hasn't finished compressing and whose source is
+    // the given ScriptSource.
+    if (SourceCompressionTask *task = state.compressionTaskForSource(this))
+        return task->uncompressedChars();
+
+    // Compressing has finished, so this ScriptSource is ready. Avoid future
+    // queries on the worker thread state when getting the chars.
+    ready_ = true;
+
+    return NULL;
 }
 
 void
@@ -707,14 +848,18 @@ WorkerThread::threadLoop()
         JS_ASSERT(!ionBuilder && !asmData);
 
         // Block until a task is available.
-        while (!state.canStartIonCompile() &&
-               !state.canStartAsmJSCompile() &&
-               !state.canStartParseTask())
-        {
+        while (true) {
             if (state.shouldPause)
                 pause();
             if (terminate)
                 return;
+            if (state.canStartIonCompile() ||
+                state.canStartAsmJSCompile() ||
+                state.canStartParseTask() ||
+                state.canStartCompressionTask())
+            {
+                break;
+            }
             state.wait(WorkerThreadState::WORKER);
         }
 
@@ -725,6 +870,10 @@ WorkerThread::threadLoop()
             handleIonWorkload(state);
         else if (state.canStartParseTask())
             handleParseWorkload(state);
+        else if (state.canStartCompressionTask())
+            handleCompressionWorkload(state);
+        else
+            MOZ_ASSUME_UNREACHABLE("No task to perform");
     }
 }
 
@@ -809,7 +958,7 @@ js::StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData)
 }
 
 bool
-js::StartOffThreadIonCompile(JSContext *cx, ion::IonBuilder *builder)
+js::StartOffThreadIonCompile(JSContext *cx, jit::IonBuilder *builder)
 {
     MOZ_ASSUME_UNREACHABLE("Off thread compilation not available in non-THREADSAFE builds");
 }
@@ -832,6 +981,26 @@ js::WaitForOffThreadParsingToFinish(JSRuntime *rt)
 {
 }
 
+bool
+js::StartOffThreadCompression(ExclusiveContext *cx, SourceCompressionTask *task)
+{
+    MOZ_ASSUME_UNREACHABLE("Off thread compression not available");
+}
+
+bool
+SourceCompressionTask::complete()
+{
+    JS_ASSERT(!active() && !oom);
+    return true;
+}
+
+const jschar *
+ScriptSource::getOffThreadCompressionChars(ExclusiveContext *cx)
+{
+    JS_ASSERT(ready());
+    return NULL;
+}
+
 AutoPauseWorkersForGC::AutoPauseWorkersForGC(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -839,6 +1008,12 @@ AutoPauseWorkersForGC::AutoPauseWorkersForGC(JSRuntime *rt MOZ_GUARD_OBJECT_NOTI
 
 AutoPauseWorkersForGC::~AutoPauseWorkersForGC()
 {
+}
+
+frontend::CompileError &
+ExclusiveContext::addPendingCompileError()
+{
+    MOZ_ASSUME_UNREACHABLE("Off thread compilation not available.");
 }
 
 #endif /* JS_WORKER_THREADS */

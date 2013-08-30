@@ -6,7 +6,6 @@
 
 XPIDL_SOURCES += [
     'nsICellBroadcastProvider.idl',
-    'nsIDOMMozCellBroadcast.idl',
     'nsIDOMMozCellBroadcastEvent.idl',
     'nsIDOMMozCellBroadcastMessage.idl',
 ]

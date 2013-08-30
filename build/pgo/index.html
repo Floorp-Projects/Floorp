@@ -157,9 +157,10 @@
      window.setTimeout(loadURL, interval); 
  };
  function loadURL () {
-     w.location.href = list[idx++];
+     w.close();
+     w = window.open(list[idx++]);
      if (idx < list.length) {
- 	window.setTimeout(loadURL, interval);
+     window.setTimeout(loadURL, interval);
      } else {
          window.setTimeout(goQuitApplication, interval);
      }

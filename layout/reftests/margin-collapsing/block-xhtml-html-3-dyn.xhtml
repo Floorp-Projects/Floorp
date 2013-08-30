@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+ <style type="text/css">
+ html, body {
+  margin: 0; padding: 0;
+ }
+ html {
+  background-color: white;
+  margin: 10px 0;
+ }
+ body {
+  background-color: red;
+  margin: 20px 0;
+ }
+ div {
+  display: none;
+  background-color: green;
+  margin: 40px 0;
+  height: 100px;
+ }
+ </style>
+ <script type="text/javascript">
+ function test() {
+  document.getElementsByTagName('div')[0].style.display = 'block';
+  document.documentElement.removeAttribute('class');
+ }
+ document.addEventListener('MozReftestInvalidate', test, false);
+ </script>
+</head>
+<body>
+<div></div>
+</body>
+</html>

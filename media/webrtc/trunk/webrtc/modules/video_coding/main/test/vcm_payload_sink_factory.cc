@@ -60,21 +60,22 @@ class VcmPayloadSinkFactory::VcmPayloadSink
   }
 
   // PayloadSinkInterface
-  virtual WebRtc_Word32 OnReceivedPayloadData(const WebRtc_UWord8* payload_data,
-      const WebRtc_UWord16 payload_size,
+  virtual int32_t OnReceivedPayloadData(
+      const uint8_t* payload_data,
+      const uint16_t payload_size,
       const WebRtcRTPHeader* rtp_header) {
     return vcm_->IncomingPacket(payload_data, payload_size, *rtp_header);
   }
 
   // VCMPacketRequestCallback
-  virtual WebRtc_Word32 ResendPackets(const WebRtc_UWord16* sequence_numbers,
-                                      WebRtc_UWord16 length) {
+  virtual int32_t ResendPackets(const uint16_t* sequence_numbers,
+                                uint16_t length) {
     stream_->ResendPackets(sequence_numbers, length);
     return 0;
   }
 
   // VCMFrameStorageCallback
-  virtual WebRtc_Word32 StoreReceivedFrame(
+  virtual int32_t StoreReceivedFrame(
       const EncodedVideoData& frame_to_store) {
     vcm_playback_->DecodeFromStorage(frame_to_store);
     return VCM_OK;
@@ -194,7 +195,7 @@ PayloadSinkInterface* VcmPayloadSinkFactory::Create(
   vcm->SetVideoProtection(protection_method_, protection_enabled_);
   vcm->SetRenderDelay(render_delay_ms_);
   vcm->SetMinimumPlayoutDelay(min_playout_delay_ms_);
-  vcm->SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack);
+  vcm->SetNackSettings(kMaxNackListSize, kMaxPacketAgeToNack, 0);
 
   scoped_ptr<FileOutputFrameReceiver> frame_receiver(
       new FileOutputFrameReceiver(base_out_filename_, stream->ssrc()));

@@ -33,7 +33,6 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIStreamConverterService.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsLayoutStatics.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "mozilla/Base64.h"
@@ -105,7 +104,6 @@ nsDOMFileReader::nsDOMFileReader()
     mDataLen(0), mDataFormat(FILE_AS_BINARY),
     mResultArrayBuffer(nullptr)
 {
-  nsLayoutStatics::AddRef();
   SetDOMStringToNull(mResult);
   SetIsDOMBinding();
 }
@@ -115,7 +113,6 @@ nsDOMFileReader::~nsDOMFileReader()
   FreeFileData();
   mResultArrayBuffer = nullptr;
   NS_DROP_JS_OBJECTS(this, nsDOMFileReader);
-  nsLayoutStatics::Release();
 }
 
 
@@ -147,7 +144,7 @@ nsDOMFileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
   nsRefPtr<nsDOMFileReader> fileReader = new nsDOMFileReader();
 
-  nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(aGlobal.Get());
+  nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(aGlobal.GetAsSupports());
   if (!owner) {
     NS_WARNING("Unexpected nsIJSNativeInitializer owner");
     aRv.Throw(NS_ERROR_FAILURE);

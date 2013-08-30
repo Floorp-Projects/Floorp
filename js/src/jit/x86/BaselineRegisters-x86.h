@@ -12,7 +12,7 @@
 #include "jit/IonMacroAssembler.h"
 
 namespace js {
-namespace ion {
+namespace jit {
 
 static MOZ_CONSTEXPR_VAR Register BaselineFrameReg = ebp;
 static MOZ_CONSTEXPR_VAR Register BaselineStackReg = esp;
@@ -34,7 +34,7 @@ static MOZ_CONSTEXPR_VAR Register ExtractTemp1        = InvalidReg;
 static MOZ_CONSTEXPR_VAR FloatRegister FloatReg0      = xmm0;
 static MOZ_CONSTEXPR_VAR FloatRegister FloatReg1      = xmm1;
 
-} // namespace ion
+} // namespace jit
 } // namespace js
 
 #endif // JS_ION

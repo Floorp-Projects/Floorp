@@ -53,22 +53,20 @@ namespace storage {
 ////////////////////////////////////////////////////////////////////////////////
 //// Memory Reporting
 
-static int64_t
-GetStorageSQLiteMemoryUsed()
-{
-  return ::sqlite3_memory_used();
-}
-
 // We don't need an "explicit" reporter for total SQLite memory usage, because
 // the multi-reporter provides reports that add up to the total.  But it's
 // useful to have the total in the "Other Measurements" list in about:memory,
 // and more importantly, we also gather the total via telemetry.
-NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLite,
-    "storage-sqlite",
-    KIND_OTHER,
-    UNITS_BYTES,
-    GetStorageSQLiteMemoryUsed,
-    "Memory used by SQLite.")
+class StorageSQLiteReporter MOZ_FINAL : public MemoryReporterBase
+{
+public:
+  StorageSQLiteReporter()
+    : MemoryReporterBase("storage-sqlite", KIND_OTHER, UNITS_BYTES,
+                         "Memory used by SQLite.")
+  {}
+private:
+  int64_t Amount() MOZ_OVERRIDE { return ::sqlite3_memory_used(); }
+};
 
 class StorageSQLiteMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
@@ -81,7 +79,7 @@ private:
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  StorageSQLiteMultiReporter(Service *aService) 
+  StorageSQLiteMultiReporter(Service *aService)
   : mService(aService)
   {
     mStmtDesc = NS_LITERAL_CSTRING(
@@ -305,8 +303,6 @@ Service::Service()
 , mSqliteVFS(nullptr)
 , mRegistrationMutex("Service::mRegistrationMutex")
 , mConnections()
-, mStorageSQLiteReporter(nullptr)
-, mStorageSQLiteMultiReporter(nullptr)
 {
 }
 
@@ -545,7 +541,7 @@ Service::initialize()
 
   // Create and register our SQLite memory reporters.  Registration can only
   // happen on the main thread (otherwise you'll get cryptic crashes).
-  mStorageSQLiteReporter = new NS_MEMORY_REPORTER_NAME(StorageSQLite);
+  mStorageSQLiteReporter = new StorageSQLiteReporter();
   mStorageSQLiteMultiReporter = new StorageSQLiteMultiReporter(this);
   (void)::NS_RegisterMemoryReporter(mStorageSQLiteReporter);
   (void)::NS_RegisterMemoryMultiReporter(mStorageSQLiteMultiReporter);
