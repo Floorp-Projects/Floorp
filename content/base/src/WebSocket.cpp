@@ -485,29 +485,26 @@ WebSocket::WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
 // Constructor:
 already_AddRefed<WebSocket>
 WebSocket::Constructor(const GlobalObject& aGlobal,
-                       JSContext* aCx,
                        const nsAString& aUrl,
                        ErrorResult& aRv)
 {
   Sequence<nsString> protocols;
-  return WebSocket::Constructor(aGlobal, aCx, aUrl, protocols, aRv);
+  return WebSocket::Constructor(aGlobal, aUrl, protocols, aRv);
 }
 
 already_AddRefed<WebSocket>
 WebSocket::Constructor(const GlobalObject& aGlobal,
-                       JSContext* aCx,
                        const nsAString& aUrl,
                        const nsAString& aProtocol,
                        ErrorResult& aRv)
 {
   Sequence<nsString> protocols;
   protocols.AppendElement(aProtocol);
-  return WebSocket::Constructor(aGlobal, aCx, aUrl, protocols, aRv);
+  return WebSocket::Constructor(aGlobal, aUrl, protocols, aRv);
 }
 
 already_AddRefed<WebSocket>
 WebSocket::Constructor(const GlobalObject& aGlobal,
-                       JSContext* aCx,
                        const nsAString& aUrl,
                        const Sequence<nsString>& aProtocols,
                        ErrorResult& aRv)
@@ -565,7 +562,8 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<WebSocket> webSocket = new WebSocket();
-  nsresult rv = webSocket->Init(aCx, principal, ownerWindow, aUrl, protocolArray);
+  nsresult rv = webSocket->Init(aGlobal.GetContext(), principal, ownerWindow,
+                                aUrl, protocolArray);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
