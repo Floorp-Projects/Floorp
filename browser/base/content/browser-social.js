@@ -322,10 +322,7 @@ SocialUI = {
     let containerParent = container.parentNode;
     if (containerParent.classList.contains("social-panel") &&
         containerParent instanceof Ci.nsIDOMXULPopupElement) {
-      // allow the link traversal to finish before closing the panel
-      setTimeout(() => {
-        containerParent.hidePopup();
-      }, 0);
+      containerParent.hidePopup();
     }
   },
 
@@ -696,7 +693,7 @@ SocialShare = {
 
   onHidden: function() {
     this.shareButton.removeAttribute("open");
-    this.iframe.setAttribute("src", "data:text/plain;charset=utf8,");
+    this.iframe.setAttribute("src", "data:text/plain;charset=utf8,")
     this.currentShare = null;
   },
 
