@@ -32,12 +32,12 @@ using mozilla::FloorLog2;
 void
 analyze::PrintBytecode(JSContext *cx, HandleScript script, jsbytecode *pc)
 {
-    printf("#%u:", script->id());
+    fprintf(stderr, "#%u:", script->id());
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return;
     js_Disassemble1(cx, script, pc, pc - script->code, true, &sprinter);
-    fprintf(stdout, "%s", sprinter.string());
+    fprintf(stderr, "%s", sprinter.string());
 }
 #endif
 
