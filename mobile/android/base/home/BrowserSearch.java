@@ -882,7 +882,7 @@ public class BrowserSearch extends HomeFragment
                 requestFocus();
             }
 
-            return false;
+            return super.onInterceptTouchEvent(event);
         }
     }
 }
