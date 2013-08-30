@@ -95,6 +95,12 @@ MediaSource::ReadOptions::setSeekTo(int64_t time_us, SeekMode mode)
 {
 }
 
+MOZ_EXPORT sp<DataSource> DataSource::CreateFromURI(
+          const char *uri,
+          const KeyedVector<String8, String8> *headers) {
+  return 0;
+}
+
 MOZ_EXPORT bool
 DataSource::getUInt16(off64_t offset, uint16_t *x)
 {
@@ -148,21 +154,6 @@ MOZ_EXPORT status_t OMXClient::connect()
 MOZ_EXPORT void OMXClient::disconnect()
 {
 }
-
-class __attribute__ ((visibility ("default"))) UnknownDataSource : public DataSource {
-public:
-UnknownDataSource();
-
-virtual status_t initCheck() const { return 0; }
-virtual ssize_t readAt(off64_t offset, void *data, size_t size) { return 0; }
-virtual status_t getSize(off64_t *size) { return 0; }
-
-virtual ~UnknownDataSource() { }
-};
-
-UnknownDataSource foo;
-
-MOZ_EXPORT UnknownDataSource::UnknownDataSource() { }
 
 MOZ_EXPORT
 ColorConverter::ColorConverter(OMX_COLOR_FORMATTYPE, OMX_COLOR_FORMATTYPE) { }
