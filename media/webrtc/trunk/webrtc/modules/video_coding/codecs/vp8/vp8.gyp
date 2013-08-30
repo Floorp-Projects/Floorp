@@ -30,6 +30,15 @@
           'dependencies': [
             '<(DEPTH)/third_party/libvpx/libvpx.gyp:libvpx',
           ],
+        },{
+          'include_dirs': [
+            '$(DIST)/include',
+          ],
+          'link_settings': {
+            'libraries': [
+              '$(LIBVPX_OBJ)/libvpx.a',
+            ],
+          },
         }],
       ],
       'direct_dependent_settings': {

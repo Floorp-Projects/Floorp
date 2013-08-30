@@ -21,11 +21,25 @@
         'resampler/include',
         'signal_processing/include',
       ],
+      'target_conditions': [
+        ['build_with_mozilla==1', {
+          'include_dirs': [
+            '$(DEPTH)/dist/include',
+          ],
+        }],
+      ],
       'direct_dependent_settings': {
         'include_dirs': [
           'resampler/include',
           'signal_processing/include',
           'vad/include',
+        ],
+        'conditions': [
+          ['build_with_mozilla==1', {
+            'include_dirs': [
+              '$(DEPTH)/dist/include',
+            ],
+          }],
         ],
       },
       'sources': [
@@ -144,6 +158,7 @@
             'resampler/sinc_resampler_sse.cc',
           ],
           'cflags': ['-msse2',],
+          'cflags_mozilla': ['-msse2',],
           'xcode_settings': {
             'OTHER_CFLAGS': ['-msse2',],
           },

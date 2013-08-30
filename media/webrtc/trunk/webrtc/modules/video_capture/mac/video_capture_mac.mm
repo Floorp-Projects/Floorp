@@ -30,8 +30,8 @@
 #include "QuickTime/video_capture_quick_time.h"
 #include "QuickTime/video_capture_quick_time_info.h"
 #else
-#include "QTKit/video_capture_qtkit.h"
-#include "QTKit/video_capture_qtkit_info.h"
+#include "qtkit/video_capture_qtkit.h"
+#include "qtkit/video_capture_qtkit_info.h"
 #endif
 
 namespace webrtc
