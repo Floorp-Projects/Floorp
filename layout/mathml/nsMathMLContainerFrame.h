@@ -7,15 +7,11 @@
 #define nsMathMLContainerFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsInlineFrame.h"
-#include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
-#include "nsMathMLChar.h"
 #include "nsMathMLFrame.h"
-#include "nsMathMLParts.h"
 #include "mozilla/Likely.h"
 
 /*
