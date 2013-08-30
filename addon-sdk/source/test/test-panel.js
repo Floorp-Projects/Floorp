@@ -14,7 +14,7 @@ const { Loader } = require('sdk/test/loader');
 const { LoaderWithHookedConsole } = require("sdk/test/loader");
 const timer = require("sdk/timers");
 const self = require('sdk/self');
-const { open, close, focus } = require('sdk/window/helpers');
+const { open, close, focus, ready } = require('sdk/window/helpers');
 const { isPrivate } = require('sdk/private-browsing');
 const { isWindowPBSupported, isGlobalPBSupported } = require('sdk/private-browsing/utils');
 const { defer, all } = require('sdk/core/promise');
@@ -894,6 +894,43 @@ exports['test passing DOM node as first argument'] = function (assert, done) {
     then(done, assert.fail)
 
   panel.show(widgetNode);
+};
+
+// This test is checking that `onpupshowing` events emitted by panel's children
+// are not considered.
+// See Bug 886329
+exports['test nested popups'] = function (assert, done) {
+  let loader = Loader(module);
+  let { Panel } = loader.require('sdk/panel');
+  let { getActiveView } = loader.require('sdk/view/core');
+  let url = '<select><option>1<option>2<option>3</select>';
+
+  let getContentWindow = panel => {
+    return getActiveView(panel).querySelector('iframe').contentWindow;
+  }
+
+  let panel = Panel({
+    contentURL: 'data:text/html;charset=utf-8,' + encodeURIComponent(url),
+    onShow: () => {
+      ready(getContentWindow(panel)).then(({ window, document }) => {
+        let select = document.querySelector('select');
+        let event = document.createEvent('UIEvent');
+
+        event.initUIEvent('popupshowing', true, true, window, null);
+        select.dispatchEvent(event);
+
+        assert.equal(
+          select,
+          getContentWindow(panel).document.querySelector('select'),
+          'select is still loaded in panel'
+        );
+
+        done();
+      });
+    }
+  });
+
+  panel.show();
 };
 
 if (isWindowPBSupported) {
